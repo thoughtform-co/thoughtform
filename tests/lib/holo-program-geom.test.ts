@@ -2,29 +2,26 @@ import { describe, expect, it } from "vitest";
 
 import {
   ADOPTION_TREADS,
-  AXIS_Y,
-  CAM_FOV,
-  CAM_POS,
-  REST_YAW,
+  AXIS_HALF,
+  CAM_DISTANCE,
+  POLAR_MAX,
+  POLAR_MIN,
   R_MAX,
   R_MIN,
-  applyRig,
-  axisScreenX,
-  cameraDepth,
-  holoLayout,
+  buildShells,
   levelAt,
-  projectToScreen01,
+  mulberry32,
+  restCameraPosition,
   ringRadius,
   ringReveal,
-  solveAxisX,
-  stationScreenX,
   tickCount,
+  waypointZ,
   type HoloWaypoint,
 } from "@/components/holo-program/holoProgramGeom";
 
 /* The portfolio's real course — the same `at` values the registry pins
    sorted and unequal (`lib/arcs/content/portfolio.ts`). The guard walks the
-   record rather than a fixture, so a content edit that breaks the drawing
+   record rather than a fixture, so a content edit that breaks the object
    fails here rather than on screen. */
 const COURSE: readonly HoloWaypoint[] = [
   { id: "embedded", label: "Embedded in marketing", sub: "2024", at: 0.04 },
@@ -36,33 +33,11 @@ const COURSE: readonly HoloWaypoint[] = [
   { id: "architect", label: "Intelligence architecture", sub: "Now", at: 1, seat: true },
 ];
 
-/**
- * The PLOT box's aspect at the three reference viewports, MEASURED on the
- * page rather than assumed:
- *
- *   1280×720  → 1020×266  (3.83)
- *   1440×800  → 1149×296  (3.88)
- *   1920×1080 → 1438×400  (3.60)
- *
- * ⚠ The distinction cost a pass. The instrument mounts inside
- * `.arc-prog__plot`, so the plot is what the camera has to fill; solving
- * against the BAND's 2.1–3.3 produced a drawing correctly sized for a box it
- * does not live in. The board's own header records the same class of trap one
- * level up — no authored viewBox survives this host's spread.
- *
- * The bracketing values below are deliberately a touch WIDER than the
- * measured three, so a future retune of `--pg-h` has margin before it
- * silently moves the drawing out of its box.
- */
-const ASPECTS = [3.95, 3.83, 3.5];
-
 describe("the adoption ladder is the flat board's own curve", () => {
   it("is a STEP function — it never interpolates between treads", () => {
     for (let i = 0; i < ADOPTION_TREADS.length - 1; i++) {
       const [start, level] = ADOPTION_TREADS[i];
       const [nextStart] = ADOPTION_TREADS[i + 1];
-      // Anywhere inside a tread reads the tread's own level, including the
-      // instant before the next one starts.
       expect(levelAt(start)).toBe(level);
       expect(levelAt((start + nextStart) / 2)).toBe(level);
       expect(levelAt(nextStart - 1e-6)).toBe(level);
@@ -91,196 +66,99 @@ describe("the adoption ladder is the flat board's own curve", () => {
 
   it("graduates a bigger ring with more ticks, and never fewer than a floor", () => {
     expect(tickCount(R_MAX)).toBeGreaterThan(tickCount(R_MIN));
-    expect(tickCount(0.01)).toBeGreaterThanOrEqual(12);
+    expect(tickCount(0.01)).toBeGreaterThanOrEqual(16);
   });
 });
 
-describe("the solver puts every ring under its own DOM station", () => {
-  it("converges within 0.2% of the band width at all three aspects", () => {
-    for (const aspect of ASPECTS) {
-      for (const wp of COURSE) {
-        const target = stationScreenX(wp.at);
-        const x = solveAxisX(target, aspect);
-        expect(Math.abs(axisScreenX(x, aspect) - target)).toBeLessThan(0.002);
-      }
-    }
+describe("the record's spacing survives into the object", () => {
+  it("places the course in order down the axis, inside its own span", () => {
+    const zs = COURSE.map((w) => waypointZ(w.at));
+    for (let i = 1; i < zs.length; i++) expect(zs[i]).toBeGreaterThan(zs[i - 1]);
+    expect(zs[0]).toBeGreaterThanOrEqual(-AXIS_HALF - 1e-9);
+    expect(zs[zs.length - 1]).toBeLessThanOrEqual(AXIS_HALF + 1e-9);
   });
 
-  it("keeps the course in the record's own order, left to right", () => {
-    for (const aspect of ASPECTS) {
-      const { rings } = holoLayout(COURSE, aspect);
-      for (let i = 1; i < rings.length; i++) {
-        expect(rings[i].x).toBeGreaterThan(rings[i - 1].x);
-      }
-    }
-  });
-
-  it("preserves the record's UNEQUAL gaps — an even spread would delete the reading", () => {
-    // ADR-078: the gaps ARE the reading. The projection may STRETCH them; it
-    // may not LEVEL them. So the bar is the record's own unevenness, not a
-    // number picked by eye — the course runs 0.14 and 0.17 apart, a ratio of
-    // ~1.21, and the drawing must come out at least that uneven.
+  it("keeps the gaps UNEQUAL — an even spread would delete the reading", () => {
+    /* ADR-078: the gaps ARE the reading. `at` maps linearly to depth, so the
+       record's own unevenness must come through exactly, not merely survive
+       approximately. */
     const atGaps = COURSE.slice(1).map((w, i) => w.at - COURSE[i].at);
+    const zGaps = COURSE.slice(1).map((w, i) => waypointZ(w.at) - waypointZ(COURSE[i].at));
     const atRatio = Math.max(...atGaps) / Math.min(...atGaps);
-    expect(atRatio).toBeGreaterThan(1.1); // the record is uneven to begin with
-
-    for (const aspect of ASPECTS) {
-      const { rings } = holoLayout(COURSE, aspect);
-      const gaps = rings.slice(1).map((r, i) => r.x - rings[i].x);
-      const ratio = Math.max(...gaps) / Math.min(...gaps);
-      expect(ratio).toBeGreaterThanOrEqual(atRatio - 1e-9);
-    }
-  });
-});
-
-describe("the rig's yaw stays inside the honest band", () => {
-  it("keeps projected rim heights MONOTONIC, so perspective cannot outrank the ladder", () => {
-    // Perspective makes a nearer ring project larger. That is only safe
-    // while it agrees with the radius encoding — if a mid-course ring can
-    // out-measure the seat on screen, the drawing is lying about its record.
-    for (const aspect of ASPECTS) {
-      const { rings } = holoLayout(COURSE, aspect);
-      const apparent = rings.map((r) => {
-        const top = projectToScreen01(applyRig([r.x, AXIS_Y + r.radius, 0]), aspect);
-        const bottom = projectToScreen01(applyRig([r.x, AXIS_Y - r.radius, 0]), aspect);
-        return bottom.y - top.y;
-      });
-      for (let i = 1; i < apparent.length; i++) {
-        expect(apparent[i]).toBeGreaterThan(apparent[i - 1]);
-      }
-    }
+    const zRatio = Math.max(...zGaps) / Math.min(...zGaps);
+    expect(atRatio).toBeGreaterThan(1.1);
+    expect(zRatio).toBeCloseTo(atRatio, 6);
   });
 
-  it("pins the pose the DOM was solved against", () => {
-    // The solver and the scene share one rest pose; drifting either alone
-    // slides every ring out from under its label.
-    expect(REST_YAW).toBeCloseTo(-0.5, 6);
-    expect(CAM_FOV).toBeCloseTo(4.96, 6);
-  });
-
-  it("puts NOW nearest, so size and distance agree instead of fighting", () => {
-    // A positive yaw would recede the terminus and pull 2024 forward — the
-    // record backing away as it reaches the present.
-    const { rings } = holoLayout(COURSE, 2.6);
-    const depths = rings.map((r) => cameraDepth([r.x, AXIS_Y, 0]));
-    for (let i = 1; i < depths.length; i++) {
-      expect(depths[i]).toBeLessThan(depths[i - 1]);
-    }
-  });
-
-  it("keeps every ring OPEN — a ring that projects to a line is not a ring", () => {
-    /**
-     * ⚠ All seven ring planes are parallel, so the camera lies in exactly
-     * one of them and THAT ring collapses to a bare vertical stroke. The
-     * plane sits at `camX·cos(yaw) − camZ·sin(yaw)`; the first cut put it
-     * mid-course and the third station rendered as a line.
-     */
-    const collapseX = CAM_POS[0] * Math.cos(REST_YAW) - CAM_POS[2] * Math.sin(REST_YAW);
-    for (const aspect of ASPECTS) {
-      const { rings } = holoLayout(COURSE, aspect);
-      for (const ring of rings) {
-        expect(
-          Math.abs(ring.x - collapseX),
-          `${ring.id} sits ${Math.abs(ring.x - collapseX).toFixed(2)} from the collapse plane`
-        ).toBeGreaterThan(0.8);
-
-        // And measure the drawn result, not just the clearance: width
-        // against height, in one common unit.
-        const top = projectToScreen01(applyRig([ring.x, AXIS_Y + ring.radius, 0]), aspect);
-        const bottom = projectToScreen01(applyRig([ring.x, AXIS_Y - ring.radius, 0]), aspect);
-        const left = projectToScreen01(applyRig([ring.x, AXIS_Y, -ring.radius]), aspect);
-        const right = projectToScreen01(applyRig([ring.x, AXIS_Y, ring.radius]), aspect);
-        const h = bottom.y - top.y;
-        const w = Math.abs(right.x - left.x) * aspect;
-        expect(w / h, `${ring.id} openness ${(w / h).toFixed(2)}`).toBeGreaterThan(0.28);
-      }
-    }
-  });
-});
-
-describe("the instrument fills its plot without escaping it", () => {
-  /**
-   * ⚠ THE RINGS AND THE STATIONS SHARE THIS BOX, AND THAT IS SETTLED
-   * ARITHMETIC RATHER THAN A PREFERENCE.
-   *
-   * Measured on the page at 1280×720: the plot is 266px tall, the up lane
-   * runs 9 % → 38.7 % and the down lane 49.3 % → 74.1 %, so the clear middle
-   * is **10.6 % — 28 pixels**. Nothing that reads as a ring fits there. So
-   * the rings pass BEHIND the labels and the labels take the Arc's own
-   * over-WebGL text lift (arcs.css, `[data-holo="live"]`).
-   *
-   * What is still guarded is the part that CAN go wrong silently: the stack
-   * must fill the field without any rim leaving it, at every aspect. A ring
-   * cropped by the plot's `overflow: hidden` is invisible as a failure —
-   * it just looks like a smaller ring.
-   */
-  const TOP_MARGIN = 0.19;
-  const BOTTOM_MARGIN = 0.81;
-
-  it("keeps every rim inside the plot, at all three aspects", () => {
-    for (const aspect of ASPECTS) {
-      const { rings } = holoLayout(COURSE, aspect);
-      for (const ring of rings) {
-        const top = projectToScreen01(applyRig([ring.x, AXIS_Y + ring.radius, 0]), aspect);
-        const bottom = projectToScreen01(applyRig([ring.x, AXIS_Y - ring.radius, 0]), aspect);
-        expect(
-          top.y,
-          `${ring.id} top rim at ${(top.y * 100).toFixed(1)}% (aspect ${aspect})`
-        ).toBeGreaterThan(TOP_MARGIN);
-        expect(
-          bottom.y,
-          `${ring.id} bottom rim at ${(bottom.y * 100).toFixed(1)}% (aspect ${aspect})`
-        ).toBeLessThan(BOTTOM_MARGIN);
-      }
-    }
-  });
-
-  it("actually FILLS the field — a stack that fits by being tiny is not a fix", () => {
-    // The obvious way to satisfy the guard above is to shrink the rings
-    // until nothing can collide. This is the other half of the contract.
-    for (const aspect of ASPECTS) {
-      const { rings } = holoLayout(COURSE, aspect);
-      const seat = rings[rings.length - 1];
-      const top = projectToScreen01(applyRig([seat.x, AXIS_Y + seat.radius, 0]), aspect);
-      const bottom = projectToScreen01(applyRig([seat.x, AXIS_Y - seat.radius, 0]), aspect);
-      expect(
-        bottom.y - top.y,
-        `seat fills ${((bottom.y - top.y) * 100).toFixed(1)}%`
-      ).toBeGreaterThan(0.5);
-    }
-  });
-});
-
-describe("the arrival performs the record's own order", () => {
-  it("staggers each ring's draw-on by its DATE", () => {
+  it("staggers the intro by DATE, so the object builds in the record's order", () => {
     const reveals = COURSE.map((w) => ringReveal(w.at));
     for (let i = 1; i < reveals.length; i++) {
       expect(reveals[i][0]).toBeGreaterThan(reveals[i - 1][0]);
     }
-    // And it is finished when the arrival is.
-    expect(reveals[reveals.length - 1][1]).toBeLessThanOrEqual(1.000001);
     expect(reveals[0][0]).toBeGreaterThanOrEqual(0);
+    expect(reveals[reveals.length - 1][1]).toBeLessThanOrEqual(1.000001);
   });
 });
 
-describe("the layout", () => {
-  it("spans the band and runs the priors in AHEAD of the first station", () => {
-    for (const aspect of ASPECTS) {
-      const l = holoLayout(COURSE, aspect);
-      expect(l.axisFrom).toBeLessThan(l.rings[0].x);
-      expect(l.axisTo).toBeGreaterThan(l.rings[l.rings.length - 1].x);
-      expect(l.priorFrom).toBeLessThan(l.priorTo);
-      expect(l.priorTo).toBeCloseTo(l.rings[0].x, 6);
+describe("the machine around the record is SEEDED, never random", () => {
+  /**
+   * ⚠ A random draw in a render is a hydration mismatch and a screenshot that
+   * never reproduces — the flat board's own SCATTER comment says the same
+   * thing, and the reference seeds its whole cluster from one integer.
+   */
+  it("builds byte-identical shells on every call", () => {
+    const a = buildShells();
+    const b = buildShells();
+    expect(a.length).toBe(b.length);
+    expect(a).toEqual(b);
+  });
+
+  it("gives a different seed a different machine", () => {
+    expect(buildShells(22, 368)).not.toEqual(buildShells(22, 369));
+  });
+
+  it("keeps every shell DIMMER than the record's own rings", () => {
+    // The eye must be able to separate the record from the machine it lives
+    // in, at any angle. The record's resting floor is 0.72 (O_RING).
+    for (const s of buildShells()) {
+      expect(s.opacity).toBeLessThan(0.4);
     }
   });
 
-  it("draws the ladder as risers and runs, never a ramp", () => {
-    const { ladder } = holoLayout(COURSE, 2.6);
-    expect(ladder.length).toBeGreaterThan(ADOPTION_TREADS.length);
-    for (let i = 1; i < ladder.length; i++) {
-      // Monotonic along the axis, and never descending.
-      expect(ladder[i][0]).toBeGreaterThanOrEqual(ladder[i - 1][0] - 1e-9);
-      expect(ladder[i][1]).toBeGreaterThanOrEqual(ladder[i - 1][1] - 1e-9);
+  it("has a PRNG that is deterministic and in range", () => {
+    const r1 = mulberry32(368);
+    const r2 = mulberry32(368);
+    for (let i = 0; i < 50; i++) {
+      const v = r1();
+      expect(v).toBe(r2());
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThan(1);
     }
+  });
+});
+
+describe("the camera can be orbited, but only into dignified poses", () => {
+  it("rests at the derived distance", () => {
+    const [x, y, z] = restCameraPosition();
+    expect(Math.hypot(x, y, z)).toBeCloseTo(CAM_DISTANCE, 6);
+  });
+
+  it("rests ABOVE the object, which is what opens the rings", () => {
+    /* ⚠ THE POSE IS THE WHOLE DIFFERENCE from round 1. Coaxial rings viewed
+       from their own level project to lines; viewed from above they open
+       into ellipses and the stack gains an interior. */
+    const [, y] = restCameraPosition();
+    expect(y).toBeGreaterThan(0.5);
+  });
+
+  it("clamps the polar range so it can never be viewed from under the floor", () => {
+    expect(POLAR_MIN).toBeGreaterThan(0);
+    expect(POLAR_MAX).toBeLessThan(Math.PI);
+    expect(POLAR_MAX).toBeGreaterThan(POLAR_MIN);
+    // And the rest pose has to sit inside the band the reader is held to.
+    const [x, y, z] = restCameraPosition();
+    const polar = Math.acos(y / Math.hypot(x, y, z));
+    expect(polar).toBeGreaterThanOrEqual(POLAR_MIN);
+    expect(polar).toBeLessThanOrEqual(POLAR_MAX);
   });
 });

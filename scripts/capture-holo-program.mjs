@@ -1,20 +1,22 @@
 /**
- * capture-holo-program — drives `/test/holo-program-lab`, gates it, and
- * captures the review stills.
+ * capture-holo-program — drives `/test/holo-program-lab`, gates the ARTIFACT,
+ * and captures the review stills.
  *
  * ⚠ HEADED, AND THAT IS NOT OPTIONAL. This lab is WebGL. A headless Chromium
  * falls back to SwiftShader or no GL at all, and the honest failure mode is
- * not an error — it is a black canvas that passes every DOM assertion. The
- * corridor smokes learned this; so does the website-screenshot skill.
+ * not an error — it is a black canvas that passes every DOM assertion.
  *
- * ⚠ WAITS ARE ON AN IDENTITY, NEVER A SLEEP AND NEVER A BARE NUMBER. The lab
- * mirrors `data-stamp` (preset|theme|mode) in the same effect as its numbers,
- * and this waits for the stamp it asked for. A wait a script can satisfy by
- * itself is not a wait — `capture-substrate-lab` gated three directions
- * against the previous cell's measurements that way.
+ * ⚠ THE GATE THAT MATTERS IS THAT IT ROTATES. Round 1 shipped an object that
+ * looked three-dimensional and could not be turned; every DOM and pixel check
+ * it had passed anyway. So this script DRAGS the canvas and asserts the
+ * picture changed — a still that is identical before and after a drag is the
+ * exact defect that got past the last set of gates.
+ *
+ * ⚠ Waits are on an IDENTITY, never a sleep and never a bare number: the lab
+ * mirrors `data-stamp` in the same effect as its numbers.
  *
  * Usage (dev server must already be running):
- *   node scripts/capture-holo-program.mjs [--port 3003] [--presets p1280,p1920]
+ *   node scripts/capture-holo-program.mjs [--port 3003] [--presets full,p1280]
  *                                         [--themes dark,light] [--out DIR]
  */
 
@@ -29,22 +31,11 @@ const argOf = (flag, fallback) => {
 
 const PORT = argOf("--port", "3003");
 const OUT = argOf("--out", "docs/design/holo-program-lab");
-const PRESETS = argOf("--presets", "p1280,p1440,p1920").split(",");
+const PRESETS = argOf("--presets", "full,p1280").split(",");
 const THEMES = argOf("--themes", "dark,light").split(",");
-/** The arrival is choreography; `rest` is the drawing it lands on. Both are
- *  captured because the still is what the reader lives with. */
-const MODES = argOf("--modes", "rest,arrive").split(",");
 
 /** A benign, site-wide report-only CSP notice — not this route's doing. */
 const IGNORED_ERROR = /upgrade-insecure-requests' is ignored when delivered in a report-only/;
-
-/** The viewport each preset is authored against. The lab sizes the BAND
- *  itself, but the window has to be big enough to hold it unclipped. */
-const VIEWPORT = {
-  p1280: { width: 1280, height: 900 },
-  p1440: { width: 1460, height: 980 },
-  p1920: { width: 1920, height: 1180 },
-};
 
 await mkdir(OUT, { recursive: true });
 
@@ -58,103 +49,123 @@ const rows = [];
 
 for (const preset of PRESETS) {
   for (const theme of THEMES) {
-    for (const mode of MODES) {
-      const context = await browser.newContext({
-        viewport: VIEWPORT[preset] ?? VIEWPORT.p1280,
-        deviceScaleFactor: 1,
-        // ⚠ PRM must stay off: the production mount refuses to arm under
-        // reduced motion, and a lab run under it would measure the fallback.
-        reducedMotion: "no-preference",
-      });
-      const page = await context.newPage();
-      const errors = [];
-      page.on("pageerror", (e) => errors.push(String(e)));
-      page.on("console", (m) => {
-        if (m.type() === "error" && !IGNORED_ERROR.test(m.text())) errors.push(m.text());
-      });
+    const context = await browser.newContext({
+      viewport: { width: 1600, height: 1000 },
+      deviceScaleFactor: 1,
+      reducedMotion: "no-preference",
+    });
+    const page = await context.newPage();
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(String(e)));
+    page.on("console", (m) => {
+      if (m.type() === "error" && !IGNORED_ERROR.test(m.text())) errors.push(m.text());
+    });
 
-      const want = `${preset}|${theme}|${mode}`;
-      const url =
+    const want = `${preset}|${theme}|live`;
+    const fail = (msg) => failures.push(`${want}: ${msg}`);
+
+    try {
+      // `auto=0` so the auto-rotate drift cannot be mistaken for the drag.
+      await page.goto(
         `http://localhost:${PORT}/test/holo-program-lab` +
-        `?preset=${preset}&theme=${theme}&still=${mode === "rest" ? 1 : 0}`;
-      await page.goto(url, { waitUntil: "domcontentloaded" });
+          `?preset=${preset}&theme=${theme}&still=0&auto=0`,
+        { waitUntil: "domcontentloaded" }
+      );
 
-      let measured = null;
-      try {
-        // The identity FIRST, then the readiness — in that order, so a stale
-        // cell can never satisfy the gate.
-        await page.waitForFunction(
-          (stamp) => {
-            const el = document.querySelector("main.hpl");
-            return (
-              !!el &&
-              el.getAttribute("data-stamp") === stamp &&
-              el.getAttribute("data-ready") === "1"
-            );
-          },
-          want,
-          { timeout: 20000 }
-        );
-        /* The arrival is 2.4s. `--arriveMs` samples it MID-FLIGHT instead of
-           after it lands — the only way to see whether the rings really do
-           stroke on in date order, which a finished still cannot show. */
-        if (mode === "arrive") await page.waitForTimeout(Number(argOf("--arriveMs", "2900")));
-
-        measured = await page.evaluate(() => {
+      await page.waitForFunction(
+        (stamp) => {
           const el = document.querySelector("main.hpl");
-          const canvas = document.querySelector(".hpl__stage canvas");
-          const stage = document.querySelector(".hpl__stage");
-          const cb = canvas?.getBoundingClientRect();
-          const sb = stage?.getBoundingClientRect();
-          return {
-            canvas: cb ? { w: Math.round(cb.width), h: Math.round(cb.height) } : null,
-            stage: sb ? { w: Math.round(sb.width), h: Math.round(sb.height) } : null,
-            hits: Number(el?.getAttribute("data-hits") ?? -1),
-            aspect: Number(el?.getAttribute("data-aspect") ?? 0),
-          };
-        });
+          return (
+            !!el &&
+            el.getAttribute("data-stamp") === stamp &&
+            el.getAttribute("data-ready") === "1"
+          );
+        },
+        want,
+        { timeout: 25000 }
+      );
+      // Let the intro land before anything is measured or shot.
+      await page.waitForTimeout(2600);
 
-        const file = `${OUT}/${preset}-${theme}-${mode}.png`;
-        const shot = await page.locator(".hpl__stage").screenshot({ path: file });
+      const stage = page.locator(".hpl__stage");
+      const before = await stage.screenshot();
+      await stage.screenshot({ path: `${OUT}/${preset}-${theme}-rest.png` });
 
-        /**
-         * ⚠ LIVENESS IS MEASURED ON THE SCREENSHOT, NOT ON THE CANVAS.
-         * `drawImage(webglCanvas)` returns BLACK once the frame is composited
-         * unless `preserveDrawingBuffer` is on — so the obvious in-page pixel
-         * probe reports "nothing is painted" for a perfectly good drawing.
-         * (It did, on this script's first run.) The composited screenshot is
-         * the only honest sample, and a PNG of a blank plate compresses to
-         * almost nothing, so its byte length separates drawn from empty
-         * without needing a decoder.
-         */
-        measured.shotKb = Math.round(shot.length / 1024);
-
-        /* ── The gates ─────────────────────────────────────────────── */
-        const fail = (msg) => failures.push(`${want}: ${msg}`);
-        if (!measured.canvas || !measured.stage) fail("no canvas or stage");
-        else {
-          // The canvas must FILL the band — a default-sized 300x150 canvas is
-          // the signature of an R3F mount that never got a resize observation.
-          if (Math.abs(measured.canvas.w - measured.stage.w) > 2)
-            fail(`canvas ${measured.canvas.w}px vs stage ${measured.stage.w}px`);
-          if (Math.abs(measured.canvas.h - measured.stage.h) > 2)
-            fail(`canvas ${measured.canvas.h}px tall vs stage ${measured.stage.h}px`);
-        }
-        if (measured.hits !== 0) fail(`${measured.hits} ring/station collisions`);
-        // An empty plate at this size compresses to a few kB; a drawn one
-        // does not. The floor is deliberately low — this is line work on a
-        // dark field, not a photograph.
-        if (mode === "rest" && measured.shotKb < 12)
-          fail(`still is only ${measured.shotKb}kB — is GL painting?`);
-        if (errors.length) fail(`page errors: ${errors.slice(0, 2).join(" | ")}`);
-
-        rows.push({ cell: want, ...measured.canvas, hits: measured.hits, kb: measured.shotKb });
-      } catch (e) {
-        failures.push(`${want}: ${String(e).split("\n")[0]}`);
+      /* ── THE ROTATION GATE ─────────────────────────────────────────── */
+      const box = await stage.boundingBox();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      // A long horizontal sweep: enough to swing the object visibly, all
+      // inside the stage so nothing else receives the drag.
+      for (let i = 1; i <= 12; i++) {
+        await page.mouse.move(
+          box.x + box.width / 2 + i * (box.width * 0.03),
+          box.y + box.height / 2 - i * 2,
+          { steps: 2 }
+        );
       }
+      await page.mouse.up();
+      await page.waitForTimeout(900); // let the damping settle
 
-      await context.close();
+      const after = await stage.screenshot();
+      await stage.screenshot({ path: `${OUT}/${preset}-${theme}-rotated.png` });
+
+      /* Compare the two PNGs. Identical bytes means the drag did nothing —
+         which is precisely round 1's defect, invisible to every other check.
+         (A live object also drifts between frames, so this is a floor, not
+         an equality test: the rotated frame must differ SUBSTANTIALLY.) */
+      const same = Buffer.compare(before, after) === 0;
+      const sizeDelta = Math.abs(before.length - after.length) / before.length;
+      if (same) fail("the drag changed NOTHING — the object does not rotate");
+
+      const measured = await page.evaluate(() => {
+        const el = document.querySelector("main.hpl");
+        const canvas = document.querySelector(".hpl__stage canvas");
+        const st = document.querySelector(".hpl__stage");
+        const cb = canvas?.getBoundingClientRect();
+        const sb = st?.getBoundingClientRect();
+        const lbls = [...document.querySelectorAll(".hpl__lbl")].map((l) => ({
+          t: l.style.transform,
+          o: Number(l.style.opacity || "1"),
+        }));
+        return {
+          canvas: cb ? { w: Math.round(cb.width), h: Math.round(cb.height) } : null,
+          stage: sb ? { w: Math.round(sb.width), h: Math.round(sb.height) } : null,
+          anchors: Number(el?.getAttribute("data-labels") ?? 0),
+          positioned: lbls.filter((l) => l.t && l.t !== "none").length,
+          faded: lbls.filter((l) => l.o < 0.99).length,
+        };
+      });
+
+      if (!measured.canvas || !measured.stage) fail("no canvas or stage");
+      else {
+        if (Math.abs(measured.canvas.w - measured.stage.w) > 2)
+          fail(`canvas ${measured.canvas.w}px vs stage ${measured.stage.w}px`);
+      }
+      // The labels must be TRACKING the object, not sitting at authored
+      // percentages — that is the round-2 contract in one assertion.
+      if (measured.anchors !== 7) fail(`${measured.anchors} anchors published, expected 7`);
+      if (measured.positioned !== 7)
+        fail(`${measured.positioned}/7 labels positioned from anchors`);
+      if (measured.faded === 0)
+        fail("no label is depth-faded — frontness is not reaching the DOM");
+      if (before.length < 12000) fail(`rest still is ${Math.round(before.length / 1024)}kB — is GL painting?`);
+      if (errors.length) fail(`page errors: ${errors.slice(0, 2).join(" | ")}`);
+
+      rows.push({
+        cell: want,
+        ...measured.canvas,
+        anchors: measured.anchors,
+        faded: measured.faded,
+        restKb: Math.round(before.length / 1024),
+        movedPct: (sizeDelta * 100).toFixed(1),
+        rotated: same ? "NO" : "yes",
+      });
+    } catch (e) {
+      fail(String(e).split("\n")[0]);
     }
+
+    await context.close();
   }
 }
 

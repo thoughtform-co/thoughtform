@@ -1,16 +1,14 @@
 /**
- * The holo-program lab's chrome.
+ * The holo artifact lab's chrome.
  *
- * Deliberately plain: the harness must not add any material the arc beat
- * will not have, or the look-dev is judging the lab. The BAND is real (its
- * three shapes are measured from the arc), and the chrome inside it copies
- * the flat board's type grammar — PT Mono for the stations, the same sizes,
- * the same lanes — so a legibility read here transfers.
+ * Deliberately plain: the harness must not add material the beat will not
+ * have, or the look-dev is judging the lab. The LABELS copy the flat board's
+ * type grammar so a legibility read here transfers.
  */
 
 .hpl {
   min-height: 100vh;
-  background: #14120f;
+  background: #141210;
   color: #ebe3d6;
   font-family: var(--font-pt-mono, "PT Mono", monospace);
   padding: 0 0 48px;
@@ -23,7 +21,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
   padding: 12px 20px;
   background: rgba(10, 9, 8, 0.94);
   border-bottom: 1px solid rgba(235, 227, 214, 0.12);
@@ -64,6 +62,19 @@
   color: #ebe3d6;
 }
 
+.hpl__slider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(235, 227, 214, 0.6);
+}
+
+.hpl__slider input {
+  width: 96px;
+}
+
 .hpl__readout {
   margin-left: auto;
   font-size: 10px;
@@ -74,10 +85,9 @@
 .hpl__wrap {
   display: flex;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 32px 20px;
 }
 
-/* THE BAND, at its real measured shape. */
 .hpl__stage {
   position: relative;
   width: var(--w);
@@ -85,7 +95,6 @@
   max-width: 100%;
 }
 
-.hpl__canvas,
 .hpl__gl {
   position: absolute;
   inset: 0;
@@ -95,110 +104,157 @@
   display: block;
 }
 
-/* The chrome floats OVER the instrument and never takes the pointer away
-   from it except on a station — the same layering the arc beat needs. */
-.hpl__chrome {
+/* THE TRACKED LABEL LAYER. It never takes the pointer — the object
+   underneath owns the drag, and a label that swallowed a pointerdown would
+   put a dead patch in the middle of the thing you are trying to rotate. */
+.hpl__labels {
   position: absolute;
   inset: 0;
-  z-index: 1;
   pointer-events: none;
 }
 
-.hpl__hd {
+.hpl__lbl {
   position: absolute;
-  top: 10px;
-  left: 14px;
-  right: 14px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.55);
-}
-
-.hpl__stns {
-  position: absolute;
-  inset: 0;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.hpl__stn {
-  position: absolute;
-  left: var(--at);
-  width: 168px;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  white-space: nowrap;
   text-align: center;
-  pointer-events: auto;
-  cursor: default;
+  will-change: transform, opacity;
 }
 
-.hpl__stn[data-lane="up"] {
-  top: 8%;
+/* The block is offset from its anchor by a wrapper transform so the JS can
+   keep writing a pure translate — the anchor is the ring's rim, and the
+   label stands off it on whichever side that ring hangs from. */
+.hpl__lbl > * {
+  position: relative;
 }
 
-.hpl__stn[data-lane="dn"] {
-  bottom: 10%;
+.hpl__lbl[data-side="up"] {
+  margin: -38px 0 0 0;
+  transform: translate3d(-50%, 0, 0);
 }
 
-.hpl__stn-date {
-  font-size: 10px;
-  letter-spacing: 0.16em;
+.hpl__lbl[data-side="dn"] {
+  margin: 24px 0 0 0;
+  transform: translate3d(-50%, 0, 0);
+}
+
+.hpl__lbl::after {
+  /* The tie-line back to the marker — below for an upper label, above for a
+     lower one, so it always points AT the ring it names. */
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  height: 16px;
+  background: rgba(235, 227, 214, 0.32);
+}
+
+.hpl__lbl[data-side="up"]::after {
+  top: 100%;
+}
+
+.hpl__lbl[data-side="dn"]::after {
+  bottom: 100%;
+}
+
+.hpl__lbl-date {
+  font-size: 9px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.55);
+  color: rgba(202, 165, 84, 0.9);
+  text-shadow: 0 0 6px rgba(10, 9, 8, 0.95);
 }
 
-.hpl__stn-lbl {
-  font-size: 12px;
+.hpl__lbl-name {
+  font-size: 11px;
   letter-spacing: 0.06em;
-  line-height: 1.15;
-  color: rgba(235, 227, 214, 0.92);
+  color: rgba(235, 227, 214, 0.94);
+  text-shadow:
+    0 0 6px rgba(10, 9, 8, 0.95),
+    0 0 14px rgba(10, 9, 8, 0.8);
 }
 
-.hpl__stn[data-seat] .hpl__stn-lbl {
+.hpl__lbl[data-seat] .hpl__lbl-name {
   color: #caa554;
 }
 
-/* The third line — production's stations carry it, so the harness must too,
-   or the lab is judging a composition the page does not have. */
-.hpl__stn-note {
-  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: 11px;
-  line-height: 1.25;
-  color: rgba(235, 227, 214, 0.62);
-  text-shadow:
-    0 0 6px rgba(10, 9, 8, 0.92),
-    0 0 14px rgba(10, 9, 8, 0.78);
-}
-
-.hpl__stn-date,
-.hpl__stn-lbl {
-  text-shadow:
-    0 0 6px rgba(10, 9, 8, 0.92),
-    0 0 14px rgba(10, 9, 8, 0.78);
-}
-
-.hpl__priors {
-  position: absolute;
-  left: 14px;
-  bottom: 10px;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(235, 227, 214, 0.4);
-}
-
 .hpl__note {
-  max-width: 760px;
+  max-width: 820px;
   margin: 0 auto;
   padding: 0 20px;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-size: 13px;
   line-height: 1.5;
   color: rgba(235, 227, 214, 0.6);
+}
+
+/* ── LIGHT ────────────────────────────────────────────────────────────
+   The harness flips with the page, or the artifact is being judged as a
+   light object on a dark sheet — which is neither theme.
+
+   ⚠ THE LABEL HALO INVERTS TOO. On void the tie-lines and text are dawn
+   lifted off the drawing by a DARK shadow; on parchment both of those are
+   backwards — the ink goes dark and the halo goes light, or the type sits
+   in a black glow on paper. Same number, opposite meaning: ADR-077's own
+   finding about alphas across the flip. */
+[data-theme="light"] .hpl {
+  background: #e4dac9;
+  color: #14110c;
+}
+
+[data-theme="light"] .hpl__bar {
+  background: rgba(236, 227, 214, 0.94);
+  border-bottom-color: rgba(20, 17, 12, 0.14);
+}
+
+[data-theme="light"] .hpl__title {
+  color: #6e5216;
+}
+
+[data-theme="light"] .hpl__btn {
+  border-color: rgba(20, 17, 12, 0.24);
+  color: rgba(20, 17, 12, 0.72);
+}
+
+[data-theme="light"] .hpl__btn:hover {
+  border-color: #8a6b20;
+  color: #14110c;
+}
+
+[data-theme="light"] .hpl__btn[data-on] {
+  background: rgba(138, 107, 32, 0.14);
+  border-color: #8a6b20;
+  color: #14110c;
+}
+
+[data-theme="light"] .hpl__readout,
+[data-theme="light"] .hpl__slider,
+[data-theme="light"] .hpl__note {
+  color: rgba(20, 17, 12, 0.62);
+}
+
+[data-theme="light"] .hpl__lbl::after {
+  background: rgba(20, 17, 12, 0.36);
+}
+
+[data-theme="light"] .hpl__lbl-date {
+  /* `--gold-ink`, 4.9:1 — gold that has to carry like text (ADR-063 U2).
+     ⚠ Never raw `--gold` here: it measures ~1.2:1 on parchment. */
+  color: #6e5216;
+  text-shadow: 0 0 6px rgba(236, 227, 214, 0.95);
+}
+
+[data-theme="light"] .hpl__lbl-name {
+  color: #14110c;
+  text-shadow:
+    0 0 6px rgba(236, 227, 214, 0.95),
+    0 0 14px rgba(236, 227, 214, 0.8);
+}
+
+[data-theme="light"] .hpl__lbl[data-seat] .hpl__lbl-name {
+  color: #6e5216;
 }

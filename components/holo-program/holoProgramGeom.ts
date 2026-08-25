@@ -1,17 +1,22 @@
 /**
- * holoProgramGeom — the trajectory instrument's arithmetic, with no three.
+ * holoProgramGeom — the trajectory ARTIFACT's arithmetic, with no three.
  *
  * ⚠ THREE-FREE ON PURPOSE. `components/arcs` may import this file (the
  * `journeyScalars` / `ringMath` transport pattern); a `three` import here
  * would drag the WebGL stack into the arc route's First Load JS, which is
  * the one thing `.claude/rules/arcs.md` bans outright.
  *
- * ⚠ IT PLOTS A RECORD, NOT A METAPHOR (ADR-078 U1). Every number below is
- * read off something that happened: the waypoints' own `at` (authored from
- * real dates, registry-pinned sorted and unequal) and the board's adoption
- * step ladder. Nothing here invents a quantity — a ring's radius is the
- * adoption reach the flat board already drew as a tread, and a ring's
- * position is the date the flat board already placed at `left: var(--at)`.
+ * ⚠ ROUND 2: THIS IS A FREE OBJECT, NOT A CHART UNDER FIXED LABELS.
+ * Round 1 solved every ring's world x so it would land under a
+ * server-positioned DOM station, which forced ONE camera pose, forbade drag
+ * and rendered the rings nearly edge-on — the owner's "flat circles… the
+ * illusion of a 3D object". The alignment solver is gone; the object is
+ * orbited with real controls and the LABELS follow IT (see holoAnchorsRef).
+ *
+ * ⚠ IT STILL PLOTS THE RECORD. The waypoints keep their authored `at`
+ * spacing (unequal — the gaps are the reading) and a ring's radius is still
+ * the adoption reach at its date. What changed is that the record is now the
+ * BRIGHT LAYER of a machine rather than the whole drawing.
  */
 
 /** The waypoint shape the scene needs — structurally the arc's own
@@ -21,16 +26,37 @@ export interface HoloWaypoint {
   id: string;
   label: string;
   sub?: string;
-  /** The sentence on what the move WAS. ⚠ THE DRAWING LETTERS NONE OF THIS —
-   *  no glyph in the scene carries a string, and the DOM stations own every
-   *  word on this beat. It is declared so a harness can render production's
-   *  real three-line station block; a lab whose chrome is simpler than the
-   *  page's is measuring a different composition, which is exactly how the
-   *  first cut reported clearance the page did not have. */
+  /** The sentence on what the move WAS. ⚠ THE SCENE LETTERS NONE OF THIS —
+   *  no glyph in the drawing carries a string; the tracked DOM layer owns
+   *  every word. Declared so a harness renders production's real chrome. */
   note?: string;
   at: number;
   seat?: true;
 }
+
+/* ── Determinism ─────────────────────────────────────────────────────── */
+
+/**
+ * Mulberry32 — the repo's own seeded PRNG (`lib/brandmark/sampleShape.ts`).
+ *
+ * ⚠ EVERY SECONDARY LAYER IS SEEDED, NEVER `Math.random()`. A random draw in
+ * a render is a hydration mismatch and a screenshot that never reproduces —
+ * the flat board's own SCATTER comment says the same thing. The reference
+ * seeds its whole cluster from one integer (`seed: 368`); so does this.
+ */
+export function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** The object's seed. One integer determines every secondary layer, so the
+ *  artifact is identical on every render, machine and screenshot. */
+export const HOLO_SEED = 368;
 
 /* ── The adoption ladder ─────────────────────────────────────────────── */
 
@@ -41,8 +67,7 @@ export interface HoloWaypoint {
  * `M30 54H150V48H270V42H390V35H510V28H630V21H750V13H870V6H975` in a 1000×60
  * box — eight runs, rising, never interpolated. Here each run is
  * `[atStart, level]` with `at = (x − 30) / 945` and `level = (54 − y) / 48`,
- * so the two drawings encode ONE curve. A reader who measures the ring
- * radii against the flat board's treads gets the same answer.
+ * so the two drawings encode ONE curve.
  *
  * ⚠ A STEP FUNCTION, NOT A RAMP. `levelAt` never interpolates between
  * treads: adoption arrived in steps and the record says so. Unit-pinned.
@@ -68,354 +93,307 @@ export function levelAt(at: number): number {
   return level;
 }
 
-/* ── The instrument's world constants ────────────────────────────────── */
+/* ── The object's world ──────────────────────────────────────────────── */
 
-/** Ring radii in world units. The seat's ring is the widest because its
- *  adoption level is the highest — one encoding, read twice.
+/**
+ * The axis runs along world Z (into the screen at rest), which is what makes
+ * this read as a TUNNEL of rings rather than a row of them.
  *
- *  ⚠ The RATIO is the encoding and the absolute size is framing. Both were
- *  solved against the station lanes (see the pose block below), so moving
- *  one without re-running `holo-program-geom.test.ts` puts a rim back
- *  through a label. */
-export const R_MIN = 0.421;
-export const R_MAX = 0.715;
+ * ⚠ ROUND 1 RAN IT ALONG X and that is most of why it looked flat: with the
+ * axis across the screen, every ring is seen near edge-on and the stack has
+ * no depth to orbit through. Down the Z axis with the camera raised and
+ * swung off-centre, the rings open into ellipses and the object has an
+ * inside — the reference's own arrangement.
+ */
+export const AXIS_HALF = 2.55;
 
-/** A waypoint's ring radius: the adoption reach at its date. */
+/** A waypoint's position along the axis, from its authored date. The record's
+ *  UNEQUAL gaps survive verbatim: `at` maps linearly to depth. */
+export function waypointZ(at: number): number {
+  return -AXIS_HALF + at * (2 * AXIS_HALF);
+}
+
+/** Ring radii in world units — the adoption reach at that date, so the flat
+ *  board's ladder and this object encode ONE curve. The growth also gives the
+ *  object its cone silhouette. */
+export const R_MIN = 0.46;
+export const R_MAX = 1.02;
+
 export function ringRadius(at: number): number {
   return R_MIN + (R_MAX - R_MIN) * levelAt(at);
 }
 
-/** World Y of the time axis — solved with the radii so the ring stack sits
- *  centred in the band's clear middle. */
-export const AXIS_Y = 0.065;
-
-/** The platform rail's drop below the time axis.
- *
- *  ⚠ IT RUNS INSIDE THE RINGS, not under them. Below the stack there is no
- *  room — the largest ring's lower rim reaches 69 % of the band and the
- *  down-lane stations start at 70 % — so a rail beneath would be a rail
- *  through a label. Threaded through the rings it reads as what it is: a
- *  second track running parallel to the course, on the same wire. */
-export const PARALLEL_DY = -0.25;
-
-/** The ground plane the drop stems reach, and the graticule sits on. Just
- *  under the deepest rim, so the graticule reads as the surface the
- *  instrument stands on rather than as a floor in another room. */
-export const GROUND_Y = -0.78;
-
-/** One rim tick per this much circumference. A bigger ring carries more
- *  ticks BECAUSE IT IS BIGGER — declared chrome, never a second encoding.
- *  ⚠ Never map a tick count to a figure (47 Skills, 22 workshops); the
- *  registers letter those and a drawing that says it twice is this
- *  surface's said-twice defect. */
-export const TICK_PITCH = 0.17;
-
-/** Rim tick length, inward from the ring's rim. */
-export const TICK_LEN = 0.082;
-
-/** Tick count for a ring, floored so the smallest ring still reads as
- *  graduated. */
-export function tickCount(radius: number): number {
-  return Math.max(12, Math.round((2 * Math.PI * radius) / TICK_PITCH));
-}
-
-/** The seat's inner ring, as a fraction of its own radius — the doublet
- *  that reads as "seated" rather than as an eighth station. */
+/** The seat's inner ring, as a fraction of its own radius — the doublet that
+ *  reads as "seated" rather than as an eighth station. */
 export const SEAT_INNER_K = 0.82;
 
 /** Ring loop resolution. Matches HologramOrbits' SEGMENTS so the stroke
  *  draw-on has the same granularity the corridor's rings do. */
 export const RING_SEGMENTS = 180;
 
-/* ── Camera & rig ────────────────────────────────────────────────────── */
+/** One rim tick per this much circumference, and every Nth tick is drawn
+ *  long — the reference's `tickRing` grammar (`major` every 8th).
+ *  ⚠ Never map a tick count to a published figure: the registers letter
+ *  those, and a drawing that says it twice is this estate's said-twice
+ *  defect. Ticks are graduation, not data. */
+export const TICK_PITCH = 0.1;
+export const TICK_LEN = 0.1;
+export const TICK_MAJOR_EVERY = 8;
+
+export function tickCount(radius: number): number {
+  return Math.max(16, Math.round((2 * Math.PI * radius) / TICK_PITCH));
+}
+
+/** The bright arc's share of a ring's circumference — the reference's
+ *  `arcFill`. These are the bloom donors and the aberration's fringe. */
+export const ARC_FILL = 0.11;
+
+/** The floor grid. ⚠ It is the QUIETEST thing in the frame — a full plane
+ *  has far more ink than a stack of rings, so equal alpha is not equal
+ *  presence and the first cut's 0.15 made the ground the subject. */
+export const GRID_Y = -2;
+export const GRID_EXTENT = 5;
+export const GRID_SPACING = 1;
 
 /**
- * A LONG LENS, which is the reference's own move and here it is load-bearing
- * three times over.
+ * Where a waypoint's label hangs off its ring, in radians around the rim.
  *
- * 1. It flattens the stack into a drawing instead of bulging it into a
- *    scene — the whole reason that reference reads as an instrument.
- * 2. It keeps the radius encoding honest. Perspective amplifies a nearer
- *    ring, and that is only safe while it AGREES with the ladder; a wide
- *    lens exaggerates it enough to outrank the record.
- * 3. ⚠ IT IS WHAT STOPS A RING COLLAPSING INTO A LINE. All seven ring
- *    planes are parallel, so the camera lies in exactly one of them — and
- *    that ring projects to a bare vertical stroke. The plane sits at
- *    `x = camX·cos(yaw) − camZ·sin(yaw)`; pulling the camera back to 30
- *    puts it at **x ≈ +14.4** while the rightmost ring sits at x ≈ 3.9, so
- *    the whole course is clear of it. At the first cut's `camZ 7.2` it
- *    landed at x ≈ −1.6, mid-course, and the third station rendered as a
- *    line with nothing on screen to explain why.
+ * ⚠ ALTERNATING, and that is not decoration. Anchored at every ring's TOP
+ * the seven labels projected into one tight diagonal and overlapped into
+ * mush — the same collision the flat board solves with its up/down lanes.
+ * Splitting them above and below the cone doubles the pitch between
+ * same-side neighbours, which is what buys each one room.
  */
-export const CAM_FOV = 4.96;
-export const CAM_POS: readonly [number, number, number] = [0, 0.5, 30];
-export const CAM_TARGET: readonly [number, number, number] = [0, 0.05, 0];
-
-/**
- * The rig's resting pose.
- *
- * ⚠ THE YAW IS NEGATIVE SO THAT **NOW IS NEAREST**. `rotY` sends +x to −z,
- * so a positive yaw would push the terminus away and pull 2024 forward —
- * the record receding as it approaches the present. With −0.5 the seat sits
- * at depth 28.1 against 2024's 32.0, and since the seat is also the widest
- * ring, size and distance agree instead of fighting.
- */
-export const REST_YAW = -0.5;
-export const REST_PITCH = -0.1;
-
-/**
- * Pointer-look amplitude, AS A FRACTION OF THE FRAME rather than a fixed
- * angle.
- *
- * ⚠ An absolute amplitude cannot survive a lens change: rotating the rig by
- * θ moves the picture by roughly θ/fov of the frame, so the corridor mark's
- * 0.05 rad — a tasteful nudge at fov 21 — would swing this drawing by more
- * than half its own width at fov 5. Expressed as a fraction, the parallax
- * keeps its FEEL if the lens is ever re-tuned.
- */
-export const POINTER_FRAME_FRACTION = 0.035;
-export const POINTER_AMPLITUDE = ((CAM_FOV * Math.PI) / 180) * POINTER_FRAME_FRACTION;
-
-/* ── Pure projection, so the DOM and the drawing agree ───────────────── */
-
-type Vec3 = readonly [number, number, number];
-
-function rotX(p: Vec3, a: number): Vec3 {
-  const c = Math.cos(a);
-  const s = Math.sin(a);
-  return [p[0], c * p[1] - s * p[2], s * p[1] + c * p[2]];
+export function anchorAngle(index: number): number {
+  const up = index % 2 === 0;
+  // A slight lean off vertical so a label never sits exactly over the one
+  // two rings along.
+  const lean = ((index % 4) - 1.5) * 0.16;
+  return up ? Math.PI / 2 + lean : -Math.PI / 2 + lean;
 }
 
-function rotY(p: Vec3, a: number): Vec3 {
-  const c = Math.cos(a);
-  const s = Math.sin(a);
-  return [c * p[0] + s * p[2], p[1], -s * p[0] + c * p[2]];
-}
+/* ── The secondary structure (the reference's other ten layers) ──────── */
 
-/**
- * The rig transform: pitch in the local frame, then yaw about world Y.
- * ⚠ This must stay the arithmetic twin of the scene's
- * `rotation.set(pitch, yaw, 0, "YXZ")` — three composes 'YXZ' as
- * `Ry · Rx · Rz`, i.e. exactly `rotY(rotX(p))`. Change one, change both, or
- * the DOM stations stop landing on their own rings.
- */
-export function applyRig(p: Vec3, yaw = REST_YAW, pitch = REST_PITCH): Vec3 {
-  return rotY(rotX(p, pitch), yaw);
-}
-
-function sub(a: Vec3, b: Vec3): Vec3 {
-  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-}
-
-function cross(a: Vec3, b: Vec3): Vec3 {
-  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-}
-
-function dot(a: Vec3, b: Vec3): number {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
-
-function norm(a: Vec3): Vec3 {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1;
-  return [a[0] / l, a[1] / l, a[2] / l];
-}
-
-/**
- * Project a world point to normalised screen space (0 → 1, left → right and
- * TOP → bottom, matching DOM percentages rather than NDC).
- *
- * A hand-rolled pinhole rather than a three `Camera.project` call, because
- * `components/arcs` and the unit tests both need this answer without a GL
- * context — and because the solver below runs it a few hundred times per
- * resize, where a matrix round-trip would be waste.
- */
-export function projectToScreen01(
-  world: Vec3,
-  aspect: number,
-  camPos: Vec3 = CAM_POS,
-  camTarget: Vec3 = CAM_TARGET,
-  fovDeg: number = CAM_FOV
-): { x: number; y: number; behind: boolean } {
-  const zAxis = norm(sub(camPos, camTarget));
-  const xAxis = norm(cross([0, 1, 0], zAxis));
-  const yAxis = cross(zAxis, xAxis);
-  const d = sub(world, camPos);
-  const vx = dot(xAxis, d);
-  const vy = dot(yAxis, d);
-  const vz = dot(zAxis, d);
-  // The camera looks down its own −z, so a visible point has vz < 0.
-  const depth = -vz;
-  if (depth <= 1e-6) return { x: 0, y: 0, behind: true };
-  const t = Math.tan((fovDeg * Math.PI) / 360);
-  const ndcX = vx / (depth * t * aspect);
-  const ndcY = vy / (depth * t);
-  return { x: ndcX * 0.5 + 0.5, y: 0.5 - ndcY * 0.5, behind: false };
-}
-
-/** Where a point ON THE TIME AXIS lands horizontally, at rest. */
-export function axisScreenX(worldX: number, aspect: number): number {
-  return projectToScreen01(applyRig([worldX, AXIS_Y, 0]), aspect).x;
-}
-
-/** How far a rig-space point sits from the camera. Used by the guard that
- *  pins NOW as the nearest ring — depth is not visible in a screen position,
- *  so nothing else can ask this question. */
-export function cameraDepth(
-  world: Vec3,
-  camPos: Vec3 = CAM_POS,
-  camTarget: Vec3 = CAM_TARGET
-): number {
-  const zAxis = norm(sub(camPos, camTarget));
-  return -dot(zAxis, sub(applyRig(world), camPos));
-}
-
-/** The widest half-span the solver will consider, in world units. */
-const SOLVE_HALF_SPAN = 14;
-
-/**
- * Invert the projection: the world x on the time axis whose resting screen
- * position is `targetX01`.
- *
- * ⚠ THIS IS WHAT LETS THE DOM STAY SERVER-RENDERED. The seven stations are
- * absolutely positioned at `left: var(--at)` by a server component and are
- * pinned there by the smoke; rather than measuring the scene per frame and
- * writing positions back into the DOM, the SCENE moves to meet them. Solved
- * at mount and on resize only — never per frame, and never a feedback loop.
- *
- * Projection along the yawed axis is monotonic in x while the axis stays in
- * front of the camera, so a bisection is exact to any tolerance we care
- * about and cannot land on a second root.
- */
-export function solveAxisX(targetX01: number, aspect: number): number {
-  let lo = -SOLVE_HALF_SPAN;
-  let hi = SOLVE_HALF_SPAN;
-  const at = (x: number) => axisScreenX(x, aspect);
-  if (at(lo) > at(hi)) {
-    // Defensive: a future rig pose that flips the axis' screen direction.
-    [lo, hi] = [hi, lo];
-  }
-  for (let i = 0; i < 60; i++) {
-    const mid = (lo + hi) / 2;
-    if (at(mid) < targetX01) lo = mid;
-    else hi = mid;
-  }
-  return (lo + hi) / 2;
-}
-
-/**
- * The stations' horizontal insets, mirroring `--pg-stn-inset` on the flat
- * board: a station block is ~170px wide and centred on its own `at`, so the
- * course cannot run edge to edge without the first and last labels leaving
- * the band.
- */
-export const INSET_L = 0.075;
-export const INSET_R = 0.075;
-
-/** The screen position a waypoint's DOM station occupies, in 0 → 1. */
-export function stationScreenX(at: number): number {
-  return INSET_L + at * (1 - INSET_L - INSET_R);
-}
-
-export interface HoloRing {
-  id: string;
-  at: number;
-  /** World x on the time axis. */
-  x: number;
+export interface HoloShell {
+  z: number;
   radius: number;
-  seat: boolean;
-  /** Draw-on window in arrival-progress units. */
-  reveal: readonly [number, number];
+  /** `dotted` = a dash ring, `frame` = a thin continuous ring, `arc` = a
+   *  partial sweep. Three kinds is what stops the filler reading as a
+   *  repeat of the record's own rings. */
+  kind: "dotted" | "frame" | "arc";
+  /** Start angle and sweep, for `arc`. */
+  from: number;
+  sweep: number;
+  opacity: number;
 }
-
-export interface HoloLayout {
-  aspect: number;
-  rings: readonly HoloRing[];
-  /** The axis rail's world-x endpoints, and where the record's span sits. */
-  axisFrom: number;
-  axisTo: number;
-  /** The priors' dashed run-in, before the first station. */
-  priorFrom: number;
-  priorTo: number;
-  /** The adoption ladder's treads in world space, as [x, radius] samples
-   *  ordered along the axis — the ring rims' upper envelope. */
-  ladder: readonly (readonly [x: number, y: number])[];
-}
-
-/* ── Arrival choreography ────────────────────────────────────────────── */
 
 /**
- * The arrival's windows, in progress units. The drawing performs its own
- * timeline: the rings stroke on IN DATE ORDER, so a reader watching it
- * arrive is watching the record happen.
+ * The shells BETWEEN the record's rings.
  *
- * ⚠ IT PLAYS ONCE AND THEN THE INSTRUMENT IS STILL (ADR-021, ADR-078). At
- * progress 1 every write stops and the demand frameloop stops with it —
- * there is no idle animation on this estate, and the grain freezes for the
- * same reason (nothing resamples it).
+ * ⚠ THEY CARRY NO READING, and that is deliberate: the reference's density
+ * comes from eleven layers of structure with the tracked data as the bright
+ * few. Without them seven rings on an axis is a chart. With them the record
+ * sits inside a machine. They are seeded, so they never move.
+ *
+ * ⚠ They are also dimmer and thinner than any waypoint ring by construction
+ * (opacity ceiling below the record's floor), so the eye can always tell the
+ * record from the machine it lives in.
  */
-export const ARRIVAL_MS = 2400;
-export const W_GROUND: readonly [number, number] = [0.0, 0.16];
-export const W_AXIS: readonly [number, number] = [0.06, 0.26];
-export const W_PRIORS: readonly [number, number] = [0.1, 0.3];
-export const W_RINGS: readonly [number, number] = [0.14, 0.78];
-export const W_LADDER: readonly [number, number] = [0.4, 0.8];
-export const W_PARALLEL: readonly [number, number] = [0.55, 0.8];
-export const W_SEAT: readonly [number, number] = [0.78, 1.0];
+export function buildShells(count = 22, seed = HOLO_SEED): HoloShell[] {
+  const rnd = mulberry32(seed);
+  const shells: HoloShell[] = [];
+  const kinds: HoloShell["kind"][] = ["dotted", "frame", "arc"];
+  for (let i = 0; i < count; i++) {
+    const t = rnd();
+    const z = -AXIS_HALF - 0.5 + t * (2 * AXIS_HALF + 1);
+    // Shell radii ride the same cone the record does, loosened either way so
+    // the object has thickness rather than a single skin.
+    const along = (z + AXIS_HALF) / (2 * AXIS_HALF);
+    const base = R_MIN + (R_MAX - R_MIN) * Math.max(0, Math.min(1, along));
+    const radius = base * (0.55 + rnd() * 1.25);
+    const kind = kinds[Math.floor(rnd() * kinds.length)];
+    const from = rnd() * Math.PI * 2;
+    const sweep = 0.35 + rnd() * 2.1;
+    /* ⚠ THE CORRIDOR'S CONTRAST LAW. Its armillary runs decorative rings at
+       opacity 0.22–0.28 against structural rings at 0.62–0.74 — three times
+       dimmer — and THAT is what makes a dense ring set read as depth rather
+       than as clutter. These stay strictly under the record's own floor. */
+    shells.push({ z, radius, kind, from, sweep, opacity: 0.08 + rnd() * 0.14 });
+  }
+  return shells;
+}
 
-/** Each ring's own draw-on window inside `W_RINGS`, staggered by DATE so
- *  the stagger is the record's spacing rather than an even beat. */
+/** Line weights, split the way the corridor splits them: what carries the
+ *  record is twice as thick as what carries the depth. */
+export const LW_RECORD = 1.6;
+export const LW_SEAT = 2.3;
+export const LW_MARK_RING = 1.9;
+export const LW_SHELL = 0.85;
+
+/** The dust cloud's size — the reference's `particleCount: 2000`. */
+export const DUST_COUNT = 2000;
+export const DUST_SPREAD = 3.4;
+
+/** The wireframe core: nodes linked at this density, the reference's
+ *  `nodeCount: 6 / linkDensity: .35 / networkOpacity: .48`. */
+export const CORE_NODES = 7;
+export const CORE_LINK_DENSITY = 0.42;
+export const CORE_RADIUS = 0.5;
+
+/* ── Camera, pose and controls ───────────────────────────────────────── */
+
+/**
+ * A LONG-ISH LENS at a RAISED, SWUNG pose.
+ *
+ * ⚠ THE POSE IS THE WHOLE DIFFERENCE between round 1 and the reference. The
+ * reference's rings are coaxial too — what makes them read as a solid object
+ * is that the camera looks DOWN on the stack (elevation −16° to −27°) and
+ * off to one side (azimuth), so every ring opens into an ellipse and the
+ * stack has an interior. Round 1 sat on the axis' own level and got lines.
+ */
+export const CAM_FOV = 22;
+/** Orbit rest pose, in radians. Azimuth swings around Y, elevation lifts. */
+/**
+ * ⚠ SWUNG WELL OFF THE AXIS. At 18° the stack was nearly end-on: the seven
+ * rings piled into one another and the record was unreadable at rest, even
+ * though a drag immediately fixed it. The rest pose has to be the pose the
+ * object reads best in — the reader should not have to work for the first
+ * impression. At ~54° the barrel lies across the frame, the rings stay open
+ * ellipses, and the dated sequence is legible before anyone touches it.
+ */
+/** ⚠ NEGATIVE, so the record reads LEFT TO RIGHT. At +54° the barrel lay the
+ *  right way round but the dates ran backwards — 2024 on the right and Now on
+ *  the left — which is a timeline a Western reader has to read against the
+ *  grain. The sign is the whole fix. */
+export const REST_AZIMUTH = (-54 * Math.PI) / 180;
+export const REST_ELEVATION = (19 * Math.PI) / 180;
+/**
+ * ⚠ MEASURED, NOT GUESSED. The object spans `2·AXIS_HALF` (5.1) down its
+ * axis and `2·R_MAX` (2.04) across, and the near end sits closer to the
+ * camera than the target. At the first cut's 6.9 the visible height at the
+ * target was 2.68 — the object overflowed the frame and the near rings were
+ * enormous. A long lens needs standoff to match.
+ */
+export const CAM_DISTANCE = 15.6;
+
+/* ── The centre: the mark, and the ring it opens into ────────────────── */
+
+/**
+ * The Thoughtform brandmark sits at the origin, and the loops emerge from
+ * it. That is the method drawn, not decoration: the Arc — Navigate, Encode,
+ * Build — is *a renewing arc on live work*, and repeated arcs accumulate the
+ * map. Each ring is one dated beat of the engagement; the mark at their
+ * origin is what they all came out of.
+ *
+ * ⚠ `sampleBrandmark3D` bakes `MARK_SCALE = 1.74` in unconditionally, so its
+ * `armHomes` span a half-extent of ≈0.87 rather than 0.5. Every production
+ * consumer re-normalises after sampling and so does this one — `MARK_SCALE`
+ * below is applied to the mounted group, not to the sampler.
+ */
+export const MARK_SCALE = 1.4;
+
+/**
+ * The ring at the mark's shoulder.
+ *
+ * ⚠ IT IS AN ABSTRACT RING AND IT TRACES NOTHING (owner, 2026-08-25). The
+ * rhyme with Loop is carried by FORM — their product is a ring — not by a
+ * borrowed mark: there is no Loop asset in this repo, and the house design
+ * doctrine says Thoughtform.co never carries client identity. It is also the
+ * ONLY fully closed, unbroken ring in the object, which is what makes it
+ * read as the origin the others opened out of.
+ */
+export const MARK_RING_RADIUS = 1.28;
+
+/** How far the reader may tilt. Clamped so the object can never be viewed
+ *  from directly overhead or from underneath the floor grid. */
+export const POLAR_MIN = (52 * Math.PI) / 180;
+export const POLAR_MAX = (104 * Math.PI) / 180;
+
+/** Orbit damping, and the slow drift that keeps it alive when untouched. */
+export const ORBIT_DAMPING = 0.075;
+export const AUTO_ROTATE_SPEED = 0.32;
+
+/** The camera's resting position, derived from the pose. Spherical → world. */
+export function restCameraPosition(): readonly [number, number, number] {
+  const r = CAM_DISTANCE;
+  const y = Math.sin(REST_ELEVATION) * r;
+  const h = Math.cos(REST_ELEVATION) * r;
+  return [Math.sin(REST_AZIMUTH) * h, y, Math.cos(REST_AZIMUTH) * h];
+}
+
+/* ── Idle life (the reference's breathe / flicker / twinkle) ──────────── */
+
+/**
+ * ⚠ WALL-CLOCK MOTION, AND IT IS A DELIBERATE EXCEPTION (ADR-080 U1, owner).
+ * ADR-021's law is that instruments on this estate are static once arrived;
+ * the owner ruled that this artifact is alive, as the reference is. It is
+ * scoped: only this object, only while it is on screen and the document is
+ * visible, and it never captures the wheel or moves the page.
+ */
+export const BREATHE = 0.09;
+export const BREATHE_HZ = 0.11;
+export const FLICKER = 0.49;
+export const TWINKLE = 0.57;
+
+/** The intro draw-on. The one part of round 1 that worked: the rings arrive
+ *  in DATE ORDER, so watching it build is watching the record happen. */
+export const INTRO_MS = 2000;
+
 export function ringReveal(at: number): readonly [number, number] {
-  const span = W_RINGS[1] - W_RINGS[0];
-  const each = 0.16;
-  const start = W_RINGS[0] + at * Math.max(0, span - each);
+  const each = 0.3;
+  const start = at * (1 - each);
   return [start, start + each];
 }
 
-/** Build the whole layout for one canvas aspect. Pure — the lab, the unit
- *  tests and the scene all read the same object. */
-export function holoLayout(waypoints: readonly HoloWaypoint[], aspect: number): HoloLayout {
-  const rings = waypoints.map((wp) => ({
-    id: wp.id,
-    at: wp.at,
-    x: solveAxisX(stationScreenX(wp.at), aspect),
-    radius: ringRadius(wp.at),
-    seat: wp.seat === true,
-    reveal: ringReveal(wp.at),
-  }));
+/* ── Post-processing (the reference's own numbers) ───────────────────── */
 
-  const axisFrom = solveAxisX(0.02, aspect);
-  const axisTo = solveAxisX(0.98, aspect);
-  const firstX = rings.length > 0 ? rings[0].x : solveAxisX(INSET_L, aspect);
-
-  /* The ladder rides the rings' upper rims, sampled at every tread AND at
-     every station, so it is the same step function in world space that the
-     flat board draws in its band. */
-  const ladder: (readonly [number, number])[] = [];
-  const sampleAts = [...ADOPTION_TREADS.map(([a]) => a), ...waypoints.map((w) => w.at), 1].sort(
-    (a, b) => a - b
-  );
-  let lastLevel = Number.NaN;
-  for (const a of sampleAts) {
-    const x = solveAxisX(stationScreenX(a), aspect);
-    const y = AXIS_Y + ringRadius(a);
-    const level = levelAt(a);
-    if (level !== lastLevel && ladder.length > 0) {
-      // The riser: step up in place, so the ladder never ramps.
-      ladder.push([x, ladder[ladder.length - 1][1]]);
-      lastLevel = level;
-    } else if (Number.isNaN(lastLevel)) {
-      lastLevel = level;
-    }
-    ladder.push([x, y]);
-  }
-
-  return {
-    aspect,
-    rings,
-    axisFrom,
-    axisTo,
-    priorFrom: axisFrom,
-    priorTo: firstX,
-    ladder,
-  };
+export interface HoloPost {
+  bloom: number;
+  bloomRadius: number;
+  aberration: number;
+  grain: number;
+  vignette: number;
+  dofFocusRange: number;
+  dofBokeh: number;
 }
+
+/** ⚠ NOT `as const` — the lab drives these live from sliders, and literal
+ *  types would make every override a compile error. */
+export const POST: HoloPost = {
+  /** ⚠ Bloom LIFTS the bright arcs; it must not melt the line work. The
+   *  first cut ran intensity 0.9 against a 0.28 threshold and every hairline
+   *  in the object bloomed into a white rope. */
+  bloom: 0.6,
+  bloomRadius: 0.7,
+  /**
+   * ⚠ THE FRINGE IS A SIGNATURE, NOT A REGISTRATION ERROR. Round 1 ran it at
+   * 0.00012 (invisible); round 2 took the reference's own 0.0014 — but that
+   * value is theirs for a picture with FEW bright bodies, and on an object
+   * made of dozens of hairline rings it separated every line into red/green/
+   * blue and read as a misprint. Halfway is where it fringes the accent arcs
+   * and leaves the structure clean.
+   */
+  /**
+   * ⚠ OFF, AND THAT IS A MEASUREMENT (2026-08-25). The reference runs .0016
+   * and it works THERE because its bright bodies are few and large. This
+   * object is dense fine line work plus a 2000-point cloud, and on those the
+   * pass does not fringe an edge — it SEPARATES each mote and hairline into
+   * distinct red and green marks, so the whole artifact read as coloured
+   * confetti / a misprint. Captured with it on and off to be sure.
+   * The lab's slider starts here, so it can be dialled back in by eye.
+   */
+  aberration: 0,
+  grain: 0.07,
+  vignette: 0.5,
+  /** ⚠ DEPTH OF FIELD IS RETIRED (owner, 2026-08-25: "a bit too much blur").
+   *  It was the most expensive pass and the one softening the whole object;
+   *  a wireframe instrument wants its lines sharp. The fields stay so the
+   *  lab can re-enable it for a comparison, but nothing reads them. */
+  dofFocusRange: 0,
+  dofBokeh: 0,
+};
+
+/** The kept-dark ground. Between the house void and the reference's slate,
+ *  staying in the warm family. ⚠ A LITERAL: it does not flip with the theme
+ *  (ADR-058 Lane 0 — a hologram reads on void). */
+export const HOLO_PLATE = "#0d0c0a";
