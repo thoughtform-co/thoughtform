@@ -2,10 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { WIREFRAME_STATIONS, expectWireframeBay, readToolBay } from "./helpers/toolBay";
 
-import {
-  SERVICES_PROOF_RUNWAY_VH,
-  VOIDWALKER_CHARACTER_STAGE,
-} from "../../components/landing/home-v2/unifiedServicesInstrument";
+import { SERVICES_PROOF_RUNWAY_VH } from "../../components/landing/home-v2/unifiedServicesInstrument";
 
 /**
  * Services card ring smoke (ADR-029).
@@ -1984,19 +1981,17 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       ambient: document.documentElement.hasAttribute("data-services-ambient"),
       mode: document.getElementById("voidwalker")?.getAttribute("data-vw-mode") ?? null,
       bg: getComputedStyle(document.getElementById("voidwalker")!).backgroundColor,
-      chReady: document
-        .querySelector<HTMLElement>("#voidwalker .ch")
-        ?.hasAttribute("data-ch-ready"),
+      quiet: !!document.querySelector("#voidwalker .vw--quiet"),
     }));
-    if (VOIDWALKER_CHARACTER_STAGE) {
-      // Character stage owns this rect; no travel mode is written.
-      expect(during.mode).toBeNull();
-      expect(during.chReady).toBe(true);
-    } else {
-      expect(during.mode).toBe("travel");
-      // Transparent over the live canvas, on the `--vw-bg-in` shield.
-      expect(during.bg).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
-    }
+    // ⚠ THE STATION IS QUIET (2026-08-26) and this is the guard that it
+    // still COVERS. Its interior was removed with ADR-082's character
+    // stage; what may not go with it is the opaque-cover role — the
+    // ADR-030 §6 seam bug, recorded five times. A quiet station writes
+    // no `data-vw-mode`, so the non-travel opaque path applies, and an
+    // opaque ground here is what ends the ambient hold cleanly.
+    expect(during.mode).toBeNull();
+    expect(during.quiet).toBe(true);
+    expect(during.bg).not.toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
     // The canvas the beats fly through / that the stage sits over is
     // still alive on both paths — the ADR-030 §6 seam bug pins it.
     expect(during.ambient).toBe(true);

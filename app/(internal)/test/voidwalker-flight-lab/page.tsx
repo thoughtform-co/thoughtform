@@ -18,7 +18,6 @@ import "@/components/landing/home-v2/about/about-stage.css";
 import "@/components/landing/home-v2/voidwalker/voidwalker.css";
 import "@/components/landing/home-v2/voidwalker/voidwalker-wire.css";
 import "@/components/landing/home-v2/voidwalker/voidwalker-travel.css";
-import "@/components/landing/home-v2/voidwalker/character/voidwalker-character.css";
 import "@/components/landing/v7/theme.css";
 import "@/components/landing/v7/rail-instruments/rail-instruments.css";
 import "./flight-lab.css";

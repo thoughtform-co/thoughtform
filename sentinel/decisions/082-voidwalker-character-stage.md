@@ -118,3 +118,95 @@ The one flag rolls it back byte-identically. The Meshy assets and the
 skill live outside the marketing bundle: no import chain reaches them
 from `LandingPage`; they only surface when the stage mounts. The record
 (voidwalkerData.ts) is unchanged, so its guards do not move.
+
+---
+
+## Update 1 — the stage is removed, the hologram replaces it (2026-08-26, owner)
+
+**Everything above describes a surface that no longer exists.** Read it for
+the era registry (which survives) and for the record of why the 3D route was
+tried; nothing else in it is live.
+
+### What the owner ruled
+
+Two rulings on the same day, after reading the assets the pipeline actually
+produced:
+
+1. **The 3D route is pinned** — "I don't really like this, not your fault. I
+   think it's just the limitations of Meshy where we just use images." Meshy
+   builds an excellent SILHOUETTE from a four-view sheet and cannot carry a
+   likeness: measured, the hand tattoos come back **absent** (not faint) and
+   the face arrives soft with a multi-view blend seam. That is arithmetic, not
+   tuning — the hands are ~3 % of frame, so their linework is gone at any
+   texture resolution. Rigging and idle animation both work (24-joint
+   skeleton, 591-action library, 5 + 3 credits) but skinning also **softens
+   the tailored silhouette** that was the mesh's one strength.
+2. **The About→stage portal is rejected outright** — "the transition we have
+   now from our About section to the Voidwalker timeline section sucks."
+
+### What replaces it
+
+A HOLOGRAM: a translucent Tensor-gold scanline figure of the owner emerging
+from the brandmark, which flattens and descends to become the projector base,
+with era panels around it. Assets come from the generative image/video route
+this project had already proven identity-stable. Look-dev runs at
+`/test/voidwalker-holo-lab` before anything mounts on the marketing page.
+
+**The architecture is "bake the LIGHT, code the SCREEN".** The asset carries
+identity, wardrobe and gold emissive lighting on pure black; the SITE carries
+every raster artifact — scanlines, flicker, translucency, chroma, the
+materialize — in CSS. Three reasons, and the second is the load-bearing one:
+VP9's 4:2:0 subsampling turns baked 1–2px scanlines into moiré; **an
+all-black wardrobe vanishes under a screen blend unless the figure is already
+lit**, because black contributes nothing additively; and one CSS block
+retunes six eras and both media types where twelve bakes would not.
+
+⚠ **The first wave proved the middle claim and corrected the prompt.** Asking
+for a "gold monochrome emissive" figure returned a BROWN GRADE — a man in a
+brown suit. Asking for "a volumetric hologram" is what gave the model
+permission to actually EMIT. The shipping block borrows that phrasing and
+then subtracts the raster explicitly.
+
+### What was deleted
+
+The character stage's whole presentation: `voidwalker/character/**` (four
+files), `useCharacterStageScroll`, `characterStageRef`, its markup test, its
+CSS sheet + the `.ch` light-theme block in `theme.css`, and
+`/test/voidwalker-avatar-lab`. The portal with it: `characterStagePortalRef`,
+`useCharacterStagePortalReceiver`, `ABOUT_EXIT_PORTAL_WINDOW`,
+`aboutExitPortalT` and `character-portal.test.ts`.
+
+⚠ **`VOIDWALKER_CHARACTER_STAGE` IS DELETED, NOT FLIPPED.** A flag standing at
+`false` implies the surface is one boolean from returning; it is not.
+
+⚠ **THE PORTAL SHIPPED A DEFECT ITS OWN TEST COULD NOT SEE.** `about-stage.css`
+summed `--about-exit` AND `--about-portal` into one `translateX`, plus a 1.6×
+scale, on a comment claiming the hook wrote 0 for whichever channel it was not
+driving. It did not — both were written every frame, so the cluster slid right
+_and_ toward centre _and_ scaled at once. `character-portal.test.ts` pinned
+`aboutExitPortalT` equal to `aboutExitT` at all 101 samples, which is the
+clearest possible evidence the second envelope bought nothing; what it never
+asked was whether two consumers were driving one transform. **A test that
+proves two clocks agree says nothing about who is allowed to write.**
+
+### What survives, and why
+
+- `lib/voidwalker/characterEras.ts` + its test — the six-era registry is the
+  hologram's registry too.
+- `public/models/voidwalker/thoughtform.glb` — pinned, not dead.
+- `VoidwalkerTimelineStation` and the ADR-081 travel machinery — UNMOUNTED but
+  retained. The shed, the travel clock and the flight config are entangled with
+  the corridor, and a mass deletion taken mid-pivot risks regressions in a
+  surface nobody is currently looking at. The excision rides the commit that
+  lands the hologram.
+
+### The station is QUIET meanwhile
+
+`VoidwalkerStation` renders the masthead and the hand-on line: the chapter
+names itself and points to `#contact`. ⚠ This is not decoration — `#voidwalker`
+is the corridor's OPAQUE COVER (ADR-030 §6, recorded five times), so the
+station keeps its id, its `data-station`, an opaque ground and a height worth
+covering with. It writes no `data-vw-mode`, so the non-travel opaque path
+applies by construction. `services-ring-smoke` asserts exactly that pair;
+`landing-corridor-smoke`'s ADR-081 U4 shed case is skipped and KEPT, because
+the machinery it guards is still on disk.

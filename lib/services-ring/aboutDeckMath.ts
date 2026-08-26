@@ -84,23 +84,12 @@ export const ABOUT_EXIT_WINDOW: readonly [number, number] = [0.74, 0.96];
  *  it is not the thing the eye sees leave. */
 export const ABOUT_DECK_FADE_WINDOW: readonly [number, number] = [0.92, 1.0];
 
-/** ADR-082 · the character-stage PORTAL exit window.
- *
- *  The exit clock is REPURPOSED when the character stage is on: the
- *  portrait moves to the CENTRE of the frame (not off to the right),
- *  grows on the same envelope, and the reader is transported into the
- *  stage. Same window as the exit slide so the ADR-047 hold is
- *  byte-identical up to 0.74; only the transform target changes.
- *
- *  Consumed by:
- *    - `about-stage.css` — `--about-portal` drives the cluster's
- *      translate to viewport centre (0 → 1) and its scale to fill the
- *      viewport.
- *    - `characterStagePortalRef` — the same 0..1 clock the character
- *      stage's viewport reads on its receiver side, so its cross-fade
- *      from still ↔ 3D lines up with the portrait's arrival.
- */
-export const ABOUT_EXIT_PORTAL_WINDOW: readonly [number, number] = [0.74, 0.96];
+/* ⚠ ADR-082's `ABOUT_EXIT_PORTAL_WINDOW` / `aboutExitPortalT` LIVED HERE
+   AND ARE DELETED (2026-08-26, owner). They were `ABOUT_EXIT_WINDOW` and
+   `aboutExitT` under another name — the portal test pinned them equal at
+   all 101 samples — so the second pair bought nothing but a way for two
+   consumers to drive one transform at once, which is exactly what went
+   wrong. A future entry choreography reuses the exit clock directly. */
 
 export function aboutFlipT(aboutP: number): number {
   return smootherstep(ABOUT_FLIP_WINDOW[0], ABOUT_FLIP_WINDOW[1], clamp01(aboutP));
@@ -120,15 +109,6 @@ export function aboutExitT(aboutP: number): number {
 /** The deck's terminal safety fade (WebGL back material only). */
 export function aboutDeckFadeT(aboutP: number): number {
   return smootherstep(ABOUT_DECK_FADE_WINDOW[0], ABOUT_DECK_FADE_WINDOW[1], clamp01(aboutP));
-}
-
-/** ADR-082 · the portal exit envelope — the same clock as `aboutExitT`
- *  but repurposed for the character-stage entry: instead of driving a
- *  translate off-screen right, the consumer reads it as the FLIGHT
- *  progress (0 = portrait at rest in its About slot, 1 = portrait
- *  centred and scaled to fill the frame). */
-export function aboutExitPortalT(aboutP: number): number {
-  return smootherstep(ABOUT_EXIT_PORTAL_WINDOW[0], ABOUT_EXIT_PORTAL_WINDOW[1], clamp01(aboutP));
 }
 
 /* ── Deck geometry constants ─────────────────────────────────────────── */

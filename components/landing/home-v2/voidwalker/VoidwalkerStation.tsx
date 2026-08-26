@@ -5,9 +5,8 @@ import { createPortal } from "react-dom";
 
 import { useVoidwalkerScroll } from "../hooks/useVoidwalkerScroll";
 import { useVoidwalkerTravelScroll } from "../hooks/useVoidwalkerTravelScroll";
-import { VOIDWALKER_CHARACTER_STAGE, VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
+import { VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
 import { MediaLightbox, useWalkthrough } from "../services/casefile/MediaLightbox";
-import { CharacterStage } from "./character/CharacterStage";
 import { FilmPlate } from "./wireframes/FilmPlate";
 import { VOIDWALKER_WIREFRAMES } from "./wireframes/voidwalkerWireframes";
 import { wholeYears, yearFrac } from "@/lib/voidwalker/voidwalkerTravelClock";
@@ -472,17 +471,52 @@ function VoidwalkerTimelineStation() {
 }
 
 /**
- * VoidwalkerStation — the station's interior.
+ * VoidwalkerStation — the station's interior, currently QUIET.
  *
- * ⚠ ONE STATION, TWO SURFACES (ADR-082). The station shell (the
- * opaque cover for `useCorridorExitScroll`, the rail manifest row,
- * the section readout, the nav drawer entry) is unchanged; only the
- * INTERIOR toggles between the character stage (`VOIDWALKER_CHARACTER_STAGE`
- * on) and the timeline (ADR-074 / ADR-081, the fallback).
+ * ⚠ THE STATION IS HOLDING ITS SLOT, NOT SHOWING ITS RECORD (owner,
+ * 2026-08-26). ADR-082's character stage was removed along with the
+ * About→stage portal that fed it, and the hologram composition that
+ * replaces it is still in look-dev at `/test/voidwalker-holo-lab`.
+ * Rather than leave a surface the owner had already rejected on a
+ * public page, the interior is reduced to the masthead: the chapter
+ * names itself, states its claim, and hands on.
  *
- * Rollback is a one-line flag flip in `unifiedServicesInstrument.ts`.
+ * ⚠ WHAT MAY NOT CHANGE WHILE IT IS QUIET. The station SHELL is
+ * load-bearing far outside this file — `#voidwalker` is the corridor's
+ * opaque cover (`useCorridorExitScroll`'s `nextStation` query and
+ * home-v2.css's `html[data-corridor-exit="true"] #…` rule name the same
+ * station; ADR-030 §6, recorded five times), and it holds a rail
+ * manifest row, the section readout and a nav drawer entry. So the
+ * section keeps its id, its `data-station`, its opaque ground and a
+ * height worth covering with. It writes no `data-vw-mode`, so the
+ * non-travel opaque path applies by construction.
+ *
+ * `VoidwalkerTimelineStation` above is UNMOUNTED but retained: the
+ * ADR-074 record still renders through it, and its travel machinery is
+ * entangled with the corridor (the structural shed, the travel clock,
+ * the flight config). Excising that is its own pass and rides the
+ * commit that lands the hologram — not a mass deletion taken mid-pivot.
  */
 export function VoidwalkerStation() {
-  if (VOIDWALKER_CHARACTER_STAGE) return <CharacterStage />;
-  return <VoidwalkerTimelineStation />;
+  return (
+    <div className="vw vw--quiet">
+      <div className="vw__band">
+        <header className="vw-head">
+          <p className="vw-head__kicker">{VOIDWALKER_HEAD.title}</p>
+          <p className="vw-head__lede">
+            <Segments segments={VOIDWALKER_HEAD.lede} />
+          </p>
+        </header>
+        <footer className="vw-foot">
+          <p className="vw-foot__line">
+            <Segments segments={VOIDWALKER_HEAD.foot} />
+          </p>
+          <a className="vw-foot__next" href={VOIDWALKER_HEAD.next.href}>
+            {VOIDWALKER_HEAD.next.label}
+            <span aria-hidden="true"> ↓</span>
+          </a>
+        </footer>
+      </div>
+    </div>
+  );
 }

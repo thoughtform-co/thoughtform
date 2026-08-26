@@ -40,6 +40,34 @@
   display: block;
 }
 
+/* ── 0 · THE QUIET STATION ────────────────────────────────────────────
+   The interior is between instruments (2026-08-26): ADR-082's character
+   stage is deleted and the hologram that replaces it is in look-dev. The
+   station still has to HOLD ITS SLOT — `#voidwalker` is the corridor's
+   opaque cover (ADR-030 §6) — so this is a real, finished short section
+   rather than an empty div: the chapter names itself, states its claim
+   and hands on.
+
+   ⚠ THE GROUND IS OPAQUE AND THE HEIGHT IS DELIBERATE. Both are the
+   cover contract, not styling: a transparent or hairline-tall station
+   ends the services ambient hold on a hard cut. `services-ring-smoke`
+   asserts exactly these two properties. */
+.vw--quiet {
+  min-height: clamp(420px, 62svh, 620px);
+  display: grid;
+  align-content: center;
+  padding-block: clamp(64px, 9svh, 120px);
+}
+.vw--quiet .vw__band {
+  display: grid;
+  gap: clamp(28px, 5svh, 56px);
+}
+.vw--quiet .vw-head,
+.vw--quiet .vw-foot {
+  grid-column: 1 / -1;
+  max-width: 62ch;
+}
+
 /* ── 1 · The band, and the grid ───────────────────────────────────── */
 /* The station already carries --hud-content-inset padding, so
    --rail-inset lands the text edge exactly on --band-margin (ADR-048).

@@ -2,20 +2,10 @@
 
 import { useEffect, type RefObject } from "react";
 
-import { ABOUT_DECK_STAGE, VOIDWALKER_CHARACTER_STAGE } from "../unifiedServicesInstrument";
-import {
-  aboutCopyT,
-  aboutExitPortalT,
-  aboutExitT,
-  aboutFlipT,
-  aboutShiftT,
-} from "@/lib/services-ring/aboutDeckMath";
+import { ABOUT_DECK_STAGE } from "../unifiedServicesInstrument";
+import { aboutCopyT, aboutExitT, aboutFlipT, aboutShiftT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
 import { invalidateAboutSlot, writeAboutSlotRect } from "@/lib/services-ring/aboutSlotRef";
-import {
-  setCharacterStagePortalActive,
-  setCharacterStagePortalProgress,
-} from "@/lib/voidwalker/characterStagePortalRef";
 import { clamp01 } from "@/lib/math";
 
 /** About-stage beats (0 flip · 1 shift+copy · 2 hold) for `data-about-step`. */
@@ -81,7 +71,6 @@ export function useAboutStageScroll(
     let currentShift = -1;
     let currentCopy = -1;
     let currentExit = -1;
-    let currentPortal = -1;
 
     const capableMedia = window.matchMedia(
       "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
@@ -124,12 +113,10 @@ export function useAboutStageScroll(
       // clear them so a re-engage starts from a known state.
       about?.style.removeProperty("--about-bg-in");
       stage?.style.removeProperty("--about-exit");
-      stage?.style.removeProperty("--about-portal");
       aboutStageProgressRef.current.progress = 0;
       aboutStageProgressRef.current.engaged = false;
-      setCharacterStagePortalActive(false);
       invalidateAboutSlot();
-      currentStep = currentFlip = currentShift = currentCopy = currentExit = currentPortal = -1;
+      currentStep = currentFlip = currentShift = currentCopy = currentExit = -1;
     };
 
     const write = () => {
@@ -184,13 +171,6 @@ export function useAboutStageScroll(
       const shift = aboutShiftT(p);
       const copyIn = aboutCopyT(p);
       const exit = aboutExitT(p);
-      // ⚠ ADR-082: the portal envelope shares the exit clock and only
-      // engages when the character stage owns the through-line surface.
-      // The DOM stage reads BOTH `--about-exit` and `--about-portal`
-      // and applies the one that matches its data-about-exit attribute,
-      // so the two transforms cannot both take effect on the same
-      // frame — a lockstep by CSS selector rather than by hook state.
-      const portal = VOIDWALKER_CHARACTER_STAGE ? aboutExitPortalT(p) : 0;
       if (Math.abs(flip - currentFlip) >= 0.001) {
         stage.style.setProperty("--about-flip", flip.toFixed(4));
         currentFlip = flip;
@@ -206,15 +186,6 @@ export function useAboutStageScroll(
       if (Math.abs(exit - currentExit) >= 0.001) {
         stage.style.setProperty("--about-exit", exit.toFixed(4));
         currentExit = exit;
-      }
-      if (VOIDWALKER_CHARACTER_STAGE) {
-        if (Math.abs(portal - currentPortal) >= 0.001) {
-          stage.style.setProperty("--about-portal", portal.toFixed(4));
-          currentPortal = portal;
-        }
-        // The receiver bus — the character stage viewport reads this.
-        setCharacterStagePortalActive(true);
-        setCharacterStagePortalProgress(portal);
       }
       const step = Math.max(0, Math.min(ABOUT_STEP_COUNT - 1, Math.floor(p * ABOUT_STEP_COUNT)));
       if (step !== currentStep) {

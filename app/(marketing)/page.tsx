@@ -17,10 +17,10 @@ import "@/components/landing/home-v2/voidwalker/voidwalker-wire.css";
 // because every rule in it overrides the vertical composition and is
 // gated on `data-vw-mode="travel"`.
 import "@/components/landing/home-v2/voidwalker/voidwalker-travel.css";
-// The character stage (ADR-082) — replaces the timeline INTERIOR when
-// `VOIDWALKER_CHARACTER_STAGE` is on. Its `.ch*` rules live in a
-// different namespace, so this sheet composes rather than overrides.
-import "@/components/landing/home-v2/voidwalker/character/voidwalker-character.css";
+// (ADR-082's character-stage sheet was imported here and is deleted with
+// the stage — 2026-08-26. The hologram composition that replaces it will
+// bring its own `.vwh*` sheet, in this slot, once it graduates out of
+// `/test/voidwalker-holo-lab`.)
 // Theme sheet LAST (ADR-058): its `html[data-theme="light"]` cascade has
 // to win over every route sheet above. Imported per-route, never from
 // globals.css, so admin / astrogation / /test/* stay dark unconditionally.

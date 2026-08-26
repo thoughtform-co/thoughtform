@@ -1,7 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { VOIDWALKER_CHARACTER_STAGE } from "../../components/landing/home-v2/unifiedServicesInstrument";
-
 /**
  * Production homepage corridor smoke (ADR-018 / ADR-021 / ADR-022).
  *
@@ -382,16 +380,19 @@ test.describe("Homepage corridor smoke", () => {
       !viewport || viewport.width < 961,
       "voidwalker travel is desktop-only; the shed has no fallback path to guard here"
     );
-    // ⚠ ADR-082 supersedes ADR-081 on composition — with the character
-    // stage on, `#voidwalker` no longer engages the travel writer, so
-    // the shed never activates (the character stage is its own opaque
-    // cover). The station's exit-time restore is guarded elsewhere
-    // (`services-ring-smoke`'s ambient walk). Skip when the flag is on
-    // rather than assert an interior that no longer exists.
-    test.skip(
-      VOIDWALKER_CHARACTER_STAGE,
-      "character stage owns the voidwalker interior; the tunnel shed is inert"
-    );
+    // ⚠ RETIRED, NOT DELETED (2026-08-26). This case walks the ADR-081
+    // U4 structural shed, which only exists during INTERIOR TRAVEL —
+    // and `#voidwalker` has no interior to travel through: the station
+    // is quiet while the hologram composition is in look-dev. The shed
+    // gate (`vwTravelInterior()`) is a pure function of `vwTravelRef`,
+    // which stays inert at 0 with no travel writer engaged, so there is
+    // nothing here to measure rather than something failing.
+    //
+    // It is kept, skipped, because the machinery it guards is still on
+    // disk and un-excised — the day a voidwalker interior engages travel
+    // again, this is the test that catches a painter hidden and never
+    // restored. Deleting it would take that guard with it silently.
+    test.skip(true, "the voidwalker station is quiet; interior travel never engages");
     // 1. Baseline — walk to the Arc. `arcY` is where we must come back
     //    to in step 3; the two marks have to be the SAME place or the
     //    weight comparison is measuring the scroll position, not the shed.

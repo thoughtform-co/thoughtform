@@ -20,7 +20,6 @@ const SHEETS = [
   "components/landing/home-v2/voidwalker/voidwalker.css",
   "components/landing/home-v2/voidwalker/voidwalker-wire.css",
   "components/landing/home-v2/voidwalker/voidwalker-travel.css",
-  "components/landing/home-v2/voidwalker/character/voidwalker-character.css",
   "components/landing/v7/theme.css",
 ];
 

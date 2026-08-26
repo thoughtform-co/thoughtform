@@ -26,32 +26,45 @@ decision (2026-08-23); `.voidwalker*` is the `#about` bio's CSS block and is
 never written here — this section is `.vw*` / `.vw-wire*` (or `.ch*` when
 the character stage is on — see below).
 
-⚠ **ADR-082 (2026-08-26): the station's INTERIOR is a character-selection
-stage when `VOIDWALKER_CHARACTER_STAGE` is on.** The station shell, the
-rail manifest row, the section readout, the nav drawer entry and the
-ADR-030 §6 cover-lockstep are UNCHANGED — the flag toggles ONLY the
-inside of the station. When on:
+⚠ **THE STATION IS QUIET (2026-08-26, owner) — see
+[ADR-082 U1](../sentinel/decisions/082-voidwalker-character-stage.md).**
+ADR-082's character stage and the About→stage portal that fed it are
+DELETED, not flagged off: the owner pinned the Meshy 3D route ("the
+limitations of Meshy") and rejected the transition outright. The
+replacement is a HOLOGRAM — a Tensor-gold scanline figure emerging from
+the brandmark-as-projector, era panels around it — in look-dev at
+`/test/voidwalker-holo-lab` until it is approved.
 
-- `VoidwalkerStation` renders `<CharacterStage />` (in `voidwalker/character/`)
-  instead of the vertical timeline / travel — every timeline hook stays
-  inert (no `data-vw-mode`, no `data-vw-ready`, no `--vw-b`);
-- the CSS namespace becomes `.ch*` (`voidwalker-character.css`), which
-  DOES NOT overlap `.vw*` — one file, one namespace, no cross-cascade;
-- the era registry is `lib/voidwalker/characterEras.ts` (six eras, each
-  pointing at a `VOIDWALKER_BEATS` entry by id — the record is one, the
-  presentation is two);
-- the About runway's exit clock has TWO transform targets: the ADR-047
-  slide-right (`--about-exit`) and the ADR-082 portal-to-centre
-  (`--about-portal`), gated by the flag; the receiver bus is
-  `characterStagePortalRef.ts`.
+`VoidwalkerStation` renders the masthead and the hand-on line, and takes
+no flag. What may NOT change while it is quiet:
+
+- ⚠ **the OPAQUE COVER role.** `#voidwalker` keeps its id, its
+  `data-station`, an opaque ground and a height worth covering with —
+  `useCorridorExitScroll`'s `nextStation` query and home-v2.css's
+  `html[data-corridor-exit="true"] #…` rule name the same station
+  (ADR-030 §6, recorded five times). It writes no `data-vw-mode`, so the
+  non-travel opaque path applies by construction. `services-ring-smoke`
+  asserts that pair;
+- the rail manifest row, the section readout and the nav drawer entry;
+- `lib/voidwalker/characterEras.ts` — the six-era registry SURVIVES and
+  is what the hologram keys off (the record is one, the presentation is
+  two).
+
+⚠ `VOIDWALKER_CHARACTER_STAGE` is gone from `unifiedServicesInstrument.ts`;
+so are `characterStagePortalRef`, `useCharacterStagePortalReceiver`,
+`ABOUT_EXIT_PORTAL_WINDOW` and `aboutExitPortalT`. The About exit is the
+ADR-047 slide-right alone again. ⚠ `VoidwalkerTimelineStation` and the
+ADR-081 travel machinery below are UNMOUNTED but retained — they are
+entangled with the corridor and their excision rides the hologram's
+landing commit, so read the travel sections as a record of code that is
+still on disk rather than of a live surface.
 
 ⚠ **The rest of this rule still binds** — the record is still the
-record, the wireframes are still on disk (fallback path), the cover
-lockstep is still the ADR-030 §6 seam bug. The `.claude/skills/
-voidwalker-avatar/` skill is the offline pipeline that produces the era
-character sheets and Meshy GLBs — `public/models/voidwalker/<era>.glb`,
-`public/images/voidwalker/era-<era>.jpg`, ≤ 4 MB per GLB
-(`scripts/probe-voidwalker-models.mjs`).
+record, the wireframes are still on disk (and are the era panels' reuse
+path), the cover lockstep is still the ADR-030 §6 seam bug. The
+`.claude/skills/voidwalker-avatar/` skill is the offline pipeline; it now
+produces hologram stills and transparent video rather than GLBs
+(`public/models/voidwalker/thoughtform.glb` stays, pinned not dead).
 
 ⚠ **SINCE ADR-081 THIS SECTION HAS TWO PRESENTATION MODES, ONE CONTENT
 TREE**, and **[ADR-081 U2](../sentinel/decisions/081-voidwalker-time-tunnel.md)

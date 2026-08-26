@@ -142,34 +142,23 @@ export const ABOUT_DECK_STAGE = true;
 export const VOIDWALKER_TIME_TUNNEL = true;
 
 /**
- * Feature flag for the VOIDWALKER CHARACTER STAGE (ADR-082, 2026-08-26).
+ * ⚠ `VOIDWALKER_CHARACTER_STAGE` (ADR-082) IS DELETED, NOT FLIPPED
+ * (2026-08-26, owner). The character stage it gated — a rotating Meshy
+ * model per era, with the About portrait flying through a portal into
+ * it — is removed from the tree along with that portal. The owner pinned
+ * the 3D route after reading the meshes ("the limitations of Meshy") and
+ * rejected the transition outright; the replacement is a HOLOGRAM
+ * composition still in look-dev at `/test/voidwalker-holo-lab`.
  *
- * ON, the through-line stops being a timeline (vertical OR travel) and
- * becomes a video-game character-selection screen: a rotating 3D model
- * of the owner in the current era, an era rail below, an in-canvas HUD
- * carrying the ADR-074 record's own copy per era. The About portrait
- * (a WebGL card in the same canvas since ADR-047) flies to CENTER on the
- * exit clock, the corridor camera advances through it, and the reader
- * lands inside the stage — no route change, no second `<Canvas>`.
+ * A flag left standing at `false` would have implied the stage is one
+ * boolean from returning. It is not — its components, its CSS sheet, its
+ * scroll clock, its ref buses and its lab are gone. `VoidwalkerStation`
+ * renders a QUIET interior meanwhile and takes no flag at all.
  *
- * What the flag gates, and only this:
- *   - `VoidwalkerStation`'s render tree: character stage when on, the
- *     ADR-074 / ADR-081 timeline when off. Same station shell, same
- *     rect, same opaque cover role for `useCorridorExitScroll`;
- *   - the corridor canvas's era mesh mount (behind the same media
- *     gate as the corridor: 961px + no PRM + WebGL);
- *   - the About exit retarget — `ABOUT_EXIT_PORTAL_WINDOW` opens on
- *     the same exit clock, so the portrait's slide-right becomes a
- *     slide-to-center-and-through only when this flag is on;
- *   - the Meshy model preloads (`useGLTF.preload(...)`).
- *
- * ⚠ Stacked with `VOIDWALKER_TIME_TUNNEL`: flag-off restores the tunnel
- * (if it is on) OR the vertical timeline; both flags off is the ADR-074
- * baseline. Never both on the same reader — this flag WINS when on.
- * Mobile / reduced-motion / corridor-fallback keep a static era rail
- * (per-era front sheet PNG) regardless of the flag.
+ * What survives, deliberately: the era registry (`characterEras.ts`) and
+ * `public/models/voidwalker/thoughtform.glb`, because the hologram reuses
+ * the first and the second cost real credits to make.
  */
-export const VOIDWALKER_CHARACTER_STAGE = true;
 
 /**
  * Feature flag for the SERVICES PROOF CASEFILE (ADR-056, 2026-07-28 —
