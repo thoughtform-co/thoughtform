@@ -109,6 +109,25 @@
   color: var(--dawn);
 }
 
+/* ── Hologram interior (ADR-082 U2) ───────────────────────────────────
+   The .vw base above is a THREE-TRACK GRID built for the ADR-074
+   timeline (spine lane between two columns), and capped at --band-max
+   with --rail-inset. The hologram is a different composition -- it has
+   its own three-track grid with a masthead row on top -- and it takes
+   the WHOLE station, so reset the parent. Every .vwh* rule below then
+   resolves against the station's own width, exactly like the lab. */
+.vw--hologram {
+  display: block;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+.vw--hologram > .vwh {
+  width: 100%;
+  max-width: var(--band-max);
+  margin-inline: auto;
+}
+
 /* ── 2 · The masthead ─────────────────────────────────────────────── */
 /* Title in the title column, lede in the body column — the services
    masthead's split. The masthead NEVER moves or fades (owner law): its

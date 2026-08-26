@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 
+import { VoidwalkerHologram } from "./hologram/VoidwalkerHologram";
 import { useVoidwalkerScroll } from "../hooks/useVoidwalkerScroll";
 import { useVoidwalkerTravelScroll } from "../hooks/useVoidwalkerTravelScroll";
 import { VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
@@ -471,52 +472,30 @@ function VoidwalkerTimelineStation() {
 }
 
 /**
- * VoidwalkerStation — the station's interior, currently QUIET.
+ * VoidwalkerStation — the station's interior is the HOLOGRAM composition
+ * (ADR-082 U2, graduated from `/test/voidwalker-holo-lab` on
+ * 2026-08-26 after owner review).
  *
- * ⚠ THE STATION IS HOLDING ITS SLOT, NOT SHOWING ITS RECORD (owner,
- * 2026-08-26). ADR-082's character stage was removed along with the
- * About→stage portal that fed it, and the hologram composition that
- * replaces it is still in look-dev at `/test/voidwalker-holo-lab`.
- * Rather than leave a surface the owner had already rejected on a
- * public page, the interior is reduced to the masthead: the chapter
- * names itself, states its claim, and hands on.
- *
- * ⚠ WHAT MAY NOT CHANGE WHILE IT IS QUIET. The station SHELL is
- * load-bearing far outside this file — `#voidwalker` is the corridor's
- * opaque cover (`useCorridorExitScroll`'s `nextStation` query and
- * home-v2.css's `html[data-corridor-exit="true"] #…` rule name the same
- * station; ADR-030 §6, recorded five times), and it holds a rail
- * manifest row, the section readout and a nav drawer entry. So the
- * section keeps its id, its `data-station`, its opaque ground and a
- * height worth covering with. It writes no `data-vw-mode`, so the
- * non-travel opaque path applies by construction.
+ * ⚠ WHAT MAY NOT CHANGE. The station SHELL is load-bearing outside this
+ * file — `#voidwalker` is the corridor's opaque cover
+ * (`useCorridorExitScroll`'s `nextStation` query and home-v2.css's
+ * `html[data-corridor-exit="true"] #…` rule name the same station;
+ * ADR-030 §6, recorded five times). It keeps its id, its `data-station`,
+ * a rail manifest row, the section readout and the nav drawer entry.
+ * The hologram interior writes no `data-vw-mode`, so the non-travel
+ * opaque path applies by construction. `services-ring-smoke` asserts
+ * the ambient-hold pair.
  *
  * `VoidwalkerTimelineStation` above is UNMOUNTED but retained: the
  * ADR-074 record still renders through it, and its travel machinery is
  * entangled with the corridor (the structural shed, the travel clock,
- * the flight config). Excising that is its own pass and rides the
- * commit that lands the hologram — not a mass deletion taken mid-pivot.
+ * the flight config). Excising that is its own pass — never a mass
+ * deletion taken mid-integration.
  */
 export function VoidwalkerStation() {
   return (
-    <div className="vw vw--quiet">
-      <div className="vw__band">
-        <header className="vw-head">
-          <p className="vw-head__kicker">{VOIDWALKER_HEAD.title}</p>
-          <p className="vw-head__lede">
-            <Segments segments={VOIDWALKER_HEAD.lede} />
-          </p>
-        </header>
-        <footer className="vw-foot">
-          <p className="vw-foot__line">
-            <Segments segments={VOIDWALKER_HEAD.foot} />
-          </p>
-          <a className="vw-foot__next" href={VOIDWALKER_HEAD.next.href}>
-            {VOIDWALKER_HEAD.next.label}
-            <span aria-hidden="true"> ↓</span>
-          </a>
-        </footer>
-      </div>
+    <div className="vw vw--hologram">
+      <VoidwalkerHologram />
     </div>
   );
 }

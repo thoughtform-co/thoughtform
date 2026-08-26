@@ -1,0 +1,863 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   VOIDWALKER HOLOGRAM — production presentation sheet.
+   ═══════════════════════════════════════════════════════════════════════
+
+   The `.vwh*` composition that lives on the home page. Extracted from the
+   lab (`app/(internal)/test/voidwalker-holo-lab/holo-lab.css`) unchanged
+   — the split is deliberate: this sheet ships, the lab's `.hll*` chrome
+   does not. Both surfaces render the SAME `.vwh` DOM, so anything tuned
+   in the lab lands here without a translation.
+
+   NAMESPACE. `.vw*` is the ADR-074 timeline and `.voidwalker*` is the
+   About bio's block; `.ch*` was the deleted character stage. `.vwh*`
+   collides with none of them.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ═══ §A · THE HOLOGRAM ═════════════════════════════════════════════ */
+
+/* ⚠ ONE SCREEN. This is a landing section, so the whole composition —
+   panels, figure, base, rail — lives inside 100svh and the figure takes
+   whatever the rail and the padding leave. `grid-template-rows` is
+   EXPLICIT (body / rail) because the first cut let four panels
+   auto-place onto four rows and the section measured 1411px against a
+   595px viewport, putting the figure below the fold. */
+.vwh {
+  --vwh-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --vwh-display: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+  --vwh-gold-rgb: var(--gold-rgb, 202, 165, 84);
+  --vwh-void-rgb: var(--void-rgb, 10, 9, 8);
+  /* ⚠ THE HEAD-LINE ANCHOR (owner, 2026-08-26, third review). The head
+     sits ~10% into the media rect from its TOP; the side stacks and the
+     era title all seat to that line, so a short stack never rises and a
+     tall stack never sinks. Derived from the media's own box in
+     `HoloLabShell` via `--vwh-head-y`, floored at 12svh. */
+  --vwh-head-y: clamp(84px, 11svh, 120px);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.82fr) minmax(0, 1fr);
+  /* head-band | body | rail. The head-band's height IS the head line, so
+     everything below aligns to a common floor and everything WITHIN it
+     is one masthead across the whole stage. */
+  grid-template-rows: var(--vwh-head-y) minmax(0, 1fr) auto;
+  gap: 0 clamp(16px, 2.4vw, 44px);
+  height: 100svh;
+  padding: 0 clamp(20px, 4vw, 64px);
+  overflow: hidden;
+}
+
+/* The side stacks. Each is a column of panels beside the figure; they
+   scroll nothing and clip nothing — a panel that will not fit is a copy
+   problem, not a layout one. */
+.vwh__side {
+  grid-row: 2;
+  align-self: start;
+  /* Head-line offset: the drawn head sits ~10svh below the media's own
+     top (i.e. the head band's bottom). Sides drop by that same amount so
+     their first row seats to the head. */
+  padding-top: clamp(24px, 6.5svh, 64px);
+  display: grid;
+  gap: clamp(24px, 4.2svh, 44px);
+  min-height: 0;
+}
+.vwh__side[data-side="l"] {
+  grid-column: 1;
+  justify-items: end;
+}
+.vwh__side[data-side="r"] {
+  grid-column: 3;
+  justify-items: start;
+}
+
+/* ── The figure column ───────────────────────────────────────────────
+   The figure and the base are ONE column so the base sits under the
+   boots at every viewport rather than being positioned against the
+   stage and drifting away from the feet as the figure scales. */
+.vwh__column {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  min-height: 0;
+  height: 100%;
+}
+
+/* ── The slot ────────────────────────────────────────────────────────
+   ⚠ `isolation: isolate` IS LOAD-BEARING, NOT TIDINESS. The media blends
+   additively; on the real station this sits inside a sticky, transformed
+   stage, and a transformed ancestor already forms a stacking context —
+   so without a floor of our own the blend resolves against a TRANSPARENT
+   group and screen-over-nothing paints the asset's black ground as an
+   opaque black rectangle over the corridor. `.vwh__ground` is that floor.
+   Since screen-with-black is the identity, the corridor still reads
+   through the wash's soft edges. NEVER try to blend "down to" the canvas. */
+.vwh__slot {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: end center;
+  width: min(100%, 620px);
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+}
+
+/* ⚠ THE FLOOR MUST BE OPAQUE ACROSS THE WHOLE MEDIA RECT, AND A VIGNETTE
+   IS NOT A FLOOR. This started as a soft radial wash and painted a black
+   box: `plus-lighter` over a TRANSPARENT backdrop returns the SOURCE, so
+   everywhere the vignette had already faded out, the asset's near-black
+   ground composited as opaque near-black — measured rgb(1,1,1) inside the
+   rect against the page's rgb(10,9,8). The failure the file's own header
+   warns about, produced by the very layer meant to prevent it.
+
+   So the fill is FLAT and total, and the softness moves to a mask, where
+   feathering removes the layer instead of thinning it. On a dark page it
+   is invisible (same void); over the live corridor it reads as the
+   projection well the figure is cast into — which is what the light
+   theme already had to become anyway, since additive light cannot exist
+   on parchment. */
+.vwh__ground {
+  position: absolute;
+  inset: -6% -16% -3%;
+  background: radial-gradient(
+    ellipse 58% 46% at 50% 97%,
+    rgba(var(--vwh-gold-rgb), 0.07),
+    transparent 74%
+  );
+  pointer-events: none;
+}
+
+/* ⚠ THE ASSET'S BLACK IS NOT #000000, AND THAT PAINTS A RECTANGLE.
+   Screen-with-pure-black is the identity, which is the whole reason this
+   architecture works — but the asset is a JPEG, so its ground arrives
+   around #050505 with ring noise, and screening THAT over the void
+   lands ~#0f0e0d: four levels lighter than the page, in a hard-edged
+   rectangle the eye finds immediately. Two answers, both applied: crush
+   the near-blacks back down, and dissolve the frame's own edge so
+   whatever survives has nowhere to draw a straight line.
+
+   ⚠ The mask is on the WRAP, not the media — the media carries the blend,
+   and a mask on a blended element is composited before the blend on some
+   engines, which puts the fade INSIDE the additive result instead of
+   around it. */
+.vwh__media-wrap {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  /* ⚠ THE FLOOR LIVES HERE, ON THE SAME ELEMENT AS THE MEDIA, AND THAT
+     IS THE WHOLE FIX. Three attempts failed before this one because they
+     treated the black box as an edge problem: a soft vignette behind the
+     media (the vignette fades out before the media does, so the outer
+     media is unfloored), then a masked opaque plate behind it (same gap,
+     smaller), then a mask on the media (feathering an unfloored blend
+     only makes a softer box). `plus-lighter` over TRANSPARENT returns the
+     SOURCE — so anywhere the media paints without a floor beneath it, the
+     asset's near-black arrives opaque. Floor and media on ONE element
+     fade under ONE mask, so a lit pixel and its floor are removed
+     together and the ungrounded case cannot occur.
+
+     ⚠ ONE MASK PER ELEMENT, too. This began as a two-layer `mask-image`
+     with `mask-composite: intersect` carrying edge + scan together, and
+     it silently did not apply. The wrap carries the EDGE, the media
+     carries the SCAN. */
+  background: rgb(var(--vwh-void-rgb));
+  -webkit-mask-image: radial-gradient(
+    ellipse 66% 78% at 50% 60%,
+    #000 40%,
+    rgba(0, 0, 0, 0.6) 72%,
+    transparent 92%
+  );
+  mask-image: radial-gradient(
+    ellipse 66% 78% at 50% 60%,
+    #000 40%,
+    rgba(0, 0, 0, 0.6) 72%,
+    transparent 92%
+  );
+  /* The reveal wipes up from the base. `clip-path` is animated only for
+     the 900ms event — see the phase rules below. */
+  clip-path: inset(0 0 0 0);
+}
+
+.vwh__media {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  mix-blend-mode: var(--holo-blend, plus-lighter);
+  opacity: var(--holo-alpha, 0.92);
+  /* ⚠ ONE GLOW, NOT TWO. A second drop-shadow at 70px on a 700px-tall
+     figure washed the whole band amber — a hologram glows AT ITS EDGE,
+     it does not light the room. */
+  /* Contrast pivots at mid-grey, so it lifts the lit body while pushing
+     the asset's imperfect JPEG ground back down toward true black —
+     which is what keeps screen-with-black an identity against the page. */
+  filter: brightness(1.04) contrast(1.16) saturate(1.15)
+    drop-shadow(0 0 calc(18px * var(--holo-glow, 1)) rgba(var(--vwh-gold-rgb), 0.22));
+  /* ⚠ THE SCAN CADENCE IS THE FIGURE'S OWN ALPHA. As an overlay it
+     multiplied the bare ground too and painted a box; as a mask it can
+     only ever remove the figure's light, so the ground stays the page. */
+  -webkit-mask-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.45) 0 1px,
+    #000 1px var(--holo-scan, 3px)
+  );
+  mask-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.45) 0 1px,
+    #000 1px var(--holo-scan, 3px)
+  );
+}
+
+@supports not (mix-blend-mode: plus-lighter) {
+  .vwh__media {
+    mix-blend-mode: screen;
+  }
+}
+
+/* A CLEAN (untinted) asset has no gold of its own — it borrows the
+   house duotone so the lab can show what the architecture rejects
+   rather than only asserting it. */
+.vwh__slot[data-form="clean"] .vwh__media {
+  filter: grayscale(1) sepia(0.5) hue-rotate(-9deg) saturate(1.35) brightness(1.14) contrast(1.14)
+    drop-shadow(0 0 calc(24px * var(--holo-glow, 1)) rgba(var(--vwh-gold-rgb), 0.22));
+}
+
+/* The projection cast — light in the air between base and figure. */
+.vwh__cone {
+  position: absolute;
+  inset: 42% 12% 0;
+  mix-blend-mode: plus-lighter;
+  /* ⚠ AN ADDITIVE LAYER MUST FADE ON EVERY SIDE, NOT JUST ONE. This was a
+     `linear-gradient(to top, …)` and it lit a hard-edged RECTANGLE around
+     the legs — the last visible box after the floor was fixed. A linear
+     ramp fades along one axis only; its left, right and bottom edges are
+     cliffs, and `plus-lighter` renders a cliff as a seam. The radial fades
+     in every direction, so the cone has no edges to draw. */
+  background: radial-gradient(
+    ellipse 62% 96% at 50% 104%,
+    rgba(var(--vwh-gold-rgb), calc(0.14 * var(--holo-glow, 1))),
+    rgba(var(--vwh-gold-rgb), calc(0.05 * var(--holo-glow, 1))) 42%,
+    transparent 76%
+  );
+  pointer-events: none;
+}
+
+/* ── The materialize ─────────────────────────────────────────────────
+   The figure wipes up out of the base, an edge bar rides the reveal
+   line, and a short settle follows. The chroma split lives HERE and
+   only here: a constant fringe reads as a broken screen, an event
+   fringe reads as a projection resolving (the themeGlitch grammar). */
+.vwh__edge {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 0;
+  height: 2px;
+  background: var(--gold-ink-lit, #f0c86a);
+  box-shadow: 0 0 12px rgba(var(--vwh-gold-rgb), 0.8);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vwh__slot[data-phase="reveal"] .vwh__media-wrap {
+  animation: vwhReveal var(--holo-reveal-ms, 900ms) cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: clip-path, transform;
+}
+.vwh__slot[data-phase="reveal"] .vwh__edge {
+  animation: vwhEdge var(--holo-reveal-ms, 900ms) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.vwh__slot[data-phase="settle"] .vwh__media {
+  animation: vwhSettle 640ms steps(8, end) both;
+}
+
+@keyframes vwhReveal {
+  from {
+    clip-path: inset(100% 0 0 0);
+    transform: translateY(14%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: translateY(0);
+  }
+}
+@keyframes vwhEdge {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  92% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--vwh-reveal-h, 70svh)));
+  }
+}
+@keyframes vwhSettle {
+  0% {
+    filter: brightness(1.5) contrast(1.2) saturate(0.7)
+      drop-shadow(2px 0 0 rgba(220, 193, 118, 0.6)) drop-shadow(-2px 0 0 rgba(176, 139, 66, 0.5));
+  }
+  100% {
+    filter: brightness(1.06) contrast(1.1) saturate(1.15)
+      drop-shadow(0 0 calc(18px * var(--holo-glow, 1)) rgba(var(--vwh-gold-rgb), 0.22));
+  }
+}
+
+/* The resting flicker — two loops at coprime periods so the beat never
+   reads as a loop. */
+.vwh__slot[data-phase="rest"] .vwh__media {
+  animation:
+    vwhFlickA 7.3s ease-in-out infinite,
+    vwhFlickB 11s ease-in-out infinite;
+}
+@keyframes vwhFlickA {
+  0%,
+  96%,
+  100% {
+    opacity: var(--holo-alpha, 0.92);
+  }
+  97.4% {
+    opacity: calc(var(--holo-alpha, 0.92) * 0.86);
+  }
+}
+@keyframes vwhFlickB {
+  0%,
+  47%,
+  100% {
+    filter: brightness(1.06) contrast(1.1) saturate(1.15)
+      drop-shadow(0 0 calc(18px * var(--holo-glow, 1)) rgba(var(--vwh-gold-rgb), 0.22));
+  }
+  48.6% {
+    filter: brightness(1.13) contrast(1.1) saturate(1.15)
+      drop-shadow(0 0 calc(26px * var(--holo-glow, 1)) rgba(var(--vwh-gold-rgb), 0.28));
+  }
+}
+
+/* ── The projector base ──────────────────────────────────────────────
+   ⚠ A MOCK. On the real page the site's brandmark flattens and descends
+   into this position; the base is where the mark ENDS UP, not a graphic
+   the section draws. Kept here so the composition can be judged. */
+.vwh__base {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(300px, 52%);
+  height: clamp(34px, 6svh, 58px);
+  margin-top: -2%;
+}
+.vwh__base__disc {
+  position: absolute;
+  inset: 22% 0 22%;
+  border: 1px solid rgba(var(--vwh-gold-rgb), 0.55);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(var(--vwh-gold-rgb), 0.22),
+    rgba(var(--vwh-gold-rgb), 0.06) 60%,
+    transparent 78%
+  );
+}
+.vwh__base__ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(var(--vwh-gold-rgb), 0.22);
+  border-radius: 50%;
+}
+.vwh__base__glow {
+  position: absolute;
+  inset: -140% -10%;
+  background: radial-gradient(
+    ellipse 50% 60% at 50% 100%,
+    rgba(var(--vwh-gold-rgb), 0.16),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* ── The panels ──────────────────────────────────────────────────────
+   ⚠ NO BOXES (owner, 2026-08-26, second review). The first cut wrapped
+   every content group in a bordered card with a wash and a lit head bar
+   — "a glorified PowerPoint". The reference boards carry structure with
+   TYPE, one thin rule under a section title, and NEGATIVE SPACE; the
+   frames in the Cyberpunk set are the monitors' own bezels, not a
+   license to box copy. So a "panel" here is typography: kicker + rule +
+   content, bare on the void. The ONE edge that survives is on the film
+   poster — an image needs containment against black; a paragraph does
+   not. */
+.vwh__panel {
+  align-self: center;
+  display: grid;
+  gap: 10px;
+  max-width: 36ch;
+  width: 100%;
+}
+
+/* The section head: kicker left, designator right, ONE thin rule under.
+   This rule is the whole structure — it is what separates sections, so
+   nothing else gets to draw a line. */
+.vwh__panel__head {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid rgba(var(--vwh-gold-rgb), 0.42);
+}
+/* ⚠ THE SECTION HEADER IS THE DISPLAY FACE AT 700 IN DAWN (owner,
+   2026-08-26, weights review): variant 4 of four. It carries the
+   authority the Starfield reference reads with — near-white sans in a
+   real weight — and lets the gold roles beneath step DOWN, so a reader
+   sees the section title first without hunting. PT Mono at any size
+   sits back; the mono only ships one weight in this build. */
+.vwh__panel__kicker {
+  font-family: var(--vwh-display);
+  font-weight: 700;
+  font-size: 13.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.98);
+}
+.vwh__panel__tag {
+  font-family: var(--vwh-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  /* 0.45 measured 3.76:1 on the bare void. */
+  color: rgba(var(--dawn-rgb), 0.62);
+  text-align: right;
+}
+
+/* The panel title (bio's sub-line, kept small: the era's DISPLAY name
+   is the masthead above the figure now). */
+.vwh__panel__title {
+  margin: 0;
+  font-family: var(--vwh-display);
+  font-size: clamp(14px, 1.05vw, 17px);
+  line-height: 1.2;
+  color: rgba(var(--dawn-rgb), 0.94);
+}
+.vwh__panel__motto {
+  margin: 0;
+  font-family: var(--vwh-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  color: rgba(var(--vwh-gold-rgb), 0.9);
+}
+.vwh__panel__body {
+  margin: 0;
+  font-family: var(--vwh-display);
+  font-size: clamp(12px, 0.92vw, 13.5px);
+  line-height: 1.5;
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+
+/* The bio's foot — a sub-kicker and its line. Space separates it from
+   the prose; the section rule stays the head's alone. */
+.vwh__panel__foot {
+  margin: 4px 0 0;
+  display: grid;
+  gap: 4px;
+  font-family: var(--vwh-mono);
+  font-size: 9.5px;
+  line-height: 1.5;
+}
+.vwh__panel__foot__k {
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--vwh-gold-rgb), 0.82);
+}
+.vwh__panel__foot__v {
+  color: rgba(var(--dawn-rgb), 0.62);
+}
+
+/* ── The era masthead ─────────────────────────────────────────────────
+   THE ERA TITLE IS NOT A ROW IN THE RIGHT STACK. Owner ruling (2026-08-26):
+   it steps out to display scale as a masthead over the figure, standalone,
+   because it is the section's own name. The right stack keeps the era's
+   description; the title crowns the whole composition. Everything below
+   the head band -- the two side stacks and the figure -- aligns to this
+   band's bottom edge. */
+.vwh__mast {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  justify-self: center;
+  text-align: center;
+  padding-bottom: clamp(6px, 1svh, 12px);
+  display: grid;
+  gap: 6px;
+}
+.vwh__mast {
+  gap: 4px;
+}
+.vwh__mast__kicker {
+  margin: 0;
+  font-family: var(--vwh-mono);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(var(--vwh-gold-rgb), 0.7);
+}
+.vwh__mast__title {
+  margin: 0;
+  font-family: var(--vwh-display);
+  font-weight: 500;
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.05;
+  color: rgba(var(--dawn-rgb), 0.96);
+}
+.vwh__mast__year {
+  margin: 0;
+  font-family: var(--vwh-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: rgba(var(--vwh-gold-rgb), 0.72);
+}
+
+/* ── Facts ─────────────────────────────────────────────────────────────
+   Label left, value right, NOTHING between them — the reference's
+   resistance grid has no per-row furniture; rules belong to section
+   heads alone. */
+.vwh__facts {
+  margin: 0;
+  display: grid;
+  gap: 9px;
+}
+.vwh__facts__row {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 14px;
+}
+.vwh__facts__k {
+  margin: 0;
+  font-family: var(--vwh-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--vwh-gold-rgb), 0.82);
+  white-space: nowrap;
+}
+.vwh__facts__v {
+  margin: 0;
+  font-family: var(--vwh-display);
+  font-size: clamp(11.5px, 0.88vw, 13px);
+  line-height: 1.35;
+  color: rgba(var(--dawn-rgb), 0.9);
+  text-align: right;
+}
+
+/* ── Press ─────────────────────────────────────────────────────────────
+   Headline in prose, source on one mono line under it. The boxed outlet
+   chip was another frame; the name in the ink rung says the same thing
+   with zero furniture. */
+.vwh__press-stack {
+  display: grid;
+  gap: 16px;
+}
+.vwh__press {
+  display: grid;
+  gap: 5px;
+  text-decoration: none;
+  color: inherit;
+}
+a.vwh__press:hover .vwh__press__headline,
+a.vwh__press:focus-visible .vwh__press__headline {
+  color: rgba(var(--dawn-rgb), 1);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(var(--vwh-gold-rgb), 0.5);
+}
+.vwh__press__headline {
+  margin: 0;
+  font-family: var(--vwh-display);
+  font-size: clamp(11.5px, 0.9vw, 13px);
+  line-height: 1.4;
+  color: rgba(var(--dawn-rgb), 0.88);
+}
+.vwh__press__meta {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  font-family: var(--vwh-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.vwh__press__outlet {
+  color: rgba(var(--vwh-gold-rgb), 0.85);
+}
+.vwh__press__date {
+  color: rgba(var(--dawn-rgb), 0.58);
+}
+.vwh__press__date::before {
+  content: "·";
+  margin: 0 6px;
+  color: rgba(var(--dawn-rgb), 0.35);
+}
+
+/* ── Transmission ────────────────────────────────────────────────────
+   THE POSTER IS THE AFFORDANCE (owner, 2026-08-26): the video's own
+   frame, 16:9, under the hologram's scanline, a play ring at centre,
+   the title on a caption bar. A text row with a diamond read as
+   nothing; a thumbnail reads as a video before a single word does. The
+   whole figure is one button. */
+.vwh__film {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+.vwh__film__frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  /* The one surviving edge: an image needs containment against black. */
+  border: 1px solid rgba(var(--vwh-gold-rgb), 0.24);
+  transition: border-color 0.18s ease;
+}
+.vwh__film:hover .vwh__film__frame,
+.vwh__film:focus-visible .vwh__film__frame {
+  border-color: rgba(var(--vwh-gold-rgb), 0.55);
+}
+.vwh__film__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* The section's own raster — the same cadence the figure wears, so the
+   poster reads as ON this instrument rather than pasted onto it. */
+.vwh__film__scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.34) 0 1px, transparent 1px 3px);
+  mix-blend-mode: multiply;
+}
+/* The play mark: one gold ring, one filled triangle. It brightens and
+   grows a touch on hover — the only motion the plate has. */
+.vwh__film__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(var(--vwh-gold-rgb), 0.85);
+  border-radius: 999px;
+  background: rgba(var(--vwh-void-rgb), 0.55);
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease;
+}
+.vwh__film__play::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 53%;
+  transform: translate(-50%, -50%);
+  border-style: solid;
+  border-width: 7px 0 7px 12px;
+  border-color: transparent transparent transparent var(--gold-ink-lit, #f0c86a);
+}
+.vwh__film:hover .vwh__film__play,
+.vwh__film:focus-visible .vwh__film__play {
+  transform: translate(-50%, -50%) scale(1.08);
+  background: rgba(var(--vwh-void-rgb), 0.75);
+}
+/* The caption bar under the frame — title left, duration right. */
+.vwh__film__bar {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.vwh__film__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--vwh-display);
+  font-size: clamp(11.5px, 0.9vw, 13px);
+  line-height: 1.3;
+  color: rgba(var(--dawn-rgb), 0.9);
+}
+.vwh__film__dur {
+  flex: 0 0 auto;
+  font-family: var(--vwh-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  /* ⚠ 0.42 measured 3.41:1 on the void. */
+  color: rgba(var(--dawn-rgb), 0.6);
+}
+
+/* ── The rail ────────────────────────────────────────────────────────*/
+.vwh__rail {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: flex;
+  justify-content: center;
+  gap: clamp(8px, 1.4vw, 22px);
+  padding: clamp(10px, 2svh, 20px) 0 clamp(14px, 3svh, 26px);
+}
+.vwh__pip {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-top: 1px solid rgba(var(--vwh-gold-rgb), 0.2);
+  padding: 8px 10px 0;
+  display: grid;
+  gap: 2px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+.vwh__pip[data-on="true"] {
+  border-top-color: var(--gold, #caa554);
+}
+.vwh__pip__year {
+  font-family: var(--vwh-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(var(--vwh-gold-rgb), 0.8);
+}
+.vwh__pip__name {
+  font-family: var(--vwh-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.45);
+}
+.vwh__pip[data-on="true"] .vwh__pip__name {
+  color: rgba(var(--dawn-rgb), 0.95);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────
+   No flicker, no reveal, no settle. The figure is simply there. */
+@media (prefers-reduced-motion: reduce) {
+  .vwh__slot .vwh__media,
+  .vwh__slot .vwh__media-wrap,
+  .vwh__slot .vwh__edge {
+    animation: none !important;
+  }
+  .vwh__edge {
+    opacity: 0;
+  }
+}
+
+/* ── Narrow ──────────────────────────────────────────────────────────
+   One column: the figure, then the panels beneath it. */
+@media (max-width: 1100px) {
+  /* ⚠ ONE COLUMN IS A STACK, NOT A GRID. As a grid this composition
+     is height-constrained to 100svh, so its `auto` tracks got SQUEEZED
+     to 66px around 193px stacks and the two sides overlapped by 120px
+     — forcing the track list inline changed nothing, because the
+     constraint was the container's height, not the template. A flex
+     column sizes to its content by construction and takes its reading
+     order from `order`, which is the one thing that has to be explicit
+     here: the DOM is left, right, figure, rail, and the reader wants
+     the figure first. */
+  .vwh {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100svh;
+    overflow: visible;
+  }
+  .vwh__column {
+    order: 1;
+    width: 100%;
+    min-height: 62svh;
+  }
+  .vwh__side[data-side="l"] {
+    order: 2;
+  }
+  .vwh__side[data-side="r"] {
+    order: 3;
+  }
+  .vwh__side[data-side="l"],
+  .vwh__side[data-side="r"] {
+    width: 100%;
+    justify-items: stretch;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+  .vwh__rail {
+    order: 4;
+  }
+  .vwh__panel {
+    max-width: none;
+  }
+}
+
+/* ── Light theme ─────────────────────────────────────────────────────
+   ⚠ THE TOKENS ALREADY FLIP (ADR-058 swaps --dawn-rgb and --void-rgb),
+   so every neutral above is correct in both themes by construction.
+   Light overrides ONLY what is keyed to GOLD — hue is the brand,
+   lightness is the role, and a saturated gold measures ~1.1:1 as small
+   text on parchment (ADR-063 U2's ramp exists for exactly that) — plus
+   the dim neutrals, because an alpha inverts its own meaning across the
+   flip. ADDITIVE LIGHT IS STILL INVISIBLE ON PAPER, so the figure keeps
+   its dark projection well. */
+html[data-theme="light"] .vwh__ground {
+  background: radial-gradient(
+    ellipse 62% 80% at 50% 96%,
+    rgba(10, 9, 8, 0.96),
+    rgba(10, 9, 8, 0.86) 62%,
+    rgba(10, 9, 8, 0) 84%
+  );
+}
+
+/* Gold as TEXT — never --gold itself on paper. The kicker uses the
+   BASE rule (`rgba(var(--dawn-rgb), 0.98)`) in both themes because
+   ADR-058 already swaps --dawn-rgb to the ink in light — an override
+   here would re-invert the correct behavior (this file already carries
+   that lesson elsewhere). */
+html[data-theme="light"] .vwh__panel__motto,
+html[data-theme="light"] .vwh__facts__k,
+html[data-theme="light"] .vwh__panel__foot__k,
+html[data-theme="light"] .vwh__press__outlet {
+  color: var(--gold-ink, #6e5216);
+}
+
+/* Gold as LINE — the section rule and the poster's edge need more
+   weight against parchment than their void alphas. */
+html[data-theme="light"] .vwh__panel__head {
+  border-color: rgba(138, 107, 32, 0.46);
+}
+html[data-theme="light"] .vwh__film__frame {
+  border-color: rgba(138, 107, 32, 0.4);
+}
+html[data-theme="light"] .vwh__film:hover .vwh__film__frame,
+html[data-theme="light"] .vwh__film:focus-visible .vwh__film__frame {
+  border-color: rgba(138, 107, 32, 0.6);
+}
+
+/* ⚠ AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP (ADR-063). The
+   dim neutrals recede toward BLACK on the void and toward PARCHMENT on
+   paper; measured on parchment they sat at 2.4-3.6:1. Lifted per theme
+   — dark is already correct and must not move. */
+html[data-theme="light"] .vwh__panel__tag,
+html[data-theme="light"] .vwh__press__date,
+html[data-theme="light"] .vwh__film__dur,
+html[data-theme="light"] .vwh__panel__foot__v {
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+html[data-theme="light"] .vwh__pip__name {
+  color: rgba(var(--void-rgb), 0.55);
+}

@@ -4,8 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import { CHARACTER_ERAS } from "@/lib/voidwalker/characterEras";
 
-import { HoloEraPanels } from "./HoloEraPanels";
-import { HoloFigure, type HoloForm } from "./HoloFigure";
+import { HoloEraPanels } from "@/components/landing/home-v2/voidwalker/hologram/HoloEraPanels";
+import {
+  HoloFigure,
+  type HoloForm,
+} from "@/components/landing/home-v2/voidwalker/hologram/HoloFigure";
 
 /**
  * HoloLabShell — look-dev for the hologram composition that replaces

@@ -12,6 +12,7 @@ import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
 import "@/components/landing/home-v2/voidwalker/voidwalker.css";
 import "@/components/landing/home-v2/voidwalker/voidwalker-wire.css";
+import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css";
 import "@/components/landing/v7/theme.css";
 import "./holo-lab.css";
 
