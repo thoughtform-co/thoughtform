@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CHARACTER_ERAS } from "@/lib/voidwalker/characterEras";
 
@@ -47,6 +47,7 @@ export function VoidwalkerHologram() {
   const [eraIdx, setEraIdx] = useState(1); // thoughtform is index 1 (the authored figure)
   const [epoch, setEpoch] = useState(0);
   const [reduced, setReduced] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -58,13 +59,49 @@ export function VoidwalkerHologram() {
 
   const era = CHARACTER_ERAS[eraIdx];
 
+  /**
+   * THE ENTRANCE FIRES ONCE, ON ARRIVAL.
+   *
+   * ⚠ NOTHING MAY RISE (owner, 2026-08-26). `#about` exits by sliding
+   * its cluster away, so a section that answers it by scrolling its own
+   * contents upward performs the same move twice in a row. The
+   * composition ASSEMBLES instead — the columns come in from the side
+   * each one lives on, the figure tears in, the masthead resolves.
+   *
+   * The attribute is written straight to the node rather than held in
+   * state: this is a one-shot with no other consumer, and a re-render
+   * here would restart the figure's own clock. Scrolling back up does
+   * not replay it (`io.disconnect()`), which is what keeps the beat a
+   * ARRIVAL rather than a loop.
+   */
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    if (reduced) {
+      el.setAttribute("data-vwh-in", "");
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        el.setAttribute("data-vwh-in", "");
+        // The figure's glitch runs off the same clock as an era switch.
+        setEpoch((e) => e + 1);
+        io.disconnect();
+      },
+      { threshold: 0.3 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [reduced]);
+
   const pick = (i: number) => {
     setEraIdx(i);
     setEpoch((e) => e + 1);
   };
 
   return (
-    <div className="vwh" data-vwh-era={era.id}>
+    <div className="vwh" data-vwh-era={era.id} ref={rootRef}>
       {/* The era's masthead sits above the figure at display scale. */}
       <header className="vwh__mast">
         <p className="vwh__mast__kicker">Era</p>
