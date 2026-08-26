@@ -71,6 +71,15 @@ export interface CharacterEraFilm {
   title: string;
   /** `M:SS`, when it is known. Chrome; the plate omits the row without it. */
   duration?: string;
+  /**
+   * The SELF-HOSTED poster under `public/images/voidwalker/` — the
+   * video's own frame, 16:9, ≤120 KB. Required: a transmission without
+   * a thumbnail is a text bar nobody reads as a video (owner,
+   * 2026-08-26). Self-hosted because `img-src` does not name ytimg and
+   * a poster must not be the page's first third-party request — the
+   * player stays the only external thing, and only after a click.
+   */
+  poster: string;
 }
 
 export interface CharacterEra {
@@ -210,6 +219,7 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     film: {
       youtubeId: "jFVezT4mznU",
       title: "Welcome to Latent Land",
+      poster: "/images/voidwalker/film-latent-land.jpg",
     },
   },
   {
@@ -255,6 +265,7 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
       youtubeId: "a5-DcdfxCvU",
       title: "How the power of fans saved The Expanse",
       duration: "2:14",
+      poster: "/images/voidwalker/film-save-the-expanse.jpg",
     },
   },
   {

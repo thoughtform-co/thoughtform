@@ -4,7 +4,6 @@ import {
   MediaLightbox,
   useWalkthrough,
 } from "@/components/landing/home-v2/services/casefile/MediaLightbox";
-import { VOIDWALKER_WIREFRAMES } from "@/components/landing/home-v2/voidwalker/wireframes/voidwalkerWireframes";
 import { eraPressBeatIds, type CharacterEra } from "@/lib/voidwalker/characterEras";
 import { VOIDWALKER_BEATS, type VwPress, type VwSegment } from "@/lib/voidwalker/voidwalkerData";
 
@@ -25,14 +24,13 @@ import { VOIDWALKER_BEATS, type VwPress, type VwSegment } from "@/lib/voidwalker
  * with a substitute. An era without a film simply has no transmission,
  * and the eye still finds the bio in the same place.
  *
- * ⚠ THE DRAWINGS ARE NOT NEW WORK. Three eras have an authored plate in
- * the ADR-074 record (`genai` → latent, `azeroth` → azeroth, `the-crowd`
- * → expanse), each a zero-prop component with no context and no scroll
- * dependency, so it mounts here verbatim — the only cost is
- * `voidwalker-wire.css` and its `--w-*` block, which the lab imports. A
- * drawing declares what it letters in `voidwalkerWireLabels.ts`; nothing
- * here adds a label, so no guard moves. It sits LAST and width-capped:
- * a drawing is evidence, not the panel's subject.
+ * ⚠ THE WIRE DRAWINGS ARE PARKED, NOT PORTED (owner, 2026-08-26). The
+ * ADR-074 plates are authored in container-query units against a
+ * ~500px+ timeline plate; in this 240px side column their labels
+ * overlapped their own panel head and the drawing spilled its border —
+ * measured, shipped, and rightly shouted at. They return only with a
+ * home wide enough to letter at their floors (the landscape scene's
+ * lower band is the candidate), never squeezed into a side stack.
  */
 
 function plain(segments: readonly VwSegment[]): string {
@@ -109,7 +107,6 @@ function PressCard({ press }: { press: VwPress }) {
 
 export function HoloEraPanels({ era }: { era: CharacterEra }) {
   const beat = VOIDWALKER_BEATS.find((b) => b.id === era.beatId);
-  const Wire = beat?.wire ? VOIDWALKER_WIREFRAMES[beat.wire] : null;
 
   // Every press card this era speaks for — its own beat by default, or
   // the span it stands in for (`the-crowd` covers four 2016-18 beats).
@@ -143,14 +140,6 @@ export function HoloEraPanels({ era }: { era: CharacterEra }) {
             </div>
           </Panel>
         ) : null}
-
-        {Wire ? (
-          <Panel kicker="Artefact" tag={beat?.artefact}>
-            <div className="vwh__panel__wire">
-              <Wire />
-            </div>
-          </Panel>
-        ) : null}
       </div>
 
       <div className="vwh__side" data-side="r">
@@ -168,17 +157,33 @@ export function HoloEraPanels({ era }: { era: CharacterEra }) {
 
         {era.film ? (
           <Panel kicker="Transmission">
+            {/* The poster IS the affordance: the video's own frame under
+                the hologram's scanline, a play ring in the middle, the
+                title on the caption bar. The whole figure is the button. */}
             <button
               type="button"
               className="vwh__film"
               onClick={(e) => open(e.currentTarget)}
               aria-haspopup="dialog"
+              aria-label={`Play: ${era.film.title}`}
             >
-              <span className="vwh__film__key" aria-hidden="true" />
-              <span className="vwh__film__title">{era.film.title}</span>
-              {era.film.duration ? (
-                <span className="vwh__film__dur">{era.film.duration}</span>
-              ) : null}
+              <span className="vwh__film__frame">
+                <img
+                  className="vwh__film__poster"
+                  src={era.film.poster}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span className="vwh__film__scan" aria-hidden="true" />
+                <span className="vwh__film__play" aria-hidden="true" />
+              </span>
+              <span className="vwh__film__bar">
+                <span className="vwh__film__title">{era.film.title}</span>
+                {era.film.duration ? (
+                  <span className="vwh__film__dur">{era.film.duration}</span>
+                ) : null}
+              </span>
             </button>
           </Panel>
         ) : null}

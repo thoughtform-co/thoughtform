@@ -186,6 +186,13 @@ describe("ADR-082 U2 · the era panels' content", () => {
       if (era.film.duration !== undefined) {
         expect(era.film.duration, `${era.id} film duration`).toMatch(/^\d{1,2}:\d{2}$/);
       }
+      // The poster is the affordance -- a transmission without one is a
+      // text bar nobody reads as a video (owner). SELF-HOSTED, because
+      // img-src does not name ytimg and the player must stay the page's
+      // only third-party thing, built only after a click.
+      expect(era.film.poster, `${era.id} film poster`).toMatch(
+        /^\/images\/voidwalker\/[^\s]+\.(jpg|webp)$/
+      );
     }
   });
 
