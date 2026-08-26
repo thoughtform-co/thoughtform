@@ -2,12 +2,13 @@
  * The VOIDWALKER character-stage era registry (ADR-082).
  *
  * Six selectable versions of the owner across twelve years — the
- * curated roster the character stage ships with (owner ruling, not the
+ * curated roster the hologram section ships with (owner ruling, not the
  * full nine). Each entry pins to a beat id in
  * `voidwalkerData.ts` (ADR-074), which is the record and stays the
- * source of truth for years, titles and prose. This file only names
- * the WARDROBE ("what era-Vince wore"), the model asset and the still
- * that stands in on mobile / PRM / no-WebGL.
+ * source of truth for years, titles and prose. This file names the
+ * WARDROBE ("what era-Vince wore"), the model asset, the still that
+ * stands in on mobile / PRM / no-WebGL, and — since ADR-082 U2 — the
+ * PANEL CONTENT that flanks the figure.
  *
  * ⚠ THE ORDER IS REVERSE-CHRONOLOGICAL, matching the record. Reading
  * downward the rail starts at the current seat (`loop`) and lands on
@@ -29,6 +30,48 @@ export type CharacterEraId =
   | "genai"
   | "thoughtform"
   | "loop";
+
+/**
+ * One row of the era's FACTS panel — a mono label and its value, read
+ * as a dotted-leader pair (the `.arc-card-item__meta-row` grammar).
+ *
+ * ⚠ THE VALUES ARE THE RECORD'S OWN PHRASINGS, NOT NEW CLAIMS. Where a
+ * figure appears it is quoted from `voidwalkerData.ts` verbatim ("about
+ * a thousand", "Sixteen thousand", "Past 100,000 signatures"), because
+ * that record is at LOCK and its guard bans the rounded forms (`1,000`,
+ * `16,000`, `\d+k`). A fact that wants a NEW number is a record edit
+ * first, in `voidwalkerData.ts`, with its own pin.
+ */
+export interface CharacterEraFact {
+  /** ≤14 chars — the row's label, mono caps, dim, left. */
+  k: string;
+  /** ≤44 chars — the value, bright, right. One line at the panel's measure. */
+  v: string;
+}
+
+/**
+ * A film that belongs to the ERA rather than to a beat.
+ *
+ * ⚠ THIS IS DELIBERATELY NOT `VwBeat.film`. `voidwalker-data.test.ts`
+ * pins the record to EXACTLY ONE film (the Expanse interlude is a row
+ * in the timeline, not a beat), so hanging a second one off a beat
+ * fails CI. The era registry is the presentation layer — two eras can
+ * carry a transmission here without the record growing a second
+ * interlude it does not have.
+ *
+ * The player is `youtube-nocookie.com/embed/{youtubeId}`, built only
+ * after a click, inside `MediaLightbox` — the ONE third-party frame on
+ * this site and the one origin `lib/security/headers.mjs` names in
+ * `frame-src`. A new origin is a decision, not a field edit.
+ */
+export interface CharacterEraFilm {
+  /** The YouTube id — 11 chars, the `nocookie` embed's whole payload. */
+  youtubeId: string;
+  /** ≤60 chars — what the plate's bar letters. */
+  title: string;
+  /** `M:SS`, when it is known. Chrome; the plate omits the row without it. */
+  duration?: string;
+}
 
 export interface CharacterEra {
   /** Kebab id, stable for the DOM (`data-era-id`) and analytics. */
@@ -70,6 +113,25 @@ export interface CharacterEra {
    * fit at 1280 without wrapping. ≤14 chars.
    */
   short: string;
+  /**
+   * The FACTS panel's rows — 3-5 of them, the left column's lead.
+   * Optional in the type so an era can ship without one; every era
+   * carries facts today and the guard pins the count where present.
+   */
+  facts?: readonly CharacterEraFact[];
+  /**
+   * Which beats' press cards the era prints, in order. Defaults to
+   * `[beatId]` when absent.
+   *
+   * ⚠ THIS IS HOW THE UNMAPPED BEATS BECOME REACHABLE. `the-crowd`
+   * spans four 2016–18 beats but pins to `expanse` for its plate, so
+   * the Pokémon GO, Ophef and coins beats have no era of their own.
+   * Naming them here is what lets one era speak for its whole span
+   * without duplicating a word of the record.
+   */
+  pressBeatIds?: readonly string[];
+  /** The era's transmission, when one exists. See `CharacterEraFilm`. */
+  film?: CharacterEraFilm;
 }
 
 /**
@@ -101,6 +163,12 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     modelPath: null,
     stillPath: "/images/services/vince.jpg",
     short: "Architect",
+    facts: [
+      { k: "Seat", v: "Loop Earplugs" },
+      { k: "Owns", v: "The map between work and intelligence" },
+      { k: "Decides", v: "Which setup runs which workflow" },
+      { k: "Answers for", v: "What it inherits, and the outcome" },
+    ],
   },
   {
     id: "thoughtform",
@@ -114,6 +182,12 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     modelPath: "/models/voidwalker/thoughtform.glb",
     stillPath: "/images/services/Vince-4.jpg",
     short: "Thoughtform",
+    facts: [
+      { k: "Founded", v: "Thoughtform, the practice" },
+      { k: "Subject", v: "Organisations" },
+      { k: "In place of", v: "A platform, an intelligence" },
+      { k: "Mark", v: "Cap, brooch, rings" },
+    ],
   },
   {
     id: "genai",
@@ -125,6 +199,18 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     modelPath: null,
     stillPath: "/images/vince-portrait.jpg",
     short: "Latent Land",
+    facts: [
+      { k: "Founded", v: "Starhaven" },
+      { k: "First", v: "Hybrid AI-video production in Belgium" },
+      { k: "Campaign", v: "Under Armour, with Anthony Joshua" },
+      { k: "Charter", v: "UBA/ACC AI Charter, co-drafted" },
+    ],
+    // The film the era is named for. Its id lives as a source comment on
+    // the `genai` beat; the record has no second `film` field to put it in.
+    film: {
+      youtubeId: "jFVezT4mznU",
+      title: "Welcome to Latent Land",
+    },
   },
   {
     id: "azeroth",
@@ -136,12 +222,19 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     modelPath: null,
     stillPath: "/images/services/vince.webp",
     short: "Azeroth",
+    facts: [
+      { k: "Field site", v: "Azeroth" },
+      { k: "Course", v: "Online Communities" },
+      { k: "Also ran", v: "Social Media Storytelling" },
+      { k: "The exit", v: "Built into the calendar" },
+    ],
   },
   {
     id: "the-crowd",
     // The plate beat is the Expanse campaign (the compound span's
-    // richest artefact); the era HUD lists all four crowds (Pokémon GO,
-    // Ophef, Save The Expanse, Six coins) in the copy panel.
+    // richest artefact); the era's facts and press speak for all four
+    // crowds — Pokémon GO and Ophef in the rows, the coins post in the
+    // second press card.
     beatId: "expanse",
     year: "2016–18",
     wardrobe: "The street organiser",
@@ -150,6 +243,19 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     modelPath: null,
     stillPath: "/images/services/Vince-4.jpg",
     short: "The Crowd",
+    facts: [
+      { k: "Petition", v: "Past 100,000 signatures" },
+      { k: "Outcome", v: "Three more seasons" },
+      { k: "Street hunt", v: "About a thousand" },
+      { k: "Zoo hunt", v: "Sixteen thousand" },
+      { k: "Same years", v: "A hashtag became a party" },
+    ],
+    pressBeatIds: ["expanse", "coins"],
+    film: {
+      youtubeId: "a5-DcdfxCvU",
+      title: "How the power of fans saved The Expanse",
+      duration: "2:14",
+    },
   },
   {
     id: "creatives",
@@ -161,6 +267,12 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     modelPath: null,
     stillPath: "/images/vince-portrait.jpg",
     short: "Creatives",
+    facts: [
+      { k: "Role", v: "Community manager" },
+      { k: "Terrain", v: "The Antwerp creative industry" },
+      { k: "Held", v: "People, disciplines, industries" },
+      { k: "The test", v: "It holds without its organiser" },
+    ],
   },
 ];
 
@@ -172,4 +284,10 @@ export const CHARACTER_ERA_COUNT = 6 as const;
  *  do on a miss (typically a fallback to the first entry). */
 export function findCharacterEra(id: string): CharacterEra | undefined {
   return CHARACTER_ERAS.find((e) => e.id === id);
+}
+
+/** The beats whose press cards an era prints, in order. One place, so
+ *  the renderer and the guard cannot disagree about the default. */
+export function eraPressBeatIds(era: CharacterEra): readonly string[] {
+  return era.pressBeatIds ?? [era.beatId];
 }

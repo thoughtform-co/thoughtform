@@ -375,25 +375,69 @@
 }
 
 /* ── The panels ──────────────────────────────────────────────────────
-   The "little design grids": what the era was, its scope, its artefact.
+   The instrument cards that flank the figure.
+
+   ⚠ THE ORDER IS FIXED AND THE CHROME CARRIES THE HIERARCHY, which is
+   what the reference boards do (Vilimovský's Cyberpunk monitors, the
+   retro-CRT nav set): the panel at the top of a stack wears a BRIGHT
+   HEAD BAR, everything under it wears a hairline. A flat stack of six
+   identical cards has no reading order; a bar and a rule give it one
+   without adding a single word.
+
    Square corners — chrome sits at 0 on ADR-065's depth ladder. */
 .vwh__panel {
   align-self: center;
+  position: relative;
   border: 1px solid rgba(var(--vwh-gold-rgb), 0.16);
   background: rgba(var(--vwh-void-rgb), 0.55);
   padding: clamp(12px, 1.4vw, 18px);
   display: grid;
-  gap: 6px;
+  gap: 8px;
   max-width: 34ch;
+  width: 100%;
+}
+
+/* The head bar. 2px of lit gold across the top edge of a stack's lead
+   card — the reference boards' "this is the top of a device" mark. */
+.vwh__panel[data-lead]::before {
+  content: "";
+  position: absolute;
+  inset: -1px -1px auto -1px;
+  height: 2px;
+  background: var(--gold-ink-lit, #f0c86a);
+  opacity: 0.9;
+}
+
+/* KICKER ................ TAG, over a hairline. The tag is the boards'
+   right-hand designator (`FIR SK 5.0 MFS`, `REV.047`) — here it is the
+   era's short name or the artefact's own label. */
+.vwh__panel__head {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(var(--vwh-gold-rgb), 0.16);
 }
 .vwh__panel__kicker {
-  margin: 0;
   font-family: var(--vwh-mono);
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(var(--vwh-gold-rgb), 0.72);
 }
+.vwh__panel__tag {
+  font-family: var(--vwh-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  /* ⚠ 0.38 measured 2.99:1 on the void — a designator nobody can read
+     is not a quiet label, it is an absent one. */
+  color: rgba(var(--dawn-rgb), 0.58);
+  text-align: right;
+}
+
 .vwh__panel__title {
   margin: 0;
   font-family: var(--vwh-display);
@@ -401,38 +445,195 @@
   line-height: 1.15;
   color: rgba(var(--dawn-rgb), 0.94);
 }
-.vwh__panel__year {
+.vwh__panel__motto {
   margin: 0;
   font-family: var(--vwh-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
   color: rgba(var(--vwh-gold-rgb), 0.9);
 }
-.vwh__panel__motto,
-.vwh__panel__body,
-.vwh__panel__press {
+.vwh__panel__body {
   margin: 0;
   font-family: var(--vwh-display);
   font-size: clamp(12px, 0.92vw, 13.5px);
   line-height: 1.45;
   color: rgba(var(--dawn-rgb), 0.7);
 }
-.vwh__panel__press {
-  color: rgba(var(--dawn-rgb), 0.86);
+
+/* The bio's foot — the wardrobe line, on a dashed rule. Loadout is
+   character data, so it rides with the era's description rather than
+   competing for a slot of its own. */
+.vwh__panel__foot {
+  margin: 2px 0 0;
+  padding-top: 7px;
+  border-top: 1px dashed rgba(var(--vwh-gold-rgb), 0.22);
+  display: grid;
+  gap: 3px;
+  font-family: var(--vwh-mono);
+  font-size: 9.5px;
+  line-height: 1.4;
 }
-.vwh__panel__cap {
+.vwh__panel__foot__k {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  /* ⚠ 0.62 measured 3.83:1 on the void. */
+  color: rgba(var(--vwh-gold-rgb), 0.82);
+}
+.vwh__panel__foot__v {
+  color: rgba(var(--dawn-rgb), 0.52);
+}
+
+/* ── Facts ───────────────────────────────────────────────────────────
+   Label-left / value-right rows on dashed rules — the boards' field
+   grammar, and the `.arc-card-item__meta-row` pattern already in the
+   house. The value carries the record's own phrasing verbatim. */
+.vwh__facts {
+  margin: 0;
+  display: grid;
+}
+.vwh__facts__row {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(var(--vwh-gold-rgb), 0.18);
+}
+.vwh__facts__row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.vwh__facts__k {
   margin: 0;
   font-family: var(--vwh-mono);
   font-size: 9.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.42);
+  /* ⚠ 0.6 measured 3.65:1 on the void, under the 4.5 floor for text. */
+  color: rgba(var(--vwh-gold-rgb), 0.82);
+  white-space: nowrap;
 }
+.vwh__facts__v {
+  margin: 0;
+  font-family: var(--vwh-display);
+  font-size: clamp(11.5px, 0.88vw, 13px);
+  line-height: 1.3;
+  color: rgba(var(--dawn-rgb), 0.88);
+  text-align: right;
+}
+
+/* ── Press ───────────────────────────────────────────────────────────
+   The headline is the subject; the outlet is a boxed designator, which
+   is how the reference boards letter a source. A card with an `href`
+   is a link and says so on hover — nothing else moves. */
+.vwh__press-stack {
+  display: grid;
+  gap: 10px;
+}
+.vwh__press {
+  display: grid;
+  gap: 6px;
+  text-decoration: none;
+  color: inherit;
+}
+a.vwh__press:hover .vwh__press__headline,
+a.vwh__press:focus-visible .vwh__press__headline {
+  color: rgba(var(--dawn-rgb), 1);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(var(--vwh-gold-rgb), 0.5);
+}
+.vwh__press-stack > .vwh__press + .vwh__press {
+  padding-top: 10px;
+  border-top: 1px dashed rgba(var(--vwh-gold-rgb), 0.18);
+}
+.vwh__press__headline {
+  margin: 0;
+  font-family: var(--vwh-display);
+  font-size: clamp(11.5px, 0.9vw, 13px);
+  line-height: 1.4;
+  color: rgba(var(--dawn-rgb), 0.86);
+}
+.vwh__press__meta {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--vwh-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.vwh__press__outlet {
+  border: 1px solid rgba(var(--vwh-gold-rgb), 0.32);
+  padding: 2px 6px;
+  color: rgba(var(--vwh-gold-rgb), 0.92);
+}
+.vwh__press__date {
+  /* ⚠ 0.38 measured 2.99:1 on the void. */
+  color: rgba(var(--dawn-rgb), 0.58);
+}
+
+/* ── Transmission ────────────────────────────────────────────────────
+   One bar, one gold key. The diamond is the panel's ONE gold mark
+   (ADR-065's discipline: gold buys exactly one thing per drawing), and
+   it is the affordance — the whole bar is the button. */
+.vwh__film {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid rgba(var(--vwh-gold-rgb), 0.22);
+  background: rgba(var(--vwh-gold-rgb), 0.05);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+.vwh__film:hover,
+.vwh__film:focus-visible {
+  background: rgba(var(--vwh-gold-rgb), 0.1);
+  border-color: rgba(var(--vwh-gold-rgb), 0.42);
+}
+.vwh__film__key {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  background: var(--gold-ink-lit, #f0c86a);
+  transform: rotate(45deg);
+}
+.vwh__film__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--vwh-display);
+  font-size: clamp(11.5px, 0.9vw, 13px);
+  line-height: 1.3;
+  color: rgba(var(--dawn-rgb), 0.9);
+}
+.vwh__film__dur {
+  flex: 0 0 auto;
+  font-family: var(--vwh-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  /* ⚠ 0.42 measured 3.41:1 on the void. */
+  color: rgba(var(--dawn-rgb), 0.6);
+}
+
 /* The wireframe plates are authored against their own box; the panel
-   only has to give them a width and stay out of the way. */
+   only has to give them a width and stay out of the way.
+   ⚠ CAPPED. Uncapped, `latent`'s wide drawing set the column's width
+   and threw the era's copy around — the defect that started this pass.
+   A drawing is evidence, and evidence does not size the instrument. */
 .vwh__panel__wire {
   width: 100%;
   min-width: 0;
+  max-width: 30ch;
+  margin-inline: auto;
 }
 
 /* ── The rail ────────────────────────────────────────────────────────*/
@@ -492,28 +693,41 @@
 /* ── Narrow ──────────────────────────────────────────────────────────
    One column: the figure, then the panels beneath it. */
 @media (max-width: 1100px) {
+  /* ⚠ ONE COLUMN IS A STACK, NOT A GRID. As a grid this composition
+     is height-constrained to 100svh, so its `auto` tracks got SQUEEZED
+     to 66px around 193px stacks and the two sides overlapped by 120px
+     — forcing the track list inline changed nothing, because the
+     constraint was the container's height, not the template. A flex
+     column sizes to its content by construction and takes its reading
+     order from `order`, which is the one thing that has to be explicit
+     here: the DOM is left, right, figure, rail, and the reader wants
+     the figure first. */
   .vwh {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .vwh {
+    display: flex;
+    flex-direction: column;
     height: auto;
     min-height: 100svh;
-    grid-template-rows: auto auto auto auto;
     overflow: visible;
   }
   .vwh__column {
-    grid-column: 1;
-    grid-row: 1;
+    order: 1;
+    width: 100%;
     min-height: 62svh;
   }
-  .vwh__side {
-    grid-column: 1;
-    grid-row: auto;
+  .vwh__side[data-side="l"] {
+    order: 2;
+  }
+  .vwh__side[data-side="r"] {
+    order: 3;
+  }
+  .vwh__side[data-side="l"],
+  .vwh__side[data-side="r"] {
+    width: 100%;
     justify-items: stretch;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
   .vwh__rail {
-    grid-row: auto;
+    order: 4;
   }
   .vwh__panel {
     max-width: none;
@@ -521,11 +735,29 @@
 }
 
 /* ── Light theme ─────────────────────────────────────────────────────
-   ⚠ ADDITIVE LIGHT IS INVISIBLE ON PAPER. ADR-058 swaps the ground to
-   parchment, where a screen blend contributes nothing and the figure
-   disappears. So light does not "tint down" — it keeps a DARK PROJECTION
-   WELL for the figure to be projected into, which is what the physics
-   would do anyway, and the panels flip to ink on paper around it. */
+   ⚠ THE TOKENS ALREADY FLIP. THE OVERRIDES MUST NOT FLIP THEM BACK.
+   ADR-058 SWAPS `--dawn-rgb` and `--void-rgb`, so under
+   `[data-theme="light"]` the resolved values are `--void-rgb:
+   236,227,214` (the parchment) and `--dawn-rgb: 17,15,9` (the ink).
+   Every neutral in §A above is written against those two tokens, which
+   makes it correct in BOTH themes by construction — one rule, no fork.
+
+   ⚠ The block this replaces re-declared them anyway — `background:
+   rgba(var(--dawn-rgb), .6)` for the panel and `color:
+   rgba(var(--void-rgb), .92)` for its title — which resolves in light
+   to a DARK box carrying LIGHT text: the dark theme, painted on paper.
+   Measured before the fix: panel ground `rgba(17,15,9,.6)` on a
+   `rgb(236,227,214)` page. This is the map lab's recorded trap
+   (`.claude/rules/proof.md`), one surface later.
+
+   So light overrides ONLY what is keyed to GOLD, because gold is a HUE
+   and its lightness is the role: a saturated gold measures ~1.1:1 as
+   small text on parchment, and ADR-063 U2's ramp exists for exactly
+   that (`--gold-ink` is the 4.5:1 rung). Never re-darken `--gold`
+   itself — that breaks the fills.
+
+   ADDITIVE LIGHT IS STILL INVISIBLE ON PAPER, so the figure keeps its
+   DARK PROJECTION WELL, which is what the physics would do anyway. */
 html[data-theme="light"] .vwh__ground {
   background: radial-gradient(
     ellipse 62% 80% at 50% 96%,
@@ -534,25 +766,56 @@ html[data-theme="light"] .vwh__ground {
     rgba(10, 9, 8, 0) 84%
   );
 }
-html[data-theme="light"] .vwh__panel {
-  background: rgba(var(--dawn-rgb), 0.6);
-  border-color: rgba(138, 107, 32, 0.3);
+
+/* Gold as a MARK — the lead bar and the film's key. A lit gold on
+   parchment is a pale mark on a pale ground; the ink rung carries it. */
+html[data-theme="light"] .vwh__panel[data-lead]::before,
+html[data-theme="light"] .vwh__film__key {
+  background: var(--gold-ink, #6e5216);
+  opacity: 1;
 }
+
+/* Gold as TEXT — never `--gold` itself on paper. */
 html[data-theme="light"] .vwh__panel__kicker,
-html[data-theme="light"] .vwh__panel__year {
+html[data-theme="light"] .vwh__panel__motto,
+html[data-theme="light"] .vwh__facts__k,
+html[data-theme="light"] .vwh__panel__foot__k,
+html[data-theme="light"] .vwh__press__outlet {
   color: var(--gold-ink, #6e5216);
 }
-html[data-theme="light"] .vwh__panel__title,
-html[data-theme="light"] .vwh__panel__press {
-  color: rgba(var(--void-rgb), 0.92);
+
+/* Gold as LINE — the hairlines need more weight against parchment than
+   the 0.16 alpha that reads correctly on the void. */
+html[data-theme="light"] .vwh__panel,
+html[data-theme="light"] .vwh__panel__head,
+html[data-theme="light"] .vwh__facts__row,
+html[data-theme="light"] .vwh__panel__foot,
+html[data-theme="light"] .vwh__press__outlet,
+html[data-theme="light"] .vwh__film,
+html[data-theme="light"] .vwh__press-stack > .vwh__press + .vwh__press {
+  border-color: rgba(138, 107, 32, 0.3);
 }
-html[data-theme="light"] .vwh__panel__motto,
-html[data-theme="light"] .vwh__panel__body {
-  color: rgba(var(--void-rgb), 0.72);
+html[data-theme="light"] .vwh__film {
+  background: rgba(138, 107, 32, 0.07);
 }
-html[data-theme="light"] .vwh__panel__cap,
-html[data-theme="light"] .vwh__pip__name {
-  color: rgba(var(--void-rgb), 0.55);
+html[data-theme="light"] .vwh__film:hover,
+html[data-theme="light"] .vwh__film:focus-visible {
+  background: rgba(138, 107, 32, 0.13);
+  border-color: rgba(138, 107, 32, 0.55);
+}
+
+/* ⚠ AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP (ADR-063). The
+   dim neutrals recede toward BLACK on the void and toward PARCHMENT on
+   paper, so the same number that reads as "quiet" in dark reads as
+   "absent" in light. Measured on the void bed these four sit where they
+   should; measured on parchment they were 2.41 / 2.41 / 2.70 / 3.61,
+   under the 4.5 floor for text of any size. Lifted per theme, not
+   globally — dark is already correct and must not move. */
+html[data-theme="light"] .vwh__panel__tag,
+html[data-theme="light"] .vwh__press__date,
+html[data-theme="light"] .vwh__film__dur,
+html[data-theme="light"] .vwh__panel__foot__v {
+  color: rgba(var(--dawn-rgb), 0.72);
 }
 
 /* ═══ §B · LAB CHROME (never ships) ═════════════════════════════════ */
