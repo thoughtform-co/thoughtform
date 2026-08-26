@@ -122,7 +122,21 @@
   margin-inline: 0;
   padding-inline: 0;
 }
+/* ⚠ THE COMPOSITION PINS; IT DOES NOT SCROLL PAST (owner, 2026-08-26).
+   Before this the station was simply taller than the viewport, so the
+   whole stage translated through it — measured, the masthead ran from
+   y=1082 to y=-115 while the figure was still arriving, which reads as
+   the section sliding over the one before it. #about solves the same
+   problem by pinning a sticky stage over its own runway (ADR-047) and
+   this is that grammar: the runway below gives the pin something to
+   hold against, the stage stays put while the reader crosses it, and
+   the entrance plays once, in place. */
+.vw--hologram {
+  min-height: 175svh;
+}
 .vw--hologram > .vwh {
+  position: sticky;
+  top: 0;
   width: 100%;
   max-width: var(--band-max);
   margin-inline: auto;

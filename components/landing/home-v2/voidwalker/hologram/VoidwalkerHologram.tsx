@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
+
 import { CHARACTER_ERAS } from "@/lib/voidwalker/characterEras";
 
 import { HoloEraPanels } from "./HoloEraPanels";
@@ -48,6 +50,9 @@ export function VoidwalkerHologram() {
   const [epoch, setEpoch] = useState(0);
   const [reduced, setReduced] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const kickerRef = useRef<HTMLParagraphElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const yearRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -95,6 +100,49 @@ export function VoidwalkerHologram() {
     return () => io.disconnect();
   }, [reduced]);
 
+  /**
+   * THE MASTHEAD DECODES IN, LIKE THE SECTION BEFORE IT.
+   *
+   * `#about` scrambles his NAME and role toward their finals as the copy
+   * clock arms (`AboutStage`, ADR-047 U7). This is the same kernel
+   * (`lib/home-v2/captionScramble`) on the same three-target stagger, so
+   * the era's name resolves the way his own does one section earlier
+   * rather than simply fading up.
+   *
+   * ⚠ THE DECODE IS DESTRUCTIVE — it writes `textContent` — so the
+   * targets are refs to leaf spans that hold nothing but their own
+   * string, and the accessible name is restored by the final frame
+   * (`to` IS the real text). It re-runs on every era switch, keyed off
+   * the same `epoch` the figure's glitch uses, so the two land together.
+   */
+  useEffect(() => {
+    if (reduced) return;
+    const targets = [kickerRef.current, titleRef.current, yearRef.current];
+    if (targets.some((t) => !t)) return;
+
+    const jobs: ScrambleJob[] = [];
+    const t0 = performance.now() / 1000;
+    const finals = ["Era", era.wardrobe, era.year];
+    targets.forEach((el, i) => {
+      // Stagger so the name lands between its two chrome lines.
+      queueScramble(jobs, el as HTMLElement, finals[i]!, t0 + i * 0.09);
+    });
+
+    let raf = 0;
+    const tick = () => {
+      advanceScrambles(jobs, performance.now() / 1000);
+      if (jobs.length) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      // Leave the real strings behind if we unmount mid-decode.
+      targets.forEach((el, i) => {
+        if (el) el.textContent = finals[i]!;
+      });
+    };
+  }, [epoch, era.wardrobe, era.year, reduced]);
+
   const pick = (i: number) => {
     setEraIdx(i);
     setEpoch((e) => e + 1);
@@ -104,9 +152,15 @@ export function VoidwalkerHologram() {
     <div className="vwh" data-vwh-era={era.id} ref={rootRef}>
       {/* The era's masthead sits above the figure at display scale. */}
       <header className="vwh__mast">
-        <p className="vwh__mast__kicker">Era</p>
-        <h2 className="vwh__mast__title">{era.wardrobe}</h2>
-        <p className="vwh__mast__year">{era.year}</p>
+        <p className="vwh__mast__kicker" ref={kickerRef}>
+          Era
+        </p>
+        <h2 className="vwh__mast__title" ref={titleRef}>
+          {era.wardrobe}
+        </h2>
+        <p className="vwh__mast__year" ref={yearRef}>
+          {era.year}
+        </p>
       </header>
 
       <HoloEraPanels era={era} />
