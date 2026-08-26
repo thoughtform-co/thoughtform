@@ -131,8 +131,15 @@
    this is that grammar: the runway below gives the pin something to
    hold against, the stage stays put while the reader crosses it, and
    the entrance plays once, in place. */
+/* ⚠ THE HOLD IS THE RUNWAY MINUS ONE VIEWPORT. At 175svh the pin held
+   for only ~75svh of scroll -- less than one flick -- so the reader's
+   momentum carried straight through: content materialized at the pin
+   and was ALREADY RELEASING upward a beat later, which reads as the
+   section flying over #about. That release, not the entrance, was the
+   third parallax report. 260svh holds the stage for ~1.6 viewports
+   (About's own 240svh runway is the precedent). */
 .vw--hologram {
-  min-height: 175svh;
+  min-height: 260svh;
 }
 .vw--hologram > .vwh {
   position: sticky;

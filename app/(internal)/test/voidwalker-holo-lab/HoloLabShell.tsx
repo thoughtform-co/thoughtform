@@ -189,6 +189,14 @@ export function HoloLabShell() {
 
       <section className="hll__stage">
         <div className="vwh" data-vwh-era={era.id}>
+          {/* Static mast: production's lives in VoidwalkerHologram with
+              the scramble refs; the lab shows the same composition
+              without the decode. */}
+          <header className="vwh__mast">
+            <p className="vwh__mast__kicker">Era</p>
+            <h2 className="vwh__mast__title">{era.wardrobe}</h2>
+            <p className="vwh__mast__year">{era.year}</p>
+          </header>
           <HoloEraPanels era={era} />
 
           <div className="vwh__column">

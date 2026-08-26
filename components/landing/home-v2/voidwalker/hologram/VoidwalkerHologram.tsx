@@ -109,12 +109,23 @@ export function VoidwalkerHologram() {
     };
     function check() {
       raf = 0;
+      /* ⚠ THE FOLD GUARD IS LOAD-BEARING. The corridor inflates layout
+         late (the page grows ~16k → 24k after hydration), and while it
+         is small this station can sit near the viewport for a frame —
+         a naked check would arm at scrollY 0, on page LOAD, and the
+         reader would then find the whole composition already lit and
+         riding the scroll. Nobody reaches the seventh station without
+         scrolling at least one viewport, so require it. */
+      if (window.scrollY <= window.innerHeight) return;
       if (el && el.getBoundingClientRect().top <= 2) arm();
     }
-    check();
+    // Deep links land already pinned but produce no scroll event — one
+    // settled check covers them, after the corridor has inflated.
+    const settled = window.setTimeout(check, 1600);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(settled);
       if (raf) cancelAnimationFrame(raf);
     };
   }, [reduced]);

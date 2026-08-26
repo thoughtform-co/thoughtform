@@ -126,14 +126,6 @@ export function HoloEraPanels({ era }: { era: CharacterEra }) {
 
   return (
     <>
-      {/* The era's masthead -- standalone above the figure, at display
-          scale. NOT a row in the right stack. */}
-      <header className="vwh__mast">
-        <p className="vwh__mast__kicker">Era</p>
-        <h2 className="vwh__mast__title">{era.wardrobe}</h2>
-        <p className="vwh__mast__year">{era.year}</p>
-      </header>
-
       <div className="vwh__side" data-side="l">
         <Facts era={era} />
 
