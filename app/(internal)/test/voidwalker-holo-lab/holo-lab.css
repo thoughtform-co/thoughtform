@@ -49,7 +49,7 @@
   grid-row: 1;
   align-self: center;
   display: grid;
-  gap: clamp(10px, 1.6svh, 18px);
+  gap: clamp(20px, 3.4svh, 36px);
   min-height: 0;
 }
 .vwh__side[data-side="l"] {
@@ -375,75 +375,58 @@
 }
 
 /* ── The panels ──────────────────────────────────────────────────────
-   The instrument cards that flank the figure.
-
-   ⚠ THE ORDER IS FIXED AND THE CHROME CARRIES THE HIERARCHY, which is
-   what the reference boards do (Vilimovský's Cyberpunk monitors, the
-   retro-CRT nav set): the panel at the top of a stack wears a BRIGHT
-   HEAD BAR, everything under it wears a hairline. A flat stack of six
-   identical cards has no reading order; a bar and a rule give it one
-   without adding a single word.
-
-   Square corners — chrome sits at 0 on ADR-065's depth ladder. */
+   ⚠ NO BOXES (owner, 2026-08-26, second review). The first cut wrapped
+   every content group in a bordered card with a wash and a lit head bar
+   — "a glorified PowerPoint". The reference boards carry structure with
+   TYPE, one thin rule under a section title, and NEGATIVE SPACE; the
+   frames in the Cyberpunk set are the monitors' own bezels, not a
+   license to box copy. So a "panel" here is typography: kicker + rule +
+   content, bare on the void. The ONE edge that survives is on the film
+   poster — an image needs containment against black; a paragraph does
+   not. */
 .vwh__panel {
   align-self: center;
-  position: relative;
-  border: 1px solid rgba(var(--vwh-gold-rgb), 0.16);
-  background: rgba(var(--vwh-void-rgb), 0.55);
-  padding: clamp(12px, 1.4vw, 18px);
   display: grid;
-  gap: 8px;
-  max-width: 34ch;
+  gap: 10px;
+  max-width: 36ch;
   width: 100%;
 }
 
-/* The head bar. 2px of lit gold across the top edge of a stack's lead
-   card — the reference boards' "this is the top of a device" mark. */
-.vwh__panel[data-lead]::before {
-  content: "";
-  position: absolute;
-  inset: -1px -1px auto -1px;
-  height: 2px;
-  background: var(--gold-ink-lit, #f0c86a);
-  opacity: 0.9;
-}
-
-/* KICKER ................ TAG, over a hairline. The tag is the boards'
-   right-hand designator (`FIR SK 5.0 MFS`, `REV.047`) — here it is the
-   era's short name or the artefact's own label. */
+/* The section head: kicker left, designator right, ONE thin rule under.
+   This rule is the whole structure — it is what separates sections, so
+   nothing else gets to draw a line. */
 .vwh__panel__head {
   margin: 0;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  padding-bottom: 7px;
-  border-bottom: 1px solid rgba(var(--vwh-gold-rgb), 0.16);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(var(--vwh-gold-rgb), 0.28);
 }
 .vwh__panel__kicker {
   font-family: var(--vwh-mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(var(--vwh-gold-rgb), 0.72);
+  color: rgba(var(--vwh-gold-rgb), 0.85);
 }
 .vwh__panel__tag {
   font-family: var(--vwh-mono);
   font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  /* ⚠ 0.38 measured 2.99:1 on the void — a designator nobody can read
-     is not a quiet label, it is an absent one. */
-  color: rgba(var(--dawn-rgb), 0.58);
+  /* 0.45 measured 3.76:1 on the bare void. */
+  color: rgba(var(--dawn-rgb), 0.62);
   text-align: right;
 }
 
 .vwh__panel__title {
   margin: 0;
   font-family: var(--vwh-display);
-  font-size: clamp(15px, 1.2vw, 19px);
-  line-height: 1.15;
-  color: rgba(var(--dawn-rgb), 0.94);
+  font-size: clamp(18px, 1.55vw, 24px);
+  line-height: 1.12;
+  color: rgba(var(--dawn-rgb), 0.96);
 }
 .vwh__panel__motto {
   margin: 0;
@@ -457,60 +440,50 @@
   margin: 0;
   font-family: var(--vwh-display);
   font-size: clamp(12px, 0.92vw, 13.5px);
-  line-height: 1.45;
-  color: rgba(var(--dawn-rgb), 0.7);
+  line-height: 1.5;
+  color: rgba(var(--dawn-rgb), 0.72);
 }
 
-/* The bio's foot — the wardrobe line, on a dashed rule. Loadout is
-   character data, so it rides with the era's description rather than
-   competing for a slot of its own. */
+/* The bio's foot — a sub-kicker and its line. Space separates it from
+   the prose; the section rule stays the head's alone. */
 .vwh__panel__foot {
-  margin: 2px 0 0;
-  padding-top: 7px;
-  border-top: 1px dashed rgba(var(--vwh-gold-rgb), 0.22);
+  margin: 4px 0 0;
   display: grid;
-  gap: 3px;
+  gap: 4px;
   font-family: var(--vwh-mono);
   font-size: 9.5px;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 .vwh__panel__foot__k {
-  letter-spacing: 0.14em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  /* ⚠ 0.62 measured 3.83:1 on the void. */
   color: rgba(var(--vwh-gold-rgb), 0.82);
 }
 .vwh__panel__foot__v {
-  color: rgba(var(--dawn-rgb), 0.52);
+  color: rgba(var(--dawn-rgb), 0.62);
 }
 
-/* ── Facts ───────────────────────────────────────────────────────────
-   Label-left / value-right rows on dashed rules — the boards' field
-   grammar, and the `.arc-card-item__meta-row` pattern already in the
-   house. The value carries the record's own phrasing verbatim. */
+/* ── Facts ─────────────────────────────────────────────────────────────
+   Label left, value right, NOTHING between them — the reference's
+   resistance grid has no per-row furniture; rules belong to section
+   heads alone. */
 .vwh__facts {
   margin: 0;
   display: grid;
+  gap: 9px;
 }
 .vwh__facts__row {
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   align-items: baseline;
-  gap: 12px;
-  padding: 6px 0;
-  border-bottom: 1px dashed rgba(var(--vwh-gold-rgb), 0.18);
-}
-.vwh__facts__row:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
+  gap: 14px;
 }
 .vwh__facts__k {
   margin: 0;
   font-family: var(--vwh-mono);
   font-size: 9.5px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  /* ⚠ 0.6 measured 3.65:1 on the void, under the 4.5 floor for text. */
   color: rgba(var(--vwh-gold-rgb), 0.82);
   white-space: nowrap;
 }
@@ -518,22 +491,22 @@
   margin: 0;
   font-family: var(--vwh-display);
   font-size: clamp(11.5px, 0.88vw, 13px);
-  line-height: 1.3;
-  color: rgba(var(--dawn-rgb), 0.88);
+  line-height: 1.35;
+  color: rgba(var(--dawn-rgb), 0.9);
   text-align: right;
 }
 
-/* ── Press ───────────────────────────────────────────────────────────
-   The headline is the subject; the outlet is a boxed designator, which
-   is how the reference boards letter a source. A card with an `href`
-   is a link and says so on hover — nothing else moves. */
+/* ── Press ─────────────────────────────────────────────────────────────
+   Headline in prose, source on one mono line under it. The boxed outlet
+   chip was another frame; the name in the ink rung says the same thing
+   with zero furniture. */
 .vwh__press-stack {
   display: grid;
-  gap: 10px;
+  gap: 16px;
 }
 .vwh__press {
   display: grid;
-  gap: 6px;
+  gap: 5px;
   text-decoration: none;
   color: inherit;
 }
@@ -544,35 +517,32 @@ a.vwh__press:focus-visible .vwh__press__headline {
   text-underline-offset: 3px;
   text-decoration-color: rgba(var(--vwh-gold-rgb), 0.5);
 }
-.vwh__press-stack > .vwh__press + .vwh__press {
-  padding-top: 10px;
-  border-top: 1px dashed rgba(var(--vwh-gold-rgb), 0.18);
-}
 .vwh__press__headline {
   margin: 0;
   font-family: var(--vwh-display);
   font-size: clamp(11.5px, 0.9vw, 13px);
   line-height: 1.4;
-  color: rgba(var(--dawn-rgb), 0.86);
+  color: rgba(var(--dawn-rgb), 0.88);
 }
 .vwh__press__meta {
   margin: 0;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: baseline;
   font-family: var(--vwh-mono);
   font-size: 9px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 .vwh__press__outlet {
-  border: 1px solid rgba(var(--vwh-gold-rgb), 0.32);
-  padding: 2px 6px;
-  color: rgba(var(--vwh-gold-rgb), 0.92);
+  color: rgba(var(--vwh-gold-rgb), 0.85);
 }
 .vwh__press__date {
-  /* ⚠ 0.38 measured 2.99:1 on the void. */
   color: rgba(var(--dawn-rgb), 0.58);
+}
+.vwh__press__date::before {
+  content: "·";
+  margin: 0 6px;
+  color: rgba(var(--dawn-rgb), 0.35);
 }
 
 /* ── Transmission ────────────────────────────────────────────────────
@@ -583,26 +553,28 @@ a.vwh__press:focus-visible .vwh__press__headline {
    whole figure is one button. */
 .vwh__film {
   display: grid;
-  gap: 0;
+  gap: 7px;
   width: 100%;
   padding: 0;
-  border: 1px solid rgba(var(--vwh-gold-rgb), 0.22);
-  background: rgba(var(--vwh-void-rgb), 0.55);
+  border: 0;
+  background: none;
   cursor: pointer;
   text-align: left;
   font: inherit;
   color: inherit;
-  transition: border-color 0.18s ease;
-}
-.vwh__film:hover,
-.vwh__film:focus-visible {
-  border-color: rgba(var(--vwh-gold-rgb), 0.5);
 }
 .vwh__film__frame {
   position: relative;
   display: block;
   aspect-ratio: 16 / 9;
   overflow: hidden;
+  /* The one surviving edge: an image needs containment against black. */
+  border: 1px solid rgba(var(--vwh-gold-rgb), 0.24);
+  transition: border-color 0.18s ease;
+}
+.vwh__film:hover .vwh__film__frame,
+.vwh__film:focus-visible .vwh__film__frame {
+  border-color: rgba(var(--vwh-gold-rgb), 0.55);
 }
 .vwh__film__poster {
   position: absolute;
@@ -657,8 +629,6 @@ a.vwh__press:focus-visible .vwh__press__headline {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 8px 10px;
-  border-top: 1px solid rgba(var(--vwh-gold-rgb), 0.18);
 }
 .vwh__film__title {
   flex: 1 1 auto;
@@ -776,29 +746,14 @@ a.vwh__press:focus-visible .vwh__press__headline {
 }
 
 /* ── Light theme ─────────────────────────────────────────────────────
-   ⚠ THE TOKENS ALREADY FLIP. THE OVERRIDES MUST NOT FLIP THEM BACK.
-   ADR-058 SWAPS `--dawn-rgb` and `--void-rgb`, so under
-   `[data-theme="light"]` the resolved values are `--void-rgb:
-   236,227,214` (the parchment) and `--dawn-rgb: 17,15,9` (the ink).
-   Every neutral in §A above is written against those two tokens, which
-   makes it correct in BOTH themes by construction — one rule, no fork.
-
-   ⚠ The block this replaces re-declared them anyway — `background:
-   rgba(var(--dawn-rgb), .6)` for the panel and `color:
-   rgba(var(--void-rgb), .92)` for its title — which resolves in light
-   to a DARK box carrying LIGHT text: the dark theme, painted on paper.
-   Measured before the fix: panel ground `rgba(17,15,9,.6)` on a
-   `rgb(236,227,214)` page. This is the map lab's recorded trap
-   (`.claude/rules/proof.md`), one surface later.
-
-   So light overrides ONLY what is keyed to GOLD, because gold is a HUE
-   and its lightness is the role: a saturated gold measures ~1.1:1 as
-   small text on parchment, and ADR-063 U2's ramp exists for exactly
-   that (`--gold-ink` is the 4.5:1 rung). Never re-darken `--gold`
-   itself — that breaks the fills.
-
-   ADDITIVE LIGHT IS STILL INVISIBLE ON PAPER, so the figure keeps its
-   DARK PROJECTION WELL, which is what the physics would do anyway. */
+   ⚠ THE TOKENS ALREADY FLIP (ADR-058 swaps --dawn-rgb and --void-rgb),
+   so every neutral above is correct in both themes by construction.
+   Light overrides ONLY what is keyed to GOLD — hue is the brand,
+   lightness is the role, and a saturated gold measures ~1.1:1 as small
+   text on parchment (ADR-063 U2's ramp exists for exactly that) — plus
+   the dim neutrals, because an alpha inverts its own meaning across the
+   flip. ADDITIVE LIGHT IS STILL INVISIBLE ON PAPER, so the figure keeps
+   its dark projection well. */
 html[data-theme="light"] .vwh__ground {
   background: radial-gradient(
     ellipse 62% 80% at 50% 96%,
@@ -808,14 +763,7 @@ html[data-theme="light"] .vwh__ground {
   );
 }
 
-/* Gold as a MARK — the lead bar and the film's key. A lit gold on
-   parchment is a pale mark on a pale ground; the ink rung carries it. */
-html[data-theme="light"] .vwh__panel[data-lead]::before {
-  background: var(--gold-ink, #6e5216);
-  opacity: 1;
-}
-
-/* Gold as TEXT — never `--gold` itself on paper. */
+/* Gold as TEXT — never --gold itself on paper. */
 html[data-theme="light"] .vwh__panel__kicker,
 html[data-theme="light"] .vwh__panel__motto,
 html[data-theme="light"] .vwh__facts__k,
@@ -824,40 +772,31 @@ html[data-theme="light"] .vwh__press__outlet {
   color: var(--gold-ink, #6e5216);
 }
 
-/* Gold as LINE — the hairlines need more weight against parchment than
-   the 0.16 alpha that reads correctly on the void. */
-html[data-theme="light"] .vwh__panel,
-html[data-theme="light"] .vwh__panel__head,
-html[data-theme="light"] .vwh__facts__row,
-html[data-theme="light"] .vwh__panel__foot,
-html[data-theme="light"] .vwh__press__outlet,
-html[data-theme="light"] .vwh__film,
-html[data-theme="light"] .vwh__press-stack > .vwh__press + .vwh__press {
-  border-color: rgba(138, 107, 32, 0.3);
+/* Gold as LINE — the section rule and the poster's edge need more
+   weight against parchment than their void alphas. */
+html[data-theme="light"] .vwh__panel__head {
+  border-color: rgba(138, 107, 32, 0.34);
 }
-html[data-theme="light"] .vwh__film {
-  background: rgba(var(--void-rgb), 0.6);
+html[data-theme="light"] .vwh__film__frame {
+  border-color: rgba(138, 107, 32, 0.4);
 }
-html[data-theme="light"] .vwh__film:hover,
-html[data-theme="light"] .vwh__film:focus-visible {
-  border-color: rgba(138, 107, 32, 0.55);
+html[data-theme="light"] .vwh__film:hover .vwh__film__frame,
+html[data-theme="light"] .vwh__film:focus-visible .vwh__film__frame {
+  border-color: rgba(138, 107, 32, 0.6);
 }
-/* The poster keeps its own dark frame in light — a film frame is a lit
-   screen, not paper; only its chrome flips. The play ring's ground is
-   the frame's own image, so it keeps the dark recipe too. */
 
 /* ⚠ AN ALPHA INVERTS ITS OWN MEANING ACROSS THE FLIP (ADR-063). The
    dim neutrals recede toward BLACK on the void and toward PARCHMENT on
-   paper, so the same number that reads as "quiet" in dark reads as
-   "absent" in light. Measured on the void bed these four sit where they
-   should; measured on parchment they were 2.41 / 2.41 / 2.70 / 3.61,
-   under the 4.5 floor for text of any size. Lifted per theme, not
-   globally — dark is already correct and must not move. */
+   paper; measured on parchment they sat at 2.4-3.6:1. Lifted per theme
+   — dark is already correct and must not move. */
 html[data-theme="light"] .vwh__panel__tag,
 html[data-theme="light"] .vwh__press__date,
 html[data-theme="light"] .vwh__film__dur,
 html[data-theme="light"] .vwh__panel__foot__v {
   color: rgba(var(--dawn-rgb), 0.72);
+}
+html[data-theme="light"] .vwh__pip__name {
+  color: rgba(var(--void-rgb), 0.55);
 }
 
 /* ═══ §B · LAB CHROME (never ships) ═════════════════════════════════ */

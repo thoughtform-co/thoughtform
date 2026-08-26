@@ -38,24 +38,22 @@ function plain(segments: readonly VwSegment[]): string {
 }
 
 /**
- * One panel. `lead` gives the stack's first card the bright top rule
- * from the reference boards — the head bar that says "this is the top
- * of an instrument", which is the hierarchy those panels carry and a
- * flat stack of identical cards does not.
+ * One section: kicker + thin rule + content, bare on the void. No card,
+ * no wash, no lit bar — the second review's ruling ("no boxes"): the
+ * rule under the head is the only line a section owns, and space does
+ * the rest.
  */
 function Panel({
   kicker,
   tag,
-  lead,
   children,
 }: {
   kicker: string;
   tag?: string;
-  lead?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <article className="vwh__panel" data-lead={lead ? "" : undefined}>
+    <article className="vwh__panel">
       <p className="vwh__panel__head">
         <span className="vwh__panel__kicker">{kicker}</span>
         {tag ? <span className="vwh__panel__tag">{tag}</span> : null}
@@ -71,7 +69,7 @@ function Facts({ era }: { era: CharacterEra }) {
   const facts = era.facts ?? [];
   if (facts.length === 0) return null;
   return (
-    <Panel kicker="Facts" tag={era.short} lead>
+    <Panel kicker="Facts" tag={era.short}>
       <dl className="vwh__facts">
         {facts.map((f) => (
           <div className="vwh__facts__row" key={f.k}>
@@ -145,7 +143,7 @@ export function HoloEraPanels({ era }: { era: CharacterEra }) {
       <div className="vwh__side" data-side="r">
         {/* The era itself: who this version was, and what it did. The
             record's own prose — this is not the #about bio restated. */}
-        <Panel kicker="Era" lead>
+        <Panel kicker="Era">
           <p className="vwh__panel__title">{era.wardrobe}</p>
           <p className="vwh__panel__motto">{era.motto}</p>
           <p className="vwh__panel__body">{beat ? plain(beat.body) : era.motto}</p>
