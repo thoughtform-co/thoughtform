@@ -109,7 +109,9 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     wardrobe: "The founder",
     loadout: "Blazer · turtleneck · Thoughtform cap · brooch · rings.",
     motto: "The practice, founded.",
-    modelPath: null,
+    // First real Meshy model (voidwalker-avatar wave 20260826-thoughtform-v3,
+    // lowpoly A/B winner, texture re-encoded to 1.55 MB from 4.30).
+    modelPath: "/models/voidwalker/thoughtform.glb",
     stillPath: "/images/services/Vince-4.jpg",
     short: "Thoughtform",
   },
