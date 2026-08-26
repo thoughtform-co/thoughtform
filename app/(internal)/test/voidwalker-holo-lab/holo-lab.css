@@ -30,15 +30,23 @@
   --vwh-display: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   --vwh-gold-rgb: var(--gold-rgb, 202, 165, 84);
   --vwh-void-rgb: var(--void-rgb, 10, 9, 8);
+  /* ⚠ THE HEAD-LINE ANCHOR (owner, 2026-08-26, third review). The head
+     sits ~10% into the media rect from its TOP; the side stacks and the
+     era title all seat to that line, so a short stack never rises and a
+     tall stack never sinks. Derived from the media's own box in
+     `HoloLabShell` via `--vwh-head-y`, floored at 12svh. */
+  --vwh-head-y: clamp(84px, 11svh, 120px);
 
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 0.82fr) minmax(0, 1fr);
-  grid-template-rows: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: clamp(16px, 2.4vw, 44px);
+  /* head-band | body | rail. The head-band's height IS the head line, so
+     everything below aligns to a common floor and everything WITHIN it
+     is one masthead across the whole stage. */
+  grid-template-rows: var(--vwh-head-y) minmax(0, 1fr) auto;
+  gap: 0 clamp(16px, 2.4vw, 44px);
   height: 100svh;
-  padding: clamp(16px, 3svh, 40px) clamp(20px, 4vw, 64px) 0;
+  padding: 0 clamp(20px, 4vw, 64px);
   overflow: hidden;
 }
 
@@ -46,10 +54,14 @@
    scroll nothing and clip nothing — a panel that will not fit is a copy
    problem, not a layout one. */
 .vwh__side {
-  grid-row: 1;
-  align-self: center;
+  grid-row: 2;
+  align-self: start;
+  /* Head-line offset: the drawn head sits ~10svh below the media's own
+     top (i.e. the head band's bottom). Sides drop by that same amount so
+     their first row seats to the head. */
+  padding-top: clamp(24px, 6.5svh, 64px);
   display: grid;
-  gap: clamp(20px, 3.4svh, 36px);
+  gap: clamp(24px, 4.2svh, 44px);
   min-height: 0;
 }
 .vwh__side[data-side="l"] {
@@ -67,11 +79,10 @@
    stage and drifting away from the feet as the figure scales. */
 .vwh__column {
   grid-column: 2;
-  grid-row: 1;
+  grid-row: 2;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
   justify-items: center;
-  align-content: end;
+  align-content: start;
   min-height: 0;
   height: 100%;
 }
@@ -421,12 +432,14 @@
   text-align: right;
 }
 
+/* The panel title (bio's sub-line, kept small: the era's DISPLAY name
+   is the masthead above the figure now). */
 .vwh__panel__title {
   margin: 0;
   font-family: var(--vwh-display);
-  font-size: clamp(18px, 1.55vw, 24px);
-  line-height: 1.12;
-  color: rgba(var(--dawn-rgb), 0.96);
+  font-size: clamp(14px, 1.05vw, 17px);
+  line-height: 1.2;
+  color: rgba(var(--dawn-rgb), 0.94);
 }
 .vwh__panel__motto {
   margin: 0;
@@ -461,6 +474,50 @@
 }
 .vwh__panel__foot__v {
   color: rgba(var(--dawn-rgb), 0.62);
+}
+
+/* ── The era masthead ─────────────────────────────────────────────────
+   THE ERA TITLE IS NOT A ROW IN THE RIGHT STACK. Owner ruling (2026-08-26):
+   it steps out to display scale as a masthead over the figure, standalone,
+   because it is the section's own name. The right stack keeps the era's
+   description; the title crowns the whole composition. Everything below
+   the head band -- the two side stacks and the figure -- aligns to this
+   band's bottom edge. */
+.vwh__mast {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  justify-self: center;
+  text-align: center;
+  padding-bottom: clamp(6px, 1svh, 12px);
+  display: grid;
+  gap: 6px;
+}
+.vwh__mast {
+  gap: 4px;
+}
+.vwh__mast__kicker {
+  margin: 0;
+  font-family: var(--vwh-mono);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(var(--vwh-gold-rgb), 0.7);
+}
+.vwh__mast__title {
+  margin: 0;
+  font-family: var(--vwh-display);
+  font-weight: 500;
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.05;
+  color: rgba(var(--dawn-rgb), 0.96);
+}
+.vwh__mast__year {
+  margin: 0;
+  font-family: var(--vwh-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: rgba(var(--vwh-gold-rgb), 0.72);
 }
 
 /* ── Facts ─────────────────────────────────────────────────────────────
@@ -650,7 +707,7 @@ a.vwh__press:focus-visible .vwh__press__headline {
 /* ── The rail ────────────────────────────────────────────────────────*/
 .vwh__rail {
   grid-column: 1 / -1;
-  grid-row: 2;
+  grid-row: 3;
   display: flex;
   justify-content: center;
   gap: clamp(8px, 1.4vw, 22px);
