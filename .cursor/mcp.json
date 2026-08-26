@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "astrolabe-vault": {
+      "type": "http",
+      "url": "https://astrolabe.thoughtform.co/api/vault/mcp"
+    }
+  }
+}

@@ -1,0 +1,248 @@
+/* Voidwalker avatar preview — internal read-only viewer over the
+   voidwalker-avatar skill's waves folder. */
+
+.avatar-preview {
+  min-height: 100svh;
+  padding: clamp(24px, 4svh, 48px) clamp(16px, 5vw, 56px);
+  background: #0a0908;
+  color: #ebe3d6;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+.avatar-preview--empty {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.avatar-preview--empty code {
+  display: inline-block;
+  padding: 4px 8px;
+  background: rgba(202, 165, 84, 0.12);
+  border-radius: 4px;
+  color: #caa554;
+}
+
+.avatar-preview__head {
+  margin-bottom: 24px;
+  max-width: 92ch;
+}
+.avatar-preview__head h1 {
+  margin: 0 0 8px;
+  font-family: ui-monospace, "PT Mono", monospace;
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #caa554;
+}
+.avatar-preview__head p {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(235, 227, 214, 0.75);
+}
+.avatar-preview__head code,
+.avatar-preview__hint code,
+.avatar-preview__figure code {
+  font-family: ui-monospace, "PT Mono", monospace;
+  color: #caa554;
+  font-size: 12px;
+  background: rgba(202, 165, 84, 0.08);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+.avatar-preview__hint {
+  font-size: 12px;
+  color: rgba(235, 227, 214, 0.55);
+}
+
+.avatar-preview__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed rgba(202, 165, 84, 0.25);
+}
+.avatar-preview__tab {
+  appearance: none;
+  border: 1px solid rgba(202, 165, 84, 0.3);
+  background: transparent;
+  padding: 8px 14px;
+  color: rgba(235, 227, 214, 0.72);
+  cursor: pointer;
+  display: grid;
+  gap: 3px;
+  font-family: inherit;
+  text-align: left;
+  transition:
+    color 180ms,
+    background 180ms,
+    border-color 180ms;
+}
+.avatar-preview__tab:hover {
+  border-color: rgba(202, 165, 84, 0.6);
+  color: #ebe3d6;
+}
+.avatar-preview__tab[data-active] {
+  background: rgba(202, 165, 84, 0.12);
+  border-color: #caa554;
+  color: #ebe3d6;
+}
+.avatar-preview__tab-id {
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+.avatar-preview__tab-meta {
+  font-size: 11px;
+  color: rgba(235, 227, 214, 0.55);
+}
+
+.avatar-preview__body {
+  display: grid;
+  gap: 32px;
+}
+.avatar-preview__body h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #caa554;
+  font-family: ui-monospace, "PT Mono", monospace;
+  letter-spacing: 0.06em;
+}
+.avatar-preview__body h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.9);
+}
+.avatar-preview__body section {
+  border-top: 1px solid rgba(202, 165, 84, 0.14);
+  padding-top: 16px;
+}
+
+.avatar-preview__grid {
+  display: grid;
+  gap: 16px;
+}
+.avatar-preview__grid--images {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.avatar-preview__grid--videos {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+.avatar-preview__grid--glbs {
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+}
+.avatar-preview__grid--frames {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.avatar-preview__figure {
+  margin: 0;
+  border: 1px solid rgba(202, 165, 84, 0.16);
+  background: rgba(0, 0, 0, 0.35);
+  display: grid;
+  grid-template-rows: auto min-content;
+}
+.avatar-preview__figure img,
+.avatar-preview__figure video {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #000;
+  min-height: 160px;
+  max-height: 640px;
+  object-fit: contain;
+}
+.avatar-preview__figure--small img {
+  max-height: 220px;
+}
+.avatar-preview__figure figcaption {
+  padding: 8px 12px;
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: rgba(235, 227, 214, 0.7);
+}
+.avatar-preview__figure figcaption span {
+  color: rgba(235, 227, 214, 0.5);
+}
+.avatar-preview__figure figcaption a {
+  color: #caa554;
+  font-size: 11px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.4);
+  justify-self: start;
+}
+.avatar-preview__figure figcaption a:hover {
+  color: #ebe3d6;
+}
+
+.avatar-preview__figure--glb {
+  grid-template-rows: 500px min-content;
+}
+.avatar-preview__viewer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.avatar-preview__viewer > div {
+  width: 100%;
+  height: 100%;
+}
+.avatar-preview__loading {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: rgba(202, 165, 84, 0.8);
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+.avatar-preview__meta {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+  font-family: ui-monospace, "PT Mono", monospace;
+  font-size: 12px;
+}
+.avatar-preview__meta a {
+  color: rgba(235, 227, 214, 0.72);
+  text-decoration: none;
+}
+.avatar-preview__meta a:hover {
+  color: #caa554;
+}
+
+.avatar-preview__eval {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px dashed rgba(202, 165, 84, 0.25);
+}
+.avatar-preview__eval h2 {
+  margin: 0 0 12px;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #caa554;
+}
+.avatar-preview__eval pre {
+  margin: 0;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(202, 165, 84, 0.15);
+  font-family: ui-monospace, "PT Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(235, 227, 214, 0.85);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}

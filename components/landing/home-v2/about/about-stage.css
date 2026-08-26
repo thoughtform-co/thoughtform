@@ -171,7 +171,11 @@
    + --band-margin (the column's exact left inset under the ADR-048 band
    chain) + 48px glow pad (≥ the name's 22px text-shadow) — so the column
    is provably off-viewport at exit = 1 on every width. No transition:
-   scroll owns it, reversible. */
+   scroll owns it, reversible.
+
+   ⚠ ADR-082 PORTAL VARIANT: the copy still slides left (out of frame is
+   the same either way — the reader is leaving About), so this rule stays
+   unchanged. Only the CLUSTER's exit changes. */
 #about[data-about-mode="stage"] .about-stage__copy {
   transform: translateX(calc(var(--about-exit, 0) * (-100% - var(--band-margin, 200px) - 48px)));
 }
@@ -191,14 +195,25 @@
    at exit = 1 on every width. --about-center-dx is offset-chain-measured
    (transform-independent), so this exit term never feeds back into its own
    target; the slot's gBCR rides it and the welded deck follows off the
-   right frustum edge (three culls it). */
+   right frustum edge (three culls it).
+
+   ⚠ ADR-082 PORTAL VARIANT — the cluster stops moving right and moves
+   toward the CENTRE of the viewport, scaling up as the reader flies
+   THROUGH the portrait. `--about-portal` (same envelope as
+   `--about-exit`) is only written when the character stage is on;
+   both channels are additive, and the hook writes 0 for the one it
+   is not driving so they cannot both take effect on the same frame. */
 #about[data-about-mode="stage"] .about-stage__cluster {
   transform: translateX(
-    calc(
-      var(--about-center-dx, 0px) * (1 - var(--about-shift, 0)) + var(--about-exit, 0) *
-        (100% + var(--band-margin, 200px) + 48px)
+      calc(
+        var(--about-center-dx, 0px) * (1 - var(--about-shift, 0)) + var(--about-exit, 0) *
+          (100% + var(--band-margin, 200px) + 48px) + var(--about-portal, 0) *
+          var(--about-center-dx, 0px)
+      )
     )
-  );
+    scale(calc(1 + var(--about-portal, 0) * 0.6));
+  transform-origin: center center;
+  transition: none;
 }
 #about[data-about-mode="stage"] .about-stage__cluster .voidwalker__orbit__svg {
   opacity: var(--about-flip, 0);

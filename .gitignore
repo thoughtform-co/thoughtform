@@ -108,3 +108,9 @@ public/images/navigator/
 # HUD-instruments look-dev stills (96 PNGs / ~8 MB, fully regenerable via
 # `node scripts/capture-hud-instruments.mjs`)
 docs/design/hud-instruments/
+
+# Voidwalker-avatar preview cache — regenerable via
+# `node scripts/sync-voidwalker-avatar-preview.mjs`. Read-only mirror of
+# the offline skill's waves folder for the /test/voidwalker-avatar-preview
+# route; never checked in (per-machine, 20+ MB per wave).
+public/_previews/

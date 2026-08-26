@@ -7,7 +7,15 @@
 # - gateway-hero.png      -> (internal) /test/gateway + /test/key-visual-portal only
 # - env/ (studio.hdr)     -> (internal) /test/brandmark-reflective only
 # - showcase/             -> zero references anywhere in the tree
-# - Vince-4.jpg           -> zero references anywhere in the tree
+#
+# ⚠ Vince-4.jpg WAS listed here on the same "zero references" ground, and
+# ADR-082 made that false: `lib/voidwalker/characterEras.ts` points two of
+# the six eras at it, so the exclusion shipped two broken images to
+# production while everything looked correct locally. Un-ignored 2026-08-26.
+# It is 4.26 MB against the registry's own <=240 KB still budget, so it is a
+# STOPGAP: it goes away when the real `public/images/voidwalker/era-<id>.jpg`
+# plates land and the six `stillPath`s flip. A "zero references" claim is
+# only true on the day it is written.
 #
 # Deliberately KEPT deployed:
 # - public/videos/        -> /claude-workshop (PUBLIC marketing route) ships
@@ -16,7 +24,6 @@
 public/images/gateway-hero.png
 public/env
 public/showcase
-public/images/services/Vince-4.jpg
 # - proof-lab/            -> (internal) /test/proof-highlight-lab only; the
 #                            captured Arc-sphere still each direction dresses
 #                            (regenerate with scripts/capture-proof-sphere.mjs)

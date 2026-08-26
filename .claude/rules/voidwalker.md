@@ -3,12 +3,16 @@ paths:
   - "components/landing/home-v2/voidwalker/**"
   - "components/landing/home-v2/hooks/useVoidwalkerScroll.ts"
   - "components/landing/home-v2/hooks/useVoidwalkerTravelScroll.ts"
+  - "components/landing/home-v2/hooks/useCharacterStageScroll.ts"
+  - "components/landing/home-v2/hooks/useCharacterStagePortalReceiver.ts"
   - "components/landing/home-v2/DepthGatewayScene/VoidwalkerTimeTunnel.tsx"
   - "lib/voidwalker/**"
   - "lib/home-v2/vwTravelRef.ts"
   - "scripts/capture-voidwalker.mjs"
   - "scripts/capture-voidwalker-travel.mjs"
+  - "scripts/probe-voidwalker-models.mjs"
   - "app/(internal)/test/voidwalker-flight-lab/**"
+  - "app/(internal)/test/voidwalker-avatar-lab/**"
   - "components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx"
   - "tests/visual/landing-corridor-smoke.spec.ts"
 ---
@@ -19,7 +23,35 @@ The career timeline after the bio — nine beats on one gold spine, six of
 them with a drawn wireframe plate — and the OPAQUE COVER that ends the
 corridor ambient hold. "Voidwalker" is the station's title by owner
 decision (2026-08-23); `.voidwalker*` is the `#about` bio's CSS block and is
-never written here — this section is `.vw*` / `.vw-wire*`.
+never written here — this section is `.vw*` / `.vw-wire*` (or `.ch*` when
+the character stage is on — see below).
+
+⚠ **ADR-082 (2026-08-26): the station's INTERIOR is a character-selection
+stage when `VOIDWALKER_CHARACTER_STAGE` is on.** The station shell, the
+rail manifest row, the section readout, the nav drawer entry and the
+ADR-030 §6 cover-lockstep are UNCHANGED — the flag toggles ONLY the
+inside of the station. When on:
+
+- `VoidwalkerStation` renders `<CharacterStage />` (in `voidwalker/character/`)
+  instead of the vertical timeline / travel — every timeline hook stays
+  inert (no `data-vw-mode`, no `data-vw-ready`, no `--vw-b`);
+- the CSS namespace becomes `.ch*` (`voidwalker-character.css`), which
+  DOES NOT overlap `.vw*` — one file, one namespace, no cross-cascade;
+- the era registry is `lib/voidwalker/characterEras.ts` (six eras, each
+  pointing at a `VOIDWALKER_BEATS` entry by id — the record is one, the
+  presentation is two);
+- the About runway's exit clock has TWO transform targets: the ADR-047
+  slide-right (`--about-exit`) and the ADR-082 portal-to-centre
+  (`--about-portal`), gated by the flag; the receiver bus is
+  `characterStagePortalRef.ts`.
+
+⚠ **The rest of this rule still binds** — the record is still the
+record, the wireframes are still on disk (fallback path), the cover
+lockstep is still the ADR-030 §6 seam bug. The `.claude/skills/
+voidwalker-avatar/` skill is the offline pipeline that produces the era
+character sheets and Meshy GLBs — `public/models/voidwalker/<era>.glb`,
+`public/images/voidwalker/era-<era>.jpg`, ≤ 4 MB per GLB
+(`scripts/probe-voidwalker-models.mjs`).
 
 ⚠ **SINCE ADR-081 THIS SECTION HAS TWO PRESENTATION MODES, ONE CONTENT
 TREE**, and **[ADR-081 U2](../sentinel/decisions/081-voidwalker-time-tunnel.md)

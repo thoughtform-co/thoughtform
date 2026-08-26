@@ -2,7 +2,10 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { WIREFRAME_STATIONS, expectWireframeBay, readToolBay } from "./helpers/toolBay";
 
-import { SERVICES_PROOF_RUNWAY_VH } from "../../components/landing/home-v2/unifiedServicesInstrument";
+import {
+  SERVICES_PROOF_RUNWAY_VH,
+  VOIDWALKER_CHARACTER_STAGE,
+} from "../../components/landing/home-v2/unifiedServicesInstrument";
 
 /**
  * Services card ring smoke (ADR-029).
@@ -1961,6 +1964,14 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // #about, and the kill lands under `#practice`. The hook's
     // `nextStation` query and home-v2.css's cover rule name that station
     // together; this walk is the third side of that lockstep.
+    //
+    // ⚠ ADR-082 supersedes ADR-081 on composition: with the CHARACTER
+    // STAGE on, `#voidwalker` no longer writes `data-vw-mode="travel"`
+    // — the timeline hook is inert and the character stage renders
+    // instead. The ambient hold still terminates under `#practice`
+    // (via the same `useCorridorExitScroll` retarget under
+    // `VOIDWALKER_TIME_TUNNEL`), and the stage's own opaque background
+    // sits over the live canvas. Assert accordingly.
     const inTravel = await page.evaluate(() => {
       const vw = document.getElementById("voidwalker");
       if (!vw) return null;
@@ -1973,11 +1984,21 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       ambient: document.documentElement.hasAttribute("data-services-ambient"),
       mode: document.getElementById("voidwalker")?.getAttribute("data-vw-mode") ?? null,
       bg: getComputedStyle(document.getElementById("voidwalker")!).backgroundColor,
+      chReady: document
+        .querySelector<HTMLElement>("#voidwalker .ch")
+        ?.hasAttribute("data-ch-ready"),
     }));
-    expect(during.mode).toBe("travel");
-    // Transparent over the live canvas, on the `--vw-bg-in` shield.
-    expect(during.bg).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
-    // The canvas the beats fly through is still alive.
+    if (VOIDWALKER_CHARACTER_STAGE) {
+      // Character stage owns this rect; no travel mode is written.
+      expect(during.mode).toBeNull();
+      expect(during.chReady).toBe(true);
+    } else {
+      expect(during.mode).toBe("travel");
+      // Transparent over the live canvas, on the `--vw-bg-in` shield.
+      expect(during.bg).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
+    }
+    // The canvas the beats fly through / that the stage sits over is
+    // still alive on both paths — the ADR-030 §6 seam bug pins it.
     expect(during.ambient).toBe(true);
 
     // Walk under #practice: THIS is where the ambient hold ends now. The

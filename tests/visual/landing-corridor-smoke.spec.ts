@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { VOIDWALKER_CHARACTER_STAGE } from "../../components/landing/home-v2/unifiedServicesInstrument";
+
 /**
  * Production homepage corridor smoke (ADR-018 / ADR-021 / ADR-022).
  *
@@ -379,6 +381,16 @@ test.describe("Homepage corridor smoke", () => {
     test.skip(
       !viewport || viewport.width < 961,
       "voidwalker travel is desktop-only; the shed has no fallback path to guard here"
+    );
+    // ⚠ ADR-082 supersedes ADR-081 on composition — with the character
+    // stage on, `#voidwalker` no longer engages the travel writer, so
+    // the shed never activates (the character stage is its own opaque
+    // cover). The station's exit-time restore is guarded elsewhere
+    // (`services-ring-smoke`'s ambient walk). Skip when the flag is on
+    // rather than assert an interior that no longer exists.
+    test.skip(
+      VOIDWALKER_CHARACTER_STAGE,
+      "character stage owns the voidwalker interior; the tunnel shed is inert"
     );
     // 1. Baseline — walk to the Arc. `arcY` is where we must come back
     //    to in step 3; the two marks have to be the SAME place or the

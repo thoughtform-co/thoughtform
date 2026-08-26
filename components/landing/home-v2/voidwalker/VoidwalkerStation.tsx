@@ -5,8 +5,9 @@ import { createPortal } from "react-dom";
 
 import { useVoidwalkerScroll } from "../hooks/useVoidwalkerScroll";
 import { useVoidwalkerTravelScroll } from "../hooks/useVoidwalkerTravelScroll";
-import { VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
+import { VOIDWALKER_CHARACTER_STAGE, VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
 import { MediaLightbox, useWalkthrough } from "../services/casefile/MediaLightbox";
+import { CharacterStage } from "./character/CharacterStage";
 import { FilmPlate } from "./wireframes/FilmPlate";
 import { VOIDWALKER_WIREFRAMES } from "./wireframes/voidwalkerWireframes";
 import { wholeYears, yearFrac } from "@/lib/voidwalker/voidwalkerTravelClock";
@@ -390,7 +391,13 @@ function useTravelCapable(): boolean {
   return capable;
 }
 
-export function VoidwalkerStation() {
+/**
+ * The ADR-074 / ADR-081 timeline surface, factored out of
+ * `VoidwalkerStation` so the ADR-082 character stage can be an early
+ * return without conditional hooks. Renders identically to the pre-flag
+ * `VoidwalkerStation` when this branch is taken.
+ */
+function VoidwalkerTimelineStation() {
   const rootRef = useRef<HTMLDivElement>(null);
   const travel = useTravelCapable();
   // ⚠ Exactly one of these writes per path. `enabled` is the same boolean
@@ -462,4 +469,20 @@ export function VoidwalkerStation() {
       </div>
     </div>
   );
+}
+
+/**
+ * VoidwalkerStation — the station's interior.
+ *
+ * ⚠ ONE STATION, TWO SURFACES (ADR-082). The station shell (the
+ * opaque cover for `useCorridorExitScroll`, the rail manifest row,
+ * the section readout, the nav drawer entry) is unchanged; only the
+ * INTERIOR toggles between the character stage (`VOIDWALKER_CHARACTER_STAGE`
+ * on) and the timeline (ADR-074 / ADR-081, the fallback).
+ *
+ * Rollback is a one-line flag flip in `unifiedServicesInstrument.ts`.
+ */
+export function VoidwalkerStation() {
+  if (VOIDWALKER_CHARACTER_STAGE) return <CharacterStage />;
+  return <VoidwalkerTimelineStation />;
 }
