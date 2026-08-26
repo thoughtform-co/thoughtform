@@ -86,18 +86,37 @@ export function VoidwalkerHologram() {
       el.setAttribute("data-vwh-in", "");
       return;
     }
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        el.setAttribute("data-vwh-in", "");
-        // The figure's glitch runs off the same clock as an era switch.
-        setEpoch((e) => e + 1);
-        io.disconnect();
-      },
-      { threshold: 0.3 }
-    );
-    io.observe(el);
-    return () => io.disconnect();
+    /* ⚠ THE ARM IS THE PIN, NOT VISIBILITY. An IntersectionObserver at
+       threshold 0.3 fired mid-approach, so the composition faded in
+       while the stage was still travelling — which is the parallax the
+       owner has now banned three times. The stage is sticky at top 0;
+       it is PINNED exactly when its rect reaches the viewport top, so
+       that is the one signal worth arming on. Checked per scroll frame,
+       one-shot, and run once immediately for deep links that load
+       already inside the section. */
+    let armed = false;
+    let raf = 0;
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(check);
+    };
+    const arm = () => {
+      if (armed) return;
+      armed = true;
+      el.setAttribute("data-vwh-in", "");
+      // The figure's glitch runs off the same clock as an era switch.
+      setEpoch((e) => e + 1);
+      window.removeEventListener("scroll", onScroll);
+    };
+    function check() {
+      raf = 0;
+      if (el && el.getBoundingClientRect().top <= 2) arm();
+    }
+    check();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, [reduced]);
 
   /**

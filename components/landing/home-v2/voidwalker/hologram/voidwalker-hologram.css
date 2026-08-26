@@ -855,17 +855,22 @@ a.vwh__press:focus-visible .vwh__press__headline {
   }
 }
 
-/* ── The entrance ─────────────────────────────────────────────────────
-   ⚠ NOTHING RISES (owner, 2026-08-26). #about exits by sliding, so a
-   section that answers it by scrolling its contents up reads as the
-   same move twice. The composition assembles instead: the columns
-   arrive from the side they live on, the figure TEARS in (see
-   @keyframes vwhReveal), and the masthead simply resolves.
+/* ── The entrance ─────────────────────────────────────────────────
+   ⚠ NOTHING VISIBLE TRAVELS. EVER. (owner, 2026-08-26, third pass on
+   this ruling — the first killed the reveal's translateY, the second
+   pinned the stage, and the section STILL read as parallax because the
+   arm fired at 30% visibility, mid-approach, so the composition faded
+   in while the stage was still riding the scroll toward its pin.)
 
-   The trigger is `data-vwh-in`, written once by an IntersectionObserver
-   in `VoidwalkerHologram` — a one-shot, so scrolling back up does not
-   replay it. Reduced motion gets the attribute immediately and every
-   transition below is skipped by the media query. */
+   The law as it now stands: while the stage travels, the station is
+   EMPTY VOID — every part of the composition (columns, masthead, rail,
+   AND the figure) holds at opacity 0. `data-vwh-in` is written only
+   when the sticky stage actually PINS (rect.top ≤ 2px, checked per
+   scroll frame in `VoidwalkerHologram`), and everything materializes
+   in place: the masthead scramble-decodes, the figure tears in, the
+   columns slide from their own side. One-shot; scrolling back does not
+   replay. Reduced motion gets the attribute immediately and skips all
+   of it via this media query. */
 @media (prefers-reduced-motion: no-preference) {
   .vwh__side,
   .vwh__mast,
@@ -876,6 +881,17 @@ a.vwh__press:focus-visible .vwh__press__headline {
       transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
   }
   /* Each column carries the sign of the side it sits on. */
+  /* The FIGURE hides with everything else. Pre-arm it was the one thing
+     still painted, so it rode the whole approach in plain view — the
+     exact motion the ruling bans. Opacity only: the tear supplies the
+     drama when the epoch bump fires at the pin. */
+  .vwh__column {
+    opacity: 0;
+    transition: opacity 360ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .vwh[data-vwh-in] .vwh__column {
+    opacity: 1;
+  }
   .vwh__side[data-side="l"] {
     transform: translateX(-42px);
   }
