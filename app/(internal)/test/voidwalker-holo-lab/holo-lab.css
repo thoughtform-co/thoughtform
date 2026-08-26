@@ -412,15 +412,22 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(var(--vwh-gold-rgb), 0.28);
+  padding-bottom: 11px;
+  border-bottom: 1px solid rgba(var(--vwh-gold-rgb), 0.42);
 }
+/* ⚠ THE SECTION HEADER IS THE DISPLAY FACE AT 700 IN DAWN (owner,
+   2026-08-26, weights review): variant 4 of four. It carries the
+   authority the Starfield reference reads with — near-white sans in a
+   real weight — and lets the gold roles beneath step DOWN, so a reader
+   sees the section title first without hunting. PT Mono at any size
+   sits back; the mono only ships one weight in this build. */
 .vwh__panel__kicker {
-  font-family: var(--vwh-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.2em;
+  font-family: var(--vwh-display);
+  font-weight: 700;
+  font-size: 13.5px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(var(--vwh-gold-rgb), 0.85);
+  color: rgba(var(--dawn-rgb), 0.98);
 }
 .vwh__panel__tag {
   font-family: var(--vwh-mono);
@@ -821,7 +828,12 @@ html[data-theme="light"] .vwh__ground {
 }
 
 /* Gold as TEXT — never --gold itself on paper. */
-html[data-theme="light"] .vwh__panel__kicker,
+/* Kicker is dawn (near-white) in dark → void (near-black) in light —
+   the section title takes the ink for maximum authority; the mono gold
+   roles beneath keep their ink-rung colour on paper. */
+html[data-theme="light"] .vwh__panel__kicker {
+  color: rgba(var(--void-rgb), 0.94);
+}
 html[data-theme="light"] .vwh__panel__motto,
 html[data-theme="light"] .vwh__facts__k,
 html[data-theme="light"] .vwh__panel__foot__k,
@@ -832,7 +844,7 @@ html[data-theme="light"] .vwh__press__outlet {
 /* Gold as LINE — the section rule and the poster's edge need more
    weight against parchment than their void alphas. */
 html[data-theme="light"] .vwh__panel__head {
-  border-color: rgba(138, 107, 32, 0.34);
+  border-color: rgba(138, 107, 32, 0.46);
 }
 html[data-theme="light"] .vwh__film__frame {
   border-color: rgba(138, 107, 32, 0.4);
