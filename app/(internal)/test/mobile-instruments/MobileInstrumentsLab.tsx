@@ -3,8 +3,34 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
-import proofConcept from "@/docs/design/mobile-instruments/proof-mobile-concept.png";
-import voidwalkerConcept from "@/docs/design/mobile-instruments/voidwalker-mobile-concept.png";
+/**
+ * ⚠ THE CONCEPT STUDIES LIVE IN `public/`, NOT IN `docs/`, AND THEY ARE
+ * REFERENCED BY PATH RATHER THAN IMPORTED.
+ *
+ * `.vercelignore` excludes `docs` (31 MB of design captures, since the
+ * 6e291118 consolidation), so a static import from there resolves on every
+ * developer machine and on NO deploy — `Module not found` at build time, plus
+ * a `TS2307` in CI, where the gitignored `next-env.d.ts` is also absent. A
+ * route that ships may not import its assets out of the docs tree.
+ *
+ * The PNGs stay in `docs/design/mobile-instruments/` as the record; these are
+ * WebP at native size (2.4 MB -> 144 kB), which is what a prod-blocked lab
+ * route should cost the deploy. `public/proof-lab/` is the precedent.
+ */
+const CONCEPTS = {
+  proof: {
+    src: "/mobile-instruments/proof-mobile-concept.webp",
+    alt: "Generated Proof mobile instrument concept",
+    width: 875,
+    height: 1798,
+  },
+  voidwalker: {
+    src: "/mobile-instruments/voidwalker-mobile-concept.webp",
+    alt: "Generated Voidwalker mobile instrument concept",
+    width: 853,
+    height: 1844,
+  },
+} as const;
 
 type Surface = "proof" | "voidwalker";
 type Presentation = "html" | "concept";
@@ -439,13 +465,7 @@ export function MobileInstrumentsLab() {
   const [device, setDevice] = useState<DeviceWidth>(390);
 
   const liveHref = surface === "proof" ? "/#services" : "/#voidwalker";
-  const concept = useMemo(
-    () =>
-      surface === "proof"
-        ? { src: proofConcept, alt: "Generated Proof mobile instrument concept" }
-        : { src: voidwalkerConcept, alt: "Generated Voidwalker mobile instrument concept" },
-    [surface]
-  );
+  const concept = useMemo(() => CONCEPTS[surface], [surface]);
 
   return (
     <main className="mil" data-device={device}>
@@ -563,6 +583,8 @@ export function MobileInstrumentsLab() {
                 className="mil-concept"
                 src={concept.src}
                 alt={concept.alt}
+                width={concept.width}
+                height={concept.height}
                 sizes={`${device}px`}
                 priority
               />
