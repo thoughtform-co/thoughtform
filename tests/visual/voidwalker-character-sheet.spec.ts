@@ -44,7 +44,10 @@ async function setVoidwalkerProgress(page: Page, progress: number) {
   await settle(page);
 }
 
-async function bootDesktop(page: Page, viewport: (typeof DESKTOP_VIEWPORTS)[number]) {
+/* The viewport is any desktop shape, not only the four reference rungs: the
+   ultra-wide symmetry case boots widths that deliberately are not in the
+   matrix, because that is where the composition had room to go wrong. */
+async function bootDesktop(page: Page, viewport: { width: number; height: number }) {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.setViewportSize(viewport);
   await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -614,6 +617,56 @@ test.describe("Voidwalker editorial character sheet", () => {
    * rail starts at `--hud-rail-y-start`. The figure column spans the whole grid
    * and must NOT have moved to buy that clearance.
    */
+  test("the sheet stays symmetric on ultra-wide screens", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "explicit Chromium viewport matrix");
+
+    /* ⚠ THIS DEFECT WAS INVISIBLE AT EVERY OTHER VIEWPORT IN THIS FILE. At
+       1600 the side columns are exactly as wide as the capped panel measure,
+       so there is no slack to misplace and the composition reads balanced.
+       Give it room and `justify-items: stretch` pinned BOTH panels to their
+       column's LEFT edge: measured 427px of inboard gap on the left against
+       32px on the right at 2560x1035, with a 235/636 outer-margin split.
+       Ultra-wide is therefore its own rung, not a nice-to-have. */
+    for (const viewport of [
+      { width: 2560, height: 1035 },
+      { width: 3440, height: 1440 },
+    ]) {
+      await bootDesktop(page, viewport);
+      const m = await page.evaluate(() => {
+        const q = (sel: string) => {
+          const el = document.querySelector<HTMLElement>(sel);
+          if (!el) throw new Error(`Missing ${sel}`);
+          return el.getBoundingClientRect();
+        };
+        const scope = q("[data-vwh-region='scope'] .vwh__panel");
+        const facts = q("[data-vwh-region='record'] .vwh__panel");
+        const figure = q(".vwh__column");
+        const mast = q("[data-vwh-region='identity']");
+        const band = document.documentElement.clientWidth;
+        return {
+          gapL: figure.left - scope.right,
+          gapR: facts.left - figure.right,
+          outerL: scope.left,
+          outerR: band - facts.right,
+          panelL: scope.width,
+          panelR: facts.width,
+          mastCentre: mast.left + mast.width / 2,
+          figureCentre: figure.left + figure.width / 2,
+        };
+      });
+      const label = `${viewport.width}x${viewport.height}`;
+
+      // the panels sit the same distance from the figure on both sides...
+      expectNear(m.gapL, m.gapR, 1, `${label}: inboard gaps`);
+      // ...and the width the screen brings becomes equal MARGIN, not stretch
+      expectNear(m.outerL, m.outerR, 2, `${label}: outer margins`);
+      // the reading measure is capped for readability and must not grow
+      expectNear(m.panelL, m.panelR, 1, `${label}: panel measures`);
+      expect(m.panelL, `${label}: measure stays capped`).toBeLessThanOrEqual(380);
+      expectNear(m.mastCentre, m.figureCentre, 2, `${label}: identity centred`);
+    }
+  });
+
   test("the era scrubber rides the left rail without taking a column", async ({
     page,
   }, testInfo) => {

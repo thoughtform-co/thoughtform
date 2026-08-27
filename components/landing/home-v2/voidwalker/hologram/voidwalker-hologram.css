@@ -96,7 +96,11 @@
      line them up. The era selector is not in the grid at all; it is the
      scrubber on the left HUD rail. */
   grid-template-rows: auto minmax(0, 1fr);
-  column-gap: clamp(16px, 2vw, 32px);
+  /* The inboard gap is the one measure that may grow with the viewport: the
+     panels are capped for readability and the figure is capped by its own
+     height derivation, so this is where an ultra-wide screen buys the
+     composition air instead of pulling it apart. */
+  column-gap: clamp(16px, 2vw, 48px);
   row-gap: clamp(10px, 1.6svh, 18px);
   height: 100svh;
   /* ⚠ THE READING BAND IS THIS PADDING, NOT THE STATION'S. The stage box
@@ -145,15 +149,26 @@
 .vwh__side {
   grid-template-rows: var(--vwh-lede-h) var(--vwh-seat-h);
 }
+/* MIRRORED, SO THE SLACK GOES OUTBOARD ON BOTH SIDES.
+   `justify-items: stretch` with a capped panel measure pins BOTH panels to
+   their column's LEFT edge -- far from the figure on the left, flush against
+   it on the right. Measured at 2560x1035: a 427px inboard gap on the left
+   against 32px on the right, and a 235/636 outer-margin split. It only looked
+   balanced at 1600, where the columns happen to be exactly as wide as the
+   panel and there is no slack to misplace.
+   Mirrored, the inboard gap is the grid's own `column-gap` on BOTH sides at
+   every width, the outer margins are equal by construction, and the width an
+   ultra-wide screen brings becomes MARGIN rather than stretching a reading
+   measure that is capped for readability. */
 .vwh__side[data-side="l"] {
   grid-column: 1;
   grid-row: 2;
-  justify-items: stretch;
+  justify-items: end;
 }
 .vwh__side[data-side="r"] {
   grid-column: 3;
   grid-row: 2;
-  justify-items: stretch;
+  justify-items: start;
 }
 
 /* ── The figure column ───────────────────────────────────────────────
@@ -600,6 +615,12 @@
   display: grid;
   align-content: start;
   min-width: 0;
+  /* A DEFINITE MEASURE, matching `.vwh__panel`. Once the side aligns its
+     children rather than stretching them, an auto-width slot shrinks to its
+     own content -- so a short press card and a film would seat at different
+     widths, and the seat-stability sweep would read the instrument reshaping
+     as the reader moves along the rail. */
+  width: min(100%, 38ch);
 }
 .vwh__panel-slot[data-slot="on-record"] {
   height: var(--vwh-seat-h);

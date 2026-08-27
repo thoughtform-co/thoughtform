@@ -122,6 +122,15 @@ handoff and the `701–1100px` complete fallback alone.
 - ⚠ **THE IDENTITY SITS ON `--station-title-top`**, the shared anchor the
   corridor's station headers and the services masthead already derive from —
   one datum for every big title on the surface, never a third close number.
+- ⚠ **THE TWO COLUMNS MIRROR (ADR-082 U11): `justify-items: end` LEFT,
+  `start` RIGHT.** With `stretch` plus a capped `38ch` measure both panels pin
+  to their column's LEFT edge -- far from the figure on the left, flush on the
+  right (measured 427px vs 32px at 2560). ⚠ **IT READS AS BALANCED AT 1600
+  BECAUSE THE COLUMNS ARE EXACTLY AS WIDE AS THE PANEL THERE**, so the defect
+  is absent at every rung in the matrix, not merely subtle. Mirrored, the
+  inboard gap is `column-gap` on both sides and the extra width becomes
+  MARGIN. ⚠ `.vwh__panel-slot` needs a definite `width: min(100%, 38ch)` or it
+  shrinks to its own content and seats vary per era.
 - ⚠ **SCOPE LEFT, FACTS RIGHT, NO LOADOUT (owner, same pass).** The identity
   and FACTS share row 1; SCOPE hangs below the identity in the same column.
   ⚠ **ONE `--vwh-seat-h` SERVES BOTH COLUMNS** — ON RECORD and TRANSMISSION are

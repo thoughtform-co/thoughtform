@@ -838,3 +838,65 @@ Measured live at 1600×1256: scrolling the runway walks
 that reads as rushed, the runway lengthens — but 260svh is tied to the
 ADR-082 U3 `-120svh` handoff overlap and the ADR-030 §6 cover lockstep, so
 that is its own pass, not a constant to nudge.
+
+---
+
+## Update 11 — the sheet stays symmetric on ultra-wide screens (2026-08-27)
+
+**Status: Accepted (owner, 2026-08-27).** A correction to U9/U10's
+composition; nothing in them is reversed.
+
+### The ruling
+
+> "the left panels are too close to the left, and the other ones are too close
+> to the middle. It's an ultra-wide screen, but this is just Google Chrome in
+> normal size. Can you just apply some responsive, ultra-wide screen best
+> practices?"
+
+### What was wrong, and why nothing caught it
+
+`.vwh__side` carried `justify-items: stretch` while `.vwh__panel` capped its
+measure at `38ch`. That pins BOTH panels to their column's **LEFT** edge —
+which is far from the figure on the left and flush against it on the right.
+Measured before the fix:
+
+| width | outer-L | gap-L   | gap-R  | outer-R |
+| ----- | ------- | ------- | ------ | ------- |
+| 1600  | 206     | 32      | 32     | 212     |
+| 1920  | 237     | **105** | **32** | 316     |
+| 2560  | 235     | **427** | **32** | 636     |
+
+⚠ **IT READ AS BALANCED AT 1600 BECAUSE THE COLUMNS ARE EXACTLY AS WIDE AS THE
+PANEL THERE** — there is no slack to misplace, so the defect is not merely
+subtle at the reference viewport, it is _absent_. Every one of this file's
+four desktop rungs sits at or below 1920, so the whole matrix was blind to it.
+This is the same shape as ADR-070's recurring finding, one surface over: a
+guard that only ever measures the authoring viewport cannot see a composition
+that comes apart past it.
+
+### The fix
+
+The columns **mirror**: `justify-items: end` on the left, `start` on the
+right. The inboard gap is then the grid's own `column-gap` on both sides at
+every width, the outer margins are equal by construction, and the width an
+ultra-wide screen brings becomes **margin** rather than stretching a reading
+measure that is capped for readability. Measured after: 32/32, 38/38, 48/48
+with outer margins matching to the scrollbar's width.
+
+- `column-gap` is the one measure allowed to grow with the viewport
+  (`clamp(16px, 2vw, 48px)`): the panels are capped for readability and the
+  figure is capped by its own height derivation, so this is where the extra
+  width buys the composition air instead of pulling it apart.
+- ⚠ **`.vwh__panel-slot` NEEDED A DEFINITE MEASURE.** Once the side aligns its
+  children instead of stretching them, an auto-width slot shrinks to its own
+  content — a short press card and a film would seat at different widths and
+  the seat-stability sweep would read the instrument reshaping as the reader
+  moves along the rail.
+
+### Verifying
+
+A dedicated case boots **2560×1035 and 3440×1440** — deliberately outside the
+reference matrix, because that is where the composition had room to go wrong —
+and asserts equal inboard gaps, equal outer margins, equal and still-capped
+panel measures, and the identity centred on the figure. `bootDesktop` widened
+from the four-rung tuple to any desktop shape so it can.
