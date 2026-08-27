@@ -2042,7 +2042,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     });
     expect(parseFloat(replayed.enter || "0")).toBe(1);
     expect(parseFloat(replayed.mastOpacity)).toBe(1);
-    expect(replayed.mastText).toBe("The founder");
+    expect(replayed.mastText).toBe("The Intelligence Architect");
 
     // Walk under #practice: THIS is where the ambient hold ends now. The
     // bottom gate is keyed to the SAME rect as the fade envelope, so there

@@ -18,9 +18,10 @@ import {
  * The projector base is a DOM mock — on the real page the site's own
  * brandmark flattens and descends into that position, which is a WebGL
  * choreography against `BrandmarkPhysicsCoreActor`'s camera-welded park
- * and its own pass. And era switching is a CLICK; the real station will
- * drive it from the scroll clock. Everything else — the treatment, the
- * materialize, the panels, the asset contract — is meant to graduate.
+ * and its own pass. Era switching is the same deliberate tab interaction
+ * as production; the landing scroll clock owns only entry, hold, and exit.
+ * Everything else — the treatment, the materialize, the panels, the asset
+ * contract — is meant to graduate.
  *
  * ⚠ ASSETS COME FROM THE OFFLINE SKILL, THROUGH THE EXISTING CACHE.
  * `scripts/sync-voidwalker-avatar-preview.mjs` mirrors the
@@ -44,7 +45,7 @@ const FORM_SRC: Record<HoloForm, string> = {
 const VIDEO_SRC = `${PREVIEW}/${HOLO_WAVE}/holo-idle-black.mp4`;
 
 export function HoloLabShell() {
-  const [eraIdx, setEraIdx] = useState(1); // thoughtform — the authored era
+  const [eraIdx, setEraIdx] = useState(0);
   const [form, setForm] = useState<HoloForm>("emissive");
   const [useVideo, setUseVideo] = useState(false);
   const [blend, setBlend] = useState<"plus-lighter" | "screen">("plus-lighter");
@@ -188,18 +189,15 @@ export function HoloLabShell() {
       </div>
 
       <section className="hll__stage">
-        <div className="vwh" data-vwh-era={era.id}>
-          {/* Static mast: production's lives in VoidwalkerHologram with
-              the scramble refs; the lab shows the same composition
-              without the decode. */}
-          <header className="vwh__mast">
-            <p className="vwh__mast__kicker">Era</p>
-            <h2 className="vwh__mast__title">{era.wardrobe}</h2>
-            <p className="vwh__mast__year">{era.year}</p>
-          </header>
-          <HoloEraPanels era={era} />
+        <div
+          className="vwh"
+          data-vwh-era={era.id}
+          data-vwh-region="character-sheet"
+          data-testid="voidwalker-character-sheet"
+        >
+          <HoloEraPanels selectedEraIndex={eraIdx} onSelectEra={pick} idPrefix="holo-lab" />
 
-          <div className="vwh__column">
+          <div className="vwh__column" data-vwh-region="figure">
             <HoloFigure
               src={src}
               videoSrc={useVideo ? VIDEO_SRC : undefined}
@@ -215,27 +213,12 @@ export function HoloLabShell() {
             {/* ⚠ MOCK. On the real page the brandmark itself flattens and
                 descends into this position — the base is not a graphic we
                 draw, it is where the site's own mark ends up. */}
-            <div className="vwh__base" aria-hidden="true">
+            <div className="vwh__base" data-vwh-region="platform" aria-hidden="true">
               <span className="vwh__base__disc" />
               <span className="vwh__base__ring" />
               <span className="vwh__base__glow" />
             </div>
           </div>
-
-          <nav className="vwh__rail" aria-label="Era">
-            {CHARACTER_ERAS.map((e, i) => (
-              <button
-                key={e.id}
-                type="button"
-                className="vwh__pip"
-                data-on={i === eraIdx}
-                onClick={() => pick(i)}
-              >
-                <span className="vwh__pip__year">{e.year}</span>
-                <span className="vwh__pip__name">{e.short}</span>
-              </button>
-            ))}
-          </nav>
         </div>
       </section>
     </main>

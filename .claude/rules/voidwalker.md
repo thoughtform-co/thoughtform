@@ -58,6 +58,46 @@ the About bio, while this surface uses `.vw*` / `.vwh*`.
 - The station id, `data-station`, rail manifest row, section readout, nav entry
   and `characterEras.ts` registry remain load-bearing.
 
+## Proposed About→Voidwalker handoff (2026-08-27)
+
+**Status: Proposed — unpushed, pending visual approval.** Only the capable path
+(`min-width: 1101px`, motion allowed, flags active, live corridor) overlaps the
+station by `-120svh`, producing a shared `20svh` pin seam. Both station
+wrappers remain structural and never animate; contained actors own the
+glitch/reveal. At 961–1100 and on mobile/PRM/corridor-fallback/flag-off paths,
+the boundary stays normal-flow.
+
+Retiming is entry `[0, .14]`, renderer/title takeover `[0, .08]`, with exit
+preserved at `[.74, .96]`. `ServicesCardRing` remains the sole
+portrait-transform owner inside the existing canvas. The Three-free receiver
+bridge must validate the portrait, FACTS dossier and era-title targets as one
+atomic gate; it publishes geometry only, applies no duplicate portal
+transform, and must not introduce a second canvas or a Three/Fiber/Drei import
+into the DOM graph. Reuse About's existing exit envelope; do not revive
+`--about-portal`.
+
+## Proposed editorial character sheet (2026-08-27)
+
+The capable desktop `.vwh` is a stable three-column character sheet beneath one
+centred horizontal six-era tab strip. Identity/FACTS/ON RECORD occupy the left,
+hologram plus projector only the centre, and SCOPE/TRANSMISSION/LOADOUT the
+right. The side dossiers start on one lower reading datum; the figure continues
+to span the full grid and must not move when the tab band changes. Dormant tabs
+use neutral hairlines and gold is active wayfinding only. Tabs use roving focus
+and automatic Arrow/Home/End selection; the tablist never remounts. Desktop
+seats remain reserved across all six eras. At `<=1100px`, restore the 3-by-2
+selector and flatten to normal flow in the order selector, identity, figure,
+FACTS, SCOPE, optional records.
+
+The About shell owns layout/inertness only. Its name and dossier are sibling
+transform actors; never transform the shell and either child together. The
+name lands at `[data-vwh-handoff-target="era-title"]` and acquires through the
+same morph as the hologram. The normalized media contract is 720x1280 with
+authored head/foot anchors; `object-fit: contain` stays bottom-centred and no
+runtime calibration transform is allowed. The slot bottom is the projector
+disc top (`--vwh-base-h` / `--vwh-base-disc-inset`). Keep the local media floor
+contained and the station itself transparent/starless.
+
 `VOIDWALKER_CHARACTER_STAGE` and its Meshy portal remain deleted. The ADR-074
 timeline and ADR-081 travel machinery below are UNMOUNTED but retained; read
 those sections as historical/fallback machinery, not as the production

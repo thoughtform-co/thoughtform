@@ -51,6 +51,27 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
 - **Keep the local media floor.** `.vwh__slot` isolation + the masked opaque
   `.vwh__media-wrap` ground prevent the JPEG near-black rectangle under
   additive blend. It is not the removed outer station plane.
+- **Proposed handoff — unshipped/unpushed, pending visual approval.** Only the
+  capable path (`min-width: 1101px`, motion allowed, flags active, live corridor) uses
+  the `-120svh` overlap / shared `20svh` pin seam. Station wrappers never
+  animate. At 961–1100 and on mobile/PRM/corridor-fallback/flag-off paths, the
+  boundary stays normal-flow. Retiming is entry `[0, .14]`, renderer takeover
+  `[0, .08]`, exit preserved at `[.74, .96]`. `ServicesCardRing` alone
+  transforms the portrait in the existing canvas from a Three-free target-seat
+  ref; the receiver publishes geometry only. No duplicate portal transform,
+  revived `--about-portal`, second canvas, or Three/Fiber/Drei DOM import.
+- **Proposed editorial character sheet.** The desktop `.vwh` is a stable
+  three-column instrument under one centred horizontal six-era tab strip:
+  identity/FACTS/ON RECORD on the left, hologram/projector only in the centre,
+  and SCOPE/TRANSMISSION/LOADOUT on the right. Both dossiers start on one lower
+  datum while the full-height figure stays fixed; inactive tabs are neutral and
+  gold is active wayfinding only. Reserve those seats across all six eras; at
+  `<=1100px` restore the 3-by-2 selector and flatten to selector, identity,
+  figure, FACTS, SCOPE, optional records. The handoff gate is atomic across portrait, FACTS and
+  `era-title` rects. About's name and dossier are sibling transform actors
+  under a layout-only shell. Media is a bottom-centred normalized 720x1280
+  `CharacterEraHologram`; no runtime calibration transforms. The slot bottom
+  equals the projector-disc top, while the media floor stays locally contained.
 - **Three parse-option copies move together**: `app/(marketing)/page.tsx`
   (`CORRIDOR_RELOCATED_STATIONS`, `[voidwalker, about, services]`),
   `tests/lib/rail-manifest.test.ts` and `tests/lib/v7-parse.test.ts`. The
@@ -143,13 +164,13 @@ no-preference` — ⚠ if a width gate is ever added, the CSS rest block in
   TRAVEL**: `InterGateCorridor`, `GatewayThroat`, `LatentFieldTunnel`,
   `LatentWormholeWalls`. Each reads `vwTravelInterior()` in `useFrame`
   and returns with `visible = false`. Gate is `engaged && flight >
-  0.15 && flight < 0.9` — pure function of live state, no latch. ⚠
+0.15 && flight < 0.9` — pure function of live state, no latch. ⚠
   **THE STARFIELD AND BRANDMARK CORE STAY ON.** Tunnel walls are
   additive point clouds, so stars are visible THROUGH gaps; the
   brandmark core is what the camera reverse-scrolls back into.
 - ⚠ **ADD A PAINTER TO THE SHED IS ADD IT TO THE SMOKE.** The
   `ADR-081 U4: the structural shed restores every painter on reverse
-  scroll` smoke walks Arc → mid-travel → Arc-after-reverse and pins
+scroll` smoke walks Arc → mid-travel → Arc-after-reverse and pins
   the frame weight. A modal / latched shed fails there.
 - ⚠ **`VW_TRAVEL_LEAD_IN = 0.06` SHIFTS `stopHome` AND `activeStop`'S
   BASE** (or the rail marker seats one year early). Unit-pinned: the

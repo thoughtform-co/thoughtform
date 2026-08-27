@@ -76,6 +76,26 @@ animation (Rule 3), and their exits finish before sticky release.
 The right-rail register is not a new page overlay: it is nested inside the
 existing fixed `.hud` at z50.
 
+### Proposed amendment — About→Voidwalker shared pin seam (2026-08-27)
+
+**Status: Proposed — unpushed, pending visual approval.**
+
+The capable path only may use a `-120svh` layout overlap, yielding a shared
+`20svh` pin seam. This is a weld between the existing inner sticky stages, not
+a cover-plane animation: neither full-bleed station wrapper may receive
+transform, opacity or background motion. At 961–1100 and on
+mobile/PRM/corridor-fallback/flag-off paths, the boundary remains normal-flow.
+
+The portrait stays in the existing corridor canvas. `ServicesCardRing` is its
+sole transform owner and reads a Three-free viewport-seat ref; the receiving
+portal atomically publishes portrait, FACTS-dossier and era-title targets but
+may not duplicate the transform. About's layout shell stays transform-free;
+its name and dossier are sibling actors. Do not add a second canvas or pull
+Three/Fiber/Drei into the landing DOM import graph. Voidwalker entry is
+proposed at `[0, .14]`, renderer/title takeover at `[0, .08]`, and the existing
+`[.74, .96]` exit is preserved. The character-sheet media floor remains local
+to the hologram slot; it is not permission to restore an outer black plane.
+
 ### 2. Rule: full-bleed elements inside `.stations` at `z ≥ 2` must be opaque
 
 `background: var(--void)` (or another opaque fill) is the default. Transparent is allowed only with an inline CSS comment explaining why the author intentionally wants the gateway glow and/or hero video to show through at that scroll position.

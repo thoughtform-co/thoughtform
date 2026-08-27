@@ -277,6 +277,33 @@ If a future feature genuinely needs another sticky pair inside `.stations`, the 
 - Suppress the inherited `.station { border-bottom: 1px dashed ... }` hairline on the sticky members; while pinned the border would track the viewport edge instead of the natural section break.
 - Choreography hooks reading section centres for sticky members must special-case them: use the WRAPPER's `offsetTop + N * vh` boundaries instead of `getBoundingClientRect()` of the sticky element (which moves with scroll). The retired `handleStageHandoff` in `useSigilChoreography.ts` is the historical reference; the `practice.top` special case for the orbit's sticky parent is the live one.
 
+## Proposed About→Voidwalker transparent weld
+
+**Proposed and unshipped/unpushed; pending visual approval.** This is the narrow
+ADR-008 exception to the opaque sticky-pair guidance above. Only the capable
+path (`min-width: 1101px`, motion allowed, flags active, live corridor) may
+apply the `-120svh`
+layout overlap that creates a shared `20svh` pin seam. The full-bleed
+`#about`/`#voidwalker` wrappers stay transparent, structural, and completely
+free of transform/opacity/background animation; contained actors own the
+glitch/reveal. At 961–1100 and on mobile/PRM/corridor-fallback/flag-off paths,
+the boundary stays normal-flow.
+
+Keep the portrait in the existing corridor canvas. `ServicesCardRing` is the
+sole transform owner and reads a Three-free viewport-seat ref; the receiver
+publishes portrait, FACTS-dossier and era-title geometry as one atomic gate but
+applies no duplicate portal transform. About's layout shell never transforms;
+its name and dossier are sibling transform owners. Do not revive
+`--about-portal`, add a second canvas, or introduce Three/Fiber/Drei into the
+landing DOM import graph. Proposed windows are entry `[0, .14]`,
+renderer/title takeover `[0, .08]`, and the preserved exit `[.74, .96]`.
+
+The proposed character sheet keeps its centre exclusive to the normalized
+720x1280 hologram and projector. The local masked media floor remains inside
+the slot; the outer station stays transparent/starless. Bottom-centred
+contained media must meet the projector disc at the shared slot-bottom contact
+plane without a runtime calibration transform.
+
 ## Related ADRs and references
 
 - `sentinel/decisions/008-landing-v7-background-layers.md` — architectural record of the paint stack and the two fixes that landed from this rule set.

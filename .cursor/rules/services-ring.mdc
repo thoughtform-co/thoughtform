@@ -38,6 +38,18 @@ lives in `ServicesRingHitAreas`, shimmed over a **projected rect** the canvas
 publishes to `hologramConnectorStore`. A surface with its own yaw needs its own
 rect — the drawer is not a linear extension of the card's.
 
+## Proposed About→Voidwalker portrait handoff
+
+**Proposed and unshipped/unpushed; pending visual approval.**
+`ServicesCardRing` is the sole owner of the portrait transform across the
+capable `-120svh` / `20svh` shared pin seam.
+It interpolates to a Three-free viewport-seat ref inside the existing corridor
+canvas. The About/Voidwalker portal publishes geometry only: no duplicate
+portal transform, no revived `--about-portal`, and no second canvas. Keep the
+ref module free of Three/Fiber/Drei so the landing DOM import boundary does not
+regress. The seam is disabled at 961–1100 and on every
+mobile/PRM/corridor-fallback/flag-off path.
+
 ## What must move together
 
 Changing the card's shape or state model touches **six** files in lockstep.

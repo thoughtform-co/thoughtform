@@ -125,10 +125,13 @@ export function AboutStage() {
   const stageRef = useRef<HTMLDivElement>(null);
   const slotRef = useRef<HTMLDivElement>(null);
   const clusterRef = useRef<HTMLDivElement>(null);
+  const copyShellRef = useRef<HTMLDivElement>(null);
+  const nameActorRef = useRef<HTMLDivElement>(null);
+  const dossierActorRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLSpanElement>(null);
   const roleRef = useRef<HTMLDivElement>(null);
   const capable = useMediaQuery("(min-width: 961px) and (prefers-reduced-motion: no-preference)");
-  useAboutStageScroll(stageRef, slotRef, clusterRef);
+  useAboutStageScroll(stageRef, slotRef, clusterRef, copyShellRef, nameActorRef, dossierActorRef);
 
   // Identity decode (owner, 2026-07-16): the name / role eyebrow
   // SCRAMBLE-DECODE into place via the caption kernel (the
@@ -191,50 +194,68 @@ export function AboutStage() {
             scrubbed stagger (about-stage.css) — NOT useRevealMotion (it
             snapshots [data-m] at mount and its .is-in is one-shot; the
             stage needs reversible, portal-safe reveals). */}
-        <div className="about-stage__copy voidwalker__copy">
-          <h2 className="voidwalker__name" style={{ ["--ci-off" as string]: 0 }}>
-            {/* The name is the single decode target, rendered UPPERCASE via
-                CSS (the "// Voidwalker." alias line was dropped, owner
-                2026-07-17). The kernel writes textContent, so the decode
-                node is the inner span. */}
-            <span className="about-stage__decode-line" ref={nameRef}>
-              {ABOUT_STAGE.name}
-            </span>
-          </h2>
-          <div
-            className="voidwalker__role about-stage__decode-line"
-            ref={roleRef}
-            style={{ ["--ci-off" as string]: 0.08 }}
-          >
-            {ABOUT_STAGE.role}
-          </div>
-          {ABOUT_STAGE.bios.map((bio, i) => (
-            <p
-              key={i}
-              className="voidwalker__bio"
-              style={{ ["--ci-off" as string]: 0.16 + i * 0.08 }}
+        <div className="about-stage__copy voidwalker__copy" ref={copyShellRef}>
+          {/* The shell owns layout and inertness only. The two sibling actors
+              below own their handoff transforms independently, preventing the
+              title flight from compounding with dossier condensation. */}
+          <div className="about-stage__name-actor" data-about-handoff-name ref={nameActorRef}>
+            <h2
+              className="voidwalker__name about-stage__copy-row"
+              style={{ ["--ci-off" as string]: 0 }}
             >
-              <BioText segments={bio} />
-            </p>
-          ))}
-          <div className="voidwalker__meta" style={{ ["--ci-off" as string]: 0.4 }}>
-            {ABOUT_STAGE.meta.map((cell) => (
-              <div key={cell.k} className="voidwalker__meta__cell">
-                <span className="voidwalker__meta__k">{cell.k}</span>
-                <span className="voidwalker__meta__v">{cell.v}</span>
-              </div>
-            ))}
+              {/* The name is the single decode target, rendered UPPERCASE via
+                  CSS (the "// Voidwalker." alias line was dropped, owner
+                  2026-07-17). The kernel writes textContent, so the decode
+                  node is the inner span. */}
+              <span className="about-stage__decode-line" ref={nameRef}>
+                {ABOUT_STAGE.name}
+              </span>
+            </h2>
           </div>
           <div
-            className="voidwalker__links"
-            aria-label="Elsewhere"
-            style={{ ["--ci-off" as string]: 0.48 }}
+            className="about-stage__dossier-actor"
+            data-about-handoff-copy
+            data-about-handoff-dossier
+            ref={dossierActorRef}
           >
-            {ABOUT_STAGE.links.map((link) => (
-              <a key={link.label} href={link.href} aria-label={link.label} title={link.label}>
-                <LinkIcon icon={link.icon} />
-              </a>
+            <div
+              className="voidwalker__role about-stage__decode-line about-stage__copy-row"
+              ref={roleRef}
+              style={{ ["--ci-off" as string]: 0.08 }}
+            >
+              {ABOUT_STAGE.role}
+            </div>
+            {ABOUT_STAGE.bios.map((bio, i) => (
+              <p
+                key={i}
+                className="voidwalker__bio about-stage__copy-row"
+                style={{ ["--ci-off" as string]: 0.16 + i * 0.08 }}
+              >
+                <BioText segments={bio} />
+              </p>
             ))}
+            <div
+              className="voidwalker__meta about-stage__copy-row"
+              style={{ ["--ci-off" as string]: 0.4 }}
+            >
+              {ABOUT_STAGE.meta.map((cell) => (
+                <div key={cell.k} className="voidwalker__meta__cell">
+                  <span className="voidwalker__meta__k">{cell.k}</span>
+                  <span className="voidwalker__meta__v">{cell.v}</span>
+                </div>
+              ))}
+            </div>
+            <div
+              className="voidwalker__links about-stage__copy-row"
+              aria-label="Elsewhere"
+              style={{ ["--ci-off" as string]: 0.48 }}
+            >
+              {ABOUT_STAGE.links.map((link) => (
+                <a key={link.label} href={link.href} aria-label={link.label} title={link.label}>
+                  <LinkIcon icon={link.icon} />
+                </a>
+              ))}
+            </div>
           </div>
         </div>
 

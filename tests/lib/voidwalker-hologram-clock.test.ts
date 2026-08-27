@@ -9,6 +9,7 @@ import {
 
 describe("Voidwalker hologram scroll clock", () => {
   it("clamps and lands exactly on both window endpoints", () => {
+    expect(VOIDWALKER_HOLOGRAM_ENTER_WINDOW).toEqual([0, 0.14]);
     expect(voidwalkerHologramEnterT(-1)).toBe(0);
     expect(voidwalkerHologramEnterT(VOIDWALKER_HOLOGRAM_ENTER_WINDOW[0])).toBe(0);
     expect(voidwalkerHologramEnterT(VOIDWALKER_HOLOGRAM_ENTER_WINDOW[1])).toBe(1);

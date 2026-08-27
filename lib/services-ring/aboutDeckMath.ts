@@ -70,10 +70,10 @@ export const ABOUT_COPY_WINDOW: readonly [number, number] = [0.4, 0.66];
 /** Runway tail — THE EXIT SLIDE (ADR-047 rev, 2026-07-18, supersedes the
  *  old ABOUT_BG_IN fade-to-shield). The copy column slides LEFT off-screen
  *  and the cluster (WebGL portrait deck welded to its slot) slides RIGHT,
- *  scrubbed on this envelope, so the live corridor bed shows through the
- *  handoff instead of a pair of restoring void panes. Ends at 0.96 (before
- *  the unpin) so the horizontal slide completes while still pinned and the
- *  stage gets a clean-bed breath before #continuum forms. */
+ *  scrubbed on this envelope. That remains the 961-1100px/fallback behavior.
+ *  ADR-082 U3 reuses the same endpoints for its capable shared-actor resolve
+ *  while suppressing the two off-screen transforms. Both paths finish at
+ *  0.96, before sticky release. */
 export const ABOUT_EXIT_WINDOW: readonly [number, number] = [0.74, 0.96];
 
 /** Runway terminal — a WebGL-only safety fade on the portrait deck's back
@@ -100,9 +100,10 @@ export function aboutShiftT(aboutP: number): number {
 export function aboutCopyT(aboutP: number): number {
   return smootherstep(ABOUT_COPY_WINDOW[0], ABOUT_COPY_WINDOW[1], clamp01(aboutP));
 }
-/** The exit-slide envelope — 0 through the reading hold (p ≤ 0.74), 1 by
- *  0.96. Drives `--about-exit` (copy/cluster translateX) in about-stage.css
- *  and the continuum formation prelude (continuumFormT). */
+/** The exit envelope — 0 through the reading hold (p ≤ 0.74), 1 by 0.96.
+ *  Drives the fallback copy/cluster translateX in about-stage.css; the
+ *  capable About → Voidwalker path shares its timing through a separate,
+ *  explicitly named scalar. */
 export function aboutExitT(aboutP: number): number {
   return smootherstep(ABOUT_EXIT_WINDOW[0], ABOUT_EXIT_WINDOW[1], clamp01(aboutP));
 }

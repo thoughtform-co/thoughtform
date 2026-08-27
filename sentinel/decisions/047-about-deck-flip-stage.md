@@ -583,3 +583,32 @@ settles it.
 `aboutStageData.ts` (`BioSegment` union + the split bio-2 segments),
 `AboutStage.tsx` (`BioText` accent branch), `landing-v7-motion.html` (the
 lockstep fallback markup).
+
+---
+
+## Update 12 — Proposed About→Voidwalker portrait handoff (2026-08-27)
+
+**Status: Proposed — unpushed, pending visual approval.**
+
+Only the capable path (`min-width: 1101px`, motion allowed, flags active and a
+live corridor) may pull `#voidwalker` upward by `-120svh`. This creates a
+shared `20svh` pin seam between the two inner stages. The `#about` and
+`#voidwalker` station wrappers remain structural and never animate; all
+glitch/reveal motion belongs to contained actors. At 961–1100 and on
+mobile/PRM/corridor-fallback/flag-off paths, the boundary stays normal-flow.
+
+`ServicesCardRing` remains the sole portrait-transform owner. It reads a
+Three-free viewport-seat ref and moves the existing WebGL deck to the hologram
+seat inside the existing canvas. The portal atomically publishes portrait,
+FACTS-dossier and era-title geometry, but must not apply a duplicate transform;
+the deleted `--about-portal` clock stays deleted. About's copy shell owns only
+layout and inertness. Its `VINCE BUYSSENS` name actor and remaining dossier
+actor are sibling transform owners, so neither can compound the other's
+flight. No second canvas and no Three/Fiber/Drei import may cross into the
+landing DOM graph.
+
+Voidwalker entry retimes to `[0, .14]`, renderer takeover completes in
+`[0, .08]`, and the exit remains `[.74, .96]`. The title cross-acquires on the
+same morph with complementary opacity and a horizontal tear no larger than
+2.5px. The clocks stay pure and reversible, and About's existing exit envelope
+is reused rather than summed with a second portal envelope.

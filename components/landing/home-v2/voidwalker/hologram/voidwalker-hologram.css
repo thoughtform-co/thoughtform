@@ -15,70 +15,82 @@
 
 /* ═══ §A · THE HOLOGRAM ═════════════════════════════════════════════ */
 
-/* ⚠ ONE SCREEN. This is a landing section, so the whole composition —
-   panels, figure, base, rail — lives inside 100svh and the figure takes
-   whatever the rail and the padding leave. `grid-template-rows` is
-   EXPLICIT (body / rail) because the first cut let four panels
-   auto-place onto four rows and the section measured 1411px against a
-   595px viewport, putting the figure below the fold. */
+/* ⚠ ONE SCREEN. The desktop sheet is a calm three-column instrument under
+   one centred era index: identity + record, hologram, scope. The root is
+   structural and never animates; its contained actors own entry/exit. Rows are
+   explicit so the stable `display: contents` tabpanel cannot auto-place a side
+   stack under the figure and silently make the stage taller than 100svh. */
 .vwh {
   --vwh-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   --vwh-display: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   --vwh-gold-rgb: var(--gold-rgb, 202, 165, 84);
   --vwh-void-rgb: var(--void-rgb, 10, 9, 8);
-  /* ⚠ THE HEAD-LINE ANCHOR (owner, 2026-08-26, third review). The head
-     sits ~10% into the media rect from its TOP; the side stacks and the
-     era title all seat to that line, so a short stack never rises and a
-     tall stack never sinks. Derived from the media's own box in
-     `HoloLabShell` via `--vwh-head-y`, floored at 12svh. */
-  --vwh-head-y: clamp(104px, 13.5svh, 152px);
-
+  /* One height ladder owns both the projector silhouette and its contact
+     plane. The disc top is the authored floor Vince stands on; deriving the
+     overlap from this inset (rather than a percentage of column WIDTH) keeps
+     that floor coincident with the slot bottom at every aspect. */
+  --vwh-base-h: clamp(34px, 6svh, 58px);
+  --vwh-base-disc-inset: clamp(7.5px, 1.32svh, 12.8px);
+  --vwh-record-seat-h: clamp(210px, 23svh, 248px);
+  --vwh-transmission-seat-h: clamp(230px, 26svh, 280px);
+  /* The era index is a global instrument, not left-column content. Reserving
+     its own quiet band also puts both dossier columns on one lower datum while
+     the spanning figure column keeps its exact authored height and floor. */
+  --vwh-era-band-h: clamp(102px, 12svh, 128px);
   position: relative;
   display: grid;
   /* ⚠ THE FIGURE COLUMN IS SIZED BY THE AVAILABLE HEIGHT, NOT BY A
      FRACTION OF THE WIDTH. The asset is a 720x1280 portrait (0.5625),
-     so a width-derived column is height-limited: on a tall window a
-     0.82fr middle measured ~300px, which is 533px of figure under
-     1030px of row -- half the stage empty below the boots. Deriving the
-     WIDTH from the height the row actually has (viewport, less the head
-     band and the rail) makes the figure grow with the window instead.
-     Floor keeps it legible on short screens; ceiling stops it eating
-     the side columns at the 1200px band. */
+     so a width-derived column is height-limited. Deriving its WIDTH from
+     the viewport height makes the figure grow with the window instead.
+     The floor keeps it legible on short screens; the ceiling stops it
+     eating the side columns at the 1200px band. */
   grid-template-columns:
     minmax(0, 1fr)
-    clamp(280px, calc((100svh - 240px) * 0.5625), 520px)
+    clamp(280px, calc((100svh - 96px) * 0.5625), 500px)
     minmax(0, 1fr);
-  /* head-band | body | rail. The head-band's height IS the head line, so
-     everything below aligns to a common floor and everything WITHIN it
-     is one masthead across the whole stage. */
-  grid-template-rows: var(--vwh-head-y) minmax(0, 1fr) auto;
-  gap: 0 clamp(16px, 2.4vw, 44px);
+  grid-template-rows: var(--vwh-era-band-h) auto minmax(0, 1fr);
+  column-gap: clamp(16px, 2vw, 32px);
+  row-gap: clamp(10px, 1.6svh, 18px);
   height: 100svh;
-  padding: 0 clamp(20px, 4vw, 64px);
+  padding: clamp(16px, 2.2svh, 28px) clamp(20px, 3vw, 48px) clamp(12px, 1.8svh, 22px);
   overflow: hidden;
+}
+
+/* The semantic panel remains mounted while era tabs retune it. `contents`
+   keeps mast and side actors on the root grid without inserting a transform
+   owner between the handoff targets and their station. */
+.vwh__tabpanel {
+  display: contents;
 }
 
 /* The side stacks. Each is a column of panels beside the figure; they
    scroll nothing and clip nothing — a panel that will not fit is a copy
    problem, not a layout one. */
 .vwh__side {
-  grid-row: 2;
-  align-self: start;
-  /* Head-line offset: the drawn head sits ~10svh below the media's own
-     top (i.e. the head band's bottom). Sides drop by that same amount so
-     their first row seats to the head. */
-  padding-top: clamp(24px, 6.5svh, 64px);
+  align-self: stretch;
+  padding-top: 0;
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: clamp(24px, 4.2svh, 44px);
+  align-content: start;
   min-height: 0;
+  height: 100%;
+}
+.vwh__side > .vwh__panel {
+  align-self: start;
 }
 .vwh__side[data-side="l"] {
   grid-column: 1;
-  justify-items: end;
+  grid-row: 3;
+  grid-template-rows: minmax(0, 1fr) var(--vwh-record-seat-h);
+  justify-items: stretch;
 }
 .vwh__side[data-side="r"] {
   grid-column: 3;
-  justify-items: start;
+  grid-row: 2 / 4;
+  grid-template-rows: minmax(0, 1fr) var(--vwh-transmission-seat-h);
+  justify-items: stretch;
 }
 
 /* ── The figure column ───────────────────────────────────────────────
@@ -87,10 +99,11 @@
    stage and drifting away from the feet as the figure scales. */
 .vwh__column {
   grid-column: 2;
-  grid-row: 2;
+  grid-row: 1 / 4;
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   justify-items: center;
-  align-content: start;
+  align-content: stretch;
   min-height: 0;
   height: 100%;
 }
@@ -196,9 +209,9 @@
 
 .vwh__media {
   display: block;
-  width: auto;
+  width: 100%;
   height: 100%;
-  max-width: 100%;
+  max-width: none;
   object-fit: contain;
   object-position: bottom center;
   mix-blend-mode: var(--holo-blend, plus-lighter);
@@ -277,6 +290,26 @@
   pointer-events: none;
 }
 
+/* Initial acquisition belongs to the runway, not to a wall-clock animation.
+   The WebGL portrait reads the complementary `1 - morph`; this DOM renderer
+   reads `morph` exactly, while the inner media reveals upward from their
+   shared bottom edge. Only the media tears (never the measured slot or the
+   stage wrapper), and the excursion is capped at 3px. The selectors are
+   `data-phase=rest` so an explicit era-button materialize can temporarily
+   take over the inner clip/tear without adding a second scroll writer. */
+.vwh[data-vwh-ready] .vwh__slot {
+  --vwh-holo-acquire: var(--vwh-morph, 0);
+  --vwh-holo-strike: clamp(0, calc(var(--vwh-holo-acquire) * 12), 1);
+  --vwh-holo-drop: clamp(0, calc((var(--vwh-holo-acquire) - 0.14) * 12), 1);
+  opacity: var(--vwh-holo-acquire);
+}
+.vwh[data-vwh-ready] .vwh__slot[data-phase="rest"] .vwh__media-wrap {
+  clip-path: inset(calc((1 - var(--vwh-holo-acquire)) * 62%) 0 0 0);
+}
+.vwh[data-vwh-ready] .vwh__slot[data-phase="rest"] .vwh__media {
+  transform: translateX(calc((var(--vwh-holo-strike) - var(--vwh-holo-drop)) * 3px));
+}
+
 .vwh__slot[data-phase="reveal"] .vwh__media-wrap {
   animation: vwhReveal var(--holo-reveal-ms, 900ms) cubic-bezier(0.16, 1, 0.3, 1) both;
   will-change: clip-path, transform;
@@ -292,36 +325,36 @@
   0% {
     opacity: 0;
     clip-path: inset(48% 0 48% 0);
-    transform: translateX(-7px);
+    transform: translateX(-3px);
   }
   10% {
     opacity: 1;
     clip-path: inset(0 0 0 0);
-    transform: translateX(6px);
+    transform: translateX(3px);
   }
   18% {
     clip-path: inset(0 0 62% 0);
-    transform: translateX(-5px);
+    transform: translateX(-2.5px);
   }
   26% {
     clip-path: inset(0 0 0 0);
-    transform: translateX(4px);
+    transform: translateX(2px);
   }
   34% {
     clip-path: inset(38% 0 24% 0);
-    transform: translateX(-3px);
+    transform: translateX(-2px);
   }
   44% {
     clip-path: inset(0 0 0 0);
-    transform: translateX(3px);
+    transform: translateX(1.5px);
   }
   56% {
     clip-path: inset(12% 0 0 0);
-    transform: translateX(-2px);
+    transform: translateX(-1px);
   }
   68% {
     clip-path: inset(0 0 0 0);
-    transform: translateX(1px);
+    transform: translateX(0.5px);
   }
   100% {
     opacity: 1;
@@ -396,12 +429,12 @@
   display: grid;
   place-items: center;
   width: min(300px, 52%);
-  height: clamp(34px, 6svh, 58px);
-  margin-top: -2%;
+  height: var(--vwh-base-h);
+  margin-top: calc(0px - var(--vwh-base-disc-inset));
 }
 .vwh__base__disc {
   position: absolute;
-  inset: 22% 0 22%;
+  inset: var(--vwh-base-disc-inset) 0 var(--vwh-base-disc-inset);
   border: 1px solid rgba(var(--vwh-gold-rgb), 0.55);
   border-radius: 50%;
   background: radial-gradient(
@@ -444,6 +477,21 @@
   gap: 10px;
   max-width: min(100%, 38ch);
   width: 100%;
+}
+
+/* Optional record/transmission modules keep authored seats on desktop so an
+   era change retunes one instrument instead of changing its silhouette. Empty
+   seats carry no chrome or copy; normal-flow fallbacks collapse them below. */
+.vwh__panel-slot {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+}
+.vwh__panel-slot[data-slot="on-record"] {
+  height: var(--vwh-record-seat-h);
+}
+.vwh__panel-slot[data-slot="transmission"] {
+  height: var(--vwh-transmission-seat-h);
 }
 
 /* The section head: kicker left, designator right, ONE thin rule under.
@@ -526,49 +574,58 @@
   color: rgba(var(--dawn-rgb), 0.62);
 }
 
-/* ── The era masthead ─────────────────────────────────────────────────
-   THE ERA TITLE IS NOT A ROW IN THE RIGHT STACK. Owner ruling (2026-08-26):
-   it steps out to display scale as a masthead over the figure, standalone,
-   because it is the section's own name. The right stack keeps the era's
-   description; the title crowns the whole composition. Everything below
-   the head band -- the two side stacks and the figure -- aligns to this
-   band's bottom edge. */
+/* ── The era identity ──────────────────────────────────────────────────
+   The identity belongs to the record it names. A compact meta row starts on
+   the same lower reading datum as SCOPE; the title reserves two lines so
+   switching loadouts cannot push FACTS down. It remains deliberately unboxed:
+   the global era index and the panel head below provide enough structure. */
 .vwh__mast {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: end;
-  justify-self: center;
-  text-align: center;
-  padding-bottom: clamp(6px, 1svh, 12px);
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  justify-self: stretch;
+  text-align: left;
   display: grid;
-  gap: 6px;
-}
-.vwh__mast {
-  gap: 4px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+  min-width: 0;
 }
 .vwh__mast__kicker {
+  grid-column: 1;
+  grid-row: 1;
   margin: 0;
   font-family: var(--vwh-mono);
-  font-size: 11px;
-  letter-spacing: 0.32em;
+  font-size: 10px;
+  line-height: 1.2;
+  min-height: 1.2em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgba(var(--vwh-gold-rgb), 0.7);
 }
 .vwh__mast__title {
+  grid-column: 1 / -1;
+  grid-row: 2;
   margin: 0;
   font-family: var(--vwh-display);
   font-weight: 400;
-  font-size: clamp(26px, 3vw, 44px);
-  line-height: 1.1;
+  font-size: clamp(29px, 1.9vw, 34px);
+  line-height: 1.02;
+  min-height: 2.04em;
   color: rgba(var(--dawn-rgb), 0.96);
-  letter-spacing: 0.04em;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 .vwh__mast__year {
+  grid-column: 2;
+  grid-row: 1;
   margin: 0;
   font-family: var(--vwh-mono);
-  font-size: 11px;
-  letter-spacing: 0.22em;
+  font-size: 10px;
+  line-height: 1.2;
+  min-height: 1.2em;
+  letter-spacing: 0.16em;
   color: rgba(var(--vwh-gold-rgb), 0.72);
+  text-align: right;
 }
 
 /* ── Facts ─────────────────────────────────────────────────────────────
@@ -757,42 +814,91 @@ a.vwh__press:focus-visible .vwh__press__headline {
   color: rgba(var(--dawn-rgb), 0.6);
 }
 
-/* ── The rail ────────────────────────────────────────────────────────*/
+/* ── Era selector ─────────────────────────────────────────────────────
+   One centred six-stop index gives the whole character sheet a navigation
+   axis without occupying either dossier column. It borrows the rhythm of a
+   game tab strip, not its chrome: dormant stops are neutral hairlines and
+   gold appears only as the active bearing. */
 .vwh__rail {
+  position: relative;
+  z-index: 2;
   grid-column: 1 / -1;
-  grid-row: 3;
-  display: flex;
-  justify-content: center;
-  gap: clamp(8px, 1.4vw, 22px);
-  padding: clamp(10px, 2svh, 20px) 0 clamp(14px, 3svh, 26px);
+  grid-row: 1;
+  align-self: start;
+  justify-self: center;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(8px, 0.8vw, 14px);
+  width: min(100%, clamp(600px, 52vw, 760px));
+  padding: 0;
+  min-width: 0;
 }
 .vwh__pip {
+  position: relative;
   appearance: none;
   background: none;
   border: 0;
-  border-top: 1px solid rgba(var(--vwh-gold-rgb), 0.2);
-  padding: 8px 10px 0;
+  border-top: 1px solid rgba(var(--dawn-rgb), 0.14);
+  min-width: 0;
+  min-height: 44px;
+  padding: 7px 5px 4px;
   display: grid;
   gap: 2px;
+  align-content: start;
   cursor: pointer;
   text-align: left;
   color: inherit;
+  transition:
+    border-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .vwh__pip[data-on="true"] {
   border-top-color: var(--gold, #caa554);
 }
+.vwh__pip::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 1px;
+  width: 5px;
+  height: 5px;
+  background: var(--gold, #caa554);
+  transform: rotate(45deg) scale(0);
+  opacity: 0;
+  transition:
+    transform 120ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vwh__pip[data-on="true"]::before {
+  transform: rotate(45deg) scale(1);
+  opacity: 1;
+}
+.vwh__pip:hover {
+  border-top-color: rgba(var(--vwh-gold-rgb), 0.55);
+}
+.vwh__pip:focus-visible {
+  outline: 1px solid rgba(var(--vwh-gold-rgb), 0.78);
+  outline-offset: 2px;
+}
 .vwh__pip__year {
   font-family: var(--vwh-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  color: rgba(var(--vwh-gold-rgb), 0.8);
+  font-size: 9px;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  color: rgba(var(--dawn-rgb), 0.5);
+}
+.vwh__pip[data-on="true"] .vwh__pip__year {
+  color: rgba(var(--vwh-gold-rgb), 0.9);
 }
 .vwh__pip__name {
   font-family: var(--vwh-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  min-width: 0;
+  font-size: 9px;
+  line-height: 1.25;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.45);
+  overflow-wrap: anywhere;
 }
 .vwh__pip[data-on="true"] .vwh__pip__name {
   color: rgba(var(--dawn-rgb), 0.95);
@@ -812,46 +918,72 @@ a.vwh__press:focus-visible .vwh__press__headline {
 }
 
 /* ── Narrow ──────────────────────────────────────────────────────────
-   One column: the figure, then the panels beneath it. */
+   One normal-flow reading order: selector, identity, figure, facts, scope,
+   then optional records. Side wrappers flatten only in this fallback. */
 @media (max-width: 1100px) {
-  /* ⚠ ONE COLUMN IS A STACK, NOT A GRID. As a grid this composition
-     is height-constrained to 100svh, so its `auto` tracks got SQUEEZED
-     to 66px around 193px stacks and the two sides overlapped by 120px
-     — forcing the track list inline changed nothing, because the
-     constraint was the container's height, not the template. A flex
-     column sizes to its content by construction and takes its reading
-     order from `order`, which is the one thing that has to be explicit
-     here: the DOM is left, right, figure, rail, and the reader wants
-     the figure first. */
+  /* `display: contents` lets the stable tabpanel children participate in
+     this flex order without adding a transformed wrapper. */
   .vwh {
     display: flex;
     flex-direction: column;
     height: auto;
     min-height: 100svh;
+    gap: clamp(18px, 4vw, 30px);
+    padding: clamp(24px, 5vw, 48px) clamp(20px, 6vw, 48px);
     overflow: visible;
   }
-  .vwh__column {
+  .vwh__rail {
     order: 1;
     width: 100%;
-    min-height: 62svh;
+    max-width: 720px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px clamp(5px, 1.5vw, 9px);
   }
-  .vwh__side[data-side="l"] {
+  .vwh__mast {
     order: 2;
-  }
-  .vwh__side[data-side="r"] {
-    order: 3;
-  }
-  .vwh__side[data-side="l"],
-  .vwh__side[data-side="r"] {
     width: 100%;
-    justify-items: stretch;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    max-width: 720px;
   }
-  .vwh__rail {
+  .vwh__column {
+    order: 3;
+    width: 100%;
+    min-height: clamp(520px, 72svh, 720px);
+    height: auto;
+  }
+  .vwh__side {
+    display: contents;
+  }
+  .vwh__side[data-side="l"] > .vwh__panel {
     order: 4;
+  }
+  .vwh__side[data-side="r"] > .vwh__panel {
+    order: 5;
+  }
+  .vwh__side[data-side="l"] > .vwh__panel-slot {
+    order: 6;
+  }
+  .vwh__side[data-side="r"] > .vwh__panel-slot {
+    order: 7;
+  }
+  .vwh__side > .vwh__panel,
+  .vwh__side > .vwh__panel-slot {
+    width: 100%;
+    max-width: 720px;
+  }
+  .vwh__panel-slot[data-slot] {
+    height: auto;
+  }
+  .vwh__panel-slot[data-empty="true"] {
+    display: none;
   }
   .vwh__panel {
     max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .vwh__column {
+    min-height: clamp(540px, 76svh, 680px);
   }
 }
 
@@ -868,14 +1000,36 @@ a.vwh__press:focus-visible .vwh__press__headline {
 @media (prefers-reduced-motion: no-preference) {
   .vwh[data-vwh-ready] .vwh__mast > *,
   .vwh[data-vwh-ready] .vwh__side > .vwh__panel,
-  .vwh[data-vwh-ready] .vwh__column > *,
+  .vwh[data-vwh-ready] .vwh__side > .vwh__panel-slot,
+  .vwh[data-vwh-ready] .vwh__column > .vwh__base,
   .vwh[data-vwh-ready] .vwh__rail > .vwh__pip {
     --ci: clamp(0, calc((var(--vwh-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
     --g1: clamp(0, calc(var(--ci) * 9), 1);
     --g2: clamp(0, calc((var(--ci) - 0.16) * 9), 1);
     --g3: clamp(0, calc((var(--ci) - 0.34) * 4), 1);
-    opacity: clamp(0, calc(var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88), 1);
-    transform: translateX(calc((var(--g1) - var(--g2)) * 2.5px));
+    --vwh-tear: calc((var(--g1) - var(--g2)) * 2.5px);
+    --vwh-entry-alpha: clamp(0, calc(var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88), 1);
+    opacity: var(--vwh-entry-alpha);
+    transform: translateX(var(--vwh-tear));
+  }
+
+  /* The moving About name and this decoded era title exchange ownership at
+     one measured footprint. Metadata keeps the longer entry stutter, but the
+     title itself is exactly complementary to the shared renderer morph. */
+  .vwh[data-vwh-ready] .vwh__mast__title {
+    opacity: var(--vwh-morph, 0);
+  }
+
+  /* The dossiers assemble around the acquired figure, horizontally only.
+     The 21px spread plus the 2.5px terminal tear stays below the 24px cap. */
+  .vwh[data-vwh-ready] .vwh__side[data-side="l"] > :is(.vwh__panel, .vwh__panel-slot) {
+    transform: translateX(calc((1 - var(--ci)) * 21px + var(--vwh-tear)));
+  }
+  .vwh[data-vwh-ready] .vwh__side[data-side="r"] > :is(.vwh__panel, .vwh__panel-slot) {
+    transform: translateX(calc((var(--ci) - 1) * 21px + var(--vwh-tear)));
+  }
+  .vwh[data-vwh-ready] .vwh__side[data-side="l"] > .vwh__panel[data-vwh-handoff-target="dossier"] {
+    transform: translateX(var(--vwh-tear));
   }
 
   .vwh[data-vwh-ready] .vwh__mast__kicker {
@@ -887,9 +1041,6 @@ a.vwh__press:focus-visible .vwh__press__headline {
   .vwh[data-vwh-ready] .vwh__mast__year {
     --ci-off: 0.12;
   }
-  .vwh[data-vwh-ready] .vwh__column > .vwh__slot {
-    --ci-off: 0.1;
-  }
   .vwh[data-vwh-ready] .vwh__column > .vwh__base {
     --ci-off: 0.18;
   }
@@ -899,10 +1050,16 @@ a.vwh__press:focus-visible .vwh__press__headline {
   .vwh[data-vwh-ready] .vwh__side[data-side="l"] > .vwh__panel:nth-child(2) {
     --ci-off: 0.26;
   }
+  .vwh[data-vwh-ready] .vwh__side[data-side="l"] > .vwh__panel-slot:nth-child(2) {
+    --ci-off: 0.26;
+  }
   .vwh[data-vwh-ready] .vwh__side[data-side="r"] > .vwh__panel:nth-child(1) {
     --ci-off: 0.2;
   }
   .vwh[data-vwh-ready] .vwh__side[data-side="r"] > .vwh__panel:nth-child(2) {
+    --ci-off: 0.3;
+  }
+  .vwh[data-vwh-ready] .vwh__side[data-side="r"] > .vwh__panel-slot:nth-child(2) {
     --ci-off: 0.3;
   }
   .vwh[data-vwh-ready] .vwh__pip:nth-child(1) {
@@ -925,39 +1082,63 @@ a.vwh__press:focus-visible .vwh__press__headline {
   }
 
   .vwh[data-vwh-ready] .vwh__mast,
-  .vwh[data-vwh-ready] .vwh__side[data-side="l"] {
+  .vwh[data-vwh-ready] .vwh__side[data-side="l"],
+  .vwh[data-vwh-ready] .vwh__rail {
     transform: translateX(calc(var(--vwh-exit, 0) * (-50vw - 100% - 48px)));
   }
   .vwh[data-vwh-ready] .vwh__column,
-  .vwh[data-vwh-ready] .vwh__side[data-side="r"],
-  .vwh[data-vwh-ready] .vwh__rail {
+  .vwh[data-vwh-ready] .vwh__side[data-side="r"] {
     transform: translateX(calc(var(--vwh-exit, 0) * (50vw + 100% + 48px)));
   }
 }
 
-/* Decode targets retain their line boxes while the scramble kernel holds
-   them empty before the scroll arm. */
+/* The ghost owns responsive line wrapping from the wrapper's final-string
+   data; the wrapper's aria-label owns that final for accessibility. The
+   destructive scramble kernel writes only the absolutely overlaid live span.
+   Blank/partial/final visual text therefore cannot move the bottom-aligned
+   mast by even one pixel, while the outer title's textContent remains the
+   live string expected by the existing replay smoke. */
 .vwh__decode-line {
+  position: relative;
+  display: block;
   min-width: 1px;
   min-height: 1em;
+}
+.vwh__decode-ghost,
+.vwh__decode-live {
+  display: block;
+  white-space: inherit;
+}
+.vwh__decode-ghost {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  pointer-events: none;
+  user-select: none;
+}
+.vwh__decode-ghost::before {
+  content: attr(data-copy);
+}
+.vwh__decode-live {
+  position: absolute;
+  inset: 0;
 }
 
 /* ── The short-viewport rung ─────────────────────────────────
    ⚠ 1280x720 IS A REFERENCE VIEWPORT AND IT IS THE BINDING ONE HERE.
-   The full ladder needs ~521px for the right stack (Scope's paragraph
-   plus a 16:9 Transmission poster) and a 720px window offers ~513
-   between the head band and the rail — measured, the two eras with a
-   film overflowed. The type steps down a rung and the air comes out of
-   the gaps rather than out of the figure: this surface's whole argument
-   is the hologram, and shrinking it to buy paragraph space would trade
-   the subject for the caption. */
-@media (max-height: 820px) {
+   The type and optional-seat reservations step down a rung and the air
+   comes out of the gaps rather than the figure. */
+@media (min-width: 1101px) and (max-height: 820px) {
   .vwh {
-    --vwh-head-y: clamp(84px, 12svh, 110px);
+    --vwh-record-seat-h: 210px;
+    --vwh-transmission-seat-h: 230px;
+    row-gap: clamp(7px, 1.1svh, 10px);
+    padding-block: clamp(12px, 1.7svh, 16px) clamp(8px, 1.2svh, 12px);
   }
   .vwh__side {
-    padding-top: clamp(12px, 3svh, 28px);
-    gap: clamp(14px, 2.6svh, 26px);
+    gap: clamp(12px, 2svh, 18px);
+  }
+  .vwh__mast__title {
+    font-size: clamp(26px, 1.75vw, 31px);
   }
   .vwh__panel {
     gap: 7px;
@@ -1007,6 +1188,19 @@ html[data-theme="light"] .vwh__press__outlet {
    weight against parchment than their void alphas. */
 html[data-theme="light"] .vwh__panel__head {
   border-color: rgba(138, 107, 32, 0.46);
+}
+html[data-theme="light"] .vwh__pip {
+  border-top-color: rgba(var(--dawn-rgb), 0.18);
+}
+html[data-theme="light"] .vwh__pip[data-on="true"],
+html[data-theme="light"] .vwh__pip:hover {
+  border-top-color: var(--gold-ink, #6e5216);
+}
+html[data-theme="light"] .vwh__pip::before {
+  background: var(--gold-ink, #6e5216);
+}
+html[data-theme="light"] .vwh__pip[data-on="true"] .vwh__pip__year {
+  color: var(--gold-ink, #6e5216);
 }
 html[data-theme="light"] .vwh__film__frame {
   border-color: rgba(138, 107, 32, 0.4);

@@ -2,11 +2,20 @@
 
 import { useEffect, type RefObject } from "react";
 
-import { ABOUT_DECK_STAGE } from "../unifiedServicesInstrument";
+import { ABOUT_DECK_STAGE, VOIDWALKER_HOLOGRAM_STAGE } from "../unifiedServicesInstrument";
 import { aboutCopyT, aboutExitT, aboutFlipT, aboutShiftT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
 import { invalidateAboutSlot, writeAboutSlotRect } from "@/lib/services-ring/aboutSlotRef";
 import { clamp01 } from "@/lib/math";
+import {
+  ABOUT_VOIDWALKER_HANDOFF_CHANGE_EVENT,
+  aboutHandoffFlightT,
+  aboutHandoffResolveT,
+  aboutVoidwalkerHandoffRef,
+  isAboutVoidwalkerHandoffReady,
+  resolveViewportRectTransform,
+  type ViewportRect,
+} from "@/lib/voidwalker/aboutVoidwalkerHandoff";
 
 /** About-stage beats (0 flip · 1 shift+copy · 2 hold) for `data-about-step`. */
 const ABOUT_STEP_COUNT = 3;
@@ -16,7 +25,7 @@ const ABOUT_STEP_COUNT = 3;
  * deck-flip stage (ADR-047). The single writer of:
  *
  *   - `data-about-mode="stage"` on `#about` — the CSS mode switch that
- *     hides the static `.voidwalker` fallback and activates the 250svh
+ *     hides the static `.voidwalker` fallback and activates the 275svh
  *     runway + sticky stage. Removed on ANY disengage (media gate,
  *     corridor fallback, unmount), so every failure mode collapses to
  *     the static opaque station (fail-static).
@@ -28,11 +37,10 @@ const ABOUT_STEP_COUNT = 3;
  *     through. The shield only restores to opaque via the disengage
  *     var-clear (→ default 1), so flag-off / mobile / JS-failure still
  *     land on a normal opaque station.
- *   - `--about-exit` on the stage — the exit-slide channel
- *     (ABOUT_EXIT_WINDOW): the copy column slides LEFT off-screen and the
- *     cluster (WebGL portrait deck) slides RIGHT as it ramps 0 → 1 across
- *     the runway tail. The continuum formation reads the same beat via
- *     continuumFormT (prelude), so the mark re-inks AS the slide happens.
+ *   - `--about-exit` on the stage — the fallback exit-slide channel
+ *     (ABOUT_EXIT_WINDOW): the copy column slides LEFT and the cluster
+ *     RIGHT. On the complete ADR-082 U3 handoff gate, contained actors
+ *     instead consume `--about-handoff`; neither station wrapper moves.
  *   - `--about-flip` / `--about-shift` / `--about-copy-in` +
  *     `data-about-step` on the stage — the DOM mirrors of the beat
  *     windows (single source: aboutDeckMath), driving the cluster
@@ -48,6 +56,9 @@ const ABOUT_STEP_COUNT = 3;
  *     frame while engaged: it must ride the cluster's live translate),
  *     the deck's seat target. Invalidated on disengage so the deck never
  *     flies at stale pixels.
+ *   - `data-about-handoff` + `--about-handoff-*` — capable-desktop only:
+ *     target geometry published by Voidwalker condenses the copy into the
+ *     first dossier while the R3F ring independently flies the real card.
  *
  * Progress = clamp01(−root.top / (root.height − vh)) over the
  * `.about-stage-root` runway (the useServicesStageScroll formula) — it
@@ -58,11 +69,15 @@ const ABOUT_STEP_COUNT = 3;
 export function useAboutStageScroll(
   stageRef: RefObject<HTMLElement | null>,
   slotRef: RefObject<HTMLElement | null>,
-  clusterRef: RefObject<HTMLElement | null>
+  clusterRef: RefObject<HTMLElement | null>,
+  copyShellRef: RefObject<HTMLElement | null>,
+  nameActorRef: RefObject<HTMLElement | null>,
+  dossierActorRef: RefObject<HTMLElement | null>
 ): void {
   useEffect(() => {
     if (!ABOUT_DECK_STAGE) return;
 
+    const mountedStage = stageRef.current;
     let frame = 0;
     let disposed = false;
     let engaged = false;
@@ -71,9 +86,16 @@ export function useAboutStageScroll(
     let currentShift = -1;
     let currentCopy = -1;
     let currentExit = -1;
+    let currentHandoff = -1;
+    let currentFlight = -1;
+    let currentTargetStamp = -1;
+    let handoffReady = false;
 
     const capableMedia = window.matchMedia(
       "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
+    );
+    const handoffMedia = window.matchMedia(
+      "(min-width: 1101px) and (prefers-reduced-motion: no-preference)"
     );
     let corridorStage: HTMLElement | null = null;
     const fallbackActive = () => {
@@ -84,6 +106,96 @@ export function useAboutStageScroll(
     };
 
     const aboutOf = (stage: HTMLElement) => stage.closest<HTMLElement>("#about");
+
+    const clearHandoff = (stage: HTMLElement | null, about: HTMLElement | null) => {
+      about?.removeAttribute("data-about-handoff");
+      stage?.style.removeProperty("--about-handoff");
+      stage?.style.removeProperty("--about-handoff-flight");
+      stage?.style.removeProperty("--about-handoff-copy-x");
+      stage?.style.removeProperty("--about-handoff-copy-y");
+      stage?.style.removeProperty("--about-handoff-copy-scale");
+      stage?.style.removeProperty("--about-handoff-copy-clip");
+      stage?.style.removeProperty("--about-handoff-title-x");
+      stage?.style.removeProperty("--about-handoff-title-y");
+      stage?.style.removeProperty("--about-handoff-title-scale-x");
+      stage?.style.removeProperty("--about-handoff-title-scale-y");
+      if (copyShellRef.current) copyShellRef.current.inert = false;
+      handoffReady = false;
+      currentHandoff = -1;
+      currentFlight = -1;
+      currentTargetStamp = -1;
+    };
+
+    const sourceViewportRect = (actor: HTMLElement, stage: HTMLElement): ViewportRect | null => {
+      let node: HTMLElement | null = actor;
+      while (node && node !== stage) {
+        node = node.offsetParent as HTMLElement | null;
+      }
+      if (node !== stage || actor.offsetWidth <= 1 || actor.offsetHeight <= 1) return null;
+
+      // The offset chain above proves actor ownership without sampling an
+      // ancestor transform. The actor's own matrix is then inverted only for
+      // its e/f translation channels: both handoff actors have a top-left
+      // origin and positive axis-aligned scale, so this recovers the precise
+      // fractional layout position even during interrupted scroll replay.
+      const stageRect = stage.getBoundingClientRect();
+      const actorRect = actor.getBoundingClientRect();
+      const transform = window.getComputedStyle(actor).transform;
+      const matrix = new DOMMatrixReadOnly(transform === "none" ? undefined : transform);
+      if (
+        !Number.isFinite(matrix.e) ||
+        !Number.isFinite(matrix.f) ||
+        Math.abs(matrix.b) > 0.0001 ||
+        Math.abs(matrix.c) > 0.0001
+      ) {
+        return null;
+      }
+      const parsedTop = Number.parseFloat(window.getComputedStyle(stage).top);
+      const pinnedTop = Number.isFinite(parsedTop) ? parsedTop : 0;
+      const sourceLeft = actorRect.left - matrix.e;
+      const sourceTop = actorRect.top - matrix.f - stageRect.top + pinnedTop;
+      return {
+        cx: sourceLeft + actor.offsetWidth / 2,
+        cy: sourceTop + actor.offsetHeight / 2,
+        w: actor.offsetWidth,
+        h: actor.offsetHeight,
+      };
+    };
+
+    const measureActorHandoffs = (stage: HTMLElement): boolean => {
+      const nameActor = nameActorRef.current;
+      const dossierActor = dossierActorRef.current;
+      const state = aboutVoidwalkerHandoffRef.current;
+      if (!nameActor || !dossierActor || !state.valid) return false;
+
+      // Offset-chain source geometry ignores every live actor transform, so
+      // remeasurement on resize/re-entry cannot feed the current pose back
+      // into its own destination.
+      const nameSource = sourceViewportRect(nameActor, stage);
+      const dossierSource = sourceViewportRect(dossierActor, stage);
+      if (!nameSource || !dossierSource) return false;
+
+      const titleTransform = resolveViewportRectTransform(nameSource, state.eraTitleRect);
+      const dossierTransform = resolveViewportRectTransform(dossierSource, state.firstDossierRect);
+      if (!titleTransform || !dossierTransform) return false;
+
+      const dossierScale = dossierTransform.scaleX;
+      const clippedSourceHeight = Math.max(
+        0,
+        dossierActor.offsetHeight - state.firstDossierRect.h / dossierScale
+      );
+
+      stage.style.setProperty("--about-handoff-copy-x", `${dossierTransform.x.toFixed(2)}px`);
+      stage.style.setProperty("--about-handoff-copy-y", `${dossierTransform.y.toFixed(2)}px`);
+      stage.style.setProperty("--about-handoff-copy-scale", dossierScale.toFixed(6));
+      stage.style.setProperty("--about-handoff-copy-clip", `${clippedSourceHeight.toFixed(2)}px`);
+      stage.style.setProperty("--about-handoff-title-x", `${titleTransform.x.toFixed(2)}px`);
+      stage.style.setProperty("--about-handoff-title-y", `${titleTransform.y.toFixed(2)}px`);
+      stage.style.setProperty("--about-handoff-title-scale-x", titleTransform.scaleX.toFixed(6));
+      stage.style.setProperty("--about-handoff-title-scale-y", titleTransform.scaleY.toFixed(6));
+      currentTargetStamp = state.stampedAt;
+      return true;
+    };
 
     const measureCenterDx = () => {
       const stage = stageRef.current;
@@ -113,6 +225,7 @@ export function useAboutStageScroll(
       // clear them so a re-engage starts from a known state.
       about?.style.removeProperty("--about-bg-in");
       stage?.style.removeProperty("--about-exit");
+      clearHandoff(stage, about);
       aboutStageProgressRef.current.progress = 0;
       aboutStageProgressRef.current.engaged = false;
       invalidateAboutSlot();
@@ -171,6 +284,26 @@ export function useAboutStageScroll(
       const shift = aboutShiftT(p);
       const copyIn = aboutCopyT(p);
       const exit = aboutExitT(p);
+      const nextHandoffReady =
+        ABOUT_DECK_STAGE &&
+        VOIDWALKER_HOLOGRAM_STAGE &&
+        handoffMedia.matches &&
+        isAboutVoidwalkerHandoffReady(aboutVoidwalkerHandoffRef.current);
+
+      if (nextHandoffReady) {
+        if (!handoffReady) {
+          about.setAttribute("data-about-handoff", "voidwalker");
+          handoffReady = true;
+        }
+        if (currentTargetStamp !== aboutVoidwalkerHandoffRef.current.stampedAt) {
+          if (!measureActorHandoffs(stage)) clearHandoff(stage, about);
+        }
+      } else if (handoffReady) {
+        clearHandoff(stage, about);
+      }
+
+      const handoff = handoffReady ? aboutHandoffResolveT(p) : 0;
+      const flight = handoffReady ? aboutHandoffFlightT(p) : 0;
       if (Math.abs(flip - currentFlip) >= 0.001) {
         stage.style.setProperty("--about-flip", flip.toFixed(4));
         currentFlip = flip;
@@ -187,6 +320,15 @@ export function useAboutStageScroll(
         stage.style.setProperty("--about-exit", exit.toFixed(4));
         currentExit = exit;
       }
+      if (Math.abs(handoff - currentHandoff) >= 0.001) {
+        stage.style.setProperty("--about-handoff", handoff.toFixed(4));
+        currentHandoff = handoff;
+      }
+      if (Math.abs(flight - currentFlight) >= 0.001) {
+        stage.style.setProperty("--about-handoff-flight", flight.toFixed(4));
+        currentFlight = flight;
+      }
+      if (copyShellRef.current) copyShellRef.current.inert = handoffReady && handoff >= 0.5;
       const step = Math.max(0, Math.min(ABOUT_STEP_COUNT - 1, Math.floor(p * ABOUT_STEP_COUNT)));
       if (step !== currentStep) {
         stage.setAttribute("data-about-step", String(step));
@@ -219,6 +361,7 @@ export function useAboutStageScroll(
       frame = window.requestAnimationFrame(write);
     };
     const onResize = () => {
+      currentTargetStamp = -1;
       measureCenterDx();
       requestWrite();
     };
@@ -240,8 +383,10 @@ export function useAboutStageScroll(
     requestWrite();
     window.addEventListener("scroll", requestWrite, { passive: true });
     window.addEventListener("resize", onResize);
+    window.addEventListener(ABOUT_VOIDWALKER_HANDOFF_CHANGE_EVENT, requestWrite);
     document.addEventListener("visibilitychange", onVisibility);
     capableMedia.addEventListener?.("change", onResize);
+    handoffMedia.addEventListener?.("change", onResize);
     // Late-hydration settle passes (the services runway inflates the page
     // above this stage asynchronously — remeasure once things land).
     const t1 = window.setTimeout(onResize, 600);
@@ -254,9 +399,11 @@ export function useAboutStageScroll(
       window.clearTimeout(t2);
       window.removeEventListener("scroll", requestWrite);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener(ABOUT_VOIDWALKER_HANDOFF_CHANGE_EVENT, requestWrite);
       document.removeEventListener("visibilitychange", onVisibility);
       capableMedia.removeEventListener?.("change", onResize);
-      disengage(stageRef.current);
+      handoffMedia.removeEventListener?.("change", onResize);
+      disengage(mountedStage);
     };
-  }, [stageRef, slotRef, clusterRef]);
+  }, [stageRef, slotRef, clusterRef, copyShellRef, nameActorRef, dossierActorRef]);
 }

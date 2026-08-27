@@ -110,6 +110,14 @@ import {
 } from "@/lib/services-ring/ringProgressRef";
 import { seatNdcFromRect, seatWorldHeight } from "@/lib/services-ring/viewportSeat";
 import {
+  aboutHandoffFlightT,
+  aboutVoidwalkerHandoffRef,
+  handoffRendererOpacities,
+  interpolateViewportRect,
+  isAboutVoidwalkerHandoffReady,
+  type AboutVoidwalkerHandoffState,
+} from "@/lib/voidwalker/aboutVoidwalkerHandoff";
+import {
   DRAWER_DAMP_RATE,
   DRAWER_HOUSED_DEPTH,
   DRAWER_RENDER_ORDERS,
@@ -1423,6 +1431,9 @@ export interface ServicesCardRingProps {
   /** About portrait-slot rect source (the deck's seat). Defaults to the
    *  module ref written by useAboutStageScroll. */
   aboutSlotSource?: { current: AboutSlot };
+  /** Optional About → Voidwalker receiver state. Production reads the
+   *  Three-free shared bridge; labs can inject a deterministic target. */
+  handoffSource?: { current: AboutVoidwalkerHandoffState };
   /** Dissipate clock for the dock entrance. Corridor passes
    *  `getSmoothedDissipate`; default reads `--corridor-dissipate` (damped),
    *  the `HologramOrbits` pattern. Ignored when `entrance="off"`. */
@@ -1496,6 +1507,7 @@ export function ServicesCardRing({
   progressRef = servicesRingProgressRef,
   aboutProgressRef = aboutStageProgressRef,
   aboutSlotSource = aboutSlotRef,
+  handoffSource = aboutVoidwalkerHandoffRef,
   dissipateGetter,
   entrance = "scroll",
   publishAnchors = false,
@@ -2191,14 +2203,20 @@ export function ServicesCardRing({
     const deckAnchorsLive =
       !(ABOUT_DECK_STAGE && entrance === "scroll") ||
       (exitP < DECK_ANCHORS_OFF_EXIT && aboutP <= 0);
-    // The about tail is a slide-out now (ADR-047 rev): the DOM cluster
-    // rides the deck's slot off the RIGHT frustum edge on --about-exit, so
-    // the deck is already off-canvas well before this fires. deckBgKill is
-    // a WebGL-only TERMINAL safety fade (ABOUT_DECK_FADE_WINDOW [0.92, 1])
-    // that guarantees the back material is exactly 0 (and its depth-write
-    // released) in the byte-stable hold below the runway — not the thing
-    // the eye sees leave.
-    const deckBgKill = deckEngaged ? 1 - aboutDeckFadeT(aboutP) : 1;
+    const handoffState = handoffSource.current;
+    const handoffActive =
+      ABOUT_DECK_STAGE && entrance === "scroll" && isAboutVoidwalkerHandoffReady(handoffState);
+    const handoffFlight = handoffActive ? aboutHandoffFlightT(aboutP) : 0;
+    const rendererOwnership = handoffRendererOpacities(handoffActive ? handoffState.morph : 0);
+    // Fallback keeps ADR-047's off-right slide + terminal safety fade.
+    // The complete shared-actor path disables that fade and hands opacity
+    // directly to the complementary renderer takeover, preventing a blank
+    // frame at the About/Voidwalker seam.
+    const deckBgKill = deckEngaged
+      ? handoffActive
+        ? rendererOwnership.webglPortrait
+        : 1 - aboutDeckFadeT(aboutP)
+      : 1;
 
     // Flip-phase shared geometry (one inverse parent matrix + camera terms
     // + the pivot's seat for all four cards — scratch objects only).
@@ -2266,19 +2284,30 @@ export function ServicesCardRing({
       deckCamScratch.current.copy(deckWorldScratch.current).applyMatrix4(camera.matrixWorldInverse);
       const camDepth = Math.max(0.1, -deckCamScratch.current.z);
 
-      // The DOM portrait slot → NDC → world → ring-local (viewport-first;
-      // the fallback anchor covers the pre-measure frames).
+      // Viewport rect first, projection second. On the capable handoff path
+      // the real card flies from its authored About seat to the future
+      // hologram seat; this ring remains the card's sole transform owner.
       const slot = aboutSlotSource.current;
-      const [ndcX, ndcY] = slot.valid
+      let seatRect = slot.rect;
+      let seatValid = slot.valid;
+      if (handoffActive && slot.valid) {
+        seatRect = interpolateViewportRect(slot.rect, handoffState.portraitSeat, handoffFlight);
+      } else if (handoffActive && handoffFlight >= 0.999) {
+        // Deep-link / refresh below About: the source seat may never have
+        // intersected the viewport, but the terminal flight pose is exact.
+        seatRect = handoffState.portraitSeat;
+        seatValid = true;
+      }
+      const [ndcX, ndcY] = seatValid
         ? seatNdcFromRect(
-            slot.rect.cx,
-            slot.rect.cy,
+            seatRect.cx,
+            seatRect.cy,
             Math.max(1, size.width),
             Math.max(1, size.height),
             ABOUT_FALLBACK_NDC
           )
         : ABOUT_FALLBACK_NDC;
-      const slotH = slot.valid ? slot.rect.h : ABOUT_FALLBACK_SLOT_H_PX;
+      const slotH = seatValid ? seatRect.h : ABOUT_FALLBACK_SLOT_H_PX;
       deckSeatScratch.current
         .set(ndcX * halfFovTan * aspect * camDepth, ndcY * halfFovTan * camDepth, -camDepth)
         .applyMatrix4(camera.matrixWorld)

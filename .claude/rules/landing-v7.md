@@ -93,6 +93,21 @@ mobile/PRM/fallback/flag-off). Flag: `ABOUT_DECK_STAGE`. Paint-stack rows
 (including the media-flip null-render — the hook disengages when its
 stage ref goes null).
 
+**Proposed About→Voidwalker portrait handoff — unshipped/unpushed, pending visual
+approval.** Only the capable path (`min-width: 1101px`, motion allowed, flags
+active, live corridor) may overlap `#voidwalker` by `-120svh`, creating a
+shared `20svh` pin seam. This is layout only: the `#about` and `#voidwalker`
+station wrappers never animate; contained actors own every reveal/glitch.
+`ServicesCardRing` is the sole portrait-transform owner and reads a Three-free
+viewport-seat ref inside the existing canvas. The portal atomically publishes
+portrait, FACTS-dossier and era-title targets only — no duplicate portal
+transform, no revived `--about-portal`, no second canvas, and no
+Three/Fiber/Drei import into the landing DOM graph. About's name and dossier
+are sibling transform actors under a layout-only shell. Proposed windows:
+entry `[0, .14]`, renderer/title takeover `[0, .08]`, existing exit
+`[.74, .96]`. At 961–1100 and on mobile/PRM/corridor-fallback/flag-off paths,
+the boundary stays normal-flow.
+
 **The left-rail manifest is parse-injected (ADR-031).** Its skeleton is
 built at parse time (`lib/v7-parse/railManifest.ts`) into the authored
 `<nav data-rail-manifest-root>` shell; `RailManifestController` mutates

@@ -249,7 +249,10 @@ test.describe("Arc cases card smoke (ADR-036 / ADR-041 / ADR-042)", () => {
     await expect(pagers.nth(0)).toHaveAttribute("aria-pressed", "false");
 
     // Clicking a pager ordinal selects it (box-click — the hit frame is
-    // re-projected every frame, so `locator.click()` can't stabilise).
+    // re-projected every frame, so `locator.click()` can't stabilise). The
+    // store opens before the rAF materialisation reaches its interaction gate,
+    // so wait for that authored readiness signal before exercising the pointer.
+    await expect(page.locator("#arc-cases-terminal")).not.toHaveAttribute("inert", "");
     await clickByBox(page, pagers.nth(3));
     await expect(pagers.nth(3)).toHaveAttribute("aria-pressed", "true");
   });

@@ -280,3 +280,148 @@ near-black pixels from painting a rectangular source box.
 - `services-ring-smoke.spec.ts` asserts hologram mode, transparent/starless
   station paint, ambient survival, reverse pre-pin hiding, replay, and the
   final `#practice` kill.
+
+---
+
+## Update 3 — proposed About → hologram shared-actor handoff (2026-08-27)
+
+**Status: Proposed.** This is Cycle-B scaffolding for the owner's approved
+card-to-hologram transition. Keep this update proposed, and keep its runtime
+work unpushed, until the owner has read the fresh-build motion in the browser.
+
+### The seam
+
+The full-viewport gap between About releasing and Voidwalker pinning is
+structural, not an easing defect. On the complete capable-desktop path,
+`#voidwalker` overlaps the preceding runway by `120svh`. Its `260svh` runway
+is unchanged; the overlap creates a `20svh` interval in which both sticky
+roots are pinned. Station wrappers never animate. Actors inside those roots
+share one scroll-derived handoff clock:
+
+- About portrait flight: `0.74 → 0.88`.
+- About copy/orbit de-resolution: `0.74 → 0.96`.
+- WebGL portrait → DOM hologram acquisition: Voidwalker `0 → 0.08`.
+- Voidwalker actor assembly: Voidwalker `0 → 0.14`.
+- Existing Voidwalker exit: `0.74 → 0.96`.
+
+The negative margin is capability-gated and may activate only after valid
+future-seat measurements exist. Widths `961–1100px`, reduced motion, WebGL
+fallback, invalid measurements and JavaScript failure retain normal flow and
+therefore retain no overlap.
+
+### One moving portrait, two renderers
+
+The portrait remains the existing WebGL deck card. `ServicesCardRing` is its
+sole transform owner and interpolates a viewport rect from the About seat to
+the future hologram seat before using the existing CSS-pixel → NDC →
+camera-depth → ring-local projection. The About orbit cluster stays in its
+authored right-hand seat and only de-resolves; it must not translate the card
+again. This is the single-owner correction to Update 1's deleted double-
+transform portal.
+
+The future seat is measured from stable DOM attributes relative to the
+Voidwalker sticky root while that root is below the viewport. It uses the
+hologram column width, the card's `420 / 680` aspect and bottom alignment with
+the hologram slot. A Three-free shared ref publishes that seat, the first left
+dossier rect, the handoff/morph scalar, capability, validity and timestamp.
+
+During takeover, WebGL portrait opacity is `1 − morph` and DOM hologram
+acquisition is `morph`; endpoints are complementary and exact. The initial
+hologram materialization is scroll-owned and reversible. The existing timed
+materialize remains available only for deliberate era-button changes. No
+second canvas, Three/Fiber import in a DOM landing module, GSAP timeline or
+time-based CSS transition may enter this seam.
+
+### Copy and ownership
+
+The About copy condenses from its top-left toward the first left dossier rect
+with one uniform width scale. Excess height is masked while rows de-resolve
+bottom-to-top through the inverse terminal-stutter grammar. The destination
+dossier resolves in the same footprint; other Voidwalker panels may spread
+outward by at most `24px`, horizontally only. The masthead and hologram do not
+move vertically.
+
+Interaction ownership follows visual ownership: disappearing About links
+become inert, and era controls remain inert until their target is readable.
+Forward, reverse, interrupted reversal, re-entry, resize across `1101px`, deep
+links and refreshes below the seam must all reconstruct from scroll position
+without a latch.
+
+---
+
+## Update 4 — proposed editorial character sheet + grounded hologram (2026-08-27)
+
+**Status: Proposed.** This is Cycle-B scaffolding for the owner's approved
+Voidwalker redesign. Keep the implementation unpushed until the owner has read
+the fresh-build composition and title handoff in the browser.
+
+The stage becomes a restrained character sheet rather than a centred mast plus
+footer rail. On capable desktop, the existing three-column station remains:
+the left column owns a six-era selector, a fixed-footprint identity title,
+FACTS and ON RECORD; the centre owns only the hologram and projector; the right
+owns SCOPE, TRANSMISSION and LOADOUT. The selector is a 3-by-2 semantic tab
+grid with stable focus. It borrows the hierarchy of game character screens but
+keeps the Thoughtform surface unboxed, sharp-cornered and gold only for active
+wayfinding. No invented stats or equipment slots enter the record.
+
+The shared seam gains a third measured receiver, `eraTitleRect`. About's copy
+shell becomes layout-only and contains two sibling transform actors: the name
+travels to the era-title seat while the remaining dossier condenses to FACTS.
+Neither actor may inherit a transform from the shell. The destination title
+acquires with the existing renderer morph and complementary opacity, so
+`VINCE BUYSSENS` resolves into the default `2026 — The Intelligence Architect`
+without a blank or duplicate frame. Portrait, title and dossier measurements
+must all be valid before the `-120svh` overlap can engage.
+
+The hologram's contact line is asset-authored, not a responsive offset. The
+canonical video and poster share one 720×1280 frame with a normalized boot
+baseline; the media box remains transform-free so the CSS screen raster keeps
+sole ownership of glitch transforms. The projector disc top coincides with the
+slot bottom through shared height-derived variables. Future era media carries
+frame plus head/foot anchors and falls back to the canonical normalized still
+until it passes the same contact guard.
+
+All station-wrapper, transparent/starless, single-canvas, Three-free bridge,
+entry `[0, .14]`, takeover `[0, .08]`, exit `[.74, .96]`, reversible-scroll and
+normal-flow fallback contracts from Updates 2–3 remain binding.
+
+Implementation contracts while this update remains proposed:
+
+- The default tab is `2026 — The Intelligence Architect`. The tablist and its
+  one stable tabpanel never remount; Arrow keys, Home and End move roving focus
+  and select automatically.
+- Desktop optional seats use fixed height-derived rows so two press records or
+  a transmission cannot move the surrounding instrument. At `<=1100px` the
+  wrappers flatten into selector → identity → figure/platform → FACTS → SCOPE →
+  optional records, and empty optional seats collapse.
+- `CharacterEraHologram` validates self-hosted video/poster paths, an exact
+  720x1280 frame and normalized `headY`/`footY` anchors. All six eras resolve to
+  the normalized Thoughtform pair until an era-specific pair is validated.
+- `.vwh__column` owns `minmax(0, 1fr) auto` rows. The slot fills the first row;
+  the base's negative disc inset places `.vwh__base__disc` exactly on the slot
+  bottom. Media fills the slot with bottom-centred `object-fit: contain`.
+
+---
+
+## Update 5 — proposed centred era instrument (2026-08-27)
+
+**Status: Proposed.** This is a visual-hierarchy amendment to Update 4 and stays
+inside the same unpushed Cycle-B acceptance package.
+
+On capable desktop, the six-era selector no longer belongs to the left dossier.
+It spans the station's top row as one centred, horizontal tab strip above the
+hologram axis. Dormant stops use neutral hairlines and readouts; gold is reserved
+for the active rule, diamond and year. The selector remains one stable semantic
+tablist with the existing roving-focus behavior and never remounts.
+
+The top instrument owns a fixed height-derived band. Identity/FACTS and
+SCOPE/LOADOUT begin beneath it on the same lower reading datum, while the centre
+figure continues to span the complete grid and therefore does not move, resize
+or gain a second transform owner. The title and dossier receivers remain live
+measurements, so the About handoff resolves to the new seats without hard-coded
+portal offsets.
+
+At `<=1100px`, the selector returns to the existing 3-by-2 normal-flow form and
+the selector → identity → figure/platform → FACTS → SCOPE → optional
+records order remains unchanged. No station-wrapper animation, vertical actor
+entrance, opaque pane, star field or additional renderer is introduced.

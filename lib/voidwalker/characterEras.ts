@@ -32,6 +32,128 @@ export type CharacterEraId =
   | "loop";
 
 /**
+ * A normalized, self-hosted hologram pair for one era.
+ *
+ * The frame and anchors are data rather than CSS calibration. Every asset
+ * therefore enters the same 720 × 1280 projection slot, and the hologram
+ * treatment remains free to own its transforms without a second corrective
+ * transform fighting it at runtime.
+ */
+export interface CharacterEraHologram {
+  /** H.264 MP4 under `public/videos/voidwalker/`. */
+  videoPath: string;
+  /** Frame-zero poster under `public/images/voidwalker/`. */
+  posterPath: string;
+  /** The normalized delivery canvas. Exact by contract. */
+  frame: {
+    readonly width: 720;
+    readonly height: 1280;
+  };
+  /** Normalized Y coordinate of the top of the authored figure. */
+  headY: number;
+  /** Normalized Y coordinate where the boots meet the projector plane. */
+  footY: number;
+}
+
+/**
+ * The one production-ready hologram. Every era resolves to this pair until
+ * an era-specific pair is present and passes `isCharacterEraHologram`.
+ */
+export const CANONICAL_CHARACTER_ERA_HOLOGRAM = Object.freeze({
+  videoPath: "/videos/voidwalker/holo-idle-thoughtform.mp4",
+  posterPath: "/images/voidwalker/holo-still-thoughtform.jpg",
+  frame: Object.freeze({ width: 720, height: 1280 }),
+  headY: 0.122,
+  footY: 0.998,
+} as const satisfies CharacterEraHologram);
+
+const HOLOGRAM_VIDEO_PATH = /^\/videos\/voidwalker\/[a-z0-9][a-z0-9._-]*\.mp4$/i;
+const HOLOGRAM_POSTER_PATH = /^\/images\/voidwalker\/[a-z0-9][a-z0-9._-]*\.(?:jpe?g|png|webp)$/i;
+
+/** Runtime guard for data coming from future generated-asset manifests. */
+export function isCharacterEraHologram(value: unknown): value is CharacterEraHologram {
+  if (!value || typeof value !== "object") return false;
+
+  const candidate = value as Partial<CharacterEraHologram>;
+  const frame = candidate.frame as Partial<CharacterEraHologram["frame"]> | undefined;
+  const headY = candidate.headY;
+  const footY = candidate.footY;
+
+  return (
+    typeof candidate.videoPath === "string" &&
+    HOLOGRAM_VIDEO_PATH.test(candidate.videoPath) &&
+    typeof candidate.posterPath === "string" &&
+    HOLOGRAM_POSTER_PATH.test(candidate.posterPath) &&
+    frame?.width === 720 &&
+    frame.height === 1280 &&
+    typeof headY === "number" &&
+    typeof footY === "number" &&
+    Number.isFinite(headY) &&
+    Number.isFinite(footY) &&
+    headY >= 0 &&
+    headY < footY &&
+    footY <= 1
+  );
+}
+
+export interface ContainedHologramPlacement {
+  /** Uniform object-fit scale. */
+  scale: number;
+  /** Rendered media bounds inside the slot. */
+  width: number;
+  height: number;
+  left: number;
+  top: number;
+  /** Foot-anchor Y in slot-local CSS pixels. */
+  footY: number;
+  /** Remaining CSS pixels between the foot anchor and the slot bottom. */
+  gapBelowFoot: number;
+}
+
+/**
+ * Pure `object-fit: contain` + `object-position: bottom center` geometry.
+ * Invalid or unmeasurable inputs fail closed instead of producing NaN CSS.
+ */
+export function containedHologramPlacement(
+  slotWidth: number,
+  slotHeight: number,
+  hologram: Pick<CharacterEraHologram, "frame" | "footY">
+): ContainedHologramPlacement | null {
+  if (
+    !Number.isFinite(slotWidth) ||
+    !Number.isFinite(slotHeight) ||
+    slotWidth <= 0 ||
+    slotHeight <= 0 ||
+    !Number.isFinite(hologram.frame.width) ||
+    !Number.isFinite(hologram.frame.height) ||
+    hologram.frame.width <= 0 ||
+    hologram.frame.height <= 0 ||
+    !Number.isFinite(hologram.footY) ||
+    hologram.footY < 0 ||
+    hologram.footY > 1
+  ) {
+    return null;
+  }
+
+  const scale = Math.min(slotWidth / hologram.frame.width, slotHeight / hologram.frame.height);
+  const width = hologram.frame.width * scale;
+  const height = hologram.frame.height * scale;
+  const left = (slotWidth - width) / 2;
+  const top = slotHeight - height;
+  const footY = top + hologram.footY * height;
+
+  return {
+    scale,
+    width,
+    height,
+    left,
+    top,
+    footY,
+    gapBelowFoot: slotHeight - footY,
+  };
+}
+
+/**
  * One row of the era's FACTS panel — a mono label and its value, read
  * as a dotted-leader pair (the `.arc-card-item__meta-row` grammar).
  *
@@ -117,6 +239,12 @@ export interface CharacterEra {
    * cost). PNG or WEBP; ≤240 KB.
    */
   stillPath: string;
+  /**
+   * Optional normalized hologram pair for this era. Omission is deliberate:
+   * `resolveCharacterEraHologram` supplies the canonical Thoughtform pair
+   * until an era-specific delivery exists and passes the runtime guard.
+   */
+  hologram?: CharacterEraHologram;
   /**
    * The rail label as it letters on the era pip. Kept short so all six
    * fit at 1280 without wrapping. ≤14 chars.
@@ -295,6 +423,17 @@ export const CHARACTER_ERA_COUNT = 6 as const;
  *  do on a miss (typically a fallback to the first entry). */
 export function findCharacterEra(id: string): CharacterEra | undefined {
   return CHARACTER_ERAS.find((e) => e.id === id);
+}
+
+/**
+ * Resolve an era's production media without ever returning an unvalidated
+ * generated-asset record. The shared canonical pair is the visible fallback,
+ * not an empty slot.
+ */
+export function resolveCharacterEraHologram(
+  era: Pick<CharacterEra, "hologram"> | null | undefined
+): CharacterEraHologram {
+  return isCharacterEraHologram(era?.hologram) ? era.hologram : CANONICAL_CHARACTER_ERA_HOLOGRAM;
 }
 
 /** The beats whose press cards an era prints, in order. One place, so

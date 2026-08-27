@@ -50,6 +50,14 @@
 #voidwalker[data-vw-mode="hologram"].station {
   padding-block: 0;
 }
+/* ADR-082 U3/U4 seam weld. The receiver publishes `ready` only after the
+   portrait, FACTS dossier and era-title seats are finite under the full gate.
+   Pulling the station back by 120svh then gives About and Voidwalker a 20svh
+   dual-pin handoff without changing the hologram's 260svh reading runway.
+   Removing the attribute restores byte-normal flow on every fallback. */
+#voidwalker[data-vw-mode="hologram"][data-vw-handoff="ready"].station {
+  margin-top: -120svh;
+}
 html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"].station {
   background-color: transparent;
   background-image: none;

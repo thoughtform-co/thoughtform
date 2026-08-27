@@ -1,10 +1,12 @@
 "use client";
 
+import { useRef, type KeyboardEvent, type RefObject } from "react";
+
 import {
   MediaLightbox,
   useWalkthrough,
 } from "@/components/landing/home-v2/services/casefile/MediaLightbox";
-import { eraPressBeatIds, type CharacterEra } from "@/lib/voidwalker/characterEras";
+import { CHARACTER_ERAS, eraPressBeatIds, type CharacterEra } from "@/lib/voidwalker/characterEras";
 import { VOIDWALKER_BEATS, type VwPress, type VwSegment } from "@/lib/voidwalker/voidwalkerData";
 
 /**
@@ -20,9 +22,9 @@ import { VOIDWALKER_BEATS, type VwPress, type VwSegment } from "@/lib/voidwalker
  *   LEFT  (the record)   FACTS · ON RECORD · ARTEFACT
  *   RIGHT (the era)      BIO   · TRANSMISSION
  *
- * An absent slot COLLAPSES; it never reorders and it is never filled
- * with a substitute. An era without a film simply has no transmission,
- * and the eye still finds the bio in the same place.
+ * Optional slots keep their footprint on capable desktop so switching
+ * eras cannot reshape the sheet. They collapse only in the normal-flow
+ * responsive presentation; an absent slot is never filled with fake data.
  *
  * ⚠ THE WIRE DRAWINGS ARE PARKED, NOT PORTED (owner, 2026-08-26). The
  * ADR-074 plates are authored in container-query units against a
@@ -37,6 +39,23 @@ function plain(segments: readonly VwSegment[]): string {
   return segments.map((s) => (typeof s === "string" ? s : "em" in s ? s.em : s.mark)).join("");
 }
 
+export function eraPositionLabel(index: number, count = CHARACTER_ERAS.length): string {
+  return `ERA / ${String(index + 1).padStart(2, "0")} OF ${String(count).padStart(2, "0")}`;
+}
+
+export interface HoloEraIdentityRefs {
+  kicker: RefObject<HTMLSpanElement | null>;
+  title: RefObject<HTMLSpanElement | null>;
+  year: RefObject<HTMLSpanElement | null>;
+}
+
+export interface HoloEraPanelsProps {
+  selectedEraIndex: number;
+  onSelectEra: (index: number) => void;
+  identityRefs?: HoloEraIdentityRefs;
+  idPrefix?: string;
+}
+
 /**
  * One section: kicker + thin rule + content, bare on the void. No card,
  * no wash, no lit bar — the second review's ruling ("no boxes"): the
@@ -46,14 +65,16 @@ function plain(segments: readonly VwSegment[]): string {
 function Panel({
   kicker,
   tag,
+  handoffTarget,
   children,
 }: {
   kicker: string;
   tag?: string;
+  handoffTarget?: "dossier";
   children: React.ReactNode;
 }) {
   return (
-    <article className="vwh__panel">
+    <article className="vwh__panel" data-vwh-handoff-target={handoffTarget}>
       <p className="vwh__panel__head">
         <span className="vwh__panel__kicker">{kicker}</span>
         {tag ? <span className="vwh__panel__tag">{tag}</span> : null}
@@ -69,7 +90,7 @@ function Facts({ era }: { era: CharacterEra }) {
   const facts = era.facts ?? [];
   if (facts.length === 0) return null;
   return (
-    <Panel kicker="Facts" tag={era.short}>
+    <Panel kicker="Facts" tag={era.short} handoffTarget="dossier">
       <dl className="vwh__facts">
         {facts.map((f) => (
           <div className="vwh__facts__row" key={f.k}>
@@ -103,7 +124,18 @@ function PressCard({ press }: { press: VwPress }) {
   );
 }
 
-export function HoloEraPanels({ era }: { era: CharacterEra }) {
+export function HoloEraPanels({
+  selectedEraIndex,
+  onSelectEra,
+  identityRefs,
+  idPrefix = "voidwalker",
+}: HoloEraPanelsProps) {
+  const era = CHARACTER_ERAS[selectedEraIndex] ?? CHARACTER_ERAS[0];
+  const activeEraIndex = CHARACTER_ERAS.indexOf(era);
+  const activeTabId = `${idPrefix}-era-tab-${era.id}`;
+  const panelId = `${idPrefix}-era-panel`;
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const kicker = eraPositionLabel(activeEraIndex);
   const beat = VOIDWALKER_BEATS.find((b) => b.id === era.beatId);
 
   // Every press card this era speaks for — its own beat by default, or
@@ -124,66 +156,190 @@ export function HoloEraPanels({ era }: { era: CharacterEra }) {
    */
   const { watching, open, close } = useWalkthrough();
 
+  const selectAndFocus = (index: number) => {
+    onSelectEra(index);
+    tabRefs.current[index]?.focus();
+  };
+
+  const onTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const count = CHARACTER_ERAS.length;
+    let next: number | null = null;
+
+    switch (event.key) {
+      case "ArrowLeft":
+        next = (index - 1 + count) % count;
+        break;
+      case "ArrowRight":
+        next = (index + 1) % count;
+        break;
+      case "ArrowUp":
+        next = (index - 3 + count) % count;
+        break;
+      case "ArrowDown":
+        next = (index + 3) % count;
+        break;
+      case "Home":
+        next = 0;
+        break;
+      case "End":
+        next = count - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    selectAndFocus(next);
+  };
+
   return (
     <>
-      <div className="vwh__side" data-side="l">
-        <Facts era={era} />
-
-        {press.length > 0 ? (
-          <Panel kicker="On record">
-            <div className="vwh__press-stack">
-              {press.map((p) => (
-                <PressCard key={`${p.outlet}-${p.headline.slice(0, 24)}`} press={p} />
-              ))}
-            </div>
-          </Panel>
-        ) : null}
-      </div>
-
-      <div className="vwh__side" data-side="r">
-        {/* The era itself: who this version was, and what it did. The
-            record's own prose — this is not the #about bio restated. */}
-        <Panel kicker="Scope">
-          <p className="vwh__panel__motto">{era.motto}</p>
-          <p className="vwh__panel__body">{beat ? plain(beat.body) : era.motto}</p>
-          <p className="vwh__panel__foot">
-            <span className="vwh__panel__foot__k">Loadout</span>
-            <span className="vwh__panel__foot__v">{era.loadout}</span>
-          </p>
-        </Panel>
-
-        {era.film ? (
-          <Panel kicker="Transmission">
-            {/* The poster IS the affordance: the video's own frame under
-                the hologram's scanline, a play ring in the middle, the
-                title on the caption bar. The whole figure is the button. */}
+      <nav
+        className="vwh__rail vwh__era-selector"
+        aria-label="Era"
+        role="tablist"
+        data-vwh-region="era-selector"
+        data-testid="voidwalker-era-selector"
+      >
+        {CHARACTER_ERAS.map((item, index) => {
+          const selected = index === activeEraIndex;
+          return (
             <button
+              key={item.id}
+              id={`${idPrefix}-era-tab-${item.id}`}
+              ref={(node) => {
+                tabRefs.current[index] = node;
+              }}
               type="button"
-              className="vwh__film"
-              onClick={(e) => open(e.currentTarget)}
-              aria-haspopup="dialog"
-              aria-label={`Play: ${era.film.title}`}
+              role="tab"
+              className="vwh__pip"
+              aria-controls={panelId}
+              aria-selected={selected}
+              aria-label={`${item.year} — ${item.wardrobe}`}
+              tabIndex={selected ? 0 : -1}
+              data-on={selected}
+              data-vwh-era-tab={item.id}
+              onClick={() => onSelectEra(index)}
+              onKeyDown={(event) => onTabKeyDown(event, index)}
             >
-              <span className="vwh__film__frame">
-                <img
-                  className="vwh__film__poster"
-                  src={era.film.poster}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                />
-                <span className="vwh__film__scan" aria-hidden="true" />
-                <span className="vwh__film__play" aria-hidden="true" />
-              </span>
-              <span className="vwh__film__bar">
-                <span className="vwh__film__title">{era.film.title}</span>
-                {era.film.duration ? (
-                  <span className="vwh__film__dur">{era.film.duration}</span>
-                ) : null}
-              </span>
+              <span className="vwh__pip__year">{item.year}</span>
+              <span className="vwh__pip__name">{item.short}</span>
             </button>
+          );
+        })}
+      </nav>
+
+      <div
+        className="vwh__tabpanel"
+        id={panelId}
+        role="tabpanel"
+        aria-labelledby={activeTabId}
+        data-vwh-era-panel={era.id}
+        data-vwh-region="era-panel"
+        data-testid="voidwalker-era-panel"
+      >
+        <header className="vwh__mast" data-vwh-region="identity">
+          <p className="vwh__mast__kicker vwh__decode-line" aria-label={kicker}>
+            <span className="vwh__decode-ghost" data-copy={kicker} aria-hidden="true" />
+            <span className="vwh__decode-live" aria-hidden="true" ref={identityRefs?.kicker}>
+              {kicker}
+            </span>
+          </p>
+          <h2
+            className="vwh__mast__title vwh__decode-line"
+            aria-label={era.wardrobe}
+            data-vwh-handoff-target="era-title"
+            data-vwh-region="era-title"
+            data-testid="voidwalker-era-title"
+          >
+            <span className="vwh__decode-ghost" data-copy={era.wardrobe} aria-hidden="true" />
+            <span className="vwh__decode-live" aria-hidden="true" ref={identityRefs?.title}>
+              {era.wardrobe}
+            </span>
+          </h2>
+          <p className="vwh__mast__year vwh__decode-line" aria-label={era.year}>
+            <span className="vwh__decode-ghost" data-copy={era.year} aria-hidden="true" />
+            <span className="vwh__decode-live" aria-hidden="true" ref={identityRefs?.year}>
+              {era.year}
+            </span>
+          </p>
+        </header>
+
+        <div className="vwh__side" data-side="l" data-vwh-region="record">
+          <Facts era={era} />
+
+          <div
+            className="vwh__panel-slot"
+            data-slot="on-record"
+            data-empty={press.length === 0}
+            data-vwh-region="on-record"
+            aria-hidden={press.length === 0 || undefined}
+          >
+            {press.length > 0 ? (
+              <Panel kicker="On record">
+                <div className="vwh__press-stack">
+                  {press.map((p) => (
+                    <PressCard key={`${p.outlet}-${p.headline.slice(0, 24)}`} press={p} />
+                  ))}
+                </div>
+              </Panel>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="vwh__side" data-side="r" data-vwh-region="scope">
+          {/* The era itself: who this version was, and what it did. The
+              record's own prose — this is not the #about bio restated. */}
+          <Panel kicker="Scope">
+            <p className="vwh__panel__motto">{era.motto}</p>
+            <p className="vwh__panel__body">{beat ? plain(beat.body) : era.motto}</p>
+            <p className="vwh__panel__foot">
+              <span className="vwh__panel__foot__k">Loadout</span>
+              <span className="vwh__panel__foot__v">{era.loadout}</span>
+            </p>
           </Panel>
-        ) : null}
+
+          <div
+            className="vwh__panel-slot"
+            data-slot="transmission"
+            data-empty={!era.film}
+            data-vwh-region="transmission"
+            aria-hidden={!era.film || undefined}
+          >
+            {era.film ? (
+              <Panel kicker="Transmission">
+                {/* The poster IS the affordance: the video's own frame under
+                    the hologram's scanline, a play ring in the middle, the
+                    title on the caption bar. The whole figure is the button. */}
+                <button
+                  type="button"
+                  className="vwh__film"
+                  onClick={(e) => open(e.currentTarget)}
+                  aria-haspopup="dialog"
+                  aria-label={`Play: ${era.film.title}`}
+                >
+                  <span className="vwh__film__frame">
+                    <img
+                      className="vwh__film__poster"
+                      src={era.film.poster}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <span className="vwh__film__scan" aria-hidden="true" />
+                    <span className="vwh__film__play" aria-hidden="true" />
+                  </span>
+                  <span className="vwh__film__bar">
+                    <span className="vwh__film__title">{era.film.title}</span>
+                    {era.film.duration ? (
+                      <span className="vwh__film__dur">{era.film.duration}</span>
+                    ) : null}
+                  </span>
+                </button>
+              </Panel>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       {watching && era.film ? (
