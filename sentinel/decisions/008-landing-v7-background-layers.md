@@ -14,7 +14,7 @@ The v7 landing page (`components/landing/v7/`) is a layered composite, not a fla
 
 Every section, divider, and connector that sits inside `.stations` and is intended to read as plain dark void is actually an **opaque shield** over those two layers. Stations correctly declare `background: var(--void); z-index: 2;` at `landing.css:713`. Connectors originally did the same.
 
-Two regressions have shipped by treating this compositing as accidental rather than structural:
+Three regressions have shipped by treating this compositing as accidental rather than structural:
 
 ### Regression 1 — transparent connectors (`c9c745b`)
 
@@ -23,6 +23,17 @@ The commit set `.celestial-connector { background: transparent; z-index: 2; }`, 
 ### Regression 2 — opacity-fade reveal on the shielding wrapper
 
 After Regression 1 was reverted, connectors still flashed gold → black for ~880ms as they entered the viewport. `.celestial-connector` carries `data-m="instrument"` in the prototype HTML. `[data-m]` declares `opacity: 0` as the hidden state and transitions to `1` over `var(--m-dur-slow) = 880ms` when `.is-in` is applied by `useRevealMotion`'s IntersectionObserver. CSS `opacity` composites the entire element layer, so an opaque `var(--void)` wrapper drawn at `opacity: 0.6` draws the void at 60% alpha and lets the gateway gold show through at 40%. Runtime evidence captured opacity sampling at `{0, 50, 300, 600, 1000} ms` after `.is-in`: `0, 0, ~0.85, ~0.98, 1` — the visible fade matched the warm-to-dark transition users reported exactly.
+
+### Regression 3 — a sticky child inside a moving opaque parent (ADR-082 U2)
+
+The Voidwalker hologram pinned its inner `.vwh` and hid every actor until that
+pin, but left `#voidwalker` as an opaque void + star station. The parent plane
+therefore rose over pinned transparent About before the child could appear;
+after a one-shot reveal latch fired, reverse scroll also carried the live child
+with that plane. A child rect/opacity inspection looked correct and could not
+see the actual paint owner. The fix made the capable outer station explicitly
+transparent, moved the lockstep cover to `#practice`, and made the inner clock
+pure/reversible with its exit complete before release.
 
 ---
 
@@ -43,9 +54,10 @@ The following ordering is load-bearing and must not be changed without an ADR up
 | 4     | `.celestial-connector`                                  | relative | 2                         | `var(--void)` — opaque shield                                                                                                                                           |
 | 4a    | `.home-v2-stage__canvas` during `data-corridor-docked`  | fixed    | 2 inside corridor host    | live R3F sphere/ambient backdrop; its painters retire on their own opacity channels                                                                                     |
 | 4b    | `#services` during `data-corridor-exit`                 | relative | 6; children 7             | intentional transparent station over the docked canvas (ADR-021); the fixed body veil (z5) sits between                                                                 |
-| 4c    | `#about` during `data-corridor-exit` + `#about::before` | relative | 6; internal 0, children 7 | ADR-047 transparent deck-flip stage; the pseudo is a FAIL-OPAQUE shield (`--about-bg-in`, default 1) that restores BEFORE the ambient canvas dies                       |
+| 4c    | `#about` during `data-corridor-exit` + `#about::before` | relative | 6; internal 0, children 7 | ADR-047 transparent deck-flip stage; the pseudo is FAIL-OPAQUE (`--about-bg-in`, default 1) and stays at 0 for the engaged life                                         |
 | 4d    | `.about-stage` (inside `#about`, mode-gated)            | sticky   | auto (children of 4c)     | transparent pinned stage (Rule 2 comment inline); all reveals ride its children                                                                                         |
-| 4e    | `#continuum` during `data-corridor-exit`                | relative | 6                         | the opaque cover that ends the ambient hold (the role `#about` carried under ADR-033)                                                                                   |
+| 4e    | `#voidwalker[data-vw-mode="hologram"]`                  | relative | 6                         | ADR-082 U2 transparent, starless pinned hologram; inner actors reveal/exit while pinned                                                                                 |
+| 4f    | `#practice` during engaged transparent Voidwalker mode  | relative | 6                         | mode-gated lockstep opaque cover + ambient-kill target after both transparent stages                                                                                    |
 | 6     | `.hud` including `[data-tools-rail-root]`               | fixed    | 50                        | persistent rails/nav; right-rail register paints inside this existing HUD stacking context                                                                              |
 
 | 7 | `.arc-hero` (`/arcs/[slug]`) | relative | 4 | the same card on an arc page: opaque, never faded or transformed; only `.hero__content` moves on `--hero-cover` (ADR-075) |
@@ -53,17 +65,16 @@ The following ordering is load-bearing and must not be changed without an ADR up
 
 Any new `position: fixed` or `position: sticky` layer on the landing page must be added to this table in the same PR. Rows 7–7a are the arc shell, which inherits these rules (`.claude/rules/arcs.md`).
 
-`#services` and `#about` are the explicit intentional-see-through
-exceptions (rows 4b–4d; the retired `#tools` lead-in was the precedent).
-During the corridor-exit band both stations are transparent over the live
-docked canvas; `#about`'s authored `::before` radial wash is overridden
-into a FAIL-OPAQUE shield (`opacity: var(--about-bg-in, 1)` — unwritten ⇒
-opaque, so JS failure / flag-off never strand a transparent station), and
-the ADR-047 ordering invariant holds: the shield restores at the about
-stage's unpin, BEFORE the ambient fade (keyed to `#continuum.top`) even
-starts. Reveals never ride the shielding wrappers — stage children carry
-every animation (Rule 3). The right-rail register is not a new page
-overlay: it is nested inside the existing fixed `.hud` at z50.
+`#services`, capable `#about`, and capable hologram `#voidwalker` are the
+explicit intentional-see-through exceptions (rows 4b–4e). They expose the
+same held corridor canvas; `#practice` is the next opaque plane and the SAME
+rect used by the ambient fade/bottom gate while Voidwalker mode is engaged.
+Static/mobile/PRM/fallback Voidwalker remains opaque and becomes that SAME
+kill rect instead, so a JS or capability failure never exposes the wrong fixed
+layer. Reveals never ride the station wrappers — stage children carry every
+animation (Rule 3), and their exits finish before sticky release.
+The right-rail register is not a new page overlay: it is nested inside the
+existing fixed `.hud` at z50.
 
 ### 2. Rule: full-bleed elements inside `.stations` at `z ≥ 2` must be opaque
 

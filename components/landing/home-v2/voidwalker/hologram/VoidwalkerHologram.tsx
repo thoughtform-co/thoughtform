@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
-
 import { CHARACTER_ERAS } from "@/lib/voidwalker/characterEras";
+import { voidwalkerHologramProgressRef } from "@/lib/voidwalker/voidwalkerHologramClock";
+
+import { useVoidwalkerHologramScroll } from "../../hooks/useVoidwalkerHologramScroll";
 
 import { HoloEraPanels } from "./HoloEraPanels";
 import { HoloFigure } from "./HoloFigure";
@@ -28,10 +30,9 @@ import { HoloFigure } from "./HoloFigure";
  *    park, its own pass. The gold disc + ring + glow sits here as the
  *    seat that mark will eventually take; the composition above it does
  *    not change when it does.
- * 2. ERA SWITCHING IS A CLICK. The corridor already carries a scroll
- *    clock; wiring the hologram to it is its own pass with its own smoke
- *    (the section is the corridor's opaque cover — see the file header
- *    on `VoidwalkerStation.tsx`).
+ * 2. ERA SWITCHING IS A CLICK. The stage scroll clock owns only entry,
+ *    reading hold and exit; choosing one of the six loadouts remains a
+ *    deliberate player action.
  *
  * ⚠ FIVE OF THE SIX ERAS RENDER THE THOUGHTFORM ASSET. Only the
  * thoughtform-era hologram exists so far (the `voidwalker-avatar` skill's
@@ -44,6 +45,9 @@ import { HoloFigure } from "./HoloFigure";
 
 const HOLO_STILL = "/images/voidwalker/holo-still-thoughtform.jpg";
 const HOLO_VIDEO = "/videos/voidwalker/holo-idle-thoughtform.mp4";
+const SCRAMBLE_ARM_AT = 0.05;
+const SCRAMBLE_REARM_BELOW = 0.02;
+const SCRAMBLE_STAGGER_S = 0.09;
 
 export function VoidwalkerHologram() {
   const [eraIdx, setEraIdx] = useState(1); // thoughtform is index 1 (the authored figure)
@@ -54,6 +58,8 @@ export function VoidwalkerHologram() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const yearRef = useRef<HTMLParagraphElement>(null);
 
+  const stageActive = useVoidwalkerHologramScroll(rootRef);
+
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const sync = () => setReduced(mq.matches);
@@ -63,72 +69,6 @@ export function VoidwalkerHologram() {
   }, []);
 
   const era = CHARACTER_ERAS[eraIdx];
-
-  /**
-   * THE ENTRANCE FIRES ONCE, ON ARRIVAL.
-   *
-   * ⚠ NOTHING MAY RISE (owner, 2026-08-26). `#about` exits by sliding
-   * its cluster away, so a section that answers it by scrolling its own
-   * contents upward performs the same move twice in a row. The
-   * composition ASSEMBLES instead — the columns come in from the side
-   * each one lives on, the figure tears in, the masthead resolves.
-   *
-   * The attribute is written straight to the node rather than held in
-   * state: this is a one-shot with no other consumer, and a re-render
-   * here would restart the figure's own clock. Scrolling back up does
-   * not replay it (`io.disconnect()`), which is what keeps the beat a
-   * ARRIVAL rather than a loop.
-   */
-  useEffect(() => {
-    const el = rootRef.current;
-    if (!el) return;
-    if (reduced) {
-      el.setAttribute("data-vwh-in", "");
-      return;
-    }
-    /* ⚠ THE ARM IS THE PIN, NOT VISIBILITY. An IntersectionObserver at
-       threshold 0.3 fired mid-approach, so the composition faded in
-       while the stage was still travelling — which is the parallax the
-       owner has now banned three times. The stage is sticky at top 0;
-       it is PINNED exactly when its rect reaches the viewport top, so
-       that is the one signal worth arming on. Checked per scroll frame,
-       one-shot, and run once immediately for deep links that load
-       already inside the section. */
-    let armed = false;
-    let raf = 0;
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(check);
-    };
-    const arm = () => {
-      if (armed) return;
-      armed = true;
-      el.setAttribute("data-vwh-in", "");
-      // The figure's glitch runs off the same clock as an era switch.
-      setEpoch((e) => e + 1);
-      window.removeEventListener("scroll", onScroll);
-    };
-    function check() {
-      raf = 0;
-      /* ⚠ THE FOLD GUARD IS LOAD-BEARING. The corridor inflates layout
-         late (the page grows ~16k → 24k after hydration), and while it
-         is small this station can sit near the viewport for a frame —
-         a naked check would arm at scrollY 0, on page LOAD, and the
-         reader would then find the whole composition already lit and
-         riding the scroll. Nobody reaches the seventh station without
-         scrolling at least one viewport, so require it. */
-      if (window.scrollY <= window.innerHeight) return;
-      if (el && el.getBoundingClientRect().top <= 2) arm();
-    }
-    // Deep links land already pinned but produce no scroll event — one
-    // settled check covers them, after the corridor has inflated.
-    const settled = window.setTimeout(check, 1600);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.clearTimeout(settled);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [reduced]);
 
   /**
    * THE MASTHEAD DECODES IN, LIKE THE SECTION BEFORE IT.
@@ -143,52 +83,120 @@ export function VoidwalkerHologram() {
    * targets are refs to leaf spans that hold nothing but their own
    * string, and the accessible name is restored by the final frame
    * (`to` IS the real text). It re-runs on every era switch, keyed off
-   * the same `epoch` the figure's glitch uses, so the two land together.
+   * the same arm that bumps the figure's glitch epoch, so the two land
+   * together. The arm is derived from the reversible runway clock; reverse
+   * scroll below the floor restores the finals, blanks again, and permits a
+   * clean replay instead of leaving a one-shot latch behind.
    */
-  useEffect(() => {
-    if (reduced) return;
+  useLayoutEffect(() => {
     const targets = [kickerRef.current, titleRef.current, yearRef.current];
     if (targets.some((t) => !t)) return;
 
-    const jobs: ScrambleJob[] = [];
-    const t0 = performance.now() / 1000;
     const finals = ["Era", era.wardrobe, era.year];
-    targets.forEach((el, i) => {
-      // Stagger so the name lands between its two chrome lines.
-      queueScramble(jobs, el as HTMLElement, finals[i]!, t0 + i * 0.09);
-    });
-
-    let raf = 0;
-    const tick = () => {
-      advanceScrambles(jobs, performance.now() / 1000);
-      if (jobs.length) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(raf);
-      // Leave the real strings behind if we unmount mid-decode.
+    const restore = () => {
       targets.forEach((el, i) => {
         if (el) el.textContent = finals[i]!;
       });
     };
-  }, [epoch, era.wardrobe, era.year, reduced]);
+    if (reduced) {
+      restore();
+      return;
+    }
+    // Static/mobile/lab/fallback presentations carry finished copy and do
+    // not need a permanent scroll-clock reader. Era clicks still retrigger
+    // the finite figure materialize in `pick` below.
+    if (!stageActive) {
+      restore();
+      return;
+    }
+
+    const jobs: ScrambleJob[] = [];
+    let armed = false;
+    let blanked = false;
+    let bumpEpoch = false;
+    let raf = 0;
+
+    const blank = () => {
+      blanked = true;
+      targets.forEach((el) => {
+        if (el) el.textContent = "";
+      });
+    };
+    const arm = (nowSec: number) => {
+      if (!blanked) blank();
+      armed = true;
+      bumpEpoch = true;
+      targets.forEach((el, i) => {
+        // Stagger so the era name lands between its two chrome lines.
+        queueScramble(jobs, el as HTMLElement, finals[i]!, nowSec + i * SCRAMBLE_STAGGER_S);
+      });
+    };
+
+    // Era switches while the stage is already live must blank before the
+    // browser paints the new finals. Entry from above is blanked on the first
+    // rAF after the scroll writer engages (the stage is still off-screen).
+    const initial = voidwalkerHologramProgressRef.current;
+    if (initial.engaged) {
+      blank();
+      if (initial.enter >= SCRAMBLE_ARM_AT) arm(performance.now() / 1000);
+    }
+
+    const tick = () => {
+      advanceScrambles(jobs, performance.now() / 1000);
+      const clock = voidwalkerHologramProgressRef.current;
+
+      if (!clock.engaged) {
+        if (armed || blanked || jobs.length) {
+          jobs.length = 0;
+          armed = false;
+          blanked = false;
+          restore();
+        }
+      } else if (armed && clock.enter <= SCRAMBLE_REARM_BELOW) {
+        jobs.length = 0;
+        armed = false;
+        blanked = false;
+        restore();
+      } else if (!armed) {
+        if (!blanked) blank();
+        if (clock.enter >= SCRAMBLE_ARM_AT) arm(performance.now() / 1000);
+      }
+
+      if (bumpEpoch) {
+        bumpEpoch = false;
+        setEpoch((value) => value + 1);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      jobs.length = 0;
+      restore();
+    };
+  }, [era.id, era.wardrobe, era.year, reduced, stageActive]);
 
   const pick = (i: number) => {
     setEraIdx(i);
-    setEpoch((e) => e + 1);
+    // In scroll-owned stage mode the decoder arm bumps the same epoch. The
+    // lab and static fallbacks have no arm, so preserve their click-owned
+    // materialize without double-triggering the capable path.
+    if (!voidwalkerHologramProgressRef.current.engaged) {
+      setEpoch((value) => value + 1);
+    }
   };
 
   return (
     <div className="vwh" data-vwh-era={era.id} ref={rootRef}>
       {/* The era's masthead sits above the figure at display scale. */}
-      <header className="vwh__mast">
-        <p className="vwh__mast__kicker" ref={kickerRef}>
+      <header className="vwh__mast" key={era.id}>
+        <p className="vwh__mast__kicker vwh__decode-line" ref={kickerRef}>
           Era
         </p>
-        <h2 className="vwh__mast__title" ref={titleRef}>
+        <h2 className="vwh__mast__title vwh__decode-line" ref={titleRef}>
           {era.wardrobe}
         </h2>
-        <p className="vwh__mast__year" ref={yearRef}>
+        <p className="vwh__mast__year vwh__decode-line" ref={yearRef}>
           {era.year}
         </p>
       </header>

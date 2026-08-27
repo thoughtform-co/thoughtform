@@ -855,69 +855,91 @@ a.vwh__press:focus-visible .vwh__press__headline {
   }
 }
 
-/* ── The entrance ─────────────────────────────────────────────────
-   ⚠ NOTHING VISIBLE TRAVELS. EVER. (owner, 2026-08-26, third pass on
-   this ruling — the first killed the reveal's translateY, the second
-   pinned the stage, and the section STILL read as parallax because the
-   arm fired at 30% visibility, mid-approach, so the composition faded
-   in while the stage was still riding the scroll toward its pin.)
+/* ── Scroll-owned entrance + exit (ADR-082 U2) ───────────────────────
+   The exact About terminal power-on: three piecewise opacity ramps make
+   every row strike, drop out, then settle, with only a 2.5px lateral tear.
+   No entrance actor translates vertically and there are no transitions or
+   one-shot attributes — `--vwh-in` is a pure, reversible runway clock.
 
-   The law as it now stands: while the stage travels, the station is
-   EMPTY VOID — every part of the composition (columns, masthead, rail,
-   AND the figure) holds at opacity 0. `data-vwh-in` is written only
-   when the sticky stage actually PINS (rect.top ≤ 2px, checked per
-   scroll frame in `VoidwalkerHologram`), and everything materializes
-   in place: the masthead scramble-decodes, the figure tears in, the
-   columns slide from their own side. One-shot; scrolling back does not
-   replay. Reduced motion gets the attribute immediately and skips all
-   of it via this media query. */
+   Group containers own the EXIT transform while their children own the
+   entry tear, so transforms never collide. Left/mast clear left; the figure,
+   right stack and era rail clear right. `--vwh-exit` reaches 1 before sticky
+   release, which makes the browser's eventual upward release invisible. */
 @media (prefers-reduced-motion: no-preference) {
-  .vwh__side,
-  .vwh__mast,
-  .vwh__rail {
-    opacity: 0;
-    transition:
-      opacity 620ms cubic-bezier(0.16, 1, 0.3, 1),
-      transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+  .vwh[data-vwh-ready] .vwh__mast > *,
+  .vwh[data-vwh-ready] .vwh__side > .vwh__panel,
+  .vwh[data-vwh-ready] .vwh__column > *,
+  .vwh[data-vwh-ready] .vwh__rail > .vwh__pip {
+    --ci: clamp(0, calc((var(--vwh-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
+    --g1: clamp(0, calc(var(--ci) * 9), 1);
+    --g2: clamp(0, calc((var(--ci) - 0.16) * 9), 1);
+    --g3: clamp(0, calc((var(--ci) - 0.34) * 4), 1);
+    opacity: clamp(0, calc(var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88), 1);
+    transform: translateX(calc((var(--g1) - var(--g2)) * 2.5px));
   }
-  /* Each column carries the sign of the side it sits on. */
-  /* The FIGURE hides with everything else. Pre-arm it was the one thing
-     still painted, so it rode the whole approach in plain view — the
-     exact motion the ruling bans. Opacity only: the tear supplies the
-     drama when the epoch bump fires at the pin. */
-  .vwh__column {
-    opacity: 0;
-    transition: opacity 360ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  .vwh[data-vwh-ready] .vwh__mast__kicker {
+    --ci-off: 0;
   }
-  .vwh[data-vwh-in] .vwh__column {
-    opacity: 1;
+  .vwh[data-vwh-ready] .vwh__mast__title {
+    --ci-off: 0.06;
   }
-  .vwh__side[data-side="l"] {
-    transform: translateX(-42px);
+  .vwh[data-vwh-ready] .vwh__mast__year {
+    --ci-off: 0.12;
   }
-  .vwh__side[data-side="r"] {
-    transform: translateX(42px);
+  .vwh[data-vwh-ready] .vwh__column > .vwh__slot {
+    --ci-off: 0.1;
   }
-  .vwh[data-vwh-in] .vwh__side,
-  .vwh[data-vwh-in] .vwh__mast,
-  .vwh[data-vwh-in] .vwh__rail {
-    opacity: 1;
-    transform: none;
+  .vwh[data-vwh-ready] .vwh__column > .vwh__base {
+    --ci-off: 0.18;
   }
-  /* The masthead names the era before the evidence lands; the right
-     column trails the left by a beat so the eye is led across. */
-  .vwh[data-vwh-in] .vwh__mast {
-    transition-delay: 40ms;
+  .vwh[data-vwh-ready] .vwh__side[data-side="l"] > .vwh__panel:nth-child(1) {
+    --ci-off: 0.16;
   }
-  .vwh[data-vwh-in] .vwh__side[data-side="l"] {
-    transition-delay: 190ms;
+  .vwh[data-vwh-ready] .vwh__side[data-side="l"] > .vwh__panel:nth-child(2) {
+    --ci-off: 0.26;
   }
-  .vwh[data-vwh-in] .vwh__side[data-side="r"] {
-    transition-delay: 300ms;
+  .vwh[data-vwh-ready] .vwh__side[data-side="r"] > .vwh__panel:nth-child(1) {
+    --ci-off: 0.2;
   }
-  .vwh[data-vwh-in] .vwh__rail {
-    transition-delay: 420ms;
+  .vwh[data-vwh-ready] .vwh__side[data-side="r"] > .vwh__panel:nth-child(2) {
+    --ci-off: 0.3;
   }
+  .vwh[data-vwh-ready] .vwh__pip:nth-child(1) {
+    --ci-off: 0.32;
+  }
+  .vwh[data-vwh-ready] .vwh__pip:nth-child(2) {
+    --ci-off: 0.35;
+  }
+  .vwh[data-vwh-ready] .vwh__pip:nth-child(3) {
+    --ci-off: 0.38;
+  }
+  .vwh[data-vwh-ready] .vwh__pip:nth-child(4) {
+    --ci-off: 0.41;
+  }
+  .vwh[data-vwh-ready] .vwh__pip:nth-child(5) {
+    --ci-off: 0.44;
+  }
+  .vwh[data-vwh-ready] .vwh__pip:nth-child(6) {
+    --ci-off: 0.47;
+  }
+
+  .vwh[data-vwh-ready] .vwh__mast,
+  .vwh[data-vwh-ready] .vwh__side[data-side="l"] {
+    transform: translateX(calc(var(--vwh-exit, 0) * (-50vw - 100% - 48px)));
+  }
+  .vwh[data-vwh-ready] .vwh__column,
+  .vwh[data-vwh-ready] .vwh__side[data-side="r"],
+  .vwh[data-vwh-ready] .vwh__rail {
+    transform: translateX(calc(var(--vwh-exit, 0) * (50vw + 100% + 48px)));
+  }
+}
+
+/* Decode targets retain their line boxes while the scramble kernel holds
+   them empty before the scroll arm. */
+.vwh__decode-line {
+  min-width: 1px;
+  min-height: 1em;
 }
 
 /* ── The short-viewport rung ─────────────────────────────────

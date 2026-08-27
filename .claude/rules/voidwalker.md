@@ -3,6 +3,7 @@ paths:
   - "components/landing/home-v2/voidwalker/**"
   - "components/landing/home-v2/hooks/useVoidwalkerScroll.ts"
   - "components/landing/home-v2/hooks/useVoidwalkerTravelScroll.ts"
+  - "components/landing/home-v2/hooks/useVoidwalkerHologramScroll.ts"
   - "components/landing/home-v2/hooks/useCharacterStageScroll.ts"
   - "components/landing/home-v2/hooks/useCharacterStagePortalReceiver.ts"
   - "components/landing/home-v2/DepthGatewayScene/VoidwalkerTimeTunnel.tsx"
@@ -19,66 +20,48 @@ paths:
 
 # Rule: The through-line (`#voidwalker`)
 
-The career timeline after the bio — nine beats on one gold spine, six of
-them with a drawn wireframe plate — and the OPAQUE COVER that ends the
-corridor ambient hold. "Voidwalker" is the station's title by owner
-decision (2026-08-23); `.voidwalker*` is the `#about` bio's CSS block and is
-never written here — this section is `.vw*` / `.vw-wire*` (or `.ch*` when
-the character stage is on — see below).
+The production surface after the About bio is the ADR-082 U2 HOLOGRAM: a
+Tensor-gold figure, era masthead, record/scope panels and six-stop era rail.
+"Voidwalker" remains the station title; `.voidwalker*` is still reserved for
+the About bio, while this surface uses `.vw*` / `.vwh*`.
 
-⚠ **THE STATION IS QUIET (2026-08-26, owner) — see
-[ADR-082 U1](../sentinel/decisions/082-voidwalker-character-stage.md).**
-ADR-082's character stage and the About→stage portal that fed it are
-DELETED, not flagged off: the owner pinned the Meshy 3D route ("the
-limitations of Meshy") and rejected the transition outright. The
-replacement is a HOLOGRAM — a Tensor-gold scanline figure emerging from
-the brandmark-as-projector, era panels around it — in look-dev at
-`/test/voidwalker-holo-lab` until it is approved.
+## Current hologram contracts (2026-08-27)
 
-`VoidwalkerStation` renders the masthead and the hand-on line, and takes
-no flag. What may NOT change while it is quiet:
+- **The capable station is transparent, not a cover plane.**
+  `useVoidwalkerHologramScroll` writes `data-vw-mode="hologram"` only at
+  `min-width: 1101px`, with motion allowed and a live corridor. That mode
+  removes station padding and the inherited void + star surface. The corridor
+  ambient survives to `#practice`; `VOIDWALKER_EXTENDS_CORRIDOR` permits the
+  handoff, while the live mode attribute makes `useCorridorExitScroll` and the
+  CSS cover choose that rect in lockstep. Without the mode, `#voidwalker`
+  remains the first opaque cover and owns the kill.
+- **Every hologram path is starless.** `data-vw-surface="hologram"` removes
+  `v7-stars.svg` on static fallbacks too. Mobile, tablet, PRM, flag-off and
+  corridor-fallback remain solid-void normal flow; they never inherit the
+  `260svh` runway or sticky child.
+- **One reversible writer.** `useVoidwalkerHologramScroll` derives progress
+  from `.vw--hologram` geometry and writes only `--vwh-in`, `--vwh-exit`,
+  `data-vwh-ready`, station mode and the component-local progress ref. Entry is
+  `[0,.22]`; exit is `[.74,.96]`.
+- **Nothing enters or releases vertically.** Entry copies About's terminal
+  stutter (three opacity ramps + 2.5px transient tear) in place. Mast/left
+  groups exit left; figure/right/rail exit right and are offscreen before the
+  sticky child releases. No one-shot observer, transition, `translateY` or
+  permanent latch may own this beat.
+- **Decode means blank, then queue.** Masthead leaves are blanked before the
+  caption kernel arms at `.05`, restored/re-armed below `.02`, and replay on
+  reverse/re-entry. Queueing rendered finals against themselves is a no-op.
+- **Keep the local media floor.** `.vwh__slot` isolation and the masked opaque
+  `.vwh__media-wrap` ground prevent the JPEG's near-black from painting a
+  rectangle under additive blend. That local floor is not the removed outer
+  station pane.
+- The station id, `data-station`, rail manifest row, section readout, nav entry
+  and `characterEras.ts` registry remain load-bearing.
 
-- ⚠ **the OPAQUE COVER role.** `#voidwalker` keeps its id, its
-  `data-station`, an opaque ground and a height worth covering with —
-  `useCorridorExitScroll`'s `nextStation` query and home-v2.css's
-  `html[data-corridor-exit="true"] #…` rule name the same station
-  (ADR-030 §6, recorded five times). It writes no `data-vw-mode`, so the
-  non-travel opaque path applies by construction. `services-ring-smoke`
-  asserts that pair;
-- the rail manifest row, the section readout and the nav drawer entry;
-- `lib/voidwalker/characterEras.ts` — the six-era registry SURVIVES and
-  is what the hologram keys off (the record is one, the presentation is
-  two).
-
-⚠ `VOIDWALKER_CHARACTER_STAGE` is gone from `unifiedServicesInstrument.ts`;
-so are `characterStagePortalRef`, `useCharacterStagePortalReceiver`,
-`ABOUT_EXIT_PORTAL_WINDOW` and `aboutExitPortalT`. The About exit is the
-ADR-047 slide-right alone again. ⚠ `VoidwalkerTimelineStation` and the
-ADR-081 travel machinery below are UNMOUNTED but retained — they are
-entangled with the corridor and their excision rides the hologram's
-landing commit, so read the travel sections as a record of code that is
-still on disk rather than of a live surface.
-
-⚠ **The rest of this rule still binds** — the record is still the
-record, the wireframes are still on disk (and are the era panels' reuse
-path), the cover lockstep is still the ADR-030 §6 seam bug. The
-`.claude/skills/voidwalker-avatar/` skill is the offline pipeline; it now
-produces hologram stills and transparent video rather than GLBs
-(`public/models/voidwalker/thoughtform.glb` stays, pinned not dead).
-
-⚠ **SINCE ADR-081 THIS SECTION HAS TWO PRESENTATION MODES, ONE CONTENT
-TREE**, and **[ADR-081 U2](../sentinel/decisions/081-voidwalker-time-tunnel.md)
-is the live pass** — one damped clock for the field and the camera, a
-flight path authored in screen fractions, slim-in-flight/full-on-park,
-and the HUD's own left rail as the time axis. See §One clock below.
-
-On desktop with motion allowed it is the TIME TUNNEL: the reader
-falls into the parked brandmark past `#about`, a wormhole opens, and the
-beats fly at them on the Z axis while the years count backwards on a
-graduated axis. Everything below describes the VERTICAL mode, which is
-still the whole record and is now the FALLBACK (flag-off · mobile ·
-tablet · reduced-motion · no-WebGL · a JS failure). Both modes render the
-same DOM.
+`VOIDWALKER_CHARACTER_STAGE` and its Meshy portal remain deleted. The ADR-074
+timeline and ADR-081 travel machinery below are UNMOUNTED but retained; read
+those sections as historical/fallback machinery, not as the production
+surface.
 
 **Read first**
 

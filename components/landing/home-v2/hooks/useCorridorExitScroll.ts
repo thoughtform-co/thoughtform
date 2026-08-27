@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type RefObject } from "react";
-import { ABOUT_DECK_STAGE, VOIDWALKER_TIME_TUNNEL } from "../unifiedServicesInstrument";
+import { ABOUT_DECK_STAGE, VOIDWALKER_EXTENDS_CORRIDOR } from "../unifiedServicesInstrument";
 import { corridorDissipateRef } from "@/lib/home-v2/corridorDissipateRef";
 import { corridorExitSpeedRamp } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
@@ -52,14 +52,12 @@ const VEIL_DOCK_CAP = 0.38;
 const VEIL_AMBIENT_CAP = 0.12;
 /** Start the ambient hold once the surface dissipate is complete. */
 const AMBIENT_ENGAGE_RAW = 0.999;
-/** Fade the ambient particles as the NEXT station approaches. `#about` is
- *  a pinned TRANSPARENT stage (the deck-flip beat plays over the
- *  still-live canvas), so the ambient hold survives THROUGH #about and
- *  the receded bed finishes dying exactly as the next OPAQUE station's
- *  top reaches the viewport top — cover and canvas death land on the same
- *  edge (the ADR-033 coincide-by-design retune, moved one station down).
- *  That station is `#voidwalker` since ADR-074 (was `#practice`).
- *  ABOUT_DECK_STAGE=false restores #about as the kill target. */
+/** Fade the ambient particles as the NEXT opaque station approaches. `#about`
+ *  is a pinned TRANSPARENT stage, so the ambient hold survives THROUGH it.
+ *  In capable hologram mode `#voidwalker` is transparent too and `#practice`
+ *  owns the cover/kill edge; static and fallback Voidwalker paths remain
+ *  opaque and own that same edge themselves. ABOUT_DECK_STAGE=false restores
+ *  #about as the kill target. */
 const NEXT_STATION_FADE_START_VH = 0.6;
 const NEXT_STATION_FADE_END_VH = 0.0;
 
@@ -136,6 +134,10 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
     let servicesEl: HTMLElement | null = null;
     let stageEl: HTMLElement | null = null;
     let nextStationEl: HTMLElement | null = null;
+    let aboutEl: HTMLElement | null = null;
+    let voidwalkerEl: HTMLElement | null = null;
+    let practiceEl: HTMLElement | null = null;
+    let contactEl: HTMLElement | null = null;
     // Last-written DOM state, so attributes flip only on edges and the
     // two alpha vars only move in ≥1/255 steps — every one of these
     // writes invalidates computed style document-wide, and they were
@@ -195,25 +197,32 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // `html[data-corridor-exit="true"] #voidwalker` rule on the SAME
       // station (the ADR-030 §6 seam bug — see the comment below).
       //
-      // ⚠ ADR-081: with the TIME TUNNEL on, `#voidwalker` is itself a
-      // pinned TRANSPARENT stage — the through-line's beats fly at the
-      // reader THROUGH the live canvas, so the ambient must survive it
-      // exactly as it survives the pinned #about. The kill moves one
-      // station further down, to `#practice` (the roleless breather that
-      // held this role under ADR-056), and `home-v2.css`'s cover rule
-      // moves WITH it in the same commit — see the §6 note above.
-      if (!nextStationEl || !nextStationEl.isConnected) {
-        nextStationEl = ABOUT_DECK_STAGE
-          ? VOIDWALKER_TIME_TUNNEL
-            ? (root.querySelector<HTMLElement>("#practice") ??
-              root.querySelector<HTMLElement>("#contact") ??
-              root.querySelector<HTMLElement>("#voidwalker"))
-            : (root.querySelector<HTMLElement>("#voidwalker") ??
-              root.querySelector<HTMLElement>("#practice"))
-          : (root.querySelector<HTMLElement>("#about") ??
-            root.querySelector<HTMLElement>("#voidwalker") ??
-            root.querySelector<HTMLElement>("#practice"));
+      // ⚠ ADR-081 / ADR-082 U2: only an ENGAGED transparent Voidwalker
+      // presentation extends the ambient to #practice. This is a runtime
+      // mode decision, not merely a build flag: at 961–1100px the corridor
+      // can dock while the hologram deliberately remains an opaque static
+      // section, so #voidwalker must resume ownership of the kill there.
+      // home-v2.css mode-gates the #practice stacking rule the same way.
+      if (!aboutEl || !aboutEl.isConnected) aboutEl = root.querySelector<HTMLElement>("#about");
+      if (!voidwalkerEl || !voidwalkerEl.isConnected) {
+        voidwalkerEl = root.querySelector<HTMLElement>("#voidwalker");
       }
+      if (!practiceEl || !practiceEl.isConnected) {
+        practiceEl = root.querySelector<HTMLElement>("#practice");
+      }
+      if (!contactEl || !contactEl.isConnected) {
+        contactEl = root.querySelector<HTMLElement>("#contact");
+      }
+      const voidwalkerMode = voidwalkerEl?.dataset.vwMode;
+      const voidwalkerTransparent =
+        VOIDWALKER_EXTENDS_CORRIDOR &&
+        (voidwalkerMode === "hologram" || voidwalkerMode === "travel");
+      const desiredNextStation = ABOUT_DECK_STAGE
+        ? voidwalkerTransparent
+          ? (practiceEl ?? contactEl ?? voidwalkerEl)
+          : (voidwalkerEl ?? practiceEl ?? contactEl)
+        : (aboutEl ?? voidwalkerEl ?? practiceEl ?? contactEl);
+      if (nextStationEl !== desiredNextStation) nextStationEl = desiredNextStation;
       const nextStationTopVh =
         (nextStationEl?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;
       // The AMBIENT hold outlives the dock gate (ADR-030 Update 1). The

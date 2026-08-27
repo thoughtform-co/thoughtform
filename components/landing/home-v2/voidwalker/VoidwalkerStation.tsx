@@ -477,14 +477,12 @@ function VoidwalkerTimelineStation() {
  * 2026-08-26 after owner review).
  *
  * ⚠ WHAT MAY NOT CHANGE. The station SHELL is load-bearing outside this
- * file — `#voidwalker` is the corridor's opaque cover
- * (`useCorridorExitScroll`'s `nextStation` query and home-v2.css's
- * `html[data-corridor-exit="true"] #…` rule name the same station;
- * ADR-030 §6, recorded five times). It keeps its id, its `data-station`,
- * a rail manifest row, the section readout and the nav drawer entry.
- * The hologram interior writes no `data-vw-mode`, so the non-travel
- * opaque path applies by construction. `services-ring-smoke` asserts
- * the ambient-hold pair.
+ * file. On the capable path the hologram hook marks it as a transparent
+ * pinned stage and `useCorridorExitScroll` keeps the ambient alive until
+ * the lockstep `#practice` cover (ADR-082 U2 / ADR-030 §6). Static, mobile,
+ * reduced-motion and corridor-fallback paths remain solid-void normal flow.
+ * It keeps its id, its `data-station`, rail manifest row, section readout and
+ * nav drawer entry; `services-ring-smoke` asserts both presentation paths.
  *
  * `VoidwalkerTimelineStation` above is UNMOUNTED but retained: the
  * ADR-074 record still renders through it, and its travel machinery is

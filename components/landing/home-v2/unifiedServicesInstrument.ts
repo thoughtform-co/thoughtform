@@ -126,9 +126,8 @@ export const ABOUT_DECK_STAGE = true;
  *     rendered either way but is `display: contents` (inert) until the
  *     hook writes `data-vw-mode="travel"`, so the 2D tree is ONE tree in
  *     two presentation modes rather than two trees;
- *   - `useCorridorExitScroll`'s next-station retarget — the corridor
- *     ambient hold must SURVIVE the travel (the beats fly over the live
- *     canvas), so the kill moves one station down to `#practice`;
+ *   - contributes to `VOIDWALKER_EXTENDS_CORRIDOR`, the shared
+ *     next-station retarget for any transparent Voidwalker presentation;
  *   - the `VoidwalkerTimeTunnel` painter's mount inside the corridor
  *     canvas (no second WebGL context — the ambient hold is already a
  *     fixed full-viewport backdrop at this point in the page).
@@ -147,18 +146,33 @@ export const VOIDWALKER_TIME_TUNNEL = true;
  * model per era, with the About portrait flying through a portal into
  * it — is removed from the tree along with that portal. The owner pinned
  * the 3D route after reading the meshes ("the limitations of Meshy") and
- * rejected the transition outright; the replacement is a HOLOGRAM
- * composition still in look-dev at `/test/voidwalker-holo-lab`.
+ * rejected the transition outright; the replacement is the production
+ * HOLOGRAM composition graduated from `/test/voidwalker-holo-lab`.
  *
  * A flag left standing at `false` would have implied the stage is one
  * boolean from returning. It is not — its components, its CSS sheet, its
- * scroll clock, its ref buses and its lab are gone. `VoidwalkerStation`
- * renders a QUIET interior meanwhile and takes no flag at all.
+ * scroll clock, its ref buses and its lab are gone.
  *
  * What survives, deliberately: the era registry (`characterEras.ts`) and
  * `public/models/voidwalker/thoughtform.glb`, because the hologram reuses
  * the first and the second cost real credits to make.
  */
+
+/**
+ * Production flag for the pinned hologram presentation (ADR-082 U2).
+ * The hook still capability-gates the mode to wide, motion-allowed,
+ * non-fallback corridor sessions; every other path is a finished static
+ * composition with no sticky runway.
+ */
+export const VOIDWALKER_HOLOGRAM_STAGE = true;
+
+/**
+ * The corridor ambient must survive any transparent Voidwalker stage and
+ * terminate under `#practice`. Keeping that cover decision separate from a
+ * specific presentation prevents a retired-but-retained feature flag from
+ * accidentally owning production compositing.
+ */
+export const VOIDWALKER_EXTENDS_CORRIDOR = VOIDWALKER_TIME_TUNNEL || VOIDWALKER_HOLOGRAM_STAGE;
 
 /**
  * Feature flag for the SERVICES PROOF CASEFILE (ADR-056, 2026-07-28 —

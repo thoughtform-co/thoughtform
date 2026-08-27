@@ -210,3 +210,73 @@ covering with. It writes no `data-vw-mode`, so the non-travel opaque path
 applies by construction. `services-ring-smoke` asserts exactly that pair;
 `landing-corridor-smoke`'s ADR-081 U4 shed case is skipped and KEPT, because
 the machinery it guards is still on disk.
+
+---
+
+## Update 2 — the hologram ships as a transparent, reversible stage (2026-08-27, owner)
+
+The production hologram graduated from `/test/voidwalker-holo-lab`, but its
+first integration preserved ADR-074's obsolete cover contract. Runtime proof
+at 1440×800 showed two independent defects:
+
+1. `.station:not(.hero)` painted a full-width opaque void + `v7-stars.svg`
+   plane on `#voidwalker`. That normal-flow plane rose over pinned transparent
+   About before the inner hologram reached its sticky pin. Changing the inner
+   figure could never remove the pane because the pane belonged to its parent.
+2. The entrance was a one-shot `data-vwh-in` latch. After one visit it never
+   cleared, so reverse scroll carried the fully visible composition with the
+   document. The masthead's advertised scramble also queued final strings
+   against those same already-rendered strings and therefore no-op'd.
+
+### The corrected compositing contract
+
+On a wide (`min-width: 1101px`), motion-allowed, non-fallback corridor session,
+`useVoidwalkerHologramScroll` writes `data-vw-mode="hologram"` on the station.
+That mode:
+
+- removes station padding so the sticky stage pins at the station boundary;
+- removes the inherited station colour and star tile, making the station an
+  intentional ADR-008 transparent window onto the already-live corridor;
+- inflates `.vw--hologram` to `260svh` and pins only its `.vwh` child.
+
+`VOIDWALKER_EXTENDS_CORRIDOR` permits the handoff, but the live
+`data-vw-mode="hologram"|"travel"` attribute decides whether
+`useCorridorExitScroll` actually keeps the ambient alive through Voidwalker and
+kills it under `#practice`. Without an engaged transparent mode (including the
+961–1100px dock-capable band), opaque `#voidwalker` resumes ownership of the
+kill. The CSS cover and the rect used by the fade/bottom gate make the same
+runtime choice and stay in lockstep (ADR-030 §6).
+
+Every mounted hologram writes `data-vw-surface="hologram"`, which removes the
+star tile on static fallbacks too. Mobile, tablet, reduced-motion, corridor
+fallback and flag-off paths keep a solid void ground, normal flow, full final
+copy and no `260svh` runway. A JS failure never activates the transparent mode.
+
+### The corrected motion contract
+
+`voidwalkerHologramClock.ts` is the single source for two pure runway envelopes:
+entry `[0, 0.22]`, exit `[0.74, 0.96]`. The hook derives progress with the About
+formula (`clamp01(-runway.top / (runway.height - vh))`) and writes `--vwh-in`
+and `--vwh-exit` once per animation frame.
+
+- Entry copies About's in-place terminal power-on exactly: strike, dropout and
+  settle opacity ramps plus a transient 2.5px lateral tear. No actor has an
+  entrance `translateY`, transition or observer latch.
+- Masthead targets blank before `queueScramble`, then decode on the same arm
+  that retriggers the figure materialize. Reverse below `0.02` restores and
+  re-arms the targets.
+- Exit copies About's ownership split: mast/left panels clear left; figure,
+  right panels and rail clear right. It completes while the stage is still
+  pinned, so native sticky release has no visible actor left to carry upward.
+
+The masked local void floor on `.vwh__media-wrap` remains. It is not the removed
+station pane; it is the additive-compositing floor that prevents the JPEG's
+near-black pixels from painting a rectangular source box.
+
+### Guards
+
+- `voidwalker-hologram-clock.test.ts` pins clamping, endpoints, the reading
+  hold, monotonicity and direction-independent replay.
+- `services-ring-smoke.spec.ts` asserts hologram mode, transparent/starless
+  station paint, ambient survival, reverse pre-pin hiding, replay, and the
+  final `#practice` kill.

@@ -45,14 +45,12 @@ Two layers paint **continuously** behind the scrolling flow:
 
 Every section/divider/connector that sits inside `.stations` and is intended to read as dark void **must** paint an opaque `var(--void)` fill on top of those two layers. That is the only thing making the rest of the page look like a solid dark page.
 
-There is NO transparent-station exception anymore (ADR-033): the retired
-`#tools` lead-in (`--tools-bg-in` shield) went with its station. `#about`
-now follows `#services` as an ordinary OPAQUE station — during the
-corridor-exit band it takes `z-index: 6` + a `content-visibility: visible`
-escape (home-v2.css) so it stacks above the body veil while the ambient
-bed dies underneath it. The services rail register (`SOURCE BUS · 04`) is
-nested inside the existing `.hud` stacking context rather than mounted as
-another fixed page overlay.
+There are now two explicit transparent-stage exceptions during the capable
+corridor-exit band: pinned `#about` (ADR-047) and
+`#voidwalker[data-vw-mode="hologram"]` (ADR-082 U2). Both expose the SAME live
+corridor ambient; `#practice` is their lockstep opaque cover and ambient-kill
+target. Outside the capable mode, both stations fail static/opaque. Every other
+section still follows the opaque default above.
 
 ---
 
@@ -152,6 +150,28 @@ The current implementation in [`useLandingScroll.ts`](../../../components/landin
 
 ---
 
+## Rule 6 — Inspect a sticky child's parent paint plane separately
+
+Pinning or hiding a child does not pin or hide its normal-flow section
+background. A full-bleed parent can still rise over the previous stage as an
+opaque pane while every child rect and opacity looks correct. Before retuning a
+sticky reveal, sample both rects and inspect the parent's computed
+`background-color`, `background-image`, padding and z-index.
+
+If the intended effect is continuity over a fixed backdrop, the outer station
+needs a documented, mode-gated transparent exception and the backdrop's kill
+target must move to the next opaque station in the same change. Inner actors
+must be hidden before approach and horizontally cleared before sticky release;
+do not use a one-shot entrance latch.
+
+**Runtime check:** forward-enter, reverse above the pin, then re-enter. At the
+approach sample the station should be transparent/starless, the sticky child
+should still be below `top: 0`, and every actor should be visually absent. At
+the same runway progress in either direction, CSS variables and computed poses
+must match.
+
+---
+
 ## Pre-merge checklist for any `components/landing/v7/**` or `landing.css` change
 
 Run through every item before opening the PR:
@@ -166,6 +186,7 @@ Run through every item before opening the PR:
   - [ ] Did I update the paint-stack diagram in this skill?
   - [ ] Did I confirm its z-index relative to `.hero` (z:1), `.station:not(.hero)` / `.celestial-connector` (z:2), and `.stations` (z:10)?
   - [ ] If sticky inside a flex/grid container, did I verify at runtime that it actually engages (Rule 5)? `getBoundingClientRect().top` should equal the resolved sticky-`top` value across a sustained range of scroll positions — not just briefly cross past it.
+  - [ ] Did I inspect the parent section's paint and rect separately from the sticky child (Rule 6), including one reverse/re-entry pass?
 - [ ] Manual scroll test from hero through every section and connector, at `prefers-reduced-motion: no-preference`:
   - [ ] No warm tint appears in any section during or after scroll.
   - [ ] No hero video silhouette appears through any later section.

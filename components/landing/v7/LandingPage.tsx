@@ -476,12 +476,11 @@ export function LandingPage({
           markup in the same station stays the mobile/PRM/fallback
           surface. Same nested-root rules as ServicesPortal. */}
       <AboutStagePortal containerRef={rootRef} />
-      {/* The through-line (ADR-074): a nested root into the
-          [data-voidwalker-root] slot inside #voidwalker — the career
-          timeline that follows the bio and is the opaque cover that ends
-          the corridor ambient hold. Plain DOM on every viewport; its own
-          single scroll writer (useVoidwalkerScroll). Same nested-root
-          rules as ServicesPortal. */}
+      {/* The through-line (ADR-074 / ADR-082 U2): a nested root into the
+          [data-voidwalker-root] slot inside #voidwalker. Production renders
+          the era hologram; its capable pinned stage is transparent over the
+          corridor and #practice owns the ambient kill. Static fallbacks are
+          solid normal-flow DOM. Same nested-root rules as ServicesPortal. */}
       <VoidwalkerPortal containerRef={rootRef} />
       {/* (The ADR-054 #proof decode controller retired with ADR-056: the
           client case is a mounted component inside ServicesStage now, and

@@ -1954,25 +1954,20 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(parseFloat(mid.flip || "0")).toBe(1);
     expect(mid.voidwalkerDisplay).toBe("none");
 
-    // ⚠ THE COVER MOVED ONE STATION DOWN (ADR-081). With the TIME TUNNEL
-    // engaged `#voidwalker` is itself a pinned TRANSPARENT stage — the
-    // through-line's beats fly at the reader through this same live canvas
-    // — so the ambient must SURVIVE it exactly as it survives the pinned
-    // #about, and the kill lands under `#practice`. The hook's
-    // `nextStation` query and home-v2.css's cover rule name that station
-    // together; this walk is the third side of that lockstep.
-    //
-    // ⚠ ADR-082 supersedes ADR-081 on composition: with the CHARACTER
-    // STAGE on, `#voidwalker` no longer writes `data-vw-mode="travel"`
-    // — the timeline hook is inert and the character stage renders
-    // instead. The ambient hold still terminates under `#practice`
-    // (via the same `useCorridorExitScroll` retarget under
-    // `VOIDWALKER_TIME_TUNNEL`), and the stage's own opaque background
-    // sits over the live canvas. Assert accordingly.
+    // ⚠ THE COVER MOVED ONE STATION DOWN (ADR-081 / ADR-082 U2). The
+    // production hologram makes `#voidwalker` a pinned TRANSPARENT stage,
+    // so the ambient survives it exactly as it survives pinned #about and
+    // terminates under `#practice`. The hook's next-station query and the
+    // CSS cover rule name that station together.
     const inTravel = await page.evaluate(() => {
       const vw = document.getElementById("voidwalker");
-      if (!vw) return null;
-      return Math.round(window.scrollY + vw.getBoundingClientRect().top + window.innerHeight * 1.5);
+      const runway = vw?.querySelector<HTMLElement>(".vw--hologram");
+      if (!vw || !runway) return null;
+      return Math.round(
+        window.scrollY +
+          vw.getBoundingClientRect().top +
+          (runway.getBoundingClientRect().height - window.innerHeight) * 0.5
+      );
     });
     expect(inTravel).not.toBeNull();
     await scrollAndSettle(inTravel as number);
@@ -1981,20 +1976,73 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       ambient: document.documentElement.hasAttribute("data-services-ambient"),
       mode: document.getElementById("voidwalker")?.getAttribute("data-vw-mode") ?? null,
       bg: getComputedStyle(document.getElementById("voidwalker")!).backgroundColor,
-      quiet: !!document.querySelector("#voidwalker .vw--quiet"),
+      bgImage: getComputedStyle(document.getElementById("voidwalker")!).backgroundImage,
+      hologram: !!document.querySelector("#voidwalker .vw--hologram"),
+      ready: document.querySelector("#voidwalker .vwh")?.hasAttribute("data-vwh-ready") ?? false,
+      enter:
+        document
+          .querySelector<HTMLElement>("#voidwalker .vwh")
+          ?.style.getPropertyValue("--vwh-in") ?? "",
+      exit:
+        document
+          .querySelector<HTMLElement>("#voidwalker .vwh")
+          ?.style.getPropertyValue("--vwh-exit") ?? "",
     }));
-    // ⚠ THE STATION IS QUIET (2026-08-26) and this is the guard that it
-    // still COVERS. Its interior was removed with ADR-082's character
-    // stage; what may not go with it is the opaque-cover role — the
-    // ADR-030 §6 seam bug, recorded five times. A quiet station writes
-    // no `data-vw-mode`, so the non-travel opaque path applies, and an
-    // opaque ground here is what ends the ambient hold cleanly.
-    expect(during.mode).toBeNull();
-    expect(during.quiet).toBe(true);
-    expect(during.bg).not.toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
-    // The canvas the beats fly through / that the stage sits over is
-    // still alive on both paths — the ADR-030 §6 seam bug pins it.
+    expect(during.mode).toBe("hologram");
+    expect(during.hologram).toBe(true);
+    expect(during.ready).toBe(true);
+    expect(during.bg).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
+    expect(during.bgImage).toBe("none");
+    expect(parseFloat(during.enter || "0")).toBe(1);
+    expect(parseFloat(during.exit || "1")).toBe(0);
     expect(during.ambient).toBe(true);
+
+    // Reverse above the pin: the one-shot latch regression. Every visual
+    // actor must be hidden again BEFORE native flow can carry the stage, and
+    // the outer station must remain a transparent, starless window.
+    const beforePin = await page.evaluate(() => {
+      const vw = document.getElementById("voidwalker");
+      if (!vw) return null;
+      return Math.round(
+        window.scrollY + vw.getBoundingClientRect().top - window.innerHeight * 0.08
+      );
+    });
+    expect(beforePin).not.toBeNull();
+    await scrollAndSettle(beforePin as number);
+    await page.waitForTimeout(500);
+    const reversed = await page.evaluate(() => {
+      const section = document.getElementById("voidwalker")!;
+      const stage = document.querySelector<HTMLElement>("#voidwalker .vwh")!;
+      const mast = document.querySelector<HTMLElement>("#voidwalker .vwh__mast__title")!;
+      const css = getComputedStyle(section);
+      return {
+        stageTop: stage.getBoundingClientRect().top,
+        enter: stage.style.getPropertyValue("--vwh-in"),
+        mastOpacity: getComputedStyle(mast).opacity,
+        bg: css.backgroundColor,
+        bgImage: css.backgroundImage,
+      };
+    });
+    expect(reversed.stageTop).toBeGreaterThan(0);
+    expect(parseFloat(reversed.enter || "1")).toBe(0);
+    expect(parseFloat(reversed.mastOpacity)).toBe(0);
+    expect(reversed.bg).toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/);
+    expect(reversed.bgImage).toBe("none");
+
+    await scrollAndSettle(inTravel as number);
+    await page.waitForTimeout(1200);
+    const replayed = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>("#voidwalker .vwh")!;
+      const mast = document.querySelector<HTMLElement>("#voidwalker .vwh__mast__title")!;
+      return {
+        enter: stage.style.getPropertyValue("--vwh-in"),
+        mastOpacity: getComputedStyle(mast).opacity,
+        mastText: mast.textContent,
+      };
+    });
+    expect(parseFloat(replayed.enter || "0")).toBe(1);
+    expect(parseFloat(replayed.mastOpacity)).toBe(1);
+    expect(replayed.mastText).toBe("The founder");
 
     // Walk under #practice: THIS is where the ambient hold ends now. The
     // bottom gate is keyed to the SAME rect as the fade envelope, so there

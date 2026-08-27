@@ -115,8 +115,8 @@ test.describe("Homepage corridor smoke", () => {
         // ADR-056 made it the casefile at the TOP of #services. #tools
         // and #build retired (the cases orbit the Arc's Build park).
         "about",
-        // ADR-074: the through-line follows the bio and is the opaque
-        // cover; #practice trails it as an empty breather.
+        // ADR-082 U2: capable hologram Voidwalker is transparent and
+        // #practice owns the opaque cover; fallback Voidwalker stays opaque.
         "voidwalker",
         "practice",
         "contact",
@@ -381,18 +381,15 @@ test.describe("Homepage corridor smoke", () => {
       "voidwalker travel is desktop-only; the shed has no fallback path to guard here"
     );
     // ⚠ RETIRED, NOT DELETED (2026-08-26). This case walks the ADR-081
-    // U4 structural shed, which only exists during INTERIOR TRAVEL —
-    // and `#voidwalker` has no interior to travel through: the station
-    // is quiet while the hologram composition is in look-dev. The shed
-    // gate (`vwTravelInterior()`) is a pure function of `vwTravelRef`,
-    // which stays inert at 0 with no travel writer engaged, so there is
-    // nothing here to measure rather than something failing.
+    // U4 structural shed, which only exists during INTERIOR TRAVEL.
+    // ADR-082's shipped hologram mode replaces that travel path, so
+    // `vwTravelRef` intentionally has no writer and stays inert at 0.
     //
     // It is kept, skipped, because the machinery it guards is still on
     // disk and un-excised — the day a voidwalker interior engages travel
     // again, this is the test that catches a painter hidden and never
     // restored. Deleting it would take that guard with it silently.
-    test.skip(true, "the voidwalker station is quiet; interior travel never engages");
+    test.skip(true, "hologram mode supersedes the retired interior-travel shed");
     // 1. Baseline — walk to the Arc. `arcY` is where we must come back
     //    to in step 3; the two marks have to be the SAME place or the
     //    weight comparison is measuring the scroll position, not the shed.

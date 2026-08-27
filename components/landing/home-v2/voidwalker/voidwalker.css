@@ -18,13 +18,11 @@
    hook that never engaged all read as a complete section, never a dark
    one — the proof.md "PRM unwraps the console too" posture.
 
-   ⚠ THIS STATION IS THE OPAQUE COVER that ends the corridor ambient
-   hold (home-v2.css `html[data-corridor-exit="true"] #voidwalker` +
-   useCorridorExitScroll's nextStation — keep them on the SAME station).
-   It keeps the authored `.station:not(.hero)` void + stars ground,
-   carries no shield var, no transparency and NO negative margin-top:
-   #about's exit relies on its runway bottom coinciding with this
-   station's top (ADR-047 U8). ═════════════════════════════════════ */
+   ⚠ THE PRODUCTION HOLOGRAM IS A TRANSPARENT PINNED STAGE (ADR-082 U2).
+   Its outer station must not become a second moving picture plane over
+   #about: capable mode removes the inherited void + stars surface and the
+   corridor ambient survives until #practice. Static/mobile/PRM paths keep a
+   solid void fallback, but never the star tile. ═════════════════════ */
 
 /* ── 0 · The station (the #proof.station recipe) ─────────────────── */
 #voidwalker.station {
@@ -36,22 +34,34 @@
   content-visibility: visible;
   contain-intrinsic-size: auto none;
 }
+
+/* The hologram never owns the authored station star tile. This attribute is
+   written whenever the React surface is mounted, including static fallbacks;
+   their solid void remains a safe ground when the live corridor is absent. */
+#voidwalker[data-vw-surface="hologram"].station {
+  background-image: none;
+}
+
+/* Intentional ADR-008 transparent-stage exception. The live corridor is
+   already held through this station (`VOIDWALKER_EXTENDS_CORRIDOR`), and
+   #practice is the lockstep opaque cover / ambient-kill target. Removing the
+   station padding also makes the sticky stage pin at the section boundary —
+   no empty plane travels for ~11svh before the composition can arm. */
+#voidwalker[data-vw-mode="hologram"].station {
+  padding-block: 0;
+}
+html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"].station {
+  background-color: transparent;
+  background-image: none;
+}
 #voidwalker .vw-root {
   display: block;
 }
 
-/* ── 0 · THE QUIET STATION ────────────────────────────────────────────
-   The interior is between instruments (2026-08-26): ADR-082's character
-   stage is deleted and the hologram that replaces it is in look-dev. The
-   station still has to HOLD ITS SLOT — `#voidwalker` is the corridor's
-   opaque cover (ADR-030 §6) — so this is a real, finished short section
-   rather than an empty div: the chapter names itself, states its claim
-   and hands on.
-
-   ⚠ THE GROUND IS OPAQUE AND THE HEIGHT IS DELIBERATE. Both are the
-   cover contract, not styling: a transparent or hairline-tall station
-   ends the services ambient hold on a hard cut. `services-ring-smoke`
-   asserts exactly these two properties. */
+/* ── 0 · THE RETAINED QUIET FALLBACK ──────────────────────────────────
+   This short interior held the slot between the deleted Meshy stage and the
+   hologram's graduation. It is unmounted but retained with the ADR-074/081
+   presentation code; do not read its dimensions as the production contract. */
 .vw--quiet {
   min-height: clamp(420px, 62svh, 620px);
   display: grid;
@@ -138,10 +148,10 @@
    section flying over #about. That release, not the entrance, was the
    third parallax report. 260svh holds the stage for ~1.6 viewports
    (About's own 240svh runway is the precedent). */
-.vw--hologram {
+#voidwalker[data-vw-mode="hologram"] .vw--hologram {
   min-height: 260svh;
 }
-.vw--hologram > .vwh {
+#voidwalker[data-vw-mode="hologram"] .vw--hologram > .vwh {
   position: sticky;
   top: 0;
   width: 100%;

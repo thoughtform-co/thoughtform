@@ -306,6 +306,31 @@ cover.
 ordinary parallax and can produce a blank dark interval, which is the opposite
 of a swipe/sweep replacement.
 
+### Pinning a child does not pin its parent's paint plane
+
+A sticky inner stage can be perfectly stationary while its normal-flow section
+background still travels through the viewport. When a transition reads as an
+unwanted black pane or parallax sheet, inspect the outer section's computed
+`background-color`, `background-image`, padding and stacking before retuning
+the child reveal. Hiding, delaying or pinning the child cannot remove paint
+owned by its parent.
+
+For a stage that should continue over an existing fixed backdrop, make the
+outer station an explicit mode-gated transparent exception, keep the live
+backdrop's kill target in lockstep with the next opaque station, and finish all
+visible child exits before sticky release. Static/mobile/reduced-motion paths
+remain opaque and normal-flow.
+
+**Runtime check:** sample the incoming station while its top is still positive,
+inspect the section and sticky-child rects separately, and record computed
+background image/color plus `elementsFromPoint`. Then enter, reverse above the
+pin, and re-enter: visual children must be hidden on both approaches and the
+same scroll progress must reconstruct the same state.
+
+**Why it matters:** a child-only fix can look correct on the first forward pass
+while the parent's plane still covers the previous station and a one-shot latch
+makes every later pass regress.
+
 **Two valid exits from a held R3F backdrop (ADR-021):** the cover-plane sweep
 above (incoming opaque plane covers the held canvas) and the
 **zoom-dissipate** (camera flies INTO the held object, surface particles

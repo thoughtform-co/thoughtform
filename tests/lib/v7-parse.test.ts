@@ -184,9 +184,8 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
     expect(mountIdx).toBeGreaterThan(0);
     expect(servicesIdx).toBeGreaterThan(mountIdx);
     // #about (the bio) directly follows services — the ADR-033 funnel;
-    // #voidwalker (the through-line) follows and is the opaque ambient
-    // cover (ADR-074, the role #practice held under ADR-056); #practice
-    // trails as an empty breather.
+    // #voidwalker (the hologram through-line) follows as a transparent
+    // capable stage; #practice trails as its lockstep ambient cover.
     expect(aboutIdx).toBeGreaterThan(servicesIdx);
     expect(voidwalkerIdx).toBeGreaterThan(aboutIdx);
     expect(practiceIdx).toBeGreaterThan(voidwalkerIdx);
