@@ -7,6 +7,7 @@ import {
   isCharacterEraHologram,
   type CharacterEraHologram,
 } from "@/lib/voidwalker/characterEras";
+import { getHoloAlphaSupport, onHoloAlphaSupport } from "@/lib/voidwalker/holoAlphaSupport";
 
 /**
  * HoloFigure — the hologram slot: the figure, its treatment, and the
@@ -103,13 +104,38 @@ export function HoloFigure({
       : isCharacterEraHologram(hologram)
         ? hologram
         : CANONICAL_CHARACTER_ERA_HOLOGRAM;
+  // ⚠ LOCKED AT MOUNT, ON PURPOSE. The probe settles during page load and the
+  // station is far down the corridor, so this is decided long before anyone
+  // sees it — but reading it live would let a late verdict swap the <source>
+  // under a playing element and restart the figure mid-view. `null` (undecided)
+  // resolves to the floor path, which is the fail-safe branch.
+  const [alphaMedia] = useState<boolean>(() => getHoloAlphaSupport() === true);
+  const [, forceProbeSettled] = useState(0);
+  useEffect(() => {
+    // Only matters if the station somehow mounts before the probe settles;
+    // re-render once so the very next mount reads a decided value.
+    if (getHoloAlphaSupport() !== null) return;
+    return onHoloAlphaSupport(() => forceProbeSettled((n) => n + 1));
+  }, []);
+
   const requestedPosterSrc =
-    productionAsset?.posterPath ?? src ?? CANONICAL_CHARACTER_ERA_HOLOGRAM.posterPath;
-  const requestedVideoSrc = reduced ? undefined : (productionAsset?.videoPath ?? videoSrc);
-  const posterSrc =
-    failedPosterSrc === requestedPosterSrc
-      ? CANONICAL_CHARACTER_ERA_HOLOGRAM.posterPath
-      : requestedPosterSrc;
+    (alphaMedia ? productionAsset?.posterAlphaPath : productionAsset?.posterPath) ??
+    src ??
+    (alphaMedia
+      ? CANONICAL_CHARACTER_ERA_HOLOGRAM.posterAlphaPath
+      : CANONICAL_CHARACTER_ERA_HOLOGRAM.posterPath);
+  const requestedVideoSrc = reduced
+    ? undefined
+    : ((alphaMedia ? productionAsset?.videoAlphaPath : productionAsset?.videoPath) ?? videoSrc);
+  // ⚠ THE LAST-RESORT POSTER MUST MATCH THE COMPOSITING BRANCH. On the alpha
+  // path the floor, the blend and the isolation are all switched off, so an
+  // opaque `.jpg` landing here would paint its black ground as a rectangle —
+  // the exact pane this update removed, reappearing only in the failure case
+  // where nobody looks.
+  const canonicalPoster = alphaMedia
+    ? CANONICAL_CHARACTER_ERA_HOLOGRAM.posterAlphaPath
+    : CANONICAL_CHARACTER_ERA_HOLOGRAM.posterPath;
+  const posterSrc = failedPosterSrc === requestedPosterSrc ? canonicalPoster : requestedPosterSrc;
   const playableVideoSrc = failedVideoSrc === requestedVideoSrc ? undefined : requestedVideoSrc;
 
   useEffect(() => {
@@ -145,6 +171,10 @@ export function HoloFigure({
       data-vwh-handoff-target="portrait"
       data-phase={phase}
       data-form={form}
+      /* The compositing branch. Present ⇒ the media carries real alpha, so the
+         floor, the additive blend and this slot's isolation are all switched
+         off in CSS. Absent ⇒ the ADR-082 U2 floor path, unchanged. */
+      data-holo-alpha={alphaMedia ? "" : undefined}
       data-vwh-frame-width={productionAsset?.frame.width}
       data-vwh-frame-height={productionAsset?.frame.height}
       data-vwh-head-y={productionAsset?.headY}
@@ -191,7 +221,7 @@ export function HoloFigure({
             height={1280}
             draggable={false}
             onError={() => {
-              if (posterSrc !== CANONICAL_CHARACTER_ERA_HOLOGRAM.posterPath) {
+              if (posterSrc !== canonicalPoster) {
                 setFailedPosterSrc(requestedPosterSrc);
               }
             }}

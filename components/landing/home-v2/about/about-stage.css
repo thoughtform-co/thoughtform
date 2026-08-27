@@ -252,20 +252,21 @@ span.about-stage__decode-line {
   transform: none;
 }
 
-/* The one-line About name lands exactly in the fixed era-title footprint.
-   Independent axes are deliberate: the target reserves two title lines, and
-   the source disappears into the destination acquisition immediately after
-   landing, before the changed aspect can read as settled typography. */
+/* ⚠ THE NAME TRANSLATES AND NEVER SCALES. The first cut fitted this actor to
+   the era-title RECT with independent `scaleX`/`scaleY`, arguing the source
+   "disappears into the destination acquisition immediately after landing,
+   before the changed aspect can read as settled typography". It does not —
+   a 44px one-line name squeezed into a 30px two-line box reads as smushed
+   type for the whole flight, which is exactly what the owner saw.
+   The destination now carries this name's OWN clamp (see `.vwh__mast__title`),
+   so both ends are the same size and only the position is left to animate.
+   Landing is top-left aligned, which puts the first lines on each other. */
 #about[data-about-mode="stage"][data-about-handoff="voidwalker"] .about-stage__name-actor {
   transform: translate3d(
-      calc(var(--about-handoff-title-x, 0px) * var(--about-handoff-flight, 0)),
-      calc(var(--about-handoff-title-y, 0px) * var(--about-handoff-flight, 0)),
-      0
-    )
-    scale(
-      calc(1 + (var(--about-handoff-title-scale-x, 1) - 1) * var(--about-handoff-flight, 0)),
-      calc(1 + (var(--about-handoff-title-scale-y, 1) - 1) * var(--about-handoff-flight, 0))
-    );
+    calc(var(--about-handoff-title-x, 0px) * var(--about-handoff-flight, 0)),
+    calc(var(--about-handoff-title-y, 0px) * var(--about-handoff-flight, 0)),
+    0
+  );
 }
 
 /* The remaining About dossier independently condenses into Facts. The bottom

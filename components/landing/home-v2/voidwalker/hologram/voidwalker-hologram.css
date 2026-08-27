@@ -36,7 +36,31 @@
   /* The era index is a global instrument, not left-column content. Reserving
      its own quiet band also puts both dossier columns on one lower datum while
      the spanning figure column keeps its exact authored height and floor. */
-  --vwh-era-band-h: clamp(102px, 12svh, 128px);
+  --vwh-era-h: clamp(38px, 4.2svh, 48px);
+  /* ⚠ THIS GAP IS THE STRIP'S BREATHING ROOM BELOW IT, and its FLOOR IS SET BY
+     ARITHMETIC, not taste. The strip-to-identity distance is this gap PLUS the
+     grid's own `row-gap`, and the short-viewport rung tightens that row-gap to
+     `clamp(7px, 1.1svh, 10px)` — 7.92px at 1280x720, its smallest desktop
+     value. The character sheet's hierarchy guard requires >= 24px, so the
+     floor must clear 24 − 7.92 = 16.08. A 16px floor measured 23.91 and failed
+     by nine hundredths of a pixel; 18 carries the margin. */
+  --vwh-era-gap: clamp(18px, 2svh, 24px);
+  /* ⚠ THE SELECTOR MUST CLEAR THE HUD RAIL'S TOP, AND THAT OFFSET IS DERIVED.
+     The strip used to sit at the band's top, which put it at 28-72px — inside
+     the nav corner's own row (45-72px) and ~91px ABOVE the rail ladder's first
+     tick. `--hud-rail-y-start` is the rail's own `top` (landing.css), so
+     deriving from it keeps the two in step instead of pinning a magic number
+     that drifts the moment the HUD margins are retuned.
+     ⚠ ROW 1 IS `auto`, NOT A COMPUTED BAND HEIGHT. The strip's real height is
+     content-driven (44px measured) and a reserved `--vwh-era-h` under-counted
+     it by 6px at 1101x800, which came straight out of the gap below and put
+     the strip 18.8px from the identity block against a required 24. The strip
+     carries the clearance and the gap as its OWN margins instead, so the row
+     self-corrects at any strip height. Rows 2-3 — and both dossier columns —
+     follow it down; the figure column spans 1/4 and is UNCHANGED, which is
+     what keeps ADR-082 U5's "the figure does not move or resize". */
+  --vwh-era-clear: max(0px, calc(var(--hud-rail-y-start, 119px) - var(--vwh-pad-top)));
+  --vwh-pad-top: clamp(16px, 2.2svh, 28px);
   position: relative;
   display: grid;
   /* ⚠ THE FIGURE COLUMN IS SIZED BY THE AVAILABLE HEIGHT, NOT BY A
@@ -49,11 +73,11 @@
     minmax(0, 1fr)
     clamp(280px, calc((100svh - 96px) * 0.5625), 500px)
     minmax(0, 1fr);
-  grid-template-rows: var(--vwh-era-band-h) auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   column-gap: clamp(16px, 2vw, 32px);
   row-gap: clamp(10px, 1.6svh, 18px);
   height: 100svh;
-  padding: clamp(16px, 2.2svh, 28px) clamp(20px, 3vw, 48px) clamp(12px, 1.8svh, 22px);
+  padding: var(--vwh-pad-top) clamp(20px, 3vw, 48px) clamp(12px, 1.8svh, 22px);
   overflow: hidden;
 }
 
@@ -205,6 +229,45 @@
   /* The reveal wipes up from the base. `clip-path` is animated only for
      the 900ms event — see the phase rules below. */
   clip-path: inset(0 0 0 0);
+}
+
+/* ── THE ALPHA PATH ──────────────────────────────────────────────────
+   ⚠ EVERYTHING ABOVE THIS BLOCK IS THE FALLBACK NOW, NOT THE DEFAULT.
+   The floor, the additive blend and the slot's `isolation` exist only to
+   fake transparency for an OPAQUE H.264 source: `plus-lighter` over a
+   transparent group returns the source, so the asset's black ground had to
+   be given something to add onto. The file's own history records three
+   attempts to soften that rectangle's edges.
+
+   But a floor "opaque across the whole media rect" over a station that paints
+   TRANSPARENT onto the corridor's non-uniform ambient is a visible black pane
+   by construction — which is exactly what the owner reported. No blend tuning
+   reaches it, and the header's own rule ("NEVER try to blend down to the
+   canvas") is why: a transformed ancestor always isolates this subtree.
+
+   So the real exit is a source that carries alpha. `data-holo-alpha` is set by
+   `holoAlphaSupport`'s decode probe — NOT by `canPlayType`, which says
+   "probably" on Safari, where VP9-in-WebM plays but its alpha is ignored.
+   On that branch the compositing hacks are simply switched off: normal blend,
+   no floor, no isolation, and the corridor reads through everywhere rather
+   than only at the wash's soft edges.
+
+   ⚠ DO NOT DELETE THE FALLBACK RULES. Safari has no self-hostable
+   alpha-capable codec here (HEVC-with-alpha cannot be encoded on the authoring
+   machine), so it keeps the floor and must never be worse than it is today.
+   The scanline raster and the edge glow are NOT part of the keying hack and
+   stay on both branches — they are the hologram's own grammar. */
+.vwh__slot[data-holo-alpha] {
+  isolation: auto;
+}
+.vwh__slot[data-holo-alpha] .vwh__ground {
+  display: none;
+}
+.vwh__slot[data-holo-alpha] .vwh__media-wrap {
+  background: none;
+}
+.vwh__slot[data-holo-alpha] .vwh__media {
+  mix-blend-mode: normal;
 }
 
 .vwh__media {
@@ -608,10 +671,20 @@
   margin: 0;
   font-family: var(--vwh-display);
   font-weight: 400;
-  font-size: clamp(29px, 1.9vw, 34px);
-  line-height: 1.02;
-  min-height: 2.04em;
+  /* ⚠ BYTE-IDENTICAL TO `.voidwalker__name` (landing.css) — ADR-044's one
+     big-title face, shared with `.services-masthead__title`. This is not a
+     coincidence to be tidied away: the About name FLIES INTO THIS SEAT, and
+     it now translates without scaling (see about-stage.css), so any
+     divergence here re-opens the smush the owner reported. The smoke asserts
+     the two computed sizes are equal. */
+  font-size: clamp(26px, 3vw, 44px);
+  line-height: 1.1;
+  /* ⚠ The three-line reservation is NOT here — `.vwh__decode-line` declares
+     `min-height: 1em` at equal specificity further down this file and would
+     win on order. It is re-declared beside that rule instead. */
   color: rgba(var(--dawn-rgb), 0.96);
+  /* Sentence case keeps its own negative tracking — the name's +0.04em is
+     there because the name is uppercase. Only the SIZE has to match. */
   letter-spacing: -0.015em;
   text-wrap: balance;
 }
@@ -824,7 +897,15 @@ a.vwh__press:focus-visible .vwh__press__headline {
   z-index: 2;
   grid-column: 1 / -1;
   grid-row: 1;
+  /* ⚠ TOP-ANCHORED WITH AN EXPLICIT CLEARANCE ABOVE — not `align-self: end`.
+     Bottom-anchoring lands the strip flush on the band's bottom edge, leaving
+     only the grid `row-gap` between it and the identity block; at 1101x800
+     that measured 8.8px against a required 24. Offsetting from the top instead
+     puts `--vwh-era-gap` BELOW the strip, where the breathing room belongs. */
   align-self: start;
+  margin-top: var(--vwh-era-clear);
+  margin-bottom: var(--vwh-era-gap);
+  min-height: var(--vwh-era-h);
   justify-self: center;
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -934,6 +1015,14 @@ a.vwh__press:focus-visible .vwh__press__headline {
   }
   .vwh__rail {
     order: 1;
+    /* ⚠ RESET THE DESKTOP BAND ALIGNMENT. `.vwh` is a COLUMN FLEX container
+       here, so the desktop `align-self: end` would stop meaning "sit at the
+       bottom of the era band" and start meaning "align to the right edge".
+       The rail-clearance band does not exist on this rung at all — the
+       station is normal flow with its own padding. */
+    align-self: stretch;
+    margin-block: 0;
+    min-height: 0;
     width: 100%;
     max-width: 720px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1104,6 +1193,19 @@ a.vwh__press:focus-visible .vwh__press__headline {
   min-width: 1px;
   min-height: 1em;
 }
+/* ⚠ THE IDENTITY TITLE RESERVES THREE LINES, AND IT HAS TO SAY SO HERE.
+   `.vwh__mast__title` and `.vwh__decode-line` are both (0,1,0) and the
+   decode rule is LATER in the file, so a `min-height` declared up at the
+   title's own block loses on order — silently, since the ghost still sizes
+   the box and only the SHORT eras collapse.
+   Three lines is the measured worst case at the name's size: in this column
+   `The Intelligence Architect` and `The community manager` both wrap to
+   three. Reserving the maximum is what stops FACTS stepping up and down as
+   the reader moves between eras — the fixed-footprint rule the character
+   sheet is built on. */
+.vwh__mast .vwh__mast__title.vwh__decode-line {
+  min-height: 3.3em;
+}
 .vwh__decode-ghost,
 .vwh__decode-live {
   display: block;
@@ -1132,14 +1234,24 @@ a.vwh__press:focus-visible .vwh__press__headline {
     --vwh-record-seat-h: 210px;
     --vwh-transmission-seat-h: 230px;
     row-gap: clamp(7px, 1.1svh, 10px);
-    padding-block: clamp(12px, 1.7svh, 16px) clamp(8px, 1.2svh, 12px);
+    /* ⚠ RE-POINT THE TOKEN, DO NOT SET `padding-block` DIRECTLY. The era
+       band's rail clearance is derived as
+       `--hud-rail-y-start − --vwh-pad-top`, so a padding set behind the
+       token's back would put the selector back over the nav corner on
+       exactly the short viewports this rung exists to serve. */
+    --vwh-pad-top: clamp(12px, 1.7svh, 16px);
+    padding-block: var(--vwh-pad-top) clamp(8px, 1.2svh, 12px);
   }
   .vwh__side {
     gap: clamp(12px, 2svh, 18px);
   }
-  .vwh__mast__title {
-    font-size: clamp(26px, 1.75vw, 31px);
-  }
+  /* ⚠ NO TITLE STEP-DOWN HERE. This rung used to take the identity title to
+     `clamp(26px, 1.75vw, 31px)` to buy vertical air — but the About name
+     flies into this seat at `clamp(26px, 3vw, 44px)` on EVERY viewport, and
+     a destination that shrinks on short screens re-opens the size mismatch
+     precisely where the runway is tightest. The air comes out of the gaps
+     and the seat reservations above instead, which is this rung's own
+     stated policy. */
   .vwh__panel {
     gap: 7px;
   }

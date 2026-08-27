@@ -40,10 +40,23 @@ export type CharacterEraId =
  * transform fighting it at runtime.
  */
 export interface CharacterEraHologram {
-  /** H.264 MP4 under `public/videos/voidwalker/`. */
+  /** H.264 MP4 under `public/videos/voidwalker/`. OPAQUE by format — H.264
+   *  cannot carry alpha — so this source composites through the additive
+   *  floor path. See `.vwh__media` in voidwalker-hologram.css. */
   videoPath: string;
-  /** Frame-zero poster under `public/images/voidwalker/`. */
+  /** VP9/WebM carrying a real alpha channel (`alpha_mode=1`), keyed from the
+   *  asset's own luminance. Preferred source: with true alpha the floor, the
+   *  blend and the slot's isolation are all unnecessary. Chromium and Firefox
+   *  take this; Safari falls back to `videoPath`. */
+  videoAlphaPath: string;
+  /** Frame-zero poster under `public/images/voidwalker/`. Paints while the
+   *  video buffers, so it must match whichever source wins — hence the
+   *  alpha-capable sibling below. */
   posterPath: string;
+  /** Frame-zero poster WITH alpha (WebP/PNG), for the alpha path. A `.jpg`
+   *  cannot hold alpha, so without this the boot frame would flash an opaque
+   *  black rectangle before the first video frame arrives. */
+  posterAlphaPath: string;
   /** The normalized delivery canvas. Exact by contract. */
   frame: {
     readonly width: 720;
@@ -61,14 +74,23 @@ export interface CharacterEraHologram {
  */
 export const CANONICAL_CHARACTER_ERA_HOLOGRAM = Object.freeze({
   videoPath: "/videos/voidwalker/holo-idle-thoughtform.mp4",
+  videoAlphaPath: "/videos/voidwalker/holo-idle-thoughtform.webm",
   posterPath: "/images/voidwalker/holo-still-thoughtform.jpg",
+  posterAlphaPath: "/images/voidwalker/holo-still-thoughtform.webp",
   frame: Object.freeze({ width: 720, height: 1280 }),
   headY: 0.122,
   footY: 0.998,
 } as const satisfies CharacterEraHologram);
 
 const HOLOGRAM_VIDEO_PATH = /^\/videos\/voidwalker\/[a-z0-9][a-z0-9._-]*\.mp4$/i;
+/** ⚠ WEBM ONLY. The alpha source is the one that must carry a real alpha
+ *  channel, and of the self-hosted formats this app can serve, VP9-in-WebM is
+ *  the only one that does. Widening this to `.mp4` would silently admit an
+ *  opaque file into the branch whose whole premise is transparency. */
+const HOLOGRAM_VIDEO_ALPHA_PATH = /^\/videos\/voidwalker\/[a-z0-9][a-z0-9._-]*\.webm$/i;
 const HOLOGRAM_POSTER_PATH = /^\/images\/voidwalker\/[a-z0-9][a-z0-9._-]*\.(?:jpe?g|png|webp)$/i;
+/** Same reasoning one step down: JPEG has no alpha channel. */
+const HOLOGRAM_POSTER_ALPHA_PATH = /^\/images\/voidwalker\/[a-z0-9][a-z0-9._-]*\.(?:png|webp)$/i;
 
 /** Runtime guard for data coming from future generated-asset manifests. */
 export function isCharacterEraHologram(value: unknown): value is CharacterEraHologram {
@@ -82,8 +104,12 @@ export function isCharacterEraHologram(value: unknown): value is CharacterEraHol
   return (
     typeof candidate.videoPath === "string" &&
     HOLOGRAM_VIDEO_PATH.test(candidate.videoPath) &&
+    typeof candidate.videoAlphaPath === "string" &&
+    HOLOGRAM_VIDEO_ALPHA_PATH.test(candidate.videoAlphaPath) &&
     typeof candidate.posterPath === "string" &&
     HOLOGRAM_POSTER_PATH.test(candidate.posterPath) &&
+    typeof candidate.posterAlphaPath === "string" &&
+    HOLOGRAM_POSTER_ALPHA_PATH.test(candidate.posterAlphaPath) &&
     frame?.width === 720 &&
     frame.height === 1280 &&
     typeof headY === "number" &&

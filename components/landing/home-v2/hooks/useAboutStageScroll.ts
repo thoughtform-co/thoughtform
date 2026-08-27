@@ -14,6 +14,7 @@ import {
   aboutVoidwalkerHandoffRef,
   isAboutVoidwalkerHandoffReady,
   resolveViewportRectTransform,
+  resolveViewportRectTranslation,
   type ViewportRect,
 } from "@/lib/voidwalker/aboutVoidwalkerHandoff";
 
@@ -117,8 +118,6 @@ export function useAboutStageScroll(
       stage?.style.removeProperty("--about-handoff-copy-clip");
       stage?.style.removeProperty("--about-handoff-title-x");
       stage?.style.removeProperty("--about-handoff-title-y");
-      stage?.style.removeProperty("--about-handoff-title-scale-x");
-      stage?.style.removeProperty("--about-handoff-title-scale-y");
       if (copyShellRef.current) copyShellRef.current.inert = false;
       handoffReady = false;
       currentHandoff = -1;
@@ -175,9 +174,13 @@ export function useAboutStageScroll(
       const dossierSource = sourceViewportRect(dossierActor, stage);
       if (!nameSource || !dossierSource) return false;
 
-      const titleTransform = resolveViewportRectTransform(nameSource, state.eraTitleRect);
+      // ⚠ The title TRANSLATES; only the dossier scales. The name and the
+      // era-title seat carry the same type ladder now, so a rect→rect fit
+      // would re-introduce the squash for no gain. See
+      // `resolveViewportRectTranslation`.
+      const titleTranslation = resolveViewportRectTranslation(nameSource, state.eraTitleRect);
       const dossierTransform = resolveViewportRectTransform(dossierSource, state.firstDossierRect);
-      if (!titleTransform || !dossierTransform) return false;
+      if (!titleTranslation || !dossierTransform) return false;
 
       const dossierScale = dossierTransform.scaleX;
       const clippedSourceHeight = Math.max(
@@ -189,10 +192,8 @@ export function useAboutStageScroll(
       stage.style.setProperty("--about-handoff-copy-y", `${dossierTransform.y.toFixed(2)}px`);
       stage.style.setProperty("--about-handoff-copy-scale", dossierScale.toFixed(6));
       stage.style.setProperty("--about-handoff-copy-clip", `${clippedSourceHeight.toFixed(2)}px`);
-      stage.style.setProperty("--about-handoff-title-x", `${titleTransform.x.toFixed(2)}px`);
-      stage.style.setProperty("--about-handoff-title-y", `${titleTransform.y.toFixed(2)}px`);
-      stage.style.setProperty("--about-handoff-title-scale-x", titleTransform.scaleX.toFixed(6));
-      stage.style.setProperty("--about-handoff-title-scale-y", titleTransform.scaleY.toFixed(6));
+      stage.style.setProperty("--about-handoff-title-x", `${titleTranslation.x.toFixed(2)}px`);
+      stage.style.setProperty("--about-handoff-title-y", `${titleTranslation.y.toFixed(2)}px`);
       currentTargetStamp = state.stampedAt;
       return true;
     };

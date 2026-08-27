@@ -2,7 +2,14 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
+import {
+  advanceScrambles,
+  queueScramble,
+  scrambleDuration,
+  scrambleFrame,
+  type ScrambleJob,
+} from "@/lib/home-v2/captionScramble";
+import { clamp01 } from "@/lib/math";
 import { CHARACTER_ERAS, resolveCharacterEraHologram } from "@/lib/voidwalker/characterEras";
 import { voidwalkerHologramProgressRef } from "@/lib/voidwalker/voidwalkerHologramClock";
 
@@ -47,6 +54,29 @@ const SCRAMBLE_ARM_AT = 0.05;
 const SCRAMBLE_REARM_BELOW = 0.02;
 const SCRAMBLE_STAGGER_S = 0.09;
 
+/**
+ * ⚠ THE ARRIVAL DECODE IS SCROLL-OWNED; ONLY AN ERA CLICK IS TIMED.
+ *
+ * ADR-082 U4 requires the initial materialization to be scroll-owned and
+ * reversible, with the timed materialize reserved for deliberate era-button
+ * changes — and the first cut did not honour it here. The decode ARMED on a
+ * scroll threshold but then ran on `performance.now()`, so the destination
+ * title resolved on a wall clock while the source name faded on a scroll
+ * clock. Two uncoupled effects is what "it glitches at the end, but not
+ * properly" describes: scrolling back left the title resolved, and scrubbing
+ * did not scrub the decode.
+ *
+ * `scrambleFrame` is a pure function of elapsed `t` with no internal latch, so
+ * feeding it a scroll-derived `t` makes the whole decode reversible for free.
+ * `advanceScrambles` is NOT used on this path — it drops finished jobs, which
+ * is precisely the latch we cannot have.
+ *
+ * The window opens just after entry and closes past the renderer takeover
+ * (`[0, .08]`), so the title is already opaque while its last characters land:
+ * it resolves IN PLACE rather than flashing complete at the seam.
+ */
+const TITLE_DECODE_WINDOW: readonly [number, number] = [0.02, 0.18];
+
 export function VoidwalkerHologram() {
   const [eraIdx, setEraIdx] = useState(0);
   const [epoch, setEpoch] = useState(0);
@@ -55,6 +85,9 @@ export function VoidwalkerHologram() {
   const kickerRef = useRef<HTMLSpanElement>(null);
   const titleRef = useRef<HTMLSpanElement>(null);
   const yearRef = useRef<HTMLSpanElement>(null);
+  // Set only by `pick`: distinguishes a deliberate era choice (timed, finite)
+  // from arrival by scroll (scrubbed, reversible).
+  const deliberateRef = useRef(false);
 
   const stageActive = useVoidwalkerHologramScroll(rootRef);
 
@@ -116,6 +149,11 @@ export function VoidwalkerHologram() {
     let blanked = false;
     let raf = 0;
 
+    // An era CLICK is a deliberate, finite event and keeps the timed path.
+    // Arrival by scroll is scrubbed — see TITLE_DECODE_WINDOW.
+    const deliberate = deliberateRef.current;
+    deliberateRef.current = false;
+
     const blank = () => {
       blanked = true;
       targets.forEach((el) => {
@@ -131,17 +169,38 @@ export function VoidwalkerHologram() {
       });
     };
 
+    /** The scrubbed writer: one pure frame per target, from scroll alone. */
+    const writeScrolled = (enter: number) => {
+      const span = TITLE_DECODE_WINDOW[1] - TITLE_DECODE_WINDOW[0];
+      const p = clamp01((enter - TITLE_DECODE_WINDOW[0]) / span);
+      // The longest line plus the full stagger is the wall the scalar maps
+      // onto, so every target finishes together at p = 1 however long its
+      // own string is.
+      const total =
+        Math.max(...finals.map((f) => scrambleDuration("", f))) +
+        SCRAMBLE_STAGGER_S * (finals.length - 1);
+      targets.forEach((el, i) => {
+        if (!el) return;
+        const final = finals[i]!;
+        const t = p * total - i * SCRAMBLE_STAGGER_S;
+        if (t <= 0) {
+          el.textContent = "";
+          return;
+        }
+        el.textContent = scrambleFrame({ from: "", to: final }, t) ?? final;
+      });
+    };
+
     // Era switches while the stage is already live must blank before the
     // browser paints the new finals. Entry from above is blanked on the first
     // rAF after the scroll writer engages (the stage is still off-screen).
     const initial = voidwalkerHologramProgressRef.current;
     if (initial.engaged) {
       blank();
-      if (initial.enter >= SCRAMBLE_ARM_AT) arm(performance.now() / 1000);
+      if (deliberate && initial.enter >= SCRAMBLE_ARM_AT) arm(performance.now() / 1000);
     }
 
     const tick = () => {
-      advanceScrambles(jobs, performance.now() / 1000);
       const clock = voidwalkerHologramProgressRef.current;
 
       if (!clock.engaged) {
@@ -151,14 +210,27 @@ export function VoidwalkerHologram() {
           blanked = false;
           restore();
         }
-      } else if (armed && clock.enter <= SCRAMBLE_REARM_BELOW) {
-        jobs.length = 0;
-        armed = false;
-        blanked = false;
-        restore();
-      } else if (!armed) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+
+      if (deliberate) {
+        // Finite, wall-clock, one-shot — an era choice is an EVENT.
+        advanceScrambles(jobs, performance.now() / 1000);
+        if (armed && clock.enter <= SCRAMBLE_REARM_BELOW) {
+          jobs.length = 0;
+          armed = false;
+          blanked = false;
+          restore();
+        } else if (!armed) {
+          if (!blanked) blank();
+          if (clock.enter >= SCRAMBLE_ARM_AT) arm(performance.now() / 1000);
+        }
+      } else {
+        // Scrubbed: position IS the decode, in both directions, with no
+        // latch to unwind on reverse.
         if (!blanked) blank();
-        if (clock.enter >= SCRAMBLE_ARM_AT) arm(performance.now() / 1000);
+        writeScrolled(clock.enter);
       }
 
       raf = requestAnimationFrame(tick);
@@ -172,6 +244,7 @@ export function VoidwalkerHologram() {
   }, [era.id, era.wardrobe, era.year, eraIdx, reduced, stageActive]);
 
   const pick = (i: number) => {
+    deliberateRef.current = true;
     setEraIdx(i);
     // The runway owns initial acquisition. A deliberate era choice is the
     // only event allowed to start HoloFigure's finite 900ms materialize.

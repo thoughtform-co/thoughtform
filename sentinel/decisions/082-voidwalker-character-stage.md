@@ -425,3 +425,156 @@ At `<=1100px`, the selector returns to the existing 3-by-2 normal-flow form and
 the selector → identity → figure/platform → FACTS → SCOPE → optional
 records order remains unchanged. No station-wrapper animation, vertical actor
 entrance, opaque pane, star field or additional renderer is introduced.
+
+---
+
+## Update 6 — the name stops smushing, the band clears the rail, and the
+
+## hologram composites through real alpha (2026-08-27, owner)
+
+Updates 3–5 shipped to `main` ahead of their visual read, at the owner's
+explicit direction; their "unpushed" wording above is stale rather than
+binding. This update is the owner's first read of the live motion, and it
+corrects three things.
+
+### 1. The title translates; it never scales
+
+`resolveViewportRectTransform` derives `scaleX`/`scaleY` INDEPENDENTLY, and
+about-stage.css applied both to the name actor. Measured at 1601×1269, the
+source `.voidwalker__name` is **44px** uppercase on one line and the
+destination `.vwh__mast__title` was **30.42px** sentence-case in a box
+reserving two lines — a 1.45× squeeze on one axis and a different one on the
+other, for the whole flight. U3's own comment states the bet: the source
+"disappears into the destination acquisition immediately after landing, before
+the changed aspect can read as settled typography". It does not; the owner read
+it immediately as smushed type.
+
+- `resolveViewportRectTranslation` is new and returns `{x, y}` ONLY. The
+  portrait and dossier keep the rect transform — they are boxes of content that
+  genuinely resize. Type is not.
+- `.vwh__mast__title` now carries `.voidwalker__name`'s clamp byte-for-byte,
+  `clamp(26px, 3vw, 44px)` at `line-height: 1.1` — ADR-044's one big-title face,
+  already shared with `.services-masthead__title` and `.continuum__title`.
+- ⚠ **UPPERCASE WAS REJECTED ON ARITHMETIC, NOT TASTE.** At 44px the single
+  word `INTELLIGENCE` measures **319px** against a 270px column. Sentence case
+  keeps its own −0.015em; only the SIZE has to match.
+- ⚠ **THE SEAT RESERVES THREE LINES** (`min-height: 3.3em`, measured 143px at
+  1440×900): `The Intelligence Architect` and `The community manager` both wrap
+  to three at the name's size. Reserving the maximum is what stops FACTS
+  stepping as the reader changes era.
+- ⚠ **THAT RESERVATION LIVES BESIDE `.vwh__decode-line`, NOT IN THE TITLE'S OWN
+  BLOCK.** Both selectors are (0,1,0) and the decode rule is LATER in the file,
+  so `min-height` declared at the title loses on ORDER — silently, because the
+  in-flow decode ghost still sizes the box and only the short eras collapse.
+- ⚠ **THE SHORT-VIEWPORT RUNG'S TITLE STEP-DOWN IS DELETED.** `@media
+(min-width: 1101px) and (max-height: 820px)` took the title to
+  `clamp(26px, 1.75vw, 31px)` — which is why the first live measurement came
+  back 28.02px and matched neither value. A destination that shrinks on short
+  screens re-opens the mismatch exactly where the runway is tightest. Measured
+  at 1280×720 after removal: name and title both 38.4px, title 127px on three
+  lines, and **nothing clips or scrolls**.
+- ⚠ **THE UN-SCALED NAME OVERHANGS ITS SEAT BY 113px** (383px at 44px against a
+  270px column). Accepted, and paid for by starting the un-type before the
+  flight ends so the full-width name never sits statically in the narrow seat.
+
+### 2. The arrival decode is scroll-owned
+
+U4 already required the initial materialization to be scroll-owned and
+reversible with the timed path reserved for era clicks — and the implementation
+did not honour it. The decode ARMED on a scroll threshold and then ran on
+`performance.now()`, so the destination resolved on a wall clock while the
+source faded on a scroll clock. That is the owner's "it glitches at the end,
+but not properly": scrubbing did not scrub it and reverse left it resolved.
+
+`scrambleFrame(job, t)` is a pure function of elapsed `t` with no internal
+latch, so a scroll-derived `t` makes it reversible for free.
+⚠ **`advanceScrambles` MAY NOT BE USED ON THAT PATH** — it drops finished jobs,
+which is precisely the latch. `TITLE_DECODE_WINDOW` is `[0.02, 0.18]`, opening
+after entry and closing past the `[0, .08]` takeover so the title resolves IN
+PLACE rather than flashing complete at the seam. `deliberateRef` (set only by
+`pick`) keeps era clicks on the finite timed path.
+
+### 3. The hologram carries real alpha; the floor becomes the Safari fallback
+
+The owner asked whether the video was transparent. It was not and could not be:
+`ffprobe` reports `h264 / yuv420p`, and neither `yuv420p` nor H.264-in-MP4
+carries alpha; the poster was a `.jpg`. Transparency was simulated by additive
+blending, and the visible black pane was `.vwh__media-wrap`'s own opaque floor
+at `rgb(10,9,8)`.
+
+⚠ **THAT FLOOR WAS NEVER AN EDGE BUG, WHICH IS WHY THREE ATTEMPTS AT ITS EDGES
+FAILED.** U2's own note requires it be "opaque across the whole media rect";
+the station paints TRANSPARENT over the corridor's non-uniform ambient; an
+opaque rect over a varying backdrop is a visible pane by construction. The
+header's rule — "NEVER try to blend down to the canvas" — is exactly why no
+blend tuning could reach it: a transformed ancestor always isolates this
+subtree. Real alpha is the only exit.
+
+- `holo-idle-thoughtform.webm` is VP9/`yuva420p` (`alpha_mode=1`), keyed from
+  luminance: `lut=y='clip((val-8)*12,0,255)'` over the source's measured levels
+  (ground **1**/255, body core **40**, head **133**). 1.82MB against the MP4's
+  1.14MB. `holo-still-thoughtform.webp` is the matching alpha poster.
+- ⚠ **THE FIRST KEY WAS TOO GENTLE AND IT SHOWED.** `alpha = luma × 6` left the
+  body at ~81 % opacity, so mid-tones blended toward the backdrop while
+  highlights stayed opaque — contrast climbed and the face and hands clipped to
+  white. The shipped curve keeps the BODY fully opaque and keys only the ground
+  and the glow's falloff. An A/B of both paths frozen on one frame confirms the
+  figure is unchanged; the blown highlights visible in both are the asset's own.
+- ⚠ **`canPlayType` CANNOT ROUTE THIS AND SOURCE ORDER IS A TRAP.** Safari 14.1+
+  plays VP9-in-WebM but ignores its alpha, and answers "probably" to every codec
+  query — so a WebM-first `<source>` list would hand Safari an opaque ground and
+  make it WORSE than today. `lib/voidwalker/holoAlphaSupport.ts` decodes a
+  581-byte fully-transparent probe once at import and reads the pixel back;
+  `HoloFigure` locks the verdict at mount (a late swap would restart the figure
+  mid-view) and publishes `data-holo-alpha` on `.vwh__slot`. `null` resolves to
+  the floor, which is the fail-safe branch.
+- On the alpha branch CSS switches the hacks off: `mix-blend-mode: normal`, no
+  `.vwh__ground`, transparent wrap, `isolation: auto`. ⚠ **THE FALLBACK RULES
+  ARE NOT DELETED** — Safari has no self-hostable alpha codec here (HEVC-alpha
+  needs macOS videotoolbox) and must never regress. The scanline raster and the
+  edge glow stay on BOTH branches: they are the hologram's grammar, not part of
+  the keying hack.
+- `CharacterEraHologram` gains `videoAlphaPath` / `posterAlphaPath`, validated
+  `.webm`-only and `png|webp`-only. ⚠ Widening either regex would readmit an
+  opaque file to the branch whose whole premise is transparency, with the markup
+  still claiming `data-holo-alpha`; a unit test pins the refusal.
+
+### 4. The era band clears the HUD rail
+
+The selector occupied **28–72px** — inside the nav corner's own row (45–72px)
+and ~91px above the rail ladder's first tick at `--hud-rail-y-start` (119px at
+1601×1269, 89px at 1280×720).
+
+⚠ **THIS WAS A SMALL CHANGE, NOT A 91px SHOVE, AND THE BAND ALREADY HELD THE
+ROOM.** `--vwh-era-band-h` was `clamp(102px, 12svh, 128px)` for a 44px strip
+pinned to the band's TOP — ~84px of it unused. The clearance is DERIVED
+(`max(0px, --hud-rail-y-start − --vwh-pad-top)`) and the strip is `align-self:
+end`, so rows 2–3 and both dossier columns follow it down by ~15px at 1601×1269
+and ~23px at 1280×720. The figure column spans `grid-row: 1 / 4` and is
+therefore UNCHANGED, which is what keeps U5's "the figure does not move".
+
+- ⚠ **`--vwh-pad-top` IS A TOKEN NOW AND THE SHORT RUNG RE-POINTS IT** rather
+  than setting `padding-block` behind its back — otherwise the derivation
+  subtracts a padding the station is not using and the strip returns to the nav
+  corner on exactly the short viewports that rung serves.
+- ⚠ **THE ≤1100px RUNG MUST RESET `align-self`.** `.vwh` is a COLUMN FLEX
+  container there, where `end` stops meaning "bottom of the band" and starts
+  meaning "align right".
+
+Measured live at 1440×900: selector top **108** against rail top **104**; name
+and title both **43.2px**; nothing clipped at 1280×720.
+
+---
+
+## Update 7 — proposed phone dossier exception (2026-08-27)
+
+**Status: Proposed — implemented locally, pending owner visual approval.**
+
+ADR-083 narrows this ADR's accepted `<=1100px` serial fallback. The complete
+3-by-2 normal-flow document remains binding at `701–1100px`; at `<=700px`, the
+local implementation instead reads identity → figure → one-row six-era rail →
+RECORD / SCOPE / TRANSMISSION → one active dossier seat. All authored nodes
+remain mounted and mobile visibility is CSS-only, so the capable desktop grid,
+handoff targets and measurements do not move. Transmission is disabled when an
+era has no authored film. This exception does not become accepted until the
+owner approves the rendered phone direction.

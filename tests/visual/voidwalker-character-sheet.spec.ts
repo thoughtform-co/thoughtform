@@ -279,12 +279,22 @@ test.describe("Voidwalker editorial character sheet", () => {
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "media failure runs once in Chromium");
+    // ⚠ ABORT BOTH SOURCES. ADR-082 U6 gave the figure an alpha branch, so on
+    // an engine that honours VP9 alpha the station requests the `.webm` and
+    // killing only the `.mp4` tests nothing at all.
     await page.route("**/videos/voidwalker/holo-idle-thoughtform.mp4", (route) => route.abort());
+    await page.route("**/videos/voidwalker/holo-idle-thoughtform.webm", (route) => route.abort());
     await bootDesktop(page, { width: 1440, height: 800 });
 
     const media = page.locator(".vwh__media");
     await expect(media).toHaveJSProperty("tagName", "IMG");
-    await expect(media).toHaveAttribute("src", "/images/voidwalker/holo-still-thoughtform.jpg");
+    // ⚠ The still must match the COMPOSITING BRANCH: on the alpha path the
+    // floor is off, so an opaque `.jpg` here would repaint the black pane.
+    const expectedPoster =
+      (await page.locator(".vwh__slot").getAttribute("data-holo-alpha")) !== null
+        ? "/images/voidwalker/holo-still-thoughtform.webp"
+        : "/images/voidwalker/holo-still-thoughtform.jpg";
+    await expect(media).toHaveAttribute("src", expectedPoster);
     await expect(page.locator(".vwh__slot")).toHaveAttribute("data-vwh-frame-width", "720");
     await expect(page.locator(".vwh__slot")).toHaveAttribute("data-vwh-frame-height", "1280");
 
@@ -300,5 +310,105 @@ test.describe("Voidwalker editorial character sheet", () => {
       return { bootY, discTop: disc.getBoundingClientRect().top };
     });
     expectNear(contact.bootY, contact.discTop, 2, "fallback-poster contact");
+  });
+
+  /**
+   * ADR-082 U6 · the identity title carries the About name's own type ladder.
+   *
+   * The name FLIES INTO this seat and now translates without scaling, so any
+   * divergence here re-opens the smush. Measuring the two computed sizes is
+   * the only check that catches it: the first fix looked correct in the source
+   * and still measured 28.02px live, because a short-viewport rung was quietly
+   * stepping the title down.
+   */
+  test("the era title matches the About name's size at every desktop rung", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "explicit Chromium viewport matrix");
+
+    for (const viewport of DESKTOP_VIEWPORTS) {
+      await bootDesktop(page, viewport);
+      const type = await page.evaluate(() => {
+        const name = document.querySelector<HTMLElement>(".voidwalker__name");
+        const title = document.querySelector<HTMLElement>(".vwh__mast__title");
+        if (!name || !title) throw new Error("Missing name or era title");
+        const t = getComputedStyle(title);
+        return {
+          name: getComputedStyle(name).fontSize,
+          title: t.fontSize,
+          // Three lines reserved so switching era cannot move FACTS beneath it.
+          reserved: title.getBoundingClientRect().height,
+          line: parseFloat(t.lineHeight),
+        };
+      });
+      const label = `${viewport.width}x${viewport.height}`;
+      expect(type.title, `${label}: era title must equal the About name's size`).toBe(type.name);
+      expect(type.reserved, `${label}: three-line seat`).toBeGreaterThanOrEqual(type.line * 2.9);
+    }
+  });
+
+  /**
+   * ADR-082 U6 · the name TRANSLATES; it never scales.
+   *
+   * Pinned from the rendered matrix rather than the published custom property,
+   * so a future pass that re-points a scale channel at the destination's width
+   * fails here even if the variable names change.
+   */
+  test("the About name actor carries no scale channel through its flight", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "explicit Chromium viewport matrix");
+
+    await bootDesktop(page, { width: 1440, height: 800 });
+    const matrices = await page.evaluate(() => {
+      const actor = document.querySelector<HTMLElement>("[data-about-handoff-name]");
+      if (!actor) return null;
+      const m = new DOMMatrixReadOnly(getComputedStyle(actor).transform);
+      return { a: m.a, d: m.d };
+    });
+    if (matrices) {
+      expect(Math.abs(matrices.a - 1), "name actor scaleX must stay 1").toBeLessThanOrEqual(0.001);
+      expect(Math.abs(matrices.d - 1), "name actor scaleY must stay 1").toBeLessThanOrEqual(0.001);
+    }
+  });
+
+  /**
+   * ADR-082 U6 · the era strip sits below the HUD rail's first tick.
+   *
+   * It used to occupy 28–72px — inside the nav corner's own row — while the
+   * rail starts at `--hud-rail-y-start`. The figure column spans the whole grid
+   * and must NOT have moved to buy that clearance.
+   */
+  test("the era strip clears the rail without moving the figure", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "explicit Chromium viewport matrix");
+
+    for (const viewport of DESKTOP_VIEWPORTS) {
+      await bootDesktop(page, viewport);
+      const geom = await page.evaluate(() => {
+        const q = (s: string) => document.querySelector<HTMLElement>(s);
+        const strip = q(".vwh__era-selector");
+        const rail = q(".hud__rail");
+        const figure = q(".vwh__column");
+        if (!strip || !rail || !figure) throw new Error("Missing strip, rail or figure");
+        const station = q(".vwh")!.getBoundingClientRect();
+        return {
+          stripTop: strip.getBoundingClientRect().top,
+          railTop: rail.getBoundingClientRect().top,
+          figureTop: figure.getBoundingClientRect().top,
+          stationTop: station.top,
+        };
+      });
+      const label = `${viewport.width}x${viewport.height}`;
+      // The clearance is derived as `--hud-rail-y-start − --vwh-pad-top`, so
+      // the strip lands ON the rail's first tick by construction and the two
+      // can disagree by a sub-pixel of float rounding (measured 0.0156px at
+      // 1101x800). What must never return is the ~91px it sat ABOVE the rail,
+      // up in the nav corner's own row.
+      expect(geom.stripTop, `${label}: strip must sit at or below the rail top`).toBeGreaterThan(
+        geom.railTop - 0.5
+      );
+      // The figure spans grid-row 1/4, so the band's growth cannot push it down.
+      expectNear(geom.figureTop, geom.stationTop, 40, `${label}: figure top unmoved`);
+    }
   });
 });

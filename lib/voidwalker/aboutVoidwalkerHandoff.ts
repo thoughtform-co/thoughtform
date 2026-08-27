@@ -54,13 +54,19 @@ export interface HandoffTitleOpacities {
 }
 
 /** Transform channels that map one viewport rect onto another from a
- * top-left transform origin. Title handoff may use independent axes because
- * the one-line About name resolves into a fixed two-line era-title seat. */
+ * top-left transform origin. */
 export interface ViewportRectTransform {
   x: number;
   y: number;
   scaleX: number;
   scaleY: number;
+}
+
+/** Position-only channels for an actor that must NOT be resized by its
+ * flight — see `resolveViewportRectTranslation`. */
+export interface ViewportTranslation {
+  x: number;
+  y: number;
 }
 
 export interface AboutVoidwalkerHandoffState {
@@ -147,6 +153,36 @@ export function resolveViewportRectTransform(
     y: to.cy - to.h / 2 - (from.cy - from.h / 2),
     scaleX: to.w / from.w,
     scaleY: to.h / from.h,
+  };
+}
+
+/**
+ * Resolve a POSITION-ONLY flight between two rects, aligned top-left.
+ *
+ * ⚠ THE TITLE MAY NEVER SCALE, AND THIS IS WHY THIS FUNCTION EXISTS.
+ * `resolveViewportRectTransform` derives `scaleX`/`scaleY` independently, which
+ * is right for the portrait and the dossier — they are boxes of content that
+ * genuinely resize. It is wrong for TYPE. The About name is one line at the
+ * journey's big-title size and the era-title seat is a narrower box reserving
+ * three lines, so a rect→rect fit squashed the name on both axes at once.
+ * The first cut shipped that deliberately, betting the swap would hide it
+ * ("before the changed aspect can read as settled typography"); the owner read
+ * it immediately as smushed text.
+ *
+ * The destination instead matches the SOURCE'S TYPE (see `.vwh__mast__title`,
+ * which now carries `.voidwalker__name`'s exact clamp), so the two are already
+ * the same size and only the position has to change. Aligning top-left lands
+ * the first lines on each other, which is the join a reader actually sees.
+ */
+export function resolveViewportRectTranslation(
+  from: ViewportRect,
+  to: ViewportRect
+): ViewportTranslation | null {
+  if (!isValidViewportRect(from) || !isValidViewportRect(to)) return null;
+
+  return {
+    x: to.cx - to.w / 2 - (from.cx - from.w / 2),
+    y: to.cy - to.h / 2 - (from.cy - from.h / 2),
   };
 }
 

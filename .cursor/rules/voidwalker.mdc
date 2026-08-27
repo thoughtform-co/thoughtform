@@ -46,11 +46,25 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
   is About's in-place terminal stutter; exit `[.74,.96]` clears mast/left to
   the left and figure/right/rail to the right before sticky release. No
   entrance `translateY`, transition, observer latch or permanent attribute.
-- **Decode means blank, then queue.** Masthead leaves blank before the caption
-  kernel arms at `.05`, restore/re-arm below `.02`, and replay on reverse.
-- **Keep the local media floor.** `.vwh__slot` isolation + the masked opaque
-  `.vwh__media-wrap` ground prevent the JPEG near-black rectangle under
-  additive blend. It is not the removed outer station plane.
+- **Decode means blank, then queue** for an ERA CLICK. ⚠ Arrival is SCROLL-OWNED
+  (ADR-082 U6): `scrambleFrame` is pure in `t`, window `[0.02, 0.18]`;
+  `advanceScrambles` may not be used there — it drops jobs, which is the latch.
+- ⚠ **THE MEDIA FLOOR IS THE FALLBACK, NOT THE DEFAULT (U6).** Over a
+  transparent station on the corridor's varying ambient, an opaque floor IS the
+  black pane — by construction, not at its edges. Real alpha is the exit
+  (`videoAlphaPath` VP9/WebM `yuva420p` + `posterAlphaPath`); `data-holo-alpha`
+  turns the blend, ground and isolation off. ⚠ Keep the floor rules — Safari has
+  no self-hostable alpha codec. ⚠ Route by DECODE PROBE
+  (`holoAlphaSupport.ts`), never `canPlayType`: Safari plays VP9-WebM, ignores
+  its alpha and answers "probably". `null` ⇒ floor.
+- ⚠ **THE ERA STRIP CLEARS THE HUD RAIL** — `--vwh-era-clear` =
+  `max(0px, --hud-rail-y-start − --vwh-pad-top)`, strip `align-self: end`. The
+  figure spans `grid-row: 1 / 4` and does not move. A rung re-points
+  `--vwh-pad-top` (never `padding-block`); ≤1100px resets `align-self`.
+- ⚠ **THE IDENTITY TITLE = `.voidwalker__name`'s CLAMP, BYTE-FOR-BYTE**, because
+  the About name flies into it and TRANSLATES without scaling. No rung steps it
+  down. Its `min-height: 3.3em` sits beside `.vwh__decode-line` (equal
+  specificity, later in file).
 - **Proposed handoff — unshipped/unpushed, pending visual approval.** Only the
   capable path (`min-width: 1101px`, motion allowed, flags active, live corridor) uses
   the `-120svh` overlap / shared `20svh` pin seam. Station wrappers never

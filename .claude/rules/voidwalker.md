@@ -51,10 +51,42 @@ the About bio, while this surface uses `.vw*` / `.vwh*`.
 - **Decode means blank, then queue.** Masthead leaves are blanked before the
   caption kernel arms at `.05`, restored/re-armed below `.02`, and replay on
   reverse/re-entry. Queueing rendered finals against themselves is a no-op.
-- **Keep the local media floor.** `.vwh__slot` isolation and the masked opaque
-  `.vwh__media-wrap` ground prevent the JPEG's near-black from painting a
-  rectangle under additive blend. That local floor is not the removed outer
-  station pane.
+- ⚠ **THE MEDIA FLOOR IS THE FALLBACK NOW, NOT THE DEFAULT (ADR-082 U6).**
+  `.vwh__slot` isolation + the masked opaque `.vwh__media-wrap` ground exist
+  only to fake transparency for an OPAQUE H.264 source, and over a station that
+  paints transparent onto the corridor's non-uniform ambient that floor IS a
+  visible black pane — by construction, not at its edges. Three attempts at its
+  edges failed for that reason. The exit is real alpha: `videoAlphaPath`
+  (VP9/WebM `yuva420p`, keyed from luminance) + `posterAlphaPath`. On that
+  branch `data-holo-alpha` switches the hacks off — `mix-blend-mode: normal`,
+  no ground, transparent wrap, `isolation: auto`.
+  ⚠ **DO NOT DELETE THE FLOOR RULES**: Safari has no self-hostable alpha codec
+  here (HEVC-alpha needs macOS videotoolbox) and keeps them.
+  ⚠ **ROUTING IS A DECODE PROBE, NEVER `canPlayType`** — Safari plays
+  VP9-in-WebM, ignores its alpha and answers "probably", so source order alone
+  would make Safari WORSE than today. `lib/voidwalker/holoAlphaSupport.ts`
+  decodes a transparent probe once and `HoloFigure` locks the verdict at mount;
+  `null` means the floor. The `.webm`-only / `png|webp`-only path regexes are
+  what stop an opaque file entering the branch whose premise is transparency.
+- ⚠ **THE ERA STRIP CLEARS THE HUD RAIL, AND THE OFFSET IS DERIVED.**
+  `--vwh-era-clear` = `max(0px, --hud-rail-y-start − --vwh-pad-top)`, with the
+  strip `align-self: end` inside `--vwh-era-band-h`. The band already held ~84px
+  of unused room, so the sides move only ~15–23px and the figure — spanning
+  `grid-row: 1 / 4` — does not move at all. ⚠ A rung that needs different
+  padding RE-POINTS `--vwh-pad-top`; setting `padding-block` behind the token's
+  back returns the strip to the nav corner. ⚠ The ≤1100px rung must reset
+  `align-self` (that container is column-flex, where `end` means "align right").
+- ⚠ **THE IDENTITY TITLE CARRIES `.voidwalker__name`'s CLAMP BYTE-FOR-BYTE**
+  (`clamp(26px, 3vw, 44px)` / 1.1) because the About name FLIES INTO IT and now
+  translates without scaling. No rung may step it down — the short-viewport
+  override was deleted for exactly that reason. The three-line reservation
+  (`min-height: 3.3em`) sits BESIDE `.vwh__decode-line`, which declares
+  `min-height: 1em` at equal specificity and later in the file.
+- ⚠ **THE ARRIVAL DECODE IS SCROLL-OWNED; ONLY AN ERA CLICK IS TIMED.**
+  `scrambleFrame` is pure in `t`, so a scroll-derived `t` is reversible for
+  free; `advanceScrambles` may NOT be used there (it drops finished jobs — the
+  latch). Window `[0.02, 0.18]`, past the `[0, .08]` takeover so the title
+  resolves in place.
 - The station id, `data-station`, rail manifest row, section readout, nav entry
   and `characterEras.ts` registry remain load-bearing.
 

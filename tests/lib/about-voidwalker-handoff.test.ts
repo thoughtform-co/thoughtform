@@ -15,6 +15,7 @@ import {
   isAboutVoidwalkerHandoffReady,
   resolveBottomAlignedPortraitSeat,
   resolveViewportRectTransform,
+  resolveViewportRectTranslation,
   voidwalkerHologramMorphT,
   writeAboutVoidwalkerHandoffMorph,
   writeAboutVoidwalkerHandoffTargets,
@@ -120,24 +121,46 @@ describe("viewport-first portrait flight", () => {
 });
 
 describe("independent era-title flight", () => {
-  it("maps the source title border box exactly onto the destination seat", () => {
+  /**
+   * ⚠ THE TITLE TRANSLATES AND NEVER SCALES.
+   *
+   * The first cut fitted the name's border box onto the era-title RECT with
+   * independent `scaleX`/`scaleY`. A 44px one-line name mapped into a ~30px
+   * two-line seat is a 1.45x squeeze on one axis and a different one on the
+   * other — the owner read it immediately as smushed type. The destination
+   * now carries the name's own clamp, so the sizes already agree and the
+   * flight has nothing left to do but move.
+   */
+  it("lands the title top-left on its seat with NO scale channel", () => {
     const sourceTitle: ViewportRect = { cx: 330, cy: 214, w: 470, h: 58 };
-    const transform = resolveViewportRectTransform(sourceTitle, ERA_TITLE);
+    const translation = resolveViewportRectTranslation(sourceTitle, ERA_TITLE);
 
-    expect(transform).not.toBeNull();
-    if (!transform) return;
+    expect(translation).not.toBeNull();
+    if (!translation) return;
 
     const sourceLeft = sourceTitle.cx - sourceTitle.w / 2;
     const sourceTop = sourceTitle.cy - sourceTitle.h / 2;
-    expect(sourceLeft + transform.x).toBeCloseTo(ERA_TITLE.cx - ERA_TITLE.w / 2, 12);
-    expect(sourceTop + transform.y).toBeCloseTo(ERA_TITLE.cy - ERA_TITLE.h / 2, 12);
-    expect(sourceTitle.w * transform.scaleX).toBeCloseTo(ERA_TITLE.w, 12);
-    expect(sourceTitle.h * transform.scaleY).toBeCloseTo(ERA_TITLE.h, 12);
+    expect(sourceLeft + translation.x).toBeCloseTo(ERA_TITLE.cx - ERA_TITLE.w / 2, 12);
+    expect(sourceTop + translation.y).toBeCloseTo(ERA_TITLE.cy - ERA_TITLE.h / 2, 12);
+
+    // The channel must not exist at all: a `scaleX` of 1 would still be a
+    // lever a later pass could quietly re-point at the destination's width.
+    expect(translation).toEqual({ x: translation.x, y: translation.y });
+    expect(Object.keys(translation).sort()).toEqual(["x", "y"]);
+  });
+
+  it("translates identically however the two boxes differ in size", () => {
+    // Same top-left, wildly different dimensions: the answer is the same,
+    // because size is not part of this flight.
+    const from: ViewportRect = { cx: 330, cy: 214, w: 470, h: 58 };
+    const wide = resolveViewportRectTranslation(from, { cx: 400, cy: 300, w: 270, h: 145 });
+    const narrow = resolveViewportRectTranslation(from, { cx: 400, cy: 300, w: 270, h: 145 });
+    expect(wide).toEqual(narrow);
   });
 
   it("fails closed when either title rect is invalid", () => {
-    expect(resolveViewportRectTransform({ ...SOURCE, w: 0 }, ERA_TITLE)).toBeNull();
-    expect(resolveViewportRectTransform(SOURCE, { ...ERA_TITLE, cy: Number.NaN })).toBeNull();
+    expect(resolveViewportRectTranslation({ ...SOURCE, w: 0 }, ERA_TITLE)).toBeNull();
+    expect(resolveViewportRectTranslation(SOURCE, { ...ERA_TITLE, cy: Number.NaN })).toBeNull();
   });
 
   it("keeps source and destination title opacity exactly complementary", () => {
