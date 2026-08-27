@@ -31,36 +31,52 @@
      that floor coincident with the slot bottom at every aspect. */
   --vwh-base-h: clamp(34px, 6svh, 58px);
   --vwh-base-disc-inset: clamp(7.5px, 1.32svh, 12.8px);
-  --vwh-record-seat-h: clamp(210px, 23svh, 248px);
-  --vwh-transmission-seat-h: clamp(230px, 26svh, 280px);
-  /* The era index is a global instrument, not left-column content. Reserving
-     its own quiet band also puts both dossier columns on one lower datum while
-     the spanning figure column keeps its exact authored height and floor. */
-  --vwh-era-h: clamp(38px, 4.2svh, 48px);
-  /* ⚠ THIS GAP IS THE STRIP'S BREATHING ROOM BELOW IT, and its FLOOR IS SET BY
-     ARITHMETIC, not taste. The strip-to-identity distance is this gap PLUS the
-     grid's own `row-gap`, and the short-viewport rung tightens that row-gap to
-     `clamp(7px, 1.1svh, 10px)` — 7.92px at 1280x720, its smallest desktop
-     value. The character sheet's hierarchy guard requires >= 24px, so the
-     floor must clear 24 − 7.92 = 16.08. A 16px floor measured 23.91 and failed
-     by nine hundredths of a pixel; 18 carries the margin. */
-  --vwh-era-gap: clamp(18px, 2svh, 24px);
-  /* ⚠ THE SELECTOR MUST CLEAR THE HUD RAIL'S TOP, AND THAT OFFSET IS DERIVED.
-     The strip used to sit at the band's top, which put it at 28-72px — inside
-     the nav corner's own row (45-72px) and ~91px ABOVE the rail ladder's first
-     tick. `--hud-rail-y-start` is the rail's own `top` (landing.css), so
-     deriving from it keeps the two in step instead of pinning a magic number
-     that drifts the moment the HUD margins are retuned.
-     ⚠ ROW 1 IS `auto`, NOT A COMPUTED BAND HEIGHT. The strip's real height is
-     content-driven (44px measured) and a reserved `--vwh-era-h` under-counted
-     it by 6px at 1101x800, which came straight out of the gap below and put
-     the strip 18.8px from the identity block against a required 24. The strip
-     carries the clearance and the gap as its OWN margins instead, so the row
-     self-corrects at any strip height. Rows 2-3 — and both dossier columns —
-     follow it down; the figure column spans 1/4 and is UNCHANGED, which is
-     what keeps ADR-082 U5's "the figure does not move or resize". */
-  --vwh-era-clear: max(0px, calc(var(--hud-rail-y-start, 119px) - var(--vwh-pad-top)));
-  --vwh-pad-top: clamp(16px, 2.2svh, 28px);
+  /* ⚠ ONE SEAT HEIGHT SERVES BOTH COLUMNS (owner, 2026-08-27). ON RECORD and
+     TRANSMISSION are each bottom-anchored in their own side, so equal seats
+     put them on ONE datum; the old 248-vs-280 pair is the arithmetic reason
+     they never lined up, and no amount of eyeballing could have fixed it. */
+  --vwh-seat-h: clamp(230px, 26svh, 280px);
+  --vwh-record-seat-h: var(--vwh-seat-h);
+  --vwh-transmission-seat-h: var(--vwh-seat-h);
+  /* ── THE ERA SCRUBBER ────────────────────────────────────────────────
+     Time runs down the LEFT HUD RAIL (owner, 2026-08-27: "use our left rail
+     and really have super clear dates … some sort of scrubber that you can
+     easily scroll through"). The rail IS the track: its own ticks extend
+     OUTWARD into the margin, so its inboard side is free, and the era stops
+     hang off it. One pitch, capped top and bottom so the six read as one
+     instrument rather than marks scattered down a line.
+     ⚠ IT LIVES IN THE HUD GUTTER, NOT IN A COLUMN. That is what answers the
+     owner's own worry about "a lot of columns on lower screen sizes" — the
+     band between the rail and the reading band is already empty at every
+     capable width (113px at 1101, 164px at 1600), and the scrubber costs
+     the composition nothing. */
+  --vwh-scrub-pitch: clamp(46px, 5svh, 62px);
+  /* ⚠ THE LEAD CLEARS THE RAIL'S OWN GAUGE NUMERALS, which sit INBOARD at
+     `--hud-rail-guide-inset + 10px` (landing.css) — the same side the era
+     stops hang off. At 18px the years printed straight through the depth
+     gauge's "2" and "5". */
+  --vwh-scrub-lead: clamp(22px, 2.2vw, 34px);
+  /* ⚠ AND THE WIDTH IS THE GUTTER'S, NOT A CONSTANT. The scrubber may never
+     reach into the reading band — at a flat 116px it overran SCOPE by 2px at
+     1101x800, which is the narrowest capable rung and therefore the one that
+     decides. Derived from the same terms the band is built from, less 8px of
+     air. */
+  --vwh-scrub-w: min(
+    116px,
+    calc(var(--hud-content-inset, 161px) + clamp(20px, 3vw, 48px) - var(--hud-margin, 45px) - 8px)
+  );
+  --vwh-pad-bottom: clamp(12px, 1.8svh, 22px);
+  /* ⚠ THE IDENTITY SITS ON THE CORRIDOR'S OWN TITLE LINE (owner,
+     2026-08-27: "put it lower, like the same height we have … in our arc").
+     `--station-title-top` is the shared anchor the Arc's masthead and the
+     services masthead already derive from — landing.css says so in as many
+     words — so this is one datum for every big title on the surface rather
+     than a third number that happens to look close. */
+  --vwh-pad-top: max(clamp(16px, 2.2svh, 28px), var(--station-title-top, 84px));
+  /* ⚠ THE LEDE SEAT. Both dossier columns reserve it so SCOPE and FACTS
+     share a top datum AND the slot beneath each keeps its own, whatever the
+     era's prose length or fact count. Sized to the tallest measured lede. */
+  --vwh-lede-h: clamp(232px, 26svh, 300px);
   position: relative;
   display: grid;
   /* ⚠ THE FIGURE COLUMN IS SIZED BY THE AVAILABLE HEIGHT, NOT BY A
@@ -73,11 +89,25 @@
     minmax(0, 1fr)
     clamp(280px, calc((100svh - 96px) * 0.5625), 500px)
     minmax(0, 1fr);
-  grid-template-rows: auto auto minmax(0, 1fr);
+  /* ⚠ ROW 1 IS THE IDENTITY, CENTRED OVER THE FIGURE; ROW 2 IS EVERYTHING
+     ELSE. Taking the mast out of the left column is what finally lets SCOPE
+     and FACTS share a datum — while it lived there, the left column always
+     started one mast lower than the right, and no amount of tuning could
+     line them up. The era selector is not in the grid at all; it is the
+     scrubber on the left HUD rail. */
+  grid-template-rows: auto minmax(0, 1fr);
   column-gap: clamp(16px, 2vw, 32px);
   row-gap: clamp(10px, 1.6svh, 18px);
   height: 100svh;
-  padding: var(--vwh-pad-top) clamp(20px, 3vw, 48px) clamp(12px, 1.8svh, 22px);
+  /* ⚠ THE READING BAND IS THIS PADDING, NOT THE STATION'S. The stage box
+     spans the viewport (see voidwalker.css) so the scrubber can sit ON the
+     left HUD rail; `overflow: hidden` clips anything that tries to escape a
+     band-inset box, which is what silently ate the previous horizontal
+     axis's ends. Reproducing the station's own inset here leaves the columns
+     exactly where they were AND leaves the rail-to-band gutter the scrubber
+     lives in. */
+  padding: var(--vwh-pad-top) calc(var(--hud-content-inset, 161px) + clamp(20px, 3vw, 48px))
+    var(--vwh-pad-bottom);
   overflow: hidden;
 }
 
@@ -104,16 +134,25 @@
 .vwh__side > .vwh__panel {
   align-self: start;
 }
+/* ⚠ SCOPE LEFT, FACTS RIGHT (owner, 2026-08-27) — and since the identity
+   moved to the centre, both columns start on ROW 2 and therefore on ONE
+   DATUM. ⚠ BOTH ROWS ARE FIXED SEATS, seated from the TOP. A `1fr` lede row
+   would push the lower slot to the column's floor (which is where ON RECORD
+   and TRANSMISSION used to sit, too low — owner: "bring transmission and on
+   record to be higher"), and a content-height lede row would move that slot
+   per era, since SCOPE's prose and FACTS' 3-to-5 rows both vary. Two fixed
+   rows put all four panels on two shared datums that no era can shift. */
+.vwh__side {
+  grid-template-rows: var(--vwh-lede-h) var(--vwh-seat-h);
+}
 .vwh__side[data-side="l"] {
   grid-column: 1;
-  grid-row: 3;
-  grid-template-rows: minmax(0, 1fr) var(--vwh-record-seat-h);
+  grid-row: 2;
   justify-items: stretch;
 }
 .vwh__side[data-side="r"] {
   grid-column: 3;
-  grid-row: 2 / 4;
-  grid-template-rows: minmax(0, 1fr) var(--vwh-transmission-seat-h);
+  grid-row: 2;
   justify-items: stretch;
 }
 
@@ -123,7 +162,7 @@
    stage and drifting away from the feet as the figure scales. */
 .vwh__column {
   grid-column: 2;
-  grid-row: 1 / 4;
+  grid-row: 2;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   justify-items: center;
@@ -145,6 +184,8 @@
   position: relative;
   isolation: isolate;
   display: grid;
+  /* definite for the same reason as `.vwh__media-wrap` below */
+  grid-template-rows: minmax(0, 1fr);
   place-items: end center;
   width: min(100%, 620px);
   height: 100%;
@@ -193,6 +234,16 @@
 .vwh__media-wrap {
   position: relative;
   display: grid;
+  /* ⚠ THE ROW MUST BE DEFINITE OR THE MEDIA SIZES ITSELF. With an implicit
+     auto row, the image's `height: 100%` has no definite area to resolve
+     against, so it falls back to its intrinsic 720x1280 aspect and the row
+     grows to fit it — the figure then hangs BELOW the slot instead of
+     scaling into it. It only ever looked correct because the column was
+     always tall enough; the time axis at the foot took ~30px and exposed it
+     at 1101x800 and 1280x720 (measured: media 704 tall in a 675 slot, boots
+     27px under the projector disc). `minmax(0, 1fr)` makes the area definite
+     and `contain` does the work it was always supposed to do. */
+  grid-template-rows: minmax(0, 1fr);
   place-items: end center;
   width: 100%;
   height: 100%;
@@ -551,10 +602,10 @@
   min-width: 0;
 }
 .vwh__panel-slot[data-slot="on-record"] {
-  height: var(--vwh-record-seat-h);
+  height: var(--vwh-seat-h);
 }
 .vwh__panel-slot[data-slot="transmission"] {
-  height: var(--vwh-transmission-seat-h);
+  height: var(--vwh-seat-h);
 }
 
 /* The section head: kicker left, designator right, ONE thin rule under.
@@ -643,14 +694,29 @@
    switching loadouts cannot push FACTS down. It remains deliberately unboxed:
    the global era index and the panel head below provide enough structure. */
 .vwh__mast {
-  grid-column: 1;
-  grid-row: 2;
+  /* ⚠ CENTRED OVER THE FIGURE'S HEAD, IN ITS OWN ROW (owner, 2026-08-27:
+     "the title of my era should be centered above my head"). It spans all
+     three columns so a long role has the full band to wrap in rather than
+     the figure column's ~500px, and its own height is what clears the nav
+     corner for the two dossier columns below — which is why
+     `--vwh-text-clear` is deleted. */
+  grid-column: 1 / -1;
+  grid-row: 1;
   align-self: start;
-  justify-self: stretch;
-  text-align: left;
+  justify-self: center;
+  text-align: center;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 12px;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  justify-items: center;
+  gap: 10px 18px;
+  /* ⚠ A FIXED MEASURE, NOT `max-width`. Centred and content-sized, the mast's
+     own box changes width with the title — its left edge moved 113px between
+     "The founder" and "The Intelligence Architect", which the seat-stability
+     sweep reads as the instrument reshaping under the reader. A constant
+     measure also keeps the title's wrap point constant, which is what the
+     three-line reservation is sized against. */
+  width: min(100%, 760px);
   min-width: 0;
 }
 .vwh__mast__kicker {
@@ -887,75 +953,89 @@ a.vwh__press:focus-visible .vwh__press__headline {
   color: rgba(var(--dawn-rgb), 0.6);
 }
 
-/* ── Era selector ─────────────────────────────────────────────────────
-   One centred six-stop index gives the whole character sheet a navigation
-   axis without occupying either dossier column. It borrows the rhythm of a
-   game tab strip, not its chrome: dormant stops are neutral hairlines and
-   gold appears only as the active bearing. */
+/* ── The era scrubber ─────────────────────────────────────────────────
+   TIME RUNS DOWN THE LEFT HUD RAIL. The rail is the track — its own ticks
+   extend OUTWARD into the margin, so its inboard side is free and the era
+   stops hang off it rather than beside it. Six stops on one pitch, capped
+   top and bottom so the group reads as one instrument; the active stop
+   carries the diamond on the rail, the lit year and the era's name.
+   ⚠ IT LIVES IN THE HUD GUTTER, NOT IN A COLUMN — no fourth column, at any
+   width, which is what the owner's "a lot of columns on lower screen sizes"
+   was about. Below 1101px it reverts to the stacked strip. */
 .vwh__rail {
-  position: relative;
+  position: absolute;
+  left: var(--hud-margin, 45px);
+  top: 50%;
+  translate: 0 -50%;
+  width: var(--vwh-scrub-w);
   z-index: 2;
-  grid-column: 1 / -1;
-  grid-row: 1;
-  /* ⚠ TOP-ANCHORED WITH AN EXPLICIT CLEARANCE ABOVE — not `align-self: end`.
-     Bottom-anchoring lands the strip flush on the band's bottom edge, leaving
-     only the grid `row-gap` between it and the identity block; at 1101x800
-     that measured 8.8px against a required 24. Offsetting from the top instead
-     puts `--vwh-era-gap` BELOW the strip, where the breathing room belongs. */
-  align-self: start;
-  margin-top: var(--vwh-era-clear);
-  margin-bottom: var(--vwh-era-gap);
-  min-height: var(--vwh-era-h);
-  justify-self: center;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: clamp(8px, 0.8vw, 14px);
-  width: min(100%, clamp(600px, 52vw, 760px));
+  grid-auto-rows: var(--vwh-scrub-pitch);
   padding: 0;
+  margin: 0;
   min-width: 0;
+}
+/* the frame: two short caps, so six marks read as one scrubber */
+.vwh__rail::before,
+.vwh__rail::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 15px;
+  height: 1px;
+  background: rgba(var(--vwh-gold-rgb), 0.45);
+}
+.vwh__rail::before {
+  top: 0;
+}
+.vwh__rail::after {
+  bottom: 0;
 }
 .vwh__pip {
   position: relative;
   appearance: none;
   background: none;
   border: 0;
-  border-top: 1px solid rgba(var(--dawn-rgb), 0.14);
   min-width: 0;
   min-height: 44px;
-  padding: 7px 5px 4px;
+  padding: 0 0 0 var(--vwh-scrub-lead);
   display: grid;
+  align-content: center;
+  justify-items: start;
   gap: 2px;
-  align-content: start;
   cursor: pointer;
   text-align: left;
   color: inherit;
-  transition:
-    border-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
-    color 120ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.vwh__pip[data-on="true"] {
-  border-top-color: var(--gold, #caa554);
-}
+/* the graduation: a tick off the rail's inboard side */
 .vwh__pip::before {
   content: "";
   position: absolute;
-  top: -3px;
-  left: 1px;
-  width: 5px;
-  height: 5px;
-  background: var(--gold, #caa554);
-  transform: rotate(45deg) scale(0);
-  opacity: 0;
+  left: 0;
+  top: 50%;
+  width: 9px;
+  height: 1px;
+  background: rgba(var(--dawn-rgb), 0.26);
+  translate: 0 -50%;
   transition:
-    transform 120ms cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 120ms cubic-bezier(0.16, 1, 0.3, 1);
+    background-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
+    width 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
+/* ⚠ THE HANDLE IS A CURSOR, NOT A DIAMOND. The rail already carries ONE
+   gold diamond — the ADR-031 journey manifest's own detent — and a second
+   identical mark on the same 1000px rail is two "you are here" glyphs at two
+   different scales. The era handle is a longer, heavier gold rule instead:
+   distinct at a glance, and it reads as a scrubber's cursor on a track,
+   which is what this control is. Never a filled pill (DESIGN.md bans
+   background-fill-only active states). */
 .vwh__pip[data-on="true"]::before {
-  transform: rotate(45deg) scale(1);
-  opacity: 1;
+  width: 17px;
+  height: 2px;
+  background: var(--gold, #caa554);
 }
-.vwh__pip:hover {
-  border-top-color: rgba(var(--vwh-gold-rgb), 0.55);
+.vwh__pip:hover::before {
+  background: rgba(var(--vwh-gold-rgb), 0.6);
 }
 .vwh__pip:focus-visible {
   outline: 1px solid rgba(var(--vwh-gold-rgb), 0.78);
@@ -963,26 +1043,33 @@ a.vwh__press:focus-visible .vwh__press__headline {
 }
 .vwh__pip__year {
   font-family: var(--vwh-mono);
-  font-size: 9px;
-  line-height: 1.2;
-  letter-spacing: 0.12em;
-  color: rgba(var(--dawn-rgb), 0.5);
+  font-size: 11px;
+  line-height: 1.3;
+  letter-spacing: 0.15em;
+  white-space: nowrap;
+  color: rgba(var(--dawn-rgb), 0.45);
 }
 .vwh__pip[data-on="true"] .vwh__pip__year {
-  color: rgba(var(--vwh-gold-rgb), 0.9);
+  font-size: 12.5px;
+  color: var(--gold-ink-lit, #f0c86a);
 }
+/* ⚠ THE NAME KEEPS ITS BOX ON EVERY STOP, and only the active one inks it.
+   Hiding it with `display: none` would let the scrubber's pitch change as
+   the reader moves down it — the one thing a track may never do. */
 .vwh__pip__name {
   font-family: var(--vwh-mono);
   min-width: 0;
   font-size: 9px;
   line-height: 1.25;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.19em;
   text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.45);
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  color: rgba(var(--vwh-gold-rgb), 0.95);
+  opacity: 0;
+  transition: opacity 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .vwh__pip[data-on="true"] .vwh__pip__name {
-  color: rgba(var(--dawn-rgb), 0.95);
+  opacity: 1;
 }
 
 /* ── Reduced motion ──────────────────────────────────────────────────
@@ -999,8 +1086,9 @@ a.vwh__press:focus-visible .vwh__press__headline {
 }
 
 /* ── Narrow ──────────────────────────────────────────────────────────
-   One normal-flow reading order: selector, identity, figure, facts, scope,
-   then optional records. Side wrappers flatten only in this fallback. */
+   One normal-flow reading order: selector, identity, figure, scope, facts,
+   then optional records — the desktop's own left-column-then-right reading,
+   serialized. Side wrappers flatten only in this fallback. */
 @media (max-width: 1100px) {
   /* `display: contents` lets the stable tabpanel children participate in
      this flex order without adding a transformed wrapper. */
@@ -1010,11 +1098,34 @@ a.vwh__press:focus-visible .vwh__press__headline {
     height: auto;
     min-height: 100svh;
     gap: clamp(18px, 4vw, 30px);
+    /* the desktop stage's viewport-spanning box is a capable-path device only */
+    margin-inline: 0;
     padding: clamp(24px, 5vw, 48px) clamp(20px, 6vw, 48px);
     overflow: visible;
   }
   .vwh__rail {
     order: 1;
+    /* ⚠ GIVE BACK THE DESKTOP AXIS. Above 1101px the rail is absolutely
+       positioned against the stage so it can meet the HUD rails at their
+       feet; this rung has no HUD rails and no stage padding to escape, so
+       every one of those properties is reset rather than overridden
+       piecemeal — a half-reset leaves a rail pinned to a viewport corner. */
+    position: static;
+    inset: auto;
+    translate: none;
+    width: 100%;
+    height: auto;
+    grid-auto-rows: auto;
+  }
+  /* the scrubber's frame caps belong to the rail-mounted track alone */
+  .vwh__rail::before,
+  .vwh__rail::after {
+    content: none;
+  }
+  .vwh__pip {
+    padding: 7px 5px 4px;
+    justify-items: stretch;
+    align-content: start;
     /* ⚠ RESET THE DESKTOP BAND ALIGNMENT. `.vwh` is a COLUMN FLEX container
        here, so the desktop `align-self: end` would stop meaning "sit at the
        bottom of the era band" and start meaning "align to the right edge".
@@ -1231,16 +1342,15 @@ a.vwh__press:focus-visible .vwh__press__headline {
    comes out of the gaps rather than the figure. */
 @media (min-width: 1101px) and (max-height: 820px) {
   .vwh {
-    --vwh-record-seat-h: 210px;
-    --vwh-transmission-seat-h: 230px;
+    --vwh-seat-h: 210px;
     row-gap: clamp(7px, 1.1svh, 10px);
-    /* ⚠ RE-POINT THE TOKEN, DO NOT SET `padding-block` DIRECTLY. The era
-       band's rail clearance is derived as
-       `--hud-rail-y-start − --vwh-pad-top`, so a padding set behind the
-       token's back would put the selector back over the nav corner on
-       exactly the short viewports this rung exists to serve. */
-    --vwh-pad-top: clamp(12px, 1.7svh, 16px);
-    padding-block: var(--vwh-pad-top) clamp(8px, 1.2svh, 12px);
+    /* ⚠ RE-POINT THE TOKENS, DO NOT SET `padding-block` DIRECTLY — and that
+       now means BOTH ends. The top still has to clear the nav corner and the
+       HUD rail's first tick; the bottom is where the time axis lives, and a
+       hard-coded value there put the projector's contact plane 72px BELOW
+       the rule it is supposed to stand on (measured at 1280x720). */
+    --vwh-pad-top: max(clamp(12px, 1.7svh, 16px), var(--station-title-top, 48px));
+    padding-block: var(--vwh-pad-top) var(--vwh-pad-bottom);
   }
   .vwh__side {
     gap: clamp(12px, 2svh, 18px);
@@ -1337,6 +1447,7 @@ a.vwh__press:focus-visible .vwh__press__headline {
   .vwh__pip {
     min-height: 44px;
     padding: 0 2px;
+    justify-items: center;
     place-items: center;
     align-content: center;
     text-align: center;
@@ -1441,16 +1552,21 @@ a.vwh__press:focus-visible .vwh__press__headline {
     overflow-y: auto;
     overscroll-behavior-y: auto;
   }
-  .vwh__tabpanel[data-vwh-mobile-mode="record"] .vwh__side[data-side="l"],
-  .vwh__tabpanel[data-vwh-mobile-mode="scope"] .vwh__side[data-side="r"],
-  .vwh__tabpanel[data-vwh-mobile-mode="transmission"] .vwh__side[data-side="r"] {
+  /* ⚠ THE SIDES SWAPPED WITH ADR-082 U8 AND THIS MAPPING FOLLOWED THEM.
+     One mode is one seat and a seat is one `.vwh__side`, so the desktop
+     pairing has to keep each mode inside a single side: SCOPE and its film
+     on the left, FACTS and their press on the right. Split a mode across
+     both sides and the phone grows two seats. */
+  .vwh__tabpanel[data-vwh-mobile-mode="record"] .vwh__side[data-side="r"],
+  .vwh__tabpanel[data-vwh-mobile-mode="scope"] .vwh__side[data-side="l"],
+  .vwh__tabpanel[data-vwh-mobile-mode="transmission"] .vwh__side[data-side="l"] {
     display: flex;
   }
   .vwh__tabpanel[data-vwh-mobile-mode="scope"]
-    .vwh__side[data-side="r"]
+    .vwh__side[data-side="l"]
     > [data-vwh-mobile-panel="transmission"],
   .vwh__tabpanel[data-vwh-mobile-mode="transmission"]
-    .vwh__side[data-side="r"]
+    .vwh__side[data-side="l"]
     > [data-vwh-mobile-panel="scope"] {
     display: none;
   }
@@ -1527,14 +1643,20 @@ html[data-theme="light"] .vwh__press__outlet {
 html[data-theme="light"] .vwh__panel__head {
   border-color: rgba(138, 107, 32, 0.46);
 }
-html[data-theme="light"] .vwh__pip {
-  border-top-color: rgba(var(--dawn-rgb), 0.18);
-}
-html[data-theme="light"] .vwh__pip[data-on="true"],
-html[data-theme="light"] .vwh__pip:hover {
-  border-top-color: var(--gold-ink, #6e5216);
+/* ⚠ THE TIME AXIS IN LIGHT. The rule and the dormant graduation go to INK;
+   only the active bearing is gold, and it takes the ramp's INK rung — never
+   `--gold` itself, which measures ~1.1:1 as small text on parchment
+   (ADR-063 U2). The blanket `::before` rule this replaces made EVERY tick
+   gold, which was correct while `::before` was only the active diamond and
+   became wrong the moment it also drew the graduation. */
+html[data-theme="light"] .vwh__rail {
+  border-top-color: rgba(var(--dawn-rgb), 0.26);
 }
 html[data-theme="light"] .vwh__pip::before {
+  background: rgba(var(--dawn-rgb), 0.34);
+}
+html[data-theme="light"] .vwh__pip[data-on="true"]::before,
+html[data-theme="light"] .vwh__pip:hover::before {
   background: var(--gold-ink, #6e5216);
 }
 html[data-theme="light"] .vwh__pip[data-on="true"] .vwh__pip__year {
@@ -1559,5 +1681,5 @@ html[data-theme="light"] .vwh__panel__foot__v {
   color: rgba(var(--dawn-rgb), 0.72);
 }
 html[data-theme="light"] .vwh__pip__name {
-  color: rgba(var(--void-rgb), 0.55);
+  color: var(--gold-ink, #6e5216);
 }

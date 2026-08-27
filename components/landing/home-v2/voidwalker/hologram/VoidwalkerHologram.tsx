@@ -13,6 +13,10 @@ import { clamp01 } from "@/lib/math";
 import { CHARACTER_ERAS, resolveCharacterEraHologram } from "@/lib/voidwalker/characterEras";
 import { voidwalkerHologramProgressRef } from "@/lib/voidwalker/voidwalkerHologramClock";
 
+import {
+  voidwalkerEraScrubRef,
+  voidwalkerProgressForEra,
+} from "@/lib/voidwalker/voidwalkerHologramClock";
 import { useVoidwalkerHologramScroll } from "../../hooks/useVoidwalkerHologramScroll";
 
 import { HoloEraPanels, eraPositionLabel } from "./HoloEraPanels";
@@ -90,6 +94,21 @@ export function VoidwalkerHologram() {
   const deliberateRef = useRef(false);
 
   const stageActive = useVoidwalkerHologramScroll(rootRef);
+
+  /* ⚠ SCROLL STEPS THE ERAS BEFORE THE PAGE MOVES ON (owner, 2026-08-27).
+     The runway already exists and is already pinned, so this needs no wheel
+     capture and no second listener: the one scroll writer derives the index
+     and hands it here. A scrubbed arrival is NOT deliberate — it must not
+     bump `epoch`, or every notch of the wheel would restart the figure's
+     900ms materialize. */
+  useEffect(() => {
+    voidwalkerEraScrubRef.current = (index: number) => {
+      setEraIdx((prev) => (prev === index ? prev : index));
+    };
+    return () => {
+      voidwalkerEraScrubRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -249,6 +268,20 @@ export function VoidwalkerHologram() {
     // The runway owns initial acquisition. A deliberate era choice is the
     // only event allowed to start HoloFigure's finite 900ms materialize.
     setEpoch((value) => value + 1);
+    /* ⚠ A CLICK PINS THE SCROLL TO THAT ERA'S SLICE CENTRE. Without this the
+       scroll spy resolves the runway's own position on the very next frame
+       and overrides the choice — the casefile's browse band learned this and
+       the two halves are one contract (ADR-056 U13). Failing to find the
+       runway simply leaves the click as a plain selection. */
+    const runway = rootRef.current?.parentElement;
+    if (!runway) return;
+    const travel = runway.offsetHeight - window.innerHeight;
+    if (travel <= 0) return;
+    const top = runway.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({
+      top: top + voidwalkerProgressForEra(i, CHARACTER_ERAS.length) * travel,
+      behavior: "auto",
+    });
   };
 
   return (

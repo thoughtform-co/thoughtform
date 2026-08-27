@@ -997,6 +997,18 @@
   width: var(--hud-rail-width);
   display: flex;
   flex-direction: column;
+  /* ⚠ THE RAIL'S BOX IS DECORATIVE AND MUST NOT SWALLOW CLICKS. It is
+     `--hud-rail-width` wide (68px at 1600) and lives at z 50 inside the HUD,
+     so anything a station places in that gutter is unreachable while the box
+     takes the hit — measured against the voidwalker era scrubber (ADR-082
+     U9), whose stops sit on this rail by design and could not be clicked at
+     all. The manifest button and any other real control inside keep `auto`. */
+  pointer-events: none;
+}
+.hud__rail [data-rail-manifest-root],
+.hud__rail button,
+.hud__rail a {
+  pointer-events: auto;
 }
 .hud__rail--l {
   left: var(--hud-margin);

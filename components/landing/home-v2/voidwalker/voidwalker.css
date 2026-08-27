@@ -49,6 +49,12 @@
    no empty plane travels for ~11svh before the composition can arm. */
 #voidwalker[data-vw-mode="hologram"].station {
   padding-block: 0;
+  /* ⚠ AND THE INLINE PADDING TOO, SINCE ADR-082 U8. The time axis has to
+     reach the two HUD rails, which are positioned against the VIEWPORT; a
+     stage inset into the reading band cannot, and `overflow: hidden` clips
+     anything that tries to escape. The band moves onto the stage's own
+     padding instead, so the columns land where they always did. */
+  padding-inline: 0;
 }
 /* ADR-082 U3/U4 seam weld. The receiver publishes `ready` only after the
    portrait, FACTS dossier and era-title seats are finite under the full gate.
@@ -163,8 +169,11 @@ html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"].station {
   position: sticky;
   top: 0;
   width: 100%;
-  max-width: var(--band-max);
-  margin-inline: auto;
+  /* ⚠ NO `--band-max` CAP HERE ANY MORE — the stage BOX spans the viewport so
+     the axis can meet the rails; the reading band is the stage's own
+     `padding-inline`, which still centres the columns inside `--band-max`. */
+  max-width: none;
+  margin-inline: 0;
 }
 
 /* ── 2 · The masthead ─────────────────────────────────────────────── */

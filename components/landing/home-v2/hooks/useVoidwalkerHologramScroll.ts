@@ -19,6 +19,10 @@ import {
   type ViewportRect,
 } from "@/lib/voidwalker/aboutVoidwalkerHandoff";
 import { clamp01 } from "@/lib/math";
+import {
+  voidwalkerEraFromProgress,
+  voidwalkerEraScrubRef,
+} from "@/lib/voidwalker/voidwalkerHologramClock";
 
 import { ABOUT_DECK_STAGE, VOIDWALKER_HOLOGRAM_STAGE } from "../unifiedServicesInstrument";
 
@@ -90,6 +94,10 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
     let currentEnter = -1;
     let currentExit = -1;
     let currentMorph = -1;
+    /* The era the runway last resolved to. It is an INPUT to the next
+       derivation, not just a cache — the hysteresis needs to know which side
+       of a slice boundary the reader came from. */
+    let currentEra = 0;
     let targetsDirty = true;
     let anchorFrame = 0;
     let pendingInitialAnchor = window.location.hash === "#voidwalker";
@@ -178,6 +186,7 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
       engaged = false;
       interactive = true;
       currentEnter = currentExit = currentMorph = -1;
+      currentEra = 0;
       resetProgress();
     };
 
@@ -293,6 +302,7 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
         publishTargets(root, capable);
       }
 
+      const eraCount = root.querySelectorAll("[data-vwh-era-tab]").length || 1;
       const runway = root.parentElement; // .vw--hologram
       if (!runway) return;
       const vh = window.innerHeight || 1;
@@ -330,8 +340,19 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
         currentMorph = morph;
       }
 
+      /* ⚠ SCROLL IS THE ERA SELECTOR, and only while the sheet is actually
+         interactive. Deriving it here keeps ONE scroll writer on this
+         surface — a second listener stepping eras would be the two-clocks
+         defect this station has already paid for once (ADR-082 U1). */
       const nextInteractive =
         morph >= INTERACTIVE_MORPH && enter >= INTERACTIVE_ENTER && exit <= INTERACTIVE_EXIT;
+      if (nextInteractive) {
+        const nextEra = voidwalkerEraFromProgress(progress, eraCount, currentEra);
+        if (nextEra !== currentEra) {
+          currentEra = nextEra;
+          voidwalkerEraScrubRef.current?.(nextEra);
+        }
+      }
       if (nextInteractive !== interactive) {
         root.inert = !nextInteractive;
         root.toggleAttribute("data-vwh-interactive", nextInteractive);

@@ -99,7 +99,7 @@ function Facts({ era }: { era: CharacterEra }) {
   const facts = era.facts ?? [];
   if (facts.length === 0) return null;
   return (
-    <Panel kicker="Facts" tag={era.short} handoffTarget="dossier" mobilePanel="record">
+    <Panel kicker="Facts" tag={era.short} mobilePanel="record">
       <dl className="vwh__facts">
         {facts.map((f) => (
           <div className="vwh__facts__row" key={f.k}>
@@ -307,39 +307,19 @@ export function HoloEraPanels({
           })}
         </div>
 
-        <div className="vwh__side" data-side="l" data-vwh-region="record">
-          <Facts era={era} />
-
-          <div
-            className="vwh__panel-slot"
-            data-slot="on-record"
-            data-empty={press.length === 0}
-            data-vwh-region="on-record"
-            data-vwh-mobile-panel="record"
-            aria-hidden={press.length === 0 || undefined}
-          >
-            {press.length > 0 ? (
-              <Panel kicker="On record">
-                <div className="vwh__press-stack">
-                  {press.map((p) => (
-                    <PressCard key={`${p.outlet}-${p.headline.slice(0, 24)}`} press={p} />
-                  ))}
-                </div>
-              </Panel>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="vwh__side" data-side="r" data-vwh-region="scope">
+        {/* LEFT — the narrative: identity above, the era's own prose, and the
+            film of it. SCOPE carries the handoff target because it now holds
+            the top-left seat the About dossier flies into.
+            ⚠ THE LOWER SLOTS PAIR BY MODE, NOT BY TASTE: the phone gives each
+            of RECORD / SCOPE / TRANSMISSION one seat, and a seat is one
+            `.vwh__side`. Scope with its film and facts with their press is
+            what keeps that mapping one-to-one after the columns swapped. */}
+        <div className="vwh__side" data-side="l" data-vwh-region="scope">
           {/* The era itself: who this version was, and what it did. The
               record's own prose — this is not the #about bio restated. */}
-          <Panel kicker="Scope" mobilePanel="scope">
+          <Panel kicker="Scope" handoffTarget="dossier" mobilePanel="scope">
             <p className="vwh__panel__motto">{era.motto}</p>
             <p className="vwh__panel__body">{beat ? plain(beat.body) : era.motto}</p>
-            <p className="vwh__panel__foot">
-              <span className="vwh__panel__foot__k">Loadout</span>
-              <span className="vwh__panel__foot__v">{era.loadout}</span>
-            </p>
           </Panel>
 
           <div
@@ -380,6 +360,34 @@ export function HoloEraPanels({
                     ) : null}
                   </span>
                 </button>
+              </Panel>
+            ) : null}
+          </div>
+        </div>
+
+        {/* RIGHT — the register: the facts, and who reported them.
+            ⚠ THE LOADOUT IS DELETED (owner, 2026-08-27). What Vince wore is
+            in `era.loadout` and stays there for the phone dossier; on the
+            capable sheet it was a third thing competing with the two the
+            reader came for. */}
+        <div className="vwh__side" data-side="r" data-vwh-region="record">
+          <Facts era={era} />
+
+          <div
+            className="vwh__panel-slot"
+            data-slot="on-record"
+            data-empty={press.length === 0}
+            data-vwh-region="on-record"
+            data-vwh-mobile-panel="record"
+            aria-hidden={press.length === 0 || undefined}
+          >
+            {press.length > 0 ? (
+              <Panel kicker="On record">
+                <div className="vwh__press-stack">
+                  {press.map((p) => (
+                    <PressCard key={`${p.outlet}-${p.headline.slice(0, 24)}`} press={p} />
+                  ))}
+                </div>
               </Panel>
             ) : null}
           </div>

@@ -578,3 +578,263 @@ remain mounted and mobile visibility is CSS-only, so the capable desktop grid,
 handoff targets and measurements do not move. Transmission is disabled when an
 era has no authored film. This exception does not become accepted until the
 owner approves the rendered phone direction.
+
+---
+
+## Update 8 — the era selector becomes the stage's TIME AXIS (2026-08-27)
+
+**Status: Accepted (owner, 2026-08-27).** Supersedes Update 5's centred top
+strip and Update 6 §4's rail-clearance band; the identity title, the figure
+column, the handoff targets and the entry/exit clocks are untouched.
+
+### The ruling
+
+The owner picked direction 01 from the seven-direction canvas and gave it its
+argument:
+
+> "if our rail is like here about navigating through space, left and right
+> vertical, then the horizontal one at the bottom can be through time,
+> space-time. I think it's nice. Let's just make it elegant, and let's make
+> sure that it touches the left and right rail. I think we can make it more
+> compact."
+
+> "I don't think we need the loadouts. I think we need to put the scope on
+> the left side and the facts on the right side."
+
+So the selector is not a tab strip parked in a band — it is **the stage's
+third rail**. The two vertical HUD rails carry SPACE; this one carries TIME,
+it meets them at their own feet, and the projector's contact plane sits on its
+rule: **Vince stands on the year.**
+
+### What changed
+
+- **`.vwh__rail` is absolutely positioned at the stage's foot.** Its rule
+  lands on `--vwh-axis-foot`, which MIRRORS `.hud__rail`'s own `bottom`
+  expression in landing.css verbatim. ⚠ The two must move together or the axis
+  stops touching the rails it is drawn to meet.
+- ⚠ **THE ESCAPE IS MEASURED, NOT NAMED.** The stage sits inside the station's
+  reading band, so an axis at `--hud-margin` against it lands short. The first
+  cut subtracted `--hud-content-inset` — and overshot by 36px at 1600, because
+  the hologram mode **re-pads the station** (197px measured against the token's
+  161). `(100vw - 100%) / 2` asks the live box instead of the recipe and is
+  correct at every width. It carries the scrollbar, so the rule overshoots the
+  rail tips by ~3px rather than falling short; a GAP is the failure that reads
+  as broken, an overlap at a hairline tip does not.
+- **The stops are inset from the rule's ends** (`--vwh-axis-inset`) so the
+  first and last year clear the bottom-left brandmark lockup and the
+  bottom-right control cluster. A graduated axis need not start at the frame
+  edge: the rule is the instrument, the stops are its reading.
+- **Dormant stops are a tick and a year; the active one is a diamond ON the
+  rule** plus the lit year and — alone on the surface — the era's NAME. ⚠ The
+  name keeps its box on every stop and only the active one inks it, so the
+  band cannot change height as the reader moves along it.
+- ⚠ **`--vwh-pad-top` ABSORBED THE CLEARANCE THE STRIP USED TO CARRY.** With
+  the band gone the identity would have started at 28px, behind the nav
+  corner. It is `max(<its old clamp>, --hud-rail-y-start)` now, so the sheet's
+  top datum IS the HUD rail's top and the composition lines up with the frame
+  around it. `--vwh-era-clear`, `--vwh-era-h` and `--vwh-era-gap` are deleted.
+- **SCOPE moves to the left column under the identity; FACTS moves right.**
+  The handoff target follows the seat, not the content: `dossier` is on the
+  panel that holds the top-left position, which is now Scope.
+- ⚠ **ONE SEAT HEIGHT FOR BOTH COLUMNS (`--vwh-seat-h`).** ON RECORD and
+  TRANSMISSION are each bottom-anchored in their own side, so equal seats put
+  them on ONE datum. The old `248` / `280` pair is the arithmetic reason they
+  never lined up — that was the owner's "the text placement is inconsistent",
+  and no amount of eyeballing could have fixed it. The identity and FACTS
+  share row 1; SCOPE hangs below the identity in the same column.
+- **The loadout is deleted from the sheet.** `era.loadout` stays in the record.
+  ⚠ It therefore also leaves ADR-083's phone SCOPE mode, which named "motto,
+  record and loadout" — that sentence is now wrong and 083 is amended with it.
+
+### Three traps this pass paid for
+
+⚠ **`overflow: hidden` ATE THE RULE, AND EVERY RECT-BASED GUARD SAID IT WAS
+FINE.** The stage is capped to `--band-max` and centred, so the axis escaping
+to the rails was clipped at the stage's own edge: the layout box measured
+`42..1552` — correct — while the PAINTED ink ran `197..1397`, reaching neither
+rail. `getBoundingClientRect` reports the layout box, not what survives an
+ancestor's clip, so a geometry assertion cannot see this at all. It was caught
+by **sampling the screenshot's pixel row** and finding two gaps. The fix is
+structural: in hologram mode the station drops its inline padding and the stage
+drops the `--band-max` cap, so the BOX spans the viewport and the reading band
+becomes the stage's own `padding-inline` — the columns land where they always
+did and the axis needs no escape at all.
+
+⚠ **THE FIGURE ONLY EVER FIT BY LUCK.** `.vwh__media-wrap` and `.vwh__slot`
+had implicit auto grid rows, so the image's `height: 100%` had no definite
+area to resolve against and fell back to its intrinsic 720x1280 — the row then
+grew to fit it. Every column had been tall enough to hide that. The axis took
+~30px at the foot and the figure hung _below_ its own projector (measured:
+media 704 tall in a 675 slot, boots 27px under the disc). Both rows are
+`minmax(0, 1fr)` now and `contain` does the work it was always supposed to do.
+
+⚠ **THE NAV CLEARANCE MUST NOT COME OUT OF `--vwh-pad-top`.** The first cut
+paid for it there, which is correct for the text and wrong for the FIGURE —
+the column spans every row, so it lost 107px at 1920x1080 on top of the ~99px
+the axis already takes at the foot. `--vwh-text-clear` is padding on the mast
+and the right side instead; row 1 grows, the column's top does not move.
+
+### The rung trap
+
+⚠ **THE SHORT-VIEWPORT RUNG SET `padding-block` DIRECTLY.** Its own comment
+warned against exactly that for the TOP, and the BOTTOM was hard-coded anyway
+— which put the projector's contact plane **72px below the rule it is supposed
+to stand on** at 1280x720, while every other measurement stayed green. Both
+ends re-point their token now. A rung that hard-codes one half of a derived
+pair is a rung that will get the other half wrong later.
+
+### Verifying
+
+`tests/visual/voidwalker-character-sheet.spec.ts` inverts rather than deletes
+the old assertions — the selector must now sit BELOW the identity and the
+scope, meet both rail feet, and carry the disc on its rule; SCOPE is pinned
+LEFT and FACTS RIGHT from both ends so a silent swap fails. Measured green at
+1600x1256, 1280x720 and 1101x800: axis on the rail feet, disc on the rule,
+identity and FACTS on one datum, both seats on one datum, nothing clipped.
+
+---
+
+## Update 9 — time runs down the LEFT RAIL, the identity centres (2026-08-27)
+
+**Status: Accepted (owner, 2026-08-27).** Supersedes Update 8's horizontal
+time axis outright — the axis is deleted, not flagged off — and moves the
+identity out of the left column.
+
+### The ruling
+
+> "the horizontal line doesn't really make sense. What I would like to do is
+> actually use our left rail and really have super clear dates … I'm wondering
+> whether you can implement the dates in some sort of subtle frame, like some
+> sort of scrubber that you can easily scroll through. That way, we really
+> leverage our left rail."
+
+> "the title of my era should be centered above my head, and that way we can
+> horizontally align scope and facts and also bring transmission and on record
+> to be higher."
+
+### What changed
+
+- **`.vwh__rail` is a VERTICAL scrubber on the left HUD rail.** The rail IS
+  the track: its own ticks extend OUTWARD into the margin, so its inboard side
+  is free and the era stops hang off it rather than sitting beside it. Six
+  stops on one pitch, capped top and bottom so the group reads as one
+  instrument; the active stop carries the lit year and the era's name.
+- ⚠ **IT LIVES IN THE HUD GUTTER, WHICH IS WHY IT COSTS NO COLUMN.** That was
+  the owner's own worry — "we can also place it next to our left rail, but
+  then we have a lot of columns, especially on lower screen sizes". The band
+  between the rail and the reading band is already empty at every capable
+  width, and `--vwh-scrub-w` is DERIVED from the same terms the band is built
+  from, so the scrubber can never reach into it. A flat 116px overran SCOPE by
+  2px at 1101x800, the narrowest capable rung and therefore the one that
+  decides.
+- ⚠ **THE HANDLE IS A CURSOR, NOT A DIAMOND.** The rail already carries one
+  gold diamond — the ADR-031 journey manifest's detent — and a second
+  identical glyph on the same rail is two "you are here" marks at two
+  different scales. The era handle is a longer, heavier gold rule.
+- ⚠ **THE LEAD CLEARS THE RAIL'S OWN GAUGE NUMERALS**, which sit INBOARD at
+  `--hud-rail-guide-inset + 10px` — the same side the stops hang off. At 18px
+  the years printed straight through the depth gauge's "2" and "5".
+- **The identity is centred over the figure in its own row**, spanning all
+  three columns at a FIXED measure. ⚠ `max-width` is wrong here: centred and
+  content-sized, the mast's left edge moved **113px** between "The founder"
+  and "The Intelligence Architect", which the seat-stability sweep correctly
+  reads as the instrument reshaping under the reader.
+- **That is what finally lets SCOPE and FACTS share a datum.** While the mast
+  lived in the left column, that column always started one mast lower than the
+  right; no tuning could line them up. Both columns are now row 2.
+- ⚠ **BOTH DOSSIER ROWS ARE FIXED SEATS, SEATED FROM THE TOP**
+  (`--vwh-lede-h` + `--vwh-seat-h`). A `1fr` lede row pushes the lower slot to
+  the column's floor — where ON RECORD and TRANSMISSION used to sit, which is
+  the owner's "bring transmission and on record to be higher" — and a
+  content-height lede row moves that slot per era, since SCOPE's prose and
+  FACTS' 3-to-5 rows both vary.
+- **`--vwh-pad-top` takes the HUD's own top margin as its floor.** The identity
+  clears the glyph row and the nav corner HORIZONTALLY (it sits in the top
+  band's empty middle), so it needs no vertical clearance from either — but it
+  should not sit 28px off the viewport edge.
+
+### The trap this pass paid for
+
+⚠ **`.hud__rail` SWALLOWED EVERY CLICK IN ITS OWN GUTTER.** The rail's box is
+`--hud-rail-width` wide (68px at 1600) and sits at z 50 inside the HUD; it had
+`pointer-events: auto` with no hover, cursor or click rule of its own. Anything
+a station places in that gutter is therefore unreachable — the scrubber's stops
+could not be clicked at all. The box is `pointer-events: none` now and the
+manifest button (its one real control) keeps `auto`. This is a sitewide fix in
+`landing.css`: a decorative container that intercepts pointer events over other
+UI is a bug wherever it happens to sit.
+
+### Verifying
+
+`tests/visual/voidwalker-character-sheet.spec.ts` inverts rather than deletes
+U8's assertions: `tabRows` is 6 (a VERTICAL scrubber) where it was 1, the
+selector rides the rail's x and must stay outboard of SCOPE's left edge, the
+years must clear the depth gauge, and the identity must be centred over the
+figure with both ledes and both seats on their own shared datums.
+
+---
+
+## Update 10 — scroll steps the eras, and the title takes the station line (2026-08-27)
+
+**Status: Accepted (owner, 2026-08-27).** Extends Update 9; nothing in it is
+reversed.
+
+### The rulings
+
+> "The intelligence architect and the title, I would put it lower, like the
+> same height we have, like 'Navigate the intelligence' in our arc."
+
+> "when you're in the Voidwalker section, you should scroll through the eras
+> before scrolling to the next section."
+
+### The title sits on the corridor's own title line
+
+`--vwh-pad-top` floors at **`--station-title-top`** — the shared anchor
+`landing.css` already declares for the corridor's station headers and the
+services masthead, whose own comment says the two surfaces' big titles derive
+from the SAME line. So this is one datum for every big title on the surface
+rather than a third number that happens to measure close. The stage's top
+inset IS that line; the figure pays ~39px for it, which is the cost of the
+title being where the Arc's is.
+
+### Scroll IS the era selector
+
+⚠ **NO WHEEL CAPTURE, AND THAT IS THE POINT.** The stage is already a pinned
+260svh runway with one scroll writer. Deriving the era from the runway's own
+progress means the reader steps through all six on the way past and the page
+continues normally at the end — no trap, no second listener, and no gesture
+reducer to get wrong. `#services` proved the trap case is real; this surface
+does not need it.
+
+- **`VOIDWALKER_ERA_BAND` is `[0.16, 0.72]`** — inside the hold, clear of the
+  entry (ends 0.14) and the exit (begins 0.74), so an era can never advance
+  while the sheet is assembling or already clearing.
+- ⚠ **A CLICK PINS THE SCROLL TO THAT ERA'S SLICE CENTRE.** Without it the
+  writer resolves the runway's position on the very next frame and overrides
+  the choice. The casefile's browse band learned this and the two halves are
+  ONE contract (ADR-056 U13). `voidwalkerProgressForEra` is the inverse of
+  `voidwalkerEraFromProgress`, and the round trip is pinned from every
+  starting era, not just the neighbouring one.
+- ⚠ **`current` IS AN INPUT TO THE DERIVATION, NOT A CACHE.** The hysteresis
+  needs to know which side of a slice boundary the reader came from, or a
+  stop held exactly on an edge flickers between two eras.
+- ⚠ **A SCRUBBED ARRIVAL IS NOT DELIBERATE** — it must not bump `epoch`, or
+  every notch of the wheel restarts the figure's finite 900ms materialize.
+  Only a click does.
+- `voidwalkerEraScrubRef` is a SLOT, not a store, for the same reason
+  `voidwalkerHologramProgressRef` is: one writer, one reader, and no render
+  subscribes to a scroll frame.
+
+### Verifying
+
+`tests/lib/voidwalker-era-band.test.ts` (8 cases) pins the band inside both
+clocks, the forward and reverse walks hitting all six in order, the boundary
+hold, the clamp outside the band, and the click round trip from every era.
+Measured live at 1600×1256: scrolling the runway walks
+`loop → thoughtform → genai → azeroth → the-crowd → creatives`, and clicking
+2014 then nudging 12px leaves it on 2014.
+
+**Left open:** the band gives each era ~15svh, about two wheel notches. If
+that reads as rushed, the runway lengthens — but 260svh is tied to the
+ADR-082 U3 `-120svh` handoff overlap and the ADR-030 §6 cover lockstep, so
+that is its own pass, not a constant to nudge.

@@ -50,7 +50,9 @@ buttons disappear so all four direct case stops remain at least 44px wide.
 The order is era identity → full-body figure/projector → one-row six-era rail →
 `RECORD / SCOPE / TRANSMISSION` → one fixed-height dossier seat. `RECORD`
 contains FACTS and any authored press; `SCOPE` contains motto, record and
-loadout; `TRANSMISSION` contains the authored film and is disabled when no film
+loadout (⚠ the loadout left the sheet entirely with ADR-082 U8 — `era.loadout`
+stays in the registry and letters nowhere, so `SCOPE` is motto + record now);
+`TRANSMISSION` contains the authored film and is disabled when no film
 exists. Selecting a non-film era while Transmission is active returns the seat
 to Record.
 

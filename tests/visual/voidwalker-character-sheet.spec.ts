@@ -101,10 +101,28 @@ test.describe("Voidwalker editorial character sheet", () => {
             selector: rect("[data-vwh-region='era-selector']"),
             identity: rect("[data-vwh-region='identity']"),
             title: rect("[data-vwh-region='era-title']"),
-            facts: rect("[data-vwh-handoff-target='dossier']"),
+            dossier: rect("[data-vwh-handoff-target='dossier']"),
+            /* ⚠ THE MAST'S BOX TOP IS NOT ITS CONTENT TOP — it carries
+               `--vwh-text-clear` as padding so the identity clears the nav
+               corner without the figure column paying for it. The datum the
+               two columns share is the first INKED line, not the box. */
+            identityInk: rect(".vwh__mast__kicker"),
+            factsPanel: rect("[data-vwh-region='record'] .vwh__panel"),
+            scopePanel: rect("[data-vwh-region='scope'] .vwh__panel"),
             figure: rect("[data-vwh-region='figure']"),
             scope: rect("[data-vwh-region='scope']"),
             platform: rect("[data-vwh-region='platform']"),
+            hudRailL: (() => {
+              const t = document.querySelector(".hud__rail--l .hud__rail__track");
+              return t ? t.getBoundingClientRect() : null;
+            })(),
+            hudRailR: (() => {
+              const t = document.querySelector(".hud__rail--r .hud__rail__track");
+              return t ? t.getBoundingClientRect() : null;
+            })(),
+            onRecord: rect("[data-slot='on-record']"),
+            transmission: rect("[data-slot='transmission']"),
+            discBottom: discRect.bottom,
             slotBottom: slotRect.bottom,
             mediaFill: {
               widthDelta: Math.abs(mediaRect.width - slotRect.width),
@@ -122,20 +140,49 @@ test.describe("Voidwalker editorial character sheet", () => {
         });
 
         expect(geometry.titleText).toBe("The Intelligence Architect");
-        expect(geometry.tabRows).toBe(1);
+        /* ⚠ SIX ROWS, NOT ONE. The selector is a VERTICAL scrubber on the
+           left rail since ADR-082 U9; `1` was the horizontal strip's own
+           assertion and is inverted here rather than deleted, so a strip
+           returning to a single row fails loudly. */
+        expect(geometry.tabRows).toBe(6);
+        /* ⚠ THE SELECTOR IS THE SCRUBBER ON THE LEFT HUD RAIL (ADR-082 U9) —
+           not a band above the identity, and not the horizontal axis at the
+           foot that U8 tried. It rides the rail's own x in the HUD gutter,
+           OUTBOARD of both dossier columns, so it adds no fourth column at
+           any width. Pinned from both ends: a strip drifting back into the
+           grid fails here. */
+        if (geometry.hudRailL) {
+          expectNear(
+            geometry.selector.left,
+            geometry.hudRailL.left,
+            3,
+            "scrubber rides the left rail"
+          );
+        }
+        expect(geometry.selector.right).toBeLessThanOrEqual(geometry.scopePanel.left);
+        /* ⚠ THE IDENTITY IS CENTRED OVER THE FIGURE (owner, 2026-08-27: "the
+           title of my era should be centered above my head"), which is what
+           frees both columns onto ONE datum — while the mast lived in the
+           left column, that column always started one mast lower than the
+           right and no tuning could line them up. */
         expectNear(
-          geometry.selector.left + geometry.selector.width / 2,
+          geometry.identity.left + geometry.identity.width / 2,
           geometry.figure.left + geometry.figure.width / 2,
-          1,
-          "centred era index"
+          2,
+          "identity centred over the figure"
         );
-        expect(geometry.selector.bottom).toBeLessThanOrEqual(geometry.identity.top + 1);
-        expect(geometry.identity.top - geometry.selector.bottom).toBeGreaterThanOrEqual(24);
-        expectNear(geometry.identity.top, geometry.scope.top, 1, "shared dossier datum");
-        expect(geometry.identity.bottom).toBeLessThanOrEqual(geometry.facts.top + 1);
-        expect(geometry.title.left).toBeLessThan(geometry.figure.left);
-        expect(geometry.facts.right).toBeLessThanOrEqual(geometry.figure.left + 1);
-        expect(geometry.scope.left).toBeGreaterThanOrEqual(geometry.figure.right - 1);
+        expect(geometry.identity.bottom).toBeLessThanOrEqual(geometry.scopePanel.top + 1);
+        expect(geometry.identity.bottom).toBeLessThanOrEqual(geometry.figure.top + 1);
+        /* Both ledes on one datum, both seats on another — the arithmetic the
+           old 248-vs-280 seat pair made impossible. */
+        expectNear(geometry.scopePanel.top, geometry.factsPanel.top, 1.5, "shared lede datum");
+        expectNear(geometry.onRecord.top, geometry.transmission.top, 1, "shared seat datum");
+        // the handoff target rides whichever panel holds the top-left seat
+        expectNear(geometry.dossier.top, geometry.scopePanel.top, 1, "dossier target on scope");
+        /* ⚠ SCOPE LEFT, FACTS RIGHT (owner, 2026-08-27) — pinned from both
+           ends so a silent swap fails. */
+        expect(geometry.scopePanel.right).toBeLessThanOrEqual(geometry.figure.left + 1);
+        expect(geometry.factsPanel.left).toBeGreaterThanOrEqual(geometry.figure.right - 1);
         expect(geometry.platform.left + geometry.platform.width / 2).toBeCloseTo(
           geometry.figure.left + geometry.figure.width / 2,
           1
@@ -330,11 +377,15 @@ test.describe("Voidwalker editorial character sheet", () => {
             modeHeights: modes.map((element) => element.getBoundingClientRect().height),
             leftDisplay: getComputedStyle(left).display,
             rightDisplay: getComputedStyle(right).display,
-            scopeDisplay: getComputedStyle(
-              required(".vwh__side[data-side='r'] > [data-vwh-mobile-panel='scope']")
-            ).display,
+            /* ⚠ ADDRESSED BY MOBILE PANEL, NOT BY SIDE. ADR-082 U8 swapped the
+               columns (scope left, facts right); a selector that names the
+               side is asserting where a panel HAPPENS to live rather than
+               what it is, and it broke on a change that did not touch the
+               phone at all. */
+            scopeDisplay: getComputedStyle(required(".vwh__side > [data-vwh-mobile-panel='scope']"))
+              .display,
             transmissionDisplay: getComputedStyle(
-              required(".vwh__side[data-side='r'] > [data-vwh-mobile-panel='transmission']")
+              required(".vwh__side > [data-vwh-mobile-panel='transmission']")
             ).display,
             activeMode: required(".vwh__tabpanel").dataset.vwhMobileMode,
             activeSeat: {
@@ -383,8 +434,11 @@ test.describe("Voidwalker editorial character sheet", () => {
         );
       }
       expect(initial.activeMode).toBe("record");
-      expect(initial.leftDisplay).not.toBe("none");
-      expect(initial.rightDisplay).toBe("none");
+      /* ⚠ RECORD LIVES ON THE RIGHT SINCE ADR-082 U8 — the columns swapped
+         (scope left, facts right) and the phone's one-mode-one-seat mapping
+         followed them. Asserted from BOTH ends so a half-swap fails. */
+      expect(initial.rightDisplay).not.toBe("none");
+      expect(initial.leftDisplay).toBe("none");
       expect(initial.activeSeat.overscrollY).toBe("auto");
       await expect(page.getByRole("button", { name: "record", exact: true })).toHaveAttribute(
         "aria-pressed",
@@ -401,8 +455,8 @@ test.describe("Voidwalker editorial character sheet", () => {
       await settle(page);
       const scope = await readPhone();
       expect(scope.activeMode).toBe("scope");
-      expect(scope.leftDisplay).toBe("none");
-      expect(scope.rightDisplay).not.toBe("none");
+      expect(scope.rightDisplay).toBe("none");
+      expect(scope.leftDisplay).not.toBe("none");
       expect(scope.scopeDisplay).not.toBe("none");
       expect(scope.transmissionDisplay).toBe("none");
       expectNear(scope.activeSeat.top, initial.activeSeat.top, 1, `${label}: dossier seat top`);
@@ -560,7 +614,9 @@ test.describe("Voidwalker editorial character sheet", () => {
    * rail starts at `--hud-rail-y-start`. The figure column spans the whole grid
    * and must NOT have moved to buy that clearance.
    */
-  test("the era strip clears the rail without moving the figure", async ({ page }, testInfo) => {
+  test("the era scrubber rides the left rail without taking a column", async ({
+    page,
+  }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "explicit Chromium viewport matrix");
 
     for (const viewport of DESKTOP_VIEWPORTS) {
@@ -568,28 +624,62 @@ test.describe("Voidwalker editorial character sheet", () => {
       const geom = await page.evaluate(() => {
         const q = (s: string) => document.querySelector<HTMLElement>(s);
         const strip = q(".vwh__era-selector");
-        const rail = q(".hud__rail");
         const figure = q(".vwh__column");
-        if (!strip || !rail || !figure) throw new Error("Missing strip, rail or figure");
+        if (!strip || !figure) throw new Error("Missing strip or figure");
         const station = q(".vwh")!.getBoundingClientRect();
+        const stripRect = strip.getBoundingClientRect();
+        const trackL = q(".hud__rail--l .hud__rail__track")!.getBoundingClientRect();
+        const gauge = Array.from(
+          document.querySelectorAll<HTMLElement>(".hud__rail--l .hud__rail__label")
+        ).map((el) => el.getBoundingClientRect());
+        const years = Array.from(document.querySelectorAll<HTMLElement>(".vwh__pip__year")).map(
+          (el) => el.getBoundingClientRect()
+        );
         return {
-          stripTop: strip.getBoundingClientRect().top,
-          railTop: rail.getBoundingClientRect().top,
+          strip: {
+            left: stripRect.left,
+            right: stripRect.right,
+            top: stripRect.top,
+            bottom: stripRect.bottom,
+          },
+          railLeft: trackL.left,
+          railTop: trackL.top,
+          railBottom: trackL.bottom,
+          gaugeRight: gauge.length ? Math.max(...gauge.map((g) => g.right)) : null,
+          yearLeft: years.length ? Math.min(...years.map((y) => y.left)) : null,
+          yearTops: years.map((y) => y.top),
+          scopeLeft: q("[data-vwh-region='scope'] .vwh__panel")!.getBoundingClientRect().left,
           figureTop: figure.getBoundingClientRect().top,
           stationTop: station.top,
         };
       });
       const label = `${viewport.width}x${viewport.height}`;
-      // The clearance is derived as `--hud-rail-y-start − --vwh-pad-top`, so
-      // the strip lands ON the rail's first tick by construction and the two
-      // can disagree by a sub-pixel of float rounding (measured 0.0156px at
-      // 1101x800). What must never return is the ~91px it sat ABOVE the rail,
-      // up in the nav corner's own row.
-      expect(geom.stripTop, `${label}: strip must sit at or below the rail top`).toBeGreaterThan(
-        geom.railTop - 0.5
+
+      /* ⚠ THE RAIL IS THE TRACK. Its own ticks extend OUTWARD into the margin,
+         so the era stops hang off its inboard side — that is what makes this
+         "leverage the left rail" rather than a second instrument beside it. */
+      expectNear(geom.strip.left, geom.railLeft, 3, `${label}: scrubber on the rail`);
+      /* ⚠ AND IT CLEARS THE RAIL'S OWN GAUGE NUMERALS, which sit INBOARD at
+         `--hud-rail-guide-inset + 10px` — the same side. At an 18px lead the
+         years printed straight through the depth gauge's "2" and "5". */
+      if (geom.gaugeRight !== null && geom.yearLeft !== null) {
+        expect(geom.yearLeft, `${label}: years clear the depth gauge`).toBeGreaterThan(
+          geom.gaugeRight
+        );
+      }
+      /* ⚠ IT COSTS THE COMPOSITION NO COLUMN — it lives in the HUD gutter,
+         outboard of the reading band. That is the owner's own worry about
+         "a lot of columns on lower screen sizes", pinned. */
+      expect(geom.strip.right, `${label}: scrubber outside the reading band`).toBeLessThanOrEqual(
+        geom.scopeLeft
       );
-      // The figure spans grid-row 1/4, so the band's growth cannot push it down.
-      expectNear(geom.figureTop, geom.stationTop, 40, `${label}: figure top unmoved`);
+      // six stops on one pitch, in order, inside the rail's own extent
+      expect(geom.yearTops.length).toBe(6);
+      for (let i = 1; i < geom.yearTops.length; i += 1) {
+        expect(geom.yearTops[i]).toBeGreaterThan(geom.yearTops[i - 1]);
+      }
+      expect(geom.strip.top).toBeGreaterThan(geom.railTop - 1);
+      expect(geom.strip.bottom).toBeLessThan(geom.railBottom + 1);
     }
   });
 });

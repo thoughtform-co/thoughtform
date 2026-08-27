@@ -1,0 +1,121 @@
+{
+  "artboards": [
+    {
+      "file": "Current.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1600,
+      "h": 1256
+    },
+    {
+      "file": "Main.dc.html",
+      "x": 1720,
+      "y": 0,
+      "w": 1600,
+      "h": 1256
+    },
+    {
+      "file": "Shoulders.dc.html",
+      "x": 3440,
+      "y": 0,
+      "w": 1600,
+      "h": 1256
+    },
+    {
+      "file": "IndexColumn.dc.html",
+      "x": 5160,
+      "y": 0,
+      "w": 1600,
+      "h": 1256
+    },
+    {
+      "file": "DatedSpine.dc.html",
+      "x": 0,
+      "y": 1456,
+      "w": 1600,
+      "h": 1256
+    },
+    {
+      "file": "Console.dc.html",
+      "x": 1720,
+      "y": 1456,
+      "w": 1600,
+      "h": 1256
+    },
+    {
+      "file": "CartridgeDeck.dc.html",
+      "x": 3440,
+      "y": 1456,
+      "w": 1600,
+      "h": 1256
+    },
+    {
+      "file": "RightLadder.dc.html",
+      "x": 5160,
+      "y": 1456,
+      "w": 1600,
+      "h": 1256
+    }
+  ],
+  "annotations": [
+    {
+      "id": "note-current",
+      "x": 8,
+      "y": -168,
+      "w": 620,
+      "text": "AS SHIPPED — the baseline.\nFive blocks on five unrelated baselines: the left stack starts at grid-row 3 and the right at row 2, and both centre their contents in tracks of different heights, so their tops can never relate."
+    },
+    {
+      "id": "note-01",
+      "x": 1728,
+      "y": -168,
+      "w": 620,
+      "text": "01 · FOOTER TRANSPORT — PICKED, and now shipped.\nThe axis is the stage's THIRD RAIL: the two vertical HUD rails carry space, this one carries time. It meets them at their own feet, and the projector's contact plane sits on it — Vince stands on the year.\nScope left, facts right. Loadout dropped. The rule runs rail to rail; the stops are inset so the first and last year clear the brandmark and the control cluster."
+    },
+    {
+      "id": "note-02",
+      "x": 3448,
+      "y": -168,
+      "w": 620,
+      "text": "02 · THE SHOULDERS — your own proposal, literally.\nSwitcher: previous era bottom-left, next bottom-right, six ticks between them for position.\nPanels: one continuous spine per column, each section a tick stepping off it. No head rules at all.\nTrade-off: ±1 era per click — a scrub, not an index."
+    },
+    {
+      "id": "note-03",
+      "x": 5168,
+      "y": -168,
+      "w": 620,
+      "text": "03 · THE INDEX COLUMN — the Cyberpunk codex read.\nSwitcher: a six-row list owning the left column, gold left bearing on the active row.\nPanels: everything consolidates right as one ruled register; the title moves INTO it, so a list on the left and a title on the right can never be confused.\nTrade-off: three columns of unequal weight; the most application-like of the seven."
+    },
+    {
+      "id": "note-04",
+      "x": 8,
+      "y": 1288,
+      "w": 620,
+      "text": "04 · THE DATED SPINE — draw the record, not a tab strip.\nSwitcher: a real dated axis, 2014–2026, eras at their true dates so the GAPS are part of the reading.\nPanels: a graduation ladder on each outboard edge; heads carry a long gold tick instead of an underline.\nTrade-off: most house-consistent, least character-select."
+    },
+    {
+      "id": "note-05",
+      "x": 1728,
+      "y": 1288,
+      "w": 620,
+      "text": "05 · THE CONSOLE — reopens the “no boxes” ruling, deliberately.\nONE machined housing on the right (TR+BL chamfer, gold hairline, square children) with the era tabs fused inside its top edge, so they read as that panel's control rather than page navigation. Left stays bare.\nTrade-off: you closed this in August. Included so the choice is explicit — if boxes are still out, this is the option that proves it."
+    },
+    {
+      "id": "note-06",
+      "x": 3448,
+      "y": 1288,
+      "w": 620,
+      "text": "06 · THE CARTRIDGE DECK — eras as objects, not words.\nSwitcher: six chamfered plates on the floor, year + glyph, the active one raised and lit. No era name in the deck at all, so duplication is impossible by construction.\nPanels: ADR-065 brackets — framed, not a device, so the cartridges stay the only chamfered things on screen.\nTrade-off: six glyphs is real work, and this is the one most at risk of reading as game chrome."
+    },
+    {
+      "id": "note-07",
+      "x": 5168,
+      "y": 1288,
+      "w": 620,
+      "text": "07 · THE RIGHT LADDER — maximum distance from the title.\nSwitcher: a vertical year ladder set into the right HUD rail, where the bearing/sector readouts live (they step aside for it).\nPanels: a flat recess wash — material without a container, no border, no rule.\nTrade-off: a wash IS a fill, so this is the closest of the six non-box options to what you rejected; and the recess must be re-measured in light, where the ground inverts."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

@@ -72,14 +72,66 @@ handoff and the `701–1100px` complete fallback alone.
   decodes a transparent probe once and `HoloFigure` locks the verdict at mount;
   `null` means the floor. The `.webm`-only / `png|webp`-only path regexes are
   what stop an opaque file entering the branch whose premise is transparency.
-- ⚠ **THE ERA STRIP CLEARS THE HUD RAIL, AND THE OFFSET IS DERIVED.**
-  `--vwh-era-clear` = `max(0px, --hud-rail-y-start − --vwh-pad-top)`, with the
-  strip `align-self: end` inside `--vwh-era-band-h`. The band already held ~84px
-  of unused room, so the sides move only ~15–23px and the figure — spanning
-  `grid-row: 1 / 4` — does not move at all. ⚠ A rung that needs different
-  padding RE-POINTS `--vwh-pad-top`; setting `padding-block` behind the token's
-  back returns the strip to the nav corner. ⚠ The ≤1100px rung must reset
-  `align-self` (that container is column-flex, where `end` means "align right").
+- ⚠ **THE ERA SELECTOR IS A VERTICAL SCRUBBER ON THE LEFT HUD RAIL (ADR-082
+  U9, owner 2026-08-27) — U8's horizontal axis is DELETED, not flagged off.**
+  The rail IS the track: its own ticks extend OUTWARD into the margin, so its
+  inboard side is free and the era stops hang off it rather than beside it.
+  Six stops on one pitch, capped top and bottom so the group reads as one
+  instrument; the active stop carries the lit year and the era's name.
+  ⚠ **IT LIVES IN THE HUD GUTTER, WHICH IS WHY IT COSTS NO COLUMN** — the
+  owner's own worry about "a lot of columns on lower screen sizes".
+  `--vwh-scrub-w` is DERIVED from the same terms the reading band is built
+  from, so it can never reach into it; a flat 116px overran SCOPE by 2px at
+  1101x800, the narrowest capable rung and therefore the one that decides.
+  ⚠ **THE HANDLE IS A CURSOR, NOT A DIAMOND** — the rail already carries one
+  gold diamond (the ADR-031 journey manifest's detent), and a second identical
+  glyph on the same rail is two "you are here" marks at two different scales.
+  ⚠ **THE LEAD CLEARS THE RAIL'S OWN GAUGE NUMERALS**, which sit INBOARD at
+  `--hud-rail-guide-inset + 10px` — the same side. At 18px the years printed
+  straight through the depth gauge's "2" and "5".
+  ⚠ **AND `.hud__rail` NO LONGER SWALLOWS CLICKS** (landing.css, sitewide):
+  its box is 68px wide at z 50 with no hover, cursor or click rule of its own,
+  so anything a station places in that gutter was unreachable — the stops
+  could not be clicked at all. `pointer-events: none` on the box, `auto` on
+  the manifest button.
+- ⚠ **THE IDENTITY IS CENTRED OVER THE FIGURE, IN ITS OWN ROW, AT A FIXED
+  MEASURE.** `max-width` is wrong: centred and content-sized, the mast's left
+  edge moved 113px between "The founder" and "The Intelligence Architect",
+  which the seat-stability sweep reads as the instrument reshaping. Its own
+  height is what clears the nav for the columns below.
+- ⚠ **THAT IS WHAT LETS SCOPE AND FACTS SHARE A DATUM.** While the mast lived
+  in the left column, that column always started one mast lower than the
+  right and no tuning could line them up. Both are row 2 now.
+  ⚠ **BOTH DOSSIER ROWS ARE FIXED SEATS, SEATED FROM THE TOP**
+  (`--vwh-lede-h` + `--vwh-seat-h`): a `1fr` lede pushes the lower slot to the
+  column's floor, and a content-height lede moves it per era.
+- ⚠ **SCROLL IS THE ERA SELECTOR (ADR-082 U10, owner 2026-08-27) — NO WHEEL
+  CAPTURE.** The stage is already a pinned runway with one scroll writer, so
+  the era is DERIVED from its progress: the reader steps through all six on
+  the way past and the page continues normally at the end.
+  `VOIDWALKER_ERA_BAND` is `[0.16, 0.72]` — inside the hold, clear of the
+  entry (0.14) and the exit (0.74), so no era advances while the sheet is
+  assembling or clearing.
+  ⚠ **A CLICK PINS THE SCROLL to that era's slice centre** — without it the
+  writer overrides the choice on the next frame; the two halves are ONE
+  contract (ADR-056 U13's browse band).
+  ⚠ **`current` IS AN INPUT to the derivation**, not a cache: the hysteresis
+  needs the side the reader came from, or a stop on a boundary flickers.
+  ⚠ **A SCRUBBED ARRIVAL IS NOT DELIBERATE** — it must not bump `epoch`, or
+  every wheel notch restarts the figure's 900ms materialize. Only a click does.
+- ⚠ **THE IDENTITY SITS ON `--station-title-top`**, the shared anchor the
+  corridor's station headers and the services masthead already derive from —
+  one datum for every big title on the surface, never a third close number.
+- ⚠ **SCOPE LEFT, FACTS RIGHT, NO LOADOUT (owner, same pass).** The identity
+  and FACTS share row 1; SCOPE hangs below the identity in the same column.
+  ⚠ **ONE `--vwh-seat-h` SERVES BOTH COLUMNS** — ON RECORD and TRANSMISSION are
+  bottom-anchored in their own side, so equal seats put them on one datum; the
+  old 248-vs-280 pair is the arithmetic reason they never lined up, and it is
+  what the owner was seeing as "the text placement is inconsistent".
+  ⚠ **THE HANDOFF TARGET FOLLOWS THE SEAT, NOT THE CONTENT** — `dossier` rides
+  whichever panel holds the top-left position, which is Scope now.
+  ⚠ `era.loadout` stays in the record but letters nowhere on the sheet, so
+  ADR-083's phone SCOPE mode ("motto, record and loadout") is amended with it.
 - ⚠ **THE IDENTITY TITLE CARRIES `.voidwalker__name`'s CLAMP BYTE-FOR-BYTE**
   (`clamp(26px, 3vw, 44px)` / 1.1) because the About name FLIES INTO IT and now
   translates without scaling. No rung may step it down — the short-viewport
@@ -229,6 +281,16 @@ surface.
   `data-vw-far` is `content-visibility` + `visibility`, never
   `display: none`, which re-ran layout at every stop transition.
 - ⚠ **THE LEFT RAIL IS THE TIME AXIS** (owner) — `.vw-axis` is deleted.
+  ⚠ **THIS IS ADR-081's `RailDates`, NOT ADR-082 U9's SCRUBBER — two
+  different objects on one rail.** `RailDates` is a READOUT: `aria-hidden`,
+  non-interactive, mounted only on the TRAVEL path, portaled INTO
+  `.hud__rail--l`, and it spreads twelve whole years across the ladder so
+  each seats on an integer rung. The hologram's scrubber is a CONTROL: a
+  six-stop tablist with roving focus, in the stage's own DOM, compact and
+  centred on the rail rather than spread along it. They never mount
+  together (travel and hologram are mutually exclusive modes), and a
+  future pass that wants the scrubber's years on real rungs should read
+  `RailDates` first — that is the precedent, and it costs a portal.
   The rail's thirteen ticks are twelve intervals and the record spans
   twelve years, so every record year seats on an INTEGER RUNG; nothing is
   added to the ladder (ADR-031's guardrail) and the twelve-year span is
