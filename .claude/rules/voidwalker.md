@@ -27,6 +27,10 @@ the About bio, while this surface uses `.vw*` / `.vwh*`.
 
 ## Current hologram contracts (2026-08-27)
 
+Read ADR-083 before changing the proposed `<=700px` identity → figure → era
+rail → dossier-mode instrument; it intentionally leaves the capable desktop
+handoff and the `701–1100px` complete fallback alone.
+
 - **The capable station is transparent, not a cover plane.**
   `useVoidwalkerHologramScroll` writes `data-vw-mode="hologram"` only at
   `min-width: 1101px`, with motion allowed and a live corridor. That mode
@@ -117,9 +121,12 @@ right. The side dossiers start on one lower reading datum; the figure continues
 to span the full grid and must not move when the tab band changes. Dormant tabs
 use neutral hairlines and gold is active wayfinding only. Tabs use roving focus
 and automatic Arrow/Home/End selection; the tablist never remounts. Desktop
-seats remain reserved across all six eras. At `<=1100px`, restore the 3-by-2
-selector and flatten to normal flow in the order selector, identity, figure,
-FACTS, SCOPE, optional records.
+seats remain reserved across all six eras. At `701–1100px`, restore the 3-by-2
+selector and complete normal-flow dossier. At `<=700px` (ADR-083, proposed),
+the order is identity, figure, one-row six-era rail, RECORD / SCOPE /
+TRANSMISSION, and one active dossier seat. Transmission is disabled without an
+authored film. Keep all dossier nodes mounted; phone visibility is CSS-only so
+desktop handoff measurements remain stable.
 
 The About shell owns layout/inertness only. Its name and dossier are sibling
 transform actors; never transform the shell and either child together. The

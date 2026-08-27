@@ -1266,6 +1266,232 @@ a.vwh__press:focus-visible .vwh__press__headline {
   }
 }
 
+/* ══ Phone character instrument ════════════════════════════════════════
+   The 701–1100 rung keeps the complete normal-flow dossier for tablets and
+   reduced layouts. A phone gets the mobile-game lesson from the references:
+   one stable character stage, one six-stop loadout rail, one dossier mode.
+   No content is unmounted, so the capable desktop seats and handoff targets
+   remain byte-identical. */
+.vwh__mobile-modes {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .vwh {
+    --vwh-mobile-figure-h: clamp(300px, 42svh, 390px);
+    --vwh-mobile-panel-h: clamp(176px, 22svh, 220px);
+    min-height: 100svh;
+    gap: 0;
+    padding: max(18px, env(safe-area-inset-top)) 16px max(22px, env(safe-area-inset-bottom));
+  }
+
+  .vwh__mast {
+    order: 1;
+    max-width: none;
+    padding: 0 0 10px;
+  }
+  .vwh__mast__title {
+    font-size: clamp(24px, 7vw, 30px);
+    line-height: 1.02;
+  }
+  /* The three-line desktop side-column reservation would spend a quarter of
+     a phone on empty identity space. Full-width mobile titles need at most
+     two lines; the ghost still preserves their exact decoded footprint. */
+  .vwh__mast .vwh__mast__title.vwh__decode-line {
+    min-height: 2.04em;
+  }
+
+  .vwh__column {
+    order: 2;
+    width: 100%;
+    min-height: 0;
+    height: var(--vwh-mobile-figure-h);
+  }
+  .vwh__slot {
+    width: min(100%, 360px);
+  }
+  /* Replaced elements keep an intrinsic grid min-size unless explicitly
+     released. Without this, the 720x1280 media box remains ~512px tall in a
+     300px phone seat and paints through the era rail despite the wrapper's
+     smaller geometry. */
+  .vwh__media {
+    min-height: 0;
+    max-height: 100%;
+  }
+  .vwh__base {
+    width: min(240px, 58%);
+  }
+
+  .vwh__rail {
+    order: 3;
+    width: 100%;
+    max-width: none;
+    min-height: 44px;
+    margin-top: 2px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0;
+    border-top: 1px solid rgba(var(--vwh-gold-rgb), 0.16);
+    border-bottom: 1px solid rgba(var(--vwh-gold-rgb), 0.16);
+    overflow: visible;
+  }
+  .vwh__pip {
+    min-height: 44px;
+    padding: 0 2px;
+    place-items: center;
+    align-content: center;
+    text-align: center;
+    border-top: 0;
+    border-left: 1px solid rgba(var(--vwh-gold-rgb), 0.1);
+  }
+  .vwh__pip:first-child {
+    border-left: 0;
+  }
+  .vwh__pip[data-on="true"] {
+    border-left-color: rgba(var(--vwh-gold-rgb), 0.24);
+  }
+  .vwh__pip::before {
+    top: auto;
+    left: 50%;
+    bottom: -3px;
+    transform: translateX(-50%) rotate(45deg) scale(0);
+  }
+  .vwh__pip[data-on="true"]::before {
+    transform: translateX(-50%) rotate(45deg) scale(1);
+  }
+  .vwh__pip__year {
+    font-size: clamp(8px, 2.35vw, 9.5px);
+    letter-spacing: 0.06em;
+  }
+  .vwh__pip__name {
+    display: none;
+  }
+
+  .vwh__mobile-modes {
+    order: 4;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    margin-top: 12px;
+    border-top: 1px solid rgba(var(--vwh-gold-rgb), 0.16);
+    border-bottom: 1px solid rgba(var(--vwh-gold-rgb), 0.16);
+  }
+  .vwh__mobile-mode {
+    position: relative;
+    appearance: none;
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 5px;
+    border: 0;
+    border-left: 1px solid rgba(var(--vwh-gold-rgb), 0.1);
+    background: transparent;
+    color: rgba(var(--dawn-rgb), 0.46);
+    font: 400 clamp(8px, 2.5vw, 10px) / 1 var(--vwh-mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .vwh__mobile-mode:first-child {
+    border-left: 0;
+  }
+  .vwh__mobile-mode[data-on] {
+    color: rgba(var(--dawn-rgb), 0.94);
+  }
+  .vwh__mobile-mode[data-on]::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -3px;
+    width: 5px;
+    height: 5px;
+    background: var(--gold, #caa554);
+    transform: translateX(-50%) rotate(45deg);
+  }
+  .vwh__mobile-mode[data-on]::after {
+    content: "";
+    position: absolute;
+    inset: auto 8px -1px;
+    height: 1px;
+    background: var(--gold, #caa554);
+  }
+  .vwh__mobile-mode:disabled {
+    color: rgba(var(--dawn-rgb), 0.2);
+    cursor: not-allowed;
+  }
+  .vwh__mobile-mode:focus-visible {
+    outline: 1px solid rgba(var(--vwh-gold-rgb), 0.8);
+    outline-offset: -3px;
+  }
+
+  /* The side wrappers become one scrollable dossier seat. Only the chosen
+     mode is visible, while all authored nodes stay mounted for desktop. */
+  .vwh__side {
+    display: none;
+    order: 5;
+    flex-direction: column;
+    align-self: stretch;
+    width: 100%;
+    max-width: none;
+    height: var(--vwh-mobile-panel-h);
+    min-height: 0;
+    margin-top: 12px;
+    padding: 12px 2px 4px;
+    gap: 20px;
+    overflow-y: auto;
+    overscroll-behavior-y: auto;
+  }
+  .vwh__tabpanel[data-vwh-mobile-mode="record"] .vwh__side[data-side="l"],
+  .vwh__tabpanel[data-vwh-mobile-mode="scope"] .vwh__side[data-side="r"],
+  .vwh__tabpanel[data-vwh-mobile-mode="transmission"] .vwh__side[data-side="r"] {
+    display: flex;
+  }
+  .vwh__tabpanel[data-vwh-mobile-mode="scope"]
+    .vwh__side[data-side="r"]
+    > [data-vwh-mobile-panel="transmission"],
+  .vwh__tabpanel[data-vwh-mobile-mode="transmission"]
+    .vwh__side[data-side="r"]
+    > [data-vwh-mobile-panel="scope"] {
+    display: none;
+  }
+  .vwh__side > .vwh__panel,
+  .vwh__side > .vwh__panel-slot {
+    width: 100%;
+    max-width: none;
+  }
+  .vwh__panel {
+    align-self: stretch;
+  }
+  .vwh__facts {
+    gap: 12px;
+  }
+}
+
+/* The 320×568 reference phone cannot carry the normal phone figure and a
+   readable dossier in one viewport. Keep the full hierarchy, but spend less
+   height on the projection and let the active dossier do the scrolling. */
+@media (max-width: 700px) and (max-height: 640px) {
+  .vwh {
+    --vwh-mobile-figure-h: clamp(224px, 40svh, 250px);
+    --vwh-mobile-panel-h: clamp(118px, 20svh, 138px);
+    padding-block: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-bottom));
+  }
+  .vwh__mast {
+    padding-bottom: 4px;
+  }
+  .vwh__mast__title {
+    font-size: clamp(21px, 6.5vw, 25px);
+  }
+  .vwh__mobile-modes,
+  .vwh__side {
+    margin-top: 6px;
+  }
+  .vwh__side {
+    padding: 8px 2px 2px;
+    gap: 14px;
+  }
+}
+
 /* ── Light theme ─────────────────────────────────────────────────────
    ⚠ THE TOKENS ALREADY FLIP (ADR-058 swaps --dawn-rgb and --void-rgb),
    so every neutral above is correct in both themes by construction.

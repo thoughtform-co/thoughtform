@@ -47,7 +47,15 @@ import { ProofGlyph } from "./ProofGlyph";
  * carry no glyph, so the gutter renders EMPTY rather than collapsing: the
  * claims stay on one rail whichever model a track uses.
  */
-export function TrackProofRegister({ track }: { track: CaseTrack }) {
+export function TrackProofRegister({
+  track,
+  id,
+  tabIndex,
+}: {
+  track: CaseTrack;
+  id?: string;
+  tabIndex?: number;
+}) {
   const items = track.blocks?.length
     ? track.blocks.map((block) => ({
         glyph: block.glyph,
@@ -65,6 +73,8 @@ export function TrackProofRegister({ track }: { track: CaseTrack }) {
   return (
     <section
       className="fl-proof-register"
+      id={id}
+      tabIndex={tabIndex}
       data-fl-zone="proof-register"
       data-fl-panel
       style={{ "--ci-off": 0.3, "--fl-dx": "-48px" } as CSSProperties}

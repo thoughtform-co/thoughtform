@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type KeyboardEvent, type RefObject } from "react";
+import { useRef, useState, type KeyboardEvent, type RefObject } from "react";
 
 import {
   MediaLightbox,
@@ -39,6 +39,9 @@ function plain(segments: readonly VwSegment[]): string {
   return segments.map((s) => (typeof s === "string" ? s : "em" in s ? s.em : s.mark)).join("");
 }
 
+const MOBILE_DOSSIER_MODES = ["record", "scope", "transmission"] as const;
+type MobileDossierMode = (typeof MOBILE_DOSSIER_MODES)[number];
+
 export function eraPositionLabel(index: number, count = CHARACTER_ERAS.length): string {
   return `ERA / ${String(index + 1).padStart(2, "0")} OF ${String(count).padStart(2, "0")}`;
 }
@@ -66,15 +69,21 @@ function Panel({
   kicker,
   tag,
   handoffTarget,
+  mobilePanel,
   children,
 }: {
   kicker: string;
   tag?: string;
   handoffTarget?: "dossier";
+  mobilePanel?: MobileDossierMode;
   children: React.ReactNode;
 }) {
   return (
-    <article className="vwh__panel" data-vwh-handoff-target={handoffTarget}>
+    <article
+      className="vwh__panel"
+      data-vwh-handoff-target={handoffTarget}
+      data-vwh-mobile-panel={mobilePanel}
+    >
       <p className="vwh__panel__head">
         <span className="vwh__panel__kicker">{kicker}</span>
         {tag ? <span className="vwh__panel__tag">{tag}</span> : null}
@@ -90,7 +99,7 @@ function Facts({ era }: { era: CharacterEra }) {
   const facts = era.facts ?? [];
   if (facts.length === 0) return null;
   return (
-    <Panel kicker="Facts" tag={era.short} handoffTarget="dossier">
+    <Panel kicker="Facts" tag={era.short} handoffTarget="dossier" mobilePanel="record">
       <dl className="vwh__facts">
         {facts.map((f) => (
           <div className="vwh__facts__row" key={f.k}>
@@ -135,6 +144,7 @@ export function HoloEraPanels({
   const activeTabId = `${idPrefix}-era-tab-${era.id}`;
   const panelId = `${idPrefix}-era-panel`;
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const [mobileMode, setMobileMode] = useState<MobileDossierMode>("record");
   const kicker = eraPositionLabel(activeEraIndex);
   const beat = VOIDWALKER_BEATS.find((b) => b.id === era.beatId);
 
@@ -156,8 +166,17 @@ export function HoloEraPanels({
    */
   const { watching, open, close } = useWalkthrough();
 
-  const selectAndFocus = (index: number) => {
+  /* A transmission is a real record, never a placeholder. Reset during the
+     deliberate selection event instead of repairing state in an effect: the
+     target era is known here and the reader never sees an empty active seat. */
+  const selectEra = (index: number) => {
+    const nextEra = CHARACTER_ERAS[index];
+    if (mobileMode === "transmission" && !nextEra?.film) setMobileMode("record");
     onSelectEra(index);
+  };
+
+  const selectAndFocus = (index: number) => {
+    selectEra(index);
     tabRefs.current[index]?.focus();
   };
 
@@ -173,9 +192,11 @@ export function HoloEraPanels({
         next = (index + 1) % count;
         break;
       case "ArrowUp":
+        if (window.matchMedia("(max-width: 700px)").matches) return;
         next = (index - 3 + count) % count;
         break;
       case "ArrowDown":
+        if (window.matchMedia("(max-width: 700px)").matches) return;
         next = (index + 3) % count;
         break;
       case "Home":
@@ -219,7 +240,7 @@ export function HoloEraPanels({
               tabIndex={selected ? 0 : -1}
               data-on={selected}
               data-vwh-era-tab={item.id}
-              onClick={() => onSelectEra(index)}
+              onClick={() => selectEra(index)}
               onKeyDown={(event) => onTabKeyDown(event, index)}
             >
               <span className="vwh__pip__year">{item.year}</span>
@@ -234,6 +255,7 @@ export function HoloEraPanels({
         id={panelId}
         role="tabpanel"
         aria-labelledby={activeTabId}
+        data-vwh-mobile-mode={mobileMode}
         data-vwh-era-panel={era.id}
         data-vwh-region="era-panel"
         data-testid="voidwalker-era-panel"
@@ -265,6 +287,26 @@ export function HoloEraPanels({
           </p>
         </header>
 
+        <div className="vwh__mobile-modes" role="group" aria-label="Dossier view">
+          {MOBILE_DOSSIER_MODES.map((mode) => {
+            const active = mobileMode === mode;
+            const unavailable = mode === "transmission" && !era.film;
+            return (
+              <button
+                key={mode}
+                type="button"
+                className="vwh__mobile-mode"
+                data-on={active || undefined}
+                aria-pressed={active}
+                disabled={unavailable}
+                onClick={() => setMobileMode(mode)}
+              >
+                {mode}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="vwh__side" data-side="l" data-vwh-region="record">
           <Facts era={era} />
 
@@ -273,6 +315,7 @@ export function HoloEraPanels({
             data-slot="on-record"
             data-empty={press.length === 0}
             data-vwh-region="on-record"
+            data-vwh-mobile-panel="record"
             aria-hidden={press.length === 0 || undefined}
           >
             {press.length > 0 ? (
@@ -290,7 +333,7 @@ export function HoloEraPanels({
         <div className="vwh__side" data-side="r" data-vwh-region="scope">
           {/* The era itself: who this version was, and what it did. The
               record's own prose — this is not the #about bio restated. */}
-          <Panel kicker="Scope">
+          <Panel kicker="Scope" mobilePanel="scope">
             <p className="vwh__panel__motto">{era.motto}</p>
             <p className="vwh__panel__body">{beat ? plain(beat.body) : era.motto}</p>
             <p className="vwh__panel__foot">
@@ -304,6 +347,7 @@ export function HoloEraPanels({
             data-slot="transmission"
             data-empty={!era.film}
             data-vwh-region="transmission"
+            data-vwh-mobile-panel="transmission"
             aria-hidden={!era.film || undefined}
           >
             {era.film ? (

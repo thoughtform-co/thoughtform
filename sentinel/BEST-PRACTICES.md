@@ -1253,6 +1253,39 @@ cascade.
 half of its required content. Reserving space prevents layout jumps; measuring
 the content prevents silent truncation.
 
+### Replaced media must surrender its intrinsic grid size
+
+`height: 100%` does not guarantee that an image or video fits a fixed grid
+seat. Replaced elements carry an intrinsic minimum; inside a short phone grid,
+the box can remain hundreds of pixels taller than its wrapper and paint across
+controls while the wrapper itself reports the expected height. Set
+`min-height: 0` and a bounded `max-height` on the media, then compare the
+rendered media and slot bounds—not only the parent dimensions.
+
+**Why it matters:** the mask can make the spill look plausible while hit
+targets and reading order are already compromised.
+
+### Critical phone geometry cannot wait for a runtime mode attribute
+
+If six 44px controls only fit after a scroll hook publishes `data-mode`, the
+first hydrated frame is already broken. Put essential phone padding, width and
+target geometry behind a CSS media query or server-known class. Runtime
+attributes may enhance choreography; they may not establish basic fit.
+
+**Why it matters:** hooks can settle hundreds of milliseconds after mount, so
+a layout that looks correct in a settled screenshot can still jump or ship
+undersized targets on first paint.
+
+### Inline instrument scrollers release at their bounds
+
+A bounded mobile evidence seat is part of the page, not a modal. Avoid
+`overscroll-behavior: contain` unless a reproduced platform bug requires it.
+Let the inner surface scroll while it has range, then release the gesture to
+the page at either end. Verify this with a real wheel/touch boundary probe.
+
+**Why it matters:** a visually elegant fixed seat becomes a scroll trap when
+the reader cannot leave it without starting a new gesture elsewhere.
+
 ### Wait for the thing to exist before you measure it
 
 A harness that queries too early doesn't error, it measures nothing — and
@@ -1312,4 +1345,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-08-03_
+_Last updated: 2026-08-27_

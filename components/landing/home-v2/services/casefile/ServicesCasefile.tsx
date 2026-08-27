@@ -108,24 +108,34 @@ const CASEFILE_TABS = CASES.map((c) => ({
   tab: c.casefile.tab,
 }));
 
+const MOBILE_CASEFILE_VIEWS = [
+  { id: "brief", label: "Brief" },
+  { id: "proof", label: "Proof" },
+  { id: "artifact", label: "Artifact" },
+] as const;
+
+type MobileCasefileView = (typeof MOBILE_CASEFILE_VIEWS)[number]["id"];
+
 export function ServicesCasefile() {
   const rootRef = useRef<HTMLElement | null>(null);
   const [slug, setSlug] = useState(PROOF_CASE.slug);
   const [trackId, setTrackId] = useState(PROOF_CASE.casefile.tracks[0].id);
+  const [mobileView, setMobileView] = useState<MobileCasefileView>("artifact");
 
   const def = CASES.find((c) => c.slug === slug) ?? PROOF_CASE;
   const file = def.casefile;
   const track = file.tracks.find((t) => t.id === trackId) ?? file.tracks[0];
+  const trackIndex = Math.max(
+    0,
+    file.tracks.findIndex((t) => t.id === track.id)
+  );
   const panelId = "svc-casefile-panel";
   const rowId = `${def.slug}-row-${track.id}`;
 
   /* The scrollspy reads the CURRENT row through a ref — its observer closure
      outlives any single render, and hysteresis needs the live index. */
   const trackIdxRef = useRef(0);
-  trackIdxRef.current = Math.max(
-    0,
-    file.tracks.findIndex((t) => t.id === track.id)
-  );
+  trackIdxRef.current = trackIndex;
 
   const selectClient = useCallback((next: string) => {
     const c = CASES.find((x) => x.slug === next);
@@ -311,10 +321,15 @@ export function ServicesCasefile() {
     };
     // Re-runs when the rendered copy changes: the decode caches the node list
     // and each node's target string at setup.
-  }, [def.slug]);
+  }, [def.casefile.tracks, def.slug]);
 
   return (
-    <section className="fl-case" ref={rootRef} aria-label={`Case file — ${def.client}`}>
+    <section
+      className="fl-case"
+      ref={rootRef}
+      aria-label={`Case file — ${def.client}`}
+      data-mobile-view={mobileView}
+    >
       {/* The label/sys/code chrome trio that used to sit above the tabs was
           REMOVED (owner, 2026-07-29) — the band above the tab strip stays
           clean, and the tab row is the instrument's first line. The tabs
@@ -330,6 +345,45 @@ export function ServicesCasefile() {
           onSelect={selectClient}
           controls={panelId}
         />
+      </div>
+
+      {/* MOBILE IS ONE RETUNABLE INSTRUMENT, NOT THE DESKTOP COLUMNS IN A
+          LONGER ORDER. The identity stays fixed while the reader switches
+          the single content seat between the brief, proof register and
+          authored artifact. These controls are CSS-hidden above the mobile
+          gate; desktop keeps the existing directory + panel contract. */}
+      <header className="fl-mobile-head" aria-live="polite">
+        <p className="fl-mobile-head__meta">
+          <span>{`Case / ${String(trackIndex + 1).padStart(2, "0")} of ${String(
+            file.tracks.length
+          ).padStart(2, "0")}`}</span>
+          <span>{track.meta}</span>
+        </p>
+        <h3 className="fl-mobile-head__title">
+          {track.project}
+          <b aria-hidden="true">.</b>
+        </h3>
+        <p className="fl-mobile-head__class">{track.classification ?? file.classLine}</p>
+      </header>
+
+      <div className="fl-mobile-views" role="group" aria-label={`${track.project} view`}>
+        {MOBILE_CASEFILE_VIEWS.map((view) => {
+          const active = mobileView === view.id;
+          return (
+            <button
+              key={view.id}
+              id={`svc-casefile-view-${view.id}`}
+              type="button"
+              className="fl-mobile-view"
+              data-on={active || undefined}
+              aria-pressed={active}
+              aria-controls={view.id === "artifact" ? panelId : `svc-casefile-${view.id}`}
+              onClick={() => setMobileView(view.id)}
+            >
+              {view.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Connection grammar — the corridor caption card's own reticle
@@ -350,6 +404,10 @@ export function ServicesCasefile() {
       {/* ── Left column · brief ─────────────────────────────────────── */}
       <div
         className="fl-brief"
+        id="svc-casefile-brief"
+        role="region"
+        aria-labelledby="svc-casefile-view-brief svc-casefile-brief-title"
+        tabIndex={mobileView === "brief" ? 0 : -1}
         data-fl-panel
         style={{ "--ci-off": 0.24, "--fl-dx": "-48px" } as CSSProperties}
       >
@@ -365,7 +423,7 @@ export function ServicesCasefile() {
             track-reactive target would go stale on the first row switch — the
             decode lives on the tab name, which IS per-client. This swaps
             instantly, matching the keyed right column. */}
-        <h3 className="fl-brief__title">
+        <h3 className="fl-brief__title" id="svc-casefile-brief-title">
           <span>{track.project}</span>
           <b className="fl-brief__dot">.</b>
         </h3>
@@ -388,7 +446,11 @@ export function ServicesCasefile() {
 
       {/* Evidence stays in the reading column, leaving the right panel as
           one uninterrupted visual instrument. */}
-      <TrackProofRegister track={track} />
+      <TrackProofRegister
+        track={track}
+        id="svc-casefile-proof"
+        tabIndex={mobileView === "proof" ? 0 : -1}
+      />
 
       {/* ── Left column · directory ─────────────────────────────────── */}
       <Directory
@@ -400,7 +462,58 @@ export function ServicesCasefile() {
       />
 
       {/* ── Right column ────────────────────────────────────────────── */}
-      <TrackPanel key={`${def.slug}-${track.id}`} track={track} id={panelId} labelledBy={rowId} />
+      <TrackPanel
+        key={`${def.slug}-${track.id}`}
+        track={track}
+        id={panelId}
+        labelledBy={`${rowId} svc-casefile-view-artifact`}
+      />
+
+      <nav className="fl-mobile-rail" aria-label="Case navigation">
+        <button
+          type="button"
+          className="fl-mobile-rail__step"
+          aria-label={`Previous case: ${
+            file.tracks[(trackIndex - 1 + file.tracks.length) % file.tracks.length].project
+          }`}
+          onClick={() =>
+            selectTrack(file.tracks[(trackIndex - 1 + file.tracks.length) % file.tracks.length].id)
+          }
+        >
+          <span aria-hidden="true">←</span>
+        </button>
+
+        <div
+          className="fl-mobile-rail__stops"
+          style={{ gridTemplateColumns: `repeat(${file.tracks.length}, minmax(0, 1fr))` }}
+        >
+          {file.tracks.map((item, index) => {
+            const active = index === trackIndex;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className="fl-mobile-rail__stop"
+                data-on={active || undefined}
+                aria-label={`${String(index + 1).padStart(2, "0")} — ${item.project}`}
+                aria-current={active ? "step" : undefined}
+                onClick={() => selectTrack(item.id)}
+              >
+                {String(index + 1).padStart(2, "0")}
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          type="button"
+          className="fl-mobile-rail__step"
+          aria-label={`Next case: ${file.tracks[(trackIndex + 1) % file.tracks.length].project}`}
+          onClick={() => selectTrack(file.tracks[(trackIndex + 1) % file.tracks.length].id)}
+        >
+          <span aria-hidden="true">→</span>
+        </button>
+      </nav>
     </section>
   );
 }

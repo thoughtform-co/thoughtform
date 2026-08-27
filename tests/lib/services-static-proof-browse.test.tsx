@@ -74,6 +74,35 @@ afterEach(() => {
 });
 
 describe("static Proof browse ownership", () => {
+  it("retunes one mobile seat and keeps the case rail in parity with the directory", async () => {
+    installMediaMode({ mobile: true, reduced: false });
+    window.scrollTo = vi.fn();
+
+    const { container } = render(<StageHarness />);
+    const casefile = container.querySelector<HTMLElement>(".fl-case")!;
+    const artifact = container.querySelector<HTMLButtonElement>("#svc-casefile-view-artifact")!;
+    const proof = container.querySelector<HTMLButtonElement>("#svc-casefile-view-proof")!;
+    const stops = container.querySelectorAll<HTMLButtonElement>(".fl-mobile-rail__stop");
+
+    await waitFor(() => expect(casefile.style.getPropertyValue("--svc-proof-in")).toBe("1.0000"));
+    expect(casefile).toHaveAttribute("data-mobile-view", "artifact");
+    expect(artifact).toHaveAttribute("aria-pressed", "true");
+    expect(proof).toHaveAttribute("aria-pressed", "false");
+    expect(stops).toHaveLength(4);
+    expect(stops[0]).toHaveAttribute("aria-current", "step");
+
+    fireEvent.click(proof);
+    expect(casefile).toHaveAttribute("data-mobile-view", "proof");
+    expect(proof).toHaveAttribute("aria-pressed", "true");
+    expect(artifact).toHaveAttribute("aria-pressed", "false");
+
+    fireEvent.click(stops[2]);
+    const studioRow = container.querySelector<HTMLElement>("[id$='-row-studio']")!;
+    expect(studioRow).toHaveAttribute("aria-selected", "true");
+    expect(stops[2]).toHaveAttribute("aria-current", "step");
+    expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["mobile", { mobile: true, reduced: false }],
     ["reduced motion", { mobile: false, reduced: true }],

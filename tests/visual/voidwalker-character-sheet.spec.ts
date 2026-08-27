@@ -219,14 +219,14 @@ test.describe("Voidwalker editorial character sheet", () => {
     expect(light).toEqual(dark);
   });
 
-  test("1024px, mobile and reduced-motion paths use the settled normal-flow order", async ({
+  test("1024px and reduced-motion paths use the settled normal-flow order", async ({
     page,
   }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "fallback matrix runs once in Chromium");
 
     for (const viewport of [
+      { width: 701, height: 900, tolerance: 3 },
       { width: 1024, height: 800, tolerance: 3 },
-      { width: 390, height: 844, tolerance: 3 },
     ]) {
       await page.emulateMedia({ reducedMotion: "no-preference" });
       await page.setViewportSize(viewport);
@@ -273,6 +273,187 @@ test.describe("Voidwalker editorial character sheet", () => {
         .locator(".vwh__media")
         .evaluate((element) => getComputedStyle(element).animationName)
     ).toBe("none");
+  });
+
+  test("phones keep one character stage and retune one dossier seat", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "explicit phone viewport matrix");
+
+    for (const viewport of [
+      { width: 320, height: 568 },
+      { width: 390, height: 844 },
+      { width: 700, height: 900 },
+    ]) {
+      await page.emulateMedia({ reducedMotion: "no-preference" });
+      await page.setViewportSize(viewport);
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+      await page.locator(".vwh").scrollIntoViewIfNeeded();
+      await settle(page);
+
+      const readPhone = () =>
+        page.evaluate(() => {
+          const required = (selector: string) => {
+            const element = document.querySelector<HTMLElement>(selector);
+            if (!element) throw new Error(`Missing ${selector}`);
+            return element;
+          };
+          const stage = required(".vwh");
+          const stageRect = stage.getBoundingClientRect();
+          const top = (selector: string) =>
+            required(selector).getBoundingClientRect().top - stageRect.top;
+          const left = required(".vwh__side[data-side='l']");
+          const right = required(".vwh__side[data-side='r']");
+          const slot = required(".vwh__slot");
+          const media = required(".vwh__media");
+          const eras = Array.from(document.querySelectorAll<HTMLElement>(".vwh__pip"));
+          const modes = Array.from(document.querySelectorAll<HTMLElement>(".vwh__mobile-mode"));
+          const activeSide = getComputedStyle(left).display !== "none" ? left : right;
+          return {
+            ready: stage.hasAttribute("data-vwh-ready"),
+            localOverflow: stage.scrollWidth - stage.clientWidth,
+            height: stageRect.height,
+            viewportHeight: window.innerHeight,
+            mediaOverflow:
+              media.getBoundingClientRect().bottom - slot.getBoundingClientRect().bottom,
+            slotOverflow: slot.scrollHeight - slot.clientHeight,
+            tops: [
+              top("[data-vwh-region='identity']"),
+              top("[data-vwh-region='figure']"),
+              top("[data-vwh-region='era-selector']"),
+              top(".vwh__mobile-modes"),
+              activeSide.getBoundingClientRect().top - stageRect.top,
+            ],
+            eraTops: eras.map((element) => element.getBoundingClientRect().top - stageRect.top),
+            eraWidths: eras.map((element) => element.getBoundingClientRect().width),
+            eraHeights: eras.map((element) => element.getBoundingClientRect().height),
+            modeHeights: modes.map((element) => element.getBoundingClientRect().height),
+            leftDisplay: getComputedStyle(left).display,
+            rightDisplay: getComputedStyle(right).display,
+            scopeDisplay: getComputedStyle(
+              required(".vwh__side[data-side='r'] > [data-vwh-mobile-panel='scope']")
+            ).display,
+            transmissionDisplay: getComputedStyle(
+              required(".vwh__side[data-side='r'] > [data-vwh-mobile-panel='transmission']")
+            ).display,
+            activeMode: required(".vwh__tabpanel").dataset.vwhMobileMode,
+            activeSeat: {
+              top: activeSide.getBoundingClientRect().top - stageRect.top,
+              height: activeSide.getBoundingClientRect().height,
+              overscrollY: getComputedStyle(activeSide).overscrollBehaviorY,
+            },
+            stable: [
+              "[data-vwh-region='identity']",
+              "[data-vwh-region='figure']",
+              "[data-vwh-region='era-selector']",
+            ].map((selector) => {
+              const rect = required(selector).getBoundingClientRect();
+              return {
+                top: rect.top - stageRect.top,
+                left: rect.left - stageRect.left,
+                width: rect.width,
+                height: rect.height,
+              };
+            }),
+          };
+        });
+
+      const initial = await readPhone();
+      const label = `${viewport.width}x${viewport.height}`;
+      expect(initial.ready, `${label}: phone path must stay normal-flow`).toBe(false);
+      expect(initial.height, `${label}: whole character instrument`).toBeLessThanOrEqual(
+        initial.viewportHeight + 1
+      );
+      expect(initial.localOverflow, `${label}: local horizontal overflow`).toBeLessThanOrEqual(1);
+      expect(initial.mediaOverflow, `${label}: media escapes figure slot`).toBeLessThanOrEqual(1);
+      expect(initial.slotOverflow, `${label}: intrinsic figure overflow`).toBeLessThanOrEqual(1);
+      expect(
+        Math.max(...initial.eraTops) - Math.min(...initial.eraTops),
+        `${label}: era row`
+      ).toBeLessThanOrEqual(1);
+      for (const height of [...initial.eraHeights, ...initial.modeHeights]) {
+        expect(height, `${label}: touch target`).toBeGreaterThanOrEqual(44);
+      }
+      for (const width of initial.eraWidths) {
+        expect(width, `${label}: six-up era target`).toBeGreaterThanOrEqual(44);
+      }
+      for (let index = 1; index < initial.tops.length; index += 1) {
+        expect(initial.tops[index], `${label}: instrument order ${index}`).toBeGreaterThanOrEqual(
+          initial.tops[index - 1] - 1
+        );
+      }
+      expect(initial.activeMode).toBe("record");
+      expect(initial.leftDisplay).not.toBe("none");
+      expect(initial.rightDisplay).toBe("none");
+      expect(initial.activeSeat.overscrollY).toBe("auto");
+      await expect(page.getByRole("button", { name: "record", exact: true })).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
+      await expect(page.getByRole("button", { name: "transmission", exact: true })).toBeDisabled();
+
+      const loopTab = page.locator("[data-vwh-era-tab='loop']");
+      await loopTab.focus();
+      await loopTab.press("ArrowDown");
+      await expect(loopTab).toHaveAttribute("aria-selected", "true");
+
+      await page.getByRole("button", { name: "scope", exact: true }).click();
+      await settle(page);
+      const scope = await readPhone();
+      expect(scope.activeMode).toBe("scope");
+      expect(scope.leftDisplay).toBe("none");
+      expect(scope.rightDisplay).not.toBe("none");
+      expect(scope.scopeDisplay).not.toBe("none");
+      expect(scope.transmissionDisplay).toBe("none");
+      expectNear(scope.activeSeat.top, initial.activeSeat.top, 1, `${label}: dossier seat top`);
+      expectNear(
+        scope.activeSeat.height,
+        initial.activeSeat.height,
+        1,
+        `${label}: dossier seat height`
+      );
+      await expect(page.getByRole("button", { name: "scope", exact: true })).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
+      for (let index = 0; index < initial.stable.length; index += 1) {
+        for (const channel of ["top", "left", "width", "height"] as const) {
+          expectNear(
+            scope.stable[index][channel],
+            initial.stable[index][channel],
+            1,
+            `${label}: stable ${index} ${channel}`
+          );
+        }
+      }
+
+      await page.locator("[data-vwh-era-tab='genai']").click();
+      const transmission = page.getByRole("button", { name: "transmission", exact: true });
+      await expect(transmission).toBeEnabled();
+      await transmission.click();
+      await expect(page.locator(".vwh__tabpanel")).toHaveAttribute(
+        "data-vwh-mobile-mode",
+        "transmission"
+      );
+      await expect(transmission).toHaveAttribute("aria-pressed", "true");
+      const filmed = await readPhone();
+      expect(filmed.scopeDisplay).toBe("none");
+      expect(filmed.transmissionDisplay).not.toBe("none");
+      expectNear(filmed.activeSeat.top, initial.activeSeat.top, 1, `${label}: film seat top`);
+      expectNear(
+        filmed.activeSeat.height,
+        initial.activeSeat.height,
+        1,
+        `${label}: film seat height`
+      );
+
+      await page.locator("[data-vwh-era-tab='loop']").click();
+      await expect(page.locator(".vwh__tabpanel")).toHaveAttribute(
+        "data-vwh-mobile-mode",
+        "record"
+      );
+      await expect(transmission).toBeDisabled();
+    }
   });
 
   test("a failed loop falls back to the normalized canonical poster", async ({

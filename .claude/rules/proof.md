@@ -32,6 +32,7 @@ breather).
 - [ADR-068: The glyphed index, the tool dossier, and authored wireframes](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) — the LIVE register + tools-plate contract; see §The glyphed index and §The tool dossier below
 - [ADR-069: The selection morph and the answered configuration](../sentinel/decisions/069-pda-selection-morph-and-answered-configuration.md) — the selected work is the PERSISTENT OBJECT and FLIES between its two homes (1 ↔ 2); reading 02 prints the record's own answers with one reactive readout. See §The selection morph below
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
+- [ADR-083: Mobile evidence instruments](../sentinel/decisions/083-mobile-evidence-instruments.md) — proposed phone IA: one stable case seat, explicit BRIEF/PROOF/ARTIFACT modes and a direct four-stop rail
 - [ADR-063: The map's reading rail and its wheel](../sentinel/decisions/063-map-reading-rail-and-wheel.md) — the rail is HORIZONTAL across the top of the console, and the console OWNS THE WHEEL while the pointer is on it (releasing at both ends). See §The reading rail below
 - ⚠ [ADR-062: The map is a city in three sheets](../sentinel/decisions/062-intelligence-map-city.md) — **STALE ON THE DRAWING.** Commit 0965318 replaced the isometric city with the PDA console (`map/pda/**`) in the casefile's right panel and shipped without an ADR. ADR-062's placement, evidence semantics and confidentiality envelope still bind; its atom, sheets, crops and EXPAND overlay describe `map/MapSurface.tsx`, which is still on disk and still passes its projection test but is **NOT what the landing renders**
 - **`/test/intelligence-map-lab`** — look-dev for an ORTHOGRAPHIC alternative to
@@ -46,6 +47,14 @@ breather).
 
 ## Contracts
 
+- **Phones retune ONE case instrument (ADR-083, proposed).** At `<=960px`,
+  client/case identity stays fixed above `BRIEF / PROOF / ARTIFACT`; exactly one
+  bounded seat is visible and a four-stop rail owns track selection. Keep the
+  desktop Directory mounted and in state parity, but do not mount a second
+  `TrackVisual`. Controls are at least 44px, the narrowest rung drops redundant
+  previous/next arrows, and inner artifact scroll releases to the page at its
+  bounds. Desktop PRM still uses the complete static document; this phone
+  state must not enter the capable runway/scrollspy path.
 - **The runway split is the whole mechanism.** The ring's visibility rides
   `--corridor-dissipate`, which saturates ~14 % into the runway — it can
   never express "scroll past a panel". `splitServicesRunway` (`ringMath.ts`)

@@ -299,6 +299,12 @@ function isDesktopViewport(page: Page): boolean {
   return (page.viewportSize()?.width ?? 0) >= 961;
 }
 
+function expectNear(actual: number, expected: number, tolerance: number, label: string) {
+  expect(Math.abs(actual - expected), `${label}: ${actual} vs ${expected}`).toBeLessThanOrEqual(
+    tolerance
+  );
+}
+
 test.describe("Services card ring smoke (ADR-029)", () => {
   test("desktop: the proof casefile holds the stage before the ring arrives (ADR-056)", async ({
     page,
@@ -2232,6 +2238,122 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(aboutStatic.mode).toBeNull();
     expect(aboutStatic.runwayH).toBeLessThan(10);
     expect(aboutStatic.voidwalker).not.toBe("none");
+  });
+
+  test("phones retune one bounded Proof instrument", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "explicit phone viewport matrix");
+
+    for (const viewport of [
+      { width: 320, height: 568 },
+      { width: 390, height: 844 },
+      { width: 960, height: 900 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+      const casefile = page.locator(".fl-case");
+      await casefile.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(120);
+
+      const readInstrument = () =>
+        page.evaluate(() => {
+          const required = (selector: string) => {
+            const element = document.querySelector<HTMLElement>(selector);
+            if (!element) throw new Error(`Missing ${selector}`);
+            return element;
+          };
+          const root = required(".fl-case");
+          const surfaces = [".fl-brief", ".fl-proof-register", ".fl-panel"].map((selector) => {
+            const element = required(selector);
+            const style = getComputedStyle(element);
+            return {
+              visible: style.display !== "none",
+              height: element.getBoundingClientRect().height,
+              overscrollY: style.overscrollBehaviorY,
+              tabIndex: element.tabIndex,
+            };
+          });
+          const modes = Array.from(document.querySelectorAll<HTMLElement>(".fl-mobile-view"));
+          const stops = Array.from(document.querySelectorAll<HTMLElement>(".fl-mobile-rail__stop"));
+          const steps = Array.from(document.querySelectorAll<HTMLElement>(".fl-mobile-rail__step"));
+          return {
+            view: root.dataset.mobileView,
+            height: root.getBoundingClientRect().height,
+            localOverflow: root.scrollWidth - root.clientWidth,
+            surfaces,
+            pressedViews: modes.filter((element) => element.getAttribute("aria-pressed") === "true")
+              .length,
+            currentStops: stops.filter((element) => element.getAttribute("aria-current") === "step")
+              .length,
+            mobileTitle: required(".fl-mobile-head__title").textContent?.trim() ?? "",
+            modeHeights: modes.map((element) => element.getBoundingClientRect().height),
+            stopHeights: stops.map((element) => element.getBoundingClientRect().height),
+            stopWidths: stops.map((element) => element.getBoundingClientRect().width),
+            stepDisplays: steps.map((element) => getComputedStyle(element).display),
+          };
+        });
+
+      const label = `${viewport.width}x${viewport.height}`;
+      const artifact = await readInstrument();
+      expect(artifact.view).toBe("artifact");
+      expect(artifact.pressedViews).toBe(1);
+      expect(artifact.currentStops).toBe(1);
+      expect(artifact.height, `${label}: whole Proof instrument`).toBeLessThanOrEqual(
+        viewport.height + 1
+      );
+      expect(artifact.localOverflow, `${label}: local horizontal overflow`).toBeLessThanOrEqual(1);
+      expect(artifact.surfaces.filter((surface) => surface.visible)).toHaveLength(1);
+      expect(artifact.surfaces.find((surface) => surface.visible)?.tabIndex).toBe(0);
+      for (const height of [...artifact.modeHeights, ...artifact.stopHeights]) {
+        expect(height, `${label}: touch target`).toBeGreaterThanOrEqual(44);
+      }
+      for (const width of artifact.stopWidths) {
+        expect(width, `${label}: case stop`).toBeGreaterThanOrEqual(44);
+      }
+      if (viewport.width < 390) {
+        expect(artifact.stepDisplays.every((display) => display === "none")).toBe(true);
+      }
+
+      const seatHeight = artifact.surfaces.find((surface) => surface.visible)!.height;
+      for (const mode of ["brief", "proof"] as const) {
+        await page.locator(`#svc-casefile-view-${mode}`).click();
+        const state = await readInstrument();
+        expect(state.view).toBe(mode);
+        expect(state.pressedViews).toBe(1);
+        expect(state.currentStops).toBe(1);
+        expect(state.surfaces.filter((surface) => surface.visible)).toHaveLength(1);
+        expect(state.surfaces.find((surface) => surface.visible)?.tabIndex).toBe(0);
+        expectNear(
+          state.surfaces.find((surface) => surface.visible)!.height,
+          seatHeight,
+          1,
+          `${label}: ${mode} seat`
+        );
+        expect(
+          state.surfaces.find((surface) => surface.visible)!.overscrollY,
+          `${label}: ${mode} releases page scroll`
+        ).toBe("auto");
+      }
+
+      await page.locator("#svc-casefile-view-artifact").click();
+      const titles = new Set<string>();
+      for (const stop of await page.locator(".fl-mobile-rail__stop").all()) {
+        await stop.click();
+        const state = await readInstrument();
+        expect(state.surfaces.filter((surface) => surface.visible)).toHaveLength(1);
+        expect(state.surfaces.find((surface) => surface.visible)?.tabIndex).toBe(0);
+        expect(state.pressedViews).toBe(1);
+        expect(state.currentStops).toBe(1);
+        expect(state.mobileTitle.length).toBeGreaterThan(1);
+        titles.add(state.mobileTitle);
+        expectNear(
+          state.surfaces.find((surface) => surface.visible)!.height,
+          seatHeight,
+          1,
+          `${label}: case seat`
+        );
+      }
+      expect(titles.size, `${label}: case identity retunes`).toBe(4);
+    }
   });
 
   test("light: the map console's palette carries its contrast (ADR-063 U2)", async ({ page }) => {

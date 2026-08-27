@@ -23,6 +23,7 @@ component you can edit in isolation.
 - [ADR-025: Services hologram stage](../sentinel/decisions/025-services-hologram-stage.md) — the oscillation history; read before redesigning this surface again
 - [ADR-044: Services masthead](../sentinel/decisions/044-services-masthead.md) · [ADR-047: About deck flip](../sentinel/decisions/047-about-deck-flip-stage.md) — the beat before and the beat after
 - [ADR-061: Intelligence Map work configurations](../sentinel/decisions/061-intelligence-map-work-configurations.md) — proposed harmonization contract for the Proof field mounted at the front of this stage; do not mark accepted before verification
+- [ADR-083: Mobile evidence instruments](../sentinel/decisions/083-mobile-evidence-instruments.md) — proposed phone IA for the Proof casefile and Voidwalker character stage
 
 ## The card is ONE object
 
@@ -102,8 +103,11 @@ Keep the field on the DOM seam: pure deterministic layout, one bounded
 click-driven intra-field FLIP, no second canvas/force graph, no runtime private
 fetch and no Three/R3F/Drei import. Its instrument grammar is flat: solid
 surfaces, one-pixel rules and categorical marks, with no map gradient or hatch
-fill. Mobile uses grouped in-flow rows and detail rather than squeezing the
-desktop field. `97%` stays canonical across Proof and the AI keynote, and all
+fill. At `<=960px`, Mobile holds one bounded case seat and retunes it through
+explicit BRIEF / PROOF / ARTIFACT controls plus a direct four-stop rail; it
+never mounts a second visual or squeezes the desktop columns side by side.
+Nested artifact scroll releases to the page at its bounds. `97%` stays
+canonical across Proof and the AI keynote, and all
 four Software for Few capability labels remain live while their canonical tool
 records remain Production. Full accepted contracts and verification evidence
 live in ADR-061 and `.claude/rules/proof.md`.

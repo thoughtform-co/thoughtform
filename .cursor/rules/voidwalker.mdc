@@ -26,6 +26,7 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
 **Read first**
 
 - [ADR-082 U2: production hologram stage](../sentinel/decisions/082-voidwalker-character-stage.md)
+- [ADR-083: Mobile evidence instruments](../sentinel/decisions/083-mobile-evidence-instruments.md) — proposed phone-only character instrument
 - [ADR-074: The through-line](../sentinel/decisions/074-voidwalker-through-line.md) — retained record/fallback machinery
 - [ADR-047](../sentinel/decisions/047-about-deck-flip-stage.md) (the station before it, whose exit relies on this one's top) · [ADR-056](../sentinel/decisions/056-services-proof-casefile.md) (the cover role's previous holder) · [ADR-068](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) (the wireframe grammar this forks) · [ADR-059](../sentinel/decisions/059-rail-instruments.md) (the journey mark, and the telemetry the right guard clears)
 
@@ -79,9 +80,12 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
   identity/FACTS/ON RECORD on the left, hologram/projector only in the centre,
   and SCOPE/TRANSMISSION/LOADOUT on the right. Both dossiers start on one lower
   datum while the full-height figure stays fixed; inactive tabs are neutral and
-  gold is active wayfinding only. Reserve those seats across all six eras; at
-  `<=1100px` restore the 3-by-2 selector and flatten to selector, identity,
-  figure, FACTS, SCOPE, optional records. The handoff gate is atomic across portrait, FACTS and
+  gold is active wayfinding only. Reserve those seats across all six eras. At
+  `701–1100px`, retain the 3-by-2 complete normal-flow dossier; at `<=700px`
+  (ADR-083, proposed), use identity → figure → one-row six-era rail → RECORD /
+  SCOPE / TRANSMISSION → one active dossier seat. Transmission is disabled
+  without an authored film and phone visibility stays CSS-only. The handoff
+  gate is atomic across portrait, FACTS and
   `era-title` rects. About's name and dossier are sibling transform actors
   under a layout-only shell. Media is a bottom-centred normalized 720x1280
   `CharacterEraHologram`; no runtime calibration transforms. The slot bottom

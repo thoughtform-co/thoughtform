@@ -233,6 +233,293 @@
   );
 }
 
+/* ══ Phone case instrument ══════════════════════════════════════════════
+   Desktop keeps the two-column proof plane above. On a phone the same
+   content becomes ONE stable seat with three explicit readings and a
+   persistent case-position rail. The generated concept and the supplied
+   industrial references informed the hierarchy only; every production mark
+   remains semantic DOM, selectable text and the existing authored plates. */
+.fl-mobile-head,
+.fl-mobile-views,
+.fl-mobile-rail {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .fl-case {
+    --fl-mobile-stage-h: clamp(320px, 52svh, 480px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    padding-bottom: clamp(30px, 8vw, 52px);
+  }
+
+  /* One client today: retain the series identity without spending a second
+     display row on the dormant archive label. */
+  .fl-tabs {
+    min-height: 44px;
+    margin: 0 0 12px;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 12px;
+    border-bottom: 1px solid rgba(var(--gold-rgb), 0.2);
+  }
+  .fl-tabs__tab {
+    min-height: 44px;
+    padding: 0 0 9px;
+    align-items: flex-end;
+  }
+  .fl-tabs__archive {
+    display: none;
+  }
+
+  .fl-mobile-head {
+    display: block;
+    min-width: 0;
+    padding: 10px 0 15px;
+  }
+  .fl-mobile-head__meta,
+  .fl-mobile-head__class {
+    margin: 0;
+    font-family: var(--fl-mono);
+    text-transform: uppercase;
+  }
+  .fl-mobile-head__meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 10px;
+    line-height: 1.2;
+    letter-spacing: 0.14em;
+    color: rgba(var(--dawn-rgb), 0.48);
+  }
+  .fl-mobile-head__meta span:last-child {
+    color: rgba(var(--gold-rgb), 0.86);
+    text-align: right;
+  }
+  .fl-mobile-head__title {
+    margin: 15px 0 0;
+    font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+    font-size: clamp(27px, 8.4vw, 38px);
+    font-weight: 700;
+    line-height: 0.98;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--dawn);
+    text-wrap: balance;
+  }
+  .fl-mobile-head__title b {
+    color: var(--gold);
+  }
+  .fl-mobile-head__class {
+    margin-top: 8px;
+    font-size: 9.5px;
+    line-height: 1.35;
+    letter-spacing: 0.12em;
+    color: rgba(var(--dawn-rgb), 0.46);
+  }
+
+  .fl-mobile-views {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 0;
+    border-top: 1px solid rgba(var(--gold-rgb), 0.16);
+    border-bottom: 1px solid rgba(var(--gold-rgb), 0.16);
+  }
+  .fl-mobile-view {
+    position: relative;
+    appearance: none;
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 8px;
+    border: 0;
+    border-left: 1px solid rgba(var(--gold-rgb), 0.12);
+    background: transparent;
+    color: rgba(var(--dawn-rgb), 0.48);
+    font: 400 10px/1 var(--fl-mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .fl-mobile-view:first-child {
+    border-left: 0;
+  }
+  .fl-mobile-view[data-on] {
+    color: var(--dawn);
+  }
+  .fl-mobile-view[data-on]::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -3px;
+    width: 5px;
+    height: 5px;
+    background: var(--gold);
+    transform: translateX(-50%) rotate(45deg);
+  }
+  .fl-mobile-view[data-on]::after {
+    content: "";
+    position: absolute;
+    inset: auto 8px -1px;
+    height: 1px;
+    background: var(--gold);
+  }
+  .fl-mobile-view:focus-visible,
+  .fl-mobile-rail button:focus-visible {
+    outline: 1px solid rgba(var(--gold-rgb), 0.8);
+    outline-offset: -3px;
+  }
+  .fl-case .fl-brief:focus-visible,
+  .fl-case .fl-proof-register:focus-visible {
+    outline: 1px solid rgba(var(--gold-rgb), 0.62);
+    outline-offset: -3px;
+  }
+
+  /* The desktop directory has two jobs there: selection and scrollspy
+     feedback. The four-stop rail below owns both on phone. */
+  .fl-case .fl-dir {
+    display: none;
+  }
+
+  .fl-case .fl-brief,
+  .fl-case .fl-proof-register,
+  .fl-case .fl-panel {
+    display: none;
+    width: 100%;
+    height: var(--fl-mobile-stage-h);
+    margin: 0;
+    border-bottom: 1px solid rgba(var(--gold-rgb), 0.16);
+  }
+  .fl-case[data-mobile-view="brief"] .fl-brief,
+  .fl-case[data-mobile-view="proof"] .fl-proof-register,
+  .fl-case[data-mobile-view="artifact"] .fl-panel {
+    display: block;
+  }
+
+  .fl-case .fl-brief {
+    padding: clamp(22px, 6vw, 34px) 2px 18px;
+    overflow-y: auto;
+    overscroll-behavior-y: auto;
+  }
+  /* Identity is fixed above the mode switch; repeating it inside BRIEF
+     turns the stable shell back into a scrolling document. */
+  .fl-case .fl-brief__title,
+  .fl-case .fl-brief__class {
+    display: none;
+  }
+  .fl-case .fl-brief__body {
+    max-width: 46ch;
+    margin: 0;
+    font-size: clamp(15px, 4.2vw, 17px);
+    line-height: 1.58;
+    color: rgba(var(--dawn-rgb), 0.76);
+  }
+
+  .fl-case .fl-proof-register {
+    --fl-glyph: 21px;
+    overflow-y: auto;
+    overscroll-behavior-y: auto;
+  }
+  .fl-case .fl-proof-register__list {
+    min-height: 100%;
+    height: auto;
+    grid-auto-rows: auto;
+  }
+  .fl-case .fl-proof-register__item {
+    min-height: 64px;
+    padding: 11px 0;
+    overflow: visible;
+  }
+  .fl-case .fl-proof-register__claim {
+    font-size: clamp(12px, 3.5vw, 13.5px);
+  }
+  .fl-case .fl-proof-register__description {
+    font-size: clamp(13.5px, 3.8vw, 15px);
+    line-height: 1.42;
+  }
+
+  .fl-case .fl-panel {
+    overflow: hidden;
+  }
+  .fl-case .fl-panel__viz {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+  }
+  /* Re-house each existing plate in the fixed artifact seat. The map's
+     deliberate index and the other consoles scroll INSIDE the instrument,
+     so opening an artifact never turns the whole section into a long dump. */
+  .fl-case[data-mobile-view="artifact"] .fl-panel__viz > .fl-plate,
+  .fl-case[data-mobile-view="artifact"] .fl-panel__viz > .fl-con {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .fl-case[data-mobile-view="artifact"] .fl-panel__viz .fl-con__console {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: auto;
+  }
+  .fl-case[data-mobile-view="artifact"] .fl-panel__viz .fl-pda__list {
+    height: 100%;
+    overscroll-behavior-y: auto;
+  }
+
+  .fl-mobile-rail {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    min-width: 0;
+    margin-top: 12px;
+    border-top: 1px solid rgba(var(--gold-rgb), 0.18);
+    border-bottom: 1px solid rgba(var(--gold-rgb), 0.18);
+  }
+  .fl-mobile-rail__stops {
+    display: grid;
+    min-width: 0;
+    border-inline: 1px solid rgba(var(--gold-rgb), 0.14);
+  }
+  .fl-mobile-rail__step,
+  .fl-mobile-rail__stop {
+    position: relative;
+    appearance: none;
+    min-width: 0;
+    min-height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: rgba(var(--dawn-rgb), 0.42);
+    font: 400 10.5px/1 var(--fl-mono);
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+  .fl-mobile-rail__step {
+    color: rgba(var(--gold-rgb), 0.72);
+    font-size: 18px;
+  }
+  .fl-mobile-rail__stop + .fl-mobile-rail__stop {
+    border-left: 1px solid rgba(var(--gold-rgb), 0.1);
+  }
+  .fl-mobile-rail__stop[data-on] {
+    color: var(--gold);
+  }
+  .fl-mobile-rail__stop[data-on]::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -3px;
+    width: 5px;
+    height: 5px;
+    background: var(--gold);
+    transform: translateX(-50%) rotate(45deg);
+  }
+}
+
 .services-stage[data-proof-live] .fl-case {
   visibility: visible;
 }
@@ -4699,13 +4986,13 @@
   }
 }
 
-/* ══ Mobile / reduced motion ═══════════════════════════════════════════
-   Below the enhanced tier the stage is a static vertical list (the plate
-   accordion), so the casefile drops out of the absolute layer entirely and
-   flows above it — the DOM-order trick `.services-masthead` and
-   `.svc-dossier` both use. It renders RESOLVED: the reveal never runs here,
-   and `--svc-proof-out` is parked at 0 by the inert branch of the scroll
-   hook, so nothing can fade it out. ═════════════════════════════════════ */
+/* ══ Inert positioning base · phones + reduced motion ══════════════════
+   Both paths leave the enhanced runway and must render resolved, in normal
+   flow, without compositor ownership. Desktop PRM keeps the complete static
+   document described below. Phones inherit this inert base but ADR-083's
+   earlier instrument rules + final source-order seal re-house the authored
+   surfaces in one bounded seat. `--svc-proof-out` remains parked at 0, so
+   neither path can fade away. ═══════════════════════════════════════════ */
 
 @media (max-width: 960px), (prefers-reduced-motion: reduce) {
   .fl-case {
@@ -4818,9 +5105,10 @@
   }
 }
 
-/* Mobile is a readable case document, not a miniaturized desktop panel.
-   Each evidence kind gets its own natural flow and all directory targets
-   retain the 44px interaction floor. */
+/* Legacy flow resets shared with desktop PRM. On phones these rules still
+   make every artifact intrinsically readable, then ADR-083's final seal
+   constrains the selected artifact back into the mobile instrument seat.
+   They are a content base now, not the phone's information architecture. */
 @media (max-width: 960px) {
   .fl-row {
     min-height: 44px;
@@ -5729,5 +6017,57 @@
     font: 9px/1.5 var(--font-mono, monospace);
     letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+}
+
+/* SOURCE-ORDER SEAL. The legacy static-document fallback above deliberately
+   comes later than the shared shell rules and still says `display: block` /
+   wrapping tabs. Phones now use the instrument contract, so restate only the
+   structural properties that that older rung would otherwise win. */
+@media (max-width: 960px) {
+  .fl-case {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    padding-bottom: clamp(30px, 8vw, 52px);
+  }
+  .fl-tabs {
+    min-height: 44px;
+    height: auto;
+    margin: 0 0 12px;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 12px;
+  }
+  .fl-tabs__tab {
+    min-height: 44px;
+    padding: 0 0 9px;
+    align-items: flex-end;
+  }
+  .fl-case .fl-panel__viz[data-kind] {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+/* Preserve 44px case stops on the narrowest supported phones. The arrow
+   controls are redundant there because every case remains directly visible. */
+@media (max-width: 389px) {
+  .fl-mobile-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .fl-mobile-rail__step {
+    display: none;
+  }
+  .fl-mobile-rail__stops {
+    border-inline: 0;
+  }
+}
+
+/* Short phones need the page scroll sooner; the active seat still stays
+   large enough to read and scroll as one bounded instrument. */
+@media (max-width: 700px) and (max-height: 640px) {
+  .fl-case {
+    --fl-mobile-stage-h: clamp(236px, 42svh, 300px);
   }
 }
