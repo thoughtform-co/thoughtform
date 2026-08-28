@@ -383,32 +383,45 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // ⚠ The Azeroth era's WARDROBE is deliberately the one exception to the
     // identity-map's six-era uniform (blazer · turtleneck · cap · rolled cuff
     // · combat boots). The 2020 field site was Azeroth itself: the figure is
-    // Vince's Warcraft warlock ARAFEL (Human, Alliance, Magtheridon EU, id
-    // 186849480) — hooded warlock cowl, fel-crystal skull spires, dark robe
-    // with fel-green sigil, sword and offhand fel-fire. The wave that authored
-    // this pair (`voidwalker-avatar/waves/20260828-azeroth-v1`) uses this
-    // outfit; the skill's `era-wardrobes.md` carries the written boots-law
-    // exception. The loadout row below letters what the plate SHOWS, not the
-    // six-era uniform.
+    // Vince's Warcraft warlock ARAFEL (Human, Alliance, Magtheridon EU), in
+    // his own "Daemoniac" transmog, with a Doomguard behind him.
+    //
+    // ⚠ AND IT IS NOT A DESCRIPTION ANY MORE — IT IS THE GAME'S OWN RENDER.
+    // v1 ran a written wardrobe through an image model, which is a paraphrase:
+    // the head came back a generic cowl, the shoulders invented fel spires,
+    // the mainhand a nondescript sword. v2 captures Blizzard's renderer driven
+    // by the character's own transmog record, so every item below is an item
+    // id, not an adjective. The loadout row letters the four pieces that read
+    // at hologram scale; the full thirteen-slot table is in the wave's
+    // `manifest.json` (`voidwalker-avatar/waves/20260828-azeroth-v2`).
     wardrobe: "The Azeroth teacher",
-    loadout: "Warlock kit · Arafel · fel-crystal spires · offhand fel-fire.",
+    loadout: "Daemoniac · Shard of Azzinoth · Skull of the Man'ari · Doomguard.",
     motto: "Class moved into the game.",
     modelPath: null,
     stillPath: "/images/services/vince.webp",
-    // The first non-thoughtform hologram. headY/footY measured from the
-    // rendered poster (`holo-still-azeroth.webp`, alpha mask, opaque cutoff
-    // 32/255). The figure sits ~8pp higher in the frame than thoughtform's
-    // (0.044 vs 0.122) because the Arafel silhouette fills more of the crop
-    // — the fel-crystal spires and hood push the top up while the boots stop
-    // one row short of the floor.
+    // The first non-thoughtform hologram, and the first captured rather than
+    // generated. `-v2` is in the filename because the v1 pair shipped and a
+    // cache does not read commit messages.
+    //
+    // ⚠ headY/footY DESCRIBE THE MAN, NOT THE COMPOSITE. Measured off a
+    // companion-free re-composite of frame zero (alpha mask, opaque cutoff
+    // 32/255): read from the delivered poster instead, headY came back 0.000,
+    // because the Doomguard's wingtip reaches the frame's top edge — a value
+    // `isCharacterEraHologram` accepts without complaint, since it only asks
+    // for 0 ≤ headY < footY ≤ 1. The demon is scenery and may not move the
+    // projector's anchor.
+    //
+    // The figure still sits ~7pp higher than thoughtform's (0.051 vs 0.122):
+    // the fel-fire skulls off the Skull of the Man'ari push the top up while
+    // the boots stop a few rows short of the floor.
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-azeroth.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth.webm",
-      posterPath: "/images/voidwalker/holo-still-azeroth.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-azeroth.webp",
+      videoPath: "/videos/voidwalker/holo-idle-azeroth-v2.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v2.webm",
+      posterPath: "/images/voidwalker/holo-still-azeroth-v2.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v2.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.044,
-      footY: 0.975,
+      headY: 0.051,
+      footY: 0.973,
     },
     short: "Azeroth",
     facts: [

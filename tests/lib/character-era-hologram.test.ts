@@ -25,11 +25,10 @@ describe("ADR-082 · normalized character hologram assets", () => {
 
   it("keeps every unauthored era on the canonical pair", () => {
     // The AZEROTH era is the first non-thoughtform pair to ship — its wardrobe
-    // is the WoW warlock Arafel (the site owner's actual 2020 character), and
-    // the wave `voidwalker-avatar/waves/20260828-azeroth-v1` produced its own
-    // 720×1280 gold-emissive hologram with a fel-green accent on the shoulder
-    // crystals and the offhand fel-fire. Every OTHER era still resolves to
-    // the canonical thoughtform pair until its own wave lands.
+    // is the WoW warlock Arafel (the site owner's actual 2020 character) in his
+    // own "Daemoniac" transmog, captured from Blizzard's renderer by the wave
+    // `voidwalker-avatar/waves/20260828-azeroth-v2`. Every OTHER era still
+    // resolves to the canonical thoughtform pair until its own wave lands.
     for (const era of CHARACTER_ERAS) {
       if (era.id === "azeroth") continue;
       expect(resolveCharacterEraHologram(era), era.id).toBe(CANONICAL_CHARACTER_ERA_HOLOGRAM);
@@ -43,14 +42,19 @@ describe("ADR-082 · normalized character hologram assets", () => {
 
     const resolved = resolveCharacterEraHologram(azeroth);
     expect(resolved).not.toBe(CANONICAL_CHARACTER_ERA_HOLOGRAM);
-    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth.mp4");
-    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth.webm");
-    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth.jpg");
-    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth.webp");
-    // Measured from the poster's opaque cutoff — the figure sits higher in
-    // the frame than thoughtform's (the fel-crystal spires push the top up).
-    expect(resolved.headY).toBeCloseTo(0.044, 3);
-    expect(resolved.footY).toBeCloseTo(0.975, 3);
+    // ⚠ `-v2` IS PART OF THE CONTRACT. The v1 pair shipped under the unsuffixed
+    // names, and overwriting a live URL leaves every warm cache serving the
+    // generated figure this wave exists to replace.
+    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth-v2.mp4");
+    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth-v2.webm");
+    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth-v2.jpg");
+    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth-v2.webp");
+    // Measured on a COMPANION-FREE re-composite of frame zero, at the poster's
+    // opaque cutoff. The Doomguard's wingtip touches the frame's top edge, so
+    // measuring the delivered poster reports headY 0.000 — legal by the runtime
+    // guard's arithmetic and wrong about the figure it is supposed to describe.
+    expect(resolved.headY).toBeCloseTo(0.051, 3);
+    expect(resolved.footY).toBeCloseTo(0.973, 3);
     // Sanity: the head anchor is above the foot anchor and both are inside
     // the frame — the same law the runtime guard enforces on every era.
     expect(resolved.headY).toBeLessThan(resolved.footY);

@@ -905,9 +905,14 @@ from the four-rung tuple to any desktop shape so it can.
 
 ## Update 12 — the first non-thoughtform hologram lands (2026-08-28, owner)
 
-**Status: Accepted (owner, 2026-08-28).** No composition or clock behaviour
-changes. This is an ASSET note that lifts one era off the canonical fallback,
-and it records the pattern the remaining four era waves will follow.
+**Status: Accepted (owner, 2026-08-28). ⚠ ITS ASSET AND ITS PIPELINE ARE
+SUPERSEDED BY [U13](#update-13--the-azeroth-era-is-captured-not-generated-2026-08-28-owner)
+— the Azeroth figure is a capture of Blizzard's renderer now, not a generated
+one, and the paths below are v1.** The RULING (this era is the written
+exception to the uniform) and the five-step integration walk still bind. No
+composition or clock behaviour changes. This is an ASSET note that lifts one
+era off the canonical fallback, and it records the pattern the remaining four
+era waves will follow.
 
 ### The ruling
 
@@ -1009,3 +1014,151 @@ new asset; (d) wire the `hologram` field with measured `headY`/`footY`;
 past the new era and add an era-specific assertion. This is the walk
 for the four remaining fallbacks (loop, genai, the-crowd, creatives —
 thoughtform is already shipping).
+
+---
+
+## Update 13 — the Azeroth era is CAPTURED, not generated (2026-08-28, owner)
+
+**Status: Accepted (owner, 2026-08-28). SUPERSEDES U12's asset, its pipeline
+and its reference-extraction pattern for this era.** No composition or clock
+behaviour changes; the registry field, the anchors and the four files behind
+them do.
+
+### The ruling
+
+**A described transmog is a paraphrase, and this era's whole claim is that it
+is the real thing.** U12 ran the wardrobe through an image model on a written
+prompt, and the model answered with a plausible warlock: a generic hood where
+the record has a Maroon Quotidian Hood, invented fel spires where the record
+has Earthripple Shoulderpads, a nondescript sword where the record has the
+Shard of Azzinoth. Every clause of that prompt was true and the picture was
+still wrong, because a wardrobe sentence has no item ids in it.
+
+So the generative step is removed from this era entirely. The figure is a
+capture of the SAME renderer the game and the armory use, driven by the
+character's own transmog record — and the demon behind him is a second capture
+of the same renderer, not an illustration of one.
+
+### What the record is
+
+`voidwalker-avatar/waves/20260828-azeroth-v2/manifest.json` is the source of
+truth: the owner's dressing-room hash decoded IN PAGE by Wowhead's own
+`getCharacterForHash`, giving thirteen slots with item ids, bonus ids and
+source ids, plus **32 non-zero customization choices** (the face is Arafel's,
+and the render is not reproducible without them).
+
+⚠ **TWO AGREEING SOURCES BEAT ONE.** The in-game Narcissus record of the
+"Daemoniac" outfit agrees with the hash slot for slot. The `/customset` string
+the owner pasted DIVERGES in two fields — it reads Hidden Bracers where both
+others carry a real wrist item, and a different feet source — and is recorded
+as rejected rather than reconciled. The hash is what actually renders.
+
+### The capture, and the four things that made it hard
+
+- ⚠ **THE ANIMATION MUST NOT ADVANCE IN WALL-CLOCK TIME.** Software rendering
+  plus a full-canvas PNG costs ~7.3s per frame, so a real-time capture samples
+  the idle 7.3s apart — random phase, not motion. A virtual clock takes over
+  `performance.now`, `Date.now` and `requestAnimationFrame` after load, and the
+  script advances it by exactly 1/fps per frame. That is also what makes the
+  loop closeable: N frames at 1/fps is an exact interval.
+- ⚠ **AND FREEZING THE CLOCK DOES NOT CAPTURE THE LOOP.** The callback already
+  queued sits in the BROWSER's rAF queue and receives the browser's timestamp;
+  the viewer only enters the virtual queue when it registers its NEXT frame.
+  Ticking immediately after the freeze ran zero callbacks while the animation
+  kept advancing on real time — every frame differed, the staleness check read
+  8/8 distinct, and the capture was back to sampling ~1s apart while reporting
+  1/24s steps. The script now waits for the handoff and fails if it never comes.
+- ⚠ **THE DRESSING ROOM'S BACKDROP IS INSIDE THE CANVAS**, and the switch that
+  removes it (`setDressingRoomTransparency`) is a no-op without Wowhead's
+  premium screenshot entitlement. That backdrop is static and screen-space, so
+  the figure is PANNED OUT OF FRAME to record the plate alone and the matte is a
+  per-pixel difference against it. Measured: the two plates are byte-identical
+  and the plate matches the frames' corners to 0. ⚠ The plate must be taken on
+  the REAL clock — with the clock frozen the pan does nothing, `plate-a` comes
+  back as a copy of a figure frame, and the plates-agree check passes trivially
+  because a frozen clock cannot produce a difference.
+- ⚠ **DARK CLOTH IS CLOSED BY TOPOLOGY, NOT BY THRESHOLD.** The cloak, boots and
+  pauldrons sit within a few units of the backdrop. A threshold loose enough to
+  catch them catches the claw pattern too, so the silhouette is closed and
+  hole-filled instead, and the backdrop is un-mixed out of every partial alpha.
+
+### The companion has no matte at all
+
+⚠ **WOWHEAD'S CREATURE PAGE IS NOT USABLE UNDER AUTOMATION, AND THE FIX WAS TO
+STOP USING IT.** Three probes of `/npc=11859` never reached a viewer. The
+first two were called an ad-frame problem and "fixed" by aborting third-party
+requests, which made it worse — the last probe showed why: aborting the page's
+OWN subresources makes Wowhead serve a static CDN error page, so the capture
+was politely waiting for a canvas on a document that had none.
+
+Reading `viewer.min.js` settled it. `type` selects the SITE (2 = Wowhead), the
+models are `[{type, id}]` against the bundle's `Bn` enum (NPC = 8), the id is
+the DISPLAY id (64965 for the Doomguard, resolved off the page rather than
+guessed), and the renderer takes its context with `{alpha: true,
+premultipliedAlpha: false}` and clears to **alpha zero**. So the companion is
+rendered on a page we serve ourselves and **the PNG's own alpha channel IS the
+matte** — 160 frames in 33 seconds, against hours for the dressing room.
+
+Four things that page needed, each of which failed silently:
+
+- ⚠ **IT MUST BE SERVED AT WOWHEAD'S ORIGIN.** zamimg answers `meta/npc/*.json`
+  with 403 to any other `Origin`. On localhost the viewer constructed, sized its
+  canvas correctly and rendered nothing for 90 seconds. The stage is `fulfill`ed
+  at a wowhead.com URL: our HTML, their origin, which is where the bundle is
+  designed to run.
+- ⚠ **PLAYWRIGHT MATCHES ROUTES IN REVERSE.** Registered before the catch-all,
+  the stage route lost and the browser landed on Wowhead's real 404 — which
+  ships jQuery, so the only symptom was `ZamModelViewer` being undefined on a
+  page that otherwise looked alive.
+- ⚠ **THE TEXTURE EXTENSION INCLUDES ITS DOT AND IS `.webp`.** Two mistakes with
+  one symptom: an actor holding its `.m2` and `.skin`, a live render loop, and
+  an empty canvas with nothing thrown. Checked directly — `.png`, `.blp` and
+  `.dds` all 404, `.webp` is 200.
+- ⚠ **A WEBGL CANVAS CANNOT BE READ FROM INSIDE THE PAGE.** The ink probe drew
+  the canvas into a 2D one and counted opaque pixels; without
+  `preserveDrawingBuffer` that buffer is cleared at composite, so the probe was
+  measuring its own read. A compositor screenshot sees what the screen sees, and
+  its SIZE is the signal.
+
+### Two placement rules the arithmetic did not supply
+
+- ⚠ **THE CROP'S WIDTH IS MEASURED AGAINST THE BODY, NOT THE SILHOUETTE.** The
+  Skull of the Man'ari throws fel-fire skulls past both shoulders, so the
+  silhouette is 745 wide against a body of 522 — aspect 0.69 in a 0.5625 slot.
+  Sizing the crop to contain the plumes made the WIDTH lead, the box grew to
+  1404 tall for a 1082-tall man, and all 322 spare pixels pooled under his feet:
+  `footY` 0.816, an eighteen-percent hole between the man and the plate he
+  stands on. A plume may run off the edge; the man may not. Body columns are
+  found by ink-per-column mass, which is a statement about what the pixels ARE
+  rather than a tuned inset.
+- ⚠ **THE ANCHORS DESCRIBE THE MAN, NOT THE COMPOSITE.** Measured off the
+  delivered poster, `headY` came back **0.000** — the Doomguard's wingtip at the
+  frame's top edge. `isCharacterEraHologram` accepts it, because it only asks
+  for `0 ≤ headY < footY ≤ 1`. Frame zero is re-composited without the companion
+  and measured there.
+- The two idles have unrelated periods (64 frames for the figure, 89 for the
+  demon). `npc[i % len]` wraps mid-stride once per loop and reads as a flinch,
+  so the companion is RESAMPLED onto the figure's period — a few percent of
+  playback rate on a breathing idle, against a visible hitch.
+
+### What changed
+
+- **`characterEras.ts` — the `azeroth` hologram repoints to `-v2` paths**,
+  `headY 0.044 → 0.051`, `footY 0.975 → 0.973`. ⚠ The suffix is part of the
+  contract: v1 shipped under the unsuffixed names, and overwriting a live URL
+  leaves every warm cache serving the generated figure. The loadout row now
+  letters the real items — "Daemoniac · Shard of Azzinoth · Skull of the
+  Man'ari · Doomguard".
+  ⚠ **THE SUFFIX IS A CACHE ARGUMENT, NOT A REASON TO KEEP THE OLD FILES.** The
+  four v1 assets are deleted in the same commit that repoints the registry —
+  orphaned media in `public/` ships on every deploy (3.5 MB here), which is
+  exactly what the landing-performance doctrine's asset rule guards. Renaming
+  and deleting answer different questions; doing only the first leaves the
+  weight behind.
+- **`character-era-hologram.test.ts`** pins the `-v2` paths and the new anchors.
+- **Every asset got SMALLER** while the fidelity went up, because a game render
+  has less entropy than a diffusion model's idea of one: WebM 3.18 → 1.42 MB,
+  MP4 1.16 MB → 331 KB, poster 170 → 118 KB, alpha poster 281 → 163 KB.
+- **U12's `geq`-LUT recipe does not apply to this era** and neither does its
+  `main-raw.png` reference-extraction pattern. Both stand for the generative
+  eras; this one has no prompt, no LUT and no key.

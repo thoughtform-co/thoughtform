@@ -61,9 +61,16 @@ handoff and the `701–1100px` complete fallback alone.
   paints transparent onto the corridor's non-uniform ambient that floor IS a
   visible black pane — by construction, not at its edges. Three attempts at its
   edges failed for that reason. The exit is real alpha: `videoAlphaPath`
-  (VP9/WebM `yuva420p`, keyed from luminance) + `posterAlphaPath`. On that
-  branch `data-holo-alpha` switches the hacks off — `mix-blend-mode: normal`,
-  no ground, transparent wrap, `isolation: auto`.
+  (VP9/WebM `yuva420p`) + `posterAlphaPath`. On that branch `data-holo-alpha`
+  switches the hacks off — `mix-blend-mode: normal`, no ground, transparent
+  wrap, `isolation: auto`.
+  ⚠ **HOW THAT ALPHA IS OBTAINED IS PER-WAVE AND IS NOT A LUMINANCE KEY BY
+  LAW.** The thoughtform pair is keyed from luminance; the Azeroth pair
+  (ADR-082 U13) is DIFFERENCE-MATTED against a captured backdrop plate,
+  because Wowhead's dressing-room backdrop is inside the canvas and the dark
+  cloth is within a few units of it — a key loose enough to catch the cloak
+  eats the claw pattern. The registry field is the contract, the matte recipe
+  is the wave's.
   ⚠ **DO NOT DELETE THE FLOOR RULES**: Safari has no self-hostable alpha codec
   here (HEVC-alpha needs macOS videotoolbox) and keeps them.
   ⚠ **ROUTING IS A DECODE PROBE, NEVER `canPlayType`** — Safari plays
