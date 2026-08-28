@@ -900,3 +900,112 @@ reference matrix, because that is where the composition had room to go wrong —
 and asserts equal inboard gaps, equal outer margins, equal and still-capped
 panel measures, and the identity centred on the figure. `bootDesktop` widened
 from the four-rung tuple to any desktop shape so it can.
+
+---
+
+## Update 12 — the first non-thoughtform hologram lands (2026-08-28, owner)
+
+**Status: Accepted (owner, 2026-08-28).** No composition or clock behaviour
+changes. This is an ASSET note that lifts one era off the canonical fallback,
+and it records the pattern the remaining four era waves will follow.
+
+### The ruling
+
+The 2020 era ships its own hologram: Vince's ACTUAL 2020 field site was
+Azeroth, and the figure is his real Warcraft warlock ARAFEL rather than a
+teacher with a tote (which is the wardrobe the identity-map's six-era
+UNIFORM would have produced). This is the FIRST written EXCEPTION to the
+identity-map's boots-law + uniform constants — and it is exactly what
+ADR-082 U1 argued the character stage should express: one man across six
+eras, in the wardrobe he actually wore at each field site.
+
+### What changed
+
+- **`characterEras.ts` — `azeroth` gains a validated `hologram` field.**
+  Paths under `/videos/voidwalker/holo-idle-azeroth.{mp4,webm}` and
+  `/images/voidwalker/holo-still-azeroth.{jpg,webp}`. Measured
+  `headY = 0.044`, `footY = 0.975` (the figure sits higher in the frame
+  than thoughtform's 0.122 / 0.998 because the fel-crystal shoulder
+  spires push the top up and the boots stop one row short of the floor).
+  The wardrobe/loadout copy on the entry now reads "Warlock kit · Arafel
+  · fel-crystal spires · offhand fel-fire" — the plate speaks for what
+  it SHOWS.
+- **`character-era-hologram.test.ts` — the fallback assertion narrows.**
+  The "every unauthored era on the canonical pair" test now `continue`s
+  past `azeroth`; a NEW test pins the azeroth-specific hologram's paths
+  and anchors, and the pair passes the runtime guard on both alpha slots
+  (WebM + WebP only, no MP4/JPG substitution). Total 8 hologram tests
+  green.
+- **`VoidwalkerHologram.tsx` — the comment updates to `FOUR OF THE SIX
+ERAS`.** The stale count was one of the ADR-082 U1 record's own open
+  edits; today's landing closes it against `20260828-azeroth-v1`.
+
+### The pipeline path is bespoke, and it is deliberate
+
+The five other eras run through `generate.py`'s canonical → cardinals →
+style loop, keyed on `era_wardrobes.md`'s PROMPT LOCK. That loop's base
+`Canonical portrait` prompt (`prompts.md`) hard-codes the six-era uniform
+(blazer · turtleneck · cap · rolled cuff · combat boots · brooch) and the
+BOOTS LAW. For azeroth those six clauses are **contradicted line by
+line** by the wardrobe; grafting an override into a PROMPT LOCK still
+leaves the base block printing what the era does not wear, so the wave
+ran as ONE bespoke prompt combining identity + WoW wardrobe + the
+shipping hologram grammar (`styles.md §holo-emissive-black`). The wave
+folder (`voidwalker-avatar/waves/20260828-azeroth-v1/run.py`) carries
+the exact recipe. `era_wardrobes.md`'s azeroth block is updated to
+record the exception in the skill's own vocabulary.
+
+### The reference-extraction pattern the next four waves will follow
+
+Wowhead has no download API and Blizzard's official API serves no 3D
+assets, but for any WoW character it does serve a **`main-raw.png`** —
+an official, transparent, full-body render of the character in-game with
+current transmog (this one 1600×1200 / 397 KB). Attached as slot 2 with
+the site owner's real photo in slot 1 (identity-map Rule 0), the model
+recreated the wardrobe piece-for-piece on the first wave. The route is
+`/profile/wow/character/{realm}/{character}/character-media` (free
+develop.battle.net client) OR — as this wave used — the reconstructed
+CDN URL `render.worldofwarcraft.com/{region}/character/{realm}/{mod}/{id}-
+main-raw.png`, which is a public asset by Blizzard's own path scheme.
+The Raider.IO character endpoint gives the equipped-item list (icon
+slugs live on wow.zamimg.com) for prompt anchoring, and Vince's own
+5120×1440 in-game captures on green/blue chroma + white matte fill the
+color/silhouette slots. No 3D extraction (wow.export) or FaceFusion
+face-swap was needed for this wave; the assets sit under
+`voidwalker-avatar/references/anchors/azeroth-arafel-*` for a re-roll.
+
+### The post-produce math is asset-derived, not inherited
+
+ADR-082 U6 required the alpha LUT to be re-derived from THIS asset's
+measured luma levels, and the shipping recipe for thoughtform
+(`clip((val-8)*12, 0, 255)`) was calibrated to that asset. Sampled
+across all 8 second-extracted frames of the Veo output:
+`ground_max = 2.0`, `body_min = 43.6`, `head_mean = 61.7`. The derived
+LUT is `clip((val-8)*8, 0, 255)` — same offset (both grounds sit on true
+black), tighter scale (gold armor absorbs where wool scattered). WebM
+at CRF 48 lands 3.26 MB (1.8× thoughtform's 1.82 MB, mostly the crystals
+
+- sword + fel-fire entropy). MP4 at CRF 26 lands 1.19 MB (in family with
+  thoughtform's 1.08).
+
+⚠ **`alphamerge` on this ffmpeg build silently dropped chroma**,
+producing a WebM that inspected as `alpha_mode=1` but rendered pure
+silver on extraction. The `geq` filter path operating on RGBA — with
+BT.601 luma computed inline (`0.299*r+0.587*g+0.114*b`) — preserved
+color. This is the recipe going forward, recorded in
+`voidwalker-avatar/waves/20260828-azeroth-v1/measure_and_post.py`.
+
+### The remaining four eras follow the same pattern
+
+For an era with an in-game field site (loop, thoughtform, genai, the-
+crowd, creatives are all outside a game), the extraction path stays
+generative + skill anchors. Where a new era ever needs its own wardrobe
+override, the pattern is: (a) record the exception in this ADR's next
+update AND in the skill's era-wardrobes.md; (b) author a bespoke wave
+script in the wave folder combining identity + wardrobe + hologram
+grammar; (c) run through post-produce with LUT re-measured from the
+new asset; (d) wire the `hologram` field with measured `headY`/`footY`;
+(e) narrow the "every unauthored era on canonical" test to `continue`
+past the new era and add an era-specific assertion. This is the walk
+for the four remaining fallbacks (loop, genai, the-crowd, creatives —
+thoughtform is already shipping).

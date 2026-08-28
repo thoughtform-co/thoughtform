@@ -380,11 +380,36 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     id: "azeroth",
     beatId: "classroom",
     year: "2020",
+    // ⚠ The Azeroth era's WARDROBE is deliberately the one exception to the
+    // identity-map's six-era uniform (blazer · turtleneck · cap · rolled cuff
+    // · combat boots). The 2020 field site was Azeroth itself: the figure is
+    // Vince's Warcraft warlock ARAFEL (Human, Alliance, Magtheridon EU, id
+    // 186849480) — hooded warlock cowl, fel-crystal skull spires, dark robe
+    // with fel-green sigil, sword and offhand fel-fire. The wave that authored
+    // this pair (`voidwalker-avatar/waves/20260828-azeroth-v1`) uses this
+    // outfit; the skill's `era-wardrobes.md` carries the written boots-law
+    // exception. The loadout row below letters what the plate SHOWS, not the
+    // six-era uniform.
     wardrobe: "The Azeroth teacher",
-    loadout: "Blazer · turtleneck · cap · lecturer's tote · headphones.",
+    loadout: "Warlock kit · Arafel · fel-crystal spires · offhand fel-fire.",
     motto: "Class moved into the game.",
     modelPath: null,
     stillPath: "/images/services/vince.webp",
+    // The first non-thoughtform hologram. headY/footY measured from the
+    // rendered poster (`holo-still-azeroth.webp`, alpha mask, opaque cutoff
+    // 32/255). The figure sits ~8pp higher in the frame than thoughtform's
+    // (0.044 vs 0.122) because the Arafel silhouette fills more of the crop
+    // — the fel-crystal spires and hood push the top up while the boots stop
+    // one row short of the floor.
+    hologram: {
+      videoPath: "/videos/voidwalker/holo-idle-azeroth.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth.webm",
+      posterPath: "/images/voidwalker/holo-still-azeroth.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-azeroth.webp",
+      frame: { width: 720, height: 1280 },
+      headY: 0.044,
+      footY: 0.975,
+    },
     short: "Azeroth",
     facts: [
       { k: "Field site", v: "Azeroth" },

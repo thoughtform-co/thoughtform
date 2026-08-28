@@ -45,13 +45,16 @@ import { HoloFigure } from "./HoloFigure";
  *    reading hold and exit; choosing one of the six loadouts remains a
  *    tab, pointer, or keyboard action.
  *
- * ⚠ FIVE OF THE SIX ERAS RENDER THE THOUGHTFORM ASSET. Only the
- * thoughtform-era hologram exists so far (the `voidwalker-avatar` skill's
- * wave 20260826-thoughtform-v5). The other five era buttons switch the
- * copy panels but keep the same figure; the follow-up batch runs the
- * remaining five through the same pipeline. Author holograms lift here
- * by extending the era registry with a validated `hologram` field. The
- * resolver keeps the canonical Thoughtform pair as the visible fallback.
+ * ⚠ FOUR OF THE SIX ERAS RENDER THE THOUGHTFORM ASSET. Two era holograms
+ * exist so far: the canonical thoughtform pair (`voidwalker-avatar` skill's
+ * wave 20260826-thoughtform-v5) and the Azeroth-warlock pair (wave
+ * 20260828-azeroth-v1 — Vince's actual WoW character Arafel rendered in the
+ * gold-emissive hologram grammar with a fel-green accent on the crystals
+ * and offhand fire). The remaining four era buttons switch the copy panels
+ * but keep the same figure; each new wave lifts one era off the fallback.
+ * Author holograms lift here by extending the era registry with a validated
+ * `hologram` field. The resolver keeps the canonical Thoughtform pair as
+ * the visible fallback for eras without their own asset.
  */
 
 const SCRAMBLE_ARM_AT = 0.05;

@@ -24,9 +24,38 @@ describe("ADR-082 · normalized character hologram assets", () => {
   });
 
   it("keeps every unauthored era on the canonical pair", () => {
+    // The AZEROTH era is the first non-thoughtform pair to ship — its wardrobe
+    // is the WoW warlock Arafel (the site owner's actual 2020 character), and
+    // the wave `voidwalker-avatar/waves/20260828-azeroth-v1` produced its own
+    // 720×1280 gold-emissive hologram with a fel-green accent on the shoulder
+    // crystals and the offhand fel-fire. Every OTHER era still resolves to
+    // the canonical thoughtform pair until its own wave lands.
     for (const era of CHARACTER_ERAS) {
+      if (era.id === "azeroth") continue;
       expect(resolveCharacterEraHologram(era), era.id).toBe(CANONICAL_CHARACTER_ERA_HOLOGRAM);
     }
+  });
+
+  it("resolves the azeroth era to its authored Arafel hologram", () => {
+    const azeroth = CHARACTER_ERAS.find((e) => e.id === "azeroth");
+    expect(azeroth?.hologram).toBeDefined();
+    expect(isCharacterEraHologram(azeroth?.hologram)).toBe(true);
+
+    const resolved = resolveCharacterEraHologram(azeroth);
+    expect(resolved).not.toBe(CANONICAL_CHARACTER_ERA_HOLOGRAM);
+    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth.mp4");
+    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth.webm");
+    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth.jpg");
+    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth.webp");
+    // Measured from the poster's opaque cutoff — the figure sits higher in
+    // the frame than thoughtform's (the fel-crystal spires push the top up).
+    expect(resolved.headY).toBeCloseTo(0.044, 3);
+    expect(resolved.footY).toBeCloseTo(0.975, 3);
+    // Sanity: the head anchor is above the foot anchor and both are inside
+    // the frame — the same law the runtime guard enforces on every era.
+    expect(resolved.headY).toBeLessThan(resolved.footY);
+    expect(resolved.headY).toBeGreaterThanOrEqual(0);
+    expect(resolved.footY).toBeLessThanOrEqual(1);
   });
 
   it("accepts a complete future pair and rejects malformed generated records", () => {
