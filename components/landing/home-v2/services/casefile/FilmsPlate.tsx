@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
 
-import type { CaseFilm } from "@/lib/cases/types";
+import type { CaseFilm, CaseFilmProduction } from "@/lib/cases/types";
 
 import { MediaLightbox, restoreFocusAfterUnmount, useCloseOnCasefileFold } from "./MediaLightbox";
 import { ConsoleFrame } from "./console/ConsoleFrame";
@@ -38,7 +38,13 @@ import { ConsoleRail } from "./console/ConsoleRail";
  * because its portal / scroll-lock / focus-restore behaviours each took a
  * measurement to get right and a second copy would drift from them.
  */
-export function FilmsPlate({ films }: { films: readonly CaseFilm[] }) {
+export function FilmsPlate({
+  films,
+  production,
+}: {
+  films: readonly CaseFilm[];
+  production?: CaseFilmProduction;
+}) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [openSrc, setOpenSrc] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -105,6 +111,30 @@ export function FilmsPlate({ films }: { films: readonly CaseFilm[] }) {
           </span>
         </div>
       </div>
+
+      {/* HOW IT WAS MADE, seated at the field's floor — a SIBLING of the
+          stage, so the stage keeps `flex: 1 1 auto` and this takes its
+          height off the top of the residual rather than out of the frame.
+
+          ⚠ It does NOT change with the rail. Both films came off one
+          pipeline with one crew, so this is the ROW's standard; switching
+          it per station would be a rail pretending it changed something.
+          See `CaseFilmProduction` for why the crew is departments only. */}
+      {production ? (
+        <div className="fl-filmprod">
+          <section className="fl-filmprod__grp">
+            <span className="fl-filmprod__k">{production.chainLabel}</span>
+            <ol className="fl-filmprod__chain">
+              {production.chain.map((stage) => (
+                <li className="fl-filmprod__stage" key={stage.name}>
+                  <b className="fl-filmprod__stage-n">{stage.name}</b>
+                  <span className="fl-filmprod__stage-t">{stage.tool}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        </div>
+      ) : null}
 
       {open ? (
         <MediaLightbox src={open.src} label={open.label} meta={open.meta} onClose={close} />

@@ -164,7 +164,7 @@ export function TrackVisual({ visual, toolIdx = 0, onToolIdx = () => {} }: Track
       return <StillsPlate shots={visual.shots} />;
 
     case "films":
-      return <FilmsPlate films={visual.films} />;
+      return <FilmsPlate films={visual.films} production={visual.production} />;
 
     case "sheets":
       return <SheetsPlate sheets={visual.sheets} />;

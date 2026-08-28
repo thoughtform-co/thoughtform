@@ -411,6 +411,37 @@ describe("cases registry (ADR-054)", () => {
             expect(film.poster.length).toBeGreaterThan(0);
             expect(film.label.length).toBeGreaterThan(0);
           }
+          // ── The seated production block (2026-08-28) ──────────────────
+          // ⚠ IT IS THE ROW'S STANDARD, NOT A FILM'S. Both films came off
+          // one pipeline with one crew, which is why it hangs here and not
+          // on `CaseFilm` — per-film it would be the same record twice with
+          // a rail switch pretending it changed something.
+          if (v.production) {
+            const p = v.production;
+            // Four stations, and the count is the drawing: `.fl-filmprod__chain`
+            // is `repeat(4, 1fr)`, so a fifth stage silently halves the row.
+            expect(p.chain.length, `${c.slug}/${t.id} chain`).toBe(4);
+            for (const stage of p.chain) {
+              // A quarter of the field at 10.5px/.16em holds ~18 characters
+              // before it wraps into the stage below it.
+              expect(
+                stage.name.length,
+                `${c.slug}/${t.id} stage "${stage.name}"`
+              ).toBeLessThanOrEqual(12);
+              expect(
+                stage.tool.length,
+                `${c.slug}/${t.id} tool "${stage.tool}"`
+              ).toBeLessThanOrEqual(26);
+            }
+            expect(p.chainLabel.length, `${c.slug}/${t.id} chainLabel`).toBeGreaterThan(0);
+            // ⚠ THE CHAIN IS THE WHOLE BLOCK NOW. The crew row — five
+            // departments, no names — was cut by the owner the day it
+            // shipped: job titles with nobody attached read as filler on a
+            // surface that removes rather than adds. If a crew ever returns
+            // it needs a reason beyond filling height, and the roles-only
+            // rule (third-party agency and post staff whose names are not
+            // ours to publish) comes back with it.
+          }
         }
         if (v.kind === "sheets") {
           // A ONE-SHEET ROW IS A PLATE WITH A RAIL ON IT — the rail costs

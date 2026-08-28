@@ -206,6 +206,29 @@
      1280×720 / 1440×900 / 1680×1050 with the Log.001 line gone). */
   --fl-copy: calc(var(--band-copy) * 0.9);
 
+  /* ── THE LEFT COLUMN'S INDEX SCALE (2026-08-28, owner: the sentence under
+     each claim is "too small") ═════════════════════════════════════════════
+     The proof register, the directory row and its meta all derive from this,
+     so the ladder moves as one and the ordering the surface already fixed —
+     directory row ≥ register claim > its meta — holds at every width without
+     three independent clamps drifting apart.
+
+     ⚠ IT IS `min(vw, svh)` BECAUSE THE TWO AXES BIND IN DIFFERENT PLACES,
+     and this took measuring to see. The sentence is bounded by WIDTH at
+     narrow viewports — at 1200px the column is 331px and the copy is already
+     two clamped lines, so a bigger size there truncates — and by the register
+     BOX at wide ones, since `--fl-proof-h` is a fixed 264px at 1920×1080 with
+     four `1fr` rows to divide between. `min` takes whichever wall is nearer.
+
+     ⚠ AND THE COEFFICIENTS ARE SOLVED, NOT PICKED. At 0.95vw / 1.30svh the
+     term is 14.04px at 1920×1080 — which is where it already was, and just
+     under the 14.1px at which the longest description wraps to a second line
+     (measured: 459px of a 462px column at 14px, i.e. 99.3 % of the line).
+     Above that viewport the height term takes over and the sentence grows to
+     16.2px and wraps to two, which the taller box affords. 1200×1120 and
+     1440×800 resolve to the floor exactly as before. */
+  --lc: clamp(11.5px, min(0.95vw, 1.3svh), 16.5px);
+
   /* 0 → 1 wipe for the signal plate; the reveal effect drives it. */
   --fl-draw: 1;
 
@@ -1023,9 +1046,26 @@
   overflow: hidden;
   font-family: var(--fl-mono);
   color: var(--dawn);
-  font-size: clamp(11.5px, 0.92vw, 13px);
+  /* ⚠ THE CEILING RISES, THE FLOOR DOES NOT, AND THE SLOPE IS THE WHOLE
+     DESIGN (2026-08-28, owner: the claim and the sentence under it should
+     read bigger). Wrap is size ÷ COLUMN WIDTH, and this rung opens at
+     1200px — where the column is at its narrowest and the clamp is already
+     sitting on its floor. Raising the floor, or reaching the ceiling on a
+     fast slope, spends type exactly where there is no width to pay for it.
+     At 0.72vw the ceiling lands around 1875px, so 1200 is byte-identical to
+     what shipped and only genuinely wide columns get the larger rung. */
+  font-size: max(11.5px, calc(var(--lc) * 0.95));
   font-weight: 700;
-  line-height: 1.25;
+  /* ⚠ AND THE SIZE IS PAID OUT OF THE LEADING, NEVER OUT OF THE BAND. This
+     register is 259.6px of a 264px floor at 1920×1080 (`--fl-proof-h`'s
+     clamp bottom; the directory beneath it is what set the 300px ceiling and
+     the ceiling has been hit once already), so ~4px is the entire budget and
+     a naive `font-size` bump overflows a reference viewport by construction.
+     13.5 × 1.18 = 15.93 against today's 13 × 1.25 = 16.25 — the type gets
+     BIGGER while the row gets shorter. A single-line uppercase mono row with
+     nothing below the baseline never needed paragraph leading, which is the
+     same finding `.fl-row` already runs at 1.15, one box down the column. */
+  line-height: 1.18;
   letter-spacing: 0.045em;
   text-transform: uppercase;
   display: -webkit-box;
@@ -1040,10 +1080,25 @@
 .fl-proof-register__description {
   grid-column: 2;
   margin: 3px 0 0;
-  color: rgba(var(--dawn-rgb), 0.6);
+  /* ⚠ 0.6 → 0.74, AND THIS IS THE HALF THAT COSTS NOTHING. Both rows already
+     rendered at 13px above 1445px wide; the claim only LOOKED bigger because
+     it is bold mono caps against a 0.6-alpha sans. So a fair share of "too
+     small" was never size — it was contrast, and alpha is free in a box with
+     four pixels of slack. It reads as more contrast on BOTH grounds, since
+     `--dawn-rgb` is the ink either side of ADR-058's flip. */
+  color: rgba(var(--dawn-rgb), 0.78);
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
-  font-size: clamp(11.5px, 0.9vw, 13px);
-  line-height: 1.4;
+  /* THE INDEX SCALE — see `--lc` on `.fl-case`. It carries the whole reason
+     this is not a bigger number typed in: the sentence is width-bound at
+     narrow viewports and box-bound at wide ones, and `--lc` is the smaller
+     of the two.
+     ⚠ Still two-line clamped, so if a description ever reaches a third line
+     the COPY BUDGET is what moves (ADR-066: a clamp that truncates live copy
+     is a bug, never a layout lever). The harness measures the real count
+     against an UNCLAMPED CLONE, because a `-webkit-box` clips instead of
+     overflowing and cannot report its own truncation. */
+  font-size: var(--lc);
+  line-height: 1.25;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -1269,7 +1324,7 @@
      above). One step ABOVE the register's 13px claims: this is the primary
      object in the band, and the identity of a project may not read smaller
      than a sentence about it. */
-  font-size: clamp(13px, 1.02vw, 14px);
+  font-size: max(13px, min(1.02vw, 14px), calc(var(--lc) * 1.02));
   /* Single-line uppercase rows with nothing below the baseline — paragraph
      leading was buying nothing and costing the size. This is what pays for
      the type at the binding 1280×720 band; do not restore `normal`. */
@@ -1311,7 +1366,7 @@
    separated by tracking and ink as well as size, so the two never read as
    one run. */
 .fl-row__meta {
-  font-size: clamp(10.2px, 0.8vw, 11.5px);
+  font-size: max(min(0.8vw, 11.5px), calc(var(--lc) * 0.75));
   line-height: 1.15;
   letter-spacing: 0.1em;
   color: var(--fl-ink-dim);
@@ -4413,10 +4468,17 @@
 }
 /* ══ Stills — shipped work, shown whole ════════════════════════════════ */
 
-/* Tiles fit by HEIGHT so the 4:5 ads are never cropped: the plate rect is
-   short and wide, and cover-cropping would cut the composition the ad was
-   built around. `justify-content: center` lets the row breathe rather than
-   stretching three portraits across a landscape box.
+/* Tiles are never cropped: the 4:5 ratio is honoured whole, because
+   cover-cropping would cut the composition the ad was built around.
+   `justify-content: center` lets the row breathe rather than stretching
+   portraits across a landscape box.
+   ⚠ THEY FIT BY WIDTH, NOT BY HEIGHT — this comment claimed the opposite
+   until 2026-08-28 and sent two readings of the sparse-panel complaint
+   looking for a height lever that does not exist. The columns are
+   `repeat(3, minmax(0, 1fr))` and the tile takes its height from
+   `aspect-ratio`, so the WIDTH governs: three across the field's ~793px is
+   ~252 wide and therefore ~315 tall, whatever the console's height. That is
+   why the second row below is the only thing that reaches the surplus.
    ⚠ NO FILTER HERE, AND THE LINE IS AUTHORED vs CAPTURED (ADR-064 U2,
    2026-08-06, owner). These are Loop's actual ads — authored photography with
    intended colour — and a duotone would destroy that colour rather than unify
@@ -4478,6 +4540,27 @@
 .fl-plate--sheets {
   padding: 0;
   gap: 0;
+
+  /* ── ONE SCALE FOR THE SHEET BODIES (2026-08-28, owner: THE LINE and THE
+     RED LINE are "not optimally using space; everything is so spread out")
+     ═══════════════════════════════════════════════════════════════════════
+     ⚠ A WIDTH-KEYED LADDER CANNOT FILL THIS PLATE, and that is arithmetic
+     rather than taste. `--fl-copy` is `vw`-only, so 1920×800 and 1920×1247
+     resolve it identically (16.2px) while the field is 530px tall in one and
+     927px in the other. The sheets were sized against the short one and read
+     as four captions floating in a tall box on every desktop above it.
+
+     ⚠ SO THE SCALE IS THE MIN OF WHAT EACH AXIS AFFORDS. `min(vw, svh)`
+     never overflows either: the width term binds on wide-and-short fields,
+     the height term on the owner's portrait console. Measured: 12.6px at
+     1280×720, 14px at 1440×800 AND 1920×800, 18.9px at 1920×1080, 20px from
+     1920×1247 up.
+
+     Everything in the two sheet bodies derives from it by RATIO — a modular
+     scale, so a retune moves one number and the relationships hold. The
+     floors are the surface's own rungs (9.5 chrome, 10.5 control, 12
+     readable-compact), and they bind only on the short fields. */
+  --sh: clamp(12px, min(1.35vw, 2.15svh), 25px);
 }
 
 /* The stills sheet keeps the standalone plate's centred, height-fitted row;
@@ -4487,31 +4570,119 @@
   padding: clamp(10px, 1.8svh, 20px) clamp(12px, 2vw, 26px);
 }
 
+/* ── THE SECOND ROW (2026-08-28, owner: "the right panel feels too sparse")
+   ═══════════════════════════════════════════════════════════════════════
+   ⚠ THE TILES ARE WIDTH-BOUND, so the hole was never reachable by a height
+   lever. Three columns across the field's ~793px make each tile ~252 wide
+   and therefore ~315 tall (`aspect-ratio: 4/5`), leaving ~595px of a ~910px
+   field empty at the owner's viewport — which is PORTRAIT (~845×950) while
+   every reference viewport this plate was composed against is landscape
+   (611×390 at 1280×720, 688×444 at 1440×800). The record grew to six ads;
+   this is the only lever that spends them.
+
+   ⚠ SIX TILES ARE TWO ROWS, AND TWO ROWS DO NOT FIT A SHORT CONSOLE: 315 ×
+   2 + gap is ~648px against the 444px field at 1440×800, which the smoke's
+   box sweep would fail. So the row is gated on the same height rung the
+   proof register uses, and below it this plate is byte-identical to the
+   three-up row that shipped before — tiles 4–6 are simply not laid out.
+
+   ⚠ AND THE GATE IS SCOPED TO `.fl-case` ON PURPOSE. `SheetsPlate` has a
+   second home on the portfolio arc (ADR-078, shared `toBe`), where
+   `.arc-sheets` is `max-width: calc(h * 1.7)` — LANDSCAPE by construction,
+   the opposite shape from this console. Its field is ~1100×600 at
+   1920×1080, so three columns of ~355 are 444 tall and a second row needs
+   ~900. There is no viewport where a 3×2 grid fits that box. A viewport
+   media query cannot tell the two apart either — `.fl-con` is
+   `container-type: inline-size`, so `@container` can ask about width but
+   never height — hence the class scope rather than a size query. The arc
+   holds at three by falling through to the rule above. This is a FIT
+   divergence, not a content one: the array is still one record. ═════════ */
+.fl-plate--sheets .fl-still:nth-child(n + 4) {
+  display: none;
+}
+
+@media (min-width: 1200px) and (min-height: 1070px) {
+  .fl-case .fl-plate--sheets .fl-still:nth-child(n + 4) {
+    display: block;
+  }
+  /* The block is still width-bound, so what is left over after two rows is
+     AIR, not a hole to fill — it goes into the padding and the row gap
+     rather than pooling under the grid. ADR-070 U14's law, one plate over:
+     split the slack, never pool it. */
+  .fl-case .fl-plate--sheets .fl-stills {
+    align-content: center;
+    padding: clamp(20px, 3.4svh, 46px) clamp(12px, 2vw, 26px);
+    row-gap: clamp(18px, 2.6svh, 34px);
+  }
+}
+
 /* The facts sheet has no capture above it, so its grid starts at the top of
    the field rather than under a bar, and it spreads into the height the
    tools plate spends on the shot. */
+/* ── FOUR BANDS, NOT A 2×2 (2026-08-28, owner: "everything is so spread
+   out") ═══════════════════════════════════════════════════════════════════
+   ⚠ A 2×2 OF SHORT BLOCKS CANNOT FILL A TALL PANEL, and no amount of type
+   closes it: four risk statements are ~90px of ink against a 880px field, so
+   `align-content: center` put them in the middle with ~350px of void above
+   and below. A four-band register fills BY CONSTRUCTION — `grid-auto-rows:
+1fr` divides the height between the rows whatever the height is, and each
+   band centres its own content, so the surplus becomes the bands' own air
+   instead of one hole.
+
+   It is also the column's own grammar, one scale up: this is exactly what
+   `.fl-proof-register__list` does on the left with the same `1fr` rows and
+   the same hairlines. The claim sits on the left rail and the evidence to
+   its right, so a reader scans four claims and reads the one they stop on.
+
+   ⚠ AND IT SUITS BOTH HOMES. The portfolio arc mounts this plate in a
+   LANDSCAPE box (~1100×600), where four bands are ~150px each — where the
+   2×2 was the only shape that worked before, and a taller stack would have
+   been the trade. `1fr` rows need no per-shape tuning. */
 .fl-caps--sheet {
   flex: 1 1 auto;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: 1fr;
+  align-content: stretch;
+  padding: 0;
+  gap: 0;
+}
+.fl-caps--sheet .fl-cap {
+  min-width: 0;
+  display: grid;
+  /* The claim's rail, then the evidence. 0.36 is what holds the longest
+     title ("CREDIBILITY COLLAPSE") on two lines rather than three at the
+     scale's ceiling. */
+  grid-template-columns: minmax(0, 0.36fr) minmax(0, 1fr);
+  column-gap: clamp(14px, 2.2vw, 34px);
+  align-items: baseline;
   align-content: center;
-  padding: clamp(12px, 2.2svh, 26px) 0;
-  gap: clamp(12px, 2.6svh, 30px) 0;
+  padding: calc(var(--sh) * 0.6) var(--fl-plate-px, clamp(16px, 1.8vw, 24px));
+  border-top: 1px solid rgba(var(--gold-rgb), 0.12);
 }
-/* SYMMETRIC RAILS. These lived on `.fl-caps--tool` until 2026-08-07 and moved
-   here with the tools plate's own renderer (ADR-068) — `.fl-caps`'s base
-   rails are ASYMMETRIC because they were cut for a 50/50 plate that had a
-   shot on the right, and a sheet has no shot. Same values as before, one
-   client instead of two. */
-.fl-caps--sheet .fl-cap:nth-child(odd) {
-  padding-left: calc(var(--fl-plate-px) + 1px);
-  padding-right: clamp(10px, 1.2vw, 16px);
+.fl-caps--sheet .fl-cap:first-child {
+  border-top-color: rgba(var(--gold-rgb), 0.24);
 }
-.fl-caps--sheet .fl-cap:nth-child(even) {
-  padding-left: clamp(10px, 1.2vw, 16px);
-  padding-right: calc(var(--fl-plate-px) + 1px);
+.fl-caps--sheet .fl-cap:last-child {
+  border-bottom: 1px solid rgba(var(--gold-rgb), 0.12);
+}
+/* ⚠ IT WRAPS HERE. The base rule is `nowrap` + ellipsis because the tools
+   plate gives a title half a narrow tile; on its own rail it has the room to
+   break, and ellipsising a four-word claim to fit a rail we chose is the
+   wrong end of that trade. */
+.fl-caps--sheet .fl-cap__t {
+  font-size: max(11px, calc(var(--sh) * 0.8));
+  line-height: 1.2;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 /* No capture above this grid, so there is nothing competing for the height —
    the clamp is a pure belt here and can sit well clear of today's copy. */
 .fl-caps--sheet .fl-cap__d {
+  font-size: max(12px, calc(var(--sh) * 0.95));
+  line-height: 1.4;
+  color: rgba(var(--dawn-rgb), 0.72);
   -webkit-line-clamp: 4;
   line-clamp: 4;
 }
@@ -4530,23 +4701,59 @@
   overflow: hidden;
 }
 
+/* ── THREE ANCHORS, NOT FOUR FRAGMENTS (2026-08-28, owner: the sheet is
+   "not optimally using space") ═══════════════════════════════════════════
+   The column used to stack everything at the top with `.fl-cmp__ex` pinned
+   to the floor by `margin: auto 0 0`, pooling every spare pixel into ONE
+   hole in the middle — 630px of it at the owner's console.
+
+   ⚠ AND `space-between` WAS WORSE, WHICH IS WORTH RECORDING. Distributing
+   all four blocks evenly put ~200px between each and turned a column into
+   four disconnected fragments: the verdict floated away from its own
+   definition, and the definition from its examples. Even distribution is
+   only an improvement when there is enough content to distribute.
+
+   So the column is a GRID with three anchors — the category at the head,
+   what it means centred in the body, what it looks like in production at
+   the floor. The middle row takes the slack, so the surplus lands where a
+   reader's eye already rests instead of between two things that belong
+   together. */
 .fl-cmp__col {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  row-gap: clamp(6px, 1.1svh, 16px);
+  padding: clamp(12px, 2svh, 26px) clamp(13px, 1.5vw, 24px);
+}
+
+/* The voice and the definition, seated together in the slack row. */
+.fl-cmp__read {
+  min-width: 0;
+  min-height: 0;
+  align-self: center;
   display: flex;
   flex-direction: column;
-  gap: clamp(4px, 0.8svh, 8px);
-  padding: clamp(12px, 2svh, 22px) clamp(13px, 1.5vw, 22px);
+  gap: calc(var(--sh) * 0.55);
 }
 
 .fl-cmp__col + .fl-cmp__col {
   border-left: 1px solid var(--con-hair2);
 }
 
+/* The kicker and its name are ONE block — `space-between` would otherwise
+   push the verdict away from the category it qualifies. */
+.fl-cmp__head {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--sh) * 0.2);
+  min-width: 0;
+}
+
 .fl-cmp__kicker {
   font-family: var(--fl-mono);
-  font-size: 9.5px;
+  font-size: max(9.5px, calc(var(--sh) * 0.55));
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--fl-ink-dim);
@@ -4559,9 +4766,9 @@
 .fl-cmp__name {
   margin: 0;
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
-  font-size: clamp(15px, 1.25vw, 19px);
+  font-size: calc(var(--sh) * 1.45);
   font-weight: 500;
-  line-height: 1.15;
+  line-height: 1.12;
   color: var(--dawn);
 }
 
@@ -4570,8 +4777,8 @@
 .fl-cmp__claim {
   margin: 0;
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
-  font-size: var(--fl-copy);
-  line-height: 1.35;
+  font-size: var(--sh);
+  line-height: 1.32;
   color: rgba(var(--dawn-rgb), 0.88);
 }
 
@@ -4588,29 +4795,33 @@
   line-clamp: 6;
   overflow: hidden;
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
-  font-size: calc(var(--fl-copy) * 0.92);
-  line-height: 1.45;
-  color: rgba(var(--dawn-rgb), 0.62);
+  font-size: max(12px, calc(var(--sh) * 0.88));
+  line-height: 1.42;
+  color: rgba(var(--dawn-rgb), 0.7);
 }
 
 /* The exemplars, on the leader grammar the directory rows already use — an
    arrow, then a noun phrase. They sit on the column's BOTTOM rail so both
    columns' lists start on one line whatever their prose above ran to. */
+/* No `auto` margin any more: the column distributes with `space-between`,
+   so the exemplars reach the floor without pooling every spare pixel into
+   one hole above them. The rule stays — it is the seam between what the
+   category IS and what it looks like in production. */
 .fl-cmp__ex {
   list-style: none;
-  margin: auto 0 0;
-  padding: clamp(8px, 1.4svh, 14px) 0 0;
+  margin: 0;
+  padding: calc(var(--sh) * 0.7) 0 0;
   border-top: 1px solid var(--con-hair);
   display: flex;
   flex-direction: column;
-  gap: clamp(3px, 0.6svh, 6px);
+  gap: calc(var(--sh) * 0.35);
 }
 
 .fl-cmp__ex li {
   display: flex;
   gap: 7px;
   font-family: var(--fl-mono);
-  font-size: 10.5px;
+  font-size: max(10.5px, calc(var(--sh) * 0.72));
   line-height: 1.3;
   letter-spacing: 0.02em;
   color: rgba(var(--dawn-rgb), 0.72);
@@ -4720,6 +4931,116 @@
   color: var(--fl-ink-dim);
   white-space: nowrap;
 }
+
+/* ── HOW IT WAS MADE (2026-08-28, owner: "the right panel feels too sparse")
+   ═══════════════════════════════════════════════════════════════════════
+   ⚠ THE FRAME CANNOT GROW, which is why this is content and not a tuning.
+   `--fl-film-h` ceilings at 470px and `.fl-filmframe` turns that into a
+   max-width through 16/9, so on the owner's PORTRAIT console (~845×950 —
+   every reference viewport this plate was composed against is LANDSCAPE)
+   the frame is WIDTH-bound at ~705×397 with ~550px of empty stage under it.
+   No height lever reaches that hole; only record does.
+
+   ⚠ GATED ON THE SAME HEIGHT RUNG AS THE SECOND AD ROW. At 1280×720 the
+   field is ~611×390 and the frame group alone is ~348 of it, so this block
+   would overflow and the smoke's box sweep would say so. Below the rung the
+   plate is byte-identical to what shipped.
+
+   ⚠ SEATED, NOT CENTRED. `flex: 0 0 auto` under a `flex: 1 1 auto` stage,
+   so it takes its height off the top of the RESIDUAL and the frame keeps
+   the symmetric air `.fl-filmstage` above says it is for. If the stage
+   still reads hollow the lever is more record in here — never a stretched
+   frame, which would break the 16:9 and crop the poster (the 2026-07-30
+   finding recorded on `.fl-film`). ══════════════════════════════════════ */
+.fl-filmprod {
+  display: none;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: clamp(10px, 1.5svh, 18px);
+  padding: clamp(12px, 1.8svh, 20px) var(--fl-plate-px, clamp(16px, 1.8vw, 24px))
+    clamp(14px, 2svh, 24px);
+  border-top: 1px solid var(--con-hair);
+  /* Declared, never inherited: `--font-mono` in this app is IBM Plex, so
+     anything that leaves the family to the cascade risks a third face
+     (ADR-067). */
+  font-family: var(--fl-mono);
+}
+
+@media (min-width: 1200px) and (min-height: 1070px) {
+  .fl-case .fl-filmprod {
+    display: flex;
+  }
+}
+
+.fl-filmprod__grp {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.9svh, 10px);
+}
+
+/* The plate has no foot and this block earns none (ADR-068 U2), so the
+   kicker is the only thing that says what is being looked at. Same size and
+   tracking as `.fl-cmp__kicker` — one chrome voice across the panel. */
+.fl-filmprod__k {
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fl-ink-dim);
+}
+
+/* THE CHAIN IS A GRADUATED SCALE, not four boxes in a row: one rule beneath
+   the stages with a tick at each. Same grammar as the rail's tick ladder,
+   and the reason there is no arrow glyph in it — an arrow would need a
+   legend, which this surface bans. */
+.fl-filmprod__chain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.fl-filmprod__stage {
+  position: relative;
+  min-width: 0;
+  padding: 7px 10px 0;
+  border-top: 1px solid rgba(var(--gold-rgb), 0.24);
+}
+/* The tick, as a box rather than a stroked path: a single-axis SVG line
+   reports a zero-height rect to the collapse guards (ADR-068 U6). */
+.fl-filmprod__stage::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 6px;
+  background: var(--gold-line, var(--gold));
+}
+.fl-filmprod__stage-n {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dawn);
+}
+.fl-filmprod__stage-t {
+  display: block;
+  margin-top: 3px;
+  font-size: 10.5px;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+
+/* ⚠ THE CREW ROW IS DELETED (owner, 2026-08-28, the day it shipped). It
+   listed the five departments a live-action spot books, as the record behind
+   the left column's "same creative team and quality bar" claim — but five job
+   titles with nobody attached read as filler, and this surface has removed a
+   console head, a foot and a designator for less. The chain stays because it
+   is a record a reader can check against the drawing. `.fl-filmprod__crew`
+   and its separator recipe went with it; git holds them. */
 
 /* The frame IS the button — there is no separate tile element. It carries
    the 16:9 box, the border and the backdrop, and it is a pointer opt-in on
@@ -5193,6 +5514,28 @@
   }
   .fl-filmmeta__spec {
     margin-left: 0;
+  }
+
+  /* ⚠ THE PRODUCTION BLOCK COMES BACK HERE, AND IT IS A CONTENT DECISION
+     RATHER THAN A FIT ONE. It is hidden on the desktop console below the
+     tall rung because the box there cannot hold it — but this path is
+     static FLOW with no ceiling, so the only thing hiding it would cost is
+     the record itself. Phones and reduced-motion visitors get the same
+     answer to "how were these made" as everyone else.
+     ⚠ REDUCED MOTION REACHES THIS GATE AT ANY WIDTH (casefile.css's own
+     static-flow pair), so a desktop PRM visitor lands here too — which is
+     the case that would otherwise have shown them a film and nothing else.
+     The chain halves to two columns: four stages across a 390px phone is
+     ~90px a stage, and `Nano Banana · Seedream 4` needs more than that. */
+  .fl-filmprod {
+    display: flex;
+    /* 12px matches `.fl-filmstage` above, so the chain's left rail lands on
+       the same line as the frame's edge rather than on the plate's. */
+    padding: 16px 12px 4px;
+  }
+  .fl-filmprod__chain {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 12px;
   }
 
   /* The plate was already one column here; below the gate it simply stops

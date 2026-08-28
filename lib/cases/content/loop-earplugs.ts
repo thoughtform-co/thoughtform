@@ -1599,6 +1599,44 @@ const STUDIO_SHOTS = [
     width: 1080,
     height: 1350,
   },
+  /* ── The second row (2026-08-28, owner) ───────────────────────────────
+     Three more shipped cuts, from the studio deck's "what AI looks like in
+     production" board. The first three above are the PERFORMANCE set (the
+     ROAS the left column claims); these three are the PROVENANCE set — one
+     per generation route the studio runs.
+
+     ⚠ THEY RENDER ONLY WHERE THE CONSOLE IS TALL. `.fl-stills` is a
+     three-column grid, so six tiles are two rows — 516px of tile against a
+     444px field at 1440×800. casefile.css gates the second row on the same
+     height rung the proof register uses; below it the plate is byte-identical
+     to the three-up row that shipped before. The record carries six either
+     way, which is what the ADR-078 `toBe` guard is protecting.
+
+     ⚠ `experience-concerts.jpg` IS A CROP, and the only one on this surface.
+     The source is 1440×2560, a story-format cut, and the grid is a uniform
+     4:5 — so it is windowed to rows 380–2180, chosen against the subject to
+     keep the ear, the earplug and the lockup with air beneath it. Owner's
+     call as the art director who signed the ad off (2026-08-28); the
+     alternative — letterboxing one tile among five that fill — reads as a
+     rendering fault. Do not re-crop it by centre. */
+  {
+    src: "/arcs/studio-ads/gifting-2025-rings.jpg",
+    alt: "Loop gifting ad: gift two golden rings — brass earplugs standing in snow beside a toy train and lit fir trees.",
+    width: 1080,
+    height: 1350,
+  },
+  {
+    src: "/arcs/studio-ads/quiet-my-peace.jpg",
+    alt: "Loop Quiet ad: my peace is my priority — monochrome portrait of a woman in sunglasses wearing an earplug, hemmed in by talking faces.",
+    width: 1080,
+    height: 1350,
+  },
+  {
+    src: "/arcs/studio-ads/experience-concerts.jpg",
+    alt: "Loop Experience ad for concerts: a woman in profile, smiling, wearing a Loop Experience earplug.",
+    width: 1080,
+    height: 1350,
+  },
 ] as const;
 
 /**
@@ -1719,6 +1757,42 @@ export const LOOP_ATL_FILMS = [
     meta: "16:9 master · 30 sec",
   },
 ] as const;
+
+/**
+ * HOW THE TWO FILMS WERE MADE (2026-08-28, owner: the panel reads sparse).
+ *
+ * ⚠ THE FRAME CANNOT GROW, so the void could only be filled with record.
+ * `--fl-film-h` caps at 470px and `.fl-filmframe` converts that to a
+ * max-width through 16/9, so at the owner's portrait console (~845×950) the
+ * frame is WIDTH-bound at ~705×397 with ~550px of stage under it. Raising
+ * the height ceiling buys nothing; this block is what spends the space.
+ *
+ * Both halves come off the studio's own ATL deck. The CHAIN is its stated
+ * approach, verbatim in four stages; the CREW is its team-composition
+ * board, reduced to departments.
+ *
+ * ⚠ THE CREW IS THE POINT, and it is the one thing the panel never showed.
+ * The left column claims the films used "the same creative team and quality
+ * bar as Loop's live-action work" — five departments a live-action spot
+ * books is that claim as a record rather than an assertion. Roles only: see
+ * `CaseFilmProduction` for why no names travel.
+ *
+ * ⚠ NOT PASSED BY THE PORTFOLIO ARC, deliberately. `.arc-films` is
+ * `max-width: calc(h * 1.7)` — landscape, ~1140×620 at 1920×1080 — where a
+ * 16:9 frame already fills the box. There is no hole there to fill, and a
+ * block under it would squeeze the film. `ArcStudioFilms` mounts
+ * `FilmsPlate` with `films` alone, so the arc is unchanged by construction;
+ * the prop is optional for exactly that reason.
+ */
+export const LOOP_ATL_PRODUCTION = {
+  chainLabel: "Generation",
+  chain: [
+    { name: "Prompt", tool: "Claude" },
+    { name: "Image", tool: "Nano Banana · Seedream 4" },
+    { name: "Analyse", tool: "Claude" },
+    { name: "Animate", tool: "VEO 3 · Seedance" },
+  ],
+} as const;
 
 /* The ADOPTION_SIGNAL curve (the mission-report row's plate) left with the
    directory trim (ADR-056 U13) — the `signal` kind and `CaseSignalPoint`
@@ -2161,7 +2235,7 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         project: "AI Above-the-Line",
         icon: "dir",
         preview: "Preview — 04_ai-above-the-line/",
-        visual: { kind: "films", films: LOOP_ATL_FILMS },
+        visual: { kind: "films", films: LOOP_ATL_FILMS, production: LOOP_ATL_PRODUCTION },
         classification: "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED",
         blocks: [
           {

@@ -56,6 +56,16 @@
      shares onto these, so there is one source per value rather than two
      that have to be kept in step. */
   --con-void: rgb(var(--void-deep-rgb));
+  /* ⚠ `--con-void` IS A BED, NOT THE PANEL'S PAINT, AND IT MUST STAY OPAQUE.
+     Four things read it as the ground they sit ON: the station diamond
+     (`.fl-con__stn > i`), the lit station's fill (`.fl-con__stn[data-on]`),
+     the capability plates' inner ground (`.fl-detail__in`, whose own note
+     records that a translucent inner floods the plate with the edge colour)
+     and `--pda-void`, which is the MAP's entire drawing ground. Softening
+     this token to make the panel transparent softens all four — the panel
+     would look right and the instruments inside it would quietly stop
+     having a floor. The PAINT is `--con-ground` below; override that. */
+  --con-ground: var(--con-void);
   --con-hair: rgba(var(--gold-rgb), 0.13);
   --con-hair2: rgba(var(--gold-rgb), 0.24);
   --con-dim: rgba(var(--gold-rgb), 0.42);
@@ -148,7 +158,7 @@
   overflow: hidden;
   border: 1px solid var(--con-edge);
   background:
-    radial-gradient(128% 58% at 50% -8%, var(--con-glow), transparent 62%), var(--con-void);
+    radial-gradient(128% 58% at 50% -8%, var(--con-glow), transparent 62%), var(--con-ground);
   clip-path: polygon(
     0 var(--con-ch),
     var(--con-ch) 0,
@@ -533,6 +543,53 @@
   .fl-con__console {
     transition: none;
     opacity: 1;
+  }
+}
+
+/* ── The casefile's console is SLIGHTLY TRANSPARENT (2026-08-28, owner) ───
+   The corridor's parked brandmark and its gold orbit curves pass behind
+   this panel, and an opaque ground threw all of it away. Letting a little
+   through is what makes the box read as a held instrument over a scene
+   rather than as a card pasted on top of one.
+
+   ⚠ IT OVERRIDES `--con-ground`, NEVER `--con-void`. The first cut of this
+   change softened `--con-void`, which is the OPAQUE BED four other things
+   sit on — the station diamond, the lit station's fill, the capability
+   plates' inner ground and `--pda-void`, the map's whole drawing floor. The
+   panel would have looked right while every instrument inside it quietly
+   lost its floor. See the token block at the head of this file.
+
+   ⚠ AND NO GUARD WOULD HAVE CAUGHT EITHER HALF. The light-theme walk reads
+   `.fl-con__console`'s `backgroundColor` and takes its luminance from the
+   raw RGB, so an alpha here does not move a single ratio it reports — it
+   measures this panel as though it were still opaque. The contrast cost of
+   this value is therefore checked BY EYE, composited, in both themes, and
+   0.86 is where that was done. Lowering it is a measurement, not a nudge.
+
+   ⚠ THE BLUR IS GATED ON `data-proof-settled`, like everything else on this
+   surface that samples its backdrop. Measured when the plates first grew
+   one (ADR-056): +2.4 to +3.7ms average on the dissipate approach, with
+   frames over 33ms going from 3% to 13-16%. The per-frame backdrop SNAPSHOT
+   is the cost, not the blur radius. There is already a settled-gated
+   `backdrop-filter` on `.fl-film` (casefile.css) which had nothing to
+   sample while this ground was opaque; it becomes meaningful again here.
+
+   ⚠ SCOPED TO `.fl-case`. The arcs mount this same console inside
+   `.arc-sheets` / `.arc-films`, over a flat page ground with no corridor
+   behind it — transparency there buys nothing and costs contrast.
+
+   ⚠ ONE `rgba()` SERVES BOTH THEMES. `--void-deep-rgb` flips to parchment
+   in theme.css, so this recedes toward the corridor in dark and toward the
+   page in light without a `[data-theme]` override to keep in step. The
+   unwrap gate below still zeroes the background entirely, so the mobile and
+   reduced-motion paths are untouched. ═══════════════════════════════════ */
+.fl-case .fl-con {
+  --con-ground: rgba(var(--void-deep-rgb), 0.86);
+}
+
+@supports (backdrop-filter: blur(2px)) {
+  .services-stage[data-proof-settled] .fl-case .fl-con__console {
+    backdrop-filter: blur(9px);
   }
 }
 

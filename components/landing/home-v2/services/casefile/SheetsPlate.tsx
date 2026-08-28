@@ -107,13 +107,29 @@ function SheetBody({ sheet, stillSizes }: { sheet: CaseSheet; stillSizes: string
         <div className="fl-cmp">
           {body.columns.map((col) => (
             <section className="fl-cmp__col" key={col.name}>
-              <span className="fl-cmp__kicker">{col.kicker}</span>
-              <h4 className="fl-cmp__name">{col.name}</h4>
+              {/* The kicker and the name are ONE block, and the wrapper is
+                  what lets the column distribute (2026-08-28, owner: the
+                  sheet is "not optimally using space"). The column is
+                  `space-between` now; without this the verdict would drift
+                  off its own category name to satisfy the spacing. */}
+              <header className="fl-cmp__head">
+                <span className="fl-cmp__kicker">{col.kicker}</span>
+                <h4 className="fl-cmp__name">{col.name}</h4>
+              </header>
               {/* Quoted, not italic — the house has no italics, and the
                   quotation marks are what mark this as the category speaking
                   in its own voice. */}
-              <p className="fl-cmp__claim">“{col.claim}”</p>
-              <p className="fl-cmp__desc">{col.desc}</p>
+              {/* The voice and the definition are ONE reading block, seated
+                  in the middle of the column. Distributing all four blocks
+                  evenly (the first cut) spread them into four disconnected
+                  fragments with ~200px between each — worse than the single
+                  hole it replaced. Three anchors instead: the category at
+                  the head, what it means in the body, what it looks like in
+                  production at the floor. */}
+              <div className="fl-cmp__read">
+                <p className="fl-cmp__claim">“{col.claim}”</p>
+                <p className="fl-cmp__desc">{col.desc}</p>
+              </div>
               <ul className="fl-cmp__ex">
                 {col.examples.map((ex) => (
                   <li key={ex}>{ex}</li>

@@ -31,6 +31,7 @@ breather).
   `VariantManifold` imports it, so it outlived the drawing it was written for
 - [ADR-068: The glyphed index, the tool dossier, and authored wireframes](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) — the LIVE register + tools-plate contract; see §The glyphed index and §The tool dossier below
 - [ADR-069: The selection morph and the answered configuration](../sentinel/decisions/069-pda-selection-morph-and-answered-configuration.md) — the selected work is the PERSISTENT OBJECT and FLIES between its two homes (1 ↔ 2); reading 02 prints the record's own answers with one reactive readout. See §The selection morph below
+- [ADR-084: The panel fills its housing, and the console lets the corridor through](../sentinel/decisions/084-casefile-panel-fills-its-housing.md) — the LIVE composition of the Studio and ATL rows: six ads on a height-gated second row, the films' seated production block, the console's `--con-ground` transparency and the register's retuned claim + sentence. See §The panel fills its housing below
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
 - [ADR-083: Mobile evidence instruments](../sentinel/decisions/083-mobile-evidence-instruments.md) — proposed phone IA: one stable case seat, explicit BRIEF/PROOF/ARTIFACT modes and a direct four-stop rail
 - [ADR-063: The map's reading rail and its wheel](../sentinel/decisions/063-map-reading-rail-and-wheel.md) — the rail is HORIZONTAL across the top of the console, and the console OWNS THE WHEEL while the pointer is on it (releasing at both ends). See §The reading rail below
@@ -472,6 +473,110 @@ facts` is wider than the whole plate — so the values live on the LABEL
 - **The tab strip is derived from `CASES`.** Adding a second case lights up
   a second tab with no component change. Do not ship placeholder clients on
   the public page — the dim `+ Archive` is what marks it as a series.
+
+## The panel fills its housing (ADR-084, live)
+
+The Studio and ATL rows' composition, and the console's paint.
+
+- ⚠ **THE ADS AND THE FILM ARE WIDTH-BOUND, so no height lever reaches their
+  surplus.** `.fl-stills` is `repeat(3, minmax(0, 1fr))` with `aspect-ratio:
+4/5` tiles: three across the field's ~793px is ~254×317 **whatever the
+  console's height**. `.fl-plate--films` caps `--fl-film-h` at 470 and
+  `.fl-filmframe` converts that to a max-width through 16/9, so at 850px of
+  field the frame is 802×484. Both were composed against LANDSCAPE fields
+  (611×390, 688×444) and the owner's console is **850×927, portrait** — the
+  ADR-070 U12/U14/U32 defect in two new places. ⚠ `.fl-stills`' comment
+  claimed "tiles fit by HEIGHT" and was FALSE; it is corrected, and the
+  correction is the durable half.
+- ⚠ **SIX ADS, AND THE SECOND ROW IS HEIGHT-GATED.** Two rows are ~666px
+  against the 444px field at 1440×800, so the rung is `(min-width: 1200px) and
+(min-height: 1070px)` — the register's own. Below it the plate is
+  byte-identical to what shipped.
+- ⚠ **THE GATE IS SCOPED TO `.fl-case`, AND A MEDIA QUERY CANNOT REPLACE THE
+  SCOPE.** `.arc-sheets` is `max-width: calc(h * 1.7)` — LANDSCAPE by
+  construction, ~1100×600 at 1920×1080 — and no viewport fits a 3×2 grid
+  there. `.fl-con` is `container-type: inline-size`, so `@container` can ask
+  about width but NEVER height; a viewport-height rung fires on the arc at a
+  tall viewport. A fit divergence, not a content one — the array stays one
+  record, which is what ADR-078's `toBe` protects.
+- ⚠ **ONE ASSET IS A CROP** (`experience-concerts.jpg`, a 1440×2560 story cut
+  windowed to rows 380–2180 against the subject). Owner's call as the art
+  director; the shown-WHOLE rule is otherwise intact. Do not re-crop by centre.
+- **`CaseFilmProduction` hangs on the `films` VISUAL, not on `CaseFilm`** —
+  both films came off one pipeline, so per-film it is the same record twice
+  with a rail pretending it changed. ⚠ **Model names ARE in scope on this row**
+  (owner, 2026-08-28); the map's stricter envelope is untouched.
+  ⚠ **THE CREW ROW IS DELETED** (owner, the day it shipped): five departments
+  with no names attached read as filler, and this surface has removed a console
+  head, a foot and a designator for less. The CHAIN stays — it is a record a
+  reader can check against the drawing. If a crew ever returns it needs a
+  reason beyond filling height, and the roles-only rule comes back with it.
+- ⚠ **THE ARC DOES NOT GET THE BLOCK** — `.arc-films` is landscape and the 16:9
+  frame already fills it, so `ArcStudioFilms` passes `films` alone and the prop
+  is optional for that reason. ⚠ **But the FLOW rung does**: below 980px and
+  under PRM at any width there is no ceiling, so hiding it would cost the
+  record and buy nothing. Chain halves to two columns there.
+- ⚠ **THE CONSOLE'S TRANSPARENCY OVERRIDES `--con-ground`, NEVER `--con-void`.**
+  `--con-void` is the OPAQUE BED for the station diamond, the lit station's
+  fill, `.fl-detail__in` and **`--pda-void` — the map's entire drawing floor**.
+  Softening it makes the panel look right while every instrument inside it
+  loses its floor. `--con-ground` is new, defaults to `--con-void`, and only
+  `.fl-con__console` paints it. ⚠ **No guard catches either half**: the light
+  walk takes `.fl-con__console`'s `backgroundColor` luminance from the raw RGB,
+  so an alpha here moves no ratio it reports. 0.86 was set BY EYE, composited,
+  in both themes. The blur stays gated on `data-proof-settled`.
+- ⚠ **TWO SCALES, EACH `min(vw, svh)`, BECAUSE `--fl-copy` IS WIDTH-ONLY.**
+  1920×800 and 1920×1247 resolve `--fl-copy` identically (16.2px) while the
+  field is 530 vs 927 tall — which is why the sheets read as captions in a tall
+  box. `--sh` on `.fl-plate--sheets` (`clamp(12px, min(1.35vw, 2.15svh), 25px)`)
+  drives both sheet bodies by RATIO; `--lc` on `.fl-case`
+  (`clamp(11.5px, min(0.95vw, 1.3svh), 16.5px)`) drives the register claim, its
+  sentence, the directory row and its meta. One number moves a whole ladder.
+  ⚠ **The coefficients are SOLVED**: `--lc` is 14.04px at 1920×1080, just under
+  the **14.1px at which the longest description wraps** (459px of a 462px column
+  at 14px — 99.3 % of the line), and 16.2px at the owner's shape where the taller
+  box affords two lines.
+- ⚠ **THE REGISTER BOX IS THE WALL, NOT THE WIDTH.** `--fl-proof-h` is a fixed
+  264px at 1920×1080 with four `1fr` rows, so ~14px is the ceiling there whether
+  the sentence takes one line or two — the arithmetic is the same both ways —
+  and the box cannot grow because the directory below needs ~144px (291.6px was
+  measured clipping it by 11). The reference viewport keeps what it had; the
+  owner's shape gets the size.
+- ⚠ **`space-between` MADE THE LINE WORSE, AND THAT IS THE FINDING.** Distributing
+  all four blocks evenly put ~200px between each and turned a column into four
+  disconnected fragments. **Even distribution only improves a column with enough
+  content to distribute.** It is a grid with THREE anchors now — category at the
+  head, `.fl-cmp__read` (claim + description, which may not drift apart) centred
+  in the body, exemplars at the floor.
+- ⚠ **THE RED LINE IS FOUR BANDS — A 2×2 CANNOT FILL A TALL PANEL.** Four risk
+  statements are ~90px of ink against an 880px field, so `align-content: center`
+  left ~350px of void and no type size closes that. `grid-auto-rows: 1fr` on one
+  column divides the height whatever the height is, each band centring its own
+  content, claim on a left rail with its evidence beside it — the proof index's
+  own grammar one scale up. ⚠ It suits the arc's LANDSCAPE box for free (~150px
+  bands at 1100×600), which the 2×2 needed tuning for.
+- **The register's size is paid out of the LEADING.** Claim
+  `clamp(11.5px, 0.72vw, 13.5px)` / 1.18; sentence
+  `clamp(11.5px, 0.73vw, 14px)` / 1.3 / α **.74**. 13.5 × 1.18 < 13 × 1.25, so
+  the type grows and the row shrinks — the box has ~4px of slack at 1920×1080
+  and a naive bump overflows a reference viewport. ⚠ **THE CEILING RISES, THE
+  FLOOR DOES NOT**: wrap is size ÷ COLUMN WIDTH and the rung opens at 1200px
+  where the column is narrowest, so the slopes reach their ceilings near
+  1875/1918 and the narrow corner is byte-identical.
+- ⚠ **THE "95 chars wraps to exactly two lines" NOTE IS STALE.** Measured
+  against an UNCLAMPED CLONE (a `-webkit-box` clips rather than overflows, so
+  the clamped box cannot report its own truncation), all four descriptions are
+  ONE line at 14px from 1920×1080 up, two at the 1200px corner, never three.
+- **Verifying:** `node scripts/capture-casefile-rows.mjs --vp 1920x1247
+--theme dark --rows 0,1,2,3` — headed, real scrolls, rows chosen by CLICK.
+  It reports every box, the tile count, the register's rendered sizes and the
+  unclamped line counts. ⚠ Two `services-ring-smoke` failures are PRE-EXISTING
+  (the Voidwalker masthead's era text; `--pda-txt3` at 2.38:1 in the light
+  walk) — confirm by stashing before blaming a change.
+- **Still open:** THE LINE and THE RED LINE still centre their content
+  (`.fl-cmp__ex`'s `margin: auto 0 0`, `.fl-caps--sheet`'s `align-content:
+center`); seated verdict bands and a fourth `THE PROCESS` sheet were offered
+  and not taken.
 
 ## The glyphed index and the tool dossier (ADR-068, live)
 

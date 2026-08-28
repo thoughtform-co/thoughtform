@@ -619,6 +619,41 @@ export interface CaseFilm {
   meta: string;
 }
 
+/** One station of a film's generation chain — the stage, and what ran it. */
+export interface CaseFilmStage {
+  /** The stage, one word: "Prompt", "Image", "Analyse", "Animate". */
+  name: string;
+  /** What ran it. Model names are in scope on this row (owner, 2026-08-28);
+   *  the Intelligence Map's stricter envelope does not reach here. */
+  tool: string;
+}
+
+/**
+ * How a `films` row was MADE — the production standard, seated under the
+ * frame (2026-08-28, owner: the panel reads sparse).
+ *
+ * ⚠ IT BELONGS TO THE ROW, NOT TO A FILM. Both films came off one pipeline
+ * with one crew, so hanging it on `CaseFilm` would print the same block
+ * twice with a rail switch pretending it changed. It is the row's standard,
+ * which is exactly what the left column claims ("the same creative team and
+ * quality bar as Loop's live-action work") and what the panel could not
+ * previously show.
+ *
+ * ⚠ THE CREW ROW IS DELETED (owner, 2026-08-28). It listed the five
+ * departments a live-action spot books, as the record behind the left
+ * column's "same creative team and quality bar" claim. The owner cut it the
+ * day it shipped: five roles with no names attached is a list of job titles,
+ * and a list of job titles is the kind of thing this surface removes rather
+ * than adds. The claim keeps its home in the brief. What survives here is
+ * the CHAIN, which is a record a reader can check against the drawing.
+ */
+export interface CaseFilmProduction {
+  /** Mono-caps label over the chain, e.g. "Generation". */
+  chainLabel: string;
+  /** The stages in order. */
+  chain: readonly CaseFilmStage[];
+}
+
 /* ── Sheets: one row, several things to show (2026-08-06, owner) ─────────
    A row whose evidence is not all one kind. The Studio row is the case that
    forced it: it showed the ads and nothing else, when the work was equally
@@ -733,7 +768,7 @@ export type CaseTrackVisual =
    *  and in natural colour. The gold is the frame, never the picture (the
    *  duotone on `tools` is a UI-capture treatment, not a content one). */
   | { kind: "stills"; shots: readonly CaseImage[] }
-  | { kind: "films"; films: readonly CaseFilm[] }
+  | { kind: "films"; films: readonly CaseFilm[]; production?: CaseFilmProduction }
   /** Several sheets on one row, switched on the shared console rail. */
   | { kind: "sheets"; sheets: readonly CaseSheet[] }
   /** The readout block IS the plate. Used by the metrics row. */
