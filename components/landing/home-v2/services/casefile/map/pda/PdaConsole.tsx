@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { SERVICES_SCROLL_OWNED_MEDIA } from "@/components/landing/home-v2/unifiedServicesInstrument";
+import {
+  MAP_BACKPLANE,
+  SERVICES_SCROLL_OWNED_MEDIA,
+} from "@/components/landing/home-v2/unifiedServicesInstrument";
 import type { CaseMapDistrict, CaseMapShape, CaseMapWork, CaseSkillEntry } from "@/lib/cases/types";
 
 import { ConsoleFrame } from "../../console/ConsoleFrame";
@@ -18,6 +21,7 @@ import {
   carrierSkillDock,
   carrierSkillNameRect,
 } from "./PdaCarrier";
+import { BACKPLANE_VIEWBOX, ViewBackplane } from "./PdaBackplane";
 import {
   ViewConfiguration,
   configExt,
@@ -25,7 +29,7 @@ import {
   configSkillNameRect,
 } from "./PdaConfiguration";
 import type { PdaEntry } from "./PdaEntry";
-import { ViewWork, gridRect, workExt, workLayout } from "./PdaViews";
+import { ViewWork, heroRect, workExt, workLayout } from "./PdaViews";
 import { PDA_FLIGHT_GUARD_MS, pdaFlight } from "./pdaFlight";
 import type { FlightRect } from "./pdaFlight";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
@@ -209,6 +213,11 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
    *  and needed its own layout beside this one; it was retired with its flag
    *  (ADR-070 U34), so there is one reading-03 crop again. */
   const carrier3 = useMemo(() => carrierPlate(aspect), [aspect]);
+  /* ⚠ **THE BACKPLANE USES A STATIC CROP** — its bays are the R4 board's own
+     module rectangles, so it fills the same panel reading 02 does and does
+     not need its own elastic layout. If elasticity becomes necessary the
+     layout function can grow on the same schedule as `configLayout`. */
+  const backplane3 = BACKPLANE_VIEWBOX;
   /** ⚠ THE CARRIER'S CELLS — the flight's destination for reading 03's skill
    *  chip needs to know which cell to land on. Cell layout is pure and does
    *  not depend on `aspect`, so it computes once per record change. */
@@ -216,7 +225,14 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
     () => carrierLayout({ shapes: cross.shapes, skills }).cells,
     [cross.shapes, skills]
   );
-  const viewBox = view === 1 ? layout1.crop : view === 2 ? layout2.crop : carrier3.crop;
+  const viewBox =
+    view === 1
+      ? layout1.crop
+      : view === 2
+        ? layout2.crop
+        : MAP_BACKPLANE
+          ? backplane3
+          : carrier3.crop;
   /* ⚠ THESE MIRRORS KEEP THE WHEEL LISTENER STABLE, and that is the whole
      reason they are refs. `go` sits in the native listener's dependency array;
      threading `view` or `selectedId` through it as values would tear the
@@ -263,9 +279,14 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
   const workRectFor = useCallback(
     (view: PdaView, id: string): { crop: string; rect: FlightRect } | null => {
       if (view === 1) {
-        const i = shown.findIndex((w) => w.id === id);
-        if (i < 0) return null;
-        return { crop: layout1.crop, rect: gridRect(i, layout1) };
+        /* ⚠ **THE HERO IS THE ONE HOME ON READING 01 SINCE 2026-08-28.**
+           The 4×5 grid was replaced with a ledger + hero composition; the
+           HERO carries the selected work at HERO_K and is the source (and
+           destination) of the 1↔2 flight. `heroRect` is invariant of `id`
+           by construction — the ledger row IS the click target, but the
+           flight originates from the hero the reader was previewing. */
+        if (!shown.some((w) => w.id === id)) return null;
+        return { crop: layout1.crop, rect: heroRect(layout1) };
       }
       if (view === 2) {
         return { crop: layout2.crop, rect: layout2.core };
@@ -293,6 +314,11 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
     (view: PdaView, skillId: string): { crop: string; rect: FlightRect } | null => {
       if (view === 2) return { crop: layout2.crop, rect: layout2.skillChip };
       if (view === 3) {
+        /* ⚠ **BACKPLANE HAS NO CHIP HOME YET** — the ADR-071 morph is
+           deferred while the direction is on trial (see PdaBackplane.tsx
+           header). Returning null makes 2↔3 fall back to bloom for the
+           skill, matching the console's own contract for a missing home. */
+        if (MAP_BACKPLANE) return null;
         const cell = carrierCells.find((c) => c.skill.id === skillId);
         if (!cell) return null;
         return { crop: carrier3.crop, rect: carrierSkillDock(cell) };
@@ -611,6 +637,7 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
         {view === 1 ? (
           <ViewWork
             works={shown}
+            totalWorks={works.length}
             hover={hover}
             onHover={hoverWork}
             onOpen={open}
@@ -644,18 +671,30 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
           />
         ) : null}
         {view === 3 ? (
-          <ViewCarrier
-            shapes={cross.shapes}
-            skills={skills}
-            /* ⚠ `hasOpened`, NOT just `selected`. The rest state is `shown[0]`,
-               and lighting a cell for a record the reader never asked for
-               claims they left it open. */
-            selected={hasOpened ? (selected ?? null) : null}
-            still={still}
-            entry={entry}
-            skillEntry={skillEntry}
-            onLit={hoverPart}
-          />
+          MAP_BACKPLANE ? (
+            <ViewBackplane
+              shapes={cross.shapes}
+              skills={skills}
+              selected={hasOpened ? (selected ?? null) : null}
+              still={still}
+              entry={entry}
+              skillEntry={skillEntry}
+              onLit={hoverPart}
+            />
+          ) : (
+            <ViewCarrier
+              shapes={cross.shapes}
+              skills={skills}
+              /* ⚠ `hasOpened`, NOT just `selected`. The rest state is `shown[0]`,
+                 and lighting a cell for a record the reader never asked for
+                 claims they left it open. */
+              selected={hasOpened ? (selected ?? null) : null}
+              still={still}
+              entry={entry}
+              skillEntry={skillEntry}
+              onLit={hoverPart}
+            />
+          )
         ) : null}
       </svg>
     </ConsoleFrame>

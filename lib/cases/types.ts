@@ -679,6 +679,15 @@ export interface CaseCompareColumn {
   desc: string;
   /** Three exemplars. Short noun phrases, never sentences. */
   examples: readonly string[];
+  /**
+   * Optional evidence image seated in the column's middle `1fr` row (2026-08-28
+   * U2, owner: "we had two pictures where we showcase where we use AI and
+   * where we don't… make that visual comparison"). Rendered as a 1:1 box
+   * with `object-fit: cover` — a compare sheet with an image on ONE side and
+   * text on the other is a table pretending to be a comparison, so both
+   * columns should either carry an image or neither should.
+   */
+  image?: CaseImage;
 }
 
 /** One titled fact on a sheet. Same shape as `ProjectCase.capabilities`, and

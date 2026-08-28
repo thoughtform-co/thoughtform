@@ -84,3 +84,30 @@ one visible surface, invariant seat height, target geometry and local overflow.
 This ADR stays Proposed until the owner approves the rendered direction on
 physical phones. Implementation and automated verification do not substitute
 for that visual decision.
+
+## Update 1 (2026-08-28) — visual polish, IA untouched
+
+The IA above is unchanged. [ADR-085](085-proof-design-pass.md) adds:
+
+- **Corner brackets** at TR + BL on every mobile seat — 12-unit gold
+  L-hairlines that register the seat as an INSTRUMENT without closing it
+  as a full frame (ADR-065's bracket-not-frame law).
+- **Hairline tick above the current case-rail stop**, paired with the
+  existing diamond below; brackets the position from both ends for a
+  reader scanning in either direction.
+- **Hover states** on the mode switch and case-rail buttons — signal that
+  a tap will happen without changing selection.
+
+⚠ **NO ADDED HEIGHT.** An earlier draft added `border-top: 1px` +
+`border-bottom: 1px` around the seat and a `font-weight: 700` lift on the
+active rail stop. The combination pushed the 320×568 `.fl-case` height
+0.45px over this ADR's own `whole Proof instrument` assertion; both were
+removed. The corner brackets alone carry the framing, and the current
+stop is triple-signalled (gold color · tick above · diamond below)
+without weight lift.
+
+⚠ **HEAD/RAIL FONTS STAY AT THEIR LITERAL SIZES** (10 / 9.5 / 10.5px)
+even though the desktop pass tokenised chrome onto `--fl-chrome-*`. The
+tokens scale UP with viewport and would grow the case at short-tall
+phones (measured); the mobile block is the one place a literal is
+preferred to a scaling clamp.

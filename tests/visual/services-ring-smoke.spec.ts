@@ -638,19 +638,18 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         // stopped resolving would empty this list rather than fail it.
         expect(drawn!.arcs, `${where}: arc labels collide: ${drawn!.arcs.join(" | ")}`).toEqual([]);
         if (view === "3") {
+          // ⚠ **CARRIER-SPECIFIC ASSERTIONS**. `MAP_BACKPLANE` was flipped
+          // back OFF on 2026-08-28 U2 (owner: "restore the old pie chart");
+          // reading 03 is the compound carrier again and these guards
+          // return unconditional. If the flag is ever re-armed for a
+          // comparison run, the Backplane's own arithmetic-side guards
+          // take over — this suite pins the CARRIER path (arc labels,
+          // cell fills, spill probe) that shipped and stays live.
           expect(
             drawn!.arcTexts,
             `${where}: the carrier's arc labels are not being measured`
           ).toBeGreaterThan(40);
 
-          // ── AND EVERY ARC LABEL IS INSIDE ITS OWN CELL (ADR-070 U34) ──
-          // ⚠ THE PAIR AGAIN: the collision walk above asks whether two
-          // labels print through each other, and answered YES to nothing
-          // while nineteen of them printed through their own CELL EDGE.
-          // Two different questions, and the second one had no guard.
-          // ⚠ The cell count is asserted alongside, for the same reason the
-          // arc count is: an `isPointInFill` that stopped resolving, or a
-          // renamed hit class, would empty this list rather than fail it.
           expect(
             drawn!.spillCells,
             `${where}: the carrier's cells are not being measured`

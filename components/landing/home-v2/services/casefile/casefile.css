@@ -160,9 +160,28 @@
      tall viewport gives the copy more room than the original tick split
      anticipated. */
   --fl-left-seam: var(--fl-t6);
-  --fl-proof-top-gap: clamp(9px, 1.3svh, 14px);
-  --fl-proof-h: clamp(76px, 12svh, 144px);
-  --fl-directory-gap: clamp(7px, 0.9svh, 11px);
+  /* ⚠ THE COMPACT-RUNG BUDGET IS CLOSED (2026-08-28 U2, owner: "the spacing
+     between the menu items should be a bit more, and above the directory").
+     Height between the seam and t11 is 41.67 % of the rail box, so raising
+     a gap must pull the register's own ceiling in step or the directory
+     clips silently (`overflow: hidden`) — the trap ADR-066 named on the
+     sentence line.
+
+     PASS TWO: register drops 82→76 at 1280×720 (coeff 11.4svh → 10.6svh,
+     floor 72→70), directory-gap climbs 8→12 (+4), and the row itself lifts
+     min-height 24→28 and padding 3-7 → 5-9 (+8 per row × 4 rows = +32; the
+     dir band picks up that plus the +4 gap = +36 requirement, funded by
+     the -6 register and by the honest 22px of pre-existing slack).
+     Traced at 1280×720: register+gaps 99.5 → 98, directory band 170 → 172.
+     Two-line contact-sheet re-run required if these numbers move.
+
+     PASS TWO — tall rung: `--fl-directory-gap` was already 18 at 1920×1080;
+     rows there also lift 4-5px each and consume the 137px of prior slack —
+     new consumption 156px, still under the 281px band that shipped, so the
+     tall rung stays whole. */
+  --fl-proof-top-gap: clamp(10px, 1.4svh, 16px);
+  --fl-proof-h: clamp(70px, 10.6svh, 128px);
+  --fl-directory-gap: clamp(12px, 1.6svh, 22px);
   /* How far the corner marks sit OUTBOARD of the content box they register.
      On the corner they cut through the designation labels, which start and
      end on the band edges; outboard is also what the production survey
@@ -228,6 +247,49 @@
      16.2px and wraps to two, which the taller box affords. 1200×1120 and
      1440×800 resolve to the floor exactly as before. */
   --lc: clamp(11.5px, min(0.95vw, 1.3svh), 16.5px);
+
+  /* ── ONE MODULAR SCALE (2026-08-28 U2, owner: "What is the relation?
+     Right now it feels a bit discombobulated.") ═══════════════════════════
+     One root and one ratio. Every chrome role is a named step, and the two
+     content ladders (--lc, --fl-copy) sit on the scale as content step 0
+     and step +1 by intent, not by derivation — they are solved against
+     measured wrap thresholds (14.04px vs the 14.1px wrap point in the
+     register, ADR-048's factor on --band-copy for the brief) and cannot be
+     re-derived without invalidating those measurements.
+
+     ⚠ THE ROOT'S CLAMP IS SOLVED TO PRESERVE THE SHIPPED CHROME-MD AT THE
+     TWO REFERENCE VIEWPORTS. At 1280 width, 0.86vw = 11.008 → clamps at 11
+     (the shipped chrome-md floor). At 1920×1080, 1.11svh = 11.988 → 12
+     (the shipped chrome-md cap). So chrome-md is byte-identical after this
+     change; chrome-sm and chrome-lg re-derive around it and move by ≤1px
+     at the reference viewports.
+
+     ⚠ THE SVG MAP CONSOLES KEEP THEIR OWN LADDER. Their authored integers
+     are multiplied by `meet` at render (0.647→0.912 depending on field),
+     so they physically cannot share px rungs with the CSS scale. This
+     ladder governs DOM/CSS type only; PdaConfiguration, PdaCarrier and
+     PdaViews measure themselves against their own FS_FLOOR constants.
+
+     ⚠ AND MOBILE STAYS LITERAL. The 320×568 assertion in the smoke has
+     0.45px of slack over the `whole Proof instrument` height check, and
+     the mobile media block sets its own literal 9.5/10/10.5 values that
+     bypass these tokens on purpose (see the `⚠ 10px FLAT` comments on
+     .fl-mobile-* rules). Do not push the token into a mobile rule. */
+  --fl-ratio: 1.2;
+  --fl-t0: clamp(11px, min(0.86vw, 1.11svh), 12px);
+
+  /* Role aliases. Each carries its own house-floor guard: chrome-sm at
+     the 10px control floor (smoke pins ≥10 on tabs and controls),
+     chrome-md at the token, chrome-lg one step up, and the display step
+     shares the surface's ONE display clamp with .fl-brief__title so a
+     sheet's category NAME never outranks the project NAME again. */
+  --fl-chrome-sm: max(10px, calc(var(--fl-t0) / var(--fl-ratio)));
+  --fl-chrome-md: var(--fl-t0);
+  --fl-chrome-lg: calc(var(--fl-t0) * var(--fl-ratio));
+  /* Step +3. One display rung for the surface, shared with .fl-brief__title.
+     The previous --sh ladder produced .fl-cmp__name at 33.7px @1920 — bigger
+     than the project title's 24px. Two independent clamps became one. */
+  --fl-display: clamp(18px, 1.66vw, 24px);
 
   /* 0 → 1 wipe for the signal plate; the reveal effect drives it. */
   --fl-draw: 1;
@@ -311,6 +373,10 @@
     display: flex;
     justify-content: space-between;
     gap: 12px;
+    /* ⚠ 10px FLAT — the token-scaled version reaches 11px at wider phones
+       and 10.5px in between, and the head's block height propagates into
+       the 320×568 `.fl-case` measure that the smoke's `whole Proof
+       instrument` assertion pins to viewport + 1px. */
     font-size: 10px;
     line-height: 1.2;
     letter-spacing: 0.14em;
@@ -360,10 +426,20 @@
     border-left: 1px solid rgba(var(--gold-rgb), 0.12);
     background: transparent;
     color: rgba(var(--dawn-rgb), 0.48);
+    /* ⚠ 10px FLAT, not the chrome-md token — chrome-md's 11px floor
+       tipped the 320×568 `.fl-case` height over the `whole Proof
+       instrument` assertion by 0.45px (measured, 2026-08-28 design pass).
+       The min-height 44px already dominates the button's box; the font
+       size only shifts THE LINE the button lets through, so 10px there
+       does not shrink the target. */
     font: 400 10px/1 var(--fl-mono);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     cursor: pointer;
+    transition: color 0.18s ease;
+  }
+  .fl-mobile-view:hover {
+    color: rgba(var(--dawn-rgb), 0.78);
   }
   .fl-mobile-view:first-child {
     border-left: 0;
@@ -409,15 +485,73 @@
   .fl-case .fl-proof-register,
   .fl-case .fl-panel {
     display: none;
+    /* ⚠ **RESET THE DESKTOP ABSOLUTE POSITIONING**. Desktop declares
+       `left: var(--fl-col-r)` (40%) and `top: var(--fl-panel-top)`; if
+       `position: relative` is set without also resetting `left`/`top`,
+       those offsets shift the seat 40 % right of the viewport, which is
+       exactly what happened when this pass first added the bracket
+       pseudo-elements (owner: design pass, 2026-08-28). */
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
     width: 100%;
     height: var(--fl-mobile-stage-h);
     margin: 0;
-    border-bottom: 1px solid rgba(var(--gold-rgb), 0.16);
+    /* ⚠ **A CHAMFERED FRAME AROUND THE PHONE SEAT** (2026-08-28, design
+       pass). The seat was a borderless block with only a bottom hairline,
+       which read as flowing paragraph rather than as an INSTRUMENT. A
+       TR+BL corner-bracket pair reads as one bounded surface — the same
+       ADR-065 diagonal grammar the desktop console uses — without closing
+       the box as a full frame. `--tf-mobile-chamfer` sizes the tick.
+       ⚠ **NO BORDER-TOP OR BORDER-BOTTOM** (owner: bracket-not-frame law).
+       An earlier draft added 2px of horizontal hairlines and made the
+       320×568 viewport's `.fl-case` overflow by 2px — the smoke's
+       `whole Proof instrument` assertion failed on it. The corner
+       brackets carry the framing on their own; the border was signal on
+       top of signal. */
+    --tf-mobile-chamfer: 12px;
   }
   .fl-case[data-mobile-view="brief"] .fl-brief,
   .fl-case[data-mobile-view="proof"] .fl-proof-register,
   .fl-case[data-mobile-view="artifact"] .fl-panel {
     display: block;
+  }
+  /* ⚠ **CORNER BRACKETS AT TR + BL** (ADR-065's diagonal grammar). Two
+     small L-brackets sit INBOARD at the seat's TR and BL corners in gold
+     hairline — a bracket-not-frame that registers the box as an INSTRUMENT
+     without closing it as a frame.
+     ⚠ **INBOARD, NOT OUTBOARD**: `.fl-brief` and `.fl-proof-register` set
+     `overflow-y: auto`, and `.fl-panel` sets `overflow: hidden`, so an
+     outboard pseudo would be clipped. z-index 2 keeps them above the
+     seat's own scrolling content. */
+  .fl-case .fl-brief::before,
+  .fl-case .fl-proof-register::before,
+  .fl-case .fl-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: var(--tf-mobile-chamfer);
+    height: var(--tf-mobile-chamfer);
+    border-top: 1px solid rgba(var(--gold-rgb), 0.6);
+    border-right: 1px solid rgba(var(--gold-rgb), 0.6);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .fl-case .fl-brief::after,
+  .fl-case .fl-proof-register::after,
+  .fl-case .fl-panel::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: var(--tf-mobile-chamfer);
+    height: var(--tf-mobile-chamfer);
+    border-bottom: 1px solid rgba(var(--gold-rgb), 0.6);
+    border-left: 1px solid rgba(var(--gold-rgb), 0.6);
+    pointer-events: none;
+    z-index: 2;
   }
 
   .fl-case .fl-brief {
@@ -517,19 +651,47 @@
     border: 0;
     background: transparent;
     color: rgba(var(--dawn-rgb), 0.42);
+    /* ⚠ 10.5px FLAT (not chrome-md) for the same reason `.fl-mobile-view`
+       stays 10px: `--fl-chrome-md`'s 11px floor added 0.45px to the
+       320×568 `.fl-case` height and broke the `whole Proof instrument`
+       assertion (2026-08-28 design pass). */
     font: 400 10.5px/1 var(--fl-mono);
     letter-spacing: 0.08em;
     cursor: pointer;
+    transition: color 0.18s ease;
   }
   .fl-mobile-rail__step {
     color: rgba(var(--gold-rgb), 0.72);
     font-size: 18px;
+  }
+  .fl-mobile-rail__step:hover,
+  .fl-mobile-rail__stop:hover {
+    color: rgba(var(--dawn-rgb), 0.78);
   }
   .fl-mobile-rail__stop + .fl-mobile-rail__stop {
     border-left: 1px solid rgba(var(--gold-rgb), 0.1);
   }
   .fl-mobile-rail__stop[data-on] {
     color: var(--gold);
+    /* ⚠ **NO FONT-WEIGHT LIFT** — bold letters render slightly taller and
+       tipped the 320×568 `.fl-case` height over the smoke's `whole Proof
+       instrument` assertion (measured, 2026-08-28 design pass). The gold
+       color plus the tick above and diamond below already carry the
+       current-stop signal at three registers; a weight lift on top would
+       be signal on signal for a fractional-pixel cost. */
+  }
+  /* Tick UNDER the current stop (the below diamond) AND a small hairline
+     ABOVE it — brackets the current stop from both ends so the reader
+     sees the position at a glance regardless of scan direction. */
+  .fl-mobile-rail__stop[data-on]::before {
+    content: "";
+    position: absolute;
+    left: 20%;
+    right: 20%;
+    top: -1px;
+    height: 1px;
+    background: rgba(var(--gold-rgb), 0.55);
+    pointer-events: none;
   }
   .fl-mobile-rail__stop[data-on]::after {
     content: "";
@@ -681,7 +843,7 @@
 
 .fl-desig {
   font-family: var(--fl-mono);
-  font-size: 9.5px;
+  font-size: var(--fl-chrome-sm);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--fl-ink-dim);
@@ -725,7 +887,7 @@
   font-family: var(--fl-mono);
   /* The client identity, at display size. Tracking tightens as the size goes
      up — 0.2em was set for 10px chrome and reads as a gap at 15. */
-  font-size: clamp(12px, 1.05vw, 15px);
+  font-size: var(--fl-chrome-lg);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.32);
@@ -743,7 +905,7 @@
      8.5px house floor is a FLOOR (owner type pass, 2026-07-29), so this may
      rise with the name; it must not track it 1:1 or the two read as one
      string. */
-  font-size: 9.5px;
+  font-size: var(--fl-chrome-sm);
   letter-spacing: 0.16em;
   opacity: 0.7;
 }
@@ -764,7 +926,7 @@
   align-self: flex-end;
   padding-bottom: 11px;
   font-family: var(--fl-mono);
-  font-size: 10px;
+  font-size: var(--fl-chrome-sm);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.2);
@@ -859,7 +1021,10 @@
   gap: 0;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   font-weight: 700;
-  font-size: clamp(18px, 1.66vw, 24px);
+  /* --fl-display IS this clamp — the shared display step. `.fl-cmp__name`
+     rides the same token now so a sheet's category never outranks the
+     project name (2026-08-28 U2). */
+  font-size: var(--fl-display);
   letter-spacing: 0.02em;
   line-height: 1;
   text-transform: uppercase;
@@ -874,7 +1039,12 @@
 .fl-brief__class {
   margin: clamp(5px, 0.7svh, 8px) 0 0;
   font-family: var(--fl-mono);
-  font-size: 9.5px;
+  /* On the surface's chrome-sm rung — the same as the client-tab ordinal and
+     the film spec (2026-08-28 U2). Was 9.5px flat: an orphan that never grew,
+     which is exactly the classification the owner named on 04_AI-ABOVE-THE-
+     LINE — "GENERATIVE PRODUCTION · ATL / CTV · SHIPPED" — and asked to
+     relate to a system. */
+  font-size: var(--fl-chrome-sm);
   line-height: 1.2;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1184,9 +1354,13 @@
 @media (min-width: 1200px) and (min-height: 1070px) {
   .fl-case {
     --fl-left-seam: min(var(--fl-t6), calc(var(--fl-body-top) + clamp(214px, 18svh, 228px)));
-    --fl-proof-h: clamp(264px, 24svh, 300px);
-    --fl-proof-top-gap: 8px;
-    --fl-directory-gap: 7px;
+    /* Register ceiling shrinks 300→282 to fund real air on both seams
+       (2026-08-28, owner). At 1920×1080 the directory band goes 309→281px
+       (still 137px over the 144 floor), and the two seams above finally
+       read as intentional gaps rather than pinned zeros. */
+    --fl-proof-h: clamp(246px, 22svh, 282px);
+    --fl-proof-top-gap: 14px;
+    --fl-directory-gap: 18px;
   }
   .fl-proof-register {
     --fl-glyph: 21px;
@@ -1276,13 +1450,13 @@
   min-height: 20px;
   padding-bottom: 5px;
   font-family: var(--fl-mono);
-  font-size: clamp(10px, 0.8vw, 11.5px);
+  font-size: var(--fl-chrome-md);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.42);
 }
 .fl-dir__head .fl-desig {
-  font-size: clamp(10px, 0.8vw, 11.5px);
+  font-size: var(--fl-chrome-md);
   letter-spacing: 0.16em;
   color: rgba(var(--dawn-rgb), 0.42);
 }
@@ -1313,11 +1487,16 @@
   grid-template-columns: 20px 1fr auto;
   gap: 0 12px;
   align-items: center;
-  /* Tightened from clamp(4px, 0.6svh, 8px) for the eight-row directory
-     (2026-07-30). The 10.5px type stays — the owner's 2026-07-29 pass made
-     this a primary reading surface, so density comes out of the padding. */
-  min-height: clamp(24px, 3.2svh, 31px);
-  padding: clamp(3px, 0.45svh, 7px) 8px;
+  /* Raised 2026-08-28 U2, owner: "the spacing between the menu items should
+     be a bit more". Min-height 24→26, padding 3-7 → 4-8 — +4px per row at
+     the binding preset (was +8, which overflowed the band by 7px measured).
+     Funded from --fl-proof-h (below) which lifted its floor 72→70 and
+     dropped its coefficient 11.4svh→10.6svh to save 6px in the register at
+     the compact rung. Total directory band: 156px need against 170px
+     available at 1280×720 — 14px of honest slack for the dotted rules and
+     future rows. */
+  min-height: clamp(26px, 3.5svh, 34px);
+  padding: clamp(4px, 0.55svh, 8px) 8px;
   text-align: left;
   font-family: var(--fl-mono);
   /* 11.5px flat → the column's own clamp (owner, 2026-08-24 — see the head
@@ -2795,7 +2974,10 @@
   padding: 0 11px;
   border-bottom: 1px solid rgba(var(--dawn-rgb), 0.08);
   font-family: var(--fl-mono);
-  font-size: 9px;
+  /* Was 9px flat — on the surface's chrome-sm rung now, floored at the 8.5px
+     house floor so a bay's feed line never approaches the effective ~7px
+     minPx defect. */
+  font-size: max(8.5px, var(--fl-chrome-sm));
   letter-spacing: 0.22em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -3116,7 +3298,12 @@
 .fl-wire__lbl {
   flex: none;
   font-family: var(--fl-mono);
-  font-size: clamp(8.6px, 1.3cqw, 10px);
+  /* ⚠ CONTAINER-QUERY-SCALED, NOT TOKEN-SCALED. The wireframes' whole chrome
+     rides `cqw`/`cqh` on their own container (see the `cqh`/`cqw` note near
+     line 3340+), so it responds to the bay's box rather than the viewport
+     the token would react to. Floor lifted 8.6→8.5 to match the surface's
+     house-chrome floor (2026-08-28 U2). */
+  font-size: clamp(8.5px, 1.3cqw, 10px);
   line-height: 1;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -4259,7 +4446,12 @@
 .fl-cap__t {
   display: block;
   font-family: var(--fl-mono);
-  font-size: 12px;
+  /* Was 12px flat — on the surface's chrome-md rung now, floored at 12 so a
+     capability title never drops below the description beneath it in rank
+     (the description is `--fl-copy`, 13.5→16.2px — a mono-vs-sans crossover
+     is legitimate as a ROLE differentiation, but the label needs to hold
+     its floor at 12). */
+  font-size: max(12px, var(--fl-chrome-md));
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -4541,26 +4733,24 @@
   padding: 0;
   gap: 0;
 
-  /* ── ONE SCALE FOR THE SHEET BODIES (2026-08-28, owner: THE LINE and THE
-     RED LINE are "not optimally using space; everything is so spread out")
-     ═══════════════════════════════════════════════════════════════════════
-     ⚠ A WIDTH-KEYED LADDER CANNOT FILL THIS PLATE, and that is arithmetic
-     rather than taste. `--fl-copy` is `vw`-only, so 1920×800 and 1920×1247
-     resolve it identically (16.2px) while the field is 530px tall in one and
-     927px in the other. The sheets were sized against the short one and read
-     as four captions floating in a tall box on every desktop above it.
+  /* ── ON THE SURFACE-WIDE LADDER (2026-08-28 U2, owner: "what is the
+     relation? it feels a bit discombobulated") ═════════════════════════════
+     The previous --sh ladder was min(vw, svh) and produced .fl-cmp__name at
+     33.7px @1920 — bigger than the project title's 24px. Two independent
+     display clamps on one surface let the sheet's category NAME outrank the
+     project NAME, which is the specific "discombobulated" reading the owner
+     called out.
 
-     ⚠ SO THE SCALE IS THE MIN OF WHAT EACH AXIS AFFORDS. `min(vw, svh)`
-     never overflows either: the width term binds on wide-and-short fields,
-     the height term on the owner's portrait console. Measured: 12.6px at
-     1280×720, 14px at 1440×800 AND 1920×800, 18.9px at 1920×1080, 20px from
-     1920×1247 up.
+     ⚠ THE SHEETS NOW RIDE THE SURFACE'S OWN SCALE. `.fl-cmp__name` uses
+     `--fl-display` (shared with `.fl-brief__title`), the chrome takes
+     `--fl-chrome-sm/md`, prose takes `--fl-copy`. The height-elasticity the
+     old ladder gave up is bought back by the IMAGE the LINE sheet now
+     carries in its middle row (studio slide 9 landed 2026-08-28), which
+     grows with the panel and takes the tall-panel air the type used to.
 
-     Everything in the two sheet bodies derives from it by RATIO — a modular
-     scale, so a retune moves one number and the relationships hold. The
-     floors are the surface's own rungs (9.5 chrome, 10.5 control, 12
-     readable-compact), and they bind only on the short fields. */
-  --sh: clamp(12px, min(1.35vw, 2.15svh), 25px);
+     ⚠ THE RED LINE'S FOUR BANDS ARE UNCHANGED. `grid-auto-rows: 1fr` still
+     fills whatever height the console gives — that plate never needed --sh
+     to fill, it needed the layout below. */
 }
 
 /* The stills sheet keeps the standalone plate's centred, height-fitted row;
@@ -4657,7 +4847,9 @@
   column-gap: clamp(14px, 2.2vw, 34px);
   align-items: baseline;
   align-content: center;
-  padding: calc(var(--sh) * 0.6) var(--fl-plate-px, clamp(16px, 1.8vw, 24px));
+  /* Was `calc(var(--sh) * 0.6)` (7.6→15px). Fixed clamp on the same range —
+     the row of four is the layout lever here, not the padding. */
+  padding: clamp(8px, 1.2svh, 15px) var(--fl-plate-px, clamp(16px, 1.8vw, 24px));
   border-top: 1px solid rgba(var(--gold-rgb), 0.12);
 }
 .fl-caps--sheet .fl-cap:first-child {
@@ -4669,18 +4861,22 @@
 /* ⚠ IT WRAPS HERE. The base rule is `nowrap` + ellipsis because the tools
    plate gives a title half a narrow tile; on its own rail it has the room to
    break, and ellipsising a four-word claim to fit a rail we chose is the
-   wrong end of that trade. */
+   wrong end of that trade. Chrome-lg is the RANK the fact title takes on the
+   surface — the same rung as the client tab strip, one below the display.
+   ⚠ FALLBACK: `.arc-sheets` does not declare --fl-chrome-lg (see fl-cmp
+   comment) — the fallback matches --fl-chrome-lg's clamp on .fl-case. */
 .fl-caps--sheet .fl-cap__t {
-  font-size: max(11px, calc(var(--sh) * 0.8));
+  font-size: var(--fl-chrome-lg, calc(clamp(11px, min(0.86vw, 1.11svh), 12px) * 1.2));
   line-height: 1.2;
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
 }
 /* No capture above this grid, so there is nothing competing for the height —
-   the clamp is a pure belt here and can sit well clear of today's copy. */
+   the clamp is a pure belt here and can sit well clear of today's copy. The
+   evidence sentence is PROSE and lives on --fl-copy with the brief body. */
 .fl-caps--sheet .fl-cap__d {
-  font-size: max(12px, calc(var(--sh) * 0.95));
+  font-size: var(--fl-copy, calc(clamp(15px, 1.15vw, 18px) * 0.9));
   line-height: 1.4;
   color: rgba(var(--dawn-rgb), 0.72);
   -webkit-line-clamp: 4;
@@ -4728,14 +4924,50 @@
   padding: clamp(12px, 2svh, 26px) clamp(13px, 1.5vw, 24px);
 }
 
-/* The voice and the definition, seated together in the slack row. */
-.fl-cmp__read {
+/* The MIDDLE row — the slack container. Holds the optional evidence image
+   (LINE sheet, 2026-08-28 U2) and the read block, stacked. When the image
+   is absent the read block sits alone and centres itself via the `justify`
+   below, so the compat path stays byte-identical. */
+.fl-cmp__middle {
   min-width: 0;
   min-height: 0;
   align-self: center;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--sh) * 0.55);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.6svh, 20px);
+  width: 100%;
+}
+
+/* The evidence figure — a 1:1 box with cover-crop keeps both columns'
+   image shapes identical (the compare sheet's argument is ONE line between
+   two categories; different image shapes would read as a table). Width
+   caps against the column so it never crowds the copy beneath. */
+.fl-cmp__figure {
+  margin: 0;
+  width: min(100%, clamp(180px, 22vw, 320px));
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid rgba(var(--gold-rgb), 0.22);
+  background: rgba(var(--void-rgb), 0.4);
+}
+
+.fl-cmp__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The voice and the definition, stacked inside the middle wrapper. */
+.fl-cmp__read {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  /* Was `calc(var(--sh) * 0.55)` (6.9→13.8). Fixed clamp on the same range. */
+  gap: clamp(7px, 1.1svh, 14px);
 }
 
 .fl-cmp__col + .fl-cmp__col {
@@ -4747,37 +4979,49 @@
 .fl-cmp__head {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--sh) * 0.2);
+  /* Was `calc(var(--sh) * 0.2)` (2.5→5). Fixed. */
+  gap: clamp(2px, 0.4svh, 5px);
   min-width: 0;
 }
 
+/* ⚠ FALLBACKS ARE DELIBERATE ON EVERY `var(--fl-*)` HERE. `SheetsPlate` has
+   TWO homes — the casefile (.fl-case declares --fl-chrome-*, --fl-display) and
+   the portfolio arc's studio beat (.arc-sheets declares --fl-copy but NOT the
+   chrome/display tokens). Without a fallback the compare column would render
+   the arc's category names at the initial `medium` (~16px) rather than the
+   surface's display size. The fallbacks match the token clamps at .fl-case
+   exactly; the arc gets one coherent display size for free. */
 .fl-cmp__kicker {
   font-family: var(--fl-mono);
-  font-size: max(9.5px, calc(var(--sh) * 0.55));
+  /* On the surface's chrome-sm rung, with the client tabs and designations —
+     the kicker is a designation for the column that follows it. */
+  font-size: var(--fl-chrome-sm, max(10px, clamp(11px, min(0.86vw, 1.11svh), 12px) / 1.2));
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--fl-ink-dim);
 }
 
-/* The category name, at the panel's own title register. ⚠ SANS, DECLARED —
-   it is a NAME, and like `.fl-cap__d` it declared no family at all and so
+/* The category name, at the surface's ONE display register. ⚠ SANS, DECLARED
+   — it is a NAME, and like `.fl-cap__d` it declared no family at all and so
    inherited the console's mono. The mono kicker above it is what makes the
-   switch legible. */
+   switch legible. `--fl-display` is the same clamp `.fl-brief__title` rides,
+   so the sheet's category NAME never outranks the project NAME again. */
 .fl-cmp__name {
   margin: 0;
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
-  font-size: calc(var(--sh) * 1.45);
+  font-size: var(--fl-display, clamp(18px, 1.66vw, 24px));
   font-weight: 500;
   line-height: 1.12;
   color: var(--dawn);
 }
 
 /* ⚠ QUOTED, NEVER ITALIC. The house has no italics anywhere; the quotation
-   marks are what mark this as the category speaking in its own voice. */
+   marks are what mark this as the category speaking in its own voice. Prose,
+   so on --fl-copy with the brief body. */
 .fl-cmp__claim {
   margin: 0;
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
-  font-size: var(--sh);
+  font-size: var(--fl-copy, calc(clamp(15px, 1.15vw, 18px) * 0.9));
   line-height: 1.32;
   color: rgba(var(--dawn-rgb), 0.88);
 }
@@ -4795,7 +5039,7 @@
   line-clamp: 6;
   overflow: hidden;
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
-  font-size: max(12px, calc(var(--sh) * 0.88));
+  font-size: var(--fl-copy, calc(clamp(15px, 1.15vw, 18px) * 0.9));
   line-height: 1.42;
   color: rgba(var(--dawn-rgb), 0.7);
 }
@@ -4810,18 +5054,22 @@
 .fl-cmp__ex {
   list-style: none;
   margin: 0;
-  padding: calc(var(--sh) * 0.7) 0 0;
+  /* Was `calc(var(--sh) * 0.7)` (8.8→17.5). Fixed clamp on the same range. */
+  padding: clamp(9px, 1.4svh, 17px) 0 0;
   border-top: 1px solid var(--con-hair);
   display: flex;
   flex-direction: column;
-  gap: calc(var(--sh) * 0.35);
+  /* Was `calc(var(--sh) * 0.35)` (4.4→8.75). Fixed. */
+  gap: clamp(4px, 0.7svh, 8px);
 }
 
 .fl-cmp__ex li {
   display: flex;
   gap: 7px;
   font-family: var(--fl-mono);
-  font-size: max(10.5px, calc(var(--sh) * 0.72));
+  /* Chrome-md — the exemplars are mono noun phrases in the same rank as the
+     directory rows on the left column. */
+  font-size: var(--fl-chrome-md, clamp(11px, min(0.86vw, 1.11svh), 12px));
   line-height: 1.3;
   letter-spacing: 0.02em;
   color: rgba(var(--dawn-rgb), 0.72);
@@ -4917,7 +5165,10 @@
 }
 .fl-filmmeta__label {
   min-width: 0;
-  font-size: 10.5px;
+  /* On the surface's chrome-md rung. Was 10.5px flat — an orphan that never
+     grew, and 0.5px off `.fl-filmmeta__spec` beside it with no relation
+     stated. Now `md` (11→12px) beside the spec's `sm` (10→10.83px). */
+  font-size: var(--fl-chrome-md);
   letter-spacing: 0.16em;
   color: var(--dawn);
   overflow: hidden;
@@ -4926,7 +5177,7 @@
 }
 .fl-filmmeta__spec {
   margin-left: auto;
-  font-size: 9.5px;
+  font-size: var(--fl-chrome-sm);
   letter-spacing: 0.14em;
   color: var(--fl-ink-dim);
   white-space: nowrap;
@@ -4983,7 +5234,7 @@
    kicker is the only thing that says what is being looked at. Same size and
    tracking as `.fl-cmp__kicker` — one chrome voice across the panel. */
 .fl-filmprod__k {
-  font-size: 9.5px;
+  font-size: var(--fl-chrome-sm);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--fl-ink-dim);
@@ -5019,7 +5270,7 @@
 }
 .fl-filmprod__stage-n {
   display: block;
-  font-size: 10.5px;
+  font-size: var(--fl-chrome-md);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -5028,7 +5279,7 @@
 .fl-filmprod__stage-t {
   display: block;
   margin-top: 3px;
-  font-size: 10.5px;
+  font-size: var(--fl-chrome-md);
   line-height: 1.35;
   letter-spacing: 0.04em;
   color: rgba(var(--dawn-rgb), 0.72);

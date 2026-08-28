@@ -1682,6 +1682,16 @@ export const LOOP_STUDIO_SHEETS = [
     label: "THE LINE",
     body: {
       kind: "compare",
+      /* ⚠ THE TWO IMAGES ARE EXTRACTED FROM THE ORIGINAL DECK (2026-08-28
+         U2, owner: "we had two pictures where we showcase where we use AI
+         and where we don't… make that visual comparison"). Source: slide 9
+         of `ai-in-studio-final.pptx` — `image9.png` under AI SUITABLE and
+         `image10.png` under REAL PHOTOGRAPHY. Deck-resolution natives
+         (444×484 and 444×444, aspect 0.917 and 1.0), converted to WebP at
+         q82 with ffmpeg into `public/arcs/studio-line/`. A cover-crop in a
+         1:1 box keeps both compositions readable and identical in shape
+         (the compare sheet's claim is that these are two categories with
+         ONE line — two DIFFERENT box shapes would be a table). */
       columns: [
         {
           kicker: "AI SUITABLE",
@@ -1693,6 +1703,12 @@ export const LOOP_STUDIO_SHEETS = [
             "Crowd and venue scenes",
             "Generic scenario illustrations",
           ],
+          image: {
+            src: "/arcs/studio-line/illustrative.webp",
+            alt: "AI-generated illustrative scene: a shorthand visual for a use-case, not an identity claim.",
+            width: 444,
+            height: 484,
+          },
         },
         {
           kicker: "REAL PHOTOGRAPHY",
@@ -1704,6 +1720,12 @@ export const LOOP_STUDIO_SHEETS = [
             "Partnership and athlete imagery",
             "Market-expansion brand imagery",
           ],
+          image: {
+            src: "/arcs/studio-line/representative.webp",
+            alt: "Real photography of Loop's people: an identity claim about the brand and its culture.",
+            width: 444,
+            height: 444,
+          },
         },
       ],
     },

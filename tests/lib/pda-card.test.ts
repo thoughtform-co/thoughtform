@@ -11,7 +11,9 @@ import {
   configurationLettering,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaConfiguration";
 import {
+  HERO_K,
   gridRect,
+  heroRect,
   workExt,
   workLayout,
 } from "@/components/landing/home-v2/services/casefile/map/pda/PdaViews";
@@ -74,10 +76,17 @@ const RUNGS = [
 /** The cartridge's own base box — reading 01's grid draws it at exactly this. */
 const W = CARD_BOX.w;
 
-/* The three homes as production computes them, at the resting field. The rects
-   move with the elastic layouts, so they are DERIVED here rather than typed —
-   a literal would be true at exactly one field shape. */
-const GRID_RECT = gridRect(0, workLayout(workExt(0)));
+/* The three homes as production computes them, at the resting field. The
+   rects move with the elastic layouts, so they are DERIVED here rather than
+   typed — a literal would be true at exactly one field shape.
+   ⚠ **`GRID_RECT` IS THE HERO SINCE 2026-08-28.** Reading 01 is a ledger +
+   hero composition now; the hero is the ONE home per selection and the
+   flight source, so the "grid rect" is `heroRect(layout)` × `HERO_K`. The
+   `gridRect(i, layout)` alias returns the same rect for every `i`, so the
+   pre-existing per-slot loops in `pda-flight.test.ts` stay green. */
+const WORK_LAYOUT_0 = workLayout(workExt(0));
+const HERO_RECT = heroRect(WORK_LAYOUT_0);
+const GRID_RECT = gridRect(0, WORK_LAYOUT_0);
 const CONFIG_LAYOUT_0 = configLayout(configExt(0));
 
 function allWorks(): PdaWork[] {
@@ -143,12 +152,19 @@ describe("the grid card and the seat card are one drawing", () => {
  */
 describe("the grid card and the seat card share ONE silhouette", () => {
   it("both homes take their silhouette from `CARD_BOX`", () => {
-    /* ⚠ THE OUTLINE WAS THE PART THE HARMONISATION MISSED. The 2026-08-13 pass
-       made the INTERIORS one drawing and left the box declared in each reading's
-       own file. `CARD_BOX` is the source now, and this walks the two homes'
-       widths back to it through their own scales. */
-    expect(GRID_RECT.w).toBeCloseTo(CARD_BOX.w, 9);
-    expect(GRID_RECT.h).toBeCloseTo(CARD_BOX.h, 9);
+    /* ⚠ THE OUTLINE WAS THE PART THE HARMONISATION MISSED. The 2026-08-13
+       pass made the INTERIORS one drawing and left the box declared in each
+       reading's own file. `CARD_BOX` is the source now, and this walks the
+       two homes' widths back to it through their own scales.
+       ⚠ **THE HERO IS AT `HERO_K`, NOT 1** (2026-08-28). The ledger + hero
+       redesign mounts the cartridge at 1.85 × its base so the flight into
+       the seat reads as a settling dock rather than a pure translation. The
+       relationship is unchanged: both homes are `CARD_BOX × k` and their
+       aspect is identical. */
+    expect(HERO_RECT.w).toBeCloseTo(CARD_BOX.w * HERO_K, 9);
+    expect(HERO_RECT.h).toBeCloseTo(CARD_BOX.h * HERO_K, 9);
+    expect(GRID_RECT.w).toBe(HERO_RECT.w); // the alias returns the same rect
+    expect(GRID_RECT.h).toBe(HERO_RECT.h);
     expect(CONFIG_LAYOUT_0.core.w).toBeCloseTo(CARD_BOX.w * CORE_K, 9);
     expect(CONFIG_LAYOUT_0.core.h).toBeCloseTo(CARD_BOX.h * CORE_K, 9);
   });
@@ -159,7 +175,7 @@ describe("the grid card and the seat card share ONE silhouette", () => {
        geometric form. */
     const base = CARD_BOX.w / CARD_BOX.h;
     for (const [where, r] of [
-      ["the grid", GRID_RECT],
+      ["the hero", HERO_RECT],
       ["the seat", CONFIG_LAYOUT_0.core],
     ] as const) {
       expect(r.w / r.h, `${where} card is not the cartridge's proportion`).toBeCloseTo(base, 12);

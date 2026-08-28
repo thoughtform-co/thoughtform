@@ -116,19 +116,31 @@ function SheetBody({ sheet, stillSizes }: { sheet: CaseSheet; stillSizes: string
                 <span className="fl-cmp__kicker">{col.kicker}</span>
                 <h4 className="fl-cmp__name">{col.name}</h4>
               </header>
-              {/* Quoted, not italic — the house has no italics, and the
-                  quotation marks are what mark this as the category speaking
-                  in its own voice. */}
-              {/* The voice and the definition are ONE reading block, seated
-                  in the middle of the column. Distributing all four blocks
-                  evenly (the first cut) spread them into four disconnected
-                  fragments with ~200px between each — worse than the single
-                  hole it replaced. Three anchors instead: the category at
-                  the head, what it means in the body, what it looks like in
-                  production at the floor. */}
-              <div className="fl-cmp__read">
-                <p className="fl-cmp__claim">“{col.claim}”</p>
-                <p className="fl-cmp__desc">{col.desc}</p>
+              {/* The middle SLACK row — image (optional) plus the reading
+                  block. Wrapped together because both belong to the middle
+                  1fr grid cell; separating them would put the image in the
+                  slack and push the text below it, undoing ADR-084's "split
+                  the slack, don't pool it" arithmetic one plate over.
+                  Quoted, not italic — the house has no italics, and the
+                  quotation marks are what mark this as the category
+                  speaking in its own voice. */}
+              <div className="fl-cmp__middle">
+                {col.image ? (
+                  <figure className="fl-cmp__figure">
+                    <Image
+                      className="fl-cmp__img"
+                      src={col.image.src}
+                      alt={col.image.alt}
+                      width={col.image.width ?? 444}
+                      height={col.image.height ?? 444}
+                      sizes="(min-width: 1920px) 340px, (min-width: 1440px) 260px, 220px"
+                    />
+                  </figure>
+                ) : null}
+                <div className="fl-cmp__read">
+                  <p className="fl-cmp__claim">“{col.claim}”</p>
+                  <p className="fl-cmp__desc">{col.desc}</p>
+                </div>
               </div>
               <ul className="fl-cmp__ex">
                 {col.examples.map((ex) => (

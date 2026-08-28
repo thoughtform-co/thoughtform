@@ -130,7 +130,12 @@
 }
 
 .fl-pda__svg text {
-  font-family: var(--font-mono, monospace);
+  /* ⚠ `--fl-mono` (PT Mono), NOT `--font-mono` (IBM Plex). Every SVG label
+     across all three readings inherits this — a leak here paints ~200 text
+     nodes in the wrong family. The list fallback at ≤980px was documented
+     with the same warning (below); this rule is the desktop equivalent
+     nobody had flagged (2026-08-28, owner: casefile type consistency). */
+  font-family: var(--fl-mono, monospace);
   user-select: none;
 }
 
@@ -231,6 +236,50 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* ── THE ROLL — reading 01's Rolodex entry (2026-08-28 U2) ────────────────
+   The hero cartridge rotates into place from a slight offset. This is the
+   ENTRY animation on the hero's group, and it runs on every mount: on
+   reading-01 arrival (still→false) AND on every preview change inside the
+   reading (React key on `previewId` unmounts and remounts the hero group).
+
+   ⚠ THE FRAME IS `fl-pda-bloom`'S: `fill-box` with a centred origin, so
+   the rotation pivots on the hero's own centre rather than on the SVG
+   origin (which would swing it across the panel). The ghost silhouettes
+   sit BEHIND the hero as siblings and never receive this transform — they
+   are static once the reading arrives.
+
+   ⚠ MUTUALLY EXCLUSIVE WITH `fl-pda-dock` AND `fl-pda-bloom`. Dock is a
+   view-change animation; roll is a same-view content swap. They never
+   co-occur and the class list makes that explicit (PdaViews' `heroCls`
+   picks exactly one). */
+.fl-pda-roll {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: flPdaRoll 0.45s cubic-bezier(0.22, 0.9, 0.3, 1) forwards;
+}
+
+@keyframes flPdaRoll {
+  from {
+    opacity: 0;
+    transform: translateX(-4px) rotate(-3deg) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* THE GHOST STACK behind the hero. Static once the reading arrives — the
+   hero is the ONLY thing that re-animates on preview change. */
+.fl-pda-rolodex {
+  opacity: 0;
+  animation: flPdaIn 0.45s cubic-bezier(0.2, 0.8, 0.25, 1) 0.08s forwards;
 }
 
 /* The core blooms — it is the object that survived the view change. */
@@ -511,6 +560,8 @@
     display: none;
   }
   .fl-pda-in,
+  .fl-pda-roll,
+  .fl-pda-rolodex,
   .fl-pda-bloom,
   .fl-pda-dock,
   .fl-pda-seat,
@@ -588,7 +639,12 @@
     padding-bottom: 8px;
     border-bottom: 1px solid var(--pda-hair);
     color: var(--gold);
-    font: 9px/1 var(--font-mono, monospace);
+    /* ⚠ `--fl-mono` (PT Mono), not `--font-mono` — the latter resolves to
+       IBM Plex Mono, a third family that leaked into the map's list
+       fallback at 980px and PRM (2026-08-28, owner: type consistency pass).
+       The three list rows are the ONLY casefile chrome that was reading in
+       a font that appears nowhere else on the surface. */
+    font: var(--fl-chrome-sm, 10px)/1 var(--fl-mono, monospace);
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
@@ -599,7 +655,7 @@
 
   .fl-pda__list-group > h4 {
     margin: 0 0 6px;
-    font: 400 10px/1.3 var(--font-mono, monospace);
+    font: 400 var(--fl-chrome-md, 11px)/1.3 var(--fl-mono, monospace);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--gold);
@@ -612,8 +668,8 @@
     gap: 8px;
     padding: 7px 0;
     border-top: 1px dotted var(--pda-hair);
-    /* 10.5px is the directory reading size and this is content, not chrome. */
-    font: 10.5px/1.35 var(--font-mono, monospace);
+    /* Row identity — mirrors the desktop directory's own ladder. */
+    font: max(11px, calc(var(--lc, 12px) * 0.9))/1.35 var(--fl-mono, monospace);
     color: var(--pda-txt);
   }
 
@@ -628,7 +684,7 @@
 
   .fl-pda__list-row > em {
     font-style: normal;
-    font-size: 9px;
+    font-size: var(--fl-chrome-sm, 10px);
     letter-spacing: 0.08em;
     color: var(--pda-txt3);
   }

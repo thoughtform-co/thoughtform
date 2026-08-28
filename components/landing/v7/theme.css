@@ -513,6 +513,20 @@ html[data-theme="light"] .fl-con {
      component target on purpose — visible, not structural. */
   --con-hair2: rgba(138, 107, 32, 0.7);
   --con-hair: rgba(138, 107, 32, 0.5);
+}
+
+/* ⚠ **THE MAP'S OWN AMBER LINE, RE-DERIVED IN LIGHT** (2026-08-28 U2). The
+   audit table above promised 3:1 line work in light and the ramp exists to
+   deliver it, but --pda-amb was declared as a LITERAL `rgba(var(--gold-rgb),
+   0.78)` on .fl-pda — the flip left it at 1.49:1 against parchment (measured;
+   ADR-063 U2's own table). This block routes it through the same
+   line-work step the console frame's --con-dim already takes, so the map's
+   amber strokes (band segments on the carrier, wire skins on the config,
+   pads on the modules) land above the 3:1 target with no per-glyph change.
+   ⚠ **DECLARED ON `.fl-pda`, NOT `.fl-con`** — the amber is the MAP's palette
+   (see pda.css line 26); the other three plates use --con-dim already. */
+html[data-theme="light"] .fl-pda {
+  --pda-amb: rgba(138, 107, 32, 0.88);
   /* ⚠ THE PANEL'S OUTLINE IS RE-DERIVED, NOT INHERITED (2026-08-07). The
      mockup's `--dawn-08` is a light hairline on near-black; the flip turns
      `--dawn-rgb` into the INK, so the identical 0.08 becomes a dark hairline

@@ -216,6 +216,28 @@ export const VOIDWALKER_EXTENDS_CORRIDOR = VOIDWALKER_TIME_TUNNEL || VOIDWALKER_
 export const SERVICES_PROOF_CASEFILE = true;
 
 /**
+ * Feature flag for the SUBSTRATE BACKPLANE.
+ *
+ * ⚠ **OFF SINCE 2026-08-28 U2** (owner: "for the substrates, I don't really
+ * like it. Let's restore the old pie chart. I think that was the clearest
+ * one"). The pass-one backplane (rectilinear bays around a central card) is
+ * retired from production; the compound carrier (ADR-070 U33 · ADR-071's
+ * skill-chip morph) is the live reading 03 again. `PdaBackplane.tsx` and
+ * its arithmetic remain on disk unreferenced pending a decision on whether
+ * to delete or keep for reference.
+ *
+ * When ON, the map's reading 03 renders `ViewBackplane` instead of
+ * `ViewCarrier`: five substrate BAYS around a central card, in the same
+ * rectilinear PCB grammar as reading 02, with ribbons where the selected
+ * work TAPS a bay.
+ *
+ * ⚠ THE ADR-071 SKILL-CHIP MORPH IS ONLY WIRED FOR THE CARRIER PATH.
+ * Flipping this ON would also require re-implementing `skillRectFor` for
+ * the backplane's bay geometry — see `PdaConsole.tsx`.
+ */
+export const MAP_BACKPLANE = false;
+
+/**
  * How many viewports of the `#services` runway the casefile holds before the
  * ring arrives.
  *
