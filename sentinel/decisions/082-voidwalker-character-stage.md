@@ -1162,3 +1162,187 @@ Four things that page needed, each of which failed silently:
 - **U12's `geq`-LUT recipe does not apply to this era** and neither does its
   `main-raw.png` reference-extraction pattern. Both stand for the generative
   eras; this one has no prompt, no LUT and no key.
+
+---
+
+## Update 14 — the Azeroth capture talks, drops the Skull of the Man'ari, and gets a hologram grade (2026-08-29, owner)
+
+**Status: Accepted (owner, 2026-08-29). SUPERSEDES U13's assets and its
+`.mp4/.webm/.jpg/.webp` filenames for this era.** The composition, the clock
+behaviour and the runtime guard are unchanged; the source URL, the animation,
+the companion, and the colour grade are.
+
+### The ruling
+
+Three things at once, in one brief:
+
+> "I actually want to have my warlock without a weapon, as you can see here
+> on the Wowhead website, to be talking the emote 'talk subdued'."
+
+> "I would love … an extra demon behind it — thinking about this, maybe we
+> can do things in parallel."
+
+> "I also want that sort of hologram scanline effect, which I don't think we
+> have right now."
+
+U13 shipped a still-idle capture with weapons drawn, the Skull of the Man'ari
+throwing fel-fire off both shoulders, and a Doomguard behind him — in raw
+game colour. Every clause of the owner's read was correct: the pose was
+static, the offhand was busy, the demon was singular, and the CSS raster
+alone did not resolve a game render as a hologram.
+
+### What changed
+
+- **The hash is new** and the owner emptied the OFFHAND in the dressing
+  room before copying its URL, so slot 13 (Skull of the Man'ari) is
+  gone at source. The remaining twelve slots match U13's manifest.json
+  slot-for-slot; the animation and sheathed state are not in the hash and
+  are set after load (see below).
+- **Animation is applied post-load via `setCharacterOptions`.** The DR's
+  hash carries EQUIPMENT ONLY on this version; the animation dropdown
+  writes to the DR's private closure, not to the URL fragment. Probed
+  with eight variants (see the wave's `_configureN/introspect.json`):
+  `animation: "EmoteTalkSubdued"` takes cleanly (canvas advances, pose
+  changes to hands-at-sides), and every sheath variant
+  (`sheathed`/`sheathe`/`sheath`/`hideWeapons`/`weapons: "sheathed"` …)
+  is silently ignored by the underlying appearance handler. The residual
+  is a small Shard of Azzinoth dagger, which the hybrid grade treats as
+  fel weapon rather than as game furniture — on-brand for demonology.
+  ⚠ **A `SETTER THAT ACCEPTS SILENTLY IS NOT A SETTER**: `ok: true` on
+  `setCharacterOptions({sheathed:true})` is what walked eight variants
+  into thinking one had worked; the actual test is a pixel comparison
+  of the mainhand region across variants, and here every variant looked
+  the same.
+- **Two static IMPS replace the Doomguard**, seated at the figure's own
+  foot line. The .Source folder the owner provided carries an authored
+  triplet of the same figure flanked by two imps on a green screen, a
+  blue screen, and a WHITE SILHOUETTE MATTE — a hand-authored alpha
+  channel of the whole composition. `chroma.py` keys the composition to
+  one RGBA off the matte's luminance (as alpha) and the BLUE plate (as
+  RGB, no green spill onto the fel puffs), un-mixing the backdrop from
+  every partial alpha. `extract-imps.py` splits the RGBA into three
+  regions via 8-connectivity and dumps the two flanking ones. The
+  LEFT imp fused with the figure's cloak at the boots (2 components
+  found, not 3), so the RIGHT imp is MIRRORED into the left seat — two
+  horned imps facing inward is a stronger demonology reading than one
+  imp of each species anyway, and the alternative was hand-masking a
+  5120px composition.
+  ⚠ **THE COMPANIONS ARE STATIC, NOT ANIMATED.** U13 rendered the
+  Doomguard through capture-npc.mjs and composited it in as a
+  matched-alpha video; that path is gone. A static prop behind a moving
+  subject reads as "seated at his feet" — the Doomguard's own idle
+  wave-off competed with the figure's idle for the eye and made the two
+  look independent of each other.
+- **A HYBRID HOLOGRAM GRADE is baked into the asset** — see
+  `voidwalker-avatar/waves/20260829-azeroth-v3/grade.py`. Two clauses,
+  and the interaction between them IS the grammar: fel-green is
+  preserved (soft mask on green dominance × emissive density × feather),
+  and everything else is duotone-mapped from a warm shadow to a bright
+  tensor-gold target, with a lightness pop on lit areas. The scanlines
+  and flicker stay CSS.
+  ⚠ **BAKE THE LIGHT, CODE THE SCREEN (ADR-082 U1's own doctrine).** If
+  the grade were also CSS (a `hue-rotate` on top of a raw game render),
+  the raster's scan cadence would multiply against whatever colour ends
+  up on the frame and no per-pixel decision the grade made would be
+  visible. This is the same argument U1 made for baking the emissive
+  lighting rather than the raster.
+  ⚠ **AND ONE RAMP MUST SURVIVE THE SITE'S OWN BLEND CEILING.** The CSS
+  runs `mix-blend-mode: plus-lighter`, opacity `.92`, a 45%-alpha scan
+  mask and a drop-shadow. A conservative gold ramp (peaking at
+  `--gold-rgb` 202,165,84) lands under 100/255 after the mask cuts half
+  its rows; the target overshoots into `--gold-ink-lit` territory
+  (240,200,105) and lifts mid-tones with gamma 0.55 so the figure
+  survives the site's own compositor.
+
+### The Route B/C record
+
+The plan carried three routes. Only ROUTE A landed:
+
+- **Route A** (Wowhead capture → chroma-key imps from .Source → hybrid
+  grade → encode): the primary path and the one that ships.
+- **Route B** (WoW model export + Blender machinima): investigation
+  only. The `thoughtform-co/WMW-Midnight` fork's Windows build passed
+  (`run 33177387086`), the Blender probe pipeline works (27 meshes, 7
+  textures wired, WALean01 action plays), and three off-hand fel-fire
+  meshes are dropped by the exporter. The pipeline is a documented
+  fallback in the `voidwalker-avatar` skill; no site dependency.
+- **Route C** (chroma-key still + Veo animate): the CHROMA and GRADE
+  halves are done (`_grade/rgba-blue-graded-v2.png` is a Veo-ready
+  hologram still with imps), the Veo call is deferred. If Route A is
+  rejected in production, this is the fallback path — one Veo run and
+  a re-encode away from a v4.
+
+### The wave
+
+Everything is in `voidwalker-avatar/waves/20260829-azeroth-v3/`:
+
+- `manifest.json` — the character record and the two settings changes
+  vs U13.
+- `capture.mjs` — U13's script plus a CONFIGURE_JS block that applies
+  the animation on both phase A and phase B (the reload for a pristine
+  camera restarts the DR at defaults; the config must re-apply).
+- `chroma.py` — .Source triplet → clean RGBA.
+- `extract-imps.py` — RGBA → per-imp PNGs.
+- `grade.py` — the hybrid hologram grade (importable from post.py).
+- `post.py` — U13's pipeline with `place_companion` (Doomguard-shaped)
+  replaced by `place_imp` (foot-anchored), imps composited BEFORE the
+  figure, and `grade_rgba` applied to the composite at crop scale
+  (grading a resampled image round-trips through the target's smaller
+  pixel grid and the fel mask loses resolution).
+- `post-manifest.json` — the actual encode's record.
+
+### What changed in the repo
+
+- **`characterEras.ts` — the `azeroth` hologram repoints to `-v3`
+  paths**, `headY 0.051 → 0.049`, `footY 0.973 → 0.972`. The loadout
+  row now letters "Daemoniac · Shard of Azzinoth · flanked by two
+  imps." — the plate speaks for what it shows (U13's own rule).
+- **`character-era-hologram.test.ts`** pins the `-v3` paths and the
+  new anchors; the "keeps every unauthored era on canonical" test's
+  `continue` past azeroth is unchanged.
+- **v2 assets deleted in the same commit as v3 lands** (U13's own
+  orphaned-media rule: renaming and deleting answer different
+  questions).
+
+### The size vs fidelity honesty
+
+- WebM: 1.42 → 2.75 MB (+94%). Two imps are more content than nothing;
+  the brighter grade is more entropy than a raw game render; and the
+  loop is 128 frames (5.33s) vs v2's 64 (2.67s).
+- MP4: 331 → 792 KB (+140%). Same reason, plus H.264 pays for the
+  extra motion frames on veryslow.
+- Posters: 118 → 149 KB (JPG), 163 → 217 KB (WebP). Grade + imps at
+  the same 88% quality.
+
+⚠ **CRF 40 IS A DELIBERATE CHOICE, NOT THE DEFAULT.** post.py's
+default CRF 34 landed the WebM at 3.9 MB. The site's asset budget for
+this era is not a hard number, but 2× v2 for equivalent-quality
+content is the honest ceiling; CRF 40 gets there at a measured cost
+(imp features and fel-mask edges stay legible, mid-tone gradients
+carry a touch more banding than CRF 34's).
+
+### Verifying
+
+- 1210 unit tests pass, including the eight in
+  `character-era-hologram.test.ts` (registry pins v3 paths and
+  anchors) and the eight in `voidwalker-era-band.test.ts` (era band
+  clocks are unaffected).
+- `scripts/capture-voidwalker-hologram.mjs` captures both themes at
+  1440×900 and reads back `data-vw-mode="hologram"`, `data-vwh-era="azeroth"`,
+  `videoCurrentSrc` pointing at the v3 WebM, `readyState: 4`, and no
+  console errors. Composites recorded in
+  `docs/design/voidwalker-hologram/1440x900_{dark,light}_azeroth.png`.
+
+### Left open
+
+- The Shard of Azzinoth is visible in the figure's left hand. The
+  hologram grade treats it as fel weapon and the reading is on-brand
+  for demonology, but a truly weaponless capture would require either
+  a hash-encoding hack (writing a v15-format encoder for the DR) or
+  hand-masking the mainhand in post. Neither is worth its cost while
+  the current reading is coherent.
+- The LEFT imp is a MIRROR of the RIGHT imp. The authored .Source had
+  two distinct imps but the LEFT one's alpha fused with the figure's
+  cloak at the boots (2 components found, not 3, on 8-connectivity).
+  A watershed segmentation with distance transform could recover the
+  authored left imp; keeping it as a follow-up.

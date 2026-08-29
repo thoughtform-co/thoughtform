@@ -384,44 +384,47 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // identity-map's six-era uniform (blazer · turtleneck · cap · rolled cuff
     // · combat boots). The 2020 field site was Azeroth itself: the figure is
     // Vince's Warcraft warlock ARAFEL (Human, Alliance, Magtheridon EU), in
-    // his own "Daemoniac" transmog, with a Doomguard behind him.
+    // his own "Daemoniac" transmog, TALKING, flanked by two imps at his feet.
     //
-    // ⚠ AND IT IS NOT A DESCRIPTION ANY MORE — IT IS THE GAME'S OWN RENDER.
-    // v1 ran a written wardrobe through an image model, which is a paraphrase:
-    // the head came back a generic cowl, the shoulders invented fel spires,
-    // the mainhand a nondescript sword. v2 captures Blizzard's renderer driven
-    // by the character's own transmog record, so every item below is an item
-    // id, not an adjective. The loadout row letters the four pieces that read
-    // at hologram scale; the full thirteen-slot table is in the wave's
-    // `manifest.json` (`voidwalker-avatar/waves/20260828-azeroth-v2`).
+    // ⚠ AND IT IS NOT A DESCRIPTION ANY MORE — IT IS THE GAME'S OWN RENDER,
+    // GRADED AS A HOLOGRAM. v1 ran a written wardrobe through an image model,
+    // which is a paraphrase (generic cowl, invented fel spires, nondescript
+    // sword). v2 replaced that with a capture of Blizzard's renderer driven by
+    // the character's own transmog record. v3 keeps the capture path but swaps
+    // the animation to EmoteTalkSubdued (a talking-idle rather than a
+    // dressing-room stance), drops the Skull of the Man'ari offhand (the owner
+    // removed it in the hash), replaces the Doomguard behind him with two imps
+    // at his feet, and BAKES A HYBRID HOLOGRAM GRADE — gold-shifted body with
+    // fel-green preserved — into the asset so the CSS raster resolves the
+    // frame as a projection rather than a screenshot with scanlines. Full
+    // recipe in `voidwalker-avatar/waves/20260829-azeroth-v3`.
     wardrobe: "The Azeroth teacher",
-    loadout: "Daemoniac · Shard of Azzinoth · Skull of the Man'ari · Doomguard.",
+    loadout: "Daemoniac · Shard of Azzinoth · flanked by two imps.",
     motto: "Class moved into the game.",
     modelPath: null,
     stillPath: "/images/services/vince.webp",
-    // The first non-thoughtform hologram, and the first captured rather than
-    // generated. `-v2` is in the filename because the v1 pair shipped and a
-    // cache does not read commit messages.
+    // ⚠ `-v3` IS PART OF THE CONTRACT. v1 shipped under the unsuffixed names,
+    // v2 replaced them, and v3 replaces v2 — a cache does not read commit
+    // messages, so a new URL is the only guarantee that the graded talking
+    // capture actually reaches the reader.
     //
     // ⚠ headY/footY DESCRIBE THE MAN, NOT THE COMPOSITE. Measured off a
     // companion-free re-composite of frame zero (alpha mask, opaque cutoff
-    // 32/255): read from the delivered poster instead, headY came back 0.000,
-    // because the Doomguard's wingtip reaches the frame's top edge — a value
-    // `isCharacterEraHologram` accepts without complaint, since it only asks
-    // for 0 ≤ headY < footY ≤ 1. The demon is scenery and may not move the
-    // projector's anchor.
-    //
-    // The figure still sits ~7pp higher than thoughtform's (0.051 vs 0.122):
-    // the fel-fire skulls off the Skull of the Man'ari push the top up while
-    // the boots stop a few rows short of the floor.
+    // 32/255). Measured from the DELIVERED poster instead, headY comes back
+    // NEAR ZERO because the imps' horn tips or fel wisps reach the frame's
+    // top — a value `isCharacterEraHologram` accepts without complaint since
+    // it only asks for 0 ≤ headY < footY ≤ 1. The imps are scenery, and
+    // scenery may not move the projector's anchor. The figure still sits ~7pp
+    // higher than thoughtform's (0.049 vs 0.122) because the Skull of the
+    // Man'ari's fel skulls off the shoulders push the top up.
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-azeroth-v2.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v2.webm",
-      posterPath: "/images/voidwalker/holo-still-azeroth-v2.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v2.webp",
+      videoPath: "/videos/voidwalker/holo-idle-azeroth-v3.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v3.webm",
+      posterPath: "/images/voidwalker/holo-still-azeroth-v3.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v3.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.051,
-      footY: 0.973,
+      headY: 0.049,
+      footY: 0.972,
     },
     short: "Azeroth",
     facts: [
