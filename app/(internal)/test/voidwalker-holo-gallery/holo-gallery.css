@@ -1,0 +1,350 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   VOIDWALKER HOLOGRAM GALLERY — dev-only comparison surface.
+   ═══════════════════════════════════════════════════════════════════════
+
+   ⚠ SELF-CONTAINED BY DESIGN. This sheet imports no production token chain
+   and declares its own literals. The gallery's job is to show assets as they
+   ARE, and inheriting `landing.css`'s :root would make every swatch reflect
+   whatever the current theme tuning happens to be — which is the one thing a
+   comparison surface must not do.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.hg {
+  --hg-gold: #caa554;
+  --hg-gold-lit: #f0c86a;
+  --hg-void: #0a0908;
+  --hg-dawn: #ebe3d6;
+  --hg-mono: "PT Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --hg-sans: "PP Neue Montreal", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  padding: 28px clamp(16px, 3vw, 48px) 96px;
+  background: var(--hg-void);
+  color: var(--hg-dawn);
+  font-family: var(--hg-sans);
+}
+
+/* ── The head ────────────────────────────────────────────────────────── */
+
+.hg__head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  gap: 16px;
+  margin: 0 0 36px;
+  padding: 20px 0 18px;
+  /* The controls sit over scrolling media, so the bar needs its own ground. */
+  background: linear-gradient(to bottom, var(--hg-void) 78%, rgba(10, 9, 8, 0));
+  border-bottom: 1px solid rgba(202, 165, 84, 0.28);
+}
+.hg__head__title h1 {
+  margin: 0 0 6px;
+  font-size: clamp(22px, 2.4vw, 34px);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+.hg__head__title p {
+  margin: 0;
+  max-width: 88ch;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: rgba(235, 227, 214, 0.68);
+}
+
+.hg__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 20px;
+}
+.hg__ctl {
+  display: grid;
+  gap: 5px;
+  font-family: var(--hg-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.85);
+}
+.hg__ctl--check {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  /* A checkbox row baselines against its own box, not the grid's gap. */
+  padding-bottom: 3px;
+  cursor: pointer;
+}
+.hg__ctl code {
+  font-size: 10.5px;
+  text-transform: none;
+}
+.hg__ctl select,
+.hg__ctl input[type="range"] {
+  font-family: var(--hg-mono);
+  font-size: 11.5px;
+  color: var(--hg-dawn);
+  background: rgba(235, 227, 214, 0.06);
+  border: 1px solid rgba(202, 165, 84, 0.34);
+  padding: 5px 7px;
+  min-width: 132px;
+}
+.hg__ctl input[type="range"] {
+  padding: 0;
+  accent-color: var(--hg-gold);
+}
+.hg__ctl input[type="range"]:disabled {
+  opacity: 0.4;
+}
+.hg__ctl input[type="checkbox"] {
+  accent-color: var(--hg-gold);
+  width: 14px;
+  height: 14px;
+}
+.hg__btn {
+  font-family: var(--hg-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hg-gold-lit);
+  background: rgba(202, 165, 84, 0.1);
+  border: 1px solid rgba(202, 165, 84, 0.5);
+  padding: 8px 15px;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease;
+}
+.hg__btn:hover {
+  background: rgba(202, 165, 84, 0.2);
+  border-color: var(--hg-gold);
+}
+
+/* ── The staging warning ─────────────────────────────────────────────── */
+
+.hg__warn {
+  margin: 0 0 32px;
+  padding: 14px 16px;
+  border: 1px solid rgba(224, 122, 95, 0.55);
+  background: rgba(224, 122, 95, 0.08);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.hg__warn code {
+  font-family: var(--hg-mono);
+  font-size: 12px;
+  color: var(--hg-gold-lit);
+}
+.hg__warn details {
+  margin-top: 8px;
+}
+.hg__warn summary {
+  cursor: pointer;
+  font-family: var(--hg-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.hg__warn ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+.hg__warn pre {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  background: rgba(10, 9, 8, 0.6);
+  border: 1px solid rgba(202, 165, 84, 0.28);
+  font-family: var(--hg-mono);
+  font-size: 11.5px;
+  color: var(--hg-gold-lit);
+  overflow-x: auto;
+}
+
+/* ── A run ───────────────────────────────────────────────────────────── */
+
+.hg__run {
+  margin: 0 0 56px;
+}
+.hg__run__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 18px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(202, 165, 84, 0.4);
+}
+.hg__run__head h2 {
+  margin: 0;
+  font-size: clamp(16px, 1.5vw, 21px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.hg__run__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-family: var(--hg-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: rgba(235, 227, 214, 0.55);
+}
+.hg__status {
+  padding: 2px 7px;
+  border: 1px solid currentcolor;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+}
+.hg-status--ship {
+  color: #8fd48f;
+}
+.hg-status--super {
+  color: rgba(235, 227, 214, 0.6);
+}
+.hg-status--reject {
+  color: #e07a5f;
+}
+.hg-status--inter {
+  color: var(--hg-gold);
+}
+.hg__adr {
+  color: var(--hg-gold);
+}
+.hg__run__summary {
+  margin: 12px 0 20px;
+  max-width: 108ch;
+}
+.hg__run__summary p {
+  margin: 0 0 7px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: rgba(235, 227, 214, 0.74);
+}
+
+/* ── The grid ────────────────────────────────────────────────────────── */
+
+.hg__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  align-items: start;
+}
+.hg__card {
+  margin: 0;
+  display: grid;
+  gap: 9px;
+}
+.hg__card__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  /* ⚠ `isolation` IS LOAD-BEARING, exactly as it is on the production sheet:
+     `plus-lighter` over a TRANSPARENT group returns the SOURCE, so without a
+     stacking context of its own the asset's near-black ground paints as an
+     opaque rectangle. Each card is its own compositing group. */
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(202, 165, 84, 0.22);
+}
+.hg__media {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 78vh;
+  object-fit: contain;
+}
+
+/* Diagnostics and sheets are read, not judged — give them room and no frame
+   treatment, and let them sit on a neutral ground whatever the backdrop is. */
+.hg__card[data-kind="diagnostic"] .hg__card__stage,
+.hg__card[data-kind="sheet"] .hg__card__stage {
+  background: #14120f;
+}
+
+.hg__card__cap {
+  display: grid;
+  gap: 5px;
+}
+.hg__card__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.hg__card__label strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+.hg__kind {
+  font-family: var(--hg-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.75);
+}
+.hg__card__cap p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.48;
+  color: rgba(235, 227, 214, 0.62);
+}
+.hg__card__files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-family: var(--hg-mono);
+  font-size: 9.5px;
+  color: rgba(235, 227, 214, 0.38);
+}
+.hg__card__files code.is-active {
+  color: var(--hg-gold-lit);
+}
+
+/* ── Backdrops ───────────────────────────────────────────────────────── */
+
+.hg[data-backdrop="void"] .hg__card__stage {
+  background: var(--hg-void);
+}
+.hg[data-backdrop="parchment"] .hg__card__stage {
+  background: #ebe3d6;
+}
+.hg[data-backdrop="white"] .hg__card__stage {
+  background: #fff;
+}
+/* ⚠ THE CHECKERBOARD IS THE HONESTY CHECK. On black, a matte hole and a
+   correctly-transparent gap look identical; on a checker, only one of them
+   shows the pattern through where the figure should be solid. */
+.hg[data-backdrop="checker"] .hg__card__stage {
+  background-color: #6b6b6b;
+  background-image:
+    linear-gradient(45deg, #4a4a4a 25%, transparent 25%, transparent 75%, #4a4a4a 75%),
+    linear-gradient(45deg, #4a4a4a 25%, transparent 25%, transparent 75%, #4a4a4a 75%);
+  background-size: 24px 24px;
+  background-position:
+    0 0,
+    12px 12px;
+}
+.hg[data-backdrop="corridor"] .hg__card__stage {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(202, 165, 84, 0.16), transparent 72%),
+    radial-gradient(ellipse 120% 80% at 50% 12%, rgba(58, 42, 92, 0.5), transparent 70%),
+    var(--hg-void);
+}
+
+/* ── The foot ────────────────────────────────────────────────────────── */
+
+.hg__foot {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(202, 165, 84, 0.24);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(235, 227, 214, 0.55);
+}
+.hg__foot code {
+  font-family: var(--hg-mono);
+  font-size: 11.5px;
+  color: rgba(202, 165, 84, 0.85);
+}
+.hg__foot a {
+  color: var(--hg-gold-lit);
+}
