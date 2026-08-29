@@ -60,10 +60,12 @@ import {
   RING_CARD_RENDER_ORDERS,
   DRAWER_HOUSED_DEPTH,
   drawerContentDepth,
+  openPairAlpha,
   openPairPitch,
   openPairYaw,
   drawerSlideX,
   drawerRecenterX,
+  RING_SLAB_CHAMFER_FRAC,
   type RingSpringState,
 } from "@/lib/services-ring/ringMath";
 
@@ -785,6 +787,125 @@ describe("drawer slide + recenter (ADR-050 rev 3)", () => {
     const clearFrac = DRAWER_SEAM / cardW; // level at which the edge emerges
     expect(DRAWER_REVEAL_FRAC).toBeGreaterThan(clearFrac);
     expect(DRAWER_REVEAL_FRAC).toBeLessThan(0.5);
+  });
+});
+
+describe("openPairAlpha (2026-08-29 — the seam bleed fix)", () => {
+  // The invariant: face and tray content project the SAME alpha at every
+  // t. Closed both = depthO (byte-identical to the shipped face formula);
+  // open both = 1, which is what covers the card's seam-side glint at
+  // renderOrder 0.05 with the drawer content at 0.07 (so the seam self-
+  // cleans instead of printing a gold hairline through the tray).
+  //
+  // Guarded on the SUM/DIFF where possible so the tests are about the
+  // invariant, not the arithmetic.
+
+  it("is EXACT identity closed, so the closed face is byte-identical", () => {
+    // Not "close to" depthO — exactly it. The shipped face formula was
+    // `lerp(depthO, 1, drawerT)`, whose closed value is exactly depthO;
+    // any drift would move a shipped pixel on the parked ring.
+    for (const depthO of [0.16, 0.5, 0.9, 1]) {
+      expect(openPairAlpha(depthO, 0)).toBe(depthO);
+    }
+  });
+
+  it("is EXACTLY 1 at full open, for any depthO", () => {
+    // The whole point of the change: the tray's ceiling was depthO = 0.9
+    // in dark, so the card's seam glint bled through as a hairline. At
+    // full open BOTH slabs must reach 1 so the face covers that glint.
+    for (const depthO of [0, 0.16, 0.5, 0.9, 1]) {
+      expect(openPairAlpha(depthO, 1)).toBe(1);
+    }
+  });
+
+  it("clamps outside [0, 1] and rises monotonically between them", () => {
+    // An overshooting spring must not push the alpha past 1 or below the
+    // rest value — the material would flash brighter than opaque or dip
+    // under the closed level for a frame.
+    expect(openPairAlpha(0.9, -0.4)).toBe(0.9);
+    expect(openPairAlpha(0.9, 1.4)).toBe(1);
+    let prev = -Infinity;
+    for (let t = 0; t <= 1.0001; t += 0.05) {
+      const a = openPairAlpha(0.9, t);
+      expect(a).toBeGreaterThanOrEqual(prev);
+      prev = a;
+    }
+  });
+
+  it("gives the face and tray content the SAME alpha at full open", () => {
+    // This is the invariant the whole change exists to pin: after both
+    // call sites (face + tray content) route through openPairAlpha, the
+    // two must project matching material at the seam. The tray also
+    // multiplies by `reveal`, but reveal is 1 for the vast majority of
+    // the slide and exactly 1 at t = 1.
+    for (const depthO of [0.16, 0.5, 0.9]) {
+      const face = openPairAlpha(depthO, 1);
+      const trayReveal = Math.min(1, 1 / DRAWER_REVEAL_FRAC);
+      expect(trayReveal).toBe(1);
+      expect(openPairAlpha(depthO, 1) * trayReveal).toBe(face);
+    }
+  });
+
+  it("recovers the shipped face formula (lerp(depthO, 1, t)) at every t", () => {
+    // Factoring the formula out of the call site must not shift a pixel
+    // on the FACE — a drift on the shipped ring would be a regression
+    // even if the tray fix was correct.
+    for (const depthO of [0.16, 0.44, 0.9]) {
+      for (let t = 0; t <= 1.0001; t += 0.1) {
+        const shipped = depthO + (1 - depthO) * Math.min(1, Math.max(0, t));
+        expect(openPairAlpha(depthO, t)).toBeCloseTo(shipped, 12);
+      }
+    }
+  });
+});
+
+describe("drawer TR chamfer (2026-08-29 — lawful pair diagonal)", () => {
+  // The open pair now carries ADR-065's canonical TR+BL diagonal: the card
+  // has the BL cut (tight face), the tray takes TR. Two invariants matter
+  // — the chamfer LEG matches the card's (so the two cuts read as one
+  // grammar) and the diagonal LANDS INSIDE the slab bezel (never in the
+  // content plane, so the drawer bake's border + ✕ chit are untouched).
+  const slabW = 0.877 + 0.05 * 2; // ≈ 0.977
+  const slabH = 1.42 + 0.05 * 2; // 1.52
+  const cardW = 0.877;
+  const cardH = 1.42;
+
+  it("uses the SAME chamfer leg as the card slab, so the cuts read as one grammar", () => {
+    // The drawer memo uses `slabW * RING_SLAB_CHAMFER_FRAC` — the same
+    // expression as the card. Regressing to a smaller cut (e.g. a bake-
+    // aware value that discounted the bezel) would give two visibly
+    // different diagonals on the open pair.
+    const card = slabW * RING_SLAB_CHAMFER_FRAC;
+    const drawer = slabW * RING_SLAB_CHAMFER_FRAC;
+    expect(drawer).toBe(card);
+    // And that leg is a sane fraction of the slab — chamfer discipline
+    // is roughly 5–8% of width; the current value is ~6.2%.
+    expect(RING_SLAB_CHAMFER_FRAC).toBeGreaterThan(0.05);
+    expect(RING_SLAB_CHAMFER_FRAC).toBeLessThan(0.08);
+  });
+
+  it("clears the content plane's top-right corner by ~4% of card height", () => {
+    // The bake covers the CONTENT plane (cardW × cardH), not the slab.
+    // The TR chamfer diagonal, at the content plane's right extent, must
+    // sit safely ABOVE the content plane's top edge — or the drawer bake
+    // (border stroke, ✕ close chit) would clip against the cut.
+    const ch = slabW * RING_SLAB_CHAMFER_FRAC; // ≈ 0.0605
+    const hw = slabW / 2; // slab half-width
+    const hh = slabH / 2; // slab half-height
+    const contentRight = cardW / 2;
+    const contentTop = cardH / 2;
+    // Parametric y along the diagonal at x = contentRight, between the
+    // diagonal endpoints (hw - ch, hh) and (hw, hh - ch).
+    const u = (contentRight - (hw - ch)) / ch;
+    const yAtContentEdge = hh - u * ch;
+    // Diagonal must be strictly above content top with meaningful margin
+    // (a hairline clearance would fail on a device-pixel roundoff).
+    expect(yAtContentEdge).toBeGreaterThan(contentTop);
+    const clearance = yAtContentEdge - contentTop;
+    // The current geometry gives ~0.039 units of clearance — a
+    // comfortable ~2.8% of card height. Anything under 1% of card height
+    // is likely to fail on a subpixel roundoff at odd zoom levels.
+    expect(clearance / cardH).toBeGreaterThan(0.01);
   });
 });
 

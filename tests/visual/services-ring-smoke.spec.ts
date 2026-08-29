@@ -1811,8 +1811,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
     // The cards carry their copy on the baked face; the DOM exposes the
     // front card as a full-rect OPEN button (ADR-050 — the tight face bakes
-    // an `OPEN` chit in place of the ADR-029 CTA slab, so there is no CTA box
-    // to shim until the drawer is out) plus side-card view targets.
+    // no CTA at all, only a top-right expand chit that is visual chrome, so
+    // nothing is shimmed onto the ADR-029 CTA box until the drawer is out
+    // and its booking CTA needs one) plus side-card targets.
     // Generous timeout: cold dev-server compile + texture bakes + the
     // parked-anchor gate all precede the first publish.
     await expect(page.locator(".svc-ring-hits")).toHaveCount(1);

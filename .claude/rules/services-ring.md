@@ -154,7 +154,96 @@ in ADR-061 and `.claude/rules/proof.md`.
   is what sells "spec sheet pulled out of the machine". ⚠ A raw
   `data-theme` attribute write does NOT re-bake (only the store notifies);
   both real paths — the toggle and the `?theme=` bootstrap — go through
-  the store/attribute pair correctly.
+  the store/attribute pair correctly. ⚠ **Any new stroke inside
+  `bakeDrawerFace` picks from `pal.*` — not a raw literal**
+  (2026-08-29). The shell gradient's four stops and the CTA's stroke/fill
+  spent months as hardcoded `rgba(202, 165, 84, …)` gold + `rgba(${DAWN}, …)`
+  cream; parity in dark hid it, parchment did not. A literal that "happens
+  to match" the token strands on the next palette change.
+- **The open pair's ALPHA is ONE invariant, not two** (2026-08-29). Face
+  and tray content both route through `openPairAlpha(depthO, drawerT) =
+lerp(depthO, 1, t)` — pinned in three-free `ringMath`, unit-tested at
+  both ends and against the shipped face formula. Duplicating the
+  arithmetic invites the drift that put the tray's ceiling at 0.9 while
+  the face was 1.0 (the "awkwardly attached" read), which let the card's
+  seam-side glint at renderOrder 0.05 print through the sub-1 tray at
+  0.07 as a gold hairline. The tray's GLASS caps, walls and glint keep
+  `depthO` — they are glass and meant to remain translucent; the
+  invariant is about the printed material, not the material of the slab.
+- **The OPEN pair carries the LAWFUL TR+BL diagonal — split across the
+  halves** (2026-08-29). Tight closed, the card has BL only; the tray
+  now takes TR (`drawerSlabGeometry` cuts at `slabW *
+RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
+  full diagonal alone (ADR-050 Update 2's "don't repeat the chamfer, it
+  declares another device" holds); the composite reads on ADR-065's
+  canonical TR+BL. The cut lands in the tray's `RING_SLAB_BEZEL` glass
+  margin, ~2.8 % of card height clear of the content plane — unit-pinned
+  from below at 1 % so a subpixel roundoff cannot clip the drawer bake's
+  border stroke or `✕` chit.
+- **The card carries TWO glint sets — closed frame + open bracket —
+  cross-faded on `drawerT`** (2026-08-29). Closed × (1 − t) + open × t,
+  same renderOrder (0.05). The two together sum to 1 at every t, so the
+  silhouette does not pulse and the seam-side edge is unlit on the open
+  pair (the `EdgesGeometry` alone kept drawing back-cap + both chamfer
+  diagonals + all four depth connectors while the tray drew a single
+  bracket — the second half of the Escher fix). `cardOpenGlintGeometry`
+  is a bracket: front outline minus the SEAM edge, BL chamfer diagonal,
+  two LEFT-side depth connectors (mirror of the tray's right-side pair).
+  Delete either fade term and the silhouette pulses at each open/close,
+  or the seam edge lights through the tray again.
+- **⚠ THE TIGHT CARD FACE CARRIES NO CTA, AND MAY NOT GROW ONE** (ADR-050
+  Addendum 5, 2026-08-29). It bakes a framed NAME + the expand chit in the
+  header, photo, lede at the foot — three content elements, one control.
+  A `SEE THE SPEC →` button at `RING_CARD_CTA_BOX` shipped for one morning
+  and came straight back out: `DRAWER_CTA_BOX === RING_CARD_CTA_BOX`, so
+  the card's button and the drawer's booking CTA stood at the same height
+  and the same width, and **two full-width gold-outlined bars side by side
+  are one visual rhyme no matter what the labels say.** Differing labels
+  and a body-vs-outline weight split were both tried; the eye pairs on
+  SILHOUETTE and resolves "which do I press" before reading either.
+- **⚠ The OPEN affordance is the top-right chit, and its SIZE is the
+  reason it is allowed to persist while open.** A 56px corner glyph reads
+  as chrome belonging to the card; a full-width labelled bar reads as a
+  command addressed to the reader, and a second one of those is a fork.
+  `TIGHT_EXPAND_SIZE` / `TIGHT_EXPAND_INSET` derive from `DRAWER_CLOSE_*`
+  so open and close occupy one corner at one scale. Visual only — the
+  whole face is already a full-rect `onOpenFront` button.
+- **⚠ The NAME FRAME is measured, and shares the chit's stroke.** Hairline
+  `pal.goldA(0.55)` at 2px — **identical to the chit's**, so the two
+  objects bracketing the header band are one chrome family. Outlined, not
+  filled: the filled ADR-029 block is what made the old chip read as a tag
+  beside a headline. The name wraps against `chitX0 − 20 − pad` so a long
+  service name can never run under the affordance, and the frame sizes to
+  the widest line. ⚠ **`NAME_CAP_H` is a measured CONSTANT, never
+  `measureText`** — `actualBoundingBoxAscent` varies per STRING, so four
+  services would carry four frame heights. ⚠ Frame and chit share a
+  CENTRE (y 62), not a top edge: different-height boxes on a shared top
+  edge read as misaligned.
+- **⚠ `CTA_LABEL_PX` / `CTA_ARROW_PX` are the DRAWER's alone now**, and
+  stay at 28 / 34. The pairing argument that raised them died with the
+  card's CTA, but the measurement stands: at 1280×720 the OPEN pair
+  renders at scale 0.426, putting a 21px label on **8.9 CSS px**. The
+  `full` variant keeps its own 21/30 literals on purpose (it is the
+  ADR-029 comparison baseline; re-typing it makes the comparison
+  unfaithful).
+- **⚠ Measure baked type on the LIVE ring, never off a screenshot.** A
+  capture of a scaled canvas understates the card badly — reading pixel
+  coordinates off one put the card at ~310px wide when the anchor rect
+  said 462. Take the scale from the published anchor
+  (`boundingBox().height / BAKE_H`) and multiply the bake px.
+- **⚠ Only the TOP scrim is branched on `variant`; the ground scrim is
+  SHARED.** Tight header 190 → 260 bake px at `0.9 → 0.72 → 0` (the name
+  frame reaches y 100 where the full face only put a chip's caps at y 80).
+  The ground ramp was branched for one day to compensate for a lede lifted
+  above a CTA box, and came out with it — **a branch added to compensate
+  for a change must be removed with the change**, or it survives as an
+  unexplained darkening the next reader has to disprove. If the copy ever
+  moves again, re-shape the RAMP, not the origin: dropping the origin eats
+  the photo, which is the middle third of the composition.
+- **⚠ The tight face bakes no `plate.statusCode` and no `plate.title`.**
+  Both are still on the type and both still render on the MOBILE
+  accordion; a readout rail in the header band pushed the name down and
+  came out (Addendum 5). Deleting either from the data breaks mobile.
 - **Dismissal keys on ring PROGRESS, not the step clock** — `data-active-step`
   only changes at beat boundaries, which lets a card rotate a half-slot with
   its drawer still out (`drawerDismissedByScroll`, unit-pinned in `ringMath`).

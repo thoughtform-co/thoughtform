@@ -125,6 +125,7 @@ import {
   DRAWER_SEAM,
   RING_CARD_RENDER_ORDERS,
   drawerContentDepth,
+  openPairAlpha,
   openPairPitch,
   openPairYaw,
   drawerOpenBoost,
@@ -562,27 +563,65 @@ const TIGHT_TITLE_LH = 52;
  *  the 5px, where rev 2's 35-vs-34 had none of them. */
 const TIGHT_LEDE_PX = 35;
 const TIGHT_LEDE_LH = 50;
-/* The EXPAND affordance (owner, 2026-07-26 — replaces the bottom-left
-   `OPEN →` chit). A small square chit in the card's TOP-RIGHT carrying the
-   universal open-in-full glyph.
+/** CTA label / arrow size in bake px. Used by the DRAWER only — the tight
+ *  card face carries NO CTA (owner, 2026-08-29: with the drawer out, a button
+ *  on each half was "the two exact calls to action, I don't think they work",
+ *  and the card's was the one to go; the open affordance is the top-right
+ *  chit again). Raised from 21 the same day on legibility grounds that stand
+ *  without the pairing argument: at 1280×720 the OPEN pair renders at scale
+ *  0.426, which put a 21px label on 8.9 CSS px.
+ *
+ *  ⚠ The `full` variant deliberately keeps its own 21/30 literals: it exists
+ *  only as the ADR-029 comparison baseline in `/test/services-card-face-lab`,
+ *  and re-typing it would make that comparison unfaithful to what shipped. */
+const CTA_LABEL_PX = 28;
+const CTA_ARROW_PX = 34;
+
+/* The EXPAND affordance (owner, 2026-07-26; RESTORED 2026-08-29 after one
+   day as a foot CTA — "the button to open the card should be in the
+   top-right corner"). A small square chit carrying the universal
+   open-in-full glyph.
 
    Sized and inset from the DRAWER's close chit deliberately, not by
-   coincidence: the control that opens the card and the control that closes it
-   then occupy the same corner at the same scale, so the pair reads as one
+   coincidence: the control that opens the card and the control that closes
+   it then occupy the same corner at the same scale, so the pair reads as one
    family across the open handoff rather than as two unrelated marks. Derived
    rather than duplicated so re-tuning one moves both.
-
-   It also balances the header band — the filled gold chip sits top-LEFT at the
-   same optical height, so the two bracket the card's head instead of the
-   affordance floating alone above the bottom edge.
 
    Visual only: the WHOLE card is the hit target (`onOpenFront`), so unlike
    `RING_CARD_CTA_BOX` this needs no normalized box for the DOM to shim. */
 const TIGHT_EXPAND_SIZE = DRAWER_CLOSE_SIZE;
 const TIGHT_EXPAND_INSET = DRAWER_CLOSE_INSET;
-/** Baseline of the LAST lede line. With the chit gone from the bottom the copy
- *  stack drops into the space it vacated; this keeps a bottom margin in the
- *  same rhythm as the full face's CTA (whose box bottoms out at BAKE_H − 44). */
+
+/* The NAME FRAME (owner, 2026-08-29 — "add a frame around Keynote / Workshop,
+   like the actual title, so it's clear"). The service name sits in a hairline
+   gold box in the header band, which is what makes it read as the card's
+   TITLE rather than as a caption floating over a photograph.
+
+   It is the ADR-029 gold-stamp chip's descendant, at the title's size and
+   OUTLINED instead of filled: the filled block was what made the old chip
+   read as a tag beside a headline, and an outline at 40px reads as the
+   headline's own housing. Stroke matches the expand chit's exactly, so the
+   two objects bracketing the header band are visibly one chrome family.
+
+   Vertically CENTRED on the chit (both centre on y 62) rather than sharing a
+   top edge: the frame is taller than the chit, and two boxes of different
+   heights sharing a top edge read as misaligned where sharing a centre reads
+   as seated. */
+const NAME_FRAME_PAD_L = 36; // frame left → diamond centre
+const NAME_FRAME_GAP = 28; // diamond centre → text left
+const NAME_FRAME_PAD_R = 36;
+const NAME_FRAME_PAD_Y = 24;
+/** Cap height of the name's face (PT Mono 700 at TIGHT_TITLE_PX). Measured,
+ *  not derived — canvas exposes no cap metric, and `measureText`'s
+ *  `actualBoundingBoxAscent` varies per string (a name with no descender
+ *  would size its frame differently from one with). A constant keeps every
+ *  service's frame the same height. */
+const NAME_CAP_H = 28;
+
+/** Baseline of the LAST lede line. With no CTA at the foot the copy stack
+ *  runs to the bottom margin again; this keeps a bottom margin in the same
+ *  rhythm as the full face's CTA (whose box bottoms out at BAKE_H − 44). */
 const TIGHT_COPY_BOTTOM = BAKE_H - 72;
 
 type InkRun = { text: string; gold: boolean };
@@ -594,12 +633,14 @@ type InkRun = { text: string; gold: boolean };
  *    outlined CTA over the photo. FIVE content elements, which is the read
  *    the owner called overwhelming on 2026-07-25 (two headline-weight labels
  *    competing, poster and spec sheet mashed into one object).
- *  · `tight` — chip + title + lede + a subtle EXPAND chit in the top-right.
- *    The includes/meta row and the full-width CTA slab are gone; the
- *    breakdown and the spec grid move to the drawer, which slides out of
+ *  · `tight` — the FRAMED service name + the expand chit bracketing the
+ *    header band, photo, lede at the foot. Three content elements and one
+ *    control. The includes/meta row is gone, `plate.title` no longer bakes
+ *    here, and there is NO CTA (owner, 2026-08-29); the breakdown, the spec
+ *    grid and the booking button all live in the drawer, which slides out of
  *    this card's own right edge. The lede STAYS — it is the line that says
- *    what the service is (owner, 2026-07-25) — but it now sits below a
- *    dominant title instead of competing with it at near-equal size.
+ *    what the service is (owner, 2026-07-25) — but it now supports a name in
+ *    the header rather than competing with an outcome line beside it.
  *
  * Kept as a parameter rather than a rewrite so the two can be judged side by
  * side in `/test/services-card-face-lab` and so flipping production is a
@@ -724,11 +765,28 @@ function bakeCardFace(
   // Scrims — chip row leads at the top; the C3 pgrade below (photo leads
   // at the top of the plate, resolves to solid page ground for the copy
   // stack — void in dark, parchment in light, the copy ink flips with it).
-  const top = ctx.createLinearGradient(0, 0, 0, 190);
-  top.addColorStop(0, `rgba(${pal.scrimRgb}, 0.78)`);
-  top.addColorStop(1, `rgba(${pal.scrimRgb}, 0)`);
+  /* The TIGHT face's top scrim is taller and holds longer (2026-08-29): its
+     header band carries the 40px gold NAME inside a frame reaching y 100,
+     where the full face only ever put a chip's 30px caps at y 80. A 190px
+     scrim already at alpha 0 by 190 left the frame's lower half on bare
+     photo. Held near-opaque through the frame, then released over the next
+     130px so the photo still opens up cleanly. */
+  const topScrimH = variant === "tight" ? 260 : 190;
+  const top = ctx.createLinearGradient(0, 0, 0, topScrimH);
+  if (variant === "tight") {
+    top.addColorStop(0, `rgba(${pal.scrimRgb}, 0.9)`);
+    top.addColorStop(0.5, `rgba(${pal.scrimRgb}, 0.72)`);
+    top.addColorStop(1, `rgba(${pal.scrimRgb}, 0)`);
+  } else {
+    top.addColorStop(0, `rgba(${pal.scrimRgb}, 0.78)`);
+    top.addColorStop(1, `rgba(${pal.scrimRgb}, 0)`);
+  }
   ctx.fillStyle = top;
-  ctx.fillRect(0, 0, BAKE_W, 190);
+  ctx.fillRect(0, 0, BAKE_W, topScrimH);
+  /* The ground scrim is SHARED by both variants: with no CTA at the tight
+     face's foot the lede sits back at the bottom margin, which is the depth
+     this ramp was tuned for. (It was briefly branched to ramp faster, for
+     the one day the lede was pushed up above a CTA box.) */
   const ground = ctx.createLinearGradient(0, 700, 0, BAKE_H);
   ground.addColorStop(0, `rgba(${pal.scrimRgb}, 0)`);
   ground.addColorStop(0.34, `rgba(${pal.scrimRgb}, 0.58)`);
@@ -799,34 +857,7 @@ function bakeCardFace(
   ctx.lineTo(BAKE_CH, BAKE_H - 1.5);
   ctx.stroke();
 
-  // Chip row — the OPEN plate's FILLED gold chip (on-gold ink is
-  // latent-night, the shared CTA/chip treatment) + status code right.
   const label = ctx as CanvasRenderingContext2D & { letterSpacing?: string };
-  ctx.textBaseline = "middle";
-  // Service label chip — enlarged (owner 2026-07-17: the top-left service
-  // name is the "what is this service" read and wasn't big enough). Font
-  // 24 → 30, chip height 54 → 66. The right-side "<CODE> · OPEN" status
-  // code was REMOVED in the same pass — decorative HUD filler that crowded
-  // the label; `statusCode` stays in servicePlateData for the mobile plate.
-  label.letterSpacing = "5px";
-  ctx.font = `700 30px ${CARD_FONT}`;
-  const chipText = plate.chip.toUpperCase();
-  const chipTextW = ctx.measureText(chipText).width;
-  const chipH = 66;
-  const chipCY = 80;
-  const chipY = chipCY - chipH / 2;
-  const chipPadL = 34; // chip-left → diamond centre
-  const chipGap = 24; // diamond centre → text
-  const chipW = chipPadL + chipGap + chipTextW + 34;
-  ctx.fillStyle = pal.chipFill;
-  ctx.fillRect(44, chipY, chipW, chipH);
-  ctx.fillStyle = pal.chipInk; // latent-night on dark, parchment on light
-  ctx.save();
-  ctx.translate(44 + chipPadL, chipCY);
-  ctx.rotate(Math.PI / 4);
-  ctx.fillRect(-5.5, -5.5, 11, 11);
-  ctx.restore();
-  ctx.fillText(chipText, 44 + chipPadL + chipGap, chipCY + 2);
 
   /* ── Copy stack — the open C3 plate's text, bottom-anchored above the
      fixed CTA box (sizes = 2× the services.css open-plate values). ── */
@@ -834,37 +865,87 @@ function bakeCardFace(
   ctx.textBaseline = "alphabetic";
 
   if (variant === "tight") {
-    /* ── TIGHT face (ADR-050) — chip · title · lede · a top-right EXPAND chit ──
-       Drops the includes/meta row and the full-width CTA slab; keeps the
-       lede, which is the line that says what the service actually is.
+    /* ── TIGHT face (ADR-050, final 2026-08-29 cut) — framed NAME + expand
+       chit · photo · lede ──
+       THREE elements and one control. The header band is bracketed by the
+       framed service name on the left and the expand chit on the right; the
+       photo runs the middle; the lede sits on the bottom margin.
 
-       Built BOTTOM-UP from the card's bottom margin so a longer title or a
-       three-line lede grows upward into the photo. The affordance no longer
-       constrains that growth — it moved to the header band (owner,
-       2026-07-26), which is also why the copy can now run to the bottom edge. */
+       `plate.title` does not bake here — the lede already carries the claim
+       ("…a working first setup and a clear build path") and the title still
+       renders on the mobile accordion. There is NO CTA: the drawer holds the
+       booking button, and a second one on the card produced "the two exact
+       calls to action, I don't think they work" (owner) the moment the pair
+       was open. The chit is the open affordance, in the corner.
+
+       The header is built TOP-DOWN and the foot BOTTOM-UP, so a two-line
+       name grows down into the photo and a four-line lede grows up into it.
+       The photo absorbs both and neither end can push the other off. */
+
+    /* ── The framed NAME ──────────────────────────────────────────────────
+       `plate.chip` at the title's weight in a hairline gold frame (owner,
+       2026-08-29: "add a frame around Keynote / Workshop, like the actual
+       title, so it's clear"). Painted in TENSOR GOLD with its leading
+       diamond — `pal.gold` is #caa554 in BOTH themes (ADR-058 Update 2), so
+       it reads bright on dark and as inked gold on parchment with no
+       per-theme override.
+
+       The frame is measured, not fixed: it wraps the text it actually holds,
+       and the text wraps against the gap to the chit so a long name can
+       never run under the affordance. */
+    label.letterSpacing = "3px";
+    ctx.font = `700 ${TIGHT_TITLE_PX}px ${CARD_FONT}`;
+    const nameText = plate.chip.toUpperCase();
+    const chitX0 = BAKE_W - TIGHT_EXPAND_INSET - TIGHT_EXPAND_SIZE;
+    const nameTextX = PAD_X + NAME_FRAME_PAD_L + NAME_FRAME_GAP;
+    // 20px of clear air between the frame's right edge and the chit.
+    const nameMaxTextW = chitX0 - 20 - NAME_FRAME_PAD_R - nameTextX;
+    const nameLines = wrapRuns(ctx, [nameText], nameMaxTextW);
+    const nameTextW = nameLines.reduce(
+      (w, line) => Math.max(w, ctx.measureText(line.map((r) => r.text).join(" ")).width),
+      0
+    );
+    const frameW = NAME_FRAME_PAD_L + NAME_FRAME_GAP + nameTextW + NAME_FRAME_PAD_R;
+    const frameH = NAME_FRAME_PAD_Y * 2 + NAME_CAP_H + (nameLines.length - 1) * TIGHT_TITLE_LH;
+    // Centred on the chit's centre — see the NAME_FRAME_* block.
+    const frameY = TIGHT_EXPAND_INSET + TIGHT_EXPAND_SIZE / 2 - frameH / 2;
+    const nameTop = frameY + NAME_FRAME_PAD_Y + NAME_CAP_H;
+
+    ctx.strokeStyle = pal.goldA(0.55);
+    ctx.lineWidth = 2;
+    ctx.strokeRect(PAD_X, frameY, frameW, frameH);
+
+    nameLines.forEach((line, i) => {
+      drawRunLine(ctx, line, nameTextX, nameTop + i * TIGHT_TITLE_LH, pal.gold, pal.gold);
+    });
+    // Gold diamond on the FIRST line's cap band. 14×14 rotated → 19.8px on
+    // the diagonal, which sits optically with the ~28px caps.
+    ctx.fillStyle = pal.gold;
+    ctx.save();
+    ctx.translate(PAD_X + NAME_FRAME_PAD_L, nameTop - NAME_CAP_H / 2);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillRect(-7, -7, 14, 14);
+    ctx.restore();
 
     /* The EXPAND affordance — the universal open-in-full glyph in a hairline
-       chit, top-right. Without SOMETHING here the tight card reads as a poster
-       and nobody discovers that it opens; an icon carries that at a fraction
-       of the ink the old `OPEN →` chit spent, and it stops competing with the
-       title for the bottom-left reading position.
+       chit, top-right. Without SOMETHING here the tight card reads as a
+       poster and nobody discovers that it opens.
 
        Two diagonal arrows striking opposite corners. Drawn rather than typed:
        there is no glyph for this in the card's mono face, and a text arrow
        would sit on the font's baseline metrics instead of the chit's centre. */
     {
-      const ex0 = BAKE_W - TIGHT_EXPAND_INSET - TIGHT_EXPAND_SIZE;
       const ey0 = TIGHT_EXPAND_INSET;
       ctx.strokeStyle = pal.goldA(0.55);
       ctx.lineWidth = 2;
-      ctx.strokeRect(ex0, ey0, TIGHT_EXPAND_SIZE, TIGHT_EXPAND_SIZE);
+      ctx.strokeRect(chitX0, ey0, TIGHT_EXPAND_SIZE, TIGHT_EXPAND_SIZE);
 
       // Glyph inset inside the chit; `arm` is the arrowhead leg length.
       const gp = 16;
       const arm = 10;
-      const gx0 = ex0 + gp;
+      const gx0 = chitX0 + gp;
       const gy0 = ey0 + gp;
-      const gx1 = ex0 + TIGHT_EXPAND_SIZE - gp;
+      const gx1 = chitX0 + TIGHT_EXPAND_SIZE - gp;
       const gy1 = ey0 + TIGHT_EXPAND_SIZE - gp;
       // Brighter than its box: the chit should recede, the mark should read.
       ctx.strokeStyle = pal.goldA(0.95);
@@ -885,36 +966,18 @@ function bakeCardFace(
       ctx.lineCap = "butt";
     }
 
-    // Lede — sans body, `{ em }` spans upright gold (no-italics rule). Now
-    // SMALLER than the title so the hierarchy reads title-first.
+    // Lede — sans body, `{ em }` spans upright gold (no-italics rule).
+    // Bottom-anchored on the card's bottom margin, growing UP.
     label.letterSpacing = "0px";
     ctx.font = `400 ${TIGHT_LEDE_PX}px ${CARD_SANS}`;
     const ledeLines = wrapRuns(ctx, plate.lede, maxW);
-    const ledeBottom = TIGHT_COPY_BOTTOM;
     ledeLines.forEach((line, i) => {
       drawRunLine(
         ctx,
         line,
         PAD_X,
-        ledeBottom - (ledeLines.length - 1 - i) * TIGHT_LEDE_LH,
+        TIGHT_COPY_BOTTOM - (ledeLines.length - 1 - i) * TIGHT_LEDE_LH,
         pal.ink(0.82),
-        pal.gold
-      );
-    });
-    const ledeTop = ledeBottom - (ledeLines.length - 1) * TIGHT_LEDE_LH - 24;
-
-    // Title — mono bold uppercase, the dominant line.
-    label.letterSpacing = "3px";
-    ctx.font = `700 ${TIGHT_TITLE_PX}px ${CARD_FONT}`;
-    const titleLines = wrapRuns(ctx, [plate.title.toUpperCase()], maxW);
-    const titleBottom = ledeTop - 30;
-    titleLines.forEach((line, i) => {
-      drawRunLine(
-        ctx,
-        line,
-        PAD_X,
-        titleBottom - (titleLines.length - 1 - i) * TIGHT_TITLE_LH,
-        pal.ink(1),
         pal.gold
       );
     });
@@ -922,6 +985,32 @@ function bakeCardFace(
     label.letterSpacing = "0px";
     return canvas;
   }
+
+  /* ── The FULL variant's chip row (kept for /test/services-card-face-lab
+     comparison; the tight face is production). The gold-stamp chip retains
+     the ADR-029 grammar here; the tight face replaced it with the readout
+     rail above. ── */
+  ctx.textBaseline = "middle";
+  label.letterSpacing = "5px";
+  ctx.font = `700 30px ${CARD_FONT}`;
+  const chipText = plate.chip.toUpperCase();
+  const chipTextW = ctx.measureText(chipText).width;
+  const chipH = 66;
+  const chipCY = 80;
+  const chipY = chipCY - chipH / 2;
+  const chipPadL = 34; // chip-left → diamond centre
+  const chipGap = 24; // diamond centre → text
+  const chipW = chipPadL + chipGap + chipTextW + 34;
+  ctx.fillStyle = pal.chipFill;
+  ctx.fillRect(44, chipY, chipW, chipH);
+  ctx.fillStyle = pal.chipInk; // latent-night on dark, parchment on light
+  ctx.save();
+  ctx.translate(44 + chipPadL, chipCY);
+  ctx.rotate(Math.PI / 4);
+  ctx.fillRect(-5.5, -5.5, 11, 11);
+  ctx.restore();
+  ctx.fillText(chipText, 44 + chipPadL + chipGap, chipCY + 2);
+  ctx.textBaseline = "alphabetic";
 
   // CTA — outlined gold box, label left, arrow right (rest state).
   label.letterSpacing = "4px";
@@ -1117,11 +1206,17 @@ function bakeDrawerFace(plate: ServicePlate, pal: DrawerPalette): HTMLCanvasElem
      seam side stays open so the panel reads as continuous with the card it
      slides out of. The matching 3D change (rectangular slab + open glint) is
      in the drawer geometry memos. */
+  /* Shell gradient — was hardcoded `rgba(202, 165, 84, …)` gold literals
+     and `rgba(${DAWN}, …)` cream (2026-08-29): both are wrong on parchment
+     (cream on cream is invisible; the gold literal happens to match the
+     light-role token, but pinning it in the bake means a token change
+     silently drifts). All four stops go through `pal.*` now, so a theme
+     flip re-papers the shell along with the ground. */
   const shell = ctx.createLinearGradient(0, 0, BAKE_W * 0.25, BAKE_H);
-  shell.addColorStop(0, "rgba(202, 165, 84, 0.52)");
-  shell.addColorStop(0.38, `rgba(${DAWN}, 0.14)`);
-  shell.addColorStop(0.66, "rgba(202, 165, 84, 0.16)");
-  shell.addColorStop(1, "rgba(202, 165, 84, 0.48)");
+  shell.addColorStop(0, pal.goldA(0.52));
+  shell.addColorStop(0.38, pal.washA(0.14));
+  shell.addColorStop(0.66, pal.goldA(0.16));
+  shell.addColorStop(1, pal.goldA(0.48));
   ctx.strokeStyle = shell;
   ctx.lineWidth = 2.5;
   ctx.beginPath();
@@ -1131,14 +1226,23 @@ function bakeDrawerFace(plate: ServicePlate, pal: DrawerPalette): HTMLCanvasElem
   ctx.lineTo(0, BAKE_H - 1.5);
   ctx.stroke();
 
-  // Seam shadow — the card overhangs the tray it houses, so the tray darkens
-  // toward the joint. This is the depth cue that sells "slides out from
-  // under", and it replaces every stroke the left edge no longer gets.
-  const seam = ctx.createLinearGradient(0, 0, 130, 0);
-  seam.addColorStop(0, pal.seamA(0.6));
+  /* Seam shadow — the card overhangs the tray it houses, so the tray
+     darkens toward the joint. This is the depth cue that sells "slides
+     out from under" and it replaces every stroke the left edge no
+     longer gets.
+
+     2026-08-29: tightened 130 → 60 bake px (65 → 30 CSS px). With the
+     tray content now opaque on open (`openPairAlpha`) the seam shadow
+     stopped competing with the card's own seam-side glint, which was
+     bleeding through the sub-1 tray as a hairline gold rule; the wide
+     dark band that used to hide that rule now READS as a gap. 30 CSS
+     px is a hairline overhang — enough to say "there's a card on top of
+     this" without saying "there's an empty column here". */
+  const seam = ctx.createLinearGradient(0, 0, 60, 0);
+  seam.addColorStop(0, pal.seamA(0.7));
   seam.addColorStop(1, pal.seamA(0));
   ctx.fillStyle = seam;
-  ctx.fillRect(0, 0, 130, BAKE_H);
+  ctx.fillRect(0, 0, 60, BAKE_H);
 
   /* ── Close chit — a bare ✕ in a hairline box at DRAWER_CLOSE_BOX ─────── */
   const closeX = DRAWER_CLOSE_BOX.x * BAKE_W;
@@ -1235,17 +1339,22 @@ function bakeDrawerFace(plate: ServicePlate, pal: DrawerPalette): HTMLCanvasElem
   y += rowB + 34;
   drawSpecCell("Leaves with", plate.spec.leavesWith, PAD_X, y, true);
 
-  /* ── CTA — the card's own treatment, at the shared box ──────────────── */
+  /* ── CTA — the card's own treatment, at the shared box. The two
+     `SERVICES_GOLD` literals (2026-08-29) both went through `pal.gold`,
+     which is the same #caa554 in light AND dark (Tensor gold, ADR-058
+     Update 2). The literal happens to match the token, but declaring it
+     in the bake means a future palette change would silently strand the
+     CTA at the old value. ──────────────────────────────────────────── */
   label.letterSpacing = "4px";
-  ctx.strokeStyle = SERVICES_GOLD;
+  ctx.strokeStyle = pal.gold;
   ctx.lineWidth = 2;
   ctx.strokeRect(PAD_X, CTA_Y0, maxW, CTA_H);
-  ctx.font = `700 21px ${CARD_FONT}`;
-  ctx.fillStyle = SERVICES_GOLD;
-  const ctaMidY = CTA_Y0 + CTA_H / 2 + 8;
+  ctx.font = `700 ${CTA_LABEL_PX}px ${CARD_FONT}`;
+  ctx.fillStyle = pal.gold;
+  const ctaMidY = CTA_Y0 + CTA_H / 2 + 10;
   ctx.fillText(plate.ctaLabel.toUpperCase(), PAD_X + 28, ctaMidY);
   label.letterSpacing = "0px";
-  ctx.font = `400 30px ${CARD_FONT}`;
+  ctx.font = `400 ${CTA_ARROW_PX}px ${CARD_FONT}`;
   ctx.textAlign = "right";
   ctx.fillText("→", PAD_X + maxW - 28, ctaMidY + 2);
   ctx.textAlign = "left";
@@ -1659,12 +1768,81 @@ export function ServicesCardRing({
     return geometry;
   }, [slabW, slabH, slabDepth, faceVariant]);
   const glintGeometry = useMemo(() => new THREE.EdgesGeometry(slabGeometry), [slabGeometry]);
+  /* ── OPEN glint (2026-08-29) — the card's mirror of the tray's bracket ────
+     Closed, the card runs the full `EdgesGeometry` above: every silhouette
+     edge, both chamfer diagonals, all four depth connectors. That's the
+     right treatment for a solid slab: a closed frame declares thickness
+     from every angle.
+
+     Open, the card is one half of the open pair — and the other half (the
+     tray) draws a BRACKET (front outline minus the seam edge, plus its own
+     right-side depth connectors). Under the surviving `OPEN_PAIR_PITCH_KEEP`
+     lean, the closed-frame card kept declaring back-cap edges and BOTH
+     chamfer diagonals while the tray declared one U-shape — and the eye
+     read two silhouettes at odds with each other ("Escher-esque" was the
+     tray's back-U fix alone; the card was doing the same thing on the
+     other side, still).
+
+     This geometry is the card's OWN bracket:
+       · front outline minus the SEAM edge (right, +x),
+       · BL chamfer diagonal (the tight face's only cut),
+       · two depth connectors on the LEFT (outer) end only.
+     Cross-faded against the full `EdgesGeometry` on `drawerT` in the frame
+     loop, so t = 0 restores the closed frame byte-identically and t = 1
+     puts the pair in one shared bracket grammar — one open outline
+     enclosing both slabs, no line at the joint. */
+  const cardOpenGlintGeometry = useMemo(() => {
+    if (!openDrawer) return null;
+    const ch = slabW * RING_SLAB_CHAMFER_FRAC;
+    const hw = slabW / 2;
+    const hh = slabH / 2;
+    const hd = slabDepth / 2;
+    const pts: number[] = [];
+    const seg = (ax: number, ay: number, az: number, bx: number, by: number, bz: number) =>
+      pts.push(ax, ay, az, bx, by, bz);
+
+    // Front-face outline, minus the RIGHT (seam) edge. The tight face has
+    // its BL chamfer only (2026-07-26); the top-right stays square. The
+    // `full` variant carries the extra TR cut for parity with its bake,
+    // though production runs `tight`.
+    // Top edge — full width across, then out to the top-right corner.
+    if (faceVariant === "full") {
+      seg(-hw, hh, hd, hw - ch, hh, hd);
+      // TR chamfer diagonal (full only) — part of the front silhouette.
+      seg(hw - ch, hh, hd, hw, hh - ch, hd);
+    } else {
+      seg(-hw, hh, hd, hw, hh, hd);
+    }
+    // Bottom edge — from the BL chamfer's lower endpoint across to the
+    // bottom-right corner. Skips the physical BL notch (drawn separately).
+    seg(-hw + ch, -hh, hd, hw, -hh, hd);
+    // BL chamfer diagonal — the identity mark of the tight silhouette,
+    // preserved on the open pair because ADR-065 says the diagonal is
+    // TR+BL and the tray (once B3 lands its own TR chamfer) will carry the
+    // TR half. Together the pair reads on the canonical diagonal.
+    seg(-hw, -hh + ch, hd, -hw + ch, -hh, hd);
+    // Left edge — from the BL chamfer's upper endpoint up to the top-left
+    // corner (all one line for both variants: the LEFT edge is never cut).
+    seg(-hw, hh, hd, -hw, -hh + ch, hd);
+
+    // Depth connectors on the LEFT (outer) end only. These give the card's
+    // own outer edge a "thickness" read — the mirror of the tray's two
+    // right-side depth edges. No connectors on the seam side: that's what
+    // the pair-as-one-bracket is FOR.
+    seg(-hw, hh, hd, -hw, hh, -hd);
+    seg(-hw, -hh + ch, hd, -hw, -hh + ch, -hd);
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+    return geometry;
+  }, [openDrawer, slabW, slabH, slabDepth, faceVariant]);
   useEffect(() => {
     return () => {
       slabGeometry.dispose();
       glintGeometry.dispose();
+      cardOpenGlintGeometry?.dispose();
     };
-  }, [slabGeometry, glintGeometry]);
+  }, [slabGeometry, glintGeometry, cardOpenGlintGeometry]);
 
   /* ── Drawer TRAY geometry (owner, 2026-07-26) ──────────────────────────────
      Rev 3 reused the card's `slabGeometry`/`glintGeometry` for the drawer —
@@ -1679,14 +1857,36 @@ export function ServicesCardRing({
        the separation the tray exists to dissolve. The bake mirrors this
        (open border + seam shadow in `bakeDrawerFace`).
 
-     Built only under `openDrawer`, like the drawer materials. */
+     Built only under `openDrawer`, like the drawer materials.
+
+     2026-08-29: the tray gets a TOP-RIGHT chamfer so the OPEN PAIR carries
+     the lawful TR+BL diagonal (ADR-065). The card's tight silhouette has
+     only the BL cut and the tray was a straight rectangle, so the pair —
+     which reads as ONE object once opened — sat on a single BL notch
+     against a square TR: off the canonical diagonal. The card and the
+     tray now split the diagonal (BL on the card, TR on the tray),
+     preserving ADR-050's "don't repeat the chamfer, it declares another
+     device" — neither half owns a full diagonal alone — while satisfying
+     ADR-065 on the composite.
+
+     The cut lands entirely in the tray's `RING_SLAB_BEZEL` glass margin:
+     at the CONTENT plane's right extent the chamfer diagonal sits at
+     y ≈ 0.749 against a content top edge of ~0.710, so the drawer bake
+     (border + ✕ close chit at bake px 750..806, 34..90) never intersects
+     the cut. Closed, `openDrawer` is false so this memo returns null
+     unchanged — no bake or geometry cost when the flag is off. */
   const drawerSlabGeometry = useMemo(() => {
     if (!openDrawer) return null;
+    const ch = slabW * RING_SLAB_CHAMFER_FRAC;
     const hw = slabW / 2;
     const hh = slabH / 2;
     const shape = new THREE.Shape();
     shape.moveTo(-hw, hh);
-    shape.lineTo(hw, hh);
+    // TR chamfer — the tray's half of the pair's TR+BL diagonal. Same
+    // leg the card uses so the two cuts read as ONE grammar rather than
+    // two.
+    shape.lineTo(hw - ch, hh);
+    shape.lineTo(hw, hh - ch);
     shape.lineTo(hw, -hh);
     shape.lineTo(-hw, -hh);
     shape.closePath();
@@ -1699,6 +1899,7 @@ export function ServicesCardRing({
   }, [openDrawer, slabW, slabH, slabDepth]);
   const drawerGlintGeometry = useMemo(() => {
     if (!openDrawer) return null;
+    const ch = slabW * RING_SLAB_CHAMFER_FRAC;
     const hw = slabW / 2;
     const hh = slabH / 2;
     const hd = slabDepth / 2;
@@ -1713,10 +1914,21 @@ export function ServicesCardRing({
     // "Escher-esque"). A closed solid can afford both silhouettes; an open
     // bracket cannot. The two leading depth edges stay — they are what
     // keeps the tray's open end reading as a slab with thickness.
-    seg(-hw, hh, hd, hw, hh, hd); // top
-    seg(hw, hh, hd, hw, -hh, hd); // leading (right) edge
+    //
+    // 2026-08-29: the tray now carries a TR chamfer (see drawerSlabGeometry),
+    // so the top edge runs to the TR chamfer's upper endpoint, the diagonal
+    // strokes the cut, and the right (leading) edge starts at the diagonal's
+    // lower endpoint. The top-right depth connector moves with it, from the
+    // (physical) top-right corner to the chamfer's lower endpoint (the
+    // new frontal-most point on that side).
+    seg(-hw, hh, hd, hw - ch, hh, hd); // top (up to TR chamfer)
+    seg(hw - ch, hh, hd, hw, hh - ch, hd); // TR chamfer diagonal
+    seg(hw, hh - ch, hd, hw, -hh, hd); // leading (right) edge
     seg(hw, -hh, hd, -hw, -hh, hd); // bottom
-    seg(hw, hh, hd, hw, hh, -hd);
+    // Right-side depth connectors (both moved to sit at the CHAMFER's lower
+    // endpoint on top and the BR corner on bottom — the two outer-end
+    // vertices on this half of the pair).
+    seg(hw, hh - ch, hd, hw, hh - ch, -hd);
     seg(hw, -hh, hd, hw, -hh, -hd);
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
@@ -1811,6 +2023,27 @@ export function ServicesCardRing({
       ),
     [ringTheme]
   );
+  /* The OPEN glint's materials — a separate set from `glintMaterials` so
+     the two can cross-fade on `drawerT` (closed frame down, open bracket
+     up) at the same renderOrder. Same pigment, same transparency; only the
+     geometry and the opacity clock differ. Allocated under `openDrawer`
+     because the geometry itself is null off. */
+  const cardOpenGlintMaterials = useMemo(
+    () =>
+      !openDrawer
+        ? null
+        : SERVICE_PLATES.map(
+            () =>
+              new THREE.LineBasicMaterial({
+                color: new THREE.Color(ringTheme === "light" ? "#caa554" : SERVICES_GOLD),
+                transparent: true,
+                opacity: 0,
+                depthWrite: false,
+                toneMapped: false,
+              })
+          ),
+    [openDrawer, ringTheme]
+  );
   const glowMaterials = useMemo(
     () =>
       SERVICE_PLATES.map(
@@ -1903,8 +2136,11 @@ export function ServicesCardRing({
       for (const material of glintMaterials) material.dispose();
       for (const material of glowMaterials) material.dispose();
       for (const material of veilMaterials) material.dispose();
+      if (cardOpenGlintMaterials) {
+        for (const material of cardOpenGlintMaterials) material.dispose();
+      }
     };
-  }, [slabMaterials, glintMaterials, glowMaterials, veilMaterials]);
+  }, [slabMaterials, glintMaterials, glowMaterials, veilMaterials, cardOpenGlintMaterials]);
   useEffect(() => {
     return () => {
       if (drawerSlabMaterials) {
@@ -2644,12 +2880,29 @@ export function ServicesCardRing({
          as it activates, nothing appearing or disappearing. Identity at
          drawerT = 0, so the shipped closed ring is byte-identical.
          ⚠ Do NOT "clean this up" as a stray fade — deleting it reintroduces
-         the ghost (see ADR-050 rev 3). */
-      const faceO = lerp(depthO, 1, drawerT) * master;
+         the ghost (see ADR-050 rev 3).
+
+         2026-08-29: the firm-up now goes through the shared `openPairAlpha`,
+         which the tray content also uses — one invariant, one call site,
+         so both slabs project the same material at the seam and the tray
+         cannot silently diverge to a lower ceiling again (which was the
+         defect the owner read as "awkwardly attached"). Face closed is
+         byte-identical to the old `lerp(depthO, 1, drawerT)`. */
+      const faceO = openPairAlpha(depthO, drawerT) * master;
       material.opacity = faceO;
       slabMaterials[i][0].opacity = glassOpacity * depthO * master;
       slabMaterials[i][1].opacity = glassEdgeOpacity * depthO * master;
-      glintMaterials[i].opacity = glintOpacity * depthO * master;
+      /* CLOSED-frame glint crossfades DOWN as the drawer opens, and the
+         OPEN-bracket glint fades UP in step (see cardOpenGlintGeometry).
+         Sum is 1 at every t, so the total ink at the card's silhouette
+         does not pulse — the eye reads one continuous outline moving from
+         "closed slab" to "open bracket". drawerT is per-card here, so a
+         card whose drawer is not out keeps the closed frame at full
+         strength while a neighbour opens. */
+      const glintBase = glintOpacity * depthO * master;
+      glintMaterials[i].opacity = glintBase * (1 - drawerT);
+      const openGlintMat = cardOpenGlintMaterials?.[i];
+      if (openGlintMat) openGlintMat.opacity = glintBase * drawerT;
       // Halo is front-weighted: swells as the card parks, gone on the sides
       // — and dies early in the stack (four converged halos would bloom).
       glowMaterials[i].opacity =
@@ -2689,9 +2942,17 @@ export function ServicesCardRing({
             drawerMesh.position.z = slabDepth / 2 + RING_CONTENT_LIFT - drawerContentDepth(drawerT);
           }
           const reveal = Math.min(1, drawerT / DRAWER_REVEAL_FRAC);
-          const drawerO = opacity * reveal;
+          /* 2026-08-29: the tray CONTENT firms with the card face via the
+             shared `openPairAlpha`, so at full open both slabs are at
+             alpha 1 and the card's seam-side glint at renderOrder 0.05 is
+             covered by the drawer's content at 0.07 (was the "vertical rule
+             at the joint" the owner read). The tray's own glass caps, walls
+             and glint stay at `depthO` — they are GLASS and meant to remain
+             translucent; the invariant is about the printed material, not
+             the material of the slab itself. `reveal` still gates all four
+             so the housed pair is invisible while behind the face. */
           const drawerMat = drawerMatRefs.current[i];
-          if (drawerMat) drawerMat.opacity = drawerO;
+          if (drawerMat) drawerMat.opacity = openPairAlpha(depthO, drawerT) * reveal * master;
           const drawerSlab = drawerSlabMaterials?.[i];
           if (drawerSlab) {
             drawerSlab[0].opacity = glassOpacity * depthO * master * reveal;
@@ -2945,6 +3206,19 @@ export function ServicesCardRing({
             material={glintMaterials[i]}
             frustumCulled={false}
           />
+          {/* Open-pair glint (2026-08-29) — the card's bracket half of the
+              open-pair silhouette; crossfaded up against the closed frame
+              on `drawerT` (frame loop). Same renderOrder so the two glints
+              paint at the same z; the fade sums to 1 at every t. Off when
+              flag-off (openDrawer false → geometry null → no mesh). */}
+          {cardOpenGlintGeometry && cardOpenGlintMaterials && (
+            <lineSegments
+              renderOrder={0.05}
+              geometry={cardOpenGlintGeometry}
+              material={cardOpenGlintMaterials[i]}
+              frustumCulled={false}
+            />
+          )}
           {/* The baked plate face, floated above the front cap. FrontSide
               since ADR-047: the only pose that ever showed this bake's
               reverse was the hidden occluded back card (a mirrored text

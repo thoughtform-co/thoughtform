@@ -86,6 +86,13 @@ The defaults above are unchanged, so the flag remains a one-word revert.
    slightly dimmer, untuned" note below. The drawer column has the vertical
    room: it still ends well above the pinned CTA at the worst case.
 
+   ⚠ **SUPERSEDED BY ADDENDUM 4 (2026-08-29): the affordance is a labelled
+   `SEE THE SPEC →` BUTTON at the foot, and the expand chit is deleted.** The
+   rest of this update is the record of how it got there, and its objection to
+   a bottom-left affordance no longer binds — that objection was "it competes
+   with the title for the bottom-left reading position", and the title is in
+   the HEADER band now, so the foot is free.
+
    **Update (owner, 2026-07-26): the affordance is an EXPAND ICON in the
    top-right, not the bottom-left `OPEN →` chit.** Rev 3 put a small outlined
    `OPEN →` chit at the bottom-left and bottom-anchored the copy stack above
@@ -498,11 +505,21 @@ single writer of `rigPointerYawRef`.
 ## Open questions
 
 - ~~The card face keeps its baked `OPEN →` chit while the drawer is out.~~
-  **Largely resolved by the expand icon (2026-07-26).** The chit is still baked
-  and so still visible while open, but it no longer reads as a stale state
-  label: sharing size, inset and optical height with the drawer's ✕, the two
-  read as an open/close pair sitting side by side. Hiding it outright would
-  still need a second face bake, and is not worth it for this.
+  **Resolved by the expand icon (2026-07-26), and Addendum 5 shows why the
+  question was mis-framed.** The chit stays baked and visible while open, and
+  that is fine: a small corner glyph reads as chrome belonging to the card,
+  not as a stale command. Addendum 4 replaced it with a labelled foot button
+  and the answer stopped holding within a day — a full-width `SEE THE SPEC →`
+  beside the drawer's `BOOK A KEYNOTE →` read as two competing commands, not
+  as a progression. **The size of the persistent affordance is what decides
+  whether the open state tolerates it.**
+- **The section masthead overlaps the card's header band when open**
+  (Addendum 4). `--svc-plate-dim: 0.18` recedes it in contrast but not in
+  presence, because the masthead's type is much larger than the card's. The
+  collision band is pre-existing. Addendum 5's frame HELPS — a bounded box
+  reads as an object over the masthead where loose gold type read as tangled
+  with it — but the masthead's own words are still legible through the card.
+  One-line fix if wanted: a lower floor while `data-plate-open="1"`.
 - ~~The drawer's spec ink sits slightly dimmer than the card's copy.~~
   Tuned in the 2026-07-26 readability pass (body ink 0.82/0.86 → 0.9, sizes
   27 → 31px).
@@ -709,3 +726,451 @@ Verified headed: light ring at rest (printed faces, receding sides), light
 open pair (paper device end to end), dark ring byte-identical; drawer /
 ring / scroll-clock / photo-404 smokes green; theme sweep + palette + ring
 math suites green.
+
+## Addendum 3 — one headline, one device (2026-08-29, owner)
+
+Owner report on the parked ring, with screenshots: the top-left gold chip
+("KEYNOTE") and the bottom-baked outcome line ("A SHARED FRAME FOR AI.")
+made the reader look TWICE to know what the card was, and the open pair
+"awkwardly attached … the right panel emerges and it doesn't feel elegant"
+— specifically the angles at the joint did not agree.
+
+Two separate fixes on the same surface. The face is a copy/bake
+re-layout; the open pair is four corrections, three of which are strict
+fixes to half-finished earlier passes rather than new choices.
+
+### The face — name at the bottom, chrome at the top
+
+The tight bake's copy grammar is now:
+
+- **Readout rail** at the top (`y = 80`, PAD_X-aligned, chrome scale):
+  the service's `statusCode` in mono at 20 bake px + a hairline
+  `pal.ink(0.14)` rule running right to the expand chit. Same grammar as
+  the drawer's `01 / What` designation but half its size — instrument
+  chrome, not content. `statusCode` already existed per service in
+  servicePlateData (`NAV-01` / `ENC-02` / `BLD-03` / `ADV-04`), used
+  previously by the mobile plate only.
+- **`plate.title` is DROPPED from the bake** — the outcome line
+  ("A shared frame for AI.") no longer paints. It stays in the type and
+  still renders on the mobile accordion (ServicePlateCard.tsx:225); the
+  lede below the name already carries the claim ("…a working first setup
+  and a clear build path"), so no copy is destroyed.
+- **`plate.chip` is promoted to the bottom headline** in the title's
+  treatment: 700 40px PT Mono, letterSpacing 3px, uppercase, **`pal.gold`**
+  (owner, 2026-08-29 — Tensor Gold, one continuous gold statement with
+  the leading diamond in the card's strongest slot), bottom-anchored on
+  `TIGHT_COPY_BOTTOM`. A gold diamond (14×14 rotated square, `pal.gold`)
+  sits to its left as the leading glyph — the chip's diamond, kept as
+  the mark of significance without the filled-block chip that used to
+  compete with the title. `pal.gold` is #caa554 in BOTH themes
+  (ADR-058 Update 2), so no per-theme override — bright on dark,
+  inked gold on parchment.
+- **The full-variant chip row stays intact.** It was in a shared block
+  drawn before the tight branch returned; that block moved INSIDE the
+  full path so the tight bake never runs it. The `SERVICES_CARD_DRAWER`
+  flag off restores byte-identically.
+
+⚠ **`ServicesRingHitAreas` aria-labels key on `plate.chip`, which still
+exists** — the smoke's `Open Keynote details` locator continues to match
+without a rewrite.
+
+### The open pair — why it read as two panels
+
+**B1 — Firm the tray to opaque (this was the root cause).** The face
+firmed to alpha 1 on open (`lerp(depthO, 1, drawerT)`), but the tray
+content stayed at `depthO`, which caps at `RING_OPACITY_RANGE[1] = 0.9`
+in dark. So at full open the tray was 10 % transparent beside an opaque
+card — a different material — and the card's own seam-side glint
+(renderOrder 0.05) and slab walls printed through the joint as a faint
+gold hairline. Addendum 1's claim that the tight face's baked shell
+"self-cleans the moment the tray emerges" only holds for an OPAQUE tray;
+the tray never reached full alpha. Light did not show it because
+Addendum 2 already lifts the ceiling to 1 in light.
+
+**Fix:** `openPairAlpha(depthO, drawerT) = lerp(depthO, 1, clamp01(t))`
+in three-free ringMath, called at BOTH sites (face + tray content), so
+the invariant is stated once. Closed byte-identical (t = 0 returns
+depthO, which was the shipped face formula). At t = 1 both sites return
+
+1. The tray still multiplies by `reveal` (housed-invisible gate; the
+   same DRAWER_REVEAL_FRAC). Unit-pinned (7 new tests):
+   `openPairAlpha`'s identity closed, ceiling open, monotone/clamped, sum
+   invariant across face + tray at full open, and the shipped-face-formula
+   recovery. The tray's glass caps, walls and glint stay at `depthO` —
+   they ARE glass and meant to remain translucent; the invariant is about
+   the printed material, not the material of the slab itself.
+
+**B2 — Match the card's open glint to the tray's** (Escher pass, part 2
+— Addendum 1's Escher fix removed the tray's back-U outline but left
+the card's `EdgesGeometry` untouched). Under `OPEN_PAIR_PITCH_KEEP =
+0.22` the card kept drawing its full closed silhouette (back cap, all
+four depth connectors, both chamfer diagonals) while the tray drew a
+single front bracket — two silhouettes at odds with each other on the
+same object.
+
+**Fix:** `cardOpenGlintGeometry` — a bracket geometry mirroring the
+tray's:
+
+- front outline minus the SEAM (right) edge,
+- BL chamfer diagonal (the tight face's only cut),
+- two depth connectors on the LEFT (outer) end only.
+
+Cross-faded against the full closed `EdgesGeometry` on `drawerT` in the
+frame loop, at the same renderOrder (0.05). Sum is 1 at every t, so the
+total ink at the card's silhouette does not pulse. Closed
+byte-identical (t = 0 → open material at 0, closed at full). At t = 1
+the card and tray together form ONE open bracket enclosing the pair,
+with no line at the joint.
+
+**B3 — Give the open pair the lawful TR+BL diagonal.** Tight closed,
+the card has BL only; the tray was a straight rectangle. On the open
+pair — which reads as ONE object — that was a single BL notch against a
+square TR, off ADR-065's canonical diagonal.
+
+**Fix:** the drawer's `slabGeometry` gets a TR chamfer at the card's
+same leg (`slabW * RING_SLAB_CHAMFER_FRAC`). The two halves now split
+the diagonal (BL card + TR tray), preserving Addendum 1's ruling that
+neither half owns a full diagonal alone. The cut lands entirely in the
+tray's `RING_SLAB_BEZEL` glass margin — at the content plane's right
+extent the diagonal sits at y ≈ 0.749 against a content top edge of
+~0.710 (2.8 % of card height of clearance), so the drawer bake's
+border + `✕` close chit at bake px (750–806, 34–90) are UNTOUCHED.
+Unit-pinned: the drawer leg matches the card leg, and the
+content-plane clearance is guarded from below at 1 % of card height so
+a subpixel roundoff cannot clip. The drawer glint's top edge, right
+edge and top-side depth connector move with the cut.
+
+**B4 — Tighten the seam shadow, and fix the drawer bake's theme
+literals.** Two clean-ups on the same function:
+
+- The seam gradient was `130 bake px × pal.seamA(0.6)` — ~65 CSS px
+  of dark band at the tray's left, which read as a gap. Now
+  `60 bake px × pal.seamA(0.7)` — ~30 CSS px of overhang hairline.
+  Wide-band was hiding the seam bleed B1 fixed; with the tray opaque
+  the wide band stopped selling "there's a card on top" and started
+  saying "there's an empty column here".
+- The shell gradient's four stops and the CTA's stroke/fill were
+  hardcoded `rgba(202, 165, 84, …)` and `rgba(${DAWN}, …)` — a
+  light-theme parity bug (cream on parchment is invisible; the gold
+  literal happens to match `pal.gold` but pinning it in the bake
+  strands it silently on a future palette change). All five now go
+  through `pal.*`.
+
+`OPEN_PAIR_PITCH_KEEP` unchanged this pass — with B2 landed the pitch
+may afford more life, but that is a separate judgement to make against
+capture.
+
+### Verification (2026-08-29)
+
+- `npm run verify` green — **1210** unit tests, **91** in
+  services-ring-math (7 new: `openPairAlpha` identity/ceiling/clamps/
+  monotonicity/invariant/shipped-formula recovery, plus the drawer TR
+  chamfer's shared-leg and content-plane clearance guards).
+- `services-ring-smoke` on `desktop`: **4 passed** on the ring/drawer
+  contracts (ring mode retires racks; front card opens/Escape/scroll-
+  dismiss; scroll clock advances; wheel over instrument). 1 unrelated
+  pre-existing failure ("ambient hold survives … Azeroth teacher") —
+  Voidwalker-adjacent, out of scope this pass (user directed).
+- Headed real-GPU capture at 1600×1000 and 1280×720, both themes,
+  cursor at (2, 2):
+  - **Closed:** the tight face reads readout rail (NAV-01, hairline
+    rule, expand chit) → photo → `◆ KEYNOTE` name → lede. No competing
+    top-left chip; no bottom outcome line. Both viewports both themes
+    match.
+  - **Open:** the pair reads as one continuous device — card left, tray
+    right, TR chamfer on the tray + BL chamfer on the card together
+    completing the ADR-065 diagonal, seam clean at every viewport,
+    photography survives on the card's half. Light shows the parchment
+    tray properly and the CTA renders in gold.
+- Screenshots archived at `C:\Users\buyss\Downloads\services-card-*.png`
+  (dark/light × 1600×1000/1280×720 × closed/open).
+
+### Guardrails added
+
+- **`openPairAlpha` is the SINGLE writer of the pair's open-alpha
+  invariant.** Two call sites (face + tray content) must route through
+  it. Duplicating the arithmetic re-invites the tray-ceiling drift that
+  caused the seam bleed — the whole point of factoring it out is that
+  the invariant is stated ONCE.
+- **The two glint sets cross-fade sum-to-1 at the same renderOrder.**
+  Closed glint × (1 − drawerT), open bracket × drawerT. Add or remove
+  a term without adjusting the sibling and the silhouette pulses at
+  each open/close, or leaves the seam-side edge lit through the tray.
+- **The drawer TR chamfer clears the content plane by ≥ 1 % of card
+  height** (guarded in ringMath tests). A larger cut would clip the
+  bake's border stroke and the `✕` close chit — the bake would need to
+  learn about the geometry, which is exactly the coupling the plate
+  design has avoided since ADR-029.
+- **The drawer bake's shell + seam + CTA go through `pal.*`, not raw
+  literals.** Any new bake stroke that needs a gold or an ink alpha
+  picks the palette member; hardcoding a colour that "happens to match"
+  the token silently drifts on a palette change.
+- **`plate.title` is not deleted from the type** — the mobile accordion
+  still renders it. Only the WebGL tight face stops baking it. If a
+  future variant wants a two-line bake it re-adds a `title` slot; the
+  data is still there.
+
+## Addendum 4 — the title goes back up, and the foot gets a button (2026-08-29, owner)
+
+> ⚠ **The foot button is DELETED by Addendum 5, same day.** Addendum 4's
+> ORDERING survives (title at the top, photo, lede at the foot) and is what
+> ships. Its CTA, its readout rail and its scrim reshape do not. Read
+> Addendum 5 for the live face; this section stands for the reasoning, which
+> is still the reason the title is at the top.
+
+Same day, same surface, against a reference card (Grafana's): **title at the
+top, visual in the middle, paragraph at the foot, button under it.** Owner:
+"it makes more sense to put the title above (and we had that with the previous
+version). We keep the paragraph at the bottom, but maybe below, we can have a
+call to action like this example here."
+
+This **reverses Addendum 3's placement decision and keeps its content
+decision.** Addendum 3 was right that the card may carry only ONE headline and
+that the headline is the service NAME — `plate.title` stays out of the bake.
+It was wrong that the name had to move to the bottom to get it: what made the
+shipped card read twice was TWO headlines, not the chip's position. With the
+outcome line gone, the header band was free and the name could simply take it.
+So the ordering is the reference's and the copy is Addendum 3's.
+
+### The face, final
+
+Header is the fixed end and grows DOWN; the foot is fixed and grows UP. The
+photo absorbs both, so neither end can push the other off the card:
+
+- **Readout rail** — unchanged at `y = 80`, except the hairline rule now runs
+  the FULL copy width. It used to stop short of the expand chit; with the chit
+  gone, stopping early would have left an unexplained gap in the masthead.
+- **Service NAME** — `plate.chip` at the title's weight (700 40px PT Mono,
+  3px tracking, uppercase, `pal.gold`) with its leading gold diamond,
+  top-anchored on `TIGHT_NAME_TOP = 168` and growing down. Everything
+  Addendum 3 decided about its treatment holds; only the anchor moved.
+- **Lede** — unchanged treatment, re-anchored to `TIGHT_COPY_BOTTOM =
+CTA_Y0 − 60`, the same gap the full face keeps above this identical control.
+- **CTA** — `SEE THE SPEC →` at `RING_CARD_CTA_BOX`, gold hairline box over a
+  `pal.goldA(0.10)` wash.
+
+**The expand chit is DELETED.** It was solving discovery with the smallest
+mark on the card — a 56px corner glyph carrying the entire "this opens"
+signal. A labelled button says it in words, in the slot the eye checks last,
+and it frees the header band for the name. `TIGHT_EXPAND_SIZE` /
+`TIGHT_EXPAND_INSET` are gone with it, along with the now-orphaned
+`DRAWER_CLOSE_SIZE` / `DRAWER_CLOSE_INSET` imports.
+
+### ⚠ The card's CTA is the OPEN affordance, not the booking link
+
+`DRAWER_CTA_BOX === RING_CARD_CTA_BOX`, so the card's new button and the
+drawer's existing one land on the SAME geometry and stand side by side in the
+open pair. Had the card's carried `plate.ctaLabel` → `#contact` too, the open
+pair would have shown **two identical gold BOOK A KEYNOTE buttons at the same
+height** — which reads as a duplication bug, not a control family. Owner
+call: the card's button opens, the drawer's books. Two different labels on one
+geometry read as a progression across the pair (`SEE THE SPEC` → `BOOK A
+KEYNOTE`), which is the funnel the drawer exists to create.
+
+Consequences worth stating, because each is a trap:
+
+- **`ServicesRingHitAreas` is UNCHANGED.** The whole face is already a
+  full-rect `onOpenFront` button, so the baked CTA is visual only — exactly
+  the status the expand chit had. This is the first time the tight face bakes
+  pixels AT `RING_CARD_CTA_BOX` **without the DOM shimming a link onto it**:
+  the box is shared for LAYOUT, not for hit-testing. The ADR-029 path (no
+  `onOpenFront`) still shims its `<a>` and is untouched.
+- **The closed card still has no booking link,** which is what the smoke's
+  ghost fence asserts (`getByRole("link", { name: "Book a keynote" })`
+  → count 0 while closed). Giving the card's CTA the booking href would have
+  broken that fence — the fence is a real constraint here, not a formality.
+- **Weight is carried by the box, not the label size.** The card's button has
+  a faint gold BODY where the drawer's is a pure outline. A solid gold fill
+  (the reference's treatment) was rejected: it would out-shout the conversion
+  it exists to lead into.
+- `SEE THE SPEC` is mildly redundant while the spec is open beside it.
+  Accepted: it reads as labelling the half you came from, and the alternative
+  is a second card-face bake for the open state.
+
+### The CTA label size — 21 → 28 bake px, for BOTH buttons
+
+Measured on the live ring rather than eyeballed, because a screenshot of a
+scaled canvas understates it badly:
+
+| viewport  | state  | card scale | 21px label | 28px label |
+| --------- | ------ | ---------- | ---------- | ---------- |
+| 1600×1000 | closed | 0.554      | 11.6px     | 15.5px     |
+| 1600×1000 | open   | 0.642      | 13.5px     | 18.0px     |
+| 1280×720  | closed | 0.366      | **7.7px**  | 10.2px     |
+| 1280×720  | open   | 0.426      | 8.9px      | 11.9px     |
+
+**7.7 CSS px is not a quiet label, it is an absent one** — and on the tight
+face this label is now the affordance the card has to be discovered by, so it
+is the one string that cannot be under the floor. `CTA_LABEL_PX = 28` /
+`CTA_ARROW_PX = 34`, shared by the tight face AND the drawer.
+
+⚠ **The drawer's had to move with it.** The two buttons stand adjacent in the
+open pair; raising only the card's would have made the booking CTA visibly
+smaller than the "see the spec" one, inverting the hierarchy in the one state
+where both are on screen. One constant, two call sites, so they cannot drift.
+
+⚠ **The `full` variant deliberately keeps its own 21/30 literals.** It exists
+only as the ADR-029 comparison baseline in `/test/services-card-face-lab`;
+re-typing it would make the comparison unfaithful to what shipped.
+
+### The scrims had to move with the copy
+
+Both are branched on `variant` now — the `full` face is byte-identical.
+
+- **Top scrim 190 → 320 bake px**, held at 0.9 → 0.7 through the name band
+  before releasing. The full face only ever put a chip's 30px caps at `y 80`;
+  the name's ink runs to ~180 for one line and ~230 for two, and a gradient
+  already at alpha 0 by 190 left the gold name sitting on bare photo.
+- **Ground scrim ramps FASTER** (seated 0.86 by 42 % of the span, against the
+  full face's 0.58 by 34 %). The copy stack rose ~116px when the lede
+  re-anchored above the CTA, which put a FOUR-line lede's top line (Embedded,
+  155ch — the longest) on ~0.70 coverage where it used to sit on ~0.90.
+  ⚠ **Fixed by re-shaping the ramp, not by moving the origin** — dropping the
+  origin would have eaten the photo, which is the middle third of the
+  reference composition and the reason the card is a card and not a panel.
+
+### Verification (2026-08-29)
+
+- `npm run verify` green — lint, typecheck, **1210** unit tests. No test
+  needed changing: nothing pinned the chit's pixels, and every DOM contract
+  (`aria-expanded`, the ghost fence, the `Open Keynote details` locator) is
+  untouched by a bake relayout.
+- `services-ring-smoke` on `desktop`: the two ring/drawer contract tests pass
+  ("ring mode retires the racks; cards expose their CTA", "the front card
+  opens its spec drawer, and Escape / scroll dismiss it").
+- Headed real-GPU capture, dark + light × 1600×1000 + 1280×720, closed +
+  open (8 frames):
+  - **Closed:** `NAV-01` + rule → `◆ KEYNOTE` → photo → lede →
+    `SEE THE SPEC →`. The reference's order, and the name reads first.
+  - **Open:** the two buttons form ONE control row across the pair, same
+    height, same size, distinguished by body-vs-outline.
+- ⚠ **Left open (owner call):** in the OPEN state the section masthead
+  (`AI CAPABILITY / YOUR TEAM OWNS.`) overlaps the card's header band — the
+  open pair scales up and slides under it, and the masthead's dim floor is
+  `--svc-plate-dim: 0.18` (services.css, owner-set 2026-07-26). The collision
+  band is pre-existing (the gold chip sat there too), but it is more visible
+  now that the band holds a large gold NAME against the masthead's large gold
+  second line. Not touched this pass because 0.18 is an owner value; the
+  one-line fix if wanted is a lower floor while `data-plate-open="1"`.
+
+## Addendum 5 — the name gets a frame, the chit comes back, the card loses its button (2026-08-29, owner)
+
+**This is the live face.** Addendum 4 shipped in the morning and the owner
+read the OPEN pair the same day:
+
+> "with the open card, the two exact calls to action, I don't think they work,
+> so let's remove the button in the collapsed card … add a frame around
+> Keynote / Workshop, like the actual title, so it's clear. The button to open
+> the card should be in the top-right corner. I also saw you added a masthead
+> to the collapsed card in NAV-01 — remove that so the title of the card moves
+> up."
+
+Four edits, one direction: **the tight face carries three content elements
+and one control, and the control is small and in a corner.** Addendum 4's
+ORDERING survives untouched — title at the top, photo, lede at the foot. Its
+three additions do not.
+
+### What the open pair actually showed
+
+Addendum 4 argued that `SEE THE SPEC →` and `BOOK A KEYNOTE →` at one height
+would read as a PROGRESSION because the labels differ. On screen they read as
+two competing commands. The argument was made about the labels and the eye
+answers on the SILHOUETTE first: two full-width gold-outlined bars of
+identical height, side by side, are one visual rhyme, and a reader resolves
+"which of these do I press" before ever reading either.
+
+⚠ **A distinction that only exists in the text is not a distinction.** The
+body-vs-outline weight difference was real and measured and was not enough,
+because it modulates within a shape the eye has already paired.
+
+**The corollary is the useful part, and it corrects this ADR's oldest open
+question** (which had run since the `OPEN →` chit): the problem was never
+that the card keeps a visible affordance while open. It is that the
+affordance's SIZE decides whether the open state tolerates it. A 56px corner
+glyph is chrome belonging to the card. A full-width labelled bar is a command
+addressed to the reader, and a second one of those is a fork.
+
+### The face, final
+
+- **Framed NAME** — `plate.chip` (700 40px PT Mono, 3px tracking, uppercase,
+  `pal.gold`) with its leading gold diamond, inside a **hairline gold box**.
+  This is the ADR-029 gold-stamp chip's descendant at the title's size and
+  OUTLINED instead of filled: the filled block was exactly what made the old
+  chip read as a tag beside a headline, where an outline at 40px reads as the
+  headline's own housing. Stroke is `pal.goldA(0.55)` at 2px — **the expand
+  chit's stroke, deliberately identical**, so the two objects bracketing the
+  header band read as one chrome family rather than two unrelated marks.
+- **Expand chit** — restored at `TIGHT_EXPAND_INSET` / `TIGHT_EXPAND_SIZE`,
+  still derived from `DRAWER_CLOSE_*` so the control that opens the card and
+  the one that closes it occupy the same corner at the same scale.
+- **Photo** — the middle third, unchanged.
+- **Lede** — unchanged treatment, re-anchored to `TIGHT_COPY_BOTTOM =
+BAKE_H − 72`, which is where it sat before Addendum 4 lifted it over a CTA.
+- **No readout rail. No CTA.**
+
+### The frame is MEASURED, and centred on the chit
+
+Two constraints that a fixed box would fail:
+
+- **It wraps the text it actually holds.** The name wraps against
+  `chitX0 − 20 − pad`, so a long service name can never run under the
+  affordance; the frame then sizes to the widest line and grows in
+  `TIGHT_TITLE_LH` steps. All four current names fit one line (the widest,
+  `EMBEDDED AI PARTNER`, measures ~513px against ~600 available), but the
+  wrap is the guard that keeps that from being a fact about today's copy.
+- **`NAME_CAP_H = 28` is a measured constant, not `measureText`.** Canvas
+  exposes no cap-height metric, and `actualBoundingBoxAscent` varies with the
+  STRING — a name with no descender would size its frame differently from one
+  with, so four services would carry four frame heights. A constant is what
+  makes the frame the same height on every card.
+- **Frame and chit share a CENTRE, not a top edge** (both on `y = 62`). The
+  frame is taller; two boxes of different heights sharing a top edge read as
+  misaligned, where sharing a centre reads as seated.
+
+### The rail goes, and the title rises
+
+`NAV-01` was Addendum 3's answer to a header band emptied by moving the name
+to the foot. Addendum 4 put the name back in that band and kept the rail
+anyway, which stacked two things in the slot and pushed the name down to
+`y 168` — the owner's "remove that so the title moves up". With the rail gone
+the frame seats at `y 24` and the name is the first thing on the card.
+
+⚠ `plate.statusCode` is **not** deleted from the data — the mobile plate
+still renders it. Only the WebGL tight face stops baking it.
+
+### What moved back, and what did not
+
+- **Ground scrim: un-branched.** It reverts to the shared ramp
+  (0.34 → 0.58, 0.62 → 0.9). Addendum 4's faster ramp existed only because
+  the lede had risen ~116px to clear a CTA box; with the lede back on the
+  bottom margin, the shared ramp is the depth it was tuned for. **A branch
+  added to compensate for a change must come out with the change** — left in,
+  it would be an unexplained tight-face darkening that the next reader would
+  have to disprove.
+- **Top scrim: still branched, 320 → 260.** The tight header still needs more
+  than the full face's 190 (the frame reaches `y 100`; the full face only put
+  a chip's caps at `y 80`), but not the 320 that Addendum 4's `y 230`
+  two-line name needed. Stops `0.9 → 0.72 at half → 0` puts ~0.76 under the
+  frame's bottom edge.
+- **`CTA_LABEL_PX` / `CTA_ARROW_PX` stay at 28 / 34** even though only the
+  DRAWER uses them now. Addendum 4 raised them on a pairing argument that no
+  longer applies, but the legibility measurement stands alone: at 1280×720
+  the OPEN pair renders at scale 0.426, which put the booking CTA's 21px
+  label on **8.9 CSS px**. Reverting would shrink the one real conversion
+  control on the surface to fix nothing.
+
+### Verification (2026-08-29)
+
+- `npm run verify` green — lint, typecheck, **1210** unit tests. Again no
+  test needed changing: nothing pins bake pixels, and every DOM contract
+  (`aria-expanded`, the ghost fence, the `Open Keynote details` locator) is
+  untouched by a relayout of the canvas.
+- Headed real-GPU capture, dark + light × 1600×1000 + 1280×720, closed +
+  open (8 frames):
+  - **Closed:** `[◆ KEYNOTE]` framed top-left, expand chit top-right, photo,
+    lede on the bottom margin. Nothing between the card's top edge and the
+    name.
+  - **Open:** exactly ONE command in the pair (`BOOK A KEYNOTE →`), and the
+    framed name reads as an object over the masthead rather than tangling
+    with it — the frame improves the known overlap without touching
+    `--svc-plate-dim`.

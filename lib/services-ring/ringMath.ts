@@ -352,6 +352,29 @@ export function drawerOpenBoost(t: number, peak: number = DRAWER_OPEN_SCALE): nu
 export const DRAWER_REVEAL_FRAC = 0.15;
 
 /**
+ * The open pair's content alpha — one function for BOTH slabs, so the
+ * invariant "face and tray project the same material at the seam" is pinned
+ * in one place rather than reasoned about across two call sites (owner,
+ * 2026-08-29 — the tray read as "awkwardly attached" because its ceiling
+ * was `depthO` = 0.9 while the face firmed to 1.0, so the card's own gold
+ * seam glint and slab walls printed through the joint as a hairline).
+ *
+ * At `t = 0` this returns `depthO` untouched, so the closed ring is
+ * byte-identical (the shipped face formula was `lerp(depthO, 1, drawerT)`,
+ * i.e. this same lerp — factoring it out changes no closed pixel). At
+ * `t = 1` it returns 1, which is the whole point: both slabs go opaque
+ * together, and the seam self-cleans because the card face covers the
+ * seam-side glint at renderOrder 0.10 > 0.08.
+ *
+ * The TRAY multiplies this by its own `reveal` gate (see DRAWER_REVEAL_FRAC)
+ * to keep the housed tray invisible while it is still behind the sub-1
+ * face. Pure — masters and depth windows are the caller's job.
+ */
+export function openPairAlpha(depthO: number, drawerT: number): number {
+  return lerp(depthO, 1, clamp01(drawerT));
+}
+
+/**
  * Intra-card renderOrder slots. Explicit because distance-sorting
  * near-coplanar transparents flickers, and because three.js orders the
  * transparent list STRICTLY by renderOrder before depth.
