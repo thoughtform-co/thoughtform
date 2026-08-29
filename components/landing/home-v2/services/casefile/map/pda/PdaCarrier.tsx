@@ -1271,7 +1271,15 @@ const BRIEF_TRACK = 0.02;
 /**
  * ⚠ DERIVED FROM THE MEASURE, NOT GUESSED. `wrapLines` breaks on CHARACTER
  * count, so the per-line budget has to be the measure divided by this font's own
- * advance — `adv(13, .02)` is 8.06, and 248 / 8.06 is 30.8.
+ * advance.
+ *
+ * ⚠ **THE FACE CHANGED AND THE BUDGET DID NOT** (ADR-085 U2). It was
+ * `adv(13, .02)` = 8.06 against the 248 measure, i.e. 30.8. IBM Plex Sans is
+ * NARROWER — `hubAdv(13, .02)` is 7.15, which would allow 34 — and 30 is kept
+ * deliberately: the extra characters buy nothing the hub needs, the shorter
+ * measure sits further inside the chamfered chord, and re-wrapping settled copy
+ * to fill a new budget is how a line count changes under a guard that only
+ * checks the words all survived. The slack is banked, not spent.
  */
 const BRIEF_PER = 30;
 /**
@@ -1313,6 +1321,49 @@ const SHAPE_BODY_DROP = 22 + 30;
 const BRIEF_DROP = 3;
 
 const HUB_META_CHARS = 22;
+
+/**
+ * ⚠ **THE HUB'S OWN ADVANCE MODEL — IBM PLEX SANS, MEASURED** (ADR-085 U2).
+ *
+ * `adv(fs, track)` is `fs × (0.6 + track)`: PT Mono's fixed cell, exact for
+ * every other label on this surface and a FICTION for a proportional face.
+ * The hub letters in IBM Plex Sans since the owner's 2026-08-29 ruling, and
+ * `wrapLines` still counts CHARACTERS — so the budgets need this face's own
+ * worst-case mean advance, not the mono one.
+ *
+ * Measured in the browser that renders them (`document.fonts.ready`, real
+ * `getComputedTextLength`), over the drawing's ACTUAL copy — the brief and
+ * all five `meaning`s wrapped at their budgets, every shape name, and the
+ * record's longest Skill `short`s. Worst case per rung, tracking removed so
+ * the `+ track` term stays where the rest of the surface keeps it:
+ *
+ *   body  13 / .02em / 400   0.5185 em   ← "What good means when the"
+ *   caps  17 / .04em / 700   0.6754 em   ← "JUDGMENT"
+ *   meta  12 / .08em / 400   0.4882 em   ← "People · Encoded"
+ *
+ * ⚠ **THE TWO RUNGS MOVE IN OPPOSITE DIRECTIONS, which is why one constant
+ * would not do.** Plex's lowercase prose is ~16 % NARROWER than the mono
+ * cell (every body budget gains slack for free), while its BOLD CAPS are
+ * ~12 % WIDER — so the pinned title is the one string that got tighter, and
+ * it is the one the `wall > 16` guard measures. A single averaged constant
+ * would have hidden that under the body's surplus.
+ *
+ * The stored values carry headroom over the measurements; re-measure before
+ * moving either (`document.fonts.ready` + `getComputedTextLength`, never a
+ * canvas estimate).
+ */
+const HUB_ADV_BODY = 0.53;
+const HUB_ADV_CAPS = 0.69;
+
+/**
+ * The hub's advance. `caps` selects the bold-uppercase rung — the pinned
+ * Skill name and the shape title, the only two strings set that way.
+ *
+ * ⚠ Used by the THREE HUB FIT PRODUCERS ONLY. Everything else on all three
+ * readings is PT Mono and stays on `adv`.
+ */
+const hubAdv = (fs: number, track: number, caps = false) =>
+  fs * ((caps ? HUB_ADV_CAPS : HUB_ADV_BODY) + track);
 
 /* ── The guards' arithmetic ─────────────────────────────────────────────── */
 
@@ -1430,13 +1481,14 @@ export function carrierShapeFits(record: CarrierRecord): CarrierShapeFit[] {
     const lines = carrierShapeLines(group.meaning);
     const height = SHAPE_BODY_DROP + (lines.length - 1) * BRIEF_LINE_H + 4;
     const widest = Math.max(
-      group.name.length * adv(17, 0.04),
-      ...lines.map((l) => l.length * adv(BRIEF_FS, BRIEF_TRACK))
+      group.name.length * hubAdv(17, 0.04, true),
+      ...lines.map((l) => l.length * hubAdv(BRIEF_FS, BRIEF_TRACK))
     );
     return {
       key: group.key,
       wall: boxClearance(0, widest / 2, height / 2, R_HUB),
-      slack: BRIEF_MEASURE - Math.max(...lines.map((l) => l.length * adv(BRIEF_FS, BRIEF_TRACK))),
+      slack:
+        BRIEF_MEASURE - Math.max(...lines.map((l) => l.length * hubAdv(BRIEF_FS, BRIEF_TRACK))),
       whole: lines.join(" ") === group.meaning,
     };
   });
@@ -1467,8 +1519,8 @@ export function carrierPinnedFits(record: CarrierRecord): CarrierPinnedFit {
     const meta = wrapLines(`${cell.skill.team} · ${cell.skill.status}`, HUB_META_CHARS, 3);
     const height = (cell.skill.flagship ? 20 : 0) + 12 + 22 + 26 + (meta.length - 1) * 17 + 4;
     const widest = Math.max(
-      cell.skill.short.length * adv(17, 0.04),
-      ...meta.map((l) => l.length * adv(FS.chrome, 0.08))
+      cell.skill.short.length * hubAdv(17, 0.04, true),
+      ...meta.map((l) => l.length * hubAdv(FS.chrome, 0.08))
     );
     const clear = boxClearance(0, widest / 2, height / 2, R_HUB);
     if (clear < wall) worst = cell.skill.short;
@@ -1499,7 +1551,7 @@ export interface CarrierBriefFit {
  */
 export function carrierBriefFits(): CarrierBriefFit {
   const lines = carrierBriefLines();
-  const widest = Math.max(...lines.map((l) => l.length * adv(BRIEF_FS, BRIEF_TRACK)));
+  const widest = Math.max(...lines.map((l) => l.length * hubAdv(BRIEF_FS, BRIEF_TRACK)));
   const first = CY + BRIEF_DROP - ((lines.length - 1) * BRIEF_LINE_H) / 2;
   const last = first + (lines.length - 1) * BRIEF_LINE_H;
   const top = first - 0.75 * BRIEF_FS;
@@ -2328,7 +2380,15 @@ function Aperture({
   shape: CarrierGroup | null;
 }) {
   return (
-    <g pointerEvents="none">
+    /* ⚠ **THE HUB IS THE ONE SANS-SERIF INSTRUMENT ON THIS SURFACE** (owner,
+       2026-08-29 — ADR-085 U2: _"it feels like a mono type, but we need
+       something else"_). Every other label on all three readings stays PT
+       Mono; the hub's three readouts are the one place the drawing SPEAKS
+       rather than labels, and a sentence meant to be read wants a
+       proportional face. `.fl-pda-hub-copy` is the hook — the family is
+       declared in pda.css, and the fit arithmetic below runs on `hubAdv`,
+       NOT the mono `adv`. */
+    <g className="fl-pda-hub-copy" pointerEvents="none">
       <Hub />
       {cell ? (
         <PinnedReadout cell={cell} name={name} />

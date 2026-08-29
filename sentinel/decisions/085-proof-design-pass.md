@@ -1,14 +1,19 @@
 # ADR-085: Proof design pass — the ledger + hero, one modular scale, and the studio's two pictures
 
-**Date:** 2026-08-28 (U1 same day)
-**Status:** Accepted (`MAP_BACKPLANE` was flipped OFF in U1 — the carrier is
-the live reading 03 again; the Backplane drawing remains on disk unreferenced)
+**Date:** 2026-08-28 (U1 same day; U2 2026-08-29)
+**Status:** Accepted — **but reading 01's LEDGER + HERO is REVERSED in U2**
+(the 4×5 cartridge grid is the live drawing again, owner 2026-08-29). The
+type ladder, the studio's pictures, the directory air and the light
+`--pda-amb` all stand. `MAP_BACKPLANE` was flipped OFF in U1 — the carrier
+is the live reading 03; the Backplane drawing remains on disk unreferenced.
 **Surfaces:** `components/landing/home-v2/services/casefile/**`,
-`components/landing/home-v2/services/casefile/map/pda/**`, `lib/cases/**`
-**Supersedes:** ADR-069 U1 on reading 01's cartridge grid (the grid becomes a
-LEDGER + HERO with a Rolodex ghost stack). Pass ONE's Backplane direction was
-reversed in U1 — the carrier's ADR-070 U34/U36 shape is the live drawing
-again.
+`components/landing/home-v2/services/casefile/map/pda/**`, `lib/cases/**`,
+`app/layout.tsx` (U2)
+**Supersedes:** ~~ADR-069 U1 on reading 01's cartridge grid~~ — **withdrawn
+in U2.** ADR-069 U1 stands again in full: reading 01 is the grid of twenty
+cartridges and the flight's source is the CLICKED card's own slot. Pass
+ONE's Backplane direction was reversed in U1 — the carrier's ADR-070
+U34/U36 shape is the live drawing again.
 **Related:** ADR-056, ADR-058, ADR-063 U2, ADR-064, ADR-065, ADR-066, ADR-067,
 ADR-068, ADR-070, ADR-071, ADR-083, ADR-048 (`--fl-copy` factor law)
 
@@ -347,3 +352,124 @@ carried is legitimately gone. Tall desktops (1920×1247+) that were
 using the svh axis to lift `.fl-cmp__name` past 20px will now see the
 name capped at the surface's display size. The tradeoff is one visible
 tier fewer of type on the surface; the IMAGES fill the slack.
+
+---
+
+## Update 2 — the grid comes back, and the hub speaks (2026-08-29, owner)
+
+Two rulings on the map, one day after the pass shipped.
+
+### 1. Reading 01 is the cartridge grid again — and the supersede is withdrawn
+
+> _"For the intelligence map, I want to go back to the previous version of
+> the work tab, where we have all the different work streams together."_
+
+The LEDGER + HERO answered a real defect — twenty cartridges letter at
+~5–7px effective at 1280×720, the density gap ADR-063 §Outstanding has
+carried for weeks — and it answered it by **showing nineteen fewer
+cartridges**. Twenty rows of legible text beside one large card is a
+different claim from the one this reading makes: the work tab's subject is
+the ESTATE, and an estate you read one card at a time is a list with a
+preview pane. The grid says _this is how much there is_ in the only way a
+drawing can, which is by drawing all of it.
+
+Restored verbatim from `2ffa2038^`: `PdaViews.tsx` (4×5, crop 780×792,
+elasticity into the gutters capped 56/62, cartridges at k = 1),
+`PdaConsole`'s view-1 branch, and the two test files' pins. Deleted:
+`HERO_K`, `heroRect`, the `gridRect` compat alias, `totalWorks`,
+`.fl-pda-roll` + `@keyframes flPdaRoll`, `.fl-pda-rolodex`.
+
+⚠ **NO FLAG.** ADR-070 U35's ruling on the SECTION/carrier pair applies —
+a flag is a comparison lever, and once the owner has read both live the
+losing drawing and its guards go. Git history is the archive.
+
+⚠ **THE FLIGHT'S DIRECTION ASSERTION CAME BACK WITH IT.** `pda-flight`'s
+_"the core grows into the field, so the cartridge flies in SMALLER"_ had
+been widened to `0.3 < dk < 3` because `HERO_K = 1.85` inverted the
+direction against the seat's `CORE_K = 1.7`. **A bound that admits either
+direction cannot catch the sign error it was written for** — it is
+`dk < 1` again.
+
+⚠ **AND THE ALIAS IS WHY NOTHING FAILED.** `gridRect(_i, layout)` returned
+`heroRect(layout)` for every `i`, so `pda-flight`'s eleven per-slot loops
+walked twenty slots that were all the same rect and stayed green — a suite
+that had stopped asking its own question while reporting that it passed.
+The same shape as ADR-069 U1's finding (a per-object guard cannot see a
+defect that lives in the relationship), one level down: **a compatibility
+alias keeps the call sites compiling and quietly empties what they test.**
+
+### 2. The hub letters in IBM Plex Sans
+
+> _"In the substrate tab at the center, it feels like a mono type, but we
+> need something else… the IBM Sans that we use."_
+
+The carrier's three centre readouts — the resting brief, a pinned
+substrate's `meaning`, a pinned Skill's card — are the one place this
+drawing writes PROSE rather than labels. ADR-085 pass one had just fixed
+the `--font-mono` leak that put ~200 SVG labels in IBM Plex Mono, which
+made the whole map one mono for the first time and made the hub's sentence
+look like a label. `.fl-pda-hub-copy` on `Aperture`'s group takes IBM Plex
+Sans; **everything else on all three readings stays PT Mono.**
+
+⚠ **IBM PLEX SANS WAS ALREADY LOADED ON EVERY ROUTE AND USED NOWHERE.**
+`app/layout.tsx` has instantiated it since the retired design system;
+`--font-ibm-plex` was referenced by no rule in the app. So the owner's
+"the IBM Sans that we use" named a font the site downloads and never
+draws — this pass gives it its one consumer, and cuts the weights to the
+hub's own two: **400 and 700**, replacing 300/400/500. The hub's pinned
+titles have always asked for `fontWeight={700}`, which that instance did
+not load — they were synthesised, and every advance measured off them
+would have been a fiction.
+
+⚠ **THE FIT ARITHMETIC IS A SEPARATE MODEL NOW, MEASURED.**
+`adv(fs, track) = fs × (0.6 + track)` is PT Mono's fixed cell and is exact
+for every other label here; against a proportional face it is a guard
+measuring a model of the drawing rather than the drawing — ADR-070 U34's
+own finding. `hubAdv()` carries IBM Plex Sans's worst-case advances,
+measured in the browser that renders them (`document.fonts.ready`, real
+`getComputedTextLength`) over the drawing's ACTUAL copy: the brief and all
+five `meaning`s wrapped at their budgets, every shape name, and the
+record's longest Skill `short`s.
+
+⚠ **THE TWO RUNGS MOVE IN OPPOSITE DIRECTIONS, which is why one constant
+would not do:**
+
+| rung                  | mono model | Plex measured      | worst string               |
+| --------------------- | ---------- | ------------------ | -------------------------- |
+| body 13 / .02em / 400 | 0.62 em    | **0.5385** (−13 %) | "What good means when the" |
+| caps 17 / .04em / 700 | 0.64 em    | **0.7154** (+12 %) | "JUDGMENT"                 |
+| meta 12 / .08em / 400 | 0.68 em    | 0.5682 (−16 %)     | "People · Encoded"         |
+
+Plex's lowercase prose is narrower than the mono cell, so every body
+budget gains slack for free — while its BOLD CAPS are wider, so the pinned
+title is the one string that got tighter, and it is exactly the string the
+`wall > 16` guard measures. **A single averaged constant would have hidden
+that under the body's surplus.** Stored as `HUB_ADV_BODY` 0.53 /
+`HUB_ADV_CAPS` 0.69 (tracking removed, headroom over the measurements).
+
+⚠ **THE BUDGETS DID NOT MOVE, DELIBERATELY.** `BRIEF_PER` 30 could go to
+34 on the narrower face. It stays: the extra characters buy nothing, the
+shorter measure sits further inside the chamfered chord, and re-wrapping
+settled copy to fill a new budget is how a line count changes under a
+guard that only checks the words all survived. The slack is banked.
+
+Measured clearances after the change — `carrierBriefFits` **43.3** against
+its `> 24`, the five shapes **43.6 – 52.9**, `carrierPinnedFits` **55.2**
+against its `> 16` (worst "VSME Reporting"). The wider caps are absorbed
+because the block's HEIGHT dominates `boxClearance` at the 30° normal.
+
+⚠ **AND THE SVG'S FAMILIES ARE PINNED FOR THE FIRST TIME.** The smoke's
+type sweep skips SVG by design (`the map's SVG is its own pass`), which is
+how this surface shipped a wrong face twice — the Plex Mono leak, and the
+missing 700. `readPda` now returns `hubFonts` and `labelFonts` and the
+reading-03 gate asserts **both**: the hub matches `/IBM Plex Sans/`, every
+other label matches `/PT Mono/`. Asserting only the hub would let the mono
+half rot exactly as it did before.
+
+### Result
+
+`npx vitest run` on the five affected suites: **382 pass**. Typecheck
+clean. Captured headed at 1920×1247 in both themes: reading 01 draws all
+twenty cartridges with the three person-led streams dashed and unlit; the
+hub's brief sets in a proportional sans inside a ring of mono cell labels,
+in dark and in light.

@@ -7,9 +7,19 @@ import { THEME_TOGGLE, THEME_STORAGE_KEY } from "@/components/landing/v7/themeTo
 import { heroPreloadScript } from "@/lib/theme/heroPreload";
 
 // Google Fonts
+/**
+ * ⚠ **IBM PLEX SANS HAS EXACTLY ONE CONSUMER: THE MAP'S HUB** (owner,
+ * 2026-08-29 — ADR-085 U2). It had been loaded on every route since the
+ * retired design system and referenced by NO rule anywhere; the substrate
+ * carrier's centre readouts now letter in it, so the download finally buys
+ * something. Weights are the hub's own two — 400 for the brief and the
+ * sentences, **700 for the pinned titles**, which had been asking for a
+ * weight this instance did not load (a synthesised bold, and every advance
+ * measured off it would have been a fiction).
+ */
 const ibmPlex = IBM_Plex_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  weight: ["400", "700"],
   variable: "--font-ibm-plex",
   display: "swap",
 });

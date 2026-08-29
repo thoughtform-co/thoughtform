@@ -32,7 +32,7 @@ breather).
 - [ADR-068: The glyphed index, the tool dossier, and authored wireframes](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) — the LIVE register + tools-plate contract; see §The glyphed index and §The tool dossier below
 - [ADR-069: The selection morph and the answered configuration](../sentinel/decisions/069-pda-selection-morph-and-answered-configuration.md) — the selected work is the PERSISTENT OBJECT and FLIES between its two homes (1 ↔ 2); reading 02 prints the record's own answers with one reactive readout. See §The selection morph below
 - [ADR-084: The panel fills its housing, and the console lets the corridor through](../sentinel/decisions/084-casefile-panel-fills-its-housing.md) — the LIVE composition of the Studio and ATL rows: six ads on a height-gated second row, the films' seated production block, the console's `--con-ground` transparency and the register's retuned claim + sentence. See §The panel fills its housing below
-- [ADR-085: Proof design pass — the ledger + hero, one modular scale, and the studio's two pictures](../sentinel/decisions/085-proof-design-pass.md) — reading 01 becomes a **LEDGER + HERO** (20 workstream rows left, one big hero cartridge right at `HERO_K = 1.85`, click flies from the hero rect); ⚠ **U1 (same day) FLIPPED `MAP_BACKPLANE` OFF** — pass one's Backplane bay-drawing is retired to disk and the compound carrier is the live reading 03 again ("restore the old pie chart"). U1 also collapses **FOUR unrelated type ladders into ONE MODULAR SCALE** on `.fl-case` (`--fl-ratio: 1.2` × `--fl-t0`; every chrome role a named step, `--sh` retired, `--fl-display` shared with `.fl-brief__title` so a sheet's category NAME never outranks the project NAME again — was 33.7px @1920), and adds a **ROLODEX GHOST STACK** behind the hero with `fl-pda-roll` (rotation-in on every hover; mutually exclusive with `fl-pda-dock`, both siblings of the hero group per pda.css line 280+). U1 lands **the studio's two policy pictures** from `ai-in-studio-final.pptx` slide 9 on THE LINE sheet (444×484 / 444×444 → WebP q82, `public/arcs/studio-line/*.webp`, new optional `image?: CaseImage` on `CaseCompareColumn`, 1:1 cover box in `.fl-cmp__middle`), and re-derives light-theme `--pda-amb` through the same line-work step `--con-dim` takes (`rgba(138,107,32,0.88)` → 3.02:1, delivering on ADR-063 U2's promise). Directory row lifts min-height 24→26 + padding 3→4 and `--fl-directory-gap` compact floor 8→12 (funded from `--fl-proof-h`'s coefficient drop). Mobile keeps its ADR-083 IA and pass-one polish. See §The ledger + hero (Rolodex), §The modular scale, and §The LINE sheet's pictures below
+- [ADR-085: Proof design pass — one modular scale, the studio's two pictures (⚠ its ledger + hero is REVERSED)](../sentinel/decisions/085-proof-design-pass.md) — ⚠ **U2 (2026-08-29, owner) IS THE LIVE STATE OF THE MAP, AND IT UNDOES PASS ONE'S READING 01.** The **4×5 CARTRIDGE GRID IS BACK** (all twenty workstreams together, cartridges at k=1, the flight's source is the CLICKED card's own slot) and the LEDGER + HERO is deleted with `HERO_K`, `heroRect`, the `gridRect` compat alias, `totalWorks`, `.fl-pda-roll` and `.fl-pda-rolodex`. ⚠ **NO FLAG** — ADR-070 U35's ruling (a flag is a comparison lever; once the owner has read both live, the losing drawing and its guards go). The LEDGER answered a real defect (~5–7px effective type at 1280×720, ADR-063 §Outstanding) **by showing nineteen fewer cartridges** — and this reading's subject is the ESTATE, which you cannot draw one card at a time. ⚠ **THE ALIAS IS WHY NOTHING FAILED**: `gridRect(_i, layout)` returned the hero rect for every `i`, so `pda-flight`'s eleven per-slot loops walked twenty identical rects and stayed green — **a compatibility alias keeps the call sites compiling and quietly empties what they test** (ADR-069 U1's finding one level down). The flight's `dk < 1` direction assertion (widened to `0.3 < dk < 3` for one day, because `HERO_K` 1.85 > `CORE_K` 1.7 inverted it) is restored — _a bound that admits either direction cannot catch the sign error it was written for_. ⚠ **U2 ALSO PUT THE HUB IN IBM PLEX SANS** — see §The hub speaks below. What still stands from pass one + U1: **FOUR unrelated type ladders collapsed into ONE MODULAR SCALE** on `.fl-case` (`--fl-ratio: 1.2` × `--fl-t0`; every chrome role a named step, `--sh` retired, `--fl-display` shared with `.fl-brief__title` so a sheet's category NAME never outranks the project NAME again — was 33.7px @1920); `MAP_BACKPLANE` OFF (the compound carrier is reading 03, the Backplane drawing unreferenced on disk); **the studio's two policy pictures** from `ai-in-studio-final.pptx` slide 9 on THE LINE sheet (444×484 / 444×444 → WebP q82, `public/arcs/studio-line/*.webp`, optional `image?: CaseImage` on `CaseCompareColumn`, 1:1 cover box in `.fl-cmp__middle`); light-theme `--pda-amb` re-derived through the same line-work step `--con-dim` takes (`rgba(138,107,32,0.88)` → 3.02:1, delivering on ADR-063 U2's promise); the directory row's air (min-height 24→26, padding 3→4, `--fl-directory-gap` compact floor 8→12, funded from `--fl-proof-h`'s coefficient drop); and the `--font-mono`→`--fl-mono` SVG leak fix. Mobile keeps its ADR-083 IA. See §The hub speaks, §The modular scale, and §The LINE sheet's pictures below
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
 - [ADR-083: Mobile evidence instruments](../sentinel/decisions/083-mobile-evidence-instruments.md) — proposed phone IA: one stable case seat, explicit BRIEF/PROOF/ARTIFACT modes and a direct four-stop rail
 - [ADR-063: The map's reading rail and its wheel](../sentinel/decisions/063-map-reading-rail-and-wheel.md) — the rail is HORIZONTAL across the top of the console, and the console OWNS THE WHEEL while the pointer is on it (releasing at both ends). See §The reading rail below
@@ -529,10 +529,19 @@ The Studio and ATL rows' composition, and the console's paint.
 - ⚠ **TWO SCALES, EACH `min(vw, svh)`, BECAUSE `--fl-copy` IS WIDTH-ONLY.**
   1920×800 and 1920×1247 resolve `--fl-copy` identically (16.2px) while the
   field is 530 vs 927 tall — which is why the sheets read as captions in a tall
-  box. `--sh` on `.fl-plate--sheets` (`clamp(12px, min(1.35vw, 2.15svh), 25px)`)
-  drives both sheet bodies by RATIO; `--lc` on `.fl-case`
-  (`clamp(11.5px, min(0.95vw, 1.3svh), 16.5px)`) drives the register claim, its
-  sentence, the directory row and its meta. One number moves a whole ladder.
+  box. `--lc` on `.fl-case` (`clamp(11.5px, min(0.95vw, 1.3svh), 16.5px)`)
+  drives the register claim, its sentence, the directory row and its meta. One
+  number moves a whole ladder.
+  ⚠ **`--sh` IS RETIRED (ADR-085 U1) AND THIS BULLET TAUGHT IT AS LAW FOR A
+  DAY.** It was `clamp(12px, min(1.35vw, 2.15svh), 25px)` on
+  `.fl-plate--sheets`, driving both sheet bodies by ratio — and it is declared
+  NOWHERE in `components/` now (it let a sheet's category NAME render 33.7px at
+  1920, outranking the project name). **The live ladder is `--fl-t0` ×
+  `--fl-ratio` (1.2) → `--fl-chrome-sm/md/lg`, plus `--fl-display` and
+  `--fl-copy`** (casefile.css:249–292). The height-elastic story `--sh` carried
+  is genuinely gone; a tall desktop caps the category name at the surface's
+  display size and the IMAGES fill the slack. Do not hang a new sheet ladder
+  off a ratio token that no longer exists.
   ⚠ **The coefficients are SOLVED**: `--lc` is 14.04px at 1920×1080, just under
   the **14.1px at which the longest description wraps** (459px of a 462px column
   at 14px — 99.3 % of the line), and 16.2px at the owner's shape where the taller
@@ -1290,6 +1299,62 @@ smoke cases pass unchanged. No ADR yet; one follows if a direction wins.
   hook never fires). Drive the controls and measure via `javascript_tool`,
   and shoot with a headless Playwright script. Unlike the landing, real
   scrolls are not needed: the lab is static DOM/SVG with no corridor.
+
+## The hub speaks (ADR-085 U2, live)
+
+Reading 03's centre — the resting brief, a pinned substrate's `meaning`, a
+pinned Skill's card — is the ONE sans-serif instrument on this surface.
+
+- ⚠ **THE HUB IS IBM PLEX SANS; EVERYTHING ELSE ON ALL THREE READINGS IS PT
+  MONO.** `.fl-pda-hub-copy` on `Aperture`'s group is the hook, the family is
+  declared in pda.css. The owner's read (2026-08-29) was that the centre _"feels
+  like a mono type, but we need something else"_ — the hub is where this drawing
+  writes PROSE rather than labels, and ADR-085 pass one had just made the whole
+  map one mono (fixing the `--font-mono` leak), which is what made the sentence
+  look like a label.
+- ⚠ **IT RESOLVES `--font-ibm-plex`, next/font's variable on `<html>`, NOT a
+  `.fl-case` token.** Deliberate: `--fl-mono` resolves only inside
+  `.fl-case`/`.arc-*`, and the map's EXPANDED overlay portals to `document.body`,
+  outside both — a scoped token would letter the hub correctly in the panel and
+  fall back to a system face in the overlay.
+- ⚠ **IBM PLEX SANS WAS LOADED ON EVERY ROUTE AND USED NOWHERE** before this.
+  `app/layout.tsx` has instantiated it since the retired design system with
+  `--font-ibm-plex` referenced by no rule in the app. The hub is its one
+  consumer, and the weights are cut to the hub's own two — **400 and 700**
+  (was 300/400/500). The pinned titles have always asked for `fontWeight={700}`,
+  which that instance did not load: they were SYNTHESISED, and any advance
+  measured off them was a fiction.
+- ⚠ **THE FIT ARITHMETIC IS A SEPARATE, MEASURED MODEL — `hubAdv`, NOT `adv`.**
+  `adv(fs, track) = fs × (0.6 + track)` is PT Mono's fixed cell; against a
+  proportional face it is a guard measuring a MODEL of the drawing rather than
+  the drawing (ADR-070 U34's finding). `hubAdv` carries measured worst-case
+  advances and feeds `carrierBriefFits` / `carrierShapeFits` /
+  `carrierPinnedFits` ONLY. Everything else stays on `adv`.
+- ⚠ **THE TWO RUNGS MOVE IN OPPOSITE DIRECTIONS, WHICH IS WHY ONE CONSTANT WILL
+  NOT DO.** Measured in the browser that renders them (`document.fonts.ready` +
+  real `getComputedTextLength`, never a canvas estimate) over the drawing's OWN
+  copy: body 13/.02em/400 is **0.5385 em** against the mono model's 0.62
+  (−13 %), meta 12/.08em/400 is 0.5682 against 0.68 (−16 %), but **caps
+  17/.04em/700 is 0.7154 against 0.64 (+12 %)**. Plex's prose is narrower — every
+  body budget gains slack for free — while its bold caps are WIDER, so the pinned
+  title is the one string that got tighter and it is exactly what the
+  `wall > 16` guard measures. An averaged constant would hide that under the
+  body's surplus. Stored `HUB_ADV_BODY` 0.53 / `HUB_ADV_CAPS` 0.69, tracking
+  removed so the `+ track` term stays where the surface keeps it.
+- ⚠ **THE BUDGETS DID NOT MOVE, DELIBERATELY.** `BRIEF_PER` 30 could go to 34 on
+  the narrower face. It stays: the characters buy nothing, the shorter measure
+  sits further inside the chamfered chord, and **re-wrapping settled copy to fill
+  a new budget is how a line count changes under a guard that only checks the
+  words all survived.** The slack is banked, not spent.
+- Measured clearances after the change: brief **43.3** against `> 24`, the five
+  shapes **43.6–52.9**, pinned **55.2** against `> 16` (worst "VSME Reporting").
+  The wider caps are absorbed because the block's HEIGHT dominates
+  `boxClearance` at the 30° normal.
+- ⚠ **THE SVG'S FAMILIES ARE PINNED NOW, BOTH HALVES.** The smoke's HTML type
+  sweep skips SVG by design (_"the map's SVG is its own pass"_), which is how
+  this surface shipped a wrong face TWICE — the Plex Mono leak, and the missing 700. `readPda` returns `hubFonts` + `labelFonts`; the reading-03 gate asserts
+  the hub matches `/IBM Plex Sans/` **and** every other label matches `/PT
+Mono/`. Asserting only the hub would let the mono half rot exactly as before.
 
 ## The carrier's walls (ADR-070 U34, live)
 

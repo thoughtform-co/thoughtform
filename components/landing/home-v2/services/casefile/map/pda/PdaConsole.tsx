@@ -29,7 +29,7 @@ import {
   configSkillNameRect,
 } from "./PdaConfiguration";
 import type { PdaEntry } from "./PdaEntry";
-import { ViewWork, heroRect, workExt, workLayout } from "./PdaViews";
+import { ViewWork, gridRect, workExt, workLayout } from "./PdaViews";
 import { PDA_FLIGHT_GUARD_MS, pdaFlight } from "./pdaFlight";
 import type { FlightRect } from "./pdaFlight";
 import { type PdaView, crossing, footCopy, pdaTotals, selectWorks } from "./pdaRecord";
@@ -279,14 +279,15 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
   const workRectFor = useCallback(
     (view: PdaView, id: string): { crop: string; rect: FlightRect } | null => {
       if (view === 1) {
-        /* ⚠ **THE HERO IS THE ONE HOME ON READING 01 SINCE 2026-08-28.**
-           The 4×5 grid was replaced with a ledger + hero composition; the
-           HERO carries the selected work at HERO_K and is the source (and
-           destination) of the 1↔2 flight. `heroRect` is invariant of `id`
-           by construction — the ledger row IS the click target, but the
-           flight originates from the hero the reader was previewing. */
-        if (!shown.some((w) => w.id === id)) return null;
-        return { crop: layout1.crop, rect: heroRect(layout1) };
+        /* ⚠ **THE GRID IS THE HOME AGAIN (owner, 2026-08-29 — ADR-085 U2).**
+           ADR-085's ledger + hero gave this reading ONE home per selection,
+           so every click flew from the same rect wherever the work sat. The
+           4×5 grid is back and the flight originates from the CLICKED
+           cartridge's own slot, which is what makes the object persistent
+           rather than a card that appears mid-panel. */
+        const i = shown.findIndex((w) => w.id === id);
+        if (i < 0) return null;
+        return { crop: layout1.crop, rect: gridRect(i, layout1) };
       }
       if (view === 2) {
         return { crop: layout2.crop, rect: layout2.core };
@@ -637,7 +638,6 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
         {view === 1 ? (
           <ViewWork
             works={shown}
-            totalWorks={works.length}
             hover={hover}
             onHover={hoverWork}
             onOpen={open}

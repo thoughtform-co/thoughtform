@@ -275,6 +275,28 @@ function readPda() {
     arcTexts: onPath.length,
     spills: [...new Set(spills)],
     spillCells: svg.querySelectorAll(".fl-pda-hit").length,
+    /* ⚠ **THE SVG'S FAMILIES, WHICH NOTHING PINNED UNTIL 2026-08-29.** The
+       HTML type sweep below explicitly skips SVG, so this surface has twice
+       shipped a wrong face here unnoticed: `--font-mono` (IBM Plex Mono)
+       leaking into ~200 labels until ADR-085, and the hub asking for a
+       weight its font instance did not load. Two roles now, and BOTH are
+       asserted — the hub SPEAKS in IBM Plex Sans (ADR-085 U2), every other
+       label LABELS in PT Mono. Asserting only the hub would let the mono
+       half rot exactly as it did before. */
+    hubFonts: [
+      ...new Set(
+        [...svg.querySelectorAll<SVGTextElement>(".fl-pda-hub-copy text")].map(
+          (t) => getComputedStyle(t).fontFamily
+        )
+      ),
+    ],
+    labelFonts: [
+      ...new Set(
+        [...svg.querySelectorAll<SVGTextElement>("text")]
+          .filter((t) => !t.closest(".fl-pda-hub-copy"))
+          .map((t) => getComputedStyle(t).fontFamily)
+      ),
+    ],
     // 0.6 units of tolerance for sub-pixel bbox rounding; a real clip is a
     // whole glyph or more.
     clipped: items
@@ -658,6 +680,22 @@ test.describe("Services card ring smoke (ADR-029)", () => {
             drawn!.spills,
             `${where}: labels print through their own cell edge: ${drawn!.spills.join(" | ")}`
           ).toEqual([]);
+
+          // ── THE HUB SPEAKS, THE LABELS LABEL (ADR-085 U2) ───────────
+          // The carrier's three centre readouts are the one sans-serif
+          // instrument on this surface; everything around them is PT
+          // Mono. Both halves, because a one-sided assertion here is
+          // what let the last two font leaks ship.
+          expect(
+            drawn!.hubFonts.length,
+            `${where}: the hub's readout is not being measured`
+          ).toBeGreaterThan(0);
+          for (const f of drawn!.hubFonts)
+            expect(f, `${where}: the hub letters in ${f}, not IBM Plex Sans`).toMatch(
+              /IBM Plex Sans/i
+            );
+          for (const f of drawn!.labelFonts)
+            expect(f, `${where}: a map label letters in ${f}, not PT Mono`).toMatch(/PT Mono/i);
         }
 
         // ── AND THE TYPE IS ACTUALLY BIGGER ────────────────────────

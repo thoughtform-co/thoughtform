@@ -505,23 +505,19 @@ describe("the flight ignores what the casefile does to this subtree", () => {
     expect(twice.dk).toBeCloseTo(one_.dk, 9);
   });
 
-  it("the hero settles into the seat — a bounded dk in either direction", () => {
-    /* ⚠ **THE DIRECTION INVERTED WITH THE LEDGER + HERO REDESIGN**
-       (2026-08-28). Before, reading 01 mounted the cartridge at its base
-       size (176×136) and the seat drew it at `CORE_K` — the flight grew
-       INTO the field (dk < 1 in 1→2). The hero is now at `HERO_K = 1.85`
-       so it is 8 % LARGER than the seat and the flight SHRINKS on the way
-       in, which is exactly the "settling into its slot" affordance an
-       interactive preview needs.
-
-       What stays asserted: the flight is not degenerate — the scale is
-       between 0.3 and 3 in either direction (the round-trip cancellation
-       test above already proves reciprocity). */
+  it("the core grows into the field, so the cartridge flies in SMALLER", () => {
+    /* Sanity on the direction, which a sign error would silently invert:
+       reading 02 draws the same object at CORE_K, and its crop is looser, so
+       the incoming pose must be under 1.
+       ⚠ **THIS ASSERTION WAS WIDENED TO `0.3 < dk < 3` FOR ONE DAY**
+       (ADR-085's hero at `HERO_K = 1.85` inverted the direction), and the
+       grid's return restores it. A bound that admits either direction
+       cannot catch the sign error it was written for. */
     const box = { width: 611, height: 356 };
     const { one, two } = boards(box);
     const v = pdaFlight(box, one.crop, gridRect(0, one), two.crop, two.core)!;
-    expect(v.dk).toBeGreaterThan(0.3);
-    expect(v.dk).toBeLessThan(3);
+    expect(v.dk).toBeLessThan(1);
+    expect(v.dk).toBeGreaterThan(0.2);
   });
 });
 

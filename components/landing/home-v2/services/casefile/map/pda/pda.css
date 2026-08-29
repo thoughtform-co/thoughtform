@@ -139,6 +139,29 @@
   user-select: none;
 }
 
+/* ── THE HUB SPEAKS IN A SANS (owner, 2026-08-29 — ADR-085 U2) ────────────
+   The carrier's three centre readouts — the resting brief, a clicked
+   substrate's sentence, a clicked Skill's card — are the one place this
+   drawing writes PROSE rather than labels, and the owner read the mono
+   there as wrong for it. Everything else on all three readings (the 47 arc
+   labels, the band names, every cell's chrome) stays PT Mono above.
+
+   ⚠ **`--font-ibm-plex` IS next/font's VARIABLE ON `<html>`, NOT A
+   `.fl-case` TOKEN** — which is deliberate: `--fl-mono` resolves only
+   inside `.fl-case`/`.arc-*`, and the map's EXPANDED overlay portals to
+   `document.body`, outside both. A `.fl-case`-scoped token would letter
+   the hub correctly in the panel and fall back to a system face in the
+   overlay.
+
+   ⚠ **THE FIT ARITHMETIC MOVED WITH IT.** `adv()` models PT Mono's 0.6 em
+   cell; a proportional face makes that a fiction, and a guard measuring a
+   model of the drawing rather than the drawing is ADR-070 U34's own
+   finding. `PdaCarrier`'s `hubAdv()` carries the measured Plex bounds and
+   the three hub fit producers run on it. */
+.fl-pda__svg .fl-pda-hub-copy text {
+  font-family: var(--font-ibm-plex, "IBM Plex Sans", system-ui, sans-serif);
+}
+
 .fl-pda-hit {
   cursor: pointer;
   /* ⚠ THE UA RING IS KILLED IN EVERY STATE, and it is replaced below rather
@@ -238,49 +261,12 @@
   }
 }
 
-/* ── THE ROLL — reading 01's Rolodex entry (2026-08-28 U2) ────────────────
-   The hero cartridge rotates into place from a slight offset. This is the
-   ENTRY animation on the hero's group, and it runs on every mount: on
-   reading-01 arrival (still→false) AND on every preview change inside the
-   reading (React key on `previewId` unmounts and remounts the hero group).
-
-   ⚠ THE FRAME IS `fl-pda-bloom`'S: `fill-box` with a centred origin, so
-   the rotation pivots on the hero's own centre rather than on the SVG
-   origin (which would swing it across the panel). The ghost silhouettes
-   sit BEHIND the hero as siblings and never receive this transform — they
-   are static once the reading arrives.
-
-   ⚠ MUTUALLY EXCLUSIVE WITH `fl-pda-dock` AND `fl-pda-bloom`. Dock is a
-   view-change animation; roll is a same-view content swap. They never
-   co-occur and the class list makes that explicit (PdaViews' `heroCls`
-   picks exactly one). */
-.fl-pda-roll {
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: flPdaRoll 0.45s cubic-bezier(0.22, 0.9, 0.3, 1) forwards;
-}
-
-@keyframes flPdaRoll {
-  from {
-    opacity: 0;
-    transform: translateX(-4px) rotate(-3deg) scale(0.96);
-  }
-  60% {
-    opacity: 1;
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* THE GHOST STACK behind the hero. Static once the reading arrives — the
-   hero is the ONLY thing that re-animates on preview change. */
-.fl-pda-rolodex {
-  opacity: 0;
-  animation: flPdaIn 0.45s cubic-bezier(0.2, 0.8, 0.25, 1) 0.08s forwards;
-}
+/* ⚠ `.fl-pda-roll` AND `.fl-pda-rolodex` WENT WITH THE HERO (owner,
+   2026-08-29 — ADR-085 U2). They were the Rolodex entry and its ghost
+   stack behind reading 01's single hero cartridge; the 4×5 grid is back,
+   twenty cards arrive on `flPdaIn`'s staggered ladder, and a rotation
+   grammar for one card has nothing left to animate. Git history is the
+   archive. */
 
 /* The core blooms — it is the object that survived the view change. */
 .fl-pda-bloom {
@@ -560,8 +546,6 @@
     display: none;
   }
   .fl-pda-in,
-  .fl-pda-roll,
-  .fl-pda-rolodex,
   .fl-pda-bloom,
   .fl-pda-dock,
   .fl-pda-seat,
