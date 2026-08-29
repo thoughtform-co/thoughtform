@@ -50,6 +50,7 @@ export interface GalleryRun {
   assets: readonly GalleryAsset[];
 }
 
+const V4 = `${MIRROR}/20260829-azeroth-v4`;
 const V3 = `${MIRROR}/20260829-azeroth-v3`;
 const V2 = `${MIRROR}/20260828-azeroth-v2`;
 const V1 = `${MIRROR}/20260828-azeroth-v1`;
@@ -57,6 +58,70 @@ const TF5 = `${MIRROR}/20260826-thoughtform-v5`;
 const TF4 = `${MIRROR}/20260826-thoughtform-v4`;
 
 export const GALLERY_RUNS: readonly GalleryRun[] = [
+  {
+    id: "az-v4",
+    wave: "20260829-azeroth-v4",
+    title: "Azeroth v4 — three routes to the same transparent video",
+    date: "2026-08-29",
+    status: "INTERMEDIATE",
+    summary: [
+      "A NEW SOURCE, and it is the good one: the owner's in-game .Source triplet — a white-on-black matte plus green and blue plates at 5120×1440, all three shot on the same pose. Alpha comes from the AUTHORED matte, so there is no difference-key and none of v3's 414 matte cuts; the blue plate carries the RGB because the character's own fel-green would be eaten by a green key. Matte and plate align to within a pixel (IoU 0.95–0.98, measured).",
+      "ROUTE A · grade.py over the 124 animated frames from the WMW-Midnight GIF. Deterministic, alpha byte-identical, temporally stable by construction — the benchmark. On the corridor's own ground it reads FLAT: one value across the whole figure, a tinted statue rather than a body of light.",
+      "ROUTE B · Nano Banana per-frame styling is REJECTED, on arithmetic rather than taste. The single-frame test passed its geometry gate (the styled figure covers 99.6% of the source silhouette), and the look is the best of the three. But two calls on the SAME frame differ by 19.6/255 — a white beard in one, a dark beard and green shoulder fire in the other — while two ADJACENT source frames differ by only 5.0. The model's run-to-run variance is 3.9× the actual motion, so a per-frame batch would bury the animation in strobe. It survives as the way to make ONE still.",
+      "ROUTE C · that styled still through Veo 3.1, then keyed to alpha on luminance (EVAL_LOG Note K's geq recipe, which had never been written down as code). This is the one that reads as a hologram: the dark armour drops out into the corridor and only the lit surfaces and the fel-green carry, which is what the flat grade cannot do.",
+      "⚠ THE LOOP DID NOT CLOSE ON ITS OWN. Veo's first=last trick left a seam of 15.35/255 against 14.19 of real motion — the jump was louder than the movement, exactly the endpoint drift vid.py's docstring predicts for an idle. Trimming to v3's own detected period (183 of 192 frames) takes the seam to 5.69 against 15.10. Kling was built as a second opinion and is UNTESTED: the account answers `code 1102, balance not enough`, which is billing, not the harness.",
+    ],
+    assets: [
+      {
+        id: "az-v4-veo-idle",
+        kind: "video",
+        src: `${V4}/holo-idle-azeroth-v4-veo.mp4`,
+        alphaSrc: `${V4}/holo-idle-azeroth-v4-veo.webm`,
+        label: "C · Veo, keyed",
+        note: "183 frames @ 24fps = 7.63s, trimmed to the detected loop period. Luma-keyed alpha: 2.2% opaque, 38% partial — the translucency is the point, not a defect.",
+        mb: 6.55,
+      },
+      {
+        id: "az-v4-grade-idle",
+        kind: "video",
+        src: `${V4}/holo-idle-azeroth-v4-grade.mp4`,
+        alphaSrc: `${V4}/holo-idle-azeroth-v4-grade.webm`,
+        label: "A · grade.py, animated",
+        note: "124 frames @ 24fps = 5.17s off the WMW-Midnight capture. The deterministic control: same duotone as v3, no generative step, no flicker.",
+        mb: 2.08,
+      },
+      {
+        id: "az-v4-routes",
+        kind: "sheet",
+        src: `${V4}/compare-routes.jpg`,
+        label: "the four-way still",
+        note: "Source · grade.py · two Nano Banana attempts. The two attempts are the flicker evidence: same input, same prompt, different beard and different shoulder fire.",
+      },
+      {
+        id: "az-v4-animated",
+        kind: "sheet",
+        src: `${V4}/compare-animated.jpg`,
+        label: "A vs C, on the corridor ground",
+        note: "Composited over #0b0a09 rather than a checkerboard, because an emissive asset can only be judged against the ground it will actually sit on.",
+      },
+      {
+        id: "az-v4-styled",
+        kind: "source",
+        src: `${V4}/styled/style-holo-emissive-azeroth-02.jpg`,
+        label: "the styled still",
+        note: "Nano Banana Pro on the keyed matte, style block `holo-emissive-azeroth` — the azeroth wardrobe on holo-emissive-black's grammar, with the fel-green ring-fenced against the gold. This one frame is what Veo animates.",
+      },
+      {
+        id: "az-v4-veo-still",
+        kind: "still",
+        src: `${V4}/holo-still-azeroth-v4-veo.jpg`,
+        alphaSrc: `${V4}/holo-still-azeroth-v4-veo.webp`,
+        label: "C · poster",
+        note: "Frame zero of the trimmed loop. headY 0.038 / footY 0.942.",
+        mb: 0.52,
+      },
+    ],
+  },
   {
     id: "az-v3",
     wave: "20260829-azeroth-v3",

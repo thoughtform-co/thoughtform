@@ -49,12 +49,28 @@ const MEDIA_EXTENSIONS = new Set([
 
 const METADATA_EXTENSIONS = new Set([".json", ".md"]);
 
+/**
+ * Per-frame working directories, which a wave carries by the thousand and the
+ * gallery never reads.
+ *
+ * ⚠ THE FILTER IS ON THE DIRECTORY, NOT THE EXTENSION. A wave's frame folders
+ * hold ordinary `.png`s — the same extension as every still we DO want — so an
+ * extension rule cannot tell an intermediate from a deliverable. The azeroth-v4
+ * wave measured 1.1 GB synced against ~9 MB of actual delivery files: 454 MB of
+ * keyed video frames, 202 MB of framed copies, 193 MB of graded copies. That is
+ * a working set, and it is regenerable from the scripts beside it.
+ */
+const SCRATCH_DIRS = /^(_|frames?[-_]|gif-raw$|gif-framed$|capture|framed|veo-framed$|nano-framed$|kling-framed$)/i;
+
 async function walk(dir, base = dir) {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) {
+      // Wave roots are never scratch; only folders INSIDE a wave are tested,
+      // so a wave called `_something` still syncs.
+      if (dir !== base && SCRATCH_DIRS.test(entry.name)) continue;
       files.push(...(await walk(path, base)));
     } else {
       files.push({ path, rel: relative(base, path).split("\\").join("/") });

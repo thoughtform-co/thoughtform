@@ -114,6 +114,27 @@ npm run lint     # Run ESLint
 npm run format   # Format with Prettier
 ```
 
+### Naming a page — give the FULL URL, never the path
+
+Per the global rule, any reply that points at a page on this site prints the
+whole thing, on its own line: `http://localhost:3003/test/voidwalker-holo-gallery`.
+A route group is invisible in the URL, so the mapping is mechanical:
+
+| file                                   | URL                                 |
+| -------------------------------------- | ----------------------------------- |
+| `app/(internal)/test/<name>/page.tsx`  | `http://localhost:3003/test/<name>` |
+| `app/(marketing)/page.tsx`             | `http://localhost:3003/`            |
+| `app/(marketing)/arcs/[slug]/page.tsx` | `http://localhost:3003/arcs/<slug>` |
+| `app/(admin)/<tool>/page.tsx`          | `http://localhost:3003/<tool>`      |
+
+⚠ **3003 is the default, not a guarantee** — `scripts/dev-server.mjs` honours a
+harness-assigned `PORT` and `.claude/launch.json` sets `autoPort`, precisely so
+a second session in this tree gets a free port. Read the port off the running
+server (`preview_start` / `preview_list`, or curl the candidate) before quoting
+a URL; the other session's server is usually the one to attach to.
+⚠ `(internal)` routes are proxy-blocked in production, so a `/test/*` page has
+**no** thoughtform.co URL to offer alongside the local one.
+
 ## Skills Available
 
 Skills live in [`.claude/skills/`](.claude/skills/) and load on demand — don't pull them all into context. Current set:
