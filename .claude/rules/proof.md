@@ -31,7 +31,7 @@ breather).
   `VariantManifold` imports it, so it outlived the drawing it was written for
 - [ADR-068: The glyphed index, the tool dossier, and authored wireframes](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) — the LIVE register + tools-plate contract; see §The glyphed index and §The tool dossier below
 - [ADR-069: The selection morph and the answered configuration](../sentinel/decisions/069-pda-selection-morph-and-answered-configuration.md) — the selected work is the PERSISTENT OBJECT and FLIES between its two homes (1 ↔ 2); reading 02 prints the record's own answers with one reactive readout. See §The selection morph below
-- [ADR-084: The panel fills its housing, and the console lets the corridor through](../sentinel/decisions/084-casefile-panel-fills-its-housing.md) — the LIVE composition of the Studio and ATL rows: six ads on a height-gated second row, the films' seated production block, the console's `--con-ground` transparency and the register's retuned claim + sentence. See §The panel fills its housing below
+- [ADR-084: The panel fills its housing, and the console lets the corridor through](../sentinel/decisions/084-casefile-panel-fills-its-housing.md) — the LIVE composition of the Studio and ATL rows: six ads on a height-gated second row, the films' seated production block, the console's `--con-ground` transparency and the register's retuned claim + sentence. ⚠ **U1 (2026-08-29, owner) GAVE THE THREE SHEETS ONE TEMPLATE** — every sheet ends on a VERDICT BAND (`CaseSheet.verdict`, `.fl-verdict`), and THE RED LINE finally says UGC. See §The sheet template below
 - [ADR-085: Proof design pass — one modular scale, the studio's two pictures (⚠ its ledger + hero is REVERSED)](../sentinel/decisions/085-proof-design-pass.md) — ⚠ **U2 (2026-08-29, owner) IS THE LIVE STATE OF THE MAP, AND IT UNDOES PASS ONE'S READING 01.** The **4×5 CARTRIDGE GRID IS BACK** (all twenty workstreams together, cartridges at k=1, the flight's source is the CLICKED card's own slot) and the LEDGER + HERO is deleted with `HERO_K`, `heroRect`, the `gridRect` compat alias, `totalWorks`, `.fl-pda-roll` and `.fl-pda-rolodex`. ⚠ **NO FLAG** — ADR-070 U35's ruling (a flag is a comparison lever; once the owner has read both live, the losing drawing and its guards go). The LEDGER answered a real defect (~5–7px effective type at 1280×720, ADR-063 §Outstanding) **by showing nineteen fewer cartridges** — and this reading's subject is the ESTATE, which you cannot draw one card at a time. ⚠ **THE ALIAS IS WHY NOTHING FAILED**: `gridRect(_i, layout)` returned the hero rect for every `i`, so `pda-flight`'s eleven per-slot loops walked twenty identical rects and stayed green — **a compatibility alias keeps the call sites compiling and quietly empties what they test** (ADR-069 U1's finding one level down). The flight's `dk < 1` direction assertion (widened to `0.3 < dk < 3` for one day, because `HERO_K` 1.85 > `CORE_K` 1.7 inverted it) is restored — _a bound that admits either direction cannot catch the sign error it was written for_. ⚠ **U2 ALSO PUT THE HUB IN IBM PLEX SANS** — see §The hub speaks below. What still stands from pass one + U1: **FOUR unrelated type ladders collapsed into ONE MODULAR SCALE** on `.fl-case` (`--fl-ratio: 1.2` × `--fl-t0`; every chrome role a named step, `--sh` retired, `--fl-display` shared with `.fl-brief__title` so a sheet's category NAME never outranks the project NAME again — was 33.7px @1920); `MAP_BACKPLANE` OFF (the compound carrier is reading 03, the Backplane drawing unreferenced on disk); **the studio's two policy pictures** from `ai-in-studio-final.pptx` slide 9 on THE LINE sheet (444×484 / 444×444 → WebP q82, `public/arcs/studio-line/*.webp`, optional `image?: CaseImage` on `CaseCompareColumn`, 1:1 cover box in `.fl-cmp__middle`); light-theme `--pda-amb` re-derived through the same line-work step `--con-dim` takes (`rgba(138,107,32,0.88)` → 3.02:1, delivering on ADR-063 U2's promise); the directory row's air (min-height 24→26, padding 3→4, `--fl-directory-gap` compact floor 8→12, funded from `--fl-proof-h`'s coefficient drop); and the `--font-mono`→`--fl-mono` SVG leak fix. Mobile keeps its ADR-083 IA. See §The hub speaks, §The modular scale, and §The LINE sheet's pictures below
 - [ADR-056: Proof casefile at the top of #services](../sentinel/decisions/056-services-proof-casefile.md)
 - [ADR-083: Mobile evidence instruments](../sentinel/decisions/083-mobile-evidence-instruments.md) — proposed phone IA: one stable case seat, explicit BRIEF/PROOF/ARTIFACT modes and a direct four-stop rail
@@ -587,6 +587,67 @@ The Studio and ATL rows' composition, and the console's paint.
   (`.fl-cmp__ex`'s `margin: auto 0 0`, `.fl-caps--sheet`'s `align-content:
 center`); seated verdict bands and a fourth `THE PROCESS` sheet were offered
   and not taken.
+
+## The sheet template (ADR-084 U1, live)
+
+The three Studio sheets shared a rail and nothing else — a grid of images, a
+bespoke two-column comparison, a borrowed four-band list (owner, 2026-08-29:
+_"each of them looks completely different"_). The band is the shared member.
+
+- **EVERY SHEET ENDS ON ITS VERDICT.** `CaseSheet.verdict: { kicker, copy }` —
+  a mono designation and one sentence, rendered as `.fl-verdict`. It is the
+  SOURCE DECK'S own grammar: slides 3, 9 and 10 of `ai-in-studio-final.pptx`
+  each close on one band under `PRINCIPLE` / `POSITION`. The body is the
+  evidence; the band is what the evidence means.
+- ⚠ **IT IS NOT `.fl-con__foot`, AND THE SMOKE STILL BANS THAT.** ADR-068 U2
+  stands: no plate prints a console foot, because that slot is ROW chrome
+  saying one thing under whatever the rail shows. This is SHEET content — it
+  switches with the rail — and it rides `.fl-filmprod`'s seat: a
+  `flex: 0 0 auto` SIBLING of the body inside `.fl-con__field`, the body
+  keeping `flex: 1 1 auto`, a `--con-hair` top seam, kicker on
+  `--fl-chrome-sm`/.2em, sentence in PP Neue Montreal on `--fl-copy`.
+- ⚠ **ALWAYS ON**, where `.fl-filmprod` is tall-gated. That block is
+  supplementary record about a row; this is each sheet's punchline, and on THE
+  RED LINE it is the only place the surface says UGC. A verdict that hides at
+  1280×720 is a sheet that stopped arguing at the binding viewport.
+- ⚠ **REQUIRED BY THE REGISTRY, OPTIONAL IN THE TYPE** — so the template cannot
+  erode one sheet at a time. Kicker ≤16, copy ≤160 (two lines at the narrowest
+  field). `.fl-caps--sheet + .fl-verdict` drops the top border: the red line's
+  grid already ends on its own hairline and two seams a pixel apart read as a
+  glitch.
+- **`CaseFact.tag` IS THE DECK'S RISK CATEGORY** (BRAND · REPUTATION ·
+  FINANCIAL · PARTNERSHIP RISK) — what turns four sentences into one ranked
+  argument, because the reader takes the AXIS before the claim. ⚠ ALL-OR-NONE
+  per sheet, registry-enforced: a tag on some bands emphasises those, and these
+  four are of equal rank. ⚠ Placed at grid **row 1 / column 1 explicitly** — a
+  third auto-placed child breaks the claim↔evidence baseline pair; absent, the
+  auto row collapses to 0 and an untagged sheet renders byte-identically.
+- ⚠ **THE FIGURE IS SIZED FROM ITS HEIGHT AND IT SHRINKS.** `.fl-cmp__figure`
+  is THE LINE's squeeze absorber (middle `1fr` row, every sibling `auto`) and
+  every term sizing it was a WIDTH — so it absorbed nothing when the band took
+  ~83px of HEIGHT, and at 1280×720 the middle wanted **301px in a 259.6px
+  row**. `.fl-cmp__middle` STRETCHES to its row now (a definite box) and the
+  figure is `flex: 0 1 auto; min-height: 0` with its size on `height`: the
+  layout does the arithmetic, and the clamp is a CEILING for tall viewports
+  rather than a size. ⚠ **A fixed `svh` cap was the first fix and it is the
+  wrong shape** — the overflow depends on the row's height AND the
+  description's wrap, so one coefficient lands at 720h and misses at 800h.
+- ⚠ **A SYMMETRIC OVERFLOW REPORTS ZERO, AND THAT IS HOW THIS SHIPPED BROKEN
+  FOR AN HOUR.** `align-self: center` spills content equally through the head
+  above and the exemplars below, so `scrollHeight === clientHeight` and
+  `capture-casefile-rows` printed `OK` on the frame it had just broken. This
+  file already named the failure mode one plate over. **It was found by LOOKING
+  at the station.** The landing's clip sweep now walks EVERY station of a
+  sheets row (it read each row on its DEFAULT station only, so THE LINE and THE
+  RED LINE were never measured on the landing) and asserts the head is not
+  clipped above its box and the middle does not print through the exemplars.
+- ⚠ **THE ARC GAINED A QUESTION RATHER THAN LOSING ONE.** The band takes 64–83px
+  of that console, so `fillH` was expected to fall through its 0.7 pin — it does
+  not (measured 0.774 → 0.83; the box is landscape and the tiles are one row),
+  **so the pin stays rather than being "retuned" to a number the change did not
+  require.** New: `fillUnion` (tiles' top → band's bottom vs the console,
+  measured 0.922–0.939, pinned > 0.85), the band on every station, and the four
+  tags rendering. Two-surface change — run BOTH smokes.
 
 ## The glyphed index and the tool dossier (ADR-068, live)
 

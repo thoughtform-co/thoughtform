@@ -297,11 +297,9 @@ the previous pass assumed.
 
 ## Left open
 
-- **THE LINE still carries two moderate gaps** — ~250px above its reading block
-  and ~200px below — where it had one 630px hole. Bigger type and three anchors
-  bought most of it back; the rest is a content question. Seated verdict bands
-  carrying the studio's own boundary sentence and UGC policy are the ready
-  answer, and the copy for both is in the two source decks.
+- ~~**THE LINE still carries two moderate gaps**~~ — **TAKEN UP IN U1**
+  (2026-08-29). The seated verdict bands this bullet named are the answer the
+  owner asked for, on all three sheets rather than two. See Update 1 below.
 - **A fourth `THE PROCESS` sheet** — the deck's brief → generation → copy →
   design chain with the AI/human split — was offered and not taken. It is the
   one addition that would make the Studio panel a _drawn_ instrument like the map
@@ -311,3 +309,135 @@ the previous pass assumed.
   record in the seated block reaches it.
 - **`--pda-txt3` now fails the light walk**, not merely the dark reading. It is
   an owner call on the ramp's ink rung, not a fix this pass should make silently.
+
+---
+
+## Update 1 — one template, three sheets, and the surface says UGC (2026-08-29, owner)
+
+> _"The most discombobulated project is the AI Fluency Studio. We have the
+> visuals, we have the line, and then we have the red line. Each of them
+> looks completely different… I think we need some sort of templates where
+> maybe at the bottom we have some information. In the presentation I
+> shared, it's clear about user-generated content (UGC), but it's not
+> clear here."_
+
+Two complaints, one cause. The three sheets shared a `ConsoleRail` and
+nothing else: a bare grid of images, a bespoke three-anchor two-column
+comparison, and a borrowed four-band list. Three documents behind one rail.
+
+### The template is a verdict band
+
+Every sheet now ends on its own designation and one sentence —
+`CaseSheet.verdict: { kicker, copy }`, rendered as `.fl-verdict`. That is
+**the source deck's own grammar**: slides 3, 9 and 10 of
+`ai-in-studio-final.pptx` each close on a single bottom band under its
+designation (`PRINCIPLE`, `POSITION`) carrying the sentence the slide
+exists to deliver. The body is the evidence; the band is what the evidence
+means.
+
+⚠ **IT IS NOT THE CONSOLE FOOT, AND THE DISTINCTION IS THE WHOLE
+ARGUMENT.** ADR-068 U2's ruling stands — no plate prints a `foot`, and the
+smoke still fails on any `.fl-con__foot`. That slot is ROW-level chrome
+saying the same thing under whatever the rail is showing. This is SHEET
+content: it switches with the rail, and it rides the films row's own
+production-block seat (`flex: 0 0 auto` sibling inside `.fl-con__field`,
+the body keeping `flex: 1 1 auto`).
+
+⚠ **ALWAYS ON, where `.fl-filmprod` is gated at `(min-width: 1200px) and
+(min-height: 1070px)`.** That block is supplementary record about a row;
+this is each sheet's punchline. A sheet whose verdict hides at 1280×720 is
+a sheet that stopped making its argument at the binding viewport.
+
+⚠ **REQUIRED BY THE REGISTRY, OPTIONAL IN THE TYPE** — so the template
+cannot erode one sheet at a time. Budgets: kicker ≤16, copy ≤160 (two
+lines at the narrowest field the band renders in).
+
+### THE RED LINE says what it is about
+
+The four risks named "a person recommending the brand" and "creators", and
+a reader who did not already know the subject had to infer it from four
+angles: **the sheet argued the case without ever stating the charge.** Its
+band opens on slide 10's own title — `AI-generated UGC is off the table.`
+— and closes on its POSITION. And `CaseFact.tag` brings the deck's risk
+categories back over each claim (BRAND · REPUTATION · FINANCIAL ·
+PARTNERSHIP RISK), which is what turns four sentences into one ranked
+argument: the reader takes the axis before the claim.
+
+⚠ **ALL-OR-NONE, registry-enforced.** A tag on some bands emphasises
+those, and the sheet's argument is that the four risks are of equal rank.
+⚠ **Placed at grid row 1 / column 1 explicitly** — a third auto-placed
+child would break the claim↔evidence baseline pairing the band is built
+on; absent, the auto row collapses to zero and an untagged facts sheet
+renders byte-identically.
+
+### The figure is sized from its height now, and it shrinks
+
+⚠ **THE BAND BROKE THE LINE AT 1280×720 THE DAY IT SHIPPED.** The
+`.fl-cmp__figure` is that column's squeeze absorber — it sits in the
+middle `1fr` row while every sibling is `auto` — but every term sizing it
+was a WIDTH (`min(100%, clamp(180px, 22vw, 320px))`), so it absorbed
+nothing when the band took ~83px off the row's HEIGHT. Measured: the
+middle wanted **301px in a 259.6px row**, and the 41px it could not give
+back came out as a spill through the column's head and its exemplars.
+
+⚠ **AND EVERY GUARD STAYED GREEN.** `.fl-cmp__middle` was
+`align-self: center`, so content taller than its row overflows
+**symmetrically** — and a symmetric overflow reports
+`scrollHeight === clientHeight`. `capture-casefile-rows` printed `OK` on
+the frame it had just broken. `.claude/rules/proof.md` names this exact
+failure mode one plate over ("the centred column's SYMMETRIC overflow,
+which reports zero") and it still caught nobody. **It was found by looking
+at the station.**
+
+The fix is structural, not a coefficient: `.fl-cmp__middle` stretches to
+its row (so the row is a definite box) and the figure is
+`flex: 0 1 auto; min-height: 0` with its size on `height`, so the layout
+does the arithmetic — the figure takes what the read block leaves, at
+every height, and the clamp becomes a CEILING for tall viewports rather
+than a size.
+
+⚠ **A FIXED `svh` CAP WAS THE FIRST FIX AND IT IS THE WRONG SHAPE.** The
+overflow depends on the row's height AND the description's wrap, so one
+coefficient lands at 720h and misses at 800h — it was measured doing
+exactly that. Measured after: middle content 248.1 in a 259.6 row at
+1280×720 (7.9px clear of the exemplars), 283.9 in 296.7 at 1440×800
+(8.8px clear), and at the owner's 1247h the figure sits at its 320 ceiling
+unshrunk — **byte-identical to what shipped**.
+
+### The guards that were missing
+
+- **The landing's clip sweep read each row on its DEFAULT station only**,
+  so THE LINE and THE RED LINE were never measured on the landing at all.
+  It now walks every station of a sheets row and asserts the column's head
+  is not clipped above its own box and the middle does not print through
+  the exemplars — the two halves of a symmetric spill, which no overflow
+  number can express.
+- **`.fl-verdict` presence** on the sheets row, and `.fl-verdict__p` joins
+  the prose-selector pin list (its kicker inherits `--fl-mono` and is
+  covered by the family sweep).
+- **The arc gained a question rather than losing one.** The band takes
+  64–83px of that console, so `fillH` was expected to fall through its 0.7
+  pin — measured, it does not (0.774 at 1280×720 → 0.83 at 1920×1247,
+  because that box is landscape and the tiles are one row), **so the pin
+  stays where it was rather than being "retuned" to a number the change
+  did not require.** What is new is the UNION — the tiles' top to the
+  band's bottom, everything under the rail — which is the honest form of
+  "the panel fills its housing" now that two things fill it (measured
+  0.922–0.939 against a 0.85 floor). Plus the band on every station and
+  the four tags rendering.
+
+### Result
+
+`cases-registry` 38 pass with the new pins and the envelope scan over the
+new copy. `arc-portfolio-smoke` 22 pass. `services-ring-smoke`: the clip
+sweep passes including the new station walk; the one failure is the
+PRE-EXISTING ambient-hold case, confirmed identical with the change
+stashed. Captured at 1280×720 / 1440×800 / 1920×1247 in both themes,
+every station.
+
+### Still open
+
+- **A fourth `THE PROCESS` sheet** — unchanged from above, and now cheaper:
+  a new sheet inherits the template rather than inventing a layout.
+- **THE LINE's remaining air** is smaller but not gone at tall viewports,
+  where the figure sits at its ceiling and the band is a fixed cost.

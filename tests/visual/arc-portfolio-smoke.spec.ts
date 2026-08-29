@@ -953,9 +953,16 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
           const host = document.querySelector<HTMLElement>(".arc-sheets");
           const con = host?.querySelector<HTMLElement>(".fl-con__console");
           const body = host?.querySelector<HTMLElement>(".fl-stills");
+          const band = host?.querySelector<HTMLElement>(".fl-verdict");
           const cb = con?.getBoundingClientRect();
           const bb = body?.getBoundingClientRect();
+          const vb = band?.getBoundingClientRect();
           return {
+            bandH: vb ? Math.round(vb.height) : 0,
+            /* The body and its verdict TOGETHER are what fills the field
+               now — everything under the rail. Measuring the stills alone
+               would read the band's height as emptiness. */
+            fillUnion: bb && vb && cb ? (vb.bottom - bb.top) / cb.height : 0,
             stations: [...(host?.querySelectorAll('[role="tab"]') ?? [])].map((t) =>
               (t.textContent ?? "").trim()
             ),
@@ -984,7 +991,19 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
         expect(sheets.conH, `sheets console height @ ${at}`).toBeGreaterThanOrEqual(430);
         expect(sheets.conW, `sheets console width @ ${at}`).toBeGreaterThanOrEqual(500);
         /* ⚠ BOTH AXES AND THE ASPECT (the ADR-070/076 lesson): a
-           height-only fill guard reports green on a box a third empty. */
+           height-only fill guard reports green on a box a third empty.
+           ⚠ **THE VERDICT BAND ADDED A QUESTION; IT DID NOT REPLACE ONE**
+           (2026-08-29). The band takes 64–83px of the console, so `fillH`
+           was expected to fall through its 0.7 pin — measured, it does
+           not: 0.774 at 1280×720 rising to 0.83 at 1920×1247, because
+           this box is landscape and the tiles are one row. The pin stays
+           where it was rather than being "retuned" to a number the change
+           did not require. What IS new is the UNION — the tiles' top to
+           the band's bottom, i.e. everything under the rail — which is
+           the honest form of "the panel fills its housing" now that two
+           things fill it (measured 0.922–0.939 against a 0.85 floor). */
+        expect(sheets.bandH, `every sheet ends on its verdict @ ${at}`).toBeGreaterThan(24);
+        expect(sheets.fillUnion, `body + verdict fill the console @ ${at}`).toBeGreaterThan(0.85);
         expect(sheets.fillH, `sheets body fills its height @ ${at}`).toBeGreaterThan(0.7);
         expect(sheets.fillW, `sheets body fills its width @ ${at}`).toBeGreaterThan(0.85);
         expect(sheets.aspect, `sheets aspect @ ${at}`).toBeGreaterThan(1.2);
@@ -1001,12 +1020,26 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
           tabs[1].click();
           await new Promise((r) => setTimeout(r, 260));
           const cols = host.querySelectorAll(".fl-cmp__col").length;
+          const bandLine = !!host.querySelector(".fl-verdict");
           tabs[2].click();
           await new Promise((r) => setTimeout(r, 260));
-          return { cols, facts: host.querySelectorAll(".fl-cap").length };
+          return {
+            cols,
+            bandLine,
+            facts: host.querySelectorAll(".fl-cap").length,
+            bandRed: !!host.querySelector(".fl-verdict"),
+            /* The deck's risk designations — all four or none (the
+               registry pins the data; this pins that they RENDER). */
+            tags: host.querySelectorAll(".fl-cap__tag").length,
+          };
         });
         expect(line.cols, `THE LINE draws ONE boundary, two columns @ ${at}`).toBe(2);
         expect(line.facts, `THE RED LINE's four claims @ ${at}`).toBe(4);
+        /* The template is the point: a band on EVERY station, not just the
+           one the panel happens to open on. */
+        expect(line.bandLine, `THE LINE carries its verdict @ ${at}`).toBe(true);
+        expect(line.bandRed, `THE RED LINE carries its verdict @ ${at}`).toBe(true);
+        expect(line.tags, `THE RED LINE's four risk designations @ ${at}`).toBe(4);
 
         // ── THE REEL ───────────────────────────────────────────────
         await restAt(page, "studio-films");

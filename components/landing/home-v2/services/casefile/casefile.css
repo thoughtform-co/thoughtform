@@ -4872,6 +4872,38 @@
   overflow: visible;
   text-overflow: clip;
 }
+
+/* ── The band's category designation ──────────────────────────────────────
+   The deck's own risk kicker over each claim (BRAND RISK, REPUTATION RISK,
+   …), which is what makes four statements read as one ranked argument
+   instead of four separate worries: the reader takes the AXIS first.
+
+   ⚠ **PLACED EXPLICITLY, because a third child breaks auto-placement.**
+   The band is a two-column grid whose whole read depends on the claim and
+   its evidence sharing a BASELINE row; an auto-placed tag would push the
+   evidence into row 2 on its own and split the pair. Row 1 / column 1 keeps
+   the pair intact — and when no tag is present the auto row collapses to
+   zero, so an untagged facts sheet renders byte-identically to before.
+   ⚠ FALLBACK: `.arc-sheets` does not declare --fl-chrome-sm (see fl-cmp
+   comment) — the value matches --fl-chrome-sm's own derivation on .fl-case. */
+.fl-caps--sheet .fl-cap__tag {
+  grid-column: 1;
+  grid-row: 1;
+  padding-bottom: 3px;
+  font-family: var(--fl-mono);
+  font-size: var(--fl-chrome-sm, max(10px, calc(clamp(11px, min(0.86vw, 1.11svh), 12px) / 1.2)));
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fl-ink-dim, rgba(var(--dawn-rgb), 0.4));
+}
+.fl-caps--sheet .fl-cap__t {
+  grid-column: 1;
+  grid-row: 2;
+}
+.fl-caps--sheet .fl-cap__d {
+  grid-column: 2;
+  grid-row: 2;
+}
 /* No capture above this grid, so there is nothing competing for the height —
    the clamp is a pure belt here and can sit well clear of today's copy. The
    evidence sentence is PROSE and lives on --fl-copy with the brief body. */
@@ -4928,10 +4960,19 @@
    (LINE sheet, 2026-08-28 U2) and the read block, stacked. When the image
    is absent the read block sits alone and centres itself via the `justify`
    below, so the compat path stays byte-identical. */
+/* ⚠ **IT STRETCHES TO ITS ROW; IT DOES NOT CENTRE IN IT** (2026-08-29).
+   `align-self: center` on a box whose content outgrows its row spills
+   SYMMETRICALLY — half up through the column's head, half down into the
+   exemplars — and because the spill is symmetric `scrollHeight` equals
+   `clientHeight`, so every overflow guard on this surface reports zero. It
+   was found by looking at a capture. Stretching makes the row the box, so
+   the figure below has a definite height to shrink against; `justify-content`
+   keeps the pair optically centred whenever there IS slack, which is the
+   only thing `align-self: center` was buying. */
 .fl-cmp__middle {
   min-width: 0;
   min-height: 0;
-  align-self: center;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4940,13 +4981,46 @@
   width: 100%;
 }
 
+/* The read block never gives up height — the claim and its description are
+   the argument. The figure is the absorber (below). */
+.fl-cmp__read {
+  flex: 0 0 auto;
+}
+
 /* The evidence figure — a 1:1 box with cover-crop keeps both columns'
    image shapes identical (the compare sheet's argument is ONE line between
    two categories; different image shapes would read as a table). Width
-   caps against the column so it never crowds the copy beneath. */
+   caps against the column so it never crowds the copy beneath.
+
+   ⚠ **IT IS SIZED FROM ITS HEIGHT AND IT SHRINKS** (2026-08-29, with the
+   verdict band). The figure is this column's squeeze absorber — it sits in
+   the middle `1fr` row and every sibling is `auto` — but it was sized by
+   WIDTH terms alone, so it absorbed nothing when the band took ~85px off
+   the row's HEIGHT. Measured at 1280×720: the middle wanted 301px in a
+   259.6px row, and the 41px it could not give back came out as a
+   symmetric spill through the column's head and its exemplars.
+
+   ⚠ **AND EVERY GUARD STAYED GREEN.** A symmetric overflow reports
+   `scrollHeight === clientHeight`, so the capture script's sweep read OK
+   on the frame it had just broken. `.claude/rules/proof.md` names this
+   exact failure mode one plate over, and it still caught nobody — it was
+   found by LOOKING at the station.
+
+   ⚠ **A FIXED `svh` CAP WAS THE FIRST FIX AND IT IS THE WRONG SHAPE** —
+   the overflow depends on the row's height AND the description's wrap, so
+   one coefficient lands at 720h and misses at 800h. `flex: 0 1 auto` with
+   `min-height: 0` against a stretched parent is the same idea with the
+   arithmetic done by the layout: the figure takes what the read block
+   leaves, at every height, and the `clamp` is a CEILING for tall
+   viewports rather than a size. At the owner's 1247h nothing shrinks and
+   the figure is byte-identical to what shipped. */
 .fl-cmp__figure {
   margin: 0;
-  width: min(100%, clamp(180px, 22vw, 320px));
+  flex: 0 1 auto;
+  min-height: 0;
+  height: min(100%, clamp(180px, 22vw, 320px));
+  width: auto;
+  max-width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
   border: 1px solid rgba(var(--gold-rgb), 0.22);
@@ -5091,6 +5165,76 @@
     -webkit-line-clamp: 5;
     line-clamp: 5;
   }
+}
+
+/* ══ The verdict band — ONE template across the three sheets ════════════
+   THE THREE SHEETS SHARED A RAIL AND NOTHING ELSE (owner, 2026-08-29 —
+   "each of them looks completely different… we need some sort of
+   templates where maybe at the bottom we have some information"). A grid
+   of images, a bespoke two-column comparison and a borrowed four-band
+   list: three documents behind one rail. The band is the shared member —
+   every sheet ends on its own designation and one sentence, which is the
+   SOURCE DECK'S own grammar (slides 3, 9 and 10 each close on a single
+   band under PRINCIPLE / POSITION).
+
+   ⚠ **IT IS NOT `.fl-con__foot`.** The console's foot slot stays empty on
+   every plate (ADR-068 U2, owner; the smoke fails on any `.fl-con__foot`)
+   because that is ROW-level chrome. This is SHEET content: it switches
+   with the rail. It rides the FILMS ROW'S SEAT instead — a
+   `flex: 0 0 auto` sibling of the body inside `.fl-con__field`, so the
+   body keeps its `flex: 1 1 auto` and the band takes its height off the
+   body's air rather than out of the frame (`.fl-filmprod`, below).
+
+   ⚠ **ALWAYS ON, where `.fl-filmprod` is tall-gated.** That block is
+   supplementary record about a row; this is each sheet's punchline, and
+   on THE RED LINE it is the only place the surface says UGC. A sheet
+   whose verdict hides at 1280×720 is a sheet that stopped making its
+   argument at the binding viewport.
+
+   ⚠ **FALLBACKS ON EVERY `var(--fl-*)`, AND THEY ARE NOT DECORATION.**
+   This plate has two homes and `.arc-sheets` declares only `--fl-mono`,
+   `--fl-copy` and `--fl-shot-px` — an unset custom property INVALIDATES
+   the whole declaration, so a bare `var(--fl-chrome-sm)` here paints the
+   kicker at the UA default on the arc. Values are byte-copies of the
+   `.fl-case` clamps they mirror. */
+.fl-verdict {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.7svh, 8px);
+  padding: clamp(10px, 1.6svh, 16px) var(--fl-plate-px, clamp(16px, 1.8vw, 24px))
+    clamp(12px, 1.8svh, 20px);
+  border-top: 1px solid var(--con-hair);
+  /* Declared, never inherited — the console's own family is `--font-mono`
+     (IBM Plex), so anything that stays silent here picks up a THIRD face
+     (ADR-067's recurring bug). */
+  font-family: var(--fl-mono);
+}
+
+/* THE RED LINE's grid already ends on its own hairline (`.fl-cap:last-child`
+   carries a bottom border), and two seams a pixel apart read as a rendering
+   glitch rather than as a division. */
+.fl-caps--sheet + .fl-verdict {
+  border-top: 0;
+}
+
+.fl-verdict__k {
+  font-size: var(--fl-chrome-sm, max(10px, calc(clamp(11px, min(0.86vw, 1.11svh), 12px) / 1.2)));
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fl-ink-dim, rgba(var(--dawn-rgb), 0.4));
+}
+
+.fl-verdict__p {
+  margin: 0;
+  /* A measure cap, for the arc's wider box — a 150-character sentence run
+     across 1100px is one long line, and the band reads as a caption. */
+  max-width: 900px;
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+  font-size: var(--fl-copy, calc(clamp(15px, 1.15vw, 18px) * 0.9));
+  line-height: 1.4;
+  letter-spacing: 0.008em;
+  color: rgba(var(--dawn-rgb), 0.88);
 }
 
 /* ══ Films — ONE film at panel scale, poster-first ══════════════════════
@@ -5733,6 +5877,13 @@
   }
   .fl-caps--sheet {
     padding: 14px 0;
+  }
+
+  /* The verdict stays in flow — like `.fl-filmprod`, this is a CONTENT
+     decision rather than a fit one: the sentence is what the sheet is for.
+     Only the rails retune, to the 12px the stacked bodies above it use. */
+  .fl-verdict {
+    padding: 14px 12px 4px;
   }
 
   .fl-stills {

@@ -1665,14 +1665,30 @@ const STUDIO_SHOTS = [
  * row's visual in `cases-registry.test.ts`.
  */
 export const LOOP_STUDIO_SHEETS = [
-  /* ⚠ THE SHEET FEET ARE GONE (owner, 2026-08-08 — the console prints no
-     foot on any plate now). The three sentences the sheets printed — the
-     live-assets line, the identity-claim/function line and the
-     creator-pipeline line — live in git; the LINE sheet's argument is
-     still carried by its own two columns. */
+  /* ⚠ THE SHEET FEET WENT AND THE VERDICT BAND IS NOT THEM COMING BACK.
+     The 2026-08-08 removal took the console's FOOT SLOT off every plate,
+     which is ROW-level chrome and stays empty (smoke-asserted). This is
+     SHEET content — one band per sheet, inside the field, switching with
+     the rail — and it exists because three sheets sharing a rail and
+     nothing else read as three different documents (owner, 2026-08-29:
+     "each of them looks completely different").
+
+     ⚠ THE KICKER + SENTENCE SHAPE IS THE SOURCE DECK'S OWN. Slides 3, 9
+     and 10 of `ai-in-studio-final.pptx` each end on a single bottom band
+     under its own designation — PRINCIPLE on the imagery policy, POSITION
+     on the red line. The body is the evidence; the band is what the
+     evidence means. */
   {
     id: "ads",
     label: "THE ADS",
+    /* The deck's own closing line for the ad wall, minus the tool names:
+       the in-ear placement engine is a third-party vendor this case does
+       not name (see the genericisation note above), and naming only the
+       one tool we may publish would read as the whole pipeline. */
+    verdict: {
+      kicker: "THE STANDARD",
+      copy: "Live campaign assets, not mockups — generated end to end or placed into real photography, and in daily production use.",
+    },
     /* Shared BY REFERENCE with the beat and the keynote arc — re-typing this
        array is how three surfaces start describing the same ad differently. */
     body: { kind: "stills", shots: STUDIO_SHOTS },
@@ -1680,6 +1696,14 @@ export const LOOP_STUDIO_SHEETS = [
   {
     id: "line",
     label: "THE LINE",
+    /* Slide 9's PRINCIPLE band, verbatim. It is the sentence the whole
+       two-column comparison exists to earn, and it was one of the three
+       sheet feet deleted in 2026-08 — restored here in the shape the deck
+       gives it rather than as a caption under a console. */
+    verdict: {
+      kicker: "THE PRINCIPLE",
+      copy: "If the image makes an identity claim, it requires real photography. If it illustrates a scenario, AI is appropriate.",
+    },
     body: {
       kind: "compare",
       /* ⚠ THE TWO IMAGES ARE EXTRACTED FROM THE ORIGINAL DECK (2026-08-28
@@ -1733,22 +1757,48 @@ export const LOOP_STUDIO_SHEETS = [
   {
     id: "red-line",
     label: "THE RED LINE",
+    /* ⚠ **THIS IS WHERE THE SURFACE SAYS UGC** (owner, 2026-08-29: "the red
+       line is for UGC… in the presentation it's clear about user-generated
+       content, but it's not clear here"). The four risks below name a
+       "person recommending the brand" and "creators", and a reader who does
+       not already know the subject has to infer it from four different
+       angles — the sheet argued the case without stating the charge. Slide
+       10 opens on its title, `AI-generated UGC is off the table.`, and
+       closes on its POSITION; both halves are here, in one band.
+
+       The genericisation holds: the deck names three synthetic-creator
+       products in its intro and none travels. What survives is the policy,
+       which is the part that is Loop's. */
+    verdict: {
+      kicker: "THE POSITION",
+      copy: "AI-generated UGC is off the table. We use AI to make the pipeline faster — briefing, editing, localization — never to replace the creators in it.",
+    },
     body: {
       kind: "facts",
+      /* ⚠ THE TAGS ARE THE DECK'S OWN RISK CATEGORIES, and they are what
+         turn four sentences into a ranked set: the reader takes the AXIS
+         before the claim, so the four read as one argument covering brand,
+         audience, revenue and partnership rather than four worries. All
+         four carry one — a tag on some bands would emphasise those, and the
+         point is that the risks are of equal rank (registry-enforced). */
       facts: [
         {
+          tag: "BRAND RISK",
           title: "Credibility collapse",
           desc: "A person recommending the brand who does not exist. Social proof stops being proof.",
         },
         {
+          tag: "REPUTATION RISK",
           title: "Public backlash",
           desc: "Audiences watch for this. The conversation moves from the product to the deception.",
         },
         {
+          tag: "FINANCIAL RISK",
           title: "Revenue exposure",
           desc: "The channel that depends most on audience trust is the one a backlash reaches first.",
         },
         {
+          tag: "PARTNERSHIP RISK",
           title: "Creator relationships",
           desc: "The creators who stay loyal through growth are the first ones lost when trust breaks.",
         },

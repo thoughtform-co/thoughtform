@@ -1671,6 +1671,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         const foot = document.querySelector<HTMLElement>(".fl-con__foot");
         if (foot) return { kind, ok: false, why: "a console foot came back on this row" };
 
+        // ── AND THE SHEET'S VERDICT IS NOT THAT FOOT ───────────────────
+        // The band above is ROW chrome hung off the frame; `.fl-verdict` is
+        // SHEET content inside the field, and it switches with the rail
+        // (owner, 2026-08-29). Three sheets sharing a rail and nothing else
+        // read as three documents, so the band is the template's one shared
+        // member — a sheets row without one has lost the thing that made it
+        // one instrument.
+        if (kind === "sheets" && !document.querySelector(".fl-verdict"))
+          return { kind, ok: false, why: "the sheet lost its verdict band" };
+
         // ── TWO FAMILIES, AND EACH DOES ITS OWN JOB ────────────────────
         // ⚠ THIS IS THE GUARD THAT WOULD HAVE CAUGHT THE LAST TWO FONT
         // BUGS. `--font-sans` was declared nowhere, so the foot rendered in
@@ -1707,6 +1717,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           ".fl-cap__d",
           ".fl-cmp__desc",
           ".fl-proof-register__description",
+          // The verdict band's sentence (2026-08-29). Its kicker inherits
+          // `--fl-mono` from the band and is covered by the sweep above.
+          ".fl-verdict__p",
         ]) {
           const el = document.querySelector(sel);
           if (el && famOf(el) !== "PP Neue Montreal")
@@ -1793,6 +1806,51 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       // anything real is a whole line of type or more.
       for (const o of overflow) {
         if (o.over > 1) clipped.push(`${o.row} — ${o.box} clips ${o.over}px`);
+      }
+
+      // ── EVERY SHEET, NOT JUST THE ONE THE ROW OPENS ON ────────────────
+      // ⚠ THE SWEEP ABOVE READS EACH ROW ON ITS DEFAULT STATION, so THE
+      // LINE and THE RED LINE were never measured on the landing — and
+      // the verdict band broke THE LINE at 1280×720 the day it shipped:
+      // `.fl-cmp__middle` centres in its row, so content that outgrows the
+      // row spills SYMMETRICALLY, the head clipping under the column's
+      // `overflow: hidden` while the description printed through the
+      // exemplars. **A symmetric spill reports `scrollHeight ===
+      // clientHeight`**, so no overflow number could have caught it; the
+      // column's own rows are what has to be compared.
+      const isSheets = await page.locator(".fl-plate--sheets").count();
+      if (isSheets) {
+        const stns = await page.locator(".fl-con__stn").count();
+        for (let s = 0; s < stns; s += 1) {
+          await page.locator(".fl-con__stn").nth(s).click();
+          await page.waitForTimeout(360);
+          const spill = await page.evaluate(() => {
+            const bad: string[] = [];
+            const label =
+              document.querySelector(".fl-con__stn[data-on] b")?.textContent?.trim() ?? "?";
+            for (const col of document.querySelectorAll<HTMLElement>(".fl-cmp__col")) {
+              const cr = col.getBoundingClientRect();
+              // The head is the first thing a symmetric spill eats.
+              const head = col.querySelector<HTMLElement>(".fl-cmp__head");
+              const ex = col.querySelector<HTMLElement>(".fl-cmp__ex");
+              const mid = col.querySelector<HTMLElement>(".fl-cmp__middle");
+              if (head && head.getBoundingClientRect().top < cr.top - 0.5)
+                bad.push(`${label}: the column head is clipped above its own box`);
+              if (
+                mid &&
+                ex &&
+                mid.getBoundingClientRect().bottom > ex.getBoundingClientRect().top + 0.5
+              )
+                bad.push(`${label}: the middle row prints through the exemplars`);
+            }
+            // And the band itself, on every station.
+            if (!document.querySelector(".fl-verdict")) bad.push(`${label}: no verdict band`);
+            return bad;
+          });
+          clipped.push(...spill);
+        }
+        await page.locator(".fl-con__stn").nth(0).click();
+        await page.waitForTimeout(260);
       }
     }
     expect(clipped, `boxes clipping at 1440x800:\n${clipped.join("\n")}`).toEqual([]);

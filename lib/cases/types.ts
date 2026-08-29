@@ -695,6 +695,17 @@ export interface CaseCompareColumn {
 export interface CaseFact {
   title: string;
   desc: string;
+  /**
+   * The band's category designation, in mono caps over the claim — the source
+   * deck's own kicker on each red-line block (`BRAND RISK`, `REPUTATION RISK`,
+   * …). It is what makes four statements read as a RANKED SET rather than four
+   * sentences: the reader learns the axis before the claim.
+   *
+   * ⚠ ALL-OR-NONE PER SHEET, and the registry enforces it. A tag on some bands
+   * and not others reads as emphasis on the tagged ones, and this sheet's whole
+   * argument is that the four risks are of equal rank.
+   */
+  tag?: string;
 }
 
 export type CaseSheetBody =
@@ -709,6 +720,32 @@ export interface CaseSheet {
   id: string;
   /** The rail's label. The FUNCTION, in mono caps, no ordinal. */
   label: string;
+  /**
+   * THE SHEET'S VERDICT, seated at the field's floor (owner, 2026-08-29 —
+   * _"some sort of templates where maybe at the bottom we have some
+   * information"_). Three sheets that shared a rail and nothing else read as
+   * three different documents; one band on each is what makes them one
+   * instrument showing three faces.
+   *
+   * It is the SOURCE DECK'S OWN GRAMMAR — slides 3, 9 and 10 each end on a
+   * single bottom band (`PRINCIPLE`, `POSITION`) carrying the sentence the
+   * slide exists to deliver. The body is evidence; this is what the evidence
+   * MEANS, and on the red line it is where the surface finally says UGC.
+   *
+   * ⚠ **NOT THE CONSOLE FOOT.** `ConsoleFrame`'s `foot` slot stays empty on
+   * every plate (ADR-068 U2, owner; smoke-asserted absent) — that slot is
+   * ROW-level chrome. This is SHEET content: it switches with the rail, and it
+   * renders inside the field on the films row's production-block seat.
+   *
+   * Optional in the type, REQUIRED by the registry test on every sheet — so
+   * the template cannot erode one sheet at a time.
+   */
+  verdict?: {
+    /** Mono caps, the deck's own designation: `THE PRINCIPLE`, `THE POSITION`. */
+    kicker: string;
+    /** One sentence. Prose, in the surface's sans. */
+    copy: string;
+  };
   body: CaseSheetBody;
 }
 

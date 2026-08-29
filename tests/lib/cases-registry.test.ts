@@ -453,6 +453,30 @@ describe("cases registry (ADR-054)", () => {
             // 4-station type rung starts ellipsising past ~22 characters.
             expect(s.label.length, `${c.slug}/${t.id}/${s.id} label`).toBeGreaterThan(0);
             expect(s.label.length, `${c.slug}/${t.id}/${s.id} label`).toBeLessThanOrEqual(22);
+
+            // ⚠ THE TEMPLATE (owner, 2026-08-29 — "some sort of templates
+            // where maybe at the bottom we have some information"): every
+            // sheet ends on its own designation and one sentence. It is
+            // OPTIONAL in the type and REQUIRED here, which is what stops
+            // the template eroding one sheet at a time — a sheet added
+            // without a verdict is three documents behind a rail again.
+            expect(s.verdict, `${c.slug}/${t.id}/${s.id} verdict`).toBeTruthy();
+            if (s.verdict) {
+              // Mono caps on the chrome-sm rung.
+              expect(s.verdict.kicker.length).toBeGreaterThan(0);
+              expect(
+                s.verdict.kicker.length,
+                `${c.slug}/${t.id}/${s.id} kicker "${s.verdict.kicker}"`
+              ).toBeLessThanOrEqual(16);
+              // Two lines at the NARROWEST field the band renders in — the
+              // landing's 1280×720 console, ~563px of measure inside the
+              // plate's rails. A third line eats the body's air.
+              expect(s.verdict.copy.length).toBeGreaterThan(0);
+              expect(
+                s.verdict.copy.length,
+                `${c.slug}/${t.id}/${s.id} verdict copy`
+              ).toBeLessThanOrEqual(160);
+            }
             const b = s.body;
             if (b.kind === "stills") {
               expect(b.shots.length).toBeGreaterThan(0);
@@ -483,10 +507,21 @@ describe("cases registry (ADR-054)", () => {
               }
             }
             if (b.kind === "facts") {
-              // The `.fl-caps` 2×2, the same grid the tools plate uses — so
-              // the same budgets, for the same reason: the title is `nowrap`
-              // and the description clamps to two lines.
+              // Four bands. The budgets are INHERITED from the tools plate's
+              // 2×2, where the title is `nowrap` and the description clamps
+              // to two lines; on its own rail the sheet wraps both and
+              // clamps at four, so these ceilings are stricter than the
+              // layout needs. Kept as a belt — today's longest are 20 and
+              // 89 — but if copy ever wants past them, this comment moves
+              // with the number.
               expect(b.facts.length, `${c.slug}/${t.id}/${s.id} facts`).toBe(4);
+              // ⚠ ALL-OR-NONE. A designation on some bands emphasises those,
+              // and this sheet's argument is that the four are of equal rank.
+              const tagged = b.facts.filter((f) => f.tag).length;
+              expect(
+                [0, b.facts.length],
+                `${c.slug}/${t.id}/${s.id} tags are all-or-none (${tagged}/${b.facts.length})`
+              ).toContain(tagged);
               for (const f of b.facts) {
                 expect(f.title.length, `${c.slug}/${t.id} fact "${f.title}"`).toBeLessThanOrEqual(
                   24
@@ -495,6 +530,10 @@ describe("cases registry (ADR-054)", () => {
                   f.desc.length,
                   `${c.slug}/${t.id} fact "${f.title}" desc`
                 ).toBeLessThanOrEqual(95);
+                // One mono line on the claim's own rail, which is the
+                // narrower of the band's two columns.
+                if (f.tag)
+                  expect(f.tag.length, `${c.slug}/${t.id} tag "${f.tag}"`).toBeLessThanOrEqual(18);
               }
             }
           }

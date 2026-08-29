@@ -22,10 +22,24 @@ import { ConsoleRail } from "./console/ConsoleRail";
  * comparison is new markup. A sheet kind that needs a whole plate of its
  * own is probably a ROW, not a sheet.
  *
- * ⚠ NO FOOT (owner, 2026-08-08 — "remove the text at the bottom of the
- * right panel"). The per-sheet foot sentence left with the map's on the
- * same ruling; `CaseSheet.foot` is deleted, and the sheets' bodies carry
- * their own argument. Git holds the three sentences it printed.
+ * ⚠ NO CONSOLE FOOT (owner, 2026-08-08 — "remove the text at the bottom of
+ * the right panel"). The per-sheet `foot` sentence left with the map's on
+ * the same ruling; `CaseSheet.foot` is deleted and the slot stays empty on
+ * every plate, smoke-asserted.
+ *
+ * ⚠ **THE VERDICT BAND IS NOT THAT FOOT COMING BACK** (owner, 2026-08-29 —
+ * "some sort of templates where maybe at the bottom we have some
+ * information"). The foot is ROW-level chrome hung off `ConsoleFrame`;
+ * `.fl-verdict` is SHEET content — it switches with the rail, it is the
+ * sentence each sheet exists to deliver, and it renders INSIDE the field on
+ * the films row's production-block seat (`flex: 0 0 auto` sibling of the
+ * body, which keeps its own `flex: 1 1 auto`). It is what makes three
+ * sheets that shared a rail and nothing else read as one instrument showing
+ * three faces.
+ *
+ * ⚠ ALWAYS ON, unlike `.fl-filmprod`'s tall-viewport gate. That block is
+ * supplementary record about a row; this is each sheet's punchline, and on
+ * THE RED LINE it is the only place the surface says UGC.
  *
  * ⚠ A SHEET IS NOT A SECOND DIRECTORY. The directory rows are the
  * engagement's bodies of work; sheets are facets of ONE of them. If a sheet
@@ -67,6 +81,12 @@ export function SheetsPlate({
       }
     >
       <SheetBody sheet={sheet} stillSizes={stillSizes} />
+      {sheet.verdict ? (
+        <div className="fl-verdict">
+          <span className="fl-verdict__k">{sheet.verdict.kicker}</span>
+          <p className="fl-verdict__p">{sheet.verdict.copy}</p>
+        </div>
+      ) : null}
     </ConsoleFrame>
   );
 }
@@ -160,6 +180,10 @@ function SheetBody({ sheet, stillSizes }: { sheet: CaseSheet; stillSizes: string
         <ul className="fl-caps fl-caps--tool fl-caps--sheet">
           {body.facts.map((f) => (
             <li className="fl-cap" key={f.title}>
+              {/* The category designation over the claim — the reader takes
+                  the AXIS before the statement, which is what makes four
+                  bands read as one ranked argument. */}
+              {f.tag ? <span className="fl-cap__tag">{f.tag}</span> : null}
               <span className="fl-cap__t">{f.title}</span>
               <span className="fl-cap__d">{f.desc}</span>
             </li>
