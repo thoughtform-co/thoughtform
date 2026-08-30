@@ -1699,8 +1699,32 @@ which is why the middle imp had to GO rather than move aside.
   table, and per-group material dimming. `find-creature.mjs` is new.
 - v7's four assets deleted in the same commit v8 lands. Payload 2.33 MB.
 
+### …and the class came back out (v9, same day, owner)
+
+> "let's make a scene without the kids"
+
+**v9 is v8 with the class removed and NOTHING ELSE RETUNED**, which is what
+makes the pair readable as the difference the class made rather than as two
+different compositions. What v8 got right survives untouched: the imps out of
+the middle, standing at his shoulders facing the way he faces.
+
+⚠ **THE "LEFT OPEN" NOTE BELOW PREDICTED THIS, AND THAT IS THE USEFUL PART.**
+Three children at ~150px each read as a huddle rather than as a class — the
+same scale problem the imps hit at four, one group later. **The space is worth
+more empty than filled with figures too small to be read as what they are.**
+
+⚠ **THE MACHINERY STAYS.** `--kids`, `KID_DIM`, the seated-idle preference and
+the sit-variation alternation all remain in `holo-scene.py`; only the call site
+is shorter. They are correct and they cost nothing unused, and the question
+("can the era show the class?") is a good one that came back once already.
+
+Anchors unchanged again at 0.1586 / 0.9695 — v5 through v9. ⚠ And with the
+flankers alone the composite's foot row is CONSTANT at 1241 across all 149
+frames, so `measure.py`'s wandering-foot warning correctly does not fire: the
+flankers stand on his own plane, where the seated class did not.
+
 ### Left open
 
 - The children read as a huddle at page scale rather than as three individuals;
   at 720 × 1280 they are ~150px each. If that matters the lever is fewer and
-  larger, exactly as it was for the imps.
+  larger, exactly as it was for the imps. **(Answered by v9: taken out.)**
