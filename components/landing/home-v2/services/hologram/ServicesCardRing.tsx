@@ -750,6 +750,17 @@ interface TitleTreatment {
   rule: "none" | "under" | "over";
 }
 
+/**
+ * Cap-top datum for a CENTRED head — the y a centred title's caps start at,
+ * whatever its size. 120 is chosen so the shipped framed treatment lands its
+ * box top at 96, which is where it was before the datum existed.
+ *
+ * A top-LEFT title has no constant: it shares the expand chit's centre line,
+ * because the two objects bracket one band and a band with two differently
+ * seated objects in it is not a band.
+ */
+const TITLE_HEAD_CAP_TOP = 120;
+
 const TITLE_STYLE: Record<CardTitleStyle, TitleTreatment> = {
   // The shipped treatment: hairline gold frame + leading diamond.
   framed: { px: 40, lh: 52, capH: 28, track: 3, box: "hairline", mark: true, rule: "none" },
@@ -1098,17 +1109,39 @@ function bakeCardFace(
     const frameH = NAME_FRAME_PAD_Y * 2 + nameCapH + (nameLines.length - 1) * nameLh;
     const nameBlockH = nameCapH + (nameLines.length - 1) * nameLh;
 
+    /* ⚠ THE TYPE IS THE DATUM, AND THE BOX DERIVES FROM IT — not the reverse.
+       This was backwards, and it produced exactly the two defects the owner saw
+       on the DISPLAY treatment (2026-08-30): the title sat 24px HIGH of the
+       expand chit, and crowded the card's top edge.
+
+       Both had one cause. `nameTop` was measured down from a frame box whose
+       padding is only symmetric around the cap block WHEN THERE IS A BOX; an
+       unframed title inherited the box's geometry without the box, landing its
+       cap centre on y 38 while the chit's centre is y 62. Bigger type made the
+       error worse, so `display` (cap 44) put its cap top at y 16 — 16px of
+       headroom on a 1360 bake.
+
+       Now the cap block is placed first, against a datum per anchor, and the
+       frame is wrapped around wherever the type ended up. One rule, every
+       treatment, framed or not.
+
+       ⚠ The shipped FRAMED face is byte-identical through this change: at cap
+       28 the new derivation returns nameTop 76 / frameY 24, which is what the
+       old arithmetic produced. Verified before the values moved. */
+    const chitCY = TIGHT_EXPAND_INSET + TIGHT_EXPAND_SIZE / 2;
+    const nameTop =
+      comp.title === "top-left"
+        ? // Share the chit's centre line: the two objects bracket one band.
+          chitCY - nameBlockH / 2 + nameCapH
+        : titleTop
+          ? // A centred head clears the chit entirely and takes its own datum.
+            TITLE_HEAD_CAP_TOP + nameCapH
+          : // The foot seats the LAST baseline on the copy margin, the same
+            // line the lede is anchored to.
+            BAKE_H - 72 - (nameBlockH - nameCapH);
+
     const frameX = titleCentre ? (BAKE_W - frameW) / 2 : PAD_X;
-    // TOP-LEFT sits on the chit's centre line (the NAME_FRAME_* block's rule);
-    // a centred head clears the chit entirely and can sit higher.
-    const frameY = titleTop
-      ? comp.title === "top-left"
-        ? TIGHT_EXPAND_INSET + TIGHT_EXPAND_SIZE / 2 - frameH / 2
-        : 96
-      : BAKE_H - 72 - frameH;
-    const nameTop = framed
-      ? frameY + NAME_FRAME_PAD_Y + nameCapH
-      : frameY + nameCapH + (frameH - nameBlockH) / 2 - NAME_FRAME_PAD_Y;
+    const frameY = nameTop - nameCapH - NAME_FRAME_PAD_Y;
 
     /* The enclosure. "hairline" is the shipped frame; "fill" is the ADR-029
        stamp, a SOLID Tensor Gold block with the ink knocked out of it — the
