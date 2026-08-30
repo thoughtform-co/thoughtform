@@ -60,12 +60,12 @@ const TF4 = `${MIRROR}/20260826-thoughtform-v4`;
 
 export const GALLERY_RUNS: readonly GalleryRun[] = [
   {
-    id: "az-v6",
+    id: "az-v8",
     wave: "20260830-azeroth-v5-blender",
     title: "Azeroth v8 — a class, not a court",
     date: "2026-08-30",
     status: "SHIPPING",
-    adr: "ADR-082 U16",
+    adr: "ADR-082 U17",
     summary: [
       "⚠ ONE WAVE, FIVE CUTS. v8 is live; v7 and v6 are the imp arc it came from, and the card below holds the wave's first cut and the companion-free control. This page is for comparison, not for a changelog — a card per version would say less than two that each carry their own findings.",
       "v8 IS THE COMPOSITION THE ERA ACTUALLY WANTED. The imps come out of the middle and stand at his shoulders facing the way HE faces — they are WITH him, not watching him — and three children sit in the space they left, facing him, backs to the reader. That is the shape a room takes when someone is teaching in it, which is the whole reason this era is on the wall. ⚠ The space in front of a teacher belongs to the students; that is why the third imp had to go rather than move.",
