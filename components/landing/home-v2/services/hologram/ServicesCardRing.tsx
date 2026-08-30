@@ -673,7 +673,9 @@ export type CardFaceVariant =
   | "glyph"
   | "sigil"
   | "armillary"
-  | "crystal";
+  | "crystal"
+  // The proposal, not a survey row: see COMPOSITION.card.
+  | "card";
 
 /**
  * The TIGHT layout family — everything except the ADR-029 `full` baseline.
@@ -689,7 +691,7 @@ const isTightLayout = (v: CardFaceVariant): boolean => v !== "full";
 type TitleAnchor = "top-left" | "top-centre" | "foot-left" | "foot-centre";
 type ParaAnchor = "foot-left" | "foot-centre" | "under-title" | "none";
 /** Which band of the card the drawing occupies. */
-type VizBand = "middle" | "lower" | "upper" | "full";
+type VizBand = "middle" | "lower" | "upper" | "full" | "poster";
 
 interface FaceComposition {
   /** "photo" and "halftone" use the plate's image; anything else is drawn. */
@@ -699,6 +701,16 @@ interface FaceComposition {
   band: VizBand;
   /** Title set large and unframed — the bled poster read (TALON). */
   bled?: boolean;
+  /**
+   * Pin the title treatment, overriding the lab's chips.
+   *
+   * ⚠ A SURVEY ROW LEAVES THE TREATMENT AS AN AXIS; A PROPOSAL DECIDES IT. The
+   * two axes exist so a composition can be crossed against six settings of the
+   * name — that is the right shape for a row that is asking a question, and the
+   * wrong shape for a row that is answering one. A proposal whose type changes
+   * when you press a chip is still a survey.
+   */
+  pin?: CardTitleStyle;
 }
 
 /**
@@ -712,6 +724,7 @@ interface FaceComposition {
  * | nebula        | density field    | foot-left   | none        | this isn't space   |
  * | panel         | rule division    | top-left    | foot-left   | Adaptive           |
  * | glyph         | pixel mark       | foot-centre | foot-centre | Marketing Memory   |
+ * | card          | node graph ×4    | top-centre  | foot-centre | THE PROPOSAL (V8)  |
  */
 const COMPOSITION: Record<string, FaceComposition> = {
   tight: { viz: "photo", title: "top-left", para: "foot-left", band: "full" },
@@ -738,6 +751,33 @@ const COMPOSITION: Record<string, FaceComposition> = {
   sigil: { viz: "sigil", title: "top-centre", para: "foot-centre", band: "middle" },
   armillary: { viz: "armillary", title: "top-centre", para: "foot-centre", band: "middle" },
   crystal: { viz: "crystal", title: "top-centre", para: "foot-centre", band: "middle" },
+
+  /* ═══ THE PROPOSAL ═══════════════════════════════════════════════════════
+     V8 — the Meridian arrangement, resolved (owner, 2026-08-30: "build V8
+     based on the Meridian").
+
+     Every row above is a QUESTION: a reference read off the board, crossed
+     against six settings of the name, judged side by side. This one is the
+     ANSWER, and it differs from a survey row in three ways rather than in its
+     drawing — the drawing is the constellation, already chosen.
+
+       · The treatment is PINNED to display. A card that changes when you press
+         a chip has not been decided.
+       · The band is `poster`, solved against the WORST-CASE type rather than
+         picked from the three the survey shares.
+       · The title's datum is measured off the chit instead of set by hand,
+         which is the thing the owner flagged and then deferred.
+
+     The three components are the whole card: a title, a paragraph, a drawing.
+     Nothing here adds a fourth — the refinement is entirely scale and rhythm,
+     because those are the only currencies the constraint leaves. */
+  card: {
+    viz: "constellation",
+    title: "top-centre",
+    para: "foot-centre",
+    band: "poster",
+    pin: "display",
+  },
 };
 
 const compositionOf = (v: CardFaceVariant): FaceComposition => COMPOSITION[v] ?? COMPOSITION.tight;
@@ -771,14 +811,24 @@ interface TitleTreatment {
 
 /**
  * Cap-top datum for a CENTRED head — the y a centred title's caps start at,
- * whatever its size. 120 is chosen so the shipped framed treatment lands its
- * box top at 96, which is where it was before the datum existed.
+ * whatever its size.
  *
- * A top-LEFT title has no constant: it shares the expand chit's centre line,
- * because the two objects bracket one band and a band with two differently
- * seated objects in it is not a band.
+ * ⚠ IT IS MEASURED OFF THE CHIT, WHICH IS THE OTHER HALF OF THE OWNER'S
+ * ALIGNMENT NOTE (2026-08-30, deferred at the time). A top-LEFT title shares
+ * the chit's centre line, so the two bracket one band. A CENTRED title cannot
+ * do that — it is centred and the chit is in a corner — so the answer is the
+ * opposite: it must clear the chit far enough to read as its OWN band. At the
+ * hand-set 120 it started 30px under the chit's bottom edge, which is near
+ * enough to look like a failed alignment and far enough to not be one. The
+ * clearance is 50px now and it is DERIVED, so the title and the affordance
+ * cannot drift apart when either moves.
+ *
+ * ⚠ AND THE CHIT DOES NOT MOVE. It is the open affordance, it shares a corner
+ * and a scale with the drawer's close chit so open and close are one object,
+ * and a control that follows the layout is a control that gets lost
+ * (`.claude/rules/services-ring.md`). The type moves; the affordance stays.
  */
-const TITLE_HEAD_CAP_TOP = 120;
+const TITLE_HEAD_CAP_TOP = TIGHT_EXPAND_INSET + TIGHT_EXPAND_SIZE + 50;
 
 const TITLE_STYLE: Record<CardTitleStyle, TitleTreatment> = {
   // The shipped treatment: hairline gold frame + leading diamond.
@@ -814,6 +864,25 @@ function vizBoxFor(band: VizBand): { x: number; y: number; w: number; h: number 
       return { x: inset, y: 140, w: BAKE_W - inset * 2, h: 620 };
     case "middle":
       return { x: inset, y: 370, w: BAKE_W - inset * 2, h: 640 };
+    /* ⚠ `poster` IS SOLVED, NOT PICKED — the proposal's band, centred in the
+       space the type leaves AT ITS WORST CASE across all four services, so no
+       card is composed at another card's expense.
+
+       Worst title: two display lines from the centred datum, last baseline at
+       140 + 44 + 74 = 258. Worst paragraph: four lines ending on the copy
+       margin, first cap top at 1288 − 150 − 25 = 1113. That leaves 855 units
+       between them, centred on 685.5, and 100 units of clearance at each end
+       fixes the diameter at 656 → y 358, h 656.
+
+       ⚠ THE FIGURE IS HEIGHT-BOUND AND THE WIDTH IS SLACK, which is why the
+       box is the COPY MEASURE (PAD_X, 736) and not a tighter inset: the circle
+       inscribes to 656 either way, and matching the copy's own margins is free.
+       Widening it further buys nothing — a bigger circle collides with type,
+       so ~328 is the ceiling this composition has, full stop. The refinement
+       here is that the drawing is CENTRED between the two type blocks rather
+       than sitting 26 units low in a band shared with the survey rows. */
+    case "poster":
+      return { x: PAD_X, y: 358, w: BAKE_W - PAD_X * 2, h: 656 };
     default:
       return { x: 0, y: 0, w: BAKE_W, h: BAKE_H };
   }
@@ -1096,7 +1165,7 @@ function bakeCardFace(
        how the title is SET, where the composition says where it goes. See
        CardTitleStyle. `bled` forces the display treatment: a 74px name inside a
        hairline box would read as a caption in a frame. */
-    const ts = TITLE_STYLE[comp.bled ? "display" : titleStyle] ?? TITLE_STYLE.framed;
+    const ts = TITLE_STYLE[comp.bled ? "display" : (comp.pin ?? titleStyle)] ?? TITLE_STYLE.framed;
     const framed = ts.box !== "none";
 
     const namePx = comp.bled ? 74 : ts.px;

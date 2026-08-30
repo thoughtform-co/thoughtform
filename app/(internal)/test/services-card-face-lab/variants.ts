@@ -1,4 +1,7 @@
-import type { CardFaceVariant } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
+import type {
+  CardFaceVariant,
+  CardTitleStyle,
+} from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 
 /**
  * The directions under judgement.
@@ -24,6 +27,15 @@ export interface FaceVariant {
   openPlate: boolean;
   thesis: string;
   provenance: string;
+  /**
+   * The treatment this row PINS, if it pins one (`FaceComposition.pin`).
+   *
+   * ⚠ Declared here as well so the console can say so. The chips stay live and
+   * keep driving every other row, so a console that went on reading "Title ·
+   * STAMP" over a card that is ignoring the chips would be lying about the one
+   * row it matters most on.
+   */
+  pinnedTitle?: CardTitleStyle;
 }
 
 export const FACE_VARIANTS: readonly FaceVariant[] = [
@@ -100,8 +112,12 @@ export const FACE_VARIANTS: readonly FaceVariant[] = [
     provenance: "'This isn't space, it's your brain'",
   },
   {
-    id: "v8",
-    label: "V8 · Panel",
+    /* ⚠ THIS ROW GAVE UP THE `v8` SLOT (owner, 2026-08-30: "build V8 based on
+       the Meridian"). Panel keeps its name and loses its number — a survey
+       ordinal marks a position in a survey, and once the survey has a winner it
+       is a label pretending to be an order. `?v=panel` reads better anyway. */
+    id: "panel",
+    label: "Panel",
     face: "panel",
     openPlate: false,
     thesis:
@@ -178,5 +194,37 @@ export const HOUSE_VARIANTS: readonly FaceVariant[] = [
     thesis:
       "The faceted skill symbol: an outer N-gon, a rotated inner N-gon at half a step, and a facet line from every outer vertex to its two nearest inner ones. The most minimal drawing the house owns — its own primitive calls it 'sharp geometry, diamonds not circles, zero border-radius'. The per-service variable is the FACET COUNT (4 · 5 · 6 · 8), so each card is a different SOLID rather than a different noise.",
     provenance: "CelestialConnector/shapes/CrystalFacet.tsx",
+  },
+];
+
+/**
+ * THE PROPOSAL — the one row that is answering rather than asking.
+ *
+ * Every row above is a reference read off the board, crossed against six
+ * settings of the name and judged side by side. This one is the composition the
+ * owner chose, finished: the constellation drawing on the Meridian arrangement,
+ * with the two open questions closed.
+ *
+ * ⚠ IT PINS ITS TITLE TREATMENT, so the treatment chips do not reach it. That
+ * is the difference between a proposal and a survey row, and it is deliberate
+ * that pressing DISPLAY / FRAMED / STAMP visibly changes twelve cards and not
+ * this one.
+ *
+ * ⚠ AND IT REUSES A LANGUAGE, which the rule above forbids for a survey row and
+ * requires here. "Every row is a different drawing" is what stops an exploration
+ * from being one design with the text moved; a proposal is the opposite job — it
+ * takes the drawing that WON and composes it properly. If this row invented a
+ * thirteenth figure it would be a thirteenth question.
+ */
+export const CANDIDATE_VARIANTS: readonly FaceVariant[] = [
+  {
+    id: "v8",
+    label: "V8 · Service card",
+    face: "card",
+    openPlate: false,
+    pinnedTitle: "display",
+    thesis:
+      "THE PROPOSAL. The constellation drawing on the Meridian arrangement — title centred at the head, paragraph centred at the foot — with both open questions closed. The title treatment is PINNED to display (a card that changes when you press a chip has not been decided). The drawing's band is SOLVED rather than picked: centred in the space the type leaves at its worst case across all four services, 100 units of clearance at each end, so no card is composed at another card's expense. And the title's datum is measured off the expand chit — a centred title cannot share the chit's centre line the way a top-left one does, so the answer is the opposite of alignment: clear it far enough to read as its own band. The chit itself does not move; the type does.",
+    provenance: "Meridian arrangement · constellation drawing · owner 2026-08-30",
   },
 ];

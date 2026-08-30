@@ -13,14 +13,19 @@ import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
 import { CardFaceFrame } from "./CardFaceFrame";
 import {
+  CANDIDATE_VARIANTS,
   FACE_VARIANTS as BASE_VARIANTS,
   HOUSE_VARIANTS,
   TITLE_NOTE,
   TITLE_STYLES,
 } from "./variants";
 
-/** The board-derived routes and the house instruments, one list for the lab. */
-const FACE_VARIANTS = [...BASE_VARIANTS, ...HOUSE_VARIANTS];
+/**
+ * The board-derived routes, the house instruments, then the proposal — one list
+ * for the lab, in that order, because the proposal is the destination and a
+ * destination does not sit in the middle of the survey it came out of.
+ */
+const FACE_VARIANTS = [...BASE_VARIANTS, ...HOUSE_VARIANTS, ...CANDIDATE_VARIANTS];
 
 // three/fiber is client-only; keep it out of the server render entirely so the
 // frame + masthead still paint if WebGL is unavailable.
@@ -254,8 +259,12 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
         </div>
 
         <p className="scfl-thesis">{variant.thesis}</p>
+        {/* A pinned row ignores the chips, so the console reports the treatment
+            the card is ACTUALLY carrying — not the one the chip row is set to. */}
         <p className="scfl-thesis">
-          <strong>Title · {titleStyle.toUpperCase()}</strong> — {TITLE_NOTE[titleStyle]}
+          <strong>Title · {(variant.pinnedTitle ?? titleStyle).toUpperCase()}</strong>
+          {variant.pinnedTitle ? " (pinned — chips do not reach this row)" : ""} —{" "}
+          {TITLE_NOTE[variant.pinnedTitle ?? titleStyle]}
         </p>
         <p className="scfl-prov">
           <span className="scfl-prov__diamond" aria-hidden="true" />
