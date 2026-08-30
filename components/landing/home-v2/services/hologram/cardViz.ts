@@ -29,6 +29,9 @@
  * glitch. Same service, same drawing, forever.
  */
 
+import { sampleShape } from "@/lib/brandmark/sampleShape";
+import { BRANDMARK_FULL_PATHS, BRANDMARK_SHAPE_KEYS } from "@/lib/brandmark/shapes";
+
 export type VizKey = string;
 
 /** Structurally the subset of `FacePalette` these need. */
@@ -410,12 +413,267 @@ function glyph(
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE HOUSE'S OWN INSTRUMENTS
+
+   The six languages above are read off the reference board — other people's
+   cards, translated. These three are drawn from THIS SITE: the brandmark's own
+   particle sampler, the celestial-connector primitive set, and the crystal
+   facet. Owner, 2026-08-30: "tap into our particle system, our glyphs, whatever,
+   our diagrams, to really create super cool but elegant, minimalistic visuals."
+
+   They are the stronger answer for the same reason the casefile instruments are
+   — a drawing assembled from vocabulary the site already speaks cannot look
+   borrowed, and it inherits every decision that vocabulary already made.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * SIGIL — the Thoughtform brandmark itself, as a stratified point cloud.
+ *
+ * Not a picture OF the mark: `sampleShape` is the same sampler the landing's
+ * particle painter runs, hit-testing the real `BRANDMARK_FULL_PATHS` with
+ * Path2D + isPointInPath, so this cloud and the corridor's brandmark are the
+ * same artifact at two densities. ADR-011's claim, literally — the mark is a
+ * runtime substrate rather than a finished asset.
+ *
+ * Each service takes a different DENSITY TIER off that ADR's own ladder: the
+ * mark resolves for one service and disperses for another, and THAT is the
+ * variation. The shape never changes, because it is the brandmark.
+ */
+function sigil(
+  ctx: CanvasRenderingContext2D,
+  b: VizBox,
+  pal: VizPalette,
+  rand: () => number
+): void {
+  const sample = sampleShape({
+    shapeKey: BRANDMARK_SHAPE_KEYS.full,
+    paths: BRANDMARK_FULL_PATHS,
+    viewBox: { x: 0, y: 0, width: 430.99, height: 436 },
+    count: 2600,
+  });
+  if (!sample.count) return;
+
+  // Square the box: the mark's viewBox is near-square, and a stretched
+  // brandmark is the one thing this may never be.
+  const s = Math.min(b.w, b.h);
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+
+  const density = 0.55 + rand() * 0.45;
+  const dispersion = (1 - density) * 0.55;
+  const keep = Math.floor(sample.count * density);
+
+  for (let i = 0; i < sample.count; i++) {
+    // Rank-clip rather than slice: the sampler shuffles rank, so clipping by it
+    // thins the cloud UNIFORMLY instead of eating one region of the mark.
+    if (sample.rank[i] >= keep) continue;
+    const hx = sample.home[i * 2];
+    const hy = sample.home[i * 2 + 1];
+    const sx = sample.seed[i * 2];
+    const sy = sample.seed[i * 2 + 1];
+    // Wander scaled by the tier — the sinusoidal drift the shader applies.
+    const wob = dispersion * s * 0.09;
+    const x = cx + hx * s + Math.sin(sx * 6.28) * wob;
+    const y = cy + hy * s + Math.cos(sy * 6.28) * wob;
+    ctx.fillStyle = pal.goldA(0.34 + (1 - dispersion) * 0.42);
+    ctx.fillRect(x, y, 2.5, 2.5);
+  }
+}
+
+/**
+ * ARMILLARY — the celestial-connector vocabulary, composed.
+ *
+ * Rings + BearingTicks + OrbitalNodes + Reticle, ported from
+ * `components/landing/v7/CelestialConnector/shapes/**` at their own radii and
+ * alphas. That set is already the site's diagram language between sections;
+ * this is the same instrument at card scale.
+ *
+ * ⚠ The primitives are React/SVG and cannot mount inside a canvas bake, so the
+ * GEOMETRY is ported while the components stay the source of truth. The radii
+ * ladder (110/92/74/56/38), the dash patterns and the per-ring alphas are
+ * reproduced exactly — if that ladder moves there, move it here.
+ */
+function armillary(
+  ctx: CanvasRenderingContext2D,
+  b: VizBox,
+  pal: VizPalette,
+  rand: () => number
+): void {
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  // The primitive set is authored against a 110-unit outer radius.
+  const k = (Math.min(b.w, b.h) / 2 / 110) * 0.94;
+  const R = (u: number) => u * k;
+
+  // Rings — the five-radius ladder and its per-ring style, verbatim.
+  const RINGS: [number, string, number[]][] = [
+    [110, "dawn-dash", [1, 5]],
+    [92, "dawn", []],
+    [74, "gold22", [2, 6]],
+    [56, "gold35", []],
+    [38, "gold15", [1, 3]],
+  ];
+  ctx.lineWidth = 1.4;
+  for (const [r, tone, dash] of RINGS) {
+    ctx.setLineDash(dash.map((d) => d * k * 1.6));
+    ctx.strokeStyle =
+      tone === "dawn-dash"
+        ? pal.ink(0.15)
+        : tone === "dawn"
+          ? pal.ink(0.1)
+          : pal.goldA(tone === "gold22" ? 0.22 : tone === "gold35" ? 0.35 : 0.15);
+    ctx.beginPath();
+    ctx.arc(cx, cy, R(r), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // BearingTicks — a graduated rim: the instrument's own scale.
+  ctx.strokeStyle = pal.ink(0.3);
+  ctx.lineWidth = 1.2;
+  const TICKS = 36;
+  for (let i = 0; i < TICKS; i++) {
+    const a = (i / TICKS) * Math.PI * 2 - Math.PI / 2;
+    const len = R(i % 9 === 0 ? 14 : 8);
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(a) * R(110), cy + Math.sin(a) * R(110));
+    ctx.lineTo(cx + Math.cos(a) * (R(110) - len), cy + Math.sin(a) * (R(110) - len));
+    ctx.stroke();
+  }
+
+  // OrbitalNodes — tilted elliptical paths carrying evenly spaced nodes.
+  const orbits = [
+    { rx: 100, ry: 34, tilt: -18, n: 3 },
+    { rx: 78, ry: 62, tilt: 24, n: 2 },
+  ];
+  for (const o of orbits) {
+    const t = (o.tilt * Math.PI) / 180;
+    ctx.setLineDash([2 * k * 2.4, 5 * k * 2.4]);
+    ctx.strokeStyle = pal.goldA(0.26);
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, R(o.rx), R(o.ry), t, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Nodes ride the ellipse's own parametric angle, then rotate with the tilt.
+    const phase = rand() * Math.PI * 2;
+    for (let i = 0; i < o.n; i++) {
+      const p = phase + (i / o.n) * Math.PI * 2;
+      const ex = Math.cos(p) * R(o.rx);
+      const ey = Math.sin(p) * R(o.ry);
+      ctx.fillStyle = pal.gold;
+      dia(
+        ctx,
+        cx + ex * Math.cos(t) - ey * Math.sin(t),
+        cy + ex * Math.sin(t) + ey * Math.cos(t),
+        5
+      );
+    }
+  }
+
+  // Reticle — the crosshair and the centre.
+  ctx.strokeStyle = pal.goldA(0.4);
+  ctx.lineWidth = 1.2;
+  for (const [a, bb] of [
+    [-56, -18],
+    [18, 56],
+  ] as const) {
+    ctx.beginPath();
+    ctx.moveTo(cx + R(a), cy);
+    ctx.lineTo(cx + R(bb), cy);
+    ctx.moveTo(cx, cy + R(a));
+    ctx.lineTo(cx, cy + R(bb));
+    ctx.stroke();
+  }
+  // An OPAQUE disc under the mark, so the orbits pass BEHIND it rather than
+  // through it — the primitive fills with --void for the same reason.
+  ctx.fillStyle = pal.ground;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R(14), 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = pal.goldA(0.7);
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.fillStyle = pal.gold;
+  dia(ctx, cx, cy, R(7));
+}
+
+/**
+ * CRYSTAL — the faceted skill symbol (`CrystalFacet`).
+ *
+ * Outer N-gon, a rotated inner N-gon at half a step, and a facet line from each
+ * outer vertex to its two nearest inner ones. The primitive's own note calls it
+ * "on-brand: sharp geometry, diamonds not circles, zero border-radius" — it is
+ * the most minimal drawing the house owns.
+ *
+ * The per-service variable is the FACET COUNT, so each card is a different
+ * SOLID rather than a different noise. That is the difference between a set and
+ * four renders of one idea.
+ */
+function crystal(
+  ctx: CanvasRenderingContext2D,
+  b: VizBox,
+  pal: VizPalette,
+  rand: () => number
+): void {
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  const outerR = (Math.min(b.w, b.h) / 2) * 0.9;
+  const facets = [4, 5, 6, 8][Math.floor(rand() * 4)];
+  const innerR = outerR * 0.44;
+  const half = Math.PI / facets;
+
+  const poly = (n: number, r: number, rot: number) =>
+    Array.from({ length: n }, (_, i) => {
+      const a = rot + (i / n) * Math.PI * 2;
+      return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r };
+    });
+  const outer = poly(facets, outerR, -Math.PI / 2);
+  const inner = poly(facets, innerR, -Math.PI / 2 + half);
+  const trace = (pts: { x: number; y: number }[]) => {
+    ctx.beginPath();
+    pts.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+    ctx.closePath();
+  };
+
+  // Inner facet fill — the primitive's gold-15, and the drawing's only mass.
+  ctx.fillStyle = pal.goldA(0.15);
+  trace(inner);
+  ctx.fill();
+
+  // Faceting: every outer vertex to its two nearest inner vertices.
+  ctx.strokeStyle = pal.goldA(0.34);
+  ctx.lineWidth = 1.3;
+  outer.forEach((op, i) => {
+    for (const ip of [inner[i], inner[(i + facets - 1) % facets]]) {
+      ctx.beginPath();
+      ctx.moveTo(op.x, op.y);
+      ctx.lineTo(ip.x, ip.y);
+      ctx.stroke();
+    }
+  });
+
+  ctx.strokeStyle = pal.goldA(0.62);
+  ctx.lineWidth = 1.8;
+  trace(outer);
+  ctx.stroke();
+  ctx.strokeStyle = pal.goldA(0.5);
+  ctx.lineWidth = 1.4;
+  trace(inner);
+  ctx.stroke();
+
+  // One signal, on the topmost vertex of the solid.
+  ctx.fillStyle = pal.gold;
+  dia(ctx, outer[0].x, outer[0].y, 6);
+}
+
 /* ── the registry ──────────────────────────────────────────────────────────── */
 
 const LANGUAGES: Record<
   string,
   (ctx: CanvasRenderingContext2D, b: VizBox, pal: VizPalette, rand: () => number) => void
-> = { constellation, dendrite, meridian, nebula, panel, glyph };
+> = { constellation, dendrite, meridian, nebula, panel, glyph, sigil, armillary, crystal };
 
 export type VizLanguage = keyof typeof LANGUAGES | string;
 

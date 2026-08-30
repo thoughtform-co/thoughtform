@@ -670,7 +670,10 @@ export type CardFaceVariant =
   | "meridian"
   | "nebula"
   | "panel"
-  | "glyph";
+  | "glyph"
+  | "sigil"
+  | "armillary"
+  | "crystal";
 
 /**
  * The TIGHT layout family — everything except the ADR-029 `full` baseline.
@@ -719,6 +722,15 @@ const COMPOSITION: Record<string, FaceComposition> = {
   nebula: { viz: "nebula", title: "foot-left", para: "none", band: "full", bled: true },
   panel: { viz: "panel", title: "top-left", para: "foot-left", band: "middle" },
   glyph: { viz: "glyph", title: "foot-centre", para: "foot-centre", band: "upper" },
+
+  /* The house instruments, all on MERIDIAN's approved arrangement — title
+     centred at the head, paragraph centred at the foot, drawing in the middle
+     band (owner, 2026-08-30). Holding the layout fixed is the point: these
+     three differ ONLY in the drawing, so the choice between them is a choice
+     about the visual and nothing else. */
+  sigil: { viz: "sigil", title: "top-centre", para: "foot-centre", band: "middle" },
+  armillary: { viz: "armillary", title: "top-centre", para: "foot-centre", band: "middle" },
+  crystal: { viz: "crystal", title: "top-centre", para: "foot-centre", band: "middle" },
 };
 
 const compositionOf = (v: CardFaceVariant): FaceComposition => COMPOSITION[v] ?? COMPOSITION.tight;

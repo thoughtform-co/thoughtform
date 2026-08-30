@@ -142,3 +142,41 @@ export const TITLE_NOTE: Record<string, string> = {
   stamp:
     "36px under a hairline, wide-tracked — the '// LABEL' bearing convention with its ordinal dropped (no ordinals survive on this surface).",
 };
+
+/**
+ * The HOUSE INSTRUMENTS — appended 2026-08-30 on the owner's brief to "tap into
+ * our particle system, our glyphs, whatever, our diagrams".
+ *
+ * All three take MERIDIAN's approved arrangement (title centred at the head,
+ * paragraph centred at the foot) and differ only in the drawing, so choosing
+ * between them is a choice about the visual and nothing else.
+ */
+export const HOUSE_VARIANTS: readonly FaceVariant[] = [
+  {
+    id: "h1",
+    label: "H1 · Sigil",
+    face: "sigil",
+    openPlate: false,
+    thesis:
+      "The BRANDMARK ITSELF as a stratified point cloud — not a picture of the mark, the mark: sampleShape hit-tests the real BRANDMARK_FULL_PATHS with the same sampler the corridor's particle painter runs, so this cloud and the landing's brandmark are one artifact at two densities. Each service takes a different density tier off ADR-011's own ladder, so the mark resolves for one and disperses for another. The shape never changes, because it is the brandmark.",
+    provenance: "lib/brandmark/sampleShape.ts · ADR-011 density tiers",
+  },
+  {
+    id: "h2",
+    label: "H2 · Armillary",
+    face: "armillary",
+    openPlate: false,
+    thesis:
+      "The celestial-connector vocabulary composed into one instrument: the five-radius ring ladder with its per-ring dashes, a 36-tick graduated rim, two tilted orbital paths carrying diamond nodes, and the reticle at the centre on its own opaque disc so the orbits pass behind the mark. This is the diagram language the site already speaks between sections, at card scale.",
+    provenance: "CelestialConnector/shapes — Rings · BearingTicks · OrbitalNodes · Reticle",
+  },
+  {
+    id: "h3",
+    label: "H3 · Crystal",
+    face: "crystal",
+    openPlate: false,
+    thesis:
+      "The faceted skill symbol: an outer N-gon, a rotated inner N-gon at half a step, and a facet line from every outer vertex to its two nearest inner ones. The most minimal drawing the house owns — its own primitive calls it 'sharp geometry, diamonds not circles, zero border-radius'. The per-service variable is the FACET COUNT (4 · 5 · 6 · 8), so each card is a different SOLID rather than a different noise.",
+    provenance: "CelestialConnector/shapes/CrystalFacet.tsx",
+  },
+];

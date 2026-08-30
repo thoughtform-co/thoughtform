@@ -12,7 +12,15 @@ import { activeServiceForProgress } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
 import { CardFaceFrame } from "./CardFaceFrame";
-import { FACE_VARIANTS, TITLE_NOTE, TITLE_STYLES } from "./variants";
+import {
+  FACE_VARIANTS as BASE_VARIANTS,
+  HOUSE_VARIANTS,
+  TITLE_NOTE,
+  TITLE_STYLES,
+} from "./variants";
+
+/** The board-derived routes and the house instruments, one list for the lab. */
+const FACE_VARIANTS = [...BASE_VARIANTS, ...HOUSE_VARIANTS];
 
 // three/fiber is client-only; keep it out of the server render entirely so the
 // frame + masthead still paint if WebGL is unavailable.
