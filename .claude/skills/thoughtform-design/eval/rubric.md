@@ -76,6 +76,19 @@ edge rather than floating inset).
 ⚠ A closed vocabulary is the point. An open one produces a different phrasing of the same
 defect every run, which cannot be counted, compared, or regressed against.
 
+**Flags that are read wrong most often — state the boundary, do not widen it:**
+
+- **`circular-indicator` means a CIRCLE, and a DIAMOND is the correct answer.** A 45°
+  square is this system's marker; flagging one is inverting the law it enforces. Only raise
+  this for an actual arc, ellipse, `border-radius: 50%`, or a composition built on concentric
+  circles. Measured: the judge flagged a diamond wave-front here three runs running, which is
+  why the boundary is written down rather than left to the flag's name.
+- **`decorative-texture` means a mark with no informational job.** A generative field whose
+  density, count or extent encodes something is a RECORD, not decoration — the map's physics
+  fields and the card emblems are the standing examples.
+- **`gold-overspend` is about COUNT, not area.** One large gold figure is disciplined; three
+  small gold things competing is not.
+
 ---
 
 ## Thresholds — PER SURFACE

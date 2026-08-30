@@ -53,6 +53,7 @@ import * as THREE from "three";
 
 import { resolveScenePalette } from "@/lib/theme/palette";
 
+import { drawCardEmblem } from "./cardEmblem";
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
 import { HologramOrbits } from "./HologramOrbits";
 import {
@@ -646,7 +647,22 @@ type InkRun = { text: string; gold: boolean };
  * side in `/test/services-card-face-lab` and so flipping production is a
  * one-word default change.
  */
-export type CardFaceVariant = "full" | "tight";
+/**
+ * `emblem` is the TIGHT composition with a drawn per-service figure in place of
+ * the photograph — the reference set's answer to "what belongs at the centre of
+ * a services card" (docs/design/card-reference-analysis.md). It shares every one
+ * of tight's layout decisions on purpose: scrims, the single BL chamfer, the
+ * open right shell, the framed name, the chit, the bottom-anchored lede. Only
+ * the FIELD changes, so a side-by-side in the lab compares one variable.
+ *
+ * ⚠ Anything branching on `variant === "tight"` must use `isTightLayout()`
+ * instead, or the emblem face silently falls back to the `full` geometry — which
+ * would cut the top-right corner the drawer tray needs square.
+ */
+export type CardFaceVariant = "full" | "tight" | "emblem";
+
+/** The tight LAYOUT family. See CardFaceVariant. */
+const isTightLayout = (v: CardFaceVariant): boolean => v === "tight" || v === "emblem";
 
 /** Greedy word-wrap for a single-font run of styled segments. Returns lines
  *  of runs so lede emphasis (`{ em }` → upright gold) survives wrapping. */
@@ -716,7 +732,13 @@ function bakeCardFace(
   ctx.fillStyle = pal.ground;
   ctx.fillRect(0, 0, BAKE_W, BAKE_H);
 
-  if (img) {
+  if (variant === "emblem") {
+    /* The EMBLEM face draws its field instead of photographing one. The photo
+       is deliberately NOT loaded past this point — the whole question this
+       variant exists to answer is whether the centre of a services card should
+       carry the practitioner or the work. See cardEmblem.ts. */
+    drawCardEmblem(ctx, plate.id, pal);
+  } else if (img) {
     // Photo, cover-fit (assets are exactly BAKE_W × BAKE_H, so this is
     // 1:1), baked CLEAN — the plate's dot-matrix hologram effect lives on
     // the animatable VEIL plane above this face (Update 3), so hovering a
@@ -771,9 +793,9 @@ function bakeCardFace(
      scrim already at alpha 0 by 190 left the frame's lower half on bare
      photo. Held near-opaque through the frame, then released over the next
      130px so the photo still opens up cleanly. */
-  const topScrimH = variant === "tight" ? 260 : 190;
+  const topScrimH = isTightLayout(variant) ? 260 : 190;
   const top = ctx.createLinearGradient(0, 0, 0, topScrimH);
-  if (variant === "tight") {
+  if (isTightLayout(variant)) {
     top.addColorStop(0, `rgba(${pal.scrimRgb}, 0.9)`);
     top.addColorStop(0.5, `rgba(${pal.scrimRgb}, 0.72)`);
     top.addColorStop(1, `rgba(${pal.scrimRgb}, 0)`);
@@ -825,7 +847,7 @@ function bakeCardFace(
   shell.addColorStop(1, pal.goldA(0.48));
   ctx.strokeStyle = shell;
   ctx.lineWidth = 2.5;
-  if (variant === "tight") {
+  if (isTightLayout(variant)) {
     /* The tight face's shell is OPEN on the right (owner, 2026-07-26): a
        baked right-edge stroke paints at the face's renderOrder — OVER the
        emerged tray — so it read as a vertical rule splitting the open pair.
@@ -864,7 +886,7 @@ function bakeCardFace(
   const maxW = BAKE_W - PAD_X * 2;
   ctx.textBaseline = "alphabetic";
 
-  if (variant === "tight") {
+  if (isTightLayout(variant)) {
     /* ── TIGHT face (ADR-050, final 2026-08-29 cut) — framed NAME + expand
        chit · photo · lede ──
        THREE elements and one control. The header band is bracketed by the

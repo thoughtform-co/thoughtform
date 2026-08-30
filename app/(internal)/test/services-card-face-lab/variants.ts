@@ -44,4 +44,13 @@ export const FACE_VARIANTS: readonly FaceVariant[] = [
       "The tight face, plus the plate that grows out of the card's own rect: 01 / WHAT (lede + breakdown), 02 / HOW (duration, participants, format, language, what they keep). Click the front card.",
     provenance: "ADR-050 candidate · full beat",
   },
+  {
+    id: "v3",
+    label: "V3 · Emblem",
+    face: "emblem",
+    openPlate: false,
+    thesis:
+      "The tight composition with a DRAWN per-service figure where the photograph was — keynote broadcasts, workshop is a working lattice, embedded interleaves two fields, guided build is a route with waypoints. Everything else is byte-identical to V1, so the comparison is one variable: does the centre of a services card carry the practitioner, or the work? Across ~40 cards in the Brand Codex reference set, not one carries the practitioner.",
+    provenance: "card-reference-analysis.md · STACK archetype · cardEmblem.ts",
+  },
 ];
