@@ -41,6 +41,24 @@ const nextConfig = {
     root: __dirname,
   },
   outputFileTracingRoot: __dirname,
+  // The design MCP serves BRAND TRUTH READ LIVE FROM THE REPO — token values
+  // parsed from the shipped CSS, law text from the ADR that owns it — which is
+  // what stops it going stale against the code. Next's tracer follows imports,
+  // and these are opened by path at request time, so it cannot see them: without
+  // this list the route works in dev and 500s on Vercel with "cannot read ...".
+  // ⚠ Adding a file to LAW_SOURCES in the route means adding it here too.
+  outputFileTracingIncludes: {
+    "/api/design/mcp": [
+      "./DESIGN.md",
+      "./app/styles/variables.css",
+      "./components/landing/v7/theme.css",
+      "./sentinel/decisions/065-corner-law.md",
+      "./docs/design/card-reference-analysis.md",
+      "./.claude/skills/thoughtform-design/references/navigation-grammar.md",
+      "./.claude/skills/thoughtform-design/references/particle-icon-grammar.md",
+      "./.claude/skills/thoughtform-design/references/tokens.md",
+    ],
+  },
   ...(exportMode
     ? {
         output: "export",

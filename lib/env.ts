@@ -62,6 +62,23 @@ export interface ServerEnvSchema {
   REPLICATE_API_TOKEN?: string;
   REPLICATE_SAM2_MODEL?: string;
 
+  // ─── Design MCP (/api/design/mcp) ────────────────────────────
+  /**
+   * Bearer token for the design MCP. The route fails CLOSED with 503 when this
+   * is unset — an unconfigured token must never mean an open endpoint.
+   */
+  DESIGN_MCP_TOKEN?: string;
+  /**
+   * Optional overrides for the design corpus's two embedding spaces. Left
+   * unset, the route trusts what `design_meta` says the corpus was built with.
+   * Set one to a model the corpus was NOT embedded with and the route refuses
+   * to search rather than comparing vectors across two unrelated spaces.
+   */
+  VOYAGE_TEXT_MODEL?: string;
+  VOYAGE_IMAGE_MODEL?: string;
+  /** Where scripts/design-corpus/sync.mjs reads the substrate vault from. */
+  DESIGN_VAULT_ROOT?: string;
+
   // ─── Figma bridge (server-only) ──────────────────────────────
   FIGMA_ACCESS_TOKEN?: string;
   FIGMA_FILE_KEY?: string;
@@ -91,6 +108,7 @@ const SECRET_KEYS = new Set<EnvKey>([
   "REPLICATE_API_TOKEN",
   "FIGMA_ACCESS_TOKEN",
   "KV_REST_API_TOKEN",
+  "DESIGN_MCP_TOKEN",
 ]);
 
 const PUBLIC_KEY_PREFIX = "NEXT_PUBLIC_";
