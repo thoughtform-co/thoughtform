@@ -24,8 +24,15 @@ ADR-011) and the recommended pattern for any new Thoughtform product
 where the brandmark needs to choreograph in space, dissolve into
 atmosphere, or recompose mid-journey.
 
-**Density tiers (load-bearing — keep in sync with `PARTICLE_STATION_DEFAULTS` in
-[`useSigilChoreography.ts`](../../../components/landing/v7/hooks/useSigilChoreography.ts)):**
+**Density tiers (load-bearing — keep in sync with the keyframe table in
+[`lib/brandmark/journey.ts`](../../../../lib/brandmark/journey.ts)):**
+
+> ⚠ Updated 2026-08-30. This table previously pointed at `PARTICLE_STATION_DEFAULTS` in
+> `useSigilChoreography.ts`; **that hook and that constant were both deleted** by the ADR-013
+> journey refactor, which replaced per-station defaults with one continuous transform
+> (position, scale, rotation, density and dispersion as functions of scrollY). The tiers below
+> still describe what the mark READS as; the mechanism is now a lerp along the journey, not a
+> set of station presets.
 
 | Tier           | Density | Dispersion | Reads as                                                                                                                                                                                              |
 | -------------- | ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -36,18 +43,18 @@ atmosphere, or recompose mid-journey.
 **Implementation:**
 
 - One canonical shape source: `BRANDMARK_FILLED_PATHS` + `BRANDMARK_VIEWBOX`
-  in [`components/landing/v7/BrandmarkGlyph.tsx`](../../../components/landing/v7/BrandmarkGlyph.tsx).
-- One sampling utility: [`lib/brandmark/sampleShape.ts`](../../../lib/brandmark/sampleShape.ts).
+  in [`components/landing/v7/BrandmarkGlyph.tsx`](../../../../components/landing/v7/BrandmarkGlyph.tsx).
+- One sampling utility: [`lib/brandmark/sampleShape.ts`](../../../../lib/brandmark/sampleShape.ts).
   Rejection-samples via `Path2D + ctx.isPointInPath()`; seeded PRNG keeps
   the cloud stable across mounts.
-- One shared GL canvas: [`components/brand/BrandmarkParticleField`](../../../components/brand/BrandmarkParticleField/).
+- One shared GL canvas: [`components/brand/BrandmarkParticleField`](../../../../components/brand/BrandmarkParticleField/).
   R3F `<Canvas>` with a custom shader that rank-clips invisible
   particles (the density dial), applies sinusoidal wander scaled by
   `uDispersion`, and projects pixel coordinates to NDC directly.
 
 **Falls back to the SVG actor + portal'd glyphs** when WebGL is
 unavailable or `prefers-reduced-motion: reduce` is set. Both paths
-preserve the [ADR-010 v3](../../../sentinel/decisions/010-brandmark-choreography.md)
+preserve the [ADR-010 v3](../../../../sentinel/decisions/010-brandmark-choreography.md)
 state machine.
 
 **Strategic framing:** in the Navigate → Encode → Build flywheel, the
@@ -57,7 +64,7 @@ new shape you might want — compass, lotus, key visual, future identities
 Mediums collapse: vector, particle, and (future) 3D become one substrate
 dialled differently.
 
-See [ADR-011](../../../sentinel/decisions/011-brandmark-particle-artifact.md)
+See [ADR-011](../../../../sentinel/decisions/011-brandmark-particle-artifact.md)
 for the full record and the [`brandmark-particle` skill](../../brandmark-particle/SKILL.md)
 for the operational how-to.
 
@@ -89,6 +96,21 @@ Decorative or wayfinding vectors in the system are designed as **mathematical no
 - **Stroke:** 1.5px default. Hairlines (1px) only for dense HUD/telemetry.
 - **Shape:** Diamonds (45° rotated squares) replace circles for markers, bullets, and indicators. No rounded caps or joins unless specified in the asset.
 - **Construction:** Geometric, grid-aligned. Icons should feel like readouts, not illustration.
+
+### Which cut, where — the corner law
+
+Radius-0 says corners are sharp; it does not say which corner treatment an object gets, or
+where, or how deep. **That is [ADR-065](../../../../sentinel/decisions/065-corner-law.md),
+summarised in SKILL.md Layer 1** — chamfer = a machined housing, notch (one corner) = oriented
+or connected, bracket = framed but not a device; one grammar per object; the diagonal is
+TR + BL; the children of a chamfered box are square.
+
+Read that before cutting any corner. This file governs the MARK and the ICONS; the corner law
+governs every housing they sit in.
+
+> Historical note: this section previously said only "corner brackets/chamfers for frames",
+> and the project skill carried a warning that it was stale. The warning is discharged — the
+> pointer above is the fix it asked for.
 
 ### Icon Token Summary
 

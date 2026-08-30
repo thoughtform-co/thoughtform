@@ -189,7 +189,7 @@ The following structural principles are adapted from the Heimdall Figma plugin's
 5. **Min/max width preservation:** Use `minWidth` and `maxWidth` on content frames to keep reading rhythm bounded. This prevents text blocks from collapsing to zero or expanding to full-bleed on wide containers.
 6. **Skip auto-layout for HUD chrome:** HUD rails, corners, chapter/pagination overlays, and decorative elements should stay outside the auto-layout flow (absolute positioning or separate overlay frames). Only interior content stacks should be auto-layout-driven.
 
-**Reference:** [Figma AutoLayout API](https://developers.figma.com/docs/widgets/api/component-AutoLayout/) | [Heimdall syncBriefings.ts](../../../Manifold%20Delta/Artifacts/11_Heimdall/packages/figma-plugin/src/commands/syncBriefings.ts) (read-only reference)
+**Reference:** [Figma AutoLayout API](https://developers.figma.com/docs/widgets/api/component-AutoLayout/) | Heimdall's `packages/figma-plugin/src/commands/syncBriefings.ts` — read-only, and in a SEPARATE repo (`Manifold Delta/Artifacts/11_Heimdall`), so it is named rather than linked: a relative path out of this one resolves against whatever checkout happens to be alongside it.
 
 ---
 
