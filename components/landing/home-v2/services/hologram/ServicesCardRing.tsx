@@ -706,7 +706,7 @@ interface FaceComposition {
  * |---------------|------------------|-------------|-------------|--------------------|
  * | tight         | photo            | top-left    | foot-left   | the shipped face   |
  * | halftone      | photo, screened  | top-left    | foot-left   | Marketing Memory   |
- * | constellation | node graph       | top-left    | under-title | Indent             |
+ * | constellation | node graph ×4    | top-centre  | foot-centre | Indent             |
  * | dendrite      | branching growth | top-centre  | foot-centre | manufacturing biology |
  * | meridian      | fine line body   | top-centre  | foot-centre | the orange brain   |
  * | nebula        | density field    | foot-left   | none        | this isn't space   |
@@ -716,7 +716,14 @@ interface FaceComposition {
 const COMPOSITION: Record<string, FaceComposition> = {
   tight: { viz: "photo", title: "top-left", para: "foot-left", band: "full" },
   halftone: { viz: "halftone", title: "top-left", para: "foot-left", band: "full" },
-  constellation: { viz: "constellation", title: "top-left", para: "under-title", band: "lower" },
+  /* ⚠ CONSTELLATION IS ON THE CENTRED ARRANGEMENT, NOT INDENT'S STACK (owner,
+     2026-08-30 — the drawing is chosen, and the placement he chose with it is
+     the one CRYSTAL carries). Its earlier reading — title top-left with the
+     paragraph stacked beneath it and the graph in the lower band — was the
+     reference card's own layout, and it is one line away if it is ever wanted
+     back; but a lab row that keeps a rejected arrangement alive is a
+     comparison nobody asked for. */
+  constellation: { viz: "constellation", title: "top-centre", para: "foot-centre", band: "middle" },
   dendrite: { viz: "dendrite", title: "top-centre", para: "foot-centre", band: "middle" },
   meridian: { viz: "meridian", title: "top-centre", para: "foot-centre", band: "middle" },
   nebula: { viz: "nebula", title: "foot-left", para: "none", band: "full", bled: true },

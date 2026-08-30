@@ -14,7 +14,8 @@
  *
  * Each language reads its own reference on the Brand Codex board:
  *
- *   constellation  Indent's wireframe node globe — a graph, chords between nodes
+ *   constellation  Indent's wireframe node globe — a graph; FOUR graphs, one
+ *                  per service, over one shared cloud (see §1)
  *   dendrite       "We're manufacturing biology" — growth branching from a spine
  *   meridian       the orange brain — a body drawn in fine concentric section
  *   nebula         "This isn't space, it's your brain" — density as the subject
@@ -89,67 +90,349 @@ function dia(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): vo
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   1. CONSTELLATION — a graph. (Indent, "Your intelligent co-worker")
-   Points on a sphere, projected flat, near neighbours joined by straight
-   chords. Reads as a network with structure rather than a scatter.
+   1. CONSTELLATION — a graph, and FOUR graphs. (Indent, "Your intelligent
+   co-worker")
+
+   ⚠ ONE CLOUD, FOUR EDGE RULES (owner, 2026-08-30: "each of them should be
+   different, corresponding to the type of service"). The NODE POSITIONS ARE
+   IDENTICAL on all four cards — same Fibonacci sphere, same tilt, same count —
+   because they stand for the same thing: a client's estate of work, which does
+   not change with which engagement is bought. What changes is the STRUCTURE
+   drawn over it, and that is exactly what a service does.
+
+     keynote       THE RADIANT — one source, rays out to a room, and no edges
+                   between the receivers. A frame arrives; the room is not
+                   wired to itself yet.
+     workshop      THE ROUTE — one path walked end to end through the field,
+                   both ends marked, everything else left untouched. One real
+                   workflow, picked out of all of them.
+     embedded      THE MESH — near-neighbour triangulation across the whole
+                   cloud, with the marks seated INSIDE it. A capability that
+                   holds itself up and depends on no single node.
+     guided-build  THE SURVEY — the estate divided into five regions, each
+                   linked internally, one dashed gold traverse across their
+                   marks, and a handful of nodes deliberately joined to
+                   nothing: the person-led work, which this house draws
+                   rather than omits.
+
+   ⚠ ONE VOCABULARY ACROSS ALL FOUR — square nodes, straight chords, diamond
+   signals, depth carried by fade alone. Varying the vocabulary as well would
+   give four unrelated pictures, which is the failure this file already made
+   once; varying only the edges is what makes a SET.
    ═══════════════════════════════════════════════════════════════════════════ */
+
+interface CloudPoint {
+  /** Unit vector on the sphere — kept for angular tests (regions, reach). */
+  ux: number;
+  uy: number;
+  uz: number;
+  /** Projected position, canvas space. */
+  px: number;
+  py: number;
+  /** Toward the viewer, [-1, 1]. Fading by this is what gives a flat projection volume. */
+  depth: number;
+}
+
+const CLOUD_N = 128;
+/** A fixed tilt, so the distribution never reads as a flat ring. */
+const CLOUD_TILT = 0.42;
+
+/** The shared substrate: a Fibonacci sphere — even, with no seams or polar bunching. */
+function sphereCloud(b: VizBox): CloudPoint[] {
+  const R = Math.min(b.w, b.h) / 2;
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const out: CloudPoint[] = [];
+  for (let i = 0; i < CLOUD_N; i++) {
+    const uy = 1 - (i / (CLOUD_N - 1)) * 2;
+    const r = Math.sqrt(Math.max(0, 1 - uy * uy));
+    const th = golden * i;
+    const ux = Math.cos(th) * r;
+    const uz = Math.sin(th) * r;
+    out.push({
+      ux,
+      uy,
+      uz,
+      px: cx + ux * R,
+      py: cy + (uy * Math.cos(CLOUD_TILT) - uz * Math.sin(CLOUD_TILT)) * R,
+      depth: uz * Math.cos(CLOUD_TILT) + uy * Math.sin(CLOUD_TILT),
+    });
+  }
+  return out;
+}
+
+/** One node of the cloud. `lit` = the structure reaches it; unlit stays present but quiet. */
+function cloudNode(
+  ctx: CanvasRenderingContext2D,
+  pal: VizPalette,
+  p: CloudPoint,
+  lit: boolean
+): void {
+  const near = Math.max(0, p.depth);
+  /* ⚠ The unlit rung is not decoration — on the radiant and the route it is the
+     REST OF THE ESTATE, and a claim like "one workflow out of all of them" only
+     lands if the ones not chosen are visible. Measured up from .13, where the
+     field vanished against the card ground and the route read as floating. */
+  ctx.fillStyle = lit ? pal.ink(0.42 + near * 0.5) : pal.ink(0.2 + near * 0.18);
+  sq(ctx, p.px, p.py, lit ? 3.1 + near * 2.2 : 2.2 + near * 0.9);
+}
+
+/** KEYNOTE — the radiant. One source reaches a room; the room has no edges yet. */
+function radiant(ctx: CanvasRenderingContext2D, pts: CloudPoint[], pal: VizPalette): void {
+  // The source is the node nearest the viewer — the front pole projects at the
+  // centre of the field, so the fan opens from the middle.
+  let s = 0;
+  for (let i = 1; i < pts.length; i++) if (pts[i].depth > pts[s].depth) s = i;
+  const src = pts[s];
+
+  const reached = new Set<number>();
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < pts.length; i++) {
+    // Every other node: a room, not a hedgehog. Parity on the Fibonacci index
+    // is well spread in angle, so the thinning leaves no gap.
+    if (i === s || i % 2) continue;
+    const p = pts[i];
+    if (p.depth < -0.05) continue; // the front hemisphere is the room
+    reached.add(i);
+    const dx = p.px - src.px;
+    const dy = p.py - src.py;
+    const d = Math.hypot(dx, dy) || 1;
+    // Start each ray clear of the source, or the hub becomes a blot instead of
+    // a mark — thirty lines meeting at a point is an ink well.
+    const GAP = 15;
+    ctx.strokeStyle = pal.ink(0.12 + Math.max(0, p.depth) * 0.32);
+    ctx.beginPath();
+    ctx.moveTo(src.px + (dx / d) * GAP, src.py + (dy / d) * GAP);
+    ctx.lineTo(p.px, p.py);
+    ctx.stroke();
+  }
+
+  pts.forEach((p, i) => cloudNode(ctx, pal, p, reached.has(i)));
+  ctx.fillStyle = pal.gold;
+  dia(ctx, src.px, src.py, 9);
+}
+
+/** WORKSHOP — the route. One workflow walked end to end. */
+function route(ctx: CanvasRenderingContext2D, pts: CloudPoint[], pal: VizPalette, R: number): void {
+  const STEPS = 15;
+  // Enter from the left of the field, so the walk reads as a traverse rather
+  // than a knot.
+  let cur = 0;
+  for (let i = 1; i < pts.length; i++) {
+    if (pts[i].depth < 0.1) continue;
+    if (pts[cur].depth < 0.1 || pts[i].px < pts[cur].px) cur = i;
+  }
+  const path = [cur];
+  const walked = new Set([cur]);
+  for (let step = 1; step < STEPS; step++) {
+    let best = -1;
+    let bestD = Infinity;
+    for (let i = 0; i < pts.length; i++) {
+      if (walked.has(i) || pts[i].depth < 0.02) continue;
+      const d = Math.hypot(pts[i].px - pts[cur].px, pts[i].py - pts[cur].py);
+      /* A HARD CAP ON THE STEP, or the walk is not a walk. Without it the greedy
+         rule happily jumps a third of the field to satisfy the forward bias, and
+         a path made of long hops reads as a plotted line rather than as a route
+         through the nodes around it. */
+      if (d > R * 0.55) continue;
+      // Forward bias: a route advances across the field instead of doubling
+      // back into the nodes it just left.
+      const penalty = pts[i].px < pts[cur].px ? R * 0.3 : 0;
+      if (d + penalty < bestD) {
+        bestD = d + penalty;
+        best = i;
+      }
+    }
+    if (best < 0) break;
+    walked.add(best);
+    path.push(best);
+    cur = best;
+  }
+
+  // The walk is HEAVIER than any other chord on these four cards: it is the one
+  // workflow, and the weight is what picks it out of the field around it.
+  ctx.lineWidth = 2.6;
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = pal.ink(0.62);
+  ctx.beginPath();
+  path.forEach((i, k) => (k ? ctx.lineTo(pts[i].px, pts[i].py) : ctx.moveTo(pts[i].px, pts[i].py)));
+  ctx.stroke();
+  ctx.lineJoin = "miter";
+
+  pts.forEach((p, i) => cloudNode(ctx, pal, p, walked.has(i)));
+
+  // BOTH ends marked — an entry and an exit is what makes a line a route rather
+  // than a tail.
+  const head = pts[path[0]];
+  const tail = pts[path[path.length - 1]];
+  ctx.fillStyle = pal.gold;
+  dia(ctx, head.px, head.py, 7);
+  dia(ctx, tail.px, tail.py, 8);
+}
+
+/** EMBEDDED — the mesh. A body that holds itself up. */
+function mesh(ctx: CanvasRenderingContext2D, pts: CloudPoint[], pal: VizPalette, R: number): void {
+  // Chords between near neighbours. Straight lines only — the sphere is implied
+  // by the point distribution, never drawn as an outline.
+  ctx.lineWidth = 1.7;
+  for (let i = 0; i < pts.length; i++) {
+    for (let j = i + 1; j < pts.length; j++) {
+      const d = Math.hypot(pts[i].px - pts[j].px, pts[i].py - pts[j].py);
+      if (d > R * 0.3) continue;
+      const near = (pts[i].depth + pts[j].depth) / 2;
+      ctx.strokeStyle = pal.ink(0.14 + Math.max(0, near) * 0.34);
+      ctx.beginPath();
+      ctx.moveTo(pts[i].px, pts[i].py);
+      ctx.lineTo(pts[j].px, pts[j].py);
+      ctx.stroke();
+    }
+  }
+  pts.forEach((p) => cloudNode(ctx, pal, p, true));
+
+  // The marks are SEATED — the nodes nearest the viewer, i.e. inside the body
+  // rather than on its rim. An owned layer sits in the middle of a team, and
+  // spacing them through the front twelve keeps three marks from clumping.
+  const byDepth = pts.map((_, i) => i).sort((a, z) => pts[z].depth - pts[a].depth);
+  ctx.fillStyle = pal.gold;
+  for (let k = 0; k < 12; k += 4) dia(ctx, pts[byDepth[k]].px, pts[byDepth[k]].py, 6);
+}
+
+/** ADVISORY — the survey. The whole estate read across, including what is not built. */
+function survey(
+  ctx: CanvasRenderingContext2D,
+  pts: CloudPoint[],
+  pal: VizPalette,
+  R: number,
+  b: VizBox
+): void {
+  /* THE REGIONS ARE SOLVED IN THE PROJECTION, NOT ON THE SPHERE, and the first
+     cut solved them on the sphere where they are invisible: five directions
+     partition a sphere correctly, then the flat projection lays the far half
+     straight over the near half, so every region interleaves with the one
+     behind it and the whole drawing reads as a mesh with holes in it. A
+     division has to happen in the plane the reader is looking at.
+
+     AND THE SEEDS ARE IRREGULAR ON PURPOSE. Five equal sectors around the
+     centre would partition the disc perfectly well and read as a PIE, i.e. a
+     circular indicator, which this system does not draw. Irregular seeds give
+     irregular regions: a surveyed estate rather than a chart of one. */
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  const SEEDS: readonly (readonly [number, number])[] = [
+    [-0.56, -0.42],
+    [0.08, -0.63],
+    [0.63, -0.06],
+    [0.28, 0.56],
+    [-0.47, 0.36],
+  ];
+  const seeds = SEEDS.map(([sx, sy]) => ({ x: cx + sx * R, y: cy + sy * R }));
+
+  /* ⚠ THE UNLINKED NODES ARE THE POINT, NOT AN OMISSION. The advisory read
+     names what should stay person-led, so the drawing has to be able to say it
+     — the Intelligence Map's own rule, one surface over: a map that shows only
+     what was configured shows what was built and hides what was not. */
+  const held = (i: number) => i % 19 === 3;
+
+  const region = pts.map((p, i) => {
+    if (held(i)) return -1;
+    let best = 0;
+    let bestD = Infinity;
+    seeds.forEach((s, k) => {
+      const d = Math.hypot(p.px - s.x, p.py - s.y);
+      if (d < bestD) {
+        bestD = d;
+        best = k;
+      }
+    });
+    return best;
+  });
+
+  // Inside a region only, so the estate reads as DIVIDED before anything
+  // crosses it.
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < pts.length; i++) {
+    if (region[i] < 0) continue;
+    for (let j = i + 1; j < pts.length; j++) {
+      if (region[j] !== region[i]) continue;
+      const d = Math.hypot(pts[i].px - pts[j].px, pts[i].py - pts[j].py);
+      if (d > R * 0.29) continue;
+      const near = (pts[i].depth + pts[j].depth) / 2;
+      ctx.strokeStyle = pal.ink(0.13 + Math.max(0, near) * 0.3);
+      ctx.beginPath();
+      ctx.moveTo(pts[i].px, pts[i].py);
+      ctx.lineTo(pts[j].px, pts[j].py);
+      ctx.stroke();
+    }
+  }
+
+  // One mark per region: the member closest to its own seed direction.
+  const marks: number[] = [];
+  seeds.forEach((s, k) => {
+    let best = -1;
+    let bestD = Infinity;
+    pts.forEach((p, i) => {
+      if (region[i] !== k) return;
+      const d = Math.hypot(p.px - s.x, p.py - s.y);
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    });
+    if (best >= 0) marks.push(best);
+  });
+
+  /* The traverse. GOLD IS WAYFINDING — this is the one line that crosses the
+     whole estate, and it is the only thing on the card entitled to the accent
+     as a LINE. Sorted left to right so it reads as a single pass rather than a
+     circuit. */
+  marks.sort((a, z) => pts[a].px - pts[z].px);
+  ctx.setLineDash([6, 7]);
+  ctx.strokeStyle = pal.goldA(0.55);
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  marks.forEach((i, k) =>
+    k ? ctx.lineTo(pts[i].px, pts[i].py) : ctx.moveTo(pts[i].px, pts[i].py)
+  );
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  pts.forEach((p, i) => {
+    if (region[i] >= 0) {
+      cloudNode(ctx, pal, p, true);
+      return;
+    }
+    // Person-led: an OPEN square, joined to nothing. Hollow because it is
+    // present and unencoded, not because it is absent.
+    ctx.strokeStyle = pal.ink(0.34 + Math.max(0, p.depth) * 0.28);
+    ctx.lineWidth = 1.6;
+    ctx.strokeRect(p.px - 4, p.py - 4, 8, 8);
+  });
+
+  ctx.fillStyle = pal.gold;
+  marks.forEach((i) => dia(ctx, pts[i].px, pts[i].py, 6));
+}
+
 function constellation(
   ctx: CanvasRenderingContext2D,
   b: VizBox,
   pal: VizPalette,
-  rand: () => number
+  rand: () => number,
+  service: VizKey
 ): void {
-  const N = 108;
+  const pts = sphereCloud(b);
   const R = Math.min(b.w, b.h) / 2;
-  const cx = b.x + b.w / 2;
-  const cy = b.y + b.h / 2;
-
-  // Fibonacci sphere — an even distribution with no seams or polar bunching.
-  const pts: { x: number; y: number; z: number }[] = [];
-  const golden = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < N; i++) {
-    const zz = 1 - (i / (N - 1)) * 2;
-    const r = Math.sqrt(Math.max(0, 1 - zz * zz));
-    const th = golden * i;
-    pts.push({ x: Math.cos(th) * r, y: zz, z: Math.sin(th) * r });
+  switch (service) {
+    case "keynote":
+      return radiant(ctx, pts, pal);
+    case "workshop":
+      return route(ctx, pts, pal, R);
+    case "guided-build":
+      return survey(ctx, pts, pal, R, b);
+    // `embedded`, and the safe default for any id this file does not know.
+    default:
+      return mesh(ctx, pts, pal, R);
   }
-  // A fixed tilt so the distribution never reads as a flat ring.
-  const tilt = 0.42;
-  const proj = pts.map((p) => ({
-    px: cx + p.x * R,
-    py: cy + (p.y * Math.cos(tilt) - p.z * Math.sin(tilt)) * R,
-    depth: p.z * Math.cos(tilt) + p.y * Math.sin(tilt),
-  }));
-
-  // Chords between near neighbours. Straight lines only — the sphere is implied
-  // by the point distribution, never drawn as an outline.
-  ctx.lineWidth = 1.7;
-  for (let i = 0; i < proj.length; i++) {
-    for (let j = i + 1; j < proj.length; j++) {
-      const dx = proj[i].px - proj[j].px;
-      const dy = proj[i].py - proj[j].py;
-      const d = Math.hypot(dx, dy);
-      if (d > R * 0.3) continue;
-      // Depth fades the far side, which is what gives the flat projection volume.
-      const near = (proj[i].depth + proj[j].depth) / 2;
-      ctx.strokeStyle = pal.ink(0.14 + Math.max(0, near) * 0.34);
-      ctx.beginPath();
-      ctx.moveTo(proj[i].px, proj[i].py);
-      ctx.lineTo(proj[j].px, proj[j].py);
-      ctx.stroke();
-    }
-  }
-  proj.forEach((p, i) => {
-    const near = Math.max(0, p.depth);
-    ctx.fillStyle = pal.ink(0.42 + near * 0.5);
-    sq(ctx, p.px, p.py, 3.1 + near * 2.2);
-    // A handful of lit nodes, chosen deterministically.
-    if (i % 23 === 4) {
-      ctx.fillStyle = pal.gold;
-      dia(ctx, p.px, p.py, 6);
-    }
-  });
-  void rand;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -670,19 +953,44 @@ function crystal(
 
 /* ── the registry ──────────────────────────────────────────────────────────── */
 
-const LANGUAGES: Record<
-  string,
-  (ctx: CanvasRenderingContext2D, b: VizBox, pal: VizPalette, rand: () => number) => void
-> = { constellation, dendrite, meridian, nebula, panel, glyph, sigil, armillary, crystal };
+/**
+ * A language's signature.
+ *
+ * ⚠ THE SERVICE ARRIVES TWICE, AND THE TWO USES ARE DIFFERENT. `rand` is the
+ * service-seeded stream — enough when the four cards may differ only in their
+ * NOISE. `service` is the key itself, for a language whose four cards differ in
+ * STRUCTURE: constellation draws a different figure per service, which a seed
+ * cannot express (owner, 2026-08-30). Most languages ignore it, and a
+ * four-parameter function assigns to this type unchanged.
+ */
+type VizDraw = (
+  ctx: CanvasRenderingContext2D,
+  b: VizBox,
+  pal: VizPalette,
+  rand: () => number,
+  service: VizKey
+) => void;
+
+const LANGUAGES: Record<string, VizDraw> = {
+  constellation,
+  dendrite,
+  meridian,
+  nebula,
+  panel,
+  glyph,
+  sigil,
+  armillary,
+  crystal,
+};
 
 export type VizLanguage = keyof typeof LANGUAGES | string;
 
 /**
- * Draw one visualization language into a box, seeded by the service.
+ * Draw one visualization language into a box, for one service.
  *
- * The SERVICE seeds the figure so the four cards of a set differ from each
- * other; the LANGUAGE decides what kind of drawing it is. That split is what
- * lets a variant be a design direction rather than four unrelated pictures.
+ * The LANGUAGE decides what kind of drawing it is; the SERVICE decides which
+ * drawing of that kind. That split is what lets a variant be a design direction
+ * rather than four unrelated pictures.
  */
 export function drawCardViz(
   ctx: CanvasRenderingContext2D,
@@ -692,7 +1000,7 @@ export function drawCardViz(
   box: VizBox
 ): void {
   const draw = LANGUAGES[language] ?? constellation;
-  draw(ctx, box, pal, prng(seedOf(`${language}:${service}`)));
+  draw(ctx, box, pal, prng(seedOf(`${language}:${service}`)), service);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

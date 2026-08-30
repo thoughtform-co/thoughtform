@@ -69,8 +69,8 @@ export const FACE_VARIANTS: readonly FaceVariant[] = [
     face: "constellation",
     openPlate: false,
     thesis:
-      "A GRAPH: points distributed on a sphere, projected flat, near neighbours joined by straight chords, depth carried by fade alone. Title and paragraph STACK at the head and the drawing takes the lower two-thirds — the arrangement Indent uses. Reads as a network with structure, which is the closest a drawing gets to saying 'connected intelligence' without a metaphor.",
-    provenance: "Indent — 'Your intelligent co-worker'",
+      "A GRAPH — and FOUR graphs. The node positions are IDENTICAL on all four cards, because they stand for the same estate of work; what changes is the structure drawn over it, which is what a service does. Keynote is a RADIANT (one source reaches a room that is not wired to itself yet). Workshop is a ROUTE (one workflow walked end to end, both ends marked). Embedded is a MESH (a body that holds itself up, marks seated inside it). Advisory is a SURVEY (five regions, a dashed gold traverse across their marks, and nodes joined to nothing — the person-led work). Title centred at the head, paragraph centred at the foot.",
+    provenance: "Indent — 'Your intelligent co-worker' · four figures, one vocabulary",
   },
   {
     id: "v5",
