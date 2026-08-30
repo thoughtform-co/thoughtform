@@ -307,6 +307,137 @@ export function drawCardEmblem(
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   The other two fields a card can carry.
+
+   The reference set does not have ONE answer for the middle of a card, it has a
+   handful, and the archetypes are what tell them apart (see
+   docs/design/card-reference-analysis.md). `drawCardEmblem` above is the
+   generative figure. These two are the other directions worth a variant:
+
+     applyHalftone   the PHOTOGRAPH, processed into the grammar rather than
+                     printed — the reference set's own answer for when a human
+                     stays in the frame
+     drawSpecReadout the field IS a readout — the INSTRUMENT archetype, the
+                     family every other Thoughtform instrument already belongs to
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Re-screen whatever is already on the canvas as a halftone of square cells.
+ *
+ * Run AFTER the photo and its LUT, so it screens the toned plate rather than the
+ * raw image. This is the move the reference set makes when a person does stay in
+ * the frame: the photograph becomes MATERIAL — dithered, perforated, obviously
+ * processed — instead of reading as a headshot dropped into a card.
+ *
+ * ⚠ Cells are SQUARES on a fixed lattice, not dots: same sharp-geometry law the
+ * emblems obey, and a round-dot halftone would read as newsprint rather than as
+ * this system's own pixel grammar.
+ */
+export function applyHalftone(
+  ctx: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  pal: EmblemPalette & { ground: string }
+): void {
+  const CELL = 9;
+  const src = ctx.getImageData(0, 0, w, h);
+  const px = src.data;
+
+  ctx.fillStyle = pal.ground;
+  ctx.fillRect(0, 0, w, h);
+
+  for (let cy = 0; cy < h; cy += CELL) {
+    for (let cx = 0; cx < w; cx += CELL) {
+      // Mean luminance of the cell. Sampling every other pixel is
+      // indistinguishable at this cell size and quarters the work.
+      let sum = 0;
+      let n = 0;
+      for (let y = cy; y < Math.min(cy + CELL, h); y += 2) {
+        for (let x = cx; x < Math.min(cx + CELL, w); x += 2) {
+          const i = (y * w + x) * 4;
+          sum += 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
+          n++;
+        }
+      }
+      if (!n) continue;
+      const lum = sum / n / 255;
+      // Size carries the value. A slight gamma keeps the mid-tones open —
+      // linear size on a dark plate crushes the whole face to near-solid.
+      const size = Math.pow(lum, 0.72) * (CELL - 1.1);
+      if (size < 0.6) continue;
+      const off = (CELL - size) / 2;
+      ctx.fillStyle = pal.ink(Math.min(0.92, 0.34 + lum * 0.62));
+      ctx.fillRect(cx + off, cy + off, size, size);
+    }
+  }
+}
+
+/** One row of the spec readout. */
+export interface SpecRow {
+  label: string;
+  value: string;
+}
+
+/**
+ * THE INSTRUMENT ARCHETYPE — the field is a readout a reader can check.
+ *
+ * The strongest Thoughtform-native direction of the five, and the one the
+ * services ring is currently the house's ONLY surface not to use: the casefile
+ * console, the intelligence map and the authored wireframes all draw records.
+ * Here the record is the engagement's own shape — duration, group size, format,
+ * language — which today is hidden inside the drawer.
+ *
+ * ⚠ NO INVENTED FIGURES. Every row is a `ServiceSpec` field the site already
+ * publishes; the meter is a categorical position on a named scale, not a
+ * measurement. This surface does not publish numbers it cannot stand behind.
+ */
+export function drawSpecReadout(
+  ctx: CanvasRenderingContext2D,
+  rows: SpecRow[],
+  pal: EmblemPalette,
+  box: { x: number; y: number; w: number; h: number },
+  fonts: { mono: string; sans: string }
+): void {
+  const label = ctx as CanvasRenderingContext2D & { letterSpacing?: string };
+  const shown = rows.slice(0, 4);
+  const pitch = box.h / shown.length;
+
+  ctx.textBaseline = "alphabetic";
+  shown.forEach((row, i) => {
+    const top = box.y + i * pitch;
+
+    // A hairline above every row — course lines, the ruled-record read.
+    ctx.strokeStyle = pal.ink(0.16);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(box.x, top);
+    ctx.lineTo(box.x + box.w, top);
+    ctx.stroke();
+
+    // The row's index mark, in the margin: a diamond, and the ONE gold thing.
+    ctx.fillStyle = pal.gold;
+    ctx.save();
+    ctx.translate(box.x + 7, top + 34);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillRect(-5, -5, 10, 10);
+    ctx.restore();
+
+    // LABEL — mono chrome, tracked, quiet.
+    label.letterSpacing = "3px";
+    ctx.font = `400 20px ${fonts.mono}`;
+    ctx.fillStyle = pal.ink(0.44);
+    ctx.fillText(row.label.toUpperCase(), box.x + 34, top + 42);
+
+    // VALUE — the record, in prose, at reading weight.
+    label.letterSpacing = "0px";
+    ctx.font = `400 30px ${fonts.sans}`;
+    ctx.fillStyle = pal.ink(0.9);
+    ctx.fillText(row.value, box.x + 34, top + 86);
+  });
+  label.letterSpacing = "0px";
+}
+
 /** Mark counts, for the eval harness and for a fit test. */
 export function emblemMarkCount(key: EmblemKey): { skeleton: number; signal: number } {
   const figure = FIGURES[key] ?? keynote;

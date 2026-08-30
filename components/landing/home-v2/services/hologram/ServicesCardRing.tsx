@@ -53,7 +53,7 @@ import * as THREE from "three";
 
 import { resolveScenePalette } from "@/lib/theme/palette";
 
-import { drawCardEmblem } from "./cardEmblem";
+import { applyHalftone, drawCardEmblem, drawSpecReadout } from "./cardEmblem";
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
 import { HologramOrbits } from "./HologramOrbits";
 import {
@@ -659,10 +659,60 @@ type InkRun = { text: string; gold: boolean };
  * instead, or the emblem face silently falls back to the `full` geometry — which
  * would cut the top-right corner the drawer tray needs square.
  */
-export type CardFaceVariant = "full" | "tight" | "emblem";
+export type CardFaceVariant =
+  | "full"
+  | "tight"
+  | "emblem"
+  | "halftone"
+  | "inverted"
+  | "instrument"
+  | "poster";
 
-/** The tight LAYOUT family. See CardFaceVariant. */
-const isTightLayout = (v: CardFaceVariant): boolean => v === "tight" || v === "emblem";
+/**
+ * The TIGHT layout family — everything except the ADR-029 `full` baseline.
+ * They share the scrims, the single BL chamfer, the open right shell and the
+ * chit, and differ only in what fills the FIELD and where the name sits.
+ */
+const isTightLayout = (v: CardFaceVariant): boolean => v !== "full";
+
+/**
+ * What a variant puts in the middle third, and where its name goes.
+ *
+ * Derived from the five archetypes read off the Brand Codex CARDS cluster
+ * (docs/design/card-reference-analysis.md). Each row is one archetype, so the
+ * lab compares DIRECTIONS rather than tweaks:
+ *
+ *   tight       photo,    name top      the shipped face, the control
+ *   emblem      figure,   name top      STACK — a drawn per-service figure
+ *   halftone    photo°,   name top      STACK — the photo processed into the
+ *                                       grammar; the reference set's own answer
+ *                                       when a person stays in the frame
+ *   inverted    figure,   name FOOT     INVERTED — the eye enters through the
+ *                                       image and lands on the words
+ *   instrument  readout,  name top      INSTRUMENT — the field IS a record
+ *   poster      figure,   name FOOT big POSTER STACK — claim top, figure centre,
+ *                                       the name bled across the foot (TALON)
+ */
+interface FaceComposition {
+  field: "photo" | "emblem" | "halftone" | "spec";
+  /** Where the framed name sits. The chit stays top-right regardless. */
+  nameAt: "top" | "foot";
+  /** The foot name is set large and unframed — the poster read. */
+  nameBled?: boolean;
+  /** Suppress the lede (the poster gives its room to the name). */
+  ledeOff?: boolean;
+}
+
+const COMPOSITION: Record<string, FaceComposition> = {
+  tight: { field: "photo", nameAt: "top" },
+  emblem: { field: "emblem", nameAt: "top" },
+  halftone: { field: "halftone", nameAt: "top" },
+  inverted: { field: "emblem", nameAt: "foot" },
+  instrument: { field: "spec", nameAt: "top" },
+  poster: { field: "emblem", nameAt: "foot", nameBled: true, ledeOff: true },
+};
+
+const compositionOf = (v: CardFaceVariant): FaceComposition => COMPOSITION[v] ?? COMPOSITION.tight;
 
 /** Greedy word-wrap for a single-font run of styled segments. Returns lines
  *  of runs so lede emphasis (`{ em }` → upright gold) survives wrapping. */
@@ -732,12 +782,29 @@ function bakeCardFace(
   ctx.fillStyle = pal.ground;
   ctx.fillRect(0, 0, BAKE_W, BAKE_H);
 
-  if (variant === "emblem") {
-    /* The EMBLEM face draws its field instead of photographing one. The photo
-       is deliberately NOT loaded past this point — the whole question this
-       variant exists to answer is whether the centre of a services card should
-       carry the practitioner or the work. See cardEmblem.ts. */
+  const comp = compositionOf(variant);
+
+  if (comp.field === "emblem") {
+    /* A DRAWN field instead of a photographed one. The photo is deliberately
+       not used past this point — the whole question these variants exist to
+       answer is whether the centre of a services card should carry the
+       practitioner or the work. See cardEmblem.ts. */
     drawCardEmblem(ctx, plate.id, pal);
+  } else if (comp.field === "spec") {
+    /* The INSTRUMENT archetype: the field is the engagement's own record,
+       which today is hidden inside the drawer. */
+    drawSpecReadout(
+      ctx,
+      [
+        { label: "Runs", value: plate.spec.duration },
+        { label: "Group", value: plate.spec.participants },
+        { label: "Format", value: plate.spec.format },
+        { label: "Language", value: plate.spec.language },
+      ],
+      pal,
+      { x: PAD_X, y: 396, w: BAKE_W - PAD_X * 2, h: 560 },
+      { mono: CARD_FONT, sans: CARD_SANS }
+    );
   } else if (img) {
     // Photo, cover-fit (assets are exactly BAKE_W × BAKE_H, so this is
     // 1:1), baked CLEAN — the plate's dot-matrix hologram effect lives on
@@ -764,6 +831,14 @@ function bakeCardFace(
       px[i + 2] = lut.b[lum];
     }
     ctx.putImageData(data, 0, 0);
+
+    /* HALFTONE re-screens the toned plate into square cells — the photograph
+       kept, but processed into the grammar so it reads as material rather than
+       as a headshot. Runs AFTER the LUT on purpose: it screens the plate the
+       card actually shows, not the raw image. */
+    if (comp.field === "halftone") {
+      applyHalftone(ctx, BAKE_W, BAKE_H, { ...pal, ground: pal.ground });
+    }
   } else {
     // Schematic dot-grid stand-in (the `.svc-plate__pbg--schematic` read) for
     // any future photo-less service — the ring never shows a raw void card.
@@ -915,39 +990,66 @@ function bakeCardFace(
        The frame is measured, not fixed: it wraps the text it actually holds,
        and the text wraps against the gap to the chit so a long name can
        never run under the affordance. */
-    label.letterSpacing = "3px";
-    ctx.font = `700 ${TIGHT_TITLE_PX}px ${CARD_FONT}`;
+    /* ⚠ `nameAt` is the archetype's variable, and the FRAME follows it.
+       At the foot the name is the last thing read rather than the first, so
+       the INVERTED and POSTER variants let the field enter the eye and land on
+       the words — the reference set's own reason for that arrangement. The
+       chit stays top-right in every case: it is the open affordance, and
+       moving a control to follow a composition is how an affordance gets lost. */
+    const namePx = comp.nameBled ? 78 : TIGHT_TITLE_PX;
+    const nameLh = comp.nameBled ? 92 : TIGHT_TITLE_LH;
+    const nameCapH = comp.nameBled ? 55 : NAME_CAP_H;
+    label.letterSpacing = comp.nameBled ? "8px" : "3px";
+    ctx.font = `700 ${namePx}px ${CARD_FONT}`;
     const nameText = plate.chip.toUpperCase();
     const chitX0 = BAKE_W - TIGHT_EXPAND_INSET - TIGHT_EXPAND_SIZE;
-    const nameTextX = PAD_X + NAME_FRAME_PAD_L + NAME_FRAME_GAP;
-    // 20px of clear air between the frame's right edge and the chit.
-    const nameMaxTextW = chitX0 - 20 - NAME_FRAME_PAD_R - nameTextX;
+    const framed = !comp.nameBled;
+    const nameTextX = PAD_X + (framed ? NAME_FRAME_PAD_L + NAME_FRAME_GAP : 0);
+    // 20px of clear air between the frame's right edge and the chit. A FOOT
+    // name has no chit beside it, so it takes the full measure.
+    const nameMaxTextW =
+      comp.nameAt === "foot"
+        ? BAKE_W - PAD_X - nameTextX
+        : chitX0 - 20 - NAME_FRAME_PAD_R - nameTextX;
     const nameLines = wrapRuns(ctx, [nameText], nameMaxTextW);
     const nameTextW = nameLines.reduce(
       (w, line) => Math.max(w, ctx.measureText(line.map((r) => r.text).join(" ")).width),
       0
     );
     const frameW = NAME_FRAME_PAD_L + NAME_FRAME_GAP + nameTextW + NAME_FRAME_PAD_R;
-    const frameH = NAME_FRAME_PAD_Y * 2 + NAME_CAP_H + (nameLines.length - 1) * TIGHT_TITLE_LH;
-    // Centred on the chit's centre — see the NAME_FRAME_* block.
-    const frameY = TIGHT_EXPAND_INSET + TIGHT_EXPAND_SIZE / 2 - frameH / 2;
-    const nameTop = frameY + NAME_FRAME_PAD_Y + NAME_CAP_H;
+    const frameH = NAME_FRAME_PAD_Y * 2 + nameCapH + (nameLines.length - 1) * nameLh;
+    const nameBlockH = nameCapH + (nameLines.length - 1) * nameLh;
+    // TOP: centred on the chit's centre (see the NAME_FRAME_* block).
+    // FOOT: seated on the card's bottom margin, growing up.
+    const frameY =
+      comp.nameAt === "foot"
+        ? BAKE_H - 72 - frameH
+        : TIGHT_EXPAND_INSET + TIGHT_EXPAND_SIZE / 2 - frameH / 2;
+    const nameTop =
+      comp.nameAt === "foot" && !framed
+        ? BAKE_H - 72 - (nameBlockH - nameCapH)
+        : frameY + NAME_FRAME_PAD_Y + nameCapH;
 
-    ctx.strokeStyle = pal.goldA(0.55);
-    ctx.lineWidth = 2;
-    ctx.strokeRect(PAD_X, frameY, frameW, frameH);
+    if (framed) {
+      ctx.strokeStyle = pal.goldA(0.55);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(PAD_X, frameY, frameW, frameH);
+    }
 
     nameLines.forEach((line, i) => {
-      drawRunLine(ctx, line, nameTextX, nameTop + i * TIGHT_TITLE_LH, pal.gold, pal.gold);
+      drawRunLine(ctx, line, nameTextX, nameTop + i * nameLh, pal.gold, pal.gold);
     });
     // Gold diamond on the FIRST line's cap band. 14×14 rotated → 19.8px on
-    // the diagonal, which sits optically with the ~28px caps.
-    ctx.fillStyle = pal.gold;
-    ctx.save();
-    ctx.translate(PAD_X + NAME_FRAME_PAD_L, nameTop - NAME_CAP_H / 2);
-    ctx.rotate(Math.PI / 4);
-    ctx.fillRect(-7, -7, 14, 14);
-    ctx.restore();
+    // the diagonal, which sits optically with the ~28px caps. The BLED name
+    // carries none: at 78px the mark would read as a bullet on a wordmark.
+    if (framed) {
+      ctx.fillStyle = pal.gold;
+      ctx.save();
+      ctx.translate(PAD_X + NAME_FRAME_PAD_L, nameTop - nameCapH / 2);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-7, -7, 14, 14);
+      ctx.restore();
+    }
 
     /* The EXPAND affordance — the universal open-in-full glyph in a hairline
        chit, top-right. Without SOMETHING here the tight card reads as a
@@ -988,21 +1090,31 @@ function bakeCardFace(
       ctx.lineCap = "butt";
     }
 
-    // Lede — sans body, `{ em }` spans upright gold (no-italics rule).
-    // Bottom-anchored on the card's bottom margin, growing UP.
-    label.letterSpacing = "0px";
-    ctx.font = `400 ${TIGHT_LEDE_PX}px ${CARD_SANS}`;
-    const ledeLines = wrapRuns(ctx, plate.lede, maxW);
-    ledeLines.forEach((line, i) => {
-      drawRunLine(
-        ctx,
-        line,
-        PAD_X,
-        TIGHT_COPY_BOTTOM - (ledeLines.length - 1 - i) * TIGHT_LEDE_LH,
-        pal.ink(0.82),
-        pal.gold
-      );
-    });
+    /* Lede — sans body, `{ em }` spans upright gold (no-italics rule).
+       Bottom-anchored on the card's bottom margin, growing UP.
+
+       ⚠ When the NAME takes the foot the lede is lifted clear of it by the
+       name's own measured height plus one line of air — derived, never a
+       second constant, so a two-line service name cannot land on top of it.
+       The POSTER drops the lede entirely: its whole argument is a claim, a
+       figure and a bled name, and a paragraph is the fourth register the
+       reference set's weakest cards all had. */
+    if (!comp.ledeOff) {
+      label.letterSpacing = "0px";
+      ctx.font = `400 ${TIGHT_LEDE_PX}px ${CARD_SANS}`;
+      const ledeBottom = comp.nameAt === "foot" ? frameY - TIGHT_LEDE_LH * 0.6 : TIGHT_COPY_BOTTOM;
+      const ledeLines = wrapRuns(ctx, plate.lede, maxW);
+      ledeLines.forEach((line, i) => {
+        drawRunLine(
+          ctx,
+          line,
+          PAD_X,
+          ledeBottom - (ledeLines.length - 1 - i) * TIGHT_LEDE_LH,
+          pal.ink(0.82),
+          pal.gold
+        );
+      });
+    }
 
     label.letterSpacing = "0px";
     return canvas;
