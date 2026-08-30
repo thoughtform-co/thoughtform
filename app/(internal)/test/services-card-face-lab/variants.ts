@@ -118,3 +118,27 @@ export const FACE_VARIANTS: readonly FaceVariant[] = [
     provenance: "The Marketing Memory Co. — the blue block glyph",
   },
 ];
+
+/**
+ * The TITLE treatments — a second, independent axis.
+ *
+ * ⚠ Worth knowing before judging these: ALMOST NO CARD ON THE REFERENCE BOARD
+ * FRAMES ITS TITLE. TALON, Droidrun, Thereby, Indent, Adaptive and both brain
+ * cards set theirs as plain type — the title reads as a title because of SIZE
+ * and POSITION, not because it is in a box. The frame is a Thoughtform
+ * invention (owner, 2026-08-29), which is exactly why it is worth seeing
+ * against the alternatives rather than assumed.
+ */
+export const TITLE_STYLES = ["framed", "chip", "bare", "display", "band", "stamp"] as const;
+
+export const TITLE_NOTE: Record<string, string> = {
+  framed:
+    "The shipped treatment — a hairline Tensor Gold frame with the leading diamond, 40px. Reads as a labelled key on a device.",
+  chip: "The ADR-029 original — a SOLID Tensor Gold stamp with the ink knocked out of it, 34px. The loudest of the six and the only one that spends the accent as a fill rather than a line; ink on gold measures ~8.2:1.",
+  bare: "No box, no mark, same 40px. What the reference board does by default: the title is a title because of where it sits, not because it is enclosed.",
+  display:
+    "No box, 62px. Size alone carries the hierarchy — TALON's move, and the one that makes the card read as a poster rather than a component.",
+  band: "44px over a full-width gold rule. The Heading Indicator grammar applied to the title: an active state is a directional edge, never a fill.",
+  stamp:
+    "36px under a hairline, wide-tracked — the '// LABEL' bearing convention with its ordinal dropped (no ordinals survive on this surface).",
+};

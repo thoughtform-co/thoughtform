@@ -724,6 +724,51 @@ const COMPOSITION: Record<string, FaceComposition> = {
 const compositionOf = (v: CardFaceVariant): FaceComposition => COMPOSITION[v] ?? COMPOSITION.tight;
 
 /**
+ * How the service title is SET — a second axis, crossed against the composition.
+ *
+ * ⚠ THE REFERENCE BOARD ALMOST NEVER FRAMES A TITLE. TALON, Droidrun, Thereby,
+ * Indent, Adaptive and both brain cards all set theirs as plain type: the title
+ * reads as a title because of SIZE and POSITION, not because it is in a box. The
+ * frame here is a Thoughtform invention (owner, 2026-08-29, "add a frame around
+ * Keynote / Workshop … so it's clear"), and it is worth seeing against the
+ * alternatives rather than assumed.
+ *
+ * `box` is what encloses the name; `mark` is the leading diamond; `rule` is a
+ * hairline above or below it. A treatment gets AT MOST ONE of box / rule — the
+ * corner law's one-grammar-per-object, applied to type.
+ */
+export type CardTitleStyle = "framed" | "chip" | "bare" | "display" | "band" | "stamp";
+
+interface TitleTreatment {
+  px: number;
+  lh: number;
+  /** Measured cap height — never `measureText`, whose ascent varies per string. */
+  capH: number;
+  track: number;
+  box: "none" | "hairline" | "fill";
+  mark: boolean;
+  rule: "none" | "under" | "over";
+}
+
+const TITLE_STYLE: Record<CardTitleStyle, TitleTreatment> = {
+  // The shipped treatment: hairline gold frame + leading diamond.
+  framed: { px: 40, lh: 52, capH: 28, track: 3, box: "hairline", mark: true, rule: "none" },
+  // The ADR-029 original — a SOLID Tensor Gold stamp with the ink knocked out.
+  // The loudest of the six, and the only one that spends the accent as a fill.
+  chip: { px: 34, lh: 46, capH: 24, track: 5, box: "fill", mark: false, rule: "none" },
+  // No box, no mark. The reference board's default, at the shipped size.
+  bare: { px: 40, lh: 52, capH: 28, track: 3, box: "none", mark: false, rule: "none" },
+  // No box, much larger. Size alone carries the hierarchy — TALON's move.
+  display: { px: 62, lh: 74, capH: 44, track: 2, box: "none", mark: false, rule: "none" },
+  // A directional edge under the name: the Heading Indicator grammar, and the
+  // house rule that an active state is a rule rather than a fill.
+  band: { px: 44, lh: 56, capH: 31, track: 3, box: "none", mark: false, rule: "under" },
+  // A hairline ABOVE it — the "// LABEL" bearing convention, minus the ordinal
+  // (no ordinals survive anywhere on this surface).
+  stamp: { px: 36, lh: 48, capH: 25, track: 6, box: "none", mark: false, rule: "over" },
+};
+
+/**
  * The drawing's box for a band.
  *
  * `full` is the photo's own case — it covers the card and the scrims carry the
@@ -800,7 +845,8 @@ function bakeCardFace(
   plate: ServicePlate,
   img: HTMLImageElement | null,
   variant: CardFaceVariant = "full",
-  pal: FacePalette = FACE_DARK
+  pal: FacePalette = FACE_DARK,
+  titleStyle: CardTitleStyle = "framed"
 ): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = BAKE_W;
@@ -1016,12 +1062,17 @@ function bakeCardFace(
        control to follow a layout is how an affordance gets lost. */
     const titleTop = comp.title.startsWith("top");
     const titleCentre = comp.title.endsWith("centre");
-    const framed = !comp.bled;
+    /* The TREATMENT is a second axis, crossed against the composition — it says
+       how the title is SET, where the composition says where it goes. See
+       CardTitleStyle. `bled` forces the display treatment: a 74px name inside a
+       hairline box would read as a caption in a frame. */
+    const ts = TITLE_STYLE[comp.bled ? "display" : titleStyle] ?? TITLE_STYLE.framed;
+    const framed = ts.box !== "none";
 
-    const namePx = comp.bled ? 74 : TIGHT_TITLE_PX;
-    const nameLh = comp.bled ? 88 : TIGHT_TITLE_LH;
-    const nameCapH = comp.bled ? 52 : NAME_CAP_H;
-    label.letterSpacing = comp.bled ? "6px" : "3px";
+    const namePx = comp.bled ? 74 : ts.px;
+    const nameLh = comp.bled ? 88 : ts.lh;
+    const nameCapH = comp.bled ? 52 : ts.capH;
+    label.letterSpacing = comp.bled ? "6px" : `${ts.track}px`;
     ctx.font = `700 ${namePx}px ${CARD_FONT}`;
     const nameText = plate.chip.toUpperCase();
     const chitX0 = BAKE_W - TIGHT_EXPAND_INSET - TIGHT_EXPAND_SIZE;
@@ -1031,7 +1082,9 @@ function bakeCardFace(
        column. Deriving this rather than fixing it is what stops a long service
        name running under the affordance in one composition and looking cramped
        in the others. */
-    const frameLead = framed ? NAME_FRAME_PAD_L + NAME_FRAME_GAP : 0;
+    // The lead is the diamond's gutter, so it belongs to the MARK, not the box:
+    // a filled chip with no mark should not carry an empty 64px porch.
+    const frameLead = ts.mark ? NAME_FRAME_PAD_L + NAME_FRAME_GAP : framed ? 30 : 0;
     const nameMaxTextW =
       comp.title === "top-left"
         ? chitX0 - 20 - NAME_FRAME_PAD_R - (PAD_X + frameLead)
@@ -1057,10 +1110,17 @@ function bakeCardFace(
       ? frameY + NAME_FRAME_PAD_Y + nameCapH
       : frameY + nameCapH + (frameH - nameBlockH) / 2 - NAME_FRAME_PAD_Y;
 
-    if (framed) {
+    /* The enclosure. "hairline" is the shipped frame; "fill" is the ADR-029
+       stamp, a SOLID Tensor Gold block with the ink knocked out of it — the
+       loudest treatment here and the only one that spends the accent as a fill
+       rather than as a line. */
+    if (ts.box === "hairline") {
       ctx.strokeStyle = pal.goldA(0.55);
       ctx.lineWidth = 2;
       ctx.strokeRect(frameX, frameY, frameW, frameH);
+    } else if (ts.box === "fill") {
+      ctx.fillStyle = pal.chipFill;
+      ctx.fillRect(frameX, frameY, frameW, frameH);
     }
 
     const nameTextX = frameX + frameLead;
@@ -1070,12 +1130,31 @@ function bakeCardFace(
       // same x. Centring the block but not its lines is the tell of a layout
       // that was moved rather than re-anchored.
       const x = titleCentre && !framed ? (BAKE_W - lineW) / 2 : nameTextX;
-      drawRunLine(ctx, line, x, nameTop + i * nameLh, pal.gold, pal.gold);
+      // On a FILLED chip the name is knocked out of the gold, not painted on it
+      // — ink on gold measures ~8.2:1, gold on gold measures nothing.
+      const ink = ts.box === "fill" ? pal.chipInk : pal.gold;
+      drawRunLine(ctx, line, x, nameTop + i * nameLh, ink, ink);
     });
+
+    /* A RULE instead of a box. At most one of the two ever draws — the corner
+       law's one-grammar-per-object, applied to type. "under" is the Heading
+       Indicator (an active state is a directional edge, never a fill); "over" is
+       the "// LABEL" bearing convention with its ordinal dropped. */
+    if (ts.rule !== "none") {
+      const ruleY = ts.rule === "under" ? nameTop + 22 : nameTop - nameCapH - 26;
+      const ruleW = titleCentre ? nameTextW : Math.max(nameTextW, 200);
+      const ruleX = titleCentre ? (BAKE_W - ruleW) / 2 : PAD_X;
+      ctx.strokeStyle = pal.goldA(0.75);
+      ctx.lineWidth = ts.rule === "under" ? 3 : 2;
+      ctx.beginPath();
+      ctx.moveTo(ruleX, ruleY);
+      ctx.lineTo(ruleX + ruleW, ruleY);
+      ctx.stroke();
+    }
     // Gold diamond on the FIRST line's cap band. 14×14 rotated → 19.8px on the
     // diagonal, which sits optically with the ~28px caps. The BLED title carries
     // none: at 74px a leading mark reads as a bullet on a wordmark.
-    if (framed) {
+    if (ts.mark) {
       ctx.fillStyle = pal.gold;
       ctx.save();
       ctx.translate(frameX + NAME_FRAME_PAD_L, nameTop - nameCapH / 2);
@@ -1728,6 +1807,8 @@ export interface ServicesCardRingProps {
    *  byte-identical until the default is deliberately flipped. Changing it
    *  re-runs the bake effect. */
   faceVariant?: CardFaceVariant;
+  /** How the service title is SET — a second axis, crossed with faceVariant. */
+  titleStyle?: CardTitleStyle;
   /**
    * Mount the ADR-050 rev-3 in-canvas DRAWER (the open state): a second
    * card-sized slab per card that slides out from behind the card when that
@@ -1792,6 +1873,7 @@ export function ServicesCardRing({
   entrance = "scroll",
   publishAnchors = false,
   faceVariant = "full",
+  titleStyle = "framed",
   openDrawer = false,
   facingBlend = RING_FACING_BLEND,
   masterOpacity = 1,
@@ -2367,7 +2449,7 @@ export function ServicesCardRing({
               img = null; // schematic fallback keeps the ring whole
             }
           }
-          return bakeCardFace(plate, img, faceVariant, facePal);
+          return bakeCardFace(plate, img, faceVariant, facePal, titleStyle);
         })
       );
       if (disposed) return;
@@ -2399,7 +2481,7 @@ export function ServicesCardRing({
     // `facePal` (the ring theme) re-runs the bake on a flip — light gets
     // the parchment-print faces; the old set disposes via the `[textures]`
     // cleanup, exactly like a glEpoch rebake.
-  }, [gl, faceVariant, facePal]);
+  }, [gl, faceVariant, facePal, titleStyle]);
 
   /* ── The DRAWER bake is LAZY (ADR-050 promotion, owner 2026-07-26) ────────
      Four drawer faces cost ~18 MB of texture, and most visitors scroll the

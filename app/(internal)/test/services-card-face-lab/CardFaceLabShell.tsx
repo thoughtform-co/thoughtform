@@ -5,13 +5,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
+import type { CardTitleStyle } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import type { ServicePlateId } from "@/components/landing/home-v2/services/servicePlateData";
 import { openPlateRef } from "@/lib/services-ring/openPlateRef";
 import { activeServiceForProgress } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
 import { CardFaceFrame } from "./CardFaceFrame";
-import { FACE_VARIANTS } from "./variants";
+import { FACE_VARIANTS, TITLE_NOTE, TITLE_STYLES } from "./variants";
 
 // three/fiber is client-only; keep it out of the server render entirely so the
 // frame + masthead still paint if WebGL is unavailable.
@@ -46,6 +47,7 @@ interface ShellProps {
  */
 export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
   const [variantIdx, setVariantIdx] = useState(0);
+  const [titleStyle, setTitleStyle] = useState<CardTitleStyle>("framed");
   const [progress, setProgress] = useState(DEFAULT_PROGRESS);
   const [openServiceId, setOpenServiceId] = useState<ServicePlateId | null>(null);
   const replayRef = useRef<(() => void) | null>(null);
@@ -63,25 +65,30 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
         if (Number.isFinite(n) && n >= 0 && n < FACE_VARIANTS.length) setVariantIdx(n);
       }
     }
+    const t = q.get("t");
+    if (t && (TITLE_STYLES as readonly string[]).includes(t)) setTitleStyle(t as CardTitleStyle);
     const p = Number.parseFloat(q.get("p") ?? "");
     if (Number.isFinite(p)) setProgress(Math.min(1, Math.max(0, p)));
   }, []);
 
   const commit = useCallback(
-    (next: { variantIdx?: number; progress?: number }) => {
+    (next: { variantIdx?: number; progress?: number; titleStyle?: CardTitleStyle }) => {
       const v = next.variantIdx ?? variantIdx;
       const p = next.progress ?? progress;
+      const t = next.titleStyle ?? titleStyle;
       if (next.variantIdx !== undefined) setVariantIdx(next.variantIdx);
       if (next.progress !== undefined) setProgress(next.progress);
+      if (next.titleStyle !== undefined) setTitleStyle(next.titleStyle);
       // Moving the ring or switching routes must not leave a plate seated on
       // a rect the card has left.
       setOpenServiceId(null);
       const url = new URL(window.location.href);
       url.searchParams.set("v", FACE_VARIANTS[v].id);
       url.searchParams.set("p", p.toFixed(3));
+      url.searchParams.set("t", t);
       window.history.replaceState(null, "", url.toString());
     },
-    [variantIdx, progress]
+    [variantIdx, progress, titleStyle]
   );
 
   /**
@@ -183,6 +190,7 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
         <RingBackdrop
           progress={progress}
           faceVariant={variant.face}
+          titleStyle={titleStyle}
           openDrawer={variant.openPlate}
         />
       </CanvasErrorBoundary>
@@ -215,7 +223,32 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
           ))}
         </div>
 
+        {/* The TITLE treatment is a second, independent axis — cross any
+            setting of the name against any composition. Kept as its own row
+            rather than folded into the variant list because six treatments ×
+            nine compositions is fifty-four cards, and a flat list of those is
+            not a comparison. */}
+        <div className="scfl-chips" role="tablist" aria-label="Title treatment">
+          {TITLE_STYLES.map((t) => (
+            <button
+              key={t}
+              type="button"
+              role="tab"
+              className="scfl-chip"
+              data-on={t === titleStyle || undefined}
+              aria-selected={t === titleStyle}
+              onClick={() => commit({ titleStyle: t })}
+              title={TITLE_NOTE[t]}
+            >
+              {t.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
         <p className="scfl-thesis">{variant.thesis}</p>
+        <p className="scfl-thesis">
+          <strong>Title · {titleStyle.toUpperCase()}</strong> — {TITLE_NOTE[titleStyle]}
+        </p>
         <p className="scfl-prov">
           <span className="scfl-prov__diamond" aria-hidden="true" />
           {variant.provenance}

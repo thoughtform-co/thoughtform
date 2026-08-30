@@ -8,7 +8,10 @@ import {
   ServicesCardRing,
   ServicesHologramScene,
 } from "@/components/landing/home-v2/services/hologram";
-import type { CardFaceVariant } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
+import type {
+  CardFaceVariant,
+  CardTitleStyle,
+} from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import { STRUCTURAL_ORBITS } from "@/components/landing/home-v2/services/hologram/HologramOrbits";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import { TENSOR_ACCENT, TENSOR_GOLD } from "@/lib/home-v2/goldPalette";
@@ -46,12 +49,19 @@ interface RingBackdropProps {
    *  the ring itself reads the module ref per WebGL frame. */
   progress: number;
   faceVariant: CardFaceVariant;
+  /** How the service title is set — the lab's second axis. */
+  titleStyle: CardTitleStyle;
   /** ADR-050 rev 3: mount the in-canvas drawer (V2 only). Its open/closed
    *  state comes from `openPlateRef`, written by the lab shell. */
   openDrawer: boolean;
 }
 
-export default function RingBackdrop({ progress, faceVariant, openDrawer }: RingBackdropProps) {
+export default function RingBackdrop({
+  progress,
+  faceVariant,
+  titleStyle,
+  openDrawer,
+}: RingBackdropProps) {
   // ADR-047's about clock stays parked: the deck flip is not part of this
   // study, and the ring's rest pose needs `engaged: false`.
   const aboutRef = useRef<AboutStageProgress>({ progress: 0, engaged: false });
@@ -101,6 +111,7 @@ export default function RingBackdrop({ progress, faceVariant, openDrawer }: Ring
             aboutProgressRef={aboutRef}
             entrance="off"
             faceVariant={faceVariant}
+            titleStyle={titleStyle}
             openDrawer={openDrawer}
             publishAnchors
           />
