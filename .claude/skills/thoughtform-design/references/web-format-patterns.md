@@ -90,7 +90,12 @@ The scroll chevron is the most load-bearing always-on anchor on web. It is the "
 
 ### Reference implementation
 
-v5: `components/hud/HUDFrame.tsx` renders the scale indicator at lines ~161. The scroll progress is computed in the parent (`components/hud/NavigationCockpitV2/index.tsx`) and threaded through as a prop.
+⚠ **The v5 implementation this section described is DELETED.** `NavigationCockpitV2` and its
+`/archive/current-home` route were removed in the 2026-07 Phase 5 cleanup; git history is the
+archive. The live scroll-progress source on thoughtform.co is
+`components/landing/v7/hooks/useLandingScroll.ts`, consumed by the `.hud__depth` diamond in
+`components/landing/v7/landing.css`. The GEOMETRY above still holds — only the file that
+computes the progress moved.
 
 ## 4. Omission rules on web
 

@@ -107,7 +107,14 @@ The Thoughtform sigil (`.sigil__mark`) animates into the HUD brandmark anchor
 **Reduced motion:** sigil elements snap visible; brandmark gets `.is-visible`
 and `.hud--brandmark-active` immediately. No scroll animation.
 
-**Implementation:** `components/landing/v7/hooks/useSigilChoreography.ts`.
+**Implementation:** `lib/brandmark/journey.ts` + `components/landing/v7/BrandmarkActor.tsx`.
+
+> ⚠ Updated 2026-08-30. This pointed at `components/landing/v7/hooks/useSigilChoreography.ts`,
+> **which no longer exists** — ADR-013 replaced the per-phase GSAP timeline described above
+> with one continuous transform (position, scale, rotation, density and dispersion as
+> functions of scrollY). The PHASES table still describes what the handoff reads as; the
+> mechanism is a lerp along the journey now, not a scrubbed timeline with discrete toggles.
+> See the `brandmark-choreography` skill for the operational detail.
 
 ---
 
