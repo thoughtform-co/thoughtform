@@ -1,7 +1,7 @@
 /**
  * The VOIDWALKER character-stage era registry (ADR-082).
  *
- * Six selectable versions of the owner across twelve years — the
+ * Five selectable versions of the owner across ten years — the
  * curated roster the hologram section ships with (owner ruling, not the
  * full nine). Each entry pins to a beat id in
  * `voidwalkerData.ts` (ADR-074), which is the record and stays the
@@ -12,24 +12,23 @@
  *
  * ⚠ THE ORDER IS REVERSE-CHRONOLOGICAL, matching the record. Reading
  * downward the rail starts at the current seat (`loop`) and lands on
- * the origin (`creatives`).
+ * the origin (`pokemon-go`).
  *
  * ⚠ ZERO IMPORTS. The consumers are the stage renderer, its lab
  * variant and a unit guard — one record, no cycles, no runtime.
  */
 
 /** A stable non-display id for the era. Kebab; matches the beat id it
- *  hangs off in `VOIDWALKER_BEATS`. The compound `the-crowd` is the
- *  one exception — it spans four 2016–18 beats (Pokémon GO, Ophef, the
- *  Expanse campaign + film, and the coins post), each one an instance
- *  of the same move on a different crowd. */
-export type CharacterEraId =
-  | "creatives"
-  | "the-crowd"
-  | "azeroth"
-  | "genai"
-  | "thoughtform"
-  | "loop";
+ *  hangs off in `VOIDWALKER_BEATS`.
+ *
+ *  ⚠ EVERY ERA ID NOW EQUALS ITS BEAT ID. The compound-era exception is
+ *  gone: `the-crowd` used to span four 2016–18 beats under one seat, and
+ *  the 2026-08-30 reduction split it into the two eras that carry their
+ *  own year — `expanse` (2018) and `pokemon-go` (2016) — each still
+ *  speaking for its neighbour through `pressBeatIds`. `azeroth` is the
+ *  one id whose spelling differs from its beat (`classroom`), because the
+ *  era is named for the field site rather than the room. */
+export type CharacterEraId = "pokemon-go" | "expanse" | "azeroth" | "genai" | "loop";
 
 /**
  * A normalized, self-hosted hologram pair for one era.
@@ -272,7 +271,7 @@ export interface CharacterEra {
    */
   hologram?: CharacterEraHologram;
   /**
-   * The rail label as it letters on the era pip. Kept short so all six
+   * The rail label as it letters on the era pip. Kept short so all five
    * fit at 1280 without wrapping. ≤14 chars.
    */
   short: string;
@@ -286,11 +285,11 @@ export interface CharacterEra {
    * Which beats' press cards the era prints, in order. Defaults to
    * `[beatId]` when absent.
    *
-   * ⚠ THIS IS HOW THE UNMAPPED BEATS BECOME REACHABLE. `the-crowd`
-   * spans four 2016–18 beats but pins to `expanse` for its plate, so
-   * the Pokémon GO, Ophef and coins beats have no era of their own.
-   * Naming them here is what lets one era speak for its whole span
-   * without duplicating a word of the record.
+   * ⚠ THIS IS HOW THE UNMAPPED BEATS BECOME REACHABLE. Two 2016–18
+   * beats have no era of their own: the `expanse` era prints the COINS
+   * card beside its own, and the `pokemon-go` era prints the OPHEF card
+   * beside its own. Naming them here is what lets one era speak for its
+   * neighbour without duplicating a word of the record.
    */
   pressBeatIds?: readonly string[];
   /** The era's transmission, when one exists. See `CharacterEraFilm`. */
@@ -303,11 +302,11 @@ export interface CharacterEra {
  *
  * Wardrobe copy is authored from the owner's own uniform (black boots,
  * black jeans, blazer, turtleneck/shirt, cap) plus per-era gear that
- * makes the moment recognisable: a mic and shorter blazer for 2014, a
- * lanyard and camera for the crowds, a lecturer's tote for Azeroth, the
- * cap and film cape for 2022's Latent Land, the Thoughtform cap +
- * ThoughtForm brooch for 2025, the same coat but longer for 2026.
- * These are the WARDROBE LOCKS the skill runs against.
+ * makes the moment recognisable: a lanyard and camera for the two
+ * crowds (2016's hunts and 2018's campaign), the warlock's own transmog
+ * for Azeroth, the cap and film cape for 2022's Latent Land, and the
+ * long coat with the Thoughtform cap + brooch for 2026. These are the
+ * WARDROBE LOCKS the skill runs against.
  *
  * ⚠ `stillPath` currently points at the existing site portrait for
  * every era. When the `voidwalker-avatar` skill produces the real era
@@ -331,25 +330,6 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
       { k: "Owns", v: "The map between work and intelligence" },
       { k: "Decides", v: "Which setup runs which workflow" },
       { k: "Answers for", v: "What it inherits, and the outcome" },
-    ],
-  },
-  {
-    id: "thoughtform",
-    beatId: "thoughtform",
-    year: "2025",
-    wardrobe: "The founder",
-    loadout: "Blazer · turtleneck · Thoughtform cap · brooch · rings.",
-    motto: "The practice, founded.",
-    // First real Meshy model (voidwalker-avatar wave 20260826-thoughtform-v3,
-    // lowpoly A/B winner, texture re-encoded to 1.55 MB from 4.30).
-    modelPath: "/models/voidwalker/thoughtform.glb",
-    stillPath: "/images/services/Vince-4.jpg",
-    short: "Thoughtform",
-    facts: [
-      { k: "Founded", v: "Thoughtform, the practice" },
-      { k: "Subject", v: "Organisations" },
-      { k: "In place of", v: "A platform, an intelligence" },
-      { k: "Mark", v: "Cap, brooch, rings" },
     ],
   },
   {
@@ -381,50 +361,63 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     beatId: "classroom",
     year: "2020",
     // ⚠ The Azeroth era's WARDROBE is deliberately the one exception to the
-    // identity-map's six-era uniform (blazer · turtleneck · cap · rolled cuff
+    // identity-map's five-era uniform (blazer · turtleneck · cap · rolled cuff
     // · combat boots). The 2020 field site was Azeroth itself: the figure is
     // Vince's Warcraft warlock ARAFEL (Human, Alliance, Magtheridon EU), in
-    // his own "Daemoniac" transmog, TALKING, flanked by two imps at his feet.
+    // his own "Daemoniac" transmog, TALKING — the emote is what the era is
+    // about, because the class was taught inside the game.
     //
-    // ⚠ AND IT IS NOT A DESCRIPTION ANY MORE — IT IS THE GAME'S OWN RENDER,
-    // GRADED AS A HOLOGRAM. v1 ran a written wardrobe through an image model,
+    // ⚠ AND IT IS THE CHARACTER'S OWN GEOMETRY NOW, LIT AS A HOLOGRAM RATHER
+    // THAN GRADED INTO ONE. v1 ran a written wardrobe through an image model,
     // which is a paraphrase (generic cowl, invented fel spires, nondescript
-    // sword). v2 replaced that with a capture of Blizzard's renderer driven by
-    // the character's own transmog record. v3 keeps the capture path but swaps
-    // the animation to EmoteTalkSubdued (a talking-idle rather than a
-    // dressing-room stance), drops the Skull of the Man'ari offhand (the owner
-    // removed it in the hash), replaces the Doomguard behind him with two imps
-    // at his feet, and BAKES A HYBRID HOLOGRAM GRADE — gold-shifted body with
-    // fel-green preserved — into the asset so the CSS raster resolves the
-    // frame as a projection rather than a screenshot with scanlines. Full
-    // recipe in `voidwalker-avatar/waves/20260829-azeroth-v3`.
+    // sword). v2 and v3 captured Blizzard's renderer through Wowhead's
+    // dressing room and post-graded the frames. v5 renders the export itself:
+    // `wow.export`'s rigged GLB, `EmoteTalkSubdued` off the model's own 422
+    // animations, in Blender on an emissive hologram material. Three things
+    // only this route can do — the alpha is the RENDERER'S (v3 carried 414
+    // matte cuts along dark cloth, because a difference key against a backdrop
+    // cannot separate black from black), the FRESNEL RIM needs a surface
+    // normal a finished frame does not have, and the scan cadence is WRAPPED
+    // ON THE GEOMETRY in world space instead of lying flat on the picture.
+    // Recipe in `voidwalker-avatar/waves/20260830-azeroth-v5-blender`.
+    //
+    // ⚠ BAKE THE LIGHT, CODE THE SCREEN still holds (ADR-082 U1). The baked
+    // band is coarse — one cycle per ~19px against the site's own 1px-in-3px
+    // CSS scan mask — and carries only the part CSS cannot: a cadence that
+    // curves over the shoulders. The site's mask, flicker and materialize are
+    // untouched.
     wardrobe: "The Azeroth teacher",
+    // ⚠ THE PLATE SPEAKS FOR WHAT IT SHOWS (U13's rule). The companions are
+    // real again — two Fel Imps exported with their own 63-joint rig and 25
+    // animations, not v3's frozen PNGs — so the row may claim them.
     loadout: "Daemoniac · Shard of Azzinoth · flanked by two imps.",
     motto: "Class moved into the game.",
     modelPath: null,
     stillPath: "/images/services/vince.webp",
-    // ⚠ `-v3` IS PART OF THE CONTRACT. v1 shipped under the unsuffixed names,
-    // v2 replaced them, and v3 replaces v2 — a cache does not read commit
-    // messages, so a new URL is the only guarantee that the graded talking
-    // capture actually reaches the reader.
+    // ⚠ `-v5` IS PART OF THE CONTRACT. Each wave has shipped under its own
+    // suffix since v1 took the unsuffixed names — a cache does not read commit
+    // messages, so a new URL is the only guarantee the new figure reaches the
+    // reader.
     //
-    // ⚠ headY/footY DESCRIBE THE MAN, NOT THE COMPOSITE. Measured off a
-    // companion-free re-composite of frame zero (alpha mask, opaque cutoff
-    // 32/255). Measured from the DELIVERED poster instead, headY comes back
-    // NEAR ZERO because the imps' horn tips or fel wisps reach the frame's
-    // top — a value `isCharacterEraHologram` accepts without complaint since
-    // it only asks for 0 ≤ headY < footY ≤ 1. The imps are scenery, and
-    // scenery may not move the projector's anchor. The figure still sits ~7pp
-    // higher than thoughtform's (0.049 vs 0.122) because the Skull of the
-    // Man'ari's fel skulls off the shoulders push the top up.
+    // ⚠ headY/footY ARE MEASURED OFF THE DELIVERED ALPHA, at the opaque cutoff
+    // 32/255, over EVERY frame rather than frame zero — a talking idle's head
+    // and hands move, so an anchor taken from one pose is wrong for the other
+    // 148. They agree with the camera solve's own projection to four decimal
+    // places, which is the check that the frame is the frame that was solved.
+    //
+    // ⚠ AND headY IS 0.159 BECAUSE THE FRAME IS WIDTH-BOUND, NOT BECAUSE THE
+    // FIGURE SITS LOW. The Daemoniac pauldrons span 1.40 m against a 2.08 m
+    // man — aspect 0.67 in a 0.5625 slot — so the shoulders decide the fit and
+    // the surplus lands above the head. A height-first fit crops them, and a
+    // pauldron is worn: U13's "a plume may run off the edge; the man may not".
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-azeroth-v3.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v3.webm",
-      posterPath: "/images/voidwalker/holo-still-azeroth-v3.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v3.webp",
+      videoPath: "/videos/voidwalker/holo-idle-azeroth-v5.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v5.webm",
+      posterPath: "/images/voidwalker/holo-still-azeroth-v5.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v5.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.049,
-      footY: 0.972,
+      headY: 0.1586,
+      footY: 0.9695,
     },
     short: "Azeroth",
     facts: [
@@ -435,26 +428,23 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     ],
   },
   {
-    id: "the-crowd",
-    // The plate beat is the Expanse campaign (the compound span's
-    // richest artefact); the era's facts and press speak for all four
-    // crowds — Pokémon GO and Ophef in the rows, the coins post in the
-    // second press card.
+    id: "expanse",
     beatId: "expanse",
-    year: "2016–18",
-    wardrobe: "The street organiser",
+    year: "2018",
+    wardrobe: "The campaign commander",
     loadout: "Blazer · shirt · lanyard · camera · phone · cap.",
-    motto: "The crowd was the work.",
+    motto: "Venting became a campaign.",
     modelPath: null,
     stillPath: "/images/services/Vince-4.jpg",
-    short: "The Crowd",
+    short: "The Expanse",
     facts: [
       { k: "Petition", v: "Past 100,000 signatures" },
+      { k: "Command post", v: "A Discord" },
+      { k: "The flight", v: "LA, to put it in front of Jeff Bezos" },
       { k: "Outcome", v: "Three more seasons" },
-      { k: "Street hunt", v: "About a thousand" },
-      { k: "Zoo hunt", v: "Sixteen thousand" },
-      { k: "Same years", v: "A hashtag became a party" },
     ],
+    // The coins post is the other 2018 crowd and has no era of its own,
+    // so this seat prints its press card beside the campaign's.
     pressBeatIds: ["expanse", "coins"],
     film: {
       youtubeId: "a5-DcdfxCvU",
@@ -464,27 +454,36 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     },
   },
   {
-    id: "creatives",
-    beatId: "creatives",
-    year: "2014",
-    wardrobe: "The community manager",
-    loadout: "Shorter blazer · shirt · mic · lanyard · cap.",
-    motto: "Antwerp. Powered by Creatives.",
+    id: "pokemon-go",
+    beatId: "pokemon-go",
+    year: "2016",
+    wardrobe: "The street organiser",
+    loadout: "Blazer · shirt · lanyard · camera · phone · cap.",
+    motto: "The crowd was the work.",
     modelPath: null,
     stillPath: "/images/vince-portrait.jpg",
-    short: "Creatives",
+    short: "Pokémon GO",
+    // ⚠ FOUR ROWS, NOT FIVE — THE FACTS SEAT IS FIXED. A fifth row
+    // ("Same years · A hashtag became a party") overran `--vwh-seat-h` and
+    // printed straight through the ON RECORD heading below it: measured 34px
+    // of ink collision at 1440x900, and invisible to any per-string budget
+    // because every value was well inside its own limit. The dropped row was
+    // the Ophef beat's summary, and that beat's press card is already the
+    // second card in ON RECORD — so the seat is honest and nothing is lost.
     facts: [
-      { k: "Role", v: "Community manager" },
-      { k: "Terrain", v: "The Antwerp creative industry" },
-      { k: "Held", v: "People, disciplines, industries" },
-      { k: "The test", v: "It holds without its organiser" },
+      { k: "Co-founded", v: "Pokémon GO Belgium" },
+      { k: "First", v: "Pokémon GO consultant, advising Unizo" },
+      { k: "Street hunt", v: "About a thousand" },
+      { k: "Zoo hunt", v: "Sixteen thousand" },
     ],
+    // Ophef is the same year's other crowd and has no era of its own.
+    pressBeatIds: ["pokemon-go", "ophef"],
   },
 ];
 
 /** How many eras the roster ships with — curated by the owner, pinned
  *  by a unit guard so growth is a decision, not a drift. */
-export const CHARACTER_ERA_COUNT = 6 as const;
+export const CHARACTER_ERA_COUNT = 5 as const;
 
 /** Look up an era by id; never throws — the consumer decides what to
  *  do on a miss (typically a fallback to the first entry). */

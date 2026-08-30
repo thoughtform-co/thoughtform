@@ -60,7 +60,16 @@ const METADATA_EXTENSIONS = new Set([".json", ".md"]);
  * keyed video frames, 202 MB of framed copies, 193 MB of graded copies. That is
  * a working set, and it is regenerable from the scripts beside it.
  */
-const SCRATCH_DIRS = /^(_|frames?[-_]|gif-raw$|gif-framed$|capture|framed|veo-framed$|nano-framed$|kling-framed$)/i;
+/**
+ * ⚠ AND A NEW ROUTE BRINGS NEW SCRATCH NAMES. The Blender wave writes its RGBA
+ * sequence to `render/` and its comparison cut to `render-solo/` — 149 PNGs
+ * each, ~166 MB per directory — which the v4 rule did not match, so the mirror
+ * went 289 MB to 456 MB the first time this wave synced. Same defect the
+ * comment above records, one pipeline later: a frame folder is a WORKING SET,
+ * regenerable from the scripts beside it, and only its NAME distinguishes it.
+ */
+const SCRATCH_DIRS =
+  /^(_|frames?[-_]|render$|render[-_]|gif-raw$|gif-framed$|capture|framed|veo-framed$|nano-framed$|kling-framed$)/i;
 
 async function walk(dir, base = dir) {
   const entries = await readdir(dir, { withFileTypes: true });

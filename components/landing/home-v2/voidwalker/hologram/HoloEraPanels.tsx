@@ -15,9 +15,9 @@ import { VOIDWALKER_BEATS, type VwPress, type VwSegment } from "@/lib/voidwalker
  * ⚠ THE SLOT ORDER IS THE SAME ON EVERY ERA, AND THAT IS THE WHOLE
  * POINT (owner, 2026-08-26). The first cut put the artefact drawing at
  * the top of the right stack, so `genai` — whose drawing is wide — threw
- * its own copy around and read nothing like `thoughtform`, which has no
- * drawing at all. The rail's six stops have to read as one instrument
- * being retuned, not six different layouts.
+ * its own copy around and read nothing like `loop`, which has no drawing
+ * at all. The rail's five stops have to read as one instrument being
+ * retuned, not five different layouts.
  *
  *   LEFT  (the record)   FACTS · ON RECORD · ARTEFACT
  *   RIGHT (the era)      BIO   · TRANSMISSION
@@ -148,8 +148,9 @@ export function HoloEraPanels({
   const kicker = eraPositionLabel(activeEraIndex);
   const beat = VOIDWALKER_BEATS.find((b) => b.id === era.beatId);
 
-  // Every press card this era speaks for — its own beat by default, or
-  // the span it stands in for (`the-crowd` covers four 2016-18 beats).
+  // Every press card this era speaks for — its own beat by default, plus
+  // any 2016-18 beat with no era of its own: `expanse` also carries the
+  // coins post, `pokemon-go` also carries Ophef.
   const byId = new Map(VOIDWALKER_BEATS.map((b) => [b.id, b]));
   const press = eraPressBeatIds(era)
     .map((id) => byId.get(id)?.press)

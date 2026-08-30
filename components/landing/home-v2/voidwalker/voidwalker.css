@@ -729,7 +729,7 @@ html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"].station {
 @media (max-width: 700px) {
   /* The phone character sheet owns its own 16px safe gutter. Do not wait for
      the scroll hook's runtime surface attribute: the first hydrated frame
-     also needs all six 44px era targets. */
+     also needs all five 44px era targets. */
   #voidwalker.station {
     padding-inline: 0;
   }

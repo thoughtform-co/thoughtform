@@ -25,13 +25,12 @@ const COPY = 18, TITLE = 44, TITLE_SEAT = Math.round(TITLE * 3.3); // min-height
 /* ── the record, verbatim from lib/voidwalker/ ────────────────────────── */
 const ERAS = [
   { y: "2026", n: "Architect", role: "The Intelligence Architect" },
-  { y: "2025", n: "Thoughtform", role: "The founder" },
   { y: "2022", n: "Latent Land", role: "The AI Captain" },
   { y: "2020", n: "Azeroth", role: "The Azeroth teacher" },
-  { y: "2016–18", n: "The Crowd", role: "The street organiser" },
-  { y: "2014", n: "Creatives", role: "The community manager" },
+  { y: "2018", n: "The Expanse", role: "The campaign commander" },
+  { y: "2016", n: "Pokémon GO", role: "The street organiser" },
 ];
-const ACTIVE = 2;
+const ACTIVE = 1;
 const ERA = ERAS[ACTIVE];
 const MOTTO = "The models arrived. Wrote the charter.";
 const LOADOUT = "Blazer · shirt · Latent Land cape · cap.";

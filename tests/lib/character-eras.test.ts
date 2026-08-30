@@ -15,7 +15,7 @@ import { VOIDWALKER_BEATS } from "@/lib/voidwalker/voidwalkerData";
  * roster the stage renders. This guard pins the invariants that make the
  * two consistent:
  *
- *   - the roster is the CURATED six (owner ruling, not all nine);
+ *   - the roster is the CURATED five (owner ruling, not all nine);
  *   - every era references an existing beat by id;
  *   - no era invents a year (each is a valid record year or span);
  *   - the wardrobe copy and rail labels fit their columns;
@@ -49,9 +49,9 @@ function eraCopy(era: (typeof CHARACTER_ERAS)[number]): string {
 }
 
 describe("ADR-082 · character era registry", () => {
-  it("ships with the curated six (never grows silently)", () => {
+  it("ships with the curated five (never grows silently)", () => {
     expect(CHARACTER_ERAS).toHaveLength(CHARACTER_ERA_COUNT);
-    expect(CHARACTER_ERA_COUNT).toBe(6);
+    expect(CHARACTER_ERA_COUNT).toBe(5);
   });
 
   it("every era's id is unique, kebab, and looked up by helper", () => {
@@ -80,8 +80,8 @@ describe("ADR-082 · character era registry", () => {
 
   it("sweeps reverse-chronological — first entry is the current seat", () => {
     // The record itself is reverse-chronological (ADR-074 U2), and the
-    // rail should read the same way so index 0 is 2026 and index 5 is
-    // 2014. Compare only the leading four digits; span forms like
+    // rail should read the same way so index 0 is 2026 and index 4 is
+    // 2016. Compare only the leading four digits; span forms like
     // "2016–18" collapse to their opening year for this check.
     const openings = CHARACTER_ERAS.map((e) => parseInt(e.year.slice(0, 4), 10));
     expect(openings[0]).toBeGreaterThanOrEqual(openings.at(-1)!);

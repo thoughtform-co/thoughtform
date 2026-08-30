@@ -19,7 +19,7 @@ alwaysApply: false
 # Rule: The through-line (`#voidwalker`)
 
 The production surface after the About bio is the ADR-082 U2 HOLOGRAM: a
-Tensor-gold figure, era masthead, record/scope panels and six-stop era rail.
+Tensor-gold figure, era masthead, record/scope panels and five-stop era rail.
 "Voidwalker" remains the station title; `.voidwalker*` stays reserved for the
 About bio, while this surface uses `.vw*` / `.vwh*`.
 
@@ -62,7 +62,7 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
   U9, owner 2026-08-27) — U8's horizontal axis is DELETED, not flagged off.**
   The rail IS the track: its own ticks extend OUTWARD into the margin, so its
   inboard side is free and the era stops hang off it rather than beside it.
-  Six stops on one pitch, capped top and bottom so the group reads as one
+  Five stops on one pitch, capped top and bottom so the group reads as one
   instrument; the active stop carries the lit year and the era's name.
   ⚠ **IT LIVES IN THE HUD GUTTER, WHICH IS WHY IT COSTS NO COLUMN** — the
   owner's own worry about "a lot of columns on lower screen sizes".
@@ -109,13 +109,13 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
   ref; the receiver publishes geometry only. No duplicate portal transform,
   revived `--about-portal`, second canvas, or Three/Fiber/Drei DOM import.
 - **Proposed editorial character sheet.** The desktop `.vwh` is a stable
-  three-column instrument under one centred horizontal six-era tab strip:
+  three-column instrument under one centred horizontal five-era tab strip:
   identity/FACTS/ON RECORD on the left, hologram/projector only in the centre,
   and SCOPE/TRANSMISSION/LOADOUT on the right. Both dossiers start on one lower
   datum while the full-height figure stays fixed; inactive tabs are neutral and
-  gold is active wayfinding only. Reserve those seats across all six eras. At
+  gold is active wayfinding only. Reserve those seats across all five eras. At
   `701–1100px`, retain the 3-by-2 complete normal-flow dossier; at `<=700px`
-  (ADR-083, proposed), use identity → figure → one-row six-era rail → RECORD /
+  (ADR-083, proposed), use identity → figure → one-row five-era rail → RECORD /
   SCOPE / TRANSMISSION → one active dossier seat. Transmission is disabled
   without an authored film and phone visibility stays CSS-only. The handoff
   gate is atomic across portrait, FACTS and

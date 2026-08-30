@@ -1346,3 +1346,186 @@ carry a touch more banding than CRF 34's).
   cloak at the boots (2 components found, not 3, on 8-connectivity).
   A watershed segmentation with distance transform could recover the
   authored left imp; keeping it as a follow-up.
+
+---
+
+## Update 15 — five eras, and the Azeroth figure is RENDERED rather than captured (2026-08-30, owner)
+
+**Status: Accepted (owner, 2026-08-30).** Two changes from one brief: cut the
+roster to five eras, and put the owner's actual World of Warcraft character on
+screen TALKING, with the hologram scanline effect the capture route could never
+quite produce.
+
+### The roster is five
+
+> "first simplify the eras: the current intelligence architect era · the era
+> before was the Gen AI one · the World of Warcraft era · the Expanse era ·
+> the Pokemon Go era"
+
+`thoughtform` (2025) and `creatives` (2014) are deleted, and the compound
+`the-crowd` (2016-18) — which pinned to the Expanse beat and spoke for four
+crowds at once — SPLITS into the two eras the owner named:
+
+- **`expanse`** (2018) — "The campaign commander", `pressBeatIds: [expanse, coins]`
+- **`pokemon-go`** (2016) — "The street organiser", `pressBeatIds: [pokemon-go, ophef]`
+
+⚠ **THE SPLIT MAKES TWO PRESS CARDS REACHABLE THAT NEVER WERE.** `the-crowd`
+routed `[expanse, coins]`, so its own Pokémon GO and Ophef beats had no era
+voice at all — their facts survived as rows, their press cards were unreachable
+from the rail. Five eras publish more of the record than six did.
+
+⚠ **`CANONICAL_CHARACTER_ERA_HOLOGRAM` SURVIVES THE DELETION OF THE
+`thoughtform` ERA**, and not by luck of ordering — it is a frozen standalone
+object, not a field on the era, and `resolveCharacterEraHologram` is
+roster-independent. Four of the five eras still resolve to it, so the
+thoughtform pair and `thoughtform.glb` stay on disk with no era referencing
+them. `character-era-hologram.test.ts`'s walk over the roster is what proves
+the fallback survived a roster change.
+
+⚠ **AND THE SMOKE'S ERA PIN WAS UNREACHABLE, AT SIX ERAS AND AT FIVE.**
+`services-ring-smoke`'s replay scrolled to the runway MIDPOINT and asserted the
+mast reads "The Intelligence Architect"; ADR-082 U10 made scroll the era
+selector, and that progress resolves to era 3 at both counts (raw 3.64 / 3.04).
+The waypoint is `voidwalkerProgressForEra(0, count)` now — era 0's slice centre,
+the same point a click pins, where the boundary overshoot is 0.5 against a 0.22
+hysteresis so it seats from either direction. ⚠ Its BASE was wrong
+independently of the count: it measured from `#voidwalker`'s document top while
+the writer derives progress from `.vw--hologram`'s own rect, so the surrounding
+assertions had been passing on a coincidence.
+
+### The figure is the character's own geometry now
+
+> "the animation: the emotetalk subdued. That's the animation I want because
+> that corresponds with teaching, because I taught class inside World of
+> Warcraft."
+
+v2 and v3 captured Blizzard's renderer through Wowhead's dressing room and
+post-graded the frames. v5 renders `wow.export`'s rigged GLB in Blender, on an
+emissive hologram MATERIAL. Three things only this route can do:
+
+- **The alpha is the renderer's.** v3 carried 414 matte cuts along dark cloth
+  because a difference key against a backdrop cannot separate black from black.
+  A renderer knows exactly which pixels it drew.
+- **The Fresnel rim needs a surface normal**, which a finished frame does not
+  have. It is what stops the figure reading as the "tinted statue" the az-v4
+  gallery entry recorded when the same duotone was applied to a flat render.
+- **The scan cadence is wrapped on the GEOMETRY**, in world space, so it curves
+  over the shoulders instead of lying flat on the picture.
+
+⚠ **BAKE THE LIGHT, CODE THE SCREEN STILL HOLDS (U1).** The baked band is
+coarse — one cycle per ~19 rendered px against the site's own 1px-in-3px CSS
+mask — and carries only the part CSS cannot. The site's mask, flicker and
+materialize are untouched.
+
+### Five things the pipeline got wrong first, each measured
+
+- ⚠ **THE FIRST LIT PASS WAS BROWN** — the "man in a brown suit" this skill's
+  own record names one pipeline over. WoW's hand-painted armour sits at
+  ~0.1-0.3 luminance, so fed raw into a gold ramp nearly every texel lands on
+  the ramp's dark end. A **gamma of 0.50 before the ramp** maps the body of the
+  texture into its gold range. Same lever v3's `grade.py` used, one stage
+  earlier.
+- ⚠ **THEN THE FEL WENT WHITE.** The era law is that fel burns brighter than
+  the gold, but the lift pushed green texels through the top of the range and
+  the belt orb came back white. Fel keeps its own ceiling and buys brightness
+  from SATURATION, which survives the site's `plus-lighter` composite where a
+  clipped channel does not. Its mask needed a BIAS, not just a gain — a bare
+  `(g - max(r,b)) * k` painted a solid neon disc on the belt and green mittens.
+- ⚠ **AN ORTHOGRAPHIC WIDTH FIT UNDER A PERSPECTIVE LENS CROPS WHATEVER LEANS
+  TOWARD THE CAMERA.** The Daemoniac pauldrons span 1.40 m against a 2.08 m man
+  (0.67 in a 0.5625 slot) AND stand ~0.38 m proud of the body, which at 5.4 m
+  is a 7.6% magnification no world-space width accounts for. The first full
+  render came back with an **81px-tall flat cut through the left pauldron on
+  117 of 149 frames** while every number in the solve reported a silhouette
+  that fitted. Widening the pose sample from 13 to 149 moved it NOT ONE PIXEL,
+  because sampling was never the defect. The camera is solved against the
+  PROJECTED silhouette now, iterated to convergence; the delivered alpha's
+  anchors agree with the solve to four decimals.
+- ⚠ **THE BAND DRIFT MUST BE AN INTEGER NUMBER OF CYCLES PER LOOP.** Authored
+  as a speed it ran 56.5 cycles over the loop, so the wrap jumped half a band —
+  and **the loop-seam guard does not catch it**, because the seam measures the
+  whole frame, where the figure's motion is twice as loud as the banding.
+- ⚠ **EVERY wow.export MODEL CARRIES AN `Icosphere` ARTEFACT** — a ±1 m shell
+  with no material, which in an all-emissive scene with the lights off renders
+  as a solid BLACK sphere. The figure's was hidden at the top of the script;
+  the imp import three hundred lines later brought in its own, and two
+  different imp displays both came back as a gold head on a black ball. The
+  cleanup is a function called at both sites.
+
+### The companions are animated, and that took one setting
+
+`config.exportCreatureFormat` was `"OBJ"` — which is the whole reason v3's imps
+were frozen stills composited into every frame. An OBJ carries no skeleton. Set
+to `GLB` with `modelsExportAnimations`, the same app exports a **Fel Imp with
+25 animations and a 63-joint skin**. Two are seated at the figure's own foot
+line, toed inward, driven off `Stand` through an NLA strip whose INTEGER repeat
+and derived scale make **7 cycles span the loop exactly** — U13's finding that a
+companion on an unrelated period wraps mid-stride and reads as a flinch, solved
+without touching a keyframe.
+
+⚠ **THE COMPANIONS ARE SCENERY AND MAY NOT MOVE THE ANCHORS** (U13). The
+envelope, the camera fit and `headY`/`footY` measure the FIGURE alone; the imps
+are checked against the frame separately and warned about. They may crop; the
+man may not.
+
+⚠ **AND "NOT IN THE FIGURE'S MESH LIST" IS NOT "IS AN IMP".** That complement
+also holds the hidden `Icosphere`, so the frame check read the stray instead of
+the companions and reported the same out-of-frame numbers before and after the
+seating was fixed. Two runs agreeing to three decimals across a change that
+moved every imp is the tell that a measurement is not looking at its subject.
+
+### A pre-existing defect the roster change surfaced
+
+⚠ **THE `genai` LEDE HAS BEEN OVERRUNNING ITS SEAT ON THE LIVE SITE.** Its
+record body is the roster's longest, and at 1440x900 its last line printed
+**18px through the TRANSMISSION heading** below it. Nothing caught it: the copy
+is at LOCK and passes every per-string budget, the panel BOX overlaps by design
+so an overflow check reads clean, and a screenshot of a heading with one line of
+prose across it looks like a heading. `--vwh-lede-h`'s FLOOR is what fixes it —
+at 900px height the `26svh` term was already resolving to the old floor.
+
+`scripts/probe-voidwalker-eras.mjs` is the new guard: it walks every era and
+compares INK rects via `Range.getClientRects`, at three viewports.
+⚠ It must compare **both axes** — the sheet is two columns, so panels sharing a
+band of rows is the normal composition, and a vertical-only test fired on eras
+this pass never touched, which is how you tell the guard is wrong rather than
+the layout. ⚠ And it must measure INK, not BOXES: box overlap reported 24px on
+a correct era.
+
+`pokemon-go` shipped five FACTS rows in a seat sized for four and printed 34px
+through ON RECORD; the fifth row was the Ophef beat's summary, whose press card
+is already the second card below it.
+
+### What changed
+
+- `characterEras.ts` — the union, `CHARACTER_ERA_COUNT` 6 to **5**, three eras
+  deleted, two added, the azeroth hologram repointed to `-v5` with
+  `headY 0.049 -> 0.1586`, `footY 0.972 -> 0.9695`, loadout to "Daemoniac ·
+  Shard of Azzinoth · talking."
+- `voidwalker-hologram.css` — the `nth-child(6)` stagger and the 6-column phone
+  rail; `--vwh-lede-h` floor 232 to **268px**.
+- `character-eras` / `voidwalker-era-band` / `character-era-hologram` /
+  `voidwalker-character-sheet` / `services-ring-smoke` retimed and repinned;
+  `probe-voidwalker-models.mjs`'s roster; the rules file.
+- v3's four assets deleted in the same commit v5 lands (U13's orphaned-media
+  rule). Payload: **WebM 2.75 -> 2.3 MB, alpha poster 217 -> 144 KB**, with 21
+  more frames — swept CRF 36/42/44/46/50 to 5.48/2.76/2.26/1.81/1.21 MB, and
+  the bitrate is the bands and the layered translucency, not render noise (64
+  TAA samples measured 0.62/255 from 256).
+- Wave: `voidwalker-avatar/waves/20260830-azeroth-v5-blender` — `holo-scene.py`
+  (scene + shader), `tune.py` (sweep a look without a 90s rebuild),
+  `measure.py` (anchors, loop seam and band drift off the delivered frames),
+  `encode.py`, `export-imp.mjs` (drives the running wow.export over CDP and
+  PUTS THE SETTING BACK).
+
+### Left open
+
+- **The light theme washes the figure out.** An emissive gold asset at 0.92
+  opacity over parchment is faint; pre-existing behaviour for this station, not
+  a v5 regression, and changing the light-mode compositing is its own decision.
+- **`--pda-txt3` at 2.38:1 in the light walk** remains the one known
+  pre-existing smoke failure. The era-text failure this update retimed was the
+  other, and it passes now.
+- The figure sits with ~0.16 of air above the head, because the pauldrons bind
+  the frame. Cropping them is the only way to buy it back, and a pauldron is
+  worn.

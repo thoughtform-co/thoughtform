@@ -43,7 +43,7 @@
      and really have super clear dates … some sort of scrubber that you can
      easily scroll through"). The rail IS the track: its own ticks extend
      OUTWARD into the margin, so its inboard side is free, and the era stops
-     hang off it. One pitch, capped top and bottom so the six read as one
+     hang off it. One pitch, capped top and bottom so the five read as one
      instrument rather than marks scattered down a line.
      ⚠ IT LIVES IN THE HUD GUTTER, NOT IN A COLUMN. That is what answers the
      owner's own worry about "a lot of columns on lower screen sizes" — the
@@ -75,8 +75,19 @@
   --vwh-pad-top: max(clamp(16px, 2.2svh, 28px), var(--station-title-top, 84px));
   /* ⚠ THE LEDE SEAT. Both dossier columns reserve it so SCOPE and FACTS
      share a top datum AND the slot beneath each keeps its own, whatever the
-     era's prose length or fact count. Sized to the tallest measured lede. */
-  --vwh-lede-h: clamp(232px, 26svh, 300px);
+     era's prose length or fact count. Sized to the tallest measured lede.
+     ⚠ AND IT WAS UNDER-MEASURED — THE genai LEDE HAS BEEN OVERRUNNING IT ON
+     THE LIVE SITE. Its record body is the longest of the roster (Starhaven,
+     Latent Land, Under Armour, the UBA/ACC charter, in one paragraph), and at
+     1440x900 its last line printed 18px THROUGH the TRANSMISSION heading
+     below it. Nothing caught it: the copy is at LOCK in `voidwalkerData.ts`
+     and passes every per-string budget, the panel BOX overlaps by design so
+     an overflow check reads clean, and a screenshot of a heading with one
+     line of prose across it looks like a heading. `scripts/probe-voidwalker-eras.mjs`
+     walks the roster comparing INK rects, which is what finally reported it.
+     ⚠ The floor, not just the svh term, is what fixes it — at 900px height
+     26svh is 234px and the clamp was already resolving to its own floor. */
+  --vwh-lede-h: clamp(268px, 30svh, 330px);
   position: relative;
   display: grid;
   /* ⚠ THE FIGURE COLUMN IS SIZED BY THE AVAILABLE HEIGHT, NOT BY A
@@ -977,7 +988,7 @@ a.vwh__press:focus-visible .vwh__press__headline {
 /* ── The era scrubber ─────────────────────────────────────────────────
    TIME RUNS DOWN THE LEFT HUD RAIL. The rail is the track — its own ticks
    extend OUTWARD into the margin, so its inboard side is free and the era
-   stops hang off it rather than beside it. Six stops on one pitch, capped
+   stops hang off it rather than beside it. Five stops on one pitch, capped
    top and bottom so the group reads as one instrument; the active stop
    carries the diamond on the rail, the lit year and the era's name.
    ⚠ IT LIVES IN THE HUD GUTTER, NOT IN A COLUMN — no fourth column, at any
@@ -996,7 +1007,7 @@ a.vwh__press:focus-visible .vwh__press__headline {
   margin: 0;
   min-width: 0;
 }
-/* the frame: two short caps, so six marks read as one scrubber */
+/* the frame: two short caps, so five marks read as one scrubber */
 .vwh__rail::before,
 .vwh__rail::after {
   content: "";
@@ -1298,9 +1309,6 @@ a.vwh__press:focus-visible .vwh__press__headline {
   .vwh[data-vwh-ready] .vwh__pip:nth-child(5) {
     --ci-off: 0.44;
   }
-  .vwh[data-vwh-ready] .vwh__pip:nth-child(6) {
-    --ci-off: 0.47;
-  }
 
   .vwh[data-vwh-ready] .vwh__mast,
   .vwh[data-vwh-ready] .vwh__side[data-side="l"],
@@ -1331,7 +1339,7 @@ a.vwh__press:focus-visible .vwh__press__headline {
    title's own block loses on order — silently, since the ghost still sizes
    the box and only the SHORT eras collapse.
    Three lines is the measured worst case at the name's size: in this column
-   `The Intelligence Architect` and `The community manager` both wrap to
+   `The Intelligence Architect` and `The campaign commander` both wrap to
    three. Reserving the maximum is what stops FACTS stepping up and down as
    the reader moves between eras — the fixed-footprint rule the character
    sheet is built on. */
@@ -1400,7 +1408,7 @@ a.vwh__press:focus-visible .vwh__press__headline {
 /* ══ Phone character instrument ════════════════════════════════════════
    The 701–1100 rung keeps the complete normal-flow dossier for tablets and
    reduced layouts. A phone gets the mobile-game lesson from the references:
-   one stable character stage, one six-stop loadout rail, one dossier mode.
+   one stable character stage, one five-stop loadout rail, one dossier mode.
    No content is unmounted, so the capable desktop seats and handoff targets
    remain byte-identical. */
 .vwh__mobile-modes {
@@ -1459,7 +1467,7 @@ a.vwh__press:focus-visible .vwh__press__headline {
     max-width: none;
     min-height: 44px;
     margin-top: 2px;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0;
     border-top: 1px solid rgba(var(--vwh-gold-rgb), 0.16);
     border-bottom: 1px solid rgba(var(--vwh-gold-rgb), 0.16);

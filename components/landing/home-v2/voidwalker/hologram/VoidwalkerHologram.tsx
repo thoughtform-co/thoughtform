@@ -42,19 +42,19 @@ import { HoloFigure } from "./HoloFigure";
  *    seat that mark will eventually take; the composition above it does
  *    not change when it does.
  * 2. ERA SWITCHING IS DELIBERATE. The stage scroll clock owns only entry,
- *    reading hold and exit; choosing one of the six loadouts remains a
+ *    reading hold and exit; choosing one of the five loadouts remains a
  *    tab, pointer, or keyboard action.
  *
- * ⚠ FOUR OF THE SIX ERAS RENDER THE THOUGHTFORM ASSET. Two era holograms
- * exist so far: the canonical thoughtform pair (`voidwalker-avatar` skill's
- * wave 20260826-thoughtform-v5) and the Azeroth-warlock pair (wave
- * 20260828-azeroth-v1 — Vince's actual WoW character Arafel rendered in the
- * gold-emissive hologram grammar with a fel-green accent on the crystals
- * and offhand fire). The remaining four era buttons switch the copy panels
- * but keep the same figure; each new wave lifts one era off the fallback.
- * Author holograms lift here by extending the era registry with a validated
- * `hologram` field. The resolver keeps the canonical Thoughtform pair as
- * the visible fallback for eras without their own asset.
+ * ⚠ FOUR OF THE FIVE ERAS RENDER THE CANONICAL THOUGHTFORM ASSET. Exactly
+ * one era-specific pair is authored today — the Azeroth warlock (Vince's
+ * actual WoW character Arafel, rendered in the gold-emissive hologram
+ * grammar with a fel-green accent). Its wave and asset version live in
+ * `characterEras.ts` beside the paths, which is the one place they can be
+ * read without going stale here. The remaining four era buttons switch the
+ * copy panels but keep the same figure; each new wave lifts one era off the
+ * fallback. Author holograms lift here by extending the era registry with a
+ * validated `hologram` field. The resolver keeps the canonical Thoughtform
+ * pair as the visible fallback for eras without their own asset.
  */
 
 const SCRAMBLE_ARM_AT = 0.05;

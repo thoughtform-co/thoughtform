@@ -9,7 +9,7 @@ import {
   voidwalkerProgressForEra,
 } from "@/lib/voidwalker/voidwalkerHologramClock";
 
-const COUNT = 6;
+const COUNT = 5;
 
 describe("the era band", () => {
   it("sits inside the hold, clear of both clocks", () => {
@@ -26,17 +26,17 @@ describe("the era band", () => {
       current = voidwalkerEraFromProgress(i / 400, COUNT, current);
       if (seen[seen.length - 1] !== current) seen.push(current);
     }
-    expect(seen).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(seen).toEqual([0, 1, 2, 3, 4]);
   });
 
   it("reverses cleanly back to the first era", () => {
-    let current = 5;
-    const seen: number[] = [5];
+    let current = 4;
+    const seen: number[] = [4];
     for (let i = 400; i >= 0; i -= 1) {
       current = voidwalkerEraFromProgress(i / 400, COUNT, current);
       if (seen[seen.length - 1] !== current) seen.push(current);
     }
-    expect(seen).toEqual([5, 4, 3, 2, 1, 0]);
+    expect(seen).toEqual([4, 3, 2, 1, 0]);
   });
 
   it("holds its era at a slice boundary rather than flickering", () => {

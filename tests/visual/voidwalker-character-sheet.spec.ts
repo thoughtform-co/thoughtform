@@ -143,11 +143,11 @@ test.describe("Voidwalker editorial character sheet", () => {
         });
 
         expect(geometry.titleText).toBe("The Intelligence Architect");
-        /* ⚠ SIX ROWS, NOT ONE. The selector is a VERTICAL scrubber on the
+        /* ⚠ FIVE ROWS, NOT ONE. The selector is a VERTICAL scrubber on the
            left rail since ADR-082 U9; `1` was the horizontal strip's own
            assertion and is inverted here rather than deleted, so a strip
            returning to a single row fails loudly. */
-        expect(geometry.tabRows).toBe(6);
+        expect(geometry.tabRows).toBe(5);
         /* ⚠ THE SELECTOR IS THE SCRUBBER ON THE LEFT HUD RAIL (ADR-082 U9) —
            not a band above the identity, and not the horizontal axis at the
            foot that U8 tried. It rides the rail's own x in the HUD gutter,
@@ -210,7 +210,7 @@ test.describe("Voidwalker editorial character sheet", () => {
     const tablist = page.getByRole("tablist", { name: "Era" });
     const tabs = tablist.getByRole("tab");
     const panel = page.getByRole("tabpanel");
-    await expect(tabs).toHaveCount(6);
+    await expect(tabs).toHaveCount(5);
     await expect(tabs.nth(0)).toHaveAttribute("aria-selected", "true");
     await expect(tabs.nth(0)).toHaveAttribute("tabindex", "0");
     const panelId = await panel.getAttribute("id");
@@ -224,7 +224,7 @@ test.describe("Voidwalker editorial character sheet", () => {
     await page.keyboard.press("Home");
     await expect(tabs.nth(0)).toBeFocused();
     await page.keyboard.press("End");
-    await expect(tabs.nth(5)).toBeFocused();
+    await expect(tabs.nth(4)).toBeFocused();
     expect(await panel.getAttribute("id")).toBe(panelId);
 
     const seatSnapshot = async () =>
@@ -249,7 +249,7 @@ test.describe("Voidwalker editorial character sheet", () => {
     await tabs.nth(0).click();
     await settle(page);
     const baseline = await seatSnapshot();
-    for (let index = 0; index < 6; index += 1) {
+    for (let index = 0; index < 5; index += 1) {
       await tabs.nth(index).click();
       await expect(tabs.nth(index)).toHaveAttribute("aria-selected", "true");
       await expect(tabs.nth(index)).toBeFocused();
@@ -429,7 +429,7 @@ test.describe("Voidwalker editorial character sheet", () => {
         expect(height, `${label}: touch target`).toBeGreaterThanOrEqual(44);
       }
       for (const width of initial.eraWidths) {
-        expect(width, `${label}: six-up era target`).toBeGreaterThanOrEqual(44);
+        expect(width, `${label}: five-up era target`).toBeGreaterThanOrEqual(44);
       }
       for (let index = 1; index < initial.tops.length; index += 1) {
         expect(initial.tops[index], `${label}: instrument order ${index}`).toBeGreaterThanOrEqual(
@@ -726,8 +726,8 @@ test.describe("Voidwalker editorial character sheet", () => {
       expect(geom.strip.right, `${label}: scrubber outside the reading band`).toBeLessThanOrEqual(
         geom.scopeLeft
       );
-      // six stops on one pitch, in order, inside the rail's own extent
-      expect(geom.yearTops.length).toBe(6);
+      // five stops on one pitch, in order, inside the rail's own extent
+      expect(geom.yearTops.length).toBe(5);
       for (let i = 1; i < geom.yearTops.length; i += 1) {
         expect(geom.yearTops[i]).toBeGreaterThan(geom.yearTops[i - 1]);
       }

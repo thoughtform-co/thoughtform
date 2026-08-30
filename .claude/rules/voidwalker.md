@@ -21,7 +21,7 @@ paths:
 # Rule: The through-line (`#voidwalker`)
 
 The production surface after the About bio is the ADR-082 U2 HOLOGRAM: a
-Tensor-gold figure, era masthead, record/scope panels and six-stop era rail.
+Tensor-gold figure, era masthead, record/scope panels and five-stop era rail.
 "Voidwalker" remains the station title; `.voidwalker*` is still reserved for
 the About bio, while this surface uses `.vw*` / `.vwh*`.
 
@@ -83,7 +83,7 @@ handoff and the `701–1100px` complete fallback alone.
   U9, owner 2026-08-27) — U8's horizontal axis is DELETED, not flagged off.**
   The rail IS the track: its own ticks extend OUTWARD into the margin, so its
   inboard side is free and the era stops hang off it rather than beside it.
-  Six stops on one pitch, capped top and bottom so the group reads as one
+  Five stops on one pitch, capped top and bottom so the group reads as one
   instrument; the active stop carries the lit year and the era's name.
   ⚠ **IT LIVES IN THE HUD GUTTER, WHICH IS WHY IT COSTS NO COLUMN** — the
   owner's own worry about "a lot of columns on lower screen sizes".
@@ -114,7 +114,7 @@ handoff and the `701–1100px` complete fallback alone.
   column's floor, and a content-height lede moves it per era.
 - ⚠ **SCROLL IS THE ERA SELECTOR (ADR-082 U10, owner 2026-08-27) — NO WHEEL
   CAPTURE.** The stage is already a pinned runway with one scroll writer, so
-  the era is DERIVED from its progress: the reader steps through all six on
+  the era is DERIVED from its progress: the reader steps through all five on
   the way past and the page continues normally at the end.
   `VOIDWALKER_ERA_BAND` is `[0.16, 0.72]` — inside the hold, clear of the
   entry (0.14) and the exit (0.74), so no era advances while the sheet is
@@ -183,15 +183,15 @@ into the DOM graph. Reuse About's existing exit envelope; do not revive
 ## Proposed editorial character sheet (2026-08-27)
 
 The capable desktop `.vwh` is a stable three-column character sheet beneath one
-centred horizontal six-era tab strip. Identity/FACTS/ON RECORD occupy the left,
+centred horizontal five-era tab strip. Identity/FACTS/ON RECORD occupy the left,
 hologram plus projector only the centre, and SCOPE/TRANSMISSION/LOADOUT the
 right. The side dossiers start on one lower reading datum; the figure continues
 to span the full grid and must not move when the tab band changes. Dormant tabs
 use neutral hairlines and gold is active wayfinding only. Tabs use roving focus
 and automatic Arrow/Home/End selection; the tablist never remounts. Desktop
-seats remain reserved across all six eras. At `701–1100px`, restore the 3-by-2
+seats remain reserved across all five eras. At `701–1100px`, restore the 3-by-2
 selector and complete normal-flow dossier. At `<=700px` (ADR-083, proposed),
-the order is identity, figure, one-row six-era rail, RECORD / SCOPE /
+the order is identity, figure, one-row five-era rail, RECORD / SCOPE /
 TRANSMISSION, and one active dossier seat. Transmission is disabled without an
 authored film. Keep all dossier nodes mounted; phone visibility is CSS-only so
 desktop handoff measurements remain stable.
@@ -302,7 +302,7 @@ surface.
   non-interactive, mounted only on the TRAVEL path, portaled INTO
   `.hud__rail--l`, and it spreads twelve whole years across the ladder so
   each seats on an integer rung. The hologram's scrubber is a CONTROL: a
-  six-stop tablist with roving focus, in the stage's own DOM, compact and
+  five-stop tablist with roving focus, in the stage's own DOM, compact and
   centred on the rail rather than spread along it. They never mount
   together (travel and hologram are mutually exclusive modes), and a
   future pass that wants the scrubber's years on real rungs should read

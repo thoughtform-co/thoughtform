@@ -28,7 +28,7 @@ import { getHoloAlphaSupport, onHoloAlphaSupport } from "@/lib/voidwalker/holoAl
  *      two hands. A gold-LIT figure has no true blacks on the body, so
  *      the same blend keys it for free and the dark folds going
  *      translucent is what a hologram should do anyway.
- *   3. One block retunes six eras and both media types; twelve bakes
+ *   3. One block retunes five eras and both media types; ten bakes
  *      do not.
  *
  * ⚠ THE BLEND NEVER REACHES THE PAGE BEHIND IT, AND MUST NOT TRY. On the

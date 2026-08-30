@@ -27,7 +27,7 @@ const MODELS = join(REPO, "public", "models", "voidwalker");
 const STILLS = join(REPO, "public", "images", "voidwalker");
 const BUDGET_MB = 4;
 
-const ERAS = ["loop", "thoughtform", "genai", "azeroth", "the-crowd", "creatives"];
+const ERAS = ["loop", "genai", "azeroth", "expanse", "pokemon-go"];
 
 const strict = process.argv.includes("--strict");
 

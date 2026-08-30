@@ -24,13 +24,14 @@ describe("ADR-082 · normalized character hologram assets", () => {
   });
 
   it("keeps every unauthored era on the canonical pair", () => {
-    // The AZEROTH era is the first non-thoughtform pair to ship — its wardrobe
-    // is the WoW warlock Arafel (the site owner's actual 2020 character) in
-    // his own "Daemoniac" transmog, TALKING, flanked by two imps at his feet,
-    // captured from Blizzard's renderer and graded as a hybrid gold+fel-green
-    // hologram by the wave `voidwalker-avatar/waves/20260829-azeroth-v3`.
-    // Every OTHER era still resolves to the canonical thoughtform pair until
-    // its own wave lands.
+    // The AZEROTH era is the one authored pair — the WoW warlock Arafel (the
+    // site owner's actual 2020 character) in his own "Daemoniac" transmog,
+    // TALKING, rendered in Blender from `wow.export`'s rigged GLB on an
+    // emissive hologram material by the wave
+    // `voidwalker-avatar/waves/20260830-azeroth-v5-blender`. Every OTHER era
+    // still resolves to the canonical thoughtform pair until its own wave
+    // lands — including the two new 2018/2016 eras, which is exactly what this
+    // walk is here to prove after a roster change.
     for (const era of CHARACTER_ERAS) {
       if (era.id === "azeroth") continue;
       expect(resolveCharacterEraHologram(era), era.id).toBe(CANONICAL_CHARACTER_ERA_HOLOGRAM);
@@ -44,21 +45,26 @@ describe("ADR-082 · normalized character hologram assets", () => {
 
     const resolved = resolveCharacterEraHologram(azeroth);
     expect(resolved).not.toBe(CANONICAL_CHARACTER_ERA_HOLOGRAM);
-    // ⚠ `-v3` IS PART OF THE CONTRACT. The v1 pair shipped under the
-    // unsuffixed names, v2 replaced them, and v3 replaces v2 — a cache does
-    // not read commit messages, so a new URL is the only guarantee that the
-    // graded talking capture with imps reaches the reader.
-    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth-v3.mp4");
-    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth-v3.webm");
-    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth-v3.jpg");
-    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth-v3.webp");
-    // Measured on a COMPANION-FREE re-composite of frame zero, at the
-    // poster's opaque cutoff (see `voidwalker-avatar/waves/20260829-azeroth-v3/post-manifest.json`).
-    // The imps and fel wisps reach the frame's top on the delivered poster,
-    // so measuring THAT poster reports headY near zero — legal by the runtime
-    // guard's arithmetic and wrong about the figure it is supposed to describe.
-    expect(resolved.headY).toBeCloseTo(0.049, 3);
-    expect(resolved.footY).toBeCloseTo(0.972, 3);
+    // ⚠ `-v5` IS PART OF THE CONTRACT. Every wave has shipped under its own
+    // suffix since v1 took the unsuffixed names — a cache does not read commit
+    // messages, so a new URL is the only guarantee the new figure reaches the
+    // reader.
+    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth-v5.mp4");
+    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth-v5.webm");
+    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth-v5.jpg");
+    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth-v5.webp");
+    // Measured off the DELIVERED alpha at the opaque cutoff 32/255, over all
+    // 149 frames rather than frame zero — a talking idle's head and hands move,
+    // so an anchor read from one pose is wrong for the other 148. They agree
+    // with the camera solve's own projection to four decimals, which is what
+    // says the delivered frame is the frame that was solved.
+    //
+    // ⚠ headY is 0.159 because the frame is WIDTH-bound: the Daemoniac
+    // pauldrons span 1.40 m against a 2.08 m man, so the shoulders decide the
+    // fit and the surplus lands above the head. Fitting by height instead cut
+    // an 81px-tall flat edge through the left pauldron on 117 of 149 frames.
+    expect(resolved.headY).toBeCloseTo(0.1586, 3);
+    expect(resolved.footY).toBeCloseTo(0.9695, 3);
     // Sanity: the head anchor is above the foot anchor and both are inside
     // the frame — the same law the runtime guard enforces on every era.
     expect(resolved.headY).toBeLessThan(resolved.footY);

@@ -50,6 +50,7 @@ export interface GalleryRun {
   assets: readonly GalleryAsset[];
 }
 
+const V5 = `${MIRROR}/20260830-azeroth-v5-blender`;
 const V4 = `${MIRROR}/20260829-azeroth-v4`;
 const V3 = `${MIRROR}/20260829-azeroth-v3`;
 const V2 = `${MIRROR}/20260828-azeroth-v2`;
@@ -58,6 +59,52 @@ const TF5 = `${MIRROR}/20260826-thoughtform-v5`;
 const TF4 = `${MIRROR}/20260826-thoughtform-v4`;
 
 export const GALLERY_RUNS: readonly GalleryRun[] = [
+  {
+    id: "az-v5",
+    wave: "20260830-azeroth-v5-blender",
+    title: "Azeroth v5 — rendered, not captured",
+    date: "2026-08-30",
+    status: "SHIPPING",
+    adr: "ADR-082 U15",
+    summary: [
+      "The wow.export pipeline was fixed, so the figure is no longer a capture of Blizzard's renderer — it is the character's OWN geometry, rigged, running `EmoteTalkSubdued` off the model's own 422 animations, re-lit in Blender on an emissive hologram material. The owner's read of the era is that he taught class inside the game; the talk emote is the era, and this is the first route that can pick an animation by name instead of by whatever the dressing room was playing.",
+      "THREE THINGS ONLY THIS ROUTE CAN DO. The alpha is the RENDERER'S — v3 carried 414 matte cuts along dark cloth because a difference key against a backdrop cannot separate black from black, and a renderer knows exactly which pixels it drew. The FRESNEL RIM needs a surface normal, which a finished frame does not have, and it is what stops the figure reading as the 'tinted statue' v4's flat grade produced. And the scan cadence is WRAPPED ON THE GEOMETRY in world space, so it curves over the shoulders instead of lying flat on the picture.",
+      "⚠ THE FIRST LIT PASS CAME BACK BROWN — the exact 'man in a brown suit' this skill's own record names one pipeline over. WoW's hand-painted armour sits at ~0.1–0.3 luminance, so fed raw into a gold ramp nearly every texel lands on the ramp's dark end. A gamma of 0.50 BEFORE the ramp maps the body of the texture into its gold range; the ramp's shape then does the grading. Same lever v3's grade.py used, one stage earlier.",
+      "⚠ AND THE FRAME IS WIDTH-BOUND, WHICH COST A RENDER TO LEARN. The pauldrons span 1.40 m against a 2.08 m man — 0.67 in a 0.5625 slot — and they lean ~0.38 m toward the lens, so an orthographic width fit under a perspective camera under-reads them by 7.6%. The first full render came back with an 81px-tall FLAT CUT through the left pauldron on 117 of 149 frames while every world-space number reported a silhouette that fitted. The camera is solved against the PROJECTED silhouette now, over all 149 posed frames; measured headY/footY agree with the solve to four decimals.",
+      "⚠ THE IMPS ARE ANIMATED AGAIN, AND IT TOOK ONE SETTING. v3's imps were frozen PNGs because the only imps on disk were OBJs, and an OBJ carries no skeleton — the cause was `config.exportCreatureFormat: \"OBJ\"`. Set to GLB with animations, the same app exports a Fel Imp with 25 animations and a 63-joint skin. Two ride an NLA strip whose integer repeat and derived scale put exactly 7 cycles in the figure's 149-frame loop, so the companions wrap where the man does instead of mid-stride.",
+      "THE TWO CUTS BELOW ARE THE SAME RENDER WITH AND WITHOUT THEM, for the owner's read: the imps carry the demonology and the era's 'flanked by two imps', the solo cut is quieter at site scale where the figure's legs and the projector disc already sit in that band. Swapping is one registry line — the wave renders both.",
+      "Payload: 2.38 MB against v3's 2.75, with two animated companions and 21 more frames — swept CRF 44/48/52 → 3.53/2.33/1.63 MB, at 0.49/255 of mean error between 44 and 48 measured on the imps' own faces. The bitrate is the bands and the layered translucency, not render noise (64 TAA samples measured 0.62/255 from 256).",
+    ],
+    assets: [
+      {
+        id: "az-v5-idle",
+        kind: "video",
+        src: `${V5}/holo-idle-azeroth-v5.mp4`,
+        alphaSrc: `${V5}/holo-idle-azeroth-v5.webm`,
+        label: "idle loop, with imps (live on the site)",
+        note: "149 frames @ 24fps = 6.21s, the action's own length less the duplicate last frame. VP9/yuva420p CRF 48 for alpha, H.264 CRF 26 for the Safari floor. The baked scan band runs exactly 6 cycles per loop so the cadence closes with the animation.",
+        mb: 2.38,
+      },
+      {
+        id: "az-v5-solo",
+        kind: "video",
+        src: `${V5}/holo-idle-azeroth-v5-solo.mp4`,
+        alphaSrc: `${V5}/holo-idle-azeroth-v5-solo.webm`,
+        label: "idle loop, figure alone",
+        note: "The same scene and the same 149 frames without the companions — the A/B for whether the imps earn the bottom third of the frame. 1.48 MB, and its anchors are byte-identical to the imp cut, which is the proof that scenery does not move the projector's anchor.",
+        mb: 1.48,
+      },
+      {
+        id: "az-v5-still",
+        kind: "still",
+        src: `${V5}/holo-still-azeroth-v5.jpg`,
+        alphaSrc: `${V5}/holo-still-azeroth-v5.webp`,
+        label: "poster",
+        note: "Frame zero. headY 0.1586 / footY 0.9695, measured over every frame's alpha at the 32/255 cutoff.",
+        mb: 0.14,
+      },
+    ],
+  },
   {
     id: "az-v4",
     wave: "20260829-azeroth-v4",
@@ -127,7 +174,7 @@ export const GALLERY_RUNS: readonly GalleryRun[] = [
     wave: "20260829-azeroth-v3",
     title: "Azeroth v3 — talking, imps, hybrid grade",
     date: "2026-08-29",
-    status: "SHIPPING",
+    status: "SUPERSEDED",
     adr: "ADR-082 U14",
     summary: [
       "Wowhead capture with EmoteTalkSubdued applied post-load, the Skull of the Man'ari offhand removed at source, two imps chroma-keyed from the owner's own .Source triplet, and a hybrid gold + fel-green grade baked in.",
@@ -139,7 +186,7 @@ export const GALLERY_RUNS: readonly GalleryRun[] = [
         kind: "video",
         src: `${V3}/holo-idle-azeroth-v3.mp4`,
         alphaSrc: `${V3}/holo-idle-azeroth-v3.webm`,
-        label: "idle loop",
+        label: "idle loop (superseded by v5)",
         note: "128 frames @ 24fps = 5.33s. VP9/yuva420p CRF 40 for alpha, H.264 CRF 26 for the Safari floor.",
         mb: 2.75,
       },

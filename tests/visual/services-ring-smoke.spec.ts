@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { WIREFRAME_STATIONS, expectWireframeBay, readToolBay } from "./helpers/toolBay";
 
 import { SERVICES_PROOF_RUNWAY_VH } from "../../components/landing/home-v2/unifiedServicesInstrument";
+import { VOIDWALKER_ERA_BAND } from "../../lib/voidwalker/voidwalkerHologramClock";
 
 /**
  * Services card ring smoke (ADR-029).
@@ -2061,16 +2062,32 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // so the ambient survives it exactly as it survives pinned #about and
     // terminates under `#practice`. The hook's next-station query and the
     // CSS cover rule name that station together.
-    const inTravel = await page.evaluate(() => {
+    /* ⚠ THE WAYPOINT IS ERA 0's SLICE CENTRE, NOT THE RUNWAY'S MIDPOINT.
+       Since ADR-082 U10 scroll IS the era selector, so a progress picks an
+       ERA as well as a clock reading — and the midpoint (0.5) resolves to
+       era 3, which is why this case's `mastText` pin could never pass. The
+       slice centre is the same round-trip-deterministic point a CLICK pins
+       (`voidwalkerProgressForEra(0, n)`): from either scroll direction the
+       crossing overshoot is a full half-slice, well past the 0.22
+       hysteresis, so era 0 seats whichever way the reader arrived.
+       ⚠ IT FOLLOWS THE ROSTER — the count is read off the live tabs and the
+       band off the clock, so a sixth era returning does not silently retune
+       this waypoint to a different era. At five eras it is 0.216, which
+       leaves `--vwh-in` at 1 (the entry closes at 0.14) and `--vwh-exit` at
+       0 (the exit opens at 0.74).
+       ⚠ AND THE BASE IS THE RUNWAY'S OWN TOP, which is what the writer
+       derives from (`-rect.top / (rect.height - innerHeight)`). */
+    const inTravel = await page.evaluate((band: readonly [number, number]) => {
       const vw = document.getElementById("voidwalker");
       const runway = vw?.querySelector<HTMLElement>(".vw--hologram");
       if (!vw || !runway) return null;
-      return Math.round(
-        window.scrollY +
-          vw.getBoundingClientRect().top +
-          (runway.getBoundingClientRect().height - window.innerHeight) * 0.5
-      );
-    });
+      const count = document.querySelectorAll("[data-vwh-era-tab]").length || 1;
+      const [lo, hi] = band;
+      const progress = count <= 1 ? lo : lo + ((hi - lo) / count) * 0.5;
+      const rect = runway.getBoundingClientRect();
+      const travel = rect.height - window.innerHeight;
+      return Math.round(window.scrollY + rect.top + travel * progress);
+    }, VOIDWALKER_ERA_BAND);
     expect(inTravel).not.toBeNull();
     await scrollAndSettle(inTravel as number);
     await page.waitForTimeout(600);
