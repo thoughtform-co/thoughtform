@@ -783,6 +783,28 @@ const COMPOSITION: Record<string, FaceComposition> = {
 const compositionOf = (v: CardFaceVariant): FaceComposition => COMPOSITION[v] ?? COMPOSITION.tight;
 
 /**
+ * Does this face put the PHOTOGRAPH on the card?
+ *
+ * ⚠ THREE THINGS HANG OFF THIS, AND ALL THREE ARE SILENT WHEN IT IS WRONG.
+ * The face bake is not the only consumer of the plate's photo:
+ *
+ *   · the ring FETCHES `plate.photo.jpg` for all four cards before baking, so
+ *     a drawn face without this gate downloads four portraits and paints none
+ *     of them — a payload the landing pays and never shows;
+ *   · the hologram VEIL is the photo's dot-matrix treatment, "full over the
+ *     photo-led zone", which is exactly where a banded drawing sits — over a
+ *     line figure it is not a treatment, it is a screen door;
+ *   · the SCRIMS exist to hold copy over an image (see below).
+ *
+ * None of them errors on a drawn face. They just quietly degrade it, which is
+ * why this is one predicate rather than three conditions.
+ */
+const faceUsesPhoto = (v: CardFaceVariant): boolean => {
+  const viz = compositionOf(v).viz;
+  return viz === "photo" || viz === "halftone";
+};
+
+/**
  * How the service title is SET — a second axis, crossed against the composition.
  *
  * ⚠ THE REFERENCE BOARD ALMOST NEVER FRAMES A TITLE. TALON, Droidrun, Thereby,
@@ -1022,6 +1044,24 @@ function bakeCardFace(
     }
   }
 
+  /* ⚠ A SCRIM HOLDS COPY OVER AN IMAGE, SO A BANDED DRAWING DOES NOT GET ONE.
+     Both ramps ran unconditionally until the proposal was promoted, and on a
+     drawn face they are wrong in one theme and pointless in the other: the
+     ground is already the opaque page colour, so in DARK the ground ramp lays
+     `5,4,3` at 0.96 over a `10,9,8` card and washes the lower half of the
+     drawing toward black, while in LIGHT the scrim family IS the parchment
+     ground and the same ramp paints nothing. An unexplained gradient across
+     one theme's figure only — the shape of bug that survives a review because
+     it looks like depth.
+
+     The test is the BAND, not the drawing: a `full`-band composition either
+     carries a photo or bleeds its field under the type (nebula), and both need
+     the ramp. A banded drawing clears the copy by ~100 units and never does.
+
+     ⚠ The shipped faces are byte-identical through this — `tight` and `full`
+     are both `full`-band. */
+  const scrimmed = comp.band === "full";
+
   // Scrims — chip row leads at the top; the C3 pgrade below (photo leads
   // at the top of the plate, resolves to solid page ground for the copy
   // stack — void in dark, parchment in light, the copy ink flips with it).
@@ -1041,8 +1081,10 @@ function bakeCardFace(
     top.addColorStop(0, `rgba(${pal.scrimRgb}, 0.78)`);
     top.addColorStop(1, `rgba(${pal.scrimRgb}, 0)`);
   }
-  ctx.fillStyle = top;
-  ctx.fillRect(0, 0, BAKE_W, topScrimH);
+  if (scrimmed) {
+    ctx.fillStyle = top;
+    ctx.fillRect(0, 0, BAKE_W, topScrimH);
+  }
   /* The ground scrim is SHARED by both variants: with no CTA at the tight
      face's foot the lede sits back at the bottom margin, which is the depth
      this ramp was tuned for. (It was briefly branched to ramp faster, for
@@ -1052,8 +1094,10 @@ function bakeCardFace(
   ground.addColorStop(0.34, `rgba(${pal.scrimRgb}, 0.58)`);
   ground.addColorStop(0.62, `rgba(${pal.scrimRgb}, 0.9)`);
   ground.addColorStop(1, `rgba(${pal.scrimRgb}, 0.96)`);
-  ctx.fillStyle = ground;
-  ctx.fillRect(0, 700, BAKE_W, BAKE_H - 700);
+  if (scrimmed) {
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 700, BAKE_W, BAKE_H - 700);
+  }
 
   // Chamfer corners — OPAQUE page color (see module doc; never
   // transparent). The TIGHT face keeps only the BOTTOM-LEFT cut (owner,
@@ -2434,6 +2478,17 @@ export function ServicesCardRing({
       ),
     [glowTexture]
   );
+  /* ⚠ THE VEIL IS SILENCED ON ITS MATERIAL, NEVER BY DROPPING THE MESH.
+     A drawn face has no photograph for the dot matrix to be a treatment OF,
+     and the veil is full over y 230–640 — straight through the poster band's
+     figure — fading out by 820, so it would mute the drawing's top half and
+     leave its bottom half clear: a horizontal split across the figure with
+     nothing to explain it.
+
+     But `DECK_INTRA_ORDERS` rebases renderOrder POSITIONALLY over
+     `cardGroup.children`, so removing this child renumbers the ADR-047 deck's
+     slots (`.claude/rules/services-ring.md` names it as a trap). `visible`
+     skips the draw and leaves the child list alone. */
   const veilMaterials = useMemo(
     () =>
       SERVICE_PLATES.map(
@@ -2446,9 +2501,10 @@ export function ServicesCardRing({
             depthTest: true,
             blending: THREE.NormalBlending,
             toneMapped: false,
+            visible: faceUsesPhoto(faceVariant),
           })
       ),
-    [veilTexture]
+    [veilTexture, faceVariant]
   );
   /* ── Drawer materials (ADR-050 rev 3) ────────────────────────────────────
      Same material RECIPE as the card's slab/glint, but its own instances,
@@ -2563,7 +2619,11 @@ export function ServicesCardRing({
       const baked = await Promise.all(
         SERVICE_PLATES.map(async (plate) => {
           let img: HTMLImageElement | null = null;
-          if (plate.photo) {
+          // A drawn face never reaches the image, so it must never FETCH one —
+          // the same discipline as the portrait back below ("flag-off never
+          // fetches the asset"). Four unused portraits is a payload the
+          // landing pays for a card that paints none of them.
+          if (plate.photo && faceUsesPhoto(faceVariant)) {
             try {
               img = await loadImage(plate.photo.jpg);
             } catch {

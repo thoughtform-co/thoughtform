@@ -310,11 +310,23 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           dissipateGetter={ringEntranceClock}
           entrance="scroll"
           publishAnchors
-          /* ADR-050 promotion: the tight face and the in-canvas drawer ride
-             ONE flag — the tight face bakes an `OPEN` chit unconditionally, so
-             the two are only coherent together. Flag off restores the ADR-029
-             full face byte-identically. */
-          faceVariant={SERVICES_CARD_DRAWER ? "tight" : "full"}
+          /* ADR-050 promotion: the open face and the in-canvas drawer ride ONE
+             flag — that face bakes an `OPEN` chit unconditionally, so the two
+             are only coherent together. Flag off restores the ADR-029 full
+             face byte-identically.
+
+             ⚠ THE FACE IS `card` SINCE 2026-08-30 (owner), NOT `tight`: the
+             centre of a services card carries THE WORK, not the practitioner.
+             That was the question the face lab was built to answer, and across
+             ~40 cards on the owner's own reference board not one carries the
+             person. `card` is the proposal that won it — the constellation
+             drawing, one figure per service over a shared cloud, on the
+             centred arrangement. `tight` is unchanged and one word away; the
+             lab keeps it as V1 for the comparison.
+
+             ⚠ Three things keyed off the photograph and none of them errors
+             without one — see `faceUsesPhoto` in ServicesCardRing. */
+          faceVariant={SERVICES_CARD_DRAWER ? "card" : "full"}
           openDrawer={SERVICES_CARD_DRAWER}
         />
       )}

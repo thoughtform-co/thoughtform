@@ -17,6 +17,7 @@ component you can edit in isolation.
 
 **Read first**
 
+- [ADR-086: The services card carries the work, not the practitioner](../sentinel/decisions/086-services-card-carries-the-work.md) — the LIVE face since 2026-08-30: `card`, the constellation drawing (one cloud, four edge rules) on the centred arrangement with the title pinned to display. ⚠ **Three things keyed off the photograph and none of them errors without one** — the fetch, the veil and the scrims all read `faceUsesPhoto` now; see §The card carries the work below
 - [ADR-029: Services card ring](../sentinel/decisions/029-services-card-ring.md) — the ring, and the ONE-OBJECT guardrail
 - [ADR-050: Card face + in-canvas drawer](../sentinel/decisions/050-services-card-face.md) — the tight face, the drawer, the promotion
 - [ADR-025: Services hologram stage](../sentinel/decisions/025-services-hologram-stage.md) — the oscillation history; read before redesigning this surface again
@@ -48,6 +49,42 @@ portal transform, no revived `--about-portal`, and no second canvas. Keep the
 ref module free of Three/Fiber/Drei so the landing DOM import boundary does not
 regress. The seam is disabled at 961–1100 and on every
 mobile/PRM/corridor-fallback/flag-off path.
+
+## The card carries the work (ADR-086, live)
+
+The face is `card`, not `tight`: a drawn constellation where the photograph
+used to be. Three components and no more — a title, a paragraph, a
+visualization (owner's own constraint).
+
+- ⚠ **`faceUsesPhoto(variant)` IS ONE PREDICATE BECAUSE THREE THINGS READ IT,
+  AND ALL THREE FAIL SILENTLY.** The face bake is not the plate photo's only
+  consumer: the ring **fetches** all four portraits before baking (334 kB the
+  landing paid for a card that painted none of them), the hologram **veil** is
+  the photo's dot-matrix treatment and runs full over y 230–640 — straight
+  through the poster band's figure — and the **scrims** exist to hold copy over
+  an image. None of them throws on a drawn face. They just degrade it.
+- ⚠ **THE VEIL IS SILENCED ON ITS MATERIAL, NEVER BY DROPPING THE MESH.**
+  `DECK_INTRA_ORDERS` rebases renderOrder positionally over
+  `cardGroup.children` — see the renumbering trap below.
+- ⚠ **THE SCRIM TEST IS THE BAND, NOT THE DRAWING.** A `full`-band composition
+  either carries a photo or bleeds its field under the type (nebula); both need
+  the ramp. A banded drawing clears the copy by ~100 units and never does.
+  Shipping the ramp on a drawn face is wrong in DARK (it washes the lower half
+  of the figure toward black) and a no-op in LIGHT (the scrim family IS the
+  parchment ground) — an unexplained gradient in one theme only.
+- ⚠ **THE CHIT DOES NOT MOVE, THE TYPE DOES.** A centred title cannot share the
+  chit's centre line the way a top-left one does, so `TITLE_HEAD_CAP_TOP`
+  CLEARS it — derived as `TIGHT_EXPAND_INSET + TIGHT_EXPAND_SIZE + 50`, so the
+  two cannot drift apart.
+- ⚠ **THE `poster` BAND IS SOLVED AGAINST THE WORST-CASE TYPE** across all four
+  services (two title lines + a four-line paragraph → 100/99 units of
+  clearance), and the figure is HEIGHT-bound, so ~328 is its ceiling. Growing
+  the box buys nothing.
+- ⚠ **MOBILE STILL CARRIES THE PHOTOGRAPHS.** `ServicePlateCard` is a separate
+  surface with its own IA (ADR-083) built around a full-bleed photo window, and
+  the four assets stay live for it. The ruling is desktop-only today.
+- `tight` and `full` are byte-identical through this change and `tight` stays in
+  the lab as V1 — the face variant is one word in `CorridorArmillary`.
 
 ## What must move together
 
