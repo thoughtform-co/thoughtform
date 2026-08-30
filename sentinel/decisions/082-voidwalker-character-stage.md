@@ -1609,15 +1609,33 @@ Fiendish 0.50 m · Corefire 0.80 m · Imp 0.58 m, on a 150° arc 0.30 deep by
   ignored. It reports the SHARE OF VERTICES outside the frame (0.5 % here) and
   only warns past 4 %.
 
+### …and then stood off him (v7, same day, same owner pass)
+
+> "Can you spread them a bit so they're less close to me?"
+
+The arc goes **0.30 × 0.47 → 0.42 × 0.525** and the imps shrink to 0.44 / 0.72
+/ 0.50 to pay for it. The gap between his leg and the nearest imp goes from
+about 5 cm to about 17 cm — the difference between demons leaning on him and
+demons attending him.
+
+⚠ **LATERAL ROOM IS NOT FREE ON THIS FRAME, AND THAT IS WHY THEY SHRANK.** The
+crop is WIDTH-bound by the pauldrons, so the flankers already sit near the
+edge: at 0.72 m of half-frame, an imp centre at `arc_y × sin 75°` plus its own
+half-width has nowhere to go. Every centimetre outward has to come off the
+imp's own size or it leaves the frame. Spreading a companion arc is therefore a
+trade against the companions' scale, never a free move — and the same is true
+forward, where the cost is the floor rather than the edge.
+
 ### What changed
 
-- `characterEras.ts` — the hologram repoints to `-v6`; anchors unchanged
-  (0.1586 / 0.9695), which is itself the evidence that the companions did not
-  move them. The loadout row now says "three imps attending."
+- `characterEras.ts` — the hologram repoints to `-v7`; anchors unchanged
+  (0.1586 / 0.9695) across v5, v6 and v7, which is itself the evidence that the
+  companions never moved them. The loadout row now says "three imps attending."
 - `character-era-hologram.test.ts` pins the `-v6` paths.
 - `holo-scene.py` — `FEL_MAX`, `--imps` (a list of `path@height`), the
   elliptical arc, the per-companion yaw, `IMP_DIM`, and the share-based frame
   check. `imp-sheet.py` is new.
-- v5's four assets deleted in the same commit v6 lands. Payload 2.33 MB, flat
-  against v5's 2.38.
-- Both cuts stay in the gallery so the pair can be read side by side.
+- Each cut's four assets are deleted in the commit that supersedes them.
+  Payload 2.38 MB at v7 — flat across all three cuts.
+- All four cuts stay in the gallery (v7 live, v6 beside it, v5 and the
+  companion-free control on the card below) so the sequence can be read.

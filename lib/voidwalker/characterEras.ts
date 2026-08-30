@@ -396,13 +396,13 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     motto: "Class moved into the game.",
     modelPath: null,
     stillPath: "/images/services/vince.webp",
-    // ⚠ `-v6` IS PART OF THE CONTRACT. Each wave has shipped under its own
+    // ⚠ `-v7` IS PART OF THE CONTRACT. Each wave has shipped under its own
     // suffix since v1 took the unsuffixed names — a cache does not read commit
     // messages, so a new URL is the only guarantee the new figure reaches the
-    // reader. v5 shipped for one commit and v6 supersedes it on the owner's
-    // read: the fel-green mask is capped so the belt and cuffs stop shouting,
-    // and the companions became an arc of three species rather than a mirrored
-    // pair.
+    // reader. v5 and v6 each shipped for one commit; v7 stands the imps OFF
+    // him (the arc goes 0.30 x 0.47 → 0.42 x 0.525 with the imps trimmed to
+    // pay for it), so there is air between the warlock and his court instead
+    // of three demons leaning on his legs.
     //
     // ⚠ headY/footY ARE MEASURED OFF THE DELIVERED ALPHA, at the opaque cutoff
     // 32/255, over EVERY frame rather than frame zero — a talking idle's head
@@ -416,10 +416,10 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // the surplus lands above the head. A height-first fit crops them, and a
     // pauldron is worn: U13's "a plume may run off the edge; the man may not".
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-azeroth-v6.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v6.webm",
-      posterPath: "/images/voidwalker/holo-still-azeroth-v6.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v6.webp",
+      videoPath: "/videos/voidwalker/holo-idle-azeroth-v7.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v7.webm",
+      posterPath: "/images/voidwalker/holo-still-azeroth-v7.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v7.webp",
       frame: { width: 720, height: 1280 },
       headY: 0.1586,
       footY: 0.9695,
