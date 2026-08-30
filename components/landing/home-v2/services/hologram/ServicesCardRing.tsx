@@ -53,7 +53,7 @@ import * as THREE from "three";
 
 import { resolveScenePalette } from "@/lib/theme/palette";
 
-import { applyHalftone, drawCardEmblem, drawSpecReadout } from "./cardEmblem";
+import { applyHalftone, drawCardViz } from "./cardViz";
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
 import { HologramOrbits } from "./HologramOrbits";
 import {
@@ -648,71 +648,101 @@ type InkRun = { text: string; gold: boolean };
  * one-word default change.
  */
 /**
- * `emblem` is the TIGHT composition with a drawn per-service figure in place of
- * the photograph — the reference set's answer to "what belongs at the centre of
- * a services card" (docs/design/card-reference-analysis.md). It shares every one
- * of tight's layout decisions on purpose: scrims, the single BL chamfer, the
- * open right shell, the framed name, the chit, the bottom-anchored lede. Only
- * the FIELD changes, so a side-by-side in the lab compares one variable.
+ * A card is THREE components (owner, 2026-08-30): **a title, a paragraph, and a
+ * visualization.** No spec rows, no meters, no fourth register.
  *
- * ⚠ Anything branching on `variant === "tight"` must use `isTightLayout()`
- * instead, or the emblem face silently falls back to the `full` geometry — which
- * would cut the top-right corner the drawer tray needs square.
+ * A variant is a choice of all three — WHICH DRAWING, where the title sits,
+ * where the paragraph sits — because that is what the reference board varies
+ * card to card. The first pass moved the title twice and reused one dot-lattice
+ * six times, which is exactly why it read as lazy: no two of those were
+ * different DIRECTIONS, they were the same direction re-anchored.
+ *
+ * ⚠ The rule for adding a row: it must differ from every other row in its
+ * VISUALIZATION LANGUAGE, not only in its anchors. Six placements of one drawing
+ * is one design.
  */
 export type CardFaceVariant =
   | "full"
   | "tight"
-  | "emblem"
   | "halftone"
-  | "inverted"
-  | "instrument"
-  | "poster";
+  | "constellation"
+  | "dendrite"
+  | "meridian"
+  | "nebula"
+  | "panel"
+  | "glyph";
 
 /**
  * The TIGHT layout family — everything except the ADR-029 `full` baseline.
  * They share the scrims, the single BL chamfer, the open right shell and the
- * chit, and differ only in what fills the FIELD and where the name sits.
+ * chit, and differ in drawing and anchors.
+ *
+ * ⚠ Anything branching on `variant === "tight"` must use this instead, or a new
+ * face silently falls back to the `full` geometry — which cuts the top-right
+ * corner the drawer tray needs square.
  */
 const isTightLayout = (v: CardFaceVariant): boolean => v !== "full";
 
-/**
- * What a variant puts in the middle third, and where its name goes.
- *
- * Derived from the five archetypes read off the Brand Codex CARDS cluster
- * (docs/design/card-reference-analysis.md). Each row is one archetype, so the
- * lab compares DIRECTIONS rather than tweaks:
- *
- *   tight       photo,    name top      the shipped face, the control
- *   emblem      figure,   name top      STACK — a drawn per-service figure
- *   halftone    photo°,   name top      STACK — the photo processed into the
- *                                       grammar; the reference set's own answer
- *                                       when a person stays in the frame
- *   inverted    figure,   name FOOT     INVERTED — the eye enters through the
- *                                       image and lands on the words
- *   instrument  readout,  name top      INSTRUMENT — the field IS a record
- *   poster      figure,   name FOOT big POSTER STACK — claim top, figure centre,
- *                                       the name bled across the foot (TALON)
- */
+type TitleAnchor = "top-left" | "top-centre" | "foot-left" | "foot-centre";
+type ParaAnchor = "foot-left" | "foot-centre" | "under-title" | "none";
+/** Which band of the card the drawing occupies. */
+type VizBand = "middle" | "lower" | "upper" | "full";
+
 interface FaceComposition {
-  field: "photo" | "emblem" | "halftone" | "spec";
-  /** Where the framed name sits. The chit stays top-right regardless. */
-  nameAt: "top" | "foot";
-  /** The foot name is set large and unframed — the poster read. */
-  nameBled?: boolean;
-  /** Suppress the lede (the poster gives its room to the name). */
-  ledeOff?: boolean;
+  /** "photo" and "halftone" use the plate's image; anything else is drawn. */
+  viz: string;
+  title: TitleAnchor;
+  para: ParaAnchor;
+  band: VizBand;
+  /** Title set large and unframed — the bled poster read (TALON). */
+  bled?: boolean;
 }
 
+/**
+ * | variant       | visualization    | title       | paragraph   | reference          |
+ * |---------------|------------------|-------------|-------------|--------------------|
+ * | tight         | photo            | top-left    | foot-left   | the shipped face   |
+ * | halftone      | photo, screened  | top-left    | foot-left   | Marketing Memory   |
+ * | constellation | node graph       | top-left    | under-title | Indent             |
+ * | dendrite      | branching growth | top-centre  | foot-centre | manufacturing biology |
+ * | meridian      | fine line body   | top-centre  | foot-centre | the orange brain   |
+ * | nebula        | density field    | foot-left   | none        | this isn't space   |
+ * | panel         | rule division    | top-left    | foot-left   | Adaptive           |
+ * | glyph         | pixel mark       | foot-centre | foot-centre | Marketing Memory   |
+ */
 const COMPOSITION: Record<string, FaceComposition> = {
-  tight: { field: "photo", nameAt: "top" },
-  emblem: { field: "emblem", nameAt: "top" },
-  halftone: { field: "halftone", nameAt: "top" },
-  inverted: { field: "emblem", nameAt: "foot" },
-  instrument: { field: "spec", nameAt: "top" },
-  poster: { field: "emblem", nameAt: "foot", nameBled: true, ledeOff: true },
+  tight: { viz: "photo", title: "top-left", para: "foot-left", band: "full" },
+  halftone: { viz: "halftone", title: "top-left", para: "foot-left", band: "full" },
+  constellation: { viz: "constellation", title: "top-left", para: "under-title", band: "lower" },
+  dendrite: { viz: "dendrite", title: "top-centre", para: "foot-centre", band: "middle" },
+  meridian: { viz: "meridian", title: "top-centre", para: "foot-centre", band: "middle" },
+  nebula: { viz: "nebula", title: "foot-left", para: "none", band: "full", bled: true },
+  panel: { viz: "panel", title: "top-left", para: "foot-left", band: "middle" },
+  glyph: { viz: "glyph", title: "foot-centre", para: "foot-centre", band: "upper" },
 };
 
 const compositionOf = (v: CardFaceVariant): FaceComposition => COMPOSITION[v] ?? COMPOSITION.tight;
+
+/**
+ * The drawing's box for a band.
+ *
+ * `full` is the photo's own case — it covers the card and the scrims carry the
+ * copy. The drawn languages take a band instead, so the copy sits on clean
+ * ground rather than fighting a field for contrast.
+ */
+function vizBoxFor(band: VizBand): { x: number; y: number; w: number; h: number } {
+  const inset = 84;
+  switch (band) {
+    case "lower":
+      return { x: inset, y: 610, w: BAKE_W - inset * 2, h: 640 };
+    case "upper":
+      return { x: inset, y: 140, w: BAKE_W - inset * 2, h: 620 };
+    case "middle":
+      return { x: inset, y: 370, w: BAKE_W - inset * 2, h: 640 };
+    default:
+      return { x: 0, y: 0, w: BAKE_W, h: BAKE_H };
+  }
+}
 
 /** Greedy word-wrap for a single-font run of styled segments. Returns lines
  *  of runs so lede emphasis (`{ em }` → upright gold) survives wrapping. */
@@ -784,27 +814,15 @@ function bakeCardFace(
 
   const comp = compositionOf(variant);
 
-  if (comp.field === "emblem") {
-    /* A DRAWN field instead of a photographed one. The photo is deliberately
-       not used past this point — the whole question these variants exist to
-       answer is whether the centre of a services card should carry the
-       practitioner or the work. See cardEmblem.ts. */
-    drawCardEmblem(ctx, plate.id, pal);
-  } else if (comp.field === "spec") {
-    /* The INSTRUMENT archetype: the field is the engagement's own record,
-       which today is hidden inside the drawer. */
-    drawSpecReadout(
-      ctx,
-      [
-        { label: "Runs", value: plate.spec.duration },
-        { label: "Group", value: plate.spec.participants },
-        { label: "Format", value: plate.spec.format },
-        { label: "Language", value: plate.spec.language },
-      ],
-      pal,
-      { x: PAD_X, y: 396, w: BAKE_W - PAD_X * 2, h: 560 },
-      { mono: CARD_FONT, sans: CARD_SANS }
-    );
+  const drawn = comp.viz !== "photo" && comp.viz !== "halftone";
+
+  if (drawn) {
+    /* A DRAWN visualization instead of a photographed one. The photo is
+       deliberately not used past this point — the question these variants
+       exist to answer is whether the centre of a services card carries the
+       practitioner or the work, and across ~40 cards on the reference board
+       not one carries the practitioner. See cardViz.ts. */
+    drawCardViz(ctx, comp.viz, plate.id, pal, vizBoxFor(comp.band));
   } else if (img) {
     // Photo, cover-fit (assets are exactly BAKE_W × BAKE_H, so this is
     // 1:1), baked CLEAN — the plate's dot-matrix hologram effect lives on
@@ -836,7 +854,7 @@ function bakeCardFace(
        kept, but processed into the grammar so it reads as material rather than
        as a headshot. Runs AFTER the LUT on purpose: it screens the plate the
        card actually shows, not the raw image. */
-    if (comp.field === "halftone") {
+    if (comp.viz === "halftone") {
       applyHalftone(ctx, BAKE_W, BAKE_H, { ...pal, ground: pal.ground });
     }
   } else {
@@ -990,81 +1008,95 @@ function bakeCardFace(
        The frame is measured, not fixed: it wraps the text it actually holds,
        and the text wraps against the gap to the chit so a long name can
        never run under the affordance. */
-    /* ⚠ `nameAt` is the archetype's variable, and the FRAME follows it.
-       At the foot the name is the last thing read rather than the first, so
-       the INVERTED and POSTER variants let the field enter the eye and land on
-       the words — the reference set's own reason for that arrangement. The
-       chit stays top-right in every case: it is the open affordance, and
-       moving a control to follow a composition is how an affordance gets lost. */
-    const namePx = comp.nameBled ? 78 : TIGHT_TITLE_PX;
-    const nameLh = comp.nameBled ? 92 : TIGHT_TITLE_LH;
-    const nameCapH = comp.nameBled ? 55 : NAME_CAP_H;
-    label.letterSpacing = comp.nameBled ? "8px" : "3px";
+    /* ⚠ TITLE AND PARAGRAPH ARE ANCHORED, NOT PLACED.
+       The reference board moves both around the card — top-left, centred at the
+       head, low over the image, stacked together at the foot — so the anchor is
+       the variable and everything below derives from it. The chit stays
+       top-right in every composition: it is the open affordance, and moving a
+       control to follow a layout is how an affordance gets lost. */
+    const titleTop = comp.title.startsWith("top");
+    const titleCentre = comp.title.endsWith("centre");
+    const framed = !comp.bled;
+
+    const namePx = comp.bled ? 74 : TIGHT_TITLE_PX;
+    const nameLh = comp.bled ? 88 : TIGHT_TITLE_LH;
+    const nameCapH = comp.bled ? 52 : NAME_CAP_H;
+    label.letterSpacing = comp.bled ? "6px" : "3px";
     ctx.font = `700 ${namePx}px ${CARD_FONT}`;
     const nameText = plate.chip.toUpperCase();
     const chitX0 = BAKE_W - TIGHT_EXPAND_INSET - TIGHT_EXPAND_SIZE;
-    const framed = !comp.nameBled;
-    const nameTextX = PAD_X + (framed ? NAME_FRAME_PAD_L + NAME_FRAME_GAP : 0);
-    // 20px of clear air between the frame's right edge and the chit. A FOOT
-    // name has no chit beside it, so it takes the full measure.
+
+    /* The measure. Only a TOP-LEFT title shares its band with the chit, so only
+       that one has to wrap short of it; every other anchor takes the full
+       column. Deriving this rather than fixing it is what stops a long service
+       name running under the affordance in one composition and looking cramped
+       in the others. */
+    const frameLead = framed ? NAME_FRAME_PAD_L + NAME_FRAME_GAP : 0;
     const nameMaxTextW =
-      comp.nameAt === "foot"
-        ? BAKE_W - PAD_X - nameTextX
-        : chitX0 - 20 - NAME_FRAME_PAD_R - nameTextX;
+      comp.title === "top-left"
+        ? chitX0 - 20 - NAME_FRAME_PAD_R - (PAD_X + frameLead)
+        : BAKE_W - PAD_X * 2 - frameLead;
     const nameLines = wrapRuns(ctx, [nameText], nameMaxTextW);
     const nameTextW = nameLines.reduce(
       (w, line) => Math.max(w, ctx.measureText(line.map((r) => r.text).join(" ")).width),
       0
     );
-    const frameW = NAME_FRAME_PAD_L + NAME_FRAME_GAP + nameTextW + NAME_FRAME_PAD_R;
+    const frameW = frameLead + nameTextW + (framed ? NAME_FRAME_PAD_R : 0);
     const frameH = NAME_FRAME_PAD_Y * 2 + nameCapH + (nameLines.length - 1) * nameLh;
     const nameBlockH = nameCapH + (nameLines.length - 1) * nameLh;
-    // TOP: centred on the chit's centre (see the NAME_FRAME_* block).
-    // FOOT: seated on the card's bottom margin, growing up.
-    const frameY =
-      comp.nameAt === "foot"
-        ? BAKE_H - 72 - frameH
-        : TIGHT_EXPAND_INSET + TIGHT_EXPAND_SIZE / 2 - frameH / 2;
-    const nameTop =
-      comp.nameAt === "foot" && !framed
-        ? BAKE_H - 72 - (nameBlockH - nameCapH)
-        : frameY + NAME_FRAME_PAD_Y + nameCapH;
+
+    const frameX = titleCentre ? (BAKE_W - frameW) / 2 : PAD_X;
+    // TOP-LEFT sits on the chit's centre line (the NAME_FRAME_* block's rule);
+    // a centred head clears the chit entirely and can sit higher.
+    const frameY = titleTop
+      ? comp.title === "top-left"
+        ? TIGHT_EXPAND_INSET + TIGHT_EXPAND_SIZE / 2 - frameH / 2
+        : 96
+      : BAKE_H - 72 - frameH;
+    const nameTop = framed
+      ? frameY + NAME_FRAME_PAD_Y + nameCapH
+      : frameY + nameCapH + (frameH - nameBlockH) / 2 - NAME_FRAME_PAD_Y;
 
     if (framed) {
       ctx.strokeStyle = pal.goldA(0.55);
       ctx.lineWidth = 2;
-      ctx.strokeRect(PAD_X, frameY, frameW, frameH);
+      ctx.strokeRect(frameX, frameY, frameW, frameH);
     }
 
+    const nameTextX = frameX + frameLead;
     nameLines.forEach((line, i) => {
-      drawRunLine(ctx, line, nameTextX, nameTop + i * nameLh, pal.gold, pal.gold);
+      const lineW = ctx.measureText(line.map((r) => r.text).join(" ")).width;
+      // A centred title centres each LINE; a left title starts every line at the
+      // same x. Centring the block but not its lines is the tell of a layout
+      // that was moved rather than re-anchored.
+      const x = titleCentre && !framed ? (BAKE_W - lineW) / 2 : nameTextX;
+      drawRunLine(ctx, line, x, nameTop + i * nameLh, pal.gold, pal.gold);
     });
-    // Gold diamond on the FIRST line's cap band. 14×14 rotated → 19.8px on
-    // the diagonal, which sits optically with the ~28px caps. The BLED name
-    // carries none: at 78px the mark would read as a bullet on a wordmark.
+    // Gold diamond on the FIRST line's cap band. 14×14 rotated → 19.8px on the
+    // diagonal, which sits optically with the ~28px caps. The BLED title carries
+    // none: at 74px a leading mark reads as a bullet on a wordmark.
     if (framed) {
       ctx.fillStyle = pal.gold;
       ctx.save();
-      ctx.translate(PAD_X + NAME_FRAME_PAD_L, nameTop - nameCapH / 2);
+      ctx.translate(frameX + NAME_FRAME_PAD_L, nameTop - nameCapH / 2);
       ctx.rotate(Math.PI / 4);
       ctx.fillRect(-7, -7, 14, 14);
       ctx.restore();
     }
 
     /* The EXPAND affordance — the universal open-in-full glyph in a hairline
-       chit, top-right. Without SOMETHING here the tight card reads as a
-       poster and nobody discovers that it opens.
+       chit, top-right. Without SOMETHING here the tight card reads as a poster
+       and nobody discovers that it opens.
 
        Two diagonal arrows striking opposite corners. Drawn rather than typed:
-       there is no glyph for this in the card's mono face, and a text arrow
-       would sit on the font's baseline metrics instead of the chit's centre. */
+       there is no glyph for this in the card's mono face, and a text arrow would
+       sit on the font's baseline metrics instead of the chit's centre. */
     {
       const ey0 = TIGHT_EXPAND_INSET;
       ctx.strokeStyle = pal.goldA(0.55);
       ctx.lineWidth = 2;
       ctx.strokeRect(chitX0, ey0, TIGHT_EXPAND_SIZE, TIGHT_EXPAND_SIZE);
 
-      // Glyph inset inside the chit; `arm` is the arrowhead leg length.
       const gp = 16;
       const arm = 10;
       const gx0 = chitX0 + gp;
@@ -1078,11 +1110,9 @@ function bakeCardFace(
       ctx.beginPath();
       ctx.moveTo(gx0, gy1);
       ctx.lineTo(gx1, gy0);
-      // Arrowhead into the top-right corner.
       ctx.moveTo(gx1 - arm, gy0);
       ctx.lineTo(gx1, gy0);
       ctx.lineTo(gx1, gy0 + arm);
-      // Arrowhead into the bottom-left corner.
       ctx.moveTo(gx0 + arm, gy1);
       ctx.lineTo(gx0, gy1);
       ctx.lineTo(gx0, gy1 - arm);
@@ -1090,26 +1120,33 @@ function bakeCardFace(
       ctx.lineCap = "butt";
     }
 
-    /* Lede — sans body, `{ em }` spans upright gold (no-italics rule).
-       Bottom-anchored on the card's bottom margin, growing UP.
+    /* The PARAGRAPH — sans body, `{ em }` spans upright gold (no-italics rule).
+       Its anchor is independent of the title's, which is the other half of the
+       variety the board shows: Indent stacks them at the head, the orange brain
+       splits them to opposite ends, "this isn't space" drops the paragraph
+       entirely and lets the title carry the card alone.
 
-       ⚠ When the NAME takes the foot the lede is lifted clear of it by the
-       name's own measured height plus one line of air — derived, never a
-       second constant, so a two-line service name cannot land on top of it.
-       The POSTER drops the lede entirely: its whole argument is a claim, a
-       figure and a bled name, and a paragraph is the fourth register the
-       reference set's weakest cards all had. */
-    if (!comp.ledeOff) {
+       ⚠ `under-title` and a FOOT title both derive their y from the title's own
+       measured height — never a second constant — so a two-line service name
+       cannot land on top of its own paragraph. */
+    if (comp.para !== "none") {
       label.letterSpacing = "0px";
       ctx.font = `400 ${TIGHT_LEDE_PX}px ${CARD_SANS}`;
-      const ledeBottom = comp.nameAt === "foot" ? frameY - TIGHT_LEDE_LH * 0.6 : TIGHT_COPY_BOTTOM;
+      const paraCentre = comp.para === "foot-centre";
       const ledeLines = wrapRuns(ctx, plate.lede, maxW);
+      const bottom =
+        comp.para === "under-title"
+          ? frameY + frameH + 46 + (ledeLines.length - 1) * TIGHT_LEDE_LH
+          : titleTop
+            ? TIGHT_COPY_BOTTOM
+            : frameY - TIGHT_LEDE_LH * 0.6;
       ledeLines.forEach((line, i) => {
+        const lineW = ctx.measureText(line.map((r) => r.text).join(" ")).width;
         drawRunLine(
           ctx,
           line,
-          PAD_X,
-          ledeBottom - (ledeLines.length - 1 - i) * TIGHT_LEDE_LH,
+          paraCentre ? (BAKE_W - lineW) / 2 : PAD_X,
+          bottom - (ledeLines.length - 1 - i) * TIGHT_LEDE_LH,
           pal.ink(0.82),
           pal.gold
         );
