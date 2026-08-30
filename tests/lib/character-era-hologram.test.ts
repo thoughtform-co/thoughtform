@@ -28,7 +28,7 @@ describe("ADR-082 · normalized character hologram assets", () => {
     // site owner's actual 2020 character) in his own "Daemoniac" transmog,
     // TALKING, rendered in Blender from `wow.export`'s rigged GLB on an
     // emissive hologram material by the wave
-    // `voidwalker-avatar/waves/20260830-azeroth-v7-blender`. Every OTHER era
+    // `voidwalker-avatar/waves/20260830-azeroth-v8-blender`. Every OTHER era
     // still resolves to the canonical thoughtform pair until its own wave
     // lands — including the two new 2018/2016 eras, which is exactly what this
     // walk is here to prove after a roster change.
@@ -50,10 +50,10 @@ describe("ADR-082 · normalized character hologram assets", () => {
     // messages, so a new URL is the only guarantee the new figure reaches the
     // reader. v6 capped the fel mask and made the companions an arc of three
     // species; v7 stands that arc OFF the figure so there is air between them.
-    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth-v7.mp4");
-    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth-v7.webm");
-    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth-v7.jpg");
-    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth-v7.webp");
+    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth-v8.mp4");
+    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth-v8.webm");
+    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth-v8.jpg");
+    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth-v8.webp");
     // Measured off the DELIVERED alpha at the opaque cutoff 32/255, over all
     // 149 frames rather than frame zero — a talking idle's head and hands move,
     // so an anchor read from one pose is wrong for the other 148. They agree

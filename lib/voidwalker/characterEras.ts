@@ -387,22 +387,22 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // curves over the shoulders. The site's mask, flicker and materialize are
     // untouched.
     wardrobe: "The Azeroth teacher",
-    // ⚠ THE PLATE SPEAKS FOR WHAT IT SHOWS (U13's rule). The companions are
-    // real — three DIFFERENT imps at three sizes, each with its own rig and
-    // idle, arranged on a shallow arc in front of him and turned to face him,
-    // so the frame shows their backs. Not v3's frozen PNGs, and not v5's
-    // matched pair either.
-    loadout: "Daemoniac · Shard of Azzinoth · three imps attending.",
+    // ⚠ THE PLATE SPEAKS FOR WHAT IT SHOWS (U13's rule), AND WHAT IT SHOWS IS
+    // A CLASS. Two imps stand at his shoulders facing the way he faces; three
+    // children sit in front of him facing HIM, backs to the reader. That is
+    // the shape a room takes when someone is teaching in it, which is the
+    // whole reason this era is on the wall — and it is why the imps moved out
+    // of the middle: the space in front of a teacher belongs to the students.
+    loadout: "Daemoniac · Shard of Azzinoth · two imps, and a class.",
     motto: "Class moved into the game.",
     modelPath: null,
     stillPath: "/images/services/vince.webp",
-    // ⚠ `-v7` IS PART OF THE CONTRACT. Each wave has shipped under its own
+    // ⚠ `-v8` IS PART OF THE CONTRACT. Each wave has shipped under its own
     // suffix since v1 took the unsuffixed names — a cache does not read commit
     // messages, so a new URL is the only guarantee the new figure reaches the
-    // reader. v5 and v6 each shipped for one commit; v7 stands the imps OFF
-    // him (the arc goes 0.30 x 0.47 → 0.42 x 0.525 with the imps trimmed to
-    // pay for it), so there is air between the warlock and his court instead
-    // of three demons leaning on his legs.
+    // reader. v5–v7 were the imp arc, tuned three times; v8 is the composition
+    // the era actually wanted — the imps out of the middle, standing at his
+    // shoulders facing HIS way, and a seated class in the space they left.
     //
     // ⚠ headY/footY ARE MEASURED OFF THE DELIVERED ALPHA, at the opaque cutoff
     // 32/255, over EVERY frame rather than frame zero — a talking idle's head
@@ -416,10 +416,10 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // the surplus lands above the head. A height-first fit crops them, and a
     // pauldron is worn: U13's "a plume may run off the edge; the man may not".
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-azeroth-v7.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v7.webm",
-      posterPath: "/images/voidwalker/holo-still-azeroth-v7.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v7.webp",
+      videoPath: "/videos/voidwalker/holo-idle-azeroth-v8.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v8.webm",
+      posterPath: "/images/voidwalker/holo-still-azeroth-v8.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v8.webp",
       frame: { width: 720, height: 1280 },
       headY: 0.1586,
       footY: 0.9695,

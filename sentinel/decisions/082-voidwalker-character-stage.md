@@ -1639,3 +1639,68 @@ forward, where the cost is the floor rather than the edge.
   Payload 2.38 MB at v7 — flat across all three cuts.
 - All four cuts stay in the gallery (v7 live, v6 beside it, v5 and the
   companion-free control on the card below) so the sequence can be read.
+
+---
+
+## Update 17 — it is a class, not a court (2026-08-30, owner)
+
+**Status: Accepted (owner, 2026-08-30). SUPERSEDES U16's companion arrangement
+and its `-v7` filenames.** The figure, the material, the frame and every guard
+are unchanged; who stands around him is not.
+
+> "remove the imp in front of my avatar, keep the ones on the left and right
+> but rotate them so their faces are facing the same way as i do … there should
+> be models of children who also have a sit pose … Use different imps."
+
+Three cuts of the imp arc (v5, v6, v7) tuned a composition that was never quite
+the era's subject. This one is: **two imps stand at his shoulders facing the
+way HE faces — with him, not watching him — and three children sit in the space
+the third imp vacated, facing him, backs to the reader.** That is the shape a
+room takes when someone is teaching in it, which is the whole reason this era
+is on the wall. ⚠ **The space in front of a teacher belongs to the students** —
+which is why the middle imp had to GO rather than move aside.
+
+### What the models gave us
+
+- WoW's NPC roster carries 39 child models; four were exported and **every one
+  has `WASit01` (two variations) and `WASit02`** — real seated idles, not a
+  standing model posed. Attentive Child, Human Orphan and Neighborhood Child
+  ship; `find-creature.mjs` is the regex search over the live listfile that
+  found them.
+- ⚠ **THE ACTION IS CHOSEN BY PREFERENCE ORDER, NEVER BY INDEX.** A creature's
+  action list is unordered and differs per model, so "the third one" means
+  nothing while `WASit01` means a seated idle on every model that has one.
+
+### Two rules the brief forced
+
+- ⚠ **THE VARIATION IS A FIXED TABLE, NOT A RANDOM.** "They shouldn't feel like
+  copy paste" is a real requirement and `random` is the wrong tool for it: a
+  re-render has to reproduce the delivered frames exactly, and a seed buried in
+  a script nobody re-reads is a reproducibility trap. Seven authored offsets
+  (position, yaw, scale) cycled by index — and neighbouring children alternate
+  `WASit01`/`WASit02`, because **a repeated pose is loudest in MOTION**, where a
+  still would not show it at all.
+- ⚠ **THE CLASS NEEDS A DEEPER DIM THAN THE IMPS, AND SKIN IS WHY.** An imp's
+  hide is dark and lands low on the gold ramp; a child's skin is pale and lands
+  high, so at the flankers' 0.62 the seated class measured **mean-luminance 146
+  against the figure's 138** — the scenery outshining the subject, in the third
+  of the frame nearest the reader. At 0.42 the class reads 124 against his 138.
+  One dim for two very different materials was the wrong shape of knob; the
+  factor is per GROUP now, still applied by set difference so it can never
+  reach him.
+
+### What changed
+
+- `characterEras.ts` — repoints to `-v8`; anchors unchanged at 0.1586 / 0.9695
+  across v5–v8, which is the evidence the company has never moved them. The
+  loadout row reads "two imps, and a class."
+- `holo-scene.py` — `seat_imps` becomes `seat_company` with two groups and two
+  placement laws (`--imps` flanking, `--kids` seated), `KID_DIM`, the jitter
+  table, and per-group material dimming. `find-creature.mjs` is new.
+- v7's four assets deleted in the same commit v8 lands. Payload 2.33 MB.
+
+### Left open
+
+- The children read as a huddle at page scale rather than as three individuals;
+  at 720 × 1280 they are ~150px each. If that matters the lever is fewer and
+  larger, exactly as it was for the imps.
