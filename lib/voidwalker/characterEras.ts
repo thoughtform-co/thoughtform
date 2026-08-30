@@ -388,16 +388,21 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // untouched.
     wardrobe: "The Azeroth teacher",
     // ⚠ THE PLATE SPEAKS FOR WHAT IT SHOWS (U13's rule). The companions are
-    // real again — two Fel Imps exported with their own 63-joint rig and 25
-    // animations, not v3's frozen PNGs — so the row may claim them.
-    loadout: "Daemoniac · Shard of Azzinoth · flanked by two imps.",
+    // real — three DIFFERENT imps at three sizes, each with its own rig and
+    // idle, arranged on a shallow arc in front of him and turned to face him,
+    // so the frame shows their backs. Not v3's frozen PNGs, and not v5's
+    // matched pair either.
+    loadout: "Daemoniac · Shard of Azzinoth · three imps attending.",
     motto: "Class moved into the game.",
     modelPath: null,
     stillPath: "/images/services/vince.webp",
-    // ⚠ `-v5` IS PART OF THE CONTRACT. Each wave has shipped under its own
+    // ⚠ `-v6` IS PART OF THE CONTRACT. Each wave has shipped under its own
     // suffix since v1 took the unsuffixed names — a cache does not read commit
     // messages, so a new URL is the only guarantee the new figure reaches the
-    // reader.
+    // reader. v5 shipped for one commit and v6 supersedes it on the owner's
+    // read: the fel-green mask is capped so the belt and cuffs stop shouting,
+    // and the companions became an arc of three species rather than a mirrored
+    // pair.
     //
     // ⚠ headY/footY ARE MEASURED OFF THE DELIVERED ALPHA, at the opaque cutoff
     // 32/255, over EVERY frame rather than frame zero — a talking idle's head
@@ -411,10 +416,10 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // the surplus lands above the head. A height-first fit crops them, and a
     // pauldron is worn: U13's "a plume may run off the edge; the man may not".
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-azeroth-v5.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v5.webm",
-      posterPath: "/images/voidwalker/holo-still-azeroth-v5.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v5.webp",
+      videoPath: "/videos/voidwalker/holo-idle-azeroth-v6.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v6.webm",
+      posterPath: "/images/voidwalker/holo-still-azeroth-v6.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v6.webp",
       frame: { width: 720, height: 1280 },
       headY: 0.1586,
       footY: 0.9695,

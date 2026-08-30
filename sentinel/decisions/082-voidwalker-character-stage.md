@@ -1529,3 +1529,95 @@ is already the second card below it.
 - The figure sits with ~0.16 of air above the head, because the pauldrons bind
   the frame. Cropping them is the only way to buy it back, and a pauldron is
   worn.
+
+---
+
+## Update 16 — the green comes down, and the imps become a court (2026-08-30, owner)
+
+**Status: Accepted (owner, 2026-08-30). SUPERSEDES U15's asset and its `-v5`
+filenames.** Two notes on the shipped v5, both about things that were shouting.
+No composition, clock or guard behaviour changes; the material's fel cap, the
+companions and the four delivery files do.
+
+### The fel mask is capped, not re-biased
+
+> "I think the belt is now green. It's standing out too much. Same with the
+> edges right above the hands."
+
+⚠ **RAISING THE MASK'S BIAS DOES NOT FIX THIS, AND THE REASON GENERALISES.**
+Those texels really are fel-green in the source, so a bias only nibbles the
+patch's EDGE while its middle stays at full strength. What reads as loud is the
+mix reaching **1.0** — the point where gold leaves the pixel entirely. Capping
+the mask (`FEL_MAX` 0.42) keeps fel as a TINT ON the gold rather than a
+replacement for it, which is what "minimise, do not remove" actually asks for.
+
+Measured after: the belt's brightest pixel is `[251, 205, 117]` — gold, and not
+clipping. The cuffs above the hands come back a pale highlight rather than a
+green one. Across the whole figure, 0.35 % of pixels clip.
+
+### The companions are three species at three sizes, facing him
+
+> "It would be nice to have some of them, and they all shouldn't be at the same
+> size. Maybe we can rotate them and spread them in front of me so they're
+> looking at me, with their backs against the camera, like a half circle."
+
+Fiendish 0.50 m · Corefire 0.80 m · Imp 0.58 m, on a 150° arc 0.30 deep by
+0.47 wide, each yawed to face the figure's centre so the frame sees their backs.
+
+- ⚠ **THREE OF THE SEVEN IMP DISPLAYS ARE UNUSABLE.** `DiabolicImp`,
+  `EmpoweredImp` and `ImpLord` carry a body texture that is effectively black,
+  so an emissive luminance ramp draws horns and hands and nothing between them.
+  `imp-sheet.py` renders every candidate alone, framed to its own height —
+  which is how to see that in one look rather than by composing blind. The
+  first arc shipped a broken species into the middle of the composition.
+- ⚠ **FOUR IS SOUP; THREE READS. COUNT WAS THE LEVER, NOT PLACEMENT.** These
+  models are about as wide as they are tall in `Stand`, so four at 0.5–0.9 m is
+  ~2.8 m of imp across a 1.44 m frame — and because the material is
+  TRANSLUCENT, overlapping bodies do not occlude, they interleave. Every limb
+  is visible through every other and the result is a tangle. Two passes of
+  re-angling and re-sizing four imps changed nothing; dropping to three fixed
+  it immediately.
+- ⚠ **THE ARC IS AN ELLIPSE — WIDE AND SHALLOW — AND THAT IS PERSPECTIVE, NOT
+  TASTE.** A companion forward of the figure is closer to the lens, so the same
+  floor plane projects LOWER: at 0.6 m forward the magnification is 1.125,
+  which takes a foot line from v 0.97 to **1.03**, off the bottom edge — and
+  off the projector disc, which the site draws at the figure's own foot line.
+  Reaching sideways costs nothing (the frame is width-bound by the pauldrons,
+  and the imps sit where the figure is narrow); reaching forward costs the
+  floor.
+- ⚠ **THEY BURN AT 0.62x THE FIGURE'S EMISSION**, applied by SET DIFFERENCE —
+  materials the imps use and he does not — so the rule can never dim him. Two
+  reasons at once: their horns and claws are the palest texels in any imp atlas
+  and clipped to white at his exposure, and a hologram whose scenery is as
+  luminous as its subject has no subject.
+- There is no seated or kneeling idle in the imp action list (`Stand` 0/1/2 and
+  combat/swim clips only), so the "attending" read comes from the yaw alone.
+
+### Two guards that were measuring the wrong thing
+
+- ⚠ **`measure.py` READS THE COMPOSITE, AND THE ANCHORS DESCRIBE THE MAN.**
+  Pointed at the delivered sequence it returned `footY` **0.9945** off an imp's
+  tail against the figure's own **0.9695** — and the site would have seated the
+  projector disc a quarter of a frame low. This is U13's law arriving through a
+  different door, and the durable half is the TELL: his boots do not move, so a
+  figure-only pass reports the same foot row on all 149 frames (1241..1241)
+  while the composite wandered 1252..1273. The script now warns on that spread,
+  and the anchors are taken from the figure-only render.
+- ⚠ **A FRAME CHECK MUST ASK HOW MUCH LEAVES, NOT WHETHER ANY DOES.** These
+  imps trail long tails, and an extremes-only test fired on a tail tip exactly
+  as loudly as on half a body — which is how a guard earns the habit of being
+  ignored. It reports the SHARE OF VERTICES outside the frame (0.5 % here) and
+  only warns past 4 %.
+
+### What changed
+
+- `characterEras.ts` — the hologram repoints to `-v6`; anchors unchanged
+  (0.1586 / 0.9695), which is itself the evidence that the companions did not
+  move them. The loadout row now says "three imps attending."
+- `character-era-hologram.test.ts` pins the `-v6` paths.
+- `holo-scene.py` — `FEL_MAX`, `--imps` (a list of `path@height`), the
+  elliptical arc, the per-companion yaw, `IMP_DIM`, and the share-based frame
+  check. `imp-sheet.py` is new.
+- v5's four assets deleted in the same commit v6 lands. Payload 2.33 MB, flat
+  against v5's 2.38.
+- Both cuts stay in the gallery so the pair can be read side by side.

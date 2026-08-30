@@ -60,11 +60,46 @@ const TF4 = `${MIRROR}/20260826-thoughtform-v4`;
 
 export const GALLERY_RUNS: readonly GalleryRun[] = [
   {
+    id: "az-v6",
+    wave: "20260830-azeroth-v5-blender",
+    title: "Azeroth v6 — the green comes down, the imps become a court",
+    date: "2026-08-30",
+    status: "SHIPPING",
+    adr: "ADR-082 U16",
+    summary: [
+      "Two owner notes on v5, both about things that were shouting. THE FEL MASK IS CAPPED at 0.42, so green is a TINT ON the gold rather than a replacement for it. ⚠ Raising the mask's bias instead does not work and the reason is worth keeping: those texels really are fel in the source, so a bias only nibbles the patch's edge while its middle stays full-strength neon. What reads as loud is the mix reaching 1.0. Measured after: the belt's brightest pixel is [251,205,117] — gold, and not clipping.",
+      "THE COMPANIONS ARE A COURT, NOT A PAIR: three different species at three sizes on a shallow arc IN FRONT of the figure, each turned to face him so the frame shows their backs. ⚠ Three, because four is soup — these models are about as wide as they are tall in their Stand pose, so four at 0.5–0.9 m is ~2.8 m of imp across a 1.44 m frame, and translucent bodies then interleave into a tangle of limbs. Count was the lever; angles and sizes were not.",
+      "⚠ THREE OF THE SEVEN IMP DISPLAYS ARE UNUSABLE — Diabolic, Empowered and Imp Lord carry a body texture that is effectively black, so an emissive luminance ramp draws horns and hands and nothing in between. `imp-sheet.py` renders every candidate alone, framed to its own height, which is how to see that in one look instead of composing blind.",
+      "⚠ AND THE ARC IS AN ELLIPSE — WIDE AND SHALLOW — BECAUSE OF PERSPECTIVE. A companion forward of the figure is closer to the lens, so the same floor projects LOWER: at 0.6 m forward the magnification is 1.125, which takes a foot line from v 0.97 to 1.03 — off the bottom edge, and off the projector disc the site draws at the figure's own foot line. Reaching sideways is free; reaching forward is not.",
+      "⚠ THE COMPANIONS ALSO BURN AT 0.62x THE FIGURE'S EMISSION. Their horns and claws are the palest texels in any imp atlas and clipped to white at his exposure — and a hologram whose scenery is as luminous as its subject has no subject. The dim is applied by SET DIFFERENCE (materials the imps use and he does not), so it can never reach him.",
+    ],
+    assets: [
+      {
+        id: "az-v6-idle",
+        kind: "video",
+        src: `${V5}/holo-idle-azeroth-v6.mp4`,
+        alphaSrc: `${V5}/holo-idle-azeroth-v6.webm`,
+        label: "idle loop (live on the site)",
+        note: "149 frames @ 24fps. Fiendish 0.50m · Corefire 0.80m · Imp 0.58m on a 150° arc, 0.30 deep by 0.47 wide. 2.33 MB.",
+        mb: 2.33,
+      },
+      {
+        id: "az-v6-still",
+        kind: "still",
+        src: `${V5}/holo-still-azeroth-v6.jpg`,
+        alphaSrc: `${V5}/holo-still-azeroth-v6.webp`,
+        label: "poster",
+        note: "headY 0.1586 / footY 0.9695. ⚠ Measured on the FIGURE-ONLY render — read off the delivered composite instead, footY comes back 0.9945 off an imp's tail and the projector disc seats a quarter-frame low.",
+        mb: 0.17,
+      },
+    ],
+  },
+  {
     id: "az-v5",
     wave: "20260830-azeroth-v5-blender",
     title: "Azeroth v5 — rendered, not captured",
     date: "2026-08-30",
-    status: "SHIPPING",
+    status: "SUPERSEDED",
     adr: "ADR-082 U15",
     summary: [
       "The wow.export pipeline was fixed, so the figure is no longer a capture of Blizzard's renderer — it is the character's OWN geometry, rigged, running `EmoteTalkSubdued` off the model's own 422 animations, re-lit in Blender on an emissive hologram material. The owner's read of the era is that he taught class inside the game; the talk emote is the era, and this is the first route that can pick an animation by name instead of by whatever the dressing room was playing.",
@@ -81,7 +116,7 @@ export const GALLERY_RUNS: readonly GalleryRun[] = [
         kind: "video",
         src: `${V5}/holo-idle-azeroth-v5.mp4`,
         alphaSrc: `${V5}/holo-idle-azeroth-v5.webm`,
-        label: "idle loop, with imps (live on the site)",
+        label: "idle loop, the mirrored pair (superseded by v6)",
         note: "149 frames @ 24fps = 6.21s, the action's own length less the duplicate last frame. VP9/yuva420p CRF 48 for alpha, H.264 CRF 26 for the Safari floor. The baked scan band runs exactly 6 cycles per loop so the cadence closes with the animation.",
         mb: 2.38,
       },
