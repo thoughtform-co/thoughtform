@@ -85,13 +85,24 @@ card face has no shell chrome and must not be judged on it; a full page is not j
 face-lab constraints. `—` means ungated: the judge still returns the score and it still lands
 in the log, it just does not fail the run.
 
-| Surface       | grammar | hierarchy | density | gold | instrument | booleans           | red_flags |
-| ------------- | ------- | --------- | ------- | ---- | ---------- | ------------------ | --------- |
-| `page`        | ≥ 7     | ≥ 7       | ≥ 7     | ≥ 8  | ≥ 7        | all true           | []        |
-| `panel`       | ≥ 7     | ≥ 7       | ≥ 7     | ≥ 8  | ≥ 7        | all true           | []        |
-| `card-face`   | ≥ 7     | ≥ 8       | ≥ 7     | ≥ 8  | ≥ 6        | all true           | []        |
-| `diagram`     | ≥ 7     | ≥ 7       | ≥ 6     | ≥ 8  | ≥ 8        | corner + registers | []        |
-| `exploration` | ≥ 5     | ≥ 5       | —       | ≥ 7  | —          | corner only        | []        |
+| Surface       | grammar | hierarchy | density | gold | instrument | booleans enforced        | red_flags |
+| ------------- | ------- | --------- | ------- | ---- | ---------- | ------------------------ | --------- |
+| `page`        | ≥ 7     | ≥ 7       | ≥ 7     | ≥ 8  | ≥ 7        | corner                   | []        |
+| `panel`       | ≥ 7     | ≥ 7       | ≥ 7     | ≥ 8  | ≥ 7        | corner                   | []        |
+| `card-face`   | ≥ 7     | ≥ 8       | ≥ 7     | ≥ 8  | ≥ 6        | corner, registers, field | []        |
+| `diagram`     | ≥ 7     | ≥ 7       | ≥ 6     | ≥ 8  | ≥ 8        | corner                   | []        |
+| `exploration` | ≥ 5     | ≥ 5       | —       | ≥ 7  | —          | corner                   | []        |
+
+⚠ **`three_registers_ok` and `field_bleeds` are CARD rules, enforced on `card-face` alone.**
+They come from the card reference set, where a claim/field/chrome stack and a bleeding visual
+are what make a card a card. A panel of pure type has no field to bleed; a diagram has no
+three registers. Enforcing them there is precisely the unpassable gate this section opens by
+banning — and it was caught that way: the harness's own LAWFUL fixture failed `field_bleeds`
+on `panel` while being, by construction, correct. The judge still SCORES both on every
+surface and they still land in the log; they just do not fail a surface whose job never
+included them.
+
+`corner_law_ok` is enforced everywhere, because every object has corners.
 
 `gold_discipline` is the strictest line everywhere, and deliberately: it is the rule most
 often broken by accident and the one that most quickly stops the accent meaning anything.

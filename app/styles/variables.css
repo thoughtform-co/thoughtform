@@ -113,6 +113,27 @@
   --font-data: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
   --font-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
 
+  /* ─── THE BRAND'S TWO FACES ───
+     PT Mono owns instrument chrome; PP Neue Montreal owns titles and prose.
+     Both .woff2 files are already preloaded in app/layout.tsx and declared as
+     @font-face there — only these TOKENS were missing outside the landing.
+
+     ⚠ Declared here 2026-08-30 because they were defined ONLY in
+     `components/landing/v7/landing.css`, which is scoped: every surface that
+     did not load it — the /test labs above all — resolved `var(--font-pt-mono)`
+     to nothing and silently inherited IBM Plex Mono instead. That is the
+     "third font family" defect the design skill warns about, and its cause was
+     a missing definition rather than a careless usage.
+
+     Values are BYTE-IDENTICAL to landing.css's, so whichever sheet the cascade
+     lands on last, the resolved face is the same. Keep them that way.
+
+     ⚠ --font-display still points at PP Mondwest, which the type system
+     RETIRED (the wordmark is inline SVG now). Left alone deliberately: removing
+     it is a separate sweep with its own verification, not a drive-by. */
+  --font-pt-mono: "PT Mono", ui-monospace, Menlo, monospace;
+  --font-pp-neue-montreal: "PP Neue Montreal", system-ui, sans-serif;
+
   /* ─── FLUID TYPOGRAPHY SCALE ───
      Tuned for smooth scaling across 430px–1440px viewports.
      Uses clamp(min, preferred, max) for evergreen responsiveness.
