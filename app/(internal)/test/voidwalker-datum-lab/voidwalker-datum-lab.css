@@ -42,6 +42,13 @@
 
   --vdl-pad-x: clamp(20px, 4vw, 72px);
 
+  /* ⚠ THE SHEET TAKES WHAT THE BAR LEAVES, MEASURED, NOT ASSUMED. It was
+     `calc(100svh - 56px)` against a knob bar that is 56px only while it
+     fits on one line — on a phone it wraps to ~330px and the era band was
+     pushed clean off the bottom of the screen. A flex column has the
+     browser do that arithmetic at every width. */
+  display: flex;
+  flex-direction: column;
   min-height: 100svh;
   background: var(--void, #0a0908);
   color: rgb(var(--vdl-dawn-rgb));
@@ -53,6 +60,7 @@
   position: sticky;
   top: 0;
   z-index: 20;
+  flex: 0 0 auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -106,9 +114,10 @@
 /* ═══ §B · THE SHEET ════════════════════════════════════════════════ */
 
 .vdl__sheet {
+  flex: 1 1 auto;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  height: calc(100svh - 56px);
+  min-height: 0;
   padding: clamp(14px, 2.4svh, 26px) 0 0;
   overflow: hidden;
 }
@@ -558,5 +567,359 @@ a.vdl__press:focus-visible .vdl__press__headline {
   .vdl__chip__frame,
   .vdl__chip__bust {
     transition: none;
+  }
+}
+
+/* ═══ §D · THE TAB ROW ══════════════════════════════════════════════
+   Desktop shows all four panels at once and has no use for a tab state, so
+   the row is absent there rather than hidden-but-reachable — a control that
+   changes nothing is worse than no control. */
+
+.vdl__tabs {
+  display: none;
+}
+
+/* ═══ §E · THE PHONE INSTRUMENT (<=700px) ═══════════════════════════
+   ⚠ THE FIGURE IS THE FIRST TAB AND THERE IS NO DOSSIER SEAT. The shipped
+   phone layout reserves a fixed seat under the figure, which spends the
+   screen twice — the figure gets what the seat leaves and the reading gets
+   a box inside what is left. Here ONE area serves both: the hologram owns
+   it on its own tab, the record owns it on the others, and each gets the
+   whole thing.
+
+   ⚠ EVERY NODE STAYS MOUNTED (ADR-083). Visibility is a stylesheet
+   decision so nothing has to remount and no measurement moves. */
+@media (max-width: 700px) {
+  .vdl {
+    --vdl-pad-x: clamp(16px, 5vw, 24px);
+    --vdl-chip: clamp(44px, 13vw, 56px);
+    /* ⚠ A BOUNDED HEIGHT, NOT JUST A FLOOR. With `min-height` alone the
+       root grows to its content, so every `flex: 1 1 auto` below it had
+       nothing to shrink against: the figure sized to its own aspect, the
+       sheet grew to 897px in an 812px viewport and pushed the era band off
+       the bottom of the screen. The phone instrument is ONE screen — the
+       stage scrolls inside it, the page does not. */
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  /* Lab chrome collapses to one scrolling line — on a phone the knob bar
+     wrapped to ~330px and spent 40 % of the screen on controls that never
+     ship. It stays reachable; it stops being the composition. */
+  .vdl__bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 6px 10px;
+  }
+  .vdl__grp,
+  .vdl__slider {
+    flex: 0 0 auto;
+  }
+  .vdl__slider input {
+    width: 64px;
+  }
+
+  .vdl__sheet {
+    display: flex;
+    flex-direction: column;
+    padding-top: clamp(12px, 2svh, 20px);
+  }
+
+  /* The mast keeps the production title clamp — the About name flies into
+     it and translates without scaling, so no rung may step it down. */
+  .vdl__mast {
+    text-align: left;
+    padding-bottom: clamp(10px, 1.8svh, 16px);
+  }
+  .vdl__mast__kicker {
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .vdl__mast__title {
+    text-wrap: balance;
+  }
+
+  .vdl__tabs {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    flex: 0 0 auto;
+    border-top: 1px solid rgba(var(--vdl-dawn-rgb), var(--vdl-rail));
+    border-bottom: 1px solid rgba(var(--vdl-dawn-rgb), var(--vdl-rail));
+  }
+  .vdl__tab {
+    appearance: none;
+    /* ⚠ 44px MINIMUM, and the row is the only navigation on the phone. */
+    min-height: 44px;
+    padding: 6px 2px;
+    background: transparent;
+    border: 0;
+    /* A hairline TICK between stops, never a box around each: the row is one
+       object being switched, not four buttons in a strip. */
+    border-right: 1px solid rgba(var(--vdl-dawn-rgb), 0.1);
+    cursor: pointer;
+    font-family: var(--vdl-mono);
+    /* ⚠ SIZED AGAINST `TRANSMISSION` IN A QUARTER OF 375px. Twelve mono
+       characters in ~90px is the binding case for the whole row; at
+       0.14em tracking it overran its column and printed off the screen
+       edge. The tracking pays for it, not the size — the labels are the
+       only navigation on this surface. */
+    font-size: clamp(8.5px, 2.4vw, 10px);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(var(--vdl-dawn-rgb), 0.45);
+  }
+  .vdl__tab:last-child {
+    border-right: 0;
+  }
+  .vdl__tab[data-on="true"] {
+    color: rgb(var(--vdl-dawn-rgb));
+    /* The lit segment is a gold underline INSIDE the row's own bottom rule —
+       the desktop's "the head sits on the rail" move, one scale down. */
+    box-shadow: inset 0 -2px 0 0 var(--gold, #caa554);
+  }
+  .vdl__tab:disabled {
+    color: rgba(var(--vdl-dawn-rgb), 0.22);
+    cursor: default;
+  }
+  .vdl__tab__note {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.82em;
+    letter-spacing: 0.1em;
+    color: rgba(var(--vdl-dawn-rgb), 0.18);
+  }
+
+  /* ── THE ONE AREA ────────────────────────────────────────────────
+     Flat flow instead of the desktop's row grid: with one panel visible at
+     a time there is nothing to align across columns, so the rails have no
+     work to do and are removed rather than left as decoration. */
+  .vdl__stage {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    /* Inner scroll releases to the page at its bounds (ADR-083). */
+    overscroll-behavior-y: auto;
+    padding-top: clamp(12px, 2svh, 18px);
+  }
+  .vdl__rail,
+  .vdl__ground {
+    display: none;
+  }
+
+  .vdl__head,
+  .vdl__body {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: stretch;
+    width: 100%;
+  }
+  .vdl__body {
+    padding-bottom: clamp(16px, 3svh, 28px);
+  }
+  .vdl__head + .vdl__body {
+    padding-top: clamp(10px, 1.8svh, 16px);
+  }
+
+  /* Which cells the active tab owns. RECORD is two panels because facts and
+     the press that reported them are one reading. */
+  .vdl__head,
+  .vdl__body,
+  .vdl__figure {
+    display: none;
+  }
+  /* ⚠ THE FIGURE IS SIZED BY FLEX AND GRID, NEVER BY `height: 100%`. The
+     percentage did not resolve against the stage — a block scroll container
+     that is itself a flex item — so the figure fell back to its own floor
+     and sat in the top 374px of a 519px area with the rest dead below it.
+     `flex: 1` claims the space and a single definite grid row hands it down,
+     which is the same move the production sheet makes for `.vwh__media-wrap`
+     and for the same reason. */
+  .vdl__sheet[data-vdl-tab="figure"] .vdl__figure {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .vdl__sheet[data-vdl-tab="record"] [data-cell="ur"],
+  .vdl__sheet[data-vdl-tab="record"] [data-cell="lr"],
+  .vdl__sheet[data-vdl-tab="scope"] [data-cell="ul"],
+  .vdl__sheet[data-vdl-tab="transmission"] [data-cell="ll"] {
+    display: block;
+  }
+  .vdl__sheet[data-vdl-tab="record"] .vdl__head,
+  .vdl__sheet[data-vdl-tab="scope"] .vdl__head,
+  .vdl__sheet[data-vdl-tab="transmission"] .vdl__head {
+    display: flex;
+  }
+  .vdl__sheet[data-vdl-tab="record"] .vdl__head:not([data-cell="ur"]):not([data-cell="lr"]),
+  .vdl__sheet[data-vdl-tab="scope"] .vdl__head:not([data-cell="ul"]),
+  .vdl__sheet[data-vdl-tab="transmission"] .vdl__head:not([data-cell="ll"]) {
+    display: none;
+  }
+
+  /* The figure fills the area it now has to itself. Width-bound here (the
+     desktop derives it from height because it shares the row with four
+     panels; on the phone it shares with nothing). */
+  .vdl__figure {
+    padding-top: 0;
+  }
+  /* ⚠ AND THE HEIGHT HAS TO BE HANDED DOWN THE WHOLE CHAIN. Stretching the
+     wrapper into the row above gives it a used height of 496px while its
+     COMPUTED height stays `auto`, so `.vwh__column`'s `height: 100%` had
+     nothing to resolve against and content-sized to 341 — the same defect
+     one level lower. One more definite row fixes it by stretching the
+     column instead of asking it to compute a percentage.
+     ⚠ `.vwh__column` ships `grid-row: 2 / grid-column: 2` for the
+     production three-column grid; inert while this wrapper was `display:
+     block`, it would now place the column in an implicit second row. It is
+     pinned to the single cell explicitly. */
+  /* ⚠ BOTH AXES DEFINITE, NOT JUST THE ROW. With only the row declared the
+     single column is implicit and content-sized, so `.vwh__slot`'s
+     `width: min(100%, 620px)` had nothing to resolve against and computed
+     to ZERO — the figure rendered as a 1px gold sliver while every height
+     in the chain measured correctly. Same lesson as the production sheet's
+     note on `.vwh__media-wrap`, one axis over. */
+  .vdl__vwh {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: 260px;
+  }
+  .vdl__vwh .vwh__column {
+    grid-area: 1 / 1;
+    height: auto;
+    min-height: 0;
+  }
+
+  .vdl__film__frame,
+  .vdl__film-empty__frame {
+    max-height: none;
+  }
+
+  /* ── THE ERA STRIP holds the foot in every tab state. */
+  .vdl__band {
+    flex: 0 0 auto;
+    gap: clamp(6px, 2vw, 14px);
+    padding-inline: clamp(8px, 3vw, 16px);
+  }
+  .vdl__chip {
+    gap: 5px;
+  }
+  .vdl__chip__name {
+    font-size: clamp(7.5px, 2.1vw, 9px);
+    letter-spacing: 0.08em;
+  }
+  .vdl__chip__year {
+    font-size: clamp(7.5px, 2.1vw, 9px);
+  }
+}
+
+/* ═══ §F · THE MIDDLE BAND (701–1100px) ═════════════════════════════
+   Production's own rung: everything visible in normal flow, no tabs. The
+   datum rails are a THREE-COLUMN idea — with the figure stacked above the
+   panels there is no shared row for them to align, so they go rather than
+   being drawn where they no longer mean anything. */
+@media (min-width: 701px) and (max-width: 1100px) {
+  .vdl__sheet {
+    height: auto;
+    overflow: visible;
+  }
+  .vdl__stage {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+    row-gap: clamp(18px, 3svh, 32px);
+  }
+  .vdl__rail,
+  .vdl__ground {
+    display: none;
+  }
+  /* ⚠ EVERY CELL IS PLACED EXPLICITLY, and matching the desktop's
+     specificity is what makes that possible. The desktop pins each cell
+     with `.vdl__head[data-cell="ul"] { grid-row: 1 }` — (0,2,0) — so a
+     reset written as `.vdl__head, .vdl__body` (0,1,0) loses even from
+     inside this media query: all four panels stayed in rows 1–4 and the
+     figure auto-placed into an implicit fifth row beneath them, with
+     `order: -1` computing correctly and reaching nothing (order only
+     governs AUTO-placed items).
+     ⚠ And auto-placement alone was not the answer either — a sparse cursor
+     in two columns staggered the pairs, so SCOPE's body sat beside FACTS'
+     head. The desktop's own row pairing, shifted one row down for the
+     figure, keeps the two columns on a shared datum. */
+  /* ⚠ THE BOX MUST STRETCH ITS CHILD, not merely be tall. As a plain block
+     the figure box was 520px while `.vdl__vwh` inside it stayed `height:
+     auto` and content-sized, so the media resolved to its own aspect at 955
+     tall and printed 445px through the panels below. A definite grid on
+     BOTH axes stretches the wrapper into the box, which is what every other
+     rung on this surface needed too. */
+  .vdl__figure {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    justify-self: center;
+    width: min(100%, 380px);
+    height: clamp(360px, 52svh, 560px);
+  }
+  .vdl__head[data-cell="ul"],
+  .vdl__head[data-cell="ur"] {
+    grid-row: 2;
+  }
+  .vdl__body[data-cell="ul"],
+  .vdl__body[data-cell="ur"] {
+    grid-row: 3;
+  }
+  .vdl__head[data-cell="ll"],
+  .vdl__head[data-cell="lr"] {
+    grid-row: 4;
+  }
+  .vdl__body[data-cell="ll"],
+  .vdl__body[data-cell="lr"] {
+    grid-row: 5;
+  }
+  .vdl__head[data-cell="ul"],
+  .vdl__body[data-cell="ul"],
+  .vdl__head[data-cell="ll"],
+  .vdl__body[data-cell="ll"] {
+    grid-column: 1;
+    justify-self: stretch;
+    width: 100%;
+  }
+  .vdl__head[data-cell="ur"],
+  .vdl__body[data-cell="ur"],
+  .vdl__head[data-cell="lr"],
+  .vdl__body[data-cell="lr"] {
+    grid-column: 2;
+    justify-self: stretch;
+    width: 100%;
+  }
+  /* The same definite-grid hand-down the phone rung needs, and for the same
+     reason: the `height: 100%` chain from wrapper to column does not resolve
+     off a stacked figure box, so the media sized to its own aspect and
+     printed 116px THROUGH the SCOPE panel below it. Both axes declared. */
+  /* ⚠ `min-height: 0` IS THE WHOLE FIX, not the grid declaration. A grid
+     item's automatic minimum size is its MIN-CONTENT, and the content here
+     is a portrait media element whose min-content height is its own aspect —
+     so the wrapper refused to shrink into a definite 520px row and measured
+     1000px, overflowing by 480 with `display: grid` computing correctly the
+     whole time. Every box on the way down needs the escape, not just the
+     one that looks wrong. */
+  .vdl__vwh {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: 0;
+  }
+  .vdl__vwh .vwh__column {
+    grid-area: 1 / 1;
+    height: auto;
+    min-height: 0;
   }
 }

@@ -20,9 +20,14 @@
  * materialize under PRM, so a PRM context captures a still poster and none of
  * the treatment this pass is being judged on.
  *
+ * Any viewport at or below the phone rung (<=700px) also walks the four tab
+ * stops, because on that rung the tab IS the layout — a capture of one stop
+ * says nothing about the other three.
+ *
  * Usage (dev server must already be running):
  *   node scripts/capture-datum-lab.mjs [--port 3003] [--era azeroth,expanse]
- *     [--vp 1440x900,1920x1247] [--theme dark|light] [--out <dir>] [--headless]
+ *     [--vp 1440x900,375x812] [--theme dark|light] [--out <dir>] [--headless]
+ *     [--tab figure,record,scope,transmission]
  */
 
 import { chromium } from "@playwright/test";
@@ -55,6 +60,12 @@ const ERA_INDEX = {
   expanse: 3,
   "pokemon-go": 4,
 };
+
+/** The phone rung in `voidwalker-datum-lab.css`. Below it the tab row is the
+ *  layout, so one capture per stop; above it every panel is on screen at once
+ *  and the tab state does not exist. */
+const PHONE_MAX = 700;
+const TABS = argOf("--tab", "figure,record,scope,transmission").split(",").filter(Boolean);
 
 await mkdir(OUT, { recursive: true });
 
@@ -116,10 +127,31 @@ for (const vp of VIEWPORTS) {
       )
       .catch(() => console.log("  ! media not ready — frame may show an empty slot"));
 
-    const name = `${vp.label}_${THEME}_${era}.png`;
-    await page.screenshot({ path: `${OUT}/${name}` });
-    console.log(`  ok ${name}`);
-    shots += 1;
+    if (vp.w > PHONE_MAX) {
+      const name = `${vp.label}_${THEME}_${era}.png`;
+      await page.screenshot({ path: `${OUT}/${name}` });
+      console.log(`  ok ${name}`);
+      shots += 1;
+      continue;
+    }
+
+    for (const t of TABS) {
+      const btn = page.locator(".vdl__tab", { hasText: new RegExp(`^${t}`, "i") });
+      if (await btn.isDisabled()) {
+        console.log(`  - ${vp.label} ${era} ${t} — disabled on this era, no frame`);
+        continue;
+      }
+      await btn.click();
+      await page.waitForFunction(
+        (tab) => document.querySelector(".vdl__sheet")?.dataset.vdlTab === tab,
+        t,
+        { timeout: 5000 }
+      );
+      const name = `${vp.label}_${THEME}_${era}_${t}.png`;
+      await page.screenshot({ path: `${OUT}/${name}` });
+      console.log(`  ok ${name}`);
+      shots += 1;
+    }
   }
 
   await context.close();

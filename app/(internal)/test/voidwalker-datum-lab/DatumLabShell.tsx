@@ -62,6 +62,22 @@ function bustHeadAnchor(hologram: CharacterEraHologram): number {
   return hologram.headY;
 }
 
+/* ⚠ THE FIGURE IS A TAB, AND THAT IS WHAT DELETES THE DOSSIER SEAT (owner,
+   2026-08-31). The shipped phone layout stacks identity → figure → rail →
+   modes → a fixed dossier seat, and the seat is the problem: it takes a
+   fixed slice of a phone screen so the figure gets what is left and the
+   reading gets a box. Making the avatar the FIRST STOP means one area
+   serves both — the hologram at full generosity on its own tab, the record
+   at full generosity on the others — and nothing needs a reserved seat.
+
+   RECORD is two panels (facts + press) because those are one reading; SCOPE
+   and TRANSMISSION are one each. The desktop shows all four at once and has
+   no use for this state at all, which is why it is CSS that decides whether
+   the tabs mean anything (ADR-083: keep every node mounted, phone
+   visibility is a stylesheet decision). */
+const MOBILE_TABS = ["figure", "record", "scope", "transmission"] as const;
+type MobileTab = (typeof MOBILE_TABS)[number];
+
 function PressItem({ press }: { press: VwPress }) {
   const year = press.date ? press.date.slice(0, 4) : null;
   const body = (
@@ -89,6 +105,7 @@ export function DatumLabShell() {
   const [chip, setChip] = useState(64);
   const [rail, setRail] = useState(0.12);
   const [bust, setBust] = useState(0.34);
+  const [tab, setTab] = useState<MobileTab>("figure");
   const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
@@ -115,7 +132,13 @@ export function DatumLabShell() {
 
   const { watching, open, close } = useWalkthrough();
 
+  /* ⚠ A TRANSMISSION IS A REAL RECORD, NEVER A PLACEHOLDER. Reset during the
+     deliberate selection event rather than repairing state in an effect: the
+     target era is known here, so the reader never sees an empty active tab
+     (the production rule in `HoloEraPanels.selectEra`). */
   const pick = (i: number) => {
+    const next = CHARACTER_ERAS[i];
+    if (tab === "transmission" && !next?.film) setTab("record");
     setEraIdx(i);
     setEpoch((e) => e + 1);
   };
@@ -192,7 +215,7 @@ export function DatumLabShell() {
         </button>
       </div>
 
-      <section className="vdl__sheet" data-vdl-era={era.id}>
+      <section className="vdl__sheet" data-vdl-era={era.id} data-vdl-tab={tab}>
         <header className="vdl__mast">
           <p className="vdl__mast__kicker">
             <span>{eraPositionLabel(eraIdx)}</span>
@@ -200,6 +223,33 @@ export function DatumLabShell() {
           </p>
           <h1 className="vdl__mast__title">{era.wardrobe}</h1>
         </header>
+
+        {/* ── THE TAB ROW (phone only) ─────────────────────────────────
+            Four slim text stops on one line, divided by hairline ticks and
+            bounded above and below by full-width rules — the SAME datum
+            grammar the desktop rails use, one scale down, so the two
+            breakpoints read as one instrument rather than two designs.
+            No icon chits: they were the heaviest thing on the phone mockup
+            and this row has to be the quietest. */}
+        <nav className="vdl__tabs" aria-label="Era view">
+          {MOBILE_TABS.map((t) => {
+            const unavailable = t === "transmission" && !era.film;
+            return (
+              <button
+                key={t}
+                type="button"
+                className="vdl__tab"
+                data-on={t === tab}
+                aria-pressed={t === tab}
+                disabled={unavailable}
+                onClick={() => setTab(t)}
+              >
+                {t}
+                {unavailable ? <span className="vdl__tab__note">no film</span> : null}
+              </button>
+            );
+          })}
+        </nav>
 
         <div className="vdl__stage">
           {/* THE TWO CONSTRUCTION RAILS. Full width, edge to edge, passing
