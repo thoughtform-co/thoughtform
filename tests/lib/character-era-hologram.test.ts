@@ -28,7 +28,7 @@ describe("ADR-082 · normalized character hologram assets", () => {
     // site owner's actual 2020 character) in his own "Daemoniac" transmog,
     // TALKING, rendered in Blender from `wow.export`'s rigged GLB on an
     // emissive hologram material by the wave
-    // `voidwalker-avatar/waves/20260830-azeroth-v9-blender`. Every OTHER era
+    // `voidwalker-avatar/waves/20260830-azeroth-v5-blender`. Every OTHER era
     // still resolves to the canonical thoughtform pair until its own wave
     // lands — including the two new 2018/2016 eras, which is exactly what this
     // walk is here to prove after a roster change.
@@ -45,26 +45,36 @@ describe("ADR-082 · normalized character hologram assets", () => {
 
     const resolved = resolveCharacterEraHologram(azeroth);
     expect(resolved).not.toBe(CANONICAL_CHARACTER_ERA_HOLOGRAM);
-    // ⚠ `-v7` IS PART OF THE CONTRACT. Every wave has shipped under its own
+    // ⚠ `-v10` IS PART OF THE CONTRACT. Every wave has shipped under its own
     // suffix since v1 took the unsuffixed names — a cache does not read commit
     // messages, so a new URL is the only guarantee the new figure reaches the
-    // reader. v6 capped the fel mask and made the companions an arc of three
-    // species; v7 stands that arc OFF the figure so there is air between them.
-    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth-v9.mp4");
-    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth-v9.webm");
-    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth-v9.jpg");
-    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth-v9.webp");
+    // reader. v6 capped the fel mask, v7 stood the imp arc off the figure, v8
+    // seated a class in front and v9 removed it again; v10 chains three talk
+    // emotes and takes the waist piece off.
+    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth-v10.mp4");
+    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth-v10.webm");
+    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth-v10.jpg");
+    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth-v10.webp");
     // Measured off the DELIVERED alpha at the opaque cutoff 32/255, over all
-    // 149 frames rather than frame zero — a talking idle's head and hands move,
-    // so an anchor read from one pose is wrong for the other 148. They agree
-    // with the camera solve's own projection to four decimals, which is what
-    // says the delivered frame is the frame that was solved.
+    // 240 frames rather than frame zero — a talking idle's head and hands move,
+    // so an anchor read from one pose is wrong for the other 239. They agree
+    // with the camera solve's own projection to three decimals, which is what
+    // says the delivered frame is the frame that was solved. ⚠ And they are
+    // read off the FIGURE-ONLY render: on the composite the same script returns
+    // footY 0.9719, which is the imps' claws three rows under his boots.
     //
-    // ⚠ headY is 0.159 because the frame is WIDTH-bound: the Daemoniac
-    // pauldrons span 1.40 m against a 2.08 m man, so the shoulders decide the
-    // fit and the surplus lands above the head. Fitting by height instead cut
-    // an 81px-tall flat edge through the left pauldron on 117 of 149 frames.
-    expect(resolved.headY).toBeCloseTo(0.1586, 3);
+    // ⚠ headY MOVED 0.159 → 0.235 WHEN THE PERFORMANCE BECAME A CHAIN, and it
+    // is arithmetic. The frame is WIDTH-bound, the fit takes the widest pose in
+    // the loop, and the 0.5625 slot then sets the height — so reach costs
+    // scale. Per emote the man spans 1.400 m in EmoteTalkSubdued (all
+    // pauldron), 1.446 m in EmoteTalkQuestion and 1.549 m in EmoteTalk, where
+    // the gauntlet swings out: that one emote widens him 10.6 % and stands him
+    // 8 % shorter in the slot. footY did not move, so the projector disc has
+    // not either — the surplus is all above his head. Fitting by height instead
+    // cut an 81px-tall flat edge through the left pauldron on 117 of 149
+    // frames, and a gauntlet is worn: "a plume may run off the edge; the man
+    // may not".
+    expect(resolved.headY).toBeCloseTo(0.2352, 3);
     expect(resolved.footY).toBeCloseTo(0.9695, 3);
     // Sanity: the head anchor is above the foot anchor and both are inside
     // the frame — the same law the runtime guard enforces on every era.

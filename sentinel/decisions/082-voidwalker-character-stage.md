@@ -1728,3 +1728,155 @@ flankers stand on his own plane, where the seated class did not.
 - The children read as a huddle at page scale rather than as three individuals;
   at 720 × 1280 they are ~150px each. If that matters the lever is fewer and
   larger, exactly as it was for the imps. **(Answered by v9: taken out.)**
+
+---
+
+## Update 18 — he asks, he explains, he settles (2026-08-31, owner)
+
+Three owner notes on v9, delivered as **v10**:
+
+1. **The belt comes off** — its glow is distracting.
+2. **Chain `EmoteTalkQuestion`, `EmoteTalk` and `EmoteTalkSubdued` in a loop.**
+3. **The left imp's arm falls out of frame** — smaller, and further in.
+
+### The chain, and why the junctions cost nothing
+
+`holo-scene.py` gains `--chain`: comma-separated action name PREFIXES played
+back to back on one NLA track. Empty keeps the input file's own assigned
+action, so every earlier cut still rebuilds from this script byte-identically.
+
+⚠ **HOW WoW AUTHORS A CYCLE IS WHAT MAKES THE SEAM FREE.** An emote's last
+frame duplicates its first, and all three talk emotes start and end on the same
+neutral stand. So laying strip N+1's START exactly on strip N's END overwrites
+that duplicate with an identical pose: the junction closes by construction, and
+no blend-in window is needed — which is the point, because a crossfade would
+smear the hands mid-gesture.
+
+⚠ **THE BOUNDARIES ARE FRACTIONAL AND MUST STAY THAT WAY.** WoW times an
+animation in milliseconds, so `EmoteTalkQuestion` is **43.2** frames, not 43.
+`NlaStrips.new()` takes an integer start and refuses an overlap, so every strip
+is parked far right first and then moved to its real float boundary. Rounding
+instead would drift the chain a frame per junction and leave a period that does
+not close. The three periods add to **43.2 + 48.0 + 148.8 = 240.0** frames —
+ten seconds on the nose, and the wrap lands on the neutral pose at both ends.
+
+⚠ **THE ACTIVE ACTION OUTRANKS THE WHOLE NLA STACK.** Left assigned, the input
+file's own `EmoteTalkSubdued` plays straight over every strip and the chain
+renders as exactly the cut it was written to replace — no error, no warning, a
+correct-looking ten-second video of the wrong thing. `animation_data.action`
+is cleared and every pre-existing track removed.
+
+⚠ **`EmoteTalk` IS A PREFIX OF FOUR OTHER EMOTES** and `bpy.data.actions` is
+unordered, so a first-match lookup picks `EmoteTalkExclamation` or
+`EmoteTalkNoSheathe` on a whim. The exporter's own naming gives the tiebreak
+for free — a real emote continues with ` (ID …)`, so `EmoteTalk (` is exact
+where `EmoteTalk` is not — and anything still ambiguous (a multi-variation
+emote such as `EmoteDance`) is an **error**, never a guess.
+
+⚠ **WHAT WAS TUNED IS THE BAND RATE, NOT THE CYCLE COUNT.** Six cycles was
+chosen for a 6.21s loop; carried literally onto a 10.0s chain it would halve
+the drift and read as a printed texture. `BAND_RATE` (bands per second) is the
+constant now and the integer count is derived from the loop and rounded — the
+integer requirement is about the WRAP, the rate is about the READ, and only one
+of the two is a taste decision. 240 frames → 10 cycles → 1.000 bands/s.
+
+### The price is scale, and it is arithmetic
+
+⚠ **headY MOVES 0.159 → 0.235, AND NOTHING WAS RECOMPOSED.** The frame is
+WIDTH-bound and the projected fit takes the widest pose in the whole loop, so
+the 0.5625 slot then decides the height: reach costs size. Measured per emote,
+the man spans
+
+| emote                         | width       | what is widest            |
+| ----------------------------- | ----------- | ------------------------- |
+| `EmoteTalkSubdued` (v9's cut) | 1.400 m     | the pauldrons             |
+| `EmoteTalkQuestion`           | 1.446 m     | the gauntlets, slightly   |
+| `EmoteTalk`                   | **1.549 m** | the gauntlet swinging out |
+
+so **`EmoteTalk` alone widens him 10.6 % and stands him 8 % shorter in the
+slot**. `footY` does not move, so the projector disc is exactly where it was
+and the whole surplus lands above his head. Cropping it back is not available:
+a gauntlet is worn, and U13's line is _a plume may run off the edge; the man
+may not_ — the same law that made the pauldrons decide the fit in the first
+place. **If the v9 size matters more than the fuller gesture, the lever is
+dropping `EmoteTalk` alone** (Question + Subdued fits at 1.446 m ⇒ headY
+≈ 0.171), which is one flag on the build.
+
+### The belt
+
+`--hide-parts` takes object name PREFIXES and runs BEFORE the envelope is
+built, so a removed part leaves the camera fit and the shader pass at once — a
+part hidden afterwards would still be framed for. `Waist_Item250039_0/_1` go:
+the buckle carries the set's fel orb, and even under U16's fel cap it was the
+brightest single object on the man. ⚠ **`humanmale_hd_Belt1` STAYS** — it is
+the BODY's own belt geoset on the shared `data-1` material, it never glowed,
+and dropping it too would cut a notch in the robe where the item used to sit.
+
+### ⚠ The frame guard was measuring the set instead of the objects
+
+v9's guard reported a placid **1.3 % of vertices outside** and filed it as an
+allowable cropping tail, while the owner could see one imp's arm running off
+the LEFT edge. The share was **POOLED ACROSS THE COMPANY**: an aggregate over
+independently-placed objects cannot name the offender, or the side, or the
+amount. It is per companion now — `COMPANY_MEMBERS` keeps each one's meshes
+separately, and the report prints each one's `u`/`v` extents, its own share
+outside, and which edge it crosses by how much. Sampled at five points around
+the loop rather than two, because at ten seconds the companions run their own
+idle at their own period and the frame one reaches furthest is not the frame
+the figure reaches his.
+
+With that reading in hand: FiendishImp 0.58 → **0.55 m** and the flank offset
+0.52 → **0.49 m**. Both companions now measure **0.00 % outside** (u
+0.022..0.388 and 0.698..0.947).
+
+### ⚠ And a warning that cannot print is a warning that does not exist
+
+Python on Windows writes stdout in cp1252, which has no `⚠` — so every ⚠ line
+in `measure.py` was a latent `UnicodeEncodeError`, invisible for as long as its
+condition stayed false and a **crash instead of the warning** the first time it
+fired. Found exactly that way, by the new junction guard. `sys.stdout` is
+reconfigured to UTF-8 once, rather than spelling the marks ASCII: the mark is
+the house's and the console is the thing that bends.
+
+### The junction guard, and the baseline it needs
+
+`measure.py` walks EVERY adjacent step now, not the first 24 — once the
+delivery is a CHAIN the loudest cut is not at the wrap but at a junction in the
+middle, which a window over the opening frames cannot see.
+
+⚠ **AND THE GLOBAL MEDIAN IS THE WRONG BASELINE FOR A CHAIN**, failing in the
+direction that wastes time: `EmoteTalkSubdued` is 149 of the 240 frames and is
+a slow idle, so it drags the median down until every frame of the two brisk
+emotes reads as a spike. The first cut of this guard fired on frame 46 — three
+frames INSIDE `EmoteTalk`, where the hand snaps out, which is the animation
+working. A discontinuity is local by definition, so the baseline is local too:
+each step against the median of its own ±6 neighbours. Delivered reading —
+worst cut **1.98×** local at frame 86 (inside `EmoteTalk`), and **neither
+junction is distinguishable from ordinary motion**.
+
+### Measured
+
+|                          | v9              | v10                             |
+| ------------------------ | --------------- | ------------------------------- |
+| frames / duration        | 149 / 6.21s     | **240 / 10.00s**                |
+| headY / footY            | 0.1586 / 0.9695 | **0.2352 / 0.9695**             |
+| loop seam ÷ typical step | 0.74            | **0.54**                        |
+| worst cut (local ratio)  | —               | **1.98 at f86**                 |
+| companions outside frame | 1.3 % pooled    | **0.00 % each**                 |
+| WebM                     | 2.22 MB         | **3.28 MB** (0.33 MB/s vs 0.37) |
+
+Anchors read off the FIGURE-ONLY render, foot row constant at 1241 on all 240
+frames; the composite returns 0.9719, which is the imps' claws three rows under
+his boots.
+
+### Left open
+
+- **The figure is 8 % smaller in the slot** and the surplus is dead air above
+  his head. It is the honest fit for the performance that was asked for, but it
+  is a visible change from the cut the owner called good. The lever is named
+  above and costs one flag.
+- **3.28 MB** is over the 2.75 MB the wave has been holding itself to. The
+  length is the ask; the bytes follow at the same CRF. Raising CRF to 52 buys
+  back roughly 30 % at a real cost on a translucent banded asset — not taken in
+  the same commit as a content change, because it would confound the comparison
+  the gallery exists for.

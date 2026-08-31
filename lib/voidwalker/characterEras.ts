@@ -372,8 +372,21 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // which is a paraphrase (generic cowl, invented fel spires, nondescript
     // sword). v2 and v3 captured Blizzard's renderer through Wowhead's
     // dressing room and post-graded the frames. v5 renders the export itself:
-    // `wow.export`'s rigged GLB, `EmoteTalkSubdued` off the model's own 422
-    // animations, in Blender on an emissive hologram material. Three things
+    // `wow.export`'s rigged GLB, in Blender, on an emissive hologram material.
+    //
+    // ⚠ THE PERFORMANCE IS A CHAIN OF THREE OF THE MODEL'S OWN ANIMATIONS
+    // (owner, 2026-08-31): `EmoteTalkQuestion` → `EmoteTalk` →
+    // `EmoteTalkSubdued`, laid back to back on ONE NLA track — he asks, he
+    // explains, he settles. The junctions cost nothing, and how WoW authors a
+    // cycle is why: an emote's last frame duplicates its first and all three
+    // start and end on the same neutral stand, so laying each strip's START on
+    // the previous strip's END overwrites that duplicate with an identical
+    // pose. No crossfade — a blend window would smear the hands mid-gesture.
+    // Measured on the delivered pixels, the loudest cut in the loop is at
+    // frame 86, INSIDE EmoteTalk where the hand snaps out; neither junction
+    // (43→44, 91→92) is distinguishable from ordinary motion.
+    //
+    // Three things
     // only this route can do — the alpha is the RENDERER'S (v3 carried 414
     // matte cuts along dark cloth, because a difference key against a backdrop
     // cannot separate black from black), the FRESNEL RIM needs a surface
@@ -394,35 +407,51 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // class, and the space they occupied is worth more empty. The machinery
     // stays (`--kids`, `KID_DIM`, the sit-variation alternation) because it
     // works and the question may return; only the call site is shorter.
+    //
+    // ⚠ AND THE WAIST PIECE IS OFF THE FIGURE SINCE v10 (owner: the belt's
+    // glow is distracting). Its buckle carries the set's fel orb, which even
+    // under the v6 fel cap was the brightest single object on the man — a
+    // hologram whose loudest feature is a belt buckle is pointing at the wrong
+    // thing. The BODY's own belt geoset stays: it never glowed, and dropping
+    // it too would cut a notch in the robe where the item used to sit.
     loadout: "Daemoniac · Shard of Azzinoth · flanked by two imps.",
     motto: "Class moved into the game.",
     modelPath: null,
     stillPath: "/images/services/vince.webp",
-    // ⚠ `-v9` IS PART OF THE CONTRACT. Each wave has shipped under its own
+    // ⚠ `-v10` IS PART OF THE CONTRACT. Each wave has shipped under its own
     // suffix since v1 took the unsuffixed names — a cache does not read commit
     // messages, so a new URL is the only guarantee the new figure reaches the
     // reader. v5–v7 were the imp arc, tuned three times; v8 added a seated
-    // class and v9 takes it out again, keeping v8's real gain — the imps out
-    // of the middle, standing at his shoulders facing HIS way.
+    // class, v9 took it out again keeping v8's real gain, and v10 is the
+    // three-emote chain with the waist piece removed.
     //
     // ⚠ headY/footY ARE MEASURED OFF THE DELIVERED ALPHA, at the opaque cutoff
     // 32/255, over EVERY frame rather than frame zero — a talking idle's head
     // and hands move, so an anchor taken from one pose is wrong for the other
-    // 148. They agree with the camera solve's own projection to four decimal
+    // 239. They agree with the camera solve's own projection to three decimal
     // places, which is the check that the frame is the frame that was solved.
+    // ⚠ AND THEY ARE READ OFF THE FIGURE-ONLY RENDER. Pointed at the delivered
+    // composite the same script returns footY 0.9719 — the imps' claws, three
+    // rows below his boots — and the projector disc would seat low.
     //
-    // ⚠ AND headY IS 0.159 BECAUSE THE FRAME IS WIDTH-BOUND, NOT BECAUSE THE
-    // FIGURE SITS LOW. The Daemoniac pauldrons span 1.40 m against a 2.08 m
-    // man — aspect 0.67 in a 0.5625 slot — so the shoulders decide the fit and
-    // the surplus lands above the head. A height-first fit crops them, and a
-    // pauldron is worn: U13's "a plume may run off the edge; the man may not".
+    // ⚠ headY MOVED 0.159 → 0.235 WITH THE CHAIN, AND THAT IS ARITHMETIC, NOT
+    // A RECOMPOSITION. The frame is WIDTH-bound: the fit takes the widest pose
+    // in the whole loop and the 0.5625 slot then decides the height, so every
+    // centimetre of reach costs scale. Measured per emote, the man spans
+    // 1.400 m in EmoteTalkSubdued (v9's cut, all pauldron), 1.446 m in
+    // EmoteTalkQuestion and 1.549 m in EmoteTalk, where the gauntlet swings
+    // out — so EmoteTalk alone widens him 10.6 % and stands him 8 % shorter in
+    // the slot. footY is unchanged, so the projector disc has not moved; the
+    // surplus is all above his head. Cropping to recover it is not available:
+    // a gauntlet is worn, and U13's line is "a plume may run off the edge; the
+    // man may not".
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-azeroth-v9.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v9.webm",
-      posterPath: "/images/voidwalker/holo-still-azeroth-v9.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v9.webp",
+      videoPath: "/videos/voidwalker/holo-idle-azeroth-v10.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v10.webm",
+      posterPath: "/images/voidwalker/holo-still-azeroth-v10.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v10.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.1586,
+      headY: 0.2352,
       footY: 0.9695,
     },
     short: "Azeroth",
