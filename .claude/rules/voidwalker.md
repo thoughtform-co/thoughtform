@@ -75,10 +75,41 @@ composition's own entry/exit block, its responsive rungs, and
   handed to whichever composition renders: two would publish two `portrait`
   rects and the receiver would measure whichever mounted last.
   Verified live: `handoff: "ready"`, all three targets found, `pinned: 0`.
-- ⚠ **THE RAILS STOP AT THE HUD FRAME**, not the viewport edge. The lab has no
-  frame, so full-bleed looked right there and ran straight THROUGH the HUD
-  rails and their tick ladder on the landing — two line systems crossing.
-  `margin-inline: calc(var(--hud-margin) - var(--vwd-pad-x))`.
+- ⚠ **THE TWO DATUM RAILS AND THE GROUND DATUM ARE DELETED (ADR-082 U21,
+  owner: _"there are these long horizontal lines … remove those"_).** Three
+  1653px hairlines ran the full plate at 1752 wide. They were the
+  composition's own argument, so this is a reversal, not a tidy-up: U19 chose
+  them to replace wave 1's leader lines, on the reasoning that the panels
+  should be tied by SHARED STRUCTURE rather than by a line landing on a
+  shoulder. That reasoning stands; what it never settled is whether the tie
+  has to be DRAWN. Each head keeps its own rule (`.vwd__head`'s border-bottom
+  at .3, against the rails' .12), the four heads still share two rows, and
+  **alignment carries the connection with no ink at all**. The leader lines
+  stay deleted — only their replacement went.
+  ⚠ **The heads and bodies stay SEPARATE grid items.** The rails they were
+  split for are gone, but the split is what puts both columns' heads on one
+  row whatever their content does.
+  ⚠ **If a rail ever returns it may not be full-bleed** — the old
+  `margin-inline: calc(var(--hud-margin) - var(--vwd-pad-x))` existed because
+  a line run to the viewport edge crosses the HUD rails' own tick ladder, two
+  line systems meeting at a shallow angle.
+  ⚠ `--vwd-rail` SURVIVES as the surface's quietest hairline alpha; its one
+  remaining consumer is the phone tab row's borders. The lab's RAIL knob is
+  deleted with the rails.
+- ⚠ **THE READING MEASURE IS `--vwd-measure`, AND IT MAY NEVER GO BACK TO
+  `ch` (ADR-082 U21).** `ch` resolves against the element's OWN font, so one
+  line of CSS — `width: min(100%, 38ch)` on a head and its body — produced two
+  different boxes: the head is PT Mono at 13px (**296px**), the body inherited
+  at 16px (**365px**). Both are `justify-self: end` in the left column, so
+  every head's left edge sat **69px inboard** of the prose beneath it. Not
+  tunable — the two numbers come from different fonts. `rem` is the root's
+  size and is the same everywhere; measured after, head and body are
+  byte-identical at 368px in both columns.
+  ⚠ **And `.vwd__body` now DECLARES its family.** It was inheriting
+  `--font-mono` (IBM Plex Mono, not this surface's PT Mono) — ADR-067's
+  recorded trap — which is what `ch` was resolving against. Every child
+  declares its own face, so nothing rendered wrong; the container's font was
+  doing arithmetic instead.
 - **The lab is a WINDOW, not a copy.** `/test/voidwalker-datum-lab` mounts
   `HoloDatumPanels` and imports `voidwalker-datum.css`; its own sheet is
   `.dlab*` knob chrome only. `--vwd-bar-h` is the one value that differs
@@ -171,10 +202,10 @@ composition's own entry/exit block, its responsive rungs, and
   boundary. Entry spread + tear + exit travel are three additive terms of one
   translate; where a group does exist (mast, figure, band) the container owns
   the exit as before.
-- ⚠ **THE RAILS AND GROUND LEAVE WITH THE FIGURE, not with the reading
-  column** — the ground datum is the projector's own plane extended, so it
-  belongs to the instrument. Mast + left cells clear left; figure, right
-  cells, rails, ground and the era band clear right.
+- **The exit splits by side.** Mast + left cells clear left; figure, right
+  cells and the era band clear right. (The rails and ground used to leave
+  with the figure — the ground being the projector's own plane extended —
+  and went with them in ADR-082 U21.)
 - ⚠ **THE DOSSIER SEAT DOES NOT SPREAD** — it takes the tear only. The About
   dossier flies into that exact footprint, so a 21px entry offset would make
   the receiver's measured rect wrong for the whole entry.

@@ -12,10 +12,14 @@
    floor, `.vwh__base` — and is imported alongside. This sheet is only the
    composition around it.
 
-   ⚠ NOTHING CONNECTS TO THE FIGURE. The panels are tied to it, and to each
-   other, by two full-width construction rails and a ground datum — never by
-   a leader line landing on the body, which claims a relationship the record
-   does not have (owner's ruling on wave 1's A4).
+   ⚠ NOTHING CONNECTS TO THE FIGURE, AND SINCE ADR-082 U21 NOTHING IS DRAWN
+   BETWEEN THE PANELS EITHER. Wave 1 tied each panel to the hologram with a
+   leader line landing on a shoulder or a knee, which claims a relationship
+   the record does not have (owner's ruling on wave 1's A4). U19 replaced
+   those with two full-width construction rails and a ground datum; the owner
+   removed all three. What carries the tie now is ALIGNMENT alone — four heads
+   on two shared rows, each with its own short rule — which claims nothing
+   false and costs no ink.
 
    ⚠ THE ERAS LIVE AT THE FOOT, NOT ON THE HUD RAIL. ADR-082 U9 put the
    scrubber in the left gutter so it cost no column; this composition spends
@@ -36,6 +40,9 @@
      the lab's slider retune the composition without touching a rule. */
   --vwd-chip: 64px;
   --vwd-band-h: calc(var(--vwd-chip) + 52px);
+  /* ⚠ NOT THE DATUM RAILS ANY MORE (ADR-082 U21) — those are deleted. This
+     is the surface's quietest hairline alpha and its one remaining consumer
+     is the phone tab row's top and bottom borders. */
   --vwd-rail: 0.12;
 
   /* ── THE REEL. One cell pitch for all five chips, so the offset that centres
@@ -45,6 +52,18 @@
   --vwd-cell: max(calc(var(--vwd-chip) + clamp(24px, 3.2vw, 72px)), 96px);
   --vwd-reel: 3.4;
   --vwd-n: 5;
+  /* ⚠ THE READING MEASURE IS DECLARED ONCE, AND NOT IN `ch` (ADR-082 U21).
+     `ch` resolves against the element's OWN font, so `min(100%, 38ch)` on a
+     head and on its body produced two different boxes from one line of CSS:
+     the head is PT Mono at 13px (296px) and the body inherits at 16px
+     (365px). Both are `justify-self: end` in the left column, so the head's
+     left edge sat 69px INBOARD of the prose underneath it — a misalignment
+     that reads as sloppiness and cannot be tuned away, because the two
+     numbers are computed from different fonts. `rem` is the root's size and
+     is the same everywhere; 23rem is the 38-character measure this column
+     was already rendering. */
+  --vwd-measure: min(100%, 23rem);
+
   /* How much of the 720×1280 frame a chip shows, and where the head anchor
      sits inside it. See `.vwd__chip__bust`. */
   --vwd-bust-span: 0.34;
@@ -208,56 +227,44 @@
 }
 
 /* ── THE STAGE GRID ─────────────────────────────────────────────────
-   Four content rows and a ground row. The heads and bodies are SEPARATE
-   items so a head's bottom edge IS a row boundary — that is what lets the
-   rails sit exactly on every head's own rule instead of near it. The
-   figure spans every content row; the ground datum takes the last. */
+   Four content rows. The heads and bodies are SEPARATE items, which is what
+   keeps a head's bottom edge on a row boundary and both columns' heads on
+   one line; the figure spans all four.
+   ⚠ THE FIFTH, ZERO-HEIGHT ROW IS GONE WITH THE GROUND DATUM (ADR-082 U21).
+   `.vwd__figure` stays `grid-row: 1 / 5` — four rows still have five lines,
+   so the span is unchanged. */
 .vwd__stage {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--vwd-fig-w) minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) 0;
+  grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr);
   column-gap: clamp(18px, 2.4vw, 52px);
   min-height: 0;
   padding: 0 var(--vwd-pad-x);
 }
 
-/* The rails. Edge to edge INCLUDING the stage's own padding — they are
-   construction lines, so they run the full plate rather than the reading
-   band; that is what makes them read as structure and not as a border. */
-/* ⚠ THE RAILS STOP AT THE HUD FRAME, NOT AT THE VIEWPORT EDGE. In the lab
-   there is no frame, so they ran to 0 and looked right; on the landing that
-   put them straight THROUGH the HUD rails and their tick ladder — two
-   different line systems crossing at a shallow angle, which reads as noise
-   rather than as construction. The frame is the outermost structure on this
-   surface and the composition sits inside it. They still bleed past the
-   reading band and behind the figure, which is what makes them read as
-   structure instead of a panel border. */
-.vwd__rail {
-  grid-column: 1 / -1;
-  align-self: end;
-  margin-inline: calc(var(--hud-margin, 45px) - var(--vwd-pad-x));
-  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
-  pointer-events: none;
-}
-.vwd__rail[data-rail="upper"] {
-  grid-row: 1;
-}
-.vwd__rail[data-rail="lower"] {
-  grid-row: 3;
-}
+/* ⚠ THE TWO DATUM RAILS AND THE GROUND DATUM ARE DELETED (owner,
+   2026-08-31): "there are these long horizontal lines … remove those".
+   Three 1653px hairlines ran the full plate at 1752 wide — one under each
+   pair of panel heads and one under the figure.
 
-.vwd__ground {
-  grid-column: 1 / -1;
-  grid-row: 5;
-  margin-inline: calc(var(--hud-margin, 45px) - var(--vwd-pad-x));
-  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), 0.2);
-  pointer-events: none;
-}
+   ⚠ THEY WERE THE COMPOSITION'S OWN ARGUMENT, so this is a reversal rather
+   than a tidy-up. ADR-082 U19 chose them to replace wave 1's leader lines:
+   the panels were tied to the figure and to each other by SHARED STRUCTURE
+   instead of by a line landing on a shoulder, which claims a relationship
+   the record does not have. That reasoning still stands — what it does not
+   settle is whether the tie has to be DRAWN. Each head keeps its own rule
+   (`.vwd__head`'s border-bottom, at .3 against the rails' .12), the four
+   heads still share two rows, and alignment carries the connection with no
+   ink at all. The leader lines stay deleted; only their replacement went.
 
-/* ── Panel heads. The kicker sits ON the rail; its own segment is brighter
-      than the rail running behind it, so the head reads as the lit part of
-      a continuous line. */
+   Restoring them is two divs and two rules — see the ADR — but they may not
+   come back as full-bleed lines through the HUD rails' tick ladder, which
+   is what their `--hud-margin` inset existed to prevent. */
+
+/* ── Panel heads. Each carries its OWN rule now — with the datum rails gone
+      (ADR-082 U21) this border is the only line under a title, so it is the
+      panel's own edge rather than the lit segment of something longer. */
 .vwd__head {
   display: flex;
   align-items: baseline;
@@ -280,7 +287,13 @@
   color: rgba(var(--vwd-dawn-rgb), 0.4);
 }
 
+/* ⚠ THE BODY DECLARES ITS FAMILY (ADR-067's recorded trap, ADR-082 U21).
+   It inherited `--font-mono` — IBM Plex Mono, NOT this surface's PT Mono —
+   and while every child declares its own face, the CONTAINER's font is what
+   `ch` was resolving against, which is half of why the heads misaligned.
+   Anything added here later inherits the reading face instead. */
 .vwd__body {
+  font-family: var(--vwd-display);
   min-width: 0;
   padding-top: clamp(10px, 1.6svh, 18px);
   /* The last 2px of the rail datum's cost (ADR-082 U20) — see `.vwd__facts`.
@@ -298,7 +311,7 @@
 .vwd__body[data-cell="ll"] {
   grid-column: 1;
   justify-self: end;
-  width: min(100%, 38ch);
+  width: var(--vwd-measure);
 }
 .vwd__head[data-cell="ur"],
 .vwd__body[data-cell="ur"],
@@ -306,7 +319,7 @@
 .vwd__body[data-cell="lr"] {
   grid-column: 3;
   justify-self: start;
-  width: min(100%, 38ch);
+  width: var(--vwd-measure);
 }
 .vwd__head[data-cell="ul"],
 .vwd__head[data-cell="ur"] {
@@ -518,12 +531,13 @@ a.vwd__press:focus-visible .vwd__press__headline {
    (ADR-082 U10), so the reel turns as the reader travels the runway.
 
    ⚠ THE DIVIDER IS DELETED, AND IT WAS A DUPLICATE RATHER THAN A CHOICE.
-   `.vwd__ground` is a 0px track at the stage's bottom edge, inset to
+   `.vwd__ground` WAS a 0px track at the stage's bottom edge (deleted in U21,
+   with the rails), inset to
    `--hud-margin`; the band's old `border-top` sat on that same Y and spanned
    the full border box. So there were two hairlines on one line: ~0.36 alpha
    between the HUD margins and 0.2 outside them — a foot rule brighter in the
    middle that ran straight through the HUD rails, which is exactly what the
-   rails' own inset (see `.vwd__rail`) exists to prevent.
+   rails' own inset existed to prevent.
 
    ⚠ AND A FULL-WIDTH TRACK CANNOT ROLL. Five cells come to ~550px against a
    1440px band, so centring the active chip only shoves the whole group sideways
@@ -877,10 +891,6 @@ a.vwd__press:focus-visible .vwd__press__headline {
     overscroll-behavior-y: auto;
     padding-top: clamp(12px, 2svh, 18px);
   }
-  .vwd__rail,
-  .vwd__ground {
-    display: none;
-  }
 
   .vwd__head,
   .vwd__body {
@@ -1019,10 +1029,6 @@ a.vwd__press:focus-visible .vwd__press__headline {
     grid-template-rows: auto;
     row-gap: clamp(18px, 3svh, 32px);
   }
-  .vwd__rail,
-  .vwd__ground {
-    display: none;
-  }
   /* ⚠ EVERY CELL IS PLACED EXPLICITLY, and matching the desktop's
      specificity is what makes that possible. The desktop pins each cell
      with `.vwd__head[data-cell="ul"] { grid-row: 1 }` — (0,2,0) — so a
@@ -1116,14 +1122,10 @@ a.vwd__press:focus-visible .vwd__press__headline {
    transitions, no keyframes and no one-shot attributes anywhere in here.
 
    ⚠ NOTHING ENTERS OR RELEASES VERTICALLY. Mast and the LEFT cells clear
-   left; the figure, the RIGHT cells, the rails, the ground datum and the era
+   left; the figure, the RIGHT cells and the era
    band clear right. `--vwh-exit` reaches 1 before the sticky releases, which
    is what makes the browser's eventual upward release invisible.
 
-   ⚠ THE RAILS AND THE GROUND LEAVE WITH THE FIGURE, and that is a reading
-   rather than a convenience: the ground datum is the projector's own plane
-   extended, so it belongs to the instrument and goes when the instrument
-   goes. The reading column is what leaves the other way.
 
    ⚠ AND THE TWO TRANSFORMS ARE COMPOSED, NOT NESTED. `.vwh` could put the
    exit on a group container because its panels live inside `.vwh__side`
@@ -1137,8 +1139,6 @@ a.vwd__press:focus-visible .vwd__press__headline {
   .vwd[data-vwh-ready] .vwd__mast > *,
   .vwd[data-vwh-ready] .vwd__head,
   .vwd[data-vwh-ready] .vwd__body,
-  .vwd[data-vwh-ready] .vwd__rail,
-  .vwd[data-vwh-ready] .vwd__ground,
   .vwd[data-vwh-ready] .vwd__figure .vwh__base,
   .vwd[data-vwh-ready] .vwd__chip {
     --ci: clamp(0, calc((var(--vwh-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
@@ -1178,25 +1178,16 @@ a.vwd__press:focus-visible .vwd__press__headline {
     transform: translateX(calc(var(--vwd-tear) + var(--vwh-exit, 0) * (-50vw - 100% - 48px)));
   }
 
-  /* The construction lines are single elements with no group to hang the
-     exit on, so they compose too. */
-  .vwd[data-vwh-ready] .vwd__rail,
-  .vwd[data-vwh-ready] .vwd__ground {
-    transform: translateX(calc(var(--vwd-tear) + var(--vwh-exit, 0) * (50vw + 100% + 48px)));
-  }
-
-  /* ── The stagger. Structure first, then the reading, then the control:
-        the rails arrive before the panels that sit on them, and the era band
-        lands last. */
+  /* ── The stagger. The identity first, then the reading, then the control;
+        the era band lands last. ⚠ The 0.12 rung belonged to the rails and is
+        left EMPTY rather than reassigned (ADR-082 U21) — the panels' own
+        offsets are what space the arrival, and pulling them all forward to
+        close the gap would re-time a choreography nobody asked to change. */
   .vwd[data-vwh-ready] .vwd__mast__kicker {
     --ci-off: 0;
   }
   .vwd[data-vwh-ready] .vwd__mast__title {
     --ci-off: 0.06;
-  }
-  .vwd[data-vwh-ready] .vwd__rail,
-  .vwd[data-vwh-ready] .vwd__ground {
-    --ci-off: 0.12;
   }
   .vwd[data-vwh-ready] :is(.vwd__head, .vwd__body)[data-cell="ul"] {
     --ci-off: 0.16;

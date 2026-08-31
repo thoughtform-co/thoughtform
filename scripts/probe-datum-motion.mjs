@@ -68,7 +68,6 @@ const sample = async (at) => {
       title: cs(".vwd__mast__title"),
       scopeHead: cs('.vwd__head[data-cell="ul"]'),
       factsHead: cs('.vwd__head[data-cell="ur"]'),
-      rail: cs('.vwd__rail[data-rail="upper"]'),
       figure: cs(".vwd__figure"),
       band: cs(".vwd__band"),
       /* ⚠ THE ONE ACTOR THAT IS NOT ZERO AT REST, DELIBERATELY (ADR-082 U20).
@@ -93,7 +92,7 @@ for (const at of [0.0, 0.06, 0.12, 0.2, 0.45, 0.8, 0.9, 0.96]) {
     `   mast op=${s.mast.op} tx=${s.mast.tx} | title op=${s.title.op} | scope op=${s.scopeHead.op} tx=${s.scopeHead.tx} | facts op=${s.factsHead.op} tx=${s.factsHead.tx}`
   );
   console.log(
-    `   rail op=${s.rail.op} tx=${s.rail.tx} | figure tx=${s.figure.tx} | band tx=${s.band.tx} reel tx=${s.track.tx} chip1 op=${s.chip1.op} | slot op=${s.slot.op}`
+    `   figure tx=${s.figure.tx} | band tx=${s.band.tx} reel tx=${s.track.tx} chip1 op=${s.chip1.op} | slot op=${s.slot.op}`
   );
 }
 

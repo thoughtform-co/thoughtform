@@ -2082,3 +2082,79 @@ Pre-existing failures unchanged: `about-voidwalker-handoff:240`
 datum move did not disturb the landing) and
 `about-voidwalker-handoff-boundaries:373` (floor isolation, correct on the
 alpha branch).
+
+## Update 21 — the rails come out, and the heads find their own left edge (2026-08-31, owner)
+
+Two notes on U20's stage, read live.
+
+**1. The long horizontal lines go.** _"There are these long horizontal lines …
+remove those."_ Three of them, measured at 1752 wide: the upper rail at y=226,
+the lower at y=699, the ground datum at y=1142 — each **1653px**, running the
+full plate from x=46 to x=1700.
+
+⚠ **THEY WERE THE COMPOSITION'S OWN ARGUMENT, SO THIS IS A REVERSAL RATHER
+THAN A TIDY-UP.** U19 chose the rails precisely to replace wave 1's leader
+lines, whose defect the owner had named himself: a line landing on a shoulder
+_"implies scope is linked to my shoulder, and that's not really the case"_. The
+replacement was to tie the panels by SHARED STRUCTURE instead. **That reasoning
+still stands — what it never settled is whether the tie has to be DRAWN.** Each
+head keeps its own rule (`.vwd__head`'s border-bottom at .3, against the rails'
+.12), the four heads still share two grid rows, and alignment carries the
+connection with no ink at all. The leader lines stay deleted; only their
+replacement went.
+
+⚠ **THE HEADS AND BODIES STAY SEPARATE GRID ITEMS.** The rails they were split
+for are gone, but the split is what puts both columns' heads on ONE row
+whatever their content does; merged, each panel's rule would land wherever its
+own box did and the four would stop agreeing.
+
+⚠ **IF A RAIL EVER RETURNS IT MAY NOT BE FULL-BLEED.** The deleted
+`margin-inline: calc(var(--hud-margin) - var(--vwd-pad-x))` existed because a
+line run to the viewport edge crosses the HUD rails' own tick ladder — two line
+systems meeting at a shallow angle, which reads as noise rather than as
+construction.
+
+Knock-ons, all taken in the same commit: the stage's fifth zero-height row
+(which held only the ground) is gone, and `.vwd__figure` stays `grid-row: 1 / 5`
+because four rows still have five lines; both small-screen rungs stop hiding
+elements that no longer exist; §G drops both actors from the opacity ladder,
+the exit transform and the stagger — ⚠ **the 0.12 `--ci-off` rung is left EMPTY
+rather than reassigned**, because pulling the panels forward to close the gap
+would re-time a choreography nobody asked to change. `--vwd-rail` survives as
+the surface's quietest hairline alpha, its one remaining consumer being the
+phone tab row's borders; the lab's RAIL knob went with the rails.
+
+**2. The panel heads were 69px inboard of their own prose.** _"Make sure that
+the titles (eg transmission, scope etc) are aligned to the left so consistent
+with the rest."_
+
+⚠ **ONE LINE OF CSS WAS PRODUCING TWO DIFFERENT BOXES, AND `ch` IS WHY.**
+`width: min(100%, 38ch)` was declared once for the heads and their bodies —
+but **`ch` resolves against the element's OWN font**. The head is PT Mono at
+13px, so 38ch is **296px**; the body inherited 16px, so 38ch is **365px**. Both
+are `justify-self: end` in the left column, so the narrower head was pushed
+right and its left edge sat 69px inboard of the paragraph underneath it. Not a
+tuning problem: the two numbers are computed from different fonts, so no value
+makes them agree.
+
+`--vwd-measure: min(100%, 23rem)` replaces it — `rem` is the root's size and is
+the same on every element. Measured after: head and body are byte-identical at
+**368px**, in both columns, at 233→601 and 1145→1513.
+
+⚠ **AND THE BODY WAS INHERITING THE WRONG FACE — ADR-067's RECORDED TRAP, ONE
+SURFACE OVER.** `.vwd__body` declared no `font-family`, so it resolved
+`--font-mono`, which is **IBM Plex Mono, not this surface's PT Mono**. Nothing
+rendered wrong, because every child declares its own face — but the container's
+font was doing the `ch` arithmetic, which is half of why the heads misaligned.
+It declares `--vwd-display` now, so anything added there later inherits the
+reading face. **A font that letters nothing can still be load-bearing.**
+
+**Verifying:** `probe-voidwalker-eras.mjs` clean at 1280×720 and 1920×1247
+(headroom unchanged at 15px / 178px, so the removal costs the seats nothing);
+`probe-datum-motion.mjs` — translateX exactly 0 at rest for every remaining
+actor, entry spread ±21 collapsing to 0, everything past the viewport by
+`exit` 1; a live sweep of `#voidwalker` for any element wider than 700px
+painting a border or ground returns **zero**. Pre-existing failures unchanged:
+`about-voidwalker-handoff:240` (`name/title width: 480 vs 407`) and
+`about-voidwalker-handoff-boundaries:373` (floor isolation, correct on the
+alpha branch); the ambient-hold case passes.

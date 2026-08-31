@@ -33,7 +33,6 @@ export function DatumLabShell() {
      size on a 375px screen, which is the exact thing the slider exists to let
      the owner judge. A lab knob may not defeat the default it explores. */
   const [chip, setChip] = useState<number | null>(null);
-  const [rail, setRail] = useState(0.12);
   const [bust, setBust] = useState(0.34);
   const [reduced, setReduced] = useState(false);
 
@@ -82,7 +81,6 @@ export function DatumLabShell() {
       style={
         {
           ...(chip === null ? null : { "--vwd-chip": `${chip}px` }),
-          "--vwd-rail": rail,
           "--vwd-bust-span": bust,
           /* The composition derives the figure's width from the height its
              own chrome leaves; in the lab the knob bar is part of that. */
@@ -127,18 +125,6 @@ export function DatumLabShell() {
             step={0.02}
             value={bust}
             onChange={(ev) => setBust(+ev.target.value)}
-          />
-        </label>
-
-        <label className="dlab__slider">
-          <span className="dlab__lbl">rail {rail.toFixed(2)}</span>
-          <input
-            type="range"
-            min={0}
-            max={0.4}
-            step={0.01}
-            value={rail}
-            onChange={(ev) => setRail(+ev.target.value)}
           />
         </label>
 

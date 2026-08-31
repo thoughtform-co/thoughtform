@@ -18,20 +18,19 @@ import { VOIDWALKER_BEATS, vwPlain, type VwPress } from "@/lib/voidwalker/voidwa
  * HoloDatumPanels — the D2 "datum rails" composition (owner's wave-2 pick,
  * 2026-08-31), behind `VOIDWALKER_DATUM_STAGE`.
  *
- * ⚠ NOTHING IS DRAWN TO THE FIGURE. Wave 1 tied each panel to the hologram
- * with a leader line landing on a shoulder or a knee, and the owner's read
- * was that the line CLAIMS a relationship the record does not have — "it
- * implies scope is linked to my shoulder, and that's not really the case".
- * The connection is made by SHARED STRUCTURE instead: two construction rails
- * run the full width behind the figure and every panel head sits ON one of
- * them, plus a ground datum extending from the projector disc. Alignment
- * carries what the leader line was claiming, and it claims nothing false.
+ * ⚠ NOTHING IS DRAWN TO THE FIGURE, AND SINCE ADR-082 U21 NOTHING IS DRAWN
+ * BETWEEN THE PANELS EITHER. Wave 1 tied each panel to the hologram with a
+ * leader line landing on a shoulder or a knee, and the owner's read was that
+ * the line CLAIMS a relationship the record does not have — "it implies scope
+ * is linked to my shoulder, and that's not really the case". U19 replaced them
+ * with two full-width construction rails plus a ground datum; the owner then
+ * removed all three ("these long horizontal lines … remove those"). ALIGNMENT
+ * is what carries the tie now, and it always was — the rails only drew it.
  *
- * ⚠ THE HEADS AND BODIES ARE SEPARATE GRID ITEMS, and that is what makes the
- * rails exact. A panel spanning both rows would put its underline wherever
- * its own box landed and the rail behind it would be a near-miss; head in the
- * head row, body in the body row, rail spanning 1/-1 with `align-self: end`,
- * so the three share a boundary by construction rather than by tuning.
+ * ⚠ THE HEADS AND BODIES ARE STILL SEPARATE GRID ITEMS. The rails they were
+ * built for are gone, but the split is what puts both columns' heads on ONE
+ * row whatever their content does; merged, each panel's rule would land
+ * wherever its own box did and the four would no longer agree.
  *
  * ⚠ THE ERAS MOVED FROM THE HUD GUTTER TO A BAND AT THE FOOT. ADR-082 U9 put
  * the scrubber on the left rail precisely so it cost no column; this spends a
@@ -270,8 +269,6 @@ export function HoloDatumPanels({
         {/* THE TWO CONSTRUCTION RAILS — full width, edge to edge, passing
             behind the figure. Each sits on the bottom edge of a head row,
             which is where every head's own rule already is. */}
-        <div className="vwd__rail" data-rail="upper" aria-hidden="true" />
-        <div className="vwd__rail" data-rail="lower" aria-hidden="true" />
 
         {/* ── UPPER LEFT · SCOPE ─────────────────────────────────────
             ⚠ Carries the `dossier` handoff target: it holds the top-left
@@ -387,10 +384,9 @@ export function HoloDatumPanels({
           </div>
         </div>
 
-        {/* THE GROUND DATUM — the projector's own plane, extended edge to
-            edge. The figure column ends on this line, so the disc sits ON it
-            rather than floating above a drawn rule. */}
-        <div className="vwd__ground" aria-hidden="true" />
+        {/* The ground datum stood here until ADR-082 U21. The figure keeps its
+            own projector disc, which is what actually seats it; the drawn plane
+            under it was a third long horizontal line. */}
       </div>
 
       {/* ── THE ERA REEL ─────────────────────────────────────────────
