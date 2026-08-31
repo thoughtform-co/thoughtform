@@ -25,6 +25,20 @@
   --vwh-display: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   --vwh-gold-rgb: var(--gold-rgb, 202, 165, 84);
   --vwh-void-rgb: var(--void-rgb, 10, 9, 8);
+  /* ⚠ THE FLOOR IS A COMPOSITING CONSTANT, NOT A THEMEABLE SURFACE, so it
+     gets its own token and that token does not flip. `--vwh-void-rgb` reads
+     `--void-rgb`, which ADR-058 swaps to PARCHMENT in light — and
+     `plus-lighter` over a near-white floor returns white, so the whole
+     figure blew out to a flat silhouette on paper. The light block below
+     already paints a dark projection well on `.vwh__ground` for exactly
+     this reason, and it was being covered by the wrap's own floor one layer
+     in front of it: the intended fix was present and defeated.
+     ⚠ It stays a LITERAL. Every ramp in this file is a colour a reader
+     perceives; this is the base an additive blend adds onto, and there is
+     no theme in which it may be light. The other two consumers of
+     `--vwh-void-rgb` (the film play button's disc) still flip, deliberately
+     — they are surfaces, not floors. */
+  --vwh-floor-rgb: 10, 9, 8;
   /* One height ladder owns both the projector silhouette and its contact
      plane. The disc top is the authored floor Vince stands on; deriving the
      overlap from this inset (rather than a percentage of column WIDTH) keeps
@@ -290,7 +304,7 @@
      with `mask-composite: intersect` carrying edge + scan together, and
      it silently did not apply. The wrap carries the EDGE, the media
      carries the SCAN. */
-  background: rgb(var(--vwh-void-rgb));
+  background: rgb(var(--vwh-floor-rgb));
   -webkit-mask-image: radial-gradient(
     ellipse 66% 78% at 50% 60%,
     #000 40%,
@@ -1645,7 +1659,13 @@ a.vwh__press:focus-visible .vwh__press__headline {
    text on parchment (ADR-063 U2's ramp exists for exactly that) — plus
    the dim neutrals, because an alpha inverts its own meaning across the
    flip. ADDITIVE LIGHT IS STILL INVISIBLE ON PAPER, so the figure keeps
-   its dark projection well. */
+   its dark projection well.
+   ⚠ AND THE WELL ALONE WAS NOT ENOUGH — this rule shipped correct and did
+   nothing, because `.vwh__media-wrap` sits IN FRONT of `.vwh__ground` and
+   carried its own floor off a token that flips to parchment, covering the
+   well and blowing the figure out to a white silhouette. The floor is
+   `--vwh-floor-rgb` now and never flips (see the token block). A dark layer
+   behind a light one is not a dark ground. */
 html[data-theme="light"] .vwh__ground {
   background: radial-gradient(
     ellipse 62% 80% at 50% 96%,

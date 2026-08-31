@@ -73,6 +73,21 @@ handoff and the `701–1100px` complete fallback alone.
   is the wave's.
   ⚠ **DO NOT DELETE THE FLOOR RULES**: Safari has no self-hostable alpha codec
   here (HEVC-alpha needs macOS videotoolbox) and keeps them.
+  ⚠ **AND THE FLOOR IS A COMPOSITING CONSTANT, NOT A THEMEABLE SURFACE
+  (2026-08-31).** It read `--vwh-void-rgb` → `--void-rgb`, which ADR-058
+  SWAPS TO PARCHMENT in light — and `plus-lighter` over a near-white floor
+  returns white, so the fallback figure blew out to a flat silhouette on
+  paper. `--vwh-floor-rgb` is a literal and never flips; the other consumers
+  of `--vwh-void-rgb` (the film play disc) still flip, because they are
+  surfaces. ⚠ The light block's own `.vwh__ground` well was already correct
+  and was being COVERED by the wrap's floor one layer in front of it — a
+  dark layer behind a light one is not a dark ground, and the rule looked
+  right in the sheet the whole time. ⚠ **THE LANDING IS ON THE ALPHA BRANCH,
+  SO THIS IS INVISIBLE THERE** (`data-holo-alpha` measured set on the live
+  station, floor cleared): it is the SAFARI path that was broken, which is
+  precisely the path U6 says may never be worse than it is. Verify a floor
+  change on the fallback branch explicitly — the alpha branch will pass it
+  either way.
   ⚠ **ROUTING IS A DECODE PROBE, NEVER `canPlayType`** — Safari plays
   VP9-in-WebM, ignores its alpha and answers "probably", so source order alone
   would make Safari WORSE than today. `lib/voidwalker/holoAlphaSupport.ts`
