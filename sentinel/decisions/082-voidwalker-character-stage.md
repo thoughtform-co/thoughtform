@@ -1880,3 +1880,82 @@ his boots.
   back roughly 30 % at a real cost on a translucent banded asset — not taken in
   the same commit as a content change, because it would confound the comparison
   the gallery exists for.
+
+## Update 19 — the datum rails replace the character sheet (2026-08-31, owner)
+
+**The station's interior is the D2 "DATUM RAILS" composition. ADR-082 U11's
+three-column character sheet — mast, two mirrored side columns of panels, the
+era scrubber in the HUD gutter — is DELETED, not flagged off.**
+
+The owner's read of the shipped sheet was that it was _"a bit like a glorified
+PowerPoint"_. Two waves of image mockups (26 renders,
+`docs/design/era-stage-pass/`) settled the direction; the pass is recorded
+there and the short version is the finding, not the pictures:
+
+⚠ **THE UNBOXED PANELS WERE ALREADY THE FIX FOR THAT SAME COMPLAINT.**
+`voidwalker-hologram.css` carried the note: the first cut was bordered cards
+with washes and lit head bars, rejected on 2026-08-26 for exactly this word.
+So the answer was never boxes-versus-no-boxes. **It is the SLIDE SKELETON** —
+a centred title over two text columns — which reads as a slide whatever the
+panels do.
+
+**What the composition does instead.** Four unboxed panels whose heads ride
+**two full-width construction rails**, a **ground datum** extending from the
+projector disc, and the five eras as a **chip band at the foot**.
+
+- ⚠ **NOTHING IS DRAWN TO THE FIGURE.** Wave 1's alternative tethered each
+  panel to the hologram with a leader line landing on a shoulder or a knee,
+  and the owner's ruling killed it: _"it implies scope is linked to my
+  shoulder, and that's not really the case."_ A drawn connection asserts a
+  relationship, and this record does not have that one. The connection is
+  made by SHARED STRUCTURE instead — alignment says what the leader line was
+  claiming, and it claims nothing false.
+- ⚠ **THE HEADS AND BODIES ARE SEPARATE GRID ITEMS**, which is what makes the
+  rails exact rather than nearly right: a head's bottom edge IS a row
+  boundary, so the rail behind it cannot be a few pixels off. This is also
+  why the exit transform is COMPOSED with the entry tear rather than hung on
+  a group container — wrapping the cells to get a container back is precisely
+  what would destroy the rails.
+- ⚠ **THE ERAS LEFT THE HUD GUTTER.** U9 put the scrubber there _precisely_
+  so it cost no column; this spends a band on it, by owner ruling, because
+  the selector must read as character-select on BOTH breakpoints. The gutter
+  is left EMPTY rather than refilled.
+- **On the phone the avatar is the FIRST TAB** (a drawn mark, then RECORD ·
+  SCOPE · TRANSMISSION), and the fixed dossier seat is deleted: one area
+  serves both, each at full generosity. ⚠ The mark is a mark and the other
+  three are words _deliberately_ — as four equal cells the row rhymed with
+  the era band below it and read as one control stated twice.
+
+**What went with it**, listed so nothing is restored from muscle memory:
+`HoloEraPanels.tsx`; the mast/side/panel/rail/pip/facts/press/film/tabpanel
+and mobile-mode rules (~1100 lines of `voidwalker-hologram.css`); that
+composition's entry/exit block and responsive rungs;
+`tests/visual/voidwalker-character-sheet.spec.ts`; and
+`VOIDWALKER_DATUM_STAGE` itself. ⚠ A flag standing at `false` implies the
+losing drawing is one boolean from returning, and it is not (ADR-070 U35).
+
+**What survives, and where it lives now.** `voidwalker-hologram.css` is the
+FIGURE's sheet — the slot's isolation and masked floor, the alpha branch, the
+projector base, the phase animations, the decode lines. ⚠ **`.vwh` declares
+no layout**; it is the token host, and the box comes from `.vwd__vwh` on the
+landing or `.hll__figure` in the figure lab, **both axes definite** or the
+slot's percentage sizing resolves to nothing. `/test/voidwalker-holo-lab` is
+the FIGURE lab (its knobs always were `HoloFigure` props), and
+`/test/voidwalker-datum-lab` is a window onto the shipped composition rather
+than a copy of it.
+
+**Two things this pass got wrong first, both silent.** The station's sticky
+pin named `.vwh` by class, so the new root translated through the entire
+260svh runway with no error — **the pin belongs to the STATION, not to a
+composition**. And the figure's acquisition rules named `.vwh[data-vwh-ready]`
+while the writer stamps the ROOT, so on the datum branch the slot sat at full
+opacity and skipped acquisition entirely. Both are the same shape of bug: a
+selector written against the composition that happened to be there.
+
+**Verifying:** `node scripts/capture-voidwalker-station.mjs` (headed — the
+corridor is WebGL and Chromium has no H.264 for the MP4 fallback) prints
+layout, mode, handoff state, pin offset and the scroll-derived era at each
+stop; `node scripts/probe-datum-motion.mjs` walks the entry and exit ramps
+per actor. Measured: `handoff: "ready"` with all three targets, pin offset 0,
+±21px spread at entry collapsing to **translateX exactly 0 at rest**, and
+every actor off a 1440 viewport by `exit` 1.

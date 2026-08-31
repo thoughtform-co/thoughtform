@@ -169,7 +169,7 @@ export function resolveViewportRectTransform(
  * ("before the changed aspect can read as settled typography"); the owner read
  * it immediately as smushed text.
  *
- * The destination instead matches the SOURCE'S TYPE (see `.vwh__mast__title`,
+ * The destination instead matches the SOURCE'S TYPE (see `.vwd__mast__title`,
  * which now carries `.voidwalker__name`'s exact clamp), so the two are already
  * the same size and only the position has to change. Aligning top-left lands
  * the first lines on each other, which is the join a reader actually sees.

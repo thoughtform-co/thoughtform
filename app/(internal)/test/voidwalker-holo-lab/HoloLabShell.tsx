@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import { CHARACTER_ERAS } from "@/lib/voidwalker/characterEras";
 
-import { HoloEraPanels } from "@/components/landing/home-v2/voidwalker/hologram/HoloEraPanels";
 import {
   HoloFigure,
   type HoloForm,
@@ -189,14 +188,7 @@ export function HoloLabShell() {
       </div>
 
       <section className="hll__stage">
-        <div
-          className="vwh"
-          data-vwh-era={era.id}
-          data-vwh-region="character-sheet"
-          data-testid="voidwalker-character-sheet"
-        >
-          <HoloEraPanels selectedEraIndex={eraIdx} onSelectEra={pick} idPrefix="holo-lab" />
-
+        <div className="vwh hll__figure" data-vwh-era={era.id} data-vwh-region="character-sheet">
           <div className="vwh__column" data-vwh-region="figure">
             <HoloFigure
               src={src}

@@ -1,3 +1,12 @@
+// ⚠ ARCHIVED — THIS MEASURES A COMPOSITION THAT NO LONGER EXISTS. It walked
+// the ADR-082 U11 character sheet (mirrored side columns, the era scrubber on
+// the HUD rail); the datum rails replaced that and the losing composition was
+// deleted (ADR-082 U19), so every `.vwh__rail` / `.vwh__pip` / `.vwh__side`
+// selector below now matches nothing and the script reports empty rather than
+// failing. Kept as the record of how this folder's stills were made. The live
+// equivalents are `scripts/probe-voidwalker-eras.mjs` and
+// `scripts/probe-datum-motion.mjs`.
+//
 // Verifies the time axis on the live stage: does the rule meet the HUD rails,
 // do the two columns share their datums, does anything clip.
 const { chromium } = await import(

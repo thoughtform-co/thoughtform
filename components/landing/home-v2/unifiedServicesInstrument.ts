@@ -166,25 +166,12 @@ export const VOIDWALKER_TIME_TUNNEL = true;
  */
 export const VOIDWALKER_HOLOGRAM_STAGE = true;
 
-/**
- * The D2 "DATUM RAILS" composition (owner's wave-2 pick, 2026-08-31).
- *
- * ⚠ A COMPARISON LEVER, NOT A SEAM. ADR-070 U35's ruling: a flag lives only
- * until the owner has read both live, and then the losing drawing and its
- * guards GO. This one switches the station's INTERIOR composition — the
- * panels, the rails, where the era selector sits — and nothing else. The
- * figure, its masked floor, the station shell, the scroll clock, the entry
- * and exit choreography and the About handoff contract are shared by both
- * and are untouched by the boolean.
- *
- * ON:  four unboxed panels whose heads ride two full-width construction
- *      rails, a ground datum off the projector disc, and the five eras as a
- *      chip band at the FOOT (ADR-082 U9's left-rail scrubber is not
- *      rendered — the gutter is left empty rather than refilled).
- * OFF: ADR-082 U11's two mirrored side columns with fixed seats, and the
- *      vertical scrubber in the HUD gutter.
- */
-export const VOIDWALKER_DATUM_STAGE = true;
+/* ⚠ `VOIDWALKER_DATUM_STAGE` IS DELETED, NOT FLIPPED (ADR-082 U19,
+   2026-08-31). It was a comparison lever and it did its job: the owner read
+   both compositions live and kept the datum rails, so the losing drawing —
+   `HoloEraPanels`, its `.vwh*` composition rules and its guards — went with
+   the boolean rather than surviving as a dead branch (ADR-070 U35's ruling).
+   The station's interior is the datum composition unconditionally now. */
 
 /**
  * The corridor ambient must survive any transparent Voidwalker stage and

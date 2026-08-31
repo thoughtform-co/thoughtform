@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 
 import {
   MediaLightbox,
@@ -13,8 +13,6 @@ import {
   type CharacterEraHologram,
 } from "@/lib/voidwalker/characterEras";
 import { VOIDWALKER_BEATS, vwPlain, type VwPress } from "@/lib/voidwalker/voidwalkerData";
-
-import { eraPositionLabel, type HoloEraIdentityRefs } from "./HoloEraPanels";
 
 /**
  * HoloDatumPanels — the D2 "datum rails" composition (owner's wave-2 pick,
@@ -66,6 +64,21 @@ import { eraPositionLabel, type HoloEraIdentityRefs } from "./HoloEraPanels";
    comparing one reading across eras is what a five-stop band is FOR. */
 const MOBILE_READINGS = ["record", "scope", "transmission"] as const;
 type DatumTab = "figure" | (typeof MOBILE_READINGS)[number];
+
+/** `ERA / 03 OF 05`. Lived in `HoloEraPanels` until that composition was
+ *  deleted (ADR-082 U19); it is the mast's own chrome, so it moved here with
+ *  the mast rather than into a module of its own. */
+export function eraPositionLabel(index: number, count = CHARACTER_ERAS.length): string {
+  return `ERA / ${String(index + 1).padStart(2, "0")} OF ${String(count).padStart(2, "0")}`;
+}
+
+/** The three mast lines the scramble kernel writes through. `VoidwalkerHologram`
+ *  owns the refs because it owns the decode; this composition only seats them. */
+export interface HoloEraIdentityRefs {
+  kicker: RefObject<HTMLSpanElement | null>;
+  title: RefObject<HTMLSpanElement | null>;
+  year: RefObject<HTMLSpanElement | null>;
+}
 
 /**
  * The figure mark: a standing figure over its projector plane, on the

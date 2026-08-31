@@ -2131,8 +2131,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await page.waitForTimeout(500);
     const reversed = await page.evaluate(() => {
       const section = document.getElementById("voidwalker")!;
-      const stage = document.querySelector<HTMLElement>("#voidwalker .vwh")!;
-      const mast = document.querySelector<HTMLElement>("#voidwalker .vwh__mast__title")!;
+      const stage = document.querySelector<HTMLElement>("#voidwalker .vwd")!;
+      const mast = document.querySelector<HTMLElement>("#voidwalker .vwd__mast__title")!;
       const css = getComputedStyle(section);
       return {
         stageTop: stage.getBoundingClientRect().top,
@@ -2151,8 +2151,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await scrollAndSettle(inTravel as number);
     await page.waitForTimeout(1200);
     const replayed = await page.evaluate(() => {
-      const stage = document.querySelector<HTMLElement>("#voidwalker .vwh")!;
-      const mast = document.querySelector<HTMLElement>("#voidwalker .vwh__mast__title")!;
+      const stage = document.querySelector<HTMLElement>("#voidwalker .vwd")!;
+      const mast = document.querySelector<HTMLElement>("#voidwalker .vwd__mast__title")!;
       return {
         enter: stage.style.getPropertyValue("--vwh-in"),
         mastOpacity: getComputedStyle(mast).opacity,

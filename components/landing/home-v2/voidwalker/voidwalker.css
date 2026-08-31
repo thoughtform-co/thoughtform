@@ -165,14 +165,14 @@ html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"].station {
 #voidwalker[data-vw-mode="hologram"] .vw--hologram {
   min-height: 260svh;
 }
-/* ⚠ BOTH COMPOSITION ROOTS PIN. `VOIDWALKER_DATUM_STAGE` swaps the station's
-   interior between `.vwh` (ADR-082 U11's mirrored side columns) and `.vwd`
-   (the D2 datum rails) — and the PIN belongs to the station, not to either
-   composition. Named for one root only, the other silently loses its sticky
-   and translates through the whole 260svh runway, which is the exact
-   "the section slides over the one before it" defect this rule was written
-   to fix. Whichever root ships, it pins. */
-#voidwalker[data-vw-mode="hologram"] .vw--hologram > .vwh,
+/* ⚠ THE PIN BELONGS TO THE STATION, NOT TO THE COMPOSITION INSIDE IT. It
+   named `.vwh` while that was the only interior; when the datum rails were
+   added alongside it, the new root silently lost its sticky and translated
+   through the whole 260svh runway — the exact "the section slides over the
+   one before it" defect this rule exists to fix, with no error. `.vwh` is
+   gone now (ADR-082 U19) but the lesson is why this selector is written
+   against the STATION's own child rather than against a composition's
+   class: whatever ships inside, it pins. */
 #voidwalker[data-vw-mode="hologram"] .vw--hologram > .vwd {
   position: sticky;
   top: 0;

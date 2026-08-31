@@ -104,9 +104,17 @@ for (const era of tabs) {
       return Number.isFinite(top) ? { top, bottom, left, right } : null;
     };
 
-    const panels = [...document.querySelectorAll("#voidwalker .vwh__panel")]
+    const panels = [...document.querySelectorAll("#voidwalker .vwd__body")]
       .map((el) => {
-        const head = el.querySelector(".vwh__panel__head, h3, h2");
+        /* ⚠ THE HEAD IS A SIBLING, NOT A CHILD (ADR-082 U19). The datum
+           composition makes each head and body separate grid items on
+           purpose — that is what puts a head's bottom edge exactly ON a row
+           boundary, which is where its rail runs. Looking for it inside the
+           body finds nothing and every panel reports "?". */
+        const cell = el.getAttribute("data-cell");
+        const head = cell
+          ? document.querySelector(`#voidwalker .vwd__head[data-cell="${cell}"]`)
+          : null;
         const ink = inkOf(el);
         if (!ink) return null;
         return {
@@ -120,8 +128,8 @@ for (const era of tabs) {
       })
       .filter(Boolean);
     return {
-      era: document.querySelector("#voidwalker .vwh")?.getAttribute("data-vwh-era"),
-      title: document.querySelector("#voidwalker .vwh__mast__title")?.textContent,
+      era: document.querySelector("#voidwalker .vwd")?.getAttribute("data-vwh-era"),
+      title: document.querySelector("#voidwalker .vwd__mast__title")?.textContent,
       slot: box("#voidwalker .vwh__slot"),
       panels,
     };

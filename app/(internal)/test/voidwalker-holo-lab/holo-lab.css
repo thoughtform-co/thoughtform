@@ -77,6 +77,23 @@
   position: relative;
   height: calc(100svh - var(--hll-bar, 92px));
 }
-.hll__stage .vwh {
+/* ⚠ THIS LAB IS THE FIGURE'S, NOT A COMPOSITION'S (ADR-082 U19). Its knobs
+   are all `HoloFigure` props — form, media, blend, alpha, scan pitch, glow —
+   and the panels it used to mount went with the deleted `.vwh` composition.
+   `.vwh` survives as the TOKEN HOST the figure rules read (`--vwh-gold-rgb`,
+   the base height ladder) and carries no layout of its own any more, so the
+   stage gives the column its box: both axes definite, because `.vwh__column`
+   and the media below it size by percentage and resolve to nothing against
+   an auto track. */
+.hll__figure {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  width: min(100%, 520px);
   height: 100%;
+  margin-inline: auto;
+}
+.hll__figure .vwh__column {
+  grid-area: 1 / 1;
+  min-height: 0;
 }

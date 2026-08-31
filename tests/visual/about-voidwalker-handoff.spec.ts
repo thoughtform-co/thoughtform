@@ -51,7 +51,7 @@ async function bootCapableHandoff(page: Page, viewport: Viewport) {
   await expect(page.locator("#about")).toHaveAttribute("data-about-handoff", "voidwalker", {
     timeout: 5_000,
   });
-  await expect(page.locator(".vwh")).toHaveAttribute("data-vwh-ready", "", {
+  await expect(page.locator(".vwd")).toHaveAttribute("data-vwh-ready", "", {
     timeout: 5_000,
   });
   await settleFrames(page);
@@ -99,7 +99,7 @@ async function readStructuralGeometry(page: Page) {
     const about = document.querySelector<HTMLElement>("#about");
     const voidwalker = document.querySelector<HTMLElement>("#voidwalker");
     const runway = document.querySelector<HTMLElement>(".vw--hologram");
-    const root = document.querySelector<HTMLElement>(".vwh");
+    const root = document.querySelector<HTMLElement>(".vwd");
     const slot = document.querySelector<HTMLElement>("[data-vwh-handoff-target='portrait']");
     const dossier = document.querySelector<HTMLElement>("[data-vwh-handoff-target='dossier']");
     if (!about || !voidwalker || !runway || !root || !slot || !dossier) {
@@ -158,7 +158,7 @@ async function readStructuralGeometry(page: Page) {
 
 async function readEntryPose(page: Page) {
   return page.evaluate(() => {
-    const root = document.querySelector<HTMLElement>(".vwh");
+    const root = document.querySelector<HTMLElement>(".vwd");
     const slot = document.querySelector<HTMLElement>(".vwh__slot");
     const canvas = document.querySelector<HTMLCanvasElement>(".home-v2-stage__canvas-inner");
     const aboutTitle = document.querySelector<HTMLElement>(
@@ -198,12 +198,12 @@ async function readEntryPose(page: Page) {
       slotCount: document.querySelectorAll(".vwh__slot").length,
       mediaCount: document.querySelectorAll(".vwh__slot > .vwh__media-wrap > .vwh__media").length,
       sourceSeatChildCount: document.querySelectorAll(".about-stage__slot > *").length,
-      mast: actor(".vwh__mast"),
+      mast: actor(".vwd__mast"),
       eraTitle: actor("[data-vwh-handoff-target='era-title']"),
       dossier: actor("[data-vwh-handoff-target='dossier']"),
       base: actor(".vwh__base"),
-      rail: actor(".vwh__rail"),
-      mastKicker: actor(".vwh__mast__kicker"),
+      rail: actor(".vwd__band"),
+      mastKicker: actor(".vwd__mast__kicker"),
     };
   });
 }
@@ -283,7 +283,7 @@ test.describe("About -> Voidwalker card-to-hologram handoff", () => {
           const dossier = document.querySelector<HTMLElement>(
             "[data-vwh-handoff-target='dossier']"
           );
-          const root = document.querySelector<HTMLElement>(".vwh");
+          const root = document.querySelector<HTMLElement>(".vwd");
           if (!copy || !dossier || !root) throw new Error("Missing handoff endpoint actor");
 
           let x = 0;
@@ -319,7 +319,7 @@ test.describe("About -> Voidwalker card-to-hologram handoff", () => {
           const target = document.querySelector<HTMLElement>(
             "[data-vwh-handoff-target='era-title']"
           );
-          const root = document.querySelector<HTMLElement>(".vwh");
+          const root = document.querySelector<HTMLElement>(".vwd");
           if (!source || !target || !root) throw new Error("Missing title endpoint actor");
 
           let x = 0;
@@ -376,7 +376,7 @@ test.describe("About -> Voidwalker card-to-hologram handoff", () => {
         // for measurement but visually absent; the station cannot rise in.
         await setAboutProgress(page, 0.84);
         const approach = await page.evaluate(() => {
-          const root = document.querySelector<HTMLElement>(".vwh");
+          const root = document.querySelector<HTMLElement>(".vwd");
           if (!root) throw new Error("Missing .vwh root");
           const opacity = (selector: string) => {
             const el = root.querySelector<HTMLElement>(selector);
@@ -386,10 +386,14 @@ test.describe("About -> Voidwalker card-to-hologram handoff", () => {
             rootTop: root.getBoundingClientRect().top,
             slotOpacity: opacity(".vwh__slot"),
             actorOpacities: [
-              opacity(".vwh__mast__kicker"),
+              opacity(".vwd__mast__kicker"),
               opacity("[data-vwh-handoff-target='dossier']"),
               opacity(".vwh__base"),
-              opacity(".vwh__pip"),
+              /* The era stop. It was a pip on the HUD rail until the datum
+                 rails moved the selector to a chip band at the foot
+                 (ADR-082 U19); it is still the LAST actor on the entry
+                 stagger, which is what this assertion is about. */
+              opacity(".vwd__chip"),
             ],
           };
         });
@@ -484,12 +488,12 @@ test.describe("About -> Voidwalker card-to-hologram handoff", () => {
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.setViewportSize({ width: 1024, height: 800 });
     await page.goto("/", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector(".vwh");
+    await page.waitForSelector(".vwd");
     await page.waitForTimeout(1_900);
     const tablet = await page.evaluate(() => {
       const about = document.querySelector<HTMLElement>("#about");
       const voidwalker = document.querySelector<HTMLElement>("#voidwalker");
-      const root = document.querySelector<HTMLElement>(".vwh");
+      const root = document.querySelector<HTMLElement>(".vwd");
       if (!about || !voidwalker || !root) throw new Error("Missing tablet fallback surface");
       const aboutBottom = about.getBoundingClientRect().bottom + window.scrollY;
       const voidwalkerTop = voidwalker.getBoundingClientRect().top + window.scrollY;
@@ -514,12 +518,12 @@ test.describe("About -> Voidwalker card-to-hologram handoff", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width: 1440, height: 800 });
     await page.reload({ waitUntil: "domcontentloaded" });
-    await page.waitForSelector(".vwh");
+    await page.waitForSelector(".vwd");
     await page.waitForTimeout(1_900);
     const reduced = await page.evaluate(() => {
       const about = document.querySelector<HTMLElement>("#about");
       const voidwalker = document.querySelector<HTMLElement>("#voidwalker");
-      const root = document.querySelector<HTMLElement>(".vwh");
+      const root = document.querySelector<HTMLElement>(".vwd");
       const media = document.querySelector<HTMLElement>(".vwh__media");
       if (!about || !voidwalker || !root || !media) {
         throw new Error("Missing reduced-motion fallback surface");

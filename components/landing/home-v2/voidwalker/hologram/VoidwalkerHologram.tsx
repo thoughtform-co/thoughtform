@@ -17,11 +17,9 @@ import {
   voidwalkerEraScrubRef,
   voidwalkerProgressForEra,
 } from "@/lib/voidwalker/voidwalkerHologramClock";
-import { VOIDWALKER_DATUM_STAGE } from "../../unifiedServicesInstrument";
 import { useVoidwalkerHologramScroll } from "../../hooks/useVoidwalkerHologramScroll";
 
-import { HoloDatumPanels } from "./HoloDatumPanels";
-import { HoloEraPanels, eraPositionLabel } from "./HoloEraPanels";
+import { HoloDatumPanels, eraPositionLabel } from "./HoloDatumPanels";
 import { HoloFigure } from "./HoloFigure";
 
 /**
@@ -289,12 +287,11 @@ export function VoidwalkerHologram() {
     });
   };
 
-  /* ⚠ ONE FIGURE NODE, TWO HOUSES. The datum composition seats it INSIDE its
-     stage grid while the ADR-082 layout seats it beside the panels, so the
-     column is built once here and placed by whichever composition renders.
-     `HoloFigure` carries the `portrait` handoff target, so it must not be
-     duplicated per branch — two of them would publish two rects and the
-     receiver would measure whichever mounted last. */
+  /* ⚠ THE FIGURE IS A NODE THE COMPOSITION SEATS, not a sibling of it. The
+     datum stage puts it INSIDE its grid (column 2, spanning the content
+     rows) rather than beside the panels, and `HoloFigure` carries the
+     `portrait` handoff target — so it is built once here, where the
+     materialize epoch lives, and handed down. */
   const figureColumn = (
     <div className="vwh__column" data-vwh-region="figure">
       <HoloFigure
@@ -318,44 +315,20 @@ export function VoidwalkerHologram() {
     </div>
   );
 
-  if (VOIDWALKER_DATUM_STAGE) {
-    return (
-      <div
-        className="vwd"
-        data-vwh-era={era.id}
-        data-vwh-region="character-sheet"
-        data-testid="voidwalker-character-sheet"
-        ref={rootRef}
-      >
-        <HoloDatumPanels
-          selectedEraIndex={eraIdx}
-          onSelectEra={pick}
-          identityRefs={{ kicker: kickerRef, title: titleRef, year: yearRef }}
-          figure={figureColumn}
-        />
-      </div>
-    );
-  }
-
   return (
     <div
-      className="vwh"
+      className="vwd"
       data-vwh-era={era.id}
       data-vwh-region="character-sheet"
       data-testid="voidwalker-character-sheet"
       ref={rootRef}
     >
-      <HoloEraPanels
+      <HoloDatumPanels
         selectedEraIndex={eraIdx}
         onSelectEra={pick}
-        identityRefs={{
-          kicker: kickerRef,
-          title: titleRef,
-          year: yearRef,
-        }}
+        identityRefs={{ kicker: kickerRef, title: titleRef, year: yearRef }}
+        figure={figureColumn}
       />
-
-      {figureColumn}
     </div>
   );
 }

@@ -258,7 +258,7 @@ span.about-stage__decode-line {
    before the changed aspect can read as settled typography". It does not —
    a 44px one-line name squeezed into a 30px two-line box reads as smushed
    type for the whole flight, which is exactly what the owner saw.
-   The destination now carries this name's OWN clamp (see `.vwh__mast__title`),
+   The destination now carries this name's OWN clamp (see `.vwd__mast__title`),
    so both ends are the same size and only the position is left to animate.
    Landing is top-left aligned, which puts the first lines on each other. */
 #about[data-about-mode="stage"][data-about-handoff="voidwalker"] .about-stage__name-actor {

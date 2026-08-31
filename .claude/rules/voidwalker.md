@@ -25,29 +25,48 @@ Tensor-gold figure, era masthead, record/scope panels and five-stop era rail.
 "Voidwalker" remains the station title; `.voidwalker*` is still reserved for
 the About bio, while this surface uses `.vw*` / `.vwh*`.
 
-## The datum-rails composition (`VOIDWALKER_DATUM_STAGE`, live 2026-08-31)
+## The datum-rails composition (ADR-082 U19, live 2026-08-31)
 
-⚠ **THE STATION'S INTERIOR IS THE D2 "DATUM RAILS" COMPOSITION NOW**
+⚠ **THE STATION'S INTERIOR IS THE D2 "DATUM RAILS" COMPOSITION**
 (`HoloDatumPanels` + `voidwalker-datum.css`, `.vwd*`), promoted out of
-`/test/voidwalker-datum-lab` after two mockup waves. The flag is a
-**COMPARISON LEVER, NOT A SEAM** (ADR-070 U35): when the owner has read both
-live, the losing composition and its guards GO.
+`/test/voidwalker-datum-lab` after two mockup waves.
 
-- **What the boolean switches, and all it switches:** the panels, the rails,
-  and where the era selector sits. The FIGURE, its masked floor, the station
-  shell, the scroll clock, the entry/exit choreography and the About handoff
-  contract are shared by both branches.
+⚠ **`VOIDWALKER_DATUM_STAGE` IS DELETED, NOT FLIPPED, AND SO IS WHAT IT
+GATED.** It was a comparison lever and it did its job: the owner read both
+compositions live and kept the rails, so `HoloEraPanels`, the `.vwh*`
+composition rules and their guards went WITH the boolean (ADR-070 U35 — a
+flag standing at `false` implies the losing drawing is one boolean from
+returning, and it is not). What went, in one list, so nothing gets restored
+from muscle memory: the mast/side/panel/rail/pip/facts/press/film/tabpanel
+and mobile-mode rules (~1100 lines of `voidwalker-hologram.css`), the
+composition's own entry/exit block, its responsive rungs, and
+`tests/visual/voidwalker-character-sheet.spec.ts`.
+
+- **`voidwalker-hologram.css` IS THE FIGURE'S SHEET NOW** — the slot's
+  isolation and masked floor, the alpha branch, the projector base, the phase
+  animations, the decode lines, and the four tokens those read. ⚠ **`.vwh`
+  declares NO LAYOUT**: it is the token host, and the element that gives the
+  figure its box differs per home (`.vwd__vwh` on the landing,
+  `.hll__figure` in the figure lab). Both must make **both axes definite** —
+  the slot and the media size by percentage and resolve to nothing against an
+  auto track.
+- **`/test/voidwalker-holo-lab` is the FIGURE lab now.** Its knobs were
+  always `HoloFigure` props (form, media, blend, alpha, scan pitch, glow);
+  the panels it mounted were incidental and went with the composition. It is
+  the only place those treatment knobs exist, which is why it was retuned
+  rather than deleted.
 - ⚠ **THE ERAS MOVED OUT OF THE HUD GUTTER TO A BAND AT THE FOOT.** ADR-082
   U9 put the scrubber on the left rail precisely so it cost no column; this
   spends a band on it instead, by owner ruling, because the selector must read
   as character-select on BOTH breakpoints. The gutter is left EMPTY rather
   than refilled — do not put something else there to "use" it.
 - ⚠ **THE PIN BELONGS TO THE STATION, NOT TO A COMPOSITION.**
-  `voidwalker.css`'s sticky rule names BOTH roots
-  (`.vw--hologram > .vwh, .vw--hologram > .vwd`). Named for one, the other
-  silently loses its sticky and translates through the whole 260svh runway —
-  which is the exact "the section slides over the one before it" defect that
-  rule exists to fix, and it fails with no error.
+  `voidwalker.css`'s sticky rule is written against the station's own child.
+  It named `.vwh` while that was the only interior, and when the datum root
+  arrived alongside it the new root silently lost its sticky and translated
+  through the whole 260svh runway — the exact "the section slides over the
+  one before it" defect that rule exists to fix, failing with no error and no
+  red guard. Whatever ships inside, it pins.
 - ⚠ **THE THREE HANDOFF TARGETS ARE THE ATOMIC GATE.** `portrait` (the slot,
   inside the figure node), `dossier` (the top-left seat — SCOPE) and
   `era-title` (the mast heading) must all measure or the receiver never
