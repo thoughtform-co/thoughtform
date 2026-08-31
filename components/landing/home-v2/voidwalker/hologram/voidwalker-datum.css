@@ -67,7 +67,20 @@
   display: flex;
   flex-direction: column;
   height: 100svh;
-  background: var(--void, #0a0908);
+  /* ⚠ NO BACKGROUND. THE CAPABLE STATION IS TRANSPARENT, NOT A COVER PLANE —
+     the corridor's ambient survives through `#about` and this stage and dies
+     at `#practice` (ADR-082 U2), and the station additionally OVERLAPS
+     `#about` by -120svh for the handoff seam. An opaque root here is
+     therefore not a background at all: it is a black pane that slides over
+     the About section as the reader crosses the seam, which is exactly what
+     the owner reported on the deploy.
+
+     It arrived from the lab, where `.vwd` IS the page root and needs a
+     ground. ⚠ That is the cost of promoting a composition out of a lab
+     wholesale: a rule that was correct about the LAB's root silently becomes
+     a claim about the STATION. The deleted `.vwh` declared no background at
+     all — the one place to check was what the composition being replaced did
+     NOT say. The lab paints its own ground on `.dlab` instead. */
   color: rgb(var(--vwd-dawn-rgb));
 }
 

@@ -12,6 +12,15 @@
    way on a phone.
    ══════════════════════════════════════════════════════════════════════ */
 
+/* ⚠ THE GROUND IS THE LAB'S, NOT THE COMPOSITION'S. On the landing the
+   station is transparent so the corridor ambient reads through it (and it
+   overlaps `#about`, so an opaque root there is a black pane sliding over the
+   previous section). Here `.vwd` IS the page root and has nothing behind it,
+   so the lab paints the void it would otherwise sit on. */
+.dlab {
+  background: var(--void, #0a0908);
+}
+
 .dlab__bar {
   position: sticky;
   top: 0;
