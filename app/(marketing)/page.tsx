@@ -22,6 +22,11 @@ import "@/components/landing/home-v2/voidwalker/voidwalker-travel.css";
 // composes with the same tokens the timeline uses, and BEFORE theme.css
 // like every other route sheet.
 import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css";
+// The D2 "datum rails" composition behind `VOIDWALKER_DATUM_STAGE` — AFTER
+// the hologram sheet, because it re-houses the same figure (`.vwh__slot`
+// and its masked floor stay that sheet's) inside a different grid and its
+// `.vwd__vwh` overrides have to win.
+import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css";
 // Theme sheet LAST (ADR-058): its `html[data-theme="light"]` cascade has
 // to win over every route sheet above. Imported per-route, never from
 // globals.css, so admin / astrogation / /test/* stay dark unconditionally.

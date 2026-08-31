@@ -13,11 +13,18 @@ import { DatumLabShell } from "./DatumLabShell";
    `voidwalker-hologram.css` is imported for the FIGURE ALONE: `.vwh__slot`,
    `.vwh__media-wrap` and `.vwh__base` carry the isolation + masked-floor
    block that took three attempts to get right (ADR-082 U6), and re-authoring
-   it here would fork it. Everything `.vdl*` is this lab's own layout. */
+   it here would fork it.
+
+   ⚠ THE COMPOSITION SHEET IS PRODUCTION'S. `voidwalker-datum.css` and
+   `HoloDatumPanels` are what the landing renders behind
+   `VOIDWALKER_DATUM_STAGE`; this route only adds a knob bar around them, so
+   anything retuned here lands on the home page without a translation and
+   there is no second drawing to keep in sync. */
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
 import "@/components/landing/home-v2/voidwalker/voidwalker.css";
 import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css";
+import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css";
 import "@/components/landing/v7/theme.css";
 import "./voidwalker-datum-lab.css";
 

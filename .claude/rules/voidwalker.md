@@ -25,6 +25,57 @@ Tensor-gold figure, era masthead, record/scope panels and five-stop era rail.
 "Voidwalker" remains the station title; `.voidwalker*` is still reserved for
 the About bio, while this surface uses `.vw*` / `.vwh*`.
 
+## The datum-rails composition (`VOIDWALKER_DATUM_STAGE`, live 2026-08-31)
+
+⚠ **THE STATION'S INTERIOR IS THE D2 "DATUM RAILS" COMPOSITION NOW**
+(`HoloDatumPanels` + `voidwalker-datum.css`, `.vwd*`), promoted out of
+`/test/voidwalker-datum-lab` after two mockup waves. The flag is a
+**COMPARISON LEVER, NOT A SEAM** (ADR-070 U35): when the owner has read both
+live, the losing composition and its guards GO.
+
+- **What the boolean switches, and all it switches:** the panels, the rails,
+  and where the era selector sits. The FIGURE, its masked floor, the station
+  shell, the scroll clock, the entry/exit choreography and the About handoff
+  contract are shared by both branches.
+- ⚠ **THE ERAS MOVED OUT OF THE HUD GUTTER TO A BAND AT THE FOOT.** ADR-082
+  U9 put the scrubber on the left rail precisely so it cost no column; this
+  spends a band on it instead, by owner ruling, because the selector must read
+  as character-select on BOTH breakpoints. The gutter is left EMPTY rather
+  than refilled — do not put something else there to "use" it.
+- ⚠ **THE PIN BELONGS TO THE STATION, NOT TO A COMPOSITION.**
+  `voidwalker.css`'s sticky rule names BOTH roots
+  (`.vw--hologram > .vwh, .vw--hologram > .vwd`). Named for one, the other
+  silently loses its sticky and translates through the whole 260svh runway —
+  which is the exact "the section slides over the one before it" defect that
+  rule exists to fix, and it fails with no error.
+- ⚠ **THE THREE HANDOFF TARGETS ARE THE ATOMIC GATE.** `portrait` (the slot,
+  inside the figure node), `dossier` (the top-left seat — SCOPE) and
+  `era-title` (the mast heading) must all measure or the receiver never
+  publishes `data-vw-handoff="ready"` and the `-120svh` overlap silently
+  disarms. ⚠ **ONE FIGURE NODE, BUILT ONCE** in `VoidwalkerHologram` and
+  handed to whichever composition renders: two would publish two `portrait`
+  rects and the receiver would measure whichever mounted last.
+  Verified live: `handoff: "ready"`, all three targets found, `pinned: 0`.
+- ⚠ **THE RAILS STOP AT THE HUD FRAME**, not the viewport edge. The lab has no
+  frame, so full-bleed looked right there and ran straight THROUGH the HUD
+  rails and their tick ladder on the landing — two line systems crossing.
+  `margin-inline: calc(var(--hud-margin) - var(--vwd-pad-x))`.
+- **The lab is a WINDOW, not a copy.** `/test/voidwalker-datum-lab` mounts
+  `HoloDatumPanels` and imports `voidwalker-datum.css`; its own sheet is
+  `.dlab*` knob chrome only. `--vwd-bar-h` is the one value that differs
+  (0 in production, the bar's height in the lab).
+- **Verifying:** `node scripts/capture-voidwalker-station.mjs` — HEADED, real
+  scrolls, walks the runway and prints the layout, mode, handoff state, pin
+  offset and scroll-derived era at each stop. ⚠ Headless is wrong twice over:
+  the corridor is WebGL, and Chromium has no H.264 so the MP4 fallback paints
+  nothing.
+- ⚠ **STILL OPEN: the datum branch has NO entry/exit choreography.** The
+  `--vwh-in` / `--vwh-exit` motion block is scoped to `.vwh[data-vwh-ready]`
+  and does not reach `.vwd`, so the composition arrives at rest and leaves
+  with the sticky release. Nothing is broken (every element's rest state is
+  its visible state) but the ADR-082 entrance stutter and the horizontal exit
+  are absent on this branch.
+
 ## Current hologram contracts (2026-08-27)
 
 Read ADR-083 before changing the proposed `<=700px` identity → figure → era

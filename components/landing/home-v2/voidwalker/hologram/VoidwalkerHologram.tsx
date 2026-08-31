@@ -17,8 +17,10 @@ import {
   voidwalkerEraScrubRef,
   voidwalkerProgressForEra,
 } from "@/lib/voidwalker/voidwalkerHologramClock";
+import { VOIDWALKER_DATUM_STAGE } from "../../unifiedServicesInstrument";
 import { useVoidwalkerHologramScroll } from "../../hooks/useVoidwalkerHologramScroll";
 
+import { HoloDatumPanels } from "./HoloDatumPanels";
 import { HoloEraPanels, eraPositionLabel } from "./HoloEraPanels";
 import { HoloFigure } from "./HoloFigure";
 
@@ -287,6 +289,54 @@ export function VoidwalkerHologram() {
     });
   };
 
+  /* ⚠ ONE FIGURE NODE, TWO HOUSES. The datum composition seats it INSIDE its
+     stage grid while the ADR-082 layout seats it beside the panels, so the
+     column is built once here and placed by whichever composition renders.
+     `HoloFigure` carries the `portrait` handoff target, so it must not be
+     duplicated per branch — two of them would publish two rects and the
+     receiver would measure whichever mounted last. */
+  const figureColumn = (
+    <div className="vwh__column" data-vwh-region="figure">
+      <HoloFigure
+        hologram={hologram}
+        epoch={epoch}
+        form="emissive"
+        blend="plus-lighter"
+        alpha={0.92}
+        scanPitch={3}
+        glow={1}
+        reduced={reduced}
+        initialMaterialization="scroll"
+      />
+
+      {/* Placeholder for the brandmark descent — see file header. */}
+      <div className="vwh__base" data-vwh-region="platform" aria-hidden="true">
+        <span className="vwh__base__disc" />
+        <span className="vwh__base__ring" />
+        <span className="vwh__base__glow" />
+      </div>
+    </div>
+  );
+
+  if (VOIDWALKER_DATUM_STAGE) {
+    return (
+      <div
+        className="vwd"
+        data-vwh-era={era.id}
+        data-vwh-region="character-sheet"
+        data-testid="voidwalker-character-sheet"
+        ref={rootRef}
+      >
+        <HoloDatumPanels
+          selectedEraIndex={eraIdx}
+          onSelectEra={pick}
+          identityRefs={{ kicker: kickerRef, title: titleRef, year: yearRef }}
+          figure={figureColumn}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="vwh"
@@ -305,26 +355,7 @@ export function VoidwalkerHologram() {
         }}
       />
 
-      <div className="vwh__column" data-vwh-region="figure">
-        <HoloFigure
-          hologram={hologram}
-          epoch={epoch}
-          form="emissive"
-          blend="plus-lighter"
-          alpha={0.92}
-          scanPitch={3}
-          glow={1}
-          reduced={reduced}
-          initialMaterialization="scroll"
-        />
-
-        {/* Placeholder for the brandmark descent — see file header. */}
-        <div className="vwh__base" data-vwh-region="platform" aria-hidden="true">
-          <span className="vwh__base__disc" />
-          <span className="vwh__base__ring" />
-          <span className="vwh__base__glow" />
-        </div>
-      </div>
+      {figureColumn}
     </div>
   );
 }

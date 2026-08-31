@@ -1,0 +1,913 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   VOIDWALKER DATUM — the D2 "datum rails" era stage, production sheet.
+   ═══════════════════════════════════════════════════════════════════════
+
+   The wave-2 composition the owner picked (2026-08-31), promoted out of
+   `/test/voidwalker-datum-lab` behind `VOIDWALKER_DATUM_STAGE`. The lab
+   imports THIS sheet and mounts THIS component, so there is one composition
+   with two homes and nothing to keep in sync (ADR-070 U35's law: the lab is
+   a window onto production, never a copy).
+
+   `voidwalker-hologram.css` still owns the FIGURE — `.vwh__slot`, its masked
+   floor, `.vwh__base` — and is imported alongside. This sheet is only the
+   composition around it.
+
+   ⚠ NOTHING CONNECTS TO THE FIGURE. The panels are tied to it, and to each
+   other, by two full-width construction rails and a ground datum — never by
+   a leader line landing on the body, which claims a relationship the record
+   does not have (owner's ruling on wave 1's A4).
+
+   ⚠ THE ERAS LIVE AT THE FOOT, NOT ON THE HUD RAIL. ADR-082 U9 put the
+   scrubber in the left gutter so it cost no column; this composition spends
+   a band on it instead, deliberately, because the owner's ruling is that the
+   era selector reads as character-select on BOTH breakpoints. The gutter is
+   left empty rather than filled with something else.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.vwd {
+  --vwd-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --vwd-display: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+  --vwd-gold-rgb: var(--gold-rgb, 202, 165, 84);
+  --vwd-dawn-rgb: var(--dawn-rgb, 235, 227, 214);
+
+  /* The chip is the one dial the owner asked for ("the avatar row should be
+     smaller"). Everything in the band derives from it, so one number moves
+     the whole band rather than one box inside it — which is also what lets
+     the lab's slider retune the composition without touching a rule. */
+  --vwd-chip: 64px;
+  --vwd-band-h: calc(var(--vwd-chip) + 52px);
+  --vwd-rail: 0.12;
+  /* How much of the 720×1280 frame a chip shows, and where the head anchor
+     sits inside it. See `.vwd__chip__bust`. */
+  --vwd-bust-span: 0.34;
+  --vwd-bust-lead: 0.1;
+
+  /* ⚠ THE FIGURE COLUMN IS WIDTH-DERIVED-FROM-HEIGHT, the production rule
+     (the asset is a 720×1280 portrait, so a width-derived column is always
+     height-limited). The subtrahend is the composition's own chrome — mast,
+     band and padding — so shrinking the band gives the figure the room back
+     instead of leaving a hole. `--vwd-bar-h` is 0 in production and the lab
+     sets it to its knob bar's height, which is the only difference between
+     the two homes. */
+  --vwd-bar-h: 0px;
+  --vwd-chrome-h: calc(var(--vwd-bar-h) + 104px + var(--vwd-band-h) + 44px);
+  --vwd-fig-w: clamp(230px, calc((100svh - var(--vwd-chrome-h)) * 0.5625), 460px);
+
+  /* ⚠ THE READING BAND IS THIS PADDING, NOT THE STATION'S — the same rule
+     `.vwh` states: the stage box spans the viewport so the rails can run
+     edge to edge, and reproducing the station's own inset here is what
+     leaves the columns where they were. */
+  --vwd-pad-x: max(clamp(20px, 4vw, 72px), var(--hud-content-inset, 161px));
+
+  /* ⚠ A BOUNDED HEIGHT, NOT A FLOOR. Every `flex: 1 1 auto` below needs
+     something to shrink against; with `min-height` alone the sheet grows to
+     its content and the era band is pushed off the bottom of the screen
+     (measured 897px in an 812px viewport). The station gives this box
+     100svh and the stage scrolls inside it, never the page. */
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  background: var(--void, #0a0908);
+  color: rgb(var(--vwd-dawn-rgb));
+}
+
+/* ═══ §B · THE SHEET ════════════════════════════════════════════════ */
+
+.vwd__sheet {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  padding: clamp(14px, 2.4svh, 26px) 0 0;
+  overflow: hidden;
+}
+
+/* ── The mast. Centred over the figure, its own row, at the production
+      title clamp — the About name flies into this on the real page and
+      translates without scaling, so no rung may step it down. */
+.vwd__mast {
+  padding: 0 var(--vwd-pad-x);
+  text-align: center;
+}
+.vwd__mast__kicker {
+  display: flex;
+  justify-content: center;
+  gap: clamp(24px, 6vw, 90px);
+  font-family: var(--vwd-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(var(--vwd-dawn-rgb), 0.45);
+}
+.vwd__mast__title {
+  margin: 6px 0 0;
+  font-family: var(--vwd-display);
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 400;
+  line-height: 1.1;
+  color: rgb(var(--vwd-dawn-rgb));
+}
+
+/* ── THE STAGE GRID ─────────────────────────────────────────────────
+   Four content rows and a ground row. The heads and bodies are SEPARATE
+   items so a head's bottom edge IS a row boundary — that is what lets the
+   rails sit exactly on every head's own rule instead of near it. The
+   figure spans every content row; the ground datum takes the last. */
+.vwd__stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--vwd-fig-w) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) 0;
+  column-gap: clamp(18px, 2.4vw, 52px);
+  min-height: 0;
+  padding: 0 var(--vwd-pad-x);
+}
+
+/* The rails. Edge to edge INCLUDING the stage's own padding — they are
+   construction lines, so they run the full plate rather than the reading
+   band; that is what makes them read as structure and not as a border. */
+/* ⚠ THE RAILS STOP AT THE HUD FRAME, NOT AT THE VIEWPORT EDGE. In the lab
+   there is no frame, so they ran to 0 and looked right; on the landing that
+   put them straight THROUGH the HUD rails and their tick ladder — two
+   different line systems crossing at a shallow angle, which reads as noise
+   rather than as construction. The frame is the outermost structure on this
+   surface and the composition sits inside it. They still bleed past the
+   reading band and behind the figure, which is what makes them read as
+   structure instead of a panel border. */
+.vwd__rail {
+  grid-column: 1 / -1;
+  align-self: end;
+  margin-inline: calc(var(--hud-margin, 45px) - var(--vwd-pad-x));
+  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
+  pointer-events: none;
+}
+.vwd__rail[data-rail="upper"] {
+  grid-row: 1;
+}
+.vwd__rail[data-rail="lower"] {
+  grid-row: 3;
+}
+
+.vwd__ground {
+  grid-column: 1 / -1;
+  grid-row: 5;
+  margin-inline: calc(var(--hud-margin, 45px) - var(--vwd-pad-x));
+  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), 0.2);
+  pointer-events: none;
+}
+
+/* ── Panel heads. The kicker sits ON the rail; its own segment is brighter
+      than the rail running behind it, so the head reads as the lit part of
+      a continuous line. */
+.vwd__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding-bottom: clamp(6px, 0.9svh, 10px);
+  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), 0.3);
+  font-family: var(--vwd-mono);
+  font-size: clamp(11px, 0.82vw, 13px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.vwd__head__kicker {
+  color: rgb(var(--vwd-dawn-rgb));
+}
+.vwd__head__tag {
+  font-size: 0.85em;
+  letter-spacing: 0.16em;
+  color: rgba(var(--vwd-dawn-rgb), 0.4);
+}
+
+.vwd__body {
+  min-width: 0;
+  padding-top: clamp(10px, 1.6svh, 18px);
+  padding-bottom: clamp(12px, 2svh, 24px);
+  overflow: hidden;
+}
+
+/* Panels are capped for readability and mirror toward the figure, so extra
+   column width becomes outer margin rather than a longer line (the
+   production rule — `justify-items` on the column, not a max-width alone). */
+.vwd__head[data-cell="ul"],
+.vwd__body[data-cell="ul"],
+.vwd__head[data-cell="ll"],
+.vwd__body[data-cell="ll"] {
+  grid-column: 1;
+  justify-self: end;
+  width: min(100%, 38ch);
+}
+.vwd__head[data-cell="ur"],
+.vwd__body[data-cell="ur"],
+.vwd__head[data-cell="lr"],
+.vwd__body[data-cell="lr"] {
+  grid-column: 3;
+  justify-self: start;
+  width: min(100%, 38ch);
+}
+.vwd__head[data-cell="ul"],
+.vwd__head[data-cell="ur"] {
+  grid-row: 1;
+}
+.vwd__body[data-cell="ul"],
+.vwd__body[data-cell="ur"] {
+  grid-row: 2;
+}
+.vwd__head[data-cell="ll"],
+.vwd__head[data-cell="lr"] {
+  grid-row: 3;
+}
+.vwd__body[data-cell="ll"],
+.vwd__body[data-cell="lr"] {
+  grid-row: 4;
+}
+
+/* ── SCOPE ─────────────────────────────────────────────────────────── */
+
+.vwd__motto {
+  margin: 0 0 clamp(8px, 1.2svh, 14px);
+  font-family: var(--vwd-mono);
+  font-size: clamp(11px, 0.8vw, 12.5px);
+  letter-spacing: 0.06em;
+  color: var(--gold-ink, #caa554);
+}
+.vwd__prose {
+  margin: 0;
+  font-family: var(--vwd-display);
+  font-size: var(--band-copy, clamp(14px, 1.05vw, 17px));
+  line-height: 1.5;
+  color: rgba(var(--vwd-dawn-rgb), 0.8);
+  text-wrap: pretty;
+}
+
+/* ── FACTS ─────────────────────────────────────────────────────────── */
+
+.vwd__facts {
+  display: grid;
+  gap: clamp(8px, 1.3svh, 14px);
+  margin: 0;
+}
+.vwd__facts__row {
+  display: grid;
+  gap: 2px;
+  padding-bottom: clamp(7px, 1.1svh, 12px);
+  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), 0.1);
+}
+.vwd__facts__row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.vwd__facts__k {
+  font-family: var(--vwd-mono);
+  font-size: clamp(9.5px, 0.68vw, 11px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--vwd-dawn-rgb), 0.5);
+}
+.vwd__facts__v {
+  margin: 0;
+  font-family: var(--vwd-display);
+  font-size: clamp(13px, 0.95vw, 16px);
+  line-height: 1.3;
+  color: rgb(var(--vwd-dawn-rgb));
+}
+
+/* ── TRANSMISSION ──────────────────────────────────────────────────── */
+
+.vwd__film {
+  appearance: none;
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.vwd__film__frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  max-height: clamp(96px, 15svh, 150px);
+  overflow: hidden;
+  border: 1px solid rgba(var(--vwd-dawn-rgb), 0.25);
+}
+.vwd__film__poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(0.4) contrast(1.05);
+}
+.vwd__film__play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  width: 0;
+  height: 0;
+  border-left: 13px solid rgb(var(--vwd-dawn-rgb));
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+.vwd__film__title {
+  font-family: var(--vwd-mono);
+  font-size: clamp(10px, 0.72vw, 11.5px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(var(--vwd-dawn-rgb), 0.75);
+}
+.vwd__film:hover .vwd__film__frame,
+.vwd__film:focus-visible .vwd__film__frame {
+  border-color: rgba(var(--vwd-gold-rgb), 0.6);
+}
+.vwd__film:hover .vwd__film__title,
+.vwd__film:focus-visible .vwd__film__title {
+  color: var(--gold-ink, #caa554);
+}
+
+.vwd__film-empty {
+  display: grid;
+  gap: 8px;
+}
+.vwd__film-empty__frame {
+  display: block;
+  aspect-ratio: 16 / 9;
+  max-height: clamp(96px, 15svh, 150px);
+  border: 1px dashed rgba(var(--vwd-dawn-rgb), 0.14);
+}
+.vwd__film-empty__note {
+  font-family: var(--vwd-mono);
+  font-size: clamp(10px, 0.72vw, 11.5px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--vwd-dawn-rgb), 0.35);
+}
+
+/* ── ON RECORD ─────────────────────────────────────────────────────── */
+
+.vwd__press-stack {
+  display: grid;
+  gap: clamp(10px, 1.6svh, 18px);
+}
+.vwd__press {
+  display: grid;
+  gap: 4px;
+  text-decoration: none;
+  color: inherit;
+}
+.vwd__press__meta {
+  display: flex;
+  gap: 10px;
+  font-family: var(--vwd-mono);
+  font-size: clamp(9.5px, 0.68vw, 11px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--vwd-dawn-rgb), 0.45);
+}
+.vwd__press__headline {
+  font-family: var(--vwd-display);
+  font-size: clamp(13px, 0.98vw, 16.5px);
+  line-height: 1.32;
+  color: rgba(var(--vwd-dawn-rgb), 0.95);
+  text-wrap: pretty;
+}
+a.vwd__press:hover .vwd__press__headline,
+a.vwd__press:focus-visible .vwd__press__headline {
+  color: var(--gold-ink, #caa554);
+}
+
+/* ── THE FIGURE ─────────────────────────────────────────────────────
+   `.vwh` is mounted for its token block and the slot rules only; the lab
+   flattens its grid so `.vwh__column` fills this cell (in a `display:
+   block` parent the column's own `grid-column`/`grid-row` are inert).
+   ⚠ The cell must have a DEFINITE height or `.vwh__media-wrap` falls back
+   to the asset's intrinsic 720×1280 and the figure hangs below the slot. */
+.vwd__figure {
+  grid-column: 2;
+  grid-row: 1 / 5;
+  min-height: 0;
+  padding-top: clamp(6px, 1svh, 14px);
+}
+.vwd__vwh {
+  display: block;
+  height: 100%;
+  padding: 0;
+  overflow: visible;
+}
+
+/* ═══ §C · THE ERA BAND ═════════════════════════════════════════════ */
+
+/* ⚠ THE CHIPS GROUP, THE BAND DOES NOT. The band's rule is a full-width
+   datum like the others, but `1fr` columns pushed the five chips to the far
+   edges of a 1920 screen where they stop reading as one control and start
+   reading as five things that happen to share a row. Content-width columns,
+   centred, with the air outside the group. */
+.vwd__band {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  align-items: start;
+  justify-items: center;
+  justify-content: center;
+  gap: clamp(18px, 3.4vw, 64px);
+  padding: clamp(10px, 1.4svh, 16px) var(--vwd-pad-x) clamp(14px, 2svh, 22px);
+  border-top: 1px solid rgba(var(--vwd-dawn-rgb), 0.2);
+}
+
+.vwd__chip {
+  appearance: none;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  /* ⚠ 44px MINIMUM HIT AREA whatever the chip slider says — the visual box
+     may shrink below it, the control may not. */
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.vwd__chip__frame {
+  position: relative;
+  display: block;
+  width: var(--vwd-chip);
+  height: var(--vwd-chip);
+  overflow: hidden;
+  border: 1px solid rgba(var(--vwd-dawn-rgb), 0.3);
+  background: rgba(var(--vwd-dawn-rgb), 0.03);
+  transition: border-color 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* ⚠ `object-fit: cover` CANNOT MAKE A PORTRAIT OUT OF THIS ASSET. A square
+   window over a 720×1280 frame shows `w/h` = 56 % of its height, and the
+   figure occupies ~88 % of the frame (headY→footY), so cover crops to head-
+   to-knees — a whole small person, not a bust. The image is scaled instead:
+   its rendered height is the chip divided by `--vwd-bust-span`, so exactly
+   that fraction of the frame fills the window, and the top offset is solved
+   from the era's OWN `--bust-head` anchor so every era's head lands on the
+   same line whatever its asset does. Both terms are knobs, because framing a
+   portrait is a judgement and the roster is not final. */
+.vwd__chip__bust {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  top: calc(
+    var(--vwd-bust-lead) * var(--vwd-chip) - var(--bust-head, 0.12) * var(--vwd-chip) /
+      var(--vwd-bust-span)
+  );
+  width: auto;
+  height: calc(var(--vwd-chip) / var(--vwd-bust-span));
+  max-width: none;
+  display: block;
+  /* ⚠ DIM WITH OPACITY, NOT BRIGHTNESS. These are emissive gold-on-black
+     stills; `brightness(.62)` on an image whose ground is already #0a0908
+     takes the whole chip to black and reads as a failed load (it did). */
+  opacity: 0.5;
+  filter: saturate(0.45);
+  transition:
+    opacity 120ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* The year letters INSIDE the frame's top-left corner — the mockup's own
+   move, and what keeps the chip one object instead of a picture with a
+   caption stack under it. */
+.vwd__chip__year {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-family: var(--vwd-mono);
+  font-size: clamp(8.5px, 0.62vw, 10px);
+  letter-spacing: 0.1em;
+  color: rgba(var(--vwd-dawn-rgb), 0.7);
+  text-shadow: 0 1px 2px rgba(10, 9, 8, 0.9);
+}
+.vwd__chip__name {
+  font-family: var(--vwd-mono);
+  font-size: clamp(8.5px, 0.62vw, 10px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--vwd-dawn-rgb), 0.45);
+}
+/* The active mark is a DIAMOND, never a dot — this system has no circles. */
+.vwd__chip__mark {
+  width: 5px;
+  height: 5px;
+  rotate: 45deg;
+  background: transparent;
+}
+
+.vwd__chip[data-on="true"] .vwd__chip__frame {
+  border-color: rgba(var(--vwd-gold-rgb), 0.75);
+}
+.vwd__chip[data-on="true"] .vwd__chip__bust {
+  opacity: 1;
+  filter: none;
+}
+.vwd__chip[data-on="true"] .vwd__chip__year,
+.vwd__chip[data-on="true"] .vwd__chip__name {
+  color: var(--gold-ink, #caa554);
+}
+.vwd__chip[data-on="true"] .vwd__chip__mark {
+  background: var(--gold, #caa554);
+}
+
+.vwd__chip:hover .vwd__chip__frame,
+.vwd__chip:focus-visible .vwd__chip__frame {
+  border-color: rgba(var(--vwd-dawn-rgb), 0.6);
+}
+.vwd__chip:hover .vwd__chip__bust,
+.vwd__chip:focus-visible .vwd__chip__bust {
+  opacity: 0.78;
+  filter: saturate(0.7);
+}
+.vwd__chip:focus-visible {
+  outline: 1px solid rgba(var(--vwd-gold-rgb), 0.8);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vwd__chip__frame,
+  .vwd__chip__bust {
+    transition: none;
+  }
+}
+
+/* ═══ §D · THE TAB ROW ══════════════════════════════════════════════
+   Desktop shows all four panels at once and has no use for a tab state, so
+   the row is absent there rather than hidden-but-reachable — a control that
+   changes nothing is worse than no control. */
+
+.vwd__tabs {
+  display: none;
+}
+
+/* ═══ §E · THE PHONE INSTRUMENT (<=700px) ═══════════════════════════
+   ⚠ THE FIGURE IS THE FIRST TAB AND THERE IS NO DOSSIER SEAT. The shipped
+   phone layout reserves a fixed seat under the figure, which spends the
+   screen twice — the figure gets what the seat leaves and the reading gets
+   a box inside what is left. Here ONE area serves both: the hologram owns
+   it on its own tab, the record owns it on the others, and each gets the
+   whole thing.
+
+   ⚠ EVERY NODE STAYS MOUNTED (ADR-083). Visibility is a stylesheet
+   decision so nothing has to remount and no measurement moves. */
+@media (max-width: 700px) {
+  .vwd {
+    --vwd-pad-x: clamp(16px, 5vw, 24px);
+    --vwd-chip: clamp(44px, 13vw, 56px);
+    /* ⚠ A BOUNDED HEIGHT, NOT JUST A FLOOR. With `min-height` alone the
+       root grows to its content, so every `flex: 1 1 auto` below it had
+       nothing to shrink against: the figure sized to its own aspect, the
+       sheet grew to 897px in an 812px viewport and pushed the era band off
+       the bottom of the screen. The phone instrument is ONE screen — the
+       stage scrolls inside it, the page does not. */
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  .vwd__sheet {
+    display: flex;
+    flex-direction: column;
+    padding-top: clamp(12px, 2svh, 20px);
+  }
+
+  /* The mast keeps the production title clamp — the About name flies into
+     it and translates without scaling, so no rung may step it down. */
+  .vwd__mast {
+    text-align: left;
+    padding-bottom: clamp(10px, 1.8svh, 16px);
+  }
+  .vwd__mast__kicker {
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .vwd__mast__title {
+    text-wrap: balance;
+  }
+
+  /* ⚠ THE MARK TAKES ITS OWN WIDTH, THE WORDS SHARE THE REST. Four equal
+     cells is what made this row rhyme with the era band below it; a narrow
+     glyph cell followed by three equal labels reads as one thing set apart
+     from a group of three, which is what it is. */
+  .vwd__tabs {
+    display: grid;
+    grid-template-columns: auto repeat(3, minmax(0, 1fr));
+    flex: 0 0 auto;
+    border-top: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
+    border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
+  }
+  .vwd__tab--figure {
+    display: grid;
+    place-items: center;
+    /* 44px of target around a 14px mark. */
+    width: 52px;
+  }
+  .vwd__tab__glyph {
+    display: block;
+    /* ⚠ The grid is authored in whole cells; anything but an integer scale
+       puts a 1-unit rect on a half pixel and the mark goes soft. */
+    shape-rendering: crispEdges;
+  }
+  .vwd__tab__sk {
+    fill: rgba(var(--vwd-dawn-rgb), 0.55);
+  }
+  .vwd__tab__sig {
+    fill: rgba(var(--vwd-dawn-rgb), 0.3);
+  }
+  /* Lit, the disc takes the gold — the same role it carries on the stage
+     itself, so the mark and the drawing agree about what the signal is. */
+  .vwd__tab--figure[data-on="true"] .vwd__tab__sk {
+    fill: rgb(var(--vwd-dawn-rgb));
+  }
+  .vwd__tab--figure[data-on="true"] .vwd__tab__sig {
+    fill: var(--gold, #caa554);
+  }
+  .vwd__tab {
+    appearance: none;
+    /* ⚠ 44px MINIMUM, and the row is the only navigation on the phone. */
+    min-height: 44px;
+    padding: 6px 2px;
+    background: transparent;
+    border: 0;
+    /* A hairline TICK between stops, never a box around each: the row is one
+       object being switched, not four buttons in a strip. */
+    border-right: 1px solid rgba(var(--vwd-dawn-rgb), 0.1);
+    cursor: pointer;
+    font-family: var(--vwd-mono);
+    /* ⚠ SIZED AGAINST `TRANSMISSION` IN A QUARTER OF 375px. Twelve mono
+       characters in ~90px is the binding case for the whole row; at
+       0.14em tracking it overran its column and printed off the screen
+       edge. The tracking pays for it, not the size — the labels are the
+       only navigation on this surface. */
+    font-size: clamp(8.5px, 2.4vw, 10px);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(var(--vwd-dawn-rgb), 0.45);
+  }
+  .vwd__tab:last-child {
+    border-right: 0;
+  }
+  .vwd__tab[data-on="true"] {
+    color: rgb(var(--vwd-dawn-rgb));
+    /* The lit segment is a gold underline INSIDE the row's own bottom rule —
+       the desktop's "the head sits on the rail" move, one scale down. */
+    box-shadow: inset 0 -2px 0 0 var(--gold, #caa554);
+  }
+  .vwd__tab:disabled {
+    color: rgba(var(--vwd-dawn-rgb), 0.22);
+    cursor: default;
+  }
+  .vwd__tab__note {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.82em;
+    letter-spacing: 0.1em;
+    color: rgba(var(--vwd-dawn-rgb), 0.18);
+  }
+
+  /* ── THE ONE AREA ────────────────────────────────────────────────
+     Flat flow instead of the desktop's row grid: with one panel visible at
+     a time there is nothing to align across columns, so the rails have no
+     work to do and are removed rather than left as decoration. */
+  .vwd__stage {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    /* Inner scroll releases to the page at its bounds (ADR-083). */
+    overscroll-behavior-y: auto;
+    padding-top: clamp(12px, 2svh, 18px);
+  }
+  .vwd__rail,
+  .vwd__ground {
+    display: none;
+  }
+
+  .vwd__head,
+  .vwd__body {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: stretch;
+    width: 100%;
+  }
+  .vwd__body {
+    padding-bottom: clamp(16px, 3svh, 28px);
+  }
+  .vwd__head + .vwd__body {
+    padding-top: clamp(10px, 1.8svh, 16px);
+  }
+
+  /* Which cells the active tab owns. RECORD is two panels because facts and
+     the press that reported them are one reading. */
+  .vwd__head,
+  .vwd__body,
+  .vwd__figure {
+    display: none;
+  }
+  /* ⚠ THE FIGURE IS SIZED BY FLEX AND GRID, NEVER BY `height: 100%`. The
+     percentage did not resolve against the stage — a block scroll container
+     that is itself a flex item — so the figure fell back to its own floor
+     and sat in the top 374px of a 519px area with the rest dead below it.
+     `flex: 1` claims the space and a single definite grid row hands it down,
+     which is the same move the production sheet makes for `.vwh__media-wrap`
+     and for the same reason. */
+  .vwd__sheet[data-vwd-tab="figure"] .vwd__figure {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .vwd__sheet[data-vwd-tab="record"] [data-cell="ur"],
+  .vwd__sheet[data-vwd-tab="record"] [data-cell="lr"],
+  .vwd__sheet[data-vwd-tab="scope"] [data-cell="ul"],
+  .vwd__sheet[data-vwd-tab="transmission"] [data-cell="ll"] {
+    display: block;
+  }
+  .vwd__sheet[data-vwd-tab="record"] .vwd__head,
+  .vwd__sheet[data-vwd-tab="scope"] .vwd__head,
+  .vwd__sheet[data-vwd-tab="transmission"] .vwd__head {
+    display: flex;
+  }
+  .vwd__sheet[data-vwd-tab="record"] .vwd__head:not([data-cell="ur"]):not([data-cell="lr"]),
+  .vwd__sheet[data-vwd-tab="scope"] .vwd__head:not([data-cell="ul"]),
+  .vwd__sheet[data-vwd-tab="transmission"] .vwd__head:not([data-cell="ll"]) {
+    display: none;
+  }
+
+  /* The figure fills the area it now has to itself. Width-bound here (the
+     desktop derives it from height because it shares the row with four
+     panels; on the phone it shares with nothing). */
+  .vwd__figure {
+    padding-top: 0;
+  }
+  /* ⚠ AND THE HEIGHT HAS TO BE HANDED DOWN THE WHOLE CHAIN. Stretching the
+     wrapper into the row above gives it a used height of 496px while its
+     COMPUTED height stays `auto`, so `.vwh__column`'s `height: 100%` had
+     nothing to resolve against and content-sized to 341 — the same defect
+     one level lower. One more definite row fixes it by stretching the
+     column instead of asking it to compute a percentage.
+     ⚠ `.vwh__column` ships `grid-row: 2 / grid-column: 2` for the
+     production three-column grid; inert while this wrapper was `display:
+     block`, it would now place the column in an implicit second row. It is
+     pinned to the single cell explicitly. */
+  /* ⚠ BOTH AXES DEFINITE, NOT JUST THE ROW. With only the row declared the
+     single column is implicit and content-sized, so `.vwh__slot`'s
+     `width: min(100%, 620px)` had nothing to resolve against and computed
+     to ZERO — the figure rendered as a 1px gold sliver while every height
+     in the chain measured correctly. Same lesson as the production sheet's
+     note on `.vwh__media-wrap`, one axis over. */
+  .vwd__vwh {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: 260px;
+  }
+  .vwd__vwh .vwh__column {
+    grid-area: 1 / 1;
+    height: auto;
+    min-height: 0;
+  }
+
+  .vwd__film__frame,
+  .vwd__film-empty__frame {
+    max-height: none;
+  }
+
+  /* ── THE ERA STRIP holds the foot in every tab state. */
+  .vwd__band {
+    flex: 0 0 auto;
+    gap: clamp(6px, 2vw, 14px);
+    padding-inline: clamp(8px, 3vw, 16px);
+  }
+  .vwd__chip {
+    gap: 5px;
+  }
+  .vwd__chip__name {
+    font-size: clamp(7.5px, 2.1vw, 9px);
+    letter-spacing: 0.08em;
+  }
+  .vwd__chip__year {
+    font-size: clamp(7.5px, 2.1vw, 9px);
+  }
+}
+
+/* ═══ §F · THE MIDDLE BAND (701–1100px) ═════════════════════════════
+   Production's own rung: everything visible in normal flow, no tabs. The
+   datum rails are a THREE-COLUMN idea — with the figure stacked above the
+   panels there is no shared row for them to align, so they go rather than
+   being drawn where they no longer mean anything. */
+@media (min-width: 701px) and (max-width: 1100px) {
+  /* ⚠ THE ROOT UNBOUNDS WITH THE SHEET. This rung is normal flow — the
+     station is not in hologram mode below 1101px, so there is no pin and no
+     runway — and a root still fixed at 100svh would clip the stacked
+     composition rather than let the page carry it. */
+  .vwd {
+    height: auto;
+    min-height: 100svh;
+  }
+  .vwd__sheet {
+    height: auto;
+    overflow: visible;
+  }
+  .vwd__stage {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+    row-gap: clamp(18px, 3svh, 32px);
+  }
+  .vwd__rail,
+  .vwd__ground {
+    display: none;
+  }
+  /* ⚠ EVERY CELL IS PLACED EXPLICITLY, and matching the desktop's
+     specificity is what makes that possible. The desktop pins each cell
+     with `.vwd__head[data-cell="ul"] { grid-row: 1 }` — (0,2,0) — so a
+     reset written as `.vwd__head, .vwd__body` (0,1,0) loses even from
+     inside this media query: all four panels stayed in rows 1–4 and the
+     figure auto-placed into an implicit fifth row beneath them, with
+     `order: -1` computing correctly and reaching nothing (order only
+     governs AUTO-placed items).
+     ⚠ And auto-placement alone was not the answer either — a sparse cursor
+     in two columns staggered the pairs, so SCOPE's body sat beside FACTS'
+     head. The desktop's own row pairing, shifted one row down for the
+     figure, keeps the two columns on a shared datum. */
+  /* ⚠ THE BOX MUST STRETCH ITS CHILD, not merely be tall. As a plain block
+     the figure box was 520px while `.vwd__vwh` inside it stayed `height:
+     auto` and content-sized, so the media resolved to its own aspect at 955
+     tall and printed 445px through the panels below. A definite grid on
+     BOTH axes stretches the wrapper into the box, which is what every other
+     rung on this surface needed too. */
+  .vwd__figure {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    justify-self: center;
+    width: min(100%, 380px);
+    height: clamp(360px, 52svh, 560px);
+  }
+  .vwd__head[data-cell="ul"],
+  .vwd__head[data-cell="ur"] {
+    grid-row: 2;
+  }
+  .vwd__body[data-cell="ul"],
+  .vwd__body[data-cell="ur"] {
+    grid-row: 3;
+  }
+  .vwd__head[data-cell="ll"],
+  .vwd__head[data-cell="lr"] {
+    grid-row: 4;
+  }
+  .vwd__body[data-cell="ll"],
+  .vwd__body[data-cell="lr"] {
+    grid-row: 5;
+  }
+  .vwd__head[data-cell="ul"],
+  .vwd__body[data-cell="ul"],
+  .vwd__head[data-cell="ll"],
+  .vwd__body[data-cell="ll"] {
+    grid-column: 1;
+    justify-self: stretch;
+    width: 100%;
+  }
+  .vwd__head[data-cell="ur"],
+  .vwd__body[data-cell="ur"],
+  .vwd__head[data-cell="lr"],
+  .vwd__body[data-cell="lr"] {
+    grid-column: 2;
+    justify-self: stretch;
+    width: 100%;
+  }
+  /* The same definite-grid hand-down the phone rung needs, and for the same
+     reason: the `height: 100%` chain from wrapper to column does not resolve
+     off a stacked figure box, so the media sized to its own aspect and
+     printed 116px THROUGH the SCOPE panel below it. Both axes declared. */
+  /* ⚠ `min-height: 0` IS THE WHOLE FIX, not the grid declaration. A grid
+     item's automatic minimum size is its MIN-CONTENT, and the content here
+     is a portrait media element whose min-content height is its own aspect —
+     so the wrapper refused to shrink into a definite 520px row and measured
+     1000px, overflowing by 480 with `display: grid` computing correctly the
+     whole time. Every box on the way down needs the escape, not just the
+     one that looks wrong. */
+  .vwd__vwh {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: 0;
+  }
+  .vwd__vwh .vwh__column {
+    grid-area: 1 / 1;
+    height: auto;
+    min-height: 0;
+  }
+}
