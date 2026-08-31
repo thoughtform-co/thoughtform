@@ -1,0 +1,562 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   VOIDWALKER DATUM LAB — the D2 "datum rails" era stage (never ships yet).
+   ═══════════════════════════════════════════════════════════════════════
+
+   Look-dev for the wave-2 direction the owner picked (2026-08-31). The
+   production sheet
+   (`components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css`)
+   is imported alongside this one and owns the FIGURE — `.vwh__slot`, its
+   masked floor and `.vwh__base`. Everything `.vdl*` is the new composition
+   and is what would graduate.
+
+   ⚠ NOTHING CONNECTS TO THE FIGURE. The panels are tied to it, and to each
+   other, by two full-width construction rails and a ground datum — never by
+   a leader line landing on the body, which claims a relationship the record
+   does not have (owner's ruling on wave 1's A4).
+   ══════════════════════════════════════════════════════════════════════ */
+
+.vdl {
+  --vdl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --vdl-display: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+  --vdl-gold-rgb: var(--gold-rgb, 202, 165, 84);
+  --vdl-dawn-rgb: var(--dawn-rgb, 235, 227, 214);
+
+  /* The chip is the one dial the owner asked for ("the avatar row should be
+     smaller"). Everything in the band derives from it, so the slider moves
+     the whole band rather than one box inside it. */
+  --vdl-chip: 64px;
+  --vdl-band-h: calc(var(--vdl-chip) + 52px);
+  --vdl-rail: 0.12;
+  /* How much of the 720×1280 frame a chip shows, and where the head anchor
+     sits inside it. See `.vdl__chip__bust`. */
+  --vdl-bust-span: 0.34;
+  --vdl-bust-lead: 0.1;
+
+  /* ⚠ THE FIGURE COLUMN IS WIDTH-DERIVED-FROM-HEIGHT, the production rule
+     (the asset is a 720×1280 portrait, so a width-derived column is always
+     height-limited). The subtrahend is this lab's own chrome — knob bar,
+     mast and band — so shrinking the band gives the figure the room back
+     instead of leaving a hole. */
+  --vdl-chrome-h: calc(56px + 104px + var(--vdl-band-h) + 44px);
+  --vdl-fig-w: clamp(230px, calc((100svh - var(--vdl-chrome-h)) * 0.5625), 460px);
+
+  --vdl-pad-x: clamp(20px, 4vw, 72px);
+
+  min-height: 100svh;
+  background: var(--void, #0a0908);
+  color: rgb(var(--vdl-dawn-rgb));
+}
+
+/* ═══ §A · KNOB CHROME (never ships) ════════════════════════════════ */
+
+.vdl__bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  background: rgba(10, 9, 8, 0.94);
+  border-bottom: 1px solid rgba(var(--vdl-gold-rgb), 0.18);
+  font-family: var(--vdl-mono);
+}
+.vdl__grp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vdl__lbl {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--vdl-gold-rgb), 0.7);
+}
+.vdl__btn {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  color: rgba(var(--vdl-dawn-rgb), 0.6);
+  background: transparent;
+  border: 1px solid rgba(var(--vdl-gold-rgb), 0.2);
+}
+.vdl__btn[data-on="true"] {
+  color: #0a0908;
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+.vdl__btn--go {
+  border-color: var(--gold, #caa554);
+  color: var(--gold, #caa554);
+}
+.vdl__slider {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vdl__slider input {
+  width: 92px;
+}
+
+/* ═══ §B · THE SHEET ════════════════════════════════════════════════ */
+
+.vdl__sheet {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: calc(100svh - 56px);
+  padding: clamp(14px, 2.4svh, 26px) 0 0;
+  overflow: hidden;
+}
+
+/* ── The mast. Centred over the figure, its own row, at the production
+      title clamp — the About name flies into this on the real page and
+      translates without scaling, so no rung may step it down. */
+.vdl__mast {
+  padding: 0 var(--vdl-pad-x);
+  text-align: center;
+}
+.vdl__mast__kicker {
+  display: flex;
+  justify-content: center;
+  gap: clamp(24px, 6vw, 90px);
+  font-family: var(--vdl-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(var(--vdl-dawn-rgb), 0.45);
+}
+.vdl__mast__title {
+  margin: 6px 0 0;
+  font-family: var(--vdl-display);
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 400;
+  line-height: 1.1;
+  color: rgb(var(--vdl-dawn-rgb));
+}
+
+/* ── THE STAGE GRID ─────────────────────────────────────────────────
+   Four content rows and a ground row. The heads and bodies are SEPARATE
+   items so a head's bottom edge IS a row boundary — that is what lets the
+   rails sit exactly on every head's own rule instead of near it. The
+   figure spans every content row; the ground datum takes the last. */
+.vdl__stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--vdl-fig-w) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto minmax(0, 1fr) 0;
+  column-gap: clamp(18px, 2.4vw, 52px);
+  min-height: 0;
+  padding: 0 var(--vdl-pad-x);
+}
+
+/* The rails. Edge to edge INCLUDING the stage's own padding — they are
+   construction lines, so they run the full plate rather than the reading
+   band; that is what makes them read as structure and not as a border. */
+.vdl__rail {
+  grid-column: 1 / -1;
+  align-self: end;
+  margin: 0 calc(-1 * var(--vdl-pad-x));
+  border-bottom: 1px solid rgba(var(--vdl-dawn-rgb), var(--vdl-rail));
+  pointer-events: none;
+}
+.vdl__rail[data-rail="upper"] {
+  grid-row: 1;
+}
+.vdl__rail[data-rail="lower"] {
+  grid-row: 3;
+}
+
+.vdl__ground {
+  grid-column: 1 / -1;
+  grid-row: 5;
+  margin: 0 calc(-1 * var(--vdl-pad-x));
+  border-bottom: 1px solid rgba(var(--vdl-dawn-rgb), 0.2);
+  pointer-events: none;
+}
+
+/* ── Panel heads. The kicker sits ON the rail; its own segment is brighter
+      than the rail running behind it, so the head reads as the lit part of
+      a continuous line. */
+.vdl__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding-bottom: clamp(6px, 0.9svh, 10px);
+  border-bottom: 1px solid rgba(var(--vdl-dawn-rgb), 0.3);
+  font-family: var(--vdl-mono);
+  font-size: clamp(11px, 0.82vw, 13px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.vdl__head__kicker {
+  color: rgb(var(--vdl-dawn-rgb));
+}
+.vdl__head__tag {
+  font-size: 0.85em;
+  letter-spacing: 0.16em;
+  color: rgba(var(--vdl-dawn-rgb), 0.4);
+}
+
+.vdl__body {
+  min-width: 0;
+  padding-top: clamp(10px, 1.6svh, 18px);
+  padding-bottom: clamp(12px, 2svh, 24px);
+  overflow: hidden;
+}
+
+/* Panels are capped for readability and mirror toward the figure, so extra
+   column width becomes outer margin rather than a longer line (the
+   production rule — `justify-items` on the column, not a max-width alone). */
+.vdl__head[data-cell="ul"],
+.vdl__body[data-cell="ul"],
+.vdl__head[data-cell="ll"],
+.vdl__body[data-cell="ll"] {
+  grid-column: 1;
+  justify-self: end;
+  width: min(100%, 38ch);
+}
+.vdl__head[data-cell="ur"],
+.vdl__body[data-cell="ur"],
+.vdl__head[data-cell="lr"],
+.vdl__body[data-cell="lr"] {
+  grid-column: 3;
+  justify-self: start;
+  width: min(100%, 38ch);
+}
+.vdl__head[data-cell="ul"],
+.vdl__head[data-cell="ur"] {
+  grid-row: 1;
+}
+.vdl__body[data-cell="ul"],
+.vdl__body[data-cell="ur"] {
+  grid-row: 2;
+}
+.vdl__head[data-cell="ll"],
+.vdl__head[data-cell="lr"] {
+  grid-row: 3;
+}
+.vdl__body[data-cell="ll"],
+.vdl__body[data-cell="lr"] {
+  grid-row: 4;
+}
+
+/* ── SCOPE ─────────────────────────────────────────────────────────── */
+
+.vdl__motto {
+  margin: 0 0 clamp(8px, 1.2svh, 14px);
+  font-family: var(--vdl-mono);
+  font-size: clamp(11px, 0.8vw, 12.5px);
+  letter-spacing: 0.06em;
+  color: var(--gold-ink, #caa554);
+}
+.vdl__prose {
+  margin: 0;
+  font-family: var(--vdl-display);
+  font-size: var(--band-copy, clamp(14px, 1.05vw, 17px));
+  line-height: 1.5;
+  color: rgba(var(--vdl-dawn-rgb), 0.8);
+  text-wrap: pretty;
+}
+
+/* ── FACTS ─────────────────────────────────────────────────────────── */
+
+.vdl__facts {
+  display: grid;
+  gap: clamp(8px, 1.3svh, 14px);
+  margin: 0;
+}
+.vdl__facts__row {
+  display: grid;
+  gap: 2px;
+  padding-bottom: clamp(7px, 1.1svh, 12px);
+  border-bottom: 1px solid rgba(var(--vdl-dawn-rgb), 0.1);
+}
+.vdl__facts__row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.vdl__facts__k {
+  font-family: var(--vdl-mono);
+  font-size: clamp(9.5px, 0.68vw, 11px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--vdl-dawn-rgb), 0.5);
+}
+.vdl__facts__v {
+  margin: 0;
+  font-family: var(--vdl-display);
+  font-size: clamp(13px, 0.95vw, 16px);
+  line-height: 1.3;
+  color: rgb(var(--vdl-dawn-rgb));
+}
+
+/* ── TRANSMISSION ──────────────────────────────────────────────────── */
+
+.vdl__film {
+  appearance: none;
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.vdl__film__frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  max-height: clamp(96px, 15svh, 150px);
+  overflow: hidden;
+  border: 1px solid rgba(var(--vdl-dawn-rgb), 0.25);
+}
+.vdl__film__poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(0.4) contrast(1.05);
+}
+.vdl__film__play {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  width: 0;
+  height: 0;
+  border-left: 13px solid rgb(var(--vdl-dawn-rgb));
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+.vdl__film__title {
+  font-family: var(--vdl-mono);
+  font-size: clamp(10px, 0.72vw, 11.5px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(var(--vdl-dawn-rgb), 0.75);
+}
+.vdl__film:hover .vdl__film__frame,
+.vdl__film:focus-visible .vdl__film__frame {
+  border-color: rgba(var(--vdl-gold-rgb), 0.6);
+}
+.vdl__film:hover .vdl__film__title,
+.vdl__film:focus-visible .vdl__film__title {
+  color: var(--gold-ink, #caa554);
+}
+
+.vdl__film-empty {
+  display: grid;
+  gap: 8px;
+}
+.vdl__film-empty__frame {
+  display: block;
+  aspect-ratio: 16 / 9;
+  max-height: clamp(96px, 15svh, 150px);
+  border: 1px dashed rgba(var(--vdl-dawn-rgb), 0.14);
+}
+.vdl__film-empty__note {
+  font-family: var(--vdl-mono);
+  font-size: clamp(10px, 0.72vw, 11.5px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--vdl-dawn-rgb), 0.35);
+}
+
+/* ── ON RECORD ─────────────────────────────────────────────────────── */
+
+.vdl__press-stack {
+  display: grid;
+  gap: clamp(10px, 1.6svh, 18px);
+}
+.vdl__press {
+  display: grid;
+  gap: 4px;
+  text-decoration: none;
+  color: inherit;
+}
+.vdl__press__meta {
+  display: flex;
+  gap: 10px;
+  font-family: var(--vdl-mono);
+  font-size: clamp(9.5px, 0.68vw, 11px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--vdl-dawn-rgb), 0.45);
+}
+.vdl__press__headline {
+  font-family: var(--vdl-display);
+  font-size: clamp(13px, 0.98vw, 16.5px);
+  line-height: 1.32;
+  color: rgba(var(--vdl-dawn-rgb), 0.95);
+  text-wrap: pretty;
+}
+a.vdl__press:hover .vdl__press__headline,
+a.vdl__press:focus-visible .vdl__press__headline {
+  color: var(--gold-ink, #caa554);
+}
+
+/* ── THE FIGURE ─────────────────────────────────────────────────────
+   `.vwh` is mounted for its token block and the slot rules only; the lab
+   flattens its grid so `.vwh__column` fills this cell (in a `display:
+   block` parent the column's own `grid-column`/`grid-row` are inert).
+   ⚠ The cell must have a DEFINITE height or `.vwh__media-wrap` falls back
+   to the asset's intrinsic 720×1280 and the figure hangs below the slot. */
+.vdl__figure {
+  grid-column: 2;
+  grid-row: 1 / 5;
+  min-height: 0;
+  padding-top: clamp(6px, 1svh, 14px);
+}
+.vdl__vwh {
+  display: block;
+  height: 100%;
+  padding: 0;
+  overflow: visible;
+}
+
+/* ═══ §C · THE ERA BAND ═════════════════════════════════════════════ */
+
+/* ⚠ THE CHIPS GROUP, THE BAND DOES NOT. The band's rule is a full-width
+   datum like the others, but `1fr` columns pushed the five chips to the far
+   edges of a 1920 screen where they stop reading as one control and start
+   reading as five things that happen to share a row. Content-width columns,
+   centred, with the air outside the group. */
+.vdl__band {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  align-items: start;
+  justify-items: center;
+  justify-content: center;
+  gap: clamp(18px, 3.4vw, 64px);
+  padding: clamp(10px, 1.4svh, 16px) var(--vdl-pad-x) clamp(14px, 2svh, 22px);
+  border-top: 1px solid rgba(var(--vdl-dawn-rgb), 0.2);
+}
+
+.vdl__chip {
+  appearance: none;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  /* ⚠ 44px MINIMUM HIT AREA whatever the chip slider says — the visual box
+     may shrink below it, the control may not. */
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+.vdl__chip__frame {
+  position: relative;
+  display: block;
+  width: var(--vdl-chip);
+  height: var(--vdl-chip);
+  overflow: hidden;
+  border: 1px solid rgba(var(--vdl-dawn-rgb), 0.3);
+  background: rgba(var(--vdl-dawn-rgb), 0.03);
+  transition: border-color 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* ⚠ `object-fit: cover` CANNOT MAKE A PORTRAIT OUT OF THIS ASSET. A square
+   window over a 720×1280 frame shows `w/h` = 56 % of its height, and the
+   figure occupies ~88 % of the frame (headY→footY), so cover crops to head-
+   to-knees — a whole small person, not a bust. The image is scaled instead:
+   its rendered height is the chip divided by `--vdl-bust-span`, so exactly
+   that fraction of the frame fills the window, and the top offset is solved
+   from the era's OWN `--bust-head` anchor so every era's head lands on the
+   same line whatever its asset does. Both terms are knobs, because framing a
+   portrait is a judgement and the roster is not final. */
+.vdl__chip__bust {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  top: calc(
+    var(--vdl-bust-lead) * var(--vdl-chip) - var(--bust-head, 0.12) * var(--vdl-chip) /
+      var(--vdl-bust-span)
+  );
+  width: auto;
+  height: calc(var(--vdl-chip) / var(--vdl-bust-span));
+  max-width: none;
+  display: block;
+  /* ⚠ DIM WITH OPACITY, NOT BRIGHTNESS. These are emissive gold-on-black
+     stills; `brightness(.62)` on an image whose ground is already #0a0908
+     takes the whole chip to black and reads as a failed load (it did). */
+  opacity: 0.5;
+  filter: saturate(0.45);
+  transition:
+    opacity 120ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* The year letters INSIDE the frame's top-left corner — the mockup's own
+   move, and what keeps the chip one object instead of a picture with a
+   caption stack under it. */
+.vdl__chip__year {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-family: var(--vdl-mono);
+  font-size: clamp(8.5px, 0.62vw, 10px);
+  letter-spacing: 0.1em;
+  color: rgba(var(--vdl-dawn-rgb), 0.7);
+  text-shadow: 0 1px 2px rgba(10, 9, 8, 0.9);
+}
+.vdl__chip__name {
+  font-family: var(--vdl-mono);
+  font-size: clamp(8.5px, 0.62vw, 10px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--vdl-dawn-rgb), 0.45);
+}
+/* The active mark is a DIAMOND, never a dot — this system has no circles. */
+.vdl__chip__mark {
+  width: 5px;
+  height: 5px;
+  rotate: 45deg;
+  background: transparent;
+}
+
+.vdl__chip[data-on="true"] .vdl__chip__frame {
+  border-color: rgba(var(--vdl-gold-rgb), 0.75);
+}
+.vdl__chip[data-on="true"] .vdl__chip__bust {
+  opacity: 1;
+  filter: none;
+}
+.vdl__chip[data-on="true"] .vdl__chip__year,
+.vdl__chip[data-on="true"] .vdl__chip__name {
+  color: var(--gold-ink, #caa554);
+}
+.vdl__chip[data-on="true"] .vdl__chip__mark {
+  background: var(--gold, #caa554);
+}
+
+.vdl__chip:hover .vdl__chip__frame,
+.vdl__chip:focus-visible .vdl__chip__frame {
+  border-color: rgba(var(--vdl-dawn-rgb), 0.6);
+}
+.vdl__chip:hover .vdl__chip__bust,
+.vdl__chip:focus-visible .vdl__chip__bust {
+  opacity: 0.78;
+  filter: saturate(0.7);
+}
+.vdl__chip:focus-visible {
+  outline: 1px solid rgba(var(--vdl-gold-rgb), 0.8);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vdl__chip__frame,
+  .vdl__chip__bust {
+    transition: none;
+  }
+}
