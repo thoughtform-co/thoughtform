@@ -85,8 +85,25 @@
 /* ── The mast. Centred over the figure, its own row, at the production
       title clamp — the About name flies into this on the real page and
       translates without scaling, so no rung may step it down. */
+/* ⚠ THE TITLE'S BOX IS ITS CONTENT, NOT THE BAND — THE ABOUT NAME LANDS ON
+   IT. The handoff spec asserts the name's rect and this title's box match on
+   left/top/width/height within 2px, because the name translates into this
+   exact footprint without scaling. Written as a plain centred block the h2
+   filled the reading band (measured 1022 against the name's 480) and the
+   landing missed by 542px — the text LOOKED centred the whole time, which is
+   why only the spec caught it. A grid with `justify-items: center` shrinks
+   each row to its own content, which is what the deleted mast's `auto`
+   tracks were doing.
+   ⚠ AND THE MEASURE IS FIXED, NOT `max-width`: centred and content-sized,
+   the box's left edge moves with the string (113px between "The founder" and
+   "The Intelligence Architect"), which the seat-stability sweep reads as the
+   instrument reshaping under the reader. The cap also keeps the wrap point
+   constant. */
 .vwd__mast {
-  padding: 0 var(--vwd-pad-x);
+  display: grid;
+  justify-items: center;
+  width: min(calc(100% - 2 * var(--vwd-pad-x)), 760px);
+  margin-inline: auto;
   text-align: center;
 }
 .vwd__mast__kicker {

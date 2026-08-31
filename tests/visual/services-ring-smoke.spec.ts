@@ -2097,14 +2097,14 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       bg: getComputedStyle(document.getElementById("voidwalker")!).backgroundColor,
       bgImage: getComputedStyle(document.getElementById("voidwalker")!).backgroundImage,
       hologram: !!document.querySelector("#voidwalker .vw--hologram"),
-      ready: document.querySelector("#voidwalker .vwh")?.hasAttribute("data-vwh-ready") ?? false,
+      ready: document.querySelector("#voidwalker .vwd")?.hasAttribute("data-vwh-ready") ?? false,
       enter:
         document
-          .querySelector<HTMLElement>("#voidwalker .vwh")
+          .querySelector<HTMLElement>("#voidwalker .vwd")
           ?.style.getPropertyValue("--vwh-in") ?? "",
       exit:
         document
-          .querySelector<HTMLElement>("#voidwalker .vwh")
+          .querySelector<HTMLElement>("#voidwalker .vwd")
           ?.style.getPropertyValue("--vwh-exit") ?? "",
     }));
     expect(during.mode).toBe("hologram");

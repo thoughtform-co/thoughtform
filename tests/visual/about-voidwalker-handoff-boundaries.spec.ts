@@ -49,7 +49,7 @@ async function waitForHandoff(page: Page) {
   await expect(page.locator("#about")).toHaveAttribute("data-about-handoff", "voidwalker", {
     timeout: 5_000,
   });
-  await expect(page.locator("#voidwalker .vwh")).toHaveAttribute("data-vwh-ready", "");
+  await expect(page.locator("#voidwalker .vwd")).toHaveAttribute("data-vwh-ready", "");
   await settle(page);
 }
 
@@ -118,7 +118,7 @@ async function flowState(page: Page) {
   return page.evaluate(() => {
     const about = document.querySelector<HTMLElement>("#about");
     const voidwalker = document.querySelector<HTMLElement>("#voidwalker");
-    const root = document.querySelector<HTMLElement>("#voidwalker .vwh");
+    const root = document.querySelector<HTMLElement>("#voidwalker .vwd");
     if (!about || !voidwalker || !root) throw new Error("Missing About/Voidwalker boundary");
     const documentTop = (element: HTMLElement) =>
       element.getBoundingClientRect().top + window.scrollY;
@@ -142,14 +142,14 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     desktopOnly(testInfo);
     await bootCapable(page, "/#voidwalker");
     await page.waitForFunction(() => {
-      const root = document.querySelector<HTMLElement>("#voidwalker .vwh");
+      const root = document.querySelector<HTMLElement>("#voidwalker .vwd");
       return root ? Math.abs(root.getBoundingClientRect().top) <= 2 : false;
     });
 
     const deepLink = await page.evaluate(() => ({
       hash: location.hash,
       scrollY: window.scrollY,
-      rootTop: document.querySelector<HTMLElement>("#voidwalker .vwh")?.getBoundingClientRect().top,
+      rootTop: document.querySelector<HTMLElement>("#voidwalker .vwd")?.getBoundingClientRect().top,
     }));
     expect(deepLink.hash).toBe("#voidwalker");
     expect(deepLink.scrollY, "the hash lands below the page origin").toBeGreaterThan(
@@ -171,7 +171,7 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     await page.waitForFunction(() => window.scrollY > window.innerHeight);
     const after = await page.evaluate(() => {
       const runway = document.querySelector<HTMLElement>(".vw--hologram");
-      const root = document.querySelector<HTMLElement>(".vwh");
+      const root = document.querySelector<HTMLElement>(".vwd");
       if (!runway || !root) throw new Error("Missing reloaded handoff runway");
       const travel = runway.offsetHeight - window.innerHeight;
       const progress =
@@ -341,7 +341,7 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
       snapshots.push(
         await page.evaluate((themeName) => {
           const station = document.getElementById("voidwalker");
-          const root = document.querySelector<HTMLElement>(".vwh");
+          const root = document.querySelector<HTMLElement>(".vwd");
           if (!station || !root) throw new Error("Missing themed handoff");
           const style = getComputedStyle(station);
           return {
