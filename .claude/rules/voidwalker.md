@@ -69,12 +69,28 @@ live, the losing composition and its guards GO.
   offset and scroll-derived era at each stop. ⚠ Headless is wrong twice over:
   the corridor is WebGL, and Chromium has no H.264 so the MP4 fallback paints
   nothing.
-- ⚠ **STILL OPEN: the datum branch has NO entry/exit choreography.** The
-  `--vwh-in` / `--vwh-exit` motion block is scoped to `.vwh[data-vwh-ready]`
-  and does not reach `.vwd`, so the composition arrives at rest and leaves
-  with the sticky release. Nothing is broken (every element's rest state is
-  its visible state) but the ADR-082 entrance stutter and the horizontal exit
-  are absent on this branch.
+- **The entry/exit choreography is ported** (`voidwalker-datum.css` §G) — the
+  same three-ramp terminal power-on, the same 2.5px tear, the same
+  `[0,.22]` / `[.74,.96]` clocks. ⚠ **THE TWO TRANSFORMS ARE COMPOSED, NOT
+  NESTED.** `.vwh` hangs the exit on `.vwh__side` group containers so it can
+  never collide with the children's entry tear; the datum heads and bodies
+  are DIRECT grid items, and wrapping them is exactly what would break the
+  rails, whose precision comes from a head's bottom edge BEING a row
+  boundary. Entry spread + tear + exit travel are three additive terms of one
+  translate; where a group does exist (mast, figure, band) the container owns
+  the exit as before.
+- ⚠ **THE RAILS AND GROUND LEAVE WITH THE FIGURE, not with the reading
+  column** — the ground datum is the projector's own plane extended, so it
+  belongs to the instrument. Mast + left cells clear left; figure, right
+  cells, rails, ground and the era band clear right.
+- ⚠ **THE DOSSIER SEAT DOES NOT SPREAD** — it takes the tear only. The About
+  dossier flies into that exact footprint, so a 21px entry offset would make
+  the receiver's measured rect wrong for the whole entry.
+- **Verifying the motion:** `node scripts/probe-datum-motion.mjs` — walks the
+  runway and prints per-actor opacity and translateX at eight points.
+  Measured: 0 opacity and ±21px spread at `in` 0, everything opaque and
+  **tx exactly 0 at rest** (the zero-at-rest rule), and every actor past the
+  1440 viewport by `exit` 1.
 
 ## Current hologram contracts (2026-08-27)
 

@@ -911,3 +911,134 @@ a.vwd__press:focus-visible .vwd__press__headline {
     min-height: 0;
   }
 }
+
+/* ═══ §G · SCROLL-OWNED ENTRANCE + EXIT ═════════════════════════════
+   ADR-082 U2's terminal power-on, ported to this composition. Three
+   piecewise opacity ramps make every row strike, drop out and settle, with
+   only a 2.5px lateral tear; `--vwh-in` and `--vwh-exit` are pure reversible
+   runway clocks written by the one scroll writer, so there are no
+   transitions, no keyframes and no one-shot attributes anywhere in here.
+
+   ⚠ NOTHING ENTERS OR RELEASES VERTICALLY. Mast and the LEFT cells clear
+   left; the figure, the RIGHT cells, the rails, the ground datum and the era
+   band clear right. `--vwh-exit` reaches 1 before the sticky releases, which
+   is what makes the browser's eventual upward release invisible.
+
+   ⚠ THE RAILS AND THE GROUND LEAVE WITH THE FIGURE, and that is a reading
+   rather than a convenience: the ground datum is the projector's own plane
+   extended, so it belongs to the instrument and goes when the instrument
+   goes. The reading column is what leaves the other way.
+
+   ⚠ AND THE TWO TRANSFORMS ARE COMPOSED, NOT NESTED. `.vwh` could put the
+   exit on a group container because its panels live inside `.vwh__side`
+   wrappers; these heads and bodies are DIRECT grid items — separating them
+   into wrappers is exactly what would break the rails, whose whole precision
+   comes from a head's bottom edge BEING a row boundary. So the entry spread,
+   the tear and the exit travel are three additive terms of one translate.
+   Where a group does exist (the mast, the figure, the band) the container
+   owns the exit and its children own the entry, as before. */
+@media (prefers-reduced-motion: no-preference) {
+  .vwd[data-vwh-ready] .vwd__mast > *,
+  .vwd[data-vwh-ready] .vwd__head,
+  .vwd[data-vwh-ready] .vwd__body,
+  .vwd[data-vwh-ready] .vwd__rail,
+  .vwd[data-vwh-ready] .vwd__ground,
+  .vwd[data-vwh-ready] .vwd__figure .vwh__base,
+  .vwd[data-vwh-ready] .vwd__chip {
+    --ci: clamp(0, calc((var(--vwh-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
+    --g1: clamp(0, calc(var(--ci) * 9), 1);
+    --g2: clamp(0, calc((var(--ci) - 0.16) * 9), 1);
+    --g3: clamp(0, calc((var(--ci) - 0.34) * 4), 1);
+    --vwd-tear: calc((var(--g1) - var(--g2)) * 2.5px);
+    opacity: clamp(0, calc(var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88), 1);
+    transform: translateX(var(--vwd-tear));
+  }
+
+  /* The moving About name and this decoded era title exchange ownership at
+     one measured footprint, so the title reads the shared renderer morph
+     exactly rather than its own entry ramp. Declared after the ladder above
+     at equal specificity, which is what lets it win. */
+  .vwd[data-vwh-ready] .vwd__mast__title {
+    opacity: var(--vwh-morph, 0);
+  }
+
+  /* The panels assemble around the acquired figure, horizontally only. The
+     21px spread plus the 2.5px terminal tear stays under the 24px cap, and
+     the exit travel is the third term of the same translate. */
+  .vwd[data-vwh-ready] :is(.vwd__head, .vwd__body)[data-cell$="l"] {
+    transform: translateX(
+      calc((1 - var(--ci)) * 21px + var(--vwd-tear) + var(--vwh-exit, 0) * (-50vw - 100% - 48px))
+    );
+  }
+  .vwd[data-vwh-ready] :is(.vwd__head, .vwd__body)[data-cell$="r"] {
+    transform: translateX(
+      calc((var(--ci) - 1) * 21px + var(--vwd-tear) + var(--vwh-exit, 0) * (50vw + 100% + 48px))
+    );
+  }
+  /* ⚠ THE DOSSIER SEAT DOES NOT SPREAD. The About dossier flies into this
+     exact footprint, so it may only carry the tear — a 21px offset would
+     make the receiver's measured rect wrong for the whole entry. */
+  .vwd[data-vwh-ready] .vwd__body[data-vwh-handoff-target="dossier"] {
+    transform: translateX(calc(var(--vwd-tear) + var(--vwh-exit, 0) * (-50vw - 100% - 48px)));
+  }
+
+  /* The construction lines are single elements with no group to hang the
+     exit on, so they compose too. */
+  .vwd[data-vwh-ready] .vwd__rail,
+  .vwd[data-vwh-ready] .vwd__ground {
+    transform: translateX(calc(var(--vwd-tear) + var(--vwh-exit, 0) * (50vw + 100% + 48px)));
+  }
+
+  /* ── The stagger. Structure first, then the reading, then the control:
+        the rails arrive before the panels that sit on them, and the era band
+        lands last. */
+  .vwd[data-vwh-ready] .vwd__mast__kicker {
+    --ci-off: 0;
+  }
+  .vwd[data-vwh-ready] .vwd__mast__title {
+    --ci-off: 0.06;
+  }
+  .vwd[data-vwh-ready] .vwd__rail,
+  .vwd[data-vwh-ready] .vwd__ground {
+    --ci-off: 0.12;
+  }
+  .vwd[data-vwh-ready] :is(.vwd__head, .vwd__body)[data-cell="ul"] {
+    --ci-off: 0.16;
+  }
+  .vwd[data-vwh-ready] .vwd__figure .vwh__base {
+    --ci-off: 0.18;
+  }
+  .vwd[data-vwh-ready] :is(.vwd__head, .vwd__body)[data-cell="ur"] {
+    --ci-off: 0.2;
+  }
+  .vwd[data-vwh-ready] :is(.vwd__head, .vwd__body)[data-cell="ll"] {
+    --ci-off: 0.26;
+  }
+  .vwd[data-vwh-ready] :is(.vwd__head, .vwd__body)[data-cell="lr"] {
+    --ci-off: 0.3;
+  }
+  .vwd[data-vwh-ready] .vwd__chip:nth-child(1) {
+    --ci-off: 0.32;
+  }
+  .vwd[data-vwh-ready] .vwd__chip:nth-child(2) {
+    --ci-off: 0.35;
+  }
+  .vwd[data-vwh-ready] .vwd__chip:nth-child(3) {
+    --ci-off: 0.38;
+  }
+  .vwd[data-vwh-ready] .vwd__chip:nth-child(4) {
+    --ci-off: 0.41;
+  }
+  .vwd[data-vwh-ready] .vwd__chip:nth-child(5) {
+    --ci-off: 0.44;
+  }
+
+  /* ── The exit, on the groups that have one. */
+  .vwd[data-vwh-ready] .vwd__mast {
+    transform: translateX(calc(var(--vwh-exit, 0) * (-50vw - 100% - 48px)));
+  }
+  .vwd[data-vwh-ready] .vwd__figure,
+  .vwd[data-vwh-ready] .vwd__band {
+    transform: translateX(calc(var(--vwh-exit, 0) * (50vw + 100% + 48px)));
+  }
+}

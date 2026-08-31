@@ -451,16 +451,27 @@
    stage wrapper), and the excursion is capped at 3px. The selectors are
    `data-phase=rest` so an explicit era-button materialize can temporarily
    take over the inner clip/tear without adding a second scroll writer. */
-.vwh[data-vwh-ready] .vwh__slot {
+/* ⚠ BOTH COMPOSITION ROOTS ACQUIRE. `VOIDWALKER_DATUM_STAGE` swaps the
+   station's interior between `.vwh` and `.vwd`, and the FIGURE is shared by
+   both — so its acquisition is named for both roots here rather than copied
+   into the datum sheet. ⚠ The datum branch nests a `.vwh` wrapper INSIDE
+   `.vwd` for the token block, and the scroll writer puts `data-vwh-ready` on
+   the ROOT only, so `.vwh[data-vwh-ready]` alone silently misses that
+   branch: the slot would sit at full opacity and skip the whole acquisition
+   instead of erroring. */
+.vwh[data-vwh-ready] .vwh__slot,
+.vwd[data-vwh-ready] .vwh__slot {
   --vwh-holo-acquire: var(--vwh-morph, 0);
   --vwh-holo-strike: clamp(0, calc(var(--vwh-holo-acquire) * 12), 1);
   --vwh-holo-drop: clamp(0, calc((var(--vwh-holo-acquire) - 0.14) * 12), 1);
   opacity: var(--vwh-holo-acquire);
 }
-.vwh[data-vwh-ready] .vwh__slot[data-phase="rest"] .vwh__media-wrap {
+.vwh[data-vwh-ready] .vwh__slot[data-phase="rest"] .vwh__media-wrap,
+.vwd[data-vwh-ready] .vwh__slot[data-phase="rest"] .vwh__media-wrap {
   clip-path: inset(calc((1 - var(--vwh-holo-acquire)) * 62%) 0 0 0);
 }
-.vwh[data-vwh-ready] .vwh__slot[data-phase="rest"] .vwh__media {
+.vwh[data-vwh-ready] .vwh__slot[data-phase="rest"] .vwh__media,
+.vwd[data-vwh-ready] .vwh__slot[data-phase="rest"] .vwh__media {
   transform: translateX(calc((var(--vwh-holo-strike) - var(--vwh-holo-drop)) * 3px));
 }
 
