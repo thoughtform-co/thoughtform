@@ -75,8 +75,49 @@ function bustHeadAnchor(hologram: CharacterEraHologram): number {
    no use for this state at all, which is why it is CSS that decides whether
    the tabs mean anything (ADR-083: keep every node mounted, phone
    visibility is a stylesheet decision). */
-const MOBILE_TABS = ["figure", "record", "scope", "transmission"] as const;
-type MobileTab = (typeof MOBILE_TABS)[number];
+/* ⚠ THE FIGURE STOP IS A MARK, THE OTHER THREE ARE WORDS, AND THAT IS THE
+   POINT (owner, 2026-08-31: "do we need those tabs above if we have
+   corresponding avatars at the bottom?"). They were never redundant — the
+   band picks WHICH ERA, the row picks WHAT YOU READ about it — but both were
+   drawn as a full-width row of equal cells with a gold active state, so they
+   rhymed and read as one control said twice. Setting the figure apart as a
+   glyph breaks that: a mark beside three words is plainly not another row of
+   stops, and the three words are then unambiguously READINGS.
+
+   ⚠ SELECTING AN ERA DOES NOT RESET THE VIEW, deliberately. The tighter
+   version of this idea was to drop the figure stop entirely and let the band
+   mean "show me this era's figure" — but then switching era while reading
+   RECORD would throw the reading away, and comparing the same reading across
+   eras is the thing a five-stop band is FOR. The band changes who, the row
+   changes what, and the glyph is the standing way back. */
+const MOBILE_READINGS = ["record", "scope", "transmission"] as const;
+type MobileTab = "figure" | (typeof MOBILE_READINGS)[number];
+
+/**
+ * The figure mark: a standing figure over its projector plane, on the
+ * particle-icon grammar (`thoughtform-design/references/particle-icon-grammar.md`)
+ * — rect-only, a 7×7 grid at integer cells, no text node, no pictogram.
+ * The DISC carries the signal because the disc is the gold object on the real
+ * stage; the body is skeleton. 14px is the grammar's compact rung, and the
+ * 2× viewBox keeps every edge on a device pixel.
+ */
+function FigureGlyph() {
+  return (
+    <svg className="vdl__tab__glyph" viewBox="0 0 7 7" width="14" height="14" aria-hidden="true">
+      {/* head · shoulders · torso · legs — the skeleton. ⚠ A WHOLE CELL OF
+          AIR UNDER THE HEAD: packed into consecutive rows the five rects
+          merge into one blob at 14px and the figure stops being readable as
+          a figure. */}
+      <rect className="vdl__tab__sk" x="3" y="0" width="1" height="1" />
+      <rect className="vdl__tab__sk" x="2" y="2" width="3" height="1" />
+      <rect className="vdl__tab__sk" x="3" y="3" width="1" height="1" />
+      <rect className="vdl__tab__sk" x="2" y="4" width="1" height="1" />
+      <rect className="vdl__tab__sk" x="4" y="4" width="1" height="1" />
+      {/* the projector plane — the signal */}
+      <rect className="vdl__tab__sig" x="1" y="6" width="5" height="1" />
+    </svg>
+  );
+}
 
 function PressItem({ press }: { press: VwPress }) {
   const year = press.date ? press.date.slice(0, 4) : null;
@@ -102,7 +143,14 @@ export function DatumLabShell() {
      every mockup in the pass — so the lab opens where the review left off. */
   const [eraIdx, setEraIdx] = useState(2);
   const [epoch, setEpoch] = useState(0);
-  const [chip, setChip] = useState(64);
+  /* ⚠ NULL UNTIL TOUCHED, because an inline style beats every stylesheet
+     rule including a media query. Seeded at 64 the knob wrote
+     `--vdl-chip: 64px` onto the root on first paint and the phone rung's own
+     `clamp(44px, 13vw, 56px)` never applied — the band rendered at desktop
+     size on a 375px screen, which is the exact thing the slider exists to
+     let the owner judge. A lab knob may not defeat the default it is there
+     to explore. */
+  const [chip, setChip] = useState<number | null>(null);
   const [rail, setRail] = useState(0.12);
   const [bust, setBust] = useState(0.34);
   const [tab, setTab] = useState<MobileTab>("figure");
@@ -148,7 +196,7 @@ export function DatumLabShell() {
       className="vdl"
       style={
         {
-          "--vdl-chip": `${chip}px`,
+          ...(chip === null ? null : { "--vdl-chip": `${chip}px` }),
           "--vdl-rail": rail,
           "--vdl-bust-span": bust,
         } as React.CSSProperties
@@ -171,13 +219,13 @@ export function DatumLabShell() {
         </div>
 
         <label className="vdl__slider">
-          <span className="vdl__lbl">chip {chip}px</span>
+          <span className="vdl__lbl">chip {chip === null ? "auto" : `${chip}px`}</span>
           <input
             type="range"
             min={44}
             max={120}
             step={2}
-            value={chip}
+            value={chip ?? 64}
             onChange={(ev) => setChip(+ev.target.value)}
           />
         </label>
@@ -232,7 +280,21 @@ export function DatumLabShell() {
             No icon chits: they were the heaviest thing on the phone mockup
             and this row has to be the quietest. */}
         <nav className="vdl__tabs" aria-label="Era view">
-          {MOBILE_TABS.map((t) => {
+          {/* The mark, outside the word group. Its accessible name is spoken
+              because a glyph has none — the visual differentiation may not
+              cost a screen reader the label. */}
+          <button
+            type="button"
+            className="vdl__tab vdl__tab--figure"
+            data-on={tab === "figure"}
+            aria-pressed={tab === "figure"}
+            aria-label="Figure"
+            onClick={() => setTab("figure")}
+          >
+            <FigureGlyph />
+          </button>
+
+          {MOBILE_READINGS.map((t) => {
             const unavailable = t === "transmission" && !era.film;
             return (
               <button

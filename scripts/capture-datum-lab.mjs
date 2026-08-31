@@ -136,7 +136,13 @@ for (const vp of VIEWPORTS) {
     }
 
     for (const t of TABS) {
-      const btn = page.locator(".vdl__tab", { hasText: new RegExp(`^${t}`, "i") });
+      /* ⚠ THE FIGURE STOP HAS NO TEXT — it is a drawn mark with an
+         `aria-label`, so a hasText locator finds nothing and the whole rung
+         goes uncaptured. Address it the way a reader does. */
+      const btn =
+        t === "figure"
+          ? page.locator(".vdl__tab--figure")
+          : page.locator(".vdl__tab", { hasText: new RegExp(`^${t}`, "i") });
       if (await btn.isDisabled()) {
         console.log(`  - ${vp.label} ${era} ${t} — disabled on this era, no frame`);
         continue;

@@ -640,13 +640,42 @@ a.vdl__press:focus-visible .vdl__press__headline {
     text-wrap: balance;
   }
 
+  /* ⚠ THE MARK TAKES ITS OWN WIDTH, THE WORDS SHARE THE REST. Four equal
+     cells is what made this row rhyme with the era band below it; a narrow
+     glyph cell followed by three equal labels reads as one thing set apart
+     from a group of three, which is what it is. */
   .vdl__tabs {
     display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
+    grid-template-columns: auto repeat(3, minmax(0, 1fr));
     flex: 0 0 auto;
     border-top: 1px solid rgba(var(--vdl-dawn-rgb), var(--vdl-rail));
     border-bottom: 1px solid rgba(var(--vdl-dawn-rgb), var(--vdl-rail));
+  }
+  .vdl__tab--figure {
+    display: grid;
+    place-items: center;
+    /* 44px of target around a 14px mark. */
+    width: 52px;
+  }
+  .vdl__tab__glyph {
+    display: block;
+    /* ⚠ The grid is authored in whole cells; anything but an integer scale
+       puts a 1-unit rect on a half pixel and the mark goes soft. */
+    shape-rendering: crispEdges;
+  }
+  .vdl__tab__sk {
+    fill: rgba(var(--vdl-dawn-rgb), 0.55);
+  }
+  .vdl__tab__sig {
+    fill: rgba(var(--vdl-dawn-rgb), 0.3);
+  }
+  /* Lit, the disc takes the gold — the same role it carries on the stage
+     itself, so the mark and the drawing agree about what the signal is. */
+  .vdl__tab--figure[data-on="true"] .vdl__tab__sk {
+    fill: rgb(var(--vdl-dawn-rgb));
+  }
+  .vdl__tab--figure[data-on="true"] .vdl__tab__sig {
+    fill: var(--gold, #caa554);
   }
   .vdl__tab {
     appearance: none;
