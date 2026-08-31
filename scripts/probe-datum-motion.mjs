@@ -18,24 +18,34 @@ const browser = await chromium.launch({ headless: false });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 await page.goto(`http://localhost:${PORT}/`, { waitUntil: "domcontentloaded" });
 await page.waitForSelector("#voidwalker .vw", { timeout: 90_000 });
-await page.locator(".home-v2-stage").first().scrollIntoViewIfNeeded().catch(() => {});
+await page
+  .locator(".home-v2-stage")
+  .first()
+  .scrollIntoViewIfNeeded()
+  .catch(() => {});
 await page.waitForTimeout(1200);
 
 const geom = await page.evaluate(() => {
   const r = document.querySelector("#voidwalker .vw");
-  return { top: r.getBoundingClientRect().top + window.scrollY, travel: r.offsetHeight - innerHeight };
+  return {
+    top: r.getBoundingClientRect().top + window.scrollY,
+    travel: r.offsetHeight - innerHeight,
+  };
 });
 
 const sample = async (at) => {
-  await page.evaluate(async (to) => {
-    let y = window.scrollY;
-    while (Math.abs(to - y) > 600) {
-      y += Math.sign(to - y) * 600;
-      window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 70));
-    }
-    window.scrollTo(0, to);
-  }, Math.round(geom.top + at * geom.travel));
+  await page.evaluate(
+    async (to) => {
+      let y = window.scrollY;
+      while (Math.abs(to - y) > 600) {
+        y += Math.sign(to - y) * 600;
+        window.scrollTo(0, y);
+        await new Promise((r) => setTimeout(r, 70));
+      }
+      window.scrollTo(0, to);
+    },
+    Math.round(geom.top + at * geom.travel)
+  );
   await page.waitForTimeout(900);
   return page.evaluate(() => {
     const root = document.querySelector("#voidwalker .vwd");
@@ -44,7 +54,11 @@ const sample = async (at) => {
       if (!el) return null;
       const c = getComputedStyle(el);
       const r = el.getBoundingClientRect();
-      return { op: +(+c.opacity).toFixed(3), tx: c.transform === "none" ? 0 : Math.round(new DOMMatrix(c.transform).m41), x: Math.round(r.left) };
+      return {
+        op: +(+c.opacity).toFixed(3),
+        tx: c.transform === "none" ? 0 : Math.round(new DOMMatrix(c.transform).m41),
+        x: Math.round(r.left),
+      };
     };
     return {
       in: +(getComputedStyle(root).getPropertyValue("--vwh-in") || 0),
@@ -57,6 +71,13 @@ const sample = async (at) => {
       rail: cs('.vwd__rail[data-rail="upper"]'),
       figure: cs(".vwd__figure"),
       band: cs(".vwd__band"),
+      /* ⚠ THE ONE ACTOR THAT IS NOT ZERO AT REST, DELIBERATELY (ADR-082 U20).
+         The reel keeps the selected era at the window's centre, so the track
+         sits at `(n/2 − i − 0.5) × cell` — 0 only at the middle era of five.
+         The zero-at-rest rule still binds on `.vwd__band`, which owns the exit;
+         this is its child and owns the selection. Recorded here so the
+         exception is read rather than discovered. */
+      track: cs(".vwd__band__track"),
       chip1: cs(".vwd__chip:nth-child(1)"),
       slot: cs(".vwh__slot"),
     };
@@ -65,12 +86,14 @@ const sample = async (at) => {
 
 for (const at of [0.0, 0.06, 0.12, 0.2, 0.45, 0.8, 0.9, 0.96]) {
   const s = await sample(at);
-  console.log(`at ${at.toFixed(2)}  in=${s.in.toFixed(3)} exit=${s.exit.toFixed(3)} morph=${s.morph.toFixed(3)}`);
+  console.log(
+    `at ${at.toFixed(2)}  in=${s.in.toFixed(3)} exit=${s.exit.toFixed(3)} morph=${s.morph.toFixed(3)}`
+  );
   console.log(
     `   mast op=${s.mast.op} tx=${s.mast.tx} | title op=${s.title.op} | scope op=${s.scopeHead.op} tx=${s.scopeHead.tx} | facts op=${s.factsHead.op} tx=${s.factsHead.tx}`
   );
   console.log(
-    `   rail op=${s.rail.op} tx=${s.rail.tx} | figure tx=${s.figure.tx} | band tx=${s.band.tx} chip1 op=${s.chip1.op} | slot op=${s.slot.op}`
+    `   rail op=${s.rail.op} tx=${s.rail.tx} | figure tx=${s.figure.tx} | band tx=${s.band.tx} reel tx=${s.track.tx} chip1 op=${s.chip1.op} | slot op=${s.slot.op}`
   );
 }
 

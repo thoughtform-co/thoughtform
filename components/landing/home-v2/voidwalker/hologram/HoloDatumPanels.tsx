@@ -307,9 +307,19 @@ export function HoloDatumPanels({
         </div>
 
         {/* ── LOWER LEFT · TRANSMISSION ──────────────────────────── */}
+        {/* ⚠ THE TAG STATES THE ABSENCE. Without it this head cannot tell "no
+            film" from `genai`'s "a film with no authored duration" — both
+            printed nothing, so the reader saw an identical head above two
+            different records. */}
         <p className="vwd__head" data-cell="ll">
           <span className="vwd__head__kicker">Transmission</span>
-          {era.film?.duration ? <span className="vwd__head__tag">{era.film.duration}</span> : null}
+          {era.film ? (
+            era.film.duration ? (
+              <span className="vwd__head__tag">{era.film.duration}</span>
+            ) : null
+          ) : (
+            <span className="vwd__head__tag">None</span>
+          )}
         </p>
         <div className="vwd__body" data-cell="ll" data-vwh-region="transmission">
           {era.film ? (
@@ -333,11 +343,10 @@ export function HoloDatumPanels({
               <span className="vwd__film__title">{era.film.title}</span>
             </button>
           ) : (
-            /* An absent film is a real reading, not an empty slot. */
-            <div className="vwd__film-empty">
-              <span className="vwd__film-empty__frame" aria-hidden="true" />
-              <span className="vwd__film-empty__note">No film on record</span>
-            </div>
+            /* An absent film is a real reading, not an empty slot — and it is
+               SAID rather than drawn. The dashed ghost frame this replaces was
+               the empty-slot idiom itself. */
+            <p className="vwd__absent">No film on record</p>
           )}
         </div>
 
@@ -348,14 +357,23 @@ export function HoloDatumPanels({
             <span className="vwd__head__tag">
               {String(press.length).padStart(2, "0")} {press.length === 1 ? "item" : "items"}
             </span>
-          ) : null}
+          ) : (
+            <span className="vwd__head__tag">None</span>
+          )}
         </p>
         <div className="vwd__body" data-cell="lr" data-vwh-region="on-record">
-          <div className="vwd__press-stack">
-            {press.map((p) => (
-              <PressItem key={`${p.outlet}-${p.headline.slice(0, 24)}`} press={p} />
-            ))}
-          </div>
+          {press.length > 0 ? (
+            <div className="vwd__press-stack">
+              {press.map((p) => (
+                <PressItem key={`${p.outlet}-${p.headline.slice(0, 24)}`} press={p} />
+              ))}
+            </div>
+          ) : (
+            /* This seat used to render a heading over an empty stack — no text
+               nodes at all, which is why the era probe reported three panels on
+               `loop` where every other era has four. */
+            <p className="vwd__absent">No press on record</p>
+          )}
         </div>
 
         {/* ── THE FIGURE ─────────────────────────────────────────────
@@ -375,56 +393,68 @@ export function HoloDatumPanels({
         <div className="vwd__ground" aria-hidden="true" />
       </div>
 
-      {/* ── THE ERA BAND ─────────────────────────────────────────────
+      {/* ── THE ERA REEL ─────────────────────────────────────────────
           Five hairline-framed chips, the year lettered inside the top-left
           corner and the name beneath the bust. Selection takes gold on the
           frame, the name and a filled diamond — colour AND elaboration
-          together here because the chip is the control, not a card in a set. */}
+          together here because the chip is the control, not a card in a set.
+
+          The band is a bounded WINDOW and the track turns behind it, so the
+          selected era is always at its centre; `--vwd-i` is the only thing the
+          composition needs to know to place it, and `--vwd-d` gives each chip
+          its distance from that centre for the depth falloff. Both are plain
+          integers — the arithmetic lives in the sheet. */}
       <nav
         className="vwd__band"
         aria-label="Era"
         role="tablist"
         data-vwh-region="era-selector"
         data-testid="voidwalker-era-selector"
+        style={
+          { "--vwd-i": activeEraIndex, "--vwd-n": CHARACTER_ERAS.length } as React.CSSProperties
+        }
       >
-        {CHARACTER_ERAS.map((item, i) => {
-          const selected = i === activeEraIndex;
-          const bust = resolveCharacterEraHologram(item);
-          return (
-            <button
-              key={item.id}
-              id={`${idPrefix}-era-tab-${item.id}`}
-              ref={(node) => {
-                chipRefs.current[i] = node;
-              }}
-              type="button"
-              role="tab"
-              className="vwd__chip"
-              aria-controls={panelId}
-              aria-selected={selected}
-              aria-label={`${item.year} — ${item.wardrobe}`}
-              tabIndex={selected ? 0 : -1}
-              data-on={selected}
-              data-vwh-era-tab={item.id}
-              onClick={() => selectEra(i)}
-              onKeyDown={(event) => onChipKeyDown(event, i)}
-            >
-              <span className="vwd__chip__frame">
-                <img
-                  className="vwd__chip__bust"
-                  src={bust.posterPath}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                  style={{ "--bust-head": bustHeadAnchor(bust) } as React.CSSProperties}
-                />
-                <span className="vwd__chip__year">{item.year}</span>
-              </span>
-              <span className="vwd__chip__name">{item.short}</span>
-              <span className="vwd__chip__mark" aria-hidden="true" />
-            </button>
-          );
-        })}
+        <div className="vwd__band__track">
+          {CHARACTER_ERAS.map((item, i) => {
+            const selected = i === activeEraIndex;
+            const bust = resolveCharacterEraHologram(item);
+            return (
+              <button
+                key={item.id}
+                id={`${idPrefix}-era-tab-${item.id}`}
+                ref={(node) => {
+                  chipRefs.current[i] = node;
+                }}
+                type="button"
+                role="tab"
+                className="vwd__chip"
+                aria-controls={panelId}
+                aria-selected={selected}
+                aria-label={`${item.year} — ${item.wardrobe}`}
+                tabIndex={selected ? 0 : -1}
+                data-on={selected}
+                data-vwh-era-tab={item.id}
+                onClick={() => selectEra(i)}
+                onKeyDown={(event) => onChipKeyDown(event, i)}
+                style={{ "--vwd-d": Math.abs(i - activeEraIndex) } as React.CSSProperties}
+              >
+                <span className="vwd__chip__frame">
+                  <img
+                    className="vwd__chip__bust"
+                    src={bust.posterPath}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    style={{ "--bust-head": bustHeadAnchor(bust) } as React.CSSProperties}
+                  />
+                  <span className="vwd__chip__year">{item.year}</span>
+                </span>
+                <span className="vwd__chip__name">{item.short}</span>
+                <span className="vwd__chip__mark" aria-hidden="true" />
+              </button>
+            );
+          })}
+        </div>
       </nav>
 
       {watching && era.film ? (

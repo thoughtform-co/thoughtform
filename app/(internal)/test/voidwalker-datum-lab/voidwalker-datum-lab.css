@@ -21,6 +21,22 @@
   background: var(--void, #0a0908);
 }
 
+/* ⚠ THE LAB OPTS INTO THE RAIL DATUM BY HAND (ADR-082 U20). On the landing the
+   block hangs from `--hud-rail-y-start`, and that rule is gated on
+   `#voidwalker[data-vw-mode="hologram"]` — necessarily, because the datum is a
+   VIEWPORT Y and only means anything where the station has surrendered its own
+   padding and pinned to the top. No such ancestor exists here, so without this
+   the lab would show the composition hanging ~82px higher than production with
+   a figure column ~15px wider: a window that lies about the thing it looks
+   onto. Declaring it here puts both homes on one line and leaves the knob bar
+   as the only difference between them, which is what the production sheet
+   claims. Same `min-height` rung as production, for the same reason. */
+@media (min-height: 720px) {
+  .dlab.vwd {
+    --vwd-pad-top: max(var(--vwd-pad-top-min), var(--hud-rail-y-start, 104px));
+  }
+}
+
 .dlab__bar {
   position: sticky;
   top: 0;

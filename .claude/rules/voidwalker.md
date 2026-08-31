@@ -83,11 +83,84 @@ composition's own entry/exit block, its responsive rungs, and
   `HoloDatumPanels` and imports `voidwalker-datum.css`; its own sheet is
   `.dlab*` knob chrome only. `--vwd-bar-h` is the one value that differs
   (0 in production, the bar's height in the lab).
-- **Verifying:** `node scripts/capture-voidwalker-station.mjs` — HEADED, real
+- ⚠ **THE RAIL DATUM IS GATED TWICE, AND BOTH GATES ARE THE RULE (ADR-082
+  U20).** `--hud-rail-y-start` is a VIEWPORT Y while the sheet's padding is
+  SECTION-RELATIVE; they coincide only where `#voidwalker` has surrendered its
+  own `padding-block` and pinned to `top: 0`, which happens only under
+  `[data-vw-mode="hologram"]`. Ungated it would overshoot by ~119px on
+  desktop-PRM, the corridor fallback and 701–1100px — the very rungs it was
+  meant to fix. And it is affordable only above `min-height: 720px`, the
+  shortest reference viewport: the capable gate is width-only, so a half-height
+  window on a wide monitor enters hologram mode at 599px tall, where the datum's
+  89px comes straight out of the body rows.
+  ⚠ **The lab re-declares BOTH by hand** (`voidwalker-datum-lab.css`) — a rule
+  the lab's selector cannot reach is a composition the lab cannot show, and
+  without it the window would hang 82px higher than the landing with a figure
+  column 15px wider. Move one rung, move the other.
+  ⚠ **IT COSTS THE PANELS ~13 % OF THE FIGURE COLUMN AND 32–53px OF BODY ROW,**
+  paid back out of band padding, the facts' own gap and row padding, and body
+  padding-bottom — chrome first, rhythm second, **never the type**. Measured
+  headroom after: **15px at 1280×720**, 178px at the owner's 1920×1247.
+- ⚠ **1752×599 STILL CLIPS, AND IT DID BEFORE THIS PASS** — Scope +64px /
+  Facts +43px now against a measured baseline of +69 / +58 plus a collision.
+  Short-and-wide is a genuinely unsolved shape for this composition, improved
+  rather than fixed; do not read a green probe at the reference viewports as
+  clearance there.
+- **Verifying:** `node scripts/probe-voidwalker-eras.mjs --vp 1280x720` is the
+  height gate — it walks every era and reports each panel's overflow AND its
+  `foot` headroom, plus the reel's pitch against the widest rendered chip name
+  and a pointer hit-test on the centred chip. ⚠ **It drives the reel with the
+  KEYBOARD** (`Home` / `ArrowRight`), because two of the five chips are always
+  outside the clip window and an `overflow: clip` box is not scrollable — a
+  per-chip `page.click` times out reporting "element is not stable", which reads
+  like an animation fault and is really "that chip is off the reel".
+  ⚠ **`clientHeight − scrollHeight` CANNOT REPORT HEADROOM** on an
+  `overflow: hidden` box: `scrollHeight` is `max(clientHeight, content)`, so it
+  is exactly 0 whenever the content fits. The `foot` metric is the gap between
+  the last glyph and the box's bottom edge.
+  Then `node scripts/capture-voidwalker-station.mjs` — HEADED, real
   scrolls, walks the runway and prints the layout, mode, handoff state, pin
   offset and scroll-derived era at each stop. ⚠ Headless is wrong twice over:
   the corridor is WebGL, and Chromium has no H.264 so the MP4 fallback paints
   nothing.
+- ⚠ **THE ERA BAND IS A REEL WINDOW (ADR-082 U20)** — the selected era is
+  always at its centre and the track turns behind a bounded window, so the reel
+  rotates as the reader travels the runway. **A full-width track cannot roll**:
+  five cells come to ~550px against a 1440px band, so centring only shoves the
+  group sideways (220px at era 0) with dead band beside it — this sheet's own
+  earlier finding ("five things that happen to share a row") from the other
+  direction, and a wider pitch reproduces it. The window is
+  `min(100% − 2·--hud-margin, --vwd-reel × --vwd-cell)`, masked at both edges.
+  ⚠ **The offset is `(n/2 − i − 0.5) × cell`, which is exactly 0 at the middle
+  era** — the reel is byte-identical to the row it replaced there, which is how
+  the change proves itself additive. `--vwd-i` and per-chip `--vwd-d` are plain
+  integers written by the component; all the arithmetic is in the sheet.
+  ⚠ **`overflow: clip`, never `hidden`** — `hidden` is a scroll container, so
+  `.focus()` on a chip the window has not reached would set `scrollLeft` and
+  leave the reel offset underneath its own transform.
+  ⚠ **NO `gap` on the track, at any rung** — cells sit `cell + gap` apart while
+  the offset steps by `cell`, so the selected chip drifts off centre by
+  `i × gap`, silently.
+  ⚠ **The chips keep their own width (`justify-self: center`)** — a grid item
+  defaults to `stretch`, and abutting targets mean a click one pixel off pins
+  the scroll to the wrong era (ADR-082 U10), which is a navigation error.
+  ⚠ **The falloff lives on the chip's CHILDREN.** `.vwd__chip`'s opacity and
+  transform belong to §G's entry ladder, so a falloff declared there is
+  overwritten the moment the station arms.
+  ⚠ **The old `border-top` was a DUPLICATE, not a divider** — `.vwd__ground` is
+  a 0px track on the same Y, so the two composited to ~0.36 alpha between the
+  HUD margins and 0.2 outside: a foot rule brighter in the middle, running
+  through the HUD rails.
+- ⚠ **AN ABSENT SEAT IS SAID, NOT DRAWN (ADR-082 U20).** `.vwd__absent` is one
+  mono line — no box, no glyph. The dashed 16:9 ghost frame is deleted (it was
+  the empty-slot idiom itself), and ON RECORD gained the same line: it used to
+  render a heading over literally no text nodes, which is why the era probe
+  reported `panels=3` on `loop` where every other era reports 4. Both heads
+  print `None` in `.vwd__head__tag` when empty — which also disambiguates
+  TRANSMISSION, where "no film" and `genai`'s "film with no authored duration"
+  both printed nothing. ⚠ **Not a diamond**: the filled gold diamond means "you
+  are here" on the reel one row below, so the same glyph as an absence marker
+  inverts its own meaning on one screen.
 - **The entry/exit choreography is ported** (`voidwalker-datum.css` §G) — the
   same three-ramp terminal power-on, the same 2.5px tear, the same
   `[0,.22]` / `[.74,.96]` clocks. ⚠ **THE TWO TRANSFORMS ARE COMPOSED, NOT
@@ -227,9 +300,18 @@ handoff and the `701–1100px` complete fallback alone.
   needs the side the reader came from, or a stop on a boundary flickers.
   ⚠ **A SCRUBBED ARRIVAL IS NOT DELIBERATE** — it must not bump `epoch`, or
   every wheel notch restarts the figure's 900ms materialize. Only a click does.
-- ⚠ **THE IDENTITY SITS ON `--station-title-top`**, the shared anchor the
-  corridor's station headers and the services masthead already derive from —
-  one datum for every big title on the surface, never a third close number.
+- ⚠ **THE IDENTITY SAT ON `--station-title-top` UNTIL ADR-082 U20; THE DATUM
+  COMPOSITION IS ON `--hud-rail-y-start` INSTEAD.** That token is the shared
+  anchor the corridor's station headers and the services masthead derive from,
+  and the rule was "one datum for every big title, never a third close number".
+  The datum composition never honoured it (the kicker measured 33px at
+  1440×900), which is what the owner read as the block "hugging the top part",
+  and the line he pointed at was the HUD rails' own top — 104px at 1440×900,
+  ~43px BELOW the station-title line. Both are shared anchors; this stage takes
+  the FRAME's because it is a full-bleed instrument seated inside the frame
+  rather than a station header. **The other stations are unmoved and still
+  hang from `--station-title-top`** — this is a second datum with a stated
+  scope, not a third close number.
 - ⚠ **THE TWO COLUMNS MIRROR (ADR-082 U11): `justify-items: end` LEFT,
   `start` RIGHT.** With `stretch` plus a capped `38ch` measure both panels pin
   to their column's LEFT edge -- far from the figure on the left, flush on the
