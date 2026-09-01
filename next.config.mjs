@@ -18,13 +18,18 @@ const bundleAnalyzer = withBundleAnalyzer({
 const exportMode = process.env.NEXT_OUTPUT_EXPORT === "1";
 
 // Security headers are computed once per build (not per request) — the
-// shape doesn't depend on request state. CSP is currently delivered in
-// `Content-Security-Policy-Report-Only` mode so we can collect violations
-// from the live homepage without breaking the v7 prototype's inline
-// styles + R3F shader pipeline. Promote to enforced once the report
-// queue is empty across all production routes (`enforceCsp: true`).
+// shape doesn't depend on request state. The CSP is ENFORCED as of
+// 2026-09-01 (pre-launch): Report-Only had shipped with no report-uri, so
+// its "promote once the report queue is empty" gate described a queue
+// that never existed. Enforcement was earned by a headed sweep instead —
+// scripts/sweep-csp-enforced.mjs, 5 routes × 2 themes, zero violations —
+// which first surfaced (and fixed) the two real breakers: the brandmark's
+// Draco decoder (self-hosted under public/draco/ now) and the hologram
+// codec probe's data: video. Re-run that sweep before widening or
+// tightening any directive.
 const securityHeaders = buildSecurityHeaders({
   isDevelopment: process.env.NODE_ENV !== "production",
+  enforceCsp: true,
 });
 
 /** @type {import('next').NextConfig} */

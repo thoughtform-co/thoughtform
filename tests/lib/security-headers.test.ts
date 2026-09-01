@@ -41,7 +41,10 @@ describe("buildContentSecurityPolicy", () => {
      itself; a host appended silently fails instead. */
   it("keeps media self-hosted — a remote src is how video leaves the repo", () => {
     const csp = buildContentSecurityPolicy();
-    expect(csp).toContain("media-src 'self' blob:;");
+    // data: is the hologram codec probe (inline content, not a remote
+    // host); no http(s) origin may ever join this list.
+    expect(csp).toContain("media-src 'self' blob: data:;");
+    expect(csp).not.toMatch(/media-src[^;]*https?:\/\//);
   });
 
   it("frames exactly one origin: the owner's own film, cookie-free (ADR-074 U2)", () => {
@@ -53,7 +56,11 @@ describe("buildContentSecurityPolicy", () => {
 
   it("scripts come from self plus exactly one host: Vercel measurement", () => {
     const prod = buildContentSecurityPolicy({ allowUnsafeEval: false });
-    expect(prod).toContain("script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com;");
+    // 'wasm-unsafe-eval' is the self-hosted Draco decoder (wasm-only, never
+    // JS eval); the one external host is Vercel measurement.
+    expect(prod).toContain(
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://va.vercel-scripts.com;"
+    );
   });
 
   it("opts in to 'unsafe-eval' for dev (HMR / fast refresh) but never in prod", () => {

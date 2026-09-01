@@ -99,6 +99,17 @@ import {
  *  is invoked there, so the corridor consumer hits the loader's cache. */
 const BRANDMARK_GLB = "/models/brandmark/brandmark.glb";
 
+/* ⚠ THE DECODER IS SELF-HOSTED (2026-09-01, the CSP enforcement pass).
+   brandmark.glb REQUIRES KHR_draco_mesh_compression (pinned by
+   tests/lib/glb-no-draco... which is exactly the test that found it), and
+   drei's default decoder path is https://www.gstatic.com/draco/ — a host
+   the enforced CSP deliberately does not allow, so without this line the
+   mark fails to parse and the corridor loses its centerpiece the moment
+   enforcement flips. The files under public/draco/ are copied verbatim
+   from three/examples/jsm/libs/draco/gltf/ — re-copy them when three is
+   upgraded (decoder and three must stay in step). */
+useGLTF.setDecoderPath("/draco/");
+
 /** Ignite is pinned to "assembled" for the corridor. The mark is the
  *  SAME brandmark end-to-end — it must never assemble from a visible
  *  swirl (the morph is a flat → 3D EXTRUDE, not a scatter → gather).

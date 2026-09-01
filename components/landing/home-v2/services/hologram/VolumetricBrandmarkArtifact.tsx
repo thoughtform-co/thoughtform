@@ -33,6 +33,11 @@ import { lerp } from "@/lib/math";
 import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 
 export const BRANDMARK_GLB = "/models/brandmark/brandmark.glb";
+
+/* Same self-hosted Draco decoder as BrandmarkPhysicsCoreActor (the GLB
+   requires it; gstatic is CSP-blocked). setDecoderPath is a static on
+   useGLTF, so the call is idempotent across the two loader modules. */
+useGLTF.setDecoderPath("/draco/");
 export const BRANDMARK_WIRE_GLB = "/models/brandmark/brandmark-wire.glb";
 export type VolumetricBrandmarkBlending = "additive" | "normal";
 
