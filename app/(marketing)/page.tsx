@@ -22,7 +22,8 @@ import "@/components/landing/home-v2/voidwalker/voidwalker-travel.css";
 // composes with the same tokens the timeline uses, and BEFORE theme.css
 // like every other route sheet.
 import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css";
-// The D2 "datum rails" composition behind `VOIDWALKER_DATUM_STAGE` — AFTER
+// The D2 "datum" composition (ungated — its comparison flag is deleted,
+// ADR-082 U19/U21) — AFTER
 // the hologram sheet, because it re-houses the same figure (`.vwh__slot`
 // and its masked floor stay that sheet's) inside a different grid and its
 // `.vwd__vwh` overrides have to win.

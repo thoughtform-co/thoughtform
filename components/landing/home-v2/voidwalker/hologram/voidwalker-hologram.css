@@ -309,10 +309,11 @@
    stage wrapper), and the excursion is capped at 3px. The selectors are
    `data-phase=rest` so an explicit era-button materialize can temporarily
    take over the inner clip/tear without adding a second scroll writer. */
-/* ⚠ BOTH COMPOSITION ROOTS ACQUIRE. `VOIDWALKER_DATUM_STAGE` swaps the
-   station's interior between `.vwh` and `.vwd`, and the FIGURE is shared by
-   both — so its acquisition is named for both roots here rather than copied
-   into the datum sheet. ⚠ The datum branch nests a `.vwh` wrapper INSIDE
+/* ⚠ BOTH COMPOSITION ROOTS ACQUIRE. The landing's interior is `.vwd` (the
+   datum composition — its comparison flag `VOIDWALKER_DATUM_STAGE` and the
+   losing `.vwh` composition are DELETED, ADR-082 U19) while the figure lab
+   still mounts the figure under a bare `.vwh` root — so the acquisition is
+   named for both roots here rather than copied into the datum sheet. ⚠ The datum branch nests a `.vwh` wrapper INSIDE
    `.vwd` for the token block, and the scroll writer puts `data-vwh-ready` on
    the ROOT only, so `.vwh[data-vwh-ready]` alone silently misses that
    branch: the slot would sit at full opacity and skip the whole acquisition

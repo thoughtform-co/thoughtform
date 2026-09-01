@@ -16,8 +16,9 @@ import { DatumLabShell } from "./DatumLabShell";
    it here would fork it.
 
    ⚠ THE COMPOSITION SHEET IS PRODUCTION'S. `voidwalker-datum.css` and
-   `HoloDatumPanels` are what the landing renders behind
-   `VOIDWALKER_DATUM_STAGE`; this route only adds a knob bar around them, so
+   `HoloDatumPanels` are what the landing renders (ungated — the comparison
+   flag `VOIDWALKER_DATUM_STAGE` is deleted with the losing composition,
+   ADR-082 U19); this route only adds a knob bar around them, so
    anything retuned here lands on the home page without a translation and
    there is no second drawing to keep in sync. */
 import "@/components/landing/v7/landing.css";

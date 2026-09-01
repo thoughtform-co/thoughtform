@@ -16,7 +16,9 @@ import { VOIDWALKER_BEATS, vwPlain, type VwPress } from "@/lib/voidwalker/voidwa
 
 /**
  * HoloDatumPanels — the D2 "datum rails" composition (owner's wave-2 pick,
- * 2026-08-31), behind `VOIDWALKER_DATUM_STAGE`.
+ * 2026-08-31). Nothing gates it: the comparison flag `VOIDWALKER_DATUM_STAGE`
+ * did its job and is DELETED with the losing composition (ADR-082 U19;
+ * ADR-070 U35's doctrine).
  *
  * ⚠ NOTHING IS DRAWN TO THE FIGURE, AND SINCE ADR-082 U21 NOTHING IS DRAWN
  * BETWEEN THE PANELS EITHER. Wave 1 tied each panel to the hologram with a
@@ -266,9 +268,10 @@ export function HoloDatumPanels({
       </nav>
 
       <div className="vwd__stage" id={panelId}>
-        {/* THE TWO CONSTRUCTION RAILS — full width, edge to edge, passing
-            behind the figure. Each sits on the bottom edge of a head row,
-            which is where every head's own rule already is. */}
+        {/* The two construction rails used to render here (full width, on the
+            head rows' bottom edges) — DELETED in ADR-082 U21, the owner's own
+            ruling; alignment carries the tie now and the boundaries smoke
+            fails any wide painted line that tries to come back. */}
 
         {/* ── UPPER LEFT · SCOPE ─────────────────────────────────────
             ⚠ Carries the `dossier` handoff target: it holds the top-left

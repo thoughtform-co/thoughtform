@@ -2154,7 +2154,14 @@ reading face. **A font that letters nothing can still be load-bearing.**
 `probe-datum-motion.mjs` — translateX exactly 0 at rest for every remaining
 actor, entry spread ±21 collapsing to 0, everything past the viewport by
 `exit` 1; a live sweep of `#voidwalker` for any element wider than 700px
-painting a border or ground returns **zero**. Pre-existing failures unchanged:
-`about-voidwalker-handoff:240` (`name/title width: 480 vs 407`) and
-`about-voidwalker-handoff-boundaries:373` (floor isolation, correct on the
-alpha branch); the ambient-hold case passes.
+painting a border or ground returns **zero** — ⚠ that sweep was a MANUAL
+check when this shipped; since 2026-09-01 it is a committed test ("no element
+wider than 700px paints a border or ground in #voidwalker" in
+`about-voidwalker-handoff-boundaries.spec.ts`, asserting PAINT on the active
+branch so the Safari-fallback `.vwh__ground` cannot red it). The two
+"pre-existing failures" this update carried are FIXED the same day: the
+boundaries floor test branches on `data-holo-alpha` (it was asserting the
+fallback contract against the alpha branch), and the handoff flight asserts
+left/top only (width 480 vs 407 and height 56 vs 42 are the two elements'
+own boxes — content-sized string vs fixed measure, by U11's ruling); the
+ambient-hold case passes.

@@ -15,7 +15,10 @@ const PAD_S = 48, PAD_T = 28, PAD_B = 22;
 // measured off the shipped screenshot: the HUD keeps a deep gutter on both
 // sides (rail + tick numerals left, the bearing/sector readouts right), so
 // the reading band is narrower than the stage padding suggests.
-const COL = 354;                    // 38ch at 18px - the live max-width
+// ⚠ HISTORICAL: 354 was "38ch at 18px" when this mockup was generated. The
+// live measure is 23rem (368px) and no longer ch-derived at all (ADR-082
+// U21) — regenerate against the live sheet before trusting these columns.
+const COL = 354;
 const LX = 190, LW = COL;           // left column   190 -> 544
 const CX = 556, CW = 488;           // media FRAME  556 -> 1044 (silhouette ~590->1030)
 const RX = 1056, RW = COL;          // right column 1056 -> 1410

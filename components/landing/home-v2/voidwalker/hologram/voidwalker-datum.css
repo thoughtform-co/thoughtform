@@ -3,10 +3,12 @@
    ═══════════════════════════════════════════════════════════════════════
 
    The wave-2 composition the owner picked (2026-08-31), promoted out of
-   `/test/voidwalker-datum-lab` behind `VOIDWALKER_DATUM_STAGE`. The lab
-   imports THIS sheet and mounts THIS component, so there is one composition
-   with two homes and nothing to keep in sync (ADR-070 U35's law: the lab is
-   a window onto production, never a copy).
+   `/test/voidwalker-datum-lab`. Its comparison flag `VOIDWALKER_DATUM_STAGE`
+   did its job and is DELETED with the losing composition — nothing gates
+   this sheet (ADR-082 U19; ADR-070 U35's doctrine). The lab imports THIS
+   sheet and mounts THIS component, so there is one composition with two
+   homes and nothing to keep in sync (the lab is a window onto production,
+   never a copy).
 
    `voidwalker-hologram.css` still owns the FIGURE — `.vwh__slot`, its masked
    floor, `.vwh__base` — and is imported alongside. This sheet is only the
@@ -60,8 +62,13 @@
      left edge sat 69px INBOARD of the prose underneath it — a misalignment
      that reads as sloppiness and cannot be tuned away, because the two
      numbers are computed from different fonts. `rem` is the root's size and
-     is the same everywhere; 23rem is the 38-character measure this column
-     was already rendering. */
+     is the same everywhere. ⚠ 23rem (368px) is the BODY's old box preserved
+     for pixel stability — i.e. 38ch of the WRONG inherited face (IBM Plex
+     Mono at 16px), not "38 characters" of anything this column renders: PP
+     Neue Montreal at these sizes fits ~43–49 characters in it. Retune the
+     measure from the design, never by back-deriving a character count from
+     this number. Byte-identical only where the column affords ≥368px; below
+     that the min() hands the box to the column. */
   --vwd-measure: min(100%, 23rem);
 
   /* How much of the 720×1280 frame a chip shows, and where the head anchor
@@ -94,10 +101,14 @@
   );
   --vwd-fig-w: clamp(230px, calc((100svh - var(--vwd-chrome-h)) * 0.5625), 460px);
 
-  /* ⚠ THE READING BAND IS THIS PADDING, NOT THE STATION'S — the same rule
-     `.vwh` states: the stage box spans the viewport so the rails can run
-     edge to edge, and reproducing the station's own inset here is what
-     leaves the columns where they were. */
+  /* ⚠ THE READING BAND IS THIS PADDING, NOT THE STATION'S. The stage box is
+     a full-bleed instrument seated inside the HUD frame (it spans the
+     viewport — originally so the U19 rails could run edge to edge; the
+     rails are deleted and the full-bleed box STAYS, because the panels'
+     measured geometry hangs off it). Reproducing the station's own inset
+     here is what keeps every column exactly where the station would put
+     it — "simplify" this to a station padding and all four panels' left
+     edges move. */
   --vwd-pad-x: max(clamp(20px, 4vw, 72px), var(--hud-content-inset, 161px));
 
   /* ⚠ THE BLOCK HANGS FROM THE HUD RAIL'S OWN TOP LINE — see the gated rule
@@ -457,8 +468,9 @@
    empty-slot idiom itself, which is what the owner was reading as "weird if
    there's nothing there" — and ON RECORD had it worse: a heading over literally
    no text nodes at all (the era probe reported `panels=3` on `loop`, where every
-   other era reports 4). The head, its rule and the datum rails already frame
-   this cell; the absence only had to be SAID.
+   other era reports 4). The head and its own rule already frame this cell
+   (the datum rails used to help — ADR-082 U21 deleted them and the framing
+   argument survives without them); the absence only had to be SAID.
    ⚠ AND IT IS NOT A DIAMOND. An outlined mark was drawn and rejected: the
    filled gold diamond means "you are here" on the chip band one row below, so
    the same glyph as an absence marker inverts its own meaning on one screen. */
@@ -530,14 +542,17 @@ a.vwd__press:focus-visible .vwd__press__headline {
    you've selected should always be in the middle"). The era is scroll-derived
    (ADR-082 U10), so the reel turns as the reader travels the runway.
 
-   ⚠ THE DIVIDER IS DELETED, AND IT WAS A DUPLICATE RATHER THAN A CHOICE.
-   `.vwd__ground` WAS a 0px track at the stage's bottom edge (deleted in U21,
-   with the rails), inset to
-   `--hud-margin`; the band's old `border-top` sat on that same Y and spanned
-   the full border box. So there were two hairlines on one line: ~0.36 alpha
-   between the HUD margins and 0.2 outside them — a foot rule brighter in the
-   middle that ran straight through the HUD rails, which is exactly what the
-   rails' own inset existed to prevent.
+   ⚠ THE BAND'S TOP EDGE CARRIES NO RULE, BY DECISION — two passes deep.
+   U20 deleted the band's `border-top` as a DUPLICATE: `.vwd__ground` (a 0px
+   track at the stage's bottom edge, inset to `--hud-margin`) already painted
+   that Y, and the two composited to ~0.36 alpha inside the HUD margins and
+   0.2 outside — a foot rule brighter in the middle, running through the HUD
+   rails' tick ladder. U21 then deleted the ground itself, with the rails.
+   The border-top STAYS deleted even though its "duplicate" is gone:
+   restoring it would recreate the full-bleed line through the tick ladder
+   that both passes removed (it spans the band's border box, not the HUD
+   margins), and the U21 sweep in the boundaries smoke now fails exactly
+   that.
 
    ⚠ AND A FULL-WIDTH TRACK CANNOT ROLL. Five cells come to ~550px against a
    1440px band, so centring the active chip only shoves the whole group sideways
@@ -862,7 +877,7 @@ a.vwd__press:focus-visible .vwd__press__headline {
   .vwd__tab[data-on="true"] {
     color: rgb(var(--vwd-dawn-rgb));
     /* The lit segment is a gold underline INSIDE the row's own bottom rule —
-       the desktop's "the head sits on the rail" move, one scale down. */
+       the desktop heads' own carries-its-rule move, one scale down. */
     box-shadow: inset 0 -2px 0 0 var(--gold, #caa554);
   }
   .vwd__tab:disabled {
@@ -879,8 +894,8 @@ a.vwd__press:focus-visible .vwd__press__headline {
 
   /* ── THE ONE AREA ────────────────────────────────────────────────
      Flat flow instead of the desktop's row grid: with one panel visible at
-     a time there is nothing to align across columns, so the rails have no
-     work to do and are removed rather than left as decoration. */
+     a time there is nothing to align across columns, so the desktop's
+     shared-row alignment has no work to do here. */
   .vwd__stage {
     display: flex;
     flex-direction: column;
@@ -1016,9 +1031,10 @@ a.vwd__press:focus-visible .vwd__press__headline {
 
 /* ═══ §F · THE MIDDLE BAND (701–1100px) ═════════════════════════════
    Production's own rung: everything visible in normal flow, no tabs. The
-   datum rails are a THREE-COLUMN idea — with the figure stacked above the
-   panels there is no shared row for them to align, so they go rather than
-   being drawn where they no longer mean anything. */
+   datum rails were a THREE-COLUMN idea and this rung never drew them —
+   with the figure stacked above the panels there was no shared row to
+   align. (Since ADR-082 U21 they are deleted everywhere, so the rung's
+   old exemption is now just the house state.) */
 @media (min-width: 701px) and (max-width: 1100px) {
   /* ⚠ THE ROOT UNBOUNDS WITH THE SHEET. This rung is normal flow — the
      station is not in hologram mode below 1101px, so there is no pin and no
@@ -1131,17 +1147,19 @@ a.vwd__press:focus-visible .vwd__press__headline {
    transitions, no keyframes and no one-shot attributes anywhere in here.
 
    ⚠ NOTHING ENTERS OR RELEASES VERTICALLY. Mast and the LEFT cells clear
-   left; the figure, the RIGHT cells and the era
-   band clear right. `--vwh-exit` reaches 1 before the sticky releases, which
-   is what makes the browser's eventual upward release invisible.
-
+   left; the figure, the RIGHT cells and the era band clear right.
+   `--vwh-exit` reaches 1 before the sticky releases, which is what makes
+   the browser's eventual upward release invisible.
 
    ⚠ AND THE TWO TRANSFORMS ARE COMPOSED, NOT NESTED. `.vwh` could put the
    exit on a group container because its panels live inside `.vwh__side`
-   wrappers; these heads and bodies are DIRECT grid items — separating them
-   into wrappers is exactly what would break the rails, whose whole precision
-   comes from a head's bottom edge BEING a row boundary. So the entry spread,
-   the tear and the exit travel are three additive terms of one translate.
+   wrappers; these heads and bodies are DIRECT grid items, and the split
+   OUTLIVES the rails it was first made for (deleted, U21): wrapping a head
+   and its body would break the two-columns-one-row alignment — whose
+   precision comes from a head's bottom edge BEING a row boundary, the one
+   thing still tying the four panels — and would nest the exit inside the
+   children's entry tear. So the entry spread, the tear and the exit travel
+   are three additive terms of one translate.
    Where a group does exist (the mast, the figure, the band) the container
    owns the exit and its children own the entry, as before. */
 @media (prefers-reduced-motion: no-preference) {

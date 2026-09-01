@@ -178,10 +178,14 @@ composition's own entry/exit block, its responsive rungs, and
   ⚠ **The falloff lives on the chip's CHILDREN.** `.vwd__chip`'s opacity and
   transform belong to §G's entry ladder, so a falloff declared there is
   overwritten the moment the station arms.
-  ⚠ **The old `border-top` was a DUPLICATE, not a divider** — `.vwd__ground` is
-  a 0px track on the same Y, so the two composited to ~0.36 alpha between the
-  HUD margins and 0.2 outside: a foot rule brighter in the middle, running
-  through the HUD rails.
+  ⚠ **The old `border-top` was a DUPLICATE, not a divider** — `.vwd__ground`
+  WAS a 0px track on the same Y (⚠ deleted itself in U21, with the rails), so
+  the two composited to ~0.36 alpha between the HUD margins and 0.2 outside:
+  a foot rule brighter in the middle, running through the HUD rails. **The
+  band's top edge carries NO rule now, by decision, two passes deep** — the
+  border-top does not come back just because its "duplicate" is gone;
+  restored, it would be the full-bleed line through the tick ladder both
+  passes removed, and the U21 sweep in the boundaries smoke fails it.
 - ⚠ **AN ABSENT SEAT IS SAID, NOT DRAWN (ADR-082 U20).** `.vwd__absent` is one
   mono line — no box, no glyph. The dashed 16:9 ghost frame is deleted (it was
   the empty-slot idiom itself), and ON RECORD gained the same line: it used to
@@ -350,8 +354,12 @@ handoff and the `701–1100px` complete fallback alone.
   BECAUSE THE COLUMNS ARE EXACTLY AS WIDE AS THE PANEL THERE**, so the defect
   is absent at every rung in the matrix, not merely subtle. Mirrored, the
   inboard gap is `column-gap` on both sides and the extra width becomes
-  MARGIN. ⚠ `.vwh__panel-slot` needs a definite `width: min(100%, 38ch)` or it
-  shrinks to its own content and seats vary per era.
+  MARGIN. ⚠ SUPERSEDED IN THE MECHANISM, KEPT FOR THE LAW: `.vwh__panel-slot`
+  is deleted with the character-sheet composition (175c5970 / U19), and a
+  `ch`-based measure is BANNED besides (see the U21 bullet above — `ch`
+  resolves against the element's own font). What survives is the principle:
+  a panel seat needs a DEFINITE width (`--vwd-measure`, `min(100%, 23rem)`)
+  or it shrinks to its own content and seats vary per era.
 - ⚠ **SCOPE LEFT, FACTS RIGHT, NO LOADOUT (owner, same pass).** The identity
   and FACTS share row 1; SCOPE hangs below the identity in the same column.
   ⚠ **ONE `--vwh-seat-h` SERVES BOTH COLUMNS** — ON RECORD and TRANSMISSION are

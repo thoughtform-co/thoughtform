@@ -168,11 +168,12 @@ for (const era of tabs) {
 
     const panels = [...document.querySelectorAll("#voidwalker .vwd__body")]
       .map((el) => {
-        /* ⚠ THE HEAD IS A SIBLING, NOT A CHILD (ADR-082 U19). The datum
-           composition makes each head and body separate grid items on
-           purpose — that is what puts a head's bottom edge exactly ON a row
-           boundary, which is where its rail runs. Looking for it inside the
-           body finds nothing and every panel reports "?". */
+        /* ⚠ THE HEAD IS A SIBLING, NOT A CHILD (ADR-082 U19, and the split
+           OUTLIVES the U21 rail deletion). The datum composition keeps each
+           head and body as separate grid items — that is what holds both
+           columns' heads on one shared row and keeps the entry/exit
+           transforms composed rather than nested. Looking for the head
+           inside the body finds nothing and every panel reports "?". */
         const cell = el.getAttribute("data-cell");
         const head = cell
           ? document.querySelector(`#voidwalker .vwd__head[data-cell="${cell}"]`)
