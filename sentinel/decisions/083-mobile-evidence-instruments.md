@@ -111,3 +111,64 @@ even though the desktop pass tokenised chrome onto `--fl-chrome-*`. The
 tokens scale UP with viewport and would grow the case at short-tall
 phones (measured); the mobile block is the one place a literal is
 preferred to a scaling clamp.
+
+## Update 2 (2026-09-01) — the seat rests on a boundary, the sheet splits its slack
+
+The owner's first physical-phone read (three screenshots, 2026-09-01) found
+three defects on this ADR's surfaces. All are fixed; the IA is untouched.
+Sign-off is still open — this update is what the owner judges.
+
+- **The ARTIFACT seat sliced capability labels at its resting fold.** The
+  tools plate's 2×2 grid put two half-cut sentences side by side at the
+  seat's bottom edge ("PROMPT ENHANCEMENT", the owner's own still). The
+  grid is single-column at `<=960` — scoped `.fl-case .fl-detail`, so the
+  arc portfolio's unwrap (no `.fl-case` ancestor) is byte-identical — and
+  `.fl-toolbody` ends on 18px of air, so the resting frame closes on a
+  whole plate with the next one's top edge peeking. **The partial plate IS
+  the scroll cue**; no gradient, no chrome. ⚠ The `<=480` 1×4 rung's own
+  arithmetic was stale: it was measured against the full-width static
+  document, and seated in the instrument band a 2×2 cell was already under
+  that rung's floor at 500w.
+- ⚠ **`capture-proof-mobile.mjs` REPORTED OK ON STATES IT NEVER VISITED**,
+  twice: the mode loop selected a `data-view` attribute the component has
+  never rendered (count 0 → continue → three of five states silently
+  skipped), and `.fl-mobile-rail button` counts the prev arrow, so `nth(1)`
+  re-captured stop one as "stop two". It walks ARTIFACT at all four stops
+  now and measures each resting fold in LINE boxes. **A capture loop that
+  skips on a zero count is the wait-condition hole in a new costume**
+  (ADR-070's substrate-lab finding) — it cannot tell "not present" from
+  "never rendered".
+- **The Voidwalker phone sheet pooled its slack** — the visible head+body
+  are content-height and top-anchored in the stage, so a short era left
+  every spare pixel under the copy (0/438 measured on `loop`): ADR-070
+  U14's defect on a new surface. Auto margins on the first visible head
+  and last visible body per tab split it by construction (Δ0 on every
+  stop) and collapse to exactly 0 on overflow — which is why they are
+  margins and not `justify-content` on a scroll box. ⚠ The element class
+  in the selector is load-bearing: a bare `[data-cell]` matches head AND
+  body and hands the free space three claimants. A biased-high (40/60)
+  alternative is captured beside the shipped 50/50 for the sign-off read.
+- **The era reel sat 34.9px under the fixed BR theme cluster** inside the
+  100svh instrument. `.vwd__band` pads its foot to
+  `max(<authored rhythm>, var(--mobile-chrome-bottom, 96px))` — the token
+  measures from the viewport floor, so a first cut that subtracted
+  `--hud-margin` double-counted and left the chips 7.6px under (measured);
+  chips clear by +8.4px at 390×844 now. The token and the band law live in
+  [`.claude/rules/mobile-sections.md`](../../.claude/rules/mobile-sections.md)
+  (2026-09-01) — this instrument clears the band itself, per its law 3.
+- **The mobile head's title left its literal** — `clamp(27px, 8.4vw, 38px)`
+  at weight 700 was the one 700 display on the phone and the owner's
+  "very thick font". It rides the new global `--m-display` at the house
+  voice (400 / +0.04em) now. ⚠ U1's literal-sizes law above is NOT
+  repealed: it covers the 9.5–10.5px CHROME floors, which stay literal;
+  the display rung riding a global ladder is the deliberate exception,
+  recorded at the doctrine comment in casefile.css. lh stays 0.98 — 1.05
+  measured −2.86px against the 320×568 pin's 0.92px of slack.
+
+Left open on these surfaces, named for the sign-off: the fold position in
+the capability list is `(seat − bay) mod plate` (two independent clocks —
+412×915 still cuts one label; a real fix is a height-elastic bay, which
+contradicts ADR-068 U4 and is a composition call); ATL's production block
+is 30px over its 960×900 seat in either orientation; the figure tab
+overflows its stage ~70px at 390×844 (pre-existing, intrinsic to the
+figure media).
