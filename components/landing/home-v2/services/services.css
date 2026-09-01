@@ -1695,7 +1695,14 @@
     color: var(--gold);
   }
   .svc-stack__name {
-    font-size: clamp(28px, 7vw, 40px);
+    /* The phone display rung (`--m-display`, variables.css). Was
+       clamp(28px, 7vw, 40px).
+       ⚠ THIS RULE ALSO PAINTS ON DESKTOP — its block is
+       `(max-width: 960px), (prefers-reduced-motion: reduce)`, so a
+       reduced-motion desktop reads it at full width. 7vw and 7.6vw both
+       saturate at the shared 40px cap above 572px, so every PRM desktop
+       is byte-identical; only the phone end moves. */
+    font-size: var(--m-display);
     color: var(--dawn);
   }
   .svc-stack__detail {

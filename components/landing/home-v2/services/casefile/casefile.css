@@ -274,7 +274,15 @@
      0.45px of slack over the `whole Proof instrument` height check, and
      the mobile media block sets its own literal 9.5/10/10.5 values that
      bypass these tokens on purpose (see the `⚠ 10px FLAT` comments on
-     .fl-mobile-* rules). Do not push the token into a mobile rule. */
+     .fl-mobile-* rules). Do not push the token into a mobile rule.
+     ⚠ THAT COVERS THE CHROME FLOORS, NOT THE DISPLAY RUNG. Since
+     2026-09-01 `.fl-mobile-head__title` rides the GLOBAL phone ladder
+     (`--m-display`, variables.css) deliberately — a case head is one of
+     nine big titles a phone paints and it has to rank with the others,
+     which is a cross-file question this instrument's scoped ladder
+     cannot answer. Its FLOOR is this surface's, though: 27px is the
+     value that fits the 320×568 height pin, and --m-display was solved
+     around it. */
   --fl-ratio: 1.2;
   --fl-t0: clamp(11px, min(0.86vw, 1.11svh), 12px);
 
@@ -389,10 +397,23 @@
   .fl-mobile-head__title {
     margin: 15px 0 0;
     font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-    font-size: clamp(27px, 8.4vw, 38px);
-    font-weight: 700;
+    /* THE HOUSE DISPLAY VOICE, on the global phone ladder. This head was
+       the ONE big title on the phone journey set in 700/0.01em while
+       every other one — the corridor station heads, the mobile signal,
+       the services masthead — reads 400/0.04em (services.css ~:588–594:
+       "the one big-title face of the whole journey"). Weight and
+       tracking are reconciled; the size comes off --m-display
+       (variables.css), whose 27px floor IS this rule's shipped floor.
+       ⚠ LINE-HEIGHT STAYS 0.98, AND THE 320×568 PIN IS WHY. The smoke's
+       `phones retune` case holds `.fl-case` at viewport + 1px, measured
+       at 0.92px of slack. The head sets two lines at 320, so 0.98 → 1.05
+       costs 2 × 27 × 0.07 = 3.78px — four times the slack, and measured
+       at 571.86 against a 569 ceiling. The lighter weight is what buys
+       the airier read here; the leading cannot be bought. */
+    font-size: var(--m-display);
+    font-weight: 400;
     line-height: 0.98;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--dawn);
     text-wrap: balance;

@@ -939,13 +939,19 @@ html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"].station {
     column-gap: 16px;
   }
   .vw-head__title {
-    font-size: clamp(28px, 8vw, 40px);
+    /* The phone display rung (`--m-display`, variables.css). Was
+       clamp(28px, 8vw, 40px) — the cap already agreed with the ladder,
+       so only the floor and the slope move (28→27, 8→7.6vw). */
+    font-size: var(--m-display);
   }
   .vw-beat {
     padding-block: clamp(28px, 5svh, 48px);
   }
   .vw-beat__title {
-    font-size: clamp(22px, 6vw, 30px);
+    /* clamp(22px, 6vw, 30px) — BYTE-IDENTICAL to --m-display-sub by
+       construction: this rule is where that rung's three numbers came
+       from, so the ladder adopts the beat rather than retuning it. */
+    font-size: var(--m-display-sub);
   }
   .vw-beat__mark {
     gap: 6px;

@@ -147,6 +147,42 @@
   --type-2xl: clamp(22px, 1.2rem + 1vw, 32px);
   --type-display: clamp(28px, 1.5rem + 2vw, 48px);
 
+  /* ─── MOBILE DISPLAY LADDER (2026-09-01) ───
+     THREE RUNGS FOR EVERY BIG TITLE A PHONE PAINTS. Nine mobile rules
+     across five files carried nine independent clamps — 32/9vw/48,
+     27/8.4vw/38, 28/8vw/40, 28/7vw/40, 24/7vw/36, 22/6.4vw/32,
+     22/6vw/30, 23/5.8vw/29, 14/4.2vw/17 — so two heads a scroll apart
+     disagreed by up to 9px at 390w while claiming the same rank. This
+     is the display counterpart to `--band-copy` (landing.css ~:196,
+     the one body register), and it is declared HERE rather than in
+     landing.css because that file's `:root` is landing-only and the
+     casefile's `.fl-case` tokens are scoped to the instrument — the
+     ladder has to reach voidwalker.css, services.css and home-v2.css
+     too. `globals.css` imports this file, so it is global.
+
+     THE HOUSE VOICE IS WEIGHT 400 (owner, 2026-09-01) — the services
+     masthead's face (services.css ~:588–594, "the one big-title face of
+     the whole journey"): PP Neue Montreal, uppercase, 0.04em. A rung
+     changes the SIZE; the face travels with it.
+
+     ⚠ TWO CONSTRAINTS ARE SOLVED, NOT PICKED.
+     FLOOR 27 = the casefile head's shipped floor. `.fl-mobile-head__title`
+     stood on clamp(27px, …) at 320×568, which is where
+     services-ring-smoke's `phones retune` case pins `.fl-case` height at
+     viewport + 1px with ~0.45px of slack. A 28px floor spends slack the
+     smoke does not have.
+     CAP 40 < 44, the DESKTOP display cap (`.services-masthead__title`
+     clamp(26px, 3vw, 44px)), so a phone rung can never outrank the
+     desktop title it echoes. It also keeps `.svc-stack__name`
+     byte-identical where it matters: that rule lives in a
+     `(max-width: 960px), (prefers-reduced-motion: reduce)` block, so it
+     paints on DESKTOP under PRM — and 7vw and 7.6vw both saturate at 40
+     above 572px, so every reduced-motion desktop reads exactly what it
+     read before. */
+  --m-display: clamp(27px, 7.6vw, 40px);
+  --m-display-sub: clamp(22px, 6vw, 30px);
+  --m-signal: clamp(14px, 4.2vw, 17px);
+
   /* Spacing (8px grid) */
   --space-xs: 4px;
   --space-sm: 8px;

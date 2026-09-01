@@ -2117,7 +2117,12 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
      headline. Aligning family + transform + tracking makes the mobile
      epilogue read as the same instrument as desktop. (ADR-018 pass 2.) */
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-size: clamp(22px, 6.4vw, 32px);
+  /* Second rung of the phone display ladder (`--m-display-sub`,
+     variables.css). Was clamp(22px, 6.4vw, 32px) — the epilogue title
+     is a sub-display, and reading it 1.5px larger than the corridor's
+     own station heads was the sort of near-miss the ladder exists to
+     end. */
+  font-size: var(--m-display-sub);
   font-weight: 400;
   line-height: 1.15;
   letter-spacing: 0.04em;
@@ -3150,6 +3155,54 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
    landing-v7-motion.html (~L1335-1380) so the corridor and the static
    fallback read identically across the capability boundary. */
 @media (max-width: 760px) {
+  /* ── THE CORRIDOR'S COPY GUTTER, IN AUTHORED UNITS ──────────────
+     ⚠ A WORLD-ANCHORED BOX IS NOT THE SIZE YOU WROTE. Every readout
+     cluster and caption on this stage is positioned AND SCALED per
+     frame by `useWorldDomTracker` against its anchor's
+     `perspectiveScale` (sceneGeom.ts). So a `min(86vw, 360px)` caption
+     is 86 % of the viewport BEFORE the tracker multiplies it — at the
+     worst anchor it lands wider than the screen, with no gutter left.
+
+     `--copy-pscale` is that multiplier's WORST CASE across the three
+     support anchors: navigate.support caps at 1.1 (sceneGeom ~:2585),
+     diagnostic.support (~:2668) and intelligence.support (~:2753) both
+     at 1.15. Authoring against 1.15 means the two heavier gates land
+     exactly on the gutter and Navigate lands INSIDE it — never the
+     other way round.
+
+     THE ARITHMETIC, for the caption's 24px gutter:
+       390w → (390 − 48) / 1.15 = 297.4px authored → ×1.15 = 342.0px
+              rendered → (390 − 342.0) / 2 = 24.0px each side.
+       430w → (430 − 48) / 1.15 = 332.2px authored → ×1.15 = 382.0px
+              rendered → (430 − 382.0) / 2 = 24.0px each side.
+     Both rendered widths confirmed live to the tenth of a pixel at the
+     diagnostic gate's peak (probe-corridor-caption.mjs), which is where
+     the 1.15 anchor actually reaches its cap.
+
+     ⚠ AND `100vw` COUNTS A CLASSIC SCROLLBAR, WHICH THE PROJECTION DOES
+     NOT. This site paints a 6px `::-webkit-scrollbar`, so on desktop
+     Chromium `100vw` is 390 against a 384px LAYOUT viewport — and the
+     tracker centres the box on the layout viewport (measured: dead on
+     `clientWidth / 2` at both shapes). The budget is therefore spent
+     6px wide of the window it lands in and the achieved gutter is
+     **21.0px symmetric**, not 24.0. On a phone, where the scrollbar is
+     an overlay, the two widths are equal and the gutter is exactly 24.
+     There is no CSS escape here — `.home-v2-stage` is itself `100vw`,
+     so `100%` resolves to the same 390 — hence the probe's floor is
+     `--copy-gutter − scrollbar/2` rather than a fudge in the sheet.
+
+     Corner crosses (15×15, inset −8px) ride the margin by owner
+     default — the gutter is measured to the BOX, not to the reticle.
+
+     ⚠ ON `:root`, not on the media block itself — a custom property is a
+     DECLARATION and needs a rule to live in (the `--mobile-chrome-*`
+     idiom in landing.css's own ≤960 block). The consumers are
+     world-anchored siblings with no shared ancestor inside the stage. */
+  :root {
+    --copy-gutter: 24px;
+    --copy-pscale: 1.15;
+  }
+
   /* ── MOBILE HIDES (LATE CASCADE) ────────────────────────────────
      These declarations sit AFTER the base `.home-v2-stack-item`,
      `.home-v2-stack-label`, and `.home-v2-encode-primitive`
@@ -3209,7 +3262,11 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
     margin-right: auto;
   }
   .home-v2-copy-block--thoughtform-left .home-v2-copy-title {
-    font-size: clamp(23px, 5.8vw, 29px);
+    /* Second rung of the phone display ladder (`--m-display-sub`,
+       variables.css). Was clamp(23px, 5.8vw, 29px) — within a pixel of
+       the beat title and the epilogue head at every phone width, three
+       clamps saying the same thing. */
+    font-size: var(--m-display-sub);
     margin-bottom: 20px;
   }
   .home-v2-copy-block--thoughtform-left .home-v2-copy-body {
@@ -3243,7 +3300,29 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
      point, the title tightens, the leader span shortens, and the
      cluster width narrows to the mobile copy-block budget. */
   .home-v2-readout {
-    width: min(88vw, 380px);
+    /* Was `min(88vw, 380px)` — a VIEWPORT fraction on a box the world-DOM
+       tracker then scales, so at 430w the cluster rendered 378.4 × 1.1 =
+       416.2px (measured) against a 424px window: 3.9px of gutter.
+       Authored against the worst perspectiveScale instead (see
+       --copy-pscale above): 332.2px at 430w, 297.4px at 390w.
+       ⚠ IT TAKES THE CAPTION'S 1.15 DIVISOR, NOT ITS OWN ANCHOR'S 1.1,
+       AND THE TITLE WRAP IS WHY THAT IS FREE. `navigate.title` does cap
+       at 1.1 (sceneGeom ~:2564) where the other two gates cap at 1.15,
+       so a 1.1 divisor would be the tighter-fitting choice — but the
+       binding measure on the title is NOT this box: `.home-v2-readout__title`
+       carries `max-width: 36ch` (~:2508), which resolves to 282px at
+       390w and 293px at 430w and is narrower than the cluster at BOTH
+       ends of the change. Measured against an injected copy of the old
+       widths, "NAVIGATE THE INTELLIGENCE." sets THREE lines before and
+       three after, at both shapes — the 46px the cluster gave up came
+       entirely out of slack the title never used. One divisor for both
+       boxes, and the Navigate gate simply lands 4-5px inside the gutter
+       instead of on it.
+       ⚠ The headroom is 15px at 390w (297.4 authored against a 282px
+       title cap), so a NARROWER phone crosses over: below ~330w the
+       cluster becomes the title's measure and the wrap is this rule's
+       business again. */
+    width: min(calc((100vw - 2 * var(--copy-gutter)) / var(--copy-pscale)), 380px);
   }
   .home-v2-readout--title {
     padding-bottom: 18px;
@@ -3267,7 +3346,12 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
   }
   .home-v2-readout__title {
     padding: 11px 16px 12px;
-    font-size: clamp(14px, 4.2vw, 17px);
+    /* The ladder's SIGNAL rung (`--m-signal`, variables.css) —
+       clamp(14px, 4.2vw, 17px), byte-identical by construction: this
+       rule is where those three numbers came from. A corridor station
+       title reads at instrument scale here on purpose (PT Mono, .1em);
+       it is a readout, not a display. */
+    font-size: var(--m-signal);
     letter-spacing: 0.1em;
   }
   .home-v2-readout__leader {
@@ -3300,7 +3384,16 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
      override was the "wrong font" on the bottom text. (ADR-018 pass 2.) */
   .home-v2-readout__caption {
     position: relative;
-    width: min(86vw, 360px);
+    /* Was `min(86vw, 360px)` — same defect as the cluster above, one
+       vw-step tighter: 360 × 1.1 = 396.0px measured at 430w against a
+       424px window, i.e. 14px of gutter. Authored against --copy-pscale,
+       capped at the shipped 360px so nothing widens on a tablet.
+       ⚠ THE CAPTION IS THE BOX THAT SETS --copy-pscale: it hangs off the
+       `.support` anchors, and diagnostic/intelligence both cap at 1.15
+       (sceneGeom ~:2668 / ~:2753) where navigate caps at 1.1. Its
+       paragraph wraps freely, so unlike the cluster's title it has no
+       second measure to hide behind. */
+    width: min(calc((100vw - 2 * var(--copy-gutter)) / var(--copy-pscale)), 360px);
     margin: 0 auto;
     padding: 18px 22px 16px;
     text-align: center;

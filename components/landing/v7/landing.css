@@ -8157,13 +8157,35 @@ body.density-dense .station {
     padding-left: 32px;
     padding-right: 32px;
   }
+  /* ── The footer reserves the bottom chrome band too ──────────────
+     `.foot` is not a `.station`, so the padding floor at the foot of
+     this file (`.station:not(.hero)…`) never reaches it — and it is the
+     LAST thing on the page, i.e. the one box guaranteed to be sitting
+     under the fixed BR cluster (`.rin-settings` + `.hud__corner--br`)
+     when the reader stops scrolling.
+     ⚠ IT IS A FLOOR, AND TODAY IT IS SLACK. `.foot`'s own bottom
+     padding is 100px against a 56px band, so this `max()` resolves to
+     100px and changes no pixel: measured at max scroll, the GITHUB ink
+     ends 45.6px above the band at 390×844 and 45.7px at 430×932 (57.6 /
+     58.3px above the cluster's own top edge). It is written down
+     because the clearance was an ACCIDENT of a hand-set 100px — a
+     future footer retune that takes that padding under 56 would put the
+     social column behind the theme switch with nothing to say so, which
+     is exactly what law 1 of .claude/rules/mobile-sections.md is for. */
+  .foot {
+    padding-bottom: max(100px, var(--mobile-chrome-bottom));
+  }
   .hud__nav a .num {
     display: none;
   }
 }
 @media (max-width: 640px) {
   .station__title {
-    font-size: clamp(32px, 9vw, 48px);
+    /* The phone display rung (`--m-display`, variables.css). Was
+       clamp(32px, 9vw, 48px) — the loudest of nine independent mobile
+       clamps, and 48px on a phone outranked the DESKTOP display cap of
+       44. One ladder now; the body counterpart is --band-copy above. */
+    font-size: var(--m-display);
   }
 }
 
@@ -10069,7 +10091,11 @@ html {
     width: min(100%, 320px);
   }
   .approach__phase__title {
-    font-size: clamp(24px, 7vw, 36px);
+    /* Second rung of the phone display ladder (variables.css). Was
+       clamp(24px, 7vw, 36px) — a phase name is subordinate to the
+       station head above it, so it takes --m-display-sub, not the
+       display rung. */
+    font-size: var(--m-display-sub);
   }
   .exec {
     margin-top: clamp(40px, 8vw, 72px);
