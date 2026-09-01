@@ -97,6 +97,15 @@ export function HoloFigure({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const initialEpochRef = useRef(epoch);
   const previousEpochRef = useRef(epoch);
+  /* ⚠ THE LOOP PLAYS ONLY NEAR THE VIEWPORT (2026-09-01, pre-launch). The
+     element mounts at hydration four stations below the fold, and a bare
+     `autoPlay` FORCES the fetch — preload="metadata" alone was measured
+     doing nothing (1.8 MB of WebM pulled at page top). An observer with a
+     one-viewport lead arms playback just before arrival; far away the loop
+     pauses. On phones this also means the bytes are never fetched until the
+     figure tab is opened (display: none never intersects). */
+  const [near, setNear] = useState(false);
+  const nearRef = useRef(false);
 
   const productionAsset =
     hologram === undefined
@@ -155,12 +164,47 @@ export function HoloFigure({
     };
   }, [epoch, initialMaterialization, reduced]);
 
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (typeof IntersectionObserver === "undefined") {
+      nearRef.current = true;
+      setNear(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        nearRef.current = entry.isIntersecting;
+        setNear(entry.isIntersecting);
+      },
+      { rootMargin: "100% 0px 100% 0px" }
+    );
+    io.observe(v);
+    return () => io.disconnect();
+  }, [playableVideoSrc]);
+
+  // Play within a viewport of the station, pause beyond it — this effect is
+  // what replaced the <video>'s own autoPlay attribute.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (near) {
+      const p = v.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    } else if (!v.paused) {
+      v.pause();
+    }
+  }, [near, playableVideoSrc]);
+
   // The video restarts with the era so its first frame is the poster the
   // reveal wipes onto — otherwise the figure materializes mid-gesture.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     v.currentTime = 0;
+    // An era change can only be made with the station on screen; the near
+    // gate just keeps a programmatic epoch bump from fetching a far loop.
+    if (!nearRef.current) return;
     const p = v.play();
     if (p && typeof p.catch === "function") p.catch(() => {});
   }, [epoch, playableVideoSrc]);
@@ -205,8 +249,15 @@ export function HoloFigure({
             muted
             loop
             playsInline
-            autoPlay={!reduced}
-            preload="auto"
+            /* No autoPlay, and "metadata", never "auto": this element mounts
+               at hydration four stations below the fold, the loops run
+               1.9-3.3 MB, and a bare autoPlay FORCES the fetch whatever the
+               preload hint says (measured: 1.8 MB pulled at page top with
+               preload="metadata" + autoPlay). Playback is driven by the
+               near-viewport observer above — the repo's own preload="none"
+               doctrine, .claude/rules/arcs.md, one notch looser because this
+               figure must already be moving as the station arrives. */
+            preload="metadata"
             onError={() => setFailedVideoSrc(requestedVideoSrc ?? null)}
           />
         ) : (
