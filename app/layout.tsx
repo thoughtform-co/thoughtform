@@ -47,7 +47,22 @@ export const viewport: Viewport = {
   viewportFit: "cover", // Enables env(safe-area-inset-*) CSS functions
 };
 
+// The share card is a 1200×630 centre crop of the dark Gateway plate
+// (public/images/Gateway_v1b.webp → sharp, jpeg q82, 57 KB). Regenerate it
+// from the plate if the hero art ever changes — a share of this URL is the
+// first pixel most people see of the site.
+const OG_IMAGE = {
+  url: "/images/og/thoughtform-og.jpg",
+  width: 1200,
+  height: 630,
+  alt: "Thoughtform — the Gateway remnant structure",
+};
+
 export const metadata: Metadata = {
+  // metadataBase is what lets every relative OG/canonical URL below resolve
+  // to the production origin (and silences Next's build warning). The
+  // canonical host is the apex — Vercel's domain config redirects www.
+  metadataBase: new URL("https://thoughtform.co"),
   title: "Thoughtform — Navigate Intelligence",
   description:
     "Thoughtform pioneers intuitive human-AI collaboration. We teach teams how to navigate AI for creative and strategic work.",
@@ -63,12 +78,25 @@ export const metadata: Metadata = {
     "latent space",
   ],
   authors: [{ name: "Vince Buyssens" }],
+  // "./" resolves per-page (not to "/"), so every route self-canonicalizes;
+  // noindexed routes (/arcs/*) keep their own robots metadata untouched.
+  alternates: { canonical: "./" },
   openGraph: {
     title: "Thoughtform — Navigate Intelligence",
     description:
       "Navigate the alien terrain of machine intelligence. Thoughtform pioneers intuitive human-AI collaboration.",
     type: "website",
     locale: "en_US",
+    siteName: "Thoughtform",
+    url: "/",
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Thoughtform — Navigate Intelligence",
+    description:
+      "Navigate the alien terrain of machine intelligence. Thoughtform pioneers intuitive human-AI collaboration.",
+    images: [OG_IMAGE.url],
   },
 };
 
