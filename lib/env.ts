@@ -169,6 +169,10 @@ export function reportMissingProductionEnv(): void {
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     "NEXT_PUBLIC_ALLOWED_EMAIL",
+    // The landing's SSR reads celestial slots through createServerClient(),
+    // which needs the service-role key — without it the homepage silently
+    // renders the SEED connector art with only a log line to say so.
+    "SUPABASE_SERVICE_ROLE_KEY",
   ];
   const missing = required.filter((key) => !optionalServerEnv(key));
   if (missing.length > 0) {
