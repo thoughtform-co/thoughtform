@@ -44,6 +44,10 @@ export function Directory({ tracks, activeId, onSelect, controls, idPrefix }: Di
       className="fl-dir"
       data-fl-zone="directory"
       data-fl-panel
+      /* The rows ARE this client's files (ADR-087 Phase B) — see the marking
+         note in `ServicesCasefile`. Inert until a second `CaseDef` puts a
+         seam in the browse band. */
+      data-fl-client-panel
       style={{ "--ci-off": 0.34, "--fl-dx": "-48px" } as CSSProperties}
     >
       <div className="fl-dir__head">

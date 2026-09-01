@@ -829,6 +829,58 @@
   );
 }
 
+/* ══ THE CLIENT SEAM ═══════════════════════════════════════════════════
+   A panel whose CONTENT is one client's record runs the SAME two ladders
+   against a composed clock (ADR-087 Phase B). The arrival input becomes
+   `--svc-proof-in × --svc-client-in` and the departure input
+   `max(--svc-proof-out, --svc-client-out)` — a product for the reveal
+   because both conditions must hold before a panel may paint, a max for the
+   fold because either one leaving is enough.
+
+   ⚠ **WITH THE CHANNELS ABSENT THESE ARE THE RULES ABOVE, EXACTLY.**
+   `var(--svc-client-in, 1)` makes the product `x × 1` and
+   `var(--svc-client-out, 0)` makes the max `max(x, 0)` over a clock the hook
+   already clamps to [0, 1] — neither can move a computed value by one bit.
+   That identity is the whole reason this is a plain override rather than a
+   rewrite of the block above, and it is why `useServicesStageScroll` does
+   not write the two properties while `CASES` holds one client: absent is
+   cheaper than "1", and it leaves the inline style byte-what it was.
+
+   ⚠ **ONLY `--ci` AND `--co` ARE RESTATED.** `--g1`/`--g2`/`--g3` and the
+   `opacity`/`transform` expressions all read those two through `var()`, and
+   a custom property resolves at COMPUTED-VALUE TIME against the element's
+   own cascade — so overriding the two inputs re-runs the whole strike →
+   dropout → settle ladder and the LIFO fold on the composed clock, with the
+   curve, the tear and the directional travel untouched. Restating any of the
+   downstream declarations here would fork the ladder into two copies that
+   drift.
+
+   ⚠ **THE HOUSING IS NOT MARKED.** `data-fl-client-panel` is on the brief,
+   the proof register, the directory and the panel's visual — the four
+   surfaces that say something about ONE client. The tabs wrapper, `.fl-split`
+   and the reticles are the frame the record is swapped inside; a frame that
+   crossfades with its own contents is a page turn, which is the read this
+   whole mechanism exists to avoid. The whole-plane iris and every other
+   `--svc-proof-out` consumer are likewise untouched: the seam is a change of
+   RECORD, not a departure of the casefile. ═══════════════════════════════ */
+
+.fl-case [data-fl-panel][data-fl-client-panel] {
+  --ci: clamp(
+    0,
+    calc(
+      (var(--svc-proof-in, 1) * var(--svc-client-in, 1) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))
+    ),
+    1
+  );
+  --co: clamp(
+    0,
+    calc(
+      (max(var(--svc-proof-out, 0), var(--svc-client-out, 0)) - var(--co-off)) / (1 - var(--co-off))
+    ),
+    1
+  );
+}
+
 /* The reticles own `transform` for their travel-to-the-corners (they animate
    `left`/`right`, but carry a centring margin, not a transform — so the tear
    is safe). The rules and the split are 1px hairlines where a lateral tear

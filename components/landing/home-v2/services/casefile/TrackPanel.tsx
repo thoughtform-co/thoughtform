@@ -32,6 +32,13 @@ export function TrackPanel({ track, labelledBy, id }: TrackPanelProps) {
         className="fl-panel__viz"
         data-fl-zone="plate"
         data-fl-panel
+        /* THE MARK GOES ON `.fl-panel__viz`, NOT `.fl-panel` (ADR-087 Phase
+           B). `.fl-panel` is the tabpanel shell and carries no
+           `data-fl-panel`, so a mark there would select nothing — the
+           client-seam rule composes onto the arrival ladder, and only the
+           ladder's own elements are on it. See the marking note in
+           `ServicesCasefile`. */
+        data-fl-client-panel
         style={{ "--ci-off": 0.44, "--fl-dx": "48px" } as CSSProperties}
         data-kind={track.visual.kind}
       >

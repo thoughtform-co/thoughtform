@@ -77,6 +77,10 @@ export function TrackProofRegister({
       tabIndex={tabIndex}
       data-fl-zone="proof-register"
       data-fl-panel
+      /* The register IS the client's record (ADR-087 Phase B) — see the
+         marking note in `ServicesCasefile`. Inert until a second `CaseDef`
+         puts a seam in the browse band. */
+      data-fl-client-panel
       style={{ "--ci-off": 0.3, "--fl-dx": "-48px" } as CSSProperties}
       aria-label={`${track.project} proof points`}
     >

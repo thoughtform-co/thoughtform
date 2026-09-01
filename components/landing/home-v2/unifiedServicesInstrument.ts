@@ -1,3 +1,12 @@
+/* ⚠ `@/lib/cases/registry` is PURE DATA — `lib/cases/**` imports nothing but
+   its own types (the confidentiality-envelope law), so components → lib is
+   lawful here and the landing's import doctrine is untouched: no three, no
+   R3F, no supabase enters this module's graph. The dwell is derived from the
+   registry below, which is why the edge exists at all. */
+import { CASES } from "@/lib/cases/registry";
+
+import { browseBandVh, browseSegments } from "./services/casefile/browseMap";
+
 /**
  * Feature flag for the corridor↔#services brandmark unification (2026-06-25).
  *
@@ -244,19 +253,77 @@ export const SERVICES_PROOF_CASEFILE = true;
  */
 export const MAP_BACKPLANE = false;
 
+/* ── THE DWELL IS DERIVED FROM THE REGISTRY (ADR-087 Phase B) ───────────
+   3.2 and 0.625 were LITERALS, and a literal is a promise that `CASES` will
+   never grow. It holds exactly one client today, so both numbers were
+   really `4 rows × 0.5vh + 1.2vh` and `2.0 / 3.2` written out — and a
+   second `CaseDef` would have changed what a browse quarter means while
+   both constants sat still.
+
+   The three knobs below are what a dwell is MADE of; the two constants that
+   follow are what it COMES TO. At N = 1 they collapse to 2.0 + 1.2 = 3.2
+   and 0.625 EXACTLY: 0.5 and 1.2's sum is the nearest double to 3.2 (the
+   tie rounds to even, which IS 3.2's representation) and 2 ÷ 3.2 rounds to
+   0.625, so nothing about the shipped surface moves by one bit. The unit
+   test asserts both with `===`. */
+
+/** One directory row's share of the browse band, in viewport heights. */
+export const SERVICES_PROOF_ROW_VH = 0.5;
+
+/**
+ * The band BETWEEN two clients — the crossing where one casefile's record is
+ * swapped for the next behind a crossfade (`browseMap.ts`). Half a viewport,
+ * the same scroll a row costs: a client change is one beat, not a chapter.
+ * Charged `N − 1` times, so at N = 1 it costs nothing.
+ */
+export const SERVICES_PROOF_CLIENT_SEAM_VH = 0.5;
+
+/**
+ * The back stretch — the 2026-07-29 handoff, unchanged. `PROOF_OUT` 0.13 →
+ * 0.66, `REVEAL_AT`, `REARM_BELOW` and `PROOF_OWNS_BELOW` all ride a releaseP
+ * RE-DERIVED over exactly this many viewports, which is what keeps the
+ * handoff byte-identical in PIXELS however long the browse band grows.
+ */
+export const SERVICES_PROOF_RELEASE_VH = 1.2;
+
+/** One row count per case, in registry order — the segment table's input. */
+const PROOF_ROW_COUNTS = CASES.map((c) => c.casefile.tracks.length);
+
+/**
+ * The browse band's own map: one band per client sized by ITS row count,
+ * one seam between neighbours, normalized onto [0, 1].
+ *
+ * Exported so the scroll hook, the casefile's spy and the smoke spec all
+ * target bands rather than hand-computed fractions. ⚠ At N = 1 it is a
+ * single band `[0, 1]` and every consumer degenerates to the ADR-056 U13
+ * arithmetic exactly — see `browseMap.ts`.
+ */
+export const SERVICES_PROOF_SEGMENTS = browseSegments(
+  PROOF_ROW_COUNTS,
+  SERVICES_PROOF_ROW_VH,
+  SERVICES_PROOF_CLIENT_SEAM_VH
+);
+
+/** The browse band's length in viewports — Σ rows × ROW_VH + (N−1) × SEAM_VH. */
+const PROOF_BROWSE_VH = browseBandVh(
+  PROOF_ROW_COUNTS,
+  SERVICES_PROOF_ROW_VH,
+  SERVICES_PROOF_CLIENT_SEAM_VH
+);
+
 /**
  * How many viewports of the `#services` runway the casefile holds before the
  * ring arrives.
  *
  * 3.2 since 2026-08-02 (owner: "scrolling now immediately transitions to
  * the Services Section… make it so that scrolling scrolls through the
- * different cases first"). The dwell is split in two by
- * `SERVICES_PROOF_BROWSE_FRAC`:
+ * different cases first"), DERIVED since ADR-087. The dwell is split in two
+ * by `SERVICES_PROOF_BROWSE_FRAC`:
  *
  *   · the BROWSE BAND (front 62.5 %, 2.0 viewports) steps the directory
- *     through its rows — scroll IS the row selector there, quarter-band per
- *     row with hysteresis, and a row click pins the scroll to its band so
- *     the two selectors can never fight;
+ *     through its rows — scroll IS the row selector there, one
+ *     `SERVICES_PROOF_ROW_VH` per row with hysteresis, and a row click pins
+ *     the scroll to its band so the two selectors can never fight;
  *   · the RELEASE (back 37.5 %, 1.2 viewports) is the 2026-07-29 handoff
  *     UNCHANGED — the fold's 0.13/0.66, `REVEAL_AT`, `REARM_BELOW` and
  *     `PROOF_OWNS_BELOW` all ride a releaseP RE-DERIVED over this back
@@ -266,17 +333,25 @@ export const MAP_BACKPLANE = false;
  * scroll") still binds — this is not that. 2.8/0.62 bought 1550px where
  * NOTHING happened; here every browse quarter changes the panel, which is
  * choreography, not patience. What would violate the ruling is browse
- * runway beyond the rows' needs.
+ * runway beyond the rows' needs — which is precisely what the derivation
+ * makes impossible: the band is exactly as long as the rows plus the seams.
  *
- * This is the ONLY tuning knob for the dwell's length. It lengthens the page
- * and moves nothing else: the split re-derives the ring's progress over the
- * remainder, so changing it can never re-time a card. Read by `services.css`
- * (as the `--svc-proof-runway` default) and by `useServicesStageScroll`; keep
- * the two in step — the CSS owns the runway's height, this constant owns the
- * split. ⚠ Changing it (or the browse fraction) rescales what a
- * `PROOF_OUT_*` fraction means in pixels — re-measure the handoff after.
+ * ⚠ **THE TUNING KNOBS ARE `SERVICES_PROOF_ROW_VH`,
+ * `SERVICES_PROOF_CLIENT_SEAM_VH` AND `SERVICES_PROOF_RELEASE_VH`** — this
+ * is a RESULT now, and assigning to it would be assigning to a measurement.
+ * Moving any of the three lengthens the page and moves nothing else: the
+ * split re-derives the ring's progress over the remainder, so it can never
+ * re-time a card. Read by `services.css` (as the `--svc-proof-runway`
+ * default) and by `useServicesStageScroll`; the CSS literal is
+ * HAND-WRITTEN — it has to exist pre-hydration — and
+ * `tests/lib/services-proof-runway-lockstep.test.ts` is the drift alarm on
+ * that pair. ⚠ Changing any knob (or the browse fraction under it) rescales
+ * what a `PROOF_OUT_*` fraction means in pixels — re-measure the handoff
+ * after.
  */
-export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 3.2 : 0;
+export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE
+  ? PROOF_BROWSE_VH + SERVICES_PROOF_RELEASE_VH
+  : 0;
 
 /**
  * Where the browse band ends and the release begins, as a fraction of the
@@ -284,11 +359,16 @@ export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE ? 3.2 : 0;
  * per directory row) + the release's original 1.2 — so the release's
  * absolute pixel budget is exactly the pre-browse dwell.
  *
+ * ⚠ NOT gated on the flag, exactly as the literal was not: it is a DIVISOR
+ * in `useServicesStageScroll`, and a 0 there would be a 0/0 the flag-off
+ * path never asked for.
+ *
  * Consumed by `useServicesStageScroll` (the split), `ServicesCasefile`
  * (the row scrollspy + the click-pins-scroll math) and the smoke spec
- * (band-fraction targeting). One constant, three readers, zero drift.
+ * (band-fraction targeting). One derivation, three readers, zero drift.
  */
-export const SERVICES_PROOF_BROWSE_FRAC = 0.625;
+export const SERVICES_PROOF_BROWSE_FRAC =
+  PROOF_BROWSE_VH / (PROOF_BROWSE_VH + SERVICES_PROOF_RELEASE_VH);
 
 /**
  * The only tier in which SCROLL OWNS THIS BEAT — the stage is pinned, the

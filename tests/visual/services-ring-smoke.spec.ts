@@ -2,8 +2,62 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { WIREFRAME_STATIONS, expectWireframeBay, readToolBay } from "./helpers/toolBay";
 
-import { SERVICES_PROOF_RUNWAY_VH } from "../../components/landing/home-v2/unifiedServicesInstrument";
+import {
+  BROWSE_HYSTERESIS,
+  browseRowBand,
+  browseTargetFor,
+} from "../../components/landing/home-v2/services/casefile/browseMap";
+import {
+  SERVICES_PROOF_BROWSE_FRAC,
+  SERVICES_PROOF_RUNWAY_VH,
+  SERVICES_PROOF_SEGMENTS,
+} from "../../components/landing/home-v2/unifiedServicesInstrument";
 import { VOIDWALKER_ERA_BAND } from "../../lib/voidwalker/voidwalkerHologramClock";
+
+/* ── THE DWELL SAMPLES ARE DERIVED, NOT COUNTED (ADR-087 Phase B) ────────
+   Every number below used to be hand-computed in a comment and typed in as
+   a literal — 0.82 as "0.625 + 0.52 × 0.375", 0.42 as "two thirds into the
+   browse band", 0.29 as "row two's edge plus the hysteresis". Those comments
+   were correct and load-bearing, which is the problem: the dwell is a
+   DERIVATION now, and the arithmetic in a comment is the arithmetic that
+   does not move when `CASES` grows. A second client re-shapes every band
+   edge, and a literal would go on passing while sampling the wrong beat.
+
+   Same precedent as `helpers/toolBay.ts`: the spec imports the production
+   arithmetic and targets BEATS rather than offsets. ⚠ Two of these are NOT
+   the old literal — the browse targets become their band's CENTRE (0.078125
+   and 0.390625 rather than 0.1 and 0.42), which selects the SAME rows with
+   more clearance from both edges. The other three are the old literals to
+   the last representable digit. ═══════════════════════════════════════ */
+
+/** releaseP → a fraction of the WHOLE dwell (the U13 remap). */
+const releaseToTotal = (r: number) =>
+  SERVICES_PROOF_BROWSE_FRAC + r * (1 - SERVICES_PROOF_BROWSE_FRAC);
+
+/** A directory row's band CENTRE, as a fraction of the whole dwell — the
+ *  same expression a row CLICK pins the scroll to. */
+const dwellAtRow = (clientIdx: number, rowIdx: number) =>
+  browseTargetFor(SERVICES_PROOF_SEGMENTS, clientIdx, rowIdx) * SERVICES_PROOF_BROWSE_FRAC;
+
+/** Row one — the MAP row, the default panel, and the settled/uncontested
+ *  sample every viewport walk starts from. */
+const DWELL_ROW_1 = dwellAtRow(0, 0);
+/** Row three — the row the scrollspy must reach with no click. */
+const DWELL_ROW_3 = dwellAtRow(0, 2);
+/** Row two's band, which a CLICK must land the browse channel inside. */
+const ROW_2_BAND = browseRowBand(SERVICES_PROOF_SEGMENTS, 0, 1);
+/** The interleave crossing, validated at releaseP 0.52. */
+const DWELL_INTERLEAVE = releaseToTotal(0.52);
+/** The reverse handoff, validated at releaseP 0.40. */
+const DWELL_REARM = releaseToTotal(0.4);
+
+console.log(
+  `[services-ring-smoke] derived dwell samples — row1 ${DWELL_ROW_1} (was 0.1), ` +
+    `row3 ${DWELL_ROW_3} (was 0.42), interleave ${DWELL_INTERLEAVE} (was 0.82), ` +
+    `rearm ${DWELL_REARM} (was 0.775), row2 band ${ROW_2_BAND.start}..${ROW_2_BAND.end} ` +
+    `(click floor ${ROW_2_BAND.start + BROWSE_HYSTERESIS}, was 0.29/0.5), ` +
+    `runway ${SERVICES_PROOF_RUNWAY_VH}vh, browse frac ${SERVICES_PROOF_BROWSE_FRAC}`
+);
 
 /**
  * Services card ring smoke (ADR-029).
@@ -338,10 +392,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await page.waitForSelector(".services-stage", { timeout: 15_000 });
 
     // Inside the BROWSE BAND (ADR-056 U13: the front 62.5 % of the dwell
-    // steps the directory; the release owns only the back stretch). 0.1 of
-    // the runway is row one's quarter — the casefile is settled, uncontested
-    // and fully live here.
-    expect(await scrollCasefileDwell(page, 0.1)).toBe(true);
+    // steps the directory; the release owns only the back stretch). This is
+    // row one's band CENTRE — the casefile is settled, uncontested and fully
+    // live here, and the centre is the furthest a sample can sit from either
+    // of the edges the hysteresis guards.
+    expect(await scrollCasefileDwell(page, DWELL_ROW_1)).toBe(true);
     await page.waitForTimeout(1400);
 
     const during = await page.evaluate(() => {
@@ -363,10 +418,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(during.rows).toBeGreaterThan(0);
 
     // The directory rows are the navigation, and they work while pinned.
-    // Since U13 a click also PINS THE SCROLL to the row's browse-band
-    // quarter — that is the contract that stops the scrollspy overriding
-    // the click on the next frame — so the browse channel must land inside
-    // row two's band (0.25..0.5, past the hysteresis edge).
+    // Since U13 a click also PINS THE SCROLL to the row's browse band —
+    // that is the contract that stops the scrollspy overriding the click on
+    // the next frame — so the browse channel must land inside row two's own
+    // band, past the hysteresis edge the spy would otherwise hold at.
     const secondRow = page.locator(".fl-row").nth(1);
     await secondRow.click();
     await page.waitForTimeout(400);
@@ -378,12 +433,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           ?.style.getPropertyValue("--svc-proof-browse") ?? "-1"
       )
     );
-    expect(browseAfterClick).toBeGreaterThan(0.29);
-    expect(browseAfterClick).toBeLessThan(0.5);
+    expect(browseAfterClick).toBeGreaterThan(ROW_2_BAND.start + BROWSE_HYSTERESIS);
+    expect(browseAfterClick).toBeLessThan(ROW_2_BAND.end);
 
-    // …and SCROLL drives the same selector (the U13 scrollspy): two thirds
-    // into the browse band is row three's quarter, reached with no click.
-    expect(await scrollCasefileDwell(page, 0.42)).toBe(true);
+    // …and SCROLL drives the same selector (the U13 scrollspy): row three's
+    // own band, reached with no click.
+    expect(await scrollCasefileDwell(page, DWELL_ROW_3)).toBe(true);
     await page.waitForTimeout(600);
     await expect(page.locator(".fl-row").nth(2)).toHaveAttribute("aria-selected", "true");
 
@@ -395,11 +450,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // fade-then-pop, which is the handoff the owner rejected. The crossing
     // was validated at releaseP 0.52 (caseOpacity ≈ 0.43 against content-in
     // ≈ 0.52); since U13 the release owns only the back 37.5 % of the
-    // runway, so the same releaseP sits at total 0.625 + 0.52 × 0.375 =
-    // 0.82. Sample the VALUES here, never the window edges — smootherstep
-    // is nearly flat across its first third, so overlapping edges alone
-    // prove nothing.
-    expect(await scrollCasefileDwell(page, 0.82)).toBe(true);
+    // runway, so `releaseToTotal` remaps it — 0.82 today, and whatever the
+    // browse band's own length makes it once `CASES` grows. Sample the
+    // VALUES here, never the window edges — smootherstep is nearly flat
+    // across its first third, so overlapping edges alone prove nothing.
+    expect(await scrollCasefileDwell(page, DWELL_INTERLEAVE)).toBe(true);
     await page.waitForTimeout(1000);
 
     const interleave = await page.evaluate(() => {
@@ -477,11 +532,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // that can blank the title. At releaseP 0.40 the clock reads ≈0.32 —
     // below the floor — so the title must already be re-armed (blanked, not
     // merely faded) while the casefile is repainting. Same U13 remap as the
-    // interleave: releaseP 0.40 sits at total 0.625 + 0.40 × 0.375 = 0.775.
-    // The pre-fix absolute floor (0.05) held the resolved title over the
-    // reassembled casefile for a third of the dwell, which is exactly what
-    // this drive would catch.
-    expect(await scrollCasefileDwell(page, 0.775)).toBe(true);
+    // interleave, through the same helper: releaseP 0.40 sits at total 0.775
+    // today. The pre-fix absolute floor (0.05) held the resolved title over
+    // the reassembled casefile for a third of the dwell, which is exactly
+    // what this drive would catch.
+    expect(await scrollCasefileDwell(page, DWELL_REARM)).toBe(true);
     await expect(page.locator(".services-masthead")).toHaveAttribute("data-reveal", "armed");
     await expect(
       page.locator(".services-masthead__title-line").first().locator("span").first()
@@ -525,7 +580,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       await page.setViewportSize(viewport);
       await page.goto("/", { waitUntil: "domcontentloaded" });
       await page.waitForSelector(".services-stage", { timeout: 15_000 });
-      expect(await scrollCasefileDwell(page, 0.1), `${label}: casefile runway missing`).toBe(true);
+      expect(
+        await scrollCasefileDwell(page, DWELL_ROW_1),
+        `${label}: casefile runway missing`
+      ).toBe(true);
       await page.waitForTimeout(1200);
       await expect(page.locator(".fl-pda")).toBeVisible();
 
@@ -805,7 +863,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       ).toBeGreaterThan(heldY + 2);
 
       // Back to the map's row and its first reading for the checks below.
-      expect(await scrollCasefileDwell(page, 0.1), `${label}: casefile runway missing`).toBe(true);
+      expect(
+        await scrollCasefileDwell(page, DWELL_ROW_1),
+        `${label}: casefile runway missing`
+      ).toBe(true);
       await page.waitForTimeout(600);
 
       // The console carries NO TITLE BAR, NO REPEATED HEADING (ADR-063 U1)
@@ -1494,7 +1555,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
     // The settle at the front of the dwell — panels assembled, stage pinned,
     // nothing travelling. Same sample point as the hold assertion above.
-    expect(await scrollCasefileDwell(page, 0.1)).toBe(true);
+    expect(await scrollCasefileDwell(page, DWELL_ROW_1)).toBe(true);
     await page.waitForTimeout(1400);
 
     // THE ALIGNMENT LAW — the instrument spans the HUD rail's own box
@@ -2487,7 +2548,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // ADR-058 wrote down and declined to take at the time.
     await page.goto("/?theme=light", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".services-stage", { timeout: 20_000 });
-    expect(await scrollCasefileDwell(page, 0.1), "casefile runway missing").toBe(true);
+    expect(await scrollCasefileDwell(page, DWELL_ROW_1), "casefile runway missing").toBe(true);
     await page.waitForTimeout(900);
     await expect(page.locator(".fl-pda")).toBeVisible();
 

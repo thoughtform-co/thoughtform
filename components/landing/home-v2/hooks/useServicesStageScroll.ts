@@ -10,7 +10,20 @@ import {
 import { clamp01 } from "@/lib/math";
 import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
-import { SERVICES_PROOF_BROWSE_FRAC, SERVICES_PROOF_RUNWAY_VH } from "../unifiedServicesInstrument";
+import { browseClientCount, browseSeamClocks } from "../services/casefile/browseMap";
+import {
+  SERVICES_PROOF_BROWSE_FRAC,
+  SERVICES_PROOF_RUNWAY_VH,
+  SERVICES_PROOF_SEGMENTS,
+} from "../unifiedServicesInstrument";
+
+/* ⚠ ONE CLIENT ⇒ NO SEAM ⇒ THE CHANNELS ARE NEVER WRITTEN (ADR-087 Phase B).
+   The crossfade the client seam needs is two custom properties on `.fl-case`,
+   and casefile.css reads them with identity defaults — so the cheapest way to
+   keep today's inline style byte-identical is to not write them at all. That
+   is not a flag (ADR-070 U35): it is the segment table answering a question
+   about itself, and it flips on the day a second `CaseDef` lands. */
+const PROOF_HAS_CLIENT_SEAM = browseClientCount(SERVICES_PROOF_SEGMENTS) > 1;
 
 /** The pinned stage: the ring holds Advisory front through a short arrival
  *  while the corridor→services dissipate settles, then the first scroll
@@ -148,7 +161,20 @@ const PROOF_RELEASE_END = 1.0;
  *  and 0.998 eighty pixels in — the intent is "~80px into the dwell", so
  *  the fraction moved with the runway (0.06 of 1.2vh → 0.025 of 3.2vh,
  *  both ≈80px at a 900px viewport). Still far inside the browse band's
- *  first row, where nothing else is moving. */
+ *  first row, where nothing else is moving.
+ *
+ *  ⚠ **IT STAYS A FRACTION, AND THE ARITHMETIC IS WHY** (ADR-087 Phase B).
+ *  Re-expressing the intent as `80 / (SERVICES_PROOF_RUNWAY_VH × vh)` was
+ *  offered and measured: it lands on 0.025 only where `vh` is EXACTLY 1000,
+ *  and every reference viewport moves — 720h flips at 80px instead of 57.6,
+ *  800h at 80 instead of 64, 900h at 80 instead of 72, 1080h at 80 instead
+ *  of 86.4. The gate owns the plates' `backdrop-filter`, so those are real
+ *  crossings a reader can see, not rounding. The honest note is therefore
+ *  that the constant records a fraction whose PIXEL intent is
+ *  viewport-dependent; a pixel re-derivation is a separate, measured
+ *  change to make when someone is prepared to re-judge the blur's onset at
+ *  all four heights. It follows the runway for free either way — the
+ *  fraction is of `proofP`, whose domain the derivation already owns. */
 const PROOF_SETTLED_AT = 0.025;
 
 // `clamp01` now comes from `@/lib/math` (Phase-5 consolidation). The local
@@ -279,6 +305,8 @@ export function useServicesStageScroll(
     // fine: nothing consumes the channels then.
     let proofHostEl: HTMLElement | null = null;
     let currentProofBrowse = -1;
+    let currentClientIn = -1;
+    let currentClientOut = -1;
     const proofHost = (stage: HTMLElement): HTMLElement | null => {
       if (!proofHostEl || !proofHostEl.isConnected) {
         proofHostEl = stage.querySelector<HTMLElement>(".fl-case");
@@ -290,7 +318,9 @@ export function useServicesStageScroll(
       inV: number,
       outV: number,
       settled = false,
-      browse?: number
+      browse?: number,
+      /** The client seam's two clocks — omitted wherever there is no seam. */
+      clients?: { clientIn: number; clientOut: number }
     ) => {
       const host = proofHost(stage);
       if (host) {
@@ -316,6 +346,36 @@ export function useServicesStageScroll(
         } else if (Math.abs(browse - currentProofBrowse) >= WRITE_EPS) {
           host.style.setProperty("--svc-proof-browse", browse.toFixed(4));
           currentProofBrowse = browse;
+        }
+        // THE CLIENT SEAM'S CROSSFADE (ADR-087 Phase B), on the same
+        // deadband as the two proof clocks — same host, same fan-out, same
+        // arithmetic about what is invisible.
+        //
+        // ⚠ ABSENT IS THE CONTRACT, NOT A DEFAULT. With one client in
+        // `CASES` there is no seam to cross, so these are never written and
+        // the inline style on `.fl-case` is byte-what it was before this
+        // change; casefile.css composes them with `var(--svc-client-in, 1)`
+        // and `var(--svc-client-out, 0)`, i.e. identity. Writing "1" and "0"
+        // instead would be the same pixels and a different DOM, which is the
+        // one thing the Phase B acceptance proof does not allow.
+        if (clients === undefined) {
+          if (host.style.getPropertyValue("--svc-client-in")) {
+            host.style.removeProperty("--svc-client-in");
+          }
+          if (host.style.getPropertyValue("--svc-client-out")) {
+            host.style.removeProperty("--svc-client-out");
+          }
+          currentClientIn = -1;
+          currentClientOut = -1;
+        } else {
+          if (Math.abs(clients.clientIn - currentClientIn) >= WRITE_EPS) {
+            host.style.setProperty("--svc-client-in", clients.clientIn.toFixed(4));
+            currentClientIn = clients.clientIn;
+          }
+          if (Math.abs(clients.clientOut - currentClientOut) >= WRITE_EPS) {
+            host.style.setProperty("--svc-client-out", clients.clientOut.toFixed(4));
+            currentClientOut = clients.clientOut;
+          }
         }
       }
       // HIT-TESTING GATE. Opacity 0 does NOT remove an element from the hit
@@ -373,6 +433,8 @@ export function useServicesStageScroll(
         // Resolved, released, and LIVE — here the casefile is static flow
         // content above the accordion, so it must stay hit-testable.
         // No browse argument: static flow has no scroll-owned row selector.
+        // No client argument either — a seam is a scroll crossing, and a
+        // static document shows one client resolved with nothing fading.
         setProof(stage, 1, 0, true);
         servicesRingProgressRef.current.progress = 0;
         servicesRingProgressRef.current.proofRelease = 1;
@@ -424,7 +486,19 @@ export function useServicesStageScroll(
       // in WITH it (see the constants block for the owner's supersession).
       const proofIn = smootherstep(PROOF_GATE_START, PROOF_GATE_END, dissipate);
       const proofOut = smootherstep(PROOF_OUT_START, PROOF_OUT_END, releaseP);
-      setProof(stage, proofIn, proofOut, proofP > PROOF_SETTLED_AT, browseP);
+      // The client seam's two clocks come off the SAME browse reading the
+      // casefile's spy derives its row from (`browseMap.ts`), so the fade and
+      // the identity swap can never disagree about where the midpoint is.
+      // Row-agnostic here on purpose — this hook does not know what a track
+      // is and must not learn.
+      setProof(
+        stage,
+        proofIn,
+        proofOut,
+        proofP > PROOF_SETTLED_AT,
+        browseP,
+        PROOF_HAS_CLIENT_SEAM ? browseSeamClocks(browseP, SERVICES_PROOF_SEGMENTS) : undefined
+      );
       // What the casefile is actually painting — the mark and its haze dim
       // against THIS, not against the release, so the instrument recedes as
       // the surface arrives rather than the moment the stage parks.
@@ -490,6 +564,8 @@ export function useServicesStageScroll(
       currentProofIn = -1;
       currentProofOut = -1;
       currentProofBrowse = -1;
+      currentClientIn = -1;
+      currentClientOut = -1;
       currentProofLive = null;
       currentProofSettled = null;
       write();

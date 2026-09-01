@@ -1,16 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import { type ScrambleJob, advanceScrambles, queueScramble } from "@/lib/home-v2/captionScramble";
 import { CASES, PROOF_CASE } from "@/lib/cases/registry";
-import type { CaseSegment } from "@/lib/cases/types";
+import type { CaseDef, CaseSegment } from "@/lib/cases/types";
 import {
   SERVICES_PROOF_BROWSE_FRAC,
+  SERVICES_PROOF_CLIENT_SEAM_VH,
+  SERVICES_PROOF_ROW_VH,
   SERVICES_PROOF_RUNWAY_VH,
   SERVICES_SCROLL_OWNED_MEDIA,
 } from "@/components/landing/home-v2/unifiedServicesInstrument";
 
+import { browseSegments, browseState, browseTargetFor, type BrowseSegment } from "./browseMap";
 import { ClientTabs } from "./ClientTabs";
 import { Directory } from "./Directory";
 import { TrackProofRegister } from "./TrackProofRegister";
@@ -75,38 +78,21 @@ const PIN_BAND = 0.02;
  * stale browse value after the surface has become static. */
 const ENHANCED_MEDIA_QUERY = SERVICES_SCROLL_OWNED_MEDIA;
 
-/* ── The row scrollspy (ADR-056 U13) ───────────────────────────────────
-   The browse band gives each directory row an equal quarter of
-   `--svc-proof-browse`; the spy converts the value back to a row with
-   HYSTERESIS so a reader parked exactly on a band edge never flickers
-   between two panels. Driven from the SAME style MutationObserver the
-   reveal already owns — the scroll hook stays the single writer, and this
-   component gains no listener it did not have. */
+/* ── The browse spy (ADR-056 U13, generalised ADR-087 Phase B) ──────────
+   The browse band gives each directory row a `SERVICES_PROOF_ROW_VH` share
+   of `--svc-proof-browse`, and each client-to-client crossing a
+   `SERVICES_PROOF_CLIENT_SEAM_VH` one; the spy converts the value back to a
+   CLIENT and a ROW with HYSTERESIS at both levels, so a reader parked
+   exactly on an edge never flickers between two panels. The arithmetic
+   lives in `browseMap.ts` — pure, three-reader, unit-tested — and
+   `BROWSE_HYSTERESIS` came with it, so this component and that module cannot
+   hold two values. Driven from the SAME style MutationObserver the reveal
+   already owns: the scroll hook stays the single writer, and this component
+   gains no listener it did not have. */
 
-/** How far past a shared band edge the browse value must travel before the
- *  spy crosses it, as a fraction of the whole browse band. ~26px of scroll
- *  at a 2-viewport band on a 900px viewport — enough that rest jitter and
- *  rubber-banding never flip a row, small enough to be imperceptible. */
-const BROWSE_HYSTERESIS = 0.04;
 /** Above this much fold the spy freezes: the panels are LEAVING, and a row
  *  swap mid-departure is noise on top of choreography. */
 const BROWSE_FREEZE_OUT = 0.02;
-
-/** Next active row for a browse reading, honouring hysteresis. */
-function rowFromBrowse(browse: number, current: number, rowCount: number): number {
-  const raw = Math.min(rowCount - 1, Math.max(0, Math.floor(browse * rowCount)));
-  if (raw === current) return current;
-  if (raw > current) return browse >= raw / rowCount + BROWSE_HYSTERESIS ? raw : current;
-  return browse <= (raw + 1) / rowCount - BROWSE_HYSTERESIS ? raw : current;
-}
-
-/** Tab rows — every case in the registry, in registry order. One case today;
- *  adding a second to `lib/cases/` lights up a second tab with no edit here. */
-const CASEFILE_TABS = CASES.map((c) => ({
-  slug: c.slug,
-  ix: c.casefile.ix,
-  tab: c.casefile.tab,
-}));
 
 const MOBILE_CASEFILE_VIEWS = [
   { id: "brief", label: "Brief" },
@@ -116,66 +102,141 @@ const MOBILE_CASEFILE_VIEWS = [
 
 type MobileCasefileView = (typeof MOBILE_CASEFILE_VIEWS)[number]["id"];
 
-export function ServicesCasefile() {
+/**
+ * `cases` is a DEFAULT ARGUMENT, not a flag (ADR-070 U35): production mounts
+ * the registry and a lab can mount a fixture without a boolean existing
+ * anywhere. Nothing branches on it — the segment table is derived from
+ * whatever list arrives, so a two-client fixture exercises the seam with the
+ * production code path.
+ */
+export function ServicesCasefile({ cases = CASES }: { cases?: readonly CaseDef[] } = {}) {
   const rootRef = useRef<HTMLElement | null>(null);
   const [slug, setSlug] = useState(PROOF_CASE.slug);
   const [trackId, setTrackId] = useState(PROOF_CASE.casefile.tracks[0].id);
   const [mobileView, setMobileView] = useState<MobileCasefileView>("artifact");
 
-  const def = CASES.find((c) => c.slug === slug) ?? PROOF_CASE;
+  const def = cases.find((c) => c.slug === slug) ?? cases[0] ?? PROOF_CASE;
   const file = def.casefile;
   const track = file.tracks.find((t) => t.id === trackId) ?? file.tracks[0];
   const trackIndex = Math.max(
     0,
     file.tracks.findIndex((t) => t.id === track.id)
   );
+  const clientIndex = Math.max(
+    0,
+    cases.findIndex((c) => c.slug === def.slug)
+  );
   const panelId = "svc-casefile-panel";
   const rowId = `${def.slug}-row-${track.id}`;
 
-  /* The scrollspy reads the CURRENT row through a ref — its observer closure
-     outlives any single render, and hysteresis needs the live index. */
+  /* Tab rows — every case in the list, in registry order. One case today;
+     adding a second to `lib/cases/` lights up a second tab with no edit
+     here. */
+  const tabs = useMemo(
+    () => cases.map((c) => ({ slug: c.slug, ix: c.casefile.ix, tab: c.casefile.tab })),
+    [cases]
+  );
+
+  /* THE SAME TABLE THE SCROLL HOOK WRITES AGAINST. At the default it is
+     `SERVICES_PROOF_SEGMENTS` value-for-value — one arithmetic, two callers —
+     and with an injected list it is that list's own map, which is the whole
+     point of the seam. */
+  const segments = useMemo(
+    () =>
+      browseSegments(
+        cases.map((c) => c.casefile.tracks.length),
+        SERVICES_PROOF_ROW_VH,
+        SERVICES_PROOF_CLIENT_SEAM_VH
+      ),
+    [cases]
+  );
+
+  /* The spy reads its CURRENT position through refs — its observer closure
+     outlives any single render, and hysteresis needs the live indices. The
+     case list and its table go the same way, so a client swap inside the
+     observer resolves against the list this render used.
+
+     ⚠ **THESE FOUR WARNINGS ARE THE COMPILER SEEING OLD CODE, NOT NEW CODE.**
+     `react-hooks/refs` is one of the rules eslint.config.mjs softens to `warn`
+     for exactly this class of surface, and the render-time write is the
+     ADR-056 U13 mechanism itself: the style MutationObserver is installed once
+     per client and must read the index the CURRENT render computed, so a
+     `useLayoutEffect` write would be a behavioural change to a documented
+     contract rather than a tidy-up. It reported NOTHING here until this pass —
+     the React Compiler bails out of a component that takes no props, so adding
+     the `cases` seam is what made it analyse `trackIdxRef`, which has been
+     written this way since U13. Disabled with the reason rather than absorbed
+     into the warning budget, which `npm run lint` pins at its exact count. */
+  /* eslint-disable react-hooks/refs -- ADR-056 U13: the scrollspy's observer
+     outlives the render and must read the live index; see the note above. */
   const trackIdxRef = useRef(0);
   trackIdxRef.current = trackIndex;
+  const clientIdxRef = useRef(0);
+  clientIdxRef.current = clientIndex;
+  const casesRef = useRef(cases);
+  casesRef.current = cases;
+  const segmentsRef = useRef<readonly BrowseSegment[]>(segments);
+  segmentsRef.current = segments;
+  /* eslint-enable react-hooks/refs */
 
-  const selectClient = useCallback((next: string) => {
-    const c = CASES.find((x) => x.slug === next);
-    if (!c) return;
-    setSlug(c.slug);
-    // A track id is only meaningful inside its own casefile.
-    setTrackId(c.casefile.tracks[0].id);
-  }, []);
-
-  /* Row selection with the CLICK-PINS-SCROLL contract (ADR-056 U13). While
-     the stage is pinned, scroll position IS the row selector — so a click
-     that only set state would be overridden by the very next spy reading.
-     The click therefore also moves the scroll to the middle of the row's
-     browse band; the spy then derives the same row and the two selectors
-     agree by construction. Instant (`behavior: "auto"`): a smooth glide
-     would drag the spy through every intermediate row on the way.
+  /* CLICK-PINS-SCROLL, the shared half (ADR-056 U13). While the stage is
+     pinned, scroll position IS the selector — so a click that only set state
+     would be overridden by the very next spy reading. The click therefore
+     also moves the scroll to the middle of the target's browse band; the spy
+     then derives the same target and the two selectors agree by
+     construction. Instant (`behavior: "auto"`): a smooth glide would drag
+     the spy through every intermediate band on the way.
 
      Static contexts keep the plain state write: mobile/reduced motion (no
      browse channel), a not-yet-pinned stage (teleporting the page under a
      reader who clicked early would be worse than a transient spy override),
-     and the flag-off rollback (no runway at all). */
+     and the flag-off rollback (no runway at all).
+
+     ⚠ The arithmetic is byte-what it was: `browseTargetFor` returns
+     `(idx + 0.5) / rows` at N = 1, and the two multiplications that follow
+     are in the order they always were. */
+  const pinBrowse = useCallback((fraction: number) => {
+    const root = rootRef.current;
+    if (!root || SERVICES_PROOF_RUNWAY_VH === 0) return;
+    const enhanced = window.matchMedia(ENHANCED_MEDIA_QUERY).matches;
+    if (!enhanced) return;
+    const runway = root.closest<HTMLElement>(".services-stage-root");
+    if (!runway) return;
+    const r = runway.getBoundingClientRect();
+    if (r.top > 2) return; // not pinned yet
+    const vh = window.innerHeight || 1;
+    const proofPx = Math.min(SERVICES_PROOF_RUNWAY_VH * vh, Math.max(0, r.height - vh));
+    const target = fraction * SERVICES_PROOF_BROWSE_FRAC * proofPx;
+    window.scrollTo({ top: r.top + window.scrollY + target, behavior: "auto" });
+  }, []);
+
+  /* A CLIENT click pins the scroll too (ADR-087 Phase B) — same guards, same
+     reason. Without it a tab click on the enhanced tier would be overridden
+     by the next spy reading exactly as a row click was before U13, and the
+     symptom would be identical: the tab lights, then snaps back one frame
+     later. It lands on the incoming client's FIRST row, which is where its
+     band's own first sub-band centre sits. */
+  const selectClient = useCallback(
+    (next: string) => {
+      const idx = casesRef.current.findIndex((x) => x.slug === next);
+      if (idx < 0) return;
+      const c = casesRef.current[idx];
+      setSlug(c.slug);
+      // A track id is only meaningful inside its own casefile.
+      setTrackId(c.casefile.tracks[0].id);
+      pinBrowse(browseTargetFor(segmentsRef.current, idx, 0));
+    },
+    [pinBrowse]
+  );
+
   const selectTrack = useCallback(
     (id: string) => {
       setTrackId(id);
-      const root = rootRef.current;
-      if (!root || SERVICES_PROOF_RUNWAY_VH === 0) return;
-      const enhanced = window.matchMedia(ENHANCED_MEDIA_QUERY).matches;
-      if (!enhanced) return;
-      const runway = root.closest<HTMLElement>(".services-stage-root");
-      if (!runway) return;
-      const r = runway.getBoundingClientRect();
-      if (r.top > 2) return; // not pinned yet
       const idx = file.tracks.findIndex((t) => t.id === id);
       if (idx < 0) return;
-      const vh = window.innerHeight || 1;
-      const proofPx = Math.min(SERVICES_PROOF_RUNWAY_VH * vh, Math.max(0, r.height - vh));
-      const target = ((idx + 0.5) / file.tracks.length) * SERVICES_PROOF_BROWSE_FRAC * proofPx;
-      window.scrollTo({ top: r.top + window.scrollY + target, behavior: "auto" });
+      pinBrowse(browseTargetFor(segmentsRef.current, clientIdxRef.current, idx));
     },
-    [file]
+    [file, pinBrowse]
   );
 
   /* ── Reveal ─────────────────────────────────────────────────────────── */
@@ -247,11 +308,18 @@ export function ServicesCasefile() {
       raf = requestAnimationFrame(tick);
     };
 
-    /* The row scrollspy (ADR-056 U13) — one more reader of the style
-       mutations this observer already receives. Missing var ⇒ NO DRIVE
-       (unlike the clock's fail-open): a bare mount has no browse channel
-       and must keep its clicked/default row, not snap to the last band. */
-    const driveRow = () => {
+    /* The browse spy (ADR-056 U13; client-aware since ADR-087 Phase B) — one
+       more reader of the style mutations this observer already receives.
+       Missing var ⇒ NO DRIVE (unlike the clock's fail-open): a bare mount has
+       no browse channel and must keep its clicked/default row, not snap to
+       the last band.
+
+       ⚠ AT N = 1 THIS IS THE U13 SPY EXACTLY. One client band spans [0, 1],
+       so `browseState` normalises the reading by `(b − 0) / (1 − 0)` — the
+       identity — and runs the same `rowFromBrowse` on the same value with the
+       same hysteresis. The client branch below can only fire once a second
+       `CaseDef` exists. */
+    const driveBrowse = () => {
       // The observer can outlive the media tier in which it was installed.
       // Static/mobile/reduced-motion mode is state-owned, even during the
       // resize mutation that removes the inline browse channel.
@@ -262,16 +330,29 @@ export function ServicesCasefile() {
       if (!Number.isFinite(rawBrowse)) return;
       const rawOut = Number.parseFloat(root.style.getPropertyValue("--svc-proof-out"));
       if (Number.isFinite(rawOut) && rawOut > BROWSE_FREEZE_OUT) return;
-      // `def` is the effect closure's — deps are [def.slug], so it is
-      // current for this observer's whole lifetime.
-      const tracks = def.casefile.tracks;
-      const idx = rowFromBrowse(rawBrowse, trackIdxRef.current, tracks.length);
-      if (idx !== trackIdxRef.current) setTrackId(tracks[idx].id);
+      const next = browseState(rawBrowse, segmentsRef.current, {
+        clientIdx: clientIdxRef.current,
+        rowIdx: trackIdxRef.current,
+      });
+      const nextCase = casesRef.current[next.clientIdx];
+      if (!nextCase) return;
+      const tracks = nextCase.casefile.tracks;
+      const nextTrack = tracks[Math.min(tracks.length - 1, Math.max(0, next.rowIdx))];
+      if (!nextTrack) return;
+      // Change-guarded on both axes: a row step inside one client must not
+      // touch the slug, and a client swap always carries a track id, because
+      // a track id is only meaningful inside its own casefile.
+      if (next.clientIdx !== clientIdxRef.current) {
+        setSlug(nextCase.slug);
+        setTrackId(nextTrack.id);
+      } else if (next.rowIdx !== trackIdxRef.current) {
+        setTrackId(nextTrack.id);
+      }
     };
 
     const onClock = () => {
       if (document.visibilityState === "hidden") return;
-      driveRow();
+      driveBrowse();
       const v = readClock();
       if (state === "armed" && v >= REVEAL_AT && isParked()) begin();
       else if (state !== "armed" && v < REARM_BELOW) arm();
@@ -339,12 +420,7 @@ export function ServicesCasefile() {
           2026-08-07 (owner) — the data stays in the content model,
           unrendered. */}
       <div data-fl-panel style={{ "--ci-off": 0.07, "--fl-dy": "-26px" } as CSSProperties}>
-        <ClientTabs
-          tabs={CASEFILE_TABS}
-          activeSlug={def.slug}
-          onSelect={selectClient}
-          controls={panelId}
-        />
+        <ClientTabs tabs={tabs} activeSlug={def.slug} onSelect={selectClient} controls={panelId} />
       </div>
 
       {/* MOBILE IS ONE RETUNABLE INSTRUMENT, NOT THE DESKTOP COLUMNS IN A
@@ -402,6 +478,15 @@ export function ServicesCasefile() {
       />
 
       {/* ── Left column · brief ─────────────────────────────────────── */}
+      {/* ⚠ `data-fl-client-panel` MARKS THE FOUR PANELS WHOSE CONTENT IS THE
+          CLIENT'S RECORD (ADR-087 Phase B) — the brief, the proof register,
+          the directory and the right panel's visual. Only these compose the
+          client-seam clocks on top of the proof clocks; the HOUSING (the tabs
+          wrapper, `.fl-split`, the reticles) is deliberately unmarked, because
+          the frame is what the record is swapped INSIDE and a frame that
+          crossfades with its contents is a page turn. Inert without the
+          channels: with `--svc-client-in/-out` absent the CSS resolves to
+          today's expressions exactly. */}
       <div
         className="fl-brief"
         id="svc-casefile-brief"
@@ -409,6 +494,7 @@ export function ServicesCasefile() {
         aria-labelledby="svc-casefile-view-brief svc-casefile-brief-title"
         tabIndex={mobileView === "brief" ? 0 : -1}
         data-fl-panel
+        data-fl-client-panel
         style={{ "--ci-off": 0.24, "--fl-dx": "-48px" } as CSSProperties}
       >
         {/* THE HEADING IS THE PROJECT, not the client (owner, 2026-07-30).

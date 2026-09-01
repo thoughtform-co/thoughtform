@@ -78,8 +78,9 @@
    * (useCorridorExitScroll), NOT this height.
    *
    * ADR-056: the proof casefile holds the FRONT of the runway, so the track
-   * grows by `--svc-proof-runway` (2 viewports, mirroring
-   * SERVICES_PROOF_RUNWAY_VH). `splitServicesRunway` then re-derives the
+   * grows by `--svc-proof-runway` (mirroring SERVICES_PROOF_RUNWAY_VH — the
+   * "2 viewports" this line used to say was the 2026-07-29 value, stale from
+   * the 08-02 retune below). `splitServicesRunway` then re-derives the
    * ring's progress over the remaining 500svh, so the RING's domain — and
    * with it RING_ARRIVAL_FRAC, RING_EXIT_START and the ADR-047 #about sweep —
    * is unchanged. Only the page gets longer. Keep this default and the TS
@@ -99,7 +100,18 @@
    * is the browse band — a half-viewport of scroll per row; the BACK 37.5 %
    * (120svh) is the 07-29 release, byte-identical in pixels because every
    * release threshold rides a re-derived sub-ramp. Not a return of the dead
-   * scroll the 07-29 note bans: each browse quarter swaps the panel. */
+   * scroll the 07-29 note bans: each browse quarter swaps the panel.
+   *
+   * ⚠ **ADR-087 Phase B: THE TS SIDE IS DERIVED NOW AND THIS LITERAL IS NOT.**
+   * `SERVICES_PROOF_RUNWAY_VH` is `Σ rows × ROW_VH + (N−1) × SEAM_VH +
+   * RELEASE_VH` over `CASES`, so a second `CaseDef` moves the constant BY
+   * ITSELF and leaves this number behind — a dwell that ends before the browse
+   * band does, with the last client's rows compressed into whatever runway was
+   * left and nothing failing. This stays hand-written because it must exist
+   * PRE-HYDRATION (`useCorridorExitScroll`'s first `servicesRect` read beats
+   * every module evaluation), so the pair cannot be generated; **the alarm is
+   * `tests/lib/services-proof-runway-lockstep.test.ts`**, which fails with the
+   * number to write here. Bump it in the same commit as the registry entry. */
   --svc-proof-runway: 320svh;
   min-height: calc(var(--svc-proof-runway) + 500svh);
 }

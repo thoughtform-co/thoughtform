@@ -13,9 +13,19 @@
  * and that only reads true at production proportions:
  *
  *   corridor  820svh   `.home-v2-stage` (ADR-018; EPILOGUE_START = 620/820)
- *   services  620svh   `--svc-proof-runway` 120svh + the 500svh ring runway
+ *   services  DERIVED  `--svc-proof-runway` + the 500svh ring runway
  *   about     250svh   the ADR-047 deck-flip stage
  *   hero / practice / contact  one viewport each
+ *
+ * ⚠ **THE SERVICES ROW WAS `620svh` AND HAD BEEN WRONG FOR A MONTH** — the
+ * casefile's dwell went 120 → 320svh on 2026-08-02 and this lab kept
+ * mirroring the old number, so the block a section-presence instrument is
+ * judged against was 200svh short of production while the comment beside it
+ * asserted the mirror. It reads `SERVICES_PROOF_RUNWAY_VH` now (ADR-087
+ * Phase B made that constant a derivation over `CASES`, which is exactly
+ * when a hand-copied mirror stops being maintainable), so the lab's detent
+ * SPACING follows the real runway for free — including the day a second
+ * client lengthens the browse band.
  *
  * ⚠ `scrollTargetForEntry` reads `el.offsetTop` for station entries, which
  * is only document-absolute while no ancestor is positioned. The runway
@@ -23,6 +33,7 @@
  * `lib/rail-manifest/clickToNavigate.ts`.
  */
 
+import { SERVICES_PROOF_RUNWAY_VH } from "@/components/landing/home-v2/unifiedServicesInstrument";
 import { CORRIDOR_MOUNT_ID, MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
 
 export interface RunwayBlock {
@@ -48,7 +59,7 @@ export interface RunwayBlock {
 const BLOCK_HEIGHTS: Readonly<Record<string, string>> = {
   hero: "100svh",
   [CORRIDOR_MOUNT_ID]: "820svh",
-  services: "620svh",
+  services: `${SERVICES_PROOF_RUNWAY_VH * 100 + 500}svh`,
   about: "250svh",
   practice: "100svh",
   contact: "100svh",

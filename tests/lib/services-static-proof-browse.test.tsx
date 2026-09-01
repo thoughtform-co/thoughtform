@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useServicesStageScroll } from "@/components/landing/home-v2/hooks/useServicesStageScroll";
 import { ServicesCasefile } from "@/components/landing/home-v2/services/casefile/ServicesCasefile";
+import { SERVICES_PROOF_RUNWAY_VH } from "@/components/landing/home-v2/unifiedServicesInstrument";
 
 interface MediaMode {
   mobile: boolean;
@@ -36,16 +37,31 @@ function installMediaMode(mode: MediaMode): void {
   }) as typeof window.matchMedia;
 }
 
+/**
+ * The runway's height, DERIVED (ADR-087 Phase B) — `services.css` is
+ * `calc(var(--svc-proof-runway) + 500svh)`, so the harness has to be the
+ * dwell plus the ring's five viewports at some nominal height. 900px is
+ * that nominal; it was a 7200 literal, which said "eight viewports" and
+ * meant nothing in particular once the dwell became a derivation.
+ *
+ * Nothing here depends on the exact number — the stage is read at `top: 0`,
+ * where `splitServicesRunway` returns proofP 0 whatever the travel — but a
+ * literal that no longer tracks the constant is a literal that will be wrong
+ * on the day someone reads it as documentation.
+ */
+const HARNESS_VH = 900;
+const RUNWAY_H = (5 + SERVICES_PROOF_RUNWAY_VH) * HARNESS_VH;
+
 function runwayRect(): DOMRect {
   return {
     x: 0,
     y: 0,
     top: 0,
     right: 1280,
-    bottom: 7200,
+    bottom: RUNWAY_H,
     left: 0,
     width: 1280,
-    height: 7200,
+    height: RUNWAY_H,
     toJSON: () => ({}),
   };
 }

@@ -31,15 +31,20 @@ const THEME = argOf("--theme", "dark");
 const [VW, VH] = argOf("--vp", "1280x720").split("x").map(Number);
 
 /**
- * Mirrors SERVICES_PROOF_RUNWAY_VH; the dwell's front is the casefile's.
+ * ⚠ SCROLL IS THE ROW SELECTOR. The front `SERVICES_PROOF_BROWSE_FRAC` of the
+ * dwell is the BROWSE BAND, divided one share per directory row, so the
+ * fraction below chooses WHICH PLATE mounts. The map is row one, which lives
+ * in the first share — 0.35 of the runway lands on the Studio row's sheets,
+ * which is how this script first came up empty looking for `.fl-pda__svg`.
  *
- * ⚠ SCROLL IS THE ROW SELECTOR. The front 62.5 % of the dwell is the BROWSE
- * BAND and it is divided into one quarter per directory row, so the fraction
- * below chooses WHICH PLATE mounts. The map is row one, which lives in the
- * first quarter — 0.35 of the runway lands on the Studio row's sheets, which
- * is how this script first came up empty looking for `.fl-pda__svg`.
+ * ⚠ **THE RUNWAY IS READ OFF THE PAGE, NOT MIRRORED** (ADR-087 Phase B). It
+ * was a `3.2` literal here, which is the one thing a capture script must
+ * never carry: the dwell is DERIVED from `CASES` now, so a mirrored constant
+ * would go stale on the day a second client lands and this script would
+ * silently shoot the wrong row. `--svc-proof-runway` is declared on
+ * `.services-stage-root` pre-hydration, in `svh` — dividing by 100 gives the
+ * viewport multiple the constant holds.
  */
-const PROOF_RUNWAY_VH = 3.2;
 const DWELL = Number(argOf("--at", "0.09"));
 
 await mkdir(OUT, { recursive: true });
@@ -65,18 +70,31 @@ try {
   });
   await page.waitForSelector(".home-v2-stage", { timeout: 60_000 });
 
-  const target = await page.evaluate(
-    ({ vh, at }) => {
+  const measured = await page.evaluate(
+    ({ at }) => {
       const runway = document.querySelector(".services-stage-root");
       if (!runway) return null;
       const rect = runway.getBoundingClientRect();
       const top = rect.top + window.scrollY;
       const travel = Math.max(0, rect.height - window.innerHeight);
-      return Math.round(top + Math.min(travel, window.innerHeight * vh) * at);
+      /* The runway's own declared dwell, read off the live element — `320svh`
+         → 3.2 viewports. Falls back to the rect's full travel if the property
+         ever stops resolving, which is loud rather than silently wrong. */
+      const declared = Number.parseFloat(
+        getComputedStyle(runway).getPropertyValue("--svc-proof-runway")
+      );
+      const proofVh = Number.isFinite(declared) ? declared / 100 : 0;
+      const proof = proofVh > 0 ? Math.min(travel, window.innerHeight * proofVh) : travel;
+      return { y: Math.round(top + proof * at), proofVh, proofPx: Math.round(proof) };
     },
-    { vh: PROOF_RUNWAY_VH, at: DWELL }
+    { at: DWELL }
   );
-  if (target == null) throw new Error("no .services-stage-root — the corridor never mounted");
+  if (measured == null) throw new Error("no .services-stage-root — the corridor never mounted");
+  const target = measured.y;
+  console.log(
+    `runway: --svc-proof-runway = ${measured.proofVh}vh (${measured.proofPx}px of dwell), ` +
+      `--at ${DWELL} → y ${target}`
+  );
 
   await page.evaluate((y) => window.scrollTo(0, y), target);
   await page.waitForTimeout(700);
@@ -139,8 +157,6 @@ try {
       clipped,
     };
   });
-
-
 
   /* The readout is the one reactive line — hover a package and it swaps. */
   const pkg = page.locator(".fl-pda__svg text", { hasText: "SKILL" }).first();

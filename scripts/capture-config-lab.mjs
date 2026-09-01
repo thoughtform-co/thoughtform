@@ -32,9 +32,7 @@ const has = (flag) => args.includes(flag);
 
 const PORT = argOf("--port", "3003");
 const OUT = argOf("--out", "docs/design/intelligence-config-lab");
-const VARIANTS = argOf("--v", "shipped,tight,fused,bands,rail,satellite,ledger,grid").split(
-  ","
-);
+const VARIANTS = argOf("--v", "shipped,tight,fused,bands,rail,satellite,ledger,grid").split(",");
 const SUBJECTS = argOf("--w", "W-017,W-004,W-026,W-040,W-063").split(",");
 const THEMES = argOf("--themes", "dark,light").split(",");
 
@@ -66,19 +64,26 @@ async function measureProduction(browser) {
     await page.waitForSelector(".home-v2-stage", { timeout: 60_000 });
 
     // A REAL two-arg scrollTo into the casefile dwell (the smoke's
-    // `scrollCasefileDwell`). 3.2 mirrors SERVICES_PROOF_RUNWAY_VH — if the
-    // runway is retuned, update this with it (measure-only constant).
-    const PROOF_RUNWAY_VH = 3.2;
+    // `scrollCasefileDwell`). ⚠ The dwell is READ OFF THE PAGE, never
+    // mirrored (ADR-087 Phase B): `SERVICES_PROOF_RUNWAY_VH` is derived from
+    // `CASES` now, so a `3.2` literal here would go stale on the day a second
+    // client lands and this script would measure the wrong beat. The CSS
+    // literal is declared pre-hydration on `.services-stage-root`, in svh.
     const target = await page.evaluate(
-      ({ p, proofVh }) => {
+      ({ p }) => {
         const runway = document.querySelector(".services-stage-root");
         if (!runway) return null;
         const rect = runway.getBoundingClientRect();
         const top = rect.top + window.scrollY;
         const travel = Math.max(0, rect.height - window.innerHeight);
-        return Math.round(top + Math.min(travel, window.innerHeight * proofVh) * p);
+        const declared = Number.parseFloat(
+          getComputedStyle(runway).getPropertyValue("--svc-proof-runway")
+        );
+        const proofVh = Number.isFinite(declared) ? declared / 100 : 0;
+        const proof = proofVh > 0 ? Math.min(travel, window.innerHeight * proofVh) : travel;
+        return Math.round(top + proof * p);
       },
-      { p: 0.35, proofVh: PROOF_RUNWAY_VH }
+      { p: 0.35 }
     );
     if (target == null) throw new Error("no .services-stage-root");
     await page.evaluate((y) => window.scrollTo(0, y), target);
