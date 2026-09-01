@@ -17,6 +17,7 @@ breather).
 
 **Read first**
 
+- ⚠ [ADR-087: The casefile is a client stack](../sentinel/decisions/087-proof-client-stack.md) — **ACCEPTED on the mechanism, PROPOSED on the choreography.** The dwell is DERIVED over `CASES` now (row 0.5vh × tracks + seam 0.5vh between clients + release 1.2vh) and the flat `[0,1]`→row map is a SEGMENT TABLE (`browseMap.ts`, pure, zero imports). Byte-identical at one client to the last bit — that identity IS the acceptance proof, and there is NO flag (ADR-070 U35). Look-dev at **`/test/client-stack-lab`**, which is the first time the client channels ever write; its findings (the decode replay's target set fails at N ≥ 2, the seam's 21 % blank stretch, seam length being invisible at a fixed seam-local position) are recorded there. See §The tab strip and the client stack below
 - [ADR-070: The configuration is a switchboard](../sentinel/decisions/070-configuration-is-a-switchboard.md) — reading 02's DRAWING, promoted out of the config lab 2026-08-09. The wiring is the picture; ONE frame, ONE bright object; only what the record connects is drawn. See §The switchboard below.
   ⚠ **U34 (2026-08-23, owner) is the latest pass on reading 03's carrier** —
   the dodecagon is the HOUSING and the division inside it is CONCENTRIC. See
@@ -67,6 +68,16 @@ breather).
   safe by construction, but `SERVICES_PROOF_RUNWAY_VH` and
   `--svc-proof-runway` must move together; the CSS is the one that has to
   exist pre-hydration.
+  ⚠ **THAT SENTENCE HAS TEETH NOW — `tests/lib/services-proof-runway-lockstep.test.ts`**
+  (ADR-087). The TS side is DERIVED over `CASES` and the CSS literal is still
+  HAND-WRITTEN, which is exactly what makes silent divergence possible for the
+  first time: a second `CaseDef` moves the constant by itself and leaves
+  `320svh` behind, and the symptom is the last client's rows compressed into
+  whatever runway was left with nothing failing. The test prints the number to
+  bump. The tuning knobs are `SERVICES_PROOF_ROW_VH`,
+  `SERVICES_PROOF_CLIENT_SEAM_VH` and `SERVICES_PROOF_RELEASE_VH`;
+  `SERVICES_PROOF_RUNWAY_VH` is a RESULT, and assigning to it is assigning to
+  a measurement.
 - **The dwell is BROWSE then HANDOFF (ADR-056 U13).** The 3.2-vh dwell
   splits at `SERVICES_PROOF_BROWSE_FRAC` (0.625): the front 2.0 viewports
   are the BROWSE BAND — scroll IS the row selector, one quarter per
@@ -474,6 +485,86 @@ facts` is wider than the whole plate — so the values live on the LABEL
 - **The tab strip is derived from `CASES`.** Adding a second case lights up
   a second tab with no component change. Do not ship placeholder clients on
   the public page — the dim `+ Archive` is what marks it as a series.
+
+## The tab strip and the client stack (ADR-087)
+
+The mechanism under that bullet, and what it costs to add a client. ⚠ **All of
+it is INERT at one client and none of it is flagged** — the derivation answers
+a question about `CASES`, so it turns on by itself.
+
+- **THE BROWSE DOMAIN IS A SEGMENT TABLE, NOT A DIVISION.**
+  `[client 0 · rows × ROW_VH][seam · SEAM_VH][client 1 · rows × ROW_VH]…`
+  normalized onto `[0, 1]` — the domain `--svc-proof-browse` already
+  publishes. A client's band is sized by ITS OWN row count, so one browse
+  quarter costs the same scroll on every tab whatever the tab holds. The
+  arithmetic is `browseMap.ts`: PURE, zero imports, three readers (the
+  casefile's style observer, the stage's scroll hook, the smoke's band
+  targeting) — which is exactly the shape that drifts when it is written
+  inline. ⚠ **At N = 1 every function degenerates to the ADR-056 U13
+  arithmetic to the last bit** (`browseTargetFor` IS `(idx + 0.5) / rows`;
+  `browseState` IS the U13 spy), and the unit test asserts it with `===`.
+  Never re-derive the table at a call site — import it.
+- **THE SEAM IS A CROSSFADE WITH THE IDENTITY SWAP AT ITS BLIND MIDPOINT.**
+  `browseSeamClocks` runs `--svc-client-out` off through the first half and
+  `--svc-client-in` on through the second, positional rather than directional
+  so scrolling back up is the same two ramps reversed. The swap is held around
+  the midpoint by `SEAM_SWAP_HYSTERESIS` 0.06. ⚠ **THE WINDOW MUST SIT INSIDE
+  THE STRETCH WHERE THE PANELS PAINT NOTHING** — a held identity is only free
+  while the thing carrying it is invisible. Measured at the swap: marked panels
+  0.000, housing 1.000, at three viewports × two themes. The two edges are NOT
+  symmetric (2.1 % at the fold's edge, exactly 0 at the arrival's — `--co-off`
+  is a shallower deadband than `--ci-off`), so a curve change re-opens the
+  question.
+- **THE CHANNELS ARE ABSENT, NOT NEUTRAL, AT ONE CLIENT.** `setProof` REMOVES
+  `--svc-client-in`/`-out` while `CASES` holds one case; casefile.css reads
+  them with identity defaults (`var(--svc-client-in, 1)`,
+  `var(--svc-client-out, 0)`). Writing "1"/"0" would be the same pixels and a
+  different DOM, which is the one thing the byte-identity proof does not allow.
+- **FOUR PANELS COMPOSE THE CLIENT CLOCKS; THE HOUSING DOES NOT.**
+  `data-fl-client-panel` marks the brief, the proof register, the directory and
+  `.fl-panel__viz` — the four surfaces that say something about ONE client. The
+  tabs wrapper, `.fl-split`, the reticles and the whole-plane iris are the
+  FRAME the record is swapped inside: **a frame that crossfades with its own
+  contents is a page turn**, which is the read this mechanism exists to avoid.
+  ⚠ Only `--ci` and `--co` are restated (`--svc-proof-in × --svc-client-in`
+  and `max(--svc-proof-out, --svc-client-out)`) — a product for the reveal
+  because both conditions must hold, a max for the fold because either leaving
+  is enough. Restating a downstream declaration forks the strike/dropout/settle
+  ladder into two copies that drift. ⚠ The visual's mark goes on
+  `.fl-panel__viz`, never `.fl-panel`, which carries no `data-fl-panel` at all.
+- **A TAB CLICK PINS THE SCROLL, exactly as a row click does.** The strip is a
+  JUMP control, not the selector — while the stage is pinned SCROLL is — so
+  `selectClient` moves the scroll to `browseTargetFor(segments, idx, 0)` and
+  the spy then derives the same target. Without the pin the tab lights and
+  snaps back one frame later, the identical symptom a row click had before U13.
+  Never remove one side of that contract without the other.
+- **NO GHOST `+ Archive` STOP** (owner). It violates both standing rulings on
+  its own: the round-3 DEAD-SCROLL ruling (a band in which nothing changes the
+  panel) and the placeholder-client ruling. `+ Archive` stays outside the
+  roving tabindex too — a disabled tab breaks the roving index for no gain.
+- **The MOBILE client step is the tab strip above the mode switch** — first in
+  source order inside the ≤960px grid, so the IA is identity → mode → the one
+  bounded seat (ADR-083). 44px stops. Inert until N ≥ 2, and `flex-wrap:
+nowrap` means a THIRD client forces a horizontal-scroll decision on the
+  narrowest rung.
+- ⚠ **THE DECODE REPLAY'S TARGET SET FAILS AT N ≥ 2, AND IT IS UNRESOLVED.**
+  A later slug change re-arms and re-runs the reveal's decode
+  (`mountedSlugRef` in `ServicesCasefile`; inert at one client, since the slug
+  cannot change). But the only `[data-fl-text]` node is `.fl-tabs__name`, and
+  with two tabs NEITHER name changes on a swap — so `begin()` blanks and
+  re-scrambles both, and blanking by `textContent = ""` REFLOWS the strip
+  (`+ Archive`'s left edge measured 453.1 → 259.1 → 453.1px at 1440×800, a
+  **194px lateral jump** in the one element whose job is to sit
+  still). Everything that does
+  change is deliberately not a decode target, because the cache is per-CLIENT
+  and those fields are per-TRACK. See ADR-087 §F1 for the three candidate
+  closes; until the owner reads the lab, prefer `decodeReplay={false}` over
+  inventing a fourth.
+- **Verifying a client change:** `node scripts/capture-client-stack.mjs` (the
+  lab, at two clients — 101 frames, the swap-midpoint assertion, the
+  blank-stretch sweep, the replay probe) plus the whole `services-ring-smoke`
+  spec, which IS the byte-identity comparison. The Phase D checklist for
+  actually adding client #2 is in ADR-087.
 
 ## The panel fills its housing (ADR-084, live)
 

@@ -108,9 +108,42 @@ type MobileCasefileView = (typeof MOBILE_CASEFILE_VIEWS)[number]["id"];
  * anywhere. Nothing branches on it — the segment table is derived from
  * whatever list arrives, so a two-client fixture exercises the seam with the
  * production code path.
+ *
+ * `seamVh` and `decodeReplay` are the same idiom, one for each half of what
+ * Phase C put under judgement (ADR-087):
+ *
+ *   · `seamVh` is the SEAM'S OWN LENGTH, and it is a parameter rather than a
+ *     lab-local copy of `browseSegments` because there may only ever be ONE
+ *     segment table. The scroll hook's table and this component's must agree
+ *     to the bit or the identity swap lands outside the stretch where both
+ *     clocks read under 0.05 — i.e. the swap becomes visible. A lab that
+ *     re-derived the table with its own seam length would show that as a
+ *     defect in the mechanism when it was a defect in the lab.
+ *   · `decodeReplay` is TRUE in production and exists so the owner can read
+ *     the swap with and without the incoming client's copy decoding. It gates
+ *     nothing else; with it off, a later client change settles silently, which
+ *     is exactly what shipped before this pass.
  */
-export function ServicesCasefile({ cases = CASES }: { cases?: readonly CaseDef[] } = {}) {
+export function ServicesCasefile({
+  cases = CASES,
+  seamVh = SERVICES_PROOF_CLIENT_SEAM_VH,
+  decodeReplay = true,
+}: {
+  cases?: readonly CaseDef[];
+  seamVh?: number;
+  decodeReplay?: boolean;
+} = {}) {
   const rootRef = useRef<HTMLElement | null>(null);
+  /* THE SLUG THE REVEAL LAST SYNCED FOR — `null` until the first sync
+     (ADR-087 Phase C). Written only inside the reveal effect, so it survives
+     that effect's re-runs and resets with the component.
+     ⚠ NOT A BOOLEAN. A plain `hasMounted` flag is flipped by React Strict
+     Mode's development double-invoke — mount, cleanup, mount — so the second
+     pass would read as "a later client change" and play a decode on page
+     load in dev only, i.e. the one environment the lab is judged in. Keying
+     on the slug asks the question that is actually being asked: is the copy
+     on screen a DIFFERENT client's? */
+  const mountedSlugRef = useRef<string | null>(null);
   const [slug, setSlug] = useState(PROOF_CASE.slug);
   const [trackId, setTrackId] = useState(PROOF_CASE.casefile.tracks[0].id);
   const [mobileView, setMobileView] = useState<MobileCasefileView>("artifact");
@@ -146,9 +179,9 @@ export function ServicesCasefile({ cases = CASES }: { cases?: readonly CaseDef[]
       browseSegments(
         cases.map((c) => c.casefile.tracks.length),
         SERVICES_PROOF_ROW_VH,
-        SERVICES_PROOF_CLIENT_SEAM_VH
+        seamVh
       ),
-    [cases]
+    [cases, seamVh]
   );
 
   /* The spy reads its CURRENT position through refs — its observer closure
@@ -177,6 +210,11 @@ export function ServicesCasefile({ cases = CASES }: { cases?: readonly CaseDef[]
   casesRef.current = cases;
   const segmentsRef = useRef<readonly BrowseSegment[]>(segments);
   segmentsRef.current = segments;
+  /* Read INSIDE the reveal effect, and deliberately not in its dep list: the
+     toggle decides what the NEXT client change does, so re-running the effect
+     on it would itself replay a decode. Production never changes it. */
+  const replayRef = useRef(decodeReplay);
+  replayRef.current = decodeReplay;
   /* eslint-enable react-hooks/refs */
 
   /* CLICK-PINS-SCROLL, the shared half (ADR-056 U13). While the stage is
@@ -358,10 +396,30 @@ export function ServicesCasefile({ cases = CASES }: { cases?: readonly CaseDef[]
       else if (state !== "armed" && v < REARM_BELOW) arm();
     };
 
-    // First sync: already parked and arrived ⇒ resolved, silently, so a
-    // reload inside `#services` paints full copy with no replay.
-    if (readClock() >= REVEAL_AT && isParked()) settle();
-    else arm();
+    /* First sync: already parked and arrived ⇒ resolved, silently, so a
+       reload inside `#services` paints full copy with no replay.
+
+       ⚠ **A LATER CLIENT CHANGE IS NOT A FIRST SYNC** (ADR-087 Phase C). This
+       effect re-runs per CLIENT (dep `def.slug`), and it was settling on
+       every re-run — so a swap arriving on a parked, revealed casefile
+       replaced the copy with a hard cut while the panels were crossfading. The
+       decode is the surface's own arrival language and the incoming client's
+       card is arriving, so it plays: `arm()` blanks and drops `--fl-draw`,
+       `begin()` queues the scramble and releases the wipe 60ms later, which is
+       the same two-task pair the arrival uses.
+
+       ⚠ **INERT AT ONE CLIENT, AND THAT IS WHY IT IS PRODUCTION CODE** — with
+       a single `CaseDef` the slug can never change, so `mountedSlugRef` can
+       only ever hold `def.slug` and this branch is unreachable. It is
+       mechanism waiting for its second client, not a lab affordance. */
+    const clientChanged = mountedSlugRef.current !== null && mountedSlugRef.current !== def.slug;
+    mountedSlugRef.current = def.slug;
+    if (readClock() >= REVEAL_AT && isParked()) {
+      if (clientChanged && replayRef.current) {
+        arm();
+        begin();
+      } else settle();
+    } else arm();
 
     // The proof channels land on this root's own inline style (scroll hook,
     // 2026-07-29) — observing the root IS the clock, and the observer no
