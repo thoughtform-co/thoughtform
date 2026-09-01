@@ -370,7 +370,7 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     }
   });
 
-  test("the hologram floor stays isolated and contained inside a transparent starless station", async ({
+  test("the hologram floor matches its compositing branch inside a transparent starless station", async ({
     page,
   }, testInfo) => {
     desktopOnly(testInfo);
@@ -394,6 +394,7 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
       const slotRect = slot.getBoundingClientRect();
       const wrapRect = wrap.getBoundingClientRect();
       return {
+        alphaBranch: slot.hasAttribute("data-holo-alpha"),
         stationBackground: stationStyle.backgroundColor,
         stationBackgroundImage: stationStyle.backgroundImage,
         isolation: slotStyle.isolation,
@@ -418,15 +419,82 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
 
     expect(cssAlpha(state.stationBackground)).toBe(0);
     expect(state.stationBackgroundImage).toBe("none");
-    expect(state.isolation).toBe("isolate");
-    expect(cssAlpha(state.floorBackground), "the additive media has an opaque local floor").toBe(1);
-    expect(state.mask).not.toBe("none");
-    expect(["plus-lighter", "screen"]).toContain(state.blend);
+    /* ⚠ THE FLOOR CONTRACT BRANCHES ON THE CODEC VERDICT (ADR-082 U6), and
+       until 2026-09-01 this test asserted only the FALLBACK half — against a
+       landing that ships the ALPHA branch, which is why it was permanently
+       red while the code was correct. With real alpha media the hacks are
+       OFF (mix-blend-mode: normal, no ground, transparent wrap, isolation:
+       auto); the Safari/H.264 fallback keeps the isolate + opaque masked
+       floor + additive blend, and those rules may never be deleted. */
+    if (state.alphaBranch) {
+      expect(state.isolation, "alpha branch: isolation off").toBe("auto");
+      expect(cssAlpha(state.floorBackground), "alpha branch: no local floor").toBe(0);
+      expect(state.blend, "alpha branch: no additive blend").toBe("normal");
+    } else {
+      expect(state.isolation).toBe("isolate");
+      expect(cssAlpha(state.floorBackground), "the additive media has an opaque local floor").toBe(
+        1
+      );
+      expect(state.mask).not.toBe("none");
+      expect(["plus-lighter", "screen"]).toContain(state.blend);
+    }
     expect(state.wrap.left).toBeGreaterThanOrEqual(state.slot.left - 1);
     expect(state.wrap.top).toBeGreaterThanOrEqual(state.slot.top - 1);
     expect(state.wrap.right).toBeLessThanOrEqual(state.slot.right + 1);
     expect(state.wrap.bottom).toBeLessThanOrEqual(state.slot.bottom + 1);
     expect(state.wrap.right - state.wrap.left).toBeLessThan(state.stationWidth * 0.75);
+  });
+
+  test("no element wider than 700px paints a border or ground in #voidwalker (ADR-082 U21)", async ({
+    page,
+  }, testInfo) => {
+    /* The datum rails and the ground datum were deleted because three 1653px
+       hairlines ran the full plate through the HUD rails' own tick ladder.
+       This sweep is the executable half of that ruling: nothing wide enough
+       to read as a full-bleed line may paint a border or a ground inside the
+       station. ⚠ It asserts PAINT on the active branch, not presence —
+       `.vwh__ground` legitimately stays in the DOM as the Safari fallback
+       and must not red this sweep on the alpha branch. */
+    desktopOnly(testInfo);
+    await bootCapable(page);
+    await walkToRunwayProgress(page, ".vw--hologram", 0.4);
+    await settle(page, 400);
+
+    const offenders = await page.evaluate(() => {
+      const alpha = (color: string) => {
+        if (!color || color === "transparent") return 0;
+        const m = color.match(/rgba?\(([^)]+)\)/);
+        if (!m) return 1;
+        const ch = m[1]!.split(/[\s,\/]+/).filter(Boolean);
+        return ch.length >= 4 ? Number.parseFloat(ch[3]!) : 1;
+      };
+      const station = document.getElementById("voidwalker");
+      if (!station) throw new Error("no #voidwalker");
+      const out: Array<{ el: string; w: number; why: string }> = [];
+      for (const el of station.querySelectorAll<HTMLElement>("*")) {
+        const r = el.getBoundingClientRect();
+        if (r.width <= 700 || r.height === 0) continue;
+        const cs = getComputedStyle(el);
+        if (cs.display === "none" || cs.visibility === "hidden" || Number(cs.opacity) === 0)
+          continue;
+        const why: string[] = [];
+        if (alpha(cs.backgroundColor) > 0) why.push(`bg ${cs.backgroundColor}`);
+        if (cs.backgroundImage !== "none") why.push("bg-image");
+        for (const side of ["Top", "Right", "Bottom", "Left"] as const) {
+          const st = cs.getPropertyValue(`border-${side.toLowerCase()}-style`);
+          const w = Number.parseFloat(cs.getPropertyValue(`border-${side.toLowerCase()}-width`));
+          const c = cs.getPropertyValue(`border-${side.toLowerCase()}-color`);
+          if (st !== "none" && w > 0 && alpha(c) > 0) why.push(`border-${side.toLowerCase()}`);
+        }
+        if (why.length > 0) {
+          const cls = typeof el.className === "string" ? el.className : el.tagName;
+          out.push({ el: cls, w: Math.round(r.width), why: why.join(" + ") });
+        }
+      }
+      return out;
+    });
+
+    expect(offenders, JSON.stringify(offenders, null, 2)).toEqual([]);
   });
 
   test("#practice is an actually opaque station when it kills the corridor", async ({

@@ -348,7 +348,18 @@ test.describe("About -> Voidwalker card-to-hologram handoff", () => {
             },
           };
         });
-        for (const channel of ["left", "top", "width", "height"] as const) {
+        /* ⚠ WIDTH AND HEIGHT ARE INTENTIONAL NON-GOALS (2026-09-01). The
+           About name is a CONTENT-SIZED string with its own line box; the
+           era title is a FIXED MEASURE carrying `.voidwalker__name`'s clamp
+           at 1.1 leading (ADR-082 U11 — content-sizing is what made the
+           mast's left edge move 113px between eras, so the seat may not
+           inherit it back). Measured: width 480 vs 407 at 1440×800, height
+           56 vs 42 at 1280×720 — both are the two elements' own boxes, and
+           no code change can equate them without reverting that ruling.
+           Asserting them kept this spec permanently red, which trains the
+           suite to ignore red. POSITION is the flight's promise: the name
+           lands where the title sits. */
+        for (const channel of ["left", "top"] as const) {
           expectNear(
             titleLanding.source[channel],
             titleLanding.target[channel],
