@@ -967,6 +967,48 @@ a.vwd__press:focus-visible .vwd__press__headline {
     display: none;
   }
 
+  /* ⚠ SPLIT THE SLACK, DON'T POOL IT (ADR-070 U14's law, arriving on this
+     surface). The visible pair is content-height and top-anchored inside a
+     `flex: 1 1 auto` stage, so everything a short era did not use pooled
+     BENEATH the copy as one dead band between the panel and the era reel —
+     measured at 390×844 before this rule: 438px on `loop` / SCOPE, 371px on
+     `azeroth` / SCOPE (the owner's own screenshot), 180–267px on RECORD. The
+     band grew with how little the record had to say, which reads as the
+     instrument having lost its content rather than as composition.
+
+     Auto margins on the FIRST and LAST visible cell halve it BY
+     CONSTRUCTION: one free-space budget, two `auto` claimants, so the copy
+     centres with no measurement, no per-era tuning and no second writer.
+
+     ⚠ AND THEY COLLAPSE TO EXACTLY 0 WHEN THE CONTENT OVERFLOWS — a flex
+     `auto` margin absorbs POSITIVE free space only — so a long era is
+     byte-identical to what shipped and the start of the reading can never be
+     pushed above the scroll container's top edge, out of reach. That
+     clipped-start trap is what `justify-content: center` would arm on this
+     box (`.vwd__stage` is `overflow-y: auto`), and it is why the centring is
+     written as margins rather than as an alignment.
+
+     ⚠ THE SELECTORS ARE THE DISPLAY RULES' OWN, PLUS THE ELEMENT CLASS —
+     which is the trap this rung has already paid for once (see the
+     `[data-cell]` note above). `.vwd__head`'s `margin: 0` is only (0,1,0), but
+     a bare `[data-cell="ur"]` here would match the head AND the body and hand
+     the free space THREE claimants, prising the head off its own body. The
+     class disambiguates the pair; the tab scope is what decides which cells
+     are visible in the first place, so the two lists move together.
+
+     THE FIGURE TAB IS ABSENT FROM BOTH LISTS on purpose: it claims the area
+     with `flex: 1 1 auto` and has no slack to split. */
+  .vwd__sheet[data-vwd-tab="record"] .vwd__head[data-cell="ur"],
+  .vwd__sheet[data-vwd-tab="scope"] .vwd__head[data-cell="ul"],
+  .vwd__sheet[data-vwd-tab="transmission"] .vwd__head[data-cell="ll"] {
+    margin-top: auto;
+  }
+  .vwd__sheet[data-vwd-tab="record"] .vwd__body[data-cell="lr"],
+  .vwd__sheet[data-vwd-tab="scope"] .vwd__body[data-cell="ul"],
+  .vwd__sheet[data-vwd-tab="transmission"] .vwd__body[data-cell="ll"] {
+    margin-bottom: auto;
+  }
+
   /* The figure fills the area it now has to itself. Width-bound here (the
      desktop derives it from height because it shares the row with four
      panels; on the phone it shares with nothing). */
@@ -1012,10 +1054,38 @@ a.vwd__press:focus-visible .vwd__press__headline {
      `cell + gap` apart while the offset still stepped by `cell` — the selected
      chip drifting off centre by `i × gap`, silently, on the phone only.
      `padding-inline` is safe: it moves the clip edge and the centring is
-     padding-independent under `justify-self: center`. */
+     padding-independent under `justify-self: center`.
+
+     ⚠ AND THE FOOT HAS TO CLEAR THE FIXED BOTTOM-RIGHT CHROME. `.rin-settings`
+     — the theme switch and the session mark — is `position: fixed` on the
+     bottom margin line and is NEVER gated off (rail-instruments.css, in as
+     many words: a theme switch that disappears on a phone is a bug). Inside a
+     100svh instrument the reel's own bottom edge IS the viewport's, so the
+     right-hand chips ran straight underneath that cluster — measured 34.9px of
+     overlap at 390×844, on four of the five eras.
+     ⚠ THE BAND'S BOX CANNOT BE MOVED OUT FROM UNDER IT, ONLY THE CHIPS. Its
+     border box ends on the viewport floor whatever this rule says, and the
+     cluster is inside that floor by construction — so the fix is padding, and
+     the guard measures the CHIPS' union rather than the band's rect.
+     ⚠ `padding-block` IS CENTRING-NEUTRAL FOR THE REEL: the offset that keeps
+     the selected era at the window's centre is horizontal
+     (`translateX((n/2 − i − 0.5) × cell)`), and the window's own
+     `justify-content: center` is unaffected by a vertical pad. The chip the
+     reader chose stays dead centre.
+     ⚠ AND THE TOKEN IS MEASURED FROM THE VIEWPORT FLOOR, SO NOTHING COMES
+     BACK OUT OF IT. `--mobile-chrome-bottom` (landing.css's <=960 block) is
+     already `max(--hud-margin, --safe-bottom) + --hud-corner-zone + 12px` —
+     the margin is INSIDE it. Subtracting `--hud-margin` again reserved 40px
+     where the chrome paints 48 (the 36px control overhangs its own 28px host
+     row by 4px a side), and the chips still ran 7.6px under the cluster with
+     every other reading green. The band's bottom edge IS the floor here —
+     `.vwd` is `height: 100svh` with no bottom margin of its own — so the band
+     reserves the whole band. The `max()` keeps §C's authored foot rhythm as a
+     floor, and the fallback keeps this rule correct standalone. */
   .vwd__band {
     flex: 0 0 auto;
     padding-inline: clamp(8px, 3vw, 16px);
+    padding-bottom: max(clamp(10px, 1.5svh, 22px), var(--mobile-chrome-bottom, 96px));
   }
   .vwd__chip {
     gap: 5px;
