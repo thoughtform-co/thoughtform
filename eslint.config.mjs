@@ -21,6 +21,10 @@ const config = [
       "**/playwright-report/**",
       "**/test-results/**",
       "**/.playwright-mcp/**",
+      // Vendored Draco decoder (copied verbatim from
+      // three/examples/jsm/libs/draco/gltf — minified upstream code, not
+      // ours to lint; see tests/lib/glb-no-draco.test.ts for the contract)
+      "public/draco/**",
       // Agent / tooling scratch space
       ".claude/**",
       ".cursor/**",
