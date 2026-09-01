@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { THEME_TOGGLE, THEME_STORAGE_KEY } from "@/components/landing/v7/themeToggle";
@@ -180,6 +182,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
+        {/* Launch-day measurement (owner decision, 2026-09-01): Vercel Web
+            Analytics + Core Web Vitals. Both no-op in dev; in production
+            they load from va.vercel-scripts.com, which script-src and
+            connect-src allowlist in lib/security/headers.mjs. */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

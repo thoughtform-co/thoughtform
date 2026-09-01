@@ -51,6 +51,11 @@ describe("buildContentSecurityPolicy", () => {
     expect(csp).not.toMatch(/frame-src[^;]*https:\/\/www\.youtube\.com/);
   });
 
+  it("scripts come from self plus exactly one host: Vercel measurement", () => {
+    const prod = buildContentSecurityPolicy({ allowUnsafeEval: false });
+    expect(prod).toContain("script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com;");
+  });
+
   it("opts in to 'unsafe-eval' for dev (HMR / fast refresh) but never in prod", () => {
     const dev = buildContentSecurityPolicy({ allowUnsafeEval: true });
     expect(dev).toContain("'unsafe-eval'");
