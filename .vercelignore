@@ -37,8 +37,29 @@ public/dossier-lab
 # were being uploaded with every deploy (docs/ ~31 MB, mostly design
 # mockups + inspiration imagery; sentinel/ ~10 MB of ADRs + baselines).
 # Excluded 2026-07-23 alongside the docs consolidation.
-docs
-sentinel
+#
+# ⚠ TWO FILES ARE RE-INCLUDED (2026-09-01): /api/design/mcp's law tool
+# opens them by path at request time and next.config.mjs traces them via
+# outputFileTracingIncludes — but tracing can only include what the
+# upload contains, so the whole-directory excludes had that route 500ing
+# in production for exactly those two topics while its own error message
+# blamed the tracing list. Under gitignore semantics a file cannot be
+# re-included through an excluded parent DIRECTORY, so the excludes are
+# `dir/**` (contents) with the parent chain negated back in — a naive
+# `!docs/...` line after a bare `docs` is a silent no-op.
+# ⚠ Adding a repo file to LAW_SOURCES means extending this chain too.
+docs/**
+!docs/design/
+!docs/design/card-reference-analysis.md
+sentinel/**
+!sentinel/decisions/
+!sentinel/decisions/065-corner-law.md
+
+# Gateway-motion lab frames (22 MB, 247 files) — referenced only by the
+# (internal) /test/gateway-motion page, which proxy.ts blocks in
+# production. Same class as gateway-hero.png/env/showcase above.
+# Regenerate with `npm run gateway:prep` / `gateway:frames`.
+public/gateway-motion
 
 # - portfolio-prototype.html -> a design prototype of /arcs/portfolio, kept in
 #                              public/ so it serves at localhost during review.
