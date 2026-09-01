@@ -27,8 +27,8 @@ This is the Thoughtform.co website, a Next.js application with a sophisticated p
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
-- **UI**: React 18, Tailwind CSS
+- **Framework**: Next.js 16 (App Router; `proxy.ts` is the Next 16 rename of `middleware.ts`, and route params are Promises)
+- **UI**: React 19, Tailwind CSS
 - **State**: Zustand
 - **Animation**: Framer Motion, GSAP
 - **3D**: Three.js, React Three Fiber, Drei

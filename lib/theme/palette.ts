@@ -14,8 +14,12 @@
  *
  * ⚠ THE DARK COLUMN IS THE EXISTING CONSTANTS, VERBATIM. Dark output has
  * to stay byte-identical (the flag's OFF contract), so every dark value
- * here must equal the literal the painter used before it was wired up —
- * `tests/lib/theme-palette.test.ts` pins the ones already in play.
+ * here must equal the literal the painter used before it was wired up.
+ * ⚠ NO TEST PINS THIS (2026-09-01): the once-cited
+ * `tests/lib/theme-palette.test.ts` was never written — the equality was
+ * verified by hand at wiring time. Anyone editing a dark value here must
+ * diff it against the painter's original literal themselves, or finally
+ * write that test.
  *
  * Growth plan: this starts with the values a surface actually needs and
  * grows one entry per painter as Phases 2–3 land, rather than declaring

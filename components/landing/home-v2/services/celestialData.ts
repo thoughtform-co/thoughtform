@@ -16,8 +16,9 @@
  * Geometry mirrors the `MISS_ORBITS` "four distinct bodies" family
  * (varied eccentricity + tilt so the paths read as different bodies, not
  * near-copies), scaled down to this viewBox. Line recipes are adapted
- * from the sigil-side entries of `lib/celestial/orbitStyles.ts`
- * (`ORBIT_STYLES`), which are tuned for the ~320 sigil viewBox — close
+ * from the sigil-side ring declarations in landing.css (the
+ * `.sigil__ring--NN` blocks — the once-cited `lib/celestial/orbitStyles.ts`
+ * never shipped), which are tuned for the ~320 sigil viewBox — close
  * enough to this 280 viewBox that the dot cadence reads the same.
  *
  * NOTE: starting values; tune live against the actual parked-sun size in

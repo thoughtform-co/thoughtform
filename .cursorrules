@@ -35,7 +35,7 @@ curl -s "https://context7.com/api/v1/LIBRARY_ID/llms.txt?tokens=5000"
 
 ## Project Context
 
-This is the Thoughtform.co website - a Next.js 14 app with:
+This is the Thoughtform.co website - a Next.js 16 app with:
 - Sophisticated HUD navigation system (`components/hud/NavigationCockpitV2/`)
 - Particle system with Supabase-backed config
 - Scroll-driven animations with progress values 0-1

@@ -356,13 +356,20 @@ now takes `--pda-ink` and goes 5.58:1 → 8.8:1.
 measuring, walks all three readings, and asserts 4.5:1 on glyphs and 3:1 on
 line work.
 
-⚠ **Still open, and now measured:** `--pda-txt3` is 2.93:1 in DARK — the same
-80 labels. It is left alone because that hierarchy is what the owner has been
-reviewing and approving on the dark surface; lifting the alpha to ~0.52 would
-put it at ~4.6:1. Owner's call. The other sites ADR-058 named as gold-as-text
-regressions (`4 ITEMS`, `IN BUILD`, `ON RECORD`, the contact email) are still
-on `--gold` at 1.8:1 — the ramp now exists for them, but adopting it there is
-a sweep with its own verification pass, not part of this change.
+⚠ **CLOSED 2026-09-01 (pre-launch, owner decision):** `--pda-txt3` took the
+call this note deferred — 0.38 → **0.52 in dark** (2.93:1 → 4.69:1, still
+under `--pda-txt2`'s 0.56 so the ladder keeps its order) with light
+re-deriving its own step in theme.css (0.62 → 4.79:1). Two more rungs fell in
+the same pass, each surfaced by the light walk as the previous worst was
+fixed: `--pda-grn`/`--pda-grn-ink` take the darker same-hue step in light
+(#3f5a2e, 5.59:1 — #7e9f66 measured 2.16:1), and `--con-txt2`'s light lift
+moved from `.fl-pda` to the `.fl-con` frame block (the rail it serves is
+shared chrome; scoped to the map it left every other row's dormant labels at
+3.98:1). The light-walk smoke case is green for the first time.
+⚠ **Still open:** the sites ADR-058 named as gold-as-text regressions
+(`4 ITEMS`, `IN BUILD`, `ON RECORD`, the contact email) remain on `--gold` at
+1.8:1 — the ramp exists for them; adopting it is the first post-launch design
+pass.
 
 ## Notes
 

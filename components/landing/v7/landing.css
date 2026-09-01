@@ -1675,8 +1675,9 @@
    `.miss__orbit--NN` end values, interpolated by the
    `--orbit-style-morph` CSS variable that the painter writes
    directly onto its SVG element. The dash pattern is per-ring and
-   stable across the morph (same dash family on both ends — see
-   ORBIT_STYLES in lib/celestial/orbitStyles.ts). */
+   stable across the morph (same dash family on both ends — the canon is
+   the per-ring `.sigil__ring--NN` declarations later in THIS file; the
+   once-cited `lib/celestial/orbitStyles.ts` never shipped). */
 .tf-traveling-orbits {
   /* The painter writes `--orbit-style-morph` per frame onto the SVG
      element itself (scoped, not on the root) — defaulting to 0
@@ -3874,8 +3875,8 @@
    useBrandmarkJourney, eased so the geometry deforms first and the
    style settles afterward — see easeOrbitStyleMorph in the hook). The
    dash PATTERN itself stays constant per ring because the sigil-side
-   and miss-side line identities are PAIRED (canonical tokens in
-   lib/celestial/orbitStyles.ts): the dotted ring stays dotted while
+   and miss-side line identities are PAIRED (canon: the `.sigil__ring--NN`
+   blocks below — no separate token module): the dotted ring stays dotted while
    the line gradually deepens to match the orbit's stronger character.
    Per-ring `--ring-stroke-*` and `--ring-w-*` overrides live on the
    `.sigil__ring--NN` selectors below. The interpolation falls back to
@@ -3908,7 +3909,7 @@
    its paired miss orbit's stroke character. Dash patterns stay per
    the inline `stroke-dasharray` HTML attribute on each ring because
    the paired sigil-side and miss-side identities share a dash family
-   (lib/celestial/orbitStyles.ts ORBIT_STYLES). */
+   (declared per ring right here — there is no separate token module). */
 .sigil__ring--01 {
   /* Spaced dotted dawn. Start matches the inline dawn-15 stroke; end
      deepens to a low-alpha dawn so the ring picks up a touch of
@@ -4553,7 +4554,8 @@
    by index with its sigil ring so the section-2 → section-3 morph
    reads as a continuous evolution per pair: the spaced-dotted ring
    becomes the spaced-dotted orbit, the solid ring becomes the solid
-   orbit, etc. Canonical tokens in lib/celestial/orbitStyles.ts.
+   orbit, etc. Canon: the per-ring declarations in this file (the
+   once-cited lib/celestial/orbitStyles.ts never shipped).
    Per-orbit alpha is BAKED INTO the stroke colour (rgba) so the
    orbit-draw reveal keyframe's `to { stroke-opacity: 1 }` step
    doesn't flatten the per-orbit hierarchy. Two orbits read in cooler

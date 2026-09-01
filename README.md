@@ -34,7 +34,7 @@ The Astrogation module built here taught me how to articulate what exactly inspi
 
 ## Architecture
 
-Next.js 14 (App Router), Tailwind CSS, Framer Motion, Three.js, Supabase (Postgres), Zustand for state, deployed on Vercel. Workspace structure with `packages/*`.
+Next.js 16 (App Router), Tailwind CSS, Framer Motion, Three.js, Supabase (Postgres), Zustand for state, deployed on Vercel. Workspace structure with `packages/*`.
 
 ### Repo structure
 

@@ -230,7 +230,8 @@ export function useBrandmarkJourney(
     // `--orbit-style-morph` interpolates each ring's STROKE IDENTITY
     // — dash pattern, color, weight — from the sigil-side starting
     // style to the miss-side target style declared per ring in
-    // landing.css (canonical tokens in lib/celestial/orbitStyles.ts).
+    // landing.css — the per-ring `.sigil__ring--NN` blocks ARE the canon
+    // (the once-cited lib/celestial/orbitStyles.ts never shipped).
     //
     // The style morph runs on a slightly delayed easing relative to
     // the geometry morph so the rings first reshape (geometry) and

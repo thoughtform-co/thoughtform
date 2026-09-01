@@ -13,8 +13,10 @@
  *   - CTA                        (link back to #contact)
  *   - shapeKey                   (drives ServiceSigilField particle visual)
  *
- * Mirrors `components/landing/v7/build-cases/buildCaseData.ts` so the
- * Services portal can follow the same content-then-card pattern.
+ * The content-then-card pattern came from the retired
+ * `build-cases/buildCaseData.ts` (deleted — `PROJECT_CASES` in
+ * `tools-cards/toolCardData.ts` is the canonical case module now); this
+ * file is its own source, mirroring nothing living.
  */
 
 export type ServiceId = "keynote" | "workshop" | "embedded" | "guided-build";
