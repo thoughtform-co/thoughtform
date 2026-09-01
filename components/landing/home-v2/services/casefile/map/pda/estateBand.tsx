@@ -250,9 +250,12 @@ export const GALLERY_H = 20;
 /**
  * ⚠ **THE FIVE LANES ARE ORDERED TO MATCH `SECTION_ORDER`** — so a
  * conductor from a footprint to its tapped stratum does not have to cross
- * the gallery. That is a hard constraint of the section drawing and it is
- * asserted by `pda-substrate-fit`; changing the order here without changing
- * the strata will produce visibly crossed conductors.
+ * the gallery. That was a hard constraint of the SECTION drawing, whose
+ * guard (`pda-substrate-fit`) died with it (ADR-070 U35); the ordering
+ * still binds for the lab's manifold variant — this file's one surviving
+ * consumer — and is UNGUARDED now: changing the order here without
+ * changing the strata will produce visibly crossed conductors with
+ * nothing red to say so.
  */
 export const GALLERY_LANES: readonly CaseMapShapeKey[] = [
   "stakeholder",

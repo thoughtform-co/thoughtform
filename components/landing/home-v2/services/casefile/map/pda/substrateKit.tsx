@@ -218,8 +218,10 @@ export const tappers = (teams: readonly PdaTeam[], key: string) =>
  * a component, where no scanner reaches it.
  *
  * The pin grid removes the need for the phrase entirely: a row's marks ARE its
- * department count, countable in place. `pda-substrate-fit` fails on
- * `/\bteams?\b/i` anywhere in a declaration, which is the mechanical half.
+ * department count, countable in place. `substrate-lab-fit` fails on
+ * `/\bteams?\b/i` anywhere in a declaration, which is the mechanical half
+ * (the ban lived in `pda-substrate-fit` until that file died with the
+ * SECTION drawing — ADR-070 U35).
  */
 export const DEPT_UNIT = "DEPARTMENTS";
 

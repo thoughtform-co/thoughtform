@@ -321,10 +321,12 @@ describe("cases registry (ADR-054)", () => {
               // THE SHORT LABEL IS AUTHORED (ADR-070 U16). The PDA's reading
               // 03 letters one plate per Skill in a 132-unit window, which is
               // 14 characters at the surface's fs floor. ⚠ THE CAP IS TYPED
-              // HERE AND NOWHERE ELSE — `pda-substrate-fit` re-measures every
-              // label against the REAL window through `substrateLettering`,
-              // so it never needs the number, and two files holding "14" is
-              // how one of them keeps an old ceiling after the other moves.
+              // HERE AND NOWHERE ELSE — `substrate-lab-fit` re-measures every
+              // label against its REAL cell on the shipped carrier, so it
+              // never needs the number, and two files holding "14" is how
+              // one of them keeps an old ceiling after the other moves.
+              // (`pda-substrate-fit` held that role until it died with the
+              // SECTION drawing — ADR-070 U35.)
               expect(
                 s.short.length,
                 `${c.slug}/${t.id} skill "${s.name}" has no short label`

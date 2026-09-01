@@ -308,13 +308,15 @@ const VARIANTS: readonly [string, (r: IslRecord) => LetterSpec[], number][] = [
   ["vats", vesselLettering, 26],
 
   /* ── Round nine · THE ESTATE'S SUPPLY SIDE ────────────────────────────
-     ⚠ SECTION AND CONTROL ARE PROMOTED / RETIRED (ADR-070 U25). SECTION
-     won the direction and lives in production's `PdaSubstrate.tsx`; the
-     production drawing is walked by `pda-substrate-fit`. CONTROL's whole
-     purpose was to hold the shipped U24 partition beside SECTION for
-     comparison, and once U24 is off the site it cannot answer its own
-     question. Only MANIFOLD survives here — the losing round-nine
-     alternative, kept so the register trade stays reviewable. */
+     ⚠ SECTION AND CONTROL ARE PROMOTED / RETIRED (ADR-070 U25) — AND
+     SECTION IS ITSELF GONE SINCE U33/U35: the carrier superseded it,
+     `PdaSubstrate.tsx` and its guard `pda-substrate-fit` were deleted
+     together (2be57f64). The shipped carrier is walked by THIS file
+     through the lab window. CONTROL's whole purpose was to hold the
+     shipped U24 partition beside SECTION for comparison, and once U24
+     was off the site it could not answer its own question. Only MANIFOLD
+     survives here — the losing round-nine alternative, kept so the
+     register trade stays reviewable. */
   ["manifold", manifoldLettering, 26],
 
   /* ── Round ten · THE SKILLS ARE THE FIGURE ────────────────────────────
@@ -730,13 +732,16 @@ describe("round six letters the definition, not just the count", () => {
   }
 });
 
-/* ⚠ THE ROUND-NINE STRUCTURAL SUITE MOVED TO `pda-substrate-fit`
-   (ADR-070 U25). SECTION is the shipped drawing now, so the arithmetic it
-   enforces — body-proportional-to-count, plate-fit-in-body, shaft lanes
-   inside the shaft, gallery lanes ordered so conductors do not cross —
-   lives beside the drawing it walks. The lab's manifold entry above is
-   the only round-nine variant left, and every guard in this file already
-   covers it. */
+/* ⚠ THE ROUND-NINE STRUCTURAL SUITE MOVED TO `pda-substrate-fit` (ADR-070
+   U25) AND DIED WITH IT (2be57f64, U35): the carrier superseded SECTION,
+   and the suite's arithmetic — body-proportional-to-count, plate-fit-in-
+   body, shaft lanes inside the shaft, gallery lanes ordered so conductors
+   do not cross — measured a drawing that no longer exists. ⚠ Nothing
+   absorbed those 24 describes, and they are NOT restorable: their imports
+   name the deleted `PdaSubstrate` symbols. The carrier's own structure is
+   pinned by the U34 area/wall guards in this file; the one orphaned
+   invariant is `GALLERY_LANES`' ordering in `estateBand.tsx`, which now
+   says so at its declaration. */
 
 describe("skill facet makes the Skills the figure", () => {
   it("draws exactly one shard per encoded Skill", () => {

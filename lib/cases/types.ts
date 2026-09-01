@@ -144,7 +144,10 @@ export interface CaseSkillEntry {
    *
    * Required on every Skill, so the drawing has one field to walk and
    * the fit guard has one field to measure. The ≤14 cap is pinned by
-   * `cases-registry.test.ts` and re-measured by `pda-substrate-fit`.
+   * `cases-registry.test.ts`; the drawing-side measure lives in
+   * `substrate-lab-fit.test.ts`, which walks the shipped carrier through
+   * the lab window (`pda-substrate-fit` died with the SECTION drawing it
+   * measured — ADR-070 U35, commit 2be57f64).
    */
   short: string;
   /**

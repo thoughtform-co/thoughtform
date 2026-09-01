@@ -103,7 +103,10 @@ const STACK_TOP_GAP = 6;
      1. The flagship encode — the Skill that CUT this pattern first.
      2. One more Skill from a DIFFERENT team, so the bay reads as multi-team.
      3. Everything else, counted as `+N MORE`.
-   Pure, so `pda-substrate-fit` can walk the same picks. */
+   Pure so a fit guard can walk the same picks — `pda-substrate-fit` did
+   until it died with the SECTION drawing (ADR-070 U35); nothing walks them
+   today, and this whole variant is the MAP_BACKPLANE lever awaiting its
+   doctrine deletion. */
 function representatives(pattern: SubstrateSkillPattern): {
   picks: readonly SampleSkill[];
   more: number;
