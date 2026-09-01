@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { HoloDatumPanels } from "@/components/landing/home-v2/voidwalker/hologram/HoloDatumPanels";
 import { HoloFigure } from "@/components/landing/home-v2/voidwalker/hologram/HoloFigure";
@@ -35,6 +35,26 @@ export function DatumLabShell() {
   const [chip, setChip] = useState<number | null>(null);
   const [bust, setBust] = useState(0.34);
   const [reduced, setReduced] = useState(false);
+  /* ⚠ MEASURED, NEVER A LITERAL. `--vwd-bar-h` feeds --vwd-chrome-h feeds
+     --vwd-fig-w, so a wrong bar height renders a lab figure column that
+     diverges from the landing's — the exact "window that lies about
+     production" defect this file's header warns about. A hand-written 56px
+     was correct only at the widths where the flex-wrap bar happened to fit
+     one row; removing the RAIL knob (ADR-082 U21) moved the wrap threshold
+     and nothing re-measured it. The observer makes any future knob change
+     self-correcting. 56 stays as the pre-measure fallback only. */
+  const [barH, setBarH] = useState(56);
+  const barRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+    const sync = () => setBarH(Math.round(bar.getBoundingClientRect().height));
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(bar);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -83,12 +103,13 @@ export function DatumLabShell() {
           ...(chip === null ? null : { "--vwd-chip": `${chip}px` }),
           "--vwd-bust-span": bust,
           /* The composition derives the figure's width from the height its
-             own chrome leaves; in the lab the knob bar is part of that. */
-          "--vwd-bar-h": "56px",
+             own chrome leaves; in the lab the knob bar is part of that —
+             so the bar reports its own measured height (see barRef above). */
+          "--vwd-bar-h": `${barH}px`,
         } as React.CSSProperties
       }
     >
-      <div className="dlab__bar">
+      <div className="dlab__bar" ref={barRef}>
         <div className="dlab__grp">
           <span className="dlab__lbl">Era</span>
           {CHARACTER_ERAS.map((e, i) => (
