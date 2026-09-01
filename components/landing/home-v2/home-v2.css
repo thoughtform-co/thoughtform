@@ -2085,6 +2085,22 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
   display: none;
 }
 
+/* ⚠ THE BELT ON THE FAIL-SAFE, AND IT IS CHEAPER THAN THE BRACES.
+   `MobileEpilogueSignal.tsx` kills the block on an IntersectionObserver
+   over #services; this is the same seam stated in CSS, keyed on the
+   attribute `useCorridorExitScroll` writes on <html> at exactly the
+   moment the corridor hands the page back (`data-corridor-exit="true"`,
+   set at useCorridorExitScroll.ts:304). It costs no JS, it holds before
+   hydration and it holds if the rAF loop never starts — which is the
+   class of failure the observer exists for in the first place.
+   `visibility: hidden` as well as `opacity: 0` because the inline
+   `opacity` the frame loop writes is what `!important` is beating, and a
+   0-opacity fixed block still takes taps in some engines. */
+html[data-corridor-exit="true"] .home-v2-mobile-signal {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
 .home-v2-mobile-signal[inert] {
   pointer-events: none;
 }

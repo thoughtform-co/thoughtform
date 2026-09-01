@@ -477,11 +477,9 @@
   display: block;
   color: var(--dawn);
 }
-@media (max-width: 640px) {
-  .hud__brand {
-    width: clamp(108px, 34vw, 150px);
-  }
-}
+/* (The ≤640 wordmark width clamp is deleted — `.hud__brand` is
+   `display: none` at ≤960 since 2026-09-01, so every rule under it was
+   sizing and moving an element that never paints.) */
 
 /* ─────────────────────────────────────────────────────────────────
    Top bar — minimal, no visual weight
@@ -1878,7 +1876,28 @@
 .hero {
   position: relative;
   z-index: 4;
+  /* ⚠ dvh, AND DELIBERATELY NO `100lvh` FLOOR. The hero's exit is not a
+     choreography that can be tuned to a height — it is an IDENTITY:
+     `--hero-lift = scrollY / window.innerHeight` (useLandingScroll.ts:137),
+     and `innerHeight` tracks the DYNAMIC viewport. So `lift = 1` means
+     "one dynamic viewport of scroll has happened", and the HUD reveal
+     clips that consume it are already written in `100dvh` (see
+     `.hud__rail` / `.hud__corner--*` above). dvh is the one unit that
+     keeps `lift = 1 ⇔ the hero has fully cleared`.
+     Give this box `100lvh` — which is what a bare `100vh` resolves to
+     while the mobile URL bar is showing — and the card is taller than the
+     travel that lifts it: at lift 1 an lvh−dvh strip of opaque hero is
+     still parked over the corridor's first frame. Measured 0px at
+     390x844 in the emulator (no dynamic toolbar) and ~60–90px on a real
+     iOS/Android phone with the bar out.
+     ⚠ THIS IS NOT `.station--cover`'s RULE (~:11229) AND MUST NOT BE
+     "HARMONISED" WITH IT. That block pairs dvh with a `min-height: 100lvh`
+     floor on purpose, because it holds a DIFFERENT invariant: it is a
+     sticky pin that must never measure SHORTER than the visible viewport
+     or the next section peeks under it. One is bounded above by the
+     scroll that clears it; the other is bounded below by what it covers. */
   height: 100vh;
+  height: 100dvh;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -2495,11 +2514,8 @@
     padding-left: 32px;
     padding-right: 32px;
   }
-  /* Wordmark tracks the hero's flat 32px left padding (content-column
-     parity); this rule also covers ≤640 since it wins on source order. */
-  .hud__brand {
-    left: 32px;
-  }
+  /* (The wordmark's `left: 32px` content-column parity is deleted with the
+     mark itself — `.hud__brand` is `display: none` at ≤960.) */
   .hero__flywheel {
     left: 32px;
   }
@@ -4185,8 +4201,12 @@
    hero behind it — only adjust padding here, not height. */
 @media (max-width: 760px) {
   #definition.station {
-    padding-top: clamp(96px, 18vw, 140px);
-    padding-bottom: clamp(64px, 12vw, 100px);
+    /* ⚠ DECLARED AS THE FLOOR'S INPUT, NOT AS PADDING. `#definition.station`
+       is (1,1,0) and would beat the ≤960 chrome-band floor outright, opting
+       this station out of the reservation with no pixel change to say so.
+       Same values, same pixels — the floor's `max()` now sees them. */
+    --station-pad-top: clamp(96px, 18vw, 140px);
+    --station-pad-bottom: clamp(64px, 12vw, 100px);
   }
   .tri {
     margin-top: clamp(20px, 5vw, 40px);
@@ -8057,12 +8077,80 @@ body.density-dense .station {
 @media (max-width: 960px) {
   :root {
     --hud-content-inset: clamp(24px, 6vw, 40px);
+    /* ── Mobile chrome safe-area bands (2026-09-01) ──────────────────
+       The two viewport bands the FIXED HUD chrome occupies on a phone,
+       expressed once so a flowing station can reserve them and a guard
+       can read them off computed style.
+       TOP  = the nav overlay corner: `.hud-nav-overlay` is pinned at
+              --hud-margin and the TL bracket is --hud-corner-zone tall,
+              +12px of air. Measured 56px at 390x844 and at 430x932
+              (--hud-margin floors at 16, --hud-corner-zone at 28).
+       BOTTOM = the same stack at the other end, but the bottom row
+              (`.rin-settings`, `.hud__corner--br`) sits on
+              `max(--hud-margin, --safe-bottom)` — the notch inset wins on
+              a device that has one, so the floor has to take the max too.
+       ⚠ These are DERIVED from the chrome's own tokens, never literals:
+       a new fixed painter re-derives them here in the same commit or the
+       band it occupies is unreserved (.claude/rules/mobile-sections.md). */
+    --mobile-chrome-top: calc(var(--hud-margin) + var(--hud-corner-zone) + 12px);
+    --mobile-chrome-bottom: calc(
+      max(var(--hud-margin), var(--safe-bottom, 0px)) + var(--hud-corner-zone) + 12px
+    );
   }
   .hud__rail {
     display: none;
   }
   .hud__brandmark {
     display: none;
+  }
+  /* The hero carries the brand as CONTENT on phones, so the corner copy is
+     a second wordmark that prints over era chips and card copy (owner
+     ruling, 2026-09-01). The two dead mobile rules that sized and moved it
+     (the ≤640 width clamp, the ≤960 `left: 32px`) went with it. */
+  .hud__brand {
+    display: none;
+  }
+  /* ⚠ `content-visibility: auto` IS A DESKTOP OPTIMISATION AND ≤960 OPTS
+     OUT. The desktop rule pairs it with `contain-intrinsic-size: auto
+     100vh`, which is a one-viewport GUESS — and on a phone the flowing
+     stations run 1.2 to 2.7 viewports (measured at 390x844: #services
+     2313px, #about 1317px, #contact 1204px against a 844px guess). Every
+     one of those is a size the browser corrects the moment the station
+     enters the rendering window, which reflows the document under the
+     reader and hands the scroll anchor a new target mid-gesture — the
+     "it jumps while I scroll" defect. Desktop is untouched: there the
+     guess is wrong by the same ratio but the sections are shorter than
+     the window is wide, so the correction lands off-screen. */
+  .station:not(.hero) {
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
+  /* ── TR readout scrim (2026-09-01) ────────────────────────────────
+     The section readout and nav corner are fixed at z 60 over flowing
+     copy; on a phone there is no rail or brandmark left to separate them
+     from a station title that scrolls underneath. This is the separation:
+     a gradient band down the top chrome zone, painted INSIDE the overlay's
+     own stacking context.
+     ⚠ z-index −1 IS LOAD-BEARING AND IT WORKS BECAUSE THE HOST HAS A
+     Z-INDEX. `.hud-nav-overlay` declares `z-index: 60`, so it opens a
+     stacking context: a −1 child paints below the overlay's own children
+     but still above every page layer beneath z 60. Verified live — the
+     readout reads over the scrim, the station title under it.
+     ⚠ `position: fixed` (not absolute): the host's box is 0x0 at the
+     corner, so an absolute band would have nothing to span.
+     ⚠ ONE RULE SERVES BOTH THEMES — ADR-058 swaps `--void-rgb`, so this
+     is ink-over-void in dark and parchment-over-paper in light. Verified
+     composited at ?theme=light: it reads as a parchment fade, not a band. */
+  .hud-nav-overlay::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--mobile-chrome-top) + 20px);
+    background: linear-gradient(180deg, rgba(var(--void-rgb), 0.82), rgba(var(--void-rgb), 0));
+    pointer-events: none;
+    z-index: -1;
   }
   .stations,
   .foot {
@@ -9966,8 +10054,9 @@ html {
 @media (max-width: 760px) {
   #practice.station {
     min-height: 0;
-    padding-top: clamp(80px, 16vw, 120px);
-    padding-bottom: clamp(64px, 12vw, 100px);
+    /* Floor inputs, not padding — see #definition above. */
+    --station-pad-top: clamp(80px, 16vw, 120px);
+    --station-pad-bottom: clamp(64px, 12vw, 100px);
   }
   .approach {
     margin-left: 0;
@@ -10004,8 +10093,9 @@ html {
     max-width: none;
   }
   #about.station {
-    padding-top: clamp(72px, 12vw, 100px);
-    padding-bottom: clamp(72px, 12vw, 100px);
+    /* Floor inputs, not padding — see #definition above. */
+    --station-pad-top: clamp(72px, 12vw, 100px);
+    --station-pad-bottom: clamp(72px, 12vw, 100px);
   }
 }
 
@@ -10451,8 +10541,15 @@ html {
    ═══════════════════════════════════════════════════════════════════ */
 #about.station {
   position: relative;
-  padding-top: clamp(120px, 14vw, 200px);
-  padding-bottom: clamp(120px, 14vw, 200px);
+  /* Declared through the two variables AND consumed here, so one value
+     serves both the desktop padding and the ≤960 chrome-band floor at the
+     foot of this file. (This rule is unconditional and later in source
+     than the ≤760 `#about.station` block, which is why that block's
+     numbers have never reached the page.) */
+  --station-pad-top: clamp(120px, 14vw, 200px);
+  --station-pad-bottom: clamp(120px, 14vw, 200px);
+  padding-top: var(--station-pad-top);
+  padding-bottom: var(--station-pad-bottom);
 }
 #about.station::before {
   content: "";
@@ -12206,4 +12303,65 @@ html {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE CHROME BANDS — THE PADDING FLOOR (2026-09-01)
+   ───────────────────────────────────────────────────────────────────
+   ⚠ LAW — AT ≤960 EVERY FLOWING STATION RESERVES THE TWO CHROME BANDS.
+   The rail and the brandmark stand down on a phone, but `.hud-nav-overlay`
+   (z 60), `.rin-settings` (z 60), the TL/BR corner brackets and the mobile
+   epilogue signal stay FIXED over the document — so a station whose copy
+   runs to its own edge hands that copy to the chrome. The two tokens are
+   declared once in the ≤960 `:root` block near the top of this file;
+   this is where they are spent.
+
+   ⚠ IT IS A FLOOR, NOT A PADDING. `max()` means a station that already
+   clears the chrome is byte-identical. Measured at 390x844 (both bands
+   resolve to 56px): #about 120/120, #practice 80/64 and #contact 140/220
+   are unchanged, and #services — which zeroes its bottom padding in
+   services.css so the runway ends flush — moves 0 → 56.
+
+   ⚠ AND IT IS LAST IN THE FILE ON PURPOSE. A station's own padding is
+   written at id specificity (`#about.station` is (1,1,0)) which outranks
+   any class-level floor outright — with no pixel change to say the
+   reservation stopped applying. So the contract runs the other way: a
+   station declares `--station-pad-top` / `--station-pad-bottom` and this
+   block re-states them through `max()`, tying on specificity and winning
+   on source order. A station that declares `padding-top`/`padding-bottom`
+   directly and is not listed here has opted out; `tests/visual/
+   mobile-section-seams.spec.ts` is what fails when it has.
+
+   Named exceptions, and only these:
+   · `.hero` — a full-bleed curtain, not flowing content (and it is the one
+     station the chrome is choreographed to reveal FROM, per --hero-lift).
+   · `.station--cover` — a sticky fixed-height interstitial; padding there
+     eats the interior instead of clearing chrome.
+   · `#voidwalker` — deliberately absent from the id list, so its own
+     `#voidwalker.station` rule keeps the section. `.vwd` is a one-screen
+     100svh instrument that clears the chrome from inside (law 3 of
+     .claude/rules/mobile-sections.md); adding an outer band would push its
+     interior off its own screen.
+   · the corridor host `.home-v2-stage` is not a `.station` at all, so
+     neither arm of this selector reaches it.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 960px) {
+  /* `.station--services` (services.css) zeroes its bottom padding so the
+     runway ends flush under the #about sweep. Restated as the floor's
+     INPUT rather than left to be overridden — otherwise the fallback
+     below would give the offer 220px of dead void on a phone instead of
+     the 56px band it actually needs. */
+  .station--services {
+    --station-pad-bottom: 0px;
+  }
+  .station:not(.hero):not(.station--cover),
+  #definition.station,
+  #services.station,
+  #about.station,
+  #practice.station,
+  #contact.station {
+    /* The fallbacks are `.station`'s own `padding: 140px 0 220px`. */
+    padding-top: max(var(--station-pad-top, 140px), var(--mobile-chrome-top));
+    padding-bottom: max(var(--station-pad-bottom, 220px), var(--mobile-chrome-bottom));
+  }
 }
