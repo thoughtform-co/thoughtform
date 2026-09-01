@@ -5990,6 +5990,63 @@
     margin-top: 14px;
   }
 
+  /* ── The PHONE SEAT's own rung (ADR-083) ───────────────────────────────
+     Everything above is the UNWRAP — ordinary flow, no ceiling — and it is
+     shared with the portfolio arc's dossier beat and with desktop PRM. The
+     two rules below belong to the BOUNDED SEAT alone, which is why they are
+     scoped to `.fl-case`: `ArcDossier` mounts `ToolField` under
+     `.arc-dossier__console` with no casefile root above it, so the arc's
+     ≤960 path stays byte-identical (a bay/detail change is a TWO-SURFACE
+     change — rules/proof.md).
+
+     ⚠ ONE COLUMN AT EVERY PHONE WIDTH, AND THE ≤480 RUNG BELOW WAS KEYED
+     TO A BOX THAT NO LONGER EXISTS. Its `~193px at 430` was measured while
+     the phone casefile was a full-width static DOCUMENT; ADR-083 seated it
+     in the inset instrument band, so `.fl-case` is **208 / 278 / 480px** at
+     320 / 390 / 960 (measured) — narrower than the viewport at every rung.
+     At a 500px viewport the case is 376px and a 2×2 cell was **183px**,
+     already under that rung's own floor while sitting on the far side of
+     the gate written to protect it.
+
+     ⚠ AND THE FOLD CUT BOTH COLUMNS IN ONE STROKE. `grid-auto-rows: 1fr`
+     sizes row one to the TALLEST plate, so the seat's resting bottom edge
+     lands inside that row and slices two labels at once — measured at rest
+     on the software row at 500×900: `Customer voice, paid…` AND `Relevant
+     insights surf…`, both at 81 % shown. That is the owner's iPhone reading
+     (`PROMPT ENHANCEMENT`, sliced) with a second label beside it. One
+     column halves it, and a stacked plate whose top edge peeks under the
+     fold reads as the scroll it is rather than as a defect.
+
+     ⚠ IT DOES NOT PUT THE FOLD ON A BOUNDARY, and no constant can: where
+     the edge falls inside the list is `(seat − bay) mod plate`, and the
+     seat is `52svh` while the bay is a 16:10 ratio of the case's WIDTH —
+     two independent clocks. 412×915 still cuts one capability title at
+     15 % shown. Recorded, not fixed; the lever that would fix it is a
+     height-elastic bay in the phone seat, which is a composition call.
+
+     ⚠ ADR-068 U2's FLOOR-SEAT IS ALREADY DEAD IN THIS SCOPE, TWICE OVER,
+     AND MUST STAY THAT WAY. `.fl-detail`'s `margin: auto 0 0` was written
+     for the desktop console's FLEX column; here `.fl-toolbody` is
+     `display: block` (an auto margin resolves to 0) and the rung above
+     restates `margin-top` anyway. In a 320–480px seat a floor-seated grid
+     would push the whole register past the fold before a reader touched it.
+     Never restore the shorthand under this gate. */
+  .fl-case .fl-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* THE BODY ENDS ON AIR. `.fl-toolbody` zeroes its padding above, so the
+     last plate's own border was the field's last pixel and a seat scrolled
+     to its end stopped ON content — the same "is there more?" ambiguity as
+     the clip, from the other side. 18px is the BRIEF seat's own bottom
+     padding above, so all three modes now end on the same air; flat, not a
+     clamp, because `--tf-edge`'s svh ramp is keyed to a console height this
+     seat does not have. Measured at the end of the scroll: 17.4 / 17.8 /
+     17.9px at 320×568 / 390×844 / 960×900. No new chrome and no gradient —
+     the partial next plate IS the scroll cue. */
+  .fl-case .fl-toolbody {
+    padding-bottom: 18px;
+  }
+
   /* The sheets foot keeps the flat rails it has always had below the gate —
      they were written on `.fl-caps--tool`, whose only remaining client is
      this plate (ADR-068). Same values, one selector. */
