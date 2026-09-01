@@ -195,10 +195,11 @@ function SessionControl() {
 /**
  * The exit marks — one, `contact`.
  *
- * Gated on `RAIL_INSTRUMENTS` rather than on `SETTINGS_CLUSTER`: these are
- * journey marks, and flipping the instruments off must take them with it
- * while leaving the theme switch — the site's only theme affordance —
- * exactly where it was. That is the whole reason the two flags are separate.
+ * Gated on `RAIL_INSTRUMENTS`: these are journey marks, and flipping the
+ * instruments off must take them with it while leaving the theme switch —
+ * the site's only theme affordance — exactly where it was. (The cluster
+ * itself is gated on `THEME_TOGGLE` in LandingPage; the old
+ * `SETTINGS_CLUSTER` flag was read by nothing and is deleted, 2026-09-01.)
  */
 function ExitMarks() {
   const { activeIdx, seat } = useJourneyMarks(true);

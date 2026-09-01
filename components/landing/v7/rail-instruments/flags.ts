@@ -30,20 +30,11 @@
  */
 export const RAIL_INSTRUMENTS = true;
 
-/**
- * The bottom-right corner carries SETTINGS (ADR-059 Update 1, reshaped by
- * Updates 2–3 — it now carries the `contact` mark between them).
- *
- * `SettingsCluster` replaces the standalone `LightModeToggle` on the
- * landing route, carrying the theme switch plus a session mark that only an
- * allowlisted signed-in user ever sees. `/arcs` still mounts the standalone
- * toggle — it has no cluster to join, and it keeps its `--br` bracket, so
- * its control stays in the ADR-058 slot inboard of that bracket.
- *
- * ⚠ Separate from `RAIL_INSTRUMENTS` on purpose, and it must stay separate:
- * the theme switch is a shipped control that predates these instruments, so
- * turning the journey marks off must never take the site's only theme
- * affordance with it. Flipping THIS one back means restoring
- * `<LightModeToggle />` in `LandingPage`.
- */
-export const SETTINGS_CLUSTER = true;
+/* ⚠ `SETTINGS_CLUSTER` IS DELETED (2026-09-01, pre-launch audit ST-2) — it
+   was a DEAD FLAG WITH A FALSE ROLLBACK PROMISE. Nothing ever read it:
+   `LandingPage.tsx` gates `<SettingsCluster />` on `THEME_TOGGLE`, and
+   `SettingsCluster`'s exit marks gate on `RAIL_INSTRUMENTS`. Its docblock
+   told an operator that flipping it restores `<LightModeToggle />`, which
+   would have changed NOTHING on a launch night — the one thing a rollback
+   lever must never do. The real levers: `THEME_TOGGLE` (the cluster and the
+   theme bootstrap) and `RAIL_INSTRUMENTS` (the journey marks). */
