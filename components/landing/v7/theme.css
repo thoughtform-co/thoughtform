@@ -513,6 +513,13 @@ html[data-theme="light"] .fl-con {
      component target on purpose — visible, not structural. */
   --con-hair2: rgba(138, 107, 32, 0.7);
   --con-hair: rgba(138, 107, 32, 0.5);
+  /* The neutral ramp's second rung, re-alpha'd for a ground it recedes INTO
+     (2026-09-01). This lived on `.fl-pda` below, which left the SHARED
+     rail's dormant station labels at 0.56 → 3.98:1 on every plate that is
+     not the map — the audit table's own number, unreached because the light
+     walk used to fail earlier. The rail is frame chrome, so the frame's
+     block is where its ramp belongs; 0.72 composites ~6.4:1. */
+  --con-txt2: rgba(var(--dawn-rgb), 0.72);
 }
 
 /* ⚠ **THE MAP'S OWN AMBER LINE, RE-DERIVED IN LIGHT** (2026-08-28 U2). The
@@ -535,8 +542,22 @@ html[data-theme="light"] .fl-pda {
      apparent weight; it is still the decorative rung, deliberately under the
      3:1 component target. */
   --con-edge: rgba(var(--dawn-rgb), 0.16);
-  /* The neutral ramp, re-alpha'd for a ground it now recedes INTO. */
-  --con-txt2: rgba(var(--dawn-rgb), 0.72);
+  /* (--con-txt2's light lift moved up to the `.fl-con` frame block,
+     2026-09-01 — the rail it serves is shared chrome on all four plates.) */
+  /* The quietest rung, same law (2026-09-01 — the audit table above finally
+     collected on its own promise). Dark's 0.52 composites to 3.53:1 on
+     parchment; 0.62 lands 4.79:1, still under --con-txt2's 0.72 (~6.4:1)
+     so a label and its metadata keep their difference. */
+  --pda-txt3: rgba(var(--dawn-rgb), 0.62);
+  /* Green takes the darker step at the same hue — the block comment above
+     names this exact move for literal hues picked to glow on near-black.
+     pda.css's own comment records #7e9f66 at 2.16:1 on parchment; #3f5a2e
+     is the value the casefile's tools plate already uses as its light
+     --atreides-ink, and lands 5.59:1 here — above the 4.5:1 text target
+     (the owner labels letter in --pda-grn: "green is the human") and the
+     3:1 line target (hatch, bundles, the seat's pylon) at once. */
+  --pda-grn: #3f5a2e;
+  --pda-grn-ink: #3f5a2e;
   /* ⚠ THE GLOWS GO OUT, they do not darken. A halo is additive: on
      near-black it reads as a lit mark, on parchment it is a pale smudge
      around a dark bronze one. The rail's diamond fill carries the signal

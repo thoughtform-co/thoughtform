@@ -99,7 +99,13 @@
      meaning across the flip. */
   --pda-gph: #93a3cc;
   --pda-gph-line: rgba(111, 127, 168, 0.5);
-  --pda-txt3: rgba(var(--dawn-rgb), 0.38);
+  /* ⚠ 0.52, NOT 0.38 (2026-09-01, pre-launch — ADR-063's open item, closed
+     with the owner's own "~0.52 alpha would fix it"). At 0.38 the quietest
+     rung measured 2.93:1 on ~80 of 97 map labels against --con-void; 0.52
+     composites to 4.69:1 while staying UNDER --pda-txt2 (0.56, ~5.2:1) so
+     the ladder keeps its order. Light re-derives its own step in theme.css
+     (0.62 → 4.79:1) — an alpha inverts its own meaning across the flip. */
+  --pda-txt3: rgba(var(--dawn-rgb), 0.52);
 
   /* ⚠ THE LIT GLOW IS ADDITIVE, so it only means something on a dark ground.
      On parchment a pale halo around a dark bronze mark reads as a smudge,
