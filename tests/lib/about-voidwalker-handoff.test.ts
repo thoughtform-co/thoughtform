@@ -14,7 +14,6 @@ import {
   invalidateAboutVoidwalkerHandoff,
   isAboutVoidwalkerHandoffReady,
   resolveBottomAlignedPortraitSeat,
-  resolveViewportRectTransform,
   resolveViewportRectTranslation,
   voidwalkerHologramMorphT,
   writeAboutVoidwalkerHandoffMorph,

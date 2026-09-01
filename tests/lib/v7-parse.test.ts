@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  extractV7Text,
-  getClaudeWorkshopContent,
-  getV7Content,
-  sliceV7Sections,
-} from "@/lib/v7-parse";
+import { extractV7Text, getV7Content, sliceV7Sections } from "@/lib/v7-parse";
 
 /**
  * v7-parse contracts (regression coverage for the production homepage).
