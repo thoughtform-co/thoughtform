@@ -56,6 +56,10 @@ yarn-error.log*
 
 # Local screenshot captures (root-only, keeps tracked design/inspiration/**.png)
 /*.png
+# Root-level capture-script output (capture-adr071-morph.mjs,
+# generate-era-stage-mockups.mjs — 46 MB of regenerable look-dev stills;
+# the root /*.png rule above does not recurse into it)
+/shots/
 
 # Vercel
 .vercel
