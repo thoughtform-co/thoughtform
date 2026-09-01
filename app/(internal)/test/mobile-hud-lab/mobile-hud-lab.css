@@ -1,0 +1,507 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /test/mobile-hud-lab — the phone leitmotif, two candidates
+   ═══════════════════════════════════════════════════════════════════════
+
+   THIS SHEET OWNS THE SCAFFOLDING ONLY: the lab root, the synthetic
+   runway's typography, and the knob console. Every rule is `.mhl`-scoped
+   and this sheet loads LAST, so those scoped overrides win the cascade
+   without touching a shipped surface.
+
+   ⚠ NOTHING HERE STYLES A CANDIDATE. `.hud__mstrip*` and `.hud__mdial*`
+   live in `components/landing/v7/mobile-hud/mobile-hud.css`, their
+   production home, and the lab imports that file. A rule in this sheet
+   that reached into either would be a measurement the promotion silently
+   loses — which is the whole failure mode the split exists to prevent.
+
+   ⚠ AND NOTHING HERE RE-DECLARES `--mobile-chrome-*` AT ≤960. Both bands
+   come from landing.css's own `:root` block at that width and nowhere
+   else; the one override below is gated to `min-width: 961px`, where no
+   phone ever reads it. A lab that shadows the token it is measuring
+   against reports whatever it was told to.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Lab root ────────────────────────────────────────────────────────────
+   ⚠ `position` MUST stay STATIC and the document MUST really scroll. The
+   detent table divides by the live scroll range and the depth channel
+   reads `window.scrollY`; both read 0 forever under a `position: fixed;
+   inset: 0` root, with no error and a drawing that simply never moves.
+
+   ⚠ `--hero-lift: 1` — see the long note in `MobileHudLabShell.tsx`. It
+   pins the frame OPEN, which is the state every station past the hero is
+   in and the only state this runway models. `/test/hud-instruments-lab`
+   forbids exactly this line because it mounts the real writer; this lab
+   mounts none, and without the pin both corner brackets compute
+   `inset(44px …)` on a 28px box and paint nothing at all. */
+.mhl {
+  --hero-lift: 1;
+  --mhl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --mhl-sans: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  overflow-x: clip;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--mhl-sans);
+}
+
+/* ⚠ ABOVE THE GATE THESE ARE A PREVIEW AID AND NOTHING ELSE. The two
+   bands are declared in a `max-width: 960px` block, so in a desktop
+   window they do not resolve at all — and re-using the live expression
+   here would be worse than useless, because `--hud-margin` and
+   `--hud-corner-zone` are viewport-relative clamps that resolve LARGER on
+   a wide window and would draw a band no phone has. The values are the
+   two tokens' FLOORS (16 + 28 + 12), i.e. what a phone actually computes,
+   measured 56/56 at both 390x844 and 430x932 in
+   `.claude/rules/mobile-sections.md`. Both candidates are `display: none`
+   up here anyway; this only keeps the runway's padding honest so the
+   column reads like a phone. */
+@media (min-width: 961px) {
+  .mhl {
+    --mobile-chrome-top: 56px;
+    --mobile-chrome-bottom: 56px;
+  }
+  /* The phone-frame presets. They size the runway COLUMN, never the
+     viewport — the candidates are `position: fixed` and measure the
+     window, exactly as they will in production. Below the gate this rule
+     does not exist: a 360px column inside a 390px viewport would put the
+     copy and the fixed instruments on two different grids, which is a
+     collision test that measures the lab instead of the design. */
+  .mhl .mhl-runway {
+    max-width: var(--mhl-frame-w, 390px);
+    margin-inline: auto;
+    border-inline: 1px dashed rgba(235, 227, 214, 0.1);
+  }
+}
+
+/* The gateway radial ships inside `.hud`'s neighbourhood in production and
+   is covered there by the corridor canvas; there is no canvas here. */
+.mhl .gateway {
+  display: none;
+}
+
+/* ⚠ NEXT'S DEV INDICATOR SITS EXACTLY WHERE CANDIDATE 2 DOES, and it was
+   in every still of the first capture run — a 48px badge in the
+   BOTTOM-LEFT corner, i.e. the one corner this whole lab exists to fill,
+   printing over the astrolabe's housing. It is a shadow host, so hiding it
+   needs the host element and nothing inside it. Unscoped by necessity (the
+   portal is a body child, not a `.mhl` descendant) and safe by locality:
+   this sheet is imported by this route alone, and the route is
+   proxy-blocked in production. */
+nextjs-portal {
+  display: none;
+}
+
+/* ── The runway ─────────────────────────────────────────────────────────
+   The blocks carry the REAL `.station` class, which is what puts them
+   under landing.css's ≤960 padding floor
+   (`max(var(--station-pad-top, 140px), var(--mobile-chrome-top))`, the
+   last rule in that file). Declaring the floor's INPUTS as 0 is what makes
+   it resolve to EXACTLY the band — copy starting on the band's edge, the
+   worst case the collision gate should be measuring. Overriding the
+   padding itself would not work and should not: `.station:not(.hero)…` is
+   (0,3,1) and beats `.mhl .mhl-block` outright, which is the specificity
+   trap law 1 of the mobile-sections rule is written around. */
+.mhl .mhl-block {
+  --station-pad-top: 0px;
+  --station-pad-bottom: 0px;
+  min-height: 100svh;
+  gap: 34px;
+  padding-inline: 20px;
+}
+/* Three viewports of travel under ONE journey row — the corridor's own
+   proportion, and the stretch where the strip's detent must sit still. */
+.mhl .mhl-block--corridor {
+  min-height: 300svh;
+  justify-content: space-between;
+}
+/* The document's end. Its social row is the last ink on the page and sits
+   directly on the bottom band, which is the astrolabe's own corner.
+
+   ⚠ THE FOOT PART HAS TO BE TALL ENOUGH TO CROSS ITS OWN OBSERVER, and the
+   first cut was not. The active row is "the last part whose top has crossed
+   45 % of the viewport", and a final part that only starts at 48 % of the
+   LAST screen can never cross it — so at max scroll the strip lit
+   `voidwalker` (rung 10) and the last two rungs of a thirteen-rung ladder
+   were unreachable by scrolling. Nothing failed: the instrument was
+   correctly reporting a row the runway never left. `62svh` puts the foot's
+   top at ~31 % of the last screen, and `flex-end` inside it keeps the mail
+   and social rows on the bottom band where the collision test needs them —
+   both properties, from one part. */
+.mhl .mhl-block--contact {
+  min-height: 120svh;
+  justify-content: flex-end;
+}
+.mhl .mhl-part--foot {
+  min-height: 62svh;
+  justify-content: flex-end;
+}
+.mhl .mhl-part {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.mhl .mhl-part--offer {
+  margin-top: 48px;
+}
+
+/* ── Runway type ────────────────────────────────────────────────────────
+   Real copy at real phone sizes. The chrome register is PT Mono and the
+   prose is PP Neue Montreal — two families by ROLE (ADR-067), which is
+   also what makes a collision legible in a still: mono under the corner
+   reads as chrome-over-chrome, prose under it reads as a defect. */
+.mhl .mhl-eyebrow {
+  margin: 0;
+  font-family: var(--mhl-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.45);
+}
+.mhl .mhl-display {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  font-weight: 300;
+}
+.mhl .mhl-display--sm {
+  font-size: 28px;
+}
+.mhl .mhl-display em {
+  font-style: normal;
+  color: var(--gold-ink, #caa554);
+}
+.mhl .mhl-title {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+.mhl .mhl-lede {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: rgba(var(--dawn-rgb), 0.78);
+}
+.mhl .mhl-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(var(--dawn-rgb), 0.72);
+}
+.mhl .mhl-body--far {
+  margin-top: 60svh;
+}
+.mhl .mhl-fine {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(var(--dawn-rgb), 0.5);
+}
+/* Hard on the bottom band — the hero's meta row is the first thing the
+   astrolabe has to share a corner with. */
+.mhl .mhl-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: auto 0 0;
+  font-family: var(--mhl-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.4);
+}
+
+.mhl .mhl-tabs {
+  display: flex;
+  gap: 8px;
+  font-family: var(--mhl-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.mhl .mhl-tabs span {
+  padding: 5px 8px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.14);
+  color: rgba(var(--dawn-rgb), 0.5);
+}
+.mhl .mhl-tabs span[data-on] {
+  color: var(--gold-ink, #caa554);
+  border-color: rgba(var(--gold-rgb), 0.4);
+}
+
+.mhl .mhl-dir {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mhl-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.mhl .mhl-dir li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px dashed rgba(var(--dawn-rgb), 0.12);
+  color: rgba(var(--dawn-rgb), 0.7);
+}
+.mhl .mhl-dir span {
+  color: rgba(var(--dawn-rgb), 0.35);
+}
+.mhl .mhl-dir i {
+  margin-left: auto;
+  font-style: normal;
+  color: rgba(var(--dawn-rgb), 0.42);
+}
+
+.mhl .mhl-claims {
+  display: grid;
+  gap: 16px;
+}
+.mhl .mhl-claims p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgba(var(--dawn-rgb), 0.6);
+}
+.mhl .mhl-claims b {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 400;
+  font-size: 13.5px;
+  color: rgba(var(--dawn-rgb), 0.92);
+}
+
+.mhl .mhl-verbs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+.mhl .mhl-verbs li {
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(var(--dawn-rgb), 0.62);
+}
+.mhl .mhl-verbs b {
+  display: block;
+  font-family: var(--mhl-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}
+
+/* A horizontally scrolling chip band — the one runway element whose
+   layout a fixed painter could visibly nudge. */
+.mhl .mhl-eras {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  font-family: var(--mhl-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.mhl .mhl-eras span {
+  flex: none;
+  padding: 6px 9px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.14);
+  color: rgba(var(--dawn-rgb), 0.5);
+}
+.mhl .mhl-eras span[data-on] {
+  color: var(--gold-ink, #caa554);
+  border-color: rgba(var(--gold-rgb), 0.4);
+}
+
+.mhl .mhl-mail {
+  margin: 0;
+  font-family: var(--mhl-mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--gold-ink, #caa554);
+}
+.mhl .mhl-social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0;
+  font-family: var(--mhl-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.42);
+}
+
+/* The theme switch's silhouette in the BR cluster mock. `--rin-ctl` is
+   the real control's own box (rail-instruments.css), so the group's width
+   — and therefore the corner's anchor — is production's. */
+.mhl .mhl-ctl-mock {
+  display: block;
+  width: var(--rin-ctl, 36px);
+  height: var(--rin-ctl, 36px);
+  border: 1px solid rgba(var(--dawn-rgb), 0.18);
+}
+
+/* ── Console ────────────────────────────────────────────────────────────
+   Bottom-CENTRE, and that is forced rather than chosen: the top band is
+   candidate 1, the bottom-left is candidate 2, the bottom-right is the
+   settings cluster. Centre is the only bottom real estate nothing under
+   study occupies — and it still prints over the runway, which is why it
+   collapses and why `?console=0` exists for the capture. */
+.mhl-console {
+  position: fixed;
+  left: 50%;
+  /* ⚠ IT CLEARS THE BOTTOM BAND, because the band is candidate 2's seat.
+     Docked on the margin line the collapsed console printed straight over
+     the astrolabe in every still — the knob chrome hiding the thing the
+     knobs are for. It is the same reservation a station makes, spent by the
+     one piece of lab furniture that shares the bottom of the screen. */
+  bottom: calc(var(--mobile-chrome-bottom, 56px) + 10px);
+  translate: -50% 0;
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: min(92vw, 420px);
+  max-height: 62vh;
+  overflow-y: auto;
+  padding: 10px 12px;
+  background: rgba(10, 9, 8, 0.9);
+  border: 1px solid rgba(235, 227, 214, 0.14);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.mhl-console:not([data-open]) {
+  gap: 0;
+  width: auto;
+  overflow: visible;
+}
+.mhl-console__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.mhl-caret,
+.mhl-readout {
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.mhl-caret {
+  padding: 0;
+  /* Collapsed, the console is `width: auto` — without this the head's two
+     runs wrap and the closed knob becomes a two-line block. */
+  white-space: nowrap;
+  color: rgba(235, 227, 214, 0.7);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.mhl-readout {
+  color: rgba(235, 227, 214, 0.4);
+  white-space: nowrap;
+}
+.mhl-readout b {
+  font-weight: 400;
+  color: var(--gold, #caa554);
+}
+.mhl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.mhl-chip {
+  padding: 5px 8px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.6);
+  background: rgba(235, 227, 214, 0.02);
+  border: 1px solid rgba(235, 227, 214, 0.16);
+  text-decoration: none;
+  cursor: pointer;
+}
+.mhl-chip--sm {
+  padding: 4px 7px;
+  font-size: 8.5px;
+}
+.mhl-chip--link {
+  color: rgba(235, 227, 214, 0.4);
+}
+.mhl-chip[data-on] {
+  color: var(--void, #0a0908);
+  background: var(--gold, #caa554);
+  border-color: var(--gold, #caa554);
+}
+.mhl-knob {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mhl-knob__label {
+  flex: none;
+  width: 76px;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.38);
+}
+.mhl-thesis {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: rgba(235, 227, 214, 0.7);
+}
+.mhl-prov {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-family: var(--font-pt-mono, ui-monospace, monospace);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(235, 227, 214, 0.4);
+}
+.mhl-prov__diamond {
+  width: 4px;
+  height: 4px;
+  flex: none;
+  background: rgba(202, 165, 84, 0.6);
+  transform: rotate(45deg);
+}
+
+/* ── Out-of-tier notice ─────────────────────────────────────────────── */
+.mhl-gate-warn {
+  display: none;
+}
+@media (min-width: 961px) {
+  .mhl-gate-warn {
+    position: fixed;
+    left: 50%;
+    top: 12px;
+    translate: -50% 0;
+    z-index: 9000;
+    display: block;
+    max-width: 70vw;
+    margin: 0;
+    padding: 7px 12px;
+    font-family: var(--font-pt-mono, ui-monospace, monospace);
+    font-size: 9px;
+    line-height: 1.4;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold, #caa554);
+    background: rgba(10, 9, 8, 0.9);
+    border: 1px solid rgba(202, 165, 84, 0.35);
+  }
+}

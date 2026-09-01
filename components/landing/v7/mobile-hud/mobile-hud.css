@@ -1,0 +1,332 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE HUD — the leitmotif at ≤960px  ·  LOOK-DEV, NOT YET MOUNTED
+   ═══════════════════════════════════════════════════════════════════════
+
+   On a phone the HUD stands almost everything down: `.hud__rail` (and the
+   13-tick ladder with it), the journey diamond, the rail-instrument mark
+   rows and — since 2026-09-01 — the wordmark are all `display: none`. What
+   survives is the TR readout/drawer trigger, the BR settings cluster and
+   the two corner brackets. So the frame still SAYS where you are (the
+   corner names the section) but nothing DRAWS it any more: the celestial-
+   navigation read is carried entirely by a word.
+
+   These are the two candidates for putting the drawing back with ONE
+   element. They are looked at side by side at
+   `/test/mobile-hud-lab`; nothing on the landing mounts either yet.
+
+   THE SHEET LIVES IN ITS PRODUCTION HOME ON PURPOSE. The lab imports it
+   from here, so promoting a winner is a MOUNT — a component and a line in
+   `LandingPage` — never a file move that re-opens every measurement in it.
+   The lab's own chrome (knobs, phone frame, runway) stays in
+   `app/(internal)/test/mobile-hud-lab/mobile-hud-lab.css` and is `.mhl*`
+   scoped; nothing in THIS file may depend on a `.mhl` rule.
+
+   ── The laws these two obey ────────────────────────────────────────────
+
+   1. THEY PAINT INSIDE A RESERVED BAND, ENTIRELY.
+      `--mobile-chrome-top` / `--mobile-chrome-bottom` (landing.css's ≤960
+      `:root` block, ~56px each at both phone shapes) are the two strips a
+      flowing station reserves for fixed chrome. `.hud__mstrip` takes the
+      top band's first 12px; `.hud__mdial` centres in the bottom band. A
+      painter that leaves its band has silently un-reserved itself —
+      `.claude/rules/mobile-sections.md` law 1, and
+      `tests/visual/mobile-section-seams.spec.ts` is what fails.
+      ⚠ NEITHER RE-DERIVES THE TOKENS, because neither changes where the
+      existing chrome sits. A candidate that ever moves the TR readout or
+      the BR cluster re-derives both tokens in the SAME commit.
+      ⚠ AND WHICHEVER ONE IS PROMOTED OWES THE GUARD AN ENTRY IN THAT SAME
+      COMMIT — `CHROME_SELECTORS` in `tests/visual/mobile-section-seams.spec.ts`
+      (law 5: "a painter absent from that list is a painter nothing
+      measures"). Nothing is mounted on the landing yet, so that list is
+      correct as it stands and this file deliberately does not touch it;
+      the moment one of these paints on `/`, it is incomplete.
+
+   2. THEY ARE RECORDS, NOT DECORATION. Position is a pure function of the
+      journey — the strip's lit detent is the active section's rung on the
+      13-tick ladder (ADR-031 U2's identity, kept), the dial's diamond is
+      the active section's seat on its own tick ring. Neither invents an
+      ordinal and neither prints a digit: the TR corner already carries the
+      NAME (ADR-055) and a second label in the same band is the said-twice
+      defect this surface has removed a console head, a foot and a
+      designator for.
+
+   3. INK GOES THROUGH THE HOUSE TOKENS, NEVER A LITERAL. `--dawn-rgb`
+      flips to ink and `--void-rgb` to parchment in light (ADR-058), so
+      `rgba(235,227,214,α)` spelled out is dawn in dark and INVISIBLE on
+      paper. Gold is split by role (ADR-063 U2): `--gold` is the MARK rung
+      and measures ~1.2:1 as line work on parchment, so every STROKE here
+      takes `--gold-line`, the 3:1 rung — byte-identical to `--gold` in
+      dark, so adoption costs nothing there.
+
+   4. NO POINTER, NO A11Y SURFACE. Both are `aria-hidden` +
+      `pointer-events: none`. The nav corner stays the single navigation
+      (ADR-059's ruling, and the reason `.rin-host` says so out loud).
+
+   ── The measured values ────────────────────────────────────────────────
+
+   ⚠ `--mhud-line-a` IS 0.48 AND IT WAS SOLVED, NOT CHOSEN. Composited on
+   the frame's own bed and measured both ways round: dawn at α .48 is
+   4.14:1 on void and ink at α .48 is 3.21:1 on parchment — LIGHT is the
+   binding case, and it binds hard. α .40 is 3.19:1 in dark and **2.55:1 in
+   light**; α .46 is 3.02:1, i.e. inside the rounding of the floor. The
+   desktop rail's marks sit at 0.44 with a documented ceiling of ~0.5
+   "where marks start competing with the ticks" (rail-instruments.css) —
+   ⚠ THAT CEILING DOES NOT APPLY HERE, and the reason is the whole point of
+   this file: on a phone there IS no tick ladder to compete with. It was
+   removed with the rail.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Line work — see the measured note above. Both candidates read it, so
+     a retune moves them together and is re-measured in BOTH themes. */
+  --mhud-line: rgba(var(--dawn-rgb), 0.48);
+  /* The lit rung. `--gold-line`, never `--gold` (ADR-063 U2, law 3). */
+  --mhud-lit: var(--gold-line);
+  /* The one allowed tween on either instrument: a detent GLIDE between
+     seats (ADR-031 U3's owner-approved narrowing of "never smooth
+     tweening"). Position stays a pure function of the active index;
+     retargeting makes fast travel read as one redirected glide instead of
+     a queued chain. Quantised `steps()` remains the canon for garnish. */
+  --mhud-glide: 320ms;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CANDIDATE 1 — the bearing strip
+   ═══════════════════════════════════════════════════════════════════════
+
+   A hairline ladder along the very top edge, under the TR readout's own
+   band: THIRTEEN ticks, twelve intervals — the rail ladder's identity
+   carried across intact (ADR-031 U2: "the ladder is load-bearing rail
+   identity and must never be removed"; on a phone it was, and this is the
+   ladder turned through 90°). One lit detent travels it.
+
+   ⚠ THE STRIP DRAWS NO BASELINE HAIRLINE, and that is a decision. A rule
+   spanning the ladder would make it read more obviously as an instrument —
+   but at the 3:1 floor law 3 sets, a full-width rule is a BAR across the
+   top of a phone, which is chrome the frame does not otherwise own. The
+   ladder's identity is the thirteen ticks, not the line they hang off.
+
+   ⚠ ITS GROUND IS THE TR SCRIM. `.hud-nav-overlay::before` already paints
+   `rgba(var(--void-rgb), .82) → 0` down the whole top chrome zone
+   (landing.css ≤960), and the strip sits in that gradient's opaque end. So
+   the ticks are measured against the frame's bed rather than against
+   whatever station copy happens to be passing underneath — which is what
+   makes a single alpha honest at every scroll position.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.hud__mstrip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* ≤12px of ink, plus the notch inset on a device that has one. The band
+     is ~56px, so the strip spends the first fifth of it and leaves the
+     readout and the TL bracket the rest untouched. */
+  height: calc(12px + var(--safe-top, 0px));
+  padding-top: var(--safe-top, 0px);
+  /* 55 — UNDER the nav overlay's 60 (the readout is the drawer trigger and
+     must stay pressable and on top) and OVER the scrim, which is a −1
+     child inside that overlay's own stacking context. */
+  z-index: 55;
+  pointer-events: none;
+}
+
+/* The ladder's box. Inset by the frame's own margin at both ends so the
+   first and last ticks land on the same vertical lines the corner
+   brackets stand on — the ladder shares the frame's gutter rather than
+   declaring a second one. A wrapper rather than per-tick arithmetic
+   because a tick's `left` is then a plain percentage of THIS box. */
+.hud__mstrip__ladder {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--hud-margin);
+  right: var(--hud-margin);
+}
+
+/* One tick. `--i` is its rung, 0…12. */
+.hud__mstrip__tick {
+  position: absolute;
+  top: 0;
+  left: calc(var(--i) / 12 * 100%);
+  width: 1px;
+  height: 4px;
+  background: var(--mhud-line);
+}
+/* Majors every third rung (0 · 3 · 6 · 9 · 12), so the twelve intervals
+   read as four spans and the eye can count without labels — the ladder's
+   own device, not a new one. */
+.hud__mstrip__tick[data-major] {
+  height: 7px;
+}
+
+/* THE LIT DETENT — "you are here", and the only gold on the strip.
+   ⚠ IT ANIMATES `left`, DELIBERATELY. The house ban is on scroll-scrubbed
+   position and on per-frame writers, not on this: the detent is an
+   absolutely positioned 1px box inside a `position: fixed` container, so
+   the glide reflows nothing outside the strip, and it is exactly what the
+   rail diamond's own 350ms `top` glide does (ADR-031 U9 §2). A transform
+   cannot replace it — a `translate` percentage resolves against the
+   element's OWN 1px width, not the ladder's. */
+.hud__mstrip__detent {
+  position: absolute;
+  top: 0;
+  left: calc(var(--mstrip-d, 0) / 12 * 100%);
+  width: 1px;
+  height: 10px;
+  background: var(--mhud-lit);
+  /* The bloom rides the same element rather than a clipped pseudo — there
+     is no curtain clip on this box to crop it (the rail's `::after` bloom
+     exists because a `box-shadow` on the clip-path'd `::before` was being
+     cropped by its own clip). */
+  box-shadow: 0 0 6px rgba(var(--gold-rgb), 0.45);
+  transition: left var(--mhud-glide) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CANDIDATE 2 — the corner astrolabe
+   ═══════════════════════════════════════════════════════════════════════
+
+   A non-interactive dial seated in the corner the wordmark vacated,
+   inside the bottom chrome band. It draws a RECORD in three registers:
+
+     · the NEEDLE is scroll depth, scrubbed and reversible — where you are
+       in the document, continuously;
+     · the TICK RING is the journey, one tick per section at its own
+       measured depth — where the sections are;
+     · the DIAMOND is the active section, stepping from tick to tick on
+       the detent glide — which one you are in.
+
+   So the needle passes each tick as the reader reaches that section, and
+   the diamond confirms it. Nothing on it is a metaphor and nothing on it
+   is a digit.
+
+   ⚠ THE HOUSING IS A DODECAGON, NOT A CIRCLE. The shape law is diamonds,
+   never circles, and the house's own answer to a dial is twelve-sided
+   (ADR-070 U33's compound carrier). It also pays: twelve sides is the
+   ladder's twelve intervals, so the two candidates are the same instrument
+   seen from two ends rather than two unrelated drawings.
+
+   ⚠ AND ADR-070 U34's LAW APPLIES TO EVERYTHING SEATED INSIDE IT: a
+   polygonal OUTER wall is worst at its APOTHEM, κ·R = cos(15°)·R, which at
+   R 46 is **44.43** — 1.6 units nearer than the radius. Every tick, the
+   diamond and the needle are bounded against 44.43, never against 46. The
+   internal rings stay concentric; the housing carries the machined
+   geometry and what is seated inside does not repeat it.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.hud__mdial {
+  /* 48 · 52 · 56 — the knob's three rungs; 52 is the default. */
+  --mdial-size: 52px;
+  position: fixed;
+  left: var(--hud-margin);
+  /* CENTRED IN THE BAND, derived — not seated on the margin line the BR
+     cluster uses. `--hud-margin` + a 52px dial is 68px against a ~56px
+     band, i.e. the obvious placement puts a quarter of the dial outside
+     the strip the stations reserve. The band is the box; the dial centres
+     in it and grows or shrinks with it (a notch inset moves both). */
+  bottom: calc((var(--mobile-chrome-bottom) - var(--mdial-size)) / 2);
+  width: var(--mdial-size);
+  height: var(--mdial-size);
+  /* 52 — under the corner bracket and the settings cluster, over the
+     stations. It shares a corner with nothing, so it needs no more. */
+  z-index: 52;
+  pointer-events: none;
+}
+
+.hud__mdial__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* `currentColor` is the line rung; the lit marks name gold explicitly.
+     One inherited colour means the drawing has no per-element rules. */
+  color: var(--mhud-line);
+  overflow: visible;
+}
+
+/* The twelve-sided housing, and the concentric tick ring inside it. */
+.hud__mdial__housing,
+.hud__mdial__tick {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+/* Every rotating mark shares ONE origin — the viewBox's centre — so the
+   drawing carries no per-element trigonometry and a radius is a radius at
+   every angle.
+   ⚠ `transform-box: view-box` IS NOT OPTIONAL ON AN SVG CHILD. The initial
+   value is `view-box` for SVG in the spec but `fill-box` is what a
+   `transform-origin` percentage would otherwise resolve against on a
+   `<line>` with zero width — 50% of a 0-wide box is 0, and every tick
+   would pivot about its own end instead of the hub. */
+.hud__mdial__tick,
+.hud__mdial__needle,
+.hud__mdial__mark {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+}
+
+/* THE NEEDLE — the one scrubbed channel on either candidate.
+   ⚠ `--mdial-depth` IS WRITTEN BY THE PAGE'S EXISTING SCROLL WRITER, NOT
+   BY A NEW ONE. In the lab a local handler writes it (the lab has no
+   corridor); in production it rides `useLandingScroll`, which already owns
+   `--hero-lift` and `--depth` off one passive listener — ADR-002 bans new
+   scroll WRITERS, not new readers. It must never become a per-frame
+   `getBoundingClientRect`: mobile-sections law 2 is explicit that a forced
+   reflow at 60 Hz is exactly what a phone cannot pay.
+   NO TRANSITION: it is scrubbed, so a tween would lag the thumb. */
+.hud__mdial__needle {
+  stroke: var(--mhud-lit);
+  stroke-width: 1.4;
+  fill: none;
+  /* The sweep is 300°, not 360° — a full turn reads as a clock, and this
+     is a bearing. -150° at the document's top, +150° at its end. */
+  rotate: calc(-150deg + var(--mdial-depth, 0) * 300deg);
+}
+.hud__mdial__needle[data-style="wedge"] {
+  fill: var(--mhud-lit);
+  stroke: none;
+}
+
+/* THE ACTIVE SECTION, riding its own tick. Rotated with the ring, not held
+   upright: a detent mark on a bezel aligns with the ring's normal, and a
+   diamond that stayed level would read as a sticker on top of the dial
+   rather than as part of it. */
+.hud__mdial__mark {
+  fill: var(--mhud-lit);
+  stroke: none;
+  rotate: calc(-150deg + var(--mdial-a, 0) * 300deg);
+  transition: rotate var(--mhud-glide) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* The hub. A diamond, at the size where it reads as a bearing's origin
+   rather than as a fourth mark. */
+.hud__mdial__hub {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────
+   The glide is the only motion either instrument owns, and under PRM the
+   state flip is instant — the ADR-031 U9 rule, unchanged. The needle is
+   not listed: it has no transition to remove, and suppressing a scrubbed
+   channel would leave the dial saying nothing about depth at all. */
+@media (prefers-reduced-motion: reduce) {
+  .hud__mstrip__detent,
+  .hud__mdial__mark {
+    transition: none;
+  }
+}
+
+/* ── The gate ───────────────────────────────────────────────────────────
+   ⚠ KEY OFF THE PRODUCTION GATE, NEVER INVENT A NEW ONE. Both candidates
+   exist BECAUSE the rail stands down at ≤960; above it the rail, its
+   ladder, the journey diamond and both mark rows are back and either one
+   would be a second journey indicator beside them. 961 is the same
+   boundary `.hud__rail`'s hide uses, so the two can never drift. */
+@media (min-width: 961px) {
+  .hud__mstrip,
+  .hud__mdial {
+    display: none;
+  }
+}
