@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
+import { isAuthorized } from "@/lib/auth-server";
 
 // ─── COMPONENT LIBRARY ───
 // Embedded component definitions for matching
@@ -360,6 +361,15 @@ function generateImplementationPath(
 
 export async function POST(request: NextRequest) {
   try {
+    // Internal design-system bridge (Thoughtform MCP match_reference), not a
+    // public API: unauthenticated it was free CPU plus a component-inventory
+    // disclosure. Same allowlisted-admin gate as every other mutation route;
+    // the dev bypass inside isAuthorized keeps local tooling working.
+    const authorized = await isAuthorized(request);
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { description, limit = 5, platform } = body;
 

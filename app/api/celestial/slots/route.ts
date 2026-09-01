@@ -21,7 +21,10 @@ export async function GET() {
       `);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      // Anonymous route: the raw Postgres message can name columns and
+      // constraints, so it goes to the server log, not the response.
+      console.error("[GET /api/celestial/slots] db error:", error);
+      return NextResponse.json({ error: "Internal error" }, { status: 500 });
     }
 
     return NextResponse.json({ slots: data ?? [] });

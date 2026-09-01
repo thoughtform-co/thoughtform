@@ -102,7 +102,8 @@ export async function GET() {
           updated_at: new Date().toISOString(),
         })),
         source: "fallback",
-        error: error.message,
+        // Anonymous route: the raw message stays in the server log above.
+        error: "database error",
       });
     }
 
@@ -120,7 +121,8 @@ export async function GET() {
         updated_at: new Date().toISOString(),
       })),
       source: "fallback",
-      error: error instanceof Error ? error.message : "Unknown error",
+      // Anonymous route: the raw message stays in the server log above.
+      error: "internal error",
     });
   }
 }
