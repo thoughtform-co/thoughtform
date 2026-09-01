@@ -892,8 +892,17 @@ a.vwd__press:focus-visible .vwd__press__headline {
     padding-top: clamp(12px, 2svh, 18px);
   }
 
-  .vwd__head,
-  .vwd__body {
+  /* ⚠ `[data-cell]` MATCHES THE DESKTOP'S SPECIFICITY — the 701–1100px
+     rung's own recorded trap, which this rung shipped anyway: written as
+     bare `.vwd__head, .vwd__body` (0,1,0) this reset lost to the desktop's
+     `.vwd__head[data-cell="ul"]` placements (0,2,0) even from inside the
+     media query, so `width: var(--vwd-measure)` (368px) still won on
+     410–700px viewports and the visible panel pinned to the stage's left
+     edge with the rest of the column dead. All four cells reset alike here
+     (flat flow, one panel shown at a time), so attribute PRESENCE is enough
+     where the grid rung needed per-cell rows. */
+  .vwd__head[data-cell],
+  .vwd__body[data-cell] {
     grid-column: auto;
     grid-row: auto;
     justify-self: stretch;
