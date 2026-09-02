@@ -21,10 +21,11 @@ import { WAYPOINTS, WAYPOINT_COUNT } from "@/lib/latent-flight/content/waypoints
  * would be two tab stops.
  */
 
-/** The heading tape: ±60° of ticks every 5°, majors every 30°, so the ±40°
- *  window has a margin to scroll into. 7 px per degree. */
+/** The heading tape: ±240° of ticks every 5°, majors every 30°. The strip
+ *  slides by the heading folded into ±180°, so the ±40° window always has
+ *  ticks whichever way the course bends. 7 px per degree. */
 const TAPE_PX_PER_DEG = 7;
-const TAPE_TICKS = Array.from({ length: 25 }, (_, i) => (i - 12) * 5);
+const TAPE_TICKS = Array.from({ length: 97 }, (_, i) => (i - 48) * 5);
 
 function tapeLabel(deg: number): string {
   return String(((deg % 360) + 360) % 360).padStart(3, "0");
@@ -189,7 +190,7 @@ function LatentFlightHudImpl() {
       {/* bottom centre — the log and the key row */}
       <div className="lf-comms" data-lf="comms" aria-hidden="true" />
       <div className="lf-keys" data-lf="keys">
-        <button type="button" className="lf-key" data-lf-action="engage" aria-disabled="true">
+        <button type="button" className="lf-key" data-lf-action="engage">
           <kbd>Space</kbd>
           <span>Engage</span>
         </button>
@@ -197,15 +198,51 @@ function LatentFlightHudImpl() {
           <kbd>Tab</kbd>
           <span>Next target</span>
         </button>
+        <button type="button" className="lf-key" data-lf-action="hold">
+          <kbd>H</kbd>
+          <span>Hold</span>
+        </button>
         <span className="lf-key lf-key--hint">
           <kbd>1–7</kbd>
           <span>Lock</span>
+        </span>
+        <span className="lf-key lf-key--hint">
+          <kbd>W/S</kbd>
+          <span>Throttle</span>
+        </span>
+        <span className="lf-key lf-key--hint">
+          <kbd>A/D</kbd>
+          <span>Steer</span>
         </span>
         <span className="lf-key lf-key--hint">
           <kbd>Esc</kbd>
           <span>Release</span>
         </span>
       </div>
+
+      {/* The dock seam (M4): the station's dossier panel, seated inboard of
+          the right rail. Hidden until the vessel docks; the dock system
+          opens it, moves focus in and makes the deck inert. This is what
+          the casefile will mount into — the record itself is not on this
+          branch. */}
+      <section className="lf-dock" data-lf="dock" hidden aria-label="Station dossier">
+        <div className="lf-dock__plate">
+          <div className="lf-dock__in">
+            <header className="lf-dock__head">
+              <b className="lf-dock__kicker">Dossier</b>
+              <b className="lf-dock__name" data-lf="dock-name" />
+              <b className="lf-dock__sector" data-lf="dock-sector" />
+            </header>
+            <p className="lf-dock__line">Bay open. The station&rsquo;s record mounts here.</p>
+            <footer className="lf-dock__foot">
+              <button type="button" className="lf-key" data-lf-action="undock">
+                <kbd>Esc</kbd>
+                <span>Undock</span>
+              </button>
+            </footer>
+          </div>
+        </div>
+      </section>
 
       <output className="lf-sr" aria-live="polite" data-lf="live" />
     </div>

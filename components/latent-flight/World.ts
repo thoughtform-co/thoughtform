@@ -15,10 +15,10 @@ import type { WaypointId } from "@/lib/latent-flight/content/waypoints";
 import type { Emitter } from "@/lib/latent-flight/engine/events";
 import type { LfEvent, LfState } from "@/lib/latent-flight/engine/gameState";
 import type { LfFlags } from "@/lib/latent-flight/flags";
+import type { Course } from "@/lib/latent-flight/flight/course";
 import type { GameClock } from "@/lib/latent-flight/gameClock";
 
-/** The vessel, as the instruments read it. Flight (M3) writes it; at rest
- *  it holds at HOME. */
+/** The vessel, as the instruments read it. `ShipSystem` is the one writer. */
 export interface ShipPose {
   position: [number, number, number];
   /** Heading, degrees, 0 = down −Z, clockwise from above. */
@@ -27,8 +27,31 @@ export interface ShipPose {
   throttle: number;
   /** Course parameter, 0 … 1. */
   s: number;
-  /** The waypoint the vessel occupies. */
+  /** Speed along the course, world units per second. */
+  v: number;
+  /** Lateral offsets in the course frame, world units. */
+  x: number;
+  y: number;
+  /** The previous fixed step's pose, for render interpolation. */
+  sPrev: number;
+  xPrev: number;
+  yPrev: number;
+  /** The waypoint the vessel is IN — the last one it reached. */
   sector: WaypointId;
+  /** The waypoint the vessel is holding AT (inside the hold range), or none. */
+  at: WaypointId | null;
+  /** The autopilot's destination, or none (hand-flown). */
+  autopilot: WaypointId | null;
+}
+
+/** The commanded stick and throttle, written by input, read by the ship. */
+export interface LfInput {
+  /** Commanded throttle, 0 … 1 in eighths. */
+  throttle: number;
+  /** −1 … 1, right positive. */
+  lateral: number;
+  /** −1 … 1, up positive. */
+  vertical: number;
 }
 
 /** The verbs. Systems that own an action install it here; the HUD's
@@ -38,6 +61,9 @@ export interface LfCommands {
   release(): void;
   cycle(dir: 1 | -1): void;
   engage(): void;
+  hold(): void;
+  throttleStep(delta: number): void;
+  undock(): void;
   skipBoot(): void;
 }
 
@@ -71,7 +97,8 @@ export interface World {
   flags: LfFlags;
   /** Reduced motion, resolved once at mount (media query OR `?rm=1`). */
   reducedMotion: boolean;
-  /** The stage element the canvas fills — the box every projection uses. */
+  /** The stage element the canvas fills — the box every projection uses,
+   *  and the flight deck that takes the keys. */
   root: HTMLElement;
   canvas: HTMLCanvasElement;
   events: Emitter<LfEvents>;
@@ -84,7 +111,7 @@ export interface World {
   /** The post chain's composer, for the debug handle only. */
   post: { passes: { name: string; enabled: boolean }[] } | null;
   /** World-space anchors the HUD projects and the capture reads by name
-   *  (`star`, later each waypoint). Written by the system that owns them. */
+   *  (`star`, each waypoint). Written by the system that owns them. */
   anchors: Map<string, THREE.Vector3>;
   /** Boot cue progress, 0 … 1 each. `instantBoot()` when there is no boot. */
   boot: BootState;
@@ -95,6 +122,12 @@ export interface World {
   /** The locked waypoint, or none. */
   target: WaypointId | null;
   ship: ShipPose;
+  input: LfInput;
+  /** The route as a curve. */
+  course: Course;
+  /** The rail lattice's cross-section at the glass, world units — the
+   *  flight model's lateral bounds. Written by the rail system on resize. */
+  rail: { halfX: number; halfY: number };
   commands: LfCommands;
   /** Lines pushed for the log; the HUD drains them. */
   log: string[];

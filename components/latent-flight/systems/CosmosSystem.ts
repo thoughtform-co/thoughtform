@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { getDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { getCountMultiplier } from "@/lib/hooks/useQualityTier";
 import { PULSAR_BOOT_DELAY_S } from "@/lib/latent-flight/boot/bootTimeline";
+import { SHIP } from "@/lib/latent-flight/flight/flightModel";
 import { buildNoise, NOISE_SIZE } from "@/lib/latent-flight/noiseTexture";
 import {
   PULSAR,
@@ -88,19 +89,19 @@ export class CosmosSystem implements LfSystem {
     // Reduced motion: no twinkle, no drift, the star parked in profile.
     this.near.material.uniforms.uTwinkle.value = w.clock.motionScale;
 
-    w.scene.add(
-      this.sky.group,
-      this.far.points,
-      this.near.points,
-      this.star.root,
-      this.star.flash,
-      this.dust.points
-    );
+    w.scene.add(this.sky.group, this.far.points, this.near.points, this.star.root, this.star.flash);
+    // The dust rides IN the camera: its points are authored in camera space
+    // and wrap on the distance travelled, so it turns with every bend of the
+    // course and streams past the lens under way.
+    w.camera.add(this.dust.points);
+    w.scene.add(w.camera);
     this.place(w);
   }
 
   resize(w: World): void {
-    if (w.fsm === "BOOT" || w.fsm === "VISTA") this.place(w);
+    // Re-seat the star only while the vessel is still at its station; once
+    // it has flown, the star is a world-fixed landmark.
+    if (w.ship.s === 0) this.place(w);
   }
 
   private place(w: World): void {
@@ -113,22 +114,30 @@ export class CosmosSystem implements LfSystem {
     w.anchors.set("star", new THREE.Vector3(pos[0], pos[1], pos[2]));
   }
 
-  render(_alpha: number, w: World): void {
+  render(alpha: number, w: World): void {
     const { sky, far, near, star, dust, frame } = this;
     if (!sky || !far || !near || !star || !dust || !frame) return;
     const t = w.clock.t;
     const dpr = w.size.dpr;
     const cam = w.camera;
 
+    // The sky and both star shells are welded to the camera's POSITION
+    // (never its rotation): they are too far to parallax against a vessel
+    // that travels a few hundred units, and the dust carries the speed.
     sky.group.position.copy(cam.position);
     far.points.position.copy(cam.position);
+    near.points.position.copy(cam.position);
     sky.setTime(t);
 
     far.material.uniforms.uPixelRatio.value = dpr;
     near.material.uniforms.uPixelRatio.value = dpr;
     near.material.uniforms.uTime.value = t;
     dust.material.uniforms.uPixelRatio.value = dpr;
-    dust.material.uniforms.uCamZ.value = cam.position.z;
+    const sh = w.ship;
+    const k = Math.max(0, Math.min(1, alpha));
+    const s = sh.sPrev + (sh.s - sh.sPrev) * k;
+    dust.material.uniforms.uTravel.value = s * w.course.length;
+    dust.material.uniforms.uVelocity.value = (sh.v / SHIP.vMax) * 2;
 
     // The boot: the sky comes up, then the star.
     const b = w.boot;
@@ -158,7 +167,7 @@ export class CosmosSystem implements LfSystem {
     if (far) w.scene.remove(far.points);
     if (near) w.scene.remove(near.points);
     if (star) w.scene.remove(star.root, star.flash);
-    if (dust) w.scene.remove(dust.points);
+    if (dust) w.camera.remove(dust.points);
     sky?.dispose();
     far?.dispose();
     near?.dispose();

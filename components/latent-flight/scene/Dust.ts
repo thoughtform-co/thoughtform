@@ -32,7 +32,7 @@ export function createDust(count: number): Dust {
     uniforms: {
       uPointSize: { value: 1.2 },
       uPixelRatio: { value: 1 },
-      uCamZ: { value: 0 },
+      uTravel: { value: 0 },
       uSpan: { value: DUST_SPAN },
       uVelocity: { value: 0 },
       uColor: { value: rawColor(VISTA.dawn) },

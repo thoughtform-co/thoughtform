@@ -127,9 +127,9 @@ for (const [width, height] of VPS) {
   // The check containment never makes: every visible piece of HUD text,
   // pairwise, against every other. A still showed SERVICES through
   // VOIDWALKER while every geometry gate was green.
-  const overlaps = await page.evaluate(() => {
+  const overlapsNow = () => page.evaluate(() => {
     const sel =
-      ".lf-wp__label, .lf-tag__k, .lf-tag__v, .lf-state, .lf-tape__box, .lf-tele, .lf-meter, .lf-comms, .lf-key, .lf-route";
+      ".lf-wp__label, .lf-wp__diamond, .lf-tag__k, .lf-tag__v, .lf-state, .lf-tape__box, .lf-tele, .lf-meter, .lf-comms, .lf-key, .lf-route, .lf-dock__name, .lf-dock__sector, .lf-dock__line";
     const boxes = Array.from(document.querySelectorAll(sel))
       .filter((e) => {
         const cs = getComputedStyle(e);
@@ -154,6 +154,7 @@ for (const [width, height] of VPS) {
       }
     return out;
   });
+  const overlaps = await overlapsNow();
   if (overlaps.length) failures.push(`${tag}: label overlap: ${overlaps.join("; ")}`);
 
   // ── the rest state still, before anything is touched ───────────────────
@@ -245,6 +246,119 @@ for (const [width, height] of VPS) {
   // (mean 55/255); the vista's mean must stay near the void.
   if (!(vista.mean < 24)) failures.push(`${tag}: vista mean ${vista.mean.toFixed(1)} — the ground is lifted`);
 
+  // ── the rails are the corridor: the lattice sits on the chrome at rest ──
+  // With the vessel centred and the pointer still, the lattice's near
+  // cross-section must project onto the two tracks and the rail's top and
+  // bottom to the pixel.
+  const alignRest = await page.evaluate(() => window.__latentFlight.railAlignment());
+  if (!(alignRest <= 1.0)) failures.push(`${tag}: rail lattice off the chrome by ${alignRest.toFixed(2)}px at rest`);
+
+  // ── flight: lock PROOF, engage, fly the course, dock ───────────────────
+  const stateIs = (want) =>
+    page.waitForFunction((s) => document.querySelector(".lf")?.dataset.lfState === s, want, { timeout: 30000 });
+  await page.keyboard.press("4");
+  await page.waitForTimeout(300);
+  await page.keyboard.press(" ");
+  await stateIs("FLIGHT");
+  await page.waitForTimeout(1600);
+  const flight = await page.evaluate(() => ({
+    ship: window.__latentFlight.ship(),
+    thr: document.querySelectorAll('[data-lf="thr"] .lf-meter__segs i[data-on="1"]').length,
+    comms: document.querySelector('[data-lf="comms"]')?.textContent,
+    word: document.querySelector('[data-lf="state-word"]')?.textContent,
+    frame: Number(document.querySelector(".lf-stage")?.dataset.lfFrame),
+  }));
+  if (!(flight.ship.s > 0.02)) failures.push(`${tag}: the vessel did not move (s = ${flight.ship.s})`);
+  if (!(flight.ship.v > 1)) failures.push(`${tag}: no speed under way (v = ${flight.ship.v})`);
+  if (!(flight.thr >= 1)) failures.push(`${tag}: THR meter empty under way`);
+  if (flight.ship.autopilot !== "proof") failures.push(`${tag}: autopilot is ${flight.ship.autopilot}`);
+  await page.screenshot({ path: `${OUT}/flight-${tag}.png` });
+
+  await stateIs("APPROACH");
+  await page.waitForTimeout(500);
+  const approach = await page.evaluate(() => ({
+    ship: window.__latentFlight.ship(),
+    tele: Array.from(document.querySelectorAll(".lf-tele__v")).map((e) => e.textContent),
+    word: document.querySelector('[data-lf="state-word"]')?.textContent,
+  }));
+  if (approach.tele[0] === "000") failures.push(`${tag}: BEARING never moved on a bent course`);
+  const approachOverlaps = await overlapsNow();
+  if (approachOverlaps.length) failures.push(`${tag}: label overlap on approach: ${approachOverlaps.join("; ")}`);
+  // The tape must still show ticks at a heading far from 000.
+  const tape = await page.evaluate(() => {
+    const win = document.querySelector('[data-lf="tape"]').getBoundingClientRect();
+    return Array.from(document.querySelectorAll(".lf-tape__tick")).filter((t) => {
+      const r = t.getBoundingClientRect();
+      return Number(getComputedStyle(t).opacity) > 0.5 && r.left >= win.left && r.right <= win.right;
+    }).length;
+  });
+  if (!(tape >= 10)) failures.push(`${tag}: only ${tape} tape ticks in the window at heading ${approach.tele[0]}`);
+  await page.screenshot({ path: `${OUT}/approach-${tag}.png` });
+
+  await stateIs("DOCK");
+  await page.waitForTimeout(600);
+  const dock = await page.evaluate(() => {
+    const panel = document.querySelector('[data-lf="dock"]');
+    const deck = document.querySelector('[data-lf="deck"]');
+    return {
+      shown: panel && !panel.hidden && getComputedStyle(panel).display !== "none",
+      name: document.querySelector('[data-lf="dock-name"]')?.textContent,
+      sector: document.querySelector('[data-lf="dock-sector"]')?.textContent,
+      focusIn: panel?.contains(document.activeElement) ?? false,
+      inert: deck?.hasAttribute("inert") ?? false,
+      tele: Array.from(document.querySelectorAll(".lf-tele__v")).map((e) => e.textContent),
+      word: document.querySelector('[data-lf="state-word"]')?.textContent,
+      ship: window.__latentFlight.ship(),
+      align: window.__latentFlight.railAlignment(),
+      routeHere: document.querySelector('[data-lf-route][data-state="here"]')?.dataset.lfRoute ?? null,
+      homePassed: document.querySelector('[data-lf-wp="home"]')?.dataset.state,
+    };
+  });
+  if (!dock.shown) failures.push(`${tag}: dock panel not shown`);
+  if (dock.name !== "PROOF") failures.push(`${tag}: dock panel names "${dock.name}"`);
+  if (dock.sector !== "04/07") failures.push(`${tag}: dock panel sector "${dock.sector}"`);
+  if (!dock.focusIn) failures.push(`${tag}: focus did not move into the dock panel`);
+  if (!dock.inert) failures.push(`${tag}: the deck is not inert while docked`);
+  if (dock.tele[1] !== "04/07") failures.push(`${tag}: SECTOR reads ${dock.tele[1]} at PROOF`);
+  if (dock.routeHere !== "proof") failures.push(`${tag}: route "here" is ${dock.routeHere} at PROOF`);
+  if (dock.homePassed !== "passed") failures.push(`${tag}: HOME mark is "${dock.homePassed}", expected passed`);
+  if (!(dock.ship.v === 0)) failures.push(`${tag}: docked but moving (v = ${dock.ship.v})`);
+  if (!(dock.align <= 1.5)) failures.push(`${tag}: rail lattice off the chrome by ${dock.align.toFixed(2)}px docked`);
+  const dockOverlaps = await overlapsNow();
+  if (dockOverlaps.length) failures.push(`${tag}: label overlap docked: ${dockOverlaps.join("; ")}`);
+  await page.screenshot({ path: `${OUT}/dock-${tag}.png` });
+
+  // Escape undocks: the panel closes, the deck takes focus back, the
+  // vessel holds at the station.
+  await page.keyboard.press("Escape");
+  await stateIs("VISTA");
+  await page.waitForTimeout(400);
+  const undock = await page.evaluate(() => ({
+    hidden: document.querySelector('[data-lf="dock"]')?.hidden,
+    deckFocused: document.activeElement === document.querySelector('[data-lf="deck"]'),
+    inert: document.querySelector('[data-lf="deck"]')?.hasAttribute("inert"),
+    word: document.querySelector('[data-lf="state-word"]')?.textContent,
+    name: document.querySelector('[data-lf="state-name"]')?.textContent,
+  }));
+  if (!undock.hidden) failures.push(`${tag}: dock panel still shown after undock`);
+  if (!undock.deckFocused) failures.push(`${tag}: focus did not return to the deck`);
+  if (undock.inert) failures.push(`${tag}: deck still inert after undock`);
+  await page.screenshot({ path: `${OUT}/undocked-${tag}.png` });
+
+  // Hand-flown: two notches of throttle, then hold; the state follows the
+  // motion both ways.
+  await page.keyboard.press("w");
+  await page.keyboard.press("w");
+  await stateIs("FLIGHT");
+  await page.waitForTimeout(900);
+  const hand = await page.evaluate(() => window.__latentFlight.ship());
+  if (!(hand.v > 0.5)) failures.push(`${tag}: hand-flown throttle gave no speed (v = ${hand.v})`);
+  if (hand.autopilot !== null) failures.push(`${tag}: autopilot engaged by a throttle key`);
+  await page.keyboard.press("h");
+  await stateIs("VISTA");
+  const held = await page.evaluate(() => window.__latentFlight.ship());
+  if (!(held.v === 0 && held.throttle === 0)) failures.push(`${tag}: hold left v ${held.v} / thr ${held.throttle}`);
+
   // ── reduced motion: the rest state IS the first frame ─────────────────
   await page.goto(`http://localhost:${PORT}/test/latent-flight?capture=1&rm=1`, {
     waitUntil: "domcontentloaded",
@@ -287,6 +401,11 @@ for (const [width, height] of VPS) {
     },
     star,
     pulses: reading.count,
+    alignRest: +alignRest.toFixed(3),
+    flight: { s: +flight.ship.s.toFixed(3), v: +flight.ship.v.toFixed(2), thr: flight.thr, comms: flight.comms },
+    approach: { s: +approach.ship.s.toFixed(3), tele: approach.tele, word: approach.word },
+    dock: { ...dock, ship: undefined, s: +dock.ship.s.toFixed(3), align: +dock.align.toFixed(3) },
+    undock,
     errors,
   });
   await context.close();
@@ -299,7 +418,9 @@ for (const r of rows) {
   console.log(
     `${r.tag}  frames ${r.frames.join("→")}  rails ${r.rails.map((x) => x.ticks).join("/")}  ` +
       `vista mean ${r.vista.mean} distinct ${r.vista.distinct} max ${r.vista.max}  ` +
-      `pulse ${r.pulse ? `gold ${r.pulse.gold} (${r.pulse.goldNear} near the star)` : "MISSED"}  pulses ${r.pulses}`
+      `pulse ${r.pulse ? `gold ${r.pulse.gold} (${r.pulse.goldNear} near the star)` : "MISSED"}  pulses ${r.pulses}\n` +
+      `           rail align ${r.alignRest}px rest / ${r.dock.align}px docked  flight s ${r.flight.s} v ${r.flight.v} thr ${r.flight.thr}  ` +
+      `approach bearing ${r.approach.tele[0]}  dock ${r.dock.name} ${r.dock.sector} focus ${r.dock.focusIn} inert ${r.dock.inert}`
   );
 }
 if (failures.length) {

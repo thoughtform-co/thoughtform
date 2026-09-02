@@ -54,23 +54,26 @@ void main() {
 `;
 
 /**
- * Foreground dust: camera-relative wrap on the point's OWN phase (the time
- * tunnel's law — offsetting by the camera before wrapping freezes the field),
- * a shallow near clip so a mote passing the lens dies before it explodes,
- * and a far fade well inside the span.
+ * Foreground dust: the points live in CAMERA space (the mesh is a child of
+ * the camera, so it turns with every bend of the course) and wrap on their
+ * OWN phase against the distance the vessel has travelled (the time tunnel's
+ * law — offsetting by the camera before wrapping freezes the field). A
+ * shallow near clip so a mote passing the lens dies before it explodes, and
+ * a far fade well inside the span. At `uTravel` 0 the field is exactly the
+ * authored layout, and it holds perfectly still while the vessel does.
  */
 export const dustVertex = /* glsl */ `
 uniform float uPointSize;
 uniform float uPixelRatio;
-uniform float uCamZ;
+uniform float uTravel;
 uniform float uSpan;
 uniform float uVelocity;
 attribute float aSeed;
 varying float vFade;
 void main() {
   vec3 p = position;
-  float rel = mod(uCamZ - p.z, uSpan);
-  float z = uCamZ - rel;
+  float rel = mod(-p.z - uTravel, uSpan);
+  float z = -rel;
   vec4 mv = modelViewMatrix * vec4(p.x, p.y, z, 1.0);
   float dist = -mv.z;
   float near = smoothstep(0.6, 3.0, dist);

@@ -20,6 +20,7 @@ import {
   rangeTo,
   sectorLabel,
 } from "@/lib/latent-flight/content/waypoints";
+import { WAYPOINT_S } from "@/lib/latent-flight/flight/course";
 import { MARK_SIZE_PX, clampToFrame, damp, ndcToScreen, quartile } from "@/lib/latent-flight/hud/anchorMath";
 import { PULSAR, firstCrossingS } from "@/lib/latent-flight/pulsar";
 
@@ -34,9 +35,9 @@ describe("waypoints", () => {
       "about",
       "voidwalker",
     ]);
-    for (let i = 1; i < WAYPOINTS.length; i++) expect(WAYPOINTS[i].s).toBeGreaterThan(WAYPOINTS[i - 1].s);
-    expect(WAYPOINTS[0].s).toBe(0);
-    expect(WAYPOINTS[WAYPOINTS.length - 1].s).toBe(1);
+    for (let i = 1; i < WAYPOINTS.length; i++) expect(WAYPOINT_S[i]).toBeGreaterThan(WAYPOINT_S[i - 1]);
+    expect(WAYPOINT_S[0]).toBe(0);
+    expect(WAYPOINT_S[WAYPOINTS.length - 1]).toBeCloseTo(1, 9);
   });
 
   it("zig-zags: every leg turns the other way, and every leg goes deeper", () => {
@@ -92,7 +93,22 @@ describe("boot timeline", () => {
   });
 
   it("speaks in the instrument register", () => {
-    const all = [...BOOT_COMMS.map((c) => c.text), STRINGS.idle, STRINGS.driveOffline, STRINGS.released];
+    const all = [
+      ...BOOT_COMMS.map((c) => c.text),
+      STRINGS.idle,
+      STRINGS.driveOffline,
+      STRINGS.released,
+      STRINGS.noLock,
+      STRINGS.underway,
+      STRINGS.hold,
+      STRINGS.undocked,
+      STRINGS.engaged("VOIDWALKER"),
+      STRINGS.approach("VOIDWALKER", "0.12"),
+      STRINGS.docked("VOIDWALKER"),
+      STRINGS.onStation("SERVICES"),
+      STRINGS.holdingIn("SERVICES"),
+      STRINGS.astern("THESIS"),
+    ];
     for (const s of all) {
       expect(s).not.toMatch(/!/);
       expect(s).not.toMatch(/\byou\b/i);

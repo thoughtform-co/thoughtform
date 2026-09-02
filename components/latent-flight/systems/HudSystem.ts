@@ -20,6 +20,7 @@ import {
 } from "@/lib/latent-flight/content/waypoints";
 import { STATE_WORD, type LfState } from "@/lib/latent-flight/engine/gameState";
 import { setLfState } from "@/lib/latent-flight/engine/store";
+import { WAYPOINT_S, localAt } from "@/lib/latent-flight/flight/course";
 import {
   MARK_SIZE_PX,
   clampToFrame,
@@ -32,6 +33,7 @@ import { pulsarRef } from "@/lib/latent-flight/pulsarRef";
 
 import { STAR_EXTENT, STAR_SCALE } from "../scene/NeutronStar";
 import type { World } from "../World";
+import { HOLD_RANGE } from "./ShipSystem";
 import type { LfSystem } from "./System";
 
 /**
@@ -117,6 +119,7 @@ export class HudSystem implements LfSystem {
   private powered = false;
   private beaconTagged = false;
   private lastFsm: LfState | null = null;
+  private lastSector: WaypointId | null = null;
   private lastTarget: WaypointId | null = null;
   private convergeFrames = 0;
   private prevCross = 0;
@@ -224,7 +227,9 @@ export class HudSystem implements LfSystem {
     if (l && r) {
       const lb = l.getBoundingClientRect();
       const rb = r.getBoundingClientRect();
-      this.frame = { left: lb.left + 24, top: lb.top + 12, right: rb.right - 24, bottom: lb.bottom - 12 };
+      // Inboard of the rails, and on the right inboard of the three seats
+      // too — an edge marker pinned over BEARING is a mark on a readout.
+      this.frame = { left: lb.right + 24, top: lb.top + 12, right: rb.left - 132, bottom: lb.bottom - 12 };
     } else {
       this.frame = { left: 48, top: 48, right: w.size.w - 48, bottom: w.size.h - 48 };
     }
@@ -260,19 +265,28 @@ export class HudSystem implements LfSystem {
       if (this.powered) this.queue(this.h["state-word"], STATE_WORD[w.fsm], t);
       if (w.fsm !== "BOOT") this.announcer.say(stateSentence(STATE_WORD[w.fsm], sectorLabel(w.ship.sector)));
     }
+    if (w.ship.sector !== this.lastSector) {
+      const first = this.lastSector === null;
+      this.lastSector = w.ship.sector;
+      const name = WAYPOINTS[waypointIndex(w.ship.sector)].name.toUpperCase();
+      if (this.powered && !first) {
+        this.queue(this.h["state-name"], name, t);
+        this.announcer.say(`Sector ${sectorLabel(w.ship.sector)}: ${WAYPOINTS[waypointIndex(w.ship.sector)].name}.`);
+      }
+    }
 
     /* boot-driven visibility ------------------------------------------- */
     this.fade(this.h.tape, b["tape-light"] > 0 ? 1 : 0);
     const tapeP = b["tape-light"];
     for (const tk of this.tapeTicks) {
-      const show = tapeP >= Math.abs(tk.deg) / 60;
+      const show = tapeP >= Math.min(1, Math.abs(tk.deg) / 60);
       if (show !== tk.shown) {
         tk.shown = show;
         tk.el.style.opacity = show ? "1" : "0";
       }
     }
     for (const lb of this.tapeLabels) {
-      const show = tapeP >= Math.abs(lb.deg) / 60;
+      const show = tapeP >= Math.min(1, Math.abs(lb.deg) / 60);
       if (show !== lb.shown) {
         lb.shown = show;
         lb.el.style.opacity = show ? "1" : "0";
@@ -313,7 +327,11 @@ export class HudSystem implements LfSystem {
       const range = rangeTo(ship, wp);
       const q = quartile(range);
       const size = pin.edge ? 8 : MARK_SIZE_PX[q];
-      const state = w.ship.sector === wp.id ? "here" : w.target === wp.id ? "locked" : "ahead";
+      // Where the mark stands on the route: here (holding at it), passed
+      // (astern of the vessel) or ahead — and locked over any of those.
+      const base =
+        w.ship.at === wp.id ? "here" : WAYPOINT_S[i] < w.ship.s - HOLD_RANGE ? "passed" : "ahead";
+      const state = w.target === wp.id ? "locked" : base;
       const flip = pin.x > W * 0.66;
       if (q !== m.q) {
         m.q = q;
@@ -324,9 +342,11 @@ export class HudSystem implements LfSystem {
         m.el.dataset.state = state;
         const route = this.routeMarks.get(wp.id);
         if (route) {
-          route.dataset.state = state === "locked" ? "ahead" : state;
+          route.dataset.state = base;
           if (state === "locked") route.setAttribute("aria-pressed", "true");
           else route.removeAttribute("aria-pressed");
+          if (base === "here") route.setAttribute("aria-current", "location");
+          else route.removeAttribute("aria-current");
         }
       }
       if (flip !== m.flip) {
@@ -350,8 +370,15 @@ export class HudSystem implements LfSystem {
         m.y = y;
         m.el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`;
       }
-      // Stagger in route order over the cue, 60 ms apart.
-      const stagger = Math.max(0, Math.min(1, (wpP * 7 - i) * 1.5));
+      // Stagger in route order over the cue, 60 ms apart. A PASSED mark that
+      // is behind the vessel is not drawn at all: astern has no bearing to
+      // give, and its edge marker only piled onto the frame's top edge.
+      const astern = base === "passed" && behind;
+      // A mark the vessel is ON has no direction to project — its pixel is
+      // wherever the numerics fall. The route row and the state word already
+      // say where the vessel is.
+      const onTop = range < 0.004;
+      const stagger = astern || onTop ? 0 : Math.max(0, Math.min(1, (wpP * 7 - i) * 1.5));
       if (stagger !== m.opacity) {
         m.opacity = stagger;
         m.el.style.opacity = stagger.toFixed(3);
@@ -432,6 +459,8 @@ export class HudSystem implements LfSystem {
     }
     if (w.target) {
       const m = this.markByld.get(w.target)!;
+      // The range is a live measurement: it counts down under way.
+      this.setText(this.h["target-v2"], formatRange(rangeTo(ship, WAYPOINTS[waypointIndex(w.target)])));
       const box = m.size + 16;
       if (box !== this.targetBox) {
         this.targetBox = box;
@@ -477,9 +506,12 @@ export class HudSystem implements LfSystem {
     if (this.powered) {
       this.seat(0, formatBearing(w.ship.heading));
       this.seat(1, sectorLabel(w.ship.sector));
-      this.seat(2, w.ship.s.toFixed(2));
+      this.seat(2, localAt(w.ship.s).toFixed(2));
       const strip = this.h["tape-strip"];
-      const tx = `translate3d(${(-w.ship.heading * TAPE_PX_PER_DEG).toFixed(1)}px,0,0)`;
+      // The tape WRAPS: the strip is authored ±240° and slides by the
+      // heading folded into ±180°, so the ±40° window always has ticks.
+      const wrapped = ((w.ship.heading + 180) % 360) - 180;
+      const tx = `translate3d(${(-wrapped * TAPE_PX_PER_DEG).toFixed(1)}px,0,0)`;
       if (strip.style.transform !== tx) strip.style.transform = tx;
       this.setText(this.h.heading, formatBearing(w.ship.heading));
       if (this.depth) {
@@ -512,7 +544,7 @@ export class HudSystem implements LfSystem {
     };
     write(this.seats[0]?.v, formatBearing(w.ship.heading));
     write(this.seats[1]?.v, sectorLabel(w.ship.sector));
-    write(this.seats[2]?.v, w.ship.s.toFixed(2));
+    write(this.seats[2]?.v, localAt(w.ship.s).toFixed(2));
     for (const s of this.seats) s.last = s.v.textContent ?? "";
     write(this.h["state-word"], STATE_WORD[w.fsm]);
     write(this.h["state-name"], WAYPOINTS[waypointIndex(w.ship.sector)].name.toUpperCase());

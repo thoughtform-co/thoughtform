@@ -15,10 +15,10 @@
  * boresight and printed SERVICES through VOIDWALKER: a containment gate
  * never sees two labels overlapping, only a still does.
  *
- * `s` is the course parameter (0 at HOME, 1 at VOIDWALKER) the flight model
- * (M3) will drive; `dock` marks a station with a dossier. `sector` is the
- * `nn/07` the right rail prints. Every number here is a position in the
- * scene, not a claim about the site.
+ * A waypoint's course parameter is NOT authored here — `flight/course.ts`
+ * derives it from where the point lands on the curve. `dock` marks a
+ * station with a dossier. `sector` is the `nn/07` the right rail prints.
+ * Every number here is a position in the scene, not a claim about the site.
  */
 
 export type WaypointId =
@@ -36,25 +36,24 @@ export interface Waypoint {
   name: string;
   /** Glyph id in the site's `SECTION_GLYPHS` table. */
   glyph: string;
-  /** Course parameter, 0 … 1, strictly increasing along the route. */
-  s: number;
   /** World position for a camera at the origin looking down −Z. */
   position: readonly [number, number, number];
   /** A station with a dossier (M4). */
   dock: boolean;
 }
 
-/** World units from HOME to VOIDWALKER along the course. */
+/** The route's depth from the station to VOIDWALKER, world units — the
+ *  nominal length the ranges are printed against. */
 export const COURSE_LENGTH = 260;
 
 export const WAYPOINTS: readonly Waypoint[] = [
-  { id: "home", name: "Home", glyph: "hero", s: 0, position: [-0.9, -1.1, -5], dock: false },
-  { id: "thesis", name: "Thesis", glyph: "thesis", s: 0.15, position: [-9, -4.6, -39], dock: false },
-  { id: "arc", name: "The Arc", glyph: "arc", s: 0.32, position: [19.2, -8.6, -83], dock: false },
-  { id: "proof", name: "Proof", glyph: "proof", s: 0.5, position: [-18.6, 16.1, -130], dock: true },
-  { id: "services", name: "Services", glyph: "services", s: 0.66, position: [-11.4, -29.6, -172], dock: false },
-  { id: "about", name: "About", glyph: "about", s: 0.8, position: [-34.3, 44.4, -208], dock: false },
-  { id: "voidwalker", name: "Voidwalker", glyph: "voidwalker", s: 1, position: [78.7, -4.5, -260], dock: true },
+  { id: "home", name: "Home", glyph: "hero", position: [-0.9, -1.1, -5], dock: false },
+  { id: "thesis", name: "Thesis", glyph: "thesis", position: [-9, -4.6, -39], dock: false },
+  { id: "arc", name: "The Arc", glyph: "arc", position: [19.2, -8.6, -83], dock: false },
+  { id: "proof", name: "Proof", glyph: "proof", position: [-18.6, 16.1, -130], dock: true },
+  { id: "services", name: "Services", glyph: "services", position: [-11.4, -29.6, -172], dock: false },
+  { id: "about", name: "About", glyph: "about", position: [-34.3, 44.4, -208], dock: false },
+  { id: "voidwalker", name: "Voidwalker", glyph: "voidwalker", position: [78.7, -4.5, -260], dock: true },
 ];
 
 export const WAYPOINT_COUNT = WAYPOINTS.length;

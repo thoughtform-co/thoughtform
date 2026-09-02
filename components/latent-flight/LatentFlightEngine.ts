@@ -14,13 +14,15 @@ import { transition, type LfEvent, type LfState } from "@/lib/latent-flight/engi
 import { stepLoop } from "@/lib/latent-flight/engine/loop";
 import { resetLfStore, setLfState } from "@/lib/latent-flight/engine/store";
 import type { LfFlags } from "@/lib/latent-flight/flags";
+import { COURSE } from "@/lib/latent-flight/flight/course";
 import { advanceClock, createGameClock } from "@/lib/latent-flight/gameClock";
 import { pulsarRef, type PulsarReading } from "@/lib/latent-flight/pulsarRef";
 import { VISTA } from "@/lib/latent-flight/vistaPalette";
 import { classifyRenderer } from "@/lib/webgl/rendererClass";
 
-import type { LfEvents, World } from "./World";
+import type { LfEvents, ShipPose, World } from "./World";
 import { rawColor } from "./scene/color";
+import type { RailSystem } from "./systems/RailSystem";
 import type { LfSystem } from "./systems/System";
 
 /**
@@ -99,6 +101,10 @@ declare global {
       world: () => World;
       /** Debug: one pixel of the current default framebuffer, CSS px. */
       pixelAt: (x: number, y: number) => [number, number, number];
+      /** The vessel's pose, copied. */
+      ship: () => ShipPose;
+      /** The rail lattice's worst deviation from the chrome, CSS px. */
+      railAlignment: () => number;
     };
   }
 }
@@ -170,12 +176,32 @@ export class LatentFlightEngine {
       bootT: 0,
       look: { x: 0, y: 0 },
       target: null,
-      ship: { position: [0, 0, 0], heading: 0, throttle: 0, s: 0, sector: "home" },
+      ship: {
+        position: [0, 0, 0],
+        heading: 0,
+        throttle: 0,
+        s: 0,
+        v: 0,
+        x: 0,
+        y: 0,
+        sPrev: 0,
+        xPrev: 0,
+        yPrev: 0,
+        sector: "home",
+        at: "home",
+        autopilot: null,
+      },
+      input: { throttle: 0, lateral: 0, vertical: 0 },
+      course: COURSE,
+      rail: { halfX: 1, halfY: 0.5 },
       commands: {
         lock: () => {},
         release: () => {},
         cycle: () => {},
         engage: () => {},
+        hold: () => {},
+        throttleStep: () => {},
+        undock: () => {},
         skipBoot: () => {},
       },
       log: [],
@@ -216,6 +242,11 @@ export class LatentFlightEngine {
         pulsar: () => pulsarRef.current,
         time: () => this.world.clock.t,
         anchors: () => this.projectAnchors(),
+        ship: () => ({ ...this.world.ship, position: [...this.world.ship.position] }),
+        railAlignment: () => {
+          const rail = this.systems.find((s) => s.name === "rail") as RailSystem | undefined;
+          return rail ? rail.railAlignment() : Number.POSITIVE_INFINITY;
+        },
         renderOnce: (withPost) => {
           const w = this.world;
           for (const s of this.systems) s.render?.(0, w);

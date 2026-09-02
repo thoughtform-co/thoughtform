@@ -370,10 +370,14 @@
   height: 0;
   border: 4px solid transparent;
 }
-/* An edge marker: the mark pinned to the frame, a chevron on the outward
-   side, the name inboard. */
+/* An edge marker: the mark pinned to the frame with a chevron on the
+   outward side. No name — three marks pinned to one edge printed their
+   names through each other; the lock's tag names the one that matters. */
 .lf-wp[data-edge] {
   --lf-mark: 8px;
+}
+.lf-wp[data-edge] .lf-wp__label {
+  display: none;
 }
 .lf-wp[data-edge] .lf-wp__chevron {
   display: block;
@@ -646,6 +650,95 @@
 }
 .lf-key--hint {
   pointer-events: none;
+}
+
+/* The dock seam (M4): the station's dossier panel, a chamfered housing
+   seated inboard of the right rail. One grammar per object — the housing is
+   chamfered on the lawful TR + BL diagonal, its children are square. The lip
+   is a clipped RING (a clip cuts a border, it never strokes one): the plate
+   paints the line colour under the same polygon, the inner box paints the
+   ground one pixel in, on the same cut less 0.6px (a 45° cut offset by d
+   moves its diagonal by d·√2). Dawn structure, gold only on the sector. */
+.lf-dock {
+  position: absolute;
+  top: 50%;
+  /* Inboard of the right rail AND its three seats. */
+  right: calc(var(--hud-margin, 48px) + 150px);
+  width: clamp(240px, 22vw, 320px);
+  transform: translateY(-50%);
+  pointer-events: auto;
+  --lf-dock-ch: 16px;
+}
+.lf-dock[hidden] {
+  display: none;
+}
+.lf-dock__plate {
+  background: var(--lf-line);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--lf-dock-ch)) 0,
+    100% var(--lf-dock-ch),
+    100% 100%,
+    var(--lf-dock-ch) 100%,
+    0 calc(100% - var(--lf-dock-ch))
+  );
+  padding: 1px;
+}
+.lf-dock__in {
+  --c: calc(var(--lf-dock-ch) - 0.6px);
+  background: rgba(var(--void-deep-rgb, 6, 5, 4), 0.86);
+  clip-path: polygon(0 0, calc(100% - var(--c)) 0, 100% var(--c), 100% 100%, var(--c) 100%, 0 calc(100% - var(--c)));
+  padding: 18px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lf-dock__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 6px;
+  align-items: baseline;
+}
+.lf-dock__kicker {
+  grid-column: 1 / -1;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--lf-ink-30);
+  font-weight: 400;
+}
+.lf-dock__name {
+  font-size: var(--lf-readout);
+  letter-spacing: 0.08em;
+  color: var(--dawn, #ebe3d6);
+  font-weight: 400;
+}
+.lf-dock__sector {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--lf-gold-ink);
+  font-weight: 400;
+}
+/* The one sentence on the panel is prose, and prose declares its face. */
+.lf-dock__line {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", sans-serif);
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--lf-ink-70);
+}
+.lf-dock__foot {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  border-top: 1px solid var(--lf-ink-30);
+}
+/* While docked the world is inert; the pointer is a pointer again. */
+.lf-stage[data-lf-docked="1"] {
+  cursor: default;
 }
 
 /* The pointer IS the reticle over the world; over chrome it is a pointer. */

@@ -114,4 +114,15 @@ export const STRINGS = {
     range: "RANGE",
   },
   lock: (name: string, range: string) => `LOCK · ${name} · RANGE ${range}`,
+  /* flight (M3) and the dock seam (M4) */
+  noLock: "NO LOCK · SELECT A WAYPOINT",
+  underway: "UNDER WAY · HAND FLOWN",
+  hold: "HOLD · THROTTLE ZERO",
+  undocked: "UNDOCKED · HOLDING",
+  engaged: (name: string) => `ENGAGED · COURSE TO ${name}`,
+  approach: (name: string, range: string) => `APPROACH · ${name} · ${range}`,
+  docked: (name: string) => `DOCKED · ${name}`,
+  onStation: (name: string) => `ON STATION · ${name}`,
+  holdingIn: (name: string) => `HOLDING · ${name}`,
+  astern: (name: string) => `ASTERN · ${name} · THE COURSE RUNS FORWARD`,
 } as const;
