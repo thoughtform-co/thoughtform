@@ -245,6 +245,28 @@ for (const [width, height] of VPS) {
   // (mean 55/255); the vista's mean must stay near the void.
   if (!(vista.mean < 24)) failures.push(`${tag}: vista mean ${vista.mean.toFixed(1)} — the ground is lifted`);
 
+  // ── reduced motion: the rest state IS the first frame ─────────────────
+  await page.goto(`http://localhost:${PORT}/test/latent-flight?capture=1&rm=1`, {
+    waitUntil: "domcontentloaded",
+  });
+  await page.waitForSelector('.lf[data-ready="1"][data-stamp="vista|VISTA|dark"]', {
+    timeout: 8000,
+  });
+  const rm = await page.evaluate(() => ({
+    state: document.querySelector(".lf")?.dataset.lfState,
+    word: document.querySelector('[data-lf="state-word"]')?.textContent,
+    comms: document.querySelector('[data-lf="comms"]')?.textContent,
+    heroLift: document.documentElement.style.getPropertyValue("--hero-lift"),
+    t0: window.__latentFlight.time(),
+  }));
+  await page.waitForTimeout(400);
+  const rmT1 = await page.evaluate(() => window.__latentFlight.time());
+  if (rm.state !== "VISTA") failures.push(`${tag}: reduced motion did not start in VISTA (${rm.state})`);
+  if (rm.word !== "VISTA") failures.push(`${tag}: reduced motion state word "${rm.word}"`);
+  if (rm.heroLift !== "1") failures.push(`${tag}: reduced motion --hero-lift "${rm.heroLift}"`);
+  if (rmT1 !== rm.t0) failures.push(`${tag}: the game clock moved under reduced motion (${rm.t0} → ${rmT1})`);
+  await page.screenshot({ path: `${OUT}/reduced-motion-${tag}.png` });
+
   const reading = await page.evaluate(() => window.__latentFlight.pulsar());
   if (errors.length) failures.push(`${tag}: page errors: ${errors.join(" | ")}`);
 
