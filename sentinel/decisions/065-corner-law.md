@@ -173,6 +173,17 @@ exception needed.
 
 ## Update 2 (2026-08-07, owner override) — the proof console carries TL+BR
 
+> ⚠ **RETIRED BY [ADR-089](089-casefile-is-one-housing.md) (2026-09-02, owner).**
+> The casefile is inside a machined housing now, and rule 4 governs: the
+> children of a chamfered box are square. The slab carries the canonical
+> **TR+BL** at the plate rung and the console carries nothing, so **the law has
+> no enumerated TL+BR object any more** — the clause in rule 2 goes back to
+> covering only the mirrored back of a flipped object. Two consequences travel
+> with it: the rail's leading station loses the notch U3 licensed (the
+> housing's chamfer no longer falls on it, so the clause has no subject), and
+> **U5's premise moves** — see the note there. The update below is kept as the
+> record of why that exception existed and what it cost.
+
 The owner's canonical mockup (`proof-page-blocks-left.html`, drawn AFTER this
 law and after Decision 3's correction) chamfers the proof panel **top-left +
 bottom-right**, and the owner confirmed it on the live build: _"a super clean
@@ -252,6 +263,19 @@ Two notes for the next object:
   cartridge is.
 
 ## Update 5 (2026-08-14, owner) — a seated set takes ITS HOUSING's diagonal
+
+> ⚠ **ITS PREMISE MOVED AND THE ANSWER IS OPEN
+> ([ADR-089](089-casefile-is-one-housing.md), 2026-09-02).** This rule names
+> the console as the housing whose lower end is BR. The console is SQUARE now,
+> so the enclosing chamfered housing is the casefile's slab — canonical TR+BL —
+> and the capability plates sit **two** levels inside it, past U1's "one
+> nesting level deep at most". Under this update they should take BL; under U1
+> they should be square. They still carry BR, and the smoke still pins them
+> from both ends: changing four notches is a visible move nobody asked for, so
+> it waits for a ruling rather than being inferred. ⚠ Whoever rules on it
+> should note that the rule below is still correct — what changed is which
+> object is the housing, which is exactly the question U5 was written to make
+> explicit.
 
 The tools plate's four capability blocks (`.fl-detail__plate`, ADR-068 U2) move
 their single notch from **bottom-left to bottom-right**. This **reverses Update

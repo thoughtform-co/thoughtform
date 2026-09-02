@@ -210,6 +210,39 @@ consequences for the stills already in this folder and for anything shot next.
   measures the register's and directory's gold hairlines, and those are
   untouched. What changed is where the boxes SIT, not what they paint.
 
+## ⚠ v2 IS PROMOTED ON PROOF (ADR-089, 2026-09-02)
+
+The owner read `v0` against `v2` at 1920×1247 and took the housing **for the
+proof casefile only**. The era stage keeps `v0` and the rulings below still
+stand for it.
+
+What that settles, and what it does not:
+
+- **Ruling 1 — answered.** The console loses its chamfer; ADR-065 U2 is
+  retired and the rail's leading station is square with it.
+- **Ruling 2 — answered.** A housing supersedes "the console is the one framed
+  object"; the slab is that object now.
+- **Ruling 3 — answered.** The top-right reticle is back, on the argument that
+  a diagonal PAIR registers a composition without closing it.
+- **Ruling 10 — answered with a SCOPE, as asked.** A console is a screen you
+  look into; a housing is the machined device it is set into, and the services
+  card is the other object of that kind. The DAWN-edge rule keeps its subject.
+- **Ruling 12 — answered.** The lip's stops are tokens; light takes
+  `--gold-line`.
+- **Rulings 4, 5, 6, 9, 11 — still open, and they are the ERA stage's.** 4, 9
+  and 11 each block `v2` there independently of the owner's hold.
+- **New, from the promotion:** ADR-065 U5's premise moved — the capability
+  plates' notch answered to the console, which is square now. Recorded in
+  ADR-089 §Left open.
+
+⚠ Three defects in this lab's own `v2` were found only when it met production,
+and all three are still here: the brief's cell head is clipped away by
+`.fl-brief`'s `overflow: hidden` and has never painted; the fused header's
+`1fr auto 1fr` template lands its single child a third of the way across; and
+it prints `state` twice while its foot repeats two labels already on screen.
+Production fixed all three — read the lab for the DIRECTION, not for the
+detail.
+
 ## Rulings the lab needs before anything is promoted
 
 1. **ADR-065 U2** — may the casefile console lose its TL+BR chamfer inside a

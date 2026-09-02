@@ -54,7 +54,50 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-09-02 (latest) — The casefile's left column: one ladder per face, and the index sits on t11 (ADR-088)
+### 2026-09-02 (latest) — The casefile is one machined housing (ADR-089)
+
+The owner read `v0` against `v2` and took the housing for the proof
+casefile; the era stage is held. Cycle B for the new chrome, Cycle A
+rows 1, 3, 4, 5 and 6.
+
+- **Row 1 — the complaint was a LINE LADDER, and it was countable.**
+  Eight gold structure lines at .12–.24 against a frame running 2px of
+  dawn at .55: a hue swap and a 4× alpha gap between a panel and the
+  thing it belongs to. `console.css` had ruled which way that goes one
+  object over, in 2026-08-07; the surface around it never got it.
+- **Row 3 — the defect class is "a rule that was written about a lab's
+  root".** All three of v2's own defects only appeared in production:
+  a cell head at `top: -17px` inside a box with `overflow: hidden` (it
+  has never painted in the lab either — nobody looked), a single child
+  in a `1fr auto 1fr` header landing a third of the way across, and
+  `state` printed twice ~250px apart. `voidwalker-datum.css` already
+  records this exact class from the previous lab-to-production
+  promotion, in almost the same words.
+- **Row 4 — two guards asserted the opposite of the new law, and both
+  were RIGHT to.** They encoded clauses whose SUBJECT moved: the rail's
+  leading notch existed because the console's chamfer fell on it, and
+  the light walk's bed was the console's own ground. When the console
+  became a cell, one clause lost its subject and the other lost its
+  reference. Neither was relaxed — the corner guard now pins every
+  station square AND the console square AND the housing's diagonal, and
+  the light walk composites to the first opaque surface.
+- **Row 5 — the light walk was measuring against PURE BLACK.** A cell
+  paints no ground, so `getComputedStyle(console).backgroundColor`
+  returned `rgba(0,0,0,0)` and `parse` matched it rather than bailing.
+  The map's quietest ink reported 1.06:1 on a page that reads fine; the
+  same hole in reverse passes an unreadable one. **A guard that reads
+  ONE element's colour is a guard that stops being true the moment that
+  element stops painting.**
+- **Row 6 — the promotion answered five open rulings and moved a sixth.**
+  ADR-065 U2 retired, U5's premise moved (the console is no longer the
+  housing its seated set answers to), and the capability plates' notch
+  is now an open question rather than a settled one. Named rather than
+  inferred: changing four notches is a visible design move.
+- **Held deliberately:** the era stage. Three of its own rulings block a
+  housing there independently of the owner's hold, and the committed
+  `>700px` paint sweep fails a band-width slab three ways at once.
+
+### 2026-09-02 — The casefile's left column: one ladder per face, and the index sits on t11 (ADR-088)
 
 The owner read the proof casefile and said the font sizes felt
 "disconnected", the directory was "too big" and too close to what is

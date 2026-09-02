@@ -17,6 +17,7 @@ breather).
 
 **Read first**
 
+- ⚠ [ADR-089: The casefile is one machined housing](../sentinel/decisions/089-casefile-is-one-housing.md) — **ACCEPTED for PROOF, 2026-09-02; the ERA stage is NOT taken and keeps v0.** The lab's `02 · Housing` is production: one slab across the instrument band (`.fl-hz`, the services plate's clipped gold lip over glass), the header FUSED to its top edge, dawn seams inside, a foot bar closing it. ⚠ **THE CONSOLE IS A CELL NOW** — it drops its chamfer, its hairline and its ground, which **RETIRES ADR-065 U2** and takes the rail's leading-station notch with it (that cut existed only because the console's chamfer fell on it). ⚠ **THE STRUCTURE IS DAWN, THE MARKS STAY GOLD** — eight gold structure lines at .12–.24 against a frame running 2px of dawn at .55 was the defect stated as a number. ⚠ **THE LIP IS A CLIPPED RING** (a `clip-path` cuts a border, it never strokes one) and its stops are TOKENS (light takes `--gold-line`). See §The housing below
 - ⚠ [ADR-088: The left column's type splits by face, and its slack is split too](../sentinel/decisions/088-casefile-left-column-ladder-and-rhythm.md) — **PROPOSED (2026-09-02), shipped and guarded, pending the owner's live read.** `--lc` is DELETED: one token drove four roles across TWO FACES and its `svh` term flipped their ranking with viewport height (at 1920×1080 the sans sentence outranked the mono claim it explains). The split is by FACE now — the register claim and the directory row are PEERS at `--fl-chrome-lg`, the meta at `--fl-chrome-md`, the sentence at `--fl-copy / --fl-ratio`. And the record column is ONE GRID (`.fl-left`, housing, unmarked): the directory's last row sits ON tick 11 and the surplus splits 1:2 between the two seams instead of pooling under the rows (137px at the owner's viewport before). ⚠ Shrinking `--fl-proof-h` to widen the seams further was built and REJECTED. See §The left column's ladder and its rhythm below
 - ⚠ [ADR-087: The casefile is a client stack](../sentinel/decisions/087-proof-client-stack.md) — **ACCEPTED on the mechanism, PROPOSED on the choreography.** The dwell is DERIVED over `CASES` now (row 0.5vh × tracks + seam 0.5vh between clients + release 1.2vh) and the flat `[0,1]`→row map is a SEGMENT TABLE (`browseMap.ts`, pure, zero imports). Byte-identical at one client to the last bit — that identity IS the acceptance proof, and there is NO flag (ADR-070 U35). Look-dev at **`/test/client-stack-lab`**, which is the first time the client channels ever write; its findings (the decode replay's target set fails at N ≥ 2, the seam's 21 % blank stretch, seam length being invisible at a fixed seam-local position) are recorded there. See §The tab strip and the client stack below
 - [ADR-070: The configuration is a switchboard](../sentinel/decisions/070-configuration-is-a-switchboard.md) — reading 02's DRAWING, promoted out of the config lab 2026-08-09. The wiring is the picture; ONE frame, ONE bright object; only what the record connects is drawn. See §The switchboard below.
@@ -572,6 +573,93 @@ nowrap` means a THIRD client forces a horizontal-scroll decision on the
   spec, which IS the byte-identity comparison. The Phase D checklist for
   actually adding client #2 is in ADR-087.
 
+## The housing (ADR-089, live on PROOF only)
+
+One machined slab across the instrument band; everything else on this surface
+is seated inside it. Promoted from `/test/hud-panel-lab`'s `v2`.
+
+- **`.fl-case` INSETS BY `--fl-hz-pad` AND `.fl-hz` NEGATES IT.** 18px, and it
+  is MARGIN — what keeps the tab strip's ordinal off the lip — not clearance.
+  The band-width objection that once cost 28px a side went with the pane: at a
+  0.42 ground under a dawn readout the shift is under 2 %.
+- ⚠ **THE STRUCTURE IS DAWN AND EVERY MARK STAYS GOLD.** The register's five
+  hairlines, the directory's row rule and the column split were 1px of GOLD at
+  .12–.24 against a frame running 2px of DAWN at .55 — a hue swap AND a 4×
+  alpha gap. `console.css` had already ruled it one object over ("the rail's
+  dividers keep the gold hairlines, because those are marks ON the machine
+  rather than its outline"); this surface never got it. ⚠ **SCOPED TO
+  `.fl-case`** — the arcs mount `ConsoleFrame` and the sheets plates with no
+  housing to belong to, and their markup is `toBe`-pinned.
+- ⚠ **THE CONSOLE IS A CELL: no chamfer, no hairline, no ground.** Rule 4 —
+  the children of a chamfered box are square. This **RETIRES ADR-065 U2**, the
+  owner's own TL+BR exception, and the law has no enumerated TL+BR object any
+  more. ⚠ **THE RAIL'S LEADING STATION IS SQUARE TOO**, and that follows from
+  the clause that created it: ADR-065 U3 licensed the cut because the console's
+  chamfer FELL on it, so with no chamfer above it the notch is a 6–11px
+  diagonal with no edge to explain it.
+- ⚠ **THE LIP IS A CLIPPED RING, NOT A BORDER** — a `clip-path` CUTS a border
+  and never strokes one, so a chamfered box with `border: 1px` has no line on
+  either diagonal. Outer contour clockwise, inner counter-clockwise 1px in,
+  non-zero winding making the middle a hole. ⚠ The inner chamfer is **not**
+  `ch − 1px`: a 45° cut offset inward by `d` moves its diagonal by `d·√2`, so
+  −0.6px is the correction (the services plate's own).
+- ⚠ **TWO OF THE PLATE'S VALUES DO NOT SURVIVE THE CHANGE OF SHAPE.** The bloom
+  is stated in PIXELS (`130% 70%` are percentages of a 420×680 CARD, ~550px;
+  the same fractions on a 1500px housing are 1495px and light the whole
+  quadrant), and there is **no `brightness(1.08)`** — that belongs to the
+  plate's OPEN state and over a band of void it turns the ground grey.
+- ⚠ **THE LIP'S FOUR STOPS ARE TOKENS BECAUSE GOLD IS SPLIT BY ROLE.** `--gold`
+  at .34 sits under the 3:1 rung line work must clear on parchment, so light
+  re-derives them from `--gold-line` (theme.css). Never a bigger alpha on
+  `--gold` — that takes the FILLS down with it (ADR-058).
+  ⚠ **The gold lip contradicts `console.css`'s "the panel's own edge is DAWN"
+  BY SCOPE, not by exception**: a console is a SCREEN you look into, a housing
+  is the machined DEVICE the screen is set into, and the services card is the
+  other object of that kind here.
+- ⚠ **THE FUSED HEADER STOPS AT THE COLUMN SPLIT, AND IT IS A COLLISION.** A
+  band-wide row prints its right slot straight through WORK / CONFIGURATION /
+  SUBSTRATE — `ConsoleRail` is the field's own header. Invisible to every
+  geometry gate, because two labels overlapping is the one thing containment
+  tests never ask about.
+  ⚠ **AND IT IS FLEX, NOT A THREE-COLUMN GRID.** One child in `1fr auto 1fr`
+  lands in column 1, so `justify-self: end` put the state a third of the way
+  across, through `+ Archive` (measured x 437 against 430).
+- ⚠ **THE BRIEF'S CELL HEAD IS A SIBLING OF `.fl-brief`, NEVER ITS CHILD.**
+  That box is height-boxed with `overflow: hidden`, so a head at `top: -17px`
+  inside it is clipped away entirely — present, measurable, painting nothing.
+  The lab draws it that way and it has never once painted.
+- ⚠ **EACH PIECE SAYS ONE THING**: header = `state`, brief head = `Brief`,
+  register head = `Proof · N claims` (tall rung only), foot = `logCode`. The
+  lab prints `state` twice and repeats the classification line and the track
+  count, all already on screen. This surface has removed a console head, a foot
+  and a designator for exactly that.
+  ⚠ **THE FOOT IS NOT `.fl-con__foot` AND THAT BAN STILL STANDS** — ADR-068 U2
+  forbids a CONSOLE foot; this is the housing's terminus, outside `.fl-con`,
+  the same distinction `.fl-verdict` ships on.
+- ⚠ **THE TOP-RIGHT RETICLE IS BACK, AND IT WAS AN OWNER DELETION**
+  (`e3b33867`). It went because the dotted chrome read as noise once the
+  console became the one framed object; the housing is that object now, and a
+  diagonal PAIR registers a composition without closing it into a box.
+- ⚠ **THE MOBILE / PRM PATH HIDES ALL OF IT** and gives the console its frame
+  back. Every piece is seated against the rail box, which that path does not
+  have — a slab drawn from `--fl-rail-top` over a document that scrolls is a
+  pane sliding across the copy.
+- **Two guards changed, because their clause lost its subject.** The rail's
+  corner guard asserted the leading plate keeps a polygon; it asserts every
+  station square AND the console square now, with the housing's TR+BL pinned in
+  its place. ⚠ **And the light walk was measuring against PURE BLACK** — it read
+  `.fl-con__console`'s own `backgroundColor`, which a cell leaves at
+  `rgba(0,0,0,0)`, and `parse` matched it rather than bailing; the map's
+  quietest ink reported 1.06:1 on a page that reads fine. It composites to the
+  first opaque surface now.
+- ⚠ **THE ERA STAGE IS NOT TAKEN.** Owner held it, and rulings 4, 9 and 11
+  block it independently — the committed `>700px` paint sweep in
+  `about-voidwalker-handoff-boundaries.spec.ts` fails a band-width housing
+  three ways at once, and `.claude/rules/voidwalker.md` states the glass gate
+  as a precondition on any promotion.
+- **Left open:** the capability plates keep BR while ADR-065 U5's premise has
+  moved (the console is no longer the housing) — see ADR-089 §Left open.
+
 ## The left column's ladder and its rhythm (ADR-088, live)
 
 The tab strip, the brief, the proof register and the directory — their type and
@@ -1053,9 +1141,17 @@ GENERATE`, the lettered placeholder `Loop Switch, golden hour`, and
 - **TOOL LIFECYCLE HAS ONE REGISTRY, and the proof register is not it.** The
   `· live` suffix left the tools claims; `PROJECT_CASES[].status` is canonical
   and the guard checks it there. A proof claim may not restate it.
-- **A STATION IS A PLATE, AND ONLY THE LEADING ONE IS NOTCHED** (ADR-067 U2,
-  owner 2026-08-12 — _"only the work tab should have that"_; supersedes U1's
-  universal cut, keeps its TOP-LEFT direction). ⚠ **WORK's notch paints
+- **A STATION IS A PLATE, AND SINCE ADR-089 NONE OF THEM IS NOTCHED.** ⚠ The
+  rule below is the record of why the leading one was: its cut existed because
+  the CONSOLE's chamfer fell on it (ADR-065 U3), and inside the housing the
+  console is a cell with no chamfer at all — so the clause has no subject and a
+  6–11px diagonal there would have no edge behind it. The smoke asserts every
+  station square AND the console square. The rest of this bullet still binds:
+  the active plate is filled and UNDERLINED, the seam's `top: var(--stn-ch)`
+  shoulder is DECLARED rather than inherited from a clip, and the corner is
+  pinned from both ends. **(ADR-067 U2**, owner 2026-08-12 —
+  _"only the work tab should have that"_; superseded U1's
+  universal cut, kept its TOP-LEFT direction). ⚠ **WORK's notch paints
   nothing**: the console removes `x + y < --con-ch` (15.9–22px), a station
   removes `x + y < --stn-ch + 2` (10.6–13px), so the leading cut is SUBSUMED
   by ≥8px at every clamp rung and what reads as WORK's notch is the housing's.
@@ -1078,8 +1174,8 @@ GENERATE`, the lettered placeholder `Loop Switch, golden hour`, and
   carries no chamfer clip any more (the bottom edge is square); its width
   stays a full station pitch, so the `--rail-i` translate still lands.
 - ⚠ **THE ORBIT ARCS ARE DELETED (ADR-068 U1, owner 2026-08-07)** — the
-  console is the mockup's one-box panel now (single dawn-08 hairline, TL+BR
-  chamfers by owner override of ADR-065, top glow, scanline; no ellipses, no
+  console is the mockup's one-box panel now (⚠ **its chamfer, its hairline and
+  its ground are GONE since ADR-089** — inside the housing it is a cell; top glow, scanline; no ellipses, no
   outer bezel). The `ry < 525` / `rx ≥ 420` arithmetic this bullet carried
   survives as a record in console.css comments should ambient arcs ever
   return; the "two diagonal lines" incident it solved cannot recur on a
@@ -1174,7 +1270,11 @@ GENERATE`, the lettered placeholder `Loop Switch, golden hour`, and
 Every evidence plate renders inside `ConsoleFrame` (`casefile/console/**`) —
 since ADR-068 U1 the frame is the owner's mockup panel: ONE dawn-08 hairline,
 chamfers TL+BR (owner override, ADR-065 U2), the gold glow off the top edge,
-scanline, opaque ground; the orbit ring and outer bezel are deleted. The
+scanline, opaque ground; the orbit ring and outer bezel are deleted.
+⚠ **ON THE CASEFILE THE HAIRLINE, THE CHAMFER AND THE GROUND ARE ALL GONE
+SINCE ADR-089** — inside `.fl-hz` the console is a CELL, and the children of a
+chamfered box are square. The description above still holds on the ARCS, which
+mount the same frame with no housing around it. The
 panel is ONE instrument that changes what it displays, not four boxes sharing
 a slot.
 
