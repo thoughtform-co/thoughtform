@@ -535,75 +535,91 @@ export function ServicesCasefile({
         aria-hidden="true"
       />
 
-      {/* ── Left column · brief ─────────────────────────────────────── */}
-      {/* ⚠ `data-fl-client-panel` MARKS THE FOUR PANELS WHOSE CONTENT IS THE
-          CLIENT'S RECORD (ADR-087 Phase B) — the brief, the proof register,
-          the directory and the right panel's visual. Only these compose the
-          client-seam clocks on top of the proof clocks; the HOUSING (the tabs
-          wrapper, `.fl-split`, the reticles) is deliberately unmarked, because
-          the frame is what the record is swapped INSIDE and a frame that
-          crossfades with its contents is a page turn. Inert without the
-          channels: with `--svc-client-in/-out` absent the CSS resolves to
-          today's expressions exactly. */}
-      <div
-        className="fl-brief"
-        id="svc-casefile-brief"
-        role="region"
-        aria-labelledby="svc-casefile-view-brief svc-casefile-brief-title"
-        tabIndex={mobileView === "brief" ? 0 : -1}
-        data-fl-panel
-        data-fl-client-panel
-        style={{ "--ci-off": 0.24, "--fl-dx": "-48px" } as CSSProperties}
-      >
-        {/* THE HEADING IS THE PROJECT, not the client (owner, 2026-07-30).
-            The client is named once, by the tab strip above, which carries it
-            at display size — repeating it here spent the brief's biggest slot
-            on something already on screen. The `Brief — expedition NN`
-            designation that used to sit above went the same way: it named the
-            format, not the work.
+      {/* ── Left column ─────────────────────────────────────────────────
+          ⚠ `.fl-left` IS HOUSING, NOT A PANEL (ADR-088). It carries neither
+          `data-fl-panel` nor `data-fl-client-panel`: it is the box the three
+          zones are seated in, and ADR-087's frame law is that a frame which
+          crossfades with its own contents is a page turn. It is also why the
+          wrapper must stay unmarked mechanically — `[data-fl-panel]` takes
+          `will-change: transform` under `[data-proof-live]`, which makes an
+          element a CONTAINING BLOCK for absolutely positioned descendants,
+          and the reticles inside this column are seated against `.fl-case`.
 
-            Deliberately NOT a `data-fl-text` decode target. The reveal effect
-            caches those nodes once per client (dep `[def.slug]`), so a
-            track-reactive target would go stale on the first row switch — the
-            decode lives on the tab name, which IS per-client. This swaps
-            instantly, matching the keyed right column. */}
-        <h3 className="fl-brief__title" id="svc-casefile-brief-title">
-          <span>{track.project}</span>
-          <b className="fl-brief__dot">.</b>
-        </h3>
-        {/* Per-track metadata swaps immediately with the heading and body.
-            It must not join the destructive decode target list, which is
-            cached once per client while directory rows change in place. */}
-        <p className="fl-brief__class">{track.classification ?? file.classLine}</p>
-        {/* The `Log.001 >` operator-quote line that followed the body was
-            removed with the chrome (owner, 2026-07-29) — the brief ends on
-            its own paragraph.
+          Its whole job is the vertical rhythm: it spans `--fl-body-top` to
+          tick 11 and splits the leftover height 1:2 between the two seams, so
+          the directory's last row SITS ON tick 11 instead of the surplus
+          pooling under it (137px at the owner's viewport before this pass).
+          The three zones keep their own boxes, their own arrival transforms
+          and their own client clocks. */}
+      <div className="fl-left">
+        {/* ⚠ `data-fl-client-panel` MARKS THE FOUR PANELS WHOSE CONTENT IS THE
+            CLIENT'S RECORD (ADR-087 Phase B) — the brief, the proof register,
+            the directory and the right panel's visual. Only these compose the
+            client-seam clocks on top of the proof clocks; the HOUSING (the
+            tabs wrapper, `.fl-left`, `.fl-split`, the reticles) is
+            deliberately unmarked. Inert without the channels: with
+            `--svc-client-in/-out` absent the CSS resolves to today's
+            expressions exactly. */}
+        <div
+          className="fl-brief"
+          id="svc-casefile-brief"
+          role="region"
+          aria-labelledby="svc-casefile-view-brief svc-casefile-brief-title"
+          tabIndex={mobileView === "brief" ? 0 : -1}
+          data-fl-panel
+          data-fl-client-panel
+          style={{ "--ci-off": 0.24, "--fl-dx": "-48px" } as CSSProperties}
+        >
+          {/* THE HEADING IS THE PROJECT, not the client (owner, 2026-07-30).
+              The client is named once, by the tab strip above, which carries
+              it at display size — repeating it here spent the brief's biggest
+              slot on something already on screen. The `Brief — expedition NN`
+              designation that used to sit above went the same way: it named
+              the format, not the work.
 
-            PER-TRACK WHEN THE TRACK HAS ONE (2026-08-01). The casefile brief
-            has to serve all eight rows, so it can only ever describe the
-            engagement; a row that owns the largest piece of the work needs to
-            make its own claim. Same optional-with-fallback idiom as `stamp`.
-            The brief and classification both switch immediately and stay
-            outside the per-client decode target list. */}
-        <p className="fl-brief__body">{(track.brief ?? file.brief).map(renderSegment)}</p>
+              Deliberately NOT a `data-fl-text` decode target. The reveal
+              effect caches those nodes once per client (dep `[def.slug]`), so
+              a track-reactive target would go stale on the first row switch —
+              the decode lives on the tab name, which IS per-client. This
+              swaps instantly, matching the keyed right column. */}
+          <h3 className="fl-brief__title" id="svc-casefile-brief-title">
+            <span>{track.project}</span>
+            <b className="fl-brief__dot">.</b>
+          </h3>
+          {/* Per-track metadata swaps immediately with the heading and body.
+              It must not join the destructive decode target list, which is
+              cached once per client while directory rows change in place. */}
+          <p className="fl-brief__class">{track.classification ?? file.classLine}</p>
+          {/* The `Log.001 >` operator-quote line that followed the body was
+              removed with the chrome (owner, 2026-07-29) — the brief ends on
+              its own paragraph.
+
+              PER-TRACK WHEN THE TRACK HAS ONE (2026-08-01). The casefile
+              brief has to serve all eight rows, so it can only ever describe
+              the engagement; a row that owns the largest piece of the work
+              needs to make its own claim. Same optional-with-fallback idiom
+              as `stamp`. The brief and classification both switch immediately
+              and stay outside the per-client decode target list. */}
+          <p className="fl-brief__body">{(track.brief ?? file.brief).map(renderSegment)}</p>
+        </div>
+
+        {/* Evidence stays in the reading column, leaving the right panel as
+            one uninterrupted visual instrument. */}
+        <TrackProofRegister
+          track={track}
+          id="svc-casefile-proof"
+          tabIndex={mobileView === "proof" ? 0 : -1}
+        />
+
+        {/* ── Left column · directory ───────────────────────────────── */}
+        <Directory
+          tracks={file.tracks}
+          activeId={track.id}
+          onSelect={selectTrack}
+          controls={panelId}
+          idPrefix={def.slug}
+        />
       </div>
-
-      {/* Evidence stays in the reading column, leaving the right panel as
-          one uninterrupted visual instrument. */}
-      <TrackProofRegister
-        track={track}
-        id="svc-casefile-proof"
-        tabIndex={mobileView === "proof" ? 0 : -1}
-      />
-
-      {/* ── Left column · directory ─────────────────────────────────── */}
-      <Directory
-        tracks={file.tracks}
-        activeId={track.id}
-        onSelect={selectTrack}
-        controls={panelId}
-        idPrefix={def.slug}
-      />
 
       {/* ── Right column ────────────────────────────────────────────── */}
       <TrackPanel

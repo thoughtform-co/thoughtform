@@ -179,9 +179,20 @@
      rows there also lift 4-5px each and consume the 137px of prior slack —
      new consumption 156px, still under the 281px band that shipped, so the
      tall rung stays whole. */
+  /* ⚠ SINCE ADR-088 THESE TWO ARE FLOORS, NOT GAPS. The left column is a grid
+     (`.fl-left`) whose two seam tracks are `minmax(<floor>, 1fr)` and
+     `minmax(<floor>, 2fr)`, so at the binding viewports the floors bind and
+     the layout is what it was, while a tall window distributes its surplus
+     1:2 across the two seams instead of pooling it under the directory. */
   --fl-proof-top-gap: clamp(10px, 1.4svh, 16px);
   --fl-proof-h: clamp(70px, 10.6svh, 128px);
   --fl-directory-gap: clamp(12px, 1.6svh, 22px);
+  /* The brief's own bottom trim, hoisted out of `.fl-brief`'s height so the
+     grid's first seam can add it to `--fl-proof-top-gap` — the air a reader
+     sees between the brief and the register has always been the SUM of the
+     two, and a floor stated as one of them would tighten that seam by 8px at
+     the binding viewport. */
+  --fl-brief-clear: clamp(8px, 1.1svh, 14px);
   /* How far the corner marks sit OUTBOARD of the content box they register.
      On the corner they cut through the designation labels, which start and
      end on the band edges; outboard is also what the production survey
@@ -1069,16 +1080,77 @@
   margin: calc(var(--fl-ret-arm) / -2) 0 0 calc(var(--fl-ret-arm) / -2);
 }
 
-/* ══ Left column · brief ═══════════════════════════════════════════════ */
+/* ══ Left column · the housing ═════════════════════════════════════════
+   ⚠ THE SLACK IS SPLIT, NOT POOLED (ADR-088, 2026-09-02, owner: "the spacing
+   between the directory and the other elements feels too connected").
 
-.fl-brief {
+   The three zones used to be three absolutes hung off the tick ladder, each
+   top-anchored: the brief at `--fl-body-top`, the register at the seam, the
+   directory's rows at the top of a box that ran to tick 11. Every viewport
+   taller than the design's own therefore put its whole surplus in ONE place —
+   the empty band under the last row, measured at 137px on the owner's
+   1920x1247 and 199px at 2560x1330 — while the seam ABOVE the directory
+   stayed pinned at 18px. That is the house's own U14 finding (ADR-070: extra
+   height distributed around content reads as air; the same height at the
+   bottom reads as a hole), and it is why the directory read as a fifth
+   register row rather than as the column's other object.
+
+   The column is one grid now, spanning `--fl-body-top` to tick 11:
+
+     brief (auto) | seam A (1fr) | register (auto) | seam B (2fr) | directory
+
+   so the last directory row SITS ON tick 11 by construction, and the surplus
+   goes to the two seams. ⚠ THE SPLIT IS 1:2 BECAUSE THE GROUPING IS 2:1 — the
+   brief and the register are one group (an engagement's claim, then the four
+   proofs of it) and the directory is the column's other object, an index of
+   the rest of the file. The larger gap is the one that separates the two
+   groups; the smaller one separates a thesis from its own evidence.
+
+   ⚠ AND THE FLOORS ARE WHAT KEEP THE BINDING VIEWPORT BYTE-NEAR-IDENTICAL.
+   At 1280x720 the column has ~32px of leftover against floors summing 30, so
+   both tracks sit on their floors and this is the shipped layout; the split
+   only expresses where there is surplus to split.
+
+   ⚠ IT IS NOT A PANEL, AND THAT IS MECHANICAL. `[data-fl-panel]` takes
+   `will-change: transform` under `[data-proof-live]`, which makes an element
+   a containing block for absolutely positioned descendants — a promoted
+   wrapper here would capture the reticles and anything else seated against
+   `.fl-case`. It also carries no client-seam mark: ADR-087's frame law is
+   that the housing does not crossfade with the record inside it.
+
+   ⚠ NO `overflow: hidden` HERE. The zones strike in from `--fl-dx: -48px`,
+   and a clipping wrapper on the column's own left edge would crop that
+   arrival. Its absence is also the better failure mode: a client with more
+   rows than tick 11 affords now overruns the column LOUDLY, where the old
+   fixed-height `.fl-dir` clipped the last row in silence. ═══════════════ */
+
+.fl-left {
   position: absolute;
   left: 0;
   width: var(--fl-col-l);
   top: var(--fl-body-top);
-  height: calc(var(--fl-left-seam) - var(--fl-body-top) - clamp(8px, 1.1svh, 14px));
-  overflow: hidden;
+  height: calc(var(--fl-split-end) - var(--fl-body-top));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows:
+    auto
+    minmax(calc(var(--fl-brief-clear) + var(--fl-proof-top-gap)), 1fr)
+    auto
+    minmax(var(--fl-directory-gap), 2fr)
+    auto;
   z-index: 2;
+}
+
+/* ══ Left column · brief ═══════════════════════════════════════════════ */
+
+/* ⚠ EVERY ZONE DECLARES ITS `grid-row` EXPLICITLY. Auto-placement fills rows
+   1, 2 and 3 — the three zones would stack against each other and both seam
+   tracks would sit empty below them. */
+.fl-brief {
+  position: relative;
+  grid-row: 1;
+  height: calc(var(--fl-left-seam) - var(--fl-body-top) - var(--fl-brief-clear));
+  overflow: hidden;
 }
 
 /* The brief's display heading. Carries the SELECTED TRACK's project since
@@ -1190,13 +1262,14 @@
    ═══════════════════════════════════════════════════════════════════════ */
 
 .fl-proof-register {
-  position: absolute;
-  left: 0;
-  width: var(--fl-col-l);
-  top: calc(var(--fl-left-seam) + var(--fl-proof-top-gap));
+  position: relative;
+  grid-row: 3;
+  /* ⚠ A FIXED BOX, NEVER `auto` (ADR-068): the four tracks share it equally so
+     that browsing the directory does not reflow the index — see the list's own
+     note below. Under ADR-088's grid the register is the one zone whose height
+     is still declared rather than measured, for exactly that reason. */
   height: var(--fl-proof-h);
   overflow: hidden;
-  z-index: 2;
 
   /* The mark's box, and the gutter derives from it (+4px of air) so the two
      can never disagree when a rung resizes one. INTEGER MULTIPLES OF SEVEN
@@ -1505,18 +1578,14 @@
    it — the ceiling on `--fl-proof-h` above is that number, measured. ══════ */
 
 .fl-dir {
-  position: absolute;
-  left: 0;
-  width: var(--fl-col-l);
-  top: calc(
-    var(--fl-left-seam) + var(--fl-proof-top-gap) + var(--fl-proof-h) + var(--fl-directory-gap)
-  );
-  height: calc(
-    var(--fl-split-end) - var(--fl-left-seam) - var(--fl-proof-top-gap) - var(--fl-proof-h) -
-      var(--fl-directory-gap)
-  );
+  position: relative;
+  grid-row: 5;
+  /* ⚠ CONTENT-HEIGHT SINCE ADR-088, and that is what seats the last row on
+     tick 11. It used to take "whatever the tokens above left", which meant its
+     rows were top-anchored in a box with up to 199px of dead band under them.
+     `overflow: hidden` stays for the horizontal sweep the smoke runs; there is
+     nothing left for it to clip vertically. */
   overflow: hidden;
-  z-index: 2;
 }
 
 /* ⚠ THE DIRECTORY WAS THE ONLY THING IN THIS COLUMN THAT DID NOT SCALE
@@ -1580,6 +1649,25 @@
   list-style: none;
   margin: 0;
   padding: 0;
+}
+/* ⚠ THE HEAD IS A LABEL OVER THE LIST, NOT THE FIRST ROW'S CAP (ADR-088).
+   The head carried `padding-bottom: 5px` and the list no margin at all, so
+   the line that says these ARE the other projects sat on the rows it labels
+   — the tightest joint in a column whose whole complaint was that everything
+   read as connected. Half a chrome step (6px at 1920) is a group break
+   without becoming a gap in its own right.
+
+   ⚠ TALL RUNG ONLY, and the funding is the reason. At 1280x720 the column's
+   leftover is ~32px against seam floors summing 30, so six more pixels would
+   push the last row past tick 11; above 1070h the 1:2 split has surplus to
+   spend. ⚠ AND IT SITS AFTER THE BASE RULE ON PURPOSE — declared inside the
+   tall-rung block up at the register, where the rest of that rung lives, it
+   loses to this rule's own `margin: 0` on source order at equal specificity
+   and silently does nothing (measured: headToList 0 at both tall viewports). */
+@media (min-width: 1200px) and (min-height: 1070px) {
+  .fl-dir__list {
+    margin-top: calc(var(--fl-chrome-md) * 0.5);
+  }
 }
 .fl-dir__list li + li .fl-row {
   border-top: 1px dotted rgba(var(--gold-rgb), 0.13);
@@ -5863,11 +5951,22 @@
     flex-wrap: wrap;
     gap: 16px;
   }
+  /* ⚠ THE LEFT COLUMN'S HOUSING DISSOLVES HERE (ADR-088). `display: contents`
+     hands the three zones straight back to `.fl-case`'s own grid, which is
+     what ADR-083's source-order seal and the `data-mobile-view` show/hide
+     rules select against — a wrapper left in the tree would put all three
+     inside one grid cell. And the `grid-row` reset goes with it: the values
+     are 1 / 3 / 5 in the desktop housing, and against `.fl-case`'s grid they
+     would seat the brief in the phone's first row, on top of the tabs. */
+  .fl-left {
+    display: contents;
+  }
   .fl-brief,
   .fl-proof-register,
   .fl-dir,
   .fl-panel {
     position: static;
+    grid-row: auto;
     width: auto;
     height: auto;
     overflow: visible;

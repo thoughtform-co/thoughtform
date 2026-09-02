@@ -630,18 +630,27 @@
   top: -17px;
   padding-bottom: 3px;
 }
-/* The register's head is a direct child of `.fl-case`, so it seats on the
-   ladder's own tokens — and only where there is air to seat it in. */
+/* ⚠ THE REGISTER'S HEAD IS A GRID ITEM IN THE SEAM IT LABELS (ADR-088). It
+   used to be a direct child of `.fl-case` seated at
+   `--fl-left-seam + --fl-proof-top-gap - 19px`, which was the register's own
+   top. Since the record column became `.fl-left` — a grid that splits its
+   surplus 1:2 between the two seams — the register floats between the brief
+   and a directory seated on tick 11, so no token on `.fl-case` names its top
+   any more. It sits in seam track A instead, hard against the register's top
+   edge, which is what it was always drawing. Still tall-rung only: the seam's
+   floor at 1280x720 is 18px of air the copy is already using. */
 .hpl .fl-case[data-hpl-dir] .hpl-cellhead[data-zone="register"] {
   display: none;
 }
 @media (min-height: 1070px) {
   .hpl .fl-case[data-hpl-dir] .hpl-cellhead[data-zone="register"] {
     display: flex;
-    position: absolute;
-    left: 0;
-    width: var(--fl-col-l);
-    top: calc(var(--fl-left-seam) + var(--fl-proof-top-gap) - 19px);
+    position: relative;
+    grid-row: 2;
+    align-self: end;
+    left: auto;
+    top: auto;
+    width: auto;
     z-index: 2;
   }
 }
@@ -657,10 +666,20 @@
 .hpl .fl-case[data-hpl-dir] .hpl-seam[data-at="register"] {
   top: var(--fl-left-seam);
 }
+/* ⚠ THE DIRECTORY SEAM IS A GRID ITEM NOW, NOT A TOKEN (ADR-088). It used to
+   be `seam + top-gap + proof-h + directory-gap / 2` — an absolute seated
+   against `.fl-case`, which worked only while the directory's top WAS that
+   sum. Under `.fl-left` the surplus splits 1:2 and the directory is seated on
+   tick 11 by its own content, so that expression names a line the drawing no
+   longer has. It rides seam track B and centres in it, which is what "half a
+   gap below the register" always meant. It keeps its full width to the column
+   split (the base rule's `--fl-col-split`), reaching past the 34.5% column
+   exactly as before — that is the whole reason it is its own element. */
 .hpl .fl-case[data-hpl-dir] .hpl-seam[data-at="directory"] {
-  top: calc(
-    var(--fl-left-seam) + var(--fl-proof-top-gap) + var(--fl-proof-h) + var(--fl-directory-gap) / 2
-  );
+  position: relative;
+  grid-row: 4;
+  align-self: center;
+  top: auto;
 }
 
 /* ── Datum stubs (v5) ────────────────────────────────────────────────────

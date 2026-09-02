@@ -610,7 +610,22 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           inner.top >= outer.top - 1 &&
           inner.bottom <= outer.bottom + 1;
 
+        // ADR-088's rhythm law. `t11` comes off the LIVE `.hud__rail` box, the
+        // same source the rail-seating test uses, so a drift between the rail
+        // and this file's mirrored geometry fails here rather than reading.
+        const rail = document.querySelector<HTMLElement>(".hud__rail");
+        const rows = [...document.querySelectorAll<HTMLElement>(".fl-row")];
+        const lastRow = rows[rows.length - 1]?.getBoundingClientRect();
+        const railBox = rail?.getBoundingClientRect();
+        const t11 = railBox ? railBox.top + railBox.height * (11 / 12) : null;
+
         return {
+          // The two seams, measured BOX to BOX. The old `summaryGap` read from
+          // the brief's PARAGRAPH, which moves with the selected row's copy —
+          // this pair is row-independent and is what the split acts on.
+          gapA: p.top - b.bottom,
+          gapB: d.top - p.bottom,
+          seatOnT11: t11 !== null && lastRow ? lastRow.bottom - t11 : null,
           proofItems: proof.querySelectorAll(".fl-proof-register__item").length,
           proofInside: inside(p, c),
           directoryInside: inside(d, c),
@@ -647,6 +662,50 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       expect(geometry?.leftAligned, `${label}: proof register and directory rails drift`).toBe(
         true
       );
+
+      // ── ADR-088: the column's slack is SPLIT, and the index sits on t11 ──
+      // Before this, the three zones were three top-anchored absolutes, so
+      // every viewport taller than the design's own put its whole surplus in
+      // one place — the empty band under the last directory row, measured at
+      // 137px on the owner's 1920x1247 and 199px at 2560x1330 — while the
+      // seam above the directory stayed pinned at 18px. Nothing failed: each
+      // box was inside the casefile and none of them clipped. These three
+      // assertions are what make that state red.
+      // ⚠ PINNED FROM BOTH SIDES. Over-running t11 is a clip; falling short of
+      // it is the pooled hole this pass removed, and a one-sided bound would
+      // only ever have caught the first.
+      expect(
+        Math.abs(geometry?.seatOnT11 ?? Number.POSITIVE_INFINITY),
+        `${label}: the directory's last row sits ${geometry?.seatOnT11?.toFixed(1)}px off tick 11`
+      ).toBeLessThanOrEqual(1.5);
+      // The floors, which are what keep the binding viewports byte-near what
+      // shipped: seam A is `--fl-brief-clear + --fl-proof-top-gap`, seam B is
+      // `--fl-directory-gap`. Both are flat above 1070h (14+14 and 18) and on
+      // their `svh` clamps below it.
+      expect(
+        geometry?.gapA ?? 0,
+        `${label}: the brief/register seam collapsed to ${geometry?.gapA?.toFixed(1)}px`
+      ).toBeGreaterThanOrEqual(viewport.height > 1069 ? 25 : 17.5);
+      expect(
+        geometry?.gapB ?? 0,
+        `${label}: the register/directory seam collapsed to ${geometry?.gapB?.toFixed(1)}px`
+      ).toBeGreaterThanOrEqual(viewport.height > 1069 ? 17.5 : 11.5);
+      // ⚠ THE RATIO IS ASSERTED ONLY WHERE THERE IS SURPLUS TO SPLIT. Below
+      // 1070h both tracks sit on their floors and seam A is legitimately the
+      // LARGER of the two (18.1 against 13.5 at 1280x720) — asserting the
+      // ordering there would fail the layout this pass deliberately preserves.
+      // Above it the split is 1:2 in favour of the group break, bounded from
+      // both sides so a future retune cannot quietly flatten it either way.
+      if (viewport.height > 1069) {
+        expect(
+          geometry?.gapB ?? 0,
+          `${label}: the index seam (${geometry?.gapB?.toFixed(1)}px) is not the wider of the two (${geometry?.gapA?.toFixed(1)}px)`
+        ).toBeGreaterThanOrEqual((geometry?.gapA ?? 0) - 0.5);
+        expect(
+          geometry?.gapB ?? 0,
+          `${label}: the index seam ran past its 1:2 share of the surplus`
+        ).toBeLessThanOrEqual((geometry?.gapA ?? 0) * 2.1 + 2);
+      }
       expect(geometry?.proofOverflow, `${label}: proof register clips`).toBeLessThanOrEqual(1);
       expect(
         geometry?.proofOverflowX,
@@ -1070,7 +1129,21 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           offGrid: spans.flatMap((s, i) => {
             const r = s.querySelector("svg")?.getBoundingClientRect();
             if (!r) return [`mark-${i + 1}:missing`];
-            const bad = r.width < 14 || r.width > 21 || r.height < 14 || r.height > 21;
+            // ⚠ THE BOUNDS CARRY AN EPSILON, AND IT IS NOT SLOPPINESS. The
+            // register is a `[data-fl-panel]` riding `translate3d(...)` on the
+            // arrival ladder, so a descendant's rect comes back through a
+            // float matrix: a mark declared at exactly 21px measured
+            // 21.000015258789062 (21 + 2^-16) on a run sampled mid-strike,
+            // failed an exact `> 21`, and passed on the next two runs at the
+            // same nominal progress. An exact bound against a transformed rect
+            // is a flake generator; half a pixel is far below the 7-unit
+            // lattice step this is actually policing (14 vs 21).
+            const EPS = 0.5;
+            const bad =
+              r.width < 14 - EPS ||
+              r.width > 21 + EPS ||
+              r.height < 14 - EPS ||
+              r.height > 21 + EPS;
             return bad ? [`mark-${i + 1}:${r.width}x${r.height}`] : [];
           }),
           // The drawing itself: pixels, never type. A `<text>` node here
@@ -1137,16 +1210,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
       if (viewport.height > 1069) {
         const tallProof = await page.evaluate(() => {
-          const briefBody = document.querySelector<HTMLElement>(".fl-brief__body");
+          // The brief's paragraph left this read with `summaryGap` (see below):
+          // the seam it used to measure is now taken box-to-box in the geometry
+          // block, at every viewport rather than only the tall ones.
           const proof = document.querySelector<HTMLElement>(".fl-proof-register");
-          if (!briefBody || !proof) return null;
-          const proofRect = proof.getBoundingClientRect();
+          if (!proof) return null;
           const descriptions = [
             ...proof.querySelectorAll<HTMLElement>(".fl-proof-register__description"),
           ];
           return {
             count: descriptions.length,
-            summaryGap: proofRect.top - briefBody.getBoundingClientRect().bottom,
             clipped: descriptions.flatMap((description, index) => {
               const rect = description.getBoundingClientRect();
               const item = description.closest<HTMLElement>(".fl-proof-register__item");
@@ -1167,14 +1240,15 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         });
         expect(tallProof, `${label}: tall proof register is missing`).not.toBeNull();
         expect(tallProof?.count).toBe(4);
-        // The seam pull-up moved with the index (ADR-068) and the gap held:
-        // re-measured 25.9px at 1920x1080 and 39.5px at 2017x1269, against
-        // the same 80px bound. The bound is what the pull-up exists to
-        // defend — it is not a fit check, so it does not track the reading.
-        expect(
-          tallProof?.summaryGap ?? Number.POSITIVE_INFINITY,
-          `${label}: dead space reopened between summary and proof register`
-        ).toBeLessThan(80);
+        // ⚠ `summaryGap < 80` IS DELETED (ADR-088), NOT MOVED. It measured
+        // from the brief's PARAGRAPH to the register, so it read a different
+        // number on every directory row, and its 80px literal was written for
+        // a column whose surplus pooled at the bottom. Under the 1:2 split the
+        // brief/register seam legitimately reaches 81.8px at 2560x1330 — the
+        // bound would have failed a layout that is doing what it was asked to.
+        // What it defended (dead space must not reopen above the register) is
+        // now the `gapA <= gapB` ordering plus the t11 seating law above, both
+        // asserted at every viewport rather than only the tall ones.
         expect(
           tallProof?.clipped,
           `${label}: tall proof descriptions clip: ${tallProof?.clipped.join(", ")}`

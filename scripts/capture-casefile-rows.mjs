@@ -119,12 +119,39 @@ try {
       const stage = document.querySelector(".fl-filmstage");
       const frame = document.querySelector(".fl-filmframe");
 
+      /* ADR-088's rhythm, printed beside the type it was traded against. The
+         two seams are measured BOX to BOX (row-independent), and the seat is
+         the last directory row against tick 11 — which `.fl-left`'s own bottom
+         IS, by construction, so this reads the law without needing the rail's
+         fixed box while the page may not be at the beat. */
+      const left = document.querySelector(".fl-left");
+      const dirBox = document.querySelector(".fl-dir");
+      const briefBox = document.querySelector(".fl-brief");
+      const rows = [...document.querySelectorAll(".fl-row")];
+      const rhythm =
+        left && dirBox && briefBox && regBox && rows.length
+          ? {
+              gapA: +(
+                regBox.getBoundingClientRect().top - briefBox.getBoundingClientRect().bottom
+              ).toFixed(1),
+              gapB: +(
+                dirBox.getBoundingClientRect().top - regBox.getBoundingClientRect().bottom
+              ).toFixed(1),
+              seatOnT11: +(
+                rows[rows.length - 1].getBoundingClientRect().bottom -
+                left.getBoundingClientRect().bottom
+              ).toFixed(2),
+              dirH: Math.round(dirBox.getBoundingClientRect().height),
+            }
+          : null;
+
       return {
         plate: plate?.className.match(/fl-plate--\w+/)?.[0] ?? null,
         field: box(field),
         console: box(cons),
         consoleBg: cons ? getComputedStyle(cons).backgroundColor : null,
         overflow: { plate: ov(plate), field: ov(field) },
+        rhythm,
         tiles: tiles.length,
         tile0: t0 ? `${Math.round(t0.width)}x${Math.round(t0.height)}` : null,
         register: {
@@ -168,6 +195,9 @@ try {
         ` field ${String(read.field).padEnd(9)} tiles ${read.tiles} ${String(read.tile0 ?? "-").padEnd(9)}` +
         ` reg ${read.register.box} ${read.register.claimPx}/${read.register.descPx}` +
         ` lines[${read.register.descLines}]` +
+        (read.rhythm
+          ? ` seams ${read.rhythm.gapA}/${read.rhythm.gapB} dir ${read.rhythm.dirH} t11${read.rhythm.seatOnT11 >= 0 ? "+" : ""}${read.rhythm.seatOnT11}`
+          : "") +
         (read.films
           ? ` film ${read.films.frame} air ${read.films.airTop}/${read.films.airBottom} prod ${read.films.prodH}`
           : "") +

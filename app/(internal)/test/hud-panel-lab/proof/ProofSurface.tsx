@@ -159,12 +159,14 @@ export function ProofSurface({
             {chrome.stubs ? (
               <DatumStubs ticks={["t1", "t6", "t11"]} panel={{ ciOff: 0.14 }} />
             ) : null}
-            {chrome.seams ? (
-              <>
-                <Seam at="register" panel={{ ciOff: 0.14 }} />
-                <Seam at="directory" panel={{ ciOff: 0.14 }} />
-              </>
-            ) : null}
+            {/* ⚠ ONLY THE REGISTER SEAM IS SEATED HERE NOW (ADR-088). It is on
+                tick 6, which is a rung of the ladder and therefore expressible
+                as a token against `.fl-case`. The DIRECTORY seam is not: since
+                the record column became a grid whose surplus splits 1:2, the
+                directory's top is wherever its own content lands above tick 11
+                — no `calc()` on `.fl-case` can reach it. It is rendered inside
+                `.fl-left` instead, as a grid item in the seam track it marks. */}
+            {chrome.seams ? <Seam at="register" panel={{ ciOff: 0.14 }} /> : null}
 
             {chrome.header !== "none" ? (
               /* ⚠ ONE STRING, ON THE RIGHT, AND THE REST OF THE BAND IS A
@@ -223,44 +225,59 @@ export function ProofSurface({
               />
             ) : null}
 
-            {/* ── The record column ─────────────────────────────────────── */}
-            <div
-              className="fl-brief"
-              data-fl-panel
-              data-fl-client-panel
-              style={{ "--ci-off": 0.24, "--fl-dx": "-48px" } as CSSProperties}
-            >
-              {chrome.cellHeads ? <CellHead zone="brief" label="Brief" meta={FILE.state} /> : null}
-              <h3 className="fl-brief__title">
-                <span>{track.project}</span>
-                <b className="fl-brief__dot">.</b>
-              </h3>
-              <p className="fl-brief__class">{track.classification ?? FILE.classLine}</p>
-              <p className="fl-brief__body">{(track.brief ?? FILE.brief).map(renderSegment)}</p>
-            </div>
+            {/* ── The record column ───────────────────────────────────────
+                ⚠ `.fl-left` IS PRODUCTION'S HOUSING (ADR-088) and this hand
+                composition has to mount it too, or the three zones lose the
+                grid that seats them and fall back to `.fl-case`'s own. It
+                carries no panel mark for the same reason production's does
+                not: a promoted wrapper becomes a containing block, and the
+                housing does not crossfade with the record inside it. */}
+            <div className="fl-left">
+              <div
+                className="fl-brief"
+                data-fl-panel
+                data-fl-client-panel
+                style={{ "--ci-off": 0.24, "--fl-dx": "-48px" } as CSSProperties}
+              >
+                {chrome.cellHeads ? (
+                  <CellHead zone="brief" label="Brief" meta={FILE.state} />
+                ) : null}
+                <h3 className="fl-brief__title">
+                  <span>{track.project}</span>
+                  <b className="fl-brief__dot">.</b>
+                </h3>
+                <p className="fl-brief__class">{track.classification ?? FILE.classLine}</p>
+                <p className="fl-brief__body">{(track.brief ?? FILE.brief).map(renderSegment)}</p>
+              </div>
 
-            {chrome.cellHeads ? (
-              /* ⚠ SEATED ONLY ON THE TALL RUNG, and the sheet decides. The
-                 register has FOUR pixels of slack in its box at 1280x720 and
-                 the directory four in its band, so a head row there would be
-                 paid for out of the copy. Above 1070h the
-                 `--fl-proof-top-gap` is already 14-18px of pure air. */
-              <CellHead
-                zone="register"
-                label="Proof"
-                meta={`${track.blocks?.length ?? 4} claims`}
-                panel={{ ciOff: 0.3, dx: "-48px" }}
+              {chrome.cellHeads ? (
+                /* ⚠ SEATED ONLY ON THE TALL RUNG, and the sheet decides. The
+                   register has FOUR pixels of slack in its box at 1280x720 and
+                   the directory four in its band, so a head row there would be
+                   paid for out of the copy. Above 1070h the
+                   `--fl-proof-top-gap` is already 14-18px of pure air. */
+                <CellHead
+                  zone="register"
+                  label="Proof"
+                  meta={`${track.blocks?.length ?? 4} claims`}
+                  panel={{ ciOff: 0.3, dx: "-48px" }}
+                />
+              ) : null}
+              <TrackProofRegister track={track} id="hpl-casefile-proof" />
+
+              {/* The register/directory seam, seated IN the seam it marks —
+                  grid row 4, centred. See the note beside the register seam
+                  above for why this one cannot be a token on `.fl-case`. */}
+              {chrome.seams ? <Seam at="directory" panel={{ ciOff: 0.14 }} /> : null}
+
+              <Directory
+                tracks={FILE.tracks}
+                activeId={track.id}
+                onSelect={onRow}
+                controls={PANEL_ID}
+                idPrefix={PROOF_CASE.slug}
               />
-            ) : null}
-            <TrackProofRegister track={track} id="hpl-casefile-proof" />
-
-            <Directory
-              tracks={FILE.tracks}
-              activeId={track.id}
-              onSelect={onRow}
-              controls={PANEL_ID}
-              idPrefix={PROOF_CASE.slug}
-            />
+            </div>
 
             {/* ── The field ─────────────────────────────────────────────── */}
             <TrackPanel
