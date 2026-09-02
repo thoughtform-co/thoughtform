@@ -91,6 +91,33 @@ not by reading the code.
 
 - **The control paints 8 gold structure lines; every direction paints 0.**
   That is the defect stated as a number.
+- **A padded gradient shell needs an opaque body, and a transparent housing is
+  not one.** The services plate gets away with `padding: 1px` + a gradient
+  behind an inset body because that body is 72–58% opaque and hides it. At
+  0.42 the shell read straight through and lit the whole panel warm-grey
+  (`30,25,17` against the void's `10,9,8`). The giveaway was that `?mat=line`,
+  which paints no ground at all, produced the SAME lightening — so the ground
+  was never the cause. The lip is a clipped RING now: the outer chamfered
+  contour clockwise, the inner one counter-clockwise, which nonzero winding
+  renders as a hole. Interior measures `10,9,8` on `line` and `7,7,5` on
+  `glass`, which is the wash doing exactly what it says.
+- **A `clip-path` cuts a border, it never strokes one.** That is why the
+  earlier flat-border housing had no line at all on its two diagonals — the cut
+  removed it. The ring is what puts the chamfer's own edge back, and it is the
+  reason the services plate uses two filled layers rather than a border.
+- **The services card's radial bloom does not survive the change of shape.**
+  It is written as `radial-gradient(130% 70% at 84% -8%, …)` — percentages of a
+  420×680 card, about 550px, a corner catching light. The same fractions on an
+  1150×600 housing are 1495px wide and light the whole top-right quadrant. A
+  corner catch has a physical size, so it is stated as one.
+- **`brightness(1.08)` belongs to the card's OPEN state, not to a housing.**
+  Its seed body is `blur(12px)` alone; the lift is tuned for a small card over
+  a bright WebGL bed, and over a whole band of void it turns the ground grey —
+  on the era stage it put the hologram on a card instead of in the dark.
+- **A housing's terminus is its own open bottom.** With the glass in, the era
+  foot row sat below the reel, outside the enclosure it was meant to close. A
+  direction that draws a housing prints no foot row there; the chips are the
+  terminus, which is what the open bottom already declares.
 - **A band-width housing cannot clear the right rail's telemetry.** SECTOR
   reaches x 1129 at 1280×720 against a band edge of 1150.9. On the proof
   surface the whole direction moves in by 28px a side to clear it, which is
@@ -188,6 +215,22 @@ four "different" rows shot the same still with every gate green.
    at 1440×800. `v5`'s stub sits on the TICK and shows the gap.
 9. **The identity's seat on the era stage** — a header row or the bay's head.
    It moves where the About name lands in the handoff.
+10. **The gold lip against `console.css`'s "the panel's own edge is DAWN, not
+    gold".** The services card's own edge IS gold, so the house has two
+    precedents pointing opposite ways; the difference is that a console is a
+    SCREEN you look into and a card is a machined SLAB you look at. `v2` takes
+    the card's lip on the device the screen is set into. If it promotes, that
+    ruling needs a SCOPE rather than an exception.
+11. **The era stage's glass, which this lab cannot judge.** That station is
+    transparent by law — the corridor's ambient survives through it and it
+    overlaps `#about` by −120svh — and the question is what the corridor looks
+    like THROUGH the glass. The lab has void behind it, so it can only show
+    that the glass is a tint (a 3-unit darkening) rather than a pane. Worth one
+    look on the real page before promotion.
+12. **The lip's contrast in light.** Gold at .34 on parchment is well under the
+    3:1 line-work rung; it reads in the stills but it is quieter than in dark.
+    The named fix is ADR-063 U2's ramp — `--gold-line` for the lip's stops in
+    light — not a bigger alpha on `--gold`.
 
 ## Out of scope
 

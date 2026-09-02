@@ -248,13 +248,47 @@ and the owner questions:
   owner's 1920x1247. Every housing here is OPEN-BOTTOMED and the chips are the
   terminus; the band rule is behind `?foot=rule`, band-inset, purely so the
   U21 amendment can be looked at.
-- ⚠ **A HOUSING ON THIS STATION IS LINE-ONLY, WHATEVER THE MATERIAL KNOB
-  SAYS.** The capable station is TRANSPARENT, not a cover plane, and it
-  overlaps `#about` by -120svh — a slab with a ground there is the black pane
-  `voidwalker-datum.css` records against its own root. It is also what lets
-  the housing keep the band: with a ground it would have to clear the right
-  rail's telemetry (SECTOR reaches 22px inside the band edge), and at that
-  clearance the two side columns lose enough measure that FACTS overflows.
+- ⚠ **A HOUSING HERE IS OPEN-BOTTOMED AND PRINTS NO FOOT ROW.** The walls stop
+  at the reel's top edge and the chips ARE the terminus — that is what the open
+  bottom declares — so a foot row below the reel belongs to neither, sitting
+  outside the enclosure it is meant to close.
+- ⚠ **AND ITS GLASS IS A JUDGEMENT THE LAB CANNOT SETTLE.** This station is
+  TRANSPARENT by law — the corridor's ambient survives through it and it
+  overlaps `#about` by -120svh — so at the console's own 0.86 a slab here is
+  the black plane `voidwalker-datum.css` records against its own root. At 0.42
+  it measures a 3-unit darkening over void, i.e. a tint. But the question is
+  what the CORRIDOR looks like through it, and a lab with void behind it can
+  only show that the glass is not a pane. One look on the real page before any
+  promotion.
+- ⚠ **THE HOUSING IS THE SERVICES PLATE'S MATERIAL, AND A PADDED GRADIENT
+  SHELL NEEDS AN OPAQUE BODY.** `v2` carries the plate's 168deg
+  gold → dawn → gold lip over its glass (dawn wash, gold corner bloom,
+  scanline, blur) at `rgba(void-deep, 0.42)` — half `--con-ground`, so a tint
+  rather than a pane (owner, 2026-09-02). ⚠ `.svc-plate__sh` gets away with
+  `padding: 1px` + a gradient behind an inset body ONLY because that body is
+  72–58% opaque; at 0.42 the shell read straight through and lit the panel
+  warm-grey (30,25,17 against the void's 10,9,8). **The giveaway was that
+  `?mat=line`, which paints no ground at all, produced the SAME lightening** —
+  so the ground was never the cause. The lip is a clipped RING now (outer
+  chamfered contour clockwise, inner counter-clockwise; nonzero winding makes
+  the middle a hole), which also puts back the edge a `clip-path` had removed:
+  **a clip cuts a border, it never strokes one**, so the earlier flat-border
+  housing had no line on either diagonal.
+- ⚠ **TWO OF THE PLATE'S VALUES DO NOT SURVIVE THE CHANGE OF SHAPE.** Its
+  bloom is `radial-gradient(130% 70% at 84% -8%)` — percentages of a 420x680
+  CARD, ~550px, a corner catching light; the same fractions on an 1150x600
+  housing are 1495px and light the whole quadrant, so the bloom is stated in
+  PIXELS. And `brightness(1.08)` belongs to the plate's OPEN state, tuned for a
+  small card over a bright WebGL bed; over a band of void it turns the ground
+  grey. The seed body's plain `blur()` is the one that generalises.
+- ⚠ **THE GOLD LIP CONTRADICTS `console.css`'s "the panel's own edge is DAWN,
+  not gold", deliberately.** The services card's own edge IS gold, so the house
+  has two precedents pointing opposite ways; the difference is that a console
+  is a SCREEN you look into and a card is a machined SLAB you look at, and this
+  is the device the screen is set into. Owner instruction; the README asks for
+  the scope. ⚠ The structure INSIDE stays dawn either way and the ledger still
+  asserts zero gold on the register's rules, the directory's rule, the column
+  seam and the era heads.
 - ⚠ **A HEADER ROW BUYS ~20px AND A FOOT ROW SPENDS IT.** The mast stacks an
   11px kicker over a 42px title, so a row is the taller of the two; `v4`'s 2px
   datum then overspent by 6px until its air came down to 4px and the foot band

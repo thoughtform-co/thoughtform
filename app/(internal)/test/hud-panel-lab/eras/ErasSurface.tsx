@@ -215,7 +215,13 @@ export function ErasSurface({
         {/* ⚠ THE FOOT IS A ROW OF TYPE, NEVER A RULE AT THE RAIL'S LAST TICK.
             The `?foot=rule` knob draws a band-INSET hairline for the owner to
             rule on; it is off by default and the landing is untouched. */}
-        {chrome.foot !== "none" ? (
+        {/* ⚠ A HOUSING'S TERMINUS IS ITS OWN OPEN BOTTOM, so a direction that
+            draws one prints no foot row here. The housing stops at the reel's
+            top edge and the chips ARE the terminus — that is what the open
+            bottom declares — and a foot row below the reel then belongs to
+            neither, sitting outside the enclosure it is supposed to close.
+            Seen on the first still with the glass in. */}
+        {chrome.foot !== "none" && !chrome.housing ? (
           /* ⚠ THE FOOT CARRIES THE ONE FIELD THIS SHEET HAS NEVER LETTERED.
              The first cut printed the era position and the motto — both
              already on screen, in the mast and in SCOPE — which is the

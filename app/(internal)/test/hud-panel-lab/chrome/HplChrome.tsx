@@ -242,11 +242,28 @@ export function Bracket() {
    One machined slab on the lawful TR+BL diagonal, seated by the sheet against
    the band and the rail box. Drawn, never a container (see the file header).
 
+   ⚠ IT IS THE SERVICES PLATE'S OWN MATERIAL, NOT AN APPROXIMATION OF IT
+   (owner, 2026-09-02: "work with a bit of transparency and then the golden
+   glass like effect which we use in the services section"). Two nodes, because
+   that is what the recipe takes: a SHELL with `padding: 1px` carrying a 168deg
+   gold → dawn → gold gradient, and a BODY inside it carrying the glass. A flat
+   1px border cannot do it — the whole read is a machined lip catching light
+   along its length, which is a gradient or it is nothing.
+
    ⚠ ITS CHILDREN ARE SQUARE. The corner law's rule 4 is why the casefile
    console drops its own chamfer inside `v2` — two chamfers of the same depth
    adjacent to each other is what a surface looks like when it has been
    decorated rather than built. That retires ADR-065 U2's TL+BR exception for
-   this direction only, and it is the first owner ruling the lab asks for. */
+   this direction only, and it is the first owner ruling the lab asks for.
+
+   ⚠ AND THE GOLD LIP CONTRADICTS A RECORDED RULING, DELIBERATELY.
+   `console.css` states "the panel's own edge is DAWN, not gold" — but the
+   services card's own edge IS gold (its slab lip at .44, its glint at .42),
+   and the house therefore has two precedents pointing opposite ways. The
+   difference is what kind of object each is: the console is a SCREEN you look
+   into, the card is a machined SLAB you look at. The housing is the device the
+   screen is set into, so it takes the slab's lip — by owner instruction. If
+   this promotes, that ruling needs a scope rather than an exception. */
 
 export function Housing({ open, panel }: { open?: boolean; panel?: HplPanelSeat }) {
   return (
@@ -258,6 +275,8 @@ export function Housing({ open, panel }: { open?: boolean; panel?: HplPanelSeat 
       data-open={open || undefined}
       aria-hidden="true"
       {...seat(panel)}
-    />
+    >
+      <i className="hpl-housing__bd" />
+    </i>
   );
 }

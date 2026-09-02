@@ -2753,6 +2753,35 @@ precedent). Full read, the reference distillations and the owner questions:
   side — the housing's real cost, stated, rather than a right edge quietly
   tucked in. Production's own console already overlaps there with line work,
   which is why the gate fails a painted GROUND and reports a border.
+- ⚠ **THE HOUSING IS THE SERVICES PLATE'S MATERIAL, AND A PADDED GRADIENT
+  SHELL NEEDS AN OPAQUE BODY.** `v2` carries the plate's 168deg
+  gold → dawn → gold lip over its glass (dawn wash, gold corner bloom,
+  scanline, blur) at `rgba(void-deep, 0.42)` — half `--con-ground`, so a tint
+  rather than a pane (owner, 2026-09-02). ⚠ `.svc-plate__sh` gets away with
+  `padding: 1px` + a gradient behind an inset body ONLY because that body is
+  72–58% opaque; at 0.42 the shell read straight through and lit the panel
+  warm-grey (30,25,17 against the void's 10,9,8). **The giveaway was that
+  `?mat=line`, which paints no ground at all, produced the SAME lightening** —
+  so the ground was never the cause. The lip is a clipped RING now (outer
+  chamfered contour clockwise, inner counter-clockwise; nonzero winding makes
+  the middle a hole), which also puts back the edge a `clip-path` had removed:
+  **a clip cuts a border, it never strokes one**, so the earlier flat-border
+  housing had no line on either diagonal.
+- ⚠ **TWO OF THE PLATE'S VALUES DO NOT SURVIVE THE CHANGE OF SHAPE.** Its
+  bloom is `radial-gradient(130% 70% at 84% -8%)` — percentages of a 420x680
+  CARD, ~550px, a corner catching light; the same fractions on an 1150x600
+  housing are 1495px and light the whole quadrant, so the bloom is stated in
+  PIXELS. And `brightness(1.08)` belongs to the plate's OPEN state, tuned for a
+  small card over a bright WebGL bed; over a band of void it turns the ground
+  grey. The seed body's plain `blur()` is the one that generalises.
+- ⚠ **THE GOLD LIP CONTRADICTS `console.css`'s "the panel's own edge is DAWN,
+  not gold", deliberately.** The services card's own edge IS gold, so the house
+  has two precedents pointing opposite ways; the difference is that a console
+  is a SCREEN you look into and a card is a machined SLAB you look at, and this
+  is the device the screen is set into. Owner instruction; the README asks for
+  the scope. ⚠ The structure INSIDE stays dawn either way and the ledger still
+  asserts zero gold on the register's rules, the directory's rule, the column
+  seam and the era heads.
 - ⚠ **A HEADER ROW MAY NOT HAVE A CENTRE HERE.** The tab strip seats flush on
   the rail's top line and IS that band's left run; a centre slot printed
   straight through the client's own name. The header stops at the column split

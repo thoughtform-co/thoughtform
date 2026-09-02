@@ -58,6 +58,9 @@
 
   /* How far a housing sits outboard of the reading band it encloses. */
   --hpl-housing-gutter: 20px;
+  /* The plate rung of ADR-065's depth ladder — seed 16 / plate 26 / chrome 0.
+     The services plate runs 16 seed → 26 open; a housing is never a seed. */
+  --hpl-ch: 26px;
   /* The header/foot band heights. The proof header shares the tab strip's
      own band, so it is the same 44px by construction. */
   --hpl-head-h: var(--fl-tabs-h, 44px);
@@ -65,9 +68,15 @@
   --hpl-stub: 21px;
 }
 
+/* ⚠ 0.42, NOT THE CONSOLE'S 0.86 (owner: "work with a bit of transparency").
+   `--con-ground` was tuned by eye for a small panel that has to hold copy over
+   a live scene; a housing is the whole band, and at that alpha it is a pane
+   rather than a device. Half of it reads as a tint the corridor still comes
+   through — which is the services plate's own argument, whose open body sits
+   at rgba(8,7,6,0.58) over a much brighter bed than this one. */
 .hpl[data-hpl-mat="glass"] {
-  --hpl-ground: rgba(var(--void-deep-rgb), 0.86);
-  --hpl-blur: 9px;
+  --hpl-ground: rgba(var(--void-deep-rgb), 0.42);
+  --hpl-blur: 14px;
 }
 
 /* `hudHtml` ships the fixed gold gateway radial; production covers it with
@@ -270,33 +279,177 @@
   pointer-events: none;
 }
 
-/* ONE machined slab on the lawful TR+BL diagonal. Drawn, never a container. */
+/* ══ THE HOUSING ══════════════════════════════════════════════════════════
+   ONE machined slab on the lawful TR+BL diagonal. Drawn, never a container.
+
+   ⚠ IT IS THE SERVICES PLATE'S MATERIAL (owner, 2026-09-02: "work with a bit
+   of transparency and then the golden glass like effect which we use in the
+   services section") — a 168deg gold → dawn → gold LIP over a translucent
+   glass body, its 174deg dawn wash, its gold corner bloom and its scanline.
+   The read is a machined edge catching light ALONG ITS LENGTH, which a flat
+   1px border cannot make.
+
+   ⚠ AND THE LIP IS A CLIPPED RING, NOT A PADDED BOX. `.svc-plate__sh` gets
+   away with `padding: 1px` + a gradient behind an inset body because that
+   body is 72–58% opaque and hides it. A housing that is "a bit transparent"
+   does not: at 0.42 the shell's gradient read straight through the interior
+   and lit the whole panel warm-grey. MEASURED — the giveaway was that
+   `?mat=line`, which paints no ground at all, produced the SAME lightening
+   (30,25,17 against the void's 10,9,8), so the ground was never the cause.
+   The lip is therefore its own layer clipped to a RING: the outer chamfered
+   contour clockwise, then the inner one counter-clockwise, which nonzero
+   winding renders as a hole. Nothing paints inside it, so the body's
+   transparency is the body's own business.
+
+   ⚠ A `clip-path` CUTS A BORDER, IT NEVER STROKES ONE (`proof.md`'s own
+   finding). That is why the earlier flat-border housing had no line at all on
+   its two diagonals — the cut simply removed it. The ring is what puts the
+   chamfer's own edge back.
+
+   ⚠ THE CHAMFER IS THE PLATE RUNG, 26px. ADR-065's ladder is seed 16 / plate
+   26 / chrome 0, and the services plate runs 16 seed → 26 open. The console
+   INSIDE this drops its cut to square (rule 4), so the surface carries exactly
+   one machined corner pair at exactly one depth.
+
+   ⚠ THE GOLD LIP CONTRADICTS `console.css`'s "the panel's own edge is DAWN,
+   not gold" — deliberately, and the README asks for the ruling. The services
+   card's own edge IS gold; the difference between the two precedents is that
+   a console is a SCREEN you look into and a card is a machined SLAB you look
+   at. This is the device the screen is set into.
+   ⚠ The structure INSIDE stays dawn regardless: the register's rules, the
+   directory's rule, the column seam and the era heads are the line ladder, and
+   the capture's ledger still asserts zero gold on them. */
+
 .hpl-housing {
   position: absolute;
   z-index: 0;
-  border: 1px solid var(--hpl-seam);
-  background: var(--hpl-ground);
-  clip-path: polygon(
-    0 0,
-    calc(100% - 22px) 0,
-    100% 22px,
-    100% 100%,
-    22px 100%,
-    0 calc(100% - 22px)
-  );
   pointer-events: none;
 }
+
+/* The lip. Outer contour clockwise, inner counter-clockwise — the winding is
+   what makes the middle a hole rather than a fill. */
+.hpl-housing::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    168deg,
+    rgba(var(--gold-rgb), 0.34) 0%,
+    rgba(var(--dawn-alt-rgb), 0.1) 45%,
+    rgba(var(--gold-rgb), 0.1) 70%,
+    rgba(var(--gold-rgb), 0.3) 100%
+  );
+  clip-path: polygon(
+    /* outer, clockwise from the top-left */ 0 0,
+    calc(100% - var(--hpl-ch)) 0,
+    100% var(--hpl-ch),
+    100% 100%,
+    var(--hpl-ch) 100%,
+    0 calc(100% - var(--hpl-ch)),
+    0 0,
+    /* inner, counter-clockwise, 1px in — the chamfer follows at −0.6px, the
+       services plate's own number, because a 45° cut offset inward by d moves
+       its diagonal by d·√2 and matching the two exactly leaves the lip visibly
+       thicker on the diagonals than on the straight runs */
+    1px 1px,
+    1px calc(100% - 1px - (var(--hpl-ch) - 0.6px)),
+    calc(1px + (var(--hpl-ch) - 0.6px)) calc(100% - 1px),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(100% - 1px) calc(1px + (var(--hpl-ch) - 0.6px)),
+    calc(100% - 1px - (var(--hpl-ch) - 0.6px)) 1px,
+    1px 1px
+  );
+}
+
+/* The glass. Its own layer inside the lip, so what it does with transparency
+   is independent of what the lip does with light. */
+.hpl-housing__bd {
+  position: absolute;
+  inset: 1px;
+  clip-path: polygon(
+    0 0,
+    calc(100% - (var(--hpl-ch) - 0.6px)) 0,
+    100% calc(var(--hpl-ch) - 0.6px),
+    100% 100%,
+    calc(var(--hpl-ch) - 0.6px) 100%,
+    0 calc(100% - (var(--hpl-ch) - 0.6px))
+  );
+}
+
+/* ⚠ `line` PAINTS NO GROUND AT ALL — the lip alone, over whatever is behind.
+   That is what makes the knob a real comparison rather than two shades of one
+   answer, and it is only possible because the lip is a ring. */
+.hpl[data-hpl-mat="glass"] .hpl-housing__bd {
+  background:
+    linear-gradient(174deg, rgba(var(--dawn-alt-rgb), 0.05) 0%, rgba(var(--dawn-alt-rgb), 0) 50%),
+    /* ⚠ THE BLOOM IS SIZED IN PIXELS, NOT PERCENTAGES, AND THAT IS THE ONE
+       PLACE THE RECIPE COULD NOT BE COPIED. The services plate writes it as
+       `radial-gradient(130% 70% at 84% -8%, …)` — percentages of a 420×680
+       CARD, where 130% is ~550px and reads as a corner catching light. The
+       same fractions on an 1150×600 housing are 1495px wide and light the
+       whole top-right quadrant: a wash, which is the opposite claim. A corner
+       catch has a PHYSICAL size, so it is stated as one. */
+    radial-gradient(
+        460px 300px at calc(100% - 90px) -40px,
+        rgba(var(--gold-rgb), 0.13),
+        transparent 62%
+      ),
+    var(--hpl-ground);
+}
 @supports (backdrop-filter: blur(2px)) {
-  .hpl[data-hpl-mat="glass"] .hpl-housing {
+  .hpl[data-hpl-mat="glass"] .hpl-housing__bd {
+    /* ⚠ NO `brightness()`, AND THAT IS THE SERVICES PLATE'S OWN SPLIT. Its
+       SEED body is `blur(12px)`; only its OPEN body adds `brightness(1.08)`,
+       a lift tuned for a small card over a bright WebGL bed. Over a whole band
+       it turns the ground grey, and on the era stage that put the hologram on
+       a card instead of in the dark. */
+    -webkit-backdrop-filter: blur(var(--hpl-blur));
     backdrop-filter: blur(var(--hpl-blur));
   }
 }
+
+/* The plate's own scanline, at the plate's own alpha. */
+.hpl[data-hpl-mat="glass"] .hpl-housing__bd::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(var(--gold-rgb), 0.025) 0 1px,
+    transparent 1px 3px
+  );
+}
+
 /* Open-bottomed: on the era stage the rail's last tick falls INSIDE the chip
    frames at every laptop shape, so the walls stop at the reel's top edge and
-   the chips are the terminus. */
-.hpl-housing[data-open] {
-  border-bottom: 0;
-  clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%);
+   the chips are the terminus. The lip's inner contour runs to the bottom edge
+   so the ring has no bottom segment at all. */
+.hpl-housing[data-open]::before {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--hpl-ch)) 0,
+    100% var(--hpl-ch),
+    100% 100%,
+    0 100%,
+    0 0,
+    1px 1px,
+    1px 100%,
+    calc(100% - 1px) 100%,
+    calc(100% - 1px) calc(1px + (var(--hpl-ch) - 0.6px)),
+    calc(100% - 1px - (var(--hpl-ch) - 0.6px)) 1px,
+    1px 1px
+  );
+}
+.hpl-housing[data-open] .hpl-housing__bd {
+  inset: 1px 1px 0;
+  clip-path: polygon(
+    0 0,
+    calc(100% - (var(--hpl-ch) - 0.6px)) 0,
+    100% calc(var(--hpl-ch) - 0.6px),
+    100% 100%,
+    0 100%
+  );
 }
 
 /* A seam between two record cells. Its own element rather than a border on
@@ -364,19 +517,20 @@
    misalignment"), so the clearance is taken from BOTH sides and the whole
    direction moves in with it. That is the housing's real cost — 44px of
    width, stated — rather than a right edge quietly tucked in. */
+/* ⚠ THE CLEARANCE IS GONE WITH THE PANE. While the ground was the console's
+   0.86 the housing had to come 28px inboard of the band so its slab did not
+   sit under the right rail's SECTOR readout, which reaches 22px inside the
+   band edge — 56px of the composition spent on a collision. A 0.42 tint under
+   a dawn readout on void is a sub-2% luminance shift, so the housing takes the
+   instrument band whole and the casefile keeps its width.
+   ⚠ THE CONTENT STILL SITS INSIDE THE WALL, NOT ON IT. Without the pad the tab
+   strip's "01" starts at the housing's own lip — a technical drawing whose
+   outermost rule touches the wall has lost its margin (ADR-070 U11, about this
+   exact band). */
 .hpl .fl-case[data-hpl-dir="v2"] {
-  /* ⚠ 28px, MEASURED AGAINST THE WIDEST READOUT. The right rail's three
-     readouts are right-aligned and SECTOR is the longest, reaching x 1129 at
-     1280x720 against a band edge of 1150.9 — so the clearance has to exceed
-     21.9px, and 22 sat exactly on the boundary and failed in one theme. */
-  --hpl-housing-clear: 28px;
-  /* ⚠ AND THE CONTENT SITS INSIDE THE WALL, NOT ON IT. Without this the tab
-     strip's "01" starts at the housing's own border — a technical drawing
-     whose outermost rule touches the wall has lost its margin, which is the
-     ruling ADR-070 U11 made about this exact band. */
   --hpl-housing-pad: 18px;
-  left: calc(var(--instrument-inset, 0px) + var(--hpl-housing-clear) + var(--hpl-housing-pad));
-  right: calc(var(--instrument-inset, 0px) + var(--hpl-housing-clear) + var(--hpl-housing-pad));
+  left: calc(var(--instrument-inset, 0px) + var(--hpl-housing-pad));
+  right: calc(var(--instrument-inset, 0px) + var(--hpl-housing-pad));
 }
 .hpl .fl-case[data-hpl-dir="v2"] .hpl-housing {
   left: calc(var(--hpl-housing-pad) * -1);
@@ -807,36 +961,17 @@
    band is symmetric by law, so the clearance is taken from both sides and
    `--vwd-pad-x` grows by it — which costs each side column 22px of measure.
    That is the housing's price on this surface, stated. */
-/* ⚠ THE ERA HOUSING IS LINE-ONLY, WHATEVER THE MATERIAL KNOB SAYS, AND THAT
-   IS A LAW RATHER THAN A DODGE. The capable station is TRANSPARENT, not a
-   cover plane: the corridor's ambient survives through `#about` and this
-   stage and dies at `#practice`, and the station additionally overlaps
-   `#about` by -120svh for the handoff. A slab with a ground there is not a
-   background at all — it is a black pane sliding over the previous section,
-   which is the exact defect `voidwalker-datum.css` records against its own
-   root. The proof casefile is the surface that may carry one: it sits over
-   the parked brandmark and its console already does.
-
-   ⚠ AND IT IS WHAT LETS THE HOUSING KEEP THE BAND. Measured at 1280x720: the
-   right rail's SECTOR readout reaches to x 1129, 22px inside the band's own
-   edge, so a slab with a GROUND has to come in far enough to clear it — and
-   at the clearance that takes, the two side columns lose enough measure that
-   FACTS overflows its seat. Line-only, the border passes behind the readout
-   exactly as production's own console does, and the composition keeps its
-   width. */
-.hpl-eras[data-hpl-dir="v2"] .hpl-housing {
-  background: none;
-  backdrop-filter: none;
-}
-/* ⚠ THE HOUSING SITS ON THE BAND, AND THE CONTENT MOVES IN BY ITS OWN
-   PADDING. Seating it 20px OUTBOARD made it 1062px wide against a 1022px
-   band, which is the one thing ADR-082 U21's sweep exists to fail: nothing
-   wide enough to read as a full-bleed line may paint inside this station.
-   So the wall takes the band exactly and the reading band grows by the
-   housing's inner padding — 18px a side, which is what a housing costs here.
-   ⚠ `--vwd-measure` is `min(100%, 23rem)`, so below a 368px column the
-   measure follows the column; the two side columns are 360px after this and
-   the prose narrows by 8px rather than the seats overflowing. */
+/* ⚠ THE ERA HOUSING TAKES THE GLASS TOO, AND THE OBJECTION IT ONCE CARRIED
+   WAS TO A PANE RATHER THAN TO A GROUND. This station is TRANSPARENT by law —
+   the corridor's ambient survives through `#about` and it, and the station
+   overlaps `#about` by -120svh for the handoff — so at the console's own 0.86
+   a slab here is a black plane sliding over the previous section, which is
+   exactly what `voidwalker-datum.css` records against its own root. At 0.42
+   with a 14px blur it is a tint the corridor reads through, which is the same
+   claim the services plate makes over a much brighter bed.
+   ⚠ THAT IS A JUDGEMENT THE LAB CANNOT SETTLE: it has void behind it, and the
+   thing being asked about is what the corridor looks like THROUGH it. It is in
+   the README's ruling list for that reason. */
 .hpl-eras[data-hpl-dir="v2"] .vwd {
   --hpl-housing-pad: 18px;
   --vwd-pad-x: calc(

@@ -300,7 +300,15 @@ function probe() {
        runs under them — so what is gated is a painted GROUND, which is what
        actually costs a readout its legibility. A border crossing behind is
        reported for the owner instead. */
-    const groundy = alpha(cs.backgroundColor) > 0.05 || cs.backgroundImage !== "none";
+    /* ⚠ THE THRESHOLD IS 0.5, AND IT IS A PROXY THAT SAYS SO. What actually
+       costs a readout its legibility is the COMPOSITED contrast behind it, and
+       that cannot be settled in a lab whose background is void — the question
+       is what the corridor looks like through the glass. `--con-ground` 0.86
+       is the value this house tuned by eye for a panel that must hold copy, so
+       half of it is the line between a pane and a tint: at 0.42 over void the
+       luminance shift behind a dawn readout is under 2%. Anything opaque
+       enough to be a slab still fails. */
+    const groundy = alpha(cs.backgroundColor) > 0.5;
     for (const t of teles) {
       if (r.right > t.x && r.left < t.x + t.w && r.bottom > t.y && r.top < t.y + t.h) {
         if (labChrome && groundy)
