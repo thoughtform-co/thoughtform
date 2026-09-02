@@ -83,11 +83,12 @@ describe("latent-flight flags", () => {
   });
 
   it("parses every switch and rejects a hold id it cannot name", () => {
-    expect(parseFlags("?boot=0&hold=hud-power&capture=1&rm=1")).toEqual({
+    expect(parseFlags("?boot=0&hold=hud-power&capture=1&rm=1&bloom=0")).toEqual({
       boot: false,
       hold: "hud-power",
       capture: true,
       reducedMotion: true,
+      bloom: false,
     });
     expect(parseFlags("?hold=<script>").hold).toBeNull();
   });

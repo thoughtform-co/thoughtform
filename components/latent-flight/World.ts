@@ -49,6 +49,15 @@ export interface World {
   root: HTMLElement;
   canvas: HTMLCanvasElement;
   events: Emitter<LfEvents>;
-  /** Renderer profile from the one-shot probe; `"mobile"` caps antialias. */
+  /** Renderer profile from the one-shot probe; anything but `ok`/`unknown`
+   *  turns antialias and multisampling off. */
   gpu: "ok" | "low" | "software" | "unknown";
+  /** When a post chain is mounted it replaces the plain render: the engine
+   *  calls this instead of `renderer.render`. Null = no post. */
+  compose: (() => void) | null;
+  /** The post chain's composer, for the debug handle only. */
+  post: { passes: { name: string; enabled: boolean }[] } | null;
+  /** World-space anchors the HUD projects and the capture reads by name
+   *  (`star`, later each waypoint). Written by the system that owns them. */
+  anchors: Map<string, THREE.Vector3>;
 }

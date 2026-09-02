@@ -20,6 +20,8 @@ export interface LfFlags {
   capture: boolean;
   /** Reduced motion, from the query. The engine ORs it with the media query. */
   reducedMotion: boolean;
+  /** `?bloom=0` mutes the bloom pass — the on/off diff is a capture gate. */
+  bloom: boolean;
 }
 
 export const DEFAULT_FLAGS: LfFlags = {
@@ -27,6 +29,7 @@ export const DEFAULT_FLAGS: LfFlags = {
   hold: null,
   capture: false,
   reducedMotion: false,
+  bloom: true,
 };
 
 export function parseFlags(search: string): LfFlags {
@@ -37,5 +40,6 @@ export function parseFlags(search: string): LfFlags {
     hold: hold && /^[a-z0-9-]+$/i.test(hold) ? hold : null,
     capture: q.get("capture") === "1",
     reducedMotion: q.get("rm") === "1",
+    bloom: q.get("bloom") !== "0",
   };
 }

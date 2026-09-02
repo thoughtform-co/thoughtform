@@ -14,10 +14,12 @@ import { stepLoop } from "@/lib/latent-flight/engine/loop";
 import { resetLfStore, setLfState } from "@/lib/latent-flight/engine/store";
 import type { LfFlags } from "@/lib/latent-flight/flags";
 import { advanceClock, createGameClock } from "@/lib/latent-flight/gameClock";
+import { pulsarRef, type PulsarReading } from "@/lib/latent-flight/pulsarRef";
 import { VISTA } from "@/lib/latent-flight/vistaPalette";
 import { classifyRenderer } from "@/lib/webgl/rendererClass";
 
 import type { LfEvents, World } from "./World";
+import { rawColor } from "./scene/color";
 import type { LfSystem } from "./systems/System";
 
 /**
@@ -66,15 +68,36 @@ export interface PixelSummary {
   gold: number;
   /** First gold-dominant pixel, CSS px from the top-left, or null. */
   goldAt: [number, number] | null;
+  /** Gold-dominant pixels inside the focus radius (0 without a focus). */
+  goldNear: number;
+}
+
+export interface PixelFocus {
+  /** CSS px from the top-left. */
+  x: number;
+  y: number;
+  /** CSS px. */
+  r: number;
 }
 
 declare global {
   interface Window {
     __latentFlight?: {
-      samplePixels: () => Promise<PixelSummary>;
+      samplePixels: (focus?: PixelFocus) => Promise<PixelSummary>;
       state: () => LfState;
       frame: () => number;
       dispatch: (event: LfEvent) => LfState;
+      pulsar: () => PulsarReading;
+      /** Game time, seconds. */
+      time: () => number;
+      /** Named world anchors projected to CSS px (top-left origin). */
+      anchors: () => Record<string, [number, number]>;
+      /** Debug: render one frame synchronously (with or without post) and
+       *  summarise its pixels — for environments whose rAF never fires. */
+      renderOnce: (withPost: boolean) => PixelSummary;
+      world: () => World;
+      /** Debug: one pixel of the current default framebuffer, CSS px. */
+      pixelAt: (x: number, y: number) => [number, number, number];
     };
   }
 }
@@ -92,6 +115,7 @@ export class LatentFlightEngine {
   private ro: ResizeObserver | null = null;
   private unsubQuality: () => void = () => {};
   private pixelRequest: ((s: PixelSummary) => void) | null = null;
+  private pixelFocus: PixelFocus | null = null;
 
   constructor(opts: EngineOptions) {
     const { canvas, root, flags, reducedMotion, systems } = opts;
@@ -105,7 +129,17 @@ export class LatentFlightEngine {
       // else keeps the cheaper swap.
       preserveDrawingBuffer: flags.capture,
     });
-    renderer.setClearColor(VISTA.ground, 1);
+    // ⚠ ONE COLOUR CONVENTION, AND THIS LINE IS WHAT ENFORCES IT. Every
+    // painter on this site writes DISPLAY values from its shaders and the
+    // canvas shows them as-is. three, however, converts the CLEAR colour and
+    // every built-in material to `outputColorSpace` on the way to the screen
+    // — and postprocessing's ClearPass reuses that converted value — so with
+    // the default sRGB output the void cleared to (62,59,56) instead of
+    // (10,9,8) in both the plain and the composed path (measured, headed).
+    // A linear output space makes three's conversion the identity: the raw
+    // token bytes in `scene/color.ts` are what reaches the screen.
+    renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+    renderer.setClearColor(rawColor(VISTA.ground), 1);
     renderer.autoClear = true;
 
     const scene = new THREE.Scene();
@@ -128,6 +162,9 @@ export class LatentFlightEngine {
       canvas,
       events: this.events,
       gpu,
+      compose: null,
+      post: null,
+      anchors: new Map(),
     };
 
     resetLfStore();
@@ -155,10 +192,38 @@ export class LatentFlightEngine {
 
     if (flags.capture) {
       window.__latentFlight = {
-        samplePixels: () => this.samplePixels(),
+        samplePixels: (focus) => this.samplePixels(focus),
         state: () => this.world.fsm,
         frame: () => this.frame,
         dispatch: (event) => this.dispatch(event),
+        pulsar: () => pulsarRef.current,
+        time: () => this.world.clock.t,
+        anchors: () => this.projectAnchors(),
+        renderOnce: (withPost) => {
+          const w = this.world;
+          for (const s of this.systems) s.render?.(0, w);
+          if (withPost && w.compose) w.compose();
+          else w.renderer.render(w.scene, w.camera);
+          return this.readPixels(null);
+        },
+        world: () => this.world,
+        pixelAt: (x, y) => {
+          const w = this.world;
+          w.renderer.setRenderTarget(null);
+          const gl = w.renderer.getContext();
+          const dpr = w.size.dpr || 1;
+          const px = new Uint8Array(4);
+          gl.readPixels(
+            Math.round(x * dpr),
+            gl.drawingBufferHeight - 1 - Math.round(y * dpr),
+            1,
+            1,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            px
+          );
+          return [px[0], px[1], px[2]];
+        },
       };
     }
   }
@@ -223,11 +288,14 @@ export class LatentFlightEngine {
       });
       this.acc = r.acc;
       for (const s of this.systems) s.render?.(r.alpha, w);
-      w.renderer.render(w.scene, w.camera);
+      if (w.compose) w.compose();
+      else w.renderer.render(w.scene, w.camera);
       if (this.pixelRequest) {
         const resolve = this.pixelRequest;
+        const focus = this.pixelFocus;
         this.pixelRequest = null;
-        resolve(this.readPixels());
+        this.pixelFocus = null;
+        resolve(this.readPixels(focus));
       }
     } catch (err) {
       // A system that throws every frame would flood the console; pause
@@ -290,14 +358,30 @@ export class LatentFlightEngine {
   /** Resolves with a summary of the NEXT rendered frame's pixels — read
    *  right after `renderer.render`, which is the only moment the buffer is
    *  guaranteed to hold the frame without `preserveDrawingBuffer`. */
-  samplePixels(): Promise<PixelSummary> {
+  samplePixels(focus?: PixelFocus): Promise<PixelSummary> {
     return new Promise((resolve) => {
       this.pixelRequest = resolve;
+      this.pixelFocus = focus ?? null;
       if (!this.running) this.resume();
     });
   }
 
-  private readPixels(): PixelSummary {
+  private projectAnchors(): Record<string, [number, number]> {
+    const out: Record<string, [number, number]> = {};
+    const v = new THREE.Vector3();
+    const { camera, size } = this.world;
+    camera.updateMatrixWorld();
+    for (const [name, world] of this.world.anchors) {
+      v.copy(world).project(camera);
+      out[name] = [(v.x * 0.5 + 0.5) * size.w, (0.5 - v.y * 0.5) * size.h];
+    }
+    return out;
+  }
+
+  private readPixels(focus: PixelFocus | null): PixelSummary {
+    // The default framebuffer, explicitly: a composer pass may leave one of
+    // its own targets bound, and readPixels reads whatever is bound.
+    this.world.renderer.setRenderTarget(null);
     const gl = this.world.renderer.getContext();
     const w = gl.drawingBufferWidth;
     const h = gl.drawingBufferHeight;
@@ -307,8 +391,12 @@ export class LatentFlightEngine {
     let sum = 0;
     let max = 0;
     let gold = 0;
+    let goldNear = 0;
     let goldAt: [number, number] | null = null;
     const dpr = this.world.size.dpr || 1;
+    const fx = focus ? focus.x * dpr : 0;
+    const fy = focus ? focus.y * dpr : 0;
+    const fr2 = focus ? focus.r * dpr * (focus.r * dpr) : 0;
     for (let i = 0; i < buf.length; i += 4) {
       const r = buf[i];
       const g = buf[i + 1];
@@ -320,18 +408,20 @@ export class LatentFlightEngine {
       // Gold-dominant: bright, warm, r > g > b with the token's own ratios.
       if (r > 120 && r > g * 1.08 && g > b * 1.4) {
         gold += 1;
-        if (!goldAt) {
-          const px = (i / 4) % w;
-          const py = (i / 4 - px) / w;
-          // readPixels is bottom-up; report top-down CSS px.
-          goldAt = [px / dpr, (h - 1 - py) / dpr];
+        const px = (i / 4) % w;
+        const py = h - 1 - (i / 4 - px) / w; // readPixels is bottom-up
+        if (!goldAt) goldAt = [px / dpr, py / dpr];
+        if (focus) {
+          const dx = px - fx;
+          const dy = py - fy;
+          if (dx * dx + dy * dy <= fr2) goldNear += 1;
         }
       }
     }
     let distinct = 0;
     for (let i = 0; i < 256; i++) distinct += seen[i];
     const n = buf.length / 4;
-    return { w, h, mean: n ? sum / n : 0, distinct, max, gold, goldAt };
+    return { w, h, mean: n ? sum / n : 0, distinct, max, gold, goldAt, goldNear };
   }
 
   /* ── Listeners ─────────────────────────────────────────────────────── */

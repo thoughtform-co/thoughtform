@@ -121,3 +121,7 @@ docs/design/hud-panel-lab/report.json
 # the offline skill's waves folder for the /test/voidwalker-avatar-preview
 # route; never checked in (per-machine, 20+ MB per wave).
 public/_previews/
+
+# Latent Flight lab captures (scripts/capture-latent-flight.mjs) — shoots, not sources
+docs/design/latent-flight/*.png
+docs/design/latent-flight/report.json
