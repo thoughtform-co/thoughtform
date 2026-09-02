@@ -1,0 +1,73 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /test/latent-flight — the page
+   ═══════════════════════════════════════════════════════════════════════
+
+   A GAME PAGE, not a scroll surface: the root is fixed to the viewport and
+   nothing scrolls. The site's HUD chrome (`hudHtml`) paints its own fixed
+   `.hud` at z 50 over everything; the canvas sits at z 1 under it and the
+   glass HUD (hud.css) between them at z 40.
+
+   The stacking order, bottom to top:
+     .lf-stage  z 1   the world canvas (or the chart-mode ground)
+     .lf-hud    z 40  the glass HUD — projected marks + the centre instruments
+     .hud       z 50  the site's rails, corners, wordmark (untouched)
+
+   ⚠ `.lf` carries no transform, filter or will-change: it is the ancestor
+   of a `position: fixed` frame, and any of those would make it the frame's
+   containing block and drag the rails off the viewport.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.lf {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+}
+
+/* `hudHtml` ships the fixed gold gateway radial; production covers it with
+   the opaque corridor canvas. Here the world canvas is opaque too, and the
+   node is hidden besides — two covers, because a lost context would
+   otherwise show the radial through a dead canvas. */
+.lf .gateway {
+  display: none;
+}
+
+/* ⚠ `display: contents` — the frame wrapper generates NO BOX. Do not put
+   `position` / `inset` / `pointer-events` on it; the `.hud` inside positions
+   itself against the viewport. */
+.lf-hud-root {
+  display: contents;
+}
+
+.lf-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: var(--void, #0a0908);
+}
+
+.lf-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* CHART mode — no WebGL, a software rasteriser, or a viewport the flight deck
+   does not fit. The instruments still work over a static void. */
+.lf-chart {
+  position: absolute;
+  inset: 0;
+  background: var(--void, #0a0908);
+}
+
+/* The parse-injected manifest diamond is focusable-but-hidden without its
+   controller; the shell also sets it `inert`. */
+.lf #railManifest {
+  visibility: hidden;
+}
+
+/* Reduced motion: the site's PRM block already lifts the rails' curtain clip;
+   nothing on this page animates through CSS besides the transitions hud.css
+   declares, and those are ≤ 150ms UI states. */

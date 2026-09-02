@@ -1,0 +1,34 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   The glass HUD — layer L1 + the game's seats in the instrument frame (L2)
+   ═══════════════════════════════════════════════════════════════════════
+
+   PT Mono throughout (chrome). Every colour is a token; every size is on the
+   ladder the interface spec declares. Nothing here paints a ground: the HUD
+   is marks over the world, and the only boxes are the ones the corner law
+   allows (square, hairline, no radius).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.lf-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  text-transform: uppercase;
+  letter-spacing: var(--track-wider, 0.1em);
+  color: var(--dawn, #ebe3d6);
+  --lf-ease: var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* Screen-reader status line. */
+.lf-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
