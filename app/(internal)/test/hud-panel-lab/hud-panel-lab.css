@@ -1,0 +1,1043 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   /test/hud-panel-lab — do the evidence panels belong to the frame?
+   ═══════════════════════════════════════════════════════════════════════
+
+   Six directions on two surfaces. `v0` mounts production and this sheet does
+   not touch it; `v1`–`v5` re-seat the SAME production leaves.
+
+   ⚠ EVERY RULE IS SCOPED UNDER `.hpl[data-hpl-dir="…"]`, which is (0,3,0) or
+   more. Production's zone rules are bare class selectors at (0,1,0) and its
+   token blocks sit on `.fl-case` / `.vwd` at (0,1,0), so the scope wins
+   everywhere it must — and the lab sheet loads last besides. Nothing here
+   reaches a surface `v0` renders.
+
+   ⚠ TOKENS BEFORE ZONES. A direction re-seats the composition by overriding
+   the tokens the production rules already read (`--fl-rail-top`,
+   `--fl-panel-end`, `--fl-left-seam`, `--vwd-pad-x`, …) and only restates a
+   zone rule where it genuinely moves that zone. Restating geometry that
+   already derives correctly is how a lab and its subject stop agreeing.
+
+   ⚠ ONE LINE LADDER, THREE RUNGS, AND IT IS THE FRAME'S OWN.
+       datum  2px  rgba(dawn, .55)   = --hud-rail-line, the rail's track
+       seam   1px  rgba(dawn, .28)   = --hud-rail-line-soft
+       rule   1px  rgba(dawn, .12)
+   Structure is DAWN; gold stays on marks (the lit tab, the spine, the lit
+   row, the diamonds, the active chip). That is `console.css`'s own ruling —
+   "the panel's own edge is dawn, not gold … the rail's dividers keep the gold
+   hairlines, because those are marks ON the machine rather than its outline"
+   — applied to the surfaces that never got it. An alpha is re-derived per
+   theme by `--dawn-rgb` swapping, so one declaration is correct in both.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.hpl {
+  position: relative;
+  min-height: 100svh;
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+
+  --hpl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+
+  /* The ladder. */
+  --hpl-datum: var(--hud-rail-line, rgba(235, 227, 214, 0.55));
+  --hpl-seam: var(--hud-rail-line-soft, rgba(235, 227, 214, 0.28));
+  --hpl-rule: rgba(var(--dawn-rgb), 0.12);
+
+  /* Chrome type — the 10px control floor, never the 8.5px decorative one:
+     every string this sheet draws is a label somebody has to read. */
+  --hpl-chrome: clamp(10px, 0.78vw, 11.5px);
+  --hpl-chrome-track: 0.18em;
+  --hpl-ink: rgba(var(--dawn-rgb), 0.52);
+  --hpl-ink-lit: rgba(var(--dawn-rgb), 0.92);
+
+  /* Enclosure. `glass` is the console's OWN ground and blur, which is the
+     one translucent material this house has already solved in both themes;
+     `line` paints nothing. */
+  --hpl-ground: transparent;
+  --hpl-blur: 0px;
+
+  /* How far a housing sits outboard of the reading band it encloses. */
+  --hpl-housing-gutter: 20px;
+  /* The header/foot band heights. The proof header shares the tab strip's
+     own band, so it is the same 44px by construction. */
+  --hpl-head-h: var(--fl-tabs-h, 44px);
+  --hpl-foot-h: 26px;
+  --hpl-stub: 21px;
+}
+
+.hpl[data-hpl-mat="glass"] {
+  --hpl-ground: rgba(var(--void-deep-rgb), 0.86);
+  --hpl-blur: 9px;
+}
+
+/* `hudHtml` ships the fixed gold gateway radial; production covers it with
+   the opaque corridor canvas, and this lab has nothing behind the frame. */
+.hpl .gateway {
+  display: none;
+}
+
+/* ⚠ `.home-v2-hud-root` is `display: contents` — it generates NO BOX. Do not
+   put `position` / `inset` / `pointer-events` on it and then reason about
+   them; the frame inside positions itself. */
+
+/* ── The stage and its runway ────────────────────────────────────────────
+   ⚠ THE DOCUMENT REALLY SCROLLS. `HudNav` writes the nav-corner readout only
+   past `scrollY > innerHeight / 2`, and that readout is the instrument that
+   says PROOF / VOIDWALKER — the thing the panels below are being judged
+   against. Under a fixed root it reads 0 forever, silently. */
+.hpl-stage {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 100svh;
+  overflow: clip;
+}
+.hpl-runway {
+  height: 80svh;
+}
+
+/* `.stations`' own content box. `.fl-case` insets itself by
+   `--instrument-inset` ALONE on the documented assumption that its stage is
+   already inside this padding; without it every zone lands one full inset too
+   far outboard. */
+.hpl-stationbox {
+  position: absolute;
+  inset: 0;
+  padding: 0 var(--hud-content-inset, 0px);
+}
+.hpl-proof-stage {
+  position: relative;
+  height: 100%;
+}
+
+/* ═══ THE CHROME KIT ═════════════════════════════════════════════════════
+   Shared paint. Where each piece SITS is a per-direction question and lives
+   in the surface blocks below. */
+
+.hpl-head,
+.hpl-foot,
+.hpl-cellhead,
+.hpl-corners span {
+  font-family: var(--hpl-mono);
+  font-size: var(--hpl-chrome);
+  letter-spacing: var(--hpl-chrome-track);
+  text-transform: uppercase;
+  color: var(--hpl-ink);
+}
+
+.hpl-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+.hpl-head__l {
+  justify-self: start;
+}
+.hpl-head__c {
+  justify-self: center;
+  color: var(--hpl-ink-lit);
+}
+.hpl-head__r {
+  justify-self: end;
+}
+/* The 2px datum, in the rail's own material — the frame's track turned
+   horizontal. The one place this lab spends the top rung of the ladder. */
+.hpl-head__datum {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--hpl-datum);
+}
+
+.hpl-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.hpl-cellhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--hpl-seam);
+  pointer-events: none;
+}
+.hpl-cellhead__l {
+  color: var(--hpl-ink-lit);
+}
+/* ⚠ THE META TAKES THE LABEL'S SIZE AND SEPARATES ON ALPHA. `0.85em` of a
+   10px chrome rung is 8.5px, under this sheet's own 10px control floor —
+   caught by the capture at 1280x720. `.fl-dir__head` already answers this
+   correctly one column over: one size for the label and its count, and the
+   difference carried by weight and ink. */
+.hpl-cellhead__r {
+  font-size: inherit;
+  letter-spacing: 0.14em;
+  color: rgba(var(--dawn-rgb), 0.4);
+}
+
+/* Chrome at the extremes, in the field's own margin. */
+.hpl-corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.hpl-corners span {
+  position: absolute;
+  font-size: max(10px, calc(var(--hpl-chrome) * 0.92));
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hpl-corners span[data-c="tl"] {
+  left: 0;
+  top: 0;
+}
+.hpl-corners span[data-c="tr"] {
+  right: 0;
+  top: 0;
+  text-align: right;
+}
+.hpl-corners span[data-c="bl"] {
+  left: 0;
+  bottom: 0;
+}
+.hpl-corners span[data-c="br"] {
+  right: 0;
+  bottom: 0;
+  text-align: right;
+}
+
+/* Four additive Ls — the corner law's third grammar. ⚠ A bracketed box is
+   never also chamfered: one grammar per object. */
+.hpl-bracket {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.hpl-bracket i {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 0 solid var(--hpl-seam);
+}
+.hpl-bracket i[data-c="tl"] {
+  left: 0;
+  top: 0;
+  border-left-width: 1px;
+  border-top-width: 1px;
+}
+.hpl-bracket i[data-c="tr"] {
+  right: 0;
+  top: 0;
+  border-right-width: 1px;
+  border-top-width: 1px;
+}
+.hpl-bracket i[data-c="bl"] {
+  left: 0;
+  bottom: 0;
+  border-left-width: 1px;
+  border-bottom-width: 1px;
+}
+.hpl-bracket i[data-c="br"] {
+  right: 0;
+  bottom: 0;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+}
+
+/* The rail's major tick continued inboard: 21 x 2, its exact dimensions, in
+   its exact material. LEFT EDGE ONLY — the right-rail telemetry seats its
+   three readouts at rungs 2/12, 6/12 and 11/12 and reaches ~15px INSIDE the
+   band's right edge at 1280. */
+.hpl-stub {
+  position: absolute;
+  left: calc(var(--hpl-stub) * -1);
+  width: var(--hpl-stub);
+  height: 2px;
+  background: var(--hpl-datum);
+  pointer-events: none;
+}
+
+/* ONE machined slab on the lawful TR+BL diagonal. Drawn, never a container. */
+.hpl-housing {
+  position: absolute;
+  z-index: 0;
+  border: 1px solid var(--hpl-seam);
+  background: var(--hpl-ground);
+  clip-path: polygon(
+    0 0,
+    calc(100% - 22px) 0,
+    100% 22px,
+    100% 100%,
+    22px 100%,
+    0 calc(100% - 22px)
+  );
+  pointer-events: none;
+}
+@supports (backdrop-filter: blur(2px)) {
+  .hpl[data-hpl-mat="glass"] .hpl-housing {
+    backdrop-filter: blur(var(--hpl-blur));
+  }
+}
+/* Open-bottomed: on the era stage the rail's last tick falls INSIDE the chip
+   frames at every laptop shape, so the walls stop at the reel's top edge and
+   the chips are the terminus. */
+.hpl-housing[data-open] {
+  border-bottom: 0;
+  clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%);
+}
+
+/* A seam between two record cells. Its own element rather than a border on
+   the cell, because the cells are `overflow: hidden` at 34.5% while the seam
+   has to reach the column split at 37.5%. */
+.hpl-seam {
+  position: absolute;
+  left: 0;
+  width: var(--fl-col-split);
+  height: 1px;
+  background: var(--hpl-rule);
+  pointer-events: none;
+}
+
+/* ═══ SURFACE 1 · THE PROOF CASEFILE ═════════════════════════════════════ */
+
+/* ⚠ THE IRIS CLIP IS OFF FOR EVERY DIRECTION. `.fl-case` rests at
+   `inset(-30px -12px …)` so the reticles' overhanging half-arms survive; the
+   datum stubs reach 21px further, and the housing's own border sits on the
+   band edge. The PRM block does exactly this for the same reason. `v0` keeps
+   the production clip untouched. */
+.hpl .fl-case[data-hpl-dir] {
+  clip-path: none;
+}
+
+/* ── The line ladder (every direction past v0) ───────────────────────────
+   ⚠ THE STRUCTURE GOES TO DAWN AND THE MARKS STAY GOLD. Today the register's
+   five hairlines are gold .12/.24 and the directory's row rule is gold .13
+   dotted, against a frame whose track is dawn .55 — a hue swap AND a 4x alpha
+   gap between the panel and the thing it is meant to belong to. */
+.hpl .fl-case[data-hpl-dir]:not([data-hpl-dir="v0"]) .fl-proof-register__item {
+  border-top-color: var(--hpl-rule);
+}
+.hpl .fl-case[data-hpl-dir]:not([data-hpl-dir="v0"]) .fl-proof-register__item:first-child {
+  border-top-color: var(--hpl-seam);
+}
+.hpl .fl-case[data-hpl-dir]:not([data-hpl-dir="v0"]) .fl-proof-register__item:last-child {
+  border-bottom-color: var(--hpl-rule);
+}
+.hpl .fl-case[data-hpl-dir]:not([data-hpl-dir="v0"]) .fl-dir__list li + li .fl-row {
+  border-top: 1px solid var(--hpl-rule);
+}
+/* The column seam becomes SOLID. A dotted 1px at dawn-alt .24 reads as a
+   suggestion beside a 2px solid track; the frame's own guides are solid, and
+   `navigation-grammar.md` says so in as many words ("prefer solid stroke
+   colour … avoid reduced opacity as the default"). */
+.hpl .fl-case[data-hpl-dir]:not([data-hpl-dir="v0"]) .fl-split {
+  background: var(--hpl-seam);
+}
+
+/* ── The housing (v2) ────────────────────────────────────────────────────
+   From the rail's top line to its last tick — the exact box the console
+   already spans, widened to the whole instrument band.
+
+   ⚠ AND THE BAND IS NOT WIDE ENOUGH FOR IT, WHICH IS A FINDING RATHER THAN A
+   TUNING. The right rail's three telemetry readouts (BEARING / SECTOR /
+   LOCAL) seat INBOARD of the rail and reach ~16px past the band's right
+   edge — measured 1279 against a band edge of 1295 at 1440x800 — so a
+   band-width slab with a GROUND paints under them. Production's console
+   already overlaps there, but it overlaps with line work and a transparent
+   plate; a translucent slab is what actually costs a readout its legibility.
+
+   The house rule is that this band is SYMMETRIC (ADR-048: "the breakout is
+   symmetric, so the seam with band-width sections reads as hierarchy, not as
+   misalignment"), so the clearance is taken from BOTH sides and the whole
+   direction moves in with it. That is the housing's real cost — 44px of
+   width, stated — rather than a right edge quietly tucked in. */
+.hpl .fl-case[data-hpl-dir="v2"] {
+  /* ⚠ 28px, MEASURED AGAINST THE WIDEST READOUT. The right rail's three
+     readouts are right-aligned and SECTOR is the longest, reaching x 1129 at
+     1280x720 against a band edge of 1150.9 — so the clearance has to exceed
+     21.9px, and 22 sat exactly on the boundary and failed in one theme. */
+  --hpl-housing-clear: 28px;
+  /* ⚠ AND THE CONTENT SITS INSIDE THE WALL, NOT ON IT. Without this the tab
+     strip's "01" starts at the housing's own border — a technical drawing
+     whose outermost rule touches the wall has lost its margin, which is the
+     ruling ADR-070 U11 made about this exact band. */
+  --hpl-housing-pad: 18px;
+  left: calc(var(--instrument-inset, 0px) + var(--hpl-housing-clear) + var(--hpl-housing-pad));
+  right: calc(var(--instrument-inset, 0px) + var(--hpl-housing-clear) + var(--hpl-housing-pad));
+}
+.hpl .fl-case[data-hpl-dir="v2"] .hpl-housing {
+  left: calc(var(--hpl-housing-pad) * -1);
+  right: calc(var(--hpl-housing-pad) * -1);
+  top: var(--fl-rail-top);
+  height: var(--fl-rail-h);
+}
+/* ⚠ THE CHILDREN OF A CHAMFERED BOX ARE SQUARE. The console drops its own
+   TL+BR cut inside the housing, and so does the rail's leading station plate:
+   two chamfers of the same depth adjacent to each other is what a surface
+   looks like when it has been decorated rather than built (ADR-065 rule 4).
+   ⚠ This RETIRES ADR-065 U2's owner exception for this direction, which is
+   the first ruling the README asks for. */
+.hpl .fl-case[data-hpl-dir="v2"] .fl-con__console,
+.hpl .fl-case[data-hpl-dir="v2"] .fl-con__stn:first-of-type {
+  clip-path: none;
+}
+/* Inside one housing the console is a CELL, not a second framed object. */
+.hpl .fl-case[data-hpl-dir="v2"] .fl-con__console {
+  border-color: transparent;
+  background: none;
+}
+/* The console shortens by the foot bar it now sits above. The left column
+   already stops at t11, 45px clear of the same edge, so only this moves. */
+.hpl .fl-case[data-hpl-dir="v2"] {
+  --fl-panel-end: calc(var(--fl-rail-top) + var(--fl-rail-h) - var(--hpl-foot-h));
+}
+
+/* ── The header band ─────────────────────────────────────────────────────
+   It shares the tab strip's own band by construction: `.fl-tabs` seats flush
+   on the rail's top line and is `--fl-tabs-h` tall, which is this band. So
+   the left slot stays EMPTY and the tabs are the header's left run.
+
+   ⚠ AND IT STOPS AT THE COLUMN SPLIT, BECAUSE THE FIELD ALREADY HAS A HEAD.
+   The console's own `ConsoleRail` occupies exactly this band on the right —
+   it IS the field's header — so a band-wide row printed its centre and right
+   slots straight through WORK / CONFIGURATION / SUBSTRATE. Seen on the first
+   still, invisible to every geometry gate, because two labels overlapping is
+   the one thing containment tests never ask about. The header heads the
+   RECORD column; the rail heads the field. */
+.hpl .fl-case[data-hpl-dir] .hpl-head {
+  position: absolute;
+  left: 0;
+  right: calc(100% - var(--fl-col-split));
+  top: var(--fl-rail-top);
+  height: var(--hpl-head-h);
+  z-index: 2;
+  padding-bottom: 11px;
+  align-items: end;
+}
+.hpl .fl-case[data-hpl-dir] .hpl-head[data-kind="bar"],
+.hpl .fl-case[data-hpl-dir] .hpl-head[data-kind="fused"] {
+  border-bottom: 1px solid var(--hpl-seam);
+}
+
+/* ── The foot ────────────────────────────────────────────────────────────
+   Seated in the band the left column already leaves free between t11 and the
+   rail's last tick — measured 45px at 1280x720, which is what ADR-056 U11
+   bought when it moved the viz rule off the labelled major.
+
+   ⚠ `top`, NEVER `bottom`, AND THAT IS NOT A PREFERENCE. `casefile.css`
+   promotes every `[data-fl-panel]` with `will-change: transform` under
+   `data-proof-live`, and a promoted element is a containing block for its
+   absolutely positioned descendants — so a `bottom` here resolves against
+   whatever box the ladder seat happens to have. Measured on the first render:
+   the foot landed at y −126 on an 800px viewport. Every absolutely positioned
+   piece in this sheet is seated from the TOP for that reason. */
+.hpl .fl-case[data-hpl-dir] .hpl-foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--fl-rail-top) + var(--fl-rail-h) - var(--hpl-foot-h));
+  height: var(--hpl-foot-h);
+  z-index: 2;
+}
+.hpl .fl-case[data-hpl-dir] .hpl-foot[data-kind="bar"] {
+  border-top: 1px solid var(--hpl-seam);
+}
+
+/* ── Cell heads ──────────────────────────────────────────────────────────
+   ⚠ THE BRIEF'S HEAD IS FREE AND THE REGISTER'S IS NOT. There is
+   `clamp(16px, 2.6svh, 38px)` of air between the tab strip's bottom and
+   `--fl-body-top` — 18.7px at 1280x720 — and a 10px mono line with its rule
+   fits it exactly. The register has FOUR pixels of slack in its box and the
+   directory four in its band, so neither may grow a head at the binding
+   viewport; the register gets one only on the tall rung, out of the
+   `--fl-proof-top-gap` that is already pure air there. Chrome first, rhythm
+   second, never the type. */
+/* ⚠ THE BRIEF'S HEAD IS A CHILD OF `.fl-brief`, so its containing block is
+   ALREADY at `--fl-body-top` — seating it with the token again double-counts
+   and drops it 147px into the paragraph (measured). It hangs off its own
+   parent's top edge, upward, into the air above. */
+.hpl .fl-case[data-hpl-dir] .fl-brief > .hpl-cellhead {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -17px;
+  padding-bottom: 3px;
+}
+/* The register's head is a direct child of `.fl-case`, so it seats on the
+   ladder's own tokens — and only where there is air to seat it in. */
+.hpl .fl-case[data-hpl-dir] .hpl-cellhead[data-zone="register"] {
+  display: none;
+}
+@media (min-height: 1070px) {
+  .hpl .fl-case[data-hpl-dir] .hpl-cellhead[data-zone="register"] {
+    display: flex;
+    position: absolute;
+    left: 0;
+    width: var(--fl-col-l);
+    top: calc(var(--fl-left-seam) + var(--fl-proof-top-gap) - 19px);
+    z-index: 2;
+  }
+}
+
+/* ── Seams between the record cells (v2, v3) ─────────────────────────────
+   They run to the column split, so the record column reads as divided rather
+   than as three blocks that happen to share a left edge. */
+/* ⚠ ON THE TICK, NOT IN THE GAP. The brief/register seam IS `--fl-left-seam`,
+   which is tick 6 — seating it half a gap lower put it 5.5px off the ladder,
+   which is precisely the drift `.claude/rules/proof.md` names as the only way
+   this design fails silently. The directory seam below has no tick of its own
+   and is reported rather than asserted. */
+.hpl .fl-case[data-hpl-dir] .hpl-seam[data-at="register"] {
+  top: var(--fl-left-seam);
+}
+.hpl .fl-case[data-hpl-dir] .hpl-seam[data-at="directory"] {
+  top: calc(
+    var(--fl-left-seam) + var(--fl-proof-top-gap) + var(--fl-proof-h) + var(--fl-directory-gap) / 2
+  );
+}
+
+/* ── Datum stubs (v5) ────────────────────────────────────────────────────
+   Seated on the rungs the composition's own seams land on. t1 is the tab
+   strip's baseline rung, t6 the brief/register seam, t11 the record column's
+   floor. ⚠ `--fl-sec` is NOT t1 — it is `rail-top + 44px`, which lands 1.07px
+   off the tick at 1280x720 and 6.0px off at 1440x800. The stub goes on the
+   TICK; whether the strip should be re-derived to meet it is an owner
+   question (the README asks it), not something a lab may assume. */
+.hpl .fl-case[data-hpl-dir] .hpl-stub[data-tick="t1"] {
+  top: calc(var(--fl-rail-top) + var(--fl-rail-h) * 0.08333);
+}
+.hpl .fl-case[data-hpl-dir] .hpl-stub[data-tick="t6"] {
+  top: var(--fl-t6);
+}
+.hpl .fl-case[data-hpl-dir] .hpl-stub[data-tick="t11"] {
+  top: var(--fl-t11);
+}
+
+/* ── The field's marks ───────────────────────────────────────────────────
+   Seated on `.fl-panel`'s own box so the labels sit in the console's margin
+   rather than over its content. */
+.hpl .fl-case[data-hpl-dir] .hpl-field-marks {
+  position: absolute;
+  left: var(--fl-col-r);
+  right: 0;
+  top: var(--fl-panel-top);
+  height: calc(var(--fl-panel-end) - var(--fl-panel-top));
+  z-index: 5;
+  pointer-events: none;
+}
+/* ⚠ THE CORNER LABELS START BELOW THE CONSOLE'S OWN RAIL. Every plate on this
+   surface is headed by `ConsoleRail` — `flex: 0 0 clamp(32px, 7%, 44px)` on
+   the console's top edge — so labels seated on the panel's box print straight
+   through WORK / CONFIGURATION / SUBSTRATE. Seen on the first still of v5,
+   and invisible to every gate here: two labels overlapping is the check
+   containment never makes. The brackets keep the whole panel, because they
+   frame the instrument; the labels belong to its FIELD. */
+.hpl .fl-case[data-hpl-dir] .hpl-field-marks .hpl-corners {
+  top: 48px;
+}
+.hpl .fl-case[data-hpl-dir] .hpl-field-marks .hpl-corners span {
+  padding: 6px 10px;
+}
+/* ⚠ NOT ON THE MAP ROW'S LOWER CORNERS. `.fl-imap__stamp` is DOM chrome
+   pinned bottom-right over a drawing that scales, and the sheets own their
+   own counts there — a second label in the same corner is the said-twice
+   defect this surface has removed a console head, a foot and a designator
+   for. Suppressed by the SEAT, so the decision lives in one place instead of
+   in every caller. */
+.hpl
+  .fl-case[data-hpl-dir]
+  .hpl-field-marks[data-kind="intelligence-map"]
+  .hpl-corners
+  span[data-c="bl"],
+.hpl
+  .fl-case[data-hpl-dir]
+  .hpl-field-marks[data-kind="intelligence-map"]
+  .hpl-corners
+  span[data-c="br"] {
+  display: none;
+}
+
+/* ── v4: the boxed readout cells ─────────────────────────────────────────
+   The record column becomes three plates and the field is the one machined
+   object. ⚠ ZERO PADDING ON THE REGISTER AND THE DIRECTORY: four pixels of
+   slack apiece, so a box here is drawn in the gap that already exists, never
+   paid for out of the copy. */
+.hpl .fl-case[data-hpl-dir="v4"] .fl-brief,
+.hpl .fl-case[data-hpl-dir="v4"] .fl-proof-register,
+.hpl .fl-case[data-hpl-dir="v4"] .fl-dir {
+  border: 1px solid var(--hpl-rule);
+  background: var(--hpl-ground);
+}
+.hpl[data-hpl-mat="glass"] .fl-case[data-hpl-dir="v4"] .fl-brief,
+.hpl[data-hpl-mat="glass"] .fl-case[data-hpl-dir="v4"] .fl-proof-register,
+.hpl[data-hpl-mat="glass"] .fl-case[data-hpl-dir="v4"] .fl-dir {
+  border-color: var(--hpl-seam);
+}
+/* The brief's own head sits ON the plate's top edge rather than above it. */
+.hpl .fl-case[data-hpl-dir="v4"] .fl-brief > .hpl-cellhead {
+  top: -15px;
+  padding-inline: 10px;
+}
+
+/* ═══ SURFACE 2 · THE ERA STAGE ══════════════════════════════════════════ */
+
+.hpl-eras {
+  position: relative;
+  height: 100%;
+}
+
+/* ⚠ THE LAB OPTS INTO THE RAIL DATUM BY HAND (ADR-082 U20). Production gates
+   it on `#voidwalker[data-vw-mode="hologram"]`, which no lab can satisfy —
+   the datum is a VIEWPORT Y and only means anything where the station has
+   surrendered its padding and pinned to the top. Without this the block hangs
+   ~82px higher than the landing with a figure column ~15px wider: a window
+   that lies about the thing it looks onto. Same `min-height` rung as
+   production, for the same reason — move one, move the other. */
+@media (min-height: 720px) {
+  .hpl .vwd {
+    --vwd-pad-top: max(var(--vwd-pad-top-min), var(--hud-rail-y-start, 104px));
+  }
+}
+
+/* ⚠ THE GROUND IS THE LAB'S, ON THE STAGE, NEVER ON `.vwd`. On the landing
+   the station is transparent so the corridor's ambient reads through it, and
+   it overlaps `#about` by -120svh — an opaque root there is a black pane
+   sliding over the previous section. Here the stage has nothing behind it. */
+.hpl-eras {
+  background: var(--void, #0a0908);
+}
+
+/* ── The mast becomes a header ROW (v1–v4) ───────────────────────────────
+   Kicker left, title centre, year right, on one line. ⚠ IT BUYS ~20px, which
+   is what pays for a foot row: the mast stacks an 11px kicker over a 42px
+   title today, and a row is the taller of the two. The title keeps its clamp
+   byte-for-byte — the About name flies into this footprint and translates
+   without scaling, so no rung may step it down. */
+.hpl-eras[data-hpl-dir="v1"] .vwd__mast,
+.hpl-eras[data-hpl-dir="v2"] .vwd__mast,
+.hpl-eras[data-hpl-dir="v3"] .vwd__mast,
+.hpl-eras[data-hpl-dir="v4"] .vwd__mast {
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  justify-items: stretch;
+  width: calc(100% - 2 * var(--vwd-pad-x));
+  column-gap: clamp(16px, 2vw, 40px);
+}
+/* The kicker is one `<p>` holding two decode lines; `display: contents` lets
+   each take its own column without new DOM. */
+.hpl-eras[data-hpl-dir="v1"] .vwd__mast__kicker,
+.hpl-eras[data-hpl-dir="v2"] .vwd__mast__kicker,
+.hpl-eras[data-hpl-dir="v3"] .vwd__mast__kicker,
+.hpl-eras[data-hpl-dir="v4"] .vwd__mast__kicker {
+  display: contents;
+}
+.hpl-eras[data-hpl-dir="v1"] .vwd__mast__kicker > :first-child,
+.hpl-eras[data-hpl-dir="v2"] .vwd__mast__kicker > :first-child,
+.hpl-eras[data-hpl-dir="v3"] .vwd__mast__kicker > :first-child,
+.hpl-eras[data-hpl-dir="v4"] .vwd__mast__kicker > :first-child {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  text-align: left;
+}
+.hpl-eras[data-hpl-dir="v1"] .vwd__mast__kicker > :last-child,
+.hpl-eras[data-hpl-dir="v2"] .vwd__mast__kicker > :last-child,
+.hpl-eras[data-hpl-dir="v3"] .vwd__mast__kicker > :last-child,
+.hpl-eras[data-hpl-dir="v4"] .vwd__mast__kicker > :last-child {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  text-align: right;
+}
+.hpl-eras[data-hpl-dir="v1"] .vwd__mast__title,
+.hpl-eras[data-hpl-dir="v2"] .vwd__mast__title,
+.hpl-eras[data-hpl-dir="v3"] .vwd__mast__title,
+.hpl-eras[data-hpl-dir="v4"] .vwd__mast__title {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+}
+
+/* v3 reads the header as a LEFT-anchored row on a rule, the grid's own
+   top line. */
+.hpl-eras[data-hpl-dir="v3"] .vwd__mast {
+  grid-template-columns: auto 1fr auto;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hpl-seam);
+}
+.hpl-eras[data-hpl-dir="v3"] .vwd__mast__title {
+  grid-column: 1;
+  justify-self: start;
+  text-align: left;
+}
+.hpl-eras[data-hpl-dir="v3"] .vwd__mast__kicker > :first-child {
+  grid-column: 2;
+  justify-self: end;
+}
+
+/* v4's 2px datum above the row — the rail's track, turned horizontal. */
+/* ⚠ THE DATUM'S AIR IS 4px, NOT 10. The header row buys back ~20px by
+   putting the kicker beside the title instead of above it, and a 2px rule
+   with 10px of air under it spent 12 of them — measured, FACTS overflowed its
+   seat by 6px on every era at 1280x720. Chrome first, and the chrome is the
+   rule, not the space around it. */
+.hpl-eras[data-hpl-dir="v4"] .vwd__mast {
+  position: relative;
+  padding-top: 4px;
+}
+.hpl-eras[data-hpl-dir="v4"] .vwd__mast::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--hpl-datum);
+}
+
+/* ── v5: the title seats on the bay ──────────────────────────────────────
+   The mast narrows to the figure column and centres over it, so the title
+   reads as the bay's head without leaving the mast — which is what keeps the
+   `era-title` handoff target measuring the same element it always did. The
+   kicker and the year move into the bay's own corners. */
+/* ⚠ THE TITLE SEATS ON THE BAY BY CENTRING, NOT BY MATCHING ITS WIDTH — and
+   that is arithmetic, not a preference. The figure column is 230px at
+   1280x720 (its own floor), while `.vwd__mast__title` carries
+   `clamp(26px, 3vw, 44px)` BYTE-FOR-BYTE because the About name flies into
+   this footprint and translates without scaling; no rung may step it down.
+   "The campaign commander" at 38.4px needs ~420px, so a bay-width mast wraps
+   to two lines and pushes FACTS 12px past its seat — measured, on `expanse`
+   alone, which is exactly the kind of per-era defect a single-subject still
+   would never show. The mast keeps a measure that fits the longest title and
+   shares the bay's centre line. */
+.hpl-eras[data-hpl-dir="v5"] .vwd__mast {
+  width: min(calc(100% - 2 * var(--vwd-pad-x)), max(calc(var(--vwd-fig-w) + 320px), 520px));
+}
+.hpl-eras[data-hpl-dir="v5"] .vwd__mast__kicker {
+  display: none;
+}
+
+/* ── The stage's own seams (v3) ──────────────────────────────────────────
+   Two vertical seams bounding the figure column. ⚠ THEY DO NOT CROSS THE
+   FIGURE and they are not full-bleed: a line run to the viewport edge crosses
+   the frame's own tick ladder, two line systems meeting at a shallow angle,
+   which is the reading that deleted the datum rails twice. */
+.hpl-eras[data-hpl-dir="v3"] .vwd__stage::before,
+.hpl-eras[data-hpl-dir="v3"] .vwd__stage::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--hpl-seam);
+  pointer-events: none;
+}
+.hpl-eras[data-hpl-dir="v3"] .vwd__stage::before {
+  left: calc(var(--vwd-pad-x) + (100% - 2 * var(--vwd-pad-x) - var(--vwd-fig-w)) / 2);
+}
+.hpl-eras[data-hpl-dir="v3"] .vwd__stage::after {
+  right: calc(var(--vwd-pad-x) + (100% - 2 * var(--vwd-pad-x) - var(--vwd-fig-w)) / 2);
+}
+
+/* ── Head rules to the column's outer edge (v3, v5) ──────────────────────
+   The head stretches to its column's OUTER wall while the body keeps
+   `--vwd-measure`, so the rule registers the column against the band edge
+   instead of stopping arbitrarily under its own words. The head/body split
+   stays intact — it is what puts both columns' heads on one row whatever
+   their content does. */
+.hpl-eras[data-hpl-dir="v3"] .vwd__head[data-cell="ul"],
+.hpl-eras[data-hpl-dir="v3"] .vwd__head[data-cell="ll"],
+.hpl-eras[data-hpl-dir="v5"] .vwd__head[data-cell="ul"],
+.hpl-eras[data-hpl-dir="v5"] .vwd__head[data-cell="ll"] {
+  justify-self: stretch;
+  width: auto;
+  padding-left: calc(100% - var(--vwd-measure));
+}
+.hpl-eras[data-hpl-dir="v3"] .vwd__head[data-cell="ur"],
+.hpl-eras[data-hpl-dir="v3"] .vwd__head[data-cell="lr"],
+.hpl-eras[data-hpl-dir="v5"] .vwd__head[data-cell="ur"],
+.hpl-eras[data-hpl-dir="v5"] .vwd__head[data-cell="lr"] {
+  justify-self: stretch;
+  width: auto;
+  padding-right: calc(100% - var(--vwd-measure));
+}
+/* The heads take the frame's seam weight with the rest of the structure. */
+.hpl-eras[data-hpl-dir]:not([data-hpl-dir="v0"]) .vwd__head {
+  border-bottom-color: var(--hpl-seam);
+}
+
+/* ── v5's stubs on the era stage ─────────────────────────────────────────
+   One per head row, on the band's left edge — the head rule's terminus. */
+.hpl-eras[data-hpl-dir="v5"] .vwd__head[data-cell="ul"]::before,
+.hpl-eras[data-hpl-dir="v5"] .vwd__head[data-cell="ll"]::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--vwd-pad-x) - var(--hpl-stub));
+  width: var(--hpl-stub);
+  height: 2px;
+  margin-top: -1px;
+  align-self: end;
+  background: var(--hpl-datum);
+}
+.hpl-eras[data-hpl-dir="v5"] .vwd__stage {
+  position: relative;
+}
+
+/* ── The housing (v2) ────────────────────────────────────────────────────
+   From the datum the block already hangs from, down to the reel's top edge.
+   ⚠ OPEN-BOTTOMED, and the gutter keeps it clear of the rails: at 1280 the
+   band's edge is 129px and the rail's inner edge 91px, so 20px outboard still
+   leaves 18px of clearance. The capture's ladder sweep asserts it. */
+/* ⚠ SAME CLEARANCE AS THE PROOF HOUSING, AND THE CONTENT MOVES WITH IT. The
+   right rail's telemetry reaches ~16px inboard of the reading band, so a slab
+   with a ground on the band's own edge paints under BEARING and SECTOR. The
+   band is symmetric by law, so the clearance is taken from both sides and
+   `--vwd-pad-x` grows by it — which costs each side column 22px of measure.
+   That is the housing's price on this surface, stated. */
+/* ⚠ THE ERA HOUSING IS LINE-ONLY, WHATEVER THE MATERIAL KNOB SAYS, AND THAT
+   IS A LAW RATHER THAN A DODGE. The capable station is TRANSPARENT, not a
+   cover plane: the corridor's ambient survives through `#about` and this
+   stage and dies at `#practice`, and the station additionally overlaps
+   `#about` by -120svh for the handoff. A slab with a ground there is not a
+   background at all — it is a black pane sliding over the previous section,
+   which is the exact defect `voidwalker-datum.css` records against its own
+   root. The proof casefile is the surface that may carry one: it sits over
+   the parked brandmark and its console already does.
+
+   ⚠ AND IT IS WHAT LETS THE HOUSING KEEP THE BAND. Measured at 1280x720: the
+   right rail's SECTOR readout reaches to x 1129, 22px inside the band's own
+   edge, so a slab with a GROUND has to come in far enough to clear it — and
+   at the clearance that takes, the two side columns lose enough measure that
+   FACTS overflows its seat. Line-only, the border passes behind the readout
+   exactly as production's own console does, and the composition keeps its
+   width. */
+.hpl-eras[data-hpl-dir="v2"] .hpl-housing {
+  background: none;
+  backdrop-filter: none;
+}
+/* ⚠ THE HOUSING SITS ON THE BAND, AND THE CONTENT MOVES IN BY ITS OWN
+   PADDING. Seating it 20px OUTBOARD made it 1062px wide against a 1022px
+   band, which is the one thing ADR-082 U21's sweep exists to fail: nothing
+   wide enough to read as a full-bleed line may paint inside this station.
+   So the wall takes the band exactly and the reading band grows by the
+   housing's inner padding — 18px a side, which is what a housing costs here.
+   ⚠ `--vwd-measure` is `min(100%, 23rem)`, so below a 368px column the
+   measure follows the column; the two side columns are 360px after this and
+   the prose narrows by 8px rather than the seats overflowing. */
+.hpl-eras[data-hpl-dir="v2"] .vwd {
+  --hpl-housing-pad: 18px;
+  --vwd-pad-x: calc(
+    max(clamp(20px, 4vw, 72px), var(--hud-content-inset, 161px)) + var(--hpl-housing-pad)
+  );
+}
+.hpl-eras[data-hpl-dir="v2"] .hpl-housing {
+  left: calc(var(--vwd-pad-x) - var(--hpl-housing-pad));
+  right: calc(var(--vwd-pad-x) - var(--hpl-housing-pad));
+  top: calc(var(--vwd-pad-top) - 10px);
+  bottom: var(--vwd-band-h);
+}
+
+/* ── The eras' foot ──────────────────────────────────────────────────────
+   A row of type under the reel, never a rule at the rail's last tick. */
+/* ⚠ ITS AIR IS THE FIRST THING SPENT. A foot row costs the two body rows its
+   full height, and at 1280x720 this composition has 15px of headroom to begin
+   with — measured FACTS 3px past its seat until this padding came down.
+   Chrome first, rhythm second, never the type. */
+/* ⚠ ITS AIR AND ITS HEIGHT ARE BOTH SPENT FIRST. A foot row costs the two
+   body rows its whole band, and this composition has 15px of headroom at
+   1280x720 to begin with — measured FACTS 6px past its seat, then 3px, until
+   the mast's datum air came down to 4 and this band to 22. Chrome first,
+   rhythm second, never the type. */
+.hpl-eras[data-hpl-dir] .hpl-foot {
+  flex: 0 0 auto;
+  padding: 0 var(--vwd-pad-x) clamp(2px, 0.6svh, 10px);
+  height: 22px;
+}
+
+/* ⚠ THE BAND RULE THE OWNER DELETED TWICE, BAND-INSET, BEHIND A KNOB. U20
+   removed it as a duplicate of the ground datum; U21 removed the ground and
+   ruled that a full-bleed line through the tick ladder may not come back. It
+   is drawn here ONLY under `?foot=rule`, inset to the reading band so it is
+   the amendment being proposed rather than the thing that was deleted, and
+   the landing is untouched either way. */
+.hpl[data-hpl-foot="rule"] .hpl-eras[data-hpl-dir]:not([data-hpl-dir="v0"]) .vwd__band {
+  border-top: 1px solid var(--hpl-rule);
+  width: min(calc(100% - 2 * var(--vwd-pad-x)), calc(var(--vwd-reel) * var(--vwd-cell)));
+}
+
+/* ── The bay ─────────────────────────────────────────────────────────────
+   ⚠ BOTH AXES DEFINITE. `.vwh__column` is `height: 100%` and the slot and its
+   media size by percentage: against an auto track they resolve to nothing and
+   the figure hangs below its own slot. */
+.hpl-bay {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+.hpl-bay .hpl-corners span {
+  font-size: 10px;
+  color: rgba(var(--dawn-rgb), 0.45);
+}
+/* The brackets sit in the padding the figure column already has, so the bay
+   costs the figure no width. */
+.hpl-bay .hpl-bracket {
+  inset: 0 -10px;
+}
+
+/* ═══ THE LAB CONSOLE ════════════════════════════════════════════════════ */
+
+.hpl-console {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  z-index: 95;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-width: min(96vw, 1180px);
+  padding: 9px 13px;
+  border: 1px solid var(--gold-30, rgba(202, 165, 84, 0.3));
+  background: rgba(8, 7, 6, 0.92);
+  backdrop-filter: blur(6px);
+  font-family: var(--hpl-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--dawn, #ebe3d6);
+  /* ⚠ THE CONSOLE SITS OVER THE COMPOSITION IT IS JUDGING. At 1440x800 its
+     rows land squarely on the directory's band, so at rest it recedes far
+     enough to read the surface through it and comes back on hover or focus.
+     Hiding it would cost the owner the controls; leaving it opaque would mean
+     every judgement was made about a partly covered panel. */
+  opacity: 0.28;
+  transition: opacity 140ms ease-out;
+}
+.hpl-console:hover,
+.hpl-console:focus-within {
+  opacity: 1;
+}
+.hpl-console:not([data-open]) > *:not(:first-child) {
+  display: none;
+}
+
+.hpl-console__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+.hpl-console__title {
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+.hpl-console__rule {
+  width: 1px;
+  height: 17px;
+  background: rgba(235, 227, 214, 0.18);
+}
+
+.hpl-btn {
+  /* 44px targets are for MOCKUP content; this is the lab's own chrome and
+     stays compact so it never competes with the composition being judged.
+     The capture reports its size rather than asserting a phone floor on it. */
+  padding: 5px 9px;
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.hpl-btn:hover {
+  border-color: var(--gold-30, rgba(202, 165, 84, 0.3));
+}
+.hpl-btn[data-on] {
+  border-color: var(--gold, #caa554);
+  color: var(--gold, #caa554);
+}
+.hpl-btn--fold {
+  margin-left: auto;
+}
+
+.hpl-slider {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hpl-slider input {
+  width: 110px;
+  accent-color: var(--gold, #caa554);
+}
+
+.hpl-thesis {
+  margin: 0;
+  max-width: 96ch;
+  font-size: 10.5px;
+  line-height: 1.5;
+  opacity: 0.72;
+}
+.hpl-thesis b {
+  display: block;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold, #caa554);
+  opacity: 1;
+}
+
+/* The machine mirror: always in the DOM, never painted. */
+.hpl-read {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* The human summary, inside the console. */
+.hpl-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 16px;
+  margin: 0;
+  padding-top: 5px;
+  border-top: 1px solid rgba(235, 227, 214, 0.12);
+  font-size: 10.5px;
+  opacity: 0.78;
+}
+
+.hpl-gate-warn {
+  position: fixed;
+  left: 50%;
+  top: 10px;
+  z-index: 95;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid rgba(235, 227, 214, 0.18);
+  background: rgba(8, 7, 6, 0.9);
+  font-family: var(--hpl-mono);
+  font-size: 10.5px;
+  color: var(--dawn, #ebe3d6);
+  display: none;
+}
+@media (max-width: 1280px), (prefers-reduced-motion: reduce) {
+  .hpl-gate-warn {
+    display: block;
+  }
+}

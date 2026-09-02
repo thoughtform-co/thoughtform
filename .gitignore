@@ -112,6 +112,9 @@ public/images/navigator/
 # HUD-instruments look-dev stills (96 PNGs / ~8 MB, fully regenerable via
 # `node scripts/capture-hud-instruments.mjs`)
 docs/design/hud-instruments/
+# The HUD panel lab's matrix — ~100 regenerable stills plus its report.
+docs/design/hud-panel-lab/*.png
+docs/design/hud-panel-lab/report.json
 
 # Voidwalker-avatar preview cache — regenerable via
 # `node scripts/sync-voidwalker-avatar-preview.mjs`. Read-only mirror of

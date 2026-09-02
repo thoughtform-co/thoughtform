@@ -2721,6 +2721,69 @@ carrying:
   left half → flagship RIGHT, right half → flagship LEFT. Non-flagship
   branches still alternate.
 
+## The HUD panel lab (look-dev, `/test/hud-panel-lab`)
+
+**Six directions on the casefile and the era stage, judged inside the REAL
+frame** (2026-09-02, owner: the panels "just seem to be floating … they don't
+really feel integrated as part of a HUD or interface"). Nothing on the landing
+changed; no ADR until a direction wins (the BOARD-archetype / config-lab
+precedent). Full read, the reference distillations and the owner questions:
+[`docs/design/hud-panel-lab/README.md`](../../docs/design/hud-panel-lab/README.md).
+
+- ⚠ **THE DIAGNOSIS IS A LINE LADDER, AND IT IS MEASURABLE.** The control
+  paints **8 gold structure lines** on this surface — the register's five
+  hairlines at gold .12/.24, the directory's row rule at gold .13 dotted, the
+  column split at dawn-alt .24 dotted — against a frame whose own track is
+  **2px at dawn .55**. A hue swap AND a 4x alpha gap between a panel and the
+  thing it is meant to belong to. `console.css`'s ruling already says which
+  way it goes ("the panel's own edge is dawn, not gold … the rail's dividers
+  keep the gold hairlines, because those are marks ON the machine rather than
+  its outline"); this surface never got it. Every direction past `v0` paints 0
+  and the capture prints the count.
+- ⚠ **THE LAB MOUNTS PRODUCTION LEAVES, AND `v0` IS `ServicesCasefile`
+  ITSELF.** The directions re-seat `ClientTabs`, `TrackProofRegister`,
+  `Directory` and `TrackPanel` on the SAME `.fl-case` root — every token they
+  read (the rail-box mirror, `--fl-t6`/`--fl-t11`, the modular scale, the
+  reticle gradients) is declared on that class, so a new root would mean
+  re-declaring thirty of them to change nothing.
+- ⚠ **A BAND-WIDTH HOUSING CANNOT CLEAR THE RIGHT RAIL'S TELEMETRY.** SECTOR
+  reaches x 1129 at 1280x720 against a band edge of 1150.9, so a slab with a
+  GROUND paints under it. The band is symmetric by law (ADR-048), so the
+  clearance comes off both sides and the whole direction moves in 28px a
+  side — the housing's real cost, stated, rather than a right edge quietly
+  tucked in. Production's own console already overlaps there with line work,
+  which is why the gate fails a painted GROUND and reports a border.
+- ⚠ **A HEADER ROW MAY NOT HAVE A CENTRE HERE.** The tab strip seats flush on
+  the rail's top line and IS that band's left run; a centre slot printed
+  straight through the client's own name. The header stops at the column split
+  besides, because `ConsoleRail` occupies the same band on the right and is
+  the FIELD's header. Same class of collision put the field's corner labels
+  through WORK / CONFIGURATION / SUBSTRATE — **two labels overlapping is the
+  check containment never makes**, and both were found by looking at a still
+  with every geometry gate green.
+- ⚠ **THE REGISTER AND THE DIRECTORY HAVE ~4px OF SLACK**, so neither grows a
+  head row at the binding viewport. The brief's head sits in the
+  `clamp(16px, 2.6svh, 38px)` of air that already exists above
+  `--fl-body-top`; the register's appears only above 1070h, out of the
+  `--fl-proof-top-gap` that is pure air there.
+- ⚠ **`will-change: transform` ON A LADDER WRAPPER MAKES IT A CONTAINING
+  BLOCK.** `.services-stage[data-proof-live] .fl-case [data-fl-panel]` carries
+  it, so chrome wrapped in a ladder div resolved `bottom` against a
+  zero-height box and landed 800px off screen. Every piece carries
+  `data-fl-panel` on ITSELF now, as `.fl-split` and `.fl-ret` do, and
+  everything is seated from the TOP. This is a production rule, not a lab one.
+- ⚠ **THE TOP-RIGHT RETICLE IS AN OWNER DELETION BEING RE-ASKED.**
+  `.fl-ret--tr` is fully styled at `casefile.css` and has not rendered since
+  commit `e3b33867` (the 2026-08-07 declutter, which took it with the route
+  diagram and the three dotted rules). Every direction past `v0` draws it; the
+  README asks for the ruling.
+- **Verifying:** `node scripts/capture-hud-panel-lab.mjs` — 138 cells, gates on
+  ink-measured clipping, frame containment, wide ink, ladder crossing, tick
+  seating, the line ledger, the type floors and the ordinal ban.
+  ⚠ Its subjects are READ OFF THE PAGE: three of four track ids were guessed
+  wrong on the first run and `parseHplQuery` fell back to row one, so four
+  "different" rows shot one still with every gate green.
+
 ## Confidentiality envelope
 
 This is client work on a public page. `tests/lib/cases-registry.test.ts`

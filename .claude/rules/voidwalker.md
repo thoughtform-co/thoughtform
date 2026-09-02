@@ -219,6 +219,62 @@ composition's own entry/exit block, its responsive rungs, and
   **tx exactly 0 at rest** (the zero-at-rest rule), and every actor past the
   1440 viewport by `exit` 1.
 
+## The HUD panel lab (look-dev, `/test/hud-panel-lab`)
+
+**Six directions on this stage and on the proof casefile, judged inside the
+REAL frame** (2026-09-02, owner: the panels "just seem to be floating … they
+don't really feel integrated as part of a HUD or interface"). Nothing here
+changed; no ADR until a direction wins. Full read, the reference distillations
+and the owner questions:
+[`docs/design/hud-panel-lab/README.md`](../../docs/design/hud-panel-lab/README.md).
+
+- **The lab is a WINDOW, not a copy.** It mounts `HoloDatumPanels` WHOLE in
+  every direction and builds the production `HoloFigure` node — nothing inside
+  that component is exported (the reel's roving focus and its `--vwd-i` /
+  `--vwd-d` arithmetic, the bust anchors, the decode line pairs, the
+  lightbox), so a lab-local composition would fork ~250 lines of behaviour.
+  The lab owns exactly two seams: the `figure` prop and CSS scoped by
+  `[data-hpl-dir]`.
+- ⚠ **THE FIGURE MOUNTS ONLY AFTER THE ALPHA PROBE SETTLES.** `HoloFigure`
+  LOCKS `getHoloAlphaSupport() === true` at mount and treats the undecided
+  `null` as the floor branch — correct on the landing, where the station is
+  four sections down, and wrong anywhere the figure is the first thing on the
+  page. On the floor branch a headless capture gets an H.264 `.mp4` it cannot
+  decode and paints an opaque poster: a frame that looks exactly like a broken
+  composition. The gate asserts `data-holo-alpha` is present.
+- ⚠ **THE FOOT CAN NEVER BE A RULE AT THE RAIL'S LAST TICK.** Measured: that
+  tick lands **16px INSIDE the chip frames at 1280x720**, 6.5px inside at
+  1440x900, and exactly on the band's twice-deleted `border-top` at the
+  owner's 1920x1247. Every housing here is OPEN-BOTTOMED and the chips are the
+  terminus; the band rule is behind `?foot=rule`, band-inset, purely so the
+  U21 amendment can be looked at.
+- ⚠ **A HOUSING ON THIS STATION IS LINE-ONLY, WHATEVER THE MATERIAL KNOB
+  SAYS.** The capable station is TRANSPARENT, not a cover plane, and it
+  overlaps `#about` by -120svh — a slab with a ground there is the black pane
+  `voidwalker-datum.css` records against its own root. It is also what lets
+  the housing keep the band: with a ground it would have to clear the right
+  rail's telemetry (SECTOR reaches 22px inside the band edge), and at that
+  clearance the two side columns lose enough measure that FACTS overflows.
+- ⚠ **A HEADER ROW BUYS ~20px AND A FOOT ROW SPENDS IT.** The mast stacks an
+  11px kicker over a 42px title, so a row is the taller of the two; `v4`'s 2px
+  datum then overspent by 6px until its air came down to 4px and the foot band
+  to 22px. Chrome first, rhythm second, never the type — the ADR-082 U20 order
+  of sacrifice, in a new place.
+- ⚠ **THE TITLE CANNOT SEAT AT THE BAY'S WIDTH.** Its clamp is byte-locked to
+  the About name's footprint (the name flies into it and translates without
+  scaling), and "The campaign commander" at 38.4px needs ~420px against a
+  230px figure column — so `v5` centres the title on the bay's AXIS at its own
+  measure. Found on `expanse` alone, which is why the gate walk visits all
+  five eras rather than shooting one.
+- **The datum raise is re-declared by the lab, by hand**, at the same
+  `min-height: 720px` rung as production — the gate is
+  `#voidwalker[data-vw-mode="hologram"]` and no lab can satisfy it. Move one
+  rung, move the other.
+- **Verifying:** `node scripts/capture-hud-panel-lab.mjs` — 138 cells; the era
+  walk covers all five eras at 1280x720 and gates on ink-measured clipping,
+  containment, the U21 wide-ink sweep (against the STATION's band, not the
+  direction's own), ladder crossing and the type floors.
+
 ## Current hologram contracts (2026-08-27)
 
 Read ADR-083 before changing the proposed `<=700px` identity → figure → era
