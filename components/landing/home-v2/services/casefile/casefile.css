@@ -225,37 +225,40 @@
      1280×720 / 1440×900 / 1680×1050 with the Log.001 line gone). */
   --fl-copy: calc(var(--band-copy) * 0.9);
 
-  /* ── THE LEFT COLUMN'S INDEX SCALE (2026-08-28, owner: the sentence under
-     each claim is "too small") ═════════════════════════════════════════════
-     The proof register, the directory row and its meta all derive from this,
-     so the ladder moves as one and the ordering the surface already fixed —
-     directory row ≥ register claim > its meta — holds at every width without
-     three independent clamps drifting apart.
+  /* ── `--lc` IS RETIRED (ADR-088, 2026-09-02, owner: "the font sizes feel
+     disconnected … the directory is too big") ══════════════════════════════
+     It was ONE token driving FOUR roles across TWO faces — claim ×0.95,
+     sentence ×1, row ×1.02, meta ×0.75 — and its `svh` term meant the
+     ranking between them FLIPPED with viewport height. Measured before the
+     retirement: at 1920×1080 the sans SENTENCE (14.04) outranked the mono
+     CLAIM (13.34) it explains; at 1920×1247 four roles sat inside 1.1px
+     (claim 15.4 · sentence 16.2 · row 16.5) and the directory row — bold
+     mono caps, the loudest face on the surface — was the largest text after
+     the title.
 
-     ⚠ IT IS `min(vw, svh)` BECAUSE THE TWO AXES BIND IN DIFFERENT PLACES,
-     and this took measuring to see. The sentence is bounded by WIDTH at
-     narrow viewports — at 1200px the column is 331px and the copy is already
-     two clamped lines, so a bigger size there truncates — and by the register
-     BOX at wide ones, since `--fl-proof-h` is a fixed 264px at 1920×1080 with
-     four `1fr` rows to divide between. `min` takes whichever wall is nearer.
+     ⚠ THE ORDERING A LADDER GUARANTEES IS THE ONE INSIDE ITS OWN FACE. One
+     token across two faces cannot hold a ranking, because the two faces do
+     not weigh the same at the same px: 13.34px of bold mono caps reads
+     LOUDER than 14.04px of 0.78-alpha sans, so the arithmetic ordering and
+     the optical ordering ran opposite ways at the reference viewport.
 
-     ⚠ AND THE COEFFICIENTS ARE SOLVED, NOT PICKED. At 0.95vw / 1.30svh the
-     term is 14.04px at 1920×1080 — which is where it already was, and just
-     under the 14.1px at which the longest description wraps to a second line
-     (measured: 459px of a 462px column at 14px, i.e. 99.3 % of the line).
-     Above that viewport the height term takes over and the sentence grows to
-     16.2px and wraps to two, which the taller box affords. 1200×1120 and
-     1440×800 resolve to the floor exactly as before. */
-  --lc: clamp(11.5px, min(0.95vw, 1.3svh), 16.5px);
+     The four roles split by FACE now, one ratio each:
+       mono  — claim + row at `--fl-chrome-lg`, meta at `--fl-chrome-md`
+       sans  — sentence at `--fl-copy / --fl-ratio`, brief at `--fl-copy`
+     Both ladders are ×1.2, so the column reads as one system with six sizes
+     at 1920 (10 · 12 · 13.5 · 14.4 · 16.2 · 24), each carrying one role. */
 
   /* ── ONE MODULAR SCALE (2026-08-28 U2, owner: "What is the relation?
      Right now it feels a bit discombobulated.") ═══════════════════════════
-     One root and one ratio. Every chrome role is a named step, and the two
-     content ladders (--lc, --fl-copy) sit on the scale as content step 0
-     and step +1 by intent, not by derivation — they are solved against
-     measured wrap thresholds (14.04px vs the 14.1px wrap point in the
-     register, ADR-048's factor on --band-copy for the brief) and cannot be
-     re-derived without invalidating those measurements.
+     One root and one ratio. Every chrome role is a named step, and the
+     surface's ONE content ladder (--fl-copy) sits on the scale at step +1
+     by intent, not by derivation — it is ADR-048's factor on --band-copy,
+     which is retuned at the band and never here. Since ADR-088 the register
+     sentence derives from it BY THE RATIO (`--fl-copy / --fl-ratio`), which
+     is the one place a content role is derived rather than solved: it is a
+     RANK statement (the brief leads, the register supports), and the wrap
+     threshold it has to clear — 14.1px in a 462px column — sits above the
+     13.5px the expression yields at every viewport ≥1920w.
 
      ⚠ THE ROOT'S CLAMP IS SOLVED TO PRESERVE THE SHIPPED CHROME-MD AT THE
      TWO REFERENCE VIEWPORTS. At 1280 width, 0.86vw = 11.008 → clamps at 11
@@ -1226,11 +1229,12 @@
 /* ⚠ THE MARK IS `center`-SEATED, NOT `baseline`-SEATED, AND IT IS THE COMPACT
    BUDGET THAT DECIDES IT. A replaced element has no baseline, so grid
    SYNTHESIZES one from its bottom border edge — which hangs a 14px mark from
-   the claim's baseline, 10.7px down its 14.7px line box, and grows every row
-   to 18.0px for a 14.7px line. That is +3.3px a row, +13px over four, out of
-   the 6px of slack the 720p box has. Centred on the claim's line box the mark
-   costs nothing (14 against 14.7) and lands 0.8px off its cap centre, which
-   is inside the ink. */
+   the claim's baseline, most of a line box down, and grows every row for
+   nothing a reader can see. Centred on the claim's line box the mark costs
+   NOTHING at either rung, and since ADR-088 that is by a wider margin: the
+   claim's line box is 15.58px at the compact rung (13.2 × 1.18), so the 14px
+   mark is now the SHORTER of the two and no longer sets the row's height at
+   all. The seating rule is unchanged; only which element wins is. */
 .fl-proof-register__item {
   min-width: 0;
   display: grid;
@@ -1240,7 +1244,17 @@
   /* The entry is centred in whatever share of the box its track gets — the
      row is a band, not a block that hangs from a rule. */
   align-content: center;
-  padding: 2px 0;
+  /* ⚠ 2px → 1px, AND IT IS WHAT PAYS FOR THE CLAIM'S SIZE AT THE COMPACT RUNG
+     (ADR-088). The claim went 11.5 → 13.2 there, i.e. a 13.57px line box to
+     15.58px, which the 76.32px register box cannot absorb at 2px of padding:
+     four rows plus the closing hairline would measure 83.3px, a 7px overflow,
+     and the column has nothing to fund it with (the brief has ~0 slack, the
+     directory 2px, and the two gap floors are the owner's own air). At 1px a
+     row is 18.58px and the four plus the hairline are 75.3px — the first time
+     this register fits its box with real slack instead of on the smoke's ≤1px
+     tolerance (it measured 77.0 in 76.32 before this pass). The TALL rung
+     keeps 4px; it has 60px of slack and does not need the trade. */
+  padding: 1px 0;
   overflow: hidden;
   border-top: 1px solid rgba(var(--gold-rgb), 0.12);
 }
@@ -1289,15 +1303,20 @@
   overflow: hidden;
   font-family: var(--fl-mono);
   color: var(--dawn);
-  /* ⚠ THE CEILING RISES, THE FLOOR DOES NOT, AND THE SLOPE IS THE WHOLE
-     DESIGN (2026-08-28, owner: the claim and the sentence under it should
-     read bigger). Wrap is size ÷ COLUMN WIDTH, and this rung opens at
-     1200px — where the column is at its narrowest and the clamp is already
-     sitting on its floor. Raising the floor, or reaching the ceiling on a
-     fast slope, spends type exactly where there is no width to pay for it.
-     At 0.72vw the ceiling lands around 1875px, so 1200 is byte-identical to
-     what shipped and only genuinely wide columns get the larger rung. */
-  font-size: max(11.5px, calc(var(--lc) * 0.95));
+  /* ⚠ THE CLAIM AND THE DIRECTORY ROW ARE PEERS ON ONE MONO STEP (ADR-088,
+     2026-09-02). Both are `--fl-chrome-lg`: 13.2 at 1280 and 1440, 14.4 at
+     1920 and above. This RE-READS ADR-067 U3's "one step ABOVE the register's
+     claims" by that rule's own stated reason — a project identity may not
+     read smaller than a sentence about it — which the SANS sentence, one
+     ratio step below at 13.5, satisfies on its own. Two mono-caps runs a
+     ratio step apart in one column is what read as "assembled from parts";
+     `/test/casefile-type-lab`'s harmonised branch made this argument first.
+
+     ⚠ AND THIS IS WHERE THE COMPACT RUNG'S 1px OF ITEM PADDING WENT. At 13.2
+     the claim's line box is 15.58px and now EXCEEDS the 14px mark beside it,
+     so the row's height comes off the type rather than the gutter — see the
+     item padding and the compact-rung arithmetic below. */
+  font-size: var(--fl-chrome-lg);
   font-weight: 700;
   /* ⚠ AND THE SIZE IS PAID OUT OF THE LEADING, NEVER OUT OF THE BAND. This
      register is 259.6px of a 264px floor at 1920×1080 (`--fl-proof-h`'s
@@ -1323,7 +1342,7 @@
 .fl-proof-register__description {
   grid-column: 2;
   margin: 3px 0 0;
-  /* ⚠ 0.6 → 0.74, AND THIS IS THE HALF THAT COSTS NOTHING. Both rows already
+  /* ⚠ 0.6 → 0.78, AND THIS IS THE HALF THAT COSTS NOTHING. Both rows already
      rendered at 13px above 1445px wide; the claim only LOOKED bigger because
      it is bold mono caps against a 0.6-alpha sans. So a fair share of "too
      small" was never size — it was contrast, and alpha is free in a box with
@@ -1331,16 +1350,25 @@
      `--dawn-rgb` is the ink either side of ADR-058's flip. */
   color: rgba(var(--dawn-rgb), 0.78);
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
-  /* THE INDEX SCALE — see `--lc` on `.fl-case`. It carries the whole reason
-     this is not a bigger number typed in: the sentence is width-bound at
-     narrow viewports and box-bound at wide ones, and `--lc` is the smaller
-     of the two.
+  /* ⚠ ONE RATIO STEP UNDER THE BRIEF, AND THAT RANK IS THE POINT (ADR-088).
+     The brief's paragraph is the engagement's own claim and this is evidence
+     under a proof point, so the sans ladder ranks them: 16.2 / 13.5 at 1920.
+     Under `--lc` this sentence reached 16.2 at the owner's 1247-tall window —
+     the same size as the brief and larger than the mono claim above it.
+
+     ⚠ THE FLOOR IS 11.5, NOT 12, AND IT IS THE 1200px CORNER THAT SETS IT.
+     Wrap is size ÷ COLUMN WIDTH and this rung opens where the column is
+     narrowest (~296px): the 95-character worst case measures ~1.85 lines at
+     11.5 and ~1.93 at 12, and the second number is one copy edit away from a
+     third line under a clamp that truncates SILENTLY. 11.5 is also exactly
+     where `--lc` floored, so that corner is byte-identical.
+
      ⚠ Still two-line clamped, so if a description ever reaches a third line
      the COPY BUDGET is what moves (ADR-066: a clamp that truncates live copy
      is a bug, never a layout lever). The harness measures the real count
      against an UNCLAMPED CLONE, because a `-webkit-box` clips instead of
      overflowing and cannot report its own truncation. */
-  font-size: var(--lc);
+  font-size: max(11.5px, calc(var(--fl-copy) / var(--fl-ratio)));
   line-height: 1.25;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -1352,15 +1380,21 @@
 /* ⚠ COMPACT RUNG — BELOW 1070px HEIGHT THE ROW IS MARK + CLAIM ALONE, and the
    arithmetic is why, re-measured for the index (owner redesign 2026-08-07).
 
-   At 1280×720 the register box is 86.4px (`--fl-proof-h` is 12svh there). One
-   row costs: the claim's line box 14.7px (11.8px mono × 1.25), the 14px mark
-   beside it in a gutter it does not outgrow, 2px of padding at each edge and a
-   1px hairline ⇒ 19.7px. Four of those plus the closing hairline is 79.9px,
-   which fits 86.4 with 6.5px to spare. Add the sentence back and a row is
-   14.7 + 3 + two lines of 16.5 = 50.7 before padding: four rows come to 211px
-   against 86.4, and the box cannot grow into it either — from the register's
-   top to tick 11 there are 242px and the directory below needs ~144 of them
-   for four rows and a head.
+   At 1280×720 the register box is 76.32px (`--fl-proof-h` is 10.6svh there).
+   One row costs: the claim's line box 15.58px (13.2px mono × 1.18), the 14px
+   mark beside it in a gutter it no longer outgrows, 1px of padding at each
+   edge and a 1px hairline ⇒ 18.58px. Four of those plus the closing hairline
+   is 75.3px, which fits 76.32 with 1.0px to spare. Add the sentence back and
+   a row is 15.58 + 3 + two lines of 14.4 = 47.4 before padding: four rows
+   come to ~192px against 76.32, and the box cannot grow into it either —
+   from the register's top to tick 11 there are 242px and the directory below
+   needs ~144 of them for four rows and a head.
+
+   ⚠ THE SLACK IS 1px AND EVERY TERM IN IT IS LOAD-BEARING (ADR-088). Anything
+   that raises the claim's size, its leading, the item's padding or the mark's
+   box at this rung overflows the register at 1280×720 — and the smoke's
+   `proofOverflow ≤ 1` is what catches it. Re-measure with
+   `node scripts/capture-casefile-rows.mjs --vp 1280x720 --rows 0,1,2,3`.
 
    The index is what made the reduction cheap. The 2×2 rung hid the same
    sentence and left a bare tile; a row that keeps its MARK still reads as an
@@ -1496,11 +1530,15 @@
    project identities they support. Measured: 11.5 / 9.5 / 9.5 against a
    claim's 13px.
 
-   The ladder is the siblings' own clamp now, with the row identity ABOVE
-   the claims because it is this column's one INTERACTIVE layer and its
-   whole navigation — rows 13.1 → 14, the meta datum 10.2 → 11.5, the head
-   label 10.2 → 11.5. Every floor is at or above the shipped value, and the
-   head's alpha lifts .30 → .42 so the line that says these ARE the other
+   The ladder is the surface's own MONO scale now (ADR-088, 2026-09-02): the
+   row identity at `--fl-chrome-lg` beside the register's claim, and the head
+   and meta at `--fl-chrome-md` one step under it. ⚠ THE ROW IS NO LONGER A
+   STEP ABOVE THE CLAIM — the 2026-08-24 pass put it there and the owner then
+   read the result as "too big" at his own viewport, where `--lc`'s height
+   term had carried it to 16.5px against a 15.4px claim and a 16.2px brief.
+   The rule that put it above still holds and is still satisfied: the SANS
+   sentence one ratio step below is what may not outrank the identity. The
+   head's alpha stays at .42 so the line that says these ARE the other
    projects registers as a label rather than a whisper (alpha up is more
    contrast on BOTH grounds — `--dawn-rgb` is the ink either side of the
    flip).
@@ -1572,11 +1610,14 @@
   padding: clamp(4px, 0.55svh, 8px) 8px;
   text-align: left;
   font-family: var(--fl-mono);
-  /* 11.5px flat → the column's own clamp (owner, 2026-08-24 — see the head
-     above). One step ABOVE the register's 13px claims: this is the primary
-     object in the band, and the identity of a project may not read smaller
-     than a sentence about it. */
-  font-size: max(13px, min(1.02vw, 14px), calc(var(--lc) * 1.02));
+  /* ⚠ THE MONO STEP IT SHARES WITH THE REGISTER'S CLAIM (ADR-088) — see the
+     claim for why the two are peers rather than a step apart. 13.2 at 1280
+     and 1440, 14.4 at 1920 and above; the type law's 13px row floor holds at
+     every width ≥1280, which is where this rung lives.
+     ⚠ 1440×800 AND 1920×800 GO 14 → 13.2, and that is deliberate: the root
+     clamp's `svh` term is under its 11px floor below 991px of height, so
+     chrome-lg is flat there. It is the direction the complaint asked for. */
+  font-size: var(--fl-chrome-lg);
   /* Single-line uppercase rows with nothing below the baseline — paragraph
      leading was buying nothing and costing the size. This is what pays for
      the type at the binding 1280×720 band; do not restore `normal`. */
@@ -1618,7 +1659,10 @@
    separated by tracking and ink as well as size, so the two never read as
    one run. */
 .fl-row__meta {
-  font-size: max(min(0.8vw, 11.5px), calc(var(--lc) * 0.75));
+  /* One mono step under the identity beside it (ADR-088), which is the same
+     step the directory's own head label letters at — head and datum are one
+     "label" rank, and the row identity is the rank above them. */
+  font-size: var(--fl-chrome-md);
   line-height: 1.15;
   letter-spacing: 0.1em;
   color: var(--fl-ink-dim);

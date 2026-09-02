@@ -658,8 +658,15 @@
     gap: 8px;
     padding: 7px 0;
     border-top: 1px dotted var(--pda-hair);
-    /* Row identity — mirrors the desktop directory's own ladder. */
-    font: max(11px, calc(var(--lc, 12px) * 0.9))/1.35 var(--fl-mono, monospace);
+    /* Row identity — mirrors the desktop directory's own ladder.
+       ⚠ IT WAS `--lc`, WHICH ADR-088 RETIRED, and a stale `var()` here would
+       have fallen to its 12px fallback silently rather than failing. The
+       directory's own head and meta letter at `--fl-chrome-md`, which is this
+       surface's label rank and floors at 11px on a phone — so this rung is
+       byte-identical to what shipped. NOT chrome-lg: that is the identity
+       rank, and it would grow these rows 11 → 13.2 on the one path where the
+       height pin has 0.45px of slack. */
+    font: max(11px, var(--fl-chrome-md, 11px))/1.35 var(--fl-mono, monospace);
     color: var(--pda-txt);
   }
 
