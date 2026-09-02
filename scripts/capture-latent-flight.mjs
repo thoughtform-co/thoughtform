@@ -65,9 +65,118 @@ for (const [width, height] of VPS) {
     if (m.type() === "error" && !IGNORED_ERROR.test(m.text())) errors.push(m.text());
   });
 
-  const url = `http://localhost:${PORT}/test/latent-flight?capture=1&boot=0`;
+  // ── the boot, held at three cues ───────────────────────────────────────
+  // `?hold=<cue>` freezes the boot clock at that cue and stamps its identity;
+  // the still is the page exactly there, however long the capture takes.
+  for (const cue of ["stars-up", "hud-power", "beacon-tag"]) {
+    await page.goto(`http://localhost:${PORT}/test/latent-flight?capture=1&hold=${cue}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await page.waitForSelector(`.lf[data-ready="1"][data-stamp="boot|hold:${cue}|dark"]`, {
+      timeout: 30000,
+    });
+    await page.waitForTimeout(250);
+    await page.screenshot({ path: `${OUT}/boot-${cue}-${tag}.png` });
+  }
+
+  // ── the rest state, after a real boot ──────────────────────────────────
+  const url = `http://localhost:${PORT}/test/latent-flight?capture=1`;
   await page.goto(url, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector('.lf[data-ready="1"]', { timeout: 30000 });
+  await page.waitForSelector('.lf[data-ready="1"][data-stamp="vista|VISTA|dark"]', {
+    timeout: 30000,
+  });
+  // The log's read-out outlives the boot; let it reach the idle line.
+  await page.waitForTimeout(2200);
+
+  // ── the HUD is on and says what it should ──────────────────────────────
+  const hud = await page.evaluate(() => {
+    const q = (s) => document.querySelector(s);
+    const text = (s) => q(s)?.textContent?.trim() ?? null;
+    const op = (s) => Number(getComputedStyle(q(s)).opacity);
+    return {
+      stateWord: text('[data-lf="state-word"]'),
+      stateName: text('[data-lf="state-name"]'),
+      tele: Array.from(document.querySelectorAll(".lf-tele__v")).map((e) => e.textContent),
+      heading: text('[data-lf="heading"]'),
+      comms: text('[data-lf="comms"]'),
+      beaconV1: text('[data-lf="beacon-v1"]'),
+      marksShown: Array.from(document.querySelectorAll("[data-lf-wp]")).filter(
+        (e) => !e.hidden && Number(e.style.opacity) > 0.99
+      ).length,
+      routeHere: q('[data-lf-route][data-state="here"]')?.dataset.lfRoute ?? null,
+      opacities: {
+        tape: op('[data-lf="tape"]'),
+        reticle: op('[data-lf="look"]'),
+        keys: op('[data-lf="keys"]'),
+        beacon: op('[data-lf="beacon"]'),
+      },
+      heroLift: document.documentElement.style.getPropertyValue("--hero-lift"),
+    };
+  });
+  if (hud.stateWord !== "VISTA") failures.push(`${tag}: state word "${hud.stateWord}"`);
+  if (hud.stateName !== "HOME") failures.push(`${tag}: state name "${hud.stateName}"`);
+  if (JSON.stringify(hud.tele) !== JSON.stringify(["000", "01/07", "0.00"]))
+    failures.push(`${tag}: telemetry ${JSON.stringify(hud.tele)}`);
+  if (hud.beaconV1 !== "LS-01") failures.push(`${tag}: beacon tag "${hud.beaconV1}"`);
+  if (hud.marksShown !== 7) failures.push(`${tag}: ${hud.marksShown} waypoint marks shown, expected 7`);
+  if (hud.routeHere !== "home") failures.push(`${tag}: route "here" is ${hud.routeHere}`);
+  for (const [k, v] of Object.entries(hud.opacities)) if (v < 0.99) failures.push(`${tag}: ${k} at opacity ${v}`);
+  if (!hud.comms) failures.push(`${tag}: the log is empty`);
+
+  // ── no label prints through another ────────────────────────────────────
+  // The check containment never makes: every visible piece of HUD text,
+  // pairwise, against every other. A still showed SERVICES through
+  // VOIDWALKER while every geometry gate was green.
+  const overlaps = await page.evaluate(() => {
+    const sel =
+      ".lf-wp__label, .lf-tag__k, .lf-tag__v, .lf-state, .lf-tape__box, .lf-tele, .lf-meter, .lf-comms, .lf-key, .lf-route";
+    const boxes = Array.from(document.querySelectorAll(sel))
+      .filter((e) => {
+        const cs = getComputedStyle(e);
+        if (cs.visibility === "hidden" || Number(cs.opacity) < 0.5) return false;
+        let p = e;
+        while (p) {
+          if (p.hidden || (p.style && Number(p.style.opacity || 1) < 0.5)) return false;
+          p = p.parentElement;
+        }
+        return true;
+      })
+      .map((e) => ({ name: (e.textContent || e.className).trim().slice(0, 24), r: e.getBoundingClientRect() }))
+      .filter((b) => b.r.width > 0 && b.r.height > 0);
+    const out = [];
+    for (let i = 0; i < boxes.length; i++)
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i].r;
+        const b = boxes[j].r;
+        const x = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (x > 1 && y > 1) out.push(`${boxes[i].name} × ${boxes[j].name}`);
+      }
+    return out;
+  });
+  if (overlaps.length) failures.push(`${tag}: label overlap: ${overlaps.join("; ")}`);
+
+  // ── the rest state still, before anything is touched ───────────────────
+  await page.screenshot({ path: `${OUT}/rest-${tag}.png` });
+
+  // ── a lock, by key ─────────────────────────────────────────────────────
+  await page.keyboard.press("4");
+  await page.waitForTimeout(700);
+  const lock = await page.evaluate(() => ({
+    target: document.querySelector('[data-lf="target"]')?.hidden === false,
+    tag: document.querySelector('[data-lf="target-v1"]')?.textContent,
+    range: document.querySelector('[data-lf="target-v2"]')?.textContent,
+    pressed: document.querySelector('[data-lf-route="proof"]')?.getAttribute("aria-pressed"),
+    live: document.querySelector('[data-lf="live"]')?.textContent,
+  }));
+  if (!lock.target) failures.push(`${tag}: no lock designator after pressing 4`);
+  if (lock.tag !== "PROOF") failures.push(`${tag}: lock tag "${lock.tag}"`);
+  if (lock.range !== "0.51") failures.push(`${tag}: lock range "${lock.range}"`);
+  if (lock.pressed !== "true") failures.push(`${tag}: route mark not aria-pressed`);
+  if (!/Locked: Proof/.test(lock.live ?? "")) failures.push(`${tag}: live region "${lock.live}"`);
+  await page.screenshot({ path: `${OUT}/lock-${tag}.png` });
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(1400);
 
   // ── loop alive ─────────────────────────────────────────────────────────
   const f1 = await page.evaluate(() => Number(document.querySelector(".lf-stage")?.dataset.lfFrame));
@@ -144,6 +253,9 @@ for (const [width, height] of VPS) {
     frames: [f1, f2],
     rails: rails.list,
     heroLift: rails.heroLift,
+    hud,
+    overlaps,
+    lock,
     vista: { mean: +vista.mean.toFixed(2), distinct: vista.distinct, max: vista.max, gold: vista.gold },
     pulse: pulse && {
       mean: +pulse.mean.toFixed(2),

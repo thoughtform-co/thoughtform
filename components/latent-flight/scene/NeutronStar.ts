@@ -36,9 +36,17 @@ import {
  * carries the object: hairlines at dawn .22–.28; the glow is secondary.
  */
 
+/** The drawing's scale in world units per authored unit, and the outermost
+ *  field shell in authored units — the HUD sizes the beacon's brackets from
+ *  their product. */
+export const STAR_SCALE = 1.6;
+export const STAR_EXTENT = 5.2;
+
 export interface NeutronStar {
   root: THREE.Group;
   flash: THREE.Mesh;
+  /** Power-on level 0 … 1: every emitter's opacity scales with it. */
+  setLevel(level: number): void;
   /** Place the star and orient its frame. `near`/`far` bound the depth fade. */
   setFrame(frame: PulsarFrame, position: Vec3): void;
   setPhase(phase: number): void;
@@ -281,6 +289,16 @@ export function createNeutronStar(noise: THREE.Texture): NeutronStar {
   disposables.push(flash.geometry, flashMat);
 
   const lineMats = [ringMat, axisMat, fieldMat];
+  const levelled: { m: THREE.ShaderMaterial; base: number }[] = [
+    coronaMat,
+    discMat,
+    ringMat,
+    axisMat,
+    fieldMat,
+    jetMat,
+    beamMat,
+  ].map((m) => ({ m, base: m.uniforms.uOpacity.value as number }));
+  let level = 1;
   const basis = new THREE.Matrix4();
   const vx = new THREE.Vector3();
   const vy = new THREE.Vector3();
@@ -289,6 +307,14 @@ export function createNeutronStar(noise: THREE.Texture): NeutronStar {
   return {
     root,
     flash,
+    setLevel(l) {
+      const next = Math.max(0, Math.min(1, l));
+      if (next === level) return;
+      level = next;
+      for (const { m, base } of levelled) m.uniforms.uOpacity.value = base * level;
+      core.visible = level > 0.05;
+      root.visible = level > 0.001;
+    },
     setFrame(frame, position) {
       root.position.set(position[0], position[1], position[2]);
       vx.set(frame.x[0], frame.x[1], frame.x[2]);

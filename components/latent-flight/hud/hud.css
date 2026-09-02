@@ -1,11 +1,18 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   The glass HUD — layer L1 + the game's seats in the instrument frame (L2)
+   The glass HUD (L1) and the game's seats in the instrument frame (L2)
    ═══════════════════════════════════════════════════════════════════════
 
-   PT Mono throughout (chrome). Every colour is a token; every size is on the
-   ladder the interface spec declares. Nothing here paints a ground: the HUD
-   is marks over the world, and the only boxes are the ones the corner law
-   allows (square, hairline, no radius).
+   PT Mono throughout — chrome. Every colour is a token; every alpha is a rung
+   of the dawn ladder. Nothing here paints a ground, and the only boxes are the
+   ones the corner law allows: square, hairline, no radius. Gold appears on
+   marks that mean "here" or "locked" and on the two meters' filled segments —
+   never as a wash.
+
+   Layering (latent-flight.css): canvas z 1 · this layer z 40 · `.hud` z 50.
+
+   ⚠ NO PER-FRAME LAYOUT. Every projected mark is `position: absolute; left: 0;
+   top: 0` and moves by `transform` alone, with `contain` and `will-change` so
+   the engine's one style write per anchor never reflows the layer.
    ═══════════════════════════════════════════════════════════════════════ */
 
 .lf-hud {
@@ -18,6 +25,32 @@
   letter-spacing: var(--track-wider, 0.1em);
   color: var(--dawn, #ebe3d6);
   --lf-ease: var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  --lf-ink-30: rgba(var(--dawn-rgb, 235, 227, 214), 0.3);
+  --lf-ink-50: rgba(var(--dawn-rgb, 235, 227, 214), 0.5);
+  --lf-ink-70: rgba(var(--dawn-rgb, 235, 227, 214), 0.7);
+  --lf-line: var(--hud-rail-line, rgba(235, 227, 214, 0.55));
+  --lf-gold-line: var(--gold-line, var(--gold, #caa554));
+  --lf-gold-ink: var(--gold-ink, var(--gold, #caa554));
+  /* The corner readout's own ramp (`.hud__nav`), copied so the state word
+     and the site's sector readout are one size at every width. */
+  --lf-readout: clamp(11.5px, 0.53rem + 0.32vw, 16px);
+}
+
+.lf-hud button {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.lf-hud button:focus-visible {
+  outline: 2px solid var(--gold, #caa554);
+  outline-offset: 4px;
 }
 
 /* Screen-reader status line. */
@@ -31,4 +64,599 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ── The frame's own seats this page re-drives ───────────────────────── */
+
+/* The TL bracket gives way to the route, exactly as the journey row takes
+   that corner on the landing (`rail-instruments.css`). */
+.lf .hud__corner--tl {
+  border-color: transparent;
+}
+
+/* The course mark: the retired scroll diamond, back as the ship. No
+   transition — it moves only with the ship, never by tween. */
+.lf .hud__depth {
+  display: block;
+  transition: none;
+  animation: none;
+  opacity: 0;
+}
+
+/* Right-rail telemetry — the `.rin-tele` seat rules, copied verbatim so the
+   game's readouts and the landing's land on the same pixels. */
+.lf-tele-host {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.lf-tele {
+  position: absolute;
+  right: calc(var(--hud-rail-guide-inset, 0px) + 8px);
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+}
+.lf-tele__k {
+  font-weight: 400;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.3);
+}
+.lf-tele__rule {
+  width: 22px;
+  height: 0;
+  border-top: 1px dotted rgba(var(--gold-rgb, 202, 165, 84), 0.25);
+}
+.lf-tele__v {
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--gold, #caa554);
+}
+
+/* ── TL: the route ───────────────────────────────────────────────────── */
+.lf-route {
+  position: absolute;
+  top: var(--hud-margin, 48px);
+  left: var(--hud-margin, 48px);
+  height: var(--hud-corner-zone, 45px);
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+}
+.lf-route__list {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lf-route__seat {
+  display: contents;
+}
+.lf-route__mark {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.22);
+  transition: color 300ms var(--lf-ease);
+  opacity: 0;
+}
+.lf-route__mark svg {
+  display: block;
+}
+.lf-route__mark[data-state="passed"] {
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.44);
+}
+.lf-route__mark[data-state="here"] {
+  color: var(--gold, #caa554);
+}
+.lf-route__mark[aria-pressed="true"] {
+  color: var(--gold, #caa554);
+  box-shadow: 0 2px 0 0 var(--gold, #caa554);
+}
+.lf-route__mark:hover {
+  color: var(--dawn, #ebe3d6);
+}
+
+/* ── TR: the state word ──────────────────────────────────────────────── */
+.lf-state {
+  position: absolute;
+  top: var(--hud-margin, 48px);
+  right: var(--hud-margin, 48px);
+  height: var(--hud-corner-zone, 45px);
+  display: flex;
+  align-items: center;
+  gap: 0.62em;
+  font-size: var(--lf-readout);
+  white-space: nowrap;
+  opacity: 0;
+}
+.lf-state__word,
+.lf-state__sep {
+  color: var(--dawn-40, rgba(235, 227, 214, 0.4));
+}
+.lf-state__name {
+  color: var(--dawn, #ebe3d6);
+  min-height: 1em;
+}
+
+/* ── Top centre: the heading tape ────────────────────────────────────── */
+.lf-tape {
+  position: absolute;
+  top: var(--hud-margin, 48px);
+  left: 50%;
+  width: 560px;
+  height: 52px;
+  transform: translateX(-50%);
+  overflow: hidden;
+  opacity: 0;
+}
+.lf-tape__strip {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+.lf-tape__seat {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+}
+/* Ticks point UP from the line — outward, the rails' own rule. */
+.lf-tape__tick {
+  position: absolute;
+  left: -1px;
+  bottom: 21px;
+  width: 2px;
+  height: 7px;
+  background: var(--lf-line);
+  opacity: 0;
+}
+.lf-tape__tick--major {
+  height: 21px;
+}
+.lf-tape__label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translateX(-50%);
+  font-weight: 400;
+  font-size: 9px;
+  color: var(--lf-ink-50);
+  opacity: 0;
+}
+.lf-tape__line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 21px;
+  height: 2px;
+  background: var(--lf-line);
+}
+.lf-tape__index {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  width: 8px;
+  height: 8px;
+  transform: translateX(-50%) rotate(45deg);
+  border: 1px solid var(--dawn, #ebe3d6);
+}
+.lf-tape__box {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 1;
+  padding: 3px 6px;
+  border: 1px solid var(--lf-ink-30);
+  color: var(--dawn, #ebe3d6);
+}
+.lf-tape__target {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  transform: translateX(-50%) rotate(45deg);
+  background: var(--gold, #caa554);
+}
+
+/* ── The glass: course lines and marks ───────────────────────────────── */
+.lf-glass {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.lf-leg {
+  fill: none;
+  stroke: rgba(var(--dawn-rgb, 235, 227, 214), 0.15);
+  stroke-width: 1;
+  stroke-dasharray: 2 6;
+  opacity: 0;
+}
+.lf-leg[data-passed="1"] {
+  stroke: rgba(var(--dawn-rgb, 235, 227, 214), 0.3);
+  stroke-dasharray: none;
+}
+.lf-leg[data-locked="1"] {
+  stroke: rgba(var(--dawn-rgb, 235, 227, 214), 0.4);
+}
+.lf-leg[data-engaged="1"] {
+  stroke: rgba(var(--gold-rgb, 202, 165, 84), 0.6);
+}
+
+.lf-marks {
+  position: absolute;
+  inset: 0;
+}
+/* ⚠ `contain: layout style`, never `paint` — a tag hangs OUTSIDE its bracket
+   box on purpose, and paint containment clips it away in silence. */
+.lf-marks > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+  contain: layout style;
+}
+
+/* A waypoint: a hollow diamond sized by range, its name beside it. */
+.lf-wp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  --lf-mark: 12px;
+  color: var(--lf-ink-50);
+  opacity: 0;
+  transition: color 80ms var(--lf-ease);
+}
+.lf-wp[data-q="3"] {
+  color: var(--lf-ink-30);
+}
+.lf-wp[data-state="passed"] {
+  color: rgba(var(--dawn-rgb, 235, 227, 214), 0.44);
+}
+.lf-wp[data-state="here"],
+.lf-wp[data-state="locked"] {
+  color: var(--gold, #caa554);
+}
+.lf-wp[data-state="here"] .lf-wp__label,
+.lf-wp[data-state="locked"] .lf-wp__label {
+  color: var(--lf-gold-ink);
+}
+.lf-wp:hover {
+  color: var(--dawn, #ebe3d6);
+}
+.lf-wp__diamond {
+  flex: 0 0 auto;
+  width: var(--lf-mark);
+  height: var(--lf-mark);
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
+  transform-origin: 50% 50%;
+}
+.lf-wp[data-state="here"] .lf-wp__diamond,
+.lf-wp[data-state="locked"] .lf-wp__diamond {
+  background: currentColor;
+}
+/* The lock's tag names the target; the mark's own label would say it twice,
+   one em apart. */
+.lf-wp[data-state="locked"] .lf-wp__label {
+  visibility: hidden;
+}
+.lf-wp__label {
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.lf-wp[data-flip="1"] {
+  flex-direction: row-reverse;
+}
+.lf-wp__chevron {
+  display: none;
+  width: 0;
+  height: 0;
+  border: 4px solid transparent;
+}
+/* An edge marker: the mark pinned to the frame, a chevron on the outward
+   side, the name inboard. */
+.lf-wp[data-edge] {
+  --lf-mark: 8px;
+}
+.lf-wp[data-edge] .lf-wp__chevron {
+  display: block;
+}
+.lf-wp[data-edge="right"] {
+  flex-direction: row-reverse;
+}
+.lf-wp[data-edge="right"] .lf-wp__chevron {
+  border-left-color: currentColor;
+}
+.lf-wp[data-edge="left"] .lf-wp__chevron {
+  border-right-color: currentColor;
+}
+.lf-wp[data-edge="top"] .lf-wp__chevron {
+  border-bottom-color: currentColor;
+}
+.lf-wp[data-edge="bottom"] .lf-wp__chevron {
+  border-top-color: currentColor;
+}
+
+/* Brackets: four Ls with 10 px arms, the Viewport Frame preset. */
+.lf-br {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 0 solid currentColor;
+}
+.lf-br--tl {
+  left: 0;
+  top: 0;
+  border-left-width: 1px;
+  border-top-width: 1px;
+}
+.lf-br--tr {
+  right: 0;
+  top: 0;
+  border-right-width: 1px;
+  border-top-width: 1px;
+}
+.lf-br--bl {
+  left: 0;
+  bottom: 0;
+  border-left-width: 1px;
+  border-bottom-width: 1px;
+}
+.lf-br--br {
+  right: 0;
+  bottom: 0;
+  border-right-width: 1px;
+  border-bottom-width: 1px;
+}
+
+/* The label-over-value tag beside a bracketed object — the telemetry pair's
+   own type, so a tag and a rail readout read as one instrument. */
+.lf-tag {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  white-space: nowrap;
+}
+[data-flip="1"] > .lf-tag {
+  left: auto;
+  right: calc(100% + 14px);
+  align-items: flex-end;
+}
+.lf-tag__pair {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lf-tag__k {
+  font-weight: 400;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--lf-ink-30);
+}
+.lf-tag__v {
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--lf-ink-70);
+  min-height: 1em;
+}
+
+/* The beacon: brackets in dawn .30 around the star's own extent; no gold —
+   gold is the lock. */
+.lf-beacon {
+  width: var(--lf-box, 200px);
+  height: var(--lf-box, 200px);
+  color: var(--lf-ink-30);
+  opacity: 0;
+}
+
+/* The lock: brackets in gold-line that converge 1.6× → 1× in 150 ms. */
+.lf-target {
+  width: var(--lf-box, 40px);
+  height: var(--lf-box, 40px);
+  color: var(--lf-gold-line);
+}
+.lf-target__box {
+  position: absolute;
+  inset: 0;
+  transform: scale(var(--lf-conv, 1));
+  transition: transform 150ms var(--lf-ease);
+}
+.lf-target .lf-tag__v {
+  color: var(--lf-gold-ink);
+}
+
+/* ── Centre: the reticle ─────────────────────────────────────────────── */
+.lf-reticle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 128px;
+  height: 128px;
+  transform: translate(-50%, -50%);
+}
+.lf-reticle__look {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  opacity: 0;
+}
+.lf-reticle__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.lf-reticle__diamond,
+.lf-reticle__ticks,
+.lf-reticle__brackets {
+  fill: none;
+  stroke: var(--lf-ink-30);
+  stroke-width: 1;
+}
+.lf-reticle__thirds {
+  fill: none;
+  stroke: var(--lf-gold-line);
+  stroke-width: 1;
+  opacity: 0;
+  transition: opacity 80ms var(--lf-ease);
+}
+.lf-reticle[data-engaged="1"] .lf-reticle__thirds {
+  opacity: 1;
+}
+.lf-reticle__boresight {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--dawn, #ebe3d6);
+  opacity: 0;
+}
+
+/* The flank meters: key + eight 8×4 segments, THR lower-left, SIG lower-right. */
+.lf-meter {
+  position: absolute;
+  top: 122px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+}
+.lf-meter--thr {
+  right: calc(100% - 20px);
+}
+.lf-meter--sig {
+  left: calc(100% - 20px);
+  flex-direction: row-reverse;
+}
+.lf-meter__k {
+  font-weight: 400;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: var(--lf-ink-30);
+}
+.lf-meter__segs {
+  display: flex;
+  gap: 2px;
+}
+.lf-meter__segs i {
+  display: block;
+  width: 8px;
+  height: 4px;
+  box-sizing: border-box;
+  border: 1px solid rgba(var(--dawn-rgb, 235, 227, 214), 0.15);
+}
+.lf-meter__segs i[data-on="1"] {
+  border-color: var(--gold, #caa554);
+  background: var(--gold, #caa554);
+}
+
+/* ── Bottom centre: the log and the key row ──────────────────────────── */
+.lf-comms {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--hud-margin, 48px) + 30px);
+  transform: translateX(-50%);
+  font-size: 10px;
+  line-height: 1;
+  color: var(--lf-ink-70);
+  white-space: nowrap;
+  min-height: 1em;
+}
+.lf-keys {
+  position: absolute;
+  left: 50%;
+  bottom: var(--hud-margin, 48px);
+  height: var(--hud-corner-zone, 45px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  opacity: 0;
+}
+/* `.lf-hud .lf-key` outranks `.lf-hud button`'s `font: inherit`, or the two
+   buttons print at the body's 16px beside 10px hints. */
+.lf-hud .lf-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--lf-ink-50);
+  white-space: nowrap;
+}
+.lf-key kbd {
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--lf-ink-30);
+  color: var(--lf-ink-50);
+  transition:
+    border-color 80ms var(--lf-ease),
+    color 80ms var(--lf-ease);
+}
+.lf-key:hover kbd {
+  border-color: var(--lf-gold-line);
+}
+.lf-key:hover span {
+  color: var(--lf-gold-ink);
+}
+.lf-key[aria-disabled="true"] {
+  color: var(--lf-ink-30);
+  cursor: default;
+}
+.lf-key[aria-disabled="true"] kbd {
+  color: var(--lf-ink-30);
+}
+.lf-key[aria-disabled="true"]:hover kbd {
+  border-color: var(--lf-ink-30);
+}
+.lf-key[aria-disabled="true"]:hover span {
+  color: var(--lf-ink-30);
+}
+.lf-key--hint {
+  pointer-events: none;
+}
+
+/* The pointer IS the reticle over the world; over chrome it is a pointer. */
+.lf-stage {
+  cursor: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lf-hud *,
+  .lf-hud *::before,
+  .lf-hud *::after {
+    transition: none !important;
+  }
 }

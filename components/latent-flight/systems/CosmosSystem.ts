@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 import { getDeviceTier } from "@/lib/hooks/useDeviceTier";
 import { getCountMultiplier } from "@/lib/hooks/useQualityTier";
+import { PULSAR_BOOT_DELAY_S } from "@/lib/latent-flight/boot/bootTimeline";
 import { buildNoise, NOISE_SIZE } from "@/lib/latent-flight/noiseTexture";
 import {
   PULSAR,
@@ -15,7 +16,7 @@ import {
 import { pulsarRef } from "@/lib/latent-flight/pulsarRef";
 
 import { createDust, type Dust } from "../scene/Dust";
-import { createNeutronStar, type NeutronStar } from "../scene/NeutronStar";
+import { STAR_SCALE, createNeutronStar, type NeutronStar } from "../scene/NeutronStar";
 import { createSky, type Sky } from "../scene/Sky";
 import { createFarStars, createNearStars, type StarLayer } from "../scene/Starfield";
 import type { World } from "../World";
@@ -35,9 +36,6 @@ import type { LfSystem } from "./System";
  * star is a world-fixed landmark.
  */
 
-/** The star drawing's scale in world units per authored unit. */
-const STAR_SCALE = 1.6;
-
 function tierCount(desktop: number, tablet: number, mobile: number): number {
   const tier = getDeviceTier(window.innerWidth);
   const base = tier === "mobile" ? mobile : tier === "tablet" ? tablet : desktop;
@@ -55,6 +53,9 @@ export class CosmosSystem implements LfSystem {
   private frame: PulsarFrame | null = null;
   private prevCross = 0;
   private count = 0;
+  private farBase = 1;
+  private nearBase = 1;
+  private dustBase = 1;
 
   init(w: World): void {
     const noise = new THREE.DataTexture(
@@ -80,6 +81,9 @@ export class CosmosSystem implements LfSystem {
     // shell), still clear of the flight axis at centre.
     this.star.root.scale.setScalar(STAR_SCALE);
     this.dust = createDust(tierCount(600, 350, 180));
+    this.farBase = this.far.material.uniforms.uOpacity.value as number;
+    this.nearBase = this.near.material.uniforms.uOpacity.value as number;
+    this.dustBase = this.dust.material.uniforms.uOpacity.value as number;
 
     // Reduced motion: no twinkle, no drift, the star parked in profile.
     this.near.material.uniforms.uTwinkle.value = w.clock.motionScale;
@@ -126,7 +130,17 @@ export class CosmosSystem implements LfSystem {
     dust.material.uniforms.uPixelRatio.value = dpr;
     dust.material.uniforms.uCamZ.value = cam.position.z;
 
-    const phase = phaseAt(t);
+    // The boot: the sky comes up, then the star.
+    const b = w.boot;
+    far.material.uniforms.uOpacity.value = this.farBase * b["stars-up"];
+    near.material.uniforms.uOpacity.value = this.nearBase * b["stars-up"];
+    dust.material.uniforms.uOpacity.value = this.dustBase * b["stars-up"];
+    star.setLevel(b["pulsar-up"]);
+
+    // The star's clock starts after the engine's so the first crossing lands
+    // on its boot cue; a page with no boot runs the star from t = 0.
+    const booted = w.flags.boot && !w.reducedMotion;
+    const phase = phaseAt(booted ? Math.max(0, t - PULSAR_BOOT_DELAY_S) : t);
     const c = crossing(frame, phase);
     star.setPhase(phase);
     star.setTime(t);

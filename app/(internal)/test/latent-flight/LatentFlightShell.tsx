@@ -4,6 +4,7 @@ import { useEffect, useMemo, useSyncExternalStore } from "react";
 
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { LatentFlightMount } from "@/components/latent-flight/LatentFlightMount";
+import { LatentFlightHud } from "@/components/latent-flight/hud/LatentFlightHud";
 import { STATE_WORD } from "@/lib/latent-flight/engine/gameState";
 import {
   getLfServerState,
@@ -96,7 +97,17 @@ export function LatentFlightShell({ hudHtml, bodyClass }: { hudHtml: string; bod
     >
       <HudFrame hudHtml={hudHtml} />
 
-      <div className="lf-stage">
+      {/* The flight deck: the one element that captures the keys, and only
+          while it has focus. `role="application"` tells a screen reader the
+          keys mean something here; the route `<nav>` sits outside it. */}
+      <div
+        className="lf-stage"
+        data-lf="deck"
+        tabIndex={0}
+        role="application"
+        aria-roledescription="flight deck"
+        aria-label="Flight deck. Tab cycles targets, digits lock a waypoint, Escape releases."
+      >
         {mode === "flight" ? (
           <CanvasErrorBoundary fallback={<div className="lf-chart" />}>
             <LatentFlightMount flags={flags} reducedMotion={reducedMotion} />
@@ -105,11 +116,15 @@ export function LatentFlightShell({ hudHtml, bodyClass }: { hudHtml: string; bod
         {mode === "chart" ? <div className="lf-chart" /> : null}
       </div>
 
-      <div className="lf-hud" role="region" aria-label="Flight instruments">
-        <output className="lf-sr" aria-live="polite">
-          {pub.status || word}
-        </output>
-      </div>
+      {mode === "flight" ? (
+        <LatentFlightHud />
+      ) : (
+        <div className="lf-hud" role="region" aria-label="Flight instruments">
+          <output className="lf-sr" aria-live="polite">
+            {pub.status || word}
+          </output>
+        </div>
+      )}
     </div>
   );
 }

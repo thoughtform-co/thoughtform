@@ -7,6 +7,7 @@ import {
   resetFrameSampler,
   useQualityStore,
 } from "@/lib/hooks/useQualityTier";
+import { instantBoot } from "@/lib/latent-flight/boot/bootTimeline";
 import { flightFov } from "@/lib/latent-flight/camera/fov";
 import { Emitter } from "@/lib/latent-flight/engine/events";
 import { transition, type LfEvent, type LfState } from "@/lib/latent-flight/engine/gameState";
@@ -165,6 +166,20 @@ export class LatentFlightEngine {
       compose: null,
       post: null,
       anchors: new Map(),
+      boot: instantBoot(),
+      bootT: 0,
+      look: { x: 0, y: 0 },
+      target: null,
+      ship: { position: [0, 0, 0], heading: 0, throttle: 0, s: 0, sector: "home" },
+      commands: {
+        lock: () => {},
+        release: () => {},
+        cycle: () => {},
+        engage: () => {},
+        skipBoot: () => {},
+      },
+      log: [],
+      dispatch: (event) => this.dispatch(event),
     };
 
     resetLfStore();
@@ -177,8 +192,10 @@ export class LatentFlightEngine {
       if (s.dprCeiling !== prev.dprCeiling) this.applyDpr(s.dprCeiling);
     });
 
-    this.resize();
+    // Init before the first resize: a system's `resize` may read handles its
+    // `init` creates (the HUD measures the rails it appended seats to).
     for (const s of this.systems) s.init?.(this.world);
+    this.resize();
 
     canvas.addEventListener("webglcontextlost", this.onLost, false);
     canvas.addEventListener("webglcontextrestored", this.onRestored, false);

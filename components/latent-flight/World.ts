@@ -10,10 +10,36 @@
 
 import type * as THREE from "three";
 
+import type { BootState } from "@/lib/latent-flight/boot/bootTimeline";
+import type { WaypointId } from "@/lib/latent-flight/content/waypoints";
 import type { Emitter } from "@/lib/latent-flight/engine/events";
-import type { LfState } from "@/lib/latent-flight/engine/gameState";
+import type { LfEvent, LfState } from "@/lib/latent-flight/engine/gameState";
 import type { LfFlags } from "@/lib/latent-flight/flags";
 import type { GameClock } from "@/lib/latent-flight/gameClock";
+
+/** The vessel, as the instruments read it. Flight (M3) writes it; at rest
+ *  it holds at HOME. */
+export interface ShipPose {
+  position: [number, number, number];
+  /** Heading, degrees, 0 = down −Z, clockwise from above. */
+  heading: number;
+  /** 0 … 1. */
+  throttle: number;
+  /** Course parameter, 0 … 1. */
+  s: number;
+  /** The waypoint the vessel occupies. */
+  sector: WaypointId;
+}
+
+/** The verbs. Systems that own an action install it here; the HUD's
+ *  buttons and the keys call through. Defaults are no-ops. */
+export interface LfCommands {
+  lock(id: WaypointId): void;
+  release(): void;
+  cycle(dir: 1 | -1): void;
+  engage(): void;
+  skipBoot(): void;
+}
 
 export interface LfSize {
   /** CSS pixels. */
@@ -60,4 +86,18 @@ export interface World {
   /** World-space anchors the HUD projects and the capture reads by name
    *  (`star`, later each waypoint). Written by the system that owns them. */
   anchors: Map<string, THREE.Vector3>;
+  /** Boot cue progress, 0 … 1 each. `instantBoot()` when there is no boot. */
+  boot: BootState;
+  /** The boot clock, seconds (frozen under `?hold=`). */
+  bootT: number;
+  /** Pointer look, −1 … 1 of the deadzone box on each axis. */
+  look: { x: number; y: number };
+  /** The locked waypoint, or none. */
+  target: WaypointId | null;
+  ship: ShipPose;
+  commands: LfCommands;
+  /** Lines pushed for the log; the HUD drains them. */
+  log: string[];
+  /** Drive the FSM. Bound by the engine. */
+  dispatch(event: LfEvent): LfState;
 }
