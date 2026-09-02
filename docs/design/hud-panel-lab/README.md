@@ -188,6 +188,28 @@ four "different" rows shot the same still with every gate green.
 
 ---
 
+## ⚠ The record column moved under this lab (ADR-088, 2026-09-02)
+
+Production's three left-column zones are grid items in a new `.fl-left`
+wrapper now, not three absolutes hung off the tick ladder: the directory's last
+row is seated on tick 11 and the surplus splits 1:2 between the two seams. Two
+consequences for the stills already in this folder and for anything shot next.
+
+- **The `proof_v*` captures here predate it.** They show the pre-ADR-088 column
+  — a 137px void under the directory at 1920×1247 and an 18px seam above it —
+  so read them for the direction's CHROME, never for its rhythm. Re-shoot
+  before judging any direction on vertical balance.
+- **The register's cell-head and the directory seam are grid items too.** Both
+  were seated on `--fl-left-seam + --fl-proof-top-gap [+ --fl-proof-h …]`,
+  which named the register's top only while the zones were top-anchored
+  absolutes; there is no expression on `.fl-case` that reaches either line now.
+  The head rides seam track A (`align-self: end`), the seam rides track B
+  (centred). The register seam stays where it was — tick 6 is a rung of the
+  ladder, and that placement was a deliberate ruling.
+- **Ruling 7 is unaffected but its neighbour moved**: the line ledger still
+  measures the register's and directory's gold hairlines, and those are
+  untouched. What changed is where the boxes SIT, not what they paint.
+
 ## Rulings the lab needs before anything is promoted
 
 1. **ADR-065 U2** — may the casefile console lose its TL+BR chamfer inside a

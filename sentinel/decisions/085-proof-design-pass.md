@@ -80,7 +80,12 @@ approaches the earlier ~7px effective minimum:
 
 The row identity, meta and register claim keep the `--lc` ladder above —
 that ladder is CONTENT and this one is CHROME; they intentionally do not
-merge. Every hard-coded chrome font-size on the tab strip, the directory
+merge. ⚠ **REVERSED BY [ADR-088](088-casefile-left-column-ladder-and-rhythm.md)
+(2026-09-02): the split is by FACE, not by content-vs-chrome.** The row, the
+claim and the meta are all MONO and ride this scale now; only the sentence and
+the brief stay on the sans ladder. Content-vs-chrome put two mono-caps runs a
+ratio step apart in one narrow column, which is what the owner read as
+"disconnected". Every hard-coded chrome font-size on the tab strip, the directory
 head, and the shared `.fl-desig` swaps to the appropriate token.
 
 ⚠ **THE `--font-mono` LEAK IS FIXED WHERE IT WAS LIVE.** `.fl-pda__svg
@@ -228,7 +233,10 @@ reading 03, and land the studio's two policy pictures on THE LINE.
    ```
 
    The clamp is solved to preserve the shipped `chrome-md` values at
-   both reference viewports (11px @1280, 12px @1920). `--lc` and
+   both reference viewports (11px @1280, 12px @1920). ⚠ `--lc` IS DELETED
+   (ADR-088) — there is ONE content ladder now, `--fl-copy`, and the
+   register's sentence derives from it by the ratio; the three MONO roles
+   `--lc` used to carry ride the chrome steps above. `--lc` and
    `--fl-copy` sit on the scale as content step 0 and step +1 by intent
    — they are solved against measured wrap thresholds and cannot be
    re-derived (ADR-048's factor on `--band-copy` for the brief). The

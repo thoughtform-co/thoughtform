@@ -242,6 +242,14 @@ afford, so neither can overflow:
   every size in both sheet bodies derives from it by ratio.
 - `--lc` on `.fl-case` = `clamp(11.5px, min(0.95vw, 1.3svh), 16.5px)` — the
   register claim, its sentence, the directory row and its meta.
+  ⚠ **SUPERSEDED AND DELETED by [ADR-088](088-casefile-left-column-ladder-and-rhythm.md)
+  (2026-09-02).** One token across FOUR roles and TWO faces cannot hold a
+  ranking: its `svh` term made the order flip with viewport height, so at
+  1920×1080 the sans sentence (14.04) outranked the mono claim (13.34) it
+  explains. The roles split by face now — mono on the chrome scale, the
+  sentence at `--fl-copy / --fl-ratio`. The measurement below is still the
+  reason the SENTENCE cannot simply grow; it was never a reason for the other
+  three.
 
 ⚠ **THE COEFFICIENTS ARE SOLVED, NOT PICKED.** `--lc` resolves to **14.04px at
 1920×1080** — where it already was, and just under the **14.1px at which the

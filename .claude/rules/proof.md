@@ -17,6 +17,7 @@ breather).
 
 **Read first**
 
+- ⚠ [ADR-088: The left column's type splits by face, and its slack is split too](../sentinel/decisions/088-casefile-left-column-ladder-and-rhythm.md) — **PROPOSED (2026-09-02), shipped and guarded, pending the owner's live read.** `--lc` is DELETED: one token drove four roles across TWO FACES and its `svh` term flipped their ranking with viewport height (at 1920×1080 the sans sentence outranked the mono claim it explains). The split is by FACE now — the register claim and the directory row are PEERS at `--fl-chrome-lg`, the meta at `--fl-chrome-md`, the sentence at `--fl-copy / --fl-ratio`. And the record column is ONE GRID (`.fl-left`, housing, unmarked): the directory's last row sits ON tick 11 and the surplus splits 1:2 between the two seams instead of pooling under the rows (137px at the owner's viewport before). ⚠ Shrinking `--fl-proof-h` to widen the seams further was built and REJECTED. See §The left column's ladder and its rhythm below
 - ⚠ [ADR-087: The casefile is a client stack](../sentinel/decisions/087-proof-client-stack.md) — **ACCEPTED on the mechanism, PROPOSED on the choreography.** The dwell is DERIVED over `CASES` now (row 0.5vh × tracks + seam 0.5vh between clients + release 1.2vh) and the flat `[0,1]`→row map is a SEGMENT TABLE (`browseMap.ts`, pure, zero imports). Byte-identical at one client to the last bit — that identity IS the acceptance proof, and there is NO flag (ADR-070 U35). Look-dev at **`/test/client-stack-lab`**, which is the first time the client channels ever write; its findings (the decode replay's target set fails at N ≥ 2, the seam's 21 % blank stretch, seam length being invisible at a fixed seam-local position) are recorded there. See §The tab strip and the client stack below
 - [ADR-070: The configuration is a switchboard](../sentinel/decisions/070-configuration-is-a-switchboard.md) — reading 02's DRAWING, promoted out of the config lab 2026-08-09. The wiring is the picture; ONE frame, ONE bright object; only what the record connects is drawn. See §The switchboard below.
   ⚠ **U34 (2026-08-23, owner) is the latest pass on reading 03's carrier** —
@@ -169,16 +170,17 @@ breather).
   nothing there and collapses every zone to `top: 0`.
 - **THE TYPE LAW IS SURFACE-WIDE, not a tools-row rule.** Decorative ordinal
   and pip metadata may use 9px. Tabs, decoder and anchors start at 10px;
-  work-node identities start at 11px; the DIRECTORY rows are
-  `clamp(13px, 1.02vw, 14px)` on the register's own width-keyed ladder and
-  sit one step ABOVE its 13px claims (ADR-067 U3 — the identity of a project
-  may not read smaller than a sentence about it; its meta and head are
-  `clamp(10.2px, 0.8vw, 11.5px)` / `clamp(10px, 0.8vw, 11.5px)` at .42
-  alpha). ⚠ Their `line-height: 1.15` is what PAYS for that size — 1280×720
-  has 4px of slack in a 123px band and single-line uppercase rows never
-  needed paragraph leading; restore `normal` and the band clips silently.
-  Readable compact
-  copy starts at 12px. A selected work title starts at 17px; expanded detail
+  work-node identities start at 11px; **the left column's four MONO roles ride
+  the chrome scale (ADR-088)** — the directory row and the register claim are
+  PEERS at `--fl-chrome-lg` (13.2 at 1280/1440, 14.4 at 1920) with the row's
+  meta and the directory head one step under at `--fl-chrome-md`. ⚠ This
+  RE-READS ADR-067 U3's "rows one step ABOVE the claims" by that rule's own
+  reason: what may not outrank a project's identity is the SENTENCE about it,
+  which is sans at `--fl-copy / --fl-ratio`, a full ratio step below both.
+  ⚠ The row's 13px floor still binds and its `line-height: 1.15` is what PAYS
+  for the size — 1280×720 has 4px of slack in its band and single-line
+  uppercase rows never needed paragraph leading; restore `normal` and the band
+  clips silently. Readable compact copy starts at 12px. A selected work title starts at 17px; expanded detail
   starts at 24px title / 14px body. PT Mono owns instrument chrome and PP Neue
   Montreal owns titles and prose. When a box will not take the size, spend
   padding, leading or content density — never shrink important labels or swap
@@ -457,8 +459,12 @@ facts` is wider than the whole plate — so the values live on the LABEL
   `--svc-proof-in`, which rides the DISSIPATE — the panels assemble WITH the
   brandmark's centering (owner, 2026-07-28). Scrubbed `clamp()` math on
   purpose — reversible, no keyframes, no writer. Travel AND tear must be
-  exactly 0 at rest: these zones are absolutely positioned against the
-  rail's tick ladder, so a residual shift is a drift bug, not a flourish.
+  exactly 0 at rest: these zones are seated against the rail's tick ladder, so
+  a residual shift is a drift bug, not a flourish. ⚠ **The LEFT column's three
+  zones are grid items in `.fl-left` since ADR-088, not absolutes** — they keep
+  their own `[data-fl-panel]` transforms and this rule is unchanged for them,
+  but the wrapper itself carries NO panel mark, because `will-change: transform`
+  would make it a containing block for everything seated against `.fl-case`.
 - **The departure FOLDS (ADR-056 Update 1, owner 2026-07-29).** `--co-off`
   is derived in CSS as `0.56 − --ci-off` — the LIFO mirror of the arrival
   ladder, so the numbers leave first and the chrome leaves last — and the
@@ -566,6 +572,74 @@ nowrap` means a THIRD client forces a horizontal-scroll decision on the
   spec, which IS the byte-identity comparison. The Phase D checklist for
   actually adding client #2 is in ADR-087.
 
+## The left column's ladder and its rhythm (ADR-088, live)
+
+The tab strip, the brief, the proof register and the directory — their type and
+their vertical seating.
+
+- ⚠ **TWO LADDERS, SPLIT BY FACE, BOTH AT `--fl-ratio` 1.2.** MONO: the register
+  claim and the directory row are PEERS at `--fl-chrome-lg`, the row's meta and
+  the directory head at `--fl-chrome-md`, the brief's class and the tab ordinal
+  at `--fl-chrome-sm`. SANS: the brief's body at `--fl-copy`, the register's
+  sentence one step under at `max(11.5px, --fl-copy / --fl-ratio)`. Six sizes
+  at 1920 — 10 · 12 · 13.5 · 14.4 · 16.2 · 24 — each with one role.
+  ⚠ **The ordering a ladder guarantees is the one inside its OWN face**: 13.34px
+  of bold mono caps reads louder than 14.04px of 0.78-alpha sans, which is how
+  `--lc` had the arithmetic and the optics running opposite ways at a reference
+  viewport with every guard green.
+- ⚠ **THE CLAIM AND THE ROW BEING PEERS RE-READS ADR-067 U3, IT DOES NOT
+  OVERTURN IT.** What may not read smaller than a project's identity is the
+  SENTENCE about it, and that is sans a full ratio step below both. The row's
+  13px floor, its `1.15` leading and its `.05em` tracking all still bind.
+  ⚠ 1440×800 and 1920×800 take the row 14 → 13.2 — `--fl-t0`'s `svh` term is
+  under its floor below 991h, so chrome-lg is flat there.
+- ⚠ **THE COMPACT REGISTER HAS 1.0px OF SLACK AND EVERY TERM IN IT IS
+  LOAD-BEARING.** At 1280×720 the box is 76.32px; a row is the claim's 15.58px
+  line box + 1px padding each side + a 1px hairline = 18.58, and four plus the
+  closing hairline are 75.3. Anything that raises the claim's size, its
+  leading, the item's padding or the mark's box at that rung overflows it —
+  and the mark no longer sets the row's height, because at 13.2 the claim's
+  line box is the taller of the two. The tall rung keeps `4px 0`.
+- ⚠ **THE SENTENCE FLOORS AT 11.5, NOT 12.** The rung opens at 1200px where the
+  column is narrowest (~296px): the 95-char worst case is ~1.85 lines at 11.5
+  and ~1.93 at 12, one copy edit from a third line under a clamp that truncates
+  in silence.
+- **THE RECORD COLUMN IS ONE GRID** — `.fl-left`, `--fl-body-top` to tick 11:
+  `brief | seam A (1fr) | register | seam B (2fr) | directory`. The last row
+  sits ON tick 11 and the surplus splits **1:2**, because the GROUPING is 2:1
+  (the brief and its four proofs are one object; the directory is the index of
+  the rest of the file). `--fl-proof-top-gap` and `--fl-directory-gap` are
+  FLOORS now, and seam A's floor is `--fl-brief-clear + --fl-proof-top-gap` —
+  the air above the register has always been the sum of both.
+  Measured: 18.1/13.5 at 1280×720 · 20/20.9 at 1440×800 · 25.9/38.8 at
+  1920×1080 · 58.8/117.6 at 1920×1247, last row on t11 at every one.
+- ⚠ **`.fl-left` IS HOUSING: no `data-fl-panel`, no client mark, no
+  `overflow: hidden`.** ADR-087's frame law, plus the mechanical reason (a
+  promoted wrapper becomes a containing block) — and the missing clip is what
+  lets the zones strike in from `--fl-dx` and makes an over-long directory
+  overrun LOUDLY instead of clipping its last row in silence.
+  ⚠ Every zone declares `grid-row` (1 / 3 / 5); auto-placement fills rows 1–3
+  and leaves both seams empty. ⚠ The ≤960/PRM block resets `display: contents`
+  AND `grid-row: auto`, or the brief seats over the tabs on a phone.
+- ⚠ **THE DIRECTORY HEAD'S 6px OVER ITS LIST IS DECLARED AFTER THE BASE RULE.**
+  Inside the tall-rung block it loses to `.fl-dir__list`'s own `margin: 0` on
+  source order at equal specificity and does nothing — measured at 0px on both
+  tall viewports on the first cut, with every other number correct.
+- ⚠ **AN EXACT BOUND AGAINST A TRANSFORMED RECT IS A FLAKE GENERATOR.** The
+  smoke's mark ladder gained a 0.5px epsilon: a 21px mark measured
+  21.000015258789062 (21 + 2⁻¹⁶) on one run sampled mid-strike and passed twice
+  more at the same progress. The register rides `translate3d`, so its
+  descendants' rects come back through a float matrix.
+- ⚠ **`summaryGap < 80` IS DELETED, NOT RETUNED** — it read from the brief's
+  paragraph (row-dependent) and its literal assumed a column that pooled its
+  surplus. `gapA ≤ gapB` plus the t11 seating law replace it, at every viewport
+  rather than only the tall ones.
+- **Verifying:** `node scripts/capture-casefile-rows.mjs --vp 1920x1247 --rows
+0,1,2,3 --stage` prints the two seams, the directory's height and the t11
+  delta beside the type. ⚠ The photo-resolution smoke case fails on the mobile
+  projects when the run is parallel and the dev server is shared (status `0`, a
+  thrown fetch) while all four assets serve 200 to `curl` — environmental.
+
 ## The panel fills its housing (ADR-084, live)
 
 The Studio and ATL rows' composition, and the console's paint.
@@ -617,12 +691,21 @@ The Studio and ATL rows' composition, and the console's paint.
   walk takes `.fl-con__console`'s `backgroundColor` luminance from the raw RGB,
   so an alpha here moves no ratio it reports. 0.86 was set BY EYE, composited,
   in both themes. The blur stays gated on `data-proof-settled`.
-- ⚠ **TWO SCALES, EACH `min(vw, svh)`, BECAUSE `--fl-copy` IS WIDTH-ONLY.**
-  1920×800 and 1920×1247 resolve `--fl-copy` identically (16.2px) while the
-  field is 530 vs 927 tall — which is why the sheets read as captions in a tall
-  box. `--lc` on `.fl-case` (`clamp(11.5px, min(0.95vw, 1.3svh), 16.5px)`)
-  drives the register claim, its sentence, the directory row and its meta. One
-  number moves a whole ladder.
+- ⚠ **`--lc` IS RETIRED (ADR-088, 2026-09-02), AND THIS BULLET TAUGHT IT AS LAW
+  — THE SECOND HEIGHT-ELASTIC CONTENT TOKEN ON THIS SURFACE TO GO.** It was
+  `clamp(11.5px, min(0.95vw, 1.3svh), 16.5px)` on `.fl-case`, driving the
+  register claim (×0.95), its sentence (×1), the directory row (×1.02) and the
+  meta (×0.75) — four roles across TWO FACES. **One token cannot hold a ranking
+  across two faces**: its `svh` term made the order flip with viewport height,
+  so at 1920×1080 the sans SENTENCE (14.04) outranked the mono CLAIM (13.34) it
+  explains, and at the owner's 1920×1247 four roles sat inside 1.1px with the
+  directory row the largest text after the title. The split is by FACE now —
+  mono on `--fl-chrome-lg`/`-md`, sans at `--fl-copy / --fl-ratio` — and one
+  consumer lived OUTSIDE this column (`pda.css`'s `.fl-pda__list-row`), where a
+  stale `var()` would have fallen to its fallback in silence rather than
+  failing. The `min(vw, svh)` observation below is still true of `--fl-copy`
+  and is why the SENTENCE cannot simply grow; it was never a reason for the
+  other three.
   ⚠ **`--sh` IS RETIRED (ADR-085 U1) AND THIS BULLET TAUGHT IT AS LAW FOR A
   DAY.** It was `clamp(12px, min(1.35vw, 2.15svh), 25px)` on
   `.fl-plate--sheets`, driving both sheet bodies by ratio — and it is declared
@@ -633,16 +716,17 @@ The Studio and ATL rows' composition, and the console's paint.
   is genuinely gone; a tall desktop caps the category name at the surface's
   display size and the IMAGES fill the slack. Do not hang a new sheet ladder
   off a ratio token that no longer exists.
-  ⚠ **The coefficients are SOLVED**: `--lc` is 14.04px at 1920×1080, just under
-  the **14.1px at which the longest description wraps** (459px of a 462px column
-  at 14px — 99.3 % of the line), and 16.2px at the owner's shape where the taller
-  box affords two lines.
-- ⚠ **THE REGISTER BOX IS THE WALL, NOT THE WIDTH.** `--fl-proof-h` is a fixed
-  264px at 1920×1080 with four `1fr` rows, so ~14px is the ceiling there whether
-  the sentence takes one line or two — the arithmetic is the same both ways —
-  and the box cannot grow because the directory below needs ~144px (291.6px was
-  measured clipping it by 11). The reference viewport keeps what it had; the
-  owner's shape gets the size.
+  ⚠ **The 14.1px wrap point is still the SENTENCE's wall** (459px of a 462px
+  column at 14px — 99.3 % of the line), which is why it sits at 13.5px on the
+  ratio and floors at 11.5 rather than 12 at the 1200px corner.
+- ⚠ **THE REGISTER BOX IS THE WALL, NOT THE WIDTH.** `--fl-proof-h` is 246px at
+  1920×1080 (the clamp's floor) with four `1fr` rows, so the box — not the
+  column — is what bounds the claim and its sentence there. ⚠ Its 282px ceiling
+  was set by a directory that needed ~144px in a fixed band; since ADR-088 the
+  directory takes only what its rows need and is seated on tick 11, so **that
+  ceiling is now a spare lever rather than a wall** (ADR-088 §Left open names
+  it as the answer if the seams read too large on a tall window). Shrinking the
+  box to widen the seams was built and REJECTED — see the same section.
 - ⚠ **`space-between` MADE THE LINE WORSE, AND THAT IS THE FINDING.** Distributing
   all four blocks evenly put ~200px between each and turned a column into four
   disconnected fragments. **Even distribution only improves a column with enough
@@ -656,9 +740,13 @@ The Studio and ATL rows' composition, and the console's paint.
   content, claim on a left rail with its evidence beside it — the proof index's
   own grammar one scale up. ⚠ It suits the arc's LANDSCAPE box for free (~150px
   bands at 1100×600), which the 2×2 needed tuning for.
-- **The register's size is paid out of the LEADING.** Claim
-  `clamp(11.5px, 0.72vw, 13.5px)` / 1.18; sentence
-  `clamp(11.5px, 0.73vw, 14px)` / 1.3 / α **.74**. 13.5 × 1.18 < 13 × 1.25, so
+- **The register's size is paid out of the LEADING.** ⚠ The SIZES below are
+  superseded by ADR-088 (claim `--fl-chrome-lg`, sentence
+  `max(11.5px, --fl-copy / --fl-ratio)`, α **.78**); the LEADINGS and the law
+  are what still bind — claim / 1.18, sentence / 1.3. ⚠ At the compact rung the
+  claim's size is paid out of the ITEM'S PADDING instead (`2px 0` → `1px 0`):
+  at 13.2 its line box is 15.58px and exceeds the 14px mark, so four rows at
+  2px would measure 83.3 in a 76.32 box. 13.5 × 1.18 < 13 × 1.25, so
   the type grows and the row shrinks — the box has ~4px of slack at 1920×1080
   and a naive bump overflows a reference viewport. ⚠ **THE CEILING RISES, THE
   FLOOR DOES NOT**: wrap is size ÷ COLUMN WIDTH and the rung opens at 1200px
@@ -2795,6 +2883,16 @@ precedent). Full read, the reference distillations and the owner questions:
   `clamp(16px, 2.6svh, 38px)` of air that already exists above
   `--fl-body-top`; the register's appears only above 1070h, out of the
   `--fl-proof-top-gap` that is pure air there.
+  ⚠ **THE LAB'S REGISTER HEAD AND DIRECTORY SEAM ARE GRID ITEMS NOW
+  (ADR-088).** Both were absolutes seated on `.fl-case` at
+  `--fl-left-seam + --fl-proof-top-gap [+ --fl-proof-h …]` — an expression that
+  named the register's top only while the zones were three top-anchored
+  absolutes. Under `.fl-left` the register floats between the brief and a
+  directory seated on tick 11, so no `calc()` on `.fl-case` can reach either
+  line: the head rides seam track A (`align-self: end`) and the seam rides
+  track B (centred). ⚠ The lab's hand composition mounts `.fl-left` too — the
+  v0 control gets it from production, v1–v5 do not, and without it the three
+  zones lose their grid.
 - ⚠ **`will-change: transform` ON A LADDER WRAPPER MAKES IT A CONTAINING
   BLOCK.** `.services-stage[data-proof-live] .fl-case [data-fl-panel]` carries
   it, so chrome wrapped in a ladder div resolved `bottom` against a

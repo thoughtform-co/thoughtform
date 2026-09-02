@@ -343,6 +343,15 @@
    the whole surface on one scale.
 
    ── WHAT IS WRONG TODAY, MEASURED AT 1440×800 ──
+   ⚠ THIS DIAGNOSIS PREDATES ADR-085 U1 AND ADR-088, AND BOTH HAVE SINCE
+   LANDED IN PRODUCTION. The seven flat mono sizes became one ×1.2 chrome
+   ladder (ADR-085 U1: `--fl-t0` → `--fl-chrome-sm/md/lg` + `--fl-display`),
+   and the left column's four content roles were split by FACE onto it
+   (ADR-088: claim and row PEERS at chrome-lg, meta at chrome-md, the sentence
+   at `--fl-copy / --fl-ratio`). The `as-is` branch below therefore no longer
+   reproduces what ships — it is the record of the state that was diagnosed,
+   and the numbers in this paragraph are that state's, not today's.
+
    Mono runs SEVEN sizes (9 · 9.5 · 9.5 · 10 · 11.5 · 13 · 15 · 20.7), SIX
    tracking values (.045 · .06 · .10 · .16 · .20 · .22em) and TWO weights.
    Sans runs THREE sizes (12.96 · 14.31 · 14.9), three leadings and three
@@ -470,7 +479,14 @@
      letter at one size — they are peers, and reading them as peers is what
      stops the left column looking assembled from parts. The ≤27-character
      claim budget only gets SAFER: 12px/.06em fits more per line than
-     13px/.045em did. */
+     13px/.045em did.
+
+     ⚠ PRODUCTION AGREES WITH THIS BRANCH ON THE PEERING NOW (ADR-088,
+     2026-09-02): the claim and the row both letter at `--fl-chrome-lg`, and
+     this argument is the one the ADR cites. What production did NOT take is
+     the four-rung ×1.26 scale — it split the roles by FACE on the existing
+     ×1.2 chrome ladder instead, keeping mono at 700 for the claim and the
+     row. Judge this branch on the RATIO and the weight, not on the peering. */
   .ctl-root[data-lab-ladder="harmonised"] .fl-row,
   .ctl-root[data-lab-ladder="harmonised"] .fl-proof-register__claim,
   .ctl-root[data-lab-ladder="harmonised"] .fl-cap__t {

@@ -294,6 +294,17 @@ smaller the navigation read RELATIVE to the copy explaining it — and at 1920 a
 register SENTENCE (13px) outranked the project identity it supports, on the
 one interactive layer in the column.
 
+⚠ **THE RANK IS SUPERSEDED BY
+[ADR-088](088-casefile-left-column-ladder-and-rhythm.md) (2026-09-02); THE
+REASON BELOW IS WHAT SUPERSEDED IT.** The row and the claim are PEERS on one
+mono step now — the sentence they both outrank is SANS and sits a full ratio
+step under both, so "an identity may not read smaller than a sentence about it"
+is satisfied without the extra mono rung. Two mono-caps runs a ratio apart in
+one narrow column is what the owner later read as "not balanced", and by then
+ADR-084's `--lc` arm had carried the row to 16.5px at his own viewport. The
+SIZE rule below (a width-keyed clamp, never a flat literal), the `1.15`
+leading, the `.05em` tracking and the head's `.42` alpha all stand.
+
 The rows are on the siblings' own clamp now, one step ABOVE the claims because
 the identity of a project may not read smaller than a sentence about it:
 **rows `clamp(13px, 1.02vw, 14px)`, the meta datum `clamp(10.2px, 0.8vw,

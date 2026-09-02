@@ -54,7 +54,60 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-08-24 (latest) — The arcs get an ink ramp (ADR-077)
+### 2026-09-02 (latest) — The casefile's left column: one ladder per face, and the index sits on t11 (ADR-088)
+
+The owner read the proof casefile and said the font sizes felt
+"disconnected", the directory was "too big" and too close to what is
+above it, and the column was "not balanced". Cycle A rows 1, 3, 4, 5 and 6.
+
+- **Row 1 — one token drove four roles across TWO FACES.** `--lc` fed the
+  register claim, its sentence, the directory row and the row's meta by
+  multiplier, and its `svh` term made their ranking flip with viewport
+  height: at 1920×1080 the sans SENTENCE (14.04) outranked the mono CLAIM
+  (13.34) it explains. **The ordering a ladder guarantees is the one
+  inside its own face** — 13.34px of bold mono caps reads louder than
+  14.04px of 0.78-alpha sans, so the arithmetic and the optics ran
+  opposite ways with every clamp inside its bounds.
+- **Row 3 — the defect class is "a multiplier standing in for a rank".**
+  `--lc` was solved against ONE of its consumers (the sentence's 14.1px
+  wrap point) and then applied to three others by coefficient. ADR-085 U1
+  had already put the chrome roles on a modular scale and left the
+  content roles off it for a reason that held for `--fl-copy` and not for
+  this. A token consumed by more than one FACE wants splitting, not
+  tuning.
+- **Row 4 — a stale `var()` fails silently, and one consumer lived
+  outside the column.** `pda.css`'s phone list row read
+  `var(--lc, 12px)`: deleting the token would have dropped it to the
+  fallback with nothing failing. Grepped for consumers before deleting,
+  which is the only way that class of breakage surfaces.
+- **Row 5 — the guards measured every box and none of the RELATIONSHIPS.**
+  Nothing looked at two roles against each other, and nothing looked at
+  the column's rhythm: the surplus pooled under the directory (137px at
+  the owner's viewport, 199px at 2560×1330) while the seam ABOVE it stayed
+  pinned at 18px, and every zone was inside the casefile and clipping
+  nothing. The smoke now pins the seat on tick 11 from BOTH sides, both
+  seam floors, and the 1:2 split bounded both ways.
+- **Row 5 again — an exact bound against a transformed rect is a flake
+  generator.** A mark declared at 21px measured 21.000015258789062
+  (21 + 2⁻¹⁶) on one run sampled mid-strike, failed `> 21`, and passed
+  twice more at the same nominal progress. The register rides
+  `translate3d`, so descendants' rects come back through a float matrix.
+  Characterised by re-running rather than by guessing, then given a 0.5px
+  epsilon — far below the 7-unit lattice step the rule polices.
+- **Row 6 — `summaryGap < 80` was deleted, not retuned.** It measured from
+  the brief's PARAGRAPH (a different number on every directory row) and
+  its literal assumed a column that pooled its surplus; under the split
+  the seam legitimately reaches ~82px at 2560×1330.
+- **A planned step was built and rejected on measurement.** Shrinking
+  `--fl-proof-h` above 1800px, to make the register/directory seam exceed
+  the register's row pitch: the comparison was wrong (a whitespace seam
+  against a HAIRLINE-RULED track's pitch), and it moved the number the
+  wrong way — the seams at 1920×1247 would have gone 59/118 to ~83/167.
+- **Left open:** the seams grow without bound with viewport height, and
+  the lever if the owner reads that as too much is `--fl-proof-h`'s
+  ceiling, which a bottom-seated directory has freed.
+
+### 2026-08-24 — The arcs get an ink ramp (ADR-077)
 
 The owner sent a screenshot of the portfolio in LIGHT: the overview cards
 painting a near-black ground on parchment. Cycle A rows 1, 3, 5 and 6.
