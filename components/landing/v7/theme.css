@@ -329,6 +329,22 @@ html[data-theme="light"] .fl-case {
      up; the blur and the plate border go with it, below. */
   --fl-glass: transparent;
 
+  /* ── THE HOUSING'S LIP, RE-DERIVED (ADR-089) ────────────────────────
+     Gold is split by ROLE and only the MARK step is theme-invariant
+     (ADR-063 U2). The lip is LINE WORK, and `--gold` at .34 on parchment
+     measures well under the 3:1 rung line work has to clear — a saturated
+     yellow is inherently high-luminance, so it has almost nowhere to go on
+     a light ground. These take `--gold-line`, the ramp's own line step
+     (#8a6b20 here), at the same alphas. ⚠ NOT a bigger alpha on `--gold`:
+     ADR-058 measured that and it takes the FILLS down with it.
+     ⚠ And the GROUND inverts its meaning across the flip — `--void-deep-rgb`
+     is the parchment side's own deep step, so the slab stays a tint of the
+     ground it sits on rather than a dark pane over paper. */
+  --fl-hz-lip-1: color-mix(in srgb, var(--gold-line) 34%, transparent);
+  --fl-hz-lip-2: rgba(var(--dawn-alt-rgb), 0.1);
+  --fl-hz-lip-3: color-mix(in srgb, var(--gold-line) 12%, transparent);
+  --fl-hz-lip-4: color-mix(in srgb, var(--gold-line) 30%, transparent);
+
   /* CHROME INK LIFT. Not a preference — an asymmetry in the medium.
      Cream at α over near-black keeps most of its contrast because the
      luminance gap is enormous; ink at the same α over parchment gives

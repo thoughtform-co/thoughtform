@@ -107,6 +107,50 @@
   --fl-hair-gold: rgba(var(--gold-rgb), 0.22);
   --fl-ink-dim: rgba(var(--dawn-rgb), 0.4);
 
+  /* ── THE HOUSING (ADR-089) ─────────────────────────────────────────────
+     One machined slab across the instrument band, from the rail's top line
+     to its last tick, with the header fused to its top edge and the content
+     divided by seams inside it. Promoted from `/test/hud-panel-lab`'s v2.
+
+     ⚠ THE STRUCTURE INSIDE IT IS DAWN, THE MARKS STAY GOLD. That is the
+     defect the lab measured as a number: the casefile painted eight gold
+     structure lines at .12–.24 while the HUD frame beside it ran 2px of dawn
+     at .55 — a hue swap AND a 4× alpha gap between a panel and the thing it
+     is meant to belong to. `console.css`'s own ruling already said which way
+     it goes ("the rail's dividers keep the gold hairlines, because those are
+     marks ON the machine rather than its outline"); this surface never got
+     it. Rules and seams below are dawn; the register's claims, the lit row
+     and the drawing's own wayfinding are untouched. */
+  --fl-hz-pad: 18px;
+  /* ADR-065's PLATE rung (seed 16 / plate 26 / chrome 0). A housing is never
+     a seed, and the console — which used to carry this rung — is a cell now. */
+  --fl-hz-ch: 26px;
+  --fl-hz-head-h: var(--fl-tabs-h);
+  --fl-hz-foot-h: 26px;
+  --fl-hz-datum: var(--hud-rail-line, rgba(var(--dawn-rgb), 0.55));
+  --fl-hz-seam: var(--hud-rail-line-soft, rgba(var(--dawn-rgb), 0.28));
+  --fl-hz-rule: rgba(var(--dawn-rgb), 0.12);
+  --fl-hz-ink: rgba(var(--dawn-rgb), 0.52);
+  --fl-hz-ink-lit: rgba(var(--dawn-rgb), 0.92);
+  /* ⚠ 0.42, NOT THE CONSOLE'S 0.86. The corridor's parked brandmark and its
+     gold orbit curves pass behind this whole band; at the console's own
+     ground the slab is a pane rather than a device with glass in it. The
+     services plate's open body sits at 0.58 over a much brighter bed. */
+  --fl-hz-ground: rgba(var(--void-deep-rgb), 0.42);
+  --fl-hz-blur: 14px;
+  /* ⚠ THE LIP'S FOUR STOPS ARE TOKENS BECAUSE GOLD IS SPLIT BY ROLE
+     (ADR-063 U2: hue is the brand, LIGHTNESS is the role). A saturated yellow
+     is inherently high-luminance, so `--gold` at .34 is line work that all
+     but vanishes on parchment — under the 3:1 rung it has to clear. Light
+     re-derives these from `--gold-line`, the ramp's own LINE step; the fix is
+     never a bigger alpha on `--gold`, which would take the FILLS down with
+     it. Declared here, overridden in theme.css beside ADR-058's other
+     per-theme blocks. */
+  --fl-hz-lip-1: rgba(var(--gold-rgb), 0.34);
+  --fl-hz-lip-2: rgba(var(--dawn-alt-rgb), 0.1);
+  --fl-hz-lip-3: rgba(var(--gold-rgb), 0.1);
+  --fl-hz-lip-4: rgba(var(--gold-rgb), 0.3);
+
   /* ── The rail box, mirrored from `.hud__rail` ─────────────────────── */
   --fl-rail-top: var(--hud-rail-y-start);
   --fl-rail-bot: max(
@@ -225,8 +269,15 @@
      band-width offer reads as hierarchy — the editorial grid's wide-figure
      idiom — not as misalignment. Interior measures hold: the brief column
      is ~51ch at the cap, inside the 45–75ch window. */
-  left: var(--instrument-inset, 0px);
-  right: var(--instrument-inset, 0px);
+  /* ⚠ THE HOUSING TAKES THE BAND AND THE RECORD MOVES IN (ADR-089). The
+     casefile used to sit ON the instrument band; it now sits INSIDE a slab
+     that does, so the content insets by `--fl-hz-pad` and the slab negates
+     that pad to reach the band edge. 18px is margin, not clearance — it is
+     what keeps the tab strip's ordinal off the lip (ADR-070 U11's own
+     reason). The band-width objection that once cost 28px a side went with
+     the pane: at a 0.42 ground under a dawn readout the shift is under 2 %. */
+  left: calc(var(--instrument-inset, 0px) + var(--fl-hz-pad));
+  right: calc(var(--instrument-inset, 0px) + var(--fl-hz-pad));
 
   /* Narrow-column derivation of the band copy size — a FACTOR on the token,
      never a replacement for it (ADR-048), so retuning the band still retunes
@@ -1073,6 +1124,331 @@
   right: 0;
   top: calc(var(--fl-body-top) - var(--fl-x-out));
   margin: calc(var(--fl-ret-arm) / -2) calc(var(--fl-ret-arm) / -2) 0 0;
+}
+
+/* ══ THE HOUSING ═══════════════════════════════════════════════════════
+   ADR-089. One slab spanning the instrument band; everything else in this
+   file is now seated inside it.
+
+   ⚠ IT NEGATES `--fl-hz-pad` TO REACH THE BAND. `.fl-case` insets by the pad
+   (see the root), so the slab pulls back out to the band edge it is drawn
+   against. Top and height are the rail box exactly — the housing's edges ARE
+   the frame's first and last tick, which is the whole claim. */
+.fl-hz {
+  position: absolute;
+  left: calc(var(--fl-hz-pad) * -1);
+  right: calc(var(--fl-hz-pad) * -1);
+  top: var(--fl-rail-top);
+  height: var(--fl-rail-h);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ⚠ THE LIP IS A CLIPPED RING, NOT A BORDER, AND THAT IS FORCED. A
+   `clip-path` CUTS a border, it never strokes one — a chamfered box with
+   `border: 1px` has no line on either diagonal. So the gold is a filled
+   contour with a hole in it: outer path clockwise, inner counter-clockwise
+   1px in, non-zero winding making the middle transparent.
+
+   ⚠ THE INNER CHAMFER IS NOT `ch − 1px`. A 45° cut offset inward by d moves
+   its diagonal by d·√2, so matching the two exactly leaves the lip visibly
+   thicker on the diagonals than on the straight runs. −0.6px is the services
+   plate's own correction, and this is that plate's lip on a bigger object.
+
+   ⚠ THE GOLD IS AN OWNER INSTRUCTION AGAINST `console.css`'s "the panel's own
+   edge is DAWN, not gold", and the scope is this: a CONSOLE is a screen you
+   look into and its outline must not compete with the drawing inside it; a
+   HOUSING is the machined device the screen is set into, and the services
+   card — the other object in this house with a gold edge — is exactly that
+   kind of slab. The rule keeps its subject; it never covered the device. */
+.fl-hz::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    168deg,
+    var(--fl-hz-lip-1) 0%,
+    var(--fl-hz-lip-2) 45%,
+    var(--fl-hz-lip-3) 70%,
+    var(--fl-hz-lip-4) 100%
+  );
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--fl-hz-ch)) 0,
+    100% var(--fl-hz-ch),
+    100% 100%,
+    var(--fl-hz-ch) 100%,
+    0 calc(100% - var(--fl-hz-ch)),
+    0 0,
+    1px 1px,
+    1px calc(100% - 1px - (var(--fl-hz-ch) - 0.6px)),
+    calc(1px + (var(--fl-hz-ch) - 0.6px)) calc(100% - 1px),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(100% - 1px) calc(1px + (var(--fl-hz-ch) - 0.6px)),
+    calc(100% - 1px - (var(--fl-hz-ch) - 0.6px)) 1px,
+    1px 1px
+  );
+}
+
+.fl-hz__bd {
+  position: absolute;
+  inset: 1px;
+  clip-path: polygon(
+    0 0,
+    calc(100% - (var(--fl-hz-ch) - 0.6px)) 0,
+    100% calc(var(--fl-hz-ch) - 0.6px),
+    100% 100%,
+    calc(var(--fl-hz-ch) - 0.6px) 100%,
+    0 calc(100% - (var(--fl-hz-ch) - 0.6px))
+  );
+  /* ⚠ THE BLOOM IS IN PIXELS, AND IT IS THE ONE VALUE THAT DID NOT SURVIVE
+     THE CHANGE OF SHAPE. The services plate writes `130% 70% at 84% -8%` —
+     percentages of a 420×680 CARD, so ~550px, a corner catching light. The
+     same fractions on a 1500px housing are 1495px and light the whole
+     quadrant. ⚠ And there is no `brightness()`: the plate's lift belongs to
+     its OPEN state, tuned for a small card over a bright WebGL bed; over a
+     band of void it turns the ground grey. */
+  background:
+    linear-gradient(174deg, rgba(var(--dawn-alt-rgb), 0.05) 0%, rgba(var(--dawn-alt-rgb), 0) 50%),
+    radial-gradient(
+      460px 300px at calc(100% - 90px) -40px,
+      rgba(var(--gold-rgb), 0.13),
+      transparent 62%
+    ),
+    var(--fl-hz-ground);
+}
+
+.fl-hz__bd::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(var(--gold-rgb), 0.025) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+/* Same gate as the console's own blur (ADR-056): a backdrop SNAPSHOT is the
+   cost, not the radius, and this one samples a band-wide box. It may not run
+   while the ladder is still travelling. */
+@supports (backdrop-filter: blur(2px)) {
+  .services-stage[data-proof-settled] .fl-hz__bd {
+    -webkit-backdrop-filter: blur(var(--fl-hz-blur));
+    backdrop-filter: blur(var(--fl-hz-blur));
+  }
+}
+
+/* ── The fused header ──────────────────────────────────────────────────
+   ⚠ IT STOPS AT THE COLUMN SPLIT, AND THAT IS A COLLISION, NOT A TASTE. A
+   band-wide row prints its right slot straight through WORK / CONFIGURATION
+   / SUBSTRATE — `ConsoleRail` occupies the same band on the right and IS the
+   field's header. Seen on the lab's first still and invisible to every
+   geometry gate, because two labels overlapping is the one thing containment
+   tests never ask about. This header heads the RECORD column. */
+.fl-hz__head {
+  position: absolute;
+  left: 0;
+  right: calc(100% - var(--fl-col-split));
+  top: var(--fl-rail-top);
+  height: var(--fl-hz-head-h);
+  z-index: 2;
+  /* ⚠ FLEX, NOT A THREE-COLUMN GRID. The lab's `1fr auto 1fr` template has
+     three slots and this header fills ONE — a single child lands in column 1
+     and `justify-self: end` puts it a third of the way across, straight
+     through the tab strip's `+ Archive`. Measured before the fix: the state
+     printed at x 437 against `+ Archive` at 430. The left slot is empty
+     because the tab strip already seats flush on this band and IS its left
+     run, so the only thing to place is the right one. */
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--fl-hz-seam);
+  pointer-events: none;
+  font-family: var(--fl-mono);
+  font-size: var(--fl-chrome-sm);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fl-hz-ink);
+}
+
+/* ── The foot bar ──────────────────────────────────────────────────────
+   ⚠ SEATED FROM THE TOP, NEVER `bottom`. `[data-fl-panel]` takes
+   `will-change: transform` under `[data-proof-live]`, which makes an element
+   a containing block — a measured `bottom` put this at y −126 on an 800px
+   viewport in the lab.
+   ⚠ IT IS NOT `.fl-con__foot`, AND THAT BAN STILL STANDS. ADR-068 U2 forbids
+   a CONSOLE foot: row chrome saying one thing under whatever the rail shows.
+   This is the HOUSING's terminus, outside `.fl-con` entirely — the same
+   distinction `.fl-verdict` already ships on. */
+.fl-hz__foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--fl-rail-top) + var(--fl-rail-h) - var(--fl-hz-foot-h));
+  height: var(--fl-hz-foot-h);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--fl-hz-seam);
+  pointer-events: none;
+  font-family: var(--fl-mono);
+  font-size: var(--fl-chrome-sm);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fl-hz-ink);
+}
+
+/* ── Interior seams ────────────────────────────────────────────────────
+   Their OWN elements rather than borders on the cells, and that is
+   arithmetic: the record cells are 34.5 % wide with `overflow: hidden` while
+   a seam has to reach the column split at 37.5 %, so a pseudo-element of the
+   cell is clipped 3 % short of the line it registers against. */
+.fl-seam {
+  position: absolute;
+  left: 0;
+  width: var(--fl-col-split);
+  height: 1px;
+  background: var(--fl-hz-rule);
+  pointer-events: none;
+}
+/* ON THE TICK, NOT IN THE GAP. The brief/register seam IS `--fl-left-seam`,
+   which is tick 6; half a gap lower sits 5.5px off the ladder, which is the
+   one way this design fails silently. */
+.fl-seam--register {
+  top: var(--fl-left-seam);
+}
+/* The directory seam has no tick of its own. It rides `.fl-left`'s second
+   seam track and centres in it (ADR-088) — since that column became a grid
+   whose surplus splits 1:2, no `calc()` on `.fl-case` names the directory's
+   top any more. */
+.fl-seam--directory {
+  position: relative;
+  grid-row: 4;
+  align-self: center;
+  top: auto;
+}
+
+/* ── Cell heads ────────────────────────────────────────────────────────
+   ⚠ THE BRIEF'S IS FREE AND THE REGISTER'S IS NOT. There is
+   `clamp(16px, 2.6svh, 38px)` of air above `--fl-body-top` — 18.7px at
+   1280×720 — and a mono line with its rule fits it exactly. The register and
+   the directory have ~4px of slack apiece (ADR-084), so neither may grow a
+   head at the binding viewport; the register gets one only above 1070h, out
+   of the `--fl-proof-top-gap` that is pure air there. Chrome first, rhythm
+   second, never the type. */
+.fl-cell {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--fl-hz-seam);
+  pointer-events: none;
+  font-family: var(--fl-mono);
+  font-size: var(--fl-chrome-sm);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fl-hz-ink);
+}
+.fl-cell__l {
+  color: var(--fl-hz-ink-lit);
+}
+/* The meta takes the label's SIZE and separates on alpha: 0.85em of a 10px
+   floor is 8.5px, under this surface's own control floor. */
+.fl-cell__r {
+  font-size: inherit;
+  letter-spacing: 0.14em;
+  color: rgba(var(--dawn-rgb), 0.4);
+}
+/* ⚠ IT HANGS OFF `.fl-left`, NOT OFF `.fl-brief`, AND THAT IS NOT A
+   PREFERENCE. The brief is height-boxed against the seam with
+   `overflow: hidden`, so a head seated at `top: -17px` INSIDE it is clipped
+   away completely — present in the DOM, measurable, painting nothing. The
+   wrapper starts at `--fl-body-top` and clips nothing, so the same offset
+   lands in the air above the column. (Seating it on `--fl-body-top` again
+   double-counts and drops it into the paragraph.) */
+.fl-cell--brief {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -17px;
+  padding-bottom: 3px;
+}
+.fl-cell--register {
+  display: none;
+}
+@media (min-height: 1070px) {
+  .fl-cell--register {
+    display: flex;
+    grid-row: 2;
+    align-self: end;
+  }
+}
+
+/* ── The console becomes a CELL ────────────────────────────────────────
+   ⚠ THE CHILDREN OF A CHAMFERED BOX ARE SQUARE (ADR-065 rule 4). Two
+   chamfers of the same depth adjacent to each other is what a surface looks
+   like when it has been decorated rather than built — so inside the housing
+   the console drops its own cut, and so does the rail's leading station
+   plate, whose notch existed only because the console's chamfer fell on it
+   (ADR-065 U3). With no chamfer above it there is nothing for that cut to
+   share, and a 6–11px diagonal with no edge behind it is precisely the
+   decorative asymmetry rule 5 forbids.
+
+   ⚠ THIS RETIRES ADR-065 U2, the owner's own TL+BR exception, by his ruling
+   on the direction. The law's enumerated TL+BR object is gone; the housing
+   carries the canonical TR+BL and everything inside it is square. */
+.fl-case .fl-con__console,
+.fl-case .fl-con__stn:first-of-type {
+  clip-path: none;
+}
+/* Inside one housing the console is a cell, not a second framed object —
+   the 2026-08-07 "the console became the one framed object" ruling passes to
+   the slab. ⚠ `--con-ground` is set to `transparent` rather than the ground
+   being removed with `background: none`: the light-theme walk reads this very
+   property for its reference bed, and a shorthand reset makes it measure
+   every label against pure black. The bed a reader sees is the housing's. */
+.fl-case .fl-con__console {
+  --con-ground: transparent;
+  border-color: transparent;
+}
+/* The console shortens by the foot bar it now sits above. */
+.fl-case {
+  --fl-panel-end: calc(var(--fl-rail-top) + var(--fl-rail-h) - var(--fl-hz-foot-h));
+}
+
+/* ── The structure goes to dawn ────────────────────────────────────────
+   The eight gold structure lines the lab counted, re-pointed at the frame's
+   own material: a hue swap AND a 4× alpha gap between this panel and the HUD
+   frame beside it was the measurable half of "the panels don't feel part of
+   the interface". Marks stay gold everywhere — the register's claims, the
+   lit directory row and every drawing's own wayfinding are untouched.
+
+   ⚠ SCOPED TO `.fl-case`. This sheet is shared with the arcs, which mount
+   `ConsoleFrame` and the sheets plates at page scale and have no housing to
+   belong to; unscoped, the dawn structure would follow them there and the
+   `toBe`-pinned arc markup would start describing a different surface. */
+.fl-case .fl-proof-register__item {
+  border-top-color: var(--fl-hz-rule);
+}
+.fl-case .fl-proof-register__item:first-child {
+  border-top-color: var(--fl-hz-seam);
+}
+.fl-case .fl-proof-register__item:last-child {
+  border-bottom-color: var(--fl-hz-rule);
+}
+.fl-case .fl-dir__list li + li .fl-row {
+  border-top: 1px solid var(--fl-hz-rule);
+}
+.fl-case .fl-split {
+  background: var(--fl-hz-seam);
 }
 .fl-ret--bl {
   left: 0;
@@ -5939,10 +6315,26 @@
     will-change: auto;
   }
   /* The absolute registration grammar is a desktop composition; stacked,
-     it is noise. */
+     it is noise. ⚠ THE HOUSING AND ITS CHROME GO WITH IT (ADR-089): every
+     piece of it is seated against the rail box, which this path does not
+     have — the case is static flow content here, and a slab drawn from
+     `--fl-rail-top` over a document that scrolls is a pane sliding across
+     the copy. The phone's own bounded seat (ADR-083) is the instrument on
+     this rung. */
   .fl-split,
-  .fl-ret {
+  .fl-ret,
+  .fl-hz,
+  .fl-hz__head,
+  .fl-hz__foot,
+  .fl-seam,
+  .fl-cell {
     display: none;
+  }
+  /* And the console takes its own frame back — with no housing around it, it
+     is the framed object again. */
+  .fl-case .fl-con__console {
+    --con-ground: var(--con-void);
+    border-color: var(--con-edge);
   }
   .fl-tabs {
     position: static;

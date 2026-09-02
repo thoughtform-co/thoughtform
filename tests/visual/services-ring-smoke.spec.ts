@@ -1763,26 +1763,40 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         const lit = stns.filter((s) => s.dataset.on !== undefined).length;
         if (lit !== 1) return { kind, ok: false, why: `${lit} stations lit, expected 1` };
 
-        // ── ONE NOTCH PER RAIL, ON THE LEADING PLATE (owner, 2026-08-12) ──
-        // The top-left cut used to be on EVERY station, and on the FIRST one
-        // it renders nothing of its own: the console's own chamfer removes
-        // every point where `x + y < --con-ch` (15.9–22px) and the plate's
-        // removes `x + y < --stn-ch + 2` (10.6–13px), so the leading cut is
-        // subsumed by ~8px at every rung of both clamps. What it bought on
-        // the others was a 9–11px diagonal 185–581px along the rail with no
-        // edge to explain it — "only the work tab should have that".
+        // ── EVERY STATION IS SQUARE (ADR-089) ────────────────────────────
+        // This asserted the opposite until the housing shipped, and the
+        // reason it flipped is the clause it was written from rather than a
+        // change of taste.
         //
-        // ⚠ NOTHING PINNED THE STATION'S CORNER IN EITHER DIRECTION BEFORE
-        // THIS. The rail assertions above measure geometry, labels and fonts;
-        // the corner flipped TR → TL in ADR-067 U1 and went universal without
-        // a test noticing. Assert BOTH halves — the leading plate keeps its
-        // cut, the rest are square — or the next drift is invisible too.
+        // The leading plate's cut existed because the CONSOLE's chamfer fell
+        // on it: the console removed every point where `x + y < --con-ch`
+        // (15.9–22px) and the plate removed `x + y < --stn-ch + 2`
+        // (10.6–13px), so the leading cut was subsumed by ~8px at every rung
+        // and what read as WORK's notch was the housing's (ADR-065 U3 — the
+        // housing's chamfer falls on one member of a seated set, so the cut
+        // belongs to that member alone). Inside `.fl-hz` the console is a
+        // CELL and carries no chamfer at all, so that clause has no subject:
+        // the cut would be a 6–11px diagonal with no edge behind it, which is
+        // exactly the decorative asymmetry ADR-065 rule 5 forbids and which
+        // this guard's own predecessor was written to remove from the
+        // trailing plates.
+        //
+        // ⚠ STILL PINNED FROM BOTH ENDS, just at a different value: EVERY
+        // station square, and the console square above them. A one-sided
+        // check would pass a console that quietly grew its chamfer back while
+        // the rail stayed flat, which is the drift that put a floating
+        // diagonal on every tab in the first place.
         const cut = (s: HTMLElement) => getComputedStyle(s).clipPath;
-        if (!cut(stns[0]).startsWith("polygon("))
-          return { kind, ok: false, why: `the leading station lost its cut — ${cut(stns[0])}` };
-        const notched = stns.slice(1).filter((s) => cut(s).startsWith("polygon("));
+        const notched = stns.filter((s) => cut(s).startsWith("polygon("));
         if (notched.length)
-          return { kind, ok: false, why: `${notched.length} trailing station(s) still notched` };
+          return {
+            kind,
+            ok: false,
+            why: `${notched.length} station(s) notched inside a chamfered housing`,
+          };
+        const panel = document.querySelector<HTMLElement>(".fl-con__console");
+        if (panel && getComputedStyle(panel).clipPath.startsWith("polygon("))
+          return { kind, ok: false, why: `the console kept a chamfer inside the housing` };
 
         // The seam's shoulder is DECLARED now. It used to be a free
         // consequence of the owning plate's clip (a clip-path clips pseudos
@@ -1874,33 +1888,39 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         if (document.querySelector(".fl-con__outer"))
           return { kind, ok: false, why: "the outer bezel came back" };
 
-        // ⚠ THE NOTCH IS TOP-LEFT + BOTTOM-RIGHT, AND THAT IS AN OWNER
-        // OVERRIDE OF ADR-065 (recorded in ADR-065 U2). It is the exact
-        // mirror of the diagonal the law prescribes, so it can only be
-        // asserted — a reviewer reading the corner law would "fix" it back.
-        // Signature: the polygon has a square TOP-RIGHT and a square
-        // BOTTOM-LEFT, and neither a square TL nor a square BR.
-        const clip = getComputedStyle(con).clipPath;
-        const pts = clip.startsWith("polygon(")
-          ? clip
+        // ⚠ ADR-065 U2 IS RETIRED, AND THE CHAMFER IT ENUMERATED IS THE
+        // HOUSING'S NOW (ADR-089). This asserted the owner's TL+BR override
+        // on the console — the law's one enumerated mirrored object. Inside
+        // `.fl-hz` the console is a CELL, and the children of a chamfered box
+        // are square (rule 4), so the whole signature moves up one level: the
+        // slab carries the canonical TR+BL and the panel carries nothing.
+        //
+        // Asserted here rather than deleted, because "the panel is square" is
+        // only correct while something above it is not — a surface where BOTH
+        // are square has lost the machined read entirely, and that is a state
+        // no other assertion on this row would notice.
+        const hz = document.querySelector<HTMLElement>(".fl-hz");
+        if (!hz) return { kind, ok: false, why: "the housing is not mounted" };
+        const lip = getComputedStyle(hz, "::before").clipPath;
+        const pts = lip.startsWith("polygon(")
+          ? lip
               .slice(8, -1)
               .split(",")
               .map((s) => s.trim())
           : [];
         const square = (re: RegExp) => pts.some((p) => re.test(p));
-        if (!pts.length) return { kind, ok: false, why: "the panel is not chamfered at all" };
-        if (square(/^0(px|%)\s+0(px|%)$/))
-          return { kind, ok: false, why: `the panel kept a square top-left — ${clip}` };
-        if (!square(/^100%\s+0(px|%)$/))
-          return { kind, ok: false, why: `the panel notched top-RIGHT — ${clip}` };
-        if (!square(/^0(px|%)\s+100%$/))
-          return { kind, ok: false, why: `the panel notched bottom-LEFT — ${clip}` };
+        if (!pts.length) return { kind, ok: false, why: "the housing is not chamfered at all" };
+        // The canonical diagonal: square TL and square BR, neither TR nor BL.
+        if (!square(/^0(px|%)\s+0(px|%)$/))
+          return { kind, ok: false, why: `the housing notched top-LEFT — ${lip}` };
+        if (!square(/^100%\s+100%$/))
+          return { kind, ok: false, why: `the housing notched bottom-RIGHT — ${lip}` };
 
-        // One hairline, and it is the dawn edge rather than the gold one the
-        // double bezel used (`--con-edge`, the mockup's `--dawn-08`).
-        const bw = Number.parseFloat(getComputedStyle(con).borderTopWidth);
-        if (!(bw > 0 && bw <= 1.5))
-          return { kind, ok: false, why: `panel border is ${bw}px, expected one hairline` };
+        // The console's own hairline goes with its chamfer — it is a cell in
+        // a framed box, not a second framed object.
+        const bc = getComputedStyle(con).borderTopColor;
+        if (!/^rgba\(.*,\s*0\)$/.test(bc))
+          return { kind, ok: false, why: `the console kept its own edge — ${bc}` };
 
         return { kind, ok: true, why: "" };
       });
@@ -2665,8 +2685,43 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           return (hi + 0.05) / (lo + 0.05);
         };
 
-        const ground = parse(getComputedStyle(consoleEl).backgroundColor);
-        if (!ground) return null;
+        // ⚠ THE BED IS COMPOSITED UP THE TREE, NOT READ OFF ONE ELEMENT
+        // (ADR-089). This used to be `parse(consoleEl.backgroundColor)`, which
+        // was only ever right while the console painted its own opaque ground.
+        // Inside the housing it is a CELL and paints nothing, so that read
+        // returns `rgba(0,0,0,0)` — and `parse` happily matches it, so every
+        // label was then measured against PURE BLACK. In light that put the
+        // map's quietest ink at 1.06:1 and failed a page that reads fine; the
+        // same hole in reverse would pass an unreadable one.
+        //
+        // `console.css` had already written down the general form of this bug
+        // ("the walk takes its luminance from the raw RGB, so an alpha here
+        // does not move a single ratio it reports"). Walking to the first
+        // opaque surface and compositing back down is what a reader's eye
+        // does, and it is the same `bedOf()` idiom the wireframe walk below
+        // already uses.
+        const bedOf = (el: Element) => {
+          const layers: { r: number; g: number; b: number; a: number }[] = [];
+          for (let n: Element | null = el; n; n = n.parentElement) {
+            const c = parse(getComputedStyle(n).backgroundColor);
+            if (c && c.a > 0) {
+              layers.push(c);
+              if (c.a >= 0.99) break;
+            }
+          }
+          let bg = { r: 255, g: 255, b: 255, a: 1 };
+          for (let i = layers.length - 1; i >= 0; i--) {
+            const f = layers[i];
+            bg = {
+              r: f.a * f.r + (1 - f.a) * bg.r,
+              g: f.a * f.g + (1 - f.a) * bg.g,
+              b: f.a * f.b + (1 - f.a) * bg.b,
+              a: 1,
+            };
+          }
+          return bg;
+        };
+        const ground = bedOf(consoleEl);
 
         let low = { ratio: 99, text: "", fill: "" };
         for (const t of svg.querySelectorAll("text")) {
@@ -2743,8 +2798,32 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           const [hi, lo] = [lum(f), lum(bg)].sort((x, y) => y - x);
           return (hi + 0.05) / (lo + 0.05);
         };
-        const ground = parse(getComputedStyle(cons).backgroundColor);
-        if (!ground) return null;
+        // Same correction as the reading walk above (ADR-089): the console is
+        // a cell inside the housing and paints no ground of its own, so its
+        // own `backgroundColor` is transparent and reading it measures every
+        // label against black. Composite to the first opaque surface instead.
+        const bedOf = (el: Element) => {
+          const layers: { r: number; g: number; b: number; a: number }[] = [];
+          for (let n: Element | null = el; n; n = n.parentElement) {
+            const c = parse(getComputedStyle(n).backgroundColor);
+            if (c && c.a > 0) {
+              layers.push(c);
+              if (c.a >= 0.99) break;
+            }
+          }
+          let bg = { r: 255, g: 255, b: 255, a: 1 };
+          for (let i = layers.length - 1; i >= 0; i--) {
+            const f = layers[i];
+            bg = {
+              r: f.a * f.r + (1 - f.a) * bg.r,
+              g: f.a * f.g + (1 - f.a) * bg.g,
+              b: f.a * f.b + (1 - f.a) * bg.b,
+              a: 1,
+            };
+          }
+          return bg;
+        };
+        const ground = bedOf(cons);
 
         let low = { ratio: 99, text: "", color: "" };
         const walk = (el: Element) => {

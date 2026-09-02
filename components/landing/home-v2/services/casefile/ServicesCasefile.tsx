@@ -469,6 +469,28 @@ export function ServicesCasefile({
       aria-label={`Case file — ${def.client}`}
       data-mobile-view={mobileView}
     >
+      {/* ── THE HOUSING (ADR-089) ──────────────────────────────────────
+          One machined slab across the instrument band; everything below is
+          seated inside it.
+
+          ⚠ IT IS THE FRAME, SO IT CARRIES NO CLIENT MARK. `data-fl-panel`
+          puts it on the arrival ladder at the chrome rung — first on, last
+          off — but never `data-fl-client-panel`: the housing is what a
+          record is swapped INSIDE, and a frame that crossfades with its own
+          contents is a page turn (ADR-087).
+
+          ⚠ AND IT IS DRAWN, NOT A CONTAINER. Wrapping the composition would
+          make a promoted `[data-fl-panel]` element the containing block for
+          every absolutely-seated piece in here. */}
+      <i
+        className="fl-hz"
+        data-fl-panel
+        style={{ "--ci-off": 0.07 } as CSSProperties}
+        aria-hidden="true"
+      >
+        <i className="fl-hz__bd" />
+      </i>
+
       {/* The label/sys/code chrome trio that used to sit above the tabs was
           REMOVED (owner, 2026-07-29) — the band above the tab strip stays
           clean, and the tab row is the instrument's first line. The tabs
@@ -476,10 +498,40 @@ export function ServicesCasefile({
           0.07, which also makes it the LAST to leave on the departure LIFO).
           The foot's telemetry line (stamp/logCode/state) was removed
           2026-08-07 (owner) — the data stays in the content model,
-          unrendered. */}
+          unrendered. ⚠ `state` RENDERS AGAIN since ADR-089, in the fused
+          header's right slot: the housing's top edge is a band that wanted
+          the record's status, and this is the field it has always held. */}
+      <header
+        className="fl-hz__head"
+        data-fl-panel
+        style={{ "--ci-off": 0.07, "--fl-dy": "-26px" } as CSSProperties}
+      >
+        <span>{file.state}</span>
+      </header>
       <div data-fl-panel style={{ "--ci-off": 0.07, "--fl-dy": "-26px" } as CSSProperties}>
         <ClientTabs tabs={tabs} activeSlug={def.slug} onSelect={selectClient} controls={panelId} />
       </div>
+
+      {/* The housing's terminus. Outside `.fl-con`, so ADR-068 U2's ban on a
+          CONSOLE foot is untouched — that rule is about row chrome saying one
+          thing under whatever the rail shows. */}
+      <footer
+        className="fl-hz__foot"
+        data-fl-panel
+        style={{ "--ci-off": 0.07, "--fl-dy": "26px" } as CSSProperties}
+      >
+        {/* ⚠ THE FILE'S OWN CODE, AND NOTHING ELSE. The lab's foot carried the
+            classification line and the track count, and BOTH are already on
+            screen — the classification under the brief's title, the count in
+            the directory's own head. This surface has removed a console head,
+            a foot and a designator for exactly that (ADR-063 U1, ADR-070 U8),
+            so a terminus that repeats two labels is the said-twice defect in a
+            new place. `logCode` is provenance and letters nowhere else; it has
+            been in the record and unrendered since the 2026-08-07 declutter
+            took the telemetry line. A part number is what a machined device's
+            foot says. */}
+        <span>{file.logCode}</span>
+      </footer>
 
       {/* MOBILE IS ONE RETUNABLE INSTRUMENT, NOT THE DESKTOP COLUMNS IN A
           LONGER ORDER. The identity stays fixed while the reader switches
@@ -528,10 +580,34 @@ export function ServicesCasefile({
         style={{ "--ci-off": 0.14 } as CSSProperties}
         aria-hidden="true"
       />
+      {/* The brief/register seam, on tick 6. Its sibling below the register is
+          a grid item inside `.fl-left` — since ADR-088 that column's surplus
+          splits 1:2, so no token on `.fl-case` names the directory's top. */}
+      <i
+        className="fl-seam fl-seam--register"
+        data-fl-panel
+        style={{ "--ci-off": 0.14 } as CSSProperties}
+        aria-hidden="true"
+      />
       <i
         className="fl-ret fl-ret--bl"
         data-fl-panel
         style={{ "--ci-off": 0.18, "--fl-dx": "-30px" } as CSSProperties}
+        aria-hidden="true"
+      />
+      {/* ⚠ THE TOP-RIGHT RETICLE IS BACK (ADR-089), AND IT WAS AN OWNER
+          DELETION — commit `e3b33867`, the 2026-08-07 declutter, which took it
+          with the route diagram and the three dotted rules. It went because
+          the dotted chrome read as noise once the console became the one
+          framed object; the housing is that object now, and a diagonal PAIR
+          is what registers a composition without closing it into a box
+          (`casefile.css`'s own reason for marking one diagonal). Restoring
+          only its partner would leave the surviving cross reading as a
+          leftover. */}
+      <i
+        className="fl-ret fl-ret--tr"
+        data-fl-panel
+        style={{ "--ci-off": 0.18, "--fl-dx": "30px" } as CSSProperties}
         aria-hidden="true"
       />
 
@@ -552,6 +628,20 @@ export function ServicesCasefile({
           The three zones keep their own boxes, their own arrival transforms
           and their own client clocks. */}
       <div className="fl-left">
+        {/* The brief cell's head, in the air that already exists above
+            `--fl-body-top` — it costs the brief no copy.
+            ⚠ A SIBLING OF `.fl-brief`, NEVER ITS CHILD. That box carries
+            `overflow: hidden` (it is height-boxed against the seam), so a
+            head hung at `top: -17px` inside it is clipped away entirely —
+            silently, with the element present and measurable. The lab draws
+            it that way and it has never once painted. */}
+        {/* ⚠ NO META. The lab puts the file's `state` here AND in the header
+            bar, which prints ON RECORD twice on one screen, ~250px apart. The
+            header's is the housing's status band; this is the cell's name. */}
+        <p className="fl-cell fl-cell--brief" aria-hidden="true">
+          <span className="fl-cell__l">Brief</span>
+        </p>
+
         {/* ⚠ `data-fl-client-panel` MARKS THE FOUR PANELS WHOSE CONTENT IS THE
             CLIENT'S RECORD (ADR-087 Phase B) — the brief, the proof register,
             the directory and the right panel's visual. Only these compose the
@@ -603,6 +693,16 @@ export function ServicesCasefile({
           <p className="fl-brief__body">{(track.brief ?? file.brief).map(renderSegment)}</p>
         </div>
 
+        {/* ⚠ SEATED ONLY ON THE TALL RUNG, in `.fl-left`'s first seam track.
+            The register has ~4px of slack in its box at the binding viewport
+            and the directory four in its band, so a head row there would be
+            paid for out of the copy. Above 1070h `--fl-proof-top-gap` is
+            already 14–18px of pure air. */}
+        <p className="fl-cell fl-cell--register" aria-hidden="true">
+          <span className="fl-cell__l">Proof</span>
+          <span className="fl-cell__r">{`${track.blocks?.length ?? 4} claims`}</span>
+        </p>
+
         {/* Evidence stays in the reading column, leaving the right panel as
             one uninterrupted visual instrument. */}
         <TrackProofRegister
@@ -610,6 +710,9 @@ export function ServicesCasefile({
           id="svc-casefile-proof"
           tabIndex={mobileView === "proof" ? 0 : -1}
         />
+
+        {/* The register/directory seam, riding the second seam track. */}
+        <i className="fl-seam fl-seam--directory" aria-hidden="true" />
 
         {/* ── Left column · directory ───────────────────────────────── */}
         <Directory
