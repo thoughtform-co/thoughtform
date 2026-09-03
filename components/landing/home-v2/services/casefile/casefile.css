@@ -126,7 +126,6 @@
      a seed, and the console — which used to carry this rung — is a cell now. */
   --fl-hz-ch: 26px;
   --fl-hz-head-h: var(--fl-tabs-h);
-  --fl-hz-foot-h: 26px;
   --fl-hz-datum: var(--hud-rail-line, rgba(var(--dawn-rgb), 0.55));
   --fl-hz-seam: var(--hud-rail-line-soft, rgba(var(--dawn-rgb), 0.28));
   --fl-hz-rule: rgba(var(--dawn-rgb), 0.12);
@@ -426,9 +425,6 @@
     min-height: 44px;
     padding: 0 0 9px;
     align-items: flex-end;
-  }
-  .fl-tabs__archive {
-    display: none;
   }
 
   .fl-mobile-head {
@@ -1060,15 +1056,6 @@
   height: 1px;
   background: var(--gold);
 }
-.fl-tabs__archive {
-  align-self: flex-end;
-  padding-bottom: 11px;
-  font-family: var(--fl-mono);
-  font-size: var(--fl-chrome-sm);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.2);
-}
 
 /* ══ Connection grammar ════════════════════════════════════════════════
    Dashed runs, not solid hairlines, and dotted corner reticles on ONE
@@ -1240,13 +1227,24 @@
   }
 }
 
-/* ── The fused header ──────────────────────────────────────────────────
+/* ── The head band's rule ──────────────────────────────────────────────
+   ⚠ IT IS A RULE, NOT A HEADER (owner, 2026-09-03). ADR-089 gave this band
+   the file's `state` in its right slot and the owner took it straight back
+   out: the band above the record is the CLIENT'S NAME and nothing else.
+   What survives is the line the name is underlined into — the tab's own gold
+   segment sits on this exact row (`.fl-tabs__tab[data-on]::after`, bottom
+   −1px of a strip that is `--fl-tabs-h` tall on the same top edge), so the
+   band reads as one rule with a lit run under the active client. That is the
+   same two-part grammar the console's rail carries on the other side of the
+   split, which is what makes the two halves one instrument.
+
    ⚠ IT STOPS AT THE COLUMN SPLIT, AND THAT IS A COLLISION, NOT A TASTE. A
-   band-wide row prints its right slot straight through WORK / CONFIGURATION
+   band-wide row printed its right slot straight through WORK / CONFIGURATION
    / SUBSTRATE — `ConsoleRail` occupies the same band on the right and IS the
    field's header. Seen on the lab's first still and invisible to every
    geometry gate, because two labels overlapping is the one thing containment
-   tests never ask about. This header heads the RECORD column. */
+   tests never ask about. With the string gone the collision cannot recur;
+   the width stays because the RULE has the same reason to stop there. */
 .fl-hz__head {
   position: absolute;
   left: 0;
@@ -1254,55 +1252,17 @@
   top: var(--fl-rail-top);
   height: var(--fl-hz-head-h);
   z-index: 2;
-  /* ⚠ FLEX, NOT A THREE-COLUMN GRID. The lab's `1fr auto 1fr` template has
-     three slots and this header fills ONE — a single child lands in column 1
-     and `justify-self: end` puts it a third of the way across, straight
-     through the tab strip's `+ Archive`. Measured before the fix: the state
-     printed at x 437 against `+ Archive` at 430. The left slot is empty
-     because the tab strip already seats flush on this band and IS its left
-     run, so the only thing to place is the right one. */
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-bottom: 11px;
   border-bottom: 1px solid var(--fl-hz-seam);
   pointer-events: none;
-  font-family: var(--fl-mono);
-  font-size: var(--fl-chrome-sm);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--fl-hz-ink);
 }
 
-/* ── The foot bar ──────────────────────────────────────────────────────
-   ⚠ SEATED FROM THE TOP, NEVER `bottom`. `[data-fl-panel]` takes
-   `will-change: transform` under `[data-proof-live]`, which makes an element
-   a containing block — a measured `bottom` put this at y −126 on an 800px
-   viewport in the lab.
-   ⚠ IT IS NOT `.fl-con__foot`, AND THAT BAN STILL STANDS. ADR-068 U2 forbids
-   a CONSOLE foot: row chrome saying one thing under whatever the rail shows.
-   This is the HOUSING's terminus, outside `.fl-con` entirely — the same
-   distinction `.fl-verdict` already ships on. */
-.fl-hz__foot {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(var(--fl-rail-top) + var(--fl-rail-h) - var(--fl-hz-foot-h));
-  height: var(--fl-hz-foot-h);
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-top: 1px solid var(--fl-hz-seam);
-  pointer-events: none;
-  font-family: var(--fl-mono);
-  font-size: var(--fl-chrome-sm);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--fl-hz-ink);
-}
+/* ⚠ THE FOOT BAR IS DELETED (owner, 2026-09-03). ADR-089 closed the housing
+   with a 26px band carrying `logCode` over a hairline; read live, both were
+   surplus — "there's also a divider, we also don't need that". A machined
+   slab already ends somewhere: its bottom lip is drawn at the rail's last
+   tick, so a second rule 26px above it was closing a box that was closed.
+   `--fl-hz-foot-h` went with it, and `--fl-panel-end` reverts to the base
+   token, which hands the console those 26px back. */
 
 /* ── Interior seams ────────────────────────────────────────────────────
    Their OWN elements rather than borders on the cells, and that is
@@ -1415,13 +1375,49 @@
    being removed with `background: none`: the light-theme walk reads this very
    property for its reference bed, and a shorthand reset makes it measure
    every label against pure black. The bed a reader sees is the housing's. */
+/* ⚠ AND THE GLOW GOES WITH THE GROUND (owner, 2026-09-03: "I'm not really
+   sure about the gradient in there, it kind of breaks the flow"). The
+   console's background is TWO layers — a ground and a
+   `radial-gradient(128% 58% at 50% -8%)` of gold .05 that models its own top
+   EDGE catching light. ADR-089 took the ground and the border and left the
+   highlight, so a 58 %-tall wash — 575px at the owner's viewport — went on
+   painting for an edge that is not there, inside a slab that already carries
+   its own gold corner bloom. One object, one catch of light. */
 .fl-case .fl-con__console {
   --con-ground: transparent;
+  --con-glow: transparent;
   border-color: transparent;
 }
-/* The console shortens by the foot bar it now sits above. */
-.fl-case {
-  --fl-panel-end: calc(var(--fl-rail-top) + var(--fl-rail-h) - var(--fl-hz-foot-h));
+/* ⚠ ONE SCANLINE ACROSS THE BAND, AND IT IS THE SLAB'S. `.fl-hz__bd` rules
+   the whole housing at gold .025 on a 3px pitch and the console rules itself
+   again at dawn .014 on the same pitch — so the right half of one slab
+   carried twice the texture of the left, at two hues, phase-dependent. The
+   cell inherits the housing's material rather than adding its own. */
+.fl-case .fl-con__console::after {
+  content: none;
+}
+/* ⚠ THE RAIL'S UNDERLINE IS THE NINTH GOLD STRUCTURE LINE, and ADR-089's
+   sweep could not see it: the lab's ledger walks four selectors in the
+   RECORD column, and this one lives in `console.css`. It is the same object
+   as the head band's rule on the other side of the split — a track with one
+   lit run travelling along it (`.fl-con__spine`, gold, untouched) — so it
+   takes the same dawn seam. Structure is dawn; the mark stays gold. */
+.fl-case .fl-con__rail {
+  border-bottom-color: var(--fl-hz-seam);
+}
+/* ⚠ THE LIT STATION WAS THE ONE OPAQUE OBJECT IN A GLASS HOUSING. Its fill
+   is a gold wash over `--con-void`, an opaque bed that made sense while the
+   console had a ground of its own; inside the slab every other surface is
+   the housing's 0.42 glass, so the selected key read as a hole cut through
+   it. The wash alone lights it now — lifted a step to carry the same signal
+   without the backing — and the station keeps its three other marks (the
+   filled diamond, the full-strength label, the spine beneath).
+   ⚠ THE TOKEN IS NOT TOUCHED: `--con-void` is the opaque bed for the
+   diamond, `.fl-detail__in` and the map's whole drawing floor, and softening
+   it makes the panel look right while every instrument inside loses its
+   floor. This is the station's own declaration, scoped to the housing. */
+.fl-case .fl-con__stn[data-on] {
+  background: linear-gradient(180deg, rgba(var(--gold-rgb), 0.18), rgba(var(--gold-rgb), 0.05) 78%);
 }
 
 /* ── The structure goes to dawn ────────────────────────────────────────
@@ -6325,16 +6321,27 @@
   .fl-ret,
   .fl-hz,
   .fl-hz__head,
-  .fl-hz__foot,
   .fl-seam,
   .fl-cell {
     display: none;
   }
   /* And the console takes its own frame back — with no housing around it, it
-     is the framed object again. */
+     is the framed object again, glow and scanline included. */
   .fl-case .fl-con__console {
     --con-ground: var(--con-void);
+    --con-glow: rgba(var(--gold-rgb), 0.05);
     border-color: var(--con-edge);
+  }
+  .fl-case .fl-con__console::after {
+    content: "";
+  }
+  .fl-case .fl-con__rail {
+    border-bottom-color: var(--con-hair2);
+  }
+  .fl-case .fl-con__stn[data-on] {
+    background:
+      linear-gradient(180deg, rgba(var(--gold-rgb), 0.14), rgba(var(--gold-rgb), 0.035) 78%),
+      var(--con-void);
   }
   .fl-tabs {
     position: static;

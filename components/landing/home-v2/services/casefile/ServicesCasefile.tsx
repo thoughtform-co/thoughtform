@@ -498,40 +498,31 @@ export function ServicesCasefile({
           0.07, which also makes it the LAST to leave on the departure LIFO).
           The foot's telemetry line (stamp/logCode/state) was removed
           2026-08-07 (owner) — the data stays in the content model,
-          unrendered. ⚠ `state` RENDERS AGAIN since ADR-089, in the fused
-          header's right slot: the housing's top edge is a band that wanted
-          the record's status, and this is the field it has always held. */}
-      <header
+          unrendered. ⚠ `state` RENDERED AGAIN for one day under ADR-089 and
+          is OUT for the second time (owner, 2026-09-03): the band above the
+          record is the client's name and nothing else, so the head is a RULE
+          now and carries no string at all. `file.state` keeps its other
+          homes (the mobile head, the directory) and letters nowhere here. */}
+      <i
         className="fl-hz__head"
         data-fl-panel
         style={{ "--ci-off": 0.07, "--fl-dy": "-26px" } as CSSProperties}
-      >
-        <span>{file.state}</span>
-      </header>
+        aria-hidden="true"
+      />
       <div data-fl-panel style={{ "--ci-off": 0.07, "--fl-dy": "-26px" } as CSSProperties}>
         <ClientTabs tabs={tabs} activeSlug={def.slug} onSelect={selectClient} controls={panelId} />
       </div>
 
-      {/* The housing's terminus. Outside `.fl-con`, so ADR-068 U2's ban on a
-          CONSOLE foot is untouched — that rule is about row chrome saying one
-          thing under whatever the rail shows. */}
-      <footer
-        className="fl-hz__foot"
-        data-fl-panel
-        style={{ "--ci-off": 0.07, "--fl-dy": "26px" } as CSSProperties}
-      >
-        {/* ⚠ THE FILE'S OWN CODE, AND NOTHING ELSE. The lab's foot carried the
-            classification line and the track count, and BOTH are already on
-            screen — the classification under the brief's title, the count in
-            the directory's own head. This surface has removed a console head,
-            a foot and a designator for exactly that (ADR-063 U1, ADR-070 U8),
-            so a terminus that repeats two labels is the said-twice defect in a
-            new place. `logCode` is provenance and letters nowhere else; it has
-            been in the record and unrendered since the 2026-08-07 declutter
-            took the telemetry line. A part number is what a machined device's
-            foot says. */}
-        <span>{file.logCode}</span>
-      </footer>
+      {/* ⚠ THE FOOT BAR IS DELETED (owner, 2026-09-03) — THE SLAB'S OWN EDGE
+          IS THE TERMINUS. ADR-089 closed the housing with a 26px band
+          carrying `logCode` over a hairline, and the owner's read of it live
+          was that both the line and the string are surplus: "there's also a
+          divider, we also don't need that". A machined slab already ends
+          somewhere — its bottom lip is drawn, at the rail's last tick — so a
+          second rule 26px above it was closing a box that was already closed.
+          `logCode` returns to the state `stamp` and `state` are in: in the
+          record, lettered nowhere. The console takes the 26px back, which is
+          why `--fl-panel-end`'s override went with this. */}
 
       {/* MOBILE IS ONE RETUNABLE INSTRUMENT, NOT THE DESKTOP COLUMNS IN A
           LONGER ORDER. The identity stays fixed while the reader switches

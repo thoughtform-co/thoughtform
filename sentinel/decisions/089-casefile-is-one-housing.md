@@ -2,6 +2,9 @@
 
 - **Status:** **Accepted** for the proof casefile (shipped, guarded).
   ⚠ **NOT taken for the era stage** — see §Not promoted.
+  ⚠ **Update 1 (2026-09-03) removes the foot bar, the header's string, the
+  `+ Archive` marker and four leftovers in the right panel** — read it before
+  citing anything below about the head, the foot or the console's paint.
 - **Date:** 2026-09-02
 - **Owner call:** the `v0` / `v2` comparison, read at 1920×1247 — _"you can
   integrate this into the homepage for the proof section"_, with the era stage
@@ -215,6 +218,74 @@ That look is now on record: `shots/era/1920x1247_dark_at25_loop.png`, captured
 on the live corridor. The figure is a hologram lit against near-black with the
 corridor's dust reading through it, and the four column heads carry the only
 rules on the plate.
+
+## Update 1 — the housing loses its chrome, and the console joins the slab (2026-09-03, owner)
+
+Read live on the landing, a day after the promotion. The housing stands; four
+things inside it come out, and every one of them is a piece this ADR ADDED or
+left behind.
+
+- **The foot bar is deleted.** _"At the bottom of that panel we have AI
+  adoption marketing, we can remove that … there's also a divider, we also
+  don't need that."_ ⚠ **The first half of that sentence describes the LAB,
+  not production** — `v2`'s `FootRow` prints the classification line and the
+  track count, which this ADR's own §Not promoted flagged as a defect the
+  promotion fixed; production's foot has said `logCode` since day one. The
+  DIVIDER is the half that was real on both, and it settles the rest: a
+  machined slab already ends somewhere — its bottom lip is drawn at the rail's
+  last tick — so a 26px band closing it 26px higher was closing a box that was
+  closed. `logCode` returns to the state `stamp` and `state` are in: in the
+  record, lettered nowhere. `--fl-hz-foot-h` and the `--fl-panel-end` override
+  go with it, and the console takes the 26px back.
+- **`state` comes off the head, and the head becomes a RULE.** This ADR put it
+  in the fused header's right slot on the argument that _"the housing's top
+  edge is a band that wanted the record's status"_. It did not: the band above
+  the record is the client's name and nothing else. What survives is the line
+  the name is underlined into — the tab's own gold segment sits on that exact
+  row — which is the same two-part grammar the console's rail carries on the
+  other side of the split. ⚠ The header's `1fr auto 1fr` → flex fix recorded
+  above is now moot for content, but the width still stops at the column split
+  for the same reason: `ConsoleRail` is the field's header and a band-wide
+  rule would run under it.
+- **`+ Archive` is deleted, and its ruling went with the IA it argued for.**
+  ADR-087's _"the dim `+ Archive` is what marks it as a series"_ assumed a
+  strip of TABS holding several clients. The owner's call is **a panel per
+  client**: _"initially my idea was to use the top tabs to show different
+  clients, but I actually want to make a panel per client"_. A ghost stop for
+  a surface that will never open here is chrome promising navigation this
+  instrument no longer offers. ⚠ ADR-087's client-stack machinery is
+  UNTOUCHED and stays inert at one case — the segment table, the seam clocks
+  and the runway lockstep are a mechanism, not a strip.
+- **The right panel is four leftovers of the box this ADR deleted** (_"I'm not
+  really sure about the gradient in there, it kind of breaks the flow … make
+  sure that everything is nicely integrated"_). The pattern is the finding:
+  taking a console's ground and its border does not take what those two
+  implied.
+  1. ⚠ **The top glow.** `.fl-con__console`'s background is TWO layers, and
+     this ADR removed one: a `radial-gradient(128% 58% at 50% -8%)` of gold
+     .05 went on modelling a top EDGE catching light — **575px of wash at the
+     owner's viewport** — inside a slab that carries its own gold corner
+     bloom. One object, one catch of light.
+  2. ⚠ **The console's own scanline.** `.fl-hz__bd` rules the whole band at
+     gold .025 on a 3px pitch and the console ruled itself again at dawn .014
+     on the same pitch, so the right half of one slab carried twice the
+     texture of the left, at two hues, phase-dependent.
+  3. ⚠ **The rail's underline was the NINTH gold structure line**, and this
+     ADR's sweep could not see it: the lab's ledger walks four selectors in
+     the RECORD column and this one lives in `console.css`. It is the same
+     object as the head band's rule — a track with one lit run travelling
+     along it — so it takes the same dawn seam. The spine stays gold.
+  4. ⚠ **The lit station was the one opaque object in a glass housing.** Its
+     fill is a gold wash over `--con-void`, an opaque bed that made sense
+     while the console had a ground; inside the slab every other surface is
+     0.42 glass, so the selected key read as a hole cut through it. The wash
+     alone lights it (.18 / .05), and the station keeps its three other marks.
+     ⚠ **The TOKEN is not touched** — `--con-void` is the bed for the diamond,
+     `.fl-detail__in` and the map's whole drawing floor.
+
+Every rule is scoped to `.fl-case`, so the arcs — which mount `ConsoleFrame`
+with no housing around it — are byte-identical, and the ≤960/PRM path restores
+all four with the console's own frame.
 
 ## Left open
 

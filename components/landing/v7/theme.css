@@ -354,10 +354,10 @@ html[data-theme="light"] .fl-case {
 
      The steps are lifted so each lands near its DARK counterpart's
      ratio, NOT to a flat maximum: the hierarchy between designations,
-     keys, tab names and the deliberately-dim archive marker is the
-     information design, and flattening it to ink would read as louder,
-     not clearer. `+ Archive` stays the faintest thing on the plate —
-     it marks the case as a series (rules/proof.md). */
+     keys and tab names is the information design, and flattening it to
+     ink would read as louder, not clearer. (The faintest step on the
+     plate used to be `+ Archive`; the marker was deleted 2026-09-03 with
+     the tabs-as-clients IA it argued for — see ClientTabs.) */
   --fl-ink-dim: rgba(var(--dawn-rgb), 0.62);
 }
 
@@ -377,9 +377,6 @@ html[data-theme="light"] .fl-panel__viz {
   }
 }
 
-html[data-theme="light"] .fl-tabs__archive {
-  color: rgba(var(--dawn-rgb), 0.38);
-}
 html[data-theme="light"] .fl-desig,
 html[data-theme="light"] .fl-desig--r,
 html[data-theme="light"] .fl-source {

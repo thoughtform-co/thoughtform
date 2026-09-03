@@ -89,13 +89,19 @@ export function ClientTabs({ tabs, activeSlug, onSelect, controls }: ClientTabsP
         );
       })}
 
-      {/* Not a tab: there is no archive surface yet, and a disabled tab in
-          the tablist would break the roving index for no gain. It marks the
-          format as a series, which is the whole reason the strip survives a
-          single-case registry. */}
-      <span className="fl-tabs__archive" aria-hidden="true">
-        + Archive
-      </span>
+      {/* ⚠ `+ Archive` IS DELETED (owner, 2026-09-03), AND ITS RULING WENT
+          WITH THE IA IT ARGUED FOR. It was the series marker — "the dim
+          `+ Archive` is what marks it as a series, which is the whole reason
+          the strip survives a single-case registry" — and that reason was a
+          strip of TABS holding several clients. The owner's call is a PANEL
+          PER CLIENT instead: "initially my idea was to use the top tabs to
+          show different clients, but I actually want to make a panel per
+          client". A second client gets its own panel, so the strip is the
+          client's IDENTITY and a ghost stop for a surface that will never
+          open here is chrome promising navigation this instrument no longer
+          offers. ADR-087's client-stack machinery is untouched and stays
+          inert at one case; if a second panel ever needs a strip, this is a
+          new decision rather than a restored line. */}
     </div>
   );
 }

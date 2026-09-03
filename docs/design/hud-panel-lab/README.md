@@ -299,6 +299,15 @@ it prints `state` twice while its foot repeats two labels already on screen.
 Production fixed all three — read the lab for the DIRECTION, not for the
 detail.
 
+⚠ **And production has moved again since (ADR-089 U1, 2026-09-03).** Read live,
+the owner took out the housing's own chrome and the last of the console's:
+the foot bar and its rule, the header's `state`, the `+ Archive` marker
+(the IA is **a panel per client** now, not tabs), and four leftovers in the
+right panel — the console's top glow, its second scanline, its gold rail
+underline and the lit station's opaque bed. `v0` mounts all of that; `v2` is
+the older cut and the `proof_v2_*` stills are the older cut again. **The
+comparison to make is `v0` against a direction, never `v2` against `v0`.**
+
 ## Rulings the lab needs before anything is promoted
 
 1. **ADR-065 U2** — may the casefile console lose its TL+BR chamfer inside a

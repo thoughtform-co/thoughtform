@@ -17,7 +17,7 @@ breather).
 
 **Read first**
 
-- ⚠ [ADR-089: The casefile is one machined housing](../sentinel/decisions/089-casefile-is-one-housing.md) — **ACCEPTED for PROOF, 2026-09-02; the ERA stage is NOT taken and keeps v0.** The lab's `02 · Housing` is production: one slab across the instrument band (`.fl-hz`, the services plate's clipped gold lip over glass), the header FUSED to its top edge, dawn seams inside, a foot bar closing it. ⚠ **THE CONSOLE IS A CELL NOW** — it drops its chamfer, its hairline and its ground, which **RETIRES ADR-065 U2** and takes the rail's leading-station notch with it (that cut existed only because the console's chamfer fell on it). ⚠ **THE STRUCTURE IS DAWN, THE MARKS STAY GOLD** — eight gold structure lines at .12–.24 against a frame running 2px of dawn at .55 was the defect stated as a number. ⚠ **THE LIP IS A CLIPPED RING** (a `clip-path` cuts a border, it never strokes one) and its stops are TOKENS (light takes `--gold-line`). See §The housing below
+- ⚠ [ADR-089: The casefile is one machined housing](../sentinel/decisions/089-casefile-is-one-housing.md) — **ACCEPTED for PROOF, 2026-09-02; the ERA stage is NOT taken and keeps v0.** ⚠ **U1 (2026-09-03, owner) STRIPS THE HOUSING'S OWN CHROME AND FINISHES THE CONSOLE'S DEMOTION** — the foot bar, the head's `state`, `+ Archive` and four leftovers in the right panel are deleted; see §The housing below before citing anything about the head, the foot or the console's paint. The lab's `02 · Housing` is production: one slab across the instrument band (`.fl-hz`, the services plate's clipped gold lip over glass), the header FUSED to its top edge, dawn seams inside, a foot bar closing it. ⚠ **THE CONSOLE IS A CELL NOW** — it drops its chamfer, its hairline and its ground, which **RETIRES ADR-065 U2** and takes the rail's leading-station notch with it (that cut existed only because the console's chamfer fell on it). ⚠ **THE STRUCTURE IS DAWN, THE MARKS STAY GOLD** — eight gold structure lines at .12–.24 against a frame running 2px of dawn at .55 was the defect stated as a number. ⚠ **THE LIP IS A CLIPPED RING** (a `clip-path` cuts a border, it never strokes one) and its stops are TOKENS (light takes `--gold-line`). See §The housing below
 - ⚠ [ADR-088: The left column's type splits by face, and its slack is split too](../sentinel/decisions/088-casefile-left-column-ladder-and-rhythm.md) — **PROPOSED (2026-09-02), shipped and guarded, pending the owner's live read.** `--lc` is DELETED: one token drove four roles across TWO FACES and its `svh` term flipped their ranking with viewport height (at 1920×1080 the sans sentence outranked the mono claim it explains). The split is by FACE now — the register claim and the directory row are PEERS at `--fl-chrome-lg`, the meta at `--fl-chrome-md`, the sentence at `--fl-copy / --fl-ratio`. And the record column is ONE GRID (`.fl-left`, housing, unmarked): the directory's last row sits ON tick 11 and the surplus splits 1:2 between the two seams instead of pooling under the rows (137px at the owner's viewport before). ⚠ Shrinking `--fl-proof-h` to widen the seams further was built and REJECTED. See §The left column's ladder and its rhythm below
 - ⚠ [ADR-087: The casefile is a client stack](../sentinel/decisions/087-proof-client-stack.md) — **ACCEPTED on the mechanism, PROPOSED on the choreography.** The dwell is DERIVED over `CASES` now (row 0.5vh × tracks + seam 0.5vh between clients + release 1.2vh) and the flat `[0,1]`→row map is a SEGMENT TABLE (`browseMap.ts`, pure, zero imports). Byte-identical at one client to the last bit — that identity IS the acceptance proof, and there is NO flag (ADR-070 U35). Look-dev at **`/test/client-stack-lab`**, which is the first time the client channels ever write; its findings (the decode replay's target set fails at N ≥ 2, the seam's 21 % blank stretch, seam length being invisible at a fixed seam-local position) are recorded there. See §The tab strip and the client stack below
 - [ADR-070: The configuration is a switchboard](../sentinel/decisions/070-configuration-is-a-switchboard.md) — reading 02's DRAWING, promoted out of the config lab 2026-08-09. The wiring is the picture; ONE frame, ONE bright object; only what the record connects is drawn. See §The switchboard below.
@@ -491,7 +491,11 @@ facts` is wider than the whole plate — so the values live on the LABEL
   panel fade) and rests at 1 ⇒ "SERVICES".
 - **The tab strip is derived from `CASES`.** Adding a second case lights up
   a second tab with no component change. Do not ship placeholder clients on
-  the public page — the dim `+ Archive` is what marks it as a series.
+  the public page. ⚠ **THE SERIES MARKER IS GONE (ADR-089 U1)** — `+ Archive`
+  was what marked the file as one of a series, and the owner's **panel per
+  client** ruling retired it: the strip is the client's IDENTITY now, not a
+  selector. The derivation stays because it is a mechanism, but a second case
+  lighting a second tab is no longer the intended IA.
 
 ## The tab strip and the client stack (ADR-087)
 
@@ -545,10 +549,11 @@ a question about `CASES`, so it turns on by itself.
   the spy then derives the same target. Without the pin the tab lights and
   snaps back one frame later, the identical symptom a row click had before U13.
   Never remove one side of that contract without the other.
-- **NO GHOST `+ Archive` STOP** (owner). It violates both standing rulings on
-  its own: the round-3 DEAD-SCROLL ruling (a band in which nothing changes the
-  panel) and the placeholder-client ruling. `+ Archive` stays outside the
-  roving tabindex too — a disabled tab breaks the roving index for no gain.
+- **NO GHOST `+ Archive` STOP** (owner) — and ⚠ **SINCE ADR-089 U1 THERE IS NO
+  `+ Archive` AT ALL.** The ruling stood on the round-3 DEAD-SCROLL rule (a
+  band in which nothing changes the panel) and the placeholder-client rule;
+  the marker itself then went with the tabs-as-clients IA it argued for. Both
+  reasons survive it, and they now bar the label as well as the stop.
 - **The MOBILE client step is the tab strip above the mode switch** — first in
   source order inside the ≤960px grid, so the IA is identity → mode → the one
   bounded seat (ADR-083). 44px stops. Inert until N ≥ 2, and `flex-wrap:
@@ -560,9 +565,10 @@ nowrap` means a THIRD client forces a horizontal-scroll decision on the
   cannot change). But the only `[data-fl-text]` node is `.fl-tabs__name`, and
   with two tabs NEITHER name changes on a swap — so `begin()` blanks and
   re-scrambles both, and blanking by `textContent = ""` REFLOWS the strip
-  (`+ Archive`'s left edge measured 453.1 → 259.1 → 453.1px at 1440×800, a
-  **194px lateral jump** in the one element whose job is to sit
-  still). Everything that does
+  (measured against `+ Archive` before ADR-089 U1 deleted it: its left edge
+  ran 453.1 → 259.1 → 453.1px at 1440×800, a **194px lateral jump** in the one
+  element whose job was to sit still — the reflow is the strip's, so removing
+  the marker removed the witness, not the defect). Everything that does
   change is deliberately not a decode target, because the cache is per-CLIENT
   and those fields are per-TRACK. See ADR-087 §F1 for the three candidate
   closes; until the owner reads the lab, prefer `decodeReplay={false}` over
@@ -616,14 +622,52 @@ is seated inside it. Promoted from `/test/hud-panel-lab`'s `v2`.
   BY SCOPE, not by exception**: a console is a SCREEN you look into, a housing
   is the machined DEVICE the screen is set into, and the services card is the
   other object of that kind here.
-- ⚠ **THE FUSED HEADER STOPS AT THE COLUMN SPLIT, AND IT IS A COLLISION.** A
-  band-wide row prints its right slot straight through WORK / CONFIGURATION /
-  SUBSTRATE — `ConsoleRail` is the field's own header. Invisible to every
-  geometry gate, because two labels overlapping is the one thing containment
-  tests never ask about.
-  ⚠ **AND IT IS FLEX, NOT A THREE-COLUMN GRID.** One child in `1fr auto 1fr`
-  lands in column 1, so `justify-self: end` put the state a third of the way
-  across, through `+ Archive` (measured x 437 against 430).
+- ⚠ **THE HEAD IS A RULE AND THE FOOT IS GONE (U1, owner 2026-09-03).** The
+  band above the record letters NOTHING — `state` was in the header's right
+  slot for one day and came back out; the band above the record is the
+  client's NAME and nothing else. What survives is the line the name is
+  underlined into (the tab's own gold segment sits on that row), which is the
+  same track-plus-lit-run grammar the console's rail carries on the other side
+  of the split. And the FOOT BAR is deleted with `--fl-hz-foot-h` and the
+  `--fl-panel-end` override: **a machined slab already ends somewhere**, its
+  bottom lip is drawn at the rail's last tick, and a 26px band closing it 26px
+  higher was closing a box that was closed. `logCode` joins `stamp` and
+  `state` — in the record, lettered nowhere. The console takes the 26px back.
+  ⚠ The head still STOPS AT THE COLUMN SPLIT, and that is a collision, not a
+  taste: a band-wide rule runs under WORK / CONFIGURATION / SUBSTRATE, and
+  `ConsoleRail` is the field's own header. (The `1fr auto 1fr` → flex fix is
+  moot for content now; the width rule is not.)
+- ⚠ **`+ Archive` IS DELETED, AND ITS RULING WENT WITH THE IA IT ARGUED FOR**
+  (U1). ADR-087's "the dim `+ Archive` is what marks it as a series" assumed a
+  strip of TABS holding several clients; the owner's call is **a panel per
+  client**. A ghost stop for a surface that will never open here is chrome
+  promising navigation this instrument no longer offers. ⚠ **ADR-087's
+  client-stack machinery is UNTOUCHED and stays inert at one case** — the
+  segment table, the seam clocks and the runway lockstep are a mechanism, not
+  a strip; a second panel is a new decision, not a restored line.
+- ⚠ **THE RIGHT PANEL'S FOUR LEFTOVERS, AND THE PATTERN IS THE FINDING** (U1,
+  owner: _"I'm not really sure about the gradient in there, it kind of breaks
+  the flow"_). **Taking a console's ground and its border does not take what
+  those two implied.** Every rule is scoped to `.fl-case`, so the arcs are
+  byte-identical and the ≤960/PRM path restores all four.
+  1. **The top glow.** `.fl-con__console`'s background is TWO layers and
+     ADR-089 removed one: a `radial-gradient(128% 58% at 50% -8%)` of gold .05
+     kept modelling a top EDGE catching light — 575px of wash at the owner's
+     viewport — inside a slab with its own gold corner bloom.
+  2. **The console's own scanline.** The housing rules the whole band at gold
+     .025 on a 3px pitch; the console ruled itself again at dawn .014 on the
+     same pitch, so the right half of one slab carried twice the texture of
+     the left, at two hues.
+  3. **The rail's underline was the NINTH gold structure line** — ADR-089's
+     sweep could not see it, because the lab's ledger walks four selectors in
+     the RECORD column and this one lives in `console.css`. Dawn now; the
+     travelling spine stays gold.
+  4. **The lit station was the one opaque object in a glass housing.** Its
+     fill was a gold wash over `--con-void`; inside the slab every other
+     surface is 0.42 glass, so the selected key read as a hole cut through it.
+     The wash alone lights it (.18 / .05) and the station keeps its three
+     other marks. ⚠ **The TOKEN is not touched** — `--con-void` is the bed for
+     the diamond, `.fl-detail__in` and the map's whole drawing floor.
 - ⚠ **THE BRIEF'S CELL HEAD IS A SIBLING OF `.fl-brief`, NEVER ITS CHILD.**
   That box is height-boxed with `overflow: hidden`, so a head at `top: -17px`
   inside it is clipped away entirely — present, measurable, painting nothing.
