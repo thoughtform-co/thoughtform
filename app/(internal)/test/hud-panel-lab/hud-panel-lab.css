@@ -2,8 +2,8 @@
    /test/hud-panel-lab — do the evidence panels belong to the frame?
    ═══════════════════════════════════════════════════════════════════════
 
-   Six directions on two surfaces. `v0` mounts production and this sheet does
-   not touch it; `v1`–`v5` re-seat the SAME production leaves.
+   Seven directions on two surfaces. `v0` mounts production and this sheet does
+   not touch it; `v1`–`v6` re-seat the SAME production leaves.
 
    ⚠ EVERY RULE IS SCOPED UNDER `.hpl[data-hpl-dir="…"]`, which is (0,3,0) or
    more. Production's zone rules are bare class selectors at (0,1,0) and its
@@ -21,6 +21,10 @@
        datum  2px  rgba(dawn, .55)   = --hud-rail-line, the rail's track
        seam   1px  rgba(dawn, .28)   = --hud-rail-line-soft
        rule   1px  rgba(dawn, .12)
+       double 2 × 1px rgba(dawn, .55) with a 2px gap — v6's one emphatic line:
+              the datum's own ink in another FORM, never a fourth rung
+       phosphor #FFA — v6's lit rung, dark only, and BACKGROUNDS only: the
+              capture's `isGold` reads it as gold, so it may never be a border
    Structure is DAWN; gold stays on marks (the lit tab, the spine, the lit
    row, the diamonds, the active chip). That is `console.css`'s own ruling —
    "the panel's own edge is dawn, not gold … the rail's dividers keep the gold
@@ -77,6 +81,48 @@
 .hpl[data-hpl-mat="glass"] {
   --hpl-ground: rgba(var(--void-deep-rgb), 0.42);
   --hpl-blur: 14px;
+}
+
+/* ── v6 · Listing — the seed's two hues, the cursor's clock, the reticle ──
+   Two colours from the seed's own hex triplets, as DARK literals
+   (docs/design/hud-panel-lab/seed-listing.md). #FFA is the one lit rung — the
+   cursor, the console's spine and lit diamond, the active era's mark; #dA9 is
+   offered for provenance meta behind `?ink=oxide`. Light takes the house's
+   own inversion: the gold ramp's LIT step for the phosphor (ADR-063 U2 —
+   emphasis is DARKER on parchment) and a rust dark enough for 4.5:1 text on
+   every light ground (#7a3e26 clears 5.5:1 on --surface-1).
+   ⚠ SCOPED BY `[data-hpl-surface]`, which only THIS lab's root carries —
+   `holo-program-lab.css` also owns a `.hpl` class and a light rule on it.
+   ⚠ NEVER a `[data-theme="dark"]` selector (theme.css law 1): dark is the
+   unqualified default and several shells carry an inert dark attribute.
+   ⚠ PHOSPHOR AND OXIDE ARE BACKGROUNDS AND INK, NEVER A BORDER. The capture's
+   `isGold` (r > 90, r − b > 40, r ≥ g) classifies both — and the light
+   phosphor — as gold, so either on a ledger-selector border fails the LEDGER
+   gate as a gold structure line, which is exactly what it would be. */
+.hpl[data-hpl-surface] {
+  --hpl-phosphor: rgb(255 255 170);
+  --hpl-oxide: rgb(221 170 153);
+  /* 6996 → 0.6996 s lit and the same dark: one cycle is 1.4 s. */
+  --hpl-cursor-period: 1.4s;
+  /* The casefile's own reticle, verbatim (`casefile.css` --fl-ret-*), so the
+     era bay's pair IS the proof surface's pair and not a lookalike. */
+  --hpl-ret-arm: 19px;
+  --hpl-ret-ink: rgba(var(--gold-rgb), 0.8);
+  --hpl-ret-dash-x: repeating-linear-gradient(
+    to right,
+    var(--hpl-ret-ink) 0 1.5px,
+    transparent 1.5px 5px
+  );
+  --hpl-ret-dash-y: repeating-linear-gradient(
+    to bottom,
+    var(--hpl-ret-ink) 0 1.5px,
+    transparent 1.5px 5px
+  );
+}
+html[data-theme="light"] .hpl[data-hpl-surface] {
+  --hpl-phosphor: var(--gold-ink-lit, #5c4411);
+  --hpl-oxide: #7a3e26;
+  --hpl-ret-ink: var(--gold-line, #8a6b20);
 }
 
 /* `hudHtml` ships the fixed gold gateway radial; production covers it with
@@ -279,6 +325,38 @@
   pointer-events: none;
 }
 
+/* A registration reticle — the corridor caption card's cross at casefile
+   scale, `.fl-ret`'s recipe on the lab's own tokens (v6). Always a
+   180°-rotated PAIR on TR + BL, the corner law's lawful diagonal; never four.
+   It sits in the region's MARGIN and touches no box — the fourth mark grammar
+   this house already draws on the casefile, beside chamfer, notch and
+   bracket. Where each one SITS is the bay's business, below. */
+.hpl-ret {
+  position: absolute;
+  width: var(--hpl-ret-arm);
+  height: var(--hpl-ret-arm);
+  pointer-events: none;
+}
+.hpl-ret::before,
+.hpl-ret::after {
+  content: "";
+  position: absolute;
+}
+.hpl-ret::before {
+  left: 0;
+  right: 0;
+  top: calc(var(--hpl-ret-arm) / 2 - 0.5px);
+  height: 1px;
+  background: var(--hpl-ret-dash-x);
+}
+.hpl-ret::after {
+  top: 0;
+  bottom: 0;
+  left: calc(var(--hpl-ret-arm) / 2 - 0.5px);
+  width: 1px;
+  background: var(--hpl-ret-dash-y);
+}
+
 /* ══ THE HOUSING ══════════════════════════════════════════════════════════
    ONE machined slab on the lawful TR+BL diagonal. Drawn, never a container.
 
@@ -450,6 +528,41 @@
     100% 100%,
     0 100%
   );
+}
+
+/* ══ THE LISTING RING (v6) ═══════════════════════════════════════════════
+   The DOS double line — ═ along the runs, ║ down the sides: two 1px lines of
+   the frame's own datum with a 2px gap, 4px in all. SQUARE, because
+   box-drawing has no chamfer and ADR-065's ladder puts chrome at depth 0 —
+   so it is two plain `border` boxes and no clip-path at all. The slab's
+   ring-winding above exists only because a clip-path CUTS a border; a square
+   box needs no cutting, and the corners stroke themselves.
+   Geometry: the outer border occupies [0, 1px); the body is absolute against
+   the outer's padding box, so `inset: 2px` puts its border at [3px, 4px).
+   Line · 2px gap · line.
+   ⚠ LINE ONLY, AND `?mat=glass` CANNOT REACH IT. The direction's first
+   refusal is a ground (its seed has no `G`). These rules are (0,4,0)/(0,4,1)
+   against the glass knob's (0,3,0)/(0,3,1), so the knob fills nothing here:
+   this is software drawn on the frame's screen, not the device the screen is
+   set into. */
+.hpl-housing[data-kind="listing"] {
+  box-sizing: border-box;
+  border: 1px solid var(--hpl-datum);
+}
+.hpl-housing[data-kind="listing"]::before {
+  content: none;
+}
+.hpl .hpl-housing[data-kind="listing"] .hpl-housing__bd {
+  inset: 2px;
+  box-sizing: border-box;
+  border: 1px solid var(--hpl-datum);
+  clip-path: none;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.hpl .hpl-housing[data-kind="listing"] .hpl-housing__bd::after {
+  content: none;
 }
 
 /* A seam between two record cells. Its own element rather than a border on
@@ -680,6 +793,14 @@
   grid-row: 4;
   align-self: center;
   top: auto;
+  /* ⚠ THE WIDTH RE-RESOLVES AGAINST `.fl-left`, NOT `.fl-case`, once the seam
+     is a grid item — so the base rule's `var(--fl-col-split)` (37.5%) became
+     37.5% OF the 34.5% column, a 119px stub at 1280×720 against the 367px
+     the register seam draws (measured, found while shooting v6; every
+     direction that draws this seam had it). The two literals below ARE
+     `--fl-col-split` and `--fl-col-l`: CSS cannot divide one percentage token
+     by another, so they are restated here — move those tokens, move this. */
+  width: calc(100% * 37.5 / 34.5);
 }
 
 /* ── Datum stubs (v5) ────────────────────────────────────────────────────
@@ -763,6 +884,198 @@
 .hpl .fl-case[data-hpl-dir="v4"] .fl-brief > .hpl-cellhead {
   top: -15px;
   padding-inline: 10px;
+}
+
+/* ── v6 · Listing ─────────────────────────────────────────────────────────
+   The seed-derived direction (docs/design/hud-panel-lab/seed-listing.md).
+   The record sits inside a square double-line ring that is SOFTWARE on the
+   frame's screen: line-only, dawn, no chamfer.
+
+   ⚠ THE RING CLEARS THE RIGHT RAIL'S TELEMETRY, AND THAT IS THE DIRECTION'S
+   OWN REFUSAL. The promoted housing (ADR-089) runs band-exact because a 0.42
+   tint under a dawn readout is a sub-2% shift; a 1px line PAIR through
+   SECTOR is not a tint, it is chrome painted over a reading — "nothing paints
+   over content" (the seed's absent `Z`). SECTOR reaches 22px inside the band
+   edge at 1280×720, so the ring stands 32px inside it — the nearest power of
+   two that clears — and the band stays symmetric by law (ADR-048), so the
+   clearance comes off both sides. The record sits 16px inside the ring
+   (margin, not clearance: the tab strip's ordinal off the wall, ADR-070 U11).
+   Stated cost: 60px of content width against production at 1280×720.
+   ⚠ EVERY SPACING THIS DIRECTION ADDS IS A POWER OF TWO — 2 gap · 4 rule ·
+   8 cursor air · 16 pad · 32 clearance. Kit rungs it inherits (the 26px foot
+   band, the −17px head seat) are the surfaces' own and stay. */
+.hpl .fl-case[data-hpl-dir="v6"] {
+  --hpl-ring-clear: 32px;
+  --hpl-housing-pad: 16px;
+  left: calc(var(--instrument-inset, 0px) + var(--hpl-ring-clear) + var(--hpl-housing-pad));
+  right: calc(var(--instrument-inset, 0px) + var(--hpl-ring-clear) + var(--hpl-housing-pad));
+  /* The console shortens by the foot row it sits above (v2's own move). */
+  --fl-panel-end: calc(var(--fl-rail-top) + var(--fl-rail-h) - var(--hpl-foot-h));
+}
+.hpl .fl-case[data-hpl-dir="v6"] .hpl-housing {
+  left: calc(var(--hpl-housing-pad) * -1);
+  right: calc(var(--hpl-housing-pad) * -1);
+  top: var(--fl-rail-top);
+  height: var(--fl-rail-h);
+}
+
+/* The fused header is FLEX — production's own fix (`.fl-hz__head`): one
+   string, on the right, and a three-column template has nothing else to
+   place. Its underside is a SINGLE seam; the ring's top is the datum. */
+.hpl .fl-case[data-hpl-dir="v6"] .hpl-head {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+.hpl .fl-case[data-hpl-dir="v6"] .hpl-head__l:empty,
+.hpl .fl-case[data-hpl-dir="v6"] .hpl-head__c:empty {
+  display: none;
+}
+
+/* The ladder as the listing reads it: DATUM on the ring (double), SEAM on the
+   register seam (tick 6), the directory seam, the header's underside and the
+   foot's top; RULE on the register's items and the directory's rows (the
+   ladder block above). The two seams step up from the kit's .12 to .28
+   because inside a double-ruled frame a .12 division reads as a smudge. */
+.hpl .fl-case[data-hpl-dir="v6"] .hpl-seam {
+  background: var(--hpl-seam);
+}
+
+/* ⚠ THE BRIEF'S HEAD HANGS OFF `.fl-left`, NEVER OFF `.fl-brief` — production's
+   own `.fl-cell--brief`. The brief is height-boxed with `overflow: hidden`, so
+   the kit's in-brief seat above is clipped away entirely on every other
+   direction and has never painted; the column clips nothing. An absolutely
+   positioned child of a grid container takes no track. */
+.hpl .fl-case[data-hpl-dir="v6"] .fl-left > .hpl-cellhead[data-zone="brief"] {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -17px;
+  padding-bottom: 3px;
+}
+
+/* ⚠ THE CLEARANCE'S FIRST COST IN PIXELS, PAID WHERE THE HOUSE SAYS TO PAY
+   IT. At 1280×720 the record column is 317px under the ring (338 in
+   production), and the ATL row's classification line — "GENERATIVE PRODUCTION
+   · ATL / CTV · SHIPPED", 327px natural — wraps to a second line, which is
+   12px the tick-bound brief does not have (measured: `over 10` on that row
+   alone). No spacing knob inside the clearance law buys it back: pad 8 is
+   +5px on the column, and 24px of clearance puts the line pair through
+   SECTOR's rect, which starts 28px inside the band edge. So the compact rung
+   spends what `.claude/rules/proof.md` says to spend, in order — chrome
+   padding first (the title's, the class line's and the body's top margins go
+   to 8 · 2 · 4, the direction's own powers of two), then a hair of leading
+   (1.48 → 1.45 on the body) — and never the type. 13.6px recovered against
+   the 12 wanted; above 1330px nothing wraps and production's rhythm stands. */
+@media (max-width: 1330px) {
+  .hpl .fl-case[data-hpl-dir="v6"] .fl-brief__title {
+    margin-top: 8px;
+  }
+  .hpl .fl-case[data-hpl-dir="v6"] .fl-brief__class {
+    margin-top: 2px;
+  }
+  .hpl .fl-case[data-hpl-dir="v6"] .fl-brief__body {
+    margin-top: 4px;
+    line-height: 1.45;
+  }
+}
+
+/* ── The column seam is DOUBLE (║) ───────────────────────────────────────
+   4px: line · 2px gap · line, in the datum. It grows RIGHTWARD from the split
+   so the horizontal seams (width `--fl-col-split`) terminate on its left
+   line — a ╠ junction rather than a seam running into a gap. The field starts
+   at `--fl-col-r` (40%), clear of it.
+   ⚠ SPECIFICITY BALLAST: the ladder block's `:not([data-hpl-dir="v0"])` rule
+   on `.fl-split` is (0,5,0); this is (0,6,0) and later besides.
+   ⚠ THE LEDGER READS BORDERS ONLY, so a gradient ground is invisible to it —
+   it cannot fail this line and it cannot vouch for it either. */
+.hpl .fl-case[data-hpl-dir] .fl-split[data-double][data-fl-panel] {
+  width: 4px;
+  background: linear-gradient(
+    to right,
+    var(--hpl-datum) 0 1px,
+    transparent 1px 3px,
+    var(--hpl-datum) 3px 4px
+  );
+}
+
+/* ── The console keeps its plate ─────────────────────────────────────────
+   ADR-089 made the console a CELL under `.fl-case` (`--con-ground:
+   transparent`, casefile.css) because the slab behind it had glass. This ring
+   has none, so the plates get their tuned 0.86 back — the "no ground" refusal
+   is about the HOUSING; a plate holding copy over a live scene is the
+   console's own business. Square is inherited from production; the edge stays
+   transparent (a cell inside a line ring, not a second frame). */
+.hpl .fl-case[data-hpl-dir="v6"] .fl-con__console {
+  --con-ground: rgba(var(--void-deep-rgb), 0.86);
+}
+
+/* ── Phosphor: the one lit rung ──────────────────────────────────────────
+   The spine and the lit station's diamond — NOT `--con-hot` wholesale: the map
+   aliases `--pda-hot` onto it and that drawing's gold is wayfinding by law
+   (ADR-062, closed). The glows keep their own warm tint and light switches
+   them off itself (theme.css); the token flips in light, so no branch here. */
+.hpl .fl-case[data-hpl-dir="v6"] .fl-con__spine {
+  background: var(--hpl-phosphor);
+}
+.hpl .fl-case[data-hpl-dir="v6"] .fl-con__stn[data-on] > i {
+  border-color: var(--hpl-phosphor);
+  background: var(--hpl-phosphor);
+}
+
+/* ── THE CURSOR ──────────────────────────────────────────────────────────
+   A 0.6em × 1em block after the active client's name, in phosphor. `I` is the
+   seed's most frequent glyph and the seed has no zero: the cursor is never
+   absent — steady under reduced motion, blinking on `steps(1)` otherwise,
+   700ms lit and 700ms dark (6996 → 0.6996 s).
+   ⚠ ON `.fl-tabs__name::after`, NOT THE TAB'S — `.fl-tabs__tab[data-on]::after`
+   is the underline that lands on the rule. The name is the decode target; the
+   scramble writes `textContent` and leaves pseudo-elements alone, so the
+   cursor survives the reveal and trails it.
+   ⚠ THE BLINK IS ON `visibility`, THE ARRIVAL ON `opacity`, and they may not
+   share a channel — a running animation overrides the declared value of the
+   property it animates. A pseudo-element cannot carry `data-fl-panel`, so its
+   arrival is its own clamp off `--svc-proof-in` (inherited from `.fl-case`'s
+   inline style); 0.44 is the ladder's last rung (`--co-off` = 0.56 − 0.44 =
+   0.12). The lab never folds, so the departure is not modelled.
+   ⚠ WALL-CLOCK MOTION. ADR-021 admits only scroll clocks, click-driven slides,
+   pointer-look and the bounded spring on `#services`; a perpetual blink is
+   none of them. The lab draws what the seed says and the README asks for the
+   ruling — `animation-iteration-count` is the one knob that bounds it.
+   ⚠ 0% IS LIT: Playwright's `animations: "disabled"` freezes every infinite
+   animation at its first keyframe, so a dark 0% would shoot a cursorless
+   still of a direction whose whole point is the cursor. */
+.hpl .fl-case[data-hpl-dir] [data-hpl-cursor] .fl-tabs__tab[data-on] .fl-tabs__name::after {
+  content: "";
+  display: inline-block;
+  width: 0.6em;
+  height: 1em;
+  margin-left: 8px;
+  vertical-align: -0.12em;
+  background: var(--hpl-phosphor, var(--gold));
+  opacity: clamp(0, calc((var(--svc-proof-in, 1) - 0.44) / 0.56), 1);
+  animation: hpl-cursor var(--hpl-cursor-period, 1.4s) steps(1, end) infinite;
+}
+@keyframes hpl-cursor {
+  0% {
+    visibility: visible;
+  }
+  50% {
+    visibility: hidden;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hpl .fl-case[data-hpl-dir] [data-hpl-cursor] .fl-tabs__tab[data-on] .fl-tabs__name::after,
+  .hpl-eras[data-hpl-dir="v6"] .vwd__chip[data-on="true"] .vwd__chip__mark {
+    animation: none;
+  }
+}
+
+/* ── `?ink=oxide` — provenance meta in the seed's second hue ─────────────
+   The foot's log code only; the era stage's own consumers are in its block.
+   The shell writes `data-hpl-ink` beside `data-hpl-mat`. */
+.hpl[data-hpl-ink="oxide"] .fl-case[data-hpl-dir="v6"] .hpl-foot {
+  color: var(--hpl-oxide);
 }
 
 /* ═══ SURFACE 2 · THE ERA STAGE ══════════════════════════════════════════ */
@@ -969,6 +1282,195 @@
   position: relative;
 }
 
+/* ── v6 · Listing ─────────────────────────────────────────────────────────
+   The seed-derived direction (docs/design/hud-panel-lab/seed-listing.md)
+   crosses this station as LINES ALONE — no ring, no ground, no header bar, no
+   foot, no corner labels: three double rules, a tabular FACTS seat, a reticle
+   pair on the bay and a cursor on the reel, and ZERO new lettered elements.
+   Everything a band-wide enclosure would trip (the transparency law, the
+   committed >700px sweep, the three handoff targets) is left exactly where
+   production has it.
+
+   ⚠ THE MAST BECOMES THE LISTING'S HEADER ROW, and that is the answer to the
+   "glorified PowerPoint" verdict, which names the SKELETON — a centred title
+   over two text columns — rather than any treatment. The title's LEFT edge
+   sits on SCOPE's left edge, the kicker's two decode lines stack on FACTS'
+   right edge, and the year sits on the title's baseline: `NAME ……… YEAR`, the
+   first row of a listing, not the title of a slide. Same template, gap and
+   band as `.vwd__stage`, so column 1's end IS SCOPE's right edge.
+   ⚠ THE GAP IS A COPIED LITERAL — production keeps `clamp(18px, 2.4vw, 52px)`
+   inline; retune one, retune the other. The capture gates the RECTS (title
+   left vs SCOPE left), never the token: `--vwd-pad-x`, `--vwd-fig-w` and
+   `--vwd-measure` live on `.vwd`, not `:root`, and a probe element cannot
+   resolve them (this lab's own recorded trap). */
+.hpl-eras[data-hpl-dir="v6"] .vwd__mast {
+  grid-template-columns: minmax(0, 1fr) var(--vwd-fig-w) minmax(0, 1fr);
+  grid-template-rows: auto;
+  column-gap: clamp(18px, 2.4vw, 52px);
+  /* The YEAR's baseline on the title's — `last baseline`, because the kicker
+     is two stacked lines and first-baseline would hang its second line below
+     the row (~14px of the 15px this composition has at 1280×720). */
+  align-items: last baseline;
+  justify-items: start;
+  width: calc(100% - 2 * var(--vwd-pad-x));
+  /* 4px air · 4px double rule · 8px air — the rule lives here, outside the
+     title's own box, because the About name lands on that box. */
+  padding-bottom: 16px;
+  text-align: left;
+}
+/* ⚠ THE TITLE'S BOX IS ITS INK AND IT NEVER WRAPS. Its clamp is locked
+   byte-for-byte to the About name's footprint, and "The campaign commander"
+   at 38.4px needs ~420px against a 365–368px measure — so the box is
+   `max-content` and overflows its grid AREA to the right, into column 2's
+   x-range, where nothing sits at the mast's row (`.vwd__mast` declares no
+   overflow; `.vwd__sheet`'s clip is far away). `margin-left` reproduces
+   SCOPE's `justify-self: end` inboard offset (0 at 1280, 44.5px at 1440)
+   WITHOUT touching the box: the handoff measures `offsetLeft`, which includes
+   margins, and asserts top-left only. */
+.hpl-eras[data-hpl-dir="v6"] .vwd__mast__title {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: start;
+  width: max-content;
+  margin: 0 0 0 calc(100% - var(--vwd-measure));
+  white-space: nowrap;
+  text-align: left;
+}
+/* THE DOUBLE RULE under the title, at the title's own ink width. The h2 is a
+   `.vwh__decode-line` — already `position: relative`, its `::before` the
+   ghost — so its `::after` is free. 4px below the line box, inside the mast's
+   padding; ≤ ~460px at every rung, well under the >700px sweep. */
+.hpl-eras[data-hpl-dir="v6"] .vwd__mast__title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  height: 4px;
+  background: linear-gradient(
+    var(--hpl-datum) 0 1px,
+    transparent 1px 3px,
+    var(--hpl-datum) 3px 4px
+  );
+  pointer-events: none;
+}
+/* The kicker's two decode lines stack, right-anchored on FACTS' right edge —
+   `justify-self: start` + `width: var(--vwd-measure)` is FACTS' own seat. */
+.hpl-eras[data-hpl-dir="v6"] .vwd__mast__kicker {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: start;
+  align-self: last baseline;
+  width: var(--vwd-measure);
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  text-align: right;
+}
+
+/* ── Three double rules, and only three ──────────────────────────────────
+   The title's, SCOPE's and FACTS' — the two UPPER seat heads are the columns'
+   datum; the lower pair (TRANSMISSION, ON RECORD) take a single seam. Line 1
+   of an upper double is the head's own border (the row boundary, and what the
+   ledger reads); line 2 is drawn INSIDE THE BODY's padding-top.
+   ⚠ NOT A `::after` HANGING BELOW THE HEAD: `scrollHeight` on an
+   `overflow: visible` block includes an overflowing absolute descendant, so a
+   pseudo at `bottom: -3px` reports `over 3` and fails the CLIP gate's `> 1`.
+   The body has ≥ 10px of padding-top and clips (`overflow: hidden`), so a
+   1px line at `top: 2px` costs nothing and can overflow nothing. */
+.hpl-eras[data-hpl-dir="v6"] .vwd__head[data-cell="ul"],
+.hpl-eras[data-hpl-dir="v6"] .vwd__head[data-cell="ur"] {
+  border-bottom: 1px solid var(--hpl-datum);
+}
+.hpl-eras[data-hpl-dir="v6"] .vwd__body[data-cell="ul"],
+.hpl-eras[data-hpl-dir="v6"] .vwd__body[data-cell="ur"] {
+  /* The dossier handoff target's RECT is unchanged by this. */
+  position: relative;
+}
+.hpl-eras[data-hpl-dir="v6"] .vwd__body[data-cell="ul"]::before,
+.hpl-eras[data-hpl-dir="v6"] .vwd__body[data-cell="ur"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 2px;
+  height: 1px;
+  background: var(--hpl-datum);
+  pointer-events: none;
+}
+.hpl-eras[data-hpl-dir="v6"] .vwd__head[data-cell="ll"],
+.hpl-eras[data-hpl-dir="v6"] .vwd__head[data-cell="lr"] {
+  border-bottom: 1px solid var(--hpl-seam);
+}
+
+/* ── FACTS as a listing (key 6/16 | value 10/16) ─────────────────────────
+   The dump's own columns: one continuous rule down the key|value seam at the
+   casefile's 37.5% split, through every row and gap — on the `dl`, not the
+   `dd`, because baseline-aligned rows no longer stretch their cells and a
+   border-left on the value would read as a dashed rule. A `::before` on a
+   grid container that is `position: absolute` takes no track.
+   ⚠ ONE VALUE PER ERA WRAPS TO TWO LINES at 1280 (the 36–37-character ones)
+   and never three; FACTS stops being the binding seat by 38–55px, which is
+   the split's structural gift to a composition that had 15px of headroom.
+   `5fr 11fr` would fit every value on one line — a departure from the seed's
+   37.5%, so it is an owner question, not a default. */
+.hpl-eras[data-hpl-dir="v6"] .vwd__facts {
+  position: relative;
+}
+.hpl-eras[data-hpl-dir="v6"] .vwd__facts::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(100% * 6 / 16);
+  width: 1px;
+  background: var(--hpl-rule);
+  pointer-events: none;
+}
+.hpl-eras[data-hpl-dir="v6"] .vwd__facts__row {
+  grid-template-columns: 6fr 10fr;
+  align-items: baseline;
+  gap: 0;
+  border-bottom-color: var(--hpl-rule);
+}
+.hpl-eras[data-hpl-dir="v6"] .vwd__facts__k {
+  padding-right: 8px;
+}
+.hpl-eras[data-hpl-dir="v6"] .vwd__facts__v {
+  padding-left: 8px;
+  text-wrap: pretty;
+}
+
+/* ── The cursor: the active era's mark ───────────────────────────────────
+   The 5px diamond ("you are here") becomes a phosphor BLOCK — the same claim
+   in terminal grammar — with ZERO layout change: the box stays 6×5 and
+   `scale: 1 2` (the sheet's own idiom) doubles it about its centre, 2.5px into
+   the chip's 7px gap above and 2.5px into the band's ≥ 10px padding below. A
+   10px box would grow every chip by 5px and take 5px off the stage.
+   ⚠ THE LIT RULE CARRIES THE CHIP: production's
+   `.vwd__chip[data-on="true"] .vwd__chip__mark` is (0,3,0), and a bare
+   `.hpl-eras[…] .vwd__chip__mark` would lose the background to it. The blink
+   is the proof surface's own keyframes (`hpl-cursor`); reduced motion is
+   handled beside them. Playwright's `animations: "disabled"` freezes at 0%,
+   which is LIT. */
+.hpl-eras[data-hpl-dir="v6"] .vwd__chip__mark {
+  width: 6px;
+  height: 5px;
+  rotate: 0deg;
+  scale: 1 2;
+}
+.hpl-eras[data-hpl-dir="v6"] .vwd__chip[data-on="true"] .vwd__chip__mark {
+  background: var(--hpl-phosphor);
+  animation: hpl-cursor var(--hpl-cursor-period, 1.4s) steps(1, end) infinite;
+}
+
+/* ── `?ink=oxide` — provenance meta in the seed's second hue ─────────────
+   The press meta (outlet · year) and the heads' tags; never the copy. */
+.hpl[data-hpl-ink="oxide"] .hpl-eras[data-hpl-dir="v6"] .vwd__press__meta,
+.hpl[data-hpl-ink="oxide"] .hpl-eras[data-hpl-dir="v6"] .vwd__head__tag {
+  color: var(--hpl-oxide);
+}
+
 /* ── The housing (v2) ────────────────────────────────────────────────────
    From the datum the block already hangs from, down to the reel's top edge.
    ⚠ OPEN-BOTTOMED, and the gutter keeps it clear of the rails: at 1280 the
@@ -1049,6 +1551,24 @@
    costs the figure no width. */
 .hpl-bay .hpl-bracket {
   inset: 0 -10px;
+}
+/* v6's registration pair on the bay's TR + BL, centred on the corner — half
+   an arm overhangs into the column gap, exactly `.fl-ret--tr`'s construction.
+   ⚠ BL SITS 2px UP, NOT ON THE EDGE: the bay's bottom IS the reel's top, the
+   band's padding-top floors at 8px, and a 9.5px overhang lands 1.5px on the
+   first visible chip's frame at 1280×720; 7.5px clears it at every rung. No
+   z-index: the slot is positioned and later in the DOM, so it paints over the
+   inboard quadrants — transparent pixels on the alpha branch, and "nothing
+   paints over content" is kept literally. */
+.hpl-bay .hpl-ret[data-c="tr"] {
+  top: 0;
+  right: 0;
+  margin: calc(var(--hpl-ret-arm) / -2) calc(var(--hpl-ret-arm) / -2) 0 0;
+}
+.hpl-bay .hpl-ret[data-c="bl"] {
+  bottom: 2px;
+  left: 0;
+  margin: 0 0 calc(var(--hpl-ret-arm) / -2) calc(var(--hpl-ret-arm) / -2);
 }
 
 /* ═══ THE LAB CONSOLE ════════════════════════════════════════════════════ */

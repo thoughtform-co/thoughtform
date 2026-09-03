@@ -2,8 +2,10 @@
 
 **`http://localhost:3003/test/hud-panel-lab`**
 
-Six directions, two surfaces, one question: **do the evidence panels belong to
-the frame, or are they sitting in front of it?**
+Seven directions, two surfaces, one question: **do the evidence panels belong to
+the frame, or are they sitting in front of it?** Six came from the owner's
+references; the seventh, `06 · Listing`, was derived from a random seed on the
+owner's own instruction — see [`seed-listing.md`](seed-listing.md).
 
 The owner's read (2026-09-02, pre-launch): on both surfaces the elements "just
 seem to be floating. They don't really feel integrated as part of a HUD or
@@ -62,25 +64,69 @@ body part (ADR-082 U19: it claims a relationship the record does not have).
 Each is one thesis, applied identically to both surfaces so the owner is
 choosing a **site-level grammar** rather than two panel fixes.
 
-| id   | name           | what it does                                                                                                                                                                                                            | trade-off                                                                          |
-| ---- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `v0` | **Shipped**    | Production, mounted, byte-identical. The control.                                                                                                                                                                       | Paints **8 gold structure lines**; the number is in the capture's table            |
-| `v1` | **Tuned**      | The null hypothesis: it is a LINE problem. Structure goes to dawn at the frame's own two weights, the column seam becomes solid, the reticle pair is completed, the era mast becomes a header row. Nothing moves house. | May prove insufficient — which is a real answer                                    |
-| `v2` | **Housing**    | One chamfered slab (TR+BL) across the band, header bar fused to its top edge, seams inside, foot bar. The console drops its own chamfer and becomes a cell.                                                             | Heaviest; retires ADR-065 U2; costs 92px of band width on proof                    |
-| `v3` | **Grid**       | No box, no fill. A top rule on tick 1, a solid column seam, cell seams that stop at it, a head row on every cell.                                                                                                       | Risks reading as a spreadsheet if the heads are uniform                            |
-| `v4` | **Instrument** | A 2px datum bar in the rail's own material, a header row under it, the field boxed and corner-labelled, the record as boxed readout cells.                                                                              | Introduces a horizontal 2px rung; a horizontal rail was rejected once (ADR-082 U9) |
-| `v5` | **Tether**     | No enclosure. The rail's ticks continue as 21px datum stubs, each head rule runs out to the band edge and terminates on one, the centrepiece sits in a bracket-cornered bay carrying its own identity in its corners.   | Stubs occupy 21px of the gutter ADR-082 U9 left empty                              |
+| id   | name           | what it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | trade-off                                                                                                                                                                               |
+| ---- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v0` | **Shipped**    | Production, mounted, byte-identical. The control.                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Paints **8 gold structure lines**; the number is in the capture's table                                                                                                                 |
+| `v1` | **Tuned**      | The null hypothesis: it is a LINE problem. Structure goes to dawn at the frame's own two weights, the column seam becomes solid, the reticle pair is completed, the era mast becomes a header row. Nothing moves house.                                                                                                                                                                                                                                                                                                   | May prove insufficient — which is a real answer                                                                                                                                         |
+| `v2` | **Housing**    | One chamfered slab (TR+BL) across the band, header bar fused to its top edge, seams inside, foot bar. The console drops its own chamfer and becomes a cell.                                                                                                                                                                                                                                                                                                                                                               | Heaviest; retires ADR-065 U2; costs 92px of band width on proof                                                                                                                         |
+| `v3` | **Grid**       | No box, no fill. A top rule on tick 1, a solid column seam, cell seams that stop at it, a head row on every cell.                                                                                                                                                                                                                                                                                                                                                                                                         | Risks reading as a spreadsheet if the heads are uniform                                                                                                                                 |
+| `v4` | **Instrument** | A 2px datum bar in the rail's own material, a header row under it, the field boxed and corner-labelled, the record as boxed readout cells.                                                                                                                                                                                                                                                                                                                                                                                | Introduces a horizontal 2px rung; a horizontal rail was rejected once (ADR-082 U9)                                                                                                      |
+| `v5` | **Tether**     | No enclosure. The rail's ticks continue as 21px datum stubs, each head rule runs out to the band edge and terminates on one, the centrepiece sits in a bracket-cornered bay carrying its own identity in its corners.                                                                                                                                                                                                                                                                                                     | Stubs occupy 21px of the gutter ADR-082 U9 left empty                                                                                                                                   |
+| `v6` | **Listing**    | Seed-derived. The panel is SOFTWARE drawn on the frame's screen: a square double-line ring (the DOS ═ ║) on proof, line-only and 32px clear of the rail's readouts; a double column seam; record rows as a listing (key 6/16); phosphor `#FFA` as the one lit rung with a blinking block cursor. On eras: no ring, the mast re-set as a listing header row on SCOPE's edge, three double rules, FACTS as a 6/16 table, a TR+BL reticle pair on the bay, the active chip's mark as the cursor, zero new lettered elements. | Leaves the gold family for the lit rung in dark; square corners against the promoted chamfer; 60px of content width at 1280 for the clearance; the blink is wall-clock motion (ADR-021) |
 
 **Knobs** (orthogonal to the direction):
 
-| param    | values           | asks                                                                                                                                   |
-| -------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `?mat=`  | `line` · `glass` | Does an enclosure need the console's own ground, or is line work enough? Defaults to `glass` on `v2` only.                             |
-| `?foot=` | `none` · `rule`  | Draws the band rule the owner deleted twice, **band-inset** rather than full-bleed, so the amendment can be looked at. Off by default. |
+| param    | values            | asks                                                                                                                                                                                                                         |
+| -------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `?mat=`  | `line` · `glass`  | Does an enclosure need the console's own ground, or is line work enough? Defaults to `glass` on `v2` only.                                                                                                                   |
+| `?foot=` | `none` · `rule`   | Draws the band rule the owner deleted twice, **band-inset** rather than full-bleed, so the amendment can be looked at. Off by default.                                                                                       |
+| `?ink=`  | `house` · `oxide` | Provenance meta (the foot's log code, the era press meta and head tags) in the seed's second hue, oxide `#dA9` — a third hue asked as a knob so it can be refused without refusing the direction. Off by default; `v6` only. |
 
-Other parameters: `?s=proof|eras`, `?v=v0…v5`, `?theme=dark|light`,
+Other parameters: `?s=proof|eras`, `?v=v0…v6`, `?theme=dark|light`,
 `?era=<id>`, `?row=<track id>`, `?in=0…1` (scrubs the casefile's arrival
 ladder), `?console=0` (removes the lab console for a still).
+
+---
+
+## 06 · Listing — the seed
+
+The owner's read on the first six (2026-09-03): the references may have been
+shoehorning the work. The procedure he set instead — generate a random
+string, derive the direction from it, then build it well — produced `v6`.
+The seed and its measured analysis are in [`seed-listing.md`](seed-listing.md);
+the short form:
+
+| the string gives                                              | the rule                                                                                                                                                    |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 128 = 8 × 16, a hex dump's shape                              | The form is a LISTING: key 6/16 · value 10/16 rows (production's own 37.5 % split); powers-of-two spacing                                                   |
+| doubled letters `FF` `pp` `BB` at Fibonacci gaps (34, 21 ≈ φ) | The DOUBLE RULE — two 1px dawn .55 lines, 2px gap — as the one emphatic line; three per surface; single .28 seams; .12 rows; square corners (no chamfer)    |
+| the strobogrammatic `6996` between two `8`s                   | Marks as a 180°-rotated TR + BL pair (the corner law's lawful diagonal); the head and the terminus are one line                                             |
+| absent `G Z h 0`                                              | No Ground (line-only — what lets one grammar cross to the transparent era stage), no Z-stack, no hidden clipping, no zero (nothing empty; the cursor stays) |
+| 61 upper / 51 lower = 1.196                                   | The house's 1.2 scale and faces stay; ≤ 16 lettered chrome elements per surface, all real readings                                                          |
+| hex triplets `#FFA` and `#dA9`                                | PHOSPHOR as the lit rung (dark; light takes `--gold-ink-lit`); OXIDE behind `?ink=`; teal and magenta declined                                              |
+| `I` × 7, no zero                                              | A block cursor, 700 ms lit / 700 ms dark (6996 → 0.6996 s), steady under reduced motion, last on the arrival ladder                                         |
+
+Its thesis is the promoted housing's opposite: ADR-089 reads the casefile as
+the machined DEVICE the screen is set into (chamfer, gold lip, glass); the
+listing reads it as the SOFTWARE drawn on that screen (square box-drawing,
+dawn, no ground). Both are coherent; the owner picks.
+
+What it costs, stated: the proof ring stands 32px inside the band on both
+sides so its line pair never runs under SECTOR (the promoted housing runs
+band-exact because a tint under a readout is a sub-2 % shift; a line pair is
+not a tint — SECTOR's rect starts 28px inside the band edge at 1280×720, so
+24px of clearance would draw straight through it), which takes 60px of content
+width at 1280×720. The first place that bit: the ATL row's classification
+line (327px natural) wraps in the 317px column there and overflowed the
+tick-bound brief by 10px on the first capture. Paid where the house says to
+pay it — the brief's three top margins to 8 · 2 · 4 and a hair of leading at
+the compact rung, never the type. And the cursor is the lab's first wall-clock
+motion.
+
+Found while shooting it, and fixed in the kit for every direction: the
+directory seam had been resolving its `37.5 %` against the record column since
+it became a grid item (ADR-088), drawing a 119px stub where the register seam
+draws 367px. The `v2`/`v3` stills on disk predate the fix.
 
 ---
 
@@ -90,7 +136,16 @@ Everything below was found by the capture's gates or by looking at a still,
 not by reading the code.
 
 - **The control paints 8 gold structure lines; every direction paints 0.**
-  That is the defect stated as a number.
+  That is the defect stated as a number. ⚠ That reading is history since
+  ADR-089: `v0` on proof mounts the promoted housing now and its `gold`
+  column reads 0, and the era control's four head rules were always dawn —
+  so the column is 0 on every cell of the 165 and the eight exist only in
+  the stills that predate the promotion. And ADR-089's
+  `.fl-case`-scoped rules reach the hand compositions too (the console's
+  ground is transparent and the record insets by 18px on `v1`–`v5`, neither
+  of which those directions asked for) — pre-existing drift, recorded here so
+  it is not blamed on the next direction. `v6` restores the console's 0.86
+  explicitly and says so.
 - **A padded gradient shell needs an opaque body, and a transparent housing is
   not one.** The services plate gets away with `padding: 1px` + a gradient
   behind an inset body because that body is 72–58% opaque and hides it. At
@@ -168,9 +223,10 @@ not by reading the code.
 node scripts/capture-hud-panel-lab.mjs
 ```
 
-Two surfaces × six directions × {1280×720, 1440×800, 1920×1080, 1920×1247} ×
+Two surfaces × seven directions × {1280×720, 1440×800, 1920×1080, 1920×1247} ×
 {dark, light}, with the per-era and per-row gate walks at the binding
-viewport. Needs the dev server; `--port`, `--s`, `--v`, `--vp`, `--theme` and
+viewport, plus one `?ink=oxide` still per surface for `v6` at the binding
+viewport in each theme — 165 cells. Needs the dev server; `--port`, `--s`, `--v`, `--vp`, `--theme` and
 `--headed` narrow it. Stills and `report.json` land beside this file and are
 gitignored — they regenerate.
 
@@ -286,6 +342,26 @@ detail.
     3:1 line-work rung; it reads in the stills but it is quieter than in dark.
     The named fix is ADR-063 U2's ramp — `--gold-line` for the lip's stops in
     light — not a bigger alpha on `--gold`.
+13. **Software or hardware (`v6`).** Is the casefile the machined DEVICE the
+    screen is set into (ADR-089's chamfered, gold-lipped housing) or the
+    SOFTWARE drawn on that screen (the listing's square box-drawing in dawn)?
+    One reading per surface — and the same reading on both, since the point of
+    this lab is a site-level grammar.
+14. **May the lit rung leave the gold family in dark?** Phosphor `#FFA` is a
+    lightness step past `--gold-ink-lit` with a slight hue drift toward the
+    green. ADR-063 U2 says hue is the brand and lightness the role; this is
+    the first lit rung that is light rather than paint. Light keeps the ramp.
+15. **The era title on SCOPE's edge** — ruling 9's seat, decided the listing's
+    way: the identity is the first row of the record, left-anchored, with the
+    year on its baseline at the far column. It moves where the About name
+    lands in the handoff (the target's box is its ink now, `nowrap`).
+16. **The blink.** ADR-021 admits no wall-clock motion on `#services`; the
+    cursor is the lab's first. Bounded (three blinks, then steady), clocked
+    (blink on arrival and on a row change), or refused — the lab draws the
+    seed's perpetual blink and holds it steady under reduced motion.
+17. **Oxide as a third hue** on provenance meta, or the house's dawn .52.
+18. **The ring's telemetry clearance** — 32px a side (60px of content at 1280) so the line pair never runs under SECTOR, against the promoted
+    housing's band-exact edge under a tint.
 
 ## Out of scope
 

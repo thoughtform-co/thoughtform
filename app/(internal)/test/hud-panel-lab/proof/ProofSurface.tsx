@@ -78,6 +78,10 @@ export function ProofSurface({
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const isControl = dir === "v0";
+  /* The listing (v6) fixes two of the hand composition's recorded defects on
+     its own branch only — the brief head's seat and the foot's copy — so the
+     other directions' stills stay comparable to the ones already on disk. */
+  const isListing = chrome.housingKind === "listing";
 
   const track = useMemo(() => FILE.tracks.find((t) => t.id === row) ?? FILE.tracks[0], [row]);
   const trackIdx = Math.max(
@@ -155,7 +159,7 @@ export function ProofSurface({
                 crossfades with its own contents is a page turn (ADR-087).
                 It rides the arrival ladder as chrome — first on, last off —
                 at the tab strip's own rung. */}
-            {chrome.housing ? <Housing panel={{ ciOff: 0.07 }} /> : null}
+            {chrome.housing ? <Housing kind={chrome.housingKind} panel={{ ciOff: 0.07 }} /> : null}
             {chrome.stubs ? (
               <DatumStubs ticks={["t1", "t6", "t11"]} panel={{ ciOff: 0.14 }} />
             ) : null}
@@ -186,7 +190,14 @@ export function ProofSurface({
               />
             ) : null}
 
-            <div data-fl-panel style={{ "--ci-off": 0.07, "--fl-dy": "-26px" } as CSSProperties}>
+            {/* `data-hpl-cursor` seats v6's block cursor after the active
+                client's name — a `::after` on the production `.fl-tabs__name`,
+                so the tab strip gains no DOM and the decode target is untouched. */}
+            <div
+              data-fl-panel
+              data-hpl-cursor={chrome.cursor || undefined}
+              style={{ "--ci-off": 0.07, "--fl-dy": "-26px" } as CSSProperties}
+            >
               <ClientTabs
                 tabs={[{ slug: PROOF_CASE.slug, ix: FILE.ix, tab: FILE.tab }]}
                 activeSlug={PROOF_CASE.slug}
@@ -201,6 +212,8 @@ export function ProofSurface({
             <i
               className="fl-split"
               data-fl-panel
+              /* v6 draws the column seam DOUBLE (║); the sheet paints it. */
+              data-double={chrome.double || undefined}
               style={{ "--ci-off": 0.14 } as CSSProperties}
               aria-hidden="true"
             />
@@ -233,13 +246,21 @@ export function ProofSurface({
                 not: a promoted wrapper becomes a containing block, and the
                 housing does not crossfade with the record inside it. */}
             <div className="fl-left">
+              {/* ⚠ ON THE LISTING THE BRIEF'S HEAD IS A SIBLING OF `.fl-brief`,
+                  NEVER ITS CHILD — production's own seat (`.fl-cell--brief`,
+                  ADR-089). The brief is height-boxed with `overflow: hidden`,
+                  so the in-brief seat below is clipped away entirely and has
+                  never painted on v2–v5 (the README records it); the column
+                  clips nothing. And NO META: the state is the fused header's,
+                  and printing it here says it twice. */}
+              {chrome.cellHeads && isListing ? <CellHead zone="brief" label="Brief" /> : null}
               <div
                 className="fl-brief"
                 data-fl-panel
                 data-fl-client-panel
                 style={{ "--ci-off": 0.24, "--fl-dx": "-48px" } as CSSProperties}
               >
-                {chrome.cellHeads ? (
+                {chrome.cellHeads && !isListing ? (
                   <CellHead zone="brief" label="Brief" meta={FILE.state} />
                 ) : null}
                 <h3 className="fl-brief__title">
@@ -325,8 +346,13 @@ export function ProofSurface({
                  which is what keeps this housing rather than record. */
               <FootRow
                 kind={chrome.foot === "bar" ? "bar" : "row"}
-                left={FILE.classLine}
-                right={`${FILE.tracks.length} items`}
+                /* The listing's terminus is the file's part number: `logCode`
+                   letters nowhere else on the surface (production's own foot,
+                   ADR-089). The class line and the count are both already on
+                   screen — the README's said-twice defect — and the other
+                   directions keep them so their stills stay comparable. */
+                left={isListing ? FILE.logCode : FILE.classLine}
+                right={isListing ? undefined : `${FILE.tracks.length} items`}
                 panel={{ ciOff: 0.07, dy: "26px" }}
               />
             ) : null}

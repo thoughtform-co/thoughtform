@@ -16,13 +16,15 @@ import { HudFrame } from "./HudFrame";
 import { ProofSurface } from "./proof/ProofSurface";
 import {
   HPL_DIRECTION_LIST,
-  HPL_DIRECTIONS,
   HPL_FOOT_RULES,
+  HPL_INKS,
   HPL_MATERIALS,
+  defaultMaterial,
   hplDirection,
   parseHplQuery,
   type HplDirectionId,
   type HplFootRule,
+  type HplInk,
   type HplMaterial,
   type HplSurfaceId,
   type HplTheme,
@@ -81,6 +83,7 @@ export interface HudPanelLabHandle {
   setProofIn(next: number): void;
   setMaterial(next: HplMaterial): void;
   setFootRule(next: HplFootRule): void;
+  setInk(next: HplInk): void;
 }
 
 declare global {
@@ -101,6 +104,7 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
   const [proofIn, setProofIn] = useState(1);
   const [mat, setMat] = useState<HplMaterial>("line");
   const [footRule, setFootRule] = useState<HplFootRule>("none");
+  const [ink, setInk] = useState<HplInk>("house");
   const [consoleOpen, setConsoleOpen] = useState(true);
   /* ⚠ `?console=0` REMOVES THE CONSOLE, it does not collapse it. Collapsed
      still leaves one row of controls sitting on the era reel and the
@@ -126,6 +130,7 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
     setProofIn(q.proofIn);
     setMat(q.mat);
     setFootRule(q.footRule);
+    setInk(q.ink);
     if (new URLSearchParams(window.location.search).get("console") === "0")
       setConsoleMounted(false);
   }, []);
@@ -155,7 +160,9 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
          this setter dependency-free. */
       const pinned = new URL(window.location.href).searchParams.get("mat");
       if (pinned !== "line" && pinned !== "glass") {
-        setMat(HPL_DIRECTIONS[next].id === "v2" ? "glass" : "line");
+        /* The registry's own default, so the shell and the parser cannot
+           disagree about which direction opens on glass. */
+        setMat(defaultMaterial(next));
       }
     },
     [writeParam]
@@ -211,6 +218,14 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
     (next: HplFootRule) => {
       setFootRule(next);
       writeParam("foot", next);
+    },
+    [writeParam]
+  );
+
+  const applyInk = useCallback(
+    (next: HplInk) => {
+      setInk(next);
+      writeParam("ink", next);
     },
     [writeParam]
   );
@@ -271,7 +286,9 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
     const sample = () => {
       const sector =
         document.querySelector<HTMLElement>(".hud__nav__sector__name")?.textContent?.trim() || "—";
-      const stamp = `${surface}|${dir}|${theme}|${era}|${row}|${proofIn.toFixed(3)}|${mat}|${footRule}`;
+      /* The ink rides at the END so every prefix wait in the capture keeps
+         matching; the oxide cell waits on the tail. */
+      const stamp = `${surface}|${dir}|${theme}|${era}|${row}|${proofIn.toFixed(3)}|${mat}|${footRule}|${ink}`;
       setRead((prev) =>
         prev.sector === sector && prev.stamp === stamp ? prev : { sector, stamp }
       );
@@ -289,7 +306,7 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
       cancelAnimationFrame(raf);
       window.clearTimeout(t);
     };
-  }, [surface, dir, theme, era, row, proofIn, mat, footRule]);
+  }, [surface, dir, theme, era, row, proofIn, mat, footRule, ink]);
 
   /* ── The capture handle ──────────────────────────────────────────────── */
   useEffect(() => {
@@ -301,6 +318,7 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
       setProofIn: applyProofIn,
       setMaterial: applyMaterial,
       setFootRule: applyFootRule,
+      setInk: applyInk,
     };
     return () => {
       delete window.__hudPanelLab;
@@ -313,6 +331,7 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
     applyProofIn,
     applyMaterial,
     applyFootRule,
+    applyInk,
   ]);
 
   return (
@@ -323,6 +342,7 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
       data-hpl-dir={dir}
       data-hpl-mat={mat}
       data-hpl-foot={footRule}
+      data-hpl-ink={ink}
     >
       <HudFrame hudHtml={hudHtml} />
       {RAIL_INSTRUMENTS && <RailInstruments containerRef={rootRef} />}
@@ -415,6 +435,27 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
                 onClick={() => applyMaterial(m)}
               >
                 {m}
+              </button>
+            ))}
+
+            <span className="hpl-console__rule" aria-hidden="true" />
+
+            <span className="hpl-console__title">Ink</span>
+            {HPL_INKS.map((k) => (
+              <button
+                key={k}
+                type="button"
+                className="hpl-btn"
+                data-on={ink === k || undefined}
+                aria-pressed={ink === k}
+                title={
+                  k === "oxide"
+                    ? "Oxide #dA9 on provenance meta — 06 · Listing's optional second hue"
+                    : "The house's own ink on every mark"
+                }
+                onClick={() => applyInk(k)}
+              >
+                {k}
               </button>
             ))}
 
@@ -535,6 +576,7 @@ export function HudPanelLabShell({ hudHtml, bodyClass }: ShellProps) {
         data-in={proofIn.toFixed(3)}
         data-mat={mat}
         data-foot={footRule}
+        data-ink={ink}
         data-sector={read.sector}
         aria-hidden="true"
       />

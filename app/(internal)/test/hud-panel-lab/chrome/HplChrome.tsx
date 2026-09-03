@@ -238,6 +238,25 @@ export function Bracket() {
   );
 }
 
+/* ── Reticles ─────────────────────────────────────────────────────────────
+   The casefile's own registration pair — `.fl-ret`'s dashed cross — brought
+   to the era stage's bay (v6). Always TWO, on TR + BL: a 180°-rotated pair on
+   the corner law's lawful diagonal, which is what `06 · Listing`'s seed
+   (the strobogrammatic 6996) asked for. Prop-less on purpose — the pair is
+   the only shape this piece can draw, so no caller can mirror it or complete
+   it to four. A reticle sits in the region's MARGIN and touches no box, so a
+   bracketed or chamfered object is never also reticled (one grammar per
+   object); the seat suppresses the bracket where it draws these. */
+
+export function Reticles() {
+  return (
+    <>
+      <i className="hpl-ret" data-hpl-chrome="ret" data-c="tr" aria-hidden="true" />
+      <i className="hpl-ret" data-hpl-chrome="ret" data-c="bl" aria-hidden="true" />
+    </>
+  );
+}
+
 /* ── The housing ──────────────────────────────────────────────────────────
    One machined slab on the lawful TR+BL diagonal, seated by the sheet against
    the band and the rail box. Drawn, never a container (see the file header).
@@ -263,9 +282,28 @@ export function Bracket() {
    difference is what kind of object each is: the console is a SCREEN you look
    into, the card is a machined SLAB you look at. The housing is the device the
    screen is set into, so it takes the slab's lip — by owner instruction. If
-   this promotes, that ruling needs a scope rather than an exception. */
+   this promotes, that ruling needs a scope rather than an exception.
 
-export function Housing({ open, panel }: { open?: boolean; panel?: HplPanelSeat }) {
+   ⚠ THE LISTING IS THE SLAB'S OPPOSITE READING (v6, `kind="listing"`). Where
+   the slab says "the device the screen is set into", the listing says "the
+   software drawn ON the screen": a SQUARE double-line ring — two 1px lines of
+   the frame's own datum with a 2px gap, the DOS box-drawing double — with no
+   ground, no lip and no chamfer, because box-drawing has no chamfer and
+   ADR-065's depth ladder puts chrome at 0. Square is what makes it two plain
+   `border` boxes: a clip-path CUTS a border, and a square box needs no
+   cutting. The attribute is written only for the listing, so every slab rule
+   in the sheet is untouched. */
+
+export function Housing({
+  open,
+  kind = "slab",
+  panel,
+}: {
+  open?: boolean;
+  /** `listing` = the square double-line ring (v6). Defaults to the slab. */
+  kind?: "slab" | "listing";
+  panel?: HplPanelSeat;
+}) {
   return (
     <i
       className="hpl-housing"
@@ -273,6 +311,7 @@ export function Housing({ open, panel }: { open?: boolean; panel?: HplPanelSeat 
       /* Open-bottomed on the era stage: the walls stop at the reel's top and
          the chip frames are the terminus. */
       data-open={open || undefined}
+      data-kind={kind === "listing" ? "listing" : undefined}
       aria-hidden="true"
       {...seat(panel)}
     >

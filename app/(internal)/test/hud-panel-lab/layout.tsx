@@ -21,8 +21,10 @@ import type { ReactNode } from "react";
  *
  * WHAT THIS ROUTE IS. The real parse-injected HUD frame, the real corner
  * instruments and telemetry, and the real production leaves of both surfaces,
- * re-composed under six directions (`v0` = production, mounted). Content is
- * untouched — the question is placement, enclosure and line weight.
+ * re-composed under seven directions (`v0` = production, mounted; `v6` derived
+ * from a random seed rather than a reference — the owner's own procedure,
+ * `docs/design/hud-panel-lab/seed-listing.md`). Content is untouched — the
+ * question is placement, enclosure and line weight.
  *
  * ⚠ NOTHING ON THE LANDING CHANGES IN THIS PASS, and there is no flag: a
  * winner is promoted with its own ADR and the losers are deleted with their

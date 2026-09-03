@@ -6,6 +6,7 @@ import {
   HPL_DIRECTION_IDS,
   HPL_DIRECTION_LIST,
   HPL_DIRECTIONS,
+  HPL_INKS,
   HPL_SURFACE_IDS,
   defaultMaterial,
   hplDirection,
@@ -24,8 +25,8 @@ import { CHARACTER_ERAS } from "@/lib/voidwalker/characterEras";
  *
  *   1. THE REGISTRY IS TOTAL AND ORDERED. A direction registered in the tuple
  *      but missing from the record (or vice versa) renders the FALLBACK, which
- *      is `v0` — i.e. the capture matrix would shoot the control six times
- *      under six different filenames and every gate would pass. The
+ *      is `v0` — i.e. the capture matrix would shoot the control seven times
+ *      under seven different filenames and every gate would pass. The
  *      `Record<HplDirectionId, …>` makes the compiler catch a missing key; this
  *      catches a stray one and pins the reading order the console prints in.
  *   2. THE PARSER'S FALLBACKS. Every value in the URL is attacker-free but
@@ -62,6 +63,10 @@ describe("hud-panel-lab · the direction registry", () => {
     expect(chrome.stubs).toBe(false);
     expect(chrome.boxes).toBe(false);
     expect(chrome.ladder).toBe(false);
+    expect(chrome.housingKind).toBe("slab");
+    expect(chrome.double).toBe(false);
+    expect(chrome.cursor).toBe(false);
+    expect(chrome.reticles).toBe(false);
   });
 
   it("every direction past v0 changes something", () => {
@@ -77,7 +82,10 @@ describe("hud-panel-lab · the direction registry", () => {
         chrome.bracket ||
         chrome.stubs ||
         chrome.boxes ||
-        chrome.ladder;
+        chrome.ladder ||
+        chrome.double ||
+        chrome.cursor ||
+        chrome.reticles;
       expect(changed, `${id} is indistinguishable from the control`).toBe(true);
     }
   });
@@ -97,6 +105,32 @@ describe("hud-panel-lab · the direction registry", () => {
       const { chrome } = HPL_DIRECTIONS[id];
       if (chrome.header === "fused") expect(chrome.housing, `${id}`).toBe(true);
     }
+  });
+
+  it("a listing ring is still a housing", () => {
+    // Box-drawing has no chamfer, but a ring is an enclosure: the fused
+    // header it carries needs the edge `housing` declares, and the era
+    // surface gates its enclosure off `housingKind`, not off `housing`.
+    for (const id of HPL_DIRECTION_IDS) {
+      const { chrome } = HPL_DIRECTIONS[id];
+      if (chrome.housingKind === "listing") expect(chrome.housing, `${id}`).toBe(true);
+    }
+  });
+
+  it("the listing is line-only by default and carries its seed", () => {
+    // The direction's first refusal is a ground (its seed has no `G`) — which
+    // is what lets one grammar cross to the transparent era stage. And the
+    // derivation must stay findable: the provenance names the seed record.
+    expect(defaultMaterial("v6")).toBe("line");
+    expect(HPL_DIRECTIONS.v6.chrome).toMatchObject({
+      housing: true,
+      housingKind: "listing",
+      double: true,
+      cursor: true,
+      reticles: true,
+      ladder: true,
+    });
+    expect(HPL_DIRECTIONS.v6.provenance).toMatch(/seed-listing\.md/);
   });
 
   it("every direction states a thesis and a provenance", () => {
@@ -138,6 +172,7 @@ describe("hud-panel-lab · parseHplQuery", () => {
     expect(q.proofIn).toBe(1);
     expect(q.mat).toBe("line");
     expect(q.footRule).toBe("none");
+    expect(q.ink).toBe("house");
   });
 
   it("the defaults name real records", () => {
@@ -149,7 +184,7 @@ describe("hud-panel-lab · parseHplQuery", () => {
   });
 
   it("adopts every valid parameter", () => {
-    const q = parse("s=eras&v=v4&theme=light&era=azeroth&in=0.4&mat=glass&foot=rule");
+    const q = parse("s=eras&v=v4&theme=light&era=azeroth&in=0.4&mat=glass&foot=rule&ink=oxide");
     expect(q.s).toBe("eras");
     expect(q.v).toBe("v4");
     expect(q.theme).toBe("light");
@@ -157,11 +192,13 @@ describe("hud-panel-lab · parseHplQuery", () => {
     expect(q.proofIn).toBeCloseTo(0.4, 6);
     expect(q.mat).toBe("glass");
     expect(q.footRule).toBe("rule");
+    expect(q.ink).toBe("oxide");
   });
 
   it("adopts every registered surface, direction and era", () => {
     for (const s of HPL_SURFACE_IDS) expect(parse(`s=${s}`).s).toBe(s);
     for (const v of HPL_DIRECTION_IDS) expect(parse(`v=${v}`).v).toBe(v);
+    for (const ink of HPL_INKS) expect(parse(`ink=${ink}`).ink).toBe(ink);
     for (const era of CHARACTER_ERAS) expect(parse(`era=${era.id}`).era).toBe(era.id);
     for (const track of PROOF_CASE.casefile.tracks) {
       expect(parse(`row=${track.id}`).row).toBe(track.id);
@@ -169,7 +206,7 @@ describe("hud-panel-lab · parseHplQuery", () => {
   });
 
   it("rejects unknown values without throwing", () => {
-    const q = parse("s=nope&v=v9&theme=sepia&era=mars&row=nothing&mat=chrome&foot=maybe");
+    const q = parse("s=nope&v=v9&theme=sepia&era=mars&row=nothing&mat=chrome&foot=maybe&ink=rust");
     expect(q.s).toBe("proof");
     expect(q.v).toBe("v0");
     expect(q.theme).toBe("dark");
@@ -177,6 +214,7 @@ describe("hud-panel-lab · parseHplQuery", () => {
     expect(q.row).toBe(HPL_DEFAULT_ROW);
     expect(q.mat).toBe("line");
     expect(q.footRule).toBe("none");
+    expect(q.ink).toBe("house");
   });
 
   it("clamps the proof clock to [0, 1] and survives nonsense", () => {
@@ -194,16 +232,20 @@ describe("hud-panel-lab · parseHplQuery", () => {
     expect(parse("v=v2&mat=line").mat).toBe("line");
     expect(parse("v=v5").mat).toBe("line");
     expect(parse("v=v5&mat=glass").mat).toBe("glass");
+    // The listing refuses a ground, but the KNOB still parses — the sheet is
+    // what makes `?mat=glass` inert on v6, not the parser.
+    expect(parse("v=v6").mat).toBe("line");
+    expect(parse("v=v6&mat=glass").mat).toBe("glass");
   });
 });
 
 /**
- * ⚠ THE SHELL REGISTRIES ARE THE OTHER HALF OF TOTALITY, and they live in the
- * shells: `PROOF_SHELLS` and `ERAS_SHELLS` are `Record<HplDirectionId, …>`
- * declared with `satisfies`, so the COMPILER fails a missing entry. Nothing to
- * assert at runtime that the type system does not already prove — what is
- * asserted here is that both records are keyed by the same tuple this file
- * owns, which is what makes that compile-time guarantee mean the right thing.
+ * ⚠ THERE IS NO SECOND REGISTRY. The shells hold no per-direction record —
+ * both surfaces branch on the `chrome` flags and on `dir` alone, so the ONE
+ * total record is `HPL_DIRECTIONS` (a `Record<HplDirectionId, …>`, which the
+ * compiler keeps total) and the tuple/keys test above is what pins its order.
+ * A direction that needs new markup adds a `chrome` field and a branch, never
+ * a parallel table that could fall out of step with this one.
  */
 describe("hud-panel-lab · surfaces", () => {
   it("declares exactly the two surfaces the lab composes", () => {

@@ -16,7 +16,7 @@ import {
 import { getHoloAlphaSupport, onHoloAlphaSupport } from "@/lib/voidwalker/holoAlphaSupport";
 import { voidwalkerEraScrubRef } from "@/lib/voidwalker/voidwalkerHologramClock";
 
-import { Bracket, CornerLabels, FootRow, Housing } from "../chrome/HplChrome";
+import { Bracket, CornerLabels, FootRow, Housing, Reticles } from "../chrome/HplChrome";
 import type { HplChrome, HplDirectionId } from "../variants";
 
 /**
@@ -142,7 +142,7 @@ export function ErasSurface({
       </div>
     );
 
-    if (!chrome.bracket && !chrome.corners) return column;
+    if (!chrome.bracket && !chrome.corners && !chrome.reticles) return column;
 
     /* THE BAY. The one place the lab adds DOM inside the composition, through
        the prop the composition already exposes. ⚠ It must be
@@ -151,6 +151,8 @@ export function ErasSurface({
     return (
       <div className="hpl-bay" data-hpl-chrome="bay">
         {chrome.bracket ? <Bracket /> : null}
+        {/* v6's registration pair — TR + BL, the casefile's own reticle. */}
+        {chrome.reticles ? <Reticles /> : null}
         {chrome.corners ? (
           <CornerLabels
             tl="Figure"
@@ -162,7 +164,7 @@ export function ErasSurface({
         {column}
       </div>
     );
-  }, [hologram, epoch, reduced, chrome.bracket, chrome.corners, eraIdx, record]);
+  }, [hologram, epoch, reduced, chrome.bracket, chrome.corners, chrome.reticles, eraIdx, record]);
 
   if (isControl) {
     /* ⚠ MOUNTED BARE, AND THAT IS A RESOLVED COMPOSITION RATHER THAN A DEAD
@@ -192,7 +194,13 @@ export function ErasSurface({
             rail's last tick falls INSIDE the chip frames at every laptop
             shape, so the walls stop at the reel's top edge and the chips are
             the terminus. */}
-        {chrome.housing ? <Housing open /> : null}
+        {/* ⚠ A LISTING DRAWS NO ENCLOSURE HERE. v6's ring belongs to the proof
+            surface; on this station — transparent by law, and swept for any
+            band-wide border or ground by the committed >700px test — the
+            grammar crosses as LINES alone: the head doubles, the reticle pair
+            on the bay and the cursor on the reel. `housing: true` is what
+            gives its proof header an edge to fuse to; here it draws nothing. */}
+        {chrome.housing && chrome.housingKind !== "listing" ? <Housing open /> : null}
 
         {/* ⚠ NO `HeaderBar` HERE, DELIBERATELY. The era stage already HAS its
             header: the mast is a kicker, a title and a year, and every header

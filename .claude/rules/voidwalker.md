@@ -221,7 +221,7 @@ composition's own entry/exit block, its responsive rungs, and
 
 ## The HUD panel lab (look-dev, `/test/hud-panel-lab`)
 
-**Six directions on this stage and on the proof casefile, judged inside the
+**Seven directions on this stage and on the proof casefile (the seventh, `06 · Listing`, derived from a random seed — `docs/design/hud-panel-lab/seed-listing.md` — crosses this station as lines alone: no ring, the mast as a listing header row, three double rules, a reticle pair on the bay, the active chip's mark as a phosphor cursor, zero new lettered elements), judged inside the
 REAL frame** (2026-09-02, owner: the panels "just seem to be floating … they
 don't really feel integrated as part of a HUD or interface"). Nothing here
 changed; no ADR until a direction wins. Full read, the reference distillations
@@ -304,7 +304,7 @@ and the owner questions:
   `min-height: 720px` rung as production — the gate is
   `#voidwalker[data-vw-mode="hologram"]` and no lab can satisfy it. Move one
   rung, move the other.
-- **Verifying:** `node scripts/capture-hud-panel-lab.mjs` — 138 cells; the era
+- **Verifying:** `node scripts/capture-hud-panel-lab.mjs` — 165 cells; the era
   walk covers all five eras at 1280x720 and gates on ink-measured clipping,
   containment, the U21 wide-ink sweep (against the STATION's band, not the
   direction's own), ladder crossing and the type floors.

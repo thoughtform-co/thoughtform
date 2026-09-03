@@ -2,8 +2,10 @@
 /**
  * capture-hud-panel-lab — the HUD panel lab's stills and its gates.
  *
- * Six directions x two surfaces x four viewports x two themes, plus the gate
- * walks that a still cannot show. What it asserts is not "does it look right"
+ * Seven directions x two surfaces x four viewports x two themes, plus the gate
+ * walks that a still cannot show, plus one `?ink=oxide` still per surface for
+ * the direction that carries the knob (v6) at the binding viewport in both
+ * themes — 165 cells. What it asserts is not "does it look right"
  * but the handful of things this house has learned go wrong SILENTLY on these
  * two surfaces:
  *
@@ -58,7 +60,11 @@ const BASE = `http://localhost:${PORT}/test/hud-panel-lab`;
 const OUT = join(process.cwd(), "docs/design/hud-panel-lab");
 
 const SURFACES = flag("s") ? [flag("s")] : ["proof", "eras"];
-const DIRECTIONS = flag("v") ? [flag("v")] : ["v0", "v1", "v2", "v3", "v4", "v5"];
+const DIRECTIONS = flag("v") ? [flag("v")] : ["v0", "v1", "v2", "v3", "v4", "v5", "v6"];
+/* The directions that carry the `?ink=` knob. ONE extra cell per surface at
+   the binding viewport in each theme, not a matrix axis: the knob touches
+   provenance META only, and an axis would buy 46 cells of one composition. */
+const INKED = new Set(["v6"]);
 const THEMES = flag("theme") ? [flag("theme")] : ["dark", "light"];
 const VIEWPORTS = (
   flag("vp") ? [flag("vp")] : ["1280x720", "1440x800", "1920x1080", "1920x1247"]
@@ -237,6 +243,38 @@ function probe() {
 
   /* 3, 4, 5, 6 — one walk over everything that PAINTS. */
   const wide = [];
+
+  /* 3b — THE ERA TITLE'S INK INSIDE THE BAND. `clipSel` reads the heads and
+     bodies, never the mast, and CONTAINMENT never reads horizontal overflow —
+     so a `white-space: nowrap` title (v6 anchors it on SCOPE's edge at its
+     own ink width) is the one new way this stage can overflow with every gate
+     green. Measured from the ink, exactly as CLIP is; reported into `wide`
+     so it fails the same way. Applies to every direction: v0–v5 wrap inside
+     the mast and pass. */
+  const mastTitle = document.querySelector(".vwd__mast__title");
+  if (mastTitle) {
+    const range = document.createRange();
+    range.selectNodeContents(mastTitle);
+    const rs = [...range.getClientRects()].filter((q) => q.width > 0);
+    if (range.detach) range.detach();
+    if (rs.length) {
+      const left = Math.min.apply(
+        null,
+        rs.map((q) => q.left)
+      );
+      const right = Math.max.apply(
+        null,
+        rs.map((q) => q.right)
+      );
+      if (left < bandLeft - 1 || right > vw - bandLeft + 1) {
+        wide.push({
+          cls: "vwd__mast__title·ink",
+          w: Math.round(right - left),
+          band: Math.round(bandWidth),
+        });
+      }
+    }
+  }
   const crossing = [];
   const seams = [];
   const ledger = [];
@@ -373,6 +411,20 @@ function probe() {
     if (isLab && /\b\d{2}\s*\/\s*\d{2}\b/.test(text)) ordinal = text.slice(0, 40);
   }
 
+  /* 7b — the lettered-chrome count, REPORTED never asserted: v6's seed caps
+     the lab's own lettered chrome at 16 per surface, and the number beside
+     `gold` is how a reader checks the budget without counting a still. */
+  let chrome = 0;
+  for (const el of nodes) {
+    if (!el.closest("[data-hpl-chrome]")) continue;
+    if (el.closest(".hpl-console") || el.closest(".hpl-gate-warn")) continue;
+    const text = [...el.childNodes]
+      .filter((n) => n.nodeType === 3)
+      .map((n) => n.textContent.trim())
+      .join("");
+    if (text) chrome++;
+  }
+
   const slot = document.querySelector(".vwh__slot");
   return {
     frame,
@@ -388,6 +440,7 @@ function probe() {
     type,
     ordinal,
     paints,
+    chrome,
     sector: (document.querySelector(".hud__nav__sector__name") || {}).textContent || "",
     sectorA11y: (document.querySelector(".hud__nav .visually-hidden") || {}).textContent || "",
     holoAlpha: slot ? slot.hasAttribute("data-holo-alpha") : null,
@@ -401,20 +454,31 @@ function probe() {
 const report = [];
 const failures = [];
 
-function url({ s, v, theme, era, row }) {
+function url({ s, v, theme, era, row, ink }) {
   const q = new URLSearchParams({ s, v, theme, console: "0" });
   if (era) q.set("era", era);
   if (row) q.set("row", row);
+  if (ink) q.set("ink", ink);
   return `${BASE}?${q}`;
 }
 
-async function settle(page, wantStamp) {
+/* ⚠ THE INK IS THE STAMP'S TAIL. The prefix waits above end at the row, and
+   an oxide cell's prefix is byte-identical to its house cell's — so the one
+   wait the prefix cannot distinguish reads the stamp's END, which the shell
+   writes only after sampling the live DOM (never the mirror's own attribute,
+   which the script's URL set). */
+async function settle(page, wantStamp, wantInk = "house") {
   await page.waitForFunction(
-    (want) => {
+    ([want, ink]) => {
       const el = document.querySelector(".hpl-read");
-      return !!el && el.dataset.stamp && el.dataset.stamp.startsWith(want);
+      return (
+        !!el &&
+        el.dataset.stamp &&
+        el.dataset.stamp.startsWith(want) &&
+        el.dataset.stamp.endsWith("|" + ink)
+      );
     },
-    wantStamp,
+    [wantStamp, wantInk],
     { timeout: 15000 }
   );
   // The nav corner's readout decodes over ~0.5s; a still shot mid-decode
@@ -498,6 +562,9 @@ for (const vp of VIEWPORTS) {
             ? ERAS.map((era) => ({ era }))
             : ROWS.map((row) => ({ row }))
           : [s === "eras" ? { era: "azeroth" } : { row: ROWS[0] }];
+        // The oxide still reuses the cell's photographed subject, in both
+        // themes, at the binding viewport only.
+        if (INKED.has(v) && vp.label === BINDING) subjects.push({ ...subjects[0], ink: "oxide" });
 
         for (let i = 0; i < subjects.length; i++) {
           const subject = subjects[i];
@@ -505,7 +572,11 @@ for (const vp of VIEWPORTS) {
           await page.goto(target, { waitUntil: "domcontentloaded" });
           const want = `${s}|${v}|${theme}|${subject.era ?? "loop"}|${subject.row ?? ROWS[0]}`;
           try {
-            await settle(page, s === "eras" ? `${s}|${v}|${theme}|${subject.era}` : want);
+            await settle(
+              page,
+              s === "eras" ? `${s}|${v}|${theme}|${subject.era}` : want,
+              subject.ink ?? "house"
+            );
           } catch (e) {
             failures.push(
               `${s}/${v}/${vp.label}/${theme}: never settled (${String(e).slice(0, 80)})`
@@ -515,14 +586,16 @@ for (const vp of VIEWPORTS) {
 
           const p = await page.evaluate(probe);
 
-          // Shoot the first subject of every cell; the walk's other subjects
-          // are measured, not photographed.
-          if (i === 0) {
-            const name = `${s}_${v}_${vp.label}_${theme}.png`;
+          // Shoot the first subject of every cell, and the oxide cell; the
+          // walk's other subjects are measured, not photographed.
+          if (i === 0 || subject.ink) {
+            const name = `${s}_${v}_${vp.label}_${theme}${subject.ink ? "_" + subject.ink : ""}.png`;
             await page.screenshot({ path: join(OUT, name), animations: "disabled" });
           }
 
-          const id = `${s}/${v}/${vp.label}/${theme}${subject.era ? "/" + subject.era : subject.row && isBinding ? "/" + subject.row : ""}`;
+          const id =
+            `${s}/${v}/${vp.label}/${theme}${subject.era ? "/" + subject.era : subject.row && isBinding ? "/" + subject.row : ""}` +
+            (subject.ink ? "/" + subject.ink : "");
           const bad = [];
           for (const c of p.clips) {
             if (c.over > 1) bad.push(`clip ${c.sel} over ${c.over}`);
@@ -569,6 +642,7 @@ for (const vp of VIEWPORTS) {
             sector: p.sector || p.sectorA11y,
             foot: Number.isFinite(minFoot) ? minFoot : null,
             gold: p.ledger.length,
+            chrome: p.chrome,
             teleProd: p.teleProd.length,
             seams: p.seams.map((x) => `${x.kind}:${x.at}@${x.off}`).join(" "),
             bad,
@@ -597,10 +671,11 @@ console.log(
     pad("corner", 11) +
     pad("foot", 7) +
     pad("gold", 6) +
+    pad("chrome", 7) +
     pad("datums", 30) +
     "verdict"
 );
-console.log("-".repeat(130));
+console.log("-".repeat(137));
 for (const r of report) {
   console.log(
     pad(r.id, 44) +
@@ -608,6 +683,7 @@ for (const r of report) {
       pad(r.sector, 11) +
       pad(r.foot, 7) +
       pad(r.gold, 6) +
+      pad(r.chrome, 7) +
       pad(r.seams, 30) +
       (r.bad.length ? "FAIL " + r.bad[0] : "ok")
   );

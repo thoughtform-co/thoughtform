@@ -2911,7 +2911,7 @@ carrying:
 
 ## The HUD panel lab (look-dev, `/test/hud-panel-lab`)
 
-**Six directions on the casefile and the era stage, judged inside the REAL
+**Seven directions on the casefile and the era stage (the seventh, `06 · Listing`, derived from a random seed rather than a reference — `docs/design/hud-panel-lab/seed-listing.md`), judged inside the REAL
 frame** (2026-09-02, owner: the panels "just seem to be floating … they don't
 really feel integrated as part of a HUD or interface"). Nothing on the landing
 changed; no ADR until a direction wins (the BOARD-archetype / config-lab
@@ -3004,7 +3004,7 @@ precedent). Full read, the reference distillations and the owner questions:
   commit `e3b33867` (the 2026-08-07 declutter, which took it with the route
   diagram and the three dotted rules). Every direction past `v0` draws it; the
   README asks for the ruling.
-- **Verifying:** `node scripts/capture-hud-panel-lab.mjs` — 138 cells, gates on
+- **Verifying:** `node scripts/capture-hud-panel-lab.mjs` — 165 cells, gates on
   ink-measured clipping, frame containment, wide ink, ladder crossing, tick
   seating, the line ledger, the type floors and the ordinal ban.
   ⚠ Its subjects are READ OFF THE PAGE: three of four track ids were guessed
