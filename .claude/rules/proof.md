@@ -645,24 +645,28 @@ is seated inside it. Promoted from `/test/hud-panel-lab`'s `v2`.
   client-stack machinery is UNTOUCHED and stays inert at one case** — the
   segment table, the seam clocks and the runway lockstep are a mechanism, not
   a strip; a second panel is a new decision, not a restored line.
-- ⚠ **THE KEYS ARE FLAT, AND THE GRAMMAR IS `.fl-row[data-on]`'s** (U2, owner
-  2026-09-03: the ramps are "unacceptably ugly"). Two vertical gradients were
-  painting on the rail with DISAGREEING stops (dormant `dawn .028 →
-transparent 62%`, lit `gold .18 → gold .05 78%`), so adjacent keys banded at
-  different heights — and ADR-089 is what made it legible, by taking the
-  opaque ground the recess wash had been tuned against. **Across all four
-  Vilimovský reference panels there is not one gradient**: every fill is flat
-  and an active key is a solid accent block with the ink knocked out. The lit
-  station is now `background: var(--gold)` + `--gold-contrast` ink + a knocked
-  out diamond, which is exactly what the lit DIRECTORY ROW already was — one
-  "selected" grammar across both halves of the housing.
-  ⚠ **THE DIAMOND MUST KNOCK OUT**: `--con-hot` is `#f0c86a`, **1.46:1** on a
-  gold plate in dark, and `--con-mark-glow` is additive so a halo over gold is
-  nothing. ⚠ **THE SPINE STAYS** — it sits on the rail's border ROW below the
-  plate and is the only mark that says _which_ key. ⚠ **`--gold-contrast`,
-  never the `--void` family** (parchment in light, ~1.4:1 on gold);
-  `theme-css-sweep` enforces it and **reads PROSE too** — it splits on `}`, so
-  a comment quoting the banned pair fails it like a declaration.
+- ⚠ **THE KEYS ARE FLAT, AND THE PLATE IS A WHISPER** (U2, owner 2026-09-03:
+  the ramps are "unacceptably ugly"). Two vertical gradients were painting on
+  the rail with DISAGREEING stops (dormant `dawn .028 → transparent 62%`, lit
+  `gold .18 → gold .05 78%`), so adjacent keys banded at different heights —
+  and ADR-089 is what made it legible, by taking the opaque ground the recess
+  wash had been tuned against. **Across all four Vilimovský reference panels
+  there is not one gradient**: every fill is flat.
+  ⚠ **BUT A SOLID FILL IS THAT RULE READ WITHOUT ITS SCALE, AND IT LASTED AN
+  HOUR** (owner: "it's too much fill"). Every solid accent in those panels is
+  SMALL or THIN — a ~30px chip, a 20px strip, a 6px section bar; large regions
+  are outlined or bare and gold never fills an AREA. A station is **255 × 44px**
+  and the first thing the eye lands on, where `.fl-row[data-on]` gets away with
+  the same declaration at 26px as one line among four. So the fill is
+  `rgba(gold, .08)` FLAT — flat because the ramp was the complaint, .08 because
+  that is where the deleted gradient averaged — and the MARKS carry the state:
+  the gold diamond, the full-strength label, the spine.
+  ⚠ **THE SPINE IS WHAT MAKES THE WHISPER ENOUGH** — a 1px gold bar on the
+  rail's border ROW below the plate, the one thin accent the references DO use
+  at this size, and the only mark that says _which_ key. ⚠ **The fill is a DIAL
+  and zero is legitimate** (underline-only, the Starfield read `v1` cites).
+  ⚠ **`theme-css-sweep` READS PROSE** — it splits on `}`, so a comment quoting
+  the banned `--gold`/`--void` pair fails it exactly like a declaration.
 - ⚠ **ONE EXTENT, TWO WEIGHTS** (U2). The record column was painting nine rules
   at THREE lengths. `--fl-col-split` is `var(--fl-col-l)` now — the split IS
   the column's right edge, so every horizontal terminates on it. Weights:

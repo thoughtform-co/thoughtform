@@ -5,10 +5,12 @@
   ⚠ **Update 1 (2026-09-03) removes the foot bar, the header's string, the
   `+ Archive` marker and four leftovers in the right panel** — read it before
   citing anything below about the head, the foot or the console's paint.
-  ⚠ **Update 2 (2026-09-03) makes the station keys FLAT — solid gold with the
-  ink knocked out, no gradient anywhere — and rationalises nine rules at three
-  lengths into ONE extent and TWO weights.** It reverses ADR-067 U2's seam
-  shoulder and retires `--fl-col-split` as a separate value.
+  ⚠ **Update 2 (2026-09-03) makes the station keys FLAT — a whisper of a fill
+  with the marks carrying the lit state, no gradient anywhere — and
+  rationalises nine rules at three lengths into ONE extent and TWO weights.**
+  It reverses ADR-067 U2's seam shoulder and retires `--fl-col-split` as a
+  separate value. ⚠ Its own first cut (a SOLID gold plate) was rejected inside
+  the hour — see the scale note.
 - **Date:** 2026-09-02
 - **Owner call:** the `v0` / `v2` comparison, read at 1920×1247 — _"you can
   integrate this into the homepage for the proof section"_, with the era stage
@@ -313,26 +315,39 @@ an active key is a **solid accent block with the ink knocked out** — `PULSE
 OXIMETRY`, `3M`, `LEVEL T2`, and the industrial-gold panel that is our palette
 exactly. Depth is outline-versus-fill, never a ramp.
 
-⚠ **And the house already spoke it one column over.** `.fl-row[data-on]` — the
-lit directory row — is `background: var(--gold)` with `--gold-contrast` ink and
-its glyph knocked out. So the lit station becomes the same object: solid gold,
-ink and diamond knocked out, no ramp. The record column and the field now say
-"selected" with ONE grammar, which is the housing's whole claim.
+⚠ **AND A SOLID FILL IS THAT RULE READ WITHOUT ITS SCALE. It shipped for an
+hour and came straight back out** (owner: _"it's too much fill"_). The first cut
+took `.fl-row[data-on]`'s grammar literally — solid `--gold`, `--gold-contrast`
+ink, knocked-out diamond — on the argument that the lit directory row already
+speaks it. **In the references every solid accent is SMALL or THIN**: a ~30px
+`3M` chip, a 20px-tall barcode strip, the industrial panel's 6px section bars.
+Large regions there are outlined or bare, and gold never fills an AREA. A
+station is **255 × 44px**, a third of the console and the first thing the eye
+lands on; the lit row gets away with the same declaration because it is ONE line
+among four, mid-column, at 26px. **One rule, an order of magnitude more area,
+the opposite result.**
 
-- ⚠ **The diamond must knock out or it disappears.** `--con-hot` is `#f0c86a` —
-  **1.46:1** on a `#caa554` plate in dark. `--con-mark-glow` is additive, so a
-  halo over a gold fill is nothing in either theme. Knocked out: 8.5:1 / 8.2:1.
-- ⚠ **The spine stays.** It sits on the rail's border ROW, one pixel below the
-  plate (`bottom: -1px` resolves against the padding box, which excludes the
-  border), so it still reads as a brighter run — and it is the only mark that
-  says _which_ key.
-- ⚠ **`--gold-contrast`, never the `--void` family** (parchment in light,
-  ~1.4:1 on gold). `theme-css-sweep` enforces it — and **it reads prose**: it
-  splits the sheet on `}`, so the comment quoting the banned pair verbatim
-  failed the guard exactly as a declaration would.
-- Not taken: the row's `font-weight: 700` (the `<b>`'s `font:` shorthand resets
-  it, and bolding a four-station rail risks the ellipsis) and its outer glow (it
-  would bleed into the neighbouring plate). The fill carries the state.
+So the plate is a **whisper** and the MARKS carry the state — the rail already
+has three: the diamond fills gold, the label goes to full strength, and the
+spine (a 1px gold bar, the thin accent the references _do_ use at this size)
+travels along the track beneath it. The fill's only job is to seat the key:
+**flat `rgba(gold, 0.08)`** — flat because the ramp was the complaint, .08
+because that is where the deleted gradient averaged, so it is the same weight of
+light with the smear taken out. ⚠ **It is a dial and zero is legitimate**: at 0
+the lit state is underline-only, which is the Starfield read the lab's `v1`
+cites.
+
+- ⚠ **The spine is what makes the whisper enough.** It sits on the rail's border
+  ROW, one pixel below the plate (`bottom: -1px` resolves against the padding
+  box, which excludes the border), and it is the only mark that says _which_
+  key. Delete it and the fill has to come back up.
+- ⚠ **`theme-css-sweep` READS PROSE.** It splits the sheet on `}`, so the
+  comment quoting the banned `--gold` / `--void` pair verbatim failed the guard
+  exactly as a declaration would. Recorded because the fix is to reword a
+  COMMENT, which is not where anyone looks first.
+- Not taken with the solid fill: the row's `font-weight: 700` (the `<b>`'s
+  `font:` shorthand resets it, and bolding a four-station rail risks the
+  ellipsis) and its outer glow (it would bleed into the neighbouring plate).
 
 ### One divider system
 

@@ -1460,41 +1460,30 @@
    key is a SOLID accent block with the ink knocked out of it (`PULSE
    OXIMETRY`, `3M`, `LEVEL T2`). Depth is outline-versus-fill, never a ramp.
 
-   ⚠ AND THE HOUSE ALREADY SPEAKS IT ONE COLUMN OVER. `.fl-row[data-on]` —
-   the lit directory row — is `background: var(--gold)` with
-   `color: var(--gold-contrast)` and its glyph knocked out. The record column
-   and the field now say "selected" with ONE grammar, which is the whole
-   claim the housing makes.
+   ⚠ AND A SOLID FILL IS THE SAME RULE READ WITHOUT ITS SCALE — IT SHIPPED
+   FOR AN HOUR AND CAME STRAIGHT BACK OUT (owner: "it's too much fill"). In
+   the references every solid accent is SMALL or THIN: a ~30px `3M` chip, a
+   20px-tall barcode strip, the industrial panel's 6px section bars. Large
+   regions there are outlined or bare, and gold never fills an AREA. A
+   station is 255 × 44px — a third of the console — so the same declaration
+   that makes a chip read as a key makes this one read as a slab, and it is
+   the first thing the eye lands on in the panel. `.fl-row[data-on]` gets
+   away with it because it is ONE line among four, mid-column, at 26px.
 
-   ⚠ THE INK IS `--gold-contrast`, NEVER THE `--void` FAMILY, which is
-   PARCHMENT in light and lands ~1.4:1 on gold. `theme-css-sweep` fails any
-   gold-filled block that inks itself from that family — and ⚠ THE GUARD
-   READS PROSE TOO: it splits the sheet on `}`, so a COMMENT quoting the
-   banned pair verbatim fails it exactly as the declaration would (this
-   comment did, on its first draft). It also cannot see the `> i` rule below,
-   so the diamond needs the right token on its own merit, not its parent's.
-   ⚠ THE `--con-void` TOKEN IS UNTOUCHED. It is the opaque bed for
-   `.fl-detail__in` and the map's whole drawing floor; this is the station's
-   own declaration, scoped to the housing. */
+   So the plate is a WHISPER and the marks carry the state — which the rail
+   already has three of: the diamond fills gold, the label goes to full
+   strength, and `.fl-con__spine` (a 1px gold bar, the thin accent the
+   references DO use at this size) travels along the track beneath it. The
+   fill's only job is to seat the key. Flat, because the ramp was the
+   original complaint; .08 because that is where the deleted gradient
+   AVERAGED, so this is the same weight of light with the smear taken out.
+   ⚠ IT IS A DIAL, AND ZERO IS A LEGITIMATE SETTING — at 0 the lit state is
+   underline-only, which is the Starfield read the lab's own `v1` cites. */
 .fl-case .fl-con__stn {
   background: none;
 }
 .fl-case .fl-con__stn[data-on] {
-  background: var(--gold);
-  color: var(--gold-contrast);
-}
-/* ⚠ THE DIAMOND KNOCKS OUT TOO, OR IT DISAPPEARS. `--con-hot` is `#f0c86a`,
-   which measures **1.46:1** on a `#caa554` plate in dark — gone — and
-   `--con-mark-glow` is ADDITIVE, so a halo over a gold fill is nothing in
-   either theme. Knocked out it reads 8.5:1 dark / 8.2:1 light.
-   ⚠ `.fl-con__spine` STAYS. It sits on the rail's border ROW, one pixel
-   BELOW this plate (`bottom: -1px` resolves against the padding box, which
-   excludes the border), so it still reads as a brighter run under the block
-   — and it is the only mark that says WHICH key, on the track itself. */
-.fl-case .fl-con__stn[data-on] > i {
-  border-color: var(--gold-contrast);
-  background: var(--gold-contrast);
-  box-shadow: none;
+  background: rgba(var(--gold-rgb), 0.08);
 }
 /* ⚠ THE KEY-TO-KEY SEAM IS A REGION DIVIDER, so it takes the frame's weight
    rather than the interior rule's: gold .13 was the console's own private
@@ -6453,12 +6442,6 @@
     background:
       linear-gradient(180deg, rgba(var(--gold-rgb), 0.14), rgba(var(--gold-rgb), 0.035) 78%),
       var(--con-void);
-    color: var(--con-txt);
-  }
-  .fl-case .fl-con__stn[data-on] > i {
-    border-color: var(--con-hot);
-    background: var(--con-hot);
-    box-shadow: var(--con-mark-glow);
   }
   .fl-case .fl-con__stn + .fl-con__stn::before {
     top: var(--stn-ch);
