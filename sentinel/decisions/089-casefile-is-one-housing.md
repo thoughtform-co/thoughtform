@@ -5,6 +5,10 @@
   ⚠ **Update 1 (2026-09-03) removes the foot bar, the header's string, the
   `+ Archive` marker and four leftovers in the right panel** — read it before
   citing anything below about the head, the foot or the console's paint.
+  ⚠ **Update 2 (2026-09-03) makes the station keys FLAT — solid gold with the
+  ink knocked out, no gradient anywhere — and rationalises nine rules at three
+  lengths into ONE extent and TWO weights.** It reverses ADR-067 U2's seam
+  shoulder and retires `--fl-col-split` as a separate value.
 - **Date:** 2026-09-02
 - **Owner call:** the `v0` / `v2` comparison, read at 1920×1247 — _"you can
   integrate this into the homepage for the proof section"_, with the era stage
@@ -286,6 +290,89 @@ left behind.
 Every rule is scoped to `.fl-case`, so the arcs — which mount `ConsoleFrame`
 with no housing around it — are byte-identical, and the ≤960/PRM path restores
 all four with the console's own frame.
+
+## Update 2 — flat keys, and one divider system (2026-09-03, owner)
+
+Read live an hour after U1: _"the tabs on the right, the gradient is
+disgustingly ugly. And the vertical and horizontal dividers are also all over
+the place"_, with the Vilimovský panel set attached — _"not exactly copy it,
+but try to understand the logic"_.
+
+### The keys go flat, and the grammar was already on the surface
+
+Two vertical ramps were painting on the rail: the dormant plates at
+`dawn .028 → transparent 62%` (console.css, authored as a recess against the
+console's own **opaque** ground) and the lit one at `gold .18 → gold .05 78%`
+(U1's own lift). ⚠ **Their stops disagreed**, so adjacent keys banded at
+different heights and the flat remainder below each ramp was a different depth
+per state — a stepped smear rather than a row of keys. And ADR-089 is what made
+it legible: taking `--con-ground` left the recess wash floating on 0.42 glass.
+
+**Across all four references there is not one gradient.** Every fill is flat and
+an active key is a **solid accent block with the ink knocked out** — `PULSE
+OXIMETRY`, `3M`, `LEVEL T2`, and the industrial-gold panel that is our palette
+exactly. Depth is outline-versus-fill, never a ramp.
+
+⚠ **And the house already spoke it one column over.** `.fl-row[data-on]` — the
+lit directory row — is `background: var(--gold)` with `--gold-contrast` ink and
+its glyph knocked out. So the lit station becomes the same object: solid gold,
+ink and diamond knocked out, no ramp. The record column and the field now say
+"selected" with ONE grammar, which is the housing's whole claim.
+
+- ⚠ **The diamond must knock out or it disappears.** `--con-hot` is `#f0c86a` —
+  **1.46:1** on a `#caa554` plate in dark. `--con-mark-glow` is additive, so a
+  halo over a gold fill is nothing in either theme. Knocked out: 8.5:1 / 8.2:1.
+- ⚠ **The spine stays.** It sits on the rail's border ROW, one pixel below the
+  plate (`bottom: -1px` resolves against the padding box, which excludes the
+  border), so it still reads as a brighter run — and it is the only mark that
+  says _which_ key.
+- ⚠ **`--gold-contrast`, never the `--void` family** (parchment in light,
+  ~1.4:1 on gold). `theme-css-sweep` enforces it — and **it reads prose**: it
+  splits the sheet on `}`, so the comment quoting the banned pair verbatim
+  failed the guard exactly as a declaration would.
+- Not taken: the row's `font-weight: 700` (the `<b>`'s `font:` shorthand resets
+  it, and bolding a four-station rail risks the ellipsis) and its outer glow (it
+  would bleed into the neighbouring plate). The fill carries the state.
+
+### One divider system
+
+The record column was painting **nine rules at three lengths and two weights**,
+and one length was a bug.
+
+- ⚠ **`.fl-seam--directory` was 12.94 % of the band** — 168px against the 487px
+  its own twin drew, a 2.9 : 1 mismatch between two instances of one object.
+  ADR-088 made it a grid item of `.fl-left`, so its inherited `width: 37.5%`
+  re-resolved against a 34.5 % column. ⚠ **The lab found this and the fix never
+  came home**: `hud-panel-lab.css` has carried a `calc(100% * 37.5 / 34.5)`
+  patch, with a comment naming production's tokens, since the v6 pass.
+- **One extent.** `--fl-col-split` is now `var(--fl-col-l)` — the split IS the
+  column's right edge, so all seven horizontals terminate on it. Measured after:
+  one extent, two colours, at every viewport. ⚠ **Stated cost:** the gap between
+  the head rule's end and the rail's underline doubles, 38 → 77px. They are one
+  _grammar_ and never one line — 37.6px apart vertically — so the horizontal
+  distance was never carrying the relationship.
+- **Two weights, one law.** `--fl-hz-seam` .28 divides REGIONS (head band from
+  record, record from field, key from key); `--fl-hz-rule` .12 rules WITHIN one.
+  ⚠ **The `:first-child` override could not simply be deleted**: the base
+  sheet's own `:first-child` (ADR-068, gold .24) is the same specificity and
+  declared ~250 lines later, so it wins on source order — measured coming back
+  gold on the live page after the deletion.
+- ⚠ **A 2px doubled rule only the tall rung ever drew.** `.fl-cell--register`'s
+  `align-self: end` seats its bottom edge ON the register's top edge with no row
+  gap, so its `border-bottom` and the first item's `border-top` land in adjacent
+  pixel rows. Halving both weights would have left it doubled; the label draws no
+  rule of its own now.
+- **The key-to-key seam** goes dawn and full-height: `--stn-ch` was the leading
+  plate's notch shoulder, and inside the housing that notch is gone, so the inset
+  was a 6–11px stub against a corner with no cut. ⚠ This **reverses ADR-067 U2's
+  shoulder guard**; the smoke asserts the new state and the flat fill, because
+  what says "seated keys" now is the fill rather than the inset.
+
+Every rule is `.fl-case`-scoped — verified live on `/arcs/portfolio`, whose
+console still carries its gradient, its border, its chamfer and its 11px
+shoulder. The ≤960/PRM block restores all five, ⚠ **including `color`**: without
+it that path gets `--gold-contrast` ink on the restored gold wash, near-black on
+near-black, and nothing in the suite would catch it.
 
 ## Left open
 

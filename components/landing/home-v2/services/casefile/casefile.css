@@ -243,8 +243,25 @@
   --fl-x-out: clamp(9px, 1.2svh, 15px);
 
   /* Column ratios, from the handoff's 400 / 692 split inside a 1152 band. */
+  /* ⚠ THE SPLIT IS THE RECORD COLUMN'S OWN RIGHT EDGE (owner, 2026-09-03:
+     "the vertical and horizontal dividers are all over the place"). It used
+     to sit 3 % outboard, so the record column painted its rules at TWO
+     lengths — 448px for everything inside `.fl-left`, 487px for the head
+     rule and the register seam — and the vertical they were supposed to
+     terminate on stood 39px past all of them. The references' own rule is
+     that a table's rules run to the table's frame; here they stopped short
+     of it. One extent now: `--fl-col-split` IS `--fl-col-l`.
+     ⚠ THE TOKEN SURVIVES because three rules read "where the split is"
+     rather than "how wide the column is", and the two meanings can diverge
+     again — declared as `var()` rather than a second literal so they cannot
+     drift silently.
+     ⚠ THE COST IS THE GUTTER, and it is stated: the space between the head
+     rule's end and the console rail's underline doubles, 38 → 77px. Those
+     two are one GRAMMAR (a dawn track carrying one lit run) and never one
+     line — they sit 37.6px apart vertically — so the horizontal distance
+     between them was never carrying the relationship. */
   --fl-col-l: 34.5%;
-  --fl-col-split: 37.5%;
+  --fl-col-split: var(--fl-col-l);
   --fl-col-r: 40%;
 
   /* The INSTRUMENT band (ADR-048 addendum, owner 2026-07-29) — the breakout
@@ -1292,6 +1309,14 @@
   grid-row: 4;
   align-self: center;
   top: auto;
+  /* ⚠ THE PERCENTAGE RE-RESOLVED AGAINST `.fl-left` ONCE THIS BECAME A GRID
+     ITEM (ADR-088), AND NOBODY SAW IT FOR A DAY. A grid item's containing
+     block is its GRID AREA, so the base rule's `--fl-col-split` was 37.5 % of
+     a 34.5 % column — 0.375 × 0.345 = 12.94 % of the band, a 168px stub
+     against the 487px its own twin was drawing. That is what the owner read
+     as a divider "all over the place": two lines that are the same object,
+     at 2.9 : 1. `100%` is the track, and the track IS the column. */
+  width: 100%;
 }
 
 /* ── Cell heads ────────────────────────────────────────────────────────
@@ -1309,7 +1334,12 @@
   gap: 12px;
   margin: 0;
   padding-bottom: 5px;
-  border-bottom: 1px solid var(--fl-hz-seam);
+  /* ⚠ INTERIOR WEIGHT (.12), NOT THE FRAME'S (owner, 2026-09-03). The ladder
+     is two rungs with one law: `--fl-hz-seam` divides REGIONS (the head band
+     from the record, the record from the field, one station key from the
+     next) and `--fl-hz-rule` rules WITHIN one — the register's claims, the
+     directory's rows, and this, a section head inside the record column. */
+  border-bottom: 1px solid var(--fl-hz-rule);
   pointer-events: none;
   font-family: var(--fl-mono);
   font-size: var(--fl-chrome-sm);
@@ -1349,6 +1379,15 @@
     display: flex;
     grid-row: 2;
     align-self: end;
+    /* ⚠ NO RULE OF ITS OWN, AND THAT IS ARITHMETIC. `align-self: end` seats
+       this box's bottom edge ON the register's top edge with no row gap and
+       no margin, so its `border-bottom` and
+       `.fl-proof-register__item:first-child`'s `border-top` land in ADJACENT
+       pixel rows — a 2px doubled rule that only the tall rung ever draws, and
+       the one the owner's own viewport shows. Halving both weights would have
+       left it doubled; the register's opening rule is the line this label
+       belongs to, so the label does not draw a second one. */
+    border-bottom: 0;
   }
 }
 
@@ -1405,19 +1444,68 @@
 .fl-case .fl-con__rail {
   border-bottom-color: var(--fl-hz-seam);
 }
-/* ⚠ THE LIT STATION WAS THE ONE OPAQUE OBJECT IN A GLASS HOUSING. Its fill
-   is a gold wash over `--con-void`, an opaque bed that made sense while the
-   console had a ground of its own; inside the slab every other surface is
-   the housing's 0.42 glass, so the selected key read as a hole cut through
-   it. The wash alone lights it now — lifted a step to carry the same signal
-   without the backing — and the station keeps its three other marks (the
-   filled diamond, the full-strength label, the spine beneath).
-   ⚠ THE TOKEN IS NOT TOUCHED: `--con-void` is the opaque bed for the
-   diamond, `.fl-detail__in` and the map's whole drawing floor, and softening
-   it makes the panel look right while every instrument inside loses its
-   floor. This is the station's own declaration, scoped to the housing. */
+/* ══ THE STATIONS GO FLAT ══════════════════════════════════════════════
+   ⚠ NO GRADIENT ON A KEY (owner, 2026-09-03 — the ramps are "unacceptably
+   ugly"). TWO vertical ramps were painting here: the dormant plates at
+   `dawn .028 → transparent 62%` and the lit one at `gold .18 → gold .05
+   78%`. Their stops DISAGREED, so adjacent keys banded at different heights
+   and the flat remainder below each ramp was a different depth per state —
+   a stepped smear along the rail rather than a row of keys. ADR-089's own
+   0.42 glass is what made it legible: the lit wash lost the opaque bed it
+   had been tuned against, so the ramp started reading THROUGH the housing.
+
+   The owner's reference set answers it. Across four Vilimovský panels —
+   medical, market, civil, and the industrial GOLD one, which is our palette
+   — there is not one gradient anywhere. Every fill is FLAT, and an active
+   key is a SOLID accent block with the ink knocked out of it (`PULSE
+   OXIMETRY`, `3M`, `LEVEL T2`). Depth is outline-versus-fill, never a ramp.
+
+   ⚠ AND THE HOUSE ALREADY SPEAKS IT ONE COLUMN OVER. `.fl-row[data-on]` —
+   the lit directory row — is `background: var(--gold)` with
+   `color: var(--gold-contrast)` and its glyph knocked out. The record column
+   and the field now say "selected" with ONE grammar, which is the whole
+   claim the housing makes.
+
+   ⚠ THE INK IS `--gold-contrast`, NEVER THE `--void` FAMILY, which is
+   PARCHMENT in light and lands ~1.4:1 on gold. `theme-css-sweep` fails any
+   gold-filled block that inks itself from that family — and ⚠ THE GUARD
+   READS PROSE TOO: it splits the sheet on `}`, so a COMMENT quoting the
+   banned pair verbatim fails it exactly as the declaration would (this
+   comment did, on its first draft). It also cannot see the `> i` rule below,
+   so the diamond needs the right token on its own merit, not its parent's.
+   ⚠ THE `--con-void` TOKEN IS UNTOUCHED. It is the opaque bed for
+   `.fl-detail__in` and the map's whole drawing floor; this is the station's
+   own declaration, scoped to the housing. */
+.fl-case .fl-con__stn {
+  background: none;
+}
 .fl-case .fl-con__stn[data-on] {
-  background: linear-gradient(180deg, rgba(var(--gold-rgb), 0.18), rgba(var(--gold-rgb), 0.05) 78%);
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+/* ⚠ THE DIAMOND KNOCKS OUT TOO, OR IT DISAPPEARS. `--con-hot` is `#f0c86a`,
+   which measures **1.46:1** on a `#caa554` plate in dark — gone — and
+   `--con-mark-glow` is ADDITIVE, so a halo over a gold fill is nothing in
+   either theme. Knocked out it reads 8.5:1 dark / 8.2:1 light.
+   ⚠ `.fl-con__spine` STAYS. It sits on the rail's border ROW, one pixel
+   BELOW this plate (`bottom: -1px` resolves against the padding box, which
+   excludes the border), so it still reads as a brighter run under the block
+   — and it is the only mark that says WHICH key, on the track itself. */
+.fl-case .fl-con__stn[data-on] > i {
+  border-color: var(--gold-contrast);
+  background: var(--gold-contrast);
+  box-shadow: none;
+}
+/* ⚠ THE KEY-TO-KEY SEAM IS A REGION DIVIDER, so it takes the frame's weight
+   rather than the interior rule's: gold .13 was the console's own private
+   vocabulary, and dawn .12 would drop it to 1.28:1 on parchment — under what
+   `--con-hair`'s light lift exists to hold. And `top` goes to 0: `--stn-ch`
+   was the LEADING plate's notch shoulder, and inside the housing that notch
+   is gone (`clip-path: none`, above), so the inset was a 6–11px stub of
+   nothing against a corner with no cut to shoulder against. */
+.fl-case .fl-con__stn + .fl-con__stn::before {
+  top: 0;
+  background: var(--fl-hz-seam);
 }
 
 /* ── The structure goes to dawn ────────────────────────────────────────
@@ -1434,8 +1522,20 @@
 .fl-case .fl-proof-register__item {
   border-top-color: var(--fl-hz-rule);
 }
+/* ⚠ THE `:first-child` LIFT COMES DOWN TO THE INTERIOR WEIGHT, AND THE
+   SELECTOR HAS TO STAY (owner, 2026-09-03). ADR-089 lifted this rule to .28
+   — the frame's own weight on a rule INSIDE a region, which is the
+   two-weight law broken in the one box small enough to show it, and at the
+   tall rung it doubled with `.fl-cell--register`'s border one pixel above.
+   ⚠ DELETING IT IS NOT THE FIX, AND THE FIRST CUT OF THIS PASS TRIED: the
+   base sheet's own `.fl-proof-register__item:first-child` (ADR-068, gold
+   .24) is (0,2,0) — the SAME specificity as `.fl-case
+.fl-proof-register__item` — and it is declared ~250 lines LATER, so it
+   wins on source order and the rule came back GOLD. Measured on the live
+   page: `rgba(202, 165, 84, 0.24)` where every other rule in the column read
+   dawn. A scoped override at equal weight is the only thing that reaches it. */
 .fl-case .fl-proof-register__item:first-child {
-  border-top-color: var(--fl-hz-seam);
+  border-top-color: var(--fl-hz-rule);
 }
 .fl-case .fl-proof-register__item:last-child {
   border-bottom-color: var(--fl-hz-rule);
@@ -6338,10 +6438,31 @@
   .fl-case .fl-con__rail {
     border-bottom-color: var(--con-hair2);
   }
+  /* ⚠ EVERY PART OF THE FLAT-KEY CHANGE COMES BACK HERE, NOT JUST THE FILL.
+     This block restores the console's OWN frame, and the inverse-video key
+     belongs to the housing that is not drawn on this path. Resetting
+     `background` alone would leave `--gold-contrast` ink — near-black — on
+     the restored translucent gold wash, i.e. near-black on near-black, in
+     dark mode, on every phone and every desktop visitor with reduced motion.
+     ⚠ NOTHING IN THE SUITE CATCHES THAT: the light walk runs at desktop
+     width and reads colour on the desktop path only. */
+  .fl-case .fl-con__stn {
+    background: linear-gradient(180deg, rgba(var(--dawn-rgb), 0.028), transparent 62%);
+  }
   .fl-case .fl-con__stn[data-on] {
     background:
       linear-gradient(180deg, rgba(var(--gold-rgb), 0.14), rgba(var(--gold-rgb), 0.035) 78%),
       var(--con-void);
+    color: var(--con-txt);
+  }
+  .fl-case .fl-con__stn[data-on] > i {
+    border-color: var(--con-hot);
+    background: var(--con-hot);
+    box-shadow: var(--con-mark-glow);
+  }
+  .fl-case .fl-con__stn + .fl-con__stn::before {
+    top: var(--stn-ch);
+    background: var(--con-hair);
   }
   .fl-tabs {
     position: static;

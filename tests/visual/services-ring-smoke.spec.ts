@@ -1798,17 +1798,52 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         if (panel && getComputedStyle(panel).clipPath.startsWith("polygon("))
           return { kind, ok: false, why: `the console kept a chamfer inside the housing` };
 
-        // The seam's shoulder is DECLARED now. It used to be a free
-        // consequence of the owning plate's clip (a clip-path clips pseudos
-        // too); square plates mean the inset has to be written down, and a
-        // divider running to the rail's top edge turns a row of seated keys
-        // back into a divided bar.
-        const seamTop = Number.parseFloat(getComputedStyle(stns[1], "::before").top);
-        if (!(seamTop > 2))
+        // ⚠ THE SHOULDER IS REVERSED INSIDE THE HOUSING (owner, 2026-09-03),
+        // AND THE READ IT PROTECTED MOVED RATHER THAN BEING GIVEN UP. The
+        // inset was the LEADING plate's notch shoulder made explicit: a clip
+        // clips its pseudos, square plates do not, and a divider running to
+        // the rail's top edge turned a row of seated keys back into a divided
+        // bar. But inside `.fl-hz` the console is a cell with `clip-path:
+        // none`, so there is no notch anywhere on the rail — the inset became
+        // a 6–11px stub against a corner with no cut to shoulder against.
+        // What says "seated keys" now is the FILL: the lit plate is solid
+        // gold with its ink knocked out, the same inverse video the lit
+        // directory row uses one column over. So the seam runs the full
+        // height and the guard asserts the material instead — dawn, because a
+        // key-to-key divider is a region divider and gold .13 was the
+        // console's own private vocabulary.
+        const seamStyle = getComputedStyle(stns[1], "::before");
+        const seamTop = Number.parseFloat(seamStyle.top);
+        if (!(seamTop < 1))
           return {
             kind,
             ok: false,
-            why: `the plate seam reaches the rail's top edge (${seamTop}px)`,
+            why: `the plate seam kept its notch shoulder inside the housing (${seamTop}px)`,
+          };
+        // Gold separates from dawn on the red-blue spread in BOTH themes:
+        // gold is 202−84 = 118 dark / 138−32 = 106 light, dawn is 235−214 = 21
+        // dark / 17−9 = 8 light. Nothing on this ladder sits between.
+        const goldish = (c: string) => {
+          const m = c.match(/\d+(\.\d+)?/g);
+          return !!m && m.length >= 3 && Number(m[0]) - Number(m[2]) > 40;
+        };
+        if (goldish(seamStyle.backgroundColor))
+          return {
+            kind,
+            ok: false,
+            why: `the plate seam is still gold — ${seamStyle.backgroundColor}`,
+          };
+        // And the lit plate carries a FLAT fill, never a ramp.
+        // `background-image` is `none` on a solid colour and a
+        // `linear-gradient(…)` on a ramp, which is the whole distinction the
+        // owner's reference set turns on.
+        const litPlate = stns.find((s) => s.dataset.on !== undefined);
+        const litBg = litPlate ? getComputedStyle(litPlate).backgroundImage : "none";
+        if (litBg !== "none")
+          return {
+            kind,
+            ok: false,
+            why: `the lit station went back to a gradient — ${litBg.slice(0, 60)}`,
           };
 
         // ── NO PLATE PRINTS A FOOT (owner, 2026-08-08) ─────────────────

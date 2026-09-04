@@ -645,6 +645,41 @@ is seated inside it. Promoted from `/test/hud-panel-lab`'s `v2`.
   client-stack machinery is UNTOUCHED and stays inert at one case** — the
   segment table, the seam clocks and the runway lockstep are a mechanism, not
   a strip; a second panel is a new decision, not a restored line.
+- ⚠ **THE KEYS ARE FLAT, AND THE GRAMMAR IS `.fl-row[data-on]`'s** (U2, owner
+  2026-09-03: the ramps are "unacceptably ugly"). Two vertical gradients were
+  painting on the rail with DISAGREEING stops (dormant `dawn .028 →
+transparent 62%`, lit `gold .18 → gold .05 78%`), so adjacent keys banded at
+  different heights — and ADR-089 is what made it legible, by taking the
+  opaque ground the recess wash had been tuned against. **Across all four
+  Vilimovský reference panels there is not one gradient**: every fill is flat
+  and an active key is a solid accent block with the ink knocked out. The lit
+  station is now `background: var(--gold)` + `--gold-contrast` ink + a knocked
+  out diamond, which is exactly what the lit DIRECTORY ROW already was — one
+  "selected" grammar across both halves of the housing.
+  ⚠ **THE DIAMOND MUST KNOCK OUT**: `--con-hot` is `#f0c86a`, **1.46:1** on a
+  gold plate in dark, and `--con-mark-glow` is additive so a halo over gold is
+  nothing. ⚠ **THE SPINE STAYS** — it sits on the rail's border ROW below the
+  plate and is the only mark that says _which_ key. ⚠ **`--gold-contrast`,
+  never the `--void` family** (parchment in light, ~1.4:1 on gold);
+  `theme-css-sweep` enforces it and **reads PROSE too** — it splits on `}`, so
+  a comment quoting the banned pair fails it like a declaration.
+- ⚠ **ONE EXTENT, TWO WEIGHTS** (U2). The record column was painting nine rules
+  at THREE lengths. `--fl-col-split` is `var(--fl-col-l)` now — the split IS
+  the column's right edge, so every horizontal terminates on it. Weights:
+  **`--fl-hz-seam` .28 divides REGIONS** (head band from record, record from
+  field, key from key), **`--fl-hz-rule` .12 rules WITHIN one**.
+  ⚠ **`.fl-seam--directory` WAS 12.94 % OF THE BAND** — 168px against its
+  twin's 487px, because ADR-088 made it a grid item and its inherited
+  percentage re-resolved against `.fl-left`. The LAB found this and patched it
+  locally; production carried it for a day. ⚠ **The `:first-child` override
+  cannot be deleted, only retargeted** — the base sheet's own `:first-child`
+  (gold .24) is equal specificity and declared later, so it wins on source
+  order and the rule comes back GOLD. ⚠ **`.fl-cell--register` draws NO rule**:
+  `align-self: end` seats it on the register's top edge, so its border and the
+  first item's landed in adjacent pixel rows — a 2px doubled line only the tall
+  rung ever drew. ⚠ The key-to-key seam is dawn and full-height, which
+  **reverses ADR-067 U2's shoulder** (the notch it shouldered against is gone
+  inside the housing); the smoke asserts the new state AND the flat fill.
 - ⚠ **THE RIGHT PANEL'S FOUR LEFTOVERS, AND THE PATTERN IS THE FINDING** (U1,
   owner: _"I'm not really sure about the gradient in there, it kind of breaks
   the flow"_). **Taking a console's ground and its border does not take what

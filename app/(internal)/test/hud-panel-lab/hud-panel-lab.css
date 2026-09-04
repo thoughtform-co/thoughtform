@@ -797,10 +797,10 @@ html[data-theme="light"] .hpl[data-hpl-surface] {
      is a grid item — so the base rule's `var(--fl-col-split)` (37.5%) became
      37.5% OF the 34.5% column, a 119px stub at 1280×720 against the 367px
      the register seam draws (measured, found while shooting v6; every
-     direction that draws this seam had it). The two literals below ARE
-     `--fl-col-split` and `--fl-col-l`: CSS cannot divide one percentage token
-     by another, so they are restated here — move those tokens, move this. */
-  width: calc(100% * 37.5 / 34.5);
+     direction that draws this seam had it, and PRODUCTION had it too until
+     2026-09-03). The ratio hack this carried is retired with the token: the
+     split IS the column's right edge now, so the track is the answer. */
+  width: 100%;
 }
 
 /* ── Datum stubs (v5) ────────────────────────────────────────────────────
@@ -1018,9 +1018,17 @@ html[data-theme="light"] .hpl[data-hpl-surface] {
 .hpl .fl-case[data-hpl-dir="v6"] .fl-con__spine {
   background: var(--hpl-phosphor);
 }
+/* ⚠ THE DIAMOND KNOCKS OUT WITH THE REST OF THE KEY. Production's lit station
+   became a SOLID gold plate on 2026-09-03, and phosphor on `#caa554` measures
+   ~1.9:1 — the seed's one lit rung, invisible. On this direction the plate is
+   what carries the lit state, so the mark knocks out of it; the phosphor rung
+   still reads where it is not sitting on gold (the spine, the era chip, the
+   cursor). The glow goes for the same reason production's does: an additive
+   halo over a gold fill is nothing. */
 .hpl .fl-case[data-hpl-dir="v6"] .fl-con__stn[data-on] > i {
-  border-color: var(--hpl-phosphor);
-  background: var(--hpl-phosphor);
+  border-color: var(--gold-contrast);
+  background: var(--gold-contrast);
+  box-shadow: none;
 }
 
 /* ── THE CURSOR ──────────────────────────────────────────────────────────
