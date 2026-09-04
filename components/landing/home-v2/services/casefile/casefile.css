@@ -1435,14 +1435,21 @@
 .fl-case .fl-con__console::after {
   content: none;
 }
-/* ⚠ THE RAIL'S UNDERLINE IS THE NINTH GOLD STRUCTURE LINE, and ADR-089's
-   sweep could not see it: the lab's ledger walks four selectors in the
-   RECORD column, and this one lives in `console.css`. It is the same object
-   as the head band's rule on the other side of the split — a track with one
-   lit run travelling along it (`.fl-con__spine`, gold, untouched) — so it
-   takes the same dawn seam. Structure is dawn; the mark stays gold. */
+/* ⚠ THE RAIL'S UNDERLINE IS DELETED (owner, 2026-09-04 — "you can remove the
+   divider below the tabs"), AND IT WAS THE TRACK THE SPINE RAN ON. ADR-089
+   U1 took it from gold to dawn as the ninth structure line; U3 hid the lit
+   run that travelled along it; with the run gone the track had nothing left
+   to be. What divides the rail from the field now is the boxes' own bottom
+   edges and the air under them — which is the same argument that deleted the
+   key-to-key seam one rule down, applied to the other axis.
+
+   ⚠ `border-bottom-color: transparent`, NOT `border-bottom: 0`. The rail's
+   height is `flex: 0 0 clamp(32px, 7%, 44px)` on the border box, so dropping
+   the border hands that pixel to the content box and every station grows 1px
+   — a geometry change to delete a line. The colour is the only thing that
+   should move. */
 .fl-case .fl-con__rail {
-  border-bottom-color: var(--fl-hz-seam);
+  border-bottom-color: transparent;
 }
 /* ══ THE STATIONS GO FLAT ══════════════════════════════════════════════
    ⚠ NO GRADIENT ON A KEY (owner, 2026-09-03 — the ramps are "unacceptably
@@ -1521,14 +1528,43 @@
   border: 1px solid var(--fl-hz-rule);
   background: none;
 }
-/* The state is the edge going gold — `--gold-line`, the ramp's LINE rung, so
-   it clears 3:1 on parchment where raw `--gold` as line work does not
-   (ADR-063 U2). The diamond fills, the label goes to full strength, and the
-   spine travels the track below: the box says which key, the spine says
-   which field it owns. */
+/* ⚠ AND THE OPEN BOX IS FILLED (owner, 2026-09-04 — "the one that's selected
+   should be filled with color, the rest should just have a border. I think
+   that's the simplest way"). This is the same declaration U2 shipped and the
+   owner rejected an hour later as "too much fill", and it is right now
+   because the OBJECT changed underneath it, not because the ruling was wrong:
+
+     · then it was a full-bleed PLATE, 255 × 44px, contiguous with its
+       neighbours and running under a rail underline — nothing bounded it, so
+       a solid fill read as a slab of the console going gold;
+     · now it is a bounded 201 × 33 box among three outlined peers with the
+       divider gone. 41 % less area, and the fill is read as this box's state
+       rather than as a region of the panel.
+
+   ⚠ SO THE VARIABLE IS FILL-AMONG-OUTLINES, NOT AREA. U2's scale finding —
+   "gold never fills an AREA" — held against a plate with no edge; a filled
+   box beside outlined boxes is the reference sidebar's own contrast, one step
+   up in size. If it still reads heavy the dial is the fill, not the box:
+   `--gold` → `rgba(var(--gold-rgb), .14)` keeps the composition and drops the
+   weight, and the ink comes off knock-out with it.
+
+   Inverse video, which is `.fl-row[data-on]`'s grammar one column over: the
+   border joins the fill so the box is ONE object rather than a fill inside a
+   rim, and `--gold-contrast` is the ink. ⚠ NEVER the `--void` family — that
+   is parchment in light, ~1.4:1 on gold, and `theme-css-sweep` fails the
+   pair. */
 .fl-case .fl-con__stn[data-on] {
-  border-color: var(--gold-line);
-  background: none;
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+/* ⚠ THE DIAMOND KNOCKS OUT TOO. `--con-hot` is `#f0c86a` — 1.46:1 on a gold
+   plate, i.e. gone — and `--con-mark-glow` is additive, so a halo over gold
+   is nothing. Knocked out it is 8.5:1 dark / 8.2:1 light. */
+.fl-case .fl-con__stn[data-on] > i {
+  border-color: var(--gold-contrast);
+  background: var(--gold-contrast);
+  box-shadow: none;
 }
 /* ⚠ AND THE TRAVELLING SPINE GOES WITH IT, BECAUSE THE BOX IS NOW THAT
    MARKER. `.fl-con__spine` is a 1px gold run on the rail's border row that
@@ -6518,6 +6554,12 @@
     background:
       linear-gradient(180deg, rgba(var(--gold-rgb), 0.14), rgba(var(--gold-rgb), 0.035) 78%),
       var(--con-void);
+    color: var(--con-txt);
+  }
+  .fl-case .fl-con__stn[data-on] > i {
+    border-color: var(--con-hot);
+    background: var(--con-hot);
+    box-shadow: var(--con-mark-glow);
   }
   .fl-case .fl-con__stn + .fl-con__stn::before {
     content: "";

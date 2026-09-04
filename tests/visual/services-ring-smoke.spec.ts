@@ -1825,11 +1825,18 @@ test.describe("Services card ring smoke (ADR-029)", () => {
             ok: false,
             why: `the key-to-key seam came back between two boxes (content: ${seamStyle.content})`,
           };
-        // Every station is drawn as a box, and NONE of them is filled — a
-        // fill is what the owner rejected twice, first as a ramp and then as
-        // a solid. `backgroundImage` catches a returning gradient;
-        // `backgroundColor` catches a returning wash, including the .08
-        // whisper that stood for one day.
+        // Every station is drawn as a box; the OPEN one is filled and the
+        // rest are outline only (owner, 2026-09-04 — "the one that's
+        // selected should be filled with color, the rest should just have a
+        // border"). Both halves are pinned, because a rule that filled every
+        // box would satisfy the first alone and say nothing.
+        //
+        // ⚠ `backgroundImage` STAYS PINNED TO `none` ON ALL FOUR. The fill
+        // came back; the RAMP did not, and that was the original complaint —
+        // two vertical gradients with disagreeing stops banding adjacent keys
+        // at different heights. Flat is the law, filled is the state, and
+        // conflating them is how the gradient returns under cover of a
+        // ruling that only ever restored the colour.
         const boxes = stns.map((s) => {
           const cs = getComputedStyle(s);
           return {
@@ -1838,27 +1845,51 @@ test.describe("Services card ring smoke (ADR-029)", () => {
             w: Number.parseFloat(cs.borderTopWidth),
             img: cs.backgroundImage,
             fill: cs.backgroundColor,
+            ink: cs.color,
           };
         });
         const unboxed = boxes.filter((b) => !(b.w >= 1));
         if (unboxed.length)
           return { kind, ok: false, why: `${unboxed.length} station(s) lost their box` };
-        const filled = boxes.find((b) => b.img !== "none" || !/, *0\)$/.test(b.fill));
-        if (filled)
+        const ramped = boxes.find((b) => b.img !== "none");
+        if (ramped)
           return {
             kind,
             ok: false,
-            why: `a station is filled again — ${filled.img.slice(0, 40)} / ${filled.fill}`,
+            why: `a station went back to a gradient — ${ramped.img.slice(0, 60)}`,
           };
-        // And the state is the edge: the open box gold, every other one not.
-        // Pinned from BOTH ends, because a rule that put every edge gold
-        // would satisfy the first half alone and say nothing.
+        const clear = (c: string) => /, *0\)$/.test(c);
         const openBox = boxes.find((b) => b.on);
-        if (!openBox || !goldish(openBox.edge))
-          return { kind, ok: false, why: `the open station's edge is not gold — ${openBox?.edge}` };
-        const strayGold = boxes.filter((b) => !b.on && goldish(b.edge));
-        if (strayGold.length)
-          return { kind, ok: false, why: `${strayGold.length} dormant station(s) edged gold` };
+        if (!openBox || !goldish(openBox.edge) || !goldish(openBox.fill))
+          return {
+            kind,
+            ok: false,
+            why: `the open station is not a filled gold box — ${openBox?.fill} / ${openBox?.edge}`,
+          };
+        // ⚠ AND ITS INK KNOCKS OUT. `--con-hot` is 1.46:1 on gold, so a lit
+        // label that kept the console's own hot ink would be gone — the
+        // failure this catches is silent, not visibly broken.
+        if (goldish(openBox.ink))
+          return {
+            kind,
+            ok: false,
+            why: `the open station's ink did not knock out — ${openBox.ink}`,
+          };
+        const stray = boxes.filter((b) => !b.on && (goldish(b.edge) || !clear(b.fill)));
+        if (stray.length)
+          return {
+            kind,
+            ok: false,
+            why: `${stray.length} dormant station(s) carry the open state's paint`,
+          };
+        // ⚠ AND THE DIVIDER BELOW THE ROW IS GONE (owner, same pass). It was
+        // the track the spine ran on; with the run hidden it had nothing left
+        // to be. `transparent`, never `border-width: 0` — the rail's height
+        // is a flex basis on the border box, so dropping the pixel hands it
+        // to the content and grows every station by 1px.
+        const railEdge = getComputedStyle(rail).borderBottomColor;
+        if (!clear(railEdge))
+          return { kind, ok: false, why: `the rail's divider came back — ${railEdge}` };
         // ⚠ AND THE TRAVELLING SPINE IS OFF INSIDE THE HOUSING. It is the
         // same statement as the gold edge, 4px lower and a full pitch wide,
         // so the active key drew two gold horizontals. The element stays in

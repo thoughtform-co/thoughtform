@@ -101,6 +101,13 @@
    gate as a gold structure line, which is exactly what it would be. */
 .hpl[data-hpl-surface] {
   --hpl-phosphor: rgb(255 255 170);
+  /* The ink that sits ON phosphor, and it is a PAIR because phosphor is not.
+     Dark theme's rung is near-white, light theme's is `--gold-ink-lit`, a
+     dark brown — so one contrast literal is unreadable at one end whichever
+     one it is. Same shape as `--gold` / `--gold-contrast`, and it exists
+     because U3's filled key (2026-09-04) put a fill under this rung for the
+     first time; while it was only a border and a diamond, nothing sat on it. */
+  --hpl-phosphor-ink: #0a0908;
   --hpl-oxide: rgb(221 170 153);
   /* 6996 → 0.6996 s lit and the same dark: one cycle is 1.4 s. */
   --hpl-cursor-period: 1.4s;
@@ -121,6 +128,7 @@
 }
 html[data-theme="light"] .hpl[data-hpl-surface] {
   --hpl-phosphor: var(--gold-ink-lit, #5c4411);
+  --hpl-phosphor-ink: #f2ebdd;
   --hpl-oxide: #7a3e26;
   --hpl-ret-ink: var(--gold-line, #8a6b20);
 }
@@ -1038,14 +1046,19 @@ html[data-theme="light"] .hpl[data-hpl-surface] {
    The glow stays off — it was tuned as a halo and the seed's grammar is a
    flat lit rung, which is why `--hpl-phosphor` exists at all. */
 .hpl .fl-case[data-hpl-dir="v6"] .fl-con__stn[data-on] > i {
-  border-color: var(--hpl-phosphor);
-  background: var(--hpl-phosphor);
+  border-color: var(--hpl-phosphor-ink);
+  background: var(--hpl-phosphor-ink);
   box-shadow: none;
 }
 /* The lit box takes the phosphor rung too, for the same reason: on this
-   direction gold is not what says "open". */
+   direction gold is not what says "open". Filled since U3, so the ink knocks
+   out of it exactly as production's does out of gold — the composition is
+   production's and only the material is the seed's, which is the whole point
+   of putting this direction beside `v0`. */
 .hpl .fl-case[data-hpl-dir="v6"] .fl-con__stn[data-on] {
   border-color: var(--hpl-phosphor);
+  background: var(--hpl-phosphor);
+  color: var(--hpl-phosphor-ink);
 }
 
 /* ── THE CURSOR ──────────────────────────────────────────────────────────

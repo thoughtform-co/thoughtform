@@ -495,6 +495,65 @@ is that phosphor is THE ONE LIT RUNG. The two marks were never going to be
 different hues there. v6 inherits the hidden spine; the rung still reads on the
 era chip and the cursor.
 
+## Update 4 — the divider goes, and the open box is filled (2026-09-04, owner)
+
+Owner, on U3 live: _"I think you can remove the divider below the tabs, and
+then the one that's selected should be filled with color. The rest should just
+have a border. I think that's the simplest way."_ He is right on both, and the
+second one is the same declaration U2 shipped and he rejected an hour later.
+
+**THE VARIABLE WAS NEVER AREA — IT IS FILL AMONG OUTLINES.** U2's finding was
+that gold may not fill an AREA, measured against a full-bleed PLATE 255 × 44px,
+contiguous with its neighbours and running under a rail underline: nothing
+bounded it, so a solid fill read as a region of the console going gold. U3 gave
+every station an edge. The same fill now lands in a bounded 201 × 33 box among
+three outlined peers — 41 % less area, and read as _this box's state_ rather
+than as a band of the panel. **That is the reference sidebar's own contrast**
+(one filled chip against outlined boxes), one step up in size.
+
+So U3's "selection is an outline" is narrowed rather than reversed: **the box
+is what U2's fill was missing.** Both rulings had to land before either was
+right, which is why neither survived alone.
+
+- **The open box is inverse video** — `background: var(--gold)`, border joined
+  to the fill so it is ONE object rather than a fill inside a rim, ink and
+  diamond on `--gold-contrast`. `.fl-row[data-on]`'s grammar one column over.
+  ⚠ The diamond MUST knock out: `--con-hot` is 1.46:1 on gold and
+  `--con-mark-glow` is additive, so a halo over gold is nothing.
+  ⚠ **NEVER the `--void` family** — parchment in light, ~1.4:1 on gold, and
+  `theme-css-sweep` fails the pair.
+- ⚠ **THE FILL IS THE DIAL, NOT THE BOX.** If it reads heavy again the answer
+  is `--gold` → `rgba(var(--gold-rgb), .14)` with the ink coming off
+  knock-out, keeping the composition. The box is settled.
+- **The rail's underline is deleted**, and it was the track the spine ran on:
+  U1 took it from gold to dawn as the ninth structure line, U3 hid the run
+  that travelled along it, and with the run gone it had nothing left to be.
+  What divides the rail from the field is the boxes' own bottom edges and the
+  air under them — the seam argument from U3, on the other axis.
+  ⚠ **`border-bottom-color: transparent`, NOT `border-bottom: 0`.** The rail's
+  height is `flex: 0 0 clamp(32px, 7%, 44px)` on the BORDER box, so dropping
+  the pixel hands it to the content box and grows every station 1px. Deleting
+  a line should not move geometry.
+
+### The guards, and the lab
+
+⚠ **`backgroundImage` STAYS PINNED TO `none` ON ALL FOUR STATIONS.** The fill
+came back; the RAMP did not, and the ramp was the original complaint (two
+vertical gradients with disagreeing stops, banding adjacent keys at different
+heights). Flat is the law, filled is the state, and conflating them is how a
+gradient returns under cover of a ruling that only restored the colour. The
+smoke now pins: open = filled gold + gold edge + knocked-out ink; dormant =
+outline only, no fill, no gold; no gradient anywhere; the rail's bottom border
+transparent.
+
+⚠ **`--hpl-phosphor-ink` IS NEW, AND IT IS A PAIR BECAUSE PHOSPHOR IS NOT.**
+The lab's `v6` takes the same composition in its own material, so its box is
+filled now too — and its rung is `rgb(255 255 170)` in dark but `--gold-ink-lit`
+(#5c4411, a dark brown) in light, so one contrast literal is unreadable at one
+end whichever one it is. Same shape as `--gold` / `--gold-contrast`. It exists
+because U4 put a FILL under that rung for the first time: while phosphor was
+only a border and a diamond, nothing had to sit on it.
+
 ## Left open
 
 - **The capability plates keep their BR notch, and their premise moved.**

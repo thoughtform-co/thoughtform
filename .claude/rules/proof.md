@@ -661,17 +661,50 @@ is seated inside it. Promoted from `/test/hud-panel-lab`'s `v2`.
   `rgba(gold, .08)` FLAT — and ⚠ **U3 TOOK THAT AWAY TOO; SEE THE NEXT BULLET.**
   ⚠ **`theme-css-sweep` READS PROSE** — it splits on `}`, so a comment quoting
   the banned `--gold`/`--void` pair fails it exactly like a declaration.
-- ⚠ **A STATION IS A BOX, AND SELECTION IS ITS EDGE** (U3, owner 2026-09-04:
+- ⚠ **A STATION IS A BOX; THE OPEN ONE IS FILLED AND THE REST ARE OUTLINED**
+  (U4, owner 2026-09-04: _"remove the divider below the tabs, and then the one
+  that's selected should be filled with color. The rest should just have a
+  border. I think that's the simplest way."_). Inverse video — `--gold` fill,
+  border joined to it so the box is ONE object, ink and diamond knocked out on
+  `--gold-contrast`. ⚠ The diamond MUST knock out (`--con-hot` is 1.46:1 on
+  gold, `--con-mark-glow` is additive); ⚠ NEVER the `--void` family (parchment
+  in light, ~1.4:1 on gold, and `theme-css-sweep` fails the pair).
+  ⚠ **THE VARIABLE WAS NEVER AREA — IT IS FILL AMONG OUTLINES.** This is the
+  declaration U2 shipped and the owner rejected an hour later, and it is right
+  now because the OBJECT changed: then a full-bleed plate 255×44, contiguous,
+  under a rail underline, so the fill read as a region of the console going
+  gold; now a bounded 201×33 box among three outlined peers, 41 % less area,
+  read as this box's state. **The box is what U2's fill was missing** — both
+  rulings had to land before either was right.
+  ⚠ **THE FILL IS THE DIAL, NOT THE BOX** — if it reads heavy again, `--gold`
+  → `rgba(var(--gold-rgb), .14)` with the ink off knock-out. The box is settled.
+  ⚠ **`backgroundImage` STAYS PINNED TO `none` ON ALL FOUR.** The fill came
+  back; the RAMP did not, and the ramp was the original complaint. Flat is the
+  LAW, filled is the STATE, and conflating them is how a gradient returns under
+  cover of a ruling that only restored the colour.
+- ⚠ **AND THE DIVIDER BELOW THE ROW IS DELETED** (U4). It was the track the
+  spine ran on: U1 took it from gold to dawn as the ninth structure line, U3
+  hid the run travelling along it, and with the run gone it had nothing left to
+  be. What divides rail from field is the boxes' own bottom edges and the air
+  under them — U3's seam argument on the other axis. ⚠ **`border-bottom-color:
+transparent`, NOT `border-bottom: 0`** — the rail's height is a flex basis on
+  the BORDER box, so dropping the pixel hands it to the content and grows every
+  station 1px. Deleting a line may not move geometry.
+  ⚠ **`--hpl-phosphor-ink` IS NEW IN THE LAB, AND IT IS A PAIR** — `v6` takes
+  the same composition in its own material, and its rung is near-white in dark
+  but `--gold-ink-lit` (a dark brown) in light, so one contrast literal is
+  unreadable at one end whichever it is. It exists because U4 put a FILL under
+  that rung for the first time; while phosphor was only a border and a diamond,
+  nothing had to sit on it.
+- ⚠ **THE BOX ITSELF** (U3, owner 2026-09-04:
   _"instead of tabs can't we try like boxes like here?"_, pointing at the
   market-data monitor). That panel states one law twice and neither half is a
   fill — its sidebar draws three DETACHED bordered boxes of which none is
   filled (what is filled is the ~30px value chip on each corner), and its year
-  selector marks the open cell with an OUTLINE. **Selection is an outline plus
-  one small filled mark**, and the rail already owns the mark: the diamond. So
-  the plate gives up its ground entirely — a whisper of fill is the wash
-  apologised for rather than replaced. `margin: 5px 3px`, `1px solid
---fl-hz-rule`, the open one on **`--gold-line`** (the LINE rung; raw `--gold`
-  is under 3:1 as line work on parchment).
+  selector marks the open cell with an OUTLINE. ⚠ **U3's own conclusion — that
+  selection is an outline and nothing is filled — is NARROWED BY U4 above;**
+  what survives is the BOX: `margin: 5px 3px`, `1px solid --fl-hz-rule` on
+  every station, and the open one's paint is U4's.
   ⚠ **THE KEY-TO-KEY SEAM IS DELETED** — the gap between two boxes is already
   the divider. Net on a four-station rail: +4 verticals and +8 horizontals at
   the INTERIOR weight, −3 at the region weight.
