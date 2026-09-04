@@ -658,15 +658,60 @@ is seated inside it. Promoted from `/test/hud-panel-lab`'s `v2`.
   are outlined or bare and gold never fills an AREA. A station is **255 × 44px**
   and the first thing the eye lands on, where `.fl-row[data-on]` gets away with
   the same declaration at 26px as one line among four. So the fill is
-  `rgba(gold, .08)` FLAT — flat because the ramp was the complaint, .08 because
-  that is where the deleted gradient averaged — and the MARKS carry the state:
-  the gold diamond, the full-strength label, the spine.
-  ⚠ **THE SPINE IS WHAT MAKES THE WHISPER ENOUGH** — a 1px gold bar on the
-  rail's border ROW below the plate, the one thin accent the references DO use
-  at this size, and the only mark that says _which_ key. ⚠ **The fill is a DIAL
-  and zero is legitimate** (underline-only, the Starfield read `v1` cites).
+  `rgba(gold, .08)` FLAT — and ⚠ **U3 TOOK THAT AWAY TOO; SEE THE NEXT BULLET.**
   ⚠ **`theme-css-sweep` READS PROSE** — it splits on `}`, so a comment quoting
   the banned `--gold`/`--void` pair fails it exactly like a declaration.
+- ⚠ **A STATION IS A BOX, AND SELECTION IS ITS EDGE** (U3, owner 2026-09-04:
+  _"instead of tabs can't we try like boxes like here?"_, pointing at the
+  market-data monitor). That panel states one law twice and neither half is a
+  fill — its sidebar draws three DETACHED bordered boxes of which none is
+  filled (what is filled is the ~30px value chip on each corner), and its year
+  selector marks the open cell with an OUTLINE. **Selection is an outline plus
+  one small filled mark**, and the rail already owns the mark: the diamond. So
+  the plate gives up its ground entirely — a whisper of fill is the wash
+  apologised for rather than replaced. `margin: 5px 3px`, `1px solid
+--fl-hz-rule`, the open one on **`--gold-line`** (the LINE rung; raw `--gold`
+  is under 3:1 as line work on parchment).
+  ⚠ **THE KEY-TO-KEY SEAM IS DELETED** — the gap between two boxes is already
+  the divider. Net on a four-station rail: +4 verticals and +8 horizontals at
+  the INTERIOR weight, −3 at the region weight.
+  ⚠ **MARGIN, NEVER `gap`** — `.fl-con__spine` is `100% / --rail-n` wide and
+  lands by `translateX(--rail-i × 100%)`, exact only while every station's
+  OUTER box is one pitch. A `gap` makes each station `(100% − (n−1)g) / n` and
+  the marker drifts up to a gap per station; equal margins do not, because flex
+  distributes the free space that remains AFTER margins. Measured 201.2 + 6 =
+  207.2 at 1920×1247, 139.3 + 6 = 145.3 at 1280×720.
+  ⚠ **SQUARE** — ADR-065 rule 4, not a preference.
+- ⚠ **AND THE SPINE IS HIDDEN INSIDE `.fl-case`, BECAUSE THE BOX IS THAT MARKER
+  NOW** (U3). The first cut kept it and shipped a **doubled gold rule** — the
+  open key drew its own gold base and the spine drew a second gold line 4px
+  under it, a full pitch wide so it ran 3px proud on both sides. Third time on
+  this surface (the register's head, the verdict seam, here), and **every gate
+  was green; the still was not.** Seating the box ON the track was built as the
+  alternative and rejected: it puts a `--fl-hz-seam` .28 base under
+  `--fl-hz-rule` .12 sides, a box with one heavy edge.
+  ⚠ **ADR-063's LAW IS ABOUT COUNT AND SURVIVES INTACT** — one lit thing on the
+  rail, still travelling key to key; it moved from the track onto the object.
+  The element stays in the DOM (the arcs keep it, `toBe`-pinned; the smoke's
+  `spines !== 1` counts the real regression).
+  ⚠ **THE LEADING STATION'S 9px CHAMFER CLEARANCE IS DEAD AND NOW RESET** —
+  `console.css` pads it to clear the console's TL cut, the console has
+  `clip-path: none` inside the housing, and a station CENTRES its content, so
+  the 9px was pushing the first key's content 4.5px off centre. Invisible on a
+  full-bleed plate; obvious inside an outline. ⚠ Not restored on ≤960/PRM
+  either — that block gives the console back its ground, border, glow and
+  scanline but **not its cut**.
+  ⚠ **THE BOX COSTS 8px OF LABEL HEADROOM PER STATION** — at 1280×720
+  `BRIEFING AGENT` (14 chars, the longest handle) is 106px against ~114 of
+  interior, where it had ~122. Nothing clips today; **a 15-character handle now
+  clips where it previously did not**, so measure rather than citing ADR-066.
+  ⚠ **THE LAB'S `v6` HAD TO MOVE TWICE, AND ITS DIAMOND FLIPPED TWICE IN TWO
+  DAYS** — phosphor → knocked-out (U2's solid plate) → phosphor (U3's outline).
+  The rule never had an opinion about colour, only about what it was sitting
+  ON, and both flips were production moving that bed under a `.hpl`-scoped
+  override: **anything in a lab that reads a production surface is a rule with
+  an off-site dependency.** Restoring v6's spine lasted one capture — its box
+  is phosphor too, because its seed law is that phosphor is the ONE lit rung.
 - ⚠ **ONE EXTENT, TWO WEIGHTS** (U2). The record column was painting nine rules
   at THREE lengths. `--fl-col-split` is `var(--fl-col-l)` now — the split IS
   the column's right edge, so every horizontal terminates on it. Weights:

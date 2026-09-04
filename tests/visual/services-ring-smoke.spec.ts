@@ -1798,28 +1798,17 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         if (panel && getComputedStyle(panel).clipPath.startsWith("polygon("))
           return { kind, ok: false, why: `the console kept a chamfer inside the housing` };
 
-        // ⚠ THE SHOULDER IS REVERSED INSIDE THE HOUSING (owner, 2026-09-03),
-        // AND THE READ IT PROTECTED MOVED RATHER THAN BEING GIVEN UP. The
-        // inset was the LEADING plate's notch shoulder made explicit: a clip
-        // clips its pseudos, square plates do not, and a divider running to
-        // the rail's top edge turned a row of seated keys back into a divided
-        // bar. But inside `.fl-hz` the console is a cell with `clip-path:
-        // none`, so there is no notch anywhere on the rail — the inset became
-        // a 6–11px stub against a corner with no cut to shoulder against.
-        // What says "seated keys" now is the FILL: the lit plate is solid
-        // gold with its ink knocked out, the same inverse video the lit
-        // directory row uses one column over. So the seam runs the full
-        // height and the guard asserts the material instead — dawn, because a
-        // key-to-key divider is a region divider and gold .13 was the
-        // console's own private vocabulary.
-        const seamStyle = getComputedStyle(stns[1], "::before");
-        const seamTop = Number.parseFloat(seamStyle.top);
-        if (!(seamTop < 1))
-          return {
-            kind,
-            ok: false,
-            why: `the plate seam kept its notch shoulder inside the housing (${seamTop}px)`,
-          };
+        // ── A STATION IS A BOX, AND SELECTION IS ITS EDGE ──────────────
+        // Owner, 2026-09-04, on the market-data panel: "instead of tabs
+        // can't we try like boxes like here?" That reference states one law
+        // twice — the sidebar's three detached bordered boxes, and the year
+        // selector's outlined open cell — and neither is filled. What IS
+        // filled is a ~30px chip. So the plate gives up its ground entirely,
+        // the border carries the state, and the diamond stays as the one
+        // small filled mark. This supersedes the 09-03 seam-shoulder and
+        // solid-fill pins in place: both described a plate, and there is no
+        // plate.
+        //
         // Gold separates from dawn on the red-blue spread in BOTH themes:
         // gold is 202−84 = 118 dark / 138−32 = 106 light, dawn is 235−214 = 21
         // dark / 17−9 = 8 light. Nothing on this ladder sits between.
@@ -1827,23 +1816,60 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           const m = c.match(/\d+(\.\d+)?/g);
           return !!m && m.length >= 3 && Number(m[0]) - Number(m[2]) > 40;
         };
-        if (goldish(seamStyle.backgroundColor))
+        // The key-to-key seam is DELETED — boxes with a gap between them are
+        // already divided, and a rule in that gap is the line drawn twice.
+        const seamStyle = getComputedStyle(stns[1], "::before");
+        if (seamStyle.content !== "none")
           return {
             kind,
             ok: false,
-            why: `the plate seam is still gold — ${seamStyle.backgroundColor}`,
+            why: `the key-to-key seam came back between two boxes (content: ${seamStyle.content})`,
           };
-        // And the lit plate carries a FLAT fill, never a ramp.
-        // `background-image` is `none` on a solid colour and a
-        // `linear-gradient(…)` on a ramp, which is the whole distinction the
-        // owner's reference set turns on.
-        const litPlate = stns.find((s) => s.dataset.on !== undefined);
-        const litBg = litPlate ? getComputedStyle(litPlate).backgroundImage : "none";
-        if (litBg !== "none")
+        // Every station is drawn as a box, and NONE of them is filled — a
+        // fill is what the owner rejected twice, first as a ramp and then as
+        // a solid. `backgroundImage` catches a returning gradient;
+        // `backgroundColor` catches a returning wash, including the .08
+        // whisper that stood for one day.
+        const boxes = stns.map((s) => {
+          const cs = getComputedStyle(s);
+          return {
+            on: s.dataset.on !== undefined,
+            edge: cs.borderTopColor,
+            w: Number.parseFloat(cs.borderTopWidth),
+            img: cs.backgroundImage,
+            fill: cs.backgroundColor,
+          };
+        });
+        const unboxed = boxes.filter((b) => !(b.w >= 1));
+        if (unboxed.length)
+          return { kind, ok: false, why: `${unboxed.length} station(s) lost their box` };
+        const filled = boxes.find((b) => b.img !== "none" || !/, *0\)$/.test(b.fill));
+        if (filled)
           return {
             kind,
             ok: false,
-            why: `the lit station went back to a gradient — ${litBg.slice(0, 60)}`,
+            why: `a station is filled again — ${filled.img.slice(0, 40)} / ${filled.fill}`,
+          };
+        // And the state is the edge: the open box gold, every other one not.
+        // Pinned from BOTH ends, because a rule that put every edge gold
+        // would satisfy the first half alone and say nothing.
+        const openBox = boxes.find((b) => b.on);
+        if (!openBox || !goldish(openBox.edge))
+          return { kind, ok: false, why: `the open station's edge is not gold — ${openBox?.edge}` };
+        const strayGold = boxes.filter((b) => !b.on && goldish(b.edge));
+        if (strayGold.length)
+          return { kind, ok: false, why: `${strayGold.length} dormant station(s) edged gold` };
+        // ⚠ AND THE TRAVELLING SPINE IS OFF INSIDE THE HOUSING. It is the
+        // same statement as the gold edge, 4px lower and a full pitch wide,
+        // so the active key drew two gold horizontals. The element stays in
+        // the DOM (the arcs keep it, their markup is `toBe`-pinned, and the
+        // `spines !== 1` count above still guards the real regression).
+        const spineShown = getComputedStyle(rail.querySelector(".fl-con__spine")!).display;
+        if (spineShown !== "none")
+          return {
+            kind,
+            ok: false,
+            why: `the spine is back under an outlined box — a second gold rule (${spineShown})`,
           };
 
         // ── NO PLATE PRINTS A FOOT (owner, 2026-08-08) ─────────────────

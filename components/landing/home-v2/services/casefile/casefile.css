@@ -1479,22 +1479,96 @@
    AVERAGED, so this is the same weight of light with the smear taken out.
    ⚠ IT IS A DIAL, AND ZERO IS A LEGITIMATE SETTING — at 0 the lit state is
    underline-only, which is the Starfield read the lab's own `v1` cites. */
+/* ⚠ AND A WHISPER OF FILL WAS STILL A FILL — THE KEY IS A BOX NOW (owner,
+   2026-09-04, pointing at the market-data panel: "instead of tabs can't we
+   try like boxes like here?"). That panel states the law TWICE, in two
+   places, and both say the same thing:
+
+     · the sidebar — MILITECH / DTR / PETROCHEM are three DETACHED bordered
+       boxes with gaps between them. Not one of the three is filled. What is
+       filled is the ~30px value chip riding each box's top-right corner.
+     · the year selector — 2073…2077 as a row of cells, and the open one is
+       marked by an OUTLINE drawn around it. Again no fill.
+
+   **Selection is an OUTLINE plus one small filled mark.** That is the same
+   scale finding as the whisper above, taken one step further: gold may fill
+   a chip and may stroke an edge, but it may not wash 255 × 44px of plate,
+   and .08 of a wash is a wash that has been apologised for rather than
+   replaced. The rail already owns the small filled mark — the diamond — so
+   the plate gives up its ground entirely and the BORDER carries the state.
+
+   The gap is what makes them boxes rather than a divided bar, so the
+   key-to-key seam is DELETED with the change: a divider between two objects
+   that are already separated is the line drawn twice. Net line work on a
+   four-station rail is +4 short verticals and +8 horizontals at the
+   INTERIOR weight, against −3 at the region weight.
+
+   ⚠ THE MARGIN IS SYMMETRIC BECAUSE THE SPINE'S ARITHMETIC DEPENDS ON IT.
+   `.fl-con__spine` is `100% / --rail-n` wide and lands by
+   `translateX(--rail-i × 100%)`, which is exact only while every station's
+   OUTER box is exactly one pitch. A `gap` on the rail breaks that (each
+   station becomes `(100% − (n−1)g) / n` and the marker drifts up to a gap
+   per station — 4.5px by the fourth at a 6px gap); equal horizontal MARGINS
+   do not, because flex distributes the free space that remains after
+   margins equally, so outer widths stay identical. Margin, never gap.
+
+   ⚠ SQUARE, and that is ADR-065 rule 4 rather than a preference — the
+   children of a chamfered box are square, the housing is the chamfered box,
+   and the console between them is already a cell. The reference draws them
+   square too. */
 .fl-case .fl-con__stn {
+  margin: 5px 3px;
+  border: 1px solid var(--fl-hz-rule);
   background: none;
 }
+/* The state is the edge going gold — `--gold-line`, the ramp's LINE rung, so
+   it clears 3:1 on parchment where raw `--gold` as line work does not
+   (ADR-063 U2). The diamond fills, the label goes to full strength, and the
+   spine travels the track below: the box says which key, the spine says
+   which field it owns. */
 .fl-case .fl-con__stn[data-on] {
-  background: rgba(var(--gold-rgb), 0.08);
+  border-color: var(--gold-line);
+  background: none;
 }
-/* ⚠ THE KEY-TO-KEY SEAM IS A REGION DIVIDER, so it takes the frame's weight
-   rather than the interior rule's: gold .13 was the console's own private
-   vocabulary, and dawn .12 would drop it to 1.28:1 on parchment — under what
-   `--con-hair`'s light lift exists to hold. And `top` goes to 0: `--stn-ch`
-   was the LEADING plate's notch shoulder, and inside the housing that notch
-   is gone (`clip-path: none`, above), so the inset was a 6–11px stub of
-   nothing against a corner with no cut to shoulder against. */
+/* ⚠ AND THE TRAVELLING SPINE GOES WITH IT, BECAUSE THE BOX IS NOW THAT
+   MARKER. `.fl-con__spine` is a 1px gold run on the rail's border row that
+   translates to the open station — ADR-063's signature, and the right answer
+   while a station was a full-bleed PLATE with no edge of its own to light.
+   Given the box it becomes the same statement twice, 4px apart, in the same
+   hue: measured at the owner's viewport the active key drew its own gold
+   base at the box's bottom and the spine drew a second gold line just under
+   it, a full pitch wide so it ran 3px proud on both sides. That is the
+   doubled-rule read this surface has now hit three times (the register's
+   head, the sheet's verdict seam, here).
+
+   ⚠ ITS LAW SURVIVES INTACT — "one marker, never one per station" is about
+   COUNT, and there is still exactly one lit thing on the rail, still moving
+   from key to key. It moved from the track onto the object, which is what
+   having an object to move onto buys. The element stays in the DOM (hidden,
+   `.fl-case`-scoped): the arcs mount this rail with no housing and keep the
+   spine, their markup is `toBe`-pinned, and the smoke's `spines !== 1` guard
+   is a count of the real regression — N markers — which is unchanged. */
+.fl-case .fl-con__spine {
+  display: none;
+}
+/* The gap between two boxes IS the divider. */
 .fl-case .fl-con__stn + .fl-con__stn::before {
-  top: 0;
-  background: var(--fl-hz-seam);
+  content: none;
+}
+/* ⚠ AND THE LEADING STATION'S CHAMFER CLEARANCE IS DEAD WEIGHT HERE, which
+   only a BOX makes visible. `console.css` pads the first station an extra
+   9px so its diamond clears the console's top-left cut; inside the housing
+   the console has `clip-path: none` (above), so there is no cut — and since
+   a station centres its content, that 9px was quietly pushing the first
+   station's diamond-and-label 4.5px right of centre. Invisible on a
+   full-bleed plate, plainly wrong once the plate has an outline to be
+   off-centre inside. Both rungs, because the `data-n="4"` rule declares its
+   own. */
+.fl-case .fl-con__stn:first-of-type {
+  padding-left: clamp(5px, 1.3cqw, 14px);
+}
+.fl-case .fl-con__rail[data-n="4"] .fl-con__stn:first-of-type {
+  padding-left: clamp(4px, 0.9cqw, 10px);
 }
 
 /* ── The structure goes to dawn ────────────────────────────────────────
@@ -6436,6 +6510,8 @@
      ⚠ NOTHING IN THE SUITE CATCHES THAT: the light walk runs at desktop
      width and reads colour on the desktop path only. */
   .fl-case .fl-con__stn {
+    margin: 0;
+    border: 0;
     background: linear-gradient(180deg, rgba(var(--dawn-rgb), 0.028), transparent 62%);
   }
   .fl-case .fl-con__stn[data-on] {
@@ -6444,9 +6520,20 @@
       var(--con-void);
   }
   .fl-case .fl-con__stn + .fl-con__stn::before {
+    content: "";
     top: var(--stn-ch);
     background: var(--con-hair);
   }
+  .fl-case .fl-con__spine {
+    display: block;
+  }
+  /* ⚠ THE CHAMFER CLEARANCE IS NOT RESTORED, AND THAT IS DELIBERATE. This
+     block gives the console back its ground, its border, its glow and its
+     scanline — but NOT its cut: `clip-path: none` above is unscoped, so the
+     console is square at every width inside `.fl-case`. Padding the leading
+     station 9px here would clear a chamfer nobody draws and put its content
+     4.5px off centre on the one path that has no box outline to make that
+     visible. The reset in the main block is correct for both paths. */
   .fl-tabs {
     position: static;
     height: auto;

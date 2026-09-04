@@ -389,6 +389,112 @@ shoulder. The ≤960/PRM block restores all five, ⚠ **including `color`**: wit
 it that path gets `--gold-contrast` ink on the restored gold wash, near-black on
 near-black, and nothing in the suite would catch it.
 
+## Update 3 — a station is a box, and selection is its edge (2026-09-04, owner)
+
+Owner, with the Vilimovsky market-data monitor attached: _"instead of tabs
+can't we try like boxes like here?"_
+
+**That panel states one law twice, in two places, and neither of them is a
+fill.** Its sidebar carries three DETACHED bordered boxes — MILITECH, DTR,
+PETROCHEM — of which not one is filled; what IS filled is the ~30px value chip
+riding each box's top-right corner. Its year selector runs 2073…2077 as a row
+of cells, and the open one is marked by an OUTLINE drawn around it. So:
+**selection is an outline plus one small filled mark.**
+
+That is U2's scale finding taken one step further, and it retires U2's own
+answer. U2 removed the ramp and shipped a solid gold plate; an hour later the
+owner rejected the fill and it became a `rgba(gold, .08)` whisper. **A whisper
+of fill is still a fill** — it is the wash apologised for rather than replaced.
+The rail already owns the small filled mark, the diamond, so the plate gives up
+its ground entirely and the BORDER carries the state.
+
+- **Every station is a box**: `margin: 5px 3px`, `1px solid --fl-hz-rule`,
+  `background: none`. The open one takes `--gold-line` — the ramp's LINE rung,
+  because raw `--gold` as line work is under 3:1 on parchment (ADR-063 U2).
+- **The key-to-key seam is deleted.** The gap between two boxes is already the
+  divider; a rule inside it is the line drawn twice. Net line work on a
+  four-station rail is +4 short verticals and +8 horizontals at the INTERIOR
+  weight, against −3 at the region weight.
+- ⚠ **THE MARGIN IS SYMMETRIC BECAUSE THE SPINE'S ARITHMETIC DEPENDS ON IT.**
+  `.fl-con__spine` is `100% / --rail-n` wide and lands by
+  `translateX(--rail-i × 100%)`, exact only while every station's OUTER box is
+  exactly one pitch. A `gap` on the rail breaks that — each station becomes
+  `(100% − (n−1)g) / n` and the marker drifts up to a gap per station, 4.5px by
+  the fourth at a 6px gap. Equal horizontal MARGINS do not, because flex
+  distributes the free space remaining after margins equally. Measured: outer
+  201.2 + 6 = 207.2 = pitch at 1920×1247; 139.3 + 6 = 145.3 at 1280×720.
+- ⚠ **SQUARE, and that is ADR-065 rule 4 rather than a preference** — the
+  children of a chamfered box are square, the housing is that box, and the
+  console between them is already a cell. The reference draws them square too.
+
+### The spine goes, and its law survives intact
+
+⚠ **THE FIRST CUT SHIPPED A DOUBLED GOLD RULE, AND IT WAS FOUND BY LOOKING.**
+Given a box, `.fl-con__spine` becomes the same statement twice: the open key
+drew its own gold base at the box's bottom edge and the spine drew a second
+gold line 4px under it, a full pitch wide so it ran 3px proud on both sides.
+That is the doubled-rule read this surface has now hit three times — the
+register's head (U2), the sheet's verdict seam (ADR-084 U1), here. Every
+geometry gate was green; the still was not.
+
+Two compositions were built. **Seating the box ON the track** (drop its bottom
+border and bottom margin so the rail's own border closes it, the spine lighting
+the open key's base) is the year selector's exact composition and keeps the
+spine — but it puts a `--fl-hz-seam` .28 base under `--fl-hz-rule` .12 sides,
+i.e. a box with one heavy edge. **Hiding the spine** leaves the open box's gold
+base above the dawn region divider: two lines, but two different hues at two
+weights saying two different things, which is hierarchy rather than doubling.
+The second one shipped.
+
+⚠ **ITS LAW IS ABOUT COUNT, NOT PLACE.** ADR-063's _"one marker, never one per
+station"_ still holds exactly: there is one lit thing on the rail and it still
+moves from key to key. It moved from the track onto the object, which is what
+having an object to move onto buys. The element stays in the DOM, hidden and
+`.fl-case`-scoped — the arcs mount this rail with no housing and keep the
+spine, their markup is `toBe`-pinned, and the smoke's `spines !== 1` guard
+counts the real regression (N markers), unchanged.
+
+### Two things only a box makes visible
+
+- ⚠ **THE LEADING STATION'S CHAMFER CLEARANCE WAS DEAD WEIGHT.** `console.css`
+  pads the first station an extra 9px so its diamond clears the console's
+  top-left cut; inside the housing the console has `clip-path: none`, so there
+  is no cut — and since a station CENTRES its content, that 9px was quietly
+  pushing the first station's diamond-and-label 4.5px right of centre.
+  Invisible on a full-bleed plate; plainly wrong once the plate has an outline
+  to be off-centre inside. ⚠ It is **not** restored on the ≤960/PRM path: that
+  block gives the console back its ground, border, glow and scanline but NOT
+  its cut, so the clearance is dead there too.
+- ⚠ **THE BOX COSTS 8px OF LABEL HEADROOM PER STATION, and the budget is now
+  8px at the binding viewport.** At 1280×720 the four-station rail gives
+  `BRIEFING AGENT` — the longest handle at 14 characters — 106px of label
+  against ~114px of interior, where it had ~122 before. Nothing clips today
+  (measured, all four rails, both themes), but ADR-066's record says these
+  handles were shortened specifically to fit: **a 15-character handle now
+  clips where it previously did not.**
+
+### The lab, and a rule with an off-site dependency
+
+`.fl-case`-scoped production rules reach every direction in `/test/hud-panel-lab`
+by design — `v0` IS `ServicesCasefile`. Only `v6 · Listing` has its own rail
+grammar, and both of its rules had to move:
+
+⚠ **ITS DIAMOND FLIPPED TWICE IN TWO DAYS BECAUSE ITS PREMISE KEPT MOVING.** It
+was phosphor; U2 made production's lit station a solid gold plate and phosphor
+on `#caa554` is ~1.9:1, so the mark knocked OUT of the plate; U3 took the fill
+away, so a knocked-out mark would be near-black on glass and phosphor is right
+again. **The rule never had an opinion about colour, only about what it was
+sitting ON** — and both flips were production moving that bed underneath a
+`.hpl`-scoped override. Anything in a lab that reads a production surface is a
+rule with an off-site dependency.
+
+⚠ **AND RESTORING v6's SPINE LASTED ONE CAPTURE.** The argument was that its
+lit rung is phosphor rather than gold, so the spine would be a different mark
+rather than a second copy — but its box is phosphor too, because the seed's law
+is that phosphor is THE ONE LIT RUNG. The two marks were never going to be
+different hues there. v6 inherits the hidden spine; the rung still reads on the
+era chip and the cursor.
+
 ## Left open
 
 - **The capability plates keep their BR notch, and their premise moved.**
@@ -407,6 +513,9 @@ near-black, and nothing in the suite would catch it.
   678×548, 850×760) are stale by the header and foot's height — they do not
   fail, they simply stop describing the field. The live guard is the smoke's
   `minPx >= 4.3`, which passes.
+- **The four-station rail's label budget is 8px at 1280×720** (U3). It clears
+  today and it is the tightest it has ever been; the next handle change should
+  measure rather than count characters against ADR-066's old figures.
 
 ## Verifying
 
@@ -414,7 +523,14 @@ near-black, and nothing in the suite would catch it.
 npx playwright test tests/visual/services-ring-smoke.spec.ts --project=desktop
 npx playwright test tests/visual/arc-portfolio-smoke.spec.ts --project=desktop
 node scripts/capture-casefile-rows.mjs --vp 1920x1247 --theme dark --rows 0 --stage
+node scripts/capture-hud-panel-lab.mjs --s proof --v v6 --vp 1920x1247 --theme dark
 ```
+
+⚠ **U3's defect was a doubled gold rule and no gate could see it.** The rail's
+geometry, containment, clipping and type gates were all green on the frame that
+drew two gold lines 4px apart. Crop the rail out of the still and look at it —
+`sharp(...).extract({left:0, top:0, width:832, height:56}).resize({width:1900,
+kernel:"nearest"})` on the capture script's own output is enough.
 
 ⚠ The photo-resolution case fails on the mobile projects under a shared dev
 server — status `0`, a thrown fetch, while all four assets serve 200 to `curl`.

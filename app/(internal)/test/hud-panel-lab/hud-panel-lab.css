@@ -1015,20 +1015,37 @@ html[data-theme="light"] .hpl[data-hpl-surface] {
    aliases `--pda-hot` onto it and that drawing's gold is wayfinding by law
    (ADR-062, closed). The glows keep their own warm tint and light switches
    them off itself (theme.css); the token flips in light, so no branch here. */
-.hpl .fl-case[data-hpl-dir="v6"] .fl-con__spine {
-  background: var(--hpl-phosphor);
-}
-/* ⚠ THE DIAMOND KNOCKS OUT WITH THE REST OF THE KEY. Production's lit station
-   became a SOLID gold plate on 2026-09-03, and phosphor on `#caa554` measures
-   ~1.9:1 — the seed's one lit rung, invisible. On this direction the plate is
-   what carries the lit state, so the mark knocks out of it; the phosphor rung
-   still reads where it is not sitting on gold (the spine, the era chip, the
-   cursor). The glow goes for the same reason production's does: an additive
-   halo over a gold fill is nothing. */
+/* ⚠ THE SPINE IS GONE HERE TOO, INHERITED FROM PRODUCTION (2026-09-04), and
+   restoring it was tried for exactly one capture. The station is an outlined
+   BOX now, so the box's own base plus a lit run 4px under it is one statement
+   drawn twice — and putting the spine back in phosphor did not escape that,
+   because this direction's box is ALSO phosphor. Its seed law is the reason:
+   phosphor is THE ONE LIT RUNG, so the two marks were never going to be
+   different hues here. The rung still reads where it is not on the rail — the
+   era chip and the cursor. What survives is the token and the ruling that the
+   rail's lit mark takes it. */
+/* ⚠ THE DIAMOND TAKES THE PHOSPHOR RUNG, AND THAT RULING FLIPPED TWICE IN
+   TWO DAYS BECAUSE ITS PREMISE KEPT MOVING. It was phosphor; on 2026-09-03
+   production's lit station became a SOLID gold plate and phosphor on
+   `#caa554` measures ~1.9:1, so the mark knocked OUT of the plate instead.
+   On 2026-09-04 the plate lost its fill entirely — the key is an outlined
+   box now — so there is no gold under the diamond and a knocked-out mark
+   would be near-black on the housing's own glass. Phosphor is right again.
+   ⚠ THE LESSON IS THE PREMISE, NOT THE VALUE: this rule never had an opinion
+   about colour, only about what it was sitting ON, and both flips were
+   production changing that bed underneath a `.hpl`-scoped override. Anything
+   here that reads a production surface is a rule with an off-site dependency.
+   The glow stays off — it was tuned as a halo and the seed's grammar is a
+   flat lit rung, which is why `--hpl-phosphor` exists at all. */
 .hpl .fl-case[data-hpl-dir="v6"] .fl-con__stn[data-on] > i {
-  border-color: var(--gold-contrast);
-  background: var(--gold-contrast);
+  border-color: var(--hpl-phosphor);
+  background: var(--hpl-phosphor);
   box-shadow: none;
+}
+/* The lit box takes the phosphor rung too, for the same reason: on this
+   direction gold is not what says "open". */
+.hpl .fl-case[data-hpl-dir="v6"] .fl-con__stn[data-on] {
+  border-color: var(--hpl-phosphor);
 }
 
 /* ── THE CURSOR ──────────────────────────────────────────────────────────
