@@ -1,0 +1,1360 @@
+/* ════════════════════════════════════════════════════════════════════════
+   /test/interface-kit — the design grid, and the proof panel recomposed on it.
+
+   ⚠ EVERYTHING IS SCOPED UNDER `.ik`, AND `casefile.css` IS NOT EDITED. The
+   panel view mounts the production leaves and re-seats them by overriding the
+   TOKENS they already read; a zone rule is restated only where production
+   hardcodes a literal no token can reach. That is what keeps `KA` — the
+   recomposition at house values — byte-comparable to the shipped control.
+
+   ⚠ AND EVERY KNOB IS AN ATTRIBUTE SELECTOR, never a per-variant class. The
+   shell writes `data-ik-<knob>="<value>"` for all nine knobs including their
+   defaults, so a rule can always be read in both directions and a still is
+   always traceable to the exact set that drew it.
+
+   THE MEASURED GAP THE KNOBS ANSWER (one probe, 1920×1247, dark, row 01 —
+   the casefile panel against each reference's whole page):
+
+     accent objects        200  ·  112 Tensorlake  ·  15 Prime Intellect
+     tracking rungs         11  ·   15             ·   4
+     share on the top rung 20%  ·  50%             ·  98%
+     text above weight 500 27%  ·  1.8%            ·  2%
+     structure lines        20 in 2 hues  ·  147 in 1  ·  150 in 1
+     rounded corners         0  ·   6              ·   2
+
+   Which says something the plan for this lab did not: the house is STRICTER
+   than both references on radius, and ADR-089 already put the casefile's
+   structure on dawn. What is actually different is that the accent is spent an
+   order of magnitude more often, no tracking rung dominates, a quarter of the
+   text is bold, and the references draw seven times more structure lines — all
+   identical. They are ruled sheets. A panel edge that lands on a page rule is
+   what makes a panel look seated, and that is what `grid=ruled` draws.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── The kit's token layer ────────────────────────────────────────────────
+   Every `--ik-*` maps onto a live token; nothing here invents a value. The
+   specimens read ONLY these, so a specimen that needs a literal is a specimen
+   telling you the token is missing — that is the sheet's diagnostic job.
+
+   ⚠ `--ik-t0` MIRRORS `--fl-t0`'s FORMULA BY HAND (casefile.css). The capture
+   asserts the two resolve to the same pixel on every cell, because a ladder
+   that drifts from the surface it documents is worse than no ladder. */
+.ik {
+  --ik-datum: var(--hud-rail-line, rgba(var(--dawn-rgb), 0.55));
+  --ik-seam: var(--hud-rail-line-soft, rgba(var(--dawn-rgb), 0.28));
+  --ik-rule: rgba(var(--dawn-rgb), 0.12);
+
+  --ik-ink: rgba(var(--dawn-rgb), 0.92);
+  --ik-ink-2: rgba(var(--dawn-rgb), 0.7);
+  --ik-ink-3: rgba(var(--dawn-rgb), 0.52);
+  --ik-ink-4: rgba(var(--dawn-rgb), 0.4);
+  --ik-ink-5: rgba(var(--dawn-rgb), 0.28);
+
+  --ik-accent: var(--gold);
+  --ik-accent-line: var(--gold-line);
+  --ik-accent-ink: var(--gold-ink);
+  --ik-accent-on: var(--gold-contrast);
+  --ik-accent-wash: rgba(var(--gold-rgb), 0.14);
+
+  --ik-ground: rgb(var(--void-deep-rgb));
+  --ik-ground-panel: rgba(var(--void-deep-rgb), 0.42);
+  --ik-ground-bar: rgba(var(--dawn-rgb), 0.04);
+
+  --ik-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  --ik-sans: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
+
+  --ik-t0: clamp(11px, min(0.86vw, 1.11svh), 12px);
+  --ik-ratio: 1.2;
+  --ik-chrome-sm: max(10px, calc(var(--ik-t0) / var(--ik-ratio)));
+  --ik-chrome-md: var(--ik-t0);
+  --ik-chrome-lg: calc(var(--ik-t0) * var(--ik-ratio));
+  --ik-title: calc(var(--ik-t0) * var(--ik-ratio) * var(--ik-ratio));
+  --ik-display: clamp(18px, 1.66vw, 24px);
+  --ik-copy: calc(var(--band-copy, 16px) * 0.9);
+
+  /* The four rungs the kit proposes, against production's eleven. */
+  --ik-track-base: 0.06em;
+  --ik-track-eyebrow: 0.1em;
+  --ik-track-display: -0.02em;
+  --ik-track-copy: 0;
+
+  --ik-ch: 26px;
+  --ik-weight-lit: 700;
+  --ik-case-display: uppercase;
+
+  min-height: 100svh;
+  color: var(--ik-ink);
+  font-family: var(--ik-sans);
+}
+
+/* ⚠ THE GATEWAY IS HIDDEN. `hudHtml` ships the fixed gold radial the landing
+   paints behind everything; on a lab route it is a wash over the composition
+   being judged. */
+.ik .gateway {
+  display: none !important;
+}
+
+/* ── The knobs, as token moves ────────────────────────────────────────── */
+
+.ik[data-ik-line="single"] {
+  --ik-rule: var(--ik-seam);
+}
+.ik[data-ik-track="tight"] {
+  --ik-track-eyebrow: var(--ik-track-base);
+}
+.ik[data-ik-weight="regular"] {
+  --ik-weight-lit: 500;
+}
+.ik[data-ik-case="sentence"] {
+  --ik-case-display: none;
+}
+.ik[data-ik-accent="budget"] {
+  --ik-accent-wash: rgba(var(--dawn-rgb), 0.06);
+}
+.ik[data-ik-lip="dawn"] {
+  --ik-accent-line: var(--ik-datum);
+}
+
+/* ── The lab's own frame ──────────────────────────────────────────────── */
+
+/* ⚠ THE ROOT IS NOT FIXED. `HudNav` prints its corner readout only past
+   `innerHeight / 2`, so the document has to scroll: a sticky stage over a
+   runway, and the shell scrolls past the collapse on mount. */
+.ik-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  z-index: 2;
+}
+.ik-runway {
+  height: 80svh;
+  pointer-events: none;
+}
+
+/* `.stations`' content box, reproduced. `.fl-case` insets itself by
+   `--instrument-inset` ALONE on the documented assumption that its stage is
+   already inside this padding; without it every zone lands one full inset too
+   far outboard. */
+.ik-stationbox {
+  position: absolute;
+  inset: 0;
+  padding: 0 var(--hud-content-inset, 0px);
+}
+.ik-proof-stage {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── The sheet ────────────────────────────────────────────────────────── */
+
+/* One scroll, not a gallery of cards: each section is a band with its head on
+   the casefile's own 34.5% column split, so the sheet is an instance of the
+   grammar it documents. */
+.ik-sheet {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: calc(var(--hud-rail-y-start, 96px)) var(--hud-content-inset, 0px) 120px;
+}
+.ik-sec {
+  display: grid;
+  grid-template-columns: 34.5% minmax(0, 1fr);
+  gap: 0 clamp(20px, 3vw, 48px);
+  padding: clamp(18px, 2.6svh, 34px) 0;
+  border-top: 1px solid var(--ik-seam);
+}
+.ik-sec:first-child {
+  border-top: 0;
+}
+.ik-sec__head {
+  min-width: 0;
+}
+.ik-sec__n {
+  display: block;
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-md);
+  font-weight: 400;
+  letter-spacing: var(--ik-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--ik-ink-4);
+}
+.ik-sec__claim {
+  margin: 6px 0 0;
+  max-width: 34ch;
+  font-family: var(--ik-sans);
+  font-size: var(--ik-copy);
+  line-height: 1.45;
+  color: var(--ik-ink-2);
+}
+.ik-sec__body {
+  min-width: 0;
+}
+
+/* ── Specimen · the line ladder ───────────────────────────────────────── */
+
+.ik-lines {
+  display: grid;
+  gap: clamp(10px, 1.4svh, 16px);
+}
+.ik-lines__row {
+  display: grid;
+  grid-template-columns: 64px minmax(120px, 260px) 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 0 14px;
+}
+.ik-lines__k,
+.ik-lines__v {
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-sm);
+  letter-spacing: var(--ik-track-base);
+  text-transform: uppercase;
+  color: var(--ik-ink-3);
+}
+.ik-lines__v {
+  color: var(--ik-ink-4);
+}
+.ik-lines__note {
+  font-family: var(--ik-sans);
+  font-size: max(11.5px, calc(var(--ik-copy) / var(--ik-ratio)));
+  line-height: 1.3;
+  color: var(--ik-ink-4);
+}
+.ik-lines__bar {
+  display: block;
+  width: 100%;
+}
+.ik-lines__bar--datum {
+  height: 2px;
+  background: var(--ik-datum);
+}
+.ik-lines__bar--seam {
+  height: 1px;
+  background: var(--ik-seam);
+}
+.ik-lines__bar--rule {
+  height: 1px;
+  background: var(--ik-rule);
+}
+.ik-lines__ticks,
+.ik-marks__ticks {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 12px;
+}
+.ik-lines__ticks i,
+.ik-marks__ticks i {
+  display: block;
+  height: 1px;
+  background: var(--ik-datum);
+}
+.ik-lines__ticks i[data-t="minor"],
+.ik-marks__ticks i[data-t="minor"] {
+  width: 7px;
+}
+.ik-lines__ticks i[data-t="major"],
+.ik-marks__ticks i[data-t="major"] {
+  width: 21px;
+}
+
+/* ── Specimen · the type ladder ───────────────────────────────────────── */
+
+.ik-type {
+  display: grid;
+  gap: clamp(8px, 1.1svh, 13px);
+}
+.ik-type__row {
+  display: grid;
+  grid-template-columns: 64px 92px minmax(0, 1fr) 150px;
+  align-items: baseline;
+  gap: 0 14px;
+  padding-bottom: clamp(6px, 0.9svh, 10px);
+  border-bottom: 1px solid var(--ik-rule);
+}
+.ik-type__k,
+.ik-type__spec,
+.ik-type__px {
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-sm);
+  letter-spacing: var(--ik-track-base);
+  text-transform: uppercase;
+  color: var(--ik-ink-4);
+}
+.ik-type__px {
+  text-align: right;
+  color: var(--ik-ink-5);
+  font-variant-numeric: tabular-nums;
+}
+.ik-type__sample {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ik-ink);
+}
+.ik-type__row[data-face="mono"] .ik-type__sample {
+  font-family: var(--ik-mono);
+  letter-spacing: var(--ik-track-base);
+  text-transform: uppercase;
+}
+.ik-type__row[data-face="sans"] .ik-type__sample {
+  font-family: var(--ik-sans);
+  letter-spacing: var(--ik-track-copy);
+}
+.ik-type__row[data-role="display"] .ik-type__sample {
+  font-size: var(--ik-display);
+  font-weight: var(--ik-weight-lit);
+  letter-spacing: var(--ik-track-display);
+  text-transform: var(--ik-case-display);
+}
+.ik-type__row[data-role="title"] .ik-type__sample {
+  font-size: var(--ik-title);
+  letter-spacing: var(--ik-track-display);
+  text-transform: var(--ik-case-display);
+}
+.ik-type__row[data-role="claim"] .ik-type__sample {
+  font-size: var(--ik-chrome-lg);
+  font-weight: var(--ik-weight-lit);
+  text-transform: var(--ik-case-display);
+}
+.ik-type__row[data-role="row"] .ik-type__sample {
+  font-size: var(--ik-chrome-lg);
+}
+.ik-type__row[data-role="copy"] .ik-type__sample {
+  font-size: var(--ik-copy);
+  color: var(--ik-ink-2);
+}
+.ik-type__row[data-role="meta"] .ik-type__sample {
+  font-size: var(--ik-chrome-md);
+  color: var(--ik-ink-4);
+}
+.ik-type__row[data-role="eyebrow"] .ik-type__sample {
+  font-size: var(--ik-chrome-sm);
+  letter-spacing: var(--ik-track-eyebrow);
+  color: var(--ik-ink-4);
+}
+
+/* ── Specimen · the marks ─────────────────────────────────────────────── */
+
+.ik-marks,
+.ik-labels,
+.ik-frames {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(14px, 2vw, 30px);
+}
+.ik-marks__cell,
+.ik-labels__cell {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.ik-marks__set {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 16px;
+}
+.ik-marks__note,
+.ik-labels__note,
+.ik-frames figcaption,
+.ik-stations__k,
+.ik-buttons__k {
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-sm);
+  letter-spacing: var(--ik-track-base);
+  text-transform: uppercase;
+  color: var(--ik-ink-4);
+}
+.ik-diamond {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  background: var(--ik-accent);
+  transform: rotate(45deg);
+}
+.ik-diamond[data-size="6"] {
+  width: 6px;
+  height: 6px;
+}
+.ik-diamond[data-size="12"] {
+  width: 12px;
+  height: 12px;
+}
+.ik-diamond[data-tone="dim"] {
+  background: var(--ik-ink-5);
+}
+.ik-diamond[data-tone="ink"] {
+  background: var(--ik-ink);
+}
+.ik-marks__reticle {
+  position: relative;
+  display: block;
+  width: 74px;
+  height: 44px;
+}
+.ik-ret {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+}
+.ik-ret[data-c="tr"] {
+  top: 0;
+  right: 0;
+  border-top: 1px solid var(--ik-accent-line);
+  border-right: 1px solid var(--ik-accent-line);
+}
+.ik-ret[data-c="bl"] {
+  bottom: 0;
+  left: 0;
+  border-bottom: 1px solid var(--ik-accent-line);
+  border-left: 1px solid var(--ik-accent-line);
+}
+
+/* ── Specimen · the label grammar ─────────────────────────────────────── */
+
+.ik-lbl {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-sm);
+  font-weight: 400;
+  letter-spacing: var(--ik-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--ik-ink-3);
+  white-space: nowrap;
+}
+.ik-lbl[data-form="bracket"] {
+  letter-spacing: var(--ik-track-base);
+  color: var(--ik-ink-4);
+}
+.ik-lbl[data-form="kv"] {
+  gap: 10px;
+}
+.ik-lbl__k {
+  color: var(--ik-ink-5);
+}
+.ik-lbl__v {
+  color: var(--ik-ink);
+  letter-spacing: var(--ik-track-base);
+}
+.ik-lbl[data-form="status"][data-on] {
+  color: var(--ik-accent-ink);
+}
+.ik-lbl[data-form="count"] {
+  color: var(--ik-accent-ink);
+  font-weight: var(--ik-weight-lit);
+  letter-spacing: var(--ik-track-base);
+}
+/* ⚠ THE COUNT IS THE FIRST THING THE BUDGET TAKES. It is a figure the
+   directory already prints beside every row; gold on it buys nothing and
+   spends the accent where no reader is being sent. */
+.ik[data-ik-accent="budget"] .ik-lbl[data-form="count"] {
+  color: var(--ik-ink-3);
+}
+
+/* ── Specimen · the frames ────────────────────────────────────────────── */
+
+.ik-frames__cell {
+  margin: 0;
+  display: grid;
+  gap: 9px;
+}
+.ik-frame {
+  position: relative;
+  width: clamp(150px, 15vw, 210px);
+  height: 104px;
+}
+.ik-frame[data-kind="rule"] {
+  border: 1px solid var(--ik-rule);
+}
+
+/* ⚠ THE HOUSING IS A CLIPPED RING, NOT A BORDER. A `clip-path` CUTS a border
+   and never strokes one, so a chamfered box with `border: 1px` has no line on
+   either diagonal. Outer contour clockwise, inner counter-clockwise one pixel
+   in, non-zero winding making the middle a hole.
+   ⚠ And the inner chamfer leg is NOT `ch − 1px`: a 45° cut offset inward by d
+   moves its diagonal by d·√2, so the correction is −0.6px. */
+.ik-frame[data-kind="housing"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    168deg,
+    color-mix(in srgb, var(--ik-accent-line) 34%, transparent) 0%,
+    rgba(var(--dawn-rgb), 0.1) 45%,
+    color-mix(in srgb, var(--ik-accent-line) 12%, transparent) 70%,
+    color-mix(in srgb, var(--ik-accent-line) 30%, transparent) 100%
+  );
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--ik-ch)) 0,
+    100% var(--ik-ch),
+    100% 100%,
+    var(--ik-ch) 100%,
+    0 calc(100% - var(--ik-ch)),
+    0 0,
+    1px 1px,
+    1px calc(100% - 1px - (var(--ik-ch) - 0.6px)),
+    calc(1px + (var(--ik-ch) - 0.6px)) calc(100% - 1px),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(100% - 1px) calc(1px + (var(--ik-ch) - 0.6px)),
+    calc(100% - 1px - (var(--ik-ch) - 0.6px)) 1px,
+    1px 1px
+  );
+}
+.ik-frame__bd {
+  position: absolute;
+  inset: 1px;
+  background: var(--ik-ground-panel);
+  clip-path: polygon(
+    0 0,
+    calc(100% - (var(--ik-ch) - 0.6px)) 0,
+    100% calc(var(--ik-ch) - 0.6px),
+    100% 100%,
+    calc(var(--ik-ch) - 0.6px) 100%,
+    0 calc(100% - (var(--ik-ch) - 0.6px))
+  );
+}
+.ik[data-ik-material="glass"] .ik-frame__bd {
+  background:
+    radial-gradient(
+      160px 100px at calc(100% - 30px) -14px,
+      rgba(var(--gold-rgb), 0.13),
+      transparent 62%
+    ),
+    var(--ik-ground-panel);
+}
+.ik-frame[data-kind="bay"] i {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+}
+.ik-frame[data-kind="bay"] i[data-c="tl"] {
+  top: 0;
+  left: 0;
+  border-top: 1px solid var(--ik-accent-line);
+  border-left: 1px solid var(--ik-accent-line);
+}
+.ik-frame[data-kind="bay"] i[data-c="tr"] {
+  top: 0;
+  right: 0;
+  border-top: 1px solid var(--ik-accent-line);
+  border-right: 1px solid var(--ik-accent-line);
+}
+.ik-frame[data-kind="bay"] i[data-c="bl"] {
+  bottom: 0;
+  left: 0;
+  border-bottom: 1px solid var(--ik-accent-line);
+  border-left: 1px solid var(--ik-accent-line);
+}
+.ik-frame[data-kind="bay"] i[data-c="br"] {
+  bottom: 0;
+  right: 0;
+  border-bottom: 1px solid var(--ik-accent-line);
+  border-right: 1px solid var(--ik-accent-line);
+}
+.ik-frame[data-kind="cell"] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--ik-seam);
+}
+.ik-frame[data-kind="cell"] i {
+  border-right: 1px solid var(--ik-rule);
+  border-bottom: 1px solid var(--ik-rule);
+}
+.ik-frame[data-kind="cell"] i:nth-child(2n) {
+  border-right: 0;
+}
+.ik-frame[data-kind="cell"] i:nth-child(n + 3) {
+  border-bottom: 0;
+}
+
+/* ── Specimen · the stations ──────────────────────────────────────────── */
+
+.ik-stations {
+  display: grid;
+  gap: clamp(12px, 1.8svh, 20px);
+}
+.ik-stations__case {
+  display: grid;
+  gap: 7px;
+}
+.ik-rail {
+  display: flex;
+  align-items: stretch;
+  height: 40px;
+}
+.ik-stn {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 5px 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--ik-rule);
+  color: var(--ik-ink-3);
+}
+.ik-stn > i {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--ik-ink-5);
+  transform: rotate(45deg);
+}
+.ik-stn > b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-sm);
+  font-weight: 400;
+  letter-spacing: var(--ik-track-eyebrow);
+  text-transform: uppercase;
+}
+/* fill — ADR-089 U4's inverse video, ink and diamond knocked out */
+.ik-rail[data-mode="fill"] .ik-stn[data-on] {
+  border-color: var(--ik-accent);
+  background: var(--ik-accent);
+  color: var(--ik-accent-on);
+}
+.ik-rail[data-mode="fill"] .ik-stn[data-on] > i {
+  border-color: var(--ik-accent-on);
+  background: var(--ik-accent-on);
+}
+/* line — no fill, the accent on the box's own bottom edge */
+.ik-rail[data-mode="line"] .ik-stn[data-on] {
+  border-color: transparent;
+  border-bottom-color: var(--ik-accent);
+  color: var(--ik-ink);
+}
+.ik-rail[data-mode="line"] .ik-stn[data-on] > i {
+  border-color: var(--ik-accent);
+  background: var(--ik-accent);
+}
+/* outline — the accent as the border alone */
+.ik-rail[data-mode="outline"] .ik-stn[data-on] {
+  border-color: var(--ik-accent);
+  color: var(--ik-ink);
+}
+.ik-rail[data-mode="outline"] .ik-stn[data-on] > i {
+  border-color: var(--ik-accent);
+  background: var(--ik-accent);
+}
+
+/* ── Specimen · the buttons ───────────────────────────────────────────── */
+
+.ik-buttons {
+  display: grid;
+  gap: clamp(11px, 1.6svh, 18px);
+}
+.ik-buttons__rank {
+  display: grid;
+  gap: 7px;
+}
+.ik-buttons__set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ik-btn-spec {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 34px;
+  padding: 0 15px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-sm);
+  font-weight: 400;
+  letter-spacing: var(--ik-track-eyebrow);
+  text-transform: uppercase;
+  cursor: default;
+}
+.ik-btn-spec__arrow {
+  font-style: normal;
+}
+/* ⚠ INK ON A GOLD FILL IS `--gold-contrast`, NEVER `--void` (ADR-058): the two
+   are byte-equal in dark, and in light `--void` IS the parchment ground. */
+.ik-btn-spec[data-rank="primary"] {
+  border-color: var(--ik-accent);
+  background: var(--ik-accent);
+  color: var(--ik-accent-on);
+}
+.ik-btn-spec[data-rank="secondary"] {
+  border-color: var(--ik-accent-line);
+  color: var(--ik-accent-ink);
+}
+.ik-btn-spec[data-rank="tertiary"] {
+  border-color: var(--ik-seam);
+  color: var(--ik-ink-2);
+}
+.ik-btn-spec[data-rank="secondary"][data-state="hover"] {
+  background: rgba(var(--gold-rgb), 0.1);
+  border-color: var(--ik-accent);
+}
+.ik-btn-spec[data-rank="tertiary"][data-state="hover"] {
+  background: rgba(var(--dawn-rgb), 0.05);
+  border-color: var(--ik-datum);
+  color: var(--ik-ink);
+}
+.ik-btn-spec[data-rank="primary"][data-state="hover"] {
+  background: var(--gold-bright, #e0bd6a);
+  border-color: var(--gold-bright, #e0bd6a);
+}
+.ik-btn-spec[data-state="active"] {
+  transform: translateY(1px);
+}
+.ik-btn-spec[data-state="disabled"] {
+  opacity: 0.4;
+}
+
+/* ── Specimen · the directory rows ────────────────────────────────────── */
+
+.ik-rows {
+  max-width: 520px;
+}
+.ik-rows__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 5px;
+}
+.ik-rows__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ik-rows__list li + li .ik-row {
+  border-top: 1px solid var(--ik-rule);
+}
+.ik-row {
+  display: grid;
+  grid-template-columns: 20px 1fr auto;
+  align-items: center;
+  gap: 0 12px;
+  min-height: 30px;
+  padding: 5px 8px;
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-lg);
+  line-height: 1.15;
+  letter-spacing: var(--ik-track-base);
+  text-transform: uppercase;
+  color: var(--ik-ink-2);
+}
+.ik-row__glyph {
+  width: 14px;
+  height: 10px;
+  border: 1px solid var(--ik-ink-5);
+}
+.ik-row__glyph[data-icon="dir"] {
+  clip-path: polygon(0 0, 7px 0, 9px 3px, 100% 3px, 100% 100%, 0 100%);
+}
+.ik-row__glyph[data-icon="doc"] {
+  clip-path: polygon(0 0, 9px 0, 100% 4px, 100% 100%, 0 100%);
+}
+.ik-row__meta {
+  font-size: var(--ik-chrome-md);
+  letter-spacing: var(--ik-track-base);
+  color: var(--ik-ink-4);
+}
+.ik-row[data-state="hover"] {
+  background: rgba(var(--dawn-rgb), 0.04);
+}
+.ik-row[data-state="active"] {
+  background: var(--ik-accent);
+  color: var(--ik-accent-on);
+  font-weight: var(--ik-weight-lit);
+  box-shadow: 0 0 18px rgba(var(--gold-rgb), 0.22);
+}
+.ik[data-ik-material="flat"] .ik-row[data-state="active"] {
+  box-shadow: none;
+}
+.ik-row[data-state="active"] .ik-row__meta {
+  color: rgba(var(--void-deep-rgb), 0.7);
+}
+.ik-row[data-state="active"] .ik-row__glyph {
+  border-color: var(--ik-accent-on);
+}
+
+/* ── Specimen · the readouts ──────────────────────────────────────────── */
+
+.ik-readouts {
+  display: grid;
+  gap: clamp(14px, 2svh, 22px);
+  max-width: 560px;
+}
+.ik-readouts__pair {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+}
+.ik-kv {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--ik-mono);
+  text-transform: uppercase;
+}
+.ik-kv[data-dir="v"] {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.ik-kv__k {
+  font-size: var(--ik-chrome-sm);
+  letter-spacing: var(--ik-track-eyebrow);
+  color: var(--ik-ink-5);
+}
+.ik-kv__rule {
+  width: 26px;
+  height: 0;
+  border-top: 1px solid var(--ik-rule);
+}
+.ik-kv__v {
+  font-size: var(--ik-chrome-md);
+  letter-spacing: var(--ik-track-base);
+  color: var(--ik-accent-ink);
+}
+.ik[data-ik-accent="budget"] .ik-kv__v {
+  color: var(--ik-ink);
+}
+.ik-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--ik-seam);
+}
+.ik-stats__cell {
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  border-right: 1px solid var(--ik-rule);
+}
+.ik-stats__cell:last-child {
+  border-right: 0;
+}
+.ik-stats__k {
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-sm);
+  letter-spacing: var(--ik-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--ik-ink-5);
+}
+.ik-stats__v {
+  font-family: var(--ik-sans);
+  font-size: var(--ik-title);
+  letter-spacing: var(--ik-track-display);
+  color: var(--ik-ink);
+}
+.ik-bench {
+  display: grid;
+  gap: 0;
+}
+.ik-bench__row {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr) 54px;
+  align-items: center;
+  gap: 0 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--ik-rule);
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-sm);
+  letter-spacing: var(--ik-track-base);
+  text-transform: uppercase;
+  color: var(--ik-ink-3);
+}
+.ik-bench__track {
+  display: block;
+  height: 6px;
+  background: rgba(var(--dawn-rgb), 0.06);
+}
+.ik-bench__track i {
+  display: block;
+  height: 100%;
+  background: var(--ik-ink-5);
+}
+.ik-bench__row[data-lit] {
+  color: var(--ik-ink);
+}
+.ik-bench__row[data-lit] .ik-bench__track i {
+  background: var(--ik-accent);
+}
+.ik-bench__t {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ik-ink-4);
+}
+
+/* ── Specimen · the panel anatomy ─────────────────────────────────────── */
+
+.ik-anatomy {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: clamp(16px, 2.4vw, 34px);
+  align-items: start;
+}
+.ik-anatomy__fig {
+  position: relative;
+  height: 190px;
+  border: 1px solid var(--ik-seam);
+}
+.ik-anatomy__fig i {
+  position: absolute;
+}
+.ik-anatomy__fig i[data-part="head"] {
+  left: 0;
+  right: 0;
+  top: 22px;
+  height: 1px;
+  background: var(--ik-seam);
+}
+.ik-anatomy__fig i[data-part="identity"] {
+  left: 10px;
+  top: 8px;
+  width: 74px;
+  height: 8px;
+  background: var(--ik-ink-5);
+}
+.ik-anatomy__fig i[data-part="record"] {
+  left: 10px;
+  top: 34px;
+  width: 30%;
+  bottom: 12px;
+  background: rgba(var(--dawn-rgb), 0.04);
+}
+.ik-anatomy__fig i[data-part="split"] {
+  left: calc(30% + 18px);
+  top: 34px;
+  bottom: 12px;
+  width: 1px;
+  background: var(--ik-seam);
+}
+.ik-anatomy__fig i[data-part="rail"] {
+  left: calc(30% + 30px);
+  right: 10px;
+  top: 34px;
+  height: 16px;
+  border: 1px solid var(--ik-rule);
+}
+.ik-anatomy__fig i[data-part="field"] {
+  left: calc(30% + 30px);
+  right: 10px;
+  top: 58px;
+  bottom: 30px;
+  background: rgba(var(--dawn-rgb), 0.03);
+}
+.ik-anatomy__fig i[data-part="foot"] {
+  left: calc(30% + 30px);
+  right: 10px;
+  bottom: 12px;
+  height: 12px;
+  border-top: 1px solid var(--ik-rule);
+}
+.ik-anatomy__key {
+  margin: 0;
+  display: grid;
+  gap: 7px;
+}
+.ik-anatomy__row {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 0 12px;
+  align-items: baseline;
+}
+.ik-anatomy__row dt {
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-sm);
+  letter-spacing: var(--ik-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--ik-ink-4);
+}
+.ik-anatomy__row dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+.ik-anatomy__row code {
+  font-family: var(--ik-mono);
+  font-size: var(--ik-chrome-sm);
+  color: var(--ik-ink-3);
+}
+.ik-anatomy__row dd span {
+  font-family: var(--ik-sans);
+  font-size: max(11.5px, calc(var(--ik-copy) / var(--ik-ratio)));
+  color: var(--ik-ink-4);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   THE PANEL BRIDGE — the knobs, applied to the production leaves.
+
+   ⚠ TOKENS FIRST, ZONE RULES ONLY WHERE PRODUCTION HARDCODES A LITERAL.
+   Every restatement below names the literal it is reaching past; if a rule
+   here has no such note it should have been a token.
+
+   ⚠ AND `[data-ik-panel]` IS ON THE RECOMPOSITION ONLY. `mount=shipped`
+   renders the real `ServicesCasefile` with no such attribute, so the control
+   is untouched by every rule in this block — which is the only way a control
+   is a control.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── grid=ruled · the seat ──────────────────────────────────
+   The references' own move, and the measured gap: they draw 147–150 structure
+   lines to our 20, all identical, so a panel edge landing on a page rule is
+   what makes the panel a REGION of the sheet rather than a card over it.
+
+   ⚠ IT IS DRAWN ON `.fl-case`, NOT ON THE STAGE, AND THAT IS NOT A PREFERENCE.
+   `--fl-rail-top` and `--fl-rail-h` are declared on `.fl-case` — the first cut
+   put this on `.ik-proof-stage`, where both resolved to their `0px` fallbacks
+   and the whole grid painted a zero-height strip with no error anywhere. A
+   token can only be read where it is declared.
+
+   The parent's `::before` paints beneath every child, so the housing, the
+   record column and the field all sit over it without a z-index of their own. */
+.ik[data-ik-grid="ruled"] .fl-case[data-ik-panel]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--fl-rail-top);
+  height: var(--fl-rail-h);
+  pointer-events: none;
+  background-image:
+    /* the column split and its repeats — the vertical rules a record column
+       and a field can land on */
+    repeating-linear-gradient(
+      to right,
+      var(--ik-rule) 0 1px,
+      transparent 1px calc(var(--fl-col-l) / 3)
+    ),
+    /* the rail's own thirteen rungs, continued across the band */
+    repeating-linear-gradient(
+        to bottom,
+        var(--ik-rule) 0 1px,
+        transparent 1px calc(var(--fl-rail-h) / 12)
+      );
+}
+
+/* ── line=single · structure is one hue ───────────────────────────────
+   What ADR-089 did not reach: the directory's row glyph draws gold .55 on all
+   four sides (casefile.css hardcodes it) and the station's diamond gold .42
+   through `--con-dim`. Both are STRUCTURE — a box and a mark on the machine —
+   not wayfinding. */
+.ik[data-ik-line="single"] .fl-case[data-ik-panel] .fl-row__glyph {
+  border-color: var(--ik-seam);
+}
+.ik[data-ik-line="single"] .fl-case[data-ik-panel] .fl-con {
+  --con-dim: var(--ik-seam);
+  --con-hair: var(--ik-rule);
+  --con-hair2: var(--ik-seam);
+}
+
+/* ── track=tight · one rung ───────────────────────────────────────────
+   Eleven values measured on one panel, none dominant. Production sets each of
+   these as a literal `letter-spacing`, so a token cannot reach them. */
+.ik[data-ik-track="tight"]
+  .fl-case[data-ik-panel]
+  :is(
+    .fl-tabs__tab,
+    .fl-tabs__ix,
+    .fl-desig,
+    .fl-dir__head,
+    .fl-dir__head .fl-desig,
+    .fl-row,
+    .fl-row__meta,
+    .fl-proof-register__claim,
+    .fl-brief__class,
+    .fl-cell,
+    .fl-cell__r,
+    .fl-con__stn > b,
+    .fl-verdict__k
+  ) {
+  letter-spacing: var(--ik-track-base);
+}
+/* ⚠ THE MAP IS DELIBERATELY NOT IN THAT LIST, AND THIS IS THE ONE PLACE THE
+   RULE STOPS. Its labels are PLACED BY ARITHMETIC against `MONO_ADVANCE`
+   (0.68em — PT Mono's advance plus the drawing's own 0.08em tracking), and
+   every fit guard on that surface measures against the same constant. Forcing
+   a different rung from CSS would move every glyph the projection already
+   solved for and overflow cells no test would catch, because the tests check
+   the MODEL rather than the render.
+   So the map keeps four of the panel's rungs, and joining them to the base one
+   is a change to `mapProjection`, not to a stylesheet. Recorded rather than
+   worked around: it is why `track=tight` reads 7 rungs and not 1. */
+
+/* ── weight=regular · nothing above 500 ───────────────────────────────
+   Six declared sites, thirty rendered nodes, 27 per cent of the panel's text.
+   Each is a hardcoded `font-weight: 700`. */
+.ik[data-ik-weight="regular"]
+  .fl-case[data-ik-panel]
+  :is(
+    .fl-tabs__tab[data-on],
+    .fl-brief__title,
+    .fl-brief__dot,
+    .fl-proof-register__claim,
+    .fl-dir__count,
+    .fl-row[data-on],
+    .fl-cell__l
+  ) {
+  font-weight: 500;
+}
+/* ⚠ AND THE MAP, WHERE TWO THIRDS OF THE PANEL'S BOLD ACTUALLY LIVES. The
+   twenty cartridge titles are `<text fontWeight={700}>` — an SVG PRESENTATION
+   ATTRIBUTE, which any CSS rule outranks, so this reaches them. Measured: the
+   DOM knob alone took 30 bold nodes to 20, and the twenty that stayed were all
+   in here.
+   ⚠ Safe on advance because PT Mono is monospaced — every weight shares the
+   cell — which is exactly why the TRACKING knob below cannot do the same. */
+.ik[data-ik-weight="regular"] .fl-case[data-ik-panel] .fl-pda text {
+  font-weight: 500;
+}
+
+/* ── case=sentence · uppercase is for chrome ──────────────────────────
+   The display title and the four register claims only. The mono chrome — the
+   tabs, the directory rows, the designations, the station labels — stays
+   uppercase, which is the point: case only ranks if something else does not
+   use it. */
+.ik[data-ik-case="sentence"]
+  .fl-case[data-ik-panel]
+  :is(.fl-brief__title, .fl-proof-register__claim) {
+  text-transform: none;
+}
+
+/* ── accent=budget · the accent is spent five times ───────────────────
+   Two hundred gold objects measured, most of them the map's outlined
+   cartridges. What keeps gold: the lit client tab, the active directory row,
+   the open station. What loses it: the estate, the counts, the marks that
+   point at nothing. */
+.ik[data-ik-accent="budget"] .fl-case[data-ik-panel] .fl-dir__count {
+  color: var(--ik-ink-3);
+}
+.ik[data-ik-accent="budget"] .fl-case[data-ik-panel] .fl-row__glyph {
+  border-color: var(--ik-ink-5);
+}
+.ik[data-ik-accent="budget"] .fl-case[data-ik-panel] .fl-brief__body em {
+  color: var(--ik-ink);
+  background: rgba(var(--dawn-rgb), 0.08);
+}
+/* ⚠ THE MAP IS AN SVG, ITS CARTRIDGES ARE STROKED, AND ONE TOKEN SERVES BOTH
+   STATES. `pdaGlyphs`' state table strokes `--pda-hot` for a configured stream
+   AND for the open one — they differ only by the fill alpha behind them, 0.07
+   against 0.18. So the accent is spent on all twenty cartridges and marks none
+   of them, and no override can keep gold on the selected one alone.
+
+   That is itself the finding, and this knob is what makes it visible: the
+   estate goes to dawn line-work and the reading falls to the state mark and the
+   fill, which is what "selection is elaboration" has to mean here. If the owner
+   wants the open stream gold as well, the fix is a SECOND token in `pda.css`,
+   not a rule in this lab. */
+.ik[data-ik-accent="budget"] .fl-case[data-ik-panel] .fl-pda {
+  --pda-hot: var(--ik-ink);
+  --pda-amb: rgba(var(--dawn-rgb), 0.34);
+  --pda-ink: rgba(var(--dawn-rgb), 0.62);
+  --pda-hub: rgba(var(--dawn-rgb), 0.08);
+  --pda-hub-grain: rgba(var(--dawn-rgb), 0.05);
+  --con-mark-glow: none;
+  --con-spine-glow: none;
+}
+
+/* ── material=flat · one ground, no atmosphere ────────────────────────
+   The housing's bloom is a `radial-gradient` inside a two-layer background, so
+   the layer has to be restated rather than switched off. The console's own
+   blur runs over a ground production already made transparent — two backdrop
+   snapshots on one band, one of them with nothing to composite. */
+.ik[data-ik-material="flat"] .fl-case[data-ik-panel] .fl-hz__bd {
+  background: var(--fl-hz-ground);
+  backdrop-filter: none;
+}
+.ik[data-ik-material="flat"] .fl-case[data-ik-panel] .fl-hz__bd::after {
+  content: none;
+}
+.ik[data-ik-material="flat"] .fl-case[data-ik-panel] .fl-con__console {
+  backdrop-filter: none;
+}
+.ik[data-ik-material="flat"] .fl-case[data-ik-panel] .fl-row[data-on] {
+  box-shadow: none;
+}
+.ik[data-ik-material="flat"] .fl-case[data-ik-panel] .fl-brief__title {
+  text-shadow: none;
+}
+
+/* ── lip=dawn · the panel is software, not a device ───────────────────
+   `console.css` rules that a panel's own edge is dawn; ADR-089 gave the
+   housing a gold lip because a housing is the machined device a screen is set
+   into. This is that ruling asked the other way round. */
+.ik[data-ik-lip="dawn"] .fl-case[data-ik-panel] {
+  --fl-hz-lip-1: var(--ik-datum);
+  --fl-hz-lip-2: var(--ik-seam);
+  --fl-hz-lip-3: var(--ik-seam);
+  --fl-hz-lip-4: var(--ik-datum);
+}
+
+/* ── tab=line / tab=outline · selection without a fill ────────────────
+   ADR-089 U4 shipped the fill after U2's flat wash was rejected as "too much
+   fill" and U3's outline was rejected as too quiet. These are the two ways to
+   keep U3's BOX and spend no area at all — the third time this rail has been
+   asked, so both are drawn rather than argued. */
+.ik[data-ik-tab="line"] .fl-case[data-ik-panel] .fl-con__stn[data-on] {
+  border-color: transparent;
+  border-bottom-color: var(--gold);
+  background: none;
+  background-image: none;
+  color: var(--con-txt);
+}
+.ik[data-ik-tab="line"] .fl-case[data-ik-panel] .fl-con__stn[data-on] > i {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+.ik[data-ik-tab="outline"] .fl-case[data-ik-panel] .fl-con__stn[data-on] {
+  border-color: var(--gold);
+  background: none;
+  background-image: none;
+  color: var(--con-txt);
+}
+.ik[data-ik-tab="outline"] .fl-case[data-ik-panel] .fl-con__stn[data-on] > i {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   The lab console. Copied in grammar from `hud-panel-lab.css` on purpose: two
+   labs the owner reads in one sitting should not have two chromes.
+   ════════════════════════════════════════════════════════════════════════ */
+
+.ik-console {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  translate: -50% 0;
+  z-index: 60;
+  display: grid;
+  gap: 6px;
+  max-width: min(1180px, calc(100vw - 40px));
+  padding: 10px 14px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.16);
+  background: rgba(8, 7, 6, 0.92);
+  backdrop-filter: blur(8px);
+}
+.ik-console:not([data-open]) > *:not(:first-child) {
+  display: none;
+}
+.ik-console__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.ik-console__title {
+  margin-right: 4px;
+  font-family: var(--ik-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.4);
+}
+.ik-console__rule {
+  width: 1px;
+  height: 14px;
+  margin: 0 6px;
+  background: rgba(var(--dawn-rgb), 0.16);
+}
+.ik-btn {
+  padding: 4px 8px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.16);
+  background: transparent;
+  color: rgba(var(--dawn-rgb), 0.62);
+  font-family: var(--ik-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ik-btn:hover {
+  color: rgba(var(--dawn-rgb), 0.92);
+  border-color: rgba(var(--dawn-rgb), 0.3);
+}
+.ik-btn[data-on] {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.ik-btn--fold {
+  margin-left: auto;
+}
+.ik-thesis {
+  margin: 2px 0 0;
+  max-width: 92ch;
+  font-family: var(--ik-sans);
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: rgba(var(--dawn-rgb), 0.6);
+}
+.ik-thesis b {
+  margin-right: 8px;
+  font-family: var(--ik-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* The machine mirror. Never `display: none` — a hidden element still has a
+   `data-stamp`, and this is what every wait in the capture hangs on. */
+.ik-read {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.ik-gate-warn {
+  position: fixed;
+  left: 50%;
+  top: 12px;
+  translate: -50% 0;
+  z-index: 60;
+  display: none;
+  margin: 0;
+  padding: 8px 12px;
+  max-width: 640px;
+  border: 1px solid rgba(var(--gold-rgb), 0.4);
+  background: rgba(8, 7, 6, 0.94);
+  font-family: var(--ik-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--gold);
+}
+@media (max-width: 1280px), (prefers-reduced-motion: reduce) {
+  .ik[data-ik-view="panel"] .ik-gate-warn {
+    display: block;
+  }
+}
+
+/* ── Light ────────────────────────────────────────────────────────────
+   ⚠ RE-DERIVED, NEVER INHERITED. An alpha inverts its own meaning across the
+   flip: `rgba(ink, .12)` recedes toward black in dark and toward parchment in
+   light, so the same number goes from quiet to invisible. The gold ramp's LINE
+   and INK steps carry the accent, because `--gold` itself is the MARK rung and
+   letters at about 1.8:1 on parchment. */
+html[data-theme="light"] .ik {
+  --ik-accent-ink: var(--gold-ink);
+  --ik-accent-line: var(--gold-line);
+  --ik-rule: rgba(var(--dawn-rgb), 0.16);
+  --ik-ground-bar: rgba(var(--dawn-rgb), 0.05);
+}
+html[data-theme="light"] .ik-console {
+  background: rgba(236, 227, 214, 0.94);
+  border-color: rgba(var(--dawn-rgb), 0.2);
+}
+html[data-theme="light"] .ik-gate-warn {
+  background: rgba(236, 227, 214, 0.96);
+  color: var(--gold-ink);
+}
