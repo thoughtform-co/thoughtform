@@ -382,8 +382,15 @@ html[data-theme="light"] .fl-desig--r,
 html[data-theme="light"] .fl-source {
   color: rgba(var(--dawn-rgb), 0.55);
 }
+/* ⚠ `:not([data-on])` IS LOAD-BEARING, NOT TIDINESS. This rule is (0,2,1)
+   and `casefile.css`'s `.fl-tabs__tab[data-on] { color: var(--gold) }` is
+   (0,2,0), so without the exclusion THE ACTIVE CLIENT TAB LOSES ITS GOLD INK
+   IN LIGHT — while its `::after` underline still draws `--gold` and the 700
+   weight still applies, which is why it reads as a rendering fault rather than
+   as a missing rule. The comment above is about the INACTIVE tab; it always
+   was. */
 html[data-theme="light"] .fl-ctx__k,
-html[data-theme="light"] .fl-tabs__tab {
+html[data-theme="light"] .fl-tabs__tab:not([data-on]) {
   color: rgba(var(--dawn-rgb), 0.58);
 }
 html[data-theme="light"] .fl-plate__foot,

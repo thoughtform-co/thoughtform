@@ -1772,6 +1772,12 @@
 
 .fl-brief__body {
   margin: clamp(10px, 1.6svh, 15px) 0 0;
+  /* ⚠ DECLARED, NEVER INHERITED (ADR-067). This is the one prose node on the
+     surface that relied on `.fl-case`'s own family, which is the exact pattern
+     that put four lines of body copy in IBM Plex Mono once already — anything
+     whose content is a sentence names its face. Byte-identical render today;
+     the point is that it stays that way. */
+  font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   font-size: var(--fl-copy);
   line-height: 1.52;
   color: rgba(var(--dawn-rgb), 0.7);
