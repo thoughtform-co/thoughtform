@@ -168,7 +168,7 @@ describe("arcs registry (ADR-052)", () => {
     // casefile's envelope: the same six patterns `cases-registry.test.ts`
     // runs over CASES and PROJECT_CASES (copied, not imported — a spec
     // importing a spec registers its tests twice), plus first names only.
-    const ENVELOPE_ARCS = ["portfolio"];
+    const ENVELOPE_ARCS = ["loop-earplugs"];
     const banned: readonly [RegExp, string][] = [
       [/[€$£]/, "currency symbol"],
       [/\b\d{1,3}(,\d{3})+\b/, "amount with thousands separator"],

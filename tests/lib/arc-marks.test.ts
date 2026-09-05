@@ -76,7 +76,7 @@ describe("every arc's corners are derived from its own menu", () => {
   }
 
   it("gives the portfolio's Tools chapter its four dossiers", () => {
-    const portfolio = ARCS.find((a) => a.slug === "portfolio")!;
+    const portfolio = ARCS.find((a) => a.slug === "loop-earplugs")!;
     const menu = menuOf(portfolio);
     const { chapters } = buildArcMarks(menu);
     expect(chapters.map((c) => c.name)).toEqual([

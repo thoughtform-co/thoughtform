@@ -17,7 +17,7 @@ const base =
     ? process.argv[process.argv.indexOf("--base") + 1]
     : "http://localhost:3113";
 
-const ROUTES = ["/", "/claude-workshop", "/arcs", "/arcs/portfolio", "/arcs/ai-keynote"];
+const ROUTES = ["/", "/claude-workshop", "/arcs", "/arcs/loop-earplugs", "/arcs/ai-keynote"];
 const THEMES = ["dark", "light"];
 
 const browser = await chromium.launch({ headless: false });

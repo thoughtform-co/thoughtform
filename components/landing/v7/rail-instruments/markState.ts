@@ -5,7 +5,7 @@
  * (ADR-059 U6). `clusters.ts` resolves every roster id against
  * `MANIFEST_ENTRIES` and `READOUT_SECTIONS` **at module evaluation**, and
  * throws loudly on a miss — which is right for the landing and absurd for
- * `/arcs/portfolio`, where it would mean renaming a landing station
+ * `/arcs/loop-earplugs`, where it would mean renaming a landing station
  * white-screens a client's page. The arcs build their roster from their own
  * menu; they share this type and this function and nothing else.
  *

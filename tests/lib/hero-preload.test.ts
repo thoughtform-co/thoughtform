@@ -61,12 +61,12 @@ describe("hero preload", () => {
     /* This list is the set of routes whose hero has TWO files, one per
        theme — the only case a script-injected preload exists to solve,
        because a static link always names the dark one.
-       `/arcs/portfolio` joined on ADR-075, left on ADR-078 U1 (a Loop key
+       `/arcs/loop-earplugs` joined on ADR-075, left on ADR-078 U1 (a Loop key
        visual, one file) and returned in U2 — a frame out of the films is
        evidence, not wallpaper, so the plate is the house visual again. ⚠ The list is hand-written rather than
        derived from the registry, so a route that changes its plate has to
        be removed here by hand — nothing else would say so. */
-    expect([...HERO_ROUTES]).toEqual(["/", "/claude-workshop", "/arcs/portfolio"]);
+    expect([...HERO_ROUTES]).toEqual(["/", "/claude-workshop", "/arcs/loop-earplugs"]);
     for (const route of HERO_ROUTES) expect(script).toContain(`"${route}"`);
   });
 

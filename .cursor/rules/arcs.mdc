@@ -13,7 +13,21 @@ Mirror of [`.claude/rules/arcs.md`](../../.claude/rules/arcs.md) — read
 that file; it is the canonical text. Read first: ADR-052 (the deck
 chassis), ADR-057 (terminal motion), ADR-072 (the portfolio arc, the
 `dossier` section kind, the shared evidence, the envelope on arcs), ADR-073
-(the site's header on every arc; the left reel deleted).
+(the site's header on every arc; the left reel deleted), ADR-090 (the
+dossier is one housing — proposed).
+
+⚠ ADR-090: the four dossier beats are one machined housing (ADR-089's
+grammar at page scale) with the console as a square CELL inside it, all
+`.arc-dossier`-scoped and gated at `(min-width: 981px) and
+(prefers-reduced-motion: no-preference)`. Three traps, all measured: the
+ADR-052 reveal's `rootMargin: -10%` is a DEAD BAND the housing may not fill
+into (`--dos-reveal-clear`; the cost is double the clearance, and it binds
+only at tall viewports where the console sets the row); `.arc-head` carries
+`.arc-reveal`, whose transform is the containing block, so the header
+band's seat is declared rather than inherited; and the housing's inset is
+paid for by the FIELD, where `.fl-bay__top` is already clipped. The housing
+also makes `--arc-plate` the record column's BED in light — a new text rung
+there belongs in the contrast walk.
 
 Contracts in one breath: one scroll writer (`useArcScroll`); `--hero-lift`
 gates the rails; the slice API is read-only; every section opaque void; no

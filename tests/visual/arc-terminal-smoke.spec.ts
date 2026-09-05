@@ -340,6 +340,6 @@ test.describe("arc terminal motion (ADR-057)", () => {
     expect(new Set(chips).size).toBe(chips.length);
     await expect(page.locator('.arc-card[href="/arcs/claude-workshop-v2"]')).toHaveCount(1);
     await expect(page.locator('.arc-card[href="/arcs/ai-keynote-v2"]')).toHaveCount(1);
-    await expect(page.locator('.arc-card[href="/arcs/portfolio"]')).toHaveCount(1);
+    await expect(page.locator('.arc-card[href="/arcs/loop-earplugs"]')).toHaveCount(1);
   });
 });

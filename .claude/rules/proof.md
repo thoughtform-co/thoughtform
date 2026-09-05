@@ -214,7 +214,7 @@ breather).
   (ADR-072).** `ToolGallery` is the casefile's COMPOSITION — console, rail,
   fold-close, lightbox — and `ToolField` (`ToolBay` + `CapabilityBlocks`,
   lifted verbatim with their comments) is the bay and the blocks, which
-  the portfolio arc (`/arcs/portfolio`, `components/arcs/ArcDossier*`)
+  the portfolio arc (`/arcs/loop-earplugs`, `components/arcs/ArcDossier*`)
   mounts at page scale, one tool per beat. `tests/lib/tool-gallery-markup.test.tsx`
   pins the landing's rendered markup byte-for-byte (snapshot + the ring
   smoke's strings). ⚠ A bay change is a TWO-surface change: run

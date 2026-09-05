@@ -10,7 +10,7 @@ import "./holo-program-lab.css";
  * fits numbers the page no longer publishes.
  */
 export default function HoloProgramLabRoute() {
-  const arc = getArc("portfolio");
+  const arc = getArc("loop-earplugs");
   const program = arc?.sections.find((s) => s.kind === "program");
 
   if (!program || program.kind !== "program") {

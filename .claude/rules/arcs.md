@@ -15,12 +15,13 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 
 - [ADR-052: Client arcs](../sentinel/decisions/052-client-arcs.md)
 - [ADR-057: Terminal motion](../sentinel/decisions/057-arc-terminal-motion.md) — the pinned-beat grammar on the `-v2` cuts
-- [ADR-072: The portfolio arc, and the dossier section kind](../sentinel/decisions/072-portfolio-arc-and-dossier.md) — `/arcs/portfolio`, the ninth kind, the shared evidence, the envelope on arcs
+- [ADR-072: The portfolio arc, and the dossier section kind](../sentinel/decisions/072-portfolio-arc-and-dossier.md) — `/arcs/loop-earplugs`, the ninth kind, the shared evidence, the envelope on arcs
 - [ADR-073: The site's header on the arc pages](../sentinel/decisions/073-arc-header.md) — `ArcHudNav` replaces the left reel; `menuPrimary` chapters; the hero's top band
 - [ADR-075: The arc hero IS the homepage hero](../sentinel/decisions/075-arc-hero-curtain.md) — the plate, the shared boot, and the curtain seam
 - [ADR-076: The portfolio flows, and the architecture closes it](../sentinel/decisions/076-portfolio-flows-and-the-architecture-beat.md) — reveal motion on the portfolio, the curtain on the flowing path, the `intelligence` kind
 - [ADR-077: The arcs' ink ramp](../sentinel/decisions/077-arcs-ink-ramp.md) — the colour tokens that let the light theme reach this surface
 - [ADR-079: The portfolio is a trajectory, and every beat owns a screen](../sentinel/decisions/079-portfolio-trajectory-and-the-beat.md) — **the live cut**: `rollout` absorbed into the board, `tool-index`, Vesper first, one beat per viewport
+- ⚠ [ADR-090: The dossier is one housing](../sentinel/decisions/090-dossier-is-one-housing.md) — **PROPOSED (2026-09-05), shipped and guarded, pending the owner's live read.** The four dossier beats become one machined housing (ADR-089's grammar at page scale): TR+BL chamfer on the plate rung, `--arc-plate` ground, the designation seated in a header band fused to the top edge, a column split the record's rules terminate on, `--arc-seam` .28 dividing regions against `--arc-rule` .12 within one, and the console demoted to a square CELL inside it (ADR-065 rule 4). ⚠ **The record overhung the console by 8.6–88.7px, a different amount per tool** — `align-items: start` aligned the tops and nothing aligned the bottoms. ⚠ **The reveal observer's `-10%` dead band is a real budget constraint** — see §The dossier housing below before touching `--arc-dossier-h`
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -406,6 +407,62 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
   is what gives (the BEFORE paragraph goes sr-only under 760h). ⚠ A bay
   change is a TWO-surface change: run `services-ring-smoke` AND
   `arc-portfolio-smoke`; both read `tests/visual/helpers/toolBay.ts`.
+
+## The dossier housing (ADR-090)
+
+The four dossier beats are one machined housing; the console is a cell inside it.
+All of it is `.arc-dossier`-scoped and gated at
+`(min-width: 981px) and (prefers-reduced-motion: no-preference)`.
+
+- ⚠ **THE REVEAL OBSERVER HAS A DEAD BAND AND THE HOUSING MAY NOT FILL INTO
+  IT.** The ADR-052 reveal runs at `rootMargin: -10%`, so the bottom tenth of
+  the viewport never triggers an intersection. Sized to the beat's whole
+  budget, the record's LAST block parks there: measured at 1920×1080,
+  `.arc-dossier__stack`'s top landed at **975 against a root bottom of 972** and
+  stayed at `opacity: 0` forever while the other five revealed.
+  `--dos-reveal-clear` reserves it. ⚠ **The cost is DOUBLE the clearance** —
+  shrinking a beat re-centres it, so 50px of budget buys ~25px of margin.
+  ⚠ **It binds only where the CONSOLE sets the row**, so 1280×720 is unaffected
+  and cannot catch it; measure at 1920×1080.
+- ⚠ **THE CONTAINING BLOCK IS THE REVEAL WRAPPER, NOT THE HOUSING.** Releasing
+  `.arc-head__lead` does not reach `.arc-dossier`: `.arc-head` carries
+  `.arc-reveal`, whose transform makes it a containing block for absolute
+  descendants, so the designation printed through the title.
+  `.arc-dossier .arc-head { position: relative }` is DECLARED — left implicit,
+  the band's seat would depend on animation state.
+- ⚠ **THE INSET IS PAID FOR BY THE FIELD.** The record column is a fixed
+  fraction, so every pixel of `--dos-pad` and of the grid gap comes off the
+  console. `.fl-bay__top`'s FEED line neither wraps nor shrinks and is ALREADY
+  clipped 28.8px at 1280×720 (pre-existing, ADR-068's budget); both tokens are
+  tuned so the field lands back at its pre-housing width.
+- ⚠ **A BORDER, NOT ADR-089's CLIPPED RING.** A `clip-path` cuts a border and
+  never strokes one, which is why the casefile needs a two-contour path for its
+  gold lip. This edge is flat dawn, so a plain border under a single-contour
+  clip is correct. ⚠ **And no gold on it** — the record already spends gold on
+  the badge, the route arrow and the NOW plate.
+- ⚠ **THE BAND'S RULE RUNS FULL WIDTH**, unlike the casefile's, which stops at
+  the split because `ConsoleRail` is the field's own header. A dossier console
+  has NO rail, so nothing collides with it. It letters the designation ALONE
+  (ADR-089 U1) — the bay's FEED line already prints `IN SERVICE {year}`.
+- ⚠ **`--con-ground: transparent`, NEVER `background: none`**, and
+  **`border-color: transparent`, NEVER `border: 0`** — the light walks read
+  that property for their bed, and the border box sizes the field.
+- ⚠ **THE HOUSING CHANGES THE RECORD'S BED IN LIGHT.** `--arc-plate` is `.55`
+  in dark (walked past) but FULLY OPAQUE in light, so it becomes the bed for
+  every rung in the record column. Five of them joined the contrast walk for
+  that reason; a new text element in this column belongs there too, because the
+  count guard only notices a LISTED selector that stops matching.
+- ⚠ **`--arc-seam` IS LIFTED IN LIGHT** (.28 → .42), like every line rung on
+  the ramp. Carried across, the two-rung ladder collapses on parchment.
+- ⚠ **CSS-ONLY BY DESIGN** — `arc-terminal-markup.test.tsx` pins
+  `class="arc-dossier__console arc-ap"` exactly and counts 12
+  `data-arc-decode`. Build the band by moving containing blocks, not elements.
+- **Verifying:** `arc-portfolio-smoke --project=desktop` AND
+  `arc-terminal-smoke --project=desktop`, plus
+  `node scripts/capture-arc-portfolio.mjs --vp 1920x1080` in both themes.
+  ⚠ Six failures on `iphone-14` / `tablet` are PRE-EXISTING (the ≤960
+  `.fl-wire` aspect rung) — stash before blaming a change.
+
 - **No italics.** Emphasis is `ArcTitle.em` → upright gold; markup inside
   copy strings fails `tests/lib/arcs-registry.test.ts`.
 - **Content changes** = edit `lib/arcs/content/*` + registry only; run

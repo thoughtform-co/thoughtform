@@ -76,7 +76,22 @@ const nextConfig = {
       }
     : {
         async redirects() {
-          return [{ source: "/v7", destination: "/", permanent: true }];
+          return [
+            { source: "/v7", destination: "/", permanent: true },
+            // The Loop arc was authored at `/arcs/portfolio` and renamed to name
+            // its client. `dynamicParams = false` closes the prerendered set, so
+            // the old slug 404s rather than falling through — and an arc is an
+            // UNLISTED page whose whole distribution is a link somebody forwards,
+            // which means the links in the wild are in inboxes. 308, because that
+            // slug is retired rather than parked.
+            // ⚠ Redirects resolve BEFORE `proxy.ts` and long before the dynamic
+            // route resolves, so this never reaches the not-found boundary.
+            {
+              source: "/arcs/portfolio",
+              destination: "/arcs/loop-earplugs",
+              permanent: true,
+            },
+          ];
         },
         async headers() {
           return [

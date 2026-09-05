@@ -57,7 +57,7 @@ import { MODE_LEGEND } from "./shared/loop-tools";
  * placement — is this page's own.
  */
 export const PORTFOLIO_ARC: ArcDef = {
-  slug: "portfolio",
+  slug: "loop-earplugs",
   format: "portfolio",
   /* ⚠ NO `motion` — this page FLOWS (ADR-076, owner 2026-08-24). The
      terminal grammar pins every section and resolves its masthead with a

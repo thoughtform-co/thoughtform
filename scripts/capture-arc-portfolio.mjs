@@ -1,5 +1,5 @@
 /**
- * capture-arc-portfolio — one shot per beat of /arcs/portfolio (ADR-078).
+ * capture-arc-portfolio — one shot per beat of /arcs/loop-earplugs (ADR-078).
  *
  * The page FLOWS (ADR-076), so there is no corridor to drive and no
  * settle marker to wait on — but the reveal is a ONE-SHOT
@@ -60,7 +60,7 @@ const run = async () => {
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
 
-  const url = `${BASE}/arcs/portfolio${THEME === "light" ? "?theme=light" : ""}`;
+  const url = `${BASE}/arcs/loop-earplugs${THEME === "light" ? "?theme=light" : ""}`;
   await page.goto(url, { waitUntil: "networkidle" });
   // The reveal drive is stepped; a smooth root would land every scroll short.
   await page.addStyleTag({ content: "html{scroll-behavior:auto!important}" });

@@ -69,6 +69,13 @@
   --arc-edge: rgba(var(--dawn-rgb), 0.08);
   --arc-rule: rgba(var(--dawn-rgb), 0.12);
   --arc-rule-dash: rgba(var(--dawn-rgb), 0.1);
+  /* ⚠ THE REGION WEIGHT (ADR-089 U2's law, ported to this surface): a SEAM
+     divides one region of a housing from another — its own outline, the
+     band above the record, the split between record and field — and
+     `--arc-rule` rules WITHIN one. Two rungs, one law, and the gap between
+     them is what stops an interior line reading louder than the frame it
+     sits inside. Only the dossier housing consumes it today. */
+  --arc-seam: rgba(var(--dawn-rgb), 0.28);
   /* Texture: the dot-matrix lifts under a head and under a close band. */
   --arc-grid: rgba(var(--dawn-rgb), 0.06);
   --arc-grid-soft: rgba(var(--dawn-rgb), 0.05);
@@ -1863,14 +1870,64 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   --fl-mono: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   --fl-copy: calc(var(--band-copy, clamp(15px, 1.15vw, 18px)) * 0.9);
   --fl-shot-px: 14px;
+  /* THE HOUSING (ADR-090). The plate rung of the corner law, the same
+     value `.arc-prog` cuts one beat above — two housings on one page are
+     one object at two sizes, not two styles. */
+  --dos-ch: clamp(16px, 1.8vw, 26px);
+  /* ⚠ THE HOUSING'S INSET IS PAID FOR BY THE CONSOLE, so it is tighter
+     than it looks like it should be. The band is fixed width, so every
+     pixel of padding comes off the field: the first cut at 1.4vw took the
+     console 585 -> 562 and pushed the bay's FEED line 52px into a clip it
+     was already 29px inside at this viewport. The gap below is the other
+     half of the same budget. */
+  --dos-pad: clamp(12px, 1.1vw, 20px);
+  --dos-band: clamp(28px, 3.2vh, 38px);
+  /* The air above each ruled block's rule. A FLOOR, not a gap: the seam
+     tracks take the housing's surplus so the last block seats on the
+     bottom datum instead of pooling a hole under itself (ADR-088). */
+  --dos-seam: clamp(10px, 1.4vh, 18px);
+  /* ⚠ THE REVEAL OBSERVER HAS A DEAD BAND AND THE HOUSING MUST NOT FILL
+     INTO IT. The ADR-052 reveal runs at `rootMargin: -10%`, so the bottom
+     tenth of the viewport never triggers an intersection — and once this
+     housing sized itself to the beat's whole budget, the record's LAST
+     block parked there at rest. Measured at 1920x1080: the stack's top
+     landed at 975 against a root bottom of 972, so it stayed at
+     `opacity: 0` forever, on a beat where everything else revealed.
+     ⚠ THE COST IS DOUBLE THE CLEARANCE. Shrinking the beat re-centres it,
+     so half of what is taken comes straight back — 50px of budget buys
+     ~25px of margin. That is why this is a `vh` term and not `-2px` more.
+     ⚠ It binds only where the CONSOLE sets the row (the tall viewports).
+     At 1280x720 the record is the taller column, so this changes nothing
+     there — which is why 1280 passed while 1920 did not. */
+  --dos-reveal-clear: clamp(28px, 5vh, 60px);
+  /* ⚠ THE PAD TERM IS `--arc-sec-pad`, THE ONE ACTUALLY SPENT. This
+     budgeted `2 * --arc-stage-pad` (clamp(96px, 14vh, 200px)) while the
+     beat pads by `--arc-sec-pad` (clamp(40px, 6vh, 104px), set by
+     `[data-arc-format="portfolio"]`) — 201.6px budgeted against 86.4px
+     spent at 1280x720, so the console was sized 115px shorter than its
+     own beat affords and the record overhung it by up to 88.7px.
+     ⚠ And it is a MINIMUM now, not a height: the row is content-driven,
+     so the housing is exactly as tall as its tallest column and neither
+     one can be clipped by the other. */
   --arc-dossier-h: clamp(
     440px,
-    calc(100svh - 2 * var(--arc-stage-pad, clamp(32px, 5vh, 72px)) - 24px),
+    calc(
+      100svh - 2 * var(--arc-sec-pad, clamp(96px, 14vh, 200px)) - var(--dos-band) - 2 *
+        var(--dos-pad) - 2px - var(--dos-reveal-clear)
+    ),
     900px
   );
   display: grid;
   grid-template-columns: minmax(300px, min(38%, 440px)) minmax(0, 1fr);
-  gap: clamp(28px, 3.5vw, 64px);
+  /* Tighter since the split (ADR-090): a bare gutter has to carry the
+     separation on its own, a ruled one does not — and the width it gives
+     back goes to the field, which is where this beat is short.
+     ⚠ TUNED AGAINST THE BAY, NOT BY EYE. `.fl-bay__top`'s FEED line does
+     not wrap or shrink, and it is ALREADY clipped 28.8px at 1280x720
+     before this pass (pre-existing, ADR-068's own budget). The gutter and
+     `--dos-pad` are sized so the field lands back at its pre-housing
+     width, i.e. so this pass costs that line nothing. */
+  gap: clamp(20px, 2vw, 40px);
   align-items: start;
 }
 
@@ -2099,9 +2156,16 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
 @media (min-width: 981px) and (prefers-reduced-motion: no-preference) {
   /* The definite box `.fl-con { height: 100% }` needs — gated to where
      the console is FRAMED (console.css unwraps it at ≤980px and under
-     reduced motion, and an unwrapped console wants `auto`). */
+     reduced motion, and an unwrapped console wants `auto`).
+     ⚠ `height: 100%` OF A STRETCHED GRID ITEM, floored by the budget.
+     A fixed `--arc-dossier-h` here is what left the two columns ending on
+     different lines — and simply stretching to it would CLIP the record,
+     which is the taller column on all four beats today (up to 88.7px).
+     The row resolves to `max(record, this floor)` and both columns end on
+     it, so nothing can be clipped by construction. */
   .arc-dossier__console {
-    height: var(--arc-dossier-h);
+    height: 100%;
+    min-height: var(--arc-dossier-h);
   }
 }
 /* The settled gate, declared: the arc has no casefile arrival to wait on. */
@@ -2121,6 +2185,195 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
 @media (prefers-reduced-motion: reduce) and (min-width: 961px) {
   .arc-dossier .fl-shot__frame {
     min-height: clamp(280px, 42svh, 520px);
+  }
+}
+
+/* ── THE HOUSING (ADR-090) ─────────────────────────────────────────────
+   The beat was two objects: a record column and a console, tops aligned
+   by `align-items: start` and bottoms aligned by nothing, so the record
+   overhung the console by 8.6–88.7px — a different amount per tool, which
+   is why it read as accident. ADR-089's answer on the casefile is that a
+   record and its instrument are ONE machined housing; this is that
+   grammar at page scale.
+
+   ⚠ THE LIP IS A BORDER, NOT ADR-089's CLIPPED RING. The casefile needs a
+   gold gradient lip and therefore a two-contour clip (a `clip-path` CUTS
+   a border, it never strokes one). This housing takes a flat dawn edge,
+   so a plain border under a single-contour clip is both correct and an
+   order of magnitude simpler. Do not port the ring.
+
+   ⚠ AND NO GOLD ON IT. The record column already spends its gold on three
+   objects — the mode badge, the route arrow, the NOW plate — and a fourth
+   gold edge around all of them is the RUN-plate argument one object later
+   (ADR-068 U5: gold buys one thing per drawing).
+
+   ⚠ GATED WHERE THE CONSOLE IS FRAMED. console.css unwraps at ≤980px and
+   under reduced motion, and a housing whose field has no frame is a box
+   round a stack of flow content. Below this gate every rule here is
+   absent and the beat is byte-identical to what shipped — which is why
+   there is no restore block. */
+@media (min-width: 981px) and (prefers-reduced-motion: no-preference) {
+  .arc-dossier {
+    position: relative;
+    border: 1px solid var(--arc-seam);
+    background: var(--arc-plate);
+    /* TR + BL, the canonical diagonal (ADR-065). Its children are square:
+       that is rule 4, and it is what takes the console's own chamfer. */
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--dos-ch)) 0,
+      100% var(--dos-ch),
+      100% 100%,
+      var(--dos-ch) 100%,
+      0 calc(100% - var(--dos-ch))
+    );
+    padding: calc(var(--dos-band) + var(--dos-pad)) var(--dos-pad) var(--dos-pad);
+    /* Both columns end on the housing's floor. The row is content-driven,
+       so it resolves to whichever column is taller and neither clips. */
+    align-items: stretch;
+  }
+
+  /* THE HEADER BAND, fused to the top edge. It letters the designation
+     ALONE: the bay's FEED line already prints IN SERVICE {year}, and
+     ADR-089 U1 shipped a second slot here for one day before removing it.
+     ⚠ Full width, unlike the casefile's — that rule stops at the column
+     split because `ConsoleRail` is the field's own header on the other
+     side. A dossier console has no rail (one tool, nothing to switch), so
+     the band is the whole housing's and nothing collides with it. */
+  .arc-dossier::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--dos-band);
+    height: 1px;
+    background: var(--arc-seam);
+    pointer-events: none;
+  }
+
+  /* The designation seats itself in that band with NO markup change: it is
+     already absolute, so releasing `.arc-head__lead` from being a
+     containing block re-anchors it to the housing.
+     ⚠ CSS-ONLY IS THE POINT — `arc-terminal-markup.test.tsx` pins
+     `class="arc-dossier__console arc-ap"` as an exact string and counts
+     exactly 12 `data-arc-decode`; a band built out of new elements would
+     move both. */
+  .arc-dossier .arc-head__lead {
+    position: static;
+  }
+  /* ⚠ THE ANCHOR IS THE HEAD, NOT THE HOUSING, AND IT IS DECLARED RATHER
+     THAN INHERITED. Releasing `.arc-head__lead` is not enough to reach
+     `.arc-dossier`: `.arc-head` also carries `.arc-reveal`, whose
+     transform makes it a containing block for absolute descendants — so
+     the designation landed on the record's first line and printed through
+     the title. Pinning `position: relative` here is what makes the anchor
+     the same box whether the reveal has resolved or not; left implicit,
+     the seat would depend on animation state. */
+  .arc-dossier .arc-head {
+    position: relative;
+  }
+  /* The head's top edge IS the housing's padding box, one `--dos-pad`
+     below the band rule — so the band is exactly that much plus its own
+     height back up. Both terms are the housing's own tokens, so the seat
+     cannot drift away from the rule it sits above. */
+  .arc-dossier .arc-head__desig {
+    top: calc((var(--dos-band) + var(--dos-pad)) * -1);
+    left: 0;
+    height: var(--dos-band);
+    line-height: var(--dos-band);
+  }
+  /* ⚠ THE HEAD'S TWO DECORATIONS GO WITH THAT RE-ANCHOR, and they would
+     have to anyway. Both are absolute inside `.arc-head__lead` at negative
+     offsets tuned to sit around a floating masthead — the dot-matrix at
+     `inset: -16px -22px` would tile the whole housing, and the origin
+     cross at `top:-26px; left:-24px` would fall outside its top-left
+     corner. ADR-065 settles it rather than re-tuning them: a bracket marks
+     something framed but NOT a device, and a housing is the device. The
+     plate ground is the texture now, and its own edge is the mark. */
+  .arc-dossier .arc-head__grid,
+  .arc-dossier .arc-head__mark--origin {
+    display: none;
+  }
+
+  /* THE SPLIT — the vertical every horizontal terminates on, and the one
+     line that does most of the work here. The record's three rules already
+     span the full column width, so putting the split at that same right
+     edge satisfies ADR-089 U2's one-extent law for free.
+     ⚠ NO `padding-right`: the rules have to REACH it. The grid gap is the
+     clearance, and it sits entirely on the console's side. */
+  .arc-dossier__record {
+    border-right: 1px solid var(--arc-seam);
+    padding-right: 0;
+    /* ⚠ GRID, NOT FLEX, AND EVERY ROW DECLARED. With the console setting
+       the row on most viewports the record has surplus; a flex column
+       pools it under the last block as a hole. The four seam tracks take
+       it instead — ADR-088's split-the-slack, at four even shares because
+       the grouping here (identity / record / mechanism) is arguable and
+       not worth pre-solving. The ratio is the dial if it reads wrong.
+       ⚠ Auto-placement would fill rows 1-6 and leave every seam empty. */
+    display: grid;
+    grid-template-rows:
+      auto
+      auto
+      minmax(var(--dos-seam), 1fr)
+      auto
+      minmax(var(--dos-seam), 1fr)
+      auto
+      minmax(var(--dos-seam), 1fr)
+      auto
+      minmax(var(--dos-seam), 1fr)
+      auto;
+    gap: 0;
+  }
+  .arc-dossier .arc-head {
+    grid-row: 1;
+  }
+  .arc-dossier__mode {
+    grid-row: 2;
+  }
+  .arc-dossier__meta {
+    grid-row: 4;
+  }
+  .arc-dossier__brief {
+    grid-row: 6;
+  }
+  .arc-dossier__route {
+    grid-row: 8;
+  }
+  /* The last block joins the ladder: four regions, four rules, and the
+     run ends on a line instead of trailing off. */
+  .arc-dossier__stack {
+    grid-row: 10;
+    align-content: start;
+    padding-top: 12px;
+    border-top: 1px solid var(--arc-rule);
+  }
+
+  /* THE CONSOLE BECOMES A CELL — ADR-065 rule 4, and ADR-089's own
+     demotion. Inside a chamfered housing the field is square and carries
+     no frame of its own: its chamfer, its hairline, its ground and its
+     top glow all modelled an edge that the housing now draws.
+     ⚠ `--con-ground: transparent`, NEVER `background: none` — the light
+     contrast walks read that property to find their reference bed, and a
+     shorthand reset makes them measure text against pure black. That
+     exact bug shipped on the casefile once.
+     ⚠ `border-color`, NEVER `border: 0` — the border box is what sizes
+     the field, so dropping the pixel moves geometry. Deleting a line may
+     not resize the console.
+     ⚠ `.arc-dossier`-SCOPED. Studio, Films, Architecture and the landing
+     all mount this same frame with no housing to belong to, and
+     `tool-gallery-markup.test.tsx` holds a byte snapshot of the landing's
+     composition. */
+  .arc-dossier .fl-con__console {
+    clip-path: none;
+    --con-ground: transparent;
+    --con-glow: transparent;
+    border-color: transparent;
+  }
+  /* The housing has no scanline of its own, but the console's modelled the
+     inside of a box that is gone. */
+  .arc-dossier .fl-con__console::after {
+    content: none;
   }
 }
 
@@ -2144,6 +2397,15 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   .arc-dossier {
     grid-template-columns: 1fr;
   }
+  /* ⚠ THE SPLIT GOES WITH THE SECOND COLUMN. Between 981 and 1100 the
+     housing is still drawn (it is gated at 981) but the record and the
+     console stack, so the record's right edge is the housing's — a rule
+     there divides nothing and reads as a line down the middle of the
+     page. `border-right-color`, not `border-right`, so the record's box
+     does not change width by a pixel on the way through. */
+  .arc-dossier__record {
+    border-right-color: transparent;
+  }
   .arc-dossier .arc-head__title {
     max-width: 20ch;
   }
@@ -2158,7 +2420,7 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
 }
 @media (max-width: 1100px) and (min-width: 981px) and (prefers-reduced-motion: no-preference) {
   .arc-dossier__console {
-    height: clamp(420px, 62svh, 720px);
+    min-height: clamp(420px, 62svh, 720px);
   }
 }
 
@@ -2432,7 +2694,7 @@ html[data-arc-entry]
   /* ⚠ THE READER TURNS IT (ADR-080 U1) — and could not, on the page. That
      update gave the object real `OrbitControls` and shipped the drag in the
      LAB; this host kept `pointer-events: none`, so no pointerdown ever
-     reached the canvas on `/arcs/portfolio`. The station layer above stays
+     reached the canvas on `/arcs/loop-earplugs`. The station layer above stays
      transparent to the pointer except on its own anchors, so a drag anywhere
      else lands here. Zoom is off in the canvas, so no wheel listener is bound
      and the page keeps scrolling over the object. */
@@ -3560,6 +3822,14 @@ html[data-theme="light"] .arc-root {
   --arc-edge: rgba(var(--dawn-rgb), 0.16);
   --arc-rule: rgba(var(--dawn-rgb), 0.22);
   --arc-rule-dash: rgba(var(--dawn-rgb), 0.2);
+  /* ⚠ LIFTED WITH THE REST, NOT CARRIED ACROSS. Every line rung on this
+     ramp gains ~1.8x in light (.08 → .16, .12 → .22, .14 → .26), because
+     an alpha that recedes toward black on void recedes toward parchment
+     here. A seam left at its dark .28 while its own `--arc-rule` sibling
+     lifts to .22 would collapse the two-rung ladder to nothing on
+     parchment. 1.5x rather than the ramp's 1.8x: the lift compresses at
+     the heavy end (`--hud-rail-line` holds .55 in both themes). */
+  --arc-seam: rgba(var(--dawn-rgb), 0.42);
   --arc-grid: rgba(var(--dawn-rgb), 0.1);
   --arc-grid-soft: rgba(var(--dawn-rgb), 0.085);
   /* The plate is a RECESS on parchment, as it is on void — but the

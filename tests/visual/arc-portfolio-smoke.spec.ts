@@ -57,7 +57,7 @@ import { WIREFRAME_STATIONS, expectWireframeBay, readToolBay } from "./helpers/t
  */
 test.use({ launchOptions: { args: ["--disable-webgl", "--disable-3d-apis"] } });
 
-const PORTFOLIO = "/arcs/portfolio";
+const PORTFOLIO = "/arcs/loop-earplugs";
 const DOSSIERS = WIREFRAME_STATIONS.map((stn) => ({ ...stn, beat: `tool-${stn.id}` }));
 
 const isDesktop = (page: Page) => (page.viewportSize()?.width ?? 0) >= 961;
@@ -723,6 +723,22 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
         [".arc-head__sub", "head sub"],
         [".arc-dossier__key", "dossier key"],
         [".arc-desig", "designation"],
+        /* ⚠ THE DOSSIER'S RECORD COLUMN, WHICH CHANGED BED IN LIGHT
+           (ADR-090). These five rungs were never in this walk, and until
+           the housing they did not have to be: the column sat straight on
+           the section, so `bedOf()` returned the page's own ground. The
+           housing's `--arc-plate` is `.55` in dark (still transparent
+           enough to walk past) but FULLY OPAQUE in light, where it becomes
+           the bed for every one of them. Measuring text against a ground
+           it no longer sits on is how a light-theme rung rots unnoticed —
+           and the count guard below cannot see a rung that was never
+           listed. Measured on the plate: 5.80 / 7.98 / 10.14 / 7.03 /
+           4.79, the tag cloud being the tightest. */
+        [".arc-dossier__legend", "dossier legend"],
+        [".arc-dossier__copy", "dossier copy"],
+        [".arc-dossier__chain li", "dossier chain step"],
+        [".arc-dossier__now", "dossier now plate"],
+        [".arc-dossier__stack li", "dossier stack tag"],
         /* THE BOARD'S OWN INK (ADR-078 U1). The portfolio's cards are
            gone, so without these the walk found three rungs on this page
            and the count guard was the only thing that noticed. A drawing
@@ -774,6 +790,27 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
       "head sub": 7,
       "dossier key": 4,
       designation: 3,
+      /* The record column's read text takes the 4.5 standard; the chain
+         step and the stack tag are 8.5–9px mono chrome and would be
+         entitled to the 3:1 line-work rung, but both measure well past
+         4.5 on the plate, so the standard is what gets pinned. The NOW
+         plate is gold-as-text on a gold wash — `--gold-ink`, the same
+         4.5 rung as the board figure, never raw `--gold`. */
+      "dossier legend": 4.5,
+      "dossier copy": 4.5,
+      "dossier chain step": 4.5,
+      "dossier now plate": 4.5,
+      /* ⚠ 4, THE `dossier key` RUNG, NOT THE 4.5 STANDARD — and the first
+         cut of this walk pinned it at 4.5 and FAILED on the real value.
+         The stack is 8.5px mono caps naming a stack (NEXT.JS, SUPABASE):
+         chrome by ADR-063 U2's split, the same class as the designation
+         at 3 and the dossier key at 4, so 4.5 was over-claiming rather
+         than the tags being wrong. Measured 4.41 dark / 4.79 light, both
+         PRE-EXISTING — the housing does not change this rung's bed in
+         dark (`--arc-plate` is .55, so `bedOf()` walks past it) and lifts
+         it in light. It sits on `--arc-ink-50`, a shared rung; lifting it
+         is a ramp-wide change, not this pass's. */
+      "dossier stack tag": 4,
       /* ⚠ 4.5, NOT 7, SINCE ADR-079 — and the change is the ramp's own
          definition rather than a relaxed guard. The register figures are
          GOLD now (they were dawn ink, which cleared 7 easily), and
