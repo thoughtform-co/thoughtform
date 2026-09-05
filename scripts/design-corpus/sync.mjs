@@ -459,10 +459,37 @@ async function deleteStale(base, key, keep) {
   return stale.length;
 }
 
+/**
+ * Upsert in batches, GROUPED BY KEY SHAPE.
+ *
+ * ⚠ PostgREST refuses a bulk insert whose objects do not all carry the same
+ * keys (`PGRST102: All object keys must match`), and the rows below are
+ * deliberately of two shapes: a vector column is OMITTED rather than nulled
+ * when its vector was reused, so a merge-duplicates upsert leaves the stored
+ * value untouched. Those two facts collide in exactly one case — a run where
+ * SOME notes need a fresh embedding and others do not.
+ *
+ * That case is every run after the first. The first sync embedded all 53 notes
+ * (one shape), `--reembed` embeds all of them (one shape), and a no-op run
+ * embeds none (one shape); adding three notes to a corpus of 53 was the first
+ * run with two shapes in one body, and PostgREST rejected the whole batch —
+ * including the 53 rows that had nothing wrong with them (2026-09-05).
+ *
+ * Grouping preserves the omission semantics rather than trading them away: a
+ * row still says nothing about a column it has no fresh value for.
+ */
 async function upsertBatched(base, key, table, rows) {
   const BATCH = 50; // vectors are large; keep request bodies sane
-  for (let i = 0; i < rows.length; i += BATCH) {
-    await rest(base, key, "POST", table, rows.slice(i, i + BATCH), "resolution=merge-duplicates,return=minimal");
+  const shapes = new Map();
+  for (const row of rows) {
+    const sig = Object.keys(row).sort().join("|");
+    if (!shapes.has(sig)) shapes.set(sig, []);
+    shapes.get(sig).push(row);
+  }
+  for (const group of shapes.values()) {
+    for (let i = 0; i < group.length; i += BATCH) {
+      await rest(base, key, "POST", table, group.slice(i, i + BATCH), "resolution=merge-duplicates,return=minimal");
+    }
   }
 }
 
