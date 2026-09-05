@@ -112,3 +112,19 @@ node scripts/capture-interface-kit.mjs --wave <name>
 
 then, from the ship directory, `doctor` → `qa --runs 3` → `make_contact_sheet` →
 `pick` → `make_review_gallery`. Full recipe in the lab README.
+
+**Stage 1 comes first**, and costs no model call:
+
+```bash
+node scripts/design-eval/mechanical.mjs --url "/test/interface-kit?k=KJ&theme=dark" --theme dark --scope ".fl-case"
+```
+
+⚠ **SCOPE TO `.fl-case`, NOT `.ik`** — the lab mounts the real HUD frame, so
+`.ik` measures the rail and its instruments and reports 29 contrast failures
+that belong to production chrome this pass does not touch. ⚠ **AND RUN IT IN
+DARK**: the panel's only existing contrast walk is the LIGHT one from ADR-063
+U2, which is how five labels at 3.19–3.41:1 in dark went unrecorded until
+2026-09-05 (ANALYSIS.md, defect 9). Scoped and in dark, the control and the
+composite are identical but for the active row's 18px gold halo, which
+`material=flat` removes — the one rule in this kit with a mechanical proof as
+well as a grade.

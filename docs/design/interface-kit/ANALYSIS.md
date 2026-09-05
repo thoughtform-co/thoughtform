@@ -153,16 +153,53 @@ Two places, both recorded rather than worked around:
 
 Two were fixed in their own commit; the rest are recorded for the kit's ruling.
 
-|     |                                                                                  |                        |
-| --- | -------------------------------------------------------------------------------- | ---------------------- |
-| 1   | the active client tab lost its gold in light — a theme rule outranked it         | **fixed**              |
-| 2   | the brief's body inherited its font instead of declaring it                      | **fixed**              |
-| 3   | a second 9px backdrop blur runs over a console whose ground is transparent       | open                   |
-| 4   | the active row's 18px glow and the brief title's text-shadow, against "no glows" | open — `material=flat` |
-| 5   | the capability plates notch BR, justified by a console chamfer ADR-089 removed   | open                   |
-| 6   | `.fl-detail__t` floors at 9px, under the 10px control floor                      | open                   |
-| 7   | `--fl-ret-rule-y` is dead: its only consumer is overridden to solid              | open                   |
-| 8   | dead light-theme rules for three deleted class families                          | open                   |
+|     |                                                                                      |                        |
+| --- | ------------------------------------------------------------------------------------ | ---------------------- |
+| 1   | the active client tab lost its gold in light — a theme rule outranked it             | **fixed**              |
+| 2   | the brief's body inherited its font instead of declaring it                          | **fixed**              |
+| 3   | a second 9px backdrop blur runs over a console whose ground is transparent           | open                   |
+| 4   | the active row's 18px glow and the brief title's text-shadow, against "no glows"     | open — `material=flat` |
+| 5   | the capability plates notch BR, justified by a console chamfer ADR-089 removed       | open                   |
+| 6   | `.fl-detail__t` floors at 9px, under the 10px control floor                          | open                   |
+| 7   | `--fl-ret-rule-y` is dead: its only consumer is overridden to solid                  | open                   |
+| 8   | dead light-theme rules for three deleted class families                              | open                   |
+| 9   | **five chrome labels measure 3.19–3.41:1 in DARK**, under the 4.5:1 the rubric wants | open — see below       |
+
+### The ninth, and why nobody had seen it
+
+Stage 1 of the design gate was run against the panel after the wave, scoped to
+`.fl-case` so it measures the panel rather than the HUD chrome around it:
+
+```bash
+node scripts/design-eval/mechanical.mjs \
+  --url "/test/interface-kit?mount=shipped&theme=dark" --theme dark --scope ".fl-case"
+```
+
+It reports the same six violations on `mount=shipped` as on `KA`, which is what
+makes them **production's and not the lab's**:
+
+|                           | control `KA` | composite `KJ` |
+| ------------------------- | ------------ | -------------- |
+| radius · fonts · gradient | 0 · 0 · 0    | 0 · 0 · 0      |
+| shadow                    | **1**        | **0**          |
+| contrast                  | 5            | 5              |
+
+- **The one shadow is defect 4, confirmed by a second instrument** — the active
+  directory row's `rgba(202,165,84,.22) 0 0 18px` halo. `material=flat` removes
+  it, so that rule now has a mechanical proof rather than only a grade.
+- **The five contrast failures are unchanged by every direction**, because no
+  knob touches ink alpha: `.fl-brief__class` at 3.19:1 and 10px, `.fl-desig` at
+  3.41:1 and 11px, and `.fl-row__meta` at 3.19:1 on all three rows.
+  ⚠ **The reason this is new is that the existing walk only measures LIGHT.**
+  `services-ring-smoke`'s contrast case is the light-theme walk ADR-063 U2 added;
+  dark was never swept on this panel, and 3.19:1 is a dark-theme number. A rule
+  the house states unconditionally was being checked in one theme.
+- ⚠ **`section.fl-case borderTopColor=rgb(229,231,235)` is a NOTE, not a defect.**
+  It is Tailwind preflight's default border colour on a border whose width is
+  `0px`, so it paints nothing. Measured, so nobody chases it twice.
+
+Fixing 9 is an ink-alpha change on a production surface, which is outside this
+pass by the same line that keeps the winning direction out of `casefile.css`.
 
 ## Sources
 

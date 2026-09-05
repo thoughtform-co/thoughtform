@@ -141,3 +141,33 @@ python tools/make_review_gallery.py ../waves/<name>
 The wave's pixels are gitignored and rebuild from a URL in about nine minutes.
 The six control stills are committed, because a baseline that can move is not a
 baseline.
+
+### Stage 1, before any of that
+
+```bash
+node scripts/design-eval/mechanical.mjs \
+  --url "/test/interface-kit?k=KJ&theme=dark" --theme dark --scope ".fl-case"
+```
+
+Computed-style assertions that need no judgment: radius, families, shadows,
+gradients, palette, contrast composited on the ground behind it. A mechanical
+failure should short-circuit a run — never let a grade launder a page with a
+halo on it.
+
+⚠ **SCOPE IT TO `.fl-case`, NOT `.ik`.** The lab mounts the REAL HUD frame, so
+`.ik` contains the rail, its labels and the rail instruments — and that scope
+reports 29 contrast failures which belong to production chrome this pass does
+not touch (`hud__rail__label` at 9px, `rin-tele__k` at 8px). Scoped to the
+panel, control and composite compare like for like: identical but for the
+shadow, which `material=flat` removes.
+
+⚠ **AND RUN IT IN DARK.** The panel's existing contrast walk in
+`services-ring-smoke` is the LIGHT-theme walk from ADR-063 U2; dark has never
+been swept here, which is why five labels at 3.19–3.41:1 went unrecorded until
+now. See ANALYSIS.md, defect 9.
+
+⚠ **The dev server must be up first**, and its port is not guaranteed to be
+3003 — `scripts/dev-server.mjs` honours an assigned `PORT` and `.claude/launch.json`
+sets `autoPort`, so a second session in this tree gets a free one. Pass `--port`
+what is actually listening; the script's default is a guess, and a wrong one
+fails as `ERR_CONNECTION_REFUSED` rather than as a finding.
