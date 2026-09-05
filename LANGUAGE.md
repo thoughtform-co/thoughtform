@@ -85,6 +85,31 @@ What maintainers get from depth. Change, bugs, knowledge, and verification conce
 | **Dossier** | Two things, one object. On the landing: the casefile's TOOLS PLATE (ADR-068) — the authored wireframe in its bay, the fused "Watch walkthrough" bar, the four capability blocks, inside the console, behind a four-station rail. On an arc page: the `dossier` SECTION KIND (ADR-072) — the same body (`ToolField`) at page scale, one tool per beat, beside its record column. "The dossier" means the bay + blocks; say "the tools plate" for the landing's housing and "a dossier beat" for the arc's. |
 | **Terminal motion** | The ADR-057 arc-page choreography (`ArcDef.motion: "terminal"`, the `-v2` cuts): each section is a **beat** — a pinned stage (`sticky; top: vh − stageH`) plus a fold **tail** — whose masthead **types in and un-types out in place** (the masthead law: it never moves, never fades), whose panels power on from their own **rung**, and whose plane folds LIFO behind an **iris**. ⚠ Unrelated to ADR-035's retired “Arc Cases Terminal” (a reveal surface) and to `#practice`. |
 
+**Housing** — The machined SLAB an instrument is set into: chamfered, with a
+drawn edge, holding a ground of its own. On the casefile it is `.fl-hz`
+(ADR-089), on an arc `.arc-dossier` (ADR-090). Distinct from **Console** — _a
+console is a screen you look INTO, a housing is the device the screen is set
+into_ — which is why a console's own edge is dawn and a housing's lip may be
+gold. _Avoid_: container, wrapper, box.
+
+**Console** — The framed FIELD an evidence plate renders inside (`ConsoleFrame`,
+`.fl-con`): a rail of stations across the top and one instrument below that
+changes what it displays. ⚠ Inside the casefile's housing it is a CELL — no
+chamfer, no hairline, no ground — because the children of a chamfered box are
+square. _Avoid_: viewer, panel (see below).
+
+**Panel** — Loosely, one bounded region of a surface; precisely, the RIGHT
+column of the casefile (`.fl-panel`, `.fl-panel__viz`), the tabpanel the
+directory governs. Say **housing** for the slab, **console** for the framed
+field, **plate** for what a station opens. _Avoid_: card (a card is a services
+card, ADR-086).
+
+**Kit** — The token layer plus the specimen grid at `/test/interface-kit`
+(ADR-091): the line ladder, the type ladder, the label grammar, the marks, the
+frames, the stations, the buttons, the rows and the readouts, each drawn once at
+the size it ships at. A kit documents a grammar; a **lab** compares directions in
+it; a **wave** is one graded set of stills of them. _Avoid_: style guide.
+
 When writing ADRs, prefer these terms over ad-hoc names (“the floating thing”, “the middle part”).
 
 ---

@@ -68,6 +68,84 @@ Both rails ship their top and bottom edge ticks inside the `Vector 4 (Stroke)` c
 
 ---
 
+## The interface kit — `UI Exploration` page (`2382:2`)
+
+**Freedom tier: MEDIUM while it is exploration.** Nothing here is promoted. The
+Brand System page is untouched, and a winner moves there with its own pass — at
+which point these ids become LOW-freedom rows like the ones above.
+
+Built 2026-09-05 (ADR-091) from the measurement in
+`docs/design/interface-kit/ANALYSIS.md`. Every fill, stroke, size and tracking
+is BOUND to a variable; nothing in the library carries a typed-in value, so
+Figma and the stylesheet cannot drift.
+
+⚠ **`Thoughtform/HUD` GAINED A LIGHT MODE**, and that is the largest change to
+the collection since it was made. It had one mode, `Dark`, while the site has
+shipped a light theme since ADR-058 — so the library could not express half of
+what renders. All twenty original variables now carry a Light value, and every
+alpha is RE-DERIVED rather than inherited: `rgba(ink, .12)` recedes toward black
+in dark and toward parchment in light, so the same number goes from quiet to
+invisible.
+
+|            |                                                                                                                                                                                                                               |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Collection | `VariableCollectionId:1770:2` · **47 variables** · modes `Dark`, `Light`                                                                                                                                                      |
+| New groups | `line/*` (datum · seam · rule) · `ink/*` (92 · 70 · 52 · 40 · 28) · `accent/*` (mark · line · ink · contrast) · `ground/*` (void · panel · bar) · `type/*` (6 rungs) · `track/*` (4 rungs) · `chamfer/*` (plate 26 · seed 16) |
+
+### Text styles
+
+The file had **zero** text styles before this pass.
+
+| Style             | Face    | Bound to                           |
+| ----------------- | ------- | ---------------------------------- |
+| `Mono/Eyebrow 10` | PT Mono | `type/chrome-sm` · `track/eyebrow` |
+| `Mono/Label 12`   | PT Mono | `type/chrome-md` · `track/base`    |
+| `Mono/Row 14`     | PT Mono | `type/chrome-lg` · `track/base`    |
+| `Sans/Body 15`    | Inter ⚠ | `type/copy` · `track/copy`         |
+| `Sans/Claim 17`   | Inter ⚠ | `type/title` · `track/display`     |
+| `Sans/Display 24` | Inter ⚠ | `type/display` · `track/display`   |
+
+⚠ **PP NEUE MONTREAL IS NOT AVAILABLE TO THIS FIGMA ACCOUNT**, so every Sans
+style is built on Inter and says so in its own description. The site loads its
+prose face through `next/font` from `public/fonts/`, which Figma cannot reach.
+Re-point the three Sans styles when the family is installed for the team — the
+sizes and tracking are bound and will not need touching.
+
+⚠ **PT MONO SHIPS ONE WEIGHT HERE.** Which is the ceiling the type rule wants
+anyway: a 700 in Figma would be synthesised, and any advance measured off it a
+fiction.
+
+### Components
+
+| Component        | Node        | Variants                                       |
+| ---------------- | ----------- | ---------------------------------------------- |
+| `Mark/Diamond`   | `2386:20`   | 9 — size 6/8/12 × tone mark/ink/dim            |
+| `Mark/Tick`      | `2386:25`   | 2 — minor 7px, major 21px                      |
+| `Mark/Reticle`   | `2386:32`   | 2 — corner tr / bl, the lawful diagonal        |
+| `Frame/Rule`     | `2387:2`    | —                                              |
+| `Frame/Housing`  | `2387:5`    | — chamfer TR+BL at the plate rung              |
+| `Frame/Bay`      | `2387:6`    | — brackets                                     |
+| `Frame/Cell`     | `2387:15`   | — seams, not gutters                           |
+| `Label/Eyebrow`  | `2388:5`    | —                                              |
+| `Label/Bracket`  | `2388:8`    | — a designation, never an ordinal              |
+| `Label/KeyValue` | `2388:13`   | —                                              |
+| `Label/Status`   | `2388:17`   | — a diamond, never a circle                    |
+| `Label/Count`    | `2388:20`   | — in INK, not accent                           |
+| `Station`        | `2388:2975` | 6 — mode fill/line/outline × state open/closed |
+| `Button`         | `2389:38`   | 12 — rank × state                              |
+| `Row`            | `2389:51`   | 3 — default / hover / active, and no glow      |
+
+Documentation frame `2389:2987`; specimen boards `2390:2` (Dark) and `2390:90`
+(Light), the second carrying an explicit mode so it PROVES theme parity rather
+than asserting it.
+
+⚠ **THE PAGE CARRIES ITS OWN GROUND.** Figma's canvas is white and a collection
+resolves to its FIRST mode, so dark ink — which is near-white — painted
+invisibly on the first pass. `page.backgrounds` is set to the void. A
+dark-first system cannot be read on a white board.
+
+---
+
 ## Legacy canonical source frames (Grid (New) canvas `1610:584`)
 
 These were the older reference specimens (pre-late-2026 refactor). Still present in the file for reference but superseded by `1802:5717`.
