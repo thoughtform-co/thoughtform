@@ -1,0 +1,270 @@
+{
+  "wave": "2026-09-05-kit-01",
+  "picked": {
+    "KA-1280x720-dark": {
+      "file": "KA-1280x720-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KA-1440x800-dark": {
+      "file": "KA-1440x800-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KA-1440x800-light": {
+      "file": "KA-1440x800-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KA-1920x1247-dark": {
+      "file": "KA-1920x1247-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KA-1920x1247-light": {
+      "file": "KA-1920x1247-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KB-1280x720-dark": {
+      "file": "KB-1280x720-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KB-1440x800-light": {
+      "file": "KB-1440x800-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KB-1920x1247-dark": {
+      "file": "KB-1920x1247-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KB-1920x1247-light": {
+      "file": "KB-1920x1247-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KC-1280x720-dark": {
+      "file": "KC-1280x720-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KC-1280x720-light": {
+      "file": "KC-1280x720-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KC-1440x800-dark": {
+      "file": "KC-1440x800-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KC-1440x800-light": {
+      "file": "KC-1440x800-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KC-1920x1247-dark": {
+      "file": "KC-1920x1247-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KC-1920x1247-light": {
+      "file": "KC-1920x1247-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KD-1280x720-dark": {
+      "file": "KD-1280x720-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KD-1280x720-light": {
+      "file": "KD-1280x720-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KD-1440x800-dark": {
+      "file": "KD-1440x800-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KD-1440x800-light": {
+      "file": "KD-1440x800-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KD-1920x1247-dark": {
+      "file": "KD-1920x1247-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KD-1920x1247-light": {
+      "file": "KD-1920x1247-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KE-1280x720-dark": {
+      "file": "KE-1280x720-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KE-1280x720-light": {
+      "file": "KE-1280x720-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KE-1440x800-dark": {
+      "file": "KE-1440x800-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KE-1440x800-light": {
+      "file": "KE-1440x800-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KE-1920x1247-dark": {
+      "file": "KE-1920x1247-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KE-1920x1247-light": {
+      "file": "KE-1920x1247-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KF-1280x720-dark": {
+      "file": "KF-1280x720-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KF-1440x800-dark": {
+      "file": "KF-1440x800-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KF-1440x800-light": {
+      "file": "KF-1440x800-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KF-1920x1247-dark": {
+      "file": "KF-1920x1247-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KF-1920x1247-light": {
+      "file": "KF-1920x1247-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KG-1280x720-dark": {
+      "file": "KG-1280x720-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KG-1440x800-dark": {
+      "file": "KG-1440x800-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KG-1440x800-light": {
+      "file": "KG-1440x800-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KG-1920x1247-dark": {
+      "file": "KG-1920x1247-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KG-1920x1247-light": {
+      "file": "KG-1920x1247-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KH-1280x720-light": {
+      "file": "KH-1280x720-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KH-1440x800-dark": {
+      "file": "KH-1440x800-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KH-1440x800-light": {
+      "file": "KH-1440x800-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KI-1280x720-dark": {
+      "file": "KI-1280x720-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KI-1440x800-light": {
+      "file": "KI-1440x800-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KI-1920x1247-dark": {
+      "file": "KI-1920x1247-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KJ-1280x720-dark": {
+      "file": "KJ-1280x720-dark__kit_01.png",
+      "verdict": "PASS_WITH_NOTES"
+    },
+    "KJ-1280x720-light": {
+      "file": "KJ-1280x720-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KJ-1440x800-dark": {
+      "file": "KJ-1440x800-dark__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KJ-1440x800-light": {
+      "file": "KJ-1440x800-light__kit_01.png",
+      "verdict": "PASS"
+    },
+    "KJ-1920x1247-dark": {
+      "file": "KJ-1920x1247-dark__kit_01.png",
+      "verdict": "PASS_WITH_NOTES"
+    },
+    "KJ-1920x1247-light": {
+      "file": "KJ-1920x1247-light__kit_01.png",
+      "verdict": "PASS_WITH_NOTES"
+    }
+  },
+  "undecided": [],
+  "below_floor": [
+    {
+      "slot": "KA-1280x720-light",
+      "verdict": "FAIL",
+      "file": "KA-1280x720-light__kit_01.png",
+      "worst_issue": "accent budget exceeded"
+    },
+    {
+      "slot": "KB-1280x720-light",
+      "verdict": "FAIL",
+      "file": "KB-1280x720-light__kit_01.png",
+      "worst_issue": "accent color element budget exceeded"
+    },
+    {
+      "slot": "KB-1440x800-dark",
+      "verdict": "RETRY",
+      "file": "KB-1440x800-dark__kit_01.png",
+      "worst_issue": "accent ink used to stroke module card outlines and rules"
+    },
+    {
+      "slot": "KF-1280x720-light",
+      "verdict": "FAIL",
+      "file": "KF-1280x720-light__kit_01.png",
+      "worst_issue": "accent element count exceeds budget across modular grid tiers"
+    },
+    {
+      "slot": "KG-1280x720-light",
+      "verdict": "FAIL",
+      "file": "KG-1280x720-light__kit_01.png",
+      "worst_issue": "accent element budget exceeded"
+    },
+    {
+      "slot": "KH-1280x720-dark",
+      "verdict": "RETRY",
+      "file": "KH-1280x720-dark__kit_01.png",
+      "worst_issue": "Selection outline drawn in accent rule violating structural ink rules"
+    },
+    {
+      "slot": "KH-1920x1247-dark",
+      "verdict": "RETRY",
+      "file": "KH-1920x1247-dark__kit_01.png",
+      "worst_issue": "accent line draws tab outline"
+    },
+    {
+      "slot": "KH-1920x1247-light",
+      "verdict": "RETRY",
+      "file": "KH-1920x1247-light__kit_01.png",
+      "worst_issue": "accent used to draw selection box outline"
+    },
+    {
+      "slot": "KI-1280x720-light",
+      "verdict": "FAIL",
+      "file": "KI-1280x720-light__kit_01.png",
+      "worst_issue": "accent outline used for tab selection"
+    },
+    {
+      "slot": "KI-1440x800-dark",
+      "verdict": "RETRY",
+      "file": "KI-1440x800-dark__kit_01.png",
+      "worst_issue": "Tab selection outline drawn in accent ink"
+    },
+    {
+      "slot": "KI-1920x1247-light",
+      "verdict": "RETRY",
+      "file": "KI-1920x1247-light__kit_01.png",
+      "worst_issue": "accent used to draw tab boundary"
+    }
+  ]
+}

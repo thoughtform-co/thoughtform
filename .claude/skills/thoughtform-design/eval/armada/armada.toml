@@ -1,0 +1,238 @@
+# armada.toml - the structure of this engagement. Read at runtime by every tool.
+#
+# THIS SHIP IS NOT AN IMAGE-GENERATION ENGAGEMENT, and the shape below is the
+# whole of the adaptation. Nothing here draws: the candidates are Playwright
+# stills of a live interface at a knob set, shot by
+# `scripts/capture-interface-kit.mjs` in the site repo. `wave.py`,
+# `generate.py`, `explore.py` and `crop.py` are never run. What IS run is the
+# half of the harness that judges: doctor, qa, contact sheet, pick, board,
+# review gallery, harvest.
+#
+# ⚠ THE THREE PROSE FILES STILL BIND. `skill/references/rubric.md` is parsed at
+# runtime by `qa.py`; `skill/references/generation.md` is what `doctor.py`
+# checks and what a reader opens to learn how a candidate is made. The second
+# describes a CAPTURE here rather than a prompt, which is the one place this
+# ship departs from the template - and it says so in its own first paragraph.
+
+[engagement]
+name = "interface-kit"
+title = "Interface kit - the design grid, graded"
+started = "2026-09-05"
+# One word, chosen by a person, never derived from the client's name.
+callsign = "osprey"
+
+[drive]
+# ⚠ THE PIXELS LIVE IN THE REPO ON THIS SHIP, which reverses the harness's own
+# default, and the reason is that they are REGENERABLE FROM A URL. Every still
+# here is a deterministic render of a knob set at a viewport in a theme; there
+# is no negative, nothing was drawn once and never again, and `capture-
+# interface-kit.mjs` rebuilds the whole wave from scratch in a few minutes. So
+# `waves/**/*.png` is gitignored by the site repo and the six CONTROL stills are
+# committed beside the design skill's other anchors - they are what every
+# candidate is judged against, and an anchor that can move is not an anchor.
+root = 'C:/Users/buyss/Manifold Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval'
+source = "control"
+creation = "waves"
+final = "picks"
+
+[env]
+# Read BY NAME. No tool ever prints a value. This is the one canonical .env on
+# this machine, shared by every generation surface here.
+canonical = 'C:/Users/buyss/Manifold Delta/Artifacts/Arcs_In The Pocket/projects/20260820-ai-readiness/skill/scripts/.env'
+
+[models]
+# The grader. Dated snapshot: capability is the rule, the ids drift.
+default = "kit"
+graders = ["gemini-flash-latest"]
+[models.lanes]
+# ⚠ A CAPTURE LANE, NOT A MODEL. It names what made the candidate so the
+# manifest and the gallery can say so; no tool in this ship ever calls it.
+kit = "playwright-chromium"
+
+[prompt]
+scale_clause = "SCALE. The subject is {scale}. Everything around it is sized to agree with that."
+# The paragraph of the shared block a setting swaps. Its first words.
+swap_paragraph = "LIGHT AND GROUND."
+max_refs = 3
+
+[refs]
+refuse = ["DO NOT TRAIN", "SUPERSEDED", "DUPLICATE"]
+model_ready_px = 2048
+model_ready_mb = 6
+
+[formats]
+anchor = 0.5
+[formats.cuts]
+# No second cut: a still is shot at the shape it is judged at, because the shape
+# IS one of the two variables. Cropping one viewport into another would be a
+# picture of a composition nothing renders.
+"16:9" = []
+
+[harvest]
+changelogs = ["skill/CHANGELOG.md"]
+eval_logs = ["skill/references/eval-log.md"]
+prompt_logs = []
+waves = "evals/waves"
+sections = []
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SUBJECTS - a viewport and a theme, and the shipped still they are judged
+#  against.
+#
+#  ⚠ `identity` IS THE CONTROL, AND THAT IS THE WHOLE JOIN. `refs.py` resolves
+#  it, `qa.py` attaches it as image 2 and `make_review_gallery.py` puts it in
+#  every lightbox under "the real ...". So every candidate is read beside the
+#  shipped panel at ITS OWN viewport and theme, which is the only comparison
+#  that means anything - a 1280x720 direction next to a 1920 control would be
+#  measuring the window, not the design.
+#
+#  ⚠ AND A DIFFERENCE FROM IT IS NOT A FAULT. The rubric's `## Grading rules`
+#  says so in as many words, because `qa.py`'s built-in preamble calls image 2
+#  an identity reference whose deviations are defects - true of a photographed
+#  subject, false of a baseline being argued with.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[subjects.1280x720-dark]
+noun = "shipped proof panel, 1280x720, dark"
+identity = "v0-1280x720-dark.png"
+
+[subjects.1280x720-light]
+noun = "shipped proof panel, 1280x720, light"
+identity = "v0-1280x720-light.png"
+
+[subjects.1440x800-dark]
+noun = "shipped proof panel, 1440x800, dark"
+identity = "v0-1440x800-dark.png"
+
+[subjects.1440x800-light]
+noun = "shipped proof panel, 1440x800, light"
+identity = "v0-1440x800-light.png"
+
+[subjects.1920x1247-dark]
+noun = "shipped proof panel, 1920x1247, dark"
+identity = "v0-1920x1247-dark.png"
+
+[subjects.1920x1247-light]
+noun = "shipped proof panel, 1920x1247, light"
+identity = "v0-1920x1247-light.png"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TYPES - one per direction.
+#
+#  ⚠ MIRRORED FROM `lib/interface-kit/directions.json`, WHICH IS THE SOURCE.
+#  The capture asserts the mirror on every run and prints the block to paste
+#  when it drifts. A type here that the page cannot draw is a type that grades
+#  a still nobody shot.
+#
+#  ⚠ AND THE IDS ARE LETTERS. `config.parse_name`'s grammar takes only letters
+#  before the first dash, so `K1` would fall to its unknown-shape branch - lane
+#  empty, draw 0 - and every tool downstream would read a different file than
+#  the capture wrote, silently.
+#
+#  `camera` / `position` / `shape` are the difference table `wave.audit` and
+#  `doctor.py` check: here they are the knob string, the axis being moved, and
+#  what the still should show. No two may be identical, which is a useful gate
+#  on this ship too - two directions with the same three answers are one
+#  direction shot twice.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[types.KA]
+name = "House"
+question = "does the panel recomposed at house values read as the shipped one?"
+channel = "proof casefile - desktop"
+ar = "16:9"
+camera = "no knob moved"
+position = "the control"
+shape = "the shipped grammar, recomposed from the production leaves"
+
+[types.KB]
+name = "Seated"
+question = "does drawing the sheet's own rules, and taking the last gold off the structure, make the panel a region rather than a card?"
+channel = "proof casefile - desktop"
+ar = "16:9"
+camera = "grid=ruled line=single"
+position = "the seat"
+shape = "page rules at the seam weight with the panel's edges on them; structure one hue"
+
+[types.KC]
+name = "Track tight"
+question = "does one dominant tracking rung give the mono chrome a base register to depart from?"
+channel = "proof casefile - desktop"
+ar = "16:9"
+camera = "track=tight"
+position = "tracking"
+shape = "eleven rungs collapse toward one at .06em"
+
+[types.KD]
+name = "Weight regular"
+question = "does the panel hold its hierarchy with nothing above 500?"
+channel = "proof casefile - desktop"
+ar = "16:9"
+camera = "weight=regular"
+position = "weight"
+shape = "thirty bold nodes become none; emphasis is ink"
+
+[types.KE]
+name = "Case sentence"
+question = "does sentence case on the title and the claims give case something to say?"
+channel = "proof casefile - desktop"
+ar = "16:9"
+camera = "case=sentence"
+position = "case"
+shape = "uppercase reserved for mono chrome"
+
+[types.KF]
+name = "Accent budget"
+question = "does gold spent on the wayfinding marks alone still say where the reader is?"
+channel = "proof casefile - desktop"
+ar = "16:9"
+camera = "accent=budget"
+position = "the accent"
+shape = "two hundred gold objects become a handful; the estate is drawn in dawn"
+
+[types.KG]
+name = "Material flat"
+question = "does the housing survive losing its bloom, its glow and one of its two blurs?"
+channel = "proof casefile - desktop"
+ar = "16:9"
+camera = "material=flat"
+position = "material"
+shape = "one ground, no atmosphere"
+
+[types.KH]
+name = "Station line"
+question = "does a 1px line carry selection without a fill?"
+channel = "proof casefile - desktop"
+ar = "16:9"
+camera = "tab=line"
+position = "the station row"
+shape = "the open station is underlined, not filled"
+
+[types.KI]
+name = "Station outline"
+question = "does an outline carry selection without a fill?"
+channel = "proof casefile - desktop"
+ar = "16:9"
+camera = "tab=outline"
+position = "the station row, again"
+shape = "the open station takes a gold border and keeps its ink"
+
+[types.KJ]
+name = "Composite"
+question = "read as one instrument: seated on the sheet, one tracking rung, nothing above 500, sentence display, an accent spent a handful of times - with the machined gold lip kept."
+channel = "proof casefile - desktop"
+ar = "16:9"
+camera = "every knob moved"
+position = "all of them at once"
+shape = "the recommendation"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SETTINGS - the theme is carried by the SUBJECT here, not by a setting,
+#  because a light still and a dark still of one direction are two candidates a
+#  reader compares rather than one candidate in two lights. `default` exists
+#  because `doctor.py` requires the fence and `qa.py` prints the name.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[settings.default]
+surface = ""
+anchors = false

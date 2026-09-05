@@ -125,3 +125,13 @@ public/_previews/
 # Latent Flight lab captures (scripts/capture-latent-flight.mjs) — shoots, not sources
 docs/design/latent-flight/*.png
 docs/design/latent-flight/report.json
+
+# ── Interface-kit waves (ADR-091) ────────────────────────────────────────
+# The stills are DETERMINISTIC RENDERS OF A URL, not negatives: the capture
+# rebuilds a whole wave in minutes, so the record is committed and the pixels
+# are not. The six CONTROL stills are the exception and are committed beside
+# the design skill's other anchors — a baseline that can move is not a
+# baseline.
+.claude/skills/thoughtform-design/eval/waves/**/*.png
+.claude/skills/thoughtform-design/eval/armada/delivery/*.html
+docs/design/interface-kit/**/*.png

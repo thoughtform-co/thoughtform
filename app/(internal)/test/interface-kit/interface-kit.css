@@ -123,8 +123,9 @@
 .ik-stage {
   position: sticky;
   top: 0;
-  height: 100svh;
   z-index: 2;
+  height: 100svh;
+  overflow: clip;
 }
 .ik-runway {
   height: 80svh;
@@ -140,9 +141,19 @@
   inset: 0;
   padding: 0 var(--hud-content-inset, 0px);
 }
+/* ⚠ `position: relative`, NEVER `absolute; inset: 0` — AND THAT IS 145px OF
+   DIFFERENCE, silently. An absolutely positioned child resolves its inset
+   against the containing block's PADDING box, which includes the padding, so
+   an absolute stage inside the station box spans the full band and hands
+   `.fl-case` a containing block starting at zero. The panel then sits one
+   whole `--hud-content-inset` too far outboard at every viewport, laid out
+   correctly, painting cleanly, and comparing against a composition production
+   never draws. In flow it takes the CONTENT box, which is the point of the
+   padding. Measured before the fix: `.fl-case` at 18..1422 against
+   production's 163..1277 at 1440x800. */
 .ik-proof-stage {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  height: 100%;
 }
 
 /* ── The sheet ────────────────────────────────────────────────────────── */
@@ -1016,8 +1027,21 @@
    and the whole grid painted a zero-height strip with no error anywhere. A
    token can only be read where it is declared.
 
+   ⚠ AND IT RULES THE MARGINS, NEVER THE COPY. The first cut ran repeating
+   vertical rules across the whole band at a third of the record column's width
+   — invented structure, corresponding to nothing, striping straight through the
+   brief. The grader named it on its first pass ("misplaced grid overlay across
+   the left pane") and it is the clearest case on this surface of the reference
+   set's own warning: a rule with no informational job is decoration, and
+   decoration behind prose is worse than no rule at all.
+
+   So the seat is drawn as a DATUM, not a field: the rail's own thirteen rungs
+   as stubs at both band edges, and the column split extended the full height of
+   the band. Both are lines the panel already lands on — the grid does not add
+   structure, it makes the structure that is already there visible.
+
    The parent's `::before` paints beneath every child, so the housing, the
-   record column and the field all sit over it without a z-index of their own. */
+   record column and the field sit over it without a z-index of their own. */
 .ik[data-ik-grid="ruled"] .fl-case[data-ik-panel]::before {
   content: "";
   position: absolute;
@@ -1027,21 +1051,22 @@
   height: var(--fl-rail-h);
   pointer-events: none;
   background-image:
-    /* the column split and its repeats — the vertical rules a record column
-       and a field can land on */
-    repeating-linear-gradient(
-      to right,
-      var(--ik-rule) 0 1px,
-      transparent 1px calc(var(--fl-col-l) / 3)
-    ),
-    /* the rail's own thirteen rungs, continued across the band */
-    repeating-linear-gradient(
-        to bottom,
-        var(--ik-rule) 0 1px,
-        transparent 1px calc(var(--fl-rail-h) / 12)
-      );
+    /* the thirteen rungs, as 21px stubs at each edge — the rail's own major
+       tick length, so the ladder reads as a continuation of the frame */
+    repeating-linear-gradient(to bottom, var(--ik-rule) 0 1px, transparent 1px calc(100% / 12)),
+    repeating-linear-gradient(to bottom, var(--ik-rule) 0 1px, transparent 1px calc(100% / 12)),
+    /* the column split, run the full band height rather than stopping at t11 */
+    linear-gradient(var(--ik-rule), var(--ik-rule));
+  background-size:
+    21px 100%,
+    21px 100%,
+    1px 100%;
+  background-position:
+    left top,
+    right top,
+    var(--fl-col-split) top;
+  background-repeat: no-repeat;
 }
-
 /* ── line=single · structure is one hue ───────────────────────────────
    What ADR-089 did not reach: the directory's row glyph draws gold .55 on all
    four sides (casefile.css hardcodes it) and the station's diamond gold .42
