@@ -1298,6 +1298,53 @@ signal) before the first read, and assert the setup took — if you stamp N
 elements, assert N > 0 immediately, so a red test names the harness rather
 than the code.
 
+### A parity check between two things broken the same way reports parity
+
+The commonest way a green gate hides a layout defect. A recomposition lab
+asserted its recomposed panel matched the shipped control on all four zone
+boxes, and passed on every run — while both stills were rendering inside a
+containing block 145px too wide, because the lab's stage was
+`position: absolute; inset: 0` and an absolutely positioned child resolves
+against its containing block's **padding** box. Both were wrong identically,
+so the comparison was true and meaningless.
+
+The fix is not a tighter tolerance. **Ask the layout LAW, not a sibling**: the
+gate now resolves the frame's own inset tokens and asserts the panel's left
+edge equals `band + pad + inset`, which no amount of shared breakage can
+satisfy. Reach for this whenever a check's reference is another render of the
+same code — a snapshot against yesterday's build, a variant against its
+control, a mirror against its source. If both can be wrong together, the
+check cannot see it.
+
+### A custom property is a string until something lays it out
+
+`getComputedStyle(el).getPropertyValue('--instrument-inset')` hands back the
+`calc(...)` **expression**, not a pixel. `parseFloat` on that returns `NaN`,
+which coerces to `0` in arithmetic — so a check built on one is silently
+correct wherever the token happens to resolve to zero and silently wrong
+everywhere else. This one reported a 48px seat error at 1920×1247 and none at
+1280×720, from a single line, and looked like a real viewport-dependent bug.
+
+Resolve through the engine instead: append a hidden probe element, set
+`style.width` to the expression, read back the computed `width`. Same trick
+for any token that might be a `calc()`, a `clamp()` or a `var()` chain — which
+is most of the geometry tokens in this repo.
+
+### A conditional row shape only mixes on the run you never test
+
+A payload built with optional keys — omit a column so a merge-upsert leaves
+the stored value alone — has one shape when everything is fresh and another
+when nothing is. Both of those are uniform, so the first-ever run passes and a
+full rebuild passes. **The mixed shape appears only on the incremental run,
+which is the normal one**, and PostgREST rejects the whole body for it
+(`PGRST102: All object keys must match`) — including every row that was fine.
+The design-corpus sync had never once run in the mode it was written for.
+
+Group by key signature before batching, rather than flattening to a uniform
+shape full of nulls that would overwrite what the omission was protecting. And
+when a code path's shape depends on how much work a run had to do, test the
+partial run, not the empty one and the full one.
+
 ---
 
 ## ✅ Quick Checklist

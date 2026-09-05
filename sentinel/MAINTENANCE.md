@@ -54,7 +54,59 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-09-02 (latest) — The casefile is one machined housing (ADR-089)
+### 2026-09-05 (latest) — The interface kit: the reference measured, and a wave graded (ADR-091)
+
+The owner named two sites he admires, named the surface he wants to reach
+that register, and said plainly he could not put a finger on the delta. So
+it was counted rather than described. Cycle B for the lab and the ship,
+Cycle A rows 1, 2, 3, 4 and 5. Nothing on the landing changed; ADR-091 is
+**Proposed** and the promotion is a separate decision.
+
+- **Row 1 — the seat gate was wrong twice before it was right.** First it
+  omitted the housing's own padding term; then it reported a 48px error at
+  one viewport and none at another, because `--instrument-inset` is a
+  `calc()` and `parseFloat` on the token string returns `NaN`, which
+  coerces to zero. Both are in BEST-PRACTICES now, as _a custom property is
+  a string until something lays it out_.
+- **Row 2 — the ruled-grid direction was rewritten after the grader named
+  it.** Its first cut struck repeating verticals through the brief at a
+  third of the record column: invented structure, not the sheet's own. It
+  rules the margins only now — the rail's rungs as stubs at both band edges
+  and the column split full height. **The grader caught it on its first
+  pass**, which is the clearest thing the wave bought.
+- **Row 3 — the defect class is "a parity check between two things broken
+  the same way reports parity".** The lab's control gate compared the
+  recomposed panel to the shipped one on all four zone boxes and passed
+  throughout, while both rendered inside a containing block 145px too
+  wide: `position: absolute; inset: 0` on the stage, and an absolutely
+  positioned child resolves against the **padding** box. The gate asks the
+  layout law now, not a sibling. Also recorded: _a conditional row shape
+  only mixes on the run you never test_, from the design-corpus sync, which
+  had never once run in the mode it was written for.
+- **Row 4 — three pairs must move together and one of them is cross-repo.**
+  `lib/interface-kit/directions.json` and the ship's `armada.toml`
+  `[types]`; `--ik-t0` and `--fl-t0`; the Figma variables and the
+  stylesheet. `.claude/rules/interface-kit.md` carries all three, and the
+  capture asserts the first two on every run rather than trusting them.
+- **Row 5 — the countable checks were stable and half the rubric was a
+  coin.** The candidates are deterministic renders of a URL, so two
+  captures produce identical pixels and every point of verdict spread
+  across three runs is the grader's. 31 of 60 came back unstable, which
+  makes the unstable list the specification for rubric 0.2 rather than a
+  nuisance. **And the rubric fails its own control on A1** — which is the
+  point: a rubric its baseline passes is describing rather than judging.
+- **Two premises in the approved plan were wrong, and the measurement is
+  what said so.** ADR-089 had already moved the casefile's structure to
+  dawn, and the house is **stricter** than both references on radius (zero
+  against six and two). Written from a lab README rather than from a probe;
+  corrected in ADR-091 rather than quietly dropped.
+- **Left open:** the vault's git has diverged since 2026-08-09 between a
+  local scribe and a cloud scribe (29 local commits against 147 remote,
+  both still writing). The three new reference notes are live in the design
+  MCP, which syncs off local disk, and committed locally — they cannot be
+  pushed until somebody decides how the two sides reconcile.
+
+### 2026-09-02 — The casefile is one machined housing (ADR-089)
 
 The owner read `v0` against `v2` and took the housing for the proof
 casefile; the era stage is held. Cycle B for the new chrome, Cycle A
