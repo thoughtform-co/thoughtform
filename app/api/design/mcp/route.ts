@@ -259,6 +259,36 @@ function designMdColors(body: string): Record<string, string> {
   return out;
 }
 
+/**
+ * DESIGN.md's declared heading weight, from the `typography:` block of the
+ * frontmatter. Read for one reason: ADR-092 caps every weight at 500 while the
+ * brand doc declared 700 for headings for weeks with nothing to say so — the
+ * `drift` row this feeds is what would have surfaced it.
+ */
+function designMdHeadingWeight(body: string): number | null {
+  const fm = body.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!fm) return null;
+  const lines = fm[1].split(/\r?\n/);
+  let inType = false;
+  let inHeading = false;
+  for (const line of lines) {
+    if (/^typography:\s*$/.test(line)) {
+      inType = true;
+      continue;
+    }
+    if (inType && /^\S/.test(line)) break; // dedent ends the block
+    if (!inType) continue;
+    if (/^\s{2}heading:\s*$/.test(line)) {
+      inHeading = true;
+      continue;
+    }
+    if (inHeading && /^\s{2}\S/.test(line)) break; // the next role
+    const m = inHeading ? line.match(/^\s+fontWeight:\s*"?(\d{3})"?\s*$/) : null;
+    if (m) return Number(m[1]);
+  }
+  return null;
+}
+
 const norm = (v: string) => v.trim().toLowerCase().replace(/\s+/g, "");
 
 // ---------------------------------------------------------------------------
@@ -429,7 +459,8 @@ async function toolTokens(args: Record<string, unknown>): Promise<unknown> {
       (k) =>
         /^--(void|dawn|gold|atreides|surface|alert|ink|verde)/.test(k) || /(-rgb|contrast)$/.test(k)
     ),
-    typography: pick((k) => /^--(font|text|type|leading|tracking)/.test(k)),
+    // `track` also matches `tracking`; `weight` is new with ADR-092's role ramps.
+    typography: pick((k) => /^--(font|text|type|leading|track|weight)/.test(k)),
     spacing: pick((k) => /^--(space|gap|pad|inset|margin)/.test(k)),
     motion: pick((k) => /^--(ease|duration|transition|anim)/.test(k)),
   };
@@ -444,6 +475,19 @@ async function toolTokens(args: Record<string, unknown>): Promise<unknown> {
       if (liveVal && norm(liveVal) !== norm(value)) {
         drift.push({ token: `--${name}`, design_md: value, variables_css: liveVal });
       }
+    }
+    // The weight ceiling (ADR-092): the doc's declared heading weight against
+    // the live `--weight-lit`. A doc that declares more than the ceiling is the
+    // drift that went unremarked for weeks before this row existed.
+    const docWeight = designMdHeadingWeight(await repoFile("DESIGN.md"));
+    const liveLit = live["--weight-lit"] ? Number(live["--weight-lit"]) : null;
+    if (docWeight !== null && liveLit !== null && docWeight > liveLit) {
+      drift.push({
+        token: "--weight-lit (ceiling)",
+        design_md: String(docWeight),
+        variables_css: String(liveLit),
+        note: "DESIGN.md declares a heading weight above the live ceiling",
+      });
     }
     if (declared.void && live["--void-deep"] && norm(declared.void) !== norm(live["--void"])) {
       drift.push({

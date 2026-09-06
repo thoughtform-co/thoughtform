@@ -183,6 +183,46 @@
   --m-display-sub: clamp(22px, 6vw, 30px);
   --m-signal: clamp(14px, 4.2vw, 17px);
 
+  /* ─── TYPE RAMPS BY ROLE (ADR-092) ───
+     Named by ROLE, as the gold ramp is: a designer picking one answers what
+     the element DOES, not how wide it should be. Four tracking rungs and a
+     500 weight ceiling — the counts ADR-091 measured on two admired
+     interfaces (50–98 % of their text on one tracking rung, ~2 % above weight
+     500) against this site's 36 rungs and 28 %.
+
+     ⚠ `--track-label` IS .08em BECAUSE THE FRAME IS THE DATUM. The HUD's own
+     labels run .08em (hud.css, _navbar.css) and are not swept, so a content
+     base of .06 would give the screen two bases — the defect ADR-091 found one
+     level down. It is also what the map's MONO_ADVANCE (0.68 = 0.6 + .08)
+     already encodes, so the map's main rung joins the base for free.
+
+     ⚠ PT MONO SHIPS 400 + 700 ONLY. `--weight-lit` on mono resolves to 400 by
+     CSS font matching, and that is the design: emphasis on mono is ink, never
+     weight. PP Neue Montreal has 400 / 500 / 700 loaded; sans display takes 500.
+
+     These are read by the design MCP (`design_tokens`, group typography) and
+     by scripts/design-eval/mechanical.mjs's tracking stage — a value here IS
+     the law the gate enforces. */
+  --track-copy: 0;
+  --track-display: -0.02em;
+  --track-label: 0.08em;
+  --track-eyebrow: 0.15em;
+  --weight-light: 300;
+  --weight-text: 400;
+  --weight-lit: 500;
+
+  /* ⚠ LEGACY MAGNITUDE NAMES — moved here from landing.css's :root on
+     2026-09-06, byte-identical, so they resolve on EVERY route (declared in a
+     route sheet they reached only that route, and 17 sites carried fallbacks
+     that disagreed with the token they could not see). Deleted in ADR-092's
+     stage 4 once every consumer sits on a role token; `--track-tight` and
+     `--track-normal` have no consumers today. */
+  --track-tight: 0.02em;
+  --track-normal: 0.04em;
+  --track-wide: 0.08em;
+  --track-wider: 0.1em;
+  --track-widest: 0.15em;
+
   /* Spacing (8px grid) */
   --space-xs: 4px;
   --space-sm: 8px;

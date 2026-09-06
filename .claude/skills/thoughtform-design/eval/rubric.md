@@ -17,14 +17,19 @@ last.
 Computed-style assertions that need no judgment. **A mechanical failure short-circuits the
 run** — do not spend a vision judge on a page that fails `grep`.
 
-| Check      | Assertion                                                            |
-| ---------- | -------------------------------------------------------------------- |
-| `radius`   | every element's computed `border-radius` is `0px`                    |
-| `fonts`    | every rendered `font-family` resolves to PT Mono or PP Neue Montreal |
-| `shadow`   | no `box-shadow` outside the sanctioned list                          |
-| `palette`  | every colour is a value present in the parsed token set              |
-| `gradient` | no CSS gradient whose stops fall in the purple/blue hue band         |
-| `contrast` | text ≥ 4.5:1, line work ≥ 3:1, composited before measuring           |
+| Check         | Assertion                                                                                                                                                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `radius`      | every element's computed `border-radius` is `0px`                                                                                                                                                                                  |
+| `fonts`       | every rendered `font-family` resolves to PT Mono or PP Neue Montreal                                                                                                                                                               |
+| `shadow`      | no `box-shadow` outside the sanctioned list                                                                                                                                                                                        |
+| `palette`     | every colour is a value present in the parsed token set                                                                                                                                                                            |
+| `gradient`    | no CSS gradient whose stops fall in the purple/blue hue band                                                                                                                                                                       |
+| `contrast`    | text ≥ 4.5:1, line work ≥ 3:1, composited before measuring                                                                                                                                                                         |
+| `weight`      | no text node's computed `font-weight` exceeds 500 (ADR-092's ceiling; mono has no 500 and renders 400)                                                                                                                             |
+| `tracking`    | every computed `letter-spacing` on HTML text is one of the four `--track-*` role rungs or 0; the rung count and the top rung's share are PRINTED (ADR-091's two numbers as a standing readout); SVG lettering is noted, not failed |
+| `case`        | no PP Neue Montreal text is uppercased by CSS — case ranks only if the sans does not shout                                                                                                                                         |
+| `text-shadow` | none in the accent; a void-family shadow over imagery is a legibility scrim and is noted                                                                                                                                           |
+| `accent`      | the accent paints no STRUCTURE — a border or outline on a stateless container, divider, frame or list item; every other accent-painted object is a MARK and is counted against the scope's budget (`--budget`)                     |
 
 ⚠ **Composite alphas before measuring contrast.** `rgba(ink, .38)` on two different grounds
 is two different ratios, and the raw value is neither.

@@ -71,11 +71,12 @@
   --duration-fast: 80ms;
   --duration-normal: 120ms;
   --duration-slow: 150ms;
-  --track-tight: 0.02em;
-  --track-normal: 0.04em;
-  --track-wide: 0.08em;
-  --track-wider: 0.1em;
-  --track-widest: 0.15em;
+  /* ⚠ THE FIVE `--track-*` MAGNITUDE TOKENS LEFT THIS SHEET (ADR-092, 2026-09-06).
+     They are declared in app/styles/variables.css's :root now, byte-identical,
+     so they resolve on every route. Declared here they reached only the routes
+     that import landing.css, and 17 sites carried fallbacks that disagreed with
+     the token they could not see. The role tokens (`--track-label`, …) live
+     beside them there; the magnitude names are aliases and go in stage 4. */
   --atreides-mid: #3d4b33;
   --atreides-light: #5b7a4e;
   /* Ink step of the provenance green (ADR-063 discipline: hue is brand,

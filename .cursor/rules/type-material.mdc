@@ -1,0 +1,37 @@
+---
+description: The type ramps by role (ADR-092) — four tracking rungs and a 500 weight ceiling on :root, a ratchet guard, the frame never swept
+globs:
+  - "app/styles/**"
+  - "components/**/*.css"
+  - "components/landing/home-v2/services/hologram/ServicesCardRing.tsx"
+  - "components/landing/home-v2/arc-cases/caseCardBake.ts"
+  - "lib/services-ring/**"
+  - "tests/lib/type-material-tokens.test.ts"
+  - "scripts/design-eval/mechanical.mjs"
+alwaysApply: false
+---
+
+# Rule: the type ramps by role (ADR-092)
+
+Full rule: `.claude/rules/type-material.md`. The short form:
+
+- `letter-spacing` is `var(--track-copy|display|label|eyebrow)` or `0`. Never a
+  literal; never a legacy `--track-wide`-style name (they are aliases that die at
+  stage 4).
+- Nothing above `--weight-lit` (500). **PT Mono has no 500** — a mono 700 is
+  DELETED, not set to 500; emphasis on mono is ink. Sans display takes 500.
+- The `font:` shorthand carries a weight; the ratchet scans it too.
+- No `text-transform: uppercase` on PP Neue Montreal. PT Mono chrome stays
+  uppercase. Check the string is AUTHORED sentence case first.
+- **The HUD frame is the datum and is never swept**: `hud.css`, `navigation*.css`,
+  `rail-instruments.css`, and the `.hud*` / `.rail-manifest*` / `.rin-*` /
+  `.home-v2-mobile-signal` blocks are pinned EXACT.
+- The ratchet (`tests/lib/type-material-tokens.test.ts`) only goes down; lower a
+  sheet's pins when its stage lands. Raising one is an ADR line.
+- Canvas text obeys via `lib/services-ring/ringType.ts`; the Bold face leaves the
+  preload only after all three bakes are at 400.
+- Light re-derives alphas, never inherits them (ADR-058).
+
+Verify: `npx vitest run tests/lib/type-material-tokens.test.ts` and
+`node scripts/design-eval/mechanical.mjs --url / --scope ".fl-case" --exclude ".fl-pda"`
+in both themes.
