@@ -340,10 +340,11 @@ html[data-theme="light"] .fl-case {
      ⚠ And the GROUND inverts its meaning across the flip — `--void-deep-rgb`
      is the parchment side's own deep step, so the slab stays a tint of the
      ground it sits on rather than a dark pane over paper. */
-  --fl-hz-lip-1: color-mix(in srgb, var(--gold-line) 34%, transparent);
-  --fl-hz-lip-2: rgba(var(--dawn-alt-rgb), 0.1);
-  --fl-hz-lip-3: color-mix(in srgb, var(--gold-line) 12%, transparent);
-  --fl-hz-lip-4: color-mix(in srgb, var(--gold-line) 30%, transparent);
+  /* The lip is ONE flat value since ADR-092 stage 1 U1 — see casefile.css
+     for why four stops made the frame's two longest edges its faintest.
+     Light re-derives from --gold-line, never --gold: raw gold on parchment
+     sits under the 3:1 rung line work has to clear (ADR-058). */
+  --fl-hz-lip: color-mix(in srgb, var(--gold-line) 30%, transparent);
 
   /* CHROME INK LIFT. Not a preference — an asymmetry in the medium.
      Cream at α over near-black keeps most of its contrast because the

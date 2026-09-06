@@ -2771,7 +2771,27 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         hzScanline: cs(hz, "::after")?.content ?? null,
         seatContent: seat?.content ?? null,
         seatLayers: (seat?.backgroundImage.match(/repeating-linear-gradient/g) ?? []).length,
-        splitGold: isGold(cs(q(".fl-split"))?.backgroundColor ?? ""),
+        // ⚠ A background-IMAGE leaves backgroundColor at rgba(0,0,0,0), so the
+        // colour check alone went vacuous the moment the split became a dotted
+        // gradient (stage 1 U1). Both are read, and the STYLE is pinned with
+        // them: dotted is what keeps a 1000px-scale line quieter than the
+        // 460px hairlines it crosses, and solid at the seam weight is exactly
+        // the regression the owner caught.
+        splitGold:
+          isGold(cs(q(".fl-split"))?.backgroundColor ?? "") ||
+          isGold(cs(q(".fl-split"))?.backgroundImage ?? ""),
+        splitDotted: /repeating-linear-gradient/.test(cs(q(".fl-split"))?.backgroundImage ?? ""),
+        // The housing hangs --fl-hz-pad outboard of .fl-case; the iris clips
+        // to its own rest bleed. If the bleed is the smaller of the two the
+        // panel's left and right edges are CUT OFF — which is exactly what
+        // shipped, because a backdrop blur was drawing a boundary in the same
+        // place and the cut read as an edge.
+        hzPad: parseFloat(cs(caseEl)?.getPropertyValue("--fl-hz-pad") ?? "0"),
+        irisBleed: Math.abs(
+          parseFloat((cs(caseEl)?.clipPath ?? "").match(/calc\(\s*0%\s*-\s*([\d.]+)px/)?.[1] ?? "0")
+        ),
+        splitH: q(".fl-split")?.getBoundingClientRect().height ?? 0,
+        bandH: q(".fl-hz")?.getBoundingClientRect().height ?? 0,
       };
     });
 
@@ -2797,6 +2817,23 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(read.glyphGold, "a dormant folder glyph is outlined in gold").toBe(false);
     expect(read.registerRuleGold, "the register's hairline went back to gold").toBe(false);
     expect(read.splitGold, "the column split is gold").toBe(false);
+    expect(read.splitDotted, "the column split went solid again (stage 1 U1)").toBe(true);
+    // ⚠ THE IRIS MUST BLEED PAST THE HOUSING (stage 1 U1). Measured with the
+    // lip painted red: at a 12px bleed against an 18px pad, only the top and
+    // bottom rows rendered — 1410px each — and the plate had no vertical edge
+    // anywhere. The +1 is the lip's own pixel.
+    expect(read.hzPad, "the housing's pad is unreadable").toBeGreaterThan(0);
+    expect(
+      read.irisBleed,
+      `the iris clips the housing's side edges — bleed ${read.irisBleed}px against a ${read.hzPad}px pad`
+    ).toBeGreaterThanOrEqual(read.hzPad + 1);
+    // It divides the record column, so it ends where that column does — the
+    // band's own floor is ~100px further down, and a divider drawn past the
+    // last thing it divides is what read as a wall.
+    expect(
+      read.splitH,
+      `the column split runs the whole band again — ${read.splitH} of ${read.bandH}`
+    ).toBeLessThan(read.bandH * 0.92);
     // the seat
     expect(read.seatContent, "the grid seat is not drawn").not.toBe("none");
     expect(read.seatLayers, "the seat should rule both band edges").toBe(2);

@@ -205,6 +205,81 @@ method — the alternative is blaming a change for a failure it did not make):
   They are ANALYSIS defect 9's family on the mobile IA, newly VISIBLE because the
   gate is new, not newly caused.
 
+## U1 (2026-09-06, owner) — the housing had no side edges, and a clip was eating them
+
+The owner, reading the shipped panel: the frame's borders _"especially the left
+and right sides, are not very legible"_, and the column split is _"fucking
+ugly … what a regression"_. Both were stage 1's. Three things, in the order they
+were found, because the first two answers were wrong about the cause.
+
+**1. The split went solid and full-height, and the sweep's own rule said not
+to.** R1 reads _"structure → 1px dawn at R2's rung, KEEPING THE LINE STYLE
+(dotted/dashed)"_. It was a dotted dawn-alt .24 reticle guide over the record
+column; stage 1 made it a solid `--fl-hz-seam` over the rail's whole height —
+about six times the ink per unit length over 1.6× the length, with the last
+~100px running past the directory's last row beside nothing. **Length is part of
+weight**: the register's hairlines are .12 over ~460px, and a .28 line over
+1030px is a different object. Dotted again, over `--fl-body-top` → `--fl-t11`.
+The grid seat keeps its stubs and stops claiming the split as its second half.
+
+**2. The lip fades through its middle, and the middle is where the long runs
+are.** The ring was the services plate's 168° four-stop ramp — gold .34 → dawn
+.1 at 45% → gold .1 at 70% → gold .3 — which is raking light across a 680px CARD
+and a fade-out across a 1030px HOUSING. Flat now, one value; top and bottom are
+unchanged and only the sides move. ADR-089 U2's own finding, applied to the last
+piece of plate atmosphere on the surface.
+
+**3. ⚠ AND THE REAL CAUSE WAS NEITHER — THE IRIS WAS AMPUTATING THE SIDES.**
+Fix 2 was necessary and did not work, so the lip was painted **pure red** and
+captured: only two rows rendered, y=131 and y=1115, 1410px each, and **no
+vertical column existed anywhere on the plate.** `.fl-case` clips to
+`inset(-30px calc(0% - 12px))` — 30px of vertical bleed, **12px** of horizontal —
+while ADR-089 hangs the housing `--fl-hz-pad` (**18px**) outboard of that same
+box. The panel's outer 6px per side, the gold lip included, was clipped away.
+The −12px is ADR-056's own number and was correct for what it was written for:
+half the reticle cross's 19px arm plus an AA margin. **ADR-089 seated something
+further out and nobody re-read the clip.**
+
+⚠ **THE GLASS IS WHY IT SURVIVED A MONTH.** A 14px backdrop blur draws a soft
+boundary wherever it is cut, so the truncation read as the housing's own edge.
+Stage 1 flattened the housing, took the blur, and left a hard unlined cut — the
+owner's complaint is the same defect made visible, not a new one.
+**A clip that amputates a border is undetectable while something else is drawing
+a boundary in the same place.**
+
+`--fl-iris-bleed: calc(var(--fl-hz-pad) + 2px)` — DERIVED, so the two cannot
+drift again; the iris still closes to the same 50.5 % slit, so the fold is
+unchanged. Measured after: left edge 947 lip pixels at x=237, right 948 at
+x=1676, joining top 1396 and bottom 1414, at `rgb(66,55,30)` against the top's
+`rgb(68,56,31)`. Light: all four at `rgb(206,190,159)` on parchment.
+
+### Three guards, because none of these had one
+
+- **The iris must bleed past the housing.** The smoke asserts
+  `irisBleed ≥ --fl-hz-pad + 1` — the arithmetic that was missing between two
+  rules in two files.
+- **The split's guard had gone vacuous.** It read `backgroundColor`, which a
+  background-IMAGE leaves at `rgba(0,0,0,0)`, so it would have passed forever
+  once the split became a gradient. It reads the image too, and pins the STYLE
+  (dotted) and the height (< 92 % of the band).
+- ⚠ **THE MECHANICAL GATE WAS REPORTING PASS ON A SCOPE IT NEVER MEASURED.**
+  It loads a URL, waits 2.5s and reads — it does not scroll — and on the landing
+  the casefile is `visibility: hidden` until the dwell publishes
+  `data-proof-live`. So every desktop, non-PRM run against `.fl-case` measured
+  **zero text nodes** and printed PASS on all fifteen stages. It reports
+  `MECHANICAL VOID` and exits 2 now. **A scope with no text in it is a failed
+  run, not a clean surface** — the real reading paths are `--prm` and any width
+  ≤ 960, where the casefile is static flow, and `capture-casefile-rows.mjs` for
+  the scrolled state. The rule file's own recipe prescribed the void run and is
+  corrected.
+
+**The pattern, stated once:** stage 1's gates cleared this panel on counts — 0
+bold, 0 gold structure, 4 tracking rungs — while two of its most visible lines
+were wrong and a third was not being drawn at all. Every count was true. **A
+count cannot see a line that is missing**, and the owner found all three by
+looking. That is the fourth time on this surface that a still has beaten every
+green gate.
+
 ## Left open
 
 - The map's lettering residue (three rungs of its own).

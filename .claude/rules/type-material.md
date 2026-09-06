@@ -77,9 +77,18 @@ system.md` and `tokens.md` state the same four rungs and the same ceiling; the
 
 ```bash
 npx vitest run tests/lib/type-material-tokens.test.ts
-node scripts/design-eval/mechanical.mjs --url / --theme dark  --scope ".fl-case" --exclude ".fl-pda"
-node scripts/design-eval/mechanical.mjs --url / --theme light --scope ".fl-case" --exclude ".fl-pda"
-node scripts/design-eval/mechanical.mjs --url / --theme dark  --scope ".fl-case" --vp 1280x720 --prm
+# ⚠ THE GATE DOES NOT SCROLL. On the landing the casefile is `visibility: hidden`
+# until the services dwell publishes `data-proof-live`, so a desktop, non-PRM run
+# against `.fl-case` measures NOTHING — and until 2026-09-06 it printed PASS on
+# every stage while doing so. It reports MECHANICAL VOID and exits 2 now.
+# The casefile is STATIC FLOW under --prm and at any width <= 960, which is
+# where these readings come from:
+node scripts/design-eval/mechanical.mjs --url / --theme dark  --scope ".fl-case" --exclude ".fl-pda" --vp 1280x720 --prm
+node scripts/design-eval/mechanical.mjs --url / --theme light --scope ".fl-case" --exclude ".fl-pda" --vp 1280x720 --prm
+node scripts/design-eval/mechanical.mjs --url / --theme dark  --scope ".fl-case" --exclude ".fl-pda" --vp 390x844
+# For the SCROLLED state (and for anything about the housing s edges) use the
+# capture, which drives real scrolls and can be measured as pixels:
+node scripts/capture-casefile-rows.mjs --vp 1920x1247 --theme dark --rows 2 --stage
 npx playwright test tests/visual/landing-page.spec.ts -g "HUD" --project=desktop   # must pass UNCHANGED before any --update-snapshots
 ```
 

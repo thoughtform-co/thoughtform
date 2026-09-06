@@ -567,6 +567,24 @@ if (JSON_OUT) {
   console.log(`\n  wrote ${JSON_OUT}`);
 }
 
+// ⚠ A SCOPE WITH NO TEXT IN IT IS A FAILED RUN, NOT A CLEAN SURFACE. This gate
+// does not scroll, and on the landing the casefile is `visibility: hidden` until
+// the services dwell publishes `data-proof-live` — so a desktop, non-PRM run
+// against `.fl-case` measured NOTHING and printed PASS on every stage. Found
+// 2026-09-06, after the owner caught two wrong lines on a panel this had just
+// called clean. The honest reading paths are `--prm` and any width <= 960,
+// where the casefile is static flow content; for the scrolled state use
+// `scripts/capture-casefile-rows.mjs`, which drives real scrolls.
+if (report.textNodes.length === 0) {
+  console.log(
+    `\n  MECHANICAL VOID — scope "${SCOPE}" yielded no text.\n` +
+      "  Nothing was measured, so nothing above is a result. On the landing the\n" +
+      "  casefile only paints inside the services dwell: re-run with --prm, or at\n" +
+      "  a width <= 960, or use capture-casefile-rows.mjs for the scrolled state.\n"
+  );
+  process.exit(2);
+}
+
 console.log(`\n  ${total === 0 ? "MECHANICAL PASS" : `MECHANICAL FAIL — ${total} violation(s)`}\n`);
 await browser.close();
 process.exit(total === 0 ? 0 : 1);

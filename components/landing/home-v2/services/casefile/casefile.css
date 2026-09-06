@@ -90,15 +90,35 @@
      the owner, 2026-07-29). The −12px rest inset is the half-arm + AA
      margin; the −30px top/bottom serve the same law vertically for the
      marks' `--fl-x-out` outboard seats. The iris still CLOSES to the same
-     50.5 % slit — the travel is just measured from −12px now.
+     50.5 % slit — the travel is just measured from the rest bleed now.
+
+     ⚠ **THE REST BLEED IS DERIVED FROM THE HOUSING, AND IT USED TO BE A
+     LITERAL 12px** (ADR-092 stage 1 U1, owner: the left and right borders
+     "are not very legible"). 12px was the right number for what it was
+     written for — half the reticle cross's 19px arm, plus an AA margin — and
+     then ADR-089 hung a housing `--fl-hz-pad` (18px) OUTBOARD of this same
+     box without re-reading the clip. The result: the panel's left and right
+     edges, the gold lip included, were clipped away entirely. Measured with
+     the lip temporarily painted red, only the top and bottom rows rendered —
+     1410px each — and no vertical column existed anywhere on the plate.
+     ⚠ **THE GLASS IS WHY IT WENT UNSEEN FOR A MONTH.** A 14px backdrop blur
+     draws a soft boundary wherever it is cut, so the truncation read as the
+     housing's own edge; flattening the housing took the blur and left a hard,
+     unlined cut. A clip that amputates a border is invisible while something
+     else is drawing a boundary in the same place.
+     ⚠ **DERIVED, NEVER A LITERAL:** the clip must reach at least as far as
+     the furthest thing seated outboard of the panel, plus the lip's own
+     pixel. +2px is that pixel and an AA margin. If anything is ever seated
+     further out than the housing, this term is what has to grow with it.
 
      Opacity is the TAIL only: the iris owns removal, this dims the last
      sliver so the closing edge never snaps. Both fail open — a missing clock
      resolves to 0 ⇒ full width, full opacity. */
   --fl-iris: clamp(0, calc((var(--svc-proof-out, 0) - 0.5) / 0.45), 1);
+  --fl-iris-bleed: calc(var(--fl-hz-pad) + 2px);
   clip-path: inset(
-    -30px calc(var(--fl-iris) * (50.5% + 12px) - 12px) -30px
-      calc(var(--fl-iris) * (50.5% + 12px) - 12px)
+    -30px calc(var(--fl-iris) * (50.5% + var(--fl-iris-bleed)) - var(--fl-iris-bleed)) -30px
+      calc(var(--fl-iris) * (50.5% + var(--fl-iris-bleed)) - var(--fl-iris-bleed))
   );
   opacity: clamp(0, calc((1 - var(--svc-proof-out, 0)) / 0.3), 1);
 
@@ -144,10 +164,18 @@
      never a bigger alpha on `--gold`, which would take the FILLS down with
      it. Declared here, overridden in theme.css beside ADR-058's other
      per-theme blocks. */
-  --fl-hz-lip-1: rgba(var(--gold-rgb), 0.34);
-  --fl-hz-lip-2: rgba(var(--dawn-alt-rgb), 0.1);
-  --fl-hz-lip-3: rgba(var(--gold-rgb), 0.1);
-  --fl-hz-lip-4: rgba(var(--gold-rgb), 0.3);
+  /* ⚠ ONE VALUE, NOT FOUR (ADR-092 stage 1 U1, owner: the left and right
+     sides "are not very legible"). The lip was the services plate's 168deg
+     ramp — gold .34 → dawn .1 at 45% → gold .1 at 70% → gold .3 — which is
+     raking light across a 680px CARD and a fade-out across a 1030px HOUSING.
+     The frame's two LONGEST edges are vertical runs through that .1 middle,
+     so they were its faintest. It read as machined only while the 14px
+     backdrop blur drew a boundary of its own all the way round; flattening
+     the housing exposed an edge the lip had never been carrying.
+     Flat is the law here (ADR-089 U2, measured off the references: not one
+     gradient among them), and this was the last piece of plate atmosphere on
+     the surface. Top and bottom are unchanged; only the sides move. */
+  --fl-hz-lip: rgba(var(--gold-rgb), 0.3);
 
   /* ── The rail box, mirrored from `.hud__rail` ─────────────────────── */
   --fl-rail-top: var(--hud-rail-y-start);
@@ -1088,15 +1116,29 @@
 .fl-split {
   position: absolute;
   left: var(--fl-col-split);
-  /* ⚠ THE SPLIT RUNS THE WHOLE BAND NOW (ADR-092, the grid seat). It was the
-     dotted reticle rule from --fl-body-top to --fl-split-end; it is the
-     column's seam from the rail's first rung to its last, at the seam weight,
-     so the record column and the field share a datum the eye can find. The
-     head band's rule terminates on it — that is the T the datum reads as. */
-  top: var(--fl-rail-top);
+  /* ⚠ DOTTED, AND ONLY AS LONG AS THE THING IT DIVIDES (ADR-092 stage 1 U1,
+     owner). Stage 1 made it a SOLID --fl-hz-seam over the rail's whole
+     height, on the argument that the record column and the field should
+     share a datum. Two things were wrong with that and the sweep's own rule
+     R1 names the first: structure keeps its LINE STYLE — a dotted rule goes
+     dawn, it does not go solid. Solid at .28 over 1030px is roughly six
+     times the ink per unit length of the dotted guide it replaced, over
+     1.6x the length, which made a reticle guide into the heaviest object in
+     the composition. And the last ~100px ran past the directory's last row
+     beside nothing at all: a divider is only a divider where there are two
+     things to divide.
+     ⚠ LENGTH IS PART OF WEIGHT. The register's hairlines are .12 over
+     ~460px; this is .28 over the column's own extent, dotted to ~1/6
+     coverage, which is what keeps a 1000px-scale line quieter than a 460px
+     one. The grid seat is unaffected — its stubs are `.fl-case::before`. */
+  top: var(--fl-body-top);
   width: 1px;
-  height: var(--fl-rail-h);
-  background: var(--fl-hz-seam);
+  height: calc(var(--fl-split-end) - var(--fl-body-top));
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--fl-hz-seam) 0 1px,
+    transparent 1px 6px
+  );
   z-index: 1;
 }
 
@@ -1176,13 +1218,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    168deg,
-    var(--fl-hz-lip-1) 0%,
-    var(--fl-hz-lip-2) 45%,
-    var(--fl-hz-lip-3) 70%,
-    var(--fl-hz-lip-4) 100%
-  );
+  background: var(--fl-hz-lip);
   clip-path: polygon(
     0 0,
     calc(100% - var(--fl-hz-ch)) 0,
@@ -1224,10 +1260,13 @@
 }
 /* ── THE GRID SEAT (ADR-091 rule 2, promoted by ADR-092) ───────────────────
    The frame's own ladder made visible where the panel lands on it: the rail's
-   rungs as stubs at both band edges, from the lip to the copy edge, and the
-   column split run the full band (`.fl-split` above). Both are lines the
-   panel already sits on — the seat adds no structure, it shows the structure
-   that is there. ⚠ MARGINS, NEVER THE COPY: the first cut striped vertical
+   rungs as stubs at both band edges, from the lip to the copy edge. The seat
+   adds no structure, it shows the structure that is there.
+   ⚠ THE COLUMN SPLIT IS NOT PART OF IT (stage 1 U1). Stage 1 ran `.fl-split`
+   the full band height and counted it as the seat's second half; the owner
+   read the result as a wall. The seat is the STUBS — they live in the band's
+   own margins, where nothing competes with them — and the split went back to
+   being the record column's own dotted edge. ⚠ MARGINS, NEVER THE COPY: the first cut striped vertical
    rules through the brief and the grader named it on its first pass.
    ⚠ Drawn on `.fl-case` because `--fl-rail-top` / `--fl-rail-h` are
    declared here (a token can only be read where it resolves); starts AT the
