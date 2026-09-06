@@ -792,7 +792,10 @@ function QNode({
   /* The reference borders its satellites at dawn .25 — quiet, well under the
      core's gold and the seat's green. `--pda-hair2` is this console's own
      hairline at that weight, already re-derived for the light flip. */
-  const stroke = hot ? "var(--pda-hot)" : led ? "var(--pda-txt3)" : "var(--pda-hair2)";
+  /* ADR-092: the satellites are estate line-work — dawn — and hover is the
+     one transient hue. `--pda-line` is the estate's stroke, re-derived for
+     light; the gold hairline stand-in is gone. */
+  const stroke = hot ? "var(--pda-hot)" : "var(--pda-line)";
   const measure = stacked ? SAT_MEASURE : BASE_MEASURE;
   return (
     <g onMouseEnter={() => onLit(g.part)} onMouseLeave={() => onLit(null)}>
@@ -817,7 +820,6 @@ function QNode({
         x={x + PAD}
         y={y + 23}
         fontSize={FS.q}
-        fontWeight={700}
         letterSpacing=".14em"
         fill={hot ? "var(--pda-hot)" : "var(--pda-txt)"}
       >
@@ -859,7 +861,9 @@ function QNode({
  * rect moves the origin the whole flight is computed from.
  */
 function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: boolean }) {
-  const stroke = led ? "var(--pda-txt3)" : "var(--pda-hot)";
+  /* ADR-092: the seat IS the open record, so it takes the LATCH token — the
+     same paint `Cartridge` gives the selected card, at `CORE_K`. */
+  const stroke = "var(--pda-sel)";
   const d = housing(core.x, core.y, core.w, core.h, CORE_CUT);
   const gx = core.x + CORE_PAD;
   const gy = core.y + SEAT.markY;
@@ -874,7 +878,7 @@ function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: b
   return (
     <g>
       <path d={d} fill="var(--pda-void)" />
-      <path d={d} fill={led ? "rgba(var(--dawn-rgb), 0.03)" : "rgba(240, 200, 106, 0.07)"} />
+      <path d={d} fill="var(--pda-sel-wash)" />
       <path d={d} fill="none" stroke={stroke} strokeDasharray={led ? "5 4" : undefined} />
       <line
         x1={core.x}
@@ -904,7 +908,7 @@ function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: b
         textAnchor="end"
         fontSize={FS.id}
         letterSpacing=".18em"
-        fill={led ? "var(--pda-txt3)" : "var(--pda-hot)"}
+        fill="var(--pda-sel)"
       >
         {work.id}
       </text>
@@ -913,14 +917,13 @@ function SeatCard({ core, work, led }: { core: FlightRect; work: PdaWork; led: b
         x={gx}
         y={core.y + SEAT.titleBase}
         fontSize={FS.title}
-        fontWeight={700}
         letterSpacing=".01em"
         fill={led ? "var(--pda-txt3)" : "var(--pda-txt)"}
       >
         {work.title}
       </text>
 
-      <text x={gx} y={barBase} fontSize={FS.key} letterSpacing=".18em" fill="var(--pda-ink)">
+      <text x={gx} y={barBase} fontSize={FS.key} letterSpacing=".18em" fill="var(--pda-txt2)">
         THE BAR
       </text>
       {valueLines(work.cfg.bar, FS.value, CORE_MEASURE).map((line, i) => (
@@ -982,14 +985,7 @@ function OwnerPlate({ work, led }: { work: PdaWork; led: boolean }) {
         DECIDES ALONE
       </text>
 
-      <text
-        x={lx}
-        y={r1 + 26}
-        fontSize={FS.owner}
-        fontWeight={700}
-        letterSpacing=".1em"
-        fill={green}
-      >
+      <text x={lx} y={r1 + 26} fontSize={FS.owner} letterSpacing=".1em" fill={green}>
         {work.owner}
       </text>
       <text
@@ -997,9 +993,8 @@ function OwnerPlate({ work, led }: { work: PdaWork; led: boolean }) {
         y={r1 + 26}
         textAnchor="end"
         fontSize={FS.lat}
-        fontWeight={700}
         letterSpacing=".22em"
-        fill="var(--pda-hot)"
+        fill="var(--pda-txt)"
       >
         {work.autonomy}
       </text>
@@ -1390,7 +1385,7 @@ function ChipMorphReturn({
   const skinVars = {
     ...pathVars,
     "--skin-f0": "rgba(var(--gold-rgb), 0.28)",
-    "--skin-s0": "var(--pda-hot)",
+    "--skin-s0": "var(--pda-sel)",
     "--skin-f1": "rgba(var(--dawn-rgb), 0.05)",
     "--skin-s1": "var(--pda-dim)",
   } as React.CSSProperties;

@@ -38,27 +38,36 @@ All sizes use `clamp()` for fluid scaling. Map to CSS variables; do not hardcode
 
 ## Weights
 
-| Token  | Value | Usage                  |
-| ------ | ----- | ---------------------- |
-| light  | 300   | Body text, long form   |
-| normal | 400   | UI, labels, default    |
-| medium | 500   | Emphasis, buttons, nav |
+| Token            | Value | Usage                                                  |
+| ---------------- | ----- | ------------------------------------------------------ |
+| `--weight-light` | 300   | Ledes only                                             |
+| `--weight-text`  | 400   | Rest state, both faces                                 |
+| `--weight-lit`   | 500   | THE CEILING: sans display and every lit / active state |
 
-Avoid 600+ on UI; reserve for rare display emphasis.
+Nothing above 500 anywhere in content (ADR-092). PT Mono ships 400 + 700 only, so
+`--weight-lit` on mono resolves to 400 by design — emphasis on mono is ink, never
+weight, and a mono 700 is DELETED rather than set to 500 (a 500 that renders 400 is
+a lie in the source). The Bold faces retire in ADR-092 stage 4.
 
 ---
 
 ## Letter Spacing (Tracking)
 
-| Token  | Value    | Usage                           |
-| ------ | -------- | ------------------------------- |
-| tight  | `0.02em` | Body text                       |
-| normal | `0.04em` | Default                         |
-| wide   | `0.08em` | HUD labels, readouts            |
-| wider  | `0.1em`  | Bearing labels, section markers |
-| widest | `0.15em` | Emphasis labels, hero sublines  |
+| Token             | Value     | Usage                                                       |
+| ----------------- | --------- | ----------------------------------------------------------- |
+| `--track-copy`    | `0`       | Sans prose                                                  |
+| `--track-display` | `-0.02em` | Sans display, sentence case                                 |
+| `--track-label`   | `0.08em`  | THE BASE RUNG: every mono chrome label, row, key, tab, meta |
+| `--track-eyebrow` | `0.15em`  | The one departure: eyebrows, designations, kickers, counts  |
 
-**HUD/Data:** Use wide or wider + uppercase for readouts and telemetry.
+Four rungs by ROLE, not five by magnitude (ADR-092). `.08em` is the HUD frame's own
+rung and `MONO_ADVANCE`'s (0.6 + .08), so the frame and the map share the base with
+no projection change — the kit proposed `.06`, and a second base one level up
+would have been ADR-091's defect in a new place. The magnitude aliases
+(`--track-tight … --track-widest`) are stage-0 aliases and retire in stage 4.
+
+**HUD/Data:** `--track-label` + uppercase for readouts and telemetry; `--track-eyebrow`
+only where the label is an eyebrow, a designation or a count.
 
 ---
 
@@ -76,10 +85,10 @@ Avoid 600+ on UI; reserve for rare display emphasis.
 
 ## Presets
 
-**HUD Label:** `--font-pt-mono`, `--type-xs`, weight 400, wide tracking, `text-transform: uppercase`  
-**Section Header:** `--font-pt-mono`, `--type-display` or `--type-2xl`, weight 700, tight tracking (`-0.01em`), uppercase  
+**HUD Label:** `--font-pt-mono`, `--type-xs`, `--weight-text`, `--track-label`, `text-transform: uppercase`  
+**Section Header:** `--font-pp-neue-montreal`, `--type-display` or `--type-2xl`, `--weight-lit` (500) up to ~24px and `--weight-text` from 36px, `--track-display`, sentence case — the hero's own PT Mono headline is the one mono display and keeps its caps at 400  
 **Body Text:** `--font-pp-neue-montreal`, `--type-base`, weight 400, loose line-height (1.5–1.6)  
-**Data Readout:** `--font-pt-mono`, 9–11px, wide tracking, uppercase, `--dawn-30` or `--dawn-70` for value
+**Data Readout:** `--font-pt-mono`, 9–11px, `--track-label`, uppercase, `--dawn-30` or `--dawn-70` for value
 
 ---
 

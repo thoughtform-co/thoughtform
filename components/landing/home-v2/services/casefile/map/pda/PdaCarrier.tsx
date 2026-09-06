@@ -1351,6 +1351,11 @@ const HUB_META_CHARS = 22;
  * The stored values carry headroom over the measurements; re-measure before
  * moving either (`document.fonts.ready` + `getComputedTextLength`, never a
  * canvas estimate).
+ *
+ * ADR-092 stage 1 (2026-09-06) took the hub titles from 700 to 500 (the site
+ * ceiling; `app/layout.tsx` loads 400 + 500 now). The caps rung above was
+ * measured at 700, so 0.69 is CONSERVATIVE against the Medium face (narrower
+ * caps) rather than wrong; stage 1b re-measures it by this same procedure.
  */
 const HUB_ADV_BODY = 0.53;
 const HUB_ADV_CAPS = 0.69;
@@ -2072,7 +2077,13 @@ export function ViewCarrier({
               className={arming ? "fl-pda-seat-arm" : undefined}
               d={cell.d}
               fill={isActive ? "rgba(var(--gold-rgb), 0.28)" : "rgba(var(--dawn-rgb), 0.04)"}
-              stroke={isActive ? "var(--pda-hot)" : "var(--pda-dim)"}
+              stroke={
+                isActive
+                  ? isHot || isPinned
+                    ? "var(--pda-hot)"
+                    : "var(--pda-sel)"
+                  : "var(--pda-dim)"
+              }
               strokeWidth={isActive ? 1.6 : 1.4}
               strokeOpacity={dimmed ? 0.42 : 1}
               opacity={dimmed ? 0.55 : 1}
@@ -2096,7 +2107,15 @@ export function ViewCarrier({
               pointerEvents="none"
               fontSize={LABEL_FS}
               letterSpacing={`${LABEL_TRACK}em`}
-              fill={isActive ? "var(--pda-hot)" : dimmed ? "var(--pda-txt2)" : "var(--pda-txt)"}
+              fill={
+                isActive
+                  ? isHot || isPinned
+                    ? "var(--pda-hot)"
+                    : "var(--pda-sel)"
+                  : dimmed
+                    ? "var(--pda-txt2)"
+                    : "var(--pda-txt)"
+              }
               opacity={dimmed ? 0.7 : 1}
             >
               <textPath
@@ -2187,8 +2206,13 @@ export function ViewCarrier({
             pointerEvents="none"
             fontSize={BAND_FS}
             letterSpacing={`${BAND_TRACK}em`}
-            fontWeight={700}
-            fill={litKey === group.key || taps.has(group.key) ? "var(--pda-hot)" : "var(--pda-txt)"}
+            fill={
+              litKey === group.key
+                ? "var(--pda-hot)"
+                : taps.has(group.key)
+                  ? "var(--pda-sel)"
+                  : "var(--pda-txt)"
+            }
           >
             <textPath href={`#carrier-band-arc-${group.key}`} startOffset="50%" textAnchor="middle">
               {group.name.toUpperCase()}
@@ -2263,7 +2287,7 @@ function ChipMorphArrival({
     "--skin-f0": "rgba(var(--dawn-rgb), 0.05)",
     "--skin-s0": "var(--pda-dim)",
     "--skin-f1": "rgba(var(--gold-rgb), 0.28)",
-    "--skin-s1": "var(--pda-hot)",
+    "--skin-s1": "var(--pda-sel)",
   } as React.CSSProperties;
   return (
     <g pointerEvents="none" aria-hidden="true">
@@ -2344,7 +2368,7 @@ function TapWash({
             className={still ? undefined : "fl-pda-in"}
             style={still ? undefined : { animationDelay: `${300 + i * 40}ms` }}
             d={carrierTapPath(g)}
-            fill="rgba(240, 200, 106, 0.14)"
+            fill="var(--pda-sel-wash)"
           />
         ))}
     </g>
@@ -2503,7 +2527,7 @@ function PinnedReadout({ cell, name }: { cell: CarrierCell; name: string }) {
         y={title}
         textAnchor="middle"
         fontSize="17"
-        fontWeight={700}
+        fontWeight={500}
         letterSpacing=".04em"
         fill="var(--pda-txt)"
       >
@@ -2573,7 +2597,7 @@ function ShapeReadout({ group }: { group: CarrierGroup }) {
         y={top + SHAPE_TITLE_DROP}
         textAnchor="middle"
         fontSize="17"
-        fontWeight={700}
+        fontWeight={500}
         letterSpacing=".04em"
         fill="var(--pda-txt)"
       >

@@ -57,6 +57,36 @@
   --pda-txt: var(--con-txt);
   --pda-txt2: var(--con-txt2);
 
+  /* ── THE ESTATE'S LINE, THE LATCH, AND THE WASHES (ADR-092) ────────────
+     ADR-091 measured gold on two hundred objects in this panel and found the
+     open cartridge differed from a configured one by two 1.4-unit diagonals in
+     the SAME token as the body stroke — the accent was spent on all twenty and
+     marked none of them. So the estate is drawn in dawn LINE-WORK and the one
+     open record keeps gold, on a token of its own:
+       --pda-line   ESTATE stroke: configured (solid) and person-led (dashed)
+                    bodies and top rules. .42 → 3.36:1 on the void (the 3:1
+                    line floor); light re-derives to .50 → 3.33:1 on parchment.
+       --pda-rule   a RULE inside a region — the phone list's dividers.
+       --pda-wash   the estate's resting fill over the void ground.
+       --pda-wash-hot  the HOVER step, one added layer, never a hue.
+       --pda-sel    THE LATCH — the record the reader has open: stroke, top
+                    rule, both cut edges, mark, stream id; the seated cell on
+                    03; the tapped band label. Reads the ramp's LIT step
+                    directly (as --pda-hot does — no light override), so at
+                    launch the open card renders byte-identical to yesterday's
+                    configured card and the only change is the other nineteen
+                    receding. ⚠ NEVER `var(--pda-hot)`: that re-couples the
+                    two roles the split exists to separate.
+       --pda-sel-wash  the open record's fill (yesterday's footprint literal,
+                    .14) and the carrier's TapWash. Light: the gold-line hue.
+     --pda-hot keeps the TRANSIENT and the rail: hover and pinned on 03, the
+     focus ring, the console's spine and diamond. */
+  --pda-line: rgba(var(--dawn-rgb), 0.42);
+  --pda-rule: rgba(var(--dawn-rgb), 0.12);
+  --pda-wash: rgba(var(--dawn-rgb), 0.03);
+  --pda-wash-hot: rgba(var(--dawn-rgb), 0.08);
+  --pda-sel: var(--gold-ink-lit);
+  --pda-sel-wash: rgba(240, 200, 106, 0.14);
   --pda-amb: rgba(var(--gold-rgb), 0.78);
   /* ⚠ THE HUB'S SOFT GOLD, AND IT IS A TOKEN BECAUSE AN ALPHA IS NOT A COLOUR
      (ADR-070 U30). The carrier's core is a FILLED plate in soft Tensor gold,
@@ -627,7 +657,7 @@
     justify-content: space-between;
     gap: 10px;
     padding-bottom: 8px;
-    border-bottom: 1px solid var(--pda-hair);
+    border-bottom: 1px solid var(--pda-rule);
     color: var(--gold);
     /* ⚠ `--fl-mono` (PT Mono), not `--font-mono` — the latter resolves to
        IBM Plex Mono, a third family that leaked into the map's list
@@ -635,7 +665,7 @@
        The three list rows are the ONLY casefile chrome that was reading in
        a font that appears nowhere else on the surface. */
     font: var(--fl-chrome-sm, 10px)/1 var(--fl-mono, monospace);
-    letter-spacing: 0.12em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
   }
 
@@ -646,7 +676,7 @@
   .fl-pda__list-group > h4 {
     margin: 0 0 6px;
     font: 400 var(--fl-chrome-md, 11px)/1.3 var(--fl-mono, monospace);
-    letter-spacing: 0.1em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: var(--gold);
   }
@@ -657,7 +687,7 @@
     align-items: baseline;
     gap: 8px;
     padding: 7px 0;
-    border-top: 1px dotted var(--pda-hair);
+    border-top: 1px dotted var(--pda-rule);
     /* Row identity — mirrors the desktop directory's own ladder.
        ⚠ IT WAS `--lc`, WHICH ADR-088 RETIRED, and a stale `var()` here would
        have fallen to its 12px fallback silently rather than failing. The
@@ -682,7 +712,7 @@
   .fl-pda__list-row > em {
     font-style: normal;
     font-size: var(--fl-chrome-sm, 10px);
-    letter-spacing: 0.08em;
+    letter-spacing: var(--track-label);
     color: var(--pda-txt3);
   }
 

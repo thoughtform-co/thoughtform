@@ -87,11 +87,12 @@ const ACCENT_ALLOW = [
 ];
 
 /**
- * Text allowed above weight 500 until the map's own pass lands (ADR-092 §4):
- * the SVG's cartridge titles are `fontWeight={700}` presentation attributes.
- * Delete this list when that pass ships.
+ * Text allowed above weight 500. Empty since ADR-092 stage 1 landed the map's
+ * own pass (the SVG's `fontWeight={700}` presentation attributes are gone); it
+ * stays as a list so a sanctioned exception has a place to be named rather
+ * than a reason to loosen the rule.
  */
-const WEIGHT_ALLOW = [/\.fl-pda/, /\.fl-imap/];
+const WEIGHT_ALLOW = [];
 
 /** Purple/blue hue band — the standing anti-pattern, as degrees on the wheel. */
 const BANNED_HUE = [230, 300];

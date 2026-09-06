@@ -186,12 +186,24 @@ describe("cases registry (ADR-054)", () => {
             // owner), because across four rows its sixteen values carried
             // nine different grammars.
             //
-            // ⚠ 27 IS MEASURED, NOT ROUND. At 1920×1080 the register's
-            // half-column is ~234px and the claim sets at 13px mono with
-            // .045em tracking — ~8.4px an advance, so 28 characters wrap. A
-            // wrapped claim steals a line from its own sentence: the map
-            // row's third tile did exactly that and clipped its description
-            // by 14px while the other fifteen fit.
+            // ⚠ 27 IS MEASURED, NOT ROUND — AND IT IS NO LONGER THE BINDING
+            // CONSTRAINT (re-measured 2026-09-06, ADR-092 stage 1). The claim
+            // moved from .045em to `--track-label` (.08em), a WIDER rung, which
+            // is the move that should have broken it; ADR-088 had already given
+            // the register a wider measure, so it did not. Measured with
+            // `scripts/measure-casefile-type.mjs`, every claim is ONE LINE at
+            // every reference viewport: the two 27-character claims set 242px
+            // into 312 available at 1280×720, 242/357 at 1440×800 and 264/449 at
+            // 1920×1080, wrapping only above a 17px font size against a 13.2px
+            // render. So the wall is the SIZE ladder now, not the character
+            // count, and 27 is kept as a ratchet rather than re-derived upward —
+            // a cap that admits more characters is a looser guard, and this one
+            // costs nothing where it stands.
+            //
+            // The rule it protects is unchanged: a wrapped claim steals a line
+            // from its own sentence. The map row's third tile did exactly that
+            // and clipped its description by 14px while the other fifteen fit.
+            // ⚠ RE-MEASURE, never re-reason, if the claim's SIZE moves.
             expect(b.title.length, `${c.slug}/${t.id} block "${b.title}"`).toBeGreaterThan(0);
             expect(b.title.length, `${c.slug}/${t.id} block "${b.title}"`).toBeLessThanOrEqual(27);
             // The evidence for the claim. Visible at every viewport now that

@@ -22,8 +22,8 @@ colors:
   atreides-15: "rgba(61,75,51,0.15)"
 typography:
   heading:
-    fontFamily: "PT Mono"
-    fontWeight: 700
+    fontFamily: "PP Neue Montreal"
+    fontWeight: 500
     fontSize: "clamp(28px, 3.6vw, 52px)"
     letterSpacing: "-0.02em"
     lineHeight: 1.08
@@ -34,11 +34,13 @@ typography:
     letterSpacing: "0"
   data:
     fontFamily: "PT Mono"
+    fontWeight: 400
     fontSize: "0.625rem"
-    letterSpacing: "0.15em"
+    letterSpacing: "0.08em"
     lineHeight: 1.35
   eyebrow:
     fontFamily: "PT Mono"
+    fontWeight: 400
     fontSize: "0.5625rem"
     letterSpacing: "0.15em"
     lineHeight: 1.2
@@ -109,10 +111,16 @@ Gold and green never swap roles. No additional accent colors.
 
 ## Typography
 
-- **PT Mono** (Bold, uppercase, tight tracking): headings, HUD labels, section
-  eyebrows, data readouts, navigation elements.
-- **PP Neue Montreal** (Regular/Medium): body text, descriptions, long-form
-  content, card copy.
+- **PT Mono** (Regular, uppercase, one label rung at `.08em`): HUD labels, rows,
+  keys, tabs, data readouts, navigation elements; section eyebrows, designations
+  and kickers take the one departure, `.15em`. PT Mono ships 400 and 700 only and
+  700 is retired (ADR-092) — emphasis on mono is INK, never weight.
+- **PP Neue Montreal** (Regular 400 / Medium 500 — the ceiling): display titles
+  at 500, sentence case, `-0.02em`; body text, descriptions, long-form content
+  and card copy at 400.
+- The rungs are tokens on `:root` (`--track-copy/-display/-label/-eyebrow`,
+  `--weight-light/-text/-lit`). Nothing in content sits above 500; the HUD frame
+  is the datum those rungs match, and it is pinned rather than swept.
 - No display font in running UI. The brand wordmark is inline SVG, not a
   font dependency.
 

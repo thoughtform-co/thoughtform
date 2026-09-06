@@ -51,12 +51,44 @@ export type GlyphState = "cfg" | "led" | "hot";
  * The distinction green was carrying survives TWICE over: solid gold against a
  * dim DASHED body, and a squared mark against a crossed one.
  */
-const CART: Record<GlyphState, [string, string, string]> = {
-  cfg: ["var(--pda-hot)", "rgba(240, 200, 106, 0.07)", "var(--pda-hot)"],
-  led: ["var(--pda-txt3)", "rgba(var(--dawn-rgb), 0.03)", "var(--pda-txt3)"],
-  /* Hover steps the WASH, not the hue: the stroke is already the lit rung, so
-     a second hue here would give one state two meanings. */
-  hot: ["var(--pda-hot)", "rgba(240, 200, 106, 0.18)", "var(--pda-hot)"],
+/**
+ * ⚠ ADR-092 REPLACES THE TRIPLE WITH TWO AXES AND A LAYER. `CART` held three
+ * states — cfg / led / hot — and SELECTION was not one of them: `sel` lit two
+ * chamfer diagonals in `--pda-hot`, the same token as the body stroke it was
+ * drawn over, so the open record differed from a configured one by two
+ * 1.4-unit lines and gold was spent on all twenty cartridges (ADR-091 measured
+ * 200 accent objects on this panel; the references ran 15–112 on a whole page).
+ *
+ *   kind  cfg | led — the RECORD: squared mark and solid body, or crossed mark
+ *         and dashed body. Both are drawn in the estate's dawn line.
+ *   sel   a PAINT OVERRIDE: the open record takes the latch token on its
+ *         stroke, its rule, its mark, its id and its cut edges.
+ *   hot   an ADDITIVE WASH LAYER, never a hue — a hovered person-led card keeps
+ *         its dash now (it used to take the `hot` triple and lose it).
+ *
+ * The estate's mark and id ink is `--pda-txt2`: the reading falls to the mark's
+ * geometry and the fill, which is what the graded composite showed.
+ */
+type CartPaint = { stroke: string; fill: string; mark: string; id: string };
+const CART_PAINT: Record<"cfg" | "led", CartPaint> = {
+  cfg: {
+    stroke: "var(--pda-line)",
+    fill: "var(--pda-wash)",
+    mark: "var(--pda-txt2)",
+    id: "var(--pda-txt2)",
+  },
+  led: {
+    stroke: "var(--pda-line)",
+    fill: "var(--pda-wash)",
+    mark: "var(--pda-txt3)",
+    id: "var(--pda-txt3)",
+  },
+};
+const SEL_PAINT: CartPaint = {
+  stroke: "var(--pda-sel)",
+  fill: "var(--pda-sel-wash)",
+  mark: "var(--pda-sel)",
+  id: "var(--pda-sel)",
 };
 
 /**
@@ -351,8 +383,8 @@ export function LaneMeter({
           y={y}
           width={cell}
           height={h}
-          fill={i < step ? "var(--pda-amb)" : "none"}
-          stroke="var(--pda-hair2)"
+          fill={i < step ? "var(--pda-txt2)" : "none"}
+          stroke="var(--pda-line)"
         />
       ))}
       <text
@@ -360,7 +392,7 @@ export function LaneMeter({
         y={y + h / 2 + fs * 0.36}
         fontSize={fs}
         letterSpacing=".2em"
-        fill="var(--pda-ink)"
+        fill="var(--pda-txt2)"
       >
         {laneLabel(lane)}
       </text>
@@ -404,16 +436,22 @@ export function Cartridge({
   k = 1,
   sel = false,
   bar,
+  hot: hotProp,
 }: {
   x: number;
   y: number;
   w: number;
   h: number;
+  /** The RECORD — `cfg` or `led`. `"hot"` is still accepted for the lab
+   *  variants that pass it and means `cfg` + `hot`. */
   state: GlyphState;
   work: PdaWork;
   k?: number;
-  /** The record the reader has open. Lights the cut edges, nothing else. */
+  /** The record the reader has open — the LATCH. Takes `--pda-sel` on the
+   *  stroke, the rule, the mark, the id and both cut edges (ADR-092). */
   sel?: boolean;
+  /** Hovered — one added wash layer, never a hue. */
+  hot?: boolean;
   /**
    * THE BAR, on the card (ADR-070 U2 — the owner's unit mockup letters the bar
    * where v18's cartridge lettered lane · autonomy).
@@ -428,8 +466,9 @@ export function Cartridge({
    */
   bar?: { label: string; lines: readonly string[] };
 }) {
-  const [stroke, fill, markInk] = CART[state];
   const led = state === "led";
+  const hot = hotProp ?? state === "hot";
+  const p = sel ? SEL_PAINT : CART_PAINT[led ? "led" : "cfg"];
   const cut = CARD.cut * k;
   const pad = CARD.pad * k;
   const rule = CARD.rule * k;
@@ -456,8 +495,9 @@ export function Cartridge({
       {/* R4's density rule: the card is OPAQUE, then washed, then outlined —
           three passes over one path so it pops off whatever it sits on. */}
       <path d={d} fill="var(--pda-void)" />
-      <path d={d} fill={fill} />
-      <path d={d} fill="none" stroke={stroke} strokeDasharray={led ? "5 4" : undefined} />
+      <path d={d} fill={p.fill} />
+      {hot ? <path d={d} fill="var(--pda-wash-hot)" /> : null}
+      <path d={d} fill="none" stroke={p.stroke} strokeDasharray={led ? "5 4" : undefined} />
       {/* R4's bright top rule. ⚠ It STOPS at the cut — run it to `x + w` and it
           overshoots into the chamfer. Its centre sits half a weight down so the
           stroke lands flush inside the top edge rather than straddling it. */}
@@ -466,7 +506,7 @@ export function Cartridge({
         y1={y + rule / 2}
         x2={x + w - cut}
         y2={y + rule / 2}
-        stroke={stroke}
+        stroke={p.stroke}
         strokeWidth={rule}
       />
       {/* THE OPEN RECORD lights its own CUT EDGES, and only once reading 02 has
@@ -477,14 +517,14 @@ export function Cartridge({
           has two since the harmonisation, and lighting one of a symmetric pair
           reads as a rendering fault rather than as a latch. */}
       {sel ? (
-        <g stroke="var(--pda-hot)" strokeWidth={Math.max(1.4, 1.8 * k)}>
+        <g stroke="var(--pda-sel)" strokeWidth={Math.max(1.4, 1.8 * k)}>
           <line x1={x + w - cut} y1={y} x2={x + w} y2={y + cut} />
           <line x1={x + cut} y1={y + h} x2={x} y2={y + h - cut} />
         </g>
       ) : null}
 
       {/* THE HEADER ROW — the mark, the team, the stream id, one baseline. */}
-      <StateMark x={gx} y={y + CARD.markY * k} side={CARD.mark * k} led={led} stroke={markInk} />
+      <StateMark x={gx} y={y + CARD.markY * k} side={CARD.mark * k} led={led} stroke={p.mark} />
       <text
         x={gx + CARD.teamDx * k}
         y={headBase}
@@ -500,7 +540,7 @@ export function Cartridge({
         textAnchor="end"
         fontSize={CART_TYPE.code * k}
         letterSpacing=".18em"
-        fill={led ? "var(--pda-txt3)" : "var(--pda-hot)"}
+        fill={p.id}
       >
         {work.id}
       </text>
@@ -514,7 +554,6 @@ export function Cartridge({
           x={gx}
           y={titleBase + i * CART_TYPE.title * MONO_LINE_BOX * k}
           fontSize={CART_TYPE.title * k}
-          fontWeight={700}
           letterSpacing=".01em"
           fill={led ? "var(--pda-txt3)" : "var(--pda-txt)"}
         >
@@ -532,7 +571,7 @@ export function Cartridge({
             y={y + CARD.barLabel * k}
             fontSize={barFs}
             letterSpacing=".18em"
-            fill="var(--pda-ink)"
+            fill="var(--pda-txt2)"
           >
             {bar.label}
           </text>

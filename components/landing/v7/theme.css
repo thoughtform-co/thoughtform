@@ -359,6 +359,26 @@ html[data-theme="light"] .fl-case {
      plate used to be `+ Archive`; the marker was deleted 2026-09-03 with
      the tabs-as-clients IA it argued for — see ClientTabs.) */
   --fl-ink-dim: rgba(var(--dawn-rgb), 0.62);
+
+  /* ── THE HOUSING'S INTERIOR RULE AND INK, RE-DERIVED (ADR-092) ────────
+     Neither had a light value: `--fl-hz-rule` .12 and `--fl-hz-ink` .52 were
+     dawn alphas read straight through the flip, where an alpha inverts its
+     meaning (ADR-058). The rule takes ADR-090's .12 → .22 step; the ink takes
+     the `--pda-txt3` .52 → .62 step one panel over. ADR-092 moved the
+     register's hairlines, the directory's rule, the tag and the count onto
+     these two, so this is what keeps them legible on parchment. */
+  --fl-hz-rule: rgba(var(--dawn-rgb), 0.22);
+  --fl-hz-ink: rgba(var(--dawn-rgb), 0.62);
+}
+/* ── GOLD AS TEXT TAKES THE INK STEP ON PARCHMENT (ADR-092 §5.5) ──────────
+   The lit client tab and the brief's full stop are gold TEXT — marks, so they
+   keep the hue — but `--gold` as small type on parchment measured 1.83:1 (the
+   mechanical gate, 2026-09-06; ADR-058's own accepted number was 1.8). The
+   ramp's INK step is what exists for this: `--gold-ink` is #6e5216 here,
+   ~5.3:1. Dark is untouched — there `--gold-ink` IS `--gold`. */
+html[data-theme="light"] .fl-case .fl-tabs__tab[data-on],
+html[data-theme="light"] .fl-case .fl-brief__dot {
+  color: var(--gold-ink);
 }
 
 /* The viz plate loses its scrim and its edge. `border-color` rather than
@@ -554,6 +574,14 @@ html[data-theme="light"] .fl-con {
    (see pda.css line 26); the other three plates use --con-dim already. */
 html[data-theme="light"] .fl-pda {
   --pda-amb: rgba(138, 107, 32, 0.88);
+  /* ADR-092's estate tokens. An alpha inverts its meaning across the flip: the
+     estate's line needs α ≥ .465 for 3:1 on parchment (.50 → 3.33:1) where the
+     void needs .39 (.42 → 3.36:1); the interior rule takes ADR-090's .12 → .22
+     step; the latch's wash is the gold-LINE hue, since decorative gold drops on
+     parchment. --pda-sel itself reads the ramp's lit step and needs no override. */
+  --pda-line: rgba(var(--dawn-rgb), 0.5);
+  --pda-rule: rgba(var(--dawn-rgb), 0.22);
+  --pda-sel-wash: rgba(138, 107, 32, 0.14);
   /* ⚠ THE PANEL'S OUTLINE IS RE-DERIVED, NOT INHERITED (2026-08-07). The
      mockup's `--dawn-08` is a light hairline on near-black; the flip turns
      `--dawn-rgb` into the INK, so the identical 0.08 becomes a dark hairline

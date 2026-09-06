@@ -37,17 +37,10 @@ import registry from "@/lib/interface-kit/directions.json";
 
 /* ── The knobs ────────────────────────────────────────────────────────────── */
 
-export const IK_KNOB_KEYS = [
-  "grid",
-  "line",
-  "track",
-  "weight",
-  "case",
-  "accent",
-  "material",
-  "lip",
-  "tab",
-] as const;
+/* ⚠ SEVEN OF NINE ABSORBED (ADR-092 stage 1, 2026-09-06): grid, line, track,
+ * weight, case, accent and material are production now, so a knob for each
+ * would be a no-op knob. The two that remain are the two open questions. */
+export const IK_KNOB_KEYS = ["lip", "tab"] as const;
 export type IkKnobKey = (typeof IK_KNOB_KEYS)[number];
 
 export type IkKnobs = Record<IkKnobKey, string>;

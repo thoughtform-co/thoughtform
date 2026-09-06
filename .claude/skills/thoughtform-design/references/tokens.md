@@ -118,21 +118,25 @@ Two faces. PT Mono = titles + HUD labels + data. PP Neue Montreal = paragraphs +
 
 ### Weights
 
-| Token  | Value |
-| ------ | ----- |
-| light  | 300   |
-| normal | 400   |
-| medium | 500   |
+| Token            | Value | Role                                   |
+| ---------------- | ----- | -------------------------------------- |
+| `--weight-light` | 300   | Ledes only                             |
+| `--weight-text`  | 400   | Rest state, both faces                 |
+| `--weight-lit`   | 500   | The ceiling — sans display, lit states |
+
+Mono has no 500 (PT Mono ships 400 + 700): `--weight-lit` on mono is 400 by design.
 
 ### Letter Spacing
 
-| Token  | Value    | Usage           |
-| ------ | -------- | --------------- |
-| tight  | `0.02em` | Body text       |
-| normal | `0.04em` | Default         |
-| wide   | `0.08em` | HUD labels      |
-| wider  | `0.1em`  | Bearing labels  |
-| widest | `0.15em` | Emphasis labels |
+| Token             | Value     | Usage                            |
+| ----------------- | --------- | -------------------------------- |
+| `--track-copy`    | `0`       | Sans prose                       |
+| `--track-display` | `-0.02em` | Sans display, sentence case      |
+| `--track-label`   | `0.08em`  | The base rung — every mono label |
+| `--track-eyebrow` | `0.15em`  | Eyebrows, designations, counts   |
+
+Four rungs by role (ADR-092). The magnitude names (`tight … widest`) are stage-0
+aliases and retire in stage 4.
 
 ### Line Heights
 
@@ -146,8 +150,8 @@ Two faces. PT Mono = titles + HUD labels + data. PP Neue Montreal = paragraphs +
 
 ### Presets
 
-**HUD Label**: PT Mono (`font-mono`), xs, normal weight, wide tracking, uppercase
-**Section Header**: PT Mono (`font-mono`), display size, bold weight, tight tracking (`-0.01em`), uppercase
+**HUD Label**: PT Mono (`font-mono`), xs, `--weight-text`, `--track-label`, uppercase
+**Section Header**: PP Neue Montreal (`font-sans`), display size, `--weight-lit` (500 — the ceiling), `--track-display`, sentence case
 **Body Text**: PP Neue Montreal (`font-sans`), base size, regular weight, loose line-height
 
 ---

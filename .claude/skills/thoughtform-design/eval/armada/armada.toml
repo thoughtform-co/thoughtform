@@ -138,66 +138,12 @@ identity = "v0-1920x1247-light.png"
 
 [types.KA]
 name = "House"
-question = "does the panel recomposed at house values read as the shipped one?"
+question = "does the panel recomposed at house values read as the shipped one? (the control; after ADR-092 stage 1, house values ARE the composite the owner approved)"
 channel = "proof casefile - desktop"
 ar = "16:9"
 camera = "no knob moved"
 position = "the control"
 shape = "the shipped grammar, recomposed from the production leaves"
-
-[types.KB]
-name = "Seated"
-question = "does drawing the sheet's own rules, and taking the last gold off the structure, make the panel a region rather than a card?"
-channel = "proof casefile - desktop"
-ar = "16:9"
-camera = "grid=ruled line=single"
-position = "the seat"
-shape = "page rules at the seam weight with the panel's edges on them; structure one hue"
-
-[types.KC]
-name = "Track tight"
-question = "does one dominant tracking rung give the mono chrome a base register to depart from?"
-channel = "proof casefile - desktop"
-ar = "16:9"
-camera = "track=tight"
-position = "tracking"
-shape = "eleven rungs collapse toward one at .06em"
-
-[types.KD]
-name = "Weight regular"
-question = "does the panel hold its hierarchy with nothing above 500?"
-channel = "proof casefile - desktop"
-ar = "16:9"
-camera = "weight=regular"
-position = "weight"
-shape = "thirty bold nodes become none; emphasis is ink"
-
-[types.KE]
-name = "Case sentence"
-question = "does sentence case on the title and the claims give case something to say?"
-channel = "proof casefile - desktop"
-ar = "16:9"
-camera = "case=sentence"
-position = "case"
-shape = "uppercase reserved for mono chrome"
-
-[types.KF]
-name = "Accent budget"
-question = "does gold spent on the wayfinding marks alone still say where the reader is?"
-channel = "proof casefile - desktop"
-ar = "16:9"
-camera = "accent=budget"
-position = "the accent"
-shape = "two hundred gold objects become a handful; the estate is drawn in dawn"
-
-[types.KG]
-name = "Material flat"
-question = "does the housing survive losing its bloom, its glow and one of its two blurs?"
-channel = "proof casefile - desktop"
-ar = "16:9"
-camera = "material=flat"
-position = "material"
-shape = "one ground, no atmosphere"
 
 [types.KH]
 name = "Station line"
@@ -217,16 +163,24 @@ camera = "tab=outline"
 position = "the station row, again"
 shape = "the open station takes a gold border and keeps its ink"
 
-[types.KJ]
-name = "Composite"
-question = "read as one instrument: seated on the sheet, one tracking rung, nothing above 500, sentence display, an accent spent a handful of times - with the machined gold lip kept."
+[types.KL]
+name = "Lip dawn"
+question = "is the housing a device set into the frame, or software drawn on its screen? The one gold line the composite kept, asked the other way round."
 channel = "proof casefile - desktop"
 ar = "16:9"
-camera = "every knob moved"
-position = "all of them at once"
-shape = "the recommendation"
+camera = "lip=dawn"
+position = "the housing's lip"
+shape = "the housing's lip in the frame's own dawn; everything else as shipped"
 
-# ─────────────────────────────────────────────────────────────────────────────
+# Wave 01 (2026-09-05) graded ten types, KA..KJ. Seven of them - KB Seated,
+# KC Track tight, KD Weight regular, KE Case sentence, KF Accent budget,
+# KG Material flat and the KJ Composite - were ABSORBED into production by
+# ADR-092 stage 1 (2026-09-06): what they proposed is what ships, so a type
+# for each would grade a still of the control against itself. Wave 02 asks
+# the two levers still open (the station's mark, the lip) against a control
+# that now IS the approved composite. The wave-01 record stays in
+# evals/waves/2026-09-05-kit-01.md.
+
 #  SETTINGS - the theme is carried by the SUBJECT here, not by a setting,
 #  because a light still and a dark still of one direction are two candidates a
 #  reader compares rather than one candidate in two lights. `default` exists

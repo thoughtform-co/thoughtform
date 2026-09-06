@@ -184,13 +184,8 @@ export function EstateBand({
         const isSel = selectedId === s.id;
         const isHot = hover === s.id;
         const d = footprintPath(s.x, s.y, s.w, s.h);
-        const stroke =
-          isSel || isHot ? "var(--pda-hot)" : s.configured ? "var(--pda-hair2)" : "var(--pda-hair)";
-        const fill = isSel
-          ? "rgba(240, 200, 106, 0.14)"
-          : s.configured
-            ? "rgba(var(--dawn-rgb), 0.04)"
-            : "none";
+        const stroke = isSel ? "var(--pda-sel)" : isHot ? "var(--pda-hot)" : "var(--pda-line)";
+        const fill = isSel ? "var(--pda-sel-wash)" : s.configured ? "var(--pda-wash)" : "none";
         const cls = still ? "fl-pda-hit" : `fl-pda-hit fl-pda-in`;
 
         return (
@@ -231,7 +226,7 @@ export function EstateBand({
                  scaled to the footprint. Both diagonals light because the
                  silhouette is symmetric under this diagonal pair (the
                  harmonisation's own argument). */
-              <g stroke="var(--pda-hot)" strokeWidth={1.2}>
+              <g stroke="var(--pda-sel)" strokeWidth={1.2}>
                 <line x1={s.x + s.w - ESTATE_CUT} y1={s.y} x2={s.x + s.w} y2={s.y + ESTATE_CUT} />
                 <line x1={s.x + ESTATE_CUT} y1={s.y + s.h} x2={s.x} y2={s.y + s.h - ESTATE_CUT} />
               </g>

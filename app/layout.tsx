@@ -21,7 +21,11 @@ import { heroPreloadScript } from "@/lib/theme/heroPreload";
  */
 const ibmPlex = IBM_Plex_Sans({
   subsets: ["latin"],
-  weight: ["400", "700"],
+  /* ADR-092: 500 is the site's weight ceiling. The hub's pinned titles moved
+     700 → 500, so the instance loads what they ask for — a weight not loaded is
+     synthesised, and every advance measured off it is a fiction (the lesson the
+     comment above records for the 700 it replaces). */
+  weight: ["400", "500"],
   variable: "--font-ibm-plex",
   display: "swap",
 });

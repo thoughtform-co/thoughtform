@@ -113,19 +113,20 @@ const PINS: Record<string, Pin> = {
     content: { A: 35, B: 4, C: 1 },
     frame: { A: 0, B: 0, C: 0 },
   },
+  // Stage 1 (2026-09-06): the casefile family is on the ramps — 78 → 0, 10 → 0, 2 → 0.
   "components/landing/home-v2/services/casefile/casefile.css": {
     tier: "content",
-    content: { A: 78, B: 10, C: 2 },
+    content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
   "components/landing/home-v2/services/casefile/console/console.css": {
     tier: "content",
-    content: { A: 2, B: 0, C: 0 },
+    content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
   "components/landing/home-v2/services/casefile/map/pda/pda.css": {
     tier: "content",
-    content: { A: 3, B: 0, C: 0 },
+    content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
   "components/landing/home-v2/about/about-stage.css": {
@@ -312,17 +313,20 @@ describe("type ramps — the tokens are declared where every route reads them", 
  * which their pins are 0.
  */
 const TSX_PINS: Record<string, { letterSpacing: number; bold: number }> = {
+  // Stage 1 (2026-09-06): the map's nine `fontWeight={700}` sites are gone — PT Mono
+  // has no 500 and inherits 400; the two Plex hub titles are 500. Tracking literals
+  // stay pinned at today's until §4C moves them to named constants.
   "components/landing/home-v2/services/casefile/map/pda/pdaGlyphs.tsx": {
     letterSpacing: 11,
-    bold: 1,
+    bold: 0,
   },
   "components/landing/home-v2/services/casefile/map/pda/PdaConfiguration.tsx": {
     letterSpacing: 14,
-    bold: 4,
+    bold: 0,
   },
   "components/landing/home-v2/services/casefile/map/pda/PdaCarrier.tsx": {
     letterSpacing: 9,
-    bold: 3,
+    bold: 0,
   },
   "components/landing/home-v2/services/casefile/map/pda/substrateKit.tsx": {
     letterSpacing: 2,
@@ -330,7 +334,7 @@ const TSX_PINS: Record<string, { letterSpacing: number; bold: number }> = {
   },
   "components/landing/home-v2/services/casefile/map/pda/PdaBackplane.tsx": {
     letterSpacing: 4,
-    bold: 1,
+    bold: 0,
   },
   "components/landing/home-v2/services/hologram/ServicesCardRing.tsx": {
     letterSpacing: 18,

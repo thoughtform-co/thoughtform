@@ -100,3 +100,41 @@ keeping gold on the selected cartridge under `accent=budget` (one token strokes
 both states, 0.07 against 0.18 of fill — the honest fix is a second token in
 `pda.css`, which is production work); grading F1/F2 in the harness rather than
 off the contact sheet.
+
+---
+
+## Wave 2 — two levers, against a control that moved, 2026-09-06
+
+**Shot, not graded.** Thirty stills, gates clean, no `qa` run: the thing to look
+at is the control, and four directions may not need a grader at all.
+
+|                      |                  |
+| -------------------- | ---------------- |
+| Draws                | 24 (+6 controls) |
+| PASS                 | —                |
+| PASS_WITH_NOTES      | —                |
+| RETRY                | —                |
+| FAIL                 | —                |
+| Unstable across runs | not run          |
+
+**What it is.** ADR-092 stage 1 promoted seven of the kit's nine knobs into
+production — `grid`, `line`, `track`, `weight`, `case`, `accent`, `material` —
+so seven directions and the `KJ` composite were deleted from the registry and
+from `armada.toml`. What remains is `KA` (control), `KH` and `KI` (how a station
+marks selection) and `KL` (the lip in dawn).
+
+**The finding, before a grader sees it.** Wave 1's control read 200 gold objects,
+30 bold text nodes and 11 tracking rungs, and the grader failed it. `mount=shipped`
+now mounts the composite, so wave 2's control reads **9 / 0 / 8** — and the six
+committed control stills moved in the same commit. A baseline that did not move
+here would mean stage 1 had not landed.
+
+⚠ **THE PROBE COUNTS THE WHOLE PANEL AND THE GATE COUNTS THE CONTENT CSS.** The
+capture's probe reads 8 tracking rungs (it includes the map's SVG lettering, which
+keeps three rungs of its own by ruling); `mechanical.mjs --scope .fl-case --exclude
+.fl-pda` reads 4, with 50 % on the `.08em` base. Two scopes, two true numbers.
+
+**Ruled out.** Grading before the owner reads the contact sheet — wave 1's real
+finding was that 31 of 60 verdicts were unstable at rubric 0.1 on DETERMINISTIC
+candidates, so another run at 0.1 buys noise; A2's repair is still the first row
+of 0.2. Full record: [`evals/waves/2026-09-06-kit-02.md`](../../evals/waves/2026-09-06-kit-02.md).

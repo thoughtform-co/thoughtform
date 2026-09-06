@@ -334,14 +334,7 @@ function BayGroup({
         stroke="var(--pda-hair)"
       />
       {/* Shape name (left) + skill count (right), on one baseline. */}
-      <text
-        x={bodyX}
-        y={bay.y + 24}
-        fontSize={13}
-        fontWeight={700}
-        letterSpacing=".14em"
-        fill={nameFill}
-      >
+      <text x={bodyX} y={bay.y + 24} fontSize={13} letterSpacing=".14em" fill={nameFill}>
         {shape.name}
       </text>
       <text

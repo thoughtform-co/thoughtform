@@ -27,7 +27,8 @@ is no flag.
 - ⚠ **TYPE IDS ARE LETTERS ONLY.** The armada's filename grammar takes letters
   before the first dash, so `K1` falls to its unknown-shape branch — lane empty,
   draw 0 — and every tool downstream reads a different file than the capture
-  wrote, silently. `KA…KJ`, asserted on every run.
+  wrote, silently. Wave 01 shot `KA…KJ`; since ADR-092 stage 1 the registry is
+  `KA`, `KH`, `KI`, `KL` (seven knobs absorbed into production), asserted on every run.
 - ⚠ **THE FIRST VALUE OF EVERY KNOB IS PRODUCTION UNTOUCHED.** That is what makes
   `KA` a control rather than a preference, and it is why the capture can assert
   `KA`'s zone boxes against the shipped panel's. A new knob whose default changes
@@ -53,12 +54,16 @@ is no flag.
 - ⚠ **`--ik-t0` MIRRORS `--fl-t0`'s FORMULA BY HAND** and the capture asserts they
   resolve to the same pixel on every cell. A ladder that has drifted from the
   surface it documents is worse than no ladder, and the drift would be one pixel.
-- **Two places a rule stops, and neither is a bug to fix in the lab.** The map's
-  labels are placed against `MONO_ADVANCE`, so `track=tight` may not reach its
-  SVG — an override moves glyphs the projection already solved for, and the tests
-  check the model rather than the render. And the map's cartridge fills are
-  literals in `pdaGlyphs.tsx` with one token serving both the configured and the
-  open state, so an accent budget there needs a second token in `pda.css`.
+- **Two places a rule stopped, and what ADR-092 did about each — neither was
+  fixed in the lab.** The map's labels are placed against `MONO_ADVANCE`
+  (0.6 + .08), which is why the site's base rung landed at `.08em` rather than
+  the kit's `.06`: the map's main rung joins the base with no projection change,
+  and the rungs that stay the map's own (`.02` label, `.05` band, `.04` chip —
+  each load-bearing for a fit guard) are named constants, decided on stills
+  (ADR-092 §4C, stage 1b). And the cartridge fills that were one token for the
+  configured AND the open state are two now — `--pda-sel` (the latch, the record
+  the reader has open) beside `--pda-hot` (the transient hover / pinned / rail),
+  with the estate drawn in `--pda-line` dawn; `hot` is a prop and never a hue.
 - **The wave's pixels are gitignored; the six CONTROL stills are committed.** They
   are deterministic renders of a URL, so the record is the asset — but a baseline
   that can move is not a baseline.

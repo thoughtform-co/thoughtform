@@ -72,15 +72,18 @@
   --ik-display: clamp(18px, 1.66vw, 24px);
   --ik-copy: calc(var(--band-copy, 16px) * 0.9);
 
-  /* The four rungs the kit proposes, against production's eleven. */
-  --ik-track-base: 0.06em;
-  --ik-track-eyebrow: 0.1em;
-  --ik-track-display: -0.02em;
-  --ik-track-copy: 0;
+  /* ADR-092 stage 1: the four rungs are the SITE'S now (variables.css), and the
+     kit reads them rather than proposing them — the sheet view documents what
+     production paints. The base landed at .08em, not the kit's .06 (the frame's
+     own rung, and MONO_ADVANCE's), and the eyebrow at .15. */
+  --ik-track-base: var(--track-label);
+  --ik-track-eyebrow: var(--track-eyebrow);
+  --ik-track-display: var(--track-display);
+  --ik-track-copy: var(--track-copy);
 
   --ik-ch: 26px;
-  --ik-weight-lit: 700;
-  --ik-case-display: uppercase;
+  --ik-weight-lit: var(--weight-lit);
+  --ik-case-display: none;
 
   min-height: 100svh;
   color: var(--ik-ink);
@@ -96,21 +99,9 @@
 
 /* ── The knobs, as token moves ────────────────────────────────────────── */
 
-.ik[data-ik-line="single"] {
-  --ik-rule: var(--ik-seam);
-}
-.ik[data-ik-track="tight"] {
-  --ik-track-eyebrow: var(--ik-track-base);
-}
-.ik[data-ik-weight="regular"] {
-  --ik-weight-lit: 500;
-}
-.ik[data-ik-case="sentence"] {
-  --ik-case-display: none;
-}
-.ik[data-ik-accent="budget"] {
-  --ik-accent-wash: rgba(var(--dawn-rgb), 0.06);
-}
+/* Seven of the nine knobs were ABSORBED by ADR-092 stage 1 — grid, line, track,
+   weight, case, accent, material are production now — and their token moves are
+   deleted with them. Two levers remain live: lip and tab. */
 .ik[data-ik-lip="dawn"] {
   --ik-accent-line: var(--ik-datum);
 }
@@ -455,16 +446,12 @@
 .ik-lbl[data-form="status"][data-on] {
   color: var(--ik-accent-ink);
 }
+/* THE COUNT WAS THE FIRST THING THE BUDGET TOOK, and production took it
+   (ADR-092 stage 1): a figure the directory prints beside every row, in chrome
+   ink, no weight. The knob is gone; this is the state. */
 .ik-lbl[data-form="count"] {
-  color: var(--ik-accent-ink);
-  font-weight: var(--ik-weight-lit);
-  letter-spacing: var(--ik-track-base);
-}
-/* ⚠ THE COUNT IS THE FIRST THING THE BUDGET TAKES. It is a figure the
-   directory already prints beside every row; gold on it buys nothing and
-   spends the accent where no reader is being sent. */
-.ik[data-ik-accent="budget"] .ik-lbl[data-form="count"] {
   color: var(--ik-ink-3);
+  letter-spacing: var(--ik-track-base);
 }
 
 /* ── Specimen · the frames ────────────────────────────────────────────── */
@@ -529,15 +516,6 @@
     calc(var(--ik-ch) - 0.6px) 100%,
     0 calc(100% - (var(--ik-ch) - 0.6px))
   );
-}
-.ik[data-ik-material="glass"] .ik-frame__bd {
-  background:
-    radial-gradient(
-      160px 100px at calc(100% - 30px) -14px,
-      rgba(var(--gold-rgb), 0.13),
-      transparent 62%
-    ),
-    var(--ik-ground-panel);
 }
 .ik-frame[data-kind="bay"] i {
   position: absolute;
@@ -779,13 +757,11 @@
   background: rgba(var(--dawn-rgb), 0.04);
 }
 .ik-row[data-state="active"] {
+  /* Flat (ADR-092 stage 1): the inverse-video fill IS the mark; the 18px halo
+     that sat under it in production is gone, and so is the weight (mono has
+     no 500). */
   background: var(--ik-accent);
   color: var(--ik-accent-on);
-  font-weight: var(--ik-weight-lit);
-  box-shadow: 0 0 18px rgba(var(--gold-rgb), 0.22);
-}
-.ik[data-ik-material="flat"] .ik-row[data-state="active"] {
-  box-shadow: none;
 }
 .ik-row[data-state="active"] .ik-row__meta {
   color: rgba(var(--void-deep-rgb), 0.7);
@@ -831,9 +807,7 @@
 .ik-kv__v {
   font-size: var(--ik-chrome-md);
   letter-spacing: var(--ik-track-base);
-  color: var(--ik-accent-ink);
-}
-.ik[data-ik-accent="budget"] .ik-kv__v {
+  /* A value is a record, not wayfinding — ink (ADR-092 stage 1). */
   color: var(--ik-ink);
 }
 .ik-stats {
@@ -1016,199 +990,16 @@
    is a control.
    ════════════════════════════════════════════════════════════════════════ */
 
-/* ── grid=ruled · the seat ──────────────────────────────────
-   The references' own move, and the measured gap: they draw 147–150 structure
-   lines to our 20, all identical, so a panel edge landing on a page rule is
-   what makes the panel a REGION of the sheet rather than a card over it.
-
-   ⚠ IT IS DRAWN ON `.fl-case`, NOT ON THE STAGE, AND THAT IS NOT A PREFERENCE.
-   `--fl-rail-top` and `--fl-rail-h` are declared on `.fl-case` — the first cut
-   put this on `.ik-proof-stage`, where both resolved to their `0px` fallbacks
-   and the whole grid painted a zero-height strip with no error anywhere. A
-   token can only be read where it is declared.
-
-   ⚠ AND IT RULES THE MARGINS, NEVER THE COPY. The first cut ran repeating
-   vertical rules across the whole band at a third of the record column's width
-   — invented structure, corresponding to nothing, striping straight through the
-   brief. The grader named it on its first pass ("misplaced grid overlay across
-   the left pane") and it is the clearest case on this surface of the reference
-   set's own warning: a rule with no informational job is decoration, and
-   decoration behind prose is worse than no rule at all.
-
-   So the seat is drawn as a DATUM, not a field: the rail's own thirteen rungs
-   as stubs at both band edges, and the column split extended the full height of
-   the band. Both are lines the panel already lands on — the grid does not add
-   structure, it makes the structure that is already there visible.
-
-   The parent's `::before` paints beneath every child, so the housing, the
-   record column and the field sit over it without a z-index of their own. */
-.ik[data-ik-grid="ruled"] .fl-case[data-ik-panel]::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: var(--fl-rail-top);
-  height: var(--fl-rail-h);
-  pointer-events: none;
-  background-image:
-    /* the thirteen rungs, as 21px stubs at each edge — the rail's own major
-       tick length, so the ladder reads as a continuation of the frame */
-    repeating-linear-gradient(to bottom, var(--ik-rule) 0 1px, transparent 1px calc(100% / 12)),
-    repeating-linear-gradient(to bottom, var(--ik-rule) 0 1px, transparent 1px calc(100% / 12)),
-    /* the column split, run the full band height rather than stopping at t11 */
-    linear-gradient(var(--ik-rule), var(--ik-rule));
-  background-size:
-    21px 100%,
-    21px 100%,
-    1px 100%;
-  background-position:
-    left top,
-    right top,
-    var(--fl-col-split) top;
-  background-repeat: no-repeat;
-}
-/* ── line=single · structure is one hue ───────────────────────────────
-   What ADR-089 did not reach: the directory's row glyph draws gold .55 on all
-   four sides (casefile.css hardcodes it) and the station's diamond gold .42
-   through `--con-dim`. Both are STRUCTURE — a box and a mark on the machine —
-   not wayfinding. */
-.ik[data-ik-line="single"] .fl-case[data-ik-panel] .fl-row__glyph {
-  border-color: var(--ik-seam);
-}
-.ik[data-ik-line="single"] .fl-case[data-ik-panel] .fl-con {
-  --con-dim: var(--ik-seam);
-  --con-hair: var(--ik-rule);
-  --con-hair2: var(--ik-seam);
-}
-
-/* ── track=tight · one rung ───────────────────────────────────────────
-   Eleven values measured on one panel, none dominant. Production sets each of
-   these as a literal `letter-spacing`, so a token cannot reach them. */
-.ik[data-ik-track="tight"]
-  .fl-case[data-ik-panel]
-  :is(
-    .fl-tabs__tab,
-    .fl-tabs__ix,
-    .fl-desig,
-    .fl-dir__head,
-    .fl-dir__head .fl-desig,
-    .fl-row,
-    .fl-row__meta,
-    .fl-proof-register__claim,
-    .fl-brief__class,
-    .fl-cell,
-    .fl-cell__r,
-    .fl-con__stn > b,
-    .fl-verdict__k
-  ) {
-  letter-spacing: var(--ik-track-base);
-}
-/* ⚠ THE MAP IS DELIBERATELY NOT IN THAT LIST, AND THIS IS THE ONE PLACE THE
-   RULE STOPS. Its labels are PLACED BY ARITHMETIC against `MONO_ADVANCE`
-   (0.68em — PT Mono's advance plus the drawing's own 0.08em tracking), and
-   every fit guard on that surface measures against the same constant. Forcing
-   a different rung from CSS would move every glyph the projection already
-   solved for and overflow cells no test would catch, because the tests check
-   the MODEL rather than the render.
-   So the map keeps four of the panel's rungs, and joining them to the base one
-   is a change to `mapProjection`, not to a stylesheet. Recorded rather than
-   worked around: it is why `track=tight` reads 7 rungs and not 1. */
-
-/* ── weight=regular · nothing above 500 ───────────────────────────────
-   Six declared sites, thirty rendered nodes, 27 per cent of the panel's text.
-   Each is a hardcoded `font-weight: 700`. */
-.ik[data-ik-weight="regular"]
-  .fl-case[data-ik-panel]
-  :is(
-    .fl-tabs__tab[data-on],
-    .fl-brief__title,
-    .fl-brief__dot,
-    .fl-proof-register__claim,
-    .fl-dir__count,
-    .fl-row[data-on],
-    .fl-cell__l
-  ) {
-  font-weight: 500;
-}
-/* ⚠ AND THE MAP, WHERE TWO THIRDS OF THE PANEL'S BOLD ACTUALLY LIVES. The
-   twenty cartridge titles are `<text fontWeight={700}>` — an SVG PRESENTATION
-   ATTRIBUTE, which any CSS rule outranks, so this reaches them. Measured: the
-   DOM knob alone took 30 bold nodes to 20, and the twenty that stayed were all
-   in here.
-   ⚠ Safe on advance because PT Mono is monospaced — every weight shares the
-   cell — which is exactly why the TRACKING knob below cannot do the same. */
-.ik[data-ik-weight="regular"] .fl-case[data-ik-panel] .fl-pda text {
-  font-weight: 500;
-}
-
-/* ── case=sentence · uppercase is for chrome ──────────────────────────
-   The display title and the four register claims only. The mono chrome — the
-   tabs, the directory rows, the designations, the station labels — stays
-   uppercase, which is the point: case only ranks if something else does not
-   use it. */
-.ik[data-ik-case="sentence"]
-  .fl-case[data-ik-panel]
-  :is(.fl-brief__title, .fl-proof-register__claim) {
-  text-transform: none;
-}
-
-/* ── accent=budget · the accent is spent five times ───────────────────
-   Two hundred gold objects measured, most of them the map's outlined
-   cartridges. What keeps gold: the lit client tab, the active directory row,
-   the open station. What loses it: the estate, the counts, the marks that
-   point at nothing. */
-.ik[data-ik-accent="budget"] .fl-case[data-ik-panel] .fl-dir__count {
-  color: var(--ik-ink-3);
-}
-.ik[data-ik-accent="budget"] .fl-case[data-ik-panel] .fl-row__glyph {
-  border-color: var(--ik-ink-5);
-}
-.ik[data-ik-accent="budget"] .fl-case[data-ik-panel] .fl-brief__body em {
-  color: var(--ik-ink);
-  background: rgba(var(--dawn-rgb), 0.08);
-}
-/* ⚠ THE MAP IS AN SVG, ITS CARTRIDGES ARE STROKED, AND ONE TOKEN SERVES BOTH
-   STATES. `pdaGlyphs`' state table strokes `--pda-hot` for a configured stream
-   AND for the open one — they differ only by the fill alpha behind them, 0.07
-   against 0.18. So the accent is spent on all twenty cartridges and marks none
-   of them, and no override can keep gold on the selected one alone.
-
-   That is itself the finding, and this knob is what makes it visible: the
-   estate goes to dawn line-work and the reading falls to the state mark and the
-   fill, which is what "selection is elaboration" has to mean here. If the owner
-   wants the open stream gold as well, the fix is a SECOND token in `pda.css`,
-   not a rule in this lab. */
-.ik[data-ik-accent="budget"] .fl-case[data-ik-panel] .fl-pda {
-  --pda-hot: var(--ik-ink);
-  --pda-amb: rgba(var(--dawn-rgb), 0.34);
-  --pda-ink: rgba(var(--dawn-rgb), 0.62);
-  --pda-hub: rgba(var(--dawn-rgb), 0.08);
-  --pda-hub-grain: rgba(var(--dawn-rgb), 0.05);
-  --con-mark-glow: none;
-  --con-spine-glow: none;
-}
-
-/* ── material=flat · one ground, no atmosphere ────────────────────────
-   The housing's bloom is a `radial-gradient` inside a two-layer background, so
-   the layer has to be restated rather than switched off. The console's own
-   blur runs over a ground production already made transparent — two backdrop
-   snapshots on one band, one of them with nothing to composite. */
-.ik[data-ik-material="flat"] .fl-case[data-ik-panel] .fl-hz__bd {
-  background: var(--fl-hz-ground);
-  backdrop-filter: none;
-}
-.ik[data-ik-material="flat"] .fl-case[data-ik-panel] .fl-hz__bd::after {
-  content: none;
-}
-.ik[data-ik-material="flat"] .fl-case[data-ik-panel] .fl-con__console {
-  backdrop-filter: none;
-}
-.ik[data-ik-material="flat"] .fl-case[data-ik-panel] .fl-row[data-on] {
-  box-shadow: none;
-}
-.ik[data-ik-material="flat"] .fl-case[data-ik-panel] .fl-brief__title {
-  text-shadow: none;
-}
+/* ⚠ THE BRIDGE SHRANK TO TWO LEVERS (ADR-092 stage 1). Seven blocks stood here —
+   the grid seat, one-hue structure, the tracking rung, the weight ceiling,
+   sentence case, the accent budget and flat material — each naming the
+   production literal it reached past. Production absorbed every one (the
+   seat is `.fl-case::before` in casefile.css; the map's second accent token
+   is `--pda-sel` in pda.css), so a knob that did what production now does is
+   a no-op knob and is gone with its bridge. The lab's own definition of done
+   was the bridge reaching zero; it is at two, and the two are open questions
+   rather than absorbed rules: the housing's lip, and how a station marks
+   selection. */
 
 /* ── lip=dawn · the panel is software, not a device ───────────────────
    `console.css` rules that a panel's own edge is dawn; ADR-089 gave the

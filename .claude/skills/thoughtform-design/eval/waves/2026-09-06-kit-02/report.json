@@ -1,0 +1,1086 @@
+{
+  "wave": "2026-09-06-kit-02",
+  "when": "2026-09-06T06:29:05.003Z",
+  "cells": [
+    {
+      "kind": "control",
+      "id": "v0",
+      "subject": "1280x720-dark",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 147,
+          "got": 147,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "147,152,340,200",
+          "reg": "147,370,340,76",
+          "dir": "147,459,340,126",
+          "viz": "541,89,592,541"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KA",
+      "subject": "1280x720-dark",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 147,
+          "got": 147,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "147,152,340,200",
+          "reg": "147,370,340,76",
+          "dir": "147,459,340,126",
+          "viz": "541,89,592,541"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KH",
+      "subject": "1280x720-dark",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 147,
+          "got": 147,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "147,152,340,200",
+          "reg": "147,370,340,76",
+          "dir": "147,459,340,126",
+          "viz": "541,89,592,541"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KI",
+      "subject": "1280x720-dark",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 147,
+          "got": 147,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "147,152,340,200",
+          "reg": "147,370,340,76",
+          "dir": "147,459,340,126",
+          "viz": "541,89,592,541"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KL",
+      "subject": "1280x720-dark",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 147,
+          "got": 147,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "147,152,340,200",
+          "reg": "147,370,340,76",
+          "dir": "147,459,340,126",
+          "viz": "541,89,592,541"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "control",
+      "id": "v0",
+      "subject": "1280x720-light",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 147,
+          "got": 147,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "147,152,340,200",
+          "reg": "147,370,340,76",
+          "dir": "147,459,340,126",
+          "viz": "541,89,592,541"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KA",
+      "subject": "1280x720-light",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 147,
+          "got": 147,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "147,152,340,200",
+          "reg": "147,370,340,76",
+          "dir": "147,459,340,126",
+          "viz": "541,89,592,541"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KH",
+      "subject": "1280x720-light",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 147,
+          "got": 147,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "147,152,340,200",
+          "reg": "147,370,340,76",
+          "dir": "147,459,340,126",
+          "viz": "541,89,592,541"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KI",
+      "subject": "1280x720-light",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 147,
+          "got": 147,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "147,152,340,200",
+          "reg": "147,370,340,76",
+          "dir": "147,459,340,126",
+          "viz": "541,89,592,541"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KL",
+      "subject": "1280x720-light",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 147,
+          "got": 147,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "147,152,340,200",
+          "reg": "147,370,340,76",
+          "dir": "147,459,340,126",
+          "viz": "541,89,592,541"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "control",
+      "id": "v0",
+      "subject": "1440x800-dark",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 163,
+          "got": 163,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "163,164,385,227",
+          "reg": "163,411,385,85",
+          "dir": "163,517,385,134",
+          "viz": "609,99,669,601"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KA",
+      "subject": "1440x800-dark",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 163,
+          "got": 163,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "163,164,385,227",
+          "reg": "163,411,385,85",
+          "dir": "163,517,385,134",
+          "viz": "609,99,669,601"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KH",
+      "subject": "1440x800-dark",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 163,
+          "got": 163,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "163,164,385,227",
+          "reg": "163,411,385,85",
+          "dir": "163,517,385,134",
+          "viz": "609,99,669,601"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KI",
+      "subject": "1440x800-dark",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 163,
+          "got": 163,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "163,164,385,227",
+          "reg": "163,411,385,85",
+          "dir": "163,517,385,134",
+          "viz": "609,99,669,601"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KL",
+      "subject": "1440x800-dark",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 163,
+          "got": 163,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "163,164,385,227",
+          "reg": "163,411,385,85",
+          "dir": "163,517,385,134",
+          "viz": "609,99,669,601"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "control",
+      "id": "v0",
+      "subject": "1440x800-light",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 163,
+          "got": 163,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "163,164,385,227",
+          "reg": "163,411,385,85",
+          "dir": "163,517,385,134",
+          "viz": "609,99,669,601"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KA",
+      "subject": "1440x800-light",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 163,
+          "got": 163,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "163,164,385,227",
+          "reg": "163,411,385,85",
+          "dir": "163,517,385,134",
+          "viz": "609,99,669,601"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KH",
+      "subject": "1440x800-light",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 163,
+          "got": 163,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "163,164,385,227",
+          "reg": "163,411,385,85",
+          "dir": "163,517,385,134",
+          "viz": "609,99,669,601"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KI",
+      "subject": "1440x800-light",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 163,
+          "got": 163,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "163,164,385,227",
+          "reg": "163,411,385,85",
+          "dir": "163,517,385,134",
+          "viz": "609,99,669,601"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KL",
+      "subject": "1440x800-light",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 109,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.183,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "11px",
+          "ik": "11px",
+          "match": true
+        },
+        "seat": {
+          "want": 163,
+          "got": 163,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "163,164,385,227",
+          "reg": "163,411,385,85",
+          "dir": "163,517,385,134",
+          "viz": "609,99,669,601"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "control",
+      "id": "v0",
+      "subject": "1920x1247-dark",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 111,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.18,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "12px",
+          "ik": "12px",
+          "match": true
+        },
+        "seat": {
+          "want": 258,
+          "got": 258,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "258,207,484,211",
+          "reg": "258,477,484,274",
+          "dir": "258,869,484,165",
+          "viz": "820,131,842,985"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KA",
+      "subject": "1920x1247-dark",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 111,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.18,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "12px",
+          "ik": "12px",
+          "match": true
+        },
+        "seat": {
+          "want": 258,
+          "got": 258,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "258,207,484,211",
+          "reg": "258,477,484,274",
+          "dir": "258,869,484,165",
+          "viz": "820,131,842,985"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KH",
+      "subject": "1920x1247-dark",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 111,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.18,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "12px",
+          "ik": "12px",
+          "match": true
+        },
+        "seat": {
+          "want": 258,
+          "got": 258,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "258,207,484,211",
+          "reg": "258,477,484,274",
+          "dir": "258,869,484,165",
+          "viz": "820,131,842,985"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KI",
+      "subject": "1920x1247-dark",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 111,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.18,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "12px",
+          "ik": "12px",
+          "match": true
+        },
+        "seat": {
+          "want": 258,
+          "got": 258,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "258,207,484,211",
+          "reg": "258,477,484,274",
+          "dir": "258,869,484,165",
+          "viz": "820,131,842,985"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KL",
+      "subject": "1920x1247-dark",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 111,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.18,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "12px",
+          "ik": "12px",
+          "match": true
+        },
+        "seat": {
+          "want": 258,
+          "got": 258,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "258,207,484,211",
+          "reg": "258,477,484,274",
+          "dir": "258,869,484,165",
+          "viz": "820,131,842,985"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "control",
+      "id": "v0",
+      "subject": "1920x1247-light",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 111,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.18,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "12px",
+          "ik": "12px",
+          "match": true
+        },
+        "seat": {
+          "want": 258,
+          "got": 258,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "258,207,484,211",
+          "reg": "258,477,484,274",
+          "dir": "258,869,484,165",
+          "viz": "820,131,842,985"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KA",
+      "subject": "1920x1247-light",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 111,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.18,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "12px",
+          "ik": "12px",
+          "match": true
+        },
+        "seat": {
+          "want": 258,
+          "got": 258,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "258,207,484,211",
+          "reg": "258,477,484,274",
+          "dir": "258,869,484,165",
+          "viz": "820,131,842,985"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KH",
+      "subject": "1920x1247-light",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 111,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.18,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "12px",
+          "ik": "12px",
+          "match": true
+        },
+        "seat": {
+          "want": 258,
+          "got": 258,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "258,207,484,211",
+          "reg": "258,477,484,274",
+          "dir": "258,869,484,165",
+          "viz": "820,131,842,985"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KI",
+      "subject": "1920x1247-light",
+      "probe": {
+        "accent": 10,
+        "bold": 0,
+        "text": 111,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.18,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "12px",
+          "ik": "12px",
+          "match": true
+        },
+        "seat": {
+          "want": 258,
+          "got": 258,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "258,207,484,211",
+          "reg": "258,477,484,274",
+          "dir": "258,869,484,165",
+          "viz": "820,131,842,985"
+        }
+      },
+      "errors": []
+    },
+    {
+      "kind": "candidate",
+      "id": "KL",
+      "subject": "1920x1247-light",
+      "probe": {
+        "accent": 9,
+        "bold": 0,
+        "text": 111,
+        "boldShare": 0,
+        "rungs": 8,
+        "topRungShare": 0.18,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10,
+        "radii": 0,
+        "structureHues": 4,
+        "t0": {
+          "fl": "12px",
+          "ik": "12px",
+          "match": true
+        },
+        "seat": {
+          "want": 258,
+          "got": 258,
+          "pad": 18,
+          "off": 0,
+          "hzOff": 0
+        },
+        "boxes": {
+          "brief": "258,207,484,211",
+          "reg": "258,477,484,274",
+          "dir": "258,869,484,165",
+          "viz": "820,131,842,985"
+        }
+      },
+      "errors": []
+    }
+  ]
+}

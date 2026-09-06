@@ -1,8 +1,18 @@
 # ADR-091: The interface kit — the delta is measured, and the panel is recomposed on it
 
-**Status: Proposed** (2026-09-05) — the lab and the Figma library are built and a
-graded wave exists; the owner has not read them. A promotion into `casefile.css`
-and onto the Brand System page is a separate decision and moves this to Accepted.
+**Status: Accepted** (2026-09-06) — the owner read the wave and approved the
+composite (`KJ`); [ADR-092](092-type-material-tokens.md) built the eight rules as
+role tokens on `:root` and its stage 1 promoted them into `casefile.css`,
+`console.css`, `pda.css` and the map's SVG. Seven of the kit's nine knobs are
+production now and are deleted from the registry with their directions; the two
+that remain (the housing's lip, the station's mark) are the open questions wave
+02 asks against a control that now IS the approved composite. The Brand System
+page follows the tokens in a doc pass.
+
+**Promotion:** ADR-092 is the record — the token set, the `.08em` base (this kit
+proposed `.06`; the frame's own rung and `MONO_ADVANCE` decided it), the ratchet
+guard, the mechanical gate's new stages and the six-stage rollout. Each of the
+three defects the gates missed (below) has a mechanical check there.
 
 **Related:** ADR-089 (the housing, and what it already fixed) · ADR-088 (the left
 column's ladder) · ADR-067 (one type ladder, two faces by role) · ADR-066 (no

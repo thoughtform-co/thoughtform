@@ -1,10 +1,18 @@
 {
-  "$comment": "THE ONE REGISTRY for /test/interface-kit. Read by the page (TS import) and by scripts/capture-interface-kit.mjs (readFileSync) and mirrored into the ship's armada.toml [types]. Two readers, one record: a direction cannot be shot that the page cannot draw. TYPE IDS ARE LETTERS ONLY - the armada's filename grammar accepts only letters before the first dash, so a digit in the id silently falls to its unknown-shape branch (lane empty, draw 0) and every downstream tool reads a different file than it wrote.",
+  "$comment": "THE ONE REGISTRY for /test/interface-kit. Read by the page (TS import) and by scripts/capture-interface-kit.mjs (readFileSync) and mirrored into the ship's armada.toml [types]. Two readers, one record: a direction cannot be shot that the page cannot draw. TYPE IDS ARE LETTERS ONLY - the armada's filename grammar accepts only letters before the first dash, so a digit in the id silently falls to its unknown-shape branch (lane empty, draw 0) and every downstream tool reads a different file than it wrote. ⚠ ADR-092 STAGE 1 (2026-09-06) ABSORBED SEVEN OF THE NINE KNOBS into production - grid, line, track, weight, case, accent, material are what ships now - so they and their directions are gone from this registry, and the lab compares the two levers that are still open questions: the housing lip and how a station marks selection.",
   "$measured": {
     "when": "2026-09-05, one probe, 1920x1247, dark, row 01",
     "scope": "the casefile panel (.fl-case) against each reference's whole page",
-    "accentObjects": { "proof": 200, "tensorlake": 112, "primeIntellect": 15 },
-    "trackingRungs": { "proof": 11, "tensorlake": 15, "primeIntellect": 4 },
+    "accentObjects": {
+      "proof": 200,
+      "tensorlake": 112,
+      "primeIntellect": 15
+    },
+    "trackingRungs": {
+      "proof": 11,
+      "tensorlake": 15,
+      "primeIntellect": 4
+    },
     "trackingConcentration": {
       "note": "share of text nodes on the single most-used rung - the number that actually reads",
       "proof": 0.2,
@@ -23,45 +31,14 @@
       "tensorlake": "147 lines, 1 hue (#393939)",
       "primeIntellect": "150 lines, 1 hue (#202020)"
     },
-    "radius": { "proof": 0, "tensorlake": 6, "primeIntellect": 2 },
+    "radius": {
+      "proof": 0,
+      "tensorlake": 6,
+      "primeIntellect": 2
+    },
     "finding": "The gap is NOT that the house draws the wrong lines - ADR-089 already put the casefile's structure on dawn, and the house is stricter than both references on radius. The gap is (a) the accent is spent on an order of magnitude more objects, (b) no tracking rung dominates, so the mono chrome has no base register to depart from, (c) a quarter of the text is bold where the references keep bold under two per cent, and (d) the references draw SEVEN TIMES more structure lines than we do, all identical - they are ruled sheets, and a panel edge landing on a page rule is what makes a panel look seated."
   },
   "knobs": {
-    "grid": {
-      "values": ["hidden", "ruled"],
-      "label": "Grid seat",
-      "note": "hidden = what ships: the panel hangs off the rail's tick ladder but the seat is invisible. ruled = the references' own move: the page's rules are drawn at the seam weight and the panel's edges land on them, so the panel reads as a region of the sheet rather than a card over it."
-    },
-    "line": {
-      "values": ["house", "single"],
-      "label": "Line law",
-      "note": "house = what ships: dawn structure since ADR-089, but the directory glyphs still draw gold .55 on four sides and the station diamonds gold .42. single = one hue for structure, full stop; the accent draws no boxes."
-    },
-    "track": {
-      "values": ["wide", "tight"],
-      "label": "Tracking",
-      "note": "wide = production's eleven rungs with no dominant one. tight = one base rung at .06em for every mono chrome label, and the two designation forms alone depart from it."
-    },
-    "weight": {
-      "values": ["bold", "regular"],
-      "label": "Weight",
-      "note": "bold = 27 per cent of text nodes at 700. regular = 500 is the ceiling on chrome and emphasis moves to ink alpha, which is what both references do."
-    },
-    "case": {
-      "values": ["upper", "sentence"],
-      "label": "Case",
-      "note": "upper = nearly everything uppercased, so case ranks nothing. sentence = uppercase reserved for mono chrome; the display title and the register claims go sentence case, as both references set their display type."
-    },
-    "accent": {
-      "values": ["house", "budget"],
-      "label": "Accent",
-      "note": "house = two hundred gold objects in one panel, most of them the map's outlined cartridges. budget = gold on the marks that say where the reader is and nowhere else; the estate goes dawn and selection becomes elaboration rather than a hue change."
-    },
-    "material": {
-      "values": ["glass", "flat"],
-      "label": "Material",
-      "note": "glass = the housing's bloom, its 14px backdrop blur, the scanline, the console's second 9px blur over a transparent ground, and the active row's 18px glow. flat = one ground and one step for the bar; no bloom, no second blur, no glow."
-    },
     "lip": {
       "values": ["gold", "dawn"],
       "label": "Housing lip",
@@ -70,88 +47,42 @@
     "tab": {
       "values": ["fill", "line", "outline"],
       "label": "Station",
-      "note": "fill = ADR-089 U4's inverse video. line = no fill, a 1px accent line on the open box's bottom edge. outline = an accent border, no fill, ink label."
+      "note": "fill = ADR-089 U4's inverse video, what ships. line = no fill, a 1px accent line on the open box's bottom edge. outline = an accent border, no fill, ink label."
     }
   },
   "directions": [
     {
       "id": "KA",
       "name": "House",
-      "question": "does the panel recomposed at house values read as the shipped one?",
+      "question": "does the panel recomposed at house values read as the shipped one? (the control; after stage 1, house values ARE the composite the owner approved)",
       "shape": "the control, recomposed from the production leaves",
       "knobs": {}
-    },
-    {
-      "id": "KB",
-      "name": "Seated",
-      "question": "does drawing the sheet's own rules, and taking the last gold off the structure, make the panel a region rather than a card?",
-      "shape": "page rules at the seam weight with the panel's edges on them; structure one hue",
-      "knobs": { "grid": "ruled", "line": "single" }
-    },
-    {
-      "id": "KC",
-      "name": "Track tight",
-      "question": "does one dominant tracking rung give the mono chrome a base register to depart from?",
-      "shape": "eleven rungs collapse to one at .06em, with two designation forms departing",
-      "knobs": { "track": "tight" }
-    },
-    {
-      "id": "KD",
-      "name": "Weight regular",
-      "question": "does the panel hold its hierarchy with nothing above 500?",
-      "shape": "27 per cent of nodes at 700 becomes none; emphasis is ink",
-      "knobs": { "weight": "regular" }
-    },
-    {
-      "id": "KE",
-      "name": "Case sentence",
-      "question": "does sentence case on the title and the claims give case something to say?",
-      "shape": "uppercase reserved for mono chrome",
-      "knobs": { "case": "sentence" }
-    },
-    {
-      "id": "KF",
-      "name": "Accent budget",
-      "question": "does gold spent on the wayfinding marks alone still say where the reader is?",
-      "shape": "two hundred gold objects become five; the estate is drawn in dawn",
-      "knobs": { "accent": "budget" }
-    },
-    {
-      "id": "KG",
-      "name": "Material flat",
-      "question": "does the housing survive losing its bloom, its glow and one of its two blurs?",
-      "shape": "one ground, one step for the bar, no atmosphere",
-      "knobs": { "material": "flat" }
     },
     {
       "id": "KH",
       "name": "Station line",
       "question": "does a 1px line carry selection without a fill?",
       "shape": "the open station is underlined, not filled",
-      "knobs": { "tab": "line" }
+      "knobs": {
+        "tab": "line"
+      }
     },
     {
       "id": "KI",
       "name": "Station outline",
       "question": "does an outline carry selection without a fill?",
       "shape": "the open station takes a gold border and keeps its ink",
-      "knobs": { "tab": "outline" }
+      "knobs": {
+        "tab": "outline"
+      }
     },
     {
-      "id": "KJ",
-      "name": "Composite",
-      "question": "read as one instrument: seated on the sheet, one tracking rung, nothing above 500, sentence display, an accent spent five times, flat material - with the machined gold lip kept.",
-      "shape": "every rule at once, the lip gold, the station underlined",
+      "id": "KL",
+      "name": "Lip dawn",
+      "question": "is the housing a device set into the frame, or software drawn on its screen? The one gold line the composite kept, asked the other way round.",
+      "shape": "the housing's lip in the frame's own dawn; everything else as shipped",
       "knobs": {
-        "grid": "ruled",
-        "line": "single",
-        "track": "tight",
-        "weight": "regular",
-        "case": "sentence",
-        "accent": "budget",
-        "material": "flat",
-        "lip": "gold",
-        "tab": "line"
+        "lip": "dawn"
       }
     }
   ],
@@ -159,6 +90,16 @@
     "lane": "kit",
     "viewports": ["1280x720", "1440x800", "1920x1247"],
     "themes": ["dark", "light"],
-    "note": "10 directions x 3 viewports x 2 themes = 60 candidates, plus 6 control stills shot from mount=shipped. 1920x1247 is the owner's own window; 1280x720 is the binding one."
+    "note": "4 directions x 3 viewports x 2 themes = 24 candidates, plus 6 control stills shot from mount=shipped. 1920x1247 is the owner's own window; 1280x720 is the binding one. Wave 01 (2026-09-05) ran 10 directions; seven were absorbed by ADR-092 stage 1."
+  },
+  "$after": {
+    "when": "2026-09-06, the same probe (mechanical.mjs --scope .fl-case), 1440x900, dark, row 01, after ADR-092 stage 1",
+    "accentMarks": 8,
+    "accentStructure": 0,
+    "boldNodes": 0,
+    "trackingRungs": 4,
+    "trackingConcentration": 0.48,
+    "contrastMisses": "5 in dark (ANALYSIS.md defect 9, chrome ink at 3.19-3.41:1), 1 in light (.fl-desig 3.96:1)",
+    "note": "From 200 accent objects to 8 marks; from 27 per cent bold to none; from 7 rungs with 26 per cent on the top to 4 with 48 per cent on the base rung .08em. The references ran 50-98 per cent."
   }
 }

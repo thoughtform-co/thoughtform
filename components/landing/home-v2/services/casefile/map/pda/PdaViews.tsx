@@ -226,7 +226,8 @@ export function ViewWork({
               y={slot.y}
               w={CARD_W}
               h={CARD_H}
-              state={hover === w.id ? "hot" : w.configured ? "cfg" : "led"}
+              state={w.configured ? "cfg" : "led"}
+              hot={hover === w.id}
               work={w}
               sel={isSel}
             />

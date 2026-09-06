@@ -1,8 +1,13 @@
 # ADR-092: The type ramps are tokens by role, and the site sits on them
 
-**Status: Proposed** (2026-09-06) — stage 0 landed: the tokens are declared, the
-ratchet guard and the gate's new stages are live, the render is byte-identical.
-Accepted when stage 1 (the casefile family) lands.
+**Status: Proposed** (2026-09-06) — **stages 0 and 1 have landed.** Stage 0
+declared the tokens and put the ratchet guard and the gate's new stages in with a
+byte-identical render; stage 1 put the casefile family, the map's SVG and the kit
+on them (see §Stage 1, measured, below). Four stages remain — the landing
+surfaces, the arcs, the Bold faces and the docs ledger — so this stays Proposed
+until the sweep is done rather than being Accepted on the surface that happens to
+have gone first. ADR-091 is Accepted as of stage 1: its composite is what
+`mount=shipped` mounts.
 
 **Supersedes** DESIGN.md's `typography.heading.fontWeight: 700` and its "PT Mono
 (Bold, uppercase, tight tracking)" line; `typography-system.md`'s Weights and
@@ -143,9 +148,16 @@ parses a second prototype against the same sheet, and deletion waits on its map.
 - The Bold faces (`PTMono-Bold.woff2`, `PPNeueMontreal-Bold.woff2`) leave the
   bundle and the preload at stage 4 — after the three canvases that bake `700 …
 "PT Mono"` move to 400, or the textures bake a synthesised faux-bold.
-- `cases-registry`'s 27-character claim cap was derived from `.045em` tracking and
-  is re-derived from `scripts/measure-casefile-type.mjs` at `.08em`; two claims are
-  exactly 27 today and may need an editorial trim.
+- `cases-registry`'s 27-character claim cap was derived from `.045em` tracking
+  against a ~234px half-column, and the move to `.08em` — a WIDER rung — is what
+  should have broken it. **Measured, it did not, and no editorial trim was
+  needed:** ADR-088 had already widened the register's measure, so at `.08em` the
+  two 27-character claims set 242px into 312 available at 1280×720, 242/357 at
+  1440×800 and 264/449 at 1920×1080, wrapping only above a **17px** font size
+  against a 13.2px render. The wall is the SIZE ladder now, not the character
+  count. The cap is KEPT at 27 as a ratchet — a cap that admits more characters is
+  a looser guard — and its comment carries the measurement instead of the stale
+  advance.
 - Display line-heights sized for caps (`.contact__title` .9, `.fl-brief__title` 1,
   `.fl-mobile-head__title` .98 under a pin with no slack) need ≥ ~1.05 for
   descenders once the sans goes sentence case.
@@ -154,6 +166,44 @@ parses a second prototype against the same sheet, and deletion waits on its map.
 - The kit's bridge shrinks knob by knob as production absorbs each, and the six
   committed control stills are re-shot: **the bridge reaching zero is the
   definition of done.**
+
+## Stage 1, measured
+
+What the gate reads on the shipped casefile (`mechanical.mjs --url / --scope
+".fl-case" --exclude ".fl-pda"`), against ADR-091's numbers for the same panel:
+
+|                          | before    | after                                |
+| ------------------------ | --------- | ------------------------------------ |
+| gold objects             | 200       | **8–9 marks, 0 structure**           |
+| text nodes above 500     | 30 (27 %) | **0**                                |
+| tracking rungs (content) | 11        | **4, with 50 % on the `.08em` base** |
+| structure hues           | 2         | **1**                                |
+
+⚠ **TWO SCOPES, TWO TRUE RUNG COUNTS.** The kit's own probe reads **8** rungs on
+the same panel because it includes the map's SVG lettering, which is placed by
+arithmetic against `MONO_ADVANCE` and keeps three rungs of its own by ruling
+(§4C — stage 1b, decided on stills). Quoting either number for the other is the
+mis-measurement this ADR exists to stop.
+
+Clean at the two paths nothing else guards: `--prm` at 1280×720 and 390×844 both
+read 0 weight / 0 tracking / 0 case / 0 text-shadow / **0 accent-structure**, so
+the ≤960 + reduced-motion restore block no longer puts gold structure, the two
+station gradients and the glow back on every phone.
+
+**What was NOT caused by this stage, confirmed by stashing** (the repo's own
+method — the alternative is blaming a change for a failure it did not make):
+
+- `services-ring-smoke` desktop: 14 passed, 1 skipped. The one failure this stage
+  DID cause was a stale GUARD, not a render — the smoke asked for the open
+  cartridge's mark by `--pda-hot`, the token §4A split. It asserts `--pda-sel` now
+  **and** bans `--pda-hot` on the latch, so the two cannot silently re-merge.
+- `mobile-section-seams` (2) and the arc smokes (5 per phone/tablet project) fail
+  identically at HEAD with this stage stashed: `.home-v2-stage` never becomes
+  visible on the WebKit phone projects. Pre-existing, environmental, and unrelated
+  — every desktop case passes.
+- The seven phone contrast misses the gate reports are byte-identical at HEAD.
+  They are ANALYSIS defect 9's family on the mobile IA, newly VISIBLE because the
+  gate is new, not newly caused.
 
 ## Left open
 

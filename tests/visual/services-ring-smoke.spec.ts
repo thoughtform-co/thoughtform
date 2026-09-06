@@ -1059,10 +1059,20 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
       // The record the reader opened stays marked on the grid, so the flight
       // has somewhere legible to land and to leave from.
+      // ⚠ THE LATCH IS `--pda-sel`, NOT `--pda-hot` (ADR-092 stage 1). ONE token
+      // served the open record AND every transient hover, which is how the estate
+      // came to spend gold on all twenty cartridges — the split is the whole point.
+      // So this asserts BOTH halves: the open record is marked in the LATCH token,
+      // and the latch is not painted in the HOVER one. A count alone would pass
+      // again the day the two are quietly re-merged.
       expect(
-        await page.locator(".fl-pda-hit").first().locator("line[stroke*='pda-hot']").count(),
+        await page.locator(".fl-pda-hit").first().locator("line[stroke*='pda-sel']").count(),
         `${label}: the open record is not marked on the grid`
       ).toBeGreaterThan(0);
+      expect(
+        await page.locator(".fl-pda-hit").first().locator("line[stroke*='pda-hot']").count(),
+        `${label}: the latch is painted in the transient hover token`
+      ).toBe(0);
 
       // NOTHING THE MAP DOES MAY PUBLISH A RING ANCHOR. The casefile host is
       // `pointer-events: none` with scoped opt-ins, and the map plate is one
@@ -2716,6 +2726,82 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     }
   });
 
+  test("the casefile is flat, on the ramps, and seated (ADR-092 stage 1)", async ({ page }) => {
+    test.skip(!isDesktopViewport(page), "the housing is desktop-only (≥961px)");
+    // THE FAILURE THIS PINS. ADR-091 counted the panel: an 18px gold halo under
+    // the active row and a text-shadow on the title (depth and glow the flat law
+    // does not have), a directory count and forty-seven tile outlines in gold
+    // (structure, not marks), the housing's bloom and its two blurs, and no
+    // seat — the panel hung off the rail's ladder with the seat invisible.
+    // ADR-092 stage 1 took each of those off production; this is what keeps
+    // them off. Every read is a computed style; nothing here is a screenshot.
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 20_000 });
+    expect(await scrollCasefileDwell(page, DWELL_ROW_1), "casefile runway missing").toBe(true);
+    await page.waitForTimeout(900);
+
+    const read = await page.evaluate(() => {
+      const isGold = (c: string) => {
+        const m = c.match(/rgba?(([^)]+))/);
+        if (!m) return false;
+        const p = m[1].split(/[,/]/).map((v) => Number.parseFloat(v));
+        const a = p.length > 3 ? p[3] : 1;
+        return a >= 0.05 && p[0] > 90 && p[0] - p[2] > 40 && p[0] >= p[1];
+      };
+      const q = (sel: string) => document.querySelector<HTMLElement>(sel);
+      const cs = (el: Element | null, pseudo?: string) =>
+        el ? getComputedStyle(el, pseudo) : null;
+      const caseEl = q(".fl-case");
+      const seat = cs(caseEl, "::before");
+      const row = q(".fl-row[data-on]");
+      const dormantGlyph = q(".fl-row:not([data-on]) .fl-row__glyph");
+      const hz = q(".fl-hz__bd");
+      return {
+        rowShadow: cs(row)?.boxShadow ?? null,
+        rowWeight: cs(row)?.fontWeight ?? null,
+        titleShadow: cs(q(".fl-brief__title"))?.textShadow ?? null,
+        titleCase: cs(q(".fl-brief__title"))?.textTransform ?? null,
+        titleWeight: cs(q(".fl-brief__title"))?.fontWeight ?? null,
+        claimCase: cs(q(".fl-proof-register__claim"))?.textTransform ?? null,
+        countGold: isGold(cs(q(".fl-dir__count"))?.color ?? ""),
+        glyphGold: isGold(cs(dormantGlyph)?.borderTopColor ?? ""),
+        registerRuleGold: isGold(cs(q(".fl-proof-register__item"))?.borderTopColor ?? ""),
+        hzBlur: cs(hz)?.backdropFilter ?? null,
+        hzImage: cs(hz)?.backgroundImage ?? null,
+        hzScanline: cs(hz, "::after")?.content ?? null,
+        seatContent: seat?.content ?? null,
+        seatLayers: (seat?.backgroundImage.match(/repeating-linear-gradient/g) ?? []).length,
+        splitGold: isGold(cs(q(".fl-split"))?.backgroundColor ?? ""),
+      };
+    });
+
+    // material — flat
+    expect(read.rowShadow, "the active row's halo is back").toBe("none");
+    expect(read.titleShadow, "the title's glow is back").toBe("none");
+    expect(
+      read.hzBlur === "none" || read.hzBlur === null,
+      `the housing blurs again — ${read.hzBlur}`
+    ).toBe(true);
+    expect(read.hzImage, "the housing's bloom is back").toBe("none");
+    expect(read.hzScanline, "the housing's scanline is back").toBe("none");
+    // type — the ceiling and the case
+    expect(
+      Number(read.rowWeight),
+      "the active row is bold again (mono has no 500)"
+    ).toBeLessThanOrEqual(500);
+    expect(Number(read.titleWeight), "the title is above the ceiling").toBeLessThanOrEqual(500);
+    expect(read.titleCase, "the title shouts again").not.toBe("uppercase");
+    expect(read.claimCase, "a claim shouts again").not.toBe("uppercase");
+    // accent — gold draws no structure
+    expect(read.countGold, "the directory count went back to gold").toBe(false);
+    expect(read.glyphGold, "a dormant folder glyph is outlined in gold").toBe(false);
+    expect(read.registerRuleGold, "the register's hairline went back to gold").toBe(false);
+    expect(read.splitGold, "the column split is gold").toBe(false);
+    // the seat
+    expect(read.seatContent, "the grid seat is not drawn").not.toBe("none");
+    expect(read.seatLayers, "the seat should rule both band edges").toBe(2);
+  });
+
   test("light: the map console's palette carries its contrast (ADR-063 U2)", async ({ page }) => {
     test.skip(!isDesktopViewport(page), "the console is desktop-only (≥981px)");
     // The wireframe walk at the end visits all four stations now (~+3.5s).
@@ -2831,7 +2917,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         // Line work that carries the drawing answers to the 3:1 component
         // target; the frame/divider hairlines are decorative and exempt.
         const host = getComputedStyle(document.querySelector<HTMLElement>(".fl-pda")!);
-        const lines = ["--pda-amb", "--pda-dim"].map((name) => {
+        // ADR-092 added the estate's dawn line and the latch: both carry the
+        // drawing (twenty outlines; the one open record) and answer to 3:1.
+        const lines = ["--pda-amb", "--pda-dim", "--pda-line", "--pda-sel"].map((name) => {
           const probe = document.createElement("span");
           probe.style.color = host.getPropertyValue(name).trim();
           document.body.appendChild(probe);

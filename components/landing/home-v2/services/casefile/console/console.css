@@ -367,7 +367,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font: 400 clamp(10px, 1.75cqw, 11.5px) / 1 var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: inherit;
 }
@@ -522,7 +522,7 @@
   max-width: 640px;
   font: 400 var(--fl-copy, 15px) / 1.45
     var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
-  letter-spacing: 0.008em;
+  letter-spacing: var(--track-copy);
   color: rgba(var(--dawn-rgb), 0.88);
 }
 
@@ -586,12 +586,10 @@
 .fl-case .fl-con {
   --con-ground: rgba(var(--void-deep-rgb), 0.86);
 }
-
-@supports (backdrop-filter: blur(2px)) {
-  .services-stage[data-proof-settled] .fl-case .fl-con__console {
-    backdrop-filter: blur(9px);
-  }
-}
+/* The console's own 9px backdrop blur is GONE (ADR-092). It ran over a ground
+   the housing had already made transparent, under the housing's own 14px blur
+   — two backdrop snapshots on one band, one of them with nothing to sample
+   (ANALYSIS.md defect 3). The housing's blur went too; the band is flat. */
 
 /* ── Below the desktop gate ──────────────────────────────────────────────
    ⚠ THE CONSOLE UNWRAPS, IT DOES NOT HIDE. Hiding it would take the plate's

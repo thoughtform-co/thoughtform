@@ -314,7 +314,9 @@ Prefer **live CSS and contracts in the repo you are editing** over prose here.
 - Dev server on **port 3003** (`autoPort` may take another — read the running server, never
   assume). Always quote a full clickable URL, origin and all.
 - The v7 landing uses the **21-position depth gauge**, not the deck's 13-position bearing grid.
-- Hero titles are PT Mono Bold uppercase; the wordmark is inline SVG.
+- Display titles are PP Neue Montreal at `--weight-lit` (500, the ceiling), sentence case,
+  `--track-display` (ADR-092); the hero's headline is the one PT Mono display and keeps its
+  caps at 400. Nothing on the site is Bold. The wordmark is inline SVG.
 - The page is a layered composite: fixed gateway glow (z:0), sticky hero (z:1), opaque shield
   sections (z:2) inside `.stations` (z:10). **Full-bleed elements at z≥2 must declare
   `background: var(--void)`.**

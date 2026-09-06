@@ -136,7 +136,6 @@
      ground the slab is a pane rather than a device with glass in it. The
      services plate's open body sits at 0.58 over a much brighter bed. */
   --fl-hz-ground: rgba(var(--void-deep-rgb), 0.42);
-  --fl-hz-blur: 14px;
   /* ⚠ THE LIP'S FOUR STOPS ARE TOKENS BECAUSE GOLD IS SPLIT BY ROLE
      (ADR-063 U2: hue is the brand, LIGHTNESS is the role). A saturated yellow
      is inherently high-luminance, so `--gold` at .34 is line work that all
@@ -400,11 +399,6 @@
     rgba(var(--gold-rgb), 0.8) 0 1.5px,
     transparent 1.5px 5px
   );
-  --fl-ret-rule-y: repeating-linear-gradient(
-    to bottom,
-    rgba(var(--dawn-alt-rgb), 0.24) 0 1px,
-    transparent 1px 6px
-  );
 }
 
 /* ══ Phone case instrument ══════════════════════════════════════════════
@@ -436,7 +430,9 @@
     align-items: stretch;
     flex-wrap: nowrap;
     gap: 12px;
-    border-bottom: 1px solid rgba(var(--gold-rgb), 0.2);
+    /* ADR-092: the rule under the strip separates the head from the record —
+       a seam, in dawn. The phone path never had a guard that read it. */
+    border-bottom: 1px solid var(--fl-hz-seam);
   }
   .fl-tabs__tab {
     min-height: 44px;
@@ -465,7 +461,7 @@
        instrument` assertion pins to viewport + 1px. */
     font-size: 10px;
     line-height: 1.2;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--track-eyebrow);
     color: rgba(var(--dawn-rgb), 0.48);
   }
   .fl-mobile-head__meta span:last-child {
@@ -473,7 +469,7 @@
     text-align: right;
   }
   .fl-mobile-head__title {
-    margin: 15px 0 0;
+    margin: 11px 0 0;
     font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
     /* THE HOUSE DISPLAY VOICE, on the global phone ladder. This head was
        the ONE big title on the phone journey set in 700/0.01em while
@@ -487,23 +483,30 @@
        at 0.92px of slack. The head sets two lines at 320, so 0.98 → 1.05
        costs 2 × 27 × 0.07 = 3.78px — four times the slack, and measured
        at 571.86 against a 569 ceiling. The lighter weight is what buys
-       the airier read here; the leading cannot be bought. */
+       the airier read here; the leading cannot be bought.
+       ⚠ ADR-092 BOUGHT IT ANYWAY, FROM THE MARGIN. Sentence case (the sans
+       does not shout) puts descenders under the baseline, and 0.98 clips
+       them. 0.98 → 1.05 costs the 3.78px above; the title's own top margin
+       comes down 15 → 11 to pay for it, so the pin's arithmetic is a wash.
+       Re-measured at 320×568 by the phones-retune case. */
     font-size: var(--m-display);
-    font-weight: 400;
-    line-height: 0.98;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-weight: var(--weight-text);
+    line-height: 1.05;
+    letter-spacing: var(--track-display);
     color: var(--dawn);
     text-wrap: balance;
   }
   .fl-mobile-head__title b {
     color: var(--gold);
+    /* A <b> is bold by UA default; the desktop dot sets its weight, this one
+       inherited 700 from the browser (ADR-092, measured at 390×844). */
+    font-weight: inherit;
   }
   .fl-mobile-head__class {
     margin-top: 8px;
     font-size: 9.5px;
     line-height: 1.35;
-    letter-spacing: 0.12em;
+    letter-spacing: var(--track-label);
     color: rgba(var(--dawn-rgb), 0.46);
   }
 
@@ -511,8 +514,8 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     min-width: 0;
-    border-top: 1px solid rgba(var(--gold-rgb), 0.16);
-    border-bottom: 1px solid rgba(var(--gold-rgb), 0.16);
+    border-top: 1px solid var(--fl-hz-seam);
+    border-bottom: 1px solid var(--fl-hz-seam);
   }
   .fl-mobile-view {
     position: relative;
@@ -522,7 +525,7 @@
     margin: 0;
     padding: 0 8px;
     border: 0;
-    border-left: 1px solid rgba(var(--gold-rgb), 0.12);
+    border-left: 1px solid var(--fl-hz-rule);
     background: transparent;
     color: rgba(var(--dawn-rgb), 0.48);
     /* ⚠ 10px FLAT, not the chrome-md token — chrome-md's 11px floor
@@ -532,7 +535,7 @@
        size only shifts THE LINE the button lets through, so 10px there
        does not shrink the target. */
     font: 400 10px/1 var(--fl-mono);
-    letter-spacing: 0.14em;
+    letter-spacing: var(--track-eyebrow);
     text-transform: uppercase;
     cursor: pointer;
     transition: color 0.18s ease;
@@ -731,13 +734,13 @@
     grid-template-columns: 44px minmax(0, 1fr) 44px;
     min-width: 0;
     margin-top: 12px;
-    border-top: 1px solid rgba(var(--gold-rgb), 0.18);
-    border-bottom: 1px solid rgba(var(--gold-rgb), 0.18);
+    border-top: 1px solid var(--fl-hz-seam);
+    border-bottom: 1px solid var(--fl-hz-seam);
   }
   .fl-mobile-rail__stops {
     display: grid;
     min-width: 0;
-    border-inline: 1px solid rgba(var(--gold-rgb), 0.14);
+    border-inline: 1px solid var(--fl-hz-rule);
   }
   .fl-mobile-rail__step,
   .fl-mobile-rail__stop {
@@ -755,7 +758,7 @@
        320×568 `.fl-case` height and broke the `whole Proof instrument`
        assertion (2026-08-28 design pass). */
     font: 400 10.5px/1 var(--fl-mono);
-    letter-spacing: 0.08em;
+    letter-spacing: var(--track-label);
     cursor: pointer;
     transition: color 0.18s ease;
   }
@@ -768,7 +771,7 @@
     color: rgba(var(--dawn-rgb), 0.78);
   }
   .fl-mobile-rail__stop + .fl-mobile-rail__stop {
-    border-left: 1px solid rgba(var(--gold-rgb), 0.1);
+    border-left: 1px solid var(--fl-hz-rule);
   }
   .fl-mobile-rail__stop[data-on] {
     color: var(--gold);
@@ -995,7 +998,7 @@
 .fl-desig {
   font-family: var(--fl-mono);
   font-size: var(--fl-chrome-sm);
-  letter-spacing: 0.22em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--fl-ink-dim);
 }
@@ -1039,7 +1042,7 @@
   /* The client identity, at display size. Tracking tightens as the size goes
      up — 0.2em was set for 10px chrome and reads as a gap at 15. */
   font-size: var(--fl-chrome-lg);
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.32);
   transition: color var(--duration-normal, 120ms) var(--ease-out, ease);
@@ -1057,12 +1060,11 @@
      rise with the name; it must not track it 1:1 or the two read as one
      string. */
   font-size: var(--fl-chrome-sm);
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-eyebrow);
   opacity: 0.7;
 }
 .fl-tabs__tab[data-on] {
   color: var(--gold);
-  font-weight: 700;
 }
 .fl-tabs__tab[data-on]::after {
   content: "";
@@ -1086,10 +1088,15 @@
 .fl-split {
   position: absolute;
   left: var(--fl-col-split);
-  top: var(--fl-body-top);
+  /* ⚠ THE SPLIT RUNS THE WHOLE BAND NOW (ADR-092, the grid seat). It was the
+     dotted reticle rule from --fl-body-top to --fl-split-end; it is the
+     column's seam from the rail's first rung to its last, at the seam weight,
+     so the record column and the field share a datum the eye can find. The
+     head band's rule terminates on it — that is the T the datum reads as. */
+  top: var(--fl-rail-top);
   width: 1px;
-  height: calc(var(--fl-split-end) - var(--fl-body-top));
-  background: var(--fl-ret-rule-y);
+  height: var(--fl-rail-h);
+  background: var(--fl-hz-seam);
   z-index: 1;
 }
 
@@ -1205,43 +1212,46 @@
     calc(var(--fl-hz-ch) - 0.6px) 100%,
     0 calc(100% - (var(--fl-hz-ch) - 0.6px))
   );
-  /* ⚠ THE BLOOM IS IN PIXELS, AND IT IS THE ONE VALUE THAT DID NOT SURVIVE
-     THE CHANGE OF SHAPE. The services plate writes `130% 70% at 84% -8%` —
-     percentages of a 420×680 CARD, so ~550px, a corner catching light. The
-     same fractions on a 1500px housing are 1495px and light the whole
-     quadrant. ⚠ And there is no `brightness()`: the plate's lift belongs to
-     its OPEN state, tuned for a small card over a bright WebGL bed; over a
-     band of void it turns the ground grey. */
-  background:
-    linear-gradient(174deg, rgba(var(--dawn-alt-rgb), 0.05) 0%, rgba(var(--dawn-alt-rgb), 0) 50%),
-    radial-gradient(
-      460px 300px at calc(100% - 90px) -40px,
-      rgba(var(--gold-rgb), 0.13),
-      transparent 62%
-    ),
-    var(--fl-hz-ground);
+  /* ⚠ FLAT (ADR-092). The housing carried a dawn wash, a gold corner bloom,
+     a gold scanline and a 14px backdrop blur — the services plate's glass,
+     ported by ADR-089. The composite the owner approved has none of them, and
+     the site rule is one ground, no atmosphere: a ramp, a halo or a texture
+     doing a line's job is the material the count found. The GROUND stays the
+     0.42 tint of the void (the corridor's brandmark parks behind it), and the
+     lip stays gold — a clipped ring, not a blur. Retires ADR-089's glass on
+     this surface; the arcs' dossier housing (ADR-090) is its own pass. */
+  background: var(--fl-hz-ground);
 }
-
-.fl-hz__bd::after {
+/* ── THE GRID SEAT (ADR-091 rule 2, promoted by ADR-092) ───────────────────
+   The frame's own ladder made visible where the panel lands on it: the rail's
+   rungs as stubs at both band edges, from the lip to the copy edge, and the
+   column split run the full band (`.fl-split` above). Both are lines the
+   panel already sits on — the seat adds no structure, it shows the structure
+   that is there. ⚠ MARGINS, NEVER THE COPY: the first cut striped vertical
+   rules through the brief and the grader named it on its first pass.
+   ⚠ Drawn on `.fl-case` because `--fl-rail-top` / `--fl-rail-h` are
+   declared here (a token can only be read where it resolves); starts AT the
+   lip via the housing's own inset so a stub is exactly the lip→copy margin;
+   `z-index: 1` seats it over the housing's ground and under every panel. */
+.fl-case::before {
   content: "";
   position: absolute;
-  inset: 0;
+  left: calc(var(--fl-hz-pad) * -1);
+  right: calc(var(--fl-hz-pad) * -1);
+  top: var(--fl-rail-top);
+  height: var(--fl-rail-h);
+  z-index: 1;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(var(--gold-rgb), 0.025) 0 1px,
-    transparent 1px 3px
-  );
-}
-
-/* Same gate as the console's own blur (ADR-056): a backdrop SNAPSHOT is the
-   cost, not the radius, and this one samples a band-wide box. It may not run
-   while the ladder is still travelling. */
-@supports (backdrop-filter: blur(2px)) {
-  .services-stage[data-proof-settled] .fl-hz__bd {
-    -webkit-backdrop-filter: blur(var(--fl-hz-blur));
-    backdrop-filter: blur(var(--fl-hz-blur));
-  }
+  background-image:
+    repeating-linear-gradient(to bottom, var(--fl-hz-rule) 0 1px, transparent 1px calc(100% / 12)),
+    repeating-linear-gradient(to bottom, var(--fl-hz-rule) 0 1px, transparent 1px calc(100% / 12));
+  background-size:
+    var(--fl-hz-pad) 100%,
+    var(--fl-hz-pad) 100%;
+  background-position:
+    left top,
+    right top;
+  background-repeat: no-repeat;
 }
 
 /* ── The head band's rule ──────────────────────────────────────────────
@@ -1343,7 +1353,7 @@
   pointer-events: none;
   font-family: var(--fl-mono);
   font-size: var(--fl-chrome-sm);
-  letter-spacing: 0.18em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--fl-hz-ink);
 }
@@ -1354,7 +1364,7 @@
    floor is 8.5px, under this surface's own control floor. */
 .fl-cell__r {
   font-size: inherit;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-label);
   color: rgba(var(--dawn-rgb), 0.4);
 }
 /* ⚠ IT HANGS OFF `.fl-left`, NOT OFF `.fl-brief`, AND THAT IS NOT A
@@ -1558,6 +1568,14 @@
   background: var(--gold);
   color: var(--gold-contrast);
 }
+/* The dormant diamonds are OUTLINES on the machine — structure, so the seam
+   weight in dawn (ADR-092). `console.css` strokes them `--con-dim`, which
+   `pda.css` aliases onto the map's own line tokens, so this is a selector
+   override rather than a token move (moving `--con-dim` would re-stroke the
+   map). The lit one is knocked out below and wins on specificity. */
+.fl-case .fl-con__stn > i {
+  border-color: var(--fl-hz-seam);
+}
 /* ⚠ THE DIAMOND KNOCKS OUT TOO. `--con-hot` is `#f0c86a` — 1.46:1 on a gold
    plate, i.e. gone — and `--con-mark-glow` is additive, so a halo over gold
    is nothing. Knocked out it is 8.5:1 dark / 8.2:1 light. */
@@ -1618,33 +1636,14 @@
    `ConsoleFrame` and the sheets plates at page scale and have no housing to
    belong to; unscoped, the dawn structure would follow them there and the
    `toBe`-pinned arc markup would start describing a different surface. */
-.fl-case .fl-proof-register__item {
-  border-top-color: var(--fl-hz-rule);
-}
-/* ⚠ THE `:first-child` LIFT COMES DOWN TO THE INTERIOR WEIGHT, AND THE
-   SELECTOR HAS TO STAY (owner, 2026-09-03). ADR-089 lifted this rule to .28
-   — the frame's own weight on a rule INSIDE a region, which is the
-   two-weight law broken in the one box small enough to show it, and at the
-   tall rung it doubled with `.fl-cell--register`'s border one pixel above.
-   ⚠ DELETING IT IS NOT THE FIX, AND THE FIRST CUT OF THIS PASS TRIED: the
-   base sheet's own `.fl-proof-register__item:first-child` (ADR-068, gold
-   .24) is (0,2,0) — the SAME specificity as `.fl-case
-.fl-proof-register__item` — and it is declared ~250 lines LATER, so it
-   wins on source order and the rule came back GOLD. Measured on the live
-   page: `rgba(202, 165, 84, 0.24)` where every other rule in the column read
-   dawn. A scoped override at equal weight is the only thing that reaches it. */
-.fl-case .fl-proof-register__item:first-child {
-  border-top-color: var(--fl-hz-rule);
-}
-.fl-case .fl-proof-register__item:last-child {
-  border-bottom-color: var(--fl-hz-rule);
-}
-.fl-case .fl-dir__list li + li .fl-row {
-  border-top: 1px solid var(--fl-hz-rule);
-}
-.fl-case .fl-split {
-  background: var(--fl-hz-seam);
-}
+/* ADR-089's four `.fl-case`-scoped overrides (the register's hairlines, the
+   directory's row rule, the column split) are GONE: ADR-092 moved the BASE
+   rules to dawn, so there is nothing left to override. The register, the
+   directory and the split are casefile-only leaves — the arcs never mounted
+   them — which is what made collapsing into the base safe where the console's
+   rules (shared) are still reached by selector. The `:first-child` trap that
+   ADR-089 U2 recorded (equal specificity, later source, the rule coming back
+   gold) cannot recur: the base is dawn now. */
 .fl-ret--bl {
   left: 0;
   top: calc(var(--fl-split-end) + var(--fl-x-out));
@@ -1739,20 +1738,22 @@
   /* No gap: the gold full stop is part of the wordmark, not a sibling. */
   gap: 0;
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
-  font-weight: 700;
+  /* ADR-092: the sans display is 500 (the ceiling), sentence case (the strings
+     are authored that way — "Intelligence Map", "Software for Few"), on the
+     display tracking rung, and it carries no glow. The leading rises 1 → 1.05
+     because a sentence has descenders where caps had none. */
+  font-weight: var(--weight-lit);
   /* --fl-display IS this clamp — the shared display step. `.fl-cmp__name`
      rides the same token now so a sheet's category never outranks the
      project name (2026-08-28 U2). */
   font-size: var(--fl-display);
-  letter-spacing: 0.02em;
-  line-height: 1;
-  text-transform: uppercase;
+  letter-spacing: var(--track-display);
+  line-height: 1.05;
   color: var(--dawn);
-  text-shadow: 0 0 9px rgba(var(--dawn-alt-rgb), 0.22);
 }
 .fl-brief__dot {
   color: var(--gold);
-  font-weight: 700;
+  font-weight: var(--weight-lit);
 }
 
 .fl-brief__class {
@@ -1765,7 +1766,7 @@
      relate to a system. */
   font-size: var(--fl-chrome-sm);
   line-height: 1.2;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--fl-ink-dim);
 }
@@ -1906,13 +1907,13 @@
      keeps 4px; it has 60px of slack and does not need the trade. */
   padding: 1px 0;
   overflow: hidden;
-  border-top: 1px solid rgba(var(--gold-rgb), 0.12);
+  border-top: 1px solid var(--fl-hz-rule);
 }
 .fl-proof-register__item:first-child {
-  border-top-color: rgba(var(--gold-rgb), 0.24);
+  border-top-color: var(--fl-hz-rule);
 }
 .fl-proof-register__item:last-child {
-  border-bottom: 1px solid rgba(var(--gold-rgb), 0.12);
+  border-bottom: 1px solid var(--fl-hz-rule);
 }
 
 /* The gutter holds its width whether or not a mark lands in it: a track can
@@ -1967,7 +1968,6 @@
      so the row's height comes off the type rather than the gutter — see the
      item padding and the compact-rung arithmetic below. */
   font-size: var(--fl-chrome-lg);
-  font-weight: 700;
   /* ⚠ AND THE SIZE IS PAID OUT OF THE LEADING, NEVER OUT OF THE BAND. This
      register is 259.6px of a 264px floor at 1920×1080 (`--fl-proof-h`'s
      clamp bottom; the directory beneath it is what set the 300px ceiling and
@@ -1978,8 +1978,11 @@
      nothing below the baseline never needed paragraph leading, which is the
      same finding `.fl-row` already runs at 1.15, one box down the column. */
   line-height: 1.18;
-  letter-spacing: 0.045em;
-  text-transform: uppercase;
+  letter-spacing: var(--track-label);
+  /* ADR-092: sentence case. The claim is mono, but it is CONTENT — a claim
+     about the work — not chrome, and case only ranks if the content does not
+     shout. Its weight came off with it: PT Mono has no 500, and a 700 here
+     was a quarter of the panel's bold on its own. */
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -2208,18 +2211,18 @@
   padding-bottom: 5px;
   font-family: var(--fl-mono);
   font-size: var(--fl-chrome-md);
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.42);
 }
 .fl-dir__head .fl-desig {
   font-size: var(--fl-chrome-md);
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-eyebrow);
   color: rgba(var(--dawn-rgb), 0.42);
 }
 .fl-dir__count {
-  color: var(--gold);
-  font-weight: 700;
+  /* ADR-092: a count is a record, not wayfinding — chrome ink, no weight. */
+  color: var(--fl-hz-ink);
 }
 
 .fl-dir__list {
@@ -2247,7 +2250,7 @@
   }
 }
 .fl-dir__list li + li .fl-row {
-  border-top: 1px dotted rgba(var(--gold-rgb), 0.13);
+  border-top: 1px solid var(--fl-hz-rule);
 }
 
 .fl-row {
@@ -2290,7 +2293,7 @@
   /* Tracking is optically sized: +22 % on the glyph takes a step OFF the
      letterfit, which also keeps the longest pairing (03_AI-FLUENCY-STUDIO/
      beside 500 ADS/MO) off the meta column at 1280. */
-  letter-spacing: 0.05em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.7);
   transition:
@@ -2309,7 +2312,9 @@
 .fl-row__glyph {
   width: 14px;
   height: 10px;
-  border: 1px solid rgba(var(--gold-rgb), 0.55);
+  /* A box drawn around a folder is structure (ADR-092): the seam weight, in
+     dawn. The lit row knocks it out below. */
+  border: 1px solid var(--fl-hz-seam);
 }
 .fl-row__glyph[data-icon="dir"] {
   clip-path: polygon(0 0, 7px 0, 9px 3px, 100% 3px, 100% 100%, 0 100%);
@@ -2329,7 +2334,7 @@
      "label" rank, and the row identity is the rank above them. */
   font-size: var(--fl-chrome-md);
   line-height: 1.15;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-label);
   color: var(--fl-ink-dim);
 }
 
@@ -2337,14 +2342,16 @@
 .fl-row[data-on] {
   background: var(--gold);
   color: var(--gold-contrast, #0a0908);
-  font-weight: 700;
-  box-shadow: 0 0 18px rgba(var(--gold-rgb), 0.22);
+  /* ADR-092: no weight (mono has no 500) and no halo — the inverse-video fill
+     IS the mark; an 18px glow under it was depth the flat law does not have. */
 }
 .fl-row[data-on] .fl-row__meta {
   color: rgba(var(--void-deep-rgb), 0.7);
 }
 .fl-row[data-on] .fl-row__glyph {
-  border-color: var(--void, #0a0908);
+  /* `--gold-contrast`, never `--void`: void is parchment in light, ~1.4:1 on
+     gold, and the sweep's void-on-gold ban did not reach a border-color. */
+  border-color: var(--gold-contrast, #0a0908);
 }
 
 /* ══ Right column ══════════════════════════════════════════════════════ */
@@ -2407,7 +2414,7 @@
   padding-top: 12px;
   font-family: var(--fl-mono);
   font-size: 8.5px;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.35);
 }
@@ -2431,11 +2438,11 @@
   padding: 5px 0;
   font-family: var(--fl-mono);
   font-size: 10px;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--track-label);
 }
 .fl-log__t {
   font-size: 9.5px;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--gold-rgb), 0.65);
 }
@@ -2465,7 +2472,7 @@
   flex: none;
   min-width: 11ch;
   font-size: 9px;
-  letter-spacing: 0.2em;
+  letter-spacing: var(--track-eyebrow);
   color: rgba(var(--gold-rgb), 0.65);
 }
 .fl-register__ld {
@@ -2476,7 +2483,7 @@
 .fl-register__v {
   flex: none;
   font-size: 9.5px;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-label);
   color: rgba(var(--dawn-rgb), 0.72);
 }
 
@@ -2502,7 +2509,7 @@
 .fl-reg__name {
   font-family: var(--fl-mono);
   font-size: 8.5px;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--gold-rgb), 0.7);
 }
@@ -2528,12 +2535,12 @@
   padding: 3px 0;
   font-family: var(--fl-mono);
   font-size: 10.5px;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
 }
 .fl-reg__team {
   color: rgba(var(--dawn-rgb), 0.35);
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-eyebrow);
   font-size: 8.5px;
 }
 .fl-reg__skill {
@@ -2542,9 +2549,9 @@
 .fl-reg__tag {
   padding: 2px 6px;
   font-size: 8.5px;
-  letter-spacing: 0.16em;
-  color: rgba(var(--gold-rgb), 0.8);
-  border: 1px solid rgba(var(--gold-rgb), 0.3);
+  letter-spacing: var(--track-eyebrow);
+  color: var(--fl-hz-ink);
+  border: 1px solid var(--fl-hz-rule);
 }
 
 /* ── THE INTELLIGENCE MAP FIELD (ADR-056 U13 → U17) ───────────────────────
@@ -2621,7 +2628,7 @@
   font-family: var(--fl-mono);
   font-size: 8.5px;
   line-height: 1;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.42);
   transition: color 0.14s ease-out;
@@ -2657,7 +2664,7 @@
   flex: none;
   font-size: 8.5px;
   font-weight: 400;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-label);
   font-variant-numeric: tabular-nums;
   color: rgba(var(--gold-rgb), 0.7);
 }
@@ -2668,7 +2675,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 10.5px;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: var(--gold);
 }
@@ -2682,7 +2689,7 @@
   text-overflow: ellipsis;
   font-style: normal;
   font-size: 8.5px;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   white-space: nowrap;
   color: rgba(var(--dawn-rgb), 0.38);
@@ -2700,7 +2707,7 @@
   font-family: var(--fl-mono);
   font-size: 8.5px;
   line-height: 1;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   white-space: nowrap;
   color: rgba(var(--dawn-rgb), 0.38);
@@ -2714,7 +2721,7 @@
   width: 11px;
   height: 8px;
   flex: none;
-  border: 1px solid rgba(var(--gold-rgb), 0.4);
+  border: 1px solid var(--fl-hz-rule);
 }
 .fl-skills__key-sw[data-fill="build"] {
   background: rgba(var(--gold-rgb), 0.2);
@@ -2724,7 +2731,6 @@
 }
 .fl-skills__key-sw[data-fill="ship"] {
   background: rgba(var(--gold-rgb), 0.62);
-  border-color: rgba(var(--gold-rgb), 0.85);
 }
 .fl-skills__key-sw[data-kind="reach"] {
   background: rgba(var(--gold-rgb), 0.28);
@@ -2778,7 +2784,7 @@
   font-family: var(--fl-mono);
   font-size: 8.5px;
   line-height: 1;
-  letter-spacing: 0.13em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
@@ -2790,7 +2796,7 @@
   font-family: var(--fl-mono);
   font-size: 10px;
   line-height: 1;
-  font-weight: 700;
+  font-weight: var(--weight-text);
   font-variant-numeric: tabular-nums;
   text-align: right;
   padding-left: 6px;
@@ -2802,7 +2808,7 @@
   width: 10px;
   height: 10px;
   justify-self: end;
-  border: 1px solid rgba(var(--gold-rgb), 0.3);
+  border: 1px solid var(--fl-hz-rule);
 }
 .fl-skills__band[data-band="steady"] {
   background: rgba(var(--gold-rgb), 0.2);
@@ -2812,7 +2818,6 @@
 }
 .fl-skills__band[data-band="intensive"] {
   background: rgba(var(--gold-rgb), 0.62);
-  border-color: rgba(var(--gold-rgb), 0.85);
 }
 
 /* ── The tile — one per Skill, persistent across every projection ─────── */
@@ -2826,7 +2831,10 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 1px solid rgba(var(--gold-rgb), 0.4);
+  /* ADR-092: forty-seven gold outlines were the panel's second estate. The
+     outline is the interior rule; the FILL is the data and keeps its ramp;
+     the open tile takes gold (`[data-on]` below). */
+  border: 1px solid var(--fl-hz-rule);
   background: transparent;
   color: rgba(var(--dawn-rgb), 0.82);
   font-family: var(--fl-mono);
@@ -2850,26 +2858,21 @@
 }
 .fl-skills__tile[data-fill="ship"] {
   background: rgba(var(--gold-rgb), 0.62);
-  border-color: rgba(var(--gold-rgb), 0.85);
 }
 /* IN ALLOCATION THE FILL BECOMES CONSUMPTION — the same tiles, re-inked
    from lifecycle to the team's draw band. The crossfade rides the morph
    transition, so the heat map arrives with the flight. */
 .fl-skills[data-proj="allocation"] .fl-skills__tile[data-band="light"] {
   background: transparent;
-  border-color: rgba(var(--gold-rgb), 0.3);
 }
 .fl-skills[data-proj="allocation"] .fl-skills__tile[data-band="steady"] {
   background: rgba(var(--gold-rgb), 0.2);
-  border-color: rgba(var(--gold-rgb), 0.4);
 }
 .fl-skills[data-proj="allocation"] .fl-skills__tile[data-band="deep"] {
   background: rgba(var(--gold-rgb), 0.42);
-  border-color: rgba(var(--gold-rgb), 0.5);
 }
 .fl-skills[data-proj="allocation"] .fl-skills__tile[data-band="intensive"] {
   background: rgba(var(--gold-rgb), 0.62);
-  border-color: rgba(var(--gold-rgb), 0.85);
 }
 .fl-skills__tile:hover,
 .fl-skills__tile[data-lit] {
@@ -2878,8 +2881,11 @@
   z-index: 2;
 }
 .fl-skills__tile[data-on] {
-  border-color: var(--dawn);
-  box-shadow: 0 0 0 1px rgba(var(--dawn-rgb), 0.45);
+  /* The open tile is the one gold OUTLINE in the field (ADR-092): selection
+     is a mark. The ring is a zero-blur shadow — a line, which the gate reads
+     as one, not depth. */
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(var(--gold-rgb), 0.45);
   z-index: 3;
 }
 .fl-skills__tile:focus-visible {
@@ -2898,7 +2904,7 @@
 .fl-skills__sym {
   font-size: 11px;
   line-height: 1;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--track-label);
   margin-top: 3px;
 }
 /* Heat cells are too small for type; the name register and the aria-label
@@ -2953,7 +2959,7 @@
   font-family: var(--fl-mono);
   font-size: 10px;
   line-height: 1;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.8);
   white-space: nowrap;
@@ -2966,7 +2972,7 @@
   font-family: var(--fl-mono);
   font-size: 8.5px;
   line-height: 1.15;
-  letter-spacing: 0.03em;
+  letter-spacing: var(--track-label);
   color: rgba(var(--dawn-rgb), 0.38);
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -3046,7 +3052,7 @@
   font-family: var(--fl-mono);
   font-size: 8.5px;
   line-height: 1;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--gold);
   overflow: hidden;
@@ -3057,7 +3063,7 @@
   font-family: var(--fl-mono);
   font-size: 8.5px;
   line-height: 1;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   white-space: nowrap;
   flex: none;
@@ -3082,7 +3088,7 @@
   font-family: var(--fl-mono);
   font-size: 8.5px;
   line-height: 1;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.38);
   white-space: nowrap;
@@ -3118,20 +3124,14 @@
   /* A bit transparent, not fully: the lattice stays legible behind it, so
      the panel reads as a drawer over the map rather than a new screen. */
   background: rgba(var(--void-deep-rgb), 0.88);
-  border-left: 1px solid rgba(var(--gold-rgb), 0.45);
-  box-shadow: -18px 0 44px rgba(0, 0, 0, 0.45);
+  border-left: 1px solid var(--fl-hz-seam);
   animation: flPanelIn 280ms cubic-bezier(0.16, 1, 0.3, 1);
   /* Same silent-clip contract as every other box here: the panel is the
      stage's height and its copy has to fit, not spill over the tier line. */
   overflow: hidden;
 }
-/* The blur samples the backdrop every frame, so it waits for the settled
-   gate exactly like the other plates' glass (ADR-056 U4). */
-@supports (backdrop-filter: blur(6px)) {
-  .services-stage[data-proof-settled] .fl-skills__panel {
-    backdrop-filter: blur(6px);
-  }
-}
+/* The drawer's own 6px backdrop blur went with the housing's glass (ADR-092):
+   a blur over a 0.88 ground was a second snapshot buying almost nothing. */
 @keyframes flPanelIn {
   from {
     transform: translateX(100%);
@@ -3148,7 +3148,7 @@
   font-family: var(--fl-mono);
   font-size: 8.5px;
   line-height: 1;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
 }
 .fl-skills__panel-engine {
@@ -3179,7 +3179,7 @@
   font-family: var(--fl-mono);
   font-size: 8.5px;
   line-height: 1;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.42);
 }
@@ -3202,7 +3202,7 @@
   font-family: var(--fl-mono);
   font-size: 8.5px;
   line-height: 1;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--gold-rgb), 0.75);
 }
@@ -3247,7 +3247,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: 10.5px;
-  letter-spacing: 0.1em;
+  letter-spacing: var(--track-label);
   color: rgba(var(--dawn-rgb), 0.72);
 }
 .fl-skills__readout-ld {
@@ -3263,7 +3263,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: 8.5px;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--track-eyebrow);
   color: rgba(var(--gold-rgb), 0.8);
 }
 
@@ -3618,7 +3618,7 @@
   background: rgba(var(--void-rgb), 0.88);
   font-family: var(--fl-mono);
   font-size: 10px;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--gold);
   transition: background var(--duration-normal, 120ms) var(--ease-out, ease);
@@ -3630,7 +3630,7 @@
 .fl-shot__bar b {
   margin-left: auto;
   font-weight: 400;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--track-label);
   color: rgba(var(--dawn-rgb), 0.55);
 }
 /* Play triangle, drawn — a media control, not a wayfinding diamond. */
@@ -3760,7 +3760,7 @@
      house floor so a bay's feed line never approaches the effective ~7px
      minPx defect. */
   font-size: max(8.5px, var(--fl-chrome-sm));
-  letter-spacing: 0.22em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   white-space: nowrap;
   color: rgba(var(--dawn-rgb), 0.34);
@@ -3893,7 +3893,7 @@
   font-family: var(--fl-mono);
   font-size: clamp(9px, 1.35cqw, 10.5px);
   line-height: 1.2;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--dawn);
 }
@@ -3916,7 +3916,7 @@
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", sans-serif);
   font-size: max(12px, calc(var(--fl-copy) * 0.84));
   line-height: 1.4;
-  letter-spacing: 0.008em;
+  letter-spacing: var(--track-copy);
   color: rgba(var(--dawn-rgb), 0.82);
 }
 
@@ -4087,7 +4087,7 @@
      house-chrome floor (2026-08-28 U2). */
   font-size: clamp(8.5px, 1.3cqw, 10px);
   line-height: 1;
-  letter-spacing: 0.2em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--w-lbl-ink);
@@ -4992,7 +4992,6 @@
   border: 1px solid var(--w-hair);
   background: var(--w-plate);
   background-image: linear-gradient(var(--w-plate-lift), var(--w-plate-lift));
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
 }
 .fl-wire--heimdall .fl-wire__he-row {
   display: flex;
@@ -5234,8 +5233,8 @@
      is legitimate as a ROLE differentiation, but the label needs to hold
      its floor at 12). */
   font-size: max(12px, var(--fl-chrome-md));
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
@@ -5314,7 +5313,7 @@
   display: block;
   margin-bottom: var(--fl-stat-gap);
   font-family: var(--fl-mono);
-  font-weight: 700;
+  font-weight: var(--weight-text);
   font-size: var(--fl-stat);
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -5674,7 +5673,7 @@
   padding-bottom: 3px;
   font-family: var(--fl-mono);
   font-size: var(--fl-chrome-sm, max(10px, calc(clamp(11px, min(0.86vw, 1.11svh), 12px) / 1.2)));
-  letter-spacing: 0.2em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--fl-ink-dim, rgba(var(--dawn-rgb), 0.4));
 }
@@ -5852,7 +5851,7 @@
   /* On the surface's chrome-sm rung, with the client tabs and designations —
      the kicker is a designation for the column that follows it. */
   font-size: var(--fl-chrome-sm, max(10px, clamp(11px, min(0.86vw, 1.11svh), 12px) / 1.2));
-  letter-spacing: 0.2em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--fl-ink-dim);
 }
@@ -5927,7 +5926,7 @@
      directory rows on the left column. */
   font-size: var(--fl-chrome-md, clamp(11px, min(0.86vw, 1.11svh), 12px));
   line-height: 1.3;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--track-label);
   color: rgba(var(--dawn-rgb), 0.72);
 }
 
@@ -6002,7 +6001,7 @@
 
 .fl-verdict__k {
   font-size: var(--fl-chrome-sm, max(10px, calc(clamp(11px, min(0.86vw, 1.11svh), 12px) / 1.2)));
-  letter-spacing: 0.2em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--fl-ink-dim, rgba(var(--dawn-rgb), 0.4));
 }
@@ -6015,7 +6014,7 @@
   font-family: var(--font-pp-neue-montreal, "PP Neue Montreal", system-ui, sans-serif);
   font-size: var(--fl-copy, calc(clamp(15px, 1.15vw, 18px) * 0.9));
   line-height: 1.4;
-  letter-spacing: 0.008em;
+  letter-spacing: var(--track-copy);
   color: rgba(var(--dawn-rgb), 0.88);
 }
 
@@ -6095,7 +6094,7 @@
      grew, and 0.5px off `.fl-filmmeta__spec` beside it with no relation
      stated. Now `md` (11→12px) beside the spec's `sm` (10→10.83px). */
   font-size: var(--fl-chrome-md);
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-eyebrow);
   color: var(--dawn);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -6104,7 +6103,7 @@
 .fl-filmmeta__spec {
   margin-left: auto;
   font-size: var(--fl-chrome-sm);
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   color: var(--fl-ink-dim);
   white-space: nowrap;
 }
@@ -6161,7 +6160,7 @@
    tracking as `.fl-cmp__kicker` — one chrome voice across the panel. */
 .fl-filmprod__k {
   font-size: var(--fl-chrome-sm);
-  letter-spacing: 0.2em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--fl-ink-dim);
 }
@@ -6197,8 +6196,8 @@
 .fl-filmprod__stage-n {
   display: block;
   font-size: var(--fl-chrome-md);
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--dawn);
 }
@@ -6207,7 +6206,7 @@
   margin-top: 3px;
   font-size: var(--fl-chrome-md);
   line-height: 1.35;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--track-label);
   color: rgba(var(--dawn-rgb), 0.72);
 }
 
@@ -6328,7 +6327,7 @@
 .fl-lightbox__label {
   font-family: var(--fl-mono, var(--font-pt-mono, ui-monospace, monospace));
   font-size: 9.5px;
-  letter-spacing: 0.2em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--dawn-rgb), 0.55);
 }
@@ -6367,7 +6366,7 @@
   border-radius: 0;
   font-family: var(--fl-mono, var(--font-pt-mono, ui-monospace, monospace));
   font-size: 9px;
-  letter-spacing: 0.24em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--gold);
   transition:
@@ -6440,7 +6439,7 @@
 .fl-signal__caption,
 .fl-signal__foot {
   font-family: var(--fl-mono);
-  letter-spacing: 1px;
+  letter-spacing: var(--track-label);
 }
 .fl-signal__stamp {
   font-size: 7.5px;
@@ -6452,7 +6451,7 @@
 }
 .fl-signal__foot {
   font-size: 7px;
-  letter-spacing: 1.5px;
+  letter-spacing: var(--track-eyebrow);
   fill: rgba(var(--dawn-alt-rgb), 0.35);
 }
 .fl-signal__foot--gold {
@@ -6532,16 +6531,20 @@
   }
   /* And the console takes its own frame back — with no housing around it, it
      is the framed object again, glow and scanline included. */
+  /* ⚠ ADR-092: THE FRAME COMES BACK; THE ATMOSPHERE DOES NOT. No bloom
+     (`--con-glow` transparent), no scanline, and the rail's underline is the
+     seam in dawn. `mechanical.mjs --prm` and 390×844 are the only guards on
+     this path — nothing in the suite read it before. */
   .fl-case .fl-con__console {
     --con-ground: var(--con-void);
-    --con-glow: rgba(var(--gold-rgb), 0.05);
+    --con-glow: transparent;
     border-color: var(--con-edge);
   }
-  .fl-case .fl-con__console::after {
-    content: "";
-  }
   .fl-case .fl-con__rail {
-    border-bottom-color: var(--con-hair2);
+    border-bottom-color: var(--fl-hz-seam);
+  }
+  .fl-case::before {
+    content: none;
   }
   /* ⚠ EVERY PART OF THE FLAT-KEY CHANGE COMES BACK HERE, NOT JUST THE FILL.
      This block restores the console's OWN frame, and the inverse-video key
@@ -6554,18 +6557,19 @@
   .fl-case .fl-con__stn {
     margin: 0;
     border: 0;
-    background: linear-gradient(180deg, rgba(var(--dawn-rgb), 0.028), transparent 62%);
+    background: none;
   }
   .fl-case .fl-con__stn[data-on] {
-    background:
-      linear-gradient(180deg, rgba(var(--gold-rgb), 0.14), rgba(var(--gold-rgb), 0.035) 78%),
-      var(--con-void);
+    /* Flat (ADR-089 U2's whisper), never the ramp: filled is the STATE, flat
+       is the LAW, and the two vertical gradients this block restored were the
+       ramps the owner called unacceptable. */
+    background: rgba(var(--gold-rgb), 0.08);
     color: var(--con-txt);
   }
   .fl-case .fl-con__stn[data-on] > i {
     border-color: var(--con-hot);
     background: var(--con-hot);
-    box-shadow: var(--con-mark-glow);
+    box-shadow: none;
   }
   .fl-case .fl-con__stn + .fl-con__stn::before {
     content: "";
@@ -6819,10 +6823,10 @@
     gap: 6px;
     padding: 10px 12px;
     font-size: 9.5px;
-    letter-spacing: 0.1em;
+    letter-spacing: var(--track-label);
   }
   .fl-shot__bar b {
-    letter-spacing: 0.06em;
+    letter-spacing: var(--track-label);
   }
 
   /* ── The new field, unwrapped (ADR-068) ────────────────────────────────
@@ -7006,7 +7010,7 @@
   text-align: left;
   color: var(--imap-mute);
   font: 400 9.5px/1.5 var(--font-mono, monospace);
-  letter-spacing: 0.11em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   cursor: pointer;
   position: relative;
@@ -7062,7 +7066,7 @@
   padding: 0 15px;
   color: var(--imap-faint);
   font: 8.5px/1 var(--font-mono, monospace);
-  letter-spacing: 0.13em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   /* The note yields first: it is the projection caption, and the EXPAND
      control has to stay reachable at every reference width. */
@@ -7083,7 +7087,7 @@
   padding: 9px 15px 8px;
   color: var(--gold);
   font: 400 10px/1.4 var(--font-mono, monospace);
-  letter-spacing: 0.11em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   white-space: nowrap;
   cursor: pointer;
@@ -7122,7 +7126,7 @@
   z-index: 2;
   color: rgba(160, 90, 60, 0.72);
   font: 8.5px/1 var(--font-mono, monospace);
-  letter-spacing: 0.12em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   pointer-events: none;
 }
@@ -7137,7 +7141,7 @@
   border-top: 1px solid var(--imap-line);
   color: var(--imap-faint);
   font: 8.5px/1 var(--font-mono, monospace);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
@@ -7161,7 +7165,7 @@
   font-family: var(--font-mono, monospace);
   font-size: calc(var(--imap-type) * 1px);
   fill: var(--imap-mute);
-  letter-spacing: 0.08em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   user-select: none;
 }
@@ -7459,7 +7463,7 @@
   border: 1px solid var(--gold);
   background: rgba(var(--void-deep-rgb), 0.97);
   font: 8.5px/1.5 var(--font-mono, monospace);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--track-label);
   color: var(--imap-mute);
   text-transform: uppercase;
   pointer-events: none;
@@ -7475,7 +7479,7 @@
   margin: 0 0 2px;
   font: 400 11.5px/1.15 var(--font-mono, monospace);
   color: var(--imap-ink);
-  letter-spacing: 0.03em;
+  letter-spacing: var(--track-label);
 }
 
 .fl-imap__card-sub {
@@ -7619,7 +7623,7 @@
     gap: 10px;
     color: var(--gold);
     font: 9px/1 var(--font-mono, monospace);
-    letter-spacing: 0.12em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--imap-line);
@@ -7633,7 +7637,7 @@
     margin: 0 0 6px;
     color: var(--gold);
     font: 400 10px/1.3 var(--font-mono, monospace);
-    letter-spacing: 0.1em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
   }
 
@@ -7663,7 +7667,7 @@
     font-style: normal;
     color: var(--imap-faint);
     font-size: 9px;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
   }
 
@@ -7671,7 +7675,7 @@
     margin: 16px 0 0;
     color: var(--imap-faint);
     font: 9px/1.5 var(--font-mono, monospace);
-    letter-spacing: 0.06em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
   }
 }
