@@ -52,3 +52,25 @@ export function getClaudeWorkshopContent(options?: ParseOptions): V7Content {
   const tokensPath = join(process.cwd(), "public/prototypes/v7/tokens.css");
   return parseV7Html(htmlPath, tokensPath, options);
 }
+
+/**
+ * The Trinny London pitch variant (ADR-093) — a SECOND fork of the
+ * ADR-053 recipe, on its own prototype.
+ *
+ * ⚠ IT IS A FORK RATHER THAN A SHARED READ OF THE WORKSHOP FILE, and the
+ * reason is dated: this page's hero copy and its proposition stations are
+ * client-specific and land in a later phase. Pointing both routes at one
+ * prototype would make every Trinny copy edit a change to
+ * `/claude-workshop` — silently, since that route's own drift guard only
+ * pins structure. Two files, two guards.
+ *
+ * The path is a string LITERAL inside `join(process.cwd(), …)` exactly as
+ * its two siblings are, so Vercel's file tracer follows it into the
+ * deployment; a composed path traces to nothing and the route 500s in
+ * production while working locally.
+ */
+export function getTrinnyLondonContent(options?: ParseOptions): V7Content {
+  const htmlPath = join(process.cwd(), "public/prototypes/v7/landing-trinny-london.html");
+  const tokensPath = join(process.cwd(), "public/prototypes/v7/tokens.css");
+  return parseV7Html(htmlPath, tokensPath, options);
+}
