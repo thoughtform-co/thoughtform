@@ -485,7 +485,145 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   }
 }
 
-/* ── 8. The interstitial — the page turns to Trinny London ───────────
+/* ── 8. The turn — the parked mark becomes the client's (ADR-095) ─────
+   A TRANSPARENT station over the live corridor canvas, between the last
+   proof card and the interstitial: `100svh` of pin + a runway + `100svh`
+   the interstitial slides over. The route's writer (`useTurnScroll`)
+   reads its rect and drives the particle morph in the canvas, the four
+   products' sweep and the smoke's `data-tl-turn` — every motion is a pure
+   function of that rect. The cover form is `#services`'s (transparent,
+   `content-visibility: visible`) keyed on the SAME exit attribute as the
+   kill — ⚠ but the child rule sets `z-index` ONLY: `home-v2.css` gives
+   `#services > *` a `position: relative` that would un-stick this stage.
+   The inline SVG is the FALLBACK mark: hidden whenever the WebGL mark is
+   parked on stage (`data-services-ambient`), shown on the paths the morph
+   cannot run on (mobile, reduced motion, a GPU the governor refused). */
+html[data-corridor-exit="true"] .tl-root #turn {
+  position: relative;
+  z-index: 6;
+  background-color: transparent;
+  background-image: none;
+  content-visibility: visible;
+}
+
+html[data-corridor-exit="true"] .tl-root #turn > * {
+  z-index: 7;
+}
+
+html[data-services-ambient="true"] .tl-root .tl-turn__mark {
+  visibility: hidden;
+}
+
+.tl-root #turn {
+  --tl-turn-runway: 120svh;
+  position: relative;
+  min-height: 100svh;
+  padding: 56px var(--hud-content-inset);
+  display: grid;
+  align-content: center;
+}
+
+.tl-root .tl-turn__stage {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+}
+
+/* The fallback mark sits where the WebGL mark is welded: centred, and
+   `TURN_MARK_CENTER_Y` of the stage down (the actor's weld offset through
+   the corridor's FOV — `turnClock.ts` derives and the test pins it). In
+   the route's coral, the colour the particles settle on. */
+.tl-root .tl-turn__mark {
+  position: absolute;
+  left: 50%;
+  top: 54.5%;
+  width: min(45svh, 45vw);
+  height: auto;
+  translate: -50% -50%;
+  color: rgb(var(--tl-brand-rgb));
+}
+
+.tl-root .tl-turn__field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The products: rest placed by tokens (a corner each, clear of the ring —
+   its on-screen radius is ~23–26 % of the stage height about
+   (50 %, 54.5 %)), pose written per frame by the turn's writer as five
+   vars. `translate`/`rotate`/`scale` are the individual properties, never
+   a `transform` (they compose; a transform would fight the channel). */
+.tl-root .tl-turn__product {
+  position: absolute;
+  display: block;
+  height: auto;
+  left: var(--tm-rest-x);
+  top: var(--tm-rest-y);
+  translate: var(--tm-dx, 0px) var(--tm-dy, 0px);
+  rotate: calc(var(--tm-rest-r) + var(--tm-dr, 0deg));
+  scale: var(--tm-s, 1);
+  opacity: var(--tm-o, 1);
+  will-change: translate;
+}
+
+.tl-root .tl-turn__product--discovery {
+  --tm-rest-x: 13%;
+  --tm-rest-y: 12%;
+  --tm-rest-r: 7deg;
+  width: clamp(140px, 13vw, 260px);
+}
+
+.tl-root .tl-turn__product--naked {
+  --tm-rest-x: 68%;
+  --tm-rest-y: 10%;
+  --tm-rest-r: -9deg;
+  width: clamp(120px, 11vw, 220px);
+}
+
+.tl-root .tl-turn__product--best {
+  --tm-rest-x: 9%;
+  --tm-rest-y: 52%;
+  --tm-rest-r: -14deg;
+  width: clamp(110px, 10vw, 200px);
+}
+
+.tl-root .tl-turn__product--overnight {
+  --tm-rest-x: 72%;
+  --tm-rest-y: 52%;
+  --tm-rest-r: 12deg;
+  width: clamp(120px, 11vw, 220px);
+}
+
+/* The capable rung — the inverse of the stack's inert rung (section 5).
+   The stage pins; `#trinny` overlaps the turn by a viewport so the coral
+   slab slides over the still-pinned stage and the stage releases exactly
+   when it is covered (the ADR-082 `-120svh` precedent). ⚠ Keyed on the
+   MEDIA rung, never on `data-corridor-exit`: a margin on a transient
+   attribute would shift the document by a viewport when it clears. */
+@media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  .tl-root #turn {
+    height: calc(200svh + var(--tl-turn-runway));
+    min-height: 0;
+    padding: 0;
+    display: block;
+    /* ⚠ `align-content` aligns BLOCK content too (Chrome 123+): the base
+       rule's `center` put the stage a viewport down inside the 320svh
+       station, so it stuck at p ≈ 0.95 instead of 0.45 — the products
+       entered clipped by a stage that had not arrived. Measured, not
+       guessed: stage.top 973px at p 0.6 before this line. */
+    align-content: start;
+  }
+  .tl-root .tl-turn__stage {
+    position: sticky;
+    top: 0;
+  }
+  .tl-root #trinny {
+    margin-top: -100svh;
+  }
+}
+
+/* ── 9. The interstitial — the copy that names the turn ───────────────
    OPAQUE, full-bleed, one viewport. It is the corridor ambient's kill
    edge (`data-corridor-kill` in the markup — the hook fades the canvas
    against ITS top), and the cover rule below promotes the SAME element
@@ -516,50 +654,6 @@ html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
     rgba(var(--tl-brand-rgb), 0.2) 44%,
     rgba(var(--tl-brand-rgb), 0) 76%
   );
-}
-
-.tl-root .tl-inter__field {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-/* The products: their own colour as objects, placed as a loose
-   constellation, each on the house parallax channel at its own speed so
-   the pile has depth. `rotate` composes with the channel's `translate`;
-   never a `transform: translate` here — it doubles the motion. */
-.tl-root .tl-inter__product {
-  position: absolute;
-  height: auto;
-  display: block;
-}
-
-.tl-root .tl-inter__product--naked {
-  left: 60%;
-  top: 10%;
-  width: clamp(120px, 11vw, 220px);
-  rotate: -9deg;
-}
-
-.tl-root .tl-inter__product--overnight {
-  left: 76%;
-  top: 46%;
-  width: clamp(120px, 11vw, 220px);
-  rotate: 12deg;
-}
-
-.tl-root .tl-inter__product--best {
-  left: 5%;
-  top: 50%;
-  width: clamp(110px, 10vw, 200px);
-  rotate: -14deg;
-}
-
-.tl-root .tl-inter__product--discovery {
-  left: 7%;
-  top: 5%;
-  width: clamp(140px, 13vw, 260px);
-  rotate: 7deg;
 }
 
 .tl-root .tl-inter__copy {
@@ -816,21 +910,26 @@ html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
   .tl-root #trinny {
     justify-items: stretch;
   }
-  .tl-root .tl-inter__product--naked {
-    left: 66%;
-    top: 4%;
+  /* The turn, static: the fallback mark centred, the four products at the
+     stage's corners, small enough to clear a phone-width ring. */
+  .tl-root .tl-turn__product {
+    width: clamp(72px, 22vw, 120px);
   }
-  .tl-root .tl-inter__product--overnight {
-    left: 70%;
-    top: 68%;
+  .tl-root .tl-turn__product--discovery {
+    --tm-rest-x: 4%;
+    --tm-rest-y: 8%;
   }
-  .tl-root .tl-inter__product--best {
-    left: 4%;
-    top: 62%;
+  .tl-root .tl-turn__product--naked {
+    --tm-rest-x: 72%;
+    --tm-rest-y: 8%;
   }
-  .tl-root .tl-inter__product--discovery {
-    left: 6%;
-    top: 3%;
+  .tl-root .tl-turn__product--best {
+    --tm-rest-x: 4%;
+    --tm-rest-y: 68%;
+  }
+  .tl-root .tl-turn__product--overnight {
+    --tm-rest-x: 72%;
+    --tm-rest-y: 68%;
   }
   .tl-root .tl-prop__head {
     grid-template-columns: 1fr;
@@ -854,7 +953,12 @@ html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tl-root .tl-inter__product {
-    translate: none !important;
+  /* The writer parks under reduced motion; this is the belt to its braces —
+     a product rests where it is authored, whatever a var says. */
+  .tl-root .tl-turn__product {
+    translate: none;
+    rotate: var(--tm-rest-r);
+    scale: none;
+    opacity: 1;
   }
 }

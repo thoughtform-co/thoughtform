@@ -2,6 +2,8 @@
 
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { brandmarkMorphRef, clearBrandmarkMorph } from "@/lib/brandmark/morphTargetRef";
+import { TURN_CAPABLE_QUERY, trinnyMorphSpec, useTurnScroll } from "./turn/useTurnScroll";
 
 /**
  * TrinnyPortals — the route's own nested root, and the one attribute the
@@ -26,6 +28,16 @@ import { createRoot, type Root } from "react-dom/client";
  * `proofRelease` input rests at 1 with no stage to write it). Removed on
  * unmount so a client-side exit hands `/` its ring back.
  *
+ * AND WHAT IT REGISTERS (ADR-095). In the same layout effect, on the capable
+ * rung only, the client-mark morph spec on `brandmarkMorphRef`: the corridor's
+ * parked mark reads it once at mount and builds Trinny London's wireframe as
+ * its second home; `useTurnScroll` then drives the clock from `#turn`'s rect.
+ * Same timing argument as the attribute — the ref must be set before the
+ * lazy corridor chunk mounts, and a layout effect here lands in the commit
+ * that starts that mount. Cleared on unmount for the same reason the
+ * attribute is removed. Registered only where the writer will run: mobile
+ * and reduced motion would otherwise build a target nothing drives.
+ *
  * The root lifecycle mirrors `ServicesPortal` verbatim — cancel a pending
  * teardown, reuse the root, defer the unmount one macrotask — for the same
  * Strict Mode / Fast Refresh reasons it documents.
@@ -42,10 +54,16 @@ export function TrinnyPortals() {
   useLayoutEffect(() => {
     const html = document.documentElement;
     html.setAttribute(RING_ATTR, "off");
+    if (window.matchMedia(TURN_CAPABLE_QUERY).matches) {
+      brandmarkMorphRef.current = { spec: trinnyMorphSpec(), progress: 0 };
+    }
     return () => {
       html.removeAttribute(RING_ATTR);
+      clearBrandmarkMorph();
     };
   }, []);
+
+  useTurnScroll();
 
   useEffect(() => {
     if (timerRef.current != null) {

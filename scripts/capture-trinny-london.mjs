@@ -127,6 +127,30 @@ if (slots.length > 1) {
   await shoot("10-stack-cover", "the second card arriving over the first");
 }
 
+// The turn (ADR-095): the parked mark re-forming as the client's while the
+// products sweep in. Its clock is a pure function of the station's rect —
+// `p = (vh − top) / (vh + runway)`, runway = height − 2·vh — so each stop is
+// solved for a `p` rather than guessed in pixels. The morph opens at 0.25,
+// settles by 0.80; the products enter over 0.42–0.97; then `#trinny` slides
+// over the still-pinned stage.
+const turnTop = await topOf("turn");
+const turnH = await page.evaluate(
+  () => document.getElementById("turn")?.getBoundingClientRect().height ?? 0
+);
+const runway = Math.max(1, turnH - 2 * h);
+const scrollForP = (p) => Math.round(turnTop + p * (h + runway) - h);
+for (const [p, name, note] of [
+  [0.35, "14-turn-arrive", "the turn — the last card leaving, the first particles in flight"],
+  [0.6, "15-turn-mid", "the turn — the mark in transit, the products sweeping in"],
+  [1.0, "16-turn-landed", "the turn — Trinny London's mark, the products at rest"],
+]) {
+  await rollTo(scrollForP(p));
+  await page.waitForTimeout(600);
+  await shoot(name, note);
+}
+await rollTo(scrollForP(1.0) + Math.round(h * 0.5));
+await shoot("17-turn-cover", "the coral slab sliding over the pinned stage");
+
 // The two static stations reveal on `data-m` (IO + a stagger + ~1s of
 // transition), so they get a longer settle than the React cards, whose
 // entrance rides the stack's own scroll channel.

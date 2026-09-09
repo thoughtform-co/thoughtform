@@ -47,10 +47,18 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(matches).toHaveLength(1);
   });
 
-  it("orders the journey hero → about → corridor → proof → trinny → proposition → contact", () => {
+  it("orders the journey hero → about → corridor → proof → turn → trinny → proposition → contact", () => {
     const body = parsed();
     const order = stationOrder(body);
-    expect(order).toEqual(["hero", "about", "services", "trinny", "proposition", "contact"]);
+    expect(order).toEqual([
+      "hero",
+      "about",
+      "services",
+      "turn",
+      "trinny",
+      "proposition",
+      "contact",
+    ]);
     // The mount is a div, not a section — assert it lands between the bio
     // and services, which is the whole point of the variant.
     const at = (needle: string) => body.indexOf(needle);
@@ -102,21 +110,53 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(body.match(/data-corridor-kill/g) ?? []).toHaveLength(1);
   });
 
-  it("ships the four product cutouts from public/, on the parallax channel, sized", () => {
-    /* CSP is `img-src 'self'`, so the products cannot be Contentful URLs;
-       and ADR-021 bans wall-clock motion on the landing, so the "float" is
-       `data-parallax` (the house channel), never a keyframe. */
+  it("ships the four product cutouts from public/ inside the turn, posed by the writer, sized", () => {
+    /* ADR-095: the products live in `#turn` now. CSP is `img-src 'self'`,
+       so they cannot be Contentful URLs. They carry NO `data-parallax` —
+       that channel derives from the element's live rect (constant inside a
+       pinned stage) and writes `translate`, which the turn's writer owns —
+       and NO `data-m`, which would be a second owner of their opacity. Each
+       carries its `data-tm` index, the writer's key into its pose. */
     const body = parsed();
-    const imgs = body.match(/<img[^>]*class="tl-inter__product[^"]*"[^>]*>/g) ?? [];
+    const turnStart = body.indexOf('id="turn"');
+    const turnEnd = body.indexOf("</section>", turnStart);
+    const turn = body.slice(turnStart, turnEnd);
+    const imgs = turn.match(/<img[^>]*class="tl-turn__product[^"]*"[^>]*>/g) ?? [];
     expect(imgs).toHaveLength(4);
+    const indices = new Set<string>();
     for (const img of imgs) {
       const src = img.match(/src="([^"]+)"/)?.[1] ?? "";
       expect(src).toMatch(/^\/trinny-london\/[a-z-]+\.webp$/);
       expect(existsSync(join(ROOT, "public", src))).toBe(true);
       expect(img).toMatch(/\swidth="\d+"/);
       expect(img).toMatch(/\sheight="\d+"/);
-      expect(img).toMatch(/data-parallax="0\.\d+"/);
+      expect(img).not.toContain("data-parallax");
+      expect(img).not.toContain("data-m=");
+      indices.add(img.match(/data-tm="(\d)"/)?.[1] ?? "");
     }
+    expect([...indices].sort()).toEqual(["0", "1", "2", "3"]);
+    // The interstitial keeps none: the kill edge is a copy slab now.
+    const trinnyStart = body.indexOf('id="trinny"');
+    const trinny = body.slice(trinnyStart, body.indexOf("</section>", trinnyStart));
+    expect(trinny).not.toContain("<img");
+    expect(trinny).not.toContain("tl-inter__product");
+  });
+
+  it("the turn is transparent over the canvas: no kill edge, the proposal's station, one sticky stage", () => {
+    /* The canvas must live THROUGH the turn — the kill stays on `#trinny`
+       (asserted above, count 1). `data-station="proposition"` turns the
+       journey here, with no mark of its own (the roster keeps five rows). */
+    const body = parsed();
+    const turn = body.match(/<section[^>]*\sid="turn"[^>]*>/)?.[0] ?? "";
+    expect(turn).not.toBe("");
+    expect(turn).not.toContain("data-corridor-kill");
+    expect(turn).toContain('data-station="proposition"');
+    expect(body.match(/data-tl-turn-stage/g) ?? []).toHaveLength(1);
+    expect(body.match(/class="tl-turn__mark"/g) ?? []).toHaveLength(1);
+    // Order: the turn sits between the proof and the kill edge.
+    const at = (needle: string) => body.indexOf(needle);
+    expect(at('id="services"')).toBeLessThan(at('id="turn"'));
+    expect(at('id="turn"')).toBeLessThan(at('id="trinny"'));
   });
 
   it("letters the proposal without the Arc's vocabulary or a digit", () => {

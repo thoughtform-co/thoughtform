@@ -161,9 +161,10 @@ test.describe("Trinny London pitch variant", () => {
     const order = await page.evaluate(() =>
       [...document.querySelectorAll("section[id]")].map((s) => s.id)
     );
-    // The parse-level order (ADR-094 added the two stations after the proof;
-    // the cards inside #services are `article`s, not sections).
-    const stations = ["hero", "about", "services", "trinny", "proposition", "contact"];
+    // The parse-level order (ADR-094 added the two stations after the proof,
+    // ADR-095 the turn between them; the cards inside #services are
+    // `article`s, not sections).
+    const stations = ["hero", "about", "services", "turn", "trinny", "proposition", "contact"];
     expect(order.filter((id) => stations.includes(id))).toEqual(stations);
     await expect(page.locator("#home-corridor-mount")).toHaveCount(1);
 
@@ -282,10 +283,66 @@ test.describe("Trinny London pitch variant", () => {
     expect(await slotStates(page)).toEqual(["covered", "covered", "covered", "pinned"]);
     await expect(page.locator(".tl-stack__runway")).toHaveAttribute("data-pc-active", "3");
 
+    /* ADR-095 — THE TURN. A transparent station the canvas lives through:
+       its stage pins, the ambient hold and the exit band stay live, the
+       journey turns to the Proposal, and the route's writer publishes the
+       beat's clock on the station (`data-tl-turn`, a pure function of its
+       rect: `(vh − top) / (vh + runway)`, runway = height − 2·vh). The
+       fallback SVG is hidden while the WebGL mark is parked on stage. */
+    const turn = await page.evaluate(() => {
+      const el = document.getElementById("turn");
+      const r = el?.getBoundingClientRect();
+      return {
+        top: (r?.top ?? 0) + window.scrollY,
+        height: r?.height ?? 0,
+        vh: window.innerHeight,
+        stage: el ? getComputedStyle(el.querySelector("[data-tl-turn-stage]")!).position : null,
+      };
+    });
+    expect(turn.stage).toBe("sticky");
+    const runway = Math.max(1, turn.height - 2 * turn.vh);
+    const scrollForP = (p: number) => Math.round(turn.top + p * (turn.vh + runway) - turn.vh);
+
+    await rollTo(page, scrollForP(0.6));
+    await expect(page.locator("html")).toHaveAttribute("data-services-ambient", "true");
+    await expect(page.locator("html")).toHaveAttribute("data-corridor-exit", "true");
+    const midP = Number(await page.locator("#turn").getAttribute("data-tl-turn"));
+    expect(midP).toBeGreaterThan(0.5);
+    expect(midP).toBeLessThan(0.7);
+    expect(
+      await page.evaluate(
+        () => getComputedStyle(document.querySelector(".tl-turn__mark")!).visibility
+      )
+    ).toBe("hidden");
+    expect(await goldMarks(page)).toEqual(["proposition"]);
+
+    await rollTo(page, scrollForP(1));
+    expect(Number(await page.locator("#turn").getAttribute("data-tl-turn"))).toBeGreaterThanOrEqual(
+      0.98
+    );
+    await expect(page.locator("html")).toHaveAttribute("data-services-ambient", "true");
+    // The four products painted from public/ (CSP is img-src 'self') and at
+    // rest — the writer's pose vars at their settled values.
+    await page.waitForTimeout(800);
+    const products = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLImageElement>(".tl-turn__product")].map((i) => ({
+        painted: i.complete && i.naturalWidth > 0,
+        o: Number(i.style.getPropertyValue("--tm-o")),
+        s: Number(i.style.getPropertyValue("--tm-s")),
+      }))
+    );
+    expect(products).toHaveLength(4);
+    for (const p of products) {
+      expect(p.painted).toBe(true);
+      expect(p.o).toBeGreaterThanOrEqual(0.95);
+      expect(p.s).toBeGreaterThanOrEqual(0.98);
+    }
+
     /* The interstitial is the declared kill edge: once its top has passed
        the viewport top the ambient hold and the exit band are gone — an
        opaque station the hook did not name would have hard-cut the canvas
-       at that edge instead (ADR-030 §6). */
+       at that edge instead (ADR-030 §6). On the capable rung it overlaps
+       the turn by a viewport, so this is also where the stage releases. */
     const trinnyTop = await page.evaluate(
       () => (document.getElementById("trinny")?.getBoundingClientRect().top ?? 0) + window.scrollY
     );
@@ -294,15 +351,7 @@ test.describe("Trinny London pitch variant", () => {
       await page.evaluate(() => document.documentElement.getAttribute("data-corridor-exit"))
     ).toBeNull();
     expect(await goldMarks(page)).toEqual(["proposition"]);
-
-    // The four products painted from public/ (CSP is img-src 'self').
-    await page.waitForTimeout(800);
-    const painted = await page.evaluate(() =>
-      [...document.querySelectorAll<HTMLImageElement>(".tl-inter__product")].map(
-        (i) => i.complete && i.naturalWidth > 0
-      )
-    );
-    expect(painted).toEqual([true, true, true, true]);
+    await expect(page.locator("#trinny .tl-turn__product")).toHaveCount(0);
 
     // The proposal: the head, the three bands, the three kickers.
     await expect(page.locator("#proposition .tl-prop__title")).toHaveText(
