@@ -47,10 +47,10 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(matches).toHaveLength(1);
   });
 
-  it("orders the journey hero → about → corridor → services → contact", () => {
+  it("orders the journey hero → about → corridor → proof → trinny → proposition → contact", () => {
     const body = parsed();
     const order = stationOrder(body);
-    expect(order).toEqual(["hero", "about", "services", "contact"]);
+    expect(order).toEqual(["hero", "about", "services", "trinny", "proposition", "contact"]);
     // The mount is a div, not a section — assert it lands between the bio
     // and services, which is the whole point of the variant.
     const at = (needle: string) => body.indexOf(needle);
@@ -73,8 +73,65 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(parsed()).not.toContain("data-about-root");
   });
 
-  it("keeps the services stage root so the casefile and the ring mount", () => {
-    expect(parsed()).toContain("data-services-root");
+  it("mounts the proof STACK in #services, never the services stage (ADR-094)", () => {
+    /* The station keeps its id — it is the corridor's exit anchor and a
+       manifest row — but its slot is this route's own. `ServicesPortal`
+       returns before `createRoot` without `[data-services-root]`, which is
+       what keeps the casefile, the masthead, the plate cluster and the ring
+       hit-areas off this page; a second slot would mount two stacks. */
+    const body = parsed();
+    expect(body.match(/data-tl-proof-root/g) ?? []).toHaveLength(1);
+    expect(body).not.toContain("data-services-root");
+    expect(body).not.toContain("services-stage-root");
+  });
+
+  it("declares the interstitial as the ambient's kill edge and opens the proposal there", () => {
+    /* `useCorridorExitScroll` resolves the kill target by id and this page
+       has none of the ids it knows below the corridor, so the interstitial
+       DECLARES itself (ADR-094). Both new stations publish `proposition` on
+       the station bus, which is how the Proposal mark lights from the
+       interstitial on. */
+    const body = parsed();
+    const trinny = body.match(/<section[^>]*\sid="trinny"[^>]*>/)?.[0] ?? "";
+    expect(trinny).toContain("data-corridor-kill");
+    expect(trinny).toContain('data-station="proposition"');
+    const prop = body.match(/<section[^>]*\sid="proposition"[^>]*>/)?.[0] ?? "";
+    expect(prop).toContain('data-station="proposition"');
+    // Exactly one kill edge: two would make the hook's read an accident of
+    // document order.
+    expect(body.match(/data-corridor-kill/g) ?? []).toHaveLength(1);
+  });
+
+  it("ships the four product cutouts from public/, on the parallax channel, sized", () => {
+    /* CSP is `img-src 'self'`, so the products cannot be Contentful URLs;
+       and ADR-021 bans wall-clock motion on the landing, so the "float" is
+       `data-parallax` (the house channel), never a keyframe. */
+    const body = parsed();
+    const imgs = body.match(/<img[^>]*class="tl-inter__product[^"]*"[^>]*>/g) ?? [];
+    expect(imgs).toHaveLength(4);
+    for (const img of imgs) {
+      const src = img.match(/src="([^"]+)"/)?.[1] ?? "";
+      expect(src).toMatch(/^\/trinny-london\/[a-z-]+\.webp$/);
+      expect(existsSync(join(ROOT, "public", src))).toBe(true);
+      expect(img).toMatch(/\swidth="\d+"/);
+      expect(img).toMatch(/\sheight="\d+"/);
+      expect(img).toMatch(/data-parallax="0\.\d+"/);
+    }
+  });
+
+  it("letters the proposal without the Arc's vocabulary or a digit", () => {
+    /* The proposal is the offer; the Arc is the approach. The owner asked
+       for them kept apart, and the drawing letters no count — it plots
+       their stack, it does not measure it. */
+    const body = parsed();
+    // From the section's own `<` — slicing at the id would leave the tag's
+    // remaining attributes (its screen label carries an ordinal) in the text.
+    const start = body.lastIndexOf("<section", body.indexOf('id="proposition"'));
+    const end = body.lastIndexOf("<section", body.indexOf('id="contact"'));
+    const prop = body.slice(start, end).replace(/<[^>]+>/g, " ");
+    expect(prop).not.toMatch(/\b(navigate|encode|build)\b/i);
+    expect(prop).not.toMatch(/\d/);
+    expect(prop.toLowerCase()).not.toContain("self-sufficien");
   });
 
   it("ships the wordmark and drops the legacy HUD chrome", () => {

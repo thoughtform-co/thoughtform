@@ -7,6 +7,7 @@ import { getCelestialSlotsCached } from "@/lib/celestial/queries";
 import { extractV7Text, getTrinnyLondonContent } from "@/lib/v7-parse";
 
 import { TRINNY_JOURNEY, TRINNY_NAV_ITEMS } from "./journey";
+import { TrinnyPortals } from "./TrinnyPortals";
 
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
@@ -122,6 +123,10 @@ export default async function TrinnyLondonPage() {
           journey={TRINNY_JOURNEY}
         />
       </div>
+      {/* ADR-094: the proof stack's nested root + the ring opt-out. AFTER
+          the wrapper, so its effects run once the parsed body is committed;
+          a sibling of LandingPage for the same reason ThemeLock is. */}
+      <TrinnyPortals />
     </>
   );
 }

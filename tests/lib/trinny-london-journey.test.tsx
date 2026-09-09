@@ -5,6 +5,7 @@ import {
   buildJourneyRoster,
   journeyPosition,
   journeySector,
+  rosterDirectId,
 } from "@/components/landing/v7/rail-instruments/journeyOrder";
 import { markState } from "@/components/landing/v7/rail-instruments/markState";
 import { useJourneyMarks } from "@/components/landing/v7/rail-instruments/useJourneyMarks";
@@ -20,7 +21,8 @@ import {
 } from "@/app/(marketing)/trinny-london/journey";
 
 /**
- * ADR-093 — the variant's journey clock.
+ * ADR-093 — the variant's journey clock; ADR-094 — its two roster-only
+ * stations.
  *
  * The same invariant `rail-instrument-marks.test.ts` pins for the landing:
  * GOLD IS WAYFINDING, so exactly one mark is lit at any position. What
@@ -29,14 +31,22 @@ import {
  * production mark carries its production position with it and reads
  * `ahead` on a page where its section comes earlier. Nothing throws when
  * that happens; the frame just lies about where the reader is.
+ *
+ * ADR-094 adds the second failure of the same family: a station the
+ * MANIFEST does not know (`#trinny`, `#proposition`) resolves to index 0
+ * through `resolveActiveIdx`, which is the hero — so the HOME mark would
+ * light over the proposal. The roster answers such an id directly.
  */
 
 const ALL_MARKS = [...TRINNY_JOURNEY.marks, ...TRINNY_JOURNEY.exit];
 
 const idxOf = (id: string) => MANIFEST_ENTRIES.findIndex((e) => e.id === id);
 
-const goldAt = (activeIdx: number, proofOwns = false) => {
-  const seat = journeyPosition(TRINNY_JOURNEY, activeIdx, proofOwns);
+/** `stationId` is what the `<html>` bus would carry — the station's own id
+ *  — and is passed for every walk so the direct path is exercised the way
+ *  the hook exercises it. A manifest id passed this way is ignored. */
+const goldAt = (activeIdx: number, proofOwns = false, stationId: string | null = null) => {
+  const seat = journeyPosition(TRINNY_JOURNEY, activeIdx, proofOwns, stationId);
   return ALL_MARKS.filter((m) => markState(m, activeIdx, seat) === "here").map((m) => m.id);
 };
 
@@ -51,6 +61,9 @@ describe("the trinny-london journey roster", () => {
         ).toBeLessThanOrEqual(1);
       }
     }
+    for (const station of ["trinny", "proposition"]) {
+      expect(goldAt(0, false, station).length, station).toBeLessThanOrEqual(1);
+    }
   });
 
   it("runs the journey in THIS page's order, not production's", () => {
@@ -64,8 +77,12 @@ describe("the trinny-london journey roster", () => {
     for (const beat of ["navigate", "encode", "build"]) {
       expect(goldAt(idxOf(beat)), beat).toEqual(["arc"]);
     }
-    expect(goldAt(idxOf("services"), true)).toEqual(["proof"]);
+    /* ADR-094: the stack IS the station, so there is no `proof` row to
+       split into — the Proof mark (id `services`) lights whether or not the
+       offer's release clock happens to read "held". */
+    expect(goldAt(idxOf("services"), true)).toEqual(["services"]);
     expect(goldAt(idxOf("services"), false)).toEqual(["services"]);
+    expect(goldAt(0, false, "proposition")).toEqual(["proposition"]);
     expect(goldAt(idxOf("contact"))).toEqual(["contact"]);
   });
 
@@ -106,12 +123,17 @@ describe("the trinny-london journey roster", () => {
     }
   });
 
-  it("has a glyph for every mark it renders", () => {
+  it("has a glyph for every mark it renders, and draws the Proof as the proof", () => {
     // `MarkRow` looks each up by `glyph ?? id` and renders null on a miss —
     // a silently blank seat in a row whose whole job is to be legible.
     for (const mark of ALL_MARKS) {
       expect(SECTION_GLYPHS[mark.glyph ?? mark.id], `${mark.id} glyph`).toBeDefined();
     }
+    // ADR-094: the station id stays `services` for the clock, the mark is
+    // what the reader finds there.
+    const proof = ALL_MARKS.find((m) => m.id === "services");
+    expect(proof?.name).toBe("Proof");
+    expect(proof?.glyph).toBe("proof");
   });
 
   it("derives a SECTOR readout of five rows that never runs backwards", () => {
@@ -120,8 +142,8 @@ describe("the trinny-london journey roster", () => {
     expect([...TRINNY_JOURNEY.sectorRows]).toEqual([
       "about",
       "arc",
-      "proof",
       "services",
+      "proposition",
       "contact",
     ]);
     const walk: [string, boolean][] = [
@@ -132,11 +154,12 @@ describe("the trinny-london journey roster", () => {
       ["build", false],
       ["services", true],
       ["services", false],
+      ["proposition", false],
       ["contact", false],
     ];
     let last = -1;
     for (const [id, proofOwns] of walk) {
-      const { seat, total } = journeySector(TRINNY_JOURNEY, idxOf(id), proofOwns);
+      const { seat, total } = journeySector(TRINNY_JOURNEY, idxOf(id), proofOwns, id);
       expect(total, id).toBe(5);
       expect(seat, `${id} went backwards`).toBeGreaterThanOrEqual(last);
       expect(seat, `${id} past the last row`).toBeLessThan(total);
@@ -147,8 +170,8 @@ describe("the trinny-london journey roster", () => {
   it("offers only anchors this page actually ships", () => {
     // The parse-time link cleanup cannot reach a React-owned list, so a
     // production nav here would ship #voidwalker and #practice as dead
-    // anchors and count four in a drawer holding two.
-    expect(TRINNY_NAV_ITEMS.map((i) => i.href)).toEqual(["#about", "#services"]);
+    // anchors and count four in a drawer holding three.
+    expect(TRINNY_NAV_ITEMS.map((i) => i.href)).toEqual(["#about", "#services", "#proposition"]);
     for (const item of TRINNY_NAV_ITEMS) {
       expect(TRINNY_JOURNEY_ORDER as readonly string[]).toContain(item.href.slice(1));
     }
@@ -166,6 +189,48 @@ describe("the trinny-london journey roster", () => {
     // `MarkRow` prints it in the lab's explain mode, and an unnamed mark
     // there is a blank seat with nothing to say which one it is.
     expect(() => buildJourneyRoster(["x"], "x", [{ id: "x" }], [])).toThrow(/pass one explicitly/);
+  });
+});
+
+describe("a roster-only station resolves directly (ADR-094)", () => {
+  it("seats the proposal off the bus and never lights the hero for it", () => {
+    /* `resolveActiveIdx` maps an unknown `data-active-station` to index 0.
+       Without the direct path that is the hero's index, and `order[0]` is
+       the hero — so the reader would be told they are at Home while
+       reading the proposal, with nothing throwing. */
+    const at = TRINNY_JOURNEY_ORDER.indexOf("proposition");
+    expect(journeyPosition(TRINNY_JOURNEY, 0, false, "proposition")).toBe(at);
+    expect(goldAt(0, false, "proposition")).toEqual(["proposition"]);
+    expect(goldAt(0, false, "proposition")).not.toContain("hero");
+    // The interstitial publishes the same id, so the mark lights from it on.
+    expect(journeySector(TRINNY_JOURNEY, 0, false, "proposition").seat).toBe(3);
+  });
+
+  it("ignores a manifest station id passed as the bus value", () => {
+    // Known stations keep going through the manifest: that path carries
+    // the corridor's beat granularity and the proof/services split, which
+    // a bare station id cannot.
+    expect(rosterDirectId(TRINNY_JOURNEY, "about")).toBeNull();
+    expect(rosterDirectId(TRINNY_JOURNEY, "services")).toBeNull();
+    expect(journeyPosition(TRINNY_JOURNEY, idxOf("about"), false, "about")).toBe(
+      TRINNY_JOURNEY_ORDER.indexOf("about")
+    );
+    // …and an id the roster does not show resolves to nothing, as before.
+    expect(rosterDirectId(TRINNY_JOURNEY, "voidwalker")).toBeNull();
+    expect(rosterDirectId(TRINNY_JOURNEY, null)).toBeNull();
+  });
+
+  it("leaves every three-argument call byte-identical", () => {
+    for (let i = 0; i < MANIFEST_ENTRIES.length; i += 1) {
+      for (const proofOwns of [false, true]) {
+        expect(journeyPosition(TRINNY_JOURNEY, i, proofOwns)).toBe(
+          journeyPosition(TRINNY_JOURNEY, i, proofOwns, null)
+        );
+        expect(journeySector(TRINNY_JOURNEY, i, proofOwns)).toEqual(
+          journeySector(TRINNY_JOURNEY, i, proofOwns, undefined)
+        );
+      }
+    }
   });
 });
 
@@ -189,6 +254,17 @@ describe("the hook publishes the roster's own SECTOR total", () => {
     const { result } = renderHook(() => useJourneyMarks(true, TRINNY_JOURNEY));
     expect(result.current.sector.total).toBe(5);
     expect(result.current.sector.seat).toBe(0);
+  });
+
+  it("reads a roster-only station straight off the bus", () => {
+    document.documentElement.setAttribute("data-active-station", "proposition");
+    try {
+      const { result } = renderHook(() => useJourneyMarks(true, TRINNY_JOURNEY));
+      expect(result.current.seat).toBe(TRINNY_JOURNEY_ORDER.indexOf("proposition"));
+      expect(result.current.sector.seat).toBe(3);
+    } finally {
+      document.documentElement.removeAttribute("data-active-station");
+    }
   });
 
   it("still publishes production's own total when no roster is given", () => {

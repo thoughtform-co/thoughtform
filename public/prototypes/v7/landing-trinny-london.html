@@ -4261,7 +4261,7 @@ html { scroll-behavior: smooth; }
         <a class="hero__cta__btn hero__cta__btn--primary" href="#home-corridor-mount">
           Begin navigation <span class="hero__cta__arrow" aria-hidden="true">→</span>
         </a>
-        <a class="hero__cta__btn hero__cta__btn--ghost" href="#services">See services</a>
+        <a class="hero__cta__btn hero__cta__btn--ghost" href="#services">See the proof</a>
       </div>
     </div>
 
@@ -5437,10 +5437,115 @@ html { scroll-behavior: smooth; }
        Workshops · Strategy) and the closing funnel CTA that lands
        the user on /contact. The CTA in the Practice copy column
        (`See how we run it`) deep-links here via #execTitle. ===== -->
-  <section class="station station--services" id="services" data-station="services" data-screen-label="08 Services">
-    <div class="station__idx">Services<span class="landmark">Landmark · how we run it</span></div>
+  <!-- ═══════════ 08 PROOF (ADR-094) ═══════════
+       The station keeps production's id: `useCorridorExitScroll` resolves
+       `#services` BY ID as the corridor's exit anchor (the dissipate, the
+       dock and the ambient hold all key to its rect), and it is a manifest
+       row, which is the only way a journey mark lights through
+       `resolveActiveIdx`. What it MOUNTS is this route's own: the four Loop
+       projects as a scroll-stacked pile of cards (`TrinnyPortals` renders
+       `ProofStack` into the slot below). No `data-services-root`, so the
+       casefile, the masthead, the plate cluster and the ring hit-areas never
+       mount; the WebGL ring is opted out on `<html>`. ===== -->
+  <section class="station station--services" id="services" data-station="services" data-screen-label="08 Proof">
+    <div class="station__idx">Proof<span class="landmark">Landmark · what was built at Loop</span></div>
 
-    <div class="services-stage-root" data-services-root></div>
+    <div class="tl-stack" data-tl-proof-root></div>
+  </section>
+
+  <!-- ═══════════ 09 TRINNY LONDON · THE INTERSTITIAL (ADR-094) ═══════════
+       The page turns here: the proof was Loop's, everything after this is
+       Trinny London's. `data-station="proposition"` lights the Proposal mark
+       from this station on. `data-corridor-kill` names it as the first
+       OPAQUE station below the corridor — the ambient canvas fades against
+       ITS top edge (useCorridorExitScroll) and the route's cover rule
+       promotes the same element while the exit band is live
+       (trinny-london.css). The products ride the house parallax channel;
+       never a keyframe (ADR-021: no wall-clock motion on the landing). ===== -->
+  <section class="station tl-inter" id="trinny" data-station="proposition" data-corridor-kill data-screen-label="09 Trinny London">
+    <div class="tl-inter__field" aria-hidden="true">
+      <img class="tl-inter__product tl-inter__product--discovery" src="/trinny-london/discovery-set.webp" alt="" width="318" height="425" loading="lazy" decoding="async" data-parallax="0.04" data-m="fade" />
+      <img class="tl-inter__product tl-inter__product--naked" src="/trinny-london/naked-ambition.webp" alt="" width="229" height="414" loading="lazy" decoding="async" data-parallax="0.07" data-m="fade" />
+      <img class="tl-inter__product tl-inter__product--best" src="/trinny-london/be-your-best.webp" alt="" width="283" height="573" loading="lazy" decoding="async" data-parallax="0.09" data-m="fade" />
+      <img class="tl-inter__product tl-inter__product--overnight" src="/trinny-london/overnight-sensation.webp" alt="" width="230" height="424" loading="lazy" decoding="async" data-parallax="0.05" data-m="fade" />
+    </div>
+    <div class="tl-inter__copy" data-m-group>
+      <p class="tl-inter__eyebrow" data-m="eyebrow">Trinny London · The proposal</p>
+      <h2 class="tl-inter__title" data-m="title">AI-first, inside Trinny London.</h2>
+      <p class="tl-inter__sub" data-m="body">What Loop Earplugs owns now, built for the people who run Trinny London.</p>
+      <a class="tl-inter__cta" href="#proposition" data-m="fade">The configuration <span aria-hidden="true">↓</span></a>
+    </div>
+  </section>
+
+  <!-- ═══════════ 10 THE PROPOSITION (ADR-094) ═══════════
+       Title-left / paragraph-right head, then THEIR configuration plotted:
+       the people, the encoded layer between them, the surfaces they already
+       run. A record of their stack, not a metaphor — no Navigate / Encode /
+       Build labels (the Arc stays the Arc), no digits, no codenames. ===== -->
+  <section class="station tl-prop" id="proposition" data-station="proposition" data-screen-label="10 Proposition">
+    <div class="tl-prop__inner">
+      <header class="tl-prop__head" data-m-group>
+        <div class="tl-prop__lead">
+          <p class="tl-prop__eyebrow" data-m="eyebrow">The proposal</p>
+          <h2 class="tl-prop__title" data-m="title">The Trinny London configuration</h2>
+        </div>
+        <p class="tl-prop__desc" data-m="body">
+          One setup that makes Trinny London AI-first: built inside the tools the team already runs,
+          owned by the people who do the work, and started where the momentum stalled. Each workflow
+          the team adopts becomes an automation; each automation buys the time for the next. Built
+          from first principles and headless, so it depends on no vendor, no single tool and no
+          single person.
+        </p>
+      </header>
+
+      <div class="tl-config" data-m="frame" role="img" aria-label="The Trinny London configuration: the people at the top, the encoded layer between, and the surfaces the team already runs at the bottom, joined by adoption running down and automation running up.">
+        <div class="tl-config__band tl-config__band--people">
+          <p class="tl-config__label">The people</p>
+          <ul class="tl-config__plates">
+            <li class="tl-config__plate">Studio</li>
+            <li class="tl-config__plate">Creative ops</li>
+            <li class="tl-config__plate">Finance</li>
+            <li class="tl-config__plate">The founder's sense-check</li>
+            <li class="tl-config__plate">The customer's voice</li>
+          </ul>
+        </div>
+        <div class="tl-config__wires tl-config__wires--down">
+          <p class="tl-config__label">Adoption ↓</p>
+          <div class="tl-config__run" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="tl-config__note">The team learns on its own work and writes down what good looks like.</p>
+        </div>
+        <div class="tl-config__band tl-config__band--layer">
+          <p class="tl-config__label">The layer</p>
+          <div class="tl-config__layer">
+            <strong>Trinny London's encoded judgment</strong>
+            <span>brand rules</span>
+            <span>the line where AI stops</span>
+            <span>the customer's voice</span>
+            <span>the checks that catch it before the founder does</span>
+          </div>
+        </div>
+        <div class="tl-config__wires tl-config__wires--up">
+          <p class="tl-config__label">Automation ↑</p>
+          <div class="tl-config__run" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="tl-config__note">The layer runs inside the tools they already use, and hands the time back.</p>
+        </div>
+        <div class="tl-config__band tl-config__band--surfaces">
+          <p class="tl-config__label">The surfaces</p>
+          <ul class="tl-config__plates">
+            <li class="tl-config__plate">Claude</li>
+            <li class="tl-config__plate">Monday</li>
+            <li class="tl-config__plate">Figma</li>
+            <li class="tl-config__plate">Shopify</li>
+            <li class="tl-config__plate">Slack</li>
+          </ul>
+        </div>
+        <ul class="tl-config__kickers">
+          <li class="tl-config__kicker">One configuration</li>
+          <li class="tl-config__kicker">The people run it</li>
+          <li class="tl-config__kicker">No vendor in the way</li>
+        </ul>
+      </div>
+    </div>
   </section>
 
   <!-- ═══════════ 06 CONTACT ═══════════ -->

@@ -1,5 +1,5 @@
 /**
- * This route's own journey clock and nav items (ADR-093).
+ * This route's own journey clock and nav items (ADR-093, re-cut by ADR-094).
  *
  * Route-local, beside the parse options, for the same reason those are
  * route-local: the page order IS this file, and a variant that kept its
@@ -18,9 +18,18 @@ import { buildJourneyRoster } from "@/components/landing/v7/rail-instruments/jou
  * below spans them, and `sectorRows` collapses them to one row exactly as
  * `READOUT_SECTIONS` does for production.
  *
- * ⚠ `proof` is here and is NOT a station. The casefile holds the front of
- * the `#services` runway (ADR-056), so one DOM section carries two beats a
- * reader experiences separately — the same split `READOUT_SECTIONS` makes.
+ * ⚠ `services` IS THE PROOF ON THIS PAGE (ADR-094). The station keeps
+ * production's id because it is the corridor's exit anchor
+ * (`useCorridorExitScroll` resolves `#services` by id) and a manifest row,
+ * which is the only way a mark lights through `resolveActiveIdx`; what it
+ * MOUNTS is the four-card proof stack, not the offer, so the mark is named
+ * "Proof" and draws the proof glyph. The ADR-093 `proof` beat entry is gone
+ * with the casefile that owned it.
+ *
+ * ⚠ `proposition` IS A ROSTER-ONLY STATION: the manifest does not know it,
+ * so it resolves DIRECTLY off `data-active-station` (`rosterDirectId`).
+ * Both `#trinny` (the interstitial) and `#proposition` publish it — the
+ * interstitial opens the proposal chapter and has no mark of its own.
  *
  * ⚠ `voidwalker` and `practice` are deliberately ABSENT: this page removes
  * them, and `journeyPosition` returns −1 for a section the page does not
@@ -34,8 +43,8 @@ export const TRINNY_JOURNEY_ORDER = [
   "navigate",
   "encode",
   "build",
-  "proof",
   "services",
+  "proposition",
   "contact",
 ] as const;
 
@@ -53,8 +62,8 @@ export const TRINNY_JOURNEY = buildJourneyRoster(
     // for the same reason: two marks lit at once is the frame lying about
     // where the reader is.
     { id: "arc", range: ["navigate", "build"] },
-    { id: "proof" },
-    { id: "services" },
+    { id: "services", name: "Proof", glyph: "proof" },
+    { id: "proposition", name: "Proposal" },
   ],
   [{ id: "contact" }]
 );
@@ -62,12 +71,15 @@ export const TRINNY_JOURNEY = buildJourneyRoster(
 /**
  * The nav drawer's items, in page order.
  *
- * Two, because two is what this page has to offer: `#voidwalker` and
+ * Three, because three is what this page has to offer: `#voidwalker` and
  * `#practice` are removed here, and production's list would ship them as
  * dead anchors (the parse-time link cleanup cannot reach a React-owned
- * list). About leads because it is the second section.
+ * list). About leads because it is the second section; the proof is the
+ * `#services` station (see the order's note); the proposal is the page's
+ * own last chapter.
  */
 export const TRINNY_NAV_ITEMS: readonly NavItem[] = [
   { num: "01", label: "About", href: "#about" },
-  { num: "02", label: "Services", href: "#services" },
+  { num: "02", label: "Proof", href: "#services" },
+  { num: "03", label: "Proposal", href: "#proposition" },
 ];

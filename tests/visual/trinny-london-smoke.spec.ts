@@ -1,9 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { SERVICES_PROOF_RUNWAY_VH } from "../../components/landing/home-v2/unifiedServicesInstrument";
-
 /**
- * /trinny-london — the light-locked pitch variant (ADR-093).
+ * /trinny-london — the light-locked pitch variant (ADR-093), with the proof
+ * stack, the interstitial and the proposal (ADR-094).
  *
  * Three things this route claims that no other spec can check, because no
  * other route makes them: it is LOCKED to light whatever the visitor
@@ -77,25 +76,26 @@ async function walkToArc(page: Page): Promise<number> {
   );
 }
 
-/** Scroll to a fraction of the CASEFILE's dwell at the front of the services
- *  runway — the services-ring smoke's own helper, same arithmetic. */
-async function scrollCasefileDwell(page: Page, progress: number) {
-  await page.waitForSelector(".home-v2-stage", { timeout: 20_000 });
-  const target = await page.evaluate(
-    ({ p, proofVh }) => {
-      const runway = document.querySelector(".services-stage-root");
-      if (!runway) return null;
-      const rect = runway.getBoundingClientRect();
-      const top = rect.top + window.scrollY;
-      const travel = Math.max(0, rect.height - window.innerHeight);
-      return Math.round(top + Math.min(travel, window.innerHeight * proofVh) * p);
-    },
-    { p: progress, proofVh: SERVICES_PROOF_RUNWAY_VH }
+/** The stack's slots — where each is, and where it pins. Read off the live
+ *  computed style, never a hardcoded pixel count (the stack's CSS owns the
+ *  geometry and the hook reads the same values). */
+const slotGeometry = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>("[data-pc-slot]")].map((el) => {
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      return {
+        top: Math.round(r.top + window.scrollY),
+        pin: Number.parseFloat(cs.top) || 0,
+        position: cs.position,
+      };
+    })
   );
-  expect(target, "the services runway never mounted").not.toBeNull();
-  await page.evaluate((y) => window.scrollTo(0, y!), target);
-  await page.waitForTimeout(600);
-}
+
+const slotStates = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll("[data-pc-slot]")].map((s) => s.getAttribute("data-pc-state"))
+  );
 
 test.describe("Trinny London pitch variant", () => {
   test("ADR-093: the light lock beats a stored dark preference AND ?theme=dark", async ({
@@ -161,22 +161,18 @@ test.describe("Trinny London pitch variant", () => {
     const order = await page.evaluate(() =>
       [...document.querySelectorAll("section[id]")].map((s) => s.id)
     );
-    // `svc-casefile-proof` is the casefile's own section, mounted by React
-    // inside #services — the parse-level order is the four below.
-    expect(order.filter((id) => ["hero", "about", "services", "contact"].includes(id))).toEqual([
-      "hero",
-      "about",
-      "services",
-      "contact",
-    ]);
+    // The parse-level order (ADR-094 added the two stations after the proof;
+    // the cards inside #services are `article`s, not sections).
+    const stations = ["hero", "about", "services", "trinny", "proposition", "contact"];
+    expect(order.filter((id) => stations.includes(id))).toEqual(stations);
     await expect(page.locator("#home-corridor-mount")).toHaveCount(1);
 
     // The nav items are a prop on this route (ADR-093): production's list is
     // hardcoded in React, so the parse-time link cleanup cannot reach it and
     // this page would ship two dead anchors in a drawer counting four.
     const links = await page.locator(".hud__nav__inline__link").allTextContents();
-    expect(links).toEqual(["About", "Services"]);
-    await expect(page.locator(".hud__nav__list__head span").last()).toHaveText("02");
+    expect(links).toEqual(["About", "Proof", "Proposal"]);
+    await expect(page.locator(".hud__nav__list__head span").last()).toHaveText("03");
     for (const dead of ["#voidwalker", "#practice", "#continuum"]) {
       await expect(page.locator(`a[href="${dead}"]`)).toHaveCount(0);
     }
@@ -194,7 +190,9 @@ test.describe("Trinny London pitch variant", () => {
         (m) => m.dataset.mark ?? ""
       )
     );
-    expect(marks).toEqual(["hero", "about", "thesis", "arc", "proof", "services"]);
+    // ADR-094: the Proof mark keeps the `services` id (the station's, for
+    // the clock) and the proposal is a roster-only station.
+    expect(marks).toEqual(["hero", "about", "thesis", "arc", "services", "proposition"]);
 
     // ⚠ The SECTOR denominator is this page's five, not production's seven.
     // It shipped as 07 once: the hook seeded its state with the production
@@ -240,14 +238,78 @@ test.describe("Trinny London pitch variant", () => {
     expect(aboutState).toBe("passed");
   });
 
-  test("ADR-056: the casefile arrives on the services dwell", async ({ page }) => {
+  test("ADR-094: the proof stacks in #services, and the interstitial ends the ambient", async ({
+    page,
+  }) => {
     await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
-    await scrollCasefileDwell(page, 0.35);
+    await page.waitForSelector("[data-pc-slot]", { timeout: 20_000 });
 
-    await expect(page.locator(".services-stage")).toHaveAttribute("data-proof-live", "1");
-    await expect(page.locator(".fl-case")).toBeVisible();
-    expect(await goldMarks(page)).toEqual(["proof"]);
+    /* The station keeps its id but mounts THIS route's slot, so nothing of
+       the offer mounts — and the WebGL ring is opted out on `<html>` before
+       the corridor chunk can read it (its entrance clock rests at "go"). */
+    await expect(page.locator("html")).toHaveAttribute("data-services-ring", "off");
+    await expect(page.locator(".fl-case")).toHaveCount(0);
+    await expect(page.locator(".services-stage")).toHaveCount(0);
+    await expect(page.locator(".svc-ring-hits__hit")).toHaveCount(0);
+    await expect(page.locator("[data-pc-slot]")).toHaveCount(4);
+
+    /* ⚠ GEOMETRY IS READ AT THE STACK, NOT FROM THE TOP OF THE PAGE. The
+       corridor's lazy content inflates the document under the scroll
+       (mobile-sections' own law), so slot tops read on arrival land short
+       once the reader is actually there. Roll to the station first. */
+    await rollTo(
+      page,
+      await page.evaluate(
+        () =>
+          (document.getElementById("services")?.getBoundingClientRect().top ?? 0) + window.scrollY
+      )
+    );
+    // Desktop: every slot resolves sticky, or the hook parks the whole pile.
+    const slots = await slotGeometry(page);
+    for (const s of slots) expect(s.position).toBe("sticky");
+    // …and the first pin clears the frame's top-left journey row.
+    expect(slots[0].pin).toBeGreaterThanOrEqual(64);
+
+    // Card 1 pinned: the pile's front, the Proof mark, the exit band live.
+    await rollTo(page, slots[0].top - slots[0].pin + 40);
+    expect(await slotStates(page)).toEqual(["pinned", "incoming", "incoming", "incoming"]);
+    expect(await goldMarks(page)).toEqual(["services"]);
+    await expect(page.locator("html")).toHaveAttribute("data-corridor-exit", "true");
+
+    // Card 4 pinned: everything above it covered, the runway's index at the end.
+    await rollTo(page, slots[3].top - slots[3].pin + 40);
+    expect(await slotStates(page)).toEqual(["covered", "covered", "covered", "pinned"]);
+    await expect(page.locator(".tl-stack__runway")).toHaveAttribute("data-pc-active", "3");
+
+    /* The interstitial is the declared kill edge: once its top has passed
+       the viewport top the ambient hold and the exit band are gone — an
+       opaque station the hook did not name would have hard-cut the canvas
+       at that edge instead (ADR-030 §6). */
+    const trinnyTop = await page.evaluate(
+      () => (document.getElementById("trinny")?.getBoundingClientRect().top ?? 0) + window.scrollY
+    );
+    await rollTo(page, trinnyTop + 40);
+    expect(
+      await page.evaluate(() => document.documentElement.getAttribute("data-corridor-exit"))
+    ).toBeNull();
+    expect(await goldMarks(page)).toEqual(["proposition"]);
+
+    // The four products painted from public/ (CSP is img-src 'self').
+    await page.waitForTimeout(800);
+    const painted = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLImageElement>(".tl-inter__product")].map(
+        (i) => i.complete && i.naturalWidth > 0
+      )
+    );
+    expect(painted).toEqual([true, true, true, true]);
+
+    // The proposal: the head, the three bands, the three kickers.
+    await expect(page.locator("#proposition .tl-prop__title")).toHaveText(
+      "The Trinny London configuration"
+    );
+    await expect(page.locator("#proposition .tl-config__band")).toHaveCount(3);
+    await expect(page.locator("#proposition .tl-config__kicker")).toHaveCount(3);
   });
 
   test("ADR-053 invariant: the entry hold never covers the bio", async ({ page }) => {

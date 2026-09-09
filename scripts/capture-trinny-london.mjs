@@ -40,9 +40,7 @@ const readState = () =>
     y: Math.round(window.scrollY),
     station: document.documentElement.getAttribute("data-active-station"),
     phase: document.documentElement.getAttribute("data-corridor-phase"),
-    gold: [
-      ...document.querySelectorAll(".rin-cl--journey .rin-mark, .rin-settings .rin-mark"),
-    ]
+    gold: [...document.querySelectorAll(".rin-cl--journey .rin-mark, .rin-settings .rin-mark")]
       .filter((m) => m.dataset.state === "here")
       .map((m) => m.dataset.mark)
       .join(","),
@@ -106,28 +104,41 @@ for (const [frac, name, note] of [
   await shoot(name, note);
 }
 
-// The casefile's dwell at the front of the services runway.
-const runway = await page.evaluate(() => {
-  const el = document.querySelector(".services-stage-root");
-  if (!el) return null;
-  const r = el.getBoundingClientRect();
-  return { top: Math.round(r.top + window.scrollY), travel: Math.round(r.height - innerHeight) };
-});
-if (runway) {
-  const proof = Math.min(runway.travel, Math.round(h * 3.2));
-  for (const [p, name, note] of [
-    [0.12, "08-proof-row1", "the casefile, row 1 — the Intelligence Map"],
-    [0.4, "09-proof-row3", "the casefile, row 3 — the Studio sheets"],
-  ]) {
-    await rollTo(runway.top + Math.round(proof * p));
-    await shoot(name, note);
-  }
-  await rollTo(runway.top + proof + Math.round((runway.travel - proof) * 0.55));
-  await shoot("10-ring", "the services card ring, behind the casefile");
+// The proof stack (ADR-094): each card pinned in turn, then the pile mid-cover
+// — the recession is what the stills have to show. Positions are read off
+// the slots' own computed pin offsets, never a hardcoded pixel count.
+const slots = await page.evaluate(() =>
+  [...document.querySelectorAll("[data-pc-slot]")].map((el) => {
+    const r = el.getBoundingClientRect();
+    return {
+      top: Math.round(r.top + window.scrollY),
+      pin: Number.parseFloat(getComputedStyle(el).top) || 0,
+    };
+  })
+);
+await rollTo((await topOf("services")) + 120);
+await shoot("08-proof-arrive", "the first card arriving on the dissipate");
+for (let i = 0; i < slots.length; i++) {
+  await rollTo(slots[i].top - slots[i].pin + 40);
+  await shoot(`09-card${i + 1}`, `the proof stack — card ${i + 1} pinned`);
+}
+if (slots.length > 1) {
+  await rollTo(slots[1].top - Math.round(h * 0.55));
+  await shoot("10-stack-cover", "the second card arriving over the first");
 }
 
+// The two static stations reveal on `data-m` (IO + a stagger + ~1s of
+// transition), so they get a longer settle than the React cards, whose
+// entrance rides the stack's own scroll channel.
+await rollTo(await topOf("trinny"));
+await page.waitForTimeout(1500);
+await shoot("11-trinny", "the interstitial — the ambient must be dead against its top");
+await rollTo(await topOf("proposition"));
+await page.waitForTimeout(1500);
+await shoot("12-proposition", "the proposal — the configuration drawing");
+
 await rollTo(await topOf("contact"));
-await shoot("11-contact", "the exit");
+await shoot("13-contact", "the exit");
 
 console.log(`\nwrote ${outDir}\n`);
 await browser.close();
