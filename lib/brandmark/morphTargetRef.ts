@@ -55,10 +55,15 @@ export interface BrandmarkMorphState {
   spec: BrandmarkMorphSpec | null;
   /** 0 → 1, the eased morph clock. Meaningless without a spec. */
   progress: number;
+  /** 0 → 1, how far the mark is put AWAY. The registering route raises this
+   *  when the beat has moved on from the mark and something else needs the
+   *  centre — copy over it, say. It multiplies the mark's opacity, so 1 is
+   *  invisible and 0 is untouched; a route that only morphs never sets it. */
+  veil: number;
 }
 
 export const brandmarkMorphRef: { current: BrandmarkMorphState } = {
-  current: { spec: null, progress: 0 },
+  current: { spec: null, progress: 0, veil: 0 },
 };
 
 /** The morph clock as every consumer should read it: 0 whenever nothing is
@@ -68,7 +73,13 @@ export function readBrandmarkMorph(): number {
   return c.spec ? c.progress : 0;
 }
 
+/** The mark's veil, read the same way: 0 (untouched) without a spec. */
+export function readBrandmarkVeil(): number {
+  const c = brandmarkMorphRef.current;
+  return c.spec ? c.veil : 0;
+}
+
 /** Reset to the unregistered state (a route's cleanup). */
 export function clearBrandmarkMorph(): void {
-  brandmarkMorphRef.current = { spec: null, progress: 0 };
+  brandmarkMorphRef.current = { spec: null, progress: 0, veil: 0 };
 }

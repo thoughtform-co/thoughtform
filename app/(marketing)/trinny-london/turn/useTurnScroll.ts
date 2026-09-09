@@ -1,32 +1,46 @@
 /**
  * useTurnScroll — the turn's ONE writer (ADR-095).
  *
- * Reads `#turn`'s rect once per scroll frame and writes three things from
+ * Reads `#turn`'s rect once per scroll frame and drives the whole beat from
  * it, all pure functions of that rect (`turnClock.ts`):
- *   - `brandmarkMorphRef.current.progress` — the particle morph clock the
- *     corridor's parked mark and the armillary read per frame;
- *   - `--tl-turn` / `data-tl-turn` on `#turn` — the smoke's observable;
- *   - `--tm-dx/-dy/-dr/-s/-o` on each `[data-tm]` product — its pose on the
- *     arc into rest. The CSS places the product from those five vars with
- *     the `translate` / `rotate` / `scale` properties, so the images never
- *     carry `data-parallax` (that channel writes `translate` too, and is
- *     dead inside a pinned stage anyway — it derives from the element's
- *     live rect, which does not move while the stage is stuck).
+ *   - `brandmarkMorphRef.progress` — the particle morph the corridor's
+ *     parked mark and the armillary read per frame;
+ *   - `brandmarkMorphRef.veil` — the mark put away once the copy owns the
+ *     centre;
+ *   - the ground's wash, through a fragment shader (`turnWash.ts`) or, where
+ *     WebGL is refused, a CSS gradient on the same canvas;
+ *   - `--tm-*` on each `[data-tm]` product — its pose on the arc into rest;
+ *   - the copy's decode (`decodeText.ts`), written straight into each
+ *     `[data-tl-decode]` node, plus `--tl-cta-o` on the block;
+ *   - `--tl-turn` / `data-tl-turn` on `#turn` — the smoke's observable.
  *
- * Passive listeners, one rAF, delta-gated, the `useStackedCardsScroll`
- * pattern. It parks (progress 0, every var cleared) whenever the capable
- * rung does not match or the stage does not compute `sticky` — the route's
- * inert media rung is the CSS's, and the stage's computed position is the
- * truth, read on measure rather than per frame.
+ * Passive listeners, one rAF, delta-gated (the `useStackedCardsScroll`
+ * pattern). It parks — progress 0, veil 0, every var cleared, every line
+ * restored to its true text — whenever the capable rung does not match or
+ * the stage does not compute `sticky`, so the reduced-motion and phone
+ * paths get the composition standing still and readable.
  *
- * THREE-FREE. The morph target's builder is reached through `load()` in
- * the spec below — a dynamic edge, so the route page's static graph stays
- * clear of `three` (landing-import-doctrine).
+ * THREE-FREE. The morph target's builder is reached through `load()` in the
+ * spec below — a dynamic edge, so the route page's static graph stays clear
+ * of `three` (landing-import-doctrine); the wash is raw WebGL and imports
+ * nothing.
  */
 
 import { useEffect } from "react";
 import { brandmarkMorphRef, type BrandmarkMorphSpec } from "@/lib/brandmark/morphTargetRef";
-import { morphOf, productPose, turnProgress, type ProductRest } from "./turnClock";
+import {
+  ctaInOf,
+  ctaInkOf,
+  ctaOutOf,
+  morphOf,
+  productPose,
+  turnProgress,
+  veilOf,
+  washOf,
+  type ProductRest,
+} from "./turnClock";
+import { turnDecodeFrame } from "./turnDecode";
+import { createTurnWash, type TurnWash } from "./turnWash";
 
 /** The inverse of the stack's inert rung — where the beat is live. */
 export const TURN_CAPABLE_QUERY =
@@ -56,9 +70,27 @@ export function useTurnScroll(): void {
   useEffect(() => {
     const turn = document.querySelector<HTMLElement>(".tl-root #turn");
     const stage = turn?.querySelector<HTMLElement>("[data-tl-turn-stage]");
-    if (!turn || !stage) return;
+    const root = document.querySelector<HTMLElement>(".tl-root");
+    if (!turn || !stage || !root) return;
     const products = Array.from(turn.querySelectorAll<HTMLElement>("[data-tm]"));
+    // The LIVE layers only. Each sits absolutely over an in-flow ghost that
+    // holds the true box and the accessible text, so a wider glyph run can
+    // never move the block (the house decode's own markup contract).
+    const lines = Array.from(turn.querySelectorAll<HTMLElement>("[data-tl-decode]"));
+    const canvas = turn.querySelector<HTMLCanvasElement>("[data-tl-turn-wash]");
     const mq = window.matchMedia(TURN_CAPABLE_QUERY);
+
+    // The true strings, read from the server-rendered text once. They are
+    // never re-read: from here the decode owns `textContent`.
+    const truth = lines.map((el) => el.textContent ?? "");
+
+    let wash: TurnWash | null = null;
+    if (canvas) {
+      wash = createTurnWash(canvas, root);
+      // No WebGL (or the context was refused): the same element takes a CSS
+      // gradient instead. A ground with banding beats no ground at all.
+      if (!wash) stage.dataset.tlWash = "css";
+    }
 
     let raf = 0;
     let live = false;
@@ -69,9 +101,16 @@ export function useTurnScroll(): void {
 
     const park = () => {
       brandmarkMorphRef.current.progress = 0;
+      brandmarkMorphRef.current.veil = 0;
       turn.style.removeProperty("--tl-turn");
       turn.removeAttribute("data-tl-turn");
+      stage.style.removeProperty("--tl-wash");
+      stage.style.removeProperty("--tl-cta-o");
       for (const el of products) for (const v of PRODUCT_VARS) el.style.removeProperty(v);
+      lines.forEach((el, i) => {
+        el.textContent = truth[i];
+      });
+      wash?.draw(0);
       lastP = -1;
     };
 
@@ -85,6 +124,7 @@ export function useTurnScroll(): void {
         cx: el.offsetLeft + el.offsetWidth / 2,
         cy: el.offsetTop + el.offsetHeight / 2,
       }));
+      wash?.resize();
     };
 
     const frame = () => {
@@ -97,9 +137,16 @@ export function useTurnScroll(): void {
       const p = turnProgress(rect.top, rect.height, window.innerHeight);
       if (lastP >= 0 && Math.abs(p - lastP) < 0.0005) return;
       lastP = p;
+
       brandmarkMorphRef.current.progress = morphOf(p);
+      brandmarkMorphRef.current.veil = veilOf(p);
       turn.style.setProperty("--tl-turn", p.toFixed(3));
       turn.setAttribute("data-tl-turn", p.toFixed(2));
+
+      const w = washOf(p);
+      stage.style.setProperty("--tl-wash", w.toFixed(3));
+      wash?.draw(w);
+
       for (let i = 0; i < products.length; i++) {
         const el = products[i];
         const k = Number(el.dataset.tm) || 0;
@@ -109,6 +156,14 @@ export function useTurnScroll(): void {
         el.style.setProperty("--tm-dr", `${pose.dr.toFixed(2)}deg`);
         el.style.setProperty("--tm-s", pose.scale.toFixed(3));
         el.style.setProperty("--tm-o", pose.opacity.toFixed(3));
+      }
+
+      const pIn = ctaInOf(p);
+      const pOut = ctaOutOf(p);
+      stage.style.setProperty("--tl-cta-o", ctaInkOf(p).toFixed(3));
+      for (let i = 0; i < lines.length; i++) {
+        const next = turnDecodeFrame(truth, i, pIn, pOut);
+        if (lines[i].textContent !== next) lines[i].textContent = next;
       }
     };
 
@@ -134,6 +189,7 @@ export function useTurnScroll(): void {
       window.removeEventListener("resize", relayout);
       mq.removeEventListener("change", relayout);
       park();
+      wash?.dispose();
     };
   }, []);
 }

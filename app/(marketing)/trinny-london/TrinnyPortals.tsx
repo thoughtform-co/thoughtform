@@ -55,7 +55,7 @@ export function TrinnyPortals() {
     const html = document.documentElement;
     html.setAttribute(RING_ATTR, "off");
     if (window.matchMedia(TURN_CAPABLE_QUERY).matches) {
-      brandmarkMorphRef.current = { spec: trinnyMorphSpec(), progress: 0 };
+      brandmarkMorphRef.current = { spec: trinnyMorphSpec(), progress: 0, veil: 0 };
     }
     return () => {
       html.removeAttribute(RING_ATTR);

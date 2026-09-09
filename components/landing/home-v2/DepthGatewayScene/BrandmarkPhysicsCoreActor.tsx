@@ -56,7 +56,11 @@ import {
   type BrandmarkCoreShape,
 } from "@/components/brand/BrandmarkPhysicsCore";
 import { sampleBrandmark3D } from "@/lib/brandmark/sampleBrandmark3D";
-import { brandmarkMorphRef, readBrandmarkMorph } from "@/lib/brandmark/morphTargetRef";
+import {
+  brandmarkMorphRef,
+  readBrandmarkMorph,
+  readBrandmarkVeil,
+} from "@/lib/brandmark/morphTargetRef";
 import {
   rasterizeBrandmarkToWorldPositions,
   worldPositionsToLocal,
@@ -894,8 +898,14 @@ export function BrandmarkPhysicsCoreActor({
     // is on its way to zero at #voidwalker, which would otherwise fade
     // the mark out during the very gesture that needs it).
     const vwInk = (v: number) => v + (1 - v) * vwRelease;
+    // ADR-095: a route that has morphed the mark may also put it AWAY — its
+    // beat moves on and something else needs the centre. Multiplied in last
+    // so it composes with every envelope above rather than replacing one;
+    // 0 without a registered morph ⇒ identity on every production route.
     opacityRef.current =
-      (armedOnly || inSvgRest ? 0 : parkedOpacity * vwInk(handoffFade)) * vwInk(dimMix);
+      (armedOnly || inSvgRest ? 0 : parkedOpacity * vwInk(handoffFade)) *
+      vwInk(dimMix) *
+      (1 - readBrandmarkVeil());
     morphRef.current = readBrandmarkMorph();
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude — with a
