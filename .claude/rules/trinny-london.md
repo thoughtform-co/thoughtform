@@ -14,7 +14,7 @@ paths:
   - "scripts/capture-trinny-london.mjs"
   - "lib/brandmark/morphTargetRef.ts"
   - "tests/lib/trinny-mark.test.ts"
-description: The Trinny London pitch variant — the light lock, its own journey clock, the proof stack, the interstitial and the proposal
+description: The Trinny London pitch variant — the light lock, its own journey clock, the proof stack, the turn (the mark morphs, the ground warms, the line decodes) and the proposal
 ---
 
 # Rule: /trinny-london
@@ -22,12 +22,12 @@ description: The Trinny London pitch variant — the light lock, its own journey
 A client pitch page built as a HOMEPAGE VARIANT on the ADR-053 recipe, forced
 into light, unlisted. Same `LandingPage`, same corridor, order
 hero → about → the Arc → **the proof STACK (in `#services`) → the turn (the
-parked mark morphs into the client's) → the Trinny interstitial → the
-proposal** → contact.
+parked mark morphs into the client's, the ground warms, the line decodes in
+place) → the proposal** → contact.
 
 **Read first**
 
-- [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock
+- [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock. ⚠ **U1 deleted the interstitial slab**: the ground changes under a shader instead, the line decodes in place over it, and `#proposition` is the kill edge
 - [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed
 - [ADR-093](../../sentinel/decisions/093-trinny-london-light-locked-variant.md) — this route's lock and its journey clock
 - [ADR-053](../../sentinel/decisions/053-workshop-corridor-variant.md) — the recipe it repeats, and its two invariants
@@ -172,11 +172,18 @@ proposal** → contact.
 ## The turn (ADR-095)
 
 - ⚠ **`#turn` IS TRANSPARENT AND CARRIES NO KILL.** The canvas must live through
-  it: its cover form is `#services`'s (transparent, `content-visibility:
-visible`) keyed on `data-corridor-exit`, and `#trinny` keeps the one
-  `data-corridor-kill`. ⚠ **The child cover rule sets `z-index` ONLY** —
-  `home-v2.css` gives `#services > *` a `position: relative` that would un-stick
-  the turn's stage.
+  the whole beat: its cover form is `#services`'s (transparent,
+  `content-visibility: visible`) keyed on `data-corridor-exit`, and
+  **`#proposition`** — the first opaque station below the corridor since U1
+  deleted the interstitial — carries the one `data-corridor-kill`. ⚠ **The child
+  cover rule sets `z-index` ONLY** — `home-v2.css` gives `#services > *` a
+  `position: relative` that would un-stick the turn's stage.
+- ⚠ **NOTHING SLIDES OVER THE TURN (U1, owner: the slab was "an ugly paint that
+  just floats over it").** The station is `100svh + runway` with NO overlap
+  viewport, so the stage releases in the frame its own progress reaches 1, and
+  the beat resolves its own ground instead of being covered. A panel rising
+  over this stage is the thing that was rejected; if a seam ever reappears, the
+  fix is the wash's resolve, not a cover.
 - ⚠ **`align-content` ALIGNS BLOCK CONTENT (Chrome 123+).** The station's base rule
   is a centred grid; the capable rung's `display: block` did not undo
   `align-content: center`, and the stage sat a viewport down inside the 320svh
@@ -218,8 +225,43 @@ visible`) keyed on `data-corridor-exit`, and `#trinny` keeps the one
   monogram. A change to either mark's geometry re-asks whether the split still
   falls between the base's ring and the target's monogram — the test pins the
   band.
-- **Capture stops 14–17 are solved for `p`**, never guessed in pixels; the smoke
-  reads `data-tl-turn` the same way.
+- **THE GROUND IS A SHADER, AND IT HAS NO CLOCK.** `turn/turnWash.ts` is a raw
+  WebGL quad on a canvas in the stage; `draw()` runs from the writer's own rAF
+  when the scroll moved, never a loop (ADR-021, and a shader that idles burns a
+  GPU on a parked page). ⚠ Its colour is READ from `--tl-brand-rgb`, never
+  restated. ⚠ **It is a shader for a reason** — a wide, low-contrast ramp on
+  parchment bands as a CSS gradient, and the ordered dither is what stops it
+  reading as paint; the CSS fallback (`data-tl-wash="css"`, stamped when the
+  context is refused) accepts that banding on purpose.
+- ⚠ **THE WASH STOPS SHORT OF THE HUD.** At full bleed it ran under the right
+  rail and swallowed its telemetry — gold values on coral, BEARING and LOCAL
+  both gone at 1920×1247. The frame is the site's chrome and stays readable:
+  the field is masked out of the outer 7.5 % / 5.5 %. Raising the peak (0.66)
+  without re-checking that mask puts the rail back under it.
+- **THE LINE USES THE HOUSE DECODE, SCRUBBED.** `turn/turnDecode.ts` calls
+  `lib/home-v2/captionScramble.ts` — the site's ONE kernel, never a second
+  implementation. `scrambleFrame` is pure in `t`, so a scroll-derived `t` is
+  reversible for free (the Voidwalker hologram's idiom). ⚠ **`advanceScrambles`
+  may not be used here**: it drops finished jobs, and a dropped job is a latch
+  scrolling back up would find nothing to unwind.
+- ⚠ **EVERY DECODED LINE IS A GHOST PLUS A LIVE LAYER, AND BOTH HALVES ARE
+  LOAD-BEARING.** The kernel keeps the string's LENGTH, but its glyphs are mono
+  caps against a proportional sans, so a decoding line is wider than its resting
+  self and would re-wrap. The ghost is in flow, transparent, carries the true
+  text for the accessibility tree and HOLDS THE BOX; the live layer is absolute
+  over it and is the only thing the writer touches. ⚠ The live layer is a LEAF
+  (the kernel writes `textContent` and would destroy markup inside it), and ⚠
+  **no `data-m` on this copy** — that is the move-and-fade reveal system, which
+  is exactly what the masthead law forbids and this replaces.
+- **`brandmarkMorphRef.veil` puts the mark BACK, not away.** It multiplies the
+  actor's opacity (identity at 0 without a spec) so the line can hold the centre
+  with the mark as a ghost behind it. Never 1: the mark stays on the page.
+- ⚠ **A HARNESS MUST CONVERGE ON THE PUBLISHED CLOCK, NOT ON ONE SOLVED `y`.**
+  The document grows under the scroll as the lazy chunks mount, so a scroll
+  position solved before the roll landed at p 0.64 when 0.84 was asked — the
+  difference between the line lit and the line mid-decode, and the first still
+  showed it. The capture and the smoke both re-solve against `data-tl-turn`
+  until it agrees. Capture stops 14–17 are solved for `p`, never guessed.
 
 ## Verifying
 

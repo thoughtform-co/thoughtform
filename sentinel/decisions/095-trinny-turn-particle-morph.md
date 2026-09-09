@@ -1,9 +1,9 @@
 # ADR-095: The turn — the parked mark morphs into the client's
 
-**Date:** 2026-09-09
+**Date:** 2026-09-09 (U1 the same day)
 **Status:** Proposed — shipped and guarded, pending the owner's live read
 **Surfaces:** `app/(marketing)/trinny-london/**` (`TrinnyPortals.tsx`, `mark/**`, `turn/**`, `trinny-london.css`), `public/prototypes/v7/landing-trinny-london.html`, `public/trinny-london/trinny-london-mark.svg`, `lib/brandmark/morphTargetRef.ts` (new), `components/brand/BrandmarkPhysicsCore/{shaders.ts,BrandmarkPhysicsCore.tsx}`, `components/landing/home-v2/DepthGatewayScene/{BrandmarkPhysicsCoreActor,CorridorArmillary}.tsx`
-**Related:** ADR-094 (the page this turns), ADR-023 (the physics core whose attribute this mixes), ADR-021 (the corridor exit; no wall-clock motion behind readable content), ADR-030 §6 (the seam bug the kill edge answers), ADR-082 (the `-120svh` overlap precedent), ADR-065 (corners — the mark's monogram is square), ADR-092 (the type tokens the sheet stays pinned to)
+**Related:** ADR-044 (the masthead decode this reuses), ADR-094 (the page this turns), ADR-023 (the physics core whose attribute this mixes), ADR-021 (the corridor exit; no wall-clock motion behind readable content), ADR-030 §6 (the seam bug the kill edge answers), ADR-082 (the `-120svh` overlap precedent), ADR-065 (corners — the mark's monogram is square), ADR-092 (the type tokens the sheet stays pinned to)
 
 ## Context
 
@@ -178,15 +178,111 @@ on `/`.
 - **A product start 0.45·stageH out crossed the stage's top edge** on entry;
   0.3 keeps the sweep on stage, faded out, reading as rotating into place.
 
+## Update 1 — the ground changes, and nothing slides over it
+
+**Owner, on the first cut's ending:** the interstitial slab rising over the
+pinned stage is _"an ugly paint that just floats over it"_. What he asked for
+instead, in his own order: as the turn leaves, **the background subtly
+changes** — a shader, not a panel; **the text appears over it at the centre**,
+like a call to action; it appears **"like it doesn't move, but with glitch
+text"**, the way another page on this site already does it; and then, scrolling
+on, **the title glitches away and the next sections appear**.
+
+### The interstitial is deleted, not restyled
+
+`#trinny` is gone as a station. Its copy moved into the turn's own pinned
+stage — the only place a line can appear WITHOUT moving, because the stage is
+already held still — and `data-corridor-kill` moved with it to `#proposition`,
+which is the first opaque station below the corridor now. That was an attribute
+move and nothing else: both sides of the seam are keyed on the same attribute,
+which is exactly why ADR-094 keyed them that way. The station is `100svh +
+runway` (no overlap viewport), so the stage releases in the frame its own
+progress reaches 1.
+
+### The ground: a fragment shader, scroll-driven, no clock
+
+`turn/turnWash.ts` — a raw-WebGL quad on a canvas in the stage. It warms
+Trinny's coral into the FIELD and leaves the centre nearly clean, so the mark
+keeps its bed and the line that follows has one; it swells with the copy and
+**resolves back to parchment as the copy leaves**, which is what removes the
+seam rather than moving it. ⚠ **No `uTime`, no loop** — `draw()` is called from
+the writer's own rAF when the scroll moved (ADR-021's addendum; a shader that
+idles would also burn a GPU on a parked page). ⚠ The colour is read from
+`--tl-brand-rgb` rather than restated. ⚠ **It is a shader for a reason**: a
+wide, low-contrast ramp on parchment BANDS as a CSS gradient, and the ordered
+dither of one 255th is what stops it reading as printed-on. WebGL refused ⇒ the
+writer stamps `data-tl-wash="css"` and the same element paints a gradient.
+
+⚠ **THE WASH STOPS SHORT OF THE HUD.** At full bleed it ran under the right
+rail and swallowed its telemetry — gold values on coral, `BEARING` and `LOCAL`
+both gone at 1920×1247 and legible again the instant the wash resolved. The
+frame is the site's chrome and has to stay readable, so the field is masked out
+of the outer 7.5 % / 5.5 %. The honest reading anyway: the HUD is not part of
+the page the client's colour is taking over.
+
+### The line: the house decode, scrubbed
+
+`turn/turnDecode.ts` reuses **`lib/home-v2/captionScramble.ts`** — the site's
+one decode kernel — rather than inventing a second. `scrambleFrame` is pure in
+elapsed `t` and holds no latch, so a scroll-derived `t` is reversible for free;
+the Voidwalker hologram found that first and this is the same idiom with a
+second window added, so the line types IN over `[0.62, 0.78]`, holds lit, and
+un-types OUT over `[0.90, 1.0]` — at a fixed position, both directions, which
+is the masthead law. ⚠ **`advanceScrambles` may not be used here**: it drops
+finished jobs, and a dropped job is a latch scrolling back up would find
+nothing to unwind.
+
+⚠ **THE REFLOW TRAP, AND WHY THE MARKUP IS TWO LAYERS.** The kernel keeps the
+string's LENGTH (unstarted characters emit a space), but its glyphs are mono
+caps and the copy is set in a proportional sans — so a decoding line is wider
+than its resting self and would re-wrap. Every line is therefore a **ghost plus
+a live layer**: the ghost is in flow, transparent, carries the true text for
+the accessibility tree and HOLDS THE BOX; the live layer is absolute over it
+and is the only thing the writer touches. Both halves are needed — the kernel
+keeps the count, the ghost keeps the geometry — and the smoke asserts the
+ghost's box is identical before and after the whole decode. ⚠ The live layer is
+a LEAF (the kernel writes `textContent` and would destroy markup inside it),
+and ⚠ **no `data-m` anywhere on this copy**: that is the move-and-fade reveal
+system, the exact thing the masthead law forbids and this replaces.
+
+### The mark makes room
+
+`brandmarkMorphRef.veil` (0 → 1, multiplied into the actor's opacity, identity
+at 0 without a spec) puts the mark back to 28 % as the copy takes the centre —
+a ghost behind the line rather than a competitor for it, and never all the way
+out.
+
+### The beat, end to end
+
+`0.20–0.56` the particles re-form · `0.30–0.69` the products sweep in ·
+`0.36–0.68` the ground warms · `0.56–0.72` the mark veils back ·
+`0.62–0.78` the line decodes in · `0.78–0.90` it holds ·
+`0.90–1.00` it decodes out and the ground resolves.
+
+### What the stills caught this time
+
+- **The wash swallowing the rail's telemetry** (above) — invisible to every
+  gate, obvious in one frame.
+- ⚠ **A HARNESS THAT SOLVES ONE `y` LANDS AT THE WRONG BEAT.** The document
+  grows under the scroll as the lazy chunks mount, so a scroll position solved
+  before the roll arrived at **p 0.64 when 0.84 was asked** — the difference
+  between the line lit and the line still mid-decode, which is what the first
+  still actually showed. Both the capture and the smoke now **converge on the
+  clock the writer PUBLISHES** (`data-tl-turn`) instead of trusting one
+  solution. Any harness that targets a scroll-driven beat on this page wants
+  the same loop.
+
 ## Consequences
 
 - `/` and `/claude-workshop` carry three new attributes/uniforms and one new
   varying in the shared program, all identity at 0. The HUD snapshot spec
   passes without `--update-snapshots`; the corridor smoke passes.
-- The interstitial is a copy slab now; the products live in the turn. The
-  parse guard pins: order with `turn`, four `tl-turn__product` in `#turn` with
-  `data-tm` 0–3 and no `data-parallax`/`data-m`, none in `#trinny`, the kill
-  still on `#trinny` alone, `#turn` without it.
+- The interstitial station is DELETED (U1); its copy is the turn's centred
+  line and `#proposition` is the kill edge. The parse guard pins: the order
+  without `trinny`, four `tl-turn__product` in `#turn` with `data-tm` 0-3 and
+  no `data-parallax`/`data-m`, the kill on `#proposition` alone, `#turn`
+  without it, and every decoded line's ghost and live layer carrying the same
+  string.
 - The smoke's stack case gained the turn: stage `sticky`, `data-services-ambient`
   and `data-corridor-exit` live mid-turn, `data-tl-turn` in range, the fallback
   hidden, the Proposal lit, the products painted and settled, then the kill at
@@ -199,9 +295,8 @@ on `/`.
   owner's read.
 - A `/test/trinny-mark` lab (the standalone 3D wireframe particle logo with
   sliders) is designed and not built; tuning today is by capture.
-- The mark's 0.6vh fade against `#trinny` is mostly moot under the overlap —
-  the slab wipes it first. If the wipe should be a dissolve instead, shorten
-  the overlap rather than the fade.
+- The mark's 0.6vh fade now runs against `#proposition`'s top, in the open,
+  with no slab over it — worth a look on the still before it is called done.
 - Phones show the static composition (the inline mark, products at the
   corners); it has not been looked at.
 
