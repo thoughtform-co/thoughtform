@@ -120,12 +120,15 @@ describe("themeBootstrapScript — the pre-paint decision", () => {
     // returns to the pre-ADR-058 dark page, this route included. The lock
     // has to go with it, or the rollback leaves one route stamping an
     // attribute whose cascade is no longer wired.
+    /* ⚠ MATCHED AS A GUARDED EXPRESSION, NOT AS A LINE SHAPE. The first cut
+       looked for the literal `{THEME_TOGGLE && (` — which prettier then
+       collapsed onto one line, so the pin read -1 and failed. The sibling
+       pin in `hero-preload.test.ts` looked for the same literal and had
+       gone VACUOUS the same way, passing on a `gate < 0` short-circuit. */
     const layout = readFileSync(join(ROOT, "app", "layout.tsx"), "utf8");
-    const gate = layout.indexOf("{THEME_TOGGLE && (");
-    const call = layout.indexOf("themeBootstrapScript()");
-    expect(gate).toBeGreaterThan(-1);
-    expect(call).toBeGreaterThan(gate);
-    expect(call).toBeLessThan(layout.indexOf(")}", gate));
+    expect(layout).toMatch(
+      /\{\s*THEME_TOGGLE\s*&&\s*\(?\s*<script[\s\S]{0,240}?themeBootstrapScript\(\)/
+    );
   });
 });
 

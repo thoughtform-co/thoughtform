@@ -1,0 +1,89 @@
+---
+paths:
+  - "app/(marketing)/trinny-london/**"
+  - "public/prototypes/v7/landing-trinny-london.html"
+  - "lib/theme/themeLock.ts"
+  - "lib/theme/themeBootstrap.ts"
+  - "components/landing/v7/ThemeLock.tsx"
+  - "components/landing/v7/rail-instruments/journeyOrder.ts"
+description: The Trinny London pitch variant — the light lock and its own journey clock
+---
+
+# Rule: /trinny-london
+
+A client pitch page built as a HOMEPAGE VARIANT on the ADR-053 recipe, forced
+into light, unlisted. Same `LandingPage`, same corridor, order
+hero → about → the Arc → the proof casefile (+ the ring) → contact.
+
+**Read first**
+
+- [ADR-093](../../sentinel/decisions/093-trinny-london-light-locked-variant.md) — this route
+- [ADR-053](../../sentinel/decisions/053-workshop-corridor-variant.md) — the recipe it repeats, and its two invariants
+- [ADR-058](../../sentinel/decisions/058-light-mode-theme.md) — the theme channel the lock overrides
+- [ADR-059](../../sentinel/decisions/059-rail-instruments.md) — the four-corner scheme and its two clocks
+
+## Contracts
+
+- **Variant-local CSS only.** `trinny-london.css` is scoped to `.tl-root` (or
+  keyed on `<html>`, for chrome the wrapper cannot reach). Never port a rule
+  from it into `landing.css` / `home-v2.css` / `services.css` /
+  `rail-instruments.css` — a shared-sheet edit changes `/` and
+  `/claude-workshop`. ⚠ ADR-053's two rules are DUPLICATED here rather than
+  shared: one rule scoped to both roots is a shared sheet by another name.
+- ⚠ **THE LOCK NEVER WRITES `localStorage`.** `data-theme` is a paint decision;
+  `tf-theme` is the visitor's. A lock that persisted itself would follow the
+  reader back to `/`. It also beats `?theme=dark` — a pitch page has no
+  legitimate dark reading, and the smoke asks for dark to prove it.
+- ⚠ **STAMPING THE ATTRIBUTE IS HALF THE JOB.** `ThemeLock` calls
+  `hydrateFromDom()` immediately after, because the WebGL painters and the
+  services drawer's bake read the STORE, not the attribute
+  ([`services-ring.md`](services-ring.md) records the drawer half). And it is a
+  `useLayoutEffect`: a passive one lands after `HeroThemeGlitch` subscribes, and
+  the notify then reads as a real flip and warms both hero plates (~780 kB) on a
+  page that can never toggle.
+- ⚠ **A ROUTE EARNS ITS `LIGHT_LOCKED_ROUTES` ROW AND ITS `HERO_ROUTES` ROW BY
+  HAND.** Both lists are hand-written; nothing derives them, so nothing else
+  would say a route had changed its theme or its plate. A locked route also
+  needs the rule that hides the switch — a lock without it leaves a control that
+  visibly does nothing.
+- ⚠ **THE ROSTER IS BUILT FROM THE PAGE ORDER, NEVER FROM PRODUCTION CLOCKS.**
+  `markState` compares indices, so a production mark carries its production
+  position: reordering `JOURNEY_MARKS` makes About read `ahead` at the offer and
+  Thesis `passed` inside the bio, with every mark rendering and nothing throwing.
+  `TRINNY_JOURNEY_ORDER` is the one clock; changing the page's sections means
+  editing that array and nothing else.
+- ⚠ **AND THE SECTOR TOTAL IS PART OF THE ROSTER.** It shipped as `01/07` on a
+  five-row page: the hook seeded production's total and its bail-out compared
+  only the POSITION, which at rest on the hero is 0 either way. Any new state on
+  that hook is compared in the same check.
+- **`resolveActiveIdx`'s `preMountStationId` defaults to `hero`** and must stay
+  byte-identical for `/`. On this page the lag station is `about`, because the
+  corridor mount is not a `.station`.
+- **The nav items are a PROP.** They are hardcoded in React, so the parse-time
+  link cleanup cannot reach them; filtering at mount instead would flash the
+  dead links on the hero and change the drawer's count after hydration.
+- **The workshop's guard stays untouched.** `claude-workshop-parse.test.ts`
+  pins its own prototype; this route has `trinny-london-parse.test.ts`. The two
+  HTML files are byte-identical at the fork and will diverge — only the PATH
+  check can tell them apart until then.
+- **The page is unlisted:** `robots: { index: false, follow: false }`, absent
+  from `app/sitemap.ts`. ⚠ The forked prototype under `/prototypes/` deploys and
+  is world-fetchable (robots-disallowed only) — the same exposure class, worth
+  remembering when client copy lands in it.
+
+## Verifying
+
+```bash
+npx vitest run tests/lib/trinny-london-parse.test.ts tests/lib/trinny-london-journey.test.tsx tests/lib/theme-lock.test.tsx
+npx playwright test tests/visual/trinny-london-smoke.spec.ts --project=desktop
+npx playwright test tests/visual/landing-page.spec.ts -g "HUD" --project=desktop   # UNCHANGED
+node scripts/capture-trinny-london.mjs --vp 1920x1247
+```
+
+⚠ The capture is **headed and at the owner's own viewport** — every reference
+viewport in this repo is landscape while he runs a tall window, and headless
+leaves the corridor canvas dead. **Look at the stills**: both defects this
+route found were invisible to a green gate.
+
+**Process:** [sentinel/MAINTENANCE.md](../../sentinel/MAINTENANCE.md) — Cycle B
+when adding a section, Cycle A after fixes.

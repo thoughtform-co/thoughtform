@@ -89,12 +89,19 @@ describe("hero preload", () => {
     // Flipping THEME_TOGGLE off is ADR-058's rollback. It should fall back
     // to the dark plate — not silently drop the hero preload and cost LCP
     // on the only path that still exists.
+    /* ⚠ THIS WENT VACUOUS ONCE AND SAID NOTHING (fixed 2026-09-09, ADR-093).
+       It looked for the literal `{THEME_TOGGLE && (`, and the `gate < 0`
+       arm meant that the day prettier collapsed that gate onto one line the
+       assertion started passing BECAUSE it could no longer find the thing it
+       was reasoning about. The claim is that the call is not inside a
+       THEME_TOGGLE guard, so match the guard as an expression and assert the
+       call is not the script it wraps. */
     const layout = readFileSync(join(ROOT, "app", "layout.tsx"), "utf8");
     expect(layout).toContain("heroPreloadScript()");
-    const gate = layout.indexOf("{THEME_TOGGLE && (");
-    const call = layout.indexOf("heroPreloadScript()");
-    const gateEnd = layout.indexOf(")}", gate);
-    expect(call > gateEnd || gate < 0).toBe(true);
+    const guarded = layout.match(/\{\s*THEME_TOGGLE\s*&&[\s\S]{0,400}?\/>\s*\)?\s*\}/g) ?? [];
+    // The gate must still EXIST — otherwise this is the vacuous read again.
+    expect(guarded.length).toBeGreaterThan(0);
+    for (const block of guarded) expect(block).not.toContain("heroPreloadScript()");
   });
 
   it("leaves no static hero preload behind on either route", () => {
