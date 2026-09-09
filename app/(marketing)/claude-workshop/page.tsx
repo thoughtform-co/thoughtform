@@ -16,6 +16,16 @@ import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 import "./claude-workshop.css";
 // Theme sheet LAST (ADR-058) — see the note in (marketing)/page.tsx.
 import "@/components/landing/v7/theme.css";
+// ⚠ AND THE INSTRUMENTS AFTER IT, exactly as `/` and the arcs route do.
+// This import was MISSING from this route from ADR-059 until 2026-09-09, and
+// the symptom was not "unstyled": `LandingPage` mounts `SettingsCluster` and
+// `RailInstruments` on every route, so with no sheet the cluster fell to
+// `position: static` and rendered in normal flow at the FOOT of the document
+// (measured y 8346 — 8000px below the fold), taking the theme switch with it,
+// while the top-left journey row printed as static inline content. Found by
+// looking at the page while building `/trinny-london`, which is why that
+// route carries the same import (ADR-093).
+import "@/components/landing/v7/rail-instruments/rail-instruments.css";
 
 export const metadata: Metadata = {
   title: "Thoughtform — Claude Workshop",
