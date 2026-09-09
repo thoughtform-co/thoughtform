@@ -63,6 +63,39 @@ export interface ScenePalette {
    * has to survive or the departure animates nothing.
    */
   proofDim: { mark: number; interior: number; surface: number; orbits: number };
+
+  /**
+   * The Build park's two node streams — the green SOURCE lines running in
+   * from the work, and the SURFACE lines running out to what you rent
+   * (`ShellStack`). ADR-058 deferred this painter to Phase 2 and it was
+   * never wired; this is that entry.
+   *
+   * ⚠ THE SURFACE SIDE IS WHY THIS EXISTS. It was painted `COLOR_DAWN`
+   * (0xebe3d6) in both modes, and the light ground is 0xece3d6 — ONE UNIT
+   * APART IN RED, about 1.00:1. An emitter that emits the ground colour
+   * emits nothing, so the whole right-hand fan vanished on parchment
+   * while its DOM chips (which flip through `--dawn-rgb`) read fine. The
+   * light values here are the theme's OWN flipped tokens rather than new
+   * colours: `--atreides-light` and `--dawn` as light mode already
+   * defines them, so the lines and the chips they run to are one family.
+   *
+   * ⚠ `tailToGround` is the second half of the same bug. The wrap tail
+   * fades by MULTIPLYING the colour toward black, which is the ground in
+   * dark and the maximum-contrast ink in light — so on parchment the
+   * absorbed tail was the STRONGEST part of the line and the straight run
+   * to the chip was the invisible part, exactly inverted. Light lerps
+   * toward the ground instead. Dark keeps the multiply, byte-identical.
+   *
+   * ⚠ `additivePips` likewise: the surface tip's diamond outline is
+   * additively blended, and additive can only LIGHTEN — it cannot draw
+   * ink on parchment at any alpha.
+   */
+  stream: {
+    source: number;
+    surface: number;
+    tailToGround: boolean;
+    additivePips: boolean;
+  };
 }
 
 export const DARK_SCENE: ScenePalette = {
@@ -71,6 +104,9 @@ export const DARK_SCENE: ScenePalette = {
   // `orbits` is 0, i.e. NO extra dim: dark leaves the structural rings on
   // `orbitReleaseLead` alone, exactly as ADR-056 tuned them.
   proofDim: { mark: 0.62, interior: 0.7, surface: 0.55, orbits: 0 },
+  // `COLOR_SOURCES` / `COLOR_SURFACES` from `artifactGeom`, verbatim, and
+  // the two behaviours the painter has always had — dark is untouched.
+  stream: { source: 0x5b7a4e, surface: 0xebe3d6, tailToGround: false, additivePips: true },
 };
 
 export const LIGHT_SCENE: ScenePalette = {
@@ -98,6 +134,13 @@ export const LIGHT_SCENE: ScenePalette = {
   // clipping. The MARK keeps a whisper (1.0 ⇒ ~6 %): ADR-056's iris has
   // to have something left to reveal on the way out.
   proofDim: { mark: 1.0, interior: 1.05, surface: 1.06, orbits: 1.06 },
+  // The theme's own light steps, not new colours: `--atreides-light`
+  // (#4a6238, the value the source chips already flip to) and `--dawn`
+  // (#110f09, the value the surface chips already flip to). Rendered
+  // through their materials' opacity on this premultiplied-alpha canvas
+  // the two land within a few points of each other — which is the
+  // harmonisation: one weight, two hues, the same rank as in dark.
+  stream: { source: 0x4a6238, surface: 0x110f09, tailToGround: true, additivePips: false },
 };
 
 /** Resolve the scene palette for a mode (defaults to the live theme). */

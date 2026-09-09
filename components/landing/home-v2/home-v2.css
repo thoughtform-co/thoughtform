@@ -2971,6 +2971,24 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
   font-weight: 700;
 }
 
+/* The two column headers' ink (ADR-058 Phase 2). They were painted from
+   an INLINE style carrying `artifactGeom`'s dark-only `*_CSS` role tier,
+   so in light "INTELLIGENCE" was #ebe3d6 on a #ece3d6 page — the same
+   dawn-is-the-ground failure as the surface streams beside it, and the
+   reason only its lowercase sub-line survived the flip. These are the
+   token pairs the rest of the column already rides: byte-identical in
+   dark (`--atreides-light` #5b7a4e, `--dawn` #ebe3d6), ink-side in
+   light. */
+.home-v2-stack-label--sources .home-v2-stack-label__num,
+.home-v2-stack-label--sources .home-v2-stack-label__name {
+  color: var(--atreides-light);
+}
+
+.home-v2-stack-label--surfaces .home-v2-stack-label__num,
+.home-v2-stack-label--surfaces .home-v2-stack-label__name {
+  color: var(--dawn);
+}
+
 .home-v2-stack-label__sub {
   font-family: var(--font-pt-mono, ui-monospace, monospace);
   font-size: 10px;

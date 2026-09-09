@@ -71,12 +71,7 @@
 import { extend, useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import {
-  COLOR_SOURCES,
-  COLOR_SURFACES,
-  PYLON_CAP_SIZE,
-  lerp,
-} from "@/components/landing/intelligence-artifact/artifactGeom";
+import { PYLON_CAP_SIZE, lerp } from "@/components/landing/intelligence-artifact/artifactGeom";
 import {
   buildDiamondGeometry,
   buildFilledDiamondGeometry,
@@ -85,6 +80,9 @@ import {
   makePointsMaterial,
 } from "@/components/landing/intelligence-artifact/artifactPrimitives";
 import { band, epilogueBand } from "@/lib/home-v2/epilogueTimeline";
+import { resolveScenePalette } from "@/lib/theme/palette";
+import { readThemeMode, type ThemeMode } from "@/lib/theme/themeModeRef";
+import { useThemeStore } from "@/lib/stores/themeStore";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { arcCasesLevelRef } from "@/lib/arc-cases/arcCasesLevelRef";
 import { CARD_EDGE_INSET } from "@/lib/arc-cases/cardLayout";
@@ -243,12 +241,69 @@ function qBezier(p0: THREE.Vector3, c: THREE.Vector3, p1: THREE.Vector3, t: numb
   );
 }
 
+/**
+ * What the two node streams are painted with, per theme (ADR-058 Phase 2).
+ *
+ * Read from `resolveScenePalette().stream` rather than held as module
+ * constants: the surface side used to be `COLOR_DAWN` in BOTH modes, and
+ * dawn IS the light ground — an emitter emitting the ground colour emits
+ * nothing, so the whole right-hand fan disappeared on parchment while its
+ * DOM chips (which flip through `--dawn-rgb`) read fine.
+ */
+interface StreamPaint {
+  source: number;
+  surface: number;
+  /** Fade the wrap tail toward the GROUND rather than toward black. */
+  tailToGround: boolean;
+  ground: number;
+}
+
+function resolveStreamPaint(mode: ThemeMode): StreamPaint {
+  const scene = resolveScenePalette(mode);
+  return {
+    source: scene.stream.source,
+    surface: scene.stream.surface,
+    tailToGround: scene.stream.tailToGround,
+    ground: scene.ground,
+  };
+}
+
+const FADE_GROUND = new THREE.Color();
+
+/**
+ * Push one faded vertex colour.
+ *
+ * ⚠ THE FADE'S TARGET IS THE GROUND, NOT BLACK. Multiplying the colour by
+ * `fade` walks it toward black, which IS the ground in dark — but on
+ * parchment black is maximum contrast, so the "absorbed" wrap tail came
+ * out as the STRONGEST part of the line and the straight run to the chip
+ * as the invisible one, exactly inverted. Dark keeps the multiply, so its
+ * output is byte-identical; light lerps toward the page instead.
+ */
+function pushFaded(colors: number[], base: THREE.Color, fade: number, paint: StreamPaint): void {
+  if (!paint.tailToGround) {
+    colors.push(base.r * fade, base.g * fade, base.b * fade);
+    return;
+  }
+  FADE_GROUND.set(paint.ground);
+  colors.push(
+    FADE_GROUND.r + (base.r - FADE_GROUND.r) * fade,
+    FADE_GROUND.g + (base.g - FADE_GROUND.g) * fade,
+    FADE_GROUND.b + (base.b - FADE_GROUND.b) * fade
+  );
+}
+
 /** SOURCE stream: pip → swoop toward the sphere → wrap around it.
  *  Flow order: index 0 at the pip, last index at the faded wrap
  *  tail. Upper rows wrap over the top (theta decreasing from ~π);
  *  lower rows wrap under the bottom. */
-function buildSourceStream(y0: number, colX: number, rowIdx: number): StreamCurve {
-  const base = new THREE.Color(COLOR_SOURCES);
+function buildSourceStream(
+  y0: number,
+  colX: number,
+  rowIdx: number,
+  paint: StreamPaint
+): StreamCurve {
+  const base = new THREE.Color(paint.source);
   const points: THREE.Vector3[] = [];
   const colors: number[] = [];
 
@@ -283,7 +338,7 @@ function buildSourceStream(y0: number, colX: number, rowIdx: number): StreamCurv
     const z = Math.sin((t * Math.PI) / 2) * STREAM_WRAP_Z * zDir;
     points.push(new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z));
     const fade = 1 - (1 - STREAM_TAIL_FADE) * t;
-    colors.push(base.r * fade, base.g * fade, base.b * fade);
+    pushFaded(colors, base, fade, paint);
   }
 
   return { points, colors };
@@ -292,8 +347,13 @@ function buildSourceStream(y0: number, colX: number, rowIdx: number): StreamCurv
 /** SURFACE stream: faint wrap around the sphere → emerges on the
  *  right → straightens out to the tip. Flow order: index 0 at the
  *  faded wrap tail, last index at the tip pip. */
-function buildSurfaceStream(y1: number, colX: number, rowIdx: number): StreamCurve {
-  const base = new THREE.Color(COLOR_SURFACES);
+function buildSurfaceStream(
+  y1: number,
+  colX: number,
+  rowIdx: number,
+  paint: StreamPaint
+): StreamCurve {
+  const base = new THREE.Color(paint.surface);
   const points: THREE.Vector3[] = [];
   const colors: number[] = [];
 
@@ -312,7 +372,7 @@ function buildSurfaceStream(y1: number, colX: number, rowIdx: number): StreamCur
     const z = Math.sin(((1 - t) * Math.PI) / 2) * STREAM_WRAP_Z * zDir;
     points.push(new THREE.Vector3(Math.cos(theta) * r, Math.sin(theta) * r, z));
     const fade = STREAM_TAIL_FADE + (1 - STREAM_TAIL_FADE) * t;
-    colors.push(base.r * fade, base.g * fade, base.b * fade);
+    pushFaded(colors, base, fade, paint);
   }
 
   const junction = new THREE.Vector3(
@@ -418,8 +478,11 @@ function advanceCurveMotes(
 // ── Arc Cases latch geometry (ADR-035 Update 1) ───────────────────
 // Module-scoped scratch so the per-frame fold allocates nothing.
 // ShellStack is a home-page singleton, so a single shared set is safe.
-const LATCH_COLOR_SOURCE = new THREE.Color(COLOR_SOURCES);
-const LATCH_COLOR_SURFACE = new THREE.Color(COLOR_SURFACES);
+// Mutable, and re-set from the palette whenever the theme changes: the
+// fold writes these straight into the line buffers, so a stale dark value
+// here would repaint the light streams back to invisible mid-latch.
+const LATCH_COLOR_SOURCE = new THREE.Color(resolveScenePalette().stream.source);
+const LATCH_COLOR_SURFACE = new THREE.Color(resolveScenePalette().stream.surface);
 const LATCH_PIP = new THREE.Vector3();
 const LATCH_TAN = new THREE.Vector3();
 const LATCH_ATTACH = new THREE.Vector3();
@@ -603,17 +666,27 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
     [colX, surfaceYs]
   );
 
-  // Field-stream curves + geometries (rebuilt on column-X change).
+  /** The live theme, as state so the curve buffers rebuild on a flip —
+   *  the vertex colours are baked into the geometry, not a uniform. */
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => readThemeMode());
+  useEffect(() => {
+    const apply = () => setThemeMode(readThemeMode());
+    apply();
+    return useThemeStore.subscribe(apply);
+  }, []);
+  const paint = useMemo(() => resolveStreamPaint(themeMode), [themeMode]);
+
+  // Field-stream curves + geometries (rebuilt on column-X or theme change).
   const streams = useMemo(() => {
-    const sourceCurves = sourceYs.map((y, i) => buildSourceStream(y, colX, i));
-    const surfaceCurves = surfaceYs.map((y, i) => buildSurfaceStream(y, colX, i));
+    const sourceCurves = sourceYs.map((y, i) => buildSourceStream(y, colX, i, paint));
+    const surfaceCurves = surfaceYs.map((y, i) => buildSurfaceStream(y, colX, i, paint));
     return {
       sourceCurves,
       surfaceCurves,
       sourceGeoms: sourceCurves.map(curveToGeometry),
       surfaceGeoms: surfaceCurves.map(curveToGeometry),
     };
-  }, [colX, sourceYs, surfaceYs]);
+  }, [colX, sourceYs, surfaceYs, paint]);
 
   const motes = useMemo(
     () => ({
@@ -685,14 +758,30 @@ export function ShellStack({ layerKey, reducedMotion = false }: ShellStackProps)
         opacity: SURFACE_STREAM_OPACITY,
         depthWrite: false,
       }),
-      sourceMotes: makePointsMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY, 0.045, false),
-      surfaceMotes: makePointsMaterial(COLOR_SURFACES, SOURCE_PIP_OPACITY, 0.045, false),
-      sourcePip: makeMeshMaterial(COLOR_SOURCES, SOURCE_PIP_OPACITY),
-      surfacePipOutline: makeLineMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY, true),
-      surfacePipFilled: makeMeshMaterial(COLOR_SURFACES, SURFACE_PIP_OPACITY * 0.94),
+      sourceMotes: makePointsMaterial(paint.source, SOURCE_PIP_OPACITY, 0.045, false),
+      surfaceMotes: makePointsMaterial(paint.surface, SOURCE_PIP_OPACITY, 0.045, false),
+      sourcePip: makeMeshMaterial(paint.source, SOURCE_PIP_OPACITY),
+      // ⚠ ADDITIVE CAN ONLY LIGHTEN. The tip's outline diamond was
+      // additively blended in both modes, which on parchment means it
+      // cannot draw at all — the palette carries the blend per mode.
+      surfacePipOutline: makeLineMaterial(
+        paint.surface,
+        SURFACE_PIP_OPACITY,
+        resolveScenePalette(themeMode).stream.additivePips
+      ),
+      surfacePipFilled: makeMeshMaterial(paint.surface, SURFACE_PIP_OPACITY * 0.94),
     }),
-    []
+    // The stream materials carry no colour of their own (vertexColors);
+    // everything else is repainted by rebuilding on a theme change.
+    [paint, themeMode]
   );
+
+  // The fold writes these into the line buffers directly, so they follow
+  // the same clock as the materials above.
+  useEffect(() => {
+    LATCH_COLOR_SOURCE.set(paint.source);
+    LATCH_COLOR_SURFACE.set(paint.surface);
+  }, [paint]);
 
   useEffect(() => {
     return () => {

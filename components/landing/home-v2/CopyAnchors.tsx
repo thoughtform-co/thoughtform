@@ -229,12 +229,15 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         >
           <span className="home-v2-stack-label__rule" aria-hidden="true" />
           <div className="home-v2-stack-label__body">
-            <span className="home-v2-stack-label__num" style={{ color: stackSourcesLabel.color }}>
-              {stackSourcesLabel.ordinal}
-            </span>
-            <span className="home-v2-stack-label__name" style={{ color: stackSourcesLabel.color }}>
-              {stackSourcesLabel.title}
-            </span>
+            {/* ⚠ THE COLOUR IS CSS, NOT AN INLINE WEBGL CONSTANT (ADR-058
+                Phase 2). These two headers used to be painted from
+                `artifactGeom`'s `*_CSS` role tiers, which are dark-only
+                literals — so on parchment "INTELLIGENCE" was #ebe3d6 on a
+                #ece3d6 page and simply did not exist, while its own
+                sub-line (on `--dawn-rgb`) read fine. The stylesheet takes
+                the token pair the rest of the column already flips on. */}
+            <span className="home-v2-stack-label__num">{stackSourcesLabel.ordinal}</span>
+            <span className="home-v2-stack-label__name">{stackSourcesLabel.title}</span>
             <span className="home-v2-stack-label__sub">{stackSourcesLabel.sub}</span>
           </div>
         </div>
@@ -247,12 +250,8 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         >
           <span className="home-v2-stack-label__rule" aria-hidden="true" />
           <div className="home-v2-stack-label__body">
-            <span className="home-v2-stack-label__num" style={{ color: stackSurfacesLabel.color }}>
-              {stackSurfacesLabel.ordinal}
-            </span>
-            <span className="home-v2-stack-label__name" style={{ color: stackSurfacesLabel.color }}>
-              {stackSurfacesLabel.title}
-            </span>
+            <span className="home-v2-stack-label__num">{stackSurfacesLabel.ordinal}</span>
+            <span className="home-v2-stack-label__name">{stackSurfacesLabel.title}</span>
             <span className="home-v2-stack-label__sub">{stackSurfacesLabel.sub}</span>
           </div>
         </div>
