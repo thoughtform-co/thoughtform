@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { READOUT_SECTIONS } from "@/lib/rail-manifest/sectionLabel";
-
 import { JOURNEY_MARKS } from "./clusters";
+import type { JourneyRoster } from "./journeyOrder";
 import { MarkRow } from "./MarkRow";
 import { useJourneyMarks, useScrollReadouts } from "./useJourneyMarks";
 
@@ -64,13 +63,24 @@ const TICK = { bearing: 2 / 12, sector: 6 / 12, local: 11 / 12 } as const;
 
 export function RailInstruments({
   containerRef,
+  roster,
 }: {
   containerRef: React.RefObject<HTMLElement | null>;
+  /**
+   * A homepage VARIANT's own roster and clock (ADR-093).
+   *
+   * Omitted on `/`, where the production tables in `clusters.ts` are the
+   * page order — that path is byte-identical to what shipped. A variant
+   * passes one because its sections are in a different order, and the
+   * production marks carry their production positions with them
+   * (`journeyOrder.ts` has the argument).
+   */
+  roster?: JourneyRoster;
 }) {
   const [hosts, setHosts] = useState<Hosts | null>(null);
   const ready = hosts !== null;
 
-  const { activeIdx, seat } = useJourneyMarks(ready);
+  const { activeIdx, seat, sector } = useJourneyMarks(ready, roster);
 
   const bearingRef = useRef<HTMLElement>(null);
   const localRef = useRef<HTMLElement>(null);
@@ -123,7 +133,7 @@ export function RailInstruments({
         // other's made the two rows read as different kinds of object. The
         // frame now prints no zone anywhere — the marks are the instrument.
         <div className="rin-cl rin-cl--journey" aria-hidden="true">
-          <MarkRow marks={JOURNEY_MARKS} activeIdx={activeIdx} seat={seat} />
+          <MarkRow marks={roster?.marks ?? JOURNEY_MARKS} activeIdx={activeIdx} seat={seat} />
         </div>,
         hosts.cornerTl
       )}
@@ -143,7 +153,7 @@ export function RailInstruments({
           <span className="rin-tele" aria-hidden="true" style={{ top: pct(TICK.sector) }}>
             <b className="rin-tele__k">Sector</b>
             <i className="rin-tele__rule" />
-            <b className="rin-tele__v">{`${pad(seat + 1)}/${pad(READOUT_SECTIONS.length)}`}</b>
+            <b className="rin-tele__v">{`${pad(sector.seat + 1)}/${pad(sector.total)}`}</b>
           </span>
           <span className="rin-tele" aria-hidden="true" style={{ top: pct(TICK.local) }}>
             <b className="rin-tele__k">Local</b>

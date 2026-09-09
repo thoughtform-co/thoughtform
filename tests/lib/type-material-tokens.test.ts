@@ -169,6 +169,15 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
+  /* ADR-093. It carries three neutralisation rules and no type at all — the
+     `.rin-settings__ctl` selector is FRAME, and pinned exact with the rest of
+     the frame. A route sheet absent from this map is a route sheet nothing
+     measures. */
+  "app/(marketing)/trinny-london/trinny-london.css": {
+    tier: "content",
+    content: { A: 0, B: 0, C: 0 },
+    frame: { A: 0, B: 0, C: 0 },
+  },
 };
 
 /**

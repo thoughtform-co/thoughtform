@@ -7,7 +7,7 @@ import { useBrandmarkJourney } from "./hooks/useBrandmarkJourney";
 import { useCorridorMount } from "./hooks/useCorridorMount";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
-import { HudNav } from "./HudNav";
+import { HudNav, type NavItem } from "./HudNav";
 import { useHeroBoot } from "./hooks/useHeroBoot";
 import { THEME_TOGGLE } from "./themeToggle";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
@@ -18,6 +18,7 @@ import { HeroThemeGlitch } from "./HeroThemeGlitch";
 import { RailInstruments } from "./rail-instruments/RailInstruments";
 import { SettingsCluster } from "./rail-instruments/SettingsCluster";
 import { RAIL_INSTRUMENTS } from "./rail-instruments/flags";
+import type { JourneyRoster } from "./rail-instruments/journeyOrder";
 import { AboutStagePortal } from "@/components/landing/home-v2/about/AboutStagePortal";
 import { VoidwalkerPortal } from "@/components/landing/home-v2/voidwalker/VoidwalkerPortal";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
@@ -42,6 +43,18 @@ interface LandingPageProps {
    *  `"home-corridor-mount"`. The corridor is only mounted when
    *  both `corridorText` and a matching DOM node are present. */
   corridorMountId?: string;
+  /**
+   * A homepage VARIANT's nav items and journey roster (ADR-093).
+   *
+   * Both are PLAIN DATA, set once by the server route and never changed —
+   * which is what makes them safe here. This component may not hold a
+   * subscription (its `dangerouslySetInnerHTML` body hosts nested
+   * `createRoot`s that a re-render orphans), but a constant prop costs no
+   * re-render at all. Omitted on `/`, where the production defaults in
+   * `HudNav` and `clusters.ts` already describe the page order.
+   */
+  navItems?: readonly NavItem[];
+  journey?: JourneyRoster;
 }
 
 export function LandingPage({
@@ -50,6 +63,8 @@ export function LandingPage({
   celestialSlots,
   corridorText,
   corridorMountId = "home-corridor-mount",
+  navItems,
+  journey,
 }: LandingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const brandmarkActorRef = useRef<BrandmarkActorHandle>(null);
@@ -529,7 +544,7 @@ export function LandingPage({
       <BrandmarkSystem ref={brandmarkActorRef} rootRef={rootRef} />
       {/* Top-right HUD nav: inline links in the hero that collapse into
           a right-rail-aligned hamburger once the hero scrolls away. */}
-      <HudNav />
+      <HudNav items={navItems} />
       {/* Light/dark toggle (ADR-058): the bottom-right chrome band,
           inboard of the `--br` corner bracket, pairing with the ADR-043
           bottom-left wordmark. Its own fixed overlay outside `.hud`, so
@@ -545,14 +560,14 @@ export function LandingPage({
           still mounts that directly, having no cluster to join. The auth
           and journey subscriptions both live in the cluster's own leaves,
           never here. */}
-      {THEME_TOGGLE && <SettingsCluster />}
+      {THEME_TOGGLE && <SettingsCluster roster={journey} />}
       {/* The hero key visual's theme swap plays a glitch (ADR-060). A leaf
           by the same law as the toggle above: it subscribes to the theme
           store IMPERATIVELY and synchronously, so the canvas covering the
           outgoing plate is drawn in the same task as the flip — before the
           browser paints the new one. It owns no state here. */}
       {THEME_TOGGLE && <HeroThemeGlitch containerRef={rootRef} />}
-      {RAIL_INSTRUMENTS && <RailInstruments containerRef={rootRef} />}
+      {RAIL_INSTRUMENTS && <RailInstruments containerRef={rootRef} roster={journey} />}
       {/* Auth-gated admin editor. Its `useAuth` subscription lives
           inside this leaf (NOT in LandingPage) so an auth-resolve
           re-render can't replace the dangerouslySetInnerHTML markup

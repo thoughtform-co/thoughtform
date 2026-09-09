@@ -1,0 +1,72 @@
+/* ═══════════════════════════════════════════════════════════════════
+   /trinny-london — route-scoped neutralizations (ADR-093)
+
+   A client pitch page built as a HOMEPAGE VARIANT on the ADR-053 recipe:
+   same LandingPage, same corridor, station order
+   hero → about → corridor → services → contact, forced into LIGHT.
+
+   ⚠ Never port these rules into landing.css / home-v2.css / services.css
+   / rail-instruments.css. They are variant-local by design; a shared-sheet
+   edit would change `/` and `/claude-workshop`.
+   Imported LAST of the route sheets (before theme.css) so it wins the
+   cascade over the composition sheets it corrects.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. The entry hold must not cover #about ────────────────────────
+   `useLandingScroll` sets html[data-corridor-entry="1"] whenever the
+   corridor mount's top is below the viewport top — with no upper bound.
+   home-v2.css then pins the corridor's sticky cell `position: fixed`
+   full-viewport (z:3), which on the homepage is invisible because the
+   hero (z:4) is the curtain over it. Here #about (z:2) sits between the
+   hero and the mount, so the armed corridor frame would paint over the
+   bio's last viewport.
+
+   Restoring native sticky is the whole fix: the corridor then simply
+   rises into view after #about — the /test/home-v2 configuration, where
+   a normal-flow section precedes the stage. Engagement is rect-based
+   (`getCorridorEngagement`), so the corridor arms and pins exactly as
+   before. Specificity (0,3,1) beats the shared rule's (0,2,1).
+
+   ⚠ This is ADR-053's rule 1, inherited verbatim rather than shared: the
+   two variants have the same defect for the same reason, and one rule
+   scoped to both roots would be a shared sheet by another name. */
+html[data-corridor-entry="1"] .tl-root .home-v2-stage__sticky {
+  position: sticky;
+  top: 0;
+  left: auto;
+  width: 100%;
+  margin-left: 0;
+}
+
+/* ── 2. The nav corner keeps the BARS, not the readout ──────────────
+   The nav-corner readout (ADR-055) resolves from MANIFEST_ENTRIES via
+   `useActiveSection` → `resolveActiveIdx`, whose seam-gap rule is
+   parameterised for the marks (ADR-093) but not for that hook — so on
+   this order the corner would name ABOUT through the corridor approach
+   and jump backwards on arrival.
+
+   So this page keeps the BARS as its trigger: same button, same drawer,
+   no claim about position. The 13-tick ladder stays either way
+   (ADR-031: "the ladder always stays"), and the TOP-LEFT journey row
+   does make the claim — correctly, on this page's own clock. */
+.tl-root .hud__nav__sector {
+  display: none;
+}
+.tl-root .hud__nav__btn .bars {
+  display: block;
+}
+
+/* ── 3. A locked route shows no theme switch ────────────────────────
+   The page is composed in light and the bootstrap holds it there
+   (ADR-093), so the control would be a switch that visibly does
+   nothing — which reads as a bug rather than as a decision.
+
+   ⚠ KEYED ON `<html>`, NOT ON `.tl-root`. `SettingsCluster` is mounted
+   as a SIBLING of the wrapper div, in its own fixed overlay, so a
+   `.tl-root` descendant selector cannot reach it. The lock attribute is
+   also the honest condition: it is present exactly while the lock is,
+   so this rule cannot outlive it across a client-side navigation.
+   (0,3,1) beats theme.css's own `.theme-toggle` (0,1,0) from anywhere. */
+html[data-theme-lock] .rin-settings__ctl .theme-toggle {
+  display: none;
+}

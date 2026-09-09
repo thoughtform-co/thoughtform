@@ -41,8 +41,23 @@ export const ACTIVE_IDX_ATTRIBUTES = [
   "data-corridor-phase",
 ] as const;
 
-/** Resolve the active journey index from the live `<html>` attribute bus. */
-export function resolveActiveIdx(html: HTMLElement): number {
+/**
+ * Resolve the active journey index from the live `<html>` attribute bus.
+ *
+ * `preMountStationId` names the station that sits immediately BEFORE the
+ * corridor mount on the page being read — the one `data-active-station`
+ * lags on while the corridor holds the viewport, because the mount is not
+ * a `.station`. On the production page that is `hero`, which is why rule 3
+ * was written as `idx === 0`; a homepage variant can order its sections
+ * differently (ADR-093: `/trinny-london` opens hero → about → corridor, so
+ * the lag station is `about`) and without this parameter its About mark
+ * would stay lit through the whole corridor.
+ *
+ * ⚠ The default keeps `/` and every existing caller byte-identical: only
+ * `hero` carries `targetId: "hero"`, and the `idx < 0` fallback lands on it
+ * too, so `targetId === "hero"` is exactly the old `idx === 0`.
+ */
+export function resolveActiveIdx(html: HTMLElement, preMountStationId = "hero"): number {
   if (html.getAttribute("data-corridor-engaged") === "true") {
     const phase = html.getAttribute("data-corridor-phase");
     const idx = phase ? MANIFEST_ENTRIES.findIndex((e) => e.corridorPhase === phase) : -1;
@@ -51,7 +66,7 @@ export function resolveActiveIdx(html: HTMLElement): number {
   const key = html.getAttribute("data-active-station") || "hero";
   let idx = MANIFEST_ENTRIES.findIndex((e) => e.kind === "station" && e.targetId === key);
   if (idx < 0) idx = 0;
-  if (idx === 0) {
+  if (MANIFEST_ENTRIES[idx]?.targetId === preMountStationId) {
     // Rule 3 — seam gap. Single batched rect read, active only in the
     // hero/corridor regime (callers gate their scroll listener on
     // `idx <= LAST_CORRIDOR_IDX`).

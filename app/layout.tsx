@@ -5,8 +5,9 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
-import { THEME_TOGGLE, THEME_STORAGE_KEY } from "@/components/landing/v7/themeToggle";
+import { THEME_TOGGLE } from "@/components/landing/v7/themeToggle";
 import { heroPreloadScript } from "@/lib/theme/heroPreload";
+import { themeBootstrapScript } from "@/lib/theme/themeBootstrap";
 
 // Google Fonts
 /**
@@ -130,24 +131,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             };if(on)document.documentElement.setAttribute("data-hero-css-reveal","1");}catch(e){}})();`,
           }}
         />
-        {/* Light-mode bootstrap (ADR-058). Reads `?theme=light|dark`
-            first (QA/Playwright override, never persisted), then
+        {/* Light-mode bootstrap (ADR-058, extended by ADR-093). Checks the
+            ROUTE LOCK first — a locked pitch route is light whatever the
+            visitor stored or asked for — then `?theme=light|dark`
+            (QA/Playwright override, never persisted), then
             `localStorage["tf-theme"]`; defaults to DARK. Sets the
             attribute BEFORE <body> paints, so the light cascade applies
             on first paint and there is no flash of the dark theme on a
             light-mode reload. The attribute is only ever "light" or
             absent — dark is the unqualified :root default. Only the
             marketing + arcs routes import `theme.css`, so on admin/test
-            routes the attribute is inert. */}
-        {THEME_TOGGLE && (
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `(function(){try{var q=new URLSearchParams(location.search).get("theme");var s=null;try{s=localStorage.getItem(${JSON.stringify(
-                THEME_STORAGE_KEY
-              )})}catch(e){}var t=(q==="light"||q==="dark")?q:((s==="light"||s==="dark")?s:"dark");if(t==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}})();`,
-            }}
-          />
-        )}
+            routes the attribute is inert.
+
+            ⚠ The source moved to `lib/theme/themeBootstrap.ts` when the
+            lock made it more than one line: it is a STRING, so it is built
+            from the same constants the app reads and pinned by a test. */}
+        {THEME_TOGGLE && <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript() }} />}
         {/* Hero key visual preload, chosen by theme (ADR-058 Update 2).
             There are two plates now — a dark AVIF and a light WebP — and a
             STATIC link would always fetch the dark one, because the preload

@@ -47,20 +47,40 @@ import { readoutDetail } from "@/lib/rail-manifest/sectionLabel";
  * casefile at the TOP of #services now, so PROOF and SERVICES would be the
  * same anchor and the row is dropped rather than duplicated).
  */
-const NAV_ITEMS = [
+export interface NavItem {
+  /** Zero-padded ordinal, printed in the drawer. */
+  num: string;
+  label: string;
+  /** In-page anchor. */
+  href: string;
+}
+
+/**
+ * ⚠ THE DEFAULT IS PRODUCTION'S, AND A VARIANT PASSES ITS OWN (ADR-093).
+ *
+ * These items are hardcoded in React, so the parse-time link cleanup that
+ * strips anchors to removed stations cannot reach them: on a variant that
+ * drops `#voidwalker` and `#practice` this list ships two dead anchors and
+ * a drawer that counts four. Threading the list from the route is what
+ * fixes that — and it has to be a PROP rather than a mount-time filter,
+ * because the row and the drawer are server-rendered and the head prints
+ * `0{n}`: filtering in an effect would flash the dead links on the hero and
+ * change the count after hydration.
+ */
+const NAV_ITEMS: readonly NavItem[] = [
   { num: "01", label: "Services", href: "#services" },
   { num: "02", label: "About", href: "#about" },
   // ADR-074: the through-line follows the bio.
   { num: "03", label: "Voidwalker", href: "#voidwalker" },
   { num: "04", label: "Practice", href: "#practice" },
-] as const;
+];
 
 /** Seconds the readout's decode waits on arrival — matches the CSS
  *  fade-in delay (`.hud__nav.is-collapsed .hud__nav__sector`), so the
  *  boot plays on a visible readout instead of behind its own fade. */
 const READOUT_ARRIVE_DELAY_S = 0.17;
 
-export function HudNav() {
+export function HudNav({ items = NAV_ITEMS }: { items?: readonly NavItem[] } = {}) {
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
@@ -248,7 +268,7 @@ export function HudNav() {
             carries its index (`--i`) so the morph can stagger them as they
             peel off toward the hamburger. */}
         <div className="hud__nav__inline">
-          {NAV_ITEMS.map((item, i) => (
+          {items.map((item, i) => (
             <a
               key={item.href}
               href={item.href}
@@ -309,9 +329,9 @@ export function HudNav() {
         <div className="hud__nav__list" id="hud-nav-menu" ref={listRef}>
           <div className="hud__nav__list__head">
             <span className="k">Nav</span>
-            <span>0{NAV_ITEMS.length}</span>
+            <span>0{items.length}</span>
           </div>
-          {NAV_ITEMS.map((item) => (
+          {items.map((item) => (
             <a key={item.href} href={item.href} onClick={(e) => handleNavigate(e, item.href)}>
               <span className="num">{item.num}</span>
               {item.label}

@@ -28,10 +28,20 @@ import { describe, expect, it } from "vitest";
  *
  * Client-ness propagates: a module is in the client region if it declares
  * "use client" or is imported (statically) by a client-region module.
+ *
+ * ⚠ EVERY MARKETING ENTRY IS WALKED, not just `/` (ADR-093). The doctrine is
+ * about a ROUTE's First Load JS, and each of these routes has its own — so a
+ * variant that pulled three in through one careless import would have been
+ * invisible to a guard that only ever walked the homepage. `/claude-workshop`
+ * had been unwalked since ADR-053 for exactly that reason.
  */
 
 const ROOT = join(__dirname, "..", "..");
-const ENTRY = "app/(marketing)/page.tsx";
+const ENTRIES = [
+  "app/(marketing)/page.tsx",
+  "app/(marketing)/claude-workshop/page.tsx",
+  "app/(marketing)/trinny-london/page.tsx",
+] as const;
 
 const BANNED_EVERYWHERE = [/^three(\/|$)/, /^@react-three\//, /^postprocessing(\/|$)/];
 const BANNED_IN_CLIENT = [/^@supabase\//];
@@ -76,8 +86,8 @@ interface Node {
   client: boolean;
 }
 
-function walkGraph() {
-  const entryAbs = join(ROOT, ENTRY);
+function walkGraph(entry: string) {
+  const entryAbs = join(ROOT, entry);
   const seen = new Map<string, boolean>(); // file → client-region flag
   const offendersEverywhere: string[] = [];
   const offendersClient: string[] = [];
@@ -110,24 +120,27 @@ function walkGraph() {
   return { seen, offendersEverywhere, offendersClient, supabaseServerFiles };
 }
 
-describe("the landing's import doctrine", () => {
-  const graph = walkGraph();
+describe.each(ENTRIES.map((entry) => [entry] as const))(
+  "the landing's import doctrine — %s",
+  (entry: string) => {
+    const graph = walkGraph(entry);
 
-  it("walks a real graph (a guard over nothing is worse than no guard)", () => {
-    // The audited static graph from the marketing page was ~200 modules; a
-    // collapse below half of that means the walker broke, not the page.
-    expect(graph.seen.size).toBeGreaterThan(100);
-  });
+    it("walks a real graph (a guard over nothing is worse than no guard)", () => {
+      // The audited static graph from the marketing page was ~200 modules; a
+      // collapse below half of that means the walker broke, not the page.
+      expect(graph.seen.size).toBeGreaterThan(100);
+    });
 
-  it("keeps three/R3F/postprocessing statically unreachable from the landing", () => {
-    expect(graph.offendersEverywhere, graph.offendersEverywhere.join("\n")).toEqual([]);
-  });
+    it("keeps three/R3F/postprocessing statically unreachable from the landing", () => {
+      expect(graph.offendersEverywhere, graph.offendersEverywhere.join("\n")).toEqual([]);
+    });
 
-  it("keeps the Supabase client out of the landing's client region", () => {
-    expect(graph.offendersClient, graph.offendersClient.join("\n")).toEqual([]);
-    // …and the server-side read path stays exactly where it is known to be:
-    // lib/supabase.ts, reached from the Server Component. Growing this list
-    // is a decision, not a drift.
-    expect([...new Set(graph.supabaseServerFiles)]).toEqual(["lib/supabase.ts"]);
-  });
-});
+    it("keeps the Supabase client out of the landing's client region", () => {
+      expect(graph.offendersClient, graph.offendersClient.join("\n")).toEqual([]);
+      // …and the server-side read path stays exactly where it is known to be:
+      // lib/supabase.ts, reached from the Server Component. Growing this list
+      // is a decision, not a drift.
+      expect([...new Set(graph.supabaseServerFiles)]).toEqual(["lib/supabase.ts"]);
+    });
+  }
+);

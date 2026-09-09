@@ -63,10 +63,18 @@ describe("hero preload", () => {
        because a static link always names the dark one.
        `/arcs/loop-earplugs` joined on ADR-075, left on ADR-078 U1 (a Loop key
        visual, one file) and returned in U2 — a frame out of the films is
-       evidence, not wallpaper, so the plate is the house visual again. ⚠ The list is hand-written rather than
+       evidence, not wallpaper, so the plate is the house visual again.
+       `/trinny-london` joined on ADR-093 — light-locked, so it only ever
+       preloads the light file, but a static link would name the dark one.
+       ⚠ The list is hand-written rather than
        derived from the registry, so a route that changes its plate has to
        be removed here by hand — nothing else would say so. */
-    expect([...HERO_ROUTES]).toEqual(["/", "/claude-workshop", "/arcs/loop-earplugs"]);
+    expect([...HERO_ROUTES]).toEqual([
+      "/",
+      "/claude-workshop",
+      "/trinny-london",
+      "/arcs/loop-earplugs",
+    ]);
     for (const route of HERO_ROUTES) expect(script).toContain(`"${route}"`);
   });
 
@@ -92,7 +100,11 @@ describe("hero preload", () => {
   it("leaves no static hero preload behind on either route", () => {
     // A leftover static link would defeat the whole mechanism: the preload
     // scanner would fetch the dark plate before this script ever runs.
-    for (const page of ["app/(marketing)/page.tsx", "app/(marketing)/claude-workshop/page.tsx"]) {
+    for (const page of [
+      "app/(marketing)/page.tsx",
+      "app/(marketing)/claude-workshop/page.tsx",
+      "app/(marketing)/trinny-london/page.tsx",
+    ]) {
       const src = readFileSync(join(ROOT, page), "utf8");
       expect(src, page).not.toMatch(/rel="preload"[^>]*as="image"/);
     }

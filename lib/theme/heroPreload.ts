@@ -77,9 +77,19 @@ export const HERO_PLATE_LIGHT_TYPE = "image/webp";
    because a static link always names the dark one. `/arcs/loop-earplugs` left it
    in ADR-078 U1 (a Loop key visual, one file) and came back in U2 (a film
    frame is evidence, not wallpaper — the plate is the house visual again).
+   `/trinny-london` joined on ADR-093: it mounts the same `LandingPage` on the
+   same plate. ⚠ It is LIGHT-LOCKED, so it can only ever preload the light
+   file — but it still earns a row here rather than a static link, because
+   the preload scanner runs before the bootstrap and a static link would
+   name the DARK plate on the one route that never paints it.
    A route that changes its plate has to be moved here BY HAND; nothing
    derives this, so nothing else would say so. */
-export const HERO_ROUTES = ["/", "/claude-workshop", "/arcs/loop-earplugs"] as const;
+export const HERO_ROUTES = [
+  "/",
+  "/claude-workshop",
+  "/trinny-london",
+  "/arcs/loop-earplugs",
+] as const;
 
 /**
  * The inline script. Reads the attribute the theme bootstrap just stamped

@@ -7,6 +7,8 @@ import { ACTIVE_IDX_ATTRIBUTES, resolveActiveIdx } from "@/lib/rail-manifest/res
 import { READOUT_SECTIONS, sectionReadout } from "@/lib/rail-manifest/sectionLabel";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
+import { journeyPosition, journeySector, type JourneyRoster } from "./journeyOrder";
+
 /**
  * The journey position the rail instruments read (ADR-059).
  *
@@ -50,8 +52,12 @@ const proofOwnsServices = () => servicesRingProgressRef.current.proofRelease < 0
 export interface JourneyMarks {
   /** `MANIFEST_ENTRIES` index — resolves the `beat`-clocked marks. */
   activeIdx: number;
-  /** `READOUT_SECTIONS` seat — resolves the `row`-clocked marks. */
+  /** `READOUT_SECTIONS` seat — resolves the `row`-clocked marks. On a
+   *  variant roster (ADR-093) this is a position in that roster's own
+   *  order instead, which is the whole point of the second clock. */
   seat: number;
+  /** The right rail's SECTOR readout: 0-based seat and the row total. */
+  sector: { seat: number; total: number };
 }
 
 /**
@@ -60,10 +66,11 @@ export interface JourneyMarks {
  * ADR-055 nav corner is the only place the frame names a section in words.
  * Nothing here needs a string — the marks are positional.
  */
-export function useJourneyMarks(enabled: boolean): JourneyMarks {
+export function useJourneyMarks(enabled: boolean, roster?: JourneyRoster): JourneyMarks {
   const [marks, setMarks] = useState<JourneyMarks>(() => ({
     activeIdx: 0,
     seat: 0,
+    sector: { seat: 0, total: READOUT_SECTIONS.length },
   }));
 
   useEffect(() => {
@@ -71,14 +78,34 @@ export function useJourneyMarks(enabled: boolean): JourneyMarks {
     const html = document.documentElement;
     let scrollRaf = 0;
     let watch = true;
+    /* ADR-093: on a variant the station the corridor lags on is not `hero`,
+       and the scroll-wake regime has to include it — rule 3 is a RECT read,
+       so it only re-evaluates while something is listening. */
+    const preMountIdx = roster
+      ? MANIFEST_ENTRIES.findIndex(
+          (e) => e.kind === "station" && e.targetId === roster.preMountStationId
+        )
+      : 0;
 
     const update = () => {
-      const activeIdx = resolveActiveIdx(html);
-      watch = activeIdx <= LAST_CORRIDOR_IDX || activeIdx === SERVICES_IDX;
-      const readout = sectionReadout(activeIdx, proofOwnsServices());
-      const seat = READOUT_SECTIONS.findIndex((row) => row.id === readout.id);
+      const activeIdx = resolveActiveIdx(html, roster?.preMountStationId);
+      watch =
+        activeIdx <= LAST_CORRIDOR_IDX || activeIdx === SERVICES_IDX || activeIdx === preMountIdx;
+      const proofOwns = proofOwnsServices();
+      let seat: number;
+      let sector: { seat: number; total: number };
+      if (roster) {
+        seat = journeyPosition(roster, activeIdx, proofOwns);
+        sector = journeySector(roster, activeIdx, proofOwns);
+      } else {
+        const readout = sectionReadout(activeIdx, proofOwns);
+        seat = READOUT_SECTIONS.findIndex((row) => row.id === readout.id);
+        sector = { seat, total: READOUT_SECTIONS.length };
+      }
       setMarks((prev) =>
-        prev.activeIdx === activeIdx && prev.seat === seat ? prev : { activeIdx, seat }
+        prev.activeIdx === activeIdx && prev.seat === seat && prev.sector.seat === sector.seat
+          ? prev
+          : { activeIdx, seat, sector }
       );
     };
 
@@ -100,7 +127,7 @@ export function useJourneyMarks(enabled: boolean): JourneyMarks {
       window.removeEventListener("scroll", onScroll);
       if (scrollRaf) cancelAnimationFrame(scrollRaf);
     };
-  }, [enabled]);
+  }, [enabled, roster]);
 
   return marks;
 }

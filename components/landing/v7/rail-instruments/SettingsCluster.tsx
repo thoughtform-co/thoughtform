@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 
 import { EXIT_MARKS } from "./clusters";
+import type { JourneyRoster } from "./journeyOrder";
 import type { JourneyMark } from "./markState";
 import { RAIL_INSTRUMENTS } from "./flags";
 import { MarkRow } from "./MarkRow";
@@ -201,12 +202,12 @@ function SessionControl() {
  * itself is gated on `THEME_TOGGLE` in LandingPage; the old
  * `SETTINGS_CLUSTER` flag was read by nothing and is deleted, 2026-09-01.)
  */
-function ExitMarks() {
-  const { activeIdx, seat } = useJourneyMarks(true);
+function ExitMarks({ roster }: { roster?: JourneyRoster }) {
+  const { activeIdx, seat } = useJourneyMarks(true, roster);
 
   return (
     <span className="rin-settings__row" aria-hidden="true">
-      <MarkRow marks={EXIT_MARKS} activeIdx={activeIdx} seat={seat} />
+      <MarkRow marks={roster?.exit ?? EXIT_MARKS} activeIdx={activeIdx} seat={seat} />
     </span>
   );
 }
@@ -225,9 +226,17 @@ export interface SettingsClusterProps {
   marks?: readonly JourneyMark[];
   activeIdx?: number;
   seat?: number;
+  /**
+   * A homepage VARIANT's roster (ADR-093) — the landing's own path, told a
+   * different order. Distinct from `marks` above, which is the ARC's path:
+   * an arc has no attribute bus at all and is handed its position from
+   * outside, while a variant still reads the bus and only needs its clock
+   * replaced.
+   */
+  roster?: JourneyRoster;
 }
 
-export function SettingsCluster({ marks, activeIdx, seat }: SettingsClusterProps = {}) {
+export function SettingsCluster({ marks, activeIdx, seat, roster }: SettingsClusterProps = {}) {
   const given = marks !== undefined;
   return (
     <div className="rin-settings" data-rin-settings>
@@ -250,7 +259,7 @@ export function SettingsCluster({ marks, activeIdx, seat }: SettingsClusterProps
             <MarkRow marks={marks} activeIdx={activeIdx ?? 0} seat={seat ?? 0} />
           </span>
         ) : (
-          <ExitMarks />
+          <ExitMarks roster={roster} />
         ))}
       <span className="rin-settings__ctl">
         <SessionControl />
