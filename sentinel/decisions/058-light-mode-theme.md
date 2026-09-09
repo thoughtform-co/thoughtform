@@ -521,6 +521,98 @@ adjacent columns (8 and 9). Visible only if you go looking at 1px cells;
 correcting it means moving `SUN_RAY_IN` or biasing the rounding, and that
 re-opens the whole shape.
 
+## Update 4 — the Build park's node streams, and an emitter that emitted the ground (2026-09-09)
+
+**Owner, on `/trinny-london` (light-locked):** _"the lines connecting to the
+right thingies are barely visible. I think in dark mode they're better
+visible."_ He was right about the cause as well as the symptom.
+
+### The defect
+
+`ShellStack` paints the Arc's two node streams — the green SOURCE lines
+running in from the work, and the SURFACE lines running out to what you rent
+— from two module constants in `artifactGeom`:
+
+```ts
+export const COLOR_SOURCES = COLOR_ATREIDES; // 0x5b7a4e
+export const COLOR_SURFACES = COLOR_DAWN; // 0xebe3d6
+```
+
+The light ground is `0xece3d6`. **The surface streams were one unit apart in
+red from the page they were drawn on — about 1.00:1.** An emitter that emits
+the ground colour emits nothing, so the entire right-hand fan has been
+invisible for as long as light mode has existed. The green side survived by
+accident: `0x5b7a4e` is a mid-lightness hue that clears ~3.8:1 on parchment
+and ~4.9:1 on void, so nobody noticed that it, too, had no light value.
+
+⚠ **`ShellStack` never imported `lib/theme/palette.ts` at all.** ADR-058's own
+§Phase 2 deferred this painter and it was never picked up; the ADR-058 commit
+does not touch the file. This is that entry, landing late.
+
+### Two things compounded it, and both are the same mistake in another form
+
+- **The wrap tail faded by MULTIPLYING toward black.** Black is the ground in
+  dark and it is maximum contrast in light — so on parchment the "absorbed"
+  tail was the STRONGEST part of the line and the straight run out to the chip
+  was the invisible part. Exactly inverted. Light lerps toward the ground
+  instead; dark keeps the multiply and is byte-identical.
+- **The tip's outline diamond is ADDITIVELY blended.** Additive can only
+  LIGHTEN: on a light ground it draws nothing at any alpha. The blend is a
+  palette field now, normal in light.
+
+### And the same failure in the DOM, one element over
+
+The two column headers ("01 WORK" / "03 INTELLIGENCE") were coloured by an
+INLINE style carrying `artifactGeom`'s `*_CSS` role tiers — dark-only literals.
+So `INTELLIGENCE` was `#ebe3d6` on a `#ece3d6` page and did not exist, while
+its own lowercase sub-line, which rides `rgba(var(--dawn-rgb), .62)`, read
+fine. ⚠ **ADR-058 §Left-open named this exact class as deliberately unswept**
+and it stayed unswept. The colour is CSS now (`--atreides-light` / `--dawn`),
+which is byte-identical in dark and ink-side in light by construction.
+
+### The fix
+
+`ScenePalette` grows a `stream` block: `source`, `surface`, `tailToGround`,
+`additivePips`. **The light values are the theme's OWN flipped tokens, not new
+colours** — `--atreides-light` (#4a6238) and `--dawn` (#110f09), the same two
+the DOM chips beside the lines already flip to, so the line and the chip it
+runs to are one family and neither can drift from the other. Rendered through
+their materials' opacity on this premultiplied-alpha canvas the two land
+within a few points of each other: one weight, two hues, the same rank as in
+dark. `ShellStack` resolves the block at mount, re-keys its curve memo on the
+mode (the vertex colours are baked into geometry, not a uniform) and
+re-subscribes the latch colours, following `ShellSubstrateGyro`'s precedent.
+
+### The guard, which is the durable half
+
+⚠ **`tests/lib/theme-palette.test.ts` did not exist.** `palette.ts` has said so
+in its own header since it was written — _"the once-cited test was never
+written; the equality was verified by hand"_ — and the gap is exactly what let
+a 1.00:1 value sit in a shipped file. It exists now, and it asks the two
+questions no eye can answer at a glance:
+
+1. **Does the dark column still equal each painter's original literal?** Pinned
+   against the `artifactGeom` constants themselves, not restated numbers.
+2. **Can each light value be SEEN on the light ground?** A channel gap and a
+   3:1 line rung against `LIGHT_SCENE.ground`, plus the axis that inverts —
+   both streams must be DARKER than the page — plus the two behaviours
+   (`additivePips` off, `tailToGround` on) whose defaults are wrong in light.
+
+It also pins `LIGHT_SCENE.ground` against the `--void` the stylesheet actually
+declares, so the occluder cannot drift from the page it has to disappear into.
+
+⚠ **Still unmeasured:** nothing anywhere walks WebGL line work in light on a
+rendered frame. The `arcs` contrast walk is DOM-only and `/arcs`-scoped; the
+`corridor-build-40` snapshot is dark. This update's guard is arithmetic on the
+palette, which catches a value that cannot possibly read — not a value that
+merely reads badly. The stills remain the gate for the second kind.
+
+⚠ **Same blast radius, not taken:** `COLOR_SURFACES` is also read by the ENCODE
+cardinal primitives (TASTE / VOICE and four of the six notes), `Aperture`,
+`ArmillaryDeck` and `Constellation` via `shellGeom`. They have the same
+dawn-on-parchment problem and are a separate pass; this one changed
+`ShellStack` only, and deliberately did NOT edit the shared constant.
+
 ## Rollback
 
 `THEME_TOGGLE = false`. The bootstrap never injects, the toggle never mounts,

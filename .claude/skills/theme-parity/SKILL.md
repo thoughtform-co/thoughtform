@@ -75,6 +75,20 @@ constants and uniforms, so every painter needs a value PER MODE:
   (the light occluder ERASES via a custom blend instead of painting the
   page color; see `applyCoreTheme`'s docblock for why paint-the-ground
   double-multiplies alpha).
+- ⚠ **AN EMITTER THAT EMITS THE GROUND COLOUR EMITS NOTHING.** The Build
+  park's SURFACE streams were `COLOR_DAWN` (0xebe3d6) in both modes and
+  the light ground is 0xece3d6 — one unit apart in red, ~1.00:1, invisible
+  for as long as light mode had existed (ADR-058 U4). Dawn is not a colour
+  in light; dawn IS the page. Any painter holding a `COLOR_DAWN`-family
+  constant needs a light value before it can be said to have one.
+- ⚠ **AND A FADE THAT MULTIPLIES TOWARD BLACK IS NOT A FADE IN LIGHT.**
+  `colour * t` walks toward black, which is the ground in dark and MAXIMUM
+  CONTRAST on parchment — so the same line's "absorbed" tail came out as
+  its strongest part and its lit run as the invisible one, exactly
+  inverted. Fade toward `palette.ground`, not toward zero.
+- ⚠ The green survived both traps by luck, not design: a mid-lightness hue
+  clears ~3.8:1 on parchment AND ~4.9:1 on void. "It looks fine in light"
+  is not evidence that a painter was ever given a light value.
 
 ## Assets
 
