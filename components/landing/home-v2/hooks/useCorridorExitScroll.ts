@@ -138,6 +138,7 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
     let voidwalkerEl: HTMLElement | null = null;
     let practiceEl: HTMLElement | null = null;
     let contactEl: HTMLElement | null = null;
+    let killEl: HTMLElement | null = null;
     // Last-written DOM state, so attributes flip only on edges and the
     // two alpha vars only move in ≥1/255 steps — every one of these
     // writes invalidates computed style document-wide, and they were
@@ -213,15 +214,29 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       if (!contactEl || !contactEl.isConnected) {
         contactEl = root.querySelector<HTMLElement>("#contact");
       }
+      // ADR-094: a variant page whose first opaque station below the
+      // corridor is none of the ids above DECLARES it with
+      // `data-corridor-kill` (the Trinny London interstitial). The chain
+      // below is by id because production's stations are known; a variant's
+      // are not, and an opaque station this read does not name hard-cuts the
+      // canvas at its top (the ADR-030 §6 seam bug, a fifth time). The
+      // declaring page carries the matching cover rule keyed on the SAME
+      // attribute, so JS and CSS cannot name different stations. Production
+      // stamps nothing ⇒ the chain below is byte-identical.
+      if (!killEl || !killEl.isConnected) {
+        killEl = root.querySelector<HTMLElement>("[data-corridor-kill]");
+      }
       const voidwalkerMode = voidwalkerEl?.dataset.vwMode;
       const voidwalkerTransparent =
         VOIDWALKER_EXTENDS_CORRIDOR &&
         (voidwalkerMode === "hologram" || voidwalkerMode === "travel");
-      const desiredNextStation = ABOUT_DECK_STAGE
-        ? voidwalkerTransparent
-          ? (practiceEl ?? contactEl ?? voidwalkerEl)
-          : (voidwalkerEl ?? practiceEl ?? contactEl)
-        : (aboutEl ?? voidwalkerEl ?? practiceEl ?? contactEl);
+      const desiredNextStation =
+        killEl ??
+        (ABOUT_DECK_STAGE
+          ? voidwalkerTransparent
+            ? (practiceEl ?? contactEl ?? voidwalkerEl)
+            : (voidwalkerEl ?? practiceEl ?? contactEl)
+          : (aboutEl ?? voidwalkerEl ?? practiceEl ?? contactEl));
       if (nextStationEl !== desiredNextStation) nextStationEl = desiredNextStation;
       const nextStationTopVh =
         (nextStationEl?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;

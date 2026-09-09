@@ -56,6 +56,10 @@ export interface MarkSpec {
   range?: readonly [string, string];
   /** A rule opens a new group before this mark. */
   ruleBefore?: boolean;
+  /** `SECTION_GLYPHS` key when it is not the mark's own id — a variant that
+   *  keeps a production station id for its clock but names the mark for
+   *  what the reader sees there (ADR-094: `services` drawn as `proof`). */
+  glyph?: string;
 }
 
 export interface JourneyRoster {
@@ -140,6 +144,7 @@ export function buildJourneyRoster(
       mark.idxEnd = end;
     }
     if (spec.ruleBefore) mark.ruleBefore = true;
+    if (spec.glyph) mark.glyph = spec.glyph;
     return mark;
   };
 
@@ -170,36 +175,83 @@ export function buildJourneyRoster(
 }
 
 /**
+ * A station the ROSTER shows that the production MANIFEST does not know.
+ *
+ * ADR-094: a variant may add stations of its own (`#trinny`, `#proposition`
+ * on the Trinny London page). `useLandingScroll` publishes their id on the
+ * `data-active-station` bus like any other, but `resolveActiveIdx` can only
+ * translate ids into `MANIFEST_ENTRIES` — an unknown id falls to index 0,
+ * which is the hero, and the HOME mark would light over the proposal with
+ * nothing throwing. So the roster answers such an id DIRECTLY: it is in the
+ * page's own order, and the order is the clock (ADR-093).
+ *
+ * Returns the id when it is one of these, `null` otherwise — a production
+ * station id (`services`, `about`…) goes through the manifest as before,
+ * because that path carries the proof/services split and the corridor's
+ * beat granularity, which a bare station id cannot.
+ */
+export function rosterDirectId(
+  roster: JourneyRoster,
+  stationId: string | null | undefined
+): string | null {
+  if (!stationId) return null;
+  if (roster.order.indexOf(stationId) < 0) return null;
+  const known = MANIFEST_ENTRIES.some((e) => e.kind === "station" && e.targetId === stationId);
+  return known ? null : stationId;
+}
+
+/**
  * The live `MANIFEST_ENTRIES` index, translated into a position in this
  * roster's own order.
  *
  * Returns **-1** for a section the variant does not show (`voidwalker`,
  * `practice`), which lights nothing — the honest answer, and the same
  * shape as the landing's own known hole for `#practice`.
+ *
+ * `stationId` is the raw `data-active-station` value, consulted only for a
+ * roster-only station (see `rosterDirectId`); every three-argument caller
+ * is unchanged.
  */
 export function journeyPosition(
   roster: JourneyRoster,
   activeIdx: number,
-  proofOwnsServices = false
+  proofOwnsServices = false,
+  stationId?: string | null
 ): number {
+  const direct = rosterDirectId(roster, stationId);
+  if (direct) return roster.order.indexOf(direct);
   const entry = MANIFEST_ENTRIES[activeIdx];
   if (!entry) return -1;
   // ADR-056: the casefile holds the front of the `#services` runway, so one
-  // manifest index covers two beats the reader experiences separately.
-  const id = proofOwnsServices && entry.id === "services" ? PROOF_SECTION_ID : entry.id;
+  // manifest index covers two beats the reader experiences separately —
+  // on a roster that SHOWS both. A roster with no `proof` row (ADR-094: the
+  // stack is the whole station) keeps the reader on `services` rather than
+  // lighting nothing while the offer's clock happens to read "held".
+  const id = splitServices(roster, entry.id, proofOwnsServices);
   return roster.order.indexOf(id);
+}
+
+function splitServices(roster: JourneyRoster, id: string, proofOwnsServices: boolean): string {
+  if (!proofOwnsServices || id !== "services") return id;
+  return roster.order.indexOf(PROOF_SECTION_ID) >= 0 ? PROOF_SECTION_ID : id;
 }
 
 /** The right rail's SECTOR readout for this roster: 1-based seat and total. */
 export function journeySector(
   roster: JourneyRoster,
   activeIdx: number,
-  proofOwnsServices = false
+  proofOwnsServices = false,
+  stationId?: string | null
 ): { seat: number; total: number } {
-  const entry = MANIFEST_ENTRIES[activeIdx];
   const total = roster.sectorRows.length;
+  const direct = rosterDirectId(roster, stationId);
+  if (direct) {
+    const seat = roster.sectorRows.indexOf(direct);
+    return { seat: seat >= 0 ? seat : 0, total };
+  }
+  const entry = MANIFEST_ENTRIES[activeIdx];
   if (!entry) return { seat: 0, total };
-  const raw = proofOwnsServices && entry.id === "services" ? PROOF_SECTION_ID : entry.id;
+  const raw = splitServices(roster, entry.id, proofOwnsServices);
   const id = isCorridorId(raw) ? ARC_SECTION_ID : raw;
   const seat = roster.sectorRows.indexOf(id);
   // Hero and any unshown section fall back to seat 0 — the same fallback

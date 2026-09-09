@@ -263,6 +263,25 @@ describe("cases registry (ADR-054)", () => {
     }
   });
 
+  it("a card lede is one short paragraph, and not the brief again", () => {
+    // ADR-094: the Trinny London pitch page shows each Loop project as ONE
+    // CARD — title, this lede, four bullets — with room for a sentence and a
+    // half. 180 is the measured ceiling at the card's narrowest column
+    // (1280×720, ~340px at 15px sans ≈ three lines). A lede that equals the
+    // brief has deleted the reason the field exists.
+    const LEDE_MAX = 180;
+    const len = (segs: readonly CaseSegment[]) =>
+      segs.map((s) => (typeof s === "string" ? s : s.em)).join("");
+    for (const c of CASES) {
+      for (const t of c.casefile.tracks) {
+        if (!t.card) continue;
+        expect(t.card.lede.length, `${c.slug}/${t.id} card lede`).toBeGreaterThan(0);
+        expect(t.card.lede.length, `${c.slug}/${t.id} card lede`).toBeLessThanOrEqual(LEDE_MAX);
+        if (t.brief) expect(t.card.lede, `${c.slug}/${t.id} card lede`).not.toBe(len(t.brief));
+      }
+    }
+  });
+
   it("every row's project title corresponds to its filename", () => {
     // Owner rule, 2026-07-31: the directory row and the brief's heading name
     // the SAME thing. They sat divergent for five of eight rows

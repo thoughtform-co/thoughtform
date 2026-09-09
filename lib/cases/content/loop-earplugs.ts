@@ -2193,6 +2193,9 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           { em: "how much intelligence runs in it" },
           ". The board lays out the estate: work streams as modules, clustered by the team that owns them. Open one and it comes apart into its configuration. Below grade runs the shared substrate — encoded once for one team, tapped by the next.",
         ],
+        card: {
+          lede: "Every workstream at Loop mapped to the intelligence that runs it: 47 Skills encoded once and reused across teams, with the work deliberately left to people on the same record.",
+        },
       },
       {
         id: "tooling",
@@ -2255,6 +2258,9 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           { em: "a conventional product roadmap would ignore" },
           ". Four internal tools grew from live bottlenecks in generation, orchestration, briefing intelligence and localization. Each is built for the few people who need it—and designed so those teams can keep extending it.",
         ],
+        card: {
+          lede: "Four tools built with the people who run the workflow, for jobs no product roadmap would take on: briefing, image and video, localisation, studio operations. Owned by those teams.",
+        },
       },
       {
         id: "studio",
@@ -2299,6 +2305,9 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           { em: "a capability the creative team owns" },
           ". Live briefs, reusable workflows and clear ethical lines moved the team from receiving AI output to briefing and judging it. Paid social moves faster, buying back time for the live-action craft AI should not replace.",
         ],
+        card: {
+          lede: "Creative technology embedded in the studio. The team briefs, generates, judges and ships paid social with AI as the default, and a clear line where photography stays real.",
+        },
       },
       {
         id: "atl-films",
@@ -2343,6 +2352,9 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           { em: "using the same creative team and quality bar as Loop’s live-action work" },
           ". The project took relatable, acquisition-minded stories into paid media on YouTube and connected TV—expanding the formats Loop could test without treating AI as a replacement for live action.",
         ],
+        card: {
+          lede: "Two 30-second films made with generative image and video models by the same creative team, to the same craft bar as live action, run as paid media on YouTube and connected TV.",
+        },
       },
       /* Rows 05–08 (workshop rollout · governance · metrics · mission
          report) were TRIMMED here 2026-08-02 (owner) — see the ORDER note

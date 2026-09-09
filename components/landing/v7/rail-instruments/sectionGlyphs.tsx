@@ -154,6 +154,17 @@ export const SECTION_GLYPHS: Readonly<Record<string, ReactElement>> = {
       <path d="M7 4.5h10.5l-3 3.5 3 3.5H7" />
     </Mark>
   ),
+  /** Three plates in a stack with the middle one filled — a configuration:
+   *  the people above, the surfaces below, the encoded layer between them
+   *  (ADR-094, the Trinny London proposal). Filled for the same reason the
+   *  voidwalker's lower diamond is: the layer is the part that gets built. */
+  proposition: (
+    <Mark>
+      <path d="M4 4.5h16v3.5H4z" />
+      <path d="M4 10.25h16v3.5H4z" fill="currentColor" />
+      <path d="M4 16h16v3.5H4z" />
+    </Mark>
+  ),
   /** Transmit. */
   contact: (
     <Mark>

@@ -889,6 +889,19 @@ export interface CaseTrack {
    * switch.
    */
   brief?: readonly CaseSegment[];
+  /**
+   * The row as ONE CARD (ADR-094, the Trinny London pitch page): a single
+   * short paragraph for a surface that shows the project at a glance —
+   * title, this lede, the four `blocks[].title` as bullets — instead of the
+   * casefile's brief + register + directory.
+   *
+   * ≤180 characters, pinned by `cases-registry.test.ts` beside the brief's
+   * ceiling. Deliberately a SECOND field rather than a shorter brief: the
+   * brief is the casefile's paragraph and serves a 420-character box; a card
+   * that reused it would carry three sentences where it has room for one
+   * and a half. Both live in the record so both are inside the envelope scan.
+   */
+  card?: { lede: string };
   /** Foot telemetry for this row — `◆ {ord} · {phase} · {ref} · {state}`,
    *  where `state` stays the casefile's. Absent falls back to the standing
    *  `00 · Field log · {logCode}` line, so this is additive. */

@@ -7,7 +7,7 @@ import { ACTIVE_IDX_ATTRIBUTES, resolveActiveIdx } from "@/lib/rail-manifest/res
 import { READOUT_SECTIONS, sectionReadout } from "@/lib/rail-manifest/sectionLabel";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 
-import { journeyPosition, journeySector, type JourneyRoster } from "./journeyOrder";
+import { journeyPosition, journeySector, rosterDirectId, type JourneyRoster } from "./journeyOrder";
 
 /**
  * The journey position the rail instruments read (ADR-059).
@@ -95,14 +95,24 @@ export function useJourneyMarks(enabled: boolean, roster?: JourneyRoster): Journ
 
     const update = () => {
       const activeIdx = resolveActiveIdx(html, roster?.preMountStationId);
+      /* ADR-094: a variant station the manifest does not know resolves
+         DIRECTLY off the bus — `resolveActiveIdx` would have mapped it to
+         the hero. Only on a roster, and never while the corridor is engaged
+         (then the phase bus is the truth and the station attribute lags). */
+      const stationId =
+        roster && html.getAttribute("data-corridor-engaged") !== "true"
+          ? html.getAttribute("data-active-station")
+          : null;
+      const direct = roster ? rosterDirectId(roster, stationId) : null;
       watch =
-        activeIdx <= LAST_CORRIDOR_IDX || activeIdx === SERVICES_IDX || activeIdx === preMountIdx;
+        !direct &&
+        (activeIdx <= LAST_CORRIDOR_IDX || activeIdx === SERVICES_IDX || activeIdx === preMountIdx);
       const proofOwns = proofOwnsServices();
       let seat: number;
       let sector: { seat: number; total: number };
       if (roster) {
-        seat = journeyPosition(roster, activeIdx, proofOwns);
-        sector = journeySector(roster, activeIdx, proofOwns);
+        seat = journeyPosition(roster, activeIdx, proofOwns, stationId);
+        sector = journeySector(roster, activeIdx, proofOwns, stationId);
       } else {
         const readout = sectionReadout(activeIdx, proofOwns);
         seat = READOUT_SECTIONS.findIndex((row) => row.id === readout.id);

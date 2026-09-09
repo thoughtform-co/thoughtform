@@ -28,7 +28,7 @@
  */
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import * as THREE from "three";
 
 import { getSmoothedDissipate } from "./motionFollower";
@@ -183,6 +183,22 @@ function featuresWithinEpsilon(a: FeatureAnchor[], b: FeatureAnchor[]): boolean 
 
 export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number }) {
   const activeServiceId = useHologramConnectors((s) => s.activeServiceId) ?? SERVICES[0].id;
+  /* ADR-094: a route may opt the card ring OUT by stamping
+     `data-services-ring="off"` on `<html>` before the corridor chunk mounts.
+     The ring's own clock cannot tell it to stay away — its entrance is
+     `smoothedDissipate × proofRelease`, and `proofRelease` RESTS AT 1
+     (`ringProgressRef.ts`), so on a page whose `#services` mounts no stage
+     the four cards replay their fly-in and park at full opacity behind the
+     transparent station. Read ONCE at mount: the attribute is a route
+     property, not a scroll state, and re-reading it per frame would spend a
+     DOM read on a value that never changes. Production carries no such
+     attribute ⇒ byte-identical. ⚠ Never gate on `[data-services-root]`
+     presence instead: the card-face labs mount this ring without it. */
+  const ringOff = useState(
+    () =>
+      typeof document !== "undefined" &&
+      document.documentElement.getAttribute("data-services-ring") === "off"
+  )[0];
   const setAnchors = useHologramConnectors((s) => s.setAnchors);
   const setFeatureAnchors = useHologramConnectors((s) => s.setFeatureAnchors);
   // ADR-029 card ring — mount gate MUST match the services DOM gate
@@ -300,7 +316,7 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           scroll-owned rotation (runway progress via servicesRingProgressRef),
           entrance staggered off the same dissipate clock as the orbit
           wrap-on, card rects published for the DOM hit-areas. */}
-      {SERVICES_CARD_RING && ringCapable && (
+      {SERVICES_CARD_RING && ringCapable && !ringOff && (
         <ServicesCardRing
           scale={scale}
           progressRef={servicesRingProgressRef}
