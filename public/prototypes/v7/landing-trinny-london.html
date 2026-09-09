@@ -5459,17 +5459,22 @@ html { scroll-behavior: smooth; }
        Thoughtform mark re-forms as Trinny London's — driven by this
        station's own scroll (useTurnScroll → brandmarkMorphRef), never a
        crossfade, never a clock — while the four products sweep in around
-       it on the same scroll. `100svh` of pin + a runway + `100svh` the
-       interstitial slides over. NO `data-corridor-kill` (the canvas must
-       live through it; `#trinny` keeps the kill). `data-station=
-       "proposition"` turns the journey to the Proposal from here on. The
-       inline SVG is the FALLBACK mark for the paths the morph cannot run
-       on (mobile, reduced motion, a refused GPU); the route hides it while
-       the WebGL mark is parked. The products carry NO `data-parallax`
-       (dead inside a pinned stage, and it owns `translate`) and NO `data-m`
-       (a second opacity owner): the writer owns their pose. ===== -->
+       it on the same scroll. `100svh` of pin + a runway, and NOTHING slides
+       over it (ADR-095 U1): the GROUND changes instead, a shader warming
+       the frame to the client's coral and resolving back to parchment, and
+       the line lands ON it — decoded in place, never moved or faded in as
+       a block. NO `data-corridor-kill` (the canvas must live through the
+       whole beat; `#proposition` below is the first opaque station and
+       carries it). `data-station="proposition"` turns the journey to the
+       Proposal from here on. The inline SVG is the FALLBACK mark for the
+       paths the morph cannot run on (mobile, reduced motion, a refused
+       GPU); the route hides it while the WebGL mark is parked. The products
+       carry NO `data-parallax` (dead inside a pinned stage, and it owns
+       `translate`) and the copy NO `data-m` (both would be a second owner
+       of what the writer already drives). ===== -->
   <section class="station tl-turn" id="turn" data-station="proposition" data-screen-label="09 The turn">
     <div class="tl-turn__stage" data-tl-turn-stage>
+      <canvas class="tl-turn__wash" data-tl-turn-wash aria-hidden="true"></canvas>
       <svg class="tl-turn__mark" viewBox="0 0 1271 1271" fill="currentColor" aria-hidden="true">
         <path fill-rule="evenodd" d="M635.5 0a635.5 635.5 0 1 0 0 1271a635.5 635.5 0 1 0 0 -1271zM635.5 71a564.5 564.5 0 1 0 0 1129a564.5 564.5 0 1 0 0 -1129z"/>
         <path d="M412 459H677V554H503V1051H412Z"/>
@@ -5483,34 +5488,39 @@ html { scroll-behavior: smooth; }
         <img class="tl-turn__product tl-turn__product--best" data-tm="2" src="/trinny-london/be-your-best.webp" alt="" width="283" height="573" loading="lazy" decoding="async" />
         <img class="tl-turn__product tl-turn__product--overnight" data-tm="3" src="/trinny-london/overnight-sensation.webp" alt="" width="230" height="424" loading="lazy" decoding="async" />
       </div>
+      <!-- The line the turn is for. It lands where the mark was, on the
+           warmed ground, and it DECODES IN PLACE on the same scroll — the
+           house kernel (`captionScramble`), scrubbed, so it types in, holds
+           lit and un-types out at a fixed position in both directions.
+           ⚠ EVERY LINE IS A GHOST PLUS A LIVE LAYER: the ghost is in flow,
+           carries the true text for the accessibility tree and HOLDS THE
+           BOX; the live layer sits absolutely over it and is the only thing
+           the writer touches, so a wider glyph run can never re-wrap or
+           shift the block. The live layer is a LEAF — the kernel writes
+           `textContent` and would destroy any markup inside it.
+           NO `data-m`: `useRevealMotion` would fade and lift these, which
+           is the thing this replaces. -->
+      <div class="tl-turn__copy">
+        <p class="tl-turn__eyebrow"><span class="tl-dc"><span class="tl-dc__ghost">Trinny London · The proposal</span><span class="tl-dc__live" data-tl-decode aria-hidden="true">Trinny London · The proposal</span></span></p>
+        <h2 class="tl-turn__title"><span class="tl-dc"><span class="tl-dc__ghost">AI-first, inside Trinny London.</span><span class="tl-dc__live" data-tl-decode aria-hidden="true">AI-first, inside Trinny London.</span></span></h2>
+        <p class="tl-turn__sub"><span class="tl-dc"><span class="tl-dc__ghost">What Loop Earplugs owns now, built for the people who run Trinny London.</span><span class="tl-dc__live" data-tl-decode aria-hidden="true">What Loop Earplugs owns now, built for the people who run Trinny London.</span></span></p>
+        <a class="tl-turn__cta" href="#proposition"><span class="tl-dc"><span class="tl-dc__ghost">The configuration</span><span class="tl-dc__live" data-tl-decode aria-hidden="true">The configuration</span></span> <span aria-hidden="true">↓</span></a>
+      </div>
     </div>
   </section>
 
-  <!-- ═══════════ 10 TRINNY LONDON · THE INTERSTITIAL (ADR-094, ADR-095) ═══════════
-       The copy that names the turn, after it: the proof was Loop's,
-       everything from here is Trinny London's. `data-corridor-kill` names
-       this as the first OPAQUE station below the corridor — the ambient
-       canvas fades against ITS top edge (useCorridorExitScroll) and the
-       route's cover rule promotes the same element while the exit band is
-       live (trinny-london.css). On the capable rung it overlaps the turn by
-       a viewport, so the coral slab slides over the still-pinned stage and
-       wipes the settled mark and products together. The products moved up
-       into the turn (ADR-095). ===== -->
-  <section class="station tl-inter" id="trinny" data-station="proposition" data-corridor-kill data-screen-label="10 Trinny London">
-    <div class="tl-inter__copy" data-m-group>
-      <p class="tl-inter__eyebrow" data-m="eyebrow">Trinny London · The proposal</p>
-      <h2 class="tl-inter__title" data-m="title">AI-first, inside Trinny London.</h2>
-      <p class="tl-inter__sub" data-m="body">What Loop Earplugs owns now, built for the people who run Trinny London.</p>
-      <a class="tl-inter__cta" href="#proposition" data-m="fade">The configuration <span aria-hidden="true">↓</span></a>
-    </div>
-  </section>
-
-  <!-- ═══════════ 11 THE PROPOSITION (ADR-094) ═══════════
+  <!-- ═══════════ 10 THE PROPOSITION (ADR-094, ADR-095 U1) ═══════════
        Title-left / paragraph-right head, then THEIR configuration plotted:
        the people, the encoded layer between them, the surfaces they already
        run. A record of their stack, not a metaphor — no Navigate / Encode /
-       Build labels (the Arc stays the Arc), no digits, no codenames. ===== -->
-  <section class="station tl-prop" id="proposition" data-station="proposition" data-screen-label="11 Proposition">
+       Build labels (the Arc stays the Arc), no digits, no codenames.
+       It is also the ambient's KILL EDGE now (ADR-095 U1 deleted the
+       interstitial slab that used to carry it): the first OPAQUE station
+       below the corridor, so the canvas fades against ITS top and the
+       route's cover rule — keyed on the same attribute — promotes it while
+       the exit band is live. It reaches this on the house parchment, since
+       the turn's wash resolves before the seam. ===== -->
+  <section class="station tl-prop" id="proposition" data-station="proposition" data-corridor-kill data-screen-label="10 Proposition">
     <div class="tl-prop__inner">
       <header class="tl-prop__head" data-m-group>
         <div class="tl-prop__lead">
@@ -5577,7 +5587,7 @@ html { scroll-behavior: smooth; }
   </section>
 
   <!-- ═══════════ 06 CONTACT ═══════════ -->
-  <section class="station" id="contact" data-station="contact" data-screen-label="12 Contact">
+  <section class="station" id="contact" data-station="contact" data-screen-label="11 Contact">
     <div class="contact" data-m-group>
       <div class="station__idx" style="justify-content:center">Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>
       <h2 class="contact__title" data-m="title">Plot your<br><em>course.</em></h2>

@@ -543,6 +543,125 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
   color: rgb(var(--tl-brand-rgb));
 }
 
+/* The ground, warmed to the client's colour by a fragment shader
+   (`turnWash.ts`) — ADR-095 U1, and the whole reason nothing slides over
+   this beat any more. It paints the FRAME and leaves the centre nearly
+   clean, so the mark keeps its bed and the line that follows has one; it
+   swells with the copy and resolves back to parchment as the copy leaves,
+   which is why the proposal below meets no edge. The element is a canvas,
+   but it also carries the CSS fallback: where WebGL is refused the writer
+   stamps `data-tl-wash="css"` and the same box paints a gradient instead. */
+.tl-root .tl-turn__wash {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.tl-root .tl-turn__stage[data-tl-wash="css"] .tl-turn__wash {
+  opacity: var(--tl-wash, 0);
+  background-image: radial-gradient(
+    120% 96% at 50% 46%,
+    rgba(var(--tl-brand-rgb), 0) 26%,
+    rgba(var(--tl-brand-rgb), 0.34) 62%,
+    rgba(var(--tl-brand-rgb), 0.72) 100%
+  );
+}
+
+/* The line the turn is for: centred ON the mark's own weld point, so it
+   lands exactly where the mark was rather than beside it. The block never
+   moves — no transform rides the reveal, only its ink (`--tl-cta-o`), and
+   each line's geometry is held by its ghost. */
+.tl-root .tl-turn__copy {
+  position: absolute;
+  left: 50%;
+  top: 54.5%;
+  translate: -50% -50%;
+  width: min(860px, 84%);
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: clamp(12px, 1.8vh, 20px);
+  opacity: var(--tl-cta-o, 1);
+}
+
+/* ⚠ THE GHOST HOLDS THE BOX AND THE LIVE LAYER FLOATS OVER IT. The kernel
+   keeps the string's LENGTH, but the glyphs it shuffles through are mono
+   caps and the copy is set in a proportional sans — so a decoding line is
+   wider than its resting self and would re-wrap. The ghost is the true
+   text, in flow, transparent: it fixes the width, the wrap and the height,
+   and it is what an assistive reader gets. The live layer is absolute over
+   it and is the only thing the writer touches. Stacking them in a grid
+   instead would let the decode change layout, which nudges scroll anchoring
+   — and the progress this whole beat is a function of (arcs.css's own
+   recorded churn bug). */
+.tl-root .tl-dc {
+  position: relative;
+  display: block;
+  min-height: 1em;
+}
+
+.tl-root .tl-dc__ghost,
+.tl-root .tl-dc__live {
+  display: block;
+  white-space: inherit;
+}
+
+.tl-root .tl-dc__ghost {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  pointer-events: none;
+  user-select: none;
+}
+
+.tl-root .tl-dc__live {
+  position: absolute;
+  inset: 0;
+}
+
+.tl-root .tl-turn__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-lit);
+  font-size: clamp(34px, 3.9vw, 62px);
+  line-height: 1.04;
+  letter-spacing: var(--track-display);
+  color: var(--tl-ink);
+}
+
+.tl-root .tl-turn__sub {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(16px, 1.2vw, 20px);
+  line-height: 1.4;
+  letter-spacing: var(--track-copy);
+  color: var(--tl-ink-2);
+  max-width: 44ch;
+}
+
+.tl-root .tl-turn__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 10px 16px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.5);
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--tl-ink);
+  text-decoration: none;
+}
+
+.tl-root .tl-turn__cta:hover {
+  border-color: var(--tl-ink);
+}
+
 .tl-root .tl-turn__field {
   position: absolute;
   inset: 0;
@@ -596,19 +715,21 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
 }
 
 /* The capable rung — the inverse of the stack's inert rung (section 5).
-   The stage pins; `#trinny` overlaps the turn by a viewport so the coral
-   slab slides over the still-pinned stage and the stage releases exactly
-   when it is covered (the ADR-082 `-120svh` precedent). ⚠ Keyed on the
-   MEDIA rung, never on `data-corridor-exit`: a margin on a transient
-   attribute would shift the document by a viewport when it clears. */
+   The stage pins for exactly its runway and then releases: `100svh` of pin
+   plus the runway, so the beat's own progress reaches 1 in the same frame
+   the stage lets go. ⚠ ADR-095 U1 DELETED THE OVERLAP. The first cut gave
+   the interstitial `margin-top: -100svh` so its slab slid up over the still
+   pinned stage — which is the "ugly paint floating over it" the owner
+   rejected. Nothing slides over the turn now; it resolves its own ground
+   and scrolls away like any other station. */
 @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
   .tl-root #turn {
-    height: calc(200svh + var(--tl-turn-runway));
+    height: calc(100svh + var(--tl-turn-runway));
     min-height: 0;
     padding: 0;
     display: block;
     /* ⚠ `align-content` aligns BLOCK content too (Chrome 123+): the base
-       rule's `center` put the stage a viewport down inside the 320svh
+       rule's `center` put the stage a viewport down inside the tall
        station, so it stuck at p ≈ 0.95 instead of 0.45 — the products
        entered clipped by a stage that had not arrived. Measured, not
        guessed: stage.top 973px at p 0.6 before this line. */
@@ -618,106 +739,21 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
     position: sticky;
     top: 0;
   }
-  .tl-root #trinny {
-    margin-top: -100svh;
-  }
 }
 
-/* ── 9. The interstitial — the copy that names the turn ───────────────
-   OPAQUE, full-bleed, one viewport. It is the corridor ambient's kill
-   edge (`data-corridor-kill` in the markup — the hook fades the canvas
-   against ITS top), and the cover rule below promotes the SAME element
-   while the exit band is live: the `#voidwalker` form (keeps its own
-   ground), never the transparent `#services` form. Keying both sides on
+/* ── 9. The ambient's kill edge ───────────────────────────────────────
+   The first OPAQUE station below the corridor — `#proposition` since
+   ADR-095 U1 deleted the interstitial slab that used to be it. The hook
+   fades the canvas against ITS top and this rule promotes the SAME element
+   while the exit band is live: the `#voidwalker` form (relative, z 6, its
+   own ground), never the transparent `#services` form. Keying both sides on
    one attribute is what stops JS and CSS naming different stations (the
-   ADR-030 §6 seam bug). Id specificity beats `.station:not(.hero)`'s
-   stars tile; the padding is the phone chrome band's own size, so the
-   copy never sits under the fixed corners. */
+   ADR-030 §6 seam bug), and it is why moving the edge was an attribute
+   move and nothing else. */
 html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
   position: relative;
   z-index: 6;
   content-visibility: visible;
-}
-
-.tl-root #trinny {
-  position: relative;
-  min-height: 100svh;
-  padding: 56px var(--hud-content-inset);
-  display: grid;
-  align-content: center;
-  justify-items: start;
-  overflow: hidden;
-  background-color: rgb(var(--void-rgb));
-  background-image: radial-gradient(
-    120% 90% at 82% 64%,
-    rgba(var(--tl-brand-rgb), 0.5) 0%,
-    rgba(var(--tl-brand-rgb), 0.2) 44%,
-    rgba(var(--tl-brand-rgb), 0) 76%
-  );
-}
-
-.tl-root .tl-inter__copy {
-  position: relative;
-  z-index: 1;
-  max-width: 640px;
-  margin-inline: var(--rail-inset, 0px);
-  display: grid;
-  gap: clamp(14px, 2vh, 22px);
-  justify-items: start;
-}
-
-.tl-root .tl-inter__eyebrow,
-.tl-root .tl-prop__eyebrow,
-.tl-root .tl-config__label {
-  margin: 0;
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  line-height: 1.2;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--tl-ink-3);
-}
-
-.tl-root .tl-inter__title {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-lit);
-  font-size: clamp(36px, 4.6vw, 72px);
-  line-height: 1.02;
-  letter-spacing: var(--track-display);
-  color: var(--tl-ink);
-}
-
-.tl-root .tl-inter__sub {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-text);
-  font-size: clamp(17px, 1.3vw, 21px);
-  line-height: 1.4;
-  letter-spacing: var(--track-copy);
-  color: var(--tl-ink-2);
-  max-width: 36ch;
-}
-
-.tl-root .tl-inter__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 6px;
-  padding: 10px 16px;
-  border: 1px solid rgba(var(--dawn-rgb), 0.5);
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--tl-ink);
-  text-decoration: none;
-}
-
-.tl-root .tl-inter__cta:hover {
-  border-color: var(--tl-ink);
 }
 
 /* ── 9. The proposition — their configuration, plotted ───────────────
@@ -907,11 +943,12 @@ html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
 }
 
 @media (max-width: 960px) {
-  .tl-root #trinny {
-    justify-items: stretch;
-  }
   /* The turn, static: the fallback mark centred, the four products at the
-     stage's corners, small enough to clear a phone-width ring. */
+     stage's corners, small enough to clear a phone-width ring, and the copy
+     resting at full strength over a static wash. */
+  .tl-root .tl-turn__copy {
+    width: 88%;
+  }
   .tl-root .tl-turn__product {
     width: clamp(72px, 22vw, 120px);
   }
@@ -952,9 +989,27 @@ html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  /* The writer parks under reduced motion; this is the belt to its braces —
-     a product rests where it is authored, whatever a var says. */
+/* Where the beat cannot run — a phone, a short window, reduced motion — the
+   writer parks and every one of its channels must REST AT THE END STATE, not
+   at zero: the composition is the point, the choreography was only how it
+   arrived. So the copy sits lit, the products sit where they are authored,
+   and the ground carries a static wash. */
+@media (max-width: 960px), (max-height: 680px), (prefers-reduced-motion: reduce) {
+  .tl-root .tl-turn__copy {
+    opacity: 1;
+  }
+  .tl-root .tl-turn__stage {
+    --tl-wash: 0.8;
+  }
+  .tl-root .tl-turn__wash {
+    opacity: var(--tl-wash);
+    background-image: radial-gradient(
+      120% 96% at 50% 46%,
+      rgba(var(--tl-brand-rgb), 0) 26%,
+      rgba(var(--tl-brand-rgb), 0.34) 62%,
+      rgba(var(--tl-brand-rgb), 0.72) 100%
+    );
+  }
   .tl-root .tl-turn__product {
     translate: none;
     rotate: var(--tm-rest-r);
