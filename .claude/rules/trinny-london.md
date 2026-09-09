@@ -12,6 +12,8 @@ paths:
   - "components/landing/home-v2/hooks/useCorridorExitScroll.ts"
   - "components/landing/home-v2/DepthGatewayScene/CorridorArmillary.tsx"
   - "scripts/capture-trinny-london.mjs"
+  - "lib/brandmark/morphTargetRef.ts"
+  - "tests/lib/trinny-mark.test.ts"
 description: The Trinny London pitch variant — the light lock, its own journey clock, the proof stack, the interstitial and the proposal
 ---
 
@@ -19,11 +21,13 @@ description: The Trinny London pitch variant — the light lock, its own journey
 
 A client pitch page built as a HOMEPAGE VARIANT on the ADR-053 recipe, forced
 into light, unlisted. Same `LandingPage`, same corridor, order
-hero → about → the Arc → **the proof STACK (in `#services`) → the Trinny
-interstitial → the proposal** → contact.
+hero → about → the Arc → **the proof STACK (in `#services`) → the turn (the
+parked mark morphs into the client's) → the Trinny interstitial → the
+proposal** → contact.
 
 **Read first**
 
+- [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock
 - [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed
 - [ADR-093](../../sentinel/decisions/093-trinny-london-light-locked-variant.md) — this route's lock and its journey clock
 - [ADR-053](../../sentinel/decisions/053-workshop-corridor-variant.md) — the recipe it repeats, and its two invariants
@@ -155,9 +159,8 @@ interstitial → the proposal** → contact.
 - **The products are alpha WebPs in `public/trinny-london/`** — cut from the
   `shearwater` engagement's harvest, the Naked Ambition roundel cropped off (a
   composited overlay, not the product). ⚠ CSP is `img-src 'self'`: no Contentful
-  URLs. ⚠ They float on `data-parallax` — the house channel — never a keyframe
-  (ADR-021: no wall-clock motion on the landing), and never a `transform:
-translate` beside it (the channel writes `translate`; a transform doubles it).
+  URLs. ⚠ Since ADR-095 they live in the TURN, not the interstitial, and they
+  carry NO `data-parallax` and NO `data-m` — see §The turn below.
 - **`--tl-brand-rgb` is a route-local token** (240, 104, 80, the Naked Ambition
   tube). Never a re-derivation of `--gold`: the WebGL golds are exempt from CSS
   by design and would go out of step.
@@ -166,14 +169,66 @@ translate` beside it (the channel writes `translate`; a transform doubles it).
 - **`mobile-section-seams.spec.ts` is `/`-only** — the trinny stations are not in
   its `STATION_IDS`; phones are covered by the capture script.
 
+## The turn (ADR-095)
+
+- ⚠ **`#turn` IS TRANSPARENT AND CARRIES NO KILL.** The canvas must live through
+  it: its cover form is `#services`'s (transparent, `content-visibility:
+visible`) keyed on `data-corridor-exit`, and `#trinny` keeps the one
+  `data-corridor-kill`. ⚠ **The child cover rule sets `z-index` ONLY** —
+  `home-v2.css` gives `#services > *` a `position: relative` that would un-stick
+  the turn's stage.
+- ⚠ **`align-content` ALIGNS BLOCK CONTENT (Chrome 123+).** The station's base rule
+  is a centred grid; the capable rung's `display: block` did not undo
+  `align-content: center`, and the stage sat a viewport down inside the 320svh
+  station — stuck at p ≈ 0.95 instead of 0.45 with every gate green. The rung
+  declares `align-content: start`. When a sticky child pins late, measure its
+  `top` at a known `p` before touching the writer.
+- **The seam is a MODULE REF, registered in the same layout effect as
+  `data-services-ring`** (`brandmarkMorphRef`, three-free): the corridor's parked
+  mark reads it ONCE at mount, `load()`s the builder lazily and writes the
+  target INTO the existing `aMorphTarget` attribute (never a geometry rebuild).
+  Registered only when the capable rung matches. ⚠ `readBrandmarkMorph()` is 0
+  without a spec and every consumer is identity at 0 — that is the byte-
+  identity proof for `/`, and the HUD snapshots are its gate. ⚠ ONE writer of
+  `progress`: `useTurnScroll`. Never write it from a test or a lab.
+- **Everything moves as a pure function of `#turn`'s rect** (`turnClock.ts`):
+  `p = (vh − top) / (vh + runway)`, `runway = height − 2·vh`; the morph opens at
+  0.25 (card 4 covers the mark until it has scrolled ~0.7vh) and settles by
+  0.80; the products enter over 0.42–0.97. Reverse scroll unwinds exactly;
+  nothing rides a clock (ADR-021, the motion-sickness ruling). The writer parks
+  under reduced motion or when the stage does not compute `sticky`.
+- ⚠ **THE PRODUCTS CARRY NO `data-parallax` AND NO `data-m`.** The parallax
+  channel derives `--py` from the element's LIVE rect — constant inside a
+  pinned stage — and writes `translate`, which the writer owns; `data-m` would
+  be a second owner of their opacity. Pose is five vars (`--tm-dx/-dy/-dr/-s/-o`)
+  through the `translate`/`rotate`/`scale` PROPERTIES, never a `transform`.
+  Rest positions are tokens (`--tm-rest-x/-y/-r`) on each modifier class.
+- **`#trinny { margin-top: -100svh }` on the capable rung** keeps the stage pinned
+  until the slab has covered it (the stage would otherwise unpin a viewport
+  before the mark's fade ends). ⚠ On the MEDIA rung, never on
+  `data-corridor-exit` — a transient attribute would shift the document by a
+  viewport when it clears.
+- **The mark's three copies derive from `mark/trinnyMark.ts`** (measured numbers,
+  not a trace): the SVG asset, the inline fallback (`fill="currentColor"`, hidden
+  under `html[data-services-ambient="true"]`), and the 3D target.
+  `tests/lib/trinny-mark.test.ts` pins them together. ⚠ Each glyph is ONE
+  outline; ⚠ the target is sampled ONCE (the sampler re-fits per call).
+- **The pairing is by class and polar rank** (`pairByPolarRank.ts`): one radius
+  split (0.42) classifies both marks, ring pairs with ring, the bars with the
+  monogram. A change to either mark's geometry re-asks whether the split still
+  falls between the base's ring and the target's monogram — the test pins the
+  band.
+- **Capture stops 14–17 are solved for `p`**, never guessed in pixels; the smoke
+  reads `data-tl-turn` the same way.
+
 ## Verifying
 
 ```bash
-npx vitest run tests/lib/trinny-london-parse.test.ts tests/lib/trinny-london-journey.test.tsx tests/lib/trinny-proof-order.test.ts tests/lib/theme-lock.test.tsx tests/lib/cases-registry.test.ts tests/lib/rail-instrument-marks.test.ts
+npx vitest run tests/lib/trinny-london-parse.test.ts tests/lib/trinny-london-journey.test.tsx tests/lib/trinny-proof-order.test.ts tests/lib/trinny-mark.test.ts tests/lib/theme-lock.test.tsx tests/lib/cases-registry.test.ts tests/lib/rail-instrument-marks.test.ts
 npx playwright test tests/visual/trinny-london-smoke.spec.ts --project=desktop
-npx playwright test tests/visual/landing-page.spec.ts -g "HUD" --project=desktop   # UNCHANGED
-node scripts/capture-trinny-london.mjs --vp 1920x1247
-node scripts/capture-trinny-london.mjs --vp 1280x720
+npx playwright test tests/visual/landing-page.spec.ts -g "HUD" --project=desktop   # UNCHANGED — the morph's identity-at-0 proof
+node scripts/capture-trinny-london.mjs --vp 1920x1247 --port <port>
+node scripts/capture-trinny-london.mjs --vp 1280x720 --port <port>
 ```
 
 ⚠ The capture is **headed and at the owner's own viewport** — every reference
