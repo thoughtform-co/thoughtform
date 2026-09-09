@@ -147,6 +147,10 @@ export const BRANDMARK_PHYSICS_CORE_COUNT_MOBILE = 650;
  *  denser gimbal shell (9600 dots at ~4.8px). See
  *  `BrandmarkPhysicsCoreActor`. */
 const DEFAULT_POINT_SIZE_PX = 2.8;
+/** ADR-095: how far a particle bulges off the straight line between its two
+ *  homes at the client-mark morph's midpoint (group-local units; the mark's
+ *  half-extent is 0.5). Scaled by sin(π·t), so 0 at both homes. */
+const DEFAULT_MORPH_LIFT = 0.12;
 
 /** Default per-particle opacity — the PARKED BASELINE (see point-size
  *  note above). Tuned subtle so the parked swirl doesn't compete with
@@ -366,6 +370,26 @@ export interface BrandmarkPhysicsCoreProps {
    *  Z (the pre-2026-06-25 dome-fill behaviour) so the lab + other
    *  consumers stay byte-identical. */
   targetHomes?: Float32Array | null;
+  /** ADR-095 — a SECOND per-particle home in the same LOCAL space as
+   *  `targetHomes` (length `count * 3`). The render shader mixes each
+   *  particle from its settled `aTarget3D` to this as `morph` rises, with a
+   *  per-particle stagger and a hashed flight arc. When omitted the
+   *  attribute is a copy of `aTarget3D`, so the mix is identity at any
+   *  `morph` and consumers that register no morph are byte-identical.
+   *  Arrives late by design (a route builds it after the GLB samples): it
+   *  is written into the existing attribute, never a geometry rebuild. */
+  morphTarget?: Float32Array | null;
+  /** The morph clock, 0 → 1. Default 0. */
+  morph?: number;
+  /** Live ref for `morph`. Read every frame inside `useFrame`. Wins over the
+   *  static prop when supplied. */
+  morphRef?: ReadonlyRef<number>;
+  /** The body colour at `morph` 1. Defaults to the landed palette. */
+  morphColor?: string;
+  /** The rim accent at `morph` 1. Defaults to `morphColor`, then landed. */
+  morphAccent?: string;
+  /** Mid-flight bulge, group-local units. Default `DEFAULT_MORPH_LIFT`. */
+  morphLift?: number;
   /** Per-particle CSS pixel size. Default `DEFAULT_POINT_SIZE_PX`. */
   pointSize?: number;
   /** Live ref for `pointSize`. Read every frame inside `useFrame` so
@@ -585,6 +609,12 @@ export function BrandmarkPhysicsCore({
   seedAtHome = false,
   seedFromPositions = null,
   targetHomes = null,
+  morphTarget = null,
+  morph = 0,
+  morphRef,
+  morphColor,
+  morphAccent,
+  morphLift = DEFAULT_MORPH_LIFT,
   pointSize = DEFAULT_POINT_SIZE_PX,
   pointSizeRef,
   color = "#caa554",
@@ -764,9 +794,29 @@ export function BrandmarkPhysicsCore({
     geo.setAttribute("aEdgeWeight", new THREE.BufferAttribute(aEdgeWeight, 1));
     geo.setAttribute("aAngle", new THREE.BufferAttribute(aAngle, 1));
     geo.setAttribute("aTarget3D", new THREE.BufferAttribute(aTarget3D, 3));
+    // ADR-095: the second home starts as a COPY of the first, so the morph
+    // mix is identity until a `morphTarget` is written into it (below). Built
+    // here rather than on demand so the shader's attribute is always bound —
+    // a declared-but-absent attribute is a driver-dependent default.
+    geo.setAttribute("aMorphTarget", new THREE.BufferAttribute(aTarget3D.slice(), 3));
 
     return geo;
   }, [resources, targetHomes]);
+
+  // ADR-095: write the client-mark target INTO the existing attribute instead
+  // of rebuilding the geometry — the target arrives late (a route builds it
+  // after the GLB samples, while the corridor is already painting), and a
+  // rebuild would dispose and re-upload every attribute mid-flight. Null
+  // restores the `aTarget3D` copy, i.e. identity.
+  useEffect(() => {
+    if (!geometry) return;
+    const attr = geometry.getAttribute("aMorphTarget") as THREE.BufferAttribute;
+    const base = geometry.getAttribute("aTarget3D") as THREE.BufferAttribute;
+    const n = attr.count * 3;
+    const src = morphTarget && morphTarget.length >= n ? morphTarget : (base.array as Float32Array);
+    (attr.array as Float32Array).set(src.subarray(0, n));
+    attr.needsUpdate = true;
+  }, [geometry, morphTarget]);
 
   // ── Material ───────────────────────────────────────────────
   const material = useMemo(() => {
@@ -784,6 +834,14 @@ export function BrandmarkPhysicsCore({
         // flat-rest palette so consumers that don't opt in are unchanged.
         uLandedColor: { value: new THREE.Color(landedColor ?? color) },
         uLandedAccent: { value: new THREE.Color(landedAccent ?? accentColor) },
+        // ADR-095 client-mark morph. Clock 0 and the landed palette by
+        // default, so a consumer that registers no morph is unchanged.
+        uMorph: { value: morph },
+        uMorphLift: { value: morphLift },
+        uMorphColor: { value: new THREE.Color(morphColor ?? landedColor ?? color) },
+        uMorphAccent: {
+          value: new THREE.Color(morphAccent ?? morphColor ?? landedAccent ?? accentColor),
+        },
         uOpacity: { value: opacity },
         uDepth: { value: depth },
         uCoverMorph: { value: coverMorph },
@@ -927,6 +985,15 @@ export function BrandmarkPhysicsCore({
       ? cleanFieldDotScaleRef.current
       : cleanFieldDotScale;
     const resolvedFreezeMotion = freezeMotionRef ? freezeMotionRef.current : freezeMotion;
+    const resolvedMorph = morphRef ? morphRef.current : morph;
+    // ADR-095: written on BOTH paths below (the material memo has no deps, so
+    // a late-arriving colour must reach the uniform per frame like the rest).
+    const writeMorph = () => {
+      mat.uniforms.uMorph.value = resolvedMorph;
+      mat.uniforms.uMorphLift.value = morphLift;
+      mat.uniforms.uMorphColor.value.set(morphColor ?? landedColor ?? color);
+      mat.uniforms.uMorphAccent.value.set(morphAccent ?? morphColor ?? landedAccent ?? accentColor);
+    };
 
     // Draw gate (2026-07-16 perf pass): at uOpacity 0 the point pass still
     // costs a full count-sized vertex run (sim texture fetch + raster of
@@ -969,6 +1036,7 @@ export function BrandmarkPhysicsCore({
       mat.uniforms.uLineJitter.value = lineJitter;
       mat.uniforms.uFreezeMotion.value = resolvedFreezeMotion ? 1 : 0;
       mat.uniforms.uTime.value = state.clock.elapsedTime;
+      writeMorph();
       return;
     }
 
@@ -1033,6 +1101,7 @@ export function BrandmarkPhysicsCore({
     mat.uniforms.uLineJitter.value = lineJitter;
     mat.uniforms.uFreezeMotion.value = resolvedFreezeMotion ? 1 : 0;
     mat.uniforms.uTime.value = state.clock.elapsedTime;
+    writeMorph();
   });
 
   if (!geometry) return null;

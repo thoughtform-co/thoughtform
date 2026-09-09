@@ -135,12 +135,19 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   uniform float uBandTrailLen;  // trail e-folding length behind the head (x01)
   uniform float uBandTrailGain; // trail brightness at the head
   uniform float uBandSizeBoost; // point-size boost on lit band particles
+  // ADR-095 client-mark morph (vertex-only → plain precision). uMorph is the
+  // eased 0→1 clock a route's turn writer drives; 0 everywhere else, and the
+  // whole block below is identity at 0 (mix(x, y, 0.0) is x; the bulge is
+  // scaled by sin(0)). uMorphLift is the mid-flight bulge in group units.
+  uniform float uMorph;
+  uniform float uMorphLift;
 
   attribute vec2 aUV;
   attribute float aLuma;        // per-particle phase [0, 1)
   attribute float aEdgeWeight;  // edge proximity [0, 1]
   attribute float aAngle;       // per-particle orientation (radians, vertex-only varying-to-fragment)
   attribute vec3 aTarget3D;     // ADR-023 2026-06-25 hybrid: volumetric wireframe home (LOCAL space)
+  attribute vec3 aMorphTarget;  // ADR-095: the SECOND home (LOCAL space); a copy of aTarget3D unless a route registered a morph
 
   varying float vLuma;
   varying float vEdgeWeight;
@@ -160,6 +167,10 @@ export const brandmarkCoreVertexShader = /* glsl */ `
   // Continuum band weights (gains pre-applied; 0 everywhere off-continuum).
   varying float vBandFill;
   varying float vBandHead;
+  // ADR-095: the per-particle morph progress (0 at rest on aTarget3D, 1 on
+  // aMorphTarget). Crosses as a VARYING so uMorph stays vertex-only and the
+  // shared-uniform precision rule above never applies to it.
+  varying float vMorphT;
 
   // Cheap deterministic hash for the per-band scanline displacement.
   float hash11(float n) {
@@ -267,7 +278,33 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // which is away from the camera in the corridor's forward-facing
     // pose) so the user reads "blown into the distance".
     pos.z -= flowBell * (0.30 + 0.20 * staggerSeed) * (1.0 - uCleanField);
-    
+
+    // ── CLIENT-MARK MORPH (ADR-095) — identity at uMorph = 0 ───────
+    // A route may register a SECOND home per particle (aMorphTarget) and
+    // drive uMorph 0 → 1 from its own scroll writer; the parked mark then
+    // re-forms as that shape. Per-particle stagger (a different hash from
+    // the corridor's, so the two flights never share a phase) makes it read
+    // as a swarm reorganising rather than a rigid lerp, and a hashed bulge
+    // direction — with real Z — sends each particle on an arc through depth
+    // rather than along the straight line. ⚠ The direction is NEVER
+    // normalize()d: a hashed vector can be zero, and NaN * sin(0) is NaN,
+    // which would corrupt the PARKED mark at uMorph 0. Everything else on
+    // the parked mark (flowBell 0, uCleanField 1) is untouched by this block.
+    const float MORPH_STAGGER = 0.35;
+    float morphStagger = fract(aLuma * 7.31 + staggerSeed * 0.5);
+    float mT = smoothstep(
+      0.0,
+      1.0,
+      clamp((uMorph - morphStagger * MORPH_STAGGER) / (1.0 - MORPH_STAGGER), 0.0, 1.0)
+    );
+    vec3 morphDir = vec3(
+      hash11(aLuma * 91.7) - 0.5,
+      hash11(aLuma * 53.3 + 1.7) - 0.5,
+      (hash11(aLuma * 17.9 + 3.1) - 0.5) * 2.0
+    );
+    pos = mix(pos, aMorphTarget, mT) + morphDir * (sin(mT * 3.14159265) * uMorphLift);
+    vMorphT = mT;
+
     // ── SUBTLE MATRIX GLITCH (uGlitch > 0) ───────────────────────
     // A gentle scanline tear that ONLY runs across the 2D → 3D handoff
     // band (uGlitch is a bell, 0 at both ends). Particles in the same
@@ -401,6 +438,11 @@ export const brandmarkCoreVertexShader = /* glsl */ `
     // already set sizeMul = uCleanFieldDotScale there, so this must be a no-op
     // (factor 0) when uCleanField = 1 or the centerpiece would double-shrink.
     sizeMul *= mix(1.0, uCleanFieldDotScale, wireCrisp * (1.0 - uCleanField));
+    // ADR-095: a mid-flight size lift on the client-mark morph so the swarm
+    // reads as particles in transit rather than a dissolve. sin bell — 0 at
+    // both homes, so the parked mark and the settled client mark are
+    // byte-identical in size.
+    sizeMul *= 1.0 + 0.25 * sin(mT * 3.14159265);
 
     // ── Density rank-clip — both ends tunable (decoupled) ────────
     // keepFrac ramps uCorridorKeep (clean = 0, corridor) → uCleanFieldKeep
@@ -460,6 +502,11 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   // byte-identical (fragment-only — no Invariant 8 precision constraint).
   uniform vec3 uLandedColor;
   uniform vec3 uLandedAccent;
+  // ADR-095: the palette the mark settles on at the end of a client-mark
+  // morph (fragment-only, no precision constraint). Defaults equal the
+  // landed palette, so consumers that register no morph are unchanged.
+  uniform vec3 uMorphColor;
+  uniform vec3 uMorphAccent;
   uniform float uOpacity;
   uniform float uTime;
   uniform float uGlitch;   // mediump via the precision stmt — matches vertex
@@ -493,6 +540,7 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
   varying float vCrisp;         // 1 at flat rest AND landed (presented), 0 mid-flight — clean shape
   varying float vBandFill;      // continuum band base-glow weight (gain pre-applied; 0 off-continuum)
   varying float vBandHead;      // continuum band pendulum-head + trail weight
+  varying float vMorphT;        // ADR-095: 0 on the parked mark → 1 on the client mark
 
   float hashF(float n) {
     return fract(sin(n * 12.9898) * 43758.5453);
@@ -677,6 +725,10 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // Clean-field lifts the dim toward full, uniform brightness (the mark
     // is flat at the centerpiece, so there is no depth to convey there).
     depthFactor = mix(depthFactor, 1.0, uCleanField);
+    // ADR-095: the client mark is a volumetric wireframe again (its target is
+    // extruded to the Thoughtform mark's own depth), so the dim the clean
+    // field flattened comes back with the morph. Identity at vMorphT 0.
+    depthFactor = mix(depthFactor, 0.70 + 0.30 * smoothstep(-0.06, 0.18, vDepth), vMorphT);
 
     // Parked-centerpiece palette convergence (2026-07-06 "one holographic
     // instrument" pass; supersedes the ADR-023 vWireCrisp gate, which had
@@ -690,6 +742,11 @@ export const brandmarkCoreFragmentShader = /* glsl */ `
     // and chips. Defaults make uLandedColor == uColor (lab no-op).
     vec3 bodyTone = mix(uColor, uLandedColor, uCleanField);
     vec3 accentTone = mix(uAccentColor, uLandedAccent, uCleanField);
+    // ADR-095: and from the landed palette to the client's as the shape
+    // becomes theirs — the colour rides the SAME per-particle clock as the
+    // position, so a particle still in flight is still ours.
+    bodyTone = mix(bodyTone, uMorphColor, vMorphT);
+    accentTone = mix(accentTone, uMorphAccent, vMorphT);
     // Tint blend. Edge particles (high \`vEdgeWeight\`, near the
     // silhouette extremes) trend toward the rim accent. Mix amount
     // is conservative so the body stays anchored in the gold body

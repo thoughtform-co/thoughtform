@@ -44,6 +44,7 @@ import {
 } from "@/components/landing/home-v2/services/hologram/HologramOrbits";
 import { ServicesCardRing } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
+import { readBrandmarkMorph } from "@/lib/brandmark/morphTargetRef";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
@@ -106,7 +107,11 @@ const orbitExitGetter = () =>
   Math.max(
     0,
     1 - resolveScenePalette().proofDim.orbits * servicesRingProgressRef.current.proofPresence
-  );
+  ) *
+  // ADR-095: the structural rings are the armature of OUR mark. When a route
+  // morphs the mark into a client's, they dissolve on the same eased clock
+  // (owner, 2026-09-09). 0 whenever no morph is registered ⇒ ×1.
+  (1 - readBrandmarkMorph());
 
 /**
  * ADR-056 — the cards' entrance CLOCK, not a fade (owner, 2026-07-28: the

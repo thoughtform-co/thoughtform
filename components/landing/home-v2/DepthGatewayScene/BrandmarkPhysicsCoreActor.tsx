@@ -56,6 +56,7 @@ import {
   type BrandmarkCoreShape,
 } from "@/components/brand/BrandmarkPhysicsCore";
 import { sampleBrandmark3D } from "@/lib/brandmark/sampleBrandmark3D";
+import { brandmarkMorphRef, readBrandmarkMorph } from "@/lib/brandmark/morphTargetRef";
 import {
   rasterizeBrandmarkToWorldPositions,
   worldPositionsToLocal,
@@ -542,6 +543,9 @@ export function BrandmarkPhysicsCoreActor({
   const cleanFieldDotScaleRef = useRef(CENTER_DOT_SCALE_BASE);
   const opacityRef = useRef(0);
   const pointSizeRef = useRef(CORE_POINT_SIZE_FLAT);
+  // ADR-095: the client-mark morph clock, mirrored from the module ref once
+  // per frame (0 whenever no route registered a morph — identity).
+  const morphRef = useRef(0);
   const pausedRef = useRef(true);
 
   // Pointer-look listener for the parked unified instrument (window-level: the
@@ -892,6 +896,7 @@ export function BrandmarkPhysicsCoreActor({
     const vwInk = (v: number) => v + (1 - v) * vwRelease;
     opacityRef.current =
       (armedOnly || inSvgRest ? 0 : parkedOpacity * vwInk(handoffFade)) * vwInk(dimMix);
+    morphRef.current = readBrandmarkMorph();
     // Crisp small specks for the flat silhouette → slightly larger
     // specks for the luminous 3D body, riding the depth extrude — with a
     // mid-flight DIP (terminal-crisp pass, see CORE_POINT_SIZE_FLIGHT_DIP)
@@ -1119,6 +1124,7 @@ export function BrandmarkPhysicsCoreActor({
             cleanFieldDotScaleRef={cleanFieldDotScaleRef}
             opacityRef={opacityRef}
             pointSizeRef={pointSizeRef}
+            morphRef={morphRef}
             color={color}
             accentColor={accentColor}
             landedColor={LANDED_WIRE_COLOR}
@@ -1157,6 +1163,7 @@ interface BrandmarkPhysicsCoreWithGLBProps {
   cleanFieldDotScaleRef: { readonly current: number };
   opacityRef: { readonly current: number };
   pointSizeRef: { readonly current: number };
+  morphRef: { readonly current: number };
   color: string;
   accentColor: string;
   landedColor: string;
@@ -1179,6 +1186,7 @@ function BrandmarkPhysicsCoreWithGLB({
   cleanFieldDotScaleRef,
   opacityRef,
   pointSizeRef,
+  morphRef,
   color,
   accentColor,
   landedColor,
@@ -1265,6 +1273,35 @@ function BrandmarkPhysicsCoreWithGLB({
     }
     return result;
   }, [scene, count]);
+
+  // ── ADR-095: a route's client-mark morph target ──
+  // Read the registry ONCE at mount (the `data-services-ring` idiom in
+  // CorridorArmillary): a morph is a ROUTE property, not a scroll state, and
+  // the registering page's layout effect lands in the same commit as the
+  // corridor mount, before this leaf can exist. The builder is loaded lazily
+  // (a dynamic import on the route side — `three` never enters the route's
+  // static graph) and handed the mark's OWN normalised homes, so the target
+  // it returns pairs slot-for-slot in the same space. Production registers
+  // nothing ⇒ `morphTarget` stays null ⇒ the attribute stays a copy of
+  // `aTarget3D` and `uMorph` stays 0 — identity. A rejected load leaves the
+  // mark ours, silently: the page still reads without the turn.
+  const morphSpec = useState(() => brandmarkMorphRef.current.spec)[0];
+  const [morphTarget, setMorphTarget] = useState<Float32Array | null>(null);
+  useEffect(() => {
+    if (!morphSpec || !targetHomes) return;
+    let alive = true;
+    morphSpec
+      .load()
+      .then((m) => {
+        if (alive) setMorphTarget(m.buildTarget(targetHomes, count));
+      })
+      .catch(() => {
+        /* no morph: the mark simply stays ours */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [morphSpec, targetHomes, count]);
 
   // ── Per-service scan anchors ON the wireframe ──
   // The #services CV-scan leader lines target regions of the MARK itself
@@ -1426,6 +1463,11 @@ function BrandmarkPhysicsCoreWithGLB({
       accentColor={accentColor}
       landedColor={landedColor}
       landedAccent={landedAccent}
+      morphTarget={morphTarget}
+      morphRef={morphRef}
+      morphColor={morphSpec?.color}
+      morphAccent={morphSpec?.accent}
+      morphLift={morphSpec?.lift}
       pausedRef={pausedRef}
       reducedMotion={reducedMotion}
       // ── Production appearance (PRODUCTION_* constants above). These
