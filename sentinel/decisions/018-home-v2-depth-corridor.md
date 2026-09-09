@@ -4236,6 +4236,73 @@ zero console errors. Don't diagnose a live SSR bug from
 (or check `preview_logs` server-side) before concluding a fix didn't
 take.
 
+## 2026-09-09 — the epilogue's subject moves from the market to the offer
+
+**Owner, reading the beat on `/trinny-london`:** the "everyone is racing"
+framing "was relevant a few months ago"; the proposition now is that we build
+something the client owns and their team can run.
+
+**The diagnosis.** The beat's SUBJECT was the market. "EVERYONE IS RACING TO /
+BUILD THIS CAPABILITY." is a claim about OpenAI, Anthropic and Palantir, and
+our own position was "WE HELP YOU OWN YOURS" — a four-word clause hanging off
+their headline. The 2026-07-27 BUILD/OWN inversion was real and it worked while
+the race was news. Once the race stopped being news the headline had nothing
+left to do, and the subordinate clause had always been the actual argument.
+
+**The move: invert the HIERARCHY, not the verbs, and throw nothing away.**
+
+|        | before                                           | after                                                       |
+| ------ | ------------------------------------------------ | ----------------------------------------------------------- |
+| title  | EVERYONE IS RACING TO / _BUILD THIS CAPABILITY._ | AN INTELLIGENCE LAYER YOU OWN, / _AND A TEAM THAT RUNS IT._ |
+| CTA    | WE HELP YOU OWN YOURS → `#contact`               | SEE WHAT WE LEAVE BEHIND → `#services`                      |
+| note   | Before the labs sell it back to you.             | _unchanged_                                                 |
+| ticker | evidence for the title's claim                   | the REASON the title's claim is urgent                      |
+
+The ticker is promoted, not demoted: three real headlines stop being proof of
+something we assert and become the pressure the offer answers, with the note
+tying them together unchanged.
+
+⚠ **THE TITLE IS THE PAIR, and that is the whole shape** — "a layer nobody
+curates freezes; a trained team with no layer evaporates; the pair is the
+product" (`thoughtform-strategy`, `04-the-offering.md`). Line one is the layer,
+line two the team. Dropping either half leaves a claim this practice does not
+make, and the gold `<em>` sits on the behaviour half.
+
+⚠ **AND IT MAY NEVER SAY "SELF-SUFFICIENT."** The same reference bans the word
+outright: _say the behaviour, because the abstraction hides the mechanics that
+make it real._ "A team that runs it" is the behaviour. This is worth recording
+because the owner's own framing for the change used the banned word — the
+positioning is right and the vocabulary is not.
+
+⚠ **THE CTA'S DESTINATION MOVED WITH ITS LABEL.** It used to be the beat's
+argument, and `#contact` is where an argument sends you. It is a MOVE now, and
+a control that says "see what we leave behind" has to land somewhere that shows
+it: `#services` opens on the proof casefile and then the cards, every one of
+which carries its own `leavesWith` row (`servicePlateData.ts` — the embedded
+card's reads "An AI layer your team owns").
+
+**This closes a drift with the doctrine.** `05-engagements.md` describes a
+handover beat on the site — _"after the market-race section, tagged
+04 · HANDOVER, headline YOUR TEAM RUNS IT WITHOUT US"_ — which has never
+existed. The corridor ended on the market's claim and the site never landed its
+own. This beat is now that beat.
+
+**Two surfaces, in lockstep:** `CorridorStationHeaders.tsx` (`SIGNAL_CONTENT`,
+`SignalActions`) and `MobileEpilogueSignal.tsx` (title, CTA, and its
+`aria-label`, which is the third thing that moves). It reaches `/`,
+`/claude-workshop` and `/trinny-london` — the copy is hardcoded in the corridor,
+not threaded through `corridorText`.
+
+⚠ **THE MOBILE TWIN IS THE ONE PLACE THE STRING MAY DIVERGE, and both halves
+are FIT rather than copy.** Measured at 23.4px in a 320px box (390×844): the
+desktop's two authored lines wrap to three and the natural break falls INSIDE
+the compound noun — "AN INTELLIGENCE / LAYER YOU OWN," — and at 360px it also
+orphans "IT." onto a fourth line. The twin binds the noun with a non-breaking
+space and drops the authored `<br>`, which gives three balanced lines identical
+at 360 / 390 / 430 with the GOLD marking the pair's boundary instead of the
+line break. Desktop needs neither: measured 2 lines, no clipping, 320px of
+margin each side at 1280×720 and 586px at 1920×1247.
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

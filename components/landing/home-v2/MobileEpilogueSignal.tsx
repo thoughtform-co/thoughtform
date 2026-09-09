@@ -147,21 +147,34 @@ export function MobileEpilogueSignal() {
       ref={ref}
       className="home-v2-mobile-signal"
       role="region"
-      aria-label="Everyone is racing to build this capability"
+      aria-label="An intelligence layer you own, and a team that runs it"
       aria-hidden="false"
     >
-      {/* Keep in lockstep with SIGNAL_CONTENT.titleHtml
-          (CorridorStationHeaders) — same beat, two surfaces. The title's
-          BUILD and the CTA's OWN below are a deliberate inversion; move
-          them together. */}
+      {/* ⚠ KEEP IN LOCKSTEP WITH `SIGNAL_CONTENT.titleHtml`
+          (CorridorStationHeaders) — same beat, two surfaces, and the full
+          reasoning for this copy lives there. In short: the title is the
+          PAIR (a layer, and a team that runs it), the race demoted to the
+          ticker that was already its evidence, and the word
+          "self-sufficient" is banned in copy — say the behaviour. The
+          aria-label above is the third thing to move. */}
+      {/* ⚠ NO AUTHORED `<br>` HERE, AND THE COMPOUND NOUN IS BOUND — the
+          one place this surface may diverge from the desktop string, and
+          both halves are fit rather than copy. Measured at 23.4px in a
+          320px box (390×844): the desktop's two authored lines wrap to
+          three, and the natural break falls INSIDE "intelligence layer"
+          ("AN INTELLIGENCE / LAYER YOU OWN,"); at 360px it also orphans
+          "IT." onto a fourth. Binding the noun and letting the rest flow
+          gives three balanced lines at every phone width, and the GOLD
+          `<em>` still marks the pair's boundary — the colour does the job
+          the line break does on desktop. */}
       <h2 className="home-v2-mobile-signal__title">
-        EVERYONE IS RACING TO
-        <br />
-        <em>BUILD THIS CAPABILITY.</em>
+        AN INTELLIGENCE&nbsp;LAYER YOU OWN, <em>AND A TEAM THAT RUNS IT.</em>
       </h2>
       <div className="home-v2-mobile-signal__actions">
-        <a className="home-v2-mobile-signal__cta" href="#contact">
-          <span className="home-v2-mobile-signal__cta-label">WE HELP YOU OWN YOURS</span>
+        {/* `#services`, not `#contact` — see the note beside the desktop
+            CTA: this is a move now, not the beat's argument. */}
+        <a className="home-v2-mobile-signal__cta" href="#services">
+          <span className="home-v2-mobile-signal__cta-label">SEE WHAT WE LEAVE BEHIND</span>
           <span className="home-v2-mobile-signal__cta-chevrons" aria-hidden="true">
             <span className="home-v2-mobile-signal__cta-chev" />
             <span className="home-v2-mobile-signal__cta-chev" />

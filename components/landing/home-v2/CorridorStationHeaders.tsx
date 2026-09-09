@@ -800,16 +800,40 @@ function StationBlock({
 // anchor pattern are identical — only the CSS variant (`--signal`)
 // and the opacity driver differ.
 const SIGNAL_CONTENT: StationContent = {
-  // Owner, 2026-07-27. The accent moved from the leading noun to the
-  // CLOSING phrase, which is where every other headline on the site puts
-  // it ("Tools the team builds itself", "Plot your course.") — and it is
-  // the phrase the ticker underneath is evidence for.
+  // The accent sits on the CLOSING phrase, which is where every other
+  // headline on the site puts it ("Tools the team builds itself", "Plot
+  // your course.") — owner, 2026-07-27, and unchanged since.
   //
-  // ⚠ The title and the CTA beneath it are a deliberate INVERSION —
-  // everyone races to BUILD, we help you OWN. Swapping either verb alone
-  // collapses the pair into a repetition and loses the whole point of the
-  // beat. Change them together or not at all.
-  titleHtml: "EVERYONE IS RACING TO<br><em>BUILD THIS CAPABILITY.</em>",
+  // ⚠ THE SUBJECT OF THIS BEAT IS OURS NOW, NOT THE MARKET'S (owner,
+  // 2026-09-09 — supersedes the 2026-07-27 BUILD/OWN inversion, which is
+  // recorded below because the reasoning still binds one level up).
+  //
+  // It used to read "EVERYONE IS RACING TO / BUILD THIS CAPABILITY." with
+  // "WE HELP YOU OWN YOURS" as its CTA — a claim about OpenAI, Anthropic
+  // and Palantir, with our own position as a four-word clause hanging off
+  // their headline. That inversion was real and it worked while the race
+  // was news; once it stopped being news the headline had nothing left to
+  // do, and the subordinate clause was always the actual argument.
+  //
+  // So the hierarchy inverts rather than the verbs: OWNERSHIP is the
+  // title, and the race demotes to the layer where its evidence already
+  // lives — the ticker underneath. Nothing is thrown away. The ticker
+  // stops being proof of a claim we are making and becomes the reason the
+  // claim is urgent, which is a better job for three real headlines, and
+  // the note ("Before the labs sell it back to you.") ties them together
+  // unchanged.
+  //
+  // ⚠ THE TITLE IS THE PAIR, and that is the whole shape — "a layer
+  // nobody curates freezes; a trained team with no layer evaporates; the
+  // pair is the product" (thoughtform-strategy, `04-the-offering.md`).
+  // Line one is the layer, line two is the team. Dropping either half
+  // leaves a claim this practice does not make.
+  //
+  // ⚠ AND IT MAY NEVER SAY "SELF-SUFFICIENT" — the same reference bans
+  // the word outright: say the behaviour, because the abstraction hides
+  // the mechanics that make it real. "A team that runs it" is the
+  // behaviour; "a self-sufficient team" is the abstraction.
+  titleHtml: "AN INTELLIGENCE LAYER YOU OWN,<br><em>AND A TEAM THAT RUNS IT.</em>",
 };
 
 interface SignalTickerItem {
@@ -1196,10 +1220,16 @@ function ChevronCluster({ flipped }: { flipped?: boolean }) {
 function SignalActions() {
   return (
     <div className="home-v2-signal-actions">
-      <a className="home-v2-signal-cta" href="#contact">
+      {/* ⚠ THE DESTINATION MOVED WITH THE LABEL (2026-09-09). The CTA used
+          to be the beat's argument ("WE HELP YOU OWN YOURS") and `#contact`
+          was where an argument sends you. It is a MOVE now — the claim went
+          up into the title — and a control that says "see what we leave
+          behind" has to land somewhere that shows it. `#services` opens on
+          the proof casefile (what was left behind at one client) and then
+          the cards, every one of which names its own `leavesWith` row. */}
+      <a className="home-v2-signal-cta" href="#services">
         <ChevronCluster />
-        {/* OWN, against the title's BUILD — see the note on SIGNAL_CONTENT. */}
-        <span className="home-v2-signal-cta__label">WE HELP YOU OWN YOURS</span>
+        <span className="home-v2-signal-cta__label">SEE WHAT WE LEAVE BEHIND</span>
         <ChevronCluster flipped />
       </a>
       <p className="home-v2-signal-note">Before the labs sell it back to you.</p>

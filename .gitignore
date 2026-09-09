@@ -54,6 +54,7 @@ yarn-error.log*
 .cursor/arc-portfolio-shots/
 .cursor/morph-shots/
 .cursor/trinny-shots/
+.cursor/signal-shots/
 
 # Local screenshot captures (root-only, keeps tracked design/inspiration/**.png)
 /*.png
