@@ -1,3 +1,4 @@
+import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -6,9 +7,11 @@ import {
   journeySector,
 } from "@/components/landing/v7/rail-instruments/journeyOrder";
 import { markState } from "@/components/landing/v7/rail-instruments/markState";
+import { useJourneyMarks } from "@/components/landing/v7/rail-instruments/useJourneyMarks";
 import { SECTION_GLYPHS } from "@/components/landing/v7/rail-instruments/sectionGlyphs";
 import { MANIFEST_ENTRIES } from "@/lib/rail-manifest/entries";
 import { resolveActiveIdx, LAST_CORRIDOR_IDX } from "@/lib/rail-manifest/resolveActiveIdx";
+import { READOUT_SECTIONS } from "@/lib/rail-manifest/sectionLabel";
 
 import {
   TRINNY_JOURNEY,
@@ -163,6 +166,34 @@ describe("the trinny-london journey roster", () => {
     // `MarkRow` prints it in the lab's explain mode, and an unnamed mark
     // there is a blank seat with nothing to say which one it is.
     expect(() => buildJourneyRoster(["x"], "x", [{ id: "x" }], [])).toThrow(/pass one explicitly/);
+  });
+});
+
+describe("the hook publishes the roster's own SECTOR total", () => {
+  it("does not leave production's denominator on a variant", () => {
+    /* ⚠ THIS SHIPPED AND WAS CAUGHT BY LOOKING. The hook seeds its state
+       with `READOUT_SECTIONS.length` and bails out of `setMarks` when the
+       POSITION is unchanged — and at rest on the hero every position is 0,
+       so the first update compared equal and the seeded total survived.
+       Live reading: `01/07` on a five-row page, with all six marks correct
+       beside it. The seed now comes from the roster and the equality check
+       compares the total.
+
+       Asserting the two totals DIFFER is what makes this a real guard: if
+       a future variant happened to have seven rows, the bug would be
+       invisible again — so the test that matters is on a roster whose
+       total is not production's. */
+    expect(TRINNY_JOURNEY.sectorRows.length).toBe(5);
+    expect(TRINNY_JOURNEY.sectorRows.length).not.toBe(READOUT_SECTIONS.length);
+
+    const { result } = renderHook(() => useJourneyMarks(true, TRINNY_JOURNEY));
+    expect(result.current.sector.total).toBe(5);
+    expect(result.current.sector.seat).toBe(0);
+  });
+
+  it("still publishes production's own total when no roster is given", () => {
+    const { result } = renderHook(() => useJourneyMarks(true));
+    expect(result.current.sector.total).toBe(READOUT_SECTIONS.length);
   });
 });
 

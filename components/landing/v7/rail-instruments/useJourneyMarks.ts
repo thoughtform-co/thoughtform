@@ -67,10 +67,16 @@ export interface JourneyMarks {
  * Nothing here needs a string — the marks are positional.
  */
 export function useJourneyMarks(enabled: boolean, roster?: JourneyRoster): JourneyMarks {
+  /* ⚠ THE INITIAL TOTAL COMES FROM THE ROSTER WHEN THERE IS ONE, and that is
+     not belt-and-braces. The equality check below bails when the POSITION is
+     unchanged, and at rest on the hero every position is 0 — so a production
+     default here survives the first update and the rail prints production's
+     denominator on a page with five rows. Measured live: `01/07` on a
+     five-row variant, with every mark correct beside it. */
   const [marks, setMarks] = useState<JourneyMarks>(() => ({
     activeIdx: 0,
     seat: 0,
-    sector: { seat: 0, total: READOUT_SECTIONS.length },
+    sector: { seat: 0, total: (roster?.sectorRows ?? READOUT_SECTIONS).length },
   }));
 
   useEffect(() => {
@@ -103,7 +109,10 @@ export function useJourneyMarks(enabled: boolean, roster?: JourneyRoster): Journ
         sector = { seat, total: READOUT_SECTIONS.length };
       }
       setMarks((prev) =>
-        prev.activeIdx === activeIdx && prev.seat === seat && prev.sector.seat === sector.seat
+        prev.activeIdx === activeIdx &&
+        prev.seat === seat &&
+        prev.sector.seat === sector.seat &&
+        prev.sector.total === sector.total
           ? prev
           : { activeIdx, seat, sector }
       );
