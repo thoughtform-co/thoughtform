@@ -36,7 +36,13 @@ import {
   TURN_MORPH_START,
   turnProgress,
   turnRunway,
+  washOf,
+  veilOf,
+  ctaInOf,
+  ctaOutOf,
+  TURN_VEIL_MAX,
 } from "@/app/(marketing)/trinny-london/turn/turnClock";
+import { turnDecodeFrame } from "@/app/(marketing)/trinny-london/turn/turnDecode";
 
 const ROOT = process.cwd();
 const SVG_PATH = join(ROOT, "public/trinny-london/trinny-london-mark.svg");
@@ -241,7 +247,7 @@ describe("buildTarget — the client's mark as a wireframe in the parked mark's 
 
 describe("turnClock", () => {
   const VH = 1000;
-  const HEIGHT = 2 * VH + 1200;
+  const HEIGHT = VH + 1200;
 
   it("progress runs 0 → 1 from the top's arrival to the runway's end, monotone", () => {
     expect(turnRunway(HEIGHT, VH)).toBe(1200);
@@ -299,5 +305,111 @@ describe("turnClock", () => {
     expect(Number.isFinite(dist) && Number.isFinite(off) && Number.isFinite(fov)).toBe(true);
     const derived = 0.5 + off / (2 * dist * Math.tan((fov * Math.PI) / 360));
     expect(Math.abs(derived - TURN_MARK_CENTER_Y)).toBeLessThan(0.005);
+  });
+});
+
+describe("the turn's ground and the mark it puts away", () => {
+  it("the wash swells and RESOLVES — the beat ends on the page's own ground", () => {
+    // ADR-095 U1: the first cut slid an opaque slab up over the stage and the
+    // owner rejected it. Nothing covers the turn now, so the wash has to come
+    // back to nothing by the end or the seam it avoided would just move.
+    expect(washOf(0)).toBe(0);
+    expect(washOf(0.3)).toBe(0);
+    expect(washOf(0.7)).toBeCloseTo(1, 5);
+    expect(washOf(0.85)).toBeCloseTo(1, 5);
+    expect(washOf(1)).toBe(0);
+    let peak = 0;
+    for (let p = 0; p <= 1.0001; p += 0.01) peak = Math.max(peak, washOf(p));
+    expect(peak).toBeCloseTo(1, 5);
+  });
+
+  it("the mark is veiled back, never all the way out", () => {
+    expect(veilOf(0)).toBe(0);
+    expect(veilOf(0.5)).toBe(0);
+    expect(veilOf(1)).toBeCloseTo(TURN_VEIL_MAX, 5);
+    expect(TURN_VEIL_MAX).toBeLessThan(1);
+    // It gets out of the copy's way BEFORE the copy arrives.
+    expect(veilOf(0.72)).toBeGreaterThan(veilOf(0.6));
+    expect(ctaInOf(0.6)).toBe(0);
+  });
+
+  it("the copy types in, holds lit, then un-types — two clocks, never overlapping", () => {
+    expect(ctaInOf(0.5)).toBe(0);
+    expect(ctaInOf(0.78)).toBeCloseTo(1, 5);
+    expect(ctaOutOf(0.85)).toBe(0);
+    expect(ctaOutOf(1)).toBeCloseTo(1, 5);
+    // The hold: fully lit and not yet leaving.
+    expect(ctaInOf(0.84)).toBeCloseTo(1, 5);
+    expect(ctaOutOf(0.84)).toBe(0);
+  });
+});
+
+describe("turnDecodeFrame — the scrubbed decode", () => {
+  const FINALS = [
+    "Trinny London · The proposal",
+    "AI-first, inside Trinny London.",
+    "What Loop Earplugs owns now, built for the people who run Trinny London.",
+    "The configuration",
+  ] as const;
+  const rand = () => 0.5;
+  const resolved = (out: string, final: string) => {
+    let n = 0;
+    for (let i = 0; i < final.length; i++) if (out[i] === final[i]) n++;
+    return n;
+  };
+
+  it("holds every line's LENGTH while it decodes — the geometry cannot change", () => {
+    for (let p = 0; p <= 1.0001; p += 0.02) {
+      for (let i = 0; i < FINALS.length; i++) {
+        const out = turnDecodeFrame(FINALS, i, p, 0, rand);
+        // Either not started (the ghost alone holds the box) or full length.
+        expect(out.length === 0 || out.length === FINALS[i].length).toBe(true);
+      }
+    }
+  });
+
+  it("resolves monotonically forward and dissolves monotonically back", () => {
+    for (let i = 0; i < FINALS.length; i++) {
+      let last = -1;
+      for (let p = 0; p <= 1.0001; p += 0.02) {
+        const n = resolved(turnDecodeFrame(FINALS, i, p, 0, rand), FINALS[i]);
+        expect(n).toBeGreaterThanOrEqual(last);
+        last = n;
+      }
+      // ⚠ The dissolve CONTRACTS: a resolved character becomes nothing, so
+      // the string shortens from the left (the kernel's own documented
+      // behaviour) and its LENGTH is the monotone measure, not a per-index
+      // match — a scramble glyph can coincide with the final character.
+      let prev = Infinity;
+      for (let p = 0; p <= 1.0001; p += 0.02) {
+        const n = turnDecodeFrame(FINALS, i, 1, p, rand).length;
+        expect(n).toBeLessThanOrEqual(prev);
+        prev = n;
+      }
+    }
+  });
+
+  it("every line is blank at the start, lit together at the end, gone after the out", () => {
+    for (let i = 0; i < FINALS.length; i++) {
+      expect(turnDecodeFrame(FINALS, i, 0, 0, rand)).toBe("");
+      expect(turnDecodeFrame(FINALS, i, 1, 0, rand)).toBe(FINALS[i]);
+      expect(turnDecodeFrame(FINALS, i, 1, 1, rand)).toBe("");
+      // The un-type runs last line FIRST — the block empties from the bottom.
+      const early = 0.3;
+      const bottom = turnDecodeFrame(FINALS, FINALS.length - 1, 1, early, rand).length;
+      const top = turnDecodeFrame(FINALS, 0, 1, early, rand).length;
+      expect(bottom / FINALS[3].length).toBeLessThan(top / FINALS[0].length);
+    }
+  });
+
+  it("never scrambles whitespace, and is deterministic for a given random", () => {
+    for (let p = 0.62; p < 1; p += 0.05) {
+      const out = turnDecodeFrame(FINALS, 2, p, 0, rand);
+      if (!out) continue;
+      for (let i = 0; i < FINALS[2].length; i++) {
+        if (FINALS[2][i] === " ") expect(out[i]).toBe(" ");
+      }
+      expect(turnDecodeFrame(FINALS, 2, p, 0, rand)).toBe(out);
+    }
   });
 });

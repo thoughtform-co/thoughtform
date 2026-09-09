@@ -161,10 +161,10 @@ test.describe("Trinny London pitch variant", () => {
     const order = await page.evaluate(() =>
       [...document.querySelectorAll("section[id]")].map((s) => s.id)
     );
-    // The parse-level order (ADR-094 added the two stations after the proof,
-    // ADR-095 the turn between them; the cards inside #services are
-    // `article`s, not sections).
-    const stations = ["hero", "about", "services", "turn", "trinny", "proposition", "contact"];
+    // The parse-level order (ADR-094 added the proposal after the proof,
+    // ADR-095 the turn before it — and ADR-095 U1 deleted the interstitial
+    // slab between them; the cards inside #services are `article`s).
+    const stations = ["hero", "about", "services", "turn", "proposition", "contact"];
     expect(order.filter((id) => stations.includes(id))).toEqual(stations);
     await expect(page.locator("#home-corridor-mount")).toHaveCount(1);
 
@@ -283,12 +283,13 @@ test.describe("Trinny London pitch variant", () => {
     expect(await slotStates(page)).toEqual(["covered", "covered", "covered", "pinned"]);
     await expect(page.locator(".tl-stack__runway")).toHaveAttribute("data-pc-active", "3");
 
-    /* ADR-095 — THE TURN. A transparent station the canvas lives through:
-       its stage pins, the ambient hold and the exit band stay live, the
-       journey turns to the Proposal, and the route's writer publishes the
-       beat's clock on the station (`data-tl-turn`, a pure function of its
-       rect: `(vh − top) / (vh + runway)`, runway = height − 2·vh). The
-       fallback SVG is hidden while the WebGL mark is parked on stage. */
+    /* ADR-095 — THE TURN, and ADR-095 U1's ground + decoded line. A
+       transparent station the canvas lives through: its stage pins, the
+       ambient hold and the exit band stay live, the journey turns to the
+       Proposal, and the route's writer publishes the beat's clock on the
+       station (`data-tl-turn`, a pure function of its rect:
+       `(vh − top) / (vh + runway)`, runway = height − vh). NOTHING slides
+       over it — the ground itself warms and resolves. */
     const turn = await page.evaluate(() => {
       const el = document.getElementById("turn");
       const r = el?.getBoundingClientRect();
@@ -300,10 +301,44 @@ test.describe("Trinny London pitch variant", () => {
       };
     });
     expect(turn.stage).toBe("sticky");
-    const runway = Math.max(1, turn.height - 2 * turn.vh);
-    const scrollForP = (p: number) => Math.round(turn.top + p * (turn.vh + runway) - turn.vh);
+    /** ⚠ CONVERGE ON THE PUBLISHED CLOCK, never on one solved `y`. The
+     *  document grows under the scroll as the lazy chunks mount, so a `y`
+     *  computed before a roll lands at a different `p` — measured 0.84
+     *  asked, 0.64 arrived, which is the difference between the line lit and
+     *  the line still mid-decode. The writer publishes what it actually
+     *  computed, so re-solve against THAT until it agrees. */
+    const publishedP = () =>
+      page.evaluate(() =>
+        Number(document.getElementById("turn")?.getAttribute("data-tl-turn") ?? "0")
+      );
+    const rollToP = async (p: number) => {
+      for (let pass = 0; pass < 5; pass++) {
+        const r = await page.evaluate(() => {
+          const el = document.getElementById("turn")?.getBoundingClientRect();
+          return { top: (el?.top ?? 0) + window.scrollY, height: el?.height ?? 0 };
+        });
+        const runway = Math.max(1, r.height - turn.vh);
+        await rollTo(page, Math.round(r.top + p * (turn.vh + runway) - turn.vh));
+        if (Math.abs((await publishedP()) - p) <= 0.01) return;
+      }
+      expect(await publishedP(), `the turn never settled at p ${p}`).toBeCloseTo(p, 1);
+    };
 
-    await rollTo(page, scrollForP(0.6));
+    /** Every decoded line's live layer beside the ghost that holds its box. */
+    const decodeLines = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>("#turn .tl-dc")].map((dc) => ({
+          ghost: dc.querySelector<HTMLElement>(".tl-dc__ghost")?.textContent ?? "",
+          live: dc.querySelector<HTMLElement>(".tl-dc__live")?.textContent ?? "",
+          ghostBox: Math.round(
+            dc.querySelector<HTMLElement>(".tl-dc__ghost")?.getBoundingClientRect().width ?? 0
+          ),
+        }))
+      );
+
+    // Mid-turn: the mark's own beat. The ambient still holds, the ground has
+    // begun to warm, and the copy has not arrived.
+    await rollToP(0.6);
     await expect(page.locator("html")).toHaveAttribute("data-services-ambient", "true");
     await expect(page.locator("html")).toHaveAttribute("data-corridor-exit", "true");
     const midP = Number(await page.locator("#turn").getAttribute("data-tl-turn"));
@@ -315,43 +350,68 @@ test.describe("Trinny London pitch variant", () => {
       )
     ).toBe("hidden");
     expect(await goldMarks(page)).toEqual(["proposition"]);
-
-    await rollTo(page, scrollForP(1));
-    expect(Number(await page.locator("#turn").getAttribute("data-tl-turn"))).toBeGreaterThanOrEqual(
-      0.98
+    const midWash = await page.evaluate(() =>
+      Number(
+        getComputedStyle(document.querySelector<HTMLElement>("[data-tl-turn-stage]")!)
+          .getPropertyValue("--tl-wash")
+          .trim()
+      )
     );
-    await expect(page.locator("html")).toHaveAttribute("data-services-ambient", "true");
-    // The four products painted from public/ (CSP is img-src 'self') and at
-    // rest — the writer's pose vars at their settled values.
-    await page.waitForTimeout(800);
+    expect(midWash).toBeGreaterThan(0.2);
+
+    // The line, lit: every live layer carries its ghost's exact string.
+    await rollToP(0.84);
+    const lit = await decodeLines();
+    expect(lit).toHaveLength(4);
+    for (const line of lit) {
+      expect(line.ghost.length).toBeGreaterThan(0);
+      expect(line.live).toBe(line.ghost);
+    }
+    // …and the products have settled around it.
     const products = await page.evaluate(() =>
       [...document.querySelectorAll<HTMLImageElement>(".tl-turn__product")].map((i) => ({
         painted: i.complete && i.naturalWidth > 0,
         o: Number(i.style.getPropertyValue("--tm-o")),
-        s: Number(i.style.getPropertyValue("--tm-s")),
       }))
     );
     expect(products).toHaveLength(4);
-    for (const p of products) {
-      expect(p.painted).toBe(true);
-      expect(p.o).toBeGreaterThanOrEqual(0.95);
-      expect(p.s).toBeGreaterThanOrEqual(0.98);
+    for (const pr of products) {
+      expect(pr.painted).toBe(true);
+      expect(pr.o).toBeGreaterThanOrEqual(0.95);
     }
 
-    /* The interstitial is the declared kill edge: once its top has passed
-       the viewport top the ambient hold and the exit band are gone — an
-       opaque station the hook did not name would have hard-cut the canvas
-       at that edge instead (ADR-030 §6). On the capable rung it overlaps
-       the turn by a viewport, so this is also where the stage releases. */
-    const trinnyTop = await page.evaluate(
-      () => (document.getElementById("trinny")?.getBoundingClientRect().top ?? 0) + window.scrollY
+    /* The end of the runway: the line has un-typed back out and the ground
+       has RESOLVED, so the proposal below meets the page's own parchment
+       and no edge is ever drawn. ⚠ The ghost's box may not have moved a
+       pixel across the whole decode — that is the effect's one promise. */
+    const litBoxes = lit.map((l) => l.ghostBox);
+    await rollToP(1);
+    const gone = await decodeLines();
+    for (const line of gone) expect(line.live).toBe("");
+    expect(gone.map((l) => l.ghostBox)).toEqual(litBoxes);
+    const endWash = await page.evaluate(() =>
+      Number(
+        getComputedStyle(document.querySelector<HTMLElement>("[data-tl-turn-stage]")!)
+          .getPropertyValue("--tl-wash")
+          .trim()
+      )
     );
-    await rollTo(page, trinnyTop + 40);
+    expect(endWash).toBeLessThan(0.05);
+
+    /* The proposal is the declared kill edge now (ADR-095 U1 moved it off
+       the deleted interstitial): once its top has passed the viewport top
+       the ambient hold and the exit band are gone — an opaque station the
+       hook did not name would have hard-cut the canvas at that edge
+       instead (ADR-030 §6). */
+    const propTop = await page.evaluate(
+      () =>
+        (document.getElementById("proposition")?.getBoundingClientRect().top ?? 0) + window.scrollY
+    );
+    await rollTo(page, propTop + 40);
     expect(
       await page.evaluate(() => document.documentElement.getAttribute("data-corridor-exit"))
     ).toBeNull();
     expect(await goldMarks(page)).toEqual(["proposition"]);
-    await expect(page.locator("#trinny .tl-turn__product")).toHaveCount(0);
 
     // The proposal: the head, the three bands, the three kickers.
     await expect(page.locator("#proposition .tl-prop__title")).toHaveText(

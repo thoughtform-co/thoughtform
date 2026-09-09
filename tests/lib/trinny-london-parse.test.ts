@@ -47,18 +47,10 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(matches).toHaveLength(1);
   });
 
-  it("orders the journey hero → about → corridor → proof → turn → trinny → proposition → contact", () => {
+  it("orders the journey hero → about → corridor → proof → turn → proposition → contact", () => {
     const body = parsed();
     const order = stationOrder(body);
-    expect(order).toEqual([
-      "hero",
-      "about",
-      "services",
-      "turn",
-      "trinny",
-      "proposition",
-      "contact",
-    ]);
+    expect(order).toEqual(["hero", "about", "services", "turn", "proposition", "contact"]);
     // The mount is a div, not a section — assert it lands between the bio
     // and services, which is the whole point of the variant.
     const at = (needle: string) => body.indexOf(needle);
@@ -93,21 +85,23 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(body).not.toContain("services-stage-root");
   });
 
-  it("declares the interstitial as the ambient's kill edge and opens the proposal there", () => {
+  it("declares the proposal as the ambient's kill edge, and it is the only one", () => {
     /* `useCorridorExitScroll` resolves the kill target by id and this page
-       has none of the ids it knows below the corridor, so the interstitial
-       DECLARES itself (ADR-094). Both new stations publish `proposition` on
-       the station bus, which is how the Proposal mark lights from the
-       interstitial on. */
+       has none of the ids it knows below the corridor, so a station DECLARES
+       itself. ADR-095 U1 moved the declaration: the interstitial slab that
+       used to carry it is deleted, and `#proposition` — the first opaque
+       station below the corridor — is the edge now. The turn between them is
+       transparent on purpose; the canvas has to live through the whole beat. */
     const body = parsed();
-    const trinny = body.match(/<section[^>]*\sid="trinny"[^>]*>/)?.[0] ?? "";
-    expect(trinny).toContain("data-corridor-kill");
-    expect(trinny).toContain('data-station="proposition"');
     const prop = body.match(/<section[^>]*\sid="proposition"[^>]*>/)?.[0] ?? "";
+    expect(prop).toContain("data-corridor-kill");
     expect(prop).toContain('data-station="proposition"');
     // Exactly one kill edge: two would make the hook's read an accident of
     // document order.
     expect(body.match(/data-corridor-kill/g) ?? []).toHaveLength(1);
+    // And the interstitial is gone, not merely emptied.
+    expect(body).not.toContain('id="trinny"');
+    expect(body).not.toContain("tl-inter__");
   });
 
   it("ships the four product cutouts from public/ inside the turn, posed by the writer, sized", () => {
@@ -142,10 +136,11 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(trinny).not.toContain("tl-inter__product");
   });
 
-  it("the turn is transparent over the canvas: no kill edge, the proposal's station, one sticky stage", () => {
-    /* The canvas must live THROUGH the turn — the kill stays on `#trinny`
-       (asserted above, count 1). `data-station="proposition"` turns the
-       journey here, with no mark of its own (the roster keeps five rows). */
+  it("the turn is transparent over the canvas, and carries the wash and the decoded copy", () => {
+    /* The canvas must live THROUGH the turn — the kill sits on
+       `#proposition` (asserted above, count 1). `data-station="proposition"`
+       turns the journey here, with no mark of its own (the roster keeps five
+       rows). ADR-095 U1 adds the ground's shader canvas and the copy. */
     const body = parsed();
     const turn = body.match(/<section[^>]*\sid="turn"[^>]*>/)?.[0] ?? "";
     expect(turn).not.toBe("");
@@ -153,10 +148,33 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(turn).toContain('data-station="proposition"');
     expect(body.match(/data-tl-turn-stage/g) ?? []).toHaveLength(1);
     expect(body.match(/class="tl-turn__mark"/g) ?? []).toHaveLength(1);
+    expect(body.match(/data-tl-turn-wash/g) ?? []).toHaveLength(1);
     // Order: the turn sits between the proof and the kill edge.
     const at = (needle: string) => body.indexOf(needle);
     expect(at('id="services"')).toBeLessThan(at('id="turn"'));
-    expect(at('id="turn"')).toBeLessThan(at('id="trinny"'));
+    expect(at('id="turn"')).toBeLessThan(at('id="proposition"'));
+
+    /* Every decoded line is a GHOST plus a LIVE layer carrying the SAME
+       string: the ghost holds the box and the accessible text, the live
+       layer is what the writer overwrites. A drift between the two would
+       show as the block resizing the moment the decode starts. And no
+       `data-m` anywhere in the copy — that is the move-and-fade reveal this
+       replaces, and it would be a second owner of the same opacity. */
+    const start = body.indexOf('class="tl-turn__copy"');
+    const copy = body.slice(start, body.indexOf("</section>", start));
+    expect(copy).not.toContain("data-m");
+    const ghosts = [...copy.matchAll(/<span class="tl-dc__ghost">([^<]*)<\/span>/g)].map(
+      (m) => m[1]
+    );
+    const lives = [...copy.matchAll(/<span class="tl-dc__live"[^>]*>([^<]*)<\/span>/g)].map(
+      (m) => m[1]
+    );
+    expect(ghosts).toHaveLength(4);
+    expect(lives).toEqual(ghosts);
+    for (const live of copy.match(/<span class="tl-dc__live"[^>]*>/g) ?? []) {
+      expect(live).toContain("data-tl-decode");
+      expect(live).toContain('aria-hidden="true"');
+    }
   });
 
   it("letters the proposal without the Arc's vocabulary or a digit", () => {

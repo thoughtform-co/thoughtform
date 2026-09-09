@@ -127,36 +127,48 @@ if (slots.length > 1) {
   await shoot("10-stack-cover", "the second card arriving over the first");
 }
 
-// The turn (ADR-095): the parked mark re-forming as the client's while the
-// products sweep in. Its clock is a pure function of the station's rect —
-// `p = (vh − top) / (vh + runway)`, runway = height − 2·vh — so each stop is
-// solved for a `p` rather than guessed in pixels. The morph opens at 0.25,
-// settles by 0.80; the products enter over 0.42–0.97; then `#trinny` slides
-// over the still-pinned stage.
-const turnTop = await topOf("turn");
-const turnH = await page.evaluate(
-  () => document.getElementById("turn")?.getBoundingClientRect().height ?? 0
-);
-const runway = Math.max(1, turnH - 2 * h);
-const scrollForP = (p) => Math.round(turnTop + p * (h + runway) - h);
+// The turn (ADR-095 + U1): the parked mark re-forming as the client's while
+// the products sweep in, the ground warming to their coral, and the line
+// decoding in place on top of it. Its clock is a pure function of the
+// station's rect — `p = (vh − top) / (vh + runway)`, runway = height − vh —
+// so each stop is solved for a `p` rather than guessed in pixels. The morph
+// runs 0.20→0.56, the products 0.30→0.69, the wash 0.36→0.68, the line
+// 0.62→0.78, and everything resolves by 1.0 so the proposal meets no edge.
+const turnRect = () =>
+  page.evaluate(() => {
+    const r = document.getElementById("turn")?.getBoundingClientRect();
+    return { top: (r?.top ?? 0) + window.scrollY, height: r?.height ?? 0 };
+  });
+/** ⚠ CONVERGE ON THE PUBLISHED CLOCK, never on one solved `y`. The document
+ *  grows under the scroll as the lazy chunks mount, so a `y` computed before
+ *  a roll lands at a different `p` — measured 0.84 asked, 0.64 arrived, which
+ *  is the difference between the line lit and the line still mid-decode. The
+ *  writer publishes what it actually computed, so re-solve against THAT until
+ *  it agrees. */
+const rollToP = async (p) => {
+  for (let pass = 0; pass < 5; pass++) {
+    const { top, height } = await turnRect();
+    const runway = Math.max(1, height - h);
+    await rollTo(Math.round(top + p * (h + runway) - h));
+    const actual = Number(
+      await page.evaluate(
+        () => document.getElementById("turn")?.getAttribute("data-tl-turn") ?? "0"
+      )
+    );
+    if (Math.abs(actual - p) <= 0.01) break;
+  }
+};
 for (const [p, name, note] of [
   [0.35, "14-turn-arrive", "the turn — the last card leaving, the first particles in flight"],
-  [0.6, "15-turn-mid", "the turn — the mark in transit, the products sweeping in"],
-  [1.0, "16-turn-landed", "the turn — Trinny London's mark, the products at rest"],
+  [0.6, "15-turn-mark", "the turn — their mark, on a ground already warming"],
+  [0.84, "16-turn-line", "the turn — the line decoded in place, the products at rest"],
+  [1.0, "17-turn-resolve", "the turn — the line un-typed, the ground back to parchment"],
 ]) {
-  await rollTo(scrollForP(p));
+  await rollToP(p);
   await page.waitForTimeout(600);
   await shoot(name, note);
 }
-await rollTo(scrollForP(1.0) + Math.round(h * 0.5));
-await shoot("17-turn-cover", "the coral slab sliding over the pinned stage");
 
-// The two static stations reveal on `data-m` (IO + a stagger + ~1s of
-// transition), so they get a longer settle than the React cards, whose
-// entrance rides the stack's own scroll channel.
-await rollTo(await topOf("trinny"));
-await page.waitForTimeout(1500);
-await shoot("11-trinny", "the interstitial — the ambient must be dead against its top");
 await rollTo(await topOf("proposition"));
 await page.waitForTimeout(1500);
 await shoot("12-proposition", "the proposal — the configuration drawing");
