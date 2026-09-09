@@ -389,6 +389,10 @@ breather).
     prose and the long subtitle on sheet 03; the parts index on sheet 01.
     The draw meter's `Never a price.` caption STAYS on the panel — a
     confidentiality line is not annotation to be reduced away.
+  - ⚠ **`useDialogShell` WAS NEVER EXTRACTED** (found 2026-09-09, ADR-094):
+    the name below describes a contract, not a module — `MediaLightbox` +
+    `useWalkthrough` are the shipped implementation of it, and a new dialog on
+    any surface copies their two documented traps until someone lifts a shell.
   - **It PORTALS to `document.body` and reuses `useDialogShell`** — the same
     two reasons `MediaLightbox` documents (a clipped ancestor becomes the
     containing block even for `fixed`; `overflow: hidden` on `<html>` is not

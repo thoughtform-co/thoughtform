@@ -55,9 +55,14 @@ the Arc's Build-park cases reveal (click-armed via the CUE — a dotted-leader
   lockstep with `MANIFEST_ENTRIES` and the drift-guard tests
   (`tests/lib/rail-manifest.test.ts`, `tests/lib/v7-parse.test.ts`).
   `PROJECT_CASES` (`tools-cards/toolCardData.ts`) is the single canonical
-  case module; `tools-cards/` otherwise survives only as the
-  `/test/project-cards` lab's shared core (console skin, chrome, stack
-  hook) — do not remount it on the landing.
+  case module; the retired `#tools` STATION — its console-plate skin
+  (`tools-cards.css`), its chrome and its rail register — survives only as
+  the `/test/project-cards` lab's shared core and is never remounted on
+  the landing. ⚠ `useStackedCardsScroll` is a different thing: a
+  three-free scroll MECHANIC (sticky-sibling slots, `--pc-enter` /
+  `--pc-cover`) that a variant route may drive with its own route-scoped
+  skin — `/trinny-london`'s proof stack does (ADR-094) without importing
+  the plate skin.
 
 **Arc Cases is an in-canvas 3D card — no camera channel (ADR-036, supersedes ADR-035).** The cases reveal is `ArcCasesCard`, ONE in-canvas portrait tools card mounted in the gyro assembly (a sibling of `ShellStack`) between the two Build-park stack columns, in front of the sphere; the accessible stepper row `ArcCasesStepper` (◂ 01 02 03 04 ▸ + CLOSE, region id `arc-cases-terminal`) is mounted in `HomeCorridor`. On arm the sources/surfaces DOM labels fade out on `arcCasesLevelRef` (single writer = the card's R3F `useFrame` at priority −5; readers = `gateStackLabel` label fade + the caption-card fade + the stepper's own rAF + `ShellStack`, which folds the source/surface node streams onto the card's actual left/right slab side walls so the screen reads as mounted on the nodes). The ref carries the card's slab edges (`cardEdges`, shell-local — the single source of truth for that mount geometry, direct math, NO viewport unprojection / `panelRect`). The corridor camera is a pure Z dolly through arm/disarm. Gate parity: the JS `ARC_CASES_MEDIA` gate == the CSS hide of BOTH the cue and the stepper. No scroll writer, no scroll lock, no backdrop; inert is reconciled every frame; DOM order = focus order. Do NOT re-introduce a camera channel, the DOM overlay panel, or the `panelRect` unprojection latch.
 
