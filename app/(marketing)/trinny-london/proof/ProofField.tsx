@@ -140,7 +140,6 @@ export function ProofField({
                  element costs a layer and this card sits four deep in a
                  sticky stack. `autoPlay` is safe precisely because the mount
                  IS the click. */
-
               <video
                 className="tl-film__frame tl-film__frame--live"
                 src={cut.src}
