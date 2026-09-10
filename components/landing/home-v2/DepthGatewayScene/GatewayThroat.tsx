@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { lerp, smoothstep, useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { vwTravelInterior } from "@/lib/home-v2/vwTravelRef";
 import { getSmoothedThoughtformOffsetX } from "./motionFollower";
-import { STATION_THOUGHTFORM, getThoughtformBootEnvelope } from "./sceneGeom";
+import { STATION_THOUGHTFORM, getThoughtformBootEnvelope, thoughtformGateX } from "./sceneGeom";
 
 /**
  * GatewayThroat — the visible interior of the portal at the parked
@@ -414,7 +414,7 @@ export function GatewayThroat() {
 
     // Welded to the gate through the centering pan — identical
     // transform source to `ThoughtformCompassGate`.
-    group.position.x = STATION_THOUGHTFORM.position[0] + getSmoothedThoughtformOffsetX();
+    group.position.x = thoughtformGateX() + getSmoothedThoughtformOffsetX();
 
     material.uniforms.uPixelRatio.value = state.viewport.dpr;
     material.uniforms.uTime.value = phaseRef.current;

@@ -10,6 +10,7 @@ import { SPHERE_GOLD } from "@/lib/home-v2/goldPalette";
 import { getSmoothedThoughtformOffsetX } from "./motionFollower";
 import {
   STATION_THOUGHTFORM,
+  thoughtformGateX,
   cameraSpaceDepth,
   depthFocusOpacity,
   getThoughtformBootEnvelope,
@@ -405,12 +406,8 @@ export function ThoughtformAtmosphere() {
     // 2026-06-09 elegance pass: smoothed follower value so the cluster
     // pans with the same temporally-eased offset as the compass + copy.
     const panX = getSmoothedThoughtformOffsetX();
-    stars.position.x = STATION_THOUGHTFORM.position[0] + panX;
-    const depth = cameraSpaceDepth(paintProgress, [
-      STATION_THOUGHTFORM.position[0] + panX,
-      0,
-      clusterCentreZ,
-    ]);
+    stars.position.x = thoughtformGateX() + panX;
+    const depth = cameraSpaceDepth(paintProgress, [thoughtformGateX() + panX, 0, clusterCentreZ]);
     const depthAlpha = depthFocusOpacity(depth, STAR_DEPTH_WINDOW);
     const ramp = thoughtformStarsProgressRamp(paintProgress);
     const starsOpacity = depthAlpha * ramp;
@@ -425,7 +422,7 @@ export function ThoughtformAtmosphere() {
     // camera-space depth gate so it can never show through after
     // the camera has passed the gate plane.
     const sw = shockwaveState(paintProgress);
-    const shockwaveX = STATION_THOUGHTFORM.position[0] + getSmoothedThoughtformOffsetX();
+    const shockwaveX = thoughtformGateX() + getSmoothedThoughtformOffsetX();
     shockwave.position.x = shockwaveX;
     if (sw.opacity < 0.005 || depth < 0.4) {
       shockwave.visible = false;

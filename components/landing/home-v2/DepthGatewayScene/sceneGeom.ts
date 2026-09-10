@@ -149,8 +149,29 @@ export const CORRIDOR_TIMELINE = {
    *  the moment section-2 owns the viewport, so the entry carries
    *  straight through. smootherstep still gives zero velocity at p=0,
    *  so the parked frame (progress 0, shown behind the departing hero)
-   *  is byte-identical and the scroll-back boundary stays snap-free. */
-  thoughtformPan: { start: 0, end: 0.109 },
+   *  is byte-identical and the scroll-back boundary stays snap-free.
+   *
+   *  ⚠ START MOVED 0 -> 0.05 (2026-09-10, owner: the copy and the mark
+   *  "are already starting to move to the left ... they should be more
+   *  centered originally, and only when you start scrolling into the
+   *  Arc, they should start moving"). That REVERSES the paragraph above,
+   *  and the reversal is the point: what 2026-06-17 held for 250px was a
+   *  composition splayed to both walls (see the spread damp below), so
+   *  the hold had nothing worth holding on and only delayed the fix.
+   *  With the spread solved the parked frame IS the composition, and the
+   *  hold is what lets the reader read it.
+   *
+   *  ⚠ THE "DRIFTS A BIT, THEN SLIDES LEFT" READ WAS THE FOLLOWER, NOT
+   *  THE HOLD -- `getSmoothedThoughtformOffsetX` settling into a target it
+   *  was already at. It rests at 0 through the hold, so there is nothing
+   *  to settle; measured at 1920x1247 the copy holds x 368 -> 372 -> 373
+   *  across p 0 -> 0.04 and only then travels.
+   *
+   *  ⚠ END IS STILL LOCKED to `dollyHoldEnd` / `thoughtformBoot.rampEnd` /
+   *  the ring flythrough's 0.13, so the pan is SHORTER rather than later
+   *  -- 0.059 of progress instead of 0.109. It is scroll-scrubbed, so
+   *  that is distance under the reader's hand, never a faster clock. */
+  thoughtformPan: { start: 0.05, end: 0.109 },
 
   /** Gateway "boot-up" envelope phases. Ramp runs alongside the
    *  Thoughtform pan; hold spans the early ring flythrough; relax
@@ -1072,6 +1093,118 @@ export const STATION_INTELLIGENCE: GateStation = stationById("intelligence")!;
  *  pan applies the SAME `dx` to every Thoughtform-anchored element
  *  each frame, so the world reads as a single camera-pan rather
  *  than independent object motions. */
+/** ---- The Thoughtform composition's lateral spread ----------------
+ *
+ *  A perspective camera's LATERAL screen offset is
+ *  `x * vh / (2 * d * tan(fov/2))` -- the viewport's WIDTH cancels out of
+ *  the aspect term -- so a composition stated in world units spreads with
+ *  the frame's HEIGHT and takes no notice of how wide the window is.
+ *  Its CONTENTS do the opposite: the copy block is capped at 460 CSS px
+ *  and the phase labels are ~10px type, both fixed whatever the frame.
+ *
+ *  So the gutter between them -- the empty middle -- is
+ *  `spread(vh) - contents`, and it grows without limit as the window gets
+ *  taller. Measured on the entry frame, copy block's right edge to the
+ *  NAVIGATE label's left:
+ *
+ *      1280x720    92px   ( 7.2% of the frame)
+ *      1440x900   184px   (12.8%)   <- the authored reference
+ *      1920x1247  458px   (23.9%)   <- the owner's own monitor
+ *      1639x1269  476px   (29.0%)
+ *      2560x1330  524px   (20.5%)
+ *
+ *  Five times the gutter for a 1.7x taller frame with the copy block
+ *  unchanged: at a laptop rung the two columns read as one composition,
+ *  on a tall desktop window as two objects flung at opposite walls. Same
+ *  defect class as ADR-070 U12 -- authored at one shape, green
+ *  everywhere, wrong at the shape the owner works at.
+ *
+ *  ⚠ THE TWO MEASURED CONSTANTS ARE THE MODEL, AND THE FIT IS THE PROOF.
+ *  Adding the contents back to each measured gutter gives the raw spread,
+ *  and dividing by the frame height gives 0.827 / 0.816 / 0.816 / 0.815
+ *  across every rung at or above 900h -- one constant, four viewports,
+ *  which is what says the projection reasoning above is the real cause
+ *  and not a curve fitted to a complaint.
+ *
+ *  ⚠ AND IT IS A NO-OP AT EVERY REFERENCE VIEWPORT. The damp is capped at
+ *  1, and both 1440x900 (the Playwright project default, so every
+ *  committed snapshot) and 1280x720 solve above 1. The corridor is
+ *  byte-identical there; this can only act on the tall windows where the
+ *  gutter was measured wrong. */
+
+/** Frame the composition was authored against, and the gutter fraction
+ *  it holds there -- the proportion every other frame is solved back to. */
+const TF_GUTTER_FRAC = 0.128;
+
+/** Screen px of lateral spread per px of frame HEIGHT (measured, above). */
+const TF_SPREAD_PER_VH = 0.82;
+
+/** Screen px the composition's own CONTENTS occupy inside that spread --
+ *  the copy block's 460px cap plus the NAVIGATE label. Fixed in px by
+ *  construction, which is exactly why the gutter cannot be. */
+const TF_SPREAD_CONTENT_PX = 560;
+
+/** Floor. Past this the two columns would close on each other faster
+ *  than the frame is growing, and the composition stops being two. */
+const TF_SPREAD_MIN = 0.6;
+
+/** Desktop copy-block anchor X at parked Thoughtform, before the damp.
+ *  Mirrors the gate's +1.1 off-axis-right so the pair reads as a
+ *  balanced two-column composition. */
+const TF_COPY_X = -1.8;
+
+let _tfSpread = 1;
+let _tfSpreadListening = false;
+
+function readThoughtformSpread(): number {
+  // Mobile is a single centred column already pulled inward by
+  // `MOBILE_PHASE_SCALE`; damping it again would contract a composition
+  // that has no spread left to give.
+  if (isMobileComposition()) return 1;
+  const vh = window.innerHeight || 900;
+  const vw = window.innerWidth || 1440;
+  // Solve the damp that lands this frame's gutter on the authored
+  // proportion: spread(vh) * k - contents = TF_GUTTER_FRAC * vw.
+  const k = (TF_GUTTER_FRAC * vw + TF_SPREAD_CONTENT_PX) / (TF_SPREAD_PER_VH * vh);
+  return Math.min(1, Math.max(TF_SPREAD_MIN, k));
+}
+
+/** Lateral contraction (0..1] for the Thoughtform composition's world
+ *  offsets FROM THE OPTICAL AXIS.
+ *
+ *  ⚠ IT SCALES CENTRES, NEVER SIZES. The compass, the mark and the copy
+ *  block keep their own dimensions; only their distance from the axis
+ *  contracts, which is what makes this a re-composition rather than a
+ *  zoom. The phase labels ride GATE-RELATIVE offsets and are deliberately
+ *  left undamped -- they are welded to a rigid object.
+ *
+ *  Cached behind a resize listener, in the shape `isMobileComposition`
+ *  already uses: every painter calls this per frame. */
+export function thoughtformSpread(): number {
+  if (typeof window === "undefined") return 1;
+  if (!_tfSpreadListening) {
+    _tfSpreadListening = true;
+    _tfSpread = readThoughtformSpread();
+    const sync = () => {
+      _tfSpread = readThoughtformSpread();
+    };
+    window.addEventListener("resize", sync);
+    window.addEventListener("orientationchange", sync);
+  }
+  return _tfSpread;
+}
+
+/** Damped world X of the Thoughtform GATE side -- compass, throat,
+ *  brandmark, star cluster, shockwave, and the pan's own target. */
+export function thoughtformGateX(): number {
+  return STATION_THOUGHTFORM.position[0] * thoughtformSpread();
+}
+
+/** Damped world X of the Thoughtform COPY side (desktop two-column). */
+export function thoughtformCopyX(): number {
+  return TF_COPY_X * thoughtformSpread();
+}
+
 export function getThoughtformCenterOffsetX(progress: number): number {
   // Mobile composition: there is no two-column → centred pan. The
   // whole Thoughtform composition (compass + brandmark + phase
@@ -1080,10 +1213,10 @@ export function getThoughtformCenterOffsetX(progress: number): number {
   // portrait frame. The same offset is folded into the copy anchor and
   // brandmark travel, so every Thoughtform-anchored element stays
   // co-centred. (ADR-018 mobile revision.)
-  if (isMobileComposition()) return -STATION_THOUGHTFORM.position[0];
+  if (isMobileComposition()) return -thoughtformGateX();
   const { start, end } = CORRIDOR_TIMELINE.thoughtformPan;
   if (progress <= start) return 0;
-  if (progress >= end) return -STATION_THOUGHTFORM.position[0];
+  if (progress >= end) return -thoughtformGateX();
   // smootherstep — Ken Perlin's C2-continuous easing (6t^5 - 15t^4
   // + 10t^3) — has zero velocity AND zero acceleration at both ends.
   // Compared to `smoothstep` (3t^2 - 2t^3, C1-continuous, non-zero
@@ -1093,7 +1226,7 @@ export function getThoughtformCenterOffsetX(progress: number): number {
   // axis instead of jumping. (v3.1 polish pass.)
   const t = (progress - start) / (end - start);
   const s = t * t * t * (t * (t * 6 - 15) + 10);
-  return -STATION_THOUGHTFORM.position[0] * s;
+  return -thoughtformGateX() * s;
 }
 
 /** "Gateway boot-up" envelope (0..1) used by painters that want to
@@ -1517,7 +1650,11 @@ export function getBrandmarkWorldPosition(
   // same smoothed channel, so the composition still slides as one
   // rigid camera-pan.
   const tfOffsetX = getSmoothedThoughtformOffsetX();
-  const tfX = BRANDMARK_ANCHOR_THOUGHTFORM[0] + tfOffsetX;
+  // ⚠ THE DAMPED GATE X, NOT THE CONST'S. `BRANDMARK_ANCHOR_THOUGHTFORM`
+  // is a module-level array evaluated once at load, so it cannot carry a
+  // viewport-derived term; the mark is rigidly co-located with the gate,
+  // so it takes the gate's live X. Y and Z stay the const's.
+  const tfX = thoughtformGateX() + tfOffsetX;
 
   if (progress <= thoughtformHold) {
     // Mobile (2026-07-15 pass 3): the mark rests a touch BELOW centre and
@@ -1923,7 +2060,7 @@ function thoughtformPhasePosition(offsetX: number, offsetY: number): WorldAnchor
     const mobile = isMobileComposition();
     const s = mobile ? MOBILE_PHASE_SCALE : 1;
     return [
-      STATION_THOUGHTFORM.position[0] + offsetX * s + getSmoothedThoughtformOffsetX(),
+      thoughtformGateX() + offsetX * s + getSmoothedThoughtformOffsetX(),
       STATION_THOUGHTFORM.position[1] + offsetY * s,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ];
@@ -2471,12 +2608,12 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
       const off = getSmoothedThoughtformOffsetX();
       if (isMobileComposition()) {
         return [
-          STATION_THOUGHTFORM.position[0] + off,
+          thoughtformGateX() + off,
           MOBILE_COPY_ANCHOR_Y,
           STATION_THOUGHTFORM.position[2] + 0.1,
         ];
       }
-      return [-1.8 + off, 0.0, STATION_THOUGHTFORM.position[2] + 0.1];
+      return [thoughtformCopyX() + off, 0.0, STATION_THOUGHTFORM.position[2] + 0.1];
     },
     visibilityBeats: ["thoughtform", "pass-01a", "navigate", "pass-01b"],
     // No entry fade — copy reads at full strength the moment the

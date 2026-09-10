@@ -9,6 +9,7 @@ import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
 import { getSmoothedThoughtformOffsetX } from "../motionFollower";
 import {
   STATION_THOUGHTFORM,
+  thoughtformGateX,
   depthOpacityForWorldPosition,
   getThoughtformBootEnvelope,
   getThoughtformMobilePhase,
@@ -502,7 +503,7 @@ export function ThoughtformCompassGate() {
     // same transform the user sees this frame. 2026-06-09 elegance
     // pass: reads the SMOOTHED follower offset so the pan eases on
     // wall-clock time, in lockstep with the brandmark + copy + stars.
-    group.position.x = STATION_THOUGHTFORM.position[0] + getSmoothedThoughtformOffsetX();
+    group.position.x = thoughtformGateX() + getSmoothedThoughtformOffsetX();
 
     // Mobile (2026-07-15 pass 3): the compass is visible at REST
     // (`diagramFactor` holds at 1 through the dwell, only dropping at the
