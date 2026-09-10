@@ -40,11 +40,38 @@ describe("the trinny proof order", () => {
     }
   });
 
-  it("leads with the creative work and ends on the company-wide layer", () => {
+  it("leads with the frontier work and ends on the company-wide layer", () => {
     // The owner's argument for a skincare reader: marketing was the proving
-    // ground, the method transfers. A reorder is a decision, not a tidy.
-    expect(TRINNY_PROOF_ORDER[0]).toBe("studio");
+    // ground, the method transfers. A reorder is a decision, not a tidy —
+    // and since ADR-094 U2 it is the RECORD's decision (see below).
+    expect(TRINNY_PROOF_ORDER[0]).toBe("atl-films");
     expect(TRINNY_PROOF_ORDER[TRINNY_PROOF_ORDER.length - 1]).toBe("ai-transformation");
+  });
+
+  /**
+   * ⚠ THE SEQUENCE AND THE ARC CAN DISAGREE WITH NOTHING FAILING, and this
+   * is the guard for it (ADR-094 U2). Each card's head prints `arc.step`
+   * from the RECORD while the pile is ordered by `TRINNY_PROOF_ORDER`, so a
+   * re-order in one place alone letters `03 · 01 · 02 · 04` down a scroll —
+   * four correct cards in an order that contradicts the numbers on them,
+   * with every other assertion on this surface green.
+   */
+  it("is the record's own arc, in its own order", () => {
+    const tracks = trinnyProofTracks();
+    for (const t of tracks) {
+      expect(t.arc, `${t.id} carries no arc beat`).toBeTruthy();
+    }
+    const steps = tracks.map((t) => t.arc!.step);
+    expect(steps).toEqual(["01", "02", "03", "04"]);
+    // …and the titles are the arc as the owner stated it, in the first
+    // person plural. Pinned literally: a reword is a copy decision and lands
+    // here in the same commit.
+    expect(tracks.map((t) => t.arc!.title)).toEqual([
+      "We pushed the frontiers of AI creative",
+      "We made the creative team self-sufficient",
+      "We built the tools the work needed",
+      "We took it to the rest of the company",
+    ]);
   });
 
   it("throws on an id that is not on the casefile, rather than dropping a card", () => {

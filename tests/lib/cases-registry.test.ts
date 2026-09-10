@@ -127,6 +127,35 @@ describe("cases registry (ADR-054)", () => {
             // URL here is blocked the moment CSP leaves report-only.
             expect(ok(film.src), `${c.slug}/${t.id} film ${film.src}`).toBe(true);
             expect(ok(film.poster), `${c.slug}/${t.id} poster ${film.poster}`).toBe(true);
+            // The 4:5 social still, where a film carries one (ADR-094 U2).
+            if (film.portrait) {
+              expect(ok(film.portrait.src), `${c.slug}/${t.id} portrait ${film.portrait.src}`).toBe(
+                true
+              );
+              expect(film.portrait.alt.length, `${c.slug}/${t.id} portrait alt`).toBeGreaterThan(0);
+              /* ⚠ ITS OWN CAPTION, AND IT MAY NOT BE THE MASTER'S. `meta`
+                 reads "16:9 master · …"; printed under a 4:5 still it
+                 contradicts the picture directly above it. */
+              expect(film.portrait.meta.length, `${c.slug}/${t.id} portrait meta`).toBeGreaterThan(
+                0
+              );
+              expect(film.portrait.meta, `${c.slug}/${t.id} portrait meta`).not.toBe(film.meta);
+              expect(film.portrait.meta, `${c.slug}/${t.id} portrait meta`).not.toMatch(
+                /16\s*:\s*9/
+              );
+              /* ⚠ THE DIMENSIONS ARE REQUIRED HERE where they are optional on
+                 `CaseImage`. The renderer hands them straight to `next/image`
+                 and derives the frame's aspect from the CLASS, so a still
+                 whose real shape disagrees with 4:5 letterboxes inside a box
+                 solved for 4:5 — visible, and invisible to every other
+                 guard. */
+              expect(film.portrait.width, `${c.slug}/${t.id} portrait width`).toBeTruthy();
+              expect(film.portrait.height, `${c.slug}/${t.id} portrait height`).toBeTruthy();
+              expect(
+                film.portrait.width! / film.portrait.height!,
+                `${c.slug}/${t.id} portrait is 4:5`
+              ).toBeCloseTo(0.8, 2);
+            }
           }
         }
       }
@@ -278,6 +307,50 @@ describe("cases registry (ADR-054)", () => {
         expect(t.card.lede.length, `${c.slug}/${t.id} card lede`).toBeGreaterThan(0);
         expect(t.card.lede.length, `${c.slug}/${t.id} card lede`).toBeLessThanOrEqual(LEDE_MAX);
         if (t.brief) expect(t.card.lede, `${c.slug}/${t.id} card lede`).not.toBe(len(t.brief));
+      }
+    }
+  });
+
+  it("the arc is a whole through-line, or none of one", () => {
+    /* ADR-094 U2 — `CaseTrack.arc` is the engagement's own sequence, the
+       thing that turns four separate records into one claim (owner: "how do
+       I connect the ATLs with the AI Studio self-sufficiency and the AI
+       tools I've built with the AI adoption"). A surface that shows several
+       tracks at once reads it instead of inventing an order.
+
+       ⚠ ALL-OR-NONE per casefile, and the steps consecutive from "01": a
+       partial arc is a through-line with a hole in it, and a duplicate step
+       makes the order a silent tiebreak wherever two cards claim the same
+       beat. A casefile with no arc at all is fine — the field is optional so
+       a second client can carry claims before its narrative is written. */
+    const CAP = 44;
+    for (const c of CASES) {
+      const withArc = c.casefile.tracks.filter((t) => t.arc);
+      if (withArc.length === 0) continue;
+      expect(withArc.length, `${c.slug} arc is partial`).toBe(c.casefile.tracks.length);
+
+      const steps = withArc.map((t) => t.arc!.step).sort();
+      expect(new Set(steps).size, `${c.slug} duplicate arc step`).toBe(steps.length);
+      expect(steps).toEqual(withArc.map((_, i) => String(i + 1).padStart(2, "0")));
+
+      for (const t of withArc) {
+        const { step, title } = t.arc!;
+        expect(step, `${c.slug}/${t.id} arc step`).toMatch(/^\d{2}$/);
+        expect(title.length, `${c.slug}/${t.id} arc title`).toBeGreaterThan(0);
+        /* ⚠ MEASURED, not round: the Trinny card's head is a 52px `nowrap`
+           flex bar and the arc shares it with the client line. 44 is what
+           fits at 1280×720 with the ellipsis unused. */
+        expect(title.length, `${c.slug}/${t.id} arc title`).toBeLessThanOrEqual(CAP);
+        /* ⚠ IT IS NOT THE PROJECT NAME AGAIN. `project` is a filename made
+           readable; this is a claim about what the project was FOR, and a
+           surface printing both would say one thing twice. */
+        expect(title.toLowerCase(), `${c.slug}/${t.id} arc restates project`).not.toBe(
+          t.project.toLowerCase()
+        );
+        /* ⚠ NO DIGITS IN THE CLAIM. The step is the only number on that
+           strip; a figure in the title is a second one beside it, and every
+           published figure on this record is pinned somewhere else. */
+        expect(title, `${c.slug}/${t.id} arc title carries a figure`).not.toMatch(/\d/);
       }
     }
   });

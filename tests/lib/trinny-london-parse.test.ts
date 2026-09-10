@@ -85,16 +85,20 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(body).not.toContain("services-stage-root");
   });
 
-  it("declares the proposal as the ambient's kill edge, and it is the only one", () => {
+  it("declares CONTACT as the ambient's kill edge, and it is the only one", () => {
     /* `useCorridorExitScroll` resolves the kill target by id and this page
        has none of the ids it knows below the corridor, so a station DECLARES
-       itself. ADR-095 U1 moved the declaration: the interstitial slab that
-       used to carry it is deleted, and `#proposition` — the first opaque
-       station below the corridor — is the edge now. The turn between them is
-       transparent on purpose; the canvas has to live through the whole beat. */
+       itself. The declaration has moved twice: ADR-095 U1 deleted the
+       interstitial slab that carried it, handing it to `#proposition`; U5
+       then made `#proposition` TRANSPARENT and pinned, so the parked mark
+       survives into the proposal and fades behind its record instead of
+       dying at its top edge. `#contact` is the first opaque station below
+       the corridor now, and it carries the edge. */
     const body = parsed();
+    const contact = body.match(/<section[^>]*\sid="contact"[^>]*>/)?.[0] ?? "";
+    expect(contact).toContain("data-corridor-kill");
     const prop = body.match(/<section[^>]*\sid="proposition"[^>]*>/)?.[0] ?? "";
-    expect(prop).toContain("data-corridor-kill");
+    expect(prop).not.toContain("data-corridor-kill");
     expect(prop).toContain('data-station="proposition"');
     // Exactly one kill edge: two would make the hook's read an accident of
     // document order.
@@ -102,6 +106,49 @@ describe("trinny-london variant parse (ADR-093)", () => {
     // And the interstitial is gone, not merely emptied.
     expect(body).not.toContain('id="trinny"');
     expect(body).not.toContain("tl-inter__");
+  });
+
+  it("the proposal is pinned, decodes its title, and travels nothing (ADR-095 U5)", () => {
+    /* The owner's read: "we have a parallax paint flying over it … the
+       elements from the next section should just come into view." An opaque
+       station in normal flow can only ARRIVE by travelling and its content
+       travels with it, so the fix is structural — a sticky stage, a scrubbed
+       opacity channel, and the house decode on the title.
+
+       ⚠ `data-m` IS THE THING BEING REPLACED, so its absence is the
+       assertion. Every role in that system but `fade` translates, it is
+       one-shot, and it fires at 12 % visibility — i.e. while this station is
+       still rising, which is exactly the defect. */
+    const body = parsed();
+    const start = body.indexOf('id="proposition"');
+    const prop = body.slice(start, body.indexOf("</section>", start));
+    expect(prop).not.toContain("data-m");
+    // The pin, and exactly one of it.
+    expect(body.match(/data-tl-prop-stage/g) ?? []).toHaveLength(1);
+    // The three reveal targets: the head, its paragraph, the drawing.
+    expect(prop.match(/data-tl-reveal/g) ?? []).toHaveLength(3);
+    /* The title's ghost + live pair, carrying the SAME string. The ghost is
+       in flow and holds the box; the live layer is a LEAF the writer
+       overwrites. A drift between them shows as the head resizing the
+       moment the decode starts. */
+    const ghost = prop.match(/<span class="tl-dc__ghost">([^<]+)<\/span>/)?.[1] ?? "";
+    const live = prop.match(/<span class="tl-dc__live"[^>]*>([^<]+)<\/span>/)?.[1] ?? "";
+    expect(ghost.length).toBeGreaterThan(0);
+    expect(live).toBe(ghost);
+  });
+
+  it("the contact block reveals without travelling", () => {
+    /* Same law, different machinery (ADR-095 U5). This block is NOT pinned —
+       a page's last card does not need a stage — so the scrubbed channel the
+       proposal uses would have nothing to key on. `fade` is the one role in
+       `data-m` that does not translate, so it is the same ruling with the
+       machinery already in the sheet. Anything else here is a slide. */
+    const body = parsed();
+    const start = body.indexOf('id="contact"');
+    const contact = body.slice(start, body.indexOf("</section>", start));
+    const roles = [...contact.matchAll(/data-m="([a-z]+)"/g)].map((m) => m[1]);
+    expect(roles.length).toBeGreaterThan(0);
+    expect([...new Set(roles)]).toEqual(["fade"]);
   });
 
   it("ships the four product cutouts from public/ inside the turn, posed by the writer, sized", () => {
@@ -137,8 +184,8 @@ describe("trinny-london variant parse (ADR-093)", () => {
   });
 
   it("the turn is transparent over the canvas, and carries the wash and the decoded copy", () => {
-    /* The canvas must live THROUGH the turn — the kill sits on
-       `#proposition` (asserted above, count 1). `data-station="proposition"`
+    /* The canvas must live THROUGH the turn AND the proposal — the kill
+       sits on `#contact` (asserted above, count 1). `data-station="proposition"`
        turns the journey here, with no mark of its own (the roster keeps five
        rows). ADR-095 U1 adds the ground's shader canvas and the copy. */
     const body = parsed();

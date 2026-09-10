@@ -28,19 +28,30 @@ import {
   trinnyMarkSvg,
 } from "@/app/(marketing)/trinny-london/mark/trinnyMark";
 import {
+  markVeil,
   morphOf,
   productEnter,
+  productExit,
   productPose,
+  propInOf,
+  propPinnedProgress,
   TURN_MARK_CENTER_Y,
   TURN_MORPH_END,
   TURN_MORPH_START,
+  TURN_PRODUCT_LEAVE,
+  TURN_PRODUCT_OUT,
+  TURN_PROP_IN,
+  TURN_PROP_LIT,
   turnProgress,
   turnRunway,
   washOf,
   veilOf,
   ctaInOf,
   ctaOutOf,
+  TURN_VEIL_FULL,
+  TURN_VEIL_IN,
   TURN_VEIL_MAX,
+  TURN_VEIL_PROP_MAX,
   TURN_PROP_FADE,
 } from "@/app/(marketing)/trinny-london/turn/turnClock";
 import { turnDecodeFrame } from "@/app/(marketing)/trinny-london/turn/turnDecode";
@@ -282,7 +293,12 @@ describe("turnClock", () => {
 
   it("a product settles exactly on its rest and starts far out, invisible", () => {
     const rest = { cx: 300, cy: 200 };
-    const settled = productPose(0, 1, rest, 1600, 1000);
+    /* ⚠ THE SETTLED SAMPLE IS 0.80, NOT 1 (ADR-095 U5). The products LEAVE
+       now, and `TURN_PRODUCT_OUT` is 0.88 — so p 1 is the end of the exit,
+       where a product is off the frame edge, not the rest it used to be.
+       0.80 is inside the hold: every entrance is spent by 0.69 and no exit
+       has opened. */
+    const settled = productPose(0, 0.8, rest, 1600, 1000);
     expect(Math.abs(settled.dx)).toBeLessThan(1e-9);
     expect(Math.abs(settled.dy)).toBeLessThan(6 + 1e-9); // the bounded drift
     expect(settled.dr).toBe(0);
@@ -295,6 +311,112 @@ describe("turnClock", () => {
     // The two flights alternate direction.
     const farOdd = productPose(1, 0, rest, 1600, 1000);
     expect(Math.sign(far.dr)).toBe(-Math.sign(farOdd.dr));
+  });
+
+  it("and then it LEAVES — outward on the arc it came in on, gone by the end", () => {
+    /* ADR-095 U5, owner: "those canisters or these products should move off
+       the screen". Until this pass they settled and stayed, so the next
+       station could only arrive by covering them — the "parallax paint
+       flying over it" the owner named. */
+    const rest = { cx: 300, cy: 200 };
+    const stageH = 1000;
+
+    // Nothing has moved while the line is still lit.
+    expect(productExit(0, 0.8)).toBe(0);
+    expect(productExit(3, 0.8)).toBe(0);
+
+    // Every product is fully out by the end of the runway.
+    for (let k = 0; k < 4; k++) {
+      const gone = productPose(k, 1, rest, 1600, stageH);
+      expect(productExit(k, 1), `product ${k} exit`).toBe(1);
+      expect(gone.opacity, `product ${k} opacity`).toBe(0);
+      /* ⚠ IT TRAVELS, IT DOES NOT ONLY FADE. A product that dissolved on the
+         spot is a product that vanished, which is a different reading from
+         one that left. `TURN_PRODUCT_LEAVE` is half the stage height, so the
+         displacement has to clear a real distance. */
+      expect(Math.hypot(gone.dx, gone.dy), `product ${k} travel`).toBeGreaterThan(
+        TURN_PRODUCT_LEAVE * stageH * 0.8
+      );
+    }
+
+    // The stagger runs BACKWARDS: the last to arrive is the first to go.
+    const at = 0.93;
+    for (let k = 1; k < 4; k++) {
+      expect(productExit(k, at), `product ${k} leads ${k - 1}`).toBeGreaterThanOrEqual(
+        productExit(k - 1, at)
+      );
+    }
+
+    // …and the exit is monotone, so scrolling back unwinds it exactly.
+    let prev = -1;
+    for (let p = TURN_PRODUCT_OUT; p <= 1.0001; p += 0.01) {
+      const v = productExit(0, Math.min(p, 1));
+      expect(v).toBeGreaterThanOrEqual(prev);
+      prev = v;
+    }
+  });
+
+  it("the mark fades further as the proposal arrives, and never all the way out", () => {
+    /* ADR-095 U5, owner: "to make sure that the brand mark in the back
+       doesn't really dominate too much, we can fade it out a bit as the next
+       section scrolls into view with the elements."
+       ⚠ THE SECOND RAMP IS ADDITIVE AND `q` IS 0 THROUGH THE WHOLE TURN, so
+       this is `veilOf(p)` there to the last bit — the turn's own beat is
+       byte-identical and the guard says so. */
+    for (const p of [0, 0.3, TURN_VEIL_IN, 0.64, TURN_VEIL_FULL, 1]) {
+      expect(markVeil(p, 0), `veil at p=${p}`).toBeCloseTo(veilOf(p), 12);
+    }
+    // Once the proposal is pinned it keeps going — and stops short of 1.
+    expect(markVeil(1, 0)).toBeCloseTo(TURN_VEIL_MAX, 12);
+    expect(markVeil(1, 1)).toBeCloseTo(TURN_VEIL_PROP_MAX, 12);
+    expect(TURN_VEIL_PROP_MAX).toBeLessThan(1);
+    expect(markVeil(1, 0.5)).toBeGreaterThan(TURN_VEIL_MAX);
+    // Monotone in the proposal's arrival, so the fade reverses on the way up.
+    let prev = -1;
+    for (let q = 0; q <= 1.0001; q += 0.02) {
+      const v = markVeil(1, Math.min(q, 1));
+      expect(v).toBeGreaterThanOrEqual(prev - 1e-12);
+      prev = v;
+    }
+  });
+
+  it("the proposal's record powers on only AFTER its stage has pinned", () => {
+    /* This is the whole mechanism (ADR-095 U5): the elements are blank while
+       the station travels and light once it has stopped, so nothing is ever
+       seen moving. A reveal that opened during the approach would be the
+       defect this pass removes, wearing a different channel.
+
+       ⚠ THE PIN IS NOT THE STATION'S TOP, and the first cut assumed it was.
+       `.station` carries top padding — 140px measured at 1920×1247 — so the
+       stage is still 140px short of its pin in the frame the station's top
+       reaches the viewport top. The clock measures the STAGE's travel. */
+    const vh = 1000;
+    const height = 1600; // 100svh pin + 60svh runway
+    const pad = 140;
+    const q = (top: number) => propPinnedProgress(top, height, pad, vh);
+
+    // Approaching: the top is below the fold, and nothing is lit.
+    expect(q(vh)).toBe(0);
+    expect(propInOf(q(vh))).toBe(0);
+    // Half-way up the viewport — still travelling, still blank.
+    expect(propInOf(q(vh / 2))).toBe(0);
+    /* ⚠ AT THE STATION'S OWN TOP THE STAGE HAS NOT PINNED YET — this is the
+       assertion the first cut would have failed, and it is the defect stated
+       as a number. */
+    expect(q(0)).toBe(0);
+    expect(propInOf(q(0))).toBe(0);
+    // …it pins one padding further on, and the reveal opens after THAT.
+    expect(q(-pad)).toBe(0);
+    expect(propInOf(q(-pad))).toBe(0);
+    expect(q(-pad - 1)).toBeGreaterThan(0);
+    // Then it opens, and settles well before the release.
+    expect(propInOf(TURN_PROP_IN)).toBe(0);
+    expect(propInOf(TURN_PROP_LIT)).toBe(1);
+    expect(propInOf(1)).toBe(1);
+    expect(TURN_PROP_LIT).toBeLessThan(1);
+    // The travel is what is left of the station once the stage's own box is
+    // taken out of it — spent exactly at the release.
+    expect(q(-(height - vh))).toBe(1);
   });
 
   it("the mark's on-stage centre is the actor's weld, re-derived from its sources", () => {

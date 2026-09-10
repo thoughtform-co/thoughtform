@@ -147,14 +147,28 @@ const cardShape = (page: Page, idx: number) =>
   page.evaluate((i) => {
     const slot = document.querySelectorAll<HTMLElement>("[data-pc-slot]")[i];
     const head = slot.querySelector<HTMLElement>(".tl-card__head")!;
-    const stns = [...head.querySelectorAll<HTMLElement>(".fl-con__stn")];
+    const field = slot.querySelector<HTMLElement>(".tl-card__field")!;
+    /* ⚠ THE RAIL IS IN THE FIELD, NOT THE HEAD (ADR-094 U2). Reading it
+       from the head is how this reader would report FOUR railless cards and
+       stay green on a rail that had silently stopped rendering. */
+    const stns = [...field.querySelectorAll<HTMLElement>(".fl-con__stn")];
     return {
       /* The head's own children, in order — the kicker leads. */
       lead: head.firstElementChild?.className ?? "",
       kicker: head.querySelector(".tl-card__kicker")?.textContent?.trim() ?? "",
+      /* This project's beat of the arc, in the head's right slot — the peek
+         band's only distinguishing mark now that the tabs have left it. */
+      arcStep: head.querySelector(".tl-card__arc-step")?.textContent?.trim() ?? "",
+      arcTitle: head.querySelector(".tl-card__arc-title")?.textContent?.trim() ?? "",
       /* The name is in the RECORD column now, never in the strip. */
       titleInRecord: !!slot.querySelector(".tl-card__record > .tl-card__title"),
       titleInHead: !!head.querySelector(".tl-card__title"),
+      stationsInHead: head.querySelectorAll(".fl-con__stn").length,
+      /* The claim's evidence sentence — the record the homepage's left
+         column carries and this card did not read until U2. */
+      claimDescs: [...slot.querySelectorAll(".tl-card__claim-desc")].map(
+        (el) => el.textContent?.trim() ?? ""
+      ),
       stations: stns.map((b) => b.textContent?.trim() ?? ""),
       on: stns.filter((b) => b.hasAttribute("data-on")).length,
       /* Both halves of "no gradient, no notch" — pinned from both ends so a
@@ -368,6 +382,20 @@ test.describe("Trinny London pitch variant", () => {
       expect(c.kicker, `card ${i + 1} kicker`).toMatch(/^Loop Earplugs \u00b7 /);
       expect(c.titleInRecord, `card ${i + 1} name is in the record`).toBe(true);
       expect(c.titleInHead, `card ${i + 1} name is out of the head`).toBe(false);
+      /* \u26a0 ADR-094 U2 \u2014 THE HEAD CARRIES THE ARC AND NOTHING ELSE. This
+         strip is the PEEK BAND, the sliver a covered card still shows; with
+         the tabs gone it would otherwise read `LOOP EARPLUGS \u00b7 BUILD` on
+         all four and the pile would stop indexing itself. Pinned from both
+         ends: the beat is here, and the rail is NOT. */
+      expect(c.arcStep, `card ${i + 1} arc step`).toBe(`0${i + 1}`);
+      expect(c.arcTitle, `card ${i + 1} arc claim`).toMatch(/^We\s+\S/);
+      expect(c.stationsInHead, `card ${i + 1} rail left the head`).toBe(0);
+      /* Four claims, each with its evidence sentence in the DOM. Whether it
+         PAINTS is a height rung (940h) \u2014 the sentence is sr-only below it,
+         which is the casefile's own 1070h precedent \u2014 so this asserts the
+         record is read, not that it is visible at every viewport. */
+      expect(c.claimDescs, `card ${i + 1} claim sentences`).toHaveLength(4);
+      for (const d of c.claimDescs) expect(d.length).toBeGreaterThan(0);
       /* ⚠ Both halves of the owner's note, on every station that exists:
          no ramp (`console.css`'s recess and its lit gradient) and no notch
          (the leading station's chamfer, which had no console cut above it
@@ -380,23 +408,52 @@ test.describe("Trinny London pitch variant", () => {
         expect(c.on, `card ${i + 1} has exactly one open station`).toBe(1);
       }
     }
-    // The ads card is a contact sheet — one object, six shots, no rail.
-    expect(shapes[0].stations).toEqual([]);
-    expect(shapes[0].stills).toBeGreaterThan(1);
-    // The two crammed cards now show ONE film / ONE drawing.
-    expect(shapes[1].stations).toHaveLength(2);
-    expect(shapes[1].films).toBe(1);
+    /* ⚠ THE ORDER IS THE RECORD'S ARC SINCE ADR-094 U2 and these indices
+       moved with it: the frontier work leads, because it is what earned the
+       studio the right to run AI itself. `trinny-proof-order.test.ts` pins
+       the sequence against `arc.step`; this pins what each card SHOWS. */
+    // 01 the frontier — ONE film, on its own rail, in the 4:5 social cut.
+    expect(shapes[0].stations).toHaveLength(2);
+    expect(shapes[0].films).toBe(1);
+    // 02 the studio — a contact sheet: one object, six shots, no rail.
+    expect(shapes[1].stations).toEqual([]);
+    expect(shapes[1].stills).toBeGreaterThan(1);
+    // 03 the tools — ONE drawing at a time.
     expect(shapes[2].stations).toHaveLength(4);
     expect(shapes[2].wires).toBe(1);
-    /* The map's own three readings, LIFTED INTO THE HEAD — which is also
-       what makes them pressable here: the card covers the console with a
-       transparent layer so its wheel capture cannot freeze the stack. */
+    /* 04 the company — the map's own three readings, PORTALLED into the
+       field's rail, which is also what makes them pressable here: the card
+       covers the console with a transparent layer so its wheel capture
+       cannot freeze the stack. */
     expect(shapes[3].stations).toEqual(["WORK", "CONFIGURATION", "SUBSTRATE"]);
     expect(shapes[3].maps).toBe(1);
     expect(
       await page.locator('[data-pc-index="3"] .fl-pda .fl-con__rail').count(),
       "the map's rail left the console"
     ).toBe(0);
+
+    /* ⚠ THE FILM IS THE 4:5 SOCIAL CUT, AND ITS CAPTION SAYS SO. A 16:9
+       poster in a 693×926 field is a stamp with a third of the box empty
+       either side; the record's `portrait` still is the same film framed
+       for the shape it is shown in. Both halves are pinned — the picture
+       and the line under it — because a caption left on the master's meta
+       contradicts the frame directly above it. */
+    const film = await page.evaluate(() => {
+      const el = document.querySelector<HTMLImageElement>('[data-pc-index="0"] .tl-film img');
+      const box = el?.getBoundingClientRect();
+      return {
+        portrait: !!document.querySelector('[data-pc-index="0"] .tl-film--portrait'),
+        src: el?.currentSrc || el?.src || "",
+        ratio: box ? box.width / box.height : 0,
+        caption: [...document.querySelectorAll('[data-pc-index="0"] .tl-film__caption > span')].map(
+          (s) => s.textContent?.trim() ?? ""
+        ),
+      };
+    });
+    expect(film.portrait).toBe(true);
+    expect(film.src).toMatch(/4x5/);
+    expect(film.ratio).toBeCloseTo(0.8, 1);
+    expect(film.caption[1]).not.toMatch(/16\s*:\s*9/i);
 
     // A station click swaps the field and moves the mark.
     const toolTabs = page.locator('[data-pc-index="2"] .fl-con__stn');
@@ -558,27 +615,128 @@ test.describe("Trinny London pitch variant", () => {
     expect(endWash).toBeGreaterThan(0.95);
     await expect(page.locator("#proposition [data-tl-prop-wash]")).toHaveCount(1);
 
-    /* The proposal is the declared kill edge now (ADR-095 U1 moved it off
-       the deleted interstitial): once its top has passed the viewport top
-       the ambient hold and the exit band are gone — an opaque station the
-       hook did not name would have hard-cut the canvas at that edge
-       instead (ADR-030 §6). */
-    const propTop = await page.evaluate(
-      () =>
-        (document.getElementById("proposition")?.getBoundingClientRect().top ?? 0) + window.scrollY
-    );
-    await rollTo(page, propTop + 40);
+    /* ADR-095 U5 — THE PROPOSAL IS NOT A SLAB, AND ITS ELEMENTS ARRIVE IN
+       PLACE (owner, 2026-09-10: "we have a parallax paint flying over it. I
+       don't want that … the elements from the next section should just come
+       into view").
+
+       An opaque station in normal flow can only ARRIVE by travelling, and
+       its content travels with it. So it is PINNED now, TRANSPARENT over the
+       live canvas, and its record sits blank until the stage has stopped.
+       These three assertions are the mechanism, in order. */
+    const propStage = page.locator("#proposition [data-tl-prop-stage]");
+    await expect(propStage).toHaveCount(1);
+
+    const propGeom = await page.evaluate(() => {
+      const el = document.getElementById("proposition")!;
+      const st = el.querySelector<HTMLElement>("[data-tl-prop-stage]")!;
+      return {
+        docTop: el.getBoundingClientRect().top + window.scrollY,
+        height: el.getBoundingClientRect().height,
+        pad: st.offsetTop,
+        stageH: st.offsetHeight,
+        sticky: getComputedStyle(st).position,
+      };
+    });
+    expect(propGeom.sticky).toBe("sticky");
+    const travel = Math.max(1, propGeom.height - propGeom.pad - propGeom.stageH);
+    /** Roll to `q` — how far into the stage's PINNED stretch, its own clock. */
+    const rollToQ = async (q: number) =>
+      rollTo(page, Math.round(propGeom.docTop + propGeom.pad + q * travel));
+
+    /* AT THE PIN: the record is blank and the box it will fill is already
+       where it will be. ⚠ The head's rule is INSIDE that reveal — with it
+       one level down, the coral line painted at full strength across an
+       otherwise empty frame. */
+    await rollToQ(0);
+    const armed = await page.evaluate(() => {
+      const head = document.querySelector<HTMLElement>("#proposition .tl-prop__head")!;
+      const r = head.getBoundingClientRect();
+      return {
+        tp: Number(document.getElementById("proposition")!.style.getPropertyValue("--tp-in")),
+        headOpacity: Number(getComputedStyle(head).opacity),
+        box: { top: Math.round(r.top), left: Math.round(r.left), w: Math.round(r.width) },
+      };
+    });
+    expect(armed.tp).toBe(0);
+    expect(armed.headOpacity).toBe(0);
+
+    /* LIT: the record is at full strength — and its BOX HAS NOT MOVED A
+       PIXEL. That is the whole claim, and it is the one thing a "does it
+       appear?" assertion never makes. */
+    await rollToQ(0.8);
+    const propLit = await page.evaluate(() => {
+      const head = document.querySelector<HTMLElement>("#proposition .tl-prop__head")!;
+      const r = head.getBoundingClientRect();
+      const live = document.querySelector<HTMLElement>("#proposition [data-tl-decode]");
+      const ghost = document.querySelector<HTMLElement>("#proposition .tl-dc__ghost");
+      return {
+        tp: Number(document.getElementById("proposition")!.style.getPropertyValue("--tp-in")),
+        headOpacity: Number(getComputedStyle(head).opacity),
+        box: { top: Math.round(r.top), left: Math.round(r.left), w: Math.round(r.width) },
+        live: live?.textContent ?? "",
+        ghost: ghost?.textContent ?? "",
+        transform: getComputedStyle(head).transform,
+      };
+    });
+    expect(propLit.tp).toBe(1);
+    expect(propLit.headOpacity).toBe(1);
+    /* ⚠ 2px, NOT EXACT, AND THE TOLERANCE IS NOT A HEDGE. The two samples
+       are taken at different scroll positions, so the sticky stage's top
+       lands on a different sub-pixel and the rect rounds one either way —
+       measured 149 against 148. What this rules out is TRAVEL, which on the
+       `data-m` reveal it replaces was 14px and on a rising slab is a whole
+       viewport. An exact bound here is the flake generator ADR-088 records. */
     expect(
-      await page.evaluate(() => document.documentElement.getAttribute("data-corridor-exit"))
-    ).toBeNull();
+      Math.abs(propLit.box.top - armed.box.top),
+      "the record does not travel"
+    ).toBeLessThanOrEqual(2);
+    expect(propLit.box.left).toBe(armed.box.left);
+    expect(propLit.box.w).toBe(armed.box.w);
+    /* ⚠ OPACITY ONLY. A transform here is the move-and-fade reveal coming
+       back wearing the new channel's clothes. */
+    expect(propLit.transform === "none" || propLit.transform === "matrix(1, 0, 0, 1, 0, 0)").toBe(
+      true
+    );
+    // The title decoded to its ghost's exact string.
+    expect(propLit.ghost.length).toBeGreaterThan(0);
+    expect(propLit.live).toBe(propLit.ghost);
+
+    /* ⚠ AND THE MARK IS STILL THERE, FADING BEHIND IT (owner: "the brand
+       mark in the back doesn't really dominate too much — we can fade it
+       out a bit as the next section scrolls into view"). The canvas has to
+       live through this beat, so the corridor is STILL ENGAGED here where
+       it used to be dead — the kill edge moved to `#contact`. */
+    expect(
+      await page.evaluate(() => document.documentElement.getAttribute("data-corridor-exit")),
+      "the canvas lives through the proposal"
+    ).toBe("true");
     expect(await goldMarks(page)).toEqual(["proposition"]);
 
-    // The proposal: the head, the three bands, the three kickers.
-    await expect(page.locator("#proposition .tl-prop__title")).toHaveText(
+    /* The proposal: the head, the three bands, the three kickers.
+       ⚠ THE GHOST, NOT THE `<h2>`. Since U5 the title is a ghost plus a live
+       layer, so the heading's own `textContent` is the string TWICE — which
+       is not a defect, it is the decode's markup contract (the ghost holds
+       the box and the accessible text; the live leaf is what the writer
+       overwrites). Asserting on the heading would fail on the effect being
+       present. */
+    await expect(page.locator("#proposition .tl-prop__title .tl-dc__ghost")).toHaveText(
       "The Trinny London configuration"
     );
     await expect(page.locator("#proposition .tl-config__band")).toHaveCount(3);
     await expect(page.locator("#proposition .tl-config__kicker")).toHaveCount(3);
+
+    /* …and `#contact` is where the corridor finally ends. Exactly one
+       station declares it, so JS and CSS cannot name different edges. */
+    expect(await page.locator("[data-corridor-kill]").count()).toBe(1);
+    await expect(page.locator("#contact[data-corridor-kill]")).toHaveCount(1);
+    const contactTop = await page.evaluate(
+      () => (document.getElementById("contact")?.getBoundingClientRect().top ?? 0) + window.scrollY
+    );
+    await rollTo(page, contactTop + 40);
+    expect(
+      await page.evaluate(() => document.documentElement.getAttribute("data-corridor-exit"))
+    ).toBeNull();
   });
 
   test("ADR-053 invariant: the entry hold never covers the bio", async ({ page }) => {
