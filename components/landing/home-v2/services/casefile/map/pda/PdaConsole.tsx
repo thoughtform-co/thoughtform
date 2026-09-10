@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import {
   MAP_BACKPLANE,
@@ -126,9 +127,26 @@ interface Props {
   skills: readonly CaseSkillEntry[];
   /** Draw against the approved envelope — a STATUS, never an amount. */
   envelope: "WITHIN" | "AT" | "OVER";
+  /**
+   * ⚠ WHERE THE READING RAIL PAINTS, when it may not paint here (ADR-094 U1).
+   * Given an element, the rail is PORTALLED into it instead of being seated
+   * on the console's top edge; omitted (every production call site — the
+   * casefile, the arcs, the labs) the render is byte-identical, which is the
+   * whole reason this is a host rather than a controlled `view` prop.
+   *
+   * ⚠ IT MOVES THE DOM AND NOTHING ELSE. `view` stays this component's own
+   * state because the flight that carries the selected work between readings
+   * is keyed on the TRANSITION (`go`, `viewTick`, `entry`,
+   * `PDA_FLIGHT_GUARD_MS`); lifting the value to a prop would fork that
+   * machine across two owners. The consumer is `/trinny-london`'s proof
+   * card, which seats the rail in its header bar — and which covers this
+   * console with a transparent layer so its wheel capture cannot freeze a
+   * pinned stack, so a rail left in place there is a rail nobody can press.
+   */
+  railHost?: HTMLElement | null;
 }
 
-export function PdaConsole({ shapes, districts, works, skills, envelope }: Props) {
+export function PdaConsole({ shapes, districts, works, skills, envelope, railHost }: Props) {
   const shown = useMemo(() => selectWorks(districts, works, skills), [districts, works, skills]);
   const totals = useMemo(() => pdaTotals(shapes, districts, works), [shapes, districts, works]);
   const cross = useMemo(
@@ -546,6 +564,18 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
     { id: "substrate", name: "SUBSTRATE" },
   ];
 
+  /* SHARED WITH EVERY OTHER PLATE (2026-08-06). This rail's own grammar
+     became the house grammar rather than the map keeping a private one —
+     see `console/ConsoleRail.tsx`. */
+  const rail = (
+    <ConsoleRail
+      stations={STATIONS}
+      activeIdx={view - 1}
+      onActive={(i) => go((i + 1) as PdaView)}
+      label="Map readings"
+    />
+  );
+
   return (
     <ConsoleFrame
       className="fl-plate fl-plate--pda fl-pda"
@@ -560,17 +590,11 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
          drawing takes the height back — which is the ONLY reason the type
          below could grow at all. Do not reinstate a title bar here without
          re-measuring the drawing's rendered type. */
-      rail={
-        /* SHARED WITH EVERY OTHER PLATE now (2026-08-06). This rail's own
-           grammar became the house grammar rather than the map keeping a
-           private one — see `console/ConsoleRail.tsx`. */
-        <ConsoleRail
-          stations={STATIONS}
-          activeIdx={view - 1}
-          onActive={(i) => go((i + 1) as PdaView)}
-          label="Map readings"
-        />
-      }
+      /* ⚠ THE RAIL LEAVES THE CONSOLE ONLY WHEN GIVEN SOMEWHERE TO GO. With
+         no `railHost` this is the same element in the same slot it has
+         always been in — the identity that keeps `/`, the arcs and the labs
+         byte-identical through ADR-094 U1. */
+      rail={railHost ? null : rail}
       /* ⚠ NO FOOT (owner, 2026-08-08 — "remove the text at the bottom of
          the right panel"). The 08-06 pass had already reduced it to the
          sentence alone; this pass removes the sentence too, and the drawing
@@ -697,6 +721,7 @@ export function PdaConsole({ shapes, districts, works, skills, envelope }: Props
           )
         ) : null}
       </svg>
+      {railHost ? createPortal(rail, railHost) : null}
     </ConsoleFrame>
   );
 }

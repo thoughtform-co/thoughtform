@@ -45,9 +45,23 @@ interface Props {
    */
   skills: readonly CaseSkillEntry[];
   envelope: "WITHIN" | "AT" | "OVER";
+  /**
+   * Optional: where the console's reading rail paints, if not on the
+   * console's own top edge (ADR-094 U1). A pass-through — this plate has
+   * never been anything but the seam between the casefile's vocabulary and
+   * the map's, and it stays that.
+   */
+  railHost?: HTMLElement | null;
 }
 
-export function IntelligenceMapPlate({ shapes, districts, works, skills, envelope }: Props) {
+export function IntelligenceMapPlate({
+  shapes,
+  districts,
+  works,
+  skills,
+  envelope,
+  railHost,
+}: Props) {
   return (
     <PdaConsole
       shapes={shapes}
@@ -55,6 +69,7 @@ export function IntelligenceMapPlate({ shapes, districts, works, skills, envelop
       works={works}
       skills={skills}
       envelope={envelope}
+      railHost={railHost}
     />
   );
 }
