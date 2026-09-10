@@ -1680,7 +1680,7 @@ export const LOOP_STUDIO_SHEETS = [
      evidence means. */
   {
     id: "ads",
-    label: "THE ADS",
+    label: "THE WORK",
     /* The deck's own closing line for the ad wall, minus the tool names:
        the in-ear placement engine is a third-party vendor this case does
        not name (see the genericisation note above), and naming only the
@@ -1703,7 +1703,7 @@ export const LOOP_STUDIO_SHEETS = [
        which is the point of one record: the tab said "the line" while the
        band under it says THE PRINCIPLE and the sheet beside it is THE RED
        LINE — two lines, one of them not the line. */
-    label: "GOVERNANCE",
+    label: "THE GOVERNANCE",
     /* Slide 9's PRINCIPLE band, verbatim. It is the sentence the whole
        two-column comparison exists to earn, and it was one of the three
        sheet feet deleted in 2026-08 — restored here in the shape the deck

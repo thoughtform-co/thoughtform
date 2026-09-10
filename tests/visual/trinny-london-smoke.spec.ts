@@ -514,7 +514,7 @@ test.describe("Trinny London pitch variant", () => {
        ⚠ THE RAIL IS PORTALLED: `SheetsPlate` owns which sheet is open, so
        `proofTabs` returns null for this kind and the stations arrive in the
        card's slot from the plate — which is what `stationsInSlot` proves. */
-    expect(shapes[1].stations).toEqual(["THE ADS", "GOVERNANCE", "THE RED LINE"]);
+    expect(shapes[1].stations).toEqual(["THE WORK", "THE GOVERNANCE", "THE RED LINE"]);
     expect(shapes[1].stationsInSlot).toBe(3);
     expect(shapes[1].stills).toBeGreaterThan(1);
     expect(shapes[1].verdicts, "each sheet ends on its verdict").toBe(1);
@@ -723,11 +723,18 @@ test.describe("Trinny London pitch variant", () => {
     // The line, lit: every live layer carries its ghost's exact string.
     await rollToP(0.84);
     const lit = await decodeLines();
-    expect(lit).toHaveLength(4);
+    // ⚠ THREE SINCE THE EYEBROW CAME OUT (owner, 2026-09-10): the title, its
+    // paragraph and the call to action. The count is what the writer walks,
+    // so a stale number here passes on a page missing a line.
+    expect(lit).toHaveLength(3);
     for (const line of lit) {
       expect(line.ghost.length).toBeGreaterThan(0);
       expect(line.live).toBe(line.ghost);
     }
+    // ⚠ AND THE OTHER CLIENT IS NOT NAMED ON THIS BEAT (owner, same pass) —
+    // the turn is the pitch's hinge, where a reference reads as borrowed
+    // credit rather than as an offer.
+    expect(lit.map((l) => l.ghost).join(" ")).not.toContain("Loop Earplugs");
     // …and the products have settled around it.
     const products = await page.evaluate(() =>
       [...document.querySelectorAll<HTMLImageElement>(".tl-turn__product")].map((i) => ({

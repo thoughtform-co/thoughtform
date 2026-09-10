@@ -193,11 +193,15 @@ place) → the proposal** → contact.
   station switch and starts the next film unasked. ⚠ **THE LIGHTBOX SURVIVES
   WHERE IT EARNS ITS KEEP**: the tools keep theirs because a screen recording
   of a UI is unreadable at card scale.
-- ⚠ **`THE LINE` IS `GOVERNANCE`** (U4). One `CaseSheet.label`, in the record,
-  so the casefile, the portfolio arc and this card move together; the sheet's
-  `id` stays `line` (a DOM id, and `data-sheet` plus two smokes read it). It
-  also fixed a collision the surface was carrying: the tab said "the line"
-  under a band reading THE PRINCIPLE and beside a sheet called THE RED LINE.
+- ⚠ **THE SHEETS' RAIL READS `THE WORK` · `THE GOVERNANCE` · `THE RED LINE`**
+  (U4 took `THE LINE` → `GOVERNANCE`; the owner's 2026-09-10 pass took `THE
+ADS` → `THE WORK` and added the article back). They are `CaseSheet.label`s
+  in the record, so **the casefile, the portfolio arc and this card move
+  together** — and the sheets' `id`s do NOT (`ads`, `line`, `red-line` are DOM
+  ids; `data-sheet` and two smokes read them). U4's own reason still holds:
+  the tab said "the line" under a band reading THE PRINCIPLE and beside a
+  sheet called THE RED LINE. ⚠ A label edit is a THREE-surface change — run
+  `trinny-london-smoke`, `services-ring-smoke` AND `arc-portfolio-smoke`.
 - ⚠ **THE TAB ROW LIVES IN THE FIELD SINCE U2**, seated on the right panel's
   own top edge at FULL WIDTH — `ConsoleRail`'s native `flex: 1 1 0`, which U1
   had to override for a reason that no longer holds (four stations at 295px
@@ -210,7 +214,7 @@ place) → the proposal** → contact.
 - ⚠ **THE STUDIO CARD MOUNTS `SheetsPlate` WHOLE, NOT ITS BODIES** (U3, owner:
   the studio card should have _"tabs, just like on the homepage, where we have
   our guidelines on where not to use AI, governance and the red line"_). THE
-  ADS · THE LINE · THE RED LINE were all in the record and this card rendered
+  three sheets were all in the record and this card rendered
   the ad wall alone. ⚠ **THE PLATE COMES WHOLE BECAUSE OF TOKENS** — `.fl-cmp`
   and `.fl-caps--sheet` read `--con-hair`, `--con-hair2`, `--fl-chrome-*`,
   `--fl-display`, `--fl-ink-dim` and `--fl-plate-px`, declared on `.fl-case`

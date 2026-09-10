@@ -1019,8 +1019,8 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
           };
         });
         expect(sheets.stations, `sheet rail @ ${at}`).toEqual([
-          "THE ADS",
-          "GOVERNANCE",
+          "THE WORK",
+          "THE GOVERNANCE",
           "THE RED LINE",
         ]);
         expect(sheets.opacity, `sheets settled gate @ ${at}`).toBe(1);

@@ -481,10 +481,14 @@ describe("the turn's ground and the mark it puts away", () => {
 });
 
 describe("turnDecodeFrame — the scrubbed decode", () => {
+  /* ⚠ THE EYEBROW IS GONE (owner, 2026-09-10) and the paragraph no longer
+     names the other client, so this array is THREE entries and its indices
+     have shifted. It mirrors the prototype's `[data-tl-decode]` order, which
+     is what the writer walks — a stale entry here does not fail, it decodes
+     a line that is not on the page. */
   const FINALS = [
-    "Trinny London · The proposal",
     "AI-first, inside Trinny London.",
-    "What Loop Earplugs owns now, built for the people who run Trinny London.",
+    "Owned by the people who run Trinny London.",
     "The configuration",
   ] as const;
   const rand = () => 0.5;
@@ -534,7 +538,10 @@ describe("turnDecodeFrame — the scrubbed decode", () => {
       const early = 0.3;
       const bottom = turnDecodeFrame(FINALS, FINALS.length - 1, 1, early, rand).length;
       const top = turnDecodeFrame(FINALS, 0, 1, early, rand).length;
-      expect(bottom / FINALS[3].length).toBeLessThan(top / FINALS[0].length);
+      // ⚠ DERIVED, NEVER A LITERAL INDEX. Line 539 already asks for the LAST
+      // line; a hardcoded `FINALS[3]` beside it was correct only while the
+      // block held four, and it threw the moment the eyebrow came out.
+      expect(bottom / FINALS[FINALS.length - 1].length).toBeLessThan(top / FINALS[0].length);
     }
   });
 

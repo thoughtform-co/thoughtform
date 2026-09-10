@@ -20,7 +20,7 @@ interface ArcStudioSheetsProps {
 /**
  * ArcStudioSheets — the studio's three sheets at page scale (ADR-078).
  *
- * THE ADS · THE LINE · THE RED LINE, on the casefile's own plate: what the
+ * THE WORK · THE GOVERNANCE · THE RED LINE, on the casefile's own plate: what
  * studio shipped, the rule it drew for when AI may make an image, and the
  * limit it refuses to cross. On the landing these three share a ~850px
  * column with everything else the row has to say; here the sheets ARE the

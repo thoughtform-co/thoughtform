@@ -228,8 +228,17 @@ describe("trinny-london variant parse (ADR-093)", () => {
     const lives = [...copy.matchAll(/<span class="tl-dc__live"[^>]*>([^<]*)<\/span>/g)].map(
       (m) => m[1]
     );
-    expect(ghosts).toHaveLength(4);
+    /* ⚠ THREE, NOT FOUR (owner, 2026-09-10): the eyebrow came out of the
+       upper block, leaving the title, the paragraph and the call to action.
+       The COUNT is what the writer walks — `useTurnScroll` reads every
+       `[data-tl-decode]` in order — so a stale number here would not fail
+       on the page, it would decode a line that is not on it. */
+    expect(ghosts).toHaveLength(3);
     expect(lives).toEqual(ghosts);
+    // ⚠ AND THE CLIENT'S OWN NAME IS THE ONLY ONE ON THIS BEAT. The turn is
+    // the pitch's hinge; naming the other engagement here reads as a
+    // reference rather than as an offer (owner, same pass).
+    expect(ghosts.join(" ")).not.toContain("Loop Earplugs");
     for (const live of copy.match(/<span class="tl-dc__live"[^>]*>/g) ?? []) {
       expect(live).toContain("data-tl-decode");
       expect(live).toContain('aria-hidden="true"');
