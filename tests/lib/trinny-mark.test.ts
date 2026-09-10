@@ -41,6 +41,7 @@ import {
   ctaInOf,
   ctaOutOf,
   TURN_VEIL_MAX,
+  TURN_PROP_FADE,
 } from "@/app/(marketing)/trinny-london/turn/turnClock";
 import { turnDecodeFrame } from "@/app/(marketing)/trinny-london/turn/turnDecode";
 
@@ -309,18 +310,31 @@ describe("turnClock", () => {
 });
 
 describe("the turn's ground and the mark it puts away", () => {
-  it("the wash swells and RESOLVES — the beat ends on the page's own ground", () => {
-    // ADR-095 U1: the first cut slid an opaque slab up over the stage and the
-    // owner rejected it. Nothing covers the turn now, so the wash has to come
-    // back to nothing by the end or the seam it avoided would just move.
+  it("the wash swells and STAYS — the client's colour takes the page", () => {
+    /* ⚠ IT NO LONGER RESOLVES (ADR-095 U4, owner: "it's important that the
+       gradient doesn't change colour — when you enter the Trinny section,
+       that gradient can stay that shader"). U1 ran it back to parchment over
+       0.90–1.00 so the proposal met the page's own ground and no edge was
+       drawn; the answer to that seam is the proposal carrying the SAME field
+       now, not the field going away before it. Where the ground finally ends
+       is GEOMETRY — TURN_PROP_FADE feathers the proposal's own bottom edge,
+       in one place however the reader arrives — so there is no third clock
+       to pin here. */
     expect(washOf(0)).toBe(0);
     expect(washOf(0.3)).toBe(0);
     expect(washOf(0.7)).toBeCloseTo(1, 5);
     expect(washOf(0.85)).toBeCloseTo(1, 5);
-    expect(washOf(1)).toBe(0);
-    let peak = 0;
-    for (let p = 0; p <= 1.0001; p += 0.01) peak = Math.max(peak, washOf(p));
-    expect(peak).toBeCloseTo(1, 5);
+    expect(washOf(1)).toBeCloseTo(1, 5);
+    // Monotone: it swells once and never dips back.
+    let prev = -1;
+    for (let p = 0; p <= 1.0001; p += 0.01) {
+      const w = washOf(p);
+      expect(w).toBeGreaterThanOrEqual(prev - 1e-9);
+      prev = w;
+    }
+    // And the feather is a fraction of a station, not a clock value.
+    expect(TURN_PROP_FADE).toBeGreaterThan(0);
+    expect(TURN_PROP_FADE).toBeLessThan(1);
   });
 
   it("the mark is veiled back, never all the way out", () => {

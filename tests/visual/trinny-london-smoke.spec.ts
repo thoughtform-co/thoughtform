@@ -532,15 +532,22 @@ test.describe("Trinny London pitch variant", () => {
     expect(band.over.top).toBeGreaterThan(0);
     expect(band.under.bottom).toBeLessThan(1);
 
-    /* The end of the runway: the line has un-typed back out and the ground
-       has RESOLVED, so the proposal below meets the page's own parchment
-       and no edge is ever drawn. ⚠ The ghost's box may not have moved a
-       pixel across the whole decode — that is the effect's one promise. */
+    /* The end of the runway: the line has un-typed back out, and the ground
+       STAYS. ⚠ The ghost's box may not have moved a pixel across the whole
+       decode — that is the effect's one promise. */
     const litBoxes = lit.map((l) => l.ghostBox);
     await rollToP(1);
     const gone = await decodeLines();
     for (const line of gone) expect(line.live).toBe("");
     expect(gone.map((l) => l.ghostBox)).toEqual(litBoxes);
+
+    /* ADR-095 U4 — THE CLIENT'S COLOUR TAKES THE PAGE (owner, 2026-09-10:
+       "it's important that the gradient doesn't change colour — when you
+       enter the Trinny section, that gradient can stay that shader"). U1 ran
+       the wash back to parchment here so the proposal met the house ground
+       with no edge; the answer to that edge is the proposal carrying the SAME
+       field, so the turn's is full at the end of its runway and the proposal
+       has a ground of its own. */
     const endWash = await page.evaluate(() =>
       Number(
         getComputedStyle(document.querySelector<HTMLElement>("[data-tl-turn-stage]")!)
@@ -548,7 +555,8 @@ test.describe("Trinny London pitch variant", () => {
           .trim()
       )
     );
-    expect(endWash).toBeLessThan(0.05);
+    expect(endWash).toBeGreaterThan(0.95);
+    await expect(page.locator("#proposition [data-tl-prop-wash]")).toHaveCount(1);
 
     /* The proposal is the declared kill edge now (ADR-095 U1 moved it off
        the deleted interstitial): once its top has passed the viewport top

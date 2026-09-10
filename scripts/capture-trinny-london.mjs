@@ -132,8 +132,10 @@ if (slots.length > 1) {
 // decoding in place on top of it. Its clock is a pure function of the
 // station's rect — `p = (vh − top) / (vh + runway)`, runway = height − vh —
 // so each stop is solved for a `p` rather than guessed in pixels. The morph
-// runs 0.20→0.56, the products 0.30→0.69, the wash 0.36→0.68, the line
-// 0.62→0.78, and everything resolves by 1.0 so the proposal meets no edge.
+// runs 0.20→0.56, the products 0.30→0.69, the line 0.62→0.78 — and the
+// wash swells 0.36→0.68 and then HOLDS (U4): the proposal below carries the
+// SAME field, so the client's colour crosses the seam instead of resolving
+// before it. Where the ground ends is geometry, not a stop on this clock.
 const turnRect = () =>
   page.evaluate(() => {
     const r = document.getElementById("turn")?.getBoundingClientRect();
@@ -162,7 +164,7 @@ for (const [p, name, note] of [
   [0.35, "14-turn-arrive", "the turn — the last card leaving, the first particles in flight"],
   [0.6, "15-turn-mark", "the turn — their mark, on a ground already warming"],
   [0.84, "16-turn-line", "the turn — the line decoded in place, the products at rest"],
-  [1.0, "17-turn-resolve", "the turn — the line un-typed, the ground back to parchment"],
+  [1.0, "17-turn-resolve", "the turn — the line un-typed, the ground HOLDING (U4)"],
 ]) {
   await rollToP(p);
   await page.waitForTimeout(600);
