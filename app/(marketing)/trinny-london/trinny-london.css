@@ -87,6 +87,16 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
      token, never a re-derivation of the site's gold: the WebGL golds are
      exempt from CSS by design and would go out of step. */
   --tl-brand-rgb: 240, 104, 80;
+  /* Trinny London's own electric yellow, read off `--yellow` on
+     trinnylondon.com and used there as the fill of every hero CTA
+     (`SHOP 30 SHADES`, `FIND OUT MORE`) — square, uppercase, their
+     `--brand-grey-1` as the ink (owner, 2026-09-10: "the button should be
+     yellow with a fill from the Trinny website … she claimed that yellow").
+     ⚠ A SECOND route-local brand literal, like the coral above it, and for
+     the same reason: it is the CLIENT's value, so deriving it from the
+     site's own ramp would be inventing a colour they did not choose. */
+  --tl-yellow-rgb: 254, 255, 4;
+  --tl-yellow-ink: #4d4d4d;
   --tl-ink: var(--dawn);
   --tl-ink-2: rgba(var(--dawn-rgb), 0.74);
   --tl-ink-3: rgba(var(--dawn-rgb), 0.52);
@@ -769,6 +779,19 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
   min-height: 100svh;
   padding: 56px var(--hud-content-inset);
   display: grid;
+  /* ⚠ THE COLUMN MUST BE `1fr`, AND WITHOUT IT THE WHOLE BEAT IS INVISIBLE
+     BELOW THE CAPABLE RUNG (found 2026-09-10 — ADR-095 listed the phone as
+     "not looked at" and this is what was there). An auto grid track is sized
+     by its content, and EVERY child of the stage is absolutely positioned:
+     the mark, the products, the wash and both copy blocks. So the track
+     measured 0, the stage measured 0 × 844, the copy's `min(860px, 84%)`
+     resolved to zero and its text overflowed into the stage's own
+     `overflow: hidden`. Only the mark survived, because it is the one child
+     with an absolute width — and it sat half off the left edge.
+     The capable rung escapes it by switching to `display: block`, which is
+     why every desktop still looked correct. Third time this pass that a
+     shrink-to-fit track met an absolutely-positioned child. */
+  grid-template-columns: minmax(0, 1fr);
   align-content: center;
 }
 
@@ -819,21 +842,57 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
   );
 }
 
-/* The line the turn is for: centred ON the mark's own weld point, so it
-   lands exactly where the mark was rather than beside it. The block never
-   moves — no transform rides the reveal, only its ink (`--tl-cta-o`), and
-   each line's geometry is held by its ghost. */
+/* The line the turn is for, seated AROUND the mark (owner, 2026-09-10: the
+   title and the text "overlap with the logo … put the title above the brand
+   mark, and then the call to action and the paragraph below it"). The first
+   cut centred the whole block ON the mark's weld point, which is where the
+   mark was — and the mark is still there once it has re-formed as theirs, so
+   the two occupied one space.
+
+   ⚠ BOTH BLOCKS ARE SEATED OFF ONE PAIR OF TOKENS, and the pair is the
+   MARK'S geometry, not a taste: `--tl-mark-cy` is the weld point the copy
+   used to sit on (`0.5 + CENTER_Y_OFFSET / (2·CENTER_DISTANCE·tan(FOV/2))`,
+   the same 54.5 % `turnClock.ts` derives its product arcs about) and
+   `--tl-mark-r` is the ring's on-screen radius as a fraction of the stage
+   height. Move the mark and both blocks follow; hard-coding two offsets
+   instead is how they drift apart from it and from each other.
+
+   Neither block moves during the beat — no transform rides the reveal, only
+   the ink (`--tl-cta-o`), and each line's geometry is held by its ghost. */
+.tl-root .tl-turn__stage {
+  --tl-mark-cy: 54.5%;
+  /* ⚠ THE RADIUS IS THE FALLBACK MARK'S OWN EXPRESSION, not a percentage
+     of the stage. `.tl-turn__mark` is `min(45svh, 45vw)` wide because the
+     WebGL mark is a BILLBOARD welded in front of the camera — its screen
+     size follows the viewport's HEIGHT on a landscape window and its WIDTH
+     on a phone. A flat `26%` is right at the owner's shape and half again
+     too big at 390×844, where it would push the two blocks apart around a
+     mark a third of that size. Measured: 25 % of the height at 1920×1247
+     and at 1280×720, 11 % at 390×844 — which is what the mark does. */
+  --tl-mark-r: min(25svh, 24vw);
+  --tl-mark-clear: clamp(14px, 2.4vh, 34px);
+}
+
 .tl-root .tl-turn__copy {
   position: absolute;
   left: 50%;
-  top: 54.5%;
-  translate: -50% -50%;
+  translate: -50% 0;
   width: min(860px, 84%);
   display: grid;
   justify-items: center;
   text-align: center;
   gap: clamp(12px, 1.8vh, 20px);
   opacity: var(--tl-cta-o, 1);
+}
+
+/* Its BOTTOM edge sits a clearance above the mark's top, so the block grows
+   upward as the title wraps rather than down into the ring. */
+.tl-root .tl-turn__copy--over {
+  bottom: calc(100% - var(--tl-mark-cy) + var(--tl-mark-r) + var(--tl-mark-clear));
+}
+
+.tl-root .tl-turn__copy--under {
+  top: calc(var(--tl-mark-cy) + var(--tl-mark-r) + var(--tl-mark-clear));
 }
 
 /* ⚠ THE GHOST HOLDS THE BOX AND THE LIVE LAYER FLOATS OVER IT. The kernel
@@ -891,24 +950,41 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
   max-width: 44ch;
 }
 
+/* ⚠ THEIR YELLOW, FILLED — the one place on this page that borrows the
+   client's own button rather than the house's (owner, 2026-09-10). Their
+   hero CTAs are a flat `#feff04` field with `--brand-grey-1` ink, SQUARE,
+   uppercase and lightly tracked, which is already the house grammar in
+   another colour; only the fill and the ink are theirs. The outline the
+   button carried is gone with it — a filled plate does not need a rim, and
+   the border was the thing that made it read as chrome rather than as the
+   one thing to press.
+   ⚠ Ink is THEIRS, not `--tl-ink`: at 7.6:1 the grey clears comfortably,
+   and their own pairing is the point of using the colour at all. */
 .tl-root .tl-turn__cta {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   margin-top: 6px;
-  padding: 10px 16px;
-  border: 1px solid rgba(var(--dawn-rgb), 0.5);
+  padding: 13px 22px;
+  border: 0;
+  background: rgb(var(--tl-yellow-rgb));
   font-family: var(--font-pt-mono);
   font-weight: var(--weight-text);
   font-size: 11px;
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
-  color: var(--tl-ink);
+  color: var(--tl-yellow-ink);
   text-decoration: none;
 }
 
 .tl-root .tl-turn__cta:hover {
-  border-color: var(--tl-ink);
+  background: rgb(var(--tl-yellow-rgb));
+  box-shadow: 0 0 0 3px rgba(var(--tl-yellow-rgb), 0.34);
+}
+
+.tl-root .tl-turn__cta:focus-visible {
+  outline: 2px solid var(--tl-yellow-ink);
+  outline-offset: 2px;
 }
 
 .tl-root .tl-turn__field {
@@ -935,32 +1011,51 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
   will-change: translate;
 }
 
+/* ⚠ THE RESTS MOVED OUTBOARD WITH THE COPY (ADR-095 U3). They were placed
+   against a copy block CENTRED on the mark, which left both top corners
+   free; with the title up in that band the top pair sat in its lane and
+   `London.` ran under the Naked Ambition tube at 1280×720. The four hug the
+   stage's edges now, so the centre column belongs to the mark and the copy
+   at every width — which is also the composition the split asked for. */
 .tl-root .tl-turn__product--discovery {
-  --tm-rest-x: 13%;
-  --tm-rest-y: 12%;
+  --tm-rest-x: 8%;
+  --tm-rest-y: 13%;
   --tm-rest-r: 7deg;
   width: clamp(140px, 13vw, 260px);
 }
 
 .tl-root .tl-turn__product--naked {
-  --tm-rest-x: 68%;
-  --tm-rest-y: 10%;
+  --tm-rest-x: 73%;
+  --tm-rest-y: 11%;
   --tm-rest-r: -9deg;
   width: clamp(120px, 11vw, 220px);
 }
 
 .tl-root .tl-turn__product--best {
-  --tm-rest-x: 9%;
+  --tm-rest-x: 5%;
   --tm-rest-y: 52%;
   --tm-rest-r: -14deg;
   width: clamp(110px, 10vw, 200px);
 }
 
 .tl-root .tl-turn__product--overnight {
-  --tm-rest-x: 72%;
+  --tm-rest-x: 75%;
   --tm-rest-y: 52%;
   --tm-rest-r: 12deg;
   width: clamp(120px, 11vw, 220px);
+}
+
+/* ⚠ THE TITLE TAKES TWO LINES WHERE THE LANE CANNOT HOLD ONE. Between the
+   phone rung and ~1500px the stage is not wide enough for a 30-character
+   display line AND a product column either side of it: at 1280×720 the one
+   line measures ~590px against ~635px of clear centre, so it touches the
+   tube however far outboard the tube goes. Narrowing the BLOCK is what
+   wraps it — the type ladder is untouched, because shrinking the display
+   size to fit is the thing this surface does not do. */
+@media (min-width: 961px) and (max-width: 1500px) {
+  .tl-root .tl-turn__copy--over {
+    width: min(560px, 62%);
+  }
 }
 
 /* The capable rung — the inverse of the stack's inert rung (section 5).
@@ -1198,24 +1293,30 @@ html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
   .tl-root .tl-turn__copy {
     width: 88%;
   }
+  /* ⚠ THE FOUR SIT IN THE TWO BANDS THE COPY LEAVES, and on a phone those
+     are narrow: the title takes the top of the stage, the paragraph and the
+     button take the bottom, and what is left is a strip above the title and
+     the mark's own flanks. At the old 22vw the bottom pair stood exactly
+     where the paragraph now lands and the copy read straight over them.
+     Smaller, and the lower two move up beside the mark. */
   .tl-root .tl-turn__product {
-    width: clamp(72px, 22vw, 120px);
+    width: clamp(56px, 17vw, 96px);
   }
   .tl-root .tl-turn__product--discovery {
-    --tm-rest-x: 4%;
-    --tm-rest-y: 8%;
+    --tm-rest-x: 2%;
+    --tm-rest-y: 6%;
   }
   .tl-root .tl-turn__product--naked {
-    --tm-rest-x: 72%;
-    --tm-rest-y: 8%;
+    --tm-rest-x: 76%;
+    --tm-rest-y: 6%;
   }
   .tl-root .tl-turn__product--best {
-    --tm-rest-x: 4%;
-    --tm-rest-y: 68%;
+    --tm-rest-x: 1%;
+    --tm-rest-y: 44%;
   }
   .tl-root .tl-turn__product--overnight {
-    --tm-rest-x: 72%;
-    --tm-rest-y: 68%;
+    --tm-rest-x: 77%;
+    --tm-rest-y: 44%;
   }
   .tl-root .tl-prop__head {
     grid-template-columns: 1fr;
