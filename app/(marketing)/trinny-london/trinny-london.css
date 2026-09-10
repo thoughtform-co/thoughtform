@@ -726,11 +726,33 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
    panel; selected, the still takes the field at the scale its frame was
    drawn for. The caption keeps the FULL label — the rail's handle is the
    film's name alone, so the client half is said once per band. */
+/* ⚠ THE TRACK IS DEFINITE AND THE ITEM IS WHAT CENTRES (owner, 2026-09-10:
+   the player "moves to the left side while it should stay centered like the
+   thumbnail"). `justify-content` centres the TRACK, and this grid's one
+   column was `auto` — sized from whichever child contributed the widest
+   max-content. That made the centring depend on the CONTENT, and the content
+   changes under the click:
+
+     · still @1280×720 — track 326.2px, the CAPTION's max-content (the film
+       is 250.2), centred, so the picture sat 38px left of centre already;
+     · live  @1280×720 — track 528.9px, the full inner width, because a
+       `<video>`'s intrinsic width saturates an auto track. With the track
+       filling the box there is nothing left to centre, and `.tl-film` — which
+       has a definite `width` — falls to `justify-items`' start. Measured
+       121–141px of jump at every reference viewport.
+
+   ⚠ AND THE SIZE NEVER MOVED, WHICH IS WHY IT SHIPPED. `.tl-film`'s
+   `min(100%, …)` re-clamps against the resolved track, so the frame stays
+   pixel-identical in both states and only its ORIGIN moves — invisible to a
+   guard that compares `{w, h}`. `minmax(0, 1fr)` makes the track the box, so
+   `100%` is the same number under a still and under a player, and
+   `justify-items` centres the item rather than the track. */
 .tl-root .tl-field--films {
   --tl-film-pad: clamp(16px, 2vw, 32px);
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: center;
-  justify-content: center;
+  justify-items: center;
   padding: var(--tl-film-pad);
 }
 

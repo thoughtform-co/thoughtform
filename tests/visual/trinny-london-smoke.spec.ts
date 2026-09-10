@@ -562,27 +562,66 @@ test.describe("Trinny London pitch variant", () => {
        the `<video>` takes EXACTLY the still's rect, so the swap is
        pixel-for-pixel and nothing reflows under the click. */
     await seatPinnedFromTop(page, 0);
-    const filmBox = await page.evaluate(() => {
-      const r = document
-        .querySelector<HTMLElement>('[data-pc-index="0"] .tl-film__frame')!
-        .getBoundingClientRect();
-      return { w: Math.round(r.width), h: Math.round(r.height) };
-    });
+    /* ⚠ THE ORIGIN IS PART OF THE RECT, AND LEAVING IT OUT IS WHAT LET THE
+       PLAYER JUMP (owner, 2026-09-10: it "moves to the left side while it
+       should stay centered like the thumbnail"). This read was `{w, h}` and
+       the frame's SIZE genuinely never moved — `.tl-field--films`' one auto
+       column was sized from content, so a `<video>`'s intrinsic width
+       saturated the track, `justify-content` had nothing left to centre, and
+       the item fell to the left padding edge 121–141px away at its own
+       unchanged size. A rect compared as a silhouette is ADR-069 U1's finding;
+       this is the same hole one surface later, so BOTH halves are pinned. */
+    const rectIn = (page: Page, sel: string) =>
+      page.evaluate((s) => {
+        const r = document.querySelector<HTMLElement>(s)?.getBoundingClientRect();
+        /* ⚠ RELATIVE TO THE FIELD, NEVER THE VIEWPORT. `.click()` runs a
+           `scrollIntoViewIfNeeded` first, so the two reads either side of it
+           are not taken at the same scroll offset — measured 181px of pure
+           `y` drift on a frame that had not moved inside its panel at all.
+           The claim is about where the player sits IN ITS BOX, and that is
+           the frame this asserts in. */
+        const f = document
+          .querySelector<HTMLElement>('[data-pc-index="0"] .tl-field--films')
+          ?.getBoundingClientRect();
+        return r && f
+          ? {
+              x: Math.round(r.x - f.x),
+              y: Math.round(r.y - f.y),
+              w: Math.round(r.width),
+              h: Math.round(r.height),
+            }
+          : null;
+      }, sel);
+    const filmBox = await rectIn(page, '[data-pc-index="0"] .tl-film__frame');
     await page.locator('[data-pc-index="0"] .tl-film__frame').click();
-    const inline = await page.evaluate(() => {
-      const v = document.querySelector<HTMLVideoElement>('[data-pc-index="0"] video');
-      const r = v?.getBoundingClientRect();
-      return {
-        mounted: !!v,
-        src: v?.getAttribute("src") ?? "",
-        box: r ? { w: Math.round(r.width), h: Math.round(r.height) } : null,
-        lightbox: document.querySelectorAll(".fl-lightbox").length,
-      };
-    });
+    const inline = await page.evaluate(() => ({
+      mounted: !!document.querySelector('[data-pc-index="0"] video'),
+      src: document.querySelector('[data-pc-index="0"] video')?.getAttribute("src") ?? "",
+      lightbox: document.querySelectorAll(".fl-lightbox").length,
+    }));
+    const liveBox = await rectIn(page, '[data-pc-index="0"] video');
     expect(inline.mounted, "the cut mounts a player").toBe(true);
     expect(inline.src, "and it is the 4:5 cut, self-hosted").toMatch(/^\/videos\/.*4x5\.mp4$/);
     expect(inline.lightbox, "and NOT the full-screen takeover").toBe(0);
-    expect(inline.box, "the player takes the still's exact box").toEqual(filmBox);
+    expect(liveBox, "the player takes the still's exact box, origin included").toEqual(filmBox);
+    /* ⚠ AND IT IS CENTRED IN THE FIELD IN BOTH STATES, which is the claim the
+       equality above cannot make on its own: two frames that agree with each
+       other can still both sit off-centre — and under the auto track they did,
+       the STILL reading 38px left of centre at 1280×720 and 8.6px at 1440×800
+       while the equality was the only thing anyone checked. */
+    const gaps = await page.evaluate(() => {
+      const field = document
+        .querySelector<HTMLElement>('[data-pc-index="0"] .tl-field--films')!
+        .getBoundingClientRect();
+      const frame = document
+        .querySelector<HTMLElement>('[data-pc-index="0"] .tl-film__frame')!
+        .getBoundingClientRect();
+      return { left: frame.left - field.left, right: field.right - frame.right };
+    });
+    expect(
+      Math.abs(gaps.left - gaps.right),
+      "the player is centred in its field, not flush to one wall"
+    ).toBeLessThan(2);
     /* ⚠ A STATION SWITCH GIVES THE NEXT FILM ITS STILL BACK. The play state
        is keyed on the film's own src, not a boolean — a boolean would carry
        across the swap and start the second film unasked. */

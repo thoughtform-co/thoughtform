@@ -783,3 +783,69 @@ Negative-tested — restoring `center` fails it.
 clamped while the corridor inflates the document, and a reading taken there is of
 an UNPINNED station: it reports a head frac of 4.1 and reads as a catastrophic
 failure rather than as a harness miss. Cost two measurement passes in this one.
+
+## Update 6 — the player takes the still's RECT, not just its size (2026-09-10)
+
+Owner, on the film card: the player _"moves to the left side while it should
+stay centered like the thumbnail"_.
+
+U4 shipped the 4:5 cut playing in its frame and claimed the swap was
+"pixel-for-pixel". It was — in **size**. `.tl-field--films` centred its content
+with `justify-content: center`, which centres the **track**, and the field's one
+column was `auto`, sized from whichever child contributed the widest
+max-content:
+
+|                 | resolved track                                                 | field inner | `.tl-film` |
+| --------------- | -------------------------------------------------------------- | ----------- | ---------- |
+| still @1280×720 | **326.2px** — the CAPTION's max-content                        | 528.8       | 250.2      |
+| live @1280×720  | **528.9px** — full; a `<video>`'s intrinsic width saturates it | 528.8       | 250.2      |
+
+So under the still the track was roughly the picture's own width and centring it
+centred the picture; under the player the track filled the box, `justify-content`
+had nothing left to centre, and `.tl-film` — which carries a definite `width` —
+fell to `justify-items`' start, flush against the left padding edge. Measured
+**121–141px** of jump at 1280×720 / 1440×800 / 1728×1080 / 1920×1080, at an
+identical size.
+
+⚠ **THE STILL WAS NEVER CENTRED EITHER**, which is the tell that the mechanism
+was structural rather than a `<video>` quirk: where the caption is the widest
+child, the track is the caption's, so the picture sat **38px** left of centre at
+1280×720 and 8.6px at 1440×800. Nobody saw it because nothing jumped.
+
+**The fix is one declaration each way**: `grid-template-columns: minmax(0, 1fr)`
+makes the track the box — so `.tl-film`'s `min(100%, …)` re-clamps against the
+same number in both states — and `justify-items: center` centres the ITEM rather
+than the track. Widths come out byte-identical to what shipped (250.2 / 309.1 /
+518.7 / 518.7); only the origin moves.
+
+⚠ **THE GENERAL FORM: a grid that centres content-sized tracks centres whatever
+the content happens to be.** Any box whose child swaps element type — a poster
+for a player, an `<img>` for a `<video>`, a drawing for a capture — wants a
+definite track. An `auto` one makes the layout a function of the content's
+intrinsic sizing, which is exactly the thing the swap changes.
+
+### The guard measured a silhouette
+
+`expect(inline.box).toEqual(filmBox)` read `{ w, h }` and nothing else, so a
+frame that kept its size while changing its origin satisfied it completely. That
+is **ADR-069 U1's finding one surface later** — `pda-flight` compared two rects
+as silhouettes and missed an interior that had changed underneath. A rect has
+four numbers and a guard that drops two of them is not a weaker version of the
+check, it is a different check.
+
+It compares the full rect now, plus a centring assertion — because equality
+alone still cannot catch the case both states are wrong in the same way, which
+is precisely what the 38px still was.
+
+⚠ **AND IT IS MEASURED RELATIVE TO THE FIELD, NEVER THE VIEWPORT.**
+`locator.click()` runs a `scrollIntoViewIfNeeded` before it clicks, so the two
+reads either side of it are not taken at the same scroll offset — the first cut
+of the tightened guard reported **181px of pure `y` drift** on a frame that had
+not moved inside its panel at all, and the failure looked like a second defect.
+U4 already recorded that trap for a scroll baseline; it applies to a rect read
+just as much. The claim is about where the player sits IN ITS BOX, so that is
+the frame to measure in.
+
+⚠ **The film field has no other rung** — one rule governs it at every viewport,
+so there was no responsive branch to check and no rung where the old behaviour
+was correct.

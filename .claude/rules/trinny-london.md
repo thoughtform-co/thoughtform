@@ -193,6 +193,30 @@ place) → the proposal** → contact.
   station switch and starts the next film unasked. ⚠ **THE LIGHTBOX SURVIVES
   WHERE IT EARNS ITS KEEP**: the tools keep theirs because a screen recording
   of a UI is unreadable at card scale.
+  ⚠ **"THE SAME BOX" IS A RECT, AND FOR A DAY IT ONLY MEANT A SIZE** (owner,
+  2026-09-10: the player _"moves to the left side while it should stay
+  centered like the thumbnail"_). `.tl-field--films` centred with
+  `justify-content`, which centres the **track** — and its one column was
+  `auto`, so the track took whichever child contributed the widest
+  max-content. Under the still that was the CAPTION (326.2px at 1280×720,
+  against a 250.2px film); under the player it was the `<video>`'s intrinsic
+  width, which saturates the track to the full box. With the track filling the
+  field there is nothing left to centre and `.tl-film` — which has a definite
+  `width` — falls to `justify-items`' start: **121–141px of jump at every
+  reference viewport, at an unchanged size**. Fixed by making the track
+  definite (`minmax(0, 1fr)`) and centring the ITEM (`justify-items`), which
+  also un-did a still that was already 38px off-centre at 1280×720.
+  ⚠ **A GRID THAT CENTRES CONTENT-SIZED TRACKS CENTRES WHATEVER THE CONTENT
+  HAPPENS TO BE** — so any box whose child swaps element type (an `<img>` for
+  a `<video>`, a poster for a player) wants a definite track, not an `auto`
+  one. ⚠ **AND THE GUARD COMPARED `{w, h}`**, which is ADR-069 U1's rect-as-
+  silhouette one surface later: the size genuinely never moved, so every
+  assertion stayed green. It compares the full rect now — ⚠ **measured
+  RELATIVE TO THE FIELD, never the viewport**, because `locator.click()` runs
+  a `scrollIntoViewIfNeeded` first and the two reads either side of it are
+  taken at different scroll offsets (181px of pure `y` drift on a frame that
+  had not moved in its panel). That trap is already recorded two bullets
+  down; it applies to a rect read just as much as to a scroll baseline.
 - ⚠ **THE SHEETS' RAIL READS `THE WORK` · `THE GOVERNANCE` · `THE RED LINE`**
   (U4 took `THE LINE` → `GOVERNANCE`; the owner's 2026-09-10 pass took `THE
 ADS` → `THE WORK` and added the article back). They are `CaseSheet.label`s
