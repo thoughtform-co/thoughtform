@@ -30,7 +30,13 @@ describe("the trinny proof order", () => {
       expect(t.card?.lede, `${t.id} lede`).toBeTruthy();
       expect(t.blocks, `${t.id} blocks`).toHaveLength(4);
       for (const b of t.blocks ?? []) expect(b.glyph, `${t.id} "${b.title}" glyph`).toBeTruthy();
-      expect(t.project.length, `${t.id} project`).toBeLessThanOrEqual(20);
+      /* ⚠ THE CAP'S REASON MOVED WITH THE NAME (ADR-094 U1). It was 20
+         because the title sat `nowrap` in a 52px flex head strip; it now
+         leads the RECORD column, where it wraps against a ~22ch measure.
+         So this is a copy budget for a two-line display name, not a
+         clipping guard — and the box it answers to is `.tl-card__title`'s
+         `max-width`, which is where to re-measure if it ever binds. */
+      expect(t.project.length, `${t.id} project`).toBeLessThanOrEqual(24);
     }
   });
 

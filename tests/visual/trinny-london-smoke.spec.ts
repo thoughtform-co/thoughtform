@@ -92,10 +92,85 @@ const slotGeometry = (page: Page) =>
     })
   );
 
+/**
+ * Seat one slot on its own pin, converging.
+ *
+ * ⚠ A SOLVED `y` GOES STALE UNDER THE SCROLL. The document grows as the
+ * corridor's lazy chunks mount, so geometry read at the top of the stack is
+ * short by the time the reader is at the bottom of it — and the deeper the
+ * slot, the further short. That is the same law the turn's `rollToP` obeys
+ * one beat later (ADR-095: converge on the published clock, never on one
+ * solved position); it reached the stack when ADR-094 U1 lengthened the
+ * pinned dwell and card 4 stopped arriving at `top − pin + 40`.
+ */
+async function seatSlot(page: Page, idx: number, offset = 40): Promise<void> {
+  const seen: string[] = [];
+  for (let pass = 0; pass < 8; pass++) {
+    const s = await page.evaluate((i) => {
+      const el = document.querySelectorAll<HTMLElement>("[data-pc-slot]")[i];
+      const r = el.getBoundingClientRect();
+      return {
+        doc: Math.round(r.top + window.scrollY),
+        pin: Number.parseFloat(getComputedStyle(el).top) || 0,
+        state: el.getAttribute("data-pc-state"),
+      };
+    }, idx);
+    /* ⚠ CONVERGE ON THE HOOK'S OWN PUBLISHED STATE, not on the rect. A
+       geometry check can be satisfied on one pass and stale on the next —
+       the lazy chunks are still decoding and the document is still
+       growing — and the first cut of this helper returned on exactly that,
+       leaving the whole pile 62px short with card 4 reading `incoming`
+       while the still showed it seated. `data-pc-state` is what the hook
+       actually computed on the frame we are about to assert. */
+    if (s.state === "pinned" || s.state === "covered") return;
+    seen.push(`${s.state}@${s.doc}`);
+    await rollTo(page, s.doc - s.pin + offset);
+  }
+  throw new Error(`slot ${idx} never seated (saw ${seen.join(" ")})`);
+}
+
 const slotStates = (page: Page) =>
   page.evaluate(() =>
     [...document.querySelectorAll("[data-pc-slot]")].map((s) => s.getAttribute("data-pc-state"))
   );
+
+/**
+ * One card's head strip and the field under it (ADR-094 U1).
+ *
+ * ⚠ THIS SURFACE HAD NO MARKUP GUARD AT ALL until this pass — `tl-card`
+ * appeared in no test file — so the head could be recomposed and the fields
+ * rebuilt with every gate green. It reads what the owner's ruling is ABOUT:
+ * the client leads the strip, the project's name is down in the record, the
+ * tabs are flat and square, and the field shows ONE thing.
+ */
+const cardShape = (page: Page, idx: number) =>
+  page.evaluate((i) => {
+    const slot = document.querySelectorAll<HTMLElement>("[data-pc-slot]")[i];
+    const head = slot.querySelector<HTMLElement>(".tl-card__head")!;
+    const stns = [...head.querySelectorAll<HTMLElement>(".fl-con__stn")];
+    return {
+      /* The head's own children, in order — the kicker leads. */
+      lead: head.firstElementChild?.className ?? "",
+      kicker: head.querySelector(".tl-card__kicker")?.textContent?.trim() ?? "",
+      /* The name is in the RECORD column now, never in the strip. */
+      titleInRecord: !!slot.querySelector(".tl-card__record > .tl-card__title"),
+      titleInHead: !!head.querySelector(".tl-card__title"),
+      stations: stns.map((b) => b.textContent?.trim() ?? ""),
+      on: stns.filter((b) => b.hasAttribute("data-on")).length,
+      /* Both halves of "no gradient, no notch" — pinned from both ends so a
+         restored ramp or a returning chamfer fails rather than passing by
+         omission. */
+      ramps: stns.map((b) => getComputedStyle(b).backgroundImage),
+      clips: stns.map((b) => getComputedStyle(b).clipPath),
+      spineShown: [...slot.querySelectorAll<HTMLElement>(".fl-con__spine")].some(
+        (el) => getComputedStyle(el).display !== "none"
+      ),
+      films: slot.querySelectorAll(".tl-film").length,
+      wires: slot.querySelectorAll(".tl-wire").length,
+      stills: slot.querySelectorAll(".tl-still").length,
+      maps: slot.querySelectorAll(".fl-pda").length,
+    };
+  }, idx);
 
 test.describe("Trinny London pitch variant", () => {
   test("ADR-093: the light lock beats a stored dark preference AND ?theme=dark", async ({
@@ -273,15 +348,62 @@ test.describe("Trinny London pitch variant", () => {
     expect(slots[0].pin).toBeGreaterThanOrEqual(64);
 
     // Card 1 pinned: the pile's front, the Proof mark, the exit band live.
-    await rollTo(page, slots[0].top - slots[0].pin + 40);
+    await seatSlot(page, 0);
     expect(await slotStates(page)).toEqual(["pinned", "incoming", "incoming", "incoming"]);
     expect(await goldMarks(page)).toEqual(["services"]);
     await expect(page.locator("html")).toHaveAttribute("data-corridor-exit", "true");
 
     // Card 4 pinned: everything above it covered, the runway's index at the end.
-    await rollTo(page, slots[3].top - slots[3].pin + 40);
+    await seatSlot(page, 3);
     expect(await slotStates(page)).toEqual(["covered", "covered", "covered", "pinned"]);
     await expect(page.locator(".tl-stack__runway")).toHaveAttribute("data-pc-active", "3");
+
+    /* ADR-094 U1 — THE HEAD IS CHROME AND THE FIELD SHOWS ONE THING.
+       The client leads every strip, the project's name sits in the record
+       column, and the three cards that had more than one thing to show
+       switch on the house rail instead of printing all of it at once. */
+    const shapes = await Promise.all([0, 1, 2, 3].map((i) => cardShape(page, i)));
+    for (const [i, c] of shapes.entries()) {
+      expect(c.lead, `card ${i + 1} leads with the client`).toContain("tl-card__kicker");
+      expect(c.kicker, `card ${i + 1} kicker`).toMatch(/^Loop Earplugs \u00b7 /);
+      expect(c.titleInRecord, `card ${i + 1} name is in the record`).toBe(true);
+      expect(c.titleInHead, `card ${i + 1} name is out of the head`).toBe(false);
+      /* ⚠ Both halves of the owner's note, on every station that exists:
+         no ramp (`console.css`'s recess and its lit gradient) and no notch
+         (the leading station's chamfer, which had no console cut above it
+         to explain). Asserting only "the open one is filled" would let
+         either come back. */
+      for (const r of c.ramps) expect(r, `card ${i + 1} station ramp`).toBe("none");
+      for (const cp of c.clips) expect(cp, `card ${i + 1} station notch`).toBe("none");
+      expect(c.spineShown, `card ${i + 1} spine`).toBe(false);
+      if (c.stations.length) {
+        expect(c.on, `card ${i + 1} has exactly one open station`).toBe(1);
+      }
+    }
+    // The ads card is a contact sheet — one object, six shots, no rail.
+    expect(shapes[0].stations).toEqual([]);
+    expect(shapes[0].stills).toBeGreaterThan(1);
+    // The two crammed cards now show ONE film / ONE drawing.
+    expect(shapes[1].stations).toHaveLength(2);
+    expect(shapes[1].films).toBe(1);
+    expect(shapes[2].stations).toHaveLength(4);
+    expect(shapes[2].wires).toBe(1);
+    /* The map's own three readings, LIFTED INTO THE HEAD — which is also
+       what makes them pressable here: the card covers the console with a
+       transparent layer so its wheel capture cannot freeze the stack. */
+    expect(shapes[3].stations).toEqual(["WORK", "CONFIGURATION", "SUBSTRATE"]);
+    expect(shapes[3].maps).toBe(1);
+    expect(
+      await page.locator('[data-pc-index="3"] .fl-pda .fl-con__rail').count(),
+      "the map's rail left the console"
+    ).toBe(0);
+
+    // A station click swaps the field and moves the mark.
+    const toolTabs = page.locator('[data-pc-index="2"] .fl-con__stn');
+    await toolTabs.nth(2).click();
+    await expect(toolTabs.nth(2)).toHaveAttribute("data-on", "true");
+    expect((await cardShape(page, 2)).on).toBe(1);
+    expect((await cardShape(page, 2)).wires).toBe(1);
 
     /* ADR-095 — THE TURN, and ADR-095 U1's ground + decoded line. A
        transparent station the canvas lives through: its stage pins, the
