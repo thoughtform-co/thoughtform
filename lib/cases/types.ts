@@ -621,11 +621,23 @@ export interface CaseFilm {
   /** Mono meta under the label, e.g. "16:9 master · 30 sec". */
   meta: string;
   /**
-   * The film's 4:5 SOCIAL cut, as a still — for surfaces whose frame is
-   * PORTRAIT (ADR-094 U2, the Trinny London card, whose field is 693×926 at
-   * the owner's viewport). A 16:9 poster in a tall box is a stamp with air
+   * The film's 4:5 SOCIAL cut — for surfaces whose frame is PORTRAIT
+   * (ADR-094 U2, the Trinny London card, whose field is 693×926 at the
+   * owner's viewport). A 16:9 poster in a tall box is a stamp with air
    * either side of it; the vertical resize is the same film, framed for the
    * shape it is being shown in.
+   *
+   * ⚠ IT CARRIES ITS OWN `src`, AND THAT IS WHAT MAKES IT PLAYABLE IN PLACE
+   * (U4, owner 2026-09-10: _"when you click on the video thumbnail, it shows
+   * the full-screen video. I don't want that"_). A 4:5 cut is authored for a
+   * small vertical frame, so it plays in the frame it is shown in; the 16:9
+   * master keeps the lightbox on the surfaces that use it. `poster`/`src`
+   * mirrors `CaseFilm`'s own two fields deliberately — it is the same pair
+   * one aspect down.
+   *
+   * ⚠ SELF-HOSTED, and it cannot be otherwise: CSP is
+   * `media-src 'self' blob: data:`, so a bucket URL is blocked outright.
+   * Transcoded from the studio's masters (11 Mbps) to web weight.
    *
    * ⚠ OPTIONAL AND ADDITIVE, and that is what makes it safe. `LOOP_ATL_FILMS`
    * is held BY REFERENCE by the homepage casefile, the portfolio arc and this
@@ -644,7 +656,14 @@ export interface CaseFilm {
    * caption contradicting its own picture, which is worse than no caption.
    * The renderer swaps the whole right half with the still.
    */
-  portrait?: CaseImage & { meta: string };
+  portrait?: {
+    /** The frame shown before a click — 4:5, natural colour. */
+    poster: CaseImage;
+    /** The 4:5 cut itself. Self-hosted; see the CSP note above. */
+    src: string;
+    /** This cut's own caption, never the master's. */
+    meta: string;
+  };
 }
 
 /** One station of a film's generation chain — the stage, and what ran it. */

@@ -72,12 +72,15 @@ export function ProofCard({ track }: { track: CaseTrack }) {
     <article className="tl-card" aria-labelledby={titleId}>
       <header className="tl-card__head">
         <p className="tl-card__kicker">Loop Earplugs · {phase}</p>
-        {track.arc ? (
-          <p className="tl-card__arc">
-            <span className="tl-card__arc-step">{track.arc.step}</span>
-            <span className="tl-card__arc-name">{track.project}</span>
-          </p>
-        ) : null}
+        {/* ⚠ THE ORDINAL ALONE (U4, owner 2026-09-10: "that subtitle —
+            whatever, Intelligence Map, Software for Few — in the top-right
+            corner, you can remove that"). U3 put the project's name here as
+            the peek band's distinguishing mark; the step keeps that job on
+            its own, because `01 … 04` differs per card and is an INDEX
+            rather than a second title. The name now letters nowhere on the
+            card — the claim is the heading and the rail names the parts,
+            which is the whole point of the arc. */}
+        {track.arc ? <p className="tl-card__arc">{track.arc.step}</p> : null}
       </header>
       <div className="tl-card__body">
         <div className="tl-card__record">

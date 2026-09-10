@@ -1695,7 +1695,15 @@ export const LOOP_STUDIO_SHEETS = [
   },
   {
     id: "line",
-    label: "THE LINE",
+    /* ⚠ `GOVERNANCE`, NOT `THE LINE` (owner, 2026-09-10: "the line here
+       should be governance"). The sheet's id stays `line` — it is a DOM id
+       and a rename would churn `data-sheet` and the two smokes' selectors
+       for nothing. And the rename lands on ALL THREE surfaces that hold this
+       array by reference (the casefile, the portfolio arc, the Trinny card),
+       which is the point of one record: the tab said "the line" while the
+       band under it says THE PRINCIPLE and the sheet beside it is THE RED
+       LINE — two lines, one of them not the line. */
+    label: "GOVERNANCE",
     /* Slide 9's PRINCIPLE band, verbatim. It is the sentence the whole
        two-column comparison exists to earn, and it was one of the three
        sheet feet deleted in 2026-08 — restored here in the shape the deck
@@ -1815,12 +1823,18 @@ export const LOOP_STUDIO_SHEETS = [
  *  above: the arc's `films` beat mounts `FilmsPlate` on THIS array, so the
  *  two surfaces cannot drift into two different reels. Pinned `toBe` the
  *  row's visual in `cases-registry.test.ts`. */
-/* ⚠ THE `portrait` STILLS ARE THE 4:5 SOCIAL RESIZES, one frame each, and they
+/* ⚠ THE `portrait` CUTS ARE THE 4:5 SOCIAL RESIZES, poster and film, and they
    exist for the surfaces whose frame is TALL (ADR-094 U2 — the Trinny London
    card's field is 693×926 at the owner's viewport, where a 16:9 poster is a
-   stamp with air either side of it). Cut from the studio's own masters in
+   stamp with air either side of it). From the studio's own masters in
    `_Showcases/`; 4:5 is the ONLY aspect both films were resized to, so it is
-   the one shape a rail can switch between without the frame changing size. */
+   the one shape a rail can switch between without the frame changing size.
+
+   ⚠ AND THEY PLAY IN PLACE (U4). A cut authored for a small vertical frame
+   is shown in a small vertical frame — the full-screen takeover belongs to
+   the 16:9 master. ⚠ Self-hosted because CSP is `media-src 'self' blob:
+data:`; transcoded from 11 Mbps to 6.8 MB / 1.2 MB, both lighter than the
+   landscape masters already beside them. */
 export const LOOP_ATL_FILMS = [
   {
     src: "/videos/loop-smug-owl-ai-atl.mp4",
@@ -1828,11 +1842,14 @@ export const LOOP_ATL_FILMS = [
     label: "Smug Owl · Loop ATL",
     meta: "16:9 master · 30 sec",
     portrait: {
-      src: "/arcs/posters/smug-owl-4x5.webp",
-      alt: "Smug Owl — the 4:5 social cut of Loop's AI above-the-line film",
-      width: 1080,
-      height: 1350,
-      meta: "4:5 social cut",
+      poster: {
+        src: "/arcs/posters/smug-owl-4x5.webp",
+        alt: "Smug Owl — the 4:5 social cut of Loop's AI above-the-line film",
+        width: 1080,
+        height: 1350,
+      },
+      src: "/videos/loop-smug-owl-ai-atl-4x5.mp4",
+      meta: "4:5 social cut · 30 sec",
     },
   },
   {
@@ -1841,11 +1858,17 @@ export const LOOP_ATL_FILMS = [
     label: "DJ Neighbour · Loop ATL",
     meta: "16:9 master · 30 sec",
     portrait: {
-      src: "/arcs/posters/dj-neighbour-4x5.webp",
-      alt: "DJ Neighbour — the 4:5 social cut of Loop's AI above-the-line film",
-      width: 1080,
-      height: 1350,
-      meta: "4:5 social cut",
+      poster: {
+        src: "/arcs/posters/dj-neighbour-4x5.webp",
+        alt: "DJ Neighbour — the 4:5 social cut of Loop's AI above-the-line film",
+        width: 1080,
+        height: 1350,
+      },
+      src: "/videos/loop-dj-neighbour-ai-atl-4x5.mp4",
+      /* ⚠ SEVEN SECONDS, and the caption says so. The two cuts do not share
+         a duration — this one is the short social edit — and a label that
+         claimed 30 would be describing the master it came from. */
+      meta: "4:5 social cut · 7 sec",
     },
   },
 ] as const;

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 
 import { IntelligenceMapPlate } from "@/components/landing/home-v2/services/casefile/IntelligenceMapPlate";
 import {
@@ -72,10 +73,12 @@ export function ProofField({
   /** Where the map's console portals its own rail. */
   railHost: HTMLElement | null;
 }) {
-  /* ⚠ ONE HOOK FOR THE WHOLE FIELD, above the switch — a hook inside a
-     branch is a hook that unmounts when the rail moves. It costs nothing on
-     the kinds that never open it. */
+  /* ⚠ BOTH HOOKS LIVE ABOVE THE SWITCH — a hook inside a branch is a hook
+     that unmounts when the rail moves. They cost nothing on the kinds that
+     never use them. */
   const { watching, open, close } = useWalkthrough();
+  /** Which 4:5 cut is playing IN ITS FRAME, by src (U4). */
+  const [playing, setPlaying] = useState<string | null>(null);
 
   switch (visual.kind) {
     case "sheets":
@@ -116,40 +119,71 @@ export function ProofField({
          is the film's own 4:5 social resize, one frame, and it is optional:
          a film without one keeps its landscape poster and the box keeps its
          16/9 derivation. The class is what tells the CSS which. */
-      const shot = film.portrait;
+      const cut = film.portrait;
+      /* ⚠ KEYED ON THE FILM'S OWN `src`, NOT A BOOLEAN. Switching stations
+         while one plays has to give the next film its still back; a boolean
+         would carry "playing" across the swap and mount the next one already
+         running — a second film starting that nobody asked for. */
+      const live = !!cut && playing === cut.src;
       return (
         <div className="tl-field tl-field--films">
-          <div className={shot ? "tl-film tl-film--portrait" : "tl-film"}>
-            {/* ⚠ THE FRAME IS THE BUTTON, which is the homepage films
-                plate's grammar exactly (`.fl-film` is a `<button>` with a
-                cue). A film's own frame is the one control it needs; a
-                labelled bar beside it would be a second affordance for one
-                object. The MASTER plays — the still is the 4:5 social cut
-                because this box is tall, but the lightbox is not. */}
-            <button
-              type="button"
-              className="tl-film__frame"
-              aria-label={`Play ${film.label}`}
-              onClick={(e) => open(e.currentTarget)}
-            >
-              <Image
-                src={shot ? shot.src : film.poster}
-                alt={shot ? shot.alt : film.label}
-                width={shot?.width ?? 1920}
-                height={shot?.height ?? 1080}
-                sizes="(min-width: 961px) 56vw, 90vw"
+          <div className={cut ? "tl-film tl-film--portrait" : "tl-film"}>
+            {live && cut ? (
+              /* ⚠ IT PLAYS IN THE FRAME (U4, owner: "when you click on the
+                 video thumbnail, it shows the full-screen video. I don't
+                 want that"). A 4:5 cut is authored FOR a small vertical
+                 frame — this one — so the full-screen takeover was the
+                 mismatch. The 16:9 master keeps the lightbox on the surfaces
+                 that show it, and the tools keep theirs because a screen
+                 recording of a UI is unreadable at card scale.
+                 ⚠ STILL NO `<video>` UNTIL A CLICK (ADR-056 U5) — a mounted
+                 element costs a layer and this card sits four deep in a
+                 sticky stack. `autoPlay` is safe precisely because the mount
+                 IS the click. */
+
+              <video
+                className="tl-film__frame tl-film__frame--live"
+                src={cut.src}
+                poster={cut.poster.src}
+                controls
+                autoPlay
+                playsInline
+                onEnded={() => setPlaying(null)}
               />
-              <i className="tl-film__cue" aria-hidden="true" />
-            </button>
+            ) : (
+              /* ⚠ THE FRAME IS THE BUTTON, which is the homepage films
+                 plate's grammar exactly (`.fl-film` is a `<button>` with a
+                 cue). A film's own frame is the one control it needs; a
+                 labelled bar beside it would be a second affordance for one
+                 object. */
+              <button
+                type="button"
+                className="tl-film__frame"
+                aria-label={`Play ${film.label}`}
+                onClick={(e) => (cut ? setPlaying(cut.src) : open(e.currentTarget))}
+              >
+                <Image
+                  src={cut ? cut.poster.src : film.poster}
+                  alt={cut ? cut.poster.alt : film.label}
+                  width={cut?.poster.width ?? 1920}
+                  height={cut?.poster.height ?? 1080}
+                  sizes="(min-width: 961px) 56vw, 90vw"
+                />
+                <i className="tl-film__cue" aria-hidden="true" />
+              </button>
+            )}
             {/* ⚠ THE META SWAPS WITH THE PICTURE. `film.meta` describes the
                 16:9 master; under a 4:5 still it names the wrong shape for
                 the thing right above it. */}
             <span className="tl-film__caption">
               <span>{film.label}</span>
-              <span>{shot ? shot.meta : film.meta}</span>
+              <span>{cut ? cut.meta : film.meta}</span>
             </span>
           </div>
-          {watching ? (
+          {/* Dormant while both Loop films carry a cut, and kept for the one
+              that does not: its master is 16:9, and a landscape frame in
+              this tall box is too small to read. */}
+          {watching && !cut ? (
             <MediaLightbox src={film.src} label={film.label} meta={film.meta} onClose={close} />
           ) : null}
         </div>

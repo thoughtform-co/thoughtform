@@ -198,13 +198,43 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
    the head's mono kicker. Square corners (zero radius is law), one dawn
    rule, no shadow (the card set's "what not to take"). The recession is
    a scale on cover plus a dawn wash that sinks the covered plate. */
+/* ⚠ THE CARD IS A CHAMFERED HOUSING (U4, owner 2026-09-10: "all the cards in
+   the proof section should have a notch, like on the homepage, in the
+   bottom-left and top-right corners"). That is ADR-065's CANONICAL diagonal
+   — TR + BL — and the law's own reading of what a chamfer means: a machined
+   housing, which is exactly what a card holding an instrument is.
+   ⚠ RULE 4 COMES WITH IT: the children of a chamfered box are SQUARE. The
+   rail's stations already are (ADR-089 U3), the console is a cell, and
+   nothing inside may grow a cut of its own — that is what stops the surface
+   reading as a pile of notched things rather than one housing with parts.
+   ⚠ AND IT MAKES THE CARD A CONTAINING BLOCK FOR `fixed` DESCENDANTS, which
+   is survivable only because `MediaLightbox` portals to `document.body`. A
+   dialog written inline here would be trapped in the card. */
 .tl-root .tl-card {
+  --tl-card-ch: clamp(14px, 1.3vw, 22px);
+  /* ⚠ THE INNER LEG IS NOT `ch − 1px`. Insetting a 45° cut by `d` on both
+     axes shortens its leg by `d(2 − √2)` ≈ 0.586d, not by `d` — the same
+     arithmetic the services plate's bezel records, and getting it wrong
+     leaves the ring visibly thicker on the diagonals than on the straights. */
+  --tl-card-ch-in: calc(var(--tl-card-ch) - 0.586px);
   position: relative;
   height: 100%;
   display: grid;
   grid-template-rows: var(--pc-peek) minmax(0, 1fr);
   background: var(--tl-plate);
-  border: 1px solid var(--tl-rule);
+  /* ⚠ NO `border` — A CLIP CUTS A BORDER, IT NEVER STROKES ONE (ADR-089).
+     A bordered box under this clip has no line on either diagonal, which is
+     six edges outlined and two not. The rule is painted as a clipped RING
+     below instead. */
+  border: 0;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--tl-card-ch)) 0,
+    100% var(--tl-card-ch),
+    100% 100%,
+    var(--tl-card-ch) 100%,
+    0 calc(100% - var(--tl-card-ch))
+  );
   overflow: hidden;
   /* ⚠ THE PLATE LAGS THE SCROLL AND EASES HOME. A sticky card's rise is
      1:1 with the page by construction — it cannot be slowed, only made to
@@ -231,6 +261,34 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   /* On the windowed channel too: a covered card must not start sinking
      before the card covering it is visible. */
   background: rgba(var(--dawn-rgb), calc(0.09 * var(--pc-cov)));
+}
+
+/* The card's own rule, as a CLIPPED RING — one polygon carrying the outer
+   contour and the inner one, `evenodd` making the middle a hole. This is
+   the only way to draw a line that follows a chamfer; the services plate's
+   gold lip is the same construction one object over. */
+.tl-root .tl-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: var(--tl-rule);
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--tl-card-ch)) 0,
+    100% var(--tl-card-ch),
+    100% 100%,
+    var(--tl-card-ch) 100%,
+    0 calc(100% - var(--tl-card-ch)),
+    1px 1px,
+    calc(100% - 1px - var(--tl-card-ch-in)) 1px,
+    calc(100% - 1px) calc(1px + var(--tl-card-ch-in)),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(1px + var(--tl-card-ch-in)) calc(100% - 1px),
+    1px calc(100% - 1px - var(--tl-card-ch-in))
+  );
 }
 
 /* ⚠ THE HEAD IS CHROME, NOT THE CLAIM (owner, 2026-09-10). The client on
@@ -279,40 +337,23 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   white-space: nowrap;
 }
 
-/* The head's right slot: the beat's ordinal and the FILE this card is of —
-   `01 · AI ABOVE-THE-LINE`. The claim itself is the display title down in
-   the record (U3), so chrome names the file and the display makes the
-   claim. ⚠ `nowrap` + ellipsis, because this is a 52px flex bar: the
-   project name is ≤20 chars by the registry's own rule, which is what makes
-   it fit here where the 44-char claim did not always. */
+/* The head's right slot: the beat's ORDINAL, and nothing else (U4). U3 had
+   the project's name here too and the owner took it out — the claim is the
+   heading, the rail names the parts, and a card that also captioned itself
+   was saying a third thing. The step survives because it is an INDEX, not a
+   title: it differs per card, so the peek band still tells the pile apart.
+   ⚠ The gold INK rung, never the mark rung — this is small text on
+   parchment, where `--gold` measures ~1.8:1. */
 .tl-root .tl-card__arc {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
   margin: 0;
-  min-width: 0;
+  flex: 0 0 auto;
   font-family: var(--font-pt-mono);
   font-weight: var(--weight-text);
   font-size: 11px;
   line-height: 1;
   letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--tl-ink-3);
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-/* The step is the one lit thing in the band — the gold INK rung, never the
-   mark rung: this is small text on parchment, where `--gold` is ~1.8:1. */
-.tl-root .tl-card__arc-step {
-  flex: 0 0 auto;
   color: var(--gold-ink);
-}
-
-.tl-root .tl-card__arc-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── The FIELD's tab row (ADR-094 U1, moved in U2) ───────────────────
@@ -741,6 +782,14 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   outline-offset: 2px;
 }
 
+/* Once it IS the player it carries its own controls, so the frame stops
+   being a control: the cursor goes back and the hover cue has nothing to
+   answer. Same box either way — the cut is 4:5 and so is the frame, so the
+   swap is pixel-for-pixel and nothing reflows under the click. */
+.tl-root .tl-film__frame--live {
+  cursor: default;
+}
+
 /* The play cue: a filled disc with a knocked-out triangle, centred. It
    grows on hover — the one motion on the card, and it is the affordance
    answering rather than the picture moving. */
@@ -940,6 +989,15 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
    has a lit top edge to catch it — the rail is not there. */
 .tl-root .tl-card__field .fl-con__console {
   background: var(--con-ground);
+  /* ⚠ AND ITS CHAMFER GOES (U4). `console.css` cuts the console TL + BR —
+     ADR-065 U2's enumerated exception — which ADR-089 RETIRED on the
+     casefile when the console became a cell inside a chamfered housing. That
+     whole pass is `.fl-case`-scoped, so this route still had the cut; giving
+     the CARD its TR + BL notch is what made it visible, as two boxes leaning
+     opposite ways one inside the other. ADR-065 rule 4 settles it: the
+     children of a chamfered box are SQUARE. Same ruling, same reason, one
+     surface later. */
+  clip-path: none;
 }
 
 .tl-root .tl-card__field .fl-con__console::after {
@@ -1000,20 +1058,6 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
     min-height: var(--pc-peek);
     flex-wrap: wrap;
     padding-block: 12px;
-  }
-  /* ⚠ THE ARC TAKES ITS OWN ROW ON A PHONE, AND ITS TITLE WRAPS. It is
-     `nowrap` + ellipsis on the desktop because that strip is a 52px flex
-     bar; at 390px the client line alone is most of the width, so held on
-     one row the claim would be ellipsed away to nothing. Same IA as the
-     mobile evidence instruments (ADR-083): identity, then the beat. */
-  .tl-root .tl-card__arc {
-    flex: 1 0 100%;
-    margin-top: 8px;
-    white-space: normal;
-  }
-  .tl-root .tl-card__arc-name {
-    overflow: visible;
-    text-overflow: clip;
   }
   /* ⚠ THE STATIONS STOP FILLING AND START WRAPPING. `console.css`'s unwrap
      rung gives every station `flex: 1 1 45%` and a wrapping label; four
