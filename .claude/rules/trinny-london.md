@@ -384,6 +384,18 @@ node scripts/capture-trinny-london.mjs --vp 1920x1247 --port <port>
 node scripts/capture-trinny-london.mjs --vp 1280x720 --port <port>
 ```
 
+⚠ **EDITING THE PROTOTYPE HTML FIRES NO HMR, AND A TAB THAT IS ALREADY OPEN
+WILL NOT SHOW IT.** `landing-trinny-london.html` lives under `public/`, so it is
+outside the module graph: `lib/v7-parse` re-reads it on the next REQUEST, but
+nothing tells the browser to make one. Editing `trinny-london.css` in the same
+pass *does* fire HMR and hot-swaps the stylesheet in place — so an open tab ends
+up with the NEW CSS over the OLD server-rendered body, which is worse than
+either alone: rules keyed on markup that is not there yet simply do not apply.
+It cost a review round on 2026-09-10 (the split copy's `--over` / `--under`
+carry the seating, so the old single block fell back to the stage's top edge and
+read as "you didn't do it"). **Hard-reload after touching the prototype, and say
+so when handing the page over.**
+
 ⚠ The capture is **headed and at the owner's own viewport** — every reference
 viewport in this repo is landscape while he runs a tall window, and headless
 leaves the corridor canvas dead. **Look at the stills**: every defect this
