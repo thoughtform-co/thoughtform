@@ -302,6 +302,26 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   parchment bands as a CSS gradient, and the ordered dither is what stops it
   reading as paint; the CSS fallback (`data-tl-wash="css"`, stamped when the
   context is refused) accepts that banding on purpose.
+- ⚠ **THE GROUND STAYS, AND THE PROPOSAL CARRIES IT (U4, owner 2026-09-10:
+  "the gradient doesn't change colour — when you enter the Trinny section, that
+  gradient can stay that shader").** `washOf` holds after its peak and
+  `#proposition` paints the SAME shader behind its record. ⚠ **ONE FIELD, TWO
+  CANVASES** — the vignette resolves in VIEWPORT space (`uOrigin` / `uView`), so
+  the two are one field by construction rather than two that match; computed
+  against each canvas's own box they land differently either side of the seam.
+  ⚠ **AND IT ENDS BY FEATHERING, NOT BY A CLOCK** (`TURN_PROP_FADE`): a
+  scroll-driven resolve measured wrong both ways on a station 1.29 viewports
+  tall — wide enough to keep the record on coral and it stepped against
+  `#contact`, narrow enough to clear that and the colour went while the drawing
+  was still on screen. ⚠ Three defects sat between "it should work" and it
+  working, all invisible in the code and obvious in a pixel sample across the
+  seam: **the turn's canvas stopped being redrawn** once `p` saturated (which is
+  exactly when its stage releases and the canvas starts travelling — a
+  viewport-locked field must be repainted when its canvas MOVES, not only when
+  its amount changes); **each wash took its station's rect instead of its
+  canvas's**; and **the drawing buffer went stale** because `resize()` only ran
+  on window events (a `ResizeObserver` on the canvas drives it now). ⚠ The
+  fallback rungs hold the same law with `background-attachment: fixed`.
 - ⚠ **THE WASH FILLS THE WHOLE VIEWPORT (U2, owner 2026-09-10), AND THE COST
   IS ON THE RECORD.** U1 masked the field out of the outer 7.5 % / 5.5 % off a
   measurement: at full bleed the ground runs under the right rail's telemetry
@@ -388,7 +408,7 @@ node scripts/capture-trinny-london.mjs --vp 1280x720 --port <port>
 WILL NOT SHOW IT.** `landing-trinny-london.html` lives under `public/`, so it is
 outside the module graph: `lib/v7-parse` re-reads it on the next REQUEST, but
 nothing tells the browser to make one. Editing `trinny-london.css` in the same
-pass *does* fire HMR and hot-swaps the stylesheet in place — so an open tab ends
+pass _does_ fire HMR and hot-swaps the stylesheet in place — so an open tab ends
 up with the NEW CSS over the OLD server-rendered body, which is worse than
 either alone: rules keyed on markup that is not there yet simply do not apply.
 It cost a review round on 2026-09-10 (the split copy's `--over` / `--under`

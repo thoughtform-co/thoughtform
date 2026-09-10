@@ -413,6 +413,85 @@ literals restate the intent rather than reading the tokens back; a guard
 computed from `--tl-mark-cy` and `--tl-mark-r` would agree with the CSS by
 construction and catch nothing.
 
+## Update 4 — the ground stays, and the proposal carries it (2026-09-10)
+
+**Owner:** _"it's also important that the gradient doesn't change colour. When
+you enter the Trinny section, that gradient can stay that shader."_
+
+This answers the dial ADR-095 left open — _whether the coral should persist into
+the proposal rather than resolve_. It persists.
+
+### What changed
+
+`washOf` loses its out-ramp: the wash swells to the copy's beat and then holds
+through the rest of the turn. U1 ran it back to parchment over 0.90–1.00 so the
+proposal met the page's own ground and no edge was drawn — **the answer to that
+edge is now the proposal carrying the SAME field, not the field going away
+before it.** `#proposition` gets a ground of its own: the same shader, the same
+`--tl-brand-rgb`, on a second canvas behind the record.
+
+### ⚠ One field, two canvases — the shader resolves in VIEWPORT space
+
+A vignette computed against each canvas's own box puts two differently-placed
+fields either side of the seam. `uOrigin` / `uView` move the whole calculation
+into viewport coordinates, so the two are **one field by construction** rather
+than two that match. The turn's canvas passes an origin of (0, 0) when it is
+pinned and full-bleed, which is byte-identical to the canvas-space version it
+replaces.
+
+### ⚠ The ground ENDS by feathering, not by a clock
+
+A scroll-driven resolve for the proposal was built first and measured wrong in
+both directions on a station only 1.29 viewports tall: wide enough to keep the
+record on coral and it left a step against `#contact`; narrow enough to clear
+that seam and the colour went while the drawing was still on screen (measured
+at 0.001 with the drawing mid-viewport). `TURN_PROP_FADE` fades the field along
+the canvas's own bottom edge instead — the end is in one place however the
+reader arrives, it reverses for free, and there is no channel to unwind.
+
+### Three defects between "it should work" and it working, all found by measuring
+
+Each was invisible in the code and obvious in a pixel sample across the seam.
+
+1. ⚠ **THE TURN'S CANVAS STOPPED BEING REDRAWN.** `frame()` returns early when
+   the turn's `p` has not moved — and `p` saturates at 1 the moment `#turn`
+   leaves, which is **exactly when its stage releases and its canvas starts
+   travelling**. The field is viewport-locked, so a canvas that MOVES must be
+   repainted even when its amount has not changed: gated, the turn's ground
+   froze at the origin it held when `p` reached 1 and then scrolled away
+   carrying that stale image. Both grounds are painted before the gate now.
+2. ⚠ **THE GROUND TOOK ITS STATION'S RECT, NOT ITS CANVAS'S.** The grounds are
+   absolutely positioned and their stations carry padding, so the boxes differ
+   on both axes. Each wash is handed its own canvas's rect.
+3. ⚠ **THE DRAWING BUFFER WENT STALE.** `resize()` ran on mount and on window
+   `resize` only, so a canvas whose CSS box changes with its own station's
+   layout kept a stale buffer — measured 2304×1607 behind an element 2304×1247,
+   which squashes the field AND puts `uOrigin` out by the difference. A
+   `ResizeObserver` on the canvas now drives it.
+
+And one correction to an instinct: the ground is `inset: 0`, **not** a negative
+inset breaking the station's `--hud-content-inset`. An absolutely positioned
+child does resolve against its containing block's padding box, but this
+station's padding box is already the full 100vw its `.station` breakout gives
+it, so the "correction" over-extended the ground by 192px a side.
+
+### The fallback path holds the same law
+
+The no-WebGL and inert rungs paint the gradient on both stations with
+`background-attachment: fixed` and a viewport-sized `background-size`, so the
+two align there for the same reason the shader's `uOrigin` aligns them on the
+WebGL path: **paint one field, not two that match.** Without it the phone
+showed a step exactly where the shader's used to be.
+
+### Guards
+
+The clock test asserted `washOf(1) === 0`; it asserts the hold and the
+monotone swell now, and that the feather is a fraction rather than a clock
+value. The smoke asserted `--tl-wash < 0.05` at the end of the runway; it
+asserts `> 0.95` and the presence of the proposal's canvas. ⚠ Neither can see
+the seam — that is a pixel sample across the boundary, and it is what found all
+three defects above.
+
 ## Consequences
 
 - `/` and `/claude-workshop` carry three new attributes/uniforms and one new
