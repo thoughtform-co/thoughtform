@@ -199,3 +199,142 @@ headless leaves the corridor canvas dead.
   work, and belongs with the sections that phase adds.
 - The page ships the workshop prototype's hero copy and bio. Both are
   owner-tunable and expected to change.
+
+## Update 1 — the hero curtain, and the corner it lifts over (2026-09-10)
+
+Two owner notes on the top of the page: the hero should parallax over section
+two "like we have on the home page", and the top-left icons should go, "only on
+the trinny page", with the corner restored as it originally was.
+
+### The hero was never the difference
+
+Measured at the same stops on both routes, `.hero` is identical — `relative`
+z 4, native scroll 1:1, `--hero-lift` agreeing to four decimals. What differs is
+what stands behind it:
+
+|                  | section two        | behaviour through the lift                                                               |
+| ---------------- | ------------------ | ---------------------------------------------------------------------------------------- |
+| `/`              | the corridor mount | its sticky cell is `position: fixed` during the entry band — FROZEN, uncovered bottom-up |
+| `/trinny-london` | `#about`           | normal flow; its top tracks the hero's bottom to the pixel (900 / 676 / 451 / 226 / 1)   |
+
+So the hero already paints over `#about` (z 4 over z 2). It simply never moves
+_against_ it: the two travel in lockstep, and lockstep is the absence of
+parallax. ⚠ **And rule 1 is why the homepage's own mechanism cannot just be
+turned on** — the fixed entry hold is deliberately undone on this route, because
+`#about` sits between the hero and the mount and the armed corridor frame would
+paint over the bio.
+
+The hold therefore moves to the station that is actually behind the curtain: the
+content is held at the viewport's top for exactly the hero's travel, which is the
+corridor's fixed cell expressed on a normal-flow station. The range ends at
+identity and continuously, so the corridor, the proof stack's slot geometry, the
+turn's clock and the proposal's pin — all measured past the first viewport — are
+untouched.
+
+### ⚠ A scroll-LINKED transform jitters, and it is not tunable
+
+The first cut wrote `translateY(calc((1 - var(--hero-lift, 1)) * -100dvh))` off
+the shared scroll writer. Owner: _"the elements in the second section jitter when
+I scroll into it from the hero section; that shouldn't happen at all."_
+
+Sampling the content's viewport top every frame under real wheel input, inside
+the hold where it should be constant:
+
+```
+32:227.2  32:243.2  32:243.2   48:227.2  48:243.2  48:243.2   64:227.2 …
+```
+
+A spread of **16.0px — exactly one wheel step — repeating on every step.** The
+page scrolls on the COMPOSITOR; a main-thread custom property lands a frame
+later. So on the frame a step arrives the content travels with the page, and the
+correction paints on the next one. That is the whole defect, and no easing,
+rounding or writer reordering touches it: **anything that must cancel native
+scroll has to be composited.**
+
+Which is exactly why `/` holds its corridor with `position: fixed` and not a
+transform — a fixed box is the compositor's to hold. `#about`'s content is not
+full-viewport, so fixing it would mean replicating its box; the composited
+equivalent that does not is a scroll-driven animation. `animation-timeline:
+scroll(root block)` with `animation-range: 0 100dvh` expresses the same function
+of scroll offset with no main thread in it. Re-measured: **spread 0.00px**,
+243.2 on all 156 frames.
+
+### ⚠ `@supports` is load-bearing, not decoration
+
+A browser without scroll timelines does not drop the effect — it drops only the
+`animation-timeline` declaration and keeps the `animation`, so the keyframes run
+on the DOCUMENT timeline and settle wherever that leaves them. Simulated by
+forcing `animation-timeline: auto`, the content was thrown a full viewport off
+its seat: `contentTop = -605` where it should read 243.
+
+`@supports (animation-timeline: scroll(root block))` makes the unsupported path
+drop the whole block instead, which is plain flow — no hold, no jitter, exactly
+what this route shipped before. **A progressive enhancement whose fallback is a
+broken layout is not one**, and the failure only appears off the development
+browser, where nobody is looking.
+
+### ⚠ It holds the CONTENT, and the first cut held the station
+
+`#about` is what the section clock measures. With the transform on the station,
+`useActiveSection` read its rect at the viewport top from scrollY 0 and lit the
+**ABOUT** mark while the reader was still looking at the hero. `ADR-093: the
+journey rail runs on THIS page's order` failed on the first run — gold on
+`about` where it asserts `hero`.
+
+That is **rule 2's own defect arriving from the other side**: a station claiming
+a position it is not at. The route already refuses the nav-corner readout for
+exactly this, and a transform that moves the measured box re-introduces it in a
+form no reader could attribute to a stylesheet.
+
+So `#about > *` carries the hold and the station's box does not move. Two
+identities make that safe rather than merely different:
+
+- **the hero's bottom edge IS `#about`'s natural top** at every scroll position,
+  so the band the curtain uncovers is exactly the band the station's own box
+  already covers — the parchment needs no help, and content translated above
+  that edge is under the hero;
+- **the gap the hold opens is always below the fold** — held, the content ends
+  where the next section sits plus `900 − scrollY`, i.e. it closes at the rate
+  the fold descends.
+
+Measured after: the content sits at a constant `243` through the whole lift and
+releases into flow past it, while the station rect tracks 900 → 0 as it always
+did, and the lit mark reads `hero` at the top, turning to `about` at 75 % of the
+lift.
+
+### The corner keeps its bracket
+
+`RailInstruments` hosts the journey marks INSIDE `.hud__corner--tl`, and
+`html[data-rail-instruments]` zeroes that bracket's border because the row IS
+the corner mark — a bracket behind one reads as two marks for one corner. Take
+the row away and the border comes back with it, which is precisely what
+`rail-instruments.css`'s own `≤960` rung already does. This is that rung,
+route-scoped and at every width, with the clip restored to production's `0`
+sides (the `−340px` opening exists only so the row's outboard mark is not
+sliced, and there is no row to spare).
+
+⚠ **`display: none`, not an unmounted component.** The marks keep computing
+their state, so `TRINNY_JOURNEY_ORDER`'s clock stays exercised by the smoke —
+which reads `data-mark` / `data-state`, both readable on a hidden node, rather
+than rects — instead of quietly becoming dead code. Unmounting would need a prop
+threaded through shared chrome, which is what rule 2 already declined to do for
+the nav readout one corner over.
+
+⚠ **CONSEQUENCE, NAMED: the page now has no section indicator.** Rule 2 hides
+the nav-corner readout on the grounds that "the TOP-LEFT journey row does make
+the claim". With the row gone, the drawer's bars are the only navigation.
+Restoring the readout is not the fix — on this station order it names ABOUT
+through the corridor approach and jumps backwards on arrival. Owner's call.
+
+### ⚠ The visual suites are worker-contended, not order-dependent
+
+`landing-page -g "HUD"` failed twice with the change and once without it, then
+passed clean twice — at `--workers=1` every run of both suites is green. The
+same is true of `ADR-094 U5: the proposal seats its head on the homepage's
+datum`, recorded in ADR-094 U6 as "order-dependent": it is contention. This
+route's own header already says why (`SERIAL` — parallel landing pages starve
+headless GPU contexts), and it applies to the runner's worker count, not only to
+the spec's own mode. **Re-run at `--workers=1` before attributing a visual
+failure to a change.** The deterministic proof that `/` is untouched is that it
+has no `.tl-root`: its journey row still computes `display: block` with seven
+marks and its TL bracket still computes `0px none`.

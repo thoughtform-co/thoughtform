@@ -73,6 +73,64 @@ place) → the proposal** → contact.
   five-row page: the hook seeded production's total and its bail-out compared
   only the POSITION, which at rest on the hero is 0 either way. Any new state on
   that hook is compared in the same check.
+- ⚠ **THE JOURNEY ROW IS HIDDEN HERE AND THE TL BRACKET IS BACK** (owner,
+  2026-09-10). `RailInstruments` hosts the marks INSIDE `.hud__corner--tl` and
+  `html[data-rail-instruments]` zeroes that bracket's border, because the row IS
+  the corner mark; with the row gone the border returns — which is exactly what
+  `rail-instruments.css`'s own `≤960` rung does, so this is that rung
+  route-scoped to every width, and the clip goes back to production's 0 sides
+  (the −340px opening exists only to spare the row's outboard mark).
+  ⚠ **`display: none`, NOT an unmounted component** — the marks keep computing,
+  so `TRINNY_JOURNEY_ORDER`'s clock stays exercised by the smoke, which reads
+  `data-mark`/`data-state` (both readable on a hidden node) rather than rects.
+  Unmounting would need a prop threaded through shared chrome, which is what
+  rule 2 already declined to do for the nav readout one corner over.
+  ⚠ **CONSEQUENCE, NAMED: this page now has NO section indicator.** Rule 2 hides
+  the nav-corner readout on the grounds that "the TOP-LEFT journey row does make
+  the claim"; the drawer's bars are the only navigation left. Restoring the
+  readout is NOT the fix — on this station order it names ABOUT through the
+  corridor approach and jumps backwards on arrival.
+- ⚠ **THE HERO CURTAIN LIFTS OVER A HELD `#about`, AND THE HOLD IS ON THE
+  CONTENT** (owner, 2026-09-10: parallax over section two "like we have on the
+  home page"). The hero is already identical on both routes — `relative` z 4,
+  native scroll 1:1, `--hero-lift` matching to four decimals. What differs is
+  what is behind it: on `/` the corridor mount's sticky cell goes
+  `position: fixed` during the entry band, so the frame is FROZEN and the hero
+  uncovers it bottom-up; here `#about` is a normal-flow station whose top tracks
+  the hero's bottom to the pixel, so the two travel in lockstep and nothing
+  moves against anything. ⚠ **Rule 1 is why the homepage's own mechanism cannot
+  be reused** — the fixed entry hold is deliberately undone on this route.
+  ⚠ **IT IS A SCROLL-DRIVEN ANIMATION, NOT A SCROLL-LINKED TRANSFORM, AND THAT
+  IS NOT A PREFERENCE.** The first cut wrote `translateY(calc((1 -
+var(--hero-lift)) * -100dvh))` off the shared scroll writer and JITTERED: the
+  page scrolls on the COMPOSITOR and a main-thread variable lands a frame later,
+  so on the frame each wheel step arrives the content travels with the page and
+  is corrected on the next — measured `227.2 / 243.2 / 243.2` repeating, a
+  displacement of exactly one wheel step, every step. `animation-timeline:
+scroll(root block)` with `animation-range: 0 100dvh` moves it off the main
+  thread; re-measured, spread **0.00px**. ⚠ **This is why the homepage holds its
+  corridor with `position: fixed` rather than a transform** — anything cancelling
+  native scroll must be composited, and no easing hides a frame of lag.
+  ⚠ **`@supports (animation-timeline: scroll(root block))` IS LOAD-BEARING.**
+  Without it a browser lacking scroll timelines keeps the `animation` and drops
+  only the `animation-timeline`, running the keyframes on the DOCUMENT timeline
+  and throwing the content a full viewport off its seat (measured `contentTop =
+-605` where it should be 243). Guarded, the unsupported path drops the block
+  and gets plain flow — what this route shipped before.
+  ⚠ **THE HOLD GOES ON `#about > *`, NEVER ON `#about`.** The station is
+  what the section clock measures: held on the station itself, `useActiveSection`
+  reads its rect at the viewport top from scrollY 0 and the page lights ABOUT
+  while the reader is still on the hero (the journey-rail smoke caught it at
+  once — gold on `about` where it asserts `hero`). That is rule 2's defect
+  arriving from the other side. ⚠ The background needs no help: the hero's
+  bottom edge IS `#about`'s natural top at every position, so the band the
+  curtain uncovers is exactly the band the station's box already covers, and
+  content translated above that edge is under the hero (z 4 over z 2).
+  ⚠ The range ends at identity and continuously, so the corridor, the stack, the
+  turn and the proposal are untouched; `> *` rather than the content's own class,
+  so a child added to the parsed station travels with it; gated to the capable
+  rung because the hold is one `dvh` of travel and a phone's `dvh` moves under
+  the URL bar.
 - **`resolveActiveIdx`'s `preMountStationId` defaults to `hero`** and must stay
   byte-identical for `/`. On this page the lag station is `about`, because the
   corridor mount is not a `.station`.
