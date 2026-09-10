@@ -200,6 +200,163 @@ labels, no digit, no "self-sufficient" (the parse guard walks the text).
 3. The tool drawings printing through each other at the owner's viewport —
    invisible at 1280×720 and 1440×900, both landscape fields.
 
+## Update 1 — the head is chrome, the field shows one thing, and the arrival settles (2026-09-10)
+
+Three owner notes on the live page, all on this beat.
+
+### 1 · The cards arrived too fast
+
+> _"the card with the different projects at Loop appears too quickly into view.
+> It should be a bit delayed, and it should appear a bit slower, like a smooth
+> animation."_
+
+**There was no arrival at all.** `useStackedCardsScroll` writes one eased
+channel and the only thing on this route reading it was `.tl-card__record`'s
+opacity, taken RAW — so the paragraph was half-lit while the card was half-way
+up the viewport, and the plate itself was opaque from its first pixel and
+stopped dead on its pin. Nothing in the sheet carried a `transition`.
+
+**Three levers, all CSS. The hook is not touched** — it is shared with
+`/test/project-cards`, and `data-pc-state` (the smoke's ladder) is computed
+from the raw `enter`, which still reaches 1 exactly at the pin.
+
+- ⚠ **THE PINNED DWELL IS DERIVED, NOT GUESSED.** A slot's ENTRY runway is
+  `vh − pinTop`, geometry the hook reads and no margin can lengthen; the
+  pin-to-pin distance is `cardH + margin − peek`. Substituting `--pc-card-h`,
+  the scroll for which a card is pinned and the next has NOT started rising
+  comes out as **`margin − n·peek − bottom-safe`** — **the viewport height
+  cancels exactly**, so one expression buys the same dwell at 720 and at 1247.
+  That term was **negative at every viewport** before this (−88px at the
+  owner's): card _i+1_ began rising before card _i_ had seated, so no card was
+  ever simply THERE. `--pc-dwell: 18svh`, and the margin is written as the sum
+  it actually is.
+- **A delayed, twice-eased channel.** `--pc-enter` is already smoothstepped in
+  the hook, so windowing it again is an S on an S: the motion starts late and
+  its rate of change decays to zero BEFORE the pin. That is the "slower" half —
+  the card SETTLES into its seat instead of travelling at scroll speed and
+  stopping on it.
+- **The plate lags and catches up.** A sticky card's rise is 1:1 with the page
+  by construction; it cannot be slowed, only made to TRAIL. It sits `--pc-rise`
+  low early and closes that on the eased channel. ⚠ `translate` is a separate
+  property from `transform`, so the rise and the ADR-094 recession compose
+  without one clobbering the other.
+- **Plate → record → field, overlapping.** Pulled apart far enough to read as
+  an order, close enough that the field is never a lit plate with an empty half
+  in it — which is what a fully separated ladder looked like on the still.
+
+### 2 · The head is chrome; the name is in the record
+
+> _"Loop Earplugs should be in the top-left corner, and the [project] should
+> actually be inside the left frame, so below it."_
+
+The strip leads with `LOOP EARPLUGS · {phase}` and closes with the tab row; the
+project's name moves into `.tl-card__record` above the paragraph, where it can
+wrap (the `nowrap` + ellipsis went with the 52px flex bar that forced them).
+
+⚠ **NAMED COST, TAKEN KNOWINGLY.** This ADR's own text calls the head "THE PEEK
+BAND … so the pile indexes itself", and with the name gone a covered card's
+sliver reads the same on all four. The three cards carrying tabs keep a
+distinguishing mark; the ads card does not. Put the name back in the head's
+right slot on that card alone if it ever reads badly — do not put it back on
+all four.
+
+⚠ `trinny-proof-order.test.ts`'s `project.length` cap was 20 **because the title
+was `nowrap` in that bar**. Its reason moved with the name; it is a copy budget
+for a two-line display name now, measured against `.tl-card__title`'s own
+`max-width`.
+
+### 3 · One rail, three cards — and the gradient he named
+
+> _"you've crammed both the videos and all the tools into the entire right
+> panel, but that's overwhelming … I would actually like to reintroduce those
+> tabs … I wouldn't use a gradient. I would just integrate it nicely into the
+> header bar … very subtle, minimalistic tabs."_
+
+The ATL card printed BOTH films and the tooling card ALL FOUR wireframes into
+one panel. They switch on `ConsoleRail` now — **the house rail, which was
+already on this page** (the map's console renders it), fully controlled and
+already a `role="tablist"` with roving tabindex. Stations are DERIVED
+(`proof/proofTabs.ts`, pure): a film's handle is its label before the middle
+dot, a tool's is `ProjectCase.tab`. The ads card keeps its six shots — a
+contact sheet is one object however many pictures are in it.
+
+⚠ **THE GRADIENT AND THE NOTCH HE NAMED ARE THE PRE-ADR-089 RAIL, AND THERE ARE
+FOUR OF THEM.** ADR-089 U3/U4's box-and-fill grammar — flat, square, bordered,
+the open one filled, no spine — is **entirely `.fl-case`-scoped in
+`casefile.css`**, and the smoke deliberately asserts this route has no
+`.fl-case`. So the map's rail here has been rendering `console.css`'s original:
+the dormant station's recessed ramp, the lit station's second ramp, the
+console's gold glow hung off its top edge (directly behind the rail), and its
+scanline. ADR-089 U1 deleted the last two for the same reason. All four are
+re-pointed at this route's tokens now, `.tl-root`-scoped — editing
+`console.css` instead would land on `/`, `/arcs/*` and two labs, where the
+markup is byte-pinned.
+
+⚠ **CONTENT-WIDTH STATIONS, NOT EQUAL THIRDS.** `flex: 1 1 0` is right for a
+rail spanning a console's top edge; in a header bar with ~1180px of free space
+at 1440, four stations at 295px each is a divided bar rather than tabs.
+
+### The map's rail moves up, and becomes pressable
+
+`PdaConsole` gains **one additive optional prop, `railHost`**: given an element
+it portals its rail there instead of seating it on the console. Identity when
+absent — every production call site — which is the byte-identity proof, gated
+by `services-ring-smoke`.
+
+⚠ **`view` STAYS ITS OWN STATE.** The flight that carries the selected work
+between readings is keyed on the TRANSITION (`go`, `viewTick`, `entry`,
+`PDA_FLIGHT_GUARD_MS`); lifting the value to a prop would fork that machine
+across two owners. The portal moves the DOM and nothing else.
+
+⚠ **AND IT IS WHAT MAKES THOSE READINGS SELECTABLE HERE AT ALL.**
+`.tl-field--map::after` covers the whole console with a transparent layer,
+because `PdaConsole` captures the wheel while the pointer is on it and that
+would freeze a pinned stack — so the rail has been decorative on this route
+since ADR-094 shipped. In the head it is above that layer, and the wheel guard
+is untouched.
+
+### What the stills caught, every gate green
+
+- **The wireframe bay had to be locked LANDSCAPE.** Given the whole field
+  (693×926 at the owner's viewport, W/H 0.75) babylon pooled its four
+  transcript rows at the top of a 700px table and heimdall's player became an
+  empty column. The 1×4 stack this replaces was accidentally right about one
+  thing — each cell was 690×235 — and `--tl-wire-ar: 1.62` keeps that while
+  giving one drawing all four cells' area. 1.62 is a floor with headroom:
+  ADR-068 U7's `cqw` cap binds below W/H 1.12.
+- ⚠ **`place-content: center` COLLAPSED THE BAY TO ZERO WIDTH.** `.fl-wire` is
+  absolutely inset and contributes no content size, so a shrink-to-fit track is
+  0 and the bay's `min(100%, …)` resolved to 0. The column stays `1fr`.
+- ⚠ **AND `margin-inline: auto` DID IT AGAIN ON THE PHONE.**
+  `justify-self: stretch` does not apply to a grid item with auto inline
+  margins — they absorb the free space and the box falls back to shrink-to-fit.
+  Measured 0×502. Both are the same defect in two dressings: **a wrapper whose
+  only child is absolutely positioned has no width of its own to fall back
+  on.**
+- **The phone gives the rail its own row.** `console.css`'s ≤980 unwrap rung
+  puts every station at `flex: 1 1 45%` with a wrapping label, which inside a
+  head strip stacked two boxes down the right edge and broke `DJ NEIGHBOUR`
+  over two lines. A full-width row under the client line is ADR-083's own IA,
+  and it keeps the 44px touch floor.
+
+### And the harness had to converge
+
+⚠ **A SOLVED `y` GOES STALE UNDER THE SCROLL, on the stack as well as the
+turn.** The dwell made the pile ~700px taller, and the smoke's single
+pre-measured `slots[3].top − pin + 40` stopped reaching card 4 — it reported
+`incoming` while the still showed it seated. `seatSlot` re-solves, and it
+converges on **`data-pc-state`, the hook's own published value**, not on the
+rect: a geometry check can be satisfied on one pass and stale on the next while
+the lazy chunks are still decoding. Same law as ADR-095's `rollToP`, one beat
+earlier.
+
+⚠ **AND THIS SURFACE HAD NO MARKUP GUARD AT ALL** — `tl-card` appeared in zero
+test files, so the head could be recomposed and the fields rebuilt with every
+gate green. The smoke now reads what the ruling is about: the client leads the
+strip, the name is in the record, every station computes `background-image:
+none` AND `clip-path: none` (both halves, pinned from both ends), the field
+renders exactly one film / one drawing, and a click swaps it.
+
 ## Verifying
 
 ```bash

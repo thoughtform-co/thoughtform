@@ -28,7 +28,7 @@ place) → the proposal** → contact.
 **Read first**
 
 - [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock. ⚠ **U1 deleted the interstitial slab**: the ground changes under a shader instead, the line decodes in place over it, and `#proposition` is the kill edge
-- [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed
+- [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome (client left, tabs right) with the project's name down in the record, the ATL and tooling fields show ONE thing on the house rail, the map's rail is portalled into the head, and the arrival is delayed and settled
 - [ADR-093](../../sentinel/decisions/093-trinny-london-light-locked-variant.md) — this route's lock and its journey clock
 - [ADR-053](../../sentinel/decisions/053-workshop-corridor-variant.md) — the recipe it repeats, and its two invariants
 - [ADR-058](../../sentinel/decisions/058-light-mode-theme.md) — the theme channel the lock overrides
@@ -140,6 +140,75 @@ place) → the proposal** → contact.
   console: `PdaConsole` owns the wheel while the pointer is on it, which inside
   a sticky stack freezes the page whenever the cursor rests on card four.
 
+## The card, recomposed (ADR-094 U1)
+
+- ⚠ **THE HEAD IS CHROME AND THE NAME IS IN THE RECORD** (owner, 2026-09-10).
+  `LOOP EARPLUGS · {phase}` leads the strip, the tab row closes it, and
+  `.tl-card__title` sits in `.tl-card__record` above the lede. **The cost is
+  named and taken**: the head is the PEEK BAND, so a covered card's sliver now
+  reads the same on all four — only the three with tabs carry a distinguishing
+  mark. If it ever needs fixing, the name goes back in the head's right slot on
+  the ADS CARD ALONE, never on all four.
+- **The tab row is `ConsoleRail`, and stations are DERIVED** (`proof/proofTabs.ts`,
+  pure, unit-pinned). A film's handle is its `label` before the middle dot; a
+  tool's is `ProjectCase.tab`. ⚠ The MAP is absent from that table on purpose —
+  `PdaConsole` owns its three readings and a copy here would be a second switch
+  for one piece of state. The ADS card gets no rail: a contact sheet is one
+  object however many pictures are in it.
+- ⚠ **THE SKIN IS ADR-089 U3/U4's, RE-POINTED, AND THAT IS THE OWNER'S "I
+  wouldn't use a gradient".** Every rule of that pass is `.fl-case`-scoped in
+  `casefile.css` and the smoke asserts this route has NO `.fl-case`, so the
+  map's rail here was still rendering `console.css`'s original — **four**
+  ramps, not one: the dormant station's recess, the lit station's fill, the
+  console's gold glow off its top edge (directly behind the rail) and its
+  scanline. All four are `.tl-root`-scoped now; the smoke pins
+  `background-image: none` AND `clip-path: none` on every station, from both
+  ends. ⚠ Fixing it in `console.css` instead lands on `/`, `/arcs/*` and two
+  labs, where the markup is byte-pinned.
+- ⚠ **CONTENT-WIDTH STATIONS.** `flex: 1 1 0` suits a rail spanning a console's
+  top edge; in a header bar with ~1180px free at 1440 it is a divided bar.
+- **`PdaConsole.railHost` is the seam, and it is additive.** Given an element
+  the rail is portalled there; omitted, the render is byte-identical (the
+  `services-ring-smoke` gate). ⚠ **`view` STAYS ITS OWN STATE** — the flight
+  between readings is keyed on the transition, and a controlled prop would fork
+  that machine. ⚠ It is also what makes those readings PRESSABLE here:
+  `.tl-field--map::after` covers the console so its wheel capture cannot freeze
+  the pinned stack, and the rail was under it.
+- ⚠ **THE WIREFRAME BAY IS LOCKED LANDSCAPE** (`--tl-wire-ar: 1.62`). The field
+  is PORTRAIT at the owner's viewport (693×926) and the drawings are authored
+  for W/H 2.3–2.9: given the whole box, babylon pooled its transcript rows at
+  the top of a 700px table and heimdall's player became an empty column. 1.62 is
+  a floor with headroom — ADR-068 U7's `cqw` cap binds below 1.12. The lock
+  comes OFF below 960px, where the field is a definite `clamp()` box and
+  `casefile.css`'s own flow rung expects to fill it.
+- ⚠ **A WRAPPER WHOSE ONLY CHILD IS ABSOLUTELY INSET HAS NO WIDTH TO FALL BACK
+  ON**, and this bit twice in one pass: `place-content: center` collapsed the
+  bay's track to 0, and on the phone `margin-inline: auto` did the same by
+  cancelling `justify-self: stretch` (measured 0×502 with the drawing simply
+  absent). Keep the column `1fr` and the margins 0 wherever the width is `auto`.
+- **The phone gives the rail its own full-width row** under the client line —
+  ADR-083's IA, and it keeps the 44px touch floor `console.css`'s unwrap rung
+  exists for. Without it the stations stacked down the head's right edge and
+  broke a two-word handle over two lines.
+- ⚠ **THE ARRIVAL'S DWELL IS DERIVED, NOT GUESSED.** `margin − n·peek −
+bottom-safe` IS the scroll for which a card is pinned and the next has not
+  started rising — the viewport height cancels, so `--pc-dwell` buys the same
+  beat at 720 and at 1247. It was NEGATIVE before U1. The three arrival
+  channels (`--pc-in`, `--pc-in-record`, `--pc-in-field`) window the hook's
+  already-smoothstepped `--pc-enter`, so the motion starts late and settles
+  before the pin; they OVERLAP on purpose, or the field is a lit plate with an
+  empty half in it. ⚠ **The hook is not touched** — it is shared with
+  `/test/project-cards`, and `data-pc-state` still comes from the raw channel.
+- ⚠ **A SOLVED `y` GOES STALE ON THE STACK TOO.** The smoke's `seatSlot`
+  converges on **`data-pc-state`**, the hook's own published value, not on the
+  rect: the dwell made the pile ~700px taller and one pre-measured
+  `top − pin + 40` stopped reaching card 4, reporting `incoming` on a card the
+  still showed seated. Same law as `rollToP` one beat later.
+- ⚠ **THE CARD'S MARKUP HAD NO GUARD AT ALL** until U1 — `tl-card` appeared in
+  zero test files. The smoke now reads the ruling: the client leads, the name is
+  in the record, the stations are flat and square, the field renders exactly one
+  film / one drawing, and a click swaps it.
+
 ## The interstitial and the proposal (ADR-094)
 
 - ⚠ **`#trinny` IS THE DECLARED KILL EDGE.** `useCorridorExitScroll` consults
@@ -233,11 +302,16 @@ place) → the proposal** → contact.
   parchment bands as a CSS gradient, and the ordered dither is what stops it
   reading as paint; the CSS fallback (`data-tl-wash="css"`, stamped when the
   context is refused) accepts that banding on purpose.
-- ⚠ **THE WASH STOPS SHORT OF THE HUD.** At full bleed it ran under the right
-  rail and swallowed its telemetry — gold values on coral, BEARING and LOCAL
-  both gone at 1920×1247. The frame is the site's chrome and stays readable:
-  the field is masked out of the outer 7.5 % / 5.5 %. Raising the peak (0.66)
-  without re-checking that mask puts the rail back under it.
+- ⚠ **THE WASH FILLS THE WHOLE VIEWPORT (U2, owner 2026-09-10), AND THE COST
+  IS ON THE RECORD.** U1 masked the field out of the outer 7.5 % / 5.5 % off a
+  measurement: at full bleed the ground runs under the right rail's telemetry
+  and BEARING and LOCAL were both gone at 1920×1247. The owner read that and
+  ruled the other way — _"I don't want you to change the reel. Just extend that
+  gradient … the color doesn't really clash with our reel"_ — so the mask is
+  deleted and the rail is untouched. ⚠ **The peak (× 0.66) is the only dial
+  left and NOTHING measures this shader's contrast** (the arcs walk is DOM-only,
+  the light walk reads `backgroundColor`); raising it re-opens exactly that
+  question with no gate to catch it. Re-shoot 15/16 at 1920×1247 first.
 - **THE LINE USES THE HOUSE DECODE, SCRUBBED.** `turn/turnDecode.ts` calls
   `lib/home-v2/captionScramble.ts` — the site's ONE kernel, never a second
   implementation. `scrambleFrame` is pure in `t`, so a scroll-derived `t` is
@@ -266,7 +340,7 @@ place) → the proposal** → contact.
 ## Verifying
 
 ```bash
-npx vitest run tests/lib/trinny-london-parse.test.ts tests/lib/trinny-london-journey.test.tsx tests/lib/trinny-proof-order.test.ts tests/lib/trinny-mark.test.ts tests/lib/theme-lock.test.tsx tests/lib/cases-registry.test.ts tests/lib/rail-instrument-marks.test.ts
+npx vitest run tests/lib/trinny-london-parse.test.ts tests/lib/trinny-london-journey.test.tsx tests/lib/trinny-proof-order.test.ts tests/lib/trinny-proof-tabs.test.ts tests/lib/trinny-mark.test.ts tests/lib/theme-lock.test.tsx tests/lib/cases-registry.test.ts tests/lib/rail-instrument-marks.test.ts
 npx playwright test tests/visual/trinny-london-smoke.spec.ts --project=desktop
 npx playwright test tests/visual/landing-page.spec.ts -g "HUD" --project=desktop   # UNCHANGED — the morph's identity-at-0 proof
 node scripts/capture-trinny-london.mjs --vp 1920x1247 --port <port>

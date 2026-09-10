@@ -147,12 +147,14 @@ cannot run on (mobile, reduced motion, a GPU the governor refused).
 
 ### 7 · The clock — `turnClock.ts` + `useTurnScroll.ts`
 
-`p = clamp01((vh − top) / (vh + runway))`, `runway = height − 2·vh`: 0 when
+`p = clamp01((vh − top) / (vh + runway))`, `runway = height − vh`: 0 when
 `#turn`'s top reaches the viewport bottom (the last card starts to leave), 1
-when the runway is spent. The particle morph is `smootherstep((p − 0.25) /
-0.55)` — card 4 is an opaque plate over the mark until it has scrolled ~0.7vh,
-so the first flight must be visible; settled by 0.80. Products enter over
-0.42–0.97 (`0.42 + 0.07k`, span 0.34), each on an arc about the mark's centre
+when the runway is spent. ⚠ **The windows below are U1's, not this section's
+first draft's** — `turnClock.ts` is the source and this text had drifted from
+it (found 2026-09-10). The particle morph runs `TURN_MORPH_START` 0.20 →
+`TURN_MORPH_END` 0.56: card 4 is an opaque plate over the mark until it has
+scrolled ~0.7vh, so the first flight must be visible. Products enter over
+`0.30 + 0.05k` with a 0.24 span, each on an arc about the mark's centre
 (`0.5 + CENTER_Y_OFFSET / (2·CENTER_DISTANCE·tan(FOV/2))` = 0.545 of the stage
 height — the test re-derives it from the actor's and `sceneGeom`'s sources),
 sweeping 50° in alternating directions from 0.3·stageH further out, then a
@@ -271,6 +273,44 @@ out.
   clock the writer PUBLISHES** (`data-tl-turn`) instead of trusting one
   solution. Any harness that targets a scroll-driven beat on this page wants
   the same loop.
+
+## Update 2 — the wash fills the frame (2026-09-10)
+
+**Owner:** _"the gradient that you have, that shader, should fill the full
+viewport. Right now it stops at the left and right reel, but it should steadily
+fill the entire viewport."_ Asked whether the right rail's telemetry should be
+protected: _"I don't want you to change the reel. Just extend that gradient,
+that shader, because the color doesn't really clash with our reel, so we can
+easily extend."_
+
+**One term.** U1's shader multiplied its field by a `frame` mask — four
+`smoothstep`s holding the ground out of the outer 7.5 % / 5.5 % (144px of
+left/right ramp at 1920, against a right rail whose box ends 136px in). That
+multiplier is deleted. Nothing else in the pipeline clipped the field: the
+canvas is `inset: 0` in a 100vw sticky stage, and both CSS fallbacks were
+always full-bleed.
+
+**What it trades, kept as the record rather than deleted with the mask.** U1
+put the mask there off a measurement, not a preference: at full bleed the
+ground runs under the rail's telemetry — gold values on coral — and on the
+still `BEARING` and `LOCAL` were both gone at 1920×1247, legible again only
+once the wash resolved. **That is still true and it is visible on the new
+still.** The owner has read it and ruled the other way: the page's colour takes
+the frame with it, and the rail is not touched. The comment above the shader
+carries the ruling and the measurement together, because the two only make
+sense as a pair.
+
+⚠ **THE PEAK IS THE ONE DIAL LEFT.** `× 0.66` at the end of the fragment is now
+the only thing standing between the coral and the readouts, and **nothing
+anywhere measures this shader's contrast** — the `arcs` walk is DOM-only, the
+light walk reads `backgroundColor`, and a WebGL field is invisible to both.
+Raising it re-opens exactly the question the mask used to answer, with no gate
+to catch it. Re-shoot `15-turn-mark` / `16-turn-line` at 1920×1247 first.
+
+**No test changed.** Nothing asserted the mask, the insets or the ceiling —
+`trinny-mark.test.ts` pins `washOf`'s CLOCK and the smoke reads `--tl-wash` off
+the stage, both of which are unmoved. The regression this could cause is only
+visible in a capture, which is what ADR-095 already says about this beat.
 
 ## Consequences
 
