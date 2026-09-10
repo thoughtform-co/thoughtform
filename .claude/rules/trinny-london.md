@@ -27,8 +27,8 @@ place) → the proposal** → contact.
 
 **Read first**
 
-- [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock. ⚠ **U1 deleted the interstitial slab**: the ground changes under a shader instead, the line decodes in place over it, and `#proposition` is the kill edge
-- [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome (client left, tabs right) with the project's name down in the record, the ATL and tooling fields show ONE thing on the house rail, the map's rail is portalled into the head, and the arrival is delayed and settled
+- [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock. ⚠ **U1 deleted the interstitial slab**: the ground changes under a shader instead and the line decodes in place over it. ⚠ **U5 (2026-09-10) DELETED THE SECOND SLAB** — the products LEAVE on the turn's own clock, `#proposition` is transparent and PINNED with its record powering on in place, the mark fades behind it, and the kill edge is **`#contact`**
+- [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome with the project's name down in the record, the fields show ONE thing on the house rail, and the arrival is delayed and settled. ⚠ **U2 (same day) PUT THE ARC IN THE RECORD AND THE TABS IN THE FIELD** — `CaseTrack.arc`, the order reversed to lead on the frontier work, the claim sentences read, and the ATL films in their 4:5 cut
 - [ADR-093](../../sentinel/decisions/093-trinny-london-light-locked-variant.md) — this route's lock and its journey clock
 - [ADR-053](../../sentinel/decisions/053-workshop-corridor-variant.md) — the recipe it repeats, and its two invariants
 - [ADR-058](../../sentinel/decisions/058-light-mode-theme.md) — the theme channel the lock overrides
@@ -123,13 +123,23 @@ place) → the proposal** → contact.
 (prefers-reduced-motion: reduce)`.** ADR-030's own rung is 759h, which would
   make 1280×720 — the reference laptop — a static list. Keep the hook's contract
   either way: the rung flips `position` to `static` and the hook parks.
-- **Content by REFERENCE, order by ROUTE.** `proofOrder.ts` names four track ids
-  on the Loop casefile (`studio · atl-films · tooling · ai-transformation`) and
-  THROWS on a missing one. The card is `track.project` · `track.card.lede`
-  (≤180, a record field beside the brief, inside the envelope scan) · the four
-  `blocks[].title` with their `ProofGlyph`. ⚠ No `data-m` on anything the stack
-  renders — `useRevealMotion` collects its targets at `LandingPage` mount and a
-  nested root's nodes rest at opacity 0 forever; entrance rides `--pc-enter`.
+- **Content by REFERENCE, order by ROUTE — and since U2 the order IS the
+  record's arc.** `proofOrder.ts` names four track ids on the Loop casefile
+  (**`atl-films · studio · tooling · ai-transformation`**) and THROWS on a
+  missing one. The card is `track.project` · `track.card.lede` (≤180, a record
+  field beside the brief, inside the envelope scan) · the four `blocks[]` as
+  `title` + `desc` with their `ProofGlyph` · and `track.arc` in the head.
+  ⚠ **THE SEQUENCE AND `arc.step` CAN DISAGREE WITH NOTHING FAILING** — the
+  head prints the step from the record while the pile is ordered by this
+  array, so a re-order in one place letters `03 · 01 · 02` down a scroll with
+  four correct cards; `trinny-proof-order.test.ts` asserts they agree.
+  ⚠ **THE ORDER LEADS ON THE FRONTIER WORK** (`atl-films`), reversing the first
+  two cards: it is what earned the studio the right to run AI itself, and a
+  stack opening on the studio has the consequence before the cause. The
+  casefile's directory order is untouched — a directory is an index, this is a
+  narrative. ⚠ No `data-m` on anything the stack renders — `useRevealMotion`
+  collects its targets at `LandingPage` mount and a nested root's nodes rest at
+  opacity 0 forever; entrance rides `--pc-enter`.
 - **The field follows the FIELD's aspect, not the viewport's.** `.tl-card__field`
   is a size container: the ads count their rows off it, and in a PORTRAIT field
   (the owner's 1920×1247) the four wireframes stack 1×4 and the posters stack —
@@ -143,18 +153,48 @@ place) → the proposal** → contact.
 ## The card, recomposed (ADR-094 U1)
 
 - ⚠ **THE HEAD IS CHROME AND THE NAME IS IN THE RECORD** (owner, 2026-09-10).
-  `LOOP EARPLUGS · {phase}` leads the strip, the tab row closes it, and
-  `.tl-card__title` sits in `.tl-card__record` above the lede. **The cost is
-  named and taken**: the head is the PEEK BAND, so a covered card's sliver now
-  reads the same on all four — only the three with tabs carry a distinguishing
-  mark. If it ever needs fixing, the name goes back in the head's right slot on
-  the ADS CARD ALONE, never on all four.
-- **The tab row is `ConsoleRail`, and stations are DERIVED** (`proof/proofTabs.ts`,
-  pure, unit-pinned). A film's handle is its `label` before the middle dot; a
-  tool's is `ProjectCase.tab`. ⚠ The MAP is absent from that table on purpose —
+  `LOOP EARPLUGS · {phase}` leads the strip and `.tl-card__title` sits in
+  `.tl-card__record` above the lede. **The cost U1 named is PAID BY U2's ARC**:
+  the head is the PEEK BAND, and with the tabs gone from it too all four would
+  read `LOOP EARPLUGS · BUILD`. `.tl-card__arc` (step + claim, mono, `nowrap` +
+  ellipsis) closes the strip instead, so scrolled the four slivers read the
+  whole argument. That is better than U1's own fallback (the quiet project
+  name) because the record column already carries the name one line down.
+- ⚠ **THE TAB ROW LIVES IN THE FIELD SINCE U2**, seated on the right panel's
+  own top edge at FULL WIDTH — `ConsoleRail`'s native `flex: 1 1 0`, which U1
+  had to override for a reason that no longer holds (four stations at 295px
+  each across a ~1180px header bar is a divided bar; across a ~700px panel they
+  are its frame). Stations are DERIVED (`proof/proofTabs.ts`, pure,
+  unit-pinned): a film's handle is its `label` before the middle dot, a tool's
+  is `ProjectCase.tab`. ⚠ The MAP is absent from that table on purpose —
   `PdaConsole` owns its three readings and a copy here would be a second switch
   for one piece of state. The ADS card gets no rail: a contact sheet is one
   object however many pictures are in it.
+- ⚠ **THE SIZE CONTAINER IS `.tl-card__bay`, ONE LEVEL UNDER THE FIELD** (U2).
+  The ads count their rows off `100cqh`, the film derives its width from it and
+  the wireframe's bay is `(100cqh − 4px) × 1.62`; left on the field it would
+  now include the rail's row and every drawing would be sized against a box it
+  does not fill. ⚠ Moving the rail also **SOLVES** the map's portal rather than
+  re-opening it: `.tl-field--map::after` is inside the bay, so a rail above the
+  bay is outside its box by construction.
+- ⚠ **THE CLAIM CARRIES ITS SENTENCE, AND IT NEEDS A 940h RUNG** (U2).
+  `CaseBlock.desc` was in the record and unread here. Four 95-character
+  sentences are ~170px of ink against a ~424px record column at 1280×720, so
+  below the rung they are sr-only — the casefile's own 1070h precedent, same
+  arithmetic. The column is seated at the TOP now, not centred. ⚠
+  `align-items: start` on the claim, never `center`: grid synthesizes a
+  replaced element's baseline from its bottom edge, so a centred glyph sits
+  mid-paragraph once the sentence wraps.
+- ⚠ **THE ATL FILMS SHOW THEIR 4:5 SOCIAL CUT** (`CaseFilm.portrait`, optional
+  and additive). The field is 693×926 at the owner's viewport, where a 16:9
+  poster is a stamp with a third of the box empty either side. ⚠ 4:5 is the
+  ONLY aspect both films were resized to, which is what lets the rail switch
+  without the frame changing size; their durations differ, which is why it is a
+  STILL and not a second `src`. ⚠ It carries its own `meta` — `CaseFilm.meta`
+  reads "16:9 master · 30 sec" and under a 4:5 still that names the wrong shape
+  for the picture above it. ⚠ `LOOP_ATL_FILMS` is `toBe`-pinned and shared by
+  reference with the homepage casefile and the portfolio arc; a field only one
+  renderer reads changes nothing for the other two.
 - ⚠ **THE SKIN IS ADR-089 U3/U4's, RE-POINTED, AND THAT IS THE OWNER'S "I
   wouldn't use a gradient".** Every rule of that pass is `.fl-case`-scoped in
   `casefile.css` and the smoke asserts this route has NO `.fl-case`, so the
@@ -211,14 +251,19 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
 
 ## The interstitial and the proposal (ADR-094)
 
-- ⚠ **`#trinny` IS THE DECLARED KILL EDGE.** `useCorridorExitScroll` consults
-  `[data-corridor-kill]` before its hardcoded chain; on this page none of that
-  chain's ids sit below the corridor, and an opaque station the hook does not
-  name HARD-CUTS the canvas at its top (ADR-030 §6). The cover rule in
-  `trinny-london.css` is keyed on the SAME attribute — the `#voidwalker` form
-  (relative, z 6, `content-visibility: visible`, its own ground), never the
-  transparent `#services` form — so JS and CSS cannot name different stations.
-  Exactly ONE element carries the attribute (the parse guard counts).
+- ⚠ **`#contact` IS THE DECLARED KILL EDGE** (ADR-095 U5; it was `#trinny`
+  until U1 deleted that station, then `#proposition` until U5 made it
+  transparent so the mark could fade BEHIND the record instead of dying at its
+  top edge — ⚠ **the two earlier ids appear in older notes and neither is
+  live**). `useCorridorExitScroll` consults `[data-corridor-kill]` before its
+  hardcoded chain; on this page none of that chain's ids sit below the
+  corridor, and an opaque station the hook does not name HARD-CUTS the canvas
+  at its top (ADR-030 §6). The cover rule in `trinny-london.css` is keyed on
+  the SAME attribute — the `#voidwalker` form (relative, z 6,
+  `content-visibility: visible`, its own ground), never the transparent
+  `#services` form — so JS and CSS cannot name different stations. Exactly ONE
+  element carries the attribute (the parse guard counts), which is what makes
+  moving the edge an attribute move and nothing else.
 - **Both new stations publish `data-station="proposition"`.** The interstitial
   opens the proposal chapter and has no mark of its own; the Proposal mark lights
   from it on. ⚠ A roster-only station resolves DIRECTLY (`rosterDirectId`):
@@ -279,11 +324,24 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   be a second owner of their opacity. Pose is five vars (`--tm-dx/-dy/-dr/-s/-o`)
   through the `translate`/`rotate`/`scale` PROPERTIES, never a `transform`.
   Rest positions are tokens (`--tm-rest-x/-y/-r`) on each modifier class.
-- **`#trinny { margin-top: -100svh }` on the capable rung** keeps the stage pinned
-  until the slab has covered it (the stage would otherwise unpin a viewport
-  before the mark's fade ends). ⚠ On the MEDIA rung, never on
-  `data-corridor-exit` — a transient attribute would shift the document by a
-  viewport when it clears.
+- ⚠ **AND THEY LEAVE (U5).** `productExit` mirrors `productEnter` with the
+  stagger REVERSED — last to land, first to go — and `productPose` SUMS both
+  into one angle and one radius rather than branching, so there is no seam
+  where one hands over to the other and no state to get wrong scrolling back.
+  `TURN_PRODUCT_OUT` 0.88 LEADS the line's un-type at 0.90 on purpose: the
+  stage clears products-then-line and hands a bare warmed ground to the
+  proposal. ⚠ The fade is the TAIL, not the gesture — the product is off the
+  frame edge before it stops being drawn and `overflow: hidden` does the work;
+  a product that dissolved on the spot has vanished, which is a different
+  reading from one that left.
+  ⚠ **UNTIL U5 THEY NEVER LEFT**, and the smoke pinned `--tm-o ≥ 0.95` at the
+  end of the runway — i.e. it asserted the defect. That is what the owner
+  named as "a parallax paint flying over it": nothing was clearing the stage,
+  so the next station could only arrive by covering it.
+- ⚠ **THERE IS NO NEGATIVE-MARGIN OVERLAP ANYWHERE ON THIS ROUTE.** Older
+  notes cite `#trinny { margin-top: -100svh }`; that station and that rule are
+  both deleted. A panel rising over the turn's stage is the thing the owner
+  rejected twice, and U5's answer is a station that does not rise — see below.
 - **The mark's three copies derive from `mark/trinnyMark.ts`** (measured numbers,
   not a trace): the SVG asset, the inline fallback (`fill="currentColor"`, hidden
   under `html[data-services-ambient="true"]`), and the 3D target.
@@ -375,6 +433,48 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   rail already says Proposal — three times in one band. The paragraph lost its
   middle sentence too: the adoption-and-automation loop is what the drawing
   under it draws. The parse guard pins the absence of both.
+- ⚠ **`#proposition` IS TRANSPARENT AND PINNED, AND ITS RECORD APPEARS RATHER
+  THAN ARRIVES (U5, owner: "the elements from the next section should just
+  come into view").** It was an OPAQUE station in normal flow whose head and
+  drawing entered on `data-m`, and **an opaque station in normal flow can only
+  ARRIVE by travelling — its content travels with it.** So it takes `#turn`'s
+  shape (`100svh` + a 60svh runway, a sticky `[data-tl-prop-stage]`), its
+  record sits blank while the station travels, and it powers on once the stage
+  parks. Nothing can be seen sliding because nothing is visible while anything
+  moves. The reveal is the house terminal stutter on `--tp-in`, **OPACITY
+  ONLY** (a transform here is the move-and-fade system back in new clothes),
+  with the title on the scrubbed house decode and its ghost/live pair.
+  ⚠ **`var(--tp-in, 1)` FAILS OPEN** — the writer REMOVES the property when it
+  parks, so the phone and reduced-motion paths get the record standing lit. A
+  reveal channel that is absent must mean shown, never hidden.
+- ⚠ **THE PIN IS NOT THE STATION'S TOP, AND ASSUMING IT WAS SHIPPED THE DEFECT
+  IN MINIATURE.** `.station` carries 140px top / 220px bottom padding at
+  1920×1247, so the stage is still 140px short of pinning in the frame the
+  station's top reaches the viewport top — the first clock opened the reveal
+  45px into that travel and lit the record while it was still moving. And a
+  sticky child travels inside its container's CONTENT box, so the bottom
+  padding comes out too: **16px of real travel at 1280×720** against a 60svh
+  runway, measured as a head clipped off the top of the viewport. The station's
+  vertical padding is 0 on the capable rung with the air spent INSIDE the
+  stage, and `propPinnedProgress` measures the STAGE's own travel off
+  `offsetTop`/`offsetHeight`. The error is viewport-dependent, so no literal
+  could have hidden it.
+- ⚠ **A RULE IS PART OF WHAT IT RULES.** `data-tl-reveal` goes on
+  `.tl-prop__head`, not on `.tl-prop__lead` inside it: the head draws the coral
+  rule under the band, and one level down that line painted at full strength
+  across an otherwise empty frame.
+- ⚠ **`#contact` TAKES `data-m="fade"` AND NOTHING ELSE** (U5). Every other
+  role in that system translates. It is not pinned — a page's last card does
+  not need a stage — so the scrubbed channel has nothing to key on, and the
+  one non-travelling role is the same law with the machinery already in the
+  sheet. The parse guard pins the role set.
+- ⚠ **THE MARK FADES AGAINST THE PROPOSAL'S ARRIVAL, NOT MORE OF THE TURN'S.**
+  `markVeil(p, q)` is ADDITIVE and `q` is exactly 0 until the stage pins, so
+  the turn's beat is byte-identical and the clock test asserts it. Ceiling
+  `TURN_VEIL_PROP_MAX` **0.94** — a watermark behind the drawing, never 1
+  (`brandmarkMorphRef.veil` puts the mark BACK, not away). 0.90 was the first
+  cut and measured too present: the ring crossed the layer band. This is the
+  one dial on the effect.
 - ⚠ **EVERY DECODED LINE IS A GHOST PLUS A LIVE LAYER, AND BOTH HALVES ARE
   LOAD-BEARING.** The kernel keeps the string's LENGTH, but its glyphs are mono
   caps against a proportional sans, so a decoding line is wider than its resting
@@ -400,9 +500,19 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
 npx vitest run tests/lib/trinny-london-parse.test.ts tests/lib/trinny-london-journey.test.tsx tests/lib/trinny-proof-order.test.ts tests/lib/trinny-proof-tabs.test.ts tests/lib/trinny-mark.test.ts tests/lib/theme-lock.test.tsx tests/lib/cases-registry.test.ts tests/lib/rail-instrument-marks.test.ts
 npx playwright test tests/visual/trinny-london-smoke.spec.ts --project=desktop
 npx playwright test tests/visual/landing-page.spec.ts -g "HUD" --project=desktop   # UNCHANGED — the morph's identity-at-0 proof
+# ⚠ THE RECORD IS SHARED: `CaseTrack.arc` and `CaseFilm.portrait` are additive
+# and optional, so these two must pass UNTOUCHED or the change was not additive.
+npx playwright test tests/visual/services-ring-smoke.spec.ts tests/visual/arc-portfolio-smoke.spec.ts --project=desktop
 node scripts/capture-trinny-london.mjs --vp 1920x1247 --port <port>
-node scripts/capture-trinny-london.mjs --vp 1280x720 --port <port>
+node scripts/capture-trinny-london.mjs --vp 1280x720 --port <port> --out .cursor/trinny-shots/1280
 ```
+
+⚠ **THE CAPTURE'S PROPOSAL STOPS ARE SOLVED FOR `q`, NEVER FOR `topOf`.** The
+station's top at the viewport top IS `q = 0` — the one frame the record is
+guaranteed to be empty in. That still is worth having (it is the proof there
+is nothing travelling), but it is not the proposal: stops 19 / 20 / 12 are
+armed · striking · lit, and `rollToQ` converges on the published
+`data-tl-prop` exactly as `rollToP` does on `data-tl-turn`.
 
 ⚠ **EDITING THE PROTOTYPE HTML FIRES NO HMR, AND A TAB THAT IS ALREADY OPEN
 WILL NOT SHOW IT.** `landing-trinny-london.html` lives under `public/`, so it is

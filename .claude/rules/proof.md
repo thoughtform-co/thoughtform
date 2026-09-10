@@ -186,6 +186,37 @@ breather).
   Montreal owns titles and prose. When a box will not take the size, spend
   padding, leading or content density — never shrink important labels or swap
   in a serif display face.
+- **A track can carry its own beat of the ARC (`CaseTrack.arc`, ADR-094 U2).**
+  `{ step, title }` — the through-line that turns four separate records into
+  one claim (owner, 2026-09-10: _"how do I connect the ATLs with the AI Studio
+  self-sufficiency and the AI tools I've built with the AI adoption"_). On the
+  Loop casefile: `01` the frontier · `02` self-sufficiency · `03` the tools ·
+  `04` the company. Optional and additive, so nothing that does not read it
+  changes; the homepage casefile and the portfolio arc do not render it yet.
+  ⚠ **IT IS NOT A RENAME.** `project` and `file` name the same thing as each
+  other and are ≤20 chars (the normalise-and-compare guard); this is a SECOND,
+  longer register in the first person plural — what the project was FOR, where
+  `project` is a filename made readable. ⚠ **ALL-OR-NONE per casefile, steps
+  unique and consecutive from `01`, title ≤44 MEASURED** (the Trinny card's
+  head is a 52px `nowrap` flex bar), never equal to `project`, and no digits
+  but the step. `cases-registry.test.ts` pins all of it and scans the title
+  under the envelope.
+- **A film can carry its own 4:5 SOCIAL still (`CaseFilm.portrait`, ADR-094
+  U2).** `CaseImage & { meta }`, for surfaces whose frame is PORTRAIT — the
+  Trinny card's field is 693×926 at the owner's viewport, where a 16:9 poster
+  is a stamp with a third of the box empty either side. ⚠ **4:5 IS THE ONLY
+  ASPECT BOTH LOOP FILMS WERE RESIZED TO**, which is what lets a rail switch
+  between them without the frame changing size; their durations differ (30s
+  against a 7s cutdown), which is why it is a STILL and not a second `src`.
+  ⚠ **IT CARRIES ITS OWN `meta`** — `CaseFilm.meta` reads "16:9 master · 30
+  sec" and under a 4:5 still that names the wrong shape for the picture
+  directly above it. ⚠ **`LOOP_ATL_FILMS` IS `toBe`-PINNED AND SHARED BY
+  REFERENCE** with the homepage casefile, the portfolio arc and the Trinny
+  card, so a field only one renderer reads changes nothing for the other two —
+  and both other suites must pass UNTOUCHED, which is the proof it was
+  additive. The registry requires the dimensions and asserts they are 4:5: the
+  renderer derives the frame's aspect from the CLASS, so a still whose real
+  shape disagrees letterboxes inside a box solved for 4:5.
 - **A track can carry its OWN brief (`CaseTrack.brief`, U11).** Optional, with
   `track.brief ?? file.brief` in the renderer; the casefile-level brief has to
   serve all four rows, so it can only ever describe the engagement. Optional

@@ -357,6 +357,123 @@ strip, the name is in the record, every station computes `background-image:
 none` AND `clip-path: none` (both halves, pinned from both ends), the field
 renders exactly one film / one drawing, and a click swaps it.
 
+## Update 2 — the arc carries the stack, and the tabs move into the field (2026-09-10)
+
+Owner: _"I was always struggling with, okay, how do I connect the ATLs with
+the AI Studio self-sufficiency and the AI tools I've built with the AI
+adoption? I think I found it working on another client. It's actually: we push
+the frontiers of AI creative · we made the creative team self-sufficient with
+AI · we built tools to enhance the processes · we expanded to the rest of the
+company. I think that is a very clear arc."_ Plus three notes on the card: the
+left panel should carry the homepage's own extra record and sit nearer the
+top, the tabs should _"live inside the right panel instead of the header …
+feel like the full frame of the right panel"_, and the ATL films should use
+the vertical cuts.
+
+### The arc goes in the RECORD, not on the route
+
+`CaseTrack.arc` — `{ step, title }`, optional and additive. The four beats are
+the engagement's own sequence, written verbatim in the Suri deck the owner had
+just used them in (_first we made film without a crew · then the studio made
+its own ads · then the studio wrote its own software · then thirteen more
+teams ran it_). The route owns nothing but the sequence, as before; the claim
+belongs to the record so the homepage casefile and the portfolio arc can adopt
+it without a second copy to keep in step.
+
+⚠ **IT IS NOT A RENAME.** `project` and `file` name the same thing as each
+other and are ≤20 characters (the registry's normalise-and-compare guard);
+`arc.title` is a SECOND, longer register in the first person plural — a claim
+about what the project was FOR, where `project` is a filename made readable.
+
+⚠ **AND IT REVERSES THE FIRST TWO CARDS.** `atl-films` leads now: the frontier
+work is what earned the studio the right to run AI itself, and a stack opening
+on the studio had the consequence before the cause. The casefile's directory
+order is untouched — a directory is an index, this is a narrative.
+
+⚠ **THE SEQUENCE AND THE STEPS CAN DISAGREE WITH NOTHING FAILING**, because
+the head prints `arc.step` from the record while the pile is ordered by
+`TRINNY_PROOF_ORDER`. A re-order in one place alone letters `03 · 01 · 02`
+down a scroll with four correct cards and every other gate green;
+`trinny-proof-order.test.ts` asserts the two agree.
+
+### The arc is also what PAYS for moving the tabs
+
+U1 recorded the cost of emptying the head: it is **the peek band**, the sliver
+a covered card still shows, and with the tabs gone as well it would read
+`LOOP EARPLUGS · BUILD` on all four — the pile stops indexing itself. The arc
+line is a better answer than the quiet project name U1 offered as the
+fallback: scrolled, the four slivers read the whole argument the owner was
+missing, so the pile indexes itself by the CLAIM rather than by a name the
+record column already carries one line down.
+
+### The rail, in the field
+
+`ConsoleRail` moves onto the right panel's own top edge and goes **back to
+`flex: 1 1 0`** — its native grammar, which U1 had to override for a good
+reason that no longer holds (four stations at 295px each across a ~1180px
+header bar is a divided bar; across a ~700px panel they are its frame).
+
+⚠ **THE SIZE CONTAINER MOVES DOWN A LEVEL, to `.tl-card__bay`.** The ads count
+their rows off `100cqh`, the film derives its width from it and the wireframe's
+whole bay is `(100cqh − 4px) × 1.62`; left on the field, all three would be
+sized against a box that now includes ~34px of chrome they cannot draw in.
+
+⚠ **AND IT SOLVES THE MAP'S PORTAL rather than re-opening it.** The
+transparent layer that stops `PdaConsole`'s wheel capture freezing the pinned
+stack is on `.tl-field--map`, INSIDE the bay — so a rail seated above the bay
+is outside its box by construction, where in the head it had to be lifted over
+it.
+
+### The left column reads the record it already had
+
+`CaseBlock` has always been `{ glyph, title, desc }` and this card printed only
+the title. The sentence is rendered now, on ADR-088's own SENTENCE rung, and
+the column is seated at the top rather than centred — centring was right while
+it held a name, a paragraph and four short claims, roughly a third of the box;
+a block that nearly fills its box and is centred reads as one that failed to.
+
+⚠ **THE SENTENCES NEED A HEIGHT RUNG (940h), and it is arithmetic.** Four
+95-character sentences are ~170px of ink on top of a name, a lede and four
+claims, against a record column that is ~424px at 1280×720. Below the rung
+they are sr-only — the casefile's own 1070h precedent, for the same reason.
+⚠ `align-items: start` on the claim, never `center`: grid synthesizes a
+replaced element's baseline from its bottom edge, so a centred glyph sits
+mid-paragraph once the sentence is two lines.
+
+### The films go vertical
+
+`CaseFilm.portrait` — the film's own 4:5 social resize, one frame, optional
+and additive. The field is 693×926 at the owner's viewport and a 16:9 poster in
+it is a stamp with a third of the box empty either side.
+
+⚠ **4:5 IS THE ONLY ASPECT BOTH FILMS WERE RESIZED TO**, which is what makes it
+the one shape a rail can switch between without the frame changing size. Their
+durations differ (Smug Owl's 4:5 is the full 30 seconds, DJ Neighbour's a
+7-second cutdown), which is why this is a STILL and not a second `src`.
+
+⚠ **IT CARRIES ITS OWN `meta`.** `CaseFilm.meta` reads "16:9 master · 30 sec";
+printed under a 4:5 still it names the wrong shape for the picture directly
+above it — a caption contradicting its own frame, which is worse than none.
+⚠ And the caption's row WRAPS while each half does not: a 4:5 frame in a SHORT
+field is 281px wide at 1280×720 where the poster it replaced was 500, and the
+two runs met and broke mid-phrase.
+
+⚠ **`LOOP_ATL_FILMS` IS HELD BY REFERENCE** by the homepage casefile, the
+portfolio arc and this card (`toBe`-pinned), so a field only one renderer reads
+changes nothing for the other two. Both suites pass untouched.
+
+### Guards
+
+`cases-registry.test.ts` gains the arc (all-or-none per casefile, steps unique
+and consecutive from "01", title ≤44 measured against the head's slot, never
+equal to `project`, no digits but the step, inside the envelope scan) and the
+portrait (repo-rooted src, alt, dimensions REQUIRED and asserting 4:5 — the
+renderer derives the frame's aspect from the CLASS, so a still whose real shape
+disagrees letterboxes inside a box solved for 4:5). ⚠ The smoke's `cardShape`
+reader now looks for the rail in the FIELD: reading it from the head is how it
+would report four railless cards and stay green on a rail that had silently
+stopped rendering.
+
 ## Verifying
 
 ```bash

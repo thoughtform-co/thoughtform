@@ -492,6 +492,118 @@ asserts `> 0.95` and the presence of the proposal's canvas. ⚠ Neither can see
 the seam — that is a pixel sample across the boundary, and it is what found all
 three defects above.
 
+## Update 5 — the products leave, and the proposal stops being a slab (2026-09-10)
+
+Owner, on the seam after the turn: _"we have a parallax paint flying over it.
+I don't want that. What I want is that those canisters or these products
+should move off the screen, and the elements from the next section should just
+come into view … to make sure that the brand mark in the back doesn't really
+dominate too much, we can fade it out a bit as the next section scrolls into
+view with the elements. This is most important because I've seen it happen a
+few times in this repo: you have these parallax frames later down the page
+that scroll over."_
+
+### The complaint measured
+
+Three facts, and together they are exactly the gesture named:
+
+1. **`productPose` had an entrance and no exit.** The four products settled at
+   `--tm-o` 1 at p 0.69 and stayed — the smoke pinned `≥ 0.95` at the end of
+   the runway, i.e. it asserted the defect.
+2. **`veilOf` saturated at p 0.72 and held**, so the mark was at 28 % of its
+   envelope for the whole rest of the beat and then died at a station edge.
+3. **`#proposition` was an OPAQUE station in normal flow**, and its head,
+   paragraph and drawing arrived on `data-m` — an IntersectionObserver
+   transition at 12 % visibility, `translateY(14px)` plus an 880ms clip-wipe.
+
+An opaque station in normal flow can only ARRIVE by travelling, and its
+content travels with it. That is the structural half, and it is why the fix
+could not be a tuning: **every reveal in this house that "appears in place" —
+the masthead, the casefile's power-on, the turn's own decode — is seated on
+something that has stopped.** U1 deleted one slab for this complaint already;
+this is the same gesture one station later.
+
+### The decision
+
+- **The products leave on the turn's own clock.** `productExit` mirrors
+  `productEnter` with the stagger REVERSED (last to land, first to go) and the
+  pose sums both into one angle and one radius — no branch, so there is no
+  seam where one hands over to the other and nothing to get wrong scrolling
+  back. `TURN_PRODUCT_OUT` 0.88 LEADS the line's un-type at 0.90, so the
+  stage clears products-then-line and the proposal inherits a bare warmed
+  ground. The fade is the TAIL (`(1 − x) × 3`, clamped): the product is off
+  the frame edge before it stops being drawn, and `overflow: hidden` does the
+  work.
+- **`#proposition` is transparent and PINNED.** It takes `#turn`'s own form —
+  `100svh` plus a 60svh runway, a sticky stage — and its record sits blank
+  while the station travels, powering on once the stage has parked. Nothing
+  can be seen sliding, because nothing is visible while anything moves.
+- **The reveal is the house's terminal power-on, OPACITY ONLY** — the `--ci` /
+  `--g1` `--g2` `--g3` stutter re-pointed at `--tp-in` (0 → 0.62 → 0.12 → 1),
+  staggered head → paragraph → drawing, with the title on the scrubbed house
+  decode. No transform: the masthead law, and the whole point of the pass.
+- **The mark fades against the PROPOSAL's arrival, not more of the turn's.**
+  `markVeil(p, q)` is additive and `q` is exactly 0 until the stage pins, so
+  the turn's beat is byte-identical; `TURN_VEIL_PROP_MAX` 0.94 takes it to a
+  watermark behind the drawing. Never 1 — the ref's own law.
+- **The kill edge moves to `#contact`**, an attribute move and nothing else:
+  the CSS cover rule and `useCorridorExitScroll` both key on
+  `[data-corridor-kill]`, so JS and CSS cannot name different stations.
+- **`#contact` takes `data-m="fade"` on all four pieces** — the one role in
+  that system that does not translate. It is not pinned (a page's last card
+  does not need a stage), so the scrubbed channel would have nothing to key
+  on; this is the same ruling with the machinery already in the sheet.
+
+### ⚠ The pin is not the station's top, and assuming it was shipped the defect in miniature
+
+`.station` carries its own vertical padding — **140px top, 220px bottom** at
+1920×1247 — so the sticky stage is still 140px short of its pin in the frame
+the station's top reaches the viewport top. The first clock measured the
+STATION's rect and opened the reveal 45px into that 140px travel: the record
+lit while it was still moving, which is the thing this update exists to
+remove, reappearing inside its own fix.
+
+Worse, the error is viewport-dependent (140 of 748px of runway at 1920, 140 of
+432 at 1280×720), so no single literal could have papered over it. And the
+bottom padding is taken out of the sticky travel too — a sticky child moves
+inside its container's CONTENT box — which left **16px of real travel at
+1280×720** against a 60svh runway: the record was already scrolling away by
+the frame the clock called q 0.7, and it measured as a head clipped off the
+top of the viewport.
+
+So: `propPinnedProgress(top, height, padTop, stageH)` measures **the stage's
+own travel**, `padTop`/`stageH` come off the layout in `measure()`, and the
+station's vertical padding is set to 0 on the capable rung with the air spent
+INSIDE the stage instead — where it is the record's margin from the frame
+rather than a hole in the pin.
+
+### ⚠ A rule is part of what it rules
+
+The reveal mark first went on `.tl-prop__lead`, one level inside the header.
+`.tl-prop__head` draws the coral rule under the band, so at the pin that line
+painted at full strength across an otherwise empty frame — a rule hanging in
+the middle of the viewport with nothing to underline. It is on the head now,
+and the paragraph's opacity compounds with the band's.
+
+### Guards
+
+- `trinny-mark.test.ts`: the settled sample moves from p 1 to **0.80** (p 1 is
+  now the end of the exit, not the rest); the exit is asserted to TRAVEL
+  (`> 0.8 × LEAVE × stageH`) and not merely fade, to be monotone, and to run
+  its stagger backwards; the veil is asserted equal to `veilOf(p)` at q 0 —
+  which is the byte-identity proof for the turn — and bounded under 1; and the
+  pinned clock is asserted **0 at the station's own top**, which is the
+  assertion the first cut would have failed.
+- The smoke asserts the mechanism in order: the stage computes `sticky`, the
+  record is at opacity 0 at the pin with its box already where it will be, and
+  at q 0.8 it is lit **in the same box** with `transform: none`. ⚠ A 2px
+  tolerance on the top, not an exact bound — the two samples sit at different
+  scroll positions so the sticky rect rounds one either way (measured 149
+  against 148). What it rules out is TRAVEL, which was 14px on the reveal it
+  replaces and a viewport on a rising slab.
+- The corridor is asserted STILL ENGAGED at the proposal and dead at
+  `#contact`, from both ends, with exactly one declared edge.
+
 ## Consequences
 
 - `/` and `/claude-workshop` carry three new attributes/uniforms and one new
