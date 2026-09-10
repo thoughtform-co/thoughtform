@@ -944,4 +944,231 @@ test.describe("Trinny London pitch variant", () => {
     );
     expect(position).toBe("sticky");
   });
+
+  test("ADR-095 U6: the entry composition holds its shape, and holds still", async ({ page }) => {
+    /* The Thoughtform two-column composition is stated in WORLD units, and a
+       perspective camera's lateral screen offset is `x·vh / (2·d·tan(fov/2))`
+       — the frame's WIDTH cancels out of the aspect term. Its contents do the
+       opposite: the copy block caps at 460 CSS px and the phase labels are
+       ~10px type. So the empty middle between them is `spread(vh) − contents`
+       and grows without limit as the window gets taller: measured 184px at
+       1440×900 and 458px at 1920×1247 before `thoughtformSpread` solved it.
+
+       ⚠ THE ASSERTION IS THE PROPORTION, NOT THE PIXELS. The damp's job is
+       that the composition occupies the same FRACTION of any frame, so a
+       pixel bound would pass at one viewport and mean nothing at the other —
+       which is precisely how the defect survived every existing gate. */
+    const readEntry = async () => {
+      await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
+      await page.waitForSelector(".home-v2-stage");
+      await page.waitForTimeout(SETTLE_MS);
+      const stageTop = await page.evaluate(() =>
+        Math.round(
+          (document.querySelector(".home-v2-stage") as Element).getBoundingClientRect().top +
+            window.scrollY
+        )
+      );
+      // Two stops, both inside the pan's hold (see `thoughtformPan.start`).
+      await rollTo(page, stageTop + 40);
+      const a = await page.evaluate(() => {
+        const box = (s: string) => {
+          const el = document.querySelector(s);
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return { left: Math.round(r.left), right: Math.round(r.right) };
+        };
+        const di = document.getElementById("depthIndicator");
+        return {
+          progress: di ? parseFloat(di.style.top) / 100 : 1,
+          copy: box(".home-v2-copy-block--thoughtform-left"),
+          nav: box(".home-v2-copy-phase--navigate"),
+          vw: window.innerWidth,
+        };
+      });
+      await rollTo(page, stageTop + 200);
+      const b = await page.evaluate(() => {
+        const el = document.querySelector(".home-v2-copy-block--thoughtform-left");
+        const di = document.getElementById("depthIndicator");
+        return {
+          progress: di ? parseFloat(di.style.top) / 100 : 1,
+          left: el ? Math.round(el.getBoundingClientRect().left) : NaN,
+        };
+      });
+      return { a, b };
+    };
+
+    // The authored reference. Every committed snapshot viewport is at or
+    // below this height, which is why the damp clamps to 1 here.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const ref = await readEntry();
+    expect(ref.a.copy).not.toBeNull();
+    expect(ref.a.nav).not.toBeNull();
+    const refFrac = (ref.a.nav!.left - ref.a.copy!.right) / ref.a.vw;
+
+    // The owner's own monitor — the shape the composition was never authored
+    // at, and where the gutter measured 23.9 % of the frame.
+    await page.setViewportSize({ width: 1920, height: 1247 });
+    const tall = await readEntry();
+    const tallFrac = (tall.a.nav!.left - tall.a.copy!.right) / tall.a.vw;
+
+    // Both stops must be inside the hold, or the readings below are of a
+    // composition already panning and the test is measuring the wrong thing.
+    expect(ref.a.progress).toBeLessThan(0.05);
+    expect(tall.a.progress).toBeLessThan(0.05);
+
+    // The proportion holds. 0.05..0.16 is the band the two reference
+    // viewports themselves sit in (7.2 % at 1280×720, 12.8 % here).
+    expect(refFrac).toBeGreaterThan(0.05);
+    expect(refFrac).toBeLessThan(0.16);
+    expect(tallFrac).toBeGreaterThan(0.05);
+    expect(tallFrac).toBeLessThan(0.16);
+    // And the two frames agree with each other, which is the whole claim.
+    expect(Math.abs(tallFrac - refFrac)).toBeLessThan(0.06);
+
+    /* ⚠ AND THE PARKED FRAME IS PARKED. `thoughtformPan.start` moved 0 →
+       0.05 so the composition is still on arrival and only travels once the
+       reader is into the Arc; before that it began sliding on the first
+       pixel of scroll. Both stops are inside the hold (asserted above), so
+       any lateral travel between them is the defect the owner named. */
+    expect(tall.b.progress).toBeLessThan(0.05);
+    expect(Math.abs(tall.b.left - tall.a.copy!.left)).toBeLessThanOrEqual(6);
+  });
+
+  test("ADR-094 U5: the proposal seats its head on the homepage's datum", async ({ page }) => {
+    /* The record is head + drawing in one grid, and centring it seated the
+       HEAD by half the drawing's height — measured 306px at 1920×1247, frac
+       0.241, against the services masthead's title at 0.107 on the same
+       frame. `align-content: start` plus a datum-derived top padding is the
+       fix; this is the measurement that says it held. */
+    await page.setViewportSize({ width: 1920, height: 1247 });
+    await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".home-v2-stage");
+    await page.waitForTimeout(SETTLE_MS);
+
+    const geom = await page.evaluate(() => {
+      const prop = document.getElementById("proposition") as HTMLElement;
+      const stage = prop.querySelector("[data-tl-prop-stage]") as HTMLElement;
+      const r = prop.getBoundingClientRect();
+      return {
+        top: Math.round(r.top + window.scrollY),
+        height: Math.round(r.height),
+        padTop: stage.offsetTop,
+        stageH: stage.offsetHeight,
+        vh: window.innerHeight,
+      };
+    });
+    const travel = geom.height - geom.padTop - geom.stageH;
+    expect(travel).toBeGreaterThan(0);
+
+    /* ⚠ ROLL TWICE. The first long roll from the top is clamped while the
+       corridor inflates the document, and a reading taken there is of an
+       UNPINNED station — which reports a head frac of 4.1 and looks like a
+       catastrophic failure rather than a harness miss. */
+    const target = Math.round(geom.top + geom.padTop + 0.7 * travel);
+    await rollTo(page, target);
+    await rollTo(page, target);
+
+    const seat = await page.evaluate(() => {
+      const prop = document.getElementById("proposition") as HTMLElement;
+      const head = prop.querySelector(".tl-prop__head") as HTMLElement;
+      const inner = prop.querySelector(".tl-prop__inner") as HTMLElement;
+      const h = head.getBoundingClientRect();
+      const i = inner.getBoundingClientRect();
+      return {
+        q: parseFloat(prop.getAttribute("data-tl-prop") ?? "0"),
+        headFrac: h.top / window.innerHeight,
+        innerBottom: i.bottom,
+        vh: window.innerHeight,
+      };
+    });
+
+    // Pinned, and lit — otherwise the seat below is of a travelling stage.
+    expect(seat.q).toBeGreaterThan(0.3);
+    // The homepage's masthead title sits at 0.107 of the frame.
+    expect(seat.headFrac).toBeGreaterThan(0.06);
+    expect(seat.headFrac).toBeLessThan(0.15);
+    // ⚠ And the record still FITS. `start` can only overrun downward, which
+    // is the whole reason it is safer than the `center` it replaced — but
+    // safer-to-see is not the same as fitting, so measure it.
+    expect(seat.innerBottom).toBeLessThan(seat.vh);
+  });
+
+  test("ADR-095 U6: the approach is halved, and exactly one ground paints it", async ({ page }) => {
+    /* A sticky stage costs one viewport of scroll-off at its end; with the
+       turn's products gone and its line un-typed by then, that viewport was
+       an empty stage leaving. `--tl-prop-lead` overlaps the two stations by
+       half of it.
+
+       ⚠ WHICH IS ONLY LEGAL BECAUSE THE GROUNDS SWAP. Two coats of the same
+       viewport-locked field is a hard horizontal band across the frame — the
+       defect the overlap buys unless exactly one ground is painting at every
+       scroll position. That is the second half of this test and it is the
+       half that can regress silently: the pixels are a wash on a wash, so
+       nothing throws and no geometry gate can see it. */
+    await page.setViewportSize({ width: 1920, height: 1247 });
+    await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".home-v2-stage");
+    await page.waitForTimeout(SETTLE_MS);
+
+    const geom = await page.evaluate(() => {
+      const box = (id: string) => {
+        const r = (document.getElementById(id) as HTMLElement).getBoundingClientRect();
+        return { top: Math.round(r.top + window.scrollY), height: Math.round(r.height) };
+      };
+      return { turn: box("turn"), prop: box("proposition"), vh: window.innerHeight };
+    });
+    const release = geom.turn.top + geom.turn.height - geom.vh;
+    const approach = geom.prop.top - release;
+
+    // Half a viewport, not a whole one. The band is wide enough to survive a
+    // runway retune and narrow enough to fail if the lead is dropped.
+    expect(approach / geom.vh).toBeGreaterThan(0.35);
+    expect(approach / geom.vh).toBeLessThan(0.65);
+
+    for (const at of [-1.0, -0.6, -0.25, -0.02, 0.02, 0.2, 0.45, 0.7]) {
+      const y = Math.round(release + at * geom.vh);
+      await rollTo(page, y);
+      await rollTo(page, y);
+      const paint = await page.evaluate(() => {
+        const seen = (sel: string) => {
+          const el = document.querySelector(sel);
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          const op = parseFloat(getComputedStyle(el).opacity || "1");
+          const top = Math.max(0, r.top);
+          const bottom = Math.min(window.innerHeight, r.bottom);
+          return { op, top, bottom, covers: Math.max(0, bottom - top) };
+        };
+        return {
+          turn: seen(".tl-turn__wash"),
+          prop: seen(".tl-prop__ground"),
+          handoff: document.getElementById("turn")?.getAttribute("data-tl-handoff") ?? null,
+        };
+      });
+      const t = paint.turn;
+      const p = paint.prop;
+      expect(t).not.toBeNull();
+      expect(p).not.toBeNull();
+      // The overlap of the two grounds INSIDE the frame, counting only a
+      // ground that is actually painting.
+      const tLive = t!.op > 0.01 ? t! : null;
+      const pLive = p!.op > 0.01 ? p! : null;
+      const overlap =
+        tLive && pLive
+          ? Math.max(0, Math.min(tLive.bottom, pLive.bottom) - Math.max(tLive.top, pLive.top))
+          : 0;
+      expect(
+        overlap,
+        `two grounds painting ${overlap}px of the frame at release${at >= 0 ? "+" : ""}${at}vh ` +
+          `(handoff=${paint.handoff}, turn op ${t!.op}, prop op ${p!.op})`
+      ).toBeLessThanOrEqual(4);
+      // ⚠ And the frame is never BARE either. A swap that hides both is the
+      // same bug with the sign flipped, and it looks like the wash simply
+      // vanishing at the seam.
+      expect(
+        Math.max(tLive?.covers ?? 0, pLive?.covers ?? 0),
+        `no ground covers the frame at release${at >= 0 ? "+" : ""}${at}vh`
+      ).toBeGreaterThan(geom.vh * 0.9);
+    }
+  });
 });
