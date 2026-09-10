@@ -141,6 +141,7 @@ export function useTurnScroll(): void {
     let lastP = -1;
     let lastQ = -1;
     let lastPropA = -1;
+    let lastHandoff = -1;
 
     const park = () => {
       brandmarkMorphRef.current.progress = 0;
@@ -158,6 +159,10 @@ export function useTurnScroll(): void {
          simply stands, which is what the phone and the reduced-motion paths
          must get. Writing 0 here would hide the whole proposal on exactly
          the paths that have no way to un-hide it. */
+      turn.removeAttribute("data-tl-handoff");
+      // ⚠ BOTH fail open: parked, the proposal keeps its ground.
+      prop?.removeAttribute("data-tl-ground");
+      lastHandoff = -1;
       prop?.style.removeProperty("--tp-in");
       prop?.removeAttribute("data-tl-prop");
       propLines.forEach((el, i) => {
@@ -228,6 +233,31 @@ export function useTurnScroll(): void {
         if (lastPropA !== 1) {
           lastPropA = 1;
           prop.style.setProperty("--tl-wash", "1");
+        }
+      }
+
+      /* -- The ground's handoff (U6) --------------------------------
+         The two stations OVERLAP by `--tl-prop-lead` now, so for half a
+         viewport after the turn's stage unpins both grounds are in the
+         frame. The proposal's reaches up past the release point (see the
+         CSS), so from that frame on it covers the viewport by itself and
+         the turn's is simply switched off -- no cross-fade, because
+         `washOf` has saturated at 1 since p 0.68 and the proposal paints
+         a constant 1 on a field locked to the same origin. Same amount,
+         same field: the step is a no-op on the pixels.
+
+         ⚠ STAMPED ON THE STATION, NOT THE STAGE, so one rule reaches the
+         canvas AND the no-WebGL gradient; and delta-gated, because this is
+         a boolean that flips once per pass. */
+      const handoff = p >= 1 ? 1 : 0;
+      if (lastHandoff !== handoff) {
+        lastHandoff = handoff;
+        if (handoff) {
+          turn.setAttribute("data-tl-handoff", "1");
+          prop?.removeAttribute("data-tl-ground");
+        } else {
+          turn.removeAttribute("data-tl-handoff");
+          prop?.setAttribute("data-tl-ground", "hold");
         }
       }
 

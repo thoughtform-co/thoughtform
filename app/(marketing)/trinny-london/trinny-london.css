@@ -1540,11 +1540,36 @@ html[data-corridor-exit="true"] .tl-root #proposition {
    the record un-pins while it is still being read. */
 .tl-root #proposition {
   --tl-prop-runway: 60svh;
+
+  /* ⚠ THE LEAD IS THE DEAD VIEWPORT, TAKEN BACK (U6, owner: "scrolling into
+     the Trinny London configuration section, it takes a bit too long -- it
+     should be a scroll or two less before the elements start to appear").
+
+     A sticky stage costs ONE VIEWPORT of scroll-off at its end, by
+     construction: `#turn` is 220svh with a 100svh stage, so the stage
+     unpins 120svh in and the remaining 100svh is that stage travelling away.
+     Measured at 1920x1247: release at 20732, this station's pin at 22001 --
+     1269px, exactly 1.00 viewport, and by then the products are gone
+     (`TURN_PRODUCT_GONE` = 1) and the line is un-typed (`TURN_CTA_OUT` 0.90),
+     so what the reader scrolls through is an empty stage leaving. The record
+     was 1.28 viewports past release before it lit.
+
+     The negative margin overlaps the two stations by half of that, which is
+     the only lever available: the turn's own clock may not be compressed (the
+     owner signed off on that beat) and the proposal's runway is DWELL, not
+     approach. Half rather than all -- the line still gets to leave before the
+     next record arrives.
+
+     ⚠ AND THE OVERLAP IS WHY `.tl-prop__ground` REACHES UP BY THE SAME
+     AMOUNT. See its own rule; the two values are one decision. */
+  --tl-prop-lead: 50svh;
 }
 
 @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
   .tl-root #proposition {
     min-height: calc(100svh + var(--tl-prop-runway));
+    /* The lead, spent. See `--tl-prop-lead`. */
+    margin-top: calc(var(--tl-prop-lead) * -1);
     /* ⚠ `display: block`, for the same reason `#turn`'s capable rung
        declares it: every child here is either absolutely positioned (the
        ground) or a sticky stage, so a grid track sized by content collapses
@@ -1571,6 +1596,11 @@ html[data-corridor-exit="true"] .tl-root #proposition {
        padding is taller than the viewport it is meant to fill. */
     box-sizing: border-box;
     padding-block: clamp(32px, 5vh, 88px);
+    /* The datum, taken off the homepage: the services masthead seats its
+       title at frac 0.107 of the frame, so the head starts there and the
+       drawing takes what is left. Floored for short viewports, capped so a
+       very tall window does not push the record off its own pin. */
+    padding-block-start: clamp(48px, 10.7svh, 148px);
     display: grid;
     /* ⚠ `1fr`, NEVER an auto track. `.tl-prop__inner` is `width: 100%` with
        a `max-width` cap, so an auto column sized by its content would let
@@ -1580,8 +1610,22 @@ html[data-corridor-exit="true"] .tl-root #proposition {
     /* ⚠ DECLARED, NOT INHERITED. `align-content` aligns BLOCK content in
        Chrome 123+, so the station's own `center` would survive into this
        stage and seat the record a viewport low inside its own pin — the
-       exact defect ADR-095 recorded on `#turn`, with every gate green. */
-    align-content: center;
+       exact defect ADR-095 recorded on `#turn`, with every gate green.
+
+       ⚠ AND IT IS `start` NOW, NOT `center` (U6, owner: the H1 and its
+       paragraph sit lower than the homepage's -- "if I look at the homepage
+       it's a bit higher placed"). Centring seated the WHOLE record -- the head
+       plus the configuration drawing under it -- so the head was pushed down
+       by half the drawing's height: measured 306px at 1920x1247, frac 0.241,
+       against the services masthead's title at frac 0.107 on the same frame.
+       More than twice as far down, and nothing on the head's own box said so.
+
+       ⚠ It is also the SAFER overflow. `center` spills a too-tall record
+       equally through the top and the bottom, so `scrollHeight` equals
+       `clientHeight` and every clip gate reports zero -- this route's own
+       recorded trap, one station over. Seated at the top it can only overrun
+       downward, where it is visible. */
+    align-content: start;
   }
 }
 
@@ -1644,6 +1688,59 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+}
+
+/* ⚠ THE GROUND REACHES UP BY THE LEAD, AND THAT IS WHAT MAKES THE OVERLAP
+   PAINTABLE. With the stations overlapped, the frame between the turn's
+   release and this station's pin is covered by BOTH grounds -- the turn's
+   from the top, this one from the station's edge downward -- and two coats
+   of the same field is a horizontal seam across the viewport, which is the
+   defect the overlap would otherwise have bought.
+
+   Reaching up to the release point instead means this ground alone covers
+   the whole frame from the moment the turn's stage unpins, so the turn's
+   wash can be handed off in ONE STEP rather than cross-faded. The step is
+   invisible by arithmetic, not by luck: `washOf` saturates at p 0.68
+   (`TURN_WASH_PEAK`) and the proposal's wash is drawn at a constant 1, so
+   at the handoff both fields carry the SAME amount, and both are locked to
+   the VIEWPORT (ADR-095 U4) rather than to their own boxes. Identical pixels
+   either side of the swap.
+
+   The extra 4px is bleed against sub-pixel rounding at the seam. */
+@media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  .tl-root #proposition .tl-prop__ground {
+    top: calc(var(--tl-prop-lead) * -1 - 4px);
+  }
+}
+
+/* The handoff itself, and it is a SWAP -- exactly one ground paints the
+   frame at any scroll position, never two.
+
+   ⚠ THE SECOND HALF IS NOT OPTIONAL, AND LEAVING IT OUT MOVED THE SEAM
+   RATHER THAN REMOVING IT. Reaching this ground up by the lead means it
+   enters the frame a whole viewport BEFORE the handoff, while the turn's
+   stage is still pinned and still painting -- so the doubling stops at
+   the release and starts again on the approach to it, as a hard horizontal
+   band travelling up the frame (measured at 1920x1247: the ground's top
+   edge at y=116 with p 0.96, and the two coats plainly visible either
+   side of it). One ground has to be off whenever the other is on.
+
+   ⚠ AND THE POLARITY FAILS OPEN. The turn's wash is hidden by a stamped
+   attribute; this one is hidden by a stamped attribute TOO, rather than by
+   the absence of one. A channel that must be present for the ground to
+   paint would blank the proposal's field on the phone, under reduced
+   motion, and the instant `park()` runs -- this route's own law, one
+   station over: an absent reveal channel means SHOWN, never hidden.
+
+   Both take the WebGL canvas and the CSS fallback together -- one rule
+   each, because the fallbacks' opacity rides `--tl-wash` and would
+   otherwise keep painting on the path with no shader. */
+.tl-root #turn[data-tl-handoff="1"] .tl-turn__wash {
+  opacity: 0;
+}
+
+.tl-root #proposition[data-tl-ground="hold"] .tl-prop__ground {
+  opacity: 0;
 }
 
 .tl-root .tl-prop__wash {
