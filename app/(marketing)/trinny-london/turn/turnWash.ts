@@ -60,17 +60,26 @@ const FRAG = `
     // kept so the light on the page still comes from one place.
     float bias = 0.68 + 0.32 * smoothstep(-0.45, 0.65, (uv.x - 0.5) * 0.85 + (0.5 - uv.y) * 0.65);
 
-    // ⚠ THE WASH STOPS SHORT OF THE HUD. The frame is the site's chrome and
-    // it has to stay readable: at full bleed this ground ran under the right
-    // rail and its telemetry — gold values on coral — and swallowed them
-    // (measured on the still: BEARING and LOCAL both gone at 1920×1247,
-    // legible again the moment the wash resolved). So the ground warms
-    // INSIDE the frame, which is the honest reading anyway — the HUD is not
-    // part of the page the client's colour is taking over.
-    float frame = smoothstep(0.0, 0.075, uv.x) * smoothstep(1.0, 0.925, uv.x) *
-                  smoothstep(0.0, 0.055, uv.y) * smoothstep(1.0, 0.945, uv.y);
-
-    float a = uAmount * (edge * bias + 0.10 * (1.0 - edge)) * frame;
+    // ⚠ THE WASH FILLS THE WHOLE VIEWPORT (owner, 2026-09-10: "that shader
+    // should fill the full viewport. Right now it stops at the left and
+    // right reel, but it should steadily fill the entire viewport" — and,
+    // asked whether the rail should be protected: "I don't want you to
+    // change the reel. Just extend that gradient, that shader, because the
+    // color doesn't really clash with our reel, so we can easily extend").
+    //
+    // WHAT THAT TRADES, kept as the record rather than deleted with the
+    // mask it explains. The first cut ran the field masked out of the outer
+    // 7.5 % / 5.5 %, because at full bleed the ground runs under the right
+    // rail's telemetry — gold values on coral — and on the still BEARING and
+    // LOCAL were both gone at 1920×1247, legible again only once the wash
+    // resolved. The owner has now read that and ruled the other way: the
+    // page's colour takes the frame with it, and the rail is not touched.
+    //
+    // ⚠ SO THE PEAK IS THE ONE DIAL LEFT, and raising it re-opens exactly
+    // that question with no guard to catch it — nothing anywhere measures
+    // this shader's contrast, and the only witness is a capture. Re-shoot
+    // the 15-turn-mark / 16-turn-line stills at 1920×1247 before moving 0.66.
+    float a = uAmount * (edge * bias + 0.10 * (1.0 - edge));
 
     // Ordered dither — a wide, low-contrast ramp on parchment bands without
     // it, which is what made the flat version read as paint.
