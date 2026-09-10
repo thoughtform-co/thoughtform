@@ -201,10 +201,18 @@ breather).
   head is a 52px `nowrap` flex bar), never equal to `project`, and no digits
   but the step. `cases-registry.test.ts` pins all of it and scans the title
   under the envelope.
-- **A film can carry its own 4:5 SOCIAL still (`CaseFilm.portrait`, ADR-094
-  U2).** `CaseImage & { meta }`, for surfaces whose frame is PORTRAIT — the
-  Trinny card's field is 693×926 at the owner's viewport, where a 16:9 poster
-  is a stamp with a third of the box empty either side. ⚠ **4:5 IS THE ONLY
+- **A film can carry its own 4:5 SOCIAL cut (`CaseFilm.portrait`, ADR-094 U2,
+  playable since U4).** `{ poster, src, meta }` — `CaseFilm`'s own pair one
+  aspect down — for surfaces whose frame is PORTRAIT: the Trinny card's field
+  is 693×926 at the owner's viewport, where a 16:9 poster is a stamp with a
+  third of the box empty either side. ⚠ **IT PLAYS IN THE FRAME, NOT OVER THE
+  PAGE** (owner: _"when you click on the video thumbnail, it shows the
+  full-screen video. I don't want that"_) — a cut authored FOR a small
+  vertical frame is shown in one, and the swap is pixel-for-pixel because
+  both are 4:5. The lightbox stays where it earns its keep: a 16:9 master, and
+  a screen recording of a UI, are both unreadable at card scale. ⚠ **SELF-
+  HOSTED, AND NOT BY PREFERENCE** — CSP is `media-src 'self' blob: data:`, so
+  a bucket URL is blocked outright. ⚠ **4:5 IS THE ONLY
   ASPECT BOTH LOOP FILMS WERE RESIZED TO**, which is what lets a rail switch
   between them without the frame changing size; their durations differ (30s
   against a 7s cutdown), which is why it is a STILL and not a second `src`.

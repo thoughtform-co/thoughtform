@@ -28,7 +28,7 @@ place) → the proposal** → contact.
 **Read first**
 
 - [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock. ⚠ **U1 deleted the interstitial slab**: the ground changes under a shader instead and the line decodes in place over it. ⚠ **U5 (2026-09-10) DELETED THE SECOND SLAB** — the products LEAVE on the turn's own clock, `#proposition` is transparent and PINNED with its record powering on in place, the mark fades behind it, and the kill edge is **`#contact`**
-- [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome with the project's name down in the record, the fields show ONE thing on the house rail, and the arrival is delayed and settled. ⚠ **U2 (same day) PUT THE ARC IN THE RECORD AND THE TABS IN THE FIELD** — `CaseTrack.arc`, the order reversed to lead on the frontier work, the claim sentences read, and the ATL films in their 4:5 cut. ⚠ **U3 (same day) MADE THE ARC THE TITLE** (the project's name is head chrome), gave the studio card its THREE SHEETS via a portalled `SheetsPlate`, and made both the films and the tools PLAY
+- [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome with the project's name down in the record, the fields show ONE thing on the house rail, and the arrival is delayed and settled. ⚠ **U2 (same day) PUT THE ARC IN THE RECORD AND THE TABS IN THE FIELD** — `CaseTrack.arc`, the order reversed to lead on the frontier work, the claim sentences read, and the ATL films in their 4:5 cut. ⚠ **U3 (same day) MADE THE ARC THE TITLE**, gave the studio card its THREE SHEETS via a portalled `SheetsPlate`, and made both the films and the tools PLAY. ⚠ **U4 (same day) NOTCHED THE CARDS** (ADR-065's canonical TR+BL, which caught the console's stale TL+BR), cut the head down to its ORDINAL, renamed `THE LINE` → `GOVERNANCE`, and made the 4:5 cut play IN ITS FRAME
 - [ADR-093](../../sentinel/decisions/093-trinny-london-light-locked-variant.md) — this route's lock and its journey clock
 - [ADR-053](../../sentinel/decisions/053-workshop-corridor-variant.md) — the recipe it repeats, and its two invariants
 - [ADR-058](../../sentinel/decisions/058-light-mode-theme.md) — the theme channel the lock overrides
@@ -152,17 +152,52 @@ place) → the proposal** → contact.
 
 ## The card, recomposed (ADR-094 U1)
 
-- ⚠ **CHROME NAMES THE FILE, THE DISPLAY MAKES THE CLAIM** (U3, owner
+- ⚠ **THE CLAIM IS THE TITLE AND THE HEAD IS AN ORDINAL** (U3 + U4, owner
   2026-09-10: _"the lines that I said, 'We push the frontiers of AI creative,'
-  should replace the title 'AI Above-the-Line'"_). `.tl-card__title` letters
-  `arc.title`; `.tl-card__arc` closes the head with `{step} · {project}`,
-  mono, `nowrap` + ellipsis. ⚠ **THE NAME GOES TO THE HEAD RATHER THAN AWAY,
-  and that is the PEEK BAND** — U1 named the cost, U2 answered it with the
-  arc, and moving the claim down would have re-opened it: a head carrying
-  only `LOOP EARPLUGS · BUILD` reads the same on all four. The ≤20-char rule
-  on `project` is what makes it fit a 52px strip where the 44-char claim
-  sometimes did not. Pinned from BOTH ends in the smoke, or a swap back
-  satisfies either half alone.
+  should replace the title 'AI Above-the-Line'"_, then _"that subtitle …
+  in the top-right corner, you can remove that"_). `.tl-card__title` letters
+  `arc.title`; `.tl-card__arc` is `arc.step` alone. ⚠ **THE STEP IS THE PEEK
+  BAND'S WHOLE JOB NOW** — U1 named the cost of emptying the strip, U2
+  answered it with the arc, U3 with the project's name, and U4 took the name
+  back out; `01 … 04` differs per card and is an INDEX rather than a second
+  title, so the pile still reads as a sequence when the slivers stack.
+  ⚠ **`project` LETTERS NOWHERE ON THE CARD** — the claim is the heading and
+  the rail names the parts. Pinned from BOTH ends in the smoke (claim up top,
+  head is TWO DIGITS), or a name creeping back satisfies neither check.
+- ⚠ **THE CARD IS A CHAMFERED HOUSING, TR + BL** (U4, owner: _"all the cards
+  in the proof section should have a notch, like on the homepage, in the
+  bottom-left and top-right corners"_) — ADR-065's canonical diagonal, and
+  its reading of what a chamfer MEANS: a machined housing, which is what a
+  card holding an instrument is. ⚠ **A CLIP CUTS A BORDER, IT NEVER STROKES
+  ONE** (ADR-089), so the rule is a CLIPPED RING — one polygon, outer contour
+  plus inner, `evenodd` making the middle a hole. ⚠ The inner leg is **not**
+  `ch − 1px`: insetting a 45° cut by `d` shortens its leg by `d(2 − √2)` ≈
+  0.586d. ⚠ **RULE 4 COMES WITH IT AND IT CAUGHT A LIVE MISMATCH** — the
+  console still carried `console.css`'s **TL + BR** cut (ADR-065 U2's
+  exception, RETIRED by ADR-089 on the casefile, `.fl-case`-scoped so this
+  route never got it): one box leaning the opposite way inside another.
+  `clip-path: none` on `.tl-card__field .fl-con__console`, route-scoped.
+  ⚠ And the card is now a containing block for `fixed` descendants —
+  survivable only because `MediaLightbox` portals to `document.body`.
+- ⚠ **THE 4:5 CUT PLAYS IN ITS FRAME, NOT OVER THE PAGE** (U4, owner: _"when
+  you click on the video thumbnail, it shows the full-screen video. I don't
+  want that"_). `CaseFilm.portrait` is `{ poster, src, meta }` — `CaseFilm`'s
+  own pair one aspect down — and a click swaps the `<button>` for a `<video>`
+  in the SAME box (cut and frame are both 4:5, so nothing reflows under the
+  pointer). ⚠ **NOT A BUCKET, AND NOT BY PREFERENCE**: CSP is `media-src
+'self' blob: data:`, so "add them to Supabase, whatever" resolves to
+  `public/videos/` — transcoded 11 Mbps → 6.8 MB / 1.2 MB, lighter than the
+  16:9 masters beside them. ⚠ **STILL NO `<video>` UNTIL A CLICK** (ADR-056
+  U5); `autoPlay` is safe because the mount IS the click. ⚠ **THE PLAY STATE
+  IS KEYED ON THE FILM'S `src`, NOT A BOOLEAN** — a boolean carries across a
+  station switch and starts the next film unasked. ⚠ **THE LIGHTBOX SURVIVES
+  WHERE IT EARNS ITS KEEP**: the tools keep theirs because a screen recording
+  of a UI is unreadable at card scale.
+- ⚠ **`THE LINE` IS `GOVERNANCE`** (U4). One `CaseSheet.label`, in the record,
+  so the casefile, the portfolio arc and this card move together; the sheet's
+  `id` stays `line` (a DOM id, and `data-sheet` plus two smokes read it). It
+  also fixed a collision the surface was carrying: the tab said "the line"
+  under a band reading THE PRINCIPLE and beside a sheet called THE RED LINE.
 - ⚠ **THE TAB ROW LIVES IN THE FIELD SINCE U2**, seated on the right panel's
   own top edge at FULL WIDTH — `ConsoleRail`'s native `flex: 1 1 0`, which U1
   had to override for a reason that no longer holds (four stations at 295px
@@ -206,14 +241,21 @@ place) → the proposal** → contact.
   the width it derives. ⚠ And the tools field's rows are `auto auto`, never
   `1fr auto`: a `1fr` row absorbs the slack, so `align-content` has nothing to
   distribute and the bar lands on the bay's floor ~300px from its drawing.
-- ⚠ **A COVERED CARD'S CONTROLS ARE UNREACHABLE NOW.** The rail and the watch
-  bar are in the FIELD, under the card above, where the head's tabs used to be
-  in the visible peek band. A harness driving card 3 must RE-SEAT it — and
-  `seatSlot` cannot, twice over: it returns early on `covered`, and
-  `rect.top + scrollY` on an already-pinned `sticky` slot gives the PINNED
-  position, so `doc − pin` converges on wherever it already is (measured
-  12532 → 12765, `covered` eight passes running). It is sound walking DOWN the
-  pile only; rewind to the stack's top first.
+- ⚠ **A COVERED CARD'S CONTROLS ARE UNREACHABLE NOW.** The rail, the watch bar
+  and the film's frame are in the FIELD, under the card above, where the
+  head's tabs used to be in the visible peek band. A harness driving any card
+  but the pinned one must RE-SEAT it — and `seatSlot` cannot, twice over: it
+  returns early on `covered`, and `rect.top + scrollY` on an already-pinned
+  `sticky` slot gives the PINNED position, so `doc − pin` converges on wherever
+  it already is (measured 12532 → 12765, `covered` eight passes running). It
+  is sound walking DOWN the pile only; `seatPinnedFromTop` rewinds to the
+  stack's top and walks, and rewinds again if it overshoots.
+- ⚠ **TWO HARNESS TRAPS THAT BLAME THE PAGE FOR THE HARNESS.**
+  `locator.click()` SCROLLS its target into view first, so a scroll baseline
+  taken before the click is a reading from a different position — measure the
+  lock with the player already open. And `page.mouse.wheel` dispatches where
+  the POINTER is, wherever the last click left it; a wheel outside the dialog
+  is not testing the dialog.
 - ⚠ **THE SIZE CONTAINER IS `.tl-card__bay`, ONE LEVEL UNDER THE FIELD** (U2).
   The ads count their rows off `100cqh`, the film derives its width from it and
   the wireframe's bay is `(100cqh − 4px) × 1.62`; left on the field it would

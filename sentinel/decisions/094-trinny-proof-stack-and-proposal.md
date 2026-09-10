@@ -601,6 +601,106 @@ it already is (measured: 12532 → 12765, `covered` eight passes running).
 `seatSlot` is sound only walking DOWN the pile, so the test rewinds to the
 stack's top and walks.
 
+## Update 4 — the notch, the ordinal alone, and the cut plays in its frame (2026-09-10)
+
+Four notes from the owner on the finished cards.
+
+### `THE LINE` becomes `GOVERNANCE`
+
+_"The line here should be governance."_ One label, in the record, so all three
+surfaces that hold `LOOP_STUDIO_SHEETS` by reference move together. The sheet's
+`id` stays `line` — it is a DOM id, and churning it would move `data-sheet` and
+two smokes' selectors for nothing.
+
+⚠ It is also a correction the surface was asking for: the tab said "the line"
+while the band under it says **THE PRINCIPLE** and the sheet beside it is
+**THE RED LINE** — two lines, one of which was not the line.
+
+### The cards are chamfered housings
+
+_"All the cards in the proof section should have a notch, like on the homepage,
+in the bottom-left and top-right corners."_ That is ADR-065's CANONICAL
+diagonal, and the law's own reading of what a chamfer means: a machined
+housing, which is exactly what a card holding an instrument is.
+
+⚠ **A CLIP CUTS A BORDER, IT NEVER STROKES ONE** (ADR-089). A bordered box
+under this clip has no line on either diagonal — six edges outlined and two
+not. The rule is a CLIPPED RING instead: one polygon carrying the outer
+contour and the inner one with `evenodd` making the middle a hole, which is
+the services plate's gold lip in a second place. ⚠ And the inner leg is **not**
+`ch − 1px`: insetting a 45° cut by `d` on both axes shortens its leg by
+`d(2 − √2)` ≈ 0.586d.
+
+⚠ **RULE 4 CAME WITH IT, AND IT CAUGHT A LIVE MISMATCH.** The smoke's new
+"children are square" assertion failed immediately on `.fl-con__console`,
+which carries `console.css`'s **TL + BR** cut — ADR-065 U2's enumerated
+exception, which ADR-089 RETIRED on the casefile when the console became a
+cell inside a chamfered housing. That whole pass is `.fl-case`-scoped, so this
+route still had it: a console leaning one way inside a card leaning the other,
+one box inside the other. Giving the card its notch is what made it visible.
+The console is square here now — the same ruling, for the same reason, one
+surface later.
+
+⚠ It also makes the card a containing block for `fixed` descendants, which is
+survivable only because `MediaLightbox` portals to `document.body`. A dialog
+written inline here would be trapped in the card.
+
+### The head keeps the ordinal and loses the name
+
+_"That subtitle — whatever, Intelligence Map, Software for Few — in the
+top-right corner, you can remove that."_
+
+U3 put the project's name there as the peek band's distinguishing mark. The
+STEP keeps that job on its own: `01 … 04` differs per card and is an INDEX
+rather than a second title, so the pile still reads as a sequence when the
+slivers stack. The project's name now letters nowhere on the card — the claim
+is the heading and the rail names the parts, which is what the arc was for.
+
+### The 4:5 cut plays in its own frame
+
+_"We have the 4:5 showcases from the Google Drive folder. Add them to Supabase,
+whatever, because right now, when you click on the video thumbnail, it shows
+the full-screen video. I don't want that."_
+
+⚠ **NOT SUPABASE, AND NOT BY PREFERENCE.** CSP is `media-src 'self' blob:
+data:`, so a bucket URL is blocked outright. Both cuts are transcoded from the
+studio's masters (11 Mbps) to `public/videos/` at **6.8 MB and 1.2 MB** —
+lighter than the 16:9 masters already sitting beside them.
+
+`CaseFilm.portrait` becomes `{ poster, src, meta }` — the same pair `CaseFilm`
+itself carries, one aspect down. A click swaps the `<button>` for a `<video>`
+**in the same box**: the cut is 4:5 and so is the frame, so the swap is
+pixel-for-pixel and nothing reflows under the pointer.
+
+⚠ **STILL NO `<video>` UNTIL A CLICK** (ADR-056 U5) — a mounted element costs
+a layer and this card sits four deep in a sticky stack. `autoPlay` is safe
+precisely because the mount IS the click.
+
+⚠ **THE PLAY STATE IS KEYED ON THE FILM'S OWN `src`, NOT A BOOLEAN.** A
+boolean would carry "playing" across a station switch and mount the next film
+already running — a second film starting that nobody asked for.
+
+⚠ **THE LIGHTBOX SURVIVES WHERE IT EARNS ITS KEEP.** The tools keep theirs
+because a screen recording of a UI is unreadable at card scale, and a film
+with no 4:5 cut would keep its 16:9 master there for the same reason. What was
+wrong was the mismatch, not the mechanism: a cut authored FOR a small vertical
+frame, taking over the whole page.
+
+### Guards
+
+The head is pinned as TWO DIGITS, so a name creeping back beside the ordinal
+fails. The chamfer is pinned from both ends — the card cut, its console and
+its field square. And the player is asserted to mount, to be the self-hosted
+4:5 cut, to raise NO lightbox, to take the still's exact box, and to give the
+next film its still back on a station switch.
+
+⚠ **TWO HARNESS TRAPS, both of which blamed the page for the harness.**
+`locator.click()` scrolls its target into view first, so a scroll baseline
+taken before the click is a reading from a different position — the lock check
+now measures with the player already open. And `page.mouse.wheel` dispatches
+where the POINTER is, wherever the last click left it; a wheel outside the
+dialog is not testing the dialog.
+
 ## Verifying
 
 ```bash
