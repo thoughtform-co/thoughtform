@@ -312,6 +312,107 @@ to catch it. Re-shoot `15-turn-mark` / `16-turn-line` at 1920×1247 first.
 the stage, both of which are unmoved. The regression this could cause is only
 visible in a capture, which is what ADR-095 already says about this beat.
 
+## Update 3 — the copy sits around the mark, and the button is theirs (2026-09-10)
+
+**Owner:** _"the title and the text overlap with the logo. I think maybe we put
+the title above the brand mark, and then the call to action and the paragraph
+below it … And then the button should be yellow with a fill from the Trinny
+website. They have — Trinny, she claimed that yellow, and that's amazing."_
+
+### The split
+
+U1 centred the whole block ON the mark's weld point, on the argument that the
+line should land exactly where the mark had been. It does — and **the mark is
+still there**, because the beat's whole subject is that it re-formed as theirs.
+The two occupied one space. The copy is two blocks now: the eyebrow and the
+title above, the paragraph and the button below.
+
+⚠ **BOTH ARE SEATED OFF ONE PAIR OF TOKENS, AND THE PAIR IS THE MARK'S OWN
+GEOMETRY** — `--tl-mark-cy` is the weld point (`0.5 + CENTER_Y_OFFSET /
+(2·CENTER_DISTANCE·tan(FOV/2))`, the same 54.5 % `turnClock.ts` swings the
+product arcs about) and `--tl-mark-r` is the ring's on-screen radius. Move the
+mark and both blocks follow.
+
+⚠ **AND THE RADIUS IS THE FALLBACK MARK'S OWN EXPRESSION, NOT A PERCENTAGE.**
+`min(25svh, 24vw)`, because the WebGL mark is a BILLBOARD welded in front of
+the camera: its screen size follows the viewport's HEIGHT on a landscape window
+and its WIDTH on a phone, which is exactly what `.tl-turn__mark` already says
+(`min(45svh, 45vw)`). A flat `26%` is right at the owner's shape and half again
+too large at 390×844, where it would push the blocks apart around a mark a
+third of that size. Measured 25 % of the height at 1920×1247 and 1280×720, 11 %
+at 390×844.
+
+### What the split cost, and what it moved
+
+The four product rests were placed against a copy block CENTRED on the mark,
+which left both top corners free. With the title up in that band they were in
+its lane: at 1280×720 `London.` ran under the Naked Ambition tube. They hug the
+stage's edges now, so the centre column belongs to the mark and the copy at
+every width.
+
+⚠ **AND THE TITLE TAKES TWO LINES WHERE THE LANE CANNOT HOLD ONE.** Between the
+phone rung and ~1500px the stage is not wide enough for a thirty-character
+display line AND a product column either side: at 1280×720 the single line
+measures ~590px against ~635px of clear centre, so it touches the tube however
+far outboard the tube goes. **Narrowing the BLOCK is what wraps it** — the type
+ladder is untouched, because shrinking a display size to fit is the thing this
+surface does not do.
+
+### The button is the client's
+
+Their hero CTAs are a flat `#feff04` field with `--brand-grey-1` ink, square,
+uppercase and lightly tracked — which is already the house grammar in another
+colour, so only the fill and the ink are borrowed. Both are read off
+trinnylondon.com's own tokens and stored as `--tl-yellow-rgb` /
+`--tl-yellow-ink`, a second route-local brand literal beside the coral and for
+the same reason: **it is the CLIENT's value, so deriving it from this site's
+ramp would be inventing a colour they did not choose.** The outline the button
+carried is deleted with it — a filled plate does not need a rim, and the border
+was what made it read as chrome rather than as the one thing to press. Ink on
+fill measures 7.6:1.
+
+### ⚠ And the phone had no turn at all
+
+`#turn`'s base rule is `display: grid` with an AUTO column, and **every child of
+the stage is absolutely positioned** — the mark, the products, the wash and both
+copy blocks. So the track measured 0, the stage measured 0 × 844, the copy's
+`min(860px, 84%)` resolved to zero and its text overflowed into the stage's own
+`overflow: hidden`. Only the mark survived, because it is the one child with an
+absolute width, and it sat half off the left edge.
+
+**The capable rung escapes it by switching to `display: block`, which is why
+every desktop still looked correct.** ADR-095 listed phones as "not looked at";
+this is what was there. `grid-template-columns: minmax(0, 1fr)` is the fix, and
+the products were then re-placed into the two bands the copy leaves — at the old
+22vw the lower pair stood exactly where the paragraph now lands.
+
+⚠ **THIRD TIME IN TWO PASSES THAT A SHRINK-TO-FIT TRACK MET AN
+ABSOLUTELY-POSITIONED CHILD** (ADR-094 U1's bay, its phone rung, and this). The
+rule is one line: **a box whose only children are out of flow has no content
+width, so any track that sizes to content collapses and every percentage inside
+it resolves to zero.**
+
+### The proposal's head
+
+⚠ **NO EYEBROW.** It read `The proposal` directly over a heading that names the
+thing, on a page whose journey rail already says Proposal — the same word three
+times in one band. A heading on the left and a paragraph on the right is the
+whole head, and the paragraph lost its middle sentence: the adoption-and-
+automation loop is what the drawing underneath it draws, so saying it in prose
+first was the caption explaining the instrument.
+
+### Guards
+
+The parse test sliced from `class="tl-turn__copy"`, which now matches neither
+block (both carry a modifier) and would have silently sliced from zero onto the
+hero. It slices `#turn` and pins the split itself — two blocks, the title in the
+upper, the button in the lower — plus the absence of the proposal's eyebrow.
+The smoke asserts the BAND: the title ends above the ring's top and the
+paragraph begins below its bottom, as fractions of the stage. ⚠ Those two
+literals restate the intent rather than reading the tokens back; a guard
+computed from `--tl-mark-cy` and `--tl-mark-r` would agree with the CSS by
+construction and catch nothing.
+
 ## Consequences
 
 - `/` and `/claude-workshop` carry three new attributes/uniforms and one new
@@ -337,8 +438,10 @@ visible in a capture, which is what ADR-095 already says about this beat.
   sliders) is designed and not built; tuning today is by capture.
 - The mark's 0.6vh fade now runs against `#proposition`'s top, in the open,
   with no slab over it — worth a look on the still before it is called done.
-- Phones show the static composition (the inline mark, products at the
-  corners); it has not been looked at.
+- ~~Phones show the static composition; it has not been looked at.~~ **Looked
+  at in U3 (2026-09-10): there was no composition there at all** — the stage
+  measured zero wide. Fixed, and the products re-placed into the bands the
+  split copy leaves.
 
 ## Verification
 

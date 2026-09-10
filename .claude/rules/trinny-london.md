@@ -318,6 +318,43 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   reversible for free (the Voidwalker hologram's idiom). ⚠ **`advanceScrambles`
   may not be used here**: it drops finished jobs, and a dropped job is a latch
   scrolling back up would find nothing to unwind.
+- ⚠ **THE COPY SITS AROUND THE MARK, NOT ON IT (U3, owner 2026-09-10).** Two
+  blocks — eyebrow + title above, paragraph + button below — seated off ONE
+  pair of tokens, and the pair is the MARK's geometry: `--tl-mark-cy` is the
+  weld point `turnClock.ts` also swings the product arcs about, `--tl-mark-r`
+  is the ring's on-screen radius. ⚠ **The radius is the fallback mark's own
+  expression (`min(25svh, 24vw)`), never a flat percentage** — the WebGL mark
+  is a BILLBOARD, so its screen size follows the viewport's HEIGHT on a
+  landscape window and its WIDTH on a phone (25 % of the height at 1920×1247
+  and 1280×720, 11 % at 390×844). ⚠ The product rests moved OUTBOARD with it:
+  they were placed against a centred block that left both top corners free,
+  and with the title in that band `London.` ran under a tube at 1280×720. ⚠
+  And **the title takes two lines between 961 and 1500px** — the lane cannot
+  hold a thirty-character display line beside a product column, and it is the
+  BLOCK that narrows; the type ladder does not shrink to fit.
+- ⚠ **THE BUTTON IS THE CLIENT'S** — `--tl-yellow-rgb` / `--tl-yellow-ink`, read
+  off trinnylondon.com's own `--yellow` and `--brand-grey-1`, which is how
+  their hero CTAs are painted (flat fill, square, uppercase). A second
+  route-local brand literal beside the coral, for the same reason: it is the
+  client's value, so deriving it from this site's ramp would be inventing a
+  colour they did not choose. The outline went with the fill — a filled plate
+  does not need a rim, and the border made it read as chrome.
+- ⚠ **`#turn`'s GRID COLUMN MUST BE `1fr`, AND WITHOUT IT THE WHOLE BEAT IS
+  INVISIBLE BELOW THE CAPABLE RUNG.** Every child of the stage is absolutely
+  positioned, so an auto track sizes to zero: the stage measured 0 × 844 on a
+  phone, the copy's `min(860px, 84%)` resolved to zero and its text overflowed
+  into the stage's own `overflow: hidden`. Only the mark survived, being the
+  one child with an absolute width. The capable rung escapes it by switching to
+  `display: block`, which is why every desktop looked correct. ⚠ **Third time in
+  two passes** (ADR-094 U1's wireframe bay and its phone rung were the others):
+  **a box whose only children are out of flow has no content width, so any
+  content-sized track collapses and every percentage inside it resolves to
+  zero.**
+- ⚠ **THE PROPOSAL'S HEAD IS A HEADING AND A PARAGRAPH (U3).** The eyebrow read
+  `The proposal` over a heading that names the thing, on a page whose journey
+  rail already says Proposal — three times in one band. The paragraph lost its
+  middle sentence too: the adoption-and-automation loop is what the drawing
+  under it draws. The parse guard pins the absence of both.
 - ⚠ **EVERY DECODED LINE IS A GHOST PLUS A LIVE LAYER, AND BOTH HALVES ARE
   LOAD-BEARING.** The kernel keeps the string's LENGTH, but its glyphs are mono
   caps against a proportional sans, so a decoding line is wider than its resting
