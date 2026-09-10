@@ -36,6 +36,7 @@ import {
   productPose,
   turnProgress,
   veilOf,
+  TURN_PROP_FADE,
   washOf,
   type ProductRest,
 } from "./turnClock";
@@ -78,6 +79,11 @@ export function useTurnScroll(): void {
     // never move the block (the house decode's own markup contract).
     const lines = Array.from(turn.querySelectorAll<HTMLElement>("[data-tl-decode]"));
     const canvas = turn.querySelector<HTMLCanvasElement>("[data-tl-turn-wash]");
+    // The proposal carries the SAME ground (ADR-095 U4) — same shader, same
+    // token, one viewport-locked field — so the coral does not resolve out
+    // from under the reader at the seam.
+    const prop = document.querySelector<HTMLElement>(".tl-root #proposition");
+    const propCanvas = prop?.querySelector<HTMLCanvasElement>("[data-tl-prop-wash]") ?? null;
     const mq = window.matchMedia(TURN_CAPABLE_QUERY);
 
     // The true strings, read from the server-rendered text once. They are
@@ -91,6 +97,12 @@ export function useTurnScroll(): void {
       // gradient instead. A ground with banding beats no ground at all.
       if (!wash) stage.dataset.tlWash = "css";
     }
+    let propWash: TurnWash | null = null;
+    if (propCanvas && prop) {
+      propWash = createTurnWash(propCanvas, root);
+      if (propWash) propWash.setFade(TURN_PROP_FADE);
+      else prop.dataset.tlWash = "css";
+    }
 
     let raf = 0;
     let live = false;
@@ -98,6 +110,7 @@ export function useTurnScroll(): void {
     let stageH = 0;
     let rests: ProductRest[] = [];
     let lastP = -1;
+    let lastPropA = -1;
 
     const park = () => {
       brandmarkMorphRef.current.progress = 0;
@@ -111,7 +124,10 @@ export function useTurnScroll(): void {
         el.textContent = truth[i];
       });
       wash?.draw(0);
+      propWash?.draw(0);
+      prop?.style.removeProperty("--tl-wash");
       lastP = -1;
+      lastPropA = -1;
     };
 
     const measure = () => {
@@ -125,6 +141,7 @@ export function useTurnScroll(): void {
         cy: el.offsetTop + el.offsetHeight / 2,
       }));
       wash?.resize();
+      propWash?.resize();
     };
 
     const frame = () => {
@@ -135,6 +152,40 @@ export function useTurnScroll(): void {
       }
       const rect = turn.getBoundingClientRect();
       const p = turnProgress(rect.top, rect.height, window.innerHeight);
+
+      /* ⚠ BOTH GROUNDS ARE PAINTED BEFORE THE PROGRESS GATE BELOW, and each
+         off its OWN canvas's rect.
+
+         The field is viewport-locked, so a canvas that MOVES has to be
+         repainted even when its amount has not changed — and `p` saturates at
+         1 the moment `#turn` leaves, which is exactly when its stage releases
+         and its canvas starts travelling. Gated with everything else, the
+         turn's ground froze at the origin it held when `p` reached 1 and then
+         scrolled away carrying that stale image, out of register with the
+         proposal's by the height of the travel: a hard line across the seam,
+         measured. The proposal's has the same problem from the other side —
+         it has a viewport and a half to cross after `p` is spent.
+
+         ⚠ And it is the CANVAS's rect, never its station's: the grounds are
+         absolutely positioned and their stations carry padding of their own,
+         so the two boxes differ. Each wash keeps its own delta gate, so this
+         costs a rect read and nothing else. */
+      if (canvas) {
+        const cr = canvas.getBoundingClientRect();
+        wash?.draw(washOf(p), cr.top, cr.left);
+      }
+      if (propWash && prop) {
+        // Constant: the ground does not resolve, it FEATHERS (see
+        // `TURN_PROP_FADE`). Only its origin moves, which is what keeps its
+        // field continuous with the turn's across the seam.
+        const pr = propCanvas!.getBoundingClientRect();
+        propWash.draw(1, pr.top, pr.left);
+        if (lastPropA !== 1) {
+          lastPropA = 1;
+          prop.style.setProperty("--tl-wash", "1");
+        }
+      }
+
       if (lastP >= 0 && Math.abs(p - lastP) < 0.0005) return;
       lastP = p;
 
@@ -143,9 +194,9 @@ export function useTurnScroll(): void {
       turn.style.setProperty("--tl-turn", p.toFixed(3));
       turn.setAttribute("data-tl-turn", p.toFixed(2));
 
-      const w = washOf(p);
-      stage.style.setProperty("--tl-wash", w.toFixed(3));
-      wash?.draw(w);
+      // The channel the CSS fallback and the smoke read; the canvas itself
+      // is painted above, outside this gate.
+      stage.style.setProperty("--tl-wash", washOf(p).toFixed(3));
 
       for (let i = 0; i < products.length; i++) {
         const el = products[i];
@@ -190,6 +241,7 @@ export function useTurnScroll(): void {
       mq.removeEventListener("change", relayout);
       park();
       wash?.dispose();
+      propWash?.dispose();
     };
   }, []);
 }

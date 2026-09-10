@@ -5526,6 +5526,16 @@ html { scroll-behavior: smooth; }
        the exit band is live. It reaches this on the house parchment, since
        the turn's wash resolves before the seam. ===== -->
   <section class="station tl-prop" id="proposition" data-station="proposition" data-corridor-kill data-screen-label="10 Proposition">
+    <!-- The turn's ground, continued (ADR-095 U4). The client's colour does
+         not resolve at the end of the turn any more — it carries into the
+         proposal, so the reader crosses the seam without the page changing
+         under them. The SAME shader on a second canvas, and the field is
+         resolved in VIEWPORT space by both, so the two are one field rather
+         than two that match. Absolute and behind the record; the writer
+         drives it off this station's own rect. -->
+    <div class="tl-prop__ground" aria-hidden="true">
+      <canvas class="tl-prop__wash" data-tl-prop-wash></canvas>
+    </div>
     <div class="tl-prop__inner">
       <header class="tl-prop__head" data-m-group>
         <div class="tl-prop__lead">

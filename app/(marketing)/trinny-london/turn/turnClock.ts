@@ -43,8 +43,19 @@ export const TURN_DRIFT_PX = 6;
 
 export const TURN_WASH_IN = 0.36;
 export const TURN_WASH_PEAK = 0.68;
-export const TURN_WASH_OUT = 0.9;
-export const TURN_WASH_END = 1;
+/**
+ * How much of the proposal's own height the ground feathers away over, at its
+ * bottom edge.
+ *
+ * ⚠ THE END OF THE GROUND IS GEOMETRY, NOT A CLOCK. A scroll-driven resolve
+ * was built first and measured wrong both ways on a station only 1.29
+ * viewports tall: wide enough to keep the record on coral and it left a step
+ * against `#contact`; narrow enough to clear that seam and the colour went
+ * while the drawing was still on screen. Feathering the field's own bottom
+ * puts the end in one place however the reader arrives, and reverses for
+ * free. 0.42 begins it just under where the drawing ends.
+ */
+export const TURN_PROP_FADE = 0.42;
 
 export const TURN_VEIL_IN = 0.56;
 export const TURN_VEIL_FULL = 0.72;
@@ -89,9 +100,19 @@ export function morphOf(p: number): number {
   return ramp(p, TURN_MORPH_START, TURN_MORPH_END);
 }
 
-/** The ground's wash: swells to the copy's beat, resolves as it leaves. */
+/**
+ * The ground's wash: swells to the copy's beat and then STAYS.
+ *
+ * ⚠ IT NO LONGER RESOLVES (owner, 2026-09-10: "it's important that the
+ * gradient doesn't change colour — when you enter the Trinny section, that
+ * gradient can stay that shader"). U1 ran it back to parchment over
+ * 0.90–1.00 so the proposal met the page's own ground and no edge was drawn;
+ * the answer to that edge is now the proposal carrying the SAME field
+ * (`propWashOf`), not the field going away before it. The client's colour
+ * takes the page from the turn onward, which is the dial ADR-095 left open.
+ */
 export function washOf(p: number): number {
-  return ramp(p, TURN_WASH_IN, TURN_WASH_PEAK) * (1 - ramp(p, TURN_WASH_OUT, TURN_WASH_END));
+  return ramp(p, TURN_WASH_IN, TURN_WASH_PEAK);
 }
 
 /** How far the mark is put away, so the line can hold the centre. */

@@ -40,16 +40,28 @@ const VERT = `
 
 const FRAG = `
   precision mediump float;
-  uniform vec2 uRes;
+  uniform vec2 uRes;       // this canvas, in device px
+  uniform vec2 uView;      // the VIEWPORT, in device px
+  uniform vec2 uOrigin;    // this canvas's origin inside it (y-up)
   uniform vec3 uBrand;
   uniform float uAmount;   // 0 → 1, the wash's own clock
+  uniform float uFade;     // feather the canvas's own BOTTOM edge, 0 = none
 
   void main() {
-    vec2 uv = gl_FragCoord.xy / uRes;
+    // ⚠ THE FIELD IS VIEWPORT-LOCKED, NOT CANVAS-LOCKED (ADR-095 U4). Two
+    // canvases paint this ground now — the turn's, pinned to the viewport,
+    // and the proposal's, which spans a station taller than one — and a
+    // vignette computed against each canvas's own box would put two
+    // differently-placed fields either side of the seam. Resolving uv
+    // against the viewport instead makes them ONE field by construction, so
+    // the ground the reader carries into the proposal is the same ground,
+    // not a match. The turn's canvas passes an origin of (0, 0) and is
+    // byte-identical to the canvas-space version it replaces.
+    vec2 uv = (gl_FragCoord.xy + uOrigin) / uView;
     // Centre on the parked mark (54.5 % from the TOP; gl_FragCoord is
     // y-up), aspect-corrected so the field is round on any window.
     vec2 p = uv - vec2(0.5, 0.455);
-    p.x *= uRes.x / max(1.0, uRes.y);
+    p.x *= uView.x / max(1.0, uView.y);
     float r = length(p);
 
     // The field takes the colour and the centre is left almost clean: the
@@ -81,6 +93,19 @@ const FRAG = `
     // the 15-turn-mark / 16-turn-line stills at 1920×1247 before moving 0.66.
     float a = uAmount * (edge * bias + 0.10 * (1.0 - edge));
 
+    // ⚠ THE GROUND ENDS BY FEATHERING, NOT BY A CLOCK (ADR-095 U4). The
+    // proposal is barely a viewport and a quarter tall, so a scroll-driven
+    // resolve either takes the colour away while the record is still on
+    // screen or leaves a step where the station meets the parchment below
+    // it — both were measured. Fading along the canvas's OWN bottom edge
+    // makes the end a property of the field instead: it is in the same place
+    // however the reader arrives, and scrolling back up restores it exactly,
+    // with no channel to unwind. The turn's canvas passes 0 here, because
+    // the proposal continues its field rather than ending it.
+    if (uFade > 0.0) {
+      a *= smoothstep(0.0, uFade, gl_FragCoord.y / max(1.0, uRes.y));
+    }
+
     // Ordered dither — a wide, low-contrast ramp on parchment bands without
     // it, which is what made the flat version read as paint.
     float d = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
@@ -91,8 +116,13 @@ const FRAG = `
 `;
 
 export interface TurnWash {
-  /** Paint the wash at `amount` (0 → 1). Cheap and idempotent. */
-  draw(amount: number): void;
+  /**
+   * Paint the wash at `amount` (0 → 1), with this canvas's top edge `top`
+   * CSS px below the viewport's. Cheap and idempotent.
+   */
+  draw(amount: number, top?: number, left?: number): void;
+  /** Feather the bottom edge to nothing over `fraction` of the canvas. */
+  setFade(fraction: number): void;
   /** Re-read the canvas box (a resize, or the stage changing shape). */
   resize(): void;
   dispose(): void;
@@ -154,8 +184,12 @@ export function createTurnWash(canvas: HTMLCanvasElement, root: HTMLElement): Tu
   gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
   const uRes = gl.getUniformLocation(prog, "uRes");
+  const uView = gl.getUniformLocation(prog, "uView");
+  const uOrigin = gl.getUniformLocation(prog, "uOrigin");
   const uBrand = gl.getUniformLocation(prog, "uBrand");
   const uAmount = gl.getUniformLocation(prog, "uAmount");
+  const uFade = gl.getUniformLocation(prog, "uFade");
+  gl.uniform1f(uFade, 0);
   gl.uniform3fv(uBrand, brandColor(root));
 
   gl.disable(gl.DEPTH_TEST);
@@ -171,13 +205,19 @@ export function createTurnWash(canvas: HTMLCanvasElement, root: HTMLElement): Tu
 
   let w = 0;
   let h = 0;
+  let ratio = 1;
   const resize = () => {
     // The ground is a soft field with no fine detail, so it is drawn at a
     // capped ratio: full DPR on a large window buys nothing here and costs
     // fill rate on a page that is already running the corridor.
-    const dpr = Math.min(1.5, window.devicePixelRatio || 1);
-    const nw = Math.max(1, Math.round(canvas.clientWidth * dpr));
-    const nh = Math.max(1, Math.round(canvas.clientHeight * dpr));
+    ratio = Math.min(1.5, window.devicePixelRatio || 1);
+    const nw = Math.max(1, Math.round(canvas.clientWidth * ratio));
+    const nh = Math.max(1, Math.round(canvas.clientHeight * ratio));
+    gl.uniform2f(
+      uView,
+      Math.max(1, window.innerWidth * ratio),
+      Math.max(1, window.innerHeight * ratio)
+    );
     if (nw === w && nh === h) return;
     w = nw;
     h = nh;
@@ -189,22 +229,70 @@ export function createTurnWash(canvas: HTMLCanvasElement, root: HTMLElement): Tu
   resize();
 
   let last = -1;
+  let lastTop = Number.NaN;
+  /* ⚠ THE DRAWING BUFFER FOLLOWS THE ELEMENT, NOT THE WINDOW. `resize()` ran
+     on mount and on `resize` events only, so a canvas whose CSS box changes
+     with its own station's layout — the proposal's does, as its content
+     settles — kept a stale buffer: measured 2304x1607 behind an element
+     2304x1247, which both squashes the field and puts `uOrigin` out by the
+     difference. The turn's canvas is viewport-sized and never showed it. */
+  const ro =
+    typeof ResizeObserver === "function"
+      ? new ResizeObserver(() => {
+          resize();
+          last = -1;
+          lastTop = Number.NaN;
+          lastLeft = Number.NaN;
+        })
+      : null;
+  ro?.observe(canvas);
+  let lastLeft = Number.NaN;
   return {
-    draw(amount: number) {
+    /**
+     * `top` is this canvas's own top edge in CSS px from the viewport's, so
+     * the field can be placed in viewport space. The turn's canvas is pinned
+     * and passes ~0; the proposal's rides its station and passes its rect.
+     */
+    draw(amount: number, top = 0, left = 0) {
       if (lost) return;
       const a = amount < 0 ? 0 : amount > 1 ? 1 : amount;
-      if (Math.abs(a - last) < 0.002) return;
+      // ⚠ THE ORIGIN IS PART OF THE FRAME. Gating on the amount alone froze
+      // the proposal's field in place the moment its clock saturated, which
+      // is exactly when it is still travelling up the viewport.
+      if (Math.abs(a - last) < 0.002 && Math.abs(top - lastTop) < 0.5 && left === lastLeft) return;
       last = a;
+      lastTop = top;
+      lastLeft = left;
+      // gl_FragCoord is y-up from the canvas's BOTTOM; the viewport's y runs
+      // down from its top. `uView.y − top·dpr − h` is where this canvas's
+      // bottom edge sits in that y-up space.
+      gl.uniform2f(
+        uOrigin,
+        -left * ratio,
+        Math.max(1, window.innerHeight * ratio) - top * ratio - h
+      );
       gl.uniform1f(uAmount, a);
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     },
+    /**
+     * Feather this canvas's bottom edge to nothing over `fraction` of its own
+     * height — how the ground ENDS, as geometry rather than as a clock.
+     */
+    setFade(fraction: number) {
+      if (lost) return;
+      gl.uniform1f(uFade, fraction < 0 ? 0 : fraction > 1 ? 1 : fraction);
+      last = -1;
+    },
     resize() {
       resize();
       last = -1;
+      lastTop = Number.NaN;
+      lastLeft = Number.NaN;
     },
     dispose() {
+      ro?.disconnect();
       canvas.removeEventListener("webglcontextlost", onLost);
       gl.deleteBuffer(buf);
       gl.deleteProgram(prog);

@@ -840,6 +840,13 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
     rgba(var(--tl-brand-rgb), 0.34) 62%,
     rgba(var(--tl-brand-rgb), 0.72) 100%
   );
+  /* ⚠ VIEWPORT-LOCKED, exactly as the shader's field is. Two gradients each
+     sized to their own element put a step at the seam between the turn and
+     the proposal — the same defect the `uOrigin` uniform removes on the WebGL
+     path, and the same fix: paint one field, not two that match. */
+  background-attachment: fixed;
+  background-size: 100vw 100svh;
+  background-position: center;
 }
 
 /* The line the turn is for, seated AROUND the mark (owner, 2026-09-10: the
@@ -1106,7 +1113,75 @@ html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
    plates (the people · the layer · the surfaces they already run) with
    1px connectors as DIVS between them — a record of THEIR stack, not a
    metaphor. Gold marks the layer, the one thing that gets built. */
+/* ⚠ THE TURN'S GROUND, CONTINUED (U4, owner 2026-09-10: "it's important
+   that the gradient doesn't change colour — when you enter the Trinny
+   section, that gradient can stay that shader"). U1 resolved the wash back
+   to parchment so the proposal met the page's own ground with no edge drawn;
+   the answer to that edge is now the proposal carrying the SAME field
+   instead of the field leaving before it.
+
+   ⚠ ONE FIELD, TWO CANVASES. The shader resolves its vignette in VIEWPORT
+   space (`uOrigin` / `uView`), so the turn's pinned canvas and this one paint
+   a single continuous ground rather than two that happen to match — a field
+   computed against each canvas's own box would put two differently-placed
+   vignettes either side of the seam.
+
+   Absolute and behind the record; the station's own parchment is underneath,
+   so the coral is a wash over it exactly as it is in the turn. */
+/* ⚠ THE SECTION HAS TO BE POSITIONED IN ITS OWN RIGHT. The kill-edge rule
+   gives it `position: relative` only while `data-corridor-exit` is live — a
+   TRANSIENT attribute — and the moment it clears, an absolutely positioned
+   ground resolves against some ancestor instead and the field lands somewhere
+   else entirely. Measured as a hard horizontal seam across the whole width at
+   the station's top edge. */
+.tl-root .tl-prop {
+  position: relative;
+}
+
+/* ⚠ `inset: 0`, AND THAT WAS WORTH MEASURING. The instinct is to break the
+   station's `--hud-content-inset` with a negative inset, on the rule that an
+   absolutely positioned child resolves against its containing block's PADDING
+   box — true, but this station's padding box is already the full 100vw the
+   `.station` breakout gives it, so the correction over-extended the ground by
+   192px a side and put the field out of register. The canvas is handed its
+   OWN rect either way; the mistake here was the box, not the maths. */
+.tl-root .tl-prop__ground {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.tl-root .tl-prop__wash {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The no-WebGL path, and the inert rung: the same gradient the turn falls
+   back to, at the amount the writer would be holding. Banding and all — a
+   ground with a step in it beats the colour vanishing at the seam. */
+.tl-root .tl-prop[data-tl-wash="css"] .tl-prop__wash {
+  opacity: var(--tl-wash, 0);
+  background-image: radial-gradient(
+    120% 96% at 50% 46%,
+    rgba(var(--tl-brand-rgb), 0) 26%,
+    rgba(var(--tl-brand-rgb), 0.34) 62%,
+    rgba(var(--tl-brand-rgb), 0.72) 100%
+  );
+  /* ⚠ VIEWPORT-LOCKED, exactly as the shader's field is. Two gradients each
+     sized to their own element put a step at the seam between the turn and
+     the proposal — the same defect the `uOrigin` uniform removes on the WebGL
+     path, and the same fix: paint one field, not two that match. */
+  background-attachment: fixed;
+  background-size: 100vw 100svh;
+  background-position: center;
+}
+
 .tl-root .tl-prop__inner {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: var(--band-max, 1200px);
   margin-inline: var(--rail-inset, 0px);
@@ -1348,8 +1423,21 @@ html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
   .tl-root .tl-turn__copy {
     opacity: 1;
   }
-  .tl-root .tl-turn__stage {
+  .tl-root .tl-turn__stage,
+  .tl-root #proposition {
     --tl-wash: 0.8;
+  }
+  .tl-root .tl-prop__wash {
+    opacity: var(--tl-wash);
+    background-image: radial-gradient(
+      120% 96% at 50% 46%,
+      rgba(var(--tl-brand-rgb), 0) 26%,
+      rgba(var(--tl-brand-rgb), 0.34) 62%,
+      rgba(var(--tl-brand-rgb), 0.72) 100%
+    );
+    background-attachment: fixed;
+    background-size: 100vw 100svh;
+    background-position: center;
   }
   .tl-root .tl-turn__wash {
     opacity: var(--tl-wash);
@@ -1359,6 +1447,9 @@ html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
       rgba(var(--tl-brand-rgb), 0.34) 62%,
       rgba(var(--tl-brand-rgb), 0.72) 100%
     );
+    background-attachment: fixed;
+    background-size: 100vw 100svh;
+    background-position: center;
   }
   .tl-root .tl-turn__product {
     translate: none;
