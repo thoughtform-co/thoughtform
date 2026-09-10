@@ -28,7 +28,7 @@ place) → the proposal** → contact.
 **Read first**
 
 - [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock. ⚠ **U1 deleted the interstitial slab**: the ground changes under a shader instead and the line decodes in place over it. ⚠ **U5 (2026-09-10) DELETED THE SECOND SLAB** — the products LEAVE on the turn's own clock, `#proposition` is transparent and PINNED with its record powering on in place, the mark fades behind it, and the kill edge is **`#contact`**
-- [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome with the project's name down in the record, the fields show ONE thing on the house rail, and the arrival is delayed and settled. ⚠ **U2 (same day) PUT THE ARC IN THE RECORD AND THE TABS IN THE FIELD** — `CaseTrack.arc`, the order reversed to lead on the frontier work, the claim sentences read, and the ATL films in their 4:5 cut
+- [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome with the project's name down in the record, the fields show ONE thing on the house rail, and the arrival is delayed and settled. ⚠ **U2 (same day) PUT THE ARC IN THE RECORD AND THE TABS IN THE FIELD** — `CaseTrack.arc`, the order reversed to lead on the frontier work, the claim sentences read, and the ATL films in their 4:5 cut. ⚠ **U3 (same day) MADE THE ARC THE TITLE** (the project's name is head chrome), gave the studio card its THREE SHEETS via a portalled `SheetsPlate`, and made both the films and the tools PLAY
 - [ADR-093](../../sentinel/decisions/093-trinny-london-light-locked-variant.md) — this route's lock and its journey clock
 - [ADR-053](../../sentinel/decisions/053-workshop-corridor-variant.md) — the recipe it repeats, and its two invariants
 - [ADR-058](../../sentinel/decisions/058-light-mode-theme.md) — the theme channel the lock overrides
@@ -152,24 +152,68 @@ place) → the proposal** → contact.
 
 ## The card, recomposed (ADR-094 U1)
 
-- ⚠ **THE HEAD IS CHROME AND THE NAME IS IN THE RECORD** (owner, 2026-09-10).
-  `LOOP EARPLUGS · {phase}` leads the strip and `.tl-card__title` sits in
-  `.tl-card__record` above the lede. **The cost U1 named is PAID BY U2's ARC**:
-  the head is the PEEK BAND, and with the tabs gone from it too all four would
-  read `LOOP EARPLUGS · BUILD`. `.tl-card__arc` (step + claim, mono, `nowrap` +
-  ellipsis) closes the strip instead, so scrolled the four slivers read the
-  whole argument. That is better than U1's own fallback (the quiet project
-  name) because the record column already carries the name one line down.
+- ⚠ **CHROME NAMES THE FILE, THE DISPLAY MAKES THE CLAIM** (U3, owner
+  2026-09-10: _"the lines that I said, 'We push the frontiers of AI creative,'
+  should replace the title 'AI Above-the-Line'"_). `.tl-card__title` letters
+  `arc.title`; `.tl-card__arc` closes the head with `{step} · {project}`,
+  mono, `nowrap` + ellipsis. ⚠ **THE NAME GOES TO THE HEAD RATHER THAN AWAY,
+  and that is the PEEK BAND** — U1 named the cost, U2 answered it with the
+  arc, and moving the claim down would have re-opened it: a head carrying
+  only `LOOP EARPLUGS · BUILD` reads the same on all four. The ≤20-char rule
+  on `project` is what makes it fit a 52px strip where the 44-char claim
+  sometimes did not. Pinned from BOTH ends in the smoke, or a swap back
+  satisfies either half alone.
 - ⚠ **THE TAB ROW LIVES IN THE FIELD SINCE U2**, seated on the right panel's
   own top edge at FULL WIDTH — `ConsoleRail`'s native `flex: 1 1 0`, which U1
   had to override for a reason that no longer holds (four stations at 295px
   each across a ~1180px header bar is a divided bar; across a ~700px panel they
   are its frame). Stations are DERIVED (`proof/proofTabs.ts`, pure,
   unit-pinned): a film's handle is its `label` before the middle dot, a tool's
-  is `ProjectCase.tab`. ⚠ The MAP is absent from that table on purpose —
-  `PdaConsole` owns its three readings and a copy here would be a second switch
-  for one piece of state. The ADS card gets no rail: a contact sheet is one
-  object however many pictures are in it.
+  is `ProjectCase.tab`. ⚠ The MAP and the SHEETS are absent from that table on
+  purpose — `PdaConsole` and `SheetsPlate` each own which of their own things
+  is open, and a copy here would be a second switch for one piece of state.
+- ⚠ **THE STUDIO CARD MOUNTS `SheetsPlate` WHOLE, NOT ITS BODIES** (U3, owner:
+  the studio card should have _"tabs, just like on the homepage, where we have
+  our guidelines on where not to use AI, governance and the red line"_). THE
+  ADS · THE LINE · THE RED LINE were all in the record and this card rendered
+  the ad wall alone. ⚠ **THE PLATE COMES WHOLE BECAUSE OF TOKENS** — `.fl-cmp`
+  and `.fl-caps--sheet` read `--con-hair`, `--con-hair2`, `--fl-chrome-*`,
+  `--fl-display`, `--fl-ink-dim` and `--fl-plate-px`, declared on `.fl-case`
+  and `.fl-con` **and re-derived for light on those same selectors**; this
+  route has neither class and is light-locked, so a route-local copy of the
+  dark values renders dark line work on parchment (ADR-058's trap). The
+  console brings both themes. Its rail portals through `railHost`, the seam
+  U1 built for the map. ⚠ **THE SIX ADS NEED A RESTORE** — `casefile.css`
+  hides 4–6 by default and puts them back under `.fl-case` at a viewport rung;
+  with no `.fl-case` this route showed three. The bay IS a size container
+  here, so the rung is `@container (max-aspect-ratio: 1.15)` — the honest
+  test, where the casefile could only use a class as a proxy.
+- ⚠ **BOTH THE FILMS AND THE TOOLS PLAY, AND NONE OF THE VIDEO IS NEW** (U3,
+  owner: _"we should have a video walkthrough of all these software"_).
+  `ProjectCase.walkthrough` and `CaseFilm.src` are the same files the homepage
+  plays. ⚠ **TWO OBJECTS, TWO AFFORDANCES**, the homepage's own split: a
+  film's control is its own FRAME (a `<button>` with a cue — `.fl-film`'s
+  grammar), a drawing gets a LABELLED bar, because a control over a wireframe
+  has to say what it opens. One affordance per object; the drawing is not
+  clickable. ⚠ `MediaLightbox` portalling to `document.body` is MANDATORY
+  here, not tidy: the card is in a `position: sticky` slot inside a clipped
+  stack, and a clipped ancestor becomes the containing block even for `fixed`.
+  The scroll lock comes with it, which is why nothing has to close the player
+  on scroll. ⚠ The still is the 4:5 cut and the player is the MASTER.
+- ⚠ **THE WATCH BAR COMES OUT OF THE HEIGHT THE DRAWING SOLVES AGAINST.** The
+  bay is the size container, so `100cqh` is the whole bay — bar included — and
+  `--tl-watch-h` is subtracted once, in `--tl-wire-h`, used by both the cap and
+  the width it derives. ⚠ And the tools field's rows are `auto auto`, never
+  `1fr auto`: a `1fr` row absorbs the slack, so `align-content` has nothing to
+  distribute and the bar lands on the bay's floor ~300px from its drawing.
+- ⚠ **A COVERED CARD'S CONTROLS ARE UNREACHABLE NOW.** The rail and the watch
+  bar are in the FIELD, under the card above, where the head's tabs used to be
+  in the visible peek band. A harness driving card 3 must RE-SEAT it — and
+  `seatSlot` cannot, twice over: it returns early on `covered`, and
+  `rect.top + scrollY` on an already-pinned `sticky` slot gives the PINNED
+  position, so `doc − pin` converges on wherever it already is (measured
+  12532 → 12765, `covered` eight passes running). It is sound walking DOWN the
+  pile only; rewind to the stack's top first.
 - ⚠ **THE SIZE CONTAINER IS `.tl-card__bay`, ONE LEVEL UNDER THE FIELD** (U2).
   The ads count their rows off `100cqh`, the film derives its width from it and
   the wireframe's bay is `(100cqh − 4px) × 1.62`; left on the field it would

@@ -241,6 +241,19 @@ breather).
   Do not hand-write a second — its portal, scroll lock and focus restore each
   cost a measurement to get right (Update 8). Its open/close + focus-return
   state is `useWalkthrough` (ADR-072), beside it.
+- ⚠ **`SheetsPlate` TAKES A `railHost`, AND IT HAS A THIRD HOME (ADR-094 U3).**
+  Given an element the rail is portalled there and the frame's own slot goes
+  empty; omitted, the render is byte-identical — the same additive seam
+  `PdaConsole` carries, and the casefile and the portfolio arc are its
+  byte-identity proof (both smokes must pass UNTOUCHED). The Trinny London
+  proof card mounts the plate WHOLE rather than its bodies, and the reason is
+  TOKENS: `.fl-cmp` and `.fl-caps--sheet` read `--con-hair`, `--con-hair2`,
+  `--fl-chrome-*`, `--fl-display`, `--fl-ink-dim` and `--fl-plate-px`, which
+  are declared on `.fl-case` / `.fl-con` **and re-derived for light on those
+  same selectors** — so a surface with neither class cannot take the bodies
+  alone without hand-copying both themes. ⚠ `activeIdx` stays the PLATE's: it
+  is what knows which sheet is open, and a controlled index would be a second
+  source for one piece of state.
 - **THE TOOLS PLATE'S BODY IS `ToolField`, AND IT HAS A SECOND HOME
   (ADR-072).** `ToolGallery` is the casefile's COMPOSITION — console, rail,
   fold-close, lightbox — and `ToolField` (`ToolBay` + `CapabilityBlocks`,

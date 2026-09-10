@@ -474,6 +474,133 @@ reader now looks for the rail in the FIELD: reading it from the head is how it
 would report four railless cards and stay green on a rail that had silently
 stopped rendering.
 
+## Update 3 — the arc IS the title, the studio switches, and the video plays (2026-09-10)
+
+Three corrections and additions from the owner, same day, on top of U2.
+
+### The arc replaces the name, it does not sit beside it
+
+_"Maybe I misspoke or you misunderstood, but the lines that I said, 'We push
+the frontiers of AI creative,' should replace the title 'AI Above-the-Line'."_
+
+U2 put the beat in the head and kept the project as the display heading. The
+claim is what the card is called. So `.tl-card__title` letters `arc.title`,
+and the project's own name goes UP into the head as chrome — `01 · AI
+ABOVE-THE-LINE` beside the client.
+
+⚠ **THE NAME GOES TO THE HEAD RATHER THAN AWAY, and that is the peek band
+again.** U1 recorded it, U2 answered it with the arc, and this move would
+have re-opened it: a head carrying only `LOOP EARPLUGS · BUILD` reads the
+same on all four. Chrome names the FILE, the display makes the CLAIM. Nothing
+is said twice and the pile still indexes itself — and the ≤20-character rule
+on `project` is what makes it fit a 52px `nowrap` strip where the 44-character
+claim sometimes did not.
+
+### The studio gets the sheets it always had
+
+_"For the Creative Team Self-Sufficient AI Fluency Studio, we also should
+have tabs, just like on the homepage, where we have our guidelines on where
+not to use AI, governance and the red line. You can repurpose the elements
+from there."_
+
+The record already held all three — THE ADS, THE LINE (the imagery policy,
+two columns and a PRINCIPLE) and THE RED LINE (four ranked risk bands and the
+POSITION that says UGC is off the table) — and this card was reaching past two
+of them to render the ad wall alone. That is the "it's not just the ads" the
+casefile itself was told on 2026-08-06, on this same row.
+
+⚠ **THE FIELD MOUNTS `SheetsPlate` WHOLE, NOT ITS BODIES, AND THE REASON IS
+TOKENS.** The first cut extracted a `SheetContent` (body + verdict) on the
+`ToolField`-out-of-`ToolGallery` precedent — and it was wrong here.
+`.fl-cmp` and `.fl-caps--sheet` read `--con-hair`, `--con-hair2`,
+`--fl-chrome-sm/md/lg`, `--fl-display`, `--fl-ink-dim` and `--fl-plate-px`,
+which are declared on `.fl-case` and `.fl-con` — **and RE-DERIVED for light
+on those same selectors** (`theme.css`: `--fl-ink-dim` .4 → .62,
+`--con-hair` gold → `rgba(138,107,32,.5)`). This route has neither class, and
+it is LIGHT-LOCKED, so a route-local copy of the dark values would have
+rendered dark-tuned line work on parchment — ADR-058's own trap, in a new
+place. The plate brings its console, and the console brings both themes.
+
+⚠ **ITS RAIL PORTALS INSTEAD (`railHost`), the seam U1 built for the map and
+this is its second consumer.** One additive prop; omitted, the render is
+byte-identical, which the casefile and the portfolio arc rely on and their
+smokes assert. And the state stays with the plate for `PdaConsole`'s reason:
+the plate is what knows which sheet is open, so `proofTabs` returns `null` for
+this kind rather than publishing a second switch for one piece of state.
+
+⚠ **THE SIX ADS HAD TO BE RESTORED, and the condition is the BAY's shape.**
+`casefile.css` hides shots 4–6 by default and puts them back under `.fl-case`
+at a viewport rung — a class scope, chosen there because `.fl-con` is
+`container-type: inline-size` and `@container` cannot ask about height. With
+no `.fl-case` this route fell through to the default and showed three of six.
+Here the bay IS a size container, so the honest test is available: two rows
+fit when the bay is portrait-ish, which is the owner's 1920×1247 and not
+1280×720. Same ruling, measured directly instead of by proxy.
+
+### The video plays, and none of it is new
+
+_"We should have a video walkthrough of all these software … I also shared
+that Google Drive link with the actual videos. That's what I want you to add
+to the Software for Few and then above the line."_
+
+Both already exist in the repo: `ProjectCase.walkthrough` is the four
+screen-recorded tool walkthroughs the homepage plays, and `CaseFilm.src` the
+two 16:9 ATL masters. The Drive folder holds the films' resizes, which U2
+already used for the 4:5 stills.
+
+⚠ **TWO OBJECTS, TWO AFFORDANCES, and that is the homepage's own split.** A
+film's control is its own FRAME — a `<button>` with a play cue over the still,
+which is exactly what `.fl-film` is on the films plate. A drawing gets a
+LABELLED bar, because a control over a wireframe has to say what it opens;
+the tools plate fuses one to its bay for the same reason. One affordance per
+object either way: the drawing itself is not clickable.
+
+⚠ **`MediaLightbox` PORTALS TO `document.body`, AND HERE THAT IS MANDATORY
+RATHER THAN TIDY.** This card lives in a `position: sticky` slot inside a
+clipped stack, and a clipped or transformed ancestor becomes the containing
+block even for `fixed` (ADR-056 U8). The scroll lock comes with it, which is
+also why nothing needs to close the player on scroll: the page cannot move
+while it is open.
+
+⚠ **THE STILL IS THE 4:5 SOCIAL CUT AND THE PLAYER IS THE MASTER.** The box is
+tall, the lightbox is not.
+
+### Two things the layout got wrong first, both found by looking
+
+- **`justify-items: center` on the tools field** would have collapsed the
+  drawing to zero — `.fl-wire`'s only child is absolutely inset, so it
+  contributes no content size and its `min(100%, …)` resolves against
+  nothing. Fifth occurrence of that trap on this route; the column stays
+  `1fr` and the BAR centres itself.
+- **`grid-template-rows: 1fr auto`** put the watch bar on the bay's floor,
+  ~300px adrift from its drawing: a `1fr` row absorbs every spare pixel, so
+  `align-content` has nothing left to distribute. Both rows are `auto` and
+  the pair centres as one group.
+- ⚠ And **the watch bar comes out of the height the drawing solves against**.
+  The bay is the size container, so `100cqh` is the whole bay — bar included
+  — and left uncorrected a landscape drawing overflows by exactly the bar.
+
+### Guards
+
+The smoke pins the ruling from BOTH ends — the claim is the heading AND the
+name is in the head — because a regression that swapped them back satisfies
+either half alone. It reads the rail from the card's own SLOT rather than
+anywhere in the field, which is what proves the studio's portal landed rather
+than the plate quietly keeping its rail in its own console. And it opens the
+walkthrough, asserting the four properties that make it work: it portals to
+`body`, its src is the record's, the page cannot scroll under it, and Escape
+closes it — a control that renders and does nothing is the defect.
+
+⚠ **AND SEATING CARD 3 NEEDED A REWIND.** `seatSlot` returns early on
+`covered`, which was harmless while the tabs lived in the head — a covered
+card still shows its peek band, so its controls were reachable. With the rail
+and the bar in the FIELD they are under the card above. A converging re-seat
+did not work either: `rect.top + scrollY` on a `sticky` element that is
+already pinned gives the PINNED position, so `doc − pin` converges on wherever
+it already is (measured: 12532 → 12765, `covered` eight passes running).
+`seatSlot` is sound only walking DOWN the pile, so the test rewinds to the
+stack's top and walks.
+
 ## Verifying
 
 ```bash
