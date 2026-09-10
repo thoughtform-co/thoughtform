@@ -135,6 +135,53 @@ const slotStates = (page: Page) =>
   );
 
 /**
+ * Put one slot on its pin from ANYWHERE in the pile, including from below it.
+ *
+ * ⚠ `seatSlot` cannot do this, twice over. It returns early on `covered` —
+ * fine while the card's controls lived in the head's peek band, wrong since
+ * ADR-094 U2 put the rail and the players in the FIELD, which a later card
+ * covers. And a converging re-seat does not work either: `rect.top +
+ * scrollY` on an already-pinned `sticky` slot gives the PINNED position, so
+ * `doc − pin` converges on wherever it already is (measured 12532 → 12765,
+ * `covered` eight passes running). `seatSlot` is sound walking DOWN the pile
+ * only — so rewind to the stack's top and walk.
+ */
+async function seatPinnedFromTop(page: Page, idx: number): Promise<void> {
+  const toStackTop = async () =>
+    rollTo(
+      page,
+      await page.evaluate(
+        () =>
+          (document.getElementById("services")?.getBoundingClientRect().top ?? 0) + window.scrollY
+      )
+    );
+  await toStackTop();
+  const seen: string[] = [];
+  for (let pass = 0; pass < 8; pass++) {
+    const s = await page.evaluate((i) => {
+      const el = document.querySelectorAll<HTMLElement>("[data-pc-slot]")[i];
+      const r = el.getBoundingClientRect();
+      return {
+        doc: Math.round(r.top + window.scrollY),
+        pin: Number.parseFloat(getComputedStyle(el).top) || 0,
+        state: el.getAttribute("data-pc-state"),
+      };
+    }, idx);
+    if (s.state === "pinned") return;
+    seen.push(`${s.state}@${s.doc}`);
+    /* ⚠ ONLY AN `incoming` SLOT'S RECT IS TRUSTWORTHY. Once it sticks,
+       `rect.top + scrollY` reports the PINNED position, so the arithmetic
+       converges on wherever it already is. Overshooting is therefore not
+       recoverable in place — rewind and walk again. And the document GROWS
+       under the walk as the lazy chunks mount, which is why one pass is not
+       enough even from a known start. */
+    if (s.state === "covered") await toStackTop();
+    else await rollTo(page, s.doc - s.pin + 40);
+  }
+  throw new Error(`slot ${idx} never pinned (saw ${seen.join(" ")})`);
+}
+
+/**
  * One card's head strip and the field under it (ADR-094 U1).
  *
  * ⚠ THIS SURFACE HAD NO MARKUP GUARD AT ALL until this pass — `tl-card`
@@ -157,13 +204,21 @@ const cardShape = (page: Page, idx: number) =>
       /* The head's own children, in order — the kicker leads. */
       lead: head.firstElementChild?.className ?? "",
       kicker: head.querySelector(".tl-card__kicker")?.textContent?.trim() ?? "",
-      /* The head's right slot: the beat's ordinal and the FILE this card is
-         of. The CLAIM is the display title below (U3) — chrome names the
-         file, the display makes the claim. */
-      arcStep: head.querySelector(".tl-card__arc-step")?.textContent?.trim() ?? "",
-      arcName: head.querySelector(".tl-card__arc-name")?.textContent?.trim() ?? "",
+      /* The head's right slot: the beat's ORDINAL and nothing else (U4). The
+         CLAIM is the display title below; the project's name letters nowhere
+         on the card at all. */
+      arc: head.querySelector(".tl-card__arc")?.textContent?.trim() ?? "",
       /* The display heading — the arc's own line since U3. */
       title: slot.querySelector(".tl-card__title")?.textContent?.trim() ?? "",
+      /* ADR-065's canonical diagonal on the housing, and rule 4 under it:
+         the children of a chamfered box are SQUARE. */
+      cardClip: getComputedStyle(slot.querySelector<HTMLElement>(".tl-card")!).clipPath,
+      /* The stations have their own pin below (ADR-089 U3's no-notch
+         ruling); these are the two boxes rule 4 reaches that nothing else
+         looks at. */
+      childClips: [...slot.querySelectorAll<HTMLElement>(".fl-con__console, .tl-card__field")].map(
+        (el) => getComputedStyle(el).clipPath
+      ),
       titleInRecord: !!slot.querySelector(".tl-card__record > .tl-card__title"),
       titleInHead: !!head.querySelector(".tl-card__title"),
       stationsInHead: head.querySelectorAll(".fl-con__stn").length,
@@ -405,16 +460,24 @@ test.describe("Trinny London pitch variant", () => {
          the tabs gone it would otherwise read `LOOP EARPLUGS \u00b7 BUILD` on
          all four and the pile would stop indexing itself. Pinned from both
          ends: the beat is here, and the rail is NOT. */
-      /* ⚠ CHROME NAMES THE FILE, THE DISPLAY MAKES THE CLAIM (U3, owner:
-         "the lines that I said, 'We push the frontiers of AI creative,'
-         should replace the title 'AI Above-the-Line'"). Pinned from BOTH
-         ends — the claim is the heading and the name is in the head — or a
-         regression that swapped them back would satisfy either half alone. */
-      expect(c.arcStep, `card ${i + 1} arc step`).toBe(`0${i + 1}`);
+      /* ⚠ THE CLAIM IS THE HEADING AND THE HEAD IS AN ORDINAL (U3 + U4,
+         owner: "the lines that I said, 'We push the frontiers of AI
+         creative,' should replace the title 'AI Above-the-Line'" — then
+         "that subtitle … in the top-right corner, you can remove that").
+         Pinned from BOTH ends: the claim is up top, and the head is TWO
+         DIGITS, so the project name creeping back in beside it fails. */
       expect(c.title, `card ${i + 1} title is the arc's claim`).toMatch(/^We\s+\S/);
-      expect(c.arcName.length, `card ${i + 1} head names the project`).toBeGreaterThan(0);
-      expect(c.arcName, `card ${i + 1} head is not the claim again`).not.toMatch(/^We\s/);
-      expect(c.title, `card ${i + 1} title is not the project again`).not.toBe(c.arcName);
+      expect(c.arc, `card ${i + 1} head is the ordinal alone`).toBe(`0${i + 1}`);
+      /* ⚠ ADR-065's CANONICAL DIAGONAL ON THE HOUSING (U4, owner: "all the
+         cards in the proof section should have a notch … in the bottom-left
+         and top-right corners") — and RULE 4 with it, from both ends: the
+         card is cut, and the things seated inside it are not. A chamfer that
+         propagated into the rail or the console is what makes a surface read
+         as a pile of notched things rather than one housing with parts. */
+      expect(c.cardClip, `card ${i + 1} is chamfered`).toMatch(/^polygon\(/);
+      for (const cp of c.childClips) {
+        expect(cp, `card ${i + 1} child keeps square corners`).toBe("none");
+      }
       expect(c.stationsInHead, `card ${i + 1} rail left the head`).toBe(0);
       /* Four claims, each with its evidence sentence in the DOM. Whether it
          PAINTS is a height rung (940h) \u2014 the sentence is sr-only below it,
@@ -451,7 +514,7 @@ test.describe("Trinny London pitch variant", () => {
        ⚠ THE RAIL IS PORTALLED: `SheetsPlate` owns which sheet is open, so
        `proofTabs` returns null for this kind and the stations arrive in the
        card's slot from the plate — which is what `stationsInSlot` proves. */
-    expect(shapes[1].stations).toEqual(["THE ADS", "THE LINE", "THE RED LINE"]);
+    expect(shapes[1].stations).toEqual(["THE ADS", "GOVERNANCE", "THE RED LINE"]);
     expect(shapes[1].stationsInSlot).toBe(3);
     expect(shapes[1].stills).toBeGreaterThan(1);
     expect(shapes[1].verdicts, "each sheet ends on its verdict").toBe(1);
@@ -493,6 +556,39 @@ test.describe("Trinny London pitch variant", () => {
     expect(film.ratio).toBeCloseTo(0.8, 1);
     expect(film.caption[1]).not.toMatch(/16\s*:\s*9/i);
 
+    /* ⚠ AND IT PLAYS IN THE FRAME, NOT OVER THE PAGE (U4, owner: "when you
+       click on the video thumbnail, it shows the full-screen video. I don't
+       want that"). Three things, and the box is the one that matters most:
+       the `<video>` takes EXACTLY the still's rect, so the swap is
+       pixel-for-pixel and nothing reflows under the click. */
+    await seatPinnedFromTop(page, 0);
+    const filmBox = await page.evaluate(() => {
+      const r = document
+        .querySelector<HTMLElement>('[data-pc-index="0"] .tl-film__frame')!
+        .getBoundingClientRect();
+      return { w: Math.round(r.width), h: Math.round(r.height) };
+    });
+    await page.locator('[data-pc-index="0"] .tl-film__frame').click();
+    const inline = await page.evaluate(() => {
+      const v = document.querySelector<HTMLVideoElement>('[data-pc-index="0"] video');
+      const r = v?.getBoundingClientRect();
+      return {
+        mounted: !!v,
+        src: v?.getAttribute("src") ?? "",
+        box: r ? { w: Math.round(r.width), h: Math.round(r.height) } : null,
+        lightbox: document.querySelectorAll(".fl-lightbox").length,
+      };
+    });
+    expect(inline.mounted, "the cut mounts a player").toBe(true);
+    expect(inline.src, "and it is the 4:5 cut, self-hosted").toMatch(/^\/videos\/.*4x5\.mp4$/);
+    expect(inline.lightbox, "and NOT the full-screen takeover").toBe(0);
+    expect(inline.box, "the player takes the still's exact box").toEqual(filmBox);
+    /* ⚠ A STATION SWITCH GIVES THE NEXT FILM ITS STILL BACK. The play state
+       is keyed on the film's own src, not a boolean — a boolean would carry
+       across the swap and start the second film unasked. */
+    await page.locator('[data-pc-index="0"] .fl-con__stn').nth(1).click();
+    await expect(page.locator('[data-pc-index="0"] video')).toHaveCount(0);
+
     /* ⚠ THE WALKTHROUGH ACTUALLY OPENS AND ACTUALLY PLAYS (U3, owner: "we
        should have a video walkthrough of all these software"). A control
        that renders and does nothing is the defect this asserts against, and
@@ -503,32 +599,10 @@ test.describe("Trinny London pitch variant", () => {
        · the page cannot scroll under it (`overflow: hidden` on `<html>` is
          NOT a scroll lock — the non-passive handlers are, ADR-056 U8);
        · Escape closes it. */
-    /* ⚠ RE-SEAT CARD 3 FIRST, AND `seatSlot` CANNOT DO IT. Its contract is
-       "get this slot onto its pin", and it returns early on `covered` —
-       which card 3 IS while card 4 is pinned. That was harmless while the
-       tabs lived in the head (a covered card still shows its peek band, so
-       its controls were reachable); with the rail and the watch bar in the
-       FIELD they are under the card above, and Playwright reports the
-       interception rather than a stale click. Roll back to its own pin. */
-    /* ⚠ AND IT REWINDS TO THE STACK'S TOP FIRST, because a seated slot's
-       rect is SELF-REFERENTIAL. `doc = rect.top + scrollY` on a `sticky`
-       element that is already pinned gives the PINNED position, not the
-       natural one, so `doc − pin` converges on wherever it already is — the
-       first cut of this walked 12532 → 12765 and reported `covered` eight
-       times running. `seatSlot` is sound only walking DOWN the pile, which
-       is how the assertions above use it, and this is that same walk from a
-       known start. */
-    await rollTo(
-      page,
-      await page.evaluate(
-        () =>
-          (document.getElementById("services")?.getBoundingClientRect().top ?? 0) + window.scrollY
-      )
-    );
-    await seatSlot(page, 2);
-    await expect(page.locator('[data-pc-index="2"]')).toHaveAttribute("data-pc-state", "pinned");
+    /* ⚠ RE-SEAT CARD 3 FIRST — its controls are in the FIELD now, under the
+       card above. See `seatPinnedFromTop` for why `seatSlot` alone cannot. */
+    await seatPinnedFromTop(page, 2);
 
-    const beforeWatch = await page.evaluate(() => Math.round(window.scrollY));
     await page.locator('[data-pc-index="2"] .tl-watch').click();
     const player = await page.evaluate(() => {
       const lb = document.querySelector<HTMLElement>(".fl-lightbox");
@@ -544,8 +618,18 @@ test.describe("Trinny London pitch variant", () => {
     expect(player.onBody, "the lightbox portals out of the sticky slot").toBe(true);
     expect(player.src).toMatch(/^\/videos\/tools\//);
     expect(player.label).toMatch(/Walkthrough/);
+    /* ⚠ THE BASELINE IS TAKEN WITH THE PLAYER ALREADY OPEN, never before the
+       click: `locator.click()` scrolls its target into view first, so a
+       reading from before it is a reading from a different scroll position
+       and the lock gets blamed for Playwright's own nudge.
+       ⚠ And the wheel goes where the POINTER is — `page.mouse.wheel`
+       dispatches at the current position, wherever the last click left it,
+       and a wheel outside the dialog is not testing the dialog. */
+    await expect(page.locator(".fl-lightbox")).toHaveCount(1);
+    const beforeWatch = await page.evaluate(() => Math.round(window.scrollY));
+    await page.mouse.move(960, 620);
     await page.mouse.wheel(0, 600);
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(400);
     expect(
       await page.evaluate(() => Math.round(window.scrollY)),
       "the page is locked while the player is open"

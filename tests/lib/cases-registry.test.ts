@@ -127,32 +127,34 @@ describe("cases registry (ADR-054)", () => {
             // URL here is blocked the moment CSP leaves report-only.
             expect(ok(film.src), `${c.slug}/${t.id} film ${film.src}`).toBe(true);
             expect(ok(film.poster), `${c.slug}/${t.id} poster ${film.poster}`).toBe(true);
-            // The 4:5 social still, where a film carries one (ADR-094 U2).
+            /* The 4:5 social cut, where a film carries one (ADR-094 U2, and
+               a playable `src` of its own since U4). */
             if (film.portrait) {
-              expect(ok(film.portrait.src), `${c.slug}/${t.id} portrait ${film.portrait.src}`).toBe(
-                true
-              );
-              expect(film.portrait.alt.length, `${c.slug}/${t.id} portrait alt`).toBeGreaterThan(0);
+              const cut = film.portrait;
+              /* ⚠ BOTH HALVES SELF-HOSTED, and the video half is the one
+                 that cannot be otherwise: CSP is `media-src 'self' blob:
+                 data:`, so a bucket URL is blocked outright — which is the
+                 answer to "add them to Supabase, whatever". */
+              expect(ok(cut.src), `${c.slug}/${t.id} portrait video ${cut.src}`).toBe(true);
+              expect(cut.src, `${c.slug}/${t.id} portrait video`).toMatch(/\.mp4$/);
+              expect(ok(cut.poster.src), `${c.slug}/${t.id} portrait ${cut.poster.src}`).toBe(true);
+              expect(cut.poster.alt.length, `${c.slug}/${t.id} portrait alt`).toBeGreaterThan(0);
               /* ⚠ ITS OWN CAPTION, AND IT MAY NOT BE THE MASTER'S. `meta`
                  reads "16:9 master · …"; printed under a 4:5 still it
                  contradicts the picture directly above it. */
-              expect(film.portrait.meta.length, `${c.slug}/${t.id} portrait meta`).toBeGreaterThan(
-                0
-              );
-              expect(film.portrait.meta, `${c.slug}/${t.id} portrait meta`).not.toBe(film.meta);
-              expect(film.portrait.meta, `${c.slug}/${t.id} portrait meta`).not.toMatch(
-                /16\s*:\s*9/
-              );
+              expect(cut.meta.length, `${c.slug}/${t.id} portrait meta`).toBeGreaterThan(0);
+              expect(cut.meta, `${c.slug}/${t.id} portrait meta`).not.toBe(film.meta);
+              expect(cut.meta, `${c.slug}/${t.id} portrait meta`).not.toMatch(/16\s*:\s*9/);
               /* ⚠ THE DIMENSIONS ARE REQUIRED HERE where they are optional on
                  `CaseImage`. The renderer hands them straight to `next/image`
                  and derives the frame's aspect from the CLASS, so a still
                  whose real shape disagrees with 4:5 letterboxes inside a box
                  solved for 4:5 — visible, and invisible to every other
                  guard. */
-              expect(film.portrait.width, `${c.slug}/${t.id} portrait width`).toBeTruthy();
-              expect(film.portrait.height, `${c.slug}/${t.id} portrait height`).toBeTruthy();
+              expect(cut.poster.width, `${c.slug}/${t.id} portrait width`).toBeTruthy();
+              expect(cut.poster.height, `${c.slug}/${t.id} portrait height`).toBeTruthy();
               expect(
-                film.portrait.width! / film.portrait.height!,
+                cut.poster.width! / cut.poster.height!,
                 `${c.slug}/${t.id} portrait is 4:5`
               ).toBeCloseTo(0.8, 2);
             }
