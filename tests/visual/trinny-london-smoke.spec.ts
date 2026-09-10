@@ -502,6 +502,36 @@ test.describe("Trinny London pitch variant", () => {
       expect(pr.o).toBeGreaterThanOrEqual(0.95);
     }
 
+    /* ADR-095 U3 — THE COPY SITS AROUND THE MARK, NOT ON IT (owner,
+       2026-09-10: the title and the text "overlap with the logo"). The mark
+       is WebGL and has no box to measure, so this asserts the band it
+       occupies is clear: the title block ends above the ring's top and the
+       paragraph and button begin below its bottom, both derived from the
+       same weld point and radius the CSS seats them off.
+       ⚠ The two literals restate the design intent rather than reading the
+       tokens back — a guard that computed the band from `--tl-mark-cy` and
+       `--tl-mark-r` would agree with the CSS by construction and catch
+       nothing. */
+    const band = await page.evaluate(() => {
+      const stage = document
+        .querySelector<HTMLElement>("[data-tl-turn-stage]")!
+        .getBoundingClientRect();
+      const box = (sel: string) => {
+        const r = document.querySelector<HTMLElement>(sel)!.getBoundingClientRect();
+        return {
+          top: (r.top - stage.top) / stage.height,
+          bottom: (r.bottom - stage.top) / stage.height,
+        };
+      };
+      return { over: box(".tl-turn__copy--over"), under: box(".tl-turn__copy--under") };
+    });
+    // The ring reaches roughly 0.29 → 0.80 of the stage about its weld point.
+    expect(band.over.bottom, "the title clears the mark's top").toBeLessThanOrEqual(0.29);
+    expect(band.under.top, "the paragraph clears the mark's bottom").toBeGreaterThanOrEqual(0.8);
+    // …and neither runs off the stage, which is how a split fails quietly.
+    expect(band.over.top).toBeGreaterThan(0);
+    expect(band.under.bottom).toBeLessThan(1);
+
     /* The end of the runway: the line has un-typed back out and the ground
        has RESOLVED, so the proposal below meets the page's own parchment
        and no edge is ever drawn. ⚠ The ghost's box may not have moved a

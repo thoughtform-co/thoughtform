@@ -160,9 +160,21 @@ describe("trinny-london variant parse (ADR-093)", () => {
        show as the block resizing the moment the decode starts. And no
        `data-m` anywhere in the copy — that is the move-and-fade reveal this
        replaces, and it would be a second owner of the same opacity. */
-    const start = body.indexOf('class="tl-turn__copy"');
+    /* ⚠ SLICE THE STATION, NOT THE FIRST COPY BLOCK. There are TWO now
+       (ADR-095 U3): the title sits above the mark and the paragraph and the
+       call to action below it, so an `indexOf('class="tl-turn__copy"')`
+       matches neither — both carry a modifier — and would silently slice
+       from zero, landing on the hero. */
+    const start = body.indexOf('id="turn"');
     const copy = body.slice(start, body.indexOf("</section>", start));
     expect(copy).not.toContain("data-m");
+    /* The split itself, so the composition cannot quietly re-merge onto the
+       mark: two blocks, the title in the upper one and the call to action in
+       the lower. */
+    expect(copy).toContain('class="tl-turn__copy tl-turn__copy--over"');
+    expect(copy).toContain('class="tl-turn__copy tl-turn__copy--under"');
+    expect(copy.indexOf("tl-turn__title")).toBeLessThan(copy.indexOf("tl-turn__copy--under"));
+    expect(copy.indexOf("tl-turn__copy--under")).toBeLessThan(copy.indexOf("tl-turn__cta"));
     const ghosts = [...copy.matchAll(/<span class="tl-dc__ghost">([^<]*)<\/span>/g)].map(
       (m) => m[1]
     );
@@ -190,6 +202,12 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(prop).not.toMatch(/\b(navigate|encode|build)\b/i);
     expect(prop).not.toMatch(/\d/);
     expect(prop.toLowerCase()).not.toContain("self-sufficien");
+    /* ⚠ THE HEAD IS A HEADING AND A PARAGRAPH, AND NOTHING ELSE (owner,
+       2026-09-10). The eyebrow read "The proposal" directly over a heading
+       that names the thing, on a page whose journey rail already says
+       Proposal — the same word three times in one band. */
+    expect(prop).not.toContain("tl-prop__eyebrow");
+    expect(prop).not.toMatch(/\bThe proposal\b/);
   });
 
   it("ships the wordmark and drops the legacy HUD chrome", () => {
