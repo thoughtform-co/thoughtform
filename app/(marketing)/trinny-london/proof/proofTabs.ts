@@ -46,8 +46,7 @@ export function filmTab(label: string): string {
 
 /**
  * The stations a card's field switches on, or `null` where the field is one
- * object (`sheets` — the ads contact sheet — and `intelligence-map`, whose
- * console brings its own rail).
+ * object (`intelligence-map`, whose console brings its own rail).
  */
 export function proofTabs(visual: CaseTrackVisual): readonly ConsoleStation[] | null {
   if (visual.kind === "films") {
@@ -62,5 +61,13 @@ export function proofTabs(visual: CaseTrackVisual): readonly ConsoleStation[] | 
       name: PROJECT_CASES.find((c) => c.id === id)?.tab ?? id.toUpperCase(),
     }));
   }
+  /* ⚠ AND THE STUDIO'S SHEETS ARE ABSENT FOR THE MAP'S REASON (ADR-094 U3).
+     The card DOES switch between them now — the ads, the rule the studio
+     drew for when AI may make an image, the limit it refuses to cross — but
+     `SheetsPlate` owns which sheet is open, exactly as `PdaConsole` owns
+     which reading is, and it portals its own rail into the card's slot. A
+     copy of those three stations here would be a second switch for one piece
+     of state, and the plate would still be showing whichever sheet IT
+     thought was open. */
   return null;
 }

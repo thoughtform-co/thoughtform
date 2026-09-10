@@ -20,15 +20,20 @@ import { proofTabLabel, proofTabs } from "./proofTabs";
  *           bottom edges — `ProofField` on `track.visual`
  *   CHROME  the head strip: the client, and this project's beat of the arc
  *
- * ⚠ THE HEAD CARRIES THE ARC NOW, AND THAT IS WHAT PAYS FOR MOVING THE TABS
- * (owner, 2026-09-10). U1 recorded the cost of taking the name out of this
- * strip: it is THE PEEK BAND — the sliver that stays visible when a later
- * card covers this one — and with only `LOOP EARPLUGS · {phase}` on it, all
- * four cards would read the same. `track.arc` is the answer rather than the
- * fallback U1 named: the covered card's sliver says which beat of the
- * engagement it is, so the pile indexes itself by the argument the owner was
- * missing ("how do I connect the ATLs with the AI Studio self-sufficiency
- * and the tools with the adoption") instead of by a repeated project name.
+ * ⚠ THE ARC IS THE TITLE (U3, owner 2026-09-10: _"the lines that I said, 'We
+ * push the frontiers of AI creative,' should replace the title 'AI
+ * Above-the-Line'"_). U2 put the beat in the head beside the name and kept
+ * the name as the display heading; the owner's correction is that the CLAIM
+ * is what the card is called. So `.tl-card__title` letters `arc.title` and
+ * the project's own name goes up into the head as chrome, where it is the
+ * FILE this card is of — `01 · AI ABOVE-THE-LINE` beside the client.
+ *
+ * ⚠ THAT KEEPS THE PEEK BAND WORKING, which is why the name goes to the head
+ * rather than away. U1 recorded the cost of emptying this strip: it is THE
+ * PEEK BAND — the sliver that stays visible when a later card covers this
+ * one — and with only `LOOP EARPLUGS · {phase}` on it, all four would read
+ * the same. Chrome names the file, the display makes the claim; nothing is
+ * said twice and the pile still indexes itself.
  *
  * ⚠ THE TABS LIVE IN THE FIELD, NOT THE HEAD (owner, same read: they should
  * "live inside the right panel instead of the header … feel like the full
@@ -70,14 +75,14 @@ export function ProofCard({ track }: { track: CaseTrack }) {
         {track.arc ? (
           <p className="tl-card__arc">
             <span className="tl-card__arc-step">{track.arc.step}</span>
-            <span className="tl-card__arc-title">{track.arc.title}</span>
+            <span className="tl-card__arc-name">{track.project}</span>
           </p>
         ) : null}
       </header>
       <div className="tl-card__body">
         <div className="tl-card__record">
           <h3 className="tl-card__title" id={titleId}>
-            {track.project}
+            {track.arc ? track.arc.title : track.project}
           </h3>
           {track.card ? <p className="tl-card__lede">{track.card.lede}</p> : null}
           {/* ⚠ THE CLAIM CARRIES ITS SENTENCE NOW (owner: the left panel of

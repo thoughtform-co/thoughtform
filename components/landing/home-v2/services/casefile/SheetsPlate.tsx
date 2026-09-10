@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 import type { CaseSheet } from "@/lib/cases/types";
 
@@ -58,27 +59,33 @@ import { ConsoleRail } from "./console/ConsoleRail";
 export function SheetsPlate({
   sheets,
   stillSizes = "200px",
+  railHost,
 }: {
   sheets: readonly CaseSheet[];
   stillSizes?: string;
+  /** Where to render the rail instead of the frame's own slot (ADR-094 U3).
+   *  Omitted — the casefile and the portfolio arc — nothing changes. */
+  railHost?: HTMLElement | null;
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const sheet = sheets[activeIdx] ?? sheets[0];
 
   if (!sheet) return null;
 
+  const rail = (
+    <ConsoleRail
+      stations={sheets.map((s) => ({ id: s.id, name: s.label }))}
+      activeIdx={activeIdx}
+      onActive={setActiveIdx}
+      label="Studio sheets"
+    />
+  );
+
   return (
     <ConsoleFrame
       className="fl-plate fl-plate--sheets"
       data-sheet={sheet.id}
-      rail={
-        <ConsoleRail
-          stations={sheets.map((s) => ({ id: s.id, name: s.label }))}
-          activeIdx={activeIdx}
-          onActive={setActiveIdx}
-          label="Studio sheets"
-        />
-      }
+      rail={railHost ? null : rail}
     >
       <SheetBody sheet={sheet} stillSizes={stillSizes} />
       {sheet.verdict ? (
@@ -87,6 +94,15 @@ export function SheetsPlate({
           <p className="fl-verdict__p">{sheet.verdict.copy}</p>
         </div>
       ) : null}
+      {/* ⚠ THE RAIL CAN BE PORTALLED OUT (ADR-094 U3), the seam `PdaConsole`
+          already carries and this plate is its second consumer. Given a host
+          the rail renders THERE and the frame's own slot goes empty; omitted,
+          the render is byte-identical — which is what the casefile and the
+          portfolio arc rely on and their smokes assert.
+          ⚠ IT IS A HOST, NOT A CONTROLLED `activeIdx`. The state stays here
+          because the plate is what knows which sheet is open; a route that
+          also owned the index would be a second source for one piece of it. */}
+      {railHost ? createPortal(rail, railHost) : null}
     </ConsoleFrame>
   );
 }

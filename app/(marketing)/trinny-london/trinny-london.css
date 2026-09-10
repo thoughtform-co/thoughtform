@@ -279,10 +279,12 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   white-space: nowrap;
 }
 
-/* The head's right slot: this project's beat of the arc, `01` … `04` with
-   the claim beside it. ⚠ `nowrap` + ellipsis, because this is a 52px flex
-   bar again — the 44-character ceiling on `CaseTrack.arc.title` is measured
-   against this slot at 1280×720, and the ellipsis is the belt behind it. */
+/* The head's right slot: the beat's ordinal and the FILE this card is of —
+   `01 · AI ABOVE-THE-LINE`. The claim itself is the display title down in
+   the record (U3), so chrome names the file and the display makes the
+   claim. ⚠ `nowrap` + ellipsis, because this is a 52px flex bar: the
+   project name is ≤20 chars by the registry's own rule, which is what makes
+   it fit here where the 44-char claim did not always. */
 .tl-root .tl-card__arc {
   display: flex;
   align-items: baseline;
@@ -307,7 +309,7 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   color: var(--gold-ink);
 }
 
-.tl-root .tl-card__arc-title {
+.tl-root .tl-card__arc-name {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -596,40 +598,85 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   list-style: none;
 }
 
-/* The six ads, whole, at 4:5 — three across, two rows where the field's
-   aspect affords them (the owner's 1920×1247 does), one row where it does
-   not (1280×720). A cropped ad is not the ad. */
-.tl-root .tl-field--stills {
+/* ── The studio's three sheets (U3) ──────────────────────────────────
+   Owner, 2026-09-10: "for the Creative Team Self-Sufficient AI Fluency
+   Studio, we also should have tabs, just like on the homepage, where we
+   have our guidelines on where not to use AI, governance and the red line.
+   You can repurpose the elements from there."
+
+   Repurposed literally: the field mounts `SheetsPlate` — the casefile's own
+   plate, its console, its three bodies and its verdict band — and the plate
+   portals its rail into the card's slot. The record already held all three
+   sheets and this card was reaching past two of them to render the ad wall
+   alone.
+
+   ⚠ THE PLATE FILLS THE BAY, AND THAT IS ALL THIS BLOCK DOES. Every
+   measure inside it is the casefile's, resolved off the console the plate
+   brings with it — including the light-theme re-derivations, which is the
+   whole reason the plate comes whole rather than in pieces. */
+.tl-root .tl-field--sheets {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.tl-root .tl-field--sheets .fl-con {
+  height: 100%;
+  min-height: 0;
+}
+
+/* The ads, whole, at 4:5 — three across, two rows where the bay's aspect
+   affords them (the owner's 1920×1247 does), one row where it does not
+   (1280×720). A cropped ad is not the ad.
+   ⚠ THE CARD'S OWN TUNING, RE-POINTED AT THE SHARED CLASSES. The plate
+   emits `.fl-stills` / `.fl-still`, and `casefile.css` sizes those against
+   the CONSOLE's box on a surface where the console is most of a viewport.
+   Here it is a card's right panel, so the route re-seats them — the same
+   thing it already does for `.fl-con__stn`. */
+.tl-root .tl-field--sheets .fl-stills {
   display: flex;
   flex-wrap: wrap;
   align-content: center;
   justify-content: center;
   gap: 4px;
-  padding: 4px;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
 }
 
-.tl-root .tl-still {
+.tl-root .tl-field--sheets .fl-still {
   flex: 0 0 calc((100% - 8px) / 3);
   aspect-ratio: 4 / 5;
   min-width: 0;
+  height: auto;
 }
 
-.tl-root .tl-still img {
+.tl-root .tl-field--sheets .fl-still img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
+/* ⚠ THE SIX ADS HAVE TO BE RESTORED, AND THE CONDITION IS THE BAY'S SHAPE.
+   `casefile.css` hides shots 4–6 by DEFAULT and puts them back under
+   `.fl-case` at a viewport rung — a class scope, chosen there because
+   `.fl-con` is `container-type: inline-size` and `@container` cannot ask
+   about height. This route has no `.fl-case`, so it fell through to the
+   default and the card showed three ads out of six.
+   ⚠ Here the bay IS a size container, so the honest test is available: two
+   rows fit when the bay is portrait-ish, which is the owner's 1920×1247 and
+   not 1280×720. Same ruling, measured directly instead of by proxy. */
 @container (max-aspect-ratio: 1.15) {
-  .tl-root .tl-still {
-    flex-basis: calc((100% - 8px) / 3);
+  .tl-root .tl-field--sheets .fl-still:nth-child(n + 4) {
+    display: block;
   }
-}
-
-@container (min-aspect-ratio: 1.15) {
-  .tl-root .tl-still:nth-child(n + 4) {
-    display: none;
+  /* Whatever two rows leave over is AIR, not a hole to fill — it goes into
+     the padding and the row gap (ADR-070 U14: split the slack, never pool
+     it). The casefile makes the same move at its own rung. */
+  .tl-root .tl-field--sheets .fl-stills {
+    row-gap: clamp(10px, 2vh, 28px);
+    padding-block: clamp(8px, 2vh, 28px);
   }
 }
 
@@ -669,11 +716,62 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   --tl-film-ar: 4 / 5;
 }
 
+/* ⚠ THE FRAME IS THE BUTTON (U3), which is the homepage films plate's own
+   grammar — `.fl-film` is a `<button>` with a cue over the poster. A film's
+   frame is the one control it needs; a labelled bar beside it would be a
+   second affordance for one object. The reset is here because a `<button>`
+   brings a UA border, padding and a centred font. */
 .tl-root .tl-film__frame {
+  position: relative;
   display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  appearance: none;
   aspect-ratio: var(--tl-film-ar);
   background: rgba(var(--dawn-rgb), 0.06);
   overflow: hidden;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.tl-root .tl-film__frame:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* The play cue: a filled disc with a knocked-out triangle, centred. It
+   grows on hover — the one motion on the card, and it is the affordance
+   answering rather than the picture moving. */
+.tl-root .tl-film__cue {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: clamp(38px, 12%, 62px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: rgba(var(--void-rgb), 0.52);
+  border: 1px solid rgba(var(--dawn-rgb), 0.5);
+  transition: scale 220ms var(--m-ease, ease-out);
+}
+
+/* ⚠ THE TRIANGLE IS OFF-CENTRE BY DESIGN — 54 %, not 50 %. A play glyph's
+   optical centre is behind its leading edge, so a mathematically centred
+   one reads as sitting left in its disc. */
+.tl-root .tl-film__cue::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 54%;
+  translate: -50% -50%;
+  border-style: solid;
+  border-width: 6px 0 6px 10px;
+  border-color: transparent transparent transparent rgba(var(--dawn-rgb), 0.92);
+}
+
+.tl-root .tl-film__frame:hover .tl-film__cue,
+.tl-root .tl-film__frame:focus-visible .tl-film__cue {
+  scale: 1.08;
 }
 
 .tl-root .tl-film__frame img {
@@ -718,11 +816,81 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
    it contributes NO content size — a shrink-to-fit track collapses to zero,
    `100%` resolves to zero, and the drawing renders at no width at all. It
    centres on the ROW instead, which is content-sized off the aspect. */
+/* ⚠ THE COLUMN STAYS `1fr` AND THE ROWS ARE DECLARED — never
+   `justify-items: center`. `.tl-wire`'s only child is absolutely inset, so
+   it contributes NO content size; the moment the track stops stretching,
+   its `min(100%, …)` resolves against nothing and the drawing renders at
+   zero width. That is the fifth time on this route, so it is spelled out
+   here too: the WIRE is stretched by its track and the BAR centres itself. */
+/* ⚠ BOTH ROWS ARE `auto` AND THE PAIR CENTRES — never `1fr auto`. A `1fr`
+   row absorbs every spare pixel, so `align-content` has nothing left to
+   distribute: the drawing seats high and the bar lands on the bay's floor,
+   ~300px adrift from the thing it belongs to. Sized to their content, the
+   two centre as ONE group and the bar stays under its drawing. */
 .tl-root .tl-field--tools {
+  --tl-watch-h: 46px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
   align-content: center;
+  gap: clamp(8px, 1.4vh, 16px);
   padding: 2px;
+}
+
+/* ── The walkthrough (U3) ────────────────────────────────────────────
+   Owner, 2026-09-10: "we should have a video walkthrough of all these
+   software." The record already had them — `ProjectCase.walkthrough`, the
+   same four files the homepage plays — and this card was drawing the tool
+   and never offering it.
+
+   ⚠ A DRAWING IS NOT A VIDEO, which is why this one is a LABELLED bar where
+   the film's control is its own frame. Same split the homepage makes: the
+   tools plate fuses a watch bar to its bay, the films plate does not, and
+   the reason is that a control over a wireframe has to say what it opens.
+   ⚠ ONE affordance per object — the drawing itself is not clickable. */
+.tl-root .tl-watch {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border: 1px solid var(--tl-rule);
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--tl-ink-2);
+  transition:
+    color 180ms ease-out,
+    border-color 180ms ease-out;
+}
+
+.tl-root .tl-watch:hover {
+  color: var(--tl-ink);
+  border-color: var(--tl-ink-3);
+}
+
+.tl-root .tl-watch:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* The same play glyph as the film's cue, at chrome scale — one mark for one
+   action, wherever it is offered. */
+.tl-root .tl-watch__cue {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 7px;
+  border-color: transparent transparent transparent var(--gold-ink);
+}
+
+.tl-root .tl-watch__meta {
+  color: var(--tl-ink-3);
 }
 
 /* ⚠ THE BAY IS LOCKED LANDSCAPE, and that is the same arithmetic in a new
@@ -738,11 +906,18 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
    enough that mímir's three panels are panels. The air it leaves above and
    below is the cost of a landscape drawing in a portrait panel, and it is
    cheaper than the stretch. */
+/* ⚠ THE WATCH BAR COMES OUT OF THE HEIGHT THE DRAWING SOLVES AGAINST (U3).
+   The bay is the size container, so `100cqh` is the WHOLE bay — bar
+   included. Left uncorrected the drawing would size itself against a box
+   that has ~46px less room than it thinks, and a landscape bay overflows
+   its bay by exactly that. One term, subtracted once, used by both the cap
+   and the width it derives. */
 .tl-root .tl-wire {
   --tl-wire-ar: 1.62;
-  width: min(100%, calc((100cqh - 4px) * var(--tl-wire-ar)));
+  --tl-wire-h: calc(100cqh - 4px - var(--tl-watch-h, 0px));
+  width: min(100%, calc(var(--tl-wire-h) * var(--tl-wire-ar)));
   aspect-ratio: var(--tl-wire-ar);
-  max-height: calc(100cqh - 4px);
+  max-height: var(--tl-wire-h);
   margin-inline: auto;
 }
 
@@ -836,7 +1011,7 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
     margin-top: 8px;
     white-space: normal;
   }
-  .tl-root .tl-card__arc-title {
+  .tl-root .tl-card__arc-name {
     overflow: visible;
     text-overflow: clip;
   }
