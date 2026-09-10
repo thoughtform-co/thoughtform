@@ -5488,8 +5488,11 @@ html { scroll-behavior: smooth; }
         <img class="tl-turn__product tl-turn__product--best" data-tm="2" src="/trinny-london/be-your-best.webp" alt="" width="283" height="573" loading="lazy" decoding="async" />
         <img class="tl-turn__product tl-turn__product--overnight" data-tm="3" src="/trinny-london/overnight-sensation.webp" alt="" width="230" height="424" loading="lazy" decoding="async" />
       </div>
-      <!-- The line the turn is for. It lands where the mark was, on the
-           warmed ground, and it DECODES IN PLACE on the same scroll — the
+      <!-- The line the turn is for. It lands AROUND the mark rather than on
+           it (owner, 2026-09-10: the title and the text "overlap with the
+           logo" — the title goes above the brand mark, the paragraph and the
+           call to action below it), on the warmed ground, and it DECODES IN
+           PLACE on the same scroll — the
            house kernel (`captionScramble`), scrubbed, so it types in, holds
            lit and un-types out at a fixed position in both directions.
            ⚠ EVERY LINE IS A GHOST PLUS A LIVE LAYER: the ghost is in flow,
@@ -5500,9 +5503,11 @@ html { scroll-behavior: smooth; }
            `textContent` and would destroy any markup inside it.
            NO `data-m`: `useRevealMotion` would fade and lift these, which
            is the thing this replaces. -->
-      <div class="tl-turn__copy">
+      <div class="tl-turn__copy tl-turn__copy--over">
         <p class="tl-turn__eyebrow"><span class="tl-dc"><span class="tl-dc__ghost">Trinny London · The proposal</span><span class="tl-dc__live" data-tl-decode aria-hidden="true">Trinny London · The proposal</span></span></p>
         <h2 class="tl-turn__title"><span class="tl-dc"><span class="tl-dc__ghost">AI-first, inside Trinny London.</span><span class="tl-dc__live" data-tl-decode aria-hidden="true">AI-first, inside Trinny London.</span></span></h2>
+      </div>
+      <div class="tl-turn__copy tl-turn__copy--under">
         <p class="tl-turn__sub"><span class="tl-dc"><span class="tl-dc__ghost">What Loop Earplugs owns now, built for the people who run Trinny London.</span><span class="tl-dc__live" data-tl-decode aria-hidden="true">What Loop Earplugs owns now, built for the people who run Trinny London.</span></span></p>
         <a class="tl-turn__cta" href="#proposition"><span class="tl-dc"><span class="tl-dc__ghost">The configuration</span><span class="tl-dc__live" data-tl-decode aria-hidden="true">The configuration</span></span> <span aria-hidden="true">↓</span></a>
       </div>
@@ -5524,15 +5529,17 @@ html { scroll-behavior: smooth; }
     <div class="tl-prop__inner">
       <header class="tl-prop__head" data-m-group>
         <div class="tl-prop__lead">
-          <p class="tl-prop__eyebrow" data-m="eyebrow">The proposal</p>
+          <!-- ⚠ NO EYEBROW (owner, 2026-09-10). The band said "The proposal"
+               directly over a heading that names the thing, on a page whose
+               journey rail already reads Proposal — said three times. A
+               heading on the left and a paragraph on the right is the whole
+               head now. -->
           <h2 class="tl-prop__title" data-m="title">The Trinny London configuration</h2>
         </div>
         <p class="tl-prop__desc" data-m="body">
           One setup that makes Trinny London AI-first: built inside the tools the team already runs,
-          owned by the people who do the work, and started where the momentum stalled. Each workflow
-          the team adopts becomes an automation; each automation buys the time for the next. Built
-          from first principles and headless, so it depends on no vendor, no single tool and no
-          single person.
+          owned by the people who do the work. Headless and built from first principles, so it
+          depends on no vendor and no single person.
         </p>
       </header>
 
