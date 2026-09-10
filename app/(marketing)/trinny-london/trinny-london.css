@@ -138,9 +138,41 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   position: sticky;
   top: calc(var(--pc-top-base) + var(--i) * var(--pc-peek));
   height: var(--pc-card-h);
-  margin-bottom: clamp(96px, 14svh, 144px);
+  /* ⚠ THE MARGIN IS THE PINNED DWELL, AND IT IS DERIVED (owner,
+     2026-09-10: the card "appears too quickly into view. It should be a
+     bit delayed"). A slot's ENTRY runway is `vh − pinTop`, geometry the
+     hook reads and no margin can lengthen; the pin-to-pin distance is
+     `cardH + margin − peek`. Substituting `--pc-card-h`, the scroll for
+     which a card is pinned and the next has NOT started rising comes out
+     as `margin − n·peek − bottom-safe` — the viewport height cancels
+     exactly, so one expression buys the same dwell at 720 and at 1247.
+     Before this, that term was NEGATIVE at every viewport (−88px at the
+     owner's): card i+1 began rising before card i had seated, and no card
+     was ever simply THERE. */
+  --pc-dwell: 18svh;
+  margin-bottom: calc(var(--pc-n) * var(--pc-peek) + var(--pc-bottom-safe) + var(--pc-dwell));
   --pc-enter: 1;
   --pc-cover: 0;
+  /* ── The arrival channels ──────────────────────────────────────────
+     `--pc-enter` is ALREADY smoothstepped in the hook, so windowing it
+     again is an S on an S: the motion starts late and its rate of change
+     decays to zero BEFORE the pin, which is what "a bit slower, like a
+     smooth animation" asks for — the card settles into its seat instead
+     of travelling at scroll speed and stopping dead on it. Same
+     `clamp()` idiom as `tools-cards.css`'s `[data-r]` reveals.
+
+     ⚠ THE HOOK IS NOT TOUCHED. It is shared with `/test/project-cards`,
+     and `data-pc-state` (which the smoke's ladder asserts at pin + 40px)
+     is computed from the RAW `enter`, which still reaches 1 exactly at
+     the pin. A CSS remap cannot move it; retuning the hook would. */
+  --pc-in: clamp(0, calc((var(--pc-enter) - 0.18) / 0.62), 1);
+  --pc-cov: clamp(0, calc((var(--pc-cover) - 0.18) / 0.62), 1);
+  /* Staggered off the same channel: plate, then record, then field — and
+     the three OVERLAP. Pulled apart far enough to read as an order, close
+     enough that the field is never a lit plate with an empty half in it,
+     which is what a fully separated ladder looked like on the still. */
+  --pc-in-record: clamp(0, calc((var(--pc-enter) - 0.34) / 0.5), 1);
+  --pc-in-field: clamp(0, calc((var(--pc-enter) - 0.42) / 0.48), 1);
 }
 
 .tl-root .tl-slot:last-of-type {
@@ -164,7 +196,18 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   background: var(--tl-plate);
   border: 1px solid var(--tl-rule);
   overflow: hidden;
-  transform: scale(calc(1 - 0.02 * var(--pc-cover)));
+  /* ⚠ THE PLATE LAGS THE SCROLL AND EASES HOME. A sticky card's rise is
+     1:1 with the page by construction — it cannot be slowed, only made to
+     TRAIL and catch up. It sits `--pc-rise` below its natural position
+     early (the delay) and closes that on the eased channel, so the last
+     stretch into the seat is 1:1 with no surge and no snap.
+     ⚠ `translate` is a SEPARATE property from `transform`, so the rise and
+     the recession compose without one clobbering the other (the turn's
+     products use the same pair). `transform-origin` reaches the scale
+     only. */
+  --pc-rise: clamp(40px, 7svh, 96px);
+  translate: 0 calc((1 - var(--pc-in)) * var(--pc-rise));
+  transform: scale(calc(1 - 0.02 * var(--pc-cov)));
   transform-origin: 50% 0;
   color: var(--tl-ink);
 }
@@ -175,9 +218,16 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  background: rgba(var(--dawn-rgb), calc(0.09 * var(--pc-cover)));
+  /* On the windowed channel too: a covered card must not start sinking
+     before the card covering it is visible. */
+  background: rgba(var(--dawn-rgb), calc(0.09 * var(--pc-cov)));
 }
 
+/* ⚠ THE HEAD IS CHROME, NOT THE CLAIM (owner, 2026-09-10). The client on
+   the left, the tab row on the right, and the project's NAME moved down
+   into the record column where it can wrap. What that costs is stated in
+   `ProofCard.tsx`: this strip is the peek band, so a covered card's sliver
+   no longer names the project. */
 .tl-root .tl-card__head {
   display: flex;
   align-items: center;
@@ -188,6 +238,9 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   min-width: 0;
 }
 
+/* Leads the RECORD column now, not the head strip — so it may wrap, and
+   the `nowrap` + ellipsis it carried in a 52px flex bar come off with the
+   box that forced them. */
 .tl-root .tl-card__title {
   margin: 0;
   font-family: var(--font-pp-neue-montreal);
@@ -196,9 +249,8 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   line-height: 1.1;
   letter-spacing: var(--track-display);
   color: var(--tl-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-wrap: balance;
+  max-width: 22ch;
 }
 
 .tl-root .tl-card__kicker {
@@ -213,6 +265,109 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   white-space: nowrap;
 }
 
+/* ── The head's tab row (ADR-094 U1) ─────────────────────────────────
+   The house rail, seated in the header bar. `ConsoleRail` is already on
+   this page — the map's console renders it — so the row of tabs the owner
+   asked for is that component with state, not a second strip.
+
+   ⚠ THE SKIN IS ADR-089 U3/U4's, RE-POINTED. That grammar (flat, square,
+   bordered, the open one filled, no spine) is the owner's own ruling of
+   2026-09-04, and every rule of it is `.fl-case`-scoped in `casefile.css`
+   — which this route deliberately has none of. So the map's rail here has
+   been rendering `console.css`'s ORIGINAL: a recessed vertical ramp on
+   every station, a second ramp on the open one, and a chamfer notch on the
+   first. That is exactly what he named ("I wouldn't use a gradient…
+   not sure if we need a notch"), and this block is that ruling arriving.
+
+   ⚠ ROUTE-SCOPED, EVERY LINE. Fixing it in `console.css` instead would
+   land on `/`, `/arcs/*` and two labs, where the markup is byte-pinned. */
+.tl-root .tl-card__tabs {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  min-width: 0;
+  align-self: stretch;
+  /* The rail's type is `cqw`-derived (`console.css`), and inside a console
+     the container is the console. Here it is this slot, so the labels size
+     against the row they are actually in rather than against whatever
+     container happens to be an ancestor. */
+  container-type: inline-size;
+}
+
+.tl-root .tl-card__tabs .fl-con__rail {
+  flex: 0 1 auto;
+  align-items: center;
+  /* The head already draws the rule under this band; a console's rail
+     draws its own because it sits on a console's top edge. */
+  border-bottom: 0;
+}
+
+/* ⚠ CONTENT-WIDTH, NOT EQUAL THIRDS. `flex: 1 1 0` is right for a rail
+   spanning a console — it makes a row of keys out of the whole top edge —
+   and wrong here: the head has up to ~1180px of free space at 1440, and
+   four stations at 295px each is a divided bar, not the "very subtle,
+   minimalistic tabs" this is. The boxes size to their labels. */
+.tl-root .tl-card__tabs .fl-con__stn {
+  flex: 0 1 auto;
+  margin: 0 0 0 6px;
+  padding: 5px 11px;
+  gap: 7px;
+  border: 1px solid var(--tl-rule);
+  background: none;
+  /* The chamfer existed because the console's own cut fell on the leading
+     station (ADR-065 U3). There is no console above this row, so the cut
+     has no edge to explain it — and inside an outlined box it also pushes
+     the first label off centre. */
+  clip-path: none;
+  color: var(--tl-ink-3);
+}
+
+.tl-root .tl-card__tabs .fl-con__stn > i {
+  border-color: var(--tl-rule);
+  background: none;
+}
+
+.tl-root .tl-card__tabs .fl-con__stn > b {
+  letter-spacing: var(--track-label);
+}
+
+.tl-root .tl-card__tabs .fl-con__stn:hover {
+  color: var(--tl-ink);
+  border-color: var(--tl-ink-3);
+}
+
+/* ⚠ FILL AMONG OUTLINES — the open box is inverse video, the border joined
+   to the fill so the box is ONE object rather than a fill inside a rim.
+   The diamond MUST knock out with the ink: `--con-hot` is ~1.5:1 on gold.
+   ⚠ NEVER the `--void` family for that ink — it is parchment in light. */
+.tl-root .tl-card__tabs .fl-con__stn[data-on] {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+
+.tl-root .tl-card__tabs .fl-con__stn[data-on] > i {
+  border-color: var(--gold-contrast);
+  background: var(--gold-contrast);
+  box-shadow: none;
+}
+
+/* The gap between two boxes IS the divider, and the box is the marker —
+   so the seam and the travelling spine both go. ADR-063's law is about
+   COUNT and there is still exactly one lit thing moving key to key. */
+.tl-root .tl-card__tabs .fl-con__stn + .fl-con__stn::before {
+  content: none;
+}
+
+.tl-root .tl-card__tabs .fl-con__spine {
+  display: none;
+}
+
+.tl-root .tl-card__tabs .fl-con__stn:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+
 .tl-root .tl-card__body {
   display: grid;
   grid-template-columns: minmax(300px, 2fr) minmax(0, 3fr);
@@ -223,15 +378,20 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: clamp(20px, 3vh, 36px);
+  /* The gap now falls between the NAME and its paragraph as well as
+     between the paragraph and the claims, so it is tuned for the tighter
+     of the two and the claims buy their separation back below. */
+  gap: clamp(14px, 2vh, 24px);
   padding: clamp(20px, 2.6vw, 44px) clamp(20px, 2vw, 32px);
   min-width: 0;
   border-right: 1px solid var(--tl-rule);
-  /* Entrance rides the hook's eased channel — the record slides up a
-     little as the card arrives and settles at rest; reverse scroll runs it
-     back by construction. */
-  opacity: var(--pc-enter);
-  translate: 0 calc((1 - var(--pc-enter)) * 14px);
+  /* Entrance rides the WINDOWED channel, not the raw one. On `--pc-enter`
+     the record was at half opacity while the card was half-way up the
+     viewport — lit before it had arrived, which is most of what "appears
+     too quickly" was. It lands after the plate has seated now, and
+     reverse scroll runs it back by construction. */
+  opacity: var(--pc-in-record);
+  translate: 0 calc((1 - var(--pc-in-record)) * 14px);
 }
 
 .tl-root .tl-card__lede {
@@ -247,7 +407,7 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
 
 .tl-root .tl-card__claims {
   list-style: none;
-  margin: 0;
+  margin: clamp(4px, 1.2vh, 14px) 0 0;
   padding: 0;
   display: grid;
   gap: clamp(8px, 1.2vh, 12px);
@@ -293,6 +453,10 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   --fl-mono: var(--font-pt-mono);
   --fl-copy: clamp(13px, 1vw, 16px);
   --fl-shot-px: 12px;
+  /* Last of the three, so the beat reads plate → record → field. No
+     travel here: the evidence bleeds to two edges and a sliding picture
+     inside a clipped box shows its own seam. */
+  opacity: var(--pc-in-field);
 }
 
 .tl-root .tl-field {
@@ -340,19 +504,29 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   }
 }
 
-/* The two films, poster-first, side by side with their mono captions. */
+/* ⚠ ONE FILM, POSTER-FIRST, ON THE HEAD'S RAIL (owner, 2026-09-10 — both
+   at once was "overwhelming"). Side by side they were two stamps in a
+   panel; selected, the poster takes the field at the scale its 16:9 frame
+   was drawn for. The caption keeps the FULL label — the rail's handle is
+   the film's name alone, so the client half is said once per band. */
 .tl-root .tl-field--films {
+  --tl-film-pad: clamp(16px, 2vw, 32px);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-content: center;
-  gap: clamp(12px, 1.6vw, 24px);
-  padding: clamp(16px, 2vw, 32px);
+  justify-content: center;
+  padding: var(--tl-film-pad);
 }
 
+/* ⚠ HEIGHT-BOUND AS WELL AS WIDTH-BOUND. The field is a size container and
+   it is portrait at the owner's viewport and landscape at 1280×720, so a
+   16:9 frame at 100 % width overflows the short one. The cap converts the
+   height the field actually has — less the padding, the caption's line box
+   and its gap — back through the aspect. */
 .tl-root .tl-film {
   display: grid;
   gap: 10px;
   min-width: 0;
+  width: min(100%, calc((100cqh - 2 * var(--tl-film-pad) - 26px) * 16 / 9));
 }
 
 .tl-root .tl-film__frame {
@@ -381,32 +555,46 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   color: var(--tl-ink-3);
 }
 
-/* The four drawn tools. Each cell is the definite box the wireframe's size
-   container fills (`.fl-wire` is absolutely inset). ⚠ THE DRAWINGS ARE
-   AUTHORED LANDSCAPE (their bays run W/H 2.3–2.9), so the grid follows the
-   field's aspect: two by two in a landscape field (1280×720 → 320×200
-   cells), one column of four in a portrait one (the owner's 1920×1247 →
-   690×235 cells). Two by two in a portrait field gave mímir's three
-   panels a 345×450 cell and they printed through each other. */
+/* ⚠ ONE DRAWN TOOL, ON THE HEAD'S RAIL (owner, 2026-09-10). The cell is
+   the definite box the wireframe's size container fills (`.fl-wire` is
+   absolutely inset), and it is now the WHOLE field.
+
+   ⚠ THAT IS THE FIX, NOT A SIMPLIFICATION. The drawings are authored for
+   LANDSCAPE bays (their W/H runs 2.3–2.9): four in one box gave a 2×2 of
+   320×200 cells at 1280×720 and a 1×4 of 690×235 at the owner's portrait
+   field, and a 2×2 there printed mímir's three panels through each other.
+   Selected, each one gets a bay of the shape it was drawn in. */
+/* ⚠ THE COLUMN TRACK STAYS `1fr`, NEVER `place-content: center`. The bay's
+   width is `min(100%, …)` and `.fl-wire` inside it is absolutely inset, so
+   it contributes NO content size — a shrink-to-fit track collapses to zero,
+   `100%` resolves to zero, and the drawing renders at no width at all. It
+   centres on the ROW instead, which is content-sized off the aspect. */
 .tl-root .tl-field--tools {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 2px;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
   padding: 2px;
 }
 
-@container (max-aspect-ratio: 1.05) {
-  .tl-root .tl-field--tools {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: repeat(4, minmax(0, 1fr));
-  }
-  /* The posters, likewise: side by side they are stamps in a tall box;
-     stacked they take the width the field has. */
-  .tl-root .tl-field--films {
-    grid-template-columns: minmax(0, 1fr);
-    padding-inline: clamp(24px, 4cqw, 48px);
-  }
+/* ⚠ THE BAY IS LOCKED LANDSCAPE, and that is the same arithmetic in a new
+   place. The field is PORTRAIT at the owner's viewport (693×926, W/H 0.75)
+   and the drawings are authored for bays running 2.3–2.9; given the whole
+   box, babylon pooled its four transcript rows at the top of a 700px table
+   and heimdall's player became an empty column. The 1×4 stack this
+   replaces was accidentally right about ONE thing — each of its cells was
+   690×235, landscape — and this keeps that while giving one drawing all
+   four cells' area.
+   ⚠ 1.62 is a floor with headroom, not a target: ADR-068 U7's `cqw` cap
+   binds below W/H 1.12, so this clears it by half again while staying tall
+   enough that mímir's three panels are panels. The air it leaves above and
+   below is the cost of a landscape drawing in a portrait panel, and it is
+   cheaper than the stretch. */
+.tl-root .tl-wire {
+  --tl-wire-ar: 1.62;
+  width: min(100%, calc((100cqh - 4px) * var(--tl-wire-ar)));
+  aspect-ratio: var(--tl-wire-ar);
+  max-height: calc(100cqh - 4px);
+  margin-inline: auto;
 }
 
 .tl-root .tl-wire {
@@ -415,6 +603,23 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   min-height: 0;
   overflow: hidden;
   background: rgba(var(--dawn-rgb), 0.04);
+}
+
+/* ── The map's console, on this route ───────────────────────────
+   The other half of the owner's "I wouldn't use a gradient". With the rail
+   lifted into the head, what is left painting a ramp in that band is the
+   CONSOLE: a gold glow hung off its top edge (a 128 % × 58 % radial at
+   50 % −8 %) and a scanline over the whole plate. ADR-089 U1 deleted both
+   on the casefile for the same reason and every rule of that pass is
+   `.fl-case`-scoped, so this route never got it.
+   ⚠ The glow modelled an EDGE CATCHING LIGHT on a console that no longer
+   has a lit top edge to catch it — the rail is gone from there. */
+.tl-root .tl-card__field .fl-con__console {
+  background: var(--con-ground);
+}
+
+.tl-root .tl-card__field .fl-con__console::after {
+  content: none;
 }
 
 /* The map, as a PICTURE. The console owns the wheel while the pointer is
@@ -449,6 +654,7 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   }
   .tl-root .tl-card {
     transform: none;
+    translate: none;
     grid-template-rows: auto auto;
   }
   .tl-root .tl-card::after {
@@ -460,6 +666,7 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   }
   .tl-root .tl-card__field {
     height: clamp(320px, 60vh, 640px);
+    opacity: 1;
   }
 }
 
@@ -470,8 +677,53 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
     flex-wrap: wrap;
     padding-block: 12px;
   }
-  .tl-root .tl-card__title {
-    white-space: normal;
+  /* ⚠ THE TABS TAKE THEIR OWN ROW ON A PHONE. `console.css`'s unwrap rung
+     gives every station `flex: 1 1 45%` and a wrapping label, which inside
+     a head strip stacked two boxes down the right-hand edge and broke
+     `DJ NEIGHBOUR` across two lines. A full-width row under the client
+     line is the same IA the mobile evidence instruments already use
+     (ADR-083: identity, then mode, then the one seat) — and it keeps the
+     44px touch floor that rung exists for. */
+  .tl-root .tl-card__tabs {
+    flex: 1 0 100%;
+    justify-content: flex-start;
+    margin-top: 10px;
+  }
+  .tl-root .tl-card__tabs .fl-con__rail {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .tl-root .tl-card__tabs .fl-con__stn {
+    flex: 0 1 auto;
+    min-height: 44px;
+    margin: 0 6px 0 0;
+    justify-content: center;
+  }
+  .tl-root .tl-card__tabs .fl-con__stn > b {
+    white-space: nowrap;
+  }
+  /* ⚠ AND THE BAY'S ASPECT LOCK COMES OFF. It exists because the DESKTOP
+     panel is portrait and the drawings are landscape; the phone's field is
+     a definite `clamp()` box, and capping it at W/H 1.62 there leaves a
+     198px strip that `casefile.css`'s own ≤960 flow rung then overflows
+     and this box clips. Filling the field is what that rung expects.
+     ⚠ The ROW stays content-sized and CENTRES: `.fl-wire` carries its own
+     `16 / 10` in that rung, so a stretched row would seat a 200px drawing
+     at the top of a 500px box with the rest as a hole. */
+  .tl-root .tl-field--tools {
+    align-content: center;
+  }
+  .tl-root .tl-wire {
+    width: auto;
+    aspect-ratio: auto;
+    max-height: none;
+    /* ⚠ AND THE AUTO MARGINS GO WITH THE WIDTH. `justify-self: stretch`
+       does not apply to a grid item with `margin-inline: auto` — auto
+       margins absorb the free space instead and the box falls back to
+       shrink-to-fit, which for a wrapper whose only child is absolutely
+       inset is ZERO. Measured 0×502 before this line. */
+    margin-inline: 0;
   }
   .tl-root .tl-card__body {
     grid-template-columns: 1fr;
@@ -479,9 +731,6 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   .tl-root .tl-card__record {
     border-right: 0;
     border-bottom: 1px solid var(--tl-rule);
-  }
-  .tl-root .tl-field--films {
-    grid-template-columns: 1fr;
   }
 }
 
