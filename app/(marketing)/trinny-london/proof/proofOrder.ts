@@ -25,7 +25,26 @@ import type { CaseTrack } from "@/lib/cases/types";
 
 export const TRINNY_PROOF_CASE = "loop-earplugs";
 
-export const TRINNY_PROOF_ORDER = ["studio", "atl-films", "tooling", "ai-transformation"] as const;
+/**
+ * The stack's sequence — and since ADR-094 U2 it is THE RECORD'S OWN ARC,
+ * not a route preference. Each track carries `arc.step`, and this array is
+ * those four beats in order:
+ *
+ *   01 the frontier · 02 self-sufficiency · 03 the tools · 04 the company
+ *
+ * ⚠ IT REVERSES THE FIRST TWO CARDS against what shipped. The frontier work
+ * (`atl-films`) is what earned the studio the right to run AI itself, so a
+ * stack that opened on the studio was showing the consequence before the
+ * cause. The casefile's directory order is untouched — a directory is an
+ * index, this is a narrative.
+ *
+ * ⚠ AND THE TWO CAN DISAGREE WITH NOTHING FAILING, which is why
+ * `trinny-proof-order.test.ts` asserts this array equals the tracks sorted by
+ * `arc.step`: the head prints the step from the record while the pile is
+ * ordered by this list, so a re-order here alone would letter `03 · 01 · 02`
+ * down a scroll and every other guard would stay green.
+ */
+export const TRINNY_PROOF_ORDER = ["atl-films", "studio", "tooling", "ai-transformation"] as const;
 
 export function trinnyProofTracks(): readonly CaseTrack[] {
   const def = getCase(TRINNY_PROOF_CASE);

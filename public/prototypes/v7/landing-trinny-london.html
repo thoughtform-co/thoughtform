@@ -5459,13 +5459,15 @@ html { scroll-behavior: smooth; }
        Thoughtform mark re-forms as Trinny London's — driven by this
        station's own scroll (useTurnScroll → brandmarkMorphRef), never a
        crossfade, never a clock — while the four products sweep in around
-       it on the same scroll. `100svh` of pin + a runway, and NOTHING slides
+       it on the same scroll AND BACK OUT AGAIN as the beat ends (ADR-095
+       U5 — they leave on their own clock, so the next station never has to
+       cover them). `100svh` of pin + a runway, and NOTHING slides
        over it (ADR-095 U1): the GROUND changes instead, a shader warming
-       the frame to the client's coral and resolving back to parchment, and
-       the line lands ON it — decoded in place, never moved or faded in as
-       a block. NO `data-corridor-kill` (the canvas must live through the
-       whole beat; `#proposition` below is the first opaque station and
-       carries it). `data-station="proposition"` turns the journey to the
+       the frame to the client's coral, and it does NOT resolve — it carries
+       into `#proposition` (U4). The line lands ON it — decoded in place,
+       never moved or faded in as a block. NO `data-corridor-kill`: the
+       canvas must live through this beat AND the proposal below it, so the
+       edge is on `#contact` (U5). `data-station="proposition"` turns the journey to the
        Proposal from here on. The inline SVG is the FALLBACK mark for the
        paths the morph cannot run on (mobile, reduced motion, a refused
        GPU); the route hides it while the WebGL mark is parked. The products
@@ -5514,18 +5516,25 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ 10 THE PROPOSITION (ADR-094, ADR-095 U1) ═══════════
+  <!-- ═══════════ 10 THE PROPOSITION (ADR-094, ADR-095 U1 + U5) ═══════════
        Title-left / paragraph-right head, then THEIR configuration plotted:
        the people, the encoded layer between them, the surfaces they already
        run. A record of their stack, not a metaphor — no Navigate / Encode /
        Build labels (the Arc stays the Arc), no digits, no codenames.
-       It is also the ambient's KILL EDGE now (ADR-095 U1 deleted the
-       interstitial slab that used to carry it): the first OPAQUE station
-       below the corridor, so the canvas fades against ITS top and the
-       route's cover rule — keyed on the same attribute — promotes it while
-       the exit band is live. It reaches this on the house parchment, since
-       the turn's wash resolves before the seam. ===== -->
-  <section class="station tl-prop" id="proposition" data-station="proposition" data-corridor-kill data-screen-label="10 Proposition">
+
+       ⚠ IT IS NOT A SLAB ANY MORE (U5, owner 2026-09-10: "we have a parallax
+       paint flying over it. I don't want that … the elements from the next
+       section should just come into view"). It used to be the first OPAQUE
+       station below the corridor, so it rose over the turn's lit stage and
+       carried its head and drawing in on `data-m` — a translate — while the
+       products sat settled underneath. Now: TRANSPARENT over the live canvas
+       like `#turn`, PINNED like `#turn` (`100svh` + a runway, a sticky
+       stage), and its elements power on IN PLACE once that stage has parked.
+       Nothing slides, so there is no edge to see. The ambient's KILL EDGE
+       moved down to `#contact` with the opacity — the mark has to survive
+       into this beat, fading behind the record rather than dying at its top.
+       ===== -->
+  <section class="station tl-prop" id="proposition" data-station="proposition" data-screen-label="10 Proposition">
     <!-- The turn's ground, continued (ADR-095 U4). The client's colour does
          not resolve at the end of the turn any more — it carries into the
          proposal, so the reader crosses the seam without the page changing
@@ -5536,24 +5545,40 @@ html { scroll-behavior: smooth; }
     <div class="tl-prop__ground" aria-hidden="true">
       <canvas class="tl-prop__wash" data-tl-prop-wash></canvas>
     </div>
+    <!-- The pin (U5). The record holds still while the reader arrives at it,
+         which is the whole reason its elements can appear rather than
+         travel. `useTurnScroll` reads this station's rect, checks this stage
+         computes `sticky`, and only then powers the record on. -->
+    <div class="tl-prop__stage" data-tl-prop-stage>
     <div class="tl-prop__inner">
-      <header class="tl-prop__head" data-m-group>
+      <!-- ⚠ NO `data-m` ON ANY OF THIS (U5). That is the move-and-fade
+           reveal system: every role but `fade` translates, it is one-shot,
+           and it fires on an IntersectionObserver at 12 % visibility — i.e.
+           while this station is still rising. The record rides `--tp-in`
+           instead, a scrubbed channel that is opacity ONLY and does not open
+           until the stage above has pinned. -->
+      <header class="tl-prop__head" data-tl-reveal>
         <div class="tl-prop__lead">
           <!-- ⚠ NO EYEBROW (owner, 2026-09-10). The band said "The proposal"
                directly over a heading that names the thing, on a page whose
                journey rail already reads Proposal — said three times. A
                heading on the left and a paragraph on the right is the whole
-               head now. -->
-          <h2 class="tl-prop__title" data-m="title">The Trinny London configuration</h2>
+               head now.
+               ⚠ THE TITLE DECODES, on the same ghost + live-leaf contract the
+               turn's copy uses: the ghost is in flow, carries the true text
+               for the accessibility tree and HOLDS THE BOX; the live layer is
+               absolute over it and is the only thing the writer touches, so a
+               wider glyph run can never re-wrap the head. -->
+          <h2 class="tl-prop__title"><span class="tl-dc"><span class="tl-dc__ghost">The Trinny London configuration</span><span class="tl-dc__live" data-tl-decode aria-hidden="true">The Trinny London configuration</span></span></h2>
         </div>
-        <p class="tl-prop__desc" data-m="body">
+        <p class="tl-prop__desc" data-tl-reveal>
           One setup that makes Trinny London AI-first: built inside the tools the team already runs,
           owned by the people who do the work. Headless and built from first principles, so it
           depends on no vendor and no single person.
         </p>
       </header>
 
-      <div class="tl-config" data-m="frame" role="img" aria-label="The Trinny London configuration: the people at the top, the encoded layer between, and the surfaces the team already runs at the bottom, joined by adoption running down and automation running up.">
+      <div class="tl-config" data-tl-reveal role="img" aria-label="The Trinny London configuration: the people at the top, the encoded layer between, and the surfaces the team already runs at the bottom, joined by adoption running down and automation running up.">
         <div class="tl-config__band tl-config__band--people">
           <p class="tl-config__label">The people</p>
           <ul class="tl-config__plates">
@@ -5601,21 +5626,38 @@ html { scroll-behavior: smooth; }
         </ul>
       </div>
     </div>
+    </div>
   </section>
 
-  <!-- ═══════════ 06 CONTACT ═══════════ -->
-  <section class="station" id="contact" data-station="contact" data-screen-label="11 Contact">
+  <!-- ═══════════ 06 CONTACT ═══════════
+       ⚠ THE AMBIENT'S KILL EDGE LIVES HERE NOW (ADR-095 U5). It was on
+       `#proposition`, which was the first OPAQUE station below the corridor;
+       U5 made that one transparent so the mark could fade BEHIND the record
+       instead of dying at its top edge, and this is the next opaque station
+       down. The route's cover rule is keyed on the SAME attribute, so JS and
+       CSS cannot name different stations (the ADR-030 §6 seam bug) — moving
+       the edge is an attribute move and nothing else, and exactly one
+       element on the page carries it.
+
+       ⚠ AND ITS COPY TAKES `data-m="fade"` ONLY (same update, owner: the
+       elements should "just come into view"). Every other role in that
+       system translates; `fade` is the one that does not. This block is not
+       pinned — a page's last card does not need a stage — so the scrubbed
+       channel `#proposition` uses would have nothing to key on, and an
+       opacity-only role is the same law with the machinery already in the
+       sheet. ===== -->
+  <section class="station" id="contact" data-station="contact" data-corridor-kill data-screen-label="11 Contact">
     <div class="contact" data-m-group>
       <div class="station__idx" style="justify-content:center">Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>
-      <h2 class="contact__title" data-m="title">Plot your<br><em>course.</em></h2>
-      <p class="contact__desc" data-m="body">
+      <h2 class="contact__title" data-m="fade">Plot your<br><em>course.</em></h2>
+      <p class="contact__desc" data-m="fade">
         Ready to navigate intelligence with your team? Send a signal. We'll
         reply with a route.
       </p>
       <div class="contact__cta" data-m="fade">
         <a href="mailto:hello@thoughtform.co" class="btn btn--solid">Initiate contact<span class="arrow"></span></a>
       </div>
-      <div class="contact__email" data-m="body">
+      <div class="contact__email" data-m="fade">
         <a href="mailto:hello@thoughtform.co">hello@thoughtform.co</a>
       </div>
     </div>

@@ -10,44 +10,43 @@ import { ProofField } from "./ProofField";
 import { proofTabLabel, proofTabs } from "./proofTabs";
 
 /**
- * ProofCard — one Loop project, at a glance (ADR-094, recomposed in U1).
+ * ProofCard — one Loop project, at a glance (ADR-094, recomposed in U1 and
+ * again in U2).
  *
  * THREE REGISTERS AND NO FOURTH (the Brand Codex card set, distilled in
  * `docs/design/card-reference-analysis.md`):
  *   CLAIM   the project's name, in the display face — `track.project`
  *   FIELD   the record's own visual, bleeding to the card's right and
  *           bottom edges — `ProofField` on `track.visual`
- *   CHROME  the head strip: the client, and the row of tabs
+ *   CHROME  the head strip: the client, and this project's beat of the arc
  *
- * ⚠ THE HEAD IS CHROME NOW, AND THE NAME IS IN THE RECORD (owner,
- * 2026-09-10: "Loop Earplugs should be in the top-left corner, and the
- * [project] should actually be inside the left frame, so below it"). The
- * strip carries `LOOP EARPLUGS · {phase}` on the left and, where the field
- * has more than one thing to show, the tab row on the right; the name leads
- * the record column above the paragraph, where it can wrap.
+ * ⚠ THE HEAD CARRIES THE ARC NOW, AND THAT IS WHAT PAYS FOR MOVING THE TABS
+ * (owner, 2026-09-10). U1 recorded the cost of taking the name out of this
+ * strip: it is THE PEEK BAND — the sliver that stays visible when a later
+ * card covers this one — and with only `LOOP EARPLUGS · {phase}` on it, all
+ * four cards would read the same. `track.arc` is the answer rather than the
+ * fallback U1 named: the covered card's sliver says which beat of the
+ * engagement it is, so the pile indexes itself by the argument the owner was
+ * missing ("how do I connect the ATLs with the AI Studio self-sufficiency
+ * and the tools with the adoption") instead of by a repeated project name.
  *
- * ⚠ WHAT THAT COSTS, stated because it was a real property of the old
- * layout: the head strip is THE PEEK BAND — the sliver that stays visible
- * when a later card covers this one — and with the name gone it reads the
- * same on all four, so the pile no longer indexes itself by name. The three
- * cards with tabs keep a distinguishing mark; the ads card does not. Taken
- * knowingly; the fallback if it reads badly is a quiet mono name in the
- * head's right slot on that one card.
+ * ⚠ THE TABS LIVE IN THE FIELD, NOT THE HEAD (owner, same read: they should
+ * "live inside the right panel instead of the header … feel like the full
+ * frame of the right panel"). So the rail is seated on the field's own top
+ * edge at full width — which is `ConsoleRail`'s native `flex: 1 1 0`
+ * grammar, the thing U1 had to override when the row was stretched across a
+ * ~1180px header bar. It is still the house's one rail: fully controlled,
+ * `role="tablist"` with roving tabindex, and this card supplies state and
+ * stations and nothing else. The skin stays ADR-089 U3/U4's, route-scoped in
+ * `trinny-london.css`: flat, square, the open box filled, no spine.
  *
- * THE TABS ARE THE HOUSE'S OWN RAIL, not a second one. `ConsoleRail` is
- * already on this page (the map's console renders it), it is fully
- * controlled, and it is a `role="tablist"` with roving tabindex and arrow
- * keys — so this card supplies state and stations and nothing else. The
- * skin is route-scoped in `trinny-london.css`: flat, square, the open box
- * filled, no spine (ADR-089 U3/U4's grammar, which never reached this route
- * because every rule of it is `.fl-case`-scoped — that is the gradient and
- * the notch the owner named).
- *
- * ⚠ THE MAP'S RAIL IS PORTALLED, NOT REBUILT. `PdaConsole` owns its three
- * readings and the flight between them; it takes a `railHost` and moves its
- * own rail here. That also makes those readings SELECTABLE on this route for
- * the first time — the card puts a transparent layer over the console so its
- * wheel capture cannot freeze the pinned stack, and the rail was under it.
+ * ⚠ THE MAP'S RAIL IS PORTALLED, NOT REBUILT, and moving the host SOLVES a
+ * problem rather than re-opening one. `PdaConsole` owns its three readings
+ * and the flight between them; it takes a `railHost` and moves its own rail
+ * there. The card puts a transparent layer over the console so its wheel
+ * capture cannot freeze the pinned stack — that layer is on `.tl-field--map`
+ * INSIDE the bay, so a rail seated above the bay is outside its box by
+ * construction, where in the head it had to be lifted over it.
  *
  * No CTA in this pass: the detail tier is a follow-up after the owner's
  * read (the plan's decision 1). The card is not a control.
@@ -59,7 +58,7 @@ export function ProofCard({ track }: { track: CaseTrack }) {
 
   const stations = proofTabs(track.visual);
   const [idx, setIdx] = useState(0);
-  /* The portal needs its host at RENDER time, so the head's tab slot is
+  /* The portal needs its host at RENDER time, so the field's rail row is
      held in state through a ref callback rather than in a ref. */
   const [railHost, setRailHost] = useState<HTMLDivElement | null>(null);
   const active = stations?.[Math.min(idx, stations.length - 1)];
@@ -68,16 +67,12 @@ export function ProofCard({ track }: { track: CaseTrack }) {
     <article className="tl-card" aria-labelledby={titleId}>
       <header className="tl-card__head">
         <p className="tl-card__kicker">Loop Earplugs · {phase}</p>
-        <div className="tl-card__tabs" ref={setRailHost}>
-          {stations ? (
-            <ConsoleRail
-              stations={stations}
-              activeIdx={idx}
-              onActive={setIdx}
-              label={proofTabLabel(track.visual.kind)}
-            />
-          ) : null}
-        </div>
+        {track.arc ? (
+          <p className="tl-card__arc">
+            <span className="tl-card__arc-step">{track.arc.step}</span>
+            <span className="tl-card__arc-title">{track.arc.title}</span>
+          </p>
+        ) : null}
       </header>
       <div className="tl-card__body">
         <div className="tl-card__record">
@@ -85,13 +80,25 @@ export function ProofCard({ track }: { track: CaseTrack }) {
             {track.project}
           </h3>
           {track.card ? <p className="tl-card__lede">{track.card.lede}</p> : null}
+          {/* ⚠ THE CLAIM CARRIES ITS SENTENCE NOW (owner: the left panel of
+              the homepage "has a bit more information about each specific
+              thing — let's also use that information"). `CaseBlock` has
+              always been `{ glyph, title, desc }` and this surface printed
+              only the title, so the record was there and the card was not
+              reading it. The sentence goes sr-only below the height rung in
+              `trinny-london.css` — the casefile's own 1070h precedent, and
+              the reason is the same arithmetic: four two-line sentences do
+              not fit a 424px record column at 1280×720. */}
           <ul className="tl-card__claims">
             {claims.map((block) => (
               <li className="tl-card__claim" key={block.title}>
                 <span className="tl-card__mark" aria-hidden="true">
                   {block.glyph ? <ProofGlyph name={block.glyph} /> : null}
                 </span>
-                <span>{block.title}</span>
+                <span className="tl-card__claim-body">
+                  <span className="tl-card__claim-title">{block.title}</span>
+                  <span className="tl-card__claim-desc">{block.desc}</span>
+                </span>
               </li>
             ))}
           </ul>
@@ -100,12 +107,28 @@ export function ProofCard({ track }: { track: CaseTrack }) {
             frame and the map's SVG rest at opacity 0 until an ancestor
             carries it. This card writes no corridor channel, so the rest
             state is declared (the arcs' host recipe, arcs.css). */}
-        <div
-          className="tl-card__field"
-          data-proof-settled=""
-          {...(active ? { role: "tabpanel", "aria-label": active.name } : null)}
-        >
-          <ProofField visual={track.visual} idx={idx} railHost={railHost} />
+        <div className="tl-card__field" data-proof-settled="">
+          <div className="tl-card__tabs" ref={setRailHost}>
+            {stations ? (
+              <ConsoleRail
+                stations={stations}
+                activeIdx={idx}
+                onActive={setIdx}
+                label={proofTabLabel(track.visual.kind)}
+              />
+            ) : null}
+          </div>
+          {/* ⚠ THE BAY IS THE SIZE CONTAINER, NOT THE FIELD. The ads count
+              their rows and the wireframes derive their `cqh` height off the
+              box they are actually drawn in; left on `.tl-card__field` the
+              container would now include the rail's row and every drawing
+              would be sized against a box it does not fill. */}
+          <div
+            className="tl-card__bay"
+            {...(active ? { role: "tabpanel", "aria-label": active.name } : null)}
+          >
+            <ProofField visual={track.visual} idx={idx} railHost={railHost} />
+          </div>
         </div>
       </div>
     </article>

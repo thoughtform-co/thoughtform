@@ -164,16 +164,61 @@ for (const [p, name, note] of [
   [0.35, "14-turn-arrive", "the turn — the last card leaving, the first particles in flight"],
   [0.6, "15-turn-mark", "the turn — their mark, on a ground already warming"],
   [0.84, "16-turn-line", "the turn — the line decoded in place, the products at rest"],
-  [1.0, "17-turn-resolve", "the turn — the line un-typed, the ground HOLDING (U4)"],
+  [0.94, "17-turn-clear", "the turn — the products sweeping OUT, the line un-typing (U5)"],
+  [1.0, "18-turn-resolve", "the turn — the stage bare, the ground HOLDING (U4)"],
 ]) {
   await rollToP(p);
   await page.waitForTimeout(600);
   await shoot(name, note);
 }
 
-await rollTo(await topOf("proposition"));
-await page.waitForTimeout(1500);
-await shoot("12-proposition", "the proposal — the configuration drawing");
+/* The proposal (ADR-095 U5). It is a PINNED station now, so its record is
+   deliberately blank while the station travels and powers on once the stage
+   has parked — `q` is how far into that pinned stretch the reader is, and
+   `data-tl-prop` is what the writer publishes.
+   ⚠ SOLVING FOR `topOf("proposition")` SHOOTS THE ONE FRAME THE RECORD IS
+   GUARANTEED TO BE EMPTY IN: the top at the viewport top IS `q = 0`, the
+   instant before the reveal opens. That still is worth having — it is the
+   proof there is no travel to see — but it is not the proposal. Same law as
+   `rollToP`: converge on the published clock. */
+/* ⚠ AND THE PIN IS NOT THE STATION'S TOP. `.station` carries top padding —
+   140px at 1920×1247 — so the stage is still that far short of pinning in
+   the frame the station's top reaches the viewport top. The clock measures
+   the STAGE's own travel, and so does this. */
+const propRect = () =>
+  page.evaluate(() => {
+    const el = document.getElementById("proposition");
+    const st = el?.querySelector("[data-tl-prop-stage]");
+    const r = el?.getBoundingClientRect();
+    return {
+      top: (r?.top ?? 0) + window.scrollY,
+      height: r?.height ?? 0,
+      pad: st?.offsetTop ?? 0,
+      stageH: st?.offsetHeight ?? 0,
+    };
+  });
+const rollToQ = async (q) => {
+  for (let pass = 0; pass < 5; pass++) {
+    const { top, height, pad, stageH } = await propRect();
+    const travel = Math.max(1, height - pad - stageH);
+    await rollTo(Math.round(top + pad + q * travel));
+    const actual = Number(
+      await page.evaluate(
+        () => document.getElementById("proposition")?.getAttribute("data-tl-prop") ?? "0"
+      )
+    );
+    if (Math.abs(actual - q) <= 0.02) break;
+  }
+};
+for (const [q, name, note] of [
+  [0, "19-prop-armed", "the proposal — pinned and blank, the frame with nothing travelling"],
+  [0.26, "20-prop-strike", "the proposal — the record striking on, in place"],
+  [0.7, "12-proposition", "the proposal — the configuration drawing, lit"],
+]) {
+  await rollToQ(q);
+  await page.waitForTimeout(900);
+  await shoot(name, note);
+}
 
 await rollTo(await topOf("contact"));
 await shoot("13-contact", "the exit");

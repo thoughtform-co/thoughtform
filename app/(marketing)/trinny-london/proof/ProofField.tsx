@@ -14,9 +14,10 @@ import type { CaseTrackVisual } from "@/lib/cases/types";
  *   sheets           the six Loop ads (the ADS sheet's shots), in NATURAL
  *                    COLOUR and shown WHOLE at 4:5 — the ADR-056 U5 law; the
  *                    duotone is a UI-capture recipe, never a content one
- *   films            the two above-the-line posters, ONE AT A TIME on the
- *                    head's rail, poster-first (no `<video>` on a card
- *                    nobody clicks — ADR-056 U5)
+ *   films            the two above-the-line films as stills, ONE AT A TIME on
+ *                    the field's own rail, in their 4:5 SOCIAL cut where one
+ *                    exists (ADR-094 U2) — still-first, so no `<video>` on a
+ *                    card nobody clicks (ADR-056 U5)
  *   tools            the four AUTHORED wireframes (`TOOL_WIREFRAMES`), the
  *                    drawn record of the tools, ONE AT A TIME — no capture,
  *                    no duotone (ADR-068 U3); a tool without a drawing
@@ -36,7 +37,10 @@ import type { CaseTrackVisual } from "@/lib/cases/types";
  *
  * The sizing contract these plates read with no fallback (`--fl-mono`,
  * `--fl-copy`, `--fl-shot-px`, a definite height, the settled gate) is
- * declared on `.tl-card__field` in `trinny-london.css`.
+ * declared on `.tl-card__field` in `trinny-london.css`. ⚠ Since ADR-094 U2
+ * the SIZE CONTAINER is one level down, on `.tl-card__bay` — the field now
+ * holds the rail as well, and a drawing sized against a box that includes
+ * its own chrome is a drawing that never fills the box it is drawn in.
  */
 export function ProofField({
   visual,
@@ -72,23 +76,33 @@ export function ProofField({
     case "films": {
       const film = visual.films[Math.min(idx, visual.films.length - 1)];
       if (!film) return null;
+      /* ⚠ THE PORTRAIT CUT WINS WHERE THERE IS ONE (ADR-094 U2, owner
+         2026-09-10: "I found the vertical versions of our ATLs, I think
+         those will work better than the landscape ones"). This field is
+         TALL — 693×926 at the owner's viewport — and a 16:9 frame in it is
+         a stamp with a third of the box empty either side. `CaseFilm.portrait`
+         is the film's own 4:5 social resize, one frame, and it is optional:
+         a film without one keeps its landscape poster and the box keeps its
+         16/9 derivation. The class is what tells the CSS which. */
+      const shot = film.portrait;
       return (
         <div className="tl-field tl-field--films">
-          <div className="tl-film">
+          <div className={shot ? "tl-film tl-film--portrait" : "tl-film"}>
             <span className="tl-film__frame">
-              {/* The posters are the films' own 1920×1080 frames
-                  (`public/arcs/posters/`); `CaseFilm.poster` is the path. */}
               <Image
-                src={film.poster}
-                alt={film.label}
-                width={1920}
-                height={1080}
+                src={shot ? shot.src : film.poster}
+                alt={shot ? shot.alt : film.label}
+                width={shot?.width ?? 1920}
+                height={shot?.height ?? 1080}
                 sizes="(min-width: 961px) 56vw, 90vw"
               />
             </span>
+            {/* ⚠ THE META SWAPS WITH THE PICTURE. `film.meta` describes the
+                16:9 master; under a 4:5 still it names the wrong shape for
+                the thing right above it. */}
             <span className="tl-film__caption">
               <span>{film.label}</span>
-              <span>{film.meta}</span>
+              <span>{shot ? shot.meta : film.meta}</span>
             </span>
           </div>
         </div>

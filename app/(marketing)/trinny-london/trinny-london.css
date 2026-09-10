@@ -234,10 +234,14 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
 }
 
 /* ⚠ THE HEAD IS CHROME, NOT THE CLAIM (owner, 2026-09-10). The client on
-   the left, the tab row on the right, and the project's NAME moved down
-   into the record column where it can wrap. What that costs is stated in
-   `ProofCard.tsx`: this strip is the peek band, so a covered card's sliver
-   no longer names the project. */
+   the left, the project's beat of the ARC on the right, and the project's
+   NAME down in the record column where it can wrap.
+   ⚠ THE ARC IS WHAT PAYS FOR MOVING THE TABS OUT (U2). U1 recorded the cost
+   of emptying this strip: it is the PEEK BAND, the sliver a covered card
+   still shows, and `LOOP EARPLUGS · BUILD` alone reads identically on all
+   four. The arc line is better than the project name U1 offered as the
+   fallback — the pile then indexes itself by the ARGUMENT rather than by a
+   name the record column already carries one line down. */
 .tl-root .tl-card__head {
   display: flex;
   align-items: center;
@@ -275,10 +279,46 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   white-space: nowrap;
 }
 
-/* ── The head's tab row (ADR-094 U1) ─────────────────────────────────
-   The house rail, seated in the header bar. `ConsoleRail` is already on
-   this page — the map's console renders it — so the row of tabs the owner
-   asked for is that component with state, not a second strip.
+/* The head's right slot: this project's beat of the arc, `01` … `04` with
+   the claim beside it. ⚠ `nowrap` + ellipsis, because this is a 52px flex
+   bar again — the 44-character ceiling on `CaseTrack.arc.title` is measured
+   against this slot at 1280×720, and the ellipsis is the belt behind it. */
+.tl-root .tl-card__arc {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  min-width: 0;
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--tl-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* The step is the one lit thing in the band — the gold INK rung, never the
+   mark rung: this is small text on parchment, where `--gold` is ~1.8:1. */
+.tl-root .tl-card__arc-step {
+  flex: 0 0 auto;
+  color: var(--gold-ink);
+}
+
+.tl-root .tl-card__arc-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── The FIELD's tab row (ADR-094 U1, moved in U2) ───────────────────
+   The house rail, seated on the right panel's own top edge (owner,
+   2026-09-10: the tabs should "live inside the right panel instead of the
+   header … feel like the full frame of the right panel"). `ConsoleRail` is
+   already on this page — the map's console renders it — so the row of tabs
+   the owner asked for is that component with state, not a second strip.
 
    ⚠ THE SKIN IS ADR-089 U3/U4's, RE-POINTED. That grammar (flat, square,
    bordered, the open one filled, no spine) is the owner's own ruling of
@@ -294,31 +334,36 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
 .tl-root .tl-card__tabs {
   display: flex;
   align-items: stretch;
-  justify-content: flex-end;
   min-width: 0;
-  align-self: stretch;
   /* The rail's type is `cqw`-derived (`console.css`), and inside a console
      the container is the console. Here it is this slot, so the labels size
      against the row they are actually in rather than against whatever
      container happens to be an ancestor. */
   container-type: inline-size;
+  /* Even when a kind has no stations (the ads sheet, the map's own console
+     before its portal lands) the row keeps its height, so all four cards
+     seat their bay on the same line. */
+  min-height: 34px;
 }
 
 .tl-root .tl-card__tabs .fl-con__rail {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   align-items: center;
-  /* The head already draws the rule under this band; a console's rail
-     draws its own because it sits on a console's top edge. */
+  /* The field's own rule sits under this band, drawn once by the row rather
+     than by the rail — a console's rail draws its own because it sits on a
+     console's top edge, and this one sits on a panel's. */
   border-bottom: 0;
 }
 
-/* ⚠ CONTENT-WIDTH, NOT EQUAL THIRDS. `flex: 1 1 0` is right for a rail
-   spanning a console — it makes a row of keys out of the whole top edge —
-   and wrong here: the head has up to ~1180px of free space at 1440, and
-   four stations at 295px each is a divided bar, not the "very subtle,
-   minimalistic tabs" this is. The boxes size to their labels. */
+/* ⚠ FULL WIDTH — BACK TO `flex: 1 1 0`, WHICH IS THE COMPONENT'S OWN
+   GRAMMAR (U2). U1 overrode it to content width for a good reason that no
+   longer holds: the row was stretched across a ~1180px HEADER bar at 1440,
+   where four stations at 295px each is a divided bar. Seated on the right
+   panel's top edge the free space is the panel's (~700px at the owner's
+   viewport, ~430 at 1280×720), the stations fill it, and the row reads as
+   the frame of the thing under it — which is what the owner asked for. */
 .tl-root .tl-card__tabs .fl-con__stn {
-  flex: 0 1 auto;
+  flex: 1 1 0;
   margin: 0 0 0 6px;
   padding: 5px 11px;
   gap: 7px;
@@ -384,10 +429,16 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   min-height: 0;
 }
 
+/* ⚠ SEATED AT THE TOP, NOT CENTRED (owner, 2026-09-10: "maybe the text
+   should also be a bit more aligned to the top"). Centring was right while
+   the column held a name, a paragraph and four short claims — roughly a
+   third of the box, floating. With each claim carrying its sentence the
+   column is most of its own height, and a centred block that nearly fills
+   its box reads as a block that failed to fill it. */
 .tl-root .tl-card__record {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   /* The gap now falls between the NAME and its paragraph as well as
      between the paragraph and the claims, so it is tuned for the tighter
      of the two and the claims buy their separation back below. */
@@ -423,11 +474,16 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   gap: clamp(8px, 1.2vh, 12px);
 }
 
+/* ⚠ `align-items: start`, NEVER `center` or `baseline`. Grid synthesizes a
+   replaced element's baseline from its bottom edge, and with a two-line
+   sentence under the claim a centred glyph sits mid-paragraph. The mark
+   hangs off the CLAIM's line, which is ADR-067's own ruling one surface
+   over. */
 .tl-root .tl-card__claim {
   display: grid;
   grid-template-columns: 14px minmax(0, 1fr);
   gap: 12px;
-  align-items: center;
+  align-items: start;
   font-family: var(--font-pp-neue-montreal);
   font-weight: var(--weight-text);
   font-size: clamp(14px, 1vw, 16px);
@@ -436,10 +492,57 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   color: var(--tl-ink-2);
 }
 
+.tl-root .tl-card__claim-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tl-root .tl-card__claim-title {
+  display: block;
+  color: var(--tl-ink);
+}
+
+/* ⚠ THE SENTENCE IS SR-ONLY BELOW THE HEIGHT RUNG, and that is arithmetic
+   rather than taste. `CaseBlock.desc` runs to 95 characters; four of them
+   at ~2 lines each are ~170px of ink on top of a name, a lede and four
+   claims, against a record column that is only ~424px tall at 1280×720.
+   The casefile's own register does exactly this at 1070h (ADR-068) for the
+   same reason. Shown, it takes ADR-088's SENTENCE rung — a full ratio step
+   under the claim, in the sans, so it can never outrank what it explains. */
+.tl-root .tl-card__claim-desc {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (min-height: 940px) {
+  .tl-root .tl-card__claim-desc {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    display: block;
+    font-size: clamp(12px, 0.82vw, 13.5px);
+    line-height: 1.35;
+    color: var(--tl-ink-3);
+  }
+}
+
 .tl-root .tl-card__mark {
   display: block;
   width: 14px;
   height: 14px;
+  /* Optically seated on the claim's first line box (1.3 × ~15px). */
+  margin-top: 3px;
 }
 
 .tl-root .tl-card__mark .fl-proof-glyph {
@@ -459,7 +562,9 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  container-type: size;
+  /* The rail on the panel's own top edge, the evidence under it (U2). */
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   --fl-mono: var(--font-pt-mono);
   --fl-copy: clamp(13px, 1vw, 16px);
   --fl-shot-px: 12px;
@@ -467,6 +572,20 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
      travel here: the evidence bleeds to two edges and a sliding picture
      inside a clipped box shows its own seam. */
   opacity: var(--pc-in-field);
+}
+
+/* ⚠ THE SIZE CONTAINER MOVED HERE FROM THE FIELD (U2), and it had to. The
+   ads count their rows off `100cqh`, the film derives its width from it and
+   the wireframe's whole bay is `(100cqh − 4px) × 1.62` — with the rail now
+   inside the field, a container on the field would hand all three a height
+   that includes ~34px of chrome they cannot draw in. Every drawing would be
+   sized against a box it does not fill. */
+.tl-root .tl-card__bay {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  container-type: size;
 }
 
 .tl-root .tl-field {
@@ -514,11 +633,11 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   }
 }
 
-/* ⚠ ONE FILM, POSTER-FIRST, ON THE HEAD'S RAIL (owner, 2026-09-10 — both
+/* ⚠ ONE FILM, STILL-FIRST, ON THE FIELD'S RAIL (owner, 2026-09-10 — both
    at once was "overwhelming"). Side by side they were two stamps in a
-   panel; selected, the poster takes the field at the scale its 16:9 frame
-   was drawn for. The caption keeps the FULL label — the rail's handle is
-   the film's name alone, so the client half is said once per band. */
+   panel; selected, the still takes the field at the scale its frame was
+   drawn for. The caption keeps the FULL label — the rail's handle is the
+   film's name alone, so the client half is said once per band. */
 .tl-root .tl-field--films {
   --tl-film-pad: clamp(16px, 2vw, 32px);
   display: grid;
@@ -527,21 +646,32 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   padding: var(--tl-film-pad);
 }
 
-/* ⚠ HEIGHT-BOUND AS WELL AS WIDTH-BOUND. The field is a size container and
+/* ⚠ HEIGHT-BOUND AS WELL AS WIDTH-BOUND. The bay is a size container and
    it is portrait at the owner's viewport and landscape at 1280×720, so a
-   16:9 frame at 100 % width overflows the short one. The cap converts the
-   height the field actually has — less the padding, the caption's line box
-   and its gap — back through the aspect. */
+   frame at 100 % width overflows the short one. The cap converts the
+   height the bay actually has — less the padding, the caption's line box
+   and its gap — back through the aspect.
+   ⚠ THE ASPECT IS ONE TOKEN, USED TWICE (U2). It sets the frame's box AND
+   the width cap that keeps that box inside the bay; declared apart, a
+   portrait still would get a tall frame inside a width solved for 16:9 and
+   the caption would be pushed out of the panel. */
 .tl-root .tl-film {
+  --tl-film-ar: 16 / 9;
   display: grid;
   gap: 10px;
   min-width: 0;
-  width: min(100%, calc((100cqh - 2 * var(--tl-film-pad) - 26px) * 16 / 9));
+  width: min(100%, calc((100cqh - 2 * var(--tl-film-pad) - 26px) * var(--tl-film-ar)));
+}
+
+/* The 4:5 social cut, where the record carries one — the shape this panel
+   actually is (ADR-094 U2). */
+.tl-root .tl-film--portrait {
+  --tl-film-ar: 4 / 5;
 }
 
 .tl-root .tl-film__frame {
   display: block;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: var(--tl-film-ar);
   background: rgba(var(--dawn-rgb), 0.06);
   overflow: hidden;
 }
@@ -553,10 +683,15 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   object-fit: contain;
 }
 
+/* ⚠ THE ROW WRAPS, THE LABELS DO NOT. A 4:5 frame in a SHORT field is
+   narrow — 281px at 1280×720, where the 16:9 poster it replaced was 500 —
+   so the two runs met and broke mid-phrase ("SMUG OWL · LOOP / ATL"). Each
+   half holds together and the meta drops to its own line instead. */
 .tl-root .tl-film__caption {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 12px;
+  gap: 2px 12px;
   font-family: var(--font-pt-mono);
   font-weight: var(--weight-text);
   font-size: 11px;
@@ -565,9 +700,13 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   color: var(--tl-ink-3);
 }
 
-/* ⚠ ONE DRAWN TOOL, ON THE HEAD'S RAIL (owner, 2026-09-10). The cell is
+.tl-root .tl-film__caption > span {
+  white-space: nowrap;
+}
+
+/* ⚠ ONE DRAWN TOOL, ON THE FIELD'S RAIL (owner, 2026-09-10). The cell is
    the definite box the wireframe's size container fills (`.fl-wire` is
-   absolutely inset), and it is now the WHOLE field.
+   absolutely inset), and it is now the WHOLE bay.
 
    ⚠ THAT IS THE FIX, NOT A SIMPLIFICATION. The drawings are authored for
    LANDSCAPE bays (their W/H runs 2.3–2.9): four in one box gave a 2×2 of
@@ -617,13 +756,13 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
 
 /* ── The map's console, on this route ───────────────────────────
    The other half of the owner's "I wouldn't use a gradient". With the rail
-   lifted into the head, what is left painting a ramp in that band is the
-   CONSOLE: a gold glow hung off its top edge (a 128 % × 58 % radial at
-   50 % −8 %) and a scanline over the whole plate. ADR-089 U1 deleted both
-   on the casefile for the same reason and every rule of that pass is
-   `.fl-case`-scoped, so this route never got it.
+   portalled OUT of the console, what is left painting a ramp in that band
+   is the CONSOLE itself: a gold glow hung off its top edge (a 128 % × 58 %
+   radial at 50 % −8 %) and a scanline over the whole plate. ADR-089 U1
+   deleted both on the casefile for the same reason and every rule of that
+   pass is `.fl-case`-scoped, so this route never got it.
    ⚠ The glow modelled an EDGE CATCHING LIGHT on a console that no longer
-   has a lit top edge to catch it — the rail is gone from there. */
+   has a lit top edge to catch it — the rail is not there. */
 .tl-root .tl-card__field .fl-con__console {
   background: var(--con-ground);
 }
@@ -687,18 +826,25 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
     flex-wrap: wrap;
     padding-block: 12px;
   }
-  /* ⚠ THE TABS TAKE THEIR OWN ROW ON A PHONE. `console.css`'s unwrap rung
-     gives every station `flex: 1 1 45%` and a wrapping label, which inside
-     a head strip stacked two boxes down the right-hand edge and broke
-     `DJ NEIGHBOUR` across two lines. A full-width row under the client
-     line is the same IA the mobile evidence instruments already use
-     (ADR-083: identity, then mode, then the one seat) — and it keeps the
-     44px touch floor that rung exists for. */
-  .tl-root .tl-card__tabs {
+  /* ⚠ THE ARC TAKES ITS OWN ROW ON A PHONE, AND ITS TITLE WRAPS. It is
+     `nowrap` + ellipsis on the desktop because that strip is a 52px flex
+     bar; at 390px the client line alone is most of the width, so held on
+     one row the claim would be ellipsed away to nothing. Same IA as the
+     mobile evidence instruments (ADR-083): identity, then the beat. */
+  .tl-root .tl-card__arc {
     flex: 1 0 100%;
-    justify-content: flex-start;
-    margin-top: 10px;
+    margin-top: 8px;
+    white-space: normal;
   }
+  .tl-root .tl-card__arc-title {
+    overflow: visible;
+    text-overflow: clip;
+  }
+  /* ⚠ THE STATIONS STOP FILLING AND START WRAPPING. `console.css`'s unwrap
+     rung gives every station `flex: 1 1 45%` and a wrapping label; four
+     equal boxes on a 390px row break `DJ NEIGHBOUR` across two lines. They
+     size to their labels and wrap, keeping the 44px touch floor that rung
+     exists for. */
   .tl-root .tl-card__tabs .fl-con__rail {
     flex: 1 1 auto;
     flex-wrap: wrap;
@@ -1093,17 +1239,34 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
 }
 
 /* ── 9. The ambient's kill edge ───────────────────────────────────────
-   The first OPAQUE station below the corridor — `#proposition` since
-   ADR-095 U1 deleted the interstitial slab that used to be it. The hook
-   fades the canvas against ITS top and this rule promotes the SAME element
-   while the exit band is live: the `#voidwalker` form (relative, z 6, its
-   own ground), never the transparent `#services` form. Keying both sides on
-   one attribute is what stops JS and CSS naming different stations (the
-   ADR-030 §6 seam bug), and it is why moving the edge was an attribute
-   move and nothing else. */
+   The first OPAQUE station below the corridor — `#contact` since ADR-095 U5
+   made `#proposition` transparent so the mark could fade BEHIND the record
+   rather than die at its top edge. The hook fades the canvas against ITS
+   top and this rule promotes the SAME element while the exit band is live:
+   the `#voidwalker` form (relative, z 6, its own ground), never the
+   transparent `#services` form. Keying both sides on one attribute is what
+   stops JS and CSS naming different stations (the ADR-030 §6 seam bug), and
+   it is why moving the edge is an attribute move and nothing else. */
 html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
   position: relative;
   z-index: 6;
+  content-visibility: visible;
+}
+
+/* ⚠ AND `#proposition` TAKES THE TURN'S FORM INSTEAD (U5) — transparent
+   over the live canvas, so the parked mark is still there behind the
+   record, veiled to 0.90 and reading as the page the reader was already
+   on. It is `position: relative` in its own right below, NOT from this
+   rule: `data-corridor-exit` is transient, and an absolutely positioned
+   ground whose containing block vanishes lands somewhere else entirely
+   (measured once already, as a hard seam across the full width).
+   ⚠ NO `> * { z-index }` CHILD RULE. `#turn` needs one only because
+   `home-v2.css` gives `#services > *` a `position: relative` that would
+   un-stick its stage; this station is not `#services`. */
+html[data-corridor-exit="true"] .tl-root #proposition {
+  z-index: 6;
+  background-color: transparent;
+  background-image: none;
   content-visibility: visible;
 }
 
@@ -1136,6 +1299,117 @@ html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
    the station's top edge. */
 .tl-root .tl-prop {
   position: relative;
+}
+
+/* ⚠ THE STATION IS PINNED NOW (U5, owner 2026-09-10: "we have a parallax
+   paint flying over it. I don't want that … the elements from the next
+   section should just come into view").
+
+   The complaint was exact and the cause was structural: an opaque station in
+   normal flow can only ARRIVE by travelling, and its content travels with it.
+   Every reveal system in the house that "appears in place" — the masthead,
+   the casefile's power-on, the turn's own decode — is seated on something
+   that has STOPPED. So this station takes the turn's shape: a viewport of
+   pin plus a runway, with a sticky stage, and the record inside it does not
+   move at all. The writer keeps it blank while the stage rises and powers it
+   on once it parks, so there is nothing to see travelling and no edge to
+   cross — the ground under it is the same coral field either side.
+
+   ⚠ THE RUNWAY IS DWELL, NOT CHOREOGRAPHY. 60svh is the pinned stretch the
+   reveal spends ~40 % of and the reader spends the rest of reading the
+   drawing. Longer is dead scroll (the ADR-056 round-3 ruling); shorter and
+   the record un-pins while it is still being read. */
+.tl-root #proposition {
+  --tl-prop-runway: 60svh;
+}
+
+@media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  .tl-root #proposition {
+    min-height: calc(100svh + var(--tl-prop-runway));
+    /* ⚠ `display: block`, for the same reason `#turn`'s capable rung
+       declares it: every child here is either absolutely positioned (the
+       ground) or a sticky stage, so a grid track sized by content collapses
+       and every percentage inside resolves to zero. Third time on this
+       route. */
+    display: block;
+    /* ⚠ THE STATION'S VERTICAL PADDING COMES OFF, AND THE RUNWAY IS WHY. A
+       sticky child travels inside its container's CONTENT box, so 140px of
+       top padding and 220px of bottom padding are 360px taken straight out
+       of the pin — at 1280×720 that left **16px** of real travel against a
+       60svh runway, and the record was already scrolling away by the frame
+       the clock called q 0.7. It measured as a head clipped off the top of
+       the viewport.
+       The air is spent INSIDE the stage instead, where it is the record's
+       margin from the frame rather than a hole in the pin. */
+    padding-block: 0;
+  }
+
+  .tl-root .tl-prop__stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    /* The station's padding, moved in — and `border-box`, or 100svh plus
+       padding is taller than the viewport it is meant to fill. */
+    box-sizing: border-box;
+    padding-block: clamp(32px, 5vh, 88px);
+    display: grid;
+    /* ⚠ `1fr`, NEVER an auto track. `.tl-prop__inner` is `width: 100%` with
+       a `max-width` cap, so an auto column sized by its content would let
+       the band size ITSELF and the `100%` resolve against nothing. Fourth
+       time on this route that a content-sized track met a percentage. */
+    grid-template-columns: minmax(0, 1fr);
+    /* ⚠ DECLARED, NOT INHERITED. `align-content` aligns BLOCK content in
+       Chrome 123+, so the station's own `center` would survive into this
+       stage and seat the record a viewport low inside its own pin — the
+       exact defect ADR-095 recorded on `#turn`, with every gate green. */
+    align-content: center;
+  }
+}
+
+/* ── The record's power-on (U5) ──────────────────────────────────────
+   The house's terminal stutter, re-pointed at `--tp-in`: the line strikes,
+   drops out, then settles (0 → 0.62 → 0.12 → 1). Reversible by construction,
+   no keyframes, no writer beyond the one scalar.
+
+   ⚠ OPACITY ONLY — `transform` stays untouched. That is the masthead law
+   (ADR-044) and it is the whole point of this pass: the elements arrive by
+   appearing, never by moving. The 2.5px lateral tear the landing's own copy
+   of this block carries is a flourish for a surface where the panels already
+   travel; here it would be the defect in miniature.
+
+   ⚠ AND IT FAILS OPEN. `var(--tp-in, 1)` — the phone, reduced motion and any
+   path where the writer parks all get the record standing at full strength,
+   because a reveal channel that is absent must mean "shown", never "hidden".
+   The writer REMOVES the property rather than writing 0. */
+.tl-root .tl-prop__stage [data-tl-reveal] {
+  --ci: clamp(0, calc((var(--tp-in, 1) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
+  --g1: clamp(0, calc(var(--ci) * 9), 1);
+  --g2: clamp(0, calc((var(--ci) - 0.16) * 9), 1);
+  --g3: clamp(0, calc((var(--ci) - 0.34) * 4), 1);
+  opacity: clamp(0, calc(var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88), 1);
+}
+
+/* The stagger: the head strikes first, its paragraph second, the drawing
+   last — frame, then claim, then instrument, which is the casefile's own
+   arrival order one surface over.
+
+   ⚠ THE MARK IS ON THE HEAD, NOT ON THE TITLE INSIDE IT, and that is not a
+   convenience. `.tl-prop__head` draws the coral rule under the band, and
+   with the reveal one level down that rule painted at full strength across
+   an otherwise empty frame — a line hanging in the middle of the viewport
+   with nothing to underline. A rule is part of what it rules; it arrives
+   with it. (The paragraph is a CHILD of the head, so its opacity compounds
+   with the band's — which is why its own offset is small.) */
+.tl-root .tl-prop__head {
+  --ci-off: 0;
+}
+
+.tl-root .tl-prop__desc {
+  --ci-off: 0.1;
+}
+
+.tl-root .tl-prop .tl-config {
+  --ci-off: 0.26;
 }
 
 /* ⚠ `inset: 0`, AND THAT WAS WORTH MEASURING. The instinct is to break the

@@ -1,18 +1,31 @@
 /**
- * useTurnScroll — the turn's ONE writer (ADR-095).
+ * useTurnScroll — the ONE writer for the turn AND the proposal (ADR-095,
+ * extended in U5).
  *
  * Reads `#turn`'s rect once per scroll frame and drives the whole beat from
  * it, all pure functions of that rect (`turnClock.ts`):
  *   - `brandmarkMorphRef.progress` — the particle morph the corridor's
  *     parked mark and the armillary read per frame;
  *   - `brandmarkMorphRef.veil` — the mark put away once the copy owns the
- *     centre;
+ *     centre, and taken further as the proposal arrives;
  *   - the ground's wash, through a fragment shader (`turnWash.ts`) or, where
  *     WebGL is refused, a CSS gradient on the same canvas;
- *   - `--tm-*` on each `[data-tm]` product — its pose on the arc into rest;
- *   - the copy's decode (`decodeText.ts`), written straight into each
+ *   - `--tm-*` on each `[data-tm]` product — its pose on the arc into rest,
+ *     and back out of frame as the beat ends;
+ *   - the copy's decode (`./turnDecode`), written straight into each
  *     `[data-tl-decode]` node, plus `--tl-cta-o` on the block;
  *   - `--tl-turn` / `data-tl-turn` on `#turn` — the smoke's observable.
+ *
+ * …and then, off `#proposition`'s OWN rect (U5):
+ *   - `--tp-in` / `data-tl-prop` on `#proposition` — its elements' power-on,
+ *     which is opacity ONLY and starts after its stage has pinned, so the
+ *     record appears in place instead of riding a slab up the screen;
+ *   - the same house decode on its title.
+ *
+ * ⚠ ONE WRITER, TWO STATIONS, AND THAT IS DELIBERATE. This effect already
+ * held `#proposition`, its canvas and its rect for the shared ground; a
+ * second hook would mean two rAFs racing over one mark's veil, which has
+ * exactly one owner by contract.
  *
  * Passive listeners, one rAF, delta-gated (the `useStackedCardsScroll`
  * pattern). It parks — progress 0, veil 0, every var cleared, every line
@@ -32,10 +45,12 @@ import {
   ctaInOf,
   ctaInkOf,
   ctaOutOf,
+  markVeil,
   morphOf,
   productPose,
+  propInOf,
+  propPinnedProgress,
   turnProgress,
-  veilOf,
   TURN_PROP_FADE,
   washOf,
   type ProductRest,
@@ -84,11 +99,16 @@ export function useTurnScroll(): void {
     // from under the reader at the seam.
     const prop = document.querySelector<HTMLElement>(".tl-root #proposition");
     const propCanvas = prop?.querySelector<HTMLCanvasElement>("[data-tl-prop-wash]") ?? null;
+    const propStage = prop?.querySelector<HTMLElement>("[data-tl-prop-stage]") ?? null;
+    const propLines = prop
+      ? Array.from(prop.querySelectorAll<HTMLElement>("[data-tl-decode]"))
+      : [];
     const mq = window.matchMedia(TURN_CAPABLE_QUERY);
 
     // The true strings, read from the server-rendered text once. They are
     // never re-read: from here the decode owns `textContent`.
     const truth = lines.map((el) => el.textContent ?? "");
+    const propTruth = propLines.map((el) => el.textContent ?? "");
 
     let wash: TurnWash | null = null;
     if (canvas) {
@@ -109,7 +129,17 @@ export function useTurnScroll(): void {
     let stageW = 0;
     let stageH = 0;
     let rests: ProductRest[] = [];
+    /* ⚠ THE STAGE'S OWN BOX, NOT THE STATION'S. `.station` carries top
+       padding — 140px at 1920×1247 — so the sticky stage pins that much
+       LATER than the station's top reaches the viewport top. Measured from
+       the layout (`offsetTop`/`offsetHeight`, which no transform reaches)
+       once per relayout, because a clock written against the station alone
+       opened the reveal 45px into a 140px travel and lit the record while it
+       was still moving. */
+    let propPadTop = 0;
+    let propStageH = 0;
     let lastP = -1;
+    let lastQ = -1;
     let lastPropA = -1;
 
     const park = () => {
@@ -123,10 +153,21 @@ export function useTurnScroll(): void {
       lines.forEach((el, i) => {
         el.textContent = truth[i];
       });
+      /* ⚠ THE PARKED PROPOSAL IS FULLY LIT, not blank. Its channel is a
+         REVEAL — absent, the CSS reads `var(--tp-in, 1)` and the record
+         simply stands, which is what the phone and the reduced-motion paths
+         must get. Writing 0 here would hide the whole proposal on exactly
+         the paths that have no way to un-hide it. */
+      prop?.style.removeProperty("--tp-in");
+      prop?.removeAttribute("data-tl-prop");
+      propLines.forEach((el, i) => {
+        el.textContent = propTruth[i];
+      });
       wash?.draw(0);
       propWash?.draw(0);
       prop?.style.removeProperty("--tl-wash");
       lastP = -1;
+      lastQ = -1;
       lastPropA = -1;
     };
 
@@ -140,6 +181,10 @@ export function useTurnScroll(): void {
         cx: el.offsetLeft + el.offsetWidth / 2,
         cy: el.offsetTop + el.offsetHeight / 2,
       }));
+      if (propStage) {
+        propPadTop = propStage.offsetTop;
+        propStageH = propStage.offsetHeight;
+      }
       wash?.resize();
       propWash?.resize();
     };
@@ -186,13 +231,45 @@ export function useTurnScroll(): void {
         }
       }
 
-      if (lastP >= 0 && Math.abs(p - lastP) < 0.0005) return;
+      /* ── The proposal's own clock (U5) ─────────────────────────────────
+         Its stage is pinned exactly as the turn's is, and `q` is how far
+         into that PINNED stretch the reader has come — 0 for the whole
+         approach, which is what lets the record sit blank while its section
+         travels and power on only once it has stopped. That is the whole
+         mechanism: nothing has to slide, because nothing is visible while
+         anything is moving.
+         ⚠ Read off `#proposition`'s rect, never the turn's: the two stations
+         are adjacent, so the turn's `p` saturates at 1 a viewport before
+         this one's pin and would light the record mid-travel. */
+      let q = 0;
+      if (prop && propStage) {
+        const prRect = prop.getBoundingClientRect();
+        q = propPinnedProgress(prRect.top, prRect.height, propPadTop, propStageH);
+      }
+
+      if (lastP >= 0 && Math.abs(p - lastP) < 0.0005 && Math.abs(q - lastQ) < 0.0005) return;
       lastP = p;
+      lastQ = q;
 
       brandmarkMorphRef.current.progress = morphOf(p);
-      brandmarkMorphRef.current.veil = veilOf(p);
+      /* Both stations, one channel — additive, and `q` is 0 through the
+         whole turn, so this IS `veilOf(p)` there to the last bit. */
+      brandmarkMorphRef.current.veil = markVeil(p, q);
       turn.style.setProperty("--tl-turn", p.toFixed(3));
       turn.setAttribute("data-tl-turn", p.toFixed(2));
+
+      if (prop) {
+        const tp = propInOf(q);
+        prop.style.setProperty("--tp-in", tp.toFixed(3));
+        prop.setAttribute("data-tl-prop", q.toFixed(2));
+        for (let i = 0; i < propLines.length; i++) {
+          // One direction only: the proposal does not un-type. The turn's
+          // copy leaves because its stage is being handed over; this record
+          // stays readable as the reader scrolls past it.
+          const next = turnDecodeFrame(propTruth, i, tp, 0);
+          if (propLines[i].textContent !== next) propLines[i].textContent = next;
+        }
+      }
 
       // The channel the CSS fallback and the smoke read; the canvas itself
       // is painted above, outside this gate.
@@ -201,7 +278,7 @@ export function useTurnScroll(): void {
       for (let i = 0; i < products.length; i++) {
         const el = products[i];
         const k = Number(el.dataset.tm) || 0;
-        const pose = productPose(k, p, rests[i], stageW, stageH);
+        const pose = productPose(k, p, rests[i], stageW, stageH, products.length);
         el.style.setProperty("--tm-dx", `${pose.dx.toFixed(1)}px`);
         el.style.setProperty("--tm-dy", `${pose.dy.toFixed(1)}px`);
         el.style.setProperty("--tm-dr", `${pose.dr.toFixed(2)}deg`);

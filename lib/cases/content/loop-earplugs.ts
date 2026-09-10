@@ -1815,18 +1815,38 @@ export const LOOP_STUDIO_SHEETS = [
  *  above: the arc's `films` beat mounts `FilmsPlate` on THIS array, so the
  *  two surfaces cannot drift into two different reels. Pinned `toBe` the
  *  row's visual in `cases-registry.test.ts`. */
+/* ⚠ THE `portrait` STILLS ARE THE 4:5 SOCIAL RESIZES, one frame each, and they
+   exist for the surfaces whose frame is TALL (ADR-094 U2 — the Trinny London
+   card's field is 693×926 at the owner's viewport, where a 16:9 poster is a
+   stamp with air either side of it). Cut from the studio's own masters in
+   `_Showcases/`; 4:5 is the ONLY aspect both films were resized to, so it is
+   the one shape a rail can switch between without the frame changing size. */
 export const LOOP_ATL_FILMS = [
   {
     src: "/videos/loop-smug-owl-ai-atl.mp4",
     poster: "/arcs/posters/smug-owl.jpg",
     label: "Smug Owl · Loop ATL",
     meta: "16:9 master · 30 sec",
+    portrait: {
+      src: "/arcs/posters/smug-owl-4x5.webp",
+      alt: "Smug Owl — the 4:5 social cut of Loop's AI above-the-line film",
+      width: 1080,
+      height: 1350,
+      meta: "4:5 social cut",
+    },
   },
   {
     src: "/videos/loop-dj-neighbour-ai-atl.mp4",
     poster: "/arcs/posters/dj-neighbour.jpg",
     label: "DJ Neighbour · Loop ATL",
     meta: "16:9 master · 30 sec",
+    portrait: {
+      src: "/arcs/posters/dj-neighbour-4x5.webp",
+      alt: "DJ Neighbour — the 4:5 social cut of Loop's AI above-the-line film",
+      width: 1080,
+      height: 1350,
+      meta: "4:5 social cut",
+    },
   },
 ] as const;
 
@@ -2196,6 +2216,11 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         card: {
           lede: "Every workstream at Loop mapped to the intelligence that runs it: 47 Skills encoded once and reused across teams, with the work deliberately left to people on the same record.",
         },
+        /* The arc's last beat — the sequence itself is documented on
+           `atl-films`, which opens it. ⚠ This lede still describes the MAP
+           where the beat claims the EXPANSION; flagged for the owner rather
+           than rewritten here, because the words are his. */
+        arc: { step: "04", title: "We took it to the rest of the company" },
       },
       {
         id: "tooling",
@@ -2261,6 +2286,8 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         card: {
           lede: "Four tools built with the people who run the workflow, for jobs no product roadmap would take on: briefing, image and video, localisation, studio operations. Owned by those teams.",
         },
+        /* Beat three — see `atl-films` for the sequence. */
+        arc: { step: "03", title: "We built the tools the work needed" },
       },
       {
         id: "studio",
@@ -2308,6 +2335,8 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         card: {
           lede: "Creative technology embedded in the studio. The team briefs, generates, judges and ships paid social with AI as the default, and a clear line where photography stays real.",
         },
+        /* Beat two — see `atl-films` for the sequence. */
+        arc: { step: "02", title: "We made the creative team self-sufficient" },
       },
       {
         id: "atl-films",
@@ -2355,6 +2384,27 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
         card: {
           lede: "Two 30-second films made with generative image and video models by the same creative team, to the same craft bar as live action, run as paid media on YouTube and connected TV.",
         },
+        /* ── THE ARC OPENS HERE (ADR-094 U2, owner 2026-09-10) ───────────
+           Four Loop projects that had been four unrelated records now carry
+           the engagement's own through-line, and this is beat one:
+
+             01  We pushed the frontiers of AI creative      (atl-films)
+             02  We made the creative team self-sufficient   (studio)
+             03  We built the tools the work needed          (tooling)
+             04  We took it to the rest of the company       (ai-transformation)
+
+           ⚠ THE ORDER IS THE ARGUMENT, and it REVERSES the first two rows
+           of the casefile's own directory. The frontier work came first and
+           is what earned the team the right to run it themselves; a surface
+           that opens on the studio has the consequence before the cause.
+           The casefile's directory order is unchanged — a directory is an
+           index and this is a narrative, and `TRINNY_PROOF_ORDER` is where
+           the sequence is declared for the surface that tells it.
+
+           ⚠ THIS IS NOT A RENAME. `project` stays "AI Above-the-Line" and
+           must keep matching `file`; the arc line is a second register, in
+           the first person plural, that says what the project WAS FOR. */
+        arc: { step: "01", title: "We pushed the frontiers of AI creative" },
       },
       /* Rows 05–08 (workshop rollout · governance · metrics · mission
          report) were TRIMMED here 2026-08-02 (owner) — see the ORDER note

@@ -620,6 +620,31 @@ export interface CaseFilm {
   label: string;
   /** Mono meta under the label, e.g. "16:9 master · 30 sec". */
   meta: string;
+  /**
+   * The film's 4:5 SOCIAL cut, as a still — for surfaces whose frame is
+   * PORTRAIT (ADR-094 U2, the Trinny London card, whose field is 693×926 at
+   * the owner's viewport). A 16:9 poster in a tall box is a stamp with air
+   * either side of it; the vertical resize is the same film, framed for the
+   * shape it is being shown in.
+   *
+   * ⚠ OPTIONAL AND ADDITIVE, and that is what makes it safe. `LOOP_ATL_FILMS`
+   * is held BY REFERENCE by the homepage casefile, the portfolio arc and this
+   * card (`cases-registry.test.ts` pins the identity with `toBe`), so a field
+   * only one renderer reads changes nothing for the other two. A film without
+   * one keeps its landscape poster everywhere.
+   *
+   * ⚠ The two masters do not share a duration — Smug Owl's 4:5 is the full
+   * 30 seconds, DJ Neighbour's a 7-second cutdown — which is why this is a
+   * STILL and not a second `src`. One frame each; the aspect is what the
+   * surface needed.
+   *
+   * ⚠ IT CARRIES ITS OWN `meta` BECAUSE `CaseFilm.meta` DESCRIBES THE
+   * MASTER. That line reads "16:9 master · 30 sec"; printed under a 4:5
+   * still it states the wrong shape for the thing directly above it — a
+   * caption contradicting its own picture, which is worse than no caption.
+   * The renderer swaps the whole right half with the still.
+   */
+  portrait?: CaseImage & { meta: string };
 }
 
 /** One station of a film's generation chain — the stage, and what ran it. */
@@ -902,6 +927,31 @@ export interface CaseTrack {
    * and a half. Both live in the record so both are inside the envelope scan.
    */
   card?: { lede: string };
+  /**
+   * Where this project sits in the engagement's ARC — the through-line that
+   * turns four separate records into one claim (ADR-094 U2, owner 2026-09-10:
+   * _"I was always struggling with, okay, how do I connect the ATLs with the
+   * AI Studio self-sufficiency and the AI tools I've built with the AI
+   * adoption"_).
+   *
+   * The four beats are the engagement's own order — we pushed the frontier,
+   * the team became self-sufficient, they wrote their own software, the rest
+   * of the company followed — and `step` is what orders them. A surface that
+   * shows several tracks at once reads this instead of inventing a sequence.
+   *
+   * ⚠ IT IS NOT A RENAME. `project` and `file` name the same thing as each
+   * other and are ≤20 characters (the registry's normalise-and-compare
+   * guard); this is a SECOND, longer register beside them — a claim in the
+   * first person plural, where `project` is a filename made readable.
+   *
+   * ⚠ ALL-OR-NONE within a casefile, and the steps must be unique and
+   * consecutive from "01": a partial arc is a through-line with a hole in it,
+   * and a duplicate step makes the order a silent tiebreak. `title` is ≤44
+   * characters — measured against the Trinny card head's right slot at
+   * 1280×720, where the strip is a 52px `nowrap` flex bar. Pinned by
+   * `cases-registry.test.ts`, which also scans it under the envelope.
+   */
+  arc?: { step: string; title: string };
   /** Foot telemetry for this row — `◆ {ord} · {phase} · {ref} · {state}`,
    *  where `state` stays the casefile's. Absent falls back to the standing
    *  `00 · Field log · {logCode}` line, so this is additive. */
