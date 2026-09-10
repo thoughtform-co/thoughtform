@@ -152,18 +152,26 @@ const cardShape = (page: Page, idx: number) =>
        from the head is how this reader would report FOUR railless cards and
        stay green on a rail that had silently stopped rendering. */
     const stns = [...field.querySelectorAll<HTMLElement>(".fl-con__stn")];
+    const tabs = field.querySelector<HTMLElement>(".tl-card__tabs");
     return {
       /* The head's own children, in order — the kicker leads. */
       lead: head.firstElementChild?.className ?? "",
       kicker: head.querySelector(".tl-card__kicker")?.textContent?.trim() ?? "",
-      /* This project's beat of the arc, in the head's right slot — the peek
-         band's only distinguishing mark now that the tabs have left it. */
+      /* The head's right slot: the beat's ordinal and the FILE this card is
+         of. The CLAIM is the display title below (U3) — chrome names the
+         file, the display makes the claim. */
       arcStep: head.querySelector(".tl-card__arc-step")?.textContent?.trim() ?? "",
-      arcTitle: head.querySelector(".tl-card__arc-title")?.textContent?.trim() ?? "",
-      /* The name is in the RECORD column now, never in the strip. */
+      arcName: head.querySelector(".tl-card__arc-name")?.textContent?.trim() ?? "",
+      /* The display heading — the arc's own line since U3. */
+      title: slot.querySelector(".tl-card__title")?.textContent?.trim() ?? "",
       titleInRecord: !!slot.querySelector(".tl-card__record > .tl-card__title"),
       titleInHead: !!head.querySelector(".tl-card__title"),
       stationsInHead: head.querySelectorAll(".fl-con__stn").length,
+      /* ⚠ THE RAIL IS IN THE CARD'S OWN SLOT, which for the studio card is
+         the PORTAL landing (`SheetsPlate.railHost`). Counting stations
+         anywhere in the field would pass on a plate that had quietly kept
+         its rail in its own console. */
+      stationsInSlot: tabs ? tabs.querySelectorAll(".fl-con__stn").length : 0,
       /* The claim's evidence sentence — the record the homepage's left
          column carries and this card did not read until U2. */
       claimDescs: [...slot.querySelectorAll(".tl-card__claim-desc")].map(
@@ -181,8 +189,18 @@ const cardShape = (page: Page, idx: number) =>
       ),
       films: slot.querySelectorAll(".tl-film").length,
       wires: slot.querySelectorAll(".tl-wire").length,
-      stills: slot.querySelectorAll(".tl-still").length,
+      /* The ads are the casefile's own `.fl-still` since U3 — the card
+         mounts `SheetsPlate` whole rather than re-typing its bodies. */
+      stills: slot.querySelectorAll(".fl-still").length,
       maps: slot.querySelectorAll(".fl-pda").length,
+      /* One sheet's verdict band, which is the thing that makes three
+         sheets read as one instrument showing three faces. */
+      verdicts: slot.querySelectorAll(".fl-verdict").length,
+      /* THE PLAYERS (U3). A film's control is its own FRAME (a `<button>`,
+         the homepage films plate's grammar); a drawing gets a labelled bar,
+         because a control over a wireframe has to say what it opens. */
+      filmIsButton: slot.querySelector(".tl-film__frame")?.tagName ?? "",
+      watchBars: slot.querySelectorAll(".tl-watch").length,
     };
   }, idx);
 
@@ -387,8 +405,16 @@ test.describe("Trinny London pitch variant", () => {
          the tabs gone it would otherwise read `LOOP EARPLUGS \u00b7 BUILD` on
          all four and the pile would stop indexing itself. Pinned from both
          ends: the beat is here, and the rail is NOT. */
+      /* ⚠ CHROME NAMES THE FILE, THE DISPLAY MAKES THE CLAIM (U3, owner:
+         "the lines that I said, 'We push the frontiers of AI creative,'
+         should replace the title 'AI Above-the-Line'"). Pinned from BOTH
+         ends — the claim is the heading and the name is in the head — or a
+         regression that swapped them back would satisfy either half alone. */
       expect(c.arcStep, `card ${i + 1} arc step`).toBe(`0${i + 1}`);
-      expect(c.arcTitle, `card ${i + 1} arc claim`).toMatch(/^We\s+\S/);
+      expect(c.title, `card ${i + 1} title is the arc's claim`).toMatch(/^We\s+\S/);
+      expect(c.arcName.length, `card ${i + 1} head names the project`).toBeGreaterThan(0);
+      expect(c.arcName, `card ${i + 1} head is not the claim again`).not.toMatch(/^We\s/);
+      expect(c.title, `card ${i + 1} title is not the project again`).not.toBe(c.arcName);
       expect(c.stationsInHead, `card ${i + 1} rail left the head`).toBe(0);
       /* Four claims, each with its evidence sentence in the DOM. Whether it
          PAINTS is a height rung (940h) \u2014 the sentence is sr-only below it,
@@ -412,15 +438,27 @@ test.describe("Trinny London pitch variant", () => {
        moved with it: the frontier work leads, because it is what earned the
        studio the right to run AI itself. `trinny-proof-order.test.ts` pins
        the sequence against `arc.step`; this pins what each card SHOWS. */
-    // 01 the frontier — ONE film, on its own rail, in the 4:5 social cut.
+    // 01 the frontier — ONE film, on its own rail, in the 4:5 social cut,
+    // and the frame is the control that plays it.
     expect(shapes[0].stations).toHaveLength(2);
     expect(shapes[0].films).toBe(1);
-    // 02 the studio — a contact sheet: one object, six shots, no rail.
-    expect(shapes[1].stations).toEqual([]);
+    expect(shapes[0].filmIsButton).toBe("BUTTON");
+    expect(shapes[0].watchBars, "a film needs no labelled bar").toBe(0);
+    /* 02 the studio — THREE SHEETS on the rail (U3, owner: "we also should
+       have tabs, just like on the homepage, where we have our guidelines on
+       where not to use AI, governance and the red line"). The record held
+       all three and this card was rendering the ad wall alone.
+       ⚠ THE RAIL IS PORTALLED: `SheetsPlate` owns which sheet is open, so
+       `proofTabs` returns null for this kind and the stations arrive in the
+       card's slot from the plate — which is what `stationsInSlot` proves. */
+    expect(shapes[1].stations).toEqual(["THE ADS", "THE LINE", "THE RED LINE"]);
+    expect(shapes[1].stationsInSlot).toBe(3);
     expect(shapes[1].stills).toBeGreaterThan(1);
-    // 03 the tools — ONE drawing at a time.
+    expect(shapes[1].verdicts, "each sheet ends on its verdict").toBe(1);
+    // 03 the tools — ONE drawing at a time, over its walkthrough.
     expect(shapes[2].stations).toHaveLength(4);
     expect(shapes[2].wires).toBe(1);
+    expect(shapes[2].watchBars).toBe(1);
     /* 04 the company — the map's own three readings, PORTALLED into the
        field's rail, which is also what makes them pressable here: the card
        covers the console with a transparent layer so its wheel capture
@@ -454,6 +492,66 @@ test.describe("Trinny London pitch variant", () => {
     expect(film.src).toMatch(/4x5/);
     expect(film.ratio).toBeCloseTo(0.8, 1);
     expect(film.caption[1]).not.toMatch(/16\s*:\s*9/i);
+
+    /* ⚠ THE WALKTHROUGH ACTUALLY OPENS AND ACTUALLY PLAYS (U3, owner: "we
+       should have a video walkthrough of all these software"). A control
+       that renders and does nothing is the defect this asserts against, and
+       three of its properties are load-bearing:
+       · it PORTALS to `document.body` — mandatory, because this card lives
+         in a `position: sticky` slot and a clipped or transformed ancestor
+         becomes the containing block even for `fixed`;
+       · the page cannot scroll under it (`overflow: hidden` on `<html>` is
+         NOT a scroll lock — the non-passive handlers are, ADR-056 U8);
+       · Escape closes it. */
+    /* ⚠ RE-SEAT CARD 3 FIRST, AND `seatSlot` CANNOT DO IT. Its contract is
+       "get this slot onto its pin", and it returns early on `covered` —
+       which card 3 IS while card 4 is pinned. That was harmless while the
+       tabs lived in the head (a covered card still shows its peek band, so
+       its controls were reachable); with the rail and the watch bar in the
+       FIELD they are under the card above, and Playwright reports the
+       interception rather than a stale click. Roll back to its own pin. */
+    /* ⚠ AND IT REWINDS TO THE STACK'S TOP FIRST, because a seated slot's
+       rect is SELF-REFERENTIAL. `doc = rect.top + scrollY` on a `sticky`
+       element that is already pinned gives the PINNED position, not the
+       natural one, so `doc − pin` converges on wherever it already is — the
+       first cut of this walked 12532 → 12765 and reported `covered` eight
+       times running. `seatSlot` is sound only walking DOWN the pile, which
+       is how the assertions above use it, and this is that same walk from a
+       known start. */
+    await rollTo(
+      page,
+      await page.evaluate(
+        () =>
+          (document.getElementById("services")?.getBoundingClientRect().top ?? 0) + window.scrollY
+      )
+    );
+    await seatSlot(page, 2);
+    await expect(page.locator('[data-pc-index="2"]')).toHaveAttribute("data-pc-state", "pinned");
+
+    const beforeWatch = await page.evaluate(() => Math.round(window.scrollY));
+    await page.locator('[data-pc-index="2"] .tl-watch').click();
+    const player = await page.evaluate(() => {
+      const lb = document.querySelector<HTMLElement>(".fl-lightbox");
+      const v = lb?.querySelector("video");
+      return {
+        open: !!lb,
+        onBody: lb?.parentElement === document.body,
+        src: v?.getAttribute("src") ?? "",
+        label: lb?.querySelector(".fl-lightbox__label")?.textContent?.trim() ?? "",
+      };
+    });
+    expect(player.open).toBe(true);
+    expect(player.onBody, "the lightbox portals out of the sticky slot").toBe(true);
+    expect(player.src).toMatch(/^\/videos\/tools\//);
+    expect(player.label).toMatch(/Walkthrough/);
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(300);
+    expect(
+      await page.evaluate(() => Math.round(window.scrollY)),
+      "the page is locked while the player is open"
+    ).toBe(beforeWatch);
+    await page.keyboard.press("Escape");
+    await expect(page.locator(".fl-lightbox")).toHaveCount(0);
 
     // A station click swaps the field and moves the mark.
     const toolTabs = page.locator('[data-pc-index="2"] .fl-con__stn');
