@@ -580,6 +580,82 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   showed it. The capture and the smoke both re-solve against `data-tl-turn`
   until it agrees. Capture stops 14–17 are solved for `p`, never guessed.
 
+## The seam into the proposal, and the head's seat (ADR-095 U6 / ADR-094 U5)
+
+- ⚠ **THE TWO STATIONS OVERLAP BY `--tl-prop-lead` (50svh), AND THAT IS WHY THE
+  GROUNDS MUST SWAP.** A sticky stage costs ONE VIEWPORT of scroll-off at its
+  end by construction, and by the turn's release its stage is empty (products at
+  `TURN_PRODUCT_GONE`, line past `TURN_CTA_OUT`) — so that viewport was the
+  reader scrolling through nothing. The negative margin takes half of it back
+  (release → pin 1.00 → **0.50** viewports, release → LIT 1.28 → **0.77**).
+  ⚠ Neither other lever reaches it: the turn's clock is signed off, and
+  `--tl-prop-runway` is DWELL, so shortening it changes how long the record
+  stays, never when it arrives.
+- ⚠ **EXACTLY ONE GROUND PAINTS THE FRAME AT EVERY SCROLL POSITION.** Both
+  stations paint a viewport-locked coral wash at the same amount, so wherever
+  both are in frame the field composites TWICE and the upper one's edge is a
+  hard horizontal band across the viewport (measured: the ground's top edge at
+  y=116 with p 0.96). Two halves, and **leaving out either moves the seam
+  rather than removing it**: `.tl-prop__ground` reaches UP by the lead (`top:
+calc(var(--tl-prop-lead) * -1 - 4px)`) so it covers the frame alone from the
+  release; and the turn's wash is switched off at `p >= 1` via
+  `data-tl-handoff` on `#turn`.
+- ⚠ **IT IS A SWAP, NOT A CROSS-FADE, AND THE STEP IS INVISIBLE BY ARITHMETIC.**
+  `washOf` saturates at `TURN_WASH_PEAK` 0.68 and the proposal's is drawn at a
+  constant 1, so at the handoff both carry the SAME amount on a field locked to
+  the same origin (U4). Identical pixels either side. A cross-fade would be the
+  wrong instrument — two half-alpha coats of one field is still two coats.
+- ⚠ **THE POLARITY FAILS OPEN, AND THE TWO ATTRIBUTES ARE OPPOSITE FOR THAT
+  REASON.** The proposal's ground is hidden by a STAMPED `data-tl-ground="hold"`,
+  never by the absence of a channel: one that must be present to paint would
+  blank the field on the phone, under reduced motion, and the instant `park()`
+  runs. Both are cleared in `park()`. Route law, one station over: an absent
+  reveal channel means SHOWN.
+- **Both rules key the STATION, not the stage**, so one selector reaches the
+  WebGL canvas AND the no-shader gradient (whose opacity rides `--tl-wash`).
+- ⚠ **THE PROPOSAL'S HEAD SEATS ON THE HOMEPAGE'S DATUM, NOT ON ITS OWN
+  DRAWING.** `align-content: center` set the head's position from half the
+  configuration drawing's height: 306px / frac **0.241** at 1920×1247 against
+  `.services-masthead__title` at **0.107** on the same frame. `start` plus
+  `padding-block-start: clamp(48px, 10.7svh, 148px)` lands it at 0.107 at every
+  reference viewport. ⚠ `start` is also the safer overflow — `center` spills
+  equally through top and bottom, so `scrollHeight === clientHeight` and every
+  clip gate reports zero.
+- ⚠ **LEFT OPEN: the slack pools at the floor** (457px at the owner's viewport).
+  _Split the slack, don't pool it_ says give the drawing a `1fr` row — but that
+  opens ~185px between the head's coral rule and the drawing, and _a rule is
+  part of what it rules_. Owner's eye, not a guess.
+
+## The corridor is SHARED, and it moved (ADR-018, 2026-09-10)
+
+- ⚠ **`/` AND `/trinny-london` MEASURE BYTE-IDENTICAL THROUGH THE CORRIDOR.**
+  Sampled at the same progress stops, every reading matched to the pixel. So a
+  corridor complaint read on this route is NOT a route defect, and a fix for it
+  lands on `/` and `/claude-workshop` too. **Measure both before scoping.**
+- ⚠ **THE THOUGHTFORM COMPOSITION'S SPREAD IS A FUNCTION OF FRAME HEIGHT.** A
+  perspective camera's lateral screen offset is `x·vh / (2·d·tan(fov/2))` — the
+  frame's WIDTH cancels out of the aspect term — while the copy block caps at
+  460 CSS px. So the gutter between the columns grew from 7.2 % of the frame at
+  1280×720 to 29.0 % at 1639×1269. `thoughtformSpread()` /
+  `thoughtformGateX()` / `thoughtformCopyX()` solve it back to the authored
+  proportion, and every Thoughtform-anchored painter reads one of them.
+  ⚠ It scales CENTRES, never sizes; the phase labels' gate-relative offsets stay
+  undamped because they are welded to a rigid object; and the pan's target is
+  `-thoughtformGateX()` or the composition overshoots the axis.
+- ⚠ **THE DAMP IS A NO-OP AT OR BELOW 900h**, which is every committed snapshot
+  viewport (the Playwright project default is 1440×900). `landing-page.spec.ts
+-g "HUD"` must pass WITHOUT `--update-snapshots` — that is the identity proof.
+- ⚠ **THE CORRIDOR'S LINEWORK IS NOT DETERMINISTIC ACROSS REPEATED HEADED RUNS.**
+  The compass's frames, leaders and pips vanished from one capture and returned
+  on the next **with identical code** — the ADR-038 quality governor degrading
+  under repeated GPU-heavy Playwright launches. Re-shoot the same code twice
+  before blaming a change for missing linework.
+- ⚠ **ROLL TWICE INTO A PINNED BAND.** The first long roll from the top is
+  clamped while the corridor inflates the document, so the reading is of an
+  UNPINNED station — it reported a head frac of 4.1 and read as catastrophic
+  rather than as a harness miss. Every probe here re-rolls and verifies
+  `scrollY` before measuring.
+
 ## Verifying
 
 ```bash

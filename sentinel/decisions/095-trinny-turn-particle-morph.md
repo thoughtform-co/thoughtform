@@ -644,3 +644,93 @@ npx playwright test tests/visual/landing-corridor-smoke.spec.ts --project=deskto
 node scripts/capture-trinny-london.mjs --vp 1920x1247 --port <port> --out .cursor/trinny-shots/1920   # headed — LOOK at 14–17
 node scripts/capture-trinny-london.mjs --vp 1280x720 --port <port> --out .cursor/trinny-shots/1280
 ```
+
+## Update 6 — the approach is halved, and the grounds swap (2026-09-10)
+
+Owner, on the seam into the proposal:
+
+> Scrolling into the Trinny London configuration section, it takes a bit too
+> long. I think it should be a scroll or two less before the elements start to
+> appear.
+
+### The dead viewport is structural, and it is exactly one
+
+A sticky stage costs ONE VIEWPORT of scroll-off at its end, by construction.
+`#turn` is 220svh with a 100svh stage, so the stage unpins 120svh in and the
+remaining 100svh is that stage travelling away. Measured at 1920×1247:
+
+```
+release  20380      (turn stage unpins, p = 1)
+prop pin 22001      = 1269px = 1.00 viewport
+prop LIT 22341      = 1.28 viewports
+```
+
+And by the release the turn's stage has nothing left on it: the products are
+gone (`TURN_PRODUCT_GONE` = 1) and the line is un-typed (`TURN_CTA_OUT` 0.90).
+The reader is scrolling through an empty stage leaving.
+
+⚠ **NEITHER OTHER LEVER REACHES IT.** The turn's own clock may not be
+compressed — the owner signed off on that beat — and the proposal's
+`--tl-prop-runway` is DWELL, the pinned stretch the reader reads the drawing in,
+not approach: shortening it changes how long the record stays, never when it
+arrives. The only lever is overlapping the two stations.
+
+`--tl-prop-lead: 50svh` and `margin-top: calc(var(--tl-prop-lead) * -1)` on the
+capable rung. Half rather than all, so the line still gets to leave before the
+next record arrives. Measured after, at 1280×720, 1440×900 and 1920×1247 alike:
+
+```
+release -> pin : 0.50 viewports   (was 1.00)
+release -> LIT : 0.77 viewports   (was 1.28)
+```
+
+### The overlap is only legal because the grounds swap
+
+⚠ **TWO COATS OF THE SAME FIELD IS A HARD HORIZONTAL BAND.** Both stations paint
+a viewport-locked coral wash, and `washOf` saturates at `TURN_WASH_PEAK` 0.68
+while the proposal's is drawn at a constant 1 — so wherever both are in the frame
+the field composites twice and the edge of the upper one is a visible seam. That
+is what the overlap buys unless exactly one ground paints at every scroll
+position. It was measured, not reasoned: the ground's top edge at y=116 with
+p 0.96, and the two coats plainly different either side of it.
+
+Two halves, and **leaving out either one moves the seam rather than removing it**:
+
+1. **`.tl-prop__ground` reaches UP by the lead** (`top: calc(var(--tl-prop-lead)
+   - -1 - 4px)`, the 4px being bleed against sub-pixel rounding). Without this,
+     the proposal's ground covers only the bottom of the frame during the approach
+     and switching the turn's off would leave the top bare.
+2. **The turn's wash is switched off at `p >= 1`**, which IS the frame its stage
+   unpins and the frame from which the extended ground covers the viewport by
+   itself. `data-tl-handoff` on `#turn`, stamped by the one writer, delta-gated.
+
+⚠ **THE STEP IS INVISIBLE BY ARITHMETIC, NOT BY LUCK.** At the handoff both
+fields carry the SAME amount (1), and both are locked to the VIEWPORT (U4)
+rather than to their own boxes. Identical pixels either side — which is why this
+is a swap and not a cross-fade. A cross-fade here would have been the wrong
+instrument: two half-alpha coats of the same field is still two coats.
+
+⚠ **AND THE POLARITY FAILS OPEN.** The proposal's ground is hidden by a stamped
+attribute (`data-tl-ground="hold"`), never by the absence of one. A channel that
+must be PRESENT for the ground to paint would blank the proposal's field on the
+phone, under reduced motion, and the instant `park()` runs — this route's own
+law, one station over: an absent reveal channel means SHOWN, never hidden. Both
+attributes are cleared in `park()`.
+
+⚠ **ONE RULE EACH, ON THE STATION RATHER THAN THE STAGE**, so it reaches the
+WebGL canvas AND the CSS fallback — the fallbacks' opacity rides `--tl-wash` and
+would otherwise keep painting on the path with no shader.
+
+### Guarded
+
+`tests/visual/trinny-london-smoke.spec.ts` — "the approach is halved, and
+exactly one ground paints it". Eight scroll stops from release −1.0vh to
++0.7vh, asserting at each that the two grounds' painting rects overlap by ≤4px
+of the frame **and** that one of them covers ≥90 % of it. ⚠ The second half is
+not redundant: a swap that hides BOTH is the same bug with the sign flipped, and
+it looks like the wash vanishing at the seam. Negative-tested — breaking the
+`data-tl-ground` selector fails the overlap assertion.
+
+⚠ **THIS IS THE HALF THAT CAN REGRESS SILENTLY.** The pixels are a wash on a
+wash: nothing throws, no geometry gate can see it, and the still is the only
+place it shows.

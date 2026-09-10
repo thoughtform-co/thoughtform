@@ -4303,6 +4303,138 @@ at 360 / 390 / 430 with the GOLD marking the pair's boundary instead of the
 line break. Desktop needs neither: measured 2 lines, no clipping, 320px of
 margin each side at 1280×720 and 586px at 1920×1247.
 
+## 2026-09-10 — the Thoughtform composition holds its shape, and holds still
+
+Owner, reading `/trinny-london` (which mounts this same corridor):
+
+> When I scroll into the third section, the text "AI sits between tool and
+> collaborator" is already starting to move to the left, but it should be a bit
+> more centered. Same with the brand mark and the gateway. When you enter the
+> second section or the third section, they should be more centered originally,
+> and only when you start scrolling into the Arc, they should start moving
+> respectively.
+
+Two claims, both true, both measurable, and the second one is the interesting
+half because it is not a preference — it is a projection bug that has been
+shipping since the two-column composition was authored.
+
+### The measurement
+
+`/` and `/trinny-london` were sampled at the same progress stops and came back
+**byte-identical to the pixel**, so nothing here is route-specific: this is the
+shared corridor, and the fix lands on `/`, `/claude-workshop` and
+`/trinny-london` alike.
+
+At corridor progress 0.005 (the parked frame), gutter between the copy block's
+right edge and the `NAVIGATE` label's left:
+
+| viewport  | gutter | of the frame |
+| --------- | ------ | ------------ |
+| 1280×720  | 92px   | 7.2 %        |
+| 1440×900  | 184px  | 12.8 %       |
+| 1920×1247 | 458px  | 23.9 %       |
+| 1639×1269 | 476px  | 29.0 %       |
+| 2560×1330 | 524px  | 20.5 %       |
+
+Five times the gutter for a 1.7× taller frame. At a laptop rung the two columns
+read as one composition; on a tall desktop window — **the owner's own monitor** —
+they read as two objects flung at opposite walls with a third of the frame empty
+between them.
+
+### Why height, and not width
+
+A perspective camera's lateral screen offset is
+
+```
+x · vh / (2 · d · tan(fov/2))
+```
+
+The viewport's **width cancels out of the aspect term**. So a composition stated
+in WORLD units spreads with the frame's HEIGHT and takes no notice of how wide
+the window is — while its CONTENTS do the opposite, because the copy block caps
+at 460 CSS px and the phase labels are ~10px type, both fixed whatever the frame.
+The gutter is `spread(vh) − contents`, and it grows without limit.
+
+⚠ **The fit is the proof, not the reasoning.** Adding the contents back to each
+measured gutter gives the raw spread; dividing by the frame height gives
+**0.827 / 0.816 / 0.816 / 0.815** across every rung at or above 900h. One
+constant, four viewports — which is what says the projection argument above is
+the cause rather than a curve fitted to a complaint.
+
+Same defect class as ADR-070 U12/U14/U32: authored at one shape, green
+everywhere, wrong at the shape the owner works at.
+
+### The damp
+
+`thoughtformSpread()` (sceneGeom.ts) solves the contraction that lands this
+frame's gutter on the authored proportion:
+
+```
+k = (TF_GUTTER_FRAC · vw + TF_SPREAD_CONTENT_PX) / (TF_SPREAD_PER_VH · vh)
+```
+
+clamped to `[TF_SPREAD_MIN, 1]`. `thoughtformGateX()` and `thoughtformCopyX()`
+are the two consumers, and every Thoughtform-anchored painter reads one of them:
+the compass gate, the gateway throat, the star cluster and shockwave, the
+brandmark anchor, the phase labels, the copy block, and the pan's own target.
+
+⚠ **IT SCALES CENTRES, NEVER SIZES.** The compass, the mark and the copy block
+keep their own dimensions; only their distance from the optical axis contracts.
+That is what makes this a re-composition rather than a zoom, and it is why the
+phase labels' own gate-relative offsets are deliberately left undamped — they
+are welded to a rigid object.
+
+⚠ **THE PAN'S TARGET MOVES WITH IT.** `getThoughtformCenterOffsetX` returns
+`-thoughtformGateX() · s`, not `-STATION_THOUGHTFORM.position[0] · s`. Damp the
+gate and leave the pan and the composition overshoots the axis by the difference.
+
+⚠ **`BRANDMARK_ANCHOR_THOUGHTFORM[0]` IS NOT THE MARK'S X ANY MORE.** That const
+is a module-level array evaluated once at load, so it cannot carry a
+viewport-derived term. The mark is rigidly co-located with the gate and takes the
+gate's live X; Y and Z stay the const's.
+
+⚠ **AND IT IS A NO-OP AT EVERY REFERENCE VIEWPORT.** Both 1440×900 (the Playwright
+project default, so every committed snapshot) and 1280×720 solve above 1 and
+clamp. Measured after: gutter 92 / 183 / 161 / 206 / 288 — **9.8 %–12.7 % of the
+frame at every rung**, against 7.2 %–29.0 % before, with the two reference
+viewports unchanged to the pixel. `landing-page.spec.ts -g "HUD"` passes without
+`--update-snapshots`, which is the identity proof.
+
+### The hold
+
+`thoughtformPan.start` moves **0 → 0.05**, which reverses the 2026-06-17 change
+recorded above it. The reversal is the point: what that pass held for ~250px was
+a composition splayed to both walls, so the hold had nothing worth holding on and
+only delayed the fix. With the spread solved the parked frame IS the composition,
+and the hold is what lets the reader read it before it travels.
+
+⚠ **THE "DRIFTS A BIT, THEN SLIDES LEFT" READ WAS THE FOLLOWER, NOT THE HOLD.**
+`getSmoothedThoughtformOffsetX` rests at 0 through the hold — it is settling into
+a target it is already at — so there is nothing to settle. Measured at 1920×1247,
+the copy holds x 368 → 372 → 373 across p 0 → 0.04 and only then travels.
+
+⚠ **END STAYS LOCKED** to `dollyHoldEnd` / `thoughtformBoot.rampEnd` / the ring
+flythrough's 0.13, so the pan is SHORTER rather than later — 0.059 of progress
+instead of 0.109. It is scroll-scrubbed, so that is distance under the reader's
+hand, never a faster clock.
+
+### A trap worth carrying
+
+⚠ **THE CORRIDOR'S LINEWORK IS NOT DETERMINISTIC ACROSS REPEATED HEADED RUNS.**
+Mid-pass, the compass's nested frames, leaders and pips vanished from a capture
+and came back on the next run **with identical code** — the ADR-038 quality
+governor degrading under repeated GPU-heavy Playwright launches. Half an hour
+went into bisecting a regression that was the harness. Before blaming a change
+for missing corridor linework, re-shoot the same code twice.
+
+**Guarded by** `tests/visual/trinny-london-smoke.spec.ts` — "the entry
+composition holds its shape, and holds still": the gutter as a FRACTION of the
+frame at 1440×900 and at 1920×1247, within 0.05–0.16 and within 0.06 of each
+other, plus a lateral-travel bound across two stops inside the hold. ⚠ The
+assertion is the PROPORTION, not the pixels — a pixel bound passes at one
+viewport and means nothing at the other, which is exactly how this survived
+every existing gate.
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

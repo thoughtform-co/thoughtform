@@ -723,3 +723,63 @@ node scripts/capture-trinny-london.mjs --vp 1280x720
   detent there.
 - The proposal runs past one viewport at 1280×720 (head + drawing +
   kickers); fine at the owner's shape.
+
+## Update 5 — the proposal's head sits on the homepage's datum (2026-09-10)
+
+Owner:
+
+> The Trinny London configuration section — the text, or the placement of the
+> H1, the heading 1, and the paragraph — because if I look at the homepage it's
+> a bit higher placed.
+
+### The head was seated by the drawing under it
+
+`.tl-prop__stage` centred its whole record — head PLUS the configuration drawing
+— in the pinned frame, so the head's position was set by half the drawing's
+height rather than by any decision about where a masthead goes. Measured at
+1920×1247:
+
+```
+proposal head   top 306   frac 0.241
+homepage masthead title    frac 0.107   (.services-masthead__title, same frame)
+```
+
+More than twice as far down, and nothing on the head's own box said so — the
+record was correctly centred, which is exactly why no gate had an opinion.
+
+`align-content: start` plus a datum-derived `padding-block-start:
+clamp(48px, 10.7svh, 148px)`. The head starts at the homepage's datum and the
+drawing takes what is left. Measured after, at all three reference viewports:
+
+```
+1280×720    head frac 0.107   record 77..671 of 720    bottom air  49
+1440×900    head frac 0.107   record 96..699 of 900    bottom air 201
+1920×1247   head frac 0.107   record 133..790 of 1247  bottom air 457
+```
+
+⚠ **`start` IS ALSO THE SAFER OVERFLOW, AND THAT IS NOT INCIDENTAL.** `center`
+spills a too-tall record equally through the top and the bottom, so
+`scrollHeight === clientHeight` and every clip gate reports zero — this repo's
+own recorded trap, named on the sheets plate and again on the casefile. Seated at
+the top a record can only overrun downward, where it is visible.
+
+⚠ **THE SLACK POOLS AT THE FLOOR NOW, AND THAT IS AN OPEN QUESTION.** 457px at
+the owner's viewport — a third of the frame — sits under the drawing. The house
+rule is _split the slack, don't pool it_ (ADR-069, ADR-070 U14), and the obvious
+application is a `1fr` row with the drawing centred in what the head leaves. It
+was NOT taken: the owner asked for the head, the arithmetic puts ~185px between
+the head's coral rule and the drawing if the slack is split, and _a rule is part
+of what it rules_ (U5's own finding, one element up). Both readings need his eye,
+not a guess. Raised rather than resolved.
+
+### Guarded
+
+`tests/visual/trinny-london-smoke.spec.ts` — "the proposal seats its head on the
+homepage's datum": head frac inside 0.06–0.15 with the stage asserted PINNED
+(`data-tl-prop` > 0.3) first, plus the record's bottom inside the frame.
+Negative-tested — restoring `center` fails it.
+
+⚠ **ROLL TWICE INTO THE PINNED BAND.** The first long roll from the top is
+clamped while the corridor inflates the document, and a reading taken there is of
+an UNPINNED station: it reports a head frac of 4.1 and reads as a catastrophic
+failure rather than as a harness miss. Cost two measurement passes in this one.
