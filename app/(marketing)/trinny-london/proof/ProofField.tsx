@@ -195,6 +195,11 @@ export function ProofField({
       const walk = tool?.walkthrough;
       return (
         <div className="tl-field tl-field--tools">
+          {/* The apparatus's HEAD (U8): one micro-label, the year the tool
+              went into service — the same record the homepage's bay letters
+              on its FEED line. Always rendered, so the box keeps its three
+              rows even for a tool without a case. */}
+          <span className="tl-bay__head">{tool ? `In service ${tool.year}` : null}</span>
           {/* ⚠ THE KEY IS THE REMOUNT, and it is deliberate (ADR-068 U3):
               each drawing seats itself once, so switching tools must give
               the next one a fresh mount rather than swapping props under a

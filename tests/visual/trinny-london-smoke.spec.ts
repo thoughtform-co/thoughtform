@@ -256,6 +256,49 @@ const cardShape = (page: Page, idx: number) =>
          because a control over a wireframe has to say what it opens. */
       filmIsButton: slot.querySelector(".tl-film__frame")?.tagName ?? "",
       watchBars: slot.querySelectorAll(".tl-watch").length,
+      /* ADR-094 U8 — THE LADDER AND THE HOUSING. Nothing pinned a type size
+         on this card before (`fontSize` appeared in zero assertions), which
+         is how it shipped one rung small. The claim is the lede's PEER by
+         size and outranks it by weight; the mark is an integer lattice
+         multiple; the field is inset off both edges; the tools' bar is the
+         box's FOOT; and the register's floor is the box's floor. */
+      ladder: (() => {
+        const px = (sel: string) => {
+          const el = slot.querySelector<HTMLElement>(sel);
+          return el ? parseFloat(getComputedStyle(el).fontSize) : 0;
+        };
+        const ct = slot.querySelector<HTMLElement>(".tl-card__claim-title");
+        return {
+          title: px(".tl-card__title"),
+          lede: px(".tl-card__lede"),
+          claim: px(".tl-card__claim-title"),
+          claimWeight: ct ? getComputedStyle(ct).fontWeight : "",
+          mark:
+            slot.querySelector<HTMLElement>(".tl-card__mark")?.getBoundingClientRect().width ?? 0,
+        };
+      })(),
+      housing: (() => {
+        const r = (sel: string) =>
+          slot.querySelector<HTMLElement>(sel)?.getBoundingClientRect() ?? null;
+        const card = r(".tl-card")!;
+        const record = r(".tl-card__record")!;
+        const box = r(".tl-field--tools");
+        const wire = r(".tl-wire");
+        const watch = r(".tl-watch");
+        const claims = [...slot.querySelectorAll<HTMLElement>(".tl-card__claim")];
+        const last = claims.length ? claims[claims.length - 1].getBoundingClientRect() : null;
+        return {
+          divider: record.right,
+          cardRight: card.right,
+          firstStnLeft: stns.length ? stns[0].getBoundingClientRect().left : null,
+          lastStnRight: stns.length ? stns[stns.length - 1].getBoundingClientRect().right : null,
+          box: box ? { left: box.left, right: box.right, bottom: box.bottom } : null,
+          wireLeft: wire?.left ?? null,
+          watch: watch ? { left: watch.left, right: watch.right, bottom: watch.bottom } : null,
+          lastClaimBottom: last?.bottom ?? null,
+          bayHead: slot.querySelector(".tl-bay__head")?.textContent?.trim() ?? "",
+        };
+      })(),
     };
   }, idx);
 
@@ -496,6 +539,28 @@ test.describe("Trinny London pitch variant", () => {
       if (c.stations.length) {
         expect(c.on, `card ${i + 1} has exactly one open station`).toBe(1);
       }
+      /* ⚠ ADR-094 U8 — ONE LADDER. Title ≥ 24px; the claim is the lede's peer
+         by SIZE and outranks it by WEIGHT (500, the ceiling); the mark is an
+         integer multiple of the 7-cell lattice (21 here, 28 on the 940h rung).
+         An equality on two computed sizes, not a floor: the day one moves
+         without the other the ranking is by accident again. */
+      expect(c.ladder.title, `card ${i + 1} title size`).toBeGreaterThanOrEqual(24);
+      expect(c.ladder.claim, `card ${i + 1} claim = lede`).toBeCloseTo(c.ladder.lede, 1);
+      expect(c.ladder.claimWeight, `card ${i + 1} claim weight`).toBe("500");
+      expect([21, 28], `card ${i + 1} mark on the lattice`).toContain(Math.round(c.ladder.mark));
+      /* ⚠ THE FIELD IS INSET OFF BOTH EDGES, rail and bay on ONE edge (owner:
+         "too close to the center border and the right border"). ≥ 16px is
+         the token's floor; the divider is the record's right edge. */
+      if (c.housing.firstStnLeft !== null) {
+        expect(
+          c.housing.firstStnLeft - c.housing.divider,
+          `card ${i + 1} rail inset L`
+        ).toBeGreaterThanOrEqual(15);
+        expect(
+          c.housing.cardRight - c.housing.lastStnRight!,
+          `card ${i + 1} rail inset R`
+        ).toBeGreaterThanOrEqual(15);
+      }
     }
     /* ⚠ THE ORDER IS THE RECORD'S ARC SINCE ADR-094 U2 and these indices
        moved with it: the frontier work leads, because it is what earned the
@@ -522,6 +587,37 @@ test.describe("Trinny London pitch variant", () => {
     expect(shapes[2].stations).toHaveLength(4);
     expect(shapes[2].wires).toBe(1);
     expect(shapes[2].watchBars).toBe(1);
+    /* ⚠ ADR-094 U8 — THE TOOLS BAY IS AN APPARATUS: one hairline box from
+       under the rail to the card's floor, a head micro-label (the year the
+       tool went into service — record, not copy), the drawing centred inside
+       it off both walls, and the watch bar FUSED as the box's foot (the
+       homepage bay's own grammar, ADR-068). Pinned as RELATIONS between
+       rects, not as sizes: the bar's bottom IS the box's bottom, its width IS
+       the box's, and the register's last rule lands on that same floor —
+       which is the one line that makes two columns read as one card. */
+    const h3 = shapes[2].housing;
+    expect(h3.box, "the tools field draws its box").not.toBeNull();
+    expect(h3.bayHead, "the bay's head letters the year").toMatch(/^In service \d{4}$/i);
+    expect(
+      h3.wireLeft! - h3.box!.left,
+      "the drawing clears the box's left wall"
+    ).toBeGreaterThanOrEqual(12);
+    expect(
+      Math.abs(h3.watch!.bottom - h3.box!.bottom),
+      "the bar is the box's foot"
+    ).toBeLessThanOrEqual(1.5);
+    expect(
+      Math.abs(h3.watch!.left - h3.box!.left),
+      "the bar spans the box (L)"
+    ).toBeLessThanOrEqual(1.5);
+    expect(
+      Math.abs(h3.watch!.right - h3.box!.right),
+      "the bar spans the box (R)"
+    ).toBeLessThanOrEqual(1.5);
+    expect(
+      Math.abs(h3.lastClaimBottom! - h3.box!.bottom),
+      "register and box share one floor"
+    ).toBeLessThanOrEqual(2);
     /* 04 the company — the map's own three readings, PORTALLED into the
        field's rail, which is also what makes them pressable here: the card
        covers the console with a transparent layer so its wheel capture

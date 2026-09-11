@@ -210,6 +210,65 @@ scroll(root block)` with `animation-range: 0 100dvh` moves it off the main
 
 ## The card, recomposed (ADR-094 U1)
 
+- ⚠ **ONE LADDER, AND THE CLAIM IS THE LEDE'S PEER (U8, owner 2026-09-11:
+  _"the smaller text below … can both be a bit larger. Maybe the title …
+  can also be increased"_).** Declared on `.tl-card`: `--tl-copy` is the
+  lede's size (16 → 19, unchanged) and the ROOT, `--tl-ratio` 1.2, `--tl-sub`
+  the sentence one step under, `--tl-display` (24 → 32) the title three steps
+  over. The claim takes the lede's SIZE at `--weight-lit`, so claim and
+  sentence rank by size and claim and lede by weight — ADR-088's law one
+  surface over. The mark is `--tl-glyph`: 21px, 28px on the 940h rung, never
+  a value that is not a multiple of 7 (`ProofGlyph.tsx`). Chrome (kicker,
+  ordinal, stations, watch bar, bay head) stays 11px PT Mono off the ladder.
+  ⚠ Nothing pinned a type size on this card before U8; the smoke now pins the
+  claim EQUAL to the lede (an equality, not a floor), weight 500, mark ∈ {21,
+  28}, title ≥ 24.
+- ⚠ **THE REGISTER IS FOUR RULED BANDS TO THE FLOOR (U8, owner: "a lot of
+  unused white space … maybe we need to add some visual elements … I don't
+  want to add too much text").** `.tl-card__record` is a grid
+  `auto auto minmax(0, 1fr)` (title · lede · register); `.tl-card__claims` on
+  `grid-auto-rows: minmax(0, 1fr)`, each band centring its claim + sentence
+  (`align-content: center`; `align-items: start` kept so the mark hangs off
+  the claim's line); a `--tl-rule` seam above the first band and as the LAST
+  rule (it is the column's floor line), `--tl-rule-soft` (.10 → .12) between.
+  The RED LINE sheet's grammar (ADR-084) and the Panels references' law: air
+  inside a drawn box is room, air under a list is a hole. Bands measure 44px
+  at 1280×720, 60 at 1440×800, 150 at 1920×1247. ⚠ `minmax(0, 1fr)`, never
+  `auto` — an `auto` row pools the slack under the list again. No new copy:
+  the marks grew and the rules are the visual element.
+- ⚠ **ONE INSET, ONE FLOOR, ALL FOUR CARDS (U8, owner: "the elements are too
+  close to the center border and the right border").** `--tl-field-px` is
+  `padding-inline` on `.tl-card__field`, so the rail's stations and the bay
+  land on the same two verticals; ⚠ its slope is **`1.25vw`, not `2vw`** —
+  the inset comes out of four stations' width, and at `2vw` `BRIEFING AGENT`
+  truncated at both laptop shapes (ADR-089 U3's headroom warning from the
+  other side); the stations went to `padding: 5px 9px` with it, and the
+  leading station's 6px margin moved to `+ .fl-con__stn`. `.tl-field` is
+  inset `--tl-field-gap` above and **`--tl-card-py` below — the record's own
+  vertical padding** — so every field ends on the register's last rule (three
+  cards ran their console to the card's edge, 40px under it). ⚠ Each kind
+  that derives a height from `100cqh` (the BAY, which keeps its full box)
+  subtracts both terms — the film does; the ads and the map fill their field.
+- ⚠ **THE TOOLS BAY IS AN APPARATUS (U8).** `.tl-field--tools` is one
+  `--tl-rule` box from under the rail to that floor, rows
+  `--tl-bay-head-h | minmax(0, 1fr) | --tl-watch-h` (30 / – / 30): the HEAD
+  `.tl-bay__head` letters `IN SERVICE {year}` (`ProjectCase.year`, rendered
+  in `ProofField.tsx` — one designation, ADR-064 U1; chrome, not copy), the
+  drawing centres in the middle row (`align-self`, auto margins) with
+  `--tl-bay-pad` off the walls, and the watch bar is the box's FOOT — full
+  width, `--tl-rule-soft` above, cue and label leading, duration at the far
+  end. `--tl-wire-h` subtracts every one of those terms from `100cqh`.
+  ⚠ **U3's "never `1fr auto`" is superseded HERE ONLY**: it guarded a bar
+  that belonged under its drawing from landing on the bay's floor; the bar
+  IS the foot now. ⚠ **A bigger bay does not buy a bigger drawing** —
+  `.fl-wire__lbl` caps at 10px, vesper's dock at 58px, mímir's rail at 190px —
+  so the box is the answer to the void and the aspect is a bonus:
+  `--tl-wire-ar` eases 1.62 → **1.5** under `@container (max-aspect-ratio: 1)`
+  (a portrait bay, the owner's) and stays 1.62 where the bay is height-bound
+  (a lower aspect there only narrows the drawing). All four drawings were
+  looked at on stills at 1.5. The smoke pins the box, its head, the drawing's
+  clearance, the bar's three edges on the box's, and the register's floor on
+  the box's floor.
 - ⚠ **THE CLAIM IS THE TITLE AND THE HEAD IS AN ORDINAL** (U3 + U4, owner
   2026-09-10: _"the lines that I said, 'We push the frontiers of AI creative,'
   should replace the title 'AI Above-the-Line'"_, then _"that subtitle …

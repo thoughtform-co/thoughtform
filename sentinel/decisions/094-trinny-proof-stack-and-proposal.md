@@ -959,3 +959,143 @@ over the coral wash is the paint-over-the-record this route rejected twice
   Creative ops answers are drawn from §7's own plates and surfaces.
 - The slack that pooled at the floor (U5) pools more: the instrument is
   shorter than the five bands were.
+
+## Update 8 — the card fills its housing (2026-09-11)
+
+Owner, on card 03 at his own viewport: _"I'm really liking the clean nature of
+our proof cards … I feel like there's a lot of unused white space. Maybe look
+at the references to see whether we can actually make more use of the white
+space. Maybe we need to add some visual elements because right now it's a bit
+sparse. I don't want to add too much text either."_ Then the type: _"the
+smaller text below, like '97% of meetings involve AI,' and the text below it …
+can both be a bit larger. Maybe the title … can also be increased."_ And the
+field: _"the right panel … there's also a lot of unused space, and the elements
+are too close to the center border and the right border. I would leave a bit
+more room and maybe we can redesign them a bit so they fill in a bit more of
+the real estate, just subtly."_
+
+### What was measured before the change (1920×1247)
+
+- The record column was a flex stack seated at the top and it stopped 40 %
+  of the way down: **~330px of plate under the claims with nothing framing
+  it**. The claim carried no size of its own — it inherited the row's
+  `clamp(14px, 1vw, 16px)` and was told apart from its sentence by INK alone.
+  Title 20–26, lede 16–19, sentence 12–13.5, glyph 14px.
+- The tools field centred a landscape drawing (1.62, U1's lock) in a portrait
+  864×928 bay with **`padding: 2px`** — the bay's frame touched the divider
+  and the card's edge — under a centred pill bar reserved at **46px while
+  measuring ~27**, with ~140px of unframed plate above and below the pair.
+- **No guard pinned a type size on the card.** `fontSize` appeared in zero
+  assertions of the smoke; the only pin on the sheet counts tracking and
+  weight literals. That is how it shipped one rung small.
+
+### Read against the Panels references
+
+The owner pointed at `_01_GENERAL REFERENCES\Panels` — the twelve Vilimovský
+Cyberpunk sheets, the amber PRX map, the HUD kit. Read for what they do with
+a region rather than for their chrome (`docs/design/hud-panel-lab/README.md`
+distils the six principles), two of them are this card's defect stated the
+other way round: **air inside a drawn box is room, air under a list is a
+hole**; and **the centrepiece sits in a bay with head and foot micro-labels,
+seated in an apparatus rather than floated in a space**. The house already
+had the answer to four claims in a tall box one surface over — the RED LINE
+sheet's `1fr` bands (ADR-084) — and the answer to a drawing over a bar on the
+homepage's own tools plate, where the watch bar is FUSED to the bay's bottom
+edge (ADR-068).
+
+### Decision
+
+1. **One type ladder on the card**, declared on `.tl-card` (ADR-085's own
+   discipline — one root, one ratio): `--tl-copy` is the lede's size
+   (`clamp(16px, 1.15vw, 19px)`, unchanged), `--tl-ratio` 1.2, `--tl-sub`
+   one step under, `--tl-display` three steps over (`clamp(24px, 1.7vw, 32px)`
+   ≈ copy × 1.2³ at both ends). **The claim is the lede's PEER by size and
+   outranks it by WEIGHT** — `--weight-lit`, the ceiling — which is ADR-088's
+   law one surface over (the ordering a ladder guarantees is the one inside
+   its own face): claim and sentence rank by size, claim and lede by weight.
+   The sentence takes `--tl-sub` and `--tl-ink-2`. The glyph goes to the next
+   lattice rungs — 21px, 28px on the 940h rung where the sentence shows
+   (integer 7-cell multiples; `ProofGlyph.tsx`'s rule). Chrome stays 11px
+   PT Mono and is not on the ladder.
+2. **The record column is one grid and the register fills it.**
+   `title · lede · register`, the register on `minmax(0, 1fr)`, its four
+   claims on `grid-auto-rows: minmax(0, 1fr)` — equal RULED BANDS to the
+   column's floor, each centring its claim and sentence (`align-content`,
+   with `align-items: start` kept so the mark hangs off the claim's line).
+   A `--tl-rule` seam above the first band, `--tl-rule-soft` between bands
+   (.10 → .12; it was declared and read by nothing), and the last band's
+   rule at the seam weight because it is the column's floor line.
+3. **The field is inset off both edges, on every card** — `--tl-field-px`
+   (16–28px) as `padding-inline` on `.tl-card__field`, so the rail's
+   stations and the bay's box land on the same two verticals; the leading
+   station loses the 6px margin that put it inboard of the box under it.
+   **And every field ends on the record's floor**: `.tl-field` is inset
+   `--tl-field-gap` above and `--tl-card-py` below, where `--tl-card-py` is
+   the record's own vertical padding. Three cards ran their console to the
+   card's edge with the register's last rule 40px above it — two floors.
+4. **The tools bay is an APPARATUS.** `.tl-field--tools` is one hairline box
+   (`--tl-rule`) from under the rail to that floor, three rows: a HEAD
+   micro-label (`IN SERVICE {year}` — `ProjectCase.year`, the record the
+   homepage's bay letters on its FEED line; left slot only, ADR-064 U1), the
+   drawing centred in a `1fr` row with `--tl-bay-pad` (14–28px) off the
+   walls, and the watch bar FUSED as the box's FOOT — full width, a
+   `--tl-rule-soft` rule above it, cue and label leading, the duration at
+   the far end, `--tl-watch-h` 30px because that is what the row is.
+   `--tl-wire-h` subtracts every one of those terms from `100cqh`. ⚠ U3's
+   "never `1fr auto`" guarded a bar that belonged UNDER its drawing from
+   landing on the bay's floor; the bar IS the foot now, so the middle row is
+   `1fr` by design and the drawing centres in it with `align-self`.
+5. **The aspect lock stays at 1.62 on a landscape bay and eases to 1.5 on a
+   portrait one** (`@container (max-aspect-ratio: 1)`). ⚠ **A bigger bay
+   does not buy a bigger drawing**: `.fl-wire__lbl` caps at 10px, vesper's
+   dock at 58px, mímir's rail at 190px, and the chrome pips are all
+   `min(…, Npx)` — only vesper's `61cqh` tile grows. So the BOX is the
+   answer to the field's void and the aspect is a bonus, taken only where the
+   bay is height-slack.
+
+### Not done, on purpose
+
+- **No capability row under the drawing.** The four `capabilities[].title`s
+  are engineering nouns (`Headless REST + MCP`, `Monday → Figma sync`) that
+  need their sentences on a pitch card, and that is the text the owner
+  declined. The record is unchanged: no new field, no new copy.
+- **No datum rail down the glyph column** — the owner deleted datum rails
+  twice (hud-panel-lab).
+- No shared-sheet edit: `console.css`, `casefile.css`, `ProofGlyph.tsx` are
+  untouched (the glyph's size was CSS-driven already).
+
+### Measured after
+
+At 1920×1247 (the owner's shape): title 32 on two lines, lede 19, claim 19 at
+500, sentence 15.8, mark 28; four bands of **149.5px**; the register's last
+rule at the record's content floor to the pixel; rail and bay **24px** off
+the divider and off the card's edge; the tools box 808×834 with the drawing
+767×511 (1.5) inside it and the bar's bottom on the box's bottom (1px); the
+register's floor and the box's floor on ONE line on every card, the film
+595×770 and the six ads inside that floor. At 1280×720 / 1440×800: title
+24 / 24.5, lede and claim 16 / 16.6, the sentence sr-only, mark 21, bands
+**44 / 60px**, inset 16 / 18px, the drawing height-bound at 1.62 (416×257 /
+537×331), every rail handle on one line. ⚠ The first cut's `2vw` inset
+truncated `BRIEFING AGENT` at both laptop shapes — the ADR-089 U3 headroom
+warning, arriving from the inset's side — so the token's slope is `1.25vw`
+and the stations gave back 2px of padding a side.
+
+### Guards
+
+`trinny-london-smoke.spec.ts`'s reader gains `ladder` and `housing`, and the
+proof test pins, on every card: title ≥ 24px, **claim size equal to lede
+size** (an equality, not a floor — the day one moves without the other the
+rank is by accident again), claim weight 500, mark ∈ {21, 28}, and rail
+inset ≥ 15px both sides; on the tools card: the box exists, its head letters
+`In service {year}`, the drawing clears the box's left wall by ≥ 12px, the
+bar's bottom and both ends equal the box's (≤ 1.5px), and the register's
+last rule equals the box's bottom (≤ 2px). `type-material-tokens` stays at
+`{A:0, B:0, C:0}`.
+
+### Left open
+
+- The bands' air at the owner's viewport — ~40px above and below each
+  claim's ink in a 149px band. The RED LINE runs ~150px bands on the arc and
+  reads; whether this column does is his eye.
+- The 1.5 aspect on a portrait bay is judged on the stills of all four
+  drawings; if one pools, the rung goes back to 1.62 and the box stays.

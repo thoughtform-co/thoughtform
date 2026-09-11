@@ -101,7 +101,12 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   --tl-ink-2: rgba(var(--dawn-rgb), 0.74);
   --tl-ink-3: rgba(var(--dawn-rgb), 0.52);
   --tl-rule: rgba(var(--dawn-rgb), 0.18);
-  --tl-rule-soft: rgba(var(--dawn-rgb), 0.1);
+  /* Two weights, one ladder (ADR-089's own): `--tl-rule` divides REGIONS
+     (the column split, the register's seam and floor, the apparatus box),
+     `--tl-rule-soft` rules WITHIN one (the bands, the bay's head and foot).
+     .10 was declared and read by nothing; .12 is where a hairline still
+     reads on parchment (ADR-058: light lifts every alpha it inherits). */
+  --tl-rule-soft: rgba(var(--dawn-rgb), 0.12);
   /* The card's plate — one step off the page ground on either theme. */
   --tl-plate: rgb(var(--void-deep-rgb));
 }
@@ -360,6 +365,32 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
      arithmetic the services plate's bezel records, and getting it wrong
      leaves the ring visibly thicker on the diagonals than on the straights. */
   --tl-card-ch-in: calc(var(--tl-card-ch) - 0.586px);
+  /* ── The card's ONE type ladder (ADR-094 U8) ──────────────────────
+     Owner, 2026-09-11: the claims, their sentences and the title "can all
+     be a bit larger". One root, one ratio — the casefile's discipline
+     (ADR-085): the lede's size is the root, the claim shares it at
+     `--weight-lit`, the sentence sits one step under, the display three
+     steps over (1.2³ ≈ 1.73). Chrome — kicker, ordinal, stations, the
+     watch bar, the bay's head — stays 11px PT Mono and is not on it. */
+  --tl-copy: clamp(16px, 1.15vw, 19px);
+  --tl-ratio: 1.2;
+  --tl-sub: calc(var(--tl-copy) / var(--tl-ratio));
+  --tl-display: clamp(24px, 1.7vw, 32px);
+  /* The glyph is a 7-cell lattice: INTEGER multiples only (ProofGlyph.tsx).
+     21 here, 28 on the 940h rung where the sentences show. */
+  --tl-glyph: 21px;
+  /* Shared insets, so the record column and the field's apparatus end on
+     ONE floor line (U8). `--tl-card-py` is the record's vertical padding
+     AND the box's bottom inset; `--tl-field-px` insets the rail and the
+     bay together off the divider and the right edge. */
+  --tl-card-py: clamp(20px, 2.6vw, 44px);
+  --tl-card-px: clamp(20px, 2vw, 32px);
+  /* ⚠ 1.25vw, NOT 2vw: the inset comes out of four stations' width, and at
+     `2vw` the rail's longest handle (`BRIEFING AGENT`, 14 chars) truncated
+     at both laptop shapes — the ADR-089 U3 headroom warning, arriving. The
+     floor binds at 1280 (16px), 1440 takes 18, the owner's 1920 takes 24. */
+  --tl-field-px: clamp(16px, 1.25vw, 28px);
+  --tl-field-gap: clamp(10px, 1.4vh, 16px);
   position: relative;
   height: 100%;
   display: grid;
@@ -448,7 +479,7 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 0 clamp(20px, 2vw, 32px);
+  padding: 0 var(--tl-card-px);
   border-bottom: 1px solid var(--tl-rule);
   min-width: 0;
 }
@@ -460,7 +491,7 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
   margin: 0;
   font-family: var(--font-pp-neue-montreal);
   font-weight: var(--weight-lit);
-  font-size: clamp(20px, 1.5vw, 26px);
+  font-size: var(--tl-display);
   line-height: 1.1;
   letter-spacing: var(--track-display);
   color: var(--tl-ink);
@@ -550,8 +581,12 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
    the frame of the thing under it — which is what the owner asked for. */
 .tl-root .tl-card__tabs .fl-con__stn {
   flex: 1 1 0;
-  margin: 0 0 0 6px;
-  padding: 5px 11px;
+  /* The gap sits BETWEEN boxes only (U8): a leading margin put the first
+     station 6px inboard of the bay's box under it, off the shared edge. */
+  margin: 0;
+  /* 9px, not 11: the field's inset (U8) costs each station ~5px of width
+     at 1280×720, and the 14-character handle clips at 11. */
+  padding: 5px 9px;
   gap: 7px;
   border: 1px solid var(--tl-rule);
   background: none;
@@ -561,6 +596,10 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
      the first label off centre. */
   clip-path: none;
   color: var(--tl-ink-3);
+}
+
+.tl-root .tl-card__tabs .fl-con__stn + .fl-con__stn {
+  margin-left: 6px;
 }
 
 .tl-root .tl-card__tabs .fl-con__stn > i {
@@ -620,17 +659,23 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
    the column held a name, a paragraph and four short claims — roughly a
    third of the box, floating. With each claim carrying its sentence the
    column is most of its own height, and a centred block that nearly fills
-   its box reads as a block that failed to fill it. */
+   its box reads as a block that failed to fill it.
+   ⚠ AND ONE GRID SINCE U8: `title · lede · register`, the register taking
+   every pixel the first two leave (`minmax(0, 1fr)`), so the column fills
+   its box the way the field's apparatus fills its own. As a flex column the
+   slack pooled under the claims — ~330px, 40 % of the card at the owner's
+   viewport, with nothing framing it. */
 .tl-root .tl-card__record {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  /* The gap now falls between the NAME and its paragraph as well as
-     between the paragraph and the claims, so it is tuned for the tighter
-     of the two and the claims buy their separation back below. */
-  gap: clamp(14px, 2vh, 24px);
-  padding: clamp(20px, 2.6vw, 44px) clamp(20px, 2vw, 32px);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-content: start;
+  /* The gap falls between the NAME and its paragraph as well as between
+     the paragraph and the register, so it is tuned for the tighter of the
+     two and the register buys its separation back with its own margin. */
+  row-gap: clamp(14px, 2vh, 24px);
+  padding: var(--tl-card-py) var(--tl-card-px);
   min-width: 0;
+  min-height: 0;
   border-right: 1px solid var(--tl-rule);
   /* Entrance rides the WINDOWED channel, not the raw one. On `--pc-enter`
      the record was at half opacity while the card was half-way up the
@@ -645,47 +690,81 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
   margin: 0;
   font-family: var(--font-pp-neue-montreal);
   font-weight: var(--weight-text);
-  font-size: clamp(16px, 1.15vw, 19px);
+  font-size: var(--tl-copy);
   line-height: 1.45;
   letter-spacing: var(--track-copy);
   color: var(--tl-ink);
   max-width: 34ch;
 }
 
+/* ── The register: four RULED BANDS to the floor (ADR-094 U8) ─────────
+   Owner, 2026-09-11: "a lot of unused white space … maybe we need to add
+   some visual elements … I don't want to add too much text either." Read
+   against the Panels references, what those do with a region is BOX it —
+   air inside a drawn box is room, air under a list is a hole — and what
+   this house already does with four claims is the RED LINE sheet
+   (ADR-084): `1fr` bands dividing whatever height there is, each centring
+   its own content, hairline seams between. The last band's rule lands on
+   the same y as the field's apparatus, so the two columns share ONE floor.
+   ⚠ `minmax(0, 1fr)` rows, never `auto`: an `auto` row is content height
+   and the slack pools under the list again. ⚠ Below 940h the sentences
+   are sr-only and a band is ~55px of claim and air — still ruled, still a
+   register. No new copy: the marks grew (14 → 21/28px), the rules are the
+   visual element, the text is the record's. */
 .tl-root .tl-card__claims {
+  grid-row: 3;
   list-style: none;
-  margin: clamp(4px, 1.2vh, 14px) 0 0;
+  margin: clamp(6px, 1vh, 12px) 0 0;
   padding: 0;
   display: grid;
-  gap: clamp(8px, 1.2vh, 12px);
+  grid-auto-rows: minmax(0, 1fr);
+  min-height: 0;
+  /* The seam dividing the brief from the register — REGION weight. */
+  border-top: 1px solid var(--tl-rule);
 }
 
 /* ⚠ `align-items: start`, NEVER `center` or `baseline`. Grid synthesizes a
    replaced element's baseline from its bottom edge, and with a two-line
    sentence under the claim a centred glyph sits mid-paragraph. The mark
    hangs off the CLAIM's line, which is ADR-067's own ruling one surface
-   over. */
+   over. `align-content: center` is a different axis of a different box —
+   the BAND centring its claim + sentence within the height it was dealt. */
 .tl-root .tl-card__claim {
   display: grid;
-  grid-template-columns: 14px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: var(--tl-glyph) minmax(0, 1fr);
+  gap: 14px;
   align-items: start;
+  align-content: center;
+  min-height: 0;
+  padding-block: clamp(6px, 1.2vh, 14px);
+  /* Rules WITHIN the register — one weight under the seam above it. */
+  border-bottom: 1px solid var(--tl-rule-soft);
   font-family: var(--font-pp-neue-montreal);
   font-weight: var(--weight-text);
-  font-size: clamp(14px, 1vw, 16px);
-  line-height: 1.3;
+  font-size: var(--tl-copy);
+  line-height: 1.25;
   letter-spacing: var(--track-copy);
   color: var(--tl-ink-2);
 }
 
+/* The closing rule IS the column's floor line, so it takes the seam weight. */
+.tl-root .tl-card__claim:last-child {
+  border-bottom-color: var(--tl-rule);
+}
+
 .tl-root .tl-card__claim-body {
   display: grid;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
 }
 
+/* The claim is the lede's PEER by size and outranks it by weight and ink —
+   ADR-088's law one surface over: the ordering a ladder guarantees is the
+   one inside its own face. Claim and sentence rank by SIZE (a full ratio
+   step); claim and lede rank by WEIGHT (`--weight-lit` is the ceiling). */
 .tl-root .tl-card__claim-title {
   display: block;
+  font-weight: var(--weight-lit);
   color: var(--tl-ink);
 }
 
@@ -717,24 +796,31 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
     clip-path: none;
     white-space: normal;
     display: block;
-    font-size: clamp(12px, 0.82vw, 13.5px);
+    font-size: var(--tl-sub);
     line-height: 1.35;
-    color: var(--tl-ink-3);
+    color: var(--tl-ink-2);
+  }
+  /* The bands hold a sentence now, so the mark takes the next lattice
+     rung — 28px is 4px cells; 24 would be a blur (ProofGlyph.tsx). */
+  .tl-root .tl-card {
+    --tl-glyph: 28px;
   }
 }
 
+/* Centred on the claim's FIRST line box (`--tl-copy` × 1.25), whichever of
+   the two is taller: a 28px cell beside a 19px word sits ~2px proud of the
+   line either side, which is the icon's own bed and not a misalignment. */
 .tl-root .tl-card__mark {
   display: block;
-  width: 14px;
-  height: 14px;
-  /* Optically seated on the claim's first line box (1.3 × ~15px). */
-  margin-top: 3px;
+  width: var(--tl-glyph);
+  height: var(--tl-glyph);
+  margin-top: calc((var(--tl-copy) * 1.25 - var(--tl-glyph)) / 2);
 }
 
 .tl-root .tl-card__mark .fl-proof-glyph {
   display: block;
-  width: 14px;
-  height: 14px;
+  width: var(--tl-glyph);
+  height: var(--tl-glyph);
 }
 
 /* ── 6. The field — the record's own visual, at card scale ──────────
@@ -751,6 +837,13 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
   /* The rail on the panel's own top edge, the evidence under it (U2). */
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  /* ⚠ ONE INSET FOR RAIL AND BAY (U8, owner: the elements are "too close
+     to the center border and the right border"). On the FIELD, not the
+     bay, so the stations' outer edges and the bay's box land on the same
+     two verticals — one alignment edge, on all four cards. The bay is the
+     size container, so every `cqw`-derived drawing re-solves against the
+     narrower box by itself. */
+  padding-inline: var(--tl-field-px);
   --fl-mono: var(--font-pt-mono);
   --fl-copy: clamp(13px, 1vw, 16px);
   --fl-shot-px: 12px;
@@ -774,9 +867,16 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
   container-type: size;
 }
 
+/* ⚠ EVERY FIELD ENDS ON THE RECORD'S FLOOR (U8). The record column pads by
+   `--tl-card-py` and its register's last rule sits on that line; a console
+   that ran to the card's own edge put a second floor 40px under the first,
+   on three of the four cards. The gap above is the rail's clearance. The
+   BAY stays the size container and keeps its full box, so every `cqh`
+   count (the ads' rows, the film's width) is against the bay, and each
+   kind that derives a height from `100cqh` subtracts these two terms. */
 .tl-root .tl-field {
   position: absolute;
-  inset: 0;
+  inset: var(--tl-field-gap) 0 var(--tl-card-py) 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -913,7 +1013,14 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
   display: grid;
   gap: 10px;
   min-width: 0;
-  width: min(100%, calc((100cqh - 2 * var(--tl-film-pad) - 26px) * var(--tl-film-ar)));
+  /* `100cqh` is the BAY; the field is inset from it top and bottom (U8). */
+  width: min(
+    100%,
+    calc(
+      (100cqh - var(--tl-field-gap) - var(--tl-card-py) - 2 * var(--tl-film-pad) - 26px) *
+        var(--tl-film-ar)
+    )
+  );
 }
 
 /* The 4:5 social cut, where the record carries one — the shape this panel
@@ -1030,25 +1137,60 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
    it contributes NO content size — a shrink-to-fit track collapses to zero,
    `100%` resolves to zero, and the drawing renders at no width at all. It
    centres on the ROW instead, which is content-sized off the aspect. */
-/* ⚠ THE COLUMN STAYS `1fr` AND THE ROWS ARE DECLARED — never
-   `justify-items: center`. `.tl-wire`'s only child is absolutely inset, so
-   it contributes NO content size; the moment the track stops stretching,
-   its `min(100%, …)` resolves against nothing and the drawing renders at
-   zero width. That is the fifth time on this route, so it is spelled out
-   here too: the WIRE is stretched by its track and the BAR centres itself. */
-/* ⚠ BOTH ROWS ARE `auto` AND THE PAIR CENTRES — never `1fr auto`. A `1fr`
-   row absorbs every spare pixel, so `align-content` has nothing left to
-   distribute: the drawing seats high and the bar lands on the bay's floor,
-   ~300px adrift from the thing it belongs to. Sized to their content, the
-   two centre as ONE group and the bar stays under its drawing. */
+/* ── The tools' APPARATUS (ADR-094 U8) ───────────────────────────────
+   Owner, 2026-09-11: "the elements are too close to the center border and
+   the right border … redesign them a bit so they fill in a bit more of the
+   real estate, just subtly." The field is portrait, the drawing is
+   landscape by law (below), and the ~140px of plate above and below it
+   read as void because nothing framed them. The Panels references seat a
+   centrepiece in a BAY with head and foot micro-labels; the homepage's own
+   tools plate fuses its watch bar to the bay's bottom edge (ADR-068). So:
+   ONE hairline box from under the rail to the card's floor, a head line
+   (`IN SERVICE {year}`, the record's own), the drawing centred in the
+   middle row, the watch bar as the box's FOOT — and the same air now sits
+   inside a drawn region, which is room rather than a hole.
+   ⚠ A BIGGER BAY DOES NOT BUY A BIGGER DRAWING: `.fl-wire__lbl` caps at
+   10px, vesper's dock at 58px, mímir's rail at 190px — past its authored
+   bay a drawing gets emptier, not larger. The BOX is the answer; the
+   aspect lock below stays where it was.
+   ⚠ THE COLUMN STAYS `1fr` — never `justify-items: center`. `.tl-wire`'s
+   only child is absolutely inset, so it contributes NO content size; a
+   shrink-to-fit track resolves its `min(100%, …)` against nothing and the
+   drawing renders at zero width (fifth time on this route). The wire
+   centres itself with auto margins INSIDE a stretched track.
+   ⚠ THE MIDDLE ROW IS `1fr` BY DESIGN NOW. U3's "never `1fr auto`" guarded
+   a bar that belonged UNDER its drawing from landing on the bay's floor;
+   the bar is the box's FOOT now, so the floor is where it belongs, and the
+   drawing centres in the row between them (`align-self`). */
 .tl-root .tl-field--tools {
-  --tl-watch-h: 46px;
+  --tl-watch-h: 30px;
+  --tl-bay-head-h: 30px;
+  /* The drawing's air off the box's walls; 14px read as touching. */
+  --tl-bay-pad: clamp(14px, 2.4cqw, 28px);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-content: center;
-  gap: clamp(8px, 1.4vh, 16px);
-  padding: 2px;
+  grid-template-rows: var(--tl-bay-head-h) minmax(0, 1fr) var(--tl-watch-h);
+  border: 1px solid var(--tl-rule);
+  padding: 0;
+}
+
+/* The bay's HEAD micro-label — one designation (ADR-064 U1), left slot only:
+   the year the tool went into service, which the homepage's bay letters on
+   its FEED line. Chrome, not copy; PT Mono, so the uppercase is lawful. */
+.tl-root .tl-bay__head {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--tl-rule-soft);
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--tl-ink-3);
+  white-space: nowrap;
 }
 
 /* ── The walkthrough (U3) ────────────────────────────────────────────
@@ -1061,16 +1203,24 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
    the film's control is its own frame. Same split the homepage makes: the
    tools plate fuses a watch bar to its bay, the films plate does not, and
    the reason is that a control over a wireframe has to say what it opens.
-   ⚠ ONE affordance per object — the drawing itself is not clickable. */
+   ⚠ ONE affordance per object — the drawing itself is not clickable.
+   ⚠ FUSED AS THE APPARATUS'S FOOT (U8) — full width, the box's own bottom
+   edge, a rule above it: the homepage bay's grammar, where "the simplified
+   bar is fused to its bottom edge". A centred pill floating 46px under the
+   drawing was a control with no edge to belong to. The row is
+   `--tl-watch-h` and the button fills it; cue and label lead, the duration
+   takes the far end. */
 .tl-root .tl-watch {
-  justify-self: center;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 14px;
-  border: 1px solid var(--tl-rule);
+  min-width: 0;
+  padding: 0 14px;
+  border: 0;
+  border-top: 1px solid var(--tl-rule-soft);
   background: none;
   cursor: pointer;
+  text-align: left;
   font-family: var(--font-pt-mono);
   font-weight: var(--weight-text);
   font-size: 11px;
@@ -1080,17 +1230,18 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
   color: var(--tl-ink-2);
   transition:
     color 180ms ease-out,
-    border-color 180ms ease-out;
+    background-color 180ms ease-out;
 }
 
 .tl-root .tl-watch:hover {
   color: var(--tl-ink);
-  border-color: var(--tl-ink-3);
+  background-color: rgba(var(--dawn-rgb), 0.04);
 }
 
+/* Inside the box's own edge — the bar IS the edge now. */
 .tl-root .tl-watch:focus-visible {
   outline: 1px solid var(--gold);
-  outline-offset: 2px;
+  outline-offset: -3px;
 }
 
 /* The same play glyph as the film's cue, at chrome scale — one mark for one
@@ -1104,6 +1255,7 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
 }
 
 .tl-root .tl-watch__meta {
+  margin-left: auto;
   color: var(--tl-ink-3);
 }
 
@@ -1120,19 +1272,25 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
    enough that mímir's three panels are panels. The air it leaves above and
    below is the cost of a landscape drawing in a portrait panel, and it is
    cheaper than the stretch. */
-/* ⚠ THE WATCH BAR COMES OUT OF THE HEIGHT THE DRAWING SOLVES AGAINST (U3).
-   The bay is the size container, so `100cqh` is the WHOLE bay — bar
-   included. Left uncorrected the drawing would size itself against a box
-   that has ~46px less room than it thinks, and a landscape bay overflows
-   its bay by exactly that. One term, subtracted once, used by both the cap
-   and the width it derives. */
+/* ⚠ EVERYTHING BETWEEN THE DRAWING AND THE BAY'S EDGES COMES OUT OF THE
+   HEIGHT IT SOLVES AGAINST (U3, extended in U8). The bay is the size
+   container, so `100cqh` is the WHOLE bay — the box's two insets, its two
+   borders, its head row, its foot row and the air around the drawing
+   included. Left uncorrected the drawing sizes itself against a box with
+   ~100px less room than it thinks, and a landscape bay overflows by
+   exactly that. Every term is a token the box itself reads, subtracted
+   once, used by both the cap and the width it derives. */
 .tl-root .tl-wire {
   --tl-wire-ar: 1.62;
-  --tl-wire-h: calc(100cqh - 4px - var(--tl-watch-h, 0px));
-  width: min(100%, calc(var(--tl-wire-h) * var(--tl-wire-ar)));
+  --tl-wire-h: calc(
+    100cqh - var(--tl-field-gap) - var(--tl-card-py) - var(--tl-bay-head-h, 0px) -
+      var(--tl-watch-h, 0px) - 2px - 2 * var(--tl-bay-pad, 0px)
+  );
+  width: min(calc(100% - 2 * var(--tl-bay-pad, 0px)), calc(var(--tl-wire-h) * var(--tl-wire-ar)));
   aspect-ratio: var(--tl-wire-ar);
   max-height: var(--tl-wire-h);
   margin-inline: auto;
+  align-self: center;
 }
 
 .tl-root .tl-wire {
@@ -1141,6 +1299,17 @@ html[data-rail-instruments] .tl-root .hud__corner--tl {
   min-height: 0;
   overflow: hidden;
   background: rgba(var(--dawn-rgb), 0.04);
+}
+
+/* On a PORTRAIT bay — the owner's 864×928 — the drawing may run a little
+   taller: 1.5 keeps a third of headroom over the 1.12 `cqw` cap and gives
+   vesper's `61cqh` tile its 8 %. A landscape bay (1280×720, 1440×800) is
+   height-bound, where a lower aspect would only NARROW the drawing, so it
+   keeps 1.62 (U8, measured on all four drawings). */
+@container (max-aspect-ratio: 1) {
+  .tl-root .tl-wire {
+    --tl-wire-ar: 1.5;
+  }
 }
 
 /* ── The map's console, on this route ───────────────────────────
