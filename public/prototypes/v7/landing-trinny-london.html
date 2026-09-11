@@ -5515,11 +5515,13 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ 10 THE PROPOSITION (ADR-094, ADR-095 U1 + U5) ═══════════
-       Title-left / paragraph-right head, then THEIR configuration plotted:
-       the people, the encoded layer between them, the surfaces they already
-       run. A record of their stack, not a metaphor — no Navigate / Encode /
-       Build labels (the Arc stays the Arc), no digits, no codenames.
+  <!-- ═══════════ 10 THE PROPOSITION (ADR-094 + U7, ADR-095 U1 + U5) ═══════════
+       Title-left / paragraph-right head, then THEIR configuration as ONE
+       INSTRUMENT (U7): the layer they own, the teams that run on it, and
+       the picked team's configuration read out — adoption and automation
+       drawn across the seam between them. A record of their stack, not a
+       metaphor — no Navigate / Encode / Build labels (the Arc stays the
+       Arc), no digits, no codenames.
 
        ⚠ IT IS NOT A SLAB ANY MORE (U5, owner 2026-09-10: "we have a parallax
        paint flying over it. I don't want that … the elements from the next
@@ -5577,46 +5579,56 @@ html { scroll-behavior: smooth; }
         </p>
       </header>
 
-      <div class="tl-config" data-tl-reveal role="img" aria-label="The Trinny London configuration: the people at the top, the encoded layer between, and the surfaces the team already runs at the bottom, joined by adoption running down and automation running up.">
-        <div class="tl-config__band tl-config__band--people">
-          <p class="tl-config__label">The people</p>
-          <ul class="tl-config__plates">
-            <li class="tl-config__plate">Studio</li>
-            <li class="tl-config__plate">Creative ops</li>
-            <li class="tl-config__plate">Finance</li>
-            <li class="tl-config__plate">The founder's sense-check</li>
-            <li class="tl-config__plate">The customer's voice</li>
+      <!-- ⚠ ONE INSTRUMENT, THREE BANDS (ADR-094 U7, owner 2026-09-11: the
+           old Aether landing's headless panel is "the composition I like").
+           The LAYER they own on the left, four rows that DIM unless the
+           picked team reads them; the FLYWHEEL across the seam as two
+           arrows, adoption writing the layer and automation running from
+           it; the TEAMS on the right as pickable tiles, with the picked
+           team's intelligence configuration read out beneath in the five
+           questions the registry asks. Picking a team is what makes the
+           transfer visible — the same layer, lit differently — without a
+           digit anywhere. The picker is `usePropPick` (delegated click on
+           `[data-tl-config]`); the record lives HERE, in `data-*`, so the
+           parse guard walks every string it can letter. -->
+      <div class="tl-config" data-tl-reveal data-tl-config role="group" aria-label="The Trinny London configuration: the layer the team owns on the left, the teams that run on it on the right, adoption writing the layer and automation running from it.">
+        <div class="tl-config__band tl-config__band--layer">
+          <div class="tl-config__lhead"><strong>The layer</strong><span>Owned by Trinny London</span></div>
+          <ul class="tl-config__layers" role="list">
+            <li class="tl-config__layer is-on" data-tl-layer="rules"><span class="tl-config__tag">Rules</span><span class="tl-config__name">brand rules, and the line where AI stops</span></li>
+            <li class="tl-config__layer is-on" data-tl-layer="examples"><span class="tl-config__tag">Examples</span><span class="tl-config__name">what good looks like, from their own work</span></li>
+            <li class="tl-config__layer is-on" data-tl-layer="sources"><span class="tl-config__tag">Sources</span><span class="tl-config__name">the catalogue and the customer's voice</span></li>
+            <li class="tl-config__layer is-on" data-tl-layer="loops"><span class="tl-config__tag">Loops</span><span class="tl-config__name">the checks that catch it before the founder does</span></li>
           </ul>
         </div>
-        <div class="tl-config__wires tl-config__wires--down">
-          <p class="tl-config__label">Adoption ↓</p>
-          <div class="tl-config__run" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-          <p class="tl-config__note">The team learns on its own work and writes down what good looks like.</p>
-        </div>
-        <div class="tl-config__band tl-config__band--layer">
-          <p class="tl-config__label">The layer</p>
-          <div class="tl-config__layer">
-            <strong>Trinny London's encoded judgment</strong>
-            <span>brand rules</span>
-            <span>the line where AI stops</span>
-            <span>the customer's voice</span>
-            <span>the checks that catch it before the founder does</span>
+        <div class="tl-config__band tl-config__band--seam">
+          <div class="tl-config__arrow tl-config__arrow--adopt">
+            <span class="tl-config__word">Adoption</span>
+            <i aria-hidden="true"></i>
+            <span class="tl-config__note">The team learns on its own work and writes down what good looks like.</span>
+          </div>
+          <div class="tl-config__arrow tl-config__arrow--auto">
+            <span class="tl-config__word">Automation</span>
+            <i aria-hidden="true"></i>
+            <span class="tl-config__note">The layer runs inside the tools they already use, and hands the time back.</span>
           </div>
         </div>
-        <div class="tl-config__wires tl-config__wires--up">
-          <p class="tl-config__label">Automation ↑</p>
-          <div class="tl-config__run" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-          <p class="tl-config__note">The layer runs inside the tools they already use, and hands the time back.</p>
-        </div>
-        <div class="tl-config__band tl-config__band--surfaces">
-          <p class="tl-config__label">The surfaces</p>
-          <ul class="tl-config__plates">
-            <li class="tl-config__plate">Claude</li>
-            <li class="tl-config__plate">Monday</li>
-            <li class="tl-config__plate">Figma</li>
-            <li class="tl-config__plate">Shopify</li>
-            <li class="tl-config__plate">Slack</li>
-          </ul>
+        <div class="tl-config__band tl-config__band--work">
+          <div class="tl-config__tiles" role="tablist" aria-label="The teams on the layer">
+            <button type="button" class="tl-config__tile is-on" role="tab" aria-selected="true" data-tl-pick data-layers="rules examples sources loops" data-owner="The studio lead, the founder's sense-check last" data-runs="A brand Skill, on the team's own keys" data-bar="On-brand, and the line where AI stops" data-reach="The brand rules and the catalogue" data-where="Claude, inside Figma"><span class="tl-config__tname">Studio</span><span class="tl-config__twork">the visual work</span></button>
+            <button type="button" class="tl-config__tile" role="tab" aria-selected="false" data-tl-pick data-layers="rules examples loops" data-owner="Creative ops, who set the calendar" data-runs="The same brand Skill, plus a briefing Skill" data-bar="A brief the studio can act on" data-reach="The calendar and the catalogue" data-where="Claude, inside Monday"><span class="tl-config__tname">Creative ops</span><span class="tl-config__twork">briefs and approvals</span></button>
+            <button type="button" class="tl-config__tile" role="tab" aria-selected="false" data-tl-pick data-layers="rules sources loops" data-owner="Finance, who sign it off" data-runs="A reporting Skill" data-bar="Numbers that reconcile before they are sent" data-reach="Shopify and the ledger" data-where="A scheduled run, results in Slack"><span class="tl-config__tname">Finance</span><span class="tl-config__twork">the numbers, checked</span></button>
+          </div>
+          <div class="tl-config__cfg" role="tabpanel" aria-live="polite">
+            <div class="tl-config__chead"><span data-tl-cfg="name">Studio</span> &middot; the intelligence configuration</div>
+            <dl class="tl-config__kv">
+              <div><dt>Who owns it</dt><dd data-tl-cfg="owner">The studio lead, the founder's sense-check last</dd></div>
+              <div><dt>What runs it</dt><dd data-tl-cfg="runs">A brand Skill, on the team's own keys</dd></div>
+              <div><dt>The bar</dt><dd data-tl-cfg="bar">On-brand, and the line where AI stops</dd></div>
+              <div><dt>What it can reach</dt><dd data-tl-cfg="reach">The brand rules and the catalogue</dd></div>
+              <div><dt>Where it runs</dt><dd data-tl-cfg="where">Claude, inside Figma</dd></div>
+            </dl>
+          </div>
         </div>
         <ul class="tl-config__kickers">
           <li class="tl-config__kicker">One configuration</li>

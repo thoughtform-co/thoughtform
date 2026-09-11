@@ -3,6 +3,7 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { brandmarkMorphRef, clearBrandmarkMorph } from "@/lib/brandmark/morphTargetRef";
+import { usePropPick } from "./proposition/usePropPick";
 import { TURN_CAPABLE_QUERY, trinnyMorphSpec, useTurnScroll } from "./turn/useTurnScroll";
 
 /**
@@ -64,6 +65,9 @@ export function TrinnyPortals() {
   }, []);
 
   useTurnScroll();
+  // The proposal's picker (ADR-094 U7): a delegated listener on the parsed
+  // instrument, so the record stays in the prototype and the behaviour here.
+  usePropPick();
 
   useEffect(() => {
     if (timerRef.current != null) {

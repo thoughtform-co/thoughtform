@@ -849,3 +849,113 @@ the frame to measure in.
 ⚠ **The film field has no other rung** — one rule governs it at every viewport,
 so there was no responsive branch to check and no rung where the old behaviour
 was correct.
+
+## Update 7 — the proposal is one instrument with a picker (2026-09-11)
+
+Owner, with the Aether repo open: _"we had our headless configuration there …
+I really like the composition there so can you dig into that."_ And, on the
+same day, the hierarchy this route's proposal has to sit inside: **the Arc is
+the approach; the proposition is what the team ends up with — self-sufficient,
+transferable, adoption and automation one flywheel — and the intelligence
+configuration is one specific workstream, a component of it.**
+
+### What the composition is
+
+The old Aether landing's `#headless` panel (unmounted since the operator
+homepage; `loop_aether/components/landing/surfaces.tsx` + the `.headless*`
+block of `landing.css`): ONE instrument. Left, the layer as a card of four rows
+— Rules · how the team decides / Examples · what good looks like / Sources /
+Loops — that DIM unless the picked surface reads them. Right, a rule "pick
+one", four selectable tiles, and a readout that swaps with the pick. Its
+argument was made by the hand: pick a surface and the contract is visible in
+one diagram. That is the property the owner named, and it is the property the
+§7 drawing did not have — five stacked bands that could only be read, never
+asked.
+
+### What changed
+
+`#proposition`'s drawing is redrawn on that grammar, adapted to this route's
+register (light-locked, dawn/gold ramp, zero type literals) and to the
+proposition's hierarchy:
+
+- **The LAYER stays left, "owned by Trinny London"**, its four rows carrying
+  their record: brand rules and the line where AI stops · what good looks like
+  from their own work · the catalogue and the customer's voice · the checks
+  that catch it before the founder does.
+- **The tiles are the TEAMS on the layer** — Studio · Creative ops · Finance,
+  the three of §7's people plates that are teams (the founder's sense-check and
+  the customer's voice moved into the rows they belong to). Picking one lights
+  only the rows it reads: **transfer made visible without a digit**, the same
+  layer lit three ways.
+- **The readout is the picked team's intelligence configuration**, in the
+  registry's five questions — who owns it · what runs it · the bar · what it
+  can reach · where it runs. §7's surfaces band (Claude · Monday · Figma ·
+  Shopify · Slack) is not deleted, it moved: each is now the answer to "where
+  it runs" for the team that runs there.
+- **The flywheel is the seam**: two arrows between the halves, ADOPTION
+  pointing at the layer with §7's own note ("the team learns on its own work
+  and writes down what good looks like"), AUTOMATION pointing back at the work
+  ("the layer runs inside the tools they already use, and hands the time
+  back"). §7's `Adoption ↓` / `Automation ↑` labels, turned to point at the
+  things they connect.
+- **Three bands, three kickers, one reveal mark** — the smoke's structural
+  pins hold unchanged, because the structure IS three regions on one plate.
+
+### The mechanics
+
+- ⚠ **THE RECORD LIVES ON THE TILES AS `data-*`** (`data-layers`,
+  `data-owner`, `data-runs`, `data-bar`, `data-reach`, `data-where`). The
+  parse guard's walk (no Arc word, no digit, no "self-sufficient") strips tags
+  but keeps attribute text out — so the tiles' attributes are ALSO asserted
+  directly: every `data-layers` id is one of the four rows, every tile carries
+  all five answers, the readout has exactly the six slots. A value the pick
+  can letter is a value the guard has read.
+- **`usePropPick`** (`app/(marketing)/trinny-london/proposition/usePropPick.ts`,
+  called from `TrinnyPortals` beside `useTurnScroll`) is ONE delegated
+  `click`/`keydown` listener on `[data-tl-config]`. Never a listener per tile:
+  the body is `dangerouslySetInnerHTML`, and per-node listeners die the way
+  nested roots do. Arrow keys walk the `role="tab"` tiles; Enter and Space are
+  the button's own.
+- ⚠ **THE RESTING STATE IS AUTHORED.** The first tile is
+  `aria-selected="true"` and every row is `is-on` in the markup, so the
+  drawing reads whole with no JS, under reduced motion, and in the parse test
+  — the hook adds the pick and nothing else. `data-tl-reveal` stays on the
+  instrument's root, count three.
+- **Gold is the built thing and nothing else.** The lit rows, the picked tile
+  and the readout's top rule take `--gold-line` / `rgba(--gold-rgb, …)`; the
+  plate, the unlit rows and the resting tiles are dawn. `type-material-tokens`
+  stays at `{A:0, B:0, C:0}` — every tracking is a `--track-*` role token,
+  every weight `--weight-text`, every uppercase run is PT Mono.
+- **Below 960px the instrument stacks**: layer, then the seam as a row of the
+  two words with their notes (the arrow runs have no axis once the bands
+  stack, so they drop), then the tiles one per row and the readout with its
+  keys over its values.
+
+### Guards
+
+`trinny-london-parse.test.ts` gains the tile/row/slot pins above.
+`trinny-london-smoke.spec.ts` picks the third tile in the lit state and asserts
+from BOTH ends: the picked tile selected and the first un-selected, the Examples
+row dimmed and the Rules row lit, the readout's name and its "where it runs"
+equal to the tile's own attribute — then picks the first again so the stills
+read the resting record.
+
+### Where the composition came from, and where else it went
+
+The same instrument is the owner's proposition one-pager (a design canvas,
+2026-09-11) and slide 8 of the Suri proposal (`suri-proposal-v15.html`, in
+place of the Arc orbit). On the deck it is drawn DARK, as the Aether panel
+was; here it is drawn in the route's light register, because a dark slab
+over the coral wash is the paint-over-the-record this route rejected twice
+(ADR-095 U1, U5).
+
+### Left open
+
+- The head's copy still says "Headless and built from first principles";
+  the strategy doctrine has demoted headless to a footnote. Owner's word,
+  owner's call.
+- Finance's configuration is a PROPOSAL of their record, not a reading of it
+  (no brief exists in the Trinny folder to check it against). The Studio and
+  Creative ops answers are drawn from §7's own plates and surfaces.
+- The slack that pooled at the floor (U5) pools more: the instrument is
+  shorter than the five bands were.

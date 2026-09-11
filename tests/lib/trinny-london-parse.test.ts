@@ -266,6 +266,36 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(prop).not.toMatch(/\bThe proposal\b/);
   });
 
+  it("draws the proposal as one instrument whose record is on the tiles", () => {
+    /* ADR-094 U7. The layer's four rows, three team tiles, and a readout
+       that answers the registry's five questions. The RECORD is `data-*`
+       on the tiles — which is what puts every string the page can letter
+       inside the walk above — and every layer a tile names must be a row
+       the drawing has, or the pick lights nothing and fails silently. */
+    const body = parsed();
+    const start = body.indexOf('id="proposition"');
+    const prop = body.slice(start, body.indexOf("</section>", start));
+    const layers = [...prop.matchAll(/data-tl-layer="([a-z]+)"/g)].map((m) => m[1]);
+    expect(layers).toEqual(["rules", "examples", "sources", "loops"]);
+    const tiles = [...prop.matchAll(/<button[^>]*data-tl-pick[^>]*>/g)].map((m) => m[0]);
+    expect(tiles).toHaveLength(3);
+    for (const tile of tiles) {
+      const lit = (tile.match(/data-layers="([^"]*)"/)?.[1] ?? "").split(/\s+/).filter(Boolean);
+      expect(lit.length).toBeGreaterThan(0);
+      for (const id of lit) expect(layers).toContain(id);
+      for (const k of ["owner", "runs", "bar", "reach", "where"]) {
+        expect(tile, `${k} on ${tile.slice(0, 60)}`).toMatch(new RegExp(`data-${k}="[^"]+"`));
+      }
+    }
+    // The readout: the name plus the five answers, one slot each.
+    const slots = [...prop.matchAll(/data-tl-cfg="([a-z]+)"/g)].map((m) => m[1]);
+    expect(slots).toEqual(["name", "owner", "runs", "bar", "reach", "where"]);
+    // At rest the first tile is picked and every row is lit — the drawing
+    // reads whole without the picker (the phone and reduced-motion paths).
+    expect(tiles[0]).toContain('aria-selected="true"');
+    expect(prop.match(/tl-config__layer is-on/g) ?? []).toHaveLength(4);
+  });
+
   it("ships the wordmark and drops the legacy HUD chrome", () => {
     const body = parsed();
     expect(body).toContain('class="hud__brand"');

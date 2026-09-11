@@ -954,6 +954,32 @@ test.describe("Trinny London pitch variant", () => {
     await expect(page.locator("#proposition .tl-config__band")).toHaveCount(3);
     await expect(page.locator("#proposition .tl-config__kicker")).toHaveCount(3);
 
+    /* ⚠ THE INSTRUMENT PICKS (ADR-094 U7). Three teams on one layer; at
+       rest the first is picked and every row of the layer is lit. Picking
+       the third swaps the readout to its record and dims the rows that team
+       does not read — the transfer made visible, and the one behaviour on
+       this station. Asserted from both ends: the picked tile's state AND
+       the un-picked tile's, the lit rows AND the dimmed one. */
+    const tiles = page.locator("#proposition [data-tl-pick]");
+    await expect(tiles).toHaveCount(3);
+    await expect(tiles.nth(0)).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#proposition [data-tl-layer].is-on")).toHaveCount(4);
+    await tiles.nth(2).click();
+    await expect(tiles.nth(2)).toHaveAttribute("aria-selected", "true");
+    await expect(tiles.nth(0)).toHaveAttribute("aria-selected", "false");
+    await expect(page.locator('#proposition [data-tl-cfg="name"]')).toHaveText("Finance");
+    await expect(page.locator('#proposition [data-tl-cfg="where"]')).toHaveText(
+      await tiles
+        .nth(2)
+        .getAttribute("data-where")
+        .then((v) => v ?? "")
+    );
+    await expect(page.locator('#proposition [data-tl-layer="examples"]')).not.toHaveClass(/is-on/);
+    await expect(page.locator('#proposition [data-tl-layer="rules"]')).toHaveClass(/is-on/);
+    // Back to the first, so the stills below read the resting record.
+    await tiles.nth(0).click();
+    await expect(page.locator("#proposition [data-tl-layer].is-on")).toHaveCount(4);
+
     /* …and `#contact` is where the corridor finally ends. Exactly one
        station declares it, so JS and CSS cannot name different edges. */
     expect(await page.locator("[data-corridor-kill]").count()).toBe(1);

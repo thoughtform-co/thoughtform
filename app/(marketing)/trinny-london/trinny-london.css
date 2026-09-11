@@ -1981,115 +1981,329 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   color: var(--tl-ink-2);
 }
 
+/* ── The configuration as ONE INSTRUMENT (ADR-094 U7) ──────────────────────
+   Three bands on one hairline plate: the LAYER they own (left), the SEAM
+   the flywheel is drawn across (adoption writes the layer, automation runs
+   from it), the WORK on the right — the teams as pickable tiles and the
+   picked team's configuration read out in the registry's five questions.
+   Everything is a ramp step off `--dawn-rgb` / `--gold-rgb` and a
+   `--track-*` / `--weight-*` token: the sheet is pinned at zero literals.
+   Gold is the one thing that gets BUILT — the lit layer rows, the picked
+   tile, the readout's rule — and nothing else on the plate is gold. */
 .tl-root .tl-config {
   display: grid;
+  grid-template-columns: minmax(280px, 330px) 120px minmax(0, 1fr);
+  gap: 0;
+  padding: clamp(20px, 2vw, 28px);
+  border: 1px solid var(--tl-rule);
+  background: rgba(var(--dawn-rgb), 0.03);
   color: var(--tl-ink);
 }
 
-.tl-root .tl-config__band {
-  display: grid;
-  grid-template-columns: 132px minmax(0, 1fr);
-  gap: 24px;
-  align-items: center;
-  padding: 14px 0;
+.tl-root .tl-config__band--layer {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border: 1px solid var(--tl-rule);
+  background: rgba(var(--dawn-rgb), 0.04);
 }
 
-.tl-root .tl-config__plates {
+.tl-root .tl-config__lhead {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--tl-rule);
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--tl-ink-2);
+}
+
+.tl-root .tl-config__lhead strong {
+  font-weight: var(--weight-text);
+  color: var(--tl-ink);
+}
+
+.tl-root .tl-config__lhead span {
+  color: var(--gold-ink);
+}
+
+.tl-root .tl-config__layers {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.tl-root .tl-config__plate {
-  padding: 11px 16px;
-  border: 1px solid var(--tl-rule);
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-text);
-  font-size: clamp(14px, 1vw, 16px);
-  line-height: 1.2;
-  letter-spacing: var(--track-copy);
-  color: var(--tl-ink);
-  background: rgba(var(--dawn-rgb), 0.03);
-}
-
+/* A row dims unless the picked team reads it. The state is the FILL, the
+   border and the ink together — an opacity alone left the dimmed rows
+   reading as disabled controls rather than as the layer's unlit part. */
 .tl-root .tl-config__layer {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 14px;
-  padding: 16px 20px;
-  border: 1px solid var(--gold-line);
-  background: rgba(var(--gold-rgb), 0.1);
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-text);
-  font-size: clamp(14px, 1vw, 16px);
-  line-height: 1.3;
-  letter-spacing: var(--track-copy);
-}
-
-.tl-root .tl-config__layer strong {
-  font-weight: var(--weight-lit);
-  color: var(--tl-ink);
-}
-
-.tl-root .tl-config__layer span {
-  color: var(--tl-ink-2);
-}
-
-.tl-root .tl-config__wires {
   display: grid;
-  grid-template-columns: 132px minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 12px;
   align-items: center;
+  padding: 13px 14px;
+  border: 1px solid var(--tl-rule);
+  border-left: 3px solid var(--tl-rule);
+  background: rgba(var(--dawn-rgb), 0.02);
+  opacity: 0.42;
+  transition:
+    opacity 240ms ease,
+    background 240ms ease,
+    border-color 240ms ease;
 }
 
-.tl-root .tl-config__wires .tl-config__label {
+.tl-root .tl-config__layer.is-on {
+  opacity: 1;
+  border-color: var(--gold-line);
+  background: rgba(var(--gold-rgb), 0.1);
+}
+
+.tl-root .tl-config__tag {
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
   color: var(--gold-ink);
 }
 
-.tl-root .tl-config__run {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  height: 34px;
-  align-items: stretch;
+.tl-root .tl-config__name {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, 0.95vw, 15px);
+  line-height: 1.3;
+  letter-spacing: var(--track-copy);
+  color: var(--tl-ink-2);
+}
+
+/* The seam: two arrows, each a 1px DIV run with a border-drawn head (the
+   wireframe law — never an svg stroke). Adoption points at the layer,
+   automation points back at the work. */
+.tl-root .tl-config__band--seam {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(28px, 4vh, 48px);
+  padding: 0 12px;
+}
+
+.tl-root .tl-config__arrow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tl-root .tl-config__word {
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+.tl-root .tl-config__arrow i {
   position: relative;
-}
-
-.tl-root .tl-config__run i {
   display: block;
-  width: 1px;
-  margin-inline: auto;
-  background: var(--tl-rule);
+  height: 9px;
 }
 
-.tl-root .tl-config__wires--down .tl-config__run i {
-  background: linear-gradient(to bottom, var(--tl-rule), var(--gold-line));
+.tl-root .tl-config__arrow i::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  height: 1px;
+  background: var(--gold-line);
 }
 
-.tl-root .tl-config__wires--up .tl-config__run i {
-  background: linear-gradient(to top, var(--tl-rule), var(--gold-line));
+.tl-root .tl-config__arrow i::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--gold-line);
+  rotate: 45deg;
+}
+
+.tl-root .tl-config__arrow--adopt i::before {
+  left: 4px;
+  right: 0;
+}
+
+.tl-root .tl-config__arrow--adopt i::after {
+  left: 1px;
+  border-right: 0;
+  border-top: 0;
+}
+
+.tl-root .tl-config__arrow--auto i::before {
+  left: 0;
+  right: 4px;
+}
+
+.tl-root .tl-config__arrow--auto i::after {
+  right: 1px;
+  border-left: 0;
+  border-bottom: 0;
 }
 
 .tl-root .tl-config__note {
   margin: 0;
   font-family: var(--font-pp-neue-montreal);
   font-weight: var(--weight-text);
-  font-size: clamp(13px, 0.9vw, 14px);
+  font-size: clamp(12px, 0.85vw, 13px);
   line-height: 1.35;
   letter-spacing: var(--track-copy);
   color: var(--tl-ink-3);
-  grid-column: 2;
+}
+
+/* The work: the teams as tiles, then the picked team's configuration. */
+.tl-root .tl-config__band--work {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.tl-root .tl-config__tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tl-root .tl-config__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 0;
+  padding: 14px 16px 12px;
+  text-align: left;
+  border: 1px solid var(--tl-rule);
+  background: rgba(var(--dawn-rgb), 0.03);
+  color: var(--tl-ink);
+  cursor: pointer;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease;
+}
+
+.tl-root .tl-config__tile:hover {
+  border-color: var(--gold-line);
+}
+
+.tl-root .tl-config__tile:focus-visible {
+  outline: 2px solid var(--gold-line);
+  outline-offset: 2px;
+}
+
+.tl-root .tl-config__tile.is-on {
+  border-color: var(--gold-line);
+  background: rgba(var(--gold-rgb), 0.14);
+}
+
+.tl-root .tl-config__tname {
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--tl-ink);
+}
+
+.tl-root .tl-config__twork {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(12px, 0.85vw, 13px);
+  line-height: 1.35;
+  letter-spacing: var(--track-copy);
+  color: var(--tl-ink-3);
+}
+
+.tl-root .tl-config__cfg {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 18px 10px;
+  border: 1px solid var(--tl-rule);
+  border-top: 2px solid var(--gold-line);
+  background: rgba(var(--dawn-rgb), 0.04);
+}
+
+.tl-root .tl-config__chead {
+  padding-bottom: 10px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--tl-rule);
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+.tl-root .tl-config__kv {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.tl-root .tl-config__kv > div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--tl-rule);
+}
+
+.tl-root .tl-config__kv > div:last-child {
+  border-bottom: 0;
+}
+
+.tl-root .tl-config__kv dt {
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--tl-ink-3);
+}
+
+.tl-root .tl-config__kv dd {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(14px, 1vw, 16px);
+  line-height: 1.35;
+  letter-spacing: var(--track-copy);
+  color: var(--tl-ink);
 }
 
 .tl-root .tl-config__kickers {
+  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
-  margin: clamp(28px, 4vh, 48px) 0 0;
-  padding: 18px 0 0;
+  margin: clamp(20px, 3vh, 32px) 0 0;
+  padding: 16px 0 0;
   border-top: 1px solid var(--tl-rule);
   list-style: none;
 }
@@ -2152,16 +2366,31 @@ html[data-corridor-exit="true"] .tl-root #proposition {
     grid-template-columns: 1fr;
     align-items: start;
   }
-  .tl-root .tl-config__band,
-  .tl-root .tl-config__wires {
+  /* The instrument stacks: layer, then the seam as a row of two words (the
+     arrows have no axis to point along once the bands are stacked, so the
+     runs are dropped and the words keep their notes), then the work. */
+  .tl-root .tl-config {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 14px;
+    padding: 16px;
   }
-  .tl-root .tl-config__note {
-    grid-column: 1;
+  .tl-root .tl-config__band--seam {
+    flex-direction: row;
+    gap: 16px;
+    padding: 0;
   }
-  .tl-root .tl-config__run {
-    height: 24px;
+  .tl-root .tl-config__arrow {
+    flex: 1 1 0;
+  }
+  .tl-root .tl-config__arrow i {
+    display: none;
+  }
+  .tl-root .tl-config__tiles {
+    grid-template-columns: 1fr;
+  }
+  .tl-root .tl-config__kv > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
   .tl-root .tl-config__kickers {
     grid-template-columns: 1fr;

@@ -28,7 +28,7 @@ place) → the proposal** → contact.
 **Read first**
 
 - [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock. ⚠ **U1 deleted the interstitial slab**: the ground changes under a shader instead and the line decodes in place over it. ⚠ **U5 (2026-09-10) DELETED THE SECOND SLAB** — the products LEAVE on the turn's own clock, `#proposition` is transparent and PINNED with its record powering on in place, the mark fades behind it, and the kill edge is **`#contact`**
-- [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome with the project's name down in the record, the fields show ONE thing on the house rail, and the arrival is delayed and settled. ⚠ **U2 (same day) PUT THE ARC IN THE RECORD AND THE TABS IN THE FIELD** — `CaseTrack.arc`, the order reversed to lead on the frontier work, the claim sentences read, and the ATL films in their 4:5 cut. ⚠ **U3 (same day) MADE THE ARC THE TITLE**, gave the studio card its THREE SHEETS via a portalled `SheetsPlate`, and made both the films and the tools PLAY. ⚠ **U4 (same day) NOTCHED THE CARDS** (ADR-065's canonical TR+BL, which caught the console's stale TL+BR), cut the head down to its ORDINAL, renamed `THE LINE` → `GOVERNANCE`, and made the 4:5 cut play IN ITS FRAME
+- [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome with the project's name down in the record, the fields show ONE thing on the house rail, and the arrival is delayed and settled. ⚠ **U2 (same day) PUT THE ARC IN THE RECORD AND THE TABS IN THE FIELD** — `CaseTrack.arc`, the order reversed to lead on the frontier work, the claim sentences read, and the ATL films in their 4:5 cut. ⚠ **U3 (same day) MADE THE ARC THE TITLE**, gave the studio card its THREE SHEETS via a portalled `SheetsPlate`, and made both the films and the tools PLAY. ⚠ **U4 (same day) NOTCHED THE CARDS** (ADR-065's canonical TR+BL, which caught the console's stale TL+BR), cut the head down to its ORDINAL, renamed `THE LINE` → `GOVERNANCE`, and made the 4:5 cut play IN ITS FRAME. ⚠ **U7 (2026-09-11) REDREW THE PROPOSAL AS ONE INSTRUMENT WITH A PICKER** — the layer they own, the teams as tiles, the picked team’s five-question configuration, adoption and automation across the seam; see §The interstitial and the proposal
 - [ADR-093](../../sentinel/decisions/093-trinny-london-light-locked-variant.md) — this route's lock and its journey clock
 - [ADR-053](../../sentinel/decisions/053-workshop-corridor-variant.md) — the recipe it repeats, and its two invariants
 - [ADR-058](../../sentinel/decisions/058-light-mode-theme.md) — the theme channel the lock overrides
@@ -452,6 +452,30 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   by design and would go out of step.
 - **The proposal letters no Arc vocabulary, no digit, no "self-sufficient"** —
   the parse guard walks its text. Connectors are 1px DIVS (the wireframe law).
+- ⚠ **THE DRAWING IS ONE INSTRUMENT WITH A PICKER (ADR-094 U7, owner
+  2026-09-11: the old Aether landing's headless panel is "the composition I
+  like").** Three `.tl-config__band`s on one hairline plate: the LAYER they
+  own (four rows — Rules · Examples · Sources · Loops — that DIM unless the
+  picked team reads them), the SEAM (two arrows, adoption pointing at the
+  layer, automation pointing back at the work, each a 1px `<i>` run with a
+  border-drawn head), and the WORK (three team tiles, then the picked team's
+  configuration read out in the registry's five questions: who owns it ·
+  what runs it · the bar · what it can reach · where it runs). The three
+  kickers stay. ⚠ **THE RECORD LIVES ON THE TILES AS `data-*`**
+  (`data-layers`, `data-owner`, `data-runs`, `data-bar`, `data-reach`,
+  `data-where`) so the parse guard's digit / Arc / self-sufficient walk
+  reaches every string the pick can letter; `usePropPick`
+  (`proposition/usePropPick.ts`, called from `TrinnyPortals`) is ONE
+  delegated listener on `[data-tl-config]` — never a listener per tile inside
+  a `dangerouslySetInnerHTML` body. ⚠ **THE RESTING STATE IS AUTHORED**: the
+  first tile carries `aria-selected="true"` and every row `is-on`, so the
+  drawing reads whole under reduced motion and on the phone, where the hook
+  is the only thing that changes it. ⚠ **GOLD IS THE BUILT THING AND NOTHING
+  ELSE**: the lit rows, the picked tile, the readout's rule — the plate, the
+  unlit rows and the tiles at rest are dawn. `data-tl-reveal` stays on the
+  instrument's root (the count is still three). The picker is smoke-pinned
+  from both ends (picked and un-picked tile, lit and dimmed row) and the
+  parse guard pins the tiles' layer ids against the rows' ids.
 - **`mobile-section-seams.spec.ts` is `/`-only** — the trinny stations are not in
   its `STATION_IDS`; phones are covered by the capture script.
 
