@@ -266,6 +266,60 @@ smokes' tab reads became band reads (head ≥ 98 % of the card, a gradient
 `backgroundImage`, the ordinal inside it), pinned from both ends as before.
 Measured: head 1150px @1440 (the card's width), the lip and plate unchanged.
 
+## Update 2 — the rail on the record's datum (2026-09-12, owner, third live read)
+
+> I don't think the gradient works with the tabs. I do think that we need to
+> harmonize the tabs. I think we should move down the tabs in the cards that
+> have them so they're vertically aligned with the title in the left panel.
+> They need to be a bit higher, and then the line on which the visual and the
+> text live needs to connect to those tabs. Right now, they're disconnected,
+> but they need to be connected.
+
+Measured before touching anything, at 1440×900: the rail sat at the body's top
+edge, **37px above the title**, its boxes were **22–23px tall inside a 34px
+row**, and the divider between record and field ran the full height with an
+**18px gap** to the rail — nothing on the field side shared a line with
+anything on the record side. That is the "disconnected", as numbers.
+
+**Three changes, one datum.** `--pf-card-py` is the record's top padding, so it
+is the term the title hangs off; the field now takes it as `padding-top`, and
+its `::before` draws a 1px `--pf-rule` at exactly that y, `left: 0` to
+`right: 0`. The field's border box begins where the record's `border-right`
+ends (measured: 0px between them), so the rule terminates ON the divider — a T
+weld — and runs 690px to the card's right edge. The rail's row starts on that
+same line, and the stations hang `--pf-rail-hang` (8px) below it at
+`--pf-rail-h` (30px), stretched rather than centred so the row's height IS the
+box's. Measured after: rail top 153, title top 153, station 30px, weld 0px.
+
+⚠ **THE RULE MAY NOT BE COLLINEAR WITH THE BOXES' TOP BORDERS, AND THE FIRST
+CUT WAS.** The reasoning was that one continuous line — the rule and each box's
+own 1px `--pf-rule` edge on one y — is stronger than a line plus a row, and it
+avoids two hairlines in a 5px band (ADR-089 U3's doubled-rule defect). On the
+still it is the opposite: the boxes cover 97 % of the run, so all that paints is
+an **18px stub at each end**, and at dawn .18 an 18px stub is invisible. The
+divider and the first station still read as disconnected — the exact defect the
+rule was added to fix. **A line a box sits on is a line you have deleted.**
+Found by looking at a 3× crop of the junction, after the computed style had
+already reported the rule present, 1px, correct colour, correct y.
+
+⚠ **AND THE PROBE THAT FOUND IT NEARLY DID NOT RUN**: `getPropertyValue
+("--pf-card-py")` returns the `clamp()` EXPRESSION, so `parseFloat` gave `NaN`
+and the screenshot clip was rejected as "outside the resulting image". A custom
+property is a string until something lays it out — `.claude/rules/interface-kit.md`
+states this law and this is its third surface. Read the resolved
+`paddingTop` off the element instead.
+
+**The cost, stated:** the bay loses 41px (37 of datum + 8 of hang − 4 the
+shorter row gives back), so the height-bound film narrows 347 → 316px and its
+caption wraps to two lines at 1440×900. Nothing clips. The film cannot be given
+the height back without breaking U8's floor rule, which is the other half of
+what makes the two columns read as one card.
+
+**The gradient is untouched.** "I don't think the gradient works with the tabs"
+resolves as a spacing complaint rather than a colour one: the band and the rail
+were 5px apart, so the tint's quiet end sat directly on the stations. With the
+rail 37px down on its own datum the band is alone on the top row.
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,

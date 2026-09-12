@@ -111,6 +111,28 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   record; do not restore the step from muscle memory.
 - ⚠ **THE INERT RUNG FLOORS THE HEAD AT `--pc-peek`** — its rows are
   `auto auto`, and a 12px tinted band reads as a rule, not a band.
+- **THE FIELD STARTS ON THE RECORD'S DATUM, AND THE RAIL HANGS FROM A RULE**
+  (U2, owner: move the tabs down "so they're vertically aligned with the title
+  in the left panel", make them "a bit higher", and connect "the line on which
+  the visual and the text live" to them). `--pf-card-py` is the record's top
+  padding, so the field takes it as `padding-top` and its `::before` draws a
+  1px `--pf-rule` at that y from `left: 0` to `right: 0`. The field's border
+  box begins where the record's `border-right` ends, so the rule terminates ON
+  the divider — the weld. The rail's row starts on that line; the stations hang
+  `--pf-rail-hang` (8px) under it at `--pf-rail-h` (30px), STRETCHED not
+  centred, so the row's height is the box's. Measured at 1440×900: rail top
+  153 = title top 153, box 30px (was 22–23 in a 34px row), weld 0px.
+- ⚠ **THE RULE MAY NOT BE COLLINEAR WITH THE BOXES' TOP BORDERS.** The first
+  cut put them on one y — same colour, same weight, "one continuous line" —
+  and the boxes cover 97 % of the run, so the only paint is an 18px stub at
+  each end, invisible at dawn .18. **A line a box sits on is a line you have
+  deleted.** The computed style reported it present, 1px, right colour, right
+  y; a 3× crop of the junction is what showed it was not there.
+- ⚠ **THE RAIL'S DATUM COSTS THE BAY 41px**, so the height-bound film narrows
+  347 → 316px at 1440×900 and its caption wraps to two lines. Nothing clips,
+  and the height cannot be taken back without breaking U8's floor rule (every
+  field ends on the record's floor) — which is the other half of what makes
+  the two columns read as one card.
 - **THE PLATE IS GLASS, ONE DIAL.** `--pf-glass-a` .62,
   `backdrop-filter: blur(--pf-blur)` under `@supports`, no `brightness()`, the
   scanline UNDER the copy, a PIXEL-sized bloom off the body's top-right. Light

@@ -3661,6 +3661,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       const c = card.getBoundingClientRect();
       const h = head.getBoundingClientRect();
       const a = arc.getBoundingClientRect();
+      const title = card.querySelector<HTMLElement>(".pf-card__title")?.getBoundingClientRect();
+      const fieldEl = card.querySelector<HTMLElement>(".pf-card__field");
+      const f = fieldEl?.getBoundingClientRect();
+      const stn = card.querySelector<HTMLElement>(".fl-con__stn")?.getBoundingClientRect();
+      const ruleCs = fieldEl ? getComputedStyle(fieldEl, "::before") : null;
       const plate = getComputedStyle(card).backgroundColor;
       const m = /rgba?\(([^)]+)\)/.exec(plate);
       const parts = m
@@ -3678,6 +3683,23 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         arcRight: a.right,
         ring: getComputedStyle(card, "::before").backgroundColor,
         plateAlpha: parts.length === 4 ? parts[3] : 1,
+        /* U2 — the rail on the record's own datum, and the rule it hangs
+           from. `railDelta` is the field's rule against the title's box top
+           (one term, `--pf-card-py`, so it is 0 by construction); `hang` is
+           the clearance under the rule that makes it read as a line rather
+           than as the boxes' own top border. */
+        titleTop: title?.top ?? null,
+        fieldTop: f?.top ?? null,
+        rulePad: fieldEl ? Number.parseFloat(getComputedStyle(fieldEl).paddingTop) : null,
+        ruleContent: ruleCs?.content ?? null,
+        ruleBg: ruleCs?.backgroundColor ?? null,
+        ruleH: ruleCs ? Number.parseFloat(ruleCs.height) : null,
+        stnTop: stn?.top ?? null,
+        stnH: stn?.height ?? null,
+        fieldLeft: f?.left ?? null,
+        dividerRight:
+          card.querySelector<HTMLElement>(".pf-card__record")?.getBoundingClientRect().right ??
+          null,
       };
     });
     expect(folder, "card 2 has no head or ordinal").not.toBeNull();
@@ -3699,6 +3721,35 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(ringA, "the lip's alpha left its rung").toBeLessThan(0.4);
     expect(folder!.plateAlpha, "the plate is opaque — the glass is gone").toBeLessThan(1);
     expect(folder!.plateAlpha, "the plate is barely there").toBeGreaterThan(0.4);
+
+    /* ── THE RAIL SITS ON THE RECORD'S DATUM, AND HANGS FROM A RULE (U2) ──
+       Owner: move the tabs down "so they're vertically aligned with the title
+       in the left panel", make them "a bit higher", and connect "the line on
+       which the visual and the text live" to them. Three reads, from both
+       ends: the field's rule is on the title's own line (`--pf-card-py`, the
+       record's top padding — one term, so the delta is 0); it starts exactly
+       where the record's `border-right` ends, which is the weld; and the
+       boxes HANG below it rather than sharing its y, because a box covers
+       97 % of the run and a collinear rule paints two 18px stubs nobody can
+       see (measured, the first cut). */
+    const ruleY = folder!.fieldTop! + folder!.rulePad!;
+    expect(
+      Math.abs(ruleY - folder!.titleTop!),
+      "the rail's rule left the title's line"
+    ).toBeLessThanOrEqual(2);
+    expect(folder!.ruleContent, "the field draws no rule").not.toBe("none");
+    expect(folder!.ruleH, "the field's rule is not a hairline").toBeCloseTo(1, 1);
+    expect(folder!.ruleBg, "the rule is not the region weight").toMatch(/^rgba?\(/);
+    expect(
+      Math.abs(folder!.fieldLeft! - folder!.dividerRight!),
+      "the rule does not start on the divider — the weld is open"
+    ).toBeLessThanOrEqual(1);
+    expect(
+      folder!.stnTop! - ruleY,
+      "the boxes share the rule's y — it paints only stubs"
+    ).toBeGreaterThanOrEqual(4);
+    expect(folder!.stnTop! - ruleY, "the boxes float off their own rule").toBeLessThanOrEqual(14);
+    expect(folder!.stnH, "the station is a strip, not a box").toBeGreaterThanOrEqual(28);
 
     /* ── NOTHING CLIPS, ON ANY CARD ────────────────────────────────────
        Every card is measured against ITS OWN box, which is what a pile of
