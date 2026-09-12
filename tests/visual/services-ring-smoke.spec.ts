@@ -3665,6 +3665,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       const fieldEl = card.querySelector<HTMLElement>(".pf-card__field");
       const f = fieldEl?.getBoundingClientRect();
       const stn = card.querySelector<HTMLElement>(".fl-con__stn")?.getBoundingClientRect();
+      const tabs = card.querySelector<HTMLElement>(".pf-card__tabs")?.getBoundingClientRect();
+      /* The framed kinds draw their box two ways — the shared console frame
+         (sheets, map) and the tools' own apparatus bay. Card 2 is the tools
+         card, so this resolves to the bay; the selector covers both. */
+      const frameEl = card.querySelector<HTMLElement>(".fl-con__console, .pf-field--tools");
+      const frame = frameEl?.getBoundingClientRect();
       const ruleCs = fieldEl ? getComputedStyle(fieldEl, "::before") : null;
       const plate = getComputedStyle(card).backgroundColor;
       const m = /rgba?\(([^)]+)\)/.exec(plate);
@@ -3696,6 +3702,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         ruleH: ruleCs ? Number.parseFloat(ruleCs.height) : null,
         stnTop: stn?.top ?? null,
         stnH: stn?.height ?? null,
+        stnLeft: stn?.left ?? null,
+        tabsBottom: tabs?.bottom ?? null,
+        frameTop: frame?.top ?? null,
+        frameLeft: frame?.left ?? null,
+        frameBorderTop: frameEl ? getComputedStyle(frameEl).borderTopWidth : null,
+        frameBorderLeft: frameEl ? getComputedStyle(frameEl).borderLeftWidth : null,
         fieldLeft: f?.left ?? null,
         dividerRight:
           card.querySelector<HTMLElement>(".pf-card__record")?.getBoundingClientRect().right ??
@@ -3750,6 +3762,24 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     ).toBeGreaterThanOrEqual(4);
     expect(folder!.stnTop! - ruleY, "the boxes float off their own rule").toBeLessThanOrEqual(14);
     expect(folder!.stnH, "the station is a strip, not a box").toBeGreaterThanOrEqual(28);
+
+    /* ── THE FRAME OPENS INTO THE RAIL (U3) ────────────────────────────
+       Owner: "the horizontal divider or border for the frame where the images
+       live, we shouldn't have that. The vertical lines should just connect to
+       the tabs above it." So the framed kinds keep their side walls and lose
+       their lid, and the walls rise to the stations' own outer edges — pinned
+       from both ends, because a box that lost ALL its borders would pass a
+       no-top-border assertion on its own. */
+    expect(folder!.frameBorderTop, "the frame kept its lid").toBe("0px");
+    expect(folder!.frameBorderLeft, "the frame lost its walls, not just its lid").not.toBe("0px");
+    expect(
+      Math.abs(folder!.frameTop! - folder!.tabsBottom!),
+      "the frame's walls do not reach the rail"
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(folder!.frameLeft! - folder!.stnLeft!),
+      "the frame's wall is inboard of the first station"
+    ).toBeLessThanOrEqual(1);
 
     /* ── NOTHING CLIPS, ON ANY CARD ────────────────────────────────────
        Every card is measured against ITS OWN box, which is what a pile of

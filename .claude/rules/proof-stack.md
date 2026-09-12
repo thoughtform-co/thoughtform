@@ -128,11 +128,28 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   each end, invisible at dawn .18. **A line a box sits on is a line you have
   deleted.** The computed style reported it present, 1px, right colour, right
   y; a 3× crop of the junction is what showed it was not there.
+- **THE FRAME OPENS INTO THE RAIL** (U3, owner: "the horizontal divider or
+  border for the frame where the images live, we shouldn't have that. The
+  vertical lines should just connect to the tabs above it"). The frame is a
+  bay the rail is the HEAD of: both framed kinds take `border-top: 0` — the
+  shared `.fl-con__console` (sheets, map) and the tools' own
+  `.pf-field--tools` — `.pf-field`'s inset drops its top term, and `--con-gap`
+  is `0px` here so the console's box IS the field's box. Measured: frame left
+  620 = first station left, frame top = rail bottom.
+  ⚠ **`--pf-field-gap` IS DELETED, NOT ZEROED.** It was subtracted in two
+  derived heights (the film's width and the wire's); a no-op term in an
+  arithmetic chain is a term the next reader has to disprove. Three sites move
+  together.
+  ⚠ **PINNED FROM BOTH ENDS** — a box that lost ALL its borders passes a
+  no-top-border assertion, so the smoke asserts the lid is `0px` AND the left
+  wall is not, plus the wall reaching the rail and landing on the station's
+  edge.
 - ⚠ **THE RAIL'S DATUM COSTS THE BAY 41px**, so the height-bound film narrows
-  347 → 316px at 1440×900 and its caption wraps to two lines. Nothing clips,
-  and the height cannot be taken back without breaking U8's floor rule (every
-  field ends on the record's floor) — which is the other half of what makes
-  the two columns read as one card.
+  347 → 326px at 1440×900 (U3 gave 10 back with the gap) and its caption wraps
+  to two lines; one line needs ~347. Nothing clips, and the height cannot be
+  taken back without breaking U8's floor rule (every field ends on the
+  record's floor) — which is the other half of what makes the two columns read
+  as one card.
 - **THE PLATE IS GLASS, ONE DIAL.** `--pf-glass-a` .62,
   `backdrop-filter: blur(--pf-blur)` under `@supports`, no `brightness()`, the
   scanline UNDER the copy, a PIXEL-sized bloom off the body's top-right. Light

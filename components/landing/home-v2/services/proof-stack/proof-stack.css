@@ -227,7 +227,6 @@
      at both laptop shapes — the ADR-089 U3 headroom warning, arriving. The
      floor binds at 1280 (16px), 1440 takes 18, the owner's 1920 takes 24. */
   --pf-field-px: clamp(16px, 1.25vw, 28px);
-  --pf-field-gap: clamp(10px, 1.4vh, 16px);
   position: relative;
   height: 100%;
   display: grid;
@@ -853,9 +852,16 @@
    BAY stays the size container and keeps its full box, so every `cqh`
    count (the ads' rows, the film's width) is against the bay, and each
    kind that derives a height from `100cqh` subtracts these two terms. */
+/* ⚠ AND ITS TOP IS THE RAIL'S BOTTOM EDGE (U3, owner: "the vertical lines
+   should just connect to the tabs above it"). It was inset by a
+   `--pf-field-gap` — "the rail's clearance" — which is what left the framed
+   kinds' side walls hanging 13px below the boxes they belong to. The token is
+   deleted rather than zeroed: it was subtracted in two derived heights (the
+   film's width and the wire's), and a no-op term in an arithmetic chain is a
+   term the next reader has to disprove. */
 .pf-stack .pf-field {
   position: absolute;
-  inset: var(--pf-field-gap) 0 var(--pf-card-py) 0;
+  inset: 0 0 var(--pf-card-py) 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -992,13 +998,11 @@
   display: grid;
   gap: 10px;
   min-width: 0;
-  /* `100cqh` is the BAY; the field is inset from it top and bottom (U8). */
+  /* `100cqh` is the BAY; the field is inset from its FLOOR alone (U8, and
+     U3 — the top inset went when the frame's walls met the rail). */
   width: min(
     100%,
-    calc(
-      (100cqh - var(--pf-field-gap) - var(--pf-card-py) - 2 * var(--pf-film-pad) - 26px) *
-        var(--pf-film-ar)
-    )
+    calc((100cqh - var(--pf-card-py) - 2 * var(--pf-film-pad) - 26px) * var(--pf-film-ar))
   );
 }
 
@@ -1149,7 +1153,12 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: var(--pf-bay-head-h) minmax(0, 1fr) var(--pf-watch-h);
+  /* ⚠ NO TOP EDGE (U3) — the same ruling as the console's one kind over: the
+     rail is this bay's head, so the box opens into it and its two walls run
+     up to the stations. `IN SERVICE {year}` keeps its own bottom rule, which
+     is what still separates the head row from the drawing. */
   border: 1px solid var(--pf-rule);
+  border-top: 0;
   padding: 0;
 }
 
@@ -1262,8 +1271,8 @@
 .pf-stack .pf-wire {
   --pf-wire-ar: 1.62;
   --pf-wire-h: calc(
-    100cqh - var(--pf-field-gap) - var(--pf-card-py) - var(--pf-bay-head-h, 0px) -
-      var(--pf-watch-h, 0px) - 2px - 2 * var(--pf-bay-pad, 0px)
+    100cqh - var(--pf-card-py) - var(--pf-bay-head-h, 0px) - var(--pf-watch-h, 0px) - 2px - 2 *
+      var(--pf-bay-pad, 0px)
   );
   width: min(calc(100% - 2 * var(--pf-bay-pad, 0px)), calc(var(--pf-wire-h) * var(--pf-wire-ar)));
   aspect-ratio: var(--pf-wire-ar);
@@ -1302,6 +1311,13 @@
    has a lit top edge to catch it — the rail is not there. */
 .pf-stack .pf-card__field .fl-con__console {
   background: var(--con-ground);
+  /* ⚠ NO TOP EDGE (U3, owner: "the horizontal divider or border for the frame
+     where the images live, we shouldn't have that. The vertical lines should
+     just connect to the tabs above it"). The frame is a bay the rail is the
+     head of, so its top is the rail — a hairline of its own there is a second
+     lid under the row of boxes, and the two verticals then read as a box that
+     happens to sit below the tabs rather than as the box they open into. */
+  border-top: 0;
   /* ⚠ AND ITS CHAMFER GOES (U4). `console.css` cuts the console TL + BR —
      ADR-065 U2's enumerated exception — which ADR-089 RETIRED on the
      casefile when the console became a cell inside a chamfered housing. That
@@ -1323,6 +1339,12 @@
    floor). */
 .pf-stack .pf-card__field .fl-con {
   --con-ground: transparent;
+  /* ⚠ AND ITS INSET GOES WITH ITS TOP EDGE (U3). `--con-gap` held the console
+     ~5px inside the field on all four sides, which put its side walls 5px
+     inboard of the rail's first and last station — near enough to read as a
+     miss rather than as a margin. At 0 the console's box IS the field's box,
+     so the walls rise into the boxes' outer edges. */
+  --con-gap: 0px;
 }
 
 .pf-stack .pf-card__field .fl-con__console::after {

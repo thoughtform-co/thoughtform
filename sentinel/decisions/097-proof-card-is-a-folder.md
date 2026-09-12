@@ -320,6 +320,42 @@ resolves as a spacing complaint rather than a colour one: the band and the rail
 were 5px apart, so the tint's quiet end sat directly on the stations. With the
 rail 37px down on its own datum the band is alone on the top row.
 
+## Update 3 — the frame opens into the rail (2026-09-12, owner, fourth live read)
+
+> Okay, this looks good, but the horizontal divider or border for the frame
+> where the images live, we shouldn't have that. The vertical lines should
+> just connect to the tabs above it.
+
+U2 put the rail on the record's datum and left the framed kinds untouched, so
+each still drew a full box **13px below the rail** — a lid under the row of
+boxes, and two side walls that stopped short of the stations they belong to.
+The frame is a bay the rail is the HEAD of; it opens into it.
+
+**Three terms, all deletions.** `--pf-field-gap` — "the rail's clearance" — is
+gone from `.pf-field`'s inset, which now runs `0 0 var(--pf-card-py) 0`;
+`--con-gap` is `0px` on this route, so the console's box IS the field's box
+rather than 5px inside it; and both framed kinds take `border-top: 0` — the
+shared `.fl-con__console` (sheets, map) and the tools' own `.pf-field--tools`
+bay. The walls now rise into the stations' outer edges: measured frame left
+620 = first station left 620, frame top = rail bottom.
+
+⚠ **THE TOKEN IS DELETED, NOT ZEROED.** `--pf-field-gap` was subtracted in two
+derived heights — the film's width (`100cqh − gap − py − …`) and the wire's —
+so zeroing it would have left a no-op term in two arithmetic chains that the
+next reader has to disprove before touching either. All three sites moved
+together.
+
+⚠ **THE PIN IS FROM BOTH ENDS.** A box that had lost ALL its borders would
+satisfy "no top border" perfectly, so the smoke asserts the lid is `0px` AND
+that the left wall is not — plus the wall reaching the rail and landing on the
+first station's edge. The same shape as ADR-065 U4's corner guard, and for the
+same reason.
+
+**What it gives back:** the film gains the 13px the gap was holding
+(316 → 326px wide). Its caption still wraps to two lines at 1440×900 — one
+line needs ~347px, which the datum's 41px does not leave. Recorded rather than
+chased: the alignment is the ask and the wrap costs nothing but a line.
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,
