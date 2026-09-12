@@ -51,3 +51,20 @@ export function proofStackTracks(): readonly CaseTrack[] {
     return track;
   });
 }
+
+/**
+ * The client the pile shows — its NAME for every card's kicker and its COLOUR
+ * for the folder tab (ADR-097). Before this the kicker printed a string
+ * literal in JSX, the one place on the surface the record was not read.
+ *
+ * `accentRgb` is `CaseDef.accent` joined with `", "` — the form the sheet's
+ * `rgba(var(--pf-accent-rgb), α)` consumes — or `null`, in which case the
+ * host writes nothing and the sheet's own fallback (the house gold) paints.
+ */
+export type ProofStackClient = { readonly name: string; readonly accentRgb: string | null };
+
+export function proofStackClient(): ProofStackClient {
+  const def = getCase(PROOF_STACK_CASE);
+  if (!def) throw new Error(`[proof-stack] case "${PROOF_STACK_CASE}" is not in CASES`);
+  return { name: def.client, accentRgb: def.accent ? def.accent.rgb.join(", ") : null };
+}

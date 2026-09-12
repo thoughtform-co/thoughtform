@@ -21,6 +21,11 @@ type SlotState = "incoming" | "pinned" | "covered";
  *   --pc-enter  0..1  eased entrance of slot i (0 = top edge at viewport
  *                     bottom, 1 = pinned at its cascade offset)
  *   --pc-cover  0..1  how covered slot i is (= enter of slot i+1)
+ *   --pc-depth  0..n−1  how many cards have risen over slot i — the SUM of
+ *                     the enters above it, continuous, so a pile can grade
+ *                     its recession by depth rather than by one flat cover
+ *                     step (ADR-097, the proof stack). Additive: a skin that
+ *                     does not read it is byte-identical (`/test/project-cards`).
  *   data-pc-state     incoming | pinned | covered
  *   data-pc-current   present on the highest-index slot with enter >= 0.5
  * and on the runway:
@@ -74,6 +79,13 @@ export function useStackedCardsScroll(runwayRef: RefObject<HTMLElement | null>):
       currentCover[i] = v;
     };
 
+    const currentDepth = new Array<number>(slots.length).fill(-1);
+    const setDepth = (i: number, v: number) => {
+      if (Math.abs(v - currentDepth[i]) < 0.001) return;
+      slots[i].style.setProperty("--pc-depth", v.toFixed(4));
+      currentDepth[i] = v;
+    };
+
     const setState = (i: number, s: SlotState) => {
       if (currentState[i] === s) return;
       slots[i].setAttribute("data-pc-state", s);
@@ -101,6 +113,7 @@ export function useStackedCardsScroll(runwayRef: RefObject<HTMLElement | null>):
         for (let i = 0; i < slots.length; i++) {
           setEnter(i, 1);
           setCover(i, 0);
+          setDepth(i, 0);
           setState(i, "pinned");
         }
         setCurrent(-1);
@@ -118,12 +131,21 @@ export function useStackedCardsScroll(runwayRef: RefObject<HTMLElement | null>):
         return smoothstep01((vh - top) / travel);
       });
 
+      // Depth = the sum of the enters ABOVE slot i (cover is its first term).
+      // Accumulated from the top of the pile down, one pass, no per-slot loop.
+      const depths = new Array<number>(slots.length).fill(0);
+      for (let i = slots.length - 1, acc = 0; i >= 0; i--) {
+        depths[i] = acc;
+        acc += enters[i];
+      }
+
       let active = 0;
       for (let i = 0; i < slots.length; i++) {
         const enter = enters[i];
         const cover = i < slots.length - 1 ? enters[i + 1] : 0;
         setEnter(i, enter);
         setCover(i, cover);
+        setDepth(i, depths[i]);
         setState(i, cover >= 0.999 ? "covered" : enter >= 0.999 ? "pinned" : "incoming");
         if (enter >= 0.5) active = i;
       }

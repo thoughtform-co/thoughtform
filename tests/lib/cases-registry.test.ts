@@ -1365,6 +1365,23 @@ describe("cases registry (ADR-054)", () => {
     expect(offenders).toEqual([]);
   });
 
+  /* ADR-097 — a case's colour, when it carries one, is three channel
+     integers. NUMBERS by design: the envelope above walks every STRING on
+     the record, and a colour spelled `"rgb(202,165,84)"` reads as an amount
+     with a thousands separator. A triple outside 0–255 is a typo the tab
+     would paint as black or clamp silently. */
+  it("a case's accent, when present, is an RGB triple of channel integers", () => {
+    for (const c of CASES) {
+      if (!c.accent) continue;
+      expect(c.accent.rgb, `${c.slug} accent`).toHaveLength(3);
+      for (const ch of c.accent.rgb) {
+        expect(Number.isInteger(ch), `${c.slug} accent channel ${ch}`).toBe(true);
+        expect(ch, `${c.slug} accent channel`).toBeGreaterThanOrEqual(0);
+        expect(ch, `${c.slug} accent channel`).toBeLessThanOrEqual(255);
+      }
+    }
+  });
+
   it("PROJECT_CASES asset paths are repo-rooted, and every tool has a walkthrough", () => {
     const ok = (src: string) => src.startsWith("/project-cards/") || src.startsWith("/videos/");
     for (const c of PROJECT_CASES) {

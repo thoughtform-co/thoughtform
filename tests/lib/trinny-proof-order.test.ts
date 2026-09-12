@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   TRINNY_PROOF_CASE,
   TRINNY_PROOF_ORDER,
+  trinnyProofClient,
   trinnyProofTracks,
 } from "@/app/(marketing)/trinny-london/proof/proofOrder";
 import { CASES } from "@/lib/cases/registry";
@@ -78,5 +79,25 @@ describe("the trinny proof order", () => {
     const def = CASES.find((c) => c.slug === TRINNY_PROOF_CASE)!;
     const ids = new Set(def.casefile.tracks.map((t) => t.id));
     for (const id of TRINNY_PROOF_ORDER) expect(ids.has(id), id).toBe(true);
+  });
+
+  /**
+   * ADR-097 — the card reads the CLIENT from the record too: the kicker's
+   * name (a JSX literal until this pass) and the folder tab's colour. The
+   * colour travels as `"r, g, b"` — the form `rgba(var(--pf-accent-rgb), α)`
+   * consumes, with the spaces the envelope's thousands-separator rule needs
+   * — or `null`, which leaves the sheet's house-gold fallback painting. The
+   * VALUE is never pinned here: a client's colour is the client's to change.
+   */
+  it("hands the card the record's client, and its colour in the sheet's form", () => {
+    const def = CASES.find((c) => c.slug === TRINNY_PROOF_CASE)!;
+    const client = trinnyProofClient();
+    expect(client.name).toBe(def.client);
+    if (def.accent) {
+      expect(client.accentRgb).toBe(def.accent.rgb.join(", "));
+      expect(client.accentRgb).toMatch(/^\d{1,3}, \d{1,3}, \d{1,3}$/);
+    } else {
+      expect(client.accentRgb).toBeNull();
+    }
   });
 });

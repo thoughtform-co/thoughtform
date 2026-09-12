@@ -9,7 +9,7 @@ import { ServicesPlateCluster } from "./ServicesPlateCluster";
 import { ServicesRingHitAreas } from "./ServicesRingHitAreas";
 import { ServicesCasefile } from "./casefile/ServicesCasefile";
 import { ProofStack } from "./proof-stack/ProofStack";
-import { proofStackTracks } from "./proof-stack/proofOrder";
+import { proofStackClient, proofStackTracks } from "./proof-stack/proofOrder";
 import { SERVICES, type ServiceId } from "./serviceData";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
@@ -224,7 +224,9 @@ export function ServicesStage() {
           and under reduced motion the pile falls into normal flow and the
           proof reads above the offer accordion, which is where the casefile
           sat for the same reason. */}
-      {SERVICES_PROOF_STACK && <ProofStack tracks={proofStackTracks()} />}
+      {SERVICES_PROOF_STACK && (
+        <ProofStack tracks={proofStackTracks()} client={proofStackClient()} />
+      )}
 
       <div
         className="services-stage"

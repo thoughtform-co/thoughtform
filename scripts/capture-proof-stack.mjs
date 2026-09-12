@@ -28,6 +28,12 @@ const OUT = argOf("--out", "shots");
 const THEME = argOf("--theme", "dark");
 const [VW, VH] = argOf("--vp", "1440x900").split("x").map(Number);
 const CARDS = argOf("--cards", "0,1,2,3").split(",").map(Number);
+/* `--mid` shoots card 1 MID-ARRIVAL (the plate's fade, ADR-097); `--perf`
+   scrolls the whole pile at reading speed and prints the frame-time
+   distribution — the glass's cost is a per-frame backdrop SNAPSHOT
+   (ADR-056's measurement), so the number to watch is the >33ms share. */
+const MID = args.includes("--mid");
+const PERF = args.includes("--perf");
 
 await mkdir(OUT, { recursive: true });
 
@@ -147,6 +153,15 @@ try {
           b.textContent?.trim()
         ),
         plate: card ? getComputedStyle(card).backgroundColor : null,
+        /* ADR-097 — the folder card's own state: depth, the plate's opacity
+           and recession, the lip's paint, and the tab's width. */
+        depth: slot ? getComputedStyle(slot).getPropertyValue("--pc-depth").trim() : null,
+        opacity: card ? getComputedStyle(card).opacity : null,
+        transform: card ? getComputedStyle(card).transform : null,
+        ring: card ? getComputedStyle(card, "::before").backgroundColor : null,
+        headW: card
+          ? Math.round(card.querySelector(".pf-card__head")?.getBoundingClientRect().width ?? 0)
+          : null,
         pile: (() => {
           const p = document.querySelector(".services-stage-root > .pf-stack");
           const q = p?.getBoundingClientRect();
@@ -161,7 +176,104 @@ try {
     );
     if (state.stations.length) console.log(`           rail  ${state.stations.join(" | ")}`);
     console.log(`           plate ${state.plate}`);
+    console.log(
+      `           depth ${state.depth}  opacity ${state.opacity}  ${state.transform}  ` +
+        `ring ${state.ring}  head ${state.headW}px`
+    );
     await page.screenshot({ path: `${OUT}/proof-stack-${tag}-card${i}.png` });
+  }
+
+  /* ── `--mid`: card 1 caught MID-ARRIVAL (ADR-097) ────────────────────
+     The plate's fade is the thing the still has to show, and a seated card
+     cannot show it. Raw ratio .4 on the hook's own travel (`vh − pinTop`)
+     lands `--pc-enter` ≈ smoothstep(.4) = .35 — inside the plate's window
+     and before the record's. Re-solved per pass, like the seats above,
+     because the corridor grows the document under the first scroll. */
+  if (MID && geo.slots[1]) {
+    const s = geo.slots[1];
+    let mid = null;
+    for (let pass = 0; pass < 5; pass += 1) {
+      await page.evaluate(
+        ({ off, top }) => {
+          const rw = document.querySelector(".services-stage-root");
+          const vh = window.innerHeight;
+          const slotTop = vh - 0.4 * (vh - top);
+          const y = rw.getBoundingClientRect().top + window.scrollY + off - slotTop;
+          window.scrollTo(0, Math.round(y));
+        },
+        { off: s.offset, top: s.top }
+      );
+      await page.waitForTimeout(pass === 0 ? 900 : 450);
+      mid = await page.evaluate(() => {
+        const slot = document.querySelectorAll(".pf-slot")[1];
+        const card = slot?.querySelector(".pf-card");
+        const cs = card ? getComputedStyle(card) : null;
+        return {
+          enter: Number(getComputedStyle(slot).getPropertyValue("--pc-enter")),
+          opacity: cs?.opacity,
+          translate: cs?.translate,
+          transform: cs?.transform,
+          record: card ? getComputedStyle(card.querySelector(".pf-card__record")).opacity : null,
+        };
+      });
+      if (mid.enter > 0.25 && mid.enter < 0.45) break;
+    }
+    console.log(`\n  card 1 mid-arrival: ${JSON.stringify(mid)}`);
+    await page.screenshot({ path: `${OUT}/proof-stack-${tag}-mid.png` });
+  }
+
+  /* ── `--perf`: the pile scrolled at reading speed ─────────────────────
+     A rAF-delta sampler runs in the page while the wheel walks the whole
+     pile; the cards are blurred glass over a live WebGL bed, and the cost of
+     a `backdrop-filter` is the per-frame SNAPSHOT (ADR-056), so what matters
+     is the share of long frames, not the mean. The pointer sits in the left
+     margin, off the cards — the map card owns the wheel under a pointer. */
+  if (PERF) {
+    await page.evaluate(() => {
+      const rw = document.querySelector(".services-stage-root");
+      window.scrollTo(
+        0,
+        Math.round(rw.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.5)
+      );
+    });
+    await page.waitForTimeout(800);
+    await page.mouse.move(40, Math.round(VH / 2));
+    await page.evaluate(() => {
+      window.__pfPerf = [];
+      window.__pfPerfOn = true;
+      let last = performance.now();
+      const tick = (t) => {
+        window.__pfPerf.push(t - last);
+        last = t;
+        if (window.__pfPerfOn) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    const distance = geo.pileH + geo.vh * 0.5;
+    for (let y = 0; y < distance; y += 80) {
+      await page.mouse.wheel(0, 80);
+      await page.waitForTimeout(16);
+    }
+    await page.waitForTimeout(300);
+    const perf = await page.evaluate(() => {
+      window.__pfPerfOn = false;
+      const d = window.__pfPerf.slice(1).sort((a, b) => a - b);
+      const n = d.length;
+      const mean = d.reduce((a, b) => a + b, 0) / Math.max(1, n);
+      const p95 = d[Math.min(n - 1, Math.floor(n * 0.95))];
+      const long = d.filter((x) => x > 33).length;
+      return {
+        frames: n,
+        mean: +mean.toFixed(1),
+        p95: +p95.toFixed(1),
+        max: +d[n - 1].toFixed(1),
+        longShare: +((100 * long) / Math.max(1, n)).toFixed(1),
+      };
+    });
+    console.log(
+      `\n  perf @ ${tag}: ${perf.frames} frames  mean ${perf.mean}ms  p95 ${perf.p95}ms  ` +
+        `max ${perf.max}ms  >33ms ${perf.longShare}%`
+    );
   }
 
   /* And the handoff: the offer's masthead past the release. */

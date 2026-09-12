@@ -273,14 +273,24 @@ const cardShape = (page: Page, idx: number) =>
           lede: px(".pf-card__lede"),
           claim: px(".pf-card__claim-title"),
           claimWeight: ct ? getComputedStyle(ct).fontWeight : "",
-          mark:
-            slot.querySelector<HTMLElement>(".pf-card__mark")?.getBoundingClientRect().width ?? 0,
+          /* ⚠ LAYOUT width, not the rect (ADR-097). These shapes are read
+             with card 4 seated, so cards 1–3 are COVERED and scaled by depth
+             (.91 at the bottom of the pile); `getBoundingClientRect` on a
+             transformed subtree returns a PICTURE of the layout, and this
+             read passed on `scale(.98)` only because 21 × .98 rounds back to
+             21. At .91 it is 19. */
+          mark: slot.querySelector<HTMLElement>(".pf-card__mark")?.offsetWidth ?? 0,
         };
       })(),
       housing: (() => {
         const r = (sel: string) =>
           slot.querySelector<HTMLElement>(sel)?.getBoundingClientRect() ?? null;
+        const cardEl = slot.querySelector<HTMLElement>(".pf-card")!;
         const card = r(".pf-card")!;
+        /* The card's rendered-over-layout ratio: 1 on the open card, under it
+           on a covered one. Every rect DELTA below is a transformed length and
+           is divided by this before it is compared with a token (ADR-097). */
+        const k = card.width / Math.max(1, cardEl.offsetWidth);
         const record = r(".pf-card__record")!;
         const box = r(".pf-field--tools");
         const wire = r(".pf-wire");
@@ -288,6 +298,10 @@ const cardShape = (page: Page, idx: number) =>
         const claims = [...slot.querySelectorAll<HTMLElement>(".pf-card__claim")];
         const last = claims.length ? claims[claims.length - 1].getBoundingClientRect() : null;
         return {
+          k,
+          /* The head is the folder TAB (ADR-097): its share of the top edge,
+             both rects transformed alike so the ratio needs no `k`. */
+          tabShare: head.getBoundingClientRect().width / Math.max(1, card.width),
           divider: record.right,
           cardRight: card.right,
           firstStnLeft: stns.length ? stns[0].getBoundingClientRect().left : null,
@@ -551,16 +565,23 @@ test.describe("Trinny London pitch variant", () => {
       /* ⚠ THE FIELD IS INSET OFF BOTH EDGES, rail and bay on ONE edge (owner:
          "too close to the center border and the right border"). ≥ 16px is
          the token's floor; the divider is the record's right edge. */
+      /* ⚠ DIVIDED BY THE CARD'S SCALE (ADR-097): cards 1–3 are covered here
+         and receded by depth, so a 16px inset measures 14.6 on the deepest
+         one. The token is a layout length; the rect is a picture of it. */
       if (c.housing.firstStnLeft !== null) {
         expect(
-          c.housing.firstStnLeft - c.housing.divider,
+          (c.housing.firstStnLeft - c.housing.divider) / c.housing.k,
           `card ${i + 1} rail inset L`
         ).toBeGreaterThanOrEqual(15);
         expect(
-          c.housing.cardRight - c.housing.lastStnRight!,
+          (c.housing.cardRight - c.housing.lastStnRight!) / c.housing.k,
           `card ${i + 1} rail inset R`
         ).toBeGreaterThanOrEqual(15);
       }
+      /* ⚠ THE HEAD IS A TAB (ADR-097) — a folder's label at the top-left,
+         stepping down to the body, never the full top edge. */
+      expect(c.housing.tabShare, `card ${i + 1} head is the whole top edge`).toBeLessThan(0.6);
+      expect(c.housing.tabShare, `card ${i + 1} tab is too narrow to be one`).toBeGreaterThan(0.2);
     }
     /* ⚠ THE ORDER IS THE RECORD'S ARC SINCE ADR-094 U2 and these indices
        moved with it: the frontier work leads, because it is what earned the

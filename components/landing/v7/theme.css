@@ -387,6 +387,32 @@ html[data-theme="light"] .fl-case .fl-brief__dot {
    removing the border outright would shift the plate a pixel. The blur
    goes too: with the bed faded there is nothing left to separate from,
    and `backdrop-filter` re-snapshots every frame it is composited. */
+/* ═══════════════════════════════════════════════════════════════════
+   BLOCK 4c — the proof card's glass, re-derived (ADR-097)
+
+   The folder card is glass over the corridor with a flat gold lip. The lip
+   needs nothing here — it is `color-mix()` of `--gold-line`, which is
+   already the parchment value on this side (the `.fl-hz` precedent above).
+   Two ALPHAS do, because an alpha inverts its meaning across the flip
+   (ADR-058): the corner bloom, which on parchment is a smear rather than a
+   catch; and the client tab's tint, which reads louder on a light ground.
+   The RGB of the tint is the client's and does not move.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .pf-stack {
+  --pf-bloom-a: 0.08;
+  --pf-tab-a: 0.22;
+}
+
+/* The bed under the pile is faded on this side, so the blur has nothing to
+   separate and would re-snapshot every frame for nothing — the same ruling
+   `.fl-con` carries above. The glass stays; only the frost goes. */
+@supports (backdrop-filter: blur(2px)) {
+  html[data-theme="light"] .pf-stack .pf-card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 html[data-theme="light"] .fl-panel__viz {
   background: transparent;
   border-color: transparent;

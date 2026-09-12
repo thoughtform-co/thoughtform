@@ -1003,6 +1003,16 @@ export interface CaseDef {
   /** Route segment for a future `/cases/[slug]`. Kebab-case, unique. */
   slug: string;
   client: string;
+  /**
+   * The client's OWN colour, as an RGB triple — the proof stack's folder tab
+   * takes it (ADR-097); absent, the tab is house gold. NUMBERS, not a string:
+   * `cases-registry.test.ts` walks every string on this record under the
+   * confidentiality envelope, and `"rgb(202,165,84)"` trips its
+   * thousands-separator rule. Sampled from the client, never derived from the
+   * site's gold — `/trinny-london`'s `--tl-brand-rgb` precedent: deriving a
+   * client's colour from our ramp would be inventing one they did not choose.
+   */
+  accent?: { readonly rgb: readonly [number, number, number] };
   report: CaseReport;
   /** Exactly the Arc — the tuple pins the count, a test pins the order. */
   beats: readonly [CaseBeat, CaseBeat, CaseBeat];

@@ -175,6 +175,31 @@ async function scrollCasefileDwell(page: Page, progress: number): Promise<boolea
  * each pass rewinds above the pile, re-solves, and converges on the state the
  * hook itself publishes. See the two warnings inside.
  */
+/* ⚠ THE PAGE SCROLLS SMOOTHLY (`scroll-behavior: smooth` on `<html>`), so a
+   `window.scrollTo` is an ANIMATION, and a fixed wait after it is a bet on
+   how far the animation got. Found by ADR-097's pass: the rewind below was
+   still ~900px short after 250ms under load, the slot was therefore still
+   STUCK, `offsetTop` read 743 instead of 0, and the solve overshot by a
+   pitch and converged on `covered`. This waits until scrollY has stopped
+   moving for three frames (capped), which is what "after the scroll" means. */
+async function settleScroll(page: Page, capMs = 1600): Promise<void> {
+  await page.evaluate(async (cap) => {
+    const t0 = performance.now();
+    let last = window.scrollY;
+    let still = 0;
+    await new Promise<void>((resolve) => {
+      const tick = () => {
+        const y = window.scrollY;
+        still = Math.abs(y - last) < 0.5 ? still + 1 : 0;
+        last = y;
+        if (still >= 3 || performance.now() - t0 > cap) resolve();
+        else requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+  }, capMs);
+}
+
 async function seatProofCard(page: Page, idx: number): Promise<string | null> {
   await page.waitForSelector(".pf-slot", { timeout: 20_000 });
   let state: string | null = null;
@@ -191,7 +216,8 @@ async function seatProofCard(page: Page, idx: number): Promise<string | null> {
       const above = runway.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.3;
       window.scrollTo(0, Math.max(0, Math.round(above)));
     }, idx);
-    await page.waitForTimeout(250);
+    /* ⚠ …AND WAIT FOR THE REWIND TO LAND, not for 250ms — see `settleScroll`. */
+    await settleScroll(page);
     await page.evaluate((i) => {
       const runway = document.querySelector(".services-stage-root");
       const slot = document.querySelectorAll<HTMLElement>(".pf-slot")[i];
@@ -209,7 +235,11 @@ async function seatProofCard(page: Page, idx: number): Promise<string | null> {
        corridor mounts lazily and the document grows UNDER the first scroll,
        so a target solved once lands short by whatever it grew.
        `data-pc-state` is what `useStackedCardsScroll` publishes and the only
-       reading that answers the question asked. */
+       reading that answers the question asked.
+       ⚠ The solve is a smooth scroll too — from a settled rewind it is the
+       LONGEST one (~3000px to the last card) — so it is settled before the
+       hook gets its frames, or the state is read mid-flight as `incoming`. */
+    await settleScroll(page);
     await page.waitForTimeout(pass === 0 ? 900 : 450);
     state = await page.evaluate(
       (i) => document.querySelectorAll(".pf-slot")[i]?.getAttribute("data-pc-state") ?? null,
@@ -3474,6 +3504,53 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // is fully in. A 0 here is the ladder never releasing.
     expect(during.recordOpacity).toBeGreaterThan(0.95);
 
+    /* ── THE PLATE FADES IN (ADR-097) ───────────────────────────────────
+       Card 1 caught MID-ARRIVAL: raw ratio .4 on the hook's own travel
+       (`vh − pinTop`) lands `--pc-enter` ≈ smoothstep(.4) = .35, inside the
+       plate's window (`/ .45`) and before the record's. Before ADR-097 the
+       card carried NO opacity at all — the read above was trivially 1 and
+       this one would have been too, which is the harsh arrival the owner
+       named. ⚠ Rewind above the pile first: `offsetTop` on a STUCK slot is
+       its stuck position (the rule file's own law). Converges on the hook's
+       published `--pc-enter`, never on a rect. */
+    let mid = { enter: 0, opacity: 1 };
+    for (let pass = 0; pass < 5; pass += 1) {
+      await page.evaluate(() => {
+        const rw = document.querySelector<HTMLElement>(".services-stage-root")!;
+        window.scrollTo(
+          0,
+          Math.round(rw.getBoundingClientRect().top + window.scrollY - window.innerHeight)
+        );
+      });
+      await settleScroll(page);
+      await page.evaluate(() => {
+        const rw = document.querySelector<HTMLElement>(".services-stage-root")!;
+        const slot = document.querySelectorAll<HTMLElement>(".pf-slot")[1];
+        const top = Number.parseFloat(getComputedStyle(slot).top);
+        const vh = window.innerHeight;
+        const y =
+          rw.getBoundingClientRect().top +
+          window.scrollY +
+          slot.offsetTop -
+          (vh - 0.4 * (vh - top));
+        window.scrollTo(0, Math.round(y));
+      });
+      await settleScroll(page);
+      await page.waitForTimeout(pass === 0 ? 700 : 400);
+      mid = await page.evaluate(() => {
+        const slot = document.querySelectorAll<HTMLElement>(".pf-slot")[1];
+        return {
+          enter: Number(getComputedStyle(slot).getPropertyValue("--pc-enter")),
+          opacity: Number(getComputedStyle(slot.querySelector<HTMLElement>(".pf-card")!).opacity),
+        };
+      });
+      if (mid.enter > 0.25 && mid.enter < 0.45) break;
+    }
+    expect(mid.enter, "card 1 was not caught mid-arrival").toBeGreaterThan(0.25);
+    expect(mid.enter, "card 1 was not caught mid-arrival").toBeLessThan(0.45);
+    expect(mid.opacity, "the plate arrives opaque — the fade is gone").toBeLessThan(0.95);
+    expect(mid.opacity, "the plate is invisible a third of the way in").toBeGreaterThan(0.2);
+
     /* ── FOUR CARDS, THE RECORD'S OWN ARC, IN ORDER ────────────────────
        The head prints `arc.step` from the RECORD while the pile is ordered
        by `proofOrder.ts` — the two can disagree with nothing failing, which
@@ -3566,6 +3643,63 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(corners!.consoleClip, "the console leans the other way inside the card").toBe("none");
     expect(corners!.radius, "zero radius is law").toBe("0px");
 
+    /* ── THE CARD IS A FOLDER (ADR-097) ────────────────────────────────
+       The head row is a TAB at the top-left with a 45° step down to the
+       body, the plate is GLASS, and the ring is the housing's GOLD lip.
+       Pinned from both ends: the tab is narrower than the top edge and
+       seated at its left; the ordinal clears the step's diagonal; the lip
+       paints gold (r > b) at the lip's alpha, whether the engine serialises
+       `color-mix()` as `rgba()` or `color(srgb …)`; the plate's alpha is
+       under 1. Read on card 2, seated. */
+    const folder = await page.evaluate(() => {
+      const card = document.querySelector<HTMLElement>('[data-pc-index="2"] .pf-card');
+      const head = card?.querySelector<HTMLElement>(".pf-card__head");
+      const arc = card?.querySelector<HTMLElement>(".pf-card__arc");
+      if (!card || !head || !arc) return null;
+      const c = card.getBoundingClientRect();
+      const h = head.getBoundingClientRect();
+      const a = arc.getBoundingClientRect();
+      const step = Number.parseFloat(getComputedStyle(card).getPropertyValue("--pf-tab-h")) || 52;
+      const plate = getComputedStyle(card).backgroundColor;
+      const m = /rgba?\(([^)]+)\)/.exec(plate);
+      const parts = m
+        ? m[1]
+            .split(/[\s,/]+/)
+            .filter(Boolean)
+            .map(Number)
+        : [];
+      return {
+        cardW: c.width,
+        headW: h.width,
+        headLeft: h.left - c.left,
+        headRight: h.right,
+        arcRight: a.right,
+        step,
+        ring: getComputedStyle(card, "::before").backgroundColor,
+        plateAlpha: parts.length === 4 ? parts[3] : 1,
+      };
+    });
+    expect(folder, "card 2 has no head or ordinal").not.toBeNull();
+    expect(folder!.headW, "the head is the full top edge, not a tab").toBeLessThan(
+      folder!.cardW * 0.6
+    );
+    expect(folder!.headLeft, "the tab is not seated at the card's left edge").toBeLessThanOrEqual(
+      1
+    );
+    expect(folder!.arcRight, "the ordinal runs into the step's diagonal").toBeLessThanOrEqual(
+      folder!.headRight - folder!.step + 4
+    );
+    const ringNums = (folder!.ring.match(/[\d.]+/g) ?? []).map(Number);
+    const ringIsColorFn = folder!.ring.startsWith("color(");
+    const ringRgb = ringIsColorFn ? ringNums.slice(0, 3).map((v) => v * 255) : ringNums.slice(0, 3);
+    const ringA = ringNums.length >= 4 ? ringNums[3] : 1;
+    expect(ringRgb.length, `the lip's paint is unreadable: ${folder!.ring}`).toBe(3);
+    expect(ringRgb[0], `the lip is not gold (${folder!.ring})`).toBeGreaterThan(ringRgb[2]);
+    expect(ringA, "the lip's alpha left its rung").toBeGreaterThan(0.2);
+    expect(ringA, "the lip's alpha left its rung").toBeLessThan(0.4);
+    expect(folder!.plateAlpha, "the plate is opaque — the glass is gone").toBeLessThan(1);
+    expect(folder!.plateAlpha, "the plate is barely there").toBeGreaterThan(0.4);
+
     /* ── NOTHING CLIPS, ON ANY CARD ────────────────────────────────────
        Every card is measured against ITS OWN box, which is what a pile of
        four simultaneously-mounted panels needs: `document.querySelector` here
@@ -3601,6 +3735,42 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       expect(clip!.titleInside, `card ${i}: the claim runs outside its card`).toBe(true);
       expect(clip!.fieldPainted, `card ${i}: the field has no height`).toBe(true);
     }
+
+    /* ── THE PILE RECEDES BY DEPTH (ADR-097) ───────────────────────────
+       The loop above ends with card 4 seated, so the other three are
+       covered. Depth is the hook's sum of the enters above a slot — card 1
+       sits under three (≥ 2.9 once card 4 is in) — and the recession is a
+       scale graded by it, so card 1 is SMALLER than card 3, which is
+       smaller than 1; the open card is not scaled at all. A covered card's
+       body is `visibility: hidden` so its controls cannot take focus under
+       the card on top. Before ADR-097 every covered card carried the same
+       flat 2 %, which is what "stacking horizontally" measured as. */
+    const pile = await page.evaluate(() => {
+      const slots = [...document.querySelectorAll<HTMLElement>(".pf-slot")];
+      const scaleOf = (slot: HTMLElement) => {
+        const t = getComputedStyle(slot.querySelector<HTMLElement>(".pf-card")!).transform;
+        if (t === "none") return 1;
+        const m = /matrix\(([^)]+)\)/.exec(t);
+        return m ? Number(m[1].split(",")[0]) : 1;
+      };
+      return {
+        states: slots.map((s) => s.getAttribute("data-pc-state")),
+        depth0: Number(getComputedStyle(slots[0]).getPropertyValue("--pc-depth")),
+        scales: slots.map(scaleOf),
+        body0: getComputedStyle(slots[0].querySelector<HTMLElement>(".pf-card__body")!).visibility,
+      };
+    });
+    expect(pile.states, "card 4 seated should cover the other three").toEqual([
+      "covered",
+      "covered",
+      "covered",
+      "pinned",
+    ]);
+    expect(pile.depth0, "the hook publishes no depth").toBeGreaterThanOrEqual(2.9);
+    expect(pile.scales[0], "card 1 is not deeper than card 3").toBeLessThan(pile.scales[2]);
+    expect(pile.scales[2], "a covered card does not recede").toBeLessThan(1);
+    expect(pile.scales[3], "the open card is scaled").toBeCloseTo(1, 3);
+    expect(pile.body0, "a covered card's controls can still take focus").toBe("hidden");
 
     /* ── AND THE OFFER ARRIVES BEHIND IT ──────────────────────────────
        The release is the back stretch of the proof share; past it the

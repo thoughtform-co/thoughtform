@@ -60,7 +60,14 @@ const JSON_OUT = argOf("--json", "");
  * that has BLUR is a finding. A zero-blur layer is a hard-edged shape — a ring
  * or a line drawn as a shadow — and is neither depth nor glow (ADR-092).
  */
-const SHADOW_ALLOW = [/\.astrogation/, /\[role="dialog"\]/, /\.focus-overlay/, /\.fl-lb\b/, /\.fl-lightbox/, /\.fl-imap-scrim/];
+const SHADOW_ALLOW = [
+  /\.astrogation/,
+  /\[role="dialog"\]/,
+  /\.focus-overlay/,
+  /\.fl-lb\b/,
+  /\.fl-lightbox/,
+  /\.fl-imap-scrim/,
+];
 
 /**
  * Accent painted on STRUCTURE is the finding ADR-091 measured (gold on 200
@@ -73,6 +80,12 @@ const SHADOW_ALLOW = [/\.astrogation/, /\[role="dialog"\]/, /\.focus-overlay/, /
  */
 const ACCENT_ALLOW = [
   /\.fl-hz::before/,
+  // The proof card's lip (ADR-097) — the housing's own device one object over.
+  // ⚠ DECLARATIVE: this stage judges `border*Color` and `outline` and never a
+  // pseudo's `backgroundImage`, and `parse()` skips `color-mix()`'s computed
+  // `color(srgb …)`, so a clipped ring is invisible to it either way. The entry
+  // records the ruling; the smoke's ring read is what measures the lip.
+  /\.pf-card::before/,
   /\.fl-mobile-[a-z-]*::(before|after)/,
   /\.arc-dossier__now/,
   /\.arc-dossier__route-arrow/,
@@ -125,7 +138,12 @@ const lum = ({ r, g, b }) => 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb
 /** Composite fg over bg at fg's own alpha — see the rubric: an alpha is not a colour. */
 function composite(fg, bg) {
   const a = fg.a ?? 1;
-  return { r: fg.r * a + bg.r * (1 - a), g: fg.g * a + bg.g * (1 - a), b: fg.b * a + bg.b * (1 - a), a: 1 };
+  return {
+    r: fg.r * a + bg.r * (1 - a),
+    g: fg.g * a + bg.g * (1 - a),
+    b: fg.b * a + bg.b * (1 - a),
+    a: 1,
+  };
 }
 
 function contrast(fg, bg) {
@@ -168,9 +186,18 @@ function liveTypeTokens() {
 
 function hexToRgb(hex) {
   let h = hex.slice(1);
-  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  if (h.length === 3)
+    h = h
+      .split("")
+      .map((c) => c + c)
+      .join("");
   if (h.length < 6) return null;
-  return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16), a: 1 };
+  return {
+    r: parseInt(h.slice(0, 2), 16),
+    g: parseInt(h.slice(2, 4), 16),
+    b: parseInt(h.slice(4, 6), 16),
+    a: 1,
+  };
 }
 
 // ── run ──────────────────────────────────────────────────────────────────────
@@ -195,7 +222,19 @@ try {
   await page.waitForTimeout(2500); // let fonts settle and the first paint land
 
   report = await page.evaluate(
-    ({ scope, exclude, shadowAllow, accentAllow, weightAllow, tokenList, bannedHue, roleRungs, legacyRungs, weightCeiling, trackEps }) => {
+    ({
+      scope,
+      exclude,
+      shadowAllow,
+      accentAllow,
+      weightAllow,
+      tokenList,
+      bannedHue,
+      roleRungs,
+      legacyRungs,
+      weightCeiling,
+      trackEps,
+    }) => {
       const root = document.querySelector(scope);
       if (!root) return { error: `scope "${scope}" not found` };
       const els = [root, ...root.querySelectorAll("*")];
@@ -236,7 +275,10 @@ try {
 
       const describe = (el) => {
         const id = el.id ? `#${el.id}` : "";
-        const cls = typeof el.className === "string" && el.className ? `.${el.className.trim().split(/\s+/)[0]}` : "";
+        const cls =
+          typeof el.className === "string" && el.className
+            ? `.${el.className.trim().split(/\s+/)[0]}`
+            : "";
         return `${el.tagName.toLowerCase()}${id}${cls}`;
       };
 
@@ -283,15 +325,18 @@ try {
       };
       const isStateful = (el) =>
         el === document.activeElement ||
-        el.matches('[data-on],[data-active],[data-lit],[data-lead],[data-seat],[data-stack-emphasis],[aria-selected="true"],[aria-current]');
+        el.matches(
+          '[data-on],[data-active],[data-lit],[data-lead],[data-seat],[data-stack-emphasis],[aria-selected="true"],[aria-current]'
+        );
 
       // Gold painted on an edge: mark, allowed, or structure.
       const judgeAccent = (host, cs, pathName, w, h) => {
         const sides = ["Top", "Right", "Bottom", "Left"].filter(
-          (s) => parseFloat(cs[`border${s}Width`]) > 0 && cs[`border${s}Style`] !== "none",
+          (s) => parseFloat(cs[`border${s}Width`]) > 0 && cs[`border${s}Style`] !== "none"
         );
         const goldSides = sides.filter((s) => isGold(cs[`border${s}Color`]));
-        const goldOutline = parseFloat(cs.outlineWidth) > 0 && cs.outlineStyle !== "none" && isGold(cs.outlineColor);
+        const goldOutline =
+          parseFloat(cs.outlineWidth) > 0 && cs.outlineStyle !== "none" && isGold(cs.outlineColor);
         if (!goldSides.length && !goldOutline) return;
         const where = goldSides.length ? goldSides.join("/") : "outline";
         if (isStateful(host) || accentOk.some((re) => re.test(pathName))) {
@@ -299,7 +344,11 @@ try {
           return;
         }
         const small = Number.isFinite(w) && Number.isFinite(h) && Math.min(w, h) <= 32;
-        const oneLongSide = goldSides.length === 1 && Number.isFinite(w) && Number.isFinite(h) && Math.max(w, h) >= 40;
+        const oneLongSide =
+          goldSides.length === 1 &&
+          Number.isFinite(w) &&
+          Number.isFinite(h) &&
+          Math.max(w, h) >= 40;
         if (!small || oneLongSide) {
           findings.accent.push(`${pathName} gold ${where} ${Math.round(w)}x${Math.round(h)}`);
         } else {
@@ -317,7 +366,12 @@ try {
         const isSvgText = el.namespaceURI === "http://www.w3.org/2000/svg";
 
         // radius
-        for (const corner of ["borderTopLeftRadius", "borderTopRightRadius", "borderBottomLeftRadius", "borderBottomRightRadius"]) {
+        for (const corner of [
+          "borderTopLeftRadius",
+          "borderTopRightRadius",
+          "borderBottomLeftRadius",
+          "borderBottomRightRadius",
+        ]) {
           const v = parseFloat(cs[corner]);
           if (v > 0.5) {
             findings.radius.push(`${pathName} ${corner}=${cs[corner]}`);
@@ -345,8 +399,10 @@ try {
         // imagery is a legibility scrim and is noted
         if (cs.textShadow && cs.textShadow !== "none") {
           const colour = (cs.textShadow.match(/rgba?\([^)]+\)/) || [""])[0];
-          if (isGold(colour)) findings.textShadow.push(`${pathName} text-shadow=${cs.textShadow.slice(0, 60)}`);
-          else if (isVoidish(colour)) findings.textShadowScrim.push(`${pathName} ${cs.textShadow.slice(0, 40)}`);
+          if (isGold(colour))
+            findings.textShadow.push(`${pathName} text-shadow=${cs.textShadow.slice(0, 60)}`);
+          else if (isVoidish(colour))
+            findings.textShadowScrim.push(`${pathName} ${cs.textShadow.slice(0, 40)}`);
           else findings.textShadow.push(`${pathName} text-shadow=${cs.textShadow.slice(0, 60)}`);
         }
 
@@ -418,10 +474,13 @@ try {
             findings.trackingSvg.push(`${pathName} ${key}em`);
           } else {
             rungHist[key] = (rungHist[key] || 0) + 1;
-            const onRole = Math.abs(ratio) < trackEps || roleValues.some((r) => Math.abs(ratio - r) < trackEps);
+            const onRole =
+              Math.abs(ratio) < trackEps || roleValues.some((r) => Math.abs(ratio - r) < trackEps);
             if (!onRole) {
               const onLegacy = legacyValues.some((r) => Math.abs(ratio - r) < trackEps);
-              (onLegacy ? findings.trackingLegacy : findings.tracking).push(`${pathName} letter-spacing=${key}em at ${size}px`);
+              (onLegacy ? findings.trackingLegacy : findings.tracking).push(
+                `${pathName} letter-spacing=${key}em at ${size}px`
+              );
             }
           }
 
@@ -466,7 +525,7 @@ try {
       legacyRungs: type.legacy,
       weightCeiling: type.weightCeiling,
       trackEps: TRACK_EPS,
-    },
+    }
   );
 } catch (err) {
   console.error(`could not run: ${err.message}`);
@@ -526,9 +585,17 @@ const order = [
 // after it are advisory by design: a legacy rung is live until stage 4, SVG
 // lettering is the map's own pass, a void scrim is legibility, and marks are
 // counted rather than judged — unless a `--budget` was given.
-const ADVISORY = new Set(["palette", "trackingLegacy", "trackingSvg", "textShadowScrim", "accentMarks"]);
+const ADVISORY = new Set([
+  "palette",
+  "trackingLegacy",
+  "trackingSvg",
+  "textShadowScrim",
+  "accentMarks",
+]);
 let total = 0;
-console.log(`\nMECHANICAL — ${url}  scope=${SCOPE}${EXCLUDE ? `  exclude=${EXCLUDE}` : ""}  ${VW}x${VH}  ${THEME}${PRM ? "  prm" : ""}\n`);
+console.log(
+  `\nMECHANICAL — ${url}  scope=${SCOPE}${EXCLUDE ? `  exclude=${EXCLUDE}` : ""}  ${VW}x${VH}  ${THEME}${PRM ? "  prm" : ""}\n`
+);
 for (const k of order) {
   const list = f[k] ?? [];
   const advisory = ADVISORY.has(k) && !(k === "accentMarks" && overBudget);
@@ -548,9 +615,14 @@ const textCount = hist.reduce((n, [, c]) => n + c, 0);
 if (textCount) {
   const [topKey, topCount] = hist[0];
   console.log(
-    `\n  tracking readout: ${hist.length} rung(s) on ${textCount} text nodes; top rung ${topKey}em carries ${Math.round((100 * topCount) / textCount)} %`,
+    `\n  tracking readout: ${hist.length} rung(s) on ${textCount} text nodes; top rung ${topKey}em carries ${Math.round((100 * topCount) / textCount)} %`
   );
-  console.log(`        ${hist.slice(0, 8).map(([k, c]) => `${k}em×${c}`).join("  ")}`);
+  console.log(
+    `        ${hist
+      .slice(0, 8)
+      .map(([k, c]) => `${k}em×${c}`)
+      .join("  ")}`
+  );
 }
 
 if (pageErrors.length) {
@@ -562,7 +634,20 @@ if (pageErrors.length) {
 if (JSON_OUT) {
   fs.writeFileSync(
     JSON_OUT,
-    JSON.stringify({ url, scope: SCOPE, exclude: EXCLUDE, theme: THEME, prm: PRM, findings: f, rungHist: report.rungHist, pageErrors }, null, 1),
+    JSON.stringify(
+      {
+        url,
+        scope: SCOPE,
+        exclude: EXCLUDE,
+        theme: THEME,
+        prm: PRM,
+        findings: f,
+        rungHist: report.rungHist,
+        pageErrors,
+      },
+      null,
+      1
+    )
   );
   console.log(`\n  wrote ${JSON_OUT}`);
 }

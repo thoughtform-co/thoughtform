@@ -7,6 +7,7 @@ import { ProofGlyph } from "@/components/landing/home-v2/services/casefile/Proof
 import type { CaseTrack } from "@/lib/cases/types";
 
 import { ProofField } from "./ProofField";
+import type { ProofStackClient } from "./proofOrder";
 import { proofTabLabel, proofTabs } from "./proofTabs";
 
 /**
@@ -56,7 +57,7 @@ import { proofTabLabel, proofTabs } from "./proofTabs";
  * No CTA in this pass: the detail tier is a follow-up after the owner's
  * read (the plan's decision 1). The card is not a control.
  */
-export function ProofCard({ track }: { track: CaseTrack }) {
+export function ProofCard({ track, client }: { track: CaseTrack; client: ProofStackClient }) {
   const titleId = `pf-card-${track.id}`;
   const claims = track.blocks ?? [];
   const phase = track.stamp?.phase ?? "Build";
@@ -71,7 +72,12 @@ export function ProofCard({ track }: { track: CaseTrack }) {
   return (
     <article className="pf-card" aria-labelledby={titleId}>
       <header className="pf-card__head">
-        <p className="pf-card__kicker">Loop Earplugs · {phase}</p>
+        {/* The client from the RECORD (ADR-097) — this was the one string
+            literal on the surface, and the tab's colour now keys off the same
+            `CaseDef` the name comes from. */}
+        <p className="pf-card__kicker">
+          {client.name} · {phase}
+        </p>
         {/* ⚠ THE ORDINAL ALONE (U4, owner 2026-09-10: "that subtitle —
             whatever, Intelligence Map, Software for Few — in the top-right
             corner, you can remove that"). U3 put the project's name here as

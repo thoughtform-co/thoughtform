@@ -296,7 +296,13 @@ breather).
   client copy on the public landing but lives outside `lib/cases/`, so the
   registry test scans it too. Adding a tool means adding a walkthrough.
 - **Content = `lib/cases/` only.** `types.ts` keeps ZERO imports; nothing
-  under `lib/cases/` may import react, three or supabase. The tool strip
+  under `lib/cases/` may import react, three or supabase. ⚠ **`CaseDef.accent?`
+  (ADR-097) is the client's OWN colour as an RGB triple of NUMBERS** — the proof
+  stack's folder tab reads it; absent, the tab is house gold. Numbers because
+  the envelope scan below walks every string and `"rgb(202,165,84)"` reads as
+  an amount with a thousands separator; the client's value, never derived from
+  the site's gold (the `--tl-brand-rgb` precedent). The registry pins three
+  integers 0–255 when it is present. The tool strip
   stores IDs and the renderer resolves them against `PROJECT_CASES`, which
   stays canonical for the four tools. A copy change is a content-module edit
   plus `npx vitest run tests/lib/cases-registry.test.ts`.

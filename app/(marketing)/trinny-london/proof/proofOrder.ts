@@ -14,4 +14,5 @@ export {
   PROOF_STACK_CASE as TRINNY_PROOF_CASE,
   PROOF_STACK_ORDER as TRINNY_PROOF_ORDER,
   proofStackTracks as trinnyProofTracks,
+  proofStackClient as trinnyProofClient,
 } from "@/components/landing/home-v2/services/proof-stack/proofOrder";

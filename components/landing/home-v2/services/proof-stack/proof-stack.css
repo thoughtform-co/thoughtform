@@ -17,13 +17,23 @@
    the other belongs in that route's own sheet.
 
    ⚠ TOKENS ONLY, AND THAT IS WHAT MAKES IT THEME-HONEST. Every colour is a
-   ramp step off `--dawn-rgb` / `--void-deep-rgb` / `--gold-rgb`, which
-   ADR-058 SWAPS between themes — so the same declarations paint cream on
-   near-black here and ink on parchment on the light-locked pitch page, with
-   no `[data-theme]` branch anywhere in the file. Every letter-spacing is an
-   ADR-092 role token and every weight is at or under `--weight-lit`;
-   `type-material-tokens` pins this sheet at zero literals.
-   ═══════════════════════════════════════════════════════════════════ */
+   ramp step off `--dawn-rgb` / `--void-deep-rgb` / `--gold-rgb` / `--gold-line`,
+   which ADR-058 SWAPS between themes — so the same declarations paint cream
+   on near-black here and ink on parchment on the light-locked pitch page,
+   with no `[data-theme]` branch anywhere in the file. The two alphas that
+   invert their meaning across the flip (`--pf-bloom-a`, `--pf-tab-a`) are
+   re-derived in `theme.css` on `.pf-stack`, the `.fl-hz` precedent; the one
+   value that is not a token — a CLIENT's colour — is written INLINE by the
+   host from `CaseDef.accent` and only ever read here (ADR-097). Every
+   letter-spacing is an ADR-092 role token and every weight is at or under
+   `--weight-lit`; `type-material-tokens` and `theme-css-sweep` pin this
+   sheet (both since ADR-097 — the header claimed it for a week before
+   either list carried the file).
+
+   ⚠ THE CARD IS A FOLDER SINCE ADR-097: glass over the corridor, a flat gold
+   lip on the clipped ring, the head row drawn as a TAB with a 45° step, the
+   pile receding by DEPTH, the plate fading in. The rulings sit on the rules
+   they changed. */
 
 /* The card's own ramp. On `/trinny-london` these values are ALSO declared on
    `.tl-root` as `--tl-*`, because the turn and the proposal read them; the
@@ -37,8 +47,29 @@
      `--pf-rule-soft` rules WITHIN one (the bands, the bay's head and foot). */
   --pf-rule: rgba(var(--dawn-rgb), 0.18);
   --pf-rule-soft: rgba(var(--dawn-rgb), 0.12);
-  /* The card's plate — one step off the page ground on either theme. */
-  --pf-plate: rgb(var(--void-deep-rgb));
+  /* ── The card is GLASS (ADR-097, owner: "that golden border should have
+     a sort of glass-like effect, a bit transparent"). ONE dial. The casefile
+     housing ran .42 with only the parked brandmark behind it; this card
+     carries dense copy over the same bed, so it starts denser. The ground
+     is a tint of the page's own deep step, so it stays a tint of whatever
+     ground it sits on across the flip (theme.css's ruling on `.fl-hz`). */
+  --pf-glass-a: 0.62;
+  --pf-plate: rgba(var(--void-deep-rgb), var(--pf-glass-a));
+  --pf-blur: 14px;
+  /* The lip: FLAT, the housing's own value (ADR-092 stage 1 U1 — the
+     services plate's four-stop ramp put a wide frame's two LONGEST edges
+     through its .1 middle, so the biggest edges were the faintest; this card
+     is that frame class). `--gold-line` is the ramp's LINE step, byte-equal
+     to `--gold` in dark and `#8a6b20` in light, so the lip re-derives for
+     parchment with no theme branch (theme.css:347 is the same declaration). */
+  --pf-lip: color-mix(in srgb, var(--gold-line) 30%, transparent);
+  /* A corner catching light, at the plate's own alpha; light lowers it. */
+  --pf-bloom-a: 0.13;
+  /* The CLIENT's colour on the folder tab. The host writes `--pf-accent-rgb`
+     inline from `CaseDef.accent`; a client without one gets the house gold —
+     the RGB is the client's, the ALPHA is the theme-varying half. */
+  --pf-accent-rgb: var(--gold-rgb);
+  --pf-tab-a: 0.28;
 }
 
 /* ── 4. The stack (the ADR-030 mechanic, this route's skin) ──────────
@@ -98,6 +129,7 @@
   margin-bottom: calc(var(--pc-n) * var(--pc-peek) + var(--pc-bottom-safe) + var(--pc-dwell));
   --pc-enter: 1;
   --pc-cover: 0;
+  --pc-depth: 0;
   /* ── The arrival channels ──────────────────────────────────────────
      `--pc-enter` is ALREADY smoothstepped in the hook, so windowing it
      again is an S on an S: the motion starts late and its rate of change
@@ -106,10 +138,12 @@
      of travelling at scroll speed and stopping dead on it. Same
      `clamp()` idiom as `tools-cards.css`'s `[data-r]` reveals.
 
-     ⚠ THE HOOK IS NOT TOUCHED. It is shared with `/test/project-cards`,
-     and `data-pc-state` (which the smoke's ladder asserts at pin + 40px)
-     is computed from the RAW `enter`, which still reaches 1 exactly at
-     the pin. A CSS remap cannot move it; retuning the hook would. */
+     ⚠ THE HOOK'S EASING AND STATE ARE NOT TOUCHED. It is shared with
+     `/test/project-cards`, and `data-pc-state` (which the smoke's ladder
+     asserts at pin + 40px) is computed from the RAW `enter`, which still
+     reaches 1 exactly at the pin. A CSS remap cannot move it; retuning the
+     hook would. ADR-097 added ONE additive channel to it, `--pc-depth`
+     (the sum of the enters above a slot), which the other skin ignores. */
   --pc-in: clamp(0, calc((var(--pc-enter) - 0.18) / 0.62), 1);
   --pc-cov: clamp(0, calc((var(--pc-cover) - 0.18) / 0.62), 1);
   /* Staggered off the same channel: plate, then record, then field — and
@@ -118,6 +152,20 @@
      which is what a fully separated ladder looked like on the still. */
   --pc-in-record: clamp(0, calc((var(--pc-enter) - 0.34) / 0.5), 1);
   --pc-in-field: clamp(0, calc((var(--pc-enter) - 0.42) / 0.48), 1);
+  /* ── The plate's own arrival (ADR-097, owner: "when the first card comes
+     into view … right now it's pretty harsh"). OPACITY, off the raw channel
+     — which is already eased — fully in by enter .45, i.e. before the record
+     (.34 → .84) has finished. Before this the plate had NO fade at all: an
+     opaque slab rose into view and only its contents faded, which is what
+     the measured mid-arrival read as (card opacity 1, record .03). */
+  --pc-in-plate: clamp(0, calc(var(--pc-enter) / 0.45), 1);
+  /* ── Depth, with its NEAREST term windowed. `--pc-depth` is the hook's sum
+     of the enters above this slot; its first term is `--pc-cover`, raw. Swap
+     that one term for the windowed `--pc-cov` and the pile keeps the cover
+     law — a card never starts receding before the card covering it is
+     visible — while the far terms (0 or 1 by the time they matter) need no
+     window at all. */
+  --pc-dp: calc(var(--pc-depth) - var(--pc-cover) + var(--pc-cov));
 }
 
 .pf-stack .pf-slot:last-of-type {
@@ -182,16 +230,62 @@
   height: 100%;
   display: grid;
   grid-template-rows: var(--pc-peek) minmax(0, 1fr);
-  background: var(--pf-plate);
+  /* ── THE FOLDER TAB (ADR-097, owner: the cards should read like the
+     "retrofuturistic digital folder-type cards" of the braindance monitors
+     and the log panels). The head ROW is the tab: `--pf-tab-w` flat along
+     the top, then a 45° step of run = rise = the peek band down to the
+     body's top edge, which then runs to the TR chamfer. The grid row stays
+     `--pc-peek`, so the body, its insets, the type ladder and the MEASURED
+     runway are byte-identical — only the silhouette changed.
+     ⚠ UNDER ADR-065 the step is the HOUSING's own silhouette in the same 45°
+     vocabulary as its chamfers, lawful by rule 5 (asymmetry is earned: the
+     tab names the file and marks the edge the pile is gripped by), and
+     rule 4 holds because the head itself carries NO cut — the tint below is
+     a layer on the card's own background that this clip cuts.
+     ⚠ THE FLOOR IS THE LONGEST KICKER: `LOOP EARPLUGS · NAVIGATE` (24 chars
+     at 11px PT Mono / .15em ≈ 198px) + `01` + the gap + both paddings ≈ 310.
+     At 1280 the tab is ~52 % of the top edge; the lever if that reads wide
+     is the head's right padding, never the peek. */
+  --pf-tab-w: clamp(320px, 34%, 460px);
+  --pf-tab-h: var(--pc-peek);
+  --pf-tab-d: calc(var(--pf-tab-w) + var(--pf-tab-h));
+  background:
+    /* the client's tab — a soft gradient of its own hue, sized to the tab
+       row; the housing's clip is what gives it the diagonal */
+    linear-gradient(
+        90deg,
+        rgba(var(--pf-accent-rgb), var(--pf-tab-a)) 0%,
+        rgba(var(--pf-accent-rgb), calc(var(--pf-tab-a) * 0.25)) 100%
+      )
+      0 0 / var(--pf-tab-d) var(--pf-tab-h) no-repeat,
+    /* the plate's own scanline, at the plate's own alpha — UNDER the copy,
+       where the services plate carries it over (a card of prose is not a
+       screen you look into) */
+    repeating-linear-gradient(to bottom, rgba(var(--gold-rgb), 0.025) 0 1px, transparent 1px 3px),
+    /* a corner catching light, stated in PIXELS (hud-panel-lab.css: the
+       plate's `130% 70%` is ~550px on a 420-wide card and lights a whole
+       quadrant on a housing), hung off the BODY's top-right — the region
+       above it, right of the tab, is outside the clip */
+    radial-gradient(
+        460px 300px at calc(100% - 90px) calc(var(--pf-tab-h) - 40px),
+        rgba(var(--gold-rgb), var(--pf-bloom-a)),
+        transparent 62%
+      ),
+    var(--pf-plate);
   /* ⚠ NO `border` — A CLIP CUTS A BORDER, IT NEVER STROKES ONE (ADR-089).
      A bordered box under this clip has no line on either diagonal, which is
      six edges outlined and two not. The rule is painted as a clipped RING
-     below instead. */
+     below instead. ⚠ And no padded-gradient SHELL either: on a translucent
+     body the shell reads straight through and lights the whole plate
+     warm-grey (hud-panel-lab.css:378 measured it) — the ring is mandatory
+     once the plate is glass. */
   border: 0;
   clip-path: polygon(
     0 0,
-    calc(100% - var(--pf-card-ch)) 0,
-    100% var(--pf-card-ch),
+    var(--pf-tab-w) 0,
+    var(--pf-tab-d) var(--pf-tab-h),
+    calc(100% - var(--pf-card-ch)) var(--pf-tab-h),
+    100% calc(var(--pf-tab-h) + var(--pf-card-ch)),
     100% 100%,
     var(--pf-card-ch) 100%,
     0 calc(100% - var(--pf-card-ch))
@@ -208,9 +302,35 @@
      only. */
   --pc-rise: clamp(40px, 7svh, 96px);
   translate: 0 calc((1 - var(--pc-in)) * var(--pc-rise));
-  transform: scale(calc(1 - 0.02 * var(--pc-cov)));
+  /* ── THE PILE RECEDES BY DEPTH (ADR-097, owner: it should "feel a bit
+     more like 3D stacked cards" rather than "stacking horizontally"). A flat
+     2 % on cover made every covered card the same card; `--pc-dp` counts
+     how many cards have risen over this one, so the tabs staircase INWARD
+     one step per card. Origin `50% 0` keeps every top edge on its sticky
+     line — geometrically this is a translateZ toward a top-centre vanishing
+     point, without a `perspective` the hook's `top` read could not survive
+     (a transform on the SLOT parks the pile). */
+  --pf-recede: 0.03;
+  --pf-dim: 0.08;
+  transform: scale(calc(1 - var(--pf-recede) * var(--pc-dp)));
   transform-origin: 50% 0;
+  /* Arrival is a FADE, and a covered plate dims a little per card over it.
+     Exactly 1 at every pin (in-plate 1, dp 0) — the smoke reads it there. */
+  opacity: calc(var(--pc-in-plate) * (1 - var(--pf-dim) * var(--pc-dp)));
   color: var(--pf-ink);
+}
+
+/* The glass. ⚠ NO `brightness()` — the services plate's SEED body is
+   `blur(12px)` alone and only its OPEN body adds `brightness(1.08)`, a lift
+   tuned for a small card over a bright WebGL bed; over a whole housing it
+   turns the ground grey (hud-panel-lab.css:487). The blur is a per-frame
+   backdrop SNAPSHOT (ADR-056 measured it), so it is the one thing on this
+   card with a frame cost — `capture-proof-stack.mjs --perf` is its gate. */
+@supports (backdrop-filter: blur(2px)) {
+  .pf-stack .pf-card {
+    -webkit-backdrop-filter: blur(var(--pf-blur));
+    backdrop-filter: blur(var(--pf-blur));
+  }
 }
 
 .pf-stack .pf-card::after {
@@ -219,9 +339,12 @@
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  /* On the windowed channel too: a covered card must not start sinking
-     before the card covering it is visible. */
-  background: rgba(var(--dawn-rgb), calc(0.09 * var(--pc-cov)));
+  /* By DEPTH now (ADR-097), toward the GROUND — the void's deep step, which
+     is the void in dark and parchment in light, so a covered folder sinks
+     into whatever it sits on rather than frosting over (the dawn haze this
+     replaced lightened in dark and darkened in light). `--pc-dp` carries
+     the cover law: nothing sinks before the covering card is visible. */
+  background: rgba(var(--void-deep-rgb), calc(0.14 * min(var(--pc-dp), 3)));
 }
 
 /* The card's own rule, as a CLIPPED RING — one polygon carrying the outer
@@ -234,18 +357,30 @@
   inset: 0;
   z-index: 4;
   pointer-events: none;
-  background: var(--pf-rule);
+  /* GOLD since ADR-097 — the housing's lip, one object over: a console is a
+     screen you look into and takes a dawn edge; a housing is the machined
+     device the screen is set into and takes the gold lip (casefile.css's
+     own scope ruling). A card holding a console is the housing case. */
+  background: var(--pf-lip);
   clip-path: polygon(
     evenodd,
     0 0,
-    calc(100% - var(--pf-card-ch)) 0,
-    100% var(--pf-card-ch),
+    var(--pf-tab-w) 0,
+    var(--pf-tab-d) var(--pf-tab-h),
+    calc(100% - var(--pf-card-ch)) var(--pf-tab-h),
+    100% calc(var(--pf-tab-h) + var(--pf-card-ch)),
     100% 100%,
     var(--pf-card-ch) 100%,
     0 calc(100% - var(--pf-card-ch)),
+    /* inner, 1px in. ⚠ THE STEP'S INNER LINE IS THE OUTER ONE SHIFTED √2 IN
+       x, so BOTH its ends inset by tan 22.5° = 0.414px — at the convex corner
+       AND at the reflex foot (a `+0.414` at the foot kinks the ring by 0.8px
+       on every card). The chamfer legs keep `--pf-card-ch-in`. */
     1px 1px,
-    calc(100% - 1px - var(--pf-card-ch-in)) 1px,
-    calc(100% - 1px) calc(1px + var(--pf-card-ch-in)),
+    calc(var(--pf-tab-w) - 0.414px) 1px,
+    calc(var(--pf-tab-d) - 0.414px) calc(var(--pf-tab-h) + 1px),
+    calc(100% - 1px - var(--pf-card-ch-in)) calc(var(--pf-tab-h) + 1px),
+    calc(100% - 1px) calc(var(--pf-tab-h) + 1px + var(--pf-card-ch-in)),
     calc(100% - 1px) calc(100% - 1px),
     calc(1px + var(--pf-card-ch-in)) calc(100% - 1px),
     1px calc(100% - 1px - var(--pf-card-ch-in))
@@ -265,9 +400,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 0 var(--pf-card-px);
-  border-bottom: 1px solid var(--pf-rule);
+  gap: 16px;
+  /* ⚠ THE HEAD IS THE TAB (ADR-097): the tab's width plus the step's run,
+     seated at the row's start. Its right padding is the step — the ordinal
+     has to clear the diagonal, which at the text's centre line is already
+     `tab-h / 2` in from the head's right edge, so `tab-h − 4` clears by
+     ~22px. NO rule under it: a folder's tab is continuous with its body, and
+     the body's top edge right of the step is the ring's. The head paints no
+     background of its own — the tint is the card's, cut by the housing. */
+  width: var(--pf-tab-d);
+  justify-self: start;
+  padding: 0 calc(var(--pf-tab-h) - 4px) 0 var(--pf-card-px);
+  border-bottom: 0;
   min-width: 0;
 }
 
@@ -469,7 +613,12 @@
      viewport — lit before it had arrived, which is most of what "appears
      too quickly" was. It lands after the plate has seated now, and
      reverse scroll runs it back by construction. */
-  opacity: var(--pc-in-record);
+  /* ⚠ AND IT LEAVES AS THE COVERING CARD ARRIVES (ADR-097). The front card
+     is glass now, so a covered card's copy would show through it as blurred
+     text behind text; fading the CONTENT on the cover channel means the glass
+     looks onto an empty folder — its tab and its plate — which is what a
+     folder behind another folder shows. */
+  opacity: calc(var(--pc-in-record) * (1 - var(--pc-cov)));
   translate: 0 calc((1 - var(--pc-in-record)) * 14px);
 }
 
@@ -636,8 +785,17 @@
   --fl-shot-px: 12px;
   /* Last of the three, so the beat reads plate → record → field. No
      travel here: the evidence bleeds to two edges and a sliding picture
-     inside a clipped box shows its own seam. */
-  opacity: var(--pc-in-field);
+     inside a clipped box shows its own seam. Leaves on the cover channel
+     with the record (ADR-097) — see `.pf-card__record`. */
+  opacity: calc(var(--pc-in-field) * (1 - var(--pc-cov)));
+}
+
+/* A covered card's rail, watch bar and film frame were already unreachable
+   by pointer under the card on top; at opacity 0 they would still take
+   FOCUS. The state flips at cover .999, after the windowed channel has hit
+   1, so nothing visible changes at the flip. */
+.pf-stack .pf-slot[data-pc-state="covered"] .pf-card__body {
+  visibility: hidden;
 }
 
 /* ⚠ THE SIZE CONTAINER MOVED HERE FROM THE FIELD (U2), and it had to. The
@@ -1121,6 +1279,18 @@
   clip-path: none;
 }
 
+/* ⚠ THE CONSOLE IS A CELL IN A GLASS HOUSING (ADR-097, from ADR-089's own
+   ruling on the casefile). With the card at .62 the console's `--con-ground`
+   — `--con-void`, OPAQUE outside `.fl-case` — would leave two of the four
+   cards carrying a solid slab over 60 % of a glass plate. The PAINT token
+   only: `--con-void` stays as declared, because it is the bed for the station
+   diamond, `.fl-detail__in` and `--pda-void`, the map's whole drawing floor
+   (console.css:59–67 — softening THAT makes every instrument lose its
+   floor). */
+.pf-stack .pf-card__field .fl-con {
+  --con-ground: transparent;
+}
+
 .pf-stack .pf-card__field .fl-con__console::after {
   content: none;
 }
@@ -1158,7 +1328,13 @@
   .pf-stack .pf-card {
     transform: none;
     translate: none;
+    opacity: 1;
     grid-template-rows: auto auto;
+  }
+  /* The rows are `auto auto` here, so without a floor the head is ~12px and
+     the tab's step (still `--pc-peek` tall) clips the body's top-right away. */
+  .pf-stack .pf-card__head {
+    min-height: var(--pc-peek);
   }
   .pf-stack .pf-card::after {
     display: none;
@@ -1174,11 +1350,27 @@
 }
 
 @media (max-width: 960px) {
+  /* ⚠ THE HEAD WRAPS HERE AND MAY EXCEED THE PEEK, so the tab comes off: two
+     tokens collapse BOTH polygons to the plain TR+BL shape (the duplicated
+     vertices are degenerate) and the tint layer to zero height. The head
+     goes back to full width and carries the client's tint itself. */
+  .pf-stack .pf-card {
+    --pf-tab-w: calc(100% - var(--pf-card-ch));
+    --pf-tab-h: 0px;
+  }
   .pf-stack .pf-card__head {
+    width: auto;
+    justify-self: stretch;
     height: auto;
     min-height: var(--pc-peek);
     flex-wrap: wrap;
-    padding-block: 12px;
+    padding: 12px var(--pf-card-px);
+    border-bottom: 1px solid var(--pf-rule);
+    background: linear-gradient(
+      90deg,
+      rgba(var(--pf-accent-rgb), var(--pf-tab-a)) 0%,
+      rgba(var(--pf-accent-rgb), calc(var(--pf-tab-a) * 0.25)) 100%
+    );
   }
   /* ⚠ THE STATIONS STOP FILLING AND START WRAPPING. `console.css`'s unwrap
      rung gives every station `flex: 1 1 45%` and a wrapping label; four

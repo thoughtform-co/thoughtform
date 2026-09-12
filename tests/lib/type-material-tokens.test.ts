@@ -178,6 +178,16 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
+  /* ADR-096 moved the proof card's sheet out of the trinny route and into
+     the shared module; the map kept the OLD home and the sheet's own header
+     went on claiming "type-material-tokens pins this sheet at zero literals"
+     for a week with no entry here to make it true (found by ADR-097). Both
+     public routes import it. Zero literals, verified on adding. */
+  "components/landing/home-v2/services/proof-stack/proof-stack.css": {
+    tier: "content",
+    content: { A: 0, B: 0, C: 0 },
+    frame: { A: 0, B: 0, C: 0 },
+  },
 };
 
 /**

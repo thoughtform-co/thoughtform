@@ -21,6 +21,11 @@ const SHEETS = [
   "components/landing/home-v2/voidwalker/voidwalker-wire.css",
   "components/landing/home-v2/voidwalker/voidwalker-travel.css",
   "components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css",
+  /* The proof card's sheet (ADR-096 → ADR-097) — read by BOTH public routes
+     and absent from this list until the folder pass gave it a gold-filled
+     station and a tinted tab, i.e. exactly the `--gold`/`--void` pair below
+     was written to catch. */
+  "components/landing/home-v2/services/proof-stack/proof-stack.css",
   "components/landing/v7/theme.css",
 ];
 

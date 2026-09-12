@@ -6,6 +6,7 @@ import { useStackedCardsScroll } from "@/components/landing/v7/tools-cards/useSt
 import type { CaseTrack } from "@/lib/cases/types";
 
 import { ProofCard } from "./ProofCard";
+import type { ProofStackClient } from "./proofOrder";
 
 /**
  * ProofStack — one casefile's projects as a scroll-stacked pile of cards
@@ -42,12 +43,27 @@ import { ProofCard } from "./ProofCard";
  * Default export as well as named, because `/trinny-london` mounts it
  * through `lazy()`.
  */
-export function ProofStack({ tracks }: { tracks: readonly CaseTrack[] }) {
+export function ProofStack({
+  tracks,
+  client,
+}: {
+  tracks: readonly CaseTrack[];
+  client: ProofStackClient;
+}) {
   const runwayRef = useRef<HTMLDivElement>(null);
   useStackedCardsScroll(runwayRef);
 
   return (
-    <div className="pf-stack">
+    /* The client's colour rides the STACK, not the card — one client per pile
+       (ADR-097). Written inline only when the record carries one, so the
+       sheet's fallback (house gold) is the resting state and not a second
+       declaration of the same value. */
+    <div
+      className="pf-stack"
+      style={
+        client.accentRgb ? ({ "--pf-accent-rgb": client.accentRgb } as CSSProperties) : undefined
+      }
+    >
       <div
         className="pf-stack__runway"
         ref={runwayRef}
@@ -61,7 +77,7 @@ export function ProofStack({ tracks }: { tracks: readonly CaseTrack[] }) {
             data-pc-index={i}
             style={{ "--i": i, zIndex: i + 1 } as CSSProperties}
           >
-            <ProofCard track={track} />
+            <ProofCard track={track} client={client} />
           </div>
         ))}
         <div className="pf-stack__tail" aria-hidden="true" />

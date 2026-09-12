@@ -204,6 +204,13 @@ copy so the pile is self-contained on either host.
   head prints the step from the record while the pile is ordered by this
   array, so a re-order in one place letters `03 · 01 · 02` down a scroll with
   four correct cards; `trinny-proof-order.test.ts` asserts they agree.
+  ⚠ **AND THE CLIENT TOO, SINCE ADR-097**: the shim passes
+  `trinnyProofClient()` — the record's `client` for the kicker (a JSX literal
+  until then) and `CaseDef.accent` for the folder tab's colour. This route
+  therefore wears the whole folder skin (glass, gold lip, tab, depth) with no
+  route-local rule: `proof-stack.css` is ONE sheet on two hosts, and the
+  smoke's `cardShape` reads its covered cards through their depth scale
+  (`offsetWidth`, deltas ÷ `k`).
   ⚠ **THE ORDER LEADS ON THE FRONTIER WORK** (`atl-films`), reversing the first
   two cards: it is what earned the studio the right to run AI itself, and a
   stack opening on the studio has the consequence before the cause. The

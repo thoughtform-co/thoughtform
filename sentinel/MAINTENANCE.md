@@ -54,7 +54,56 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-09-05 (latest) — The interface kit: the reference measured, and a wave graded (ADR-091)
+### 2026-09-12 (latest) — The proof card is a folder (ADR-097)
+
+**Trigger:** owner read the promoted proof stack (ADR-096) and kept the IA but
+not the look — the cards "feel a bit out of place": make them digital folders,
+glass with the golden border like the services section, 3D-stacked rather than
+"horizontal", a fade on the first card's arrival, a client colour on the head.
+
+**What changed:** `proof-stack.css` (one sheet, two hosts) — glass plate at
+`.62` + blur, FLAT `--gold-line` lip on the existing clipped ring, the head row
+as a TAB with a 45° step (card + ring polygons, ≤960 collapse by two tokens),
+recession by depth, plate fade, covered content leaving on the cover channel,
+console ground transparent; `useStackedCardsScroll` +`--pc-depth` (additive);
+`CaseDef.accent?` + `proofStackClient()` → `ProofStack`/`ProofCard` (the
+`"Loop Earplugs"` literal retired); `theme.css` BLOCK 4c; both smokes;
+`capture-proof-stack.mjs --mid --perf`; `mechanical.mjs` `ACCENT_ALLOW`.
+
+**Cycle A rows that triggered:**
+
+- **A guard that measured a picture, not the thing** (twice). The trinny
+  smoke's `cardShape` read glyph widths and rail insets off `getBoundingClientRect`
+  on COVERED cards — transformed rects — and passed on `scale(.98)` only because
+  `21 × .98` rounds back to 21; at a real depth scale it fails. Reads are
+  `offsetWidth` and deltas ÷ the card's rendered-over-layout ratio now. And the
+  seat helper's rewind waited 250ms on a page whose `<html>` scrolls SMOOTHLY:
+  under load the rewind was ~900px short, the slot still stuck, `offsetTop`
+  reading its stuck position, the solve overshooting a pitch onto `covered`
+  (`settleScroll()`).
+- **A ratchet that did not have the file.** `proof-stack.css` was in neither
+  `type-material-tokens`' PINS (the map kept the sheet's OLD route home from
+  before ADR-096) nor `theme-css-sweep`'s SHEETS, while the sheet's header and
+  `.claude/rules/proof-stack.md` both said it was pinned at zero literals. Both
+  carry it now. ⚠ When a sheet MOVES, its ratchet entries move with it.
+- **A cost measured before it was assumed.** `--perf` samples rAF deltas
+  through the whole pile: long-frame share 17.9 → 14.9 % @1440×900,
+  22.4 → 15.1 % @1920×1247 — the glass is free against the corridor already
+  under it; the fallback stays unbuilt and recorded.
+- **A house ruling kept over a reference's recipe.** The services plate's 168°
+  four-stop lip was the obvious port and is wrong on a wide frame (ADR-092
+  stage 1 U1 measured it on the housing); the FLAT lip is the default and the
+  ramp a one-line swap for the owner's still.
+- **The arithmetic of an inset diagonal.** A 45° edge offset 1px inward is
+  the same line shifted √2 in x, so BOTH ends of the tab's step inset by
+  tan 22.5° in the same direction; the plan's `+0.414` at the reflex foot would
+  have kinked the ring by 0.8px on every card.
+
+**Docs:** ADR-097 · `.claude/rules/proof-stack.md` §The folder ·
+`.claude/rules/proof.md` (`CaseDef.accent`) · `.claude/rules/trinny-london.md` ·
+CLAUDE.md pointer.
+
+### 2026-09-05 — The interface kit: the reference measured, and a wave graded (ADR-091)
 
 The owner named two sites he admires, named the surface he wants to reach
 that register, and said plainly he could not put a finger on the delta. So
