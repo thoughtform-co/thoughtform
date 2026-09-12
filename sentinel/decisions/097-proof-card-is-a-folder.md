@@ -356,6 +356,37 @@ same reason.
 line needs ~347px, which the datum's 41px does not leave. Recorded rather than
 chased: the alignment is the ask and the wrap costs nothing but a line.
 
+## Update 4 — the rail is full-bleed (2026-09-12, owner, fifth live read)
+
+> I do think, though, that the tabs need to connect with the vertical rail
+> that separates the left and the right panel. That way, it really feels like
+> an integrated thing. I think the tabs should be full width and should also
+> reach the edge on the other side. The visuals and the text can remain
+> centered with some padding or margin, but for these tabs, it needs to be
+> like this.
+
+`.pf-card__tabs` negates the field's `padding-inline`, so the first station's
+left edge lands ON the divider and the last one's right edge on the card's own
+edge. Measured: 0px at both ends, where each was 18px. Everything else — the
+bay, the frame, every drawing — keeps `--pf-field-px` untouched.
+
+⚠ **THIS REVERSES ADR-094 U8's ≥15px RAIL INSET, WHICH WAS THE OWNER'S OWN
+NOTE** ("too close to the center border and the right border"). It is not a
+contradiction and should not be recorded as one: U8 was about the elements
+INSIDE the panel, and this is the ruling that **the rail is not one of them**.
+The rail is the panel's head; the panel's contents are what keep a margin.
+
+⚠ **AND IT NARROWS U3's ALIGNMENT CLAUSE, WHICH LASTED ONE PASS.** U3 read
+"the vertical lines should just connect to the tabs above it" as the frame's
+walls rising into the stations' OUTER EDGES, and pinned `frameLeft ===
+stnLeft`. With the rail full-bleed those are 18px apart by design. What
+survives of U3 is the part that was actually asked for — the frame has no lid
+and its walls reach the RAIL's underside; where they land horizontally was my
+inference, not his instruction. The smoke now pins the difference in both
+directions: the rail on the field's edges, the frame on the field's padding.
+A rail that drifted inboard and a frame that went full-bleed would each look
+like the other's fix, so neither half can be asserted alone.
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,

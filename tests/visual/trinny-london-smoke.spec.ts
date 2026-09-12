@@ -568,18 +568,26 @@ test.describe("Trinny London pitch variant", () => {
       /* ⚠ THE FIELD IS INSET OFF BOTH EDGES, rail and bay on ONE edge (owner:
          "too close to the center border and the right border"). ≥ 16px is
          the token's floor; the divider is the record's right edge. */
-      /* ⚠ DIVIDED BY THE CARD'S SCALE (ADR-097): cards 1–3 are covered here
-         and receded by depth, so a 16px inset measures 14.6 on the deepest
-         one. The token is a layout length; the rect is a picture of it. */
+      /* ⚠ THE RAIL IS FULL-BLEED, AND THAT REVERSES U8's INSET (ADR-097 U4,
+         owner: "the tabs need to connect with the vertical rail that separates
+         the left and the right panel … the tabs should be full width and
+         should also reach the edge on the other side"). U8's ≥15px was the
+         owner's own note that the elements sat too close to those borders; it
+         was about the elements INSIDE the panel, and this is the ruling that
+         the rail is not one of them. Pinned from both ends — the first
+         station lands ON the divider and the last ON the card's edge — so a
+         rail that drifted back inboard fails as loudly as one that overhung.
+         ⚠ DIVIDED BY THE CARD'S SCALE: cards 1–3 are covered here and receded
+         by depth. The token is a layout length; the rect is a picture of it. */
       if (c.housing.firstStnLeft !== null) {
         expect(
-          (c.housing.firstStnLeft - c.housing.divider) / c.housing.k,
-          `card ${i + 1} rail inset L`
-        ).toBeGreaterThanOrEqual(15);
+          Math.abs(c.housing.firstStnLeft - c.housing.divider) / c.housing.k,
+          `card ${i + 1} rail does not meet the divider`
+        ).toBeLessThanOrEqual(1.5);
         expect(
-          (c.housing.cardRight - c.housing.lastStnRight!) / c.housing.k,
-          `card ${i + 1} rail inset R`
-        ).toBeGreaterThanOrEqual(15);
+          Math.abs(c.housing.cardRight - c.housing.lastStnRight!) / c.housing.k,
+          `card ${i + 1} rail does not reach the card's edge`
+        ).toBeLessThanOrEqual(1.5);
       }
       /* ⚠ THE HEAD IS THE CLIENT'S BAND (ADR-097 U1) — the FULL top row,
          carrying the client's gradient; the first cut's tab-only tint was

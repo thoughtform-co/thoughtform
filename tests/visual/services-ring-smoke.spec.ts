@@ -3703,6 +3703,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         stnTop: stn?.top ?? null,
         stnH: stn?.height ?? null,
         stnLeft: stn?.left ?? null,
+        stnRight:
+          [...card.querySelectorAll<HTMLElement>(".fl-con__stn")].at(-1)?.getBoundingClientRect()
+            .right ?? null,
+        fieldRight: f?.right ?? null,
+        fieldPadX: fieldEl ? Number.parseFloat(getComputedStyle(fieldEl).paddingLeft) : null,
         tabsBottom: tabs?.bottom ?? null,
         frameTop: frame?.top ?? null,
         frameLeft: frame?.left ?? null,
@@ -3776,10 +3781,32 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       Math.abs(folder!.frameTop! - folder!.tabsBottom!),
       "the frame's walls do not reach the rail"
     ).toBeLessThanOrEqual(1);
+
+    /* ── THE RAIL IS FULL-BLEED; EVERYTHING ELSE KEEPS ITS INSET (U4) ──
+       Owner: "the tabs should be full width and should also reach the edge on
+       the other side. The visuals and the text can remain centered with some
+       padding or margin, but for these tabs, it needs to be like this." So
+       the rail spans the panel — first station ON the divider, last ON the
+       card's edge — while the frame stays at `--pf-field-px`. Both halves are
+       pinned, because the whole point is the DIFFERENCE between them: a rail
+       that drifted inboard and a frame that went full-bleed would each look
+       like the other's fix. */
     expect(
-      Math.abs(folder!.frameLeft! - folder!.stnLeft!),
-      "the frame's wall is inboard of the first station"
+      Math.abs(folder!.stnLeft! - folder!.fieldLeft!),
+      "the rail does not meet the divider"
     ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(folder!.stnRight! - folder!.fieldRight!),
+      "the rail does not reach the card's edge"
+    ).toBeLessThanOrEqual(1);
+    expect(
+      folder!.frameLeft! - folder!.fieldLeft! - folder!.fieldPadX!,
+      "the frame lost the inset the visuals keep"
+    ).toBeLessThanOrEqual(1);
+    expect(
+      folder!.frameLeft! - folder!.stnLeft!,
+      "the frame went full-bleed with the rail"
+    ).toBeGreaterThanOrEqual(8);
 
     /* ── NOTHING CLIPS, ON ANY CARD ────────────────────────────────────
        Every card is measured against ITS OWN box, which is what a pile of
