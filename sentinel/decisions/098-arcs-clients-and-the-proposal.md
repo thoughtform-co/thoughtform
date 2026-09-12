@@ -171,6 +171,43 @@ that wrote them would have to edit those two tests as well — a generator
 quieting its own guards. It prints them loudly instead, and the red guard is
 the handover.
 
+## Update 1 (2026-09-12, owner): the corner goes quiet, and a proposal is read
+
+On the page live:
+
+> The text in section one is too big. We need to drastically reduce it. I think
+> the icons in the top-left corner compete with the hero. Let's remove them from
+> these arc pages, along with the links in the top-left corner, like we have for
+> Trinny. I think that's much easier on the eye.
+
+**The chapter row is hidden on every detail arc**, and the corner's bracket
+comes back with it. This is ADR-093's ruling for the pitch page, one surface
+over, in the same two halves: `rail-instruments.css` zeroes that bracket's
+border because the row IS the corner's mark, so removing the row without
+restoring the border leaves an empty corner.
+
+⚠ It reaches ALL FIVE arcs, not only the proposal, because the ask is about
+chrome and the roster is derived — the same reason ADR-059 U6's own change
+reached all five when it put the marks there. ⚠ `display: none`, never an
+unmounted component, so `buildArcMarks` and every arc's roster stay exercised.
+⚠ **Unlike the pitch page, an arc keeps its section indicator**: that route
+hides the nav readout too and is left with none, a consequence its rule names.
+The arcs' header is the site's own (ADR-073) and stays.
+
+**The interstitial's display line comes down on a PROPOSAL only**, from
+`clamp(38px, 5.4vw, 76px)` to `clamp(24px, 2.6vw, 40px)` — 69px to 33px at the
+reference laptop. Scoped to the format, which is what `data-arc-format` is for:
+the same size is right on a keynote, because a deck is presented in a room from
+a distance and the callout is the beat where the room looks up. A proposal is
+read by one person at arm's length, and at that distance the same type shouts.
+Measured after: the keynote's line is unchanged at 53.8px, the proposal's is
+33.3px.
+
+⚠ **The measure is part of the size.** At 34ch the sentence still set three
+lines and broke `AI-first.` across its own hyphen, which reads as a typo rather
+than a line. 42ch sets it in two at both reference widths, with `text-wrap:
+balance` evening them.
+
 ## Deliberately absent
 
 - **The client page's Armada / technical setup.** The owner named it for later

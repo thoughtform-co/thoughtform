@@ -36,6 +36,15 @@ rather than shared. A `theme: "light"` arc is two halves — the mount and a
 hand-written `LIGHT_LOCKED_ROUTES` row. `scripts/new-arc.mjs` scaffolds a
 client page in one command and ships finished copy, never placeholders.
 
+⚠ ADR-098 U1: the chapter row in the top-left corner is hidden on EVERY arc
+and the bracket comes back with it (ADR-093's pitch-page ruling, one surface
+over) — `display: none`, never unmounted, and the restore carries `.arc-root`
+because `rail-instruments.css` is imported after `arcs.css`. Unlike the pitch
+page an arc KEEPS its section indicator: the header is the site's own. And a
+PROPOSAL's interstitial line drops to `clamp(24px, 2.6vw, 40px)` at 42ch,
+scoped to the format — a deck is presented in a room, a proposal is read at
+arm's length.
+
 ⚠ ADR-090: the four dossier beats are one machined housing (ADR-089's
 grammar at page scale) with the console as a square CELL inside it, all
 `.arc-dossier`-scoped and gated at `(min-width: 981px) and

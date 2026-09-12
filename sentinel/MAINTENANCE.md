@@ -72,6 +72,15 @@ pitch page's instrument as data, ADR-052's second content-only exception);
 `scripts/new-arc.mjs` + its skeleton; `arcs.css` gains the overview bands, the
 filter, `.arc-cfg*` and the locked-switch rule.
 
+**U1, same day (owner, on the page live):** the top-left chapter row is hidden
+on every arc with its bracket restored (ADR-093's pitch-page ruling, one
+surface over), and a PROPOSAL's interstitial line drops from
+`clamp(38px, 5.4vw, 76px)` to `clamp(24px, 2.6vw, 40px)` at 42ch — scoped to
+the format, because a deck is presented in a room and a proposal is read at
+arm's length. Measured after: the keynote's line unchanged at 53.8px, the
+proposal's 33.3px. ⚠ The measure was part of the size: at 34ch the sentence
+still broke `AI-first.` across its own hyphen.
+
 **Cycle B** — ADR-098 opened Proposed, `.claude/rules/arcs.md` +
 `.cursor/rules/arcs.mdc` gained §The client model, LANGUAGE.md gained **Client
 page** and **Engagement**.
