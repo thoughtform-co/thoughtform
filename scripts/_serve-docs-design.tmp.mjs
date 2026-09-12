@@ -34,9 +34,11 @@ createServer(async (req, res) => {
     const s = await stat(full).catch(() => null);
     if (s && s.isDirectory()) full = join(full, "index.html");
     const body = await readFile(full);
-    res.writeHead(200, { "Content-Type": TYPES[extname(full).toLowerCase()] || "application/octet-stream" });
+    res.writeHead(200, {
+      "Content-Type": TYPES[extname(full).toLowerCase()] || "application/octet-stream",
+    });
     res.end(body);
-  } catch (e) {
+  } catch {
     res.writeHead(404, { "Content-Type": "text/plain" }).end("Not Found: " + req.url);
   }
 }).listen(PORT, () => {
