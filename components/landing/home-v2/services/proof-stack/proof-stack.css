@@ -471,13 +471,15 @@
   /* Even when a kind has no stations (the ads sheet, the map's own console
      before its portal lands) the row keeps its height, so all four cards
      seat their bay on the same line.
-     ⚠ THE ROW IS THE RULE'S CLEARANCE PLUS THE BOX (U2). It was 34 against a
-     station that measured 22–23, so the box floated inside its own row at a
-     height nothing else on the card knew about. Now the row's top IS the
-     field's datum — where the rule paints — the box hangs `--pf-rail-hang`
-     below it, and `--pf-rail-h` is the box: 30, because a 22px strip under a
-     52px band reads as a strip and a 30px box reads as a box (the owner's
-     "a bit higher"). */
+     ⚠ THE ROW IS THE DATUM'S CLEARANCE PLUS THE BOX (U2, reworded at U5). It
+     was 34 against a station that measured 22–23, so the box floated inside
+     its own row at a height nothing else on the card knew about. Now the
+     row's top IS the field's datum — the title's own line — the box hangs
+     `--pf-rail-hang` below it, and `--pf-rail-h` is the box: 30, because a
+     22px strip under a 52px band reads as a strip and a 30px box reads as a
+     box (the owner's "a bit higher"). ⚠ The hang was sized to clear a RULE
+     drawn at the datum; U5 removed the rule and kept the hang, so it is the
+     air over the row now and nothing is measured against it. */
   --pf-rail-hang: 8px;
   --pf-rail-h: 30px;
   padding-top: var(--pf-rail-hang);
@@ -812,31 +814,15 @@
   opacity: calc(var(--pc-in-field) * (1 - var(--pc-cov)));
 }
 
-/* ⚠ THE LINE THE TABS HANG FROM (U2, owner: "the line on which the visual and
-   the text live needs to connect to those tabs. Right now, they're
-   disconnected, but they need to be connected"). One rule at the field's own
-   datum, from the DIVIDER to the card's right edge — the field's border box
-   starts exactly where the record's `border-right` ends, so `left: 0` welds
-   the two into a T and the rail stops floating in the panel.
-   ⚠ IT CLEARS THE BOXES BY `--pf-rail-hang`, AND THAT IS THE WHOLE POINT.
-   The first cut drew it COLLINEAR with the stations' top borders — same y,
-   same `--pf-rule` — on the theory that one continuous line is stronger than
-   a line plus a row. It is not: a box covers 97 % of the run, so all that
-   paints is an 18px stub at each end of the field, and at dawn .18 an 18px
-   stub is nothing. Measured on the still: the divider and the first station
-   read as disconnected, which is the defect this rule exists to fix. Hung
-   above them the rule is a 690px line at 1440 that terminates on the divider
-   and has the row hanging off it. */
-.pf-stack .pf-card__field::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: var(--pf-card-py);
-  height: 1px;
-  background: var(--pf-rule);
-  pointer-events: none;
-}
+/* ⚠ THE FIELD DRAWS NO RULE AT ITS DATUM (U5, owner: "remove the line above
+   the tabs"), AND THE DATUM ITSELF STAYS. U2 added a hairline there to weld
+   the rail to the divider; U4 made the rail FULL-BLEED, so the first station
+   now lands on the divider itself and the line was doing that job twice. The
+   field's `padding-top` is what still puts the row on the title's line, and
+   `--pf-rail-hang` is now the rail's own clearance under that line rather
+   than clearance under a drawn thing. Do not restore the rule without first
+   checking whether the rail still reaches the divider — if it does, the rule
+   is a second statement of the same weld. */
 
 /* A covered card's rail, watch bar and film frame were already unreachable
    by pointer under the card on top; at opacity 0 they would still take
@@ -1434,16 +1420,12 @@
      equal boxes on a 390px row break `DJ NEIGHBOUR` across two lines. They
      size to their labels and wrap, keeping the 44px touch floor that rung
      exists for. */
-  /* ⚠ THE FIELD'S DATUM AND ITS RULE COME OFF HERE (U2). Stacked, the record
-     sits ABOVE the field and its `border-bottom` is already the line between
-     them; a second rule 33px under it is two hairlines in a band, and the
-     padding that seats the rail against a title is seating it against
+  /* ⚠ THE FIELD'S DATUM COMES OFF HERE (U2). Stacked, the record sits ABOVE
+     the field and its `border-bottom` is already the line between them, so
+     the padding that seats the rail against a title is seating it against
      nothing. */
   .pf-stack .pf-card__field {
     padding-top: 0;
-  }
-  .pf-stack .pf-card__field::before {
-    content: none;
   }
   .pf-stack .pf-card__tabs .fl-con__rail {
     flex: 1 1 auto;

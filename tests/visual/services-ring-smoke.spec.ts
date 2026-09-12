@@ -3739,33 +3739,32 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(folder!.plateAlpha, "the plate is opaque — the glass is gone").toBeLessThan(1);
     expect(folder!.plateAlpha, "the plate is barely there").toBeGreaterThan(0.4);
 
-    /* ── THE RAIL SITS ON THE RECORD'S DATUM, AND HANGS FROM A RULE (U2) ──
-       Owner: move the tabs down "so they're vertically aligned with the title
-       in the left panel", make them "a bit higher", and connect "the line on
-       which the visual and the text live" to them. Three reads, from both
-       ends: the field's rule is on the title's own line (`--pf-card-py`, the
-       record's top padding — one term, so the delta is 0); it starts exactly
-       where the record's `border-right` ends, which is the weld; and the
-       boxes HANG below it rather than sharing its y, because a box covers
-       97 % of the run and a collinear rule paints two 18px stubs nobody can
-       see (measured, the first cut). */
-    const ruleY = folder!.fieldTop! + folder!.rulePad!;
+    /* ── THE RAIL SITS ON THE RECORD'S DATUM, AND THE DATUM IS UNDRAWN (U2,
+       U5) ── Owner: move the tabs down "so they're vertically aligned with
+       the title in the left panel" and make them "a bit higher"; then, once
+       U4 had taken the rail full-bleed onto the divider, "remove the line
+       above the tabs" — the hairline U2 drew there was welding the rail to a
+       divider the rail now touches itself. So the datum is a LAYOUT term, not
+       a painted one: `--pf-card-py` is the record's top padding and the
+       field's `padding-top`, one term, so the delta is 0 by construction.
+       Pinned from both ends — the row is on the title's line AND the field
+       paints nothing there, so a restored rule fails as loudly as a drifted
+       row. */
+    const datumY = folder!.fieldTop! + folder!.rulePad!;
     expect(
-      Math.abs(ruleY - folder!.titleTop!),
-      "the rail's rule left the title's line"
+      Math.abs(datumY - folder!.titleTop!),
+      "the rail left the title's line"
     ).toBeLessThanOrEqual(2);
-    expect(folder!.ruleContent, "the field draws no rule").not.toBe("none");
-    expect(folder!.ruleH, "the field's rule is not a hairline").toBeCloseTo(1, 1);
-    expect(folder!.ruleBg, "the rule is not the region weight").toMatch(/^rgba?\(/);
+    expect(folder!.ruleContent, "the field draws a rule at its datum again").toBe("none");
     expect(
       Math.abs(folder!.fieldLeft! - folder!.dividerRight!),
-      "the rule does not start on the divider — the weld is open"
+      "the field does not start on the divider"
     ).toBeLessThanOrEqual(1);
     expect(
-      folder!.stnTop! - ruleY,
-      "the boxes share the rule's y — it paints only stubs"
+      folder!.stnTop! - datumY,
+      "the boxes sit on the datum, not under it"
     ).toBeGreaterThanOrEqual(4);
-    expect(folder!.stnTop! - ruleY, "the boxes float off their own rule").toBeLessThanOrEqual(14);
+    expect(folder!.stnTop! - datumY, "the boxes float off the datum").toBeLessThanOrEqual(14);
     expect(folder!.stnH, "the station is a strip, not a box").toBeGreaterThanOrEqual(28);
 
     /* ── THE FRAME OPENS INTO THE RAIL (U3) ────────────────────────────

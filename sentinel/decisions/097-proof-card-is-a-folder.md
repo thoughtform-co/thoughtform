@@ -387,6 +387,29 @@ directions: the rail on the field's edges, the frame on the field's padding.
 A rail that drifted inboard and a frame that went full-bleed would each look
 like the other's fix, so neither half can be asserted alone.
 
+## Update 5 — the datum stops being drawn (2026-09-12, owner, sixth live read)
+
+> Remove the line above the tabs.
+
+The hairline `.pf-card__field::before` drew at the field's datum is deleted,
+and the datum stays — it is `padding-top` on the field, so the row is still on
+the title's line. `--pf-rail-hang` stays too, as the air over the row rather
+than as clearance under a drawn thing.
+
+**It was two statements of one weld, and U4 is what made it so.** U2 added the
+rule for a reason that was true when it was added: the rail was inset 18px
+from the divider, so something had to reach across. U4 took the rail
+full-bleed onto the divider — the rail now IS the connection — and the rule
+was drawing the same relationship a second time, one line higher. The
+instruction to delete it is the correct reading of a surface where the earlier
+fix has been superseded by a later one.
+
+⚠ **THE SMOKE'S POLARITY IS INVERTED, NOT DROPPED.** It asserted `ruleContent
+!== "none"`; it asserts `=== "none"` now, beside the unchanged datum check.
+Deleting the assertion instead would have left the rule free to come back on
+the next pass through this block — which, across five updates in one day, is
+the failure mode this surface actually has.
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,

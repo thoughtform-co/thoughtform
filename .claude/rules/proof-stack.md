@@ -111,23 +111,25 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   record; do not restore the step from muscle memory.
 - ⚠ **THE INERT RUNG FLOORS THE HEAD AT `--pc-peek`** — its rows are
   `auto auto`, and a 12px tinted band reads as a rule, not a band.
-- **THE FIELD STARTS ON THE RECORD'S DATUM, AND THE RAIL HANGS FROM A RULE**
-  (U2, owner: move the tabs down "so they're vertically aligned with the title
-  in the left panel", make them "a bit higher", and connect "the line on which
-  the visual and the text live" to them). `--pf-card-py` is the record's top
-  padding, so the field takes it as `padding-top` and its `::before` draws a
-  1px `--pf-rule` at that y from `left: 0` to `right: 0`. The field's border
-  box begins where the record's `border-right` ends, so the rule terminates ON
-  the divider — the weld. The rail's row starts on that line; the stations hang
-  `--pf-rail-hang` (8px) under it at `--pf-rail-h` (30px), STRETCHED not
-  centred, so the row's height is the box's. Measured at 1440×900: rail top
-  153 = title top 153, box 30px (was 22–23 in a 34px row), weld 0px.
-- ⚠ **THE RULE MAY NOT BE COLLINEAR WITH THE BOXES' TOP BORDERS.** The first
-  cut put them on one y — same colour, same weight, "one continuous line" —
-  and the boxes cover 97 % of the run, so the only paint is an 18px stub at
-  each end, invisible at dawn .18. **A line a box sits on is a line you have
-  deleted.** The computed style reported it present, 1px, right colour, right
-  y; a 3× crop of the junction is what showed it was not there.
+- **THE FIELD STARTS ON THE RECORD'S DATUM, AND THE DATUM IS UNDRAWN** (U2 for
+  the datum, U5 for the rule: "remove the line above the tabs"). `--pf-card-py`
+  is the record's top padding, so the field takes it as `padding-top` and the
+  rail's row starts on the title's own line; the stations hang `--pf-rail-hang`
+  (8px) under it at `--pf-rail-h` (30px), STRETCHED not centred, so the row's
+  height is the box's. Measured at 1440×900: rail top 153 = title top 153, box
+  30px (was 22–23 in a 34px row). ⚠ **THE DATUM IS A LAYOUT TERM, NOT A PAINTED
+  ONE** — the smoke pins both halves, the row on the title's line AND the field
+  painting nothing there.
+- ⚠ **A RULE AT THE DATUM IS A SECOND STATEMENT OF THE WELD.** U2 drew one
+  because the rail was inset 18px from the divider and something had to reach
+  across; U4 took the rail full-bleed onto the divider, so the rail IS the
+  connection and the rule was drawing it again one line up. Do not restore it
+  without first checking whether the rail still reaches the divider.
+  ⚠ Its own failure is worth keeping: the first cut drew it COLLINEAR with the
+  boxes' top borders — same y, same colour — and a box covers 97 % of the run,
+  so the only paint was an 18px stub at each end, invisible at dawn .18. **A
+  line a box sits on is a line you have deleted.** The computed style reported
+  it present, 1px, right colour, right y; a 3× crop is what showed it was not.
 - **THE FRAME OPENS INTO THE RAIL** (U3, owner: "the horizontal divider or
   border for the frame where the images live, we shouldn't have that. The
   vertical lines should just connect to the tabs above it"). The frame is a
