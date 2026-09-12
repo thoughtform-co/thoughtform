@@ -73,7 +73,13 @@ place) → the proposal** → contact.
   five-row page: the hook seeded production's total and its bail-out compared
   only the POSITION, which at rest on the hero is 0 either way. Any new state on
   that hook is compared in the same check.
-- ⚠ **THE JOURNEY ROW IS HIDDEN HERE AND THE TL BRACKET IS BACK** (owner,
+- ⚠ **THE JOURNEY ROW IS HIDDEN EVERYWHERE NOW, AND THE RULE LEFT THIS SHEET**
+  (ADR-098 U1, 2026-09-12). This route asked first; the arcs and then the
+  homepage asked next, so `.rin-cl--journey { display: none }` and the bracket
+  restore moved into `rail-instruments.css` and the route-local copy is gone.
+  The consequence below is still this route's alone, because every other
+  surface keeps its nav-corner readout. The original reasoning, which still
+  holds: (owner,
   2026-09-10). `RailInstruments` hosts the marks INSIDE `.hud__corner--tl` and
   `html[data-rail-instruments]` zeroes that bracket's border, because the row IS
   the corner mark; with the row gone the border returns — which is exactly what

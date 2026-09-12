@@ -453,15 +453,47 @@
   outline-offset: -2px;
 }
 
-/* ── The brackets the rows stand in for ─────────────────────────────────
-   BOTH working corners now (Update 2 — the bottom-right kept its bracket
-   for the day it held settings alone). The rows ARE the corner marks; a
-   bracket behind one reads as two marks for the same corner, and the
-   `--br` one draws straight through the terminal glyph besides.
+/* ── THE JOURNEY ROW IS OFF, ON EVERY SURFACE ───────────────────────────
+   Owner, 2026-09-12, having taken it off the arcs and then the homepage:
+   the icons in the top-left corner compete with the hero, and every page
+   reads easier without them.
 
-   The bottom-LEFT keeps its bracket — that corner is the ADR-043 wordmark
-   and has no row to replace it. */
-html[data-rail-instruments] .hud__corner--tl,
+   ⚠ THIS IS THE ≤960 RUNG BELOW, PROMOTED TO EVERY WIDTH — which is why
+   it is two declarations and not a new mechanism. That rung already hid
+   this row and restored this bracket on a phone; the ruling is that a
+   desktop should read the same way.
+
+   ⚠ IT REPLACES THREE ROUTE-SCOPED COPIES, not two. `/trinny-london` hid
+   it first (ADR-093, owner 2026-09-10) and `/arcs/*` second (ADR-098 U1,
+   the same afternoon); when the third surface asks for the same thing the
+   rule belongs in the sheet that owns the row. Both route copies are
+   deleted with this.
+
+   ⚠ `display: none`, NEVER an unmounted component. `useJourneyMarks` keeps
+   computing `data-mark` / `data-state`, which is what
+   `trinny-london-smoke` reads (both are readable on a hidden node) and
+   what keeps `rail-instrument-marks.test.ts`'s one-gold-mark invariant
+   honest. The hook's OTHER outputs — the seat and the BEARING / SECTOR /
+   LOCAL telemetry in the right rail — are still on screen, so nothing
+   here is a hook kept alive for a test alone.
+
+   ⚠ THE ROW IS NOW DORMANT UI. Deleting `MarkRow` and its clusters is a
+   separate, safe pass once this has been read live; it is not done here,
+   because bringing the row back is one line for as long as it stays. */
+.rin-cl--journey {
+  display: none;
+}
+
+/* ── The bracket the ROWS stand in for ──────────────────────────────────
+   A row IS its corner's mark, and a bracket behind one reads as two marks
+   for the same corner — so the corner that still HAS a row is the only one
+   that gives its border up. That is the bottom-right, which holds the exit
+   mark, the session and the theme switch, and whose bracket would draw
+   straight through the terminal glyph besides.
+
+   ⚠ THE TOP-LEFT TAKES ITS BRACKET BACK with the row's departure, because
+   the reason it was suppressed left with the row. The bottom-LEFT never
+   gave one up — that corner is the ADR-043 wordmark and never had a row. */
 html[data-rail-instruments] .hud__corner--br {
   border: 0;
 }
@@ -486,10 +518,13 @@ html[data-rail-instruments] .hud__rail {
       ) -340px -340px -340px
   );
 }
+/* ⚠ THE SIDES GO BACK TO PRODUCTION'S 0. The -340px opening existed only
+   to spare the journey row's outboard mark from being sliced; with no row
+   there is nothing overhanging to spare, and an opened clip on an empty
+   corner just widens what the curtain has to travel over. The TOP inset is
+   untouched — it is what uncovers the frame as the hero lifts. */
 html[data-rail-instruments] .hud__corner--tl {
-  clip-path: inset(
-    max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) -340px -340px -340px
-  );
+  clip-path: inset(max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) 0 0 0);
 }
 @media (prefers-reduced-motion: reduce) {
   .rin-mark,
@@ -514,16 +549,15 @@ html[data-rail-instruments] .hud__corner--tl {
    row to the ADR-058 slot (see the `min-width: 961px` block above), which
    is also what keeps the control clear of the bracket coming back. */
 @media (max-width: 960px) {
-  .rin-cl--journey,
+  /* ⚠ THE JOURNEY ROW AND THE TL BRACKET ARE NOT LISTED HERE ANY MORE —
+     both are unconditional above, and a rung repeating an unconditional
+     rule is a rule that looks load-bearing and is not. What is left is the
+     half this rung still owns: the marks BESIDE settings. */
   .rin-settings__row {
     display: none;
   }
-  /* The rows are gone, so their brackets come back. The BL bracket is not
+  /* That row is gone, so its bracket comes back. The BL bracket is not
      listed because it was never suppressed. */
-  html[data-rail-instruments] .hud__corner--tl {
-    border-top: 2px solid var(--hud-rail-line);
-    border-left: 2px solid var(--hud-rail-line);
-  }
   html[data-rail-instruments] .hud__corner--br {
     border-bottom: 2px solid var(--hud-rail-line);
     border-right: 2px solid var(--hud-rail-line);

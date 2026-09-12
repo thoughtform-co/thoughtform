@@ -4360,51 +4360,19 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   }
 }
 
-/* ── NO CHAPTER ROW IN THE CORNER, AND THE BRACKET COMES BACK ────
-   Owner, 2026-09-12, reading the proposal live: the icons in the top-left
-   corner compete with the hero, and an arc reads easier without them.
-   ADR-093's own ruling for the pitch page, one surface over, in its two
-   halves.
-
-   `ArcRailInstruments` portals the chapter marks INTO `.hud__corner--tl`,
-   and `rail-instruments.css` zeroes that bracket's border because the row
-   IS the corner's mark — a bracket behind it would be two marks for one
-   corner. Take the row away and the corner has nothing in it, so the
-   border comes back with it, which is exactly what that sheet's own ≤960
-   rung already does. This is that rung, surface-scoped and at every width.
-
-   ⚠ SPECIFICITY IS THE WHOLE TRICK. `rail-instruments.css` is imported
-   AFTER `arcs.css` at the route (mirroring the landing), so its
-   `html[data-rail-instruments] .hud__corner--tl` (0,2,1) would win from
-   later in the cascade. Adding `.arc-root` makes these (0,3,1) and the
-   order stops mattering — which is why the sheet order can stay exactly
-   as ADR-072 and ADR-059 U6 left it.
-
-   ⚠ `display: none`, NEVER an unmounted component. The marks keep
-   computing their state, so every arc's roster stays exercised by
-   `arc-marks.test.ts` rather than quietly becoming dead code. Unmounting
-   would thread a prop through shared chrome for a paint decision.
-
-   ⚠ THE CLIP GOES BACK TO PRODUCTION'S, NOT AWAY. The corner is still
-   uncovered by the rising hero (ADR-031 U16 rev c); it is the SIDES that
-   return to `0`. `data-rail-instruments` opens them to -340px so the row's
-   outboard mark is not sliced, and with no row there is nothing
-   overhanging to spare.
+/* ── THE CHAPTER ROW IS OFF, AND THE RULE IS NOT HERE (ADR-098 U1) ───
+   Owner, 2026-09-12: the icons in the top-left corner compete with the
+   hero. This surface hid them first, the homepage asked next, and a rule
+   three surfaces want belongs in the sheet that owns the row — so
+   `.rin-cl--journey { display: none }` and the bracket's return live in
+   `rail-instruments.css` now, once, for every surface. Nothing arc-scoped
+   is left here to keep in step with it.
 
    ⚠ UNLIKE THE PITCH PAGE, AN ARC KEEPS ITS SECTION INDICATOR. That route
-   hides the nav-corner readout as well and is left with no indicator at
-   all, a consequence named in its own rule. Here the header is the site's
-   own (ADR-073): the readout and its drawer stay TOP-RIGHT, so the page
-   still says where you are and still reaches every section. Nothing here
-   touches `SettingsCluster` bottom-right. */
-.arc-root .rin-cl--journey {
-  display: none;
-}
-html[data-rail-instruments] .arc-root .hud__corner--tl {
-  border-top: 2px solid var(--hud-rail-line);
-  border-left: 2px solid var(--hud-rail-line);
-  clip-path: inset(max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) 0 0 0);
-}
+   hides the nav-corner readout as well and is left with none, a
+   consequence its own rule names. Here the header is the site's own
+   (ADR-073): the readout and its drawer stay TOP-RIGHT, so the page still
+   says where you are and still reaches every section. */
 
 /* ── A PROPOSAL'S DISPLAY LINE IS READ, NOT PRESENTED ────────────
    Owner, 2026-09-12: the divider's line "is too big, we need to drastically

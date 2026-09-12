@@ -214,45 +214,22 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
   }
 }
 
-/* ── 3b. No journey row on this page — the corner keeps its bracket ───
-   Owner, 2026-09-10: remove the icons in the top-left corner, only here,
-   and restore the corner as it originally was.
+/* ── 3b. No journey row — now the site's own rule, not this route's ──
+   Owner, 2026-09-10, asked for the icons in the top-left corner gone HERE;
+   on 2026-09-12 he asked for the same on the arcs and then on the
+   homepage, so the rule moved to the sheet that owns the row
+   (`rail-instruments.css`) and applies everywhere. The route-local copy is
+   deleted — rule 1 forbids sharing a rule across roots, and what happened
+   instead is that the RULING stopped being route-local.
 
-   `RailInstruments` hosts the journey marks INSIDE `.hud__corner--tl` and
-   `html[data-rail-instruments]` zeroes that bracket's border, because the
-   row IS the corner mark and a bracket behind it reads as two marks for
-   one corner (rail-instruments.css). Take the row away and the corner has
-   nothing in it, so the border comes back with it — which is precisely
-   what that sheet's own `≤960` rung does. This is that rung, route-scoped
-   and at every width.
-
-   ⚠ `display: none`, NOT an unmounted component. The marks keep computing
-   their state, so `TRINNY_JOURNEY_ORDER`'s clock stays exercised by the
-   smoke (which reads `data-mark` / `data-state`, both readable on a hidden
-   node) instead of quietly becoming dead code. Unmounting would need a
-   prop threaded through shared chrome, which is what rule 2 already
-   declined to do for the nav readout one corner over.
-
-   ⚠ THE CLIP IS RESTORED TO PRODUCTION'S, NOT DROPPED. The corner is still
-   uncovered by the rising hero (ADR-031 U16 rev c) — it is the SIDES that
-   go back to `0`: `data-rail-instruments` opens them to −340px so the
-   approach row's outboard mark is not sliced, and with no row there is
-   nothing overhanging to spare.
-
-   ⚠ CONSEQUENCE, NAMED: rule 2 hides the nav-corner readout on the grounds
-   that "the TOP-LEFT journey row does make the claim". With the row gone
-   this page has no section indicator at all — the drawer's bars are the
-   only navigation. That is the owner's call, not an oversight; restoring
-   the readout is not the fix, because on this station order it names ABOUT
-   through the corridor approach and jumps backwards on arrival. */
-.tl-root .rin-cl--journey {
-  display: none;
-}
-html[data-rail-instruments] .tl-root .hud__corner--tl {
-  border-top: 2px solid var(--hud-rail-line);
-  border-left: 2px solid var(--hud-rail-line);
-  clip-path: inset(max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) 0 0 0);
-}
+   ⚠ CONSEQUENCE, STILL NAMED AND STILL THIS ROUTE'S ALONE: rule 2 hides
+   the nav-corner readout on the grounds that "the TOP-LEFT journey row
+   does make the claim". With the row gone this page has no section
+   indicator at all — the drawer's bars are the only navigation. That is
+   the owner's call, not an oversight; restoring the readout is not the
+   fix, because on this station order it names ABOUT through the corridor
+   approach and jumps backwards on arrival. Every OTHER surface keeps its
+   readout, so this stays a fact about `/trinny-london`. */
 
 /* ── 8. The turn — the parked mark becomes the client's (ADR-095) ─────
    A TRANSPARENT station over the live corridor canvas, between the last

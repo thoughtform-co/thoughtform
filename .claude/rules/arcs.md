@@ -500,15 +500,14 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
   reverted — both lists are pinned `toEqual` by their own tests so a route
   joins or leaves by a reviewed hand, and a generator that edited those tests
   would be quieting its own guards. The red guard IS the handover.
-- ⚠ **NO CHAPTER ROW IN THE TOP-LEFT CORNER, ON ANY ARC** (ADR-098 U1, owner:
-  the icons "compete with the hero"). `.arc-root .rin-cl--journey` is
-  `display: none` and the bracket comes back, because `rail-instruments.css`
-  zeroes that border only on the grounds that the row IS the corner's mark.
-  ⚠ **Specificity, not sheet order**: that sheet is imported AFTER `arcs.css`,
-  so the restore carries `.arc-root` to reach (0,3,1). ⚠ `display: none`, never
-  an unmounted component — the roster stays exercised. ⚠ **The arcs KEEP their
-  section indicator**, unlike the pitch page: the header is the site's own and
-  the readout and drawer stay top-right.
+- ⚠ **NO CHAPTER ROW IN THE TOP-LEFT CORNER, AND THE RULE IS NOT HERE**
+  (ADR-098 U1, owner: the icons "compete with the hero"). The arcs hid it
+  first, then the homepage asked, so `.rin-cl--journey { display: none }` and
+  the bracket's return live in `rail-instruments.css` for every surface and the
+  arc-scoped copy is DELETED. ⚠ Do not re-add one here — three routes wanting
+  one rule is what moved it. ⚠ **The arcs KEEP their section indicator**,
+  unlike the pitch page: the header is the site's own (ADR-073) and the readout
+  and drawer stay top-right.
 - ⚠ **A PROPOSAL'S DISPLAY LINE IS READ, NOT PRESENTED** (ADR-098 U1). The
   interstitial's callout is `clamp(24px, 2.6vw, 40px)` at `max-width: 42ch`
   under `[data-arc-format="proposal"]`, against the deck's own

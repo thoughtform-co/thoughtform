@@ -194,6 +194,26 @@ unmounted component, so `buildArcMarks` and every arc's roster stay exercised.
 hides the nav readout too and is left with none, a consequence its rule names.
 The arcs' header is the site's own (ADR-073) and stays.
 
+**Then the owner asked for the homepage too, and the rule left this surface.**
+Three surfaces wanting the same thing is not three route rules; it is one rule
+in the sheet that owns the row. `.rin-cl--journey { display: none }` and the
+top-left bracket's return now live in `rail-instruments.css`, unconditionally,
+and the route-scoped copies in `arcs.css` and `trinny-london.css` are DELETED.
+
+⚠ **It is the ≤960 rung promoted to every width**, which is why it is two
+declarations and not a new mechanism: that rung already hid this row and
+restored this bracket on a phone, and the ruling is that a desktop should read
+the same way. The top-left clip goes back to production's `0` sides with it —
+the `-340px` opening existed only to spare the row's outboard mark, and there
+is no row to spare. ⚠ ADR-059 U6's four-corner scheme keeps its bottom-right
+half: the exit mark, the session and the theme switch are still there, and that
+corner still gives up its bracket for them.
+
+⚠ **THE ROW IS NOW DORMANT UI ON EVERY SURFACE.** Deleting `MarkRow` and its
+clusters is a separate, safe pass once this has been read live; not done here,
+because bringing the row back is one line for as long as it stays, and
+`useJourneyMarks` still drives the seat and the right rail's telemetry.
+
 **The interstitial's display line comes down on a PROPOSAL only**, from
 `clamp(38px, 5.4vw, 76px)` to `clamp(24px, 2.6vw, 40px)` — 69px to 33px at the
 reference laptop. Scoped to the format, which is what `data-arc-format` is for:

@@ -72,9 +72,14 @@ pitch page's instrument as data, ADR-052's second content-only exception);
 `scripts/new-arc.mjs` + its skeleton; `arcs.css` gains the overview bands, the
 filter, `.arc-cfg*` and the locked-switch rule.
 
-**U1, same day (owner, on the page live):** the top-left chapter row is hidden
+**U1, same day (owner, on the page live):** the top-left journey row is hidden
 on every arc with its bracket restored (ADR-093's pitch-page ruling, one
-surface over), and a PROPOSAL's interstitial line drops from
+surface over) — then the owner asked for the homepage too, so the rule left the
+route sheets entirely: it is the ≤960 rung promoted to every width, living once
+in `rail-instruments.css`, with the copies in `arcs.css` and `trinny-london.css`
+deleted. The row is dormant UI on every surface now; deleting `MarkRow` is a
+separate pass, not taken, because bringing it back is one line while it stays.
+And a PROPOSAL's interstitial line drops from
 `clamp(38px, 5.4vw, 76px)` to `clamp(24px, 2.6vw, 40px)` at 42ch — scoped to
 the format, because a deck is presented in a room and a proposal is read at
 arm's length. Measured after: the keynote's line unchanged at 53.8px, the
