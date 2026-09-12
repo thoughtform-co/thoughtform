@@ -4,6 +4,7 @@ import { ArcAnatomy } from "./ArcAnatomy";
 import { ArcBeat } from "./ArcBeat";
 import { ArcCards } from "./ArcCards";
 import { ArcClose } from "./ArcClose";
+import { ArcConfiguration } from "./ArcConfiguration";
 import { ArcDossier } from "./ArcDossier";
 import { ArcProgramBoard } from "./ArcProgramBoard";
 import { ArcIntelligence } from "./ArcIntelligence";
@@ -92,6 +93,10 @@ export function ArcSectionRenderer({
           case "films":
             return (
               <ArcStudioFilms key={section.id} section={section} index={index} motion={motion} />
+            );
+          case "configuration":
+            return (
+              <ArcConfiguration key={section.id} section={section} index={index} motion={motion} />
             );
           case "tool-index":
             return (

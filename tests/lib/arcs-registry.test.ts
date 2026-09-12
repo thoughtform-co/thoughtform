@@ -10,7 +10,10 @@ import { LOOP_FIGURES } from "@/lib/arcs/content/shared/loop-figures";
 import { LOOP_SKILL_GROUPS } from "@/lib/arcs/content/shared/loop-skills";
 import { STUDIO_AD_CARDS } from "@/lib/arcs/content/shared/loop-studio";
 import { MODE_LEGEND } from "@/lib/arcs/content/shared/loop-tools";
-import { ARCS, arcSlugs, getArc } from "@/lib/arcs/registry";
+import { CLIENTS, clientSlugs, getClient, kindOf } from "@/lib/arcs/clients";
+import { ARCS, arcSlugs, arcsOf, getArc, houseArcs } from "@/lib/arcs/registry";
+import { HERO_ROUTES } from "@/lib/theme/heroPreload";
+import { LIGHT_LOCKED_ROUTES } from "@/lib/theme/themeLock";
 import { ROLLOUT_ROWS } from "@/lib/cases/content/loop-earplugs";
 
 /**
@@ -556,6 +559,129 @@ describe("arcs registry (ADR-052)", () => {
         expect(arc.cardChip).toBeDefined();
         expect(arc.cardChip).not.toBe(arc.format);
       }
+    }
+  });
+
+  it("every engagement resolves its client, and the two slug sets are DISJOINT (ADR-098)", () => {
+    /* ⚠ ONE NAMESPACE, TWO SETS. `/arcs/[slug]` resolves a client first and
+       an arc second, so a client slug equal to an arc's would shadow a live
+       page with a listing — and it would do it silently, on a page whose
+       whole distribution is a link somebody already forwarded. */
+    const clients = clientSlugs();
+    expect(new Set(clients).size).toBe(clients.length);
+    for (const slug of clients) expect(slug).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+    const collisions = clients.filter((slug) => arcSlugs().includes(slug));
+    expect(collisions, "a client slug shadows an arc").toEqual([]);
+
+    for (const arc of ARCS) {
+      if (!arc.client) continue;
+      expect(getClient(arc.client), `${arc.slug}: unknown client ${arc.client}`).toBeDefined();
+    }
+    // Every client on the overview has something to list.
+    for (const client of CLIENTS) {
+      expect(arcsOf(client.slug).length, `${client.slug}: no engagements`).toBeGreaterThan(0);
+    }
+    // The two partitions cover the registry exactly once.
+    const grouped = CLIENTS.flatMap((c) => arcsOf(c.slug)).length + houseArcs().length;
+    expect(grouped).toBe(ARCS.length);
+  });
+
+  it("resolves a kind for every arc, and the filter can reach it (ADR-098)", () => {
+    for (const arc of ARCS) {
+      expect(["keynote", "workshop", "production"], `${arc.slug}`).toContain(kindOf(arc));
+    }
+  });
+
+  it("the configuration's picker is internally consistent (ADR-098)", () => {
+    for (const arc of ARCS) {
+      for (const section of arc.sections) {
+        if (section.kind !== "configuration") continue;
+        const at = `${arc.slug}/${section.id}`;
+        const ids = section.layer.map((row) => row.id);
+        expect(new Set(ids).size, `${at}: duplicate layer id`).toBe(ids.length);
+        expect(section.teams.length, `${at}: no teams to pick`).toBeGreaterThan(0);
+        const teamIds = section.teams.map((team) => team.id);
+        expect(new Set(teamIds).size, `${at}: duplicate team id`).toBe(teamIds.length);
+        for (const team of section.teams) {
+          expect(team.layers.length, `${at}/${team.id}: reads no layer row`).toBeGreaterThan(0);
+          for (const id of team.layers) {
+            // A team lighting a row that does not exist dims the whole
+            // layer and nothing fails — the picker just does nothing.
+            expect(ids, `${at}/${team.id}: unknown layer ${id}`).toContain(id);
+          }
+          for (const key of ["owner", "runs", "bar", "reach", "where"] as const) {
+            expect(team[key]?.length, `${at}/${team.id}: empty ${key}`).toBeGreaterThan(0);
+          }
+        }
+        expect(section.kickers?.length ?? 0, `${at}: too many kickers`).toBeLessThanOrEqual(3);
+        /* ⚠ NO DIGIT ON THE DRAWING. Picking a team is what makes the
+           transfer visible; a count would be a claim the page cannot
+           evidence, and the pitch page's own parse guard says the same. */
+        scanArc(
+          { layer: section.layer, seam: section.seam, teams: section.teams },
+          at,
+          (value, path) => {
+            // A PHASE CODE IS A NAME, not a count: `M1` designates the
+            // workstream a tile belongs to and evidences nothing. What the
+            // rule is actually for is a figure the drawing cannot support.
+            const counted = value.replace(/\bM\d\b/g, "");
+            expect(/\d/.test(counted), `${path}: a figure on the configuration`).toBe(false);
+          }
+        );
+      }
+    }
+  });
+
+  it("a proposal holds the client-facing copy law (ADR-098)", () => {
+    /* A proposal is read by the person being asked to buy it, so the deck's
+       own law applies to every string on the page: say the behaviour, never
+       the house's word for it. The fleet's vocabulary is internal and must
+       not leak onto a client's page; `—` is banned by the deck's copy law
+       and would be the one character on the surface nobody chose. */
+    const banned: readonly [RegExp, string][] = [
+      [/self-sufficient/i, "says the word instead of the behaviour"],
+      [/armada/i, "fleet vocabulary"],
+      [/callsign/i, "fleet vocabulary"],
+      [/harvest/i, "fleet vocabulary"],
+      [/the wave|wave one/i, "fleet vocabulary"],
+      [/—/, "em dash"],
+      [/\[(?!Next team)[^\]]+\]/, "an unfilled scaffold placeholder"],
+    ];
+    const offenders: string[] = [];
+    for (const arc of ARCS) {
+      if (arc.format !== "proposal") continue;
+      scanArc(arc, arc.slug, (value, path) => {
+        /* ⚠ `meta.title` IS EXEMPT, and only it. Every arc's tab title is
+           `<name> — Thoughtform`; that dash is the site's own convention
+           and predates this law, so pinning it here would ask one page to
+           spell its tab differently from the other five. The law is about
+           the copy a reader reads on the page. */
+        if (path.endsWith(".meta.title")) return;
+        for (const [pattern, what] of banned) {
+          if (pattern.test(value)) offenders.push(`${path}: ${what}`);
+        }
+      });
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("a locked arc carries its hand-written route rows (ADR-098)", () => {
+    /* Nothing derives either list, which is the whole point of them — so
+       nothing but this would say an arc had asked for a lock it never got.
+       A locked route that is missing its row renders dark on first paint
+       and flips to light after hydration. */
+    for (const arc of ARCS) {
+      if (arc.theme !== "light") continue;
+      expect(
+        [...LIGHT_LOCKED_ROUTES],
+        `${arc.slug}: theme "light" with no LIGHT_LOCKED_ROUTES row`
+      ).toContain(`/arcs/${arc.slug}`);
+    }
+    for (const arc of ARCS) {
+      if (arc.hero.plate !== "gateway") continue;
+      expect([...HERO_ROUTES], `${arc.slug}: the gateway plate with no HERO_ROUTES row`).toContain(
+        `/arcs/${arc.slug}`
+      );
     }
   });
 

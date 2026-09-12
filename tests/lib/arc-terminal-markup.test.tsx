@@ -5,6 +5,7 @@ import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { CLAUDE_WORKSHOP_ARC } from "@/lib/arcs/content/claude-workshop";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
 import { PORTFOLIO_ARC } from "@/lib/arcs/content/portfolio";
+import { SURI_PROPOSAL_ARC } from "@/lib/arcs/content/suri-proposal";
 import type { ArcSection } from "@/lib/arcs/types";
 
 /**
@@ -28,6 +29,12 @@ const ALL: readonly ArcSection[] = [
   ...CLAUDE_WORKSHOP_ARC.sections,
   ...AI_KEYNOTE_ARC.sections,
   ...PORTFOLIO_ARC.sections,
+  /* ⚠ A NEW KIND JOINS THIS ARRAY OR IT IS NEVER WALKED (ADR-098). The
+     `configuration` leaf publishes its own `data-cfg-*` channel, and the
+     first assertion below is what keeps that distinct from `data-arc-*`,
+     which is the beat grammar and the thing "the v1 pages were not
+     touched" is measured against. */
+  ...SURI_PROPOSAL_ARC.sections,
 ];
 const DOSSIERS: readonly ArcSection[] = PORTFOLIO_ARC.sections.filter((s) => s.kind === "dossier");
 

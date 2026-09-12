@@ -3,6 +3,8 @@ paths:
   - "app/(marketing)/arcs/**"
   - "components/arcs/**"
   - "lib/arcs/**"
+  - "scripts/new-arc.mjs"
+  - "scripts/new-arc/**"
 description: Client arc pages — deck pages on the HUD slice
 ---
 
@@ -22,6 +24,7 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - [ADR-077: The arcs' ink ramp](../sentinel/decisions/077-arcs-ink-ramp.md) — the colour tokens that let the light theme reach this surface
 - [ADR-079: The portfolio is a trajectory, and every beat owns a screen](../sentinel/decisions/079-portfolio-trajectory-and-the-beat.md) — **the live cut**: `rollout` absorbed into the board, `tool-index`, Vesper first, one beat per viewport
 - ⚠ [ADR-090: The dossier is one housing](../sentinel/decisions/090-dossier-is-one-housing.md) — **PROPOSED (2026-09-05), shipped and guarded, pending the owner's live read.** The four dossier beats become one machined housing (ADR-089's grammar at page scale): TR+BL chamfer on the plate rung, `--arc-plate` ground, the designation seated in a header band fused to the top edge, a column split the record's rules terminate on, `--arc-seam` .28 dividing regions against `--arc-rule` .12 within one, and the console demoted to a square CELL inside it (ADR-065 rule 4). ⚠ **The record overhung the console by 8.6–88.7px, a different amount per tool** — `align-items: start` aligned the tops and nothing aligned the bottoms. ⚠ **The reveal observer's `-10%` dead band is a real budget constraint** — see §The dossier housing below before touching `--arc-dossier-h`
+- ⚠ [ADR-098: Clients and the proposal on /arcs](../sentinel/decisions/098-arcs-clients-and-the-proposal.md) — **PROPOSED (2026-09-12), built and guarded, pending the owner's live read.** `client` / `kind` / `theme` on an `ArcDef`, the client page inside the existing route, the overview's groups and filter, the `configuration` kind, and `scripts/new-arc.mjs`. See §The client model below
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -407,6 +410,95 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
   is what gives (the BEFORE paragraph goes sr-only under 760h). ⚠ A bay
   change is a TWO-surface change: run `services-ring-smoke` AND
   `arc-portfolio-smoke`; both read `tests/visual/helpers/toolBay.ts`.
+
+## The client model, the filter and the proposal (ADR-098)
+
+- ⚠ **TWO SLUG SETS, ONE NAMESPACE.** `/arcs/[slug]` resolves a CLIENT first
+  (`getClient` → `ArcClientPage`) and an arc second. A client slug equal to an
+  arc's would shadow a live page with a listing, silently, on a page whose
+  whole distribution is a link somebody already forwarded — `arcs-registry`
+  pins the sets disjoint, and `generateStaticParams` is their union.
+- ⚠ **NO URL MOVED, AND THAT WAS THE POINT.** Engagements stay FLAT
+  (`/arcs/suri-proposal`, not `/arcs/suri/proposal`). Nesting reads better
+  and costs a second route file repeating the seven-sheet cascade order, a
+  308 chain on top of the one already in `next.config.mjs`, and every
+  hardcoded slug in two smokes, the capture script and `HERO_ROUTES` moved at
+  once. The hierarchy is expressed on the OVERVIEW, which is where a reader
+  meets it.
+- **`kind` is DERIVED where it can be** (`kindOf`, `lib/arcs/clients.ts`):
+  a workshop is a workshop, a portfolio and a proposal are productions. None
+  of the five pre-existing content modules was edited to author a taxonomy it
+  already implied, and the `-v2` cuts inherit it through the spread that
+  shares their v1's sections. ⚠ **The chip stays `cardChip ?? format`** — two
+  productions would print one word twice, and `arc-terminal-smoke` asserts the
+  chips distinguish the cards.
+- ⚠ **`format` IS THE LAYOUT FAMILY, `kind` IS THE TAXONOMY.** The portfolio
+  and a proposal are both productions and share ADR-079's one-beat-per-screen
+  budget; a workshop is neither. `data-arc-format` exists for exactly this,
+  and collapsing the two fields would retune a twenty-section deck.
+- ⚠ **NO `date` FIELD.** Registry order is the order, newest first within a
+  client. A field that only ever feeds a sort is a second place for one fact
+  to be wrong.
+- **The filter writes ONE attribute** (`data-arc-kind` on `.arc-root`) and the
+  narrowing is CSS over SERVER-RENDERED data: every card carries `data-kind`,
+  every band the set it holds. ⚠ **No `:has()`** — the band already knows what
+  is in it. ⚠ **No attribute means everything is shown**, so the page is whole
+  without JS and the resting state is authored. ⚠ **It is site chrome, not a
+  ported deck control**, so ADR-052's flattening doctrine does not reach it.
+- ⚠ **THE CONTROL LIVES IN THE HERO BAND, NOT IN THE PEEK.** `.arc-index-hero`
+  is 86svh on purpose so the grid's edge invites the scroll — but the wordmark
+  is FIXED at the viewport's bottom-left, so anything full-width in that band
+  lands on it (measured: the row at 648–685 against the lockup at 653–684).
+- **The `configuration` kind** = the pitch page's instrument (ADR-094 U7) as
+  data: `{ head, owner, layer[], seam, teams[], next?, kickers? }`. It is
+  ADR-052's **second enumerated exception** to "new arcs are content-only",
+  after ADR-072's dossier — one leaf, one delegated listener on its own root.
+  ⚠ **The resting state is AUTHORED** (first tile selected, its rows lit), so
+  the drawing reads whole in the static render, with no JS and under reduced
+  motion. ⚠ **Its attributes are `data-cfg-*`, NEVER `data-arc-*`** —
+  `arc-terminal-markup.test.tsx` asserts a reveal page emits none of the
+  latter, and that assertion is what makes "the v1 pages were not touched" a
+  property of the code. ⚠ **The grammar is COPIED from `trinny-london.css`,
+  never shared** (that route's own rule: one selector reaching both roots is a
+  shared sheet by another name), and re-derived on the ADR-077 ramp. ⚠ **The
+  picked tile is FILLED** (ADR-089 U4), where the pitch page's is outlined —
+  that ruling landed after the pitch shipped and the newer house law wins.
+- ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
+  phases as a rail; on this surface a drawing plots something that HAPPENED,
+  and a plan is an argument. Three phases are three `list-groups` columns,
+  which is the deck's own plan table.
+- ⚠ **`.arc-cards` COLLAPSES TO TWO AT ≤1280**, which is the reference laptop.
+  Three cards land 2+1 with a hole there; four land 2×2. The pricing beat is
+  four (M1 · M2 · M3 · Total) for that reason, and the total stopped being a
+  footnote to its own table.
+- ⚠ **A TIPS TAG IS A CHIP, NOT A CLAUSE.** `.arc-tips__tag` is `nowrap` in a
+  120–160px column, so a tag written as a sentence overruns its column and
+  prints THROUGH the body beside it. Caught on the first capture; the clause
+  belongs in the body.
+- **A LOCKED ARC IS TWO HALVES.** `theme: "light"` mounts `ThemeLock` through
+  `ArcShell` and the root's own `data-theme` follows it; the route also earns
+  a `LIGHT_LOCKED_ROUTES` row BY HAND, and `arcs.css` hides the switch
+  (`html[data-theme-lock] .rin-settings__ctl .theme-toggle`) — a lock without
+  that rule leaves a control that visibly does nothing. The registry test
+  fails a locked arc with no row, and a gateway-plate arc with no
+  `HERO_ROUTES` row.
+- **A proposal is OUTSIDE `ENVELOPE_ARCS`** and deliberately so: that envelope
+  is for a page forwarded to strangers, and a proposal names its fee and its
+  addressee. What it does hold is the client-facing copy law — no fleet
+  vocabulary, no "self-sufficient", no em dash (`meta.title` exempt: every
+  arc's tab title carries the site's own dash) — walked over every
+  `format: "proposal"` arc.
+- **A new client page is one command**: `node scripts/new-arc.mjs --client
+<slug> --name "<Name>" [--engagement proposal] [--dry-run]`. Three fail-loud
+  needle edits and one module. ⚠ **The skeleton ships FINISHED copy, not
+  placeholders** — Armada's day-one command runs this unattended, and a
+  registered arc full of `[brackets]` would leave `npm run verify` failing in
+  a repo nobody had opened. The registry test walks for them. It never
+  commits, never overwrites, and prints the two hand-written rows it cannot
+  add for you.
+- **Capturing any arc:** `node scripts/capture-arc-portfolio.mjs --slug
+<slug> --vp 1280x720`. The sweep is the reveal grammar's, which every
+  flowing arc shares. ⚠ A light-locked arc ignores `--theme`.
 
 ## The dossier housing (ADR-090)
 

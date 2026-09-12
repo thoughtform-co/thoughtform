@@ -52,6 +52,7 @@ yarn-error.log*
 .cursor/pda-shots/
 .cursor/substrate-r3-shots/
 .cursor/arc-portfolio-shots/
+.cursor/arc-shots-*/
 .cursor/morph-shots/
 .cursor/trinny-shots/
 .cursor/signal-shots/

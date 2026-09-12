@@ -74,6 +74,7 @@ describe("hero preload", () => {
       "/claude-workshop",
       "/trinny-london",
       "/arcs/loop-earplugs",
+      "/arcs/suri-proposal",
     ]);
     for (const route of HERO_ROUTES) expect(script).toContain(`"${route}"`);
   });

@@ -364,6 +364,66 @@ export type ArcSection = ArcSectionBase &
         kind: "tool-index";
         head: ArcHead;
       }
+    | {
+        /**
+         * THE CONFIGURATION (ADR-098): what the client's team ends up
+         * owning, drawn as one instrument with a picker — the pitch
+         * page's own drawing (ADR-094 U7), as data.
+         *
+         * Three bands on one plate. The LAYER they own, whose rows dim
+         * unless the picked team reads them; the SEAM, where adoption
+         * writes the layer and automation runs on it; the WORK, the teams
+         * as tiles over the picked team's configuration in the five
+         * questions the registry asks.
+         *
+         * ⚠ THE RESTING STATE IS THE FIRST TEAM, AUTHORED IN THE MARKUP.
+         * The picker adds the pick and nothing else, so the drawing reads
+         * whole with no JS, under reduced motion, and in a static render.
+         *
+         * ⚠ NO DIGIT BELONGS IN IT. Picking a team is what makes the
+         * transfer visible — the same layer, lit differently — and a
+         * count would be a claim the page cannot evidence.
+         */
+        kind: "configuration";
+        head: ArcHead;
+        /** The layer band's right-hand kicker, e.g. "Owned by Suri". */
+        owner: string;
+        /** The layer's rows, top to bottom. `id` is what a team's
+         *  `layers` names; the registry test pins every reference. */
+        layer: readonly {
+          id: string;
+          /** Mono tag, e.g. "Rules". */
+          tag: string;
+          /** What that row holds, lower case, no full stop. */
+          name: string;
+        }[];
+        /** The two arrows' notes, one sentence each. */
+        seam: { adoption: string; automation: string };
+        /** The teams on the layer. The FIRST is the resting pick. */
+        teams: readonly {
+          id: string;
+          /** Mono tile name, e.g. "Imagery". */
+          name: string;
+          /** What that team does, under the name. */
+          work: string;
+          /** Layer row ids this team reads. */
+          layers: readonly string[];
+          /** The five questions, in the order the readout letters them. */
+          owner: string;
+          runs: string;
+          bar: string;
+          reach: string;
+          where: string;
+        }[];
+        /**
+         * The ghost tile — the workflow after these, named as a bracket
+         * because it is not scoped yet. It is the one place on the
+         * drawing where a bracket is the honest register.
+         */
+        next?: { name: string; work: string };
+        /** The foot: three short mono lines at most. */
+        kickers?: readonly string[];
+      }
   );
 
 export type ArcSectionKind = ArcSection["kind"];
@@ -371,8 +431,28 @@ export type ArcSectionKind = ArcSection["kind"];
 /** The section narrowed to one kind — component prop types. */
 export type ArcSectionOf<K extends ArcSectionKind> = Extract<ArcSection, { kind: K }>;
 
-/** Overview chip text. `portfolio` is ADR-072's one arc so far. */
-export type ArcFormat = "workshop" | "keynote" | "portfolio";
+/**
+ * Overview chip text, and the LAYOUT family a page belongs to.
+ *
+ * `portfolio` is ADR-072's one arc so far. `proposal` (ADR-098) joins it on
+ * ADR-079's one-beat-per-screen budget: both are read one screen at a time
+ * by a single reader, where a workshop runs past twenty sections and would
+ * triple in height under the same rule.
+ *
+ * ⚠ NOT THE TAXONOMY — that is `ArcKind`. The portfolio and a proposal are
+ * both PRODUCTIONS and are different layouts, which is exactly the split
+ * `data-arc-format` exists for.
+ */
+export type ArcFormat = "workshop" | "keynote" | "portfolio" | "proposal";
+
+/**
+ * What kind of engagement this is (ADR-098) — the overview's taxonomy and
+ * the one thing its filter reads.
+ *
+ * Usually DERIVED from the format (`kindOf`, `lib/arcs/clients.ts`), so an
+ * arc authors it only when the two genuinely differ.
+ */
+export type ArcKind = "keynote" | "workshop" | "production";
 
 /**
  * Section choreography system (ADR-057). Absent or "reveal" is the
@@ -384,10 +464,33 @@ export type ArcFormat = "workshop" | "keynote" | "portfolio";
 export type ArcMotion = "reveal" | "terminal";
 
 export interface ArcDef {
-  /** Route segment — kebab-case, unique across the registry. */
+  /** Route segment — kebab-case, unique across the registry, and never
+   *  equal to a client slug (they share `/arcs/[slug]`). */
   slug: string;
-  /** Overview card chip text (WORKSHOP / KEYNOTE). */
+  /** Overview card chip text (WORKSHOP / KEYNOTE) and the layout family. */
   format: ArcFormat;
+  /**
+   * The client this engagement belongs to — a `ClientDef.slug`
+   * (`lib/arcs/clients.ts`, ADR-098). ABSENT ⇒ a Thoughtform format, which
+   * is what the keynote and the workshop are: a shape the practice sells,
+   * not a piece of work done for one company.
+   */
+  client?: string;
+  /**
+   * The overview's taxonomy (ADR-098). Absent ⇒ derived from the format by
+   * `kindOf`, which is right for every arc registered so far. Author it
+   * only where the format and the kind genuinely disagree.
+   */
+  kind?: ArcKind;
+  /**
+   * Lock the page to one theme (ADR-093's mechanism, ADR-098's use). A
+   * proposal is composed on paper and has no dark reading.
+   *
+   * ⚠ IT IS HALF A DECISION. The route also earns a row in
+   * `LIGHT_LOCKED_ROUTES` BY HAND — nothing derives that list — and the
+   * registry test fails a locked arc that has none.
+   */
+  theme?: "light";
   /** Choreography system — see ArcMotion. Default "reveal". */
   motion?: ArcMotion;
   /**

@@ -54,7 +54,49 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-09-12 (latest) — The proof card is a folder (ADR-097)
+### 2026-09-12 (latest) — Clients and the proposal on /arcs (ADR-098)
+
+**Trigger:** owner wants a client proposal built on the site rather than as a
+local HTML deck ("that's where our brand lives"), a subpage per client listing
+its engagements, and `/arcs` restructured so keynotes, workshops and
+productions read apart and cluster by client. The Suri deck and the
+`/trinny-london` pitch are the two shapes it had to absorb.
+
+**What changed:** `lib/arcs/clients.ts` (new — `ClientDef`, `CLIENTS`,
+`kindOf`); `ArcDef` gains `client` / `kind` / `theme` and `ArcFormat` gains
+`proposal`; `/arcs/[slug]` resolves a client first and an arc second (one
+route, no new file, NO URL moved); `ArcClientGroups` + `ArcKindFilter` +
+`ArcClientPage`; the `configuration` section kind (`ArcConfiguration`, the
+pitch page's instrument as data, ADR-052's second content-only exception);
+`lib/arcs/content/suri-proposal.ts`; the light lock reaching an arc;
+`scripts/new-arc.mjs` + its skeleton; `arcs.css` gains the overview bands, the
+filter, `.arc-cfg*` and the locked-switch rule.
+
+**Cycle B** — ADR-098 opened Proposed, `.claude/rules/arcs.md` +
+`.cursor/rules/arcs.mdc` gained §The client model, LANGUAGE.md gained **Client
+page** and **Engagement**.
+
+**Cycle A rows that triggered:**
+
+- _Did a guard pass while the thing was wrong?_ — **no, three guards caught
+  real defects on their first run**: the portfolio had no `client` (the band
+  would have been empty), a copied `ariaLabel` carried an em dash onto a
+  client's page, and the new digit rule was too blunt for a phase code. Two
+  more came from LOOKING at the capture: a tips tag written as a clause
+  printed through its own body, and three fee cards landed 2+1 at the 1280
+  rung where `.arc-cards` collapses to two.
+- _Did a hand-written number go stale?_ — **yes.** `arc-terminal-smoke`
+  pinned the overview at five cards; the sixth arc turned a true statement
+  about the grid into a failure about a number. It derives from `ARCS.length`
+  now.
+- _Was CI already red?_ — **yes, and not from this work.** The lint ratchet
+  is 337 and a clean tree at HEAD measured 338: `scripts/_serve-docs-design.tmp.mjs`
+  landed in 38df7010 with an unused catch binding. Fixed at the line rather
+  than by raising the cap.
+
+---
+
+### 2026-09-12 — The proof card is a folder (ADR-097)
 
 **Trigger:** owner read the promoted proof stack (ADR-096) and kept the IA but
 not the look — the cards "feel a bit out of place": make them digital folders,

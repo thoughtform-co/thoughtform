@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { ArcClientPage } from "@/components/arcs/ArcClientPage";
 import { ArcHero } from "@/components/arcs/ArcHero";
 import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { ArcShell } from "@/components/arcs/ArcShell";
-import { arcSlugs, getArc } from "@/lib/arcs/registry";
+import { clientSlugs, getClient } from "@/lib/arcs/clients";
+import { arcSlugs, arcsOf, getArc } from "@/lib/arcs/registry";
 import { sliceV7Sections } from "@/lib/v7-parse";
 
 import "@/components/landing/v7/landing.css";
@@ -31,16 +33,29 @@ import "@/components/landing/v7/theme.css";
 import "@/components/landing/v7/rail-instruments/rail-instruments.css";
 
 /**
- * /arcs/[slug] — one client arc (ADR-052). Statically generated from
- * the registry; unknown slugs 404 (`dynamicParams = false`). Unlisted:
- * robots noindex on every arc. The detail shell writes `--hero-lift`
- * from scroll so the HUD rails clip-uncover with the hero curtain,
- * exactly like the landing.
+ * /arcs/[slug] — one client arc (ADR-052), or one CLIENT (ADR-098).
+ *
+ * Statically generated; unknown slugs 404 (`dynamicParams = false`).
+ * Unlisted: robots noindex on both shapes. The detail shell writes
+ * `--hero-lift` from scroll so the HUD rails clip-uncover with the hero
+ * curtain, exactly like the landing.
+ *
+ * ⚠ TWO SLUG SETS, ONE NAMESPACE, AND THE CLIENT RESOLVES FIRST. A client
+ * page is a listing of that client's engagements; an arc is one of them.
+ * `tests/lib/arcs-registry.test.ts` pins the sets disjoint, because a
+ * collision here would shadow a live page — silently, and only for the
+ * one reader holding the link to it.
+ *
+ * ⚠ THE ENGAGEMENTS STAY FLAT (`/arcs/<slug>`, not `/arcs/<client>/<slug>`).
+ * An arc is an unlisted page whose whole distribution is a link somebody
+ * forwarded, so the links in the wild are in inboxes: the cheapest way to
+ * keep them working is not to move the page. The hierarchy is expressed on
+ * the overview, which is where a reader meets it.
  */
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return arcSlugs().map((slug) => ({ slug }));
+  return [...arcSlugs(), ...clientSlugs()].map((slug) => ({ slug }));
 }
 
 interface ArcRouteParams {
@@ -50,6 +65,14 @@ interface ArcRouteParams {
 
 export async function generateMetadata({ params }: ArcRouteParams): Promise<Metadata> {
   const { slug } = await params;
+  const client = getClient(slug);
+  if (client) {
+    return {
+      title: `${client.name} — Thoughtform`,
+      description: client.lede,
+      robots: { index: false, follow: false },
+    };
+  }
   const arc = getArc(slug);
   if (!arc) return { robots: { index: false, follow: false } };
   return {
@@ -61,9 +84,20 @@ export async function generateMetadata({ params }: ArcRouteParams): Promise<Meta
 
 export default async function ArcPage({ params }: ArcRouteParams) {
   const { slug } = await params;
+  const slice = sliceV7Sections([]);
+  const client = getClient(slug);
+  if (client) {
+    return (
+      <ArcClientPage
+        client={client}
+        arcs={arcsOf(client.slug)}
+        hudHtml={slice.hudHtml}
+        bodyClass={slice.bodyClass}
+      />
+    );
+  }
   const arc = getArc(slug);
   if (!arc) notFound();
-  const slice = sliceV7Sections([]);
   const menu = arc.sections
     .filter((section) => section.menuLabel)
     .map((section) => ({
@@ -94,6 +128,7 @@ export default async function ArcPage({ params }: ArcRouteParams) {
         gatewayPlate={gatewayPlate}
         curtain={arc.hero.curtain ?? false}
         format={arc.format}
+        lock={arc.theme}
       >
         <ArcHero hero={arc.hero} />
         <ArcSectionRenderer sections={arc.sections} motion={motion} />

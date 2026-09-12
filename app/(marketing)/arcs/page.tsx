@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
-import { ArcCardGrid } from "@/components/arcs/ArcCardGrid";
+import { ArcClientGroups } from "@/components/arcs/ArcClientGroups";
+import { ArcKindFilter } from "@/components/arcs/ArcKindFilter";
 import { ArcShell } from "@/components/arcs/ArcShell";
-import { ARCS } from "@/lib/arcs/registry";
 import { sliceV7Sections } from "@/lib/v7-parse";
 
 import "@/components/landing/v7/landing.css";
@@ -43,11 +43,20 @@ export default function ArcsPage() {
           <p className="arc-cue arc-reveal" aria-hidden="true">
             The arcs
           </p>
+          {/* ⚠ THE CONTROL LIVES IN THE HEAD, NOT IN THE PEEK (ADR-098).
+              The hero is 86svh on purpose, so the grid's top edge shows
+              above the fold and invites the scroll — but the wordmark is
+              FIXED at the viewport's bottom-left, so anything full-width
+              in that band lands on it (measured: the row at 648-685
+              against the lockup at 653-684). A page-level control belongs
+              with the page's own head anyway. Last child, so the four
+              reveal delays above are untouched. */}
+          <ArcKindFilter />
         </div>
       </section>
       <section className="arc-section arc-index-grid" aria-label="All arcs">
         <div className="arc-band">
-          <ArcCardGrid arcs={ARCS} />
+          <ArcClientGroups />
         </div>
       </section>
     </ArcShell>

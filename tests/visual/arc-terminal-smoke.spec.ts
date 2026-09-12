@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { ARCS } from "@/lib/arcs/registry";
+
 import { beatState, driveTo, parkBeat, prepare } from "./helpers/arcTerminal";
 
 /**
@@ -334,8 +336,12 @@ test.describe("arc terminal motion (ADR-057)", () => {
   }) => {
     await prepare(page, "/arcs");
     const cards = page.locator(".arc-card");
-    // Two v1 decks, their two terminal cuts, and the portfolio (ADR-072).
-    await expect(cards).toHaveCount(5);
+    /* ⚠ DERIVED FROM THE REGISTRY, NOT COUNTED BY HAND (ADR-098). This was
+       `5` — two v1 decks, their two terminal cuts and the portfolio — and
+       the first arc registered after it turned a true statement about the
+       grid into a failure about a number. The invariant is "every arc has
+       a card", and that is what this now says. */
+    await expect(cards).toHaveCount(ARCS.length);
     const chips = await page.locator(".arc-card__chip").allTextContents();
     expect(new Set(chips).size).toBe(chips.length);
     await expect(page.locator('.arc-card[href="/arcs/claude-workshop-v2"]')).toHaveCount(1);

@@ -6,6 +6,7 @@ import type { CSSProperties, ReactNode } from "react";
 import type { ArcMotion } from "@/lib/arcs/types";
 
 import { HeroThemeGlitch } from "@/components/landing/v7/HeroThemeGlitch";
+import { ThemeLock } from "@/components/landing/v7/ThemeLock";
 import { LightModeToggle } from "@/components/landing/v7/LightModeToggle";
 import { useHeroBoot } from "@/components/landing/v7/hooks/useHeroBoot";
 import { RAIL_INSTRUMENTS } from "@/components/landing/v7/rail-instruments/flags";
@@ -51,6 +52,18 @@ interface ArcShellProps {
    * carry this: the workshop v1 and the portfolio are both reveal pages.
    */
   format?: string;
+  /**
+   * `ArcDef.theme` (ADR-098) — a page composed in one theme and held
+   * there. It mounts `ThemeLock`, which is ADR-093's own leaf: the
+   * pre-paint bootstrap already stamped both attributes on a full load,
+   * so this exists for a `next/link` entry (which runs no document
+   * script) and for handing the visitor their theme back on the way out.
+   *
+   * ⚠ IT IS HALF THE DECISION. The route also earns a row in
+   * `LIGHT_LOCKED_ROUTES` by hand, and `arcs.css` hides the switch — a
+   * lock without that rule leaves a control that visibly does nothing.
+   */
+  lock?: "light";
   children: ReactNode;
 }
 
@@ -81,6 +94,7 @@ export function ArcShell({
   gatewayPlate = false,
   curtain = false,
   format,
+  lock,
   children,
 }: ArcShellProps) {
   const rootRef = useRef<HTMLElement>(null);
@@ -135,7 +149,12 @@ export function ArcShell({
       ref={rootRef}
       className={`arc-root arc-root--${variant} ${bodyClass}`}
       data-arc-format={format}
-      data-theme="dark"
+      /* ⚠ THE ROOT'S OWN THEME FOLLOWS THE LOCK (ADR-098). No selector in
+         this repo reads `[data-theme="dark"]` — ADR-058 forbids authoring
+         one — so this attribute paints nothing either way; what it does is
+         answer "what theme is this subtree" to anything that asks, and on
+         a light-locked page the honest answer is not "dark". */
+      data-theme={lock === "light" ? "light" : "dark"}
       data-motion={motion === "terminal" ? "terminal" : undefined}
       /* THE CURTAIN, ON THE FLOWING PATH (ADR-076). ADR-075's seam is
          CSS-gated on `[data-motion="terminal"]`, because that was the only
@@ -191,6 +210,13 @@ export function ArcShell({
       {THEME_TOGGLE && gatewayPlate && variant === "detail" ? (
         <HeroThemeGlitch containerRef={rootRef} />
       ) : null}
+      {/* The lock (ADR-098), a leaf by the same law as the two above: it
+          owns no state here and renders nothing. ⚠ It must come AFTER
+          `HeroThemeGlitch` in the tree for the reason its own docstring
+          gives — its `useLayoutEffect` lands before that component's
+          passive subscribe either way, so the glitch captures light and
+          never warms both hero plates on a page that cannot toggle. */}
+      {lock === "light" ? <ThemeLock /> : null}
       {children}
     </main>
   );

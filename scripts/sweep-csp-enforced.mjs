@@ -12,10 +12,9 @@
  */
 import { chromium } from "playwright";
 
-const base =
-  process.argv.includes("--base")
-    ? process.argv[process.argv.indexOf("--base") + 1]
-    : "http://localhost:3113";
+const base = process.argv.includes("--base")
+  ? process.argv[process.argv.indexOf("--base") + 1]
+  : "http://localhost:3113";
 
 const ROUTES = [
   "/",
@@ -24,6 +23,11 @@ const ROUTES = [
   "/arcs",
   "/arcs/loop-earplugs",
   "/arcs/ai-keynote",
+  /* The proposal (ADR-098): a new section kind with its own client leaf,
+     and the one arc that is light-LOCKED, so it is the route where a
+     policy violation would show up in a theme nobody could toggle out of. */
+  "/arcs/suri-proposal",
+  "/arcs/suri",
 ];
 const THEMES = ["dark", "light"];
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { kindOf } from "@/lib/arcs/clients";
 import type { ArcDef } from "@/lib/arcs/types";
 
 /**
@@ -16,7 +17,15 @@ export function ArcCard({ arc }: { arc: ArcDef }) {
   // the chip is the only thing distinguishing them at a glance.
   const chip = arc.cardChip ?? arc.format;
   return (
-    <Link href={`/arcs/${arc.slug}`} className="arc-card" aria-label={`${chip}: ${arc.cardTitle}`}>
+    <Link
+      href={`/arcs/${arc.slug}`}
+      className="arc-card"
+      /* The overview's filter reads this (ADR-098). Server-rendered, so
+         the narrowing is CSS over data rather than a list built in the
+         browser, and a reader without JS gets the whole grid. */
+      data-kind={kindOf(arc)}
+      aria-label={`${chip}: ${arc.cardTitle}`}
+    >
       <span className="arc-card__sh" aria-hidden="true">
         <span className="arc-card__bd">
           {/* eslint-disable-next-line @next/next/no-img-element */}

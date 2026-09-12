@@ -60,6 +60,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   films: "REEL",
   program: "CHART",
   "tool-index": "INDEX",
+  configuration: "SETUP",
 };
 
 /**

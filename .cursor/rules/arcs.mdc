@@ -4,6 +4,8 @@ globs:
   - "app/(marketing)/arcs/**"
   - "components/arcs/**"
   - "lib/arcs/**"
+  - "scripts/new-arc.mjs"
+  - "scripts/new-arc/**"
 alwaysApply: false
 ---
 
@@ -14,7 +16,25 @@ that file; it is the canonical text. Read first: ADR-052 (the deck
 chassis), ADR-057 (terminal motion), ADR-072 (the portfolio arc, the
 `dossier` section kind, the shared evidence, the envelope on arcs), ADR-073
 (the site's header on every arc; the left reel deleted), ADR-090 (the
-dossier is one housing — proposed).
+dossier is one housing — proposed), ADR-098 (clients, the overview's
+filter, the `configuration` kind, the scaffold — proposed).
+
+⚠ ADR-098: an `ArcDef` gains `client` / `kind` / `theme`, and `/arcs/<client>`
+lists that client's engagements INSIDE the existing `[slug]` route — the two
+slug sets share a namespace and are pinned disjoint. NO URL MOVED: engagements
+stay flat, because an arc's whole distribution is a link somebody forwarded.
+`kind` is DERIVED from `format` where it can be, so no pre-existing content
+module was edited; `format` stays the LAYOUT family (a portfolio and a
+proposal are both productions and lay out alike). The overview groups by
+client and filters by kind, writing ONE attribute with the narrowing in CSS
+over server-rendered `data-kind` / `data-kinds` — no `:has()`, and no
+attribute means everything is shown. The `configuration` kind is ADR-052's
+SECOND exception to "content-only" after the dossier: one client leaf, one
+delegated listener, the resting state authored, `data-cfg-*` never
+`data-arc-*`, and the pitch page's grammar COPIED onto the ADR-077 ramp
+rather than shared. A `theme: "light"` arc is two halves — the mount and a
+hand-written `LIGHT_LOCKED_ROUTES` row. `scripts/new-arc.mjs` scaffolds a
+client page in one command and ships finished copy, never placeholders.
 
 ⚠ ADR-090: the four dossier beats are one machined housing (ADR-089's
 grammar at page scale) with the console as a square CELL inside it, all

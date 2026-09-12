@@ -58,6 +58,10 @@ import { MODE_LEGEND } from "./shared/loop-tools";
  */
 export const PORTFOLIO_ARC: ArcDef = {
   slug: "loop-earplugs",
+  /* The engagement this page IS (ADR-098). Nothing else about the arc
+     moves: the slug, the sections and the URL are byte-identical, and a
+     link already forwarded still lands here. */
+  client: "loop",
   format: "portfolio",
   /* ⚠ NO `motion` — this page FLOWS (ADR-076, owner 2026-08-24). The
      terminal grammar pins every section and resolves its masthead with a

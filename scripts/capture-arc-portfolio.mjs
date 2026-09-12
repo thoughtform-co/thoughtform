@@ -19,6 +19,12 @@
  *   node scripts/capture-arc-portfolio.mjs --vp 1280x720 --theme light
  *   node scripts/capture-arc-portfolio.mjs --only overview,studio
  *   node scripts/capture-arc-portfolio.mjs --holo --only overview
+ *   node scripts/capture-arc-portfolio.mjs --slug suri-proposal --vp 1280x720
+ *
+ * ⚠ `--slug` SHOOTS ANY ARC (ADR-098). The sweep is the reveal grammar's,
+ * which every flowing arc shares, so the one thing that was portfolio-
+ * specific here was the URL. A light-LOCKED arc ignores `--theme`: the
+ * route holds itself in light, which is the point of the lock.
  */
 import { chromium } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
@@ -30,11 +36,19 @@ const arg = (flag, fallback) => {
 };
 
 const BASE = arg("--base", "http://localhost:3003");
+const SLUG = arg("--slug", "loop-earplugs");
 const THEME = arg("--theme", "dark");
 const ONLY = arg("--only", "");
 /* ⚠ NOT under `public/` — that ships. The repo's throwaway shoots live
    under `.cursor/`, which is gitignored (the pda/isl/substrate precedent). */
-const OUT = arg("--out", path.join(".cursor", "arc-portfolio-shots"));
+/* ⚠ THE PORTFOLIO KEEPS ITS DOCUMENTED PATH. `.gitignore` names each shoot
+   directory one by one, and `.claude/rules/arcs.md` names this one; a
+   default that quietly moved would orphan both. Another arc gets its own
+   directory, covered by the `arc-shots-*` pattern beside it. */
+const OUT = arg(
+  "--out",
+  path.join(".cursor", SLUG === "loop-earplugs" ? "arc-portfolio-shots" : `arc-shots-${SLUG}`)
+);
 const [W, H] = arg("--vp", "1440x800")
   .split("x")
   .map((n) => Number(n));
@@ -60,7 +74,7 @@ const run = async () => {
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
 
-  const url = `${BASE}/arcs/loop-earplugs${THEME === "light" ? "?theme=light" : ""}`;
+  const url = `${BASE}/arcs/${SLUG}${THEME === "light" ? "?theme=light" : ""}`;
   await page.goto(url, { waitUntil: "networkidle" });
   // The reveal drive is stepped; a smooth root would land every scroll short.
   await page.addStyleTag({ content: "html{scroll-behavior:auto!important}" });
@@ -72,7 +86,11 @@ const run = async () => {
   // first intersect, so a beat taller than the viewport never reveals its
   // own foot if you jump straight to it (the smoke's `restAt` does the
   // same thing for the same reason).
-  for (let y = 0; y < (await page.evaluate(() => document.body.scrollHeight)); y += Math.round(H * 0.6)) {
+  for (
+    let y = 0;
+    y < (await page.evaluate(() => document.body.scrollHeight));
+    y += Math.round(H * 0.6)
+  ) {
     await page.evaluate((to) => window.scrollTo(0, to), y);
     await page.waitForTimeout(90);
   }
@@ -101,7 +119,10 @@ const run = async () => {
       await page.waitForTimeout(2900);
     }
 
-    const file = path.join(OUT, `${String(ids.indexOf(id) + 1).padStart(2, "0")}-${id}-${THEME}-${W}x${H}.png`);
+    const file = path.join(
+      OUT,
+      `${String(ids.indexOf(id) + 1).padStart(2, "0")}-${id}-${THEME}-${W}x${H}.png`
+    );
     await page.screenshot({ path: file });
     shots.push(file);
   }

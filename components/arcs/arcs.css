@@ -3640,19 +3640,22 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
    a 720px beat, so a dossier's record column (583px there) pushed the
    section to 786 and crowded the beat below. The fix is the budget, not
    a second min-height. */
-.arc-root[data-arc-format="portfolio"] {
+.arc-root[data-arc-format="portfolio"],
+.arc-root[data-arc-format="proposal"] {
   --arc-sec-pad: clamp(40px, 6vh, 104px);
 }
 /* A hairline where one beat ends and the next begins — with the beats
    centred in their own screens, the seam is what tells a reader the
    change of subject was intended. */
-.arc-root[data-arc-format="portfolio"] .arc-sec + .arc-sec {
+.arc-root[data-arc-format="portfolio"] .arc-sec + .arc-sec,
+.arc-root[data-arc-format="proposal"] .arc-sec + .arc-sec {
   border-top: 1px solid var(--arc-edge);
 }
 @media (max-width: 960px), (prefers-reduced-motion: reduce) {
   /* Below the tier the beats stack and read as a document: a phone
      viewport cannot hold a console beat, and forcing one crops it. */
-  .arc-root[data-arc-format="portfolio"] .arc-sec {
+  .arc-root[data-arc-format="portfolio"] .arc-sec,
+  .arc-root[data-arc-format="proposal"] .arc-sec {
     min-height: 0;
   }
 }
@@ -3795,6 +3798,582 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
 .arc-films .fl-con__console {
   opacity: 1;
   transition: none;
+}
+
+/* ── THE OVERVIEW: GROUPED BY CLIENT, FILTERED BY KIND (ADR-098) ──
+   The grid was one flat auto-fit row of every registered arc, which
+   answered "what exists" and not "who was it for" — and the practice now
+   has more than one engagement per client. One band per client, then the
+   house formats; the filter narrows by kind across all of them.
+
+   ⚠ THE NARROWING IS CSS OVER SERVER-RENDERED DATA. Every card carries
+   `data-kind` and every band the set it holds, so these are two rules per
+   kind and no `:has()`: the band already knows what is in it, and asking
+   the browser to re-derive that is work for an answer the server had.
+
+   ⚠ NO ATTRIBUTE ON THE ROOT MEANS EVERYTHING IS SHOWN — the no-JS
+   contract, and the same shape as this surface's reveal opt-in. */
+.arc-clients {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(48px, 7vh, 96px);
+}
+
+/* The head is the client's NAME on a band, and the line is what the name
+   is underlined into (ADR-089 U1). The count is at the far end because a
+   reader scanning for "what else did they do" is counting. */
+.arc-client__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: clamp(10px, 1.4vh, 16px);
+  border-bottom: 1px solid var(--arc-seam);
+}
+
+.arc-client__name {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-lit);
+  font-size: clamp(22px, 2.4vw, 34px);
+  line-height: 1.08;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink);
+}
+
+.arc-client__name a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+.arc-client__name a:hover,
+.arc-client__name a:focus-visible {
+  color: var(--gold-ink);
+  border-bottom-color: var(--gold-line);
+}
+
+.arc-client__count {
+  flex: 0 0 auto;
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  color: var(--arc-ink-40);
+}
+
+.arc-client__lede {
+  max-width: 62ch;
+  margin: clamp(10px, 1.4vh, 16px) 0 clamp(22px, 3vh, 36px);
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(14px, 1.05vw, 16px);
+  line-height: 1.5;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-62);
+}
+
+/* A band's grid starts at the left edge rather than centring: with a head
+   ruled above it, a centred row of one card reads as a mistake. */
+.arc-client .arc-grid {
+  justify-content: start;
+}
+
+/* ── THE FILTER (ADR-089 U3/U4's grammar) ────────────────────────
+   Outlined boxes, the picked one FILLED in inverse video. ⚠ MARGIN, NEVER
+   `gap`: a gap makes each station `(100% − (n−1)g)/n`, and any marker on
+   the row then drifts a gap per station. The boxes are square, because
+   they are chrome (the corner law's depth ladder, rung three). */
+.arc-filter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  /* Seated in the hero band, which sets the rhythm with its own gap; the
+     row's own margins are the inter-station ones and nothing else. */
+  margin: 0;
+  padding: 0;
+}
+
+.arc-filter__stn {
+  margin: 0 6px 6px 0;
+  padding: 8px 15px;
+  border: 1px solid var(--arc-rule);
+  background: none;
+  color: var(--arc-ink-62);
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.arc-filter__stn:hover {
+  border-color: var(--gold-line);
+  color: var(--arc-ink);
+}
+
+.arc-filter__stn:focus-visible {
+  outline: 2px solid var(--gold-line);
+  outline-offset: 2px;
+}
+
+/* The one filled thing in the row, and the row's only gold. */
+.arc-filter__stn.is-on {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+
+/* The narrowing itself: two rules per kind, the card and its band. A band
+   whose set does not include the picked kind has nothing to show, so the
+   head goes with the cards — a ruled name over an empty space reads as a
+   page that failed to load. */
+.arc-root[data-arc-kind="keynote"] .arc-card:not([data-kind="keynote"]),
+.arc-root[data-arc-kind="keynote"] .arc-client:not([data-kinds~="keynote"]),
+.arc-root[data-arc-kind="workshop"] .arc-card:not([data-kind="workshop"]),
+.arc-root[data-arc-kind="workshop"] .arc-client:not([data-kinds~="workshop"]),
+.arc-root[data-arc-kind="production"] .arc-card:not([data-kind="production"]),
+.arc-root[data-arc-kind="production"] .arc-client:not([data-kinds~="production"]) {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .arc-client .arc-grid {
+    justify-content: center;
+  }
+}
+
+/* ── THE CONFIGURATION, AS ONE INSTRUMENT (ADR-098) ──────────────
+   The pitch page's drawing (ADR-094 U7), rebuilt on this surface's own
+   ramp. Three bands on one hairline plate: the LAYER the client owns,
+   the SEAM the two motions cross, the WORK — the teams as pickable
+   tiles over the picked team's five answers.
+
+   ⚠ THE GRAMMAR IS COPIED, NOT SHARED. `trinny-london.css` is scoped to
+   `.tl-root` and its rules key `--tl-*` tokens that do not exist here;
+   one selector reaching both roots would be a shared sheet by another
+   name, and that route's own rule forbids it. What travels is the
+   composition — what is re-derived is every colour, through
+   `--arc-ink-*` / `--arc-rule` / `--arc-plate`, so the light theme
+   reaches this drawing for free.
+
+   ⚠ GOLD IS THE BUILT THING AND NOTHING ELSE (ADR-094 U7's ruling,
+   carried): the lit layer rows, the picked tile, the readout's top rule
+   and the kickers' diamonds. The plate, the unlit rows and the resting
+   tiles are dawn. `--gold-line` where a LINE is drawn, `--gold-ink`
+   where a small label is READ — raw `--gold` fails the light walk at
+   11px (ADR-063 U2). */
+.arc-cfg {
+  display: grid;
+  grid-template-columns: minmax(250px, 300px) minmax(116px, 136px) minmax(0, 1fr);
+  gap: 0;
+  padding: clamp(18px, 1.9vw, 26px);
+  border: 1px solid var(--arc-rule);
+  background: var(--arc-plate);
+  color: var(--arc-ink-90);
+}
+
+.arc-cfg__band--layer {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border: 1px solid var(--arc-rule);
+  background: var(--arc-sheen);
+}
+
+.arc-cfg__lhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 11px;
+  margin-bottom: 11px;
+  border-bottom: 1px solid var(--arc-rule);
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-62);
+}
+
+.arc-cfg__lhead strong {
+  font-weight: var(--weight-text);
+  color: var(--arc-ink-90);
+}
+
+.arc-cfg__lhead span {
+  color: var(--gold-ink);
+}
+
+.arc-cfg__layers {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A row dims unless the picked team reads it. The state is the FILL, the
+   border and the ink TOGETHER — an opacity alone leaves the dimmed rows
+   reading as disabled controls rather than as the layer's unlit part
+   (the pitch page's own finding, and it holds on either ground). */
+.arc-cfg__layer {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px 13px;
+  border: 1px solid var(--arc-edge);
+  border-left: 3px solid var(--arc-edge);
+  background: var(--arc-sheen);
+  opacity: 0.42;
+  transition:
+    opacity 240ms ease,
+    background 240ms ease,
+    border-color 240ms ease;
+}
+
+.arc-cfg__layer.is-on {
+  opacity: 1;
+  border-color: var(--gold-line);
+  background: rgba(var(--gold-rgb), 0.1);
+}
+
+.arc-cfg__tag {
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+.arc-cfg__name {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(13px, 0.95vw, 15px);
+  line-height: 1.3;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-70);
+}
+
+/* The seam: two arrows, each a 1px DIV run with a border-drawn head (the
+   wireframe law — a connector is never an svg stroke on this surface).
+   Adoption points at the layer, automation points back at the work. */
+.arc-cfg__band--seam {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(24px, 3.6vh, 44px);
+  padding: 0 11px;
+}
+
+.arc-cfg__arrow {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.arc-cfg__word {
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+.arc-cfg__arrow i {
+  position: relative;
+  display: block;
+  height: 9px;
+}
+
+.arc-cfg__arrow i::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  height: 1px;
+  background: var(--gold-line);
+}
+
+.arc-cfg__arrow i::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--gold-line);
+  rotate: 45deg;
+}
+
+.arc-cfg__arrow--adopt i::before {
+  left: 4px;
+  right: 0;
+}
+
+.arc-cfg__arrow--adopt i::after {
+  left: 1px;
+  border-right: 0;
+  border-top: 0;
+}
+
+.arc-cfg__arrow--auto i::before {
+  left: 0;
+  right: 4px;
+}
+
+.arc-cfg__arrow--auto i::after {
+  right: 1px;
+  border-left: 0;
+  border-bottom: 0;
+}
+
+.arc-cfg__note {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(12px, 0.85vw, 13px);
+  line-height: 1.35;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-50);
+}
+
+/* The work: the teams as tiles, then the picked team's configuration. */
+.arc-cfg__band--work {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  min-width: 0;
+}
+
+/* ⚠ MARGIN-FREE COLUMNS, AND THE SET IS SQUARE (ADR-065 rule 4): the
+   plate is the drawn housing, so the tiles inside it are flat stock. */
+.arc-cfg__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.arc-cfg__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 0;
+  padding: 13px 15px 11px;
+  text-align: left;
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-sheen);
+  color: var(--arc-ink-90);
+  cursor: pointer;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease;
+}
+
+.arc-cfg__tile:hover {
+  border-color: var(--gold-line);
+}
+
+.arc-cfg__tile:focus-visible {
+  outline: 2px solid var(--gold-line);
+  outline-offset: 2px;
+}
+
+/* ⚠ THE PICKED TILE IS FILLED, NOT OUTLINED (ADR-089 U4). The variable
+   in a set of bounded boxes is FILL AMONG OUTLINES — the pitch page
+   shipped the outline form before that ruling landed, and the newer
+   house law wins here. Inverse video: gold ground, its own contrast ink
+   knocked out, the border joined to the fill. */
+.arc-cfg__tile.is-on {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+
+.arc-cfg__tile.is-on .arc-cfg__tname,
+.arc-cfg__tile.is-on .arc-cfg__twork {
+  color: inherit;
+}
+
+/* The ghost: the workflow after these, named and unpickable. Dashed,
+   because a dashed edge is this surface's "not yet" (the `--arc-rule-dash`
+   rung), and no pointer — it is not a control. */
+.arc-cfg__tile--ghost {
+  border-style: dashed;
+  border-color: var(--arc-rule-dash);
+  background: none;
+  cursor: default;
+}
+
+.arc-cfg__tname {
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-90);
+}
+
+.arc-cfg__twork {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(12px, 0.85vw, 13px);
+  line-height: 1.35;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-50);
+}
+
+.arc-cfg__cfg {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 13px 17px 9px;
+  border: 1px solid var(--arc-rule);
+  border-top: 2px solid var(--gold-line);
+  background: var(--arc-sheen);
+}
+
+.arc-cfg__chead {
+  padding-bottom: 9px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--arc-rule);
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+.arc-cfg__kv {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.arc-cfg__kv > div {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--arc-rule);
+}
+
+.arc-cfg__kv > div:last-child {
+  border-bottom: 0;
+}
+
+.arc-cfg__kv dt {
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+
+.arc-cfg__kv dd {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(14px, 1vw, 16px);
+  line-height: 1.35;
+  letter-spacing: var(--track-copy);
+  color: var(--arc-ink-90);
+}
+
+.arc-cfg__kickers {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin: clamp(18px, 2.6vh, 28px) 0 0;
+  padding: 15px 0 0;
+  border-top: 1px solid var(--arc-rule);
+  list-style: none;
+}
+
+.arc-cfg__kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-62);
+}
+
+.arc-cfg__kicker::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  rotate: 45deg;
+  background: var(--gold);
+  flex: 0 0 auto;
+}
+
+/* One column below the tier: the seam's arrows are a horizontal reading
+   and there is no horizontal left, so the runs go and the two words stay
+   as the band's own labels. */
+@media (max-width: 960px) {
+  .arc-cfg {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .arc-cfg__band--seam {
+    flex-direction: row;
+    gap: 20px;
+    padding: 0;
+  }
+  .arc-cfg__arrow i {
+    display: none;
+  }
+  .arc-cfg__kickers {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+/* ── A LOCKED ARC HIDES THE SWITCH (ADR-098) ─────────────────────
+   `ArcDef.theme: "light"` stamps `data-theme-lock` (ADR-093's own
+   mechanism, through `ThemeLock`). The lock is only half a decision:
+   leaving the control on a page that can never toggle reads as a bug
+   rather than as a ruling, which is the note `themeLock.ts` carries and
+   the pitch page's own rule one route over. Keyed on `<html>` because the
+   settings cluster is mounted as a SIBLING of the arc root, in its own
+   fixed overlay, so an `.arc-root` descendant selector cannot reach it —
+   and the lock attribute is the honest condition anyway: it is present
+   exactly while the lock is, so the rule cannot outlive it across a
+   client-side navigation. (0,3,1) beats theme.css's own `.theme-toggle`
+   (0,1,0) from anywhere in the cascade. */
+html[data-theme-lock] .rin-settings__ctl .theme-toggle {
+  display: none;
 }
 
 /* ── LIGHT: THE RAMP RE-DERIVED (ADR-077) ────────────────────────

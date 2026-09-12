@@ -33,7 +33,14 @@ export const THEME_LOCK_ATTR = "data-theme-lock";
  * removal rather than a write and the bootstrap's shape would change. If
  * a dark-locked route is ever wanted, that is its own pass.
  */
-export const LIGHT_LOCKED_ROUTES = ["/trinny-london"] as const;
+export const LIGHT_LOCKED_ROUTES = [
+  "/trinny-london",
+  /* A proposal is composed on paper and has no dark reading (ADR-098).
+     The arc declares `theme: "light"`, which is what mounts `ThemeLock`
+     and hides the switch; this row is the pre-paint half, and the
+     registry test fails a locked arc that has no row here. */
+  "/arcs/suri-proposal",
+] as const;
 
 /** Strip a trailing slash the way both inline scripts do, so `/x` and
  *  `/x/` are one route. `/` stays `/`. */
