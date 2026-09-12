@@ -15,6 +15,7 @@ import "@/components/landing/home-v2/services/services.css";
 import "@/components/landing/home-v2/services/casefile/casefile.css";
 import "@/components/landing/home-v2/services/casefile/console/console.css";
 import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
+import "@/components/landing/home-v2/services/proof-stack/proof-stack.css";
 // about-stage.css / continuum-stage.css / voidwalker/*.css are deliberately
 // NOT imported: this page mounts no pinned stage (ADR-053 — #about is the
 // static voidwalker here, #continuum and #voidwalker are removed).

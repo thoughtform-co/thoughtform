@@ -13,6 +13,7 @@ import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { browseClientCount, browseSeamClocks } from "../services/casefile/browseMap";
 import {
   SERVICES_PROOF_BROWSE_FRAC,
+  SERVICES_PROOF_RELEASE_VH,
   SERVICES_PROOF_RUNWAY_VH,
   SERVICES_PROOF_SEGMENTS,
 } from "../unifiedServicesInstrument";
@@ -304,14 +305,34 @@ export function useServicesStageScroll(
     // spec key off it there. Null host (flag off ⇒ casefile unmounted) is
     // fine: nothing consumes the channels then.
     let proofHostEl: HTMLElement | null = null;
+    /* ⚠ THE ABSENT HOST IS CACHED TOO (ADR-096). Under the proof STACK there
+       is no `.fl-case` at all, and a lookup keyed only on `!proofHostEl` ran
+       a `querySelector` over the stage's subtree on EVERY scroll frame for a
+       node that can never appear. Re-resolve only when a host we HAD has left
+       the document. */
+    let proofHostResolved = false;
     let currentProofBrowse = -1;
     let currentClientIn = -1;
     let currentClientOut = -1;
     const proofHost = (stage: HTMLElement): HTMLElement | null => {
-      if (!proofHostEl || !proofHostEl.isConnected) {
+      if (!proofHostResolved || (proofHostEl && !proofHostEl.isConnected)) {
         proofHostEl = stage.querySelector<HTMLElement>(".fl-case");
+        proofHostResolved = true;
       }
       return proofHostEl;
+    };
+    /* The proof PILE's own box (ADR-096) — the same cache discipline. It is a
+       sibling of the stage inside `.services-stage-root`, absolutely seated
+       over the front of the runway by `services.css`. */
+    let pileEl: HTMLElement | null = null;
+    let pileResolved = false;
+    let currentProofRunwayPx = -1;
+    const proofPile = (runway: HTMLElement): HTMLElement | null => {
+      if (!pileResolved || (pileEl && !pileEl.isConnected)) {
+        pileEl = runway.querySelector<HTMLElement>(":scope > .pf-stack");
+        pileResolved = true;
+      }
+      return pileEl;
     };
     const setProof = (
       stage: HTMLElement,
@@ -467,20 +488,45 @@ export function useServicesStageScroll(
         smoothstep(SHRINK_START, SHRINK_END, dissipate),
         smoothstep(FADE_START, FADE_END, dissipate)
       );
-      // The casefile owns the FRONT of the runway; the ring owns the rest,
-      // over a domain `splitServicesRunway` keeps byte-identical to the
-      // pre-casefile 500svh. `proofP` is 1 immediately when the flag is off.
-      const { proofP, ringP } = splitServicesRunway(-r.top, travel, SERVICES_PROOF_RUNWAY_VH * vh);
+      /* ── THE PROOF SHARE IS MEASURED, NOT DECLARED (ADR-096) ───────────
+         The pile's length is `100svh` arithmetic with fixed px terms in it
+         (the 64–88px pin, the 52px peek, the 24px safe band), so it lands
+         anywhere in ~483–490svh across the reference viewports and no single
+         literal is right at more than one of them. Read the box, add the
+         release band, and write the total back onto `--svc-proof-runway` —
+         which is what keeps the RUNWAY's reserved height and the SPLIT's
+         proof share the same number, and therefore the ring's domain at
+         exactly the pre-proof 500svh at every viewport rather than at one.
+         ⚠ ONE WRITE PER RESIZE, NEVER PER FRAME: the value is a function of
+         the viewport alone, so the change guard holds it still while
+         scrolling. It converges in a single frame (writing it changes the
+         RUNWAY's height, never the pile's — the pile is out of flow). */
+      let proofPx = SERVICES_PROOF_RUNWAY_VH * vh;
+      let browseFrac = SERVICES_PROOF_BROWSE_FRAC;
+      const pile = proofPile(runway);
+      const pileH = pile ? pile.offsetHeight : 0;
+      if (pileH > 0) {
+        proofPx = pileH + SERVICES_PROOF_RELEASE_VH * vh;
+        browseFrac = clamp01(pileH / proofPx);
+        if (Math.abs(proofPx - currentProofRunwayPx) >= 1) {
+          runway.style.setProperty("--svc-proof-runway", `${Math.round(proofPx)}px`);
+          currentProofRunwayPx = proofPx;
+        }
+      }
 
-      // The browse/release split (ADR-056 U13). `browseP` steps the
-      // directory; `releaseP` is proofP re-derived over the back stretch so
-      // every threshold below rides exactly the ramp it was tuned on. Flag
-      // off ⇒ proofP is 1 ⇒ both saturate ⇒ unchanged.
-      const browseP =
-        SERVICES_PROOF_BROWSE_FRAC > 0 ? clamp01(proofP / SERVICES_PROOF_BROWSE_FRAC) : 1;
-      const releaseP = clamp01(
-        (proofP - SERVICES_PROOF_BROWSE_FRAC) / (1 - SERVICES_PROOF_BROWSE_FRAC)
-      );
+      // The proof beat owns the FRONT of the runway; the ring owns the rest,
+      // over a domain `splitServicesRunway` keeps byte-identical to the
+      // pre-casefile 500svh. `proofP` is 1 immediately when both flags are
+      // off.
+      const { proofP, ringP } = splitServicesRunway(-r.top, travel, proofPx);
+
+      // The browse/release split (ADR-056 U13). `browseP` stepped the
+      // casefile's directory and is inert under the stack (the pile is its
+      // own selector); `releaseP` is proofP re-derived over the back stretch
+      // so every threshold below rides exactly the ramp it was tuned on.
+      // Flags off ⇒ proofP is 1 ⇒ both saturate ⇒ unchanged.
+      const browseP = browseFrac > 0 ? clamp01(proofP / browseFrac) : 1;
+      const releaseP = browseFrac < 1 ? clamp01((proofP - browseFrac) / (1 - browseFrac)) : 1;
 
       // Casefile arrival — the mark's centering clock, so the panels travel
       // in WITH it (see the constants block for the owner's supersession).

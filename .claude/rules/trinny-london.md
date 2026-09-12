@@ -148,6 +148,19 @@ scroll(root block)` with `animation-range: 0 100dvh` moves it off the main
 
 ## The proof stack (ADR-094)
 
+⚠ **THE CARD AND THE PILE LIVE IN `components/landing/home-v2/services/
+proof-stack/` SINCE [ADR-096](../../sentinel/decisions/096-proof-stack-on-the-homepage.md)**
+(2026-09-12) — the owner asked for the same beat on the homepage, so the module
+and its sheet were PROMOTED rather than copied, and the route scope
+`.tl-root .tl-*` became `.pf-stack .pf-*` (same specificity, same overrides).
+This route keeps three shims under `proof/` so `trinny-proof-order.test.ts` and
+`trinny-proof-tabs.test.ts` are untouched, and `ProofStack` there stays a
+DEFAULT export for `lazy()`. Every contract below still binds — read it with
+[`proof-stack.md`](proof-stack.md), which owns the shared half.
+⚠ The route-local `--tl-ink` / `--tl-rule` / `--tl-plate` tokens stay on
+`.tl-root` for the TURN and the PROPOSAL; the card carries its own `--pf-*`
+copy so the pile is self-contained on either host.
+
 - ⚠ **`#services` KEEPS ITS ID AND MOUNTS `[data-tl-proof-root]`, NEVER
   `[data-services-root]`.** `useCorridorExitScroll` resolves `#services` by id
   and RETURNS WITHOUT IT — the dissipate, the dock and the ambient hold all key

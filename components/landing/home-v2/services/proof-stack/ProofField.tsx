@@ -57,8 +57,8 @@ import type { CaseTrackVisual } from "@/lib/cases/types";
  *
  * The sizing contract these plates read with no fallback (`--fl-mono`,
  * `--fl-copy`, `--fl-shot-px`, a definite height, the settled gate) is
- * declared on `.tl-card__field` in `trinny-london.css`. ⚠ Since ADR-094 U2
- * the SIZE CONTAINER is one level down, on `.tl-card__bay` — the field now
+ * declared on `.pf-card__field` in `trinny-london.css`. ⚠ Since ADR-094 U2
+ * the SIZE CONTAINER is one level down, on `.pf-card__bay` — the field now
  * holds the rail as well, and a drawing sized against a box that includes
  * its own chrome is a drawing that never fills the box it is drawn in.
  */
@@ -100,7 +100,7 @@ export function ProofField({
          state, and `proofTabs` returns `null` for this kind for exactly
          that reason. */
       return (
-        <div className="tl-field tl-field--sheets">
+        <div className="pf-field pf-field--sheets">
           <SheetsPlate
             sheets={visual.sheets}
             stillSizes="(min-width: 1600px) 220px, 18vw"
@@ -126,8 +126,8 @@ export function ProofField({
          running — a second film starting that nobody asked for. */
       const live = !!cut && playing === cut.src;
       return (
-        <div className="tl-field tl-field--films">
-          <div className={cut ? "tl-film tl-film--portrait" : "tl-film"}>
+        <div className="pf-field pf-field--films">
+          <div className={cut ? "pf-film pf-film--portrait" : "pf-film"}>
             {live && cut ? (
               /* ⚠ IT PLAYS IN THE FRAME (U4, owner: "when you click on the
                  video thumbnail, it shows the full-screen video. I don't
@@ -141,7 +141,7 @@ export function ProofField({
                  sticky stack. `autoPlay` is safe precisely because the mount
                  IS the click. */
               <video
-                className="tl-film__frame tl-film__frame--live"
+                className="pf-film__frame pf-film__frame--live"
                 src={cut.src}
                 poster={cut.poster.src}
                 controls
@@ -157,7 +157,7 @@ export function ProofField({
                  object. */
               <button
                 type="button"
-                className="tl-film__frame"
+                className="pf-film__frame"
                 aria-label={`Play ${film.label}`}
                 onClick={(e) => (cut ? setPlaying(cut.src) : open(e.currentTarget))}
               >
@@ -168,13 +168,13 @@ export function ProofField({
                   height={cut?.poster.height ?? 1080}
                   sizes="(min-width: 961px) 56vw, 90vw"
                 />
-                <i className="tl-film__cue" aria-hidden="true" />
+                <i className="pf-film__cue" aria-hidden="true" />
               </button>
             )}
             {/* ⚠ THE META SWAPS WITH THE PICTURE. `film.meta` describes the
                 16:9 master; under a 4:5 still it names the wrong shape for
                 the thing right above it. */}
-            <span className="tl-film__caption">
+            <span className="pf-film__caption">
               <span>{film.label}</span>
               <span>{cut ? cut.meta : film.meta}</span>
             </span>
@@ -194,12 +194,12 @@ export function ProofField({
       const tool = PROJECT_CASES.find((c) => c.id === id);
       const walk = tool?.walkthrough;
       return (
-        <div className="tl-field tl-field--tools">
+        <div className="pf-field pf-field--tools">
           {/* The apparatus's HEAD (U8): one micro-label, the year the tool
               went into service — the same record the homepage's bay letters
               on its FEED line. Always rendered, so the box keeps its three
               rows even for a tool without a case. */}
-          <span className="tl-bay__head">{tool ? `In service ${tool.year}` : null}</span>
+          <span className="pf-bay__head">{tool ? `In service ${tool.year}` : null}</span>
           {/* ⚠ THE KEY IS THE REMOUNT, and it is deliberate (ADR-068 U3):
               each drawing seats itself once, so switching tools must give
               the next one a fresh mount rather than swapping props under a
@@ -207,7 +207,7 @@ export function ProofField({
               part of the picture — but the panel around it is named by the
               open station, so the hide goes here and not on the box. */}
           {Wireframe ? (
-            <div className="tl-wire" key={id} aria-hidden="true">
+            <div className="pf-wire" key={id} aria-hidden="true">
               <Wireframe />
             </div>
           ) : null}
@@ -216,10 +216,10 @@ export function ProofField({
               tools plate fuses a watch bar to its bay and its films plate
               does not: the control has to say what it opens. */}
           {walk ? (
-            <button type="button" className="tl-watch" onClick={(e) => open(e.currentTarget)}>
-              <i className="tl-watch__cue" aria-hidden="true" />
-              <span className="tl-watch__label">Watch walkthrough</span>
-              <span className="tl-watch__meta">{walk.duration}</span>
+            <button type="button" className="pf-watch" onClick={(e) => open(e.currentTarget)}>
+              <i className="pf-watch__cue" aria-hidden="true" />
+              <span className="pf-watch__label">Watch walkthrough</span>
+              <span className="pf-watch__meta">{walk.duration}</span>
             </button>
           ) : null}
           {watching && walk && tool ? (
@@ -235,7 +235,7 @@ export function ProofField({
     }
     case "intelligence-map":
       return (
-        <div className="tl-field tl-field--map">
+        <div className="pf-field pf-field--map">
           <IntelligenceMapPlate
             shapes={visual.shapes}
             districts={visual.districts}

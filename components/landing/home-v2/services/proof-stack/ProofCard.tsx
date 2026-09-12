@@ -24,7 +24,7 @@ import { proofTabLabel, proofTabs } from "./proofTabs";
  * push the frontiers of AI creative,' should replace the title 'AI
  * Above-the-Line'"_). U2 put the beat in the head beside the name and kept
  * the name as the display heading; the owner's correction is that the CLAIM
- * is what the card is called. So `.tl-card__title` letters `arc.title` and
+ * is what the card is called. So `.pf-card__title` letters `arc.title` and
  * the project's own name goes up into the head as chrome, where it is the
  * FILE this card is of — `01 · AI ABOVE-THE-LINE` beside the client.
  *
@@ -49,7 +49,7 @@ import { proofTabLabel, proofTabs } from "./proofTabs";
  * problem rather than re-opening one. `PdaConsole` owns its three readings
  * and the flight between them; it takes a `railHost` and moves its own rail
  * there. The card puts a transparent layer over the console so its wheel
- * capture cannot freeze the pinned stack — that layer is on `.tl-field--map`
+ * capture cannot freeze the pinned stack — that layer is on `.pf-field--map`
  * INSIDE the bay, so a rail seated above the bay is outside its box by
  * construction, where in the head it had to be lifted over it.
  *
@@ -57,7 +57,7 @@ import { proofTabLabel, proofTabs } from "./proofTabs";
  * read (the plan's decision 1). The card is not a control.
  */
 export function ProofCard({ track }: { track: CaseTrack }) {
-  const titleId = `tl-card-${track.id}`;
+  const titleId = `pf-card-${track.id}`;
   const claims = track.blocks ?? [];
   const phase = track.stamp?.phase ?? "Build";
 
@@ -69,9 +69,9 @@ export function ProofCard({ track }: { track: CaseTrack }) {
   const active = stations?.[Math.min(idx, stations.length - 1)];
 
   return (
-    <article className="tl-card" aria-labelledby={titleId}>
-      <header className="tl-card__head">
-        <p className="tl-card__kicker">Loop Earplugs · {phase}</p>
+    <article className="pf-card" aria-labelledby={titleId}>
+      <header className="pf-card__head">
+        <p className="pf-card__kicker">Loop Earplugs · {phase}</p>
         {/* ⚠ THE ORDINAL ALONE (U4, owner 2026-09-10: "that subtitle —
             whatever, Intelligence Map, Software for Few — in the top-right
             corner, you can remove that"). U3 put the project's name here as
@@ -80,14 +80,14 @@ export function ProofCard({ track }: { track: CaseTrack }) {
             rather than a second title. The name now letters nowhere on the
             card — the claim is the heading and the rail names the parts,
             which is the whole point of the arc. */}
-        {track.arc ? <p className="tl-card__arc">{track.arc.step}</p> : null}
+        {track.arc ? <p className="pf-card__arc">{track.arc.step}</p> : null}
       </header>
-      <div className="tl-card__body">
-        <div className="tl-card__record">
-          <h3 className="tl-card__title" id={titleId}>
+      <div className="pf-card__body">
+        <div className="pf-card__record">
+          <h3 className="pf-card__title" id={titleId}>
             {track.arc ? track.arc.title : track.project}
           </h3>
-          {track.card ? <p className="tl-card__lede">{track.card.lede}</p> : null}
+          {track.card ? <p className="pf-card__lede">{track.card.lede}</p> : null}
           {/* ⚠ THE CLAIM CARRIES ITS SENTENCE NOW (owner: the left panel of
               the homepage "has a bit more information about each specific
               thing — let's also use that information"). `CaseBlock` has
@@ -97,15 +97,15 @@ export function ProofCard({ track }: { track: CaseTrack }) {
               `trinny-london.css` — the casefile's own 1070h precedent, and
               the reason is the same arithmetic: four two-line sentences do
               not fit a 424px record column at 1280×720. */}
-          <ul className="tl-card__claims">
+          <ul className="pf-card__claims">
             {claims.map((block) => (
-              <li className="tl-card__claim" key={block.title}>
-                <span className="tl-card__mark" aria-hidden="true">
+              <li className="pf-card__claim" key={block.title}>
+                <span className="pf-card__mark" aria-hidden="true">
                   {block.glyph ? <ProofGlyph name={block.glyph} /> : null}
                 </span>
-                <span className="tl-card__claim-body">
-                  <span className="tl-card__claim-title">{block.title}</span>
-                  <span className="tl-card__claim-desc">{block.desc}</span>
+                <span className="pf-card__claim-body">
+                  <span className="pf-card__claim-title">{block.title}</span>
+                  <span className="pf-card__claim-desc">{block.desc}</span>
                 </span>
               </li>
             ))}
@@ -115,8 +115,8 @@ export function ProofCard({ track }: { track: CaseTrack }) {
             frame and the map's SVG rest at opacity 0 until an ancestor
             carries it. This card writes no corridor channel, so the rest
             state is declared (the arcs' host recipe, arcs.css). */}
-        <div className="tl-card__field" data-proof-settled="">
-          <div className="tl-card__tabs" ref={setRailHost}>
+        <div className="pf-card__field" data-proof-settled="">
+          <div className="pf-card__tabs" ref={setRailHost}>
             {stations ? (
               <ConsoleRail
                 stations={stations}
@@ -128,11 +128,11 @@ export function ProofCard({ track }: { track: CaseTrack }) {
           </div>
           {/* ⚠ THE BAY IS THE SIZE CONTAINER, NOT THE FIELD. The ads count
               their rows and the wireframes derive their `cqh` height off the
-              box they are actually drawn in; left on `.tl-card__field` the
+              box they are actually drawn in; left on `.pf-card__field` the
               container would now include the rail's row and every drawing
               would be sized against a box it does not fill. */}
           <div
-            className="tl-card__bay"
+            className="pf-card__bay"
             {...(active ? { role: "tabpanel", "aria-label": active.name } : null)}
           >
             <ProofField visual={track.visual} idx={idx} railHost={railHost} />

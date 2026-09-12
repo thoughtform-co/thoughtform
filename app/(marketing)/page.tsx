@@ -8,6 +8,7 @@ import "@/components/landing/home-v2/services/services.css";
 import "@/components/landing/home-v2/services/casefile/casefile.css";
 import "@/components/landing/home-v2/services/casefile/console/console.css";
 import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
+import "@/components/landing/home-v2/services/proof-stack/proof-stack.css";
 import "@/components/landing/home-v2/about/about-stage.css";
 // The through-line (ADR-074) — the section sheet and its drawings' sheet,
 // both BEFORE theme.css so the light rows cascade last.

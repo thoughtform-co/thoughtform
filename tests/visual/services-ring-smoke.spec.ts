@@ -9,8 +9,10 @@ import {
 } from "../../components/landing/home-v2/services/casefile/browseMap";
 import {
   SERVICES_PROOF_BROWSE_FRAC,
+  SERVICES_PROOF_CASEFILE,
   SERVICES_PROOF_RUNWAY_VH,
   SERVICES_PROOF_SEGMENTS,
+  SERVICES_PROOF_STACK,
 } from "../../components/landing/home-v2/unifiedServicesInstrument";
 import { VOIDWALKER_ERA_BAND } from "../../lib/voidwalker/voidwalkerHologramClock";
 
@@ -115,7 +117,19 @@ async function scrollServicesRunway(page: Page, ringProgress: number): Promise<b
       const rect = runway.getBoundingClientRect();
       const top = rect.top + window.scrollY;
       const travel = Math.max(0, rect.height - window.innerHeight);
-      const proof = Math.min(travel, window.innerHeight * proofVh);
+      /* ⚠ THE PROOF SHARE IS READ, NOT ASSUMED (ADR-096). The hook
+         MEASURES the card pile and writes the real total back onto
+         `--svc-proof-runway` in px, because the pile's length carries fixed
+         px terms and is not a clean multiple of the viewport. The constant
+         is only the pre-hydration reservation, so converting a ring progress
+         against it lands a few pixels off at every viewport and further off
+         at the ones the reservation was not solved for. */
+      const written = getComputedStyle(runway).getPropertyValue("--svc-proof-runway").trim();
+      const measured = written.endsWith("px") ? Number.parseFloat(written) : NaN;
+      const proof = Math.min(
+        travel,
+        Number.isFinite(measured) ? measured : window.innerHeight * proofVh
+      );
       return Math.round(top + proof + (travel - proof) * p);
     },
     { p: ringProgress, proofVh: SERVICES_PROOF_RUNWAY_VH }
@@ -136,7 +150,13 @@ async function scrollCasefileDwell(page: Page, progress: number): Promise<boolea
       const rect = runway.getBoundingClientRect();
       const top = rect.top + window.scrollY;
       const travel = Math.max(0, rect.height - window.innerHeight);
-      return Math.round(top + Math.min(travel, window.innerHeight * proofVh) * p);
+      const written = getComputedStyle(runway).getPropertyValue("--svc-proof-runway").trim();
+      const measured = written.endsWith("px") ? Number.parseFloat(written) : NaN;
+      const proof = Math.min(
+        travel,
+        Number.isFinite(measured) ? measured : window.innerHeight * proofVh
+      );
+      return Math.round(top + proof * p);
     },
     { p: progress, proofVh: SERVICES_PROOF_RUNWAY_VH }
   );
@@ -144,6 +164,60 @@ async function scrollCasefileDwell(page: Page, progress: number): Promise<boolea
   await page.evaluate((y) => window.scrollTo(0, y), target);
   await page.waitForTimeout(600);
   return true;
+}
+
+/**
+ * Seat proof card `idx` of the stack (ADR-096).
+ *
+ * A slot's pin point is its flow offset inside the pile less its computed
+ * `top` — but BOTH halves of that are booby-trapped while the pile is stuck,
+ * and the corridor's lazy mount moves the page under the first scroll. So
+ * each pass rewinds above the pile, re-solves, and converges on the state the
+ * hook itself publishes. See the two warnings inside.
+ */
+async function seatProofCard(page: Page, idx: number): Promise<string | null> {
+  await page.waitForSelector(".pf-slot", { timeout: 20_000 });
+  let state: string | null = null;
+  for (let pass = 0; pass < 6; pass += 1) {
+    await page.evaluate((i) => {
+      const runway = document.querySelector(".services-stage-root");
+      const slot = document.querySelectorAll<HTMLElement>(".pf-slot")[i];
+      if (!runway || !slot) return;
+      /* ⚠ REWIND ABOVE THE PILE FIRST. `offsetTop` on a sticky element that
+         is CURRENTLY STUCK reports its stuck position, not its flow offset —
+         so solving a seat while standing further down the pile reads a lie
+         and converges on wherever it already is (the trinny smoke's own
+         `seatSlot` finding). Unstick everything, then measure. */
+      const above = runway.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.3;
+      window.scrollTo(0, Math.max(0, Math.round(above)));
+    }, idx);
+    await page.waitForTimeout(250);
+    await page.evaluate((i) => {
+      const runway = document.querySelector(".services-stage-root");
+      const slot = document.querySelectorAll<HTMLElement>(".pf-slot")[i];
+      if (!runway || !slot) return;
+      const top = Number.parseFloat(getComputedStyle(slot).top) || 0;
+      const y =
+        runway.getBoundingClientRect().top +
+        window.scrollY +
+        slot.offsetTop -
+        top +
+        slot.offsetHeight * 0.35;
+      window.scrollTo(0, Math.round(y));
+    }, idx);
+    /* ⚠ AND IT CONVERGES ON THE HOOK'S OWN STATE, NEVER ON A RECT. The
+       corridor mounts lazily and the document grows UNDER the first scroll,
+       so a target solved once lands short by whatever it grew.
+       `data-pc-state` is what `useStackedCardsScroll` publishes and the only
+       reading that answers the question asked. */
+    await page.waitForTimeout(pass === 0 ? 900 : 450);
+    state = await page.evaluate(
+      (i) => document.querySelectorAll(".pf-slot")[i]?.getAttribute("data-pc-state") ?? null,
+      idx
+    );
+    if (state === "pinned") break;
+  }
+  return state;
 }
 
 /**
@@ -386,6 +460,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
   test("desktop: the proof casefile holds the stage before the ring arrives (ADR-056)", async ({
     page,
   }) => {
+    /* ⚠ THE CASEFILE'S GUARDS SLEEP WITH THE CASEFILE (ADR-096). The proof
+       beat is the card STACK now and this surface no longer mounts, so every
+       assertion below would fail on an absent node rather than on a defect.
+       The component, its sheet and this test all stay until the owner has
+       read the new beat live — ADR-070 U35's ruling: a flag is a comparison
+       lever, and the losing drawing goes WITH its guards, not before them. */
+    test.skip(
+      !SERVICES_PROOF_CASEFILE,
+      "the casefile is off — the proof stack is the beat (ADR-096)"
+    );
     test.skip(!isDesktopViewport(page), "the casefile layer is desktop-only (≥961px)");
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
@@ -547,6 +631,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
   });
 
   test("desktop: the harmonised casefile fits its reference viewports", async ({ page }) => {
+    /* ⚠ THE CASEFILE'S GUARDS SLEEP WITH THE CASEFILE (ADR-096). The proof
+       beat is the card STACK now and this surface no longer mounts, so every
+       assertion below would fail on an absent node rather than on a defect.
+       The component, its sheet and this test all stay until the owner has
+       read the new beat live — ADR-070 U35's ruling: a flag is a comparison
+       lever, and the losing drawing goes WITH its guards, not before them. */
+    test.skip(
+      !SERVICES_PROOF_CASEFILE,
+      "the casefile is off — the proof stack is the beat (ADR-096)"
+    );
     test.skip(!isDesktopViewport(page), "the casefile layer is desktop-only (≥961px)");
     test.setTimeout(300_000);
 
@@ -1626,6 +1720,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
   });
 
   test("desktop: no casefile box clips its content, on any row (ADR-056 U11)", async ({ page }) => {
+    /* ⚠ THE CASEFILE'S GUARDS SLEEP WITH THE CASEFILE (ADR-096). The proof
+       beat is the card STACK now and this surface no longer mounts, so every
+       assertion below would fail on an absent node rather than on a defect.
+       The component, its sheet and this test all stay until the owner has
+       read the new beat live — ADR-070 U35's ruling: a flag is a comparison
+       lever, and the losing drawing goes WITH its guards, not before them. */
+    test.skip(
+      !SERVICES_PROOF_CASEFILE,
+      "the casefile is off — the proof stack is the beat (ADR-096)"
+    );
     test.skip(!isDesktopViewport(page), "the casefile layer is desktop-only (≥961px)");
 
     // 1440x800 — a MacBook Air, where the owner reads this, and the viewport
@@ -2612,6 +2716,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
   test("phones retune one bounded Proof instrument", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop", "explicit phone viewport matrix");
+    /* ⚠ THE CASEFILE'S GUARDS SLEEP WITH THE CASEFILE (ADR-096). The proof
+       beat is the card STACK now and this surface no longer mounts, so every
+       assertion below would fail on an absent node rather than on a defect.
+       The component, its sheet and this test all stay until the owner has
+       read the new beat live — ADR-070 U35's ruling: a flag is a comparison
+       lever, and the losing drawing goes WITH its guards, not before them. */
+    test.skip(
+      !SERVICES_PROOF_CASEFILE,
+      "the casefile is off — the proof stack is the beat (ADR-096)"
+    );
 
     for (const viewport of [
       { width: 320, height: 568 },
@@ -2727,6 +2841,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
   });
 
   test("the casefile is flat, on the ramps, and seated (ADR-092 stage 1)", async ({ page }) => {
+    /* ⚠ THE CASEFILE'S GUARDS SLEEP WITH THE CASEFILE (ADR-096). The proof
+       beat is the card STACK now and this surface no longer mounts, so every
+       assertion below would fail on an absent node rather than on a defect.
+       The component, its sheet and this test all stay until the owner has
+       read the new beat live — ADR-070 U35's ruling: a flag is a comparison
+       lever, and the losing drawing goes WITH its guards, not before them. */
+    test.skip(
+      !SERVICES_PROOF_CASEFILE,
+      "the casefile is off — the proof stack is the beat (ADR-096)"
+    );
     test.skip(!isDesktopViewport(page), "the housing is desktop-only (≥961px)");
     // THE FAILURE THIS PINS. ADR-091 counted the panel: an 18px gold halo under
     // the active row and a text-shadow on the title (depth and glow the flat law
@@ -2841,6 +2965,17 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
   test("light: the map console's palette carries its contrast (ADR-063 U2)", async ({ page }) => {
     test.skip(!isDesktopViewport(page), "the console is desktop-only (≥981px)");
+    /* ⚠ A CASEFILE WALK IN ITS BONES (ADR-096) — it navigates by `.fl-row`
+       and reads ONE console per row, which is what a single-panel surface
+       has. The stack mounts four cards at once, so `document.querySelector
+       (".fl-con__console")` would answer with whichever card is FIRST in the
+       DOM rather than the one on screen. The same two colour laws are walked
+       on the new surface by the scoped light test below; this one sleeps with
+       the casefile it navigates. */
+    test.skip(
+      !SERVICES_PROOF_CASEFILE,
+      "the casefile is off — the proof stack is the beat (ADR-096)"
+    );
     // The wireframe walk at the end visits all four stations now (~+3.5s).
     test.setTimeout(60_000);
 
@@ -3237,5 +3372,430 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       expect(con.fieldOverflow).toBeLessThanOrEqual(1);
     }
     await context.close();
+  });
+
+  /* ════════════════════════════════════════════════════════════════════
+     THE PROOF STACK (ADR-096) — the beat that replaced the casefile.
+     ════════════════════════════════════════════════════════════════════ */
+
+  test("desktop: the proof stack holds the stage before the ring arrives (ADR-096)", async ({
+    page,
+  }) => {
+    test.skip(!SERVICES_PROOF_STACK, "the proof stack is off");
+    test.skip(!isDesktopViewport(page), "the pile is desktop-only (≥961px)");
+    test.setTimeout(120_000);
+
+    // 1440×800 — the owner's reading shape, and the viewport that has
+    // exposed every clipping bug this surface has had. The project default
+    // of 1440×900 hides them.
+    await page.setViewportSize({ width: 1440, height: 800 });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 20_000 });
+    await page.waitForSelector(".pf-slot", { timeout: 20_000 });
+
+    /* ── THE SEAT, AND THE SPLIT IT IS MEASURED AGAINST ────────────────
+       The pile is a SIBLING of the pinned stage and out of flow, so the
+       stage still pins from the runway's very top; the hook measures the
+       pile's box and writes the total back onto `--svc-proof-runway`, which
+       is what keeps the ring's domain at exactly the pre-proof 500svh. Both
+       halves are read here because either alone can be right while the
+       beat is wrong: a pile of the correct length seated in flow would push
+       the stage down the runway, and an out-of-flow pile measured against
+       the RESERVATION would hand the ring a domain a few points long. */
+    const geo = await page.evaluate(() => {
+      const runway = document.querySelector<HTMLElement>(".services-stage-root");
+      const pile = document.querySelector<HTMLElement>(".services-stage-root > .pf-stack");
+      const stage = document.querySelector<HTMLElement>(".services-stage");
+      if (!runway || !pile || !stage) return null;
+      const written = getComputedStyle(runway).getPropertyValue("--svc-proof-runway").trim();
+      return {
+        vh: window.innerHeight,
+        pilePosition: getComputedStyle(pile).position,
+        stagePosition: getComputedStyle(stage).position,
+        // The stage's own flow offset inside the runway: 0 means it pins
+        // from the top, i.e. the pile did not push it down.
+        stageOffset: stage.offsetTop,
+        pileH: pile.offsetHeight,
+        runwayH: runway.offsetHeight,
+        writtenPx: written.endsWith("px") ? Number.parseFloat(written) : NaN,
+        slots: [...document.querySelectorAll<HTMLElement>(".pf-slot")].map((el) => ({
+          position: getComputedStyle(el).position,
+          top: Number.parseFloat(getComputedStyle(el).top),
+        })),
+      };
+    });
+    expect(geo, "the pile never mounted").not.toBeNull();
+    expect(geo!.pilePosition, "the pile is in flow — it would push the stage's pin down").toBe(
+      "absolute"
+    );
+    expect(geo!.stagePosition).toBe("sticky");
+    expect(geo!.stageOffset, "the stage no longer pins from the runway's top").toBe(0);
+    expect(geo!.slots).toHaveLength(4);
+    // ⚠ EVERY SLOT MUST RESOLVE STICKY OR THE HOOK PARKS THE WHOLE PILE —
+    // it reads `computed.top` as a pixel length and falls to static mode.
+    for (const [i, slot] of geo!.slots.entries()) {
+      expect(slot.position, `slot ${i} is not sticky`).toBe("sticky");
+      expect(Number.isFinite(slot.top), `slot ${i} has no pixel top`).toBe(true);
+    }
+    // ⚠ THE FIRST PIN CLEARS THE FRAME'S TOP-LEFT ROW (ADR-094). At 16px the
+    // first card's head sat under the journey marks, which centre ~y45.
+    expect(geo!.slots[0].top).toBeGreaterThanOrEqual(64);
+    // The written runway is the MEASURED pile plus the release band, and the
+    // ring's domain is what is left.
+    expect(Number.isFinite(geo!.writtenPx), "the hook never wrote the measured runway").toBe(true);
+    expect(geo!.writtenPx).toBeCloseTo(geo!.pileH + 1.2 * geo!.vh, 0);
+    expect(geo!.runwayH - geo!.writtenPx, "the ring lost its 500svh domain").toBeCloseTo(
+      5 * geo!.vh,
+      0
+    );
+
+    /* ── THE PILE HOLDS THE STAGE ──────────────────────────────────────
+       The offer's whole assembly rides `--svc-content-in` × the release, and
+       the ring's hit anchors publish off the card opacity — so a published
+       anchor here would mean a card is painting AND that an invisible click
+       target is sitting over the proof. */
+    expect(await seatProofCard(page, 0)).toBe("pinned");
+    const during = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>(".services-stage");
+      const card = document.querySelector<HTMLElement>('[data-pc-index="0"] .pf-card');
+      return {
+        contentIn: Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "1"),
+        hits: document.querySelectorAll(".svc-ring-hits__hit").length,
+        cardOpacity: card ? Number(getComputedStyle(card).opacity) : null,
+        recordOpacity: card
+          ? Number(getComputedStyle(card.querySelector<HTMLElement>(".pf-card__record")!).opacity)
+          : null,
+      };
+    });
+    expect(during.contentIn).toBeLessThan(0.05);
+    expect(during.hits).toBe(0);
+    expect(during.cardOpacity).toBeGreaterThan(0.9);
+    // The arrival channels are windowed off `--pc-enter`; seated, the record
+    // is fully in. A 0 here is the ladder never releasing.
+    expect(during.recordOpacity).toBeGreaterThan(0.95);
+
+    /* ── FOUR CARDS, THE RECORD'S OWN ARC, IN ORDER ────────────────────
+       The head prints `arc.step` from the RECORD while the pile is ordered
+       by `proofOrder.ts` — the two can disagree with nothing failing, which
+       is the defect `trinny-proof-order.test.ts` pins arithmetically and
+       this pins on the rendered page. ⚠ The project's NAME letters nowhere
+       on the card (ADR-094 U4): the claim is the heading and the rail names
+       the parts. */
+    const cards = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>(".pf-card")].map((card) => ({
+        arc: card.querySelector(".pf-card__arc")?.textContent?.trim() ?? "",
+        title: card.querySelector(".pf-card__title")?.textContent?.trim() ?? "",
+        kicker: card.querySelector(".pf-card__kicker")?.textContent?.trim() ?? "",
+        claims: [...card.querySelectorAll(".pf-card__claim-title")].map(
+          (el) => el.textContent?.trim() ?? ""
+        ),
+        marks: card.querySelectorAll(".pf-card__mark .fl-proof-glyph").length,
+      }))
+    );
+    expect(cards).toHaveLength(4);
+    expect(cards.map((c) => c.arc)).toEqual(["01", "02", "03", "04"]);
+    for (const [i, card] of cards.entries()) {
+      expect(card.title.length, `card ${i} has no claim as its heading`).toBeGreaterThan(10);
+      expect(card.kicker).toMatch(/LOOP EARPLUGS/i);
+      expect(card.claims, `card ${i} does not carry four claims`).toHaveLength(4);
+      expect(card.marks, `card ${i} is missing a proof glyph`).toBe(4);
+    }
+
+    /* ── THE RAIL IS THE CARD'S OWN SWITCH, AND IT IS FLAT AND SQUARE ──
+       ADR-089 U3/U4's grammar, which every station on this surface takes:
+       a bordered BOX, the open one FILLED, no ramp and no chamfer. ⚠ Pinned
+       from BOTH ends — `background-image: none` AND `clip-path: none` — or a
+       gradient returns under cover of a ruling that only restored a colour. */
+    expect(await seatProofCard(page, 2)).toBe("pinned");
+    const rail = page.locator('[data-pc-index="2"] .fl-con__stn');
+    expect(await rail.count()).toBe(4);
+    const railSkin = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('[data-pc-index="2"] .fl-con__stn')].map((el) => {
+        const cs = getComputedStyle(el);
+        return { bg: cs.backgroundImage, clip: cs.clipPath, on: el.hasAttribute("data-on") };
+      })
+    );
+    for (const [i, stn] of railSkin.entries()) {
+      expect(stn.bg, `station ${i} paints a ramp`).toBe("none");
+      expect(stn.clip, `station ${i} carries a chamfer`).toBe("none");
+    }
+    expect(railSkin.filter((s) => s.on)).toHaveLength(1);
+
+    /* …and it switches the field. The drawing REMOUNTS per tool (ADR-068 U3),
+       so the assertion is on the DRAWING'S OWN LETTERING, not on a class —
+       a swapped class with the same picture under it is the regression a
+       class check cannot see. ⚠ `readToolBay` does NOT apply here: it reads
+       `.fl-shot__frame`, which is the CASEFILE's tools bay; the card draws
+       the wireframe straight into its own apparatus. */
+    const bayLabels = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>('[data-pc-index="2"] .pf-wire *')]
+          .filter((el) => !el.children.length && (el.textContent ?? "").trim())
+          .map((el) => (el.textContent ?? "").trim())
+          .sort()
+      );
+    const firstBay = await bayLabels();
+    expect(firstBay.length, "the first drawing letters nothing").toBeGreaterThan(3);
+    await rail.nth(2).click();
+    await page.waitForTimeout(700);
+    await expect(rail.nth(2)).toHaveAttribute("data-on", "true");
+    const thirdBay = await bayLabels();
+    expect(thirdBay, "the rail did not change the drawing").not.toEqual(firstBay);
+    // The bay's head is the record's own designation (ADR-094 U8).
+    await expect(page.locator('[data-pc-index="2"] .pf-bay__head')).toHaveText(/IN SERVICE/i);
+
+    /* ── THE CARD IS A CHAMFERED HOUSING, AND ITS CHILDREN ARE SQUARE ──
+       ADR-065's canonical TR + BL, drawn as a CLIPPED RING because a clip
+       cuts a border and never strokes one. Rule 4 comes with it, which is
+       why the console inside takes `clip-path: none` on this route. */
+    const corners = await page.evaluate(() => {
+      const card = document.querySelector<HTMLElement>('[data-pc-index="2"] .pf-card');
+      const con = document.querySelector<HTMLElement>('[data-pc-index="3"] .fl-con__console');
+      if (!card) return null;
+      const before = getComputedStyle(card, "::before");
+      return {
+        cardClip: getComputedStyle(card).clipPath,
+        ringClip: before.clipPath,
+        ringBg: before.backgroundColor,
+        consoleClip: con ? getComputedStyle(con).clipPath : "absent",
+        radius: getComputedStyle(card).borderTopLeftRadius,
+      };
+    });
+    expect(corners!.cardClip, "the card lost its chamfer").toMatch(/^polygon/);
+    expect(corners!.ringClip, "the card's rule is not a clipped ring").toMatch(/evenodd/);
+    expect(corners!.consoleClip, "the console leans the other way inside the card").toBe("none");
+    expect(corners!.radius, "zero radius is law").toBe("0px");
+
+    /* ── NOTHING CLIPS, ON ANY CARD ────────────────────────────────────
+       Every card is measured against ITS OWN box, which is what a pile of
+       four simultaneously-mounted panels needs: `document.querySelector` here
+       would answer with whichever card is first in the DOM. */
+    for (let i = 0; i < 4; i++) {
+      expect(await seatProofCard(page, i)).toBe("pinned");
+      const clip = await page.evaluate((idx) => {
+        const card = document.querySelectorAll<HTMLElement>(".pf-card")[idx];
+        if (!card) return null;
+        const cardBox = card.getBoundingClientRect();
+        const out: { sel: string; over: number }[] = [];
+        for (const sel of [".pf-card__record", ".pf-card__claims", ".pf-card__field"]) {
+          const el = card.querySelector<HTMLElement>(sel);
+          if (!el) continue;
+          out.push({ sel, over: Math.round(el.scrollHeight - el.clientHeight) });
+        }
+        const title = card.querySelector<HTMLElement>(".pf-card__title");
+        const t = title?.getBoundingClientRect();
+        return {
+          boxes: out,
+          // The title is the one string with no ellipsis and no clamp, so a
+          // card that has run out of room shows it here first.
+          titleInside: t ? t.top >= cardBox.top - 1 && t.bottom <= cardBox.bottom + 1 : false,
+          fieldPainted:
+            (card.querySelector<HTMLElement>(".pf-card__field")?.getBoundingClientRect().height ??
+              0) > 100,
+        };
+      }, i);
+      expect(clip, `card ${i} vanished`).not.toBeNull();
+      for (const b of clip!.boxes) {
+        expect(b.over, `card ${i}: ${b.sel} overflows by ${b.over}px`).toBeLessThanOrEqual(1);
+      }
+      expect(clip!.titleInside, `card ${i}: the claim runs outside its card`).toBe(true);
+      expect(clip!.fieldPainted, `card ${i}: the field has no height`).toBe(true);
+    }
+
+    /* ── AND THE OFFER ARRIVES BEHIND IT ──────────────────────────────
+       The release is the back stretch of the proof share; past it the
+       masthead, the plate cluster and the ring all come up on one ramp. */
+    expect(await scrollServicesRunway(page, 0.18)).toBe(true);
+    await page.waitForTimeout(900);
+    const after = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>(".services-stage");
+      const masthead = document.querySelector<HTMLElement>(".services-masthead");
+      return {
+        contentIn: Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "0"),
+        mastheadOpacity: masthead ? Number(getComputedStyle(masthead).opacity) : null,
+      };
+    });
+    expect(after.contentIn, "the offer never assembled after the pile").toBeGreaterThan(0.9);
+    expect(after.mastheadOpacity).toBeGreaterThan(0.9);
+  });
+
+  test("light: the stack's instruments carry their contrast (ADR-063 U2 · ADR-068)", async ({
+    page,
+  }) => {
+    test.skip(!SERVICES_PROOF_STACK, "the proof stack is off");
+    test.skip(!isDesktopViewport(page), "the consoles are desktop-only (≥961px)");
+    test.setTimeout(180_000);
+
+    /* THE FAILURE THIS PINS, one surface later. The map console and the four
+       authored wireframes are drawings authored on near-black; ADR-058's flip
+       makes their ground parchment, where a gold at 1.15:1 and an
+       `rgba(ink, .44)` at 2.4:1 are on screen and unreadable. The casefile's
+       own walk asserted this per ROW on one console — this pile mounts FOUR
+       consoles at once, so every read here is SCOPED to the seated card.
+       ⚠ A scope is not a detail: `document.querySelector(".fl-con__console")`
+       answers with the sheets card whatever is on screen. */
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/?theme=light", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".services-stage", { timeout: 20_000 });
+    await page.waitForSelector(".pf-slot", { timeout: 20_000 });
+
+    // ── The map's three readings, on the map card ─────────────────────
+    expect(await seatProofCard(page, 3)).toBe("pinned");
+    await expect(page.locator(".fl-pda")).toBeVisible();
+    const mapRail = page.locator('[data-pc-index="3"] .fl-con__stn');
+    expect(await mapRail.count()).toBe(3);
+
+    for (const [index, view] of ["1", "2", "3"].entries()) {
+      await mapRail.nth(index).click();
+      await page.waitForTimeout(500);
+      await expect(page.locator(".fl-pda")).toHaveAttribute("data-view", view);
+
+      const worst = await page.evaluate(() => {
+        const root = document.querySelector<HTMLElement>('[data-pc-index="3"]');
+        const svg = root?.querySelector<SVGSVGElement>(".fl-pda__svg");
+        if (!root || !svg) return null;
+
+        const parse = (c: string) => {
+          const m = String(c).match(/rgba?\(([^)]+)\)/);
+          if (!m) return null;
+          const p = m[1].split(",").map((v) => Number.parseFloat(v));
+          return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+        };
+        const lin = (v: number) => {
+          const s = v / 255;
+          return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        };
+        type C = { r: number; g: number; b: number; a: number };
+        const lum = (c: C) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+        const over = (fg: C, bg: C): C =>
+          fg.a >= 1
+            ? fg
+            : {
+                r: fg.a * fg.r + (1 - fg.a) * bg.r,
+                g: fg.a * fg.g + (1 - fg.a) * bg.g,
+                b: fg.a * fg.b + (1 - fg.a) * bg.b,
+                a: 1,
+              };
+        const ratio = (fg: C, bg: C) => {
+          const [hi, lo] = [lum(over(fg, bg)), lum(bg)].sort((x, y) => y - x);
+          return (hi + 0.05) / (lo + 0.05);
+        };
+        /* ⚠ THE BED IS COMPOSITED UP THE TREE, NOT READ OFF ONE ELEMENT
+           (ADR-089). Inside the card the console is a CELL and paints
+           nothing, so reading its own `backgroundColor` returns
+           `rgba(0,0,0,0)` — and every label would then be judged against
+           PURE BLACK, which fails a page that reads fine and would pass one
+           that does not. */
+        const bedOf = (el: Element): C => {
+          let node: Element | null = el;
+          while (node) {
+            const c = parse(getComputedStyle(node).backgroundColor);
+            if (c && c.a >= 0.85) return { ...c, a: 1 };
+            node = node.parentElement;
+          }
+          return { r: 255, g: 255, b: 255, a: 1 };
+        };
+
+        let low = { text: "", ratio: 99, fill: "" };
+        for (const t of svg.querySelectorAll("text")) {
+          const text = (t.textContent ?? "").trim();
+          if (!text) continue;
+          const cs = getComputedStyle(t);
+          if (cs.visibility === "hidden" || Number(cs.opacity) < 0.05) continue;
+          const fill = parse(cs.fill);
+          if (!fill) continue;
+          const r = ratio({ ...fill, a: fill.a * Number(cs.opacity || 1) }, bedOf(t));
+          if (r < low.ratio)
+            low = { text: text.slice(0, 40), ratio: Math.round(r * 100) / 100, fill: cs.fill };
+        }
+        return { low, labels: svg.querySelectorAll("text").length };
+      });
+
+      expect(worst, `view ${view}: no map on the seated card`).not.toBeNull();
+      expect(worst!.labels, `view ${view}: the drawing letters nothing`).toBeGreaterThan(10);
+      expect(
+        worst!.low.ratio,
+        `view ${view}: "${worst!.low.text}" is ${worst!.low.ratio}:1 in ${worst!.low.fill}`
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+
+    // ── And all four authored wireframes, on the same parchment ───────
+    expect(await seatProofCard(page, 2)).toBe("pinned");
+    const toolRail = page.locator('[data-pc-index="2"] .fl-con__stn');
+    for (const stn of WIREFRAME_STATIONS) {
+      if (stn.kind !== "wire") continue;
+      await toolRail.nth(stn.idx).click();
+      await page.waitForTimeout(700);
+
+      const wire = await page.evaluate(() => {
+        const root = document.querySelector<HTMLElement>('[data-pc-index="2"] .pf-field--tools');
+        if (!root) return null;
+        const parse = (c: string) => {
+          const m = String(c).match(/rgba?\(([^)]+)\)/);
+          if (!m) return null;
+          const p = m[1].split(",").map((v) => Number.parseFloat(v));
+          return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+        };
+        const lin = (v: number) => {
+          const s = v / 255;
+          return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+        };
+        type C = { r: number; g: number; b: number; a: number };
+        const lum = (c: C) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+        const over = (fg: C, bg: C): C =>
+          fg.a >= 1
+            ? fg
+            : {
+                r: fg.a * fg.r + (1 - fg.a) * bg.r,
+                g: fg.a * fg.g + (1 - fg.a) * bg.g,
+                b: fg.a * fg.b + (1 - fg.a) * bg.b,
+                a: 1,
+              };
+        const ratio = (fg: C, bg: C) => {
+          const [hi, lo] = [lum(over(fg, bg)), lum(bg)].sort((x, y) => y - x);
+          return (hi + 0.05) / (lo + 0.05);
+        };
+        const bedOf = (el: Element): C => {
+          let node: Element | null = el;
+          while (node) {
+            const c = parse(getComputedStyle(node).backgroundColor);
+            if (c && c.a >= 0.85) return { ...c, a: 1 };
+            node = node.parentElement;
+          }
+          return { r: 255, g: 255, b: 255, a: 1 };
+        };
+
+        let low = { text: "", ratio: 99, color: "" };
+        let count = 0;
+        for (const el of root.querySelectorAll<HTMLElement>(".fl-wire *")) {
+          if (el.children.length) continue;
+          const text = (el.textContent ?? "").trim();
+          if (!text) continue;
+          count += 1;
+          const cs = getComputedStyle(el);
+          const fg = parse(cs.color);
+          if (!fg) continue;
+          const r = ratio(fg, bedOf(el.parentElement ?? el));
+          if (r < low.ratio)
+            low = { text: text.slice(0, 30), ratio: Math.round(r * 100) / 100, color: cs.color };
+        }
+        return { low, count };
+      });
+
+      expect(wire, `${stn.id}: no drawing on the seated card`).not.toBeNull();
+      /* ⚠ THE FLOOR IS THE STATION'S OWN PINNED LABEL SET, never a round
+         number: heimdall letters exactly three (`BRIEFINGS · SYNC ·
+         TEMPLATE`) and a hand-picked `> 3` failed the drawing for being
+         itself. Tied to the record, the check also catches a drawing that
+         silently stopped rendering half its lettering. */
+      expect(
+        wire!.count,
+        `${stn.id}: ${wire!.count} lettered elements against ${stn.labels.length} pinned`
+      ).toBeGreaterThanOrEqual(stn.labels.length);
+      expect(
+        wire!.low.ratio,
+        `${stn.id}: "${wire!.low.text}" is ${wire!.low.ratio}:1 in ${wire!.low.color}`
+      ).toBeGreaterThanOrEqual(4.5);
+    }
   });
 });

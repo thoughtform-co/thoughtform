@@ -184,7 +184,7 @@ async function seatPinnedFromTop(page: Page, idx: number): Promise<void> {
 /**
  * One card's head strip and the field under it (ADR-094 U1).
  *
- * ⚠ THIS SURFACE HAD NO MARKUP GUARD AT ALL until this pass — `tl-card`
+ * ⚠ THIS SURFACE HAD NO MARKUP GUARD AT ALL until this pass — `pf-card`
  * appeared in no test file — so the head could be recomposed and the fields
  * rebuilt with every gate green. It reads what the owner's ruling is ABOUT:
  * the client leads the strip, the project's name is down in the record, the
@@ -193,34 +193,34 @@ async function seatPinnedFromTop(page: Page, idx: number): Promise<void> {
 const cardShape = (page: Page, idx: number) =>
   page.evaluate((i) => {
     const slot = document.querySelectorAll<HTMLElement>("[data-pc-slot]")[i];
-    const head = slot.querySelector<HTMLElement>(".tl-card__head")!;
-    const field = slot.querySelector<HTMLElement>(".tl-card__field")!;
+    const head = slot.querySelector<HTMLElement>(".pf-card__head")!;
+    const field = slot.querySelector<HTMLElement>(".pf-card__field")!;
     /* ⚠ THE RAIL IS IN THE FIELD, NOT THE HEAD (ADR-094 U2). Reading it
        from the head is how this reader would report FOUR railless cards and
        stay green on a rail that had silently stopped rendering. */
     const stns = [...field.querySelectorAll<HTMLElement>(".fl-con__stn")];
-    const tabs = field.querySelector<HTMLElement>(".tl-card__tabs");
+    const tabs = field.querySelector<HTMLElement>(".pf-card__tabs");
     return {
       /* The head's own children, in order — the kicker leads. */
       lead: head.firstElementChild?.className ?? "",
-      kicker: head.querySelector(".tl-card__kicker")?.textContent?.trim() ?? "",
+      kicker: head.querySelector(".pf-card__kicker")?.textContent?.trim() ?? "",
       /* The head's right slot: the beat's ORDINAL and nothing else (U4). The
          CLAIM is the display title below; the project's name letters nowhere
          on the card at all. */
-      arc: head.querySelector(".tl-card__arc")?.textContent?.trim() ?? "",
+      arc: head.querySelector(".pf-card__arc")?.textContent?.trim() ?? "",
       /* The display heading — the arc's own line since U3. */
-      title: slot.querySelector(".tl-card__title")?.textContent?.trim() ?? "",
+      title: slot.querySelector(".pf-card__title")?.textContent?.trim() ?? "",
       /* ADR-065's canonical diagonal on the housing, and rule 4 under it:
          the children of a chamfered box are SQUARE. */
-      cardClip: getComputedStyle(slot.querySelector<HTMLElement>(".tl-card")!).clipPath,
+      cardClip: getComputedStyle(slot.querySelector<HTMLElement>(".pf-card")!).clipPath,
       /* The stations have their own pin below (ADR-089 U3's no-notch
          ruling); these are the two boxes rule 4 reaches that nothing else
          looks at. */
-      childClips: [...slot.querySelectorAll<HTMLElement>(".fl-con__console, .tl-card__field")].map(
+      childClips: [...slot.querySelectorAll<HTMLElement>(".fl-con__console, .pf-card__field")].map(
         (el) => getComputedStyle(el).clipPath
       ),
-      titleInRecord: !!slot.querySelector(".tl-card__record > .tl-card__title"),
-      titleInHead: !!head.querySelector(".tl-card__title"),
+      titleInRecord: !!slot.querySelector(".pf-card__record > .pf-card__title"),
+      titleInHead: !!head.querySelector(".pf-card__title"),
       stationsInHead: head.querySelectorAll(".fl-con__stn").length,
       /* ⚠ THE RAIL IS IN THE CARD'S OWN SLOT, which for the studio card is
          the PORTAL landing (`SheetsPlate.railHost`). Counting stations
@@ -229,7 +229,7 @@ const cardShape = (page: Page, idx: number) =>
       stationsInSlot: tabs ? tabs.querySelectorAll(".fl-con__stn").length : 0,
       /* The claim's evidence sentence — the record the homepage's left
          column carries and this card did not read until U2. */
-      claimDescs: [...slot.querySelectorAll(".tl-card__claim-desc")].map(
+      claimDescs: [...slot.querySelectorAll(".pf-card__claim-desc")].map(
         (el) => el.textContent?.trim() ?? ""
       ),
       stations: stns.map((b) => b.textContent?.trim() ?? ""),
@@ -242,8 +242,8 @@ const cardShape = (page: Page, idx: number) =>
       spineShown: [...slot.querySelectorAll<HTMLElement>(".fl-con__spine")].some(
         (el) => getComputedStyle(el).display !== "none"
       ),
-      films: slot.querySelectorAll(".tl-film").length,
-      wires: slot.querySelectorAll(".tl-wire").length,
+      films: slot.querySelectorAll(".pf-film").length,
+      wires: slot.querySelectorAll(".pf-wire").length,
       /* The ads are the casefile's own `.fl-still` since U3 — the card
          mounts `SheetsPlate` whole rather than re-typing its bodies. */
       stills: slot.querySelectorAll(".fl-still").length,
@@ -254,8 +254,8 @@ const cardShape = (page: Page, idx: number) =>
       /* THE PLAYERS (U3). A film's control is its own FRAME (a `<button>`,
          the homepage films plate's grammar); a drawing gets a labelled bar,
          because a control over a wireframe has to say what it opens. */
-      filmIsButton: slot.querySelector(".tl-film__frame")?.tagName ?? "",
-      watchBars: slot.querySelectorAll(".tl-watch").length,
+      filmIsButton: slot.querySelector(".pf-film__frame")?.tagName ?? "",
+      watchBars: slot.querySelectorAll(".pf-watch").length,
       /* ADR-094 U8 — THE LADDER AND THE HOUSING. Nothing pinned a type size
          on this card before (`fontSize` appeared in zero assertions), which
          is how it shipped one rung small. The claim is the lede's PEER by
@@ -267,25 +267,25 @@ const cardShape = (page: Page, idx: number) =>
           const el = slot.querySelector<HTMLElement>(sel);
           return el ? parseFloat(getComputedStyle(el).fontSize) : 0;
         };
-        const ct = slot.querySelector<HTMLElement>(".tl-card__claim-title");
+        const ct = slot.querySelector<HTMLElement>(".pf-card__claim-title");
         return {
-          title: px(".tl-card__title"),
-          lede: px(".tl-card__lede"),
-          claim: px(".tl-card__claim-title"),
+          title: px(".pf-card__title"),
+          lede: px(".pf-card__lede"),
+          claim: px(".pf-card__claim-title"),
           claimWeight: ct ? getComputedStyle(ct).fontWeight : "",
           mark:
-            slot.querySelector<HTMLElement>(".tl-card__mark")?.getBoundingClientRect().width ?? 0,
+            slot.querySelector<HTMLElement>(".pf-card__mark")?.getBoundingClientRect().width ?? 0,
         };
       })(),
       housing: (() => {
         const r = (sel: string) =>
           slot.querySelector<HTMLElement>(sel)?.getBoundingClientRect() ?? null;
-        const card = r(".tl-card")!;
-        const record = r(".tl-card__record")!;
-        const box = r(".tl-field--tools");
-        const wire = r(".tl-wire");
-        const watch = r(".tl-watch");
-        const claims = [...slot.querySelectorAll<HTMLElement>(".tl-card__claim")];
+        const card = r(".pf-card")!;
+        const record = r(".pf-card__record")!;
+        const box = r(".pf-field--tools");
+        const wire = r(".pf-wire");
+        const watch = r(".pf-watch");
+        const claims = [...slot.querySelectorAll<HTMLElement>(".pf-card__claim")];
         const last = claims.length ? claims[claims.length - 1].getBoundingClientRect() : null;
         return {
           divider: record.right,
@@ -296,7 +296,7 @@ const cardShape = (page: Page, idx: number) =>
           wireLeft: wire?.left ?? null,
           watch: watch ? { left: watch.left, right: watch.right, bottom: watch.bottom } : null,
           lastClaimBottom: last?.bottom ?? null,
-          bayHead: slot.querySelector(".tl-bay__head")?.textContent?.trim() ?? "",
+          bayHead: slot.querySelector(".pf-bay__head")?.textContent?.trim() ?? "",
         };
       })(),
     };
@@ -486,7 +486,7 @@ test.describe("Trinny London pitch variant", () => {
     // Card 4 pinned: everything above it covered, the runway's index at the end.
     await seatSlot(page, 3);
     expect(await slotStates(page)).toEqual(["covered", "covered", "covered", "pinned"]);
-    await expect(page.locator(".tl-stack__runway")).toHaveAttribute("data-pc-active", "3");
+    await expect(page.locator(".pf-stack__runway")).toHaveAttribute("data-pc-active", "3");
 
     /* ADR-094 U1 — THE HEAD IS CHROME AND THE FIELD SHOWS ONE THING.
        The client leads every strip, the project's name sits in the record
@@ -494,7 +494,7 @@ test.describe("Trinny London pitch variant", () => {
        switch on the house rail instead of printing all of it at once. */
     const shapes = await Promise.all([0, 1, 2, 3].map((i) => cardShape(page, i)));
     for (const [i, c] of shapes.entries()) {
-      expect(c.lead, `card ${i + 1} leads with the client`).toContain("tl-card__kicker");
+      expect(c.lead, `card ${i + 1} leads with the client`).toContain("pf-card__kicker");
       expect(c.kicker, `card ${i + 1} kicker`).toMatch(/^Loop Earplugs \u00b7 /);
       expect(c.titleInRecord, `card ${i + 1} name is in the record`).toBe(true);
       expect(c.titleInHead, `card ${i + 1} name is out of the head`).toBe(false);
@@ -636,13 +636,13 @@ test.describe("Trinny London pitch variant", () => {
        and the line under it — because a caption left on the master's meta
        contradicts the frame directly above it. */
     const film = await page.evaluate(() => {
-      const el = document.querySelector<HTMLImageElement>('[data-pc-index="0"] .tl-film img');
+      const el = document.querySelector<HTMLImageElement>('[data-pc-index="0"] .pf-film img');
       const box = el?.getBoundingClientRect();
       return {
-        portrait: !!document.querySelector('[data-pc-index="0"] .tl-film--portrait'),
+        portrait: !!document.querySelector('[data-pc-index="0"] .pf-film--portrait'),
         src: el?.currentSrc || el?.src || "",
         ratio: box ? box.width / box.height : 0,
-        caption: [...document.querySelectorAll('[data-pc-index="0"] .tl-film__caption > span')].map(
+        caption: [...document.querySelectorAll('[data-pc-index="0"] .pf-film__caption > span')].map(
           (s) => s.textContent?.trim() ?? ""
         ),
       };
@@ -661,7 +661,7 @@ test.describe("Trinny London pitch variant", () => {
     /* ⚠ THE ORIGIN IS PART OF THE RECT, AND LEAVING IT OUT IS WHAT LET THE
        PLAYER JUMP (owner, 2026-09-10: it "moves to the left side while it
        should stay centered like the thumbnail"). This read was `{w, h}` and
-       the frame's SIZE genuinely never moved — `.tl-field--films`' one auto
+       the frame's SIZE genuinely never moved — `.pf-field--films`' one auto
        column was sized from content, so a `<video>`'s intrinsic width
        saturated the track, `justify-content` had nothing left to centre, and
        the item fell to the left padding edge 121–141px away at its own
@@ -677,7 +677,7 @@ test.describe("Trinny London pitch variant", () => {
            The claim is about where the player sits IN ITS BOX, and that is
            the frame this asserts in. */
         const f = document
-          .querySelector<HTMLElement>('[data-pc-index="0"] .tl-field--films')
+          .querySelector<HTMLElement>('[data-pc-index="0"] .pf-field--films')
           ?.getBoundingClientRect();
         return r && f
           ? {
@@ -688,8 +688,8 @@ test.describe("Trinny London pitch variant", () => {
             }
           : null;
       }, sel);
-    const filmBox = await rectIn(page, '[data-pc-index="0"] .tl-film__frame');
-    await page.locator('[data-pc-index="0"] .tl-film__frame').click();
+    const filmBox = await rectIn(page, '[data-pc-index="0"] .pf-film__frame');
+    await page.locator('[data-pc-index="0"] .pf-film__frame').click();
     const inline = await page.evaluate(() => ({
       mounted: !!document.querySelector('[data-pc-index="0"] video'),
       src: document.querySelector('[data-pc-index="0"] video')?.getAttribute("src") ?? "",
@@ -707,10 +707,10 @@ test.describe("Trinny London pitch variant", () => {
        while the equality was the only thing anyone checked. */
     const gaps = await page.evaluate(() => {
       const field = document
-        .querySelector<HTMLElement>('[data-pc-index="0"] .tl-field--films')!
+        .querySelector<HTMLElement>('[data-pc-index="0"] .pf-field--films')!
         .getBoundingClientRect();
       const frame = document
-        .querySelector<HTMLElement>('[data-pc-index="0"] .tl-film__frame')!
+        .querySelector<HTMLElement>('[data-pc-index="0"] .pf-film__frame')!
         .getBoundingClientRect();
       return { left: frame.left - field.left, right: field.right - frame.right };
     });
@@ -738,7 +738,7 @@ test.describe("Trinny London pitch variant", () => {
        card above. See `seatPinnedFromTop` for why `seatSlot` alone cannot. */
     await seatPinnedFromTop(page, 2);
 
-    await page.locator('[data-pc-index="2"] .tl-watch').click();
+    await page.locator('[data-pc-index="2"] .pf-watch').click();
     const player = await page.evaluate(() => {
       const lb = document.querySelector<HTMLElement>(".fl-lightbox");
       const v = lb?.querySelector("video");

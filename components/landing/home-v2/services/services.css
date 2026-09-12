@@ -111,9 +111,59 @@
    * PRE-HYDRATION (`useCorridorExitScroll`'s first `servicesRect` read beats
    * every module evaluation), so the pair cannot be generated; **the alarm is
    * `tests/lib/services-proof-runway-lockstep.test.ts`**, which fails with the
-   * number to write here. Bump it in the same commit as the registry entry. */
-  --svc-proof-runway: 320svh;
+   * number to write here. Bump it in the same commit as the registry entry.
+   *
+   * ⚠ **ADR-096: 320 → 610svh, AND IT IS A RESERVATION THAT GETS OVERWRITTEN.**
+   * The proof beat is the STACK now (4.9 viewports of pile + the 1.2 of
+   * release), and the pile's length is `100svh` arithmetic with fixed px terms
+   * in it — the 64–88px pin, the 52px peek, the 24px safe band — so it lands
+   * anywhere in ~483–490svh depending on the viewport. This literal is what
+   * the page reserves BEFORE hydration; `useServicesStageScroll` then measures
+   * the pile's own box and writes the real total back onto this property, in
+   * pixels, once per resize. That is what keeps the reserved height and the
+   * runway SPLIT's proof share the same number at every viewport, and with
+   * them the ring's domain at exactly 500svh. */
+  --svc-proof-runway: 610svh;
   min-height: calc(var(--svc-proof-runway) + 500svh);
+}
+
+/* ── The proof stack's seat (ADR-096) ──────────────────────────────────
+   The pile is a SIBLING of the pinned stage, and it is out of flow.
+
+   ⚠ THE STACK CANNOT LIVE INSIDE THE STAGE. Its slots are `position: sticky`
+   and a sticky slot needs real scroll to stick against; inside a stage that is
+   itself pinned at `top: 0` there is none. But putting it in FLOW ahead of the
+   stage would push the stage's own pin down the runway, so `.services-stage`
+   would arrive by sliding up after the last card instead of already being
+   there — and the proof → offer handoff is the beat the owner likes. Absolute
+   keeps both: the pile scrolls over the front of the runway, the stage pins
+   from the runway's very top, and the masthead and the ring fade up in a frame
+   that never moved.
+
+   ⚠ NO `height` HERE. The box is content-height — the pile's own arithmetic —
+   because that height is what the hook MEASURES for the runway split. Pinning
+   it to `--svc-proof-runway` would make the measurement read back the
+   reservation it is supposed to correct.
+
+   z 6 is the casefile's own rung: above `.svc-ring-hits__hit` at z 4, so a
+   card's rail and watch bar take their own clicks while the pile is on screen.
+   Past the pile the box is above the viewport and reaches nothing. */
+.services-stage-root > .pf-stack {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 6;
+}
+
+/* ⚠ THE INERT RUNG IS THE SHEET'S OWN, RESTATED — it must be the SAME query
+   `proof-stack.css` parks the slots with, or the pile falls into normal flow
+   inside a box that is still out of it and lands on top of the accordion. In
+   flow the pile is the runway's first child and the stage pins after it, which
+   the measured split handles by construction (the hook reads the box either
+   way). */
+@media (max-width: 960px), (max-height: 680px), (prefers-reduced-motion: reduce) {
+  .services-stage-root > .pf-stack {
+    position: static;
+  }
 }
 
 /* ── Pinned stage ────────────────────────────────────────────────── */

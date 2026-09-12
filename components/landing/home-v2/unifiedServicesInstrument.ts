@@ -228,8 +228,43 @@ export const VOIDWALKER_EXTENDS_CORRIDOR = VOIDWALKER_TIME_TUNNEL || VOIDWALKER_
  *
  * Mobile / reduced motion keep the plate accordion regardless; there the
  * casefile renders as resolved static flow content above it.
+ *
+ * ⚠ **OFF SINCE ADR-096 (2026-09-12, owner): THE PROOF STACK IS THE BEAT.**
+ * The owner read the Trinny London pitch page's card pile and asked for it
+ * here — "in the proof section on our homepage, we now have different cards,
+ * but I want you to use the ones from Trinny London" — so `#services` opens
+ * with `SERVICES_PROOF_STACK` below and this surface no longer mounts. Its
+ * component tree, its CSS and its guards are all still on disk: the losing
+ * drawing goes once the owner has read the new beat live (ADR-070 U35's
+ * ruling), not before. ⚠ THE FOUR EVIDENCE PLATES SURVIVE EITHER WAY —
+ * `SheetsPlate`, `FilmsPlate`, `ToolField` and `IntelligenceMapPlate` are
+ * what the CARDS mount, so `casefile/**` is not dead code and may not be
+ * swept as such.
  */
-export const SERVICES_PROOF_CASEFILE = true;
+export const SERVICES_PROOF_CASEFILE = false;
+
+/**
+ * Feature flag for the SERVICES PROOF STACK (ADR-096, 2026-09-12) — the four
+ * Loop projects as a scroll-stacked pile of cards, in the casefile's place at
+ * the front of the `#services` runway.
+ *
+ * The mechanic is ADR-030's sticky-sibling stack and the skin is
+ * `proof-stack.css`, both shared verbatim with `/trinny-london` (ADR-094).
+ * What differs here is only the SEATING: the pile is absolutely positioned
+ * over the front of `.services-stage-root` (`services.css`), so
+ * `.services-stage` still pins from the runway's very top and the
+ * proof → offer handoff keeps the shape it has today — the masthead and the
+ * ring fade up in a frame that never moved.
+ *
+ * ⚠ THE RUNWAY SPLIT IS UNCHANGED MACHINERY, MEASURED RATHER THAN DECLARED.
+ * `useServicesStageScroll` still hands `splitServicesRunway` a proof share
+ * and a ring share; it just reads the pile's own height for the first one
+ * instead of trusting a literal, because the pile's height is `100svh`-based
+ * arithmetic with px terms in it and comes out at 439–447svh across the
+ * reference viewports. `SERVICES_PROOF_RUNWAY_VH` below is the
+ * PRE-HYDRATION RESERVATION for that measurement, not the measurement.
+ */
+export const SERVICES_PROOF_STACK = true;
 
 /**
  * Feature flag for the SUBSTRATE BACKPLANE.
@@ -285,6 +320,26 @@ export const SERVICES_PROOF_CLIENT_SEAM_VH = 0.5;
  * handoff byte-identical in PIXELS however long the browse band grows.
  */
 export const SERVICES_PROOF_RELEASE_VH = 1.2;
+
+/**
+ * The PILE's own scroll, in viewport heights — the front of the proof runway
+ * under `SERVICES_PROOF_STACK` (ADR-096), where the casefile's browse band
+ * used to be.
+ *
+ * ⚠ IT IS A RESERVATION, NOT THE GEOMETRY. The stack's height is
+ * `proof-stack.css`'s arithmetic — `n × (100svh − pinTop + peek + dwell)`
+ * plus the last card and its tail — and the px terms in it (the 64–88px pin,
+ * the 52px peek, the 24px safe band) do not scale with the viewport, so the
+ * pile comes out around **489svh at 1280×720, 490 at 1440×800 and 483 at
+ * 1920×1247**. A single literal can only ever be near it, which is why
+ * `useServicesStageScroll` READS the pile's box and writes the real number
+ * back onto `--svc-proof-runway`. This value is what the page reserves before
+ * that first measurement lands (and the fallback if the pile is absent), so
+ * it is deliberately the CEILING of the measured range and not its mean:
+ * reserving too little would let the ring's domain start inside the pile for
+ * one frame.
+ */
+export const SERVICES_PROOF_PILE_VH = 4.9;
 
 /** One row count per case, in registry order — the segment table's input. */
 const PROOF_ROW_COUNTS = CASES.map((c) => c.casefile.tracks.length);
@@ -349,9 +404,11 @@ const PROOF_BROWSE_VH = browseBandVh(
  * what a `PROOF_OUT_*` fraction means in pixels — re-measure the handoff
  * after.
  */
-export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE
-  ? PROOF_BROWSE_VH + SERVICES_PROOF_RELEASE_VH
-  : 0;
+export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_STACK
+  ? SERVICES_PROOF_PILE_VH + SERVICES_PROOF_RELEASE_VH
+  : SERVICES_PROOF_CASEFILE
+    ? PROOF_BROWSE_VH + SERVICES_PROOF_RELEASE_VH
+    : 0;
 
 /**
  * Where the browse band ends and the release begins, as a fraction of the
@@ -367,8 +424,9 @@ export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_CASEFILE
  * (the row scrollspy + the click-pins-scroll math) and the smoke spec
  * (band-fraction targeting). One derivation, three readers, zero drift.
  */
-export const SERVICES_PROOF_BROWSE_FRAC =
-  PROOF_BROWSE_VH / (PROOF_BROWSE_VH + SERVICES_PROOF_RELEASE_VH);
+export const SERVICES_PROOF_BROWSE_FRAC = SERVICES_PROOF_STACK
+  ? SERVICES_PROOF_PILE_VH / (SERVICES_PROOF_PILE_VH + SERVICES_PROOF_RELEASE_VH)
+  : PROOF_BROWSE_VH / (PROOF_BROWSE_VH + SERVICES_PROOF_RELEASE_VH);
 
 /**
  * The only tier in which SCROLL OWNS THIS BEAT — the stage is pinned, the

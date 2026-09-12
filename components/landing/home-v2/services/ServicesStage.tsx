@@ -8,6 +8,8 @@ import { ServicesMasthead } from "./ServicesMasthead";
 import { ServicesPlateCluster } from "./ServicesPlateCluster";
 import { ServicesRingHitAreas } from "./ServicesRingHitAreas";
 import { ServicesCasefile } from "./casefile/ServicesCasefile";
+import { ProofStack } from "./proof-stack/ProofStack";
+import { proofStackTracks } from "./proof-stack/proofOrder";
 import { SERVICES, type ServiceId } from "./serviceData";
 import { useServicesStageScroll } from "../hooks/useServicesStageScroll";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
@@ -21,6 +23,7 @@ import {
   SERVICES_CARD_DRAWER,
   SERVICES_CARD_RING,
   SERVICES_PROOF_CASEFILE,
+  SERVICES_PROOF_STACK,
   UNIFIED_SERVICES_ARMILLARY,
 } from "../unifiedServicesInstrument";
 
@@ -203,77 +206,101 @@ export function ServicesStage() {
   // (the ringScrollTween — an explicit programmatic scroll, unchanged).
 
   return (
-    <div
-      className="services-stage"
-      ref={stageRef}
-      data-active-step="0"
-      data-card-ring={SERVICES_CARD_RING ? "on" : "off"}
-      /* ADR-050: while a drawer is out the open pair scales up and paints
+    <>
+      {/* ── THE PROOF STACK (ADR-096) ────────────────────────────────────
+          The four Loop projects as a scroll-stacked pile of cards, in the
+          casefile's place at the front of the `#services` runway.
+
+          ⚠ IT IS A SIBLING OF THE STAGE, NOT A CHILD, AND THAT IS THE WHOLE
+          STRUCTURAL CHANGE. The pile is `position: sticky` slots — they need
+          real scroll to stick against, and inside a stage that is itself
+          pinned there is none. So it sits beside the stage in
+          `.services-stage-root` and `services.css` seats it ABSOLUTELY over
+          the front of the runway: out of flow, so `.services-stage` still
+          pins from the runway's very top and the proof → offer handoff keeps
+          the shape it has today.
+
+          ⚠ FIRST IN DOM, ahead of the stage, for the inert rung: below 961px
+          and under reduced motion the pile falls into normal flow and the
+          proof reads above the offer accordion, which is where the casefile
+          sat for the same reason. */}
+      {SERVICES_PROOF_STACK && <ProofStack tracks={proofStackTracks()} />}
+
+      <div
+        className="services-stage"
+        ref={stageRef}
+        data-active-step="0"
+        data-card-ring={SERVICES_CARD_RING ? "on" : "off"}
+        /* ADR-050: while a drawer is out the open pair scales up and paints
          over the masthead (the corridor canvas out-stacks the station DOM),
          so the section copy DIMS to read as background — services.css keys
          `--svc-plate-dim` off this attribute. */
-      data-plate-open={drawerActive && openServiceId ? "1" : undefined}
-    >
-      <div className="services-stage__items">
-        {/* The client casefile (ADR-056) — the corridor epilogue's claim
+        data-plate-open={drawerActive && openServiceId ? "1" : undefined}
+      >
+        <div className="services-stage__items">
+          {/* The client casefile (ADR-056) — the corridor epilogue's claim
             answered with one engagement, over the parked brandmark, BEFORE
-            the offer. It holds the front of the runway; the ring and the
-            masthead wait behind it on `--svc-content-in` × the release ramp.
-            FIRST in DOM, ahead of the masthead, so the mobile/PRM accordion
-            flow puts the proof above the offer there too. */}
-        {SERVICES_PROOF_CASEFILE && <ServicesCasefile />}
+            the offer. It held the front of the runway; the ring and the
+            masthead waited behind it on `--svc-content-in` × the release ramp.
+            ⚠ OFF SINCE ADR-096 — the PROOF STACK above is the beat now, and
+            it is a sibling of this stage rather than a child of it (a pile of
+            sticky slots cannot stick inside a pinned stage). This branch is
+            dead while the flag is, and stays until the owner has read the new
+            beat live. */}
+          {SERVICES_PROOF_CASEFILE && <ServicesCasefile />}
 
-        {/* Section masthead (ADR-044): title left / intro right in the upper
+          {/* Section masthead (ADR-044): title left / intro right in the upper
             band. Ring-mode only (the flag-off racks own the upper corners);
             FIRST in DOM so the mobile/PRM accordion flow puts it above the
             plates for free — on desktop it is absolutely positioned. */}
-        {SERVICES_CARD_RING && <ServicesMasthead />}
+          {SERVICES_CARD_RING && <ServicesMasthead />}
 
-        {showServicesCanvas ? <ServicesHologramCanvas activeServiceId={activeServiceId} /> : null}
+          {showServicesCanvas ? <ServicesHologramCanvas activeServiceId={activeServiceId} /> : null}
 
-        {/* Designation layer sits under the plate cluster so an open plate
+          {/* Designation layer sits under the plate cluster so an open plate
             always paints on top of a stray callout that lands near a
             rack edge (rare, but possible on narrow desktops). Hidden on
             mobile / reduced motion via CSS + a JS gate in the layer. */}
-        <ServicesDesignationLayer fallbackActiveServiceId={activeServiceId} />
+          <ServicesDesignationLayer fallbackActiveServiceId={activeServiceId} />
 
-        {/* Kept mounted in ring mode: below 961px the accordion IS the
+          {/* Kept mounted in ring mode: below 961px the accordion IS the
             services UI (CSS owns visibility via data-card-ring). Leader
             lines retire with the racks when the ring carries the cards. */}
-        <ServicesPlateCluster
-          activeServiceId={activeServiceId}
-          expandedServiceId={expandedServiceId}
-          onSelectService={selectService}
-          plateVariant="wireframe"
-          showConnectors={!SERVICES_CARD_RING}
-        />
+          <ServicesPlateCluster
+            activeServiceId={activeServiceId}
+            expandedServiceId={expandedServiceId}
+            onSelectService={selectService}
+            plateVariant="wireframe"
+            showConnectors={!SERVICES_CARD_RING}
+          />
 
-        {/* Click targets over the orbiting cards (rects published by
+          {/* Click targets over the orbiting cards (rects published by
             ServicesCardRing): side/back cards scroll the runway to their
             beat, the front card exposes its baked CTA as a real link.
             The cards carry ALL their copy on the baked face — one plate,
             exactly like the open C3 card (2026-07-10 Vince red-alert:
             never split the card into a photo plane + a text console). */}
-        {cardRingActive && (
-          <ServicesRingHitAreas
-            onSelectService={selectService}
-            /* ADR-050: with the drawer promoted the FRONT card's target is the
+          {cardRingActive && (
+            <ServicesRingHitAreas
+              onSelectService={selectService}
+              /* ADR-050: with the drawer promoted the FRONT card's target is the
                whole face (the baked `OPEN` chit is the visible signal) and the
                drawer's baked CTA / ✕ / spec copy get their own shims off the
                second published rect. Flag off, these stay undefined and the
                front card keeps the ADR-029 CTA link byte-identically. */
-            onOpenFront={drawerActive ? openFrontCard : undefined}
-            onCloseDrawer={drawerActive ? closeDrawer : undefined}
-            openServiceId={drawerActive ? openServiceId : null}
-          />
-        )}
+              onOpenFront={drawerActive ? openFrontCard : undefined}
+              onCloseDrawer={drawerActive ? closeDrawer : undefined}
+              openServiceId={drawerActive ? openServiceId : null}
+            />
+          )}
 
-        {/* Station readout RETIRED (owner, 2026-07-16): the mono row along
+          {/* Station readout RETIRED (owner, 2026-07-16): the mono row along
             the bottom of the stage was removed to give the card ring + the
             title band more vertical real estate on short viewports. The
             step clock's other surfaces (data-active-step, plates, ring
             highlight, designations) carry the active-service signal. */}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

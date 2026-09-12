@@ -13,11 +13,9 @@ import {
   rowFromBrowse,
 } from "@/components/landing/home-v2/services/casefile/browseMap";
 import {
-  SERVICES_PROOF_BROWSE_FRAC,
   SERVICES_PROOF_CLIENT_SEAM_VH,
   SERVICES_PROOF_RELEASE_VH,
   SERVICES_PROOF_ROW_VH,
-  SERVICES_PROOF_RUNWAY_VH,
   SERVICES_PROOF_SEGMENTS,
 } from "@/components/landing/home-v2/unifiedServicesInstrument";
 
@@ -47,19 +45,35 @@ const N1 = browseSegments([4], SERVICES_PROOF_ROW_VH, SERVICES_PROOF_CLIENT_SEAM
  */
 const N2 = browseSegments([4, 3], SERVICES_PROOF_ROW_VH, SERVICES_PROOF_CLIENT_SEAM_VH);
 
+/**
+ * THE CASEFILE'S OWN DWELL, DERIVED HERE (ADR-096).
+ *
+ * ⚠ `SERVICES_PROOF_RUNWAY_VH` AND `SERVICES_PROOF_BROWSE_FRAC` ARE THE
+ * STACK'S NOW. The proof beat is the card pile, so those exports carry the
+ * pile's reservation and its split — while this file's subject is
+ * `browseMap.ts`, the CASEFILE's arithmetic, which is a pure function of the
+ * three knobs and degenerates to the ADR-056 U13 spy at N = 1 whatever the
+ * page happens to mount. Reading the shipped constants made that claim
+ * depend on which beat is live, which is exactly the coupling that broke
+ * when the beat changed. Derived from the knobs, the claim is about the
+ * arithmetic again.
+ */
+const CASEFILE_BROWSE_VH = browseBandVh([4], SERVICES_PROOF_ROW_VH, SERVICES_PROOF_CLIENT_SEAM_VH);
+const CASEFILE_DWELL_VH = CASEFILE_BROWSE_VH + SERVICES_PROOF_RELEASE_VH;
+const CASEFILE_BROWSE_FRAC = CASEFILE_BROWSE_VH / CASEFILE_DWELL_VH;
+
 describe("the dwell is derived, and at N = 1 it is exactly what shipped", () => {
   it("collapses to 2.0 + 1.2 = 3.2 and 0.625 with no float drift", () => {
-    const browseVh = browseBandVh([4], SERVICES_PROOF_ROW_VH, SERVICES_PROOF_CLIENT_SEAM_VH);
-    expect(browseVh).toBe(2);
+    expect(CASEFILE_BROWSE_VH).toBe(2);
     // ⚠ `2 + 1.2` is a rounding TIE between the two doubles bracketing 3.2,
     // and round-half-to-even picks the one that IS 3.2's representation.
     // That is luck the test is entitled to check, not to assume.
-    expect(browseVh + SERVICES_PROOF_RELEASE_VH).toBe(3.2);
-    expect(SERVICES_PROOF_RUNWAY_VH).toBe(3.2);
-    expect(SERVICES_PROOF_BROWSE_FRAC).toBe(0.625);
+    expect(CASEFILE_BROWSE_VH + SERVICES_PROOF_RELEASE_VH).toBe(3.2);
+    expect(CASEFILE_DWELL_VH).toBe(3.2);
+    expect(CASEFILE_BROWSE_FRAC).toBe(0.625);
     // …and the release's absolute budget is the pre-browse dwell, which is
     // the sentence the constant's comment makes.
-    expect(SERVICES_PROOF_RUNWAY_VH * (1 - SERVICES_PROOF_BROWSE_FRAC)).toBeCloseTo(1.2, 12);
+    expect(CASEFILE_DWELL_VH * (1 - CASEFILE_BROWSE_FRAC)).toBeCloseTo(1.2, 12);
   });
 
   it("publishes one client band spanning the whole domain", () => {
@@ -87,14 +101,14 @@ describe("the dwell is derived, and at N = 1 it is exactly what shipped", () => 
     // the dwell is row one's band and 0.42 is row three's — the two readings
     // `services-ring-smoke` asserts by name.
     const cursor = { clientIdx: 0, rowIdx: 0 };
-    const at = (dwell: number) => browseState(dwell / SERVICES_PROOF_BROWSE_FRAC, N1, cursor);
+    const at = (dwell: number) => browseState(dwell / CASEFILE_BROWSE_FRAC, N1, cursor);
     expect(at(0.1).rowIdx).toBe(0);
     expect(at(0.42).rowIdx).toBe(2);
     // The band table agrees with the spy about which rows those are.
-    expect(0.1 / SERVICES_PROOF_BROWSE_FRAC).toBeGreaterThanOrEqual(browseRowBand(N1, 0, 0).start);
-    expect(0.1 / SERVICES_PROOF_BROWSE_FRAC).toBeLessThan(browseRowBand(N1, 0, 0).end);
-    expect(0.42 / SERVICES_PROOF_BROWSE_FRAC).toBeGreaterThanOrEqual(browseRowBand(N1, 0, 2).start);
-    expect(0.42 / SERVICES_PROOF_BROWSE_FRAC).toBeLessThan(browseRowBand(N1, 0, 2).end);
+    expect(0.1 / CASEFILE_BROWSE_FRAC).toBeGreaterThanOrEqual(browseRowBand(N1, 0, 0).start);
+    expect(0.1 / CASEFILE_BROWSE_FRAC).toBeLessThan(browseRowBand(N1, 0, 0).end);
+    expect(0.42 / CASEFILE_BROWSE_FRAC).toBeGreaterThanOrEqual(browseRowBand(N1, 0, 2).start);
+    expect(0.42 / CASEFILE_BROWSE_FRAC).toBeLessThan(browseRowBand(N1, 0, 2).end);
   });
 
   it("runs rowFromBrowse itself, unchanged, over the whole band", () => {

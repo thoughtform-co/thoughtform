@@ -7,6 +7,22 @@ A "case" is content in `lib/cases/`; it is NOT an "arc page"
 (`/arcs/[slug]`, a ported deck) and NOT `arc-cases/` (the corridor's
 four-tool card, which belongs to the Arc). See LANGUAGE.md.
 
+⚠ **AND SINCE [ADR-096](../sentinel/decisions/096-proof-stack-on-the-homepage.md)
+(2026-09-12, owner) THE CASEFILE IS NOT WHAT `#services` MOUNTS.** The beat is
+the proof STACK — the same four Loop projects as a scroll-stacked pile of
+cards, promoted from `/trinny-london` (ADR-094) — and
+[`.claude/rules/proof-stack.md`](proof-stack.md) is its rule.
+`SERVICES_PROOF_CASEFILE` is OFF; this file's casefile geometry, its browse
+band, its housing and its five smoke tests are all still on disk and all
+inert, until the owner has read the new beat live (ADR-070 U35: a flag is a
+comparison lever, and the losing drawing goes WITH its guards).
+⚠ **WHAT IS NOT INERT IS EVERYTHING BELOW ABOUT THE RECORD AND THE PLATES.**
+`lib/cases/**`, the confidentiality envelope, `SheetsPlate`, `FilmsPlate`, the
+four authored wireframes and `IntelligenceMapPlate` are what the CARDS mount,
+at card scale, through `ProofField` — so `casefile/**` is not dead code and may
+not be swept as such. What changed is the housing around the evidence, never
+the evidence.
+
 ⚠ **There is no `#proof` station.** ADR-054's station, its parse-time
 generator (`lib/v7-parse/proofStation.ts`) and its reveal controller were
 deleted by ADR-056. If you are here from an old comment expecting a station
