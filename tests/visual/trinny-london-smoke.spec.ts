@@ -299,9 +299,12 @@ const cardShape = (page: Page, idx: number) =>
         const last = claims.length ? claims[claims.length - 1].getBoundingClientRect() : null;
         return {
           k,
-          /* The head is the folder TAB (ADR-097): its share of the top edge,
-             both rects transformed alike so the ratio needs no `k`. */
-          tabShare: head.getBoundingClientRect().width / Math.max(1, card.width),
+          /* The head is the client's BAND (ADR-097 U1 — the owner took the
+             tab-only cut off: "I want the full top row to have that
+             gradient"): its share of the top edge, both rects transformed
+             alike so the ratio needs no `k`, and its paint. */
+          headShare: head.getBoundingClientRect().width / Math.max(1, card.width),
+          headBg: getComputedStyle(head).backgroundImage,
           divider: record.right,
           cardRight: card.right,
           firstStnLeft: stns.length ? stns[0].getBoundingClientRect().left : null,
@@ -578,10 +581,14 @@ test.describe("Trinny London pitch variant", () => {
           `card ${i + 1} rail inset R`
         ).toBeGreaterThanOrEqual(15);
       }
-      /* ⚠ THE HEAD IS A TAB (ADR-097) — a folder's label at the top-left,
-         stepping down to the body, never the full top edge. */
-      expect(c.housing.tabShare, `card ${i + 1} head is the whole top edge`).toBeLessThan(0.6);
-      expect(c.housing.tabShare, `card ${i + 1} tab is too narrow to be one`).toBeGreaterThan(0.2);
+      /* ⚠ THE HEAD IS THE CLIENT'S BAND (ADR-097 U1) — the FULL top row,
+         carrying the client's gradient; the first cut's tab-only tint was
+         read off the live page and rejected the same day. Pinned from both
+         ends: the row spans the card, and it paints a gradient. */
+      expect(c.housing.headShare, `card ${i + 1} head is not the full top row`).toBeGreaterThan(
+        0.98
+      );
+      expect(c.housing.headBg, `card ${i + 1} head carries no gradient`).toMatch(/linear-gradient/);
     }
     /* ⚠ THE ORDER IS THE RECORD'S ARC SINCE ADR-094 U2 and these indices
        moved with it: the frontier work leads, because it is what earned the

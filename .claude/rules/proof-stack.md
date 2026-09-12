@@ -17,12 +17,13 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
 **Read first**
 
 - ⚠ [ADR-097](../../sentinel/decisions/097-proof-card-is-a-folder.md) — **THE
-  CARD IS A FOLDER (2026-09-12, owner; pending his live read):** glass over
-  the corridor with a FLAT gold lip on the clipped ring, the head row drawn as
-  a TAB with a 45° step to the body, the pile receding by DEPTH, the plate
-  fading in, and the client's colour on the tab from a new `CaseDef.accent`.
-  See §The folder below before touching the card's silhouette, its material,
-  its recession or its arrival.
+  CARD IS A FOLDER (2026-09-12, owner; U1 the same day on his live read):**
+  glass over the corridor with a FLAT gold lip on the clipped ring, the head
+  row a full-width BAND carrying the client's gradient over the plain TR+BL
+  housing (U1 — the first cut's tab with a 45° step was taken off), the pile
+  receding by DEPTH, the plate fading in, and the client's colour from a new
+  `CaseDef.accent`. See §The folder below before touching the card's
+  silhouette, its material, its recession or its arrival.
 - [ADR-096](../../sentinel/decisions/096-proof-stack-on-the-homepage.md) — the
   promotion: the seating, the MEASURED runway split, why dark mode was free,
   and what the casefile's retirement is still waiting on.
@@ -75,7 +76,7 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   `rgba(5, 4, 3, 0.62)` dark, `rgba(228, 218, 201, 0.62)` light; the lip is
   `color(srgb .79 .65 .33 / .3)` dark, `(.54 .42 .13 / .3)` light — `--gold-line`
   through `color-mix()`, no branch. The two alphas that invert across the flip
-  (`--pf-bloom-a`, `--pf-tab-a`) are re-derived in `theme.css` BLOCK 4c on
+  (`--pf-bloom-a`, `--pf-head-a`) are re-derived in `theme.css` BLOCK 4c on
   `.pf-stack`; the one non-token value, a CLIENT's colour, is written INLINE by
   the host and only read here. ⚠ **A literal here is a guard failure — and since
   ADR-097 that is TRUE**: the sheet was in neither `type-material-tokens`' PINS
@@ -93,25 +94,23 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
 
 ## The folder (ADR-097, live on both hosts)
 
-- **THE HEAD ROW IS THE TAB.** `--pf-tab-w: clamp(320px, 34%, 460px)` flat, a
-  45° step of run = rise = `--pc-peek` down to the body's top edge, then the TR
-  chamfer; BL stays. The grid row is still `--pc-peek`, so the body, the insets,
-  the type ladder and the MEASURED runway are byte-identical. The head is
-  `tab-w + tab-h` wide, seated at the row's start, right-padded by the step so
-  the ordinal clears the diagonal, and draws NO rule and NO background — the
-  tint is a layer on the CARD's `background`, sized to the tab, that the
-  housing's clip cuts (ADR-065 rule 4: the head carries no cut of its own).
-  ⚠ The floor is the longest kicker (`LOOP EARPLUGS · NAVIGATE` + `04` ≈ 310);
-  the lever if the tab reads wide is the head's right padding, never the peek.
-- ⚠ **THE RING'S STEP VERTICES INSET −0.414px AT BOTH ENDS.** A 45° line offset
-  1px inward is the same line shifted √2 in x; a `+0.414` at the reflex foot
-  kinks the ring by 0.8px on every card.
-- ⚠ **≤960px THE TAB COMES OFF, BY TWO TOKENS**: `--pf-tab-w: calc(100% − ch)`
-  and `--pf-tab-h: 0px` collapse both polygons to the plain TR+BL shape and the
-  tint layer to zero height; the head goes full width and paints the tint
-  itself. The inert rung keeps the tab and floors the head at `--pc-peek` — its
-  rows are `auto auto`, and a 12px head under a 52px step clips the body's
-  top-right away.
+- **THE HEAD ROW IS THE CLIENT'S BAND, AND THE SILHOUETTE IS THE PLAIN TR+BL
+  HOUSING** (U1, owner, on the live read: _"having the gradient only on the
+  left … doesn't really work. I want the full top row to have that gradient,
+  and let's keep that notch in the top-right corner"_). The head is the
+  full-width row it was — rule under it, `gap: 24px`, `padding: 0
+--pf-card-px` — painting `linear-gradient(90deg, rgba(accent, --pf-head-a) →
+× .25)` on itself; the card's clip takes the TR chamfer out of it. The grid
+  row is still `--pc-peek`, so the body, the insets, the type ladder and the
+  MEASURED runway are byte-identical.
+  ⚠ **THE TAB WAS BUILT AND TAKEN OFF THE SAME DAY.** The first cut drew the
+  head as a tab (`--pf-tab-w`, a 45° step, eight-point polygons with a
+  `−0.414px` inner step, a ≤960 collapse) and left the row's top-right open;
+  the folder read comes from the BAND over a body whose corners stay cut (the
+  braindance header), not from a step in the outline. ADR-097 U1 holds the
+  record; do not restore the step from muscle memory.
+- ⚠ **THE INERT RUNG FLOORS THE HEAD AT `--pc-peek`** — its rows are
+  `auto auto`, and a 12px tinted band reads as a rule, not a band.
 - **THE PLATE IS GLASS, ONE DIAL.** `--pf-glass-a` .62,
   `backdrop-filter: blur(--pf-blur)` under `@supports`, no `brightness()`, the
   scanline UNDER the copy, a PIXEL-sized bloom off the body's top-right. Light
@@ -132,7 +131,7 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   the slot; additive, 0 when parked; `/test/project-cards` ignores it); CSS
   windows its nearest term as `--pc-dp = depth − cover + cov` so the cover law
   holds. `scale(1 − .03·dp)` about `50% 0` (tops stay on their sticky lines, the
-  tabs staircase inward — a translateZ toward a top-centre vanishing point
+  bands staircase inward — a translateZ toward a top-centre vanishing point
   without a `perspective` the hook could not survive), opacity dims `.08·dp`,
   the wash goes toward the GROUND (`void-deep`, `.14·min(dp,3)`). A covered
   card's CONTENT leaves on the cover channel (`× (1 − cov)`) so the front glass

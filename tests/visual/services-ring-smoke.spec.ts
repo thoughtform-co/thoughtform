@@ -3643,14 +3643,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(corners!.consoleClip, "the console leans the other way inside the card").toBe("none");
     expect(corners!.radius, "zero radius is law").toBe("0px");
 
-    /* ── THE CARD IS A FOLDER (ADR-097) ────────────────────────────────
-       The head row is a TAB at the top-left with a 45° step down to the
-       body, the plate is GLASS, and the ring is the housing's GOLD lip.
-       Pinned from both ends: the tab is narrower than the top edge and
-       seated at its left; the ordinal clears the step's diagonal; the lip
-       paints gold (r > b) at the lip's alpha, whether the engine serialises
-       `color-mix()` as `rgba()` or `color(srgb …)`; the plate's alpha is
-       under 1. Read on card 2, seated. */
+    /* ── THE CARD IS A FOLDER (ADR-097, U1) ────────────────────────────
+       The head row is the client's BAND across the FULL top edge — a soft
+       gradient of the client's hue (the first cut's tab-only tint with a
+       45° step was read live and taken off the same day: "I want the full
+       top row to have that gradient … keep that notch in the top-right
+       corner"), the plate is GLASS, and the ring is the housing's GOLD lip.
+       Pinned from both ends: the head spans the card and paints a gradient;
+       the ordinal sits inside it; the lip paints gold (r > b) at the lip's
+       alpha, whether the engine serialises `color-mix()` as `rgba()` or
+       `color(srgb …)`; the plate's alpha is under 1. Read on card 2, seated. */
     const folder = await page.evaluate(() => {
       const card = document.querySelector<HTMLElement>('[data-pc-index="2"] .pf-card');
       const head = card?.querySelector<HTMLElement>(".pf-card__head");
@@ -3659,7 +3661,6 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       const c = card.getBoundingClientRect();
       const h = head.getBoundingClientRect();
       const a = arc.getBoundingClientRect();
-      const step = Number.parseFloat(getComputedStyle(card).getPropertyValue("--pf-tab-h")) || 52;
       const plate = getComputedStyle(card).backgroundColor;
       const m = /rgba?\(([^)]+)\)/.exec(plate);
       const parts = m
@@ -3673,21 +3674,20 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         headW: h.width,
         headLeft: h.left - c.left,
         headRight: h.right,
+        headBg: getComputedStyle(head).backgroundImage,
         arcRight: a.right,
-        step,
         ring: getComputedStyle(card, "::before").backgroundColor,
         plateAlpha: parts.length === 4 ? parts[3] : 1,
       };
     });
     expect(folder, "card 2 has no head or ordinal").not.toBeNull();
-    expect(folder!.headW, "the head is the full top edge, not a tab").toBeLessThan(
-      folder!.cardW * 0.6
-    );
-    expect(folder!.headLeft, "the tab is not seated at the card's left edge").toBeLessThanOrEqual(
+    expect(folder!.headW, "the head is not the full top row").toBeGreaterThan(folder!.cardW * 0.98);
+    expect(folder!.headLeft, "the band is not seated at the card's left edge").toBeLessThanOrEqual(
       1
     );
-    expect(folder!.arcRight, "the ordinal runs into the step's diagonal").toBeLessThanOrEqual(
-      folder!.headRight - folder!.step + 4
+    expect(folder!.headBg, "the band carries no gradient").toMatch(/linear-gradient/);
+    expect(folder!.arcRight, "the ordinal runs out of the band").toBeLessThanOrEqual(
+      folder!.headRight + 1
     );
     const ringNums = (folder!.ring.match(/[\d.]+/g) ?? []).map(Number);
     const ringIsColorFn = folder!.ring.startsWith("color(");

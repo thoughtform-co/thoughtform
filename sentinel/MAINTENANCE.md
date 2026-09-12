@@ -103,6 +103,18 @@ console ground transparent; `useStackedCardsScroll` +`--pc-depth` (additive);
 `.claude/rules/proof.md` (`CaseDef.accent`) · `.claude/rules/trinny-london.md` ·
 CLAUDE.md pointer.
 
+**Same day, U1 — the owner's live read took the tab off.** _"Having the
+gradient only on the left … doesn't really work. I want the full top row to
+have that gradient, and let's keep that notch in the top-right corner."_ The
+head is the full-width band again (rule, padding, gap as before) carrying the
+client's gradient on itself; the silhouette is the plain TR+BL housing; the
+tab tokens, the eight-point polygons and the ≤960 collapse are gone;
+`--pf-tab-a` is `--pf-head-a`. Both smokes' tab reads became band reads.
+Lesson for the ledger: **the folder read was the BAND, not the cut** — two of
+three references had the band, one had the step, and the pile's staircase
+came from the depth scale regardless. When a reference set disagrees, ship the
+part they share and hold the part they don't for the live read.
+
 ### 2026-09-05 — The interface kit: the reference measured, and a wave graded (ADR-091)
 
 The owner named two sites he admires, named the surface he wants to reach

@@ -5,8 +5,9 @@
 flat `scale(1 − .02·cover)` + dawn wash, and [ADR-096](096-proof-stack-on-the-homepage.md)'s
 opaque `--pf-plate` — the card's IA, its registers, its type ladder and the
 stack mechanic are untouched
-**Extends:** [ADR-065](065-corner-law.md) (the tab is a fourth silhouette, argued
-below) · [ADR-089](089-casefile-is-one-housing.md) (the gold lip on a housing) ·
+**Extends:** [ADR-089](089-casefile-is-one-housing.md) (the gold lip on a housing) ·
+[ADR-065](065-corner-law.md) (§1 argued a tab as a fourth silhouette; **U1 below
+retired it the same day** — the card is the chamfered housing it was) ·
 [ADR-092](092-type-material-tokens.md) (the flat lip; two ratchets now pin the sheet)
 **Related:** [ADR-030](030-tools-section-cover-stack.md) (the hook grows one channel) ·
 [ADR-058](058-light-mode-theme.md) · [ADR-063 U2](063-map-reading-rail-and-wheel.md)
@@ -234,10 +235,41 @@ nothing measurable against the corridor already under it; the fallback
 (covered cards drop the blur, `--pf-glass-a` densifying on cover) stays
 unbuilt.
 
+## Update 1 — the band, not the tab (2026-09-12, owner, on the live read)
+
+> Overall, it looks good, but I think having the gradient only on the left,
+> where we have the client title, doesn't really work. I want the full top
+> row to have that gradient, and let's keep that notch in the top-right
+> corner because I feel like you removed the top part you shouldn't have.
+
+**The tab-only cut is off; the folder is the BAND.** The head is a full-width
+row again (its rule under it restored, `gap: 24px`, `padding: 0 --pf-card-px`
+— the composition he approved before this pass), tinted end to end with the
+client's gradient (`.pf-card__head { background: linear-gradient(90deg,
+rgba(accent, --pf-head-a) → × .25) }`), and the card's silhouette is the plain
+TR+BL housing: the top-right region the tab left open is back, notch and all.
+Glass, lip, depth, fade and the client plumbing are untouched.
+
+What it corrects in §1's reading of the references: the braindance panels'
+teal header is a band that runs the full width of a panel whose corners stay
+cut — the folder read comes from the BAND over a body, not from a step in the
+outline. The log panels' stepped tab was the one reference of three that had
+the cut, and the composed pile gets its staircase from the depth scale
+anyway. §1's ADR-065 argument for the step is therefore moot; nothing new is
+claimed under the corner law — the card is the chamfered housing it was.
+
+Mechanically: `--pf-tab-w/h/d`, the tint layer on the card's background, the
+eight-point polygons and their `−0.414px` inner step, the ≤960 collapse and
+the head's step padding are all gone; `--pf-tab-a` is `--pf-head-a` (sheet +
+theme.css). The bloom returns to the card's own top-right (`−40px`). The
+smokes' tab reads became band reads (head ≥ 98 % of the card, a gradient
+`backgroundImage`, the ordinal inside it), pinned from both ends as before.
+Measured: head 1150px @1440 (the card's width), the lip and plate unchanged.
+
 ## Left open
 
-- The owner's read of the two dials: the flat lip vs the plate's ramp, and
-  the console's transparent ground.
+- The owner's read of the remaining dial: the flat lip vs the plate's ramp,
+  and the console's transparent ground.
 - Loop's tab colour — any triple, one line, when he wants one.
 - `bedOf()` in the light walk now walks past the glass card to `body` for the
   map and sheets cards (optimistic by the glass-over-page delta). Hardening:

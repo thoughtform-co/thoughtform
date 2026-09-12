@@ -395,12 +395,13 @@ html[data-theme="light"] .fl-case .fl-brief__dot {
    already the parchment value on this side (the `.fl-hz` precedent above).
    Two ALPHAS do, because an alpha inverts its meaning across the flip
    (ADR-058): the corner bloom, which on parchment is a smear rather than a
-   catch; and the client tab's tint, which reads louder on a light ground.
-   The RGB of the tint is the client's and does not move.
+   catch; and the client band's tint (the full head row since ADR-097 U1),
+   which reads louder on a light ground. The RGB of the tint is the client's
+   and does not move.
    ═══════════════════════════════════════════════════════════════════ */
 html[data-theme="light"] .pf-stack {
   --pf-bloom-a: 0.08;
-  --pf-tab-a: 0.22;
+  --pf-head-a: 0.22;
 }
 
 /* The bed under the pile is faded on this side, so the blur has nothing to

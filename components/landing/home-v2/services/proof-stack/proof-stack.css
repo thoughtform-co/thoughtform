@@ -21,7 +21,7 @@
    which ADR-058 SWAPS between themes — so the same declarations paint cream
    on near-black here and ink on parchment on the light-locked pitch page,
    with no `[data-theme]` branch anywhere in the file. The two alphas that
-   invert their meaning across the flip (`--pf-bloom-a`, `--pf-tab-a`) are
+   invert their meaning across the flip (`--pf-bloom-a`, `--pf-head-a`) are
    re-derived in `theme.css` on `.pf-stack`, the `.fl-hz` precedent; the one
    value that is not a token — a CLIENT's colour — is written INLINE by the
    host from `CaseDef.accent` and only ever read here (ADR-097). Every
@@ -65,11 +65,13 @@
   --pf-lip: color-mix(in srgb, var(--gold-line) 30%, transparent);
   /* A corner catching light, at the plate's own alpha; light lowers it. */
   --pf-bloom-a: 0.13;
-  /* The CLIENT's colour on the folder tab. The host writes `--pf-accent-rgb`
-     inline from `CaseDef.accent`; a client without one gets the house gold —
-     the RGB is the client's, the ALPHA is the theme-varying half. */
+  /* The CLIENT's colour on the head BAND — the full top row (ADR-097 U1,
+     owner: a tint on the tab alone "doesn't really work"). The host writes
+     `--pf-accent-rgb` inline from `CaseDef.accent`; a client without one gets
+     the house gold — the RGB is the client's, the ALPHA is the theme-varying
+     half. */
   --pf-accent-rgb: var(--gold-rgb);
-  --pf-tab-a: 0.28;
+  --pf-head-a: 0.28;
 }
 
 /* ── 4. The stack (the ADR-030 mechanic, this route's skin) ──────────
@@ -230,44 +232,29 @@
   height: 100%;
   display: grid;
   grid-template-rows: var(--pc-peek) minmax(0, 1fr);
-  /* ── THE FOLDER TAB (ADR-097, owner: the cards should read like the
+  /* ── THE FOLDER (ADR-097, owner: the cards should read like the
      "retrofuturistic digital folder-type cards" of the braindance monitors
-     and the log panels). The head ROW is the tab: `--pf-tab-w` flat along
-     the top, then a 45° step of run = rise = the peek band down to the
-     body's top edge, which then runs to the TR chamfer. The grid row stays
+     and the log panels). Glass, a gold lip, a tinted head BAND, the pile
+     receding by depth. ⚠ THE SILHOUETTE IS THE PLAIN TR+BL HOUSING (U1,
+     owner, same day, on the live read: the tab-only tint "doesn't really
+     work" and "keep that notch in the top-right corner … you removed the top
+     part you shouldn't have"). The first cut drew the head as a TAB with a
+     45° step and left the top-right of the row open; the owner's read is
+     that the folder is the BAND, not the cut — the braindance panels' teal
+     header runs the full width of the panel over a body that keeps its
+     corners. The band paints on `.pf-card__head`; the grid row stays
      `--pc-peek`, so the body, its insets, the type ladder and the MEASURED
-     runway are byte-identical — only the silhouette changed.
-     ⚠ UNDER ADR-065 the step is the HOUSING's own silhouette in the same 45°
-     vocabulary as its chamfers, lawful by rule 5 (asymmetry is earned: the
-     tab names the file and marks the edge the pile is gripped by), and
-     rule 4 holds because the head itself carries NO cut — the tint below is
-     a layer on the card's own background that this clip cuts.
-     ⚠ THE FLOOR IS THE LONGEST KICKER: `LOOP EARPLUGS · NAVIGATE` (24 chars
-     at 11px PT Mono / .15em ≈ 198px) + `01` + the gap + both paddings ≈ 310.
-     At 1280 the tab is ~52 % of the top edge; the lever if that reads wide
-     is the head's right padding, never the peek. */
-  --pf-tab-w: clamp(320px, 34%, 460px);
-  --pf-tab-h: var(--pc-peek);
-  --pf-tab-d: calc(var(--pf-tab-w) + var(--pf-tab-h));
+     runway are byte-identical. */
   background:
-    /* the client's tab — a soft gradient of its own hue, sized to the tab
-       row; the housing's clip is what gives it the diagonal */
-    linear-gradient(
-        90deg,
-        rgba(var(--pf-accent-rgb), var(--pf-tab-a)) 0%,
-        rgba(var(--pf-accent-rgb), calc(var(--pf-tab-a) * 0.25)) 100%
-      )
-      0 0 / var(--pf-tab-d) var(--pf-tab-h) no-repeat,
     /* the plate's own scanline, at the plate's own alpha — UNDER the copy,
        where the services plate carries it over (a card of prose is not a
        screen you look into) */
     repeating-linear-gradient(to bottom, rgba(var(--gold-rgb), 0.025) 0 1px, transparent 1px 3px),
     /* a corner catching light, stated in PIXELS (hud-panel-lab.css: the
        plate's `130% 70%` is ~550px on a 420-wide card and lights a whole
-       quadrant on a housing), hung off the BODY's top-right — the region
-       above it, right of the tab, is outside the clip */
+       quadrant on a housing), hung off the card's top-right */
     radial-gradient(
-        460px 300px at calc(100% - 90px) calc(var(--pf-tab-h) - 40px),
+        460px 300px at calc(100% - 90px) -40px,
         rgba(var(--gold-rgb), var(--pf-bloom-a)),
         transparent 62%
       ),
@@ -282,10 +269,8 @@
   border: 0;
   clip-path: polygon(
     0 0,
-    var(--pf-tab-w) 0,
-    var(--pf-tab-d) var(--pf-tab-h),
-    calc(100% - var(--pf-card-ch)) var(--pf-tab-h),
-    100% calc(var(--pf-tab-h) + var(--pf-card-ch)),
+    calc(100% - var(--pf-card-ch)) 0,
+    100% var(--pf-card-ch),
     100% 100%,
     var(--pf-card-ch) 100%,
     0 calc(100% - var(--pf-card-ch))
@@ -365,22 +350,14 @@
   clip-path: polygon(
     evenodd,
     0 0,
-    var(--pf-tab-w) 0,
-    var(--pf-tab-d) var(--pf-tab-h),
-    calc(100% - var(--pf-card-ch)) var(--pf-tab-h),
-    100% calc(var(--pf-tab-h) + var(--pf-card-ch)),
+    calc(100% - var(--pf-card-ch)) 0,
+    100% var(--pf-card-ch),
     100% 100%,
     var(--pf-card-ch) 100%,
     0 calc(100% - var(--pf-card-ch)),
-    /* inner, 1px in. ⚠ THE STEP'S INNER LINE IS THE OUTER ONE SHIFTED √2 IN
-       x, so BOTH its ends inset by tan 22.5° = 0.414px — at the convex corner
-       AND at the reflex foot (a `+0.414` at the foot kinks the ring by 0.8px
-       on every card). The chamfer legs keep `--pf-card-ch-in`. */
     1px 1px,
-    calc(var(--pf-tab-w) - 0.414px) 1px,
-    calc(var(--pf-tab-d) - 0.414px) calc(var(--pf-tab-h) + 1px),
-    calc(100% - 1px - var(--pf-card-ch-in)) calc(var(--pf-tab-h) + 1px),
-    calc(100% - 1px) calc(var(--pf-tab-h) + 1px + var(--pf-card-ch-in)),
+    calc(100% - 1px - var(--pf-card-ch-in)) 1px,
+    calc(100% - 1px) calc(1px + var(--pf-card-ch-in)),
     calc(100% - 1px) calc(100% - 1px),
     calc(1px + var(--pf-card-ch-in)) calc(100% - 1px),
     1px calc(100% - 1px - var(--pf-card-ch-in))
@@ -400,19 +377,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  /* ⚠ THE HEAD IS THE TAB (ADR-097): the tab's width plus the step's run,
-     seated at the row's start. Its right padding is the step — the ordinal
-     has to clear the diagonal, which at the text's centre line is already
-     `tab-h / 2` in from the head's right edge, so `tab-h − 4` clears by
-     ~22px. NO rule under it: a folder's tab is continuous with its body, and
-     the body's top edge right of the step is the ring's. The head paints no
-     background of its own — the tint is the card's, cut by the housing. */
-  width: var(--pf-tab-d);
-  justify-self: start;
-  padding: 0 calc(var(--pf-tab-h) - 4px) 0 var(--pf-card-px);
-  border-bottom: 0;
+  gap: 24px;
+  padding: 0 var(--pf-card-px);
+  border-bottom: 1px solid var(--pf-rule);
   min-width: 0;
+  /* ⚠ THE HEAD IS THE CLIENT'S BAND (ADR-097 U1, owner: "I want the full top
+     row to have that gradient"). A soft gradient of the client's own hue,
+     left to right, across the whole row — the braindance panels' header band,
+     which runs the full width of a panel whose corners stay cut. It sits
+     UNDER the card's TR chamfer, which the housing's clip takes out of this
+     box too (the head is square; the housing is what has corners). The rule
+     under it is the one it always had: at the row's right end the tint is a
+     quarter of itself, and a band that fades to nothing needs its floor. */
+  background: linear-gradient(
+    90deg,
+    rgba(var(--pf-accent-rgb), var(--pf-head-a)) 0%,
+    rgba(var(--pf-accent-rgb), calc(var(--pf-head-a) * 0.25)) 100%
+  );
 }
 
 /* Leads the RECORD column now, not the head strip — so it may wrap, and
@@ -1331,8 +1312,8 @@
     opacity: 1;
     grid-template-rows: auto auto;
   }
-  /* The rows are `auto auto` here, so without a floor the head is ~12px and
-     the tab's step (still `--pc-peek` tall) clips the body's top-right away. */
+  /* The rows are `auto auto` here, so without a floor the head is ~12px — a
+     tinted band that thin reads as a rule, not a band. */
   .pf-stack .pf-card__head {
     min-height: var(--pc-peek);
   }
@@ -1350,27 +1331,13 @@
 }
 
 @media (max-width: 960px) {
-  /* ⚠ THE HEAD WRAPS HERE AND MAY EXCEED THE PEEK, so the tab comes off: two
-     tokens collapse BOTH polygons to the plain TR+BL shape (the duplicated
-     vertices are degenerate) and the tint layer to zero height. The head
-     goes back to full width and carries the client's tint itself. */
-  .pf-stack .pf-card {
-    --pf-tab-w: calc(100% - var(--pf-card-ch));
-    --pf-tab-h: 0px;
-  }
+  /* The head WRAPS here and may exceed the peek; the band, its rule and its
+     tint are the base rule's and come along. */
   .pf-stack .pf-card__head {
-    width: auto;
-    justify-self: stretch;
     height: auto;
     min-height: var(--pc-peek);
     flex-wrap: wrap;
-    padding: 12px var(--pf-card-px);
-    border-bottom: 1px solid var(--pf-rule);
-    background: linear-gradient(
-      90deg,
-      rgba(var(--pf-accent-rgb), var(--pf-tab-a)) 0%,
-      rgba(var(--pf-accent-rgb), calc(var(--pf-tab-a) * 0.25)) 100%
-    );
+    padding-block: 12px;
   }
   /* ⚠ THE STATIONS STOP FILLING AND START WRAPPING. `console.css`'s unwrap
      rung gives every station `flex: 1 1 45%` and a wrapping label; four
