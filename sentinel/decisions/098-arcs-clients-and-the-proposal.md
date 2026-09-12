@@ -162,6 +162,15 @@ move.
 `[brackets]` in a registered arc would leave `npm run verify` failing on a repo
 nobody had opened yet; the registry test walks for them.
 
+⚠ **TWO ROWS STAY THE PERSON'S, and the end-to-end run is what settled it.** A
+scaffolded arc typechecks and passes 22 of 23 registry guards; the one that
+fails names the missing `LIGHT_LOCKED_ROUTES` row. Writing the rows from the
+scaffold was built and reverted: both lists are pinned `toEqual` by their own
+tests precisely so a route joins or leaves by a reviewed hand, so a scaffold
+that wrote them would have to edit those two tests as well — a generator
+quieting its own guards. It prints them loudly instead, and the red guard is
+the handover.
+
 ## Deliberately absent
 
 - **The client page's Armada / technical setup.** The owner named it for later

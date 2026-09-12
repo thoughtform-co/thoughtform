@@ -494,8 +494,12 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
   placeholders** — Armada's day-one command runs this unattended, and a
   registered arc full of `[brackets]` would leave `npm run verify` failing in
   a repo nobody had opened. The registry test walks for them. It never
-  commits, never overwrites, and prints the two hand-written rows it cannot
-  add for you.
+  commits and never overwrites. ⚠ **Two rows stay yours**: a scaffolded arc
+  passes 22 of 23 registry guards and the one that fails names the missing
+  `LIGHT_LOCKED_ROUTES` row. Writing them from the scaffold was built and
+  reverted — both lists are pinned `toEqual` by their own tests so a route
+  joins or leaves by a reviewed hand, and a generator that edited those tests
+  would be quieting its own guards. The red guard IS the handover.
 - **Capturing any arc:** `node scripts/capture-arc-portfolio.mjs --slug
 <slug> --vp 1280x720`. The sweep is the reveal grammar's, which every
   flowing arc shares. ⚠ A light-locked arc ignores `--theme`.
