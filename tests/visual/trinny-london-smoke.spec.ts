@@ -189,20 +189,30 @@ async function seatPinnedFromTop(page: Page, idx: number): Promise<void> {
  * rebuilt with every gate green. It reads what the owner's ruling is ABOUT:
  * the client leads the strip, the project's name is down in the record, the
  * tabs are flat and square, and the field shows ONE thing.
+ *
+ * ⚠ THE RAIL MOVED INTO THE BAND (ADR-097 U6), so this reads it from the
+ * HEAD now. The reason the old comment gave still stands, pointed the other
+ * way: read it from the wrong container and this reports four railless cards
+ * while staying green on a rail that had stopped rendering.
  */
 const cardShape = (page: Page, idx: number) =>
   page.evaluate((i) => {
     const slot = document.querySelectorAll<HTMLElement>("[data-pc-slot]")[i];
     const head = slot.querySelector<HTMLElement>(".pf-card__head")!;
     const field = slot.querySelector<HTMLElement>(".pf-card__field")!;
-    /* ⚠ THE RAIL IS IN THE FIELD, NOT THE HEAD (ADR-094 U2). Reading it
-       from the head is how this reader would report FOUR railless cards and
-       stay green on a rail that had silently stopped rendering. */
-    const stns = [...field.querySelectorAll<HTMLElement>(".fl-con__stn")];
-    const tabs = field.querySelector<HTMLElement>(".pf-card__tabs");
+    /* ⚠ THE RAIL IS IN THE BAND, NOT THE FIELD (ADR-097 U6, reversing
+       ADR-094 U2). Reading it from the field is how this reader would report
+       four railless cards and stay green on a rail that had stopped
+       rendering — the same trap, one container over. */
+    const stns = [...head.querySelectorAll<HTMLElement>(".fl-con__stn")];
+    const tabs = head.querySelector<HTMLElement>(".pf-card__headrail");
     return {
-      /* The head's own children, in order — the kicker leads. */
+      /* The band is the body's own grid since U6: the identity cell leads,
+         and the kicker leads inside it. Both are read, because a head that
+         lost its grid would still start with a kicker somewhere. */
       lead: head.firstElementChild?.className ?? "",
+      leadInId:
+        head.querySelector<HTMLElement>(".pf-card__headid")?.firstElementChild?.className ?? "",
       kicker: head.querySelector(".pf-card__kicker")?.textContent?.trim() ?? "",
       /* The head's right slot: the beat's ORDINAL and nothing else (U4). The
          CLAIM is the display title below; the project's name letters nowhere
@@ -221,7 +231,16 @@ const cardShape = (page: Page, idx: number) =>
       ),
       titleInRecord: !!slot.querySelector(".pf-card__record > .pf-card__title"),
       titleInHead: !!head.querySelector(".pf-card__title"),
-      stationsInHead: head.querySelectorAll(".fl-con__stn").length,
+      stationsInField: field.querySelectorAll(".fl-con__stn").length,
+      /* ⚠ AND IT MAY NEVER REACH THE RECORD (U2, owner: the tabs "should
+         never extend too much to the left side where the left panel sits").
+         The band carries the body's tracks, so the rail's cell starts on the
+         divider — measured, not assumed. */
+      railCrossesDivider: (() => {
+        const first = stns[0]?.getBoundingClientRect();
+        const f = field.getBoundingClientRect();
+        return first ? first.left < f.left - 1 : false;
+      })(),
       /* ⚠ THE RAIL IS IN THE CARD'S OWN SLOT, which for the studio card is
          the PORTAL landing (`SheetsPlate.railHost`). Counting stations
          anywhere in the field would pass on a plate that had quietly kept
@@ -511,7 +530,8 @@ test.describe("Trinny London pitch variant", () => {
        switch on the house rail instead of printing all of it at once. */
     const shapes = await Promise.all([0, 1, 2, 3].map((i) => cardShape(page, i)));
     for (const [i, c] of shapes.entries()) {
-      expect(c.lead, `card ${i + 1} leads with the client`).toContain("pf-card__kicker");
+      expect(c.lead, `card ${i + 1} band is not the body's grid`).toContain("pf-card__headid");
+      expect(c.leadInId, `card ${i + 1} leads with the client`).toContain("pf-card__kicker");
       expect(c.kicker, `card ${i + 1} kicker`).toMatch(/^Loop Earplugs \u00b7 /);
       expect(c.titleInRecord, `card ${i + 1} name is in the record`).toBe(true);
       expect(c.titleInHead, `card ${i + 1} name is out of the head`).toBe(false);
@@ -538,7 +558,8 @@ test.describe("Trinny London pitch variant", () => {
       for (const cp of c.childClips) {
         expect(cp, `card ${i + 1} child keeps square corners`).toBe("none");
       }
-      expect(c.stationsInHead, `card ${i + 1} rail left the head`).toBe(0);
+      expect(c.stationsInField, `card ${i + 1} rail left the band`).toBe(0);
+      expect(c.railCrossesDivider, `card ${i + 1} rail reaches over the record`).toBe(false);
       /* Four claims, each with its evidence sentence in the DOM. Whether it
          PAINTS is a height rung (940h) \u2014 the sentence is sr-only below it,
          which is the casefile's own 1070h precedent \u2014 so this asserts the
@@ -568,26 +589,26 @@ test.describe("Trinny London pitch variant", () => {
       /* ⚠ THE FIELD IS INSET OFF BOTH EDGES, rail and bay on ONE edge (owner:
          "too close to the center border and the right border"). ≥ 16px is
          the token's floor; the divider is the record's right edge. */
-      /* ⚠ THE RAIL IS FULL-BLEED, AND THAT REVERSES U8's INSET (ADR-097 U4,
-         owner: "the tabs need to connect with the vertical rail that separates
-         the left and the right panel … the tabs should be full width and
-         should also reach the edge on the other side"). U8's ≥15px was the
-         owner's own note that the elements sat too close to those borders; it
-         was about the elements INSIDE the panel, and this is the ruling that
-         the rail is not one of them. Pinned from both ends — the first
-         station lands ON the divider and the last ON the card's edge — so a
-         rail that drifted back inboard fails as loudly as one that overhung.
+      /* ⚠ THE RAIL IS IN THE BAND, AND IT MAY NEVER REACH THE RECORD
+         (ADR-097 U6, owner: the tabs "should never extend too much to the
+         left side where the left panel sits, it should remain on the right
+         side"). The band carries the body's own tracks, so the rail's cell
+         BEGINS on the divider and crossing it is not a thing the layout can
+         do. An inequality, not an equality: U4's full-bleed clause was about
+         a rail spanning the PANEL it sat on, and this rail no longer sits on
+         one — what survives of it is that the row still starts at the
+         divider and still stops inside the card.
          ⚠ DIVIDED BY THE CARD'S SCALE: cards 1–3 are covered here and receded
          by depth. The token is a layout length; the rect is a picture of it. */
       if (c.housing.firstStnLeft !== null) {
         expect(
-          Math.abs(c.housing.firstStnLeft - c.housing.divider) / c.housing.k,
-          `card ${i + 1} rail does not meet the divider`
-        ).toBeLessThanOrEqual(1.5);
+          (c.housing.firstStnLeft - c.housing.divider) / c.housing.k,
+          `card ${i + 1} rail reaches over the record`
+        ).toBeGreaterThanOrEqual(-1.5);
         expect(
-          Math.abs(c.housing.cardRight - c.housing.lastStnRight!) / c.housing.k,
-          `card ${i + 1} rail does not reach the card's edge`
-        ).toBeLessThanOrEqual(1.5);
+          (c.housing.cardRight - c.housing.lastStnRight!) / c.housing.k,
+          `card ${i + 1} rail runs past the card's edge`
+        ).toBeGreaterThanOrEqual(-1.5);
       }
       /* ⚠ THE HEAD IS THE CLIENT'S BAND (ADR-097 U1) — the FULL top row,
          carrying the client's gradient; the first cut's tab-only tint was

@@ -410,6 +410,76 @@ Deleting the assertion instead would have left the rule free to come back on
 the next pass through this block — which, across five updates in one day, is
 the failure mode this surface actually has.
 
+## Update 6 — the rail moves into the band (2026-09-12, owner, seventh live read)
+
+> Can you maybe try to integrate the tabs into the top part where we have the
+> client name … before you implement it show me a screenshot from a test page
+> on how a proof card would look like.
+
+Then, on the first cut:
+
+> This looks ugly and it should never extend too much to the left side where
+> the left panel sits, it should remain on the right side.
+
+### Drawn before it was chosen
+
+`/test/proof-card-head-lab` draws the REAL card three ways — `ProofCard` took
+one optional `railSeat`, so nothing about production moved while the question
+was open. Two rounds: the first put the rail across the whole band, the second
+answered both halves of the note above.
+
+### The band is the body's grid now
+
+The first cut let the rail flex across the row, and at four stations it reached
+a third of the way over the RECORD: a control for the right panel, drawn above
+the left one. So `.pf-card__head` carries the body's own `2fr 3fr` tracks when
+a rail is in it — the identity takes the record's cell, the rail takes the
+field's. **Crossing the split stopped being something the rule can do**, which
+is a different guarantee from it happening not to.
+
+It sits on `--pf-field-px`, the FIELD's inset, not the card's: the stations
+land ON the bay's verticals rather than near them, and a 4px miss there is the
+kind nobody can name.
+
+### The station is flat
+
+A bordered, filled box in the band reads as a control bolted onto a label —
+that is what "ugly" was. The lit station is the one gold thing and its diamond
+is the marker, which satisfies ADR-063's law by the MARK rather than by a fill.
+Measured after: the lit label is 5.26:1 on light and 8.80:1 on dark, and the
+dim station is the kicker's own colour, so the band is one row in one voice.
+
+⚠ **THE BORDER GOES TRANSPARENT, NOT AWAY.** Zeroing the width moves every
+label a pixel and re-flows the row — this repo's own standing lesson one
+surface over (`border-bottom-color: transparent`, never `border-bottom: 0`).
+
+### Three of this ADR's own rulings are retired BY THEIR REASONS
+
+- **U2, the rail on the record's datum.** The datum survives; the BAY inherits
+  it. `--pf-card-py` is the record's top padding and the field's, one term, so
+  the delta is still 0 by construction.
+- **U3, the frame opens into the rail.** The lid came off because "the vertical
+  lines should just connect to the tabs above it" — the rail WAS the bay's
+  head. With the rail in the band the box was left with two walls rising into
+  40px of empty field, which the lab's own still showed plainly. **The lid is
+  back**, pinned from both ends so a frame that got every border back fails as
+  loudly as one that lost them all.
+- **U4, the rail is full-bleed.** That was about a rail spanning the PANEL it
+  sat on; this rail does not sit on one. What survives is an INEQUALITY: the
+  row starts at or right of the divider and stops at or inside the card.
+
+U1 (the band is the client's), U5 (the datum is undrawn) and the folder skin
+are untouched.
+
+### Rejected
+
+**The boxes in the band** (`panel` in the lab, drawn and shot). It keeps
+ADR-089 U4's fill-among-outlines law and U4's connection to the divider, and
+at four stations it is genuinely good — but the films card carries two, where
+each box becomes a 450px slab, and it sits two slots above the tools card in
+one pile. A grammar that changes weight with its own item count is not one
+grammar.
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,

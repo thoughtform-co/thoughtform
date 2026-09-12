@@ -1,0 +1,84 @@
+/* The head-rail lab's own chrome (2026-09-12).
+   Page furniture only — every rule that touches the CARD lives in
+   `proof-stack.css`, which is the sheet a promotion would come out of. A
+   lab that styles its subject locally is a lab whose answer does not
+   travel. */
+
+.pchl {
+  min-height: 100svh;
+  padding: clamp(32px, 5vh, 72px) clamp(20px, 4vw, 64px) clamp(80px, 12vh, 160px);
+  background: var(--void, #0a0908);
+  color: var(--dawn, #ebe3d6);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+}
+
+.pchl__head {
+  max-width: 70ch;
+  margin: 0 0 clamp(32px, 5vh, 64px);
+}
+
+.pchl__desig {
+  margin: 0 0 14px;
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}
+
+.pchl__title {
+  margin: 0 0 12px;
+  font-size: clamp(26px, 3vw, 40px);
+  font-weight: var(--weight-text, 400);
+  letter-spacing: var(--track-display);
+}
+
+.pchl__lede {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(var(--dawn-rgb), 0.62);
+}
+
+.pchl__row {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 48px);
+  align-items: start;
+  padding-block: clamp(28px, 4vh, 52px);
+  border-top: 1px solid rgba(var(--dawn-rgb), 0.12);
+}
+
+.pchl__name {
+  margin: 0 0 10px;
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--dawn);
+}
+
+.pchl__note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(var(--dawn-rgb), 0.55);
+}
+
+.pchl__note code {
+  font-family: var(--font-pt-mono);
+  font-size: 12px;
+  color: var(--gold-ink, #caa554);
+}
+
+/* One card at the height a pinned card actually gets, so the band's row and
+   the field's proportions read as they do on the page rather than as a
+   squeezed specimen. */
+.pchl__frame {
+  height: clamp(520px, 62vh, 700px);
+  position: relative;
+}
+
+.pchl__frame .pf-card {
+  height: 100%;
+}

@@ -120,6 +120,31 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   30px (was 22–23 in a 34px row). ⚠ **THE DATUM IS A LAYOUT TERM, NOT A PAINTED
   ONE** — the smoke pins both halves, the row on the title's line AND the field
   painting nothing there.
+- ⚠ **THE RAIL IS IN THE CLIENT'S BAND SINCE U6, AND EVERY CLAUSE BELOW ABOUT
+  ITS SEAT IS HISTORY.** Read them for their reasons, which are still live;
+  their positions are not. What holds now:
+  - The head carries the BODY'S OWN `2fr 3fr` tracks (`.pf-card__headid` in
+    the record's cell, `.pf-card__headrail` in the field's), inset on
+    `--pf-field-px`. ⚠ **Crossing the split is not something the layout can
+    do**, which is the guarantee the owner asked for: the tabs "should never
+    extend too much to the left side where the left panel sits".
+  - The station is FLAT — `border-color: transparent`, no fill, the lit one in
+    `--gold-ink` with its diamond. ⚠ **Transparent, NEVER `border: 0`**: the
+    width is box metrics and zeroing it re-flows the row. Measured 5.26:1 on
+    light, 8.80:1 on dark; the dim station is the kicker's own colour, so the
+    band is one row in one voice.
+  - **The BAY inherits U2's datum.** Same term (`--pf-card-py`), so the delta
+    is still 0 by construction.
+  - **The frame's LID is back**, because U3's reason left with the rail: two
+    walls were rising into 40px of empty field. Still pinned from both ends.
+  - **U4's full-bleed is an INEQUALITY now**: the row starts at or right of the
+    divider and stops at or inside the card.
+  - ⚠ **`/test/proof-card-head-lab` is the comparison**, and `ProofCard` keeps
+    `railSeat` so it stays runnable. `"flat"` is the default and what ships;
+    `"field"` is the pre-U6 grammar and `"panel"` the boxed variant, both
+    lab-only. Rejected: `panel`, because a 450px gold slab on the two-station
+    films card is not the same grammar as four handles on the tools card.
+
 - ⚠ **A RULE AT THE DATUM IS A SECOND STATEMENT OF THE WELD.** U2 drew one
   because the rail was inset 18px from the divider and something had to reach
   across; U4 took the rail full-bleed onto the divider, so the rail IS the

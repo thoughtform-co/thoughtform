@@ -441,6 +441,132 @@
   white-space: nowrap;
 }
 
+/* ── THE RAIL, UP IN THE CLIENT'S BAND (the head-rail lab, 2026-09-12) ─
+   Owner: "try to integrate the tabs into the top part where we have the
+   client name", then, on the first cut: it "should never extend too much to
+   the left side where the left panel sits, it should remain on the right
+   side."
+
+   ⚠ SO THE BAND BECOMES THE BODY'S OWN GRID. The first cut let the rail
+   flex across the whole row, and at four stations it reached a third of the
+   way over the RECORD — a control for the right panel, drawn above the left
+   one. The head now carries the body's `2fr 3fr` tracks, the identity takes
+   the record's cell and the rail takes the field's, so crossing the split
+   is not a thing the rule can do rather than a thing it happens not to.
+
+   ⚠ AND IT SITS ON THE FIELD'S OWN INSETS, not the card's. `--pf-field-px`
+   is what the bay and the shipped rail are inset by; using the card's
+   `--pf-card-px` here would land the stations NEAR the bay's verticals
+   instead of ON them, which is the kind of 4px that reads as a mistake
+   nobody can name.
+
+   Both directions are behind `data-pf-rail`, which no production call
+   writes, so the shipped grammar below is untouched. */
+.pf-stack .pf-card[data-pf-rail] .pf-card__head {
+  display: grid;
+  grid-template-columns: minmax(300px, 2fr) minmax(0, 3fr);
+  align-items: center;
+  gap: 0;
+  /* The cells carry the insets now, because the two columns want different
+     ones: the identity takes the card's, the rail takes the field's. */
+  padding: 0;
+}
+
+.pf-stack .pf-card__headid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding-inline: var(--pf-card-px);
+}
+
+.pf-stack .pf-card__headrail {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  /* The rail's type is `cqw`-derived (`console.css`), so the slot has to be
+     the container or the labels size against the card. */
+  container-type: inline-size;
+  /* ⚠ THE BAY'S OWN VERTICALS. */
+  padding-inline: var(--pf-field-px);
+}
+
+/* ⚠ EVERY STATION RULE IS INHERITED, NOT RESTATED. The slot carries
+   `pf-card__tabs` as well, so the outline, the gold fill among outlines, the
+   knocked-out diamond and the focus ring are the SHIPPED ones. What follows
+   adjusts the seating only — the band is a fixed row where the field's is a
+   hanging one, so the box stops stretching and centres in it. */
+.pf-stack .pf-card__headrail .fl-con__rail {
+  align-items: center;
+}
+
+.pf-stack .pf-card__headrail .fl-con__stn {
+  align-self: center;
+  padding: 5px 11px;
+}
+
+/* `panel` — the boxes span the field's column exactly, so the row of
+   stations and the bay under it are one object seen twice. */
+.pf-stack .pf-card[data-pf-rail="panel"] .pf-card__headrail .fl-con__rail {
+  flex: 1 1 auto;
+}
+.pf-stack .pf-card[data-pf-rail="panel"] .pf-card__headrail .fl-con__stn {
+  flex: 1 1 0;
+}
+
+/* `flat` — no box at all. The band is CHROME: a bordered box in it is a
+   control bolted onto a label, which is what "ugly" was. The lit station is
+   the one gold thing and its diamond is the marker, which is ADR-063's law
+   satisfied by the mark rather than by a fill. */
+.pf-stack .pf-card[data-pf-rail="flat"] .pf-card__headrail .fl-con__rail {
+  flex: 0 1 auto;
+  gap: 0;
+}
+.pf-stack .pf-card[data-pf-rail="flat"] .pf-card__headrail .fl-con__stn {
+  flex: 0 0 auto;
+  border-color: transparent;
+  background: none;
+  padding: 5px 0;
+  color: var(--pf-ink-3);
+}
+.pf-stack .pf-card[data-pf-rail="flat"] .pf-card__headrail .fl-con__stn + .fl-con__stn {
+  margin-left: 22px;
+}
+.pf-stack .pf-card[data-pf-rail="flat"] .pf-card__headrail .fl-con__stn:hover {
+  border-color: transparent;
+  color: var(--pf-ink);
+}
+.pf-stack .pf-card[data-pf-rail="flat"] .pf-card__headrail .fl-con__stn[data-on] {
+  border-color: transparent;
+  background: none;
+  color: var(--gold-ink);
+}
+.pf-stack .pf-card[data-pf-rail="flat"] .pf-card__headrail .fl-con__stn[data-on] > i {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+
+/* ⚠ AND THE FRAME TAKES ITS LID BACK (ADR-097 U6). U3 removed it because
+   "the vertical lines should just connect to the tabs above it" — the rail
+   WAS the bay's head, so a hairline there was a second lid under the row of
+   boxes. With the rail up in the band that premise is gone, and the box was
+   left with two walls rising into 40px of empty field: a three-sided box
+   hanging under nothing, which is what the lab's own still showed. The
+   ruling is retired by its reason, not overruled.
+
+   Both framed kinds, and only inside a card whose rail has moved. */
+.pf-stack .pf-card[data-pf-rail] .pf-field--tools,
+.pf-stack .pf-card[data-pf-rail] .pf-card__field .fl-con__console {
+  border-top: 1px solid var(--pf-rule);
+}
+
+/* With the rail in the band the field starts at its bay, so the bay takes
+   the row the tabs used to hold. */
+.pf-stack .pf-card[data-pf-rail] .pf-card__field {
+  grid-template-rows: minmax(0, 1fr);
+}
+
 /* ── The FIELD's tab row (ADR-094 U1, moved in U2) ───────────────────
    The house rail, seated on the right panel's own top edge (owner,
    2026-09-10: the tabs should "live inside the right panel instead of the

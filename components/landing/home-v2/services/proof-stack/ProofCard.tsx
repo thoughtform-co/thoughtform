@@ -57,7 +57,39 @@ import { proofTabLabel, proofTabs } from "./proofTabs";
  * No CTA in this pass: the detail tier is a follow-up after the owner's
  * read (the plan's decision 1). The card is not a control.
  */
-export function ProofCard({ track, client }: { track: CaseTrack; client: ProofStackClient }) {
+/**
+ * Where the card's rail is drawn (the head-rail lab, 2026-09-12).
+ *
+ * `"field"` is the shipped grammar (ADR-094 U2): the rail seated on the
+ * right panel's own top edge. The other two put the stations up in the
+ * client's band, which is what the owner asked to see before it is chosen.
+ *
+ * ⚠ NEITHER MAY CROSS INTO THE RECORD'S COLUMN (owner, 2026-09-12: it
+ * "should never extend too much to the left side where the left panel sits,
+ * it should remain on the right side"). So the band becomes the BODY'S OWN
+ * GRID when a rail is in it — the same `2fr 3fr` tracks — and the rail sits
+ * in the second cell, on the field's own insets. The stations then land on
+ * the verticals the bay below them already uses.
+ *
+ *   panel  the shipped station boxes, spanning the field's column exactly.
+ *   flat   labels only, from the bay's left edge — the band is chrome, and
+ *          a box in it is a control bolted to a label.
+ *
+ * ⚠ THE DEFAULT IS WHAT SHIPS — `"flat"` since ADR-097 U6. The other two
+ * are the lab's, which passes them explicitly; production calls pass
+ * nothing and get the ruling.
+ */
+export type ProofRailSeat = "field" | "panel" | "flat";
+
+export function ProofCard({
+  track,
+  client,
+  railSeat = "flat",
+}: {
+  track: CaseTrack;
+  client: ProofStackClient;
+  railSeat?: ProofRailSeat;
+}) {
   const titleId = `pf-card-${track.id}`;
   const claims = track.blocks ?? [];
   const phase = track.stamp?.phase ?? "Build";
@@ -69,15 +101,53 @@ export function ProofCard({ track, client }: { track: CaseTrack; client: ProofSt
   const [railHost, setRailHost] = useState<HTMLDivElement | null>(null);
   const active = stations?.[Math.min(idx, stations.length - 1)];
 
+  const inHead = railSeat !== "field";
+  const rail = stations ? (
+    <ConsoleRail
+      stations={stations}
+      activeIdx={idx}
+      onActive={setIdx}
+      label={proofTabLabel(track.visual.kind)}
+    />
+  ) : null;
+
   return (
-    <article className="pf-card" aria-labelledby={titleId}>
+    <article
+      className="pf-card"
+      aria-labelledby={titleId}
+      {...(inHead ? { "data-pf-rail": railSeat } : null)}
+    >
       <header className="pf-card__head">
+        {/* ⚠ THE BAND IS THE BODY'S GRID WHEN THE RAIL IS IN IT. The identity
+            takes the record's column and the rail takes the field's, so the
+            stations can never reach across the split — and they land on the
+            bay's own verticals rather than near them. */}
+        {inHead ? (
+          <div className="pf-card__headid">
+            <p className="pf-card__kicker">
+              {client.name} · {phase}
+            </p>
+            {track.arc ? <p className="pf-card__arc">{track.arc.step}</p> : null}
+          </div>
+        ) : null}
+        {inHead ? (
+          /* ⚠ IT CARRIES `pf-card__tabs` TOO, so the stations are the SHIPPED
+             stations — the outline, the gold fill among them, the knocked-out
+             diamond, the focus ring. `__headrail` adjusts only the SEATING. A
+             head rail that re-described the station would be a second
+             description of one object, and the two would drift. */
+          <div className="pf-card__tabs pf-card__headrail" ref={setRailHost}>
+            {rail}
+          </div>
+        ) : null}
         {/* The client from the RECORD (ADR-097) — this was the one string
             literal on the surface, and the tab's colour now keys off the same
             `CaseDef` the name comes from. */}
-        <p className="pf-card__kicker">
-          {client.name} · {phase}
-        </p>
+        {inHead ? null : (
+          <p className="pf-card__kicker">
+            {client.name} · {phase}
+          </p>
+        )}
         {/* ⚠ THE ORDINAL ALONE (U4, owner 2026-09-10: "that subtitle —
             whatever, Intelligence Map, Software for Few — in the top-right
             corner, you can remove that"). U3 put the project's name here as
@@ -86,7 +156,7 @@ export function ProofCard({ track, client }: { track: CaseTrack; client: ProofSt
             rather than a second title. The name now letters nowhere on the
             card — the claim is the heading and the rail names the parts,
             which is the whole point of the arc. */}
-        {track.arc ? <p className="pf-card__arc">{track.arc.step}</p> : null}
+        {inHead || !track.arc ? null : <p className="pf-card__arc">{track.arc.step}</p>}
       </header>
       <div className="pf-card__body">
         <div className="pf-card__record">
@@ -122,16 +192,11 @@ export function ProofCard({ track, client }: { track: CaseTrack; client: ProofSt
             carries it. This card writes no corridor channel, so the rest
             state is declared (the arcs' host recipe, arcs.css). */}
         <div className="pf-card__field" data-proof-settled="">
-          <div className="pf-card__tabs" ref={setRailHost}>
-            {stations ? (
-              <ConsoleRail
-                stations={stations}
-                activeIdx={idx}
-                onActive={setIdx}
-                label={proofTabLabel(track.visual.kind)}
-              />
-            ) : null}
-          </div>
+          {inHead ? null : (
+            <div className="pf-card__tabs" ref={setRailHost}>
+              {rail}
+            </div>
+          )}
           {/* ⚠ THE BAY IS THE SIZE CONTAINER, NOT THE FIELD. The ads count
               their rows and the wireframes derive their `cqh` height off the
               box they are actually drawn in; left on `.pf-card__field` the

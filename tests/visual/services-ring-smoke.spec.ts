@@ -3664,8 +3664,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       const title = card.querySelector<HTMLElement>(".pf-card__title")?.getBoundingClientRect();
       const fieldEl = card.querySelector<HTMLElement>(".pf-card__field");
       const f = fieldEl?.getBoundingClientRect();
-      const stn = card.querySelector<HTMLElement>(".fl-con__stn")?.getBoundingClientRect();
-      const tabs = card.querySelector<HTMLElement>(".pf-card__tabs")?.getBoundingClientRect();
+      /* ⚠ THE RAIL IS IN THE BAND (U6). Read from the head, and read the
+         BAY where the rail's own datum used to be read. */
+      const stn = head.querySelector<HTMLElement>(".fl-con__stn")?.getBoundingClientRect();
+      const tabs = head.querySelector<HTMLElement>(".pf-card__headrail")?.getBoundingClientRect();
+      const bay = card.querySelector<HTMLElement>(".pf-card__bay")?.getBoundingClientRect();
       /* The framed kinds draw their box two ways — the shared console frame
          (sheets, map) and the tools' own apparatus bay. Card 2 is the tools
          card, so this resolves to the bay; the selector covers both. */
@@ -3704,8 +3707,22 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         stnH: stn?.height ?? null,
         stnLeft: stn?.left ?? null,
         stnRight:
-          [...card.querySelectorAll<HTMLElement>(".fl-con__stn")].at(-1)?.getBoundingClientRect()
+          [...head.querySelectorAll<HTMLElement>(".fl-con__stn")].at(-1)?.getBoundingClientRect()
             .right ?? null,
+        bayTop: bay?.top ?? null,
+        /* The flat station's own skin (U6): no box at all, and the lit one
+           carries the gold in its INK and its diamond. */
+        /* ⚠ THE COLOUR, NOT THE WIDTH. A flat station gives up its PAINT and
+           keeps its box metrics: zeroing the width would move every label
+           1px and re-flow the row, which is this repo's own standing lesson
+           one surface over (`border-bottom-color: transparent`, never
+           `border-bottom: 0`). So "no box" is a transparent border. */
+        stnBorder: stn
+          ? getComputedStyle(head.querySelector<HTMLElement>(".fl-con__stn")!).borderTopColor
+          : null,
+        stnBg: stn
+          ? getComputedStyle(head.querySelector<HTMLElement>(".fl-con__stn")!).backgroundColor
+          : null,
         fieldRight: f?.right ?? null,
         fieldPadX: fieldEl ? Number.parseFloat(getComputedStyle(fieldEl).paddingLeft) : null,
         tabsBottom: tabs?.bottom ?? null,
@@ -3760,44 +3777,54 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       Math.abs(folder!.fieldLeft! - folder!.dividerRight!),
       "the field does not start on the divider"
     ).toBeLessThanOrEqual(1);
-    expect(
-      folder!.stnTop! - datumY,
-      "the boxes sit on the datum, not under it"
-    ).toBeGreaterThanOrEqual(4);
-    expect(folder!.stnTop! - datumY, "the boxes float off the datum").toBeLessThanOrEqual(14);
-    expect(folder!.stnH, "the station is a strip, not a box").toBeGreaterThanOrEqual(28);
+    /* ⚠ THE BAY INHERITS THE DATUM (U6). U2 put the RAIL on the record's own
+       line; with the rail in the band it is the bay that starts there, and
+       the term is the same one — `--pf-card-py` is the record's top padding
+       AND the field's, so this is 0 by construction either way. */
+    expect(Math.abs(folder!.bayTop! - datumY), "the bay left the title's line").toBeLessThanOrEqual(
+      2
+    );
 
-    /* ── THE FRAME OPENS INTO THE RAIL (U3) ────────────────────────────
-       Owner: "the horizontal divider or border for the frame where the images
-       live, we shouldn't have that. The vertical lines should just connect to
-       the tabs above it." So the framed kinds keep their side walls and lose
-       their lid, and the walls rise to the stations' own outer edges — pinned
-       from both ends, because a box that lost ALL its borders would pass a
-       no-top-border assertion on its own. */
-    expect(folder!.frameBorderTop, "the frame kept its lid").toBe("0px");
-    expect(folder!.frameBorderLeft, "the frame lost its walls, not just its lid").not.toBe("0px");
-    expect(
-      Math.abs(folder!.frameTop! - folder!.tabsBottom!),
-      "the frame's walls do not reach the rail"
-    ).toBeLessThanOrEqual(1);
+    /* ── THE FRAME TAKES ITS LID BACK (U6, retiring U3) ────────────────
+       U3 removed it because "the vertical lines should just connect to the
+       tabs above it" — the rail WAS the bay's head. With the rail up in the
+       band that premise is gone and the box was left with two walls rising
+       into 40px of empty field. The ruling is retired by its reason, and the
+       box is a box again: pinned from BOTH ends, because a frame that got
+       every border back and a frame that lost them all both satisfy a
+       one-sided check. */
+    expect(folder!.frameBorderTop, "the frame is still open at the top").not.toBe("0px");
+    expect(folder!.frameBorderLeft, "the frame lost its walls").not.toBe("0px");
 
-    /* ── THE RAIL IS FULL-BLEED; EVERYTHING ELSE KEEPS ITS INSET (U4) ──
-       Owner: "the tabs should be full width and should also reach the edge on
-       the other side. The visuals and the text can remain centered with some
-       padding or margin, but for these tabs, it needs to be like this." So
-       the rail spans the panel — first station ON the divider, last ON the
-       card's edge — while the frame stays at `--pf-field-px`. Both halves are
-       pinned, because the whole point is the DIFFERENCE between them: a rail
-       that drifted inboard and a frame that went full-bleed would each look
-       like the other's fix. */
-    expect(
-      Math.abs(folder!.stnLeft! - folder!.fieldLeft!),
-      "the rail does not meet the divider"
-    ).toBeLessThanOrEqual(1);
-    expect(
-      Math.abs(folder!.stnRight! - folder!.fieldRight!),
-      "the rail does not reach the card's edge"
-    ).toBeLessThanOrEqual(1);
+    /* ── THE RAIL IS IN THE BAND, AND IT MAY NEVER REACH THE RECORD (U6) ──
+       Owner: "integrate the tabs into the top part where we have the client
+       name", then: they "should never extend too much to the left side where
+       the left panel sits, it should remain on the right side." The band
+       carries the body's own `2fr 3fr` tracks, so the rail's cell BEGINS on
+       the divider — crossing it is not something the layout can do. Pinned
+       as an inequality rather than an equality: the first station starts at
+       or right of the divider, and the last stops at or inside the card.
+       ⚠ U4's full-bleed clause went with the move. It was about a rail
+       spanning the PANEL it sat on; this rail does not sit on the panel. */
+    expect(folder!.stnLeft!, "the rail reaches over the record").toBeGreaterThanOrEqual(
+      folder!.fieldLeft! - 1
+    );
+    expect(folder!.stnRight!, "the rail runs past the card's edge").toBeLessThanOrEqual(
+      folder!.fieldRight! + 1
+    );
+
+    /* ── AND THE STATION IS FLAT (U6) ──────────────────────────────────
+       The band is CHROME. A bordered, filled box in it reads as a control
+       bolted onto a label, which is what the owner called ugly; the lit
+       station is the one gold thing and its diamond is the marker. Pinned
+       from both ends — no border AND no fill — because either alone comes
+       back as the other. */
+    expect(folder!.stnBorder, "the station took a box back").toMatch(
+      /rgba\(0,\s*0,\s*0,\s*0\)|transparent/
+    );
+    expect(folder!.stnBg, "the station took a fill back").toMatch(
+      /rgba\(0,\s*0,\s*0,\s*0\)|transparent/
+    );
     expect(
       folder!.frameLeft! - folder!.fieldLeft! - folder!.fieldPadX!,
       "the frame lost the inset the visuals keep"
