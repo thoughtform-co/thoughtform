@@ -480,6 +480,42 @@ each box becomes a 450px slab, and it sits two slots above the tools card in
 one pile. A grammar that changes weight with its own item count is not one
 grammar.
 
+## Update 7 — the ordinal goes, and the rail comes home (2026-09-13, owner)
+
+> Remove the numbers (01 etc) — and I don't think the tabs in the header is
+> working; can't we restore them in their original position?
+
+**Two deletions, one of them a retirement.** `.pf-card__arc` and its rule are
+gone from the card and the sheet; `ProofCard`'s `railSeat` default goes back to
+`"field"`, which retires U6's band seat on both hosts. The `railSeat` prop,
+the `"panel"` / `"flat"` skins and `/test/proof-card-head-lab` all stay — they
+are the comparison lever, and ADR-070 U35's rule is that the losing drawing
+goes WITH its guards once the owner has read it, not before.
+
+⚠ **THE CSS REVERTED ITSELF, WHICH IS WHY THE SEAT WAS SAFE TO FLIP.** Every
+band rule is scoped to `[data-pf-rail]`, an attribute only the head seats
+write, so the field seat restores U3's open frame and U4's full-bleed rail with
+no rule edited. The SMOKES did not: U6 had rewritten the folder block to read
+the rail from the head, to expect the frame's lid back and to expect a flat
+station, so restoring the seat meant restoring those three pins as well. A
+skin that reverts by attribute and a guard that reverts by hand are the two
+halves of one change, and only one of them is automatic.
+
+⚠ **THE PEEK BAND HAS NOTHING LEFT TO TELL THE PILE APART.** The ordinal held
+the head's right slot from ADR-094 U4 precisely because `01 … 04` differs per
+card; three of the four `phase` values read `Build`, so the sliver a covered
+card shows is now `LOOP EARPLUGS · BUILD` on cards 1–3 and `· NAVIGATE` on 4.
+That is the defect U1 and U4 both solved, re-opened deliberately — the owner
+has read this pile with the numbers on it for a week. `track.arc.step` stays in
+the RECORD and `trinny-proof-order.test.ts` still pins the sequence against it;
+it letters nowhere on the card.
+
+⚠ **BOTH SMOKES PIN THE ABSENCE, NOT THE SILENCE.** The ordinal assertion was
+`["01","02","03","04"]`; it is `arcs === 0` per card now, beside
+`headRails === 0`. Deleting the assertions instead would leave the head's right
+slot free to refill one card at a time — and across seven updates in two days,
+that is this surface's actual failure mode.
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,

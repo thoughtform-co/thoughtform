@@ -200,24 +200,25 @@ const cardShape = (page: Page, idx: number) =>
     const slot = document.querySelectorAll<HTMLElement>("[data-pc-slot]")[i];
     const head = slot.querySelector<HTMLElement>(".pf-card__head")!;
     const field = slot.querySelector<HTMLElement>(".pf-card__field")!;
-    /* ⚠ THE RAIL IS IN THE BAND, NOT THE FIELD (ADR-097 U6, reversing
-       ADR-094 U2). Reading it from the field is how this reader would report
-       four railless cards and stay green on a rail that had stopped
-       rendering — the same trap, one container over. */
-    const stns = [...head.querySelectorAll<HTMLElement>(".fl-con__stn")];
-    const tabs = head.querySelector<HTMLElement>(".pf-card__headrail");
+    /* ⚠ THE RAIL IS BACK IN THE FIELD (ADR-097 U7, retiring U6's band seat —
+       owner: "I don't think the tabs in the header is working; can't we
+       restore them in their original position?"). Read from the SLOT, which
+       answers wherever the rail is seated; reading it from one host is how
+       this reader would report four railless cards and stay green on a rail
+       that had merely moved. */
+    const stns = [...slot.querySelectorAll<HTMLElement>(".fl-con__stn")];
+    const tabs = slot.querySelector<HTMLElement>(".pf-card__tabs");
     return {
-      /* The band is the body's own grid since U6: the identity cell leads,
-         and the kicker leads inside it. Both are read, because a head that
-         lost its grid would still start with a kicker somewhere. */
+      /* The band is a flat strip again (U7), so the kicker leads the head
+         itself rather than a `__headid` cell inside it. */
       lead: head.firstElementChild?.className ?? "",
-      leadInId:
-        head.querySelector<HTMLElement>(".pf-card__headid")?.firstElementChild?.className ?? "",
       kicker: head.querySelector(".pf-card__kicker")?.textContent?.trim() ?? "",
-      /* The head's right slot: the beat's ORDINAL and nothing else (U4). The
-         CLAIM is the display title below; the project's name letters nowhere
-         on the card at all. */
-      arc: head.querySelector(".pf-card__arc")?.textContent?.trim() ?? "",
+      /* ⚠ THE HEAD HAS NO RIGHT SLOT (U7, owner: "remove the numbers (01
+         etc)"). The ordinal held it from ADR-094 U4; the CLAIM is the display
+         title below, and the project's name letters nowhere on the card at
+         all. Counted, not read — the pin is the absence. */
+      arcs: slot.querySelectorAll(".pf-card__arc").length,
+      headRails: head.querySelectorAll(".pf-card__headrail").length,
       /* The display heading — the arc's own line since U3. */
       title: slot.querySelector(".pf-card__title")?.textContent?.trim() ?? "",
       /* ADR-065's canonical diagonal on the housing, and rule 4 under it:
@@ -231,11 +232,12 @@ const cardShape = (page: Page, idx: number) =>
       ),
       titleInRecord: !!slot.querySelector(".pf-card__record > .pf-card__title"),
       titleInHead: !!head.querySelector(".pf-card__title"),
-      stationsInField: field.querySelectorAll(".fl-con__stn").length,
-      /* ⚠ AND IT MAY NEVER REACH THE RECORD (U2, owner: the tabs "should
-         never extend too much to the left side where the left panel sits").
-         The band carries the body's tracks, so the rail's cell starts on the
-         divider — measured, not assumed. */
+      stationsInHead: head.querySelectorAll(".fl-con__stn").length,
+      /* ⚠ AND IT MAY NEVER REACH THE RECORD (owner, twice over: the tabs
+         "should never extend too much to the left side where the left panel
+         sits"). Back in the field the rail is FULL-BLEED to the field's own
+         box (ADR-097 U4), and the field begins on the divider — so this is
+         the same question asked of a different seat, measured, not assumed. */
       railCrossesDivider: (() => {
         const first = stns[0]?.getBoundingClientRect();
         const f = field.getBoundingClientRect();
@@ -530,8 +532,11 @@ test.describe("Trinny London pitch variant", () => {
        switch on the house rail instead of printing all of it at once. */
     const shapes = await Promise.all([0, 1, 2, 3].map((i) => cardShape(page, i)));
     for (const [i, c] of shapes.entries()) {
-      expect(c.lead, `card ${i + 1} band is not the body's grid`).toContain("pf-card__headid");
-      expect(c.leadInId, `card ${i + 1} leads with the client`).toContain("pf-card__kicker");
+      /* ⚠ THE BAND IS A FLAT STRIP AGAIN (U7). U6 made it the body's `2fr 3fr`
+         grid so a rail could sit in its second cell, and pinned the identity
+         into a `__headid` wrapper; with the rail back in the field the head
+         has one child and the kicker leads it directly. */
+      expect(c.lead, `card ${i + 1} leads with the client`).toContain("pf-card__kicker");
       expect(c.kicker, `card ${i + 1} kicker`).toMatch(/^Loop Earplugs \u00b7 /);
       expect(c.titleInRecord, `card ${i + 1} name is in the record`).toBe(true);
       expect(c.titleInHead, `card ${i + 1} name is out of the head`).toBe(false);
@@ -540,14 +545,16 @@ test.describe("Trinny London pitch variant", () => {
          the tabs gone it would otherwise read `LOOP EARPLUGS \u00b7 BUILD` on
          all four and the pile would stop indexing itself. Pinned from both
          ends: the beat is here, and the rail is NOT. */
-      /* ⚠ THE CLAIM IS THE HEADING AND THE HEAD IS AN ORDINAL (U3 + U4,
-         owner: "the lines that I said, 'We push the frontiers of AI
-         creative,' should replace the title 'AI Above-the-Line'" — then
-         "that subtitle … in the top-right corner, you can remove that").
-         Pinned from BOTH ends: the claim is up top, and the head is TWO
-         DIGITS, so the project name creeping back in beside it fails. */
+      /* ⚠ THE CLAIM IS THE HEADING AND THE BAND IS THE CLIENT ALONE (U3 +
+         ADR-097 U7: "remove the numbers (01 etc)" and the rail back to the
+         field). The ordinal held the head's right slot from ADR-094 U4 and
+         this asserted it was two digits; the absence is what is pinned now,
+         on both the ordinal and the band rail, because the head is the strip
+         a covered card still shows and anything creeping back into it is on
+         screen four times over. */
       expect(c.title, `card ${i + 1} title is the arc's claim`).toMatch(/^We\s+\S/);
-      expect(c.arc, `card ${i + 1} head is the ordinal alone`).toBe(`0${i + 1}`);
+      expect(c.arcs, `card ${i + 1} letters an ordinal again`).toBe(0);
+      expect(c.headRails, `card ${i + 1} rail came back to the band`).toBe(0);
       /* ⚠ ADR-065's CANONICAL DIAGONAL ON THE HOUSING (U4, owner: "all the
          cards in the proof section should have a notch … in the bottom-left
          and top-right corners") — and RULE 4 with it, from both ends: the
@@ -558,7 +565,7 @@ test.describe("Trinny London pitch variant", () => {
       for (const cp of c.childClips) {
         expect(cp, `card ${i + 1} child keeps square corners`).toBe("none");
       }
-      expect(c.stationsInField, `card ${i + 1} rail left the band`).toBe(0);
+      expect(c.stationsInHead, `card ${i + 1} rail left the field`).toBe(0);
       expect(c.railCrossesDivider, `card ${i + 1} rail reaches over the record`).toBe(false);
       /* Four claims, each with its evidence sentence in the DOM. Whether it
          PAINTS is a height rung (940h) \u2014 the sentence is sr-only below it,

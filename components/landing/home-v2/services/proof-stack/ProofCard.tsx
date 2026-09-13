@@ -75,16 +75,18 @@ import { proofTabLabel, proofTabs } from "./proofTabs";
  *   flat   labels only, from the bay's left edge — the band is chrome, and
  *          a box in it is a control bolted to a label.
  *
- * ⚠ THE DEFAULT IS WHAT SHIPS — `"flat"` since ADR-097 U6. The other two
- * are the lab's, which passes them explicitly; production calls pass
- * nothing and get the ruling.
+ * ⚠ THE DEFAULT IS WHAT SHIPS — back to `"field"` at ADR-097 U7 (owner, on
+ * reading U6 live: "I don't think the tabs in the header is working; can't
+ * we restore them in their original position?"). `"panel"` and `"flat"` are
+ * the lab's, which passes them explicitly; production calls pass nothing and
+ * get the ruling.
  */
 export type ProofRailSeat = "field" | "panel" | "flat";
 
 export function ProofCard({
   track,
   client,
-  railSeat = "flat",
+  railSeat = "field",
 }: {
   track: CaseTrack;
   client: ProofStackClient;
@@ -127,7 +129,6 @@ export function ProofCard({
             <p className="pf-card__kicker">
               {client.name} · {phase}
             </p>
-            {track.arc ? <p className="pf-card__arc">{track.arc.step}</p> : null}
           </div>
         ) : null}
         {inHead ? (
@@ -148,15 +149,16 @@ export function ProofCard({
             {client.name} · {phase}
           </p>
         )}
-        {/* ⚠ THE ORDINAL ALONE (U4, owner 2026-09-10: "that subtitle —
-            whatever, Intelligence Map, Software for Few — in the top-right
-            corner, you can remove that"). U3 put the project's name here as
-            the peek band's distinguishing mark; the step keeps that job on
-            its own, because `01 … 04` differs per card and is an INDEX
-            rather than a second title. The name now letters nowhere on the
-            card — the claim is the heading and the rail names the parts,
-            which is the whole point of the arc. */}
-        {inHead || !track.arc ? null : <p className="pf-card__arc">{track.arc.step}</p>}
+        {/* ⚠ THE ORDINAL IS GONE (U7, owner: "remove the numbers (01 etc)").
+            It had been the head's whole right slot since ADR-094 U4, kept
+            because `01 … 04` differs per card and was what let the PEEK BAND
+            tell the pile apart. That job is now unheld: three of the four
+            phases read `Build`, so the sliver a covered card shows is
+            `LOOP EARPLUGS · BUILD` on cards 1–3 and `· NAVIGATE` on 4.
+            Recorded rather than argued — the owner has read the pile with the
+            numbers on it for a week. `track.arc.step` stays in the RECORD and
+            `trinny-proof-order.test.ts` still pins the sequence against it;
+            it simply letters nowhere on the card now. */}
       </header>
       <div className="pf-card__body">
         <div className="pf-card__record">

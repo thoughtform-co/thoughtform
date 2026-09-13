@@ -3551,16 +3551,19 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(mid.opacity, "the plate arrives opaque — the fade is gone").toBeLessThan(0.95);
     expect(mid.opacity, "the plate is invisible a third of the way in").toBeGreaterThan(0.2);
 
-    /* ── FOUR CARDS, THE RECORD'S OWN ARC, IN ORDER ────────────────────
-       The head prints `arc.step` from the RECORD while the pile is ordered
-       by `proofOrder.ts` — the two can disagree with nothing failing, which
-       is the defect `trinny-proof-order.test.ts` pins arithmetically and
-       this pins on the rendered page. ⚠ The project's NAME letters nowhere
-       on the card (ADR-094 U4): the claim is the heading and the rail names
-       the parts. */
+    /* ── FOUR CARDS, AND NO ORDINAL ON ANY OF THEM ─────────────────────
+       ⚠ THE STEP LETTERS NOWHERE SINCE U7 (owner: "remove the numbers (01
+       etc)"). It had been the head's right slot since ADR-094 U4 and this
+       suite pinned it `["01","02","03","04"]` — the rendered half of the
+       agreement between the record's arc and the pile's order. The
+       arithmetic half survives in `trinny-proof-order.test.ts`, which reads
+       `arc.step` off the RECORD; what is pinned here now is the absence, so
+       the slot cannot drift back one card at a time.
+       ⚠ The project's NAME letters nowhere either (ADR-094 U4): the claim is
+       the heading and the rail names the parts. */
     const cards = await page.evaluate(() =>
       [...document.querySelectorAll<HTMLElement>(".pf-card")].map((card) => ({
-        arc: card.querySelector(".pf-card__arc")?.textContent?.trim() ?? "",
+        arcs: card.querySelectorAll(".pf-card__arc").length,
         title: card.querySelector(".pf-card__title")?.textContent?.trim() ?? "",
         kicker: card.querySelector(".pf-card__kicker")?.textContent?.trim() ?? "",
         claims: [...card.querySelectorAll(".pf-card__claim-title")].map(
@@ -3570,8 +3573,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       }))
     );
     expect(cards).toHaveLength(4);
-    expect(cards.map((c) => c.arc)).toEqual(["01", "02", "03", "04"]);
     for (const [i, card] of cards.entries()) {
+      expect(card.arcs, `card ${i} letters an ordinal again`).toBe(0);
       expect(card.title.length, `card ${i} has no claim as its heading`).toBeGreaterThan(10);
       expect(card.kicker).toMatch(/LOOP EARPLUGS/i);
       expect(card.claims, `card ${i} does not carry four claims`).toHaveLength(4);
@@ -3656,19 +3659,18 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     const folder = await page.evaluate(() => {
       const card = document.querySelector<HTMLElement>('[data-pc-index="2"] .pf-card');
       const head = card?.querySelector<HTMLElement>(".pf-card__head");
-      const arc = card?.querySelector<HTMLElement>(".pf-card__arc");
-      if (!card || !head || !arc) return null;
+      if (!card || !head) return null;
       const c = card.getBoundingClientRect();
       const h = head.getBoundingClientRect();
-      const a = arc.getBoundingClientRect();
       const title = card.querySelector<HTMLElement>(".pf-card__title")?.getBoundingClientRect();
       const fieldEl = card.querySelector<HTMLElement>(".pf-card__field");
       const f = fieldEl?.getBoundingClientRect();
-      /* ⚠ THE RAIL IS IN THE BAND (U6). Read from the head, and read the
-         BAY where the rail's own datum used to be read. */
-      const stn = head.querySelector<HTMLElement>(".fl-con__stn")?.getBoundingClientRect();
-      const tabs = head.querySelector<HTMLElement>(".pf-card__headrail")?.getBoundingClientRect();
-      const bay = card.querySelector<HTMLElement>(".pf-card__bay")?.getBoundingClientRect();
+      /* ⚠ THE RAIL IS BACK IN THE FIELD (U7, retiring U6's band seat), so it
+         is read from the CARD rather than from either host — one selector
+         that answers wherever the rail is seated. */
+      const stn = card.querySelector<HTMLElement>(".fl-con__stn")?.getBoundingClientRect();
+      const tabs = card.querySelector<HTMLElement>(".pf-card__tabs")?.getBoundingClientRect();
+      const headRails = head.querySelectorAll(".pf-card__headrail").length;
       /* The framed kinds draw their box two ways — the shared console frame
          (sheets, map) and the tools' own apparatus bay. Card 2 is the tools
          card, so this resolves to the bay; the selector covers both. */
@@ -3689,7 +3691,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         headLeft: h.left - c.left,
         headRight: h.right,
         headBg: getComputedStyle(head).backgroundImage,
-        arcRight: a.right,
+        arcs: card.querySelectorAll(".pf-card__arc").length,
+        headRails,
         ring: getComputedStyle(card, "::before").backgroundColor,
         plateAlpha: parts.length === 4 ? parts[3] : 1,
         /* U2 — the rail on the record's own datum, and the rule it hangs
@@ -3707,21 +3710,13 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         stnH: stn?.height ?? null,
         stnLeft: stn?.left ?? null,
         stnRight:
-          [...head.querySelectorAll<HTMLElement>(".fl-con__stn")].at(-1)?.getBoundingClientRect()
+          [...card.querySelectorAll<HTMLElement>(".fl-con__stn")].at(-1)?.getBoundingClientRect()
             .right ?? null,
-        bayTop: bay?.top ?? null,
-        /* The flat station's own skin (U6): no box at all, and the lit one
-           carries the gold in its INK and its diamond. */
-        /* ⚠ THE COLOUR, NOT THE WIDTH. A flat station gives up its PAINT and
-           keeps its box metrics: zeroing the width would move every label
-           1px and re-flow the row, which is this repo's own standing lesson
-           one surface over (`border-bottom-color: transparent`, never
-           `border-bottom: 0`). So "no box" is a transparent border. */
+        /* The station is a BOX again with the rail back in the field (U7) —
+           ADR-089 U3/U4's outline among outlines. U6's flat band skin went
+           with the seat it was drawn for. */
         stnBorder: stn
-          ? getComputedStyle(head.querySelector<HTMLElement>(".fl-con__stn")!).borderTopColor
-          : null,
-        stnBg: stn
-          ? getComputedStyle(head.querySelector<HTMLElement>(".fl-con__stn")!).backgroundColor
+          ? getComputedStyle(card.querySelector<HTMLElement>(".fl-con__stn")!).borderTopColor
           : null,
         fieldRight: f?.right ?? null,
         fieldPadX: fieldEl ? Number.parseFloat(getComputedStyle(fieldEl).paddingLeft) : null,
@@ -3736,15 +3731,18 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           null,
       };
     });
-    expect(folder, "card 2 has no head or ordinal").not.toBeNull();
+    expect(folder, "card 2 has no head").not.toBeNull();
     expect(folder!.headW, "the head is not the full top row").toBeGreaterThan(folder!.cardW * 0.98);
     expect(folder!.headLeft, "the band is not seated at the card's left edge").toBeLessThanOrEqual(
       1
     );
     expect(folder!.headBg, "the band carries no gradient").toMatch(/linear-gradient/);
-    expect(folder!.arcRight, "the ordinal runs out of the band").toBeLessThanOrEqual(
-      folder!.headRight + 1
-    );
+    /* U7 — the band is the client's identity alone: no ordinal, and no rail
+       in it either. Both are pinned here because the head is the one strip
+       every card shows while covered, so anything that creeps back into it
+       is on screen four times over. */
+    expect(folder!.arcs, "the ordinal came back to the band").toBe(0);
+    expect(folder!.headRails, "the rail came back to the band").toBe(0);
     const ringNums = (folder!.ring.match(/[\d.]+/g) ?? []).map(Number);
     const ringIsColorFn = folder!.ring.startsWith("color(");
     const ringRgb = ringIsColorFn ? ringNums.slice(0, 3).map((v) => v * 255) : ringNums.slice(0, 3);
@@ -3777,54 +3775,48 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       Math.abs(folder!.fieldLeft! - folder!.dividerRight!),
       "the field does not start on the divider"
     ).toBeLessThanOrEqual(1);
-    /* ⚠ THE BAY INHERITS THE DATUM (U6). U2 put the RAIL on the record's own
-       line; with the rail in the band it is the bay that starts there, and
-       the term is the same one — `--pf-card-py` is the record's top padding
-       AND the field's, so this is 0 by construction either way. */
-    expect(Math.abs(folder!.bayTop! - datumY), "the bay left the title's line").toBeLessThanOrEqual(
-      2
-    );
-
-    /* ── THE FRAME TAKES ITS LID BACK (U6, retiring U3) ────────────────
-       U3 removed it because "the vertical lines should just connect to the
-       tabs above it" — the rail WAS the bay's head. With the rail up in the
-       band that premise is gone and the box was left with two walls rising
-       into 40px of empty field. The ruling is retired by its reason, and the
-       box is a box again: pinned from BOTH ends, because a frame that got
-       every border back and a frame that lost them all both satisfy a
-       one-sided check. */
-    expect(folder!.frameBorderTop, "the frame is still open at the top").not.toBe("0px");
-    expect(folder!.frameBorderLeft, "the frame lost its walls").not.toBe("0px");
-
-    /* ── THE RAIL IS IN THE BAND, AND IT MAY NEVER REACH THE RECORD (U6) ──
-       Owner: "integrate the tabs into the top part where we have the client
-       name", then: they "should never extend too much to the left side where
-       the left panel sits, it should remain on the right side." The band
-       carries the body's own `2fr 3fr` tracks, so the rail's cell BEGINS on
-       the divider — crossing it is not something the layout can do. Pinned
-       as an inequality rather than an equality: the first station starts at
-       or right of the divider, and the last stops at or inside the card.
-       ⚠ U4's full-bleed clause went with the move. It was about a rail
-       spanning the PANEL it sat on; this rail does not sit on the panel. */
-    expect(folder!.stnLeft!, "the rail reaches over the record").toBeGreaterThanOrEqual(
-      folder!.fieldLeft! - 1
-    );
-    expect(folder!.stnRight!, "the rail runs past the card's edge").toBeLessThanOrEqual(
-      folder!.fieldRight! + 1
-    );
-
-    /* ── AND THE STATION IS FLAT (U6) ──────────────────────────────────
-       The band is CHROME. A bordered, filled box in it reads as a control
-       bolted onto a label, which is what the owner called ugly; the lit
-       station is the one gold thing and its diamond is the marker. Pinned
-       from both ends — no border AND no fill — because either alone comes
-       back as the other. */
-    expect(folder!.stnBorder, "the station took a box back").toMatch(
+    /* ⚠ THE RAIL IS BACK ON THE DATUM (U7, retiring U6's band seat). The
+       owner read the band rail live — "I don't think the tabs in the header
+       is working; can't we restore them in their original position?" — so
+       the stations hang under the record's own line again, one box tall,
+       and U2's three reads come back with them. */
+    expect(
+      folder!.stnTop! - datumY,
+      "the boxes sit on the datum, not under it"
+    ).toBeGreaterThanOrEqual(4);
+    expect(folder!.stnTop! - datumY, "the boxes float off the datum").toBeLessThanOrEqual(14);
+    expect(folder!.stnH, "the station is a strip, not a box").toBeGreaterThanOrEqual(28);
+    expect(folder!.stnBorder, "the station lost its outline").not.toMatch(
       /rgba\(0,\s*0,\s*0,\s*0\)|transparent/
     );
-    expect(folder!.stnBg, "the station took a fill back").toMatch(
-      /rgba\(0,\s*0,\s*0,\s*0\)|transparent/
-    );
+
+    /* ── THE FRAME OPENS INTO THE RAIL AGAIN (U7, restoring U3) ────────
+       U6 gave the box its lid back, correctly, because the rail had left the
+       field and two walls were rising into empty space. With the rail seated
+       on the panel's own top edge that premise is gone again and the frame is
+       the bay the rail heads: no lid, walls to the rail. Pinned from BOTH
+       ends — a frame that lost every border satisfies "no lid" on its own. */
+    expect(folder!.frameBorderTop, "the frame kept its lid").toBe("0px");
+    expect(folder!.frameBorderLeft, "the frame lost its walls, not just its lid").not.toBe("0px");
+    expect(
+      Math.abs(folder!.frameTop! - folder!.tabsBottom!),
+      "the frame's walls do not reach the rail"
+    ).toBeLessThanOrEqual(1);
+
+    /* ── THE RAIL IS FULL-BLEED; EVERYTHING ELSE KEEPS ITS INSET (U4,
+       restored at U7) ── The rail spans the panel — first station ON the
+       divider, last ON the card's edge — while the frame stays at
+       `--pf-field-px`. Both halves are pinned, because the whole point is
+       the DIFFERENCE between them: a rail that drifted inboard and a frame
+       that went full-bleed would each look like the other's fix. */
+    expect(
+      Math.abs(folder!.stnLeft! - folder!.fieldLeft!),
+      "the rail does not meet the divider"
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(folder!.stnRight! - folder!.fieldRight!),
+      "the rail does not reach the card's edge"
+    ).toBeLessThanOrEqual(1);
     expect(
       folder!.frameLeft! - folder!.fieldLeft! - folder!.fieldPadX!,
       "the frame lost the inset the visuals keep"

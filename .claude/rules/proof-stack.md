@@ -120,30 +120,36 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   30px (was 22–23 in a 34px row). ⚠ **THE DATUM IS A LAYOUT TERM, NOT A PAINTED
   ONE** — the smoke pins both halves, the row on the title's line AND the field
   painting nothing there.
-- ⚠ **THE RAIL IS IN THE CLIENT'S BAND SINCE U6, AND EVERY CLAUSE BELOW ABOUT
-  ITS SEAT IS HISTORY.** Read them for their reasons, which are still live;
-  their positions are not. What holds now:
-  - The head carries the BODY'S OWN `2fr 3fr` tracks (`.pf-card__headid` in
-    the record's cell, `.pf-card__headrail` in the field's), inset on
-    `--pf-field-px`. ⚠ **Crossing the split is not something the layout can
-    do**, which is the guarantee the owner asked for: the tabs "should never
-    extend too much to the left side where the left panel sits".
-  - The station is FLAT — `border-color: transparent`, no fill, the lit one in
-    `--gold-ink` with its diamond. ⚠ **Transparent, NEVER `border: 0`**: the
-    width is box metrics and zeroing it re-flows the row. Measured 5.26:1 on
-    light, 8.80:1 on dark; the dim station is the kicker's own colour, so the
-    band is one row in one voice.
-  - **The BAY inherits U2's datum.** Same term (`--pf-card-py`), so the delta
-    is still 0 by construction.
-  - **The frame's LID is back**, because U3's reason left with the rail: two
-    walls were rising into 40px of empty field. Still pinned from both ends.
-  - **U4's full-bleed is an INEQUALITY now**: the row starts at or right of the
-    divider and stops at or inside the card.
-  - ⚠ **`/test/proof-card-head-lab` is the comparison**, and `ProofCard` keeps
-    `railSeat` so it stays runnable. `"flat"` is the default and what ships;
-    `"field"` is the pre-U6 grammar and `"panel"` the boxed variant, both
-    lab-only. Rejected: `panel`, because a 450px gold slab on the two-station
-    films card is not the same grammar as four handles on the tools card.
+- ⚠ **THE RAIL IS BACK IN THE FIELD (U7), SO EVERY CLAUSE HERE ABOUT ITS SEAT
+  IS LIVE AGAIN.** U6 moved it up into the client's band and the owner read it
+  live — "I don't think the tabs in the header is working; can't we restore
+  them in their original position?" — so `ProofCard`'s `railSeat` default goes
+  back to `"field"` and U2–U5 hold as written: the rail on the record's datum,
+  full-bleed to the field's edges, the frame open into it, the datum undrawn.
+  - ⚠ **THE CSS REVERTS ITSELF; THE SMOKES DO NOT.** Every band rule is scoped
+    to `[data-pf-rail]`, which only the head seats write, so flipping the seat
+    restored U3's open frame and U4's full-bleed rail with no rule edited. U6
+    had rewritten the smoke's folder block to read the rail from the HEAD, to
+    expect the frame's lid and to expect a flat station — all three had to come
+    back by hand. **A skin that reverts by attribute and a guard that reverts
+    by hand are two halves of one change, and only one is automatic.**
+  - ⚠ **`/test/proof-card-head-lab` STAYS, and so does `railSeat`.** `"field"`
+    is the default and what ships; `"panel"` and `"flat"` are lab-only
+    (ADR-070 U35 — the losing drawing goes with its guards once the owner has
+    read it, not before). Rejected on the read: `flat`, the band seat itself;
+    `panel`, because a 450px gold slab on the two-station films card is not
+    the same grammar as four handles on the tools card.
+- ⚠ **THE HEAD HAS NO RIGHT SLOT, AND THE PEEK BAND PAYS FOR IT** (U7: "remove
+  the numbers (01 etc)"). `.pf-card__arc` and its rule are deleted. The ordinal
+  held that slot from ADR-094 U4 _because_ `01 … 04` differs per card, and
+  three of the four `phase` values read `Build` — so the sliver a covered card
+  shows is `LOOP EARPLUGS · BUILD` on cards 1–3 and `· NAVIGATE` on 4. The
+  defect U1 and U4 both solved is re-opened deliberately. `track.arc.step`
+  stays in the RECORD (`trinny-proof-order.test.ts` still pins the sequence
+  against it); it letters nowhere on the card.
+  ⚠ **BOTH SMOKES PIN THE ABSENCE** — `arcs === 0` and `headRails === 0` per
+  card, not a deleted assertion. The head is the one strip a covered card
+  shows, so anything creeping back into it is on screen four times over.
 
 - ⚠ **A RULE AT THE DATUM IS A SECOND STATEMENT OF THE WELD.** U2 drew one
   because the rail was inset 18px from the divider and something had to reach

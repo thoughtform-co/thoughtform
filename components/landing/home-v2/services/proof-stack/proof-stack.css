@@ -422,24 +422,13 @@
   white-space: nowrap;
 }
 
-/* The head's right slot: the beat's ORDINAL, and nothing else (U4). U3 had
-   the project's name here too and the owner took it out — the claim is the
-   heading, the rail names the parts, and a card that also captioned itself
-   was saying a third thing. The step survives because it is an INDEX, not a
-   title: it differs per card, so the peek band still tells the pile apart.
-   ⚠ The gold INK rung, never the mark rung — this is small text on
-   parchment, where `--gold` measures ~1.8:1. */
-.pf-stack .pf-card__arc {
-  margin: 0;
-  flex: 0 0 auto;
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  line-height: 1;
-  letter-spacing: var(--track-eyebrow);
-  color: var(--gold-ink);
-  white-space: nowrap;
-}
+/* ⚠ THE HEAD HAS NO RIGHT SLOT (ADR-097 U7, owner: "remove the numbers
+   (01 etc)"). `.pf-card__arc` was the beat's ordinal and the head's whole
+   right half since ADR-094 U4; the rule is deleted with the element rather
+   than left behind styling nothing. The band is the client's identity alone
+   now, so it is also the last gold on this card's chrome — if a right slot
+   ever returns, it takes `--gold-ink` and never the mark rung (small text on
+   parchment, where `--gold` measures ~1.8:1). */
 
 /* ── THE RAIL, UP IN THE CLIENT'S BAND (the head-rail lab, 2026-09-12) ─
    Owner: "try to integrate the tabs into the top part where we have the
