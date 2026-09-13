@@ -675,20 +675,33 @@ describe("arcs registry (ADR-052)", () => {
         const [today, configured] = section.states;
         expect(today.mode, `${at}: the first state is today`).toBe("today");
         expect(configured.mode, `${at}: the second state is configured`).toBe("configured");
+        // One layer: the dormant board letters its tags, or none (an empty
+        // dashed room under its one line); it never letters a different set.
+        if (today.layer.rows.length > 0) {
+          expect(
+            configured.layer.rows.map((r) => r.id),
+            `${at}: one layer, lit differently`
+          ).toEqual(today.layer.rows.map((r) => r.id));
+        }
         expect(
-          configured.layer.rows.map((r) => r.id),
-          `${at}: one layer, lit differently`
-        ).toEqual(today.layer.rows.map((r) => r.id));
+          configured.tools.items.map((t) => t.id),
+          `${at}: the same tools, wired differently`
+        ).toEqual(today.tools.items.map((t) => t.id));
         for (const state of section.states) {
           const ids = state.layer.rows.map((r) => r.id);
           expect(new Set(ids).size, `${at}/${state.mode}: duplicate layer id`).toBe(ids.length);
-          expect(state.foot.length, `${at}/${state.mode}: too many kickers`).toBeLessThanOrEqual(3);
-          expect(
-            state.card.rows?.length ?? 0,
-            `${at}/${state.mode}: too many card rows`
-          ).toBeLessThanOrEqual(2);
+          expect(state.layer.rows.length, `${at}/${state.mode}: too many tags`).toBeLessThanOrEqual(
+            4
+          );
+          expect(Boolean(state.card.q), `${at}/${state.mode}: a question needs its answer`).toBe(
+            Boolean(state.card.a)
+          );
+          expect(state.card.work && state.card.q, `${at}/${state.mode}: one thing`).toBeFalsy();
         }
-        expect(today.sockets, `${at}: a dormant board offers no socket`).toBeUndefined();
+        expect(
+          today.tools.items.filter((t) => t.lit),
+          `${at}: nothing is lit on a dormant board`
+        ).toHaveLength(0);
         // ⚠ NO DIGIT ON THE DRAWING — the configuration's own ruling, kept.
         scanArc(section.states, at, (value, path) => {
           expect(/\d/.test(value), `${path}: a figure on the board`).toBe(false);

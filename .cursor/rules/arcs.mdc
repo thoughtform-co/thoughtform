@@ -62,13 +62,17 @@ there belongs in the contrast walk.
 
 ⚠ ADR-100: the `board` kind is the FOURTH enumerated exception — the client's
 configuration as a circuit board in two states (dormant beside lit), the
-proof's R4 grammar at page scale, no frame, one leaf with no picker. Dispatched
-in BOTH `ArcSectionRenderer` and the Trinny page's `TrinnyBeats` switch (which
-dropped `configuration`; `ArcConfiguration` is byte-identical elsewhere). The
-box is width-led and its aspect is the contract (`--arc-board-aspect` and the
-flex bases are pinned to the crops by `arc-board-fit`); the crop is
-height-elastic (`ArcBoardRow`'s `ResizeObserver` → `fitExt` → `chain(e)`); every
-colour is an `--arc-board-*` alias of the ramp, never a `--pda-*`; every
+proof's R4 grammar at page scale, no frame, one leaf with no picker, SERVER-ONLY.
+⚠ U1 (owner, same day: "no, radically simplify it") is the live cut — FOUR
+objects per board (seat · layer · card · tools), one line apiece, three plain
+ribbons; the bed, sockets, foot rows, hatch, layer sentences, second card row
+and the elastic crop (`ArcBoardRow`) are deleted. When he asks for simple, the
+FIRST cut is the minimal one. Dispatched in BOTH `ArcSectionRenderer` and the
+Trinny page's `TrinnyBeats` switch (which dropped `configuration`;
+`ArcConfiguration` is byte-identical elsewhere). The row is width-led and its
+shares are the crops' (560 + 40 + 800 = 1400; the flex bases and the seam are
+pinned by `arc-board-fit`; the svg sits at its own height, no cap, no aspect);
+every colour is an `--arc-board-*` alias of the ramp, never a `--pda-*`; every
 dormant rule sits under `.is-arc-js` + `no-preference` so no-JS and PRM render
 lit; `data-board-*` never `data-arc-*`; the head on the TEXT band, the drawing
 on the INSTRUMENT band.

@@ -77,6 +77,19 @@ extensions) plus the smoke's rendered walk (≥ 10px, zero label overlaps, one
 meet, the crop filling its box at two viewports); the still caught the one
 thing both missed (the head's coord stamp on the board's datum label at 720h).
 
+**U1, the same day — "no, radically simplify it."** The owner's whole read of
+the first cut was three words, and they were about DENSITY, not copy or colour:
+the bed, two sockets, two foot rows, hatched cables, four layer sentences, a
+second card row, the tools' notes and the height-elastic crop (with its
+`ResizeObserver` island) all went in one pass. Four objects per board, one line
+apiece, three plain ribbons; 10 / 18 lettered nodes where there were 19 / 38;
+the svg at its own height with the beat's slack pooling at the floor (ADR-099's
+named cost, taken over the machinery that filled it). The guards kept their
+SHAPE and lost their extensions: `arc-board-fit` walks one crop and pins the
+label sets `toEqual`; `trinny-offer` budgets ≤ 10 / ≤ 17; the smoke expects 24
+wires. Cycle A row 6 triggered — a feedback memory: when he asks for simple,
+the FIRST cut is the minimal one, and the elaboration waits for him to ask.
+
 ### 2026-09-12 — Clients and the proposal on /arcs (ADR-098)
 
 **Trigger:** owner wants a client proposal built on the site rather than as a

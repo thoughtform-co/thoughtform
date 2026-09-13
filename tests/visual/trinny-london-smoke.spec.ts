@@ -1160,7 +1160,7 @@ test.describe("Trinny London pitch variant", () => {
     /* ⚠ TWO STATES, ONE ROW, AND THE ROLES ARE THE RECORD (ADR-100). The
        dormant board lights nothing gold, wires nothing and seats no one in
        green; the lit board fills exactly one card in gold, strokes its seat
-       in green and runs five lanes. Read off the COMPUTED paint — the
+       in green and runs three lanes. Read off the COMPUTED paint — the
        tokens are aliases of the ramp and light re-derives them, so this is
        the drawing's own claim rather than its class names — and read after
        the ladder has landed, because every lit object rests at opacity 0
@@ -1202,8 +1202,9 @@ test.describe("Trinny London pitch variant", () => {
     expect(roles.configured.seat, "the seat is green: the human, and nothing else").toBe(
       roles.green
     );
-    // Five lanes — three eight-wire runs and two four-wire drops.
-    expect(roles.configured.wires, "the ribbons").toBe(32);
+    // Three lanes, eight wires each: the seat's drop, the layer's run and
+    // the tools' run (ADR-100 U1 took the two socket drops with the sockets).
+    expect(roles.configured.wires, "the ribbons").toBe(24);
 
     /* ⚠ AND THE MARK IS STILL THERE, FADING BEHIND IT (owner: "the brand
        mark in the back doesn't really dominate too much"). The canvas has to
@@ -1537,13 +1538,15 @@ test.describe("Trinny London pitch variant", () => {
       const where = `${vp.width}×${vp.height}`;
       expect(read.boards, `${where}: two boards`).toHaveLength(2);
       for (const b of read.boards) {
-        expect(b.texts, `${where}: a board letters`).toBeGreaterThan(10);
+        // The dormant board letters exactly ten strings (the set is pinned in
+        // `arc-board-fit`); the lit one eighteen.
+        expect(b.texts, `${where}: a board letters`).toBeGreaterThanOrEqual(10);
         expect(b.overlaps, `${where}: labels printing through labels`).toEqual([]);
         expect(b.minPx, `${where}: the type floor`).toBeGreaterThanOrEqual(10);
-        /* The crop grew to its box (the elastic ext), so the drawn height
-           is the box's within a rounding of the extension — no letterbox on
-           either axis. */
-        expect(Math.abs(b.drawnH - b.h), `${where}: the crop fills its box`).toBeLessThanOrEqual(8);
+        /* The svg sits at its own height (`height: auto` off the crop's
+           aspect — ADR-100 U1 retired the elastic crop), so the drawn height
+           is the box's within a rounding — no letterbox on either axis. */
+        expect(Math.abs(b.drawnH - b.h), `${where}: the crop fills its box`).toBeLessThanOrEqual(2);
       }
       const [today, configured] = read.boards;
       expect(

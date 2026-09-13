@@ -591,22 +591,28 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   (same slot, same `id: "configuration"`, same `.arc-head` and datum): the
   proof's R4 grammar at page scale as TWO svg boards on one row with no plate
   around them, dormant (dashed dawn, the card GREEN-outlined because all the
-  work is the people's, the tools as unwired islands) beside lit (the green
-  seat and its authority drop, four named layer cells, the ONE gold-washed
-  card, WHERE IT RUNS with CLAUDE lit, two dashed SOCKETS for creative ops and
-  finance, a bed). The picker is gone with the panel; `ArcConfiguration` and
+  work is the people's, the layer an empty dashed room under "not written
+  down", the tools as unwired islands) beside lit (the green seat and its
+  authority drop, the layer's four tags, the ONE gold-washed card with WHAT
+  RUNS IT and its answer, WHERE IT RUNS with CLAUDE lit, three plain ribbons).
+  ⚠ **U1 (same day, owner: _"no, radically simplify it"_) IS THE LIVE CUT** —
+  the first cut's bed, two sockets, foot rows, hatched cables, four layer
+  sentences, second card row, tool notes and the height-elastic crop (with
+  `ArcBoardRow`'s `ResizeObserver`) are ALL deleted; FOUR objects per board,
+  one line apiece, 10 / 18 lettered nodes where there were 19 / 38, and the
+  svg sits at its own height with the beat's slack pooling at the floor
+  (ADR-099's named cost). When he asks for simple, the FIRST cut is the
+  minimal one. The picker is gone with the panel; `ArcConfiguration` and
   `.arc-cfg*` are byte-identical for the registered proposals. ⚠ The record is
-  the DISCOVERY CALL in roles ("No one, as their day job", "all by hand, and no
-  creative strategist", "trained on, not wired in") — blunt by design and the
-  owner's to soften; the copy law and `arc-board-fit` re-walk any change.
-  ⚠ The beat pays for its instrument (`--arc-sec-pad` and the head's margin
-  tightened on `.arc-sec--board`): with the arc's defaults the 1280×720 box is
-  385px and the chrome rung falls under the 10px floor. ⚠ The head's margin
-  floors at 36px — at 24 the head's coord stamp sat on the board's datum label
-  at 720h, visible only on the still. ⚠ The crop is HEIGHT-ELASTIC (ADR-070
-  U12): at 1920×1247 it grows 314 units and fills the beat; a fixed crop pooled
-  290px under the drawing. Rules for the kind: `.claude/rules/arcs.md` §The
-  client model; the numbers: ADR-100.
+  the DISCOVERY CALL in roles ("No one, as their day job", "all by hand",
+  "not written down") — blunt by design and the owner's to soften; the copy
+  law and `arc-board-fit` re-walk any change. ⚠ The beat pays for its
+  instrument (`--arc-sec-pad` and the head's margin tightened on
+  `.arc-sec--board`): with the arc's defaults the 1280×720 box is 385px and
+  the chrome rung falls under the 10px floor. ⚠ The head's margin floors at
+  36px — at 24 the head's coord stamp sat on the board's datum label at 720h,
+  visible only on the still. Rules for the kind: `.claude/rules/arcs.md` §The
+  client model; the numbers: ADR-100 U1.
 - **`mobile-section-seams.spec.ts` is `/`-only** — the trinny stations are not in
   its `STATION_IDS`; phones are covered by the capture script.
 

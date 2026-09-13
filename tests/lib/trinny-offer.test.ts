@@ -23,15 +23,13 @@ const lettered = (s: BoardState) =>
   (s.seat.note ? 1 : 0) +
   1 +
   (s.card.work ? 1 : 0) +
-  2 * (s.card.rows?.length ?? 0) +
+  (s.card.q ? 1 : 0) +
+  (s.card.a ? 1 : 0) +
   1 +
   (s.layer.sub ? 1 : 0) +
-  s.layer.rows.reduce((n, r) => n + 1 + (r.name ? 1 : 0), 0) +
+  s.layer.rows.length +
   (s.tools.label ? 1 : 0) +
-  s.tools.items.reduce((n, t) => n + 1 + (t.note ? 1 : 0), 0) +
-  (s.tools.note ? 1 : 0) +
-  (s.sockets ? s.sockets.items.length + (s.sockets.note ? 1 : 0) : 0) +
-  s.foot.length;
+  s.tools.items.reduce((n, t) => n + 1 + (t.note ? 1 : 0), 0);
 
 /**
  * The Trinny pitch page's offer (ADR-094 U9) — the proposal's beats after
@@ -90,10 +88,11 @@ describe("trinny-london offer (ADR-094 U9)", () => {
 
   it("the board's two states are the same layer, dormant then lit (ADR-100)", () => {
     /* The record is the discovery call in two states, and the claim the
-       drawing makes is that they are ONE board: the same regions, the same
-       four layer rows, dormant on the left and lit on the right. What a
-       render cannot catch is a row that exists in one state and not the
-       other, a socket on the dormant board, or a figure on either. */
+       drawing makes is that they are ONE board: the same four objects, the
+       same tools, dormant on the left and lit on the right. What a render
+       cannot catch is a tool that exists in one state and not the other, a
+       dormant layer that letters tags it has no sentence for, a card that
+       says both a work line and a question, or a figure on either. */
     const b = TRINNY_BOARD;
     expect(b.kind).toBe("board");
     if (b.kind !== "board") return;
@@ -107,30 +106,36 @@ describe("trinny-london offer (ADR-094 U9)", () => {
       expect(new Set(ids).size, `${s.mode}: duplicate layer id`).toBe(ids.length);
       const tools = s.tools.items.map((t) => t.id);
       expect(new Set(tools).size, `${s.mode}: duplicate tool id`).toBe(tools.length);
-      expect(s.foot.length, `${s.mode}: the foot row takes three at most`).toBeLessThanOrEqual(3);
-      expect(s.foot.length, `${s.mode}: a board sits on its foot row`).toBeGreaterThan(0);
-      expect(
-        s.card.rows?.length ?? 0,
-        `${s.mode}: the card takes two rows at most`
-      ).toBeLessThanOrEqual(2);
+      // The card says ONE thing under its name: the work line OR a question
+      // and its answer, never both, never a question without its answer.
+      expect(Boolean(s.card.q), `${s.mode}: a question needs its answer`).toBe(Boolean(s.card.a));
+      expect(s.card.work && s.card.q, `${s.mode}: the card says one thing`).toBeFalsy();
       expect(s.alt.length, `${s.mode}: the board's accessible name`).toBeGreaterThan(40);
     }
-    // The same layer, lit differently — the claim, mechanised.
-    expect(configured.layer.rows.map((r) => r.id)).toEqual(today.layer.rows.map((r) => r.id));
+    // The same tools, wired differently — the claim, mechanised.
     expect(configured.tools.items.map((t) => t.id)).toEqual(today.tools.items.map((t) => t.id));
-    // The dormant board letters no sentence in its cells; the lit one does.
-    for (const row of today.layer.rows) expect(row.name, `today.${row.id}`).toBeUndefined();
-    for (const row of configured.layer.rows) expect(row.name, `configured.${row.id}`).toBeTruthy();
-    // Sockets are what the lit board offers next; the dormant board has none.
-    expect(today.sockets).toBeUndefined();
-    expect(configured.sockets?.items.length ?? 0).toBeGreaterThan(0);
-    // Exactly one tool is lit, and only on the configured board.
+    // The dormant layer is an empty dashed room under its one line; the lit
+    // layer is the four tags. ("not written down" IS the reading.)
+    expect(today.layer.rows).toHaveLength(0);
+    expect(today.layer.sub).toBeTruthy();
+    expect(configured.layer.rows).toHaveLength(4);
+    // The dormant card is the people's work line; the lit card answers.
+    expect(today.card.work).toBeTruthy();
+    expect(configured.card.q).toBeTruthy();
+    // Exactly one tool is lit, and only on the configured board; the note
+    // rides the lit item alone.
     expect(today.tools.items.filter((t) => t.lit)).toHaveLength(0);
     expect(configured.tools.items.filter((t) => t.lit)).toHaveLength(1);
-    /* The budgets: the owner's "keep it simple on the left" and "without
-       making it too complicated", as counts the record can be held to. */
-    expect(lettered(today)).toBeLessThanOrEqual(18);
-    expect(lettered(configured)).toBeLessThanOrEqual(32);
+    for (const s of b.states) {
+      for (const t of s.tools.items) {
+        expect(!t.note || t.lit, `${s.mode}.${t.id}: a note on an unlit tool`).toBe(true);
+      }
+    }
+    /* The budgets: the owner's "keep it simple on the left" and "radically
+       simplify it", as counts the record can be held to — ten strings on
+       the dormant board, seventeen on the lit one. */
+    expect(lettered(today)).toBeLessThanOrEqual(10);
+    expect(lettered(configured)).toBeLessThanOrEqual(17);
     /* ⚠ NO DIGIT ON THE DRAWING, the ruling this beat has carried since
        ADR-094 U7: it plots the configuration, it does not measure it. */
     scanStrings(b, "board", (value, path) => {

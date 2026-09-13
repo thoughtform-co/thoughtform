@@ -517,38 +517,45 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
 - **The `board` kind** (ADR-100) = `{ head, states: [BoardState<"today">,
 BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, after
   the flow. `ArcBoard` (server) draws the client's configuration as a circuit
-  board in TWO STATES on one row, no plate around it: dormant (dashed dawn, the
-  card GREEN-outlined because all the work is the people's, tools as unwired
-  islands) beside lit (a green seat and its authority drop, the layer's four
-  cells named, ONE gold-washed card, WHERE IT RUNS, two dashed SOCKETS for the
-  next workstreams, a bed). The proof's R4 grammar (ADR-070 U11) copied by
-  hand into `components/arcs/board/boardGlyphs.tsx`; the pure modules
-  (`ribbon.ts`, `pdaLetters.ts`, `pdaFit.ts`, `housing`/`band`/`MODULE`) are
-  imported; NO `--pda-*` token (they resolve only under `.fl-pda` + `.fl-con`)
-  — every colour is an `--arc-board-*` alias of the ADR-077 ramp. ⚠ **BOTH
-  DISPATCHES**: `ArcSectionRenderer` AND the Trinny page's own `TrinnyBeats`
-  switch (which no longer draws `configuration`). ⚠ **THE BOX IS WIDTH-LED AND
-  ITS ASPECT IS THE CONTRACT**: both crops share one height and every share is
-  a fraction of 1560 (620 + 40 + 900), so `meet` is `W / 1560` on both boards;
-  `--arc-board-aspect` and the flex bases are PINNED to the crops by
-  `arc-board-fit`. The beat pays for its instrument (`--arc-sec-pad` and the
-  head's margin tightened on `.arc-sec--board`, `.arc-sec--intel`'s precedent)
-  — with the defaults the 1280×720 box is 385px and the chrome rung falls under
-  10px. ⚠ **THE CROP IS HEIGHT-ELASTIC** (ADR-070 U12): `ArcBoardRow` (the one
-  client island) reads the row's aspect with a `ResizeObserver` and `chain(e)`
-  spends the extension on the cable, the cells and the drops; SSR renders
-  `e = 0` and `xMidYMid meet` seats it whole. ⚠ **EVERY DORMANT RULE SITS UNDER
-  `.is-arc-js` + `no-preference`**, and the wrapper's `.arc-reveal` rise is
-  overridden — no-JS, PRM and terminal render lit, the ladder is the only
-  motion. ⚠ **FIT IS DECLARED**: `boardGeom` emits every `<text>` with its
-  measure; the vitest walks it at six extensions, the smoke measures the
-  rendered svg (≥ 10px, zero label overlaps, one meet, the crop filling its
-  box) at 1920×1247 and 1280×720. ⚠ `data-board-*`, never `data-arc-*`; the
-  hatch pattern ids are `arc-board-${section.id}-${mode}-*`, never fixed; no
-  `transform` on any svg group (the overlap walk compares `getBBox`). ⚠ The
-  head stays on the TEXT band (the datum guard's x) and the drawing takes the
-  INSTRUMENT band. ⚠ Dark is defined by the ramp, unverified until a dark
-  surface adopts the kind.
+  board in TWO STATES on one row, no plate around it, **FOUR objects each —
+  the seat, the layer, the card, the tools — one line apiece** (⚠ **U1, owner,
+  the same day: _"no, radically simplify it"_** — the first cut's bed, sockets,
+  foot rows, hatched cables, layer sentences, second card row and elastic crop
+  are ALL gone; when he asks for simple, the FIRST cut is the minimal one):
+  dormant (dashed dawn, the card GREEN-outlined because all the work is the
+  people's, the layer an empty dashed room under "not written down", the tools
+  as unwired islands) beside lit (a green seat and its authority drop, the
+  layer's four tags, ONE gold-washed card with one question and its answer,
+  WHERE IT RUNS with the one lit tool marked, three plain eight-wire ribbons).
+  The proof's R4 grammar (ADR-070 U11) copied by hand into
+  `components/arcs/board/boardGlyphs.tsx`; the pure modules (`ribbon.ts`,
+  `pdaLetters.ts`, `housing`/`band`/`MODULE`) are imported; NO `--pda-*` token
+  (they resolve only under `.fl-pda` + `.fl-con`) — every colour is an
+  `--arc-board-*` alias of the ADR-077 ramp. ⚠ **SERVER-ONLY** — `ArcBoard`
+  draws the whole row; there is no client island (U1 deleted `ArcBoardRow`
+  with the `ResizeObserver`). ⚠ **BOTH DISPATCHES**: `ArcSectionRenderer` AND
+  the Trinny page's own `TrinnyBeats` switch (which no longer draws
+  `configuration`). ⚠ **THE ROW IS WIDTH-LED AND ITS SHARES ARE THE CROPS'**:
+  both crops share one height (414) and every share is a fraction of 1400
+  (560 + 40 + 800), so `meet` is `W / 1400` on both boards and the head strips
+  sit on one datum; the flex bases and the seam are PINNED to the crops by
+  `arc-board-fit`, and the svg sits at its own height (`height: auto` — no
+  cap, no aspect, no `--arc-board-h`; the beat's slack pools at the floor,
+  ADR-099's named cost). The beat pays for its instrument (`--arc-sec-pad`
+  and the head's margin tightened on `.arc-sec--board`, `.arc-sec--intel`'s
+  precedent; the margin floors at 36px or the head's coord stamp sits on the
+  board's datum label at 720h). ⚠ \*\*EVERY DORMANT RULE SITS UNDER `.is-arc-js`
+  - `no-preference`**, and the wrapper's `.arc-reveal` rise is overridden —
+    no-JS, PRM and terminal render lit, the ladder is the only motion. ⚠ **FIT
+    IS DECLARED\*_: `boardGeom` emits every `<text>` with its measure; the vitest
+    walks it (fit, the longest word, the floor — 15.3 units paints 11.2px at the
+    1022px band —, each letter inside its own module, the lanes wall to wall,
+    the label SETS pinned 10 / 18), the smoke measures the rendered svg (≥ 10px,
+    zero label overlaps, one meet, 24 wires, the crop filling its box) at
+    1920×1247 and 1280×720. ⚠ `data-board-_`, never `data-arc-\*`; no `transform`on any svg group (the overlap walk compares`getBBox`). ⚠ The head stays on
+    the TEXT band (the datum guard's x) and the drawing takes the INSTRUMENT
+    band. ⚠ Dark is defined by the ramp, unverified until a dark surface adopts
+    the kind.
 - ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
   phases as a rail; on this surface a drawing plots something that HAPPENED,
   and a plan is an argument. Three phases are three `list-groups` columns,

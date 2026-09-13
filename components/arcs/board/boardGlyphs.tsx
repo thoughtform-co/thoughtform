@@ -3,15 +3,14 @@ import type { CSSProperties } from "react";
 import { ribbonPaths } from "@/components/landing/home-v2/services/casefile/map/pda/ribbon";
 import { band, housing } from "@/components/landing/home-v2/services/casefile/map/pda/substrateKit";
 
-import type { BoardBed, BoardDiamond, BoardLane, BoardLetter, BoardModule } from "./boardLayout";
+import type { BoardDiamond, BoardLane, BoardLetter, BoardModule } from "./boardLayout";
 
 /**
  * boardGlyphs — THE BOARD's marks (ADR-100), the proof's R4 grammar copied
  * by hand from `PdaConfiguration`'s module-private primitives: an opaque
  * chamfered module with a dawn lift and a 2-unit top rule that STOPS AT THE
- * CUT, a head band ruled at its floor, eight-wire ribbons at pitch 4 behind
- * a 45° hatch that arrives with them, a diamond that is never a circle, and
- * the substrate bed the whole reading is named for.
+ * CUT, a head band ruled at its floor, eight-wire ribbons at pitch 4, and a
+ * diamond that is never a circle.
  *
  * ⚠ EVERY COLOUR IS A `--arc-board-*` TOKEN, declared on `.arc-board` as an
  * alias of the ADR-077 ramp — never a `--pda-*` (those resolve only under
@@ -56,7 +55,6 @@ const PAINT: Record<BoardModule["paint"], Paint> = {
     dashed: false,
     rule: true,
   },
-  socket: { plate: false, stroke: "var(--arc-board-edge)", dashed: true, rule: false },
   island: { plate: true, stroke: "var(--arc-board-edge)", dashed: true, rule: false },
 };
 
@@ -95,52 +93,28 @@ export function Module({ m }: { m: BoardModule }) {
           />
         </>
       ) : null}
-      {(m.rules ?? []).map((ry) => (
-        <line
-          key={ry}
-          x1={x}
-          y1={ry}
-          x2={x + w}
-          y2={ry}
-          stroke="var(--arc-board-line)"
-          strokeDasharray={p.dashed ? DASH : undefined}
-        />
-      ))}
     </g>
   );
 }
 
 /**
- * A multi-conductor bundle — n parallel wires at pitch 4 behind a hatched
- * band. ⚠ The draw-on class goes on each PATH, not the group, and `--l` is
- * the base polyline's length (the offset copies differ by a few units at the
- * corners and a dasharray only has to be at least the path's length).
+ * A multi-conductor bundle — eight parallel wires at pitch 4. ⚠ The draw-on
+ * class goes on each PATH, not the group, and `--l` is the base polyline's
+ * length (the offset copies differ by a few units at the corners and a
+ * dasharray only has to be at least the path's length).
  */
-export function Ribbon({ lane, hatchId }: { lane: BoardLane; hatchId: string }) {
+export function Ribbon({ lane }: { lane: BoardLane }) {
   const stroke = lane.paint === "green" ? "var(--arc-board-green)" : "var(--arc-board-gold-line)";
   return (
-    <g opacity={lane.dashed ? 0.62 : 0.85}>
-      {lane.hatch ? (
-        <rect
-          className="arc-board__hatch"
-          x={lane.hatch.x}
-          y={lane.hatch.y}
-          width={lane.hatch.w}
-          height={lane.hatch.h}
-          fill={`url(#${hatchId})`}
+    <g opacity={0.85} stroke={stroke} fill="none" strokeWidth="1">
+      {ribbonPaths(lane.pts, lane.wires, 4).map((d, i) => (
+        <path
+          key={i}
+          className="arc-board__wire"
+          d={d}
+          style={{ "--l": lane.len } as CSSProperties}
         />
-      ) : null}
-      <g stroke={stroke} fill="none" strokeWidth="1">
-        {ribbonPaths(lane.pts, lane.wires, 4).map((d, i) => (
-          <path
-            key={i}
-            className="arc-board__wire"
-            d={d}
-            strokeDasharray={lane.dashed ? "4 3" : undefined}
-            style={{ "--l": lane.len } as CSSProperties}
-          />
-        ))}
-      </g>
+      ))}
     </g>
   );
 }
@@ -148,8 +122,6 @@ export function Ribbon({ lane, hatchId }: { lane: BoardLane; hatchId: string }) 
 const DIAMOND: Record<BoardDiamond["paint"], string> = {
   "gold-line": "var(--arc-board-gold-line)",
   green: "var(--arc-board-green)",
-  gold: "var(--arc-board-gold)",
-  line: "var(--arc-board-edge)",
 };
 
 /** A diamond — a rotated square, never a circle (the shape law). */
@@ -178,39 +150,5 @@ export function Letter({ l }: { l: BoardLetter }) {
     >
       {l.text}
     </text>
-  );
-}
-
-/**
- * The substrate bed — a ghost die around the card, two meanders, passive
- * pairs and vias, one group opacity as the alpha ceiling (set against the
- * RENDERED drawing: a 1-unit hairline paints under a device pixel here and
- * the browser pays the rest in alpha).
- */
-export function Bed({ bed }: { bed: BoardBed }) {
-  return (
-    <g opacity="0.85" aria-hidden="true">
-      <rect
-        x={bed.die.x}
-        y={bed.die.y}
-        width={bed.die.w}
-        height={bed.die.h}
-        fill="none"
-        stroke="var(--arc-board-hair)"
-        strokeDasharray={DASH}
-      />
-      <path d={bed.meanders.join(" ")} fill="none" stroke="var(--arc-board-hair)" />
-      <g fill="var(--arc-board-hair)">
-        {bed.passives.map(([px, py]) => (
-          <g key={`p${px}-${py}`}>
-            <rect x={px} y={py} width={10} height={4} />
-            <rect x={px} y={py + 7} width={10} height={4} />
-          </g>
-        ))}
-        {bed.vias.map(([px, py]) => (
-          <rect key={`v${px}-${py}`} x={px} y={py} width={3} height={3} opacity="0.7" />
-        ))}
-      </g>
-    </g>
   );
 }

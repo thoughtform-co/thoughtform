@@ -74,9 +74,13 @@ hero → about → the Arc → the proof casefile (+ the ring) → contact.
 - ⚠ **ADR-100: `#proposition` mounts the `board` kind** — `ArcBoard` over
   `TRINNY_BOARD` (same slot, same `id: "configuration"`): the client's
   configuration as two svg boards, dormant beside lit, the proof's R4 grammar
-  at page scale, no frame, no picker. The record is the discovery call in
-  roles; `trinny-offer.test.ts` and `arc-board-fit.test.ts` walk it. Canonical
-  text: `.claude/rules/trinny-london.md` and `.claude/rules/arcs.md`.
+  at page scale, no frame, no picker, server-only. ⚠ U1 (owner: "no,
+  radically simplify it") is the live cut — FOUR objects per board (seat ·
+  layer · card · tools), one line apiece, three plain ribbons; the bed,
+  sockets, foot rows, hatch, sentences and the elastic crop are deleted. The
+  record is the discovery call in roles; `trinny-offer.test.ts` and
+  `arc-board-fit.test.ts` walk it. Canonical text:
+  `.claude/rules/trinny-london.md` and `.claude/rules/arcs.md`.
 
 ## Verifying
 

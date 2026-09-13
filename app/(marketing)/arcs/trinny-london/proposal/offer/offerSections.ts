@@ -59,18 +59,32 @@ export const TRINNY_BOARD: ArcSection = {
   head: {
     eyebrow: "Trinny London · where the studio stands",
     title: { pre: "The studio today, and the studio", em: "configured." },
-    sub: "The founder wants Trinny London AI-first and the teams are trained on Claude, but the push has stalled: nobody owns it as their day job, the studio does everything by hand, and the founder still catches what the review rounds miss. Below, that state as it runs now, and the same studio with a configuration seated.",
+    sub: "The founder wants Trinny London AI-first and the teams are trained on Claude, but the push has stalled: nobody owns it as their day job, the studio does everything by hand with no creative strategist, and the founder still catches what the review rounds miss. Below, that state as it runs now, and the same studio with a configuration seated.",
   },
   states: [
     {
       mode: "today",
       label: "As it runs today",
-      alt: "Trinny London's creative work as it runs today: no owner seated, the studio working by hand with no creative strategist, nothing of the brand written down, and Claude, Monday and Slack unwired from each other.",
+      alt: "Trinny London's creative work as it runs today: no owner seated, the studio working by hand, nothing of the brand written down, and Claude, Monday and Slack unwired from each other.",
       seat: { q: "Who owns it", a: "No one, as their day job" },
-      card: { name: "The studio", work: "all by hand, and no creative strategist" },
+      card: { name: "The studio", work: "all by hand" },
+      layer: { label: "The layer", sub: "not written down", rows: [] },
+      tools: {
+        items: [
+          { id: "claude", name: "Claude" },
+          { id: "monday", name: "Monday" },
+          { id: "slack", name: "Slack" },
+        ],
+      },
+    },
+    {
+      mode: "configured",
+      label: "With a configuration",
+      alt: "The same studio with a configuration seated: the studio lead owns it with the founder's sense-check as the last gate, a brand Skill on the team's own keys runs it inside Figma, and it reads the layer the team owns: rules, examples, sources and loops.",
+      seat: { q: "Who owns it", a: "The studio lead", note: "the founder's sense-check last" },
+      card: { name: "The studio", q: "What runs it", a: "A brand Skill, on the team's own keys" },
       layer: {
         label: "The layer",
-        sub: "nothing written down",
         rows: [
           { id: "rules", tag: "Rules" },
           { id: "examples", tag: "Examples" },
@@ -79,50 +93,13 @@ export const TRINNY_BOARD: ArcSection = {
         ],
       },
       tools: {
-        items: [
-          { id: "claude", name: "Claude" },
-          { id: "monday", name: "Monday" },
-          { id: "slack", name: "Slack" },
-        ],
-        note: "trained on, not wired in",
-      },
-      foot: ["No owner", "By hand", "Unwired"],
-    },
-    {
-      mode: "configured",
-      label: "With a configuration",
-      alt: "The same studio with a configuration seated: the studio lead owns it with the founder's sense-check as the last gate; a brand Skill on the team's own keys runs inside Figma, reads the brand rules, the examples, the catalogue and the customer's voice, and its checks catch what the founder used to; creative ops and finance are the next workstreams on the same layer.",
-      seat: { q: "Who owns it", a: "The studio lead", note: "the founder's sense-check last" },
-      card: {
-        name: "The studio",
-        rows: [
-          { q: "What runs it", a: "A brand Skill, on the team's own keys" },
-          { q: "The bar", a: "On-brand, and the line where AI stops" },
-        ],
-      },
-      layer: {
-        label: "The layer",
-        sub: "owned by Trinny London",
-        rows: [
-          { id: "rules", tag: "Rules", name: "brand rules, and the line where AI stops" },
-          { id: "examples", tag: "Examples", name: "what good looks like, from their own work" },
-          { id: "sources", tag: "Sources", name: "the catalogue and the customer's voice" },
-          { id: "loops", tag: "Loops", name: "the checks that catch it before the founder does" },
-        ],
-      },
-      tools: {
         label: "Where it runs",
         items: [
           { id: "claude", name: "Claude", note: "inside Figma", lit: true },
-          { id: "monday", name: "Monday", note: "the brief" },
-          { id: "slack", name: "Slack", note: "the alert" },
+          { id: "monday", name: "Monday" },
+          { id: "slack", name: "Slack" },
         ],
       },
-      sockets: {
-        items: [{ name: "Creative ops" }, { name: "Finance" }],
-        note: "next, on the same layer",
-      },
-      foot: ["One configuration", "The people run it", "No vendor in the way"],
     },
   ],
 };
