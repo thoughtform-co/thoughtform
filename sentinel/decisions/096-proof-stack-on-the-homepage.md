@@ -193,6 +193,15 @@ smoke pins them on the rendered page.
 
 ## Update 1 — the offer opens while the last card is still leaving (2026-09-13, owner)
 
+⚠ **SUPERSEDED BY U3 (same day, same ask read again).** This update measured
+`--svc-content-in` — the DOM ladder — and the owner was looking at the ring's
+CARDS, which ride the same release through a window ending at 0.88 and were
+still a viewport late with this guard green. The overlap constant below is
+DELETED; the ramp is solved from the last card's own exit now. What survives
+is the diagnosis (one fraction was answering two questions) and the invariant
+(nothing may open while the card is parked). Read U3 before citing any number
+here.
+
 > There's a bit of a gap between when you scroll away from the proof section
 > into the services section. It takes two or three scrolls, even before the
 > elements of that services section show up. That needs to happen a bit
@@ -347,6 +356,127 @@ and failed in the pair, which is the signature. ⚠ **AND THE FIRST FIX HID IT**
 failure became deterministic, which is how the real cause surfaced. Both
 scrolls go through one `scrollExactly` helper that converges on `scrollY`
 now; three consecutive pair runs green.
+
+## Update 3 — the ring parks as the last card clears (2026-09-13, owner)
+
+> The cards from the services section should appear the moment the last card
+> from the proof section has disappeared. Right now, it takes a few scrolls
+> still before the cards from the services section come into view.
+
+**This is U1's ask, read again — and U1 answered the wrong half of it.** U1
+measured `--svc-content-in` and pinned it `> 0` at the clearing; that channel
+is the DOM LADDER (masthead, plate cluster, designations, orbit draw-on). The
+"cards from the services section" are the **WebGL ring**, and they were still
+arriving a viewport later. The guard was green the whole time because it was
+asking about a different object.
+
+**Where the cards actually are.** `ringEntranceClock` (`CorridorArmillary`) is
+`smoothedDissipate × proofRelease`, and the three VISIBLE cards fly in over
+`RING_ENTRANCE_WINDOWS` `[0.58, 0.88]` — one window, all three, by ADR-029's
+own design. Past the dwell the dissipate has saturated, so that clock IS the
+release: the cards start at `proofRelease` 0.58 and are parked, with their hit
+anchors published, at **0.88**. Under U1's ramp (`pileH − 1.0vh` →
+`pileH + 1.2vh`) that landed 0.6–1.1 viewports after the card was gone.
+
+**Measured before, at 1440×900** — the last card's bottom crosses the viewport
+top at runway-relative scroll 4166:
+
+| at the clearing                 | before (U1) | after (U3)      |
+| ------------------------------- | ----------- | --------------- |
+| `--svc-content-in`              | **0.121**   | **0.880**       |
+| published `.svc-ring-hits__hit` | **0**       | 3 (within 24px) |
+
+**THE SHARE IS SOLVED FROM THE CARD, NOT FROM A CONSTANT.** Two measured
+positions, both runway-relative, both read off the LAST slot:
+
+```
+exit = pinTop + slotH      876px at 1440×900 — the card's own travel: its
+                           bottom sits exactly this far below the viewport
+                           top while parked, and moves 1:1 once released
+gone = pileH − margin      4166 — where that bottom crosses zero
+proofPx     = gone + (1 / PROOF_RELEASE_PARK − 1) × exit
+releaseFrac = (gone − exit) / proofPx
+```
+
+The ramp OPENS at the card's release (`gone − exit`) and is stretched so
+`PROOF_RELEASE_PARK` — `smootherstepInverse(RING_ENTRANCE_WINDOWS[0][1])` =
+**0.734969**, new in `ringMath` — falls exactly on `gone`. Verified live: at
+100 % of the exit the clock reads **0.880** against a derived 0.88.
+
+⚠ **`exit` IS THE LAST SLOT'S PIN, WHICH IS `top-base + i·peek` = 220, NOT 64.**
+That is where U1's own recorded 876px came from, and deriving it from the
+constants without the peek term gives 720 — which is why this update MEASURED
+it instead. `scripts/capture-proof-stack.mjs --handoff` prints the walk.
+
+⚠ **THE OVERLAP CONSTANT IS DELETED.** `SERVICES_PROOF_HANDOFF_OVERLAP_VH`
+(1.0vh) was a viewport literal answering a question about a card, and it could
+only ever be right about the ladder. Its replacement is a derivation of the
+ring's own windows, so **retiming an entrance window retimes the handoff with
+it** — which is the one coupling that must not drift, because those windows
+ride the raw dissipate everywhere else and nothing else would notice.
+
+⚠ **U1's INVARIANT SURVIVES AND IS STRONGER.** "It may never open while the
+last card is still parked" was a bound on how far the overlap could reach;
+here the ramp's own zero IS the release point, so the whole of the card's hold
+reads exactly 0.000 rather than nearly 0. The smoke still pins it at the pin.
+
+⚠ **THE PAGE GETS ~1.6vh SHORTER, AND U1's "IT DOES NOT GET LONGER" IS
+SUPERSEDED.** That sentence was a constraint U1 imposed on itself to leave the
+runway's reserved height byte-identical; it is exactly what kept the cards
+late. The share now ENDS SHORT of the pile's box — 78px at 1440×900, ~13–170px
+across the reference viewports — because it stops inside the trailing margin
+the last card has already vacated. Three numbers move in this commit:
+`SERVICES_PROOF_RUNWAY_VH` 6.3 → **5.1** (the stack path is
+`SERVICES_PROOF_PILE_VH` alone), the hand-written `--svc-proof-runway` literal
+630svh → **510svh**, and `SERVICES_PROOF_RELEASE_VH` becomes the CASEFILE's
+alone (unchanged at 1.2; `casefile-browse-map` still pins `2 + 1.2 = 3.2`).
+The ring's domain is untouched by construction — the runway is
+`--svc-proof-runway + 500svh` and the hook writes the measured share into it,
+so `runwayH − writtenPx` is 5vh at every viewport, as it was.
+
+⚠ **THE LOCKSTEP GUARD HAD A LATENT FLOAT BUG AND 6.3 DODGED IT.**
+`6.3 * 100` is exactly 630 in doubles; `5.1 * 100` is **509.99999999999994**,
+so the alarm failed on a correct pair and its own message instructed the reader
+to write `509.99999999999994svh` into a stylesheet. Both sides round to six
+decimals now — ~1e-4 of a viewport pixel, against a drift it exists to catch of
+whole viewports. Calibrated: reverting the CSS literal alone fails with
+_"services.css declares 630svh but SERVICES_PROOF_RUNWAY_VH derives 5.1
+(510svh)"_.
+
+⚠ **THE FLY-IN GETS A REAL SPAN, AND THAT IS WHY THE RAMP OPENS AT THE RELEASE
+RATHER THAN AT THE PIN.** The visible cards occupy `PARK − start` = 0.192 of
+the release, so they fly in over the last ~26 % of the card's exit — 229px at
+1440×900, ~142 at 1280×720, ~281 at 1920×1247. Opening at the card's PIN
+instead would have bought a longer fly-in and cost 28 % of the ladder painting
+under a parked card, through glass, which is U1's crossfade in a new place;
+opening at the clearing would have compressed the fly-in to ~80px, which is one
+wheel notch and reads as a pop. Both were computed before this was chosen.
+
+⚠ **THE EXIT GEOMETRY IS READ ONCE PER LAYOUT, AND NEVER FROM `offsetTop`.**
+`proofExit` caches on the pile's height AND the viewport; it takes the computed
+`top` and `margin-bottom` and `offsetHeight`, all layout-stable under scroll.
+`offsetTop` on a STUCK sticky element reports its stuck position — the finding
+`seatProofCard` and U2 both paid for. And ⚠ **not `:last-of-type`**: the dead
+rule U1 found in the sheet is dead because `.pf-stack__tail` is a later `div`,
+so the slots are selected by `[data-pc-slot]` and indexed.
+
+**The guards.** `services-ring-math.test.ts` pins the inverse against the
+forward function over the whole domain, its monotonicity, its clamping, and
+that `PROOF_RELEASE_PARK` IS the visible cards' shared window end rather than a
+literal beside it (plus that those three cards still share one window at all).
+⚠ `smootherstepInverse` returns its endpoints rather than searching for them:
+the quintic's first two derivatives vanish at 0 and 1, so `smootherstep` rounds
+to exactly 0 and 1 across a neighbourhood and a bisection stalls ~2e-6 short.
+The smoke pins the written share as the ARITHMETIC (never a number), that it is
+shorter than the pile's box, `contentIn ≤ 0.01` at the pin, a ramp reading
+`0.15 < x < 0.85` with zero anchors halfway through the exit, `contentIn ≥
+0.88 − 0.03` at the clearing, and anchors published 120px past it. **Calibrated
+against U1's own code**: the halfway ramp check fails with `Received: 0`.
+
+**Left open:** the masthead's decode (`REVEAL_AT` 0.5 on the release) now fires
+while the last card is still on screen, so it types under the card's glass
+rather than onto an empty frame. Read live before deciding whether it is a
+defect or the beat working.
 
 ## Left open
 

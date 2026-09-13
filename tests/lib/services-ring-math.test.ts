@@ -18,6 +18,9 @@ import {
   RING_Y_OFFSET,
   RING_ENTRANCE_RADIUS_FROM,
   RING_ENTRANCE_WINDOWS,
+  PROOF_RELEASE_PARK,
+  smootherstep,
+  smootherstepInverse,
   splitServicesRunway,
   RING_ENTRANCE_DIRECTIONS,
   RING_ENTRANCE_OFFSET,
@@ -1185,5 +1188,60 @@ describe("openPairPitch (ADR-050, 2026-08-02 Escher fix)", () => {
     const local = 0.11;
     const rig = 0.23;
     expect(rig + openPairPitch(local, rig, 1, 0)).toBeCloseTo(0, 10);
+  });
+});
+
+/* ── THE HANDOFF'S ANCHOR (ADR-096 U3) ─────────────────────────────────
+   `PROOF_RELEASE_PARK` is what `useServicesStageScroll` solves the proof
+   share against so the ring's visible cards park exactly as the last proof
+   card's bottom leaves the frame. It is a DERIVATION of the entrance
+   windows, so what has to be pinned is that the inverse really is one (a
+   bisection that silently converged on the wrong side would move the whole
+   handoff with every gate green) and that it still tracks the window rather
+   than having become a literal beside it. */
+describe("smootherstepInverse, and the release fraction the ring parks at", () => {
+  it("inverts smootherstep over the whole domain", () => {
+    for (let i = 0; i <= 100; i += 1) {
+      const y = i / 100;
+      expect(smootherstep(0, 1, smootherstepInverse(y)), `y=${y}`).toBeCloseTo(y, 9);
+    }
+  });
+
+  it("is monotone, and pins both ends exactly", () => {
+    expect(smootherstepInverse(0)).toBeCloseTo(0, 9);
+    expect(smootherstepInverse(1)).toBeCloseTo(1, 9);
+    expect(smootherstepInverse(0.5)).toBeCloseTo(0.5, 9);
+    let last = -1;
+    for (let i = 0; i <= 200; i += 1) {
+      const x = smootherstepInverse(i / 200);
+      expect(x).toBeGreaterThanOrEqual(last);
+      last = x;
+    }
+  });
+
+  it("clamps rather than running away outside [0, 1]", () => {
+    expect(smootherstepInverse(-3)).toBeCloseTo(0, 9);
+    expect(smootherstepInverse(9)).toBeCloseTo(1, 9);
+  });
+
+  it("IS the visible cards' window end, not a literal beside it", () => {
+    // All three VISIBLE cards (0, 1, 3) land together; index 2 is the hidden
+    // back card and is the only late one — so the number the handoff anchors
+    // to is the window they share.
+    const visible = [0, 1, 3].map((i) => RING_ENTRANCE_WINDOWS[i][1]);
+    expect(new Set(visible).size, "the visible cards stopped landing together").toBe(1);
+    expect(PROOF_RELEASE_PARK).toBeCloseTo(smootherstepInverse(visible[0]), 12);
+    expect(smootherstep(0, 1, PROOF_RELEASE_PARK)).toBeCloseTo(RING_ENTRANCE_WINDOWS[0][1], 9);
+  });
+
+  it("leaves the fly-in a real span of the ramp", () => {
+    // The visible cards' fly-in occupies `park − start` of the release, and
+    // the hook stretches the ramp so `park` lands on the last card's exit —
+    // so this fraction IS how much of that exit the fly-in gets. Under ~0.1
+    // and the cards pop in; the value today is ~0.19.
+    const start = smootherstepInverse(RING_ENTRANCE_WINDOWS[0][0]);
+    expect(PROOF_RELEASE_PARK - start).toBeGreaterThan(0.12);
+    expect(PROOF_RELEASE_PARK).toBeGreaterThan(0.6);
+    expect(PROOF_RELEASE_PARK).toBeLessThan(0.85);
   });
 });

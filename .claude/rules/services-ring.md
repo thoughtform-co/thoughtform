@@ -305,6 +305,16 @@ RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
   park gate and the publish gate read the same clock). Delaying the ring by
   retuning `RING_ENTRANCE_WINDOWS` does not work either: they ride the raw
   dissipate, which has already saturated by then.
+  ⚠ **AND SINCE ADR-096 U3 THAT RELEASE RAMP IS THE LAST PROOF CARD'S OWN
+  EXIT.** The owner asked for the cards to be there the moment the last card
+  has gone, so `useServicesStageScroll` solves the proof share against
+  **`PROOF_RELEASE_PARK`** (`ringMath` — `smootherstepInverse` of
+  `RING_ENTRANCE_WINDOWS[0][1]`, 0.734969) so the three visible cards finish
+  flying in at exactly that pixel. **That makes the windows load-bearing off
+  this surface**: retiming one retimes the handoff with it, silently, because
+  everywhere else they ride the raw dissipate and nothing would notice. The
+  three VISIBLE cards must also keep sharing one window end — the unit test
+  fails if they stop.
 
 ## Verifying
 

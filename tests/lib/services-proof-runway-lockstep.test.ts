@@ -44,12 +44,19 @@ describe("the proof runway's CSS literal and TS constant", () => {
     const css = readFileSync(CSS_PATH, "utf8");
     const match = /--svc-proof-runway:\s*([0-9.]+)svh/.exec(css);
     expect(match, "`--svc-proof-runway` is not declared in svh in services.css").not.toBeNull();
-
     const cssVh = Number.parseFloat(match![1]);
-    // `svh` is a PERCENT of the viewport where the constant is a MULTIPLE.
-    const expected = SERVICES_PROOF_RUNWAY_VH * 100;
+    /* `svh` is a PERCENT of the viewport where the constant is a MULTIPLE.
+       ⚠ ROUNDED, AND THAT IS NOT A WEAKENING — `5.1 * 100` is
+       509.99999999999994 in doubles while `6.3 * 100` is exactly 630, so the
+       comparison's strictness depended on which values happened to be
+       representable. Unrounded, this test's own failure message instructs the
+       reader to write `509.99999999999994svh` into a stylesheet. Six decimal
+       places is ~1e-4 of a viewport pixel; the drift it exists to catch is
+       whole viewports. */
+    const round = (v: number) => Math.round(v * 1e6) / 1e6;
+    const expected = round(SERVICES_PROOF_RUNWAY_VH * 100);
     expect(
-      cssVh,
+      round(cssVh),
       `services.css declares ${cssVh}svh but SERVICES_PROOF_RUNWAY_VH derives ` +
         `${SERVICES_PROOF_RUNWAY_VH} (${expected}svh). Bump the CSS literal by hand — ` +
         `it has to exist pre-hydration, so it cannot be generated.`

@@ -318,6 +318,13 @@ export const SERVICES_PROOF_CLIENT_SEAM_VH = 0.5;
  * 0.66, `REVEAL_AT`, `REARM_BELOW` and `PROOF_OWNS_BELOW` all ride a releaseP
  * RE-DERIVED over exactly this many viewports, which is what keeps the
  * handoff byte-identical in PIXELS however long the browse band grows.
+ * ⚠ **IT IS THE CASEFILE'S NOW (ADR-096 U3).** The STACK's release is not a
+ * viewport constant at all — it is the last card's own exit, solved in
+ * `useServicesStageScroll` against `PROOF_RELEASE_PARK` so the ring parks as
+ * that card's bottom leaves the frame. This still carries the casefile's
+ * back stretch (`browseMap`'s arithmetic and `casefile-browse-map.test.ts`
+ * both read it), and it is no longer a term of `SERVICES_PROOF_RUNWAY_VH` on
+ * the stack path.
  */
 export const SERVICES_PROOF_RELEASE_VH = 1.2;
 
@@ -339,52 +346,16 @@ export const SERVICES_PROOF_RELEASE_VH = 1.2;
  * is absent), so it is deliberately the CEILING of the measured range and not
  * its mean: reserving too little would let the ring's domain start inside the
  * pile for one frame.
+ *
+ * ⚠ **AND SINCE ADR-096 U3 IT IS THE WHOLE SHARE, NOT A TERM OF IT.** The
+ * release used to be `+ SERVICES_PROOF_RELEASE_VH` on top of this; it is the
+ * last card's own exit now, solved inside the measured share, which ENDS
+ * ~70–170px short of the pile's box (the share stops inside the trailing
+ * margin the last card has already vacated). So the measured total runs
+ * ~482–492svh and this reservation is still the ceiling of it — which is the
+ * side to err on.
  */
 export const SERVICES_PROOF_PILE_VH = 5.1;
-
-/**
- * How far before the pile's box ends the OFFER'S ARRIVAL OPENS, in viewport
- * heights — the overlap between the last card leaving and the services beat
- * assembling (ADR-096 U1, owner 2026-09-13: _"there's a bit of a gap between
- * when you scroll away from the proof section into the services section. It
- * takes two or three scrolls, even before the elements of that services
- * section show up. That needs to happen a bit smoother and a bit faster."_).
- *
- * ⚠ **IT IS THE LAST CARD'S OWN EXIT, AND THAT IS WHY IT IS 1.0.** The last
- * slot has no card above it to be covered by, so it unsticks and scrolls away
- * under its own height plus its pin — measured 876px at 1440×900, 696 at
- * 1280×720, 1223 at 1920×1247, i.e. **0.97–0.98vh at every reference
- * viewport**. Opening the release one viewport before the pile's box ends
- * therefore starts the offer while that card is still travelling, which is
- * the whole point: the beats INTERLOCK rather than queue.
- *
- * Measured before, at 1440×900: the last card's bottom cleared the viewport at
- * scrollY 12442 and the release did not open until 12836 — **394px in which
- * the pile was gone, the offer was at exactly 0 and the brandmark was still
- * dimmed behind both** — with `--svc-content-in` not crossing 4 % until 13030
- * and 15 % until 13150. That is ~800px, three trackpad swipes, of nothing,
- * which is the complaint verbatim.
- *
- * ⚠ **THE PAGE DOES NOT GET LONGER — ONLY THE OPENING MOVES.** `proofPx` is
- * untouched (`pileH + SERVICES_PROOF_RELEASE_VH × vh`), so the runway's
- * reserved height, `--svc-proof-runway`, the ring's 500svh domain and the
- * lockstep guard are all byte-identical. What changes is where `releaseP`
- * starts inside it — and because the ramp then spans ~1980px instead of
- * ~1080px, the SAME `smootherstep` does less per pixel. That is the second
- * half of the ask: faster to begin, gentler once begun.
- *
- * ⚠ **IT MAY NEVER OPEN WHILE THE LAST CARD IS STILL PINNED.** The card's
- * hold is the tail's own height (216px at 900h — sticky is bounded by the
- * containing block MINUS the element's own margin, and the last slot keeps a
- * 394px one); an overlap past `exit + hold` would start the offer under a
- * card that is still parked over it, which is a crossfade, not a handoff. At
- * 1.0 the release opens ~42 % into the exit, measured at all three viewports.
- *
- * ⚠ **THIS IS `proofP` SPACE, WHICH IS WHERE RETIMING BELONGS** (the hook's
- * own standing note). Never in `RING_ENTRANCE_WINDOWS` — those ride the raw
- * dissipate, which saturated long before this beat.
- */
-export const SERVICES_PROOF_HANDOFF_OVERLAP_VH = 1.0;
 
 /** One row count per case, in registry order — the segment table's input. */
 const PROOF_ROW_COUNTS = CASES.map((c) => c.casefile.tracks.length);
@@ -436,6 +407,14 @@ const PROOF_BROWSE_VH = browseBandVh(
  * runway beyond the rows' needs — which is precisely what the derivation
  * makes impossible: the band is exactly as long as the rows plus the seams.
  *
+ * ⚠ **ON THE STACK PATH IT IS `SERVICES_PROOF_PILE_VH` ALONE (ADR-096 U3).**
+ * The release is no longer a viewport constant added on top — it is the last
+ * card's exit, solved inside the share against `PROOF_RELEASE_PARK` — so this
+ * is a RESERVATION for the whole beat and the tuning knobs below are the
+ * casefile's. The hook overwrites it with the measured number on the first
+ * frame either way; what this value has to do is exist pre-hydration and be
+ * no SMALLER than the measurement.
+ *
  * ⚠ **THE TUNING KNOBS ARE `SERVICES_PROOF_ROW_VH`,
  * `SERVICES_PROOF_CLIENT_SEAM_VH` AND `SERVICES_PROOF_RELEASE_VH`** — this
  * is a RESULT now, and assigning to it would be assigning to a measurement.
@@ -450,7 +429,7 @@ const PROOF_BROWSE_VH = browseBandVh(
  * after.
  */
 export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_STACK
-  ? SERVICES_PROOF_PILE_VH + SERVICES_PROOF_RELEASE_VH
+  ? SERVICES_PROOF_PILE_VH
   : SERVICES_PROOF_CASEFILE
     ? PROOF_BROWSE_VH + SERVICES_PROOF_RELEASE_VH
     : 0;
@@ -468,6 +447,9 @@ export const SERVICES_PROOF_RUNWAY_VH = SERVICES_PROOF_STACK
  * Consumed by `useServicesStageScroll` (the split), `ServicesCasefile`
  * (the row scrollspy + the click-pins-scroll math) and the smoke spec
  * (band-fraction targeting). One derivation, three readers, zero drift.
+ * ⚠ On the STACK path it shapes only the NO-PILE fallback (ADR-096 U3): with
+ * a pile the hook derives both fractions from the measured box, and the
+ * browse channel itself is inert under it.
  */
 export const SERVICES_PROOF_BROWSE_FRAC = SERVICES_PROOF_STACK
   ? SERVICES_PROOF_PILE_VH / (SERVICES_PROOF_PILE_VH + SERVICES_PROOF_RELEASE_VH)

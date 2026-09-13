@@ -14,6 +14,7 @@ import {
   SERVICES_PROOF_SEGMENTS,
   SERVICES_PROOF_STACK,
 } from "../../components/landing/home-v2/unifiedServicesInstrument";
+import { PROOF_RELEASE_PARK, RING_ENTRANCE_WINDOWS } from "../../lib/services-ring/ringMath";
 import { VOIDWALKER_ERA_BAND } from "../../lib/voidwalker/voidwalkerHologramClock";
 
 /* ── THE DWELL SAMPLES ARE DERIVED, NOT COUNTED (ADR-087 Phase B) ────────
@@ -3452,6 +3453,20 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           position: getComputedStyle(el).position,
           top: Number.parseFloat(getComputedStyle(el).top),
         })),
+        /* The LAST card's exit and the runway behind it — the two terms the
+           share is solved from since ADR-096 U3. ⚠ Computed `top` and
+           `margin-bottom`, never `offsetTop`: on a stuck sticky element that
+           reports the STUCK position. */
+        last: (() => {
+          const slots = [...document.querySelectorAll<HTMLElement>(".pf-slot")];
+          const el = slots[slots.length - 1];
+          if (!el) return null;
+          const cs = getComputedStyle(el);
+          return {
+            exit: (Number.parseFloat(cs.top) || 0) + el.offsetHeight,
+            margin: Number.parseFloat(cs.marginBottom) || 0,
+          };
+        })(),
       };
     });
     expect(geo, "the pile never mounted").not.toBeNull();
@@ -3470,10 +3485,21 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // ⚠ THE FIRST PIN CLEARS THE FRAME'S TOP-LEFT ROW (ADR-094). At 16px the
     // first card's head sat under the journey marks, which centre ~y45.
     expect(geo!.slots[0].top).toBeGreaterThanOrEqual(64);
-    // The written runway is the MEASURED pile plus the release band, and the
-    // ring's domain is what is left.
+    /* ── THE SHARE IS SOLVED FROM THE LAST CARD'S EXIT (ADR-096 U3) ────
+       It was `pileH + 1.2vh` — the pile's box plus a release band bolted on
+       after it. The release is the card's own exit now, solved so the ring's
+       visible cards park exactly as that card's bottom leaves the frame, so
+       the share ENDS SHORT of the box (inside the trailing margin the card
+       has already vacated). Pinned as the arithmetic rather than as a number:
+       a viewport-dependent literal here is what U1 spent and had to retire. */
     expect(Number.isFinite(geo!.writtenPx), "the hook never wrote the measured runway").toBe(true);
-    expect(geo!.writtenPx).toBeCloseTo(geo!.pileH + 1.2 * geo!.vh, 0);
+    expect(geo!.last, "the pile has no slots").not.toBeNull();
+    const gone = geo!.pileH - geo!.last!.margin;
+    expect(geo!.writtenPx).toBeCloseTo(gone + (1 / PROOF_RELEASE_PARK - 1) * geo!.last!.exit, 0);
+    expect(
+      geo!.writtenPx,
+      "the share outlasts the pile's box — the release was bolted on after it again"
+    ).toBeLessThan(geo!.pileH);
     expect(geo!.runwayH - geo!.writtenPx, "the ring lost its 500svh domain").toBeCloseTo(
       5 * geo!.vh,
       0
@@ -4021,21 +4047,28 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(pile.scales[3], "the open card is scaled").toBeCloseTo(1, 3);
     expect(pile.body0, "a covered card's controls can still take focus").toBe("hidden");
 
-    /* ── AND IT HANDS OVER WITH NO DEAD BAND (ADR-096 U1) ─────────────
-       Owner, 2026-09-13: "there's a bit of a gap between when you scroll away
-       from the proof section into the services section. It takes two or three
-       scrolls, even before the elements of that services section show up."
-       Measured: the last card's bottom cleared the viewport 394px before the
-       release even opened, and `--svc-content-in` did not reach 4 % for
-       another 194 — ~800px of nothing. The release now opens one viewport
-       (the last card's own exit) before the pile's box ends, so the offer
-       assembles out of the motion that carries the card away.
+    /* ── AND THE RING PARKS AS THE LAST CARD CLEARS (ADR-096 U3) ──────
+       Owner, 2026-09-13: "the cards from the services section should appear
+       the moment the last card from the proof section has disappeared. Right
+       now it takes a few scrolls still."
+
+       U1 read that complaint as the DOM ladder's and moved its opening
+       earlier; this is the same ask read as what he was actually looking at.
+       The services CARDS are the WebGL ring, whose fly-in rides
+       `smoothedDissipate × proofRelease` through `RING_ENTRANCE_WINDOWS` and
+       therefore finishes at `PROOF_RELEASE_PARK` — which under U1 landed
+       0.6–1.1 VIEWPORTS after the card was gone, with U1's own guard green.
+       Measured at 1440×900 before: at the clearing `--svc-content-in` read
+       0.121 and ZERO hit anchors had published. The share is solved against
+       that fraction now, so the same reading is 0.880 and the three visible
+       cards are parked.
 
        ⚠ PINNED FROM BOTH ENDS, because either alone is satisfiable by the
-       wrong thing: an overlap that opened while the card was still PARKED
-       would be a crossfade under a card the reader is still reading, and one
-       that opened after it cleared is the dead band again. So: nothing while
-       it is pinned, something by the time it clears. */
+       wrong thing: a ramp that opened while the card was still PARKED would
+       be a crossfade under a card the reader is still reading, and one that
+       parks after it has cleared is the dead band again. So: nothing while it
+       is pinned, a ramp through its exit, and the ring landed at the pixel it
+       goes. */
     /* ── AND THE LAST CARD IS HELD AS LONG AS THE ONE BEFORE IT (U2) ──
        Every other card is held by the card that covers it; the last has
        nothing above it, so what keeps it parked is the runway left under its
@@ -4091,6 +4124,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
             Number.parseFloat(getComputedStyle(last).top)
         ),
         tailH: tail ? tail.offsetHeight : 0,
+        /* The last card's own travel — its bottom sits exactly this far below
+           the viewport top while parked (ADR-096 U3). */
+        exit: (Number.parseFloat(getComputedStyle(last).top) || 0) + last.offsetHeight,
       };
     });
     expect(
@@ -4108,6 +4144,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           offBy: Math.abs(slot.getBoundingClientRect().top - Number.parseFloat(cs.top)),
           cover: Number.parseFloat(cs.getPropertyValue("--pc-cover")) || 0,
           state: slot.getAttribute("data-pc-state"),
+          hits: document.querySelectorAll(".svc-ring-hits__hit").length,
           contentIn: Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "0"),
         };
       });
@@ -4136,6 +4173,19 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       spent.offBy,
       "the last card is still on its line past the tail — the hold is no longer the tail"
     ).toBeGreaterThan(2);
+    /* Halfway through the card's exit: the ramp is a RAMP. Both bounds
+       matter — under 0.15 it opened too late to be the card's own motion,
+       over 0.85 it is effectively a step, and either way the reader gets a
+       change of state rather than a handoff. And nothing may be PUBLISHED
+       yet: the ring's anchors are invisible click targets, and one of them
+       here would sit over the card the reader is still watching leave. */
+    const halfway = await atLastCard(geom.tailH + Math.round(geom.exit * 0.5));
+    expect(
+      halfway.contentIn,
+      "the offer has not opened by the middle of the last card's exit"
+    ).toBeGreaterThan(0.15);
+    expect(halfway.contentIn, "the offer snapped in rather than ramping").toBeLessThan(0.85);
+    expect(halfway.hits, "the ring parked before the card had half left").toBe(0);
 
     /* Solve for the scroll where the last card's bottom clears the top. Once
        unstuck it moves 1:1 with the page, so one correction converges. */
@@ -4163,10 +4213,25 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(Math.abs(clearing.cardBottom ?? 999), "the last card never cleared").toBeLessThanOrEqual(
       3
     );
+    /* ⚠ THE NUMBER IS `PROOF_RELEASE_PARK` MAPPED THROUGH THE SAME EASING THE
+       ENTRANCE CLOCK USES, so it is the windows' own end — the fly-in is over
+       at exactly this reading. Measured 0.880 against a derived 0.88. U1's
+       `> 0` passed here at 0.121, which is the whole reason this is an
+       equality against the ring's constant and not a floor. */
     expect(
       clearing.contentIn,
-      "the offer has not begun by the time the last card clears — the dead band is back (ADR-096 U1)"
+      "the ring has not parked by the time the last card clears — the dead band is back (ADR-096 U3)"
+    ).toBeGreaterThanOrEqual(RING_ENTRANCE_WINDOWS[0][1] - 0.03);
+
+    /* …and the anchors follow within a wheel notch. The park gate reads `>=`
+       against the same 0.88, so the clearing itself sits exactly on the
+       boundary; 120px past it there is nothing to argue about. */
+    const justPast = await atLastCard(geom.tailH + geom.exit + 120);
+    expect(
+      justPast.hits,
+      "the ring's cards are parked but publish no anchors — they are unclickable"
     ).toBeGreaterThan(0);
+    expect(justPast.contentIn).toBeGreaterThan(0.9);
 
     /* ── AND THE OFFER ARRIVES BEHIND IT ──────────────────────────────
        The release is the back stretch of the proof share; past it the

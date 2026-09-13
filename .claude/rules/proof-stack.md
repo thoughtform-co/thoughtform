@@ -52,31 +52,54 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
 - ⚠ **THE PROOF SHARE IS MEASURED AND WRITTEN BACK.** The pile is
   `n × (100svh − pinTop + peek + dwell)` plus the last card and its tail, with
   px terms that do not scale — 489svh at 1280×720, 491 at 1440×900, 483 at
-  1920×1247. `useServicesStageScroll` reads `.pf-stack`'s box, adds
-  `SERVICES_PROOF_RELEASE_VH`, and writes the total onto `--svc-proof-runway`
-  once per resize. `SERVICES_PROOF_RUNWAY_VH` is the PRE-HYDRATION RESERVATION
+  `useServicesStageScroll` reads `.pf-stack`'s box, SOLVES the share from the
+  last card's exit (U3 below — it was `+ SERVICES_PROOF_RELEASE_VH`), and
+  writes the total onto `--svc-proof-runway` once per resize.
+  `SERVICES_PROOF_RUNWAY_VH` is the PRE-HYDRATION RESERVATION
   (and the fallback), deliberately the ceiling of that range;
   `services-proof-runway-lockstep.test.ts` still pins the CSS literal to it.
-- ⚠ **THE OFFER OPENS WHILE THE LAST CARD IS STILL LEAVING** (ADR-096 U1,
-  owner: _"it takes two or three scrolls, even before the elements of that
-  services section show up"_). The pile's BOX outlasts its last card by that
-  card's whole exit, so a release pinned to the box's end opened ~800px after
-  the screen had emptied — measured 394px at exactly `--svc-content-in` 0 at
-  1440×900, then another 400 under 15 %. **`browseFrac` and `releaseFrac` are
-  two fractions now**: the first is the pile's box (and inert under the stack —
-  the pile is its own selector), the second is `pileH −
-SERVICES_PROOF_HANDOFF_OVERLAP_VH × vh`, the overlap being **1.0 = the last
-  card's own exit** (876px @1440×900, 696 @1280×720, 1223 @1920×1247 — 0.97–0.98vh
-  everywhere).
-  ⚠ **THE OVERLAP COMES OUT OF THE OPENING, NEVER OUT OF `proofPx`** — the
-  runway's reserved height, the ring's domain and the lockstep guard stay
-  byte-identical, and the same `smootherstep` gets ~1980px instead of ~1080 to
-  run over, which is the "smoother" half of the ask.
-  ⚠ **IT MAY NOT OPEN WHILE THE CARD IS PARKED** (that would be a crossfade,
-  not a handoff), and the card's hold is only the tail's 216px — sticky is
-  bounded by the containing block MINUS the element's own margin. Both ends are
-  pinned in the smoke and the pair was CALIBRATED: with the overlap at 0 the
-  second fails with `Received: 0`.
+- ⚠ **THE RING PARKS AS THE LAST CARD CLEARS** (ADR-096 U3, owner: _"the cards
+  from the services section should appear the moment the last card from the
+  proof section has disappeared"_). **THIS SUPERSEDES U1**, which is the same
+  ask read as the DOM ladder's: `--svc-content-in` carries the masthead and the
+  plates, but the "cards" are the WebGL ring, and its three VISIBLE cards fly
+  in over `RING_ENTRANCE_WINDOWS` `[0.58, 0.88]` on
+  `smoothedDissipate × proofRelease` — so they were parked 0.6–1.1 viewports
+  after the pile was gone with U1's guard green (measured at the clearing:
+  `--svc-content-in` 0.121, **zero** published anchors).
+  The share is SOLVED from two measured positions on the last slot:
+  `exit = pinTop + slotH` (its own travel) and `gone = pileH − marginBottom`
+  (where its bottom crosses zero). The ramp opens at `gone − exit` and is
+  stretched so **`PROOF_RELEASE_PARK`** — `smootherstepInverse` of that window's
+  end, 0.734969, in `ringMath` — lands on `gone`. Measured after: 0.880 and
+  three anchors, at the pixel.
+  ⚠ **`SERVICES_PROOF_HANDOFF_OVERLAP_VH` IS DELETED** — a viewport constant
+  cannot anchor a card's disappearance, and the replacement is a derivation of
+  the ring's own windows, so **retiming an entrance window retimes the handoff
+  with it** (they ride the raw dissipate everywhere else; nothing else would
+  notice).
+  ⚠ **THE PAGE GETS ~1.6vh SHORTER AND THREE NUMBERS MOVE TOGETHER** —
+  `SERVICES_PROOF_RUNWAY_VH` 6.3 → **5.1** (the stack path is the pile alone),
+  the `--svc-proof-runway` literal 630 → **510svh**, and
+  `SERVICES_PROOF_RELEASE_VH` becomes the CASEFILE's. The ring's 500svh domain
+  is untouched by construction. `services-proof-runway-lockstep` is the alarm —
+  and it had a latent float bug that 6.3 dodged (`5.1 * 100` is
+  509.99999999999994), so both sides round now.
+  ⚠ **U1's INVARIANT SURVIVES, STRONGER** — the ramp's own zero IS the release
+  point, so the card's whole hold reads exactly 0.000.
+  ⚠ **`exit` IS THE LAST SLOT'S PIN (`top-base + i·peek` = 220), NOT 64** —
+  deriving it from the constants without the peek term gives 720 against a
+  measured 876. ⚠ Read it from computed `top` / `margin-bottom` / `offsetHeight`
+  once per layout, **never `offsetTop`** (stuck position) and **never
+  `:last-of-type`** (the tail is a later `div`).
+  ⚠ **THE FLY-IN GETS THE LAST ~26 % OF THE EXIT** (142–281px). Opening the ramp
+  at the card's PIN instead buys a longer fly-in and paints 28 % of the ladder
+  under a parked card, through its glass; opening it at the clearing compresses
+  the fly-in to ~80px, one wheel notch. Both were computed before this was
+  chosen — do not move the opening without redoing that pair.
+  ⚠ **Verifying:** `node scripts/capture-proof-stack.mjs --handoff` walks the
+  exit in tenths and prints `--svc-content-in` and the anchor count against the
+  card's own bottom edge.
 - ⚠ **THE LAST CARD'S HOLD IS THE TAIL, AND IT IS SIZED TO THE CARD BEFORE IT**
   (ADR-096 U2, owner: _"fix the last card's hold too"_). Every other card is
   held by the one that covers it; the last has nothing above it, so its hold is
@@ -95,10 +118,12 @@ SERVICES_PROOF_HANDOFF_OVERLAP_VH × vh`, the overlap being **1.0 = the last
   and instead removes the runway the U1 release runs over after the card has
   cleared — it would pull the opening in front of the card's unstick.
   ⚠ **A LONGER TAIL IS A LONGER PILE**, so `SERVICES_PROOF_PILE_VH` (5.1),
-  `SERVICES_PROOF_RUNWAY_VH` (6.3) and the `--svc-proof-runway` literal
-  (630svh) move in the same commit — `services-proof-runway-lockstep` is the
-  alarm. It does NOT disturb U1: the unstick point and the box shift together,
-  so the release still opens ~42 % into the exit.
+  `SERVICES_PROOF_RUNWAY_VH` and the `--svc-proof-runway` literal move in the
+  same commit — `services-proof-runway-lockstep` is the alarm. (They are 5.1
+  and 510svh since U3 took the release inside the pile; this bullet shipped
+  them as 6.3 / 630svh.) It does NOT disturb the handoff: the unstick point and
+  the box shift together, and U3 solves the ramp from BOTH, so a longer tail
+  moves the whole beat down the page without re-timing any part of it.
   ⚠ **PIN THE HOLD BEHAVIOURALLY.** Deriving the sticky range from `offsetTop`
   reads the STUCK position (`seatProofCard`'s own finding) — it reported 125px
   against a 320px tail. The smoke walks the card instead: parked at its pin,

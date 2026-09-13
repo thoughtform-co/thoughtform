@@ -202,6 +202,54 @@ export const RING_ENTRANCE_WINDOWS: ReadonlyArray<readonly [number, number]> = [
   [0.62, 0.88], // card 3 — left edge (visible): synced with the right card
 ];
 
+/** Inverse of `smootherstep(0, 1, x)` — the `x` that produces `y`.
+ *
+ *  The quintic has no useful closed form, so this bisects. It is monotone on
+ *  [0, 1], so 60 halvings land on the exact double, and the one production
+ *  caller below runs it ONCE at module evaluation. Pure, and unit-pinned
+ *  against the forward function (`services-ring-math.test.ts`). */
+export function smootherstepInverse(y: number): number {
+  const target = clamp01(y);
+  /* ⚠ THE ENDPOINTS ARE RETURNED, NOT SEARCHED FOR. The quintic's first and
+     second derivatives are both zero at 0 and 1, so `smootherstep` rounds to
+     exactly 0 and 1 across a whole neighbourhood of each and a bisection
+     stalls ~2e-6 short of them. They are exact by definition. */
+  if (target <= 0) return 0;
+  if (target >= 1) return 1;
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 60; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (smootherstep(0, 1, mid) < target) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+/**
+ * The `releaseP` at which the ring's VISIBLE cards finish flying in — the
+ * number the proof → offer handoff is anchored to (ADR-096 U3).
+ *
+ * `ringEntranceClock` (`CorridorArmillary`) is `smoothedDissipate ×
+ * proofRelease`, and all three VISIBLE cards' windows end at
+ * `RING_ENTRANCE_WINDOWS[0][1]` — which is also `ANCHOR_PUBLISH_DISSIPATE`
+ * (0.88, a literal in `ServicesCardRing`; that file is Three-bound and cannot
+ * be imported here, so the pair is recorded rather than shared). Past the
+ * dwell the dissipate has long saturated, so the clock IS the release: this
+ * is the releaseP at which the cards are parked and their hit anchors
+ * publish, and `proofRelease = smootherstep(0, 1, releaseP)` is what inverts.
+ *
+ * ⚠ **IT IS A DERIVATION OF THE WINDOWS, NEVER A SECOND LITERAL BESIDE
+ * THEM.** `useServicesStageScroll` solves the proof share so this fraction
+ * lands exactly where the last card's bottom leaves the viewport (owner,
+ * 2026-09-13: _"the cards from the services section should appear the moment
+ * the last card from the proof section has disappeared"_). Retiming an
+ * entrance window therefore retimes the handoff with it, which is the one
+ * behaviour that cannot drift — the windows ride the RAW dissipate on every
+ * other surface, so nothing else would notice.
+ */
+export const PROOF_RELEASE_PARK = smootherstepInverse(RING_ENTRANCE_WINDOWS[0][1]);
+
 /** Legacy radial fly-in multiplier (cards start a touch wider, ease to 1).
  *  Kept as a small secondary term — the DOMINANT entrance is now the
  *  directional off-frame slide below (RING_ENTRANCE_DIRECTIONS), so the

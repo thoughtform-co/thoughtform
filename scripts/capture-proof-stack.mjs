@@ -34,6 +34,9 @@ const CARDS = argOf("--cards", "0,1,2,3").split(",").map(Number);
    (ADR-056's measurement), so the number to watch is the >33ms share. */
 const MID = args.includes("--mid");
 const PERF = args.includes("--perf");
+/* `--handoff` walks the LAST card off the screen and reports the ring against
+   its bottom edge — the beat ADR-096 U3 solves for. */
+const HANDOFF = args.includes("--handoff");
 
 await mkdir(OUT, { recursive: true });
 
@@ -90,8 +93,19 @@ try {
   console.log(`  pile height         ${geo.pileH}px  (${(geo.pileH / geo.vh).toFixed(2)} vh)`);
   console.log(`  --svc-proof-runway  ${geo.proofRunwayVar}`);
   console.log(`  pile position       ${geo.pilePosition}`);
+  /* ⚠ THE SHARE IS THE WRITTEN NUMBER, NOT `pileH + 1.2vh` (ADR-096 U3).
+     The release is the last card's own exit now and is solved INSIDE the
+     measured share, which ends short of the pile's box — so reading the
+     domain off the old sum reported a drift that is not there. */
+  const sharePx = geo.proofRunwayVar.endsWith("px")
+    ? Number.parseFloat(geo.proofRunwayVar)
+    : geo.pileH;
   console.log(
-    `  ring domain         ${Math.round(geo.runwayH - geo.vh - geo.pileH - 1.2 * geo.vh)}px ` +
+    `  proof share         ${Math.round(sharePx)}px  (${(sharePx / geo.vh).toFixed(2)} vh, ` +
+      `pile ${Math.round(sharePx - geo.pileH)}px)`
+  );
+  console.log(
+    `  ring domain         ${Math.round(geo.runwayH - geo.vh - sharePx)}px ` +
       `(want ${Math.round(4 * geo.vh)}px)`
   );
   for (const [i, s] of geo.slots.entries()) {
@@ -259,6 +273,67 @@ try {
     }
     console.log(`\n  card 1 mid-arrival: ${JSON.stringify(mid)}`);
     await page.screenshot({ path: `${OUT}/proof-stack-${tag}-mid.png` });
+  }
+
+  /* ── `--handoff`: the last card's exit, walked (ADR-096 U3) ───────────
+     The share is solved so the ring's visible cards PARK as this card's
+     bottom leaves the frame, so the reading that matters is the pair
+     `--svc-content-in` / published hit anchors against the card's own bottom
+     edge. ⚠ Runway-relative scroll throughout: the corridor inflates the
+     document, so an absolute `y` means nothing between runs. */
+  if (HANDOFF) {
+    const ex = await page.evaluate(() => {
+      const pile = document.querySelector(".services-stage-root > .pf-stack");
+      const slots = [...document.querySelectorAll("[data-pc-slot]")];
+      const last = slots[slots.length - 1];
+      const cs = getComputedStyle(last);
+      const exit = (Number.parseFloat(cs.top) || 0) + last.offsetHeight;
+      const gone = pile.offsetHeight - (Number.parseFloat(cs.marginBottom) || 0);
+      return { exit, gone, unstick: gone - exit };
+    });
+    console.log(`\n── the handoff @ ${tag} ─────────────────────────────`);
+    console.log(`  exit ${ex.exit}px   unstick ${ex.unstick}   gone ${ex.gone}`);
+    console.log(`     % of exit    scroll   cardBottom   --svc-content-in   hits`);
+    const at = async (s) => {
+      for (let pass = 0; pass < 4; pass += 1) {
+        await page.evaluate((rel) => {
+          const rw = document.querySelector(".services-stage-root");
+          window.scrollTo(0, Math.round(rw.getBoundingClientRect().top + window.scrollY + rel));
+        }, s);
+        await page.waitForTimeout(pass === 0 ? 500 : 260);
+        const landed = await page.evaluate(() => {
+          const rw = document.querySelector(".services-stage-root");
+          return Math.round(-rw.getBoundingClientRect().top);
+        });
+        if (Math.abs(landed - s) <= 2) break;
+      }
+      return page.evaluate(() => {
+        const card = [...document.querySelectorAll("[data-pc-slot]")]
+          .at(-1)
+          .querySelector(".pf-card");
+        const stage = document.querySelector(".services-stage");
+        const rw = document.querySelector(".services-stage-root");
+        return {
+          s: Math.round(-rw.getBoundingClientRect().top),
+          bottom: Math.round(card.getBoundingClientRect().bottom),
+          contentIn: Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "0"),
+          hits: document.querySelectorAll(".svc-ring-hits__hit").length,
+        };
+      });
+    };
+    for (let f = 0; f <= 10; f += 1) {
+      const r = await at(Math.round(ex.unstick + (f / 10) * ex.exit));
+      console.log(
+        `  ${String(f * 10).padStart(9)}%  ${String(r.s).padStart(8)}  ` +
+          `${String(r.bottom).padStart(10)}   ${r.contentIn.toFixed(3).padStart(14)}   ` +
+          `${String(r.hits).padStart(4)}`
+      );
+      if (f === 7) await page.screenshot({ path: `${OUT}/proof-handoff-70pct-${tag}.png` });
+    }
+    await page.screenshot({ path: `${OUT}/proof-handoff-gone-${tag}.png` });
+    const past = await at(ex.gone + 120);
+    console.log(`  past +120  ${JSON.stringify(past)}`);
+    await page.screenshot({ path: `${OUT}/proof-handoff-past120-${tag}.png` });
   }
 
   /* ── `--perf`: the pile scrolled at reading speed ─────────────────────

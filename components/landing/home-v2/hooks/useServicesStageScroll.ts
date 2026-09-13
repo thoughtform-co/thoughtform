@@ -5,6 +5,7 @@ import { useEffect, type RefObject } from "react";
 import {
   activeServiceForProgress,
   exitProgressForRunway,
+  PROOF_RELEASE_PARK,
   splitServicesRunway,
 } from "@/lib/services-ring/ringMath";
 import { clamp01 } from "@/lib/math";
@@ -13,8 +14,6 @@ import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { browseClientCount, browseSeamClocks } from "../services/casefile/browseMap";
 import {
   SERVICES_PROOF_BROWSE_FRAC,
-  SERVICES_PROOF_HANDOFF_OVERLAP_VH,
-  SERVICES_PROOF_RELEASE_VH,
   SERVICES_PROOF_RUNWAY_VH,
   SERVICES_PROOF_SEGMENTS,
 } from "../unifiedServicesInstrument";
@@ -335,6 +334,42 @@ export function useServicesStageScroll(
       }
       return pileEl;
     };
+    /* The LAST card's exit, cached per layout (ADR-096 U3).
+       `exit` is the card's own travel — its bottom sits exactly `pinTop +
+       slotH` below the viewport top while parked, and moves 1:1 with the page
+       once the slot releases — and `lastMargin` is the runway that follows its
+       box, which is what makes `pileH − lastMargin` the scroll at which that
+       bottom crosses zero.
+       ⚠ **NEVER `offsetTop`** — on a STUCK sticky element it reports the stuck
+       position, not the flow offset (the smoke's own `seatProofCard` finding).
+       Every term here is layout-stable under scroll: the computed `top` and
+       `margin-bottom` are clamps on the viewport, and `offsetHeight` is a box.
+       ⚠ **NEVER `.pf-slot:last-of-type`** — `:last-of-type` counts by element
+       TYPE and `.pf-stack__tail` is a later `div`, so no slot is ever the last
+       of its type (the dead rule ADR-096 U1 found in the sheet).
+       ⚠ Keyed on the pile's height AND the viewport, because both terms move
+       with the viewport and two shapes could share a pile height. */
+    let exitGeom = { pileH: -1, vh: -1, exit: 0, lastMargin: 0 };
+    const proofExit = (pile: HTMLElement, pileH: number, vh: number) => {
+      if (exitGeom.pileH !== pileH || exitGeom.vh !== vh) {
+        const slots = pile.querySelectorAll<HTMLElement>("[data-pc-slot]");
+        const last = slots[slots.length - 1];
+        if (last) {
+          const cs = getComputedStyle(last);
+          const top = Number.parseFloat(cs.top);
+          const margin = Number.parseFloat(cs.marginBottom);
+          exitGeom = {
+            pileH,
+            vh,
+            exit: (Number.isFinite(top) ? top : 0) + last.offsetHeight,
+            lastMargin: Number.isFinite(margin) ? margin : 0,
+          };
+        } else {
+          exitGeom = { pileH, vh, exit: 0, lastMargin: 0 };
+        }
+      }
+      return exitGeom;
+    };
     const setProof = (
       stage: HTMLElement,
       inV: number,
@@ -489,40 +524,75 @@ export function useServicesStageScroll(
         smoothstep(SHRINK_START, SHRINK_END, dissipate),
         smoothstep(FADE_START, FADE_END, dissipate)
       );
-      /* ── THE PROOF SHARE IS MEASURED, NOT DECLARED (ADR-096) ───────────
+      /* ── THE PROOF SHARE IS MEASURED, AND IT ENDS ON THE LAST CARD ─────
+         (ADR-096, U3 2026-09-13.)
+
          The pile's length is `100svh` arithmetic with fixed px terms in it
          (the 64–88px pin, the 52px peek, the 24px safe band), so it lands
-         anywhere in ~483–490svh across the reference viewports and no single
-         literal is right at more than one of them. Read the box, add the
-         release band, and write the total back onto `--svc-proof-runway` —
-         which is what keeps the RUNWAY's reserved height and the SPLIT's
-         proof share the same number, and therefore the ring's domain at
-         exactly the pre-proof 500svh at every viewport rather than at one.
-         ⚠ ONE WRITE PER RESIZE, NEVER PER FRAME: the value is a function of
+         anywhere in ~483–507svh across the reference viewports and no single
+         literal is right at more than one of them. So the box is READ, the
+         share is solved from it, and the total is written back onto
+         `--svc-proof-runway` — which is what keeps the RUNWAY's reserved
+         height and the SPLIT's proof share the same number, and therefore
+         the ring's domain at exactly the pre-proof 500svh at every viewport
+         rather than at one.
+
+         ⚠ **THE RAMP IS SOLVED SO THE RING PARKS AS THE LAST CARD CLEARS**
+         (U3, owner: _"the cards from the services section should appear the
+         moment the last card from the proof section has disappeared"_). Two
+         measured positions, both runway-relative:
+
+           exit = pinTop + slotH   the last card's own travel — its bottom
+                                   sits exactly this far below the viewport
+                                   top while it is parked, and it moves 1:1
+                                   with the page once released
+           gone = pileH − margin   the scroll at which that bottom crosses
+                                   zero (the tail is inside the box and the
+                                   slot's own margin is what follows it)
+
+         The ramp OPENS at `gone − exit` (the release, where the card starts
+         moving) and is stretched so `PROOF_RELEASE_PARK` — the releaseP at
+         which the ring's three visible cards finish flying in — falls exactly
+         on `gone`. Everything else follows for free: the fly-in occupies the
+         last ~230px of the card's exit, `--svc-content-in` reads ~0.88 as the
+         card clears, and the hit anchors publish within a wheel notch of it.
+
+         ⚠ **NOTHING OPENS WHILE THE CARD IS PARKED** (U1's invariant, and it
+         is stronger here than it was): the ramp's own zero IS the release
+         point, so the whole of the last card's hold reads exactly 0.
+         ⚠ **THE ANCHOR IS `PROOF_RELEASE_PARK`, A DERIVATION OF
+         `RING_ENTRANCE_WINDOWS`** — never a viewport constant. U1 spent one
+         (`SERVICES_PROOF_HANDOFF_OVERLAP_VH`, 1.0vh) and it could only ever
+         be right about where the DOM ladder opened; the cards themselves ride
+         the same release through a window that ends at 0.88, which is what
+         put them 0.6–1.1 viewports late at every viewport with the guard
+         green.
+         ⚠ ONE WRITE PER RESIZE, NEVER PER FRAME: every term is a function of
          the viewport alone, so the change guard holds it still while
          scrolling. It converges in a single frame (writing it changes the
          RUNWAY's height, never the pile's — the pile is out of flow). */
       let proofPx = SERVICES_PROOF_RUNWAY_VH * vh;
       let browseFrac = SERVICES_PROOF_BROWSE_FRAC;
-      /* Where the HANDOFF opens. The casefile's two questions — "when do the
-         directory's rows stop stepping" and "when does the offer start
-         arriving" — were one fraction because on that surface they were one
-         answer. Under the pile they are not (ADR-096 U1): the browse channel
-         is inert and the release wants to open BEFORE the pile's box ends, so
-         the offer assembles out of the same motion that carries the last card
-         away. Identical on the casefile path, where both are the band's end. */
       let releaseFrac = SERVICES_PROOF_BROWSE_FRAC;
       const pile = proofPile(runway);
       const pileH = pile ? pile.offsetHeight : 0;
-      if (pileH > 0) {
-        proofPx = pileH + SERVICES_PROOF_RELEASE_VH * vh;
+      if (pile && pileH > 0) {
+        const { exit, lastMargin } = proofExit(pile, pileH, vh);
+        const gone = Math.max(1, pileH - lastMargin);
+        if (exit > 0 && gone > exit) {
+          proofPx = gone + (1 / PROOF_RELEASE_PARK - 1) * exit;
+          releaseFrac = clamp01((gone - exit) / proofPx);
+        } else {
+          proofPx = pileH;
+          releaseFrac = SERVICES_PROOF_BROWSE_FRAC;
+        }
+        /* The browse channel is INERT under the pile (the casefile's
+           directory is what it stepped, and the pile is its own selector),
+           and the share now ends inside the pile's own trailing margin — so
+           this saturates. Kept as the same expression rather than a literal
+           1: it still answers "how much of the share is the pile's box", and
+           on the casefile path the two fractions are one number. */
         browseFrac = clamp01(pileH / proofPx);
-        /* ⚠ THE OVERLAP COMES OUT OF THE OPENING, NEVER OUT OF `proofPx`
-           (ADR-096 U1). The runway's reserved height, the ring's domain and
-           the lockstep guard all key off the total; moving only where the
-           ramp starts inside it leaves every one of them byte-identical and
-           hands the release ~1980px instead of ~1080 to run over. */
-        releaseFrac = clamp01((pileH - SERVICES_PROOF_HANDOFF_OVERLAP_VH * vh) / proofPx);
         if (Math.abs(proofPx - currentProofRunwayPx) >= 1) {
           runway.style.setProperty("--svc-proof-runway", `${Math.round(proofPx)}px`);
           currentProofRunwayPx = proofPx;

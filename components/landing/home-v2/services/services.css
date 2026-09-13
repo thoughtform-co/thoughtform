@@ -113,18 +113,26 @@
    * `tests/lib/services-proof-runway-lockstep.test.ts`**, which fails with the
    * number to write here. Bump it in the same commit as the registry entry.
    *
-   * ⚠ **ADR-096: 320 → 610svh, AND IT IS A RESERVATION THAT GETS OVERWRITTEN.**
-   * The proof beat is the STACK now (4.9 viewports of pile + the 1.2 of
-   * release), and the pile's length is `100svh` arithmetic with fixed px terms
-   * in it — the 64–88px pin, the 52px peek, the 24px safe band — so it lands
-   * anywhere in ~493–507svh depending on the viewport (ADR-096 U2 lengthened
-   * the tail, which is the last card's hold, from ~483–490). This literal is
-   * what the page reserves BEFORE hydration; `useServicesStageScroll` then
-   * measures the pile's own box and writes the real total back onto this
-   * property, in pixels, once per resize. That is what keeps the reserved
-   * height and the runway SPLIT's proof share the same number at every
-   * viewport, and with them the ring's domain at exactly 500svh. */
-  --svc-proof-runway: 630svh;
+   * ⚠ **ADR-096: 320 → 510svh, AND IT IS A RESERVATION THAT GETS OVERWRITTEN.**
+   * The proof beat is the STACK now, and the pile's length is `100svh`
+   * arithmetic with fixed px terms in it — the 64–88px pin, the 52px peek, the
+   * 24px safe band — so it lands anywhere in ~493–507svh depending on the
+   * viewport (ADR-096 U2 lengthened the tail, which is the last card's hold,
+   * from ~483–490). This literal is what the page reserves BEFORE hydration;
+   * `useServicesStageScroll` then measures the pile's own box and writes the
+   * real total back onto this property, in pixels, once per resize. That is
+   * what keeps the reserved height and the runway SPLIT's proof share the same
+   * number at every viewport, and with them the ring's domain at exactly
+   * 500svh.
+   *
+   * ⚠ **U3 TOOK THE RELEASE INSIDE THE PILE, SO THIS WENT 630 → 510.** It was
+   * `PILE_VH + RELEASE_VH` (5.1 + 1.2); the release is the last card's own
+   * exit now, solved against `PROOF_RELEASE_PARK` so the ring parks as that
+   * card clears, and the measured share comes out ~482–492svh — SHORTER than
+   * the pile's box, because it ends inside the trailing margin the card has
+   * already vacated. 5.1 stays the reservation: it must be the ceiling of the
+   * measurement, never its mean. */
+  --svc-proof-runway: 510svh;
   min-height: calc(var(--svc-proof-runway) + 500svh);
 }
 
