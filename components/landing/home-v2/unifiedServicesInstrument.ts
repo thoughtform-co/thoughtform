@@ -341,6 +341,50 @@ export const SERVICES_PROOF_RELEASE_VH = 1.2;
  */
 export const SERVICES_PROOF_PILE_VH = 4.9;
 
+/**
+ * How far before the pile's box ends the OFFER'S ARRIVAL OPENS, in viewport
+ * heights — the overlap between the last card leaving and the services beat
+ * assembling (ADR-096 U1, owner 2026-09-13: _"there's a bit of a gap between
+ * when you scroll away from the proof section into the services section. It
+ * takes two or three scrolls, even before the elements of that services
+ * section show up. That needs to happen a bit smoother and a bit faster."_).
+ *
+ * ⚠ **IT IS THE LAST CARD'S OWN EXIT, AND THAT IS WHY IT IS 1.0.** The last
+ * slot has no card above it to be covered by, so it unsticks and scrolls away
+ * under its own height plus its pin — measured 876px at 1440×900, 696 at
+ * 1280×720, 1223 at 1920×1247, i.e. **0.97–0.98vh at every reference
+ * viewport**. Opening the release one viewport before the pile's box ends
+ * therefore starts the offer while that card is still travelling, which is
+ * the whole point: the beats INTERLOCK rather than queue.
+ *
+ * Measured before, at 1440×900: the last card's bottom cleared the viewport at
+ * scrollY 12442 and the release did not open until 12836 — **394px in which
+ * the pile was gone, the offer was at exactly 0 and the brandmark was still
+ * dimmed behind both** — with `--svc-content-in` not crossing 4 % until 13030
+ * and 15 % until 13150. That is ~800px, three trackpad swipes, of nothing,
+ * which is the complaint verbatim.
+ *
+ * ⚠ **THE PAGE DOES NOT GET LONGER — ONLY THE OPENING MOVES.** `proofPx` is
+ * untouched (`pileH + SERVICES_PROOF_RELEASE_VH × vh`), so the runway's
+ * reserved height, `--svc-proof-runway`, the ring's 500svh domain and the
+ * lockstep guard are all byte-identical. What changes is where `releaseP`
+ * starts inside it — and because the ramp then spans ~1980px instead of
+ * ~1080px, the SAME `smootherstep` does less per pixel. That is the second
+ * half of the ask: faster to begin, gentler once begun.
+ *
+ * ⚠ **IT MAY NEVER OPEN WHILE THE LAST CARD IS STILL PINNED.** The card's
+ * hold is the tail's own height (216px at 900h — sticky is bounded by the
+ * containing block MINUS the element's own margin, and the last slot keeps a
+ * 394px one); an overlap past `exit + hold` would start the offer under a
+ * card that is still parked over it, which is a crossfade, not a handoff. At
+ * 1.0 the release opens ~42 % into the exit, measured at all three viewports.
+ *
+ * ⚠ **THIS IS `proofP` SPACE, WHICH IS WHERE RETIMING BELONGS** (the hook's
+ * own standing note). Never in `RING_ENTRANCE_WINDOWS` — those ride the raw
+ * dissipate, which saturated long before this beat.
+ */
+export const SERVICES_PROOF_HANDOFF_OVERLAP_VH = 1.0;
+
 /** One row count per case, in registry order — the segment table's input. */
 const PROOF_ROW_COUNTS = CASES.map((c) => c.casefile.tracks.length);
 

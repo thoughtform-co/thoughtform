@@ -57,6 +57,32 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   once per resize. `SERVICES_PROOF_RUNWAY_VH` is the PRE-HYDRATION RESERVATION
   (and the fallback), deliberately the ceiling of that range;
   `services-proof-runway-lockstep.test.ts` still pins the CSS literal to it.
+- ⚠ **THE OFFER OPENS WHILE THE LAST CARD IS STILL LEAVING** (ADR-096 U1,
+  owner: _"it takes two or three scrolls, even before the elements of that
+  services section show up"_). The pile's BOX outlasts its last card by that
+  card's whole exit, so a release pinned to the box's end opened ~800px after
+  the screen had emptied — measured 394px at exactly `--svc-content-in` 0 at
+  1440×900, then another 400 under 15 %. **`browseFrac` and `releaseFrac` are
+  two fractions now**: the first is the pile's box (and inert under the stack —
+  the pile is its own selector), the second is `pileH −
+SERVICES_PROOF_HANDOFF_OVERLAP_VH × vh`, the overlap being **1.0 = the last
+  card's own exit** (876px @1440×900, 696 @1280×720, 1223 @1920×1247 — 0.97–0.98vh
+  everywhere).
+  ⚠ **THE OVERLAP COMES OUT OF THE OPENING, NEVER OUT OF `proofPx`** — the
+  runway's reserved height, the ring's domain and the lockstep guard stay
+  byte-identical, and the same `smootherstep` gets ~1980px instead of ~1080 to
+  run over, which is the "smoother" half of the ask.
+  ⚠ **IT MAY NOT OPEN WHILE THE CARD IS PARKED** (that would be a crossfade,
+  not a handoff), and the card's hold is only the tail's 216px — sticky is
+  bounded by the containing block MINUS the element's own margin. Both ends are
+  pinned in the smoke and the pair was CALIBRATED: with the overlap at 0 the
+  second fails with `Received: 0`.
+  ⚠ **`.pf-slot:last-of-type { margin-bottom: 0 }` HAS NEVER MATCHED** —
+  `:last-of-type` counts by element TYPE and `.pf-stack__tail` is a later
+  `div`, so the last slot keeps its 394px margin and its hold is the tail
+  alone. `:nth-last-child(2)` is the selector that would match; left alone
+  deliberately (it would triple that card's read time — a choreography change,
+  not a fix).
 - ⚠ **THE INERT RUNG IS RESTATED IN TWO SHEETS AND MUST STAY IDENTICAL** —
   `(max-width: 960px), (max-height: 680px), (prefers-reduced-motion: reduce)`.
   `proof-stack.css` parks the slots; `services.css` puts the box back in flow.

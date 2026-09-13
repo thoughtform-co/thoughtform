@@ -191,6 +191,83 @@ smoke pins them on the rendered page.
   them made a claim about `browseMap.ts`'s arithmetic depend on which beat the
   page happens to mount.
 
+## Update 1 — the offer opens while the last card is still leaving (2026-09-13, owner)
+
+> There's a bit of a gap between when you scroll away from the proof section
+> into the services section. It takes two or three scrolls, even before the
+> elements of that services section show up. That needs to happen a bit
+> smoother and a bit faster.
+
+**This is the "Left open" item below, read live.** It was recorded as _"the
+last card's dwell is long before the release … one constant if the owner reads
+it as slow"_, and that is what this update is.
+
+**Measured first, at 1440×900.** The last card unsticks at scrollY 11566 and
+its bottom clears the viewport at **12442**; the release did not open until
+**12836** — `--svc-content-in` sat at exactly 0 for those 394px — and did not
+reach 4 % until 13030 or 15 % until 13150. So ~**800px, three trackpad swipes,
+in which the pile was gone, the offer was at zero and the brandmark was still
+dimmed behind both.** The same walk at 1920×1247 and 1280×720 showed the same
+shape.
+
+**The cause is that ONE fraction was answering TWO questions.** The hook split
+the proof share at `pileH / proofPx` — the pile's own box — and used that one
+number both for "when do the directory's rows stop stepping" (`browseP`) and
+"when does the offer start arriving" (`releaseP`). On the casefile those were
+one answer. Under the pile they are not: the browse channel is inert (the pile
+is its own selector) and the pile's BOX outlasts its last card by that card's
+whole exit. The release was therefore pinned to the end of a box whose contents
+had left.
+
+**So they are two fractions now.** `browseFrac` is unchanged; `releaseFrac` is
+`(pileH − SERVICES_PROOF_HANDOFF_OVERLAP_VH × vh) / proofPx`, and the overlap is
+**1.0** — the last card's own exit, which measures 876px at 1440×900, 696 at
+1280×720 and 1223 at 1920×1247, i.e. 0.97–0.98vh everywhere. The offer now
+assembles out of the motion that carries the card away.
+
+**Measured after**, same three viewports — the dead band is gone and is now an
+OVERLAP (the offer paints before the card clears):
+
+|                                          | 1280×720       | 1440×900              | 1920×1247 |
+| ---------------------------------------- | -------------- | --------------------- | --------- |
+| offer's first paint vs the card clearing | −120px         | −240px                | −360px    |
+| `--svc-content-in` when the card clears  | —              | **0.127** (was 0.000) | —         |
+| offer at 50 %                            | −360px earlier | 13030 (was 13390)     | —         |
+
+⚠ **THE PAGE DOES NOT GET LONGER, AND THAT IS THE POINT OF PUTTING IT HERE.**
+`proofPx` is untouched, so `--svc-proof-runway`, the runway's reserved height,
+the ring's 500svh domain and `services-proof-runway-lockstep` are all
+byte-identical. Only the ramp's OPENING moves inside it — which also hands the
+same `smootherstep` ~1980px to run over instead of ~1080, so it does less per
+pixel. That is the second half of the ask: faster to begin, gentler once begun.
+It is also why the fix belongs in `proofP` space and not in
+`RING_ENTRANCE_WINDOWS`, which ride the raw dissipate and saturated long before
+this beat (the hook's own standing note).
+
+⚠ **IT MAY NEVER OPEN WHILE THE LAST CARD IS STILL PARKED.** That card's hold
+is only the tail's height — 216px at 900h, because sticky is bounded by the
+containing block MINUS the element's own margin and the last slot keeps a 394px
+one — so an overlap past `exit + hold` would start the offer under a card the
+reader is still reading, which is a crossfade, not a handoff. At 1.0 the release
+opens ~42 % into the exit at all three viewports.
+
+⚠ **THE GUARD IS PINNED FROM BOTH ENDS AND WAS CALIBRATED, NOT MERELY GREENED.**
+Either half alone is satisfiable by the wrong thing, so the smoke asserts
+`--svc-content-in ≤ 0.01` while the last card is PINNED **and** `> 0` at the
+scroll where its bottom clears the viewport (solved by scrolling by the measured
+bottom — once unstuck the card moves 1:1 with the page, so it converges in one
+pass). Setting the overlap back to 0 fails the second with `Received: 0`, which
+is the old behaviour exactly.
+
+⚠ **AND `.pf-slot:last-of-type { margin-bottom: 0 }` HAS NEVER MATCHED.**
+`:last-of-type` counts by ELEMENT TYPE, and `.pf-stack__tail` is a `div` after
+the slots — so the last slot keeps the 394px margin the rule means to remove,
+which is what limits its hold to the tail's 216px rather than the 610 the rule
+intends. Recorded, not fixed: correcting it would give the last card ~3× its
+present read time, which is a change to the pile's own choreography and not
+what was asked. `.pf-stack__runway > .pf-slot:nth-last-child(2)` is the
+selector that would match.
+
 ## Left open
 
 - **The casefile and its guards are still on disk.** One decision, after the
@@ -218,6 +295,9 @@ smoke pins them on the rendered page.
   Check `getComputedStyle(document.body).margin === "0px"` before believing any
   width finding on this repo.
 
-- **The last card's dwell is long** (its own margin plus the tail, ~71svh)
-  before the release. Kept as `/trinny-london` tuned it; one constant if the
-  owner reads it as slow.
+- ~~**The last card's dwell is long** (its own margin plus the tail, ~71svh)
+  before the release.~~ **CLOSED at U1** (2026-09-13) — he read it as slow, and
+  it was one constant: `SERVICES_PROOF_HANDOFF_OVERLAP_VH`.
+- **The last card's own HOLD is short** — 216px, the tail, because the margin
+  the `:last-of-type` rule means to remove is still there (U1). Whether that
+  card deserves the ~610px the rule intends is an owner read, not a bug fix.

@@ -4021,6 +4021,61 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(pile.scales[3], "the open card is scaled").toBeCloseTo(1, 3);
     expect(pile.body0, "a covered card's controls can still take focus").toBe("hidden");
 
+    /* ── AND IT HANDS OVER WITH NO DEAD BAND (ADR-096 U1) ─────────────
+       Owner, 2026-09-13: "there's a bit of a gap between when you scroll away
+       from the proof section into the services section. It takes two or three
+       scrolls, even before the elements of that services section show up."
+       Measured: the last card's bottom cleared the viewport 394px before the
+       release even opened, and `--svc-content-in` did not reach 4 % for
+       another 194 — ~800px of nothing. The release now opens one viewport
+       (the last card's own exit) before the pile's box ends, so the offer
+       assembles out of the motion that carries the card away.
+
+       ⚠ PINNED FROM BOTH ENDS, because either alone is satisfiable by the
+       wrong thing: an overlap that opened while the card was still PARKED
+       would be a crossfade under a card the reader is still reading, and one
+       that opened after it cleared is the dead band again. So: nothing while
+       it is pinned, something by the time it clears. */
+    expect(await seatProofCard(page, 3)).toBe("pinned");
+    const parked = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>(".services-stage");
+      return Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "0");
+    });
+    expect(parked, "the offer is already arriving under a parked last card").toBeLessThanOrEqual(
+      0.01
+    );
+
+    /* Solve for the scroll where the last card's bottom clears the top. Once
+       unstuck it moves 1:1 with the page, so one correction converges. */
+    for (let pass = 0; pass < 5; pass += 1) {
+      const bottom = await page.evaluate(() => {
+        const card = document
+          .querySelectorAll<HTMLElement>(".pf-slot")[3]
+          ?.querySelector<HTMLElement>(".pf-card");
+        return card ? card.getBoundingClientRect().bottom : 0;
+      });
+      if (Math.abs(bottom) <= 2) break;
+      await page.evaluate((d) => window.scrollBy(0, d), Math.round(bottom));
+      await settleScroll(page);
+    }
+    const clearing = await page.evaluate(() => {
+      const stage = document.querySelector<HTMLElement>(".services-stage");
+      const card = document
+        .querySelectorAll<HTMLElement>(".pf-slot")[3]
+        ?.querySelector<HTMLElement>(".pf-card");
+      return {
+        cardBottom: card ? Math.round(card.getBoundingClientRect().bottom) : null,
+        contentIn: Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "0"),
+      };
+    });
+    expect(Math.abs(clearing.cardBottom ?? 999), "the last card never cleared").toBeLessThanOrEqual(
+      3
+    );
+    expect(
+      clearing.contentIn,
+      "the offer has not begun by the time the last card clears — the dead band is back (ADR-096 U1)"
+    ).toBeGreaterThan(0);
+
     /* ── AND THE OFFER ARRIVES BEHIND IT ──────────────────────────────
        The release is the back stretch of the proof share; past it the
        masthead, the plate cluster and the ring all come up on one ramp. */

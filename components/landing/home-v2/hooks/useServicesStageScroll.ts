@@ -13,6 +13,7 @@ import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { browseClientCount, browseSeamClocks } from "../services/casefile/browseMap";
 import {
   SERVICES_PROOF_BROWSE_FRAC,
+  SERVICES_PROOF_HANDOFF_OVERLAP_VH,
   SERVICES_PROOF_RELEASE_VH,
   SERVICES_PROOF_RUNWAY_VH,
   SERVICES_PROOF_SEGMENTS,
@@ -503,11 +504,25 @@ export function useServicesStageScroll(
          RUNWAY's height, never the pile's — the pile is out of flow). */
       let proofPx = SERVICES_PROOF_RUNWAY_VH * vh;
       let browseFrac = SERVICES_PROOF_BROWSE_FRAC;
+      /* Where the HANDOFF opens. The casefile's two questions — "when do the
+         directory's rows stop stepping" and "when does the offer start
+         arriving" — were one fraction because on that surface they were one
+         answer. Under the pile they are not (ADR-096 U1): the browse channel
+         is inert and the release wants to open BEFORE the pile's box ends, so
+         the offer assembles out of the same motion that carries the last card
+         away. Identical on the casefile path, where both are the band's end. */
+      let releaseFrac = SERVICES_PROOF_BROWSE_FRAC;
       const pile = proofPile(runway);
       const pileH = pile ? pile.offsetHeight : 0;
       if (pileH > 0) {
         proofPx = pileH + SERVICES_PROOF_RELEASE_VH * vh;
         browseFrac = clamp01(pileH / proofPx);
+        /* ⚠ THE OVERLAP COMES OUT OF THE OPENING, NEVER OUT OF `proofPx`
+           (ADR-096 U1). The runway's reserved height, the ring's domain and
+           the lockstep guard all key off the total; moving only where the
+           ramp starts inside it leaves every one of them byte-identical and
+           hands the release ~1980px instead of ~1080 to run over. */
+        releaseFrac = clamp01((pileH - SERVICES_PROOF_HANDOFF_OVERLAP_VH * vh) / proofPx);
         if (Math.abs(proofPx - currentProofRunwayPx) >= 1) {
           runway.style.setProperty("--svc-proof-runway", `${Math.round(proofPx)}px`);
           currentProofRunwayPx = proofPx;
@@ -526,7 +541,7 @@ export function useServicesStageScroll(
       // so every threshold below rides exactly the ramp it was tuned on.
       // Flags off ⇒ proofP is 1 ⇒ both saturate ⇒ unchanged.
       const browseP = browseFrac > 0 ? clamp01(proofP / browseFrac) : 1;
-      const releaseP = browseFrac < 1 ? clamp01((proofP - browseFrac) / (1 - browseFrac)) : 1;
+      const releaseP = releaseFrac < 1 ? clamp01((proofP - releaseFrac) / (1 - releaseFrac)) : 1;
 
       // Casefile arrival — the mark's centering clock, so the panels travel
       // in WITH it (see the constants block for the owner's supersession).
