@@ -757,6 +757,167 @@ frame width, the ≥15 inset, `recordBorderRight`, `arcs`/`headRails` 0;
 `type-material-tokens` at `{0,0,0}`, `theme-css-sweep`, `arc-portfolio-smoke`
 (the plate's byte-identity).
 
+## Update 11 — the first card materialises (2026-09-13, owner)
+
+> It would also be cool that, when you scroll into the proof section where you
+> see the big cards, we have a cool glitch effect where the first card appears.
+> The others can just scroll over it as it is now. From an experience point of
+> view it would be nice to have it appear in a glitch effect.
+
+Card 0 alone. Everything about the pile's mechanic, its geometry and the other
+three cards is untouched.
+
+**Three ways to spend it, and the owner picked the first.** (a) The card is
+ABSENT through its whole rise and is struck into existence in its last ~140px;
+(b) it still slides up as today and arrives mid-burst; (c) the burst fires only
+once it is fully pinned. (b) puts two motions on one object at once, and (c)
+leaves a reader who stops a few pixels short looking at nothing. **The cost of
+(a) is named: for most of its travel the first card is not there**, so what the
+reader watches on the approach is the corridor's own dissipate — which is the
+beat that runs there anyway, and the card then announces itself rather than
+drifting in.
+
+### The trigger is a CHANNEL, never `data-pc-state`
+
+`ProofStack` writes `data-pf-arrive` — `await` | `in` | `out` — on the SLOT,
+off the hook's own `--pc-enter`, with a hysteresis of **0.92 in / 0.82 out**.
+
+⚠ **`data-pc-state` HAS NO MEMORY OF DIRECTION.** A covered card returns to
+`pinned` the moment the card above it scrolls back down, so a state-keyed
+animation would re-fire the burst on a card that never left — four times on the
+way back up the pile. `--pc-enter` stays at 1 for the whole time slot 0 is
+covered, so a threshold on it fires exactly once per real arrival and re-arms
+only on a real departure. Measured: `out` at ratio 0.60 on the way back, `in`
+again on the way down, and **card 0 sitting `covered` at opacity 0.760** —
+which is the depth dim still reaching it, i.e. the proof that the burst ended
+on the cascade.
+
+⚠ **IT READS THE INLINE VALUE, NOT THE COMPUTED ONE.** `proof-stack.css`
+declares `--pc-enter: 1` on every slot as its SSR rest state, so a
+`getComputedStyle` read at mount says 1 for a card three viewports below the
+fold — it would fire the burst where nobody is looking and then never fire it
+again. The inline property is empty until the hook writes, which is also the
+event the observer is waiting for. (It is the cheaper read besides: no style
+resolution inside the hook's own frame.)
+
+⚠ **IT OBSERVES, IT DOES NOT LISTEN.** A `MutationObserver` on the slot's
+`style` attribute — the hook's writes are delta-gated at 1e-3, so it is silent
+at rest and runs inside the hook's existing rAF. This surface has ONE scroll
+reader and does not get a second.
+
+⚠ **A CARD ALREADY COVERED IS SEEDED SHOWN, SILENTLY.** On a reload deep in the
+pile slot 0 is `covered` with `--pc-enter` at 1; a burst there would fire on
+something nobody can see and leave it lit under three other cards.
+
+### The skin, and where its grammar comes from
+
+640ms, three animations on `.pf-card`, in the exact inverse of the pile's inert
+rung (`min-width: 961px` and `min-height: 681px` and
+`prefers-reduced-motion: no-preference`).
+
+- **`pf-glitch-bands`** (420ms, `steps(1, end)`) — band dropout as `clip-path`
+  combs: eighths, lit in a SHUFFLED rank ({2,5} → {0,2,5,7} → … → whole), which
+  is `themeGlitch`'s own law (a monotonic order reads as a wipe, and a wipe is
+  the one thing a glitch must not look like). **Band 0 carries the TR cut and
+  band 7 the BL**, so the silhouette is never square for a frame.
+  ⚠ **A COMB IS ONE POLYGON**: each lit band traced clockwise, bridged down the
+  left edge and closed back up it, where the bridges and the return are
+  collinear and enclose nothing — **non-zero winding, never `evenodd`**, which
+  would cancel them.
+  ⚠ **`clip-path`, NOT `mask`.** The chamfer is already a clip on this element;
+  the bands ride the same mechanism rather than introducing a second one over a
+  `backdrop-filter` whose behaviour under a mask is unverified.
+- **`pf-glitch-strike`** (640ms, linear) — the `#about` terminal power-on as
+  TIME rather than as scroll: strike to 0.62, drop out to 0.12, settle to 1,
+  with the house's self-cancelling 2.5px lateral tear. Verified against the
+  keyframes at five offsets (0.352 at 40ms, 0.353 at 140, 0.149 at 260, 1 at
+  420 — the curve, to three decimals).
+- **`pf-glitch-chroma`** (640ms, `steps(1, end)`) — the hologram's `vwhSettle`
+  chromatic split, resolving over the settle half only.
+  ⚠ **THE SPLIT CARRIES IT, NOT THE BRIGHTNESS.** The hologram's own peak is
+  1.5; at that value here the whole card washed olive, because **`filter`
+  applies to this element's rendered output, which INCLUDES its
+  `backdrop-filter`** — so lifting it lifts the blurred corridor behind the
+  glass and the frame reads as an exposure change rather than as the card
+  resolving. 1.16 with a wider (3px) offset keeps the event on the object.
+  Both frames were shot and compared.
+- **`pf-glitch-out`** (260ms) — shorter, because leaving is not an arrival
+  played backwards at the same length. It ends VISIBLE at opacity 0 and lets
+  the cascade's `hidden` take over, so nothing has to interpolate `visibility`.
+
+⚠ **EVERYTHING ANIMATES ON `.pf-card`, NEVER ON THE SLOT.** A `filter`,
+`opacity`, `clip-path` or `mask` on an ANCESTOR makes that ancestor the backdrop
+root and the card's `backdrop-filter` goes blind — the glass flashing flat for
+the length of the burst. And the hook reads the SLOT's rect: a transform there
+parks the whole pile.
+
+⚠ **THE LAST FRAME IS THE IDENTITY AND `fill-mode` IS `none`.** Every animation
+ends on exactly what the cascade already says at a pinned card — the card's own
+chamfer, opacity 1 through `--pc-in-plate`, zero translate, no filter — so
+removing the animation cannot pop. A `forwards` fill would pin `opacity: 1` over
+the depth dim and the card would refuse to recede under the three that cover it.
+The smoke pins the shape by STRING EQUALITY against card 1, which never glitches.
+
+⚠ **HIDDEN, NOT MERELY TRANSPARENT.** A transparent card still takes the clicks
+its rail and its buttons would, and removes nothing from the tab order.
+
+⚠ **THE THRESHOLD IS WHERE THE CARD IS ALREADY COMPOSED.** `--pc-enter` is
+already smoothstepped, so 0.92 is raw ratio ~0.83 — the last ~140px at 1440×900,
+by which point the plate, record and field windows have all saturated AND the
+`--pc-rise` translate has closed. The card materialises in place; only its
+sticky travel remains.
+
+### Opt-in, not a rule in the sheet
+
+`ProofStack` takes `arrival?: "glitch"` and `ServicesStage` passes it. There are
+exactly two call sites and the other one — `/trinny-london`, wherever that route
+currently lives — passes nothing, so the effect returns at its first line, no
+attribute is written and the selectors cannot match. ⚠ **The trinny smoke could
+NOT be run as the gate this time**: that route is mid-move in the shared tree
+(another session, `app/(marketing)/arcs/trinny-london/`), so the byte-identity
+proof here is the call site plus the prop's default. Re-run it once that move
+has landed.
+
+### Guards
+
+`settleArrival(page, idx)` waits on `getAnimations().finished`, and it is
+load-bearing rather than tidy: ⚠ **`seatProofCard` returns the moment the hook
+publishes `pinned`, and its retry wait is 450ms against a 640ms burst** — so
+every plate reading after it would sample the strike's own dropout (opacity
+0.12) on any pass but the first. That is a load-dependent flake that looks like
+a broken card rather than a race. The smoke then pins: `data-pf-arrive` is `in`
+and the animations are finished; the settled clip equals card 1's, with no
+residual translate and no residual filter; card 0 caught at 40 % of its travel
+is `visibility: hidden` at opacity 0; and it re-arms after a rewind. A separate
+reduced-motion case pins the slot static, `animation-name: none` and the card
+lit — ⚠ with an explicit `browser.newContext`, this file's own precedent, because
+`test.use({ reducedMotion })` inside a nested describe never reached the page
+(the slot came back `sticky`, i.e. the assertion was measuring nothing).
+
+**Calibrated, twice.** Disabling the media gate fails with
+`Received: "none"` against `/pf-glitch-bands/`; restoring the card's visibility
+during the rise fails with its own sentence, _"the first card is painting on its
+way up"_.
+
+### Looking at it
+
+`node scripts/capture-proof-stack.mjs --glitch 0,40,140,260,420,620` replays the
+burst on a PAUSED clock — the attribute is toggled to restart the animations,
+then each is paused and seeked — so the same frame comes back every run.
+⚠ **CANCEL BEFORE RESTARTING**: toggling the attribute alone does not replace a
+CSS animation the WAAPI has already paused, it ADDS one, and the count climbed
+3 → 6 → 9 → 12 across a five-frame strip while every computed value still looked
+correct.
+
+### Left open
+
+- The threshold pair (0.92 / 0.82), the band count (8) and the burst's length
+  (640ms) are dials; nothing measures whether the burst reads as fast or slow.
+- A scanline fleck across the bands (`themeGlitch` has one) was designed and not
+  shipped — one effect at a time until he has read this live.
+- Cards 2–4 are deliberately untouched, per the ask. If the pile should ever
+  read as one system, it is a new decision and not an extension of this one.
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,

@@ -395,6 +395,242 @@
   );
 }
 
+/* ── THE FIRST CARD MATERIALISES (ADR-097 U11) ───────────────────────
+   Owner, 2026-09-13: the first card should APPEAR in a glitch rather than
+   slide up and fade, "the others can just scroll over it as it is now". So
+   card 0 alone is held absent through its whole rise and struck into
+   existence in its last ~120–200px; scrolling back up strikes it out again.
+   `ProofStack` writes `data-pf-arrive` on the SLOT off the hook's own
+   `--pc-enter` (a channel, never `data-pc-state`, which has no memory of
+   direction); every pixel below is this sheet's.
+
+   ⚠ **GATED ON THE EXACT INVERSE OF THE INERT RUNG.** Where the pile is
+   static flow the hook parks every slot at `enter: 1` and there is no
+   arrival to strike — a card that hid itself there would simply be missing.
+
+   ⚠ **EVERYTHING ANIMATES ON `.pf-card`, NEVER ON THE SLOT.** A `filter`,
+   `opacity`, `clip-path` or `mask` on an ANCESTOR makes that ancestor the
+   backdrop root, and the card's `backdrop-filter` would go blind — the glass
+   flashing flat for the length of the burst. And the hook reads the SLOT's
+   rect: a transform there parks the whole pile (the sheet's own law).
+
+   ⚠ **THE GRAMMAR IS THE HOUSE'S, FROM THREE PLACES.** The opacity curve is
+   the `#about` terminal power-on (strike to .62, drop out to ~.12, settle to
+   1) with its self-cancelling 2.5px lateral tear; the band dropout and the
+   chromatic resolve are the Voidwalker hologram's `vwhReveal` / `vwhSettle`;
+   and the bands arrive in a SHUFFLED rank rather than top-to-bottom, which is
+   `themeGlitch`'s own law — a monotonic order reads as a wipe, and a wipe is
+   the one thing a glitch must not look like.
+
+   ⚠ **THE LAST FRAME IS THE IDENTITY, AND `fill-mode` IS `none`.** Every
+   animation ends on exactly what the cascade already says at a pinned card
+   (the card's own chamfer, opacity 1 through `--pc-in-plate`, zero translate,
+   no filter), so removing the animation cannot pop. A `forwards` fill would
+   pin `opacity: 1` over the depth dim and the card would refuse to recede
+   under the three that cover it.
+
+   ⚠ **`clip-path`, NOT `mask`.** The chamfer is already a clip on this
+   element — that is how the card is cut — so the bands ride the same
+   mechanism, and every frame carries the TR and BL cuts in its first and last
+   band rather than squaring the silhouette for 420ms. A comb is ONE polygon:
+   each lit band traced clockwise, bridged down the left edge and closed back
+   up it, where the bridges and the return are collinear and enclose nothing
+   (non-zero winding — never `evenodd` here, which would cancel them). */
+@media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  .pf-stack .pf-slot[data-pf-arrive="await"] .pf-card,
+  .pf-stack .pf-slot[data-pf-arrive="out"] .pf-card {
+    opacity: 0;
+    /* ⚠ HIDDEN, not merely transparent — a transparent card still takes the
+       clicks its rail and its buttons would. */
+    visibility: hidden;
+  }
+
+  .pf-stack .pf-slot[data-pf-arrive="in"] .pf-card {
+    animation:
+      pf-glitch-bands 420ms steps(1, end),
+      pf-glitch-strike 640ms linear,
+      pf-glitch-chroma 640ms steps(1, end);
+    animation-fill-mode: none;
+  }
+
+  .pf-stack .pf-slot[data-pf-arrive="out"] .pf-card {
+    animation:
+      pf-glitch-out 260ms steps(1, end),
+      pf-glitch-bands 260ms steps(1, end) reverse;
+    animation-fill-mode: none;
+  }
+}
+
+/* The band comb, shuffled: two thin bands, then four, then the runs merge
+   until the card is whole. Bands are eighths; band 0 carries the TR cut and
+   band 7 the BL, so the silhouette is never square. */
+@keyframes pf-glitch-bands {
+  0% {
+    clip-path: polygon(0 25%, 100% 25%, 100% 37.5%, 0 37.5%, 0 62.5%, 100% 62.5%, 100% 75%, 0 75%);
+  }
+  9% {
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--pf-card-ch)) 0,
+      100% var(--pf-card-ch),
+      100% 12.5%,
+      0 12.5%,
+      0 25%,
+      100% 25%,
+      100% 37.5%,
+      0 37.5%,
+      0 62.5%,
+      100% 62.5%,
+      100% 75%,
+      0 75%,
+      0 87.5%,
+      100% 87.5%,
+      100% 100%,
+      var(--pf-card-ch) 100%,
+      0 calc(100% - var(--pf-card-ch))
+    );
+  }
+  18% {
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--pf-card-ch)) 0,
+      100% var(--pf-card-ch),
+      100% 12.5%,
+      0 12.5%,
+      0 25%,
+      100% 25%,
+      100% 50%,
+      0 50%,
+      0 62.5%,
+      100% 62.5%,
+      100% 100%,
+      var(--pf-card-ch) 100%,
+      0 calc(100% - var(--pf-card-ch))
+    );
+  }
+  27% {
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--pf-card-ch)) 0,
+      100% var(--pf-card-ch),
+      100% 50%,
+      0 50%,
+      0 62.5%,
+      100% 62.5%,
+      100% 100%,
+      var(--pf-card-ch) 100%,
+      0 calc(100% - var(--pf-card-ch))
+    );
+  }
+  36%,
+  100% {
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--pf-card-ch)) 0,
+      100% var(--pf-card-ch),
+      100% 100%,
+      var(--pf-card-ch) 100%,
+      0 calc(100% - var(--pf-card-ch))
+    );
+  }
+}
+
+/* The power-on, and the tear that cancels itself. `--pc-in` has saturated by
+   the time this fires, so the cascade's own `translate` is already 0 — which
+   is what makes animating that property safe here and nowhere else in the
+   arrival. */
+@keyframes pf-glitch-strike {
+  0% {
+    opacity: 0;
+    translate: 2.5px 0;
+  }
+  11% {
+    opacity: 0.62;
+    translate: -2.5px 0;
+  }
+  16% {
+    opacity: 0.62;
+    translate: 2.5px 0;
+  }
+  27% {
+    opacity: 0.12;
+    translate: 0 0;
+  }
+  40% {
+    opacity: 0.12;
+    translate: 0 0;
+  }
+  59% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* The chromatic split resolving — the hologram's `vwhSettle` at this scale,
+   in the house gold rather than a second hue. It rides the SETTLE half only:
+   a split under a card that is still flickering is two effects at once.
+   ⚠ **THE SPLIT CARRIES IT, NOT THE BRIGHTNESS.** The hologram's own peak is
+   1.5, and at that value here the card washes olive — `filter` applies to this
+   element's rendered output, which INCLUDES its `backdrop-filter`, so lifting
+   it lifts the blurred corridor behind the glass and the frame reads as an
+   exposure change rather than as the card resolving. 1.16 with a wider offset
+   keeps the event on the object. */
+@keyframes pf-glitch-chroma {
+  0%,
+  58% {
+    filter: none;
+  }
+  59% {
+    filter: brightness(1.16) drop-shadow(3px 0 0 rgba(var(--gold-rgb), 0.6))
+      drop-shadow(-3px 0 0 rgba(var(--gold-rgb), 0.45));
+  }
+  70% {
+    filter: brightness(1.1) drop-shadow(1.5px 0 0 rgba(var(--gold-rgb), 0.4))
+      drop-shadow(-1.5px 0 0 rgba(var(--gold-rgb), 0.3));
+  }
+  82% {
+    filter: brightness(1.04) drop-shadow(0 0 8px rgba(var(--gold-rgb), 0.3));
+  }
+  100% {
+    filter: none;
+  }
+}
+
+/* The reverse, shorter — leaving is not an arrival played backwards at the
+   same length. It ends VISIBLE at opacity 0 and the cascade's `hidden` takes
+   over when the animation stops, so nothing has to interpolate `visibility`. */
+@keyframes pf-glitch-out {
+  0% {
+    opacity: 1;
+    visibility: visible;
+    translate: 0 0;
+  }
+  10% {
+    opacity: 0.62;
+    visibility: visible;
+    translate: -2.5px 0;
+  }
+  20% {
+    opacity: 0.9;
+    visibility: visible;
+    translate: 2.5px 0;
+  }
+  30% {
+    opacity: 0.3;
+    visibility: visible;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    visibility: visible;
+    translate: 0 0;
+  }
+}
+
 /* ⚠ THE HEAD IS CHROME, NOT THE CLAIM (owner, 2026-09-10). The client on
    the left, the project's beat of the ARC on the right, and the project's
    NAME down in the record column where it can wrap.

@@ -201,6 +201,33 @@ async function settleScroll(page: Page, capMs = 1600): Promise<void> {
   }, capMs);
 }
 
+/**
+ * Wait for proof card `idx`'s materialisation to finish (ADR-097 U11).
+ *
+ * ⚠ **A SCROLL SETTLE IS NOT A PAINT SETTLE.** `settleScroll` returns when the
+ * page has stopped moving, which is exactly when the burst STARTS; every plate
+ * reading taken after it would then be sampling the strike's own dropout. This
+ * waits on the animations themselves — `finished` resolves immediately for an
+ * already-finished one — and is a no-op on any surface that does not opt in
+ * (`/trinny-london` passes no `arrival`, so there are no animations to await).
+ */
+async function settleArrival(page: Page, idx: number, capMs = 3000): Promise<void> {
+  await page.evaluate(
+    async ({ i, cap }) => {
+      const card = document
+        .querySelector<HTMLElement>(`[data-pc-index="${i}"]`)
+        ?.querySelector<HTMLElement>(".pf-card");
+      if (!card) return;
+      const anims = card.getAnimations();
+      if (anims.length === 0) return;
+      await Promise.race([
+        Promise.all(anims.map((a) => a.finished.catch(() => undefined))),
+        new Promise((resolve) => window.setTimeout(resolve, cap)),
+      ]);
+    },
+    { i: idx, cap: capMs }
+  );
+}
 async function seatProofCard(page: Page, idx: number): Promise<string | null> {
   await page.waitForSelector(".pf-slot", { timeout: 20_000 });
   let state: string | null = null;
@@ -3511,6 +3538,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
        anchor here would mean a card is painting AND that an invisible click
        target is sitting over the proof. */
     expect(await seatProofCard(page, 0)).toBe("pinned");
+    await settleArrival(page, 0);
     const during = await page.evaluate(() => {
       const stage = document.querySelector<HTMLElement>(".services-stage");
       const card = document.querySelector<HTMLElement>('[data-pc-index="0"] .pf-card');
@@ -3529,6 +3557,121 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // The arrival channels are windowed off `--pc-enter`; seated, the record
     // is fully in. A 0 here is the ladder never releasing.
     expect(during.recordOpacity).toBeGreaterThan(0.95);
+
+    /* ── THE FIRST CARD MATERIALISES (ADR-097 U11) ─────────────────────
+       Owner, 2026-09-13: the first card should APPEAR in a glitch. It is held
+       absent through its whole rise and struck in over 640ms in the last
+       ~140px, so three things are pinned: that it is genuinely ABSENT
+       mid-rise, that the burst ENDS ON THE CASCADE (the identity frame —
+       `fill-mode: none`, and a `forwards` fill would pin opacity 1 over the
+       depth dim), and that it re-arms on the way back up.
+
+       ⚠ **THE READS BELOW MUST WAIT FOR THE ANIMATIONS, NOT FOR A TIMEOUT.**
+       `seatProofCard` returns the moment the hook publishes `pinned`, and its
+       retry wait is 450ms against a 640ms burst — so the plate reads that
+       follow would catch the strike's own dropout (opacity 0.12) on any pass
+       but the first. That is a load-dependent flake, and it would look like a
+       broken card rather than a race. (The call is above, before the plate
+       reads — it is what makes those trustworthy too.) */
+    const glitch = await page.evaluate(() => {
+      const slot = document.querySelector<HTMLElement>('[data-pc-index="0"]');
+      const card = slot?.querySelector<HTMLElement>(".pf-card");
+      const sibling = document.querySelector<HTMLElement>('[data-pc-index="1"] .pf-card');
+      if (!slot || !card || !sibling) return null;
+      const cs = getComputedStyle(card);
+      return {
+        arrive: slot.getAttribute("data-pf-arrive"),
+        visibility: cs.visibility,
+        animationName: cs.animationName,
+        running: card.getAnimations().filter((a) => a.playState === "running").length,
+        clip: cs.clipPath,
+        siblingClip: getComputedStyle(sibling).clipPath,
+        translate: cs.translate,
+        filter: cs.filter,
+      };
+    });
+    expect(glitch, "card 0 never mounted").not.toBeNull();
+    expect(glitch!.arrive, "the homepage never opted the first card in").toBe("in");
+    expect(glitch!.visibility).toBe("visible");
+    expect(glitch!.animationName).toMatch(/pf-glitch-bands/);
+    expect(glitch!.running, "the burst is still running after its own finish").toBe(0);
+    /* THE IDENTITY FRAME, pinned against the card that never glitched: a
+       settled card 0 must be cut exactly like card 1, carry no residual tear
+       and no residual filter. */
+    expect(glitch!.clip, "the burst left the first card a different shape").toBe(
+      glitch!.siblingClip
+    );
+    expect(glitch!.translate).toMatch(/^(none|0px( 0px)?)$/);
+    expect(glitch!.filter, "the chromatic split never resolved").toBe("none");
+
+    /* ── …AND IT IS ABSENT UNTIL IT DOES (ADR-097 U11) ─────────────────
+       The half of the ruling a settled read cannot see. Card 0 is solved to
+       40 % of its own travel — the same arithmetic the plate-fade probe uses
+       on card 1 one block down, where that card is EXPECTED to be painting —
+       and here it must be nothing at all. ⚠ `visibility`, not just opacity: a
+       transparent card still takes the clicks its rail and its buttons would.
+       ⚠ Rewind above the pile first, or `offsetTop` reports a stuck position. */
+    let mid0 = { enter: 1, visibility: "visible", opacity: "1", arrive: "in" };
+    for (let pass = 0; pass < 5; pass += 1) {
+      await page.evaluate(() => {
+        const rw = document.querySelector<HTMLElement>(".services-stage-root")!;
+        window.scrollTo(
+          0,
+          Math.max(
+            0,
+            Math.round(rw.getBoundingClientRect().top + window.scrollY - window.innerHeight)
+          )
+        );
+      });
+      await settleScroll(page);
+      await page.evaluate(() => {
+        const rw = document.querySelector<HTMLElement>(".services-stage-root")!;
+        const slot = document.querySelectorAll<HTMLElement>(".pf-slot")[0];
+        const top = Number.parseFloat(getComputedStyle(slot).top);
+        const vh = window.innerHeight;
+        const y =
+          rw.getBoundingClientRect().top +
+          window.scrollY +
+          slot.offsetTop -
+          (vh - 0.4 * (vh - top));
+        window.scrollTo(0, Math.round(y));
+      });
+      await settleScroll(page);
+      await page.waitForTimeout(pass === 0 ? 700 : 400);
+      mid0 = await page.evaluate(() => {
+        const slot = document.querySelectorAll<HTMLElement>(".pf-slot")[0];
+        const cs = getComputedStyle(slot.querySelector<HTMLElement>(".pf-card")!);
+        return {
+          enter: Number(getComputedStyle(slot).getPropertyValue("--pc-enter")),
+          visibility: cs.visibility,
+          opacity: cs.opacity,
+          arrive: slot.getAttribute("data-pf-arrive") ?? "",
+        };
+      });
+      if (mid0.enter > 0.25 && mid0.enter < 0.6) break;
+    }
+    expect(mid0.enter, "card 0 was not caught mid-rise").toBeGreaterThan(0.25);
+    expect(mid0.enter, "card 0 was not caught mid-rise").toBeLessThan(0.6);
+    expect(
+      mid0.visibility,
+      "the first card is painting on its way up — it must be absent until it materialises (ADR-097 U11)"
+    ).toBe("hidden");
+    expect(Number(mid0.opacity)).toBe(0);
+    expect(["await", "out"]).toContain(mid0.arrive);
+
+    /* …and the burst re-arms. Coming back down is a real departure, so the
+       card strikes OUT — which is also the proof that the trigger is the
+       hook's CHANNEL and not `data-pc-state`, an attribute that returns to
+       `pinned` whenever the card above scrolls back off it. */
+    expect(await seatProofCard(page, 0)).toBe("pinned");
+    await settleArrival(page, 0);
+    const rearmed = await page.evaluate(() => {
+      const slot = document.querySelectorAll<HTMLElement>(".pf-slot")[0];
+      const cs = getComputedStyle(slot.querySelector<HTMLElement>(".pf-card")!);
+      return { arrive: slot.getAttribute("data-pf-arrive"), visibility: cs.visibility };
+    });
+    expect(rearmed.arrive, "the first card never materialised a second time").toBe("in");
+    expect(rearmed.visibility).toBe("visible");
 
     /* ── THE PLATE FADES IN (ADR-097) ───────────────────────────────────
        Card 1 caught MID-ARRIVAL: raw ratio .4 on the hook's own travel
@@ -4248,6 +4391,57 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     });
     expect(after.contentIn, "the offer never assembled after the pile").toBeGreaterThan(0.9);
     expect(after.mastheadOpacity).toBeGreaterThan(0.9);
+  });
+
+  /* ── AND UNDER REDUCED MOTION IT SIMPLY STANDS THERE (ADR-097 U11) ────
+     The glitch is gated on the exact inverse of the pile's inert rung, where
+     the hook parks every slot at `enter: 1` and there is no arrival to strike.
+     ⚠ The ATTRIBUTE is still written there — it is a state, not a switch — so
+     what this pins is that the SHEET does not reach it. A rule that leaked
+     past the gate would leave the first card permanently hidden on the one
+     path that has no way to reveal it.
+     ⚠ An explicit CONTEXT, not `test.use({ reducedMotion })` — this file's own
+     precedent one test up, and the `use` form does not take inside a nested
+     describe here (the slot came back `sticky`, i.e. the emulation never
+     reached the page and the assertion was measuring nothing). */
+  test("prm: the first card stands lit and never glitches (ADR-097 U11)", async ({ browser }) => {
+    test.skip(!SERVICES_PROOF_STACK, "the proof stack is off");
+    const context = await browser.newContext({
+      reducedMotion: "reduce",
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto("/", { waitUntil: "domcontentloaded" });
+      await page.waitForSelector(".pf-slot", { timeout: 20_000 });
+      await page.evaluate(() =>
+        document.querySelectorAll(".pf-slot")[0]?.scrollIntoView({ block: "center" })
+      );
+      await page.waitForTimeout(600);
+      const prm = await page.evaluate(() => {
+        const slot = document.querySelectorAll<HTMLElement>(".pf-slot")[0];
+        const card = slot?.querySelector<HTMLElement>(".pf-card");
+        if (!slot || !card) return null;
+        const cs = getComputedStyle(card);
+        return {
+          prefersReduced: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+          slotPosition: getComputedStyle(slot).position,
+          animationName: cs.animationName,
+          visibility: cs.visibility,
+          opacity: cs.opacity,
+          anims: card.getAnimations().length,
+        };
+      });
+      expect(prm, "card 0 never mounted under reduced motion").not.toBeNull();
+      expect(prm!.prefersReduced, "the emulation never reached the page").toBe(true);
+      expect(prm!.slotPosition, "the pile is not inert under reduced motion").toBe("static");
+      expect(prm!.animationName, "the glitch leaked past its gate").toBe("none");
+      expect(prm!.anims).toBe(0);
+      expect(prm!.visibility).toBe("visible");
+      expect(Number(prm!.opacity)).toBe(1);
+    } finally {
+      await context.close();
+    }
   });
 
   test("light: the stack's instruments carry their contrast (ADR-063 U2 · ADR-068)", async ({

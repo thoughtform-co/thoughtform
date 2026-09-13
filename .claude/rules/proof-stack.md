@@ -1,7 +1,7 @@
 ---
 paths:
   - "components/landing/home-v2/services/proof-stack/**"
-  - "app/(marketing)/trinny-london/proof/**"
+  - "app/(marketing)/arcs/trinny-london/proposal/proof/**"
   - "components/landing/home-v2/services/ServicesStage.tsx"
   - "components/landing/home-v2/hooks/useServicesStageScroll.ts"
   - "scripts/capture-proof-stack.mjs"
@@ -11,7 +11,7 @@ description: The proof card and its scroll-stacked pile — the site's evidence 
 # Rule: the proof stack
 
 Four projects from one casefile as a scroll-stacked pile of cards. Built for
-`/trinny-london` (ADR-094) and promoted to the homepage's evidence beat in the
+`/arcs/trinny-london/proposal` (ADR-094) and promoted to the homepage's evidence beat in the
 casefile's place (ADR-096). **One module, one sheet, two hosts.**
 
 **Read first**
@@ -160,11 +160,53 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
 - ⚠ **`.pf-card` IS A CONTAINING BLOCK FOR `fixed` DESCENDANTS** (it carries a
   `clip-path`). Survivable only because `MediaLightbox` portals to
   `document.body`; a dialog written inline here is trapped in the card.
-- **`ProofStack` is a named AND default export.** `/trinny-london` mounts it
+- **`ProofStack` is a named AND default export.** `/arcs/trinny-london/proposal` mounts it
   through `lazy()`; the homepage imports it into `ServicesStage`.
 
 ## The folder (ADR-097, live on both hosts)
 
+- ⚠ **THE FIRST CARD MATERIALISES, AND ONLY THE FIRST** (ADR-097 U11, owner:
+  _"a cool glitch effect where the first card appears — the others can just
+  scroll over it as it is now"_). Card 0 is ABSENT through its whole rise and
+  struck in over 640ms in its last ~140px; scrolling back up strikes it out.
+  Five things about it, each of which was a defect first:
+  ⚠ **THE TRIGGER IS THE CHANNEL, NOT `data-pc-state`.** That attribute returns
+  to `pinned` whenever the card above scrolls back off a covered slot, so a
+  state-keyed burst re-fires on a card that never left — four times on the way
+  back up. `--pc-enter` stays at 1 while covered, so a hysteresis on it
+  (0.92 in / 0.82 out) fires once per real arrival.
+  ⚠ **READ THE INLINE VALUE, NOT THE COMPUTED ONE.** The sheet declares
+  `--pc-enter: 1` as the SSR rest state, so a computed read at mount says 1 for
+  a card three viewports below the fold. The inline property is empty until the
+  hook writes — which is the event the `MutationObserver` (on `style`, the
+  hook's own delta-gated writes) is waiting for. No second scroll listener.
+  ⚠ **EVERYTHING ANIMATES ON `.pf-card`, NEVER ON THE SLOT.** A `filter`,
+  `opacity`, `clip-path` or `mask` on an ANCESTOR makes it the backdrop root and
+  the card's `backdrop-filter` goes blind for the length of the burst; and a
+  transform on the slot parks the whole pile.
+  ⚠ **THE LAST FRAME IS THE CASCADE AND `fill-mode` IS `none`** — the card's own
+  chamfer, opacity 1, zero translate, no filter. A `forwards` fill pins
+  `opacity: 1` over the depth dim and the card refuses to recede under the three
+  that cover it. The smoke pins the shape by string equality against card 1.
+  ⚠ **`filter` REACHES THE BACKDROP.** `brightness` on this element lifts the
+  blurred corridor behind the glass, so the hologram's own 1.5 peak washed the
+  card olive and read as an exposure change; 1.16 with a wider split keeps the
+  event on the object.
+  ⚠ **IT IS A PROP, NOT A RULE IN THE SHEET** — `arrival="glitch"`, passed by
+  `ServicesStage` alone. The other host passes nothing and is byte-identical:
+  the effect returns at its first line and the selectors cannot match. Gated in
+  CSS on the exact inverse of the inert rung, where the hook parks every slot at
+  `enter: 1` and there is no arrival to strike.
+  ⚠ **A HARNESS MUST WAIT ON THE ANIMATIONS, NOT ON A TIMEOUT** —
+  `seatProofCard` returns when the hook publishes `pinned` and its retry wait is
+  450ms against a 640ms burst, so a plate read after it samples the strike's
+  DROPOUT (opacity 0.12) on any pass but the first. `settleArrival` awaits
+  `getAnimations().finished`.
+  ⚠ **Looking at it:** `node scripts/capture-proof-stack.mjs --glitch
+0,40,140,260,420,620` replays it on a paused clock. **Cancel the animations
+  before restarting** — toggling the attribute alone ADDS a CSS animation the
+  WAAPI has paused rather than replacing it (3 → 6 → 9 → 12 across one strip,
+  with every computed value still looking right).
 - **THE HEAD ROW IS THE CLIENT'S BAND, AND THE SILHOUETTE IS THE PLAIN TR+BL
   HOUSING** (U1, owner, on the live read: _"having the gradient only on the
   left … doesn't really work. I want the full top row to have that gradient,

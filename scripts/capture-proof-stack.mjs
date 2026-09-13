@@ -37,6 +37,12 @@ const PERF = args.includes("--perf");
 /* `--handoff` walks the LAST card off the screen and reports the ring against
    its bottom edge — the beat ADR-096 U3 solves for. */
 const HANDOFF = args.includes("--handoff");
+/* `--glitch 60,300,600` shoots the first card's materialisation (ADR-097 U11)
+   on a PAUSED clock, one still per millisecond offset. */
+const GLITCH = (argOf("--glitch", "") || "")
+  .split(",")
+  .map(Number)
+  .filter((n) => Number.isFinite(n));
 
 await mkdir(OUT, { recursive: true });
 
@@ -281,6 +287,71 @@ try {
      `--svc-content-in` / published hit anchors against the card's own bottom
      edge. ⚠ Runway-relative scroll throughout: the corridor inflates the
      document, so an absolute `y` means nothing between runs. */
+  /* ── `--glitch`: the first card's materialisation, on a PAUSED clock ──
+     (ADR-097 U11.) The burst is 640ms and a Playwright round trip is 400–900,
+     so "shoot it mid-flight" is post-hoc fiction (ADR-071's own finding). It
+     is REPLAYED instead: the attribute is toggled off and on to restart the
+     animations, then every one of them is paused and seeked to the same
+     `currentTime`. Deterministic, and the same frame comes back every run. */
+  if (GLITCH.length) {
+    for (let pass = 0; pass < 4; pass += 1) {
+      await page.evaluate(
+        ({ off, top, h }) => {
+          const rw = document.querySelector(".services-stage-root");
+          const y = rw.getBoundingClientRect().top + window.scrollY + off - top + h * 0.35;
+          window.scrollTo(0, Math.round(y));
+        },
+        { off: geo.slots[0].offset, top: geo.slots[0].top, h: geo.slots[0].height }
+      );
+      await page.waitForTimeout(pass === 0 ? 900 : 450);
+      const seated = await page.evaluate(
+        () => document.querySelectorAll(".pf-slot")[0]?.getAttribute("data-pc-state") === "pinned"
+      );
+      if (seated) break;
+    }
+    const armed = await page.evaluate(() =>
+      document.querySelectorAll(".pf-slot")[0]?.getAttribute("data-pf-arrive")
+    );
+    console.log(`\n── the glitch @ ${tag} ──────────────────────────────`);
+    console.log(`  card 0 data-pf-arrive = ${armed}`);
+    for (const ms of GLITCH) {
+      const frame = await page.evaluate((t) => {
+        const slot = document.querySelectorAll(".pf-slot")[0];
+        const card = slot.querySelector(".pf-card");
+        /* ⚠ CANCEL BEFORE RESTARTING. Toggling the attribute alone does not
+           replace a CSS animation the WAAPI has already paused — it ADDS one,
+           and the count climbed 3 → 6 → 9 across a five-frame strip while every
+           computed value still looked right. */
+        for (const a of card.getAnimations()) a.cancel();
+        slot.dataset.pfArrive = "await";
+        void card.offsetWidth; // restart, not resume
+        slot.dataset.pfArrive = "in";
+        const anims = card.getAnimations();
+        for (const a of anims) {
+          a.pause();
+          a.currentTime = t;
+        }
+        const cs = getComputedStyle(card);
+        return {
+          anims: anims.length,
+          opacity: cs.opacity,
+          clip: cs.clipPath.slice(0, 46),
+          filter: cs.filter === "none" ? "none" : cs.filter.slice(0, 38),
+          translate: cs.translate,
+        };
+      }, ms);
+      console.log(`  ${String(ms).padStart(4)}ms  ${JSON.stringify(frame)}`);
+      await page.screenshot({
+        path: `${OUT}/proof-glitch-${String(ms).padStart(4, "0")}ms-${tag}.png`,
+      });
+    }
+    /* Hand the card back its own clock, or every still after this is frozen. */
+    await page.evaluate(() => {
+      const card = document.querySelectorAll(".pf-slot")[0].querySelector(".pf-card");
+      for (const a of card.getAnimations()) a.finish();
+    });
+  }
+
   if (HANDOFF) {
     const ex = await page.evaluate(() => {
       const pile = document.querySelector(".services-stage-root > .pf-stack");

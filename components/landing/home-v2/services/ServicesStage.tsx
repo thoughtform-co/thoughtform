@@ -225,7 +225,12 @@ export function ServicesStage() {
           proof reads above the offer accordion, which is where the casefile
           sat for the same reason. */}
       {SERVICES_PROOF_STACK && (
-        <ProofStack tracks={proofStackTracks()} client={proofStackClient()} />
+        /* `arrival` is this route's OPT-IN to the first card materialising
+           (ADR-097 U11, owner: a glitch where the first card appears). It is a
+           prop rather than a rule in the sheet because `/trinny-london` mounts
+           the same component and must stay byte-identical — omitted, nothing is
+           observed and no attribute is written. */
+        <ProofStack tracks={proofStackTracks()} client={proofStackClient()} arrival="glitch" />
       )}
 
       <div
