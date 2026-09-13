@@ -16,6 +16,13 @@ import "@/components/landing/home-v2/services/casefile/casefile.css";
 import "@/components/landing/home-v2/services/casefile/console/console.css";
 import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 import "@/components/landing/home-v2/services/proof-stack/proof-stack.css";
+// The arcs' sheet (ADR-094 U9): the offer after the configuration is the
+// arcs' own section components inside an `.arc-root`, and this is their
+// grammar and their light re-derivation. Every rule in it is `.arc-*`-scoped
+// but three, none of which this page can match (`#rollout`,
+// `html[data-arc-entry]`, and the theme-lock switch rule this route already
+// carries). Before the route sheet, so the route can still overrule it.
+import "@/components/arcs/arcs.css";
 // about-stage.css / continuum-stage.css / voidwalker/*.css are deliberately
 // NOT imported: this page mounts no pinned stage (ADR-053 — #about is the
 // static voidwalker here, #continuum and #voidwalker are removed).

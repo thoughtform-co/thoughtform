@@ -913,6 +913,117 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   color: var(--arc-ink-70);
 }
 
+/* ── Ledger (ADR-098 U2) ───────────────────────────────────────────
+   `ledger` on a cards section — the deck's fee table: one row per card
+   (kicker | body | title) under the authored head row, the LAST card the
+   total on the plate ground, the tips BESIDE it as bordered cards with a
+   gold left rule (the deck's own composition). ADR-098 rejected a
+   `pricing` KIND and this keeps that ruling: the same four records, drawn
+   as the table they were on the deck. The grid branch is byte-identical. */
+.arc-ledger {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: clamp(24px, 3vw, 40px);
+  align-items: start;
+}
+.arc-ledger__table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-plate);
+}
+.arc-ledger__table th,
+.arc-ledger__table td {
+  padding: clamp(12px, 1.6vh, 18px) clamp(16px, 1.4vw, 22px);
+  text-align: left;
+  vertical-align: baseline;
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-ledger__table thead th {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+  border-bottom: 1px solid var(--arc-seam);
+}
+.arc-ledger__table .arc-ledger__fee {
+  text-align: right;
+  white-space: nowrap;
+}
+.arc-ledger__phase {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 12px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-90);
+  white-space: nowrap;
+}
+.arc-ledger__what {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--arc-ink-70);
+}
+.arc-ledger__table td.arc-ledger__fee {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: 16px;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink);
+}
+/* The total row: a region of its own, so a seam above it and no rule
+   beneath (the table's border closes it), on a step of the ground. */
+.arc-ledger__total th,
+.arc-ledger__total td {
+  border-top: 1px solid var(--arc-seam);
+  border-bottom: 0;
+  background: rgba(var(--dawn-rgb), 0.05);
+}
+.arc-ledger__total .arc-ledger__what {
+  font-size: 14px;
+  color: var(--arc-ink-50);
+}
+.arc-ledger__tips {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.arc-ledger__tip {
+  padding: clamp(14px, 1.6vh, 18px) clamp(16px, 1.4vw, 22px);
+  border: 1px solid var(--arc-edge);
+  border-left: 2px solid var(--gold-line, #caa554);
+  background: var(--arc-plate);
+}
+.arc-ledger__tip-tag {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}
+.arc-ledger__tip-body {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--arc-ink-70);
+}
+@media (max-width: 900px) {
+  .arc-ledger {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── List groups ───────────────────────────────────────────────────── */
 .arc-groups {
   display: grid;
@@ -1006,6 +1117,135 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   font-size: 14px;
   line-height: 1.5;
   color: var(--arc-ink-60);
+}
+
+/* ── Plates (ADR-098 U2) ───────────────────────────────────────────
+   `layout: "plates"` — the deck's plan table. Each group is a bordered
+   PLATE: a head band (mono kicker over the name), one ruled row per item,
+   and the outcome as an INVERSE band at the floor. The deck draws it on a
+   12px-radius card with a soft ground; this is the same STRUCTURE in the
+   house material — square (ADR-065), --arc-edge on --arc-plate, --arc-seam
+   dividing the head from the rows (the region weight) and --arc-rule within
+   (ADR-089 U2's law, as the dossier housing carries it). The `columns`
+   layout above is untouched: three naked columns of dashed rows is what the
+   owner read as chaotic on the proposal's three modules (2026-09-13), and
+   the difference is exactly the borders and dividers this block adds.
+   ⚠ The foot is `--arc-ink` under `--void` — the pair ADR-058 swaps — so it
+   is a dark band on parchment in light and a dawn band on void in dark
+   without a theme rule; both are walked in the smoke. */
+.arc-groups--plates {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(18px, 2vw, 28px);
+  align-items: stretch;
+}
+.arc-plate {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-plate);
+}
+.arc-plate__head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: clamp(14px, 1.6vh, 18px) clamp(16px, 1.4vw, 22px) clamp(12px, 1.4vh, 16px);
+  border-bottom: 1px solid var(--arc-seam);
+  background: linear-gradient(172deg, var(--arc-sheen) 0%, rgba(var(--dawn-rgb), 0) 55%);
+}
+.arc-plate__kicker {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+/* The leading plate's kicker is gold, as the leading group's label is in
+   the other layouts — and it is READ, so it takes the ink rung (ADR-078). */
+.arc-plate__kicker[data-lead] {
+  color: var(--gold-ink, #caa554);
+}
+.arc-plate__name {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: clamp(15px, 1.05vw, 17px);
+  line-height: 1.3;
+  letter-spacing: var(--track-display);
+  color: var(--arc-ink-90);
+}
+.arc-plate__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+/* Rows share the plate's slack equally, so three plates whose weeks run
+   to different lengths still land their foot on one line. */
+.arc-plate__row {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: clamp(11px, 1.4vh, 15px) clamp(16px, 1.4vw, 22px);
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-plate__tag {
+  margin-bottom: 3px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-plate__line {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--arc-ink-70);
+}
+.arc-plate__line a {
+  color: inherit;
+  text-decoration: underline dotted rgba(202, 165, 84, 0.5);
+  text-underline-offset: 4px;
+}
+.arc-plate__meta {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+}
+.arc-plate__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: clamp(11px, 1.4vh, 14px) clamp(16px, 1.4vw, 22px);
+  background: var(--arc-ink);
+  color: var(--void, #0a0908);
+}
+.arc-plate__foot-label {
+  margin-bottom: 2px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: rgba(var(--void-rgb, 10, 9, 8), 0.62);
+}
+.arc-plate__foot-line {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  font-size: 13.5px;
+  line-height: 1.4;
+  letter-spacing: var(--track-display);
 }
 
 /* ── Anatomy rows ──────────────────────────────────────────────────── */
@@ -1411,7 +1651,8 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   .arc-cards {
     grid-template-columns: 1fr;
   }
-  .arc-groups--columns {
+  .arc-groups--columns,
+  .arc-groups--plates {
     grid-template-columns: 1fr;
   }
 }

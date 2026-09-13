@@ -580,18 +580,34 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
 }
 
 /* ── 9. The ambient's kill edge ───────────────────────────────────────
-   The first OPAQUE station below the corridor — `#contact` since ADR-095 U5
-   made `#proposition` transparent so the mark could fade BEHIND the record
-   rather than die at its top edge. The hook fades the canvas against ITS
-   top and this rule promotes the SAME element while the exit band is live:
-   the `#voidwalker` form (relative, z 6, its own ground), never the
-   transparent `#services` form. Keying both sides on one attribute is what
-   stops JS and CSS naming different stations (the ADR-030 §6 seam bug), and
-   it is why moving the edge is an attribute move and nothing else. */
+   The first OPAQUE station below the corridor — `#offer` since ADR-094 U9
+   appended the proposal's beats after the configuration (it was `#contact`
+   from ADR-095 U5, which made `#proposition` transparent so the mark could
+   fade BEHIND the record rather than die at its top edge). The hook fades
+   the canvas against ITS top and this rule promotes the SAME element while
+   the exit band is live: the `#voidwalker` form (relative, z 6, its own
+   ground), never the transparent `#services` form. Keying both sides on one
+   attribute is what stops JS and CSS naming different stations (the ADR-030
+   §6 seam bug), and it is why moving the edge is an attribute move and
+   nothing else. */
 html[data-corridor-exit="true"] .tl-root [data-corridor-kill] {
   position: relative;
   z-index: 6;
   content-visibility: visible;
+}
+
+/* ── 9b. The offer station (ADR-094 U9) ──────────────────────────────
+   The proposal's beats after the configuration, rendered by the arcs'
+   components inside an `.arc-root` (`offer/TrinnyOffer.tsx`). The station's
+   base is a centred flex column carrying the landing's asymmetric padding —
+   right for one titled block, wrong for seven viewport beats that bring
+   their own rhythm (`.arc-sec`) — so it is a plain block with no padding.
+   The stars bed under it never shows: every `.arc-section` paints its own
+   opaque void, and they tile the station edge to edge. That ground is the
+   kill edge's ground (§9). */
+.tl-root .tl-offer {
+  display: block;
+  padding: 0;
 }
 
 /* ⚠ AND `#proposition` TAKES THE TURN'S FORM INSTEAD (U5) — transparent

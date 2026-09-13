@@ -45,12 +45,19 @@ import { TURN_CAPABLE_QUERY, trinnyMorphSpec, useTurnScroll } from "./turn/useTu
  */
 
 const ProofStack = lazy(() => import("./proof/ProofStack"));
+/* The offer (ADR-094 U9): the proposal's beats after the configuration,
+   rendered by the arcs' own components into `[data-tl-offer-root]` inside
+   `#offer`. Lazy for the same reason the stack is — the arcs' section
+   components and their sheet are off this route's first paint. */
+const TrinnyOffer = lazy(() => import("./offer/TrinnyOffer"));
 
 const RING_ATTR = "data-services-ring";
 
 export function TrinnyPortals() {
   const rootRef = useRef<Root | null>(null);
   const timerRef = useRef<number | null>(null);
+  const offerRootRef = useRef<Root | null>(null);
+  const offerTimerRef = useRef<number | null>(null);
 
   useLayoutEffect(() => {
     const html = document.documentElement;
@@ -97,6 +104,42 @@ export function TrinnyPortals() {
           rootRef.current = null;
         }
         timerRef.current = null;
+      }, 0);
+    };
+  }, []);
+
+  // The offer's root (ADR-094 U9) — the proof stack's lifecycle, verbatim,
+  // on the second slot the fork declares. A second root rather than a
+  // second child of the first: the two slots are two stations apart, and
+  // a portal cannot span from one into the other.
+  useEffect(() => {
+    if (offerTimerRef.current != null) {
+      window.clearTimeout(offerTimerRef.current);
+      offerTimerRef.current = null;
+    }
+
+    const slot = document.querySelector<HTMLElement>(".tl-root [data-tl-offer-root]");
+    if (!slot) return;
+
+    let root = offerRootRef.current;
+    if (!root) {
+      root = createRoot(slot);
+      offerRootRef.current = root;
+    }
+    root.render(
+      <Suspense fallback={null}>
+        <TrinnyOffer />
+      </Suspense>
+    );
+
+    return () => {
+      const r = offerRootRef.current;
+      offerTimerRef.current = window.setTimeout(() => {
+        if (offerRootRef.current === r) {
+          r?.unmount();
+          offerRootRef.current = null;
+        }
+        offerTimerRef.current = null;
       }, 0);
     };
   }, []);

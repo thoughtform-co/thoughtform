@@ -564,6 +564,48 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
 - **`mobile-section-seams.spec.ts` is `/`-only** — the trinny stations are not in
   its `STATION_IDS`; phones are covered by the capture script.
 
+## The offer (ADR-094 U9)
+
+The proposal's beats after the configuration — phases · loop · needs and keeps
+· the fee · the people · next steps · appendix — APPENDED to this page (owner,
+2026-09-13, over an arc handoff), rendered by the ARCS' OWN COMPONENTS.
+
+- ⚠ **`#offer` IS A STATION WHOSE ONLY CHILD IS A SLOT.** `[data-tl-offer-root]`
+  is mounted by `TrinnyPortals` through a second nested root (the proof
+  stack's lifecycle verbatim) with `offer/TrinnyOffer.tsx`: an `.arc-root`
+  around `ArcListGroups` / `ArcCards` over `offer/offerSections.ts`. The record
+  is that module, never the prototype — a second hand-written copy of every
+  proposal section is the fork ADR-098 argued against, and the plates and the
+  ledger (ADR-098 U2) land here and on `/arcs/suri-proposal` from ONE renderer.
+- ⚠ **THE KILL EDGE IS `#offer` NOW** — the first opaque station below the
+  corridor (the `.station` base paints the ground; every arc beat paints its
+  own void). `#contact` gave it up; the parse guard pins both ends and the
+  count. §9's cover rule is keyed on the attribute, so nothing in CSS moved.
+- ⚠ **`arcs.css` IS IMPORTED BY THIS ROUTE**, before `trinny-london.css` and
+  `theme.css`. Audited: every rule is `.arc-*`-scoped but `#rollout`,
+  `html[data-arc-entry]` and the theme-lock switch rule, none of which this
+  page can match differently. Its light re-derivation reaches the offer
+  through `.arc-root` — the plates' foot is a DARK band on parchment here, and
+  the smoke reads that off the computed colours.
+- ⚠ **NOT `ArcSectionRenderer`, NOT `ArcShell`.** The renderer statically
+  imports every kind incl. the dossier console and the holo program's three.js
+  mount; the shell injects chrome this page already has. `TrinnyOffer` is a
+  page-local switch over `list-groups` and `cards` plus the reveal opt-in
+  (class and observer together) — `trinny-offer.test.ts` fails a beat authored
+  in any other kind, which would otherwise vanish silently.
+- **The journey**: `offer` is in `TRINNY_JOURNEY_ORDER`; the Proposal mark
+  RANGES over `proposition` + `offer` (the Arc's device); the sector reads
+  05/06 on it (rows are stations, the range is the mark's); the drawer has
+  `04 · The offer`. The station's `display: block; padding: 0` is §9b — the
+  landing's centred flex station is wrong for seven viewport beats.
+- ⚠ **THE COPY IS SURI'S, NOUN-SWAPPED, BY THE OWNER'S OWN INSTRUCTION** —
+  "I can change the contents later". `trinny-offer.test.ts` walks it with
+  `PROPOSAL_COPY_BANS` and fails on any `Suri` / `Kate` / `Mark` / `Nick`.
+- **Capture**: stops `21-offer-phases` and `22-offer-pricing`, rolled to TWICE
+  (the arcs' reveal is an IntersectionObserver with a -10 % dead band). ⚠ The
+  seam from the pinned proposition into the offer is NOT a stop — shoot it by
+  hand (`topOf("offer") − 0.45·vh`) after touching either station.
+
 ## The turn (ADR-095)
 
 - ⚠ **`#turn` IS TRANSPARENT AND CARRIES NO KILL.** The canvas must live through

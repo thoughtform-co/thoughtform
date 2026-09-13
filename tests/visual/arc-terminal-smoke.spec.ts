@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 
+import { CLIENTS } from "@/lib/arcs/clients";
 import { ARCS } from "@/lib/arcs/registry";
 
 import { beatState, driveTo, parkBeat, prepare } from "./helpers/arcTerminal";
@@ -340,8 +341,10 @@ test.describe("arc terminal motion (ADR-057)", () => {
        `5` — two v1 decks, their two terminal cuts and the portfolio — and
        the first arc registered after it turned a true statement about the
        grid into a failure about a number. The invariant is "every arc has
-       a card", and that is what this now says. */
-    await expect(cards).toHaveCount(ARCS.length);
+       a card", and that is what this now says — plus a card per client
+       page that is not an arc (ADR-098 U2, the Trinny pitch). */
+    const pages = CLIENTS.reduce((n, client) => n + (client.pages?.length ?? 0), 0);
+    await expect(cards).toHaveCount(ARCS.length + pages);
     const chips = await page.locator(".arc-card__chip").allTextContents();
     expect(new Set(chips).size).toBe(chips.length);
     await expect(page.locator('.arc-card[href="/arcs/claude-workshop-v2"]')).toHaveCount(1);

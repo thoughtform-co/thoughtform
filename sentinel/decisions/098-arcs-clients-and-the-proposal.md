@@ -228,6 +228,90 @@ lines and broke `AI-first.` across its own hyphen, which reads as a typo rather
 than a line. 42ch sets it in two at both reference widths, with `text-wrap:
 balance` evening them.
 
+## Update 2 (2026-09-13, owner): the offer matches the deck, and the pitch joins the clients
+
+Owner, with `suri-proposal-v24.html` (the structure) and `suri-proposal-v25.pptx`
+(the latest content) open:
+
+> If you look at the Suri one, the three modules are supposed to be like three
+> blocks, but it doesn't really have these borders or dividers, which makes it
+> look very chaotic. Let's try it properly for Suri. … The HTML has structure,
+> but this PowerPoint actually has the latest content. … Of course, we have to
+> wire [the Trinny page] up to the right subpage.
+
+### What was measured
+
+Deck against arc, at 1920×1247. The deck's plan slide is three **plates** — a
+head band on a soft ground, ruled week rows, a dark outcome foot — and its
+pricing is a **fee table** beside three tip cards with a coloured left rule.
+The arc drew the plan as three naked columns of dashed rows
+(`.arc-groups--columns`) and the pricing as four tiles under a tips strip. That
+is the "chaotic": the same records with every border and divider removed.
+
+After: the phases beat is exactly one viewport at 1920×1247 (section 1247 = vh,
+plates 498px, the foot's bottom at 1001) and runs 35px over at 1280×720 (755 vs
+720 — the same overflow class the columns had at that shape). The pricing beat
+fits both.
+
+### Decision
+
+1. **`list-groups` gains `layout: "plates"`, and a group gains `foot`.** The
+   deck's STRUCTURE in the house material: square (ADR-065), `--arc-edge` on
+   `--arc-plate`, `--arc-seam` dividing the head band from the rows and
+   `--arc-rule` within (ADR-089 U2's two weights, as the dossier housing carries
+   them), the outcome as an INVERSE band — `--arc-ink` under `--void`, the pair
+   ADR-058 swaps, so it is a dark band on parchment in light and dawn on void in
+   dark with no theme rule. `columns` and `stack` are untouched: every other arc
+   is byte-identical, and the terminal-markup test still sees no `data-arc-*`.
+2. **`cards` gains `ledger`** — the same four records drawn as the table they
+   were on the deck: `kicker` | `body` | `title` under three authored head
+   cells, the LAST card the total on the plate ground, the tips BESIDE it as
+   bordered cards with a gold left rule, `footnote` as the deck's note. **"No
+   `pricing` kind" stands**: a variant on `cards` is not a kind.
+3. **Suri's content from v25, configuration onward.** The phases from slide 9
+   (mapped by shape position: the "Creative strategy, tone of voice…" line sits
+   under M1's week 2); the fee **M1 £10,000 · M2 +£15,000 · M3 +£20,000 = £45,000**
+   — v25's total row still read £60,000 against phases summing to 45, and the
+   owner ruled the phases current, M3's blank "what" being its phase name; the
+   needs' third item as v25's "Stakeholder time". ⚠ **The loop and "what you
+   keep" are KEPT** (owner): v25 trimmed them for slides, the HTML has the
+   structure. The appendix names Higgsfield, as both deck versions do. Suri's
+   beats before the configuration are untouched (owner).
+   ⚠ **Three lines are rewritten to the behaviour**: "self-sufficient" and
+   "autonomously" from v25, and — on BOTH modules — "run the waves themselves",
+   which is the fleet's word and which the ban `/the wave/` had never met
+   because the inline list only ever walked strings the deck had not yet used.
+4. **The bans move to `lib/arcs/copyLaw.ts`** (`PROPOSAL_COPY_BANS`,
+   `scanStrings`, zero imports) because a second surface reads them: the Trinny
+   pitch page's offer is the same beats OUTSIDE `ARCS` (ADR-094 U9), and
+   `tests/lib/trinny-offer.test.ts` walks it with the same list — plus a guard
+   that no Suri noun survived the swap.
+5. **`ClientDef.pages`** — a client's page that is NOT an arc, listed FIRST on
+   its band and its page as a card that links out. **Trinny London joins
+   `CLIENTS`**, first, with `/trinny-london` as its one page. This REVERSES the
+   "deliberately absent" ruling below by owner instruction, and the shape
+   honours the reason it was rejected: no link-only `ArcDef`, so every
+   `ARCS.map` walk is untouched; `ArcCard` splits into `ArcCardFace` (the
+   markup) over two records. The overview smoke counts `ARCS.length + Σ pages`;
+   the registry pins a page's `href` outside `/arcs/`.
+6. **The offer follows the configuration on the pitch page**, rendered by these
+   same components through the route's nested-root seam — ADR-094 U9 records
+   it; the point here is that a fix to the plates or the ledger lands on both
+   surfaces because there is one renderer.
+
+### Left open
+
+- **The overview's grid is capped at two columns at every desktop width.**
+  `repeat(auto-fit, minmax(300px, 420px))` counts repetitions against the MAX
+  track: `floor((1194 + 36) / (420 + 36)) = 2` in the text band at 1920×1247,
+  so a one-engagement client's band is ~810px of page for one 420×680 poster
+  (the second track computes to `0px`), and the page ran 4,710px for six links.
+  Measured this pass; the owner set the overview aside ("nvm").
+- The Trinny card carries the house key visual, as Suri's does, until the
+  client's own image is approved.
+- The offer's copy on the pitch page is Suri's, noun-swapped — the owner's own
+  placeholder, to be rewritten.
+
 ## Deliberately absent
 
 - **The client page's Armada / technical setup.** The owner named it for later
@@ -236,9 +320,10 @@ balance` evening them.
 - **A deck export from the record.** The HTML deck pipeline lives in the
   engagement's own repo and still runs; this does not replace it, and a second
   renderer off one record is a promise to keep two surfaces in step.
-- **The Trinny pitch as a card on the overview.** It is a homepage variant, not
-  an arc; listing it needs a link-only record that would break every
-  `ARCS.map` walk for one row.
+- ~~**The Trinny pitch as a card on the overview.** It is a homepage variant,
+  not an arc; listing it needs a link-only record that would break every
+  `ARCS.map` walk for one row.~~ **Reversed by U2** — as a field on the CLIENT
+  (`ClientDef.pages`), which reaches the two listings and no `ARCS` walk.
 - **`/cases/[slug]`**, still anticipated by `lib/cases/registry.ts` and
   LANGUAGE.md, still not built.
 

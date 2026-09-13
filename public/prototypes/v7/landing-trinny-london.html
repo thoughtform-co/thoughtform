@@ -5640,24 +5640,48 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <!-- ═══════════ 06 CONTACT ═══════════
-       ⚠ THE AMBIENT'S KILL EDGE LIVES HERE NOW (ADR-095 U5). It was on
-       `#proposition`, which was the first OPAQUE station below the corridor;
-       U5 made that one transparent so the mark could fade BEHIND the record
-       instead of dying at its top edge, and this is the next opaque station
-       down. The route's cover rule is keyed on the SAME attribute, so JS and
-       CSS cannot name different stations (the ADR-030 §6 seam bug) — moving
+  <!-- ═══════════ 06 THE OFFER ═══════════
+       The proposal's beats after the configuration (ADR-094 U9): the phases,
+       the loop, what it needs and leaves, the fee, the people, the next steps
+       and the appendix. The configuration above is where the proposal STARTS
+       (owner, 2026-09-13); this is what the deck says next, rendered by the
+       ARCS' OWN COMPONENTS — `TrinnyPortals` mounts `offer/TrinnyOffer.tsx`
+       into the slot below over `offer/trinnyOffer.ts`, so this page and
+       `/arcs/suri-proposal` draw the offer from one renderer. The record is
+       in that module, never here: a second hand-written copy of every
+       proposal section is the fork ADR-098 argued against.
+
+       ⚠ THE AMBIENT'S KILL EDGE LIVES HERE NOW. It was on `#contact` (ADR-095
+       U5); this is the first OPAQUE station below the corridor since it
+       exists — the `.station` base paints the ground and every arc beat
+       inside paints its own void — and the hook fades the canvas against ITS
+       top. The route's cover rule is keyed on the SAME attribute, so JS and
+       CSS cannot name different stations (the ADR-030 §6 seam bug): moving
        the edge is an attribute move and nothing else, and exactly one
        element on the page carries it.
 
-       ⚠ AND ITS COPY TAKES `data-m="fade"` ONLY (same update, owner: the
+       ⚠ A `.station`, so the clock sees it: `TRINNY_JOURNEY_ORDER` lists it
+       and the Proposal mark RANGES over proposition + offer, the Arc mark's
+       own device, so "Proposal" stays lit from the configuration to the
+       appendix. ===== -->
+  <section class="station tl-offer" id="offer" data-station="offer" data-corridor-kill data-screen-label="11 The offer">
+    <div data-tl-offer-root></div>
+  </section>
+
+  <!-- ═══════════ 07 CONTACT ═══════════
+       ⚠ THE KILL EDGE MOVED UP TO `#offer` (ADR-094 U9). This station carried
+       it from ADR-095 U5 — when `#proposition` went transparent so the mark
+       could fade BEHIND the record — until the offer was appended above it
+       and became the first opaque station below the corridor.
+
+       ⚠ ITS COPY TAKES `data-m="fade"` ONLY (ADR-095 U5, owner: the
        elements should "just come into view"). Every other role in that
        system translates; `fade` is the one that does not. This block is not
        pinned — a page's last card does not need a stage — so the scrubbed
        channel `#proposition` uses would have nothing to key on, and an
        opacity-only role is the same law with the machinery already in the
        sheet. ===== -->
-  <section class="station" id="contact" data-station="contact" data-corridor-kill data-screen-label="11 Contact">
+  <section class="station" id="contact" data-station="contact" data-screen-label="12 Contact">
     <div class="contact" data-m-group>
       <div class="station__idx" style="justify-content:center">Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>
       <h2 class="contact__title" data-m="fade">Plot your<br><em>course.</em></h2>

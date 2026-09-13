@@ -1,3 +1,4 @@
+import { clientPageCount } from "@/lib/arcs/clients";
 import type { ClientDef } from "@/lib/arcs/clients";
 import type { ArcDef } from "@/lib/arcs/types";
 
@@ -12,6 +13,9 @@ import { ArcShell } from "./ArcShell";
  * the overview's own hero band and the same card grid, filtered to one
  * client, and that is deliberate — a client page is a listing, and a
  * listing that invents a second grammar makes the reader learn one.
+ *
+ * A client's non-arc `pages` (ADR-098 U2) lead the grid, exactly as they
+ * lead the client's band on the overview.
  *
  * ⚠ IT RENDERS AT `/arcs/<client>`, inside the SAME route as an arc. The
  * two slug sets share one namespace and are pinned disjoint by the
@@ -33,6 +37,7 @@ export function ArcClientPage({
   hudHtml: string;
   bodyClass: string;
 }) {
+  const count = clientPageCount(client, arcs);
   return (
     <ArcShell hudHtml={hudHtml} bodyClass={bodyClass} variant="index">
       <section className="arc-section arc-index-hero" aria-label={client.name}>
@@ -41,13 +46,13 @@ export function ArcClientPage({
           <h1 className="arc-title arc-index-hero__title arc-reveal">{client.name}</h1>
           <p className="arc-index-hero__lede arc-reveal">{client.lede}</p>
           <p className="arc-cue arc-reveal" aria-hidden="true">
-            {arcs.length === 1 ? "One engagement" : `${arcs.length} engagements`}
+            {count === 1 ? "One engagement" : `${count} engagements`}
           </p>
         </div>
       </section>
       <section className="arc-section arc-index-grid" aria-label={`${client.name} engagements`}>
         <div className="arc-band">
-          <ArcCardGrid arcs={arcs} />
+          <ArcCardGrid arcs={arcs} pages={client.pages} />
         </div>
       </section>
     </ArcShell>

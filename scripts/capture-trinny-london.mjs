@@ -220,6 +220,22 @@ for (const [q, name, note] of [
   await shoot(name, note);
 }
 
+/* The offer (ADR-094 U9): the proposal's beats after the configuration,
+   rendered by the arcs' components into `#offer`. Each beat is its own
+   `.arc-sec` with the section's id, so a stop is solved off the beat's box
+   rather than the station's — and rolled to TWICE, because the reveal is
+   an IntersectionObserver with a -10% dead band and the first roll from
+   the proposal's pinned stretch can land it before the observer has fired. */
+for (const [id, name, note] of [
+  ["phases", "21-offer-phases", "the offer — the three phases as plates"],
+  ["pricing", "22-offer-pricing", "the offer — the fee table beside its terms"],
+]) {
+  await rollTo(await topOf(id));
+  await rollTo(await topOf(id));
+  await page.waitForTimeout(900);
+  await shoot(name, note);
+}
+
 await rollTo(await topOf("contact"));
 await shoot("13-contact", "the exit");
 

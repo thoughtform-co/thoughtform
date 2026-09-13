@@ -136,14 +136,17 @@ describe("the trinny-london journey roster", () => {
     expect(proof?.glyph).toBe("proof");
   });
 
-  it("derives a SECTOR readout of five rows that never runs backwards", () => {
+  it("derives a SECTOR readout of six rows that never runs backwards", () => {
     // The corridor's four beats are ONE row, exactly as READOUT_SECTIONS
-    // collapses them for production; hero has no row of its own.
+    // collapses them for production; hero has no row of its own. The offer
+    // (ADR-094 U9) is a row: a range is a fact about the MARK, and the rail
+    // counts stations.
     expect([...TRINNY_JOURNEY.sectorRows]).toEqual([
       "about",
       "arc",
       "services",
       "proposition",
+      "offer",
       "contact",
     ]);
     const walk: [string, boolean][] = [
@@ -155,12 +158,13 @@ describe("the trinny-london journey roster", () => {
       ["services", true],
       ["services", false],
       ["proposition", false],
+      ["offer", false],
       ["contact", false],
     ];
     let last = -1;
     for (const [id, proofOwns] of walk) {
       const { seat, total } = journeySector(TRINNY_JOURNEY, idxOf(id), proofOwns, id);
-      expect(total, id).toBe(5);
+      expect(total, id).toBe(6);
       expect(seat, `${id} went backwards`).toBeGreaterThanOrEqual(last);
       expect(seat, `${id} past the last row`).toBeLessThan(total);
       last = seat;
@@ -171,7 +175,12 @@ describe("the trinny-london journey roster", () => {
     // The parse-time link cleanup cannot reach a React-owned list, so a
     // production nav here would ship #voidwalker and #practice as dead
     // anchors and count four in a drawer holding three.
-    expect(TRINNY_NAV_ITEMS.map((i) => i.href)).toEqual(["#about", "#services", "#proposition"]);
+    expect(TRINNY_NAV_ITEMS.map((i) => i.href)).toEqual([
+      "#about",
+      "#services",
+      "#proposition",
+      "#offer",
+    ]);
     for (const item of TRINNY_NAV_ITEMS) {
       expect(TRINNY_JOURNEY_ORDER as readonly string[]).toContain(item.href.slice(1));
     }
@@ -204,6 +213,14 @@ describe("a roster-only station resolves directly (ADR-094)", () => {
     expect(goldAt(0, false, "proposition")).not.toContain("hero");
     // The interstitial publishes the same id, so the mark lights from it on.
     expect(journeySector(TRINNY_JOURNEY, 0, false, "proposition").seat).toBe(3);
+    /* The offer (ADR-094 U9) is the proposal's second half: its own station
+       on the bus and its own sector row, but the SAME mark — the Proposal
+       ranges over both, so the row does not hand the reader to a second
+       chapter for the fee. */
+    const offerAt = TRINNY_JOURNEY_ORDER.indexOf("offer");
+    expect(journeyPosition(TRINNY_JOURNEY, 0, false, "offer")).toBe(offerAt);
+    expect(goldAt(0, false, "offer")).toEqual(["proposition"]);
+    expect(journeySector(TRINNY_JOURNEY, 0, false, "offer").seat).toBe(4);
   });
 
   it("ignores a manifest station id passed as the bus value", () => {
@@ -248,11 +265,11 @@ describe("the hook publishes the roster's own SECTOR total", () => {
        a future variant happened to have seven rows, the bug would be
        invisible again — so the test that matters is on a roster whose
        total is not production's. */
-    expect(TRINNY_JOURNEY.sectorRows.length).toBe(5);
+    expect(TRINNY_JOURNEY.sectorRows.length).toBe(6);
     expect(TRINNY_JOURNEY.sectorRows.length).not.toBe(READOUT_SECTIONS.length);
 
     const { result } = renderHook(() => useJourneyMarks(true, TRINNY_JOURNEY));
-    expect(result.current.sector.total).toBe(5);
+    expect(result.current.sector.total).toBe(6);
     expect(result.current.sector.seat).toBe(0);
   });
 

@@ -406,8 +406,9 @@ test.describe("Trinny London pitch variant", () => {
     );
     // The parse-level order (ADR-094 added the proposal after the proof,
     // ADR-095 the turn before it — and ADR-095 U1 deleted the interstitial
-    // slab between them; the cards inside #services are `article`s).
-    const stations = ["hero", "about", "services", "turn", "proposition", "contact"];
+    // slab between them; the cards inside #services are `article`s; ADR-094
+    // U9 appended the offer between the proposal and the exit).
+    const stations = ["hero", "about", "services", "turn", "proposition", "offer", "contact"];
     expect(order.filter((id) => stations.includes(id))).toEqual(stations);
     await expect(page.locator("#home-corridor-mount")).toHaveCount(1);
 
@@ -415,8 +416,8 @@ test.describe("Trinny London pitch variant", () => {
     // hardcoded in React, so the parse-time link cleanup cannot reach it and
     // this page would ship two dead anchors in a drawer counting four.
     const links = await page.locator(".hud__nav__inline__link").allTextContents();
-    expect(links).toEqual(["About", "Proof", "Proposal"]);
-    await expect(page.locator(".hud__nav__list__head span").last()).toHaveText("03");
+    expect(links).toEqual(["About", "Proof", "Proposal", "The offer"]);
+    await expect(page.locator(".hud__nav__list__head span").last()).toHaveText("04");
     for (const dead of ["#voidwalker", "#practice", "#continuum"]) {
       await expect(page.locator(`a[href="${dead}"]`)).toHaveCount(0);
     }
@@ -443,7 +444,9 @@ test.describe("Trinny London pitch variant", () => {
     // total and bailed out of the update because the POSITION had not
     // changed — every mark correct, the number beside them wrong.
     const sector = page.locator(".rin-tele").nth(1).locator(".rin-tele__v");
-    await expect(sector).toHaveText(/^0[1-5]\/05$/);
+    // Six since ADR-094 U9: the offer is a station and the rail counts
+    // stations, even though the Proposal MARK ranges over it.
+    await expect(sector).toHaveText(/^0[1-6]\/06$/);
 
     // Gold is wayfinding: exactly one mark, and it travels in PAGE order.
     expect(await goldMarks(page)).toEqual(["hero"]);
@@ -1106,7 +1109,8 @@ test.describe("Trinny London pitch variant", () => {
        mark in the back doesn't really dominate too much — we can fade it
        out a bit as the next section scrolls into view"). The canvas has to
        live through this beat, so the corridor is STILL ENGAGED here where
-       it used to be dead — the kill edge moved to `#contact`. */
+       it used to be dead — the kill edge moved to `#contact` (ADR-095 U5),
+       then to `#offer` (ADR-094 U9), the first opaque station below. */
     expect(
       await page.evaluate(() => document.documentElement.getAttribute("data-corridor-exit")),
       "the canvas lives through the proposal"
@@ -1152,10 +1156,54 @@ test.describe("Trinny London pitch variant", () => {
     await tiles.nth(0).click();
     await expect(page.locator("#proposition [data-tl-layer].is-on")).toHaveCount(4);
 
-    /* …and `#contact` is where the corridor finally ends. Exactly one
-       station declares it, so JS and CSS cannot name different edges. */
+    /* …and `#offer` is where the corridor finally ends (ADR-094 U9): the
+       proposal's beats after the configuration, the first opaque station
+       below it. Exactly one station declares it, so JS and CSS cannot name
+       different edges. */
     expect(await page.locator("[data-corridor-kill]").count()).toBe(1);
-    await expect(page.locator("#contact[data-corridor-kill]")).toHaveCount(1);
+    await expect(page.locator("#offer[data-corridor-kill]")).toHaveCount(1);
+    await expect(page.locator("#contact[data-corridor-kill]")).toHaveCount(0);
+
+    /* THE OFFER (ADR-094 U9): the proposal's beats after the configuration,
+       the arcs' own components mounted into `#offer` over a route-local
+       record. Two of its drawings are what this pass exists for — the three
+       phases as PLATES and the fee as a LEDGER — so both are pinned here at
+       the lit state, and the Proposal mark stays gold across them (the mark
+       ranges over the two stations). ⚠ Rolled to TWICE: the reveal is an
+       IntersectionObserver with a -10% dead band, and one roll out of the
+       proposal's pinned stretch can land the beat before it has fired. */
+    const topOf = (id: string) =>
+      page.evaluate(
+        (sel) => (document.getElementById(sel)?.getBoundingClientRect().top ?? 0) + window.scrollY,
+        id
+      );
+    await rollTo(page, await topOf("phases"));
+    await rollTo(page, await topOf("phases"));
+    await expect(page.locator("#offer .arc-root")).toHaveCount(1);
+    await expect(page.locator("#phases .arc-plate")).toHaveCount(3);
+    await expect(page.locator("#phases .arc-plate__foot")).toHaveCount(3);
+    await expect(page.locator("#phases .arc-plate").first()).toHaveClass(/is-in/);
+    expect(await goldMarks(page)).toEqual(["proposition"]);
+    await rollTo(page, await topOf("pricing"));
+    await rollTo(page, await topOf("pricing"));
+    await expect(page.locator("#pricing .arc-ledger__table")).toHaveCount(1);
+    await expect(page.locator("#pricing .arc-ledger__total .arc-ledger__fee")).toHaveText(
+      /£45,000/
+    );
+    await expect(page.locator("#pricing .arc-ledger__tip")).toHaveCount(3);
+    // The arcs' ramp re-derives in light, and this page is locked light: the
+    // plate's inverse foot must be a DARK band on parchment, not parchment on
+    // parchment — the pair ADR-058 swaps, read back through the computed style.
+    const foot = await page.evaluate(() => {
+      const el = document.querySelector("#phases .arc-plate__foot") as HTMLElement;
+      const cs = getComputedStyle(el);
+      const rgb = (s: string) => (s.match(/\d+/g) ?? []).slice(0, 3).map(Number);
+      const lum = ([r, g, b]: number[]) => (r * 299 + g * 587 + b * 114) / 1000;
+      return { bg: lum(rgb(cs.backgroundColor)), ink: lum(rgb(cs.color)) };
+    });
+    expect(foot.bg, "the foot's band is dark in light").toBeLessThan(80);
+    expect(foot.ink, "the foot's ink is light in light").toBeGreaterThan(180);
+
     const contactTop = await page.evaluate(
       () => (document.getElementById("contact")?.getBoundingClientRect().top ?? 0) + window.scrollY
     );

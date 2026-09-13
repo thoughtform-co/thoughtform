@@ -1099,3 +1099,73 @@ last rule equals the box's bottom (≤ 2px). `type-material-tokens` stays at
   reads; whether this column does is his eye.
 - The 1.5 aspect on a portrait bay is judged on the stills of all four
   drawings; if one pools, the rung goes back to 1.62 and the box stays.
+
+## Update 9 — the offer follows the configuration, on this page (2026-09-13)
+
+Owner: _"The Trinny London page and its contents are all perfect, so don't
+touch it. … if you go to one of the bottom sections, the Trinny London
+configuration, that's where the proposal actually starts."_ Asked whether the
+proposal's remaining beats should live on an arc the page hands off to
+(recommended) or be appended here, he chose **appended**.
+
+### What was built
+
+`#offer`, a new `.station` between `#proposition` and `#contact`, whose only
+child is a slot — `[data-tl-offer-root]`. `TrinnyPortals` mounts
+`offer/TrinnyOffer.tsx` into it through the SAME nested-root lifecycle as the
+proof stack, and that component renders the arcs' own `ArcListGroups` and
+`ArcCards` inside an `.arc-root` over `offer/offerSections.ts`: the phases as
+plates, the loop, needs and keeps, the fee as a ledger, the people, the next
+steps, the appendix (ADR-098 U2's drawings). The pitch route imports
+`arcs.css` for it — audited: its only out-of-scope selectors are `#rollout`,
+`html[data-arc-entry]` and the theme-lock switch rule this route already
+carries.
+
+⚠ **"Appended" did not mean a second hand-written copy.** The alternative —
+authoring seven beats as HTML in the fork with their own CSS — is the third
+copy of one page ADR-098 argued against, and a fix to the plates would have
+had to be made twice. One renderer, two hosts: `/arcs/suri-proposal` and this
+page draw the offer from the same components, which is what the owner's "as
+close to the HTML as possible" needed to be true on both.
+
+### What moved with it
+
+- **The kill edge.** `#offer` is the first OPAQUE station below the corridor
+  now (the `.station` base paints the ground, every arc beat paints its own
+  void), so `data-corridor-kill` moved from `#contact` to it — an attribute
+  move and nothing else, because the cover rule (§9 of the route sheet) and
+  `useCorridorExitScroll` both key on the attribute. Measured on the seam:
+  nothing of the ghost mark prints below `#offer`'s top; above it, the
+  proposition's own floor slack (426px at 1920×1247, U5's open item) is what
+  the reader crosses.
+- **The journey clock.** `offer` joins `TRINNY_JOURNEY_ORDER`; the Proposal
+  mark takes `range: ["proposition", "offer"]`, the Arc mark's device, so it
+  stays gold from the configuration to the appendix. ⚠ The SECTOR readout
+  counts the offer as a row of its own (05/06) — `sectorRows` is derived per
+  station and a range is a fact about the mark, not the rail. The nav drawer
+  gains `04 · The offer`.
+- **`TrinnyOffer` is NOT `ArcSectionRenderer`** — that dispatch statically
+  imports every kind, the dossier console and the holo program's three.js
+  mount among them; a page-local switch over the two kinds the offer uses
+  keeps `three` off this route's graph. And NOT `ArcShell`: the HUD chrome,
+  the lock, the hero boot and the scroll writer are all already here. What is
+  copied is the reveal opt-in, class and observer together.
+- **The copy law follows the beats.** `PROPOSAL_COPY_BANS` lives in
+  `lib/arcs/copyLaw.ts` now; `tests/lib/trinny-offer.test.ts` walks the offer
+  with it and fails on any Suri noun that survived the swap.
+
+### Measured
+
+At 1920×1247, headed: stops 01–20 unchanged; `21-offer-phases` at y 22999 and
+`22-offer-pricing` at y 26712 with `station=offer`, `gold=proposition`,
+`sector=05/06`; `13-contact` at y 31414. The plates' foot is a dark band on
+parchment (the light re-derivation reaching through `.arc-root`), pinned in
+the smoke from the computed colours.
+
+### Left open
+
+- The copy is Suri's, noun-swapped (Suri → Trinny London; Kate, Mark, Nick →
+  the studio lead, the founder) — the owner's own placeholder, to be rewritten.
+- The parchment between the configuration's kickers and the phases head is
+  two known terms: U5's floor slack and the arc beat's top padding. Owner's
+  eye, as U5 already said.

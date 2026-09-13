@@ -17,6 +17,33 @@
 
 import type { ArcDef, ArcKind } from "./types";
 
+/**
+ * A page of the client's that is NOT an arc (ADR-098 U2): a homepage
+ * variant like `/trinny-london`, listed on the client's band and page as a
+ * card that links out to it.
+ *
+ * ⚠ A FIELD ON THE CLIENT, NEVER A LINK-ONLY `ArcDef`. ADR-098 rejected
+ * listing the pitch because a record with no sections would have to be
+ * special-cased in every `ARCS.map` walk — the static params, the
+ * registry's guards, the smokes' slug loops. A page on the CLIENT reaches
+ * the two listings and nothing else, which is the whole of what a link
+ * needs. The owner's ask (2026-09-13: "we have to wire it up to the right
+ * subpage") reversed the "deliberately absent" ruling; this is the shape
+ * that honours both.
+ */
+export interface ClientPageDef {
+  /** Where the card goes — a site route OUTSIDE `/arcs/` (the registry test
+   *  pins it), because an `/arcs/` page is an arc and belongs in `ARCS`. */
+  href: string;
+  /** The card's chip, e.g. "pitch". The overview smoke asserts every chip
+   *  on the page is distinct, this one included. */
+  chip: string;
+  title: string;
+  lede: string;
+  image: { src: string; alt: string };
+  kind: ArcKind;
+}
+
 export interface ClientDef {
   /** Route segment for `/arcs/<slug>` — kebab-case, unique, and never
    *  equal to an arc's slug. */
@@ -27,7 +54,30 @@ export interface ClientDef {
   /** One line under the name: what the work is, in the client's own terms.
    *  The copy law applies — a name, never an aphorism. */
   lede: string;
+  /** Pages of the client's that are not arcs, listed FIRST in the band. */
+  pages?: readonly ClientPageDef[];
 }
+
+export const TRINNY_CLIENT: ClientDef = {
+  slug: "trinny-london",
+  name: "Trinny London",
+  lede: "A beauty brand in London, and a creative team that would run its own imagery, briefs and numbers on one layer.",
+  /* The pitch is a homepage variant (ADR-093), not an arc: it re-choreographs
+     the corridor, stacks the Loop proof, re-forms the mark as theirs and ends
+     on the configuration their team would own — with the proposal's offer
+     appended after it (ADR-094 U9). It links out; nothing under `/arcs/`
+     renders it. */
+  pages: [
+    {
+      href: "/trinny-london",
+      chip: "pitch",
+      title: "Trinny London · the pitch",
+      lede: "The Loop proof as a stack of cards, the mark re-formed as theirs, the configuration their team would own, and the offer.",
+      image: { src: "/images/services/embedded.webp", alt: "" },
+      kind: "production",
+    },
+  ],
+};
 
 export const LOOP_CLIENT: ClientDef = {
   slug: "loop",
@@ -43,7 +93,7 @@ export const SURI_CLIENT: ClientDef = {
 
 /** Every client with an engagement on the site, in the order the overview
  *  reads them. */
-export const CLIENTS: readonly ClientDef[] = [SURI_CLIENT, LOOP_CLIENT];
+export const CLIENTS: readonly ClientDef[] = [TRINNY_CLIENT, SURI_CLIENT, LOOP_CLIENT];
 
 export function clientSlugs(): string[] {
   return CLIENTS.map((client) => client.slug);
@@ -51,6 +101,11 @@ export function clientSlugs(): string[] {
 
 export function getClient(slug: string): ClientDef | undefined {
   return CLIENTS.find((client) => client.slug === slug);
+}
+
+/** Everything a client's band lists: its non-arc pages and its arcs. */
+export function clientPageCount(client: ClientDef, arcs: readonly ArcDef[]): number {
+  return (client.pages?.length ?? 0) + arcs.length;
 }
 
 /**

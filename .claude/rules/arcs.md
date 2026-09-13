@@ -518,6 +518,39 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
 - **Capturing any arc:** `node scripts/capture-arc-portfolio.mjs --slug
 <slug> --vp 1280x720`. The sweep is the reveal grammar's, which every
   flowing arc shares. ⚠ A light-locked arc ignores `--theme`.
+- ⚠ **THE PLAN IS PLATES AND THE FEE IS A LEDGER (ADR-098 U2, owner
+  2026-09-13: the three modules "are supposed to be like three blocks, but it
+  doesn't really have these borders or dividers, which makes it look very
+  chaotic").** `list-groups` takes `layout: "plates"` — each group a bordered
+  plate with a head band (mono `label` over `blurb` as the NAME), ruled rows,
+  and `group.foot` as an INVERSE band (`--arc-ink` under `--void`, ADR-058's
+  swapped pair, so both themes are one rule). `cards` takes
+  `ledger: { columns }` — one row per card under the head cells, the LAST
+  card the total, the tips BESIDE the table as gold-ruled cards, `footnote`
+  as the note. ⚠ **Neither is a new KIND**: the `columns`/`stack` layouts and
+  the cards grid are byte-identical, and "no `pricing` kind" stands. ⚠ Both
+  drawings render on the Trinny pitch page too (ADR-094 U9) through the same
+  components — a change here is a TWO-surface change; run
+  `trinny-london-smoke` with the arc smokes.
+- ⚠ **THE PROPOSAL COPY LAW IS A MODULE** (`lib/arcs/copyLaw.ts`,
+  `PROPOSAL_COPY_BANS` + `scanStrings`), read by `arcs-registry` AND
+  `trinny-offer.test.ts`. ⚠ It caught "run the waves themselves" on the day it
+  moved — the fleet's word had been on the Suri page since the arc shipped,
+  and "wave" in any form is the fleet's; the ban's regex is narrower than the
+  law it stands for.
+- ⚠ **A CLIENT MAY HAVE A PAGE THAT IS NOT AN ARC** (`ClientDef.pages`,
+  ADR-098 U2). Listed FIRST on its band and its page as an `ArcCardFace` that
+  links out; never an `ArcDef` (the reason "the Trinny pitch as a card" was
+  rejected still holds — a link-only arc breaks every `ARCS.map` walk). The
+  registry pins a page's `href` outside `/arcs/`; the overview smoke counts
+  `ARCS.length + Σ pages`. ⚠ `scripts/new-arc.mjs` still edits `clients.ts` by
+  needle — keep `export const CLIENTS: readonly ClientDef[] = [` intact.
+- ⚠ **THE OVERVIEW GRID IS CAPPED AT TWO COLUMNS, AND IT IS ARITHMETIC.**
+  `repeat(auto-fit, minmax(300px, 420px))` counts repetitions against the MAX
+  track — `floor((1194 + 36) / (420 + 36)) = 2` at 1920×1247 — so the `300px`
+  has never decided anything, a one-engagement band is ~810px for one poster
+  with a `0px` second track, and six links ran 4,710px. Measured 2026-09-13;
+  the owner set it aside. Open.
 
 ## The dossier housing (ADR-090)
 

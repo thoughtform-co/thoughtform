@@ -283,113 +283,118 @@ export const SURI_PROPOSAL_ARC: ArcDef = {
          something that HAPPENED (ADR-078 U1), and a plan has not happened
          yet — so the three phases are the deck's own plan table, as three
          columns, with the outcome as each column's last ruled row. */
+      /* The deck's plan table, as PLATES (ADR-098 U2): three bordered
+         blocks, a week per ruled row, the deliverable as an inverse foot.
+         Content is `suri-proposal-v25.pptx` slide 9, mapped by shape
+         position (the "Creative strategy, tone of voice…" line sits under
+         M1's week 2). ⚠ Two of its lines are rewritten to the BEHAVIOUR —
+         "self-sufficient" is banned by this surface's own copy law, and
+         "autonomously" is the same word one door down. */
       id: "phases",
       kind: "list-groups",
       menuLabel: "Phases",
       menuPrimary: true,
-      layout: "columns",
+      layout: "plates",
       head: {
         eyebrow: "Suri · the shape of the work",
-        title: { pre: "We propose running this in", em: "three phases." },
-        sub: "Discovery, imagery and video first, then composition, then ads and the handover. One motion leads each phase, and M2 and M3 firm up once M1 discovery has told us what they should be.",
+        title: { pre: "We propose a modular approach", em: "that compounds." },
+        sub: "The process from briefing to final delivery has many moving parts, so the work is built in modules: Suri's team can take the low-hanging fruit first, or run them in parallel.",
       },
       groups: [
         {
           id: "m1",
-          label: "M1 · Discovery, imagery and video",
-          blurb: "Navigate leads. Weeks 1 to 3, building the intuition on Suri's own work.",
+          label: "M1 · about three weeks",
+          blurb: "Setup, insight and briefing",
           items: [
             {
               id: "m1w1",
-              tag: "Week 1",
-              name: "On site",
-              body: "Kickoff with Mark, Kate and Nick. The systems mapped, and the setup stood up with the designers.",
+              tag: "Week 1 · on site",
+              name: "Kickoff with the team",
+              body: "The setup configured with the designers, on Suri's creative stack: Figma, Claude, GitHub",
             },
             {
               id: "m1w2",
               tag: "Week 2",
-              name: "Brand and tone of voice encoded, in Kate's words",
-              body: "First imagery waves, run by the designers, graded with Kate in the room.",
+              name: "Workstreams mapped out and made AI-ready",
+              body: "Creative strategy, tone of voice and brand guidelines encoded into the creative intelligence configuration",
             },
             {
               id: "m1w3",
               tag: "Week 3",
-              name: "First video: approved stills animated into simple clips",
-              body: "M1 review with Mark.",
-            },
-            {
-              id: "m1out",
-              tag: "Outcome",
-              name: "Imagery Skill and first clips live",
-              meta: "About three weeks",
+              name: "A new AI-first workstream the team runs without us",
+              body: "An intelligence layer that plugs into M2",
             },
           ],
+          foot: {
+            label: "Deliverable",
+            lines: ["The creative intelligence configuration", "A team that runs M1 on its own"],
+          },
         },
         {
           id: "m2",
-          label: "M2 · Composition",
-          blurb: "Encode leads. Weeks 4 to 6, writing down the judgment the team is already using.",
+          label: "M2 · about three weeks",
+          blurb: "Asset generation and design",
           items: [
             {
               id: "m2w1",
               tag: "Week 1",
-              name: "Kickoff workshop: the team reviews M1 output",
-              body: "Designers begin layout, type and CTA in Figma.",
+              name: "Visual and semantic analysis of creatives",
+              body: "Encoding sprint: creative and art direction, visual and copy guidelines codified into the system",
             },
             {
               id: "m2w2",
               tag: "Week 2",
-              name: "Iteration workshops",
-              body: "Guardrails encoded from what Kate sends back. Simple animations composed into the formats.",
+              name: "Generation sprint: the image and video flow tested and improved in real time by the creative team",
+              body: "Prompt and model best practice encoded into the broader system",
             },
             {
               id: "m2w3",
               tag: "Week 3",
-              name: "The designers run composition alone",
-              body: "M2 review with Mark.",
-            },
-            {
-              id: "m2out",
-              tag: "Outcome",
-              name: "Composition Skill encoded",
-              meta: "About three weeks",
+              name: "Encoding sprint on ad design best practice",
+              body: "Design sprint: ad generation tested inside Figma",
             },
           ],
+          foot: {
+            label: "Deliverable",
+            lines: [
+              "Compounding layers for asset generation and ad creation",
+              "A team that manages M1 and M2 on its own",
+            ],
+          },
         },
         {
           id: "m3",
-          label: "M3 · Ads and handover",
-          blurb: "Build leads. Weeks 7 to 9, handing the system over while we watch.",
+          label: "M3 · about three weeks",
+          blurb: "Creative operations and scaling",
           items: [
             {
               id: "m3w1",
               tag: "Week 1",
-              name: "Workshop: the team builds the briefing Skill with us",
-              body: "Structure and above-the-line session, Rob and Mark.",
+              name: "All layers unified in one production-ready workflow",
+              body: "Debrief and next steps with Mark, Kate and Nick",
             },
             {
               id: "m3w2",
               tag: "Week 2",
-              name: "A designer takes a brief to a finished ad, tested",
-              body: "The handover pack: files, rubric and record, on Suri's keys.",
+              name: "Tech transfer of best practice to creative ops",
+              body: "Automation sprint for project managers",
             },
             {
               id: "m3w3",
               tag: "Week 3",
-              name: "Handover workshop: the team runs it, we watch",
-              body: "Then it scales: the next asset type, campaign and team.",
-            },
-            {
-              id: "m3out",
-              tag: "Outcome",
-              name: "Handover complete, ready to scale",
-              meta: "About three weeks",
+              name: "Handover workshop",
+              body: "Final review with Mark, Kate and Nick",
             },
           ],
+          foot: {
+            label: "Deliverable",
+            lines: [
+              "A working setup: brief in, asset out, creative ops unburdened",
+              "A blueprint for scaling beyond the creative departments",
+            ],
+          },
         },
       ],
-      closing:
-        "M2 and M3 are our current view of the work. They confirm at the end of M1, when discovery has said what they should be.",
     },
     {
       id: "how-we-work",
@@ -411,7 +416,7 @@ export const SURI_PROPOSAL_ARC: ArcDef = {
               id: "owns",
               tag: "Who owns it",
               name: "Kate, and the designers",
-              body: "Kate decides what passes. The designers run the waves themselves.",
+              body: "Kate decides what passes. The designers run the rounds themselves.",
             },
             {
               id: "runs",
@@ -449,7 +454,7 @@ export const SURI_PROPOSAL_ARC: ArcDef = {
               id: "designers",
               tag: "Suri",
               name: "The designers, who make the work",
-              body: "In every session from day one. From week two they run the waves themselves.",
+              body: "In every session from day one. From week two they run the rounds themselves.",
               meta: "Two sessions a week, then their normal week",
             },
             {
@@ -507,8 +512,8 @@ export const SURI_PROPOSAL_ARC: ArcDef = {
             {
               id: "time",
               tag: "03",
-              name: "The creative team's time",
-              body: "Kate and the designers are in every working session: this is done with them, not for them. Kate's grading is what the rubric learns from.",
+              name: "Stakeholder time",
+              body: "Mark, Kate and Nick for interviews and sign-off. Kate's review time is what the rubric learns from, so it is not optional.",
             },
           ],
         },
@@ -557,42 +562,51 @@ export const SURI_PROPOSAL_ARC: ArcDef = {
       ],
     },
     {
+      /* The deck's fee table, as a LEDGER (ADR-098 U2): the four records
+         drawn as rows under Phase · What · Fee, the total last, the terms
+         beside it. Figures are `suri-proposal-v25.pptx` slide 10 — ⚠ its
+         total row still read £60,000 against phases that sum to £45,000,
+         and the owner ruled the phases current (2026-09-13); M3's blank
+         "what" is its phase name. */
       id: "pricing",
       kind: "cards",
       menuLabel: "Pricing",
       menuPrimary: true,
       columns: 4,
+      ledger: { columns: ["Phase", "What", "Fee"] },
       head: {
         eyebrow: "Suri · the fee",
         title: { pre: "Priced", em: "one phase at a time." },
-        sub: "Twenty thousand a phase. M1 is scoped and priced now. M2 and M3 are our current view, and they confirm at the end of M1.",
+        sub: "Each phase is a stage gate, priced on its own, so nothing beyond it is committed until it has earned the next.",
       },
       cards: [
         {
           id: "fee-m1",
           kicker: "M1",
-          title: "£20,000",
-          body: "Discovery, imagery and video. Scoped and priced now.",
+          title: "£10,000",
+          body: "Setup, insight and briefing",
         },
         {
           id: "fee-m2",
           kicker: "M2",
-          title: "+£20,000",
-          body: "Composition. Confirms at the end of M1.",
+          title: "+£15,000",
+          body: "Image, video and composition",
         },
         {
           id: "fee-m3",
           kicker: "M3",
           title: "+£20,000",
-          body: "Ads and handover. Confirms at the end of M2.",
+          body: "Creative operations and scaling",
         },
         {
           id: "fee-total",
           kicker: "Total",
-          title: "£60,000",
-          body: "If all three phases are commissioned. M1 stands on its own: stop after it and the team still has a working imagery setup and the Skills behind it.",
+          title: "£45,000",
+          body: "If all three phases are commissioned",
         },
       ],
+      footnote:
+        "M1 stands on its own. If Suri stops after it, the team still has a working imagery setup and the Skills behind it.",
       /* ⚠ THE TAGS ARE CHIPS, NOT SENTENCES. `.arc-tips__tag` is a nowrap
          chip in a 120-160px column, so a tag written as a clause overruns
          its own column and prints through the body beside it (measured on
@@ -678,7 +692,7 @@ export const SURI_PROPOSAL_ARC: ArcDef = {
       layout: "columns",
       head: {
         eyebrow: "Appendix",
-        title: { pre: "Why not just subscribe to", em: "a generation tool?" },
+        title: { pre: "Why not just subscribe to", em: "Higgsfield?" },
         sub: "Because the same models sit behind both. A subscription rents your team a front end to them. This puts them inside the tools the team already uses, on Suri's own keys, learning from Suri's own work.",
       },
       groups: [

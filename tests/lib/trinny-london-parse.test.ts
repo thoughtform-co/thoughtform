@@ -47,10 +47,16 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(matches).toHaveLength(1);
   });
 
-  it("orders the journey hero → about → corridor → proof → turn → proposition → contact", () => {
+  it("orders the journey hero → about → corridor → proof → turn → proposition → offer → contact", () => {
     const body = parsed();
     const order = stationOrder(body);
-    expect(order).toEqual(["hero", "about", "services", "turn", "proposition", "contact"]);
+    /* `offer` (ADR-094 U9): the proposal's beats after the configuration,
+       a station whose only child is the slot the arcs' components mount
+       into — so at parse time it is an empty box, and the region walks
+       below that slice up to the `<section` before `#contact` still land
+       on the proposition alone. */
+    expect(order).toEqual(["hero", "about", "services", "turn", "proposition", "offer", "contact"]);
+    expect(body.match(/data-tl-offer-root/g) ?? []).toHaveLength(1);
     // The mount is a div, not a section — assert it lands between the bio
     // and services, which is the whole point of the variant.
     const at = (needle: string) => body.indexOf(needle);
@@ -85,18 +91,22 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(body).not.toContain("services-stage-root");
   });
 
-  it("declares CONTACT as the ambient's kill edge, and it is the only one", () => {
+  it("declares THE OFFER as the ambient's kill edge, and it is the only one", () => {
     /* `useCorridorExitScroll` resolves the kill target by id and this page
        has none of the ids it knows below the corridor, so a station DECLARES
-       itself. The declaration has moved twice: ADR-095 U1 deleted the
+       itself. The declaration has moved three times: ADR-095 U1 deleted the
        interstitial slab that carried it, handing it to `#proposition`; U5
        then made `#proposition` TRANSPARENT and pinned, so the parked mark
        survives into the proposal and fades behind its record instead of
-       dying at its top edge. `#contact` is the first opaque station below
-       the corridor now, and it carries the edge. */
+       dying at its top edge, and `#contact` took it; ADR-094 U9 appended
+       the offer between the two, and THAT is the first opaque station
+       below the corridor now. */
     const body = parsed();
+    const offer = body.match(/<section[^>]*\sid="offer"[^>]*>/)?.[0] ?? "";
+    expect(offer).toContain("data-corridor-kill");
+    expect(offer).toContain('data-station="offer"');
     const contact = body.match(/<section[^>]*\sid="contact"[^>]*>/)?.[0] ?? "";
-    expect(contact).toContain("data-corridor-kill");
+    expect(contact).not.toContain("data-corridor-kill");
     const prop = body.match(/<section[^>]*\sid="proposition"[^>]*>/)?.[0] ?? "";
     expect(prop).not.toContain("data-corridor-kill");
     expect(prop).toContain('data-station="proposition"');

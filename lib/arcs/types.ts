@@ -88,8 +88,18 @@ export interface ArcListItem {
 export interface ArcListGroup {
   id: string;
   label: string;
+  /** Under `stack` / `columns`, a note beside the label. Under `plates` it
+   *  is the plate's NAME line — the deck's `h4` under the mono
+   *  `M1 · ~3 weeks` kicker — so one slot serves both layouts. */
   blurb?: string;
   items: readonly ArcListItem[];
+  /**
+   * The plate's FOOT (ADR-098 U2): the deck's outcome band — a mono label
+   * ("Deliverable") over one or two lines, drawn as an INVERSE band at the
+   * plate's floor. Read by `layout: "plates"` only; the other layouts
+   * ignore it, so a group can carry one before its section switches.
+   */
+  foot?: { label: string; lines: readonly string[] };
 }
 
 export interface ArcAnatomyRow {
@@ -141,12 +151,28 @@ export type ArcSection = ArcSectionBase &
         receipt?: string;
         footnote?: string;
         columns?: 2 | 3 | 4;
+        /**
+         * Present ⇒ the cards render as the deck's FEE TABLE (ADR-098 U2):
+         * one row per card — `kicker` | `body` | `title` — under these three
+         * head cells, the LAST card the total row, the `tips` beside the
+         * table as bordered cards rather than the strip beneath. ADR-098
+         * rejected a `pricing` KIND and still does: this is the same four
+         * records, drawn as the table they were on the deck.
+         */
+        ledger?: { columns: readonly [string, string, string] };
       }
     | {
         /** Grouped lists — status stacks (LIVE / IN PROGRESS / …) or column maps. */
         kind: "list-groups";
         head: ArcHead;
-        layout: "stack" | "columns";
+        /**
+         * `plates` (ADR-098 U2) is the deck's plan table: each group a
+         * bordered PLATE — head band, ruled rows, an inverse `foot` — where
+         * `columns` is three naked columns of dashed rows. The owner read the
+         * latter as chaotic on the proposal's three modules (2026-09-13); the
+         * difference is exactly the borders and dividers.
+         */
+        layout: "stack" | "columns" | "plates";
         groups: readonly ArcListGroup[];
         closing?: string;
       }

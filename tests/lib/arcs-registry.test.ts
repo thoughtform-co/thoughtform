@@ -11,6 +11,7 @@ import { LOOP_SKILL_GROUPS } from "@/lib/arcs/content/shared/loop-skills";
 import { STUDIO_AD_CARDS } from "@/lib/arcs/content/shared/loop-studio";
 import { MODE_LEGEND } from "@/lib/arcs/content/shared/loop-tools";
 import { CLIENTS, clientSlugs, getClient, kindOf } from "@/lib/arcs/clients";
+import { PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
 import { ARCS, arcSlugs, arcsOf, getArc, houseArcs } from "@/lib/arcs/registry";
 import { HERO_ROUTES } from "@/lib/theme/heroPreload";
 import { LIGHT_LOCKED_ROUTES } from "@/lib/theme/themeLock";
@@ -577,9 +578,24 @@ describe("arcs registry (ADR-052)", () => {
       if (!arc.client) continue;
       expect(getClient(arc.client), `${arc.slug}: unknown client ${arc.client}`).toBeDefined();
     }
-    // Every client on the overview has something to list.
+    // Every client on the overview has something to list — an arc, or a
+    // page of its own that is not one (ADR-098 U2: the Trinny pitch).
     for (const client of CLIENTS) {
-      expect(arcsOf(client.slug).length, `${client.slug}: no engagements`).toBeGreaterThan(0);
+      const pages = client.pages ?? [];
+      expect(
+        arcsOf(client.slug).length + pages.length,
+        `${client.slug}: no engagements`
+      ).toBeGreaterThan(0);
+      for (const page of pages) {
+        /* A client page links OUT. Anything under `/arcs/` is an arc and
+           belongs in `ARCS`, where every guard can reach it; a page record
+           pointing there would be a link-only arc by the back door — the
+           exact shape ADR-098 rejected. */
+        expect(page.href, `${client.slug}: page ${page.href}`).not.toMatch(/^\/arcs(\/|$)/);
+        expect(page.href, `${client.slug}: page ${page.href}`).toMatch(/^\/[a-z0-9-]+$/);
+        expect(page.chip.length, `${client.slug}: page chip`).toBeGreaterThan(0);
+        expect(["keynote", "workshop", "production"]).toContain(page.kind);
+      }
     }
     // The two partitions cover the registry exactly once.
     const grouped = CLIENTS.flatMap((c) => arcsOf(c.slug)).length + houseArcs().length;
@@ -638,15 +654,11 @@ describe("arcs registry (ADR-052)", () => {
        the house's word for it. The fleet's vocabulary is internal and must
        not leak onto a client's page; `—` is banned by the deck's copy law
        and would be the one character on the surface nobody chose. */
-    const banned: readonly [RegExp, string][] = [
-      [/self-sufficient/i, "says the word instead of the behaviour"],
-      [/armada/i, "fleet vocabulary"],
-      [/callsign/i, "fleet vocabulary"],
-      [/harvest/i, "fleet vocabulary"],
-      [/the wave|wave one/i, "fleet vocabulary"],
-      [/—/, "em dash"],
-      [/\[(?!Next team)[^\]]+\]/, "an unfilled scaffold placeholder"],
-    ];
+    /* The bans live in `lib/arcs/copyLaw.ts` (ADR-098 U2), because a second
+       surface reads them: the Trinny pitch page's offer is the same beats
+       OUTSIDE `ARCS`, and `tests/lib/trinny-offer.test.ts` walks it with the
+       same list. One law, two readers. */
+    const banned = PROPOSAL_COPY_BANS;
     const offenders: string[] = [];
     for (const arc of ARCS) {
       if (arc.format !== "proposal") continue;
