@@ -596,26 +596,25 @@ test.describe("Trinny London pitch variant", () => {
       /* ⚠ THE FIELD IS INSET OFF BOTH EDGES, rail and bay on ONE edge (owner:
          "too close to the center border and the right border"). ≥ 16px is
          the token's floor; the divider is the record's right edge. */
-      /* ⚠ THE RAIL IS IN THE BAND, AND IT MAY NEVER REACH THE RECORD
-         (ADR-097 U6, owner: the tabs "should never extend too much to the
-         left side where the left panel sits, it should remain on the right
-         side"). The band carries the body's own tracks, so the rail's cell
-         BEGINS on the divider and crossing it is not a thing the layout can
-         do. An inequality, not an equality: U4's full-bleed clause was about
-         a rail spanning the PANEL it sat on, and this rail no longer sits on
-         one — what survives of it is that the row still starts at the
-         divider and still stops inside the card.
+      /* ⚠ THE RAIL KEEPS THE FIELD'S INSET, WHICH IS ADR-094 U8's ≥15px BACK
+         IN FORCE (ADR-097 U8, owner: "the length of the tabs should be the
+         same as the right panel where the image and text lives"). U4 ran it
+         full-bleed to the divider and the card's edge; U6 relaxed this pair to
+         an inequality for the band seat; with the rail back in the field and
+         the divider REMOVED, the edge worth sharing is the frame's — and the
+         frame sits on `--pf-field-px`, like every drawing in the panel. So the
+         floor is the token's again rather than a sign check.
          ⚠ DIVIDED BY THE CARD'S SCALE: cards 1–3 are covered here and receded
          by depth. The token is a layout length; the rect is a picture of it. */
       if (c.housing.firstStnLeft !== null) {
         expect(
           (c.housing.firstStnLeft - c.housing.divider) / c.housing.k,
-          `card ${i + 1} rail reaches over the record`
-        ).toBeGreaterThanOrEqual(-1.5);
+          `card ${i + 1} rail inset L`
+        ).toBeGreaterThanOrEqual(15);
         expect(
           (c.housing.cardRight - c.housing.lastStnRight!) / c.housing.k,
-          `card ${i + 1} rail runs past the card's edge`
-        ).toBeGreaterThanOrEqual(-1.5);
+          `card ${i + 1} rail inset R`
+        ).toBeGreaterThanOrEqual(15);
       }
       /* ⚠ THE HEAD IS THE CLIENT'S BAND (ADR-097 U1) — the FULL top row,
          carrying the client's gradient; the first cut's tab-only tint was

@@ -516,6 +516,39 @@ it letters nowhere on the card.
 slot free to refill one card at a time — and across seven updates in two days,
 that is this surface's actual failure mode.
 
+## Update 8 — the rail is the frame's width, and the columns lose their line (2026-09-13, owner)
+
+> So the length of the tabs should be the same as the right panel where the
+> image and text lives. Let's maybe also remove the vertical divider between
+> the left and right panel.
+
+`.pf-card__tabs` drops U4's negative margin and takes the field's own
+`padding-inline`, so the rail's two ends ARE the frame's two ends — 620 → 1274
+at 1440×900, one column with the rail as its head. `.pf-card__record` loses its
+`border-right`.
+
+⚠ **THIS REVERSES U4 BY U4's OWN REASON.** U4's point was that the rail should
+share an edge with what it heads; it read "reach the edge on the other side" as
+the CARD's edge because the divider was still drawn to reach on the near side.
+With the divider gone there is nothing to meet out there, and the only edge
+worth sharing is the frame's. ADR-094 U8's `--pf-field-px` inset — reversed at
+U4, restored here — is back in force for the whole panel, rail included.
+
+⚠ **THE SPLIT SURVIVES THE LINE.** It is the body's `2fr 3fr` grid, which is
+why removing the border changes no geometry: the field's box still begins
+exactly where the record's ends (measured 0px), and the smoke still pins that.
+What separates the halves now is what the right one IS — a framed box inset off
+a column edge. The stacked rung keeps its own `border-bottom` at ≤960: there is
+no left and right there, and two columns running into each other vertically is
+a different problem.
+
+⚠ **THE GUARDS WENT BACK THROUGH THREE STATES IN TWO DAYS** — U8's ≥15px inset,
+U4's full-bleed equality, U6's sign-check inequality for the band seat, and now
+U8's floor again. Each was correct for the seat it was written against, which
+is why the smoke's message strings name the seat and not just the number: a
+bare `>= 15` tells the next reader nothing about which of the four rulings it
+is enforcing.
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,

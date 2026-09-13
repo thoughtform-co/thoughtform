@@ -168,10 +168,10 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   shared `.fl-con__console` (sheets, map) and the tools' own
   `.pf-field--tools` — `.pf-field`'s inset drops its top term, and `--con-gap`
   is `0px` here so the console's box IS the field's box. Measured: frame top =
-  rail bottom. ⚠ U3 also pinned the walls to the STATIONS' outer edges; U4
-  made the rail full-bleed and the frame is 18px inboard of it now, by design
-  — that clause was an inference, the lid and the reach to the rail were the
-  instruction.
+  rail bottom, and — since U8 put the rail back on the field's inset — frame
+  left = station left again. ⚠ U3's clause on the walls meeting the stations'
+  outer edges was an INFERENCE that happened to be true, went false at U4 and
+  is true again at U8; the lid and the reach to the RAIL were the instruction.
   ⚠ **`--pf-field-gap` IS DELETED, NOT ZEROED.** It was subtracted in two
   derived heights (the film's width and the wire's); a no-op term in an
   arithmetic chain is a term the next reader has to disprove. Three sites move
@@ -180,18 +180,24 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   no-top-border assertion, so the smoke asserts the lid is `0px` AND the left
   wall is not, plus the wall reaching the rail and landing on the station's
   edge.
-- **THE RAIL IS FULL-BLEED; EVERYTHING ELSE KEEPS ITS INSET** (U4, owner: "the
-  tabs need to connect with the vertical rail that separates the left and the
-  right panel … the tabs should be full width and should also reach the edge
-  on the other side. The visuals and the text can remain centered with some
-  padding or margin"). `.pf-card__tabs` negates the field's `padding-inline`:
-  first station ON the divider, last ON the card's edge, measured 0px at both
-  ends. ⚠ **THIS REVERSES ADR-094 U8's ≥15px RAIL INSET**, which was the
-  owner's own note — and it is not a contradiction: U8 was about the elements
-  INSIDE the panel and this is the ruling that the rail is not one of them.
-  ⚠ **PINNED IN BOTH DIRECTIONS**: the rail on the field's edges AND the frame
-  on the field's padding. A rail that drifted inboard and a frame that went
-  full-bleed each look like the other's fix, so neither half asserts alone.
+- **THE RAIL IS THE FRAME'S WIDTH, AND NOTHING DIVIDES THE COLUMNS** (U8,
+  owner: "the length of the tabs should be the same as the right panel where
+  the image and text lives", and "let's maybe also remove the vertical divider
+  between the left and right panel"). `.pf-card__tabs` takes the field's
+  `padding-inline` like everything else in the panel, so the rail's two ends
+  ARE the frame's two ends; `.pf-card__record` draws no `border-right`.
+  ⚠ **ADR-094 U8's ≥15px INSET IS BACK IN FORCE** — U4 had reversed it to run
+  the rail full-bleed to the divider and the card's edge, and U8 reverses that
+  by U4's own reason: the rail shares an edge with what it HEADS, and with the
+  divider gone the frame is the only edge left to share.
+  ⚠ **THE SPLIT SURVIVES THE LINE** — it is the body's `2fr 3fr` grid, so
+  removing the border moved no geometry: the field's box still begins exactly
+  where the record's ends (0px, pinned). The ≤960 rung keeps its own
+  `border-bottom`; stacked, that is a different problem.
+  ⚠ **THE RAIL'S INSET HAS BEEN PINNED FOUR WAYS IN TWO DAYS** — U8's floor,
+  U4's full-bleed equality, U6's sign check for the band seat, U8's floor
+  again. Each was right for its seat, which is why the smoke's message strings
+  name the seat: a bare `>= 15` says nothing about which ruling it holds.
 - ⚠ **THE RAIL'S DATUM COSTS THE BAY 41px**, so the height-bound film narrows
   347 → 326px at 1440×900 (U3 gave 10 back with the gap) and its caption wraps
   to two lines; one line needs ~347. Nothing clips, and the height cannot be

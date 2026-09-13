@@ -599,21 +599,20 @@
   --pf-rail-h: 30px;
   padding-top: var(--pf-rail-hang);
   min-height: calc(var(--pf-rail-hang) + var(--pf-rail-h));
-  /* ⚠ THE RAIL IS FULL-BLEED, AND IT IS THE ONE THING IN THE FIELD THAT IS
-     (U4, owner: "the tabs need to connect with the vertical rail that
-     separates the left and the right panel … the tabs should be full width
-     and should also reach the edge on the other side. The visuals and the
-     text can remain centered with some padding or margin, but for these
-     tabs, it needs to be like this"). Negating the field's inset puts the
-     first station's left edge ON the divider and the last one's right edge on
-     the card's own edge, so the row spans the panel and the two halves read
-     as one instrument rather than as a rail parked inside a panel.
-     ⚠ THIS REVERSES ADR-094 U8's ≥15px RAIL INSET, which was the owner's own
-     note that the elements sat "too close to the center border and the right
-     border". It is not a contradiction: U8 was about the elements INSIDE the
-     panel, and this is the ruling that the rail is not one of them. The bay,
-     the frame and every drawing keep `--pf-field-px` untouched. */
-  margin-inline: calc(-1 * var(--pf-field-px));
+  /* ⚠ THE RAIL IS THE FRAME'S WIDTH (U8, owner: "the length of the tabs
+     should be the same as the right panel where the image and text lives").
+     It takes the field's own `padding-inline`, which is what the frame and
+     every drawing already sit on, so the row and the box under it are one
+     column — the rail reads as that panel's head rather than as a strip
+     measured against something else.
+     ⚠ U4 HAD IT FULL-BLEED and this reverses that, by the reason U4 itself
+     gave: the point was ever that the rail and the thing it heads share an
+     edge. U4 read "reach the edge on the other side" as the CARD's edge with
+     the divider still drawn to reach on the near side; with the divider gone
+     (below) there is nothing to meet out there, and the edge worth sharing is
+     the frame's. ⚠ So ADR-094 U8's inset is back in force for the rail too —
+     no negative margin here, and nothing in the field bleeds past
+     `--pf-field-px`. */
 }
 
 .pf-stack .pf-card__tabs .fl-con__rail {
@@ -738,7 +737,15 @@
   padding: var(--pf-card-py) var(--pf-card-px);
   min-width: 0;
   min-height: 0;
-  border-right: 1px solid var(--pf-rule);
+  /* ⚠ NO DIVIDER BETWEEN THE COLUMNS (U8, owner: "let's maybe also remove the
+     vertical divider between the left and right panel"). The split is still
+     there — it is the body's `2fr 3fr` grid — it is simply not drawn. What
+     separates the two halves now is what the right one IS: a framed box with
+     its own walls, inset `--pf-field-px` off a column edge that no longer
+     needs a line to be found. ⚠ The stacked rung keeps ITS separator
+     (`border-bottom` at ≤960): there is no left and right there, and two
+     columns running into each other vertically is a different problem from
+     two columns sitting beside each other. */
   /* Entrance rides the WINDOWED channel, not the raw one. On `--pc-enter`
      the record was at half opacity while the card was half-way up the
      viewport — lit before it had arrived, which is most of what "appears

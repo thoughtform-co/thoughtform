@@ -3723,6 +3723,11 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         tabsBottom: tabs?.bottom ?? null,
         frameTop: frame?.top ?? null,
         frameLeft: frame?.left ?? null,
+        frameRight: frame?.right ?? null,
+        recordBorderRight: (() => {
+          const rec = card.querySelector<HTMLElement>(".pf-card__record");
+          return rec ? getComputedStyle(rec).borderRightWidth : null;
+        })(),
         frameBorderTop: frameEl ? getComputedStyle(frameEl).borderTopWidth : null,
         frameBorderLeft: frameEl ? getComputedStyle(frameEl).borderLeftWidth : null,
         fieldLeft: f?.left ?? null,
@@ -3771,9 +3776,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       "the rail left the title's line"
     ).toBeLessThanOrEqual(2);
     expect(folder!.ruleContent, "the field draws a rule at its datum again").toBe("none");
+    /* The split is the body's grid, not a line — the field's box still begins
+       exactly where the record's ends, which is what the two columns are.
+       Since U8 nothing is DRAWN there (pinned above). */
     expect(
       Math.abs(folder!.fieldLeft! - folder!.dividerRight!),
-      "the field does not start on the divider"
+      "the field does not start where the record ends"
     ).toBeLessThanOrEqual(1);
     /* ⚠ THE RAIL IS BACK ON THE DATUM (U7, retiring U6's band seat). The
        owner read the band rail live — "I don't think the tabs in the header
@@ -3803,28 +3811,28 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       "the frame's walls do not reach the rail"
     ).toBeLessThanOrEqual(1);
 
-    /* ── THE RAIL IS FULL-BLEED; EVERYTHING ELSE KEEPS ITS INSET (U4,
-       restored at U7) ── The rail spans the panel — first station ON the
-       divider, last ON the card's edge — while the frame stays at
-       `--pf-field-px`. Both halves are pinned, because the whole point is
-       the DIFFERENCE between them: a rail that drifted inboard and a frame
-       that went full-bleed would each look like the other's fix. */
+    /* ── THE RAIL IS THE FRAME'S WIDTH, AND NOTHING DIVIDES THE COLUMNS
+       (U8) ── Owner: "the length of the tabs should be the same as the right
+       panel where the image and text lives", and "let's maybe also remove the
+       vertical divider between the left and right panel". So the rail's two
+       ends are the FRAME's two ends — one column, the rail its head — and the
+       record draws no right border. ⚠ U4's full-bleed pin is reversed here by
+       U4's own reason: the rail should share an edge with the thing it heads,
+       and with the divider gone the frame is the only edge left to share.
+       ADR-094 U8's `--pf-field-px` inset is back in force for both. */
     expect(
-      Math.abs(folder!.stnLeft! - folder!.fieldLeft!),
-      "the rail does not meet the divider"
+      Math.abs(folder!.stnLeft! - folder!.frameLeft!),
+      "the rail and the frame do not share a left edge"
     ).toBeLessThanOrEqual(1);
     expect(
-      Math.abs(folder!.stnRight! - folder!.fieldRight!),
-      "the rail does not reach the card's edge"
+      Math.abs(folder!.stnRight! - folder!.frameRight!),
+      "the rail and the frame do not share a right edge"
     ).toBeLessThanOrEqual(1);
     expect(
       folder!.frameLeft! - folder!.fieldLeft! - folder!.fieldPadX!,
       "the frame lost the inset the visuals keep"
     ).toBeLessThanOrEqual(1);
-    expect(
-      folder!.frameLeft! - folder!.stnLeft!,
-      "the frame went full-bleed with the rail"
-    ).toBeGreaterThanOrEqual(8);
+    expect(folder!.recordBorderRight, "the column divider is drawn again").toBe("0px");
 
     /* ── NOTHING CLIPS, ON ANY CARD ────────────────────────────────────
        Every card is measured against ITS OWN box, which is what a pile of
