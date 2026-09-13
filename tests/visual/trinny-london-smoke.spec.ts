@@ -677,10 +677,23 @@ test.describe("Trinny London pitch variant", () => {
       Math.abs(h3.watch!.right - h3.box!.right),
       "the bar spans the box (R)"
     ).toBeLessThanOrEqual(1.5);
+    /* ⚠ THE REGISTER AND THE BOX NO LONGER SHARE A FLOOR (ADR-097 U9, owner:
+       "the borders left and right of the image needs to touch the bottom
+       border"). ADR-094 U8 had inset the field's bottom by `--pf-card-py` so
+       the record's last rule and the box's floor landed on one line; the box
+       runs to the CARD's edge now and the card's lip closes it, so the two
+       floors are `--pf-card-py` apart by design. What is pinned instead is
+       the relation that survived: the record's last rule sits ABOVE the box's
+       floor, by the record's own padding and no more — a register that
+       overran its column would still fail. */
     expect(
-      Math.abs(h3.lastClaimBottom! - h3.box!.bottom),
-      "register and box share one floor"
-    ).toBeLessThanOrEqual(2);
+      h3.box!.bottom - h3.lastClaimBottom!,
+      "the register runs past the box's floor"
+    ).toBeGreaterThanOrEqual(0);
+    expect(
+      h3.box!.bottom - h3.lastClaimBottom!,
+      "the register floats far above the card's floor"
+    ).toBeLessThanOrEqual(60);
     /* 04 the company — the map's own three readings, PORTALLED into the
        field's rail, which is also what makes them pressable here: the card
        covers the console with a transparent layer so its wheel capture

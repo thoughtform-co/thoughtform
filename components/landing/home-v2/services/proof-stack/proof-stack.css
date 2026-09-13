@@ -216,10 +216,12 @@
   /* The glyph is a 7-cell lattice: INTEGER multiples only (ProofGlyph.tsx).
      21 here, 28 on the 940h rung where the sentences show. */
   --pf-glyph: 21px;
-  /* Shared insets, so the record column and the field's apparatus end on
-     ONE floor line (U8). `--pf-card-py` is the record's vertical padding
-     AND the box's bottom inset; `--pf-field-px` insets the rail and the
-     bay together off the divider and the right edge. */
+  /* ⚠ `--pf-card-py` IS THE RECORD'S PADDING AND THE FIELD'S DATUM, NOT THE
+     FIELD'S FLOOR ANY MORE. ADR-094 U8 used it at both ends so the record's
+     last rule and the field's apparatus landed on one line; ADR-097 U3 took
+     the top (the rail is the frame's head) and U9 the bottom (the CARD's lip
+     is its floor), so the field now fills its bay and only the record pads by
+     this. `--pf-field-px` still insets the rail and the bay together. */
   --pf-card-py: clamp(20px, 2.6vw, 44px);
   --pf-card-px: clamp(20px, 2vw, 32px);
   /* ⚠ 1.25vw, NOT 2vw: the inset comes out of four stations' width, and at
@@ -975,16 +977,25 @@
    BAY stays the size container and keeps its full box, so every `cqh`
    count (the ads' rows, the film's width) is against the bay, and each
    kind that derives a height from `100cqh` subtracts these two terms. */
-/* ⚠ AND ITS TOP IS THE RAIL'S BOTTOM EDGE (U3, owner: "the vertical lines
-   should just connect to the tabs above it"). It was inset by a
-   `--pf-field-gap` — "the rail's clearance" — which is what left the framed
-   kinds' side walls hanging 13px below the boxes they belong to. The token is
-   deleted rather than zeroed: it was subtracted in two derived heights (the
-   film's width and the wire's), and a no-op term in an arithmetic chain is a
-   term the next reader has to disprove. */
+/* ⚠ THE FIELD FILLS THE BAY ON ALL FOUR SIDES (U3 took the top, U9 the
+   floor). U3: "the vertical lines should just connect to the tabs above it" —
+   the top was inset by a `--pf-field-gap` that left the framed kinds' walls
+   hanging 13px below the rail. U9: "the borders left and right of the image
+   needs to touch the bottom border" — the floor was inset by `--pf-card-py`,
+   which stopped the frame 37px above the card's own edge with a band of bare
+   plate under it.
+   ⚠ THIS RETIRES ADR-094 U8's "EVERY FIELD ENDS ON THE RECORD'S FLOOR."
+   That rule existed because a console running to the card's edge drew its own
+   bottom line 37px under the record's last rule — two floors. The answer now
+   is not to move the box back up but to stop drawing that second line: the
+   frames take `border-bottom: 0` and the CARD's lip is their floor, which is
+   the same move U3 made at the top with the rail.
+   ⚠ BOTH INSETS WERE SUBTRACTED IN TWO DERIVED HEIGHTS (the film's width and
+   the wire's) and both terms are deleted, not zeroed — a no-op term in an
+   arithmetic chain is a term the next reader has to disprove. */
 .pf-stack .pf-field {
   position: absolute;
-  inset: 0 0 var(--pf-card-py) 0;
+  inset: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1121,12 +1132,9 @@
   display: grid;
   gap: 10px;
   min-width: 0;
-  /* `100cqh` is the BAY; the field is inset from its FLOOR alone (U8, and
-     U3 — the top inset went when the frame's walls met the rail). */
-  width: min(
-    100%,
-    calc((100cqh - var(--pf-card-py) - 2 * var(--pf-film-pad) - 26px) * var(--pf-film-ar))
-  );
+  /* `100cqh` IS the field now — both insets went (U3 the top, U9 the floor),
+     so the only terms left are the film block's own. */
+  width: min(100%, calc((100cqh - 2 * var(--pf-film-pad) - 26px) * var(--pf-film-ar)));
 }
 
 /* The 4:5 social cut, where the record carries one — the shape this panel
@@ -1279,9 +1287,13 @@
   /* ⚠ NO TOP EDGE (U3) — the same ruling as the console's one kind over: the
      rail is this bay's head, so the box opens into it and its two walls run
      up to the stations. `IN SERVICE {year}` keeps its own bottom rule, which
-     is what still separates the head row from the drawing. */
+     is what still separates the head row from the drawing.
+     ⚠ AND NO FLOOR (U9): the box runs to the card's edge, so the card's lip
+     is its floor and the watch bar is fused to that rather than to a hairline
+     drawn just inside it. Walls only, top to bottom. */
   border: 1px solid var(--pf-rule);
   border-top: 0;
+  border-bottom: 0;
   padding: 0;
 }
 
@@ -1394,8 +1406,7 @@
 .pf-stack .pf-wire {
   --pf-wire-ar: 1.62;
   --pf-wire-h: calc(
-    100cqh - var(--pf-card-py) - var(--pf-bay-head-h, 0px) - var(--pf-watch-h, 0px) - 2px - 2 *
-      var(--pf-bay-pad, 0px)
+    100cqh - var(--pf-bay-head-h, 0px) - var(--pf-watch-h, 0px) - 2px - 2 * var(--pf-bay-pad, 0px)
   );
   width: min(calc(100% - 2 * var(--pf-bay-pad, 0px)), calc(var(--pf-wire-h) * var(--pf-wire-ar)));
   aspect-ratio: var(--pf-wire-ar);
@@ -1439,8 +1450,13 @@
      just connect to the tabs above it"). The frame is a bay the rail is the
      head of, so its top is the rail — a hairline of its own there is a second
      lid under the row of boxes, and the two verticals then read as a box that
-     happens to sit below the tabs rather than as the box they open into. */
+     happens to sit below the tabs rather than as the box they open into.
+     ⚠ AND NO FLOOR EITHER (U9, owner: "the borders left and right of the image
+     needs to touch the bottom border"). The box runs to the card's own edge
+     now, so the CARD's lip is its floor; a hairline 1px inside that lip is
+     the same doubled line the lid was. Walls only, top to bottom. */
   border-top: 0;
+  border-bottom: 0;
   /* ⚠ AND ITS CHAMFER GOES (U4). `console.css` cuts the console TL + BR —
      ADR-065 U2's enumerated exception — which ADR-089 RETIRED on the
      casefile when the console became a cell inside a chamfered housing. That

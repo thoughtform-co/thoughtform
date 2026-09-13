@@ -549,6 +549,38 @@ is why the smoke's message strings name the seat and not just the number: a
 bare `>= 15` tells the next reader nothing about which of the four rulings it
 is enforcing.
 
+## Update 9 — the frame's floor is the card's lip (2026-09-13, owner)
+
+> The borders left and right of the image needs to touch the bottom border.
+
+Measured first: the framed box closed on its own bottom **37px above the
+card's edge** on all four cards — `--pf-card-py`, ADR-094 U8's "EVERY FIELD
+ENDS ON THE RECORD'S FLOOR" — leaving the walls terminating in a band of bare
+plate with the card's gold lip below them. `.pf-field`'s inset goes to `0` on
+all four sides and both framed kinds take `border-bottom: 0`, so the box fills
+its bay and the CARD's lip closes it. Measured after: frame bottom = card
+bottom, 0px, on every card.
+
+⚠ **THIS RETIRES ADR-094 U8's FLOOR RULE, AND THE ANSWER IS THE SAME ONE U3
+GAVE AT THE TOP.** U8 inset the field because a console running to the card's
+edge drew its own bottom line 37px under the record's last rule — two floors.
+The fix is not to move the box back up but to stop drawing the second line: no
+lid because the rail is the head, no floor because the lip is the floor. The
+frame draws walls and nothing else.
+
+⚠ **THE COST IS THE ALIGNMENT U8 BOUGHT.** The record's last rule now sits
+~37px above the field's floor rather than on it. That asymmetry is what U8
+existed to remove, and it is re-opened deliberately; the trinny smoke's
+`register and box share one floor` equality is replaced by the relation that
+survives — the register ends at or above the box's floor, by the record's own
+padding and no more, so a register overrunning its column still fails.
+
+⚠ **THE FLOOR TERM WAS IN TWO DERIVED HEIGHTS**, exactly as the top inset was
+at U3: the film's width and the wire's both subtracted `--pf-card-py`. Deleted,
+not zeroed. `--pf-card-py` is now the record's padding and the field's DATUM
+only — its comment says so, because a token used at one end and not the other
+is the kind of thing the next reader assumes is symmetric.
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,

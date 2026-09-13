@@ -166,8 +166,17 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   vertical lines should just connect to the tabs above it"). The frame is a
   bay the rail is the HEAD of: both framed kinds take `border-top: 0` — the
   shared `.fl-con__console` (sheets, map) and the tools' own
-  `.pf-field--tools` — `.pf-field`'s inset drops its top term, and `--con-gap`
-  is `0px` here so the console's box IS the field's box. Measured: frame top =
+  `.pf-field--tools` — `.pf-field` has NO inset at all (U3 took the top, U9 the
+  floor), and `--con-gap` is `0px` here so the console's box IS the field's
+  box. ⚠ **AND NO FLOOR EITHER (U9, owner: "the borders left and right of the
+  image needs to touch the bottom border")**: the box runs to the card's edge
+  and the card's LIP closes it — `border-bottom: 0` on both kinds, walls and
+  nothing else. **This retires ADR-094 U8's "every field ends on the record's
+  floor"**, whose reason was that a console reaching the card's edge drew a
+  second line under the record's last rule; the answer is to stop drawing that
+  line, not to move the box up. The cost is U8's alignment: the record's last
+  rule now sits ~37px above the field's floor. Measured: frame bottom = card
+  bottom (0px), frame top =
   rail bottom, and — since U8 put the rail back on the field's inset — frame
   left = station left again. ⚠ U3's clause on the walls meeting the stations'
   outer edges was an INFERENCE that happened to be true, went false at U4 and

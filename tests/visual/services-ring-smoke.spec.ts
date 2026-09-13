@@ -3729,7 +3729,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           return rec ? getComputedStyle(rec).borderRightWidth : null;
         })(),
         frameBorderTop: frameEl ? getComputedStyle(frameEl).borderTopWidth : null,
+        frameBorderBottom: frameEl ? getComputedStyle(frameEl).borderBottomWidth : null,
         frameBorderLeft: frameEl ? getComputedStyle(frameEl).borderLeftWidth : null,
+        frameBottom: frame?.bottom ?? null,
+        cardBottom: c.bottom,
         fieldLeft: f?.left ?? null,
         dividerRight:
           card.querySelector<HTMLElement>(".pf-card__record")?.getBoundingClientRect().right ??
@@ -3809,6 +3812,21 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(
       Math.abs(folder!.frameTop! - folder!.tabsBottom!),
       "the frame's walls do not reach the rail"
+    ).toBeLessThanOrEqual(1);
+
+    /* ── AND NO FLOOR EITHER: THE CARD'S LIP IS IT (U9) ────────────────
+       Owner: "the borders left and right of the image needs to touch the
+       bottom border." The box ran to `--pf-card-py` above the card's edge —
+       ADR-094 U8's "every field ends on the record's floor" — which left the
+       walls stopping in a band of bare plate. The box fills its bay now and
+       the CARD's own lip closes it, so the frame draws walls and nothing
+       else. ⚠ Pinned from both ends, like the lid: the floor is `0px` AND
+       the walls reach the card's bottom, because a frame that simply lost
+       every border satisfies the first on its own. */
+    expect(folder!.frameBorderBottom, "the frame kept its floor").toBe("0px");
+    expect(
+      Math.abs(folder!.frameBottom! - folder!.cardBottom!),
+      "the frame's walls stop short of the card's bottom edge"
     ).toBeLessThanOrEqual(1);
 
     /* ── THE RAIL IS THE FRAME'S WIDTH, AND NOTHING DIVIDES THE COLUMNS
