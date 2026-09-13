@@ -5,7 +5,7 @@ import {
   TRINNY_PROOF_ORDER,
   trinnyProofClient,
   trinnyProofTracks,
-} from "@/app/(marketing)/trinny-london/proof/proofOrder";
+} from "@/app/(marketing)/arcs/trinny-london/proposal/proof/proofOrder";
 import { CASES } from "@/lib/cases/registry";
 
 /**

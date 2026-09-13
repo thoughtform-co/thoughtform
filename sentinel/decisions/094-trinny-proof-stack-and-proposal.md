@@ -1169,3 +1169,50 @@ the smoke from the computed colours.
 - The parchment between the configuration's kickers and the phases head is
   two known terms: U5's floor slack and the arc beat's top padding. Owner's
   eye, as U5 already said.
+
+## Update 10 — the configuration is an arc beat, and the pin is retired (2026-09-13)
+
+⚠ **THIS RETIRES U5's PIN AND U7's ROUTE-LOCAL DRAWING. Full record:
+[ADR-099](099-proposal-nests-and-the-configuration-scrolls-in.md).**
+
+The owner, reading the page after U9 landed: _"when you scroll from the section
+where we see the Trinny London particle system logo, after the products move
+away and we go into the Trinny London configuration, there's a brief moment
+where a blank section or a leftover section briefly appears"_ — and _"as you
+move away, the elements from the next section should scroll into view"_.
+
+**The blank frame WAS the pin.** Capture stops `18-turn-resolve` (y 20380) and
+`19-prop-armed` (y 21004) were pixel-identical bare frames: the turn's stage is
+empty from `p ≥ 0.90` and `#proposition` held `--tp-in: 0` until its sticky
+stage parked. **A pin cannot begin until the thing above it has ended**, so
+the reader crossed a viewport of held ground with nothing in it. U5 chose that
+pin to stop a slab sliding over the turn; this is what it bought.
+
+What changed:
+
+- **`#proposition` keeps everything except its stage.** Same id, same bus
+  station, same journey range, same transparent cover form, same
+  `.tl-prop__ground` canvas and the U6 swap. Its RECORD is one
+  `[data-tl-config-root]` slot that `TrinnyPortals` mounts `ArcConfiguration`
+  into, over `TRINNY_CONFIGURATION` in `offer/offerSections.ts` — so the
+  drawing U7 authored here comes back through ADR-098 §4's port of it, the
+  same three teams and four layer rows, verbatim from the deleted tiles'
+  `data-*`.
+- **The clock is an ARRIVAL.** `propArrival(top, vh)` replaces
+  `propPinnedProgress`; `propInOf`, `TURN_PROP_IN/_LIT`, the `--tp-in` channel,
+  `.tl-prop__stage/head/lead/title/desc`, the whole `.tl-config*` block and
+  `usePropPick` are all deleted. ⚠ **The overlap is arithmetic**: `#turn` is
+  `100svh + 120svh`, so the record opens at `p = 1 − 0.5/2.2 = 0.7727` and is
+  half arrived at `p = 1` (measured live at 0.77). It rises while the products
+  leave (0.88 → 1.0) — the blank frame is not patched, it is unreachable.
+- **U5's head-datum bullet is superseded by a rule that reaches every head**
+  (ADR-099 §3): `align-content: center` seated a head by HALF ITS BEAT'S BODY
+  HEIGHT, so across this page's own beats the eyebrow ranged 0.107 → 0.197 of
+  the frame. `[data-arc-format="proposal"] .arc-sec:has(> .arc-band >
+.arc-head)` takes `start` plus the 10.7svh datum. U5's "left open: the slack
+  pools at the floor" survives as the named cost.
+- **The offer's designators offset by one.** `TrinnyBeats` renders both roots
+  and `startIndex` shifts the numbering, so the configuration is 01 and the
+  phases 02. The head, the cross and the coord stamps are the `.arc-head`'s —
+  which is the owner's fifth ask ("all sections have that cross"), answered by
+  the record becoming a beat rather than by a rule.

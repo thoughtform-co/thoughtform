@@ -40,7 +40,7 @@ const ROOT = join(__dirname, "..", "..");
 const ENTRIES = [
   "app/(marketing)/page.tsx",
   "app/(marketing)/claude-workshop/page.tsx",
-  "app/(marketing)/trinny-london/page.tsx",
+  "app/(marketing)/arcs/trinny-london/proposal/page.tsx",
 ] as const;
 
 const BANNED_EVERYWHERE = [/^three(\/|$)/, /^@react-three\//, /^postprocessing(\/|$)/];

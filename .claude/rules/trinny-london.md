@@ -1,6 +1,6 @@
 ---
 paths:
-  - "app/(marketing)/trinny-london/**"
+  - "app/(marketing)/arcs/trinny-london/proposal/**"
   - "public/prototypes/v7/landing-trinny-london.html"
   - "public/trinny-london/**"
   - "lib/theme/themeLock.ts"
@@ -27,7 +27,8 @@ place) → the proposal** → contact.
 
 **Read first**
 
-- [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock. ⚠ **U1 deleted the interstitial slab**: the ground changes under a shader instead and the line decodes in place over it. ⚠ **U5 (2026-09-10) DELETED THE SECOND SLAB** — the products LEAVE on the turn's own clock, `#proposition` is transparent and PINNED with its record powering on in place, the mark fades behind it, and the kill edge is **`#contact`**
+- ⚠ [ADR-099](../../sentinel/decisions/099-proposal-nests-and-the-configuration-scrolls-in.md) — **PROPOSED (2026-09-13), built and guarded, pending the owner's live read. THE ROUTE IS `/arcs/trinny-london/proposal` NOW** (a 308 from the old URL; ADR-098 §2's flat-engagement rule is untouched — what nests is a `ClientDef.pages` record, outside `[slug]`'s one-segment namespace). ⚠ **U5's PIN IS RETIRED AND THE CONFIGURATION IS AN ARC BEAT** that scrolls in over the emptied turn — the blank frame the owner saw WAS the pin; the clock is `propArrival`, the overlap is arithmetic (`p = 0.7727`), the coral rule and `--tp-in` are deleted, and the beat carries the `.arc-head`'s cross. ⚠ **EVERY PROPOSAL HEAD TAKES A DATUM** (`arcs.css`, format-scoped, so the Suri and Perfect Ted pages take it too). ⚠ **A `flow` KIND** draws the brief → renders → markets pipeline; see §The interstitial and the proposal
+- [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock. ⚠ **U1 deleted the interstitial slab**: the ground changes under a shader instead and the line decodes in place over it. ⚠ **U5 (2026-09-10) DELETED THE SECOND SLAB** — the products LEAVE on the turn's own clock, `#proposition` is transparent, the mark fades behind it, and the kill edge is **`#contact`** (⚠ its PIN is retired by ADR-099 and the kill edge is `#offer` since ADR-094 U9 — both are recorded below)
 - [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome with the project's name down in the record, the fields show ONE thing on the house rail, and the arrival is delayed and settled. ⚠ **U2 (same day) PUT THE ARC IN THE RECORD AND THE TABS IN THE FIELD** — `CaseTrack.arc`, the order reversed to lead on the frontier work, the claim sentences read, and the ATL films in their 4:5 cut. ⚠ **U3 (same day) MADE THE ARC THE TITLE**, gave the studio card its THREE SHEETS via a portalled `SheetsPlate`, and made both the films and the tools PLAY. ⚠ **U4 (same day) NOTCHED THE CARDS** (ADR-065's canonical TR+BL, which caught the console's stale TL+BR), cut the head down to its ORDINAL, renamed `THE LINE` → `GOVERNANCE`, and made the 4:5 cut play IN ITS FRAME. ⚠ **U7 (2026-09-11) REDREW THE PROPOSAL AS ONE INSTRUMENT WITH A PICKER** — the layer they own, the teams as tiles, the picked team’s five-question configuration, adoption and automation across the seam; see §The interstitial and the proposal
 - [ADR-093](../../sentinel/decisions/093-trinny-london-light-locked-variant.md) — this route's lock and its journey clock
 - [ADR-053](../../sentinel/decisions/053-workshop-corridor-variant.md) — the recipe it repeats, and its two invariants
@@ -536,31 +537,51 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   tube). Never a re-derivation of `--gold`: the WebGL golds are exempt from CSS
   by design and would go out of step.
 - **The proposal letters no Arc vocabulary, no digit, no "self-sufficient"** —
-  the parse guard walks its text. Connectors are 1px DIVS (the wireframe law).
+  `trinny-offer.test.ts` walks `TRINNY_CONFIGURATION` with `PROPOSAL_COPY_BANS`
+  (it was the parse guard's job while the record lived in the HTML).
+  Connectors are 1px DIVS (the wireframe law).
+- ⚠ **THE CONFIGURATION IS AN ARC BEAT NOW, AND IT SCROLLS IN (ADR-099,
+  2026-09-13, owner: _"the elements from the next section should scroll into
+  view"_).** `#proposition`'s record is ONE `[data-tl-config-root]` slot that
+  `TrinnyPortals` mounts `ArcConfiguration` into, over `TRINNY_CONFIGURATION`
+  in `offer/offerSections.ts` — so it carries the `.arc-head` (eyebrow, origin
+  cross, coord stamps) every other beat has, and the owner's "all sections
+  have that cross" is answered by the record becoming a beat rather than by a
+  rule. ⚠ **DELETED WITH THE PIN**: `.tl-prop__stage/head/lead/title/desc`
+  (with the coral rule the owner called a "weird red divider"), the whole
+  `.tl-config*` block, `--tp-in`, `data-tl-reveal` on this station, and
+  `proposition/usePropPick.ts` — `ArcConfiguration` owns its picker on
+  `data-cfg-*`. ⚠ **THE SLOT MAY NOT CARRY `.tl-prop__inner`**: the station's
+  banding and the arc's `.arc-band` both apply and the instrument is squeezed
+  into a column with the ground beside it; the station gives up its horizontal
+  padding too, exactly as `#offer` does one station down. ⚠ **AND
+  `.arc-root` PAINTS AN OPAQUE GROUND** — the transparency rule must cover
+  `.arc-root` AND `.arc-section`, or the beat mounts on the arcs' own page
+  ground with a hard seam at the station's top edge (measured: the coral
+  stopped dead at y 811 at 1920×1247, every geometry gate green).
 - ⚠ **THE DRAWING IS ONE INSTRUMENT WITH A PICKER (ADR-094 U7, owner
   2026-09-11: the old Aether landing's headless panel is "the composition I
-  like").** Three `.tl-config__band`s on one hairline plate: the LAYER they
-  own (four rows — Rules · Examples · Sources · Loops — that DIM unless the
-  picked team reads them), the SEAM (two arrows, adoption pointing at the
-  layer, automation pointing back at the work, each a 1px `<i>` run with a
-  border-drawn head), and the WORK (three team tiles, then the picked team's
-  configuration read out in the registry's five questions: who owns it ·
-  what runs it · the bar · what it can reach · where it runs). The three
-  kickers stay. ⚠ **THE RECORD LIVES ON THE TILES AS `data-*`**
-  (`data-layers`, `data-owner`, `data-runs`, `data-bar`, `data-reach`,
-  `data-where`) so the parse guard's digit / Arc / self-sufficient walk
-  reaches every string the pick can letter; `usePropPick`
-  (`proposition/usePropPick.ts`, called from `TrinnyPortals`) is ONE
-  delegated listener on `[data-tl-config]` — never a listener per tile inside
-  a `dangerouslySetInnerHTML` body. ⚠ **THE RESTING STATE IS AUTHORED**: the
-  first tile carries `aria-selected="true"` and every row `is-on`, so the
-  drawing reads whole under reduced motion and on the phone, where the hook
-  is the only thing that changes it. ⚠ **GOLD IS THE BUILT THING AND NOTHING
-  ELSE**: the lit rows, the picked tile, the readout's rule — the plate, the
-  unlit rows and the tiles at rest are dawn. `data-tl-reveal` stays on the
-  instrument's root (the count is still three). The picker is smoke-pinned
-  from both ends (picked and un-picked tile, lit and dimmed row) and the
-  parse guard pins the tiles' layer ids against the rows' ids.
+  like").** That composition is unchanged and now renders through
+  `ArcConfiguration`: the LAYER they own (four rows — Rules · Examples ·
+  Sources · Loops — that DIM unless the picked team reads them), the SEAM (two
+  arrows, adoption pointing at the layer, automation pointing back at the
+  work), and the WORK (three team tiles, then the picked team's configuration
+  read out in the registry's five questions: who owns it · what runs it · the
+  bar · what it can reach · where it runs). The three kickers stay. ⚠ **THE
+  RECORD CAME HOME RATHER THAN BEING REWRITTEN** — ADR-098 §4 ported this
+  drawing onto the arcs surface, and `TRINNY_CONFIGURATION` is the same three
+  teams, four layer rows, two seam notes and three kickers lifted verbatim
+  from the deleted tiles' `data-*`, so "the same instrument" is a claim the
+  diff can carry. ⚠ **THE RESTING STATE IS AUTHORED** (first tile selected,
+  its rows lit), so the drawing reads whole with no JS and under reduced
+  motion. ⚠ **GOLD IS THE BUILT THING AND NOTHING ELSE**: the lit rows, the
+  picked tile, the readout's rule — the plate, the unlit rows and the tiles at
+  rest are dawn. ⚠ **THE PICKED TILE IS FILLED HERE** (ADR-089 U4), where the
+  pitch page's own cut outlined it; the newer house law wins, and this route
+  took it by mounting the arcs' component. ⚠ The mechanical gate reports five
+  `accent` findings on `.arc-cfg` (four lit layer rows, the readout's rule) —
+  **identical on `/arcs/suri-proposal`**, i.e. the authored gold the ruling
+  above asks for, not a regression.
 - **`mobile-section-seams.spec.ts` is `/`-only** — the trinny stations are not in
   its `STATION_IDS`; phones are covered by the capture script.
 
@@ -756,44 +777,51 @@ The proposal's beats after the configuration — phases · loop · needs and kee
   rail already says Proposal — three times in one band. The paragraph lost its
   middle sentence too: the adoption-and-automation loop is what the drawing
   under it draws. The parse guard pins the absence of both.
-- ⚠ **`#proposition` IS TRANSPARENT AND PINNED, AND ITS RECORD APPEARS RATHER
-  THAN ARRIVES (U5, owner: "the elements from the next section should just
-  come into view").** It was an OPAQUE station in normal flow whose head and
-  drawing entered on `data-m`, and **an opaque station in normal flow can only
-  ARRIVE by travelling — its content travels with it.** So it takes `#turn`'s
-  shape (`100svh` + a 60svh runway, a sticky `[data-tl-prop-stage]`), its
-  record sits blank while the station travels, and it powers on once the stage
-  parks. Nothing can be seen sliding because nothing is visible while anything
-  moves. The reveal is the house terminal stutter on `--tp-in`, **OPACITY
-  ONLY** (a transform here is the move-and-fade system back in new clothes),
-  with the title on the scrubbed house decode and its ghost/live pair.
-  ⚠ **`var(--tp-in, 1)` FAILS OPEN** — the writer REMOVES the property when it
-  parks, so the phone and reduced-motion paths get the record standing lit. A
-  reveal channel that is absent must mean shown, never hidden.
-- ⚠ **THE PIN IS NOT THE STATION'S TOP, AND ASSUMING IT WAS SHIPPED THE DEFECT
-  IN MINIATURE.** `.station` carries 140px top / 220px bottom padding at
-  1920×1247, so the stage is still 140px short of pinning in the frame the
-  station's top reaches the viewport top — the first clock opened the reveal
-  45px into that travel and lit the record while it was still moving. And a
-  sticky child travels inside its container's CONTENT box, so the bottom
-  padding comes out too: **16px of real travel at 1280×720** against a 60svh
-  runway, measured as a head clipped off the top of the viewport. The station's
-  vertical padding is 0 on the capable rung with the air spent INSIDE the
-  stage, and `propPinnedProgress` measures the STAGE's own travel off
-  `offsetTop`/`offsetHeight`. The error is viewport-dependent, so no literal
-  could have hidden it.
-- ⚠ **A RULE IS PART OF WHAT IT RULES.** `data-tl-reveal` goes on
-  `.tl-prop__head`, not on `.tl-prop__lead` inside it: the head draws the coral
-  rule under the band, and one level down that line painted at full strength
-  across an otherwise empty frame.
+- ⚠ **`#proposition` IS TRANSPARENT, AND SINCE ADR-099 IT IS NOT PINNED.** U5
+  made it a pinned station whose record powered on in place, on the reasoning
+  that _an opaque station in normal flow can only ARRIVE by travelling_. It
+  bought the blank frame the owner then reported: **a pin cannot begin until
+  the thing above it has ended**, so stops `18-turn-resolve` and `19-prop-armed`
+  were pixel-identical bare frames, ~1 viewport of held ground with nothing in
+  it. The station keeps its id, its bus station, its journey range, its
+  transparent cover form and the U6 ground; **the stage, `--tp-in`,
+  `propPinnedProgress`, `propInOf`, `TURN_PROP_IN/_LIT`, the ghost/live decode
+  pair and `data-tl-reveal` on this station are all deleted**, and its record
+  is an arc beat that scrolls in (see §The interstitial and the proposal).
+- ⚠ **THE CLOCK IS AN ARRIVAL, AND THE OVERLAP IS ARITHMETIC.**
+  `propArrival(top, vh)` = `clamp01((vh − top) / vh)`, one rect read. `#turn`
+  is `100svh + 120svh` with a sticky stage, so `p = 1` exactly as its bottom
+  reaches the viewport's, and `#proposition` starts `--tl-prop-lead` (50svh)
+  above that: the record opens at `p = 1 − 0.5/2.2 = 0.7727` and is **half
+  arrived at `p = 1`** (measured live at 0.77). It rises while the products
+  leave (`TURN_PRODUCT_OUT` 0.88 → 1.0), which is the owner's fourth ask
+  answered by the same change as his third. ⚠ **AND IT DELETES A LATCH** — the
+  pinned clock's one asymmetric failure was a station kept with its stage
+  removed: `q` pinned at 0 and the record invisible forever. An arrival has no
+  such state, which is the durable half of U5's `var(--tp-in, 1)` fail-open.
+- ⚠ **`.station` CARRIES 140px TOP / 220px BOTTOM PADDING AT 1920×1247, AND
+  THAT IS WHY THE PIN WAS NEVER THE STATION'S TOP** (U5's finding, kept
+  because it binds on any future sticky child here): a sticky child travels
+  inside its container's CONTENT box, so both paddings come out of the runway
+  — 16px of real travel at 1280×720 against a 60svh runway, and the error is
+  viewport-dependent, so no literal could have hidden it. The station's
+  vertical padding stays 0 on the capable rung.
+- ⚠ **THE CORAL RULE IS DELETED (ADR-099, owner: the configuration "has some
+  weird red divider").** U5's own bullet — _a rule is part of what it rules_,
+  which is why `data-tl-reveal` went on `.tl-prop__head` rather than on
+  `.tl-prop__lead` inside it — is retired with the head that drew it. The beat
+  carries the `.arc-head`'s eyebrow, origin cross and coord stamps instead.
 - ⚠ **`#contact` TAKES `data-m="fade"` AND NOTHING ELSE** (U5). Every other
   role in that system translates. It is not pinned — a page's last card does
   not need a stage — so the scrubbed channel has nothing to key on, and the
   one non-travelling role is the same law with the machinery already in the
   sheet. The parse guard pins the role set.
 - ⚠ **THE MARK FADES AGAINST THE PROPOSAL'S ARRIVAL, NOT MORE OF THE TURN'S.**
-  `markVeil(p, q)` is ADDITIVE and `q` is exactly 0 until the stage pins, so
-  the turn's beat is byte-identical and the clock test asserts it. Ceiling
+  `markVeil(p, q)` is ADDITIVE, and since ADR-099 that is load-bearing rather
+  than merely safe: `veilOf` saturates at `p = 0.72` and the arrival opens at
+  `p ≈ 0.7727`, so the two HAND OVER instead of racing — the turn takes the
+  mark to 0.72 and the arrival carries it the rest of the way, landing as the
+  record does. The clock test asserts the overlap arithmetic. Ceiling
   `TURN_VEIL_PROP_MAX` **0.94** — a watermark behind the drawing, never 1
   (`brandmarkMorphRef.veil` puts the mark BACK, not away). 0.90 was the first
   cut and measured too present: the ring crossed the layer band. This is the
@@ -817,7 +845,7 @@ The proposal's beats after the configuration — phases · loop · needs and kee
   showed it. The capture and the smoke both re-solve against `data-tl-turn`
   until it agrees. Capture stops 14–17 are solved for `p`, never guessed.
 
-## The seam into the proposal, and the head's seat (ADR-095 U6 / ADR-094 U5)
+## The seam into the proposal, and the head's seat (ADR-095 U6 / ADR-099)
 
 - ⚠ **THE TWO STATIONS OVERLAP BY `--tl-prop-lead` (50svh), AND THAT IS WHY THE
   GROUNDS MUST SWAP.** A sticky stage costs ONE VIEWPORT of scroll-off at its
@@ -828,6 +856,22 @@ The proposal's beats after the configuration — phases · loop · needs and kee
   ⚠ Neither other lever reaches it: the turn's clock is signed off, and
   `--tl-prop-runway` is DWELL, so shortening it changes how long the record
   stays, never when it arrives.
+  ⚠ **SINCE ADR-099 THE LEAD IS THE ONE DIAL ON WHEN THE RECORD OPENS**, and
+  the arithmetic is stated on the turn's own clock rather than on a pin: `#turn`
+  is `100svh + 120svh`, so the record opens at `p = 1 − 0.5/2.2 = 0.7727` and is
+  half arrived at `p = 1` (measured live at 0.77), rising while the products
+  leave at 0.88. Raising the lead starts it earlier and eats further into the
+  turn, which the owner has signed off.
+  ⚠ **AND THE COVERAGE HALF OF U6's GUARD HAD TO CHANGE ITS QUESTION.** It
+  asserted ONE ground covers ≥90 % of the frame — true while the proposal was a
+  160svh pinned station whose ground blanketed the viewport alone. Its record is
+  a beat now, so past the release the coral FEATHERS (`TURN_PROP_FADE`) exactly
+  where `#offer` begins painting (measured at release +0.7vh: the prop canvas
+  reaches alpha 1 by y 998 and `#offer`'s opaque top IS 998). The guard measures
+  the UNION of the painted bands. **Loosening the number until it passed was the
+  alternative, and that is how a guard stops describing the page.** ⚠ A union is
+  a sorted-interval merge — the first cut took `max(coral, offerTop)`, where
+  `offerTop` is where the band BEGINS, and passed for the wrong reason.
 - ⚠ **EXACTLY ONE GROUND PAINTS THE FRAME AT EVERY SCROLL POSITION.** Both
   stations paint a viewport-locked coral wash at the same amount, so wherever
   both are in frame the field composites TWICE and the upper one's edge is a
@@ -850,22 +894,41 @@ calc(var(--tl-prop-lead) * -1 - 4px)`) so it covers the frame alone from the
   reveal channel means SHOWN.
 - **Both rules key the STATION, not the stage**, so one selector reaches the
   WebGL canvas AND the no-shader gradient (whose opacity rides `--tl-wash`).
-- ⚠ **THE PROPOSAL'S HEAD SEATS ON THE HOMEPAGE'S DATUM, NOT ON ITS OWN
-  DRAWING.** `align-content: center` set the head's position from half the
-  configuration drawing's height: 306px / frac **0.241** at 1920×1247 against
-  `.services-masthead__title` at **0.107** on the same frame. `start` plus
-  `padding-block-start: clamp(48px, 10.7svh, 148px)` lands it at 0.107 at every
-  reference viewport. ⚠ `start` is also the safer overflow — `center` spills
-  equally through top and bottom, so `scrollHeight === clientHeight` and every
-  clip gate reports zero.
-- ⚠ **LEFT OPEN: the slack pools at the floor** (457px at the owner's viewport).
-  _Split the slack, don't pool it_ says give the drawing a `1fr` row — but that
-  opens ~185px between the head's coral rule and the drawing, and _a rule is
-  part of what it rules_. Owner's eye, not a guess.
+- ⚠ **THE PROPOSAL'S HEADS ALL SEAT ON ONE DATUM, AND IT IS NOT THIS PAGE'S
+  RULE (ADR-099 §3, owner: _"make sure the hero one and the paragraph are
+  always positioned at the right position"_).** `.arc-sec { align-content:
+center }` seats a head by HALF ITS BEAT'S BODY HEIGHT, so a head's position
+  is a function of what is under it — measured **0.107 → 0.197** of the frame
+  across this page's own beats at 1920×1247, with nothing on any head's box
+  saying so. `.arc-root[data-arc-format="proposal"] .arc-sec:has(> .arc-band >
+.arc-head)` takes `align-content: start` and `padding-block-start:
+var(--arc-head-datum)` = `clamp(48px, 10.7svh, 148px)` — the homepage services
+  masthead's own 0.107, which is the value U5 solved for on this station before
+  its pin was retired. ⚠ **IT LIVES IN `arcs.css`, NOT HERE**: `/arcs/suri-
+proposal` and `/arcs/perfect-ted-proposal` have the same defect for the same
+  reason, and a fix scoped to one client's page would be a rule true on one
+  surface. ⚠ **`:has()` is the mechanism** — chapter heads, interstitial
+  callouts and the close band draw no `.arc-head` and keep centring.
+  ⚠ `start` is also the safer overflow: `center` spills equally through top and
+  bottom, so `scrollHeight === clientHeight` and every clip gate reports zero.
+- ⚠ **THE COST IS STILL THE SLACK POOLING AT THE FLOOR, AND THE ANSWER MOVED
+  TO THE DRAWING.** U5 left this open and named the trap — giving the record a
+  `1fr` row opens ~185px between the head and the drawing, and _a rule is part
+  of what it rules_. With the datum in place the answer is that **the DRAWING
+  takes a share of the beat, never the head**: `.arc-flow` carries a
+  `min-height: clamp(300px, 46svh, 620px)` for exactly this. Air under a record
+  reads as room; air above it reads as a mis-seat.
+- ⚠ **THE GUARD ASSERTS THE EQUALITY, NOT THE VALUE.** A fixed frac passes at
+  one viewport and lies at another; what was asked for is that the heads agree
+  with EACH OTHER — the smoke measures the configuration head's seat against
+  the phases head's at two viewports, with the datum's own value checked once
+  and loosely. ⚠ **`.arc-reveal` RESTS TRANSLATED**, so a rect read before
+  `is-in` measures the animation: the guard waits for the class and the
+  transition, which is why it passed solo and failed in a full run.
 
 ## The corridor is SHARED, and it moved (ADR-018, 2026-09-10)
 
-- ⚠ **`/` AND `/trinny-london` MEASURE BYTE-IDENTICAL THROUGH THE CORRIDOR.**
+- ⚠ **`/` AND `/arcs/trinny-london/proposal` MEASURE BYTE-IDENTICAL THROUGH THE CORRIDOR.**
   Sampled at the same progress stops, every reading matched to the pixel. So a
   corridor complaint read on this route is NOT a route defect, and a fix for it
   lands on `/` and `/claude-workshop` too. **Measure both before scoping.**
@@ -906,12 +969,16 @@ node scripts/capture-trinny-london.mjs --vp 1920x1247 --port <port>
 node scripts/capture-trinny-london.mjs --vp 1280x720 --port <port> --out .cursor/trinny-shots/1280
 ```
 
-⚠ **THE CAPTURE'S PROPOSAL STOPS ARE SOLVED FOR `q`, NEVER FOR `topOf`.** The
-station's top at the viewport top IS `q = 0` — the one frame the record is
-guaranteed to be empty in. That still is worth having (it is the proof there
-is nothing travelling), but it is not the proposal: stops 19 / 20 / 12 are
-armed · striking · lit, and `rollToQ` converges on the published
-`data-tl-prop` exactly as `rollToP` does on `data-tl-turn`.
+⚠ **THE CAPTURE'S CONFIGURATION STOPS ARE SOLVED FOR `q`, NEVER FOR `topOf`.**
+Since ADR-099 `q` is `propArrival` — the station's arrival, not a stage's
+travel — so the station's top at the viewport top is `q = 1`, not 0. The stops
+are `19-config-arrive` (`rollToQ(0.45)`: the record half in over the emptied
+turn, which is the frame the blank one used to be) and `20-config-strike` /
+`12-configuration` at full arrival, with `23-offer-flow` after the offer's
+beats; `rollToQ` converges on the published `data-tl-prop` exactly as
+`rollToP` does on `data-tl-turn`. ⚠ The seam itself is still NOT a stop —
+shoot it by hand (`topOf("proposition") − 0.45·vh`) after touching either
+station.
 
 ⚠ **EDITING THE PROTOTYPE HTML FIRES NO HMR, AND A TAB THAT IS ALREADY OPEN
 WILL NOT SHOW IT.** `landing-trinny-london.html` lives under `public/`, so it is

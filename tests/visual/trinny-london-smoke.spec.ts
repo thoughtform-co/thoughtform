@@ -387,7 +387,7 @@ test.describe("Trinny London pitch variant", () => {
       if (r.resourceType() === "image" || /Gateway/i.test(r.url())) imageRequests.push(r.url());
     });
 
-    await page.goto("/trinny-london?theme=dark", { waitUntil: "domcontentloaded" });
+    await page.goto("/arcs/trinny-london/proposal?theme=dark", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
 
     const html = page.locator("html");
@@ -419,7 +419,7 @@ test.describe("Trinny London pitch variant", () => {
   });
 
   test("ADR-093: unlisted — noindex, and out of the sitemap", async ({ page, request }) => {
-    await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
+    await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
       "content",
       /noindex.*nofollow/
@@ -427,13 +427,13 @@ test.describe("Trinny London pitch variant", () => {
     // A sitemap that lists a noindexed URL advertises a page it then tells
     // crawlers to drop (app/sitemap.ts's own rule).
     const sitemap = await (await request.get("/sitemap.xml")).text();
-    expect(sitemap).not.toContain("/trinny-london");
+    expect(sitemap).not.toContain("/arcs/trinny-london/proposal");
   });
 
   test("ADR-053 recipe: the station order, and no anchor to a station it removed", async ({
     page,
   }) => {
-    await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
+    await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
 
     const order = await page.evaluate(() =>
@@ -459,7 +459,7 @@ test.describe("Trinny London pitch variant", () => {
   });
 
   test("ADR-093: the journey rail runs on THIS page's order", async ({ page }) => {
-    await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
+    await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
     await page.waitForTimeout(600);
 
@@ -523,7 +523,7 @@ test.describe("Trinny London pitch variant", () => {
   test("ADR-094: the proof stacks in #services, and the interstitial ends the ambient", async ({
     page,
   }) => {
-    await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
+    await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
     await page.waitForSelector("[data-pc-slot]", { timeout: 20_000 });
 
@@ -1084,143 +1084,99 @@ test.describe("Trinny London pitch variant", () => {
     expect(endWash).toBeGreaterThan(0.95);
     await expect(page.locator("#proposition [data-tl-prop-wash]")).toHaveCount(1);
 
-    /* ADR-095 U5 — THE PROPOSAL IS NOT A SLAB, AND ITS ELEMENTS ARRIVE IN
-       PLACE (owner, 2026-09-10: "we have a parallax paint flying over it. I
-       don't want that … the elements from the next section should just come
-       into view").
+    /* ADR-099 — THE CONFIGURATION SCROLLS IN, AND THE BARE FRAME IS GONE
+       (owner, 2026-09-13: "there's a brief moment where a blank section or
+       a leftover section briefly appears. That shouldn't happen" — and,
+       for the same beat, "as you move away… the elements from the next
+       section should scroll into view").
 
-       An opaque station in normal flow can only ARRIVE by travelling, and
-       its content travels with it. So it is PINNED now, TRANSPARENT over the
-       live canvas, and its record sits blank until the stage has stopped.
-       These three assertions are the mechanism, in order. */
-    const propStage = page.locator("#proposition [data-tl-prop-stage]");
-    await expect(propStage).toHaveCount(1);
+       ADR-095 U5 pinned this station and powered its record on in place,
+       which solved a slab sliding over the turn and bought a worse thing: a
+       pin cannot begin until the beat above it has ended, so the reader
+       crossed a viewport of emptied stage before anything arrived. The
+       record is an arc beat now and the two stations overlap.
 
-    const propGeom = await page.evaluate(() => {
-      const el = document.getElementById("proposition")!;
-      const st = el.querySelector<HTMLElement>("[data-tl-prop-stage]")!;
+       THE OVERLAP IS THE ASSERTION, and it is measured on the two clocks at
+       once: at the frame the turn is spent, the proposal must ALREADY be
+       half-arrived and its head must ALREADY be on screen. */
+    const seam = await page.evaluate(() => {
+      const turn = document.getElementById("turn")!;
+      const prop = document.getElementById("proposition")!;
       return {
-        docTop: el.getBoundingClientRect().top + window.scrollY,
-        height: el.getBoundingClientRect().height,
-        pad: st.offsetTop,
-        stageH: st.offsetHeight,
-        sticky: getComputedStyle(st).position,
+        pTurn: Number(turn.getAttribute("data-tl-turn") ?? "0"),
+        q: Number(prop.getAttribute("data-tl-prop") ?? "0"),
+        propTop: Math.round(prop.getBoundingClientRect().top),
+        vh: window.innerHeight,
       };
     });
-    expect(propGeom.sticky).toBe("sticky");
-    const travel = Math.max(1, propGeom.height - propGeom.pad - propGeom.stageH);
-    /** Roll to `q` — how far into the stage's PINNED stretch, its own clock. */
-    const rollToQ = async (q: number) =>
-      rollTo(page, Math.round(propGeom.docTop + propGeom.pad + q * travel));
+    expect(seam.pTurn, "the turn is spent at this stop").toBeGreaterThan(0.98);
+    expect(seam.q, "the proposal is already arriving as the turn ends").toBeGreaterThan(0.35);
+    expect(seam.propTop, "its top is already inside the frame").toBeLessThan(seam.vh);
 
-    /* AT THE PIN: the record is blank and the box it will fill is already
-       where it will be. ⚠ The head's rule is INSIDE that reveal — with it
-       one level down, the coral line painted at full strength across an
-       otherwise empty frame. */
-    await rollToQ(0);
-    const armed = await page.evaluate(() => {
-      const head = document.querySelector<HTMLElement>("#proposition .tl-prop__head")!;
-      const r = head.getBoundingClientRect();
-      return {
-        tp: Number(document.getElementById("proposition")!.style.getPropertyValue("--tp-in")),
-        headOpacity: Number(getComputedStyle(head).opacity),
-        box: { top: Math.round(r.top), left: Math.round(r.left), w: Math.round(r.width) },
-      };
-    });
-    expect(armed.tp).toBe(0);
-    expect(armed.headOpacity).toBe(0);
-
-    /* LIT: the record is at full strength — and its BOX HAS NOT MOVED A
-       PIXEL. That is the whole claim, and it is the one thing a "does it
-       appear?" assertion never makes. */
-    await rollToQ(0.8);
-    const propLit = await page.evaluate(() => {
-      const head = document.querySelector<HTMLElement>("#proposition .tl-prop__head")!;
-      const r = head.getBoundingClientRect();
-      const live = document.querySelector<HTMLElement>("#proposition [data-tl-decode]");
-      const ghost = document.querySelector<HTMLElement>("#proposition .tl-dc__ghost");
-      return {
-        tp: Number(document.getElementById("proposition")!.style.getPropertyValue("--tp-in")),
-        headOpacity: Number(getComputedStyle(head).opacity),
-        box: { top: Math.round(r.top), left: Math.round(r.left), w: Math.round(r.width) },
-        live: live?.textContent ?? "",
-        ghost: ghost?.textContent ?? "",
-        transform: getComputedStyle(head).transform,
-      };
-    });
-    expect(propLit.tp).toBe(1);
-    expect(propLit.headOpacity).toBe(1);
-    /* ⚠ 2px, NOT EXACT, AND THE TOLERANCE IS NOT A HEDGE. The two samples
-       are taken at different scroll positions, so the sticky stage's top
-       lands on a different sub-pixel and the rect rounds one either way —
-       measured 149 against 148. What this rules out is TRAVEL, which on the
-       `data-m` reveal it replaces was 14px and on a rising slab is a whole
-       viewport. An exact bound here is the flake generator ADR-088 records. */
+    /* ⚠ AND THE PIN IS GONE, BOTH HALVES. A stage left behind would pin `q`
+       at 0 with the writer no longer reading it; a `--tp-in` left behind
+       would be a reveal channel nothing drives, which latches the record
+       invisible on exactly the paths that cannot un-hide it. */
+    await expect(page.locator("#proposition [data-tl-prop-stage]")).toHaveCount(0);
     expect(
-      Math.abs(propLit.box.top - armed.box.top),
-      "the record does not travel"
-    ).toBeLessThanOrEqual(2);
-    expect(propLit.box.left).toBe(armed.box.left);
-    expect(propLit.box.w).toBe(armed.box.w);
-    /* ⚠ OPACITY ONLY. A transform here is the move-and-fade reveal coming
-       back wearing the new channel's clothes. */
-    expect(propLit.transform === "none" || propLit.transform === "matrix(1, 0, 0, 1, 0, 0)").toBe(
-      true
-    );
-    // The title decoded to its ghost's exact string.
-    expect(propLit.ghost.length).toBeGreaterThan(0);
-    expect(propLit.live).toBe(propLit.ghost);
+      await page.evaluate(() =>
+        document.getElementById("proposition")!.style.getPropertyValue("--tp-in")
+      )
+    ).toBe("");
+
+    /** Roll to `q` — how far the station has ARRIVED, its own clock. */
+    const rollToQ = async (q: number) => {
+      const box = await page.evaluate(() => {
+        const el = document.getElementById("proposition")!;
+        return { docTop: el.getBoundingClientRect().top + window.scrollY, vh: window.innerHeight };
+      });
+      await rollTo(page, Math.round(box.docTop - (1 - q) * box.vh));
+    };
+
+    /* THE RECORD IS THE ARCS' OWN BEAT NOW: one `.arc-cfg` instrument under
+       an `.arc-head`, which is what gives it the cross, the eyebrow and the
+       datum every other beat on this page has. */
+    await rollToQ(1);
+    await rollToQ(1);
+    await expect(page.locator("#proposition .arc-cfg")).toHaveCount(1);
+    await expect(page.locator("#proposition .arc-head")).toHaveCount(1);
+    await expect(page.locator("#proposition .arc-head").first()).toHaveClass(/is-in/);
+    /* ⚠ THE CROSS AND NO CORAL RULE (owner: "all sections should have that
+       cross in the left corner above the H1… the configuration one also has
+       some weird red divider. We need to remove that"). The mark is the arc
+       head's own origin cross; the rule left with `.tl-prop__head`. */
+    await expect(page.locator("#proposition .arc-head__mark--origin")).toHaveCount(1);
+    await expect(page.locator("#proposition .tl-prop__head")).toHaveCount(0);
+
+    /* ⚠ THE INSTRUMENT STILL PICKS (ADR-098 §4's port of ADR-094 U7). Three
+       teams on one layer; at rest the first is picked and every row is lit.
+       Picking the third swaps the readout and dims the rows that team does
+       not read — the transfer made visible, and the one behaviour on this
+       station. Asserted from BOTH ends, and on `data-cfg-*`: the arcs' own
+       channel, never `data-arc-*` (`arc-terminal-markup`'s law). */
+    const tiles = page.locator("#proposition [data-cfg-pick]");
+    await expect(tiles).toHaveCount(3);
+    await expect(tiles.nth(0)).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#proposition [data-cfg-layer].is-on")).toHaveCount(4);
+    await tiles.nth(2).click();
+    await expect(tiles.nth(2)).toHaveAttribute("aria-selected", "true");
+    await expect(tiles.nth(0)).toHaveAttribute("aria-selected", "false");
+    await expect(page.locator('#proposition [data-cfg-out="name"]')).toHaveText("Finance");
+    await expect(page.locator('#proposition [data-cfg-layer="examples"]')).not.toHaveClass(/is-on/);
+    await expect(page.locator('#proposition [data-cfg-layer="rules"]')).toHaveClass(/is-on/);
+    // Back to the first, so the stills below read the resting record.
+    await tiles.nth(0).click();
+    await expect(page.locator("#proposition [data-cfg-layer].is-on")).toHaveCount(4);
 
     /* ⚠ AND THE MARK IS STILL THERE, FADING BEHIND IT (owner: "the brand
-       mark in the back doesn't really dominate too much — we can fade it
-       out a bit as the next section scrolls into view"). The canvas has to
-       live through this beat, so the corridor is STILL ENGAGED here where
-       it used to be dead — the kill edge moved to `#contact` (ADR-095 U5),
-       then to `#offer` (ADR-094 U9), the first opaque station below. */
+       mark in the back doesn't really dominate too much"). The canvas has to
+       live through this beat, so the corridor is STILL ENGAGED here — the
+       kill edge is `#offer`, the first opaque station below. */
     expect(
       await page.evaluate(() => document.documentElement.getAttribute("data-corridor-exit")),
       "the canvas lives through the proposal"
     ).toBe("true");
     expect(await goldMarks(page)).toEqual(["proposition"]);
-
-    /* The proposal: the head, the three bands, the three kickers.
-       ⚠ THE GHOST, NOT THE `<h2>`. Since U5 the title is a ghost plus a live
-       layer, so the heading's own `textContent` is the string TWICE — which
-       is not a defect, it is the decode's markup contract (the ghost holds
-       the box and the accessible text; the live leaf is what the writer
-       overwrites). Asserting on the heading would fail on the effect being
-       present. */
-    await expect(page.locator("#proposition .tl-prop__title .tl-dc__ghost")).toHaveText(
-      "The Trinny London configuration"
-    );
-    await expect(page.locator("#proposition .tl-config__band")).toHaveCount(3);
-    await expect(page.locator("#proposition .tl-config__kicker")).toHaveCount(3);
-
-    /* ⚠ THE INSTRUMENT PICKS (ADR-094 U7). Three teams on one layer; at
-       rest the first is picked and every row of the layer is lit. Picking
-       the third swaps the readout to its record and dims the rows that team
-       does not read — the transfer made visible, and the one behaviour on
-       this station. Asserted from both ends: the picked tile's state AND
-       the un-picked tile's, the lit rows AND the dimmed one. */
-    const tiles = page.locator("#proposition [data-tl-pick]");
-    await expect(tiles).toHaveCount(3);
-    await expect(tiles.nth(0)).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator("#proposition [data-tl-layer].is-on")).toHaveCount(4);
-    await tiles.nth(2).click();
-    await expect(tiles.nth(2)).toHaveAttribute("aria-selected", "true");
-    await expect(tiles.nth(0)).toHaveAttribute("aria-selected", "false");
-    await expect(page.locator('#proposition [data-tl-cfg="name"]')).toHaveText("Finance");
-    await expect(page.locator('#proposition [data-tl-cfg="where"]')).toHaveText(
-      await tiles
-        .nth(2)
-        .getAttribute("data-where")
-        .then((v) => v ?? "")
-    );
-    await expect(page.locator('#proposition [data-tl-layer="examples"]')).not.toHaveClass(/is-on/);
-    await expect(page.locator('#proposition [data-tl-layer="rules"]')).toHaveClass(/is-on/);
-    // Back to the first, so the stills below read the resting record.
-    await tiles.nth(0).click();
-    await expect(page.locator("#proposition [data-tl-layer].is-on")).toHaveCount(4);
 
     /* …and `#offer` is where the corridor finally ends (ADR-094 U9): the
        proposal's beats after the configuration, the first opaque station
@@ -1286,7 +1242,7 @@ test.describe("Trinny London pitch variant", () => {
        sits between the hero and the mount, so the armed frame would paint
        over the last viewport of the bio. The route sheet restores native
        sticky — this is the assertion that it still does. */
-    await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
+    await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
 
     const mountTop = await page.evaluate(() => {
@@ -1317,7 +1273,7 @@ test.describe("Trinny London pitch variant", () => {
        pixel bound would pass at one viewport and mean nothing at the other —
        which is precisely how the defect survived every existing gate. */
     const readEntry = async () => {
-      await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
+      await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
       await page.waitForSelector(".home-v2-stage");
       await page.waitForTimeout(SETTLE_MS);
       const stageTop = await page.evaluate(() =>
@@ -1392,63 +1348,72 @@ test.describe("Trinny London pitch variant", () => {
     expect(Math.abs(tall.b.left - tall.a.copy!.left)).toBeLessThanOrEqual(6);
   });
 
-  test("ADR-094 U5: the proposal seats its head on the homepage's datum", async ({ page }) => {
-    /* The record is head + drawing in one grid, and centring it seated the
-       HEAD by half the drawing's height — measured 306px at 1920×1247, frac
-       0.241, against the services masthead's title at 0.107 on the same
-       frame. `align-content: start` plus a datum-derived top padding is the
-       fix; this is the measurement that says it held. */
-    await page.setViewportSize({ width: 1920, height: 1247 });
-    await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector(".home-v2-stage");
-    await page.waitForTimeout(SETTLE_MS);
+  test("ADR-099: every proposal head sits on ONE datum", async ({ page }) => {
+    /* Owner, 2026-09-13: the head "must always be positioned at the right
+       position, because in the Trinny London configuration it's different
+       from 'we propose a modular approach that compounds'".
 
-    const geom = await page.evaluate(() => {
-      const prop = document.getElementById("proposition") as HTMLElement;
-      const stage = prop.querySelector("[data-tl-prop-stage]") as HTMLElement;
-      const r = prop.getBoundingClientRect();
-      return {
-        top: Math.round(r.top + window.scrollY),
-        height: Math.round(r.height),
-        padTop: stage.offsetTop,
-        stageH: stage.offsetHeight,
-        vh: window.innerHeight,
+       The cause was `.arc-sec { align-content: center }`: a beat centres in
+       its own screen, so where its head lands is a function of how tall its
+       BODY is — and the proposal's bodies range from a three-plate row to a
+       fee table. Measured 0.107 → 0.197 of the frame across the page's own
+       beats before this. Head-bearing beats are seated from the top now, on
+       the homepage masthead's own datum.
+
+       ⚠ THE ASSERTION IS THE EQUALITY, NOT THE VALUE. A fixed frac would
+       pass on one viewport and lie on another; what the owner asked for is
+       that the heads agree with EACH OTHER. The datum's own value is
+       checked once, loosely, so a wholesale reseat is still caught. */
+    for (const vp of [
+      { width: 1920, height: 1247 },
+      { width: 1280, height: 720 },
+    ]) {
+      await page.setViewportSize(vp);
+      await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
+      await page.waitForSelector(".home-v2-stage");
+      await page.waitForTimeout(SETTLE_MS);
+
+      const topOf = (id: string) =>
+        page.evaluate(
+          (sel) =>
+            (document.getElementById(sel)?.getBoundingClientRect().top ?? 0) + window.scrollY,
+          id
+        );
+      /** The head's eyebrow, relative to its own beat's top — the datum is a
+       *  padding on the beat, so THAT is the box it must be constant in. */
+      const seatOf = async (id: string) => {
+        // ⚠ Roll twice: the first long roll is clamped while the corridor
+        // inflates the document, and a reading taken there is of a beat that
+        // has not reached its place.
+        await rollTo(page, await topOf(id));
+        await rollTo(page, await topOf(id));
+        /* ⚠ AND WAIT FOR THE REVEAL, WHICH IS THE SEAT. `.arc-reveal` rests
+           TRANSLATED and settles on `is-in`, so a rect read before it lands
+           measures the animation rather than the datum — and it passes
+           solo, where the page is quiet, while failing in a full run. The
+           transition itself then has to finish, or the head is caught
+           mid-travel. */
+        await page.locator(`#${id} .arc-head`).first().waitFor({ state: "visible" });
+        await expect(page.locator(`#${id} .arc-head`).first()).toHaveClass(/is-in/);
+        await page.waitForTimeout(700);
+        return page.evaluate((sel) => {
+          const beat = document.getElementById(sel)!;
+          const desig = beat.querySelector(".arc-head__desig") as HTMLElement;
+          return Math.round(desig.getBoundingClientRect().top - beat.getBoundingClientRect().top);
+        }, id);
       };
-    });
-    const travel = geom.height - geom.padTop - geom.stageH;
-    expect(travel).toBeGreaterThan(0);
 
-    /* ⚠ ROLL TWICE. The first long roll from the top is clamped while the
-       corridor inflates the document, and a reading taken there is of an
-       UNPINNED station — which reports a head frac of 4.1 and looks like a
-       catastrophic failure rather than a harness miss. */
-    const target = Math.round(geom.top + geom.padTop + 0.7 * travel);
-    await rollTo(page, target);
-    await rollTo(page, target);
-
-    const seat = await page.evaluate(() => {
-      const prop = document.getElementById("proposition") as HTMLElement;
-      const head = prop.querySelector(".tl-prop__head") as HTMLElement;
-      const inner = prop.querySelector(".tl-prop__inner") as HTMLElement;
-      const h = head.getBoundingClientRect();
-      const i = inner.getBoundingClientRect();
-      return {
-        q: parseFloat(prop.getAttribute("data-tl-prop") ?? "0"),
-        headFrac: h.top / window.innerHeight,
-        innerBottom: i.bottom,
-        vh: window.innerHeight,
-      };
-    });
-
-    // Pinned, and lit — otherwise the seat below is of a travelling stage.
-    expect(seat.q).toBeGreaterThan(0.3);
-    // The homepage's masthead title sits at 0.107 of the frame.
-    expect(seat.headFrac).toBeGreaterThan(0.06);
-    expect(seat.headFrac).toBeLessThan(0.15);
-    // ⚠ And the record still FITS. `start` can only overrun downward, which
-    // is the whole reason it is safer than the `center` it replaced — but
-    // safer-to-see is not the same as fitting, so measure it.
-    expect(seat.innerBottom).toBeLessThan(seat.vh);
+      const config = await seatOf("configuration");
+      const phases = await seatOf("phases");
+      const pricing = await seatOf("pricing");
+      const where = `${vp.width}×${vp.height}`;
+      expect(Math.abs(config - phases), `${where}: config vs phases`).toBeLessThanOrEqual(1);
+      expect(Math.abs(config - pricing), `${where}: config vs pricing`).toBeLessThanOrEqual(1);
+      // The datum itself: `clamp(48px, 10.7svh, 148px)` plus the head's own
+      // box, so a band rather than a number — a reseat lands outside it.
+      expect(config, `${where}: the datum`).toBeGreaterThan(40);
+      expect(config, `${where}: the datum`).toBeLessThan(200);
+    }
   });
 
   test("ADR-095 U6: the approach is halved, and exactly one ground paints it", async ({ page }) => {
@@ -1464,7 +1429,7 @@ test.describe("Trinny London pitch variant", () => {
        half that can regress silently: the pixels are a wash on a wash, so
        nothing throws and no geometry gate can see it. */
     await page.setViewportSize({ width: 1920, height: 1247 });
-    await page.goto("/trinny-london", { waitUntil: "domcontentloaded" });
+    await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
     await page.waitForTimeout(SETTLE_MS);
 
@@ -1497,9 +1462,12 @@ test.describe("Trinny London pitch variant", () => {
           const bottom = Math.min(window.innerHeight, r.bottom);
           return { op, top, bottom, covers: Math.max(0, bottom - top) };
         };
+        const offer = document.getElementById("offer")?.getBoundingClientRect();
         return {
           turn: seen(".tl-turn__wash"),
           prop: seen(".tl-prop__ground"),
+          // The next OPAQUE station: where the coral stops, this begins.
+          offerTop: offer ? Math.max(0, Math.min(window.innerHeight, offer.top)) : null,
           handoff: document.getElementById("turn")?.getAttribute("data-tl-handoff") ?? null,
         };
       });
@@ -1520,12 +1488,40 @@ test.describe("Trinny London pitch variant", () => {
         `two grounds painting ${overlap}px of the frame at release${at >= 0 ? "+" : ""}${at}vh ` +
           `(handoff=${paint.handoff}, turn op ${t!.op}, prop op ${p!.op})`
       ).toBeLessThanOrEqual(4);
-      // ⚠ And the frame is never BARE either. A swap that hides both is the
-      // same bug with the sign flipped, and it looks like the wash simply
-      // vanishing at the seam.
+      /* ⚠ AND THE FRAME IS NEVER BARE EITHER. A swap that hides both is the
+         same bug with the sign flipped, and it looks like the wash simply
+         vanishing at the seam.
+
+         ⚠ THE UNION, NOT THE LARGEST (ADR-099). This asserted that ONE
+         element covered 90 % of the frame, which was true while the proposal
+         was a 160svh pinned station whose ground blanketed the viewport by
+         itself. Its record is a beat now and the station is one screen, so
+         past the release the coral FEATHERS OUT (`TURN_PROP_FADE`) exactly
+         where `#offer` — the next opaque station, and the ambient's kill
+         edge — begins painting: measured at release+0.7vh, the prop canvas
+         reaches alpha 1 by y 998 and the offer's top IS 998.
+
+         So the honest question is whether anything is UNPAINTED, and the
+         answer is the union of the coral and the opaque station under it.
+         Keeping the old form would have meant loosening a number until it
+         passed, which is how a guard stops describing the page. */
+      const bands: [number, number][] = [];
+      if (tLive) bands.push([tLive.top, tLive.bottom]);
+      if (pLive) bands.push([pLive.top, pLive.bottom]);
+      // The offer is opaque from its own top to the foot of the frame.
+      if (paint.offerTop !== null) bands.push([paint.offerTop, geom.vh]);
+      bands.sort((a, b) => a[0] - b[0]);
+      let covered = 0;
+      let reach = 0;
+      for (const [from, to] of bands) {
+        if (to <= reach) continue;
+        covered += to - Math.max(from, reach);
+        reach = to;
+      }
       expect(
-        Math.max(tLive?.covers ?? 0, pLive?.covers ?? 0),
-        `no ground covers the frame at release${at >= 0 ? "+" : ""}${at}vh`
+        covered,
+        `the frame is bare at release${at >= 0 ? "+" : ""}${at}vh ` +
+          `(bands ${JSON.stringify(bands.map(([a, b]) => [Math.round(a), Math.round(b)]))})`
       ).toBeGreaterThan(geom.vh * 0.9);
     }
   });

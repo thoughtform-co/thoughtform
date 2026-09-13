@@ -11,7 +11,7 @@
  * assertion green. Capture what he looks at before saying it is done.
  *
  *   node scripts/capture-trinny-london.mjs [--vp 1920x1247] [--port 3003]
- *                                          [--url /trinny-london] [--out <dir>]
+ *                                          [--url /arcs/trinny-london/proposal] [--out <dir>]
  *
  * Writes to `.cursor/trinny-shots/` (gitignored) and prints one line per
  * stop with what the frame is supposed to show.
@@ -27,7 +27,7 @@ const arg = (name, fallback) => {
 
 const [w, h] = arg("vp", "1920x1247").split("x").map(Number);
 const port = arg("port", "3003");
-const path = arg("url", "/trinny-london");
+const path = arg("url", "/arcs/trinny-london/proposal");
 const outDir = arg("out", join(".cursor", "trinny-shots"));
 mkdirSync(outDir, { recursive: true });
 
@@ -172,36 +172,19 @@ for (const [p, name, note] of [
   await shoot(name, note);
 }
 
-/* The proposal (ADR-095 U5). It is a PINNED station now, so its record is
-   deliberately blank while the station travels and powers on once the stage
-   has parked — `q` is how far into that pinned stretch the reader is, and
-   `data-tl-prop` is what the writer publishes.
-   ⚠ SOLVING FOR `topOf("proposition")` SHOOTS THE ONE FRAME THE RECORD IS
-   GUARANTEED TO BE EMPTY IN: the top at the viewport top IS `q = 0`, the
-   instant before the reveal opens. That still is worth having — it is the
-   proof there is no travel to see — but it is not the proposal. Same law as
-   `rollToP`: converge on the published clock. */
-/* ⚠ AND THE PIN IS NOT THE STATION'S TOP. `.station` carries top padding —
-   140px at 1920×1247 — so the stage is still that far short of pinning in
-   the frame the station's top reaches the viewport top. The clock measures
-   the STAGE's own travel, and so does this. */
-const propRect = () =>
-  page.evaluate(() => {
-    const el = document.getElementById("proposition");
-    const st = el?.querySelector("[data-tl-prop-stage]");
-    const r = el?.getBoundingClientRect();
-    return {
-      top: (r?.top ?? 0) + window.scrollY,
-      height: r?.height ?? 0,
-      pad: st?.offsetTop ?? 0,
-      stageH: st?.offsetHeight ?? 0,
-    };
-  });
+/* The proposal (ADR-099). It is a normal station again — the record scrolls
+   in rather than powering on behind a pin — so the stops are solved for `q`,
+   the station's ARRIVAL: 0 with its top at the viewport's bottom edge, 1 at
+   the top. The writer still publishes it as `data-tl-prop`.
+   ⚠ THE FIRST TWO STOPS ARE THE POINT OF THE PASS. `19-config-arrive` is
+   the frame that used to be blank: the turn is spent, the products are
+   leaving, and the record is already half in. Solve, roll, re-solve — the
+   document grows under the scroll as the lazy chunks mount, so one solved
+   `y` lands somewhere else (the `rollToP` law, one beat up). */
 const rollToQ = async (q) => {
-  for (let pass = 0; pass < 5; pass++) {
-    const { top, height, pad, stageH } = await propRect();
-    const travel = Math.max(1, height - pad - stageH);
-    await rollTo(Math.round(top + pad + q * travel));
+  for (let pass = 0; pass < 4; pass++) {
+    const top = await topOf("proposition");
+    await rollTo(Math.round(top - (1 - q) * h));
     const actual = Number(
       await page.evaluate(
         () => document.getElementById("proposition")?.getAttribute("data-tl-prop") ?? "0"
@@ -211,23 +194,23 @@ const rollToQ = async (q) => {
   }
 };
 for (const [q, name, note] of [
-  [0, "19-prop-armed", "the proposal — pinned and blank, the frame with nothing travelling"],
-  [0.26, "20-prop-strike", "the proposal — the record striking on, in place"],
-  [0.7, "12-proposition", "the proposal — the configuration drawing, lit"],
+  [0.35, "19-config-arrive", "the record rising while the products leave — no bare frame"],
+  [0.7, "20-config-strike", "the configuration most of the way in"],
+  [1.0, "12-proposition", "the configuration seated on the head's datum"],
 ]) {
   await rollToQ(q);
   await page.waitForTimeout(900);
   await shoot(name, note);
 }
 
-/* The offer (ADR-094 U9): the proposal's beats after the configuration,
-   rendered by the arcs' components into `#offer`. Each beat is its own
-   `.arc-sec` with the section's id, so a stop is solved off the beat's box
-   rather than the station's — and rolled to TWICE, because the reveal is
-   an IntersectionObserver with a -10% dead band and the first roll from
-   the proposal's pinned stretch can land it before the observer has fired. */
+/* The offer (ADR-094 U9, extended by ADR-099). Each beat is its own
+   `.arc-sec` with the section's id, so a stop is solved off the BEAT's box
+   rather than the station's — and rolled to TWICE, because the arcs' reveal
+   is an IntersectionObserver with a -10% dead band and the first roll out of
+   the beat above can land before it has fired. */
 for (const [id, name, note] of [
   ["phases", "21-offer-phases", "the offer — the three phases as plates"],
+  ["flow", "23-offer-flow", "the offer — the pipeline: brief → renders → markets"],
   ["pricing", "22-offer-pricing", "the offer — the fee table beside its terms"],
 ]) {
   await rollTo(await topOf(id));

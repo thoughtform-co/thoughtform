@@ -19,7 +19,7 @@ import type { ArcDef, ArcKind } from "./types";
 
 /**
  * A page of the client's that is NOT an arc (ADR-098 U2): a homepage
- * variant like `/trinny-london`, listed on the client's band and page as a
+ * variant like `/arcs/trinny-london/proposal`, listed on the client's band and page as a
  * card that links out to it.
  *
  * ⚠ A FIELD ON THE CLIENT, NEVER A LINK-ONLY `ArcDef`. ADR-098 rejected
@@ -69,7 +69,7 @@ export const TRINNY_CLIENT: ClientDef = {
      renders it. */
   pages: [
     {
-      href: "/trinny-london",
+      href: "/arcs/trinny-london/proposal",
       chip: "pitch",
       title: "Trinny London · the pitch",
       lede: "The Loop proof as a stack of cards, the mark re-formed as theirs, the configuration their team would own, and the offer.",

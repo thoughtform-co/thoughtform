@@ -77,7 +77,7 @@ export const HERO_PLATE_LIGHT_TYPE = "image/webp";
    because a static link always names the dark one. `/arcs/loop-earplugs` left it
    in ADR-078 U1 (a Loop key visual, one file) and came back in U2 (a film
    frame is evidence, not wallpaper — the plate is the house visual again).
-   `/trinny-london` joined on ADR-093: it mounts the same `LandingPage` on the
+   `/arcs/trinny-london/proposal` joined on ADR-093: it mounts the same `LandingPage` on the
    same plate. ⚠ It is LIGHT-LOCKED, so it can only ever preload the light
    file — but it still earns a row here rather than a static link, because
    the preload scanner runs before the bootstrap and a static link would
@@ -87,7 +87,7 @@ export const HERO_PLATE_LIGHT_TYPE = "image/webp";
 export const HERO_ROUTES = [
   "/",
   "/claude-workshop",
-  "/trinny-london",
+  "/arcs/trinny-london/proposal",
   "/arcs/loop-earplugs",
   "/arcs/suri-proposal",
   "/arcs/perfect-ted-proposal",

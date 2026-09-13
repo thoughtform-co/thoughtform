@@ -17,7 +17,7 @@
  *
  * ⚠ THIS IS NOT A CONTENT DECISION IT CAN MAKE FOR ITSELF. A locked route
  * must also carry the route-scoped rule that hides the theme switch (see
- * `app/(marketing)/trinny-london/trinny-london.css`) — a lock without it
+ * `app/(marketing)/arcs/trinny-london/proposal/trinny-london.css`) — a lock without it
  * leaves a control that visibly does nothing, which reads as a bug rather
  * than as a decision.
  */
@@ -34,7 +34,7 @@ export const THEME_LOCK_ATTR = "data-theme-lock";
  * a dark-locked route is ever wanted, that is its own pass.
  */
 export const LIGHT_LOCKED_ROUTES = [
-  "/trinny-london",
+  "/arcs/trinny-london/proposal",
   /* A proposal is composed on paper and has no dark reading (ADR-098).
      The arc declares `theme: "light"`, which is what mounts `ThemeLock`
      and hides the switch; this row is the pre-paint half, and the

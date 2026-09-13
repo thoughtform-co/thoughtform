@@ -25,6 +25,7 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - [ADR-079: The portfolio is a trajectory, and every beat owns a screen](../sentinel/decisions/079-portfolio-trajectory-and-the-beat.md) — **the live cut**: `rollout` absorbed into the board, `tool-index`, Vesper first, one beat per viewport
 - ⚠ [ADR-090: The dossier is one housing](../sentinel/decisions/090-dossier-is-one-housing.md) — **PROPOSED (2026-09-05), shipped and guarded, pending the owner's live read.** The four dossier beats become one machined housing (ADR-089's grammar at page scale): TR+BL chamfer on the plate rung, `--arc-plate` ground, the designation seated in a header band fused to the top edge, a column split the record's rules terminate on, `--arc-seam` .28 dividing regions against `--arc-rule` .12 within one, and the console demoted to a square CELL inside it (ADR-065 rule 4). ⚠ **The record overhung the console by 8.6–88.7px, a different amount per tool** — `align-items: start` aligned the tops and nothing aligned the bottoms. ⚠ **The reveal observer's `-10%` dead band is a real budget constraint** — see §The dossier housing below before touching `--arc-dossier-h`
 - ⚠ [ADR-098: Clients and the proposal on /arcs](../sentinel/decisions/098-arcs-clients-and-the-proposal.md) — **PROPOSED (2026-09-12), built and guarded, pending the owner's live read.** `client` / `kind` / `theme` on an `ArcDef`, the client page inside the existing route, the overview's groups and filter, the `configuration` kind, and `scripts/new-arc.mjs`. See §The client model below
+- ⚠ [ADR-099: The pitch nests under its client, the configuration scrolls in, and the flow is drawn](../sentinel/decisions/099-proposal-nests-and-the-configuration-scrolls-in.md) — **PROPOSED (2026-09-13), built and guarded, pending the owner's live read.** ONE nesting exception (a `ClientDef.pages` record, outside `[slug]`'s one-segment namespace — ADR-098 §2's flat engagements are untouched), a DATUM under every proposal head (format-scoped, so all three proposal arcs take it), and the `flow` kind — ADR-052's third enumerated exception. See §The client model and §One beat per screen below
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -130,6 +131,25 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
   exemption (it measured 1141 in a 1080 beat); `--arc-intel-h` takes the beat's
   budget as a second term, and its WIDTH rides that height (`max-width` = h ×
   1.2), so an over-tight cap fails the smoke on width while height still passes.
+- ⚠ **AND A PROPOSAL HEAD SITS ON A DATUM (ADR-099).** `align-content: center`
+  seats a head by HALF ITS BEAT'S BODY HEIGHT, so a head's position is a
+  function of what is under it — measured **0.107 → 0.197** of the frame across
+  one page's own beats at 1920×1247, which reads as carelessness rather than as
+  a rule. `.arc-root[data-arc-format="proposal"] .arc-sec:has(> .arc-band >
+.arc-head)` takes `align-content: start` and `padding-block-start:
+var(--arc-head-datum)` = `clamp(48px, 10.7svh, 148px)`, the homepage services
+  masthead's own 0.107. ⚠ **`:has()` IS THE MECHANISM** — only a beat that DRAWS
+  a head takes it, so chapter heads, interstitial callouts and the close band
+  keep centring, which is what they are composed for. ⚠ **FORMAT-SCOPED, so
+  every proposal arc takes it** (a fix scoped to one client's page would be a
+  rule true on one surface). ⚠ **THE COST, NAMED: the slack pools at the FLOOR
+  of a short beat** — air under a record reads as room, air above it reads as a
+  mis-seat; where a drawing then looks stranded the DRAWING takes a share of the
+  beat (`.arc-flow`'s `min-height`), never the head. ⚠ **THE GUARD ASSERTS THE
+  EQUALITY, NOT THE VALUE** — a fixed frac passes at one viewport and lies at
+  another; what was asked for is that the heads agree with EACH OTHER, at two
+  viewports. ⚠ `.arc-reveal` RESTS TRANSLATED, so measure only after `is-in`
+  and the transition, or the rect is the animation.
 - **The `tool-index` kind** (ADR-079) = `{ head }` and nothing else — the tools
   chapter head, given the four records it opens (number · codename · `subline` ·
   mode), each row opening its own beat. The renderer resolves `PROJECT_CASES`;
@@ -425,6 +445,19 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
   hardcoded slug in two smokes, the capture script and `HERO_ROUTES` moved at
   once. The hierarchy is expressed on the OVERVIEW, which is where a reader
   meets it.
+- ⚠ **ONE EXCEPTION, AND IT IS NOT AN ARC (ADR-099).** The Trinny pitch moved
+  to `/arcs/trinny-london/proposal`, with a 308 from `/trinny-london` beside
+  the `/arcs/portfolio` one. **The engagements above are UNTOUCHED**: what
+  nests is a `ClientDef.pages` record — a client's own page, never an `ArcDef`
+  — and `/arcs/<client>/<leaf>` is outside `[slug]`'s namespace **by
+  construction, because `[slug]` matches ONE segment**. So it shadows nothing,
+  needs no `generateStaticParams` row, and `/arcs/trinny-london` still
+  resolves to the client page (verified 200 / 200 / 308). ⚠ `arcs-registry`
+  pins BOTH halves — such an href is two segments deep AND its first segment
+  is its own client's slug, because a page nested under another client's would
+  resolve fine and lie about whose work it is. ⚠ **`isLightLockedPath` AND
+  `HERO_ROUTES` ARE EXACT-MATCH**, so a moved route earns both rows by hand;
+  both lists are `toEqual`-pinned so a route joins or leaves by a reviewed hand.
 - **`kind` is DERIVED where it can be** (`kindOf`, `lib/arcs/clients.ts`):
   a workshop is a workshop, a portfolio and a proposal are productions. None
   of the five pre-existing content modules was edited to author a taxonomy it
@@ -463,6 +496,23 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
   shared sheet by another name), and re-derived on the ADR-077 ramp. ⚠ **The
   picked tile is FILLED** (ADR-089 U4), where the pitch page's is outlined —
   that ruling landed after the pitch shipped and the newer house law wins.
+- **The `flow` kind** (ADR-099) = `{ head, brief: { label, fields }, renders:
+{ label, images }, scale: { label, markets }, steps: [string, string] }` —
+  ADR-052's **third enumerated exception**, after the dossier and the
+  configuration. `ArcFlow` draws three hairline plates with two connectors: the
+  BRIEF that goes in (its field rows in the wireframes' green), WHAT IT MAKES
+  (product renders), EVERY MARKET (the same render in tagged frames). Server,
+  no state, no pointer. ⚠ **IT DRAWS A RECORD** (ADR-078 U1) — the fields are a
+  real template's and the renders are the client's own products; an arrow-and-box
+  picture of an idea is the thing that law forbids. ⚠ **THE SAME RENDER IN EVERY
+  MARKET FRAME IS THE CLAIM**: one approved asset, localised. The first cut drew
+  placeholder rectangles and said nothing. ⚠ **NO GOLD IN THE DRAWING** — the
+  head's `em` has already spent the beat's one gold, and three plates competing
+  for the eye is the opposite of "keep it minimalistic". ⚠ **1px DIVS AND A
+  BORDER PAIR FOR THE CONNECTORS, never an svg line** (ADR-068 U6: a stroked
+  single-axis path reports a zero-height rect and every collapse guard reads
+  that as absent). ⚠ The drawing takes a `min-height` share of the beat, which
+  is where the head datum's floor slack goes.
 - ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
   phases as a rail; on this surface a drawing plots something that HAPPENED,
   and a plan is an argument. Three phases are three `list-groups` columns,

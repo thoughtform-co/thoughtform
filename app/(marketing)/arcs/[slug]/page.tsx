@@ -51,6 +51,16 @@ import "@/components/landing/v7/rail-instruments/rail-instruments.css";
  * forwarded, so the links in the wild are in inboxes: the cheapest way to
  * keep them working is not to move the page. The hierarchy is expressed on
  * the overview, which is where a reader meets it.
+ *
+ * ⚠ ONE EXCEPTION, AND IT IS NOT AN ARC (ADR-099, owner 2026-09-13). A
+ * client's own PAGE — a homepage variant like the Trinny pitch, a
+ * `ClientDef.pages` record rather than an `ArcDef` — nests at
+ * `/arcs/<client>/<leaf>` as a real route folder. That address is outside
+ * this route's namespace by construction (`[slug]` matches ONE segment),
+ * so it shadows nothing and needs no entry in `generateStaticParams`; and
+ * the rule above is untouched, because the thing that moved was never an
+ * engagement in `ARCS`. `arcs-registry` pins both halves: such an href
+ * must be two segments deep, and the first must be its own client's slug.
  */
 export const dynamicParams = false;
 

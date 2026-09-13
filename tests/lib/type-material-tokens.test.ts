@@ -173,7 +173,7 @@ const PINS: Record<string, Pin> = {
      `.rin-settings__ctl` selector is FRAME, and pinned exact with the rest of
      the frame. A route sheet absent from this map is a route sheet nothing
      measures. */
-  "app/(marketing)/trinny-london/trinny-london.css": {
+  "app/(marketing)/arcs/trinny-london/proposal/trinny-london.css": {
     tier: "content",
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },

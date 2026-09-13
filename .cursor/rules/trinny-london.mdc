@@ -1,7 +1,7 @@
 ---
 description: The Trinny London pitch variant — the light lock and its own journey clock
 globs:
-  - "app/(marketing)/trinny-london/**"
+  - "app/(marketing)/arcs/trinny-london/proposal/**"
   - "public/prototypes/v7/landing-trinny-london.html"
   - "lib/theme/themeLock.ts"
   - "lib/theme/themeBootstrap.ts"

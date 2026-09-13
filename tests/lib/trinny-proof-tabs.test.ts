@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { trinnyProofTracks } from "@/app/(marketing)/trinny-london/proof/proofOrder";
-import { filmTab, proofTabLabel, proofTabs } from "@/app/(marketing)/trinny-london/proof/proofTabs";
+import { trinnyProofTracks } from "@/app/(marketing)/arcs/trinny-london/proposal/proof/proofOrder";
+import {
+  filmTab,
+  proofTabLabel,
+  proofTabs,
+} from "@/app/(marketing)/arcs/trinny-london/proposal/proof/proofTabs";
 import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 
 /**

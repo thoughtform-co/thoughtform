@@ -677,8 +677,6 @@ html[data-corridor-exit="true"] .tl-root #proposition {
    drawing. Longer is dead scroll (the ADR-056 round-3 ruling); shorter and
    the record un-pins while it is still being read. */
 .tl-root #proposition {
-  --tl-prop-runway: 60svh;
-
   /* ⚠ THE LEAD IS THE DEAD VIEWPORT, TAKEN BACK (U6, owner: "scrolling into
      the Trinny London configuration section, it takes a bit too long -- it
      should be a scroll or two less before the elements start to appear").
@@ -705,7 +703,10 @@ html[data-corridor-exit="true"] .tl-root #proposition {
 
 @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
   .tl-root #proposition {
-    min-height: calc(100svh + var(--tl-prop-runway));
+    /* The beat inside brings its own `min-height: 100svh` (`.arc-sec`),
+       so the station is one screen plus whatever the record needs. It
+       was `100svh + a runway` for the pin ADR-099 retired. */
+    min-height: 100svh;
     /* The lead, spent. See `--tl-prop-lead`. */
     margin-top: calc(var(--tl-prop-lead) * -1);
     /* ⚠ `display: block`, for the same reason `#turn`'s capable rung
@@ -723,94 +724,14 @@ html[data-corridor-exit="true"] .tl-root #proposition {
        the viewport.
        The air is spent INSIDE the stage instead, where it is the record's
        margin from the frame rather than a hole in the pin. */
-    padding-block: 0;
+    /* ⚠ ALL OF IT, NOT JUST THE BLOCK AXIS (ADR-099). The station is a
+       host for an arc beat now, and `.arc-band` carries this surface's own
+       insets — left on, `.station`'s horizontal padding bands the content
+       TWICE and the instrument is squeezed into a column with the ground
+       showing beside it. `#offer` gives up the same padding for the same
+       reason, one station down. */
+    padding: 0;
   }
-
-  .tl-root .tl-prop__stage {
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    /* The station's padding, moved in — and `border-box`, or 100svh plus
-       padding is taller than the viewport it is meant to fill. */
-    box-sizing: border-box;
-    padding-block: clamp(32px, 5vh, 88px);
-    /* The datum, taken off the homepage: the services masthead seats its
-       title at frac 0.107 of the frame, so the head starts there and the
-       drawing takes what is left. Floored for short viewports, capped so a
-       very tall window does not push the record off its own pin. */
-    padding-block-start: clamp(48px, 10.7svh, 148px);
-    display: grid;
-    /* ⚠ `1fr`, NEVER an auto track. `.tl-prop__inner` is `width: 100%` with
-       a `max-width` cap, so an auto column sized by its content would let
-       the band size ITSELF and the `100%` resolve against nothing. Fourth
-       time on this route that a content-sized track met a percentage. */
-    grid-template-columns: minmax(0, 1fr);
-    /* ⚠ DECLARED, NOT INHERITED. `align-content` aligns BLOCK content in
-       Chrome 123+, so the station's own `center` would survive into this
-       stage and seat the record a viewport low inside its own pin — the
-       exact defect ADR-095 recorded on `#turn`, with every gate green.
-
-       ⚠ AND IT IS `start` NOW, NOT `center` (U6, owner: the H1 and its
-       paragraph sit lower than the homepage's -- "if I look at the homepage
-       it's a bit higher placed"). Centring seated the WHOLE record -- the head
-       plus the configuration drawing under it -- so the head was pushed down
-       by half the drawing's height: measured 306px at 1920x1247, frac 0.241,
-       against the services masthead's title at frac 0.107 on the same frame.
-       More than twice as far down, and nothing on the head's own box said so.
-
-       ⚠ It is also the SAFER overflow. `center` spills a too-tall record
-       equally through the top and the bottom, so `scrollHeight` equals
-       `clientHeight` and every clip gate reports zero -- this route's own
-       recorded trap, one station over. Seated at the top it can only overrun
-       downward, where it is visible. */
-    align-content: start;
-  }
-}
-
-/* ── The record's power-on (U5) ──────────────────────────────────────
-   The house's terminal stutter, re-pointed at `--tp-in`: the line strikes,
-   drops out, then settles (0 → 0.62 → 0.12 → 1). Reversible by construction,
-   no keyframes, no writer beyond the one scalar.
-
-   ⚠ OPACITY ONLY — `transform` stays untouched. That is the masthead law
-   (ADR-044) and it is the whole point of this pass: the elements arrive by
-   appearing, never by moving. The 2.5px lateral tear the landing's own copy
-   of this block carries is a flourish for a surface where the panels already
-   travel; here it would be the defect in miniature.
-
-   ⚠ AND IT FAILS OPEN. `var(--tp-in, 1)` — the phone, reduced motion and any
-   path where the writer parks all get the record standing at full strength,
-   because a reveal channel that is absent must mean "shown", never "hidden".
-   The writer REMOVES the property rather than writing 0. */
-.tl-root .tl-prop__stage [data-tl-reveal] {
-  --ci: clamp(0, calc((var(--tp-in, 1) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
-  --g1: clamp(0, calc(var(--ci) * 9), 1);
-  --g2: clamp(0, calc((var(--ci) - 0.16) * 9), 1);
-  --g3: clamp(0, calc((var(--ci) - 0.34) * 4), 1);
-  opacity: clamp(0, calc(var(--g1) * 0.62 - var(--g2) * 0.5 + var(--g3) * 0.88), 1);
-}
-
-/* The stagger: the head strikes first, its paragraph second, the drawing
-   last — frame, then claim, then instrument, which is the casefile's own
-   arrival order one surface over.
-
-   ⚠ THE MARK IS ON THE HEAD, NOT ON THE TITLE INSIDE IT, and that is not a
-   convenience. `.tl-prop__head` draws the coral rule under the band, and
-   with the reveal one level down that rule painted at full strength across
-   an otherwise empty frame — a line hanging in the middle of the viewport
-   with nothing to underline. A rule is part of what it rules; it arrives
-   with it. (The paragraph is a CHILD of the head, so its opacity compounds
-   with the band's — which is why its own offset is small.) */
-.tl-root .tl-prop__head {
-  --ci-off: 0;
-}
-
-.tl-root .tl-prop__desc {
-  --ci-off: 0.1;
-}
-
-.tl-root .tl-prop .tl-config {
-  --ci-off: 0.26;
 }
 
 /* ⚠ `inset: 0`, AND THAT WAS WORTH MEASURING. The instinct is to break the
@@ -907,400 +828,24 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   background-position: center;
 }
 
-.tl-root .tl-prop__inner {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: var(--band-max, 1200px);
-  margin-inline: var(--rail-inset, 0px);
-  /* At the narrow end of the band the right rail's telemetry (BEARING ·
-     SECTOR · LOCAL, ~x1128 at 1280) overlaps the band's last 25px; the
-     paragraph column yields that much until the band has its own margin. */
-  padding-right: clamp(0px, calc(1340px - 100vw), 48px);
-}
+/* ⚠ THE BEAT INSIDE MUST NOT PAINT ITS OWN GROUND (ADR-099). Every
+   `.arc-section` carries an opaque void so the killed gateway radial can
+   never show through it (ADR-008) — correct on `/arcs/*`, and here it would
+   cover the coral field this station exists to continue, plus the veiled
+   mark behind it. Scoped to this station: the offer's beats below keep
+   their own ground, because there is nothing behind THEM to protect.
 
-.tl-root .tl-prop__head {
-  display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-  gap: clamp(24px, 4vw, 72px);
-  align-items: end;
-  padding-bottom: clamp(20px, 3vh, 32px);
-  border-bottom: 1px solid rgba(var(--tl-brand-rgb), 0.6);
-  margin-bottom: clamp(32px, 5vh, 64px);
-}
-
-.tl-root .tl-prop__lead {
-  display: grid;
-  gap: 14px;
-}
-
-.tl-root .tl-prop__title {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-lit);
-  font-size: clamp(30px, 3vw, 48px);
-  line-height: 1.06;
-  letter-spacing: var(--track-display);
-  color: var(--tl-ink);
-}
-
-.tl-root .tl-prop__desc {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-text);
-  font-size: clamp(16px, 1.15vw, 19px);
-  line-height: 1.5;
-  letter-spacing: var(--track-copy);
-  color: var(--tl-ink-2);
-}
-
-/* ── The configuration as ONE INSTRUMENT (ADR-094 U7) ──────────────────────
-   Three bands on one hairline plate: the LAYER they own (left), the SEAM
-   the flywheel is drawn across (adoption writes the layer, automation runs
-   from it), the WORK on the right — the teams as pickable tiles and the
-   picked team's configuration read out in the registry's five questions.
-   Everything is a ramp step off `--dawn-rgb` / `--gold-rgb` and a
-   `--track-*` / `--weight-*` token: the sheet is pinned at zero literals.
-   Gold is the one thing that gets BUILT — the lit layer rows, the picked
-   tile, the readout's rule — and nothing else on the plate is gold. */
-.tl-root .tl-config {
-  display: grid;
-  grid-template-columns: minmax(280px, 330px) 120px minmax(0, 1fr);
-  gap: 0;
-  padding: clamp(20px, 2vw, 28px);
-  border: 1px solid var(--tl-rule);
-  background: rgba(var(--dawn-rgb), 0.03);
-  color: var(--tl-ink);
-}
-
-.tl-root .tl-config__band--layer {
-  display: flex;
-  flex-direction: column;
-  padding: 18px;
-  border: 1px solid var(--tl-rule);
-  background: rgba(var(--dawn-rgb), 0.04);
-}
-
-.tl-root .tl-config__lhead {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid var(--tl-rule);
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  line-height: 1.2;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--tl-ink-2);
-}
-
-.tl-root .tl-config__lhead strong {
-  font-weight: var(--weight-text);
-  color: var(--tl-ink);
-}
-
-.tl-root .tl-config__lhead span {
-  color: var(--gold-ink);
-}
-
-.tl-root .tl-config__layers {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* A row dims unless the picked team reads it. The state is the FILL, the
-   border and the ink together — an opacity alone left the dimmed rows
-   reading as disabled controls rather than as the layer's unlit part. */
-.tl-root .tl-config__layer {
-  display: grid;
-  grid-template-columns: 82px minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  padding: 13px 14px;
-  border: 1px solid var(--tl-rule);
-  border-left: 3px solid var(--tl-rule);
-  background: rgba(var(--dawn-rgb), 0.02);
-  opacity: 0.42;
-  transition:
-    opacity 240ms ease,
-    background 240ms ease,
-    border-color 240ms ease;
-}
-
-.tl-root .tl-config__layer.is-on {
-  opacity: 1;
-  border-color: var(--gold-line);
-  background: rgba(var(--gold-rgb), 0.1);
-}
-
-.tl-root .tl-config__tag {
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  line-height: 1.2;
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  color: var(--gold-ink);
-}
-
-.tl-root .tl-config__name {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-text);
-  font-size: clamp(13px, 0.95vw, 15px);
-  line-height: 1.3;
-  letter-spacing: var(--track-copy);
-  color: var(--tl-ink-2);
-}
-
-/* The seam: two arrows, each a 1px DIV run with a border-drawn head (the
-   wireframe law — never an svg stroke). Adoption points at the layer,
-   automation points back at the work. */
-.tl-root .tl-config__band--seam {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: clamp(28px, 4vh, 48px);
-  padding: 0 12px;
-}
-
-.tl-root .tl-config__arrow {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.tl-root .tl-config__word {
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  line-height: 1.2;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--gold-ink);
-}
-
-.tl-root .tl-config__arrow i {
-  position: relative;
-  display: block;
-  height: 9px;
-}
-
-.tl-root .tl-config__arrow i::before {
-  content: "";
-  position: absolute;
-  top: 4px;
-  height: 1px;
-  background: var(--gold-line);
-}
-
-.tl-root .tl-config__arrow i::after {
-  content: "";
-  position: absolute;
-  top: 1px;
-  width: 6px;
-  height: 6px;
-  border: 1px solid var(--gold-line);
-  rotate: 45deg;
-}
-
-.tl-root .tl-config__arrow--adopt i::before {
-  left: 4px;
-  right: 0;
-}
-
-.tl-root .tl-config__arrow--adopt i::after {
-  left: 1px;
-  border-right: 0;
-  border-top: 0;
-}
-
-.tl-root .tl-config__arrow--auto i::before {
-  left: 0;
-  right: 4px;
-}
-
-.tl-root .tl-config__arrow--auto i::after {
-  right: 1px;
-  border-left: 0;
-  border-bottom: 0;
-}
-
-.tl-root .tl-config__note {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-text);
-  font-size: clamp(12px, 0.85vw, 13px);
-  line-height: 1.35;
-  letter-spacing: var(--track-copy);
-  color: var(--tl-ink-3);
-}
-
-/* The work: the teams as tiles, then the picked team's configuration. */
-.tl-root .tl-config__band--work {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
-}
-
-.tl-root .tl-config__tiles {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.tl-root .tl-config__tile {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 5px;
-  margin: 0;
-  padding: 14px 16px 12px;
-  text-align: left;
-  border: 1px solid var(--tl-rule);
-  background: rgba(var(--dawn-rgb), 0.03);
-  color: var(--tl-ink);
-  cursor: pointer;
-  transition:
-    background 200ms ease,
-    border-color 200ms ease;
-}
-
-.tl-root .tl-config__tile:hover {
-  border-color: var(--gold-line);
-}
-
-.tl-root .tl-config__tile:focus-visible {
-  outline: 2px solid var(--gold-line);
-  outline-offset: 2px;
-}
-
-.tl-root .tl-config__tile.is-on {
-  border-color: var(--gold-line);
-  background: rgba(var(--gold-rgb), 0.14);
-}
-
-.tl-root .tl-config__tname {
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  line-height: 1.2;
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  color: var(--tl-ink);
-}
-
-.tl-root .tl-config__twork {
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-text);
-  font-size: clamp(12px, 0.85vw, 13px);
-  line-height: 1.35;
-  letter-spacing: var(--track-copy);
-  color: var(--tl-ink-3);
-}
-
-.tl-root .tl-config__cfg {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  padding: 14px 18px 10px;
-  border: 1px solid var(--tl-rule);
-  border-top: 2px solid var(--gold-line);
-  background: rgba(var(--dawn-rgb), 0.04);
-}
-
-.tl-root .tl-config__chead {
-  padding-bottom: 10px;
-  margin-bottom: 2px;
-  border-bottom: 1px solid var(--tl-rule);
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  line-height: 1.2;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--gold-ink);
-}
-
-.tl-root .tl-config__kv {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-}
-
-.tl-root .tl-config__kv > div {
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  gap: 16px;
-  align-items: baseline;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--tl-rule);
-}
-
-.tl-root .tl-config__kv > div:last-child {
-  border-bottom: 0;
-}
-
-.tl-root .tl-config__kv dt {
-  margin: 0;
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  line-height: 1.3;
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  color: var(--tl-ink-3);
-}
-
-.tl-root .tl-config__kv dd {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-text);
-  font-size: clamp(14px, 1vw, 16px);
-  line-height: 1.35;
-  letter-spacing: var(--track-copy);
-  color: var(--tl-ink);
-}
-
-.tl-root .tl-config__kickers {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-  margin: clamp(20px, 3vh, 32px) 0 0;
-  padding: 16px 0 0;
-  border-top: 1px solid var(--tl-rule);
-  list-style: none;
-}
-
-.tl-root .tl-config__kicker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  line-height: 1.2;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--tl-ink-2);
-}
-
-.tl-root .tl-config__kicker::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  rotate: 45deg;
-  background: var(--gold);
-  flex: 0 0 auto;
+   ⚠ BOTH LAYERS, AND THE ROOT IS THE ONE THAT BIT. `.arc-root` paints the
+   SURFACE's ground and `.arc-section` paints each beat's — two opaque
+   layers, and scoping this to the section alone left the root covering the
+   field with a hard edge at the station's own top (measured at 1920×1247:
+   the coral stopped dead at y 811 and every geometry gate was green, because
+   the drawing was laid out perfectly on top of the wrong ground). An
+   ancestor walk found it in one read; reasoning about z-index did not, and
+   would not have — the layer was never a stacking problem. */
+.tl-root #proposition .arc-root,
+.tl-root #proposition .arc-section {
+  background: transparent;
 }
 
 @media (max-width: 960px) {
@@ -1334,40 +879,6 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   .tl-root .tl-turn__product--overnight {
     --tm-rest-x: 77%;
     --tm-rest-y: 44%;
-  }
-  .tl-root .tl-prop__head {
-    grid-template-columns: 1fr;
-    align-items: start;
-  }
-  /* The instrument stacks: layer, then the seam as a row of two words (the
-     arrows have no axis to point along once the bands are stacked, so the
-     runs are dropped and the words keep their notes), then the work. */
-  .tl-root .tl-config {
-    grid-template-columns: 1fr;
-    gap: 14px;
-    padding: 16px;
-  }
-  .tl-root .tl-config__band--seam {
-    flex-direction: row;
-    gap: 16px;
-    padding: 0;
-  }
-  .tl-root .tl-config__arrow {
-    flex: 1 1 0;
-  }
-  .tl-root .tl-config__arrow i {
-    display: none;
-  }
-  .tl-root .tl-config__tiles {
-    grid-template-columns: 1fr;
-  }
-  .tl-root .tl-config__kv > div {
-    grid-template-columns: 1fr;
-    gap: 4px;
-  }
-  .tl-root .tl-config__kickers {
-    grid-template-columns: 1fr;
-    gap: 12px;
   }
 }
 

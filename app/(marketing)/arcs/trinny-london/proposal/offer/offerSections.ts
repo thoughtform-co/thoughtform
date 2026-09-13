@@ -26,6 +26,85 @@ import type { ArcSection } from "@/lib/arcs/types";
  *
  * Type-only import: the arcs' section union, nothing at runtime.
  */
+/**
+ * The configuration — the beat `#proposition` mounts (ADR-099).
+ *
+ * It was hand-written markup in the prototype with its own `.tl-config`
+ * sheet and its own picker, revealed by a scrubbed opacity channel once a
+ * sticky stage pinned (ADR-094 U5/U7). It is the arcs' `configuration` kind
+ * now — the SAME instrument, since ADR-098 §4 ported this drawing onto that
+ * surface in the first place, so this is the copy coming home rather than a
+ * new one. What the move buys: the record scrolls in instead of powering on
+ * behind a bare frame, it takes the arc head every other beat on this page
+ * has (the cross, the eyebrow, the gold `em`, one datum), and 13.5 kB of
+ * route-local CSS goes with the pin.
+ *
+ * ⚠ THE RECORD IS VERBATIM from the tiles' `data-*` — the same three teams,
+ * the same four layer rows, the same two seam notes and three kickers. A
+ * move that edited the copy on the way would make the diff unreadable and
+ * the claim ("the same instrument") unprovable.
+ *
+ * ⚠ NO `next` TILE. The arcs' kind offers a ghost "[Next team]" and Suri
+ * takes it; this drawing never had one, and inventing one here would put a
+ * team on the client's own layer that nobody has proposed.
+ */
+export const TRINNY_CONFIGURATION: ArcSection = {
+  id: "configuration",
+  kind: "configuration",
+  head: {
+    eyebrow: "Trinny London · what the team owns",
+    title: { pre: "The Trinny London", em: "configuration." },
+    sub: "One setup that makes Trinny London AI-first: built inside the tools the team already runs, owned by the people who do the work. Headless and built from first principles, so it depends on no vendor and no single person.",
+  },
+  owner: "Owned by Trinny London",
+  layer: [
+    { id: "rules", tag: "Rules", name: "brand rules, and the line where AI stops" },
+    { id: "examples", tag: "Examples", name: "what good looks like, from their own work" },
+    { id: "sources", tag: "Sources", name: "the catalogue and the customer's voice" },
+    { id: "loops", tag: "Loops", name: "the checks that catch it before the founder does" },
+  ],
+  seam: {
+    adoption: "The team learns on its own work and writes down what good looks like.",
+    automation: "The layer runs inside the tools they already use, and hands the time back.",
+  },
+  teams: [
+    {
+      id: "studio",
+      name: "Studio",
+      work: "the visual work",
+      layers: ["rules", "examples", "sources", "loops"],
+      owner: "The studio lead, the founder's sense-check last",
+      runs: "A brand Skill, on the team's own keys",
+      bar: "On-brand, and the line where AI stops",
+      reach: "The brand rules and the catalogue",
+      where: "Claude, inside Figma",
+    },
+    {
+      id: "creative-ops",
+      name: "Creative ops",
+      work: "briefs and approvals",
+      layers: ["rules", "examples", "loops"],
+      owner: "Creative ops, who set the calendar",
+      runs: "The same brand Skill, plus a briefing Skill",
+      bar: "A brief the studio can act on",
+      reach: "The calendar and the catalogue",
+      where: "Claude, inside Monday",
+    },
+    {
+      id: "finance",
+      name: "Finance",
+      work: "the numbers, checked",
+      layers: ["rules", "sources", "loops"],
+      owner: "Finance, who sign it off",
+      runs: "A reporting Skill",
+      bar: "Numbers that reconcile before they are sent",
+      reach: "Shopify and the ledger",
+      where: "A scheduled run, results in Slack",
+    },
+  ],
+  kickers: ["One configuration", "The people run it", "No vendor in the way"],
+};
+
 export const TRINNY_OFFER_SECTIONS: readonly ArcSection[] = [
   {
     id: "phases",
@@ -131,6 +210,54 @@ export const TRINNY_OFFER_SECTIONS: readonly ArcSection[] = [
         },
       },
     ],
+  },
+  {
+    /* THE FLOW (ADR-099, owner 2026-09-13): "a new section where we
+       visualize the flow, sort of like a diagram — on the left side a
+       briefing template… it flows into the center where we see some product
+       renders… and then the third phase is the scaling, where these assets
+       get localized."
+
+       ⚠ THE BRIEF'S FIELDS ARE A REAL TEMPLATE'S, not an invention. They are
+       the eight a working creative team fills on every page — the set mined
+       from 340 briefs and 153 briefing docs of one brand, which is the
+       practice's own record of what a brief IS
+       (`paid-social-praxis/references/briefing-grammar.md`). The owner
+       pointed at a client's Figma template for this; that file is not
+       readable from here, and the mined set is the same eight labels a
+       reader of either would recognise. If the Figma is opened later, the
+       fields are one array to correct.
+
+       ⚠ THE RENDERS ARE THE CLIENT'S OWN PRODUCTS, the same four cutouts the
+       turn sweeps in two stations up — already on the page, already paid
+       for, and alpha-cut against any ground. The Drive also holds eight
+       GENERATED packshots from this engagement's own calibration wave; they
+       are the honest illustration of what the setup makes and are the first
+       thing to try if this plate should show output rather than input. */
+    id: "flow",
+    kind: "flow",
+    head: {
+      eyebrow: "Trinny London · the pipeline",
+      title: { pre: "From one brief to", em: "every market." },
+      sub: "The brief goes in as the team already writes it. The setup makes the imagery, the studio grades it, and what passes is localised for every market it ships to.",
+    },
+    brief: {
+      label: "The brief",
+      fields: ["Idea", "Why", "Audience", "Formats", "Variants", "Visual", "Copy", "Product"],
+    },
+    renders: {
+      label: "What it makes",
+      images: [
+        { src: "/trinny-london/naked-ambition.webp", alt: "" },
+        { src: "/trinny-london/be-your-best.webp", alt: "" },
+        { src: "/trinny-london/overnight-sensation.webp", alt: "" },
+      ],
+    },
+    scale: {
+      label: "Every market",
+      markets: ["UK", "DE", "FR", "NL"],
+    },
+    steps: ["Generate", "Localise"],
   },
   {
     id: "how-we-work",

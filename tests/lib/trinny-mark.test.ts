@@ -11,14 +11,14 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { buildTarget } from "@/app/(marketing)/trinny-london/mark/buildTrinnyTarget";
+import { buildTarget } from "@/app/(marketing)/arcs/trinny-london/proposal/mark/buildTrinnyTarget";
 import {
   assignByPolarRank,
   classifyRadius,
   MARK_CLASS_INNER,
   MARK_CLASS_RING,
   PAIR_SPLIT_RADIUS,
-} from "@/app/(marketing)/trinny-london/mark/pairByPolarRank";
+} from "@/app/(marketing)/arcs/trinny-london/proposal/mark/pairByPolarRank";
 import {
   polygonPath,
   TRINNY_MARK_GLYPHS,
@@ -26,22 +26,19 @@ import {
   TRINNY_MARK_VIEWBOX,
   trinnyMarkPaths,
   trinnyMarkSvg,
-} from "@/app/(marketing)/trinny-london/mark/trinnyMark";
+} from "@/app/(marketing)/arcs/trinny-london/proposal/mark/trinnyMark";
 import {
   markVeil,
   morphOf,
   productEnter,
   productExit,
   productPose,
-  propInOf,
-  propPinnedProgress,
+  propArrival,
   TURN_MARK_CENTER_Y,
   TURN_MORPH_END,
   TURN_MORPH_START,
   TURN_PRODUCT_LEAVE,
   TURN_PRODUCT_OUT,
-  TURN_PROP_IN,
-  TURN_PROP_LIT,
   turnProgress,
   turnRunway,
   washOf,
@@ -53,8 +50,8 @@ import {
   TURN_VEIL_MAX,
   TURN_VEIL_PROP_MAX,
   TURN_PROP_FADE,
-} from "@/app/(marketing)/trinny-london/turn/turnClock";
-import { turnDecodeFrame } from "@/app/(marketing)/trinny-london/turn/turnDecode";
+} from "@/app/(marketing)/arcs/trinny-london/proposal/turn/turnClock";
+import { turnDecodeFrame } from "@/app/(marketing)/arcs/trinny-london/proposal/turn/turnDecode";
 
 const ROOT = process.cwd();
 const SVG_PATH = join(ROOT, "public/trinny-london/trinny-london-mark.svg");
@@ -380,43 +377,56 @@ describe("turnClock", () => {
     }
   });
 
-  it("the proposal's record powers on only AFTER its stage has pinned", () => {
-    /* This is the whole mechanism (ADR-095 U5): the elements are blank while
-       the station travels and light once it has stopped, so nothing is ever
-       seen moving. A reveal that opened during the approach would be the
-       defect this pass removes, wearing a different channel.
+  it("the proposal ARRIVES on its own rect, and overlaps the turn on purpose", () => {
+    /* ADR-099 replaces ADR-095 U5's pinned clock. The record was blank while
+       its station travelled and powered on once a sticky stage parked — and
+       that is exactly what put a bare frame between the two beats: a pin
+       cannot begin until the thing above it has ended, so the turn emptied
+       (products out at 0.88, the line un-typed at 0.90) and the reader then
+       crossed a viewport of held ground before anything arrived.
 
-       ⚠ THE PIN IS NOT THE STATION'S TOP, and the first cut assumed it was.
-       `.station` carries top padding — 140px measured at 1920×1247 — so the
-       stage is still 140px short of its pin in the frame the station's top
-       reaches the viewport top. The clock measures the STAGE's travel. */
+       The record scrolls in instead, so `q` is a plain ARRIVAL: 0 when the
+       station's top is at the viewport's bottom edge, 1 when it reaches the
+       top. One rect, no stage term, and no state to latch — which also
+       deletes U5's one asymmetric failure, where a missing stage pinned `q`
+       at 0 and left the record invisible forever. */
     const vh = 1000;
-    const height = 1600; // 100svh pin + 60svh runway
-    const pad = 140;
-    const q = (top: number) => propPinnedProgress(top, height, pad, vh);
+    const q = (top: number) => propArrival(top, vh);
 
-    // Approaching: the top is below the fold, and nothing is lit.
     expect(q(vh)).toBe(0);
-    expect(propInOf(q(vh))).toBe(0);
-    // Half-way up the viewport — still travelling, still blank.
-    expect(propInOf(q(vh / 2))).toBe(0);
-    /* ⚠ AT THE STATION'S OWN TOP THE STAGE HAS NOT PINNED YET — this is the
-       assertion the first cut would have failed, and it is the defect stated
-       as a number. */
-    expect(q(0)).toBe(0);
-    expect(propInOf(q(0))).toBe(0);
-    // …it pins one padding further on, and the reveal opens after THAT.
-    expect(q(-pad)).toBe(0);
-    expect(propInOf(q(-pad))).toBe(0);
-    expect(q(-pad - 1)).toBeGreaterThan(0);
-    // Then it opens, and settles well before the release.
-    expect(propInOf(TURN_PROP_IN)).toBe(0);
-    expect(propInOf(TURN_PROP_LIT)).toBe(1);
-    expect(propInOf(1)).toBe(1);
-    expect(TURN_PROP_LIT).toBeLessThan(1);
-    // The travel is what is left of the station once the stage's own box is
-    // taken out of it — spent exactly at the release.
-    expect(q(-(height - vh))).toBe(1);
+    expect(q(vh / 2)).toBeCloseTo(0.5, 12);
+    expect(q(0)).toBe(1);
+    // Past the top it saturates rather than running on.
+    expect(q(-400)).toBe(1);
+    // Monotonic as the station rises.
+    for (let top = vh; top > 0; top -= 50) {
+      expect(q(top - 50)).toBeGreaterThan(q(top));
+    }
+
+    /* ⚠ THE OVERLAP IS THE POINT, AND IT IS ARITHMETIC. `#turn` is
+       `100svh + 120svh` of runway with a sticky stage, so `p = 1` exactly as
+       its bottom reaches the viewport's bottom; `#proposition` starts
+       `--tl-prop-lead` (50svh) ABOVE that. So at the turn's release the
+       proposal is already half arrived, and it began arriving a quarter of
+       the turn earlier — while the products are still leaving. */
+    const lead = 0.5;
+    const turnRunway = 1.2;
+    /** The proposal's top, in viewport units, at a given turn progress. */
+    const propTopAt = (pTurn: number) => (1 - pTurn) * (1 + turnRunway) + 1 - lead;
+    expect(propArrival(propTopAt(1) * vh, vh)).toBeCloseTo(0.5, 6);
+    const opensAt = 1 - lead / (1 + turnRunway);
+    expect(opensAt).toBeCloseTo(0.7727, 3);
+    expect(propArrival(propTopAt(opensAt) * vh, vh)).toBeCloseTo(0, 6);
+    // The products are still on screen when it opens (they go OUT → GONE).
+    expect(opensAt).toBeLessThan(TURN_PRODUCT_OUT);
+
+    /* And the veil HANDS OVER rather than racing: `veilOf` has saturated by
+       `p = 0.72`, before the arrival opens, so the turn takes the mark to its
+       own ceiling and the arrival carries it the rest of the way, landing
+       exactly as the record does. */
+    expect(veilOf(0.72)).toBeCloseTo(TURN_VEIL_MAX, 12);
+    expect(markVeil(opensAt, 0)).toBeCloseTo(TURN_VEIL_MAX, 12);
+    expect(markVeil(1, 0.5)).toBeCloseTo(TURN_VEIL_PROP_MAX, 12);
   });
 
   it("the mark's on-stage centre is the actor's weld, re-derived from its sources", () => {

@@ -18,7 +18,7 @@ import {
   TRINNY_JOURNEY,
   TRINNY_JOURNEY_ORDER,
   TRINNY_NAV_ITEMS,
-} from "@/app/(marketing)/trinny-london/journey";
+} from "@/app/(marketing)/arcs/trinny-london/proposal/journey";
 
 /**
  * ADR-093 — the variant's journey clock; ADR-094 — its two roster-only

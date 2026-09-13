@@ -55,6 +55,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   portrait: "OPERATOR",
   close: "CLOSE",
   dossier: "DOSSIER",
+  flow: "PIPELINE",
   intelligence: "ATLAS",
   sheets: "STUDIO",
   films: "REEL",

@@ -43,9 +43,9 @@ function runBootstrapAt(url: string) {
 
 describe("the light-locked routes", () => {
   it("normalises a trailing slash and rejects a near miss", () => {
-    expect(isLightLockedPath("/trinny-london")).toBe(true);
-    expect(isLightLockedPath("/trinny-london/")).toBe(true);
-    expect(isLightLockedPath("/trinny-londonx")).toBe(false);
+    expect(isLightLockedPath("/arcs/trinny-london/proposal")).toBe(true);
+    expect(isLightLockedPath("/arcs/trinny-london/proposal/")).toBe(true);
+    expect(isLightLockedPath("/arcs/trinny-london/proposalx")).toBe(false);
     expect(isLightLockedPath("/")).toBe(false);
   });
 
@@ -54,7 +54,7 @@ describe("the light-locked routes", () => {
     // the list is pinned rather than derived. `/` and `/claude-workshop`
     // must never appear here — they are the site's own themed surfaces.
     expect([...LIGHT_LOCKED_ROUTES]).toEqual([
-      "/trinny-london",
+      "/arcs/trinny-london/proposal",
       "/arcs/suri-proposal",
       "/arcs/perfect-ted-proposal",
     ]);
@@ -65,7 +65,7 @@ describe("themeBootstrapScript — the pre-paint decision", () => {
   beforeEach(resetChannel);
 
   it("stamps BOTH attributes on a locked route", () => {
-    runBootstrapAt("/trinny-london");
+    runBootstrapAt("/arcs/trinny-london/proposal");
     expect(document.documentElement.getAttribute("data-theme")).toBe("light");
     expect(document.documentElement.getAttribute(THEME_LOCK_ATTR)).toBe("light");
   });
@@ -75,19 +75,19 @@ describe("themeBootstrapScript — the pre-paint decision", () => {
     // a pitch page is composed in light and there is no legitimate reason
     // to force it out of the theme it was designed in.
     window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
-    runBootstrapAt("/trinny-london?theme=dark");
+    runBootstrapAt("/arcs/trinny-london/proposal?theme=dark");
     expect(document.documentElement.getAttribute("data-theme")).toBe("light");
     expect(document.documentElement.getAttribute(THEME_LOCK_ATTR)).toBe("light");
   });
 
   it("NEVER writes storage — the visitor's own choice survives the visit", () => {
     window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
-    runBootstrapAt("/trinny-london");
+    runBootstrapAt("/arcs/trinny-london/proposal");
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
   });
 
   it("locks the trailing-slash form too", () => {
-    runBootstrapAt("/trinny-london/");
+    runBootstrapAt("/arcs/trinny-london/proposal/");
     expect(document.documentElement.getAttribute(THEME_LOCK_ATTR)).toBe("light");
   });
 

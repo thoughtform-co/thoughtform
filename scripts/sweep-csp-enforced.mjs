@@ -19,7 +19,7 @@ const base = process.argv.includes("--base")
 const ROUTES = [
   "/",
   "/claude-workshop",
-  "/trinny-london",
+  "/arcs/trinny-london/proposal",
   "/arcs",
   "/arcs/loop-earplugs",
   "/arcs/ai-keynote",

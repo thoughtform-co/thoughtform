@@ -213,53 +213,38 @@ export function productExit(k: number, p: number, n = 4): number {
   return smootherstep((p - from) / (TURN_PRODUCT_GONE - from));
 }
 
-/* ── The proposal's own arrival (ADR-095 U5) ─────────────────────────────
-   `#proposition` is a pinned station now, the turn's own shape: `100svh` of
-   pin plus a runway, with a sticky stage. Everything the beat does is
-   expressed against the PINNED stretch of it — the elements are blank while
-   the stage travels and power on once it has stopped, which is the whole
-   mechanism (nothing can be seen sliding if nothing is visible while
-   anything moves).
+/* ── The proposal's own arrival (ADR-095 U5, re-cut by ADR-099) ───────
+   `#proposition` was a PINNED station whose record powered on once its stage
+   parked. That is retired: the record is an arc beat that scrolls in, so `q`
+   is the station's ARRIVAL — 0 when its top is at the viewport's bottom edge,
+   1 when it reaches the top.
 
-   ⚠ THE PIN IS NOT AT THE STATION'S TOP, AND ASSUMING IT WAS SHIPPED THE
-   DEFECT IN MINIATURE. `.station` carries its own top padding — 140px at
-   1920×1247, measured — so the sticky stage is still 140px short of its pin
-   in the frame the station's top reaches the viewport top. A clock written
-   against the station's rect alone opened the reveal 45px into a 140px
-   travel, i.e. the record lit while it was still moving. And the size of the
-   error is viewport-dependent (140 of 748px of runway at 1920, 140 of 432 at
-   1280×720), so no single literal could have hidden it either.
+   ⚠ IT IS THE SAME SHAPE AS THE TURN'S OWN CLOCK, ONE VIEWPORT WIDE, and
+   that is what makes the two beats overlap on purpose. With
+   `--tl-prop-lead: 50svh` the proposal's top enters the frame at the turn's
+   `p ≈ 0.77` and is half-arrived exactly at `p = 1` — so the record rises
+   while the products are still leaving (they go 0.88 → 1.0), which is the
+   defect this replaced: a pin cannot start until the thing above it has
+   finished, so it could only ever follow the emptied stage with a bare frame
+   in between.
 
-   So the clock measures THE STAGE'S OWN TRAVEL: `padTop` is where the stage
-   sits inside the station, and the travel is what is left of the station
-   after the stage's own box. Both come off the layout in `measure()`. */
+   ⚠ NO STAGE TERM, AND THAT DELETES A TRAP. The pinned clock had to measure
+   the stage's own box (`padTop`, `stageH`) because `.station` padding put the
+   pin 140px below the station's top — and its failure mode was silent: with
+   the stage gone but the section kept, `q` pinned at 0 and the reveal channel
+   latched the record invisible forever. An arrival reads one rect and has no
+   such state. */
 
 /**
- * How far into the stage's PINNED stretch the reader is, 0 → 1.
+ * How far the proposal has arrived, 0 → 1, off its own rect.
  *
- * `top` is the station's viewport-relative top, `padTop` the stage's offset
- * inside it, `stageH` the stage's height. Exactly 0 for the whole approach,
- * which is what keeps the turn's own beat byte-identical.
+ * `top` is the station's viewport-relative top. Unlike the pinned clock it
+ * replaces, this is NON-ZERO during the turn's last quarter — deliberately:
+ * `markVeil` adds on it, so the mark keeps going away as the record comes in
+ * rather than waiting for a pin that no longer happens.
  */
-export function propPinnedProgress(
-  top: number,
-  height: number,
-  padTop: number,
-  stageH: number
-): number {
-  const travel = Math.max(1, height - padTop - stageH);
-  return clamp01((-top - padTop) / travel);
-}
-
-/** The elements' power-on window, in pinned-stretch units. It opens just
- *  after the pin (not ON it — a reveal that starts in the same frame the
- *  stage stops moving reads as the motion continuing) and settles well
- *  before the release. */
-export const TURN_PROP_IN = 0.06;
-export const TURN_PROP_LIT = 0.46;
-
-export function propInOf(q: number): number {
-  return ramp(q, TURN_PROP_IN, TURN_PROP_LIT);
+export function propArrival(top: number, vh: number): number {
+  return clamp01((vh - top) / Math.max(1, vh));
 }
 
 /** The mark's extra fade, over the same arrival. */
@@ -274,11 +259,14 @@ export function propVeilRamp(q: number): number {
  * The mark's veil, from both stations at once — the turn's own put-away plus
  * the proposal's arrival taking it the rest of the way.
  *
- * ⚠ ADDITIVE, NOT A `max()`, and `q` is what makes that safe: it is exactly
- * 0 until `#proposition`'s stage has pinned, so during the whole turn this
- * IS `veilOf(p)` to the last bit. A `max()` of two ramps that both start at 0
- * would have been the same value and a worse contract — it would not say
- * that the second one only ever ADDS.
+ * ⚠ ADDITIVE, NOT A `max()`, AND SINCE ADR-099 THE OVERLAP IS THE POINT.
+ * Under the pinned clock `q` was 0 for the whole turn and the additive form
+ * was merely safe; now `q` opens at `p ≈ 0.77` — but `veilOf` has already
+ * saturated at `p = 0.72`, so the two never race: the turn takes the mark to
+ * 0.72 and the arrival carries it to 0.94, continuously, landing exactly as
+ * the record does (`TURN_PROP_VEIL_FULL` 0.5 of arrival IS `p = 1`). A
+ * `max()` would read the same and say the wrong thing — that either could
+ * win, when the contract is that the second only ever ADDS.
  */
 export function markVeil(pTurn: number, q: number): number {
   return clamp01(veilOf(pTurn) + (TURN_VEIL_PROP_MAX - TURN_VEIL_MAX) * propVeilRamp(q));

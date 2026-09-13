@@ -118,33 +118,36 @@ describe("trinny-london variant parse (ADR-093)", () => {
     expect(body).not.toContain("tl-inter__");
   });
 
-  it("the proposal is pinned, decodes its title, and travels nothing (ADR-095 U5)", () => {
-    /* The owner's read: "we have a parallax paint flying over it … the
-       elements from the next section should just come into view." An opaque
-       station in normal flow can only ARRIVE by travelling and its content
-       travels with it, so the fix is structural — a sticky stage, a scrubbed
-       opacity channel, and the house decode on the title.
+  it("the proposal is a SLOT the configuration mounts into (ADR-099)", () => {
+    /* ADR-095 U5 made this station a pinned stage whose record powered on in
+       place, because an opaque station in normal flow can only ARRIVE by
+       travelling and its content travels with it. That solved the slide and
+       bought a worse thing: a pin cannot start until the beat above it has
+       finished, so the turn emptied (products out at 0.88, the line un-typed
+       at 0.90) and the reader crossed a viewport of held ground before
+       anything appeared. The owner read it as "a blank section or a leftover
+       section briefly appears".
 
-       ⚠ `data-m` IS THE THING BEING REPLACED, so its absence is the
-       assertion. Every role in that system but `fade` translates, it is
-       one-shot, and it fires at 12 % visibility — i.e. while this station is
-       still rising, which is exactly the defect. */
+       The record is an arc beat now, mounted by `TrinnyPortals` into the one
+       slot below. It scrolls in over the emptying stage — the stations
+       overlap by `--tl-prop-lead` — so nothing slides over anything and
+       nothing waits.
+
+       ⚠ THE ABSENCES ARE THE ASSERTION. `data-m` is the move-and-fade system
+       this station may never use; `data-tl-prop-stage` and `data-tl-reveal`
+       are the retired pin and its channel, and a stage left behind with the
+       writer gone would pin `q` at 0 and latch the record invisible. */
     const body = parsed();
     const start = body.indexOf('id="proposition"');
     const prop = body.slice(start, body.indexOf("</section>", start));
     expect(prop).not.toContain("data-m");
-    // The pin, and exactly one of it.
-    expect(body.match(/data-tl-prop-stage/g) ?? []).toHaveLength(1);
-    // The three reveal targets: the head, its paragraph, the drawing.
-    expect(prop.match(/data-tl-reveal/g) ?? []).toHaveLength(3);
-    /* The title's ghost + live pair, carrying the SAME string. The ghost is
-       in flow and holds the box; the live layer is a LEAF the writer
-       overwrites. A drift between them shows as the head resizing the
-       moment the decode starts. */
-    const ghost = prop.match(/<span class="tl-dc__ghost">([^<]+)<\/span>/)?.[1] ?? "";
-    const live = prop.match(/<span class="tl-dc__live"[^>]*>([^<]+)<\/span>/)?.[1] ?? "";
-    expect(ghost.length).toBeGreaterThan(0);
-    expect(live).toBe(ghost);
+    expect(body.match(/data-tl-config-root/g) ?? []).toHaveLength(1);
+    expect(body).not.toContain("data-tl-prop-stage");
+    expect(body).not.toContain("data-tl-reveal");
+    expect(prop).not.toContain("tl-config__");
+    /* The ground SURVIVES the move: ADR-095 U4's held field and U6's swap are
+       untouched, which is what keeps the client's colour across the seam. */
+    expect(prop).toContain("data-tl-prop-wash");
   });
 
   it("the contact block reveals without travelling", () => {
@@ -255,55 +258,28 @@ describe("trinny-london variant parse (ADR-093)", () => {
     }
   });
 
-  it("letters the proposal without the Arc's vocabulary or a digit", () => {
-    /* The proposal is the offer; the Arc is the approach. The owner asked
-       for them kept apart, and the drawing letters no count — it plots
-       their stack, it does not measure it. */
-    const body = parsed();
-    // From the section's own `<` — slicing at the id would leave the tag's
-    // remaining attributes (its screen label carries an ordinal) in the text.
-    const start = body.lastIndexOf("<section", body.indexOf('id="proposition"'));
-    const end = body.lastIndexOf("<section", body.indexOf('id="contact"'));
-    const prop = body.slice(start, end).replace(/<[^>]+>/g, " ");
-    expect(prop).not.toMatch(/\b(navigate|encode|build)\b/i);
-    expect(prop).not.toMatch(/\d/);
-    expect(prop.toLowerCase()).not.toContain("self-sufficien");
-    /* ⚠ THE HEAD IS A HEADING AND A PARAGRAPH, AND NOTHING ELSE (owner,
-       2026-09-10). The eyebrow read "The proposal" directly over a heading
-       that names the thing, on a page whose journey rail already says
-       Proposal — the same word three times in one band. */
-    expect(prop).not.toContain("tl-prop__eyebrow");
-    expect(prop).not.toMatch(/\bThe proposal\b/);
-  });
+  it("leaves the proposal's copy to the record it now mounts (ADR-099)", () => {
+    /* This walked the station's own markup for the Arc's vocabulary, a
+       digit and "self-sufficient" — right while the record was hand-written
+       here. It is data now (`offer/offerSections.ts`), so the walk moved to
+       `tests/lib/trinny-offer.test.ts`, which reads the same bans from
+       `lib/arcs/copyLaw.ts` over every string the page can letter.
 
-  it("draws the proposal as one instrument whose record is on the tiles", () => {
-    /* ADR-094 U7. The layer's four rows, three team tiles, and a readout
-       that answers the registry's five questions. The RECORD is `data-*`
-       on the tiles — which is what puts every string the page can letter
-       inside the walk above — and every layer a tile names must be a row
-       the drawing has, or the pick lights nothing and fails silently. */
+       ⚠ WHAT STAYS HERE IS WHAT THE HTML STILL OWNS: the station is a shell,
+       so it must letter NOTHING. A head that crept back into the prototype
+       would be a second source for one record, and the two would drift. */
     const body = parsed();
-    const start = body.indexOf('id="proposition"');
-    const prop = body.slice(start, body.indexOf("</section>", start));
-    const layers = [...prop.matchAll(/data-tl-layer="([a-z]+)"/g)].map((m) => m[1]);
-    expect(layers).toEqual(["rules", "examples", "sources", "loops"]);
-    const tiles = [...prop.matchAll(/<button[^>]*data-tl-pick[^>]*>/g)].map((m) => m[0]);
-    expect(tiles).toHaveLength(3);
-    for (const tile of tiles) {
-      const lit = (tile.match(/data-layers="([^"]*)"/)?.[1] ?? "").split(/\s+/).filter(Boolean);
-      expect(lit.length).toBeGreaterThan(0);
-      for (const id of lit) expect(layers).toContain(id);
-      for (const k of ["owner", "runs", "bar", "reach", "where"]) {
-        expect(tile, `${k} on ${tile.slice(0, 60)}`).toMatch(new RegExp(`data-${k}="[^"]+"`));
-      }
+    const start = body.lastIndexOf("<section", body.indexOf('id="proposition"'));
+    const end = body.lastIndexOf("<section", body.indexOf('id="offer"'));
+    const text = body
+      .slice(start, end)
+      .replace(/<!--[\s\S]*?-->/g, " ")
+      .replace(/<[^>]+>/g, " ");
+    expect(text.trim()).toBe("");
+    // And the retired head's own classes are gone with it.
+    for (const cls of ["tl-prop__head", "tl-prop__title", "tl-prop__desc", "tl-prop__eyebrow"]) {
+      expect(body, cls).not.toContain(cls);
     }
-    // The readout: the name plus the five answers, one slot each.
-    const slots = [...prop.matchAll(/data-tl-cfg="([a-z]+)"/g)].map((m) => m[1]);
-    expect(slots).toEqual(["name", "owner", "runs", "bar", "reach", "where"]);
-    // At rest the first tile is picked and every row is lit — the drawing
-    // reads whole without the picker (the phone and reduced-motion paths).
-    expect(tiles[0]).toContain('aria-selected="true"');
-    expect(prop.match(/tl-config__layer is-on/g) ?? []).toHaveLength(4);
   });
 
   it("ships the wordmark and drops the legacy HUD chrome", () => {

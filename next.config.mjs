@@ -91,6 +91,19 @@ const nextConfig = {
               destination: "/arcs/loop-earplugs",
               permanent: true,
             },
+            // The Trinny pitch was authored at `/trinny-london` and moved
+            // under its client (ADR-099, owner). Same reasoning as the arc
+            // rename above, and the same 308: the page's whole distribution
+            // is a link somebody forwarded, so the links in the wild are in
+            // inboxes and the cheapest way to keep them working is to
+            // forward the address rather than ask anyone to re-send it.
+            // ⚠ THE OLD PATH IS NOT A ROUTE ANY MORE, so without this row it
+            // reaches the not-found boundary rather than falling through.
+            {
+              source: "/trinny-london",
+              destination: "/arcs/trinny-london/proposal",
+              permanent: true,
+            },
           ];
         },
         async headers() {

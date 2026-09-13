@@ -587,12 +587,27 @@ describe("arcs registry (ADR-052)", () => {
         `${client.slug}: no engagements`
       ).toBeGreaterThan(0);
       for (const page of pages) {
-        /* A client page links OUT. Anything under `/arcs/` is an arc and
-           belongs in `ARCS`, where every guard can reach it; a page record
-           pointing there would be a link-only arc by the back door — the
-           exact shape ADR-098 rejected. */
-        expect(page.href, `${client.slug}: page ${page.href}`).not.toMatch(/^\/arcs(\/|$)/);
-        expect(page.href, `${client.slug}: page ${page.href}`).toMatch(/^\/[a-z0-9-]+$/);
+        /* ⚠ A CLIENT PAGE MAY NEST UNDER ITS OWN CLIENT, AND MAY NOT SIT IN
+           THE SLUG NAMESPACE (ADR-099, owner 2026-09-13: the pitch moves to
+           `/arcs/trinny-london/proposal`). The invariant ADR-098 was
+           protecting is still the one that matters — a record with no
+           sections may not occupy an address `[slug]` resolves, because
+           that is a link-only arc by the back door and every `ARCS.map`
+           walk would have to special-case it. A DEEPER path under the
+           client's own segment is not in that namespace: `[slug]` matches
+           one segment, so `/arcs/<client>/<leaf>` can only ever be a real
+           route folder. Both halves are asserted — the depth AND the
+           ownership — because a page nested under ANOTHER client's slug
+           would resolve fine and lie about whose work it is. */
+        const nested = page.href.match(/^\/arcs\/([a-z0-9-]+)\/[a-z0-9-]+$/);
+        if (page.href.startsWith("/arcs")) {
+          expect(nested, `${client.slug}: ${page.href} is in the [slug] namespace`).not.toBeNull();
+          expect(nested?.[1], `${client.slug}: ${page.href} nests under another client`).toBe(
+            client.slug
+          );
+        } else {
+          expect(page.href, `${client.slug}: page ${page.href}`).toMatch(/^\/[a-z0-9-]+$/);
+        }
         expect(page.chip.length, `${client.slug}: page chip`).toBeGreaterThan(0);
         expect(["keynote", "workshop", "production"]).toContain(page.kind);
       }

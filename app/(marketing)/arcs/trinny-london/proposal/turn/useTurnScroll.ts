@@ -16,11 +16,11 @@
  *     `[data-tl-decode]` node, plus `--tl-cta-o` on the block;
  *   - `--tl-turn` / `data-tl-turn` on `#turn` — the smoke's observable.
  *
- * …and then, off `#proposition`'s OWN rect (U5):
- *   - `--tp-in` / `data-tl-prop` on `#proposition` — its elements' power-on,
- *     which is opacity ONLY and starts after its stage has pinned, so the
- *     record appears in place instead of riding a slab up the screen;
- *   - the same house decode on its title.
+ * …and then, off `#proposition`'s OWN rect:
+ *   - `data-tl-prop` — its ARRIVAL (ADR-099), published for the capture and
+ *     the smoke to converge on. It no longer drives the record: that is an
+ *     arc beat with the arcs' own reveal, so this writer touches its ground
+ *     and its veil and nothing inside it.
  *
  * ⚠ ONE WRITER, TWO STATIONS, AND THAT IS DELIBERATE. This effect already
  * held `#proposition`, its canvas and its rect for the shared ground; a
@@ -48,8 +48,7 @@ import {
   markVeil,
   morphOf,
   productPose,
-  propInOf,
-  propPinnedProgress,
+  propArrival,
   turnProgress,
   TURN_PROP_FADE,
   washOf,
@@ -99,16 +98,11 @@ export function useTurnScroll(): void {
     // from under the reader at the seam.
     const prop = document.querySelector<HTMLElement>(".tl-root #proposition");
     const propCanvas = prop?.querySelector<HTMLCanvasElement>("[data-tl-prop-wash]") ?? null;
-    const propStage = prop?.querySelector<HTMLElement>("[data-tl-prop-stage]") ?? null;
-    const propLines = prop
-      ? Array.from(prop.querySelectorAll<HTMLElement>("[data-tl-decode]"))
-      : [];
     const mq = window.matchMedia(TURN_CAPABLE_QUERY);
 
     // The true strings, read from the server-rendered text once. They are
     // never re-read: from here the decode owns `textContent`.
     const truth = lines.map((el) => el.textContent ?? "");
-    const propTruth = propLines.map((el) => el.textContent ?? "");
 
     let wash: TurnWash | null = null;
     if (canvas) {
@@ -136,8 +130,6 @@ export function useTurnScroll(): void {
        once per relayout, because a clock written against the station alone
        opened the reveal 45px into a 140px travel and lit the record while it
        was still moving. */
-    let propPadTop = 0;
-    let propStageH = 0;
     let lastP = -1;
     let lastQ = -1;
     let lastPropA = -1;
@@ -154,20 +146,16 @@ export function useTurnScroll(): void {
       lines.forEach((el, i) => {
         el.textContent = truth[i];
       });
-      /* ⚠ THE PARKED PROPOSAL IS FULLY LIT, not blank. Its channel is a
-         REVEAL — absent, the CSS reads `var(--tp-in, 1)` and the record
-         simply stands, which is what the phone and the reduced-motion paths
-         must get. Writing 0 here would hide the whole proposal on exactly
-         the paths that have no way to un-hide it. */
+      /* ⚠ THE PARKED PROPOSAL IS FULLY LIT, and since ADR-099 it is lit by
+         construction rather than by a fail-open default. Its record is an arc
+         beat with the arcs' own reveal opt-in, so on the phone and under
+         reduced motion it simply stands; there is no `--tp-in` channel left
+         to write, and therefore no path on which parking could hide it. */
       turn.removeAttribute("data-tl-handoff");
       // ⚠ BOTH fail open: parked, the proposal keeps its ground.
       prop?.removeAttribute("data-tl-ground");
       lastHandoff = -1;
-      prop?.style.removeProperty("--tp-in");
       prop?.removeAttribute("data-tl-prop");
-      propLines.forEach((el, i) => {
-        el.textContent = propTruth[i];
-      });
       wash?.draw(0);
       propWash?.draw(0);
       prop?.style.removeProperty("--tl-wash");
@@ -186,10 +174,6 @@ export function useTurnScroll(): void {
         cx: el.offsetLeft + el.offsetWidth / 2,
         cy: el.offsetTop + el.offsetHeight / 2,
       }));
-      if (propStage) {
-        propPadTop = propStage.offsetTop;
-        propStageH = propStage.offsetHeight;
-      }
       wash?.resize();
       propWash?.resize();
     };
@@ -261,45 +245,37 @@ export function useTurnScroll(): void {
         }
       }
 
-      /* ── The proposal's own clock (U5) ─────────────────────────────────
-         Its stage is pinned exactly as the turn's is, and `q` is how far
-         into that PINNED stretch the reader has come — 0 for the whole
-         approach, which is what lets the record sit blank while its section
-         travels and power on only once it has stopped. That is the whole
-         mechanism: nothing has to slide, because nothing is visible while
-         anything is moving.
+      /* ── The proposal's own clock (ADR-099) ────────────────────────────
+         `q` is the station's ARRIVAL, one viewport wide. It was the pinned
+         stretch of a sticky stage (U5) — blank while the section travelled,
+         powering on once it stopped — and that is what left a bare frame
+         between the two beats: a pin cannot begin until the thing above it
+         has ended. The record scrolls in now, so the two overlap.
          ⚠ Read off `#proposition`'s rect, never the turn's: the two stations
-         are adjacent, so the turn's `p` saturates at 1 a viewport before
-         this one's pin and would light the record mid-travel. */
+         overlap by `--tl-prop-lead`, so the turn's `p` saturates while this
+         one is still arriving — which is exactly the overlap ADR-099 wanted,
+         and it can only be measured on the station that is moving. */
       let q = 0;
-      if (prop && propStage) {
-        const prRect = prop.getBoundingClientRect();
-        q = propPinnedProgress(prRect.top, prRect.height, propPadTop, propStageH);
-      }
+      if (prop) q = propArrival(prop.getBoundingClientRect().top, window.innerHeight);
 
       if (lastP >= 0 && Math.abs(p - lastP) < 0.0005 && Math.abs(q - lastQ) < 0.0005) return;
       lastP = p;
       lastQ = q;
 
       brandmarkMorphRef.current.progress = morphOf(p);
-      /* Both stations, one channel — additive, and `q` is 0 through the
-         whole turn, so this IS `veilOf(p)` there to the last bit. */
+      /* Both stations, one channel — additive. `veilOf` saturates at
+         `p = 0.72` and `q` opens at `p ≈ 0.77`, so the turn hands the mark
+         over rather than racing it: 0.72 by the end of the turn, 0.94 as the
+         record lands (ADR-099). */
       brandmarkMorphRef.current.veil = markVeil(p, q);
       turn.style.setProperty("--tl-turn", p.toFixed(3));
       turn.setAttribute("data-tl-turn", p.toFixed(2));
 
-      if (prop) {
-        const tp = propInOf(q);
-        prop.style.setProperty("--tp-in", tp.toFixed(3));
-        prop.setAttribute("data-tl-prop", q.toFixed(2));
-        for (let i = 0; i < propLines.length; i++) {
-          // One direction only: the proposal does not un-type. The turn's
-          // copy leaves because its stage is being handed over; this record
-          // stays readable as the reader scrolls past it.
-          const next = turnDecodeFrame(propTruth, i, tp, 0);
-          if (propLines[i].textContent !== next) propLines[i].textContent = next;
-        }
-      }
+      /* The arrival is still PUBLISHED — the capture and the smoke converge
+         on it rather than on a solved `y`, and the ground's own swap reads
+         the same rect. What it no longer drives is the record: that is an arc
+         beat with the arcs' reveal, so nothing here writes its opacity. */
+      prop?.setAttribute("data-tl-prop", q.toFixed(2));
 
       // The channel the CSS fallback and the smoke read; the canvas itself
       // is painted above, outside this gate.

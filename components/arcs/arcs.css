@@ -913,6 +913,226 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   color: var(--arc-ink-70);
 }
 
+/* ── The flow (ADR-099) ────────────────────────────────
+   A pipeline, drawn: the brief in, the renders it becomes, the markets it
+   ships to. The grammar is the tools' authored wireframes' — hairline
+   plates, mono micro-labels, quiet bars where a real interface would carry
+   text — at page scale rather than inside a bay.
+
+   ⚠ NO GOLD IN THE DRAWING. Every other instrument on this surface spends
+   its one gold on the thing that gets BUILT; here the head's `em` has
+   already spent it, and a pipeline where each of three plates competes for
+   the eye is the opposite of what was asked for. Green is the operational
+   flow (the wireframes' own signal, ADR-068 U5) and it letters the field
+   names alone.
+
+   ⚠ ONE ROW, AND THE MIDDLE IS THE SUBJECT. `1fr` on the outer plates and
+   `1.15fr` on the renders: the thing the setup MAKES is what the beat is
+   about, and three equal columns would say the brief and the markets matter
+   as much. The connectors are `max-content` so they never steal from it. */
+.arc-flow {
+  display: grid;
+  grid-template-columns: 1fr max-content 1.15fr max-content 1fr;
+  align-items: stretch;
+  gap: clamp(12px, 1.4vw, 24px);
+  margin-top: clamp(28px, 4vh, 56px);
+  /* ⚠ THE ROW TAKES A SHARE OF THE BEAT, NOT JUST ITS CONTENT. Seated from
+     the head's datum (ADR-099), a content-height row leaves the slack pooled
+     at the floor — measured ~500px of bare parchment under a 380px drawing,
+     which reads as a beat that stopped rather than one that fits. A minimum
+     in `svh` is the same lever `.arc-sec` uses one level up; the plates then
+     stretch and their own rows distribute. */
+  min-height: clamp(300px, 46svh, 620px);
+}
+.arc-flow__plate {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vh, 16px);
+  padding: clamp(16px, 1.6vw, 24px);
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-plate);
+}
+.arc-flow__kicker {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+
+/* The brief: one ruled row per field — the name, then a bar standing in for
+   what somebody writes there. Bars vary in width so the plate reads as a
+   filled form rather than one row repeated. */
+.arc-flow__fields {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+.arc-flow__field {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: clamp(5px, 0.8vh, 9px) 0;
+  border-bottom: 1px solid var(--arc-rule);
+}
+.arc-flow__field:last-child {
+  border-bottom: 0;
+}
+.arc-flow__fname {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--atreides-ink);
+}
+.arc-flow__fbar {
+  display: block;
+  height: 3px;
+  width: 72%;
+  background: rgba(var(--dawn-rgb), 0.13);
+}
+.arc-flow__field:nth-child(2n) .arc-flow__fbar {
+  width: 88%;
+}
+.arc-flow__field:nth-child(3n) .arc-flow__fbar {
+  width: 56%;
+}
+
+/* The renders: the client's own cutouts, each in a thin frame. `contain`,
+   never `cover` — these are products on a transparent ground and a crop
+   would take a cap off a bottle. */
+.arc-flow__tiles {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 0.9vw, 14px);
+  min-height: 0;
+}
+.arc-flow__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: clamp(8px, 1vh, 14px);
+  border: 1px solid var(--arc-rule);
+}
+.arc-flow__tile img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+/* The markets: the same asset, four times, each tagged. A 2x2 rather than a
+   row — the plate is the narrowest of the three and four frames across it
+   would be stamps. */
+.arc-flow__markets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(8px, 0.9vw, 14px);
+  min-height: 0;
+}
+.arc-flow__market {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: clamp(8px, 1vh, 14px);
+  border: 1px solid var(--arc-rule);
+}
+.arc-flow__market img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.arc-flow__mname {
+  position: absolute;
+  left: 6px;
+  bottom: 5px;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+
+/* The connector: the verb over a hairline run with a border-drawn head.
+   ⚠ A 1px DIV AND A BORDER PAIR, never an svg line — a stroked
+   single-axis path reports a zero-height rect and every collapse guard on
+   this codebase then reads it as absent (ADR-068 U6). */
+.arc-flow__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: clamp(48px, 6vw, 96px);
+}
+.arc-flow__verb {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-40);
+}
+.arc-flow__run {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--arc-seam);
+}
+.arc-flow__run::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-top: 1px solid var(--arc-seam);
+  border-right: 1px solid var(--arc-seam);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+/* Stacked, the connectors turn: a run that pointed right between columns
+   points down between rows, or it is an arrow across a gap that no longer
+   exists. */
+@media (max-width: 900px) {
+  .arc-flow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .arc-flow__step {
+    width: 100%;
+    flex-direction: row;
+    gap: 12px;
+    padding-block: 4px;
+  }
+  .arc-flow__run {
+    flex: 1 1 auto;
+  }
+}
+
 /* ── Ledger (ADR-098 U2) ───────────────────────────────────────────
    `ledger` on a cards section — the deck's fee table: one row per card
    (kicker | body | title) under the authored head row, the LAST card the
@@ -3884,6 +4104,40 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
 .arc-root[data-arc-format="portfolio"],
 .arc-root[data-arc-format="proposal"] {
   --arc-sec-pad: clamp(40px, 6vh, 104px);
+}
+
+/* ── ONE DATUM FOR EVERY PROPOSAL HEAD (ADR-099) ───────────────────────
+   Owner, 2026-09-13: the head "must always be positioned at the right
+   position, because in the Trinny London configuration it's different from
+   'we propose a modular approach that compounds'".
+
+   ⚠ THE CAUSE IS `align-content: center`, AND IT IS NOT A CONSTANT OFFSET.
+   `.arc-sec` centres a beat in its own `100svh` grid, so where the head
+   lands is a function of HOW TALL THE BEAT'S BODY IS: a short one seats its
+   eyebrow near the middle, a tall one near the top. Measured across the
+   proposal's own beats at 1920×1247, the eyebrow ranged 0.107 → 0.197 of the
+   frame — and nothing on any head's own box said so, which is why it reads
+   as carelessness rather than as a rule.
+
+   So a head-bearing beat is seated from the TOP, on the datum the homepage's
+   own services masthead uses (frac 0.107) — the value ADR-094 U5 solved for
+   on this very station before its pin was retired. The slack then pools at
+   the FLOOR of a short beat, which is the honest trade: air under a record
+   reads as room, air above it reads as a mis-seat.
+
+   ⚠ `:has()` IS THE WHOLE MECHANISM. Only a beat that DRAWS a head takes the
+   datum; a chapter head, an interstitial callout and the close band have no
+   `.arc-head` and keep centring, which is what they are composed for.
+   ⚠ FORMAT-SCOPED, so it reaches `/arcs/suri-proposal` and
+   `/arcs/perfect-ted-proposal` too — deliberately: they have the same defect
+   for the same reason, and a fix scoped to one client's page would be a rule
+   that is true on one surface. */
+.arc-root[data-arc-format="proposal"] {
+  --arc-head-datum: clamp(48px, 10.7svh, 148px);
+}
+.arc-root[data-arc-format="proposal"] .arc-sec:has(> .arc-band > .arc-head) {
+  align-content: start;
+  padding-block-start: var(--arc-head-datum);
 }
 /* A hairline where one beat ends and the next begins — with the beats
    centred in their own screens, the seam is what tells a reader the

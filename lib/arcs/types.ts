@@ -392,6 +392,39 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
+         * THE FLOW (ADR-099): a pipeline drawn left to right — what goes in,
+         * what the setup makes of it, and where it ends up.
+         *
+         * Owner, 2026-09-13: "a section where we visualize the flow, sort of
+         * like a diagram… this new section should be super clean so that they
+         * can see what the flow is. Keep it minimalistic."
+         *
+         * ⚠ IT DRAWS A RECORD, NOT A METAPHOR (ADR-078 U1's standing law).
+         * The brief plate letters the FIELDS a real briefing template
+         * carries, the renders are the client's own products, and the scale
+         * plate names real markets. Nothing here is an arrow-and-box picture
+         * of an idea; every cell is a thing that exists.
+         *
+         * ⚠ THE THIRD ENUMERATED EXCEPTION to ADR-052's "new arcs are
+         * content-only", after ADR-072's dossier and ADR-098's configuration.
+         * The bar both cleared and this clears: it cannot be said with the
+         * existing kinds (a three-column pipeline with connectors is not a
+         * card grid), and it is ONE leaf with no state.
+         */
+        kind: "flow";
+        head: ArcHead;
+        /** The input: a plate of field labels, lettered as the template's
+         *  own. Eight is the measured set; the renderer tolerates fewer. */
+        brief: { label: string; fields: readonly string[] };
+        /** What the setup makes — the client's own product renders. */
+        renders: { label: string; images: readonly { src: string; alt: string }[] };
+        /** Where it ends up: one render, many markets. */
+        scale: { label: string; markets: readonly string[] };
+        /** The two connectors' verbs, in order. */
+        steps: readonly [string, string];
+      }
+    | {
+        /**
          * THE CONFIGURATION (ADR-098): what the client's team ends up
          * owning, drawn as one instrument with a picker — the pitch
          * page's own drawing (ADR-094 U7), as data.

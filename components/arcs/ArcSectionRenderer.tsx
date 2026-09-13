@@ -6,6 +6,7 @@ import { ArcCards } from "./ArcCards";
 import { ArcClose } from "./ArcClose";
 import { ArcConfiguration } from "./ArcConfiguration";
 import { ArcDossier } from "./ArcDossier";
+import { ArcFlow } from "./ArcFlow";
 import { ArcProgramBoard } from "./ArcProgramBoard";
 import { ArcIntelligence } from "./ArcIntelligence";
 import { ArcInterstitial } from "./ArcInterstitial";
@@ -102,6 +103,8 @@ export function ArcSectionRenderer({
             return (
               <ArcToolIndex key={section.id} section={section} index={index} motion={motion} />
             );
+          case "flow":
+            return <ArcFlow key={section.id} section={section} index={index} motion={motion} />;
           default: {
             const exhaustive: never = section;
             return exhaustive;

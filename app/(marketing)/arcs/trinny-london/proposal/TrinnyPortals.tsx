@@ -1,9 +1,8 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import { lazy, Suspense, useLayoutEffect } from "react";
+import { useNestedRoot } from "./useNestedRoot";
 import { brandmarkMorphRef, clearBrandmarkMorph } from "@/lib/brandmark/morphTargetRef";
-import { usePropPick } from "./proposition/usePropPick";
 import { TURN_CAPABLE_QUERY, trinnyMorphSpec, useTurnScroll } from "./turn/useTurnScroll";
 
 /**
@@ -45,6 +44,11 @@ import { TURN_CAPABLE_QUERY, trinnyMorphSpec, useTurnScroll } from "./turn/useTu
  */
 
 const ProofStack = lazy(() => import("./proof/ProofStack"));
+/* The configuration (ADR-099): the beat `#proposition` mounts, where that
+   station used to carry hand-written markup on a pinned stage. Lazy for the
+   same reason the others are — the arcs' section components and their sheet
+   are off this route's first paint. */
+const TrinnyConfiguration = lazy(() => import("./offer/TrinnyConfiguration"));
 /* The offer (ADR-094 U9): the proposal's beats after the configuration,
    rendered by the arcs' own components into `[data-tl-offer-root]` inside
    `#offer`. Lazy for the same reason the stack is — the arcs' section
@@ -54,11 +58,6 @@ const TrinnyOffer = lazy(() => import("./offer/TrinnyOffer"));
 const RING_ATTR = "data-services-ring";
 
 export function TrinnyPortals() {
-  const rootRef = useRef<Root | null>(null);
-  const timerRef = useRef<number | null>(null);
-  const offerRootRef = useRef<Root | null>(null);
-  const offerTimerRef = useRef<number | null>(null);
-
   useLayoutEffect(() => {
     const html = document.documentElement;
     html.setAttribute(RING_ATTR, "off");
@@ -72,77 +71,34 @@ export function TrinnyPortals() {
   }, []);
 
   useTurnScroll();
-  // The proposal's picker (ADR-094 U7): a delegated listener on the parsed
-  // instrument, so the record stays in the prototype and the behaviour here.
-  usePropPick();
 
-  useEffect(() => {
-    if (timerRef.current != null) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
+  /* Three slots, three roots, one lifecycle (`useNestedRoot`). They are
+     stations apart in a `dangerouslySetInnerHTML` body, so each needs its
+     own root — a portal cannot span from one into another.
 
-    const slot = document.querySelector<HTMLElement>(".tl-root [data-tl-proof-root]");
-    if (!slot) return;
-
-    let root = rootRef.current;
-    if (!root) {
-      root = createRoot(slot);
-      rootRef.current = root;
-    }
-    root.render(
-      <Suspense fallback={null}>
-        <ProofStack />
-      </Suspense>
-    );
-
-    return () => {
-      const r = rootRef.current;
-      timerRef.current = window.setTimeout(() => {
-        if (rootRef.current === r) {
-          r?.unmount();
-          rootRef.current = null;
-        }
-        timerRef.current = null;
-      }, 0);
-    };
-  }, []);
-
-  // The offer's root (ADR-094 U9) — the proof stack's lifecycle, verbatim,
-  // on the second slot the fork declares. A second root rather than a
-  // second child of the first: the two slots are two stations apart, and
-  // a portal cannot span from one into the other.
-  useEffect(() => {
-    if (offerTimerRef.current != null) {
-      window.clearTimeout(offerTimerRef.current);
-      offerTimerRef.current = null;
-    }
-
-    const slot = document.querySelector<HTMLElement>(".tl-root [data-tl-offer-root]");
-    if (!slot) return;
-
-    let root = offerRootRef.current;
-    if (!root) {
-      root = createRoot(slot);
-      offerRootRef.current = root;
-    }
-    root.render(
-      <Suspense fallback={null}>
-        <TrinnyOffer />
-      </Suspense>
-    );
-
-    return () => {
-      const r = offerRootRef.current;
-      offerTimerRef.current = window.setTimeout(() => {
-        if (offerRootRef.current === r) {
-          r?.unmount();
-          offerRootRef.current = null;
-        }
-        offerTimerRef.current = null;
-      }, 0);
-    };
-  }, []);
+     ⚠ THE CONFIGURATION'S PICKER CAME WITH IT (ADR-099). `usePropPick` was a
+     delegated listener this component held, because the instrument was
+     hand-written markup in the prototype; `ArcConfiguration` owns its own
+     picker on `data-cfg-*`, so the hook and its file are deleted rather than
+     left pointing at markup that no longer exists. */
+  useNestedRoot(
+    ".tl-root [data-tl-proof-root]",
+    <Suspense fallback={null}>
+      <ProofStack />
+    </Suspense>
+  );
+  useNestedRoot(
+    ".tl-root [data-tl-config-root]",
+    <Suspense fallback={null}>
+      <TrinnyConfiguration />
+    </Suspense>
+  );
+  useNestedRoot(
+    ".tl-root [data-tl-offer-root]",
+    <Suspense fallback={null}>
+      <TrinnyOffer />
+    </Suspense>
+  );
 
   return null;
 }

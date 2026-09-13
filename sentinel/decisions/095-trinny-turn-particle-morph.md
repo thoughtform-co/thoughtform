@@ -734,3 +734,39 @@ it looks like the wash vanishing at the seam. Negative-tested — breaking the
 ⚠ **THIS IS THE HALF THAT CAN REGRESS SILENTLY.** The pixels are a wash on a
 wash: nothing throws, no geometry gate can see it, and the still is the only
 place it shows.
+
+## Update 7 — the veil hands over to an arrival, and the grounds guard changes its question (2026-09-13)
+
+⚠ **U4's held field and U6's swap are KEPT. What moves is the clock `q` comes
+from. Full record: [ADR-099](099-proposal-nests-and-the-configuration-scrolls-in.md).**
+
+`#proposition`'s pin is retired (ADR-094 U10), so `q` is no longer a pinned
+stage's travel — it is `propArrival(top, vh)` = `clamp01((vh − top) / vh)`,
+one rect read, the station's own arrival.
+
+- ⚠ **`markVeil` STAYS ADDITIVE, AND IT STOPS BEING MERELY SAFE.** `veilOf`
+  saturates at `p = 0.72` and the arrival opens at `p ≈ 0.7727`, so the turn
+  takes the mark to 0.72 and the arrival carries it to `TURN_VEIL_PROP_MAX`
+  0.94, landing as the record does. Under the pinned clock `q` was 0 for the
+  whole of the turn and the additive form was a safety property; it is
+  load-bearing now, and the clock test asserts the handover (`opensAt ≈
+0.7727 < TURN_PRODUCT_OUT`) rather than the old byte-identity.
+- ⚠ **AND IT DELETES A LATCH.** The pinned clock's one asymmetric failure was
+  a section kept with its stage removed: `q` pinned at 0, `--tp-in: 0.000`,
+  the record invisible forever on the capable path. An arrival reads one rect
+  and has no such state — which is the same argument U5's `var(--tp-in, 1)`
+  fail-open made, settled by removing the channel instead of defaulting it.
+- ⚠ **U6's GROUNDS GUARD HAD TO CHANGE ITS QUESTION, AND THAT IS THE FINDING.**
+  It asserted ONE ground covers ≥90 % of the frame — true while the proposal
+  was a 160svh pinned station whose ground blanketed the viewport alone. Its
+  record is a beat now, so past the release the coral FEATHERS
+  (`TURN_PROP_FADE`) exactly where `#offer` begins painting: measured at
+  release +0.7vh, the prop canvas reaches alpha 1 by y 998 and `#offer`'s
+  opaque top IS 998. The composition is correct and the assertion described
+  the old station. It measures the UNION of the painted bands now.
+  **Loosening the number until it passed was the alternative, and that is how
+  a guard stops describing the page.** ⚠ The first union attempt was wrong
+  arithmetic — `max(coral, offerTop)`, where `offerTop` is where the band
+  BEGINS — and passed for the wrong reason; it is a sorted-interval union.
+- The overlap (`--tl-prop-lead` 50svh) is untouched, and it is now the one
+  dial on when the record opens.

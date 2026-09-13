@@ -312,6 +312,52 @@ fits both.
 - The offer's copy on the pitch page is Suri's, noun-swapped — the owner's own
   placeholder, to be rewritten.
 
+## Update 3 (2026-09-13, owner): the pitch nests under its client, and every proposal head takes a datum
+
+⚠ **Full record: [ADR-099](099-proposal-nests-and-the-configuration-scrolls-in.md).**
+Three things here reach past the Trinny page onto every `format: "proposal"`
+arc, so they are recorded on this ADR too.
+
+**1 · One nesting exception, and §2's rule is untouched.** The owner:
+_"`/trinny-london` should be renamed / moved to `arcs/trinny-london/proposal`"_.
+The route moves with a 308 beside the `/arcs/portfolio` one, for the reason
+U2 gave for keeping the arcs flat — the links in the wild are in inboxes.
+⚠ **THE ENGAGEMENTS STILL STAY FLAT.** What moved is a `ClientDef.pages`
+record — a client's own page, never an `ArcDef` — and `/arcs/<client>/<leaf>`
+is outside `[slug]`'s namespace by construction, because `[slug]` matches ONE
+segment: it shadows nothing, needs no `generateStaticParams` row, and
+`/arcs/trinny-london` still resolves to the client page. `arcs-registry` pins
+both halves — such an href is two segments deep AND its first segment is its
+own client's slug, because a page nested under another client's would resolve
+fine and lie about whose work it is.
+
+**2 · A proposal head has a datum now, and every proposal arc takes it.**
+`.arc-sec { align-content: center }` seats a head by HALF ITS BEAT'S BODY
+HEIGHT, so a head's position is a function of what is under it — measured
+0.107 → 0.197 of the frame across one page's own beats.
+`.arc-root[data-arc-format="proposal"] .arc-sec:has(> .arc-band > .arc-head)`
+takes `align-content: start` and `padding-block-start: clamp(48px, 10.7svh,
+148px)`. ⚠ **`:has()` is the mechanism** — only a beat that DRAWS a head takes
+it, so chapter heads, interstitial callouts and the close band keep centring.
+⚠ **FORMAT-SCOPED, so `/arcs/suri-proposal` and `/arcs/perfect-ted-proposal`
+take it too**, deliberately: they have the same defect for the same reason,
+and a fix scoped to one client's page would be a rule true on one surface.
+⚠ **The cost, named: the slack pools at the FLOOR of a short beat.** Where a
+drawing then looks stranded, the DRAWING takes a share of the beat, never the
+head.
+
+**3 · The `flow` kind — ADR-052's THIRD enumerated exception**, after
+ADR-072's dossier and this ADR's own `configuration`. `{ head, brief, renders,
+scale, steps }`, drawn by `ArcFlow` as three hairline plates with two
+connectors: the brief that goes in, the renders the setup makes, the markets
+it ships to. It clears the same bar the other two did — it cannot be said with
+the existing kinds, and it is one leaf with no state. ⚠ It draws a RECORD
+(ADR-078 U1): the eight brief fields are a real template's and the renders are
+the client's own products. ⚠ **No gold in the drawing** (the head's `em` has
+already spent the beat's one gold) and ⚠ **1px divs for the connectors, never
+an svg line**. Authored on the Trinny pitch page; the kind is shared and one
+line adopts it on any proposal arc.
+
 ## Deliberately absent
 
 - **The client page's Armada / technical setup.** The owner named it for later

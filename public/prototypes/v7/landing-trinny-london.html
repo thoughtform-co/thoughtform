@@ -5546,98 +5546,25 @@ html { scroll-behavior: smooth; }
     <div class="tl-prop__ground" aria-hidden="true">
       <canvas class="tl-prop__wash" data-tl-prop-wash></canvas>
     </div>
-    <!-- The pin (U5). The record holds still while the reader arrives at it,
-         which is the whole reason its elements can appear rather than
-         travel. `useTurnScroll` reads this station's rect, checks this stage
-         computes `sticky`, and only then powers the record on. -->
-    <div class="tl-prop__stage" data-tl-prop-stage>
-    <div class="tl-prop__inner">
-      <!-- ⚠ NO `data-m` ON ANY OF THIS (U5). That is the move-and-fade
-           reveal system: every role but `fade` translates, it is one-shot,
-           and it fires on an IntersectionObserver at 12 % visibility — i.e.
-           while this station is still rising. The record rides `--tp-in`
-           instead, a scrubbed channel that is opacity ONLY and does not open
-           until the stage above has pinned. -->
-      <header class="tl-prop__head" data-tl-reveal>
-        <div class="tl-prop__lead">
-          <!-- ⚠ NO EYEBROW (owner, 2026-09-10). The band said "The proposal"
-               directly over a heading that names the thing, on a page whose
-               journey rail already reads Proposal — said three times. A
-               heading on the left and a paragraph on the right is the whole
-               head now.
-               ⚠ THE TITLE DECODES, on the same ghost + live-leaf contract the
-               turn's copy uses: the ghost is in flow, carries the true text
-               for the accessibility tree and HOLDS THE BOX; the live layer is
-               absolute over it and is the only thing the writer touches, so a
-               wider glyph run can never re-wrap the head. -->
-          <h2 class="tl-prop__title"><span class="tl-dc"><span class="tl-dc__ghost">The Trinny London configuration</span><span class="tl-dc__live" data-tl-decode aria-hidden="true">The Trinny London configuration</span></span></h2>
-        </div>
-        <p class="tl-prop__desc" data-tl-reveal>
-          One setup that makes Trinny London AI-first: built inside the tools the team already runs,
-          owned by the people who do the work. Headless and built from first principles, so it
-          depends on no vendor and no single person.
-        </p>
-      </header>
+    <!-- THE RECORD IS AN ARC BEAT NOW (ADR-099, owner 2026-09-13). It was a
+         pinned stage whose elements powered on in place once it parked
+         (ADR-094 U5) — and that pin is exactly what put a bare frame between
+         the turn and the proposal: the turn empties at p 0.90 (products out,
+         the line un-typed) and the record stayed blank until its own stage
+         stopped, so two full viewports painted nothing but the held ground.
 
-      <!-- ⚠ ONE INSTRUMENT, THREE BANDS (ADR-094 U7, owner 2026-09-11: the
-           old Aether landing's headless panel is "the composition I like").
-           The LAYER they own on the left, four rows that DIM unless the
-           picked team reads them; the FLYWHEEL across the seam as two
-           arrows, adoption writing the layer and automation running from
-           it; the TEAMS on the right as pickable tiles, with the picked
-           team's intelligence configuration read out beneath in the five
-           questions the registry asks. Picking a team is what makes the
-           transfer visible — the same layer, lit differently — without a
-           digit anywhere. The picker is `usePropPick` (delegated click on
-           `[data-tl-config]`); the record lives HERE, in `data-*`, so the
-           parse guard walks every string it can letter. -->
-      <div class="tl-config" data-tl-reveal data-tl-config role="group" aria-label="The Trinny London configuration: the layer the team owns on the left, the teams that run on it on the right, adoption writing the layer and automation running from it.">
-        <div class="tl-config__band tl-config__band--layer">
-          <div class="tl-config__lhead"><strong>The layer</strong><span>Owned by Trinny London</span></div>
-          <ul class="tl-config__layers" role="list">
-            <li class="tl-config__layer is-on" data-tl-layer="rules"><span class="tl-config__tag">Rules</span><span class="tl-config__name">brand rules, and the line where AI stops</span></li>
-            <li class="tl-config__layer is-on" data-tl-layer="examples"><span class="tl-config__tag">Examples</span><span class="tl-config__name">what good looks like, from their own work</span></li>
-            <li class="tl-config__layer is-on" data-tl-layer="sources"><span class="tl-config__tag">Sources</span><span class="tl-config__name">the catalogue and the customer's voice</span></li>
-            <li class="tl-config__layer is-on" data-tl-layer="loops"><span class="tl-config__tag">Loops</span><span class="tl-config__name">the checks that catch it before the founder does</span></li>
-          </ul>
-        </div>
-        <div class="tl-config__band tl-config__band--seam">
-          <div class="tl-config__arrow tl-config__arrow--adopt">
-            <span class="tl-config__word">Adoption</span>
-            <i aria-hidden="true"></i>
-            <span class="tl-config__note">The team learns on its own work and writes down what good looks like.</span>
-          </div>
-          <div class="tl-config__arrow tl-config__arrow--auto">
-            <span class="tl-config__word">Automation</span>
-            <i aria-hidden="true"></i>
-            <span class="tl-config__note">The layer runs inside the tools they already use, and hands the time back.</span>
-          </div>
-        </div>
-        <div class="tl-config__band tl-config__band--work">
-          <div class="tl-config__tiles" role="tablist" aria-label="The teams on the layer">
-            <button type="button" class="tl-config__tile is-on" role="tab" aria-selected="true" data-tl-pick data-layers="rules examples sources loops" data-owner="The studio lead, the founder's sense-check last" data-runs="A brand Skill, on the team's own keys" data-bar="On-brand, and the line where AI stops" data-reach="The brand rules and the catalogue" data-where="Claude, inside Figma"><span class="tl-config__tname">Studio</span><span class="tl-config__twork">the visual work</span></button>
-            <button type="button" class="tl-config__tile" role="tab" aria-selected="false" data-tl-pick data-layers="rules examples loops" data-owner="Creative ops, who set the calendar" data-runs="The same brand Skill, plus a briefing Skill" data-bar="A brief the studio can act on" data-reach="The calendar and the catalogue" data-where="Claude, inside Monday"><span class="tl-config__tname">Creative ops</span><span class="tl-config__twork">briefs and approvals</span></button>
-            <button type="button" class="tl-config__tile" role="tab" aria-selected="false" data-tl-pick data-layers="rules sources loops" data-owner="Finance, who sign it off" data-runs="A reporting Skill" data-bar="Numbers that reconcile before they are sent" data-reach="Shopify and the ledger" data-where="A scheduled run, results in Slack"><span class="tl-config__tname">Finance</span><span class="tl-config__twork">the numbers, checked</span></button>
-          </div>
-          <div class="tl-config__cfg" role="tabpanel" aria-live="polite">
-            <div class="tl-config__chead"><span data-tl-cfg="name">Studio</span> &middot; the intelligence configuration</div>
-            <dl class="tl-config__kv">
-              <div><dt>Who owns it</dt><dd data-tl-cfg="owner">The studio lead, the founder's sense-check last</dd></div>
-              <div><dt>What runs it</dt><dd data-tl-cfg="runs">A brand Skill, on the team's own keys</dd></div>
-              <div><dt>The bar</dt><dd data-tl-cfg="bar">On-brand, and the line where AI stops</dd></div>
-              <div><dt>What it can reach</dt><dd data-tl-cfg="reach">The brand rules and the catalogue</dd></div>
-              <div><dt>Where it runs</dt><dd data-tl-cfg="where">Claude, inside Figma</dd></div>
-            </dl>
-          </div>
-        </div>
-        <ul class="tl-config__kickers">
-          <li class="tl-config__kicker">One configuration</li>
-          <li class="tl-config__kicker">The people run it</li>
-          <li class="tl-config__kicker">No vendor in the way</li>
-        </ul>
-      </div>
-    </div>
-    </div>
+         The configuration scrolls in instead: `TrinnyPortals` mounts the
+         ARCS' own `ArcConfiguration` into the slot below, over the record in
+         `offer/offerSections.ts`, so it arrives while the products are still
+         leaving and it carries the arc head every other beat on this page
+         carries — the cross, the eyebrow, the gold `em`, one datum.
+
+         ⚠ THE STATION KEEPS EVERYTHING ELSE: its id (the bus, the journey
+         range, the CTA above and the drawer both land here), its transparent
+         cover form, and the ground canvas above — ADR-095 U4's held field and
+         U6's swap are untouched, which is why the coral still crosses the
+         seam rather than resolving under the reader. -->
+    <div data-tl-config-root></div>
   </section>
 
   <!-- ═══════════ 06 THE OFFER ═══════════
