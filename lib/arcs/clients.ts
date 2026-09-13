@@ -91,9 +91,20 @@ export const SURI_CLIENT: ClientDef = {
   lede: "An electric toothbrush brand in London, and a creative team that will run its own imagery.",
 };
 
+export const PERFECT_TED_CLIENT: ClientDef = {
+  slug: "perfect-ted",
+  name: "Perfect Ted",
+  lede: "A matcha brand in London, and a range that outgrew the photography behind it.",
+};
+
 /** Every client with an engagement on the site, in the order the overview
  *  reads them. */
-export const CLIENTS: readonly ClientDef[] = [TRINNY_CLIENT, SURI_CLIENT, LOOP_CLIENT];
+export const CLIENTS: readonly ClientDef[] = [
+  PERFECT_TED_CLIENT,
+  TRINNY_CLIENT,
+  SURI_CLIENT,
+  LOOP_CLIENT,
+];
 
 export function clientSlugs(): string[] {
   return CLIENTS.map((client) => client.slug);

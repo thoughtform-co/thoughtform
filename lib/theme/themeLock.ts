@@ -40,6 +40,7 @@ export const LIGHT_LOCKED_ROUTES = [
      and hides the switch; this row is the pre-paint half, and the
      registry test fails a locked arc that has no row here. */
   "/arcs/suri-proposal",
+  "/arcs/perfect-ted-proposal",
 ] as const;
 
 /** Strip a trailing slash the way both inline scripts do, so `/x` and

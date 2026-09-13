@@ -1,67 +1,36 @@
-/**
- * The proposal skeleton (ADR-098) — one `ArcDef` module, with the house
- * parts written and the client's four inputs interpolated.
- *
- * ⚠ IT SHIPS FINISHED COPY, NOT PLACEHOLDERS. A scaffold that registered
- * an arc full of `[brackets]` would leave `npm run verify` failing on a
- * repo nobody had opened yet — and Armada's day-one command runs this
- * unattended. Every sentence here is the house's own argument, true of any
- * engagement; what a person then replaces is the CONTENT the fill-in list
- * names, not the scaffolding around it.
- *
- * The one bracket that survives is the configuration's ghost tile, which
- * is the honest register for a workstream that is not scoped yet — and the
- * registry test's placeholder walk exempts exactly that string.
- *
- * Pure and export-only, so `tests/lib/new-arc-scaffold.test.ts` can run it
- * without touching the filesystem.
- */
-
-/** `Suri` → `SURI`, `Tom on the Moon` → `TOM_ON_THE_MOON`. */
-export const constantCase = (slug) => slug.replace(/[^a-z0-9]+/gi, "_").toUpperCase();
-
-/** A TypeScript string literal with the quotes and escapes a name needs. */
-const q = (value) => JSON.stringify(String(value));
-
-export function proposalModule({ client, name, engagement = "proposal", kind = "production" }) {
-  const slug = `${client}-${engagement}`;
-  const CONST = `${constantCase(slug)}_ARC`;
-  const N = name;
-  return `import type { ArcDef } from "../types";
+import type { ArcDef } from "../types";
 
 import { MODE_LEGEND } from "./shared/loop-tools";
 
 /**
- * ${N}, the ${engagement}, as an arc (ADR-098).
+ * Perfect Ted, the proposal, as an arc (ADR-098).
  *
- * Scaffolded by \`scripts/new-arc.mjs\`. The house parts below are written;
- * what wants ${N}'s own words is the configuration's teams, the phases,
+ * Scaffolded by `scripts/new-arc.mjs`. The house parts below are written;
+ * what wants Perfect Ted's own words is the configuration's teams, the phases,
  * the fee, the people and the next steps.
  *
  * ⚠ IT IS ADDRESSED TO ONE READER, so it may print the fee, the names and
- * the dates, and it is therefore deliberately OUTSIDE \`ENVELOPE_ARCS\`,
+ * the dates, and it is therefore deliberately OUTSIDE `ENVELOPE_ARCS`,
  * whose job is a page forwarded to strangers.
  *
  * ⚠ THE PROOF IS LOOP'S, BY REFERENCE. The films, the sheets and the
  * briefing agent resolve the casefile's own records, so a correction lands
  * in one place and nothing about Loop is retyped here.
  */
-export const ${CONST}: ArcDef = {
-  slug: ${q(slug)},
+export const PERFECT_TED_PROPOSAL_ARC: ArcDef = {
+  slug: "perfect-ted-proposal",
   format: "proposal",
-  client: ${q(client)},
-  kind: ${q(kind)},
+  client: "perfect-ted",
+  kind: "production",
   theme: "light",
-  cardTitle: ${q(`${N} · the ${engagement}`)},
+  cardTitle: "Perfect Ted · the proposal",
   cardLede:
-    ${q(`What ${N}'s team would own, and the phases that get them there.`)},
+    "A range that grew faster than the photography behind it, and a team that would make its own.",
   cardImage: { src: "/images/services/embedded.webp", alt: "" },
   hero: {
-    eyebrow: ${q(`Proposal · ${N}`)},
+    eyebrow: "Proposal · Perfect Ted",
     title: { pre: "Creative teams that", em: "scale themselves." },
-    lede: ${q(
-      `A proposal for ${N}. Three years of building AI capability inside a creative team, turned into phases for ${N}'s own team.`
-    )},
+    lede: "A proposal for Perfect Ted. Three years of building AI capability inside a creative team, turned into phases for the team that makes the matcha, the lattes and the cans look like themselves.",
     image: {
       src: "/images/Thoughtform_Key%20Visual_14d.webp",
       alt: "",
@@ -73,8 +42,9 @@ export const ${CONST}: ArcDef = {
     actions: [{ id: "read", label: "The configuration", href: "#configuration", primary: true }],
   },
   meta: {
-    title: ${q(`${N} · ${engagement} — Thoughtform`)},
-    description: ${q(`What ${N}'s team would own, and the phases that get them there.`)},
+    title: "Perfect Ted · proposal — Thoughtform",
+    description:
+      "A range that grew faster than the photography behind it, and a team that would make its own.",
   },
   sections: [
     {
@@ -165,12 +135,10 @@ export const ${CONST}: ArcDef = {
       id: "turn",
       kind: "interstitial",
       variant: "callout",
-      eyebrow: ${q(`Part two · ${N}`)},
-      line: { pre: ${q(`${N} does not need`)}, em: "three years of this." },
+      eyebrow: "Part two · Perfect Ted",
+      line: { pre: "Perfect Ted does not need", em: "three years of this." },
       subline:
-        ${q(
-          `The products, the brand and the review taste are already ${N}'s. We bring the order to do it in, and the method for writing a team's judgment down. The tools wrapping the models change every quarter, and every subscription is a bet on one of them. What lasts is a team that works the models directly.`
-        )},
+        "The products, the brand and the review taste are already Perfect Ted's. We bring the order to do it in, and the method for writing a team's judgment down. The tools wrapping the models change every quarter, and every subscription is a bet on one of them. What lasts is a team that works the models directly.",
     },
     {
       /* FILL IN: the teams, and the five answers each. One tile per
@@ -180,15 +148,13 @@ export const ${CONST}: ArcDef = {
       kind: "configuration",
       menuLabel: "The setup",
       menuPrimary: true,
-      ariaLabel: ${q(`The AI capability ${N}'s team would own`)},
+      ariaLabel: "The AI capability Perfect Ted's team would own",
       head: {
-        eyebrow: ${q(`${N} · what the team owns`)},
+        eyebrow: "Perfect Ted · what the team owns",
         title: { pre: "AI capability", em: "your team owns." },
-        sub: ${q(
-          `One setup that ${N}'s team runs and keeps building after we leave. Adoption writes the layer, automation runs on it. Pick a workstream to see how the same layer is read differently.`
-        )},
+        sub: "One setup that Perfect Ted's team runs and keeps building after we leave. Adoption writes the layer, automation runs on it. Pick a workstream to see how the same layer is read differently.",
       },
-      owner: ${q(`Owned by ${N}`)},
+      owner: "Owned by Perfect Ted",
       layer: [
         { id: "rules", tag: "Rules", name: "how the team decides" },
         { id: "examples", tag: "Examples", name: "what good looks like" },
@@ -206,9 +172,9 @@ export const ${CONST}: ArcDef = {
           work: "stills and video, M1",
           layers: ["rules", "examples", "sources", "loops"],
           owner: "The creative lead, the last gate",
-          runs: ${q(`The imagery Skill, on ${N}'s keys`)},
+          runs: "The imagery Skill, on Perfect Ted's keys",
           bar: "On-brand, graded before the lead opens the sheet",
-          reach: ${q(`${N}'s products and brand definition`)},
+          reach: "Perfect Ted's products and brand definition",
           where: "Claude, with image generation",
         },
         {
@@ -246,7 +212,7 @@ export const ${CONST}: ArcDef = {
       menuPrimary: true,
       layout: "columns",
       head: {
-        eyebrow: ${q(`${N} · the shape of the work`)},
+        eyebrow: "Perfect Ted · the shape of the work",
         title: { pre: "We propose running this in", em: "three phases." },
         sub: "Discovery, imagery and video first, then composition, then ads and the handover. One motion leads each phase, and M2 and M3 firm up once M1 discovery has told us what they should be.",
       },
@@ -254,7 +220,7 @@ export const ${CONST}: ArcDef = {
         {
           id: "m1",
           label: "M1 · Discovery, imagery and video",
-          blurb: ${q(`Navigate leads. Weeks 1 to 3, building the intuition on ${N}'s own work.`)},
+          blurb: "Navigate leads. Weeks 1 to 3, building the intuition on Perfect Ted's own work.",
           items: [
             {
               id: "m1w1",
@@ -328,7 +294,7 @@ export const ${CONST}: ArcDef = {
               id: "m3w2",
               tag: "Week 2",
               name: "A designer takes a brief to a finished ad, tested",
-              body: ${q(`The handover pack: files, rubric and record, on ${N}'s keys.`)},
+              body: "The handover pack: files, rubric and record, on Perfect Ted's keys.",
             },
             {
               id: "m3w3",
@@ -355,11 +321,9 @@ export const ${CONST}: ArcDef = {
       menuLabel: "The loop",
       layout: "columns",
       head: {
-        eyebrow: ${q(`${N} · inside every phase`)},
+        eyebrow: "Perfect Ted · inside every phase",
         title: { pre: "How we work together,", em: "inside every phase." },
-        sub: ${q(
-          `One loop, run with ${N}'s team. We set it up in week one, then run it beside them until they are running it without us.`
-        )},
+        sub: "One loop, run with Perfect Ted's team. We set it up in week one, then run it beside them until they are running it without us.",
       },
       groups: [
         {
@@ -400,14 +364,14 @@ export const ${CONST}: ArcDef = {
           items: [
             {
               id: "lead",
-              tag: ${q(N)},
+              tag: "Perfect Ted",
               name: "The creative lead, the last gate",
               body: "Writes the review rules in week one, then grades every round.",
               meta: "Two half-days a week",
             },
             {
               id: "designers",
-              tag: ${q(N)},
+              tag: "Perfect Ted",
               name: "The designers, who make the work",
               body: "In every session from day one. From week two they run the rounds themselves.",
               meta: "Two sessions a week, then their normal week",
@@ -429,14 +393,14 @@ export const ${CONST}: ArcDef = {
       menuLabel: "Needs and keeps",
       layout: "columns",
       head: {
-        eyebrow: ${q(`${N} · the terms of the work`)},
+        eyebrow: "Perfect Ted · the terms of the work",
         title: { pre: "What we need, and", em: "what you keep." },
         sub: "Three dependencies. Six things that stay behind when we stop showing up.",
       },
       groups: [
         {
           id: "needs",
-          label: ${q(`What this needs from ${N}`)},
+          label: "What this needs from Perfect Ted",
           items: [
             {
               id: "brand",
@@ -448,9 +412,7 @@ export const ${CONST}: ArcDef = {
               id: "access",
               tag: "02",
               name: "Access",
-              body: ${q(
-                `Figma, plus the accounts and API access for image generation. Opened in ${N}'s name so nothing needs migrating later.`
-              )},
+              body: "Figma, plus the accounts and API access for image generation. Opened in Perfect Ted's name so nothing needs migrating later.",
             },
             {
               id: "time",
@@ -462,15 +424,13 @@ export const ${CONST}: ArcDef = {
         },
         {
           id: "keeps",
-          label: ${q(`What ${N} has at the end`)},
+          label: "What Perfect Ted has at the end",
           items: [
             {
               id: "setup",
               tag: "Keeps",
               name: "The configuration",
-              body: ${q(
-                `Claude, Figma and image generation in ${N}'s environment, on ${N}'s keys.`
-              )},
+              body: "Claude, Figma and image generation in Perfect Ted's environment, on Perfect Ted's keys.",
             },
             {
               id: "skills",
@@ -514,7 +474,7 @@ export const ${CONST}: ArcDef = {
       menuPrimary: true,
       columns: 4,
       head: {
-        eyebrow: ${q(`${N} · the fee`)},
+        eyebrow: "Perfect Ted · the fee",
         title: { pre: "Priced", em: "one phase at a time." },
         sub: "M1 is scoped and priced now. M2 and M3 are our current view, and they confirm at the end of M1.",
       },
@@ -553,16 +513,12 @@ export const ${CONST}: ArcDef = {
         {
           id: "expenses",
           tag: "Expenses",
-          body: ${q(
-            `Travel at cost. Model and API usage billed to ${N} directly by the providers, typically low hundreds per month at this volume.`
-          )},
+          body: "Travel at cost. Model and API usage billed to Perfect Ted directly by the providers, typically low hundreds per month at this volume.",
         },
         {
           id: "owns",
           tag: "Ownership",
-          body: ${q(
-            `${N} owns its configured setup, its Skills and its outputs outright. The underlying method is not exclusive to ${N}.`
-          )},
+          body: "Perfect Ted owns its configured setup, its Skills and its outputs outright. The underlying method is not exclusive to Perfect Ted.",
         },
       ],
     },
@@ -599,7 +555,7 @@ export const ${CONST}: ArcDef = {
       menuLabel: "Next steps",
       columns: 3,
       head: {
-        eyebrow: ${q(`${N} · from here`)},
+        eyebrow: "Perfect Ted · from here",
         title: { pre: "Next", em: "steps." },
         sub: "Three of them, and the first is a date in a diary.",
       },
@@ -632,9 +588,7 @@ export const ${CONST}: ArcDef = {
       head: {
         eyebrow: "Appendix",
         title: { pre: "Why not just subscribe to", em: "a generation tool?" },
-        sub: ${q(
-          `Because the same models sit behind both. A subscription rents your team a front end to them. This puts them inside the tools the team already uses, on ${N}'s own keys, learning from ${N}'s own work.`
-        )},
+        sub: "Because the same models sit behind both. A subscription rents your team a front end to them. This puts them inside the tools the team already uses, on Perfect Ted's own keys, learning from Perfect Ted's own work.",
       },
       groups: [
         {
@@ -673,7 +627,7 @@ export const ${CONST}: ArcDef = {
         {
           id: "own",
           label: "Your own configuration",
-          blurb: ${q(`Claude, on ${N}'s keys, inside the tools the team already has open.`)},
+          blurb: "Claude, on Perfect Ted's keys, inside the tools the team already has open.",
           items: [
             {
               id: "o-pay",
@@ -688,7 +642,7 @@ export const ${CONST}: ArcDef = {
             {
               id: "o-keys",
               tag: "Who holds the keys",
-              name: ${q(`${N} does. Files, accounts and outputs stay ${N}'s`)},
+              name: "Perfect Ted does. Files, accounts and outputs stay Perfect Ted's",
             },
             {
               id: "o-models",
@@ -709,9 +663,7 @@ export const ${CONST}: ArcDef = {
         },
       ],
       closing:
-        ${q(
-          `A subscription tool is a good tool, and it stays available: connect it and the team's own setup gets smarter either way. The question is where ${N}'s judgment ends up, in a vendor's account or written down in ${N}'s own setup, where the next team inherits it.`
-        )},
+        "A subscription tool is a good tool, and it stays available: connect it and the team's own setup gets smarter either way. The question is where Perfect Ted's judgment ends up, in a vendor's account or written down in Perfect Ted's own setup, where the next team inherits it.",
     },
     {
       id: "close",
@@ -722,21 +674,15 @@ export const ${CONST}: ArcDef = {
         sub: "Questions on any of it, or a date for the on-site week.",
       },
       actions: [
-        { id: "vince", label: "Vince Buyssens", href: "mailto:vince@thoughtform.co", primary: true },
+        {
+          id: "vince",
+          label: "Vince Buyssens",
+          href: "mailto:vince@thoughtform.co",
+          primary: true,
+        },
         { id: "home", label: "thoughtform.co", href: "/" },
       ],
-      footerLine: ${q(`Thoughtform · Proposal for ${N}.`)},
+      footerLine: "Thoughtform · Proposal for Perfect Ted.",
     },
   ],
 };
-`;
-}
-
-/** What a person fills in after the scaffold runs, in the order it reads. */
-export const FILL_IN = [
-  "the configuration's teams, and the five answers each",
-  "the phases, and what happens in each week",
-  "the fee",
-  "the people who will be in the room",
-  "the next steps, with real dates",
-];

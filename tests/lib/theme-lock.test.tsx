@@ -53,7 +53,11 @@ describe("the light-locked routes", () => {
     // Hand-written, like HERO_ROUTES: a route joins or leaves BY HAND, so
     // the list is pinned rather than derived. `/` and `/claude-workshop`
     // must never appear here — they are the site's own themed surfaces.
-    expect([...LIGHT_LOCKED_ROUTES]).toEqual(["/trinny-london", "/arcs/suri-proposal"]);
+    expect([...LIGHT_LOCKED_ROUTES]).toEqual([
+      "/trinny-london",
+      "/arcs/suri-proposal",
+      "/arcs/perfect-ted-proposal",
+    ]);
   });
 });
 

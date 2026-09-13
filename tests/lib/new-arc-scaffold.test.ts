@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
    script, not part of the app's graph. TS resolves it through allowJs, so
    no directive is needed — one added "just in case" is itself an error. */
 import { constantCase, proposalModule, FILL_IN } from "../../scripts/new-arc/proposalTemplate.mjs";
+import { PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
 
 /**
  * The proposal scaffold (ADR-098).
@@ -59,12 +60,15 @@ describe("the proposal scaffold (ADR-098)", () => {
       .split("\n")
       .filter((line) => !/^\s*title: .*Thoughtform/.test(line))
       .join("\n");
-    for (const [pattern, what] of [
-      [/\bself-sufficient\b/i, "says the word instead of the behaviour"],
-      [/\barmada\b/i, "fleet vocabulary"],
-      [/\bcallsign\b/i, "fleet vocabulary"],
-      [/—/, "em dash"],
-    ] as const) {
+    /* THE LAW IS IMPORTED, NEVER RETYPED. This list was four of the
+       law's bans copied by hand, and the three it left out were not
+       enforced here at all: the skeleton shipped the fleet's word for a
+       round of generation for as long as that gap existed, and the page
+       it wrote failed the registry's own walk the first time day one ran
+       it unattended. The bracket ban is the one exemption, because the
+       ghost tile is honest and has its own test above. */
+    for (const [pattern, what] of PROPOSAL_COPY_BANS) {
+      if (what === "an unfilled scaffold placeholder") continue;
       expect(pattern.test(src), `the skeleton ${what}`).toBe(false);
     }
   });
