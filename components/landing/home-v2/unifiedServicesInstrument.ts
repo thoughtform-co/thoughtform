@@ -330,16 +330,17 @@ export const SERVICES_PROOF_RELEASE_VH = 1.2;
  * `proof-stack.css`'s arithmetic — `n × (100svh − pinTop + peek + dwell)`
  * plus the last card and its tail — and the px terms in it (the 64–88px pin,
  * the 52px peek, the 24px safe band) do not scale with the viewport, so the
- * pile comes out around **489svh at 1280×720, 490 at 1440×800 and 483 at
- * 1920×1247**. A single literal can only ever be near it, which is why
- * `useServicesStageScroll` READS the pile's box and writes the real number
- * back onto `--svc-proof-runway`. This value is what the page reserves before
- * that first measurement lands (and the fallback if the pile is absent), so
- * it is deliberately the CEILING of the measured range and not its mean:
- * reserving too little would let the ring's domain start inside the pile for
- * one frame.
+ * pile comes out around **505svh at 1280×720, 507 at 1440×900 and 493 at
+ * 1920×1247** (it was 489/491/483 before ADR-096 U2 lengthened the tail to
+ * give the last card its hold). A single literal can only ever be near it,
+ * which is why `useServicesStageScroll` READS the pile's box and writes the
+ * real number back onto `--svc-proof-runway`. This value is what the page
+ * reserves before that first measurement lands (and the fallback if the pile
+ * is absent), so it is deliberately the CEILING of the measured range and not
+ * its mean: reserving too little would let the ring's domain start inside the
+ * pile for one frame.
  */
-export const SERVICES_PROOF_PILE_VH = 4.9;
+export const SERVICES_PROOF_PILE_VH = 5.1;
 
 /**
  * How far before the pile's box ends the OFFER'S ARRIVAL OPENS, in viewport

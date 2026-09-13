@@ -4036,14 +4036,106 @@ test.describe("Services card ring smoke (ADR-029)", () => {
        would be a crossfade under a card the reader is still reading, and one
        that opened after it cleared is the dead band again. So: nothing while
        it is pinned, something by the time it clears. */
-    expect(await seatProofCard(page, 3)).toBe("pinned");
-    const parked = await page.evaluate(() => {
-      const stage = document.querySelector<HTMLElement>(".services-stage");
-      return Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "0");
+    /* ── AND THE LAST CARD IS HELD AS LONG AS THE ONE BEFORE IT (U2) ──
+       Every other card is held by the card that covers it; the last has
+       nothing above it, so what keeps it parked is the runway left under its
+       own margin box — the TAIL. Measured parked spans ran 240 / 280 / 360 at
+       1440×900 with the last at 240: the SHORTEST hold in a pile that had been
+       lengthening all the way down, so that card arrived and left (owner,
+       2026-09-13).
+
+       ⚠ PINNED BEHAVIOURALLY, NOT ARITHMETICALLY, AND THE FIRST CUT WAS THE
+       ARITHMETIC. Deriving the sticky range from `offsetTop` read the STUCK
+       position — `seatProofCard`'s own documented finding, one block up — and
+       reported 125px against a 320px tail. So this walks the card instead:
+       parked at its pin, still parked just before the tail is spent, gone just
+       after. That is the hold, measured on the layout rather than on a model
+       of it. */
+    /* ⚠ CONVERGE ON THE SCROLL, NEVER ON ONE SETTLE. `<html>` scrolls SMOOTHLY
+       and `settleScroll` returns at its cap, so under load a single call can
+       come back with the page still travelling. Both scrolls below are long
+       ones — the rewind out of the pile and the ~3000px return to the last
+       card — and a short landing on EITHER is silent: the rewind's would leave
+       a slot still stuck, whose `offsetTop` reports its STUCK position
+       (`seatProofCard`'s own finding) and moves the pin the rest of this block
+       is measured from. Re-issuing from wherever it stopped is a shorter
+       scroll each time and lands. */
+    const scrollExactly = async (y: number) => {
+      for (let pass = 0; pass < 4; pass += 1) {
+        await page.evaluate((t) => window.scrollTo(0, t), y);
+        await settleScroll(page);
+        const landed = await page.evaluate(() => Math.round(window.scrollY));
+        if (Math.abs(landed - y) <= 2) return;
+      }
+    };
+
+    const rewindTo = await page.evaluate(() => {
+      const root = document.querySelector<HTMLElement>(".services-stage-root");
+      if (!root) return null;
+      return Math.max(
+        0,
+        Math.round(root.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.3)
+      );
     });
-    expect(parked, "the offer is already arriving under a parked last card").toBeLessThanOrEqual(
-      0.01
-    );
+    expect(rewindTo, "the pile has no runway").not.toBeNull();
+    await scrollExactly(rewindTo!);
+    const geom = await page.evaluate(() => {
+      const root = document.querySelector<HTMLElement>(".services-stage-root")!;
+      const last = [...document.querySelectorAll<HTMLElement>(".pf-slot")].at(-1)!;
+      const tail = document.querySelector<HTMLElement>(".pf-stack__tail");
+      return {
+        pin: Math.round(
+          root.getBoundingClientRect().top +
+            window.scrollY +
+            last.offsetTop -
+            Number.parseFloat(getComputedStyle(last).top)
+        ),
+        tailH: tail ? tail.offsetHeight : 0,
+      };
+    });
+    expect(
+      geom.tailH,
+      "the last card's hold fell below the pile's own rhythm (ADR-096 U2)"
+    ).toBeGreaterThanOrEqual(280);
+
+    const atLastCard = async (past: number) => {
+      await scrollExactly(geom.pin + past);
+      return page.evaluate(() => {
+        const slot = [...document.querySelectorAll<HTMLElement>(".pf-slot")].at(-1)!;
+        const cs = getComputedStyle(slot);
+        const stage = document.querySelector<HTMLElement>(".services-stage");
+        return {
+          offBy: Math.abs(slot.getBoundingClientRect().top - Number.parseFloat(cs.top)),
+          cover: Number.parseFloat(cs.getPropertyValue("--pc-cover")) || 0,
+          state: slot.getAttribute("data-pc-state"),
+          contentIn: Number.parseFloat(stage?.style.getPropertyValue("--svc-content-in") ?? "0"),
+        };
+      });
+    };
+
+    const atPin = await atLastCard(0);
+    expect(atPin.state, "the last card is not seated at its own pin").toBe("pinned");
+    expect(atPin.offBy, "the last card is not on its line at its pin").toBeLessThanOrEqual(2);
+    /* ⚠ AND THE OFFER IS STILL AT ZERO HERE — the overlap above may never open
+       while this card is PARKED, which would be a crossfade under a card the
+       reader is still reading rather than a handoff. */
+    expect(
+      atPin.contentIn,
+      "the offer is already arriving under a parked last card"
+    ).toBeLessThanOrEqual(0.01);
+
+    const nearlyUp = await atLastCard(geom.tailH - 80);
+    expect(
+      nearlyUp.offBy,
+      "the last card left its line before its hold was up"
+    ).toBeLessThanOrEqual(2);
+    expect(nearlyUp.cover, "something covered the last card").toBeLessThanOrEqual(0.001);
+
+    const spent = await atLastCard(geom.tailH + 120);
+    expect(
+      spent.offBy,
+      "the last card is still on its line past the tail — the hold is no longer the tail"
+    ).toBeGreaterThan(2);
 
     /* Solve for the scroll where the last card's bottom clears the top. Once
        unstuck it moves 1:1 with the page, so one correction converges. */

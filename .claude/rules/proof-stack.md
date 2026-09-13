@@ -77,12 +77,32 @@ SERVICES_PROOF_HANDOFF_OVERLAP_VH × vh`, the overlap being **1.0 = the last
   bounded by the containing block MINUS the element's own margin. Both ends are
   pinned in the smoke and the pair was CALIBRATED: with the overlap at 0 the
   second fails with `Received: 0`.
+- ⚠ **THE LAST CARD'S HOLD IS THE TAIL, AND IT IS SIZED TO THE CARD BEFORE IT**
+  (ADR-096 U2, owner: _"fix the last card's hold too"_). Every other card is
+  held by the one that covers it; the last has nothing above it, so its hold is
+  the runway left under its own margin box. Measured parked spans — arrived,
+  uncovered, still — ran 240 / 280 / 360 at 1440×900 with the LAST at 240: the
+  pile accelerates and then the final card got the shortest hold of the four.
+  `.pf-stack__tail` is `clamp(280px, 40svh, 400px)` now (was
+  `clamp(160px, 24svh, 280px)`), which lands 288 / 360 / 400 against sibling
+  targets of 280 / 360 / 400.
+  ⚠ **THE MARGIN CANCELS** — sticky is bounded by the containing block MINUS
+  the element's own margins, and the last slot's 394px margin is inside that
+  block, so it comes off both terms and the range is the tail alone.
   ⚠ **`.pf-slot:last-of-type { margin-bottom: 0 }` HAS NEVER MATCHED** —
   `:last-of-type` counts by element TYPE and `.pf-stack__tail` is a later
-  `div`, so the last slot keeps its 394px margin and its hold is the tail
-  alone. `:nth-last-child(2)` is the selector that would match; left alone
-  deliberately (it would triple that card's read time — a choreography change,
-  not a fix).
+  `div`. Leave it dead: by the line above, zeroing that margin changes NO hold
+  and instead removes the runway the U1 release runs over after the card has
+  cleared — it would pull the opening in front of the card's unstick.
+  ⚠ **A LONGER TAIL IS A LONGER PILE**, so `SERVICES_PROOF_PILE_VH` (5.1),
+  `SERVICES_PROOF_RUNWAY_VH` (6.3) and the `--svc-proof-runway` literal
+  (630svh) move in the same commit — `services-proof-runway-lockstep` is the
+  alarm. It does NOT disturb U1: the unstick point and the box shift together,
+  so the release still opens ~42 % into the exit.
+  ⚠ **PIN THE HOLD BEHAVIOURALLY.** Deriving the sticky range from `offsetTop`
+  reads the STUCK position (`seatProofCard`'s own finding) — it reported 125px
+  against a 320px tail. The smoke walks the card instead: parked at its pin,
+  parked 80px before the tail is spent, off its line 120px after.
 - ⚠ **THE INERT RUNG IS RESTATED IN TWO SHEETS AND MUST STAY IDENTICAL** —
   `(max-width: 960px), (max-height: 680px), (prefers-reduced-motion: reduce)`.
   `proof-stack.css` parks the slots; `services.css` puts the box back in flow.

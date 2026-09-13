@@ -172,12 +172,32 @@
   --pc-dp: calc(var(--pc-depth) - var(--pc-cover) + var(--pc-cov));
 }
 
-.pf-stack .pf-slot:last-of-type {
-  margin-bottom: 0;
-}
+/* ── THE TAIL IS THE LAST CARD'S HOLD (ADR-096 U2) ───────────────────
+   Every other card is held by the one that covers it; the last has nothing
+   above it, so what keeps it parked is the runway left under its own margin
+   box — which is exactly this element. `position: sticky` is bounded by the
+   containing block MINUS the element's own margins, and both the slot's
+   margin and this tail are inside that block, so the margin cancels out of
+   the range on both sides and the hold IS the tail, to the pixel.
 
+   ⚠ SIZED TO THE CARD BEFORE IT, NOT PICKED. Measured parked spans (the
+   scroll over which a card is arrived, uncovered and still): 200/240/280 at
+   1280×720, 240/280/360 at 1440×900, 280/360/400 at 1920×1247 — the pile
+   accelerates, so the honest target for the last card is the one the reader
+   was just given, i.e. 280 / 360 / 400. This clamp lands 288 / 360 / 400.
+   It was `clamp(160px, 24svh, 280px)` (173 / 216 / 280), which made the last
+   card the SHORTEST hold in a pile that had been lengthening all the way
+   down — it arrived and left (owner, 2026-09-13).
+
+   ⚠ GROWING IT MOVES THE HANDOFF WITH IT, WHICH IS WHY U1 SURVIVES. The
+   card's unstick point and the pile's box both shift by the same amount, and
+   `releaseFrac` is derived from the box — so the release still opens the same
+   ~42 % into the card's exit. ⚠ It also lengthens the PILE, so
+   `SERVICES_PROOF_PILE_VH` (the pre-hydration reservation, and the ceiling of
+   the measured range) and the `--svc-proof-runway` literal in `services.css`
+   move with it — the lockstep guard is the alarm on that pair. */
 .pf-stack .pf-stack__tail {
-  height: clamp(160px, 24svh, 280px);
+  height: clamp(280px, 40svh, 400px);
 }
 
 /* ── 5. The card — three registers and no fourth ─────────────────────

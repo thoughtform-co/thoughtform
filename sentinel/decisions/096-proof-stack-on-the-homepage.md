@@ -261,12 +261,92 @@ is the old behaviour exactly.
 
 ⚠ **AND `.pf-slot:last-of-type { margin-bottom: 0 }` HAS NEVER MATCHED.**
 `:last-of-type` counts by ELEMENT TYPE, and `.pf-stack__tail` is a `div` after
-the slots — so the last slot keeps the 394px margin the rule means to remove,
-which is what limits its hold to the tail's 216px rather than the 610 the rule
-intends. Recorded, not fixed: correcting it would give the last card ~3× its
-present read time, which is a change to the pile's own choreography and not
-what was asked. `.pf-stack__runway > .pf-slot:nth-last-child(2)` is the
-selector that would match.
+the slots, so no `.pf-slot` is ever the last of its type and the last slot
+keeps its 394px margin. ⚠ **THIS UPDATE FIRST CLAIMED THAT WAS WHAT SHORTENED
+THE CARD'S HOLD, AND THAT WAS WRONG — SEE U2.** The margin is inside the
+sticky containing block on BOTH sides of the range (`block height − (element
+flow bottom + its own margin)`), so removing it shortens the runway by exactly
+what it removes from the element's own bound and the range is unchanged: 216px
+either way. What the margin actually is, is the runway AFTER the last card has
+cleared, over which U1's release runs — so zeroing it would pull the release's
+opening in front of the card's unstick and break this update's own invariant.
+The rule is dead, its intent does not apply to this layout, and the hold is the
+TAIL.
+
+## Update 2 — the last card is held as long as the one before it (2026-09-13, owner)
+
+> Fix the last card's hold too.
+
+U1 closed the gap AFTER the pile; this is the card the gap was in front of.
+Every other card is held by the card that covers it — the last has nothing
+above it, so what keeps it parked is the runway left under its own margin box,
+which is the TAIL.
+
+**Measured parked spans** — the scroll over which a card is arrived, uncovered
+and still, which is the span in which it is a readable object rather than one
+in motion:
+
+| viewport  | cards 1 · 2 · 3 | last card | tail |
+| --------- | --------------- | --------- | ---- |
+| 1280×720  | 200 / 240 / 280 | **200**   | 173  |
+| 1440×800  | 200 / 240 / 320 | **320**¹  | 320¹ |
+| 1440×900  | 240 / 280 / 360 | **240**   | 216  |
+| 1920×1247 | 280 / 360 / 400 | **280**   | 280  |
+
+¹ after this update; the others are the before.
+
+The pile ACCELERATES — each card is held longer than the last — and then the
+final card got the shortest hold of the four. It arrived and left.
+
+**The tail goes `clamp(160px, 24svh, 280px)` → `clamp(280px, 40svh, 400px)`**,
+derived rather than picked: the target is the hold of the card immediately
+before it (280 / 360 / 400 at the three reference viewports), because that is
+the rhythm the reader has just been taught. The clamp lands 288 / 360 / 400.
+Measured after: the last card holds 320 / 360 / 400, matching or just over its
+predecessor at every viewport.
+
+⚠ **THE HOLD IS THE TAIL, AND THE MARGIN CANCELS.** `position: sticky` is
+bounded by the containing block MINUS the element's own margins, and the last
+slot's 394px margin sits inside that block — so it is subtracted from both
+terms and the range is the tail alone, to the pixel. That is why U1's note
+about `.pf-slot:last-of-type` was wrong on its consequence and is corrected
+above: zeroing that margin changes no hold at all, it removes release runway.
+
+⚠ **GROWING THE TAIL MOVES THE HANDOFF WITH IT, WHICH IS WHY U1 SURVIVES
+UNTOUCHED.** The card's unstick point and the pile's box shift by the same
+amount and `releaseFrac` is derived from the box, so the release still opens
+~42 % into the card's exit. Measured after: the offer still paints 240px
+BEFORE the card clears at both 1440×900 and 1280×720 (it was −240 / −120).
+
+⚠ **THREE NUMBERS MOVE TOGETHER OR THE RING'S DOMAIN DRIFTS.** A longer tail is
+a longer PILE — 505 / 507 / 493svh, from 489 / 491 / 483 — so
+`SERVICES_PROOF_PILE_VH` (the pre-hydration reservation, deliberately the
+CEILING of the measured range) goes 4.9 → **5.1**, and with it
+`SERVICES_PROOF_RUNWAY_VH` 6.1 → 6.3 and the hand-written `--svc-proof-runway`
+literal 610svh → **630svh**. `services-proof-runway-lockstep.test.ts` is the
+alarm on that pair and it is why the bump is one commit.
+
+⚠ **THE GUARD IS BEHAVIOURAL, AND THE ARITHMETIC ONE FAILED FIRST.** The first
+cut derived the sticky range as `runway.offsetHeight − (slot.offsetTop +
+slot.offsetHeight + margin)` and read **125px against a 320px tail** — because
+`offsetTop` on a STUCK sticky element reports its stuck position, which is
+`seatProofCard`'s own documented finding one block up in the same file. So the
+smoke walks the card instead: parked at its pin, still parked 80px before the
+tail is spent, off its line 120px after. Calibrated both ways — reverting the
+clamp fails with `Received: 192`.
+
+⚠ **AND THE SAME TRAP BIT A SECOND TIME, ONE LINE EARLIER, AS A FLAKE.** The
+walk rewinds above the pile first so the offsets it reads are FLOW offsets —
+but the rewind was a single `scrollTo` + `settleScroll`, and `<html>` scrolls
+smoothly while `settleScroll` returns at a 1600ms cap. From deep in the pile
+that is a ~3000px animation, so under load it came back still travelling, with
+a slot still stuck and its `offsetTop` still reporting the stuck position: the
+pin moved and the hold checks measured from the wrong place. It passed alone
+and failed in the pair, which is the signature. ⚠ **AND THE FIRST FIX HID IT**
+— converging only the RETURN scroll made the walk land correctly and the
+failure became deterministic, which is how the real cause surfaced. Both
+scrolls go through one `scrollExactly` helper that converges on `scrollY`
+now; three consecutive pair runs green.
 
 ## Left open
 
@@ -298,6 +378,6 @@ selector that would match.
 - ~~**The last card's dwell is long** (its own margin plus the tail, ~71svh)
   before the release.~~ **CLOSED at U1** (2026-09-13) — he read it as slow, and
   it was one constant: `SERVICES_PROOF_HANDOFF_OVERLAP_VH`.
-- **The last card's own HOLD is short** — 216px, the tail, because the margin
-  the `:last-of-type` rule means to remove is still there (U1). Whether that
-  card deserves the ~610px the rule intends is an owner read, not a bug fix.
+- ~~**The last card's own HOLD is short** — 216px, the tail.~~ **CLOSED at U2**
+  (2026-09-13, same read) — the tail is now sized to the hold of the card
+  before it.

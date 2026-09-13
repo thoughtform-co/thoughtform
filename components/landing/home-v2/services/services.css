@@ -117,13 +117,14 @@
    * The proof beat is the STACK now (4.9 viewports of pile + the 1.2 of
    * release), and the pile's length is `100svh` arithmetic with fixed px terms
    * in it — the 64–88px pin, the 52px peek, the 24px safe band — so it lands
-   * anywhere in ~483–490svh depending on the viewport. This literal is what
-   * the page reserves BEFORE hydration; `useServicesStageScroll` then measures
-   * the pile's own box and writes the real total back onto this property, in
-   * pixels, once per resize. That is what keeps the reserved height and the
-   * runway SPLIT's proof share the same number at every viewport, and with
-   * them the ring's domain at exactly 500svh. */
-  --svc-proof-runway: 610svh;
+   * anywhere in ~493–507svh depending on the viewport (ADR-096 U2 lengthened
+   * the tail, which is the last card's hold, from ~483–490). This literal is
+   * what the page reserves BEFORE hydration; `useServicesStageScroll` then
+   * measures the pile's own box and writes the real total back onto this
+   * property, in pixels, once per resize. That is what keeps the reserved
+   * height and the runway SPLIT's proof share the same number at every
+   * viewport, and with them the ring's domain at exactly 500svh. */
+  --svc-proof-runway: 630svh;
   min-height: calc(var(--svc-proof-runway) + 500svh);
 }
 
