@@ -2,6 +2,7 @@ import type { ArcMotion, ArcSection } from "@/lib/arcs/types";
 
 import { ArcAnatomy } from "./ArcAnatomy";
 import { ArcBeat } from "./ArcBeat";
+import { ArcBoard } from "./ArcBoard";
 import { ArcCards } from "./ArcCards";
 import { ArcClose } from "./ArcClose";
 import { ArcConfiguration } from "./ArcConfiguration";
@@ -105,6 +106,8 @@ export function ArcSectionRenderer({
             );
           case "flow":
             return <ArcFlow key={section.id} section={section} index={index} motion={motion} />;
+          case "board":
+            return <ArcBoard key={section.id} section={section} index={index} motion={motion} />;
           default: {
             const exhaustive: never = section;
             return exhaustive;

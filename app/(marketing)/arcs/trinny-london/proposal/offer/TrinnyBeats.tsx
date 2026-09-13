@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
+import { ArcBoard } from "@/components/arcs/ArcBoard";
 import { ArcCards } from "@/components/arcs/ArcCards";
-import { ArcConfiguration } from "@/components/arcs/ArcConfiguration";
 import { ArcFlow } from "@/components/arcs/ArcFlow";
 import { ArcListGroups } from "@/components/arcs/ArcListGroups";
 import type { ArcSection } from "@/lib/arcs/types";
@@ -12,7 +12,7 @@ import type { ArcSection } from "@/lib/arcs/types";
  * TrinnyBeats — the arcs' own section components, mounted into this page's
  * stations (ADR-094 U9, extended by ADR-099).
  *
- * TWO ROOTS USE IT: `#proposition` mounts the configuration alone, `#offer`
+ * TWO ROOTS USE IT: `#proposition` mounts the board alone (ADR-100), `#offer`
  * mounts the seven beats after it. One renderer either way, so a fix to the
  * plates, the ledger or the head's datum lands on both surfaces and on
  * `/arcs/suri-proposal` at the same time.
@@ -23,6 +23,9 @@ import type { ArcSection } from "@/lib/arcs/types";
  * page-local switch over the four kinds this page uses is the whole cost of
  * that, and the `never` fallthrough keeps it honest — a beat authored in
  * another kind renders nothing, which `trinny-offer.test.ts` fails on.
+ * (`configuration` left this switch with ADR-100: the page no longer draws
+ * it, and `ArcConfiguration` stays byte-identical for the registered
+ * proposals through `ArcSectionRenderer`.)
  *
  * ⚠ NOT `ArcShell` either: that injects the HUD chrome, the theme lock, the
  * hero boot and the scroll writer, all of which this page already has from
@@ -96,8 +99,8 @@ function TrinnyBeat({ section, index }: { section: ArcSection; index: number }) 
       return <ArcListGroups section={section} index={index} />;
     case "cards":
       return <ArcCards section={section} index={index} />;
-    case "configuration":
-      return <ArcConfiguration section={section} index={index} />;
+    case "board":
+      return <ArcBoard section={section} index={index} />;
     case "flow":
       return <ArcFlow section={section} index={index} />;
     default:

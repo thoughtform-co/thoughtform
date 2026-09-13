@@ -115,6 +115,55 @@ export interface ArcAction {
   primary?: boolean;
 }
 
+/**
+ * THE BOARD's two states (ADR-100). One state = one circuit board: the
+ * client's configuration drawn in the proof's R4 grammar — the seat on
+ * top, the layer left, the one card centre, the tools right, and (lit
+ * only) the sockets the next workstreams dock into.
+ *
+ * ⚠ DORMANT OR LIT FOLLOWS `mode` ALONE — no per-element flags — so the
+ * guard is one predicate and a board cannot half-light. `today` letters
+ * what the record found; `configured` letters what the setup seats.
+ * ⚠ NO DIGIT ON EITHER, no bracket, no em dash (the proposal copy law).
+ * ⚠ The mono chrome strings (`label`, `seat.q`, `card.name`, the tags,
+ * `tools.label`, the item names, the socket names, `foot`) are authored in
+ * sentence case and UPPERCASED BY THE DRAWING, so the fit guard walks the
+ * rendered string.
+ */
+export type BoardMode = "today" | "configured";
+
+export interface BoardState<M extends BoardMode = BoardMode> {
+  mode: M;
+  /** The head strip's eyebrow, e.g. "As it runs today". */
+  label: string;
+  /** The svg's accessible name — the whole board in one sentence. */
+  alt: string;
+  /** WHO OWNS IT — the seat, top centre. Green is this and nothing else. */
+  seat: { q: string; a: string; note?: string };
+  /** The workstream — the one card. `rows` ≤ 2; an answer wraps to ≤ 2 lines. */
+  card: { name: string; work?: string; rows?: readonly { q: string; a: string }[] };
+  /** The layer, left. `sub` is the head band's second row; a row's `name` is
+   *  its sentence and is absent on the dormant board — the dashed room IS
+   *  the reading. */
+  layer: {
+    label: string;
+    sub?: string;
+    rows: readonly { id: string; tag: string; name?: string }[];
+  };
+  /** WHERE IT RUNS, right: the tools — unwired islands on `today`, one
+   *  module on `configured`. `lit` marks the item the Skill runs inside. */
+  tools: {
+    label?: string;
+    items: readonly { id: string; name: string; note?: string; lit?: boolean }[];
+    note?: string;
+  };
+  /** Dashed empty silhouettes on the card's own outline — the next
+   *  workstreams. Lit board only: the type forbids them on `today`. */
+  sockets?: M extends "configured" ? { items: readonly { name: string }[]; note?: string } : never;
+  /** The foot row: ≤ 3 mono kickers on the terminus hairline. */
+  foot: readonly string[];
+}
+
 interface ArcSectionBase {
   /** DOM id — anchor target + ArcMenu key. Unique within the arc. */
   id: string;
@@ -482,6 +531,26 @@ export type ArcSection = ArcSectionBase &
         next?: { name: string; work: string };
         /** The foot: three short mono lines at most. */
         kickers?: readonly string[];
+      }
+    | {
+        /**
+         * THE BOARD (ADR-100): the client's configuration as a circuit-board
+         * instrument in TWO STATES side by side — as it runs today (dormant,
+         * compact) and with a configuration (lit, expanded). The proof's R4
+         * substrate grammar (ADR-070 U11) at page scale: opaque chamfered
+         * modules on a faint bed, eight-wire hatched ribbons, one lit card;
+         * gold is the built thing, green is the human and nothing else.
+         *
+         * ⚠ THE FOURTH ENUMERATED EXCEPTION to "new arcs are content-only"
+         * (dossier · configuration · flow · board). Stricter than the
+         * configuration's: one leaf, NO picker, NO listener — the arrival is
+         * CSS keyed on `.is-in`, and the only script is the row's own
+         * measurement (the elastic crop, ADR-070 U12).
+         * ⚠ EXACTLY TWO STATES, today then configured — the tuple says so.
+         */
+        kind: "board";
+        head: ArcHead;
+        states: readonly [BoardState<"today">, BoardState<"configured">];
       }
   );
 

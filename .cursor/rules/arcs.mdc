@@ -60,6 +60,19 @@ paid for by the FIELD, where `.fl-bay__top` is already clipped. The housing
 also makes `--arc-plate` the record column's BED in light — a new text rung
 there belongs in the contrast walk.
 
+⚠ ADR-100: the `board` kind is the FOURTH enumerated exception — the client's
+configuration as a circuit board in two states (dormant beside lit), the
+proof's R4 grammar at page scale, no frame, one leaf with no picker. Dispatched
+in BOTH `ArcSectionRenderer` and the Trinny page's `TrinnyBeats` switch (which
+dropped `configuration`; `ArcConfiguration` is byte-identical elsewhere). The
+box is width-led and its aspect is the contract (`--arc-board-aspect` and the
+flex bases are pinned to the crops by `arc-board-fit`); the crop is
+height-elastic (`ArcBoardRow`'s `ResizeObserver` → `fitExt` → `chain(e)`); every
+colour is an `--arc-board-*` alias of the ramp, never a `--pda-*`; every
+dormant rule sits under `.is-arc-js` + `no-preference` so no-JS and PRM render
+lit; `data-board-*` never `data-arc-*`; the head on the TEXT band, the drawing
+on the INSTRUMENT band.
+
 Contracts in one breath: one scroll writer (`useArcScroll`); `--hero-lift`
 gates the rails; the slice API is read-only; every section opaque void; no
 three.js / Supabase / `LandingPage` imports — the casefile's dossier LEAVES

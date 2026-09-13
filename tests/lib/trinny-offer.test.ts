@@ -4,14 +4,34 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import {
-  TRINNY_CONFIGURATION,
+  TRINNY_BOARD,
   TRINNY_OFFER_SECTIONS,
 } from "@/app/(marketing)/arcs/trinny-london/proposal/offer/offerSections";
 import { PROPOSAL_COPY_BANS, scanStrings } from "@/lib/arcs/copyLaw";
+import type { BoardState } from "@/lib/arcs/types";
 
-/** Every beat the page mounts, in reading order: the configuration is beat
- *  one and lives in its own station (ADR-099), the rest follow in `#offer`. */
-const ALL_BEATS = [TRINNY_CONFIGURATION, ...TRINNY_OFFER_SECTIONS];
+/** Every beat the page mounts, in reading order: the board is beat one and
+ *  lives in its own station (ADR-099 → ADR-100), the rest follow in `#offer`. */
+const ALL_BEATS = [TRINNY_BOARD, ...TRINNY_OFFER_SECTIONS];
+
+/** How many strings a state letters — the drawing's own count, from the
+ *  record. The exact SET is pinned in `arc-board-fit`; this is the budget
+ *  the owner's "not too complicated" set. */
+const lettered = (s: BoardState) =>
+  1 +
+  2 +
+  (s.seat.note ? 1 : 0) +
+  1 +
+  (s.card.work ? 1 : 0) +
+  2 * (s.card.rows?.length ?? 0) +
+  1 +
+  (s.layer.sub ? 1 : 0) +
+  s.layer.rows.reduce((n, r) => n + 1 + (r.name ? 1 : 0), 0) +
+  (s.tools.label ? 1 : 0) +
+  s.tools.items.reduce((n, t) => n + 1 + (t.note ? 1 : 0), 0) +
+  (s.tools.note ? 1 : 0) +
+  (s.sockets ? s.sockets.items.length + (s.sockets.note ? 1 : 0) : 0) +
+  s.foot.length;
 
 /**
  * The Trinny pitch page's offer (ADR-094 U9) — the proposal's beats after
@@ -31,11 +51,11 @@ describe("trinny-london offer (ADR-094 U9)", () => {
   });
 
   it("carries no noun of the client it was copied from", () => {
-    /* The record is the Suri proposal's with the client's nouns swapped —
-       placeholder copy by the owner's own instruction, to be rewritten.
-       A swap is only a swap if nothing of the other client survived it:
-       a Trinny page that says "Suri" once is not a placeholder, it is the
-       wrong client's proposal. */
+    /* The offer's record is the Suri proposal's with the client's nouns
+       swapped — placeholder copy by the owner's own instruction, to be
+       rewritten. A swap is only a swap if nothing of the other client
+       survived it: a Trinny page that says "Suri" once is not a placeholder,
+       it is the wrong client's proposal. */
     const leaks: string[] = [];
     scanStrings(ALL_BEATS, "beats", (value, path) => {
       if (/\bSuri\b|\bKate\b|\bMark\b|\bNick\b/.test(value)) leaks.push(path);
@@ -51,11 +71,11 @@ describe("trinny-london offer (ADR-094 U9)", () => {
        failure that says so. */
     const kinds = new Set(ALL_BEATS.map((s) => s.kind));
     for (const kind of kinds) {
-      expect(["list-groups", "cards", "configuration", "flow"]).toContain(kind);
+      expect(["list-groups", "cards", "board", "flow"]).toContain(kind);
     }
     /* ⚠ UNIQUE ACROSS BOTH ROOTS, not within each. The ids are DOM ids on
-       one page — the configuration mounts into `#proposition` and the rest
-       into `#offer`, two React trees but one document, so a collision is a
+       one page — the board mounts into `#proposition` and the rest into
+       `#offer`, two React trees but one document, so a collision is a
        duplicate anchor that `topOf()` and every in-page link resolve to the
        first of. */
     const ids = ALL_BEATS.map((s) => s.id);
@@ -68,31 +88,53 @@ describe("trinny-london offer (ADR-094 U9)", () => {
     expect(pricing?.kind === "cards" && pricing.ledger?.columns).toEqual(["Phase", "What", "Fee"]);
   });
 
-  it("the configuration's picker is internally consistent (ADR-099)", () => {
-    /* The record moved out of the prototype's `data-*` and into this module,
-       so the parse guard that walked those attributes moved here with it.
-       Every layer a tile names must be a row the drawing HAS, or the pick
-       lights nothing and fails silently — the one defect this shape can have
-       that neither a render nor a type can catch. */
-    const cfg = TRINNY_CONFIGURATION;
-    expect(cfg.kind).toBe("configuration");
-    if (cfg.kind !== "configuration") return;
-    const rows = cfg.layer.map((row) => row.id);
-    expect(rows).toEqual(["rules", "examples", "sources", "loops"]);
-    expect(cfg.teams).toHaveLength(3);
-    for (const team of cfg.teams) {
-      expect(team.layers.length, `${team.id}: reads nothing`).toBeGreaterThan(0);
-      for (const id of team.layers) expect(rows, `${team.id}: unknown layer ${id}`).toContain(id);
-      for (const k of ["owner", "runs", "bar", "reach", "where"] as const) {
-        expect(team[k], `${team.id}.${k}`).toBeTruthy();
-      }
+  it("the board's two states are the same layer, dormant then lit (ADR-100)", () => {
+    /* The record is the discovery call in two states, and the claim the
+       drawing makes is that they are ONE board: the same regions, the same
+       four layer rows, dormant on the left and lit on the right. What a
+       render cannot catch is a row that exists in one state and not the
+       other, a socket on the dormant board, or a figure on either. */
+    const b = TRINNY_BOARD;
+    expect(b.kind).toBe("board");
+    if (b.kind !== "board") return;
+    // ⚠ THE BEAT KEEPS ITS ID — the datum guard measures `seatOf("configuration")`.
+    expect(b.id).toBe("configuration");
+    const [today, configured] = b.states;
+    expect(today.mode).toBe("today");
+    expect(configured.mode).toBe("configured");
+    for (const s of b.states) {
+      const ids = s.layer.rows.map((r) => r.id);
+      expect(new Set(ids).size, `${s.mode}: duplicate layer id`).toBe(ids.length);
+      const tools = s.tools.items.map((t) => t.id);
+      expect(new Set(tools).size, `${s.mode}: duplicate tool id`).toBe(tools.length);
+      expect(s.foot.length, `${s.mode}: the foot row takes three at most`).toBeLessThanOrEqual(3);
+      expect(s.foot.length, `${s.mode}: a board sits on its foot row`).toBeGreaterThan(0);
+      expect(
+        s.card.rows?.length ?? 0,
+        `${s.mode}: the card takes two rows at most`
+      ).toBeLessThanOrEqual(2);
+      expect(s.alt.length, `${s.mode}: the board's accessible name`).toBeGreaterThan(40);
     }
-    /* ⚠ NO DIGIT ON THE DRAWING, the ruling this instrument has carried
-       since ADR-094 U7: it plots the configuration, it does not measure it.
-       (A phase code like `M1` is a NAME and is allowed — but this drawing
-       carries none, so the plain ban is the honest one here.) */
-    scanStrings(cfg, "configuration", (value, path) => {
-      expect(/\d/.test(value), `${path}: a figure on the configuration`).toBe(false);
+    // The same layer, lit differently — the claim, mechanised.
+    expect(configured.layer.rows.map((r) => r.id)).toEqual(today.layer.rows.map((r) => r.id));
+    expect(configured.tools.items.map((t) => t.id)).toEqual(today.tools.items.map((t) => t.id));
+    // The dormant board letters no sentence in its cells; the lit one does.
+    for (const row of today.layer.rows) expect(row.name, `today.${row.id}`).toBeUndefined();
+    for (const row of configured.layer.rows) expect(row.name, `configured.${row.id}`).toBeTruthy();
+    // Sockets are what the lit board offers next; the dormant board has none.
+    expect(today.sockets).toBeUndefined();
+    expect(configured.sockets?.items.length ?? 0).toBeGreaterThan(0);
+    // Exactly one tool is lit, and only on the configured board.
+    expect(today.tools.items.filter((t) => t.lit)).toHaveLength(0);
+    expect(configured.tools.items.filter((t) => t.lit)).toHaveLength(1);
+    /* The budgets: the owner's "keep it simple on the left" and "without
+       making it too complicated", as counts the record can be held to. */
+    expect(lettered(today)).toBeLessThanOrEqual(18);
+    expect(lettered(configured)).toBeLessThanOrEqual(32);
+    /* ⚠ NO DIGIT ON THE DRAWING, the ruling this beat has carried since
+       ADR-094 U7: it plots the configuration, it does not measure it. */
+    scanStrings(b, "board", (value, path) => {
+      expect(/\d/.test(value), `${path}: a figure on the board`).toBe(false);
     });
   });
 

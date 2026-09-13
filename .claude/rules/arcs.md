@@ -26,6 +26,7 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
 - ⚠ [ADR-090: The dossier is one housing](../sentinel/decisions/090-dossier-is-one-housing.md) — **PROPOSED (2026-09-05), shipped and guarded, pending the owner's live read.** The four dossier beats become one machined housing (ADR-089's grammar at page scale): TR+BL chamfer on the plate rung, `--arc-plate` ground, the designation seated in a header band fused to the top edge, a column split the record's rules terminate on, `--arc-seam` .28 dividing regions against `--arc-rule` .12 within one, and the console demoted to a square CELL inside it (ADR-065 rule 4). ⚠ **The record overhung the console by 8.6–88.7px, a different amount per tool** — `align-items: start` aligned the tops and nothing aligned the bottoms. ⚠ **The reveal observer's `-10%` dead band is a real budget constraint** — see §The dossier housing below before touching `--arc-dossier-h`
 - ⚠ [ADR-098: Clients and the proposal on /arcs](../sentinel/decisions/098-arcs-clients-and-the-proposal.md) — **PROPOSED (2026-09-12), built and guarded, pending the owner's live read.** `client` / `kind` / `theme` on an `ArcDef`, the client page inside the existing route, the overview's groups and filter, the `configuration` kind, and `scripts/new-arc.mjs`. See §The client model below
 - ⚠ [ADR-099: The pitch nests under its client, the configuration scrolls in, and the flow is drawn](../sentinel/decisions/099-proposal-nests-and-the-configuration-scrolls-in.md) — **PROPOSED (2026-09-13), built and guarded, pending the owner's live read.** ONE nesting exception (a `ClientDef.pages` record, outside `[slug]`'s one-segment namespace — ADR-098 §2's flat engagements are untouched), a DATUM under every proposal head (format-scoped, so all three proposal arcs take it), and the `flow` kind — ADR-052's third enumerated exception. See §The client model and §One beat per screen below
+- ⚠ [ADR-100: The configuration is a board in two states](../sentinel/decisions/100-the-configuration-is-a-board-in-two-states.md) — **PROPOSED (2026-09-13), built and guarded, pending the owner's live read.** The `board` kind — ADR-052's **fourth enumerated exception**: the client's configuration as a circuit board, dormant beside lit, the proof's R4 grammar at page scale, no frame, one leaf with no picker. On the Trinny page it REPLACES the `configuration` beat (`ArcConfiguration` is byte-identical for the registered proposals). See §The client model below
 - [ADR-008: Landing v7 background layers](../sentinel/decisions/008-landing-v7-background-layers.md) — the compositing rules the arc shell inherits
 
 **Contracts**
@@ -513,6 +514,41 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
   single-axis path reports a zero-height rect and every collapse guard reads
   that as absent). ⚠ The drawing takes a `min-height` share of the beat, which
   is where the head datum's floor slack goes.
+- **The `board` kind** (ADR-100) = `{ head, states: [BoardState<"today">,
+BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, after
+  the flow. `ArcBoard` (server) draws the client's configuration as a circuit
+  board in TWO STATES on one row, no plate around it: dormant (dashed dawn, the
+  card GREEN-outlined because all the work is the people's, tools as unwired
+  islands) beside lit (a green seat and its authority drop, the layer's four
+  cells named, ONE gold-washed card, WHERE IT RUNS, two dashed SOCKETS for the
+  next workstreams, a bed). The proof's R4 grammar (ADR-070 U11) copied by
+  hand into `components/arcs/board/boardGlyphs.tsx`; the pure modules
+  (`ribbon.ts`, `pdaLetters.ts`, `pdaFit.ts`, `housing`/`band`/`MODULE`) are
+  imported; NO `--pda-*` token (they resolve only under `.fl-pda` + `.fl-con`)
+  — every colour is an `--arc-board-*` alias of the ADR-077 ramp. ⚠ **BOTH
+  DISPATCHES**: `ArcSectionRenderer` AND the Trinny page's own `TrinnyBeats`
+  switch (which no longer draws `configuration`). ⚠ **THE BOX IS WIDTH-LED AND
+  ITS ASPECT IS THE CONTRACT**: both crops share one height and every share is
+  a fraction of 1560 (620 + 40 + 900), so `meet` is `W / 1560` on both boards;
+  `--arc-board-aspect` and the flex bases are PINNED to the crops by
+  `arc-board-fit`. The beat pays for its instrument (`--arc-sec-pad` and the
+  head's margin tightened on `.arc-sec--board`, `.arc-sec--intel`'s precedent)
+  — with the defaults the 1280×720 box is 385px and the chrome rung falls under
+  10px. ⚠ **THE CROP IS HEIGHT-ELASTIC** (ADR-070 U12): `ArcBoardRow` (the one
+  client island) reads the row's aspect with a `ResizeObserver` and `chain(e)`
+  spends the extension on the cable, the cells and the drops; SSR renders
+  `e = 0` and `xMidYMid meet` seats it whole. ⚠ **EVERY DORMANT RULE SITS UNDER
+  `.is-arc-js` + `no-preference`**, and the wrapper's `.arc-reveal` rise is
+  overridden — no-JS, PRM and terminal render lit, the ladder is the only
+  motion. ⚠ **FIT IS DECLARED**: `boardGeom` emits every `<text>` with its
+  measure; the vitest walks it at six extensions, the smoke measures the
+  rendered svg (≥ 10px, zero label overlaps, one meet, the crop filling its
+  box) at 1920×1247 and 1280×720. ⚠ `data-board-*`, never `data-arc-*`; the
+  hatch pattern ids are `arc-board-${section.id}-${mode}-*`, never fixed; no
+  `transform` on any svg group (the overlap walk compares `getBBox`). ⚠ The
+  head stays on the TEXT band (the datum guard's x) and the drawing takes the
+  INSTRUMENT band. ⚠ Dark is defined by the ramp, unverified until a dark
+  surface adopts the kind.
 - ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
   phases as a rail; on this surface a drawing plots something that HAPPENED,
   and a plan is an argument. Three phases are three `list-groups` columns,

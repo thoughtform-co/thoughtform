@@ -4855,6 +4855,261 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   }
 }
 
+/* ── THE BOARD (ADR-100) ──────────────────────────────────────────────
+   The client's configuration as a circuit board in two states, side by
+   side: as it runs today (dormant, 620 units wide) and with a configuration
+   (lit, 900), a 40-unit seam between them — the proof's R4 grammar at page
+   scale, and the answer to "a lot of things to look at" on the panel it
+   replaces. The drawing itself is SVG; this sheet owns its box, its tokens
+   and its arrival.
+
+   ⚠ NOT IN A FRAME. No plate, no border, no ground on the row — the modules
+   are the objects and the page's ground shows between them (on the Trinny
+   page, the turn's coral wash). Every colour is an alias of the ADR-077
+   ramp or a themed token, so light re-derives for free and dark is defined
+   by construction (⚠ unverified until a dark surface adopts the kind — the
+   one route that mounts it is light-locked).
+
+   ⚠ THE BOX IS WIDTH-LED AND ITS ASPECT IS THE CONTRACT. Both boards
+   render at ONE height: the flex bases and the seam are all fractions of
+   1560, so `meet` is `W / 1560` on both, and the two head strips and foot
+   rows sit on one datum. The height is the beat's budget (the `.arc-intel`
+   contract: a viewport share, less the datum, the head and the pads) with
+   a floor at the drawing's own height at the binding band (1022 / 2.4762 =
+   413) — a short window lets the beat run past one viewport rather than
+   the type fall under 10px (ADR-070 U10 ranks the floor above the fold).
+   `max-width` is the height × the row's aspect, so a box can never be
+   shorter than the crop and `meet` can never letterbox on width. Above the
+   fixed crop the row's own measurement (`ArcBoardRow`) grows both crops by
+   the same extension, so a tall window gets a taller board, not a hole.
+
+   ⚠ THE BEAT PAYS FOR ITS INSTRUMENT (`.arc-sec--intel`'s precedent). At
+   1280×720 the arc's default head margin and pad leave 385px, and the cap
+   would shrink the drawing to 953 wide — 9.35px chrome, under the floor.
+   `--arc-sec-pad` is a token override, never a `padding-block` (ADR-079). */
+.arc-sec--board {
+  --arc-sec-pad: clamp(28px, 4vh, 72px);
+  /* ⚠ 36 IS THE FLOOR THE HEAD'S COORD STAMP NEEDS. `.arc-head__coord` hangs
+     22px under the head; at 720h a 24px margin put the board's datum label
+     on top of it (measured on the 1280×720 still). The stamp's box ends at
+     +30, the eyebrow's cap starts at the margin +3. */
+  --arc-board-gap: clamp(36px, 3.4vh, 48px);
+}
+.arc-sec--board .arc-head {
+  margin-bottom: var(--arc-board-gap);
+}
+.arc-board {
+  /* The head's measured band with this beat's copy — a literal, like
+     `.arc-intel`'s 124, to be re-measured if the head is rewritten. */
+  --arc-board-head: 150px;
+  /* 1560 / 630 — ⚠ equal to the viewBoxes; `arc-board-fit` pins it. */
+  --arc-board-aspect: 2.4762;
+  --arc-board-h: max(
+    413px,
+    min(
+      clamp(400px, 72svh, 960px),
+      calc(
+        100svh - var(--arc-head-datum, 0px) - var(--arc-board-head) - var(--arc-board-gap, 0px) -
+          var(--arc-sec-pad, 0px)
+      )
+    )
+  );
+  display: flex;
+  align-items: stretch;
+  gap: calc(100% * 40 / 1560);
+  height: var(--arc-board-h);
+  width: 100%;
+  max-width: calc(var(--arc-board-h) * var(--arc-board-aspect));
+  min-width: 0;
+  margin-inline: auto;
+
+  /* ── The tokens: one alias each, gold split by role (ADR-063 U2) ── */
+  --arc-board-plate: var(--arc-plate);
+  --arc-board-sheen: var(--arc-sheen);
+  --arc-board-band: rgba(var(--dawn-rgb), 0.05);
+  --arc-board-hair: var(--arc-edge);
+  --arc-board-line: var(--arc-rule);
+  --arc-board-edge: var(--arc-seam);
+  --arc-board-ink: var(--arc-ink-90);
+  --arc-board-ink-2: var(--arc-ink-62);
+  --arc-board-ink-3: var(--arc-ink-50);
+  /* FILL and mark only — the foot's diamonds on the lit board. */
+  --arc-board-gold: var(--gold);
+  /* Line work: the ribbons, the hatch, the card's outline and rule. */
+  --arc-board-gold-line: var(--gold-line);
+  /* Small text: the keys. Raw gold fails the light walk at this size. */
+  --arc-board-gold-ink: var(--gold-ink);
+  --arc-board-gold-ink-lit: var(--gold-ink-lit);
+  --arc-board-gold-wash: rgba(var(--gold-rgb), 0.12);
+  /* Green is the human and nothing else: the seat, the authority drop,
+     the dormant card's outline (the work is all the people's there). */
+  --arc-board-green: var(--atreides-light);
+  --arc-board-green-ink: var(--atreides-ink);
+  --arc-board-green-wash: rgba(var(--atreides-rgb), 0.07);
+}
+.arc-board__state {
+  flex: 0 0 auto;
+  min-width: 0;
+  margin: 0;
+}
+.arc-board__state--today {
+  flex-basis: calc(100% * 620 / 1560);
+}
+.arc-board__state--configured {
+  flex-basis: calc(100% * 900 / 1560);
+}
+.arc-board__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* Size and tracking are the drawing's own attributes; the faces are the
+   house's. PT Mono is the chrome, PP Neue Montreal the sentences (ADR-067). */
+.arc-board text {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+}
+.arc-board .arc-board__sans {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  letter-spacing: var(--track-copy);
+}
+
+/* ── The arrival: the board assembles outward from its one bright object.
+   ⚠ EVERY DORMANT RULE SITS UNDER `.is-arc-js` AND INSIDE `no-preference`,
+   or the board renders blank on exactly the paths that cannot un-hide it
+   (no JS, reduced motion, terminal — ADR-057's law). The wrapper's own
+   rise is overridden: the ladder IS the arrival, and a row that also rose
+   would ride two animations at once. The keyframes are the map's own
+   (`pda.css`), copied — the arcs copy grammars, never import a sheet. */
+@media (prefers-reduced-motion: no-preference) {
+  .is-arc-js .arc-board.arc-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .is-arc-js .arc-board .arc-board__in,
+  .is-arc-js .arc-board .arc-board__bloom,
+  .is-arc-js .arc-board .arc-board__hatch {
+    opacity: 0;
+  }
+  .is-arc-js .arc-board .arc-board__wire {
+    stroke-dasharray: var(--l);
+    stroke-dashoffset: var(--l);
+  }
+  .is-arc-js .arc-board.is-in .arc-board__in,
+  .is-arc-js .arc-board.is-in .arc-board__hatch {
+    animation: arcBdIn 0.42s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+  }
+  .is-arc-js .arc-board.is-in .arc-board__bloom {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: arcBdBloom 0.55s cubic-bezier(0.2, 0.85, 0.25, 1) both;
+  }
+  .is-arc-js .arc-board.is-in .arc-board__wire {
+    animation: arcBdWire 0.6s cubic-bezier(0.3, 0.8, 0.3, 1) forwards;
+  }
+  /* The lit board: head and foot, the bed, the card first, the seat, then
+     the cables draw on and the modules they feed light behind them. */
+  .arc-board.is-in [data-board-role="bed"] {
+    animation-delay: 60ms;
+  }
+  .arc-board.is-in [data-board-role="card"] {
+    animation-delay: 140ms;
+  }
+  .arc-board.is-in [data-board-role="seat"] {
+    animation-delay: 220ms;
+  }
+  .arc-board.is-in [data-board-lane="seat"] * {
+    animation-delay: 300ms;
+  }
+  .arc-board.is-in [data-board-lane="layer"] * {
+    animation-delay: 360ms;
+  }
+  .arc-board.is-in [data-board-role="layer"] {
+    animation-delay: 420ms;
+  }
+  .arc-board.is-in [data-board-lane="tools"] * {
+    animation-delay: 420ms;
+  }
+  .arc-board.is-in [data-board-role="tools"] {
+    animation-delay: 500ms;
+  }
+  .arc-board.is-in [data-board-lane="drop-l"] * {
+    animation-delay: 480ms;
+  }
+  .arc-board.is-in [data-board-lane="drop-r"] * {
+    animation-delay: 540ms;
+  }
+  .arc-board.is-in [data-board-role="sockets"] {
+    animation-delay: 580ms;
+  }
+  /* The dormant board: a plain ladder, no bloom, nothing draws on. */
+  .arc-board.is-in [data-board-state="today"] [data-board-role="seat"] {
+    animation-delay: 120ms;
+  }
+  .arc-board.is-in [data-board-state="today"] [data-board-role="card"] {
+    animation: arcBdIn 0.42s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+    animation-delay: 200ms;
+  }
+  .arc-board.is-in [data-board-state="today"] [data-board-role="layer"] {
+    animation-delay: 280ms;
+  }
+  .arc-board.is-in [data-board-state="today"] [data-board-role="tools"] {
+    animation-delay: 360ms;
+  }
+}
+@keyframes arcBdIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes arcBdBloom {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  45% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.45;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes arcBdWire {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+/* Below the tier the boards stack, each sized by its own crop; the row's
+   aspect is tall for the wrong reason there, so the measurement is off. */
+@media (max-width: 960px) {
+  .arc-board {
+    flex-direction: column;
+    align-items: stretch;
+    gap: clamp(20px, 4vw, 32px);
+    height: auto;
+    max-width: none;
+  }
+  .arc-board__state {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+  .arc-board__svg {
+    height: auto;
+  }
+}
+
 /* ── THE CHAPTER ROW IS OFF, AND THE RULE IS NOT HERE (ADR-098 U1) ───
    Owner, 2026-09-12: the icons in the top-left corner compete with the
    hero. This surface hid them first, the homepage asked next, and a rule
@@ -4981,4 +5236,14 @@ html[data-theme="light"] .arc-root .arc-prog {
   --pg-green-fill: rgba(74, 98, 56, 0.14);
   --pg-route: rgba(110, 82, 22, 0.52);
   --pg-br: rgba(110, 82, 22, 0.62);
+}
+
+/* The two-state board's own rows (ADR-100). Everything else on it aliases a
+   rung the block above already re-derives; only the two WASHES are alphas
+   of their own — an alpha is not a colour, and a wash that recedes toward
+   black on void recedes toward parchment here. The green triple is light's
+   own (`theme.css` re-pins `--atreides-rgb` there). */
+html[data-theme="light"] .arc-root .arc-board {
+  --arc-board-gold-wash: rgba(var(--gold-rgb), 0.18);
+  --arc-board-green-wash: rgba(var(--atreides-rgb), 0.1);
 }

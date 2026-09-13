@@ -48,6 +48,18 @@ const goldMarks = (page: Page) =>
       .map((m) => m.dataset.mark ?? "")
   );
 
+/** Roll to `q` — how far `#proposition` has ARRIVED, its own clock (ADR-099).
+ *  ⚠ Solved for the published clock, never a pixel count: the station starts
+ *  half a viewport above the turn's end, and where that lands moves with the
+ *  document the corridor inflates. */
+async function rollToQ(page: Page, q: number) {
+  const box = await page.evaluate(() => {
+    const el = document.getElementById("proposition")!;
+    return { docTop: el.getBoundingClientRect().top + window.scrollY, vh: window.innerHeight };
+  });
+  await rollTo(page, Math.round(box.docTop - (1 - q) * box.vh));
+}
+
 /**
  * Park inside the corridor's `navigate` band.
  *
@@ -1124,21 +1136,18 @@ test.describe("Trinny London pitch variant", () => {
       )
     ).toBe("");
 
-    /** Roll to `q` — how far the station has ARRIVED, its own clock. */
-    const rollToQ = async (q: number) => {
-      const box = await page.evaluate(() => {
-        const el = document.getElementById("proposition")!;
-        return { docTop: el.getBoundingClientRect().top + window.scrollY, vh: window.innerHeight };
-      });
-      await rollTo(page, Math.round(box.docTop - (1 - q) * box.vh));
-    };
-
-    /* THE RECORD IS THE ARCS' OWN BEAT NOW: one `.arc-cfg` instrument under
-       an `.arc-head`, which is what gives it the cross, the eyebrow and the
-       datum every other beat on this page has. */
-    await rollToQ(1);
-    await rollToQ(1);
-    await expect(page.locator("#proposition .arc-cfg")).toHaveCount(1);
+    /* THE RECORD IS THE ARCS' OWN BEAT NOW (ADR-099), AND SINCE ADR-100 IT
+       IS THE BOARD: two svg boards in one row under an `.arc-head`, which
+       is what gives it the cross, the eyebrow and the datum every other
+       beat on this page has. The framed panel it replaced is gone with its
+       picker — nothing on this beat is pressable. */
+    await rollToQ(page, 1);
+    await rollToQ(page, 1);
+    const board = page.locator("#proposition .arc-board");
+    await expect(board).toHaveCount(1);
+    await expect(page.locator("#proposition .arc-cfg, #proposition [data-cfg-pick]")).toHaveCount(
+      0
+    );
     await expect(page.locator("#proposition .arc-head")).toHaveCount(1);
     await expect(page.locator("#proposition .arc-head").first()).toHaveClass(/is-in/);
     /* ⚠ THE CROSS AND NO CORAL RULE (owner: "all sections should have that
@@ -1148,25 +1157,53 @@ test.describe("Trinny London pitch variant", () => {
     await expect(page.locator("#proposition .arc-head__mark--origin")).toHaveCount(1);
     await expect(page.locator("#proposition .tl-prop__head")).toHaveCount(0);
 
-    /* ⚠ THE INSTRUMENT STILL PICKS (ADR-098 §4's port of ADR-094 U7). Three
-       teams on one layer; at rest the first is picked and every row is lit.
-       Picking the third swaps the readout and dims the rows that team does
-       not read — the transfer made visible, and the one behaviour on this
-       station. Asserted from BOTH ends, and on `data-cfg-*`: the arcs' own
-       channel, never `data-arc-*` (`arc-terminal-markup`'s law). */
-    const tiles = page.locator("#proposition [data-cfg-pick]");
-    await expect(tiles).toHaveCount(3);
-    await expect(tiles.nth(0)).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator("#proposition [data-cfg-layer].is-on")).toHaveCount(4);
-    await tiles.nth(2).click();
-    await expect(tiles.nth(2)).toHaveAttribute("aria-selected", "true");
-    await expect(tiles.nth(0)).toHaveAttribute("aria-selected", "false");
-    await expect(page.locator('#proposition [data-cfg-out="name"]')).toHaveText("Finance");
-    await expect(page.locator('#proposition [data-cfg-layer="examples"]')).not.toHaveClass(/is-on/);
-    await expect(page.locator('#proposition [data-cfg-layer="rules"]')).toHaveClass(/is-on/);
-    // Back to the first, so the stills below read the resting record.
-    await tiles.nth(0).click();
-    await expect(page.locator("#proposition [data-cfg-layer].is-on")).toHaveCount(4);
+    /* ⚠ TWO STATES, ONE ROW, AND THE ROLES ARE THE RECORD (ADR-100). The
+       dormant board lights nothing gold, wires nothing and seats no one in
+       green; the lit board fills exactly one card in gold, strokes its seat
+       in green and runs five lanes. Read off the COMPUTED paint — the
+       tokens are aliases of the ramp and light re-derives them, so this is
+       the drawing's own claim rather than its class names — and read after
+       the ladder has landed, because every lit object rests at opacity 0
+       until it does. */
+    await expect(board).toHaveClass(/is-in/);
+    await page.waitForTimeout(1200);
+    await expect(page.locator('#proposition .arc-board svg[role="img"]')).toHaveCount(2);
+    const roles = await page.evaluate(() => {
+      const rgb = (v: string) => {
+        const p = document.createElement("i");
+        p.style.color = v;
+        document.body.append(p);
+        const c = getComputedStyle(p).color;
+        p.remove();
+        return c;
+      };
+      const root = document.querySelector("#proposition .arc-board") as HTMLElement;
+      const cs = getComputedStyle(root);
+      const goldRgb = cs.getPropertyValue("--gold-rgb").trim();
+      const green = rgb(cs.getPropertyValue("--arc-board-green"));
+      const read = (mode: string) => {
+        const svg = document.querySelector(`[data-board-state="${mode}"] svg`)!;
+        const fills = [...svg.querySelectorAll("path, rect")].map((e) => getComputedStyle(e).fill);
+        const wash = svg.querySelector('[data-board-role="card"] .arc-board__wash');
+        const seat = svg.querySelector('[data-board-role="seat"] .arc-board__outline')!;
+        return {
+          goldFills: fills.filter((f) => f.includes(goldRgb)).length,
+          cardGold: wash ? getComputedStyle(wash).fill.includes(goldRgb) : false,
+          seat: getComputedStyle(seat).stroke,
+          wires: svg.querySelectorAll(".arc-board__wire").length,
+        };
+      };
+      return { green, today: read("today"), configured: read("configured") };
+    });
+    expect(roles.today.goldFills, "the dormant board lights nothing gold").toBe(0);
+    expect(roles.today.wires, "the dormant board is unwired").toBe(0);
+    expect(roles.today.seat, "no one is seated on the dormant board").not.toBe(roles.green);
+    expect(roles.configured.cardGold, "the lit card is the gold fill").toBe(true);
+    expect(roles.configured.seat, "the seat is green: the human, and nothing else").toBe(
+      roles.green
+    );
+    // Five lanes — three eight-wire runs and two four-wire drops.
+    expect(roles.configured.wires, "the ribbons").toBe(32);
 
     /* ⚠ AND THE MARK IS STILL THERE, FADING BEHIND IT (owner: "the brand
        mark in the back doesn't really dominate too much"). The canvas has to
@@ -1413,6 +1450,118 @@ test.describe("Trinny London pitch variant", () => {
       // box, so a band rather than a number — a reseat lands outside it.
       expect(config, `${where}: the datum`).toBeGreaterThan(40);
       expect(config, `${where}: the datum`).toBeLessThan(200);
+    }
+  });
+
+  test("ADR-100: the board fills its band, letters at the floor and collides nowhere", async ({
+    page,
+  }) => {
+    /* The live half of the board's fit guard. `arc-board-fit` walks the
+       drawing's own declaration — every string against the measure it must
+       fit — but the arithmetic cannot see a CSS change: a flex base that
+       drifted from its crop, a box the height cap shrank, a font the sheet
+       stopped resolving. So the rendered svg is measured here at the two
+       shapes that bracket the page: the owner's own tall window and the
+       reference laptop, where the chrome rung lands at 10.02px.
+
+       ⚠ `preserveAspectRatio="xMidYMid meet"` scales by the SMALLER ratio,
+       so `box.width / vb.width` over-reports; glyph boxes are compared in
+       user units (`getBBox`) and the rendered size derived from the meet
+       (the map smoke's own instrument). Label-on-label overlap is the check
+       nothing else makes. */
+    for (const vp of [
+      { width: 1920, height: 1247 },
+      { width: 1280, height: 720 },
+    ]) {
+      await page.setViewportSize(vp);
+      await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
+      await page.waitForSelector(".home-v2-stage");
+      await page.waitForTimeout(SETTLE_MS);
+      await rollToQ(page, 1);
+      await rollToQ(page, 1);
+      const row = page.locator("#proposition .arc-board");
+      await expect(row).toHaveClass(/is-in/);
+      await page.waitForTimeout(1200);
+      const read = await page.evaluate(() => {
+        const rowEl = document.querySelector("#proposition .arc-board")!;
+        const rowRect = rowEl.getBoundingClientRect();
+        const bandEl = rowEl.parentElement!;
+        const band = bandEl.getBoundingClientRect();
+        const bandCs = getComputedStyle(bandEl);
+        const inner = {
+          left: band.left + parseFloat(bandCs.paddingLeft),
+          right: band.right - parseFloat(bandCs.paddingRight),
+        };
+        const beat = document.getElementById("configuration")!.getBoundingClientRect();
+        const boards = [...rowEl.querySelectorAll("svg")].map((svg) => {
+          const r = svg.getBoundingClientRect();
+          const vb = svg.viewBox.baseVal;
+          const meet = Math.min(r.width / vb.width, r.height / vb.height);
+          const items = [...svg.querySelectorAll("text")].map((t) => ({
+            text: (t.textContent ?? "").slice(0, 40),
+            b: t.getBBox(),
+            px: Number.parseFloat(getComputedStyle(t).fontSize) * meet,
+          }));
+          const overlaps: string[] = [];
+          for (let i = 0; i < items.length; i++) {
+            for (let j = i + 1; j < items.length; j++) {
+              const a = items[i].b;
+              const b = items[j].b;
+              const ox = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+              const oy = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+              if (ox > 0.5 && oy > 0.5) overlaps.push(`"${items[i].text}" x "${items[j].text}"`);
+            }
+          }
+          return {
+            h: r.height,
+            meet,
+            drawnH: vb.height * meet,
+            minPx: Math.min(...items.map((i) => i.px)),
+            texts: items.length,
+            overlaps,
+          };
+        });
+        return {
+          vh: window.innerHeight,
+          row: {
+            left: rowRect.left,
+            right: rowRect.right,
+            top: rowRect.top,
+            bottom: rowRect.bottom,
+          },
+          inner,
+          beat: { top: beat.top, bottom: beat.bottom, h: beat.height },
+          boards,
+        };
+      });
+      const where = `${vp.width}×${vp.height}`;
+      expect(read.boards, `${where}: two boards`).toHaveLength(2);
+      for (const b of read.boards) {
+        expect(b.texts, `${where}: a board letters`).toBeGreaterThan(10);
+        expect(b.overlaps, `${where}: labels printing through labels`).toEqual([]);
+        expect(b.minPx, `${where}: the type floor`).toBeGreaterThanOrEqual(10);
+        /* The crop grew to its box (the elastic ext), so the drawn height
+           is the box's within a rounding of the extension — no letterbox on
+           either axis. */
+        expect(Math.abs(b.drawnH - b.h), `${where}: the crop fills its box`).toBeLessThanOrEqual(8);
+      }
+      const [today, configured] = read.boards;
+      expect(
+        Math.abs(today.meet - configured.meet) / configured.meet,
+        `${where}: one meet on both boards`
+      ).toBeLessThan(0.01);
+      expect(Math.abs(today.h - configured.h), `${where}: one datum line`).toBeLessThanOrEqual(1);
+      expect(read.row.left, `${where}: inside the band`).toBeGreaterThanOrEqual(
+        read.inner.left - 1
+      );
+      expect(read.row.right, `${where}: inside the band`).toBeLessThanOrEqual(read.inner.right + 1);
+      expect(read.row.top, `${where}: inside the beat`).toBeGreaterThanOrEqual(read.beat.top - 1);
+      expect(read.row.bottom, `${where}: inside the beat`).toBeLessThanOrEqual(
+        read.beat.bottom + 1
+      );
+      // The reference laptop is the binding shape: the beat holds one viewport there.
+      if (vp.height === 720)
+        expect(read.beat.h, `${where}: one viewport`).toBeLessThanOrEqual(read.vh + 1);
     }
   });
 

@@ -54,7 +54,30 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-09-12 (latest) — Clients and the proposal on /arcs (ADR-098)
+### 2026-09-13 (latest) — The configuration is a board in two states (ADR-100)
+
+**Trigger:** owner's read of the Trinny proposal's configuration beat — "it
+doesn't look bad, but it's a lot of things to look at"; the beat is the problem
+statement; their current status left, kept simple, and their configuration
+right as an EXPANDED version of the proof's own; not in frames; the motherboard
+as leitmotif.
+
+**Cycle B (prior art cited):** ADR-070 U11 (the R4 substrate field — the
+grammar), U12 (the elastic crop), ADR-076 (SVG at page scale under an aspect
+cap), ADR-098 §4 (the `configuration` kind this replaces on the page), ADR-099
+(the datum and the `flow` precedent for a beat's `min-height` share), ADR-065
+(the corner law), ADR-077 (the ramp). ADR-100 opened Proposed with the shape,
+the measurements and the alternatives rejected.
+
+**Cycle A rows that triggered:** 4 — `types.ts`, both dispatches, `chrome.tsx`,
+`arcs.css` and three tests move together (rule in `.claude/rules/arcs.md` §The
+client model + `.cursor/rules/arcs.mdc`); 5 — the runtime check is the fit
+guard (`arc-board-fit`, the drawing against its own declaration at six
+extensions) plus the smoke's rendered walk (≥ 10px, zero label overlaps, one
+meet, the crop filling its box at two viewports); the still caught the one
+thing both missed (the head's coord stamp on the board's datum label at 720h).
+
+### 2026-09-12 — Clients and the proposal on /arcs (ADR-098)
 
 **Trigger:** owner wants a client proposal built on the site rather than as a
 local HTML deck ("that's where our brand lives"), a subpage per client listing

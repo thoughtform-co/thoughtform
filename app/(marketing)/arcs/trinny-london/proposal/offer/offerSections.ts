@@ -27,82 +27,104 @@ import type { ArcSection } from "@/lib/arcs/types";
  * Type-only import: the arcs' section union, nothing at runtime.
  */
 /**
- * The configuration — the beat `#proposition` mounts (ADR-099).
+ * The configuration — the beat `#proposition` mounts (ADR-099), drawn as
+ * THE BOARD since ADR-100.
  *
- * It was hand-written markup in the prototype with its own `.tl-config`
- * sheet and its own picker, revealed by a scrubbed opacity channel once a
- * sticky stage pinned (ADR-094 U5/U7). It is the arcs' `configuration` kind
- * now — the SAME instrument, since ADR-098 §4 ported this drawing onto that
- * surface in the first place, so this is the copy coming home rather than a
- * new one. What the move buys: the record scrolls in instead of powering on
- * behind a bare frame, it takes the arc head every other beat on this page
- * has (the cross, the eyebrow, the gold `em`, one datum), and 13.5 kB of
- * route-local CSS goes with the pin.
+ * It was the arcs' `configuration` kind — the old Aether headless panel:
+ * the layer left, two arrows across a seam, three team tiles over a
+ * five-question readout, all on one framed plate. The owner's read: "it
+ * doesn't look bad, but it's a lot of things to look at", and the beat is
+ * really the PROBLEM STATEMENT. So the record is the discovery call now, in
+ * TWO STATES the drawing sets side by side: the studio as it runs today
+ * (dormant — no owner seated, everything by hand, nothing written down,
+ * the tools unwired) and the same studio with a configuration seated (lit
+ * — the proof's own R4 board, expanded to page scale).
  *
- * ⚠ THE RECORD IS VERBATIM from the tiles' `data-*` — the same three teams,
- * the same four layer rows, the same two seam notes and three kickers. A
- * move that edited the copy on the way would make the diff unreadable and
- * the claim ("the same instrument") unprovable.
+ * ⚠ THE `today` COPY IS THE CALL'S OWN WORDS, in roles, never names: "no
+ * single ownership to make it happen", "a Friday afternoon job", "all of
+ * our creative studios are 100% in-house … not using AI in a way that we
+ * could", "we've kind of lost momentum". The `configured` answers are the
+ * ones the previous drawing carried for the studio, kept verbatim where
+ * they survive (the four layer rows, the two card rows, the seat, the three
+ * kickers) — a rewrite is the owner's to make, and every string is walked
+ * by the copy law and the board's own fit guard.
  *
- * ⚠ NO `next` TILE. The arcs' kind offers a ghost "[Next team]" and Suri
- * takes it; this drawing never had one, and inventing one here would put a
- * team on the client's own layer that nobody has proposed.
+ * ⚠ NO DIGIT ON EITHER BOARD, no bracket, no em dash. ⚠ THE BEAT KEEPS ITS
+ * ID: `seatOf("configuration")` is what the datum guard measures and
+ * `#configuration` is the page's own anchor.
  */
-export const TRINNY_CONFIGURATION: ArcSection = {
+export const TRINNY_BOARD: ArcSection = {
   id: "configuration",
-  kind: "configuration",
+  kind: "board",
   head: {
-    eyebrow: "Trinny London · what the team owns",
-    title: { pre: "The Trinny London", em: "configuration." },
-    sub: "One setup that makes Trinny London AI-first: built inside the tools the team already runs, owned by the people who do the work. Headless and built from first principles, so it depends on no vendor and no single person.",
+    eyebrow: "Trinny London · where the studio stands",
+    title: { pre: "The studio today, and the studio", em: "configured." },
+    sub: "The founder wants Trinny London AI-first and the teams are trained on Claude, but the push has stalled: nobody owns it as their day job, the studio does everything by hand, and the founder still catches what the review rounds miss. Below, that state as it runs now, and the same studio with a configuration seated.",
   },
-  owner: "Owned by Trinny London",
-  layer: [
-    { id: "rules", tag: "Rules", name: "brand rules, and the line where AI stops" },
-    { id: "examples", tag: "Examples", name: "what good looks like, from their own work" },
-    { id: "sources", tag: "Sources", name: "the catalogue and the customer's voice" },
-    { id: "loops", tag: "Loops", name: "the checks that catch it before the founder does" },
+  states: [
+    {
+      mode: "today",
+      label: "As it runs today",
+      alt: "Trinny London's creative work as it runs today: no owner seated, the studio working by hand with no creative strategist, nothing of the brand written down, and Claude, Monday and Slack unwired from each other.",
+      seat: { q: "Who owns it", a: "No one, as their day job" },
+      card: { name: "The studio", work: "all by hand, and no creative strategist" },
+      layer: {
+        label: "The layer",
+        sub: "nothing written down",
+        rows: [
+          { id: "rules", tag: "Rules" },
+          { id: "examples", tag: "Examples" },
+          { id: "sources", tag: "Sources" },
+          { id: "loops", tag: "Loops" },
+        ],
+      },
+      tools: {
+        items: [
+          { id: "claude", name: "Claude" },
+          { id: "monday", name: "Monday" },
+          { id: "slack", name: "Slack" },
+        ],
+        note: "trained on, not wired in",
+      },
+      foot: ["No owner", "By hand", "Unwired"],
+    },
+    {
+      mode: "configured",
+      label: "With a configuration",
+      alt: "The same studio with a configuration seated: the studio lead owns it with the founder's sense-check as the last gate; a brand Skill on the team's own keys runs inside Figma, reads the brand rules, the examples, the catalogue and the customer's voice, and its checks catch what the founder used to; creative ops and finance are the next workstreams on the same layer.",
+      seat: { q: "Who owns it", a: "The studio lead", note: "the founder's sense-check last" },
+      card: {
+        name: "The studio",
+        rows: [
+          { q: "What runs it", a: "A brand Skill, on the team's own keys" },
+          { q: "The bar", a: "On-brand, and the line where AI stops" },
+        ],
+      },
+      layer: {
+        label: "The layer",
+        sub: "owned by Trinny London",
+        rows: [
+          { id: "rules", tag: "Rules", name: "brand rules, and the line where AI stops" },
+          { id: "examples", tag: "Examples", name: "what good looks like, from their own work" },
+          { id: "sources", tag: "Sources", name: "the catalogue and the customer's voice" },
+          { id: "loops", tag: "Loops", name: "the checks that catch it before the founder does" },
+        ],
+      },
+      tools: {
+        label: "Where it runs",
+        items: [
+          { id: "claude", name: "Claude", note: "inside Figma", lit: true },
+          { id: "monday", name: "Monday", note: "the brief" },
+          { id: "slack", name: "Slack", note: "the alert" },
+        ],
+      },
+      sockets: {
+        items: [{ name: "Creative ops" }, { name: "Finance" }],
+        note: "next, on the same layer",
+      },
+      foot: ["One configuration", "The people run it", "No vendor in the way"],
+    },
   ],
-  seam: {
-    adoption: "The team learns on its own work and writes down what good looks like.",
-    automation: "The layer runs inside the tools they already use, and hands the time back.",
-  },
-  teams: [
-    {
-      id: "studio",
-      name: "Studio",
-      work: "the visual work",
-      layers: ["rules", "examples", "sources", "loops"],
-      owner: "The studio lead, the founder's sense-check last",
-      runs: "A brand Skill, on the team's own keys",
-      bar: "On-brand, and the line where AI stops",
-      reach: "The brand rules and the catalogue",
-      where: "Claude, inside Figma",
-    },
-    {
-      id: "creative-ops",
-      name: "Creative ops",
-      work: "briefs and approvals",
-      layers: ["rules", "examples", "loops"],
-      owner: "Creative ops, who set the calendar",
-      runs: "The same brand Skill, plus a briefing Skill",
-      bar: "A brief the studio can act on",
-      reach: "The calendar and the catalogue",
-      where: "Claude, inside Monday",
-    },
-    {
-      id: "finance",
-      name: "Finance",
-      work: "the numbers, checked",
-      layers: ["rules", "sources", "loops"],
-      owner: "Finance, who sign it off",
-      runs: "A reporting Skill",
-      bar: "Numbers that reconcile before they are sent",
-      reach: "Shopify and the ledger",
-      where: "A scheduled run, results in Slack",
-    },
-  ],
-  kickers: ["One configuration", "The people run it", "No vendor in the way"],
 };
 
 export const TRINNY_OFFER_SECTIONS: readonly ArcSection[] = [

@@ -71,6 +71,12 @@ hero → about → the Arc → the proof casefile (+ the ring) → contact.
   from `app/sitemap.ts`. ⚠ The forked prototype under `/prototypes/` deploys and
   is world-fetchable (robots-disallowed only) — the same exposure class, worth
   remembering when client copy lands in it.
+- ⚠ **ADR-100: `#proposition` mounts the `board` kind** — `ArcBoard` over
+  `TRINNY_BOARD` (same slot, same `id: "configuration"`): the client's
+  configuration as two svg boards, dormant beside lit, the proof's R4 grammar
+  at page scale, no frame, no picker. The record is the discovery call in
+  roles; `trinny-offer.test.ts` and `arc-board-fit.test.ts` walk it. Canonical
+  text: `.claude/rules/trinny-london.md` and `.claude/rules/arcs.md`.
 
 ## Verifying
 

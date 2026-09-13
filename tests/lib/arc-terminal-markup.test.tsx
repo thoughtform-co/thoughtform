@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { TRINNY_BOARD } from "@/app/(marketing)/arcs/trinny-london/proposal/offer/offerSections";
 import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { CLAUDE_WORKSHOP_ARC } from "@/lib/arcs/content/claude-workshop";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
@@ -35,6 +36,10 @@ const ALL: readonly ArcSection[] = [
      which is the beat grammar and the thing "the v1 pages were not
      touched" is measured against. */
   ...SURI_PROPOSAL_ARC.sections,
+  /* The `board` leaf (ADR-100) publishes `data-board-*` the same way, and
+     it is mounted by a page-local dispatch rather than a registered arc —
+     so it joins the walk by hand, or its channel is never checked. */
+  TRINNY_BOARD,
 ];
 const DOSSIERS: readonly ArcSection[] = PORTFOLIO_ARC.sections.filter((s) => s.kind === "dossier");
 

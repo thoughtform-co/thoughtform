@@ -537,9 +537,10 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   tube). Never a re-derivation of `--gold`: the WebGL golds are exempt from CSS
   by design and would go out of step.
 - **The proposal letters no Arc vocabulary, no digit, no "self-sufficient"** —
-  `trinny-offer.test.ts` walks `TRINNY_CONFIGURATION` with `PROPOSAL_COPY_BANS`
-  (it was the parse guard's job while the record lived in the HTML).
-  Connectors are 1px DIVS (the wireframe law).
+  `trinny-offer.test.ts` walks `TRINNY_BOARD` (ADR-100; `TRINNY_CONFIGURATION`
+  before it) with `PROPOSAL_COPY_BANS` (it was the parse guard's job while the
+  record lived in the HTML). Connectors on the offer are 1px DIVS (the wireframe
+  law); the board's ribbons are svg paths inside a box the beat owns.
 - ⚠ **THE CONFIGURATION IS AN ARC BEAT NOW, AND IT SCROLLS IN (ADR-099,
   2026-09-13, owner: _"the elements from the next section should scroll into
   view"_).** `#proposition`'s record is ONE `[data-tl-config-root]` slot that
@@ -582,6 +583,30 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   `accent` findings on `.arc-cfg` (four lit layer rows, the readout's rule) —
   **identical on `/arcs/suri-proposal`**, i.e. the authored gold the ruling
   above asks for, not a regression.
+- ⚠ **SUPERSEDED ON THIS PAGE BY ADR-100 (2026-09-13, owner: _"it doesn't look
+  bad, but it's a lot of things to look at"_; the beat is the PROBLEM
+  STATEMENT; left = their current status, kept simple, right = their
+  configuration as an EXPANDED version of the proof's own; not in frames).**
+  `#proposition` mounts the `board` kind now — `ArcBoard` over `TRINNY_BOARD`
+  (same slot, same `id: "configuration"`, same `.arc-head` and datum): the
+  proof's R4 grammar at page scale as TWO svg boards on one row with no plate
+  around them, dormant (dashed dawn, the card GREEN-outlined because all the
+  work is the people's, the tools as unwired islands) beside lit (the green
+  seat and its authority drop, four named layer cells, the ONE gold-washed
+  card, WHERE IT RUNS with CLAUDE lit, two dashed SOCKETS for creative ops and
+  finance, a bed). The picker is gone with the panel; `ArcConfiguration` and
+  `.arc-cfg*` are byte-identical for the registered proposals. ⚠ The record is
+  the DISCOVERY CALL in roles ("No one, as their day job", "all by hand, and no
+  creative strategist", "trained on, not wired in") — blunt by design and the
+  owner's to soften; the copy law and `arc-board-fit` re-walk any change.
+  ⚠ The beat pays for its instrument (`--arc-sec-pad` and the head's margin
+  tightened on `.arc-sec--board`): with the arc's defaults the 1280×720 box is
+  385px and the chrome rung falls under the 10px floor. ⚠ The head's margin
+  floors at 36px — at 24 the head's coord stamp sat on the board's datum label
+  at 720h, visible only on the still. ⚠ The crop is HEIGHT-ELASTIC (ADR-070
+  U12): at 1920×1247 it grows 314 units and fills the beat; a fixed crop pooled
+  290px under the drawing. Rules for the kind: `.claude/rules/arcs.md` §The
+  client model; the numbers: ADR-100.
 - **`mobile-section-seams.spec.ts` is `/`-only** — the trinny stations are not in
   its `STATION_IDS`; phones are covered by the capture script.
 

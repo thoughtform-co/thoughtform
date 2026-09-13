@@ -663,6 +663,40 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  it("a board's two states are one layer, dormant then lit (ADR-100)", () => {
+    /* No registered arc carries a `board` yet — the Trinny page mounts it
+       through its own dispatch and `trinny-offer.test.ts` walks that copy.
+       The walk lives here too so a registered proposal can adopt the kind
+       without the guard arriving a commit late. */
+    for (const arc of ARCS) {
+      for (const section of arc.sections) {
+        if (section.kind !== "board") continue;
+        const at = `${arc.slug}/${section.id}`;
+        const [today, configured] = section.states;
+        expect(today.mode, `${at}: the first state is today`).toBe("today");
+        expect(configured.mode, `${at}: the second state is configured`).toBe("configured");
+        expect(
+          configured.layer.rows.map((r) => r.id),
+          `${at}: one layer, lit differently`
+        ).toEqual(today.layer.rows.map((r) => r.id));
+        for (const state of section.states) {
+          const ids = state.layer.rows.map((r) => r.id);
+          expect(new Set(ids).size, `${at}/${state.mode}: duplicate layer id`).toBe(ids.length);
+          expect(state.foot.length, `${at}/${state.mode}: too many kickers`).toBeLessThanOrEqual(3);
+          expect(
+            state.card.rows?.length ?? 0,
+            `${at}/${state.mode}: too many card rows`
+          ).toBeLessThanOrEqual(2);
+        }
+        expect(today.sockets, `${at}: a dormant board offers no socket`).toBeUndefined();
+        // ⚠ NO DIGIT ON THE DRAWING — the configuration's own ruling, kept.
+        scanArc(section.states, at, (value, path) => {
+          expect(/\d/.test(value), `${path}: a figure on the board`).toBe(false);
+        });
+      }
+    }
+  });
+
   it("a proposal holds the client-facing copy law (ADR-098)", () => {
     /* A proposal is read by the person being asked to buy it, so the deck's
        own law applies to every string on the page: say the behaviour, never
