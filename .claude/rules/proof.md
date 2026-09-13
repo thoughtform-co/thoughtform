@@ -277,7 +277,13 @@ breather).
   same selectors** — so a surface with neither class cannot take the bodies
   alone without hand-copying both themes. ⚠ `activeIdx` stays the PLATE's: it
   is what knows which sheet is open, and a controlled index would be a second
-  source for one piece of state.
+  source for one piece of state. ⚠ **AND A `verdictHost` SINCE ADR-097 U10** —
+  the plate's SECOND additive seam, on the same terms: given a host,
+  `.fl-verdict` renders there (the proof card's foot slot, where the card
+  re-seats it as a frame of its own); omitted, the render is byte-identical,
+  and the casefile and arc-portfolio smokes must pass UNTOUCHED. It is still
+  the plate's sentence — it switches with the rail because the plate renders
+  it, wherever it renders it.
 - **THE TOOLS PLATE'S BODY IS `ToolField`, AND IT HAS A SECOND HOME
   (ADR-072).** `ToolGallery` is the casefile's COMPOSITION — console, rail,
   fold-close, lightbox — and `ToolField` (`ToolBay` + `CapabilityBlocks`,

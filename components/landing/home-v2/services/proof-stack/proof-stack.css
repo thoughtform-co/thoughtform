@@ -31,9 +31,11 @@
    either list carried the file).
 
    ⚠ THE CARD IS A FOLDER SINCE ADR-097: glass over the corridor, a flat gold
-   lip on the clipped ring, the head row drawn as a TAB with a 45° step, the
-   pile receding by DEPTH, the plate fading in. The rulings sit on the rules
-   they changed. */
+   lip on the clipped ring, the head row the client's BAND (U1), the pile
+   receding by DEPTH, the plate fading in — and since U10 the right panel is
+   a TERMINAL OF FRAMES: the rail, a closed evidence frame on every kind, an
+   optional foot frame, one token of air between them, the last one ending
+   on the record's last rule. The rulings sit on the rules they changed. */
 
 /* The card's own ramp. On `/trinny-london` these values are ALSO declared on
    `.tl-root` as `--tl-*`, because the turn and the proposal read them; the
@@ -43,8 +45,8 @@
   --pf-ink-2: rgba(var(--dawn-rgb), 0.74);
   --pf-ink-3: rgba(var(--dawn-rgb), 0.52);
   /* Two weights, one ladder (ADR-089's own): `--pf-rule` divides REGIONS
-     (the column split, the register's seam and floor, the apparatus box),
-     `--pf-rule-soft` rules WITHIN one (the bands, the bay's head and foot). */
+     (the register's seam and floor, every frame in the panel — U10),
+     `--pf-rule-soft` rules WITHIN one (the register's bands). */
   --pf-rule: rgba(var(--dawn-rgb), 0.18);
   --pf-rule-soft: rgba(var(--dawn-rgb), 0.12);
   /* ── The card is GLASS (ADR-097, owner: "that golden border should have
@@ -216,13 +218,21 @@
   /* The glyph is a 7-cell lattice: INTEGER multiples only (ProofGlyph.tsx).
      21 here, 28 on the 940h rung where the sentences show. */
   --pf-glyph: 21px;
-  /* ⚠ `--pf-card-py` IS THE RECORD'S PADDING AND THE FIELD'S DATUM, NOT THE
-     FIELD'S FLOOR ANY MORE. ADR-094 U8 used it at both ends so the record's
-     last rule and the field's apparatus landed on one line; ADR-097 U3 took
-     the top (the rail is the frame's head) and U9 the bottom (the CARD's lip
-     is its floor), so the field now fills its bay and only the record pads by
-     this. `--pf-field-px` still insets the rail and the bay together. */
+  /* ⚠ `--pf-card-py` IS THE RECORD'S PADDING, THE FIELD'S DATUM *AND* ITS
+     FLOOR (U10). ADR-094 U8 used it at both ends so the record's last rule
+     and the field's box landed on one line; ADR-097 U3 took the top (the rail
+     opened the frame) and U9 the bottom (the lip closed it). U10 puts the
+     bottom back — the right panel is a column of DISCRETE frames now, and
+     its last one ends on the record's last rule, which is the one line that
+     makes two columns read as one card. The top is still the rail's datum.
+     `--pf-field-px` insets rail, frame and foot together. */
   --pf-card-py: clamp(20px, 2.6vw, 44px);
+  /* The air between the panel's regions — rail → frame → foot (U10; the
+     references' tab-row-to-frame gap). ONE token, the field's `row-gap`, so
+     both seams are the same number and the smoke reads it off the field.
+     Fixed, like `--pf-rail-hang` and the 6px between stations: chrome air,
+     not a size that should follow the viewport. */
+  --pf-frame-gap: 10px;
   --pf-card-px: clamp(20px, 2vw, 32px);
   /* ⚠ 1.25vw, NOT 2vw: the inset comes out of four stations' width, and at
      `2vw` the rail's longest handle (`BRIEFING AGENT`, 14 chars) truncated
@@ -538,19 +548,10 @@
   background: var(--gold);
 }
 
-/* ⚠ AND THE FRAME TAKES ITS LID BACK (ADR-097 U6). U3 removed it because
-   "the vertical lines should just connect to the tabs above it" — the rail
-   WAS the bay's head, so a hairline there was a second lid under the row of
-   boxes. With the rail up in the band that premise is gone, and the box was
-   left with two walls rising into 40px of empty field: a three-sided box
-   hanging under nothing, which is what the lab's own still showed. The
-   ruling is retired by its reason, not overruled.
-
-   Both framed kinds, and only inside a card whose rail has moved. */
-.pf-stack .pf-card[data-pf-rail] .pf-field--tools,
-.pf-stack .pf-card[data-pf-rail] .pf-card__field .fl-con__console {
-  border-top: 1px solid var(--pf-rule);
-}
+/* The lab's lid rule (U6 — "the frame takes its lid back" while the rail
+   was in the band) went at U10: every frame carries its lid on every seat
+   now, so the rule had become a no-op, and a no-op term is one the next
+   reader has to disprove. */
 
 /* With the rail in the band the field starts at its bay, so the bay takes
    the row the tabs used to hold. */
@@ -910,17 +911,26 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  /* The rail on the panel's own top edge, the evidence under it (U2). */
+  /* The rail on the panel's own top edge, the evidence under it (U2), and —
+     since U10 — an optional FOOT under that: rail · frame · foot, three
+     discrete regions with one token of air between them.
+     ⚠ THE FOOT IS AN IMPLICIT THIRD ROW, NOT `auto minmax(0, 1fr) auto`. An
+     empty explicit track still takes a `row-gap`, and the films and map
+     cards have no foot — `.pf-card__foot:empty` is `display: none`, so on
+     those cards there is no item, no row and no second gap. */
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  /* ⚠ THE FIELD STARTS ON THE RECORD'S OWN LINE (U2, owner: move the tabs
-     down "so they're vertically aligned with the title in the left panel").
-     `--pf-card-py` is the record's top padding, so this is the SAME term the
-     title hangs off — the rail's row and the title's first line begin on one
-     datum, and the field's rule below draws it. U1 had the rail at the body's
-     top edge, 37px above the title at 1440, which is what read as two
-     unrelated things starting at two heights. */
-  padding-top: var(--pf-card-py);
+  row-gap: var(--pf-frame-gap);
+  /* ⚠ THE FIELD STARTS ON THE RECORD'S OWN LINE AND ENDS ON ITS LAST RULE
+     (U2 for the datum, U10 for the floor). `--pf-card-py` is the record's
+     BLOCK padding, so both are the same term the register hangs between: the
+     rail's row and the title's first line begin on one datum, and the
+     panel's last frame and the record's last claim rule end on one floor.
+     U1 had the rail at the body's top edge, 37px above the title at 1440;
+     U9 ran the frame to the card's lip, 37px below the record's last rule —
+     each read as two unrelated things ending at two heights. A terminal of
+     discrete frames has no fused edges, so the floor is the panel's own. */
+  padding-block: var(--pf-card-py);
   /* ⚠ ONE INSET FOR RAIL AND BAY (U8, owner: the elements are "too close
      to the center border and the right border"). On the FIELD, not the
      bay, so the stations' outer edges and the bay's box land on the same
@@ -958,10 +968,14 @@
 
 /* ⚠ THE SIZE CONTAINER MOVED HERE FROM THE FIELD (U2), and it had to. The
    ads count their rows off `100cqh`, the film derives its width from it and
-   the wireframe's whole bay is `(100cqh − 4px) × 1.62` — with the rail now
+   the wireframe's box is `(100cqh − 2px − 2·pad) × 1.62` — with the rail
    inside the field, a container on the field would hand all three a height
    that includes ~34px of chrome they cannot draw in. Every drawing would be
-   sized against a box it does not fill. */
+   sized against a box it does not fill.
+   ⚠ AND THE FOOT IS OUTSIDE IT (U10), for the same reason from the other
+   side: a foot inside the bay is one more term in every chain (the head row
+   and the watch row were, until U10). As a sibling it simply takes its
+   height off the bay and the chains stay honest. */
 .pf-stack .pf-card__bay {
   position: relative;
   min-width: 0;
@@ -970,35 +984,74 @@
   container-type: size;
 }
 
-/* ⚠ EVERY FIELD ENDS ON THE RECORD'S FLOOR (U8). The record column pads by
-   `--pf-card-py` and its register's last rule sits on that line; a console
-   that ran to the card's own edge put a second floor 40px under the first,
-   on three of the four cards. The gap above is the rail's clearance. The
-   BAY stays the size container and keeps its full box, so every `cqh`
-   count (the ads' rows, the film's width) is against the bay, and each
-   kind that derives a height from `100cqh` subtracts these two terms. */
-/* ⚠ THE FIELD FILLS THE BAY ON ALL FOUR SIDES (U3 took the top, U9 the
-   floor). U3: "the vertical lines should just connect to the tabs above it" —
-   the top was inset by a `--pf-field-gap` that left the framed kinds' walls
-   hanging 13px below the rail. U9: "the borders left and right of the image
-   needs to touch the bottom border" — the floor was inset by `--pf-card-py`,
-   which stopped the frame 37px above the card's own edge with a band of bare
-   plate under it.
-   ⚠ THIS RETIRES ADR-094 U8's "EVERY FIELD ENDS ON THE RECORD'S FLOOR."
-   That rule existed because a console running to the card's edge drew its own
-   bottom line 37px under the record's last rule — two floors. The answer now
-   is not to move the box back up but to stop drawing that second line: the
-   frames take `border-bottom: 0` and the CARD's lip is their floor, which is
-   the same move U3 made at the top with the rail.
-   ⚠ BOTH INSETS WERE SUBTRACTED IN TWO DERIVED HEIGHTS (the film's width and
-   the wire's) and both terms are deleted, not zeroed — a no-op term in an
-   arithmetic chain is a term the next reader has to disprove. */
+/* ⚠ THE FIELD IS THE BAY, i.e. THE FRAME'S BORDER-BOX (U3 took the top
+   inset, U9 the floor; U10 keeps both gone for a different reason). The bay
+   is now one closed frame among the panel's regions, and its box IS the
+   frame's box. Whatever ends the panel — this frame, or the foot under it —
+   ends on the record's last rule, which the FIELD's `padding-bottom` puts
+   there; no term of that floor lives here, and the two heights derived from
+   `100cqh` below subtract the frame's own 2px and nothing else. */
 .pf-stack .pf-field {
   position: absolute;
   inset: 0;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* ── THE CARD IS A TERMINAL OF FRAMES (U10) ─────────────────────────
+   Owner, 2026-09-13, beside Vilimovský's Cyberpunk 2077 panels and
+   Starfield's TRAVEL DATA: "I think we can harmonize it … try to connect
+   everything with lines — I don't think it really works. In that terminal
+   interface you have different frames; that's what we also need to do. The
+   tabs don't need to have a border connected to them. They're just items,
+   and when you click on them, things switch."
+   So the right panel is three DISCRETE regions on one inset with air
+   between them: the RAIL (detached boxes — already that grammar; what still
+   joined it to the frame was the frame's walls rising to its bottom edge),
+   the EVIDENCE FRAME (a closed four-sided box on EVERY kind — the films
+   were the one unframed field), and an optional FOOT (a second box: the
+   studio's verdict, the tools' walkthrough button). All square (ADR-065
+   rule 4), all at ONE weight: the console's own edge is dawn .08 and the
+   tools box was .18, and one panel cannot carry two frame weights.
+   ⚠ THIS RETIRES U3's OPEN LID AND U9's OPEN FLOOR TOGETHER, by the owner's
+   own reading. Those fused the frame to the rail and to the lip so the walls
+   would "connect"; a terminal's regions connect to nothing — the air between
+   them is what makes each one a frame. `console.css`'s ≤980 unwrap sets the
+   console's `border: 0` at (0,1,0); this (0,3,0) rule wins there too, on
+   purpose: the flow rung is a terminal as well. */
+.pf-stack .pf-card__field .fl-con__console,
+.pf-stack .pf-field--tools,
+.pf-stack .pf-field--films {
+  border: 1px solid var(--pf-rule);
+}
+
+/* ── The FOOT (U10) — the panel's optional third frame ──────────────
+   Owner: the studio card's verdict "needs to be a separate frame, a bit
+   higher; the left and right borders should not touch the bottom panel —
+   instead a horizontal divider, so it really feels like a separate
+   frame/block"; the tools' Watch Walkthrough "a bigger button like the
+   Starfield one … the same with every frame at the bottom in the right
+   panel". A slot under the evidence frame, on the same inset, that a kind
+   PORTALS one block into — `SheetsPlate`'s `.fl-verdict` (its
+   `verdictHost`), the tools' `.pf-watch` — exactly as the map and the
+   sheets already portal their rail into `.pf-card__tabs`. The films and the
+   map put nothing here, and their frame ends on the floor itself.
+   ⚠ `:empty` IS THE ROW'S EXISTENCE. The host is always rendered — the
+   portal needs its target at render time, held in state through a ref
+   callback like `railHost` — and `display: none` while empty means no grid
+   item, no implicit row, no second `row-gap`. The JSX is a self-closing
+   `<div/>`; a whitespace text node would defeat this.
+   ⚠ OUTSIDE THE BAY BY CONSTRUCTION — see `.pf-card__bay` above.
+   `display: grid` so the one child stretches to the slot's width: the
+   button spans the frame with no `width: 100%` of its own. */
+.pf-stack .pf-card__foot {
+  min-width: 0;
+  display: grid;
+}
+
+.pf-stack .pf-card__foot:empty {
+  display: none;
 }
 
 /* ── The studio's three sheets (U3) ──────────────────────────────────
@@ -1042,7 +1095,10 @@
   align-content: center;
   justify-content: center;
   gap: 4px;
-  padding: 0;
+  /* Inside a CLOSED frame (U10) the ads keep the air the tools and the film
+     keep off their walls — flush against four hairlines they read as cropped
+     by the frame. A dial: the drawing's, not the record's. */
+  padding: clamp(10px, 1.6cqw, 18px);
   margin: 0;
   min-height: 0;
 }
@@ -1059,6 +1115,21 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* ⚠ THE FRAME'S LID AND FLOOR ARE THE RED LINE GRID'S FIRST AND LAST RULES
+   (U10). `casefile.css` gives the sheet's four bands a top hairline each,
+   the first at gold .24, and the last band a bottom hairline — drawn for a
+   console that opened into its rail and closed on its verdict. Inside a
+   closed frame the first sits 0px under the dawn lid and the last 0px over
+   the dawn floor: two seams a pixel apart, the glitch casefile.css's own
+   `.fl-caps--sheet + .fl-verdict` rule exists to avoid. */
+.pf-stack .pf-field--sheets .fl-caps--sheet .fl-cap:first-child {
+  border-top: 0;
+}
+
+.pf-stack .pf-field--sheets .fl-caps--sheet .fl-cap:last-child {
+  border-bottom: 0;
 }
 
 /* ⚠ THE SIX ADS HAVE TO BE RESTORED, AND THE CONDITION IS THE BAY'S SHAPE.
@@ -1132,9 +1203,10 @@
   display: grid;
   gap: 10px;
   min-width: 0;
-  /* `100cqh` IS the field now — both insets went (U3 the top, U9 the floor),
-     so the only terms left are the film block's own. */
-  width: min(100%, calc((100cqh - 2 * var(--pf-film-pad) - 26px) * var(--pf-film-ar)));
+  /* `100cqh` is the bay, i.e. this frame's border-box. Out of it come the
+     lid and the floor (2px — the films are framed like every other kind
+     since U10), the box's own padding, the caption's line and its gap. */
+  width: min(100%, calc((100cqh - 2px - 2 * var(--pf-film-pad) - 26px) * var(--pf-film-ar)));
 }
 
 /* The 4:5 social cut, where the record carries one — the shape this panel
@@ -1251,18 +1323,21 @@
    it contributes NO content size — a shrink-to-fit track collapses to zero,
    `100%` resolves to zero, and the drawing renders at no width at all. It
    centres on the ROW instead, which is content-sized off the aspect. */
-/* ── The tools' APPARATUS (ADR-094 U8) ───────────────────────────────
+/* ── The tools' box (ADR-094 U8's apparatus, cut to the drawing at U10) ──
    Owner, 2026-09-11: "the elements are too close to the center border and
    the right border … redesign them a bit so they fill in a bit more of the
    real estate, just subtly." The field is portrait, the drawing is
    landscape by law (below), and the ~140px of plate above and below it
-   read as void because nothing framed them. The Panels references seat a
-   centrepiece in a BAY with head and foot micro-labels; the homepage's own
-   tools plate fuses its watch bar to the bay's bottom edge (ADR-068). So:
-   ONE hairline box from under the rail to the card's floor, a head line
-   (`IN SERVICE {year}`, the record's own), the drawing centred in the
-   middle row, the watch bar as the box's FOOT — and the same air now sits
-   inside a drawn region, which is room rather than a hole.
+   read as void because nothing framed them — so U8 drew ONE hairline box
+   around the drawing, with a head line and the watch bar fused as its foot.
+   ⚠ U10 KEEPS THE BOX AND TAKES THE CHROME OUT OF IT (owner, 2026-09-13):
+   `IN SERVICE {year}` is DELETED — "that also gives us some extra real
+   estate" — and the watch bar is the panel's FOOT frame, outside this box
+   and outside this size container (see `.pf-card__foot`). The box is the
+   drawing's alone: a closed frame (the frame law above), the drawing
+   centred in its one row between two walls, a lid and a floor it shares
+   with nothing. The same air still sits inside a drawn region, which is
+   room rather than a hole.
    ⚠ A BIGGER BAY DOES NOT BUY A BIGGER DRAWING: `.fl-wire__lbl` caps at
    10px, vesper's dock at 58px, mímir's rail at 190px — past its authored
    bay a drawing gets emptier, not larger. The BOX is the answer; the
@@ -1272,114 +1347,113 @@
    shrink-to-fit track resolves its `min(100%, …)` against nothing and the
    drawing renders at zero width (fifth time on this route). The wire
    centres itself with auto margins INSIDE a stretched track.
-   ⚠ THE MIDDLE ROW IS `1fr` BY DESIGN NOW. U3's "never `1fr auto`" guarded
-   a bar that belonged UNDER its drawing from landing on the bay's floor;
-   the bar is the box's FOOT now, so the floor is where it belongs, and the
-   drawing centres in the row between them (`align-self`). */
+   ⚠ THE ROW IS `1fr` AND THE DRAWING CENTRES IN IT (`align-self`). U3's
+   "never `1fr auto`" guarded a bar under its drawing from landing on the
+   bay's floor; there is no bar in this box any more. */
 .pf-stack .pf-field--tools {
-  --pf-watch-h: 30px;
-  --pf-bay-head-h: 30px;
   /* The drawing's air off the box's walls; 14px read as touching. */
   --pf-bay-pad: clamp(14px, 2.4cqw, 28px);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: var(--pf-bay-head-h) minmax(0, 1fr) var(--pf-watch-h);
-  /* ⚠ NO TOP EDGE (U3) — the same ruling as the console's one kind over: the
-     rail is this bay's head, so the box opens into it and its two walls run
-     up to the stations. `IN SERVICE {year}` keeps its own bottom rule, which
-     is what still separates the head row from the drawing.
-     ⚠ AND NO FLOOR (U9): the box runs to the card's edge, so the card's lip
-     is its floor and the watch bar is fused to that rather than to a hairline
-     drawn just inside it. Walls only, top to bottom. */
-  border: 1px solid var(--pf-rule);
-  border-top: 0;
-  border-bottom: 0;
+  grid-template-rows: minmax(0, 1fr);
   padding: 0;
 }
 
-/* The bay's HEAD micro-label — one designation (ADR-064 U1), left slot only:
-   the year the tool went into service, which the homepage's bay letters on
-   its FEED line. Chrome, not copy; PT Mono, so the uppercase is lawful. */
-.pf-stack .pf-bay__head {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--pf-rule-soft);
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 11px;
-  line-height: 1;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--pf-ink-3);
-  white-space: nowrap;
-}
-
-/* ── The walkthrough (U3) ────────────────────────────────────────────
+/* ── The walkthrough BUTTON (U3; the panel's FOOT frame since U10) ────
    Owner, 2026-09-10: "we should have a video walkthrough of all these
    software." The record already had them — `ProjectCase.walkthrough`, the
    same four files the homepage plays — and this card was drawing the tool
    and never offering it.
 
-   ⚠ A DRAWING IS NOT A VIDEO, which is why this one is a LABELLED bar where
-   the film's control is its own frame. Same split the homepage makes: the
-   tools plate fuses a watch bar to its bay, the films plate does not, and
-   the reason is that a control over a wireframe has to say what it opens.
-   ⚠ ONE affordance per object — the drawing itself is not clickable.
-   ⚠ FUSED AS THE APPARATUS'S FOOT (U8) — full width, the box's own bottom
-   edge, a rule above it: the homepage bay's grammar, where "the simplified
-   bar is fused to its bottom edge". A centred pill floating 46px under the
-   drawing was a control with no edge to belong to. The row is
-   `--pf-watch-h` and the button fills it; cue and label lead, the duration
-   takes the far end. */
+   ⚠ A DRAWING IS NOT A VIDEO, which is why this one is a LABELLED control
+   where the film's control is its own frame: a control over a wireframe
+   has to say what it opens. ⚠ ONE affordance per object — the drawing
+   itself is not clickable.
+
+   Owner, 2026-09-13: "for Watch Walkthrough, make a bigger button like the
+   Starfield one" — the starmap's full-width JUMP [X] under the TRAVEL DATA
+   panel: one bar the width of the panel, the label centred, the key in a
+   small outlined chip at the right end. Here it is the FOOT frame,
+   `--pf-frame-gap` under the drawing's box on the same inset, tall enough
+   to be a button rather than a rule with a label on it. U8 had fused it to
+   the apparatus's floor at 30px; a terminal's frames are discrete.
+   ⚠ OUTLINE AT REST, FILL WHEN ANSWERED — the services drawer's big CTA
+   (ADR-050) and this rail's own lit station: a `--gold-line` rim with
+   `--gold-ink` ink (both re-derived for parchment by the token, so no
+   theme.css branch), `--gold` with `--gold-contrast` on hover and focus.
+   NOT gold at rest: a gold slab under a gold station is two lit things in
+   one panel (ADR-063's count), and a full-width gold bar is the drawer's
+   booking CTA's silhouette (ADR-050 Addendum 5). The owner picked this
+   over the reference's light fill and a resting gold fill; both are
+   two-line swaps recorded in the ADR.
+   ⚠ STILL 11px PT MONO — the stations above it are 11px, and a button one
+   rung larger than the tabs it sits under is a second chrome size. Height
+   and the rim are what make it bigger.
+   ⚠ THREE TRACKS, NOT FLEX: the cue + label group sits in the middle one
+   and the chip at the end of the third, so the chip can never push the
+   label off centre. */
 .pf-stack .pf-watch {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
   min-width: 0;
+  min-height: clamp(44px, 5.5svh, 60px);
   padding: 0 14px;
-  border: 0;
-  border-top: 1px solid var(--pf-rule-soft);
+  border: 1px solid var(--gold-line);
   background: none;
   cursor: pointer;
-  text-align: left;
   font-family: var(--font-pt-mono);
   font-weight: var(--weight-text);
   font-size: 11px;
   line-height: 1;
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
-  color: var(--pf-ink-2);
+  color: var(--gold-ink);
   transition:
     color 180ms ease-out,
-    background-color 180ms ease-out;
+    background-color 180ms ease-out,
+    border-color 180ms ease-out;
 }
 
-.pf-stack .pf-watch:hover {
-  color: var(--pf-ink);
-  background-color: rgba(var(--dawn-rgb), 0.04);
+.pf-stack .pf-watch:hover,
+.pf-stack .pf-watch:focus-visible {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast);
 }
 
-/* Inside the box's own edge — the bar IS the edge now. */
+/* Outside the bay now, so the ring may sit outside the box. */
 .pf-stack .pf-watch:focus-visible {
   outline: 1px solid var(--gold);
-  outline-offset: -3px;
+  outline-offset: 2px;
+}
+
+.pf-stack .pf-watch__act {
+  grid-column: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
 /* The same play glyph as the film's cue, at chrome scale — one mark for one
-   action, wherever it is offered. */
+   action, wherever it is offered. `currentColor`, so it knocks out with the
+   label on the fill. */
 .pf-stack .pf-watch__cue {
   width: 0;
   height: 0;
   border-style: solid;
   border-width: 4px 0 4px 7px;
-  border-color: transparent transparent transparent var(--gold-ink);
+  border-color: transparent transparent transparent currentColor;
 }
 
+/* The duration as the reference's key chip — a small outlined box at the
+   right end, in the button's own ink, inverting with it. */
 .pf-stack .pf-watch__meta {
-  margin-left: auto;
-  color: var(--pf-ink-3);
+  grid-column: 3;
+  justify-self: end;
+  padding: 3px 6px;
+  border: 1px solid currentColor;
 }
 
 /* ⚠ THE BAY IS LOCKED LANDSCAPE, and that is the same arithmetic in a new
@@ -1396,18 +1470,19 @@
    below is the cost of a landscape drawing in a portrait panel, and it is
    cheaper than the stretch. */
 /* ⚠ EVERYTHING BETWEEN THE DRAWING AND THE BAY'S EDGES COMES OUT OF THE
-   HEIGHT IT SOLVES AGAINST (U3, extended in U8). The bay is the size
-   container, so `100cqh` is the WHOLE bay — the box's two insets, its two
-   borders, its head row, its foot row and the air around the drawing
-   included. Left uncorrected the drawing sizes itself against a box with
-   ~100px less room than it thinks, and a landscape bay overflows by
-   exactly that. Every term is a token the box itself reads, subtracted
-   once, used by both the cap and the width it derives. */
+   HEIGHT IT SOLVES AGAINST (U3, extended in U8, cut back in U10). The bay
+   is the size container, so `100cqh` is the WHOLE bay = this frame's
+   border-box. What comes out of it is the lid and the floor (1px each — the
+   box is CLOSED since U10) and the drawing's air off the walls. ⚠ The head
+   row and the watch row are DELETED terms, not zeroed ones: the head is
+   gone and the bar is the panel's FOOT frame, outside this box and outside
+   this container. Left uncorrected the drawing sizes itself against a box
+   with more room than it has, and a landscape bay overflows by exactly
+   that; every term is a token the box itself reads, subtracted once, used
+   by both the cap and the width it derives. */
 .pf-stack .pf-wire {
   --pf-wire-ar: 1.62;
-  --pf-wire-h: calc(
-    100cqh - var(--pf-bay-head-h, 0px) - var(--pf-watch-h, 0px) - 2px - 2 * var(--pf-bay-pad, 0px)
-  );
+  --pf-wire-h: calc(100cqh - 2px - 2 * var(--pf-bay-pad, 0px));
   width: min(calc(100% - 2 * var(--pf-bay-pad, 0px)), calc(var(--pf-wire-h) * var(--pf-wire-ar)));
   aspect-ratio: var(--pf-wire-ar);
   max-height: var(--pf-wire-h);
@@ -1445,18 +1520,11 @@
    has a lit top edge to catch it — the rail is not there. */
 .pf-stack .pf-card__field .fl-con__console {
   background: var(--con-ground);
-  /* ⚠ NO TOP EDGE (U3, owner: "the horizontal divider or border for the frame
-     where the images live, we shouldn't have that. The vertical lines should
-     just connect to the tabs above it"). The frame is a bay the rail is the
-     head of, so its top is the rail — a hairline of its own there is a second
-     lid under the row of boxes, and the two verticals then read as a box that
-     happens to sit below the tabs rather than as the box they open into.
-     ⚠ AND NO FLOOR EITHER (U9, owner: "the borders left and right of the image
-     needs to touch the bottom border"). The box runs to the card's own edge
-     now, so the CARD's lip is its floor; a hairline 1px inside that lip is
-     the same doubled line the lid was. Walls only, top to bottom. */
-  border-top: 0;
-  border-bottom: 0;
+  /* Its border is the frame law's (above `.pf-card__foot`): four sides at
+     `--pf-rule`, so the console's box weighs what the tools box and the
+     film's frame weigh. U3 had taken its lid and U9 its floor to fuse it to
+     the rail and the lip; U10 closed it again — a terminal's frames are
+     discrete, and the air between them is the connection. */
   /* ⚠ AND ITS CHAMFER GOES (U4). `console.css` cuts the console TL + BR —
      ADR-065 U2's enumerated exception — which ADR-089 RETIRED on the
      casefile when the console became a cell inside a chamfered housing. That
@@ -1478,16 +1546,59 @@
    floor). */
 .pf-stack .pf-card__field .fl-con {
   --con-ground: transparent;
-  /* ⚠ AND ITS INSET GOES WITH ITS TOP EDGE (U3). `--con-gap` held the console
+  /* ⚠ AND ITS INSET IS GONE (U3, kept at U10). `--con-gap` held the console
      ~5px inside the field on all four sides, which put its side walls 5px
      inboard of the rail's first and last station — near enough to read as a
      miss rather than as a margin. At 0 the console's box IS the field's box,
-     so the walls rise into the boxes' outer edges. */
+     so its walls land on the stations' outer verticals, with the field's
+     `row-gap` — not a `--con-gap` — as the air between them. */
   --con-gap: 0px;
 }
 
 .pf-stack .pf-card__field .fl-con__console::after {
   content: none;
+}
+
+/* ── The studio's verdict, as the FOOT frame (U10) ───────────────────
+   Owner: "THE STANDARD …" "needs to be a separate frame, a bit higher; the
+   left and right borders should not touch the bottom panel — instead a
+   horizontal divider, so it really feels like a separate frame/block."
+   `SheetsPlate` portals `.fl-verdict` into `.pf-card__foot` (its
+   `verdictHost`, the `railHost` seam's twin) and this block re-seats it as
+   a box. `casefile.css`'s rule is the CONSOLE's band — a hairline over it,
+   on the plate's rails — and is untouched; the arc portfolio pins it.
+   ⚠ `--con-hair`, `--fl-plate-px`, `--fl-chrome-sm` and `--fl-ink-dim` are
+   declared on `.fl-con` / `.fl-case`, and the foot is outside both: the
+   casefile rule's `var()`s fall to their fallbacks or invalidate their
+   declaration. Everything here is STATED. `--fl-mono` and `--fl-copy` are
+   the field's and still reach it, so the kicker keeps PT Mono and the
+   sentence its PP Neue Montreal by class. */
+.pf-stack .pf-card__foot .fl-verdict {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--pf-rule);
+}
+
+.pf-stack .pf-card__foot .fl-verdict__k {
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--pf-ink-3);
+}
+
+/* ⚠ TWO LINES ARE RESERVED, ON THE PARAGRAPH — the thing that varies. The
+   three verdicts run one or two lines at card width, and a foot that
+   changes height on a rail switch resizes the BAY: every `cqh`-derived
+   drawing above re-solves and the ads jump. The paragraph holds two line
+   boxes whatever it letters. */
+.pf-stack .pf-card__foot .fl-verdict__p {
+  min-height: 2.8em;
+  max-width: none;
+  font-size: var(--pf-sub);
+  line-height: 1.4;
+  letter-spacing: var(--track-copy);
+  color: var(--pf-ink-2);
 }
 
 /* The map, as a PICTURE. The console owns the wheel while the pointer is
@@ -1561,9 +1672,16 @@
   /* ⚠ THE FIELD'S DATUM COMES OFF HERE (U2). Stacked, the record sits ABOVE
      the field and its `border-bottom` is already the line between them, so
      the padding that seats the rail against a title is seating it against
-     nothing. */
+     nothing.
+     ⚠ AND THE FLOOR IS THE PANEL'S OWN INSET, NOT THE RECORD'S PADDING (U10).
+     Stacked, there is no record floor beside the field to land on:
+     `--pf-card-py` would leave a band of plate under the frame, and 0 puts
+     the frame's floor on the lip's own pixel row — the doubled line U9
+     removed. `--pf-field-px` is what the frame already sits inside on its
+     two sides, so the box is centred in one margin on three sides. */
   .pf-stack .pf-card__field {
     padding-top: 0;
+    padding-bottom: var(--pf-field-px);
   }
   .pf-stack .pf-card__tabs .fl-con__rail {
     flex: 1 1 auto;

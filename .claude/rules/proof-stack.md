@@ -124,8 +124,9 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   IS LIVE AGAIN.** U6 moved it up into the client's band and the owner read it
   live — "I don't think the tabs in the header is working; can't we restore
   them in their original position?" — so `ProofCard`'s `railSeat` default goes
-  back to `"field"` and U2–U5 hold as written: the rail on the record's datum,
-  full-bleed to the field's edges, the frame open into it, the datum undrawn.
+  back to `"field"` and U2 and U5 hold as written: the rail on the record's
+  datum, the frame's width (U8), the datum undrawn. ⚠ U3's "frame open into
+  the rail" is RETIRED by U10 — the frame is a closed box one gap under it.
   - ⚠ **THE CSS REVERTS ITSELF; THE SMOKES DO NOT.** Every band rule is scoped
     to `[data-pf-rail]`, which only the head seats write, so flipping the seat
     restored U3's open frame and U4's full-bleed rail with no rule edited. U6
@@ -161,34 +162,70 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   so the only paint was an 18px stub at each end, invisible at dawn .18. **A
   line a box sits on is a line you have deleted.** The computed style reported
   it present, 1px, right colour, right y; a 3× crop is what showed it was not.
-- **THE FRAME OPENS INTO THE RAIL** (U3, owner: "the horizontal divider or
-  border for the frame where the images live, we shouldn't have that. The
-  vertical lines should just connect to the tabs above it"). The frame is a
-  bay the rail is the HEAD of: both framed kinds take `border-top: 0` — the
-  shared `.fl-con__console` (sheets, map) and the tools' own
-  `.pf-field--tools` — `.pf-field` has NO inset at all (U3 took the top, U9 the
-  floor), and `--con-gap` is `0px` here so the console's box IS the field's
-  box. ⚠ **AND NO FLOOR EITHER (U9, owner: "the borders left and right of the
-  image needs to touch the bottom border")**: the box runs to the card's edge
-  and the card's LIP closes it — `border-bottom: 0` on both kinds, walls and
-  nothing else. **This retires ADR-094 U8's "every field ends on the record's
-  floor"**, whose reason was that a console reaching the card's edge drew a
-  second line under the record's last rule; the answer is to stop drawing that
-  line, not to move the box up. The cost is U8's alignment: the record's last
-  rule now sits ~37px above the field's floor. Measured: frame bottom = card
-  bottom (0px), frame top =
-  rail bottom, and — since U8 put the rail back on the field's inset — frame
-  left = station left again. ⚠ U3's clause on the walls meeting the stations'
-  outer edges was an INFERENCE that happened to be true, went false at U4 and
-  is true again at U8; the lid and the reach to the RAIL were the instruction.
-  ⚠ **`--pf-field-gap` IS DELETED, NOT ZEROED.** It was subtracted in two
-  derived heights (the film's width and the wire's); a no-op term in an
-  arithmetic chain is a term the next reader has to disprove. Three sites move
-  together.
-  ⚠ **PINNED FROM BOTH ENDS** — a box that lost ALL its borders passes a
-  no-top-border assertion, so the smoke asserts the lid is `0px` AND the left
-  wall is not, plus the wall reaching the rail and landing on the station's
-  edge.
+- **THE PANEL IS A TERMINAL OF FRAMES** (U10, owner, beside Vilimovský's
+  Cyberpunk panels and Starfield's TRAVEL DATA: "in that terminal interface you
+  have different frames — that's what we also need to do … the tabs don't need
+  to have a border connected to them; they're just items"). Three DISCRETE
+  regions on one inset (`--pf-field-px`), all square, all at `--pf-rule`, one
+  token of air between them (`--pf-frame-gap`, 10px fixed, the field's
+  `row-gap`): the RAIL (its boxes unchanged — what joined them to the frame was
+  the frame's walls rising to their bottom edge); a CLOSED four-sided evidence
+  frame on EVERY kind — `.fl-con__console` (sheets, map), `.pf-field--tools`,
+  and `.pf-field--films`, the one field that had been unframed; and an
+  optional FOOT frame — the studio's verdict, the tools' walkthrough button.
+  The last region ends on the record's last claim rule.
+  ⚠ **THIS RETIRES U3's OPEN LID AND U9's OPEN FLOOR TOGETHER** — both fused
+  the frame to a neighbour (U3 to the rail, U9 to the lip) so the walls would
+  "connect"; read beside the references, connecting was the defect. A
+  terminal's regions connect to nothing.
+  ⚠ **ADR-094 U8's ONE FLOOR IS BACK**, as `.pf-card__field { padding-block:
+var(--pf-card-py) }` — one term at both ends, the same term the record pads
+  by, so datum and floor cannot drift apart. `.pf-field` stays `inset: 0`, and
+  the two `100cqh` chains subtract the frame's own 2px and nothing else:
+  `--pf-bay-head-h` and `--pf-watch-h` are DELETED, not zeroed. ⚠ U8's apparatus
+  HEAD (`IN SERVICE {year}`) does not come back with its floor — deleted on the
+  card; the year stays in the record and on the homepage bay's FEED line.
+  ⚠ `console.css`'s ≤980 unwrap sets the console's `border: 0` at (0,1,0); the
+  frame law's (0,3,0) rule wins there on purpose — the flow rung is a terminal
+  too. ⚠ The lab's `[data-pf-rail]` lid rule (U6) is deleted as a no-op.
+  ⚠ **PINNED FROM BOTH ENDS, ON BOTH HOSTS**: lid AND floor `1px`, both walls
+  non-zero, `frameTop − tabsBottom = rowGap` with the gap itself pinned
+  `[8, 14]`, `paddingBottom = paddingTop`, the last region's bottom on the
+  record's last rule (≤2) per card, the foot row present exactly on the studio
+  and tools cards. The trinny reads go through `k` (covered cards are receded).
+- ⚠ **THE FOOT IS A PORTAL SLOT, AND `:empty` IS ITS ROW** (U10). `ProofCard`
+  renders `.pf-card__foot` after the bay as an IMPLICIT third grid row (never a
+  third explicit track — an empty explicit track still takes a `row-gap`),
+  holds its host in state via a ref callback like `railHost`, and `ProofField`
+  portals the tools' `.pf-watch` into it and passes it to `SheetsPlate` as
+  `verdictHost` — the plate's SECOND additive seam; omitted, byte-identical
+  (`arc-portfolio-smoke`'s `fillUnion` is the proof). `.pf-card__foot:empty {
+display: none }` gives the films and the map no row and no second gap; the
+  JSX is a self-closing div — a whitespace child defeats `:empty`. ⚠ OUTSIDE
+  THE BAY BY CONSTRUCTION: the bay is the size container, so a sibling foot
+  shrinks it by its own height and no `cqh` chain has to know; a foot inside it
+  is one more term in every chain (the head and watch rows were, until U10).
+  Both blocks render in place until the host exists (SSR, the first render)
+  and move in the layout phase, before paint.
+- ⚠ **THE WALKTHROUGH IS A BUTTON, NOT A BAR** (U10, owner: "a bigger button
+  like the Starfield one"). ≥44px (`clamp(44px, 5.5svh, 60px)`), the frame's
+  width, a three-track grid (label centred, the duration in an outlined chip
+  at the end — the reference's `[X]`), `--gold-line` rim + `--gold-ink` ink at
+  rest, `--gold` + `--gold-contrast` on hover/focus (the drawer's big-CTA
+  precedent, ADR-050, and the lit station's own fill). NOT gold at rest —
+  owner's choice; ADR-063's count and ADR-050 Addendum 5 are the reasons; (b)
+  light fill and (c) gold at rest are two-line swaps recorded in the ADR. Still
+  11px PT Mono: the stations above it are 11px. Its `min-height` is a literal
+  because it is in no chain. The light smoke pins its label ≥ 4.5:1.
+- ⚠ **THE VERDICT IN THE FOOT IS STATED, NOT INHERITED.** Outside `.fl-con` /
+  `.fl-case` the casefile rule's `--con-hair`, `--fl-plate-px`,
+  `--fl-chrome-sm` and `--fl-ink-dim` are undeclared, so `.pf-card__foot
+.fl-verdict` declares every value on `--pf-*`; family and uppercase still
+  reach it by class. Its paragraph reserves two line boxes (`min-height:
+2.8em`) so a rail switch cannot resize the bay. ⚠ **A CLOSED CONSOLE DOUBLES
+  THE RED LINE'S FIRST/LAST HAIRLINES** against the lid and floor — two
+  `.pf-field--sheets`-scoped overrides zero them. The ads take
+  `clamp(10px, 1.6cqw, 18px)` of air inside their frame (a dial).
 - **THE RAIL IS THE FRAME'S WIDTH, AND NOTHING DIVIDES THE COLUMNS** (U8,
   owner: "the length of the tabs should be the same as the right panel where
   the image and text lives", and "let's maybe also remove the vertical divider
@@ -207,12 +244,15 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   U4's full-bleed equality, U6's sign check for the band seat, U8's floor
   again. Each was right for its seat, which is why the smoke's message strings
   name the seat: a bare `>= 15` says nothing about which ruling it holds.
-- ⚠ **THE RAIL'S DATUM COSTS THE BAY 41px**, so the height-bound film narrows
-  347 → 326px at 1440×900 (U3 gave 10 back with the gap) and its caption wraps
-  to two lines; one line needs ~347. Nothing clips, and the height cannot be
-  taken back without breaking U8's floor rule (every field ends on the
-  record's floor) — which is the other half of what makes the two columns read
-  as one card.
+- ⚠ **THE PANEL'S CHROME COSTS THE BAY 48px, PLUS ITS FOOT** — the rail's row
+  (hang 8 + 30) and one gap above the frame, and on the studio and tools cards
+  a second gap and the foot (84px verdict / 50px button at 1440×900). The
+  height-bound film narrows accordingly and its caption wraps to two lines;
+  nothing clips, and the height cannot be taken back without breaking U10's
+  one-floor rule — the other half of what makes the two columns read as one
+  card. ⚠ At ≤960 the field's floor is `--pf-field-px`, not `--pf-card-py`:
+  stacked, there is no record floor beside the field, and 0 would put the
+  frame's floor on the lip's own pixel row (U9's doubled line).
 - **THE PLATE IS GLASS, ONE DIAL.** `--pf-glass-a` .62,
   `backdrop-filter: blur(--pf-blur)` under `@supports`, no `brightness()`, the
   scanline UNDER the copy, a PIXEL-sized bloom off the body's top-right. Light

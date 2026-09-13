@@ -581,6 +581,182 @@ not zeroed. `--pf-card-py` is now the record's padding and the field's DATUM
 only — its comment says so, because a token used at one end and not the other
 is the kind of thing the next reader assumes is symmetric.
 
+## Update 10 — the card is a terminal of frames (2026-09-13, owner)
+
+Read live beside Vilimovský's Cyberpunk 2077 panels (the medical screens, the
+quest display, the industrial monitors — every region a discrete bordered frame
+with air between, the tab row a row of detached boxes with the open one filled)
+and Starfield's starmap TRAVEL DATA panel (a full-width `JUMP [X]` button at
+its foot):
+
+> I think we can harmonize it and try to connect everything with lines. I don't
+> think it really works — it's like uniformizing and harmonizing all the cards.
+> If you look at the screenshots, you also have a sort of terminal interface,
+> and in that interface you have different frames. I think that's what we also
+> need to do. I think the tabs don't need to have a border connected to them.
+> They're just items, and when you click on them, things switch.
+>
+> The text at the bottom [THE STANDARD] also needs to be a separate frame. It
+> needs to be a bit higher, and the left and right borders should not touch the
+> bottom panel. Instead, it should have a horizontal divider so it really feels
+> like a separate frame/block. And then [on "We built the tools the work
+>
+> > needed"] IN SERVICE — we need to remove that. That also gives us some extra
+> > real estate. Watch Walkthrough should also be a bit higher, and the same with
+> > every frame at the bottom in the right panel. The bottom needs to be aligned
+> > horizontally with the bottom divider of the left panel … the elements on the
+> > right side should never be lower than that one. For Watch Walkthrough we can
+> > maybe make a bigger button like the Starfield one.
+
+Asked the three things it left open, he chose: the button a **gold OUTLINE
+that fills on hover**; the **left column stays ruled text** (its last rule IS
+the floor); the **films card gets the same frame** as the other three.
+
+**Measured before** (1440×900, dark): lid `0px` and floor `0px` on every
+framed kind, frame bottom = card bottom (U9), the record's last rule 37px above
+that floor, the tools box a three-row apparatus (`IN SERVICE 2025` at 30px, the
+watch bar at 30px, fused), the film unframed.
+
+**The panel is three DISCRETE regions on one inset, all square, all at
+`--pf-rule`, one token of air between them, the last one on the record's last
+rule.** THE RAIL — its boxes were already the detached-items grammar; what
+joined them to the frame was the frame's walls rising to their bottom edge, and
+that goes. THE EVIDENCE FRAME — a closed four-sided box on EVERY kind: the
+shared `.fl-con__console` (sheets, map — its own edge was dawn .08 against the
+tools box's .18, and one panel cannot carry two frame weights),
+`.pf-field--tools`, and `.pf-field--films`. THE FOOT — an optional second box
+under the frame: the studio's verdict, the tools' walkthrough button; the films
+and the map put nothing there and their frame ends on the floor itself.
+`--pf-frame-gap` (10px, fixed — chrome air like `--pf-rail-hang`) is the field's
+`row-gap`, so rail→frame and frame→foot are one number.
+
+**Measured after** (`capture-proof-stack`'s new `panel` line): borders
+`1/1/1/1` on all four kinds; `rowGap` 10; rail→frame 10 on all four;
+frame→foot 10 on the studio and tools cards; the last region's bottom against
+the record's last claim rule **0px on every card**, at every shape read —
+1440×900 dark and light, the owner's 1920×1247, 1280×720, and the ≤680h inert
+rung; `.pf-bay__head` 0. The button is 60px at 1920×1247, 50 at 1440×900 and
+44 (its floor) at 1280×720; the verdict block 89 / 84 / 82. ⚠ The mechanical
+gate (`--prm`, both themes) now lists the button under `accent` — a gold
+outline 654×50, beside the three ads' own gold borders — which is the owner's
+chosen rim and the gate doing its job (ADR-091: gold buys one thing); its other
+findings (`fonts` 71 — IBM Plex Mono inherited on the containers, `radius` 1 —
+the film's cue, the 8.5px wireframe labels and the light kicker under 4.5:1)
+predate U10 and are unchanged by it.
+
+⚠ **THIS RETIRES U3's OPEN LID AND U9's OPEN FLOOR TOGETHER, BY THE OWNER'S
+OWN READING.** Both fused the frame to a neighbour — U3 to the rail ("the
+vertical lines should just connect to the tabs"), U9 to the lip ("touch the
+bottom border") — so the walls would connect. Read beside the references,
+connecting was the defect: a terminal's regions connect to nothing, and the air
+between them is what makes each one a frame. Nine updates on this surface were
+about how the rail, the frame and the floor JOIN; the ruling is that they do
+not.
+
+⚠ **ADR-094 U8's ONE FLOOR IS BACK, AS THE FIELD'S OWN `padding-bottom`.** U9
+retired "every field ends on the record's floor" and paid for it with a 37px
+asymmetry; the owner's "aligned horizontally with the bottom divider of the
+left panel" is that rule restated. It returns symmetric with the datum —
+`.pf-card__field { padding-block: var(--pf-card-py) }`, one term at both ends,
+the same term the record pads by — so the rail's row and the title start on one
+line and the panel's last frame and the record's last rule end on one. The
+trinny smoke's `[0, 60]` relation (U9's relaxation, which under U10 would have
+stayed green while asserting nothing) is the `≤ 2` equality again. ⚠ U8's
+apparatus HEAD does not come back with its floor: `IN SERVICE {year}` is deleted
+from the card (the year stays in the record and on the homepage bay's FEED
+line), and the tools box is the drawing's alone.
+
+⚠ **THE FOOT IS A PORTAL SLOT OUTSIDE THE SIZE CONTAINER, AND `:empty` IS ITS
+ROW.** `ProofCard` renders `.pf-card__foot` after the bay as an IMPLICIT third
+grid row, holds its host in state through a ref callback (the `railHost`
+mechanism), and `ProofField` portals the tools' `.pf-watch` into it and hands
+it to `SheetsPlate` as `verdictHost` — the plate's SECOND additive seam, on the
+rail's terms exactly: omitted, byte-identical, which the casefile and the arc
+portfolio's `fillUnion` pin rely on. Two reasons it is a portal and not a CSS
+split: the bay is the size container and every drawing derives from its
+`100cqh`, so a foot OUTSIDE it shrinks the bay by the foot's height and no chain
+has to know — a foot inside it is one more term in every chain, which is what
+the head row and the watch row were until now; and a CSS split cannot close the
+console's box ABOVE a verdict that lives inside the console's own flex column
+without reaching into `casefile.css`. `.pf-card__foot:empty { display: none }`
+is what gives the films and the map no row and no second gap — never a third
+EXPLICIT track (an empty explicit track still takes a `row-gap`), and the JSX is
+a self-closing div (a whitespace child defeats `:empty`). Both blocks render IN
+PLACE until the host exists (the server, the first client render), so hydration
+matches and a no-JS reader keeps both; the host is set in the layout phase and
+they move before the first paint.
+
+⚠ **TWO CHAIN TERMS ARE DELETED, NOT ZEROED.** `--pf-bay-head-h` and
+`--pf-watch-h` leave `--pf-wire-h`, which is `100cqh − 2px − 2·pad` now (the 2px
+is the lid and floor a closed box has); the film's width gains the same 2px.
+
+⚠ **THE BUTTON IS A BUTTON, NOT A BAR.** ≥44px (`clamp(44px, 5.5svh, 60px)`),
+the panel's width, the label centred in a three-track grid so the duration chip
+— the reference's `[X]` key, an outlined box in the button's own ink — can never
+push it off centre. Outline in `--gold-line` with `--gold-ink` ink at rest,
+`--gold` with `--gold-contrast` on hover and focus: the services drawer's
+big-CTA precedent (ADR-050) and this rail's own lit station. NOT gold at rest,
+by the owner's choice and two standing reasons — a gold slab under a gold
+station is two lit things in one panel (ADR-063's count), and a full-width gold
+bar is the drawer's booking CTA's silhouette (ADR-050 Addendum 5). The two
+alternatives are two-line swaps, recorded here and not in the sheet: **(b)** the
+reference's light fill — `border-color: var(--pf-ink); background:
+var(--pf-ink); color: rgb(var(--void-deep-rgb))`, both tokens ADR-058-swapped;
+**(c)** gold at rest — `border-color: var(--gold); background: var(--gold);
+color: var(--gold-contrast)`. All three pass `theme-css-sweep` (never `--void`
+ink on a gold fill). ⚠ The type stays 11px PT Mono: the stations above it are
+11px, and a button one rung larger than its tabs is a second chrome size —
+height and the rim are what make it bigger.
+
+⚠ **THE VERDICT IS STATED, NOT INHERITED.** Outside `.fl-con` and `.fl-case`
+the casefile rule's `--con-hair`, `--fl-plate-px`, `--fl-chrome-sm` and
+`--fl-ink-dim` are undeclared — its `border-top` invalidates at computed-value
+time and its paddings fall to fallbacks — so `.pf-card__foot .fl-verdict`
+declares every value on `--pf-*` tokens; the family and the uppercase still
+reach it by class. Its paragraph reserves two line boxes (`min-height: 2.8em`):
+the three verdicts run one or two lines at card width, and a foot that changed
+height on a rail switch would resize the bay and re-solve every `cqh`-derived
+drawing above it.
+
+⚠ **A CLOSED CONSOLE DOUBLES THE RED LINE'S OWN HAIRLINES.** `casefile.css`
+gives that sheet's four bands a top rule each (the first at gold .24) and the
+last a bottom rule, drawn for a console that opened into its rail and closed on
+its verdict; inside a closed frame the first sits 0px under the dawn lid and the
+last 0px over the dawn floor — the doubled seam its own
+`.fl-caps--sheet + .fl-verdict` rule exists to avoid. Two
+`.pf-field--sheets`-scoped overrides zero them. The ads take
+`clamp(10px, 1.6cqw, 18px)` of air inside their frame for the same reason the
+tools keep `--pf-bay-pad`: flush against four hairlines a photo reads as cropped
+by the frame. That inset is a dial.
+
+⚠ **THE ≤960 RUNG'S FLOOR IS `--pf-field-px`, NOT `--pf-card-py`.** Stacked,
+there is no record floor beside the field to land on: the record's padding
+leaves a band of plate under the frame, and 0 puts the frame's floor on the
+lip's own pixel row — U9's doubled line. The field's inline inset is what the
+frame already sits inside on its two sides. And `console.css`'s ≤980 unwrap
+sets the console's `border: 0` at (0,1,0); the frame law's (0,3,0) wins there
+on purpose — the flow rung is a terminal too.
+
+⚠ **THE LAB'S LID RULE IS DELETED AS A NO-OP.** U6's
+`[data-pf-rail] … { border-top: 1px }` gave the frame its lid back while the
+rail was in the band; every frame carries its lid on every seat now.
+
+**Guards.** Homepage smoke: the lid and the floor pinned `1px`, both walls
+non-zero; `frameTop − tabsBottom = rowGap` (fused at 0 and floating at 30 both
+fail) with the gap itself pinned `[8, 14]`; `fieldPadBottom = paddingTop`
+(datum and floor one term); the foot present on the tools card, the button its
+child, one gap under the frame, ≥44px, rimmed, spanning the frame; the foot's
+bottom on the record's last claim rule (≤2); `.pf-bay__head` count 0; per card
+in the clip sweep `frameClosed`, `floorDelta ≤ 2`, the foot row present exactly
+on the studio and tools cards, the verdict the foot's child on the studio card;
+in light, the button's label ≥ 4.5:1 on its bed. Trinny smoke: the same
+relations through `k` (the covered cards' scale), the `[0, 60]` back to `≤ 2`,
+`bayHeads === 0`, the film's and the map's frames closed and on the floor with
+no foot. Unchanged and green: the datum, the rail's `[4, 14]` hang, the rail =
+frame width, the ≥15 inset, `recordBorderRight`, `arcs`/`headRails` 0;
+`type-material-tokens` at `{0,0,0}`, `theme-css-sweep`, `arc-portfolio-smoke`
+(the plate's byte-identity).
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,
@@ -595,3 +771,6 @@ is the kind of thing the next reader assumes is symmetric.
 - The capture's seat for the LAST card scrolls 35 % into a dwell that slot
   does not have in full, so its still sits 14–39px above the pin; a real
   scroll pins it. Pre-existing; the smoke is unaffected.
+- U10's two dials: the walkthrough button's fill ((b) light, (c) gold at rest
+  — two-line swaps, above) and its 11px label; and the ads' inset inside
+  their closed frame (`clamp(10px, 1.6cqw, 18px)`).

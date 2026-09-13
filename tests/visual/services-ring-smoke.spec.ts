@@ -3621,8 +3621,12 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     await expect(rail.nth(2)).toHaveAttribute("data-on", "true");
     const thirdBay = await bayLabels();
     expect(thirdBay, "the rail did not change the drawing").not.toEqual(firstBay);
-    // The bay's head is the record's own designation (ADR-094 U8).
-    await expect(page.locator('[data-pc-index="2"] .pf-bay__head')).toHaveText(/IN SERVICE/i);
+    /* ⚠ THE APPARATUS HEAD IS DELETED (ADR-097 U10, owner: "we need to remove
+       that — that also gives us some extra real estate"). ADR-094 U8's
+       `IN SERVICE {year}` was pinned PRESENT here; it is pinned ABSENT now —
+       the inversion this surface's smokes make rather than dropping a read,
+       so a head row drifting back is what this line catches. */
+    await expect(page.locator('[data-pc-index="2"] .pf-bay__head')).toHaveCount(0);
 
     /* ── THE CARD IS A CHAMFERED HOUSING, AND ITS CHILDREN ARE SQUARE ──
        ADR-065's canonical TR + BL, drawn as a CLIPPED RING because a clip
@@ -3676,6 +3680,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
          card, so this resolves to the bay; the selector covers both. */
       const frameEl = card.querySelector<HTMLElement>(".fl-con__console, .pf-field--tools");
       const frame = frameEl?.getBoundingClientRect();
+      /* U10 — the panel's FOOT (the walkthrough button on this card), the
+         field's row-gap, and the record's last claim rule: the floor every
+         right-panel region ends on now. */
+      const footEl = card.querySelector<HTMLElement>(".pf-card__foot");
+      const foot = footEl?.getBoundingClientRect();
+      const watchEl = card.querySelector<HTMLElement>(".pf-watch");
+      const watch = watchEl?.getBoundingClientRect();
+      const lastClaim = [...card.querySelectorAll<HTMLElement>(".pf-card__claim")]
+        .at(-1)
+        ?.getBoundingClientRect();
       const ruleCs = fieldEl ? getComputedStyle(fieldEl, "::before") : null;
       const plate = getComputedStyle(card).backgroundColor;
       const m = /rgba?\(([^)]+)\)/.exec(plate);
@@ -3731,6 +3745,18 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         frameBorderTop: frameEl ? getComputedStyle(frameEl).borderTopWidth : null,
         frameBorderBottom: frameEl ? getComputedStyle(frameEl).borderBottomWidth : null,
         frameBorderLeft: frameEl ? getComputedStyle(frameEl).borderLeftWidth : null,
+        frameBorderRight: frameEl ? getComputedStyle(frameEl).borderRightWidth : null,
+        frameGap: fieldEl ? Number.parseFloat(getComputedStyle(fieldEl).rowGap) : null,
+        fieldPadBottom: fieldEl ? Number.parseFloat(getComputedStyle(fieldEl).paddingBottom) : null,
+        footDisplay: footEl ? getComputedStyle(footEl).display : null,
+        footTop: foot?.top ?? null,
+        footBottom: foot?.bottom ?? null,
+        watchInFoot: !!watchEl && !!footEl && watchEl.parentElement === footEl,
+        watchLeft: watch?.left ?? null,
+        watchRight: watch?.right ?? null,
+        watchH: watch?.height ?? null,
+        watchBorder: watchEl ? getComputedStyle(watchEl).borderTopWidth : null,
+        lastClaimBottom: lastClaim?.bottom ?? null,
         frameBottom: frame?.bottom ?? null,
         cardBottom: c.bottom,
         fieldLeft: f?.left ?? null,
@@ -3801,32 +3827,62 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       /rgba\(0,\s*0,\s*0,\s*0\)|transparent/
     );
 
-    /* ── THE FRAME OPENS INTO THE RAIL AGAIN (U7, restoring U3) ────────
-       U6 gave the box its lid back, correctly, because the rail had left the
-       field and two walls were rising into empty space. With the rail seated
-       on the panel's own top edge that premise is gone again and the frame is
-       the bay the rail heads: no lid, walls to the rail. Pinned from BOTH
-       ends — a frame that lost every border satisfies "no lid" on its own. */
-    expect(folder!.frameBorderTop, "the frame kept its lid").toBe("0px");
-    expect(folder!.frameBorderLeft, "the frame lost its walls, not just its lid").not.toBe("0px");
+    /* ── THE FRAME IS A CLOSED BOX, ONE GAP UNDER THE RAIL (U10, retiring
+       U3's open lid) ── Owner, beside the Cyberpunk panels: "in that terminal
+       interface you have different frames … the tabs don't need to have a
+       border connected to them. They're just items." U3 opened the frame
+       into the rail so the walls would "connect"; a terminal's regions
+       connect to nothing. Pinned from BOTH ends and on both axes — the lid
+       is 1px AND the walls are (a frame that lost every border is not
+       closed), and the frame's top sits exactly one `--pf-frame-gap` under
+       the rail (fused at 0 and floating at 30 both fail). */
+    expect(folder!.frameBorderTop, "the frame lost its lid — every frame is closed since U10").toBe(
+      "1px"
+    );
+    expect(folder!.frameBorderLeft, "the frame lost its left wall").not.toBe("0px");
+    expect(folder!.frameBorderRight, "the frame lost its right wall").not.toBe("0px");
+    expect(folder!.frameGap, "`--pf-frame-gap` left its rung").toBeGreaterThanOrEqual(8);
+    expect(folder!.frameGap, "`--pf-frame-gap` left its rung").toBeLessThanOrEqual(14);
     expect(
-      Math.abs(folder!.frameTop! - folder!.tabsBottom!),
-      "the frame's walls do not reach the rail"
+      Math.abs(folder!.frameTop! - folder!.tabsBottom! - folder!.frameGap!),
+      "the frame is fused to the rail — the terminal puts one gap of air between them"
     ).toBeLessThanOrEqual(1);
 
-    /* ── AND NO FLOOR EITHER: THE CARD'S LIP IS IT (U9) ────────────────
-       Owner: "the borders left and right of the image needs to touch the
-       bottom border." The box ran to `--pf-card-py` above the card's edge —
-       ADR-094 U8's "every field ends on the record's floor" — which left the
-       walls stopping in a band of bare plate. The box fills its bay now and
-       the CARD's own lip closes it, so the frame draws walls and nothing
-       else. ⚠ Pinned from both ends, like the lid: the floor is `0px` AND
-       the walls reach the card's bottom, because a frame that simply lost
-       every border satisfies the first on its own. */
-    expect(folder!.frameBorderBottom, "the frame kept its floor").toBe("0px");
+    /* ── A FLOOR, AND A FOOT UNDER IT, ON THE RECORD'S LAST RULE (U10,
+       retiring U9) ── Owner: "Watch Walkthrough should also be a bit higher,
+       and the same with every frame at the bottom in the right panel. The
+       bottom needs to be aligned horizontally with the bottom divider of the
+       left panel … the elements on the right side should never be lower than
+       that one." So the frame closes on its own floor, the walkthrough is a
+       separate FOOT frame one gap under it, and the foot's bottom is the
+       record's last claim rule — ADR-094 U8's one floor, back as the field's
+       own `padding-bottom` (one term with the datum, pinned as such). The
+       button is pinned as a BUTTON: ≥44px tall, rimmed, spanning the frame,
+       and living in the foot slot rather than inside the drawing's box. */
+    expect(folder!.frameBorderBottom, "the frame lost its floor").toBe("1px");
     expect(
-      Math.abs(folder!.frameBottom! - folder!.cardBottom!),
-      "the frame's walls stop short of the card's bottom edge"
+      Math.abs(folder!.fieldPadBottom! - folder!.rulePad!),
+      "the field's floor and its datum are not one term"
+    ).toBeLessThanOrEqual(0.5);
+    expect(folder!.footDisplay, "the tools card has no foot frame").not.toBe("none");
+    expect(folder!.watchInFoot, "the button is not the panel's foot").toBe(true);
+    expect(
+      Math.abs(folder!.footTop! - folder!.frameBottom! - folder!.frameGap!),
+      "the foot is not one gap under the frame"
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(folder!.footBottom! - folder!.lastClaimBottom!),
+      "the panel's last frame does not end on the record's last rule (ADR-094 U8's floor, back at U10)"
+    ).toBeLessThanOrEqual(2);
+    expect(folder!.watchH, "a rule with a label, not a button").toBeGreaterThanOrEqual(44);
+    expect(folder!.watchBorder, "the button lost its rim").toBe("1px");
+    expect(
+      Math.abs(folder!.watchLeft! - folder!.frameLeft!),
+      "the button does not span the frame (L)"
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(folder!.watchRight! - folder!.frameRight!),
+      "the button does not span the frame (R)"
     ).toBeLessThanOrEqual(1);
 
     /* ── THE RAIL IS THE FRAME'S WIDTH, AND NOTHING DIVIDES THE COLUMNS
@@ -3870,6 +3926,19 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         }
         const title = card.querySelector<HTMLElement>(".pf-card__title");
         const t = title?.getBoundingClientRect();
+        /* U10 — the terminal of frames, on EVERY kind: the evidence frame is
+           a closed box, and whatever ends the panel (the frame, or the foot
+           under it) ends on the record's last rule. */
+        const frameEl = card.querySelector<HTMLElement>(
+          ".fl-con__console, .pf-field--tools, .pf-field--films"
+        );
+        const fc = frameEl ? getComputedStyle(frameEl) : null;
+        const footEl = card.querySelector<HTMLElement>(".pf-card__foot");
+        const footShown = !!footEl && getComputedStyle(footEl).display !== "none";
+        const lastRegion = (footShown ? footEl : frameEl)?.getBoundingClientRect();
+        const claim = [...card.querySelectorAll<HTMLElement>(".pf-card__claim")]
+          .at(-1)
+          ?.getBoundingClientRect();
         return {
           boxes: out,
           // The title is the one string with no ellipsis and no clamp, so a
@@ -3878,6 +3947,17 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           fieldPainted:
             (card.querySelector<HTMLElement>(".pf-card__field")?.getBoundingClientRect().height ??
               0) > 100,
+          frameClosed:
+            !!fc &&
+            [
+              fc.borderTopWidth,
+              fc.borderRightWidth,
+              fc.borderBottomWidth,
+              fc.borderLeftWidth,
+            ].every((w) => w === "1px"),
+          footShown,
+          verdictInFoot: !!card.querySelector(".pf-card__foot > .fl-verdict"),
+          floorDelta: lastRegion && claim ? Math.abs(lastRegion.bottom - claim.bottom) : null,
         };
       }, i);
       expect(clip, `card ${i} vanished`).not.toBeNull();
@@ -3886,6 +3966,23 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       }
       expect(clip!.titleInside, `card ${i}: the claim runs outside its card`).toBe(true);
       expect(clip!.fieldPainted, `card ${i}: the field has no height`).toBe(true);
+      /* The films (0) and the map (3) put nothing in the foot; the studio (1)
+         puts its verdict there and the tools (2) their button. */
+      expect(clip!.frameClosed, `card ${i}: the evidence frame is not a closed box (U10)`).toBe(
+        true
+      );
+      expect(
+        clip!.floorDelta,
+        `card ${i}: the panel's last frame is off the record's last rule`
+      ).toBeLessThanOrEqual(2);
+      expect(clip!.footShown, `card ${i}: the foot row disagrees with its kind`).toBe(
+        i === 1 || i === 2
+      );
+      if (i === 1) {
+        expect(clip!.verdictInFoot, "the studio's verdict is not the panel's foot frame").toBe(
+          true
+        );
+      }
     }
 
     /* ── THE PILE RECEDES BY DEPTH (ADR-097) ───────────────────────────
@@ -4119,5 +4216,58 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         `${stn.id}: "${wire!.low.text}" is ${wire!.low.ratio}:1 in ${wire!.low.color}`
       ).toBeGreaterThanOrEqual(4.5);
     }
+
+    /* ── And the walkthrough BUTTON, at rest, on the same parchment (ADR-097
+       U10) ── an outline in `--gold-line` with `--gold-ink` ink, both the
+       ramp's re-derived rungs; the label is TEXT and takes the 4.5 floor over
+       whatever bed it composites to (the button paints none at rest, so that
+       is the card's glass over the page). Whichever fill the owner settles
+       on, this is the read that keeps its ink legible in light. */
+    const button = await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>('[data-pc-index="2"] .pf-watch__label');
+      if (!el) return null;
+      const parse = (c: string) => {
+        const m = String(c).match(/rgba?\(([^)]+)\)/);
+        if (!m) return null;
+        const p = m[1].split(",").map((v) => Number.parseFloat(v));
+        return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+      };
+      const lin = (v: number) => {
+        const s = v / 255;
+        return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      };
+      type C = { r: number; g: number; b: number; a: number };
+      const lum = (c: C) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+      const over = (fg: C, bg: C): C =>
+        fg.a >= 1
+          ? fg
+          : {
+              r: fg.a * fg.r + (1 - fg.a) * bg.r,
+              g: fg.a * fg.g + (1 - fg.a) * bg.g,
+              b: fg.a * fg.b + (1 - fg.a) * bg.b,
+              a: 1,
+            };
+      const ratio = (fg: C, bg: C) => {
+        const [hi, lo] = [lum(over(fg, bg)), lum(bg)].sort((x, y) => y - x);
+        return (hi + 0.05) / (lo + 0.05);
+      };
+      const bedOf = (start: Element): C => {
+        let node: Element | null = start;
+        while (node) {
+          const c = parse(getComputedStyle(node).backgroundColor);
+          if (c && c.a >= 0.85) return { ...c, a: 1 };
+          node = node.parentElement;
+        }
+        return { r: 255, g: 255, b: 255, a: 1 };
+      };
+      const cs = getComputedStyle(el);
+      const fg = parse(cs.color);
+      return fg ? { ratio: Math.round(ratio(fg, bedOf(el)) * 100) / 100, color: cs.color } : null;
+    });
+    expect(button, "the tools card has no walkthrough button").not.toBeNull();
+    expect(
+      button!.ratio,
+      `the walkthrough label is ${button!.ratio}:1 in ${button!.color} on parchment`
+    ).toBeGreaterThanOrEqual(4.5);
   });
 });

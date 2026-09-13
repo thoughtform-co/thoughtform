@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 import { IntelligenceMapPlate } from "@/components/landing/home-v2/services/casefile/IntelligenceMapPlate";
 import {
@@ -24,16 +25,18 @@ import type { CaseTrackVisual } from "@/lib/cases/types";
  *                    the ads, the rule the studio drew for when AI may make
  *                    an image, and the limit it refuses to cross. The
  *                    casefile's own `SheetsPlate`, with its rail portalled
- *                    into the card's slot, so all three surfaces letter one
- *                    record and this one inherits the console's tokens
+ *                    into the card's slot and its verdict into the card's
+ *                    FOOT slot (ADR-097 U10), so all three surfaces letter
+ *                    one record and this one inherits the console's tokens
  *   films            the two above-the-line films as stills, ONE AT A TIME
  *                    on that rail, in their 4:5 SOCIAL cut where one exists
  *                    (U2) — and the frame is a BUTTON that plays the master
  *                    (U3), which is the homepage films plate's own grammar
  *   tools            the four AUTHORED wireframes (`TOOL_WIREFRAMES`), the
  *                    drawn record of the tools, ONE AT A TIME — no capture,
- *                    no duotone (ADR-068 U3) — over a watch bar carrying the
- *                    tool's screen-recorded walkthrough (U3)
+ *                    no duotone (ADR-068 U3) — alone in a closed frame, with
+ *                    the tool's screen-recorded walkthrough as the panel's
+ *                    FOOT button (U3, re-seated at ADR-097 U10)
  *   intelligence-map the PDA console — three readings, forty-seven Skills —
  *                    as a PICTURE of the record: the card's CSS puts a
  *                    transparent layer over it so the console's own wheel
@@ -66,12 +69,17 @@ export function ProofField({
   visual,
   idx,
   railHost,
+  footHost,
 }: {
   visual: CaseTrackVisual;
   /** Which station the head's rail has open. Ignored by the one-object kinds. */
   idx: number;
   /** Where the map's console portals its own rail. */
   railHost: HTMLElement | null;
+  /** Where a kind portals its FOOT frame — the studio's verdict, the tools'
+   *  walkthrough button (ADR-097 U10). `null` until the card's slot exists,
+   *  and both kinds render their block in place until then. */
+  footHost: HTMLElement | null;
 }) {
   /* ⚠ BOTH HOOKS LIVE ABOVE THE SWITCH — a hook inside a branch is a hook
      that unmounts when the rail moves. They cost nothing on the kinds that
@@ -105,6 +113,7 @@ export function ProofField({
             sheets={visual.sheets}
             stillSizes="(min-width: 1600px) 220px, 18vw"
             railHost={railHost}
+            verdictHost={footHost}
           />
         </div>
       );
@@ -193,13 +202,28 @@ export function ProofField({
       const Wireframe = id ? TOOL_WIREFRAMES[id] : undefined;
       const tool = PROJECT_CASES.find((c) => c.id === id);
       const walk = tool?.walkthrough;
+      /* ⚠ A DRAWING IS NOT A VIDEO, so this one takes a LABELLED control
+         where the film takes its own frame: the control has to say what it
+         opens. Since ADR-097 U10 it is the panel's FOOT frame — the
+         Starfield JUMP grammar: one bar the width of the panel, the label
+         centred, the duration in a chip at the end — and it is built once
+         here so the two seats below render the same node. */
+      const watch = walk ? (
+        <button type="button" className="pf-watch" onClick={(e) => open(e.currentTarget)}>
+          <span className="pf-watch__act">
+            <i className="pf-watch__cue" aria-hidden="true" />
+            <span className="pf-watch__label">Watch walkthrough</span>
+          </span>
+          <span className="pf-watch__meta">{walk.duration}</span>
+        </button>
+      ) : null;
       return (
         <div className="pf-field pf-field--tools">
-          {/* The apparatus's HEAD (U8): one micro-label, the year the tool
-              went into service — the same record the homepage's bay letters
-              on its FEED line. Always rendered, so the box keeps its three
-              rows even for a tool without a case. */}
-          <span className="pf-bay__head">{tool ? `In service ${tool.year}` : null}</span>
+          {/* ⚠ THE HEAD IS GONE (U10, owner: "we need to remove that — that
+              also gives us some extra real estate"). U8's `IN SERVICE {year}`
+              micro-label was the apparatus's head row; the box is the
+              drawing's alone now. `ProjectCase.year` stays in the record and
+              on the homepage bay's FEED line. */}
           {/* ⚠ THE KEY IS THE REMOUNT, and it is deliberate (ADR-068 U3):
               each drawing seats itself once, so switching tools must give
               the next one a fresh mount rather than swapping props under a
@@ -211,17 +235,16 @@ export function ProofField({
               <Wireframe />
             </div>
           ) : null}
-          {/* ⚠ A DRAWING IS NOT A VIDEO, so this one takes a LABELLED bar
-              where the film takes its own frame. Same reason the homepage's
-              tools plate fuses a watch bar to its bay and its films plate
-              does not: the control has to say what it opens. */}
-          {walk ? (
-            <button type="button" className="pf-watch" onClick={(e) => open(e.currentTarget)}>
-              <i className="pf-watch__cue" aria-hidden="true" />
-              <span className="pf-watch__label">Watch walkthrough</span>
-              <span className="pf-watch__meta">{walk.duration}</span>
-            </button>
-          ) : null}
+          {/* ⚠ THE BUTTON IS THE PANEL'S FOOT FRAME (U10), portalled out of
+              the drawing's box into the card's slot — the same seam the rail
+              rides. Rendered IN PLACE until the host exists (the server, the
+              first client render), which is what keeps the server HTML and
+              hydration in step and a no-JS reader with a button; the host
+              is set from a ref callback in the layout phase, so it moves
+              before the first paint. `open(e.currentTarget)` still captures
+              the button for the lightbox's focus return — React events
+              bubble through the React tree, portal or not. */}
+          {footHost && watch ? createPortal(watch, footHost) : watch}
           {watching && walk && tool ? (
             <MediaLightbox
               src={walk.src}

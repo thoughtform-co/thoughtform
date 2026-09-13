@@ -36,7 +36,9 @@ import { ConsoleRail } from "./console/ConsoleRail";
  * the films row's production-block seat (`flex: 0 0 auto` sibling of the
  * body, which keeps its own `flex: 1 1 auto`). It is what makes three
  * sheets that shared a rail and nothing else read as one instrument showing
- * three faces.
+ * three faces. ⚠ On the proof card it is PORTALLED to the card's foot slot
+ * (`verdictHost`, ADR-097 U10) and re-seated there as a frame of its own;
+ * omitted, it renders here as before.
  *
  * ⚠ ALWAYS ON, unlike `.fl-filmprod`'s tall-viewport gate. That block is
  * supplementary record about a row; this is each sheet's punchline, and on
@@ -60,12 +62,16 @@ export function SheetsPlate({
   sheets,
   stillSizes = "200px",
   railHost,
+  verdictHost,
 }: {
   sheets: readonly CaseSheet[];
   stillSizes?: string;
   /** Where to render the rail instead of the frame's own slot (ADR-094 U3).
    *  Omitted — the casefile and the portfolio arc — nothing changes. */
   railHost?: HTMLElement | null;
+  /** Where to render the sheet's verdict instead of under the body (ADR-097
+   *  U10). Omitted — the casefile and the portfolio arc — nothing changes. */
+  verdictHost?: HTMLElement | null;
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const sheet = sheets[activeIdx] ?? sheets[0];
@@ -81,6 +87,13 @@ export function SheetsPlate({
     />
   );
 
+  const verdict = sheet.verdict ? (
+    <div className="fl-verdict">
+      <span className="fl-verdict__k">{sheet.verdict.kicker}</span>
+      <p className="fl-verdict__p">{sheet.verdict.copy}</p>
+    </div>
+  ) : null;
+
   return (
     <ConsoleFrame
       className="fl-plate fl-plate--sheets"
@@ -88,12 +101,7 @@ export function SheetsPlate({
       rail={railHost ? null : rail}
     >
       <SheetBody sheet={sheet} stillSizes={stillSizes} />
-      {sheet.verdict ? (
-        <div className="fl-verdict">
-          <span className="fl-verdict__k">{sheet.verdict.kicker}</span>
-          <p className="fl-verdict__p">{sheet.verdict.copy}</p>
-        </div>
-      ) : null}
+      {verdictHost ? null : verdict}
       {/* ⚠ THE RAIL CAN BE PORTALLED OUT (ADR-094 U3), the seam `PdaConsole`
           already carries and this plate is its second consumer. Given a host
           the rail renders THERE and the frame's own slot goes empty; omitted,
@@ -103,6 +111,14 @@ export function SheetsPlate({
           because the plate is what knows which sheet is open; a route that
           also owned the index would be a second source for one piece of it. */}
       {railHost ? createPortal(rail, railHost) : null}
+      {/* ⚠ AND SO CAN THE VERDICT (ADR-097 U10) — the second additive seam on
+          this plate, on the same terms. Given a host the band renders THERE
+          and the console keeps its body alone; omitted, the render is
+          byte-identical, which the casefile and the arc portfolio rely on
+          (`fillUnion` on `.arc-sheets`). It is still THIS plate's sentence:
+          it switches with the rail because the plate renders it, wherever
+          it renders it. */}
+      {verdictHost && verdict ? createPortal(verdict, verdictHost) : null}
     </ConsoleFrame>
   );
 }

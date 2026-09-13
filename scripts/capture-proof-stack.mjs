@@ -148,7 +148,6 @@ try {
             }
           : null,
         title: card?.querySelector(".pf-card__title")?.textContent?.trim(),
-        arc: card?.querySelector(".pf-card__arc")?.textContent?.trim(),
         stations: [...(card?.querySelectorAll(".fl-con__stn") ?? [])].map((b) =>
           b.textContent?.trim()
         ),
@@ -162,6 +161,45 @@ try {
         headW: card
           ? Math.round(card.querySelector(".pf-card__head")?.getBoundingClientRect().width ?? 0)
           : null,
+        /* ADR-097 U10 — the terminal of frames: the evidence frame's four
+           borders, the field's gap, rail→frame and frame→foot air, the last
+           region's floor against the record's last rule, the foot's height,
+           and the apparatus head that must stay deleted. */
+        panel: (() => {
+          const field = card?.querySelector(".pf-card__field");
+          const frame = card?.querySelector(".fl-con__console, .pf-field--tools, .pf-field--films");
+          const tabs = card?.querySelector(".pf-card__tabs");
+          const foot = card?.querySelector(".pf-card__foot");
+          const last = [...(card?.querySelectorAll(".pf-card__claim") ?? [])].at(-1);
+          if (!field || !frame) return null;
+          const fc = getComputedStyle(frame);
+          const fr = frame.getBoundingClientRect();
+          const footShown = !!foot && getComputedStyle(foot).display !== "none";
+          const lastRegion = footShown ? foot : frame;
+          const h = (sel) =>
+            Math.round(card.querySelector(sel)?.getBoundingClientRect().height ?? 0) || null;
+          return {
+            borders: [
+              fc.borderTopWidth,
+              fc.borderRightWidth,
+              fc.borderBottomWidth,
+              fc.borderLeftWidth,
+            ].join("/"),
+            gap: getComputedStyle(field).rowGap,
+            railToFrame: Math.round(fr.top - (tabs?.getBoundingClientRect().bottom ?? fr.top)),
+            frameToFoot: footShown
+              ? Math.round(foot.getBoundingClientRect().top - fr.bottom)
+              : null,
+            floorDelta: last
+              ? Math.round(
+                  lastRegion.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom
+                )
+              : null,
+            watchH: h(".pf-watch"),
+            verdictH: h(".fl-verdict"),
+            bayHeads: card.querySelectorAll(".pf-bay__head").length,
+          };
+        })(),
         pile: (() => {
           const p = document.querySelector(".services-stage-root > .pf-stack");
           const q = p?.getBoundingClientRect();
@@ -172,7 +210,7 @@ try {
     }, i);
     console.log(
       `  card ${i}  ${state.pcState ?? "?"}  enter ${state.enter}  ` +
-        `${JSON.stringify(state.card)}  ${JSON.stringify(state.title)} / ${state.arc}`
+        `${JSON.stringify(state.card)}  ${JSON.stringify(state.title)}`
     );
     if (state.stations.length) console.log(`           rail  ${state.stations.join(" | ")}`);
     console.log(`           plate ${state.plate}`);
@@ -180,6 +218,7 @@ try {
       `           depth ${state.depth}  opacity ${state.opacity}  ${state.transform}  ` +
         `ring ${state.ring}  head ${state.headW}px`
     );
+    console.log(`           panel ${JSON.stringify(state.panel)}`);
     await page.screenshot({ path: `${OUT}/proof-stack-${tag}-card${i}.png` });
   }
 

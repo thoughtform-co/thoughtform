@@ -190,10 +190,12 @@ async function seatPinnedFromTop(page: Page, idx: number): Promise<void> {
  * the client leads the strip, the project's name is down in the record, the
  * tabs are flat and square, and the field shows ONE thing.
  *
- * ⚠ THE RAIL MOVED INTO THE BAND (ADR-097 U6), so this reads it from the
- * HEAD now. The reason the old comment gave still stands, pointed the other
- * way: read it from the wrong container and this reports four railless cards
- * while staying green on a rail that had stopped rendering.
+ * ⚠ THE RAIL IS IN THE FIELD AGAIN (ADR-097 U7, retiring U6's band seat), and
+ * since U10 the field is a TERMINAL OF FRAMES — the rail, a closed evidence
+ * frame on every kind, an optional foot frame — so `housing` reads the frame,
+ * the gap and the foot as well. Every element is read from the SLOT: read it
+ * from one container and this reports four railless cards while staying green
+ * on a rail that had merely moved.
  */
 const cardShape = (page: Page, idx: number) =>
   page.evaluate((i) => {
@@ -318,6 +320,15 @@ const cardShape = (page: Page, idx: number) =>
         const watch = r(".pf-watch");
         const claims = [...slot.querySelectorAll<HTMLElement>(".pf-card__claim")];
         const last = claims.length ? claims[claims.length - 1].getBoundingClientRect() : null;
+        /* U10 — the terminal of frames: the evidence frame on EVERY kind, the
+           field's gap, the foot slot and what it holds. */
+        const frameEl = slot.querySelector<HTMLElement>(
+          ".fl-con__console, .pf-field--tools, .pf-field--films"
+        );
+        const frame = frameEl?.getBoundingClientRect() ?? null;
+        const fc = frameEl ? getComputedStyle(frameEl) : null;
+        const footEl = slot.querySelector<HTMLElement>(".pf-card__foot");
+        const verdict = r(".fl-verdict");
         return {
           k,
           /* The head is the client's BAND (ADR-097 U1 — the owner took the
@@ -332,9 +343,33 @@ const cardShape = (page: Page, idx: number) =>
           lastStnRight: stns.length ? stns[stns.length - 1].getBoundingClientRect().right : null,
           box: box ? { left: box.left, right: box.right, bottom: box.bottom } : null,
           wireLeft: wire?.left ?? null,
-          watch: watch ? { left: watch.left, right: watch.right, bottom: watch.bottom } : null,
+          watch: watch
+            ? {
+                left: watch.left,
+                right: watch.right,
+                top: watch.top,
+                bottom: watch.bottom,
+                h: watch.height,
+              }
+            : null,
           lastClaimBottom: last?.bottom ?? null,
-          bayHead: slot.querySelector(".pf-bay__head")?.textContent?.trim() ?? "",
+          frame: frame
+            ? { left: frame.left, right: frame.right, top: frame.top, bottom: frame.bottom }
+            : null,
+          frameClosed:
+            !!fc &&
+            [
+              fc.borderTopWidth,
+              fc.borderRightWidth,
+              fc.borderBottomWidth,
+              fc.borderLeftWidth,
+            ].every((w) => w === "1px"),
+          gap: Number.parseFloat(getComputedStyle(field).rowGap),
+          footShown: !!footEl && getComputedStyle(footEl).display !== "none",
+          verdictInFoot: !!slot.querySelector(".pf-card__foot > .fl-verdict"),
+          watchInFoot: !!slot.querySelector(".pf-card__foot > .pf-watch"),
+          verdict: verdict ? { top: verdict.top, bottom: verdict.bottom } : null,
+          bayHeads: slot.querySelectorAll(".pf-bay__head").length,
         };
       })(),
     };
@@ -638,6 +673,16 @@ test.describe("Trinny London pitch variant", () => {
     expect(shapes[0].films).toBe(1);
     expect(shapes[0].filmIsButton).toBe("BUTTON");
     expect(shapes[0].watchBars, "a film needs no labelled bar").toBe(0);
+    /* ⚠ THE FILM IS FRAMED LIKE EVERY OTHER KIND (ADR-097 U10, owner: "it's
+       like uniformizing and harmonizing all the cards"). It was the one
+       unframed field; now its closed box ends on the record's last rule
+       itself, because a film has no foot. */
+    expect(shapes[0].housing.frameClosed, "the film is not framed (U10)").toBe(true);
+    expect(shapes[0].housing.footShown, "a film has no foot frame").toBe(false);
+    expect(
+      Math.abs(shapes[0].housing.frame!.bottom - shapes[0].housing.lastClaimBottom!),
+      "the film's frame does not end on the record's last rule"
+    ).toBeLessThanOrEqual(2);
     /* 02 the studio — THREE SHEETS on the rail (U3, owner: "we also should
        have tabs, just like on the homepage, where we have our guidelines on
        where not to use AI, governance and the red line"). The record held
@@ -649,54 +694,66 @@ test.describe("Trinny London pitch variant", () => {
     expect(shapes[1].stationsInSlot).toBe(3);
     expect(shapes[1].stills).toBeGreaterThan(1);
     expect(shapes[1].verdicts, "each sheet ends on its verdict").toBe(1);
-    // 03 the tools — ONE drawing at a time, over its walkthrough.
+    /* ⚠ THE VERDICT IS THE PANEL'S FOOT FRAME (ADR-097 U10, owner: it "needs
+       to be a separate frame, a bit higher … a horizontal divider so it
+       really feels like a separate frame/block"). Portalled by the plate into
+       the card's foot slot (`verdictHost`, the rail's seam), one gap under
+       the closed frame, its bottom on the record's last rule. A COUNT of one
+       was all this surface had on the verdict; its SEAT is pinned now. Every
+       delta ÷ k — this card is read covered and receded. */
+    const h2 = shapes[1].housing;
+    expect(h2.frameClosed, "the ads' frame is not a closed box (U10)").toBe(true);
+    expect(h2.verdictInFoot, "the verdict is not the panel's foot frame").toBe(true);
+    expect(
+      Math.abs((h2.verdict!.top - h2.frame!.bottom) / h2.k - h2.gap),
+      "the verdict is not one gap under the frame"
+    ).toBeLessThanOrEqual(1.5);
+    expect(
+      Math.abs(h2.verdict!.bottom - h2.lastClaimBottom!),
+      "the verdict does not end on the record's last rule"
+    ).toBeLessThanOrEqual(2);
+    // 03 the tools — ONE drawing at a time, its walkthrough as the panel's foot.
     expect(shapes[2].stations).toHaveLength(4);
     expect(shapes[2].wires).toBe(1);
     expect(shapes[2].watchBars).toBe(1);
-    /* ⚠ ADR-094 U8 — THE TOOLS BAY IS AN APPARATUS: one hairline box from
-       under the rail to the card's floor, a head micro-label (the year the
-       tool went into service — record, not copy), the drawing centred inside
-       it off both walls, and the watch bar FUSED as the box's foot (the
-       homepage bay's own grammar, ADR-068). Pinned as RELATIONS between
-       rects, not as sizes: the bar's bottom IS the box's bottom, its width IS
-       the box's, and the register's last rule lands on that same floor —
-       which is the one line that makes two columns read as one card. */
+    /* ⚠ ADR-097 U10 — THE PANEL IS A TERMINAL OF FRAMES (owner, beside the
+       Cyberpunk panels and Starfield's TRAVEL DATA: "in that terminal
+       interface you have different frames … the tabs don't need to have a
+       border connected to them"; "Watch Walkthrough … a bigger button like
+       the Starfield one … aligned horizontally with the bottom divider of the
+       left panel"). ADR-094 U8's apparatus is cut to the drawing: the box is
+       a CLOSED frame, its head line is deleted, and the watch bar is a
+       separate FOOT frame one gap under it — a button, not a bar. Pinned as
+       RELATIONS, every delta ÷ k (this card is read covered and receded):
+       the button is one gap under the box, spans it, is ≥44px tall, and its
+       bottom is the record's last rule — ADR-094 U8's one floor, back, after
+       U9 had let the two floors drift `--pf-card-py` apart. */
     const h3 = shapes[2].housing;
     expect(h3.box, "the tools field draws its box").not.toBeNull();
-    expect(h3.bayHead, "the bay's head letters the year").toMatch(/^In service \d{4}$/i);
+    expect(h3.frameClosed, "the tools box is not a closed frame (U10)").toBe(true);
+    expect(h3.bayHeads, "the apparatus head came back — U10 deleted it").toBe(0);
     expect(
       h3.wireLeft! - h3.box!.left,
       "the drawing clears the box's left wall"
     ).toBeGreaterThanOrEqual(12);
+    expect(h3.watchInFoot, "the button is not the panel's foot frame").toBe(true);
     expect(
-      Math.abs(h3.watch!.bottom - h3.box!.bottom),
-      "the bar is the box's foot"
+      Math.abs((h3.watch!.top - h3.box!.bottom) / h3.k - h3.gap),
+      "the button is fused to the box — it is the panel's foot frame, one gap under it"
     ).toBeLessThanOrEqual(1.5);
     expect(
       Math.abs(h3.watch!.left - h3.box!.left),
-      "the bar spans the box (L)"
+      "the button spans the frame (L)"
     ).toBeLessThanOrEqual(1.5);
     expect(
       Math.abs(h3.watch!.right - h3.box!.right),
-      "the bar spans the box (R)"
+      "the button spans the frame (R)"
     ).toBeLessThanOrEqual(1.5);
-    /* ⚠ THE REGISTER AND THE BOX NO LONGER SHARE A FLOOR (ADR-097 U9, owner:
-       "the borders left and right of the image needs to touch the bottom
-       border"). ADR-094 U8 had inset the field's bottom by `--pf-card-py` so
-       the record's last rule and the box's floor landed on one line; the box
-       runs to the CARD's edge now and the card's lip closes it, so the two
-       floors are `--pf-card-py` apart by design. What is pinned instead is
-       the relation that survived: the record's last rule sits ABOVE the box's
-       floor, by the record's own padding and no more — a register that
-       overran its column would still fail. */
+    expect(h3.watch!.h / h3.k, "a rule with a label, not a button").toBeGreaterThanOrEqual(44);
     expect(
-      h3.box!.bottom - h3.lastClaimBottom!,
-      "the register runs past the box's floor"
-    ).toBeGreaterThanOrEqual(0);
-    expect(
-      h3.box!.bottom - h3.lastClaimBottom!,
-      "the register floats far above the card's floor"
-    ).toBeLessThanOrEqual(60);
+      Math.abs(h3.watch!.bottom - h3.lastClaimBottom!),
+      "the panel's last frame does not end on the record's last rule (ADR-094 U8's floor, back at U10)"
+    ).toBeLessThanOrEqual(2);
     /* 04 the company — the map's own three readings, PORTALLED into the
        field's rail, which is also what makes them pressable here: the card
        covers the console with a transparent layer so its wheel capture
@@ -707,6 +764,15 @@ test.describe("Trinny London pitch variant", () => {
       await page.locator('[data-pc-index="3"] .fl-pda .fl-con__rail').count(),
       "the map's rail left the console"
     ).toBe(0);
+    // The map's console is the fourth closed frame, and it has no foot (U10).
+    expect(shapes[3].housing.frameClosed, "the map's console is not a closed frame (U10)").toBe(
+      true
+    );
+    expect(shapes[3].housing.footShown, "the map has no foot frame").toBe(false);
+    expect(
+      Math.abs(shapes[3].housing.frame!.bottom - shapes[3].housing.lastClaimBottom!),
+      "the map's frame does not end on the record's last rule"
+    ).toBeLessThanOrEqual(2);
 
     /* ⚠ THE FILM IS THE 4:5 SOCIAL CUT, AND ITS CAPTION SAYS SO. A 16:9
        poster in a 693×926 field is a stamp with a third of the box empty

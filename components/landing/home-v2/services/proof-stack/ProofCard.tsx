@@ -46,6 +46,18 @@ import { proofTabLabel, proofTabs } from "./proofTabs";
  * stations and nothing else. The skin stays ADR-089 U3/U4's, route-scoped in
  * `trinny-london.css`: flat, square, the open box filled, no spine.
  *
+ * ⚠ THE PANEL IS A TERMINAL OF FRAMES (ADR-097 U10, owner: "in that
+ * terminal interface you have different frames — that's what we also need
+ * to do; the tabs don't need to have a border connected to them, they're
+ * just items"). Three discrete regions on one inset with air between them:
+ * the RAIL, a CLOSED evidence frame on every kind, and an optional FOOT
+ * frame — the studio's verdict, the tools' walkthrough button — that a kind
+ * PORTALS into `.pf-card__foot` exactly as the map and the sheets portal
+ * their rail into `.pf-card__tabs`. The last region ends on the record's
+ * last claim rule (ADR-094 U8's one floor, back). The foot host is held in
+ * state through a ref callback for the same reason the rail host is, and
+ * `.pf-card__foot:empty` is how the films and the map get no row at all.
+ *
  * ⚠ THE MAP'S RAIL IS PORTALLED, NOT REBUILT, and moving the host SOLVES a
  * problem rather than re-opening one. `PdaConsole` owns its three readings
  * and the flight between them; it takes a `railHost` and moves its own rail
@@ -101,6 +113,8 @@ export function ProofCard({
   /* The portal needs its host at RENDER time, so the field's rail row is
      held in state through a ref callback rather than in a ref. */
   const [railHost, setRailHost] = useState<HTMLDivElement | null>(null);
+  /* The foot slot's host, on the same terms (U10). */
+  const [footHost, setFootHost] = useState<HTMLDivElement | null>(null);
   const active = stations?.[Math.min(idx, stations.length - 1)];
 
   const inHead = railSeat !== "field";
@@ -208,8 +222,18 @@ export function ProofCard({
             className="pf-card__bay"
             {...(active ? { role: "tabpanel", "aria-label": active.name } : null)}
           >
-            <ProofField visual={track.visual} idx={idx} railHost={railHost} />
+            <ProofField visual={track.visual} idx={idx} railHost={railHost} footHost={footHost} />
           </div>
+          {/* ⚠ THE FOOT — the panel's optional third frame (ADR-097 U10). A
+              kind PORTALS one block here: the studio's verdict, the tools'
+              walkthrough button. Always rendered, because the portal needs
+              its target at render time; `.pf-card__foot:empty` collapses it,
+              so the films and the map put nothing here and their frame ends
+              on the record's floor itself. A SELF-CLOSING div — a whitespace
+              child would defeat `:empty`. Outside the bay on purpose: the bay
+              is the size container, and a foot inside it would be one more
+              term in every `cqh` chain. */}
+          <div className="pf-card__foot" ref={setFootHost} />
         </div>
       </div>
     </article>
