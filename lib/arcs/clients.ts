@@ -97,9 +97,16 @@ export const PERFECT_TED_CLIENT: ClientDef = {
   lede: "A matcha brand in London, and a range that outgrew the photography behind it.",
 };
 
+export const HUNGRY_MINDS_CLIENT: ClientDef = {
+  slug: "hungry-minds",
+  name: "Hungry Minds",
+  lede: "A publisher of hand-illustrated books, and a team that would write its own briefs from its own reviews.",
+};
+
 /** Every client with an engagement on the site, in the order the overview
  *  reads them. */
 export const CLIENTS: readonly ClientDef[] = [
+  HUNGRY_MINDS_CLIENT,
   PERFECT_TED_CLIENT,
   TRINNY_CLIENT,
   SURI_CLIENT,

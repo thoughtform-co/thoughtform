@@ -5,6 +5,7 @@ import { CLAUDE_WORKSHOP_V2_ARC } from "./content/claude-workshop-v2";
 import { PORTFOLIO_ARC } from "./content/portfolio";
 import { SURI_PROPOSAL_ARC } from "./content/suri-proposal";
 import { PERFECT_TED_PROPOSAL_ARC } from "./content/perfect-ted-proposal";
+import { HUNGRY_MINDS_PROPOSAL_ARC } from "./content/hungry-minds-proposal";
 import type { ArcDef } from "./types";
 
 /**
@@ -22,6 +23,7 @@ import type { ArcDef } from "./types";
  * the same fact to be wrong.
  */
 export const ARCS: readonly ArcDef[] = [
+  HUNGRY_MINDS_PROPOSAL_ARC,
   PERFECT_TED_PROPOSAL_ARC,
   SURI_PROPOSAL_ARC,
   CLAUDE_WORKSHOP_ARC,

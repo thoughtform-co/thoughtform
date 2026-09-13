@@ -57,6 +57,7 @@ describe("the light-locked routes", () => {
       "/arcs/trinny-london/proposal",
       "/arcs/suri-proposal",
       "/arcs/perfect-ted-proposal",
+      "/arcs/hungry-minds-proposal",
     ]);
   });
 });

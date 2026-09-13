@@ -41,6 +41,7 @@ export const LIGHT_LOCKED_ROUTES = [
      registry test fails a locked arc that has no row here. */
   "/arcs/suri-proposal",
   "/arcs/perfect-ted-proposal",
+  "/arcs/hungry-minds-proposal",
 ] as const;
 
 /** Strip a trailing slash the way both inline scripts do, so `/x` and
