@@ -202,11 +202,11 @@ async function settleScroll(page: Page, capMs = 1600): Promise<void> {
 }
 
 /**
- * Wait for proof card `idx`'s materialisation to finish (ADR-097 U11).
+ * Wait for proof card `idx`'s materialisation to finish (ADR-097 U11/U12).
  *
  * ⚠ **A SCROLL SETTLE IS NOT A PAINT SETTLE.** `settleScroll` returns when the
- * page has stopped moving, which is exactly when the burst STARTS; every plate
- * reading taken after it would then be sampling the strike's own dropout. This
+ * page has stopped moving, which is exactly when the sweep STARTS; every plate
+ * reading taken after it would then be sampling a half-open card. This
  * waits on the animations themselves — `finished` resolves immediately for an
  * already-finished one — and is a no-op on any surface that does not opt in
  * (`/trinny-london` passes no `arrival`, so there are no animations to await).
@@ -3559,17 +3559,19 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(during.recordOpacity).toBeGreaterThan(0.95);
 
     /* ── THE FIRST CARD MATERIALISES (ADR-097 U11) ─────────────────────
-       Owner, 2026-09-13: the first card should APPEAR in a glitch. It is held
-       absent through its whole rise and struck in over 640ms in the last
-       ~140px, so three things are pinned: that it is genuinely ABSENT
-       mid-rise, that the burst ENDS ON THE CASCADE (the identity frame —
-       `fill-mode: none`, and a `forwards` fill would pin opacity 1 over the
-       depth dim), and that it re-arms on the way back up.
+       Owner, 2026-09-13: the first card should APPEAR rather than slide up.
+       It is held absent through its whole rise and its APERTURE sweeps open
+       from a centre slit over 550ms in the last ~140px (U12 replaced U11's
+       glitch, which flashed), so three things are pinned: that it is
+       genuinely ABSENT mid-rise, that the sweep ENDS ON THE CASCADE (the
+       identity frame — `fill-mode: none`, and a `forwards` fill would pin
+       the clip and stop the card receding under the three that cover it),
+       and that it re-arms on the way back up.
 
        ⚠ **THE READS BELOW MUST WAIT FOR THE ANIMATIONS, NOT FOR A TIMEOUT.**
        `seatProofCard` returns the moment the hook publishes `pinned`, and its
-       retry wait is 450ms against a 640ms burst — so the plate reads that
-       follow would catch the strike's own dropout (opacity 0.12) on any pass
+       retry wait is 450ms against a 550ms sweep — so the plate reads that
+       follow would catch the card still half open on any pass
        but the first. That is a load-dependent flake, and it would look like a
        broken card rather than a race. (The call is above, before the plate
        reads — it is what makes those trustworthy too.) */
@@ -3593,16 +3595,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(glitch, "card 0 never mounted").not.toBeNull();
     expect(glitch!.arrive, "the homepage never opted the first card in").toBe("in");
     expect(glitch!.visibility).toBe("visible");
-    expect(glitch!.animationName).toMatch(/pf-glitch-bands/);
-    expect(glitch!.running, "the burst is still running after its own finish").toBe(0);
-    /* THE IDENTITY FRAME, pinned against the card that never glitched: a
-       settled card 0 must be cut exactly like card 1, carry no residual tear
-       and no residual filter. */
-    expect(glitch!.clip, "the burst left the first card a different shape").toBe(
+    expect(glitch!.animationName).toMatch(/pf-aperture/);
+    expect(glitch!.running, "the sweep is still running after its own finish").toBe(0);
+    /* THE IDENTITY FRAME, pinned against the card that never opens: a
+       settled card 0 must be cut exactly like card 1, carry no residual
+       translate and no filter at all (U12: the sweep is pure motion). */
+    expect(glitch!.clip, "the sweep left the first card a different shape").toBe(
       glitch!.siblingClip
     );
     expect(glitch!.translate).toMatch(/^(none|0px( 0px)?)$/);
-    expect(glitch!.filter, "the chromatic split never resolved").toBe("none");
+    expect(glitch!.filter, "the aperture grew a filter (ADR-097 U12: pure motion)").toBe("none");
 
     /* ── …AND IT IS ABSENT UNTIL IT DOES (ADR-097 U11) ─────────────────
        The half of the ruling a settled read cannot see. Card 0 is solved to
@@ -3659,8 +3661,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(Number(mid0.opacity)).toBe(0);
     expect(["await", "out"]).toContain(mid0.arrive);
 
-    /* …and the burst re-arms. Coming back down is a real departure, so the
-       card strikes OUT — which is also the proof that the trigger is the
+    /* …and the sweep re-arms. Coming back down is a real departure, so the
+       card irises SHUT — which is also the proof that the trigger is the
        hook's CHANNEL and not `data-pc-state`, an attribute that returns to
        `pinned` whenever the card above scrolls back off it. */
     expect(await seatProofCard(page, 0)).toBe("pinned");
@@ -4394,8 +4396,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
   });
 
   /* ── AND UNDER REDUCED MOTION IT SIMPLY STANDS THERE (ADR-097 U11) ────
-     The glitch is gated on the exact inverse of the pile's inert rung, where
-     the hook parks every slot at `enter: 1` and there is no arrival to strike.
+     The sweep is gated on the exact inverse of the pile's inert rung, where
+     the hook parks every slot at `enter: 1` and there is no arrival to open.
      ⚠ The ATTRIBUTE is still written there — it is a state, not a switch — so
      what this pins is that the SHEET does not reach it. A rule that leaked
      past the gate would leave the first card permanently hidden on the one
@@ -4435,7 +4437,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       expect(prm, "card 0 never mounted under reduced motion").not.toBeNull();
       expect(prm!.prefersReduced, "the emulation never reached the page").toBe(true);
       expect(prm!.slotPosition, "the pile is not inert under reduced motion").toBe("static");
-      expect(prm!.animationName, "the glitch leaked past its gate").toBe("none");
+      expect(prm!.animationName, "the aperture leaked past its gate").toBe("none");
       expect(prm!.anims).toBe(0);
       expect(prm!.visibility).toBe("visible");
       expect(Number(prm!.opacity)).toBe(1);

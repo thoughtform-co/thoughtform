@@ -111,7 +111,7 @@ async function rollToT(page: Page, t: number) {
 /**
  * Let every animation under `sel` finish.
  *
- * ⚠ A STRIKE'S LENGTH IS A LADDER, NOT A DURATION. The ledger's last rung is
+ * ⚠ AN ARRIVAL'S LENGTH IS A LADDER, NOT A DURATION. The ledger's last rung is
  * 960ms behind 640ms of delay, so a fixed wait is either a flake or slower
  * than it needs to be on every other assertion. `getAnimations().finished`
  * asks the animations themselves; the `catch` is load-bearing, because an
@@ -2008,17 +2008,16 @@ test.describe("Trinny London pitch variant", () => {
       expect(ctaReachable, "the turn's CTA is under the awaiting station").toBe(true);
     }
 
-    // 2 — at the datum it STRIKES, and every part of it runs the burst.
+    // 2 — at the datum it ARRIVES, and every part of it runs its rung.
     await rollToQ(page, 1);
     await rollToQ(page, 1);
     const striking = await read();
     expect(striking.arrive, "the record strikes as the turn lands").toBe("in");
-    expect(striking.head!.anim).toMatch(/tl-glitch-bands/);
-    expect(striking.head!.anim).toMatch(/tl-glitch-strike/);
-    for (const v of striking.svgs) expect(v!.anim).toMatch(/tl-glitch-bands/);
+    expect(striking.head!.anim).toMatch(/tl-aperture/);
+    for (const v of striking.svgs) expect(v!.anim).toMatch(/tl-aperture/);
     expect(striking.roles.length, "five roles, drawn twice").toBe(10);
     for (const r of striking.roles) {
-      expect(r.anim, `${r.role} does not strike`).toMatch(/tl-glitch-strike/);
+      expect(r.anim, `${r.role} does not arrive`).toMatch(/tl-settle/);
     }
 
     // 3 — and it ends on the CASCADE: no fill, nothing pinned, nothing risen.
@@ -2026,14 +2025,14 @@ test.describe("Trinny London pitch variant", () => {
     const settled = await read();
     expect(settled.head!.vis).toBe("visible");
     expect(settled.head!.op).toBe("1");
-    expect(settled.head!.running, "the burst is spent, not held").toBe(false);
+    expect(settled.head!.running, "the sweep is spent, not held").toBe(false);
     /* ⚠ AND IT FILLS BACKWARDS, NEVER FORWARDS. Every one of these ends on
        exactly what the cascade already says, so ending ON the cascade cannot
        pop — a `forwards` fill would pin the last frame over it and take the
        board's own resting paint with it. The fill is what makes a DELAYED rung
        legal at all: without it a rung sits lit for the length of its delay and
        then snaps to zero, which is the ladder playing backwards. */
-    // One value per animation in the list — three, all the same.
+    // One animation on the head now (U12 collapsed the three into one sweep).
     expect(new Set(settled.head!.fill.split(",").map((v) => v.trim()))).toEqual(
       new Set(["backwards"])
     );
@@ -2043,7 +2042,7 @@ test.describe("Trinny London pitch variant", () => {
        it. `none` is the resting transform of a neutralised reveal. */
     expect(settled.head!.tr, "the head rose as well as struck").toBe("none");
     for (const r of settled.roles) {
-      expect(r.op, `${r.role} is dark after its strike`).toBe("1");
+      expect(r.op, `${r.role} is dark after its rung`).toBe("1");
     }
 
     // 4 — scrolling back strikes it OUT and re-arms it.
@@ -2087,7 +2086,7 @@ test.describe("Trinny London pitch variant", () => {
         plates: plates.map((p) => ({
           vis: getComputedStyle(p).visibility,
           running: p.getAnimations().some((a) => a.playState === "running"),
-          /* The comb's last frame is STRING-EQUAL to the plate's own clip,
+          /* The sweep's last frame is STRING-EQUAL to the plate's own clip,
              so the animation and the cascade end on one polygon. */
           clip: getComputedStyle(p).clipPath,
           w: Math.round(p.getBoundingClientRect().width),
@@ -2099,8 +2098,8 @@ test.describe("Trinny London pitch variant", () => {
     expect(phasesLate.plates.length).toBe(3);
     for (const p of phasesLate.plates) {
       expect(p.vis).toBe("visible");
-      expect(p.running, "the plate's burst is spent, not held").toBe(false);
-      expect(p.clip, "the plate lost its own notch to the comb").toMatch(/polygon/);
+      expect(p.running, "the plate's sweep is spent, not held").toBe(false);
+      expect(p.clip, "the plate lost its own notch to the sweep").toMatch(/polygon/);
       expect(p.w).toBeGreaterThan(200);
     }
   });
@@ -2208,11 +2207,14 @@ test.describe("Trinny London pitch variant", () => {
        stretch is a pure geometry move and the hand-over frame carries no
        half-shuffled glyph. */
     await rollToT(page, 0.99);
-    /* ⚠ AND THE PLATES HAVE TO HAVE STOPPED STRIKING BEFORE THEIR HEADS ARE
-       MEASURED. §A's burst animates `translate: 2.5px 0` on the plate itself,
-       so a head read mid-strike is up to 2.5px from where it settles — which
-       reads as the carrier missing its weld and is the HARNESS moving the
-       target. Settled, the delta is 0.00 on all four terms (measured). */
+    /* ⚠ AND THE PLATES HAVE TO HAVE FINISHED OPENING BEFORE THEIR HEADS ARE
+       MEASURED. Until ADR-097 U12 this was load-bearing for the GEOMETRY:
+       §A's strike animated `translate: 2.5px 0` on the plate itself, so a
+       head read mid-burst was up to 2.5px from where it settles — the
+       HARNESS moving the target. The aperture moves nothing, so the delta
+       no longer depends on it; the wait stays because a hand-over frame
+       sampled through a half-open plate is not the frame being claimed.
+       Settled, the delta is 0.00 on all four terms (measured). */
     await settleStrike(page, "#phases");
     const seated = await read();
     if (seated.t > 0.9 && seated.t < 1) {

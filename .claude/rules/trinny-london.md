@@ -1110,24 +1110,36 @@ proposal` and `/arcs/perfect-ted-proposal` have the same defect for the same
   rather than as a harness miss. Every probe here re-rolls and verifies
   `scrollY` before measuring.
 
-## The two strike-ins (ADR-101 §A)
+## The two arrivals (ADR-101 §A, skin per ADR-097 U12)
 
 Owner, 2026-09-14: the configuration's elements _"don't have to fly in. They
 don't have to have a movement. They need to have a glitch effect like we have
 on our homepage"_, only once the turn has emptied — and the same for the
 phases one station down.
 
-- ⚠ **IT IS THE PROOF CARD'S STRIKE-IN (ADR-097 U11), NOT THE HERO'S
-  SLICE-TEAR (ADR-060).** Both answer to "the homepage's glitch" and only one
-  can be aimed at a live beat: the hero's is a CANVAS that samples the painted
-  page, which has nothing to sample until the thing is already visible — the
-  frame the effect exists to replace. The card's is CSS on the object itself
-  (band comb on its own clip, the `#about` power-on curve with a
-  self-cancelling 2.5px tear, the hologram's chromatic resolve) and it
-  materialises a COMPOSED thing in place. ⚠ **COPIED as `tl-glitch-*` into the
-  route sheet, never imported** — a route sheet reaching into a landing sheet
-  is a dependency in the wrong direction, and the arcs already say so of
-  `pda.css` one object over.
+⚠ **AND LATER THE SAME DAY THE GLITCH CAME OUT, ON BOTH HOSTS** (ADR-097 U12,
+owner, on the live read of the homepage card this route copied: _"it's a bit
+too flashy, which could give seizures"_). The flash was countable — three
+large-area luminance transitions inside 378ms, ~4 dark↔light alternations a
+second, against WCAG 2.3.1's three-per-second general-flash threshold — so it
+is not a dial. **Everything below still binds except what PAINTS**: the order,
+the lead, the hysteresis, the two hidden states, the fill mode, the delay
+property and both ladders are untouched. The skin is the corridor caption
+card's centre-out APERTURE (550ms, `cubic-bezier(0.16, 1, 0.3, 1)`, PURE
+MOTION with zero fades) — `tl-aperture` · `tl-aperture-close` ·
+`tl-aperture-plate` · `tl-aperture-plate-close` · `tl-settle`.
+
+- ⚠ **IT IS THE PROOF CARD'S ARRIVAL (ADR-097), NOT THE HERO'S SLICE-TEAR
+  (ADR-060).** Both answer to "the homepage's glitch" and only one can be
+  aimed at a live beat: the hero's is a CANVAS that samples the painted page,
+  which has nothing to sample until the thing is already visible — the frame
+  the effect exists to replace. The card's is CSS on the object itself, and it
+  materialises a COMPOSED thing in place. ⚠ **COPIED as `tl-aperture*` into
+  the route sheet, never imported** — a route sheet reaching into a landing
+  sheet is a dependency in the wrong direction, and the arcs already say so of
+  `pda.css` one object over. U11's band comb, power-on curve and chromatic
+  resolve were copied here first and came out with U12; the COPY is the
+  durable half of this bullet, not the keyframes it happened to name.
 - ⚠ **THE TRIGGER IS A HYSTERESIS AND `await` IS NOT `out`.** `arriveNext`
   (pure, unit-pinned) is ADR-021's one sanctioned exception: a bounded burst on
   a hysteresis, because a burst has a DIRECTION and a progress value does not.
@@ -1162,18 +1174,23 @@ phases one station down.
   race left to lose. ⚠ `animation-fill-mode` is **`backwards`**, never
   `forwards` — the last frame is already the cascade's identity, but a delayed
   rung without it sits lit for its delay and then snaps to zero.
-- ⚠ **TWO COMBS.** `tl-glitch-bands` is OVERSCANNED by `--tl-gl-o` 48px with an
+- ⚠ **TWO APERTURES.** `tl-aperture` is OVERSCANNED by `--tl-gl-o` 48px with an
   identity frame larger than the box (the head hangs its designation, origin
   cross, two coord stamps and close cross OUTSIDE its border box, and a 0 →
-  100% comb guillotines all four). `tl-glitch-bands-plate` carries the plate's
-  TR cut in band 0 and its last frame is STRING-EQUAL to `.arc-plate`'s own
-  `clip-path`, so animation and cascade end on one polygon. Both are ONE
-  polygon, bands bridged down the left edge, non-zero winding, never `evenodd`.
-- ⚠ **THE CHROMA RIDES THE ROWS AND THE FOOT, NEVER AN OPAQUE PLATE** —
-  `filter` applies to the whole rendered output and the clip is applied AFTER
-  it, so a split on the plate is clipped away. ⚠ And on parchment the 1.16
-  brightness GREYS the ink for ~70ms; the split carries the effect, and it is
-  the one dial (left open).
+  100% clip guillotines all four); it also serves `.arc-board__svg`, which
+  sweeps as a WHOLE object. `tl-aperture-plate` carries the plate's TR cut and
+  its open frame is STRING-EQUAL to `.arc-plate`'s own `clip-path`, so
+  animation and cascade end on one polygon. ⚠ In both, the CLOSED frame is the
+  open one with every **X at 50% and every Y untouched** — purely lateral,
+  point for point, and the plate's notch present throughout.
+- ⚠ **THE CHROMA IS DELETED, AND SO IS THE DIAL IT LEFT OPEN** (U12). It rode
+  `.arc-plate__row` / `__foot` and never the opaque plate (`filter` applies to
+  the whole rendered output and the clip lands AFTER it, so a split on the
+  plate is clipped away) — and on parchment its 1.16 brightness GREYED the ink
+  for ~70ms, which was recorded here as the one dial. A brightness pulse is a
+  luminance flash; the rows and the foot are revealed by the plate's own sweep
+  now, which is the caption card's law and one less thing between the reader
+  and the plate. **Nothing inside a plate animates.**
 - ⚠ **`visibility: hidden` AND `pointer-events: none` WHILE A STATION WAITS.**
   The stations overlap by a whole viewport, so for the turn's last screen
   `#proposition` is laid out directly over the turn's own button; a transparent
@@ -1190,15 +1207,20 @@ phases one station down.
   keyframes long after the burst ends, so "did it finish" is asked of
   `getAnimations()`. `settleStrike` waits on `.finished` with a `catch` (an
   animation cancelled mid-flight REJECTS) rather than on a timeout — a
-  strike's length is a LADDER (1.60s to the ledger's last rung), not a
+  arrival's length is a LADDER (1.60s to the ledger's last rung), not a
   duration.
 - **The ladders.** Board 640ms — card 80 · seat 160 · lane seat 240 · lane
   layer 300 · layer 360 · lane tools 360 · tools 440 · lane reach 480 · reach 560. Ledger 960ms — seat 80 · layer 220 · card 360 · tools 500 · reach 640.
   Phases: head 0, plates 160 · 300 · 440. ADR-100 U3's "read first, read
-  slowest" survives the change of mechanism.
-- **Left open:** the brightness on parchment; a fast flick landing the head
-  band inside the plates' comb for a frame; the beats below `#phases` keeping
-  the plain rise (the owner asked for "the next section").
+  slowest" survives the change of mechanism, TWICE — the rungs and both
+  durations are byte-identical under U12's `tl-settle`, because replacing that
+  ladder with a per-part aperture would have deleted an owner ruling to buy
+  one more sweep (and a `clip-path` percentage on an SVG `<g>` does not
+  resolve against a per-group box in any case).
+- **Left open:** the sweep's duration and curve (the one dial U12 leaves); a
+  fast flick landing the head band inside a half-open plate for a frame; the
+  beats below `#phases` keeping the plain rise (the owner asked for "the next
+  section").
 
 ## The seam: the chip becomes the plates (ADR-101 §B)
 

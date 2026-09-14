@@ -987,7 +987,7 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   }
 }
 
-/* ── 10. The two strike-ins (ADR-101 §A) ───────────────────────────
+/* ── 10. The two arrivals (ADR-101 §A, skin per ADR-097 U12) ─────────
    Owner, 2026-09-14: _"when you scroll from the 'And now we bring this to
    Trinny London' section to the next section, the elements of the next
    section … don't have to fly in. They don't have to have a movement. They
@@ -996,21 +996,32 @@ html[data-corridor-exit="true"] .tl-root #proposition {
    out."_ And, for the beat after it: _"we also want the elements from the
    next section to glitch into view."_
 
-   ⚠ THE GLITCH IS THE PROOF CARD'S STRIKE-IN (ADR-097 U11), NOT THE HERO'S
-   SLICE-TEAR. Both are "the homepage's glitch". The hero's (`themeGlitch.ts`)
-   is a canvas that samples the painted page and rebuilds it in torn slices —
-   correct for swapping one whole image for another, and it cannot be pointed
-   at a live DOM beat with an SVG in it. The card's is CSS on the object
-   itself: a band comb on the clip, a power-on curve with a self-cancelling
-   tear, and a chromatic resolve. That is the one that materialises a composed
-   thing in place, which is the ask.
+   ⚠ THE GLITCH IS GONE AND THE SEATED ARRIVAL IS NOT. Later the same day, on
+   the live read of the homepage card this copied: the strike is too flashy to
+   keep — a photosensitivity risk, and a measurable one (three large-area
+   luminance transitions inside 378ms, ~4 dark↔light alternations a second,
+   against WCAG 2.3.1's three-per-second general-flash threshold, with five
+   hard `steps(1, end)` band changes over the top). Everything §A ruled
+   SURVIVES: nothing flies in, nothing rises, both beats arrive SEATED, and
+   neither begins until the turn's own elements are spent. Only the skin
+   changed.
 
-   ⚠ AND EVERY KEYFRAME BELOW IS `proof-stack.css`'s, COPIED, NOT IMPORTED.
-   The arcs copy grammars (the board's own ladder says the same of `pda.css`);
-   a route sheet reaching into a landing sheet is a dependency in the wrong
-   direction. The values are unchanged — 420ms comb on a shuffled rank, 640ms
-   strike at 0 → .62 → .12 → 1 with a 2.5px tear that cancels itself, 640ms
-   chroma on the settle half, 260ms out.
+   ⚠ AND IT IS STILL THE PROOF CARD'S, COPIED, NOT IMPORTED. The arcs copy
+   grammars (the board's own ladder says the same of `pda.css`); a route sheet
+   reaching into a landing sheet is a dependency in the wrong direction. What
+   it copies now is `proof-stack.css`'s APERTURE (ADR-097 U12) — itself the
+   corridor caption card's motion — a `clip-path` opening from a zero-width
+   centre slit to both edges at once, 550ms on `cubic-bezier(0.16, 1, 0.3, 1)`.
+   Its law is the whole point: **the unfold is PURE MOTION, zero fades.** A
+   sweep and a flicker fight each other, so there is no opacity curve, no tear
+   and no `filter` left in this section.
+
+   ⚠ THE BOARD'S PARTS KEEP THEIR OWN LADDER, AND IT IS AN OWNER RULING
+   (ADR-100 U3). The two drawings sweep open as WHOLE objects; their parts
+   arrive inside on `tl-settle`, a MONOTONIC fade with no dropout and no tear
+   — same rungs, same two durations, so the ledger still reads slower than the
+   board assembles. Replacing that ladder with a per-part aperture would have
+   deleted his ruling to buy one more sweep.
 
    ⚠ `animation-fill-mode` IS `backwards`, NEVER `forwards`. The last frame
    of every one of these IS the cascade's own identity, so ending on the
@@ -1027,83 +1038,30 @@ html[data-corridor-exit="true"] .tl-root #proposition {
    race left to lose. */
 
 .tl-root {
-  /* How far the comb overscans the box it cuts. The head hangs its
+  /* How far the aperture overscans the box it cuts. The head hangs its
      designation, its origin cross, two coord stamps and its close cross
-     OUTSIDE its own border box, so a comb running 0 → 100% guillotines them
-     for the length of the burst and the head reads as losing its chrome
+     OUTSIDE its own border box, so a clip running 0 → 100% guillotines them
+     for the length of the sweep and the head reads as losing its chrome
      rather than as arriving. 48px clears all four. */
   --tl-gl-o: 48px;
   --tl-gl-a: calc(0px - var(--tl-gl-o));
   --tl-gl-b: calc(100% + var(--tl-gl-o));
 }
 
-/* The band comb, shuffled and OVERSCANNED: two thin bands, then four, then
-   the runs merge until the object is whole. Bands are eighths of the box;
-   the outer extremes are the box plus `--tl-gl-o` on every side, so the last
-   frame is an identity frame LARGER than what it cuts. */
-@keyframes tl-glitch-bands {
-  0% {
+/* The aperture, OVERSCANNED: a zero-width slit down the middle at full
+   height, opening to an identity frame LARGER than what it cuts. Four points
+   on both ends and one fill rule, so the polygon interpolates point for point
+   instead of snapping discrete. */
+@keyframes tl-aperture {
+  from {
     clip-path: polygon(
-      var(--tl-gl-a) 25%,
-      var(--tl-gl-b) 25%,
-      var(--tl-gl-b) 37.5%,
-      var(--tl-gl-a) 37.5%,
-      var(--tl-gl-a) 62.5%,
-      var(--tl-gl-b) 62.5%,
-      var(--tl-gl-b) 75%,
-      var(--tl-gl-a) 75%
+      50% var(--tl-gl-a),
+      50% var(--tl-gl-a),
+      50% var(--tl-gl-b),
+      50% var(--tl-gl-b)
     );
   }
-  9% {
-    clip-path: polygon(
-      var(--tl-gl-a) var(--tl-gl-a),
-      var(--tl-gl-b) var(--tl-gl-a),
-      var(--tl-gl-b) 12.5%,
-      var(--tl-gl-a) 12.5%,
-      var(--tl-gl-a) 25%,
-      var(--tl-gl-b) 25%,
-      var(--tl-gl-b) 37.5%,
-      var(--tl-gl-a) 37.5%,
-      var(--tl-gl-a) 62.5%,
-      var(--tl-gl-b) 62.5%,
-      var(--tl-gl-b) 75%,
-      var(--tl-gl-a) 75%,
-      var(--tl-gl-a) 87.5%,
-      var(--tl-gl-b) 87.5%,
-      var(--tl-gl-b) var(--tl-gl-b),
-      var(--tl-gl-a) var(--tl-gl-b)
-    );
-  }
-  18% {
-    clip-path: polygon(
-      var(--tl-gl-a) var(--tl-gl-a),
-      var(--tl-gl-b) var(--tl-gl-a),
-      var(--tl-gl-b) 12.5%,
-      var(--tl-gl-a) 12.5%,
-      var(--tl-gl-a) 25%,
-      var(--tl-gl-b) 25%,
-      var(--tl-gl-b) 50%,
-      var(--tl-gl-a) 50%,
-      var(--tl-gl-a) 62.5%,
-      var(--tl-gl-b) 62.5%,
-      var(--tl-gl-b) var(--tl-gl-b),
-      var(--tl-gl-a) var(--tl-gl-b)
-    );
-  }
-  27% {
-    clip-path: polygon(
-      var(--tl-gl-a) var(--tl-gl-a),
-      var(--tl-gl-b) var(--tl-gl-a),
-      var(--tl-gl-b) 50%,
-      var(--tl-gl-a) 50%,
-      var(--tl-gl-a) 62.5%,
-      var(--tl-gl-b) 62.5%,
-      var(--tl-gl-b) var(--tl-gl-b),
-      var(--tl-gl-a) var(--tl-gl-b)
-    );
-  }
-  36%,
-  100% {
+  to {
     clip-path: polygon(
       var(--tl-gl-a) var(--tl-gl-a),
       var(--tl-gl-b) var(--tl-gl-a),
@@ -1113,69 +1071,46 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   }
 }
 
-/* The same comb for a PLATE, which carries its own silhouette. Band 0 holds
-   the top-right cut, and the last frame is STRING-EQUAL to `.arc-plate`'s own
-   `clip-path` (arcs.css) — so the animation and the cascade end on one
-   polygon and removing the animation is a no-op on the pixels. No overscan
-   here: the plate's box IS its edge, and an overscanned frame would cut the
-   notch off for the length of the burst. */
-@keyframes tl-glitch-bands-plate {
-  0% {
-    clip-path: polygon(0 25%, 100% 25%, 100% 37.5%, 0 37.5%, 0 62.5%, 100% 62.5%, 100% 75%, 0 75%);
-  }
-  9% {
+/* The iris shutting. ⚠ IT MUST HOLD `opacity` AND `visibility` ITSELF: the
+   `out` cascade below already says `opacity: 0; visibility: hidden`, so a
+   close that animated the clip alone would play on an invisible object. It
+   ends on the slit, where nothing paints, and the cascade takes over from
+   there with no pop and nothing interpolating `visibility`. */
+@keyframes tl-aperture-close {
+  from {
+    opacity: 1;
+    visibility: visible;
     clip-path: polygon(
-      0 0,
-      calc(100% - var(--arc-plate-ch)) 0,
-      100% var(--arc-plate-ch),
-      100% 12.5%,
-      0 12.5%,
-      0 25%,
-      100% 25%,
-      100% 37.5%,
-      0 37.5%,
-      0 62.5%,
-      100% 62.5%,
-      100% 75%,
-      0 75%,
-      0 87.5%,
-      100% 87.5%,
-      100% 100%,
-      0 100%
+      var(--tl-gl-a) var(--tl-gl-a),
+      var(--tl-gl-b) var(--tl-gl-a),
+      var(--tl-gl-b) var(--tl-gl-b),
+      var(--tl-gl-a) var(--tl-gl-b)
     );
   }
-  18% {
+  to {
+    opacity: 1;
+    visibility: visible;
     clip-path: polygon(
-      0 0,
-      calc(100% - var(--arc-plate-ch)) 0,
-      100% var(--arc-plate-ch),
-      100% 12.5%,
-      0 12.5%,
-      0 25%,
-      100% 25%,
-      100% 50%,
-      0 50%,
-      0 62.5%,
-      100% 62.5%,
-      100% 100%,
-      0 100%
+      50% var(--tl-gl-a),
+      50% var(--tl-gl-a),
+      50% var(--tl-gl-b),
+      50% var(--tl-gl-b)
     );
   }
-  27% {
-    clip-path: polygon(
-      0 0,
-      calc(100% - var(--arc-plate-ch)) 0,
-      100% var(--arc-plate-ch),
-      100% 50%,
-      0 50%,
-      0 62.5%,
-      100% 62.5%,
-      100% 100%,
-      0 100%
-    );
+}
+
+/* The same aperture for a PLATE, which carries its own silhouette. The open
+   frame is STRING-EQUAL to `.arc-plate`'s own `clip-path` (arcs.css) — so the
+   animation and the cascade end on one polygon and removing the animation is
+   a no-op on the pixels. No overscan here: the plate's box IS its edge, and
+   an overscanned frame would cut the notch off for the length of the sweep.
+   ⚠ The top-right cut is PRESENT THROUGHOUT, collapsed in x and never in y,
+   so the silhouette is not square for a single frame. */
+@keyframes tl-aperture-plate {
+  from {
+    clip-path: polygon(50% 0, 50% 0, 50% var(--arc-plate-ch), 50% 100%, 50% 100%);
   }
-  36%,
-  100% {
+  to {
     clip-path: polygon(
       0 0,
       calc(100% - var(--arc-plate-ch)) 0,
@@ -1186,105 +1121,45 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   }
 }
 
-/* The power-on, and the tear that cancels itself. Every element this runs on
-   is seated (the record does not travel on this route), so animating
-   `translate` here is safe in a way it is nowhere else in an arrival. */
-@keyframes tl-glitch-strike {
-  0% {
+/* ⚠ THE PLATE'S CLOSE HOLDS `visibility` ALONE. Its `out` cascade hides it by
+   `visibility` and never touches opacity, because §B's carrier has to be able
+   to re-declare the head band `visible` under that hide while the body stays
+   away — so a close that faded opacity would be fighting the seam. */
+@keyframes tl-aperture-plate-close {
+  from {
+    visibility: visible;
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--arc-plate-ch)) 0,
+      100% var(--arc-plate-ch),
+      100% 100%,
+      0 100%
+    );
+  }
+  to {
+    visibility: visible;
+    clip-path: polygon(50% 0, 50% 0, 50% var(--arc-plate-ch), 50% 100%, 50% 100%);
+  }
+}
+
+/* The board's parts, arriving inside the sweep. MONOTONIC by law — one rise,
+   no dropout, no tear: this is the rung that carried the flash. */
+@keyframes tl-settle {
+  from {
     opacity: 0;
-    translate: 2.5px 0;
   }
-  11% {
-    opacity: 0.62;
-    translate: -2.5px 0;
-  }
-  16% {
-    opacity: 0.62;
-    translate: 2.5px 0;
-  }
-  27% {
-    opacity: 0.12;
-    translate: 0 0;
-  }
-  40% {
-    opacity: 0.12;
-    translate: 0 0;
-  }
-  59% {
+  to {
     opacity: 1;
-    translate: 0 0;
-  }
-  100% {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
-/* The chromatic split resolving, on the SETTLE half only — a split under an
-   object that is still flickering is two effects at once.
-   ⚠ ON PARCHMENT THE BRIGHTNESS GREYS THE INK FOR ~70ms, and the split is
-   what carries the effect. This route is light-locked, so unlike the proof
-   card's home the lift works AGAINST the ground rather than with it; 1.16 is
-   the one dial on the effect. */
-@keyframes tl-glitch-chroma {
-  0%,
-  58% {
-    filter: none;
-  }
-  59% {
-    filter: brightness(1.16) drop-shadow(3px 0 0 rgba(var(--gold-rgb), 0.6))
-      drop-shadow(-3px 0 0 rgba(var(--gold-rgb), 0.45));
-  }
-  70% {
-    filter: brightness(1.1) drop-shadow(1.5px 0 0 rgba(var(--gold-rgb), 0.4))
-      drop-shadow(-1.5px 0 0 rgba(var(--gold-rgb), 0.3));
-  }
-  82% {
-    filter: brightness(1.04) drop-shadow(0 0 8px rgba(var(--gold-rgb), 0.3));
-  }
-  100% {
-    filter: none;
-  }
-}
-
-/* The reverse, shorter — leaving is not an arrival played backwards at the
-   same length. It ends VISIBLE at opacity 0 and the cascade's `hidden` takes
-   over when the animation stops, so nothing has to interpolate `visibility`. */
-@keyframes tl-glitch-out {
-  0% {
-    opacity: 1;
-    visibility: visible;
-    translate: 0 0;
-  }
-  10% {
-    opacity: 0.62;
-    visibility: visible;
-    translate: -2.5px 0;
-  }
-  20% {
-    opacity: 0.9;
-    visibility: visible;
-    translate: 2.5px 0;
-  }
-  30% {
-    opacity: 0.3;
-    visibility: visible;
-    translate: 0 0;
-  }
-  100% {
-    opacity: 0;
-    visibility: visible;
-    translate: 0 0;
   }
 }
 
 @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
   /* — The rise is inert on both beats —
      `ArcShell`'s IO still runs and still stamps `.is-in`; what it drives is
-     neutralised, because the strike IS the arrival and a beat that also rose
-     would ride two entrances at once. Route-scoped at ID specificity, which
-     is the board wrapper's own precedent one sheet over (arcs.css), so every
-     other arc keeps the rise unchanged. */
+     neutralised, because the aperture IS the arrival and a beat that also
+     rose would ride two entrances at once. Route-scoped at ID specificity,
+     which is the board wrapper's own precedent one sheet over (arcs.css), so
+     every other arc keeps the rise unchanged. */
   .tl-root #proposition .arc-reveal,
   .tl-root #phases .arc-reveal {
     opacity: 1;
@@ -1294,13 +1169,14 @@ html[data-corridor-exit="true"] .tl-root #proposition {
 
   /* — The board's own assembly, replaced —
      ADR-100's ladder fades each role in, blooms the chip and draws the
-     ribbons on. All three are MOVEMENT, which is the thing the owner asked
-     to be rid of here. The strike replaces them.
+     ribbons on. The bloom is a `1 → 0.45 → 1` flicker and the wire draw is
+     MOVEMENT, which is the thing the owner asked to be rid of here; the
+     sweep plus `tl-settle` replaces all three.
      ⚠ AND THE RESTING OPACITY HAS TO COME BACK WITH THEM. `arcs.css` rests
      `.arc-board__in` and `.arc-board__bloom` at `opacity: 0` and relies on
      `arcBdIn`'s `forwards` fill to hold them lit; with the animation gone and
-     the strike ending on the cascade (`fill-mode` is never `forwards` here),
-     the board would strike in and then vanish on its own last frame. */
+     the arrival ending on the cascade (`fill-mode` is never `forwards` here),
+     the board would arrive and then vanish on its own last frame. */
   .tl-root #proposition .arc-board .arc-board__in,
   .tl-root #proposition .arc-board .arc-board__bloom {
     opacity: 1;
@@ -1332,30 +1208,26 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   }
 
   .tl-root #proposition[data-tl-prop-arrive="in"] .arc-head {
-    animation:
-      tl-glitch-bands 420ms steps(1, end) backwards,
-      tl-glitch-strike 640ms linear backwards,
-      tl-glitch-chroma 640ms steps(1, end) backwards;
+    animation: tl-aperture 550ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
-  /* The two drawings comb as WHOLE objects and resolve chromatically; their
-     parts strike individually, on the ladder below. */
+  /* The two drawings sweep open as WHOLE objects; their parts arrive inside,
+     on the ladder below. */
   .tl-root #proposition[data-tl-prop-arrive="in"] .arc-board__svg {
-    animation:
-      tl-glitch-bands 420ms 80ms steps(1, end) backwards,
-      tl-glitch-chroma 640ms 80ms steps(1, end) backwards;
+    animation: tl-aperture 550ms 80ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
   .tl-root #proposition[data-tl-prop-arrive="in"] [data-board-role],
   .tl-root #proposition[data-tl-prop-arrive="in"] [data-board-lane] {
-    animation: tl-glitch-strike 640ms var(--tl-gl-d, 0ms) linear backwards;
+    animation: tl-settle 640ms var(--tl-gl-d, 0ms) cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
   /* ⚠ AND THE LEDGER STILL RUNS SLOWER THAN THE BOARD (ADR-100 U3, owner:
      "the elements from the studio today should move a bit slower into view").
-     The two sides are not the same kind of arrival and the strike does not
-     change that: the board ASSEMBLES outward from its chip, the ledger is
-     five rows READ IN ORDER. 960ms against 640, last rung at 1.60s against
-     the board's 1.20s. */
+     The two sides are not the same kind of arrival and neither the strike nor
+     the sweep changes that: the board ASSEMBLES outward from its chip, the
+     ledger is five rows READ IN ORDER. 960ms against 640, last rung at 1.60s
+     against the board's 1.20s — the rungs and both durations are U3's own,
+     untouched by U12. */
   .tl-root #proposition[data-tl-prop-arrive="in"] [data-board-state="today"] [data-board-role] {
-    animation: tl-glitch-strike 960ms var(--tl-gl-d, 0ms) linear backwards;
+    animation: tl-settle 960ms var(--tl-gl-d, 0ms) cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
   /* The lit board, outward from the one lit object. */
@@ -1405,9 +1277,7 @@ html[data-corridor-exit="true"] .tl-root #proposition {
 
   .tl-root #proposition[data-tl-prop-arrive="out"] .arc-head,
   .tl-root #proposition[data-tl-prop-arrive="out"] .arc-board__svg {
-    animation:
-      tl-glitch-out 260ms steps(1, end),
-      tl-glitch-bands 260ms steps(1, end) reverse;
+    animation: tl-aperture-close 260ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   /* — The phases —
@@ -1428,24 +1298,14 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   }
 
   .tl-root #offer[data-tl-phases-arrive="in"] #phases .arc-head {
-    animation:
-      tl-glitch-bands 420ms steps(1, end) backwards,
-      tl-glitch-strike 640ms linear backwards,
-      tl-glitch-chroma 640ms steps(1, end) backwards;
+    animation: tl-aperture 550ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
+  /* ⚠ THE PLATE SWEEPS ON ITS OWN SILHOUETTE, AND NOTHING INSIDE IT ANIMATES.
+     Its rows and its foot were carrying the chromatic split; they are revealed
+     spatially by the sweep now, which is the caption card's own law and one
+     less thing between the reader and the plate. */
   .tl-root #offer[data-tl-phases-arrive="in"] #phases .arc-plate {
-    animation:
-      tl-glitch-bands-plate 420ms var(--tl-gl-d, 0ms) steps(1, end) backwards,
-      tl-glitch-strike 640ms var(--tl-gl-d, 0ms) linear backwards;
-  }
-  /* ⚠ THE CHROMA RIDES THE ROWS AND THE FOOT, NEVER THE PLATE. `filter`
-     applies to an element's whole rendered output, so a split on the plate
-     would be a split of one opaque slab and then clipped away by the plate's
-     own `clip-path`, which is applied AFTER the filter. On the rows there is
-     an alpha edge for it to split. */
-  .tl-root #offer[data-tl-phases-arrive="in"] #phases .arc-plate__row,
-  .tl-root #offer[data-tl-phases-arrive="in"] #phases .arc-plate__foot {
-    animation: tl-glitch-chroma 640ms var(--tl-gl-d, 0ms) steps(1, end) backwards;
+    animation: tl-aperture-plate 550ms var(--tl-gl-d, 0ms) cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
   .tl-root #phases .arc-plate:nth-child(1) {
     --tl-gl-d: 160ms;
@@ -1457,11 +1317,11 @@ html[data-corridor-exit="true"] .tl-root #proposition {
     --tl-gl-d: 440ms;
   }
 
-  .tl-root #offer[data-tl-phases-arrive="out"] #phases .arc-head,
+  .tl-root #offer[data-tl-phases-arrive="out"] #phases .arc-head {
+    animation: tl-aperture-close 260ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
   .tl-root #offer[data-tl-phases-arrive="out"] #phases .arc-plate {
-    animation:
-      tl-glitch-out 260ms steps(1, end),
-      tl-glitch-bands 260ms steps(1, end) reverse;
+    animation: tl-aperture-plate-close 260ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 

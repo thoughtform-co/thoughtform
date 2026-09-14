@@ -37,7 +37,7 @@ const PERF = args.includes("--perf");
 /* `--handoff` walks the LAST card off the screen and reports the ring against
    its bottom edge — the beat ADR-096 U3 solves for. */
 const HANDOFF = args.includes("--handoff");
-/* `--glitch 60,300,600` shoots the first card's materialisation (ADR-097 U11)
+/* `--glitch 0,90,180,280,420,560` shoots the first card's materialisation
    on a PAUSED clock, one still per millisecond offset. */
 const GLITCH = (argOf("--glitch", "") || "")
   .split(",")
@@ -288,7 +288,7 @@ try {
      edge. ⚠ Runway-relative scroll throughout: the corridor inflates the
      document, so an absolute `y` means nothing between runs. */
   /* ── `--glitch`: the first card's materialisation, on a PAUSED clock ──
-     (ADR-097 U11.) The burst is 640ms and a Playwright round trip is 400–900,
+     (ADR-097 U11/U12.) The sweep is 550ms and a Playwright round trip is 400–900,
      so "shoot it mid-flight" is post-hoc fiction (ADR-071's own finding). It
      is REPLAYED instead: the attribute is toggled off and on to restart the
      animations, then every one of them is paused and seeked to the same

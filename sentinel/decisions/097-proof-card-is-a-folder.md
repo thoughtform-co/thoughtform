@@ -918,6 +918,132 @@ correct.
 - Cards 2–4 are deliberately untouched, per the ask. If the pile should ever
   read as one system, it is a new decision and not an extension of this one.
 
+## Update 12 — the card opens instead of striking (2026-09-14, owner)
+
+> It's a bit too flashy, which could give seizures, so we can't do that.
+> Instead, I want to have that sort of scan-line animation which we have in
+> the text cards in our arc at the bottom that then opens from the center to
+> the left and right sides. I want to have that effect for our first proof
+> card as well.
+
+**U11's ruling survives; only its skin is replaced.** Card 0 alone. It is
+still ABSENT through its whole rise (option (a), his own pick) and still
+materialises in its last ~140px; scrolling back up still closes it. The
+trigger is untouched to the line — `data-pf-arrive`, the 0.92 / 0.82
+hysteresis on the INLINE `--pc-enter`, the `MutationObserver` on `style`, the
+covered-slot seeding, the `arrival="glitch"` prop and its one call site. **No
+TypeScript moved on either host.**
+
+### The flash was countable
+
+`pf-glitch-strike` ran `opacity 0 → .62 → .12 → 1` on a linear 640ms clock:
+three large-area luminance transitions inside its first **378ms**, i.e. about
+**four dark↔light alternations a second**, against WCAG 2.3.1's
+three-per-second general-flash threshold — with `pf-glitch-bands`' five hard
+`steps(1, end)` shape changes inside 420ms over the top, on an object covering
+a large share of the viewport. ⚠ **Whether the relative-luminance delta also
+crosses 2.3.1's 0.1 bound is NOT measured** — it depends on the corridor
+behind the glass, and it does not need to be: the count alone is the finding,
+and a safety concern is not a dial.
+
+### The grammar is the corridor caption card's, and he named it
+
+`.home-v2-reticle` — the text card docked at the bottom of the screen through
+NAVIGATE / ENCODE / BUILD. It rests at `clip-path: inset(-26px 50% -12px 50%)`
+— a zero-width slit at its centre — and sweeps open to both edges in 0.55s on
+`cubic-bezier(0.16, 1, 0.3, 1)`, its four gold corner crosses riding the
+opening edges on the same clock. Its own sheet states the law this pass turns
+on: **"the unfold is PURE MOTION, zero fades … everything inside (glass,
+hairlines, copy, meta, pips) is revealed spatially by the sweep."**
+
+So there is no opacity curve, no tear and no `filter` left in the block. A
+sweep and a flicker fight each other; removing the flicker is not a compromise
+with the effect, it is the effect.
+
+⚠ **THE SCAN LINE IS THE CARD'S OWN, AND NOTHING NEW IS DRAWN** (his call,
+offered against a literal travelling hairline). The gold lip ring
+(`.pf-card::before`) and the head's rule are already horizontal hairlines, and
+the aperture TERMINATES them at its two travelling edges — so they draw
+outward from the centre as it opens. That is precisely the read on the caption
+card, where the dashed edge frame does the same job. One less element, and
+nothing that can read as a flash.
+
+### Two keyframes, and the closed frame is the open one with x collapsed
+
+`pf-aperture` (550ms) and `pf-aperture-close` (300ms). The open frame is
+**string-equal** to `.pf-card`'s own six-point chamfer polygon; the closed
+frame is that polygon with every **X at 50% and every Y left alone** — a
+zero-width, FULL-HEIGHT slit, so the sweep is purely lateral and the six points
+interpolate one for one instead of snapping discrete.
+
+⚠ **THE SILHOUETTE IS NEVER SQUARE FOR A FRAME.** Both chamfer points are
+present at 0 % (collapsed in x, never in y), so the TR and BL cuts grow with
+the sweep. Collapsing to a rectangle and cutting the corners at the end is the
+thing U11's band comb existed to avoid, and it would have been the easy way to
+write this.
+
+⚠ **THE CLOSE HOLDS `opacity` AND `visibility` ITSELF.** The `out` cascade
+says `opacity: 0; visibility: hidden`, so a close animating the clip alone
+plays on an invisible card. It ends on the slit — where nothing paints — and
+the cascade takes over from there, so nothing has to interpolate `visibility`
+and there is no pop. That is `pf-glitch-out`'s own contract, kept.
+
+Every U11 law is unchanged and still load-bearing: everything animates on
+`.pf-card` and never the slot (a clip on an ancestor blinds the
+`backdrop-filter`, a transform on the slot parks the pile); `fill-mode: none`
+with the last frame equal to the cascade (a `forwards` fill pins the clip and
+the card refuses to recede under the three that cover it); `clip-path`, not
+`mask`.
+
+### Measured, on the paused clock
+
+`node scripts/capture-proof-stack.mjs --glitch 0,20,45,80,140,280,560` at
+1440×900, card 1150×656: **one** animation throughout, `filter: none`,
+`translate: 0px`, `opacity: 1` at every offset — and the clip 50 % → 39.5 % →
+28.8 % → 18.3 % → 8.4 % → 1.3 % → the identity, which the smoke then pins by
+string equality against card 1.
+
+⚠ **THE READABLE PHASE IS THE FIRST QUARTER OF THE DURATION, AND THAT IS THE
+REFERENCE'S OWN SHAPE.** `cubic-bezier(0.16, 1, 0.3, 1)` is 84 % open at 90ms;
+the caption card is 84 % open at 90ms too, proportionally identical. What
+differs is absolute edge speed — 575px a side here against ~230px there — so
+if it reads fast on this card the dial is the DURATION, which scales the
+readable phase with it. Named, not spent.
+
+### The same pass fixed the other host
+
+`/arcs/trinny-london/proposal` carried a hand-copy of the identical strike
+(ADR-101 §A, `tl-glitch-*`) on its configuration board and its three phase
+plates. The flash is a property of the animation, not of the page, and that
+one is a client-facing pitch — so it takes the aperture too, in the same
+commit. See ADR-101 §A, amended in place. ⚠ **The board's PARTS keep their own
+ladder** (ADR-100 U3's owner ruling: the ledger reads slower than the board
+assembles); what they lose is the flash, on a monotonic `tl-settle`. Replacing
+that ladder with a per-part aperture would have deleted a ruling to buy one
+more sweep.
+
+### Guards
+
+`services-ring-smoke`'s settled read now matches `/pf-aperture/`; **every other
+assertion in it is untouched and is the proof the swap is clean** — the clip
+string-equal to card 1's, no residual translate, `filter: none`, the animation
+spent not held, the card absent mid-rise, and the re-arm. The PRM case still
+pins `animation-name: none`. `settleArrival` still waits on
+`getAnimations().finished` and is still load-bearing: `seatProofCard`'s retry
+wait is 450ms against a 550ms sweep, so a plate read after it would sample a
+half-open card on any pass but the first.
+
+### Left open
+
+- The two durations (550 / 300) and the curve are the only dials; nothing
+  measures whether the sweep reads as fast or slow on a card this wide.
+- **`arcBdBloom` (`arcs.css`) still carries a `1 → 0.45 → 1` opacity flicker**
+  over ~138ms — the same class of defect on the arcs' default board ladder. It
+  does not run on the Trinny page (that sheet kills it) and no other arc mounts
+  the `board` kind today, so it is DORMANT. Flagged, not touched.
+- The board-sweeps-as-one alternative on `#proposition` (an aperture on
+  `.arc-board__svg` with the per-part ladder dropped) — named and not taken.
+
 ## Left open
 
 - The owner's read of the remaining dial: the flat lip vs the plate's ramp,

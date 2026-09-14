@@ -395,47 +395,71 @@
   );
 }
 
-/* ── THE FIRST CARD MATERIALISES (ADR-097 U11) ───────────────────────
-   Owner, 2026-09-13: the first card should APPEAR in a glitch rather than
-   slide up and fade, "the others can just scroll over it as it is now". So
-   card 0 alone is held absent through its whole rise and struck into
-   existence in its last ~120–200px; scrolling back up strikes it out again.
-   `ProofStack` writes `data-pf-arrive` on the SLOT off the hook's own
-   `--pc-enter` (a channel, never `data-pc-state`, which has no memory of
-   direction); every pixel below is this sheet's.
+/* ── THE FIRST CARD OPENS (ADR-097 U12, superseding U11's skin) ──────
+   Owner, 2026-09-13: the first card should APPEAR rather than slide up and
+   fade, "the others can just scroll over it as it is now". U11 spent that as
+   a GLITCH; on the live read (2026-09-14) it was too flashy to keep — a
+   photosensitivity risk, and a measurable one. `pf-glitch-strike` ran
+   `opacity 0 → .62 → .12 → 1` on a linear 640ms clock, i.e. THREE large-area
+   luminance transitions inside its first 378ms (~4 dark↔light alternations a
+   second, against WCAG 2.3.1's three-per-second general-flash threshold),
+   with five hard `steps(1, end)` band changes inside 420ms over the top.
+
+   ⚠ **WHAT U11 RULED STANDS; ONLY ITS SKIN CHANGED.** Card 0 alone is still
+   held ABSENT through its whole rise and materialises in its last ~120–200px;
+   scrolling back up closes it again. `ProofStack` still writes
+   `data-pf-arrive` on the SLOT off the hook's own `--pc-enter` (a channel,
+   never `data-pc-state`, which has no memory of direction), with the same
+   0.92 / 0.82 hysteresis read INLINE. Not one line of TS moved.
+
+   ⚠ **THE GRAMMAR IS THE CORRIDOR CAPTION CARD'S** (`.home-v2-reticle`,
+   home-v2.css) — the text card docked at the bottom of the screen through
+   NAVIGATE / ENCODE / BUILD, which the owner named as the replacement. It
+   rests clipped to a zero-width slit at its centre and sweeps open to both
+   edges at once, and its law is the whole point here: **"the unfold is PURE
+   MOTION, zero fades — everything inside is revealed spatially by the
+   sweep."** A sweep and a flicker fight each other, so there is no opacity
+   curve, no tear and no `filter` anywhere in this block.
+
+   ⚠ **THE SCAN LINE IS THE CARD'S OWN, NOT AN ADDED ONE** (owner's call, same
+   day). Nothing new is drawn: the gold lip ring (`.pf-card::before`) and the
+   head's rule are already horizontal hairlines, and the aperture terminates
+   them at its two travelling edges — so they draw outward from the centre as
+   it opens. That IS the read on the caption card, where the dashed edge frame
+   does the same job.
 
    ⚠ **GATED ON THE EXACT INVERSE OF THE INERT RUNG.** Where the pile is
    static flow the hook parks every slot at `enter: 1` and there is no
-   arrival to strike — a card that hid itself there would simply be missing.
+   arrival to open — a card that hid itself there would simply be missing.
 
    ⚠ **EVERYTHING ANIMATES ON `.pf-card`, NEVER ON THE SLOT.** A `filter`,
    `opacity`, `clip-path` or `mask` on an ANCESTOR makes that ancestor the
    backdrop root, and the card's `backdrop-filter` would go blind — the glass
-   flashing flat for the length of the burst. And the hook reads the SLOT's
+   flashing flat for the length of the sweep. And the hook reads the SLOT's
    rect: a transform there parks the whole pile (the sheet's own law).
 
-   ⚠ **THE GRAMMAR IS THE HOUSE'S, FROM THREE PLACES.** The opacity curve is
-   the `#about` terminal power-on (strike to .62, drop out to ~.12, settle to
-   1) with its self-cancelling 2.5px lateral tear; the band dropout and the
-   chromatic resolve are the Voidwalker hologram's `vwhReveal` / `vwhSettle`;
-   and the bands arrive in a SHUFFLED rank rather than top-to-bottom, which is
-   `themeGlitch`'s own law — a monotonic order reads as a wipe, and a wipe is
-   the one thing a glitch must not look like.
-
-   ⚠ **THE LAST FRAME IS THE IDENTITY, AND `fill-mode` IS `none`.** Every
-   animation ends on exactly what the cascade already says at a pinned card
-   (the card's own chamfer, opacity 1 through `--pc-in-plate`, zero translate,
-   no filter), so removing the animation cannot pop. A `forwards` fill would
-   pin `opacity: 1` over the depth dim and the card would refuse to recede
-   under the three that cover it.
+   ⚠ **THE LAST FRAME IS THE IDENTITY, AND `fill-mode` IS `none`.** The open
+   frame is STRING-EQUAL to the card's own clip above, so removing the
+   animation cannot pop — and the smoke pins exactly that, by comparing card
+   0's settled `clip-path` against card 1's, which never opens. A `forwards`
+   fill would pin the clip and the card would refuse to recede under the three
+   that cover it.
 
    ⚠ **`clip-path`, NOT `mask`.** The chamfer is already a clip on this
-   element — that is how the card is cut — so the bands ride the same
-   mechanism, and every frame carries the TR and BL cuts in its first and last
-   band rather than squaring the silhouette for 420ms. A comb is ONE polygon:
-   each lit band traced clockwise, bridged down the left edge and closed back
-   up it, where the bridges and the return are collinear and enclose nothing
-   (non-zero winding — never `evenodd` here, which would cancel them). */
+   element — that is how the card is cut — so the aperture rides the same
+   mechanism rather than introducing a second one over a `backdrop-filter`
+   whose behaviour under a mask is unverified.
+
+   ⚠ **THE SILHOUETTE IS NEVER SQUARE FOR A FRAME.** The closed frame is the
+   card's own six-point polygon with every X collapsed to 50% and every Y left
+   alone — a zero-width, FULL-HEIGHT slit — so the TR and BL cuts are present
+   throughout and grow with the sweep. Collapsing to a rectangle and cutting
+   the corners at the end is the thing U11's band comb was built to avoid.
+
+   The curve and the two durations are dials: 550ms / `cubic-bezier(0.16, 1,
+   0.3, 1)` is the caption card's own pair, copied; the shorter close is this
+   surface's own law — leaving is not an arrival played backwards at the same
+   length. */
 @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
   .pf-stack .pf-slot[data-pf-arrive="await"] .pf-card,
   .pf-stack .pf-slot[data-pf-arrive="out"] .pf-card {
@@ -446,84 +470,32 @@
   }
 
   .pf-stack .pf-slot[data-pf-arrive="in"] .pf-card {
-    animation:
-      pf-glitch-bands 420ms steps(1, end),
-      pf-glitch-strike 640ms linear,
-      pf-glitch-chroma 640ms steps(1, end);
+    animation: pf-aperture 550ms cubic-bezier(0.16, 1, 0.3, 1);
     animation-fill-mode: none;
   }
 
   .pf-stack .pf-slot[data-pf-arrive="out"] .pf-card {
-    animation:
-      pf-glitch-out 260ms steps(1, end),
-      pf-glitch-bands 260ms steps(1, end) reverse;
+    animation: pf-aperture-close 300ms cubic-bezier(0.16, 1, 0.3, 1);
     animation-fill-mode: none;
   }
 }
 
-/* The band comb, shuffled: two thin bands, then four, then the runs merge
-   until the card is whole. Bands are eighths; band 0 carries the TR cut and
-   band 7 the BL, so the silhouette is never square. */
-@keyframes pf-glitch-bands {
-  0% {
-    clip-path: polygon(0 25%, 100% 25%, 100% 37.5%, 0 37.5%, 0 62.5%, 100% 62.5%, 100% 75%, 0 75%);
-  }
-  9% {
+/* The aperture. `from` is the card's own silhouette with every X at 50% —
+   a zero-width slit down the middle at full height; `to` is that silhouette
+   verbatim. Six points on both ends and one fill rule, so the polygon
+   interpolates point for point instead of snapping discrete. */
+@keyframes pf-aperture {
+  from {
     clip-path: polygon(
-      0 0,
-      calc(100% - var(--pf-card-ch)) 0,
-      100% var(--pf-card-ch),
-      100% 12.5%,
-      0 12.5%,
-      0 25%,
-      100% 25%,
-      100% 37.5%,
-      0 37.5%,
-      0 62.5%,
-      100% 62.5%,
-      100% 75%,
-      0 75%,
-      0 87.5%,
-      100% 87.5%,
-      100% 100%,
-      var(--pf-card-ch) 100%,
-      0 calc(100% - var(--pf-card-ch))
+      50% 0,
+      50% 0,
+      50% var(--pf-card-ch),
+      50% 100%,
+      50% 100%,
+      50% calc(100% - var(--pf-card-ch))
     );
   }
-  18% {
-    clip-path: polygon(
-      0 0,
-      calc(100% - var(--pf-card-ch)) 0,
-      100% var(--pf-card-ch),
-      100% 12.5%,
-      0 12.5%,
-      0 25%,
-      100% 25%,
-      100% 50%,
-      0 50%,
-      0 62.5%,
-      100% 62.5%,
-      100% 100%,
-      var(--pf-card-ch) 100%,
-      0 calc(100% - var(--pf-card-ch))
-    );
-  }
-  27% {
-    clip-path: polygon(
-      0 0,
-      calc(100% - var(--pf-card-ch)) 0,
-      100% var(--pf-card-ch),
-      100% 50%,
-      0 50%,
-      0 62.5%,
-      100% 62.5%,
-      100% 100%,
-      var(--pf-card-ch) 100%,
-      0 calc(100% - var(--pf-card-ch))
-    );
-  }
-  36%,
-  100% {
+  to {
     clip-path: polygon(
       0 0,
       calc(100% - var(--pf-card-ch)) 0,
@@ -535,99 +507,36 @@
   }
 }
 
-/* The power-on, and the tear that cancels itself. `--pc-in` has saturated by
-   the time this fires, so the cascade's own `translate` is already 0 — which
-   is what makes animating that property safe here and nowhere else in the
-   arrival. */
-@keyframes pf-glitch-strike {
-  0% {
-    opacity: 0;
-    translate: 2.5px 0;
-  }
-  11% {
-    opacity: 0.62;
-    translate: -2.5px 0;
-  }
-  16% {
-    opacity: 0.62;
-    translate: 2.5px 0;
-  }
-  27% {
-    opacity: 0.12;
-    translate: 0 0;
-  }
-  40% {
-    opacity: 0.12;
-    translate: 0 0;
-  }
-  59% {
-    opacity: 1;
-    translate: 0 0;
-  }
-  100% {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
-/* The chromatic split resolving — the hologram's `vwhSettle` at this scale,
-   in the house gold rather than a second hue. It rides the SETTLE half only:
-   a split under a card that is still flickering is two effects at once.
-   ⚠ **THE SPLIT CARRIES IT, NOT THE BRIGHTNESS.** The hologram's own peak is
-   1.5, and at that value here the card washes olive — `filter` applies to this
-   element's rendered output, which INCLUDES its `backdrop-filter`, so lifting
-   it lifts the blurred corridor behind the glass and the frame reads as an
-   exposure change rather than as the card resolving. 1.16 with a wider offset
-   keeps the event on the object. */
-@keyframes pf-glitch-chroma {
-  0%,
-  58% {
-    filter: none;
-  }
-  59% {
-    filter: brightness(1.16) drop-shadow(3px 0 0 rgba(var(--gold-rgb), 0.6))
-      drop-shadow(-3px 0 0 rgba(var(--gold-rgb), 0.45));
-  }
-  70% {
-    filter: brightness(1.1) drop-shadow(1.5px 0 0 rgba(var(--gold-rgb), 0.4))
-      drop-shadow(-1.5px 0 0 rgba(var(--gold-rgb), 0.3));
-  }
-  82% {
-    filter: brightness(1.04) drop-shadow(0 0 8px rgba(var(--gold-rgb), 0.3));
-  }
-  100% {
-    filter: none;
-  }
-}
-
-/* The reverse, shorter — leaving is not an arrival played backwards at the
-   same length. It ends VISIBLE at opacity 0 and the cascade's `hidden` takes
-   over when the animation stops, so nothing has to interpolate `visibility`. */
-@keyframes pf-glitch-out {
-  0% {
+/* The iris shutting — the caption card's disarm, which plays the exact
+   reverse. ⚠ IT MUST HOLD `opacity` AND `visibility` ITSELF: the `out`
+   cascade above already says `opacity: 0; visibility: hidden`, so a close
+   that animated the clip alone would play on an invisible card. It ends on
+   the slit, where nothing paints, and the cascade takes over from there with
+   no pop and nothing interpolating `visibility`. */
+@keyframes pf-aperture-close {
+  from {
     opacity: 1;
     visibility: visible;
-    translate: 0 0;
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--pf-card-ch)) 0,
+      100% var(--pf-card-ch),
+      100% 100%,
+      var(--pf-card-ch) 100%,
+      0 calc(100% - var(--pf-card-ch))
+    );
   }
-  10% {
-    opacity: 0.62;
+  to {
+    opacity: 1;
     visibility: visible;
-    translate: -2.5px 0;
-  }
-  20% {
-    opacity: 0.9;
-    visibility: visible;
-    translate: 2.5px 0;
-  }
-  30% {
-    opacity: 0.3;
-    visibility: visible;
-    translate: 0 0;
-  }
-  100% {
-    opacity: 0;
-    visibility: visible;
-    translate: 0 0;
+    clip-path: polygon(
+      50% 0,
+      50% 0,
+      50% var(--pf-card-ch),
+      50% 100%,
+      50% 100%,
+      50% calc(100% - var(--pf-card-ch))
+    );
   }
 }
 

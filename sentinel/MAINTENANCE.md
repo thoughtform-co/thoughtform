@@ -81,8 +81,9 @@ faded out — with the same for the beat after it.
   delays were applied in the LIT board's role order. The smoke SORTED the rungs
   by delay before asserting they increase — a walk that can find a dead rung and
   never a mis-ordered one. It reads them in DOM order now.
-- **ADR-101 §A — both beats strike in, seated.** The PROOF CARD's strike-in
-  (ADR-097 U11) copied as `tl-glitch-*`, not the hero's canvas slice-tear
+- **ADR-101 §A — both beats arrive, seated.** The PROOF CARD's arrival copied
+  as `tl-aperture*` (the strike-in was ADR-097 U11 and its flash came out the
+  same day — U12), not the hero's canvas slice-tear
   (ADR-060), which samples the painted page and so has nothing to sample until
   the thing is visible. `--tl-prop-lead` 50svh → **100svh** so `p` and `q`
   saturate on ONE frame; the veil's second ramp re-keyed to 0.384 / 1 or the

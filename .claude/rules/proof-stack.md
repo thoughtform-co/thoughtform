@@ -174,15 +174,36 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
 
 ## The folder (ADR-097, live on both hosts)
 
-- ⚠ **THE FIRST CARD MATERIALISES, AND ONLY THE FIRST** (ADR-097 U11, owner:
-  _"a cool glitch effect where the first card appears — the others can just
-  scroll over it as it is now"_). Card 0 is ABSENT through its whole rise and
-  struck in over 640ms in its last ~140px; scrolling back up strikes it out.
-  Five things about it, each of which was a defect first:
-  ⚠ **THE TRIGGER IS THE CHANNEL, NOT `data-pc-state`.** That attribute returns
-  to `pinned` whenever the card above scrolls back off a covered slot, so a
-  state-keyed burst re-fires on a card that never left — four times on the way
-  back up. `--pc-enter` stays at 1 while covered, so a hysteresis on it
+- ⚠ **THE FIRST CARD OPENS, AND ONLY THE FIRST** (ADR-097 U11 for the beat,
+  **U12 for the skin**). Owner, 2026-09-13: _"a cool glitch effect where the
+  first card appears — the others can just scroll over it as it is now"_; then
+  2026-09-14, on the live read: _"it's a bit too flashy, which could give
+  seizures … instead I want that sort of scan-line animation which we have in
+  the text cards in our arc at the bottom that then opens from the center to
+  the left and right sides."_ Card 0 is ABSENT through its whole rise and its
+  APERTURE sweeps open from a zero-width centre slit over 550ms in its last
+  ~140px; scrolling back up irises it shut in 300ms. Seven things about it,
+  each of which was a defect first:
+  ⚠ **THE FLASH WAS COUNTABLE, AND THAT IS WHY IT IS NOT A DIAL.** The retired
+  `pf-glitch-strike` ran `opacity 0 → .62 → .12 → 1` linear over 640ms: three
+  large-area luminance transitions inside its first **378ms** (~4 dark↔light
+  alternations a second, against WCAG 2.3.1's three-per-second general-flash
+  threshold), with `pf-glitch-bands`' five hard `steps(1, end)` shape changes
+  over the top. The relative-luminance delta is NOT measured and does not need
+  to be. **Nothing on this card may reintroduce a luminance flicker.**
+  ⚠ **PURE MOTION, ZERO FADES** — the corridor caption card's own law
+  (`.home-v2-reticle`, the text card at the bottom of NAVIGATE / ENCODE /
+  BUILD, which is the grammar he named). There is no opacity curve, no tear
+  and no `filter` in the block. A sweep and a flicker fight each other.
+  ⚠ **THE SCAN LINE IS THE CARD'S OWN.** Nothing new is drawn: the gold lip
+  ring (`.pf-card::before`) and the head's rule are already horizontal
+  hairlines, and the aperture terminates them at its two travelling edges, so
+  they draw outward from the centre. A literal travelling hairline was offered
+  and not taken.
+  ⚠ **THE TRIGGER IS THE CHANNEL, NOT `data-pc-state`.** That attribute
+  returns to `pinned` whenever the card above scrolls back off a covered slot,
+  so a state-keyed arrival re-fires on a card that never left — four times on
+  the way back up. `--pc-enter` stays at 1 while covered, so a hysteresis on it
   (0.92 in / 0.82 out) fires once per real arrival.
   ⚠ **READ THE INLINE VALUE, NOT THE COMPUTED ONE.** The sheet declares
   `--pc-enter: 1` as the SSR rest state, so a computed read at mount says 1 for
@@ -191,28 +212,33 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   hook's own delta-gated writes) is waiting for. No second scroll listener.
   ⚠ **EVERYTHING ANIMATES ON `.pf-card`, NEVER ON THE SLOT.** A `filter`,
   `opacity`, `clip-path` or `mask` on an ANCESTOR makes it the backdrop root and
-  the card's `backdrop-filter` goes blind for the length of the burst; and a
+  the card's `backdrop-filter` goes blind for the length of the sweep; and a
   transform on the slot parks the whole pile.
-  ⚠ **THE LAST FRAME IS THE CASCADE AND `fill-mode` IS `none`** — the card's own
-  chamfer, opacity 1, zero translate, no filter. A `forwards` fill pins
-  `opacity: 1` over the depth dim and the card refuses to recede under the three
+  ⚠ **THE LAST FRAME IS THE CASCADE AND `fill-mode` IS `none`** — the open
+  frame is STRING-EQUAL to `.pf-card`'s own six-point chamfer polygon, and the
+  closed frame is that polygon with every **X at 50% and every Y untouched**, so
+  the sweep is purely lateral, the six points interpolate one for one, and both
+  cuts are present throughout (the silhouette is never square for a frame). A
+  `forwards` fill pins the clip and the card refuses to recede under the three
   that cover it. The smoke pins the shape by string equality against card 1.
-  ⚠ **`filter` REACHES THE BACKDROP.** `brightness` on this element lifts the
-  blurred corridor behind the glass, so the hologram's own 1.5 peak washed the
-  card olive and read as an exposure change; 1.16 with a wider split keeps the
-  event on the object.
+  ⚠ **THE CLOSE HOLDS `opacity` AND `visibility` ITSELF** — the `out` cascade
+  says `opacity: 0; visibility: hidden`, so a close animating the clip alone
+  plays on an invisible card. It ends on the slit, where nothing paints.
   ⚠ **IT IS A PROP, NOT A RULE IN THE SHEET** — `arrival="glitch"`, passed by
-  `ServicesStage` alone. The other host passes nothing and is byte-identical:
-  the effect returns at its first line and the selectors cannot match. Gated in
-  CSS on the exact inverse of the inert rung, where the hook parks every slot at
-  `enter: 1` and there is no arrival to strike.
+  `ServicesStage` alone (the name is U11's and stays, so the one call site does
+  not churn). Gated in CSS on the exact inverse of the inert rung, where the
+  hook parks every slot at `enter: 1` and there is no arrival to open.
   ⚠ **A HARNESS MUST WAIT ON THE ANIMATIONS, NOT ON A TIMEOUT** —
   `seatProofCard` returns when the hook publishes `pinned` and its retry wait is
-  450ms against a 640ms burst, so a plate read after it samples the strike's
-  DROPOUT (opacity 0.12) on any pass but the first. `settleArrival` awaits
-  `getAnimations().finished`.
+  450ms against a 550ms sweep, so a plate read after it samples a HALF-OPEN card
+  on any pass but the first. `settleArrival` awaits `getAnimations().finished`.
+  ⚠ **THE READABLE PHASE IS THE FIRST QUARTER OF THE DURATION, AND THAT IS THE
+  REFERENCE'S SHAPE.** `cubic-bezier(0.16, 1, 0.3, 1)` is 84 % open at 90ms —
+  proportionally identical on the caption card; what differs is absolute edge
+  speed (575px a side here against ~230px there). If it reads fast, the dial is
+  the DURATION, which scales the readable phase with it.
   ⚠ **Looking at it:** `node scripts/capture-proof-stack.mjs --glitch
-0,40,140,260,420,620` replays it on a paused clock. **Cancel the animations
+0,90,180,280,420,560` replays it on a paused clock. **Cancel the animations
   before restarting** — toggling the attribute alone ADDS a CSS animation the
   WAAPI has paused rather than replacing it (3 → 6 → 9 → 12 across one strip,
   with every computed value still looking right).
