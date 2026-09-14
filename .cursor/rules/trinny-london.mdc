@@ -134,6 +134,34 @@ var(--rail-inset)` so the hero seats on ADR-048's editorial band like
   `seamProgress` clamps, so a `t = 0` target on the published clock arrives
   two viewports short. Canonical text: `.claude/rules/trinny-london.md`
   §The seam.
+- ⚠ **ADR-102: `#proposition` IS ONE PINNED SCENE, AND IT RETIRES §A.3 AND
+  §B.1–B.3 ABOVE** (owner, same day: the flight "jitters and lags", starts
+  "almost immediately", and the cards must "collapse inwards so it feels like
+  one configuration" before anything moves). The slot is a sticky stage that
+  pins on the frame the record strikes in; the PHASES beat renders INSIDE it
+  over the board (`TRINNY_SCENE`; `#offer` opens on the flow); everything from
+  the dwell to the paragraph is a pure function of `sv`, the station's clock in
+  VIEWPORT UNITS (dwell 0–40 · withdraw 40–70 · fold 58–109 · hand-over 112 ·
+  slide 114–150 · title 134–164 · unrolls 152–274 with the two copies between ·
+  paragraph 278–302 · runway 325svh). ⚠ The jitter was a main-thread writer
+  against a compositor scroll; the carrier lives INSIDE the stage now, welded
+  to things that do not move (0.00px of stage motion under the wheel). ⚠ The
+  layout is keyed on the writer's `data-tl-scene` stamp and FAILS OPEN; the
+  ground's canvas is sticky and viewport-sized (the ground's `overflow: hidden`
+  had to go); `data-tl-scene-past` is a LATCH cleared only when the record
+  strikes out; the nodes SHRINK before they travel (tools and reach paint over
+  the chip); the seat lane retracts with the opposite dash sign; a copy holds
+  its source's words until it has separated. ⚠ Four silent traps: drain the
+  `MutationObserver` after every measure (the probes mutate what it watches);
+  a `ResizeObserver` on a fixed-height stage is blind; a React root's first
+  render clears its container (mount the layer from `measure()`); `-top / vh`
+  at the pin is `-0`. ⚠ The plates' feet ran 23.7px past the stage at
+  1280×720 with the beat's "one viewport" read green (the beat's box IS the
+  stage); a bottom-pad trim changed nothing (content flows from the top), so
+  under `(max-height: 760px)` both heads in the scene take the terminal cut's
+  `clamp(28px, 5.5vh, 72px)` and the smoke measures the FEET against the
+  stage. Canonical text: `.claude/rules/trinny-london.md` §The scene; the
+  record is ADR-102.
 
 ## Verifying
 

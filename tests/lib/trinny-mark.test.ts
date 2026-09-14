@@ -41,12 +41,8 @@ import {
   TURN_MORPH_START,
   TURN_PRODUCT_LEAVE,
   TURN_PRODUCT_OUT,
-  seamLanding,
-  seamProgress,
   turnProgress,
   turnRunway,
-  PHASES_ARRIVE_IN,
-  PHASES_ARRIVE_OUT,
   PROP_ARRIVE_IN,
   PROP_ARRIVE_OUT,
   washOf,
@@ -57,7 +53,7 @@ import {
   TURN_VEIL_IN,
   TURN_VEIL_MAX,
   TURN_VEIL_PROP_MAX,
-  TURN_PROP_FADE,
+  TURN_PROP_FEATHER_VH,
   TURN_PROP_VEIL_FULL,
   TURN_PROP_VEIL_IN,
 } from "@/app/(marketing)/arcs/trinny-london/proposal/turn/turnClock";
@@ -470,28 +466,28 @@ describe("turnClock", () => {
        states, two thresholds, and `await` distinct from `out` — both hide the
        beat, and collapsing them would strike the record OUT on the way in. */
     const step = (prev: "await" | "in" | "out" | null, v: number) =>
-      arriveNext(prev, v, PHASES_ARRIVE_IN, PHASES_ARRIVE_OUT);
+      arriveNext(prev, v, PROP_ARRIVE_IN, PROP_ARRIVE_OUT);
 
     expect(step(null, 0)).toBe("await");
     expect(step("await", 0.5)).toBe("await");
     // Below the in-threshold but above the out-threshold: nothing moves.
-    expect(step("await", 0.75)).toBe("await");
-    expect(step("await", 0.8)).toBe("in");
-    expect(step("in", 0.75)).toBe("in");
-    expect(step("in", 0.7)).toBe("out");
+    expect(step("await", 0.97)).toBe("await");
+    expect(step("await", 0.99)).toBe("in");
+    expect(step("in", 0.97)).toBe("in");
+    expect(step("in", 0.96)).toBe("out");
     expect(step("out", 0.5)).toBe("out");
-    expect(step("out", 0.75)).toBe("out");
-    expect(step("out", 0.8)).toBe("in");
+    expect(step("out", 0.97)).toBe("out");
+    expect(step("out", 0.99)).toBe("in");
     // A deep reload seeds `in`, so a reader who lands mid-page sees the beat.
-    expect(step(null, 0.9)).toBe("in");
+    expect(step(null, 0.995)).toBe("in");
     // A non-finite reading leaves the state exactly as it was.
     expect(step("in", Number.NaN)).toBe("in");
     expect(step("await", Number.NaN)).toBe("await");
     expect(step(null, Number.NaN)).toBe("await");
 
-    // The two windows are ordered, and apart — a reader resting on the edge
-    // may not make either beat flicker.
-    expect(PHASES_ARRIVE_OUT).toBeLessThan(PHASES_ARRIVE_IN);
+    // The window is ordered, and apart — a reader resting on the edge may
+    // not make the beat flicker. (The phases' own strike left with ADR-102:
+    // they unroll on the scene's clock now, with no burst to trigger.)
     expect(PROP_ARRIVE_OUT).toBeLessThan(PROP_ARRIVE_IN);
     /* ⚠ AND THE CONFIGURATION'S IN-THRESHOLD IS WHAT THE OWNER'S ORDERING
        ACTUALLY ASKS FOR, which is that the frame be EMPTY — not that a number
@@ -515,27 +511,6 @@ describe("turnClock", () => {
     }
   });
 
-  it("the seam opens as the plates enter the frame and lands when they are whole", () => {
-    const vh = 1000;
-    // A plates row 600 tall, 200 down its beat: whole in the frame with the
-    // beat's top at 200.
-    const s1 = seamLanding(vh, 800);
-    expect(s1).toBe(200);
-    expect(seamProgress(vh, vh, s1)).toBe(0);
-    expect(seamProgress(s1, vh, s1)).toBe(1);
-    expect(seamProgress(-400, vh, s1)).toBe(1);
-    expect(seamProgress(vh + 400, vh, s1)).toBe(0);
-    expect(seamProgress((vh + s1) / 2, vh, s1)).toBeCloseTo(0.5, 12);
-    for (let top = vh; top > s1; top -= 40) {
-      expect(seamProgress(top - 40, vh, s1)).toBeGreaterThan(seamProgress(top, vh, s1));
-    }
-    /* ⚠ THE LANDING IS FLOORED AT 0 AND THE FLOOR BINDS AT 1280×720, where
-       the row is taller than the frame can hold above it. A negative target
-       would divide by a larger span and invert the ramp's end. */
-    expect(seamLanding(720, 900)).toBe(0);
-    expect(seamProgress(0, 720, seamLanding(720, 900))).toBe(1);
-  });
-
   it("the mark's on-stage centre is the actor's weld, re-derived from its sources", () => {
     const actor = readFileSync(ACTOR, "utf8");
     const geom = readFileSync(SCENE_GEOM, "utf8");
@@ -556,9 +531,10 @@ describe("the turn's ground and the mark it puts away", () => {
        0.90–1.00 so the proposal met the page's own ground and no edge was
        drawn; the answer to that seam is the proposal carrying the SAME field
        now, not the field going away before it. Where the ground finally ends
-       is GEOMETRY — TURN_PROP_FADE feathers the proposal's own bottom edge,
-       in one place however the reader arrives — so there is no third clock
-       to pin here. */
+       is GEOMETRY — `feather()` maps the ground's bottom edge into the sticky
+       canvas's own fractions every frame (ADR-102), a band
+       TURN_PROP_FEATHER_VH viewports tall, in one place however the reader
+       arrives — so there is no third clock to pin here. */
     expect(washOf(0)).toBe(0);
     expect(washOf(0.3)).toBe(0);
     expect(washOf(0.7)).toBeCloseTo(1, 5);
@@ -571,9 +547,9 @@ describe("the turn's ground and the mark it puts away", () => {
       expect(w).toBeGreaterThanOrEqual(prev - 1e-9);
       prev = w;
     }
-    // And the feather is a fraction of a station, not a clock value.
-    expect(TURN_PROP_FADE).toBeGreaterThan(0);
-    expect(TURN_PROP_FADE).toBeLessThan(1);
+    // And the feather is a length in viewports, not a clock value.
+    expect(TURN_PROP_FEATHER_VH).toBeGreaterThan(0);
+    expect(TURN_PROP_FEATHER_VH).toBeLessThan(2);
   });
 
   it("the mark is veiled back, never all the way out", () => {

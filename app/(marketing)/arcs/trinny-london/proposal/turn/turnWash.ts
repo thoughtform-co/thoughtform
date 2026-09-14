@@ -45,7 +45,8 @@ const FRAG = `
   uniform vec2 uOrigin;    // this canvas's origin inside it (y-up)
   uniform vec3 uBrand;
   uniform float uAmount;   // 0 → 1, the wash's own clock
-  uniform float uFade;     // feather the canvas's own BOTTOM edge, 0 = none
+  uniform vec2 uFeather;   // (lo, hi): feather from lo up to hi, in this canvas's own
+                           // y-up fractions; hi <= lo means no feather at all
 
   void main() {
     // ⚠ THE FIELD IS VIEWPORT-LOCKED, NOT CANVAS-LOCKED (ADR-095 U4). Two
@@ -94,16 +95,21 @@ const FRAG = `
     float a = uAmount * (edge * bias + 0.10 * (1.0 - edge));
 
     // ⚠ THE GROUND ENDS BY FEATHERING, NOT BY A CLOCK (ADR-095 U4). The
-    // proposal is barely a viewport and a quarter tall, so a scroll-driven
-    // resolve either takes the colour away while the record is still on
-    // screen or leaves a step where the station meets the parchment below
-    // it — both were measured. Fading along the canvas's OWN bottom edge
-    // makes the end a property of the field instead: it is in the same place
-    // however the reader arrives, and scrolling back up restores it exactly,
-    // with no channel to unwind. The turn's canvas passes 0 here, because
-    // the proposal continues its field rather than ending it.
-    if (uFade > 0.0) {
-      a *= smoothstep(0.0, uFade, gl_FragCoord.y / max(1.0, uRes.y));
+    // proposal was barely a viewport and a quarter tall, so a scroll-driven
+    // resolve either took the colour away while the record was still on
+    // screen or left a step where the station met the parchment below it —
+    // both were measured. Fading along the ground's OWN bottom edge makes the
+    // end a property of the field instead: it is in the same place however
+    // the reader arrives, and scrolling back up restores it exactly.
+    // ⚠ A PAIR SINCE ADR-102, because the canvas is viewport-sized and STICKY
+    // inside a ground four viewports tall: a fraction of the canvas's own
+    // height would feather the bottom of every frame, so the writer converts
+    // the ground's bottom edge into this canvas's fractions each frame
+    // (feather() in turnClock) and the band still sits where the ground
+    // ends. The turn's canvas leaves it at (0, 0), because the proposal
+    // continues its field rather than ending it.
+    if (uFeather.y > uFeather.x) {
+      a *= smoothstep(uFeather.x, uFeather.y, gl_FragCoord.y / max(1.0, uRes.y));
     }
 
     // Ordered dither — a wide, low-contrast ramp on parchment bands without
@@ -121,8 +127,9 @@ export interface TurnWash {
    * CSS px below the viewport's. Cheap and idempotent.
    */
   draw(amount: number, top?: number, left?: number): void;
-  /** Feather the bottom edge to nothing over `fraction` of the canvas. */
-  setFade(fraction: number): void;
+  /** Feather the field to nothing from `lo` up to `hi`, both in this canvas's
+   *  own y-up fractions; `hi <= lo` removes the feather. */
+  setFeather(lo: number, hi: number): void;
   /** Re-read the canvas box (a resize, or the stage changing shape). */
   resize(): void;
   dispose(): void;
@@ -188,8 +195,8 @@ export function createTurnWash(canvas: HTMLCanvasElement, root: HTMLElement): Tu
   const uOrigin = gl.getUniformLocation(prog, "uOrigin");
   const uBrand = gl.getUniformLocation(prog, "uBrand");
   const uAmount = gl.getUniformLocation(prog, "uAmount");
-  const uFade = gl.getUniformLocation(prog, "uFade");
-  gl.uniform1f(uFade, 0);
+  const uFeather = gl.getUniformLocation(prog, "uFeather");
+  gl.uniform2f(uFeather, 0, 0);
   gl.uniform3fv(uBrand, brandColor(root));
 
   gl.disable(gl.DEPTH_TEST);
@@ -247,6 +254,8 @@ export function createTurnWash(canvas: HTMLCanvasElement, root: HTMLElement): Tu
       : null;
   ro?.observe(canvas);
   let lastLeft = Number.NaN;
+  let lastLo = 0;
+  let lastHi = 0;
   return {
     /**
      * `top` is this canvas's own top edge in CSS px from the viewport's, so
@@ -277,12 +286,18 @@ export function createTurnWash(canvas: HTMLCanvasElement, root: HTMLElement): Tu
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     },
     /**
-     * Feather this canvas's bottom edge to nothing over `fraction` of its own
-     * height — how the ground ENDS, as geometry rather than as a clock.
+     * Where the field feathers to nothing, in this canvas's own y-up
+     * fractions — how the ground ENDS, as geometry rather than as a clock
+     * (the writer derives the pair from the ground's rect every frame).
+     * Delta-gated with the origin: the pair changes only while the ground's
+     * end is near the frame.
      */
-    setFade(fraction: number) {
+    setFeather(lo: number, hi: number) {
       if (lost) return;
-      gl.uniform1f(uFade, fraction < 0 ? 0 : fraction > 1 ? 1 : fraction);
+      if (Math.abs(lo - lastLo) < 0.002 && Math.abs(hi - lastHi) < 0.002) return;
+      lastLo = lo;
+      lastHi = hi;
+      gl.uniform2f(uFeather, lo, hi);
       last = -1;
     },
     resize() {

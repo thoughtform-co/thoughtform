@@ -374,6 +374,43 @@ contract.
 
 ---
 
+### A main-thread scroll writer lags the compositor by one wheel step, every step
+
+**Why it matters:** the compositor applies a wheel step on its own frame and
+the main thread learns of it one frame later. Anything a rAF writer positions
+so that it must appear stationary or smoothly moving RELATIVE TO the scrolling
+page lands one step behind and is corrected on the next frame — a jitter of
+exactly one wheel step that no easing hides, and that the owner reads as "it
+jitters and lags a bit". Measured twice on `/arcs/trinny-london/proposal`: the
+hero curtain (`227.2 / 243.2 / 243.2` repeating, ADR-093 §3) and ADR-101's
+chip flight, a carrier posed in document space between a page-glued chip and
+page-glued plates.
+
+**Two cures, and no third:**
+
+- **Composite the motion** — `transform` / `opacity` on a scroll timeline
+  (`animation-timeline: scroll(root block)` or a WAAPI `ScrollTimeline`), which
+  needs both ends known at layout time. The curtain's fix: spread 0.00px.
+- **Make the frame stationary** — pin the stage (sticky) for the length of the
+  choreography so nothing the object is welded to moves; then a main-thread
+  writer has nothing to be behind and may drive `clip-path`, `width`, custom
+  properties and text freely. ADR-102's fix: `#proposition` became one pinned
+  scene with the phases beat INSIDE it, and the carrier's box agrees with its
+  own pose to 0.01px under the wheel.
+
+A main-thread `clip-path` or property scrub on a STATIONARY object is fine (a
+frame of lag in the clip's progress is invisible); on an object that has to
+track a compositor scroll it is the defect. Ask first what the compositor is
+moving.
+
+### A pinned scene's clock runs in viewport units, not 0 → 1
+
+**Why it matters:** with a normalised clock a runway edit rescales every window
+in the choreography with nothing failing. With the clock in viewports past the
+pin (`sv`) and every window authored in the same unit, a shorter runway can
+only TRUNCATE the scene — and a unit test can read the runway out of the
+sheet and pin the last window under it (ADR-102, `trinny-seam`).
+
 ## 🧷 DOM Pinning & ScrollTrigger (brandmark / fixed actors)
 
 > See also: [ADR-010](decisions/010-brandmark-choreography.md), `.claude/skills/brandmark-choreography/SKILL.md`.  
@@ -1286,6 +1323,24 @@ the page at either end. Verify this with a real wheel/touch boundary probe.
 **Why it matters:** a visually elegant fixed seat becomes a scroll trap when
 the reader cannot leave it without starting a new gesture elsewhere.
 
+### An observer that watches what the measurement mutates loops the tab
+
+**Why it matters:** a `MutationObserver` on a subtree is the right signal that
+a lazy root has mounted — but if the measurement it triggers appends anything
+inside that subtree (a probe element used to resolve a `clamp()` token, a
+baseline probe, a carrier layer), those are childList mutations the observer
+sees. It fires again, measures again, appends again: a synchronous microtask
+loop that never yields to a frame. Nothing throws; the tab hangs;
+`waitForSelector` times out (ADR-102). Drain `observer.takeRecords()` after
+every measurement, and filter records whose target is inside anything the
+writer itself mutates per frame.
+
+Two neighbours of the same shape, from the same pass: a `ResizeObserver` on a
+slot goes BLIND once the slot becomes a fixed-height stage (mounting no longer
+changes its box); and a React root's first `render` CLEARS its container, so a
+non-React child appended before the root commits is simply gone — mount it
+after the beats exist.
+
 ### Wait for the thing to exist before you measure it
 
 A harness that queries too early doesn't error, it measures nothing — and
@@ -1392,4 +1447,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-08-27_
+_Last updated: 2026-09-14_

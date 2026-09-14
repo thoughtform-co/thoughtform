@@ -13,12 +13,14 @@
  * records: it drops finished jobs, and a dropped job is a latch. Scrolling
  * back up would find nothing to unwind.
  *
- * ⚠ AND ONE WALL FOR ALL SIX. Each pair is a different length, so per-pair
- * timing would land `M1` while `Creative operations and scaling` is still
- * shuffling — three head bands resolving at three different moments reads as
- * three separate effects rather than as one object arriving in triplicate.
- * The wall is the LONGEST pair's duration, so every line lands exactly at
- * t = 1, which is the frame the carriers hand over to the real heads.
+ * ⚠ AND ONE WALL PER CARRIER, OVER BOTH OF ITS LINES. Each pair is a
+ * different length, so per-pair timing would land `M1` while `Setup, insight
+ * and briefing` is still shuffling — a band whose two lines resolve at two
+ * moments reads as two effects rather than as one object arriving. The wall
+ * is the LONGER pair's duration, so both lines land exactly at the end of
+ * their carrier's travel, which is the frame it hands over to the real head.
+ * (ADR-101 ran six pairs on one wall because its three carriers travelled at
+ * once; since ADR-102 they travel one after another, each on its own window.)
  */
 
 import { scrambleDuration, scrambleFrame, type ScrambleJob } from "@/lib/home-v2/captionScramble";

@@ -54,6 +54,87 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-14 (fourth pass) — One pinned scene: the configuration becomes the plates (ADR-102)
+
+**Trigger:** the owner's live read of ADR-101's seam — it _"jitters and lags"_,
+it starts _"almost immediately"_ once the studio is entered, the cards around
+the chip must _"collapse inwards so it feels like one configuration"_ before
+anything moves, the chip should go _"to the utter left"_ first and the plates
+open to the right of it out of their own head bands, the title revealed too
+and the paragraph _"only after all the cards have been revealed"_. Plus three
+copy edits on the shared corridor epilogue.
+
+- **The diagnosis was measurable, and it was the hero curtain's finding
+  again.** ADR-101's carrier was posed in DOCUMENT space from a rAF while it
+  had to move smoothly relative to a page the compositor was scrolling; a
+  main-thread writer lands one wheel step behind every step. And `t` opened
+  on the first pixel past q = 1, while the arrival's 1.6 s ladder was still
+  running — there was no runway in which to be deliberate.
+- **ADR-102 — `#proposition` is ONE PINNED SCENE.** The slot is a sticky stage
+  that pins on the same frame the record is struck in (q = 1 IS the station's
+  top at the frame's top, so ADR-099's blank frame — a pin that began before
+  the record arrived — cannot return); the PHASES beat renders inside it over
+  the board (`TRINNY_SCENE`; `#offer` opens on the flow); the carrier lives
+  inside the stage. Everything the choreography touches is stationary while
+  the clock runs, and the clock is in VIEWPORT UNITS so a runway edit can only
+  truncate. Dwell · withdraw (the board's head and the ledger close on the
+  scrubbed aperture) · fold (each node SHRINKS before it travels, because
+  tools and reach paint OVER the chip; the seat lane's dash sign is opposite)
+  · hand-over · slide to plate 1's band · title · three unrolls out of their
+  bands with two copies between · paragraph · settle, over 325svh.
+- ⚠ **SIX SILENT WRONG ANSWERS, EACH ON THE READOUT OR THE STILL.** (1) A
+  `ResizeObserver` on the slot goes blind once the slot is a fixed-height
+  stage. (2) A React root's first `render` CLEARS its container — the layer
+  appended at effect time was gone, readout "no layer". (3) `measureSeam`'s
+  probes mutate the subtree the `MutationObserver` watches, which re-measures,
+  which appends probes — a microtask loop that hung the tab with nothing
+  thrown; `takeRecords()` after every measure. (4) `data-tl-scene-past`
+  cleared on the way back re-matched every `:not()`-scoped `animation:` rule
+  and REPLAYED the whole strike (eleven animations running at the pin); it is
+  a latch cleared only when the record strikes out. (5) A copy born ON the
+  band it peels off decoded from zero and the real band's own words shuffled
+  under the reader; the words hold until the copy has separated. (6)
+  `−top / vh` at the pin is `−0`, printed as `-0.00` on the stamp the roller
+  converges on.
+- ⚠ **AND THE GROUND'S `overflow: hidden` HAD TO GO.** The canvas is
+  viewport-sized and sticky inside a ground four viewports tall now (a canvas
+  spanning it is a 24-megapixel shader pass per frame), and an ancestor with
+  a non-visible overflow is a scroll container — the canvas would have stuck
+  to the ground's own never-scrolling box, frozen one viewport above the
+  station with every geometry gate green. The feather became a pair solved
+  per frame against the CANVAS's rect.
+- ⚠ **A SEVENTH, FOUND ON THE STILL AFTER THE GATES WERE GREEN: THE PLATES'
+  FEET RAN 23.7px PAST THE STAGE AT 1280×720.** Inside the stage `#phases` is
+  `inset: 0`, so its box IS the stage and ADR-100's "one viewport" read on the
+  beat cannot fail whatever the content does; the pre-existing 23px overflow
+  that a flowing beat absorbed by growing became the last line of the
+  DELIVERABLE band under the frame's edge. The first cut trimmed the beat's
+  bottom pad and claimed 28px back — measured 743.7 before and after: the
+  datum seats the head at `start`, content flows from the top, the bottom pad
+  is never in the sum. The head's margin is; under `(max-height: 760px)` both
+  scene heads take the terminal cut's `clamp(28px, 5.5vh, 72px)` (feet at
+  718.5), and a fifteenth smoke case measures the feet against the stage.
+- **Durable half:** the scene's layout is keyed on the writer's `data-tl-scene`
+  stamp and FAILS OPEN to two flowing beats (pinned by the reduced-motion
+  case); the smoke drives eight wheel steps mid-slide asserting the stage's
+  top at 0 and the carrier's box on its own pose to 0.5px — the jitter is
+  measured, not eyeballed. Two new patterns in BEST-PRACTICES: the
+  main-thread-writer-versus-compositor law with its two cures, and the
+  observer-measuring-its-own-probes loop.
+- **The copy (shared epilogue, every route):** the title is `AI CAPABILITY /
+YOUR TEAM OWNS.` (the services masthead's own line), the CTA reads `HOW WE
+DID IT AT LOOP` and still lands on `#services` (the Loop proof stack), and
+  _"Before the labs sell it back to you."_ is deleted — desktop, mobile and the
+  region's `aria-label` together.
+- **Verified:** `tsc` clean, the touched unit suites green (`trinny-seam`
+  rewritten, `trinny-mark`, `trinny-offer`, `arc-board-fit`, the parse and
+  journey guards, the type ratchet), the Trinny smoke **15/15** (three new
+  cases: the welds under the wheel, a deep reload mid-scene, and the plates'
+  feet against the stage at 720h and 1247h), the landing
+  HUD snapshots unchanged, the epilogue snapshot re-baselined for the copy,
+  and captures looked at at 1920×1247 and 1280×720 across the thirteen scene
+  stops.
+
 ### 2026-09-14 (third pass) — The configuration strikes in (ADR-100 U4, ADR-101 §A)
 
 **Trigger:** one owner message of seven asks on the live proposal. Two of

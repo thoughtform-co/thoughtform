@@ -215,58 +215,56 @@ await shoot("12-proposition", "the configuration seated on the head's datum");
    rather than the station's — and rolled to TWICE, because the arcs' reveal
    is an IntersectionObserver with a -10% dead band and the first roll out of
    the beat above can land before it has fired. */
-/* The SEAM (ADR-101 §B): the chip detaches from the board, glides to the
-   frame's centre, copies itself to the plates' columns and lands as their head
-   bands. Solved for `t`, the writer's own published clock, and converged on it
-   — `#offer`'s beats are a lazy nested root, so the document grows by several
-   viewports the first time this band is entered.
-   ⚠ THE THREE STOPS ARE THE THREE WINDOWS, and the middle one is the point:
-   at 0.4 there are THREE boxes where the board had one. */
-const rollToT = async (t) => {
-  for (let pass = 0; pass < 5; pass++) {
-    const box = await page.evaluate(() => {
-      const ph = document.getElementById("phases");
-      if (!ph) return null;
-      const row = ph.querySelector(".arc-groups--plates");
-      const pr = ph.getBoundingClientRect();
-      const s1 = row
-        ? Math.max(0, window.innerHeight - (row.getBoundingClientRect().bottom - pr.top))
-        : 0;
-      return { docTop: pr.top + window.scrollY, vh: window.innerHeight, s1 };
+/* THE SCENE (ADR-102): `#proposition` is a pinned stage now, and everything
+   between the record's arrival and the offer is a pure function of its own
+   clock `sv` — viewports past the pin, published as `data-tl-scene`. Solved
+   off the STATION's rect (the stage is sticky, so its rect reports wherever
+   it is pinned; and the clock clamps, so a target at its floor lands
+   anywhere above it), and converged on the published value. The stops are the
+   windows: the dwell, the board's head and the ledger closing, the nodes
+   folding into the chip, the hand-over, the slide to plate 1, the title, the
+   three unrolls with the two copies between them, the paragraph, and the
+   settled scene. ⚠ Look at every one of them: the two defects the first cut
+   shipped (a missing layer, a replayed strike on the way back) were on the
+   readout and on the still, and on no gate. */
+const rollToS = async (sv) => {
+  for (let pass = 0; pass < 6; pass++) {
+    const g = await page.evaluate(() => {
+      const r = document.getElementById("proposition").getBoundingClientRect();
+      return { docTop: r.top + window.scrollY, vh: window.innerHeight, runway: r.height - window.innerHeight };
     });
-    if (!box) {
-      await rollTo(await topOf("offer"));
-      continue;
-    }
-    await rollTo(Math.round(box.docTop - (box.vh - t * (box.vh - box.s1))));
+    await rollTo(Math.round(g.docTop + Math.min(sv * g.vh, g.runway)));
     const actual = Number(
-      await page.evaluate(() => document.getElementById("offer")?.getAttribute("data-tl-seam") ?? "0")
+      await page.evaluate(
+        () => document.getElementById("proposition")?.getAttribute("data-tl-scene") ?? "0"
+      )
     );
-    if (Math.abs(actual - t) <= 0.02) break;
+    if (Math.abs(actual - Math.min(sv, g.runway / g.vh)) <= 0.02) break;
   }
 };
-for (const [t, name, note] of [
-  [0.15, "24-seam-detach", "the chip lifts off the board and glides to the centre"],
-  [0.5, "25-seam-split", "one object became three, on the plates' own columns"],
-  [0.85, "26-seam-seat", "the three carriers seating as the plates' head bands"],
+for (const [sv, name, note] of [
+  [0.15, "21-scene-dwell", "the scene pinned — the record whole, nothing moving yet"],
+  [0.55, "22-scene-withdraw", "the board's head and the ledger closing to the centre"],
+  [0.85, "23-scene-fold", "the nodes folding into the chip, ribbons retracting"],
+  [1.12, "24-scene-handover", "the chip handed to the carrier — the frame holds one object"],
+  [1.3, "25-scene-slide", "the chip sliding to the far left, becoming plate 1's band"],
+  [1.5, "26-scene-title", "plate 1's band landed, the title opening"],
+  [1.65, "27-scene-unroll1", "plate 1 unrolling out of its band; the copy born on it"],
+  [1.85, "28-scene-copy2", "the copy travelling to plate 2's column"],
+  [2.1, "29-scene-unroll2", "plate 2 unrolling"],
+  [2.35, "30-scene-copy3", "the second copy travelling to plate 3's column"],
+  [2.6, "31-scene-unroll3", "plate 3 unrolling"],
+  [2.9, "32-scene-paragraph", "the paragraph opening, last"],
+  [3.1, "33-scene-settled", "the scene whole — three plates, title and paragraph"],
 ]) {
-  await rollToT(t);
+  await rollToS(sv);
   await page.waitForTimeout(200);
   await shoot(name, note);
 }
 
-/* ⚠ THE PHASES STRIKE ON THE SEAM, NOT ON ARRIVAL, so their burst fires
-   at t 0.8 — which is BEFORE the beat's own top reaches the frame's top. One
-   roll lands inside it; the doubled roll below lands past it. Both are worth
-   a still. */
-await rollTo(await topOf("phases"));
-await page.waitForTimeout(300);
-await shoot("21a-phases-strike", "the phases STRIKING in on the seam");
-
 for (const [id, name, note] of [
-  ["phases", "21-offer-phases", "the offer — the three phases as plates"],
-  ["flow", "23-offer-flow", "the offer — the pipeline: brief → renders → markets"],
-  ["pricing", "22-offer-pricing", "the offer — the fee table beside its terms"],
+  ["flow", "34-offer-flow", "the offer — the pipeline: brief → renders → markets"],
+  ["pricing", "35-offer-pricing", "the offer — the fee table beside its terms"],
 ]) {
   await rollTo(await topOf(id));
   await rollTo(await topOf(id));

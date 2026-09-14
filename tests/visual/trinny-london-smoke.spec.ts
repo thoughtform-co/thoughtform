@@ -20,8 +20,10 @@ import { expect, test, type Page } from "@playwright/test";
 test.describe.configure({ mode: "serial" });
 
 const SETTLE_MS = 700;
-/** Mirrors `SEAM_DETACH_END` — the frame the two copies un-hide on. */
-const SEAM_DETACH_AT = 0.25;
+/** Where the scene is whole: past the paragraph's opening (`SCENE_INTRO` ends
+ *  at 3.02) and inside the settle before the stage releases (`SCENE_END`
+ *  3.18). Mirrors the clock by hand; `trinny-seam` pins the clock itself. */
+const SCENE_SETTLED = 3.1;
 
 /** Roll to `y` in viewport-sized steps, then let the corridor catch up. */
 async function rollTo(page: Page, y: number) {
@@ -62,49 +64,32 @@ async function rollToQ(page: Page, q: number) {
   await rollTo(page, Math.round(box.docTop - (1 - q) * box.vh));
 }
 
-/** Roll to `t` — the seam clock the phases' strike and the carriers hang on
- *  (ADR-101).
+/** Roll to `sv` viewports into the scene — `#proposition`'s pinned clock
+ *  (ADR-102), 0 on the frame the record is struck in, the runway at release.
  *
- *  ⚠ TWO LOOPS, AND THE SPLIT IS NOT TIDINESS. `#offer`'s beats are a lazy
- *  nested root, so the first entry into this band grows the document by several
- *  viewports; walking in has to be allowed to take as many passes as it needs
- *  WITHOUT spending the convergence budget.
- *
- *  ⚠ AND IT CONVERGES ON THE BEAT'S OWN RECT, NOT ON THE PUBLISHED CLOCK.
- *  `seamProgress` CLAMPS, so every scroll position above `#phases` reads 0.00 —
- *  a `t = 0` target therefore "arrives" two viewports short, with the record
- *  behind it still waiting to strike and every assertion downstream reading a
- *  page that is nowhere near where it was asked for. A clamped clock is not a
- *  convergence target at its own floor.
- */
-async function rollToT(page: Page, t: number) {
+ *  ⚠ CONVERGES ON THE STATION'S OWN RECT, NEVER ON THE STAGE'S AND NEVER ON
+ *  THE PUBLISHED CLOCK AT ITS FLOOR. The stage is sticky, so its rect reports
+ *  wherever it is pinned — rolling to it converges on wherever the page already
+ *  is; and `sceneProgress` clamps, so every position above the pin reads 0.00
+ *  and a target of 0 would "arrive" anywhere above it (`rollToT`'s lesson,
+ *  ADR-101). The station is a layout fact. ⚠ Several passes, because the
+ *  configuration's root is lazy and its stamp grows the station by three
+ *  viewports the first time this band is entered. */
+async function rollToS(page: Page, sv: number) {
   for (let pass = 0; pass < 6; pass++) {
-    if (await page.evaluate(() => !!document.getElementById("phases"))) break;
-    const offerTop = await page.evaluate(
-      () =>
-        (document.getElementById("offer") as HTMLElement).getBoundingClientRect().top +
-        window.scrollY
-    );
-    await rollTo(page, Math.round(offerTop));
-  }
-  for (let pass = 0; pass < 5; pass++) {
-    const box = await page.evaluate(() => {
-      const ph = document.getElementById("phases");
-      if (!ph) return null;
-      const row = ph.querySelector<HTMLElement>(".arc-groups--plates");
-      const pr = ph.getBoundingClientRect();
-      const s1 = row
-        ? Math.max(0, window.innerHeight - (row.getBoundingClientRect().bottom - pr.top))
-        : 0;
-      return { docTop: pr.top + window.scrollY, vh: window.innerHeight, s1 };
+    const g = await page.evaluate(() => {
+      const r = document.getElementById("proposition")!.getBoundingClientRect();
+      return {
+        docTop: r.top + window.scrollY,
+        vh: window.innerHeight,
+        runway: r.height - window.innerHeight,
+      };
     });
-    if (!box) return;
-    const want = box.vh - t * (box.vh - box.s1);
-    await rollTo(page, Math.round(box.docTop - want));
-    const now = await page.evaluate(
-      () => (document.getElementById("phases") as HTMLElement).getBoundingClientRect().top
+    await rollTo(page, Math.round(g.docTop + Math.min(sv * g.vh, g.runway)));
+    const top = await page.evaluate(
+      () => document.getElementById("proposition")!.getBoundingClientRect().top
     );
-    if (Math.abs(now - want) <= 4) break;
+    if (Math.abs(Math.min(-top / g.vh, g.runway / g.vh) - sv) <= 0.01) break;
   }
 }
 
@@ -1264,13 +1249,17 @@ test.describe("Trinny London pitch variant", () => {
     await expect(page.locator("#proposition .arc-cfg, #proposition [data-cfg-pick]")).toHaveCount(
       0
     );
-    await expect(page.locator("#proposition .arc-head")).toHaveCount(1);
-    await expect(page.locator("#proposition .arc-head").first()).toHaveClass(/is-in/);
+    /* ⚠ TWO HEADS IN THE STATION SINCE ADR-102 — the configuration's and the
+       phases', which renders inside the scene's stage over the board. The
+       configuration's is the one this block is about. */
+    await expect(page.locator("#proposition .arc-head")).toHaveCount(2);
+    await expect(page.locator("#configuration .arc-head")).toHaveCount(1);
+    await expect(page.locator("#configuration .arc-head")).toHaveClass(/is-in/);
     /* ⚠ THE CROSS AND NO CORAL RULE (owner: "all sections should have that
        cross in the left corner above the H1… the configuration one also has
        some weird red divider. We need to remove that"). The mark is the arc
        head's own origin cross; the rule left with `.tl-prop__head`. */
-    await expect(page.locator("#proposition .arc-head__mark--origin")).toHaveCount(1);
+    await expect(page.locator("#configuration .arc-head__mark--origin")).toHaveCount(1);
     await expect(page.locator("#proposition .tl-prop__head")).toHaveCount(0);
 
     /* ⚠ ONE RECORD, TWO KINDS OF DRAWING (ADR-100 U2). The dormant side is
@@ -1424,9 +1413,18 @@ test.describe("Trinny London pitch variant", () => {
         (sel) => (document.getElementById(sel)?.getBoundingClientRect().top ?? 0) + window.scrollY,
         id
       );
-    await rollTo(page, await topOf("phases"));
-    await rollTo(page, await topOf("phases"));
+    /* ⚠ THE PHASES ARE IN THE SCENE SINCE ADR-102 — `#phases` renders inside
+       `#proposition`'s pinned stage, where the board's chip becomes its head
+       bands, and `#offer` opens on the flow. Rolled to the scene's settled
+       end, where all three plates are whole; `topOf("phases")` would converge
+       on wherever the stage is pinned. */
+    await rollToS(page, SCENE_SETTLED);
     await expect(page.locator("#offer .arc-root")).toHaveCount(1);
+    await expect(page.locator("#proposition #phases")).toHaveCount(1);
+    expect(
+      await page.evaluate(() => document.querySelector("#offer .arc-sec")?.id ?? null),
+      "the offer opens on the flow"
+    ).toBe("flow");
     await expect(page.locator("#phases .arc-plate")).toHaveCount(3);
     await expect(page.locator("#phases .arc-plate__foot")).toHaveCount(3);
     await expect(page.locator("#phases .arc-plate").first()).toHaveClass(/is-in/);
@@ -1448,7 +1446,9 @@ test.describe("Trinny London pitch variant", () => {
        actually painted: a clipped corner does not answer. */
     const corners = await page.evaluate(() => {
       const el = document.querySelector("#phases .arc-plate") as HTMLElement;
-      el.scrollIntoView({ block: "center" });
+      /* ⚠ NO `scrollIntoView` — the plate is inside a sticky stage, and
+         scrolling it "into view" scrolls the stage away from the scene. It is
+         in view at the settled end, where the roll above left it. */
       const r = el.getBoundingClientRect();
       /* Inside the chamfer's own triangle: a point `d` in from BOTH edges of
          a corner is clipped exactly when `2d < ch`, so 0.35 of the cut is
@@ -1806,6 +1806,16 @@ test.describe("Trinny London pitch variant", () => {
       await page.waitForTimeout(SETTLE_MS);
       await rollToQ(page, 1);
       await rollToQ(page, 1);
+      /* ⚠ MEASURED AT THE SCENE'S ZERO (ADR-102). The fold scrubs a CSS
+         `transform` on every role group, identity only at `sv` 0, and
+         `getBBox` is blind to an element's own transform — so the overlap
+         walk below compares one user space only here. */
+      expect(
+        await page.evaluate(() =>
+          document.getElementById("proposition")!.getAttribute("data-tl-scene")
+        ),
+        "the board is measured at the scene's zero"
+      ).toBe("0.00");
       const row = page.locator("#proposition .arc-board");
       await expect(row).toHaveClass(/is-in/);
       await page.waitForTimeout(1200);
@@ -2053,74 +2063,297 @@ test.describe("Trinny London pitch variant", () => {
     await rollToQ(page, 1);
     await rollToQ(page, 1);
     expect((await read()).arrive, "the strike re-arms").toBe("in");
+    await settleStrike(page, "#proposition");
 
-    /* 5 — and the phases, one station down, on the SEAM rather than on an
-       arrival: hidden while the plates row is still entering the frame,
-       struck once it is four fifths in. */
-    await rollToT(page, 0.4);
-    const phasesEarly = await page.evaluate(() => {
-      const ph = document.getElementById("phases");
-      if (!ph) return null;
-      const head = ph.querySelector(".arc-head")!;
-      const plate = ph.querySelector(".arc-plate")!;
-      return {
-        arrive: document.getElementById("offer")?.getAttribute("data-tl-phases-arrive") ?? null,
-        seam: document.getElementById("offer")?.getAttribute("data-tl-seam") ?? null,
-        head: getComputedStyle(head).visibility,
-        plate: getComputedStyle(plate).visibility,
-      };
-    });
-    expect(phasesEarly, "#phases never mounted").not.toBeNull();
-    expect(phasesEarly!.arrive, `the phases struck at seam ${phasesEarly!.seam}`).toBe("await");
-    expect(phasesEarly!.head).toBe("hidden");
-    expect(phasesEarly!.plate).toBe("hidden");
+    /* 5 — THE SCENE (ADR-102). From the pin on, everything is a pure function
+       of the station's clock: the board's head and the ledger close, the four
+       nodes fold into the chip with their ribbons, the chip is handed to the
+       carrier and slides to plate 1's band, the plates unroll out of their
+       bands one after another, the title opens with the first and the
+       paragraph after the third. Walked forward at the stops that matter, then
+       BACK, because a scene that does not reverse is a scene that latches. */
+    const scene = () =>
+      page.evaluate(() => {
+        const prop = document.getElementById("proposition")!;
+        const stage = prop.querySelector("[data-tl-config-root]") as HTMLElement;
+        const ph = document.getElementById("phases")!;
+        const cs = (el: Element | null) => (el ? getComputedStyle(el) : null);
+        const num = (v: string | null | undefined) => (v ? parseFloat(v) : Number.NaN);
+        const rect = (el: Element | null) => {
+          const r = el?.getBoundingClientRect();
+          return r ? { x: r.x, y: r.y, w: r.width, h: r.height } : null;
+        };
+        const roles = [
+          ...prop.querySelectorAll<SVGGElement>(
+            '[data-board-state="configured"] [data-board-role]'
+          ),
+        ];
+        const lanes = [
+          ...prop.querySelectorAll<SVGGElement>(
+            '[data-board-state="configured"] [data-board-lane]'
+          ),
+        ];
+        const plates = [...ph.querySelectorAll<HTMLElement>(".arc-plate")];
+        const layer = stage.querySelector<HTMLElement>(":scope > .tl-seam");
+        const carriers = layer ? [...layer.querySelectorAll<HTMLElement>(".tl-seam__carrier")] : [];
+        const clipped = [
+          ...plates,
+          ph.querySelector(".arc-head__lead")!,
+          ph.querySelector(".arc-head__intro")!,
+          prop.querySelector("#configuration .arc-head__lead")!,
+        ];
+        return {
+          sv: num(prop.getAttribute("data-tl-scene")),
+          past: prop.hasAttribute("data-tl-scene-past"),
+          chip: prop.getAttribute("data-tl-chip"),
+          stagePos: cs(stage)!.position,
+          stageTop: stage.getBoundingClientRect().top,
+          phasesPos: cs(ph)!.position,
+          ap: {
+            prop: num(stage.style.getPropertyValue("--tl-ap-prop")),
+            title: num(stage.style.getPropertyValue("--tl-ap-title")),
+            intro: num(stage.style.getPropertyValue("--tl-ap-intro")),
+          },
+          cardVis: cs(
+            prop.querySelector('[data-board-state="configured"] [data-board-role="card"]')
+          )!.visibility,
+          chipBox: rect(
+            prop.querySelector(
+              '[data-board-state="configured"] [data-board-module="card"] .arc-board__plate'
+            )
+          ),
+          roles: roles.map((g) => ({
+            role: g.getAttribute("data-board-role"),
+            tr: cs(g)!.transform,
+            op: num(cs(g)!.opacity),
+          })),
+          lanes: lanes.map((g) => ({
+            lane: g.getAttribute("data-board-lane"),
+            wire: num(g.style.getPropertyValue("--tl-wire")),
+          })),
+          layerHidden: layer ? layer.hidden : null,
+          carriers: carriers.map((c) => ({
+            hidden: c.hidden,
+            box: rect(c),
+            kicker: c.querySelector(".tl-seam__kicker")?.textContent ?? "",
+            name: c.querySelector(".tl-seam__name")?.textContent ?? "",
+          })),
+          plates: plates.map((p) => ({
+            st: p.getAttribute("data-tl-plate"),
+            vis: cs(p)!.visibility,
+            clip: cs(p)!.clipPath,
+            y: num(p.style.getPropertyValue("--tl-unroll-y")),
+            head: rect(p.querySelector(".arc-plate__head")),
+            headVis: cs(p.querySelector(".arc-plate__head"))!.visibility,
+            headH: (p.querySelector(".arc-plate__head") as HTMLElement).offsetHeight,
+          })),
+          /* ⚠ A transition on a scrubbed property is smoothing, and smoothing
+             is lag by another name. */
+          transitions: clipped.map((el) => cs(el)!.transitionDuration),
+          running: [prop, ...prop.querySelectorAll("*")]
+            .flatMap((el) => (typeof el.getAnimations === "function" ? el.getAnimations() : []))
+            .filter((a) => a.playState === "running").length,
+        };
+      });
+    const IDENTITY = /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/;
+    const near = (a: number, b: number, eps: number, what: string) =>
+      expect(Math.abs(a - b), what).toBeLessThanOrEqual(eps);
 
-    await rollToT(page, 1);
-    await settleStrike(page, "#phases");
-    const phasesLate = await page.evaluate(() => {
-      const ph = document.getElementById("phases")!;
-      const plates = [...ph.querySelectorAll(".arc-plate")];
-      return {
-        arrive: document.getElementById("offer")!.getAttribute("data-tl-phases-arrive"),
-        head: getComputedStyle(ph.querySelector(".arc-head")!).visibility,
-        plates: plates.map((p) => ({
-          vis: getComputedStyle(p).visibility,
-          running: p.getAnimations().some((a) => a.playState === "running"),
-          /* The sweep's last frame is STRING-EQUAL to the plate's own clip,
-             so the animation and the cascade end on one polygon. */
-          clip: getComputedStyle(p).clipPath,
-          w: Math.round(p.getBoundingClientRect().width),
-        })),
-      };
-    });
-    expect(phasesLate.arrive).toBe("in");
-    expect(phasesLate.head).toBe("visible");
-    expect(phasesLate.plates.length).toBe(3);
-    for (const p of phasesLate.plates) {
-      expect(p.vis).toBe("visible");
-      expect(p.running, "the plate's sweep is spent, not held").toBe(false);
-      expect(p.clip, "the plate lost its own notch to the sweep").toMatch(/polygon/);
-      expect(p.w).toBeGreaterThan(200);
+    // 5a — the pin: the stage is stuck at the frame's top, the phases seated
+    // over the board, nothing moved, nothing running.
+    await rollToS(page, 0.15);
+    const pinned = await scene();
+    expect(pinned.stagePos, "the slot is the stage").toBe("sticky");
+    near(pinned.stageTop, 0, 1, "the stage is pinned at the frame's top");
+    expect(pinned.phasesPos, "the phases are seated over the board").toBe("absolute");
+    expect(pinned.past).toBe(false);
+    expect(pinned.chip).toBeNull();
+    expect(pinned.cardVis).toBe("visible");
+    expect(pinned.ap.prop).toBe(1);
+    expect(pinned.ap.title).toBe(0);
+    expect(pinned.ap.intro).toBe(0);
+    for (const r of pinned.roles) {
+      expect(r.tr, `${r.role} is at identity during the dwell`).toMatch(IDENTITY);
+      expect(r.op, `${r.role} is lit during the dwell`).toBe(1);
     }
+    for (const l of pinned.lanes) expect(l.wire, `${l.lane} is drawn`).toBe(0);
+    for (const p of pinned.plates) {
+      expect(p.st).toBe("held");
+      expect(p.vis).toBe("hidden");
+    }
+    expect(pinned.layerHidden, "the carrier layer is in the stage and away").toBe(true);
+    for (const t of pinned.transitions)
+      expect(t, "no transition on a scrubbed property").toBe("0s");
+    expect(pinned.running, "nothing runs during the dwell").toBe(0);
+
+    // 5b — the withdraw: the board's head and the ledger closing, the strike's
+    // replay gate latched.
+    await rollToS(page, 0.55);
+    const withdrawing = await scene();
+    expect(withdrawing.past, "the scene-past latch is set").toBe(true);
+    expect(withdrawing.ap.prop).toBeGreaterThan(0.3);
+    expect(withdrawing.ap.prop).toBeLessThan(0.7);
+
+    // 5c — the fold, in order: the reach is gone, the seat has barely begun.
+    await rollToS(page, 0.85);
+    const folding = await scene();
+    expect(folding.ap.prop).toBe(0);
+    const reach = folding.roles.find((r) => r.role === "reach")!;
+    const seat = folding.roles.find((r) => r.role === "seat")!;
+    expect(reach.tr, "the reach has folded").not.toMatch(IDENTITY);
+    expect(reach.op, "the reach has gone").toBeLessThan(0.15);
+    expect(seat.op, "the seat has not started").toBeGreaterThan(0.99);
+    expect(folding.lanes.find((l) => l.lane === "reach")!.wire).toBeGreaterThan(0.9);
+    expect(folding.lanes.find((l) => l.lane === "seat")!.wire).toBe(0);
+    expect(folding.chip).toBeNull();
+    expect(folding.cardVis).toBe("visible");
+
+    // 5d — the hand-over: the chip's group is away and carrier 0 IS the chip,
+    // on its box, with its words. ⚠ A hundredth PAST the threshold (1.12):
+    // the roller converges to ±0.01, and on the threshold itself half the
+    // landings are a frame before it. Still before the slide opens at 1.14.
+    await rollToS(page, 1.13);
+    const handed = await scene();
+    expect(handed.chip).toBe("away");
+    expect(handed.cardVis).toBe("hidden");
+    for (const r of handed.roles.filter((r) => r.role !== "card")) {
+      expect(r.op, `${r.role} has folded away`).toBeLessThan(0.02);
+    }
+    expect(handed.layerHidden).toBe(false);
+    const c0 = handed.carriers[0];
+    expect(c0.hidden).toBe(false);
+    expect(handed.carriers[1].hidden).toBe(true);
+    expect(handed.carriers[2].hidden).toBe(true);
+    for (const k of ["x", "y", "w", "h"] as const) {
+      near(c0.box![k], handed.chipBox![k], 1.5, `carrier 0 is the chip's box (${k})`);
+    }
+    expect(c0.kicker).toBe("AI CAPABILITY");
+    expect(c0.name).toBe("owned by the team");
+    for (const p of handed.plates) expect(p.st).toBe("held");
+
+    // 5e — the slide: between the chip and plate 1's band.
+    await rollToS(page, 1.3);
+    const sliding = await scene();
+    const head0 = sliding.plates[0].head!;
+    expect(sliding.carriers[0].box!.x).toBeLessThan(sliding.chipBox!.x);
+    expect(sliding.carriers[0].box!.x).toBeGreaterThan(head0.x);
+    expect(sliding.plates[0].headVis, "plate 1's band is hidden under the carrier").toBe("hidden");
+
+    // 5f — plate 1 lands: the carrier hands over to the real band, and the plate
+    // unrolls out of it; the title is opening.
+    await rollToS(page, 1.5);
+    const landed = await scene();
+    expect(landed.carriers[0].hidden, "carrier 0 has handed over").toBe(true);
+    expect(landed.plates[0].st).toBe("unroll");
+    expect(landed.plates[0].vis).toBe("visible");
+    expect(landed.plates[0].headVis).toBe("visible");
+    near(landed.plates[0].y, landed.plates[0].headH, 1, "the clip starts at the band's height");
+    expect(landed.plates[0].clip).toMatch(/polygon/);
+    expect(landed.ap.title).toBeGreaterThan(0.3);
+    expect(landed.ap.title).toBeLessThan(0.8);
+    expect(landed.plates[1].st).toBe("held");
+
+    // 5g — the copy: born ON plate 1's band with its words, then travelling.
+    await rollToS(page, 1.65);
+    const born = await scene();
+    expect(born.plates[0].y).toBeGreaterThan(born.plates[0].headH + 20);
+    const c1 = born.carriers[1];
+    expect(c1.hidden).toBe(false);
+    for (const k of ["x", "y", "w", "h"] as const) {
+      near(c1.box![k], born.plates[0].head![k], 1.5, `the copy is born on plate 1's band (${k})`);
+    }
+    expect(c1.kicker, "the copy holds its source's words until it has separated").toBe(
+      "M1 · about three weeks"
+    );
+    await rollToS(page, 1.85);
+    const peeling = await scene();
+    expect(peeling.carriers[1].box!.x).toBeGreaterThan(peeling.plates[0].head!.x + 60);
+    expect(peeling.carriers[1].box!.x).toBeLessThan(peeling.plates[1].head!.x - 60);
+    expect(peeling.plates[0].st, "plate 1 is whole and rests on the cascade").toBeNull();
+    expect(peeling.plates[0].clip, "the resting clip is the plate's own").toBe(
+      peeling.plates[2].clip
+    );
+
+    // 5h — plates 2 and 3, the same way.
+    await rollToS(page, 2.0);
+    const second = await scene();
+    expect(second.carriers[1].hidden).toBe(true);
+    expect(second.plates[1].st).toBe("unroll");
+    near(second.plates[1].y, second.plates[1].headH, 1, "plate 2's clip starts at its band");
+    await rollToS(page, 2.35);
+    const third = await scene();
+    expect(third.plates[1].st).toBeNull();
+    expect(third.carriers[2].hidden).toBe(false);
+    expect(third.carriers[2].box!.x).toBeGreaterThan(third.plates[1].head!.x + 60);
+    expect(third.carriers[2].box!.x).toBeLessThan(third.plates[2].head!.x - 60);
+    await rollToS(page, 2.6);
+    expect((await scene()).plates[2].st).toBe("unroll");
+
+    // 5i — the paragraph, last; then everything whole and still.
+    await rollToS(page, 2.9);
+    const opening = await scene();
+    expect(opening.ap.intro).toBeGreaterThan(0.3);
+    expect(opening.ap.intro).toBeLessThan(0.8);
+    for (const p of opening.plates) expect(p.st).toBeNull();
+    await rollToS(page, SCENE_SETTLED);
+    const settledScene = await scene();
+    expect(settledScene.ap.title).toBe(1);
+    expect(settledScene.ap.intro).toBe(1);
+    expect(settledScene.layerHidden).toBe(true);
+    expect(settledScene.running, "nothing runs at the settled end").toBe(0);
+    for (const p of settledScene.plates) {
+      expect(p.st).toBeNull();
+      expect(p.vis).toBe("visible");
+      expect(p.headVis).toBe("visible");
+      expect(p.clip).toBe(settledScene.plates[0].clip);
+      expect(p.head!.w).toBeGreaterThan(200);
+    }
+    near(settledScene.stageTop, 0, 1, "still pinned at the settled end");
+
+    // 5j — and BACK: the same frames in reverse, and no replayed strike.
+    await rollToS(page, 0.55);
+    const backMid = await scene();
+    expect(backMid.chip).toBeNull();
+    expect(backMid.cardVis).toBe("visible");
+    for (const p of backMid.plates) expect(p.st).toBe("held");
+    expect(backMid.past, "the replay gate stays latched inside the scene").toBe(true);
+    await rollToS(page, 0);
+    const backRest = await scene();
+    expect(backRest.ap.prop).toBe(1);
+    for (const r of backRest.roles) {
+      expect(r.tr, `${r.role} is back at identity`).toMatch(IDENTITY);
+      expect(r.op).toBe(1);
+    }
+    expect(backRest.running, "scrolling back replays no strike").toBe(0);
   });
 
-  test("ADR-101 §B: the chip becomes the plates, welded at both ends", async ({ page }) => {
-    /* Owner, 2026-09-14: the chip _"moves into the center of the screen, and
-       then it copies itself left and right. That becomes the cards from the
-       'We propose a modular approach' section … I don't want fucking
-       cross-dissolves. This really needs to be an elegant transformation of
-       the element."_
+  test("ADR-102: the chip becomes plate 1's band, then copies right, welded at every end", async ({
+    page,
+  }) => {
+    /* Owner, 2026-09-14: the first cut _"jitters and lags"_; _"the top part,
+       AI capability, should first move to the utter left and then the other
+       card should open up to the right of it"_.
 
-       ⚠ THE TWO WELDS ARE THE WHOLE CLAIM, and neither is visible on a still
-       that is not taken on exactly the right frame: at t = 0 the carrier has
-       to BE the chip it covers, and at t = 1 it has to BE the head it is
-       replaced by. Off by a few pixels at either end and the reader sees a
-       jump — which is what a cross-dissolve was being avoided to prevent.
-       `trinny-seam` pins the arithmetic; this pins the live boxes. */
+       ⚠ THE WELDS ARE THE WHOLE CLAIM, and none is visible on a still that
+       is not taken on exactly the right frame: at the hand-over the carrier
+       has to BE the chip it covers; at the end of its slide it has to BE the
+       band that replaces it; and each copy has to be born ON the band it
+       peels off and land ON the band it becomes. Off by a few pixels at any
+       end and the reader sees a jump — which is what a cross-dissolve was
+       being avoided to prevent. `trinny-seam` pins the arithmetic; this pins
+       the live boxes, in the stage's own frame.
+
+       ⚠ AND THE STAGE MUST NOT MOVE UNDER THE WHEEL. The jitter was a
+       main-thread writer posing a box against a page the compositor was
+       scrolling; the cure is that nothing the carrier is welded to moves
+       while it travels. Asserted from the wheel's side: the stage's top stays
+       at 0 across wheel steps, and the carrier's box agrees with the pose its
+       own vars declare on every frame. */
     await page.setViewportSize({ width: 1920, height: 1247 });
     await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
     await page.waitForSelector(".home-v2-stage");
     await page.waitForTimeout(SETTLE_MS);
+    await page.addStyleTag({ content: "html{scroll-behavior:auto!important}" });
 
     const read = () =>
       page.evaluate(() => {
@@ -2129,19 +2362,18 @@ test.describe("Trinny London pitch variant", () => {
           const r = el.getBoundingClientRect();
           return { x: r.x, y: r.y, w: r.width, h: r.height };
         };
-        const layer = document.querySelector<HTMLElement>(".tl-seam");
-        const cs = [...document.querySelectorAll<HTMLElement>(".tl-seam__carrier")];
-        const chip = document.querySelector(
-          '#proposition [data-board-state="configured"] [data-board-module="card"] .arc-board__plate'
+        const prop = document.getElementById("proposition")!;
+        const stage = prop.querySelector<HTMLElement>("[data-tl-config-root]")!;
+        const layer = stage.querySelector<HTMLElement>(":scope > .tl-seam");
+        const cs = layer ? [...layer.querySelectorAll<HTMLElement>(".tl-seam__carrier")] : [];
+        const chip = prop.querySelector(
+          '[data-board-state="configured"] [data-board-module="card"] .arc-board__plate'
         );
         const heads = [...document.querySelectorAll("#phases .arc-plate__head")];
         return {
-          t: Number(document.getElementById("offer")?.getAttribute("data-tl-seam") ?? "0"),
-          arrive:
-            document.getElementById("proposition")?.getAttribute("data-tl-prop-arrive") ?? null,
-          q: document.getElementById("proposition")?.getAttribute("data-tl-prop") ?? null,
-          chipAway: document.getElementById("proposition")?.getAttribute("data-tl-chip") ?? null,
-          hold: document.getElementById("offer")?.getAttribute("data-tl-heads") ?? null,
+          sv: Number(prop.getAttribute("data-tl-scene") ?? "0"),
+          chipAway: prop.getAttribute("data-tl-chip"),
+          layerInStage: !!layer,
           layerHidden: layer ? layer.hidden : null,
           shown: cs.filter((c) => !c.hidden).length,
           carriers: cs.map((c) => ({
@@ -2151,95 +2383,199 @@ test.describe("Trinny London pitch variant", () => {
             name: c.querySelector(".tl-seam__name")?.textContent ?? "",
           })),
           chip: box(chip),
-          chipVis: chip ? getComputedStyle(chip).visibility : null,
-          chipText: [
-            ...document.querySelectorAll(
-              '#proposition [data-board-state="configured"] [data-board-role="card"] text'
-            ),
-          ].map((t) => getComputedStyle(t).visibility),
+          cardVis: getComputedStyle(
+            prop.querySelector('[data-board-state="configured"] [data-board-role="card"]')!
+          ).visibility,
           heads: heads.map((h) => ({ box: box(h), vis: getComputedStyle(h).visibility })),
         };
       });
-
-    // 0 — the chip is whole on the board and there is no layer to see.
-    await rollToT(page, 0);
-    const rest = await read();
-    expect(rest.chipAway, "the chip is still seated").toBeNull();
-    expect(rest.layerHidden).toBe(true);
-    for (const v of rest.chipText)
-      expect(v, `arrive=${rest.arrive} q=${rest.q} t=${rest.t}`).toBe("visible");
-
-    /* 1 — the first frame of travel: ONE carrier, over the chip it covers,
-       to the pixel. The chip's own words are away and its OUTLINE is not:
-       four ribbons still run to that box, and a seat that vanished would
-       leave them ending in the middle of the board. */
-    await rollToT(page, 0.02);
-    const off = await read();
-    if (off.t > 0 && off.t < SEAM_DETACH_AT) {
-      expect(off.chipAway, "the chip is put away as the carrier lifts").toBe("away");
-      expect(off.hold, "the heads are held").toBe("hold");
-      expect(off.shown, "one object, not three, before the split").toBe(1);
-      for (const v of off.chipText) expect(v, "the chip's words are away").toBe("hidden");
-      expect(off.chipVis, "the chip's OUTLINE stays — the ribbons meet it").toBe("visible");
-      const c = off.carriers.find((x) => !x.hidden)!;
-      // The weld: within a pixel and a half of the chip's own screen box.
-      for (const k of ["w", "h"] as const) {
+    const weld = (a: { x: number; y: number; w: number; h: number }, b: typeof a, what: string) => {
+      for (const k of ["x", "y", "w", "h"] as const) {
         expect(
-          Math.abs(c.box![k] - off.chip![k]),
-          `the carrier is not the chip's size at t ${off.t} (${k})`
+          Math.abs(a[k] - b[k]),
+          `${what} (${k}): ${JSON.stringify(a)} vs ${JSON.stringify(b)}`
         ).toBeLessThanOrEqual(1.5);
       }
-      expect(c.kicker, "it carries the chip's own words").toBe("AI CAPABILITY");
-      expect(c.name).toBe("owned by the team");
-    }
+    };
 
-    // 2 — past the split: one object became three.
-    await rollToT(page, 0.5);
-    const split = await read();
-    expect(split.shown, "the chip copied itself left and right").toBe(3);
-    const xs = split.carriers.map((c) => c.box!.x).sort((a, b) => a - b);
-    expect(xs[1] - xs[0], "the copies peeled apart").toBeGreaterThan(60);
-    expect(xs[2] - xs[1]).toBeGreaterThan(60);
-    for (const h of split.heads) expect(h.vis, "the heads are held").toBe("hidden");
+    // 0 — at the pin the chip is whole on the board and the layer is away.
+    await rollToS(page, 0.15);
+    const rest = await read();
+    expect(rest.layerInStage, "the carrier layer lives in the stage").toBe(true);
+    expect(rest.chipAway, "the chip is still seated").toBeNull();
+    expect(rest.layerHidden).toBe(true);
+    expect(rest.cardVis).toBe("visible");
 
-    /* 3 — the far weld. Each carrier is its head's box, and its words have
-       already landed: the decode finishes at 90 % of the seat so the last
-       stretch is a pure geometry move and the hand-over frame carries no
-       half-shuffled glyph. */
-    await rollToT(page, 0.99);
-    /* ⚠ AND THE PLATES HAVE TO HAVE FINISHED OPENING BEFORE THEIR HEADS ARE
-       MEASURED. Until ADR-097 U12 this was load-bearing for the GEOMETRY:
-       §A's strike animated `translate: 2.5px 0` on the plate itself, so a
-       head read mid-burst was up to 2.5px from where it settles — the
-       HARNESS moving the target. The aperture moves nothing, so the delta
-       no longer depends on it; the wait stays because a hand-over frame
-       sampled through a half-open plate is not the frame being claimed.
-       Settled, the delta is 0.00 on all four terms (measured). */
-    await settleStrike(page, "#phases");
-    const seated = await read();
-    if (seated.t > 0.9 && seated.t < 1) {
-      expect(seated.shown).toBe(3);
-      for (let i = 0; i < 3; i++) {
-        const c = seated.carriers[i].box!;
-        const h = seated.heads[i].box!;
-        for (const k of ["x", "y", "w", "h"] as const) {
-          expect(
-            Math.abs(c[k] - h[k]),
-            `carrier ${i} is not its head's box at t ${seated.t} (${k})`
-          ).toBeLessThanOrEqual(1.5);
-        }
-        expect(seated.carriers[i].kicker, `carrier ${i}'s kicker`).toMatch(/^M[123] /);
-      }
-    }
+    // 1 — the hand-over: the chip's group is away and ONE carrier is its box.
+    // (A hundredth past the 1.12 threshold — the roller lands ±0.01 — and
+    // still before the slide opens at 1.14, so the carrier has not moved.)
+    await rollToS(page, 1.13);
+    const handed = await read();
+    expect(handed.chipAway, "the chip is put away as the carrier takes it").toBe("away");
+    expect(handed.cardVis, "the whole group, outline included — the ribbons are gone").toBe(
+      "hidden"
+    );
+    expect(handed.shown, "one object").toBe(1);
+    weld(handed.carriers[0].box!, handed.chip!, "carrier 0 is the chip at the hand-over");
+    expect(handed.carriers[0].kicker).toBe("AI CAPABILITY");
+    expect(handed.carriers[0].name).toBe("owned by the team");
+    for (const h of handed.heads) expect(h.vis, "every band is held").toBe("hidden");
 
-    // 4 — and at 1 the layer is away and the real heads paint.
-    await rollToT(page, 1);
+    // 2 — the far end of the slide: carrier 0 IS plate 1's band, words landed.
+    await rollToS(page, 1.498);
+    const slid = await read();
+    expect(slid.shown).toBe(1);
+    weld(slid.carriers[0].box!, slid.heads[0].box!, "carrier 0 is plate 1's band at its landing");
+    expect(slid.carriers[0].kicker, "the words landed before the box").toBe(
+      "M1 · about three weeks"
+    );
+    expect(slid.carriers[0].name).toBe("Setup, insight and briefing");
+
+    // 3 — the copies: born on the band before, landing on the band after.
+    await rollToS(page, 1.65);
+    const born = await read();
+    expect(born.shown).toBe(1);
+    weld(born.carriers[1].box!, born.heads[0].box!, "the copy is born on plate 1's band");
+    expect(born.carriers[1].kicker).toBe("M1 · about three weeks");
+    expect(born.heads[0].vis, "the band it peels off stays painted").toBe("visible");
+    await rollToS(page, 1.978);
+    const c1 = await read();
+    weld(c1.carriers[1].box!, c1.heads[1].box!, "the copy lands on plate 2's band");
+    expect(c1.carriers[1].kicker).toBe("M2 · about three weeks");
+    await rollToS(page, 2.458);
+    const c2 = await read();
+    weld(c2.carriers[2].box!, c2.heads[2].box!, "the second copy lands on plate 3's band");
+    expect(c2.carriers[2].kicker).toBe("M3 · about three weeks");
+
+    // 4 — settled: the layer is away and every real band paints.
+    await rollToS(page, SCENE_SETTLED);
     const done = await read();
     expect(done.layerHidden, "the layer hands over").toBe(true);
-    expect(done.chipAway, "the chip is whole again").toBeNull();
-    expect(done.hold).toBeNull();
-    for (const h of done.heads) expect(h.vis, "the real heads paint").toBe("visible");
-    for (const v of done.chipText) expect(v).toBe("visible");
+    for (const h of done.heads) expect(h.vis, "the real bands paint").toBe("visible");
+
+    // 5 — the wheel: nothing the carrier is welded to moves while it travels.
+    // Six 40px steps from 1.20 stay inside the slide (1.14–1.50) at 1247h:
+    // 240px is 0.19 viewports, so the last sample lands at ~1.39 with the
+    // carrier still live.
+    await rollToS(page, 1.2);
+    await page.mouse.move(960, 620);
+    const samples: { top: number; dx: number; dy: number }[] = [];
+    for (let i = 0; i < 6; i++) {
+      await page.mouse.wheel(0, 40);
+      await page.evaluate(
+        () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      );
+      samples.push(
+        await page.evaluate(() => {
+          const stage = document.querySelector<HTMLElement>("#proposition [data-tl-config-root]")!;
+          const c = stage.querySelector<HTMLElement>('.tl-seam__carrier[data-i="0"]')!;
+          const sr = stage.getBoundingClientRect();
+          const cr = c.getBoundingClientRect();
+          return {
+            top: sr.top,
+            dx: cr.left - sr.left - parseFloat(c.style.getPropertyValue("--x")),
+            dy: cr.top - sr.top - parseFloat(c.style.getPropertyValue("--y")),
+          };
+        })
+      );
+    }
+    for (const s of samples) {
+      expect(Math.abs(s.top), "the stage does not move under the wheel").toBeLessThanOrEqual(0.5);
+      expect(Math.abs(s.dx), "the carrier is where its pose says, this frame").toBeLessThanOrEqual(
+        0.5
+      );
+      expect(Math.abs(s.dy)).toBeLessThanOrEqual(0.5);
+    }
+  });
+
+  test("ADR-102: a deep reload mid-scene replays no strike over a folded board", async ({
+    page,
+  }) => {
+    /* `arriveNext` seeds `in` on a reload that lands past the threshold, so
+       the arrival strike would run its settle ladder — 1.6 s of opacity on
+       the role groups — over nodes the fold has already put away, and four
+       modules would flash in at the chip's centre. The sheet scopes every
+       strike rule away from `data-tl-scene-past`, which the writer stamps on
+       the same frame it seeds the arrival. */
+    await page.setViewportSize({ width: 1920, height: 1247 });
+    await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".home-v2-stage");
+    await page.waitForTimeout(SETTLE_MS);
+    await rollToS(page, 2.0);
+    const y = await page.evaluate(() => window.scrollY);
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".home-v2-stage");
+    await page.waitForTimeout(SETTLE_MS);
+    // Chrome restores the scroll; put it back exactly regardless, once the
+    // lazy root has mounted and the station has grown.
+    await rollTo(page, y);
+    await rollTo(page, y);
+    await page.waitForTimeout(300);
+    const read = await page.evaluate(() => {
+      const prop = document.getElementById("proposition")!;
+      const roles = [
+        ...prop.querySelectorAll<SVGGElement>('[data-board-state="configured"] [data-board-role]'),
+      ];
+      return {
+        sv: Number(prop.getAttribute("data-tl-scene") ?? "0"),
+        past: prop.hasAttribute("data-tl-scene-past"),
+        arrive: prop.getAttribute("data-tl-prop-arrive"),
+        animations: roles.map((g) => g.getAnimations().length),
+        reachOp: parseFloat(
+          getComputedStyle(roles.find((g) => g.getAttribute("data-board-role") === "reach")!)
+            .opacity
+        ),
+      };
+    });
+    expect(read.sv, "the reload landed inside the scene").toBeGreaterThan(0.5);
+    expect(read.arrive, "the arrival seeded `in`").toBe("in");
+    expect(read.past, "the replay gate is stamped").toBe(true);
+    for (const n of read.animations) expect(n, "no strike animation was ever applied").toBe(0);
+    expect(read.reachOp, "the fold holds").toBeLessThan(0.02);
+  });
+
+  test("ADR-102: the settled plates keep their feet inside the stage", async ({ page }) => {
+    /* ⚠ THE BEAT'S BOX CANNOT SEE THIS. Inside a pinned stage `#phases` is
+       `inset: 0`, so its box IS the stage and the ADR-100 "one viewport"
+       read on `beat.h` passes whatever its content does. The plates' feet
+       overran the stage by 23.7px at 1280×720 — the last line of the
+       DELIVERABLE band under the frame's edge for the whole settled dwell —
+       with every gate green and the sheet claiming a bottom-pad trim had
+       recovered it. Measure the CONTENT against the stage, at the reference
+       laptop and at the owner's viewport, and pin the two heads' margins
+       equal (the rung that recovers it applies to both). */
+    for (const vp of [
+      { width: 1280, height: 720 },
+      { width: 1920, height: 1247 },
+    ]) {
+      await page.setViewportSize(vp);
+      await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
+      await page.waitForSelector(".home-v2-stage");
+      await page.waitForTimeout(SETTLE_MS);
+      await rollToS(page, SCENE_SETTLED);
+      const read = await page.evaluate(() => {
+        const stage = document.querySelector<HTMLElement>("#proposition [data-tl-config-root]")!;
+        const plates = [...document.querySelectorAll<HTMLElement>("#phases .arc-plate")];
+        const heads = [
+          document.querySelector<HTMLElement>("#configuration .arc-head")!,
+          document.querySelector<HTMLElement>("#phases .arc-head")!,
+        ];
+        return {
+          sv: document.getElementById("proposition")!.getAttribute("data-tl-scene"),
+          stageBottom: stage.getBoundingClientRect().bottom,
+          feet: plates.map((p) => p.getBoundingClientRect().bottom),
+          gaps: heads.map((h) => getComputedStyle(h).marginBottom),
+        };
+      });
+      const where = `${vp.width}×${vp.height}`;
+      expect(read.sv, `${where}: settled`).toBe(SCENE_SETTLED.toFixed(2));
+      expect(read.feet, `${where}: three plates`).toHaveLength(3);
+      for (const foot of read.feet)
+        expect(foot, `${where}: a plate's foot inside the stage`).toBeLessThanOrEqual(
+          read.stageBottom + 0.5
+        );
+      expect(read.gaps[0], `${where}: the two heads share one margin`).toBe(read.gaps[1]);
+    }
   });
 
   test("ADR-101 §A: under reduced motion nothing strikes, and nothing is hidden", async ({
@@ -2269,10 +2605,19 @@ test.describe("Trinny London pitch variant", () => {
       const prop = document.getElementById("proposition")!;
       const head = prop.querySelector(".arc-head") as HTMLElement;
       const svgs = [...prop.querySelectorAll(".arc-board__svg")];
+      const ph = document.getElementById("phases");
       return {
         arrive: prop.getAttribute("data-tl-prop-arrive"),
-        seam: document.getElementById("offer")?.getAttribute("data-tl-seam") ?? null,
-        phases: document.getElementById("offer")?.getAttribute("data-tl-phases-arrive") ?? null,
+        scene: prop.getAttribute("data-tl-scene"),
+        chip: prop.getAttribute("data-tl-chip"),
+        stagePos: getComputedStyle(prop.querySelector("[data-tl-config-root]")!).position,
+        phasesPos: ph ? getComputedStyle(ph).position : null,
+        plates: ph
+          ? [...ph.querySelectorAll(".arc-plate")].map((p) => ({
+              st: p.getAttribute("data-tl-plate"),
+              vis: getComputedStyle(p).visibility,
+            }))
+          : [],
         head: {
           vis: getComputedStyle(head).visibility,
           op: getComputedStyle(head).opacity,
@@ -2287,8 +2632,18 @@ test.describe("Trinny London pitch variant", () => {
     });
 
     expect(read.arrive, "a parked writer must leave no stamp behind").toBeNull();
-    expect(read.seam).toBeNull();
-    expect(read.phases).toBeNull();
+    /* ⚠ AND NO SCENE: without the stamp the station is two flowing beats with
+       the arcs' own seam between them, the inert page. A scene that needed
+       the writer would be a page that can go wrong with nothing to say so. */
+    expect(read.scene, "the scene is keyed on the writer's stamp").toBeNull();
+    expect(read.chip).toBeNull();
+    expect(read.stagePos).not.toBe("sticky");
+    expect(read.phasesPos, "the phases flow under the board").not.toBe("absolute");
+    expect(read.plates.length).toBe(3);
+    for (const p of read.plates) {
+      expect(p.st).toBeNull();
+      expect(p.vis).toBe("visible");
+    }
     expect(read.head.vis).toBe("visible");
     expect(read.head.op).toBe("1");
     expect(read.head.w).toBeGreaterThan(400);
@@ -2345,16 +2700,35 @@ test.describe("Trinny London pitch variant", () => {
       `the proposal opens ${approach}px off the turn's release — the lead has drifted`
     ).toBeLessThanOrEqual(2);
 
-    for (const at of [-1.0, -0.6, -0.25, -0.02, 0.02, 0.2, 0.45, 0.7]) {
-      const y = Math.round(release + at * geom.vh);
+    /* Two bands of samples: around the turn's release, where the two grounds
+       swap, and around the SCENE's release (ADR-102), where the proposal's
+       sticky canvas unsticks and scrolls off feathering into `#offer`. The
+       scene grows the station by three viewports once its root mounts, so
+       the end is re-read after rolling in. */
+    const stops: number[] = [-1.0, -0.6, -0.25, -0.02, 0.02, 0.2, 0.45, 0.7].map((at) =>
+      Math.round(release + at * geom.vh)
+    );
+    await rollToS(page, 1);
+    const end = await page.evaluate(() => {
+      const r = document.getElementById("proposition")!.getBoundingClientRect();
+      return Math.round(r.top + window.scrollY + r.height - window.innerHeight);
+    });
+    for (const at of [-0.6, -0.25, 0, 0.45, 0.7]) stops.push(Math.round(end + at * geom.vh));
+    for (const y of stops) {
       await rollTo(page, y);
       await rollTo(page, y);
       const paint = await page.evaluate(() => {
-        const seen = (sel: string) => {
-          const el = document.querySelector(sel);
-          if (!el) return null;
+        /* ⚠ THE RECT IS THE CANVAS'S, THE OPACITY IS THE GROUND'S. The
+           proposal's canvas is sticky inside its ground and paints only its
+           own viewport-sized box, so the ground's rect over-reports by three
+           viewports; the hold is stamped on the GROUND (`opacity: 0` there),
+           which a canvas's own computed opacity does not show. */
+        const seen = (rectSel: string, opSel = rectSel) => {
+          const el = document.querySelector(rectSel);
+          const opEl = document.querySelector(opSel);
+          if (!el || !opEl) return null;
           const r = el.getBoundingClientRect();
-          const op = parseFloat(getComputedStyle(el).opacity || "1");
+          const op = parseFloat(getComputedStyle(opEl).opacity || "1");
           const top = Math.max(0, r.top);
           const bottom = Math.min(window.innerHeight, r.bottom);
           return { op, top, bottom, covers: Math.max(0, bottom - top) };
@@ -2362,12 +2736,13 @@ test.describe("Trinny London pitch variant", () => {
         const offer = document.getElementById("offer")?.getBoundingClientRect();
         return {
           turn: seen(".tl-turn__wash"),
-          prop: seen(".tl-prop__ground"),
+          prop: seen(".tl-prop__wash", ".tl-prop__ground"),
           // The next OPAQUE station: where the coral stops, this begins.
           offerTop: offer ? Math.max(0, Math.min(window.innerHeight, offer.top)) : null,
           handoff: document.getElementById("turn")?.getAttribute("data-tl-handoff") ?? null,
         };
       });
+      const at = Math.round(((y - release) / geom.vh) * 100) / 100;
       const t = paint.turn;
       const p = paint.prop;
       expect(t).not.toBeNull();

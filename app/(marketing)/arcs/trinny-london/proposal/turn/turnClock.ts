@@ -79,8 +79,8 @@ export const TURN_PRODUCT_LEAVE = 0.55;
 export const TURN_WASH_IN = 0.36;
 export const TURN_WASH_PEAK = 0.68;
 /**
- * How much of the proposal's own height the ground feathers away over, at its
- * bottom edge.
+ * How far above the proposal's ground's BOTTOM edge its feather begins, in
+ * viewports.
  *
  * ⚠ THE END OF THE GROUND IS GEOMETRY, NOT A CLOCK. A scroll-driven resolve
  * was built first and measured wrong both ways on a station only 1.29
@@ -88,9 +88,41 @@ export const TURN_WASH_PEAK = 0.68;
  * against `#contact`; narrow enough to clear that seam and the colour went
  * while the drawing was still on screen. Feathering the field's own bottom
  * puts the end in one place however the reader arrives, and reverses for
- * free. 0.42 begins it just under where the drawing ends.
+ * free.
+ *
+ * ⚠ IN VIEWPORTS SINCE ADR-102, NOT AS A FRACTION OF THE CANVAS. The canvas
+ * is viewport-sized and STICKY now (the station is a four-viewport scene, and
+ * a canvas spanning it would be a 24-megapixel shader pass per scroll frame),
+ * so a fraction of its own height would feather the bottom of EVERY frame.
+ * `feather()` converts this back into the canvas's own fractions each frame
+ * from where the ground's bottom actually is. 0.84 is the 0.42 of the
+ * two-viewport canvas it replaces: the same document-space ramp.
  */
-export const TURN_PROP_FADE = 0.42;
+export const TURN_PROP_FEATHER_VH = 0.84;
+
+/**
+ * The feather, in the canvas's OWN fractions from its bottom (y-up, as the
+ * shader reads `gl_FragCoord`): `lo` is where the ground's bottom edge sits,
+ * `hi` is `TURN_PROP_FEATHER_VH` viewports above it. Everything above `hi`
+ * paints in full; `hi ≤ 0` means the ground's end is still more than a
+ * feather's length below the frame and nothing is touched.
+ *
+ * ⚠ AGAINST THE CANVAS'S RECT, NEVER THE VIEWPORT'S. While the canvas is
+ * stuck its bottom IS the frame's bottom; once the ground's box leaves the
+ * frame the canvas unsticks and scrolls with it, and its bottom becomes the
+ * ground's own. Solving in the canvas's fractions is what makes the ramp
+ * continuous across that moment.
+ */
+export function feather(
+  groundBottom: number,
+  canvasBottom: number,
+  canvasH: number,
+  vh: number
+): { lo: number; hi: number } {
+  const h = Math.max(1, canvasH);
+  const lo = (canvasBottom - groundBottom) / h;
+  return { lo, hi: lo + (TURN_PROP_FEATHER_VH * Math.max(1, vh)) / h };
+}
 
 export const TURN_VEIL_IN = 0.56;
 export const TURN_VEIL_FULL = 0.72;
@@ -305,10 +337,12 @@ export function markVeil(pTurn: number, q: number): number {
   return clamp01(veilOf(pTurn) + (TURN_VEIL_PROP_MAX - TURN_VEIL_MAX) * propVeilRamp(q));
 }
 
-/* ── The two strike-ins (ADR-101 §A) ──────────────────────────────────────────
+/* ── The strike-in (ADR-101 §A) ───────────────────────────────────────────────
    Owner, 2026-09-14: _"the elements of the next section, where the studio
    stands, don't have to fly in … they need to have a glitch effect like we
-   have on our homepage"_, and the same for the beat after it.
+   have on our homepage"_. (The phases had the same burst until ADR-102 took
+   them into the scene, where they unroll out of their own head bands on the
+   scene's clock instead.)
 
    A strike is a BURST, not a scrub, so it cannot be a pure function of
    scroll the way everything else on this route is — it is ADR-021's one
@@ -345,12 +379,6 @@ export type Arrive = "await" | "in" | "out";
 export const PROP_ARRIVE_IN = 0.99;
 export const PROP_ARRIVE_OUT = 0.96;
 
-/** The phases strike well before the seam lands, so a reader who stops
- *  mid-gesture is looking at three whole plates rather than at a beat still
- *  assembling (ADR-101 §B seats the head bands at t = 1). */
-export const PHASES_ARRIVE_IN = 0.8;
-export const PHASES_ARRIVE_OUT = 0.7;
-
 /**
  * The next arrival state, given the last one and a progress value.
  *
@@ -372,44 +400,220 @@ export function arriveNext(prev: Arrive | null, v: number, inAt: number, outAt: 
   return at;
 }
 
-/* ── The seam (ADR-101 §B) ────────────────────────────────────────────────
-   `#offer`'s own clock, and the one the phases' strike is hung on. `t` runs
-   0 → 1 from the frame `#phases`' top reaches the viewport's bottom — which
-   IS the configuration seated, because `#proposition` is exactly one viewport
-   — to the frame its plates row is fully in view. */
+/* ── The scene (ADR-102) ──────────────────────────────────────────────
+   Owner, 2026-09-14, on ADR-101's flight: it "jitters and lags"; it begins
+   the moment the studio is entered; before anything moves on, the four nodes
+   around the chip must COLLAPSE INWARDS "so it feels like one configuration";
+   the chip then goes to the FAR LEFT and the plates open to the RIGHT of it,
+   each unrolling out of its own head band; the title reveals with the first
+   plate, the paragraph only after the third.
+
+   `#proposition` is a sticky SCENE now: its stage pins on the same frame the
+   record is struck in (q = 1 IS the station's top at the frame's top, so a
+   pin cannot begin before the record has arrived — ADR-099's blank frame was
+   a pin that did) and holds for `--tl-scene-runway`, with the phases beat
+   seated absolutely over the board inside it. Every object the choreography
+   touches is therefore viewport-STATIONARY while this clock runs, which is
+   the whole cure for the jitter: a main-thread writer positioning a carrier
+   against a page the COMPOSITOR is scrolling lands one frame behind it —
+   "a displacement of exactly one wheel step, every step", the hero curtain's
+   own measurement on this route — and a carrier moving between two boxes
+   that do not move has nothing to be behind.
+
+   ⚠ THE CLOCK IS IN VIEWPORT UNITS, NOT NORMALISED. `sv` is how many
+   viewports the station's top has passed the frame's top, and every window
+   below is authored in the same unit, so an edit to the runway can only
+   TRUNCATE the scene — it cannot rescale every window with nothing failing,
+   which a 0 → 1 clock would. `trinny-seam` reads the runway out of the sheet
+   and pins `SCENE_END` under it.
+
+   ⚠ EVERY WINDOW IS A PURE FUNCTION OF `sv` AND EVERY HAND-OVER TARGETS A
+   BOX THAT IS NOT MOVING. Scrolling back plays the same frames in reverse;
+   the one burst on the station (the arrival strike, on `q`) leaves at
+   q ≤ 0.96, which is above the pin where `sv` is 0, so the two never meet. */
+
+/** Nothing moves: the owner's delay, and the room the arrival's 1.6 s ladder
+ *  needs before the board is asked to come apart. */
+export const SCENE_DWELL_END = 0.4;
+/** The board's head, its dek and the ledger CLOSE on the scrubbed aperture. */
+export const SCENE_WITHDRAW = [0.4, 0.7] as const;
+/** The nodes fold into the chip in the reverse of the assembly's order — the
+ *  last to arrive is the first to go home. */
+export const SCENE_FOLD_ORDER = ["reach", "tools", "layer", "seat"] as const;
+export const SCENE_FOLD_START = 0.58;
+export const SCENE_FOLD_SPAN = 0.3;
+export const SCENE_FOLD_STAGGER = 0.07;
+/**
+ * Inside a node's own fold window it SHRINKS first and TRAVELS second.
+ *
+ * ⚠ NOT A TASTE CHOICE. The roles paint seat · layer · card · tools · reach,
+ * so the tools and the reach paint OVER the chip: a full-size node sliding to
+ * the chip's centre crosses its edge on top of it, which reads as going over
+ * the chip rather than into it. Shrunk to ~1/7 before its travel starts, a
+ * node is a mark riding its own ribbon home by the time it reaches that edge,
+ * and the last of it goes as it enters.
+ */
+export const SCENE_FOLD_SHRINK_END = 0.7;
+export const SCENE_FOLD_TRAVEL_START = 0.3;
+export const SCENE_FOLD_FADE_START = 0.8;
+export const SCENE_FOLD_MIN_SCALE = 0.02;
+/** The chip's group is hidden and carrier 0 is shown on its box, welded. */
+export const SCENE_HANDOVER = 1.12;
+/**
+ * Carrier `i`'s travel: 0 is the chip to plate 1's head band (the slide to
+ * the far left), 1 is plate 1's band to plate 2's, 2 is plate 2's to plate
+ * 3's. A copy starts pixel-identical ON the band it peels off, so nothing is
+ * hidden at its start; at its end the real band takes over and the plate
+ * unrolls out of it.
+ */
+export const SCENE_CARRY: readonly (readonly [number, number])[] = [
+  [1.14, 1.5],
+  [1.65, 1.98],
+  [2.14, 2.46],
+];
+/** Plate `i`'s body unrolls out of its band: the clip's bottom edge runs
+ *  from the head's own height to the plate's. */
+export const SCENE_UNROLL: readonly (readonly [number, number])[] = [
+  [1.52, 1.78],
+  [2.0, 2.26],
+  [2.48, 2.74],
+];
+/** The section's title opens as the first band lands … */
+export const SCENE_TITLE = [1.34, 1.64] as const;
+/** … and its paragraph only once the third plate is whole (owner). */
+export const SCENE_INTRO = [2.78, 3.02] as const;
+/** Everything real and stationary from here; the runway must reach it. */
+export const SCENE_END = 3.18;
+/**
+ * The words decode over the MIDDLE of a carrier's travel.
+ *
+ * ⚠ THEY START LATE. A copy is born pixel-identical ON the band it peels off,
+ * and a decode that began at 0 shuffled the band's own words under the reader
+ * while nothing had yet moved — measured on the still, the real band reading
+ * "3G O BBOUT THREE WEEKS". The carrier holds its source's words until it has
+ * visibly separated, then transforms in flight.
+ * ⚠ AND THEY LAND EARLY: `seamDecodeFrame` is exact at its ends, so at `u`
+ * 0.999 it is still shuffling a glyph, and the frame that hands over to the
+ * real band would carry one wrong letter. The last stretch is a pure geometry
+ * move, which is also the easier thing to read.
+ */
+export const SCENE_DECODE_START = 0.2;
+export const SCENE_DECODE_END = 0.9;
+
+/** A carrier's decode clock from its travel progress: 0 until it has
+ *  separated, 1 before it lands. */
+export function decodeClock(e: number): number {
+  return clamp01((e - SCENE_DECODE_START) / (SCENE_DECODE_END - SCENE_DECODE_START));
+}
+
+/** How many viewports the station's top has passed the frame's top, clamped
+ *  to the runway. 0 is the pin; `runwayVh` is the release. */
+export function sceneProgress(top: number, vh: number, runwayVh: number): number {
+  const sv = -top / Math.max(1, vh);
+  // `<= 0`, so a top of exactly 0 is +0 and not −0 (which prints as "-0.00").
+  return sv <= 0 ? 0 : sv > runwayVh ? runwayVh : sv;
+}
+
+/** A smootherstep ramp across one of the windows above. */
+export function sceneWindow(sv: number, from: number, to: number): number {
+  return ramp(sv, from, to);
+}
+
+/** Once the withdraw has opened the arrival strike may never replay over the
+ *  folded board (a deep reload seeds `in`); the writer stamps this and the
+ *  strike's rules are scoped away from it. */
+export function scenePast(sv: number): boolean {
+  return sv >= SCENE_WITHDRAW[0];
+}
+
+/** The board's own head and the ledger: 1 open, 0 closed to the centre slit. */
+export function propClose(sv: number): number {
+  return 1 - ramp(sv, SCENE_WITHDRAW[0], SCENE_WITHDRAW[1]);
+}
+export function titleOpen(sv: number): number {
+  return ramp(sv, SCENE_TITLE[0], SCENE_TITLE[1]);
+}
+export function introOpen(sv: number): number {
+  return ramp(sv, SCENE_INTRO[0], SCENE_INTRO[1]);
+}
+
+export function foldWindow(k: number): readonly [number, number] {
+  const from = SCENE_FOLD_START + SCENE_FOLD_STAGGER * k;
+  return [from, from + SCENE_FOLD_SPAN];
+}
+
+export interface FoldPose {
+  /** The group's centre displacement, in the board's own user units. */
+  fx: number;
+  fy: number;
+  scale: number;
+  opacity: number;
+}
+
+export interface Centre {
+  cx: number;
+  cy: number;
+}
+
+/** Node `k`'s (in `SCENE_FOLD_ORDER`) pose: identity before its window, a
+ *  vanished mark on the chip's centre after it. */
+export function foldPose(k: number, sv: number, node: Centre, chip: Centre): FoldPose {
+  const [from, to] = foldWindow(k);
+  const e = ramp(sv, from, to);
+  if (e <= 0) return { fx: 0, fy: 0, scale: 1, opacity: 1 };
+  const shrink = smootherstep(e / SCENE_FOLD_SHRINK_END);
+  const travel = smootherstep((e - SCENE_FOLD_TRAVEL_START) / (1 - SCENE_FOLD_TRAVEL_START));
+  const fade = clamp01((e - SCENE_FOLD_FADE_START) / (1 - SCENE_FOLD_FADE_START));
+  return {
+    fx: travel * (chip.cx - node.cx),
+    fy: travel * (chip.cy - node.cy),
+    scale: 1 - (1 - SCENE_FOLD_MIN_SCALE) * shrink,
+    opacity: 1 - fade,
+  };
+}
+
+/** Lane `k`'s retract, 0 → 1, in step with its node's travel: the wire's far
+ *  end follows the mark home. */
+export function wireRetract(k: number, sv: number): number {
+  const [from, to] = foldWindow(k);
+  const e = ramp(sv, from, to);
+  return smootherstep((e - SCENE_FOLD_TRAVEL_START) / (1 - SCENE_FOLD_TRAVEL_START));
+}
+
+/** The chip's group is put away from the hand-over on: the carrier is the
+ *  chip from that frame, and it becomes the plates. */
+export function chipAway(sv: number): boolean {
+  return sv >= SCENE_HANDOVER;
+}
 
 /**
- * Where `#phases`' top has to be for its plates row to be whole in the frame,
- * as a viewport-relative y.
- *
- * ⚠ FLOORED AT 0, AND THE FLOOR BINDS. At 1280×720 the row overflows its own
- * beat by 23px (pre-existing), so the honest landing is above the viewport's
- * top — and a negative target would run `t` past 1 and invert the ramp.
- * Floored, the seam simply lands with the row's foot a little low.
+ * Carrier `i`'s travel progress and whether it is on stage. Carrier 0 is born
+ * at the hand-over and waits on the chip's box until its slide opens; the two
+ * copies exist only for their own travel.
  */
-export function seamLanding(vh: number, rowBottom: number): number {
-  return Math.max(0, vh - rowBottom);
+export function carrierWindow(i: number, sv: number): { e: number; live: boolean } {
+  const [from, to] = SCENE_CARRY[i];
+  const start = i === 0 ? SCENE_HANDOVER : from;
+  return { e: ramp(sv, from, to), live: sv >= start && sv < to };
 }
 
-/** 0 when `#phases`' top is at the viewport's bottom, 1 at `s1`. */
-export function seamProgress(phasesTop: number, vh: number, s1: number): number {
-  return clamp01((vh - phasesTop) / Math.max(1, vh - s1));
+export type PlateState = "held" | "unroll" | null;
+
+/** Plate `i` is HELD (nothing of it paints) until its band has landed, UNROLLS
+ *  out of that band, and is then its own resting self. */
+export function plateState(i: number, sv: number): PlateState {
+  if (sv < SCENE_CARRY[i][1]) return "held";
+  if (sv < SCENE_UNROLL[i][1]) return "unroll";
+  return null;
 }
 
-/* — The carrier (ADR-101 §B) —
-   Owner, 2026-09-14: _"The AI capability card at the center moves into the
-   center of the screen, and then it copies itself left and right. That
-   becomes the cards from the 'We propose a modular approach' section … I don't
-   want fucking cross-dissolves. This really needs to be an elegant
-   transformation of the element."_
+/** Where plate `i`'s clip bottom sits, px from its own top: its head's height
+ *  until the unroll opens, its full height once it has. */
+export function unrollY(i: number, sv: number, headH: number, plateH: number): number {
+  const [from, to] = SCENE_UNROLL[i];
+  return headH + (plateH - headH) * ramp(sv, from, to);
+}
 
-   Three windows on one clock: DETACH (the chip lifts off the board and
-   glides to the frame's centre), SPLIT (two copies un-hide on the frame all
-   three coincide, then peel to the plates' columns), SEAT (all three travel
-   to their head rects, changing box, cut and edge as they go). */
-
-export const SEAM_DETACH_END = 0.25;
-export const SEAM_SPLIT_END = 0.55;
 /** The chip's corner cut, in the board's own units. ⚠ Pinned equal to
  *  `CUT.card` by `trinny-seam.test.ts` — the writer may not import
  *  `boardLayout` (a client module reaching into the arcs' server geometry),
@@ -423,48 +627,14 @@ export interface SeamRect {
   h: number;
 }
 
-export function seamDetach(t: number): number {
-  return smootherstep(t / SEAM_DETACH_END);
-}
-export function seamSplit(t: number): number {
-  return ramp(t, SEAM_DETACH_END, SEAM_SPLIT_END);
-}
-export function seamSeat(t: number): number {
-  return ramp(t, SEAM_SPLIT_END, 1);
-}
-
-/**
- * One carrier's box at `t`.
- *
- * ⚠ ONE SUMMED EXPRESSION, NEVER A BRANCH — `productPose`'s own law, one
- * station up. The three legs are added into the same four terms rather than
- * switched between, so there is no seam where one window hands over to the
- * next, no state to get wrong scrolling back, and the continuity at 0.25 and
- * 0.55 is arithmetic rather than a tolerance (the test pins it at 1e-9).
- *
- * ⚠ AND `chip` AND `head` ARE LIVE, READ THIS FRAME. Both boxes move under
- * the scroll — the board is leaving the frame while the plates are entering
- * it — so a pose solved against a remembered rect lands wherever that rect
- * used to be. The two WELDS are what this buys: at t = 0 the carrier is
- * pixel-identical to the chip it covers, and at t = 1 to the head it becomes.
- */
-export function seamCarrierRect(
-  t: number,
-  chip: SeamRect,
-  centre: SeamRect,
-  park: SeamRect,
-  head: SeamRect
-): SeamRect {
-  const e1 = seamDetach(t);
-  const e2 = seamSplit(t);
-  const e3 = seamSeat(t);
-  const f = (c: number, ce: number, pk: number, h: number) =>
-    c + e1 * (ce - c) + e2 * (pk - ce) + e3 * (h - pk);
+/** One box between two, at `e`. At 0 it IS `a` and at 1 it IS `b` — those
+ *  two frames are the welds, so they are exact rather than nearly. */
+export function lerpRect(a: SeamRect, b: SeamRect, e: number): SeamRect {
   return {
-    x: f(chip.x, centre.x, park.x, head.x),
-    y: f(chip.y, centre.y, park.y, head.y),
-    w: f(chip.w, centre.w, park.w, head.w),
-    h: f(chip.h, centre.h, park.h, head.h),
+    x: a.x + (b.x - a.x) * e,
+    y: a.y + (b.y - a.y) * e,
+    w: a.w + (b.w - a.w) * e,
+    h: a.h + (b.h - a.h) * e,
   };
 }
 

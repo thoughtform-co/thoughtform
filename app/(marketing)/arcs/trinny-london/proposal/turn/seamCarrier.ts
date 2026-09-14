@@ -1,74 +1,89 @@
 /**
- * seamCarrier — the chip becomes the three plate head bands (ADR-101 §B).
+ * seamCarrier — the chip becomes the three plate head bands (ADR-101 §B,
+ * re-cut as ONE PINNED SCENE by ADR-102).
  *
- * Owner, 2026-09-14: _"The AI capability card at the center moves into the
- * center of the screen, and then it copies itself left and right. That becomes
- * the cards from the 'We propose a modular approach' section … I don't want
- * fucking cross-dissolves. This really needs to be an elegant transformation of
- * the element."_
+ * Owner, 2026-09-14, on the first cut: it "jitters and lags", and _"the top
+ * part, AI capability, should first move to the utter left and then the other
+ * card should open up to the right of it"_.
  *
- * So there is no dissolve anywhere in here. One object detaches from the board,
- * glides to the frame's centre, copies itself, peels to the plates' columns and
- * lands as their head bands — changing its box, its corner cut, its edge colour
- * and its two words on the way, all summed into one expression of the seam
- * clock `t` (`seamCarrierRect`). What is HIDDEN rather than faded is the chip it
- * left (its outline stays, dashed, as the socket the ribbons still meet) and the
- * heads it is about to become.
+ * So there is still no dissolve anywhere in here, and the object is still ONE
+ * object: it lifts off the board as the chip, slides to the far left and lands
+ * as plate 1's head band — changing its box, its corner cut, its edge colour
+ * and its two words on the way — then a copy peels off that band and travels
+ * to plate 2's, and a copy of THAT to plate 3's, each plate unrolling out of
+ * the band that arrived. What is HIDDEN rather than faded is the chip's group
+ * once the carrier has taken it, and each real band until its carrier lands.
  *
- * ⚠ THE LAYER IS ABSOLUTE IN DOCUMENT SPACE, NOT FIXED, and that is the whole
- * reason the two welds are exact. The chip and the heads are both glued to the
- * page; a `fixed` carrier is composited against the VIEWPORT, so a frame this
- * writer misses leaves it hanging where the scroll used to be while the things
- * it is welding to have moved. Absolute, it misses the same frame glued to the
- * same page.
- *
- * ⚠ AND IT IS APPENDED TO `document.body`. An absolutely positioned element
- * whose containing block is the initial one is in document space and scrolls
- * with the page — which is what is wanted — and the alternative (giving
- * `.tl-root` a `position`) would silently re-home every absolutely positioned
- * descendant of the page root. The route's sheet styles it by class; a
- * stylesheet is document-global once loaded, and `.tl-seam` exists nowhere else.
+ * ⚠ THE LAYER LIVES INSIDE THE STAGE NOW, ABSOLUTE, AND THAT IS THE WHOLE
+ * CURE FOR THE JITTER. ADR-101 put it on `document.body` in document space,
+ * because the chip and the heads were both glued to a page the reader was
+ * scrolling — and a main-thread writer posing a box against a page the
+ * COMPOSITOR is moving lands one frame behind it on every wheel step (the hero
+ * curtain's own measurement on this route). Inside a sticky stage that is
+ * PINNED for the whole choreography, the chip, the three heads and the
+ * carrier are all stationary in the frame while the clock runs: there is
+ * nothing for the writer to be behind. Poses are written in the STAGE's own
+ * coordinates, read off its live rect every frame — ⚠ never assumed to be
+ * (0, 0): `.station` is `100vw` with `margin-left: calc(50% − 50vw)`, so on a
+ * window with a scrollbar the stage's left edge is a few px outboard of the
+ * frame's.
  *
  * ⚠ EVERY COLOUR AND EVERY LENGTH IS RESOLVED THROUGH A PROBE, never read with
  * `getPropertyValue`. A custom property is a STRING until something lays it out
  * (`--arc-plate-ch` is a `clamp()`; `--arc-edge` is `rgba(var(--dawn-rgb), …)`),
- * and this layer sits outside `.arc-root`, where none of those tokens resolve.
- * The probe goes inside the element that OWNS the token and reports the pixel.
+ * and this layer sits beside `.arc-root`, not inside it, so none of those
+ * tokens resolve here. The probe goes inside the element that OWNS the token
+ * and reports the pixel.
  */
 
 import {
-  clamp01,
+  carrierWindow,
+  decodeClock,
   fitCropMid,
-  seamCarrierRect,
-  seamSeat,
+  lerpRect,
   SEAM_CHIP_CUT,
-  SEAM_DETACH_END,
   type SeamRect,
 } from "./turnClock";
 import { seamDecodeFrame, seamWall, type SeamPair } from "./seamDecode";
 
 const CARRIERS = 3;
-/** The plate whose column IS the frame's centre, so it holds still through the
- *  split and is the one carrier the detach shows (measured at 1920×1247: its
- *  centre is 956.95 against a client width of 1914). */
-const MID = 1;
+
+interface Pose {
+  /** px in the carrier's own box */
+  x: number;
+  y: number;
+  fs: number;
+  /** letter-spacing, px */
+  ls: number;
+}
 
 interface Leaf {
   el: HTMLElement;
-  /** Pose at the chip end and at the head end, px in the carrier's own box. */
-  a: { x: number; y: number; fs: number; ls: string };
-  b: { x: number; y: number; fs: number; ls: string };
+  /** Pose at the start of this carrier's travel and at its end. */
+  a: Pose;
+  b: Pose;
   pair: SeamPair;
-  /** The ink at each end, as resolved colour strings. */
-  inkA: string;
-  inkB: string;
+  /** The ink at each end, as RGBA quadruples. */
+  inkA: number[];
+  inkB: number[];
 }
 
 interface Carrier {
   el: HTMLElement;
   leaves: Leaf[];
-  /** The head's box inside `#phases`, transform-free. */
-  head: SeamRect;
+  /** Where it starts, px in the STAGE's box — `null` for the chip, which is
+   *  solved live off the svg's rect every frame. */
+  from: SeamRect | null;
+  /** Where it lands, px in the stage's box: its own plate's head band. */
+  to: SeamRect;
+  /** The corner cut at each end, px; `null` at the chip end (solved live). */
+  chA: number | null;
+  chB: number;
+  /** The edge colour at each end, as RGBA quadruples. */
+  edgeA: number[];
+  edgeB: number[];
+  /** One decode wall for both of its lines. */
+  wall: number;
 }
 
 export interface SeamMeasure {
@@ -76,15 +91,7 @@ export interface SeamMeasure {
   vb: { w: number; h: number };
   /** The chip's box in the board's own user units. */
   chip: SeamRect;
-  phases: HTMLElement;
   carriers: Carrier[];
-  wall: number;
-  /** The corner cut at each end, in px. */
-  chA: number;
-  chB: number;
-  /** The edge colour at each end, as RGBA quadruples. */
-  edgeA: number[];
-  edgeB: number[];
 }
 
 /* ── Probes ──────────────────────────────────────────────────────────── */
@@ -117,6 +124,8 @@ const mixRgba = (a: number[], b: number[], u: number) =>
     (b[3] - a[3]) * u
   ).toFixed(3)})`;
 
+const trackPx = (v: string): number => (v === "normal" ? 0 : parseFloat(v) || 0);
+
 /**
  * Where a span's own text BASELINE sits inside its box, in px.
  *
@@ -138,9 +147,10 @@ function baselineIn(el: HTMLElement): number {
 
 /* ── Mount ───────────────────────────────────────────────────────────── */
 
-/** Append the layer (idempotent under Strict Mode's double effect). */
-export function mountSeamLayer(): HTMLElement {
-  const existing = document.querySelector<HTMLElement>(".tl-seam");
+/** Append the layer INTO the stage (idempotent under Strict Mode's double
+ *  effect). Absolute over the stage's own box, so its poses are the stage's. */
+export function mountSeamLayer(stage: HTMLElement): HTMLElement {
+  const existing = stage.querySelector<HTMLElement>(":scope > .tl-seam");
   if (existing) return existing;
   const layer = document.createElement("div");
   layer.className = "tl-seam";
@@ -151,6 +161,7 @@ export function mountSeamLayer(): HTMLElement {
     c.className = "tl-seam__carrier";
     if (i === 0) c.dataset.lead = "";
     c.dataset.i = String(i);
+    c.hidden = true;
     const rule = document.createElement("i");
     rule.className = "tl-seam__rule";
     const kicker = document.createElement("span");
@@ -160,20 +171,33 @@ export function mountSeamLayer(): HTMLElement {
     c.append(rule, kicker, name);
     layer.appendChild(c);
   }
-  document.body.appendChild(layer);
+  stage.appendChild(layer);
   return layer;
 }
 
 /* ── Measure ─────────────────────────────────────────────────────────── */
 
+/** A box relative to the stage's own, from two rects read in one frame. */
+const inStage = (r: DOMRect, stage: DOMRect): SeamRect => ({
+  x: r.left - stage.left,
+  y: r.top - stage.top,
+  w: r.width,
+  h: r.height,
+});
+
 /**
  * Everything that changes only when the page re-lays-out.
  *
- * Returns null until the board and all three plates exist — both are lazy
- * nested roots, and a seam with nothing to carry has to be a NO-OP rather than
- * a layer holding three boxes over an empty page.
+ * Returns null until the board and all three plates exist inside the stage —
+ * the configuration is a lazy nested root, and a seam with nothing to carry
+ * has to be a NO-OP rather than a layer holding three boxes over an empty
+ * stage.
  */
-export function measureSeam(layer: HTMLElement, root: HTMLElement): SeamMeasure | null {
+export function measureSeam(
+  layer: HTMLElement,
+  root: HTMLElement,
+  stage: HTMLElement
+): SeamMeasure | null {
   const board = root.querySelector<HTMLElement>("#proposition .arc-board");
   const svg = root.querySelector<SVGSVGElement>(
     '#proposition [data-board-state="configured"] .arc-board__svg'
@@ -184,9 +208,18 @@ export function measureSeam(layer: HTMLElement, root: HTMLElement): SeamMeasure 
   const chipText = svg
     ? [...svg.querySelectorAll<SVGGraphicsElement>('[data-board-role="card"] text')]
     : [];
-  const phases = root.querySelector<HTMLElement>("#phases");
+  const phases = root.querySelector<HTMLElement>("#proposition #phases");
   const plates = phases ? [...phases.querySelectorAll<HTMLElement>(".arc-plate")] : [];
-  if (!board || !svg || !plateEl || !phases || chipText.length < 2 || plates.length !== CARRIERS) {
+  const heads = plates.map((p) => p.querySelector<HTMLElement>(".arc-plate__head"));
+  if (
+    !board ||
+    !svg ||
+    !plateEl ||
+    !phases ||
+    chipText.length < 2 ||
+    plates.length !== CARRIERS ||
+    heads.some((h) => !h)
+  ) {
     return null;
   }
 
@@ -207,78 +240,102 @@ export function measureSeam(layer: HTMLElement, root: HTMLElement): SeamMeasure 
   const carrierHidden = els.map((el) => el.hidden);
   layer.hidden = false;
   for (const el of els) el.hidden = false;
-  const phasesBox = phases.getBoundingClientRect();
+  const stageBox = stage.getBoundingClientRect();
   /* The plate's own cut, resolved: it is a `clamp()`, so the string is useless
      and `parseFloat` reads its floor. */
-  const chB = resolveLen(plates[0], "--arc-plate-ch");
-  const edgeA = rgba(resolveColor(board, "--arc-board-gold-line", "rgb(202,165,84)"));
-  const edgeB = rgba(resolveColor(plates[0], "--arc-edge", "rgba(235,227,214,0.08)"));
+  const chPlate = resolveLen(plates[0], "--arc-plate-ch");
+  const edgeChip = rgba(resolveColor(board, "--arc-board-gold-line", "rgb(202,165,84)"));
+  const edgePlate = rgba(resolveColor(plates[0], "--arc-edge", "rgba(235,227,214,0.08)"));
+
+  /** A head band's two spans, posed inside their own band's box. */
+  const spansOf = (head: HTMLElement) => {
+    const hb = head.getBoundingClientRect();
+    return [
+      head.querySelector<HTMLElement>(".arc-plate__kicker"),
+      head.querySelector<HTMLElement>(".arc-plate__name"),
+    ].map((span) => {
+      const sb = span ? span.getBoundingClientRect() : hb;
+      const cs = span ? getComputedStyle(span) : getComputedStyle(head);
+      return {
+        pose: {
+          x: sb.left - hb.left,
+          y: sb.top - hb.top,
+          fs: parseFloat(cs.fontSize),
+          ls: trackPx(cs.letterSpacing),
+        } as Pose,
+        text: span?.textContent ?? "",
+        ink: rgba(cs.color),
+      };
+    });
+  };
 
   const carriers: Carrier[] = els.map((el, i) => {
-    const plate = plates[i];
-    const headEl = plate.querySelector<HTMLElement>(".arc-plate__head")!;
-    const hb = headEl.getBoundingClientRect();
-    const head: SeamRect = {
-      x: hb.left - phasesBox.left,
-      y: hb.top - phasesBox.top,
-      w: hb.width,
-      h: hb.height,
-    };
-    const targets = [
-      headEl.querySelector<HTMLElement>(".arc-plate__kicker"),
-      headEl.querySelector<HTMLElement>(".arc-plate__name"),
-    ];
+    const dstHead = heads[i]!;
+    const to = inStage(dstHead.getBoundingClientRect(), stageBox);
+    const dst = spansOf(dstHead);
     const leafEls = [
       el.querySelector<HTMLElement>(".tl-seam__kicker")!,
       el.querySelector<HTMLElement>(".tl-seam__name")!,
     ];
+    /* Carrier 0 starts as the CHIP: its two words are SVG `<text>` on their
+       baseline, so each is converted to a span placed by its box top. The two
+       copies start as the band they peel off, which is HTML already. */
+    const src = i === 0 ? null : spansOf(heads[i - 1]!);
     const leaves: Leaf[] = leafEls.map((leaf, k) => {
-      const src = chipText[k];
-      const sb = src.getBBox();
-      const srcCs = getComputedStyle(src);
-      const srcFs = parseFloat(srcCs.fontSize) * fit.k;
-      const srcTrack = parseFloat(srcCs.letterSpacing) || 0;
-      const tgt = targets[k];
-      const tb = tgt ? tgt.getBoundingClientRect() : hb;
-      const tgtCs = tgt ? getComputedStyle(tgt) : getComputedStyle(headEl);
-      /* The chip's word is on its BASELINE; the carrier's span is placed by
-         its box top, so the baseline the span WOULD have at that size is
-         measured and subtracted. `getBBox().y` is the ink's top, and the
-         baseline is one ascent below it — but the ascent is the face's, so
-         the `y` attribute is used directly instead. */
-      const srcBaseline = (Number(src.getAttribute("y")) || sb.y + sb.height) - chip.y;
-      leaf.style.fontSize = `${srcFs}px`;
-      leaf.style.letterSpacing = `${srcTrack * fit.k}px`;
-      const aTop = srcBaseline * fit.k - baselineIn(leaf);
+      let a: Pose;
+      let fromText: string;
+      let inkA: number[];
+      if (src) {
+        a = src[k].pose;
+        fromText = src[k].text;
+        inkA = src[k].ink;
+      } else {
+        const glyph = chipText[k];
+        const sb = glyph.getBBox();
+        const srcCs = getComputedStyle(glyph);
+        const srcFs = parseFloat(srcCs.fontSize) * fit.k;
+        const srcTrack = (parseFloat(srcCs.letterSpacing) || 0) * fit.k;
+        /* The chip's word is on its BASELINE; the carrier's span is placed by
+           its box top, so the baseline the span WOULD have at that size is
+           measured and subtracted. The `y` attribute is the baseline itself. */
+        const srcBaseline = (Number(glyph.getAttribute("y")) || sb.y + sb.height) - chip.y;
+        leaf.style.fontSize = `${srcFs}px`;
+        leaf.style.letterSpacing = `${srcTrack}px`;
+        a = {
+          x: (sb.x - chip.x) * fit.k,
+          y: srcBaseline * fit.k - baselineIn(leaf),
+          fs: srcFs,
+          ls: srcTrack,
+        };
+        fromText = glyph.textContent ?? "";
+        inkA = rgba(srcCs.fill && srcCs.fill !== "none" ? srcCs.fill : srcCs.color);
+      }
       return {
         el: leaf,
-        a: {
-          x: (sb.x - chip.x) * fit.k,
-          y: aTop,
-          fs: srcFs,
-          ls: `${srcTrack * fit.k}px`,
-        },
-        b: {
-          x: tb.left - hb.left,
-          y: tb.top - hb.top,
-          fs: parseFloat(tgtCs.fontSize),
-          ls: tgtCs.letterSpacing === "normal" ? "0px" : tgtCs.letterSpacing,
-        },
-        pair: { from: src.textContent ?? "", to: tgt?.textContent ?? "" },
-        inkA: srcCs.fill && srcCs.fill !== "none" ? srcCs.fill : srcCs.color,
-        inkB: tgtCs.color,
+        a,
+        b: dst[k].pose,
+        pair: { from: fromText, to: dst[k].text },
+        inkA,
+        inkB: dst[k].ink,
       };
     });
-    return { el, leaves, head };
+    return {
+      el,
+      leaves,
+      from: i === 0 ? null : inStage(heads[i - 1]!.getBoundingClientRect(), stageBox),
+      to,
+      chA: i === 0 ? null : chPlate,
+      chB: chPlate,
+      edgeA: i === 0 ? edgeChip : edgePlate,
+      edgeB: edgePlate,
+      wall: seamWall(leaves.map((l) => l.pair)),
+    };
   });
 
   layer.hidden = wasHidden;
   els.forEach((el, i) => {
     el.hidden = carrierHidden[i];
   });
-
-  const pairs = carriers.flatMap((c) => c.leaves.map((l) => l.pair));
-  const wall = seamWall(pairs);
 
   /* The material, written once onto the layer: the chip's three fills, the
      head's divider, and the gold rule across its top. */
@@ -303,124 +360,79 @@ export function measureSeam(layer: HTMLElement, root: HTMLElement): SeamMeasure 
     resolveColor(plates[0], "--gold-line", "rgba(202,165,84,0.34)")
   );
 
-  return {
-    svg,
-    vb,
-    chip,
-    phases,
-    carriers,
-    wall,
-    chA: SEAM_CHIP_CUT * fit.k,
-    chB,
-    edgeA,
-    edgeB,
-  };
+  return { svg, vb, chip, carriers };
 }
 
 /* ── Write ───────────────────────────────────────────────────────────── */
 
 /**
- * One frame.
+ * One frame, at scene clock `sv`.
  *
- * `svgRect` and `phasesRect` are passed in rather than read here: this writer
+ * `svgRect` and `stageRect` are passed in rather than read here: the writer
  * takes every rect it needs at the top of its own frame, before the first style
  * write, and a second read in here would buy a forced synchronous layout per
- * frame for nothing.
+ * frame for nothing. The chip's box is solved from the svg's LIVE rect, the
+ * heads' from the boxes measured at relayout — all of them stationary while the
+ * stage is pinned, which is the premise of the whole layer.
  */
 export function writeSeam(
   layer: HTMLElement,
   m: SeamMeasure,
-  t: number,
+  sv: number,
   svgRect: DOMRect,
-  phasesRect: DOMRect,
-  scrollY: number
+  stageRect: DOMRect
 ): void {
-  if (t <= 0 || t >= 1) {
-    if (!layer.hidden) layer.hidden = true;
-    return;
-  }
-  if (layer.hidden) layer.hidden = false;
-
   const fit = fitCropMid({ w: svgRect.width, h: svgRect.height }, m.vb);
-  /* The chip's box in DOCUMENT space — the layer's own coordinate system, so a
-     frame this writer misses leaves the carrier glued to the page exactly as
-     the chip and the heads are. */
   const chip: SeamRect = {
-    x: svgRect.left + fit.ox + m.chip.x * fit.k,
-    y: svgRect.top + scrollY + fit.oy + m.chip.y * fit.k,
+    x: svgRect.left - stageRect.left + fit.ox + m.chip.x * fit.k,
+    y: svgRect.top - stageRect.top + fit.oy + m.chip.y * fit.k,
     w: m.chip.w * fit.k,
     h: m.chip.h * fit.k,
   };
-  /* ⚠ `clientWidth`, NEVER `innerWidth` — the second includes the scrollbar,
-     and a centre half a scrollbar off is a centre the reader can see is off. */
-  const vw = document.documentElement.clientWidth;
-  const vh = document.documentElement.clientHeight;
-  const centre: SeamRect = {
-    x: vw / 2 - chip.w / 2,
-    y: scrollY + vh / 2 - chip.h / 2,
-    w: chip.w,
-    h: chip.h,
-  };
 
-  const e3 = seamSeat(t);
-  /* ⚠ THE WORDS LAND BEFORE THE BOX DOES. `seamDecodeFrame` is exact at its
-     ends, so at `u` 0.999 it is still shuffling a glyph — and the frame the
-     layer hands over to the real heads would carry one wrong letter. Finishing
-     the decode at 90 % of the seat leaves the last stretch a pure geometry
-     move, which is also the easier thing to read. */
-  const u = clamp01(e3 / 0.9);
-  const ch = m.chA + (m.chB - m.chA) * e3;
-  const edge = mixRgba(m.edgeA, m.edgeB, e3);
-  const show = t >= SEAM_DETACH_END;
-
+  let any = false;
   for (let i = 0; i < m.carriers.length; i++) {
     const c = m.carriers[i];
-    const head: SeamRect = {
-      x: phasesRect.left + c.head.x,
-      y: phasesRect.top + scrollY + c.head.y,
-      w: c.head.w,
-      h: c.head.h,
-    };
-    /* The park: chip-sized, on the head's own column centre and the frame's
-       vertical middle — so the split is a pure lateral peel and the middle
-       carrier does not move at all. */
-    const park: SeamRect = {
-      x: head.x + head.w / 2 - chip.w / 2,
-      y: centre.y,
-      w: chip.w,
-      h: chip.h,
-    };
-    const r = seamCarrierRect(t, chip, centre, park, head);
+    const { e, live } = carrierWindow(i, sv);
     const el = c.el;
-    if (!show && i !== MID) {
+    if (!live) {
       if (!el.hidden) el.hidden = true;
       continue;
     }
+    any = true;
     if (el.hidden) el.hidden = false;
+    const from = c.from ?? chip;
+    const r = lerpRect(from, c.to, e);
+    const chA = c.chA ?? SEAM_CHIP_CUT * fit.k;
+    const ch = chA + (c.chB - chA) * e;
     el.style.setProperty("--x", `${r.x.toFixed(2)}px`);
     el.style.setProperty("--y", `${r.y.toFixed(2)}px`);
     el.style.setProperty("--w", `${r.w.toFixed(2)}px`);
     el.style.setProperty("--h", `${r.h.toFixed(2)}px`);
     el.style.setProperty("--ch", `${ch.toFixed(2)}px`);
-    el.style.setProperty("--edge", edge);
+    el.style.setProperty("--edge", mixRgba(c.edgeA, c.edgeB, e));
+    /* The words hold until the carrier has visibly separated from what it
+       peeled off, decode in flight, and land before the box does — see
+       `decodeClock` for both ends and why. */
+    const u = decodeClock(e);
     for (const leaf of c.leaves) {
-      const x = leaf.a.x + (leaf.b.x - leaf.a.x) * e3;
-      const y = leaf.a.y + (leaf.b.y - leaf.a.y) * e3;
-      const fs = leaf.a.fs + (leaf.b.fs - leaf.a.fs) * e3;
-      const lsA = parseFloat(leaf.a.ls) || 0;
-      const lsB = parseFloat(leaf.b.ls) || 0;
+      const x = leaf.a.x + (leaf.b.x - leaf.a.x) * e;
+      const y = leaf.a.y + (leaf.b.y - leaf.a.y) * e;
+      const fs = leaf.a.fs + (leaf.b.fs - leaf.a.fs) * e;
+      const ls = leaf.a.ls + (leaf.b.ls - leaf.a.ls) * e;
       leaf.el.style.setProperty("--tx", `${x.toFixed(2)}px`);
       leaf.el.style.setProperty("--ty", `${y.toFixed(2)}px`);
       leaf.el.style.fontSize = `${fs.toFixed(2)}px`;
-      leaf.el.style.letterSpacing = `${(lsA + (lsB - lsA) * e3).toFixed(3)}px`;
-      leaf.el.style.color = mixRgba(rgba(leaf.inkA), rgba(leaf.inkB), e3);
-      const next = seamDecodeFrame(leaf.pair, u, m.wall);
+      leaf.el.style.letterSpacing = `${ls.toFixed(3)}px`;
+      leaf.el.style.color = mixRgba(leaf.inkA, leaf.inkB, e);
+      const next = seamDecodeFrame(leaf.pair, u, c.wall);
       if (leaf.el.textContent !== next) leaf.el.textContent = next;
     }
   }
+  if (layer.hidden === any) layer.hidden = !any;
 }
 
-/** Put the layer away and restore every line to its own end state. */
+/** Put the layer away. */
 export function parkSeam(layer: HTMLElement | null): void {
   if (!layer) return;
   layer.hidden = true;

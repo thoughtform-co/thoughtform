@@ -599,7 +599,7 @@ BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, afte
     renderer is outside every content scanner, ADR-070 U15''''s `8 TEAMS`), and
     the smoke measures the rendered svg (≥ 10px, zero label overlaps, one meet,
     24 wires, zero modules on the ledger and zero rows on the board, the counts
-    pinned `[9, 16]`, the crop filling its box) at 1920×1247 and 1280×720. ⚠ `data-board-_`, never `data-arc-\*`; no `transform`on any svg group (the overlap walk compares`getBBox`). ⚠ The head stays on
+    pinned `[9, 16]`, the crop filling its box) at 1920×1247 and 1280×720. ⚠ `data-board-_`, never `data-arc-\*`; no `transform`ATTRIBUTE and no RESTING transform on any svg element — the overlap walk compares`getBBox`, which is blind to an element's own transform, so two texts are comparable only while every group is at identity; a route may scrub the CSS `transform`PROPERTY on a role`<g>` (`transform-box: fill-box`) provided it is identity whenever a measurement is taken (the Trinny scene's fold, ADR-102, at its clock's zero), never on `<text>`, never the attribute. ⚠ The head stays on
     the TEXT band (the datum guard's x) and the drawing takes the INSTRUMENT
     band. ⚠ Dark is defined by the ramp, unverified until a dark surface adopts
     the kind.

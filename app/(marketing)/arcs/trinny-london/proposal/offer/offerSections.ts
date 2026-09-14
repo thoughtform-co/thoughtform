@@ -121,112 +121,129 @@ export const TRINNY_BOARD: ArcSection = {
   ],
 };
 
-export const TRINNY_OFFER_SECTIONS: readonly ArcSection[] = [
-  {
-    id: "phases",
-    kind: "list-groups",
-    layout: "plates",
-    head: {
-      eyebrow: "Trinny London · the shape of the work",
-      title: { pre: "We propose a modular approach", em: "that compounds." },
-      sub: "The process from briefing to final delivery has many moving parts, so the work is built in modules: Trinny London's team can take the low-hanging fruit first, or run them in parallel.",
-    },
-    groups: [
-      {
-        id: "m1",
-        label: "M1 · about three weeks",
-        blurb: "Setup, insight and briefing",
-        items: [
-          {
-            id: "m1w1",
-            tag: "Week 1 · on site",
-            name: "Kickoff with the team",
-            body: "The setup configured with the designers, on Trinny London's creative stack: Figma, Claude, GitHub",
-          },
-          {
-            id: "m1w2",
-            tag: "Week 2",
-            name: "Workstreams mapped out and made AI-ready",
-            body: "Creative strategy, tone of voice and brand guidelines encoded into the creative intelligence configuration",
-          },
-          {
-            id: "m1w3",
-            tag: "Week 3",
-            name: "A new AI-first workstream the team runs without us",
-            body: "An intelligence layer that plugs into M2",
-          },
-        ],
-        foot: {
-          label: "Deliverable",
-          lines: ["The creative intelligence configuration", "A team that runs M1 on its own"],
-        },
-      },
-      {
-        id: "m2",
-        label: "M2 · about three weeks",
-        blurb: "Asset generation and design",
-        items: [
-          {
-            id: "m2w1",
-            tag: "Week 1",
-            name: "Visual and semantic analysis of creatives",
-            body: "Encoding sprint: creative and art direction, visual and copy guidelines codified into the system",
-          },
-          {
-            id: "m2w2",
-            tag: "Week 2",
-            name: "Generation sprint: the image and video flow tested and improved in real time by the creative team",
-            body: "Prompt and model best practice encoded into the broader system",
-          },
-          {
-            id: "m2w3",
-            tag: "Week 3",
-            name: "Encoding sprint on ad design best practice",
-            body: "Design sprint: ad generation tested inside Figma",
-          },
-        ],
-        foot: {
-          label: "Deliverable",
-          lines: [
-            "Compounding layers for asset generation and ad creation",
-            "A team that manages M1 and M2 on its own",
-          ],
-        },
-      },
-      {
-        id: "m3",
-        label: "M3 · about three weeks",
-        blurb: "Creative operations and scaling",
-        items: [
-          {
-            id: "m3w1",
-            tag: "Week 1",
-            name: "All layers unified in one production-ready workflow",
-            body: "Debrief and next steps with the founder and the studio lead",
-          },
-          {
-            id: "m3w2",
-            tag: "Week 2",
-            name: "Tech transfer of best practice to creative ops",
-            body: "Automation sprint for project managers",
-          },
-          {
-            id: "m3w3",
-            tag: "Week 3",
-            name: "Handover workshop",
-            body: "Final review with the founder and the studio lead",
-          },
-        ],
-        foot: {
-          label: "Deliverable",
-          lines: [
-            "A working setup: brief in, asset out, creative ops unburdened",
-            "A blueprint for scaling beyond the creative departments",
-          ],
-        },
-      },
-    ],
+/**
+ * The phases — the offer's first beat, and SINCE ADR-102 A PART OF THE
+ * CONFIGURATION'S SCENE. The board's chip travels to the far left and becomes
+ * these three plates' head bands one after another, each plate unrolling out
+ * of the band that arrived, while the frame holds still; so the beat renders
+ * INSIDE `#proposition`'s pinned stage (`TRINNY_SCENE`, `TrinnyConfiguration`)
+ * rather than at the head of `#offer`. Its id, its record and its renderer are
+ * untouched — `#phases` is where it always was to every guard that names it.
+ */
+export const TRINNY_PHASES: ArcSection = {
+  id: "phases",
+  kind: "list-groups",
+  layout: "plates",
+  head: {
+    eyebrow: "Trinny London · the shape of the work",
+    title: { pre: "We propose a modular approach", em: "that compounds." },
+    sub: "The process from briefing to final delivery has many moving parts, so the work is built in modules: Trinny London's team can take the low-hanging fruit first, or run them in parallel.",
   },
+  groups: [
+    {
+      id: "m1",
+      label: "M1 · about three weeks",
+      blurb: "Setup, insight and briefing",
+      items: [
+        {
+          id: "m1w1",
+          tag: "Week 1 · on site",
+          name: "Kickoff with the team",
+          body: "The setup configured with the designers, on Trinny London's creative stack: Figma, Claude, GitHub",
+        },
+        {
+          id: "m1w2",
+          tag: "Week 2",
+          name: "Workstreams mapped out and made AI-ready",
+          body: "Creative strategy, tone of voice and brand guidelines encoded into the creative intelligence configuration",
+        },
+        {
+          id: "m1w3",
+          tag: "Week 3",
+          name: "A new AI-first workstream the team runs without us",
+          body: "An intelligence layer that plugs into M2",
+        },
+      ],
+      foot: {
+        label: "Deliverable",
+        lines: ["The creative intelligence configuration", "A team that runs M1 on its own"],
+      },
+    },
+    {
+      id: "m2",
+      label: "M2 · about three weeks",
+      blurb: "Asset generation and design",
+      items: [
+        {
+          id: "m2w1",
+          tag: "Week 1",
+          name: "Visual and semantic analysis of creatives",
+          body: "Encoding sprint: creative and art direction, visual and copy guidelines codified into the system",
+        },
+        {
+          id: "m2w2",
+          tag: "Week 2",
+          name: "Generation sprint: the image and video flow tested and improved in real time by the creative team",
+          body: "Prompt and model best practice encoded into the broader system",
+        },
+        {
+          id: "m2w3",
+          tag: "Week 3",
+          name: "Encoding sprint on ad design best practice",
+          body: "Design sprint: ad generation tested inside Figma",
+        },
+      ],
+      foot: {
+        label: "Deliverable",
+        lines: [
+          "Compounding layers for asset generation and ad creation",
+          "A team that manages M1 and M2 on its own",
+        ],
+      },
+    },
+    {
+      id: "m3",
+      label: "M3 · about three weeks",
+      blurb: "Creative operations and scaling",
+      items: [
+        {
+          id: "m3w1",
+          tag: "Week 1",
+          name: "All layers unified in one production-ready workflow",
+          body: "Debrief and next steps with the founder and the studio lead",
+        },
+        {
+          id: "m3w2",
+          tag: "Week 2",
+          name: "Tech transfer of best practice to creative ops",
+          body: "Automation sprint for project managers",
+        },
+        {
+          id: "m3w3",
+          tag: "Week 3",
+          name: "Handover workshop",
+          body: "Final review with the founder and the studio lead",
+        },
+      ],
+      foot: {
+        label: "Deliverable",
+        lines: [
+          "A working setup: brief in, asset out, creative ops unburdened",
+          "A blueprint for scaling beyond the creative departments",
+        ],
+      },
+    },
+  ],
+};
+
+/** What `#proposition`'s pinned stage holds (ADR-102): the board, and the
+ *  phases seated absolutely over it. `TrinnyConfiguration` renders this. */
+export const TRINNY_SCENE: readonly ArcSection[] = [TRINNY_BOARD, TRINNY_PHASES];
+
+/** The offer's beats after the scene, in `#offer` — the flow first since
+ *  ADR-102 took the phases into the scene. `startIndex` 2 on the mount keeps
+ *  the designators counting on from the two beats above. */
+export const TRINNY_OFFER_SECTIONS: readonly ArcSection[] = [
   {
     /* THE FLOW (ADR-099, owner 2026-09-13): "a new section where we
        visualize the flow, sort of like a diagram — on the left side a

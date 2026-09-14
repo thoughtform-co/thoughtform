@@ -1,6 +1,6 @@
 /**
  * useTurnScroll — the ONE writer for the turn AND the proposal (ADR-095,
- * extended in U5).
+ * extended in U5, the scene since ADR-102).
  *
  * Reads `#turn`'s rect once per scroll frame and drives the whole beat from
  * it, all pure functions of that rect (`turnClock.ts`):
@@ -20,33 +20,39 @@
  *   - `data-tl-prop` — its ARRIVAL (ADR-099), published for the capture and
  *     the smoke to converge on. It does not drive the record's LAYOUT: that
  *     is an arc beat, and this writer touches its ground and its veil and
- *     nothing inside it.
+ *     nothing inside it until the scene opens.
  *   - `data-tl-prop-arrive` — `await` / `in` / `out` (ADR-101 §A), the
  *     hysteresis stamp the configuration's STRIKE hangs on. The one thing
  *     here that is not a pure function of scroll, and the reason it is a
  *     stamp rather than a channel: a burst has a direction and a memory,
  *     which a progress value does not.
- *
- * …and off `#phases`' rect, one station further down:
- *   - `--tl-seam` / `data-tl-seam` — the seam clock `t`, 0 as the plates row
- *     enters the frame and 1 when it is whole in it;
- *   - `data-tl-phases-arrive` — the same three states, off `t`;
- *   - `data-tl-chip` / `data-tl-heads` — which of the two ENDS is put away
- *     while the carrier layer is between them (ADR-101 §B);
- *   - the carrier layer itself, three boxes in document space.
+ *   - THE SCENE (ADR-102) — `--tl-scene` / `data-tl-scene`, the station's
+ *     pinned clock in viewport units, and everything it drives inside the
+ *     sticky stage: the board's head and the ledger closing, the four nodes
+ *     folding into the chip with their ribbons, the chip's hand-over to the
+ *     carrier, the plates' bands and their unrolls, the title and the
+ *     paragraph opening. Every one of them a pure function of `sv`.
  *
  * ⚠ ONE WRITER, THREE STATIONS, AND THAT IS DELIBERATE. This effect already
  * held `#proposition`, its canvas and its rect for the shared ground; a
  * second hook would mean two rAFs racing over one mark's veil, which has
- * exactly one owner by contract. `#offer` joins it for the same reason one
- * level on: the seam is measured between two stations, so nothing but this
- * frame can hold both rects at one instant.
+ * exactly one owner by contract.
+ *
+ * ⚠ THE SCENE'S LAYOUT IS KEYED ON A STAMP THIS WRITER PUBLISHES, AND IT
+ * FAILS OPEN. `data-tl-scene` on `#proposition` is what makes the station
+ * tall, the slot sticky and the phases beat absolute; it is written only once
+ * the board, its four nodes, the three plates and their heads have all
+ * resolved AND the slot has been verified to compute `sticky`. Absent — a
+ * phone, a short window, reduced motion, a root that never mounted — the
+ * page is two flowing beats with the arcs' own seam between them, which is
+ * the inert page and reads whole. A layout that needed the writer to be
+ * running would be a page that can go wrong with nothing to say so.
  *
  * Passive listeners, one rAF, delta-gated (the `useStackedCardsScroll`
- * pattern). It parks — progress 0, veil 0, every var cleared, every line
- * restored to its true text — whenever the capable rung does not match or
- * the stage does not compute `sticky`, so the reduced-motion and phone
- * paths get the composition standing still and readable.
+ * pattern). It parks — progress 0, veil 0, every var cleared, every stamp
+ * removed, every line restored to its true text — whenever the capable rung
+ * does not match or the stage does not compute `sticky`, so the reduced-motion
+ * and phone paths get the composition standing still and readable.
  *
  * THREE-FREE. The morph target's builder is reached through `load()` in the
  * spec below — a dynamic edge, so the route page's static graph stays clear
@@ -58,23 +64,32 @@ import { useEffect } from "react";
 import { brandmarkMorphRef, type BrandmarkMorphSpec } from "@/lib/brandmark/morphTargetRef";
 import {
   arriveNext,
+  chipAway,
   ctaInOf,
   ctaInkOf,
   ctaOutOf,
+  feather,
+  foldPose,
+  introOpen,
   markVeil,
   morphOf,
+  plateState,
   productPose,
   propArrival,
-  seamLanding,
-  seamProgress,
+  propClose,
+  sceneProgress,
+  scenePast,
+  titleOpen,
   turnProgress,
-  PHASES_ARRIVE_IN,
-  PHASES_ARRIVE_OUT,
+  unrollY,
+  wireRetract,
   PROP_ARRIVE_IN,
   PROP_ARRIVE_OUT,
-  TURN_PROP_FADE,
+  SCENE_FOLD_ORDER,
   washOf,
   type Arrive,
+  type Centre,
+  type PlateState,
   type ProductRest,
 } from "./turnClock";
 import { measureSeam, mountSeamLayer, parkSeam, writeSeam, type SeamMeasure } from "./seamCarrier";
@@ -104,6 +119,25 @@ export function trinnyMorphSpec(): BrandmarkMorphSpec {
 }
 
 const PRODUCT_VARS = ["--tm-dx", "--tm-dy", "--tm-dr", "--tm-s", "--tm-o"] as const;
+/** The scene's channels on the STAGE, which every clipped object inside reads. */
+const SCENE_STAGE_VARS = ["--tl-ap-prop", "--tl-ap-title", "--tl-ap-intro"] as const;
+const FOLD_VARS = ["--tl-fx", "--tl-fy", "--tl-fs", "--tl-fo"] as const;
+
+/** Everything about the scene that changes only on a relayout. */
+interface SceneMeasure {
+  /** The configured board's svg — the fold's coordinate space. */
+  svg: SVGSVGElement;
+  /** The chip's centre, in the board's own user units. */
+  chip: Centre;
+  /** The four nodes in `SCENE_FOLD_ORDER`, each with its centre. */
+  nodes: { el: SVGGElement; c: Centre }[];
+  /** Their ribbons, in the same order. */
+  lanes: SVGGElement[];
+  /** The three plates, their bands, and the two heights the unroll runs between. */
+  plates: { el: HTMLElement; headH: number; plateH: number }[];
+  /** The station's pinned scroll, in viewports — read off its own box. */
+  runwayVh: number;
+}
 
 export function useTurnScroll(): void {
   useEffect(() => {
@@ -122,19 +156,16 @@ export function useTurnScroll(): void {
     // from under the reader at the seam.
     const prop = document.querySelector<HTMLElement>(".tl-root #proposition");
     const propCanvas = prop?.querySelector<HTMLCanvasElement>("[data-tl-prop-wash]") ?? null;
-    /* The offer, for the seam alone (ADR-101 §B). `#phases` is the beat whose
-       plates the chip becomes; `#offer` is where its stamp lives, because the
-       carrier layer is seated against the ROUTE and a stamp on the station is
-       one selector away from every plate inside it.
-       ⚠ THE STATION IS STATIC MARKUP; ITS BEATS ARE NOT. `#offer` is a nested
-       root that mounts on approach, so `#phases` does not exist when this
-       effect runs and a query taken here returns null FOREVER — which reads
-       as a seam pinned at 0 and a beat that never strikes, with nothing
-       throwing. It is resolved in `measure()` and re-resolved whenever the
-       root's box changes, which is exactly the frame it mounts on. */
-    const offer = document.querySelector<HTMLElement>(".tl-root #offer");
-    let phases: HTMLElement | null = null;
-    let seamRow: HTMLElement | null = null;
+    const propGround = prop?.querySelector<HTMLElement>(".tl-prop__ground") ?? null;
+    /* The scene's STAGE (ADR-102): the configuration's slot, which the route
+       sheet pins once this writer stamps the station. The board and the
+       phases mount INSIDE it, lazily, on approach.
+       ⚠ THE STATION IS STATIC MARKUP; ITS BEATS ARE NOT. `#phases`, the
+       board and every node the scene moves do not exist when this effect
+       runs, and a query taken here returns null FOREVER — which reads as a
+       scene that never opens, with nothing throwing. They are resolved in
+       `measure()`, which the observers below re-run on the mount frame. */
+    const sceneStage = prop?.querySelector<HTMLElement>("[data-tl-config-root]") ?? null;
     const mq = window.matchMedia(TURN_CAPABLE_QUERY);
 
     // The true strings, read from the server-rendered text once. They are
@@ -151,8 +182,7 @@ export function useTurnScroll(): void {
     let propWash: TurnWash | null = null;
     if (propCanvas && prop) {
       propWash = createTurnWash(propCanvas, root);
-      if (propWash) propWash.setFade(TURN_PROP_FADE);
-      else prop.dataset.tlWash = "css";
+      if (!propWash) prop.dataset.tlWash = "css";
     }
 
     let raf = 0;
@@ -160,40 +190,63 @@ export function useTurnScroll(): void {
     let stageW = 0;
     let stageH = 0;
     let rests: ProductRest[] = [];
-    /* ⚠ THE STAGE'S OWN BOX, NOT THE STATION'S. `.station` carries top
-       padding — 140px at 1920×1247 — so the sticky stage pins that much
-       LATER than the station's top reaches the viewport top. Measured from
-       the layout (`offsetTop`/`offsetHeight`, which no transform reaches)
-       once per relayout, because a clock written against the station alone
-       opened the reveal 45px into a 140px travel and lit the record while it
-       was still moving. */
     let lastP = -1;
     let lastQ = -1;
-    let lastT = -1;
+    let lastSv = -1;
     let lastPropA = -1;
     let lastHandoff = -1;
-    /* Where `#phases`' top lands when its plates row is whole in the frame.
-       Measured per relayout; 0 until the beat exists, which makes the seam a
-       no-op rather than a divide by nothing. */
-    let seamS1 = 0;
-    /* The carrier layer and everything about it that only changes on a
-       relayout. Null until both nested roots have mounted, which makes the
-       whole seam a no-op rather than a layer over an empty page. */
-    const seamLayer = mq.matches ? mountSeamLayer() : null;
+    /* The scene, and the carrier layer inside its stage. Null until the
+       configuration's root has mounted and the station has taken its pin,
+       which makes the whole scene a no-op rather than a set of channels
+       written onto an empty stage.
+       ⚠ THE LAYER IS MOUNTED FROM `measure()`, NEVER HERE. The stage is a
+       React root's container, and a root's first `render` CLEARS the
+       container before committing its tree — a layer appended at effect
+       time is gone by the time the beats exist, with nothing thrown and the
+       readout saying "no layer". Mounted once the beats have resolved, it is
+       a non-React child React leaves alone. */
+    let seamLayer: HTMLElement | null = null;
+    let scene: SceneMeasure | null = null;
     let seam: SeamMeasure | null = null;
     let lastChip = -1;
-    let lastHeads = -1;
-    /* ⚠ THE TWO STRIKES ARE THE ONLY STATE THIS WRITER KEEPS, and they are
-       state because a burst has a DIRECTION. Everything else here is a pure
+    let lastPast = -1;
+    let lastPlate: PlateState[] = [];
+    /* ⚠ THE STRIKE IS THE ONLY STATE THIS WRITER KEEPS, and it is state
+       because a burst has a DIRECTION. Everything else here is a pure
        function of a rect and survives being recomputed from nothing. */
     let propArrive: Arrive | null = null;
-    let phasesArrive: Arrive | null = null;
 
     /** Write a stamp only when it changes — an attribute write restarts every
      *  animation under it, so an un-gated one would re-strike every frame. */
     const stamp = (host: HTMLElement | null, name: string, was: Arrive | null, now: Arrive) => {
       if (host && was !== now) host.setAttribute(name, now);
       return now;
+    };
+
+    /** Put the scene away: every stamp and every channel it wrote, gone.
+     *  ⚠ ABSENT MEANS SHOWN, on every one of them — this is the path the
+     *  phone, the short window and reduced motion take. */
+    const parkScene = () => {
+      if (prop) {
+        prop.removeAttribute("data-tl-scene");
+        prop.removeAttribute("data-tl-scene-past");
+        prop.removeAttribute("data-tl-chip");
+        prop.style.removeProperty("--tl-scene");
+      }
+      if (sceneStage) for (const v of SCENE_STAGE_VARS) sceneStage.style.removeProperty(v);
+      if (scene) {
+        for (const n of scene.nodes) for (const v of FOLD_VARS) n.el.style.removeProperty(v);
+        for (const l of scene.lanes) l.style.removeProperty("--tl-wire");
+        for (const pl of scene.plates) {
+          pl.el.removeAttribute("data-tl-plate");
+          pl.el.style.removeProperty("--tl-unroll-y");
+        }
+      }
+      parkSeam(seamLayer);
+      lastChip = -1;
+      lastPast = -1;
+      lastPlate = [];
+      lastSv = -1;
     };
 
     const park = () => {
@@ -217,29 +270,158 @@ export function useTurnScroll(): void {
       prop?.removeAttribute("data-tl-ground");
       lastHandoff = -1;
       prop?.removeAttribute("data-tl-prop");
-      /* ⚠ AND BOTH STRIKES FAIL OPEN. Parked is the phone, the short window
+      /* ⚠ AND THE STRIKE FAILS OPEN. Parked is the phone, the short window
          and reduced motion, where the arcs' own reveal stands the record up on
          its own; an ABSENT stamp means SHOWN, exactly as the ground's does one
-         rule over. Leaving `await` behind here would blank two whole beats on
-         the paths that cannot un-blank them. */
+         rule over. Leaving `await` behind here would blank a whole beat on the
+         paths that cannot un-blank it. */
       prop?.removeAttribute("data-tl-prop-arrive");
-      offer?.removeAttribute("data-tl-phases-arrive");
-      offer?.removeAttribute("data-tl-seam");
-      offer?.style.removeProperty("--tl-seam");
-      prop?.removeAttribute("data-tl-chip");
-      offer?.removeAttribute("data-tl-heads");
-      lastChip = -1;
-      lastHeads = -1;
-      parkSeam(seamLayer);
       propArrive = null;
-      phasesArrive = null;
+      parkScene();
       wash?.draw(0);
       propWash?.draw(0);
       prop?.style.removeProperty("--tl-wash");
       lastP = -1;
       lastQ = -1;
-      lastT = -1;
       lastPropA = -1;
+    };
+
+    /**
+     * Resolve everything the scene moves, and stamp the station once — and
+     * only once — all of it is there.
+     *
+     * ⚠ STAMP FIRST, THEN VERIFY THE PIN. The sticky rule is keyed on the
+     * stamp, so the slot cannot compute `sticky` before it is written; and a
+     * stamped station whose slot did NOT take the pin (an ancestor grew an
+     * `overflow`, say) would be a four-viewport station with a scene that
+     * scrolls straight through it, so the stamp comes back off.
+     */
+    const measureScene = (): SceneMeasure | null => {
+      if (!prop || !sceneStage || !live) {
+        parkScene();
+        return null;
+      }
+      const svg = prop.querySelector<SVGSVGElement>(
+        '[data-board-state="configured"] .arc-board__svg'
+      );
+      const card = svg?.querySelector<SVGGraphicsElement>(
+        '[data-board-module="card"] .arc-board__plate'
+      );
+      const nodes = SCENE_FOLD_ORDER.map(
+        (role) => svg?.querySelector<SVGGElement>(`[data-board-role="${role}"]`) ?? null
+      );
+      const lanes = SCENE_FOLD_ORDER.map(
+        (role) => svg?.querySelector<SVGGElement>(`[data-board-lane="${role}"]`) ?? null
+      );
+      const phases = prop.querySelector<HTMLElement>("#phases");
+      const plates = phases ? [...phases.querySelectorAll<HTMLElement>(".arc-plate")] : [];
+      const heads = plates.map((p) => p.querySelector<HTMLElement>(".arc-plate__head"));
+      if (
+        !svg ||
+        !card ||
+        nodes.some((n) => !n) ||
+        lanes.some((l) => !l) ||
+        plates.length !== 3 ||
+        heads.some((h) => !h)
+      ) {
+        parkScene();
+        return null;
+      }
+      if (!prop.hasAttribute("data-tl-scene")) prop.setAttribute("data-tl-scene", "");
+      if (getComputedStyle(sceneStage).position !== "sticky") {
+        parkScene();
+        return null;
+      }
+      const vh = window.innerHeight;
+      /* ⚠ `getBBox` IS BLIND TO AN ELEMENT'S OWN TRANSFORM, which is what
+         makes this safe to re-run mid-scene: a folded node reports the box
+         it has at rest, so its centre — and every displacement solved from
+         it — is the same number at every `sv`. */
+      const cb = card.getBBox();
+      const chip: Centre = { cx: cb.x + cb.width / 2, cy: cb.y + cb.height / 2 };
+      const centreOf = (g: SVGGraphicsElement): Centre => {
+        const b = g.getBBox();
+        return { cx: b.x + b.width / 2, cy: b.y + b.height / 2 };
+      };
+      return {
+        svg,
+        chip,
+        nodes: nodes.map((el) => ({ el: el!, c: centreOf(el!) })),
+        lanes: lanes.map((l) => l!),
+        plates: plates.map((el, i) => ({
+          el,
+          headH: heads[i]!.offsetHeight,
+          plateH: el.offsetHeight,
+        })),
+        runwayVh: Math.max(0, (prop.getBoundingClientRect().height - vh) / Math.max(1, vh)),
+      };
+    };
+
+    /**
+     * One frame of the scene, at clock `sv`. Called from `frame()` and — once,
+     * synchronously — from `measure()` the moment the stamp lands, so the
+     * stage never paints a frame with the phases standing lit over the board
+     * (every channel's ABSENT value is "shown").
+     */
+    const writeScene = (sv: number, svgRect: DOMRect, stageRect: DOMRect) => {
+      if (!scene || !prop || !sceneStage) return;
+      prop.style.setProperty("--tl-scene", sv.toFixed(3));
+      prop.setAttribute("data-tl-scene", sv.toFixed(2));
+      /* ⚠ THE ARRIVAL STRIKE MAY NOT REPLAY OVER A FOLDED BOARD. A deep
+         reload mid-scene seeds `in` (`arriveNext`'s own rule) and would run
+         the settle ladder's opacity over nodes this clock has already put
+         away; the sheet scopes every strike rule away from this stamp.
+         ⚠ A LATCH, NOT A CHANNEL. Set once the withdraw has opened and
+         cleared only when the record strikes OUT (see `frame`): cleared on
+         the way back down the scene it re-matches every `:not()`-scoped
+         `animation:` rule, and a rule that starts matching again RESTARTS its
+         animation — the whole strike, ladders and all, replaying over a
+         board the reader is scrolling back through (measured: eleven
+         animations running at the pin on the way back up). */
+      if (scenePast(sv) && lastPast !== 1) {
+        lastPast = 1;
+        prop.setAttribute("data-tl-scene-past", "");
+      }
+      sceneStage.style.setProperty("--tl-ap-prop", propClose(sv).toFixed(4));
+      sceneStage.style.setProperty("--tl-ap-title", titleOpen(sv).toFixed(4));
+      sceneStage.style.setProperty("--tl-ap-intro", introOpen(sv).toFixed(4));
+      scene.nodes.forEach((n, k) => {
+        const pose = foldPose(k, sv, n.c, scene!.chip);
+        n.el.style.setProperty("--tl-fx", `${pose.fx.toFixed(2)}px`);
+        n.el.style.setProperty("--tl-fy", `${pose.fy.toFixed(2)}px`);
+        n.el.style.setProperty("--tl-fs", pose.scale.toFixed(4));
+        n.el.style.setProperty("--tl-fo", pose.opacity.toFixed(4));
+      });
+      scene.lanes.forEach((l, k) => {
+        l.style.setProperty("--tl-wire", wireRetract(k, sv).toFixed(4));
+      });
+      /* The chip's group is put away by a STAMP rather than by the layer's
+         presence, so it fails open: a parked writer leaves a whole chip on
+         the board. Delta-gated, because an attribute write is a style
+         invalidation on everything under it. */
+      const away = chipAway(sv) ? 1 : 0;
+      if (lastChip !== away) {
+        lastChip = away;
+        if (away) prop.setAttribute("data-tl-chip", "away");
+        else prop.removeAttribute("data-tl-chip");
+      }
+      scene.plates.forEach((pl, i) => {
+        const st = plateState(i, sv);
+        if (lastPlate[i] !== st) {
+          lastPlate[i] = st;
+          if (st) pl.el.setAttribute("data-tl-plate", st);
+          else pl.el.removeAttribute("data-tl-plate");
+        }
+        if (st === "unroll") {
+          pl.el.style.setProperty(
+            "--tl-unroll-y",
+            `${unrollY(i, sv, pl.headH, pl.plateH).toFixed(2)}px`
+          );
+        } else {
+          pl.el.style.removeProperty("--tl-unroll-y");
+        }
+      });
+      if (seam && seamLayer) writeSeam(seamLayer, seam, sv, svgRect, stageRect);
     };
 
     const measure = () => {
@@ -254,21 +436,20 @@ export function useTurnScroll(): void {
       }));
       wash?.resize();
       propWash?.resize();
-      phases = offer?.querySelector<HTMLElement>("#phases") ?? null;
-      seamRow = phases?.querySelector<HTMLElement>(".arc-groups--plates") ?? null;
-      /* ⚠ READ AS A DIFFERENCE OF TWO RECTS IN ONE FRAME, never as an
-         `offsetTop` chain: `#phases` is not a positioned box, so it is not in
-         its own descendants' `offsetParent` chain and the walk would run past
-         it to the station. Both rects move together under scroll, so their
-         difference is a layout measure however far down the page they are. */
-      if (phases && seamRow) {
-        const pr = phases.getBoundingClientRect();
-        const rr = seamRow.getBoundingClientRect();
-        seamS1 = seamLanding(window.innerHeight, rr.bottom - pr.top);
-      } else {
-        seamS1 = 0;
+      scene = measureScene();
+      if (scene && sceneStage && !seamLayer) seamLayer = mountSeamLayer(sceneStage);
+      seam =
+        scene && seamLayer && root && sceneStage ? measureSeam(seamLayer, root, sceneStage) : null;
+      if (scene && prop && sceneStage) {
+        lastPlate = [];
+        lastChip = -1;
+        lastPast = -1;
+        writeScene(
+          sceneProgress(prop.getBoundingClientRect().top, window.innerHeight, scene.runwayVh),
+          scene.svg.getBoundingClientRect(),
+          sceneStage.getBoundingClientRect()
+        );
       }
-      seam = seamLayer && root ? measureSeam(seamLayer, root) : null;
     };
 
     const frame = () => {
@@ -278,15 +459,17 @@ export function useTurnScroll(): void {
         return;
       }
       /* ⚠ EVERY RECT THIS FRAME NEEDS, READ BEFORE THE FIRST STYLE WRITE.
-         Five boxes across three stations; interleaving a `--tl-wash` write
+         Seven boxes across two stations; interleaving a `--tl-wash` write
          between two of them buys a forced synchronous layout per frame for
          nothing. */
       const vh = window.innerHeight;
       const rect = turn.getBoundingClientRect();
       const propRect = prop ? prop.getBoundingClientRect() : null;
-      const phasesRect = phases ? phases.getBoundingClientRect() : null;
       const canvasRect = canvas ? canvas.getBoundingClientRect() : null;
       const propCanvasRect = propCanvas ? propCanvas.getBoundingClientRect() : null;
+      const groundRect = propGround ? propGround.getBoundingClientRect() : null;
+      const stageRect = scene && sceneStage ? sceneStage.getBoundingClientRect() : null;
+      const svgRect = scene ? scene.svg.getBoundingClientRect() : null;
       const p = turnProgress(rect.top, rect.height, vh);
 
       /* ⚠ BOTH GROUNDS ARE PAINTED BEFORE THE PROGRESS GATE BELOW, and each
@@ -310,9 +493,18 @@ export function useTurnScroll(): void {
         wash?.draw(washOf(p), canvasRect.top, canvasRect.left);
       }
       if (propWash && prop && propCanvasRect) {
-        // Constant: the ground does not resolve, it FEATHERS (see
-        // `TURN_PROP_FADE`). Only its origin moves, which is what keeps its
-        // field continuous with the turn's across the seam.
+        /* ⚠ THE FEATHER IS SOLVED FROM THE GROUND'S RECT EVERY FRAME (ADR-102).
+           The canvas is viewport-sized and sticky inside a ground four
+           viewports tall, so the ground's END is not the canvas's end until
+           the last viewport — `feather()` maps where the ground's bottom
+           actually is into this canvas's own fractions. Delta-gated inside. */
+        if (groundRect) {
+          const f = feather(groundRect.bottom, propCanvasRect.bottom, propCanvasRect.height, vh);
+          propWash.setFeather(f.lo, f.hi);
+        }
+        // Constant: the ground does not resolve, it FEATHERS. Only its origin
+        // moves, which is what keeps its field continuous with the turn's
+        // across the seam.
         propWash.draw(1, propCanvasRect.top, propCanvasRect.left);
         if (lastPropA !== 1) {
           lastPropA = 1;
@@ -357,29 +549,32 @@ export function useTurnScroll(): void {
          and it can only be measured on the station that is moving. */
       const q = propRect ? propArrival(propRect.top, vh) : 0;
 
-      /* ⚠ AND `t` JOINS THE GATE, WHICH IS NOT OPTIONAL. `p` and `q` both
-         saturate the moment the record lands, so from that frame on the two
-         of them agree forever — which is the WHOLE of `#offer`'s scroll. A
-         gate on those two alone returns before the seam is ever read, and
-         the phases' strike would simply never fire. */
-      const t = phasesRect ? seamProgress(phasesRect.top, vh, seamS1) : 0;
+      /* ── The scene's clock (ADR-102) ───────────────────────────────────
+         `sv` is how far the station's top has passed the frame's top, in
+         viewports — 0 on the frame the record is struck in (q = 1 IS the pin),
+         the runway at its release. Off the same rect as `q`.
+         ⚠ IT JOINS THE DELTA GATE, WHICH IS NOT OPTIONAL. `p` and `q` both
+         saturate the moment the record lands, so from that frame on they
+         agree forever — which is the whole of the scene's scroll. A gate on
+         those two alone returns before the scene is ever written. */
+      const sv = scene && propRect ? sceneProgress(propRect.top, vh, scene.runwayVh) : 0;
 
       if (
         lastP >= 0 &&
         Math.abs(p - lastP) < 0.0005 &&
         Math.abs(q - lastQ) < 0.0005 &&
-        Math.abs(t - lastT) < 0.0005
+        Math.abs(sv - lastSv) < 0.0005
       )
         return;
       lastP = p;
       lastQ = q;
-      lastT = t;
+      lastSv = sv;
 
       brandmarkMorphRef.current.progress = morphOf(p);
       /* Both stations, one channel — additive. `veilOf` saturates at
-         `p = 0.72` and `q` opens at `p ≈ 0.77`, so the turn hands the mark
+         `p = 0.72` and `q` opens at `p ≈ 0.55`, so the turn hands the mark
          over rather than racing it: 0.72 by the end of the turn, 0.94 as the
-         record lands (ADR-099). */
+         record lands (ADR-099, re-keyed by ADR-101 §A). */
       brandmarkMorphRef.current.veil = markVeil(p, q);
       turn.style.setProperty("--tl-turn", p.toFixed(3));
       turn.setAttribute("data-tl-turn", p.toFixed(2));
@@ -387,7 +582,7 @@ export function useTurnScroll(): void {
       /* The arrival is still PUBLISHED — the capture and the smoke converge
          on it rather than on a solved `y`, and the ground's own swap reads
          the same rect. What it no longer drives is the record: that is an arc
-         beat with the arcs' reveal, so nothing here writes its opacity. */
+         beat, so nothing here writes its opacity. */
       prop?.setAttribute("data-tl-prop", q.toFixed(2));
 
       /* ⚠ THE CONFIGURATION STRIKES, IT DOES NOT RISE (ADR-101 §A). `q` is
@@ -402,44 +597,14 @@ export function useTurnScroll(): void {
         propArrive,
         arriveNext(propArrive, q, PROP_ARRIVE_IN, PROP_ARRIVE_OUT)
       );
-
-      if (offer) {
-        offer.style.setProperty("--tl-seam", t.toFixed(3));
-        offer.setAttribute("data-tl-seam", t.toFixed(2));
-        phasesArrive = stamp(
-          offer,
-          "data-tl-phases-arrive",
-          phasesArrive,
-          arriveNext(phasesArrive, t, PHASES_ARRIVE_IN, PHASES_ARRIVE_OUT)
-        );
+      /* The scene-past latch releases only here — the record leaving the way
+         it came is the one moment a replayed strike is the right thing. */
+      if (propArrive === "out" && lastPast === 1) {
+        lastPast = 0;
+        prop?.removeAttribute("data-tl-scene-past");
       }
 
-      /* ⚠ THE CHIP BECOMES THE PLATES (ADR-101 §B), and the two ends are put
-         away by STAMPS rather than by the layer's own presence: both fail
-         open, so a parked writer leaves a whole chip on the board and three
-         whole plates below it. Delta-gated because an attribute write is a
-         style invalidation on everything under it. */
-      if (seam && seamLayer) {
-        const away = t > 0 && t < 1 ? 1 : 0;
-        if (lastChip !== away) {
-          lastChip = away;
-          if (away) prop?.setAttribute("data-tl-chip", "away");
-          else prop?.removeAttribute("data-tl-chip");
-        }
-        if (lastHeads !== away) {
-          lastHeads = away;
-          if (away) offer?.setAttribute("data-tl-heads", "hold");
-          else offer?.removeAttribute("data-tl-heads");
-        }
-        writeSeam(
-          seamLayer,
-          seam,
-          t,
-          seam.svg.getBoundingClientRect(),
-          phasesRect ?? seam.phases.getBoundingClientRect(),
-          window.scrollY
-        );
-      }
+      if (scene && stageRect && svgRect) writeScene(sv, svgRect, stageRect);
 
       // The channel the CSS fallback and the smoke read; the canvas itself
       // is painted above, outside this gate.
@@ -469,10 +634,21 @@ export function useTurnScroll(): void {
       if (raf) return;
       raf = window.requestAnimationFrame(frame);
     };
+    /* Declared before `relayout` so it can drain the observer: see below. */
+    let mo: MutationObserver | null = null;
     const relayout = () => {
       measure();
+      /* ⚠ MEASURING MUTATES THE SUBTREE IT WATCHES. `measureSeam` resolves
+         every token through a probe element appended inside the board and the
+         first plate and removed again — childList mutations inside the stage,
+         which is exactly what the observer below listens for. Left queued,
+         they fire the observer, which re-measures, which appends probes, which
+         fires the observer: a synchronous loop that never yields to a frame
+         and hangs the tab with nothing thrown. Draining the records here
+         discards the mutations this measurement made and nothing else. */
+      mo?.takeRecords();
       lastP = -1;
-      lastT = -1;
+      lastSv = -1;
       schedule();
     };
 
@@ -482,13 +658,21 @@ export function useTurnScroll(): void {
     window.addEventListener("resize", relayout, { passive: true });
     mq.addEventListener("change", relayout);
 
-    /* ⚠ AND THE NESTED ROOTS ARE WATCHED, BECAUSE THEY ARRIVE LATE. Both
-       `#proposition`'s record and `#offer`'s beats are lazy roots: the
-       station boxes are server-rendered and empty, and everything the seam
-       measures appears inside them one approach later. A `ResizeObserver` on
-       the roots fires on exactly that frame — it is the one signal that says
-       'the thing you could not find is here now', and it covers a font swap
-       and an image settling for free. */
+    /* ⚠ AND THE NESTED ROOTS ARE WATCHED, BECAUSE THEY ARRIVE LATE. The
+       configuration's root and `#offer`'s beats are lazy: the station boxes
+       are server-rendered and empty, and everything the scene measures
+       appears inside them one approach later.
+       ⚠ A `ResizeObserver` ON THE SLOT IS BLIND ONCE THE SLOT IS THE STAGE.
+       It fires on the mount frame today because mounting the beats grows the
+       slot — but the stamped slot is a fixed `100svh`, so from then on a font
+       swap, an image settling or a re-mount changes nothing about its box and
+       the observer never fires again, with `measureSeam` returning null
+       forever and nothing throwing. A `MutationObserver` on the slot's
+       subtree is the signal that says 'the thing you could not find is here
+       now'; the resize observer stays for the offer's root and the window.
+       ⚠ The carrier layer lives INSIDE that subtree and re-writes its text
+       every frame of a decode, so its own mutations are filtered out — or
+       the writer would re-measure the whole scene on every frame it moved. */
     const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => relayout());
     if (ro) {
       for (const sel of [
@@ -499,10 +683,23 @@ export function useTurnScroll(): void {
         if (el) ro.observe(el);
       }
     }
+    mo =
+      typeof MutationObserver === "undefined" || !sceneStage
+        ? null
+        : new MutationObserver((records) => {
+            const layer = seamLayer;
+            if (layer && records.every((r) => layer.contains(r.target))) return;
+            relayout();
+          });
+    if (mo && sceneStage) {
+      mo.observe(sceneStage, { childList: true, subtree: true });
+      // The initial measure above ran before the observer existed; nothing to drain.
+    }
 
     return () => {
       if (raf) window.cancelAnimationFrame(raf);
       ro?.disconnect();
+      mo?.disconnect();
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", relayout);
       mq.removeEventListener("change", relayout);

@@ -28,9 +28,14 @@ import type { BoardLane, BoardLetter, BoardModule } from "./boardLayout";
  *
  * ⚠ EVERY COLOUR IS A `--arc-board-*` TOKEN, declared on `.arc-board` as an
  * alias of the ADR-077 ramp — never a `--pda-*` (those resolve only under
- * the casefile's `.fl-pda`), never a literal. ⚠ NO `transform` ON ANY
- * ELEMENT: the smoke's overlap walk compares `getBBox` boxes, which are only
- * comparable while every text shares one user space.
+ * the casefile's `.fl-pda`), never a literal. ⚠ NO `transform` ATTRIBUTE AND
+ * NO RESTING TRANSFORM ON ANY ELEMENT: the smoke's overlap walk compares
+ * `getBBox` boxes, which are blind to an element's own transform, so two
+ * texts are comparable only while every group is at identity. A route may
+ * scrub the CSS `transform` PROPERTY on a role `<g>` (`transform-box:
+ * fill-box`) PROVIDED the value is identity whenever a measurement is taken
+ * — the Trinny scene's fold (ADR-102) is identity at its clock's zero, where
+ * every guard reads — never on `<text>`, never the attribute.
  */
 
 const INK: Record<BoardLetter["ink"], string> = {

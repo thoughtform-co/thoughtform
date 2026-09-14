@@ -27,6 +27,7 @@ place) → the proposal** → contact.
 
 **Read first**
 
+- ⚠ [ADR-102](../../sentinel/decisions/102-one-pinned-scene-the-configuration-becomes-the-plates.md) — **PROPOSED (2026-09-14), built and guarded, pending the owner's live read. `#proposition` IS ONE PINNED SCENE**: the record strikes in and the slot pins on the same frame, the PHASES beat renders inside the stage over the board, and everything from the dwell to the paragraph's opening is a pure function of the station's clock `sv` (viewport units). The nodes fold INTO the chip (shrinking before they travel), the chip slides to plate 1's band, two copies peel right one after another, each plate unrolls out of the band that arrived. ⚠ It retires ADR-101 §A.3 and §B.1–B.3: no seam clock, no phases' strike, no document-space carrier. See §The scene below
 - ⚠ [ADR-099](../../sentinel/decisions/099-proposal-nests-and-the-configuration-scrolls-in.md) — **PROPOSED (2026-09-13), built and guarded, pending the owner's live read. THE ROUTE IS `/arcs/trinny-london/proposal` NOW** (a 308 from the old URL; ADR-098 §2's flat-engagement rule is untouched — what nests is a `ClientDef.pages` record, outside `[slug]`'s one-segment namespace). ⚠ **U5's PIN IS RETIRED AND THE CONFIGURATION IS AN ARC BEAT** that scrolls in over the emptied turn — the blank frame the owner saw WAS the pin; the clock is `propArrival`, the overlap is arithmetic (`p = 0.7727`), the coral rule and `--tp-in` are deleted, and the beat carries the `.arc-head`'s cross. ⚠ **EVERY PROPOSAL HEAD TAKES A DATUM** (`arcs.css`, format-scoped, so the Suri and Perfect Ted pages take it too). ⚠ **A `flow` KIND** draws the brief → renders → markets pipeline; see §The interstitial and the proposal
 - [ADR-095](../../sentinel/decisions/095-trinny-turn-particle-morph.md) — the turn: the registry seam, the shader's second home, the measured mark, the polar-rank pairing, the beat's clock. ⚠ **U1 deleted the interstitial slab**: the ground changes under a shader instead and the line decodes in place over it. ⚠ **U5 (2026-09-10) DELETED THE SECOND SLAB** — the products LEAVE on the turn's own clock, `#proposition` is transparent, the mark fades behind it, and the kill edge is **`#contact`** (⚠ its PIN is retired by ADR-099 and the kill edge is `#offer` since ADR-094 U9 — both are recorded below)
 - [ADR-094](../../sentinel/decisions/094-trinny-proof-stack-and-proposal.md) — the proof stack, the interstitial, the proposal, and the three mechanisms they needed. ⚠ **U1 (2026-09-10) RECOMPOSED THE CARD**: the head is chrome with the project's name down in the record, the fields show ONE thing on the house rail, and the arrival is delayed and settled. ⚠ **U2 (same day) PUT THE ARC IN THE RECORD AND THE TABS IN THE FIELD** — `CaseTrack.arc`, the order reversed to lead on the frontier work, the claim sentences read, and the ATL films in their 4:5 cut. ⚠ **U3 (same day) MADE THE ARC THE TITLE**, gave the studio card its THREE SHEETS via a portalled `SheetsPlate`, and made both the films and the tools PLAY. ⚠ **U4 (same day) NOTCHED THE CARDS** (ADR-065's canonical TR+BL, which caught the console's stale TL+BR), cut the head down to its ORDINAL, renamed `THE LINE` → `GOVERNANCE`, and made the 4:5 cut play IN ITS FRAME. ⚠ **U7 (2026-09-11) REDREW THE PROPOSAL AS ONE INSTRUMENT WITH A PICKER** — the layer they own, the teams as tiles, the picked team’s five-question configuration, adoption and automation across the seam; see §The interstitial and the proposal
@@ -658,6 +659,11 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
 The proposal's beats after the configuration — phases · loop · needs and keeps
 · the fee · the people · next steps · appendix — APPENDED to this page (owner,
 2026-09-13, over an arc handoff), rendered by the ARCS' OWN COMPONENTS.
+⚠ **SINCE ADR-102 THE PHASES RENDER IN `#proposition`'S SCENE, NOT HERE**
+(`TRINNY_PHASES` / `TRINNY_SCENE`; `#offer` opens on the flow with
+`startIndex` 2, seven beats). Everything below about the plates' material,
+notch and guards still holds — the plate is the same component in a different
+station — and `#phases` keeps its id.
 
 - ⚠ **`#offer` IS A STATION WHOSE ONLY CHILD IS A SLOT.** `[data-tl-offer-root]`
   is mounted by `TrinnyPortals` through a second nested root (the proof
@@ -1154,14 +1160,16 @@ ease-in-out, PURE MOTION with zero fades) — `tl-aperture` · `tl-aperture-clos
   so that is what is asserted: at q 0.99 the turn's `ctaInkOf` is 0.0009 and
   the loudest product is 0.0054. ⚠ The guard walks ALL FOUR products — the
   exit stagger runs BACKWARDS, and a spot check on k = 3 reads seven times low.
-- ⚠ **`t` JOINS THE WRITER'S DELTA GATE.** `p` and `q` both saturate the frame
-  the record lands and agree forever after, which is the whole of `#offer`'s
-  scroll; gated on those two the seam is never read and the phases never
-  strike. ⚠ **AND `#phases` DOES NOT EXIST WHEN THE WRITER MOUNTS** — `#offer`
-  is a lazy nested root, so a `querySelector` in the effect body returns null
-  FOREVER, which reads as a seam pinned at 0 with nothing throwing. Resolved in
-  `measure()` and re-resolved from a `ResizeObserver` on both nested roots.
-  Found by looking at a still.
+- ⚠ **THE SCENE'S CLOCK `sv` JOINS THE WRITER'S DELTA GATE (ADR-102; it was
+  the seam's `t` under ADR-101).** `p` and `q` both saturate the frame the
+  record lands and agree forever after, which is the whole of the scene's
+  scroll; gated on those two the scene is never written. ⚠ **AND NOTHING THE
+  SCENE MOVES EXISTS WHEN THE WRITER MOUNTS** — the configuration's root is
+  lazy, so a `querySelector` in the effect body returns null FOREVER, which
+  reads as a scene that never opens with nothing throwing. Resolved in
+  `measure()`, re-run from a `MutationObserver` on the slot's subtree (see
+  §The scene for why a `ResizeObserver` on the slot goes blind). Found by
+  looking at a still.
 - ⚠ **TAKING AN ANIMATION AWAY TAKES WHAT IT WAS HOLDING UP.** ADR-100's
   ladder rests `.arc-board__in` / `__bloom` at `opacity: 0` and the ribbons at a
   full dash offset, relying on `forwards` fills to put them back; with the
@@ -1174,15 +1182,18 @@ ease-in-out, PURE MOTION with zero fades) — `tl-aperture` · `tl-aperture-clos
   race left to lose. ⚠ `animation-fill-mode` is **`backwards`**, never
   `forwards` — the last frame is already the cascade's identity, but a delayed
   rung without it sits lit for its delay and then snaps to zero.
-- ⚠ **TWO APERTURES.** `tl-aperture` is OVERSCANNED by `--tl-gl-o` 48px with an
-  identity frame larger than the box (the head hangs its designation, origin
-  cross, two coord stamps and close cross OUTSIDE its border box, and a 0 →
-  100% clip guillotines all four); it also serves `.arc-board__svg`, which
-  sweeps as a WHOLE object. `tl-aperture-plate` carries the plate's TR cut and
-  its open frame is STRING-EQUAL to `.arc-plate`'s own `clip-path`, so
-  animation and cascade end on one polygon. ⚠ In both, the CLOSED frame is the
-  open one with every **X at 50% and every Y untouched** — purely lateral,
-  point for point, and the plate's notch present throughout.
+- ⚠ **ONE APERTURE KEYFRAME NOW (ADR-102 took the plate's).** `tl-aperture`
+  is OVERSCANNED by `--tl-gl-o` 48px with an identity frame larger than the
+  box (the head hangs its designation, origin cross, two coord stamps and
+  close cross OUTSIDE its border box, and a 0 → 100% clip guillotines all
+  four); it also serves `.arc-board__svg`, which sweeps as a WHOLE object.
+  ⚠ Its CLOSED frame is the open one with every **X at 50% and every Y
+  untouched** — purely lateral, point for point. ⚠ **AND IT IS NARROWED TO
+  `#configuration .arc-head` AND SCOPED `:not([data-tl-scene-past])`**: the
+  phases' head lives in this station too now and opens on the scene's own
+  clock, and a strike may never replay over a folded board (§The scene).
+  `tl-aperture-plate(-close)` is deleted — a plate UNROLLS out of the band the
+  chip became.
 - ⚠ **THE CHROMA IS DELETED, AND SO IS THE DIAL IT LEFT OPEN** (U12). It rode
   `.arc-plate__row` / `__foot` and never the opaque plate (`filter` applies to
   the whole rendered output and the clip lands AFTER it, so a split on the
@@ -1195,9 +1206,8 @@ ease-in-out, PURE MOTION with zero fades) — `tl-aperture` · `tl-aperture-clos
   The stations overlap by a whole viewport, so for the turn's last screen
   `#proposition` is laid out directly over the turn's own button; a transparent
   box swallows the one link that beat offers. The smoke asks it from the LINK's
-  side (`elementFromPoint` at the CTA's centre). ⚠ The PLATES take
-  `visibility` alone — §B's carrier re-declares their head band visible under
-  the hide while the body stays away.
+  side (`elementFromPoint` at the CTA's centre). (The plates' own hold is the
+  scene's `data-tl-plate="held"` now — §The scene.)
 - ⚠ **AN ABSENT STAMP MEANS SHOWN.** `park()` removes both, and parked is the
   phone, the short window and reduced motion. This route's own polarity law one
   station over (the ground's, ADR-099). Pinned by its own smoke case: if it
@@ -1211,7 +1221,7 @@ ease-in-out, PURE MOTION with zero fades) — `tl-aperture` · `tl-aperture-clos
   duration.
 - **The ladders.** Board 640ms — card 80 · seat 160 · lane seat 240 · lane
   layer 300 · layer 360 · lane tools 360 · tools 440 · lane reach 480 · reach 560. Ledger 960ms — seat 80 · layer 220 · card 360 · tools 500 · reach 640.
-  Phases: head 0, plates 160 · 300 · 440. ADR-100 U3's "read first, read
+  (The phases' ladder left with ADR-102.) ADR-100 U3's "read first, read
   slowest" survives the change of mechanism, TWICE — the rungs and both
   durations are byte-identical under U12's `tl-settle`, because replacing that
   ladder with a per-part aperture would have deleted an owner ruling to buy
@@ -1225,14 +1235,155 @@ ease-in-out, PURE MOTION with zero fades) — `tl-aperture` · `tl-aperture-clos
   one and change the other. ⚠ `tl-settle` keeps its OWN curve and both
   durations (640 / 960) — it is a fade on ADR-100 U3's ladder, not the sweep,
   and that ruling is stated in those two numbers.
-- **Left open:** the two durations (720 / 420); a
-  fast flick landing the head band inside a half-open plate for a frame (the
-  window widened 170ms with the slower sweep — the last plate now finishes at
-  440 + 720 = 1.16s after the stamp); the
-  beats below `#phases` keeping the plain rise (the owner asked for "the next
-  section").
+- **Left open:** the two durations (720 / 420); the beats below `#phases`
+  keeping the plain rise (the owner asked for "the next section").
 
-## The seam: the chip becomes the plates (ADR-101 §B)
+## The scene (ADR-102)
+
+Owner, 2026-09-14, on ADR-101's flight: it _"jitters and lags"_; _"once you
+enter the studio today, the AI capability card almost immediately starts
+moving"_; _"all the cards surrounding it … need to collapse inwards so it feels
+like one configuration. Only then does it need to move"_; _"AI capability
+should first move to the utter left and then the other card should open up to
+the right of it"_; a plate's reveal must _"evolve … from the upper part of the
+cards that has moved from the previous section"_; the title revealed too, the
+paragraph _"only after all the cards have been revealed"_.
+
+- ⚠ **THE JITTER WAS A MAIN-THREAD WRITER AGAINST A COMPOSITOR SCROLL, AND THE
+  CURE IS A FRAME IN WHICH NOTHING MOVES.** ADR-101's carrier was posed in
+  document space from a rAF while it had to move smoothly relative to a page
+  the compositor was scrolling — §3's hero curtain already measured that
+  failure on this route: _one wheel step of displacement, every step_. No
+  easing hides a frame of lag. `#proposition` is a sticky SCENE now (the slot
+  is the stage, `100svh` inside a station of `100svh + --tl-scene-runway`),
+  the PHASES beat renders inside it seated absolutely over the board
+  (`TRINNY_SCENE`; `#offer` opens on the flow, `startIndex` 2), and the
+  carrier lives INSIDE the stage. The chip, the three bands, the carrier, the
+  title and the paragraph are all stationary while the clock runs. Measured:
+  the stage's top at 0.00 across eight wheel steps of the slide and the
+  carrier's box within 0.01px of its own pose on every frame.
+  ⚠ **THE PLATES' FEET MUST FIT THE STAGE, AND THE BEAT'S BOX CANNOT SEE
+  WHETHER THEY DO.** Inside the stage `#phases` is `inset: 0`, so its box IS
+  the stage and ADR-100's "one viewport" read on the beat passes whatever the
+  content does; the plates' feet ran 23.7px past the frame at 1280×720 (the
+  last line of the DELIVERABLE band, for the whole settled dwell) with every
+  gate green. A bottom-pad trim was the first answer and changed NOTHING —
+  the datum seats the head at `start` and content flows from the top, so the
+  bottom pad is never in the sum. The head's own margin is: under
+  `(max-height: 760px)` both heads in the scene take the terminal cut's
+  `clamp(28px, 5.5vh, 72px)` (39.6px at 720h; feet at 718.5). Both, so the
+  ADR-100 guard on the two margins stays equal. The smoke's last ADR-102 case
+  measures the plates' feet against the stage's bottom at both ends.
+- ⚠ **THE PIN CANNOT BEGIN BEFORE THE RECORD, BY ARITHMETIC.** ADR-099's blank
+  frame was a pin that began while the record was still rising; under
+  ADR-101's 100svh lead q = 1 IS the station's top at the frame's top, which
+  is the frame a sticky child pins on. Struck in and pinned on one frame.
+- ⚠ **THE LAYOUT IS KEYED ON THE WRITER'S STAMP AND FAILS OPEN.** The
+  station's height, the slot's pin, the phases' seat and the sticky canvas
+  all hang on `data-tl-scene`, written only once the board, its four role
+  groups, the three plates and their heads have resolved AND the slot has
+  been verified to compute `sticky`; `park()` removes it. Absent — the phone,
+  the short window, reduced motion, a root that never mounted — the station is
+  two flowing beats with the arcs' own seam: the inert page. Pinned by the
+  reduced-motion case.
+- ⚠ **THE CLOCK IS IN VIEWPORT UNITS, NOT NORMALISED.** `sv` = how many
+  viewports the station's top has passed the frame's top (`sceneProgress`),
+  published as `--tl-scene` / `data-tl-scene`; every window in `turnClock.ts`
+  is authored in svh, so a runway edit can only TRUNCATE the scene.
+  `trinny-seam` reads `--tl-scene-runway` out of the sheet and pins
+  `SCENE_END` under it. Windows: DWELL 0–40 · WITHDRAW 40–70 · FOLD 58–109
+  (reach · tools · layer · seat, 7 apart) · HAND-OVER 112 · SLIDE 114–150 ·
+  TITLE 134–164 · UNROLL 152–178 / 200–226 / 248–274 · COPY 165–198 /
+  214–246 · PARAGRAPH 278–302 · SETTLE to 318 · runway 325.
+- ⚠ **A NODE SHRINKS BEFORE IT TRAVELS, AND IT IS GEOMETRY.** The roles paint
+  seat · layer · card · tools · reach, so the tools and the reach paint OVER
+  the chip; a full-size node sliding to the chip's centre crosses its edge on
+  top of it. `foldPose` shrinks over the first 70 % of the node's window and
+  travels over the last 70 %; the unit test walks the board's own boxes and
+  asserts scale ≤ 0.1 at the crossing. The fold is the CSS `transform`
+  PROPERTY on the role `<g>` (`transform-box: fill-box`), identity at `sv` 0
+  — `getBBox` is blind to it, so the board's overlap walk is measured there
+  and nowhere else (`arcs.md`'s amended rule). ⚠ **The seat lane retracts
+  with the opposite dash sign** — it is drawn from the seat DOWN to the chip,
+  the other three from the chip outward.
+- ⚠ **THE WITHDRAW, THE TITLE AND THE PARAGRAPH ARE ONE SCRUBBED APERTURE**
+  — `.arc-ap`'s form (`clip-path: inset(-o calc(50% − ap·(50% + o)))`), on
+  the two head COLUMNS never on `.arc-head` (which carries the arrival's
+  keyframe animation on the same property), overscanned by `--tl-gl-o`.
+  Every channel's absent value is 1 = shown. No `transition` on any scrubbed
+  property — smoothing is lag by another name; the smoke pins
+  `transitionDuration` 0s on every one.
+- ⚠ **THE CARRIER IS BORN AT THE HAND-OVER AND THE COPIES ON THE BANDS THEY
+  PEEL OFF.** Carrier 0 is the chip's box (live off the svg's rect, in the
+  STAGE's coordinates — never assumed (0, 0): `.station` is `100vw` with
+  `margin-left: calc(50% − 50vw)`) until its slide opens, then `lerpRect` to
+  plate 1's band; carriers 1 and 2 start pixel-identical on the band before
+  and land on the band after. `data-tl-chip="away"` hides the WHOLE card
+  group now, outline included — the ribbons have retracted, there is no
+  socket. `left/top/width/height`, not `translate` (a transformed box
+  rasterises text on a different sub-pixel grid than the layout-positioned
+  band). ⚠ **The words start LATE (`SCENE_DECODE_START` 0.2) and land early
+  (0.9)**: a decode from zero shuffled the real band's own words under the
+  reader while the copy still stood on it — seen on the still, not by a gate.
+  One wall per carrier over both of its lines.
+- ⚠ **A PLATE IS HELD, THEN UNROLLS, THEN RESTS ON `arcs.css`'S OWN CLIP.**
+  `data-tl-plate="held"` is `visibility: hidden` (nothing of it paints until
+  its band lands); `unroll` is the route's polygon with the bottom edge at
+  `--tl-unroll-y` (px, from the band's `offsetHeight` to the plate's), the
+  top-right cut intact and the ring clipping with the plate so the travelling
+  edge carries no rule; the writer REMOVES the stamp once the plate is whole,
+  so the notch guard reads the resting clip untouched.
+- ⚠ **THE GROUND'S CANVAS IS VIEWPORT-SIZED AND STICKY INSIDE THE GROUND.**
+  A canvas spanning a four-viewport ground is a ~24-megapixel shader pass per
+  scroll frame. ⚠ **`.tl-prop__ground` LOST ITS `overflow: hidden` FOR IT** —
+  an ancestor with a non-visible overflow is a scroll container, and the
+  canvas would have stuck to the ground's own never-scrolling scrollport:
+  frozen one viewport above the station, the frame bare, every geometry gate
+  green. The feather is a PAIR now (`vec2 uFeather`, `feather()` mapping the
+  ground's bottom edge into the canvas's own fractions each frame, solved
+  against the CANVAS's rect so the ramp is continuous across the frame it
+  unsticks); `TURN_PROP_FEATHER_VH` 0.84 is the old 0.42 of a two-viewport
+  canvas. The grounds-union smoke reads the CANVAS's rect with the GROUND's
+  opacity (the hold is stamped on the ground) and samples the scene's release.
+- ⚠ **`data-tl-scene-past` IS A LATCH, CLEARED ONLY WHEN THE RECORD STRIKES
+  OUT.** A deep reload mid-scene seeds `in` and would replay the settle ladder
+  over a folded board, so every `animation:` under `[data-tl-prop-arrive="in"]`
+  is scoped `:not([data-tl-scene-past])`. ⚠ Cleared on the way BACK it
+  re-matches every one of those rules, and a rule that starts matching again
+  RESTARTS its animation — measured: eleven animations running at the pin on
+  the way back up, the whole strike replaying over a board the reader was
+  scrolling back through. Pinned from both ends (the reload case; the
+  scene walk's return to `sv` 0 with nothing running).
+- ⚠ **FOUR SILENT TRAPS, EACH FOUND ON THE READOUT OR THE STILL.** (1)
+  `measureSeam`'s probes mutate the subtree the `MutationObserver` watches —
+  `relayout()` drains `takeRecords()` after every measure, or the tab hangs in
+  a microtask loop with nothing thrown. (2) A `ResizeObserver` on the slot is
+  blind once the slot is a fixed-height stage — mounting no longer changes
+  its box; the `MutationObserver` is the mount signal and the carrier layer's
+  own per-frame text writes are filtered out of it. (3) A React root's first
+  `render` CLEARS its container — the layer is mounted from `measure()`, never
+  at effect time. (4) `−top / vh` at the pin is `−0`, which prints `-0.00` on
+  the stamp the harness converges on.
+- ⚠ **`rollToS` CONVERGES ON THE STATION'S RECT, NEVER THE STAGE'S AND NEVER
+  THE PUBLISHED CLOCK AT ITS FLOOR.** The stage is sticky, so its rect reports
+  wherever it is pinned (rolling to it converges on wherever the page already
+  is), and `sceneProgress` clamps (`rollToT`'s lesson, ADR-101). The station
+  is a layout fact; several passes, because the lazy root's stamp grows it by
+  three viewports on first entry.
+- **Named, not fixed:** the plates and the title sit on the coral wash rather
+  than `#offer`'s parchment (the scene is in `#proposition`); tools and reach
+  paint over the chip in DOM order (the shrink hides it); the runway's length
+  is the owner's read; `useJourneyMarks`' LOCAL readout runs 0 → 1 over four
+  viewports on this station; dark, as ever on a light-locked route.
+
+## The seam: the chip becomes the plates (ADR-101 §B) — RETIRED BY ADR-102
+
+⚠ **Everything below is the record of ADR-101 §B and is SUPERSEDED on the
+mechanism** (the document-space layer, the three-window sum, the socket
+outline, one wall for six pairs). What survives is B.0 (one material — the
+plates' head and foot paint the chip's wash, house-wide), B.4 (the probes and
+the measured baseline) and B.5 (the house decode kernel, never
+`advanceScrambles`). Read §The scene above for what is live.
 
 Owner, 2026-09-14: _"The AI capability card at the center moves into the
 center of the screen, and then it copies itself left and right. That becomes
@@ -1330,13 +1481,14 @@ node scripts/capture-trinny-london.mjs --vp 1280x720 --port <port> --out .cursor
 ⚠ **THE CAPTURE'S CONFIGURATION STOPS ARE SOLVED FOR `q`, NEVER FOR `topOf`.**
 Since ADR-099 `q` is `propArrival` — the station's arrival, not a stage's
 travel — so the station's top at the viewport top is `q = 1`, not 0. The stops
-are `19-config-arrive` (`rollToQ(0.45)`: the record half in over the emptied
-turn, which is the frame the blank one used to be) and `20-config-strike` /
-`12-configuration` at full arrival, with `23-offer-flow` after the offer's
-beats; `rollToQ` converges on the published `data-tl-prop` exactly as
-`rollToP` does on `data-tl-turn`. ⚠ The seam itself is still NOT a stop —
-shoot it by hand (`topOf("proposition") − 0.45·vh`) after touching either
-station.
+are `19-turn-empties` (`rollToQ(0.95)`) and `20-config-strike` /
+`20b-config-struck` / `12-proposition` at full arrival; `rollToQ` converges on
+the published `data-tl-prop` exactly as `rollToP` does on `data-tl-turn`.
+⚠ **THE SCENE'S THIRTEEN STOPS ARE SOLVED FOR `sv` ON THE STATION'S RECT**
+(`21-scene-dwell` … `33-scene-settled`, ADR-102), then the offer's `34-offer-flow`
+/ `35-offer-pricing`. The seam IS a stop now; look at every one of them — the
+first cut's two defects (a missing layer, a replayed strike on the way back)
+were on the readout and on the still, and on no gate.
 
 ⚠ **EDITING THE PROTOTYPE HTML FIRES NO HMR, AND A TAB THAT IS ALREADY OPEN
 WILL NOT SHOW IT.** `landing-trinny-london.html` lives under `public/`, so it is

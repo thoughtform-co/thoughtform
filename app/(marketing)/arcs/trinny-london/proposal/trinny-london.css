@@ -800,13 +800,117 @@ html[data-corridor-exit="true"] .tl-root #proposition {
    box — true, but this station's padding box is already the full 100vw the
    `.station` breakout gives it, so the correction over-extended the ground by
    192px a side and put the field out of register. The canvas is handed its
-   OWN rect either way; the mistake here was the box, not the maths. */
+   OWN rect either way; the mistake here was the box, not the maths.
+   ⚠ NO `overflow: hidden` HERE SINCE ADR-102, AND IT IS NOT TIDINESS. An
+   ancestor with a non-visible overflow is a SCROLL CONTAINER, so the sticky
+   canvas (§9c) would stick to this box's own never-scrolling scrollport —
+   frozen at the ground's top, one viewport above the station, with the frame
+   going bare on the first scroll into the scene and every geometry gate
+   green. Nothing here overflows in any case: the canvas is the box. */
 .tl-root .tl-prop__ground {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  overflow: hidden;
+}
+
+/* ── 9c. The scene (ADR-102) ──────────────────────────────────────────
+   Owner, 2026-09-14, on ADR-101's flight: it "jitters and lags", it starts
+   the moment the studio is entered, the nodes around the chip must COLLAPSE
+   INWARDS first, the chip then goes to the FAR LEFT and the plates open to
+   the right of it out of their own head bands, the title with the first, the
+   paragraph after the third.
+
+   `#proposition` is a sticky SCENE: the configuration's slot pins on the
+   frame the record is struck in (q = 1 IS the station's top at the frame's
+   top, so the pin cannot begin before the record has arrived — the blank
+   frame ADR-099 deleted was a pin that did) and holds for the runway, and
+   the PHASES beat mounts in the same root, seated absolutely over the board.
+   Everything the choreography touches is then viewport-STATIONARY, which is
+   the whole cure for the jitter: a main-thread writer posing a carrier
+   against a page the COMPOSITOR is scrolling lands one frame behind it on
+   every wheel step (§3's hero curtain measured exactly that); between two
+   boxes that do not move it has nothing to be behind.
+
+   ⚠ KEYED ON THE WRITER'S STAMP, AND ABSENT MEANS THE INERT PAGE. The
+   station's height, the slot's pin and the phases' seat all hang on
+   `data-tl-scene`, which `useTurnScroll` writes only once the board, its
+   nodes, the plates and their heads have resolved AND the slot computes
+   `sticky` — and removes when it parks. Without it the two beats simply
+   flow, with the arcs' own seam between them: the phone, the short window,
+   reduced motion and a root that never mounted all read whole. */
+.tl-root #proposition {
+  /* How far the scene runs past its pin, in viewports. ⚠ The clock is in the
+     same unit (`sceneProgress`, viewport units, NOT normalised), so shortening
+     this can only TRUNCATE the scene — it cannot rescale every window with
+     nothing failing. `trinny-seam` reads it here and pins `SCENE_END` under it. */
+  --tl-scene-runway: 325svh;
+}
+
+@media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  /* A DEFINITE height, not a `min-height`: the sticky child's travel is its
+     container's box, and a `min-height` would let the two beats' own flow
+     height set it instead. */
+  .tl-root #proposition[data-tl-scene] {
+    height: calc(100svh + var(--tl-scene-runway));
+    min-height: 0;
+  }
+  /* The slot IS the stage. No wrapper in the prototype: the station's
+     ancestors carry no overflow, no transform and no filter (§9's cover rule
+     lifts `content-visibility` for the whole scene), and the turn's stage is
+     the precedent one station up under the same `.station` class. */
+  .tl-root #proposition[data-tl-scene] [data-tl-config-root] {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+  }
+  /* The root inside the stage is the phases' containing block — one viewport,
+     so `inset: 0` on the beat is the frame. */
+  .tl-root #proposition[data-tl-scene] .arc-root {
+    position: relative;
+    height: 100svh;
+    min-height: 0;
+  }
+  /* The phases, seated OVER the board. ⚠ `border-top: 0`: the arcs' own
+     `.arc-sec + .arc-sec` seam would rule a hairline across the top of the
+     stage, over the board's head. Never `overflow: clip` the stage — it
+     would cut the plates' feet on the frame they matter most. */
+  .tl-root #proposition[data-tl-scene] #phases {
+    position: absolute;
+    inset: 0;
+    min-height: 0;
+    border-top: 0;
+  }
+  /* ⚠ THE PLATES' FEET OVERRAN THE STAGE BY 23.7px AT 1280×720, AND A BOTTOM
+     PAD CANNOT REACH THEM. The plates row overflowed its flowing beat by that
+     much before this pass (pre-existing, and harmless there — a flowing beat
+     just grows); inside a one-viewport stage the same 23.7px is the last line
+     of the DELIVERABLE band under the frame's bottom edge for the whole
+     settled dwell, on the reference laptop. The first cut trimmed
+     `--arc-sec-pad` and claimed 28px back — a fix that changed nothing
+     (measured 743.7 before and after): the datum seats the head at `start`,
+     content flows from the TOP, and the bottom pad is never in the sum. What
+     is in the sum is the head's own margin — 9vh = 64.8px there — and the
+     terminal cut's rung (`clamp(28px, 5.5vh, 72px)`, arcs.css) is the house
+     value one step tighter: 39.6px at 720h, the plates' feet at 718.5. Both
+     heads in the scene take it, so ADR-100's guard that reads the board
+     head's margin against the plate beats' stays equal, and the title still
+     opens on the seat the board's title closed on. Above 760h nothing
+     changes — the three taller references clear the stage by 42px and more. */
+  @media (max-height: 760px) {
+    .tl-root #proposition[data-tl-scene] .arc-head {
+      margin-bottom: clamp(28px, 5.5vh, 72px);
+    }
+  }
+  /* The five things the scene clips, promoted for the length of it. Not the
+     svg groups — an svg is one layer, and there is no gain. */
+  .tl-root #proposition[data-tl-scene] #phases .arc-plate,
+  .tl-root #proposition[data-tl-scene] #phases .arc-head__lead,
+  .tl-root #proposition[data-tl-scene] #phases .arc-head__intro,
+  .tl-root #proposition[data-tl-scene] #configuration .arc-head__lead,
+  .tl-root #proposition[data-tl-scene] #configuration .arc-head__intro {
+    will-change: clip-path;
+  }
 }
 
 /* ⚠ THE GROUND REACHES UP BY THE LEAD, AND THAT IS WHAT MAKES THE OVERLAP
@@ -829,6 +933,20 @@ html[data-corridor-exit="true"] .tl-root #proposition {
 @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
   .tl-root #proposition .tl-prop__ground {
     top: calc(var(--tl-prop-lead) * -1 - 4px);
+  }
+  /* ⚠ THE CANVAS IS VIEWPORT-SIZED AND STICKY INSIDE THE GROUND (ADR-102).
+     The ground spans a four-viewport scene now, and a canvas the size of its
+     box is a ~24-megapixel shader pass on every scroll frame. Stuck at the
+     frame's top for as long as the ground is in frame, it is one viewport of
+     pixels — the turn's own arrangement inside its stage — and it scrolls
+     off with the ground's box at the end, where the writer feathers it
+     (`feather()`; the shader takes the band as a PAIR of canvas fractions
+     for exactly this reason). Keyed on the stamp: without the scene the
+     ground is two viewports and the canvas fills it, as before. */
+  .tl-root #proposition[data-tl-scene] .tl-prop__wash {
+    position: sticky;
+    top: 0;
+    height: 100svh;
   }
 }
 
@@ -1110,48 +1228,9 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   }
 }
 
-/* The same aperture for a PLATE, which carries its own silhouette. The open
-   frame is STRING-EQUAL to `.arc-plate`'s own `clip-path` (arcs.css) — so the
-   animation and the cascade end on one polygon and removing the animation is
-   a no-op on the pixels. No overscan here: the plate's box IS its edge, and
-   an overscanned frame would cut the notch off for the length of the sweep.
-   ⚠ The top-right cut is PRESENT THROUGHOUT, collapsed in x and never in y,
-   so the silhouette is not square for a single frame. */
-@keyframes tl-aperture-plate {
-  from {
-    clip-path: polygon(50% 0, 50% 0, 50% var(--arc-plate-ch), 50% 100%, 50% 100%);
-  }
-  to {
-    clip-path: polygon(
-      0 0,
-      calc(100% - var(--arc-plate-ch)) 0,
-      100% var(--arc-plate-ch),
-      100% 100%,
-      0 100%
-    );
-  }
-}
-
-/* ⚠ THE PLATE'S CLOSE HOLDS `visibility` ALONE. Its `out` cascade hides it by
-   `visibility` and never touches opacity, because §B's carrier has to be able
-   to re-declare the head band `visible` under that hide while the body stays
-   away — so a close that faded opacity would be fighting the seam. */
-@keyframes tl-aperture-plate-close {
-  from {
-    visibility: visible;
-    clip-path: polygon(
-      0 0,
-      calc(100% - var(--arc-plate-ch)) 0,
-      100% var(--arc-plate-ch),
-      100% 100%,
-      0 100%
-    );
-  }
-  to {
-    visibility: visible;
-    clip-path: polygon(50% 0, 50% 0, 50% var(--arc-plate-ch), 50% 100%, 50% 100%);
-  }
-}
+/* (The plates' own aperture, `tl-aperture-plate`, left with ADR-102: a plate
+   UNROLLS out of the head band the chip became, on the scene's clock — see
+   §10b below.) */
 
 /* The board's parts, arriving inside the sweep. MONOTONIC by law — one rise,
    no dropout, no tear: this is the rung that carried the flash. */
@@ -1218,16 +1297,28 @@ html[data-corridor-exit="true"] .tl-root #proposition {
     pointer-events: none;
   }
 
-  .tl-root #proposition[data-tl-prop-arrive="in"] .arc-head {
+  /* ⚠ THE CONFIGURATION'S HEAD, NOT EVERY HEAD IN THE STATION: the phases'
+     head lives in this station too since ADR-102, and it opens on the scene's
+     own clock (§10b). ⚠ AND NEVER OVER A SCENE THAT HAS ALREADY BEGUN
+     (`:not([data-tl-scene-past])`): a deep reload mid-scene seeds `in`, and
+     the settle ladder's opacity would then replay for 1.6 s over nodes the
+     fold has put away — four modules flashing in at the chip's centre. Past
+     the withdraw the cascade IS the state; a strike still running when a
+     fast reader crosses that mark is cancelled to it, which is the fast
+     flick ADR-101 already names. */
+  .tl-root
+    #proposition[data-tl-prop-arrive="in"]:not([data-tl-scene-past])
+    #configuration
+    .arc-head {
     animation: tl-aperture 720ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
   }
   /* The two drawings sweep open as WHOLE objects; their parts arrive inside,
      on the ladder below. */
-  .tl-root #proposition[data-tl-prop-arrive="in"] .arc-board__svg {
+  .tl-root #proposition[data-tl-prop-arrive="in"]:not([data-tl-scene-past]) .arc-board__svg {
     animation: tl-aperture 720ms 80ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
   }
-  .tl-root #proposition[data-tl-prop-arrive="in"] [data-board-role],
-  .tl-root #proposition[data-tl-prop-arrive="in"] [data-board-lane] {
+  .tl-root #proposition[data-tl-prop-arrive="in"]:not([data-tl-scene-past]) [data-board-role],
+  .tl-root #proposition[data-tl-prop-arrive="in"]:not([data-tl-scene-past]) [data-board-lane] {
     animation: tl-settle 640ms var(--tl-gl-d, 0ms) cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
   /* ⚠ AND THE LEDGER STILL RUNS SLOWER THAN THE BOARD (ADR-100 U3, owner:
@@ -1237,7 +1328,10 @@ html[data-corridor-exit="true"] .tl-root #proposition {
      ledger is five rows READ IN ORDER. 960ms against 640, last rung at 1.60s
      against the board's 1.20s — the rungs and both durations are U3's own,
      untouched by U12. */
-  .tl-root #proposition[data-tl-prop-arrive="in"] [data-board-state="today"] [data-board-role] {
+  .tl-root
+    #proposition[data-tl-prop-arrive="in"]:not([data-tl-scene-past])
+    [data-board-state="today"]
+    [data-board-role] {
     animation: tl-settle 960ms var(--tl-gl-d, 0ms) cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
@@ -1291,48 +1385,99 @@ html[data-corridor-exit="true"] .tl-root #proposition {
     animation: tl-aperture-close 420ms cubic-bezier(0.65, 0, 0.35, 1);
   }
 
-  /* — The phases —
-     Same recipe, hung on the seam rather than on an arrival: `t` 0.8 in,
-     0.7 out, so three whole plates are standing well before the seam lands
-     (ADR-101 §B docks the head bands at t = 1). */
-  .tl-root #offer[data-tl-phases-arrive="await"] #phases .arc-head,
-  .tl-root #offer[data-tl-phases-arrive="out"] #phases .arc-head {
-    opacity: 0;
-    visibility: hidden;
-  }
-  /* ⚠ THE PLATES TAKE `visibility` ALONE, NOT OPACITY. Their head band is
-     what the chip becomes, and §B's carrier has to be able to re-declare
-     that band `visible` under this hide while the body stays away. */
-  .tl-root #offer[data-tl-phases-arrive="await"] #phases .arc-plate,
-  .tl-root #offer[data-tl-phases-arrive="out"] #phases .arc-plate {
-    visibility: hidden;
+  /* ── 10b. The scene (ADR-102) ────────────────────────────────────────
+     Every rule below is a pure function of a channel the writer scrubs off
+     the scene's clock — no keyframe, no transition, no burst. ⚠ NO
+     `transition` ON ANY OF THEM: a transition on a scrubbed property is
+     smoothing, and smoothing is lag by another name. ⚠ EVERY CHANNEL'S
+     ABSENT VALUE IS "SHOWN" (`var(--x, 1)`): the phone, the short window,
+     reduced motion and a parked writer all read the whole page. */
+
+  /* — The withdraw —
+     The board's own head, its dek and the ledger CLOSE on the scrubbed
+     aperture — the caption card's centre-out sweep run backwards, in the
+     `.arc-ap` form arcs.css already uses for its media frames (a clip inset,
+     scrubbed, rather than the keyframed `tl-aperture` above). On the two
+     head COLUMNS, never on `.arc-head`, which carries the arrival's own
+     `clip-path` animation; the columns each hang their chrome (the origin
+     cross, the coord stamps, the close cross) outside their border box,
+     which is what the `--tl-gl-o` overscan clears. At 1 this is
+     `inset(-48px -48px)`, the same coverage as `tl-aperture`'s open frame. */
+  .tl-root #proposition[data-tl-scene] #configuration .arc-head__lead,
+  .tl-root #proposition[data-tl-scene] #configuration .arc-head__intro,
+  .tl-root #proposition[data-tl-scene] [data-board-state="today"] .arc-board__svg {
+    clip-path: inset(
+      calc(0px - var(--tl-gl-o)) calc(50% - var(--tl-ap-prop, 1) * (50% + var(--tl-gl-o)))
+    );
   }
 
-  .tl-root #offer[data-tl-phases-arrive="in"] #phases .arc-head {
-    animation: tl-aperture 720ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
+  /* — The fold —
+     Each node SHRINKS about its own centre, then rides its ribbon into the
+     chip, and the last of it goes as it enters (`foldPose`). ⚠ THE CSS
+     `transform` PROPERTY, never the attribute, and IDENTITY AT REST: the
+     board's fit guard compares `getBBox` boxes, which are blind to an
+     element's own transform, so two texts are comparable only while every
+     group is at identity — and at `sv` 0 every one of these is. `px` on an
+     svg element is a user unit, so the displacement is written in the
+     board's own units. */
+  .tl-root #proposition[data-tl-scene] [data-board-state="configured"] [data-board-role] {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    transform: translate(var(--tl-fx, 0px), var(--tl-fy, 0px)) scale(var(--tl-fs, 1));
+    opacity: var(--tl-fo, 1);
   }
-  /* ⚠ THE PLATE SWEEPS ON ITS OWN SILHOUETTE, AND NOTHING INSIDE IT ANIMATES.
-     Its rows and its foot were carrying the chromatic split; they are revealed
-     spatially by the sweep now, which is the caption card's own law and one
-     less thing between the reader and the plate. */
-  .tl-root #offer[data-tl-phases-arrive="in"] #phases .arc-plate {
-    animation: tl-aperture-plate 720ms var(--tl-gl-d, 0ms) cubic-bezier(0.65, 0, 0.35, 1) backwards;
+  /* The ribbons retract INTO the chip, in step with their node's travel.
+     ⚠ THE SEAT LANE RUNS THE OTHER WAY. Three lanes are drawn from the chip
+     outward, so a positive offset retracts their far end toward the chip;
+     the seat's is drawn from the seat DOWN to the chip (`boardLayout`), so
+     it takes the opposite sign or it retracts toward the seat — silently,
+     and it would read as a taste decision. */
+  .tl-root
+    #proposition[data-tl-scene]
+    [data-board-state="configured"]
+    [data-board-lane]
+    .arc-board__wire {
+    stroke-dasharray: var(--l);
+    stroke-dashoffset: calc(var(--l) * var(--tl-wire, 0) * var(--tl-wire-dir, 1));
   }
-  .tl-root #phases .arc-plate:nth-child(1) {
-    --tl-gl-d: 160ms;
-  }
-  .tl-root #phases .arc-plate:nth-child(2) {
-    --tl-gl-d: 300ms;
-  }
-  .tl-root #phases .arc-plate:nth-child(3) {
-    --tl-gl-d: 440ms;
+  .tl-root #proposition[data-tl-scene] [data-board-state="configured"] [data-board-lane="seat"] {
+    --tl-wire-dir: -1;
   }
 
-  .tl-root #offer[data-tl-phases-arrive="out"] #phases .arc-head {
-    animation: tl-aperture-close 420ms cubic-bezier(0.65, 0, 0.35, 1);
+  /* — The plates —
+     HELD: nothing of the plate paints until its band has landed (the carrier
+     is that band). UNROLL: the clip's bottom edge runs from the head's own
+     height to the plate's, the TOP-RIGHT cut intact throughout; the ring on
+     `::before` is a child and clips with it, so the travelling edge carries
+     no rule — the caption card's own law. The writer REMOVES the stamp once
+     the plate is whole, so the resting clip is `arcs.css`'s own and the notch
+     guard reads it untouched. */
+  .tl-root #proposition[data-tl-scene] #phases .arc-plate[data-tl-plate="held"] {
+    visibility: hidden;
   }
-  .tl-root #offer[data-tl-phases-arrive="out"] #phases .arc-plate {
-    animation: tl-aperture-plate-close 420ms cubic-bezier(0.65, 0, 0.35, 1);
+  .tl-root #proposition[data-tl-scene] #phases .arc-plate[data-tl-plate="unroll"] {
+    clip-path: polygon(
+      0 0,
+      calc(100% - var(--arc-plate-ch)) 0,
+      100% var(--arc-plate-ch),
+      100% var(--tl-unroll-y, 100%),
+      0 var(--tl-unroll-y, 100%)
+    );
+  }
+
+  /* — The title, then the paragraph —
+     The same scrubbed aperture as the withdraw, opening: the title's column
+     as the first band lands, the paragraph's only once the third plate is
+     whole (owner). */
+  .tl-root #proposition[data-tl-scene] #phases .arc-head__lead {
+    clip-path: inset(
+      calc(0px - var(--tl-gl-o)) calc(50% - var(--tl-ap-title, 1) * (50% + var(--tl-gl-o)))
+    );
+  }
+  .tl-root #proposition[data-tl-scene] #phases .arc-head__intro {
+    clip-path: inset(
+      calc(0px - var(--tl-gl-o)) calc(50% - var(--tl-ap-intro, 1) * (50% + var(--tl-gl-o)))
+    );
   }
 }
 
@@ -1343,25 +1488,29 @@ html[data-corridor-exit="true"] .tl-root #proposition {
    fucking cross-dissolves. This really needs to be an elegant transformation of
    the element."_
 
-   ⚠ SO NOTHING HERE FADES. The chip is HIDDEN on the board (its outline stays,
-   dashed, as the socket its four ribbons still meet) and the plates' head bands
-   are HIDDEN under the carriers, and one object travels between them changing
-   its box, its cut, its edge and its two words. A cross-fade would be two
-   objects agreeing to look like one; this is one object.
+   ⚠ SO NOTHING HERE FADES. The chip's group is HIDDEN on the board once the
+   carrier has taken it, each plate's head band is HIDDEN until its carrier
+   lands, and one object travels between them changing its box, its cut, its
+   edge and its two words. A cross-fade would be two objects agreeing to look
+   like one; this is one object.
 
-   ⚠ THE LAYER IS OUTSIDE `.tl-root` AND OUTSIDE `.arc-root`, appended to
-   `document.body` so its absolute box resolves against the INITIAL containing
-   block and therefore scrolls with the document (see `seamCarrier.ts`). Every
-   token it paints with is written onto it by the writer, resolved through a
-   probe inside the element that owns it — none of `--arc-*` resolves here. */
+   ⚠ THE LAYER LIVES INSIDE THE SCENE'S STAGE SINCE ADR-102, absolute over
+   its box (see `seamCarrier.ts`: the chip and the heads are stationary in
+   the frame while the stage is pinned, so the carrier has nothing to lag
+   behind — ADR-101's document-space layer on `document.body` was posed
+   against a page the compositor was scrolling, one frame behind it on every
+   wheel step). It sits beside `.arc-root`, not inside it: every token it
+   paints with is written onto it by the writer, resolved through a probe
+   inside the element that owns it — none of `--arc-*` resolves here. */
 
 .tl-seam {
   position: absolute;
-  top: 0;
-  left: 0;
-  /* Over the stations (10) and the corridor's caption overlay (11), under the
-     HUD frame (50) and the nav overlay (60). */
-  z-index: 12;
+  inset: 0;
+  /* Over the two beats (`.arc-section` is z 1), inside the station's own
+     stacking context — under the HUD frame and the nav overlay as before,
+     and now on the SAME side of the fixed grit overlay as the chip and the
+     heads it welds to. */
+  z-index: 2;
   pointer-events: none;
 }
 
@@ -1462,36 +1611,15 @@ html[data-corridor-exit="true"] .tl-root #proposition {
 }
 
 @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
-  /* ⚠ THE CHIP IS HIDDEN, ITS OUTLINE IS NOT. The four ribbons still run to
-     this box, so removing it entirely leaves them ending in the middle of the
-     board. What stays is the SOCKET — the dormant side's own grammar (a dashed
-     dawn outline), which is exactly what an empty seat looks like on this
-     drawing. ⚠ Fail-open: the attribute is stamped to hide, never to show. */
+  /* ⚠ THE WHOLE CHIP GOES, OUTLINE INCLUDED (ADR-102). ADR-101 kept its
+     outline as the socket the four ribbons still met; the ribbons have
+     retracted into the chip by the hand-over now, so there is no socket to
+     keep, and the carrier standing on the box IS the chip from that frame.
+     ⚠ Fail-open: the attribute is stamped to hide, never to show. */
   .tl-root
     #proposition[data-tl-chip="away"]
     [data-board-state="configured"]
-    [data-board-role="card"]
-    .arc-board__wash,
-  .tl-root
-    #proposition[data-tl-chip="away"]
-    [data-board-state="configured"]
-    [data-board-role="card"]
-    text {
-    visibility: hidden;
-  }
-  .tl-root
-    #proposition[data-tl-chip="away"]
-    [data-board-state="configured"]
-    [data-board-role="card"]
-    .arc-board__outline {
-    stroke-dasharray: 4 4;
-    opacity: 0.5;
-  }
-
-  /* And the heads the carriers are about to become. ⚠ `visibility` only: the
-     plate's BODY has to keep painting under a band that is still in flight,
-     which is why §A hides a waiting plate by visibility rather than opacity. */
-  .tl-root #offer[data-tl-heads="hold"] #phases .arc-plate__head {
+    [data-board-role="card"] {
     visibility: hidden;
   }
 }

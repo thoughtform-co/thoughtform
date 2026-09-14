@@ -6,13 +6,16 @@ import { join } from "node:path";
 import {
   TRINNY_BOARD,
   TRINNY_OFFER_SECTIONS,
+  TRINNY_PHASES,
+  TRINNY_SCENE,
 } from "@/app/(marketing)/arcs/trinny-london/proposal/offer/offerSections";
 import { PROPOSAL_COPY_BANS, scanStrings } from "@/lib/arcs/copyLaw";
 import type { BoardState } from "@/lib/arcs/types";
 
-/** Every beat the page mounts, in reading order: the board is beat one and
- *  lives in its own station (ADR-099 → ADR-100), the rest follow in `#offer`. */
-const ALL_BEATS = [TRINNY_BOARD, ...TRINNY_OFFER_SECTIONS];
+/** Every beat the page mounts, in reading order: the board and the phases
+ *  are beats one and two and live in `#proposition`'s pinned scene
+ *  (ADR-099 → ADR-100 → ADR-102), the rest follow in `#offer`. */
+const ALL_BEATS = [TRINNY_BOARD, TRINNY_PHASES, ...TRINNY_OFFER_SECTIONS];
 
 /** How many strings a state carries — the record's own count. The exact SET
  *  the drawing letters is pinned in `arc-board-fit` (the ledger joins the
@@ -70,10 +73,23 @@ describe("trinny-london offer (ADR-094 U9)", () => {
        first of. */
     const ids = ALL_BEATS.map((s) => s.id);
     expect(new Set(ids).size).toBe(ids.length);
+    /* ⚠ THE SCENE IS THE BOARD AND THE PHASES, IN THAT ORDER, AND THE OFFER
+       OPENS ON THE FLOW (ADR-102). The chip becomes the plates' head bands
+       inside one pinned stage, so the phases render in the configuration's
+       root; a phases beat back in `#offer` would be a second copy of the
+       plates the scene lands on, and a scene without it has nothing to land
+       on. `#phases` keeps its id either way, which is what every guard names. */
+    expect(TRINNY_SCENE.map((s) => s.id)).toEqual(["configuration", "phases"]);
+    expect(TRINNY_SCENE[0]).toBe(TRINNY_BOARD);
+    expect(TRINNY_SCENE[1]).toBe(TRINNY_PHASES);
+    expect(TRINNY_OFFER_SECTIONS[0].id).toBe("flow");
+    expect(TRINNY_OFFER_SECTIONS.map((s) => s.id)).not.toContain("phases");
+    expect(TRINNY_OFFER_SECTIONS).toHaveLength(7);
     // The phases are PLATES and the fee is a LEDGER — the two drawings this
     // pass exists for (ADR-098 U2).
-    const phases = TRINNY_OFFER_SECTIONS.find((s) => s.id === "phases");
-    expect(phases?.kind === "list-groups" && phases.layout).toBe("plates");
+    const phases = TRINNY_PHASES;
+    expect(phases.kind === "list-groups" && phases.layout).toBe("plates");
+    expect(phases.kind === "list-groups" && phases.groups.length).toBe(3);
     const pricing = TRINNY_OFFER_SECTIONS.find((s) => s.id === "pricing");
     expect(pricing?.kind === "cards" && pricing.ledger?.columns).toEqual(["Phase", "What", "Fee"]);
   });

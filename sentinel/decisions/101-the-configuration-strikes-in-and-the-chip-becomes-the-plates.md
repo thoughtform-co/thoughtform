@@ -58,6 +58,8 @@ Everything else on this route is a pure function of scroll and reverses exactly.
 
 ⚠ **`PROP_ARRIVE_IN` IS 0.99, NOT 1, AND THE DIFFERENCE IS MEASURED.** `propArrival` is a `clamp01`, so `q === 1` is reachable only where the station's top is at or above zero EXACTLY — and every converging roller on this surface (the capture's, the smoke's) lands at top **0.22px**, i.e. q 0.99983, with the record still hidden, every stamp correct and nothing failing. A threshold no measurement can rest on is a threshold that fires by luck. What the owner asked for is that the frame be EMPTY, not that a number be 1, so that is what is asserted: at q 0.99 the turn's p is 0.9955, where `ctaInkOf` is **0.0009** and the loudest product's opacity is **0.0054**. ⚠ The guard walks ALL FOUR products, because the exit stagger runs BACKWARDS and a spot check on k = 3 reads seven times low.
 
+> ⚠ **A.3 IS SUPERSEDED BY [ADR-102](102-one-pinned-scene-the-configuration-becomes-the-plates.md) (2026-09-14, owner: the flight "jitters and lags" and starts too soon).** There is no seam clock and no phases' strike: `#proposition` is a pinned SCENE, the phases beat renders inside its stage, and the plates unroll out of their own head bands on the scene's clock. A.0–A.2 and A.4–A.8 (the configuration's arrival) stand.
+
 ### A.3 · The seam is `#offer`'s own clock, and the phases hang on it
 
 `t` runs 0 → 1 from the frame `#phases`' top reaches the viewport's bottom — which IS the configuration seated, since `#proposition` is exactly one viewport — to the frame its plates row is whole in view. `seamLanding(vh, rowBottom) = max(0, vh − rowBottom)`; ⚠ **the floor binds at 1280×720**, where the row overflows its own beat by 23px (pre-existing), and a negative target would run the ramp past 1 and invert its end.
@@ -117,6 +119,8 @@ The board still ASSEMBLES outward from its chip and the ledger is still five row
 **Capture** — `19-turn-empties` (the frame handed over), `20-config-strike` at +260ms (inside the strike's own dead band, where the comb is still cutting), `20b-config-struck` at +1.66s (past the ledger's last rung), and `21a-phases-strike` before the settled `21-offer-phases`.
 
 ## §B · The chip becomes the plates
+
+> ⚠ **B.1–B.3 ARE SUPERSEDED BY [ADR-102](102-one-pinned-scene-the-configuration-becomes-the-plates.md) (2026-09-14).** The three-window sum, the document-space layer on `document.body` and the socket outline are gone: the carrier lives INSIDE a pinned stage where the chip and the heads are stationary (the document-space argument inverts once nothing it welds to moves), the chip slides to plate 1's band and two copies peel right one after another, and the whole card group is hidden at the hand-over because its ribbons have retracted. B.0 (one material), B.4 (the probes, the baseline) and B.5 (the decode kernel, one wall per carrier now) stand.
 
 ### B.0 · One material, so there is nothing to cross-fade
 
