@@ -74,6 +74,18 @@ percentages and `calc()`s), and the cut resolves through a probe element:
 a custom property is a string until something lays it out. CSS-only, three
 pages.
 
+⚠ ADR-101 §B (owner, same day): THE PLATE'S FOOT IS NO LONGER INVERSE. Its
+head band AND its foot both paint `--arc-gold-wash` — the BOARD CHIP's own
+material, aliased from one token on `.arc-root` so the two cannot drift — with
+the 2px `--gold-line` rule across the head stopping at the cut. On
+`/arcs/trinny-london/proposal` that chip literally travels here and lands as
+this band, and the owner ruled out a cross-fade; the answer is that there is
+only one material. ⚠ The RING becomes visible over the foot, and that is the
+point: U2 relied on the inverse band bleeding to the silhouette to CAP the
+plate. Measured in light, head and foot composite to the identical
+`rgb(223,208,180)` with `--gold-ink` at 4.81:1; DARK is defined by the ramp
+and unverified, since every proposal route is light-locked.
+
 ⚠ ADR-100: the `board` kind is the FOURTH enumerated exception — the client's
 configuration as a circuit board in two states (dormant beside lit), the
 proof's R4 grammar at page scale, no frame, one leaf with no picker, SERVER-ONLY.
