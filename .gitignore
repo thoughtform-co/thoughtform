@@ -56,6 +56,7 @@ yarn-error.log*
 .cursor/morph-shots/
 .cursor/trinny-shots/
 .cursor/signal-shots/
+.cursor/redline-shots/
 
 # Local screenshot captures (root-only, keeps tracked design/inspiration/**.png)
 /*.png
