@@ -820,20 +820,26 @@ const SIGNAL_CONTENT: StationContent = {
   // lives — the ticker underneath. Nothing is thrown away. The ticker
   // stops being proof of a claim we are making and becomes the reason the
   // claim is urgent, which is a better job for three real headlines, and
-  // the note ("Before the labs sell it back to you.") ties them together
-  // unchanged.
+  // and the note that used to tie them together is gone.
   //
-  // ⚠ THE TITLE IS THE PAIR, and that is the whole shape — "a layer
-  // nobody curates freezes; a trained team with no layer evaporates; the
-  // pair is the product" (thoughtform-strategy, `04-the-offering.md`).
-  // Line one is the layer, line two is the team. Dropping either half
-  // leaves a claim this practice does not make.
+  // ⚠ THE TITLE IS THE CAPABILITY, IN THE HOUSE'S OWN WORDS (owner,
+  // 2026-09-14: "we can simplify it by saying 'AI capability your team
+  // owns'" — supersedes the 2026-09-09 pair below). It is the services
+  // masthead's own authored line (`serviceData.ts`), so the beat and the
+  // offer it leads into say one thing in one voice.
+  //
+  // The 2026-09-09 shape it replaces, recorded because the reasoning still
+  // binds one level up: "AN INTELLIGENCE LAYER YOU OWN, / AND A TEAM THAT
+  // RUNS IT." — the PAIR from `04-the-offering.md` ("a layer nobody curates
+  // freezes; a trained team with no layer evaporates; the pair is the
+  // product"). The owner collapsed it to the capability; the pair is still
+  // what the offer below unpacks.
   //
   // ⚠ AND IT MAY NEVER SAY "SELF-SUFFICIENT" — the same reference bans
   // the word outright: say the behaviour, because the abstraction hides
-  // the mechanics that make it real. "A team that runs it" is the
-  // behaviour; "a self-sufficient team" is the abstraction.
-  titleHtml: "AN INTELLIGENCE LAYER YOU OWN,<br><em>AND A TEAM THAT RUNS IT.</em>",
+  // the mechanics that make it real. "Your team owns" is the behaviour;
+  // "a self-sufficient team" is the abstraction.
+  titleHtml: "AI CAPABILITY<br><em>YOUR TEAM OWNS.</em>",
 };
 
 interface SignalTickerItem {
@@ -1220,19 +1226,23 @@ function ChevronCluster({ flipped }: { flipped?: boolean }) {
 function SignalActions() {
   return (
     <div className="home-v2-signal-actions">
-      {/* ⚠ THE DESTINATION MOVED WITH THE LABEL (2026-09-09). The CTA used
-          to be the beat's argument ("WE HELP YOU OWN YOURS") and `#contact`
-          was where an argument sends you. It is a MOVE now — the claim went
-          up into the title — and a control that says "see what we leave
-          behind" has to land somewhere that shows it. `#services` opens on
-          the proof casefile (what was left behind at one client) and then
-          the cards, every one of which names its own `leavesWith` row. */}
+      {/* ⚠ THE DESTINATION MOVED WITH THE LABEL (2026-09-09), AND THE LABEL
+          NAMES THE CLIENT NOW (owner, 2026-09-14: "change that to how we did
+          it at Loop"). The CTA used to be the beat's argument ("WE HELP YOU
+          OWN YOURS") and `#contact` was where an argument sends you. It is a
+          MOVE — the claim went up into the title — and a control that says
+          "how we did it at Loop" has to land on exactly that: `#services`
+          opens on the proof stack, the four Loop projects as a pile of cards
+          (ADR-096), on every route that mounts this beat.
+          ⚠ THE NOTE UNDER IT IS DELETED (same pass): "Before the labs sell it
+          back to you." was the line that framed the ticker's headlines as
+          the reason the claim is urgent; the owner took it out, and the
+          ticker stands on its own. */}
       <a className="home-v2-signal-cta" href="#services">
         <ChevronCluster />
-        <span className="home-v2-signal-cta__label">SEE WHAT WE LEAVE BEHIND</span>
+        <span className="home-v2-signal-cta__label">HOW WE DID IT AT LOOP</span>
         <ChevronCluster flipped />
       </a>
-      <p className="home-v2-signal-note">Before the labs sell it back to you.</p>
     </div>
   );
 }

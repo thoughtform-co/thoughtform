@@ -147,41 +147,38 @@ export function MobileEpilogueSignal() {
       ref={ref}
       className="home-v2-mobile-signal"
       role="region"
-      aria-label="An intelligence layer you own, and a team that runs it"
+      aria-label="AI capability your team owns"
       aria-hidden="false"
     >
       {/* ⚠ KEEP IN LOCKSTEP WITH `SIGNAL_CONTENT.titleHtml`
           (CorridorStationHeaders) — same beat, two surfaces, and the full
           reasoning for this copy lives there. In short: the title is the
-          PAIR (a layer, and a team that runs it), the race demoted to the
-          ticker that was already its evidence, and the word
-          "self-sufficient" is banned in copy — say the behaviour. The
-          aria-label above is the third thing to move. */}
-      {/* ⚠ NO AUTHORED `<br>` HERE, AND THE COMPOUND NOUN IS BOUND — the
-          one place this surface may diverge from the desktop string, and
-          both halves are fit rather than copy. Measured at 23.4px in a
-          320px box (390×844): the desktop's two authored lines wrap to
-          three, and the natural break falls INSIDE "intelligence layer"
-          ("AN INTELLIGENCE / LAYER YOU OWN,"); at 360px it also orphans
-          "IT." onto a fourth. Binding the noun and letting the rest flow
-          gives three balanced lines at every phone width, and the GOLD
-          `<em>` still marks the pair's boundary — the colour does the job
-          the line break does on desktop. */}
+          CAPABILITY in the services masthead's own words (owner,
+          2026-09-14), the race demoted to the ticker that was already its
+          evidence, and the word "self-sufficient" is banned in copy — say
+          the behaviour. The aria-label above is the third thing to move. */}
+      {/* ⚠ NO AUTHORED `<br>` HERE — the one place this surface may diverge
+          from the desktop string, for fit rather than copy: the desktop's
+          two authored lines are set against a phone-width box, and the GOLD
+          `<em>` marks the break the line break does on desktop. (The
+          previous title bound its compound noun with an NBSP; this one has
+          none.) */}
       <h2 className="home-v2-mobile-signal__title">
-        AN INTELLIGENCE&nbsp;LAYER YOU OWN, <em>AND A TEAM THAT RUNS IT.</em>
+        AI CAPABILITY <em>YOUR TEAM OWNS.</em>
       </h2>
       <div className="home-v2-mobile-signal__actions">
         {/* `#services`, not `#contact` — see the note beside the desktop
-            CTA: this is a move now, not the beat's argument. */}
+            CTA: this is a move now, not the beat's argument, and the label
+            names where it lands (the Loop proof). The note that followed it
+            is deleted (owner, 2026-09-14). */}
         <a className="home-v2-mobile-signal__cta" href="#services">
-          <span className="home-v2-mobile-signal__cta-label">SEE WHAT WE LEAVE BEHIND</span>
+          <span className="home-v2-mobile-signal__cta-label">HOW WE DID IT AT LOOP</span>
           <span className="home-v2-mobile-signal__cta-chevrons" aria-hidden="true">
             <span className="home-v2-mobile-signal__cta-chev" />
             <span className="home-v2-mobile-signal__cta-chev" />
             <span className="home-v2-mobile-signal__cta-chev" />
           </span>
         </a>
-        <p className="home-v2-mobile-signal__note">Before the labs sell it back to you.</p>
       </div>
     </div>
   );
