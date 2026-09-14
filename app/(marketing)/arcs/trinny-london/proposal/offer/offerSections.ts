@@ -45,11 +45,18 @@ import type { ArcSection } from "@/lib/arcs/types";
  * our creative studios are 100% in-house … not using AI in a way that we
  * could", "we've kind of lost momentum".
  *
- * ⚠ ONE RECORD, FOUR FACTS, TWO DRAWINGS (U2, owner 2026-09-14). Both
- * states answer the same four questions — who owns it, the context, the
- * work, the tools — and the DRAWING is what differs: a ledger on the left,
- * the assembled board on the right. So the copy is written as four pairs,
- * not as two compositions. ⚠ **THE RIGHT SIDE'S HEART IS THE CAPABILITY
+ * ⚠ ONE RECORD, FIVE FACTS, TWO DRAWINGS (U2, owner 2026-09-14; the fifth
+ * is U4's). Both states answer the same five questions — who owns it, the
+ * context, the work, the tools, where it scales — and the DRAWING is what
+ * differs: a ledger on the left, the assembled board on the right. So the
+ * copy is written as five pairs, not as two compositions.
+ *
+ * ⚠ WHERE IT SCALES IS THE ANSWER TO THE WHOLE BEAT (U4, owner: the
+ * capability "can be scaled and plugged into other parts of the business,
+ * because that's the entire thing"). Today the work stops at the studio;
+ * configured it goes out. It is the one pair that states the consequence
+ * rather than the setup, which is why it sits at the FLOOR of both
+ * drawings — last read on the ledger, last node on the board. ⚠ **THE RIGHT SIDE'S HEART IS THE CAPABILITY
  * ITSELF**, not a workstream with a Skill in it: they want it in-house, so
  * the lit card is `AI capability` / "owned by the team" and everything else
  * on that board is what it sits on.
@@ -70,7 +77,7 @@ export const TRINNY_BOARD: ArcSection = {
     {
       mode: "today",
       label: "As it runs today",
-      alt: "Trinny London's creative work as it runs today, written out as a ledger: no owner seated, nothing of the brand written down, the studio working by hand, and four tools nothing connects.",
+      alt: "Trinny London's creative work as it runs today, written out as a ledger: no owner seated, nothing of the brand written down, the studio working by hand, four tools nothing connects, and nothing that reaches past the studio.",
       seat: { q: "Who owns it", a: "No one, as their day job" },
       card: { name: "The work", work: "all by hand" },
       layer: { label: "The context", sub: "not written down", rows: [] },
@@ -83,11 +90,12 @@ export const TRINNY_BOARD: ArcSection = {
           { id: "slack", name: "Slack" },
         ],
       },
+      reach: { label: "Where it scales", value: "not past the studio" },
     },
     {
       mode: "configured",
       label: "With a configuration",
-      alt: "The same studio with its configuration seated: the studio lead owns it with the founder's sign-off, an AI capability the team owns runs at the centre, it reads the context they keep, and it runs inside the tools they already use.",
+      alt: "The same studio with its configuration seated: the studio lead owns it with the founder's sign-off, an AI capability the team owns runs at the centre, it reads the context they keep, it runs inside the tools they already use, and it scales into the rest of the business.",
       seat: { q: "Who owns it", a: "The studio lead, with the founder's sign-off." },
       card: { name: "AI capability", work: "owned by the team" },
       layer: {
@@ -108,6 +116,7 @@ export const TRINNY_BOARD: ArcSection = {
           { id: "slack", name: "Slack" },
         ],
       },
+      reach: { label: "Where it scales", value: "into the rest of the business" },
     },
   ],
 };

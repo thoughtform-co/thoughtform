@@ -116,10 +116,11 @@ export interface ArcAction {
 }
 
 /**
- * THE BOARD's two states (ADR-100, U2). One RECORD, four facts — who owns
- * it, the context, the work, the tools — drawn twice: on `today` as a ruled
- * LEDGER (an inventory: the four facts written down and unconnected) and on
- * `configured` as the BOARD (the same four assembled and wired).
+ * THE BOARD's two states (ADR-100, U2; a fifth fact in U4). One RECORD, five
+ * facts — who owns it, the context, the work, the tools, where it scales —
+ * drawn twice: on `today` as a ruled LEDGER (an inventory: the facts written
+ * down and unconnected) and on `configured` as the BOARD (the same five
+ * assembled and wired).
  *
  * ⚠ THE TWO DRAWINGS MAY NOT MIRROR EACH OTHER (owner, 2026-09-14: the left
  * "should look less connected … a contrast like before and after, but
@@ -139,7 +140,11 @@ export type BoardMode = "today" | "configured";
 
 export interface BoardState<M extends BoardMode = BoardMode> {
   mode: M;
-  /** The head strip's eyebrow, e.g. "As it runs today". */
+  /** The state's NAME — half the row's accessible name, and nothing else.
+   *  ⚠ IT IS NOT LETTERED SINCE U4: the head strips and the datum rule under
+   *  them are deleted (owner: "I don't think we need the lines as it runs
+   *  today with the configuration or the dividers"), and the head's own dek
+   *  names the two sides ("Left, the studio as it runs today. Right, …"). */
   label: string;
   /** The svg's accessible name — the whole drawing in one sentence. */
   alt: string;
@@ -158,6 +163,14 @@ export interface BoardState<M extends BoardMode = BoardMode> {
    *  belongs at the same level as the others). The ledger row joins their
    *  names into one line, so both states letter ONE list. */
   tools: { label: string; items: readonly { id: string; name: string }[] };
+  /** WHERE IT SCALES — the fifth fact (U4, owner: the capability "can be
+   *  scaled and plugged into other parts of the business, because that's the
+   *  entire thing"). The ledger's last row; on the board the node UNDER the
+   *  chip, on a gold run out of its floor — the mirror of the seat's green
+   *  drop above it, which is what makes that board a cross. One key, one
+   *  line, BOTH sides: a fact answered on one side only is the hole the
+   *  before/after cannot justify. */
+  reach: { label: string; value: string };
 }
 
 interface ArcSectionBase {
@@ -530,18 +543,18 @@ export type ArcSection = ArcSectionBase &
       }
     | {
         /**
-         * THE BOARD (ADR-100): the client's configuration as a circuit-board
-         * instrument in TWO STATES side by side — as it runs today (dormant,
-         * compact) and with a configuration (lit, expanded). The proof's R4
-         * substrate grammar (ADR-070 U11) at page scale: opaque chamfered
-         * modules on a faint bed, eight-wire hatched ribbons, one lit card;
-         * gold is the built thing, green is the human and nothing else.
+         * THE BOARD (ADR-100): the client's configuration in TWO STATES side
+         * by side — as it runs today (a ruled LEDGER) and with a
+         * configuration (the assembled BOARD). The proof's R4 substrate
+         * grammar (ADR-070 U11) at page scale: opaque chamfered modules,
+         * eight-wire ribbons, one lit chip; gold is the built thing, green is
+         * the human and nothing else.
          *
          * ⚠ THE FOURTH ENUMERATED EXCEPTION to "new arcs are content-only"
          * (dossier · configuration · flow · board). Stricter than the
-         * configuration's: one leaf, NO picker, NO listener — the arrival is
-         * CSS keyed on `.is-in`, and the only script is the row's own
-         * measurement (the elastic crop, ADR-070 U12).
+         * configuration's: one leaf, NO picker, NO listener, NO script at all
+         * — the arrival is CSS keyed on `.is-in` and the crop is fixed (U1
+         * deleted the elastic chain and its `ResizeObserver` island).
          * ⚠ EXACTLY TWO STATES, today then configured — the tuple says so.
          */
         kind: "board";

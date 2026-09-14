@@ -1248,7 +1248,7 @@ test.describe("Trinny London pitch variant", () => {
       return { green, today: read("today"), configured: read("configured") };
     });
     expect(roles.today.modules, "the dormant side is a ledger, not a board").toBe(0);
-    expect(roles.today.rows, "four ruled rows, one per fact").toBe(4);
+    expect(roles.today.rows, "five ruled rows, one per fact").toBe(5);
     expect(roles.today.goldFills, "the ledger lights nothing gold").toBe(0);
     expect(roles.today.wires, "the ledger is unwired").toBe(0);
     expect(roles.today.seat, "nothing is housed on the ledger").toBeNull();
@@ -1260,9 +1260,11 @@ test.describe("Trinny London pitch variant", () => {
     // ⚠ NO DIAMONDS ANYWHERE (U2, owner: "remove the square diamond icon
     // above The Studio") — the chip's wash is what marks the built thing.
     expect(roles.today.marks + roles.configured.marks, "a mark came back").toBe(0);
-    // Three lanes, eight wires each: the seat's drop, the context's run and
-    // the tools' run (ADR-100 U1 took the two socket drops with the sockets).
-    expect(roles.configured.wires, "the ribbons").toBe(24);
+    /* FOUR lanes, eight wires each: the seat's green drop IN and the gold run
+       OUT of the chip's floor (U4's cross), plus the context's and the
+       tools' runs across (ADR-100 U1 took the two socket drops with the
+       sockets). */
+    expect(roles.configured.wires, "the ribbons").toBe(32);
 
     /* ⚠ BOTH ARRIVAL LADDERS ARE LIVE, AND THE LEDGER'S IS THE SLOWER
        (U2, owner 2026-09-14: "the elements from the studio today should move
@@ -1273,40 +1275,50 @@ test.describe("Trinny London pitch variant", () => {
        shorthand won and RESET every delay to zero. Both sides are asserted
        from both ends: each ladder is strictly increasing (so no rung is
        dead) and the dormant rungs are slower AND longer than the lit ones
-       (so the contrast the owner asked for cannot be tuned away). */
+       (so the contrast the owner asked for cannot be tuned away).
+       ⚠ AND IT IS READ IN DOM ORDER, NOT SORTED BY DELAY (U4). Sorted, this
+       walk cannot see a ladder whose rungs are in the wrong ORDER — which
+       is what U3 shipped: the ledger's delays were applied in the LIT
+       board's role order, so the rows arrived 1-3-2-4 while every
+       assertion here passed. A ledger read out of order is a list that
+       flickered. */
     const ladders = await page.evaluate(() => {
       const secs = (v: string) => parseFloat(v) * (v.trim().endsWith("ms") ? 0.001 : 1);
       const read = (mode: string) =>
-        [...document.querySelectorAll(`[data-board-state="${mode}"] [data-board-role]`)]
-          .map((m) => {
+        [...document.querySelectorAll(`[data-board-state="${mode}"] [data-board-role]`)].map(
+          (m) => {
             const cs = getComputedStyle(m as HTMLElement);
             return {
               role: m.getAttribute("data-board-role") ?? "",
               d: secs(cs.animationDelay),
               t: secs(cs.animationDuration),
             };
-          })
-          .filter((r) => r.role !== "head")
-          .sort((a, b) => a.d - b.d);
+          }
+        );
       return { today: read("today"), lit: read("configured") };
     });
+    /* The ledger is read in the order it is DRAWN; the board assembles from
+       its chip outward, so only its rungs may be sorted. */
+    expect(
+      ladders.today.map((r) => r.role),
+      "the ledger's rows, in reading order"
+    ).toEqual(["seat", "layer", "card", "tools", "reach"]);
     for (const [name, rungs] of [
       ["the ledger", ladders.today],
-      ["the board", ladders.lit],
+      ["the board", [...ladders.lit].sort((a, b) => a.d - b.d)],
     ] as const) {
-      expect(rungs.length, `${name} has four objects`).toBe(4);
+      expect(rungs.length, `${name} has five objects`).toBe(5);
       for (let i = 1; i < rungs.length; i++) {
-        expect(
-          rungs[i].d,
-          `${name}'s ladder is dead at rung ${i} — a shorthand reset its delay`
-        ).toBeGreaterThan(rungs[i - 1].d);
+        expect(rungs[i].d, `${name}'s ladder is dead or out of order at rung ${i}`).toBeGreaterThan(
+          rungs[i - 1].d
+        );
       }
     }
     const lastOf = (r: { d: number; t: number }[]) => r[r.length - 1];
     expect(
       lastOf(ladders.today).d,
       "the ledger's last row waits longer than the board's last module"
-    ).toBeGreaterThan(lastOf(ladders.lit).d);
+    ).toBeGreaterThan(Math.max(...ladders.lit.map((r) => r.d)));
     expect(
       ladders.today[0].t,
       "and each ledger row takes longer to arrive than a lit module"
@@ -1580,11 +1592,27 @@ test.describe("Trinny London pitch variant", () => {
       /** The head's eyebrow, relative to its own beat's top — the datum is a
        *  padding on the beat, so THAT is the box it must be constant in. */
       const seatOf = async (id: string) => {
-        // ⚠ Roll twice: the first long roll is clamped while the corridor
-        // inflates the document, and a reading taken there is of a beat that
-        // has not reached its place.
-        await rollTo(page, await topOf(id));
-        await rollTo(page, await topOf(id));
+        /* ⚠ CONVERGE ON THE BEAT'S OWN TOP, never on one solved `y`. The
+           first long roll is clamped while the corridor inflates the
+           document (5,490px of growth measured at 1280×720 between the
+           first roll and the second), so a reading taken there is of a beat
+           that has not reached its place — and a fixed pair of rolls is a
+           bet on how much of that growth landed in between.
+           ⚠ AND IT REWINDS FIRST. The loop navigates the SAME url a second
+           time at a new viewport, and Chrome restores the previous scroll
+           across that reload: `rollTo` then reads `from` deep in the page,
+           walks the wrong way and parks on whatever it reaches. Measured as
+           a failure on the SECOND viewport alone, with the first green. */
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForTimeout(120);
+        for (let pass = 0; pass < 4; pass++) {
+          await rollTo(page, await topOf(id));
+          const off = await page.evaluate(
+            (sel) => Math.abs(document.getElementById(sel)?.getBoundingClientRect().top ?? 1e9),
+            id
+          );
+          if (off <= 2) break;
+        }
         /* ⚠ AND WAIT FOR THE REVEAL, WHICH IS THE SEAT. `.arc-reveal` rests
            TRANSLATED and settles on `is-in`, so a rect read before it lands
            measures the animation rather than the datum — and it passes
@@ -1654,6 +1682,11 @@ test.describe("Trinny London pitch variant", () => {
           right: band.right - parseFloat(bandCs.paddingRight),
         };
         const beat = document.getElementById("configuration")!.getBoundingClientRect();
+        const headEl = document.querySelector("#configuration .arc-head") as HTMLElement;
+        const head = headEl.getBoundingClientRect();
+        const headGap = getComputedStyle(headEl).marginBottom;
+        const phasesHead = document.querySelector("#phases .arc-head") as HTMLElement | null;
+        const phasesHeadGap = phasesHead ? getComputedStyle(phasesHead).marginBottom : headGap;
         const boards = [...rowEl.querySelectorAll("svg")].map((svg) => {
           const r = svg.getBoundingClientRect();
           const vb = svg.viewBox.baseVal;
@@ -1691,6 +1724,9 @@ test.describe("Trinny London pitch variant", () => {
             bottom: rowRect.bottom,
           },
           inner,
+          head: { left: head.left, right: head.right },
+          headGap,
+          phasesHeadGap,
           beat: { top: beat.top, bottom: beat.bottom, h: beat.height },
           boards,
         };
@@ -1699,8 +1735,8 @@ test.describe("Trinny London pitch variant", () => {
       expect(read.boards, `${where}: two boards`).toHaveLength(2);
       for (const b of read.boards) {
         // The dormant board letters exactly ten strings (the set is pinned in
-        // `arc-board-fit`); the lit one eighteen.
-        expect(b.texts, `${where}: a drawing letters`).toBeGreaterThanOrEqual(9);
+        // `arc-board-fit`); the lit one seventeen.
+        expect(b.texts, `${where}: a drawing letters`).toBeGreaterThanOrEqual(10);
         expect(b.overlaps, `${where}: labels printing through labels`).toEqual([]);
         expect(b.minPx, `${where}: the type floor`).toBeGreaterThanOrEqual(10);
         /* The svg sits at its own height (`height: auto` off the crop's
@@ -1712,16 +1748,18 @@ test.describe("Trinny London pitch variant", () => {
       /* ⚠ THE COUNTS ARE PINNED LIVE, not only in `arc-board-fit`'s label
          sets: a `<text>` that stopped rendering — a token that stopped
          resolving, a role group that stopped mounting — leaves the
-         arithmetic green and the drawing short. Nine on the ledger,
-         sixteen on the board (ADR-100 U2). */
+         arithmetic green and the drawing short. Ten on the ledger,
+         seventeen on the board (ADR-100 U2, U4's fifth fact). */
       expect([today.texts, configured.texts], `${where}: the drawings' own counts`).toEqual([
-        9, 16,
+        10, 17,
       ]);
       expect(
         Math.abs(today.meet - configured.meet) / configured.meet,
         `${where}: one meet on both boards`
       ).toBeLessThan(0.01);
-      expect(Math.abs(today.h - configured.h), `${where}: one datum line`).toBeLessThanOrEqual(1);
+      expect(Math.abs(today.h - configured.h), `${where}: one top, one floor`).toBeLessThanOrEqual(
+        1
+      );
       expect(read.row.left, `${where}: inside the band`).toBeGreaterThanOrEqual(
         read.inner.left - 1
       );
@@ -1729,6 +1767,27 @@ test.describe("Trinny London pitch variant", () => {
       expect(read.row.top, `${where}: inside the beat`).toBeGreaterThanOrEqual(read.beat.top - 1);
       expect(read.row.bottom, `${where}: inside the beat`).toBeLessThanOrEqual(
         read.beat.bottom + 1
+      );
+      /* ⚠ AND THE DRAWING SITS ON ITS OWN HEAD'S EDGES (U4, owner: the
+         configuration head "is a bit more centered versus the other
+         sections … 'We propose a modular approach that compounds' — that
+         positioning is the gold standard"). The heads were always
+         pixel-identical; the DRAWING was the object that was out, on the
+         1440 instrument band against a head on the 1200 text band, 120px
+         per side at 1920×1247. It reads as a mis-set head and measures as a
+         mis-set drawing, which is why this assertion is on the row. */
+      expect(
+        Math.abs(read.row.left - read.head.left),
+        `${where}: the drawing's left edge is its head's`
+      ).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(read.row.right - read.head.right),
+        `${where}: the drawing's right edge is its head's`
+      ).toBeLessThanOrEqual(1);
+      /* And the head's own margin is the standard one, so the gap under the
+         dek matches the plate beats' (the second half of the same read). */
+      expect(read.headGap, `${where}: the head's margin is the beats' own`).toBe(
+        read.phasesHeadGap
       );
       // The reference laptop is the binding shape: the beat holds one viewport there.
       if (vp.height === 720)

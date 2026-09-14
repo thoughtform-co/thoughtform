@@ -7,17 +7,20 @@ import {
   BAND_PX,
   BAND_Y,
   CUT,
-  DATUM_Y,
+  FACTS,
   FLOOR_Y,
   FS_FLOOR,
   GAP1,
+  GAP2,
   INSET,
-  MARGIN,
   MODULE_H,
+  NODE_H,
+  NODE_Y,
   PAD,
   ROW_H,
   SANS_ADV,
   SEAT_H,
+  TOP_Y,
   VB,
   boardFloorPx,
   boardGeom,
@@ -61,12 +64,17 @@ const wordWidth = (l: BoardLetter, word: string) =>
   l.face === "mono" ? word.length * adv(l.fs, l.track) : word.length * SANS_ADV * l.fs;
 
 describe("arc board fit (ADR-100)", () => {
-  it("both sides share the datum and the floor", () => {
-    expect(DATUM_Y + MARGIN + SEAT_H + GAP1).toBe(BAND_Y);
-    expect(BAND_Y + MODULE_H).toBe(FLOOR_Y);
-    expect(FLOOR_Y + MARGIN).toBe(VB.h);
-    // The ledger's four rows run from the seat's own top to that floor.
-    expect(DATUM_Y + MARGIN + 4 * ROW_H).toBe(FLOOR_Y);
+  it("both sides share the top and the floor, and the cross is symmetric", () => {
+    /* One inset on all four sides since U4 deleted the head strips: both
+       drawings start at TOP_Y and end at FLOOR_Y, and the crop closes on
+       the same inset it opened with. */
+    expect(TOP_Y).toBe(INSET);
+    expect(TOP_Y + SEAT_H + GAP1).toBe(BAND_Y);
+    expect(BAND_Y + MODULE_H + GAP2).toBe(NODE_Y);
+    expect(NODE_Y + NODE_H).toBe(FLOOR_Y);
+    expect(FLOOR_Y + INSET).toBe(VB.h);
+    // The ledger's five rows run from that top to that floor.
+    expect(TOP_Y + FACTS * ROW_H).toBe(FLOOR_Y);
     expect(VB.w.today + VB.seam + VB.w.configured).toBe(VB.row);
   });
 
@@ -97,6 +105,10 @@ describe("arc board fit (ADR-100)", () => {
     // floor, and the number that moves first if the crops, the seam or the
     // flex bases move.
     expect(boardFloorPx(BAND_PX["1280x720"])).toBeGreaterThanOrEqual(10);
+    /* ⚠ THE TEXT BAND, NOT THE INSTRUMENT BAND (U4). 1200 is `--band-max`;
+       reading 1440 here would measure a floor the drawing no longer has. */
+    expect(BAND_PX["1920x1247"]).toBe(1200);
+    expect(BAND_PX["1920x1080"]).toBe(1200);
     for (const state of states()) {
       for (const l of boardGeom(state).letters) {
         expect(
@@ -113,7 +125,7 @@ describe("arc board fit (ADR-100)", () => {
     for (const state of states()) {
       const g = boardGeom(state);
       for (const l of g.letters) {
-        if (l.role === "head" || l.anchor !== "start") continue;
+        if (l.anchor !== "start") continue;
         const m = moduleFor(g, l);
         expect(m, `${state.mode} ${l.slot}: no object holds it`).toBeTruthy();
         if (!m) continue;
@@ -133,10 +145,10 @@ describe("arc board fit (ADR-100)", () => {
           m.rect.y + m.rect.h
         );
       }
-      // The head strip stays on the crop's inset; every object inside it.
-      expect(g.datum.x1).toBe(INSET);
-      expect(g.datum.x2).toBe(g.vb.w - INSET);
+      /* Every object inside the crop's own inset, on all four sides — the
+         head strips are gone, so the inset is the whole frame (U4). */
       for (const m of g.modules) {
+        expect(m.rect.y, `${state.mode} ${m.id}: above the top`).toBeGreaterThanOrEqual(TOP_Y);
         expect(m.rect.x, `${state.mode} ${m.id}: past the inset`).toBeGreaterThanOrEqual(INSET);
         expect(m.rect.x + m.rect.w, `${state.mode} ${m.id}: past the inset`).toBeLessThanOrEqual(
           g.vb.w - INSET
@@ -156,32 +168,47 @@ describe("arc board fit (ADR-100)", () => {
        rows, no housing, no cable, no colour on the left; the assembled
        board on the right. Drawn as dashed modules the left read as the
        right greyed out, which is what the owner rejected. */
-    expect(t.modules).toHaveLength(4);
+    expect(t.modules).toHaveLength(FACTS);
     expect(t.modules.every((m) => m.paint === "row" && m.cut === 0)).toBe(true);
-    /* ⚠ EVERY ROW RULES ITS BOTTOM, and the head's datum opens the ledger —
-       a row ruling its top would paint 14 units under that datum, which is
-       one doubled line (ADR-089 U3's defect). */
+    /* ⚠ EVERY ROW RULES ITS BOTTOM and the ledger opens UNRULED: with the
+       datum gone (U4) a rule at the crop's top would be a line with no
+       object over it, and the last row's closes on the board's own floor. */
     expect(t.modules.every((m) => m.rule === "bottom")).toBe(true);
     expect(t.lanes).toHaveLength(0);
-    // The four facts, in the order both sides read them.
-    expect(t.modules.map((m) => m.role)).toEqual(["seat", "layer", "card", "tools"]);
-    // The lit side: one green seat, one gold chip, two head bands.
+    // The five facts, in the order both sides read them.
+    expect(t.modules.map((m) => m.role)).toEqual(["seat", "layer", "card", "tools", "reach"]);
+    // The lit side: one green seat, one gold chip, three head bands.
     expect(k.modules.filter((m) => m.paint === "seat-lit")).toHaveLength(1);
     expect(k.modules.filter((m) => m.paint === "card-lit")).toHaveLength(1);
-    expect(k.modules.filter((m) => m.head)).toHaveLength(2);
+    expect(k.modules.filter((m) => m.head)).toHaveLength(3);
     expect(k.modules.some((m) => m.paint === "row")).toBe(false);
+    expect(k.modules.map((m) => m.role)).toEqual(["seat", "layer", "card", "tools", "reach"]);
+    /* ⚠ THE CORNER IS PINNED FROM BOTH ENDS (ADR-065 U4/U5's own finding: a
+       one-sided assertion verifies a cut EXISTS, never that it is on the
+       right corner). The chip is TOP-RIGHT alone — it is what becomes the
+       offer's phase plates — and every housing around it keeps the pair. */
+    expect(k.modules.find((m) => m.id === "card")?.notch).toBe("tr");
+    for (const m of k.modules) {
+      if (m.id === "card") continue;
+      expect(m.notch, `${m.id}: a lone notch on a housing`).toBeUndefined();
+    }
+    for (const m of t.modules) {
+      expect(m.notch, `${m.id}: a ledger row has no corner`).toBeUndefined();
+    }
   });
 
-  it("the three ribbons run wall to wall and meet the chip's middle", () => {
+  it("the four ribbons run wall to wall and meet the chip, a cross", () => {
     const [, configured] = states();
     const g = boardGeom(configured);
     const card = g.modules.find((m) => m.id === "card")!;
     const layer = g.modules.find((m) => m.id === "layer")!;
     const tools = g.modules.find((m) => m.id === "tools")!;
     const seat = g.modules.find((m) => m.id === "seat")!;
+    const node = g.modules.find((m) => m.id === "reach")!;
     const lane = (id: string) => g.lanes.find((l) => l.id === id)!;
+    const cx = card.rect.x + card.rect.w / 2;
     const cy = card.rect.y + card.rect.h / 2;
-    expect(g.lanes.map((l) => l.id)).toEqual(["seat", "layer", "tools"]);
+    expect(g.lanes.map((l) => l.id)).toEqual(["seat", "layer", "tools", "reach"]);
     expect(lane("seat").pts[0][1]).toBeCloseTo(seat.rect.y + seat.rect.h, 6);
     expect(lane("seat").pts[1][1]).toBeCloseTo(card.rect.y, 6);
     // The seat drops onto the chip's own centre line, not a module's corner.
@@ -190,6 +217,15 @@ describe("arc board fit (ADR-100)", () => {
     expect(lane("layer").pts[1][0]).toBeCloseTo(layer.rect.x + layer.rect.w, 6);
     expect(lane("tools").pts[0]).toEqual([card.rect.x + card.rect.w, cy]);
     expect(lane("tools").pts[1][0]).toBeCloseTo(tools.rect.x, 6);
+    /* ⚠ THE FIFTH FACT HANGS OFF THE CHIP'S FLOOR ON THE SEAT'S OWN RUN —
+       equal lengths above and below is what makes the drawing a CROSS on the
+       one lit object rather than a row with something under it (U4). */
+    expect(lane("reach").pts[0]).toEqual([cx, card.rect.y + card.rect.h]);
+    expect(lane("reach").pts[1]).toEqual([cx, node.rect.y]);
+    expect(lane("reach").len).toBeCloseTo(lane("seat").len, 6);
+    // And the node is the seat's own box, mirrored below.
+    expect(node.rect.x).toBe(seat.rect.x);
+    expect(node.rect.w).toBe(seat.rect.w);
     for (const l of g.lanes) {
       expect(l.len).toBeGreaterThan(0);
       expect(l.wires).toBe(8);
@@ -202,17 +238,19 @@ describe("arc board fit (ADR-100)", () => {
       boardGeom(s)
         .letters.map((l) => l.text)
         .sort();
-    // Nine strings on the ledger, sixteen on the board — from 19 and 38
-    // before U1, and 10 and 18 before U2 folded the tools into one row.
+    // Ten strings on the ledger, seventeen on the board — from 19 and 38
+    // before U1, 10 and 18 before U2 folded the tools into one row, and 9 and
+    // 16 before U4 took the head strips and added the fifth fact.
     expect(texts(today)).toEqual([
-      "AS IT RUNS TODAY",
       "Claude, Figma, Monday, Slack",
       "No one, as their day job",
       "THE CONTEXT",
       "THE TOOLS",
       "THE WORK",
+      "WHERE IT SCALES",
       "WHO OWNS IT",
       "all by hand",
+      "not past the studio",
       "not written down",
     ]);
     expect(texts(configured)).toEqual([
@@ -228,9 +266,10 @@ describe("arc board fit (ADR-100)", () => {
       "THE CONTEXT",
       "The studio lead, with the",
       "WHERE IT RUNS",
+      "WHERE IT SCALES",
       "WHO OWNS IT",
-      "WITH A CONFIGURATION",
       "founder's sign-off.",
+      "into the rest of the business",
       "owned by the team",
     ]);
   });
@@ -244,6 +283,18 @@ describe("arc board fit (ADR-100)", () => {
     );
     // The row sits at its own height: no cap, no aspect, no observer.
     expect(css).not.toMatch(/--arc-board-aspect|--arc-board-h:/);
+    /* ⚠ AND THE HEAD TAKES THE STANDARD MARGIN (U4): the beat-local override
+       existed to clear the head's coord stamp from the datum LABEL, which is
+       deleted, and it was what put this drawing 45px under its dek where
+       every plate beat's sits 143px under its own. */
+    /* The DECLARATION and the rule, never the name: the block's comment
+       still records what the override was and why it went, and a bare
+       token regex fails on prose (`theme-css-sweep`'s own trap). */
+    expect(css).not.toMatch(/--arc-board-gap:/);
+    expect(css).not.toMatch(/\.arc-sec--board \.arc-head\s*\{/);
+    // The fifth fact has a rung on both ladders, scoped by state.
+    expect(css).toMatch(/\[data-board-state="configured"\] \[data-board-role="reach"\]/);
+    expect(css).toMatch(/\[data-board-state="today"\] \[data-board-role="reach"\]/);
   });
 });
 

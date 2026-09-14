@@ -17,9 +17,11 @@ const ALL_BEATS = [TRINNY_BOARD, ...TRINNY_OFFER_SECTIONS];
 /** How many strings a state carries — the record's own count. The exact SET
  *  the drawing letters is pinned in `arc-board-fit` (the ledger joins the
  *  tool names into one row, so it letters fewer than it holds); this is the
- *  budget the owner's "radically simplify it" set. */
+ *  budget the owner's "radically simplify it" set.
+ *  ⚠ The leading `1` was the head STRIP, deleted in U4 — the two `2`s the
+ *  seat and the card, and the trailing `2` is the fifth fact's pair. */
 const lettered = (s: BoardState) =>
-  1 + 2 + 2 + 1 + (s.layer.sub ? 1 : 0) + s.layer.rows.length + 1 + s.tools.items.length;
+  2 + 2 + 1 + (s.layer.sub ? 1 : 0) + s.layer.rows.length + 1 + s.tools.items.length + 2;
 
 /**
  * The Trinny pitch page's offer (ADR-094 U9) — the proposal's beats after
@@ -77,12 +79,12 @@ describe("trinny-london offer (ADR-094 U9)", () => {
   });
 
   it("the board's two states are the same layer, dormant then lit (ADR-100)", () => {
-    /* The record is the discovery call as ONE set of four facts — who owns
-       it, the context, the work, the tools — answered twice. The drawing
-       then reads them as a ledger and as a board (ADR-100 U2). What a
-       render cannot catch is a tool that exists in one state and not the
-       other, a dormant side that letters tags it has no sentence for, or a
-       figure on either. */
+    /* The record is the discovery call as ONE set of five facts — who owns
+       it, the context, the work, the tools, where it scales — answered
+       twice. The drawing then reads them as a ledger and as a board
+       (ADR-100 U2, U4). What a render cannot catch is a tool that exists in
+       one state and not the other, a dormant side that letters tags it has
+       no sentence for, or a figure on either. */
     const b = TRINNY_BOARD;
     expect(b.kind).toBe("board");
     if (b.kind !== "board") return;
@@ -96,11 +98,17 @@ describe("trinny-london offer (ADR-094 U9)", () => {
       expect(new Set(ids).size, `${s.mode}: duplicate layer id`).toBe(ids.length);
       const tools = s.tools.items.map((t) => t.id);
       expect(new Set(tools).size, `${s.mode}: duplicate tool id`).toBe(tools.length);
-      // Every fact is answered on both sides: the drawing has four slots and
+      // Every fact is answered on both sides: the drawing has five slots and
       // an empty one is a hole, not a reading.
       expect(s.seat.a.length, `${s.mode}: the seat`).toBeGreaterThan(0);
       expect(s.card.work.length, `${s.mode}: the work`).toBeGreaterThan(0);
       expect(s.tools.label.length, `${s.mode}: the tools' label`).toBeGreaterThan(0);
+      /* ⚠ THE FIFTH FACT IS ANSWERED ON BOTH SIDES TOO (U4). The board's
+         node is what the beat is FOR — the capability scaling out — and a
+         claim the before side does not answer is one the reader cannot
+         measure against anything. Today it stops at the studio. */
+      expect(s.reach.label.length, `${s.mode}: the reach's label`).toBeGreaterThan(0);
+      expect(s.reach.value.length, `${s.mode}: the reach`).toBeGreaterThan(0);
       expect(s.alt.length, `${s.mode}: the drawing's accessible name`).toBeGreaterThan(40);
     }
     /* ⚠ THE TOOLS ARE PEERS AND THE LIST IS ONE (owner, 2026-09-14: Figma
@@ -119,10 +127,13 @@ describe("trinny-london offer (ADR-094 U9)", () => {
     // on both is a row the before/after cannot justify.
     expect(configured.seat.a).not.toBe(today.seat.a);
     expect(configured.card.name).not.toBe(today.card.name);
+    expect(configured.reach.value).not.toBe(today.reach.value);
+    // One key, both sides: the fact is the same question twice.
+    expect(configured.reach.label).toBe(today.reach.label);
     /* The budgets: the owner's "keep it simple on the left" and "radically
        simplify it", as counts the record can be held to. */
-    expect(lettered(today)).toBeLessThanOrEqual(12);
-    expect(lettered(configured)).toBeLessThanOrEqual(15);
+    expect(lettered(today)).toBeLessThanOrEqual(14);
+    expect(lettered(configured)).toBeLessThanOrEqual(17);
     /* ⚠ NO DIGIT ON THE DRAWING, the ruling this beat has carried since
        ADR-094 U7: it plots the configuration, it does not measure it. */
     scanStrings(b, "board", (value, path) => {

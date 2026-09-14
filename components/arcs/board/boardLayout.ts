@@ -13,30 +13,47 @@ import type { BoardMode, BoardState } from "@/lib/arcs/types";
  * boardLayout — THE BOARD's arithmetic (ADR-100 U2). Pure: no React, no DOM.
  *
  * Two crops, one height, ONE record drawn twice. The dormant side is 560
- * wide, the lit one 800, with a 40-unit seam, so the row is 1400 × 414 units
+ * wide, the lit one 800, with a 40-unit seam, so the row is 1400 × 548 units
  * and every share is a fraction of 1400 — which is what makes `meet` the
- * SAME on both at every viewport (`W / 1400`) and puts both head strips on
- * one datum.
+ * SAME on both at every viewport (`W / 1400`) and lands both drawings on
+ * one top and one floor.
  *
  * ⚠ THE TWO DRAWINGS ARE DIFFERENT KINDS OF OBJECT, AND THAT IS THE POINT
  * (U2, owner: the left "should look less connected … a contrast like before
  * and after, but without implying they're unorganized"). LEFT is a ruled
- * LEDGER — four rows, a key and a value, hairlines and nothing else: the
- * four facts written down, unconnected, and perfectly in order. RIGHT is the
- * BOARD — the same four assembled: the seat over a green drop, the context
- * left, the capability as the one lit chip in the middle, the tools right,
- * three ribbons. U1 drew the left as the right's own modules greyed out,
- * which read as one picture at two brightnesses rather than as a before.
+ * LEDGER — five rows, a key and a value, hairlines and nothing else: the
+ * facts written down, unconnected, and perfectly in order. RIGHT is the
+ * BOARD — the same five assembled. U1 drew the left as the right's own
+ * modules greyed out, which read as one picture at two brightnesses rather
+ * than as a before.
  *
- * ⚠ BOTH SIDES SHARE THE DATUM AND THE FLOOR — the ledger's first rule is
- * the seat's top (y 40) and its last is the module row's floor (y 400), so
- * the two drawings agree on where the reading starts and stops even though
- * nothing else about them matches.
+ * ⚠ THE BOARD IS A CROSS ON THE CHIP (U4). The seat drops onto it in green
+ * from above and WHERE IT SCALES hangs off its floor in gold below, on runs
+ * of the SAME length, with the context and the tools at its sides — so the
+ * one lit object is the centre of the drawing by construction rather than by
+ * placement. The fifth fact is what the beat is for (owner: the capability
+ * "can be scaled and plugged into other parts of the business, because
+ * that's the entire thing"), and it reads last on both sides.
+ *
+ * ⚠ BOTH SIDES SHARE THE TOP AND THE FLOOR — one inset (24) on all four
+ * sides of both crops, the ledger's first row and the seat starting on it,
+ * and the last rule landing on the node's floor (y 524). The head STRIPS and
+ * the datum rule under them are deleted (U4, owner: "I don't think we need
+ * the lines as it runs today with the configuration or the dividers"); the
+ * head's own dek names the two sides.
  *
  * ⚠ THE TYPE IS SET AGAINST THE RENDERED SIZE, NOT 1:1. At the binding band
  * (1022px, 1280×720) `meet` is 0.73, so the chrome rung of 15.3 units paints
  * 11.2px — above the surface's 10px control floor. R4's RANKING is kept
  * (name > value > head > key > chrome).
+ *
+ * ⚠ AND THE BAND IS THE TEXT BAND SINCE U4, NOT THE INSTRUMENT BAND. The
+ * drawing ran 120px wider per side than its own head at 1920×1247
+ * (240—1680 against 360—1560) while every plate beat below sits flush with
+ * its head — which is what the owner read as the head being "a bit more
+ * centered versus the other sections". The cost is 13.1px at the chrome rung
+ * there instead of 15.7; below the ~1503px band crossover the two bands
+ * coincide and nothing moves.
  *
  * ⚠ FIT IS DECLARED, NOT REVIEWED. SVG `<text>` neither wraps nor reports
  * overflow, so `boardGeom` emits every lettered string WITH the measure it
@@ -50,23 +67,31 @@ import type { BoardMode, BoardState } from "@/lib/arcs/types";
  * chain, the bed, the sockets and the foot rows are two commits back in git.
  */
 
-export const VB = { h: 414, w: { today: 560, configured: 800 }, seam: 40, row: 1400 } as const;
-/** The side inset — R4's "the crop is the frame, not the stage". */
+export const VB = { h: 548, w: { today: 560, configured: 800 }, seam: 40, row: 1400 } as const;
+/** The inset — R4's "the crop is the frame, not the stage", on all four
+ *  sides since U4 deleted the head strips and the datum rule under them. */
 export const INSET = 24;
-export const DATUM_Y = 26;
-export const MARGIN = 14;
+/** Where both drawings START: the ledger's first row, and the seat. */
+export const TOP_Y = INSET;
 export const SEAT_H = 92;
 /** The seat's cable — the run from the seat's floor to the chip. */
 export const GAP1 = 52;
-export const BAND_Y = DATUM_Y + MARGIN + SEAT_H + GAP1;
+export const BAND_Y = TOP_Y + SEAT_H + GAP1;
 export const MODULE_H = 216;
-/** The floor both drawings end on: the module row's, and the ledger's last rule. */
-export const FLOOR_Y = BAND_Y + MODULE_H;
+/** The chip's own cable DOWN, the same run as the seat's — which is what
+ *  makes the board a cross centred on the one lit object (U4). */
+export const GAP2 = GAP1;
+export const NODE_Y = BAND_Y + MODULE_H + GAP2;
+export const NODE_H = 88;
+/** The floor both drawings end on: the node's, and the ledger's last rule. */
+export const FLOOR_Y = NODE_Y + NODE_H;
 /** A module's head band, ruled at its floor. */
 export const HEAD_H = 40;
 export const TAG_PITCH = 44;
-/** The ledger's row pitch — four rows from the datum's margin to the floor. */
-export const ROW_H = (FLOOR_Y - (DATUM_Y + MARGIN)) / 4;
+/** The record's facts — the ledger's rows, and the board's objects. */
+export const FACTS = 5;
+/** The ledger's row pitch — five rows from the top inset to the floor. */
+export const ROW_H = (FLOOR_Y - TOP_Y) / FACTS;
 /** The ledger's value column, off the crop's own inset. */
 export const LEDGER_VALUE_X = 224;
 /** The corner cuts, by object: modules take R4's own, the chip the plate rung. */
@@ -85,13 +110,14 @@ export const STEP = 26;
 
 /** The band widths the row renders into at the reference shapes — derived
  *  from landing.css's inset chain (hud margin + rail + the third term, or
- *  the 1440 instrument cap). The smoke measures the live ones; this is what
- *  the fit test pins the floor against. */
+ *  `--band-max` 1200 above the crossover). The smoke measures the live
+ *  ones; this is what the fit test pins the floor against.
+ *  ⚠ THE TEXT BAND SINCE U4, never the instrument band's 1440. */
 export const BAND_PX = {
   "1280x720": 1022,
   "1440x800": 1151,
-  "1920x1080": 1440,
-  "1920x1247": 1440,
+  "1920x1080": 1200,
+  "1920x1247": 1200,
 } as const;
 export const boardFloorPx = (bandPx: number) => (FS_FLOOR * bandPx) / VB.row;
 
@@ -103,7 +129,7 @@ export interface Rect {
 }
 export type Face = "mono" | "sans";
 export type Ink = "ink" | "ink2" | "ink3" | "gold-ink" | "green-ink";
-export type Role = "head" | "seat" | "layer" | "card" | "tools";
+export type Role = "seat" | "layer" | "card" | "tools" | "reach";
 
 export interface BoardLetter extends LetterSpec {
   role: Role;
@@ -125,6 +151,12 @@ export interface BoardModule {
   role: Role;
   rect: Rect;
   cut: number;
+  /** Which corners the cut takes. Absent ⇒ ADR-065's canonical TR + BL
+   *  pair, a machined housing. `"tr"` ⇒ the TOP-RIGHT alone, and only on
+   *  the chip: it is the one object the ribbons meet (a single notch MEANS
+   *  oriented or connected) and the one that becomes the offer's phase
+   *  plates, which carry that same corner (ADR-098 U5). */
+  notch?: "tr";
   paint: ModulePaint;
   /** A head band of this height, ruled at its floor. */
   head?: number;
@@ -133,7 +165,7 @@ export interface BoardModule {
   rule?: "bottom";
 }
 export interface BoardLane {
-  id: "seat" | "layer" | "tools";
+  id: "seat" | "layer" | "tools" | "reach";
   pts: readonly Pt[];
   wires: number;
   paint: "gold" | "green";
@@ -143,7 +175,6 @@ export interface BoardLane {
 export interface BoardGeom {
   mode: BoardMode;
   vb: { w: number; h: number };
-  datum: { y: number; x1: number; x2: number };
   modules: BoardModule[];
   letters: BoardLetter[];
   lanes: BoardLane[];
@@ -222,11 +253,7 @@ function lane(id: BoardLane["id"], pts: readonly Pt[], paint: BoardLane["paint"]
   return { id, pts, wires: 8, paint, len: polylineLength(pts) };
 }
 
-/** The head strip's eyebrow, on the datum both drawings share. */
-const headLetter = (s: BoardState, W: number) =>
-  mono("head", "label", s.label, FS.chrome, TRACK.chrome, W - 2 * INSET, INSET, 16, "ink2");
-
-/** The four facts, in the order both drawings read them. */
+/** The five facts, in the order both drawings read them. */
 const facts = (s: BoardState) =>
   [
     { role: "seat" as const, key: s.seat.q, value: s.seat.a },
@@ -237,39 +264,41 @@ const facts = (s: BoardState) =>
       key: s.tools.label,
       value: s.tools.items.map((t) => t.name).join(", "),
     },
+    { role: "reach" as const, key: s.reach.label, value: s.reach.value },
   ] as const;
 
 /**
- * THE LEDGER — the dormant side. Four ruled rows off the crop's own inset:
- * a mono key, a sans value, a hairline over each and one closing the last.
- * No plate, no outline, no cut, no colour: nothing here is built yet, and an
- * inventory is the one drawing that says so without saying "disorganised".
+ * THE LEDGER — the dormant side. Five ruled rows off the crop's own inset:
+ * a mono key, a sans value, and a hairline under each, the last closing on
+ * the board's own floor. No plate, no outline, no cut, no colour: nothing
+ * here is built yet, and an inventory is the one drawing that says so
+ * without saying "disorganised".
  */
 function todayGeom(s: BoardState<"today">): BoardGeom {
   const W = VB.w.today;
   const x0 = INSET;
   const w = W - 2 * INSET;
-  const letters: BoardLetter[] = [headLetter(s, W)];
+  const letters: BoardLetter[] = [];
   const modules: BoardModule[] = [];
   const keyM = LEDGER_VALUE_X - x0 - 10;
   const valM = W - INSET - LEDGER_VALUE_X;
 
   facts(s).forEach((f, i) => {
-    const y = DATUM_Y + MARGIN + i * ROW_H;
+    const y = TOP_Y + i * ROW_H;
     modules.push({
       id: f.role,
       role: f.role,
       rect: { x: x0, y, w, h: ROW_H },
       cut: 0,
       paint: "row",
-      /* ⚠ THE HEAD'S DATUM OPENS THE LEDGER, so the first row rules only its
-         floor: at 14 units the two would paint as one doubled line, which is
-         the defect ADR-089 U3 names (a rule 4px under another rule, every
-         gate green and the still not). Each row then rules its BOTTOM and
-         the last one closes on the board's own floor. */
+      /* ⚠ EVERY ROW RULES ITS BOTTOM, and the ledger opens UNRULED. With the
+         datum gone (U4) the first row has nothing above it to double
+         against, and a rule at the crop's own top would be a line with no
+         object over it. The last row's closes on the board's own floor,
+         which is the one horizontal the two drawings share. */
       rule: "bottom",
     });
-    letters.push(mono(f.role, `${f.role}.key`, f.key, FS.key, TRACK.key, keyM, x0, y + 52, "ink2"));
+    letters.push(mono(f.role, `${f.role}.key`, f.key, FS.key, TRACK.key, keyM, x0, y + 56, "ink2"));
     if (f.value) {
       letters.push(
         ...sans(
@@ -279,7 +308,7 @@ function todayGeom(s: BoardState<"today">): BoardGeom {
           FS.value,
           valM,
           LEDGER_VALUE_X,
-          y + 52,
+          y + 56,
           "ink",
           1
         )
@@ -290,7 +319,6 @@ function todayGeom(s: BoardState<"today">): BoardGeom {
   return {
     mode: "today",
     vb: { w: W, h: VB.h },
-    datum: { y: DATUM_Y, x1: INSET, x2: W - INSET },
     modules,
     letters,
     lanes: [],
@@ -298,9 +326,10 @@ function todayGeom(s: BoardState<"today">): BoardGeom {
 }
 
 /**
- * THE BOARD — the lit side. The seat over its green drop, the context left,
- * the capability as the one gold chip on the lane row, the tools right, and
- * three eight-wire ribbons meeting the chip's own middle.
+ * THE BOARD — the lit side, a CROSS on the chip. The seat drops onto it in
+ * green from above and WHERE IT SCALES hangs off its floor in gold below on
+ * a run of the same length; the context is at its left, the tools at its
+ * right. Four eight-wire ribbons, all meeting the one lit object.
  */
 function configuredGeom(s: BoardState<"configured">): BoardGeom {
   const W = VB.w.configured;
@@ -310,8 +339,11 @@ function configuredGeom(s: BoardState<"configured">): BoardGeom {
   const tools: Rect = { x: layer.x + layer.w + 40 + 264 + 40, y: BAND_Y, w: 188, h: MODULE_H };
   const cx = card.x + card.w / 2;
   const cy = card.y + card.h / 2;
-  const seat: Rect = { x: cx - 172, y: DATUM_Y + MARGIN, w: 344, h: SEAT_H };
-  const letters: BoardLetter[] = [headLetter(s, W)];
+  const seat: Rect = { x: cx - 172, y: TOP_Y, w: 344, h: SEAT_H };
+  /* The node takes the SEAT's own box, mirrored below the chip: the two
+     objects the cross answers to are the same width, on the same centre. */
+  const node: Rect = { x: seat.x, y: NODE_Y, w: seat.w, h: NODE_H };
+  const letters: BoardLetter[] = [];
   const modules: BoardModule[] = [
     { id: "seat", role: "seat", rect: seat, cut: CUT.module, paint: "seat-lit" },
   ];
@@ -354,14 +386,33 @@ function configuredGeom(s: BoardState<"configured">): BoardGeom {
     );
   });
 
-  // The chip — the one lit object, and the one thing the ribbons meet.
-  modules.push({ id: "card", role: "card", rect: card, cut: CUT.card, paint: "card-lit" });
+  /* The chip — the one lit object, and the one thing every ribbon meets.
+     ⚠ TOP-RIGHT ONLY (U4, owner: "the AI capability card has a notch in the
+     bottom-left corner. We don't need that because the cards in the
+     subsequent section don't have it either"). Lawful as a single notch
+     because a single notch MEANS oriented-or-connected (ADR-065 rule 5) and
+     this is the object four ribbons meet — and because it is the one that
+     becomes the offer's phase plates, which carry that same corner and
+     nothing else (ADR-098 U5). Every housing around it keeps the pair. */
+  modules.push({
+    id: "card",
+    role: "card",
+    rect: card,
+    cut: CUT.card,
+    notch: "tr",
+    paint: "card-lit",
+  });
   const kx = card.x + PAD.card;
   const km = card.w - 2 * PAD.card;
   letters.push(
     mono("card", "card.name", s.card.name, FS.name, TRACK.name, km, kx, card.y + 44, "ink")
   );
-  letters.push(...sans("card", "card.work", s.card.work, FS.value, km, kx, card.y + 70, "ink", 1));
+  /* ⚠ THE CHIP'S SECOND LINE IS LIT (500), like the seat's answer. It is
+     what the plates' NAME is set in one beat later, and PP Neue Montreal is
+     a static family — a weight that has to change mid-flight snaps. */
+  letters.push(
+    ...sans("card", "card.work", s.card.work, FS.value, km, kx, card.y + 70, "ink", 1, true)
+  );
 
   // Where it runs — four peers at the context's own pitch.
   modules.push({
@@ -393,9 +444,30 @@ function configuredGeom(s: BoardState<"configured">): BoardGeom {
     );
   });
 
-  // Three ribbons: the seat's authority drop in green, the gold runs from the
-  // chip to the context and the tools. They run wall to wall; the modules
-  // paint over their entries, R4's own order.
+  /* WHERE IT SCALES — the fifth fact, and the beat's whole point (U4). A
+     module the seat's own width under the chip, on the gold run out of its
+     floor: what the capability reaches once it exists. */
+  modules.push({
+    id: "reach",
+    role: "reach",
+    rect: node,
+    cut: CUT.module,
+    paint: "module",
+    head: HEAD_H,
+  });
+  const nx = node.x + PAD.module;
+  const nm = node.w - 2 * PAD.module;
+  letters.push(
+    mono("reach", "reach.label", s.reach.label, FS.head, TRACK.head, nm, nx, node.y + 26, "ink")
+  );
+  letters.push(
+    ...sans("reach", "reach.value", s.reach.value, FS.value, nm, nx, node.y + HEAD_H + 28, "ink", 1)
+  );
+
+  // Four ribbons: the seat's authority drop in green from above, the gold run
+  // OUT of the chip's floor below, and the gold runs to the context and the
+  // tools. They run wall to wall; the modules paint over their entries, R4's
+  // own order.
   const lanes: BoardLane[] = [
     lane(
       "seat",
@@ -421,12 +493,19 @@ function configuredGeom(s: BoardState<"configured">): BoardGeom {
       ],
       "gold"
     ),
+    lane(
+      "reach",
+      [
+        [cx, card.y + card.h],
+        [cx, node.y],
+      ],
+      "gold"
+    ),
   ];
 
   return {
     mode: "configured",
     vb: { w: W, h: VB.h },
-    datum: { y: DATUM_Y, x1: INSET, x2: W - INSET },
     modules,
     letters,
     lanes,

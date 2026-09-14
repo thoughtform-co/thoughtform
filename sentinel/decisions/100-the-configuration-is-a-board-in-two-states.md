@@ -141,3 +141,45 @@ Title `The studio today, and *configured.*` (was "The studio today, and the stud
 **The guard is the durable half.** The smoke reads both ladders off the computed style, sorts each by delay and asserts it is STRICTLY INCREASING — a dead rung collapses to zero and fails — then asserts the ledger's last rung waits longer than the board's and each ledger row takes longer than a lit module. Both properties, from both ends: the contrast the owner asked for cannot be tuned away, and neither ladder can die again in silence.
 
 **Files:** the `.arc-board*` arrival block in `components/arcs/arcs.css` · `tests/visual/trinny-london-smoke.spec.ts`. No record, no layout, no type.
+
+## Update 4 (2026-09-14, owner) — the board joins the band, and the capability scales out
+
+> The studio today is configured — if you compare the margin on the left where it's positioned and also the paragraph on the right, in that section it is a bit more centered versus the other sections. Please make that consistent. "We propose a modular approach that compounds" — that positioning, which we also have in all the sections below, is the gold standard. … the paragraph section on the right needs to be a bit higher. Maybe I'm just seeing things. Let me know if I'm incorrect here. … On the right side, AI capability owned by the team — I think we need a connector at the bottom as well that says something about the fact that it can be scaled and plugged into other parts of the business, because that's the entire thing. I don't think we need the lines "as it runs today" / "with the configuration" or the dividers. … The AI capability card has a notch in the bottom-left corner. We don't need that because the cards in the subsequent section don't have it either.
+
+**He was not seeing things, and the object he named was not the one that was out.** Measured at his own 1920×1247: the configuration's head and the phases' head are PIXEL-IDENTICAL — title at x 360, copy at x 1146.7, both at the same y. What differed was the DRAWING. The board row sat on the 1440px INSTRUMENT band (240–1680) while its own head and every plate beat below sit on the 1200px TEXT band (360–1560), so the head read 120px inboard of its own drawing on each side. And the beat carried its own `--arc-board-gap`, which put the drawing 45px under the dek where every plate beat's sits 143px under its own — which is what "the paragraph needs to be a bit higher" describes from the other end: a paragraph with no air under it reads as sitting low in its own block.
+
+⚠ **AND IT ONLY EXISTS ABOVE THE ~1503px BAND CROSSOVER.** `--band-margin` is `max(--hud-content-inset, (100vw − 1200px) / 2)` and `--instrument-margin` the same against 1440, so the two bands COINCIDE at 1280×720 and 1440×800 and diverge only on a wide window. Every reference viewport in this repo sits below the crossover; the defect was visible on his monitor and nowhere else. The same shape of finding as ADR-099 U1's hero, the same week.
+
+**The row takes `.arc-band`**, and U2's "two bands, deliberately" is reversed. The cost is the meet: 1440/1400 → 1200/1400 at 1920, so the chrome rung paints **13.1px** rather than 15.7 against a 10px floor. Below the crossover nothing moves. And the beat's head-margin override is DELETED — its 36px floor existed to keep the head's coord stamp off the board's DATUM LABEL, and that label is gone (below), so the clause has no subject.
+
+### The strips and the datum go, and the crop gets one inset
+
+The two head strips (`AS IT RUNS TODAY` / `WITH A CONFIGURATION`) and the hairline under each are deleted with the `head` role, `headLetter` and `BoardGeom.datum`. The head's own dek already names the two sides — "Left, the studio as it runs today. Right, the same studio with its configuration seated" — so the strips were the same sentence twice, in the drawing's own chrome, where this surface has removed a console head, a foot and a designator for exactly that (ADR-063 U1). `DATUM_Y` and `MARGIN` collapse into `TOP_Y = INSET`: **one 24-unit inset on all four sides of both crops**, which is R4's own "the crop is the frame" read strictly.
+
+⚠ **AND THE LEDGER NOW OPENS UNRULED.** U2's rows rule their BOTTOM because the datum opened the ledger and a rule 14 units under it would have painted as one doubled line (ADR-089 U3's defect class). With the datum gone the reason changes but the rule does not: a hairline at the crop's own top is a line with no object over it. The last row still closes on the board's floor, which is the one horizontal the two drawings share.
+
+### A fifth fact, and the board becomes a cross
+
+`BoardState.reach: { label, value }` — `WHERE IT SCALES`, answered on BOTH sides: **"not past the studio"** on the ledger, **"into the rest of the business"** on the board, drawn as a module the seat's own width under the chip, fed by a fourth eight-wire gold ribbon out of the chip's floor.
+
+⚠ **BOTH SIDES, NOT THE BOARD ALONE** — U2's law is one record drawn twice and `trinny-offer` asserts every fact is answered on both. A claim the before side does not answer is one the reader cannot measure against anything, and this is the claim the beat exists to make.
+
+⚠ **AND THE RUNS ARE THE SAME LENGTH.** `GAP2 = GAP1` (52), so the seat's green drop IN and the gold run OUT are both 108 units and the drawing is a CROSS centred on the chip: the human above, the reach below, the context and the tools at its sides. The one lit object is the centre by construction rather than by placement — which is what the owner means by "that's the entire thing". `VB.h` 414 → **548**; the ledger's pitch is `(FLOOR_Y − TOP_Y) / 5` = **100** exactly, so the chain's identities stay integer.
+
+### The chip loses its bottom-left corner
+
+`BoardModule.notch?: "tr"` on the chip alone; `Module` draws the kit's `band()` path for it, which IS a housing cut top-right and squared at its floor — byte-identically the silhouette of the offer's phase plates (ADR-098 U5). Every other object keeps ADR-065's canonical TR + BL.
+
+⚠ **A LONE NOTCH IS LAWFUL HERE BY RULE 5, NOT IN SPITE OF IT.** A single notch MEANS oriented-or-connected, and this is the one object four ribbons meet — and the one that becomes the plates one beat later. ⚠ Two corner grammars on one drawing is an owner-visible choice; if the mixed set ever reads as inconsistent the fallback is every board plate TR-only, which is one flag.
+
+### What the measurements found that nobody asked about
+
+⚠ **THE LEDGER'S ROWS WERE ARRIVING OUT OF ORDER.** U3 set the dormant delays 160/300/440/580 — but in the LIT board's role order (card before layer), so the ledger arrived **1-3-2-4**. A ledger read out of order is the one thing a ledger may not do. The smoke could not see it: it SORTED the rungs by delay before asserting they increase, which is a walk that can only find a dead rung, never a mis-ordered one. It reads them in DOM order now, and the rungs are seat 160 · layer 300 · card 440 · tools 580 · reach 720 (last row at 1.44s against the board's 0.98s — U3's "read first, read slowest" intact).
+
+⚠ **AND THE DATUM GUARD'S SEAT WAS A BET ON A SCROLL.** `seatOf` rolled twice on the reasoning that the first roll is clamped while the corridor inflates the document (5,490px of growth measured at 1280×720 between the two). Two is not a number, it is a guess: the test navigates the SAME url a second time at a new viewport, Chrome restores the previous scroll across that reload, and `rollTo` then reads `from` deep in the page and walks the wrong way. It failed on the SECOND viewport with the first green — the shape that reads as a page defect and is a harness one. It rewinds to the top and CONVERGES on the beat's own rect now (≤ 2px, four passes).
+
+### Files
+
+`lib/arcs/types.ts` · `components/arcs/board/{boardLayout.ts, boardGlyphs.tsx}` · `components/arcs/ArcBoard.tsx` · `app/(marketing)/arcs/trinny-london/proposal/offer/offerSections.ts` · the `.arc-board*` block in `components/arcs/arcs.css` · `tests/lib/{arc-board-fit.test.ts, trinny-offer.test.ts}` · `tests/visual/trinny-london-smoke.spec.ts`.
+
+Pins that moved, all in one commit: the label sets **9 → 10** and **16 → 17** (`toEqual`), the live counts `[9, 16]` → `[10, 17]`, wires 24 → **32**, ledger rows 4 → **5**, rungs 4 → **5**, the budgets 12/15 → **14/17**, `BAND_PX` 1440 → **1200** at both wide shapes. New: the chain's five identities, the corner pinned from both ends (`card.notch === "tr"` AND every other module `undefined`), the two runs' equal length, the ledger's DOM order, and — the owner's ask made mechanical — **the drawing's left and right edges within 1px of its own head's**, plus the head's `margin-bottom` equal to the phases head's.

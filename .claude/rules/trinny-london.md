@@ -601,6 +601,18 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   (owner: _"it should be a contrast like before and after, but without
   implying they're unorganized"_) — a ledger is ordered and connected to
   nothing.
+  ⚠ **U4 (same day) PUTS THE DRAWING ON THE HEAD'S OWN BAND, DELETES THE
+  HEAD STRIPS AND HANGS `WHERE IT SCALES` UNDER THE CHIP.** The heads were
+  always pixel-identical to the phases' (title x 360, copy x 1146.7 at
+  1920×1247); the DRAWING was on the instrument band, 120px wider per side,
+  and that is what he read as the head being "a bit more centered versus the
+  other sections" — visible only above the ~1503px crossover. The beat's own
+  head margin goes too (45px of air under the dek against every plate beat's
+  143). The board is a CROSS now: the seat's green drop in, the gold run out
+  of the chip's floor on the same 108 units, the context and the tools at
+  its sides. The chip is TOP-RIGHT-ONLY, the silhouette of the plates it
+  becomes one beat later. `VB.h` 548, five facts, five ledger rows, 32 wires,
+  label sets 10 / 17. See `.claude/rules/arcs.md` and ADR-100 U4.
   ⚠ **AND THEY DO NOT ARRIVE AT ONE SPEED (U3, same day, owner: _"the
   elements from the studio today should move a bit slower into view"_).** The
   board ASSEMBLES, so its rungs overlap into one gesture; the ledger is four

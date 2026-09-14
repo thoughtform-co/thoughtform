@@ -13,13 +13,13 @@ interface ArcBoardProps {
   motion?: ArcMotion;
 }
 
-const ROLES: readonly Role[] = ["head", "seat", "layer", "card", "tools"];
+const ROLES: readonly Role[] = ["seat", "layer", "card", "tools", "reach"];
 
 /**
  * ArcBoard — the client's configuration, one record drawn twice (ADR-100
- * U2): a ruled LEDGER of the four facts as they stand today, beside the
- * BOARD those four become once a configuration is seated — the proof's R4
- * grammar (ADR-070 U11) at page scale.
+ * U2, five facts since U4): a ruled LEDGER of the facts as they stand
+ * today, beside the BOARD they become once a configuration is seated — the
+ * proof's R4 grammar (ADR-070 U11) at page scale.
  *
  * ⚠ RADICALLY SIMPLE, BY OWNER RULING (U1). The first cut drew a bed, two
  * sockets, foot rows, hatched cables, four sentences and a second card row,
@@ -36,11 +36,19 @@ const ROLES: readonly Role[] = ["head", "seat", "layer", "card", "tools"];
  * modules are the objects and the page's own ground shows between them —
  * on the Trinny page, the turn's coral wash.
  *
- * ⚠ TWO BANDS, DELIBERATELY. The head stays on the TEXT band so it seats on
- * the same x as every other proposal head (ADR-099's datum guard measures
- * `seatOf("configuration")` against the phases and the fee). The drawing
- * takes the INSTRUMENT band. `:has(> .arc-band > .arc-head)` still matches
- * the first band, so the datum rule and the beat's id are untouched.
+ * ⚠ ONE BAND, AND U2's TWO ARE REVERSED (U4). The head stayed on the TEXT
+ * band while the drawing took the INSTRUMENT band, reasoning that a drawing
+ * is a wide figure. Measured at 1920×1247: the head is PIXEL-IDENTICAL to
+ * the phases' (title x 360, copy x 1146.7) and it was the DRAWING that was
+ * out — 240—1680 against a head at 360—1560, so the head read 120px inboard
+ * of its own drawing on each side while every plate beat below sits flush
+ * with its head. The owner read that as the head being "a bit more centered
+ * versus the other sections", and the plates are the gold standard. Both
+ * blocks take `.arc-band`. The cost is the meet: 1440/1400 → 1200/1400 at
+ * 1920, so the chrome rung paints 13.1px rather than 15.7 (the floor is 10);
+ * below the ~1503px crossover the two bands coincide and nothing moves.
+ * `:has(> .arc-band > .arc-head)` still matches the first band, so the datum
+ * rule and the beat's id are untouched.
  *
  * ⚠ SERVER, NO STATE, NO SCRIPT. The arrival is CSS on `.is-in`; no-JS,
  * reduced motion and terminal all render LIT.
@@ -64,7 +72,7 @@ export function ArcBoard({ section, index, motion = "reveal" }: ArcBoardProps) {
           motion={motion}
         />
       </div>
-      <div className="arc-band arc-band--instrument">
+      <div className="arc-band">
         <div
           className="arc-board arc-reveal"
           role="group"
@@ -114,15 +122,6 @@ function RoleGroup({ role, g }: { role: Role; g: BoardGeom }) {
   const letters = g.letters.filter((l) => l.role === role);
   return (
     <g data-board-role={role} className={role === "card" ? "arc-board__bloom" : "arc-board__in"}>
-      {role === "head" ? (
-        <line
-          x1={g.datum.x1}
-          y1={g.datum.y}
-          x2={g.datum.x2}
-          y2={g.datum.y}
-          stroke="var(--arc-board-edge)"
-        />
-      ) : null}
       {modules.map((m) => (
         <Module key={m.id} m={m} />
       ))}

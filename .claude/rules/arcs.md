@@ -534,6 +534,43 @@ BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, afte
   SIDES SHARE THE DATUM AND THE FLOOR** (y 26, y 400), which is what keeps
   them one instrument. ⚠ U1's own ruling stands under it: when he asks for
   simple, the FIRST cut is the minimal one.
+  ⚠ **U4 (2026-09-14, owner) PUTS THE DRAWING ON THE TEXT BAND, TAKES THE
+  HEAD STRIPS OFF AND HANGS A FIFTH FACT UNDER THE CHIP.** He read the head
+  as "a bit more centered versus the other sections" and the two heads are
+  PIXEL-IDENTICAL — it was the DRAWING that was out, on the 1440 instrument
+  band (240—1680) against a head on the 1200 text band (360—1560), 120px per
+  side. ⚠ **AND ONLY ABOVE THE ~1503px CROSSOVER**, where the two bands
+  diverge: at 1280×720 and 1440×800 they coincide, so no reference viewport
+  could show it. The cost is the meet (chrome 15.7 → 13.1px at 1920, floor
+  10). The beat's `--arc-board-gap` override goes with it: it put the
+  drawing 45px under the dek where every plate beat's sits 143px under its
+  own, which is the other half of the same complaint ("the paragraph on the
+  right needs to be a bit higher").
+  ⚠ The two head STRIPS and the datum rule under them are deleted (owner:
+  "I don't think we need the lines as it runs today with the configuration
+  or the dividers") — the head's dek already names the two sides, so they
+  were the same sentence twice. `DATUM_Y`/`MARGIN` collapse into `TOP_Y =
+  INSET`: ONE 24-unit inset on all four sides, both drawings starting on it
+  and ending on the floor. The ledger opens UNRULED now (a hairline at the
+  crop's top is a line with no object over it) and still rules every bottom.
+  ⚠ **THE FIFTH FACT IS `reach`, ON BOTH SIDES** (`WHERE IT SCALES` · "not
+  past the studio" / "into the rest of the business"), drawn as a module the
+  seat's own width under the chip on a fourth gold ribbon out of its floor.
+  `GAP2 = GAP1`, so the drop IN and the run OUT are both 108 units and the
+  board is a CROSS centred on the one lit object. `VB.h` 414 → **548**, the
+  ledger's pitch `(FLOOR_Y − TOP_Y) / 5` = 100 exactly.
+  ⚠ **THE CHIP ALONE IS TOP-RIGHT-ONLY** (`notch: "tr"`, drawn with the
+  kit's `band()` — a housing cut TR and squared at its floor IS the plates'
+  silhouette). Lawful by ADR-065 rule 5: a single notch MEANS
+  oriented-or-connected, and this is the object four ribbons meet and the
+  one that becomes the offer's plates. Every housing around it keeps the
+  pair; the corner is pinned from BOTH ends.
+  ⚠ **AND THE LEDGER WAS ARRIVING 1-3-2-4.** U3's dormant delays were
+  applied in the LIT board's role order, so the rows landed out of reading
+  order — and the smoke SORTED the rungs by delay before asserting they
+  increase, a walk that can find a dead rung and never a mis-ordered one. It
+  reads them in DOM order now: seat 160 · layer 300 · card 440 · tools 580 ·
+  reach 720 (1.44s against the board's 0.98s).
   The proof's R4 grammar (ADR-070 U11) copied by hand into
   `components/arcs/board/boardGlyphs.tsx`; the pure modules (`ribbon.ts`,
   `pdaLetters.ts`, `housing`/`band`/`MODULE`) are imported; NO `--pda-*` token

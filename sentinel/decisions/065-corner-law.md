@@ -323,3 +323,12 @@ a polygon that cuts two corners; a one-sided check passes both.
 ⚠ Nothing else moved. The notch depth (`--dt-notch`, the seed rung at card
 scale), the two-layer construction, and the 1px inner inset are unchanged —
 the inner polygon is the outer one with `--dt-notch − 1px`, mirrored with it.
+
+## Update 6 (2026-09-14, owner) — two objects took the top corner alone, and both are rule 5
+
+The corner inventory, so it stays complete. Both rulings are recorded where the object lives; neither changes the law.
+
+- **The offer's three phase plates** (ADR-098 U4 then U5) take the TOP-RIGHT alone. U4 gave them the canonical pair; on the still the owner took the bottom-left back, because a plate's floor IS its inverse DELIVERABLE band and its text is set INSIDE it, so that chamfer bit the line the reader is on. **A cut is free only where nothing is set against it** — the head band under the TR cut carries a short mono kicker and sits clear. Lawful as a uniform SET on the lawful diagonal's top end (U1 as U4 corrected it), and a single notch MEANS oriented-or-connected, which a numbered sequence of phases is.
+- **The configuration board's chip** (ADR-100 U4) takes the same corner, for the connected half of the same clause: it is the one object on that drawing four ribbons meet, and it is what BECOMES those three plates one beat later. Every housing around it on the board keeps the pair.
+
+⚠ **BOTH ARE PINNED FROM BOTH ENDS**, which is U4's and U5's own finding: `card.notch === "tr"` AND every other module `undefined` in the arithmetic; a hit test at 0.35 of the cut in from both edges of each corner in the live guard. ⚠ **AND A COMPUTED `clip-path` IS NOT A PIXEL LIST** — Chrome keeps the percentages and the `calc()`s, so a pixel-pair regex measures the serialisation and finds one point in five; resolving the cut needs a probe element, because a custom property is a string until something lays it out.

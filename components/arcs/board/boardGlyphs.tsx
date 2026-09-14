@@ -11,11 +11,16 @@ import type { BoardLane, BoardLetter, BoardModule } from "./boardLayout";
  * chamfered module with a dawn lift and a 2-unit top rule that STOPS AT THE
  * CUT, a head band ruled at its floor, and eight-wire ribbons at pitch 4.
  *
- * ⚠ AND ONE OBJECT THAT IS NOT R4's: the LEDGER ROW (`row`, U2). A hairline
- * at its top, nothing else — no plate, no outline, no cut. The dormant side
- * is an inventory, so it may not carry the machined grammar at all; drawn as
- * dashed modules it read as the lit board greyed out, which is the thing the
- * before/after had to stop doing.
+ * ⚠ AND ONE OBJECT THAT IS NOT R4's: the LEDGER ROW (`row`, U2). One
+ * hairline on the edge the layout names, nothing else — no plate, no
+ * outline, no cut. The dormant side is an inventory, so it may not carry the
+ * machined grammar at all; drawn as dashed modules it read as the lit board
+ * greyed out, which is the thing the before/after had to stop doing.
+ *
+ * ⚠ AND ONE CORNER THAT IS NOT THE PAIR: the chip's (U4). `notch: "tr"`
+ * draws the kit's `band` path — a housing cut top-right and squared at its
+ * floor, which is byte-identically the silhouette of the offer's phase
+ * plates (ADR-098 U5). Every other object keeps ADR-065's TR + BL.
  *
  * ⚠ NO DIAMONDS (U2, owner: "remove the square diamond icon above The
  * Studio"). The drawing marks nothing with a glyph now — the chip's gold
@@ -70,7 +75,11 @@ function Row({ m }: { m: BoardModule }) {
 export function Module({ m }: { m: BoardModule }) {
   if (m.paint === "row") return <Row m={m} />;
   const { x, y, w, h } = m.rect;
-  const d = housing(x, y, w, h, m.cut);
+  /* ⚠ `band` IS THE TOP-RIGHT-ONLY HOUSING, not a second path: a header
+     band shares its module's top corners and squares off at the bottom,
+     which is exactly the chip's silhouette and the plates' own clip. One
+     definition for the whole map (substrateKit), used for two things. */
+  const d = m.notch === "tr" ? band(x, y, w, h, m.cut) : housing(x, y, w, h, m.cut);
   const p = PAINT[m.paint];
   return (
     <g className="arc-board__module" data-board-module={m.id}>
