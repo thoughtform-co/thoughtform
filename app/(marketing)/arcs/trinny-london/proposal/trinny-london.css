@@ -231,6 +231,43 @@ html[data-theme-lock] .rin-settings__ctl .theme-toggle {
    approach and jumps backwards on arrival. Every OTHER surface keeps its
    readout, so this stays a fact about `/trinny-london`. */
 
+/* ── 3c. The hero joins the editorial band ────────────────────
+   Owner, 2026-09-14: "the alignment of the hero one and maybe also the
+   paragraph is not consistent with the alignment of the two text components
+   in the other sections."
+
+   ⚠ HE IS DESCRIBING A DEFECT THAT ONLY EXISTS AT HIS OWN VIEWPORT, AND
+   THAT IS WHY NO REFERENCE SHAPE EVER SHOWED IT. Every text component on
+   this page rides ADR-048's editorial band — `#about`'s pair through
+   `.voidwalker`, and all nine proposal heads through `.arc-band` — which is
+   the station's `--hud-content-inset` padding PLUS `--rail-inset`, landing
+   the text edge on `--band-margin`. `.hero__content` takes the padding
+   alone. `--rail-inset` is `--band-margin - --hud-content-inset`, i.e. ZERO
+   below the 1200px band's crossover, so at 1280×720 and 1440×800 the hero
+   and the band agree to the pixel and there is nothing to see; at 1920×1247
+   the band opens to 360 and the hero stays at 192. Measured: 129/129 ·
+   145/145 · **192/360**.
+
+   ⚠ SO THE FIX IS TO JOIN THE BAND, NEVER TO RE-INSET THE SECTIONS — ADR-
+   048's own standing clause ("never re-widen the inset per-section"), and
+   the sections are the nine that already agree with each other. The recipe
+   is the one `.proof__beat`, `.voidwalker` and the services masthead use,
+   verbatim: `margin-inline: var(--rail-inset)` on a block already inside a
+   station's padding. The hero's own 680px measure is untouched, so this
+   moves the block and changes nothing about the type.
+
+   ⚠ ROUTE-SCOPED, AND THE HOMEPAGE HAS THE SAME DIVERGENCE (rule 1: a rule
+   in `landing.css` would land on `/` and `/claude-workshop`). It is NOT the
+   same defect there: `/` runs hero → corridor, so the hero's neighbour is a
+   full-bleed canvas rather than nine banded heads, and nothing sits beside
+   it to be inconsistent with. Flagged, not taken.
+   ⚠ `margin-inline`, not `-start`: the band is symmetric by law (ADR-048),
+   and with a 680px `max-width` the outboard half costs nothing today — it
+   is what keeps the rule true if the measure ever grows. */
+.tl-root .hero__content {
+  margin-inline: var(--rail-inset);
+}
+
 /* ── 8. The turn — the parked mark becomes the client's (ADR-095) ─────
    A TRANSPARENT station over the live corridor canvas, between the last
    proof card and the interstitial: `100svh` of pin + a runway + `100svh`

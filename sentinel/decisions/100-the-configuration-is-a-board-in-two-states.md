@@ -127,3 +127,17 @@ Title `The studio today, and *configured.*` (was "The studio today, and the stud
 ### Files
 
 `lib/arcs/types.ts` · `components/arcs/board/{boardLayout.ts, boardGlyphs.tsx}` · `components/arcs/ArcBoard.tsx` · `app/(marketing)/arcs/trinny-london/proposal/offer/offerSections.ts` · `tests/lib/{arc-board-fit.test.ts, trinny-offer.test.ts, arcs-registry.test.ts}` · `tests/visual/trinny-london-smoke.spec.ts`. No CSS moved: the row keeps its bases (560 + 40 + 800 of 1400) and its ladder.
+
+## Update 3 (2026-09-14, owner) — the ledger is read slower, and the board's own ladder was dead
+
+> The elements from the studio today should move a bit slower into view.
+
+**The two sides are not the same kind of arrival, so they should not run at one speed.** The lit board ASSEMBLES — the chip, the seat, the ribbons drawing on, the modules lighting behind them — and its rungs overlap into one gesture. The ledger is FOUR ROWS READ IN ORDER, and a row landing before the eye has taken the one above it is a list that flickered rather than a record being written. The dormant ladder goes from 0.42s at an 80ms stagger to **0.72s at 140ms** (delays 160 / 300 / 440 / 580), so its last row lands at 1.30s against the board's 0.92s. The ledger finishing last is the point, not a mis-tune: it is read first and read slowest.
+
+⚠ **AND MEASURING IT FOUND THAT THE LIT BOARD'S LADDER HAD NEVER RUN.** U1's rungs are written `.arc-board.is-in [data-board-role="card"]` — two classes and one attribute — against the rule that STARTS the animation, `.is-arc-js .arc-board.is-in .arc-board__in`, which is four classes. The shorthand wins on specificity, and **`animation:` resets `animation-delay` to zero**. Measured on all five roles at three viewports: every configured module arrived on the same frame. The dormant rungs carry a SECOND attribute (`[data-board-state="today"]`), which ties the shorthand and wins on source order — which is the only reason that half worked, and why the defect was invisible: one board staggered, and nobody had a reason to check the other against it.
+
+⚠ **A DELAY THAT DOES NOT APPLY FAILS SILENTLY.** Nothing errors, nothing logs, the still is identical, and the result reads as a taste decision rather than a bug. The fix is to scope every lit rung `[data-board-state="configured"]` — the cheapest honest way to the fourth component, and it says WHICH BOARD the rung belongs to, which the selector could not say before. A `!important` would have worked and would have said nothing.
+
+**The guard is the durable half.** The smoke reads both ladders off the computed style, sorts each by delay and asserts it is STRICTLY INCREASING — a dead rung collapses to zero and fails — then asserts the ledger's last rung waits longer than the board's and each ledger row takes longer than a lit module. Both properties, from both ends: the contrast the owner asked for cannot be tuned away, and neither ladder can die again in silence.
+
+**Files:** the `.arc-board*` arrival block in `components/arcs/arcs.css` · `tests/visual/trinny-london-smoke.spec.ts`. No record, no layout, no type.

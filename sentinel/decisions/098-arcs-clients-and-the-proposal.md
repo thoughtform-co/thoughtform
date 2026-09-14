@@ -383,7 +383,9 @@ line adopts it on any proposal arc.
   `ENVELOPE_ARCS` — the portfolio's envelope is for a page forwarded to
   strangers, and a proposal is addressed to one.
 
-## Update 3 — the plates take the notch (2026-09-14, owner)
+## Update 4 — the plates take the notch (2026-09-14, owner)
+
+⚠ **RENUMBERED.** It shipped as a second “Update 3” beside the nesting update above — two sections with one number, which is how a cross-reference starts pointing at the wrong ruling. ⚠ **AND ITS CORNER IS SUPERSEDED THE SAME DAY BY UPDATE 5 BELOW**: the plate keeps the TOP-RIGHT notch alone.
 
 > Redesign the modular approach cards so they have the notch.
 
@@ -400,3 +402,17 @@ line adopts it on any proposal arc.
 **Three pages, one renderer** — the Trinny pitch, `/arcs/suri-proposal`, `/arcs/hungry-minds-proposal` (Perfect Ted's phases are still `layout: "columns"`). CSS-only: `ArcListGroups` does not change, so `arc-terminal-markup`'s byte-identity pin holds. The trinny smoke gains the assertion the plates never had — a `polygon` clip, `border-top-width: 0px`, and a `::before` that actually paints with an `evenodd` clip; "the plate is cut" had no guard at all before, because nothing measured a plate's geometry.
 
 ⚠ **Left open, flagged not taken:** the pricing beat's `.arc-ledger__table` and `.arc-ledger__tip` are the same material one beat later and stay square-bordered. A table is not a housing, but the two beats now differ; the owner's call.
+
+## Update 5 — only the top-right corner (2026-09-14, owner)
+
+> I don't think we need a notch in the bottom-left corner because, as you can see, it is too close to the text. Let's only keep the notch in the top-right corner.
+
+**Read on the still, the same day U4 shipped.** The plate's floor is the inverse DELIVERABLE band, and its text is set inside the band — so a chamfer at the bottom-left takes its bite out of the line the reader is on, and the copy has to clear a diagonal that nothing else on the plate explains. The head band under the TR cut does not have the problem: its mono kicker is short enough to sit clear of it. **A cut is free only where nothing is set against it**, and U4 checked the ring's geometry rather than what the ring was cutting into.
+
+⚠ **ONE CORNER IS LAWFUL HERE BY ADR-065's OWN UNIFORM-SET CLAUSE, not in spite of it.** Rule U1 admits a single notch on a uniform SET, and U4's correction to that clause is that the operative words are "ON THE LAWFUL DIAGONAL", never the count. These are three plates of one kind, side by side, at one nesting level and one scale, cut on the TOP end of TR + BL. A single notch also MEANS oriented-or-connected — and a numbered sequence of phases is both, which is the exact case U4's twenty work cartridges were NOT.
+
+**The change is the two polygons and nothing else.** The housing's clip goes six points to five (`0 0, 100%−ch 0, 100% ch, 100% 100%, 0 100%`) and the ring's `evenodd` contours follow; `--arc-plate-ch-in` still serves the one remaining cut. Rule 4 is untouched — head band, rows and foot stay square. CSS-only, three pages.
+
+⚠ **THE GUARD IS HIT-TESTED NOW, NOT PARSED, AND THE FIRST CUT OF IT FAILED TWICE.** ADR-065 U4/U5's finding is that a one-sided assertion verifies a cut exists, never that it is on the right corner — so the corner had to be pinned from both ends. Reading the computed `clip-path` for pixel pairs found **one point in five**: Chrome keeps the percentages and the `calc()`s (`polygon(0px 0px, calc(100% - 26px) 0px, 100% 26px, 100% 100%, 0px 100%)`), so the regex was measuring the SERIALISATION. `elementFromPoint` at 0.35 of the cut in from both edges of each corner asks the browser what it actually painted: a clipped corner does not answer. ⚠ And resolving the cut needed a probe element — **a custom property is a string until something lays it out**, so `getPropertyValue("--arc-plate-ch")` hands back the `clamp()` and `parseFloat` returns its first term.
+
+**Superseded within U4:** the TR + BL pair on `.arc-plate`, and the sentence "its clip takes them out of the band and the foot for free" — it took them out of the foot at a cost, which is what this update is.

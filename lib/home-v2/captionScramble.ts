@@ -18,6 +18,10 @@
 /** Glyph pool the shuffle draws from — the same character family the
  *  readouts themselves use (mono caps, digits, HUD separators). */
 export const SCRAMBLE_GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789·-+";
+
+/** A space the shuffle leaves alone — the plain one, and the NO-BREAK
+ *  space a caller uses to keep a proper noun whole across a line break. */
+const isSpace = (ch: string) => ch === " " || ch === " ";
 /** Seconds until the FIRST character resolves. */
 export const SCRAMBLE_LEAD_S = 0.12;
 /** Additional resolve delay per character — chars land left-to-right. */
@@ -86,9 +90,16 @@ export function scrambleFrame(
     const outgoing = job.from[c] ?? "";
     if (t < resolveAt - SCRAMBLE_SHUFFLE_S) {
       out += outgoing || " ";
-    } else if (incoming === " " || (incoming === "" && outgoing === " ")) {
-      // Never scramble whitespace — the word rhythm holds.
-      out += " ";
+    } else if (isSpace(incoming) || (incoming === "" && isSpace(outgoing))) {
+      /* Never scramble whitespace — the word rhythm holds.
+         ⚠ AND A NO-BREAK SPACE IS WHITESPACE. A caller uses U+00A0 to keep
+         a proper noun whole across a line break (the Trinny turn's title);
+         scrambled into a glyph it stops being a space mid-decode and the
+         line re-wraps under the ghost that is holding the box — which is
+         the one thing the ghost/live pair exists to prevent. It resolves to
+         ITSELF, not to a plain space, or the join it was written for is
+         gone for the whole shuffle. */
+      out += incoming || outgoing;
     } else {
       out += SCRAMBLE_GLYPHS[(random() * SCRAMBLE_GLYPHS.length) | 0];
     }

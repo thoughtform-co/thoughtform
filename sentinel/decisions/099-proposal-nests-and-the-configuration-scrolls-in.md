@@ -87,3 +87,17 @@ The bar ADR-072's dossier and ADR-098's configuration both cleared, and this cle
 - **The offer's copy is still Suri's, noun-swapped** — his own placeholder, to be rewritten.
 - **The flow's centre plate shows the client's existing cutouts.** The engagement's own calibration wave holds eight GENERATED packshots on Drive; if the plate should show what the setup MAKES rather than what goes in, those are the assets.
 - **Neither Figma file was readable** from this machine's Figma account (no edit access), which is why the brief's fields come from the practice's own mined record. If the template is opened later, the fields are one array to correct.
+
+## Update 1 (2026-09-14, owner) — the hero joins the band
+
+> The alignment of the hero one and maybe also the paragraph is not consistent with the alignment of the two text components in the other sections.
+
+**§3 seated every proposal head on one vertical datum; this is the same complaint on the other axis, and it is the page hero that is out.** Measured across the whole page: `#about`'s title and paragraph land at **360**, and so do all nine proposal heads' title and copy. `.hero__content` lands at **192**.
+
+⚠ **AND IT ONLY EXISTS AT HIS OWN VIEWPORT, WHICH IS WHY NO REFERENCE SHAPE EVER SHOWED IT.** Every banded text component rides ADR-048's editorial band: the station's `--hud-content-inset` padding PLUS `--rail-inset`, which lands the text edge on `--band-margin`. The hero takes the padding alone. `--rail-inset` is `--band-margin − --hud-content-inset`, i.e. **zero below the 1200px band's crossover** — so at 1280×720 and 1440×800 the hero and the band agree to the pixel and there is nothing to see, and the divergence opens only on a wide window. Measured hero/band: **129 / 129** · **145 / 145** · **192 / 360**.
+
+**So the fix is to JOIN the band, never to re-inset the sections** — ADR-048's own standing clause is "never re-widen the inset per-section", and the sections here are the nine that already agree with each other and with `#about`. The recipe is the one `.proof__beat`, `.voidwalker` and the services masthead already use, verbatim: `margin-inline: var(--rail-inset)` on a block that is already inside a station's padding. The hero's own 680px measure is untouched, so the block moves and the type does not.
+
+⚠ **ROUTE-SCOPED, AND THE HOMEPAGE HAS THE SAME DIVERGENCE — FLAGGED, NOT TAKEN.** A rule in `landing.css` lands on `/` and `/claude-workshop` (this route's first contract). It is not the same defect there: `/` runs hero → corridor, so the hero's neighbour is a full-bleed canvas rather than nine banded heads, and nothing sits beside it to be inconsistent with. `margin-inline` rather than `-start` because the band is symmetric by law; with a 680px `max-width` the outboard half costs nothing today and is what keeps the rule true if the measure ever grows.
+
+**Files:** one rule, §3c of `app/(marketing)/arcs/trinny-london/proposal/trinny-london.css`.

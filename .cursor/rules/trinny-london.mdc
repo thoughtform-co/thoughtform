@@ -77,10 +77,22 @@ hero → about → the Arc → the proof casefile (+ the ring) → contact.
   frame, no picker, server-only. ⚠ U2 (owner, 2026-09-14) is the live cut: a
   ruled LEDGER of four facts beside the assembled BOARD — they may not mirror
   each other. The gold chip is `AI CAPABILITY` / "owned by the team"; four
-  tools are peers; no diamonds; THE CONTEXT, not THE LAYER. ⚠ The turn's
-  paragraph is the one line on this page allowed "self-sufficient" (ADR-095
-  U8, owner) and `.tl-turn__sub` is 52ch so the word does not break at its own
-  hyphen. The record is the discovery call in roles; `trinny-offer.test.ts`
+  tools are peers; no diamonds; THE CONTEXT, not THE LAYER. ⚠ U3 (same day):
+  the LEDGER arrives slower (0.72s / 140ms against the board's 0.42 / 80), and
+  every LIT rung is scoped `[data-board-state="configured"]` or the ladder is
+  dead — `animation:` resets `animation-delay`, which U1 shipped unnoticed.
+  ⚠ The turn's paragraph is the one line on this page allowed
+  "self-sufficient" (ADR-095 U8, owner) and `.tl-turn__sub` is 52ch so the
+  word does not break at its own hyphen; its TITLE binds the client's name
+  with a NO-BREAK SPACE, and the house decode kernel had to learn U+00A0 is
+  whitespace (it resolves to ITSELF, never to a plain space).
+  ⚠ ADR-099 U1: `.tl-root .hero__content` takes `margin-inline:
+var(--rail-inset)` so the hero seats on ADR-048's editorial band like
+  `#about` and all nine proposal heads — 192 against 360 at 1920×1247, and
+  IDENTICAL below the band's crossover, which is why only his own viewport
+  showed it. Join the band; never re-inset the sections.
+  ⚠ ADR-098 U5: the three phase plates keep the TOP-RIGHT notch only — the
+  bottom-left one bit the inverse foot's own text. The record is the discovery call in roles; `trinny-offer.test.ts`
   and `arc-board-fit.test.ts` walk it. Canonical text:
   `.claude/rules/trinny-london.md` and `.claude/rules/arcs.md`.
 

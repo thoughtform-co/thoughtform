@@ -566,6 +566,22 @@ BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, afte
     the TEXT band (the datum guard's x) and the drawing takes the INSTRUMENT
     band. ⚠ Dark is defined by the ramp, unverified until a dark surface adopts
     the kind.
+- ⚠ **THE BOARD'S TWO ARRIVAL LADDERS RUN AT DIFFERENT SPEEDS, AND EVERY
+  LIT RUNG IS SCOPED `[data-board-state="configured"]`** (ADR-100 U3, owner
+  2026-09-14: _"the elements from the studio today should move a bit slower
+  into view"_). The board ASSEMBLES — overlapping rungs, one gesture — while
+  the ledger is four rows READ IN ORDER at 0.72s and a 140ms stagger, landing
+  its last row at 1.30s against the board's 0.92s.
+  ⚠ **WITHOUT THE STATE SCOPE THE LIT LADDER IS DEAD.** The rules that START
+  the animations (`.is-arc-js .arc-board.is-in .arc-board__in` and `… __wire`)
+  are FOUR classes; a bare `.arc-board.is-in [data-board-role="card"]` is two
+  classes and an attribute, so the shorthand wins and **`animation:` resets
+  `animation-delay` to zero**. It shipped that way in U1: every configured
+  module arrived on the same frame, while the dormant rules — carrying a
+  second attribute, so they TIE and win on source order — staggered. **A
+  delay that does not apply fails silently**: nothing errors, nothing logs,
+  the still is identical, and the result reads as a taste decision. The smoke
+  asserts each ladder is strictly increasing and that the ledger's is slower.
 - ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
   phases as a rail; on this surface a drawing plots something that HAPPENED,
   and a plan is an argument. Three phases are three `list-groups` columns,
@@ -635,10 +651,22 @@ BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, afte
   drawings render on the Trinny pitch page too (ADR-094 U9) through the same
   components — a change here is a TWO-surface change; run
   `trinny-london-smoke` with the arc smokes.
-  ⚠ **AND THE PLATES TAKE THE NOTCH (U3, owner 2026-09-14: "redesign the
-  modular approach cards so they have the notch").** TR + BL at the plate
-  rung (`--arc-plate-ch: clamp(16px, 1.8vw, 26px)`, the value `.arc-dossier`
-  and `.arc-prog` already cut at). U2's "square (ADR-065)" meant NO 12px
+  ⚠ **AND THE PLATES TAKE THE NOTCH — TOP-RIGHT, AND ONLY TOP-RIGHT**
+  (U4 then U5, owner 2026-09-14: "redesign the modular approach cards so they
+  have the notch", then, on the still, "I don't think we need a notch in the
+  bottom-left corner because … it is too close to the text"). The plate rung
+  (`--arc-plate-ch: clamp(16px, 1.8vw, 26px)`, the value `.arc-dossier` and
+  `.arc-prog` already cut at), on the TOP end of the canonical diagonal.
+  ⚠ **THE BL CUT WAS NOT FREE**: the plate's floor IS the inverse DELIVERABLE
+  band and its text is set inside it, so a chamfer there bites the line the
+  reader is on, while the head band under the TR cut carries a short mono
+  kicker and sits clear. **A cut is free only where nothing is set against
+  it**, and U4 checked the ring's geometry rather than what it cut into.
+  ⚠ One corner is lawful by ADR-065's own uniform-SET clause, not in spite of
+  it — three plates of one kind, one nesting level, one scale, on the LAWFUL
+  diagonal (U4's correction: the operative words are "on the lawful diagonal",
+  never the count) — and a single notch MEANS oriented-or-connected, which a
+  numbered sequence of phases is. U2's "square (ADR-065)" meant NO 12px
   RADIUS — the deck's soft card is its own material — and was read afterwards
   as "no cut", which U2 never argued. ⚠ **NO `border`: a clip CUTS a border
   and never strokes one**, so the edge is a two-contour `evenodd` RING on
@@ -648,7 +676,14 @@ BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, afte
   their corners for free. ⚠ The ring is INVISIBLE over the inverse foot by
   construction (`--arc-edge` and `--arc-ink` are one dawn triple at two
   alphas), so the dark band caps the plate. CSS-only: `ArcListGroups` does not
-  change and `arc-terminal-markup`'s byte-identity pin holds. ⚠ Three pages
+  change and `arc-terminal-markup`'s byte-identity pin holds.
+  ⚠ **THE CORNER IS PINNED FROM BOTH ENDS AND IT IS HIT-TESTED, NOT PARSED**
+  (ADR-065 U4/U5: a one-sided assertion verifies a cut EXISTS, never that it
+  is on the right corner). The computed `clip-path` keeps its percentages and
+  `calc()`s, so a pixel-pair regex finds one point in five — it measures the
+  SERIALISATION; `elementFromPoint` at 0.35 of the cut in from both edges of
+  each corner asks what actually painted. ⚠ Resolving the cut takes a probe
+  element: **a custom property is a string until something lays it out.** ⚠ Three pages
   render it (Trinny, Suri, Hungry Minds — Perfect Ted is still `columns`) and
   only `trinny-london-smoke` guards it.
 - ⚠ **THE PROPOSAL COPY LAW IS A MODULE** (`lib/arcs/copyLaw.ts`,

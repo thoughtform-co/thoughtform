@@ -785,3 +785,15 @@ Two lines, and one ruling about a ban.
 ⚠ **THE MEASURE MOVED WITH THE COPY.** `.tl-turn__sub` was `max-width: 44ch`, where the new line breaks INSIDE `self-sufficient` — a browser breaks at an existing hyphen by default, which is ADR-098 U1's own finding ("at 34ch the sentence broke `AI-first.` across its own hyphen") one beat over. At **52ch** the break lands after `teams`, and at 1920×1247 the line fits whole. A longer line re-measures it.
 
 ⚠ **BOTH HALVES OF EACH `.tl-dc` PAIR CARRY THE STRING.** `useTurnScroll` reads its `truth` from the LIVE layer and the ghost holds the box; the parse guard pins them byte-identical. And `tests/lib/trinny-mark.test.ts`'s `FINALS` is a hand-maintained MIRROR of the prototype — a stale entry there does not fail, it exercises a line that is not on the page, so it moves in the same commit.
+
+### U8 amended (same day) — the client's name is bound, and the kernel had to learn what a space is
+
+> Can you put Trinny London on the same line below it?
+
+**A proper noun that breaks across a line is the defect; the lane is not.** Narrowing the title's measure until the break falls where it should is a fix that holds at one viewport and lies at the next — the lane is already three rungs of `min(px, %)` against a type size that clamps on `vw`, so the character count per line moves with BOTH. The name is bound instead: `Trinny\u00a0London.` with a NO-BREAK SPACE, in the ghost AND in the live layer, so the join travels with the string rather than with the box.
+
+⚠ **AND THE HOUSE DECODE KERNEL DID NOT KNOW U+00A0 WAS WHITESPACE.** `captionScramble.ts` leaves a space alone so the word rhythm holds; its test was `ch === " "`, so a no-break space fell through to the glyph pool and SHUFFLED. That breaks the binding for the whole decode: mid-shuffle the character is a letter, the live layer re-wraps under a ghost that is holding a two-line box, and the line the reader sees jumps. `isSpace` covers both, and the branch resolves the character to **ITSELF** — `out += incoming || outgoing`, never a hard-coded `" "`, or the NBSP is flattened to a plain space and the join is gone for the same reason. Pure and scrubbed, so it is reversible for free.
+
+**Measured after:** at 1920×1247 and 1280×720 the title reads `And now we bring this to / Trinny London.` At 1440×800 the lane is 560px against 56px type and it reads `And now we bring this / to Trinny London.` — the name is still whole on one line, which is what the binding is for; forcing `to` up would mean widening a lane that was solved against the product column. Named, not fixed.
+
+⚠ `tests/lib/trinny-mark.test.ts`'s `FINALS` carries the NBSP **copied verbatim from the prototype**, and a new case walks the decode from 0.62 to 1 asserting that index resolves to `\u00a0` on every frame. The kernel's own suite gains nothing about the turn — it is shared with the corridor's caption card, and that is the point: one kernel, and the fix lands wherever a caller binds a name.

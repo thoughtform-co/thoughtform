@@ -1264,6 +1264,54 @@ test.describe("Trinny London pitch variant", () => {
     // the tools' run (ADR-100 U1 took the two socket drops with the sockets).
     expect(roles.configured.wires, "the ribbons").toBe(24);
 
+    /* ⚠ BOTH ARRIVAL LADDERS ARE LIVE, AND THE LEDGER'S IS THE SLOWER
+       (U2, owner 2026-09-14: "the elements from the studio today should move
+       a bit slower into view"). A delay that does not apply fails SILENTLY —
+       nothing errors and the still is identical — and the lit board shipped
+       that way for a day: its rungs are two classes and an attribute against
+       the four-class `animation:` shorthand that starts them, so the
+       shorthand won and RESET every delay to zero. Both sides are asserted
+       from both ends: each ladder is strictly increasing (so no rung is
+       dead) and the dormant rungs are slower AND longer than the lit ones
+       (so the contrast the owner asked for cannot be tuned away). */
+    const ladders = await page.evaluate(() => {
+      const secs = (v: string) => parseFloat(v) * (v.trim().endsWith("ms") ? 0.001 : 1);
+      const read = (mode: string) =>
+        [...document.querySelectorAll(`[data-board-state="${mode}"] [data-board-role]`)]
+          .map((m) => {
+            const cs = getComputedStyle(m as HTMLElement);
+            return {
+              role: m.getAttribute("data-board-role") ?? "",
+              d: secs(cs.animationDelay),
+              t: secs(cs.animationDuration),
+            };
+          })
+          .filter((r) => r.role !== "head")
+          .sort((a, b) => a.d - b.d);
+      return { today: read("today"), lit: read("configured") };
+    });
+    for (const [name, rungs] of [
+      ["the ledger", ladders.today],
+      ["the board", ladders.lit],
+    ] as const) {
+      expect(rungs.length, `${name} has four objects`).toBe(4);
+      for (let i = 1; i < rungs.length; i++) {
+        expect(
+          rungs[i].d,
+          `${name}'s ladder is dead at rung ${i} — a shorthand reset its delay`
+        ).toBeGreaterThan(rungs[i - 1].d);
+      }
+    }
+    const lastOf = (r: { d: number; t: number }[]) => r[r.length - 1];
+    expect(
+      lastOf(ladders.today).d,
+      "the ledger's last row waits longer than the board's last module"
+    ).toBeGreaterThan(lastOf(ladders.lit).d);
+    expect(
+      ladders.today[0].t,
+      "and each ledger row takes longer to arrive than a lit module"
+    ).toBeGreaterThan(ladders.lit[0].t);
+
     /* ⚠ AND THE MARK IS STILL THERE, FADING BEHIND IT (owner: "the brand
        mark in the back doesn't really dominate too much"). The canvas has to
        live through this beat, so the corridor is STILL ENGAGED here — the
@@ -1303,26 +1351,58 @@ test.describe("Trinny London pitch variant", () => {
     await expect(page.locator("#phases .arc-plate").first()).toHaveClass(/is-in/);
     expect(await goldMarks(page)).toEqual(["proposition"]);
 
-    /* ⚠ AND THE PLATE IS CUT (ADR-098 U3, owner: the cards "should have the
-       notch"). A clip CUTS a border and never strokes one, so the edge is a
+    /* ⚠ AND THE PLATE IS CUT — TOP-RIGHT, AND ONLY TOP-RIGHT (ADR-098 U3,
+       owner: the cards "should have the notch", then "I don't think we need
+       a notch in the bottom-left corner … it is too close to the text").
+       A clip CUTS a border and never strokes one, so the edge is a
        two-contour RING — and the border has to be gone, or the plate is
-       outlined on six sides and open on two. All three are asserted: the
-       silhouette, the absent border, and that the ring actually paints. */
-    const cut = await page.evaluate(() => {
+       outlined on five sides and open on one.
+       ⚠ THE CORNER IS PINNED FROM BOTH ENDS (ADR-065 U4/U5's own finding:
+       a one-sided assertion verifies that a cut exists, never that it is on
+       the right corner) — AND IT IS HIT-TESTED, NOT PARSED. The computed
+       `clip-path` keeps its percentages and its `calc()`s
+       (`polygon(0px 0px, calc(100% - 26px) 0px, 100% 26px, 100% 100%, 0px
+       100%)`), so reading it for pixel pairs measures the SERIALISATION and
+       finds one point in five. `elementFromPoint` asks the browser what it
+       actually painted: a clipped corner does not answer. */
+    const corners = await page.evaluate(() => {
       const el = document.querySelector("#phases .arc-plate") as HTMLElement;
-      const cs = getComputedStyle(el);
-      const ring = getComputedStyle(el, "::before");
+      el.scrollIntoView({ block: "center" });
+      const r = el.getBoundingClientRect();
+      /* Inside the chamfer's own triangle: a point `d` in from BOTH edges of
+         a corner is clipped exactly when `2d < ch`, so 0.35 of the cut is
+         inside a notch and painted on a square corner.
+         ⚠ A CUSTOM PROPERTY IS A STRING UNTIL SOMETHING LAYS IT OUT —
+         `getPropertyValue` hands back `clamp(16px, 1.8vw, 26px)` and
+         `parseFloat` returns 16, or NaN on a `calc()`. The probe inherits
+         the token from the plate and reports the resolved pixel. */
+      const probe = document.createElement("div");
+      probe.style.cssText = "position:absolute;left:0;top:0;height:1px;width:var(--arc-plate-ch)";
+      el.appendChild(probe);
+      const ch = probe.getBoundingClientRect().width;
+      probe.remove();
+      const d = Math.max(4, ch * 0.35);
+      const at = (x: number, y: number) =>
+        !!(document.elementFromPoint(x, y) as HTMLElement | null)?.closest("#phases .arc-plate");
       return {
-        clip: cs.clipPath,
-        border: cs.borderTopWidth,
-        ringBg: ring.backgroundColor,
-        ringClip: ring.clipPath,
+        ch,
+        tl: at(r.left + d, r.top + d),
+        tr: at(r.right - d, r.top + d),
+        bl: at(r.left + d, r.bottom - d),
+        br: at(r.right - d, r.bottom - d),
+        pts: getComputedStyle(el)
+          .clipPath.replace(/^polygon\(/, "")
+          .replace(/\)$/, "")
+          .split(","),
       };
     });
-    expect(cut.clip, "the plate is a chamfered housing").toMatch(/^polygon\(/);
-    expect(cut.border, "a clip cuts a border, it never strokes one").toBe("0px");
-    expect(cut.ringBg, "the ring paints").not.toMatch(/,\s*0\)$/);
-    expect(cut.ringClip, "the ring is the two-contour lip").toMatch(/evenodd/);
+    expect(corners.ch, "the cut is at the plate rung").toBeGreaterThan(8);
+    expect(corners.tr, "the notch is TOP-RIGHT").toBe(false);
+    expect(corners.bl, "the BOTTOM-LEFT corner is square: the foot's text needs it").toBe(true);
+    expect(corners.tl, "the top-left is square").toBe(true);
+    expect(corners.br, "the bottom-right is square").toBe(true);
+    expect(corners.pts.length, "one notch means five points, not six").toBe(5);
+    expect(corners.pts[4].trim(), "the silhouette closes on the box's own corner").toBe("0px 100%");
 
     await rollTo(page, await topOf("pricing"));
     await rollTo(page, await topOf("pricing"));

@@ -497,7 +497,12 @@ describe("turnDecodeFrame — the scrubbed decode", () => {
      is what the writer walks — a stale entry here does not fail, it decodes
      a line that is not on the page. */
   const FINALS = [
-    "And now we bring this to Trinny London.",
+    /* ⚠ A NO-BREAK SPACE binds the client's name: the lane holds
+       `Trinny London.` on one line only if it cannot break there, and the
+       kernel resolves U+00A0 to ITSELF (captionScramble). Copy it verbatim
+       from the prototype — a plain space here passes and tests a string
+       that is not on the page. */
+    "And now we bring this to Trinny London.",
     "An AI-first approach designed to make Trinny's teams self-sufficient.",
     "The configuration",
   ] as const;
@@ -563,6 +568,20 @@ describe("turnDecodeFrame — the scrubbed decode", () => {
         if (FINALS[2][i] === " ") expect(out[i]).toBe(" ");
       }
       expect(turnDecodeFrame(FINALS, 2, p, 0, rand)).toBe(out);
+    }
+  });
+
+  it("resolves a no-break space to ITSELF, so a bound name stays bound", () => {
+    /* ⚠ The title binds the client's name with U+00A0 so the lane cannot
+       break `Trinny London.` across two lines. Scrambled into a glyph — or
+       flattened to a plain space — the join is gone for the whole shuffle
+       and the live layer re-wraps under the ghost that is holding the box,
+       which is the one thing the ghost/live pair exists to prevent. */
+    const nb = FINALS[0].indexOf("\u00a0");
+    expect(nb, "the title binds the client's name with a no-break space").toBeGreaterThan(0);
+    for (let p = 0.62; p < 1; p += 0.05) {
+      const out = turnDecodeFrame(FINALS, 0, p, 0, rand);
+      if (out) expect(out[nb]).toBe("\u00a0");
     }
   });
 });

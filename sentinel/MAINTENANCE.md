@@ -54,6 +54,62 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-14 (second pass) — Four reads on the same page (ADR-095 U8 amended, ADR-100 U3, ADR-099 U1, ADR-098 U5)
+
+**Trigger:** one owner message on the live page after the first pass shipped:
+put `Trinny London` on the line below; the studio-today elements should arrive
+slower; the hero's heading and paragraph are not aligned with the two text
+components in the other sections; and the phase plates should keep only the
+top-right notch, because the bottom-left one is too close to the text.
+
+**What changed.** The turn's title binds the client's name with a NO-BREAK
+SPACE, and `captionScramble.ts` — the site's ONE decode kernel — learned that
+U+00A0 is whitespace and must resolve to ITSELF. The dormant board's arrival
+ladder goes to 0.72s at a 140ms stagger. `.tl-root .hero__content` takes
+`margin-inline: var(--rail-inset)`, joining ADR-048's editorial band. And
+`.arc-plate`'s clip and ring drop their bottom-left corner.
+
+**Two things the measurements found that nobody asked about.**
+
+1. ⚠ **THE LIT BOARD'S DELAY LADDER HAD NEVER RUN.** ADR-100 U1's rungs are
+   two classes and an attribute against the FOUR-class `animation:` shorthand
+   that starts them; the shorthand wins and **resets `animation-delay` to
+   zero**. The dormant rungs carry a second attribute, so they tie and win on
+   source order — which is the only reason that half worked and why nothing
+   looked wrong. **A delay that does not apply fails silently**: no error, no
+   log, an identical still, and the result reads as a taste decision. Fixed by
+   scoping every lit rung `[data-board-state="configured"]`; guarded by
+   asserting each ladder is strictly increasing.
+2. ⚠ **THE HERO'S MIS-ALIGNMENT ONLY EXISTS ABOVE THE 1200px BAND'S
+   CROSSOVER.** `--rail-inset` is `--band-margin − --hud-content-inset`, i.e.
+   ZERO at 1280×720 and 1440×800, where hero and band measure 129/129 and
+   145/145 — and 192/360 at his own 1920×1247. Every reference viewport in
+   this repo is landscape and narrower than the crossover, so no capture could
+   have shown it. **A defect invisible at every reference shape is one only a
+   capture at the owner's own window can find** (the standing memory rule,
+   earning its keep again).
+
+**Two guard traps, both in the same new assertion.** Reading a computed
+`clip-path` for pixel pairs measures the SERIALISATION — Chrome keeps the
+percentages and the `calc()`s, so the regex found one point in five. And
+`getPropertyValue("--arc-plate-ch")` hands back the `clamp()`: **a custom
+property is a string until something lays it out.** The corner is hit-tested
+with `elementFromPoint` now, from both ends, with the cut resolved through a
+probe element.
+
+**Cycle:** A (fixes on a live surface), plus one new ruling per ADR above.
+
+**Verified:** tsc, 212 unit tests, `trinny-london-smoke` 10/10,
+`arc-portfolio-smoke` + `arc-terminal-smoke` 22 passed (the one red is the
+pre-existing chip test at `arc-terminal-smoke:335`), and captures at
+1920×1247 / 1440×800 / 1280×720 looked at, plus the plates on
+`/arcs/suri-proposal` and `/arcs/hungry-minds-proposal`.
+
+**Left open, flagged not taken:** the homepage hero has the same band
+divergence as this route's (`/` has no banded neighbour, so it is not the same
+defect); at 1440×800 the turn's title reads `… this / to Trinny London.`,
+where the name is whole but `to` falls to line two.
+
 ### 2026-09-14 — Four surfaces on the Trinny proposal (ADR-100 U2, ADR-098 U3, ADR-084 U2, ADR-095 U8)
 
 **Trigger:** one owner message on the live page, naming four things: the red

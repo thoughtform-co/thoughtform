@@ -1354,17 +1354,28 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
    is a dark band on parchment in light and a dawn band on void in dark
    without a theme rule; both are walked in the smoke.
 
-   ⚠ AND THE PLATE IS A CHAMFERED HOUSING (U3, owner 2026-09-14: "redesign
-   the modular approach cards so they have the notch"). U2 said "square
+   ⚠ AND THE PLATE IS A NOTCHED HOUSING — TOP-RIGHT, AND ONLY TOP-RIGHT
+   (U3, owner 2026-09-14: "redesign the modular approach cards so they have
+   the notch", then, on the still: "I don't think we need a notch in the
+   bottom-left corner because, as you can see, it is too close to the text.
+   Let's only keep the notch in the top-right corner"). U2 said "square
    (ADR-065)" and meant NO 12px RADIUS — the deck's soft card is its own
-   material; it was read as "no cut", which is a different claim. A plate
-   is a machined housing by rule 1, so it takes the CANONICAL diagonal, TR +
-   BL (rule 2) at the PLATE rung (rule 3) — the same cut the proof cards two
-   beats up carry, which is the owner's own word for it ("a notch, like on
-   the homepage, in the bottom-left and top-right corners", ADR-097 U4).
-   Rule 4 comes with it: the head band, the rows and the inverse foot stay
-   SQUARE — the housing is what has corners, and the clip takes them out of
-   the band and the foot for free.
+   material; it was read as "no cut", which is a different claim.
+   ⚠ ONE CORNER IS LAWFUL HERE BY ADR-065's OWN UNIFORM-SET CLAUSE, not in
+   spite of it: three plates of one kind, side by side, at one nesting level
+   and one scale, cut on the lawful diagonal's TOP end. A single notch means
+   ORIENTED, and these three read left to right — which is the claim the
+   beat makes. The clause's U4 correction is satisfied too (the cut is on
+   TR + BL's diagonal, not an invented corner); what it bans is a lone notch
+   on a set that is neither oriented nor connected, and a numbered sequence
+   of phases is both.
+   ⚠ AND THE BL CUT WAS NOT FREE — the inverse foot's own text sits inside
+   it. A chamfer at the floor's left takes its bite out of the band the last
+   line is set in, so the copy has to clear a diagonal that nothing else on
+   the plate explains; the head band under the TR cut has a mono kicker
+   short enough to sit clear of it. Rule 4 still comes with the housing: the
+   head band, the rows and the inverse foot stay SQUARE, and the clip takes
+   the one corner out of the band for free.
    ⚠ NO `border` — A CLIP CUTS A BORDER, IT NEVER STROKES ONE (ADR-089). A
    bordered box under this clip has six edges outlined and two not, which is
    the opposite of what a beat composed around "borders and dividers" can
@@ -1400,8 +1411,7 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
     calc(100% - var(--arc-plate-ch)) 0,
     100% var(--arc-plate-ch),
     100% 100%,
-    var(--arc-plate-ch) 100%,
-    0 calc(100% - var(--arc-plate-ch))
+    0 100%
   );
 }
 .arc-plate::before {
@@ -1417,14 +1427,12 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
     calc(100% - var(--arc-plate-ch)) 0,
     100% var(--arc-plate-ch),
     100% 100%,
-    var(--arc-plate-ch) 100%,
-    0 calc(100% - var(--arc-plate-ch)),
+    0 100%,
     1px 1px,
     calc(100% - 1px - var(--arc-plate-ch-in)) 1px,
     calc(100% - 1px) calc(1px + var(--arc-plate-ch-in)),
     calc(100% - 1px) calc(100% - 1px),
-    calc(1px + var(--arc-plate-ch-in)) calc(100% - 1px),
-    1px calc(100% - 1px - var(--arc-plate-ch-in))
+    1px calc(100% - 1px)
   );
 }
 .arc-plate__head {
@@ -5044,41 +5052,70 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
     animation: arcBdWire 0.6s cubic-bezier(0.3, 0.8, 0.3, 1) forwards;
   }
   /* The lit board: the head, the card first, the seat, then the cables draw
-     on and the modules they feed light behind them. */
-  .arc-board.is-in [data-board-role="card"] {
+     on and the modules they feed light behind them.
+     ⚠ EVERY ONE OF THESE IS SCOPED `[data-board-state="configured"]`, AND
+     NOT FOR SYMMETRY — WITHOUT IT THE WHOLE LADDER IS DEAD. The rules that
+     START the animations are `.is-arc-js .arc-board.is-in .arc-board__in`
+     and `… .arc-board__wire`, four classes each, declared ABOVE; a bare
+     `.arc-board.is-in [data-board-role="card"]` is two classes and one
+     attribute, so the SHORTHAND wins on specificity and `animation:` RESETS
+     `animation-delay` to zero. Shipped that way in U1 and measured on
+     2026-09-14: every configured module arrived on the same frame while the
+     dormant side — whose rules carry a second attribute and therefore TIE
+     and win on source order — staggered correctly. The state attribute is
+     the cheapest honest way to the fourth component, and it says which board
+     the rung belongs to, which the selector could not say before.
+     ⚠ A DELAY THAT DOES NOT APPLY FAILS SILENTLY AND LOOKS LIKE A TASTE
+     DECISION — nothing errors, nothing logs, and the still is identical. */
+  .arc-board.is-in [data-board-state="configured"] [data-board-role="card"] {
     animation-delay: 140ms;
   }
-  .arc-board.is-in [data-board-role="seat"] {
+  .arc-board.is-in [data-board-state="configured"] [data-board-role="seat"] {
     animation-delay: 220ms;
   }
-  .arc-board.is-in [data-board-lane="seat"] * {
+  .arc-board.is-in [data-board-state="configured"] [data-board-lane="seat"] * {
     animation-delay: 300ms;
   }
-  .arc-board.is-in [data-board-lane="layer"] * {
+  .arc-board.is-in [data-board-state="configured"] [data-board-lane="layer"] * {
     animation-delay: 360ms;
   }
-  .arc-board.is-in [data-board-role="layer"] {
+  .arc-board.is-in [data-board-state="configured"] [data-board-role="layer"] {
     animation-delay: 420ms;
   }
-  .arc-board.is-in [data-board-lane="tools"] * {
+  .arc-board.is-in [data-board-state="configured"] [data-board-lane="tools"] * {
     animation-delay: 420ms;
   }
-  .arc-board.is-in [data-board-role="tools"] {
+  .arc-board.is-in [data-board-state="configured"] [data-board-role="tools"] {
     animation-delay: 500ms;
   }
-  /* The dormant board: a plain ladder, no bloom, nothing draws on. */
+  /* The dormant board: a plain ladder, no bloom, nothing draws on.
+     ⚠ AND IT RUNS SLOWER THAN THE LIT ONE (owner, 2026-09-14: "the
+     elements from the studio today should move a bit slower into view").
+     The two sides are not the same kind of arrival: the lit board ASSEMBLES
+     — a card, a seat, cables drawing on, modules lighting behind them — so
+     its rungs overlap and read as one gesture, while the ledger is FOUR
+     ROWS READ IN ORDER, and a row landing before the eye has taken the one
+     above it is a list that flickered rather than a record being written.
+     Duration 0.42 → 0.72s and the stagger 80 → 140ms, so the last row lands
+     at 1.30s against the lit board's 0.92s. The ledger finishing last is the
+     point and not a mis-tune: it is read first and read slowest. */
   .arc-board.is-in [data-board-state="today"] [data-board-role="seat"] {
-    animation-delay: 120ms;
+    animation-delay: 160ms;
   }
   .arc-board.is-in [data-board-state="today"] [data-board-role="card"] {
-    animation: arcBdIn 0.42s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
-    animation-delay: 200ms;
+    animation: arcBdIn 0.72s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+    animation-delay: 300ms;
   }
   .arc-board.is-in [data-board-state="today"] [data-board-role="layer"] {
-    animation-delay: 280ms;
+    animation-delay: 440ms;
   }
   .arc-board.is-in [data-board-state="today"] [data-board-role="tools"] {
-    animation-delay: 360ms;
+    animation-delay: 580ms;
+  }
+  /* ⚠ LAST IN THE BLOCK, because the card rule above restates the
+     `animation` SHORTHAND and a shorthand resets every longhand it carries. */
+  .arc-board.is-in [data-board-state="today"] .arc-board__in {
+    animation-duration: 0.72s;
   }
 }
 @keyframes arcBdIn {

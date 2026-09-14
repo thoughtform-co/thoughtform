@@ -60,6 +60,20 @@ paid for by the FIELD, where `.fl-bay__top` is already clipped. The housing
 also makes `--arc-plate` the record column's BED in light — a new text rung
 there belongs in the contrast walk.
 
+⚠ ADR-098 U4 + U5 (owner, 2026-09-14): the three `plates` groups are a
+NOTCHED HOUSING — TOP-RIGHT, and only top-right. The plate's floor IS the
+inverse DELIVERABLE band and its text is set inside it, so a bottom-left
+chamfer bites the line the reader is on; a cut is free only where nothing is
+set against it. One corner is lawful by ADR-065's uniform-SET clause (three
+plates, one nesting level, one scale, the LAWFUL diagonal's top end) and a
+single notch MEANS oriented, which a numbered sequence is. NO `border` — a
+clip cuts a border and never strokes one — so the edge is a two-contour
+`evenodd` ring, inner leg `ch - 0.586px`. ⚠ The corner is pinned from BOTH
+ends by HIT TEST, never by parsing the computed `clip-path` (which keeps its
+percentages and `calc()`s), and the cut resolves through a probe element:
+a custom property is a string until something lays it out. CSS-only, three
+pages.
+
 ⚠ ADR-100: the `board` kind is the FOURTH enumerated exception — the client's
 configuration as a circuit board in two states (dormant beside lit), the
 proof's R4 grammar at page scale, no frame, one leaf with no picker, SERVER-ONLY.
@@ -70,7 +84,15 @@ colour) beside the assembled BOARD (green seat + drop, THE CONTEXT's four
 tags, the gold CHIP `AI CAPABILITY` / "owned by the team", four tools as
 peers, three ribbons). The two sides may NOT mirror each other. No diamonds.
 Both share the datum and the floor. ⚠ U1's ruling stands under it: when he
-asks for simple, the FIRST cut is the minimal one. Dispatched in BOTH `ArcSectionRenderer` and the
+asks for simple, the FIRST cut is the minimal one.
+⚠ U3 (same day, owner): the LEDGER arrives SLOWER — 0.72s at a 140ms stagger
+against the board's 0.42/80 — because the board assembles in one gesture and
+the ledger is four rows read in order. ⚠ EVERY LIT RUNG IS SCOPED
+`[data-board-state="configured"]` or the whole ladder is DEAD: the rules that
+start the animations are four classes, a bare `.arc-board.is-in
+[data-board-role="card"]` is three, and `animation:` RESETS `animation-delay`
+to zero. It shipped that way in U1 — a delay that does not apply fails
+silently and reads as a taste decision. The smoke pins both ladders. Dispatched in BOTH `ArcSectionRenderer` and the
 Trinny page's `TrinnyBeats` switch (which dropped `configuration`;
 `ArcConfiguration` is byte-identical elsewhere). The row is width-led and its
 shares are the crops' (560 + 40 + 800 = 1400; the flex bases and the seam are

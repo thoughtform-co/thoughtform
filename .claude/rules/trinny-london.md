@@ -600,7 +600,25 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   meeting the chip's centre. ⚠ The two sides must NOT mirror each other
   (owner: _"it should be a contrast like before and after, but without
   implying they're unorganized"_) — a ledger is ordered and connected to
-  nothing. ⚠ No diamonds, no notes, one sentence in the seat, THE CONTEXT not
+  nothing.
+  ⚠ **AND THEY DO NOT ARRIVE AT ONE SPEED (U3, same day, owner: _"the
+  elements from the studio today should move a bit slower into view"_).** The
+  board ASSEMBLES, so its rungs overlap into one gesture; the ledger is four
+  rows READ IN ORDER, so its rungs are 0.72s at a 140ms stagger (was 0.42/80)
+  and its last row lands at 1.30s against the board's 0.92s. The ledger
+  finishing last is the point: read first, read slowest.
+  ⚠ **EVERY LIT RUNG IS SCOPED `[data-board-state="configured"]`, AND
+  WITHOUT IT THE WHOLE LADDER IS DEAD.** The rules that START the animations
+  (`.is-arc-js .arc-board.is-in .arc-board__in` / `… __wire`) are FOUR
+  classes; a bare `.arc-board.is-in [data-board-role="card"]` is two classes
+  and an attribute, so the shorthand wins and `animation:` RESETS
+  `animation-delay` to zero. Shipped that way in U1 and measured on
+  2026-09-14: every configured module arrived on the same frame, while the
+  dormant rules — carrying a second attribute, so they TIE and win on source
+  order — staggered correctly. **A delay that does not apply fails silently:
+  nothing errors, nothing logs, the still is identical, and it reads as a
+  taste decision.** The smoke asserts each ladder is strictly increasing and
+  that the ledger's is the slower of the two, from both ends. ⚠ No diamonds, no notes, one sentence in the seat, THE CONTEXT not
   THE LAYER, and both sides share the datum and the floor.
   ⚠ **U1 (same day, owner: _"no, radically simplify it"_) IS THE LIVE CUT** —
   the first cut's bed, two sockets, foot rows, hatched cables, four layer
@@ -652,6 +670,26 @@ The proposal's beats after the configuration — phases · loop · needs and kee
   page-local switch over `list-groups` and `cards` plus the reveal opt-in
   (class and observer together) — `trinny-offer.test.ts` fails a beat authored
   in any other kind, which would otherwise vanish silently.
+- ⚠ **THE THREE PHASE PLATES ARE NOTCHED TOP-RIGHT, AND ONLY TOP-RIGHT**
+  (ADR-098 U4 then U5, owner 2026-09-14: _"redesign the modular approach cards
+  so they have the notch"_, then, on the still, _"I don't think we need a
+  notch in the bottom-left corner because … it is too close to the text"_).
+  The plate's floor IS the inverse DELIVERABLE band and its text is set inside
+  it, so a BL chamfer bites the line the reader is on; the head band under the
+  TR cut has a short mono kicker and sits clear. **A cut is free only where
+  nothing is set against it.**
+  ⚠ One corner is lawful by ADR-065's own uniform-set clause — three plates
+  of one kind, one nesting level, one scale, on the TOP end of the canonical
+  TR + BL diagonal — and a single notch MEANS oriented-or-connected, which a
+  numbered sequence of phases is.
+  ⚠ **NO `border`: a clip CUTS a border and never strokes one.** The edge is
+  a two-contour `evenodd` RING on `::before`, inner leg `ch − 0.586px`.
+  ⚠ **THE GUARD IS HIT-TESTED, NOT PARSED** — the computed `clip-path` keeps
+  its percentages and `calc()`s, so a pixel-pair regex finds one point in
+  five; `elementFromPoint` inside each corner's triangle asks what actually
+  painted, and the corner is pinned from BOTH ends. ⚠ Resolving the cut needs
+  a probe element: **a custom property is a string until something lays it
+  out.** CSS-only, three pages — run `arc-terminal-smoke` too.
 - **The journey**: `offer` is in `TRINNY_JOURNEY_ORDER`; the Proposal mark
   RANGES over `proposition` + `offer` (the Arc's device); the sector reads
   05/06 on it (rows are stations, the range is the mark's); the drawer has
@@ -790,7 +828,27 @@ The proposal's beats after the configuration — phases · loop · needs and kee
   green suite is not evidence the law held on this beat. ⚠ `.tl-turn__sub` is
   `max-width: 52ch`, NOT 44: at 44 the line breaks inside `self-sufficient`
   (a browser breaks at an existing hyphen), which is ADR-098 U1's finding one
-  beat over. ⚠ `tests/lib/trinny-mark.test.ts`'s `FINALS` MIRRORS those three
+  beat over.
+  ⚠ **THE CLIENT'S NAME IS BOUND WITH A NO-BREAK SPACE, AND THE LANE IS NOT
+  THE LEVER** (owner, 2026-09-14: _"can you put Trinny London on the same line
+  below it?"_). The title carries `Trinny London.` in the ghost AND in the
+  live layer, so the join travels with the STRING. Narrowing the measure until
+  the break falls where it should holds at one viewport and lies at the next:
+  the lane is three rungs of `min(px, %)` against type that clamps on `vw`, so
+  the characters per line move with both. ⚠ **AND THE HOUSE DECODE KERNEL DID
+  NOT KNOW U+00A0 WAS WHITESPACE** — `captionScramble.ts` tested `ch === " "`,
+  so an NBSP fell through to the glyph pool and SHUFFLED, un-binding the name
+  for the whole decode while the ghost held a two-line box. `isSpace` covers
+  both and the branch resolves the character to **ITSELF** (`out += incoming ||
+outgoing`), never a hard-coded `" "` — flattening it to a plain space loses
+  the join for the same reason. ⚠ One kernel, shared with the corridor's
+  caption card, so the fix lands wherever a caller binds a name.
+  ⚠ Measured: `And now we bring this to / Trinny London.` at 1920×1247 and
+  1280×720; at 1440×800 the lane is 560px against 56px type and it reads
+  `… this / to Trinny London.` — the NAME is still whole, which is what the
+  binding is for. Named, not fixed: forcing `to` up means widening a lane that
+  was solved against the product column.
+  ⚠ `tests/lib/trinny-mark.test.ts`'s `FINALS` MIRRORS those three
   strings by hand and moves in the same commit — a stale entry does not fail,
   it decodes a line that is not on the page.
 - ⚠ **THE COPY SITS AROUND THE MARK, NOT ON IT (U3, owner 2026-09-10).** Two
@@ -947,6 +1005,25 @@ calc(var(--tl-prop-lead) * -1 - 4px)`) so it covers the frame alone from the
   reveal channel means SHOWN.
 - **Both rules key the STATION, not the stage**, so one selector reaches the
   WebGL canvas AND the no-shader gradient (whose opacity rides `--tl-wash`).
+- ⚠ **AND THE HERO SEATS ON THE EDITORIAL BAND, WHICH IS THE SAME COMPLAINT
+  ON THE OTHER AXIS** (ADR-099 U1, owner 2026-09-14: _"the alignment of the
+  hero one and maybe also the paragraph is not consistent with the alignment of
+  the two text components in the other sections"_). Every banded text component
+  on this page rides ADR-048: the station's `--hud-content-inset` padding PLUS
+  `--rail-inset`, landing the edge on `--band-margin`. `#about`'s pair and all
+  nine proposal heads do; `.hero__content` took the padding alone.
+  ⚠ **IT ONLY EXISTS ABOVE THE 1200px BAND'S CROSSOVER, I.E. ONLY AT HIS OWN
+  VIEWPORT** — `--rail-inset` is `--band-margin − --hud-content-inset` and
+  resolves to ZERO below it, so hero/band measure 129/129 at 1280×720 and
+  145/145 at 1440×800 and **192/360** at 1920×1247. A defect invisible at
+  every reference shape is one only a capture at his own window can find.
+  ⚠ **JOIN THE BAND, NEVER RE-INSET THE SECTIONS** — ADR-048's own standing
+  clause, and the sections are the nine that already agree. `margin-inline:
+var(--rail-inset)` on `.tl-root .hero__content` (§3c), the recipe
+  `.proof__beat` / `.voidwalker` / the services masthead already use.
+  ⚠ Route-scoped by rule 1, and **the homepage has the same divergence** —
+  flagged, not taken: on `/` the hero's neighbour is a full-bleed canvas, not
+  nine banded heads, so nothing sits beside it to be inconsistent with.
 - ⚠ **THE PROPOSAL'S HEADS ALL SEAT ON ONE DATUM, AND IT IS NOT THIS PAGE'S
   RULE (ADR-099 §3, owner: _"make sure the hero one and the paragraph are
   always positioned at the right position"_).** `.arc-sec { align-content:
