@@ -1011,10 +1011,21 @@ html[data-corridor-exit="true"] .tl-root #proposition {
    reaching into a landing sheet is a dependency in the wrong direction. What
    it copies now is `proof-stack.css`'s APERTURE (ADR-097 U12) — itself the
    corridor caption card's motion — a `clip-path` opening from a zero-width
-   centre slit to both edges at once, 550ms on `cubic-bezier(0.16, 1, 0.3, 1)`.
-   Its law is the whole point: **the unfold is PURE MOTION, zero fades.** A
-   sweep and a flicker fight each other, so there is no opacity curve, no tear
-   and no `filter` left in this section.
+   centre slit to both edges at once, **720ms on `cubic-bezier(0.65, 0, 0.35,
+   1)`**. Its law is the whole point: **the unfold is PURE MOTION, zero
+   fades.** A sweep and a flicker fight each other, so there is no opacity
+   curve, no tear and no `filter` left in this section.
+
+   ⚠ THE PACING IS EASE-IN-OUT AND IT IS NOT THE REFERENCE'S (owner,
+   2026-09-14: _"a bit more subtle … a bit too fast … easy in, easy out"_).
+   The caption card's expo-out is 84 % open in its first sixth, which reads at
+   509px and not on objects this size. `easeInOutCubic` spends the duration
+   evenly and is slow at BOTH ends. The two hosts move together — one
+   grammar, one pair of numbers — so a change here is a change in
+   `proof-stack.css` too, and the reverse.
+   ⚠ `tl-settle` KEEPS ITS OWN CURVE AND BOTH DURATIONS (640 / 960): it is a
+   FADE on ADR-100 U3's ladder, not the sweep he was looking at, and the
+   ledger-slower-than-the-board ruling is stated in those two numbers.
 
    ⚠ THE BOARD'S PARTS KEEP THEIR OWN LADDER, AND IT IS AN OWNER RULING
    (ADR-100 U3). The two drawings sweep open as WHOLE objects; their parts
@@ -1208,12 +1219,12 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   }
 
   .tl-root #proposition[data-tl-prop-arrive="in"] .arc-head {
-    animation: tl-aperture 550ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: tl-aperture 720ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
   }
   /* The two drawings sweep open as WHOLE objects; their parts arrive inside,
      on the ladder below. */
   .tl-root #proposition[data-tl-prop-arrive="in"] .arc-board__svg {
-    animation: tl-aperture 550ms 80ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: tl-aperture 720ms 80ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
   }
   .tl-root #proposition[data-tl-prop-arrive="in"] [data-board-role],
   .tl-root #proposition[data-tl-prop-arrive="in"] [data-board-lane] {
@@ -1277,7 +1288,7 @@ html[data-corridor-exit="true"] .tl-root #proposition {
 
   .tl-root #proposition[data-tl-prop-arrive="out"] .arc-head,
   .tl-root #proposition[data-tl-prop-arrive="out"] .arc-board__svg {
-    animation: tl-aperture-close 260ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: tl-aperture-close 420ms cubic-bezier(0.65, 0, 0.35, 1);
   }
 
   /* — The phases —
@@ -1298,14 +1309,14 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   }
 
   .tl-root #offer[data-tl-phases-arrive="in"] #phases .arc-head {
-    animation: tl-aperture 550ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: tl-aperture 720ms cubic-bezier(0.65, 0, 0.35, 1) backwards;
   }
   /* ⚠ THE PLATE SWEEPS ON ITS OWN SILHOUETTE, AND NOTHING INSIDE IT ANIMATES.
      Its rows and its foot were carrying the chromatic split; they are revealed
      spatially by the sweep now, which is the caption card's own law and one
      less thing between the reader and the plate. */
   .tl-root #offer[data-tl-phases-arrive="in"] #phases .arc-plate {
-    animation: tl-aperture-plate 550ms var(--tl-gl-d, 0ms) cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation: tl-aperture-plate 720ms var(--tl-gl-d, 0ms) cubic-bezier(0.65, 0, 0.35, 1) backwards;
   }
   .tl-root #phases .arc-plate:nth-child(1) {
     --tl-gl-d: 160ms;
@@ -1318,10 +1329,10 @@ html[data-corridor-exit="true"] .tl-root #proposition {
   }
 
   .tl-root #offer[data-tl-phases-arrive="out"] #phases .arc-head {
-    animation: tl-aperture-close 260ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: tl-aperture-close 420ms cubic-bezier(0.65, 0, 0.35, 1);
   }
   .tl-root #offer[data-tl-phases-arrive="out"] #phases .arc-plate {
-    animation: tl-aperture-plate-close 260ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: tl-aperture-plate-close 420ms cubic-bezier(0.65, 0, 0.35, 1);
   }
 }
 

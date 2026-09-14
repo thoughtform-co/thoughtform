@@ -3561,7 +3561,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     /* ── THE FIRST CARD MATERIALISES (ADR-097 U11) ─────────────────────
        Owner, 2026-09-13: the first card should APPEAR rather than slide up.
        It is held absent through its whole rise and its APERTURE sweeps open
-       from a centre slit over 550ms in the last ~140px (U12 replaced U11's
+       from a centre slit over 720ms in the last ~140px (U12 replaced U11's
        glitch, which flashed), so three things are pinned: that it is
        genuinely ABSENT mid-rise, that the sweep ENDS ON THE CASCADE (the
        identity frame — `fill-mode: none`, and a `forwards` fill would pin
@@ -3570,7 +3570,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
 
        ⚠ **THE READS BELOW MUST WAIT FOR THE ANIMATIONS, NOT FOR A TIMEOUT.**
        `seatProofCard` returns the moment the hook publishes `pinned`, and its
-       retry wait is 450ms against a 550ms sweep — so the plate reads that
+       retry wait is 450ms against a 720ms sweep — so the plate reads that
        follow would catch the card still half open on any pass
        but the first. That is a load-dependent flake, and it would look like a
        broken card rather than a race. (The call is above, before the plate

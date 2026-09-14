@@ -970,7 +970,8 @@ nothing that can read as a flash.
 
 ### Two keyframes, and the closed frame is the open one with x collapsed
 
-`pf-aperture` (550ms) and `pf-aperture-close` (300ms). The open frame is
+`pf-aperture` (720ms) and `pf-aperture-close` (420ms), both on
+`cubic-bezier(0.65, 0, 0.35, 1)` — `easeInOutCubic`. The open frame is
 **string-equal** to `.pf-card`'s own six-point chamfer polygon; the closed
 frame is that polygon with every **X at 50% and every Y left alone** — a
 zero-width, FULL-HEIGHT slit, so the sweep is purely lateral and the six points
@@ -997,18 +998,37 @@ the card refuses to recede under the three that cover it); `clip-path`, not
 
 ### Measured, on the paused clock
 
-`node scripts/capture-proof-stack.mjs --glitch 0,20,45,80,140,280,560` at
-1440×900, card 1150×656: **one** animation throughout, `filter: none`,
-`translate: 0px`, `opacity: 1` at every offset — and the clip 50 % → 39.5 % →
-28.8 % → 18.3 % → 8.4 % → 1.3 % → the identity, which the smoke then pins by
-string equality against card 1.
+`node scripts/capture-proof-stack.mjs --glitch 0,90,180,270,360,450,540,630,720`
+at 1440×900, card 1150×656: **one** animation throughout, `filter: none`,
+`translate: 0px`, `opacity: 1` at every offset — and the clip's half-width
+50 % → 49.3 → 46.5 → 39.6 → **25.0 at 360ms** → 10.4 → 3.5 → 0.7 → the
+identity, which the smoke then pins by string equality against card 1. Exactly
+half open at exactly half the duration, which is what an ease-in-out is.
 
-⚠ **THE READABLE PHASE IS THE FIRST QUARTER OF THE DURATION, AND THAT IS THE
-REFERENCE'S OWN SHAPE.** `cubic-bezier(0.16, 1, 0.3, 1)` is 84 % open at 90ms;
-the caption card is 84 % open at 90ms too, proportionally identical. What
-differs is absolute edge speed — 575px a side here against ~230px there — so
-if it reads fast on this card the dial is the DURATION, which scales the
-readable phase with it. Named, not spent.
+### ⚠ The pacing is EASE-IN-OUT, and it is NOT the reference's
+
+Owner, hours later, on the live read:
+
+> can you make that scanline animation a bit more subtle? Right now it's a bit
+> too fast. Do it easy in, easy out, like any frontend design best practice.
+
+**The first cut copied the caption card's pair verbatim — 550ms on
+`cubic-bezier(0.16, 1, 0.3, 1)`, an EXPO-OUT — and that was the wrong half of
+the reference to copy.** Measured: it is **84 % open at 90ms**, so the sweep is
+spent in its first sixth and 460ms of the declaration is an imperceptible
+settle. Proportionally the caption card does exactly the same thing; what
+differs is ABSOLUTE EDGE SPEED, because this card is 1150px wide against its
+509 and the same curve moves these edges **2.5× faster in pixels**. That is
+what he saw, and it is arithmetic rather than taste.
+
+**`easeInOutCubic` at 720ms spends the duration evenly** — slow at BOTH ends,
+so the slit does not snap open and the card does not slam to full width — and
+the whole 720ms is readable instead of its first 120. ⚠ **The grammar is the
+caption card's; the PACING is this object's size.** A reference is copied for
+what it does, not for the numbers it does it at, and an effect scaled onto a
+2.3× wider object needs its timing re-solved rather than inherited — the same
+finding ADR-089 records about the services plate's bloom percentages, one
+property over.
 
 ### The same pass fixed the other host
 
@@ -1030,13 +1050,12 @@ string-equal to card 1's, no residual translate, `filter: none`, the animation
 spent not held, the card absent mid-rise, and the re-arm. The PRM case still
 pins `animation-name: none`. `settleArrival` still waits on
 `getAnimations().finished` and is still load-bearing: `seatProofCard`'s retry
-wait is 450ms against a 550ms sweep, so a plate read after it would sample a
+wait is 450ms against a 720ms sweep, so a plate read after it would sample a
 half-open card on any pass but the first.
 
 ### Left open
 
-- The two durations (550 / 300) and the curve are the only dials; nothing
-  measures whether the sweep reads as fast or slow on a card this wide.
+- The two durations (720 / 420) are the only dials left; the curve is settled.
 - **`arcBdBloom` (`arcs.css`) still carries a `1 → 0.45 → 1` opacity flicker**
   over ~138ms — the same class of defect on the arcs' default board ladder. It
   does not run on the Trinny page (that sheet kills it) and no other arc mounts

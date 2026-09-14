@@ -181,8 +181,8 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   seizures … instead I want that sort of scan-line animation which we have in
   the text cards in our arc at the bottom that then opens from the center to
   the left and right sides."_ Card 0 is ABSENT through its whole rise and its
-  APERTURE sweeps open from a zero-width centre slit over 550ms in its last
-  ~140px; scrolling back up irises it shut in 300ms. Seven things about it,
+  APERTURE sweeps open from a zero-width centre slit over 720ms in its last
+  ~140px; scrolling back up irises it shut in 420ms. Seven things about it,
   each of which was a defect first:
   ⚠ **THE FLASH WAS COUNTABLE, AND THAT IS WHY IT IS NOT A DIAL.** The retired
   `pf-glitch-strike` ran `opacity 0 → .62 → .12 → 1` linear over 640ms: three
@@ -230,15 +230,21 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   hook parks every slot at `enter: 1` and there is no arrival to open.
   ⚠ **A HARNESS MUST WAIT ON THE ANIMATIONS, NOT ON A TIMEOUT** —
   `seatProofCard` returns when the hook publishes `pinned` and its retry wait is
-  450ms against a 550ms sweep, so a plate read after it samples a HALF-OPEN card
+  450ms against a 720ms sweep, so a plate read after it samples a HALF-OPEN card
   on any pass but the first. `settleArrival` awaits `getAnimations().finished`.
-  ⚠ **THE READABLE PHASE IS THE FIRST QUARTER OF THE DURATION, AND THAT IS THE
-  REFERENCE'S SHAPE.** `cubic-bezier(0.16, 1, 0.3, 1)` is 84 % open at 90ms —
-  proportionally identical on the caption card; what differs is absolute edge
-  speed (575px a side here against ~230px there). If it reads fast, the dial is
-  the DURATION, which scales the readable phase with it.
+  ⚠ **THE PACING IS EASE-IN-OUT AND IT IS NOT THE REFERENCE'S** (owner, the
+  same day: _"a bit more subtle … a bit too fast … easy in, easy out, like any
+  frontend design best practice"_). The caption card's own pair — 550ms on the
+  expo-out `cubic-bezier(0.16, 1, 0.3, 1)` — is **84 % open at 90ms**, so the
+  sweep is spent in its first sixth. Proportionally identical on the caption
+  card; what differs is ABSOLUTE EDGE SPEED, 575px a side here against ~230px
+  there. `cubic-bezier(0.65, 0, 0.35, 1)` at 720ms is exactly half open at
+  360ms and readable end to end. **Copy a reference for what it DOES; re-solve
+  its timing for the size of the object you put it on.**
+  ⚠ **BOTH HOSTS MOVE TOGETHER** — one grammar, one pair of numbers. A change
+  here is a change in `trinny-london.css`'s `tl-aperture*`, and the reverse.
   ⚠ **Looking at it:** `node scripts/capture-proof-stack.mjs --glitch
-0,90,180,280,420,560` replays it on a paused clock. **Cancel the animations
+0,180,360,540,720` replays it on a paused clock. **Cancel the animations
   before restarting** — toggling the attribute alone ADDS a CSS animation the
   WAAPI has paused rather than replacing it (3 → 6 → 9 → 12 across one strip,
   with every computed value still looking right).

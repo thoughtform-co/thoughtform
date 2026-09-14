@@ -456,10 +456,22 @@
    throughout and grow with the sweep. Collapsing to a rectangle and cutting
    the corners at the end is the thing U11's band comb was built to avoid.
 
-   The curve and the two durations are dials: 550ms / `cubic-bezier(0.16, 1,
-   0.3, 1)` is the caption card's own pair, copied; the shorter close is this
-   surface's own law — leaving is not an arrival played backwards at the same
-   length. */
+   ⚠ **EASE-IN-OUT, AND SLOWER THAN THE REFERENCE — 720ms ON
+   `cubic-bezier(0.65, 0, 0.35, 1)`** (owner, 2026-09-14, on the live read:
+   _"can you make that scanline animation a bit more subtle? Right now it's a
+   bit too fast. Do it easy in, easy out, like any frontend design best
+   practice."_) The caption card's own pair is 550ms on an EXPO-OUT
+   (`cubic-bezier(0.16, 1, 0.3, 1)`), which is 84 % open at 90ms — so the
+   sweep is over in its first sixth and 460ms of the declaration is an
+   imperceptible settle. That reads fine at the caption card's 509px and not
+   at this card's 1150: the same curve moves these edges 2.5× faster in
+   absolute pixels, which is what he saw. `easeInOutCubic` spends the
+   duration EVENLY — slow at both ends, so the slit does not snap open and
+   the card does not slam to full width — and the whole 720ms is readable.
+   ⚠ It is a DEPARTURE from the reference, taken deliberately: the grammar is
+   the caption card's, the pacing is this object's size.
+   The close is 420ms on the same curve — this surface's own law: leaving is
+   not an arrival played backwards at the same length. */
 @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
   .pf-stack .pf-slot[data-pf-arrive="await"] .pf-card,
   .pf-stack .pf-slot[data-pf-arrive="out"] .pf-card {
@@ -470,12 +482,12 @@
   }
 
   .pf-stack .pf-slot[data-pf-arrive="in"] .pf-card {
-    animation: pf-aperture 550ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: pf-aperture 720ms cubic-bezier(0.65, 0, 0.35, 1);
     animation-fill-mode: none;
   }
 
   .pf-stack .pf-slot[data-pf-arrive="out"] .pf-card {
-    animation: pf-aperture-close 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    animation: pf-aperture-close 420ms cubic-bezier(0.65, 0, 0.35, 1);
     animation-fill-mode: none;
   }
 }

@@ -1125,8 +1125,8 @@ second, against WCAG 2.3.1's three-per-second general-flash threshold — so it
 is not a dial. **Everything below still binds except what PAINTS**: the order,
 the lead, the hysteresis, the two hidden states, the fill mode, the delay
 property and both ladders are untouched. The skin is the corridor caption
-card's centre-out APERTURE (550ms, `cubic-bezier(0.16, 1, 0.3, 1)`, PURE
-MOTION with zero fades) — `tl-aperture` · `tl-aperture-close` ·
+card's centre-out APERTURE (**720ms on `cubic-bezier(0.65, 0, 0.35, 1)`**,
+ease-in-out, PURE MOTION with zero fades) — `tl-aperture` · `tl-aperture-close` ·
 `tl-aperture-plate` · `tl-aperture-plate-close` · `tl-settle`.
 
 - ⚠ **IT IS THE PROOF CARD'S ARRIVAL (ADR-097), NOT THE HERO'S SLICE-TEAR
@@ -1217,8 +1217,18 @@ MOTION with zero fades) — `tl-aperture` · `tl-aperture-close` ·
   ladder with a per-part aperture would have deleted an owner ruling to buy
   one more sweep (and a `clip-path` percentage on an SVG `<g>` does not
   resolve against a per-group box in any case).
-- **Left open:** the sweep's duration and curve (the one dial U12 leaves); a
-  fast flick landing the head band inside a half-open plate for a frame; the
+- ⚠ **THE SWEEP IS EASE-IN-OUT, AND BOTH HOSTS CARRY ONE PAIR OF NUMBERS**
+  (owner, same day: _"a bit more subtle … a bit too fast … easy in, easy
+  out"_). The caption card's expo-out is 84 % open at 90ms — fine at its own
+  509px, 2.5× too fast in pixels on objects this size. 720ms in / 420ms out on
+  `cubic-bezier(0.65, 0, 0.35, 1)`, matching `proof-stack.css` exactly; change
+  one and change the other. ⚠ `tl-settle` keeps its OWN curve and both
+  durations (640 / 960) — it is a fade on ADR-100 U3's ladder, not the sweep,
+  and that ruling is stated in those two numbers.
+- **Left open:** the two durations (720 / 420); a
+  fast flick landing the head band inside a half-open plate for a frame (the
+  window widened 170ms with the slower sweep — the last plate now finishes at
+  440 + 720 = 1.16s after the stamp); the
   beats below `#phases` keeping the plain rise (the owner asked for "the next
   section").
 
