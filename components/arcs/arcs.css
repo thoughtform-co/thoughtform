@@ -85,6 +85,16 @@
      parchment. */
   --arc-plate: rgba(var(--void-deep-rgb), 0.55);
   --arc-sheen: rgba(var(--dawn-rgb), 0.03);
+  /* The soft gold FILL — a wash, never a line rung (ADR-101 §B, owner
+     2026-09-14: the plates' foot had "a black sort of fill. I don't think
+     we have that in the AI capability cards, so we use the soft yellow
+     fill"). It is the board chip's own value, lifted to `.arc-root` so the
+     two objects read as one material rather than as two that happen to
+     match: the chip BECOMES these plates, and a colour that has to be
+     kept in step by hand is a colour that drifts. ⚠ An alpha is not a
+     colour — light re-derives it below, because a wash that recedes toward
+     black on void recedes toward parchment here. */
+  --arc-gold-wash: rgba(var(--gold-rgb), 0.12);
 
   /* Decorative survey chrome (dot-grid lifts, crosses) deliberately
      bleeds past the band; clip it so it can never widen the page.
@@ -1435,13 +1445,38 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
     1px calc(100% - 1px)
   );
 }
+/* ⚠ THE HEAD BAND IS THE CHIP (ADR-101 §B). It carries the board chip's own
+   material — the gold wash over the plate's sheen, and the 2px gold rule that
+   STOPS AT THE CUT (`boardGlyphs`' own law: a rule run to the corner
+   overshoots into the notch) — because on this route the chip travels here
+   and lands as this band. A cross-fade between two materials is the one
+   thing the owner ruled out; the answer is that there is only one material.
+   ⚠ House-wide, not route-scoped: one renderer, three proposal pages, and a
+   plate whose head is gold on one of them is a fork of the component.
+   ⚠ THE RULE IS A `::before`, NOT A `border-top`. A border is cut away by the
+   plate's own clip on the diagonal and would run the full width besides;
+   this stops `--arc-plate-ch` short of the right edge, which is where the
+   diagonal begins. */
 .arc-plate__head {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: clamp(14px, 1.6vh, 18px) clamp(16px, 1.4vw, 22px) clamp(12px, 1.4vh, 16px);
   border-bottom: 1px solid var(--arc-seam);
-  background: linear-gradient(172deg, var(--arc-sheen) 0%, rgba(var(--dawn-rgb), 0) 55%);
+  background:
+    linear-gradient(0deg, var(--arc-gold-wash), var(--arc-gold-wash)),
+    linear-gradient(172deg, var(--arc-sheen) 0%, rgba(var(--dawn-rgb), 0) 55%);
+}
+.arc-plate__head::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% - var(--arc-plate-ch));
+  height: 2px;
+  background: var(--gold-line, rgba(202, 165, 84, 0.34));
+  pointer-events: none;
 }
 .arc-plate__kicker {
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
@@ -1513,13 +1548,23 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   text-transform: uppercase;
   color: var(--gold-ink, #caa554);
 }
+/* ⚠ AND THE FOOT TAKES THE SAME WASH, WHICH RETIRES ADR-098 U2's INVERSE
+   BAND (ADR-101 §B, owner 2026-09-14). The inverse read as a different
+   OBJECT bolted to the plate's floor — and once the head is the chip's
+   material, a slab of solid ink under it says the plate is two things. The
+   seam above it does the dividing, which is `--arc-seam`'s own job one
+   weight up from the rows' `--arc-rule` (ADR-089 U2's law).
+   ⚠ THE RING IS VISIBLE OVER IT NOW, AND THAT IS THE POINT. U2 relied on
+   the inverse band bleeding to the silhouette to CAP the plate; a wash
+   leaves the edge to the ring, which is what draws the cut corner. */
 .arc-plate__foot {
   display: flex;
   flex-direction: column;
   gap: 3px;
   padding: clamp(11px, 1.4vh, 14px) clamp(16px, 1.4vw, 22px);
-  background: var(--arc-ink);
-  color: var(--void, #0a0908);
+  border-top: 1px solid var(--arc-seam);
+  background: var(--arc-gold-wash);
+  color: var(--arc-ink-90);
 }
 .arc-plate__foot-label {
   margin-bottom: 2px;
@@ -1529,7 +1574,9 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   line-height: 1.2;
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
-  color: rgba(var(--void-rgb, 10, 9, 8), 0.62);
+  /* The gold INK rung, not the mark (ADR-063 U2's ramp): this label sits ON
+     the gold wash, and `--gold` as small text is ~1.7:1 on parchment. */
+  color: var(--gold-ink, #caa554);
 }
 .arc-plate__foot-line {
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
@@ -4985,7 +5032,10 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
   /* Small text: the keys. Raw gold fails the light walk at this size. */
   --arc-board-gold-ink: var(--gold-ink);
   --arc-board-gold-ink-lit: var(--gold-ink-lit);
-  --arc-board-gold-wash: rgba(var(--gold-rgb), 0.12);
+  /* ⚠ ONE VALUE WITH THE PLATES, ALIASED (ADR-101 §B). The chip is what the
+     offer's plates are made of one beat later, so the two cannot be two
+     declarations that agree today. */
+  --arc-board-gold-wash: var(--arc-gold-wash);
   /* Green is the human and nothing else: the seat, the authority drop,
      the dormant card's outline (the work is all the people's there). */
   --arc-board-green: var(--atreides-light);
@@ -5018,6 +5068,14 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
 .arc-board .arc-board__sans {
   font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
   letter-spacing: var(--track-copy);
+}
+/* ⚠ THE CHIP'S SECOND LINE TAKES THE LIT WEIGHT (ADR-101 §B). On the Trinny
+   page this line BECOMES each plate's name, which is `--weight-lit`, and PP
+   Neue Montreal is a static family — a weight that changes mid-flight does
+   not tween, it snaps. The chip is the one object on the board that travels,
+   so it is the one that has to start where it lands. */
+.arc-board [data-board-role="card"] .arc-board__sans {
+  font-weight: var(--weight-lit);
 }
 
 /* ── The arrival: the board assembles outward from its one bright object.
@@ -5311,7 +5369,9 @@ html[data-theme="light"] .arc-root .arc-prog {
    of their own — an alpha is not a colour, and a wash that recedes toward
    black on void recedes toward parchment here. The green triple is light's
    own (`theme.css` re-pins `--atreides-rgb` there). */
+html[data-theme="light"] .arc-root {
+  --arc-gold-wash: rgba(var(--gold-rgb), 0.18);
+}
 html[data-theme="light"] .arc-root .arc-board {
-  --arc-board-gold-wash: rgba(var(--gold-rgb), 0.18);
   --arc-board-green-wash: rgba(var(--atreides-rgb), 0.1);
 }

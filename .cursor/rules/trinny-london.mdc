@@ -116,6 +116,24 @@ var(--rail-inset)` so the hero seats on ADR-048's editorial band like
   route-scoped. ⚠ Delays ride `var(--tl-gl-d)` INSIDE the shorthand, fill
   `backwards`. ⚠ An absent stamp means SHOWN. Canonical text:
   `.claude/rules/trinny-london.md` §The two strike-ins.
+- ⚠ **ADR-101 §B: THE CHIP BECOMES THE THREE PLATE HEAD BANDS** (owner: it
+  _"moves into the center of the screen, and then it copies itself left and
+  right … I don't want fucking cross-dissolves"_). ⚠ ONE MATERIAL, so there
+  is nothing to cross-fade: `--arc-gold-wash` on `.arc-root`, aliased by the
+  board, painted by the plate's head AND its foot — which retires ADR-098
+  U2's inverse DELIVERABLE band house-wide. ⚠ One summed expression over
+  three windows (detach / split / seat), never a branch, with `chip` and
+  `head` read LIVE every frame: the two welds measure 0.00px on all four
+  terms. ⚠ The layer is ABSOLUTE in document space on `document.body`, never
+  fixed — a fixed carrier is composited against the viewport, so a missed
+  frame unglues it from the two things it is welding. ⚠ The chip is hidden
+  and its OUTLINE is not (four ribbons still meet that box; what stays is the
+  socket). ⚠ Every token resolved through a PROBE, and a `display: none`
+  layer measures ZERO — the baseline probe read 0 and dropped the words
+  18.85px with nothing erroring. ⚠ `rollToT` converges on the BEAT'S RECT:
+  `seamProgress` clamps, so a `t = 0` target on the published clock arrives
+  two viewports short. Canonical text: `.claude/rules/trinny-london.md`
+  §The seam.
 
 ## Verifying
 

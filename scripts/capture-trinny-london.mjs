@@ -215,6 +215,46 @@ await shoot("12-proposition", "the configuration seated on the head's datum");
    rather than the station's — and rolled to TWICE, because the arcs' reveal
    is an IntersectionObserver with a -10% dead band and the first roll out of
    the beat above can land before it has fired. */
+/* The SEAM (ADR-101 §B): the chip detaches from the board, glides to the
+   frame's centre, copies itself to the plates' columns and lands as their head
+   bands. Solved for `t`, the writer's own published clock, and converged on it
+   — `#offer`'s beats are a lazy nested root, so the document grows by several
+   viewports the first time this band is entered.
+   ⚠ THE THREE STOPS ARE THE THREE WINDOWS, and the middle one is the point:
+   at 0.4 there are THREE boxes where the board had one. */
+const rollToT = async (t) => {
+  for (let pass = 0; pass < 5; pass++) {
+    const box = await page.evaluate(() => {
+      const ph = document.getElementById("phases");
+      if (!ph) return null;
+      const row = ph.querySelector(".arc-groups--plates");
+      const pr = ph.getBoundingClientRect();
+      const s1 = row
+        ? Math.max(0, window.innerHeight - (row.getBoundingClientRect().bottom - pr.top))
+        : 0;
+      return { docTop: pr.top + window.scrollY, vh: window.innerHeight, s1 };
+    });
+    if (!box) {
+      await rollTo(await topOf("offer"));
+      continue;
+    }
+    await rollTo(Math.round(box.docTop - (box.vh - t * (box.vh - box.s1))));
+    const actual = Number(
+      await page.evaluate(() => document.getElementById("offer")?.getAttribute("data-tl-seam") ?? "0")
+    );
+    if (Math.abs(actual - t) <= 0.02) break;
+  }
+};
+for (const [t, name, note] of [
+  [0.15, "24-seam-detach", "the chip lifts off the board and glides to the centre"],
+  [0.5, "25-seam-split", "one object became three, on the plates' own columns"],
+  [0.85, "26-seam-seat", "the three carriers seating as the plates' head bands"],
+]) {
+  await rollToT(t);
+  await page.waitForTimeout(200);
+  await shoot(name, note);
+}
+
 /* ⚠ THE PHASES STRIKE ON THE SEAM, NOT ON ARRIVAL, so their burst fires
    at t 0.8 — which is BEFORE the beat's own top reaches the frame's top. One
    roll lands inside it; the doubled roll below lands past it. Both are worth

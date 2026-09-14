@@ -396,6 +396,96 @@ export function seamProgress(phasesTop: number, vh: number, s1: number): number 
   return clamp01((vh - phasesTop) / Math.max(1, vh - s1));
 }
 
+/* — The carrier (ADR-101 §B) —
+   Owner, 2026-09-14: _"The AI capability card at the center moves into the
+   center of the screen, and then it copies itself left and right. That
+   becomes the cards from the 'We propose a modular approach' section … I don't
+   want fucking cross-dissolves. This really needs to be an elegant
+   transformation of the element."_
+
+   Three windows on one clock: DETACH (the chip lifts off the board and
+   glides to the frame's centre), SPLIT (two copies un-hide on the frame all
+   three coincide, then peel to the plates' columns), SEAT (all three travel
+   to their head rects, changing box, cut and edge as they go). */
+
+export const SEAM_DETACH_END = 0.25;
+export const SEAM_SPLIT_END = 0.55;
+/** The chip's corner cut, in the board's own units. ⚠ Pinned equal to
+ *  `CUT.card` by `trinny-seam.test.ts` — the writer may not import
+ *  `boardLayout` (a client module reaching into the arcs' server geometry),
+ *  so the one number they share is asserted rather than shared. */
+export const SEAM_CHIP_CUT = 20;
+
+export interface SeamRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export function seamDetach(t: number): number {
+  return smootherstep(t / SEAM_DETACH_END);
+}
+export function seamSplit(t: number): number {
+  return ramp(t, SEAM_DETACH_END, SEAM_SPLIT_END);
+}
+export function seamSeat(t: number): number {
+  return ramp(t, SEAM_SPLIT_END, 1);
+}
+
+/**
+ * One carrier's box at `t`.
+ *
+ * ⚠ ONE SUMMED EXPRESSION, NEVER A BRANCH — `productPose`'s own law, one
+ * station up. The three legs are added into the same four terms rather than
+ * switched between, so there is no seam where one window hands over to the
+ * next, no state to get wrong scrolling back, and the continuity at 0.25 and
+ * 0.55 is arithmetic rather than a tolerance (the test pins it at 1e-9).
+ *
+ * ⚠ AND `chip` AND `head` ARE LIVE, READ THIS FRAME. Both boxes move under
+ * the scroll — the board is leaving the frame while the plates are entering
+ * it — so a pose solved against a remembered rect lands wherever that rect
+ * used to be. The two WELDS are what this buys: at t = 0 the carrier is
+ * pixel-identical to the chip it covers, and at t = 1 to the head it becomes.
+ */
+export function seamCarrierRect(
+  t: number,
+  chip: SeamRect,
+  centre: SeamRect,
+  park: SeamRect,
+  head: SeamRect
+): SeamRect {
+  const e1 = seamDetach(t);
+  const e2 = seamSplit(t);
+  const e3 = seamSeat(t);
+  const f = (c: number, ce: number, pk: number, h: number) =>
+    c + e1 * (ce - c) + e2 * (pk - ce) + e3 * (h - pk);
+  return {
+    x: f(chip.x, centre.x, park.x, head.x),
+    y: f(chip.y, centre.y, park.y, head.y),
+    w: f(chip.w, centre.w, park.w, head.w),
+    h: f(chip.h, centre.h, park.h, head.h),
+  };
+}
+
+/**
+ * An svg's `xMidYMid meet` mapping: the scale, and the offset of the crop's
+ * origin inside the element's own box.
+ *
+ * ⚠ `xMidYMid`, NOT `xMidYMin`. `pdaFlight.fitCrop` is the same arithmetic
+ * with `oy` hardcoded to 0, because the map's svg anchors its crop to the TOP
+ * (ADR-070 U3 — and that pairing is load-bearing there). The board anchors
+ * MID, so borrowing that helper would land every carrier half a letterbox
+ * high on a console taller than its crop.
+ */
+export function fitCropMid(
+  box: { w: number; h: number },
+  vb: { w: number; h: number }
+): { k: number; ox: number; oy: number } {
+  const k = Math.min(box.w / Math.max(1, vb.w), box.h / Math.max(1, vb.h));
+  return { k, ox: (box.w - vb.w * k) / 2, oy: (box.h - vb.h * k) / 2 };
+}
+
 export interface ProductRest {
   /** Rest centre, px in the stage's own box. */
   cx: number;

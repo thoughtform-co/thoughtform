@@ -694,6 +694,22 @@ BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, afte
   bottom-left corner because … it is too close to the text"). The plate rung
   (`--arc-plate-ch: clamp(16px, 1.8vw, 26px)`, the value `.arc-dossier` and
   `.arc-prog` already cut at), on the TOP end of the canonical diagonal.
+  ⚠ **THE FOOT IS NO LONGER INVERSE (ADR-101 §B, owner 2026-09-14: the
+  plates' foot had "a black sort of fill. I don't think we have that in the
+  AI capability cards, so we use the soft yellow fill").** The head band and
+  the foot both paint `--arc-gold-wash` — the BOARD CHIP's own material,
+  aliased from one token on `.arc-root` so the two cannot drift — with the
+  2px `--gold-line` rule across the head STOPPING AT THE CUT. On
+  `/arcs/trinny-london/proposal` that chip literally travels here and lands
+  as this band, and a cross-fade between two materials is the one thing the
+  owner ruled out; the answer is that there is only one material.
+  ⚠ **THE RING IS VISIBLE OVER THE FOOT NOW, AND THAT IS THE POINT** — U2
+  relied on the inverse band bleeding to the silhouette to CAP the plate; a
+  wash leaves the edge to the ring, which is what draws the cut corner.
+  ⚠ Measured composited in light: head and foot land on the identical
+  `rgb(223,208,180)`, `--gold-ink` reads 4.81:1 on it and the sans 10.93:1.
+  DARK is defined by the ramp and unverified — every proposal route is
+  light-locked.
   ⚠ **THE BL CUT WAS NOT FREE**: the plate's floor IS the inverse DELIVERABLE
   band and its text is set inside it, so a chamfer there bites the line the
   reader is on, while the head band under the TR cut carries a short mono

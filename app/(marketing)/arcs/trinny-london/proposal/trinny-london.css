@@ -1464,3 +1464,163 @@ html[data-corridor-exit="true"] .tl-root #proposition {
       tl-glitch-bands 260ms steps(1, end) reverse;
   }
 }
+
+/* ── 11. The chip becomes the plates (ADR-101 §B) ─────────────────────
+   Owner, 2026-09-14: _"The AI capability card at the center moves into the
+   center of the screen, and then it copies itself left and right. That becomes
+   the cards from the 'We propose a modular approach' section … I don't want
+   fucking cross-dissolves. This really needs to be an elegant transformation of
+   the element."_
+
+   ⚠ SO NOTHING HERE FADES. The chip is HIDDEN on the board (its outline stays,
+   dashed, as the socket its four ribbons still meet) and the plates' head bands
+   are HIDDEN under the carriers, and one object travels between them changing
+   its box, its cut, its edge and its two words. A cross-fade would be two
+   objects agreeing to look like one; this is one object.
+
+   ⚠ THE LAYER IS OUTSIDE `.tl-root` AND OUTSIDE `.arc-root`, appended to
+   `document.body` so its absolute box resolves against the INITIAL containing
+   block and therefore scrolls with the document (see `seamCarrier.ts`). Every
+   token it paints with is written onto it by the writer, resolved through a
+   probe inside the element that owns it — none of `--arc-*` resolves here. */
+
+.tl-seam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Over the stations (10) and the corridor's caption overlay (11), under the
+     HUD frame (50) and the nav overlay (60). */
+  z-index: 12;
+  pointer-events: none;
+}
+
+.tl-seam__carrier {
+  position: absolute;
+  left: var(--x, 0px);
+  top: var(--y, 0px);
+  width: var(--w, 0px);
+  height: var(--h, 0px);
+  --ch-in: calc(var(--ch, 0px) - 0.586px);
+  /* The chip's own three fills, in its own order: the gold wash over the
+     plate's sheen over the plate. `boardGlyphs` paints them as three stacked
+     paths; here they are three background layers of one box. */
+  background:
+    linear-gradient(0deg, var(--tl-seam-wash), var(--tl-seam-wash)),
+    linear-gradient(172deg, var(--tl-seam-sheen) 0%, transparent 55%), var(--tl-seam-plate);
+  clip-path: polygon(0 0, calc(100% - var(--ch, 0px)) 0, 100% var(--ch, 0px), 100% 100%, 0 100%);
+}
+
+/* ⚠ THE EDGE IS A CLIPPED RING, NOT A BORDER — a clip CUTS a border and never
+   strokes one (ADR-089), which on a five-point silhouette leaves four edges
+   outlined and the diagonal open. Outer contour clockwise, inner
+   counter-clockwise, `evenodd` making the middle a hole. ⚠ The inner leg is
+   NOT `ch - 1px`: insetting a 45° cut by `d` on both axes shortens its leg by
+   `d(2 - √2)` ≈ 0.586d, and matching them exactly leaves the ring visibly
+   thicker on the diagonal than on the straight runs. The plate's own ring uses
+   the same correction, which is how the two welds match. */
+.tl-seam__carrier::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--edge, transparent);
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--ch, 0px)) 0,
+    100% var(--ch, 0px),
+    100% 100%,
+    0 100%,
+    1px 1px,
+    calc(100% - 1px - var(--ch-in)) 1px,
+    calc(100% - 1px) calc(1px + var(--ch-in)),
+    calc(100% - 1px) calc(100% - 1px),
+    1px calc(100% - 1px)
+  );
+}
+
+/* The head band's own divider, which the carrier arrives carrying. */
+.tl-seam__carrier::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: var(--tl-seam-seam, transparent);
+}
+
+/* ⚠ THE 2px GOLD RULE STOPS AT THE CUT, at both ends of the flight. Run to the
+   corner it overshoots into the notch — `boardGlyphs`' own law on the chip, and
+   `.arc-plate__head::before`'s on the plate. One rule, one behaviour. */
+.tl-seam__rule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: calc(100% - var(--ch, 0px));
+  background: var(--tl-seam-rule, transparent);
+}
+
+.tl-seam__kicker,
+.tl-seam__name {
+  position: absolute;
+  left: var(--tx, 0px);
+  top: var(--ty, 0px);
+  /* ⚠ NEVER WRAP. The carrier's box is narrower than the head's for most of
+     the flight, and a line that breaks mid-travel re-lays-out under the
+     reader's eye — which is the one thing a single travelling object may not
+     do. The decode keeps the string's LENGTH, so the run is bounded. */
+  white-space: nowrap;
+}
+
+/* ⚠ THE LEAVES CARRY THE PLATES' OWN LINE-HEIGHTS, not 1. The head end's pose
+   is the real span's `offsetTop` — its BOX top — so the carrier's text lands
+   where the real text does only if the two boxes place their baseline
+   identically. At `line-height: 1` the name would sit 1.7px high at touchdown,
+   which is a visible step on the frame the layer hands over. */
+.tl-seam__kicker {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.tl-seam__name {
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-lit);
+  line-height: 1.3;
+}
+
+@media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  /* ⚠ THE CHIP IS HIDDEN, ITS OUTLINE IS NOT. The four ribbons still run to
+     this box, so removing it entirely leaves them ending in the middle of the
+     board. What stays is the SOCKET — the dormant side's own grammar (a dashed
+     dawn outline), which is exactly what an empty seat looks like on this
+     drawing. ⚠ Fail-open: the attribute is stamped to hide, never to show. */
+  .tl-root
+    #proposition[data-tl-chip="away"]
+    [data-board-state="configured"]
+    [data-board-role="card"]
+    .arc-board__wash,
+  .tl-root
+    #proposition[data-tl-chip="away"]
+    [data-board-state="configured"]
+    [data-board-role="card"]
+    text {
+    visibility: hidden;
+  }
+  .tl-root
+    #proposition[data-tl-chip="away"]
+    [data-board-state="configured"]
+    [data-board-role="card"]
+    .arc-board__outline {
+    stroke-dasharray: 4 4;
+    opacity: 0.5;
+  }
+
+  /* And the heads the carriers are about to become. ⚠ `visibility` only: the
+     plate's BODY has to keep painting under a band that is still in flight,
+     which is why §A hides a waiting plate by visibility rather than opacity. */
+  .tl-root #offer[data-tl-heads="hold"] #phases .arc-plate__head {
+    visibility: hidden;
+  }
+}

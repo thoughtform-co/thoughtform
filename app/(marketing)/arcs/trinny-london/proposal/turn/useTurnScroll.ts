@@ -30,7 +30,10 @@
  * …and off `#phases`' rect, one station further down:
  *   - `--tl-seam` / `data-tl-seam` — the seam clock `t`, 0 as the plates row
  *     enters the frame and 1 when it is whole in it;
- *   - `data-tl-phases-arrive` — the same three states, off `t`.
+ *   - `data-tl-phases-arrive` — the same three states, off `t`;
+ *   - `data-tl-chip` / `data-tl-heads` — which of the two ENDS is put away
+ *     while the carrier layer is between them (ADR-101 §B);
+ *   - the carrier layer itself, three boxes in document space.
  *
  * ⚠ ONE WRITER, THREE STATIONS, AND THAT IS DELIBERATE. This effect already
  * held `#proposition`, its canvas and its rect for the shared ground; a
@@ -74,6 +77,7 @@ import {
   type Arrive,
   type ProductRest,
 } from "./turnClock";
+import { measureSeam, mountSeamLayer, parkSeam, writeSeam, type SeamMeasure } from "./seamCarrier";
 import { turnDecodeFrame } from "./turnDecode";
 import { createTurnWash, type TurnWash } from "./turnWash";
 
@@ -172,6 +176,13 @@ export function useTurnScroll(): void {
        Measured per relayout; 0 until the beat exists, which makes the seam a
        no-op rather than a divide by nothing. */
     let seamS1 = 0;
+    /* The carrier layer and everything about it that only changes on a
+       relayout. Null until both nested roots have mounted, which makes the
+       whole seam a no-op rather than a layer over an empty page. */
+    const seamLayer = mq.matches ? mountSeamLayer() : null;
+    let seam: SeamMeasure | null = null;
+    let lastChip = -1;
+    let lastHeads = -1;
     /* ⚠ THE TWO STRIKES ARE THE ONLY STATE THIS WRITER KEEPS, and they are
        state because a burst has a DIRECTION. Everything else here is a pure
        function of a rect and survives being recomputed from nothing. */
@@ -215,6 +226,11 @@ export function useTurnScroll(): void {
       offer?.removeAttribute("data-tl-phases-arrive");
       offer?.removeAttribute("data-tl-seam");
       offer?.style.removeProperty("--tl-seam");
+      prop?.removeAttribute("data-tl-chip");
+      offer?.removeAttribute("data-tl-heads");
+      lastChip = -1;
+      lastHeads = -1;
+      parkSeam(seamLayer);
       propArrive = null;
       phasesArrive = null;
       wash?.draw(0);
@@ -252,6 +268,7 @@ export function useTurnScroll(): void {
       } else {
         seamS1 = 0;
       }
+      seam = seamLayer && root ? measureSeam(seamLayer, root) : null;
     };
 
     const frame = () => {
@@ -397,6 +414,33 @@ export function useTurnScroll(): void {
         );
       }
 
+      /* ⚠ THE CHIP BECOMES THE PLATES (ADR-101 §B), and the two ends are put
+         away by STAMPS rather than by the layer's own presence: both fail
+         open, so a parked writer leaves a whole chip on the board and three
+         whole plates below it. Delta-gated because an attribute write is a
+         style invalidation on everything under it. */
+      if (seam && seamLayer) {
+        const away = t > 0 && t < 1 ? 1 : 0;
+        if (lastChip !== away) {
+          lastChip = away;
+          if (away) prop?.setAttribute("data-tl-chip", "away");
+          else prop?.removeAttribute("data-tl-chip");
+        }
+        if (lastHeads !== away) {
+          lastHeads = away;
+          if (away) offer?.setAttribute("data-tl-heads", "hold");
+          else offer?.removeAttribute("data-tl-heads");
+        }
+        writeSeam(
+          seamLayer,
+          seam,
+          t,
+          seam.svg.getBoundingClientRect(),
+          phasesRect ?? seam.phases.getBoundingClientRect(),
+          window.scrollY
+        );
+      }
+
       // The channel the CSS fallback and the smoke read; the canvas itself
       // is painted above, outside this gate.
       stage.style.setProperty("--tl-wash", washOf(p).toFixed(3));
@@ -463,6 +507,7 @@ export function useTurnScroll(): void {
       window.removeEventListener("resize", relayout);
       mq.removeEventListener("change", relayout);
       park();
+      seamLayer?.remove();
       wash?.dispose();
       propWash?.dispose();
     };

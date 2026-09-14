@@ -20,6 +20,8 @@ import { expect, test, type Page } from "@playwright/test";
 test.describe.configure({ mode: "serial" });
 
 const SETTLE_MS = 700;
+/** Mirrors `SEAM_DETACH_END` — the frame the two copies un-hide on. */
+const SEAM_DETACH_AT = 0.25;
 
 /** Roll to `y` in viewport-sized steps, then let the corridor catch up. */
 async function rollTo(page: Page, y: number) {
@@ -60,12 +62,31 @@ async function rollToQ(page: Page, q: number) {
   await rollTo(page, Math.round(box.docTop - (1 - q) * box.vh));
 }
 
-/** Roll to `t` — the seam clock the phases' strike hangs on (ADR-101 §A).
- *  ⚠ CONVERGED ON THE PUBLISHED VALUE, never solved once: `#offer`'s beats
- *  are a lazy nested root, so the document grows by several viewports the
- *  first time this band is entered and a `y` computed before the roll lands
- *  somewhere else entirely. */
+/** Roll to `t` — the seam clock the phases' strike and the carriers hang on
+ *  (ADR-101).
+ *
+ *  ⚠ TWO LOOPS, AND THE SPLIT IS NOT TIDINESS. `#offer`'s beats are a lazy
+ *  nested root, so the first entry into this band grows the document by several
+ *  viewports; walking in has to be allowed to take as many passes as it needs
+ *  WITHOUT spending the convergence budget.
+ *
+ *  ⚠ AND IT CONVERGES ON THE BEAT'S OWN RECT, NOT ON THE PUBLISHED CLOCK.
+ *  `seamProgress` CLAMPS, so every scroll position above `#phases` reads 0.00 —
+ *  a `t = 0` target therefore "arrives" two viewports short, with the record
+ *  behind it still waiting to strike and every assertion downstream reading a
+ *  page that is nowhere near where it was asked for. A clamped clock is not a
+ *  convergence target at its own floor.
+ */
 async function rollToT(page: Page, t: number) {
+  for (let pass = 0; pass < 6; pass++) {
+    if (await page.evaluate(() => !!document.getElementById("phases"))) break;
+    const offerTop = await page.evaluate(
+      () =>
+        (document.getElementById("offer") as HTMLElement).getBoundingClientRect().top +
+        window.scrollY
+    );
+    await rollTo(page, Math.round(offerTop));
+  }
   for (let pass = 0; pass < 5; pass++) {
     const box = await page.evaluate(() => {
       const ph = document.getElementById("phases");
@@ -77,23 +98,13 @@ async function rollToT(page: Page, t: number) {
         : 0;
       return { docTop: pr.top + window.scrollY, vh: window.innerHeight, s1 };
     });
-    if (!box) {
-      // Not mounted yet: walk into the station and let the root arrive.
-      const offerTop = await page.evaluate(
-        () =>
-          (document.getElementById("offer") as HTMLElement).getBoundingClientRect().top +
-          window.scrollY
-      );
-      await rollTo(page, Math.round(offerTop));
-      continue;
-    }
-    await rollTo(page, Math.round(box.docTop - (box.vh - t * (box.vh - box.s1))));
-    const actual = Number(
-      await page.evaluate(
-        () => document.getElementById("offer")?.getAttribute("data-tl-seam") ?? "0"
-      )
+    if (!box) return;
+    const want = box.vh - t * (box.vh - box.s1);
+    await rollTo(page, Math.round(box.docTop - want));
+    const now = await page.evaluate(
+      () => (document.getElementById("phases") as HTMLElement).getBoundingClientRect().top
     );
-    if (Math.abs(actual - t) <= 0.02) break;
+    if (Math.abs(now - want) <= 4) break;
   }
 }
 
@@ -1481,18 +1492,87 @@ test.describe("Trinny London pitch variant", () => {
       /£45,000/
     );
     await expect(page.locator("#pricing .arc-ledger__tip")).toHaveCount(3);
-    // The arcs' ramp re-derives in light, and this page is locked light: the
-    // plate's inverse foot must be a DARK band on parchment, not parchment on
-    // parchment — the pair ADR-058 swaps, read back through the computed style.
-    const foot = await page.evaluate(() => {
-      const el = document.querySelector("#phases .arc-plate__foot") as HTMLElement;
-      const cs = getComputedStyle(el);
-      const rgb = (s: string) => (s.match(/\d+/g) ?? []).slice(0, 3).map(Number);
-      const lum = ([r, g, b]: number[]) => (r * 299 + g * 587 + b * 114) / 1000;
-      return { bg: lum(rgb(cs.backgroundColor)), ink: lum(rgb(cs.color)) };
+    /* ⚠ THE HEAD AND THE FOOT ARE ONE MATERIAL, AND IT IS THE CHIP'S
+       (ADR-101 §B, owner 2026-09-14: the plates' foot had "a black sort of
+       fill. I don't think we have that in the AI capability cards, so we use
+       the soft yellow fill"). This REPLACES ADR-098 U2's inverse-band
+       assertion, and it is asserted as a COMPOSITE rather than as two
+       declarations: the head paints its wash as a `background-image` layer
+       and the foot as a `background-color`, so comparing the declarations
+       reads two different strings for one colour. What matters is the pixel.
+       ⚠ AND THE CONTRAST IS MEASURED ON THAT COMPOSITE, in light, because
+       `--gold-ink` on a gold wash is the one rung on this plate that could
+       fall under the floor (measured 4.81:1 on the foot's label, 5.2 on the
+       head's kicker; `--gold` itself would be ~1.7 and may never letter). */
+    const plate = await page.evaluate(() => {
+      const num = (v: string) => (v.match(/[\d.]+/g) ?? []).map(Number);
+      const over = (fg: number[], bg: number[]) => {
+        const a = fg[3] ?? 1;
+        return [0, 1, 2].map((i) => fg[i] * a + bg[i] * (1 - a));
+      };
+      const lin = (c: number) => {
+        const x = c / 255;
+        return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+      };
+      const L = ([r, g, b]: number[]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+      const ratio = (a: number[], b: number[]) => {
+        const hi = Math.max(L(a), L(b));
+        const lo = Math.min(L(a), L(b));
+        return (hi + 0.05) / (lo + 0.05);
+      };
+      /* Composite down to the first OPAQUE ancestor, then re-apply this
+         element's own wash — a `background-image` never shows in
+         `backgroundColor`, so a naive walk measures the plate under it. */
+      const bedOf = (el: Element) => {
+        const chain: number[][] = [];
+        let n: Element | null = el;
+        while (n) {
+          const c = num(getComputedStyle(n).backgroundColor);
+          if (c.length >= 3) chain.push(c);
+          if (c.length >= 3 && (c[3] ?? 1) >= 0.85) break;
+          n = n.parentElement;
+        }
+        let bg = chain.length ? chain[chain.length - 1].slice(0, 3) : [255, 255, 255];
+        for (let i = chain.length - 2; i >= 0; i--) bg = over(chain[i], bg);
+        const img = getComputedStyle(el).backgroundImage;
+        const wash = img.match(/rgba?\(([\d.,\s]+)\)/);
+        return wash ? over(num(wash[1]), bg) : bg;
+      };
+      const on = (el: Element) => {
+        const bg = bedOf(el.parentElement!);
+        return +ratio(over(num(getComputedStyle(el).color), bg), bg).toFixed(2);
+      };
+      const foot = document.querySelector("#phases .arc-plate__foot")!;
+      const head = document.querySelector("#phases .arc-plate__head")!;
+      return {
+        footBed: bedOf(foot).map(Math.round),
+        headBed: bedOf(head).map(Math.round),
+        footLabel: on(foot.querySelector(".arc-plate__foot-label")!),
+        footLine: on(foot.querySelector(".arc-plate__foot-line")!),
+        kicker: on(head.querySelector(".arc-plate__kicker")!),
+        name: on(head.querySelector(".arc-plate__name")!),
+        /* The gold rule across the head's top, stopping at the cut. */
+        ruleW: Math.round(parseFloat(getComputedStyle(head, "::before").width || "0")),
+        headW: Math.round(head.getBoundingClientRect().width),
+      };
     });
-    expect(foot.bg, "the foot's band is dark in light").toBeLessThan(80);
-    expect(foot.ink, "the foot's ink is light in light").toBeGreaterThan(180);
+    // A LIGHT band on parchment, not the inverse: the chip's own wash.
+    expect(plate.footBed[0], "the foot carries the soft gold fill").toBeGreaterThan(180);
+    for (let i = 0; i < 3; i++) {
+      expect(
+        Math.abs(plate.footBed[i] - plate.headBed[i]),
+        `the head and the foot are one material (${plate.headBed} vs ${plate.footBed})`
+      ).toBeLessThanOrEqual(3);
+    }
+    expect(plate.footLabel, "DELIVERABLE on the wash").toBeGreaterThanOrEqual(4.5);
+    expect(plate.footLine, "the outcome on the wash").toBeGreaterThanOrEqual(4.5);
+    expect(plate.kicker, "the module label on the wash").toBeGreaterThanOrEqual(4.5);
+    expect(plate.name, "the module name on the wash").toBeGreaterThanOrEqual(4.5);
+    /* And the head's gold rule stops at the cut — run to the corner it
+       overshoots into the notch, which is `boardGlyphs`' own law on the
+       object this band came from. */
+    expect(plate.ruleW, "the head's rule runs the full width").toBeLessThan(plate.headW - 8);
+    expect(plate.ruleW, "the head's rule is missing").toBeGreaterThan(plate.headW - 40);
 
     const contactTop = await page.evaluate(
       () => (document.getElementById("contact")?.getBoundingClientRect().top ?? 0) + window.scrollY
@@ -2023,6 +2103,141 @@ test.describe("Trinny London pitch variant", () => {
       expect(p.clip, "the plate lost its own notch to the comb").toMatch(/polygon/);
       expect(p.w).toBeGreaterThan(200);
     }
+  });
+
+  test("ADR-101 §B: the chip becomes the plates, welded at both ends", async ({ page }) => {
+    /* Owner, 2026-09-14: the chip _"moves into the center of the screen, and
+       then it copies itself left and right. That becomes the cards from the
+       'We propose a modular approach' section … I don't want fucking
+       cross-dissolves. This really needs to be an elegant transformation of
+       the element."_
+
+       ⚠ THE TWO WELDS ARE THE WHOLE CLAIM, and neither is visible on a still
+       that is not taken on exactly the right frame: at t = 0 the carrier has
+       to BE the chip it covers, and at t = 1 it has to BE the head it is
+       replaced by. Off by a few pixels at either end and the reader sees a
+       jump — which is what a cross-dissolve was being avoided to prevent.
+       `trinny-seam` pins the arithmetic; this pins the live boxes. */
+    await page.setViewportSize({ width: 1920, height: 1247 });
+    await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".home-v2-stage");
+    await page.waitForTimeout(SETTLE_MS);
+
+    const read = () =>
+      page.evaluate(() => {
+        const box = (el: Element | null) => {
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return { x: r.x, y: r.y, w: r.width, h: r.height };
+        };
+        const layer = document.querySelector<HTMLElement>(".tl-seam");
+        const cs = [...document.querySelectorAll<HTMLElement>(".tl-seam__carrier")];
+        const chip = document.querySelector(
+          '#proposition [data-board-state="configured"] [data-board-module="card"] .arc-board__plate'
+        );
+        const heads = [...document.querySelectorAll("#phases .arc-plate__head")];
+        return {
+          t: Number(document.getElementById("offer")?.getAttribute("data-tl-seam") ?? "0"),
+          arrive:
+            document.getElementById("proposition")?.getAttribute("data-tl-prop-arrive") ?? null,
+          q: document.getElementById("proposition")?.getAttribute("data-tl-prop") ?? null,
+          chipAway: document.getElementById("proposition")?.getAttribute("data-tl-chip") ?? null,
+          hold: document.getElementById("offer")?.getAttribute("data-tl-heads") ?? null,
+          layerHidden: layer ? layer.hidden : null,
+          shown: cs.filter((c) => !c.hidden).length,
+          carriers: cs.map((c) => ({
+            hidden: c.hidden,
+            box: box(c),
+            kicker: c.querySelector(".tl-seam__kicker")?.textContent ?? "",
+            name: c.querySelector(".tl-seam__name")?.textContent ?? "",
+          })),
+          chip: box(chip),
+          chipVis: chip ? getComputedStyle(chip).visibility : null,
+          chipText: [
+            ...document.querySelectorAll(
+              '#proposition [data-board-state="configured"] [data-board-role="card"] text'
+            ),
+          ].map((t) => getComputedStyle(t).visibility),
+          heads: heads.map((h) => ({ box: box(h), vis: getComputedStyle(h).visibility })),
+        };
+      });
+
+    // 0 — the chip is whole on the board and there is no layer to see.
+    await rollToT(page, 0);
+    const rest = await read();
+    expect(rest.chipAway, "the chip is still seated").toBeNull();
+    expect(rest.layerHidden).toBe(true);
+    for (const v of rest.chipText)
+      expect(v, `arrive=${rest.arrive} q=${rest.q} t=${rest.t}`).toBe("visible");
+
+    /* 1 — the first frame of travel: ONE carrier, over the chip it covers,
+       to the pixel. The chip's own words are away and its OUTLINE is not:
+       four ribbons still run to that box, and a seat that vanished would
+       leave them ending in the middle of the board. */
+    await rollToT(page, 0.02);
+    const off = await read();
+    if (off.t > 0 && off.t < SEAM_DETACH_AT) {
+      expect(off.chipAway, "the chip is put away as the carrier lifts").toBe("away");
+      expect(off.hold, "the heads are held").toBe("hold");
+      expect(off.shown, "one object, not three, before the split").toBe(1);
+      for (const v of off.chipText) expect(v, "the chip's words are away").toBe("hidden");
+      expect(off.chipVis, "the chip's OUTLINE stays — the ribbons meet it").toBe("visible");
+      const c = off.carriers.find((x) => !x.hidden)!;
+      // The weld: within a pixel and a half of the chip's own screen box.
+      for (const k of ["w", "h"] as const) {
+        expect(
+          Math.abs(c.box![k] - off.chip![k]),
+          `the carrier is not the chip's size at t ${off.t} (${k})`
+        ).toBeLessThanOrEqual(1.5);
+      }
+      expect(c.kicker, "it carries the chip's own words").toBe("AI CAPABILITY");
+      expect(c.name).toBe("owned by the team");
+    }
+
+    // 2 — past the split: one object became three.
+    await rollToT(page, 0.5);
+    const split = await read();
+    expect(split.shown, "the chip copied itself left and right").toBe(3);
+    const xs = split.carriers.map((c) => c.box!.x).sort((a, b) => a - b);
+    expect(xs[1] - xs[0], "the copies peeled apart").toBeGreaterThan(60);
+    expect(xs[2] - xs[1]).toBeGreaterThan(60);
+    for (const h of split.heads) expect(h.vis, "the heads are held").toBe("hidden");
+
+    /* 3 — the far weld. Each carrier is its head's box, and its words have
+       already landed: the decode finishes at 90 % of the seat so the last
+       stretch is a pure geometry move and the hand-over frame carries no
+       half-shuffled glyph. */
+    await rollToT(page, 0.99);
+    /* ⚠ AND THE PLATES HAVE TO HAVE STOPPED STRIKING BEFORE THEIR HEADS ARE
+       MEASURED. §A's burst animates `translate: 2.5px 0` on the plate itself,
+       so a head read mid-strike is up to 2.5px from where it settles — which
+       reads as the carrier missing its weld and is the HARNESS moving the
+       target. Settled, the delta is 0.00 on all four terms (measured). */
+    await settleStrike(page, "#phases");
+    const seated = await read();
+    if (seated.t > 0.9 && seated.t < 1) {
+      expect(seated.shown).toBe(3);
+      for (let i = 0; i < 3; i++) {
+        const c = seated.carriers[i].box!;
+        const h = seated.heads[i].box!;
+        for (const k of ["x", "y", "w", "h"] as const) {
+          expect(
+            Math.abs(c[k] - h[k]),
+            `carrier ${i} is not its head's box at t ${seated.t} (${k})`
+          ).toBeLessThanOrEqual(1.5);
+        }
+        expect(seated.carriers[i].kicker, `carrier ${i}'s kicker`).toMatch(/^M[123] /);
+      }
+    }
+
+    // 4 — and at 1 the layer is away and the real heads paint.
+    await rollToT(page, 1);
+    const done = await read();
+    expect(done.layerHidden, "the layer hands over").toBe(true);
+    expect(done.chipAway, "the chip is whole again").toBeNull();
+    expect(done.hold).toBeNull();
+    for (const h of done.heads) expect(h.vis, "the real heads paint").toBe("visible");
+    for (const v of done.chipText) expect(v).toBe("visible");
   });
 
   test("ADR-101 §A: under reduced motion nothing strikes, and nothing is hidden", async ({

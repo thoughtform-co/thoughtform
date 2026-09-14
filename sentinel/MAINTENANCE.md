@@ -106,11 +106,28 @@ faded out — with the same for the beat after it.
   cancelled animation REJECTS) rather than a timeout: a strike's length is a
   LADDER, not a duration, and `animationName` is the DECLARATION rather than
   the state.
-- **Verified:** `tsc` clean, 1530 unit tests, the Trinny smoke 12/12 (two new
-  cases plus the fail-open reduced-motion one), `arc-terminal-smoke` 9 passed
+- **ADR-101 §B — the chip becomes the three plate head bands.** The way to
+  obey _"I don't want fucking cross-dissolves"_ is to have only ONE
+  MATERIAL: `--arc-gold-wash` lifts to `.arc-root`, the board's own token
+  aliases it, and the plate's head band AND its foot paint it — which
+  **retires ADR-098 U2's inverse DELIVERABLE band house-wide**. The
+  choreography is ONE SUMMED EXPRESSION over three windows with the chip's
+  and the head's boxes read LIVE each frame; both welds measure 0.00px.
+- ⚠ **THREE MORE SILENT WRONG ANSWERS, ALL FOUND BY MEASURING RATHER THAN
+  BY A FAILURE.** (1) A `display: none` layer measures ZERO, so the baseline
+  probe read 0 and dropped every carrier word 18.85px — it reads as type
+  placed by eye. (2) `seamProgress` CLAMPS, so a `t = 0` convergence target
+  on the published clock "arrives" two viewports short with every assertion
+  downstream reading a page nowhere near where it was asked for: **a clamped
+  clock is not a convergence target at its own floor.** (3) §A's strike
+  animates `translate: 2.5px 0` on the plate, so a head read mid-strike is
+  2.5px from where it settles and the harness is moving its own target.
+- **Verified:** `tsc` clean, **1536** unit tests (a new `trinny-seam` suite),
+  the Trinny smoke **13/13** (three new cases plus the fail-open
+  reduced-motion one), `arc-terminal-smoke` + `arc-portfolio-smoke` 22 passed
   with only the documented pre-existing chip failure, and captures looked at
-  at 1920×1247 and 1280×720.
-- Commits: `082b5882` (ADR-100 U4) and this pass's §A.
+  at 1920×1247 and 1280×720 including the three new seam stops.
+- Commits: `082b5882` (ADR-100 U4), `a8d17510` (§A) and this pass's §B.
 
 ### 2026-09-14 (second pass) — Four reads on the same page (ADR-095 U8 amended, ADR-100 U3, ADR-099 U1, ADR-098 U5)
 

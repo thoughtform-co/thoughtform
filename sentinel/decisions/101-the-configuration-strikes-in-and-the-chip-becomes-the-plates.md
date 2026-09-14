@@ -1,6 +1,6 @@
 # ADR-101: The configuration strikes in, and the chip becomes the plates
 
-**Status:** §A Proposed (2026-09-14) — shipped and guarded, pending the owner's live read. §B is not built yet.
+**Status:** Proposed (2026-09-14) — §A and §B both shipped and guarded, pending the owner's live read.
 **Surface:** `#proposition` and `#offer` on `/arcs/trinny-london/proposal` (ADR-093 → ADR-094 → ADR-099 → ADR-100).
 **Supersedes on this page:** ADR-095 U6's half-viewport lead (the lead is a WHOLE viewport now, §A.1) and the arcs' IO rise on these two beats alone (§A.4).
 **Related:** ADR-097 U11 (the proof card's strike-in, which this copies), ADR-021 (the motion law and its one sanctioned exception), ADR-060 (the hero's slice-tear, which this is NOT), ADR-100 U4 (the board the strike lands on), ADR-098 U5 (the plates the chip becomes, §B).
@@ -13,7 +13,7 @@ Owner, 2026-09-14, reading the four-surface pass live, in one message of seven a
 > 2. Once you're done with the studio today and configured, and you scroll to the next section, we also want the elements from the next section to glitch into view. This is super important, so use the proper sub-agents to scope this.
 > 3. The AI capability card at the center moves into the center of the screen, and then it copies itself left and right. That becomes the cards from the "We propose a modular approach" section … I don't want fucking cross-dissolves. This really needs to be an elegant transformation of the element.
 
-§A is asks 1 and 2. §B is ask 3, with the plates' material (ask 4) — not built yet.
+§A is asks 1 and 2. §B is ask 3, with the plates' material (his fourth ask: _"in that every proposal module or approach that compound section, the cards at the bottom have a black sort of fill. I don't think we have that in the AI capability cards, so we use the soft yellow fill"_).
 
 ## §A · Both beats strike in
 
@@ -116,10 +116,70 @@ The board still ASSEMBLES outward from its chip and the ledger is still five row
 
 ## §B · The chip becomes the plates
 
-Not built. Scoped: the chip detaches, travels to the frame's centre, copies itself left and right and lands as each plate's HEAD BAND with the body unfolding beneath, on a carrier layer driven by the same seam clock `t`; the plates' DELIVERABLE foot takes the chip's gold wash. The design calls are recorded in the plan; this section is written when it ships.
+### B.0 · One material, so there is nothing to cross-fade
+
+The ask forbids a dissolve, and the cheapest way to obey it is to have only one thing. `--arc-gold-wash` moves up to `.arc-root` (0.12, re-derived 0.18 in light — an alpha is not a colour) and the board's own `--arc-board-gold-wash` ALIASES it. The plate's head band then paints the chip's material exactly: the gold wash over the plate's sheen, with the 2px `--gold-line` rule across its top **stopping at the cut** (`boardGlyphs`' own law: a rule run to the corner overshoots into the notch). ⚠ The rule is a `::before`, not a `border-top` — a border is cut away by the plate's clip on the diagonal and would run the full width besides.
+
+⚠ **AND THE FOOT TAKES THE SAME WASH, WHICH RETIRES ADR-098 U2's INVERSE BAND.** A slab of solid ink under a head made of the chip's material says the plate is two things; the `--arc-seam` above it does the dividing, which is that weight's own job one step up from the rows' `--arc-rule` (ADR-089 U2). ⚠ **The ring becomes visible over it, and that is the point** — U2 relied on the inverse band bleeding to the silhouette to CAP the plate, where a wash leaves the edge to the ring, which is what draws the cut corner.
+
+⚠ **HOUSE-WIDE, NOT ROUTE-SCOPED.** One renderer, three proposal pages: a plate whose head is gold on one of them is a fork of the component. All four proposal routes are light-locked, so the dark values are defined by the ramp and **unverified** (ADR-100 U1's own note, one object over). Measured composited in light: head and foot land on the identical `rgb(223, 208, 180)`, `--gold-ink` reads **4.81:1** on it and the sans **10.93:1**.
+
+⚠ **AND THE CHIP'S SECOND LINE TAKES `--weight-lit`.** It becomes each plate's name, which is 500, and PP Neue Montreal is a static family — a weight that changes mid-flight does not tween, it snaps.
+
+### B.1 · One summed expression, two welds
+
+`seamCarrierRect(t, chip, centre, park, head)` is the whole choreography:
+
+```
+C(t) = chip + e1(centre — chip) + e2(park — centre) + e3(head — park)
+```
+
+with `e1/e2/e3` smootherstep over DETACH [0, 0.25], SPLIT [0.25, 0.55] and SEAT [0.55, 1]. ⚠ **SUMMED, NEVER BRANCHED** — `productPose`'s own law one station up: there is no seam where one window hands over to the next, no state to get wrong scrolling back, and the continuity at both joins is arithmetic rather than a tolerance (pinned at 1e-9).
+
+⚠ **`chip` AND `head` ARE READ LIVE, THIS FRAME.** Both boxes move under the scroll — the board is leaving the frame while the plates are entering it — so a pose solved against a remembered rect lands where that rect used to be. What this buys is the two WELDS, and they are the whole claim: **measured 0.00px on all four terms at both ends.** Off by a few pixels at either end and the reader sees exactly the jump a cross-fade was being avoided to prevent.
+
+⚠ **THE MIDDLE CARRIER HOLDS STILL THROUGH THE SPLIT**, because the middle plate's column centre IS the frame's centre (956.95 against a client width of 1914). So the split reads as two copies peeling OFF one object rather than as three objects moving.
+
+### B.2 · The layer is absolute in document space, on `document.body`
+
+⚠ **NOT FIXED, AND THAT IS WHY THE WELDS SURVIVE A MISSED FRAME.** The chip and the heads are both glued to the page; a `fixed` carrier is composited against the VIEWPORT, so a frame this writer misses leaves it hanging where the scroll used to be while the things it welds to have moved. Absolute, it misses the same frame glued to the same page.
+
+⚠ **AND IT IS APPENDED TO `document.body`.** An absolutely positioned element whose containing block is the initial one is in document space and scrolls with it; the alternative — giving `.tl-root` a `position` — would silently re-home every absolutely positioned descendant of the page root. `z-index: 12`: over the stations (10) and the corridor's caption overlay (11), under the HUD frame (50).
+
+### B.3 · What is put away, and what is not
+
+`data-tl-chip="away"` hides the chip's WASH and its two words and leaves its OUTLINE, dashed at 0.5 — the dormant side's own grammar. ⚠ **Four ribbons still run to that box**, so a seat that vanished would leave them ending in the middle of the board; what stays is the SOCKET, which is what an empty seat looks like on this drawing. `data-tl-heads="hold"` hides the plates' head bands by `visibility` alone, which is why §A hides a waiting plate the same way: the body has to keep painting under a band that is still in flight. Both stamps fail OPEN.
+
+### B.4 · Every token is resolved through a probe
+
+⚠ **A CUSTOM PROPERTY IS A STRING UNTIL SOMETHING LAYS IT OUT** (`--arc-plate-ch` is a `clamp()`; `--arc-edge` is `rgba(var(--dawn-rgb), …)`) — and this layer sits outside `.arc-root`, where none of those tokens resolve at all. The probe goes INSIDE the element that owns the token and reports the pixel. The edge colour is then interpolated in JS and written as a literal `rgba()`, which avoids a `color-mix` fallback branch and is exact.
+
+⚠ **THE LAYER HAS TO BE LAID OUT TO BE MEASURED, AND THAT COST A DEFECT.** It rests at `hidden`, i.e. `display: none`, where every rect is zero — so the baseline probe reported **0**, which places each span's BOX top on the chip's BASELINE and drops its text **18.85px**, measured. Nothing errored, nothing else moved, and it reads as the words having been placed by eye. It is un-hidden for the measurement and restored after; the baseline delta is **0.01px**.
+
+⚠ **AND THE BASELINE IS MEASURED, NOT DERIVED FROM A FONT TABLE.** The chip's words are SVG `<text>` on their baseline and the carrier's are HTML spans placed by their box top; the ascent that converts them is a property of the face at that size, which nothing in CSS exposes. A zero-size inline-block at `vertical-align: baseline` reports it exactly. ⚠ The leaves also carry the PLATES' own line-heights (1.2 / 1.3), not 1 — at `line-height: 1` the name lands 1.7px high at touchdown, which is a visible step on the hand-over frame.
+
+### B.5 · The words change by decoding, on one wall
+
+`seamDecode.ts` runs six pairs through the house kernel (`scrambleFrame`, pure in elapsed `t`, never `advanceScrambles` — it drops finished jobs, and a dropped job is a latch). ⚠ **ONE WALL FOR ALL SIX**, the longest pair's duration, or `M1` lands while `Creative operations and scaling` is still shuffling and three head bands resolve at three different moments. ⚠ **The ends are string-equal**, not nearly: those two frames are the welds. ⚠ And the decode finishes at **90 % of the seat**, so the last stretch is a pure geometry move and the hand-over frame carries no half-shuffled glyph.
+
+### Files
+
+`app/(marketing)/arcs/trinny-london/proposal/turn/{turnClock.ts, seamCarrier.ts, seamDecode.ts, useTurnScroll.ts}` · §11 of the route sheet · the plate block and `--arc-gold-wash` in `components/arcs/arcs.css` · `tests/lib/trinny-seam.test.ts` · `tests/visual/trinny-london-smoke.spec.ts` · `scripts/capture-trinny-london.mjs`.
+
+### Guards
+
+**Unit** (`trinny-seam`) — both welds and both joins over the boxes the reference viewport measures, the three ramps saturating in order, the middle carrier holding still through the split, `SEAM_CHIP_CUT === CUT.card` (the writer may not import the arcs' server geometry, so the one number they share is asserted), `fitCropMid` against `pdaFlight.fitCrop`'s top-anchored variant, and the decode's exact ends. It also pins three facts in the SOURCE — `document.body`, no `getPropertyValue`, no `innerWidth` — because each is a silent wrong answer rather than an error.
+
+**Smoke** — `the chip becomes the plates, welded at both ends` walks t 0 → 0.02 → 0.5 → 0.99 → 1: the chip whole at rest, one carrier on the chip's own box with the chip's words and its outline still drawn, three carriers peeled apart past the split with the heads held, each carrier on its head's box to 1.5px at 0.99, and the layer away with the real heads painting at 1. The plate material is asserted as a COMPOSITE (the head paints its wash as a background IMAGE and the foot as a background COLOR, so comparing the declarations reads two strings for one colour) with `--gold-ink`'s contrast measured on it.
+
+⚠ **`rollToT` CONVERGES ON THE BEAT'S RECT, NOT ON THE PUBLISHED CLOCK.** `seamProgress` CLAMPS, so every scroll position above `#phases` reads 0.00 — a `t = 0` target therefore "arrives" two viewports short with every assertion downstream reading a page nowhere near where it was asked for. **A clamped clock is not a convergence target at its own floor.** ⚠ And the plates have to have STOPPED STRIKING before their heads are measured: §A's burst animates `translate: 2.5px 0` on the plate itself, so a head read mid-strike is up to 2.5px from where it settles — which reads as the carrier missing its weld and is the harness moving the target.
+
+**Capture** — `24-seam-detach` (t 0.15), `25-seam-split` (0.5 — past the peel, where the copies are genuinely three objects rather than three overlapping ones) and `26-seam-seat` (0.85).
 
 ## Left open
 
 - **The brightness on parchment** (A.6). 1.16 is the proof card's value on a dark ground; it greys the ink here for about 70ms. One number, owner's read.
 - **A fast flick** lands the phases' head band inside the plates' comb for a frame or two (0.8 → 1.0 in under 420ms), and a continuous scroll through the configuration's threshold has the board still striking while the seam has already opened. Both are the nature of a burst on a scroll trigger; both are named rather than fixed.
 - **The beats below `#phases`** keep the plain rise. The owner asked for "the next section"; a consistency pass over the flow, the fee and the close is CSS only and is not taken.
+- **The plates in DARK.** All four proposal routes are light-locked, so `--arc-gold-wash`'s dark value is defined by the ramp and has never been looked at. ADR-100 U1's own note, one object over.
+- **The carrier crossing its own drawing.** Through the detach the chip travels over the board's other modules. That is what a single travelling object does; naming it rather than adding a veil, which would be the cross-fade by another route.
