@@ -60,6 +60,64 @@ async function rollToQ(page: Page, q: number) {
   await rollTo(page, Math.round(box.docTop - (1 - q) * box.vh));
 }
 
+/** Roll to `t` — the seam clock the phases' strike hangs on (ADR-101 §A).
+ *  ⚠ CONVERGED ON THE PUBLISHED VALUE, never solved once: `#offer`'s beats
+ *  are a lazy nested root, so the document grows by several viewports the
+ *  first time this band is entered and a `y` computed before the roll lands
+ *  somewhere else entirely. */
+async function rollToT(page: Page, t: number) {
+  for (let pass = 0; pass < 5; pass++) {
+    const box = await page.evaluate(() => {
+      const ph = document.getElementById("phases");
+      if (!ph) return null;
+      const row = ph.querySelector<HTMLElement>(".arc-groups--plates");
+      const pr = ph.getBoundingClientRect();
+      const s1 = row
+        ? Math.max(0, window.innerHeight - (row.getBoundingClientRect().bottom - pr.top))
+        : 0;
+      return { docTop: pr.top + window.scrollY, vh: window.innerHeight, s1 };
+    });
+    if (!box) {
+      // Not mounted yet: walk into the station and let the root arrive.
+      const offerTop = await page.evaluate(
+        () =>
+          (document.getElementById("offer") as HTMLElement).getBoundingClientRect().top +
+          window.scrollY
+      );
+      await rollTo(page, Math.round(offerTop));
+      continue;
+    }
+    await rollTo(page, Math.round(box.docTop - (box.vh - t * (box.vh - box.s1))));
+    const actual = Number(
+      await page.evaluate(
+        () => document.getElementById("offer")?.getAttribute("data-tl-seam") ?? "0"
+      )
+    );
+    if (Math.abs(actual - t) <= 0.02) break;
+  }
+}
+
+/**
+ * Let every animation under `sel` finish.
+ *
+ * ⚠ A STRIKE'S LENGTH IS A LADDER, NOT A DURATION. The ledger's last rung is
+ * 960ms behind 640ms of delay, so a fixed wait is either a flake or slower
+ * than it needs to be on every other assertion. `getAnimations().finished`
+ * asks the animations themselves; the `catch` is load-bearing, because an
+ * animation cancelled mid-flight (the stamp changing under it) REJECTS.
+ */
+async function settleStrike(page: Page, sel: string) {
+  await page.evaluate(async (q: string) => {
+    const root = document.querySelector(q);
+    if (!root) return;
+    const running = [root, ...root.querySelectorAll("*")].flatMap((el) =>
+      typeof el.getAnimations === "function" ? el.getAnimations() : []
+    );
+    await Promise.all(running.map((a) => a.finished.catch(() => {})));
+  }, sel);
+  await page.waitForTimeout(120);
+}
+
 /**
  * Park inside the corridor's `navigate` band.
  *
@@ -1795,11 +1853,250 @@ test.describe("Trinny London pitch variant", () => {
     }
   });
 
-  test("ADR-095 U6: the approach is halved, and exactly one ground paints it", async ({ page }) => {
+  test("ADR-101 §A: both beats STRIKE in, seated, and nothing rises", async ({ page }) => {
+    /* Owner, 2026-09-14: the next section's elements _"don't have to fly in.
+       They don't have to have a movement. They need to have a glitch effect
+       like we have on our homepage. Let's make sure it only happens when all
+       the elements from the [turn] have faded out."_
+
+       ⚠ THE THING THAT CAN REGRESS SILENTLY IS THE ORDER, not the effect. A
+       burst that fires early looks like a burst; a burst that never fires
+       leaves a beat the arcs' own reveal would have shown anyway (the stamps
+       fail OPEN by contract), so the page reads correct and the ask is
+       simply not delivered. Both ends are pinned here. */
+    await page.setViewportSize({ width: 1920, height: 1247 });
+    await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".home-v2-stage");
+    await page.waitForTimeout(SETTLE_MS);
+
+    const read = () =>
+      page.evaluate(() => {
+        const prop = document.getElementById("proposition")!;
+        const head = prop.querySelector(".arc-head") as HTMLElement | null;
+        const svgs = [...prop.querySelectorAll(".arc-board__svg")] as SVGElement[];
+        const roles = [...prop.querySelectorAll("[data-board-role]")] as SVGElement[];
+        const cs = (el: Element | null) => {
+          if (!el) return null;
+          const c = getComputedStyle(el);
+          return {
+            op: c.opacity,
+            vis: c.visibility,
+            anim: c.animationName,
+            fill: c.animationFillMode,
+            tr: c.transform,
+            /* ⚠ `animationName` IS THE DECLARATION, NOT THE STATE. It keeps
+               naming the keyframes long after the burst has ended, so "did it
+               finish" has to be asked of the animations themselves. */
+            running: el.getAnimations().some((a) => a.playState === "running"),
+          };
+        };
+        return {
+          arrive: prop.getAttribute("data-tl-prop-arrive"),
+          q: prop.getAttribute("data-tl-prop"),
+          pe: getComputedStyle(prop).pointerEvents,
+          head: cs(head),
+          svgs: svgs.map(cs),
+          roles: roles.map((r) => ({
+            role: r.getAttribute("data-board-role"),
+            ...cs(r)!,
+          })),
+        };
+      });
+
+    // 1 — before the turn is spent the record is ABSENT, not transparent.
+    await rollToQ(page, 0.9);
+    await rollToQ(page, 0.9);
+    const awaiting = await read();
+    expect(awaiting.arrive, "the record waits while the turn empties").toBe("await");
+    expect(awaiting.head!.vis).toBe("hidden");
+    for (const v of awaiting.svgs) expect(v!.vis).toBe("hidden");
+    /* ⚠ AND IT TAKES NO CLICKS WHILE IT WAITS. The stations overlap by a
+       WHOLE viewport now, so this box is laid out directly over the turn's
+       own button for the turn's last screen — and a hidden box with
+       `pointer-events: auto` swallows the one link that beat offers. Asked
+       from the LINK's side, because that is the failure a reader meets. */
+    expect(awaiting.pe, "an awaiting station must not take a click").toBe("none");
+    const ctaReachable = await page.evaluate(() => {
+      const cta = document.querySelector(".tl-turn__cta") as HTMLElement | null;
+      if (!cta) return null;
+      const r = cta.getBoundingClientRect();
+      if (r.width < 1 || r.bottom < 0 || r.top > window.innerHeight) return null;
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return hit ? cta.contains(hit) || hit.contains(cta) : false;
+    });
+    if (ctaReachable !== null) {
+      expect(ctaReachable, "the turn's CTA is under the awaiting station").toBe(true);
+    }
+
+    // 2 — at the datum it STRIKES, and every part of it runs the burst.
+    await rollToQ(page, 1);
+    await rollToQ(page, 1);
+    const striking = await read();
+    expect(striking.arrive, "the record strikes as the turn lands").toBe("in");
+    expect(striking.head!.anim).toMatch(/tl-glitch-bands/);
+    expect(striking.head!.anim).toMatch(/tl-glitch-strike/);
+    for (const v of striking.svgs) expect(v!.anim).toMatch(/tl-glitch-bands/);
+    expect(striking.roles.length, "five roles, drawn twice").toBe(10);
+    for (const r of striking.roles) {
+      expect(r.anim, `${r.role} does not strike`).toMatch(/tl-glitch-strike/);
+    }
+
+    // 3 — and it ends on the CASCADE: no fill, nothing pinned, nothing risen.
+    await settleStrike(page, "#proposition");
+    const settled = await read();
+    expect(settled.head!.vis).toBe("visible");
+    expect(settled.head!.op).toBe("1");
+    expect(settled.head!.running, "the burst is spent, not held").toBe(false);
+    /* ⚠ AND IT FILLS BACKWARDS, NEVER FORWARDS. Every one of these ends on
+       exactly what the cascade already says, so ending ON the cascade cannot
+       pop — a `forwards` fill would pin the last frame over it and take the
+       board's own resting paint with it. The fill is what makes a DELAYED rung
+       legal at all: without it a rung sits lit for the length of its delay and
+       then snaps to zero, which is the ladder playing backwards. */
+    // One value per animation in the list — three, all the same.
+    expect(new Set(settled.head!.fill.split(",").map((v) => v.trim()))).toEqual(
+      new Set(["backwards"])
+    );
+    /* ⚠ NOTHING RISES. `ArcShell`'s IntersectionObserver still stamps
+       `.is-in`; what it drives is neutralised route-wide, and a beat running
+       BOTH is the defect this replaced rather than a second opinion about
+       it. `none` is the resting transform of a neutralised reveal. */
+    expect(settled.head!.tr, "the head rose as well as struck").toBe("none");
+    for (const r of settled.roles) {
+      expect(r.op, `${r.role} is dark after its strike`).toBe("1");
+    }
+
+    // 4 — scrolling back strikes it OUT and re-arms it.
+    await rollToQ(page, 0.9);
+    await rollToQ(page, 0.9);
+    const leaving = await read();
+    expect(leaving.arrive, "it leaves the way it came").toBe("out");
+    await rollToQ(page, 1);
+    await rollToQ(page, 1);
+    expect((await read()).arrive, "the strike re-arms").toBe("in");
+
+    /* 5 — and the phases, one station down, on the SEAM rather than on an
+       arrival: hidden while the plates row is still entering the frame,
+       struck once it is four fifths in. */
+    await rollToT(page, 0.4);
+    const phasesEarly = await page.evaluate(() => {
+      const ph = document.getElementById("phases");
+      if (!ph) return null;
+      const head = ph.querySelector(".arc-head")!;
+      const plate = ph.querySelector(".arc-plate")!;
+      return {
+        arrive: document.getElementById("offer")?.getAttribute("data-tl-phases-arrive") ?? null,
+        seam: document.getElementById("offer")?.getAttribute("data-tl-seam") ?? null,
+        head: getComputedStyle(head).visibility,
+        plate: getComputedStyle(plate).visibility,
+      };
+    });
+    expect(phasesEarly, "#phases never mounted").not.toBeNull();
+    expect(phasesEarly!.arrive, `the phases struck at seam ${phasesEarly!.seam}`).toBe("await");
+    expect(phasesEarly!.head).toBe("hidden");
+    expect(phasesEarly!.plate).toBe("hidden");
+
+    await rollToT(page, 1);
+    await settleStrike(page, "#phases");
+    const phasesLate = await page.evaluate(() => {
+      const ph = document.getElementById("phases")!;
+      const plates = [...ph.querySelectorAll(".arc-plate")];
+      return {
+        arrive: document.getElementById("offer")!.getAttribute("data-tl-phases-arrive"),
+        head: getComputedStyle(ph.querySelector(".arc-head")!).visibility,
+        plates: plates.map((p) => ({
+          vis: getComputedStyle(p).visibility,
+          running: p.getAnimations().some((a) => a.playState === "running"),
+          /* The comb's last frame is STRING-EQUAL to the plate's own clip,
+             so the animation and the cascade end on one polygon. */
+          clip: getComputedStyle(p).clipPath,
+          w: Math.round(p.getBoundingClientRect().width),
+        })),
+      };
+    });
+    expect(phasesLate.arrive).toBe("in");
+    expect(phasesLate.head).toBe("visible");
+    expect(phasesLate.plates.length).toBe(3);
+    for (const p of phasesLate.plates) {
+      expect(p.vis).toBe("visible");
+      expect(p.running, "the plate's burst is spent, not held").toBe(false);
+      expect(p.clip, "the plate lost its own notch to the comb").toMatch(/polygon/);
+      expect(p.w).toBeGreaterThan(200);
+    }
+  });
+
+  test("ADR-101 §A: under reduced motion nothing strikes, and nothing is hidden", async ({
+    page,
+  }) => {
+    /* ⚠ THE ONE FAILURE MODE OF A STAMPED REVEAL IS THAT IT LATCHES SHUT.
+       Both beats are hidden by an attribute the writer publishes, and the
+       writer parks — removing every stamp — wherever the beat cannot run: a
+       phone, a short window, reduced motion. So an ABSENT stamp has to mean
+       SHOWN, which is this route's own law one station over (the ground's
+       polarity, ADR-099). If it ever meant HIDDEN, the readers who cannot
+       see the burst would be the readers who cannot see the record either,
+       and nothing on any other path would fail. */
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1920, height: 1247 });
+    await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".home-v2-stage");
+    await page.waitForTimeout(SETTLE_MS);
+
+    const propTop = await page.evaluate(
+      () => document.getElementById("proposition")!.getBoundingClientRect().top + window.scrollY
+    );
+    await rollTo(page, Math.round(propTop));
+    await rollTo(page, Math.round(propTop));
+
+    const read = await page.evaluate(() => {
+      const prop = document.getElementById("proposition")!;
+      const head = prop.querySelector(".arc-head") as HTMLElement;
+      const svgs = [...prop.querySelectorAll(".arc-board__svg")];
+      return {
+        arrive: prop.getAttribute("data-tl-prop-arrive"),
+        seam: document.getElementById("offer")?.getAttribute("data-tl-seam") ?? null,
+        phases: document.getElementById("offer")?.getAttribute("data-tl-phases-arrive") ?? null,
+        head: {
+          vis: getComputedStyle(head).visibility,
+          op: getComputedStyle(head).opacity,
+          w: Math.round(head.getBoundingClientRect().width),
+        },
+        svgs: svgs.map((v) => ({
+          vis: getComputedStyle(v).visibility,
+          op: getComputedStyle(v).opacity,
+          h: Math.round(v.getBoundingClientRect().height),
+        })),
+      };
+    });
+
+    expect(read.arrive, "a parked writer must leave no stamp behind").toBeNull();
+    expect(read.seam).toBeNull();
+    expect(read.phases).toBeNull();
+    expect(read.head.vis).toBe("visible");
+    expect(read.head.op).toBe("1");
+    expect(read.head.w).toBeGreaterThan(400);
+    expect(read.svgs.length, "both boards render").toBe(2);
+    for (const v of read.svgs) {
+      expect(v.vis).toBe("visible");
+      expect(v.op).toBe("1");
+      expect(v.h).toBeGreaterThan(100);
+    }
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+  });
+
+  test("ADR-101 §A: the approach is spent, and exactly one ground paints it", async ({ page }) => {
     /* A sticky stage costs one viewport of scroll-off at its end; with the
        turn's products gone and its line un-typed by then, that viewport was
        an empty stage leaving. `--tl-prop-lead` overlaps the two stations by
-       half of it.
+       it.
+
+       ⚠ ADR-095 U6 TOOK HALF AND ADR-101 §A TAKES ALL OF IT, because the
+       record stopped rising. Half was right while it ARRIVED by travelling:
+       the line got to leave before the next thing came in, and the thing
+       coming in was moving, so an overlap read as a handover. The record is
+       STRUCK in now, seated, so the frame before it has to be empty and the
+       frame it lands on has to be composed — which is one scroll position,
+       not two. `#proposition`'s top IS the turn's release.
 
        ⚠ WHICH IS ONLY LEGAL BECAUSE THE GROUNDS SWAP. Two coats of the same
        viewport-locked field is a hard horizontal band across the frame — the
@@ -1822,10 +2119,14 @@ test.describe("Trinny London pitch variant", () => {
     const release = geom.turn.top + geom.turn.height - geom.vh;
     const approach = geom.prop.top - release;
 
-    // Half a viewport, not a whole one. The band is wide enough to survive a
-    // runway retune and narrow enough to fail if the lead is dropped.
-    expect(approach / geom.vh).toBeGreaterThan(0.35);
-    expect(approach / geom.vh).toBeLessThan(0.65);
+    /* Zero, to the pixel: `p` and `q` saturate on the same frame, which is
+       what the configuration's strike is hung on. A lead that drifts either
+       way re-opens the bare frame this beat was re-cut to delete — short,
+       and the record strikes over a turn that has not finished leaving. */
+    expect(
+      Math.abs(approach),
+      `the proposal opens ${approach}px off the turn's release — the lead has drifted`
+    ).toBeLessThanOrEqual(2);
 
     for (const at of [-1.0, -0.6, -0.25, -0.02, 0.02, 0.2, 0.45, 0.7]) {
       const y = Math.round(release + at * geom.vh);

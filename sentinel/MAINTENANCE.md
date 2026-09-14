@@ -54,6 +54,64 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-14 (third pass) — The configuration strikes in (ADR-100 U4, ADR-101 §A)
+
+**Trigger:** one owner message of seven asks on the live proposal. Two of
+them landed here: the configuration head reads _"a bit more centered versus
+the other sections"_ against the plates, which are _"the gold standard"_; and
+the next section's elements _"don't have to fly in … they need to have a glitch
+effect like we have on our homepage"_, only once the turn's own elements have
+faded out — with the same for the beat after it.
+
+- **ADR-100 U4 — the board joins the band, and the capability scales out.** The
+  two heads were PIXEL-IDENTICAL (title x 360, copy x 1146.7 at 1920×1247); the
+  DRAWING was the object that was out, on the 1440 instrument band against a
+  head on the 1200 text band, 120px per side, **and only above the ~1503px
+  crossover** where the two bands diverge — every reference viewport in this
+  repo sits below it. The row takes `.arc-band`; the beat's own head-margin
+  override goes with it (45px of air under the dek against every plate beat's
+  143). The two head strips and their datum rules are deleted with the `head`
+  role (the dek already names the two sides), `DATUM_Y`/`MARGIN` collapse into
+  `TOP_Y = INSET`, and a FIFTH fact — `WHERE IT SCALES`, answered on both
+  sides — hangs under the chip on a fourth gold ribbon with `GAP2 = GAP1`, so
+  the drop in and the run out are both 108 units and the board is a CROSS
+  centred on the one lit object. The chip alone goes TOP-RIGHT-ONLY (the kit's
+  `band()` path, which IS the offer plates' silhouette).
+- ⚠ **AND MEASURING THE LADDERS FOUND THE LEDGER ARRIVING 1-3-2-4.** U3's
+  delays were applied in the LIT board's role order. The smoke SORTED the rungs
+  by delay before asserting they increase — a walk that can find a dead rung and
+  never a mis-ordered one. It reads them in DOM order now.
+- **ADR-101 §A — both beats strike in, seated.** The PROOF CARD's strike-in
+  (ADR-097 U11) copied as `tl-glitch-*`, not the hero's canvas slice-tear
+  (ADR-060), which samples the painted page and so has nothing to sample until
+  the thing is visible. `--tl-prop-lead` 50svh → **100svh** so `p` and `q`
+  saturate on ONE frame; the veil's second ramp re-keyed to 0.384 / 1 or the
+  two clocks race on a one-owner channel. Trigger is `arriveNext`, a pure
+  hysteresis (ADR-021's one sanctioned exception), with `await` distinct from
+  `out`.
+- ⚠ **THREE DEFECTS THE GATES COULD NOT HAVE SEEN, ALL FOUND BY LOOKING.**
+  (1) `PROP_ARRIVE_IN = 1` is unreachable in practice — `propArrival` clamps, and
+  every converging roller lands at top 0.22px with the record hidden and every
+  stamp correct; **a threshold no measurement can rest on fires by luck**.
+  (2) `#phases` does not exist when the writer mounts, because `#offer` is a
+  lazy nested root — a query in the effect body returns null FOREVER and the
+  seam sits at 0 with nothing throwing. (3) Taking ADR-100's ladder away took
+  its RESTING PAINT with it (the board rests at `opacity: 0` and the ribbons
+  undrawn, behind `forwards` fills), so the first cut struck in and then
+  vanished on its own last frame.
+- **Durable half:** every delay rides `var(--tl-gl-d, 0ms)` INSIDE the
+  `animation:` shorthand rather than out-specifying it — ADR-100 U3's lesson
+  taken properly, because a shorthand cannot reset what it is READING. And
+  `settleStrike` waits on `getAnimations().finished` (with a `catch`, since a
+  cancelled animation REJECTS) rather than a timeout: a strike's length is a
+  LADDER, not a duration, and `animationName` is the DECLARATION rather than
+  the state.
+- **Verified:** `tsc` clean, 1530 unit tests, the Trinny smoke 12/12 (two new
+  cases plus the fail-open reduced-motion one), `arc-terminal-smoke` 9 passed
+  with only the documented pre-existing chip failure, and captures looked at
+  at 1920×1247 and 1280×720.
+- Commits: `082b5882` (ADR-100 U4) and this pass's §A.
+
 ### 2026-09-14 (second pass) — Four reads on the same page (ADR-095 U8 amended, ADR-100 U3, ADR-099 U1, ADR-098 U5)
 
 **Trigger:** one owner message on the live page after the first pass shipped:

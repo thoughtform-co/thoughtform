@@ -220,13 +220,25 @@ export function productExit(k: number, p: number, n = 4): number {
    1 when it reaches the top.
 
    ⚠ IT IS THE SAME SHAPE AS THE TURN'S OWN CLOCK, ONE VIEWPORT WIDE, and
-   that is what makes the two beats overlap on purpose. With
-   `--tl-prop-lead: 50svh` the proposal's top enters the frame at the turn's
-   `p ≈ 0.77` and is half-arrived exactly at `p = 1` — so the record rises
-   while the products are still leaving (they go 0.88 → 1.0), which is the
-   defect this replaced: a pin cannot start until the thing above it has
-   finished, so it could only ever follow the emptied stage with a bare frame
-   in between.
+   that is what makes the two beats overlap on purpose. ADR-099 set
+   `--tl-prop-lead: 50svh`, which opened `q` at the turn's `p ≈ 0.77` and had
+   the record half-arrived at `p = 1` — it RISES while the products are still
+   leaving (they go 0.88 → 1.0), which was the answer to the defect a pin
+   could not avoid: a pin cannot start until the thing above it has finished,
+   so it could only ever follow the emptied stage with a bare frame in between.
+
+   ⚠ AND THE LEAD IS 100svh SINCE ADR-101 §A, WHICH MOVES THE OVERLAP FROM
+   HALF TO WHOLE. The record does not rise at all any more — it is STRUCK in,
+   in place, seated, once the turn is spent (`arriveNext` below) — and a
+   strike has to fire on a frame where the thing struck is already composed.
+   At a full lead `q` reaches 1 on the SAME scroll position as `p`, so the
+   products are gone (`TURN_PRODUCT_GONE` 1), the line is un-typed
+   (`TURN_CTA_GONE` 1) and the head is on its datum, all at once. The named
+   cost is the stretch from p 0.98 to 1.0 — about 55px at 1247h — where the
+   frame is the coral ground and the mark's ghost and nothing else. That is
+   the owner's own ordering: _"let's make sure it only happens when all the
+   elements from the 'And now we bring this to Trinny London' section have
+   faded out"_.
 
    ⚠ NO STAGE TERM, AND THAT DELETES A TRAP. The pinned clock had to measure
    the stage's own box (`padTop`, `stageH`) because `.station` padding put the
@@ -247,9 +259,30 @@ export function propArrival(top: number, vh: number): number {
   return clamp01((vh - top) / Math.max(1, vh));
 }
 
-/** The mark's extra fade, over the same arrival. */
-export const TURN_PROP_VEIL_IN = 0;
-export const TURN_PROP_VEIL_FULL = 0.5;
+/**
+ * The mark's extra fade, over the same arrival.
+ *
+ * ⚠ BOTH VALUES ARE DERIVED FROM THE LEAD, AND BOTH MOVED WITH IT
+ * (ADR-101 §A). `--tl-prop-lead` went 50svh → 100svh so that the turn's
+ * `p` and the proposal's `q` SATURATE TOGETHER, and the two ends of this
+ * ramp are the two facts that keeps true:
+ *
+ *   q(p) = (p × 220 — 220 + lead) / 100, from `#turn`'s 100svh pin plus its
+ *   120svh runway against a one-viewport arrival.
+ *
+ *   — `_IN` is the q at which `veilOf` saturates (p = `TURN_VEIL_FULL` 0.72):
+ *     (0.72 × 220 — 120) / 100 = **0.384**. The second ramp opens exactly
+ *     where the first ends, so the additive form still never races itself.
+ *   — `_FULL` is the q at which the record lands, which under this lead IS
+ *     q = 1 — the same scroll position as p = 1.
+ *
+ * ⚠ AT 50svh THESE WERE 0 AND 0.5 AND BOTH WERE RIGHT THEN. `_IN` 0 was safe
+ * only because `q` opened at p 0.7727, past the first ramp's end; at this lead
+ * it opens at p 0.5455, in the middle of it, and a 0 start would have the turn
+ * and the arrival both moving the one channel that has exactly one owner.
+ */
+export const TURN_PROP_VEIL_IN = 0.384;
+export const TURN_PROP_VEIL_FULL = 1;
 
 export function propVeilRamp(q: number): number {
   return ramp(q, TURN_PROP_VEIL_IN, TURN_PROP_VEIL_FULL);
@@ -270,6 +303,97 @@ export function propVeilRamp(q: number): number {
  */
 export function markVeil(pTurn: number, q: number): number {
   return clamp01(veilOf(pTurn) + (TURN_VEIL_PROP_MAX - TURN_VEIL_MAX) * propVeilRamp(q));
+}
+
+/* ── The two strike-ins (ADR-101 §A) ──────────────────────────────────────────
+   Owner, 2026-09-14: _"the elements of the next section, where the studio
+   stands, don't have to fly in … they need to have a glitch effect like we
+   have on our homepage"_, and the same for the beat after it.
+
+   A strike is a BURST, not a scrub, so it cannot be a pure function of
+   scroll the way everything else on this route is — it is ADR-021's one
+   sanctioned exception: a bounded burst on a HYSTERESIS trigger, which is
+   the proof card's own mechanism (ADR-097 U11). This is that trigger, pure:
+   a three-state machine over one progress value, with the two thresholds
+   apart so a reader resting on the edge cannot make it flicker.
+
+   ⚠ `await` AND `out` PAINT THE SAME AND ARE NOT THE SAME STATE. Both hide
+   the beat; `out` plays the 260ms reverse first, `await` has never been
+   seen. Collapsing them would strike the record out on the way IN. */
+
+export type Arrive = "await" | "in" | "out";
+
+/**
+ * The configuration strikes when the proposal has all but landed, which
+ * under a 100svh lead is the frame the turn's own clock spends.
+ *
+ * ⚠ 0.98, NOT 1, AND THE DIFFERENCE IS MEASURED RATHER THAN CAUTIOUS.
+ * `propArrival` is a `clamp01`, so `q === 1` is reachable only where the
+ * station's top is at or above zero EXACTLY — and a converging roller (the
+ * capture's, the smoke's) lands at top 0.22px, i.e. q 0.99983, with the
+ * record still hidden and every stamp correct. A threshold no measurement
+ * can rest on is a threshold that fires by luck.
+ *
+ * ⚠ AND 0.98 STILL SATISFIES THE OWNER'S ORDERING, which is about what is
+ * ON SCREEN rather than about a number: q 0.99 is the turn's p 0.9955, where
+ * `ctaInkOf` is **0.0009** and the loudest product's opacity is **0.0054**
+ * (measured across all four; the LAST to leave is k = 0, not k = 3 - the
+ * exit stagger runs backwards). The frame the record strikes into is empty
+ * to three significant figures; what
+ * is left of the arrival is 13px of scroll at 1269h.
+ */
+export const PROP_ARRIVE_IN = 0.99;
+export const PROP_ARRIVE_OUT = 0.96;
+
+/** The phases strike well before the seam lands, so a reader who stops
+ *  mid-gesture is looking at three whole plates rather than at a beat still
+ *  assembling (ADR-101 §B seats the head bands at t = 1). */
+export const PHASES_ARRIVE_IN = 0.8;
+export const PHASES_ARRIVE_OUT = 0.7;
+
+/**
+ * The next arrival state, given the last one and a progress value.
+ *
+ * ⚠ NaN LEAVES THE STATE ALONE. A rect read during a relayout can hand this
+ * a non-finite value, and the one thing a burst must never do is fire because
+ * a measurement was briefly unavailable.
+ *
+ * ⚠ AND A DEEP RELOAD SEEDS `in`, NOT `await`. Landing mid-page with `prev`
+ * null and the value already past the threshold plays the strike once and ends
+ * on the cascade's own identity — which is what the reader would have seen had
+ * they scrolled to it. Seeding `await` there would leave the beat hidden until
+ * they scrolled BACK and forward again.
+ */
+export function arriveNext(prev: Arrive | null, v: number, inAt: number, outAt: number): Arrive {
+  const at = prev ?? "await";
+  if (!Number.isFinite(v)) return at;
+  if (v >= inAt) return "in";
+  if (v <= outAt) return at === "in" ? "out" : at;
+  return at;
+}
+
+/* ── The seam (ADR-101 §B) ────────────────────────────────────────────────
+   `#offer`'s own clock, and the one the phases' strike is hung on. `t` runs
+   0 → 1 from the frame `#phases`' top reaches the viewport's bottom — which
+   IS the configuration seated, because `#proposition` is exactly one viewport
+   — to the frame its plates row is fully in view. */
+
+/**
+ * Where `#phases`' top has to be for its plates row to be whole in the frame,
+ * as a viewport-relative y.
+ *
+ * ⚠ FLOORED AT 0, AND THE FLOOR BINDS. At 1280×720 the row overflows its own
+ * beat by 23px (pre-existing), so the honest landing is above the viewport's
+ * top — and a negative target would run `t` past 1 and invert the ramp.
+ * Floored, the seam simply lands with the row's foot a little low.
+ */
+export function seamLanding(vh: number, rowBottom: number): number {
+  return Math.max(0, vh - rowBottom);
+}
+
+/** 0 when `#phases`' top is at the viewport's bottom, 1 at `s1`. */
+export function seamProgress(phasesTop: number, vh: number, s1: number): number {
+  return clamp01((vh - phasesTop) / Math.max(1, vh - s1));
 }
 
 export interface ProductRest {

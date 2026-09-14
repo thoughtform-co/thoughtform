@@ -970,21 +970,33 @@ outgoing`), never a hard-coded `" "` — flattening it to a plain space loses
 
 ## The seam into the proposal, and the head's seat (ADR-095 U6 / ADR-099)
 
-- ⚠ **THE TWO STATIONS OVERLAP BY `--tl-prop-lead` (50svh), AND THAT IS WHY THE
+- ⚠ **THE LEAD IS A WHOLE VIEWPORT SINCE [ADR-101](../../sentinel/decisions/101-the-configuration-strikes-in-and-the-chip-becomes-the-plates.md) §A,
+  AND THAT DELETES THE "HALF" IN EVERY NUMBER BELOW.** The record stopped
+  RISING: it is STRUCK in, seated, once the turn is spent, and a strike needs
+  the frame before it EMPTY and the thing struck already COMPOSED — which is
+  one scroll position, not two. At 100svh `q` reaches 1 where `p` does
+  (`q(p) = (p × 220 — 220 + lead)/100`), so `#proposition`'s top IS the turn's
+  release (measured 20500 both, pinned to ±2px). ⚠ `TURN_PROP_VEIL_IN`
+  0 → **0.384** and `TURN_PROP_VEIL_FULL` 0.5 → **1** went with it: at the old
+  lead `q` opened PAST `veilOf`'s end so a 0 start was merely safe, and at
+  this one it opens in the MIDDLE of it — two writers on the one channel that
+  has exactly one owner. The unit test derives both from the lead it reads
+  out of the sheet.
+- ⚠ **THE TWO STATIONS OVERLAP BY `--tl-prop-lead`, AND THAT IS WHY THE
   GROUNDS MUST SWAP.** A sticky stage costs ONE VIEWPORT of scroll-off at its
   end by construction, and by the turn's release its stage is empty (products at
   `TURN_PRODUCT_GONE`, line past `TURN_CTA_OUT`) — so that viewport was the
-  reader scrolling through nothing. The negative margin takes half of it back
-  (release → pin 1.00 → **0.50** viewports, release → LIT 1.28 → **0.77**).
+  reader scrolling through nothing. The negative margin takes ALL of it back
+  (release → pin 1.00 → **0.00** viewports since ADR-101 §A; it was 0.50 under
+  ADR-095 U6, and the guard that pinned "half" now pins zero).
   ⚠ Neither other lever reaches it: the turn's clock is signed off, and
   `--tl-prop-runway` is DWELL, so shortening it changes how long the record
   stays, never when it arrives.
   ⚠ **SINCE ADR-099 THE LEAD IS THE ONE DIAL ON WHEN THE RECORD OPENS**, and
   the arithmetic is stated on the turn's own clock rather than on a pin: `#turn`
-  is `100svh + 120svh`, so the record opens at `p = 1 − 0.5/2.2 = 0.7727` and is
-  half arrived at `p = 1` (measured live at 0.77), rising while the products
-  leave at 0.88. Raising the lead starts it earlier and eats further into the
-  turn, which the owner has signed off.
+  is `100svh + 120svh`, so `q` opens at `p = 1 − lead/2.2` — 0.7727 at the old
+  50svh, **0.5455** at 100. Raising the lead starts it earlier and eats further
+  into the turn, which the owner has signed off.
   ⚠ **AND THE COVERAGE HALF OF U6's GUARD HAD TO CHANGE ITS QUESTION.** It
   asserted ONE ground covers ≥90 % of the frame — true while the proposal was a
   160svh pinned station whose ground blanketed the viewport alone. Its record is
@@ -1097,6 +1109,96 @@ proposal` and `/arcs/perfect-ted-proposal` have the same defect for the same
   UNPINNED station — it reported a head frac of 4.1 and read as catastrophic
   rather than as a harness miss. Every probe here re-rolls and verifies
   `scrollY` before measuring.
+
+## The two strike-ins (ADR-101 §A)
+
+Owner, 2026-09-14: the configuration's elements _"don't have to fly in. They
+don't have to have a movement. They need to have a glitch effect like we have
+on our homepage"_, only once the turn has emptied — and the same for the
+phases one station down.
+
+- ⚠ **IT IS THE PROOF CARD'S STRIKE-IN (ADR-097 U11), NOT THE HERO'S
+  SLICE-TEAR (ADR-060).** Both answer to "the homepage's glitch" and only one
+  can be aimed at a live beat: the hero's is a CANVAS that samples the painted
+  page, which has nothing to sample until the thing is already visible — the
+  frame the effect exists to replace. The card's is CSS on the object itself
+  (band comb on its own clip, the `#about` power-on curve with a
+  self-cancelling 2.5px tear, the hologram's chromatic resolve) and it
+  materialises a COMPOSED thing in place. ⚠ **COPIED as `tl-glitch-*` into the
+  route sheet, never imported** — a route sheet reaching into a landing sheet
+  is a dependency in the wrong direction, and the arcs already say so of
+  `pda.css` one object over.
+- ⚠ **THE TRIGGER IS A HYSTERESIS AND `await` IS NOT `out`.** `arriveNext`
+  (pure, unit-pinned) is ADR-021's one sanctioned exception: a bounded burst on
+  a hysteresis, because a burst has a DIRECTION and a progress value does not.
+  Both hidden states paint identically; `out` plays the 260ms reverse and
+  `await` has never been seen, and collapsing them strikes the record out on
+  the way IN. NaN leaves the state alone; a deep reload seeds `in`.
+- ⚠ **`PROP_ARRIVE_IN` IS 0.99, NOT 1, AND THAT IS MEASURED.** `propArrival`
+  clamps, so `q === 1` needs the station's top at or above zero EXACTLY — and
+  every converging roller here lands at top **0.22px** (q 0.99983) with the
+  record hidden and every stamp correct. **A threshold no measurement can rest
+  on fires by luck.** What the ask actually wants is that the frame be EMPTY,
+  so that is what is asserted: at q 0.99 the turn's `ctaInkOf` is 0.0009 and
+  the loudest product is 0.0054. ⚠ The guard walks ALL FOUR products — the
+  exit stagger runs BACKWARDS, and a spot check on k = 3 reads seven times low.
+- ⚠ **`t` JOINS THE WRITER'S DELTA GATE.** `p` and `q` both saturate the frame
+  the record lands and agree forever after, which is the whole of `#offer`'s
+  scroll; gated on those two the seam is never read and the phases never
+  strike. ⚠ **AND `#phases` DOES NOT EXIST WHEN THE WRITER MOUNTS** — `#offer`
+  is a lazy nested root, so a `querySelector` in the effect body returns null
+  FOREVER, which reads as a seam pinned at 0 with nothing throwing. Resolved in
+  `measure()` and re-resolved from a `ResizeObserver` on both nested roots.
+  Found by looking at a still.
+- ⚠ **TAKING AN ANIMATION AWAY TAKES WHAT IT WAS HOLDING UP.** ADR-100's
+  ladder rests `.arc-board__in` / `__bloom` at `opacity: 0` and the ribbons at a
+  full dash offset, relying on `forwards` fills to put them back; with the
+  ladder replaced and the strike ending on the cascade the board struck in and
+  then vanished on its own last frame. Both resting states are restored
+  route-scoped, beside the neutralised `.arc-reveal` rise.
+- ⚠ **EVERY DELAY RIDES `var(--tl-gl-d, 0ms)` INSIDE THE SHORTHAND.** That is
+  ADR-100 U3's lesson taken properly: a shorthand cannot reset what it is
+  READING, so the per-rung rules set a property and there is no specificity
+  race left to lose. ⚠ `animation-fill-mode` is **`backwards`**, never
+  `forwards` — the last frame is already the cascade's identity, but a delayed
+  rung without it sits lit for its delay and then snaps to zero.
+- ⚠ **TWO COMBS.** `tl-glitch-bands` is OVERSCANNED by `--tl-gl-o` 48px with an
+  identity frame larger than the box (the head hangs its designation, origin
+  cross, two coord stamps and close cross OUTSIDE its border box, and a 0 →
+  100% comb guillotines all four). `tl-glitch-bands-plate` carries the plate's
+  TR cut in band 0 and its last frame is STRING-EQUAL to `.arc-plate`'s own
+  `clip-path`, so animation and cascade end on one polygon. Both are ONE
+  polygon, bands bridged down the left edge, non-zero winding, never `evenodd`.
+- ⚠ **THE CHROMA RIDES THE ROWS AND THE FOOT, NEVER AN OPAQUE PLATE** —
+  `filter` applies to the whole rendered output and the clip is applied AFTER
+  it, so a split on the plate is clipped away. ⚠ And on parchment the 1.16
+  brightness GREYS the ink for ~70ms; the split carries the effect, and it is
+  the one dial (left open).
+- ⚠ **`visibility: hidden` AND `pointer-events: none` WHILE A STATION WAITS.**
+  The stations overlap by a whole viewport, so for the turn's last screen
+  `#proposition` is laid out directly over the turn's own button; a transparent
+  box swallows the one link that beat offers. The smoke asks it from the LINK's
+  side (`elementFromPoint` at the CTA's centre). ⚠ The PLATES take
+  `visibility` alone — §B's carrier re-declares their head band visible under
+  the hide while the body stays away.
+- ⚠ **AN ABSENT STAMP MEANS SHOWN.** `park()` removes both, and parked is the
+  phone, the short window and reduced motion. This route's own polarity law one
+  station over (the ground's, ADR-099). Pinned by its own smoke case: if it
+  ever meant HIDDEN, the readers who cannot see the burst would be the readers
+  who cannot see the record, and nothing else would fail.
+- ⚠ **`animationName` IS THE DECLARATION, NOT THE STATE.** It keeps naming the
+  keyframes long after the burst ends, so "did it finish" is asked of
+  `getAnimations()`. `settleStrike` waits on `.finished` with a `catch` (an
+  animation cancelled mid-flight REJECTS) rather than on a timeout — a
+  strike's length is a LADDER (1.60s to the ledger's last rung), not a
+  duration.
+- **The ladders.** Board 640ms — card 80 · seat 160 · lane seat 240 · lane
+  layer 300 · layer 360 · lane tools 360 · tools 440 · lane reach 480 · reach 560. Ledger 960ms — seat 80 · layer 220 · card 360 · tools 500 · reach 640.
+  Phases: head 0, plates 160 · 300 · 440. ADR-100 U3's "read first, read
+  slowest" survives the change of mechanism.
+- **Left open:** the brightness on parchment; a fast flick landing the head
+  band inside the plates' comb for a frame; the beats below `#phases` keeping
+  the plain rise (the owner asked for "the next section").
 
 ## Verifying
 

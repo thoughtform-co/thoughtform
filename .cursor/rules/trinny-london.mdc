@@ -95,6 +95,27 @@ var(--rail-inset)` so the hero seats on ADR-048's editorial band like
   bottom-left one bit the inverse foot's own text. The record is the discovery call in roles; `trinny-offer.test.ts`
   and `arc-board-fit.test.ts` walk it. Canonical text:
   `.claude/rules/trinny-london.md` and `.claude/rules/arcs.md`.
+- ⚠ **ADR-101 §A: BOTH BEATS STRIKE IN, SEATED, AND NOTHING RISES** (owner,
+  2026-09-14: the next section's elements _"don't have to fly in … they need to
+  have a glitch effect like we have on our homepage"_, only once the turn has
+  emptied). It is the PROOF CARD's strike-in (ADR-097 U11) copied as
+  `tl-glitch-*`, never the hero's canvas slice-tear — that one samples the
+  painted page, which has nothing to sample until the thing is visible.
+  ⚠ `--tl-prop-lead` 50svh → **100svh**, so `p` and `q` saturate on ONE frame
+  and `#proposition`'s top IS the turn's release; `TURN_PROP_VEIL_IN` 0 →
+  0.384 and `_FULL` 0.5 → 1 move with it or the two clocks race on the mark's
+  one-owner veil. ⚠ The trigger is a HYSTERESIS (`arriveNext`, pure) and
+  `await` is not `out`. ⚠ `PROP_ARRIVE_IN` is **0.99, not 1**: `propArrival`
+  clamps, so 1 needs top ≤ 0 exactly and every roller lands at 0.22px with the
+  record hidden — a threshold no measurement can rest on fires by luck.
+  ⚠ `t` joins the writer's delta gate (p and q agree for the whole of
+  `#offer`'s scroll) and `#phases` is resolved in `measure()` + a
+  `ResizeObserver`, because `#offer` is a lazy root and a query in the effect
+  body returns null forever. ⚠ Taking ADR-100's ladder away takes its resting
+  paint with it (board opacity 0, ribbons undrawn) — both restored
+  route-scoped. ⚠ Delays ride `var(--tl-gl-d)` INSIDE the shorthand, fill
+  `backwards`. ⚠ An absent stamp means SHOWN. Canonical text:
+  `.claude/rules/trinny-london.md` §The two strike-ins.
 
 ## Verifying
 

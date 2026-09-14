@@ -28,6 +28,8 @@ import {
   trinnyMarkSvg,
 } from "@/app/(marketing)/arcs/trinny-london/proposal/mark/trinnyMark";
 import {
+  arriveNext,
+  ctaInkOf,
   markVeil,
   morphOf,
   productEnter,
@@ -39,8 +41,14 @@ import {
   TURN_MORPH_START,
   TURN_PRODUCT_LEAVE,
   TURN_PRODUCT_OUT,
+  seamLanding,
+  seamProgress,
   turnProgress,
   turnRunway,
+  PHASES_ARRIVE_IN,
+  PHASES_ARRIVE_OUT,
+  PROP_ARRIVE_IN,
+  PROP_ARRIVE_OUT,
   washOf,
   veilOf,
   ctaInOf,
@@ -50,6 +58,8 @@ import {
   TURN_VEIL_MAX,
   TURN_VEIL_PROP_MAX,
   TURN_PROP_FADE,
+  TURN_PROP_VEIL_FULL,
+  TURN_PROP_VEIL_IN,
 } from "@/app/(marketing)/arcs/trinny-london/proposal/turn/turnClock";
 import { turnDecodeFrame } from "@/app/(marketing)/arcs/trinny-london/proposal/turn/turnDecode";
 
@@ -61,6 +71,7 @@ const ACTOR = join(
   "components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx"
 );
 const SCENE_GEOM = join(ROOT, "components/landing/home-v2/DepthGatewayScene/sceneGeom.ts");
+const ROUTE_CSS = join(ROOT, "app/(marketing)/arcs/trinny-london/proposal/trinny-london.css");
 
 /** A stand-in for the parked Thoughtform homes: a ring at r 0.48 with real
  *  depth, and two bars through the centre. Deterministic. */
@@ -406,27 +417,123 @@ describe("turnClock", () => {
     /* ⚠ THE OVERLAP IS THE POINT, AND IT IS ARITHMETIC. `#turn` is
        `100svh + 120svh` of runway with a sticky stage, so `p = 1` exactly as
        its bottom reaches the viewport's bottom; `#proposition` starts
-       `--tl-prop-lead` (50svh) ABOVE that. So at the turn's release the
-       proposal is already half arrived, and it began arriving a quarter of
-       the turn earlier — while the products are still leaving. */
-    const lead = 0.5;
+       `--tl-prop-lead` ABOVE that.
+       ⚠ THE LEAD IS READ OFF THE SHEET, NEVER RESTATED HERE (ADR-101 §A).
+       It moved 50svh → 100svh with the strike-in and this whole block is a
+       function of it; a literal copy would keep passing against the value it
+       was written for, which is the one failure a clock test exists to catch. */
+    const lead =
+      Number(readFileSync(ROUTE_CSS, "utf8").match(/--tl-prop-lead:\s*(\d+(?:\.\d+)?)svh/)?.[1]) /
+      100;
+    expect(lead).toBe(1);
     const turnRunway = 1.2;
     /** The proposal's top, in viewport units, at a given turn progress. */
     const propTopAt = (pTurn: number) => (1 - pTurn) * (1 + turnRunway) + 1 - lead;
-    expect(propArrival(propTopAt(1) * vh, vh)).toBeCloseTo(0.5, 6);
+
+    /* ⚠ AT A WHOLE-VIEWPORT LEAD THE TWO CLOCKS SATURATE TOGETHER, and that
+       is the property the strike-in rests on: the frame the configuration is
+       struck into is the frame the turn is spent. */
+    expect(propArrival(propTopAt(1) * vh, vh)).toBeCloseTo(1, 6);
     const opensAt = 1 - lead / (1 + turnRunway);
-    expect(opensAt).toBeCloseTo(0.7727, 3);
+    expect(opensAt).toBeCloseTo(0.5455, 3);
     expect(propArrival(propTopAt(opensAt) * vh, vh)).toBeCloseTo(0, 6);
     // The products are still on screen when it opens (they go OUT → GONE).
     expect(opensAt).toBeLessThan(TURN_PRODUCT_OUT);
 
-    /* And the veil HANDS OVER rather than racing: `veilOf` has saturated by
-       `p = 0.72`, before the arrival opens, so the turn takes the mark to its
-       own ceiling and the arrival carries it the rest of the way, landing
-       exactly as the record does. */
+    /* And the veil HANDS OVER rather than racing: `veilOf` saturates at
+       `p = 0.72`, and the second ramp opens at EXACTLY the q that p is — so
+       the turn takes the mark to its own ceiling, the arrival carries it the
+       rest of the way, and the two never move it at once.
+       ⚠ BOTH ENDS ARE DERIVED FROM THE LEAD. At 50svh they were 0 and 0.5;
+       at 100svh a `_IN` of 0 would open the second ramp in the MIDDLE of the
+       first, which is the race the additive form promises not to have. */
+    const qAt = (pTurn: number) => propArrival(propTopAt(pTurn) * vh, vh);
+    expect(TURN_PROP_VEIL_IN).toBeCloseTo(qAt(TURN_VEIL_FULL), 3);
+    expect(TURN_PROP_VEIL_FULL).toBeCloseTo(qAt(1), 6);
     expect(veilOf(0.72)).toBeCloseTo(TURN_VEIL_MAX, 12);
-    expect(markVeil(opensAt, 0)).toBeCloseTo(TURN_VEIL_MAX, 12);
-    expect(markVeil(1, 0.5)).toBeCloseTo(TURN_VEIL_PROP_MAX, 12);
+    expect(markVeil(TURN_VEIL_FULL, TURN_PROP_VEIL_IN)).toBeCloseTo(TURN_VEIL_MAX, 12);
+    expect(markVeil(1, TURN_PROP_VEIL_FULL)).toBeCloseTo(TURN_VEIL_PROP_MAX, 12);
+    // Monotonic through the handover, with no step at the join.
+    let prevVeil = -1;
+    for (let pTurn = 0; pTurn <= 1.0001; pTurn += 0.01) {
+      const v = markVeil(Math.min(1, pTurn), qAt(Math.min(1, pTurn)));
+      expect(v).toBeGreaterThanOrEqual(prevVeil - 1e-12);
+      prevVeil = v;
+    }
+  });
+
+  /* — The two strike-ins (ADR-101 §A) — */
+
+  it("the arrival stamp is a hysteresis, with a memory of direction", () => {
+    /* ⚠ A STRIKE IS THE ONE PLACE ON THIS ROUTE THAT IS NOT A PURE FUNCTION
+       OF SCROLL, so the trigger is where all of its correctness lives. Three
+       states, two thresholds, and `await` distinct from `out` — both hide the
+       beat, and collapsing them would strike the record OUT on the way in. */
+    const step = (prev: "await" | "in" | "out" | null, v: number) =>
+      arriveNext(prev, v, PHASES_ARRIVE_IN, PHASES_ARRIVE_OUT);
+
+    expect(step(null, 0)).toBe("await");
+    expect(step("await", 0.5)).toBe("await");
+    // Below the in-threshold but above the out-threshold: nothing moves.
+    expect(step("await", 0.75)).toBe("await");
+    expect(step("await", 0.8)).toBe("in");
+    expect(step("in", 0.75)).toBe("in");
+    expect(step("in", 0.7)).toBe("out");
+    expect(step("out", 0.5)).toBe("out");
+    expect(step("out", 0.75)).toBe("out");
+    expect(step("out", 0.8)).toBe("in");
+    // A deep reload seeds `in`, so a reader who lands mid-page sees the beat.
+    expect(step(null, 0.9)).toBe("in");
+    // A non-finite reading leaves the state exactly as it was.
+    expect(step("in", Number.NaN)).toBe("in");
+    expect(step("await", Number.NaN)).toBe("await");
+    expect(step(null, Number.NaN)).toBe("await");
+
+    // The two windows are ordered, and apart — a reader resting on the edge
+    // may not make either beat flicker.
+    expect(PHASES_ARRIVE_OUT).toBeLessThan(PHASES_ARRIVE_IN);
+    expect(PROP_ARRIVE_OUT).toBeLessThan(PROP_ARRIVE_IN);
+    /* ⚠ AND THE CONFIGURATION'S IN-THRESHOLD IS WHAT THE OWNER'S ORDERING
+       ACTUALLY ASKS FOR, which is that the frame be EMPTY — not that a number
+       be 1. It is under 1 because `propArrival` clamps, so q === 1 is
+       reachable only at top <= 0 EXACTLY and every converging roller lands
+       just short (measured: top 0.22px, q 0.99983, the record still hidden
+       and every stamp correct). What the threshold has to buy is asserted
+       instead: at the turn progress that q corresponds to, both of the
+       turn's own channels are spent. */
+    expect(PROP_ARRIVE_IN).toBeLessThan(1);
+    const pAtStrike = (PROP_ARRIVE_IN * 100 + 120) / 220;
+    expect(ctaInkOf(pAtStrike)).toBeLessThan(0.005);
+    /* EVERY product, not one of them: the exit stagger runs BACKWARDS, so
+       the last cutout still on screen is k = 0 and a spot check on k = 3
+       reads seven times low. */
+    for (let k = 0; k < 4; k++) {
+      expect(
+        productPose(k, pAtStrike, { cx: 300, cy: 200 }, 1000, 1000).opacity,
+        `product ${k} is still on screen when the record strikes`
+      ).toBeLessThan(0.01);
+    }
+  });
+
+  it("the seam opens as the plates enter the frame and lands when they are whole", () => {
+    const vh = 1000;
+    // A plates row 600 tall, 200 down its beat: whole in the frame with the
+    // beat's top at 200.
+    const s1 = seamLanding(vh, 800);
+    expect(s1).toBe(200);
+    expect(seamProgress(vh, vh, s1)).toBe(0);
+    expect(seamProgress(s1, vh, s1)).toBe(1);
+    expect(seamProgress(-400, vh, s1)).toBe(1);
+    expect(seamProgress(vh + 400, vh, s1)).toBe(0);
+    expect(seamProgress((vh + s1) / 2, vh, s1)).toBeCloseTo(0.5, 12);
+    for (let top = vh; top > s1; top -= 40) {
+      expect(seamProgress(top - 40, vh, s1)).toBeGreaterThan(seamProgress(top, vh, s1));
+    }
+    /* ⚠ THE LANDING IS FLOORED AT 0 AND THE FLOOR BINDS AT 1280×720, where
+       the row is taller than the frame can hold above it. A negative target
+       would divide by a larger span and invert the ramp's end. */
+    expect(seamLanding(720, 900)).toBe(0);
+    expect(seamProgress(0, 720, seamLanding(720, 900))).toBe(1);
   });
 
   it("the mark's on-stage centre is the actor's weld, re-derived from its sources", () => {

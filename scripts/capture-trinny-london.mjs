@@ -172,15 +172,17 @@ for (const [p, name, note] of [
   await shoot(name, note);
 }
 
-/* The proposal (ADR-099). It is a normal station again — the record scrolls
-   in rather than powering on behind a pin — so the stops are solved for `q`,
-   the station's ARRIVAL: 0 with its top at the viewport's bottom edge, 1 at
-   the top. The writer still publishes it as `data-tl-prop`.
-   ⚠ THE FIRST TWO STOPS ARE THE POINT OF THE PASS. `19-config-arrive` is
-   the frame that used to be blank: the turn is spent, the products are
-   leaving, and the record is already half in. Solve, roll, re-solve — the
-   document grows under the scroll as the lazy chunks mount, so one solved
-   `y` lands somewhere else (the `rollToP` law, one beat up). */
+/* The proposal (ADR-101 §A). The stops are solved for `q`, the station's
+   ARRIVAL: 0 with its top at the viewport's bottom edge, 1 at the top.
+   ⚠ AND THE MIDDLE OF THAT RANGE IS NOW DELIBERATELY EMPTY. ADR-099's
+   stops shot the record RISING at q 0.35 and 0.7; it does not rise any more,
+   it is struck in, seated, at q = 1 (owner, 2026-09-14: the elements "don't
+   have to fly in … they need to have a glitch effect"). So the three stops
+   are the empty frame before it, the burst, and the settled record — which
+   is what has to be looked at, in that order.
+   Solve, roll, re-solve — the document grows under the scroll as the lazy
+   chunks mount, so one solved `y` lands somewhere else (the `rollToP` law,
+   one beat up). */
 const rollToQ = async (q) => {
   for (let pass = 0; pass < 4; pass++) {
     const top = await topOf("proposition");
@@ -193,21 +195,34 @@ const rollToQ = async (q) => {
     if (Math.abs(actual - q) <= 0.02) break;
   }
 };
-for (const [q, name, note] of [
-  [0.35, "19-config-arrive", "the record rising while the products leave — no bare frame"],
-  [0.7, "20-config-strike", "the configuration most of the way in"],
-  [1.0, "12-proposition", "the configuration seated on the head's datum"],
-]) {
-  await rollToQ(q);
-  await page.waitForTimeout(900);
-  await shoot(name, note);
-}
+await rollToQ(0.95);
+await page.waitForTimeout(600);
+await shoot("19-turn-empties", "the frame the turn hands over — ground and ghost, nothing else");
+
+/* ⚠ THE BURST IS 640ms AND IT ENDS ON THE CASCADE, so a still taken late is
+   a still of the settled record with nothing to say. 260ms lands inside the
+   strike's own dead band (opacity .12) where the comb is still cutting; 1.6s
+   is past the ledger's last rung (960ms + 640ms of delay). */
+await rollToQ(1.0);
+await page.waitForTimeout(260);
+await shoot("20-config-strike", "the configuration STRIKING in — the comb mid-cut");
+await page.waitForTimeout(1400);
+await shoot("20b-config-struck", "the same frame, settled — the strike ends on the cascade");
+await shoot("12-proposition", "the configuration seated on the head's datum");
 
 /* The offer (ADR-094 U9, extended by ADR-099). Each beat is its own
    `.arc-sec` with the section's id, so a stop is solved off the BEAT's box
    rather than the station's — and rolled to TWICE, because the arcs' reveal
    is an IntersectionObserver with a -10% dead band and the first roll out of
    the beat above can land before it has fired. */
+/* ⚠ THE PHASES STRIKE ON THE SEAM, NOT ON ARRIVAL, so their burst fires
+   at t 0.8 — which is BEFORE the beat's own top reaches the frame's top. One
+   roll lands inside it; the doubled roll below lands past it. Both are worth
+   a still. */
+await rollTo(await topOf("phases"));
+await page.waitForTimeout(300);
+await shoot("21a-phases-strike", "the phases STRIKING in on the seam");
+
 for (const [id, name, note] of [
   ["phases", "21-offer-phases", "the offer — the three phases as plates"],
   ["flow", "23-offer-flow", "the offer — the pipeline: brief → renders → markets"],
@@ -215,7 +230,7 @@ for (const [id, name, note] of [
 ]) {
   await rollTo(await topOf(id));
   await rollTo(await topOf(id));
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(1400);
   await shoot(name, note);
 }
 
