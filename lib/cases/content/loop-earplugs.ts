@@ -1783,12 +1783,19 @@ export const LOOP_STUDIO_SHEETS = [
     },
     body: {
       kind: "facts",
+      /* ⚠ AND THE CHARGE IS AT THE CROSSING (ADR-084 U2, owner 2026-09-14:
+         the four bands are "not really clear what they're related to").
+         Four risks around a named centre say in one object what the bands
+         said only in the verdict below them: these are four faces of ONE
+         decision, and the decision has a name. Slide 10's own title, cut to
+         the three words a hub can hold. */
+      hub: "NO AI UGC",
       /* ⚠ THE TAGS ARE THE DECK'S OWN RISK CATEGORIES, and they are what
          turn four sentences into a ranked set: the reader takes the AXIS
          before the claim, so the four read as one argument covering brand,
          audience, revenue and partnership rather than four worries. All
-         four carry one — a tag on some bands would emphasise those, and the
-         point is that the risks are of equal rank (registry-enforced). */
+         four carry one — a tag on some quadrants would emphasise those, and
+         the point is that the risks are of equal rank (registry-enforced). */
       facts: [
         {
           tag: "BRAND RISK",

@@ -770,3 +770,18 @@ one rect read, the station's own arrival.
   BEGINS — and passed for the wrong reason; it is a sorted-interval union.
 - The overlap (`--tl-prop-lead` 50svh) is untouched, and it is now the one
   dial on when the record opens.
+
+## Update 8 — the turn hands over, and its one exempt word (2026-09-14, owner)
+
+Two lines, and one ruling about a ban.
+
+- The title becomes **"And now we bring this to Trinny London."** (was "AI-first, inside Trinny London."). The turn is the HANDOVER between the proof and the proposal, and the old line named a state where the beat's job is to name a move.
+- The paragraph becomes **"An AI-first approach designed to make Trinny's teams self-sufficient."** (was "Owned by the people who run Trinny London.").
+
+⚠ **"SELF-SUFFICIENT" IS BANNED COPY, AND THIS LINE IS AN OWNER-RULED EXEMPTION.** `PROPOSAL_COPY_BANS` carries `/self-sufficient/i` — ADR-018's ruling, _say the behaviour, because the abstraction hides the mechanics that make it real_ — and ADR-098 rewrote three proposal lines to drop it. Asked whether to keep it here or say the behaviour, the owner chose to keep it (2026-09-14). The reason it survives review: the proof card two beats up says **"We made the creative team self-sufficient"** about Loop's team, from the shared casefile record, and the turn is the sentence that carries that claim across to this client. The word is the through-line, not an abstraction reached for.
+
+**The scope of the exemption is this one line.** The offer's record and the board stay under the law — `trinny-offer.test.ts` walks `TRINNY_BOARD` and `TRINNY_OFFER_SECTIONS` with `PROPOSAL_COPY_BANS` and is untouched. ⚠ And nothing mechanical walks the turn at all: its copy lives in the forked prototype HTML, which no scanner reads, so the ban was never enforced here in the first place. That is worth knowing before assuming a green suite means the law held on this beat.
+
+⚠ **THE MEASURE MOVED WITH THE COPY.** `.tl-turn__sub` was `max-width: 44ch`, where the new line breaks INSIDE `self-sufficient` — a browser breaks at an existing hyphen by default, which is ADR-098 U1's own finding ("at 34ch the sentence broke `AI-first.` across its own hyphen") one beat over. At **52ch** the break lands after `teams`, and at 1920×1247 the line fits whole. A longer line re-measures it.
+
+⚠ **BOTH HALVES OF EACH `.tl-dc` PAIR CARRY THE STRING.** `useTurnScroll` reads its `truth` from the LIVE layer and the ghost holds the box; the parse guard pins them byte-identical. And `tests/lib/trinny-mark.test.ts`'s `FINALS` is a hand-maintained MIRROR of the prototype — a stale entry there does not fail, it exercises a line that is not on the page, so it moves in the same commit.

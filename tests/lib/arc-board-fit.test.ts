@@ -8,12 +8,14 @@ import {
   BAND_Y,
   CUT,
   DATUM_Y,
+  FLOOR_Y,
   FS_FLOOR,
   GAP1,
   INSET,
   MARGIN,
   MODULE_H,
   PAD,
+  ROW_H,
   SANS_ADV,
   SEAT_H,
   VB,
@@ -28,23 +30,23 @@ import { MODULE } from "@/components/landing/home-v2/services/casefile/map/pda/s
 import type { BoardState } from "@/lib/arcs/types";
 
 /**
- * THE BOARD's fit guard (ADR-100 U1) — the drawing measured against its own
+ * THE BOARD's fit guard (ADR-100 U2) — the drawing measured against its own
  * declaration.
  *
  * ⚠ SVG `<text>` NEITHER WRAPS NOR REPORTS OVERFLOW: a label past its
  * measure vanishes with nothing on screen to say so. So `boardGeom` emits
  * every lettered string WITH the measure it must fit, and this walk holds
  * each one to it — mono through the surface's advance model, sans through
- * the measured 0.55 em cell — plus the longest WORD (a wrap that fits per
- * line can still put one word through a wall), the type floor at the
+ * the measured 0.55 em cell — plus the longest WORD, the type floor at the
  * binding band, the chain's closure, the cut law and the CSS box's parity
  * with the crops. The live half is the smoke's overlap walk and its
  * rendered-px floor; neither half is sufficient alone (the arithmetic
  * cannot see a CSS change, the smoke cannot say which constant to move).
  *
- * ⚠ ONE CROP, FIXED. The first cut walked six extensions of an elastic
- * crop; the owner's "radically simplify it" took the extension with the
- * bed, the sockets and the foot it was buying room for.
+ * ⚠ AND THE NO-DIGIT WALK IS HERE, NOT ONLY ON THE RECORD. The ledger's
+ * tools row is COMPOSED at draw time (the item names joined), and a string
+ * built in a renderer is outside every content scanner — the finding
+ * ADR-070 U15 paid for with `8 TEAMS` on a public page.
  */
 
 function states(): readonly [BoardState<"today">, BoardState<"configured">] {
@@ -59,13 +61,16 @@ const wordWidth = (l: BoardLetter, word: string) =>
   l.face === "mono" ? word.length * adv(l.fs, l.track) : word.length * SANS_ADV * l.fs;
 
 describe("arc board fit (ADR-100)", () => {
-  it("the chain closes: datum, seat, cable, one module row, and the margin under it", () => {
+  it("both sides share the datum and the floor", () => {
     expect(DATUM_Y + MARGIN + SEAT_H + GAP1).toBe(BAND_Y);
-    expect(BAND_Y + MODULE_H + MARGIN).toBe(VB.h);
+    expect(BAND_Y + MODULE_H).toBe(FLOOR_Y);
+    expect(FLOOR_Y + MARGIN).toBe(VB.h);
+    // The ledger's four rows run from the seat's own top to that floor.
+    expect(DATUM_Y + MARGIN + 4 * ROW_H).toBe(FLOOR_Y);
     expect(VB.w.today + VB.seam + VB.w.configured).toBe(VB.row);
   });
 
-  it("every lettered string fits its measure, word by word", () => {
+  it("every lettered string fits its measure, word by word, and letters no digit", () => {
     for (const state of states()) {
       const g = boardGeom(state);
       expect(g.vb.h, `${state.mode}: the crop is the chain's`).toBe(VB.h);
@@ -73,6 +78,7 @@ describe("arc board fit (ADR-100)", () => {
       for (const l of g.letters) {
         const at = `${state.mode} ${l.slot} "${l.text}"`;
         expect(l.text.trim().length, `${at}: blank`).toBeGreaterThan(0);
+        expect(/\d/.test(l.text), `${at}: a figure on the drawing`).toBe(false);
         // A wrapped line past the cap is declared at measure 0 — the tail
         // the drawing would slice in silence.
         expect(l.measure, `${at}: a sliced tail`).toBeGreaterThan(0);
@@ -101,7 +107,7 @@ describe("arc board fit (ADR-100)", () => {
     }
   });
 
-  it("every letter sits inside its own module, and the cuts are the house's", () => {
+  it("every letter sits inside its own object, and the cuts are the house's", () => {
     expect(CUT.module).toBe(MODULE.cut);
     expect(PAD.module).toBe(MODULE.pad);
     for (const state of states()) {
@@ -109,21 +115,25 @@ describe("arc board fit (ADR-100)", () => {
       for (const l of g.letters) {
         if (l.role === "head" || l.anchor !== "start") continue;
         const m = moduleFor(g, l);
-        expect(m, `${state.mode} ${l.slot}: no module holds it`).toBeTruthy();
+        expect(m, `${state.mode} ${l.slot}: no object holds it`).toBeTruthy();
         if (!m) continue;
+        /* ⚠ A LEDGER ROW HAS NO WALL. Its content hangs on the crop's own
+           inset, which is the row's left edge — a module's 4-unit clearance
+           is about padding, and a row has none. */
+        const pad = m.paint === "row" ? 0 : 4;
         expect(l.x, `${state.mode} ${l.slot}: left of its wall`).toBeGreaterThanOrEqual(
-          m.rect.x + 4
+          m.rect.x + pad
         );
         expect(
           l.x + letterWidth(l),
           `${state.mode} ${l.slot}: through its wall`
-        ).toBeLessThanOrEqual(m.rect.x + m.rect.w - 4 + 1e-6);
-        expect(l.y, `${state.mode} ${l.slot}: above its module`).toBeGreaterThan(m.rect.y);
-        expect(l.y, `${state.mode} ${l.slot}: below its module`).toBeLessThanOrEqual(
+        ).toBeLessThanOrEqual(m.rect.x + m.rect.w - pad + 1e-6);
+        expect(l.y, `${state.mode} ${l.slot}: above its object`).toBeGreaterThan(m.rect.y);
+        expect(l.y, `${state.mode} ${l.slot}: below its object`).toBeLessThanOrEqual(
           m.rect.y + m.rect.h
         );
       }
-      // The head strip stays on the crop's inset; every module inside it.
+      // The head strip stays on the crop's inset; every object inside it.
       expect(g.datum.x1).toBe(INSET);
       expect(g.datum.x2).toBe(g.vb.w - INSET);
       for (const m of g.modules) {
@@ -132,13 +142,37 @@ describe("arc board fit (ADR-100)", () => {
           g.vb.w - INSET
         );
         expect(m.rect.y + m.rect.h, `${state.mode} ${m.id}: below the floor`).toBeLessThanOrEqual(
-          VB.h - MARGIN
+          FLOOR_Y
         );
       }
     }
   });
 
-  it("the three ribbons run wall to wall on the lit board", () => {
+  it("the dormant side is a LEDGER and the lit side is a BOARD", () => {
+    const [today, configured] = states();
+    const t = boardGeom(today);
+    const k = boardGeom(configured);
+    /* ⚠ THE CONTRAST IS THE KIND OF OBJECT, NOT THE BRIGHTNESS (U2). Four
+       rows, no housing, no cable, no colour on the left; the assembled
+       board on the right. Drawn as dashed modules the left read as the
+       right greyed out, which is what the owner rejected. */
+    expect(t.modules).toHaveLength(4);
+    expect(t.modules.every((m) => m.paint === "row" && m.cut === 0)).toBe(true);
+    /* ⚠ EVERY ROW RULES ITS BOTTOM, and the head's datum opens the ledger —
+       a row ruling its top would paint 14 units under that datum, which is
+       one doubled line (ADR-089 U3's defect). */
+    expect(t.modules.every((m) => m.rule === "bottom")).toBe(true);
+    expect(t.lanes).toHaveLength(0);
+    // The four facts, in the order both sides read them.
+    expect(t.modules.map((m) => m.role)).toEqual(["seat", "layer", "card", "tools"]);
+    // The lit side: one green seat, one gold chip, two head bands.
+    expect(k.modules.filter((m) => m.paint === "seat-lit")).toHaveLength(1);
+    expect(k.modules.filter((m) => m.paint === "card-lit")).toHaveLength(1);
+    expect(k.modules.filter((m) => m.head)).toHaveLength(2);
+    expect(k.modules.some((m) => m.paint === "row")).toBe(false);
+  });
+
+  it("the three ribbons run wall to wall and meet the chip's middle", () => {
     const [, configured] = states();
     const g = boardGeom(configured);
     const card = g.modules.find((m) => m.id === "card")!;
@@ -146,40 +180,20 @@ describe("arc board fit (ADR-100)", () => {
     const tools = g.modules.find((m) => m.id === "tools")!;
     const seat = g.modules.find((m) => m.id === "seat")!;
     const lane = (id: string) => g.lanes.find((l) => l.id === id)!;
+    const cy = card.rect.y + card.rect.h / 2;
     expect(g.lanes.map((l) => l.id)).toEqual(["seat", "layer", "tools"]);
     expect(lane("seat").pts[0][1]).toBeCloseTo(seat.rect.y + seat.rect.h, 6);
     expect(lane("seat").pts[1][1]).toBeCloseTo(card.rect.y, 6);
-    expect(lane("layer").pts[0][0]).toBeCloseTo(card.rect.x, 6);
+    // The seat drops onto the chip's own centre line, not a module's corner.
+    expect(lane("seat").pts[0][0]).toBeCloseTo(card.rect.x + card.rect.w / 2, 6);
+    expect(lane("layer").pts[0]).toEqual([card.rect.x, cy]);
     expect(lane("layer").pts[1][0]).toBeCloseTo(layer.rect.x + layer.rect.w, 6);
-    expect(lane("tools").pts[0][0]).toBeCloseTo(card.rect.x + card.rect.w, 6);
+    expect(lane("tools").pts[0]).toEqual([card.rect.x + card.rect.w, cy]);
     expect(lane("tools").pts[1][0]).toBeCloseTo(tools.rect.x, 6);
-    // Every lane's `--l` is its own polyline length, never a guess; every
-    // lane is the eight-wire bundle.
     for (const l of g.lanes) {
       expect(l.len).toBeGreaterThan(0);
       expect(l.wires).toBe(8);
     }
-  });
-
-  it("green is the human and gold is the built thing, on both boards", () => {
-    const [today, configured] = states();
-    const t = boardGeom(today);
-    const k = boardGeom(configured);
-    // The dormant board lights nothing gold, seats no one in green, and runs
-    // no cable.
-    expect(t.modules.filter((m) => m.paint === "card-lit" || m.paint === "seat-lit")).toHaveLength(
-      0
-    );
-    expect(t.diamonds.filter((d) => d.paint === "gold-line")).toHaveLength(0);
-    expect(t.lanes).toHaveLength(0);
-    // Its card is green — the work is all the people's.
-    expect(t.modules.find((m) => m.id === "card")?.paint).toBe("card-led");
-    // The lit board: one lit card, one green seat, one green cable, and the
-    // one lit tool marked.
-    expect(k.modules.filter((m) => m.paint === "card-lit")).toHaveLength(1);
-    expect(k.modules.filter((m) => m.paint === "seat-lit")).toHaveLength(1);
-    expect(k.lanes.filter((l) => l.paint === "green")).toHaveLength(1);
-    expect(k.diamonds.filter((d) => d.role === "tools" && d.filled)).toHaveLength(1);
   });
 
   it("the label sets are pinned, per state", () => {
@@ -188,37 +202,36 @@ describe("arc board fit (ADR-100)", () => {
       boardGeom(s)
         .letters.map((l) => l.text)
         .sort();
+    // Nine strings on the ledger, sixteen on the board — from 19 and 38
+    // before U1, and 10 and 18 before U2 folded the tools into one row.
     expect(texts(today)).toEqual([
       "AS IT RUNS TODAY",
-      "CLAUDE",
-      "MONDAY",
+      "Claude, Figma, Monday, Slack",
       "No one, as their day job",
-      "SLACK",
-      "THE LAYER",
-      "THE STUDIO",
+      "THE CONTEXT",
+      "THE TOOLS",
+      "THE WORK",
       "WHO OWNS IT",
       "all by hand",
       "not written down",
     ]);
     expect(texts(configured)).toEqual([
-      "A brand Skill, on the",
+      "AI CAPABILITY",
       "CLAUDE",
       "EXAMPLES",
+      "FIGMA",
       "LOOPS",
       "MONDAY",
       "RULES",
       "SLACK",
       "SOURCES",
-      "THE LAYER",
-      "THE STUDIO",
-      "The studio lead",
-      "WHAT RUNS IT",
+      "THE CONTEXT",
+      "The studio lead, with the",
       "WHERE IT RUNS",
       "WHO OWNS IT",
       "WITH A CONFIGURATION",
-      "inside Figma",
-      "team's own keys",
-      "the founder's sense-check last",
+      "founder's sign-off.",
+      "owned by the team",
     ]);
   });
 

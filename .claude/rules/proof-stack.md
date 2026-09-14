@@ -163,6 +163,15 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
 - **`ProofStack` is a named AND default export.** `/arcs/trinny-london/proposal` mounts it
   through `lazy()`; the homepage imports it into `ServicesStage`.
 
+- ⚠ **THE RED LINE'S FIRST/LAST-RULE OVERRIDE IS RETIRED (ADR-084 U2).**
+  U10 had to strip the band grid's outer hairlines here, because inside a
+  closed frame they sat a pixel under the dawn lid and a pixel over the dawn
+  floor. The sheet is four quadrants divided by ONE INTERNAL CROSS now, so it
+  has no perimeter rule at all and the frame's own edges are the block's.
+  ⚠ This card is the SMALLEST field the sheet renders in (579 × 215 at
+  1280×720, a 108px quadrant), so it is where a longer sentence fails first —
+  the smoke measures each quadrant's ink against its cell in both directions.
+
 ## The folder (ADR-097, live on both hosts)
 
 - ⚠ **THE FIRST CARD MATERIALISES, AND ONLY THE FIRST** (ADR-097 U11, owner:

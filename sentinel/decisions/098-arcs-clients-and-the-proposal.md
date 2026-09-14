@@ -382,3 +382,21 @@ line adopts it on any proposal arc.
 - The proposal names its fee and its addressee, so it is deliberately OUTSIDE
   `ENVELOPE_ARCS` — the portfolio's envelope is for a page forwarded to
   strangers, and a proposal is addressed to one.
+
+## Update 3 — the plates take the notch (2026-09-14, owner)
+
+> Redesign the modular approach cards so they have the notch.
+
+**U2 said "square (ADR-065)" and meant NO 12px RADIUS.** The deck draws its plan on a soft rounded card; that softness is the deck's material and does not travel. The sentence was read afterwards as "no cut", which is a different claim and not one U2 ever argued: a plate is a machined housing by the corner law's first rule, and a machined housing takes the canonical diagonal.
+
+**The plates take TR + BL at the plate rung.** `--arc-plate-ch: clamp(16px, 1.8vw, 26px)` — the value `.arc-dossier` and `.arc-prog` already cut at, because two housings on one surface are one object at two sizes rather than two styles. It is also what the owner means by "the notch": his own word for the proof cards two beats up ("a notch, like on the homepage, in the bottom-left and top-right corners", ADR-097 U4).
+
+**Rule 4 comes with it**: the head band, the ruled rows and the inverse DELIVERABLE foot stay SQUARE. The housing is what has corners, and its clip takes them out of the band and the foot for free — the proof card's own head band is the precedent.
+
+⚠ **NO `border` — A CLIP CUTS A BORDER, IT NEVER STROKES ONE** (ADR-089). A bordered box under this clip has six edges outlined and two not, which is the opposite of what a beat composed around "borders and dividers" can afford. The edge is a clipped RING: one `::before` polygon carrying the outer contour and the inner one, `evenodd` making the middle a hole, the inner leg `ch − 0.586px` because insetting a 45° cut by `d` shortens its leg by `d(2 − √2)`. `clip-path` establishes a stacking context by itself, so the ring needs `z-index: 1` and no `isolation`.
+
+⚠ **THE RING IS INVISIBLE OVER THE INVERSE FOOT, BY CONSTRUCTION.** `--arc-edge` and `--arc-ink` are the same dawn triple at two alphas, so the dark band bleeds to the silhouette and ends the plate as a cap. That is the proof card's floor too, and it is why the foot needs no rule of its own.
+
+**Three pages, one renderer** — the Trinny pitch, `/arcs/suri-proposal`, `/arcs/hungry-minds-proposal` (Perfect Ted's phases are still `layout: "columns"`). CSS-only: `ArcListGroups` does not change, so `arc-terminal-markup`'s byte-identity pin holds. The trinny smoke gains the assertion the plates never had — a `polygon` clip, `border-top-width: 0px`, and a `::before` that actually paints with an `evenodd` clip; "the plate is cut" had no guard at all before, because nothing measured a plate's geometry.
+
+⚠ **Left open, flagged not taken:** the pricing beat's `.arc-ledger__table` and `.arc-ledger__tip` are the same material one beat later and stay square-bordered. A table is not a housing, but the two beats now differ; the owner's call.

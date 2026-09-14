@@ -3,7 +3,7 @@ import type { ArcMotion, ArcSectionOf, BoardState } from "@/lib/arcs/types";
 import { ArcBeat } from "./ArcBeat";
 import { ArcSectionHead } from "./ArcSectionHead";
 import { rung } from "./arcMotion";
-import { Diamond, Letter, Module, Ribbon } from "./board/boardGlyphs";
+import { Letter, Module, Ribbon } from "./board/boardGlyphs";
 import { boardGeom, type BoardGeom, type Role } from "./board/boardLayout";
 import { arcTitleText } from "./chrome";
 
@@ -16,16 +16,21 @@ interface ArcBoardProps {
 const ROLES: readonly Role[] = ["head", "seat", "layer", "card", "tools"];
 
 /**
- * ArcBoard — the client's configuration as a circuit board in two states
- * (ADR-100): as it runs today, dormant, beside the same studio with a
- * configuration seated, lit. Four objects each — the seat, the layer, the
- * card, the tools — one line apiece, in the proof's R4 grammar (ADR-070
- * U11) at page scale.
+ * ArcBoard — the client's configuration, one record drawn twice (ADR-100
+ * U2): a ruled LEDGER of the four facts as they stand today, beside the
+ * BOARD those four become once a configuration is seated — the proof's R4
+ * grammar (ADR-070 U11) at page scale.
  *
  * ⚠ RADICALLY SIMPLE, BY OWNER RULING (U1). The first cut drew a bed, two
  * sockets, foot rows, hatched cables, four sentences and a second card row,
- * and grew the crop to the beat; he said "no, radically simplify it". What
- * survives is the reading and nothing that decorates it.
+ * and grew the crop to the beat; he said "no, radically simplify it".
+ *
+ * ⚠ AND THE TWO SIDES ARE DIFFERENT KINDS OF DRAWING (U2). U1 kept them
+ * symmetrical — the same slots, dashed — and he read it as one picture at
+ * two brightnesses: "it shouldn't look too similar to the right … a
+ * contrast like before and after, but without implying they're
+ * unorganized". A ledger is the answer: ordered, complete, and connected to
+ * nothing.
  *
  * ⚠ NOT IN A FRAME. The row has no plate, no border and no ground: the
  * modules are the objects and the page's own ground shows between them —
@@ -107,7 +112,6 @@ function Board({ state }: { state: BoardState }) {
 function RoleGroup({ role, g }: { role: Role; g: BoardGeom }) {
   const modules = g.modules.filter((m) => m.role === role);
   const letters = g.letters.filter((l) => l.role === role);
-  const diamonds = g.diamonds.filter((d) => d.role === role);
   return (
     <g data-board-role={role} className={role === "card" ? "arc-board__bloom" : "arc-board__in"}>
       {role === "head" ? (
@@ -121,9 +125,6 @@ function RoleGroup({ role, g }: { role: Role; g: BoardGeom }) {
       ) : null}
       {modules.map((m) => (
         <Module key={m.id} m={m} />
-      ))}
-      {diamonds.map((d) => (
-        <Diamond key={d.id} d={d} />
       ))}
       {letters.map((l) => (
         <Letter key={l.slot} l={l} />

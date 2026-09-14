@@ -449,3 +449,31 @@ every station.
   a new sheet inherits the template rather than inventing a layout.
 - **THE LINE's remaining air** is smaller but not gone at tall viewports,
   where the figure sits at its ceiling and the band is a fixed cost.
+
+## Update 2 — the red line is a block with a named centre (2026-09-14, owner)
+
+> In the Proof section, in "The Red Line" of "We made the creative team self-sufficient", redesign the 4 bands into a square block of 4 elements with at the center "NO AI UGC", because right now it's not really clear what they're related to. Do a clean design.
+
+**This reverses U1's four-band ruling, and the reason it can is that the object changed.** U1's §"THE RED LINE IS FOUR BANDS, BECAUSE A 2×2 CANNOT FILL A TALL PANEL" measured a 2×2 that was **centred in** the field — four short blocks with ~350px of void above and below. The block here **fills**: `1fr` rows and `1fr` columns divide whatever height the box gives, so the surplus becomes the quadrants' own air exactly as the bands' did. The finding that killed the first 2×2 was never "a 2×2 is wrong"; it was "a centred 2×2 leaves a hole", and that is still true.
+
+**Four quadrants, one cross, the charge at the crossing.** `CaseSheetBody`'s facts arm gains `hub?: string`; the red-line sheet carries `hub: "NO AI UGC"`. The block is `<div class="fl-caps-block fl-caps-block--hub">` around the existing `<ul class="fl-caps fl-caps--sheet">` plus one absolutely-centred `<span class="fl-caps-block__hub">`. Four claims around a named centre say what four stacked bands could not: the risks are four faces of ONE decision, and the decision has a name. U1's own §"THE RED LINE says what it is about" solved half of this in the verdict band; the drawing says it now too.
+
+⚠ **SQUARE IS THE ARRANGEMENT, NOT THE BOX.** A 1:1 block is a 550px stamp with 275px of air a side in the portfolio arc's LANDSCAPE console (~1100×600) — the undersized-stamp defect ADR-076 and ADR-078 both name. Filling makes it square on the proof card's portrait field and landscape on the arc, and letterboxes on neither.
+
+⚠ **THE CROSS IS TWO GRADIENTS ON THE GRID, NOT BORDERS ON THE CELLS.** Cell borders cannot open a gap in the middle, and a gap is what the hub needs: the proof card is GLASS (`--con-ground: transparent` there), so a label over a line has no ground to knock itself out with. `background-repeat: no-repeat` is load-bearing — a `1px 100%` tile repeats across the whole width and paints a solid wash.
+
+⚠ **THE HAIRLINE IS `--con-hair`, NOT THE BANDS' RAW GOLD.** The four-band rules were `rgba(var(--gold-rgb), .12/.24)` with no light value anywhere, i.e. raw gold on parchment on two of the three hosts. `--con-hair` is declared on `.fl-con`, which all three mount, and is re-derived for light in `theme.css`.
+
+⚠ **THE HUB TAKES THE LINE-WORK RUNG, NOT `--gold-line` AT FULL.** That weight is the console's LIT state (an open station's own mark), so a gold-outlined label inside the frame reads as a control. `--con-dim`, square corners (rule 4), mono — which is also what keeps the type ratchet's PP-Neue-plus-uppercase count untouched.
+
+### What the measurement found, and what it cost
+
+- The block fills its field exactly at every shape on the card (814 × 690 · 652 × 286 · 579 × 215), and the hub is dead centre (0.0px on both axes) on both hosts.
+- ⚠ **THE BINDING SHAPE IS THE CARD AT 1280×720**, where a quadrant is 290 × 108 against 88.4 of ink — three pixels over. The PADDING pays (`padding-block: clamp(5px, 0.85svh, 14px)` below the register's own `1070px` rung, which it tiles with). ⚠ **The four bands overflowed there too and nobody knew**: a centred box that outgrows its cell spills equally through the top and the bottom, so `scrollHeight === clientHeight` and every fit gate on this surface read green — `.fl-cmp__middle` paid for the same lesson one sheet over. `align-content: safe center` makes such a spill visible, and both smokes measure the ink against the cell in BOTH directions now.
+- ⚠ **TWO COLUMNS WERE THE FIRST FIX AND THEY DO NOT FIT.** Putting the evidence beside the claim halves the cell's height, but a quadrant is half a band's width: the rail cannot hold `CREDIBILITY` (92px of mono in a 75px track) and the claim printed straight through the sentence. A `min-content` rail fixes the overlap and takes the evidence to five lines, which overflows again. The arrangement is one column; the room is the padding.
+- ⚠ **THE REGISTRY'S 95-CHARACTER CEILING IS A BELT, NOT THIS BOX.** At the binding shape a quadrant holds about 85 (today's longest is 84). Between those two numbers, MEASURE — the same caveat `.fl-brief` carries between its 330-pixel box and its 420-character guard.
+- `proof-stack.css`'s U10 override goes with the bands: it existed to strip the grid's first and last hairlines where they doubled the frame's lid and floor, and the block has no perimeter rule at all.
+
+### Guards
+
+`cases-registry` pins `hub` ≤ 12 when present (the dividers' gaps are sized to it, and a phrase there is a caption). `arc-portfolio-smoke` and `trinny-london-smoke` both assert, on THE RED LINE: four quadrants, four tags, the hub's text, the hub on the crossing within 1px, and **no quadrant's ink outside its cell** — the check neither host had. The verdict's own assertions are untouched on all three hosts.

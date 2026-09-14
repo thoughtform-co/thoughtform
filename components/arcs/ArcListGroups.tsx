@@ -95,8 +95,13 @@ export function ArcListGroups({ section, index, motion = "reveal" }: ArcListGrou
  * One plate (ADR-098 U2). The deck's `.plan .col`: a head band carrying
  * the mono kicker (`label`) over the name (`blurb`), one ruled row per
  * item — the mono `tag` heading the item's two lines — and the outcome as
- * an INVERSE band at the floor. Square, on the house tokens: the deck's
- * 12px radii and soft card are its own material, not this surface's.
+ * an INVERSE band at the floor. On the house tokens: the deck's 12px radii
+ * and soft card are its own material, not this surface's.
+ *
+ * ⚠ THE PLATE IS A CHAMFERED HOUSING SINCE U3 (owner, 2026-09-14: the cards
+ * "should have the notch") — TR + BL at the plate rung, drawn entirely in
+ * `arcs.css`; the head, the rows and the foot stay square (ADR-065 rule 4)
+ * and this markup does not change for it.
  */
 function ArcPlate({
   group,

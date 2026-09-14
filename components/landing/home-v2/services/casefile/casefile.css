@@ -5629,86 +5629,96 @@
 /* The facts sheet has no capture above it, so its grid starts at the top of
    the field rather than under a bar, and it spreads into the height the
    tools plate spends on the shot. */
-/* ── FOUR BANDS, NOT A 2×2 (2026-08-28, owner: "everything is so spread
-   out") ═══════════════════════════════════════════════════════════════════
-   ⚠ A 2×2 OF SHORT BLOCKS CANNOT FILL A TALL PANEL, and no amount of type
-   closes it: four risk statements are ~90px of ink against a 880px field, so
-   `align-content: center` put them in the middle with ~350px of void above
-   and below. A four-band register fills BY CONSTRUCTION — `grid-auto-rows:
-1fr` divides the height between the rows whatever the height is, and each
-   band centres its own content, so the surplus becomes the bands' own air
-   instead of one hole.
+/* ── FOUR QUADRANTS AROUND A NAMED CENTRE (ADR-084 U2, 2026-09-14, owner:
+   the four risk bands are "not really clear what they're related to" —
+   "redesign the 4 bands into a square block of 4 elements with at the center
+   NO AI UGC. Do a clean design") ══════════════════════════════════════════
+   The field divides in four and one cross divides them; the charge letters
+   at the crossing, and the rules stop short of it so the label sits IN the
+   division rather than on a line. Four claims around a named centre carry
+   what the bands could not: that the risks are four faces of one decision.
 
-   It is also the column's own grammar, one scale up: this is exactly what
-   `.fl-proof-register__list` does on the left with the same `1fr` rows and
-   the same hairlines. The claim sits on the left rail and the evidence to
-   its right, so a reader scans four claims and reads the one they stop on.
+   ⚠ THIS REVERSES THE FOUR-BAND RULING (2026-08-28, "everything is so spread
+   out"), and the reason it can is that the earlier 2×2 was CENTRED IN the
+   field — four short blocks with ~350px of void above and below. This one
+   FILLS: `1fr` rows and `1fr` columns divide whatever height the box gives,
+   so the surplus becomes the quadrants' own air, exactly as the bands' did.
 
-   ⚠ AND IT SUITS BOTH HOMES. The portfolio arc mounts this plate in a
-   LANDSCAPE box (~1100×600), where four bands are ~150px each — where the
-   2×2 was the only shape that worked before, and a taller stack would have
-   been the trade. `1fr` rows need no per-shape tuning. */
+   ⚠ SQUARE IS THE ARRANGEMENT, NOT THE BOX. A 1:1 block is a 550px stamp
+   with 275px of air a side in the arc's LANDSCAPE console (~1100×600) — the
+   undersized-stamp defect ADR-076 and ADR-078 both name. Filling makes it
+   square on the proof card's portrait field and landscape on the arc, and
+   letterboxes on neither.
+
+   ⚠ THE CROSS IS TWO GRADIENTS ON THE GRID, NOT BORDERS ON THE CELLS. Cell
+   borders cannot open a gap in the middle, and a gap is what the hub needs:
+   the card is GLASS (`--con-ground` is transparent there), so a label over a
+   line has no ground to knock it out with. ⚠ `no-repeat` IS LOAD-BEARING —
+   a `1px 100%` tile repeats across the whole width and paints a solid wash.
+
+   ⚠ THE HAIRLINE IS `--con-hair`, NOT THE BANDS' RAW GOLD. The four-band
+   rules were `rgba(var(--gold-rgb), .12/.24)` with no light value anywhere,
+   i.e. raw gold on parchment; `--con-hair` is declared on `.fl-con` (which
+   all three hosts mount) and re-derived for light in theme.css. */
+.fl-caps-block {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 .fl-caps--sheet {
   flex: 1 1 auto;
   min-height: 0;
-  grid-template-columns: minmax(0, 1fr);
-  grid-auto-rows: 1fr;
-  align-content: stretch;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   padding: 0;
   gap: 0;
 }
+.fl-caps-block--hub .fl-caps--sheet {
+  /* Half the hub's own box plus its clearance. Retune these with the string,
+     never the string with these. */
+  --hub-gap-x: 64px;
+  --hub-gap-y: 28px;
+  background-image:
+    linear-gradient(
+      to bottom,
+      var(--con-hair, rgba(var(--gold-rgb), 0.13)) 0 calc(50% - var(--hub-gap-y)),
+      transparent calc(50% - var(--hub-gap-y)) calc(50% + var(--hub-gap-y)),
+      var(--con-hair, rgba(var(--gold-rgb), 0.13)) calc(50% + var(--hub-gap-y)) 100%
+    ),
+    linear-gradient(
+      to right,
+      var(--con-hair, rgba(var(--gold-rgb), 0.13)) 0 calc(50% - var(--hub-gap-x)),
+      transparent calc(50% - var(--hub-gap-x)) calc(50% + var(--hub-gap-x)),
+      var(--con-hair, rgba(var(--gold-rgb), 0.13)) calc(50% + var(--hub-gap-x)) 100%
+    );
+  background-size:
+    1px 100%,
+    100% 1px;
+  background-position:
+    50% 0,
+    0 50%;
+  background-repeat: no-repeat;
+}
+/* ⚠ ONE COLUMN, THREE ROWS, AND NO EXPLICIT PLACEMENT. The band put the tag
+   and the claim on a rail beside the evidence and had to place all three by
+   hand (a third auto-placed child split the pair); a quadrant stacks them in
+   DOM order, so auto-placement is correct and a missing tag collapses its
+   own row. ⚠ `safe center` — a centred grid that outgrows its cell spills
+   through the TOP, where `scrollHeight` never reports it; `safe` falls back
+   to `start` and the overflow becomes visible instead of silent. */
 .fl-caps--sheet .fl-cap {
   min-width: 0;
+  min-height: 0;
   display: grid;
-  /* The claim's rail, then the evidence. 0.36 is what holds the longest
-     title ("CREDIBILITY COLLAPSE") on two lines rather than three at the
-     scale's ceiling. */
-  grid-template-columns: minmax(0, 0.36fr) minmax(0, 1fr);
-  column-gap: clamp(14px, 2.2vw, 34px);
-  align-items: baseline;
-  align-content: center;
-  /* Was `calc(var(--sh) * 0.6)` (7.6→15px). Fixed clamp on the same range —
-     the row of four is the layout lever here, not the padding. */
-  padding: clamp(8px, 1.2svh, 15px) var(--fl-plate-px, clamp(16px, 1.8vw, 24px));
-  border-top: 1px solid rgba(var(--gold-rgb), 0.12);
+  grid-template-columns: minmax(0, 1fr);
+  align-content: safe center;
+  padding: clamp(10px, 1.6svh, 20px) var(--fl-plate-px, clamp(16px, 1.8vw, 24px));
+  border: 0;
 }
-.fl-caps--sheet .fl-cap:first-child {
-  border-top-color: rgba(var(--gold-rgb), 0.24);
-}
-.fl-caps--sheet .fl-cap:last-child {
-  border-bottom: 1px solid rgba(var(--gold-rgb), 0.12);
-}
-/* ⚠ IT WRAPS HERE. The base rule is `nowrap` + ellipsis because the tools
-   plate gives a title half a narrow tile; on its own rail it has the room to
-   break, and ellipsising a four-word claim to fit a rail we chose is the
-   wrong end of that trade. Chrome-lg is the RANK the fact title takes on the
-   surface — the same rung as the client tab strip, one below the display.
-   ⚠ FALLBACK: `.arc-sheets` does not declare --fl-chrome-lg (see fl-cmp
-   comment) — the fallback matches --fl-chrome-lg's clamp on .fl-case. */
-.fl-caps--sheet .fl-cap__t {
-  font-size: var(--fl-chrome-lg, calc(clamp(11px, min(0.86vw, 1.11svh), 12px) * 1.2));
-  line-height: 1.2;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-}
-
-/* ── The band's category designation ──────────────────────────────────────
-   The deck's own risk kicker over each claim (BRAND RISK, REPUTATION RISK,
-   …), which is what makes four statements read as one ranked argument
-   instead of four separate worries: the reader takes the AXIS first.
-
-   ⚠ **PLACED EXPLICITLY, because a third child breaks auto-placement.**
-   The band is a two-column grid whose whole read depends on the claim and
-   its evidence sharing a BASELINE row; an auto-placed tag would push the
-   evidence into row 2 on its own and split the pair. Row 1 / column 1 keeps
-   the pair intact — and when no tag is present the auto row collapses to
-   zero, so an untagged facts sheet renders byte-identically to before.
-   ⚠ FALLBACK: `.arc-sheets` does not declare --fl-chrome-sm (see fl-cmp
+/* ⚠ FALLBACK: `.arc-sheets` does not declare --fl-chrome-sm (see fl-cmp
    comment) — the value matches --fl-chrome-sm's own derivation on .fl-case. */
 .fl-caps--sheet .fl-cap__tag {
-  grid-column: 1;
-  grid-row: 1;
   padding-bottom: 3px;
   font-family: var(--fl-mono);
   font-size: var(--fl-chrome-sm, max(10px, calc(clamp(11px, min(0.86vw, 1.11svh), 12px) / 1.2)));
@@ -5716,23 +5726,84 @@
   text-transform: uppercase;
   color: var(--fl-ink-dim, rgba(var(--dawn-rgb), 0.4));
 }
+/* ⚠ IT WRAPS HERE. The base rule is `nowrap` + ellipsis because the tools
+   plate gives a title half a narrow tile; in a quadrant it has the room to
+   break, and ellipsising a four-word claim to fit is the wrong end of that
+   trade. Chrome-lg is the RANK the fact title takes on the surface — the
+   same rung as the client tab strip, one below the display.
+   ⚠ FALLBACK: `.arc-sheets` does not declare --fl-chrome-lg. */
 .fl-caps--sheet .fl-cap__t {
-  grid-column: 1;
-  grid-row: 2;
+  font-size: var(--fl-chrome-lg, calc(clamp(11px, min(0.86vw, 1.11svh), 12px) * 1.2));
+  line-height: 1.2;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
+/* The evidence sentence is PROSE and lives on --fl-copy with the brief body.
+   Five lines: a quadrant is narrower than a band was, so the same 95-char
+   ceiling wraps further. */
 .fl-caps--sheet .fl-cap__d {
-  grid-column: 2;
-  grid-row: 2;
-}
-/* No capture above this grid, so there is nothing competing for the height —
-   the clamp is a pure belt here and can sit well clear of today's copy. The
-   evidence sentence is PROSE and lives on --fl-copy with the brief body. */
-.fl-caps--sheet .fl-cap__d {
+  padding-top: 4px;
   font-size: var(--fl-copy, calc(clamp(15px, 1.15vw, 18px) * 0.9));
   line-height: 1.4;
   color: rgba(var(--dawn-rgb), 0.72);
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+}
+/* ⚠ SQUARE (ADR-065 rule 4: the children of a chamfered housing are square),
+   and the line-work rung of the gold ramp rather than `--gold-line` at full
+   — that weight is the console's LIT state (`--con-hot` on an open station),
+   and a gold-outlined label inside the frame would read as a control. Mono,
+   so the type ratchet's PP-Neue-plus-uppercase count is untouched. */
+.fl-caps-block__hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  padding: 9px 14px;
+  border: 1px solid var(--con-dim, rgba(var(--gold-rgb), 0.42));
+  font-family: var(--fl-mono);
+  font-size: var(--fl-chrome-md, clamp(11px, min(0.86vw, 1.11svh), 12px));
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--con-txt, rgba(var(--dawn-rgb), 0.92));
+}
+
+/* ── A SHORT QUADRANT SPENDS ITS PADDING ──────────────────────────────────
+   ⚠ THE BINDING SHAPE IS THE PROOF CARD AT 1280×720, where the sheets field
+   is 579 × 215 and a quadrant is 290 × 108. A tag (18) over a claim (15.8)
+   over a three-line sentence (54.6) is 88.4 of ink against 85 of interior —
+   three pixels over, and the sentence is what gives. The padding is what
+   pays (ADR-066's order of sacrifice: a screenshot loses pixels before a
+   sentence loses meaning, and here the padding loses them before either).
+   ⚠ THE FOUR BANDS OVERFLOWED THERE TOO and nobody knew: a CENTRED box that
+   outgrows its cell spills equally through the top and the bottom, so
+   `scrollHeight === clientHeight` and every fit gate on this surface read
+   green (`.fl-cmp__middle` paid for the same lesson one sheet over). The
+   `safe center` above is what makes such a spill visible; this rung is what
+   makes it unnecessary, and the smokes now measure the ink either way.
+   ⚠ TWO COLUMNS WERE THE FIRST FIX AND THEY DO NOT FIT. Putting the
+   evidence beside the claim halves the cell's height, but a quadrant is
+   half a band's width: the rail cannot hold `CREDIBILITY` (92px of mono in
+   a 75px track), so the claim printed straight through the sentence. A
+   `min-content` rail fixes the overlap and takes the evidence to five
+   lines, which overflows again. The arrangement is one column; the room is
+   the padding.
+   ⚠ AND THE REGISTRY'S 95-CHARACTER CEILING IS A BELT, NOT THIS BOX. At
+   this shape a quadrant holds about 85 (today's longest is 84). Between
+   those two numbers, MEASURE — the same standing caveat `.fl-brief` carries
+   between its 330-pixel box and its 420-character guard.
+   ⚠ It TILES with the register's `min-height: 1070px` rung, deliberately:
+   two height rungs on one surface that disagree by a pixel is how a box
+   clips in the gap between them. */
+@media (max-height: 1069px) {
+  .fl-caps--sheet .fl-cap {
+    padding-block: clamp(5px, 0.85svh, 14px);
+  }
+  .fl-caps--sheet .fl-cap__d {
+    padding-top: 2px;
+  }
 }
 
 /* ── The comparison ──────────────────────────────────────────────────────
@@ -6029,13 +6100,6 @@
      (IBM Plex), so anything that stays silent here picks up a THIRD face
      (ADR-067's recurring bug). */
   font-family: var(--fl-mono);
-}
-
-/* THE RED LINE's grid already ends on its own hairline (`.fl-cap:last-child`
-   carries a bottom border), and two seams a pixel apart read as a rendering
-   glitch rather than as a division. */
-.fl-caps--sheet + .fl-verdict {
-  border-top: 0;
 }
 
 .fl-verdict__k {
@@ -6772,9 +6836,6 @@
   .fl-cmp__ex {
     margin-top: 12px;
   }
-  .fl-caps--sheet {
-    padding: 14px 0;
-  }
 
   /* The verdict stays in flow — like `.fl-filmprod`, this is a CONTENT
      decision rather than a fit one: the sentence is what the sheet is for.
@@ -6944,16 +7005,31 @@
     padding-bottom: 18px;
   }
 
-  /* The sheets foot keeps the flat rails it has always had below the gate —
-     they were written on `.fl-caps--tool`, whose only remaining client is
-     this plate (ADR-068). Same values, one selector. */
+  /* ⚠ THE QUADRANTS STACK AND THE CROSS COMES OFF (ADR-084 U2). One column
+     of four has no crossing to letter, so the hub leads the stack as its
+     own row and the rows divide with a hairline apiece — the band grammar
+     the block replaced above the gate, which is still the right one for a
+     phone. The `.fl-caps--tool` rails this inherited went with that class
+     (ADR-068); these are the same 12px, on one selector. */
   .fl-caps--sheet {
-    padding: 14px 0 4px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: auto;
+    padding: 0 0 4px;
+    background-image: none;
   }
-  .fl-caps--sheet .fl-cap:nth-child(odd),
-  .fl-caps--sheet .fl-cap:nth-child(even) {
-    padding-left: 12px;
-    padding-right: 12px;
+  .fl-caps--sheet .fl-cap {
+    padding: 14px 12px;
+  }
+  .fl-caps--sheet .fl-cap + .fl-cap {
+    border-top: 1px solid var(--con-hair, rgba(var(--gold-rgb), 0.13));
+  }
+  .fl-caps-block__hub {
+    position: static;
+    translate: none;
+    order: -1;
+    align-self: center;
+    margin: 14px 0 6px;
   }
   /* ⚠ NOTHING CLAMPS BELOW THE GATE. The console has unwrapped into ordinary
      flow here, so height is free and every clamp above is buying something

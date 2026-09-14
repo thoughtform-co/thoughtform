@@ -1,6 +1,6 @@
 # ADR-100: The configuration is a board in two states
 
-**Status:** Proposed (2026-09-13) — shipped and guarded, pending the owner's live read. ⚠ **[Update 1](#update-1-2026-09-13-owner--no-radically-simplify-it) (same day, owner: _"no, radically simplify it"_) IS THE LIVE CUT** — §2, §3, §4 and §6 below record the FIRST cut and are superseded where Update 1 says so; read it first.
+**Status:** Proposed (2026-09-13) — shipped and guarded, pending the owner's live read. ⚠ **[Update 2](#update-2-2026-09-14-owner--a-ledger-beside-a-board) (2026-09-14, owner) IS THE LIVE DRAWING** — the dormant side is a LEDGER, the lit side a board, and the record is four facts answered twice; read it and U1 before anything below. ⚠ **[Update 1](#update-1-2026-09-13-owner--no-radically-simplify-it) (2026-09-13, owner: _"no, radically simplify it"_)** — §2, §3, §4 and §6 below record the FIRST cut and are superseded where Update 1 says so; read it first.
 **Surface:** `#proposition` on `/arcs/trinny-london/proposal` (ADR-093 → ADR-094 → ADR-099).
 **Supersedes on this page:** ADR-098 §4's port of the pitch page's instrument (ADR-094 U7). `ArcConfiguration` is untouched and still renders the registered proposals.
 **Related:** ADR-070 U11 (the R4 substrate field), ADR-070 U12 (the elastic crop), ADR-076 (the aspect cap), ADR-065 (the corner law), ADR-077 (the arcs' ink ramp), ADR-099 (the datum).
@@ -88,3 +88,42 @@ The head: eyebrow "Trinny London · where the studio stands", title "The studio 
 ## Files
 
 `lib/arcs/types.ts` · `components/arcs/ArcBoard.tsx` (server, the whole row) · `components/arcs/board/{boardLayout.ts, boardGlyphs.tsx}` · `components/arcs/ArcSectionRenderer.tsx` · `components/arcs/chrome.tsx` · `components/arcs/arcs.css` (one block + two light rows) · `app/(marketing)/arcs/trinny-london/proposal/offer/{offerSections.ts, TrinnyBeats.tsx, TrinnyConfiguration.tsx}` · `tests/lib/{arc-board-fit.test.ts, trinny-offer.test.ts, arcs-registry.test.ts, arc-terminal-markup.test.tsx}` · `tests/visual/trinny-london-smoke.spec.ts`. `ArcBoardRow.tsx` is deleted (U1).
+
+## Update 2 (2026-09-14, owner) — a ledger beside a board
+
+**The ruling, in four notes and one instruction.** On the live U1 drawing: the title and the dek should be more concise; "As it runs today" **should not look so similar to** "With a configuration" — "it should be a contrast like before and after, but without implying they're unorganized"; WHERE IT RUNS should list Figma at the same level as the other tools; the diamond above THE STUDIO comes off; "The studio lead / the founder's sense-check last" is "cringe", make it ONE sentence; THE LAYER becomes THE CONTEXT; and the centre node and its pair should be "way more simple" — "as you know they want to build out this capability in-house and that's what's at the heart of it. Maybe the right side should be AI-capability, owned by the team". Then: **"AND REALLY DO A FUCKING SENSE CHECK IN THIS SECTION because it feels sloppy."**
+
+### 1 · The two sides stop being the same picture at two brightnesses
+
+U1 drew the dormant side as the lit board's own modules, dashed. Every guard was green and the arithmetic was right, and it still read as one drawing greyed out — because it WAS one drawing greyed out. A before/after asks for two kinds of object, not two states of one.
+
+**LEFT is a ruled LEDGER**: four rows off the crop's own inset, a mono key and a sans value each, a hairline under every row and the last closing on the board's floor. No housing, no cut, no cable, no colour. It says the four facts are _written down and connected to nothing_ — which is the client's actual position — and it says it without the dashes, hatches and empty rooms that read as disorder. **RIGHT is the BOARD**: the same four assembled and wired.
+
+⚠ **Both sides share the datum and the floor** (y 26 and y 400), so the two drawings agree on where the reading starts and stops while agreeing on nothing else. That is what keeps them one instrument.
+
+### 2 · The record is FOUR FACTS answered twice
+
+`BoardState` stops being a board's parts list and becomes the four questions: `seat` (who owns it), `layer` (the context), `card` (the work), `tools` (where it runs). Each carries one key and one value on both sides, so the copy is written as four pairs and the DRAWING is what differs. `seat.note`, `card.q`, `card.a`, `tools.items[].note` and `tools.items[].lit` are deleted — the seat is one sentence (the "cringe" pair), the card is a name and a line, and the tools are peers.
+
+⚠ **THE HEART OF THE RIGHT SIDE IS THE CAPABILITY, NOT A WORKSTREAM.** The lit card was `THE STUDIO` / "What runs it" / "A brand Skill, on the team's own keys" — a workstream with a tool in it. It is **`AI CAPABILITY` / "owned by the team"** now, drawn as a CHIP on the lane row (264 × 104, centred on `cy`) so the three ribbons meet its middle rather than its corner. What they want is the capability in-house; the board's one lit object should be that and nothing else.
+
+⚠ **FIGMA IS A PEER.** It was a note on a lit CLAUDE ("inside Figma"); it is the second of four tool names now, at the context's own tag pitch, and both sides letter ONE list — the ledger joins the four names into a row, the board letters them as four.
+
+⚠ **NO DIAMONDS ANYWHERE.** `BoardDiamond` and `Diamond` are deleted. The drawing marks nothing with a glyph; the chip's gold wash is what says which object is the built one.
+
+### 3 · The copy
+
+Title `The studio today, and *configured.*` (was "The studio today, and the studio configured."). Dek: _"The teams are trained on Claude, but nobody owns AI as their day job and the studio still works by hand. Left, the studio as it runs today. Right, the same studio with its configuration seated."_ — 190 characters from 360, and it stops restating what the turn above already said.
+
+### 4 · The sense check, and what it found
+
+- **A doubled rule.** The ledger's first row ruled its top 14 units under the head's own datum: two full-width lines in one place, ADR-089 U3's defect in a new object. Every row rules its BOTTOM now and the datum opens the ledger.
+- **A hyphen break on the turn** (Part 2 of the same pass): `self-sufficient` split across its own hyphen at `44ch`, which is ADR-098 U1's finding one beat over. The sub's measure is 52ch.
+
+### Guards
+
+`arc-board-fit` pins the label sets by `toEqual` (**nine** on the ledger, **sixteen** on the board), asserts every dormant module is a `row` with no cut and no lane, the three eight-wire ribbons meeting the chip's centre line, and — new — **that no lettered string carries a digit**, because the ledger's tools row is COMPOSED at draw time and a string built in a renderer is outside every content scanner (ADR-070 U15's `8 TEAMS`). `trinny-offer` and `arcs-registry` check that every fact is answered on both sides and that the two sides answer with DIFFERENT words. The smoke asserts the ledger draws zero modules and the board zero rows, zero marks on either, 24 wires, and pins the rendered counts `[9, 16]` live.
+
+### Files
+
+`lib/arcs/types.ts` · `components/arcs/board/{boardLayout.ts, boardGlyphs.tsx}` · `components/arcs/ArcBoard.tsx` · `app/(marketing)/arcs/trinny-london/proposal/offer/offerSections.ts` · `tests/lib/{arc-board-fit.test.ts, trinny-offer.test.ts, arcs-registry.test.ts}` · `tests/visual/trinny-london-smoke.spec.ts`. No CSS moved: the row keeps its bases (560 + 40 + 800 of 1400) and its ladder.

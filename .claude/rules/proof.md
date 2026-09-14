@@ -1066,13 +1066,28 @@ The Studio and ATL rows' composition, and the console's paint.
   content to distribute.** It is a grid with THREE anchors now — category at the
   head, `.fl-cmp__read` (claim + description, which may not drift apart) centred
   in the body, exemplars at the floor.
-- ⚠ **THE RED LINE IS FOUR BANDS — A 2×2 CANNOT FILL A TALL PANEL.** Four risk
-  statements are ~90px of ink against an 880px field, so `align-content: center`
-  left ~350px of void and no type size closes that. `grid-auto-rows: 1fr` on one
-  column divides the height whatever the height is, each band centring its own
-  content, claim on a left rail with its evidence beside it — the proof index's
-  own grammar one scale up. ⚠ It suits the arc's LANDSCAPE box for free (~150px
-  bands at 1100×600), which the 2×2 needed tuning for.
+- ⚠ **THE RED LINE IS A BLOCK WITH A NAMED CENTRE (ADR-084 U2, owner
+  2026-09-14: the four bands are "not really clear what they're related
+  to").** Four quadrants divided by ONE CROSS, with `CaseSheetBody`'s new
+  `hub` (`NO AI UGC`) lettered at the crossing and the rules stopping short of
+  it. ⚠ **This reverses the four-band ruling because the OBJECT changed**: the
+  2×2 that ruling killed was CENTRED in the field (four short blocks, ~350px
+  of void); this one FILLS with `1fr` rows and columns, so the surplus is the
+  quadrants' air exactly as the bands' was. ⚠ **Square is the ARRANGEMENT,
+  not the box** — a 1:1 block is a 550px stamp in the arc's landscape console.
+  ⚠ **The cross is two gradients on the grid, not borders on the cells** (a
+  border cannot open the gap the hub needs, and the card is glass);
+  `background-repeat: no-repeat` is load-bearing. ⚠ The hairline is
+  `--con-hair`, not the bands' raw gold (which had no light value on two of
+  the three hosts), and the hub takes `--con-dim`, the line-work rung — full
+  `--gold-line` is the console's LIT state and reads as a control.
+  ⚠ **THE BINDING SHAPE IS THE CARD AT 1280×720** (a quadrant is 290 × 108
+  against 88.4 of ink): the padding pays, below a rung that TILES with the
+  register's own 1070px. ⚠ **The four bands overflowed there too and nothing
+  saw it** — a centred box spills through the TOP as well, where
+  `scrollHeight` never reports it; `safe center` plus the two smokes' ink walk
+  is what closes that. ⚠ Two columns were the first fix and do NOT fit: a
+  quadrant is half a band's width and the rail cannot hold `CREDIBILITY`.
 - **The register's size is paid out of the LEADING.** ⚠ The SIZES below are
   superseded by ADR-088 (claim `--fl-chrome-lg`, sentence
   `max(11.5px, --fl-copy / --fl-ratio)`, α **.78**); the LEADINGS and the law

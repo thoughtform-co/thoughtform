@@ -41,8 +41,10 @@ import { ConsoleRail } from "./console/ConsoleRail";
  * omitted, it renders here as before.
  *
  * ⚠ ALWAYS ON, unlike `.fl-filmprod`'s tall-viewport gate. That block is
- * supplementary record about a row; this is each sheet's punchline, and on
- * THE RED LINE it is the only place the surface says UGC.
+ * supplementary record about a row; this is each sheet's punchline. On THE
+ * RED LINE it was the only place the surface said UGC until ADR-084 U2 gave
+ * the facts body a HUB — the charge now names itself at the crossing of the
+ * four risks, and the verdict states the position under them.
  *
  * ⚠ A SHEET IS NOT A SECOND DIRECTORY. The directory rows are the
  * engagement's bodies of work; sheets are facets of ONE of them. If a sheet
@@ -205,22 +207,28 @@ function SheetBody({ sheet, stillSizes }: { sheet: CaseSheet; stillSizes: string
       );
 
     case "facts":
-      /* The tools plate's fact grid, reused. Four titled claims, 2×2, on the
-         symmetric rails — the same object doing the same job on another row
-         is exactly what the shared grammar is for. */
+      /* FOUR QUADRANTS AROUND A NAMED CENTRE (ADR-084 U2, owner 2026-09-14:
+         the red line's bands are "not really clear what they're related
+         to"). The four claims divide the field and one cross divides them;
+         `hub` letters the subject at the crossing, with the rules stopping
+         short of it so the label sits IN the division rather than on top of
+         a line. Without a `hub` it is the plain 2×2 and no cross. */
       return (
-        <ul className="fl-caps fl-caps--tool fl-caps--sheet">
-          {body.facts.map((f) => (
-            <li className="fl-cap" key={f.title}>
-              {/* The category designation over the claim — the reader takes
-                  the AXIS before the statement, which is what makes four
-                  bands read as one ranked argument. */}
-              {f.tag ? <span className="fl-cap__tag">{f.tag}</span> : null}
-              <span className="fl-cap__t">{f.title}</span>
-              <span className="fl-cap__d">{f.desc}</span>
-            </li>
-          ))}
-        </ul>
+        <div className={`fl-caps-block${body.hub ? " fl-caps-block--hub" : ""}`}>
+          <ul className="fl-caps fl-caps--sheet">
+            {body.facts.map((f) => (
+              <li className="fl-cap" key={f.title}>
+                {/* The category designation over the claim — the reader takes
+                    the AXIS before the statement, which is what makes four
+                    quadrants read as one ranked argument. */}
+                {f.tag ? <span className="fl-cap__tag">{f.tag}</span> : null}
+                <span className="fl-cap__t">{f.title}</span>
+                <span className="fl-cap__d">{f.desc}</span>
+              </li>
+            ))}
+          </ul>
+          {body.hub ? <span className="fl-caps-block__hub">{body.hub}</span> : null}
+        </div>
       );
 
     default: {

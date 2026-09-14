@@ -1068,6 +1068,38 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
             /* The deck's risk designations — all four or none (the
                registry pins the data; this pins that they RENDER). */
             tags: host.querySelectorAll(".fl-cap__tag").length,
+            /* ⚠ THE BLOCK AND ITS HUB (ADR-084 U2). The four claims are a
+               2×2 around a named centre now, so what has to hold is that
+               the block FILLS its slot, that the hub sits ON the crossing,
+               and — the check nothing on this surface made — that no
+               quadrant's ink spills its cell. A CENTRED box that outgrows
+               its cell spills equally through the top and the bottom, so
+               `scrollHeight === clientHeight` and every existing fit gate
+               reads green (`.fl-cmp__middle`'s own lesson). Measure the
+               INK against the cell, in both directions. */
+            hub: (() => {
+              const ul = host.querySelector(".fl-caps--sheet");
+              const h = host.querySelector(".fl-caps-block__hub");
+              if (!ul || !h) return null;
+              const u = ul.getBoundingClientRect();
+              const b = h.getBoundingClientRect();
+              return {
+                text: h.textContent,
+                dx: Math.abs(b.x + b.width / 2 - (u.x + u.width / 2)),
+                dy: Math.abs(b.y + b.height / 2 - (u.y + u.height / 2)),
+              };
+            })(),
+            spills: [...host.querySelectorAll(".fl-cap")].flatMap((c) => {
+              const cb = c.getBoundingClientRect();
+              const kids = [...c.children].map((k) => k.getBoundingClientRect());
+              const d = c.querySelector(".fl-cap__d") as HTMLElement;
+              const over = [
+                cb.top - kids[0].top,
+                kids[kids.length - 1].bottom - cb.bottom,
+                d.scrollHeight - d.clientHeight,
+              ];
+              return over.some((v) => v > 0.5) ? [`${c.textContent?.slice(0, 24)}: ${over}`] : [];
+            }),
           };
         });
         expect(line.cols, `THE LINE draws ONE boundary, two columns @ ${at}`).toBe(2);
@@ -1077,6 +1109,10 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
         expect(line.bandLine, `THE LINE carries its verdict @ ${at}`).toBe(true);
         expect(line.bandRed, `THE RED LINE carries its verdict @ ${at}`).toBe(true);
         expect(line.tags, `THE RED LINE's four risk designations @ ${at}`).toBe(4);
+        expect(line.hub?.text, `the charge letters at the crossing @ ${at}`).toBe("NO AI UGC");
+        expect(line.hub?.dx ?? 9, `the hub is on the crossing, x @ ${at}`).toBeLessThanOrEqual(1);
+        expect(line.hub?.dy ?? 9, `the hub is on the crossing, y @ ${at}`).toBeLessThanOrEqual(1);
+        expect(line.spills, `a quadrant's ink outside its cell @ ${at}`).toEqual([]);
 
         // ── THE REEL ───────────────────────────────────────────────
         await restAt(page, "studio-films");

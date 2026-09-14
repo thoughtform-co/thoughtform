@@ -43,11 +43,16 @@ import type { ArcSection } from "@/lib/arcs/types";
  * ⚠ THE `today` COPY IS THE CALL'S OWN WORDS, in roles, never names: "no
  * single ownership to make it happen", "a Friday afternoon job", "all of
  * our creative studios are 100% in-house … not using AI in a way that we
- * could", "we've kind of lost momentum". The `configured` answers are the
- * ones the previous drawing carried for the studio, kept verbatim where
- * they survive (the four layer rows, the two card rows, the seat, the three
- * kickers) — a rewrite is the owner's to make, and every string is walked
- * by the copy law and the board's own fit guard.
+ * could", "we've kind of lost momentum".
+ *
+ * ⚠ ONE RECORD, FOUR FACTS, TWO DRAWINGS (U2, owner 2026-09-14). Both
+ * states answer the same four questions — who owns it, the context, the
+ * work, the tools — and the DRAWING is what differs: a ledger on the left,
+ * the assembled board on the right. So the copy is written as four pairs,
+ * not as two compositions. ⚠ **THE RIGHT SIDE'S HEART IS THE CAPABILITY
+ * ITSELF**, not a workstream with a Skill in it: they want it in-house, so
+ * the lit card is `AI capability` / "owned by the team" and everything else
+ * on that board is what it sits on.
  *
  * ⚠ NO DIGIT ON EITHER BOARD, no bracket, no em dash. ⚠ THE BEAT KEEPS ITS
  * ID: `seatOf("configuration")` is what the datum guard measures and
@@ -58,20 +63,22 @@ export const TRINNY_BOARD: ArcSection = {
   kind: "board",
   head: {
     eyebrow: "Trinny London · where the studio stands",
-    title: { pre: "The studio today, and the studio", em: "configured." },
-    sub: "The founder wants Trinny London AI-first and the teams are trained on Claude, but the push has stalled: nobody owns it as their day job, the studio does everything by hand with no creative strategist, and the founder still catches what the review rounds miss. Below, that state as it runs now, and the same studio with a configuration seated.",
+    title: { pre: "The studio today, and", em: "configured." },
+    sub: "The teams are trained on Claude, but nobody owns AI as their day job and the studio still works by hand. Left, the studio as it runs today. Right, the same studio with its configuration seated.",
   },
   states: [
     {
       mode: "today",
       label: "As it runs today",
-      alt: "Trinny London's creative work as it runs today: no owner seated, the studio working by hand, nothing of the brand written down, and Claude, Monday and Slack unwired from each other.",
+      alt: "Trinny London's creative work as it runs today, written out as a ledger: no owner seated, nothing of the brand written down, the studio working by hand, and four tools nothing connects.",
       seat: { q: "Who owns it", a: "No one, as their day job" },
-      card: { name: "The studio", work: "all by hand" },
-      layer: { label: "The layer", sub: "not written down", rows: [] },
+      card: { name: "The work", work: "all by hand" },
+      layer: { label: "The context", sub: "not written down", rows: [] },
       tools: {
+        label: "The tools",
         items: [
           { id: "claude", name: "Claude" },
+          { id: "figma", name: "Figma" },
           { id: "monday", name: "Monday" },
           { id: "slack", name: "Slack" },
         ],
@@ -80,11 +87,11 @@ export const TRINNY_BOARD: ArcSection = {
     {
       mode: "configured",
       label: "With a configuration",
-      alt: "The same studio with a configuration seated: the studio lead owns it with the founder's sense-check as the last gate, a brand Skill on the team's own keys runs it inside Figma, and it reads the layer the team owns: rules, examples, sources and loops.",
-      seat: { q: "Who owns it", a: "The studio lead", note: "the founder's sense-check last" },
-      card: { name: "The studio", q: "What runs it", a: "A brand Skill, on the team's own keys" },
+      alt: "The same studio with its configuration seated: the studio lead owns it with the founder's sign-off, an AI capability the team owns runs at the centre, it reads the context they keep, and it runs inside the tools they already use.",
+      seat: { q: "Who owns it", a: "The studio lead, with the founder's sign-off." },
+      card: { name: "AI capability", work: "owned by the team" },
       layer: {
-        label: "The layer",
+        label: "The context",
         rows: [
           { id: "rules", tag: "Rules" },
           { id: "examples", tag: "Examples" },
@@ -95,7 +102,8 @@ export const TRINNY_BOARD: ArcSection = {
       tools: {
         label: "Where it runs",
         items: [
-          { id: "claude", name: "Claude", note: "inside Figma", lit: true },
+          { id: "claude", name: "Claude" },
+          { id: "figma", name: "Figma" },
           { id: "monday", name: "Monday" },
           { id: "slack", name: "Slack" },
         ],

@@ -441,7 +441,14 @@ html[data-services-ambient="true"] .tl-root .tl-turn__mark {
   line-height: 1.4;
   letter-spacing: var(--track-copy);
   color: var(--tl-ink-2);
-  max-width: 44ch;
+  /* ⚠ 52, NOT 44, AND THE MEASURE IS PART OF THE COPY. At 44ch the line
+     breaks INSIDE `self-sufficient` — a browser breaks at an existing
+     hyphen by default — which is ADR-098 U1's own finding on this page
+     family ("at 34ch the sentence broke `AI-first.` across its own
+     hyphen"), one beat over. At 52 the break lands after `teams` and the
+     hyphenated word stays whole at both reference shapes. A longer line
+     re-measures this. */
+  max-width: 52ch;
 }
 
 /* ⚠ THEIR YELLOW, FILLED — the one place on this page that borrows the

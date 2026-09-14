@@ -116,16 +116,23 @@ export interface ArcAction {
 }
 
 /**
- * THE BOARD's two states (ADR-100, radically simplified in U1). One state
- * = one circuit board of FOUR objects: the seat on top, the layer left, the
- * one card centre, the tools right — one line each, and nothing else.
+ * THE BOARD's two states (ADR-100, U2). One RECORD, four facts — who owns
+ * it, the context, the work, the tools — drawn twice: on `today` as a ruled
+ * LEDGER (an inventory: the four facts written down and unconnected) and on
+ * `configured` as the BOARD (the same four assembled and wired).
+ *
+ * ⚠ THE TWO DRAWINGS MAY NOT MIRROR EACH OTHER (owner, 2026-09-14: the left
+ * "should look less connected … a contrast like before and after, but
+ * without implying they're unorganized"). A ledger is ordered and says
+ * nothing about a machine; four dashed modules in the board's own slots
+ * said "the same picture, greyed out", which is the defect this answers.
  *
  * ⚠ DORMANT OR LIT FOLLOWS `mode` ALONE — no per-element flags — so the
  * guard is one predicate and a board cannot half-light. `today` letters
  * what the record found; `configured` letters what the setup seats.
  * ⚠ NO DIGIT ON EITHER, no bracket, no em dash (the proposal copy law).
- * ⚠ The mono chrome strings (`label`, `seat.q`, `card.name`, `card.q`, the
- * tags, `tools.label`, the item names) are authored in sentence case and
+ * ⚠ The mono chrome strings (`label`, `seat.q`, `card.name`, `layer.label`,
+ * the tags, `tools.label`, the item names) are authored in sentence case and
  * UPPERCASED BY THE DRAWING, so the fit guard walks the rendered string.
  */
 export type BoardMode = "today" | "configured";
@@ -134,24 +141,23 @@ export interface BoardState<M extends BoardMode = BoardMode> {
   mode: M;
   /** The head strip's eyebrow, e.g. "As it runs today". */
   label: string;
-  /** The svg's accessible name — the whole board in one sentence. */
+  /** The svg's accessible name — the whole drawing in one sentence. */
   alt: string;
-  /** WHO OWNS IT — the seat, top centre. Green is this and nothing else. */
-  seat: { q: string; a: string; note?: string };
-  /** The workstream — the one card: its name, and EITHER a work line (the
-   *  dormant board) OR one question and its answer (the lit board). */
-  card: { name: string; work?: string; q?: string; a?: string };
-  /** The layer, left: its label, an optional one-line sub, and its tags —
-   *  four on the lit board, NONE on the dormant one (the empty dashed
-   *  module under "not written down" is the reading). */
+  /** WHO OWNS IT — the seat, top centre on the board; the first ledger row.
+   *  Green is this and nothing else. One sentence, never a sentence plus a
+   *  note (owner: the two-line seat was "cringe"). */
+  seat: { q: string; a: string };
+  /** The work — the one card on the board, the third ledger row: its name
+   *  and ONE line under it. */
+  card: { name: string; work: string };
+  /** The context they own: its label, an optional one-line sub (the ledger's
+   *  value on `today`), and its tags — four on the lit board, NONE on the
+   *  dormant one, where the sub IS the row. */
   layer: { label: string; sub?: string; rows: readonly { id: string; tag: string }[] };
-  /** WHERE IT RUNS, right: the tools — unwired islands on `today`, one
-   *  module on `configured`. `lit` marks the item the Skill runs inside,
-   *  and it is the one item that may carry a note. */
-  tools: {
-    label?: string;
-    items: readonly { id: string; name: string; note?: string; lit?: boolean }[];
-  };
+  /** WHERE IT RUNS: the tools as PEERS — no lit item, no note (owner: Figma
+   *  belongs at the same level as the others). The ledger row joins their
+   *  names into one line, so both states letter ONE list. */
+  tools: { label: string; items: readonly { id: string; name: string }[] };
 }
 
 interface ArcSectionBase {

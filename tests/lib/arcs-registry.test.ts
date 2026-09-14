@@ -663,7 +663,7 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
-  it("a board's two states are one layer, dormant then lit (ADR-100)", () => {
+  it("a board's two states are one record, a ledger then a board (ADR-100)", () => {
     /* No registered arc carries a `board` yet — the Trinny page mounts it
        through its own dispatch and `trinny-offer.test.ts` walks that copy.
        The walk lives here too so a registered proposal can adopt the kind
@@ -675,12 +675,12 @@ describe("arcs registry (ADR-052)", () => {
         const [today, configured] = section.states;
         expect(today.mode, `${at}: the first state is today`).toBe("today");
         expect(configured.mode, `${at}: the second state is configured`).toBe("configured");
-        // One layer: the dormant board letters its tags, or none (an empty
-        // dashed room under its one line); it never letters a different set.
+        // One context: the dormant side letters its tags, or none (its one
+        // line IS the row); it never letters a different set.
         if (today.layer.rows.length > 0) {
           expect(
             configured.layer.rows.map((r) => r.id),
-            `${at}: one layer, lit differently`
+            `${at}: one context, lit differently`
           ).toEqual(today.layer.rows.map((r) => r.id));
         }
         expect(
@@ -689,19 +689,18 @@ describe("arcs registry (ADR-052)", () => {
         ).toEqual(today.tools.items.map((t) => t.id));
         for (const state of section.states) {
           const ids = state.layer.rows.map((r) => r.id);
-          expect(new Set(ids).size, `${at}/${state.mode}: duplicate layer id`).toBe(ids.length);
+          expect(new Set(ids).size, `${at}/${state.mode}: duplicate context id`).toBe(ids.length);
           expect(state.layer.rows.length, `${at}/${state.mode}: too many tags`).toBeLessThanOrEqual(
             4
           );
-          expect(Boolean(state.card.q), `${at}/${state.mode}: a question needs its answer`).toBe(
-            Boolean(state.card.a)
-          );
-          expect(state.card.work && state.card.q, `${at}/${state.mode}: one thing`).toBeFalsy();
+          // Four facts, four answers: an empty slot is a hole in the drawing.
+          expect(state.seat.a.length, `${at}/${state.mode}: the seat`).toBeGreaterThan(0);
+          expect(state.card.work.length, `${at}/${state.mode}: the work`).toBeGreaterThan(0);
+          expect(state.tools.label.length, `${at}/${state.mode}: the tools`).toBeGreaterThan(0);
         }
-        expect(
-          today.tools.items.filter((t) => t.lit),
-          `${at}: nothing is lit on a dormant board`
-        ).toHaveLength(0);
+        // The two sides answer with different words, or the before/after has
+        // a row that says nothing.
+        expect(configured.seat.a, `${at}: the seat reads the same on both`).not.toBe(today.seat.a);
         // ⚠ NO DIGIT ON THE DRAWING — the configuration's own ruling, kept.
         scanArc(section.states, at, (value, path) => {
           expect(/\d/.test(value), `${path}: a figure on the board`).toBe(false);

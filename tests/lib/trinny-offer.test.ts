@@ -14,22 +14,12 @@ import type { BoardState } from "@/lib/arcs/types";
  *  lives in its own station (ADR-099 → ADR-100), the rest follow in `#offer`. */
 const ALL_BEATS = [TRINNY_BOARD, ...TRINNY_OFFER_SECTIONS];
 
-/** How many strings a state letters — the drawing's own count, from the
- *  record. The exact SET is pinned in `arc-board-fit`; this is the budget
- *  the owner's "not too complicated" set. */
+/** How many strings a state carries — the record's own count. The exact SET
+ *  the drawing letters is pinned in `arc-board-fit` (the ledger joins the
+ *  tool names into one row, so it letters fewer than it holds); this is the
+ *  budget the owner's "radically simplify it" set. */
 const lettered = (s: BoardState) =>
-  1 +
-  2 +
-  (s.seat.note ? 1 : 0) +
-  1 +
-  (s.card.work ? 1 : 0) +
-  (s.card.q ? 1 : 0) +
-  (s.card.a ? 1 : 0) +
-  1 +
-  (s.layer.sub ? 1 : 0) +
-  s.layer.rows.length +
-  (s.tools.label ? 1 : 0) +
-  s.tools.items.reduce((n, t) => n + 1 + (t.note ? 1 : 0), 0);
+  1 + 2 + 2 + 1 + (s.layer.sub ? 1 : 0) + s.layer.rows.length + 1 + s.tools.items.length;
 
 /**
  * The Trinny pitch page's offer (ADR-094 U9) — the proposal's beats after
@@ -87,12 +77,12 @@ describe("trinny-london offer (ADR-094 U9)", () => {
   });
 
   it("the board's two states are the same layer, dormant then lit (ADR-100)", () => {
-    /* The record is the discovery call in two states, and the claim the
-       drawing makes is that they are ONE board: the same four objects, the
-       same tools, dormant on the left and lit on the right. What a render
-       cannot catch is a tool that exists in one state and not the other, a
-       dormant layer that letters tags it has no sentence for, a card that
-       says both a work line and a question, or a figure on either. */
+    /* The record is the discovery call as ONE set of four facts — who owns
+       it, the context, the work, the tools — answered twice. The drawing
+       then reads them as a ledger and as a board (ADR-100 U2). What a
+       render cannot catch is a tool that exists in one state and not the
+       other, a dormant side that letters tags it has no sentence for, or a
+       figure on either. */
     const b = TRINNY_BOARD;
     expect(b.kind).toBe("board");
     if (b.kind !== "board") return;
@@ -106,36 +96,33 @@ describe("trinny-london offer (ADR-094 U9)", () => {
       expect(new Set(ids).size, `${s.mode}: duplicate layer id`).toBe(ids.length);
       const tools = s.tools.items.map((t) => t.id);
       expect(new Set(tools).size, `${s.mode}: duplicate tool id`).toBe(tools.length);
-      // The card says ONE thing under its name: the work line OR a question
-      // and its answer, never both, never a question without its answer.
-      expect(Boolean(s.card.q), `${s.mode}: a question needs its answer`).toBe(Boolean(s.card.a));
-      expect(s.card.work && s.card.q, `${s.mode}: the card says one thing`).toBeFalsy();
-      expect(s.alt.length, `${s.mode}: the board's accessible name`).toBeGreaterThan(40);
+      // Every fact is answered on both sides: the drawing has four slots and
+      // an empty one is a hole, not a reading.
+      expect(s.seat.a.length, `${s.mode}: the seat`).toBeGreaterThan(0);
+      expect(s.card.work.length, `${s.mode}: the work`).toBeGreaterThan(0);
+      expect(s.tools.label.length, `${s.mode}: the tools' label`).toBeGreaterThan(0);
+      expect(s.alt.length, `${s.mode}: the drawing's accessible name`).toBeGreaterThan(40);
     }
-    // The same tools, wired differently — the claim, mechanised.
+    /* ⚠ THE TOOLS ARE PEERS AND THE LIST IS ONE (owner, 2026-09-14: Figma
+       "should be the same level as the other elements"). Both sides carry
+       the same four ids in the same order — the ledger joins their names
+       into one row, the board letters them as four. */
     expect(configured.tools.items.map((t) => t.id)).toEqual(today.tools.items.map((t) => t.id));
-    // The dormant layer is an empty dashed room under its one line; the lit
-    // layer is the four tags. ("not written down" IS the reading.)
+    expect(today.tools.items.length).toBe(4);
+    // The dormant context is its one line ("not written down" IS the row);
+    // the lit one is the four tags.
     expect(today.layer.rows).toHaveLength(0);
     expect(today.layer.sub).toBeTruthy();
     expect(configured.layer.rows).toHaveLength(4);
-    // The dormant card is the people's work line; the lit card answers.
-    expect(today.card.work).toBeTruthy();
-    expect(configured.card.q).toBeTruthy();
-    // Exactly one tool is lit, and only on the configured board; the note
-    // rides the lit item alone.
-    expect(today.tools.items.filter((t) => t.lit)).toHaveLength(0);
-    expect(configured.tools.items.filter((t) => t.lit)).toHaveLength(1);
-    for (const s of b.states) {
-      for (const t of s.tools.items) {
-        expect(!t.note || t.lit, `${s.mode}.${t.id}: a note on an unlit tool`).toBe(true);
-      }
-    }
+    expect(configured.layer.sub, "the lit side letters its tags, not a sub").toBeUndefined();
+    // The two sides answer with DIFFERENT words — a fact that reads the same
+    // on both is a row the before/after cannot justify.
+    expect(configured.seat.a).not.toBe(today.seat.a);
+    expect(configured.card.name).not.toBe(today.card.name);
     /* The budgets: the owner's "keep it simple on the left" and "radically
-       simplify it", as counts the record can be held to — ten strings on
-       the dormant board, seventeen on the lit one. */
-    expect(lettered(today)).toBeLessThanOrEqual(10);
-    expect(lettered(configured)).toBeLessThanOrEqual(17);
+       simplify it", as counts the record can be held to. */
+    expect(lettered(today)).toBeLessThanOrEqual(12);
+    expect(lettered(configured)).toBeLessThanOrEqual(15);
     /* ⚠ NO DIGIT ON THE DRAWING, the ruling this beat has carried since
        ADR-094 U7: it plots the configuration, it does not measure it. */
     scanStrings(b, "board", (value, path) => {

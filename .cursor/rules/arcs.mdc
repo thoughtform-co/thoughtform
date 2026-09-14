@@ -63,11 +63,14 @@ there belongs in the contrast walk.
 ⚠ ADR-100: the `board` kind is the FOURTH enumerated exception — the client's
 configuration as a circuit board in two states (dormant beside lit), the
 proof's R4 grammar at page scale, no frame, one leaf with no picker, SERVER-ONLY.
-⚠ U1 (owner, same day: "no, radically simplify it") is the live cut — FOUR
-objects per board (seat · layer · card · tools), one line apiece, three plain
-ribbons; the bed, sockets, foot rows, hatch, layer sentences, second card row
-and the elastic crop (`ArcBoardRow`) are deleted. When he asks for simple, the
-FIRST cut is the minimal one. Dispatched in BOTH `ArcSectionRenderer` and the
+⚠ U2 (owner, 2026-09-14) is the live drawing: ONE RECORD of four facts (who
+owns it · the context · the work · the tools) drawn TWICE — a ruled LEDGER on
+the dormant side (four rows, a key and a value, hairlines, no housing and no
+colour) beside the assembled BOARD (green seat + drop, THE CONTEXT's four
+tags, the gold CHIP `AI CAPABILITY` / "owned by the team", four tools as
+peers, three ribbons). The two sides may NOT mirror each other. No diamonds.
+Both share the datum and the floor. ⚠ U1's ruling stands under it: when he
+asks for simple, the FIRST cut is the minimal one. Dispatched in BOTH `ArcSectionRenderer` and the
 Trinny page's `TrinnyBeats` switch (which dropped `configuration`;
 `ArcConfiguration` is byte-identical elsewhere). The row is width-led and its
 shares are the crops' (560 + 40 + 800 = 1400; the flex bases and the seam are

@@ -1373,20 +1373,15 @@
   object-fit: contain;
 }
 
-/* ⚠ THE FRAME'S LID AND FLOOR ARE THE RED LINE GRID'S FIRST AND LAST RULES
-   (U10). `casefile.css` gives the sheet's four bands a top hairline each,
-   the first at gold .24, and the last band a bottom hairline — drawn for a
-   console that opened into its rail and closed on its verdict. Inside a
-   closed frame the first sits 0px under the dawn lid and the last 0px over
-   the dawn floor: two seams a pixel apart, the glitch casefile.css's own
-   `.fl-caps--sheet + .fl-verdict` rule exists to avoid. */
-.pf-stack .pf-field--sheets .fl-caps--sheet .fl-cap:first-child {
-  border-top: 0;
-}
-
-.pf-stack .pf-field--sheets .fl-caps--sheet .fl-cap:last-child {
-  border-bottom: 0;
-}
+/* ⚠ THE RED LINE'S OWN RULES ARE GONE, AND SO IS THE OVERRIDE THAT FOUGHT
+   THEM (ADR-084 U2). U10 had to strip the band grid's first and last
+   hairlines here: drawn for a console that opened into its rail and closed
+   on its verdict, inside a closed frame they sat a pixel under the dawn lid
+   and a pixel over the dawn floor — two seams reading as a glitch. The
+   sheet is four quadrants divided by ONE INTERNAL CROSS now, so it has no
+   perimeter line at all and the frame's own edges are the block's. Nothing
+   to strip; if a facts sheet ever grows an outer rule again, this is the
+   host that will show it first. */
 
 /* ⚠ THE SIX ADS HAVE TO BE RESTORED, AND THE CONDITION IS THE BAY'S SHAPE.
    `casefile.css` hides shots 4–6 by DEFAULT and puts them back under

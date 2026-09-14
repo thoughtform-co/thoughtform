@@ -759,8 +759,18 @@ export type CaseSheetBody =
   | { kind: "stills"; shots: readonly CaseImage[] }
   /** Exactly two columns — a comparison with three sides is a table. */
   | { kind: "compare"; columns: readonly CaseCompareColumn[] }
-  /** Exactly four tiles — the 2×2 the register and the tools plate both use. */
-  | { kind: "facts"; facts: readonly CaseFact[] };
+  /**
+   * Exactly four tiles, in a 2×2 divided by one cross.
+   *
+   * `hub` letters the subject at that crossing — the thing all four facts
+   * are facts ABOUT (owner, 2026-09-14, on the red line: "it's not really
+   * clear what they're related to"). Four claims around a named centre say
+   * what four stacked bands could not: the risks are of one charge, and the
+   * charge has a name. Optional: a facts sheet without one draws the plain
+   * 2×2 and no cross. ⚠ Mono chrome, so keep it SHORT (registry: ≤ 12) —
+   * the dividers' gaps are sized to it, and a phrase there is a caption.
+   */
+  | { kind: "facts"; facts: readonly CaseFact[]; hub?: string };
 
 export interface CaseSheet {
   /** Stable key and DOM id fragment. */

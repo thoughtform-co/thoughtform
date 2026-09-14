@@ -516,17 +516,24 @@ console.css → pda.css → arcs.css → theme.css → rail-instruments.css`
   is where the head datum's floor slack goes.
 - **The `board` kind** (ADR-100) = `{ head, states: [BoardState<"today">,
 BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, after
-  the flow. `ArcBoard` (server) draws the client's configuration as a circuit
-  board in TWO STATES on one row, no plate around it, **FOUR objects each —
-  the seat, the layer, the card, the tools — one line apiece** (⚠ **U1, owner,
-  the same day: _"no, radically simplify it"_** — the first cut's bed, sockets,
-  foot rows, hatched cables, layer sentences, second card row and elastic crop
-  are ALL gone; when he asks for simple, the FIRST cut is the minimal one):
-  dormant (dashed dawn, the card GREEN-outlined because all the work is the
-  people's, the layer an empty dashed room under "not written down", the tools
-  as unwired islands) beside lit (a green seat and its authority drop, the
-  layer's four tags, ONE gold-washed card with one question and its answer,
-  WHERE IT RUNS with the one lit tool marked, three plain eight-wire ribbons).
+  the flow. `ArcBoard` (server) draws ONE RECORD — four facts: who owns it,
+  the context, the work, the tools — TWICE on one row, no plate around it.
+  ⚠ **U2 (2026-09-14, owner) IS THE LIVE DRAWING AND THE TWO SIDES ARE
+  DIFFERENT KINDS OF OBJECT**: the dormant side is a ruled LEDGER (four rows,
+  a mono key and a sans value, hairlines and nothing else — no housing, no
+  cut, no cable, no colour) and the lit side is the BOARD (a green seat over
+  its drop, THE CONTEXT left with four tags, the one gold-washed CHIP in the
+  middle, WHERE IT RUNS right with four tools as PEERS, three eight-wire
+  ribbons meeting the chip's own centre line). U1 drew the left as the right's
+  modules greyed out and he read it as one picture at two brightnesses —
+  _"it should be a contrast like before and after, but without implying
+  they're unorganized"_. A ledger is ordered, complete, and connected to
+  nothing. ⚠ **THE LIT CARD IS THE CAPABILITY, NOT A WORKSTREAM** (`AI
+  CAPABILITY` / "owned by the team") — they want it in-house, so the board's
+  one lit object is that. ⚠ **NO DIAMONDS ANYWHERE** (U2, owner) and **BOTH
+  SIDES SHARE THE DATUM AND THE FLOOR** (y 26, y 400), which is what keeps
+  them one instrument. ⚠ U1's own ruling stands under it: when he asks for
+  simple, the FIRST cut is the minimal one.
   The proof's R4 grammar (ADR-070 U11) copied by hand into
   `components/arcs/board/boardGlyphs.tsx`; the pure modules (`ribbon.ts`,
   `pdaLetters.ts`, `housing`/`band`/`MODULE`) are imported; NO `--pda-*` token
@@ -549,10 +556,13 @@ BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, afte
     no-JS, PRM and terminal render lit, the ladder is the only motion. ⚠ **FIT
     IS DECLARED\*_: `boardGeom` emits every `<text>` with its measure; the vitest
     walks it (fit, the longest word, the floor — 15.3 units paints 11.2px at the
-    1022px band —, each letter inside its own module, the lanes wall to wall,
-    the label SETS pinned 10 / 18), the smoke measures the rendered svg (≥ 10px,
-    zero label overlaps, one meet, 24 wires, the crop filling its box) at
-    1920×1247 and 1280×720. ⚠ `data-board-_`, never `data-arc-\*`; no `transform`on any svg group (the overlap walk compares`getBBox`). ⚠ The head stays on
+    1022px band —, each letter inside its own object, the lanes wall to wall,
+    the label SETS pinned **9 / 16**, and **NO DIGIT on any lettered string** —
+    the ledger''''s tools row is COMPOSED at draw time and a string built in a
+    renderer is outside every content scanner, ADR-070 U15''''s `8 TEAMS`), and
+    the smoke measures the rendered svg (≥ 10px, zero label overlaps, one meet,
+    24 wires, zero modules on the ledger and zero rows on the board, the counts
+    pinned `[9, 16]`, the crop filling its box) at 1920×1247 and 1280×720. ⚠ `data-board-_`, never `data-arc-\*`; no `transform`on any svg group (the overlap walk compares`getBBox`). ⚠ The head stays on
     the TEXT band (the datum guard's x) and the drawing takes the INSTRUMENT
     band. ⚠ Dark is defined by the ramp, unverified until a dark surface adopts
     the kind.
@@ -625,6 +635,22 @@ BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, afte
   drawings render on the Trinny pitch page too (ADR-094 U9) through the same
   components — a change here is a TWO-surface change; run
   `trinny-london-smoke` with the arc smokes.
+  ⚠ **AND THE PLATES TAKE THE NOTCH (U3, owner 2026-09-14: "redesign the
+  modular approach cards so they have the notch").** TR + BL at the plate
+  rung (`--arc-plate-ch: clamp(16px, 1.8vw, 26px)`, the value `.arc-dossier`
+  and `.arc-prog` already cut at). U2's "square (ADR-065)" meant NO 12px
+  RADIUS — the deck's soft card is its own material — and was read afterwards
+  as "no cut", which U2 never argued. ⚠ **NO `border`: a clip CUTS a border
+  and never strokes one**, so the edge is a two-contour `evenodd` RING on
+  `::before` with the inner leg `ch - 0.586px`; `clip-path` makes its own
+  stacking context, so `z-index: 1` and no `isolation`. ⚠ Rule 4 keeps the
+  head band, the rows and the inverse foot SQUARE — the housing's clip takes
+  their corners for free. ⚠ The ring is INVISIBLE over the inverse foot by
+  construction (`--arc-edge` and `--arc-ink` are one dawn triple at two
+  alphas), so the dark band caps the plate. CSS-only: `ArcListGroups` does not
+  change and `arc-terminal-markup`'s byte-identity pin holds. ⚠ Three pages
+  render it (Trinny, Suri, Hungry Minds — Perfect Ted is still `columns`) and
+  only `trinny-london-smoke` guards it.
 - ⚠ **THE PROPOSAL COPY LAW IS A MODULE** (`lib/arcs/copyLaw.ts`,
   `PROPOSAL_COPY_BANS` + `scanStrings`), read by `arcs-registry` AND
   `trinny-offer.test.ts`. ⚠ It caught "run the waves themselves" on the day it

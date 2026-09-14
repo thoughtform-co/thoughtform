@@ -615,16 +615,26 @@ describe("cases registry (ADR-054)", () => {
               }
             }
             if (b.kind === "facts") {
-              // Four bands. The budgets are INHERITED from the tools plate's
-              // 2×2, where the title is `nowrap` and the description clamps
-              // to two lines; on its own rail the sheet wraps both and
-              // clamps at four, so these ceilings are stricter than the
-              // layout needs. Kept as a belt — today's longest are 20 and
-              // 89 — but if copy ever wants past them, this comment moves
-              // with the number.
+              // Four quadrants. The budgets are INHERITED from the tools
+              // plate's 2×2, where the title is `nowrap` and the description
+              // clamps to two lines; a quadrant wraps both and clamps at
+              // five, so these ceilings are stricter than the layout needs.
+              // Kept as a belt — today's longest are 20 and 89 — but if copy
+              // ever wants past them, this comment moves with the number.
               expect(b.facts.length, `${c.slug}/${t.id}/${s.id} facts`).toBe(4);
-              // ⚠ ALL-OR-NONE. A designation on some bands emphasises those,
-              // and this sheet's argument is that the four are of equal rank.
+              /* ⚠ THE HUB IS MONO CHROME AT A CROSSING (ADR-084 U2), so it
+                 is a NAME and not a caption: the dividers' gaps are sized to
+                 it, and a phrase there runs under the quadrants' own copy.
+                 "NO AI UGC" is nine. */
+              if (b.hub !== undefined) {
+                expect(b.hub.length, `${c.slug}/${t.id}/${s.id} hub`).toBeGreaterThan(0);
+                expect(
+                  b.hub.length,
+                  `${c.slug}/${t.id}/${s.id} hub "${b.hub}"`
+                ).toBeLessThanOrEqual(12);
+              }
+              // ⚠ ALL-OR-NONE. A designation on some quadrants emphasises
+              // those, and this sheet's argument is that the four are equal.
               const tagged = b.facts.filter((f) => f.tag).length;
               expect(
                 [0, b.facts.length],

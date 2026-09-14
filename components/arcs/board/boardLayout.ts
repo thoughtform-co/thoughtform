@@ -10,14 +10,28 @@ import { MODULE } from "@/components/landing/home-v2/services/casefile/map/pda/s
 import type { BoardMode, BoardState } from "@/lib/arcs/types";
 
 /**
- * boardLayout — THE BOARD's arithmetic (ADR-100 U1). Pure: no React, no DOM.
+ * boardLayout — THE BOARD's arithmetic (ADR-100 U2). Pure: no React, no DOM.
  *
- * Two crops, one height, FOUR objects each. The dormant board is 560 wide,
- * the lit one 800, with a 40-unit seam, so the row is 1400 × 414 units and
- * every share is a fraction of 1400 — which is what makes `meet` the SAME
- * on both boards at every viewport (`W / 1400`) and puts both head strips on
- * one datum. The vertical chain is shared: the seat, the cable's run, one
- * module row of one height.
+ * Two crops, one height, ONE record drawn twice. The dormant side is 560
+ * wide, the lit one 800, with a 40-unit seam, so the row is 1400 × 414 units
+ * and every share is a fraction of 1400 — which is what makes `meet` the
+ * SAME on both at every viewport (`W / 1400`) and puts both head strips on
+ * one datum.
+ *
+ * ⚠ THE TWO DRAWINGS ARE DIFFERENT KINDS OF OBJECT, AND THAT IS THE POINT
+ * (U2, owner: the left "should look less connected … a contrast like before
+ * and after, but without implying they're unorganized"). LEFT is a ruled
+ * LEDGER — four rows, a key and a value, hairlines and nothing else: the
+ * four facts written down, unconnected, and perfectly in order. RIGHT is the
+ * BOARD — the same four assembled: the seat over a green drop, the context
+ * left, the capability as the one lit chip in the middle, the tools right,
+ * three ribbons. U1 drew the left as the right's own modules greyed out,
+ * which read as one picture at two brightnesses rather than as a before.
+ *
+ * ⚠ BOTH SIDES SHARE THE DATUM AND THE FLOOR — the ledger's first rule is
+ * the seat's top (y 40) and its last is the module row's floor (y 400), so
+ * the two drawings agree on where the reading starts and stops even though
+ * nothing else about them matches.
  *
  * ⚠ THE TYPE IS SET AGAINST THE RENDERED SIZE, NOT 1:1. At the binding band
  * (1022px, 1280×720) `meet` is 0.73, so the chrome rung of 15.3 units paints
@@ -28,16 +42,12 @@ import type { BoardMode, BoardState } from "@/lib/arcs/types";
  * overflow, so `boardGeom` emits every lettered string WITH the measure it
  * must fit, and `tests/lib/arc-board-fit.test.ts` walks that list — mono via
  * `adv`, sans via a measured 0.55 em cell — plus the longest WORD, the type
- * floor, each letter inside its own module and the chain's closure. A
+ * floor, each letter inside its own object and the chain's closure. A
  * wrapped string past its cap is declared at measure 0 so a sliced tail
  * fails loudly (the `PdaConfiguration` idiom).
  *
- * ⚠ FIXED CROP, BY OWNER RULING ("radically simplify it"). The first cut
- * grew the crop to the beat with a ResizeObserver (ADR-070 U12's mechanism)
- * and drew a bed, sockets and foot rows into the room it bought; the ruling
- * took all of it. The row sits under the head at its own height and the
- * beat's slack pools at the floor, as it does under every plate beat on the
- * page (ADR-099's named cost). The elastic chain is one commit back in git.
+ * ⚠ FIXED CROP, BY OWNER RULING ("radically simplify it", U1). The elastic
+ * chain, the bed, the sockets and the foot rows are two commits back in git.
  */
 
 export const VB = { h: 414, w: { today: 560, configured: 800 }, seam: 40, row: 1400 } as const;
@@ -46,16 +56,21 @@ export const INSET = 24;
 export const DATUM_Y = 26;
 export const MARGIN = 14;
 export const SEAT_H = 92;
-/** The seat's cable — the run from the seat's floor to the module row. */
+/** The seat's cable — the run from the seat's floor to the chip. */
 export const GAP1 = 52;
 export const BAND_Y = DATUM_Y + MARGIN + SEAT_H + GAP1;
 export const MODULE_H = 216;
+/** The floor both drawings end on: the module row's, and the ledger's last rule. */
+export const FLOOR_Y = BAND_Y + MODULE_H;
 /** A module's head band, ruled at its floor. */
 export const HEAD_H = 40;
 export const TAG_PITCH = 44;
-export const ITEM_PITCH = 56;
-/** The corner cuts, by object: modules take R4's own, the card the plate rung. */
-export const CUT = { module: MODULE.cut, card: 20, island: 6 } as const;
+/** The ledger's row pitch — four rows from the datum's margin to the floor. */
+export const ROW_H = (FLOOR_Y - (DATUM_Y + MARGIN)) / 4;
+/** The ledger's value column, off the crop's own inset. */
+export const LEDGER_VALUE_X = 224;
+/** The corner cuts, by object: modules take R4's own, the chip the plate rung. */
+export const CUT = { module: MODULE.cut, card: 20 } as const;
 export const PAD = { module: MODULE.pad, card: 18, seat: 18 } as const;
 
 /** The type ladder, in units. See the header for the px it renders. */
@@ -87,7 +102,7 @@ export interface Rect {
   h: number;
 }
 export type Face = "mono" | "sans";
-export type Ink = "ink" | "ink2" | "ink3" | "gold-ink" | "gold-ink-lit" | "green-ink";
+export type Ink = "ink" | "ink2" | "ink3" | "gold-ink" | "green-ink";
 export type Role = "head" | "seat" | "layer" | "card" | "tools";
 
 export interface BoardLetter extends LetterSpec {
@@ -100,7 +115,11 @@ export interface BoardLetter extends LetterSpec {
   /** The lit seat's answer alone takes `--weight-lit`, the ceiling. */
   lit?: boolean;
 }
-export type ModulePaint = "module" | "dormant" | "card-lit" | "card-led" | "seat-lit" | "island";
+/**
+ * How an object is painted. `row` is the LEDGER's — a hairline at its top and
+ * nothing else, so the dormant side owns no plate, no outline and no cut.
+ */
+export type ModulePaint = "module" | "row" | "card-lit" | "seat-lit";
 export interface BoardModule {
   id: string;
   role: Role;
@@ -109,6 +128,9 @@ export interface BoardModule {
   paint: ModulePaint;
   /** A head band of this height, ruled at its floor. */
   head?: number;
+  /** Which edge a `row` rules. The head's datum opens the ledger, so every
+   *  row rules its own BOTTOM and the last closes on the board's floor. */
+  rule?: "bottom";
 }
 export interface BoardLane {
   id: "seat" | "layer" | "tools";
@@ -118,15 +140,6 @@ export interface BoardLane {
   /** `polylineLength` of the base path — the draw-on's `--l`. */
   len: number;
 }
-export interface BoardDiamond {
-  id: string;
-  role: Role;
-  x: number;
-  y: number;
-  r: number;
-  paint: "gold-line" | "green";
-  filled: boolean;
-}
 export interface BoardGeom {
   mode: BoardMode;
   vb: { w: number; h: number };
@@ -134,7 +147,6 @@ export interface BoardGeom {
   modules: BoardModule[];
   letters: BoardLetter[];
   lanes: BoardLane[];
-  diamonds: BoardDiamond[];
 }
 
 /** Greedy wrap to a character measure, every line kept. */
@@ -210,52 +222,109 @@ function lane(id: BoardLane["id"], pts: readonly Pt[], paint: BoardLane["paint"]
   return { id, pts, wires: 8, paint, len: polylineLength(pts) };
 }
 
-/** The seat and the head strip — the same on both boards but for the paint. */
-function common(
-  s: BoardState,
-  W: number,
-  cx: number,
-  seatPaint: ModulePaint,
-  aInk: Ink,
-  lit: boolean
-) {
-  const seat: Rect = { x: cx - 172, y: DATUM_Y + MARGIN, w: 344, h: SEAT_H };
-  const sx = seat.x + PAD.seat;
-  const sm = seat.w - 2 * PAD.seat;
-  const letters: BoardLetter[] = [
-    mono("head", "label", s.label, FS.chrome, TRACK.chrome, W - 2 * INSET, INSET, 16, "ink2"),
-    mono("seat", "seat.q", s.seat.q, FS.key, TRACK.seat, sm, sx, seat.y + 22, "ink2"),
-    ...sans("seat", "seat.a", s.seat.a, FS.value, sm, sx, seat.y + 45, aInk, 1, lit),
-  ];
-  if (s.seat.note) {
-    letters.push(
-      ...sans("seat", "seat.note", s.seat.note, FS.value, sm, sx, seat.y + 69, "ink", 1)
-    );
-  }
-  const seatModule: BoardModule = {
-    id: "seat",
-    role: "seat",
-    rect: seat,
-    cut: CUT.module,
-    paint: seatPaint,
+/** The head strip's eyebrow, on the datum both drawings share. */
+const headLetter = (s: BoardState, W: number) =>
+  mono("head", "label", s.label, FS.chrome, TRACK.chrome, W - 2 * INSET, INSET, 16, "ink2");
+
+/** The four facts, in the order both drawings read them. */
+const facts = (s: BoardState) =>
+  [
+    { role: "seat" as const, key: s.seat.q, value: s.seat.a },
+    { role: "layer" as const, key: s.layer.label, value: s.layer.sub ?? "" },
+    { role: "card" as const, key: s.card.name, value: s.card.work },
+    {
+      role: "tools" as const,
+      key: s.tools.label,
+      value: s.tools.items.map((t) => t.name).join(", "),
+    },
+  ] as const;
+
+/**
+ * THE LEDGER — the dormant side. Four ruled rows off the crop's own inset:
+ * a mono key, a sans value, a hairline over each and one closing the last.
+ * No plate, no outline, no cut, no colour: nothing here is built yet, and an
+ * inventory is the one drawing that says so without saying "disorganised".
+ */
+function todayGeom(s: BoardState<"today">): BoardGeom {
+  const W = VB.w.today;
+  const x0 = INSET;
+  const w = W - 2 * INSET;
+  const letters: BoardLetter[] = [headLetter(s, W)];
+  const modules: BoardModule[] = [];
+  const keyM = LEDGER_VALUE_X - x0 - 10;
+  const valM = W - INSET - LEDGER_VALUE_X;
+
+  facts(s).forEach((f, i) => {
+    const y = DATUM_Y + MARGIN + i * ROW_H;
+    modules.push({
+      id: f.role,
+      role: f.role,
+      rect: { x: x0, y, w, h: ROW_H },
+      cut: 0,
+      paint: "row",
+      /* ⚠ THE HEAD'S DATUM OPENS THE LEDGER, so the first row rules only its
+         floor: at 14 units the two would paint as one doubled line, which is
+         the defect ADR-089 U3 names (a rule 4px under another rule, every
+         gate green and the still not). Each row then rules its BOTTOM and
+         the last one closes on the board's own floor. */
+      rule: "bottom",
+    });
+    letters.push(mono(f.role, `${f.role}.key`, f.key, FS.key, TRACK.key, keyM, x0, y + 52, "ink2"));
+    if (f.value) {
+      letters.push(
+        ...sans(
+          f.role,
+          `${f.role}.value`,
+          f.value,
+          FS.value,
+          valM,
+          LEDGER_VALUE_X,
+          y + 52,
+          "ink",
+          1
+        )
+      );
+    }
+  });
+
+  return {
+    mode: "today",
+    vb: { w: W, h: VB.h },
+    datum: { y: DATUM_Y, x1: INSET, x2: W - INSET },
+    modules,
+    letters,
+    lanes: [],
   };
-  return { seat, module: seatModule, letters };
 }
 
+/**
+ * THE BOARD — the lit side. The seat over its green drop, the context left,
+ * the capability as the one gold chip on the lane row, the tools right, and
+ * three eight-wire ribbons meeting the chip's own middle.
+ */
 function configuredGeom(s: BoardState<"configured">): BoardGeom {
   const W = VB.w.configured;
-  // 24 | layer 220 | 40 | card 264 | 40 | tools 188 | 24 = 800 — one chain.
+  // 24 | context 220 | 40 | chip 264 | 40 | tools 188 | 24 = 800 — one chain.
   const layer: Rect = { x: INSET, y: BAND_Y, w: 220, h: MODULE_H };
-  const card: Rect = { x: layer.x + layer.w + 40, y: BAND_Y, w: 264, h: MODULE_H };
-  const tools: Rect = { x: card.x + card.w + 40, y: BAND_Y, w: 188, h: MODULE_H };
+  const card: Rect = { x: layer.x + layer.w + 40, y: BAND_Y + 56, w: 264, h: 104 };
+  const tools: Rect = { x: layer.x + layer.w + 40 + 264 + 40, y: BAND_Y, w: 188, h: MODULE_H };
   const cx = card.x + card.w / 2;
-  const cy = card.y + 108;
-  const base = common(s, W, cx, "seat-lit", "green-ink", true);
-  const letters = base.letters;
-  const diamonds: BoardDiamond[] = [];
-  const modules: BoardModule[] = [base.module];
+  const cy = card.y + card.h / 2;
+  const seat: Rect = { x: cx - 172, y: DATUM_Y + MARGIN, w: 344, h: SEAT_H };
+  const letters: BoardLetter[] = [headLetter(s, W)];
+  const modules: BoardModule[] = [
+    { id: "seat", role: "seat", rect: seat, cut: CUT.module, paint: "seat-lit" },
+  ];
 
-  // The layer — its label, and four tags in the room under it.
+  // The seat — green is the human and nothing else. ONE sentence under it.
+  const sx = seat.x + PAD.seat;
+  const sm = seat.w - 2 * PAD.seat;
+  letters.push(mono("seat", "seat.q", s.seat.q, FS.key, TRACK.seat, sm, sx, seat.y + 24, "ink2"));
+  letters.push(
+    ...sans("seat", "seat.a", s.seat.a, FS.value, sm, sx, seat.y + 50, "green-ink", 2, true)
+  );
+
+  // The context they own — its label over four tags.
   modules.push({
     id: "layer",
     role: "layer",
@@ -269,21 +338,6 @@ function configuredGeom(s: BoardState<"configured">): BoardGeom {
   letters.push(
     mono("layer", "layer.label", s.layer.label, FS.head, TRACK.head, lm, lx, layer.y + 26, "ink")
   );
-  if (s.layer.sub) {
-    letters.push(
-      ...sans(
-        "layer",
-        "layer.sub",
-        s.layer.sub,
-        FS.sub,
-        lm,
-        lx,
-        layer.y + HEAD_H + 24,
-        "gold-ink",
-        1
-      )
-    );
-  }
   s.layer.rows.forEach((row, i) => {
     letters.push(
       mono(
@@ -294,38 +348,22 @@ function configuredGeom(s: BoardState<"configured">): BoardGeom {
         TRACK.key,
         lm,
         lx,
-        layer.y + HEAD_H + 28 + (s.layer.sub ? STEP : 0) + i * TAG_PITCH,
+        layer.y + HEAD_H + 28 + i * TAG_PITCH,
         "gold-ink"
       )
     );
   });
 
-  // The card — the one lit object: its name, one question, one answer.
+  // The chip — the one lit object, and the one thing the ribbons meet.
   modules.push({ id: "card", role: "card", rect: card, cut: CUT.card, paint: "card-lit" });
   const kx = card.x + PAD.card;
   const km = card.w - 2 * PAD.card;
-  diamonds.push({
-    id: "card.mark",
-    role: "card",
-    x: card.x + 26,
-    y: card.y + 17,
-    r: 8,
-    paint: "gold-line",
-    filled: true,
-  });
   letters.push(
-    mono("card", "card.name", s.card.name, FS.name, TRACK.name, km, kx, card.y + 62, "ink")
+    mono("card", "card.name", s.card.name, FS.name, TRACK.name, km, kx, card.y + 44, "ink")
   );
-  if (s.card.work)
-    letters.push(...sans("card", "card.work", s.card.work, FS.value, km, kx, card.y + 88, "ink"));
-  if (s.card.q)
-    letters.push(
-      mono("card", "card.q", s.card.q, FS.key, TRACK.key, km, kx, card.y + 122, "gold-ink")
-    );
-  if (s.card.a)
-    letters.push(...sans("card", "card.a", s.card.a, FS.value, km, kx, card.y + 145, "ink"));
+  letters.push(...sans("card", "card.work", s.card.work, FS.value, km, kx, card.y + 70, "ink", 1));
 
-  // The tools — where it runs, the lit item marked.
+  // Where it runs — four peers at the context's own pitch.
   modules.push({
     id: "tools",
     role: "tools",
@@ -336,66 +374,33 @@ function configuredGeom(s: BoardState<"configured">): BoardGeom {
   });
   const tx = tools.x + PAD.module;
   const tm = tools.w - 2 * PAD.module;
-  if (s.tools.label) {
-    letters.push(
-      mono("tools", "tools.label", s.tools.label, FS.head, TRACK.head, tm, tx, tools.y + 26, "ink")
-    );
-  }
+  letters.push(
+    mono("tools", "tools.label", s.tools.label, FS.head, TRACK.head, tm, tx, tools.y + 26, "ink")
+  );
   s.tools.items.forEach((item, i) => {
-    const top = tools.y + HEAD_H + 4 + i * ITEM_PITCH;
-    if (item.lit) {
-      diamonds.push({
-        id: `tools.${item.id}.mark`,
-        role: "tools",
-        x: tx + 5,
-        y: top + 16,
-        r: 5,
-        paint: "gold-line",
-        filled: true,
-      });
-      letters.push(
-        mono(
-          "tools",
-          `tools.${item.id}`,
-          item.name,
-          FS.key,
-          TRACK.key,
-          tm - 18,
-          tx + 18,
-          top + 21,
-          "gold-ink-lit"
-        )
-      );
-    } else {
-      letters.push(
-        mono(
-          "tools",
-          `tools.${item.id}`,
-          item.name,
-          FS.key,
-          TRACK.key,
-          tm,
-          tx,
-          top + 21,
-          "gold-ink"
-        )
-      );
-    }
-    if (item.note) {
-      letters.push(
-        ...sans("tools", `tools.${item.id}.note`, item.note, FS.value, tm, tx, top + 44, "ink", 1)
-      );
-    }
+    letters.push(
+      mono(
+        "tools",
+        `tools.${item.id}`,
+        item.name,
+        FS.key,
+        TRACK.key,
+        tm,
+        tx,
+        tools.y + HEAD_H + 28 + i * TAG_PITCH,
+        "gold-ink"
+      )
+    );
   });
 
-  // Three ribbons: the seat's authority drop in green, the gold runs to the
-  // layer and the tools. They run wall to wall; the modules paint over their
-  // entries, R4's own order.
+  // Three ribbons: the seat's authority drop in green, the gold runs from the
+  // chip to the context and the tools. They run wall to wall; the modules
+  // paint over their entries, R4's own order.
   const lanes: BoardLane[] = [
     lane(
       "seat",
       [
-        [cx, base.seat.y + base.seat.h],
+        [cx, seat.y + seat.h],
         [cx, card.y],
       ],
       "green"
@@ -425,127 +430,17 @@ function configuredGeom(s: BoardState<"configured">): BoardGeom {
     modules,
     letters,
     lanes,
-    diamonds,
   };
 }
 
-function todayGeom(s: BoardState<"today">): BoardGeom {
-  const W = VB.w.today;
-  // 24 | layer 172 | 20 | card 200 | 20 | islands 100 | 24 = 560.
-  const layer: Rect = { x: INSET, y: BAND_Y, w: 172, h: MODULE_H };
-  const card: Rect = { x: layer.x + layer.w + 20, y: BAND_Y, w: 200, h: MODULE_H };
-  const islandX = card.x + card.w + 20;
-  const cx = card.x + card.w / 2;
-  const base = common(s, W, cx, "dormant", "ink2", false);
-  const letters = base.letters;
-  const diamonds: BoardDiamond[] = [];
-  const modules: BoardModule[] = [base.module];
-
-  // The layer as dashed room: its label and what the call found.
-  modules.push({
-    id: "layer",
-    role: "layer",
-    rect: layer,
-    cut: CUT.module,
-    paint: "dormant",
-    head: HEAD_H,
-  });
-  const lx = layer.x + PAD.module;
-  const lm = layer.w - 2 * PAD.module;
-  letters.push(
-    mono("layer", "layer.label", s.layer.label, FS.head, TRACK.head, lm, lx, layer.y + 26, "ink2")
-  );
-  if (s.layer.sub) {
-    letters.push(
-      ...sans("layer", "layer.sub", s.layer.sub, FS.sub, lm, lx, layer.y + HEAD_H + 24, "ink3", 1)
-    );
-  }
-  s.layer.rows.forEach((row, i) => {
-    letters.push(
-      mono(
-        "layer",
-        `layer.${row.id}`,
-        row.tag,
-        FS.key,
-        TRACK.key,
-        lm,
-        lx,
-        layer.y + HEAD_H + 28 + (s.layer.sub ? STEP : 0) + i * TAG_PITCH,
-        "gold-ink"
-      )
-    );
-  });
-
-  // The card, green: the work is the people's, all of it.
-  modules.push({ id: "card", role: "card", rect: card, cut: CUT.card, paint: "card-led" });
-  const kx = card.x + PAD.card;
-  const km = card.w - 2 * PAD.card;
-  diamonds.push({
-    id: "card.mark",
-    role: "card",
-    x: card.x + 26,
-    y: card.y + 17,
-    r: 8,
-    paint: "green",
-    filled: false,
-  });
-  letters.push(
-    mono("card", "card.name", s.card.name, FS.name, TRACK.name, km, kx, card.y + 62, "ink")
-  );
-  if (s.card.work)
-    letters.push(...sans("card", "card.work", s.card.work, FS.value, km, kx, card.y + 88, "ink"));
-  if (s.card.q)
-    letters.push(
-      mono("card", "card.q", s.card.q, FS.key, TRACK.key, km, kx, card.y + 122, "gold-ink")
-    );
-  if (s.card.a)
-    letters.push(...sans("card", "card.a", s.card.a, FS.value, km, kx, card.y + 145, "ink"));
-
-  // The tools as islands: present, unwired.
-  s.tools.items.forEach((item, i) => {
-    const r: Rect = { x: islandX, y: BAND_Y + i * 52, w: 100, h: 36 };
-    modules.push({
-      id: `island.${item.id}`,
-      role: "tools",
-      rect: r,
-      cut: CUT.island,
-      paint: "island",
-    });
-    letters.push(
-      mono(
-        "tools",
-        `tools.${item.id}`,
-        item.name,
-        FS.key,
-        TRACK.key,
-        r.w - 12,
-        r.x + r.w / 2,
-        r.y + 24,
-        "gold-ink",
-        "middle"
-      )
-    );
-  });
-
-  return {
-    mode: "today",
-    vb: { w: W, h: VB.h },
-    datum: { y: DATUM_Y, x1: INSET, x2: W - INSET },
-    modules,
-    letters,
-    lanes: [],
-    diamonds,
-  };
-}
-
-/** One board's whole drawing, for one state. */
+/** One side's whole drawing, for one state. */
 export function boardGeom(state: BoardState): BoardGeom {
   return state.mode === "today"
     ? todayGeom(state as BoardState<"today">)
     : configuredGeom(state as BoardState<"configured">);
 }
 
-/** The lettering a fit guard walks — every `<text>` the board draws. */
+/** The lettering a fit guard walks — every `<text>` the drawing draws. */
 export const boardLettering = (state: BoardState): BoardLetter[] => boardGeom(state).letters;
 
 /** A letter's width under the surface's advance model. */

@@ -724,6 +724,53 @@ test.describe("Trinny London pitch variant", () => {
       Math.abs(h2.verdict!.bottom - h2.lastClaimBottom!),
       "the verdict does not end on the record's last rule"
     ).toBeLessThanOrEqual(2);
+
+    /* ⚠ AND THE RED LINE IS A BLOCK WITH A NAMED CENTRE (ADR-084 U2, owner:
+       the four bands are "not really clear what they're related to"). This
+       host had no `.fl-cap` assertion at all, and it is the SMALLEST field
+       the sheet renders in — 579 × 215 at 1280×720, where a quadrant is
+       108px against 88 of ink. So the ink is measured against the cell in
+       BOTH directions: a centred box that outgrows its cell spills through
+       the TOP as well, where `scrollHeight` never reports it. */
+    const red = await page.evaluate(async () => {
+      const card = document.querySelector('[data-pc-index="1"]');
+      const stn = [...(card?.querySelectorAll(".fl-con__stn") ?? [])].find((b) =>
+        /RED LINE/i.test(b.textContent ?? "")
+      ) as HTMLElement | undefined;
+      if (!card || !stn) return null;
+      stn.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const ul = card.querySelector(".fl-caps--sheet");
+      const hub = card.querySelector(".fl-caps-block__hub");
+      if (!ul || !hub) return { caps: card.querySelectorAll(".fl-cap").length };
+      const u = ul.getBoundingClientRect();
+      const b = hub.getBoundingClientRect();
+      return {
+        caps: card.querySelectorAll(".fl-cap").length,
+        tags: card.querySelectorAll(".fl-cap__tag").length,
+        hub: hub.textContent,
+        dx: Math.abs(b.x + b.width / 2 - (u.x + u.width / 2)),
+        dy: Math.abs(b.y + b.height / 2 - (u.y + u.height / 2)),
+        spills: [...card.querySelectorAll(".fl-cap")].flatMap((c) => {
+          const cb = c.getBoundingClientRect();
+          const kids = [...c.children].map((k) => k.getBoundingClientRect());
+          const d = c.querySelector(".fl-cap__d") as HTMLElement;
+          const over = [
+            cb.top - kids[0].top,
+            kids[kids.length - 1].bottom - cb.bottom,
+            d.scrollHeight - d.clientHeight,
+          ];
+          return over.some((v) => v > 0.5) ? [`${c.textContent?.slice(0, 24)}: ${over}`] : [];
+        }),
+      };
+    });
+    expect(red?.caps, "THE RED LINE's four quadrants").toBe(4);
+    expect(red?.tags, "and their four risk designations").toBe(4);
+    expect(red?.hub, "the charge letters at the crossing").toBe("NO AI UGC");
+    expect(red?.dx ?? 9, "the hub is on the crossing, x").toBeLessThanOrEqual(1);
+    expect(red?.dy ?? 9, "the hub is on the crossing, y").toBeLessThanOrEqual(1);
+    expect(red?.spills, "a quadrant's ink outside its cell").toEqual([]);
+
     // 03 the tools — ONE drawing at a time, its walkthrough as the panel's foot.
     expect(shapes[2].stations).toHaveLength(4);
     expect(shapes[2].wires).toBe(1);
@@ -1157,14 +1204,16 @@ test.describe("Trinny London pitch variant", () => {
     await expect(page.locator("#proposition .arc-head__mark--origin")).toHaveCount(1);
     await expect(page.locator("#proposition .tl-prop__head")).toHaveCount(0);
 
-    /* ⚠ TWO STATES, ONE ROW, AND THE ROLES ARE THE RECORD (ADR-100). The
-       dormant board lights nothing gold, wires nothing and seats no one in
-       green; the lit board fills exactly one card in gold, strokes its seat
-       in green and runs three lanes. Read off the COMPUTED paint — the
-       tokens are aliases of the ramp and light re-derives them, so this is
-       the drawing's own claim rather than its class names — and read after
-       the ladder has landed, because every lit object rests at opacity 0
-       until it does. */
+    /* ⚠ ONE RECORD, TWO KINDS OF DRAWING (ADR-100 U2). The dormant side is
+       a LEDGER — four ruled rows, no housing, no cable, nothing gold and
+       nothing green — and the lit side is the BOARD: one gold-washed chip,
+       a green seat, three lanes. The contrast the owner asked for is the
+       kind of object, so what this asserts is that the left draws NO
+       module at all, not that its modules are dimmer. Read off the COMPUTED
+       paint — the tokens are aliases of the ramp and light re-derives them,
+       so this is the drawing's own claim rather than its class names — and
+       read after the ladder has landed, because every lit object rests at
+       opacity 0 until it does. */
     await expect(board).toHaveClass(/is-in/);
     await page.waitForTimeout(1200);
     await expect(page.locator('#proposition .arc-board svg[role="img"]')).toHaveCount(2);
@@ -1185,24 +1234,33 @@ test.describe("Trinny London pitch variant", () => {
         const svg = document.querySelector(`[data-board-state="${mode}"] svg`)!;
         const fills = [...svg.querySelectorAll("path, rect")].map((e) => getComputedStyle(e).fill);
         const wash = svg.querySelector('[data-board-role="card"] .arc-board__wash');
-        const seat = svg.querySelector('[data-board-role="seat"] .arc-board__outline')!;
+        const seat = svg.querySelector('[data-board-role="seat"] .arc-board__outline');
         return {
           goldFills: fills.filter((f) => f.includes(goldRgb)).length,
           cardGold: wash ? getComputedStyle(wash).fill.includes(goldRgb) : false,
-          seat: getComputedStyle(seat).stroke,
+          seat: seat ? getComputedStyle(seat).stroke : null,
+          modules: svg.querySelectorAll(".arc-board__module").length,
+          rows: svg.querySelectorAll(".arc-board__row").length,
+          marks: svg.querySelectorAll(".arc-board__mark").length,
           wires: svg.querySelectorAll(".arc-board__wire").length,
         };
       };
       return { green, today: read("today"), configured: read("configured") };
     });
-    expect(roles.today.goldFills, "the dormant board lights nothing gold").toBe(0);
-    expect(roles.today.wires, "the dormant board is unwired").toBe(0);
-    expect(roles.today.seat, "no one is seated on the dormant board").not.toBe(roles.green);
-    expect(roles.configured.cardGold, "the lit card is the gold fill").toBe(true);
+    expect(roles.today.modules, "the dormant side is a ledger, not a board").toBe(0);
+    expect(roles.today.rows, "four ruled rows, one per fact").toBe(4);
+    expect(roles.today.goldFills, "the ledger lights nothing gold").toBe(0);
+    expect(roles.today.wires, "the ledger is unwired").toBe(0);
+    expect(roles.today.seat, "nothing is housed on the ledger").toBeNull();
+    expect(roles.configured.rows, "the lit side draws no ledger row").toBe(0);
+    expect(roles.configured.cardGold, "the chip is the gold fill").toBe(true);
     expect(roles.configured.seat, "the seat is green: the human, and nothing else").toBe(
       roles.green
     );
-    // Three lanes, eight wires each: the seat's drop, the layer's run and
+    // ⚠ NO DIAMONDS ANYWHERE (U2, owner: "remove the square diamond icon
+    // above The Studio") — the chip's wash is what marks the built thing.
+    expect(roles.today.marks + roles.configured.marks, "a mark came back").toBe(0);
+    // Three lanes, eight wires each: the seat's drop, the context's run and
     // the tools' run (ADR-100 U1 took the two socket drops with the sockets).
     expect(roles.configured.wires, "the ribbons").toBe(24);
 
@@ -1244,6 +1302,28 @@ test.describe("Trinny London pitch variant", () => {
     await expect(page.locator("#phases .arc-plate__foot")).toHaveCount(3);
     await expect(page.locator("#phases .arc-plate").first()).toHaveClass(/is-in/);
     expect(await goldMarks(page)).toEqual(["proposition"]);
+
+    /* ⚠ AND THE PLATE IS CUT (ADR-098 U3, owner: the cards "should have the
+       notch"). A clip CUTS a border and never strokes one, so the edge is a
+       two-contour RING — and the border has to be gone, or the plate is
+       outlined on six sides and open on two. All three are asserted: the
+       silhouette, the absent border, and that the ring actually paints. */
+    const cut = await page.evaluate(() => {
+      const el = document.querySelector("#phases .arc-plate") as HTMLElement;
+      const cs = getComputedStyle(el);
+      const ring = getComputedStyle(el, "::before");
+      return {
+        clip: cs.clipPath,
+        border: cs.borderTopWidth,
+        ringBg: ring.backgroundColor,
+        ringClip: ring.clipPath,
+      };
+    });
+    expect(cut.clip, "the plate is a chamfered housing").toMatch(/^polygon\(/);
+    expect(cut.border, "a clip cuts a border, it never strokes one").toBe("0px");
+    expect(cut.ringBg, "the ring paints").not.toMatch(/,\s*0\)$/);
+    expect(cut.ringClip, "the ring is the two-contour lip").toMatch(/evenodd/);
+
     await rollTo(page, await topOf("pricing"));
     await rollTo(page, await topOf("pricing"));
     await expect(page.locator("#pricing .arc-ledger__table")).toHaveCount(1);
@@ -1540,7 +1620,7 @@ test.describe("Trinny London pitch variant", () => {
       for (const b of read.boards) {
         // The dormant board letters exactly ten strings (the set is pinned in
         // `arc-board-fit`); the lit one eighteen.
-        expect(b.texts, `${where}: a board letters`).toBeGreaterThanOrEqual(10);
+        expect(b.texts, `${where}: a drawing letters`).toBeGreaterThanOrEqual(9);
         expect(b.overlaps, `${where}: labels printing through labels`).toEqual([]);
         expect(b.minPx, `${where}: the type floor`).toBeGreaterThanOrEqual(10);
         /* The svg sits at its own height (`height: auto` off the crop's
@@ -1549,6 +1629,14 @@ test.describe("Trinny London pitch variant", () => {
         expect(Math.abs(b.drawnH - b.h), `${where}: the crop fills its box`).toBeLessThanOrEqual(2);
       }
       const [today, configured] = read.boards;
+      /* ⚠ THE COUNTS ARE PINNED LIVE, not only in `arc-board-fit`'s label
+         sets: a `<text>` that stopped rendering — a token that stopped
+         resolving, a role group that stopped mounting — leaves the
+         arithmetic green and the drawing short. Nine on the ledger,
+         sixteen on the board (ADR-100 U2). */
+      expect([today.texts, configured.texts], `${where}: the drawings' own counts`).toEqual([
+        9, 16,
+      ]);
       expect(
         Math.abs(today.meet - configured.meet) / configured.meet,
         `${where}: one meet on both boards`

@@ -1344,25 +1344,88 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
    PLATE: a head band (mono kicker over the name), one ruled row per item,
    and the outcome as an INVERSE band at the floor. The deck draws it on a
    12px-radius card with a soft ground; this is the same STRUCTURE in the
-   house material — square (ADR-065), --arc-edge on --arc-plate, --arc-seam
-   dividing the head from the rows (the region weight) and --arc-rule within
-   (ADR-089 U2's law, as the dossier housing carries it). The `columns`
-   layout above is untouched: three naked columns of dashed rows is what the
-   owner read as chaotic on the proposal's three modules (2026-09-13), and
-   the difference is exactly the borders and dividers this block adds.
+   house material — --arc-edge on --arc-plate, --arc-seam dividing the head
+   from the rows (the region weight) and --arc-rule within (ADR-089 U2's
+   law, as the dossier housing carries it). The `columns` layout above is
+   untouched: three naked columns of dashed rows is what the owner read as
+   chaotic on the proposal's three modules (2026-09-13), and the difference
+   is exactly the borders and dividers this block adds.
    ⚠ The foot is `--arc-ink` under `--void` — the pair ADR-058 swaps — so it
    is a dark band on parchment in light and a dawn band on void in dark
-   without a theme rule; both are walked in the smoke. */
+   without a theme rule; both are walked in the smoke.
+
+   ⚠ AND THE PLATE IS A CHAMFERED HOUSING (U3, owner 2026-09-14: "redesign
+   the modular approach cards so they have the notch"). U2 said "square
+   (ADR-065)" and meant NO 12px RADIUS — the deck's soft card is its own
+   material; it was read as "no cut", which is a different claim. A plate
+   is a machined housing by rule 1, so it takes the CANONICAL diagonal, TR +
+   BL (rule 2) at the PLATE rung (rule 3) — the same cut the proof cards two
+   beats up carry, which is the owner's own word for it ("a notch, like on
+   the homepage, in the bottom-left and top-right corners", ADR-097 U4).
+   Rule 4 comes with it: the head band, the rows and the inverse foot stay
+   SQUARE — the housing is what has corners, and the clip takes them out of
+   the band and the foot for free.
+   ⚠ NO `border` — A CLIP CUTS A BORDER, IT NEVER STROKES ONE (ADR-089). A
+   bordered box under this clip has six edges outlined and two not, which is
+   the opposite of what a beat composed around "borders and dividers" can
+   afford. The edge is painted as a clipped RING instead: one polygon
+   carrying the outer contour and the inner one, `evenodd` making the middle
+   a hole — the proof card's construction, retargeted.
+   ⚠ THE INNER LEG IS NOT `ch - 1px`: insetting a 45° cut by `d` on both
+   axes shortens its leg by `d(2 - √2)` ≈ 0.586d (proof-stack.css's own
+   arithmetic), and matching them exactly leaves the ring visibly thicker on
+   the diagonals than on the straight runs.
+   ⚠ The ring is INVISIBLE over the inverse foot, by construction: `--arc-
+   edge` and `--arc-ink` are the same dawn triple at two alphas, so the dark
+   band bleeds to the silhouette and ends the plate as a cap. That is the
+   proof card's floor too, and it is why the foot needs no rule of its own. */
 .arc-groups--plates {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(18px, 2vw, 28px);
   align-items: stretch;
 }
 .arc-plate {
+  /* The arcs' own housing rung — the value `.arc-dossier` and `.arc-prog`
+     both cut at, because two housings on one surface are one object at two
+     sizes, not two styles. */
+  --arc-plate-ch: clamp(16px, 1.8vw, 26px);
+  --arc-plate-ch-in: calc(var(--arc-plate-ch) - 0.586px);
+  position: relative;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--arc-edge);
+  border: 0;
   background: var(--arc-plate);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--arc-plate-ch)) 0,
+    100% var(--arc-plate-ch),
+    100% 100%,
+    var(--arc-plate-ch) 100%,
+    0 calc(100% - var(--arc-plate-ch))
+  );
+}
+.arc-plate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--arc-edge);
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--arc-plate-ch)) 0,
+    100% var(--arc-plate-ch),
+    100% 100%,
+    var(--arc-plate-ch) 100%,
+    0 calc(100% - var(--arc-plate-ch)),
+    1px 1px,
+    calc(100% - 1px - var(--arc-plate-ch-in)) 1px,
+    calc(100% - 1px) calc(1px + var(--arc-plate-ch-in)),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(1px + var(--arc-plate-ch-in)) calc(100% - 1px),
+    1px calc(100% - 1px - var(--arc-plate-ch-in))
+  );
 }
 .arc-plate__head {
   display: flex;

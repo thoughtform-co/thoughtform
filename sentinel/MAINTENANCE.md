@@ -54,7 +54,54 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
-### 2026-09-13 (latest) — The configuration is a board in two states (ADR-100)
+### 2026-09-14 — Four surfaces on the Trinny proposal (ADR-100 U2, ADR-098 U3, ADR-084 U2, ADR-095 U8)
+
+**Trigger:** one owner message on the live page, naming four things: the red
+line's four bands are "not really clear what they're related to" (make them a
+square block of four with `NO AI UGC` at the centre); two lines of the turn's
+copy; a list of notes on the configuration beat ending "AND REALLY DO A FUCKING
+SENSE CHECK IN THIS SECTION because it feels sloppy"; and "redesign the modular
+approach cards so they have the notch".
+
+**Cycle B (prior art cited):** ADR-084 U1 (the four-band ruling this reverses,
+and WHY it can — that 2×2 was centred, this one fills), ADR-065 (the corner
+law's rules 1–4 for the plates), ADR-089 (a clip cuts a border and never
+strokes one — the clipped ring), ADR-097 U4 (the owner's own word for the
+notch), ADR-018 (the "self-sufficient" ban the turn is now the one exemption
+to), ADR-098 U1 (a display line breaking at its own hyphen), ADR-066 (the order
+of sacrifice: padding before type), ADR-070 U15 (a string composed at render
+time is outside every content scanner).
+
+**Cycle A rows that triggered:**
+
+- **4 — files that move together.** The red line is a THREE-HOST change
+  (`SheetsPlate`, `casefile.css`, `proof-stack.css`, the record, the registry,
+  two smokes); the plates are a THREE-PAGE change through one renderer; the
+  board's record, layout, glyphs and three guards move as one.
+- **5 — the runtime check.** Two new ink walks: every quadrant's first and last
+  child against its cell (both smokes), and the board's rendered counts pinned
+  `[9, 16]` live. ⚠ **Both exist because a CENTRED box that outgrows its cell
+  spills through the TOP, where `scrollHeight` never reports it** — the four
+  bands had been overflowing at 1280×720 and every fit gate on the surface read
+  green. `.fl-cmp__middle` paid for this exact lesson one sheet over; it is now
+  two.
+- **6 — a durable finding.** "Square (ADR-065)" in ADR-098 U2 meant _no 12px
+  radius_ and was read afterwards as _no cut_. A ruling that names a law should
+  name the clause: the plates were square by an argument about the deck's
+  material, not by the corner law, and nothing said so.
+
+**What the stills caught that the gates did not:** the ledger's first row ruled
+its top 14 units under the head's own datum — one doubled line, ADR-089 U3's
+defect in a new object; and the turn's new sub broke `self-sufficient` across
+its own hyphen at `44ch`. Neither had a guard and neither would have got one:
+both were found by looking at a capture.
+
+**Left open:** the pricing beat's ledger table and tip cards are the same
+material one beat after the plates and stay square — flagged for the owner, not
+taken. The offer's plates as PARTS that dock into the board (the motherboard
+leitmotif's second half) is still the pass ADR-100 named.
+
+### 2026-09-13 — The configuration is a board in two states (ADR-100)
 
 **Trigger:** owner's read of the Trinny proposal's configuration beat — "it
 doesn't look bad, but it's a lot of things to look at"; the beat is the problem

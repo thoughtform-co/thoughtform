@@ -497,8 +497,8 @@ describe("turnDecodeFrame — the scrubbed decode", () => {
      is what the writer walks — a stale entry here does not fail, it decodes
      a line that is not on the page. */
   const FINALS = [
-    "AI-first, inside Trinny London.",
-    "Owned by the people who run Trinny London.",
+    "And now we bring this to Trinny London.",
+    "An AI-first approach designed to make Trinny's teams self-sufficient.",
     "The configuration",
   ] as const;
   const rand = () => 0.5;

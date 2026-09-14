@@ -591,10 +591,17 @@ bottom-safe` IS the scroll for which a card is pinned and the next has not
   (same slot, same `id: "configuration"`, same `.arc-head` and datum): the
   proof's R4 grammar at page scale as TWO svg boards on one row with no plate
   around them, dormant (dashed dawn, the card GREEN-outlined because all the
-  work is the people's, the layer an empty dashed room under "not written
-  down", the tools as unwired islands) beside lit (the green seat and its
-  authority drop, the layer's four tags, the ONE gold-washed card with WHAT
-  RUNS IT and its answer, WHERE IT RUNS with CLAUDE lit, three plain ribbons).
+  work is the people's) beside lit. ⚠ **U2 (2026-09-14) IS THE LIVE DRAWING:
+  A LEDGER BESIDE A BOARD.** The dormant side is four ruled rows (a mono key,
+  a sans value, hairlines, nothing else) and the lit side is the assembled
+  board — the green seat over its drop, THE CONTEXT with four tags, the gold
+  CHIP (`AI CAPABILITY` / "owned by the team" — the capability in-house is
+  the heart of it), WHERE IT RUNS with four tools as PEERS, three ribbons
+  meeting the chip's centre. ⚠ The two sides must NOT mirror each other
+  (owner: _"it should be a contrast like before and after, but without
+  implying they're unorganized"_) — a ledger is ordered and connected to
+  nothing. ⚠ No diamonds, no notes, one sentence in the seat, THE CONTEXT not
+  THE LAYER, and both sides share the datum and the floor.
   ⚠ **U1 (same day, owner: _"no, radically simplify it"_) IS THE LIVE CUT** —
   the first cut's bed, two sockets, foot rows, hatched cables, four layer
   sentences, second card row, tool notes and the height-elastic crop (with
@@ -771,6 +778,21 @@ The proposal's beats after the configuration — phases · loop · needs and kee
   reversible for free (the Voidwalker hologram's idiom). ⚠ **`advanceScrambles`
   may not be used here**: it drops finished jobs, and a dropped job is a latch
   scrolling back up would find nothing to unwind.
+- ⚠ **THE TURN IS THE ONE LINE ON THIS PAGE ALLOWED "SELF-SUFFICIENT"**
+  (ADR-095 U8, owner 2026-09-14). Its paragraph reads "An AI-first approach
+  designed to make Trinny's teams self-sufficient." and its title "And now we
+  bring this to Trinny London." `PROPOSAL_COPY_BANS` bans the word (ADR-018:
+  _say the behaviour_) and the owner ruled it stays HERE, because the proof
+  card two beats up says it about Loop's team and this is the sentence that
+  carries the claim across. ⚠ The exemption is that one line: the board and
+  the offer stay under the law. ⚠ And nothing mechanical walks the turn at all
+  — its copy is in the forked prototype HTML, which no scanner reads — so a
+  green suite is not evidence the law held on this beat. ⚠ `.tl-turn__sub` is
+  `max-width: 52ch`, NOT 44: at 44 the line breaks inside `self-sufficient`
+  (a browser breaks at an existing hyphen), which is ADR-098 U1's finding one
+  beat over. ⚠ `tests/lib/trinny-mark.test.ts`'s `FINALS` MIRRORS those three
+  strings by hand and moves in the same commit — a stale entry does not fail,
+  it decodes a line that is not on the page.
 - ⚠ **THE COPY SITS AROUND THE MARK, NOT ON IT (U3, owner 2026-09-10).** Two
   blocks — eyebrow + title above, paragraph + button below — seated off ONE
   pair of tokens, and the pair is the MARK's geometry: `--tl-mark-cy` is the
