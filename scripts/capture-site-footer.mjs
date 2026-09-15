@@ -7,6 +7,10 @@
  * which decide whether this station is painting as the ambient's opaque COVER
  * — never publish.
  *
+ * ⚠ **U1: THE PLATE IS THE STATION BOX.** It was a 46svh strip anchored to the
+ * floor; it is the station's whole ground now, so `plateIsStation` is the
+ * reading that says the negated-padding geometry still holds on this rung.
+ *
  * ⚠ **NOTHING MECHANICAL MEASURES CONTRAST OVER AN IMAGE.** `theme-css-sweep`
  * checks selector laws, `type-material-tokens` counts literals, and the
  * mechanical gate composites against a background COLOUR. The legal bar and
@@ -60,6 +64,9 @@ const read = await page.evaluate(() => {
   const plate = document.querySelector(".ft-foot__plate");
   const bar = document.querySelector(".ft-foot__bar");
   const title = document.querySelector(".ft-foot__title");
+  const dark = document.querySelector(".ft-foot__plate-img--dark");
+  const light = document.querySelector(".ft-foot__plate-img--light");
+  const heroImg = document.querySelector(".hero__bg img");
   const cs = (el) => (el ? getComputedStyle(el) : null);
   const box = (el) => {
     if (!el) return null;
@@ -81,6 +88,28 @@ const read = await page.evaluate(() => {
     foot: box(foot),
     band: box(band),
     plate: box(plate),
+    station: box(st),
+    /* ⚠ THE PLATE'S BOX MUST BE THE STATION'S. Its insets negate the
+       station's own padding tokens, so a padding change on one side only
+       shows up here as a few pixels of drift — not as anything visible. */
+    plateIsStation: (() => {
+      if (!plate || !st) return null;
+      const a = plate.getBoundingClientRect();
+      const b = st.getBoundingClientRect();
+      return (
+        Math.abs(a.left - b.left) <= 1 &&
+        Math.abs(a.top - b.top) <= 1 &&
+        Math.abs(a.right - b.right) <= 1 &&
+        Math.abs(a.bottom - b.bottom) <= 1
+      );
+    })(),
+    /* In dark this must EQUAL the hero's own `currentSrc` — same file, same
+       AVIF/WebP pick, so the footer's plate costs nothing. And the hidden
+       theme's img must report `""`: a `display: none` + lazy image is never
+       fetched, which is the whole reason the swap is two elements. */
+    plateSrc: (dark?.currentSrc || "").split("/").pop() || "",
+    lightSrc: (light?.currentSrc || "").split("/").pop() || "",
+    heroSrc: (heroImg?.currentSrc || "").split("/").pop() || "",
     bar: box(bar),
     titlePx: cs(title)?.fontSize ?? null,
     /* The band must land on the SAME left edge as the rest of the page's
@@ -98,13 +127,20 @@ const read = await page.evaluate(() => {
 const tag = `${W}x${H}-${THEME}`;
 console.log(`\n── the footer @ ${tag} ────────────────────────────────`);
 console.log(`  ambient ${read.ambient}   corridor-exit ${read.exit}`);
-console.log(`  station  ground ${read.stationGround}  image ${read.stationImage}  z ${read.stationZ}  cv ${read.contentVisibility}`);
+console.log(
+  `  station  ground ${read.stationGround}  image ${read.stationImage}  z ${read.stationZ}  cv ${read.contentVisibility}`
+);
 console.log(`  foot  ${JSON.stringify(read.foot)}`);
-console.log(`  band  ${JSON.stringify(read.band)}   left ${read.bandLeft}  (--rail-inset ${read.railInset})`);
-console.log(`  plate ${JSON.stringify(read.plate)}`);
+console.log(
+  `  band  ${JSON.stringify(read.band)}   left ${read.bandLeft}  (--rail-inset ${read.railInset})`
+);
+console.log(`  plate ${JSON.stringify(read.plate)}   == station ${read.plateIsStation}`);
+console.log(`  stn   ${JSON.stringify(read.station)}`);
+console.log(`  src   dark "${read.plateSrc}"  light "${read.lightSrc}"  hero "${read.heroSrc}"`);
 console.log(`  bar   ${JSON.stringify(read.bar)}   title ${read.titlePx}`);
 console.log(`  socials ${read.socials}   dead links ${read.deadLinks}`);
-for (const c of read.chrome) console.log(`  chrome  ${c.cls}  ${JSON.stringify({ x: c.x, y: c.y, w: c.w, h: c.h })}`);
+for (const c of read.chrome)
+  console.log(`  chrome  ${c.cls}  ${JSON.stringify({ x: c.x, y: c.y, w: c.w, h: c.h })}`);
 if (errors.length) console.log(`  ⚠ page errors: ${JSON.stringify(errors.slice(0, 3))}`);
 
 await page.screenshot({ path: `${OUT}/site-footer-${tag}.png` });

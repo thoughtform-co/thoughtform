@@ -13,8 +13,9 @@ import { CONTACT_EMAIL, publishedSocials, type SocialIcon } from "@/lib/site/soc
  * That way we can combine the contact form and the bold footer."_
  *
  * ONE section, not two: the key visual, the ask, the form and the socials.
- * Composition is the Zellic reference he gave me — copy above, the plate
- * bleeding up from the floor, the legal bar sitting on its darkest part.
+ * Composition is the Zellic reference he gave me — the plate IS the station's
+ * ground, the copy sits ON it in its quiet zone, and the legal bar rides its
+ * darkest strip at the floor.
  *
  * ⚠ **IT IS THE CORRIDOR'S OPAQUE COVER.** `#voidwalker` is a pinned
  * TRANSPARENT stage in hologram mode, so the WebGL ambient runs until the
@@ -30,21 +31,31 @@ import { CONTACT_EMAIL, publishedSocials, type SocialIcon } from "@/lib/site/soc
  * LandingPage mount; this is a nested root, so its nodes are never observed
  * and a `data-m` here would rest at opacity 0 forever with nothing to say so.
  *
- * ⚠ **THE PLATE IS PER THEME, AND ONE KEPT-DARK IMAGE WAS TRIED FIRST.**
- * `Key Visual 14d` is parchment above and void below, and bleeding its VOID
- * half up is right in dark. In light it put a dark slab under the parchment
- * page — bold, and it cost the FRAME two readings: the right rail's `LOCAL`
- * label and the bottom-left brandmark are dark ink in light, they are FIXED at
- * z 60, and they print over whatever is beneath them (ADR-043). On the still
- * `LOCAL` was gone and only its gold value survived. So light takes the hero's
- * own light plate instead, which is also the closest reading of "aligned with
- * our hero section": the page opens and closes on the same pair.
+ * ⚠ **U1 — THE PLATE IS THE STATION'S WHOLE GROUND, AND BOTH PLATES ARE THE
+ * HERO'S.** The first cut anchored a 46svh strip to the floor and washed half
+ * of it out; the owner's read was that it "looks really bad, especially in
+ * dark mode — the visual needs to be as full bleed as possible". Two things
+ * were doing it: the strip, and `Key Visual 14d`, which is parchment ABOVE and
+ * void BELOW and therefore could only ever be shown cropped to its bottom
+ * half. Dark takes `Gateway_v1b` now — the hero's own plate, already fetched,
+ * ring right-of-centre over deep void with its trail running out to the left
+ * where the copy sits — and light keeps `Gateway_v2-light`, which is the hero's
+ * too. So the page opens and closes on the same pair in BOTH themes, which is
+ * the closest reading of "aligned with our hero section".
+ *
+ * ⚠ **AND THE THEME EXCEPTION STOPPED EXISTING WITH IT.** A kept-dark plate
+ * needed two values pinned against ADR-058's swap — cream ink for the bar on
+ * it, a dark wash under that ink — and getting one right silently inverted the
+ * other. With the hero's pair, the bar's ink IS the page's ink and the scrim IS
+ * the page's ground, both plain tokens, and theme.css carries no block for this
+ * sheet at all.
  *
  * ⚠ **`display: none` + `loading="lazy"` IS WHAT KEEPS EACH THEME FROM
- * FETCHING THE OTHER'S PLATE** — theme.css:950-968's recipe, and the reason
- * the swap is two `<img>` rather than a `src` the theme store rewrites. No
- * `HERO_ROUTES` row either: a footer is below the fold and must never compete
- * with the hero's LCP.
+ * FETCHING THE OTHER'S PLATE** — the hero's own recipe in theme.css, and the
+ * reason the swap is two elements rather than a `src` the theme store
+ * rewrites. No `HERO_ROUTES` row either: a footer is below the fold and must
+ * never compete with the hero's LCP — and since U1 both plates are files the
+ * hero has already requested, so in either theme this is a cache hit.
  *
  * The form arrives in the next pass (it needs a transport). Until then the ask
  * is answered by the mail CTA, so the page has a correct ending either way.
@@ -105,38 +116,52 @@ export function SiteFooter() {
 
   return (
     <div className="ft-foot" role="contentinfo">
-      {/* The key visual, bleeding up from the floor. `aria-hidden` and
-          `loading="lazy"`: it is below the fold and it says nothing. */}
+      {/* The key visual — the station's whole ground, edge to edge (U1).
+          `aria-hidden` and `loading="lazy"`: below the fold, and it says
+          nothing. Its box is the station's BORDER box; the sheet's plate rule
+          negates the station's own padding to get there. */}
       <div className="ft-foot__plate" aria-hidden="true">
         {/* ⚠ `<img>`, NOT `next/image`, AND FOR THE SWAP'S OWN SAKE. The theme
             pair works because a `display: none` + `loading="lazy"` image is
-            never FETCHED (theme.css:950-968), and that is a property of the
-            raw element — an optimizer wrapper puts a component between this
-            rule and the request. It is below the fold, lazy and dimensioned,
-            so the LCP the lint rule protects is not in play. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          className="ft-foot__plate-img ft-foot__plate-img--dark"
-          src="/images/Thoughtform_Key%20Visual_14d.webp"
-          alt=""
-          width={2560}
-          height={1440}
-          loading="lazy"
-          decoding="async"
-        />
+            never FETCHED (theme.css's own hero recipe), and that is a property
+            of the raw element — an optimizer wrapper puts a component between
+            this rule and the request. It is below the fold, lazy and
+            dimensioned, so the LCP the lint rule protects is not in play.
+            ⚠ THE SWAP CLASS IS ON THE `<img>`, NEVER THE `<picture>`: source
+            selection is part of the img's own deferred fetch, so a hidden lazy
+            img requests NEITHER format. The hero hides only its img for the
+            same reason. And no `fetchpriority` and no `HERO_ROUTES` row — this
+            is the same file the hero already preloaded, so in dark it is a
+            cache hit, and a footer must never compete with the hero's LCP. */}
+        {/* ⚠ No `eslint-disable` here and one on the light plate below: the
+            `no-img-element` rule does not fire on an `<img>` inside a
+            `<picture>`, and an unused directive is itself a lint warning. */}
+        <picture>
+          <source srcSet="/images/Gateway_v1b.avif" type="image/avif" />
+          <img
+            className="ft-foot__plate-img ft-foot__plate-img--dark"
+            src="/images/Gateway_v1b.webp"
+            alt=""
+            width={2880}
+            height={1620}
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="ft-foot__plate-img ft-foot__plate-img--light"
           src="/images/Gateway_v2-light.webp"
           alt=""
-          width={2880}
-          height={1620}
+          width={2912}
+          height={1632}
           loading="lazy"
           decoding="async"
         />
-        {/* Feathers the plate into the station's own ground at the top, and
-            darkens its foot so the legal bar and the HUD's bottom corners
-            keep their contrast. Re-derived per theme in the sheet. */}
+        {/* Three layers, one job each: a top feather welding the plate into
+            `#voidwalker`'s void above, a directional bed under the copy
+            column only, and a bottom band so the legal bar and the HUD's
+            fixed corners keep their contrast. Tokens, so it inverts. */}
         <div className="ft-foot__scrim" />
       </div>
 

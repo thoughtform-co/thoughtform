@@ -1,6 +1,7 @@
 # ADR-105: The page ends on a bold footer, and `#practice` is deleted
 
-- **Status:** Proposed (2026-09-15) — shipped and guarded, pending the owner's live read
+- **Status:** Proposed (2026-09-15) — shipped and guarded. **Update 1 (same day, owner's
+  live read) makes the plate full bleed; see the Update at the foot.**
 - **Surface:** the homepage's ending — `#voidwalker` → `#contact`
 - **Supersedes:** ADR-056's `#practice` breather (deleted) and the parsed `.contact` /
   `<footer class="foot">` markup. ADR-030 §6's cover lockstep is re-pointed, not repealed.
@@ -227,3 +228,172 @@ directly:
   first of its kind. A candidate for deletion once the footer has been read live.
 - **The right rail's `LOCAL` label over a busy part of the plate** is marginal in light.
   The hero has the same condition under the same rails; named rather than chased.
+
+---
+
+## Update 1 — the plate is the station's whole ground (2026-09-15, owner)
+
+> It looks really bad, especially in dark mode; the visual needs to be as full bleed as
+> possible.
+
+He read it live against his own reference folder (Zellic, Lighthouse, Meridian, GIC NY,
+Eclipsera) and footer.design. **Every one of them makes the image the footer's GROUND**;
+this one made it a band at the floor.
+
+### Why it read as a strip, and only one of the four reasons was the CSS
+
+1. `.ft-foot__plate` was `height: clamp(300px, 46svh, 620px)` anchored `bottom: 0`.
+2. ⚠ **`Key Visual 14d` IS PARCHMENT ABOVE AND VOID BELOW**, so it could only ever be
+   shown cropped to its bottom half (`object-position: center bottom`) — **the plate was
+   a strip because the picture could not be anything else.** Choosing a half-and-half
+   plate is what forced the band; the height was downstream of it.
+3. The scrim ran `void → .62 @20% → 0 @56%` plus a `.72` bottom band: over half the
+   picture washed out.
+4. The station's own `--void` + stars sat above the plate's top edge in a different
+   black — a visible tonal seam, with the ring floating in the gap.
+
+### The decision
+
+**Both plates are the hero's now.** Dark takes `Gateway_v1b` (the hero's own
+`<picture>`, AVIF + WebP) and light keeps `Gateway_v2-light`. `Key Visual 14d` retires
+from this surface.
+
+⚠ **THIS IS THE ORIGINAL ASK ARRIVING IN FULL** — _"nicely aligned with our hero
+section"_. U0 delivered half of it: light was already the hero's plate, dark was not.
+Now the page opens and closes on the same pair in **both** themes, the dark plate costs
+**zero extra bytes** (the hero preloaded that exact file, so it is a cache hit), and
+`Gateway_v1b`'s composition is the reference's composition — the ring right-of-centre
+over deep void, its trail running out to the **left third, which is where the copy
+sits**.
+
+### The geometry: the plate's box IS the station's border box
+
+```css
+#contact.station {
+  --ft-pad-top: max(var(--station-pad-top), var(--mobile-chrome-top, 0px));
+  --ft-pad-bottom: max(var(--station-pad-bottom), var(--mobile-chrome-bottom, 0px));
+  padding-top: var(--ft-pad-top);
+  padding-bottom: var(--ft-pad-bottom);
+}
+.ft-foot__plate {
+  top: calc(-1 * var(--ft-pad-top));
+  bottom: calc(-1 * var(--ft-pad-bottom));
+  left: calc(50% - 50vw);
+  right: calc(50% - 50vw);
+}
+```
+
+⚠ **THE PADDING IS DECLARED AS TOKENS SO THE PLATE CAN READ IT BACK, AND THAT IS WHAT
+MAKES IT ORDER-INDEPENDENT.** The obvious alternative — `#contact.station { padding-top:
+0 }` with the air moved into `.ft-foot__band` — works on `/` only because
+`site-footer.css` is imported **after** `landing.css` in `page.tsx`, so it beats
+`landing.css:12414`'s `#contact.station { padding-top: max(--station-pad-top,
+--mobile-chrome-top) }` at equal specificity on source order alone. Any surface that
+imports in another order silently re-inserts the mobile chrome band above the plate.
+Reading the same two tokens from both sides cannot do that: whichever declaration wins,
+both evaluate to the same value and the plate negates exactly it.
+
+⚠ **NO `overflow: hidden` ON THE STATION.** The plate lands on the station's edge **by
+construction**, so there is nothing to clip — and clipping there would cut into the
+cover choreography's stacking. The containing-block chain is what makes this exact:
+`.station` → the slot (`flex: 1 1 auto; align-self: stretch`) → `.ft-foot` (same), so
+`.ft-foot`'s box **is** the station's content box. ⚠ `.ft-foot` may therefore never gain
+padding, margin or a border of its own.
+
+⚠ **`--ft-bleed` IS DELETED, AND WITH IT A LOCKSTEP.** It tracked the station's
+horizontal inset, which is `--hud-content-inset` on desktop but a **32px literal** at
+≤960 (`landing.css:2430-2433`, not `--hud-content-inset`'s `clamp(24px, 6vw, 40px)`) —
+so the sheet carried its own copy of that literal on its own rung, and the two had to
+move together. `calc(50% - 50vw)` is the identity `.station:not(.hero)` already uses for
+its own 100vw margin: 50 % of a box that is `(100vw − 2·pad)` wide, minus 50vw, is
+exactly `−pad` on **every** rung, whatever the pad is. One expression, no rung.
+
+### ⚠ THE BAND GAVE UP ITS SECOND COLUMN, AND THE CAPTURE IS WHAT SAID SO
+
+The two-column band put the CTA at ~55 % of `--band-max` — which on a full-bleed
+`Gateway_v1b` is **exactly where the ring's bright metal trail sweeps through**. The
+first still had a `--gold-line` rim and 12px gold mono sitting on near-white. Shifting
+the crop cannot fix it: at 1920×1247 the plate is height-bound with ~297px of horizontal
+slack, i.e. ±148px against a collision ~250px wide. So the **layout** yielded — head and
+ask stack in one column capped at `min(var(--band-max), 52ch)`, and the ring gets its
+half uninterrupted.
+
+That is also what the reference set does (one copy block, the picture whole), and it is
+the durable form: a two-column band re-opens the same collision at any viewport where
+the crop lands differently, and nothing measures type against a photograph.
+
+### ⚠ THE MOBILE WINDOWS GO OPPOSITE WAYS, AND THAT IS THE PLATES' DOING
+
+A portrait box has **no vertical slack** — cover scales the landscape plate to the box's
+HEIGHT (390 of ~1500px), so the `y` term does nothing and the visible 26 % slice is
+picked by `x` alone.
+
+- **Dark 88 %.** The first cut took 78 %, framing the ring's upper-left _approach_ —
+  which is its bright trail, and it ran straight through the lede and the CTA. 88 %
+  frames the ring's **body**, whose bright limb is low, under the copy rather than
+  through it.
+- **Light 24 %.** The opposite end, because `Gateway_v2-light` is ink-on-parchment: its
+  dark mass is the ring at centre-right and its quiet ground is the empty left third
+  above the horizon. ⚠ **And in light the bed cannot rescue it** — the scrim washes
+  toward `--void-rgb`, which ADR-058 swaps to PARCHMENT, so it lightens the ring instead
+  of bedding the ink. The rule is the same on both rungs (put the copy on quiet ground);
+  the numbers differ because the pictures do. The cost is named: at 24 % the phone shows
+  the horizon and the drafting marks rather than the ring. On a 390px column the title is
+  full-bleed width, so any ring intrusion lands on it — legibility takes the rung.
+- ⚠ **The bed ROTATES with the column too.** Desktop copy is the left third and the bed
+  runs `to right`; on a phone the band is full width at the top, so a horizontal bed
+  washes the wrong half. The ≤960 rung restates it `to bottom`, with its stops read off
+  the band's measured box (it ends at ~49 % of the station at 390×844) rather than
+  guessed.
+
+### The scrim: three layers, one job each
+
+A top feather (6→16 %) welding the plate into `#voidwalker`'s void above; a **directional
+bed** (`to right`, .42 → 0 at 60 %) under the copy column only; a bottom band
+(.78 → 0 at 30 %) for the legal bar and the HUD's fixed bottom corners. The stops mirror
+`.hero__video__overlay` one notch lighter — the dark plate's left third is already
+near-black. Still `--void-rgb`, never `--void-deep-rgb` (U0's reason holds: light
+resolves that to a different parchment and re-tints a plate that was already correct).
+
+### What else the pass found
+
+- ⚠ **`#contact.station::before` HAD BEEN PAINTING NOTHING.** The alternating radial
+  atmosphere (`landing.css:2458`) sits at z 0 under a slot forced to z 1 — which since
+  U0 holds an opaque cover-fit image. Removed from the cadence; **`#contact.station > *`
+  STAYS**, because that is what gives the slot its stacking context and the plate / band
+  / bar are ordered inside it.
+- ⚠ **AN UNTERMINATED COMMENT HAD SWALLOWED ITS OWN DECLARATION'S PROSE.** site-footer.css
+  opened a `/*` inside an already-open block; the outer `*/` closed both, so the
+  paragraph explaining `--ft-plate-h` was dead text while the declaration under it was
+  live. Fixed in passing — and `--ft-plate-h` is deleted anyway.
+- ⚠ **TWO COMMENTS CLAIMED A theme.css BLOCK THAT NEVER EXISTED.** Both said the bar's
+  ink was "re-pinned in theme.css on this element"; `grep ft-foot theme.css` is empty,
+  and this ADR's own U0 text says the exception stopped existing. Deleted. A comment
+  describing a mechanism that was removed during the same pass is the durable half of
+  this finding.
+- The light plate's intrinsic dimensions in the TSX were **2880×1620**; the file is
+  **2912×1632**. Harmless under `cover`, wrong in the markup.
+
+### Guards
+
+Unchanged and still green by design: the handoff guard still reads `#contact`'s **own**
+computed style (`alpha === 1` + a background image), which the plate does not touch —
+that the plate covers those pixels is irrelevant to the assertion, and the station's
+opaque ground is still what makes the assertion true. `type-material-tokens` (0/0/0) and
+`theme-css-sweep` pass with the sheet still token-only; the only `[data-theme]` rules in
+it remain the two plates' `display` swap.
+
+`capture-site-footer.mjs` gained the three readings that would catch a regression no
+smoke can see: **`plateIsStation`** (the plate's rect equals the station's within 1px —
+this is what fails if one side of the padding pair moves alone), and **`plateSrc` /
+`heroSrc`**, which must be the same file in dark, with the hidden theme's `currentSrc`
+empty (proof that neither theme fetches the other's plate).
+
+### Left open
+
+- `Gateway_v1b` carries a **baked caption** at ~65–75 % x / 86–91 % y. At 1280×720 there
+  is no vertical crop, so it lands in the bar's row; the .78 bottom band should bury it
+  — read the still, and nudge `object-position` to `center 45%` if it shows.
+- The CTA column starts ~55 % x at 1440, where the dust trail runs. If the 12px gold mono
+  reads badly on the capture, cap the band at `min(var(--band-max), 62%)` at ≥1200.
+- `contact-95.png` still wants re-shooting (it did before this pass too).

@@ -70,27 +70,54 @@ class="stations">`.** Four things read that and a `<footer id="contact">` falls 
 - ⚠ **THE STATION KEEPS ITS OWN OPAQUE `var(--void)` GROUND AND THE PLATE IS A LAYER
   INSIDE IT.** The handoff guard asserts the cover has `alpha === 1` AND a background
   image; a station whose only ground is the image fails one of the two.
-- ⚠ **THE PLATE IS PER THEME, AND ONE KEPT-DARK IMAGE WAS TRIED FIRST.** `Key Visual
-14d` bleeds its void half up in dark; in light it cost the FRAME two readings — the
-  right rail's `LOCAL` label and the bottom-left brandmark are dark ink, FIXED at z 60,
-  printing over whatever is beneath (ADR-043). Light takes the hero's own
-  `Gateway_v2-light.webp`, which is also the closest reading of "aligned with our hero
-  section". ⚠ **That choice DELETED a class of exception**: a kept-dark plate needed
-  cream ink and a dark wash pinned against ADR-058's swap, and the first cut re-pinned
-  `--dawn-rgb` on the bar — fixing the ink and **silently inverting the wash**, which
-  then lightened the plate's foot against the very ink it was bedding. Light on a light
-  plate makes both plain tokens and `theme.css` needs no block for the sheet at all.
+- ⚠ **U1 (same day, owner: _"it looks really bad, especially in dark mode; the visual
+  needs to be as full bleed as possible"_): THE PLATE IS THE STATION'S WHOLE GROUND, AND
+  BOTH PLATES ARE THE HERO'S.** U0 anchored a 46svh strip to the floor and washed half of
+  it out — and the reason it _had_ to be a strip was the picture: `Key Visual 14d` is
+  parchment ABOVE and void BELOW, so it could only ever be shown cropped to its bottom
+  half. Dark takes `Gateway_v1b` (the hero's own `<picture>`, AVIF + WebP) and light
+  keeps `Gateway_v2-light`, so the page opens and closes on the same pair in BOTH themes
+  — the original ask in full — at **zero extra bytes**, since the hero preloaded that
+  exact file. `Key Visual 14d` retires from this surface. ⚠ That choice also DELETED a
+  class of exception: a kept-dark plate needed cream ink and a dark wash pinned against
+  ADR-058's swap, and U0's first cut re-pinned `--dawn-rgb` on the bar — fixing the ink
+  and **silently inverting the wash**. Two plates the theme flip already handles makes
+  both plain tokens, and `theme.css` needs no block for this sheet at all.
   ⚠ `display: none` + `loading="lazy"` is what stops either theme fetching the other's
-  plate; **no `HERO_ROUTES` row** — a footer must never compete with the hero's LCP.
-- ⚠ **THE STATION GIVES UP ITS BOTTOM PADDING THROUGH THE TOKEN AND A `max()`.**
-  `.station`'s base is a literal `140px 0 220px`, so the plate's floor sat 220px above
-  the page's last pixel and the key visual FLOATED in a band of void. Written as a bare
-  `padding-bottom` it would opt out of the ≤960 chrome floor at id specificity with no
-  pixel change to say so (landing.css's own note), so the floor is reproduced.
-  ⚠ **AND THE FLEX CHILD IS THE PORTAL'S SLOT, NOT `.ft-foot`** — measured, the footer's
-  bottom sat at 781 in a 900 viewport and the plate floated with it.
-- ⚠ **THE BAND IS JOINED, NOT RE-INSET** (ADR-048): `max-width: var(--band-max);
-margin-inline: var(--rail-inset)`. `--rail-inset` is 0 below the 1200px crossover, so
+  plate — **on the `<img>`, never the `<picture>`**, since source selection is part of
+  the img's own deferred fetch; **no `HERO_ROUTES` row and no `fetchpriority`**, a footer
+  must never compete with the hero's LCP.
+- ⚠ **THE PLATE'S BOX IS THE STATION'S BORDER BOX, BY CONSTRUCTION.** The station's
+  padding is declared as `--ft-pad-top` / `--ft-pad-bottom` (`max(token, mobile floor)`)
+  and `.ft-foot__plate` negates exactly those, with `calc(50% - 50vw)` on the horizontal
+  — the identity `.station:not(.hero)` uses for its own 100vw margin, so no bleed token
+  has to track the station's inset (`--hud-content-inset` on desktop, a **32px literal**
+  at ≤960). **No `overflow: hidden` on the station**: there is nothing to clip, and
+  clipping there would cut into the cover choreography's stacking. ⚠ Reading the tokens
+  from both sides is what makes it ORDER-INDEPENDENT — moving the padding into the footer
+  instead only works because `site-footer.css` is imported after `landing.css`, whose
+  `#contact.station` padding rule (12414) has equal specificity. ⚠ `.ft-foot` may never
+  gain padding, margin or a border: its box IS the station's content box, which is what
+  the negation is measured against. ⚠ **AND THE FLEX CHILD IS THE PORTAL'S SLOT, NOT
+  `.ft-foot`** — measured, the footer's bottom sat at 781 in a 900 viewport.
+- ⚠ **THE BAND IS ONE COLUMN AND THE PICTURE OWNS THE OTHER HALF (U1).** Two columns put
+  the CTA at ~55 % of the band, which on a full-bleed `Gateway_v1b` is where the ring's
+  BRIGHT METAL TRAIL sweeps — gold rim and 12px gold mono on near-white. The crop cannot
+  fix it (±148px of slack against a ~250px collision), so the layout yields: head and ask
+  stack, capped at `min(var(--band-max), 52ch)`. ⚠ **On a phone the windows go OPPOSITE
+  ways** — a portrait box has no vertical slack, so `x` alone picks the slice: dark 88 %
+  (the ring's body, whose bright limb sits low) and light **24 %** (the empty left third,
+  because `Gateway_v2-light` is ink-on-parchment and the bed washes toward PARCHMENT
+  there, so it lightens the ring instead of bedding the ink). Same rule, different
+  numbers, because the two pictures put their subject in different places. ⚠ The text bed
+  rotates with the column too: `to right` on desktop, `to bottom` at ≤960.
+- ⚠ **`#contact` IS OUT OF THE `::before` RADIAL CADENCE (U1)** — those two washes sit at
+  z 0 under a slot forced to z 1 that holds an opaque cover-fit image, so they painted
+  nothing. **`#contact.station > *` STAYS**: it is what gives the slot its stacking
+  context, and plate / band / bar are ordered inside it.
+- ⚠ **THE BAND IS JOINED, NOT RE-INSET** (ADR-048): `margin-inline: var(--rail-inset)`,
+  with only its WIDTH cut (U1's `min(var(--band-max), 52ch)`) — a fraction of the band,
+  never a second inset. `--rail-inset` is 0 below the 1200px crossover, so
   a divergence is invisible at 1280×720 and 1440×800 — **measure at 1920×1247** (band
   left 357 = inset 189 + rail 168, width exactly `--band-max`). The legal bar pays
   `--hud-margin + --hud-corner-zone` of bottom padding, the two tokens the rails stop
@@ -120,7 +147,10 @@ margin-inline: var(--rail-inset)`. `--rail-inset` is 0 below the 1200px crossove
 - **Verifying:** `node scripts/capture-site-footer.mjs --vp 1920x1247 --theme dark`
   (and `--theme light`, and `--vp 390x844`) — headed, real scrolls, and it prints the
   HUD corners' boxes against the plate's, because **nothing mechanical measures contrast
-  over an image**. Plus `about-voidwalker-handoff-boundaries`, the five drift guards
+  over an image**. Since U1 it also prints `plateIsStation` (the plate's rect equals the
+  station's within 1px — what fails if one side of the padding pair moves alone) and
+  `plateSrc` / `heroSrc`, which must be the SAME file in dark with the hidden theme's
+  `currentSrc` empty. Plus `about-voidwalker-handoff-boundaries`, the five drift guards
   (`rail-manifest` · `v7-parse` · `section-label` · `detentTable` ·
   `rail-instrument-marks`) and `mechanical.mjs --scope ".ft-foot" --prm` in both themes.
 

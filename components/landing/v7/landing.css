@@ -2448,14 +2448,19 @@
    shift rather than centered glow. Alphas held in the 0.025–0.05
    envelope. Pointer-events disabled; sit beneath content (z-index 0).
 
-   Cadence (alternating): #definition, #continuum, #build, #contact.
+   Cadence (alternating): #definition, #continuum, #build.
    #ilayer and #about keep their own existing washes. The other
    stations stay clean to let the page breathe between glows.
+
+   ⚠ ADR-105 U1: `#contact` IS OUT OF THE CADENCE. Its whole ground is the
+   footer's key visual now — an opaque cover-fit image at z 0 inside a slot
+   at z 1 — so two radials underneath it painted nothing. The `> *` rule
+   below STAYS: it is what gives that slot its stacking context, and the
+   plate / band / bar z-order is ordered inside it.
    ═══════════════════════════════════════════════════════════════════ */
 #definition.station::before,
 #continuum.station::before,
-#build.station::before,
-#contact.station::before {
+#build.station::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -2489,13 +2494,6 @@
   background:
     radial-gradient(ellipse 45% 60% at 5% 50%, rgba(var(--gold-rgb), 0.05), transparent 70%),
     radial-gradient(ellipse 55% 45% at 80% 15%, rgba(var(--dawn-rgb), 0.03), transparent 65%);
-}
-
-/* gold top-left + dawn bottom-center */
-#contact.station::before {
-  background:
-    radial-gradient(ellipse 50% 45% at 20% 10%, rgba(var(--gold-rgb), 0.045), transparent 65%),
-    radial-gradient(ellipse 70% 40% at 50% 90%, rgba(var(--dawn-rgb), 0.03), transparent 70%);
 }
 
 @media (max-width: 640px) {
