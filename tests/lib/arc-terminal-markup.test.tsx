@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { TRINNY_BOARD } from "@/app/(marketing)/arcs/trinny-london/proposal/offer/offerSections";
+import {
+  TRINNY_BOARD,
+  TRINNY_OUTCOMES,
+} from "@/app/(marketing)/arcs/trinny-london/proposal/offer/offerSections";
 import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { CLAUDE_WORKSHOP_ARC } from "@/lib/arcs/content/claude-workshop";
 import { AI_KEYNOTE_ARC } from "@/lib/arcs/content/ai-keynote";
@@ -40,6 +43,9 @@ const ALL: readonly ArcSection[] = [
      it is mounted by a page-local dispatch rather than a registered arc —
      so it joins the walk by hand, or its channel is never checked. */
   TRINNY_BOARD,
+  /* The `steps` leaf (ADR-103) publishes `data-steps-*`; same page-local
+     dispatch, same reason. */
+  TRINNY_OUTCOMES,
 ];
 const DOSSIERS: readonly ArcSection[] = PORTFOLIO_ARC.sections.filter((s) => s.kind === "dossier");
 

@@ -231,7 +231,11 @@ const rollToS = async (sv) => {
   for (let pass = 0; pass < 6; pass++) {
     const g = await page.evaluate(() => {
       const r = document.getElementById("proposition").getBoundingClientRect();
-      return { docTop: r.top + window.scrollY, vh: window.innerHeight, runway: r.height - window.innerHeight };
+      return {
+        docTop: r.top + window.scrollY,
+        vh: window.innerHeight,
+        runway: r.height - window.innerHeight,
+      };
     });
     await rollTo(Math.round(g.docTop + Math.min(sv * g.vh, g.runway)));
     const actual = Number(
@@ -248,14 +252,26 @@ for (const [sv, name, note] of [
   [0.85, "23-scene-fold", "the nodes folding into the chip, ribbons retracting"],
   [1.12, "24-scene-handover", "the chip handed to the carrier — the frame holds one object"],
   [1.3, "25-scene-slide", "the chip sliding to the far left, becoming plate 1's band"],
-  [1.5, "26-scene-title", "plate 1's band landed, the title opening"],
+  [1.5, "26-scene-title", "plate 1's band landed, the title decoding in place (ADR-103)"],
   [1.65, "27-scene-unroll1", "plate 1 unrolling out of its band; the copy born on it"],
   [1.85, "28-scene-copy2", "the copy travelling to plate 2's column"],
   [2.1, "29-scene-unroll2", "plate 2 unrolling"],
   [2.35, "30-scene-copy3", "the second copy travelling to plate 3's column"],
   [2.6, "31-scene-unroll3", "plate 3 unrolling"],
-  [2.9, "32-scene-paragraph", "the paragraph opening, last"],
-  [3.1, "33-scene-settled", "the scene whole — three plates, title and paragraph"],
+  [2.9, "32-scene-paragraph", "the paragraph typing in place, last (ADR-103)"],
+  [3.1, "33-scene-phases", "the phases whole — three plates, title and paragraph"],
+  /* ADR-103: the outcomes. ⚠ Look at 34 for rings on the collapsing plates'
+     travelling edge, at 36 for one material in flight, at 38 for the scan
+     sweeping with its first callouts, at 41/42 for the feet at 720h. */
+  [3.45, "34-scene-collapse", "the plates rolling back into their bands, the title decoding"],
+  [3.66, "35-scene-bands", "three bands, the outcomes' title landed"],
+  [3.9, "36-scene-stack", "the bands travelling to the rows, one material"],
+  [4.25, "37-scene-stacked", "a list of three, all lit, the paragraph typing"],
+  [4.6, "38-scene-step1", "row 1 open and filled, the scan sweeping"],
+  [4.9, "39-scene-crossover", "one row closing as the next opens, both apertures crossing"],
+  [5.15, "40-scene-step2", "row 2 open, the second field"],
+  [5.65, "41-scene-step3", "row 3 open, the third field"],
+  [5.95, "42-scene-settled", "the scene settled — the scan finished"],
 ]) {
   await rollToS(sv);
   await page.waitForTimeout(200);
@@ -263,8 +279,8 @@ for (const [sv, name, note] of [
 }
 
 for (const [id, name, note] of [
-  ["flow", "34-offer-flow", "the offer — the pipeline: brief → renders → markets"],
-  ["pricing", "35-offer-pricing", "the offer — the fee table beside its terms"],
+  ["flow", "43-offer-flow", "the offer — the pipeline: brief → renders → markets"],
+  ["pricing", "44-offer-pricing", "the offer — the fee table beside its terms"],
 ]) {
   await rollTo(await topOf(id));
   await rollTo(await topOf(id));

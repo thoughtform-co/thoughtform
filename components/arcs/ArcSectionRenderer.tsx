@@ -15,6 +15,7 @@ import { ArcListGroups } from "./ArcListGroups";
 import { ArcMediaSection } from "./ArcMediaSection";
 import { ArcPortrait } from "./ArcPortrait";
 import { ArcSectionHead } from "./ArcSectionHead";
+import { ArcSteps } from "./ArcSteps";
 import { ArcStudioFilms } from "./ArcStudioFilms";
 import { ArcStudioSheets } from "./ArcStudioSheets";
 import { ArcToolIndex } from "./ArcToolIndex";
@@ -108,6 +109,8 @@ export function ArcSectionRenderer({
             return <ArcFlow key={section.id} section={section} index={index} motion={motion} />;
           case "board":
             return <ArcBoard key={section.id} section={section} index={index} motion={motion} />;
+          case "steps":
+            return <ArcSteps key={section.id} section={section} index={index} motion={motion} />;
           default: {
             const exhaustive: never = section;
             return exhaustive;

@@ -114,6 +114,22 @@ dormant rule sits under `.is-arc-js` + `no-preference` so no-JS and PRM render
 lit; `data-board-*` never `data-arc-*`; the head on the TEXT band, the drawing
 on the INSTRUMENT band.
 
+⚠ ADR-103 (2026-09-15): the `steps` kind is the FIFTH enumerated exception —
+`{ head, items: [{ id, kicker, name, body, visual }] }`, `ArcSteps` SERVER-ONLY
+with `data-steps-*` only, the deliverables as a stepped list of `.arc-plate`
+rows (head band + a body line — the plates' own material, so on the Trinny
+page the phase plates' bands travel to BECOME them) beside a stage per item.
+⚠ EVERY MOTION CHANNEL IS A CUSTOM PROPERTY WITH A FINISHED DEFAULT
+(`--tl-row-h`, `--tl-lit`, `--tl-vis`, `--scan-s`): the static render, no-JS
+and PRM read every row open and filled, every stage shown, the scan complete;
+a route scrubs them. A `visual` is `scan` (`ArcScanVisual`: a framed 4:5 field
+on its own opaque bed, a gold edge sweeping the packshot over its grey ghost,
+callouts as 7×7 nodes + 1px div leaders + labels, a verdict; no digits, no
+svg, no opacity, no transition) or `field` (the frame with one centred node
+over a designation). `trinny-offer` pins that no row restates a phase
+("not a simulacrum of those three modules"). Canonical text:
+`.claude/rules/arcs.md` §The client model; the record is ADR-103.
+
 Contracts in one breath: one scroll writer (`useArcScroll`); `--hero-lift`
 gates the rails; the slice API is read-only; every section opaque void; no
 three.js / Supabase / `LandingPage` imports — the casefile's dossier LEAVES

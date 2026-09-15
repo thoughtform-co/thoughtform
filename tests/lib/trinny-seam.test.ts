@@ -24,13 +24,24 @@ import {
   fitCropMid,
   foldPose,
   foldWindow,
-  introOpen,
+  headFraction,
+  headIntro,
+  headLead,
+  headState,
   lerpRect,
   plateState,
   propClose,
+  rowLit,
+  rowState,
   sceneProgress,
   scenePast,
+  stepBoundary,
+  stepOf,
+  stepOpen,
+  stepProgress,
+  stepWeight,
   SCENE_CARRY,
+  SCENE_COLLAPSE,
   SCENE_DECODE_END,
   SCENE_DECODE_START,
   SCENE_DWELL_END,
@@ -39,12 +50,16 @@ import {
   SCENE_FOLD_ORDER,
   SCENE_FOLD_TRAVEL_START,
   SCENE_HANDOVER,
-  SCENE_INTRO,
-  SCENE_TITLE,
+  SCENE_HEAD_INTRO,
+  SCENE_HEAD_LEAD,
+  SCENE_STEP_CROSS,
+  SCENE_STEP_OPEN,
+  SCENE_STEP_SPAN,
+  SCENE_STEP_START,
+  SCENE_STEPS,
   SCENE_UNROLL,
   SCENE_WITHDRAW,
   SEAM_CHIP_CUT,
-  titleOpen,
   TURN_PROP_FEATHER_VH,
   unrollY,
   wireRetract,
@@ -53,10 +68,12 @@ import {
 import {
   seamDecodeFrame,
   seamWall,
+  typeFrame,
 } from "@/app/(marketing)/arcs/trinny-london/proposal/turn/seamDecode";
 
 const ROOT = process.cwd();
 const CARRIER = join(ROOT, "app/(marketing)/arcs/trinny-london/proposal/turn/seamCarrier.ts");
+const HEAD_CARRIER = join(ROOT, "app/(marketing)/arcs/trinny-london/proposal/turn/headCarrier.ts");
 const ROUTE_CSS = join(ROOT, "app/(marketing)/arcs/trinny-london/proposal/trinny-london.css");
 
 /** The chip and plate 1's head, in the shape they measure at 1920×1247. */
@@ -122,32 +139,84 @@ describe("the scene (ADR-102)", () => {
         );
       }
     }
-    // The title opens with the first band; the paragraph after the third plate.
-    expect(SCENE_TITLE[0]).toBeGreaterThanOrEqual(SCENE_CARRY[0][0]);
-    expect(SCENE_TITLE[1]).toBeLessThanOrEqual(SCENE_UNROLL[0][1]);
-    expect(SCENE_INTRO[0]).toBeGreaterThanOrEqual(SCENE_UNROLL[2][1]);
-    expect(SCENE_END).toBeGreaterThanOrEqual(SCENE_INTRO[1]);
+    // The title decodes with the first band; the paragraph after the third plate.
+    expect(SCENE_HEAD_LEAD[0][0]).toBeGreaterThanOrEqual(SCENE_CARRY[0][0]);
+    expect(SCENE_HEAD_LEAD[0][1]).toBeLessThanOrEqual(SCENE_UNROLL[0][1]);
+    expect(SCENE_HEAD_INTRO[0][0]).toBeGreaterThanOrEqual(SCENE_UNROLL[2][1]);
+    /* ── ADR-103: the outcomes ──
+       The plates collapse only once the phases are whole (the paragraph has
+       landed); each band travels only after its own plate has collapsed; the
+       second head decode runs the title over the collapse and the paragraph
+       after the third band has landed; the steps begin after that, and the
+       scene ends after the last step. */
+    for (let i = 0; i < 3; i++) {
+      expect(
+        SCENE_COLLAPSE[i][0],
+        `plate ${i} collapses after the phases are whole`
+      ).toBeGreaterThanOrEqual(SCENE_HEAD_INTRO[0][1]);
+      expect(SCENE_COLLAPSE[i][1]).toBeGreaterThan(SCENE_COLLAPSE[i][0]);
+      expect(
+        SCENE_CARRY[3 + i][0],
+        `band ${i} travels after its plate has collapsed`
+      ).toBeGreaterThanOrEqual(SCENE_COLLAPSE[i][1]);
+      expect(SCENE_CARRY[3 + i][1]).toBeGreaterThan(SCENE_CARRY[3 + i][0]);
+    }
+    // LIFO: the last plate folds first.
+    expect(SCENE_COLLAPSE[2][0]).toBeLessThan(SCENE_COLLAPSE[1][0]);
+    expect(SCENE_COLLAPSE[1][0]).toBeLessThan(SCENE_COLLAPSE[0][0]);
+    expect(SCENE_HEAD_LEAD[1][0]).toBeGreaterThanOrEqual(SCENE_HEAD_INTRO[0][1]);
+    expect(SCENE_HEAD_LEAD[1][1]).toBeLessThanOrEqual(SCENE_CARRY[3][0]);
+    expect(SCENE_HEAD_INTRO[1][0]).toBeGreaterThanOrEqual(SCENE_CARRY[5][1]);
+    expect(SCENE_STEP_START).toBeGreaterThanOrEqual(SCENE_HEAD_INTRO[1][1]);
+    expect(SCENE_STEP_CROSS).toBeLessThan(SCENE_STEP_SPAN);
+    expect(SCENE_STEP_OPEN).toBeLessThan(SCENE_STEP_SPAN - SCENE_STEP_CROSS / 2);
+    expect(SCENE_END).toBeGreaterThanOrEqual(stepBoundary(SCENE_STEPS));
     // The arrival strike leaves above the pin (q ≤ 0.96 is sv = 0), and the
     // deep-reload gate opens with the withdraw.
     expect(scenePast(SCENE_WITHDRAW[0] - 1e-9)).toBe(false);
     expect(scenePast(SCENE_WITHDRAW[0])).toBe(true);
   });
 
-  it("the withdraw closes the board's head and the ledger, and the two openings follow", () => {
+  it("the withdraw closes the ledger, and the head decodes in place on two windows per column", () => {
     expect(propClose(0)).toBe(1);
     expect(propClose(SCENE_WITHDRAW[0])).toBe(1);
     expect(propClose(SCENE_WITHDRAW[1])).toBeCloseTo(0, 12);
     expect(propClose(SCENE_END)).toBeCloseTo(0, 12);
-    expect(titleOpen(SCENE_TITLE[0])).toBe(0);
-    expect(titleOpen(SCENE_TITLE[1])).toBeCloseTo(1, 12);
-    expect(introOpen(SCENE_INTRO[0])).toBe(0);
-    expect(introOpen(SCENE_INTRO[1])).toBeCloseTo(1, 12);
-    // Monotone: closing never re-opens, opening never re-closes.
+    // Monotone: closing never re-opens.
     let prev = 2;
     for (let sv = 0; sv <= SCENE_END; sv += 0.01) {
       const v = propClose(sv);
       expect(v).toBeLessThanOrEqual(prev + 1e-12);
       prev = v;
+    }
+    /* THE HEAD NEVER CLOSES (ADR-103). Each column decodes on two windows —
+       beat 0 → 1, then 1 → 2 — exact at both ends of each, and the state the
+       sheet keys the real heads on runs null → decode → 1 → decode → 2. */
+    for (let k = 0; k < 2; k++) {
+      expect(headLead(k, SCENE_HEAD_LEAD[k][0])).toBe(0);
+      expect(headLead(k, SCENE_HEAD_LEAD[k][1])).toBeCloseTo(1, 12);
+      expect(headIntro(k, SCENE_HEAD_INTRO[k][0])).toBe(0);
+      expect(headIntro(k, SCENE_HEAD_INTRO[k][1])).toBeCloseTo(1, 12);
+    }
+    for (const [col, W] of [
+      ["lead", SCENE_HEAD_LEAD],
+      ["intro", SCENE_HEAD_INTRO],
+    ] as const) {
+      expect(headState(col, 0)).toBeNull();
+      expect(headState(col, W[0][0] - 1e-9)).toBeNull();
+      expect(headState(col, W[0][0])).toBe("decode");
+      expect(headState(col, W[0][1] - 1e-9)).toBe("decode");
+      expect(headState(col, W[0][1])).toBe("1");
+      expect(headState(col, W[1][0] - 1e-9)).toBe("1");
+      expect(headState(col, W[1][0])).toBe("decode");
+      expect(headState(col, W[1][1])).toBe("2");
+      expect(headState(col, SCENE_END)).toBe("2");
+      // The smoke's channel: 0 before, the running window's fraction, 1 after.
+      expect(headFraction(col, 0)).toBe(0);
+      expect(headFraction(col, (W[0][0] + W[0][1]) / 2)).toBeCloseTo(0.5, 12);
+      expect(headFraction(col, W[0][1])).toBe(1);
+      expect(headFraction(col, W[1][0])).toBe(0);
+      expect(headFraction(col, SCENE_END)).toBe(1);
     }
   });
 
@@ -231,11 +300,13 @@ describe("the scene (ADR-102)", () => {
     // Landed: the real band takes over on that frame.
     expect(carrierWindow(0, SCENE_CARRY[0][1] - 1e-9).e).toBeCloseTo(1, 6);
     expect(carrierWindow(0, SCENE_CARRY[0][1]).live).toBe(false);
-    for (const i of [1, 2]) {
+    // …and the three band → row carriers (ADR-103) the same way.
+    for (const i of [1, 2, 3, 4, 5]) {
       expect(carrierWindow(i, SCENE_CARRY[i][0] - 1e-9).live).toBe(false);
       expect(carrierWindow(i, SCENE_CARRY[i][0])).toEqual({ e: 0, live: true });
       expect(carrierWindow(i, SCENE_CARRY[i][1]).live).toBe(false);
     }
+    expect(SCENE_CARRY).toHaveLength(6);
     // The welds: at 0 the box IS `a`, at 1 it IS `b` — exact, never nearly.
     near(lerpRect(CHIP, HEAD, 0), CHIP, 12, "e = 0 is the chip");
     near(lerpRect(CHIP, HEAD, 1), HEAD, 12, "e = 1 is the head");
@@ -244,7 +315,7 @@ describe("the scene (ADR-102)", () => {
     expect(mid.w).toBeCloseTo((CHIP.w + HEAD.w) / 2, 12);
   });
 
-  it("a plate is held until its band lands, unrolls out of it, then rests", () => {
+  it("a plate is held until its band lands, unrolls out of it, rests, collapses, and is taken", () => {
     for (let i = 0; i < 3; i++) {
       expect(plateState(i, 0)).toBe("held");
       expect(plateState(i, SCENE_CARRY[i][1] - 1e-9)).toBe("held");
@@ -259,7 +330,74 @@ describe("the scene (ADR-102)", () => {
         (75 + 620) / 2,
         9
       );
+      /* ADR-103: whole through the phases' dwell, then the clip runs BACK to
+         the band's height over the collapse, the plate stands as a band until
+         its carrier is born, and is held from that frame. */
+      expect(plateState(i, SCENE_COLLAPSE[i][0] - 1e-9)).toBeNull();
+      expect(plateState(i, SCENE_COLLAPSE[i][0])).toBe("unroll");
+      expect(plateState(i, SCENE_CARRY[3 + i][0] - 1e-9)).toBe("unroll");
+      expect(plateState(i, SCENE_CARRY[3 + i][0])).toBe("held");
+      expect(plateState(i, SCENE_END)).toBe("held");
+      expect(unrollY(i, SCENE_COLLAPSE[i][0], 75, 620)).toBeCloseTo(620, 9);
+      expect(unrollY(i, (SCENE_COLLAPSE[i][0] + SCENE_COLLAPSE[i][1]) / 2, 75, 620)).toBeCloseTo(
+        (75 + 620) / 2,
+        9
+      );
+      expect(unrollY(i, SCENE_COLLAPSE[i][1], 75, 620)).toBeCloseTo(75, 9);
+      expect(unrollY(i, SCENE_CARRY[3 + i][0], 75, 620)).toBeCloseTo(75, 9);
+      // The row it becomes is held until that band has landed.
+      expect(rowState(i, 0)).toBe("held");
+      expect(rowState(i, SCENE_CARRY[3 + i][1] - 1e-9)).toBe("held");
+      expect(rowState(i, SCENE_CARRY[3 + i][1])).toBeNull();
     }
+  });
+
+  it("the steps partition the frame, one row open and filled at a time, reversibly", () => {
+    // Before the steps: every row lit, nothing open, no stage shown.
+    for (let i = 0; i < SCENE_STEPS; i++) {
+      expect(rowLit(i, 0)).toBe(1);
+      expect(rowLit(i, SCENE_STEP_START)).toBe(1);
+      expect(stepOpen(i, SCENE_STEP_START)).toBe(0);
+    }
+    expect(stepOf(SCENE_STEP_START - 1e-9)).toEqual({ i: -1, t: 0 });
+    // The shares sum to 1 everywhere, and exactly one is dominant outside a crossover.
+    for (let sv = SCENE_STEP_START; sv <= SCENE_END; sv += 0.005) {
+      let sum = 0;
+      let dominant = 0;
+      for (let i = 0; i < SCENE_STEPS; i++) {
+        const w = stepWeight(i, sv);
+        expect(w).toBeGreaterThanOrEqual(-1e-12);
+        expect(w).toBeLessThanOrEqual(1 + 1e-12);
+        sum += w;
+        if (w > 0.5) dominant++;
+      }
+      expect(sum).toBeCloseTo(1, 9);
+      const inCross = [1, 2].some((j) => Math.abs(sv - stepBoundary(j)) < SCENE_STEP_CROSS / 2);
+      if (!inCross) expect(dominant, `one step dominant at sv ${sv.toFixed(3)}`).toBe(1);
+    }
+    // Step 0 opens over OPEN; rows 1 and 2 dim over the same window.
+    expect(stepOpen(0, SCENE_STEP_START + SCENE_STEP_OPEN)).toBeCloseTo(1, 12);
+    expect(rowLit(1, SCENE_STEP_START + SCENE_STEP_OPEN)).toBeCloseTo(0, 12);
+    expect(rowLit(2, SCENE_STEP_START + SCENE_STEP_OPEN)).toBeCloseTo(0, 12);
+    // The crossover: one closes as the next opens, symmetric at the boundary.
+    const b1 = stepBoundary(1);
+    expect(stepOpen(0, b1)).toBeCloseTo(0.5, 9);
+    expect(stepOpen(1, b1)).toBeCloseTo(0.5, 9);
+    expect(stepOpen(0, b1 + SCENE_STEP_CROSS / 2)).toBeCloseTo(0, 12);
+    expect(stepOpen(1, b1 + SCENE_STEP_CROSS / 2)).toBeCloseTo(1, 12);
+    expect(rowLit(1, b1 + SCENE_STEP_CROSS / 2)).toBeCloseTo(1, 12);
+    expect(rowLit(0, b1 + SCENE_STEP_CROSS / 2)).toBeCloseTo(0, 12);
+    // The last step holds to the end.
+    expect(stepOpen(2, SCENE_END)).toBe(1);
+    expect(rowLit(2, SCENE_END)).toBe(1);
+    expect(stepOf(SCENE_END).i).toBe(SCENE_STEPS - 1);
+    // A stage's own clock: 0 before its step, 1 after, never rewinding.
+    expect(stepProgress(1, b1 - 1e-9)).toBe(0);
+    expect(stepProgress(1, b1)).toBe(0);
+    expect(stepProgress(1, b1 + SCENE_STEP_SPAN / 2)).toBeCloseTo(0.5, 12);
+    expect(stepProgress(1, stepBoundary(2))).toBe(1);
+    expect(stepProgress(1, SCENE_END)).toBe(1);
+    expect(stepProgress(0, SCENE_END)).toBe(1);
   });
 
   it("the ground's feather follows its bottom edge into the frame, in the canvas's own fractions", () => {
@@ -333,6 +471,23 @@ describe("the scene (ADR-102)", () => {
     expect(decodeClock(SCENE_DECODE_END)).toBe(1);
     expect(decodeClock(1)).toBe(1);
     expect(decodeClock((SCENE_DECODE_START + SCENE_DECODE_END) / 2)).toBeCloseTo(0.5, 12);
+    /* The paragraph TYPES (ADR-103): the outgoing line un-typed from its end,
+       the incoming typed from its start — exact at both ends, and a plain
+       prefix of one or the other at every frame between (no caps glyph ever
+       lands in a sentence). */
+    const from = "The teams are trained on Claude.";
+    const to = "The process has many moving parts.";
+    expect(typeFrame(from, to, 0)).toBe(from);
+    expect(typeFrame(from, to, -1)).toBe(from);
+    expect(typeFrame(from, to, 1)).toBe(to);
+    expect(typeFrame(from, to, 2)).toBe(to);
+    for (let u = 0.01; u < 1; u += 0.01) {
+      const s = typeFrame(from, to, u);
+      expect(from.startsWith(s) || to.startsWith(s), `u ${u.toFixed(2)}: "${s}"`).toBe(true);
+    }
+    expect(typeFrame(from, to, 0.2).length).toBeLessThan(from.length);
+    expect(typeFrame(from, to, 0.7).length).toBeLessThan(to.length);
+    expect(to.startsWith(typeFrame(from, to, 0.7))).toBe(true);
   });
 
   it("the carrier lives in the stage and reads no document-space value", () => {
@@ -341,18 +496,27 @@ describe("the scene (ADR-102)", () => {
        travel are stationary in the frame while the stage is pinned, and a
        document-space pose would put the carrier back on the compositor's
        clock. Pinned in the source rather than left to a comment. */
-    const src = readFileSync(CARRIER, "utf8");
-    expect(src).toMatch(/stage\.appendChild\(layer\)/);
-    expect(src).not.toMatch(/document\.body\.appendChild/);
-    expect(src).not.toMatch(/scrollY/);
-    expect(src, "the writer resolves tokens through a probe, never getPropertyValue").not.toMatch(
-      /getPropertyValue\(/
-    );
-    expect(src, "clientWidth, never innerWidth — innerWidth includes the scrollbar").not.toMatch(
-      /window\.innerWidth/
-    );
-    expect(src, "the fold is the CSS property, never the attribute").not.toMatch(
-      /setAttribute\(\s*["']transform["']/
-    );
+    // The head's layer (ADR-103) lives by the same pins.
+    for (const file of [CARRIER, HEAD_CARRIER]) {
+      const src = readFileSync(file, "utf8");
+      expect(src, file).toMatch(/stage\.appendChild\(layer\)/);
+      expect(src, file).not.toMatch(/document\.body\.appendChild/);
+      expect(src, file).not.toMatch(/scrollY/);
+      expect(src, "the writer resolves tokens through a probe, never getPropertyValue").not.toMatch(
+        /getPropertyValue\(/
+      );
+      expect(src, "clientWidth, never innerWidth — innerWidth includes the scrollbar").not.toMatch(
+        /window\.innerWidth/
+      );
+      expect(src, "the fold is the CSS property, never the attribute").not.toMatch(
+        /setAttribute\(\s*["']transform["']/
+      );
+      /* ⚠ AND EVERY DECODE RIDES THE HOLD (ADR-102's trap, twice now: a
+         decode from zero shuffles the line it stands on — the head's first
+         cut had `Trinny` as `HEIIny` on the hand-over frame). */
+      expect(src, "the decode is clocked through decodeClock, never the raw window").toMatch(
+        /decodeClock\(/
+      );
+    }
   });
 });

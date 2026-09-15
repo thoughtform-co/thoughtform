@@ -162,6 +162,35 @@ var(--rail-inset)` so the hero seats on ADR-048's editorial band like
   `clamp(28px, 5.5vh, 72px)` and the smoke measures the FEET against the
   stage. Canonical text: `.claude/rules/trinny-london.md` §The scene; the
   record is ADR-102.
+- ⚠ **ADR-103 (2026-09-15, owner: the eyebrow "disappears" while the title
+  and paragraph "always appear at the same location" — "morph it via a glitch
+  effect"; and a third beat, "what you actually get", NOT the phases
+  restated): THE HEAD DECODES IN PLACE, AND THE PLATES BECOME THE
+  DELIVERABLES.** The head NEVER CLOSES — ADR-102's withdraw keeps only the
+  ledger svg, the four head-column apertures are deleted, and a second layer
+  in the stage (`headCarrier.ts`, the seam's idiom with zero travel) holds one
+  leaf per RENDERED LINE of each head run (a `Range` walked word by word,
+  grouped by line, the half-leading taken off), scrambling the chrome and the
+  title and TYPING the paragraph as ONE typewriter; the real text is hidden
+  per beat by `data-tl-head-lead` / `-intro` on the columns' CHILDREN, never
+  the column. Windows `[[1.34,1.64],[3.34,3.64]]` / `[[2.78,3.02],[4.12,4.36]]`.
+  Then `#outcomes` (`TRINNY_OUTCOMES`, the `steps` kind, the fifth exception)
+  inside the same scene: COLLAPSE 3.24–3.64 (LIFO, `unrollY` back to the
+  band) · STACK carriers 3/4/5 3.68–4.10 (band i → row i; the rows ARE plate
+  heads, one material) · STEPS from 4.40 at `SCENE_STEP_SPAN` 0.5 (the one
+  dial), a 0.16 crossover, the open row filled and the rest ring-only, each
+  stage a centre-out aperture on its own `stepProgress` clock · `SCENE_END`
+  5.98 · runway **605svh**. The first stage is a computer-vision SCAN of the
+  packshot (`ArcScanVisual`: a gold edge sweeping the image over its grey
+  ghost, 1px div leaders to labels on their own bed, the checks the grading
+  gates); stages 2 and 3 are framed fields. Every channel has a FINISHED
+  default (PRM / no-JS read whole). ⚠ Traps: the observer filters BOTH
+  layers; the rows are measured whole then COLLAPSED before the seam reads
+  the landing boxes; the seam guard reads `headCarrier.ts` as text (say
+  "document-space scroll offset", never the literal); two 8px fixes collide
+  over a 200px field (container query); `SCENE_SETTLED` is 5.95 and
+  `SCENE_PHASES_SETTLED` 3.1. Canonical text: `.claude/rules/trinny-london.md`
+  §The head decodes; the record is ADR-103.
 
 ## Verifying
 

@@ -561,7 +561,77 @@ export type ArcSection = ArcSectionBase &
         head: ArcHead;
         states: readonly [BoardState<"today">, BoardState<"configured">];
       }
+    | {
+        /**
+         * THE STEPS (ADR-103): what the client's team GETS, as a stepped
+         * list beside a stage — three rows in the plates' own head-band
+         * material (the open one filled, the others ring-only, ADR-089 U4)
+         * and, for each, one visual on the right. On the Trinny page the
+         * three phase plates collapse to their bands and travel here to
+         * become these rows, and the pinned stage steps through them.
+         *
+         * ⚠ THE FIFTH ENUMERATED EXCEPTION to "new arcs are content-only"
+         * (dossier · configuration · flow · board · steps). Same bar as the
+         * board's: one leaf, NO listener, NO script — every motion channel is
+         * a custom property a route may write, and every default is the
+         * finished state, so the static render, no-JS and reduced motion all
+         * read whole.
+         *
+         * ⚠ THESE ARE DELIVERABLES, NOT THE PHASES RESTATED (owner,
+         * 2026-09-15: "I don't want to copy or create a simulacrum of those
+         * three modules because those are the offerings. This is more about
+         * what you actually get").
+         */
+        kind: "steps";
+        head: ArcHead;
+        items: readonly ArcStepsItem[];
+      }
   );
+
+/** One deliverable on a `steps` beat: a row on the left, a visual on the right. */
+export interface ArcStepsItem {
+  id: string;
+  /** Mono kicker on the row's band, e.g. "01 · The setup". */
+  kicker: string;
+  /** The deliverable's name, on the band under the kicker. ≤ 40 chars: the
+   *  scene's carrier letters it on ONE line while it travels. */
+  name: string;
+  /** One or two short sentences, revealed under the name while the row is open. */
+  body: string;
+  visual: ArcStepsVisual;
+}
+
+/**
+ * The stage's drawing for one deliverable.
+ *
+ * `scan` is the computer-vision read of a generated packshot: a gold edge
+ * sweeps the image and the checks the studio's grading actually gates are
+ * called out as it passes their anchor — a record of a real grading pass,
+ * never a metaphor (ADR-078 U1). `field` is the framed, empty instrument the
+ * other two deliverables hold until their own drawing exists.
+ */
+export type ArcStepsVisual =
+  | {
+      kind: "scan";
+      image: ArcImage & { width: number; height: number };
+      /** The two mono fixes above the field: the subject, and the pass. */
+      fix: readonly [string, string];
+      /** Sorted by `y`, the sweep's own order. `x`/`y` are fractions of the field. */
+      checks: readonly ArcStepsCheck[];
+      /** The foot line, e.g. "Pass · to the studio lead". */
+      verdict: string;
+    }
+  | { kind: "field"; designation: string };
+
+export interface ArcStepsCheck {
+  id: string;
+  /** Mono key, e.g. "Wordmark". ≤ 10 chars. */
+  key: string;
+  /** The reading, e.g. "In place, legible". ≤ 20 chars: one mono line in the label. */
+  reading: string;
+  x: number;
+  y: number;
+}
 
 export type ArcSectionKind = ArcSection["kind"];
 

@@ -1413,6 +1413,92 @@ paragraph _"only after all the cards have been revealed"_.
   is the owner's read; `useJourneyMarks`' LOCAL readout runs 0 → 1 over four
   viewports on this station; dark, as ever on a light-locked route.
 
+## The head decodes, and the plates become the deliverables (ADR-103)
+
+Owner, 2026-09-15: the eyebrow "disappears" between the board and the phases
+while the title and paragraph "always appear at the same location" — "morph
+it via a glitch effect"; and a third beat, "what you actually get" (a creative
+tech setup · a team that runs it themselves · no long-term dependency), NOT
+the phases restated, the three plates collapsing and stacking left into a
+carousel that "you scroll through" with a clean visual per item on the right.
+
+- ⚠ **THE HEAD NEVER CLOSES.** ADR-102's withdraw keeps only the ledger svg;
+  the four head-column apertures and `--tl-ap-title` / `--tl-ap-intro` are
+  DELETED. A second layer in the stage, `.tl-head` (`headCarrier.ts`, the
+  seam's idiom with zero travel), holds one leaf per RENDERED LINE of each
+  head run — found with a `Range` walked word by word and grouped by line —
+  posed on the line's own pixels with the run's computed face INLINE and
+  `white-space: nowrap`. ⚠ A `Range` rect is the content area: the leaf's top
+  takes the half-leading off, or the weld is a line-height off.
+  ⚠ **ON THE COLUMNS' CHILDREN, NEVER THE COLUMN OR `.arc-head`** — the
+  stamps `data-tl-head-lead` / `-intro` (`headState`: null → decode → 1 →
+  decode → 2) hide the TEXT per beat; beat 0's grid and crosses serve all
+  three heads; absent = beat 0's text shown. Windows `SCENE_HEAD_LEAD`
+  `[[1.34,1.64],[3.34,3.64]]`, `SCENE_HEAD_INTRO` `[[2.78,3.02],[4.12,4.36]]`.
+- ⚠ **THE HEAD DECODES ON `decodeClock`, THE SEAM'S OWN HOLD** — the layer
+  paints for the whole window (the real text is hidden for all of it) but its
+  text is beat k's, byte-equal, through the first fifth and beat k + 1's
+  through the last tenth. A decode from zero shuffles the line it stands on:
+  at `e` 0.03 the wall had made `Trinny` into `HEIIny`, and the hand-over
+  frame carried four wrong letters. The weld case reads both ends.
+- ⚠ **REGISTER LAW: chrome and the title SCRAMBLE, the paragraph TYPES**
+  (`typeCounts` + `typedSlice`, ONE typewriter over the run's lines — typing
+  each line in parallel read as three cursors on the still). The caps glyph
+  pool reads as noise through lowercase (`ArcDecodeText`'s ruling).
+- ⚠ **THE MUTATION OBSERVER FILTERS BOTH LAYERS.** The head layer rebuilds
+  its leaves on every measure and writes `textContent` every frame of a
+  decode; unfiltered, that is the microtask-loop hang.
+- ⚠ **THE SEAM GUARD READS `headCarrier.ts` AS TEXT** — a comment saying
+  "no `scrollY`" fails the `/scrollY/` pin. Say "document-space scroll offset".
+- **The `steps` kind** (`ArcSteps`, the fifth exception) renders in the
+  scene as `#outcomes`, absolute over `#phases` like `#phases` is over the
+  board; the rows are `.arc-plate` heads plus a body line — the plates' own
+  material, so the bands BECOME them (ADR-101 §B). Every channel has a
+  finished default: `--tl-row-h` (absent `auto`), `--tl-lit` (absent 1 — the
+  wash and the gold rule open from the centre), `--tl-vis` on a stage (absent
+  1), `--scan-s` on the scan (absent 1). No-JS, PRM and the phone read every
+  row open and filled and the scan complete.
+- **Windows, appended (svh):** COLLAPSE plate 3 3.24–3.48 · 2 3.32–3.56 · 1
+  3.40–3.64 (LIFO, `unrollY` = `ramp(UNROLL) − ramp(COLLAPSE)`, `plateState`
+  `unroll` again then `held` from its carrier's birth) · STACK carriers 3/4/5
+  3.68–3.98 · 3.74–4.04 · 3.80–4.10 (band i → row i; `rowState` held until
+  landing) · STEPS from 4.40 at **`SCENE_STEP_SPAN` 0.5 — the one dial**, a
+  0.16 crossover at each boundary (`stepWeight` sums to 1; `stepOpen` drives
+  the row body AND the stage aperture; `rowLit` keeps every band lit until
+  the stepping starts, or the material jumps at the weld; `stepProgress(i)`
+  is each stage's own clock and never rewinds under a closing aperture) ·
+  `SCENE_END` 5.98 · runway **605svh**.
+  ⚠ **THE ROWS ARE MEASURED WHOLE, THEN COLLAPSED** in `measureScene`
+  (`--tl-row-h` off → read → set to `headH`) BEFORE `measureSeam` reads the
+  landing boxes; the synchronous `writeScene` after `measure()` restores the
+  frame. A row's landing box read with the accordion open is a weld a band's
+  height off.
+- **The scan** (`ArcScanVisual`, stage 1) is CSS on `--tl-step`: a 4:5 field
+  on its own opaque `--arc-plate` bed (the scene sits on the coral wash,
+  which no contrast walk sees), the `--arc-grid` matrix, dashed runs, four
+  registration crosses (the head's own mark; ADR-065: framed and observed,
+  not a device); the packshot twice from one src (ghost under, live clipped
+  to the sweep); a 1px `--gold-line` edge that parks as the verdict's rule;
+  four callouts (7×7 node · 1px div leader · label on its own bed) as the
+  edge passes their anchor — the checks the studio's grading gates,
+  composition left to the human on purpose. Every reveal a travelling or
+  centre-out clip. ⚠ The right fix hides under `@container (max-width:
+520px)` — a 200px field cannot carry two 8px runs.
+- ⚠ **A COVERING BEAT THAT PAINTS NOTHING STILL TAKES EVERY HIT TEST.**
+  `#outcomes` sits over the whole stage from the pin, rows held and stages
+  shut, and the ADR-098 corner probe found it at all four corners of plate
+  1. `#proposition[data-tl-scene]:not([data-tl-step]) #outcomes` is
+     `pointer-events: none` (ADR-101 §A's awaiting-station ruling, one beat
+     later); the walk asserts `none` at the pin and `auto` at step 1.
+- ⚠ **`SCENE_SETTLED` IS 5.95 AND `SCENE_PHASES_SETTLED` IS 3.1** in the
+  smoke — the plates are whole only between 3.02 and 3.24; a case that wants
+  them (the ADR-094 block, the plates' feet) rolls to the latter.
+- **Verifying:** `trinny-seam` (the windows, five plate states, six carriers,
+  the steps' partition, `typeFrame`), `trinny-offer` (the record, the scan's
+  table, no phase restated), the smoke's extended walk (5k–5q, the band → row
+  welds, four head welds against `Range` rects, the outcomes' feet at 4.6
+  and 5.95, reduced motion), capture stops 34–42.
+
 ## The seam: the chip becomes the plates (ADR-101 §B) — RETIRED BY ADR-102
 
 ⚠ **Everything below is the record of ADR-101 §B and is SUPERSEDED on the

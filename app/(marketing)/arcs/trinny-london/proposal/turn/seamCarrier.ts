@@ -34,6 +34,14 @@
  * and this layer sits beside `.arc-root`, not inside it, so none of those
  * tokens resolve here. The probe goes inside the element that OWNS the token
  * and reports the pixel.
+ *
+ * ⚠ SIX CARRIERS SINCE ADR-103. Carriers 3, 4 and 5 run the plates' bands the
+ * other way: once the three plates have rolled back into their bands, each
+ * band travels to the outcomes' ROW of the same index (band 1 widens in
+ * place; 2 and 3 travel left and down) and lands as that row's head — the
+ * same material, the same two spans, the same weld, and its words decoding
+ * from the phase's name to the deliverable's. The plate is HELD from the
+ * frame its carrier is born; the row is HELD until it lands.
  */
 
 import {
@@ -46,7 +54,10 @@ import {
 } from "./turnClock";
 import { seamDecodeFrame, seamWall, type SeamPair } from "./seamDecode";
 
-const CARRIERS = 3;
+/** Chip → band 1 → band 2 → band 3 (ADR-102), then band 1 → row 1, band 2 →
+ *  row 2, band 3 → row 3 (ADR-103). */
+const CARRIERS = 6;
+const PLATES = 3;
 
 interface Pose {
   /** px in the carrier's own box */
@@ -211,14 +222,24 @@ export function measureSeam(
   const phases = root.querySelector<HTMLElement>("#proposition #phases");
   const plates = phases ? [...phases.querySelectorAll<HTMLElement>(".arc-plate")] : [];
   const heads = plates.map((p) => p.querySelector<HTMLElement>(".arc-plate__head"));
+  /* The outcomes' rows (ADR-103): the bands' destinations. ⚠ Measured with
+     every row COLLAPSED to its band — the writer's `measureScene` writes
+     `--tl-row-h` before this runs — so the landing box is the band's, not the
+     open row's. */
+  const outcomes = root.querySelector<HTMLElement>("#proposition #outcomes");
+  const rows = outcomes ? [...outcomes.querySelectorAll<HTMLElement>(".arc-steps__item")] : [];
+  const rowHeads = rows.map((r) => r.querySelector<HTMLElement>(".arc-plate__head"));
   if (
     !board ||
     !svg ||
     !plateEl ||
     !phases ||
+    !outcomes ||
     chipText.length < 2 ||
-    plates.length !== CARRIERS ||
-    heads.some((h) => !h)
+    plates.length !== PLATES ||
+    heads.some((h) => !h) ||
+    rows.length !== PLATES ||
+    rowHeads.some((h) => !h)
   ) {
     return null;
   }
@@ -270,7 +291,10 @@ export function measureSeam(
   };
 
   const carriers: Carrier[] = els.map((el, i) => {
-    const dstHead = heads[i]!;
+    /* 0–2: chip → band 1, band 1 → band 2, band 2 → band 3. 3–5: band i →
+       row i (ADR-103). */
+    const dstHead = i < PLATES ? heads[i]! : rowHeads[i - PLATES]!;
+    const srcHead = i === 0 ? null : i < PLATES ? heads[i - 1]! : heads[i - PLATES]!;
     const to = inStage(dstHead.getBoundingClientRect(), stageBox);
     const dst = spansOf(dstHead);
     const leafEls = [
@@ -278,9 +302,9 @@ export function measureSeam(
       el.querySelector<HTMLElement>(".tl-seam__name")!,
     ];
     /* Carrier 0 starts as the CHIP: its two words are SVG `<text>` on their
-       baseline, so each is converted to a span placed by its box top. The two
-       copies start as the band they peel off, which is HTML already. */
-    const src = i === 0 ? null : spansOf(heads[i - 1]!);
+       baseline, so each is converted to a span placed by its box top. Every
+       other carrier starts as a band, which is HTML already. */
+    const src = srcHead ? spansOf(srcHead) : null;
     const leaves: Leaf[] = leafEls.map((leaf, k) => {
       let a: Pose;
       let fromText: string;
@@ -322,11 +346,11 @@ export function measureSeam(
     return {
       el,
       leaves,
-      from: i === 0 ? null : inStage(heads[i - 1]!.getBoundingClientRect(), stageBox),
+      from: srcHead ? inStage(srcHead.getBoundingClientRect(), stageBox) : null,
       to,
-      chA: i === 0 ? null : chPlate,
+      chA: srcHead ? chPlate : null,
       chB: chPlate,
-      edgeA: i === 0 ? edgeChip : edgePlate,
+      edgeA: srcHead ? edgePlate : edgeChip,
       edgeB: edgePlate,
       wall: seamWall(leaves.map((l) => l.pair)),
     };

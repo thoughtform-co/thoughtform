@@ -20,10 +20,13 @@ import { expect, test, type Page } from "@playwright/test";
 test.describe.configure({ mode: "serial" });
 
 const SETTLE_MS = 700;
-/** Where the scene is whole: past the paragraph's opening (`SCENE_INTRO` ends
- *  at 3.02) and inside the settle before the stage releases (`SCENE_END`
- *  3.18). Mirrors the clock by hand; `trinny-seam` pins the clock itself. */
-const SCENE_SETTLED = 3.1;
+/** Where the PHASES are whole: past the paragraph's first decode
+ *  (`SCENE_HEAD_INTRO[0]` ends at 3.02) and before the collapse opens (3.24).
+ *  Mirrors the clock by hand; `trinny-seam` pins the clock itself. */
+const SCENE_PHASES_SETTLED = 3.1;
+/** Where the whole scene is settled (ADR-103): past the last step (5.90) and
+ *  inside the settle before the stage releases (`SCENE_END` 5.98). */
+const SCENE_SETTLED = 5.95;
 
 /** Roll to `y` in viewport-sized steps, then let the corridor catch up. */
 async function rollTo(page: Page, y: number) {
@@ -1249,10 +1252,11 @@ test.describe("Trinny London pitch variant", () => {
     await expect(page.locator("#proposition .arc-cfg, #proposition [data-cfg-pick]")).toHaveCount(
       0
     );
-    /* ⚠ TWO HEADS IN THE STATION SINCE ADR-102 — the configuration's and the
-       phases', which renders inside the scene's stage over the board. The
-       configuration's is the one this block is about. */
-    await expect(page.locator("#proposition .arc-head")).toHaveCount(2);
+    /* ⚠ THREE HEADS IN THE STATION SINCE ADR-103 — the configuration's, the
+       phases' and the outcomes', the last two rendering inside the scene's
+       stage over the board. The configuration's is the one this block is
+       about. */
+    await expect(page.locator("#proposition .arc-head")).toHaveCount(3);
     await expect(page.locator("#configuration .arc-head")).toHaveCount(1);
     await expect(page.locator("#configuration .arc-head")).toHaveClass(/is-in/);
     /* ⚠ THE CROSS AND NO CORAL RULE (owner: "all sections should have that
@@ -1418,7 +1422,7 @@ test.describe("Trinny London pitch variant", () => {
        bands, and `#offer` opens on the flow. Rolled to the scene's settled
        end, where all three plates are whole; `topOf("phases")` would converge
        on wherever the stage is pinned. */
-    await rollToS(page, SCENE_SETTLED);
+    await rollToS(page, SCENE_PHASES_SETTLED);
     await expect(page.locator("#offer .arc-root")).toHaveCount(1);
     await expect(page.locator("#proposition #phases")).toHaveCount(1);
     expect(
@@ -1778,9 +1782,11 @@ test.describe("Trinny London pitch variant", () => {
 
       const config = await seatOf("configuration");
       const phases = await seatOf("phases");
+      const outcomes = await seatOf("outcomes");
       const pricing = await seatOf("pricing");
       const where = `${vp.width}×${vp.height}`;
       expect(Math.abs(config - phases), `${where}: config vs phases`).toBeLessThanOrEqual(1);
+      expect(Math.abs(config - outcomes), `${where}: config vs outcomes`).toBeLessThanOrEqual(1);
       expect(Math.abs(config - pricing), `${where}: config vs pricing`).toBeLessThanOrEqual(1);
       /* The datum itself, against the rule that makes it (ADR-099 U2): the
          beat's top padding IS the datum (`padding-block-start` overrides
@@ -1970,6 +1976,12 @@ test.describe("Trinny London pitch variant", () => {
   });
 
   test("ADR-101 §A: both beats STRIKE in, seated, and nothing rises", async ({ page }) => {
+    /* ⚠ THE WALK IS THE WHOLE SCENE THERE AND BACK — twenty-six converging
+       rolls over a 605svh station since ADR-103 (5a–5q, the settled end,
+       then 3.1 · 0.55 · 0), each settling 700ms after a stepped scroll. It
+       ran out of the 30s default at the return leg; the budget is stated
+       rather than tripled so a longer runway fails on a number. */
+    test.setTimeout(240_000);
     /* Owner, 2026-09-14: the next section's elements _"don't have to fly in.
        They don't have to have a movement. They need to have a glitch effect
        like we have on our homepage. Let's make sure it only happens when all
@@ -2122,11 +2134,28 @@ test.describe("Trinny London pitch variant", () => {
         const plates = [...ph.querySelectorAll<HTMLElement>(".arc-plate")];
         const layer = stage.querySelector<HTMLElement>(":scope > .tl-seam");
         const carriers = layer ? [...layer.querySelectorAll<HTMLElement>(".tl-seam__carrier")] : [];
+        /* ADR-103: the outcomes' rows and stages, the head's own layer. */
+        const oc = document.getElementById("outcomes")!;
+        const rows = [...oc.querySelectorAll<HTMLElement>(".arc-steps__item")];
+        const stages = [...oc.querySelectorAll<HTMLElement>(".arc-steps__stage")];
+        const headLayer = stage.querySelector<HTMLElement>(":scope > .tl-head");
+        const headLines = headLayer
+          ? [...headLayer.querySelectorAll<HTMLElement>(".tl-head__line")]
+          : [];
+        const textOf = (sel: string) => {
+          const el = prop.querySelector<HTMLElement>(sel);
+          return el ? { vis: cs(el)!.visibility, text: el.textContent ?? "" } : null;
+        };
+        /* Every scrubbed object: the plates' clip, the rows' height, the
+           stages' aperture, the scan's clips, the head layer's lines. */
         const clipped = [
           ...plates,
-          ph.querySelector(".arc-head__lead")!,
-          ph.querySelector(".arc-head__intro")!,
-          prop.querySelector("#configuration .arc-head__lead")!,
+          ...rows,
+          ...stages,
+          ...headLines,
+          ...oc.querySelectorAll<HTMLElement>(
+            ".arc-scan__img--live, .arc-scan__lead, .arc-scan__label, .arc-scan__edge"
+          ),
         ];
         return {
           sv: num(prop.getAttribute("data-tl-scene")),
@@ -2134,12 +2163,70 @@ test.describe("Trinny London pitch variant", () => {
           chip: prop.getAttribute("data-tl-chip"),
           stagePos: cs(stage)!.position,
           stageTop: stage.getBoundingClientRect().top,
+          stageBottom: stage.getBoundingClientRect().bottom,
           phasesPos: cs(ph)!.position,
-          ap: {
-            prop: num(stage.style.getPropertyValue("--tl-ap-prop")),
-            title: num(stage.style.getPropertyValue("--tl-ap-title")),
-            intro: num(stage.style.getPropertyValue("--tl-ap-intro")),
+          outcomesPos: cs(oc)!.position,
+          outcomesPointer: cs(oc)!.pointerEvents,
+          ap: { prop: num(stage.style.getPropertyValue("--tl-ap-prop")) },
+          hd: {
+            lead: num(stage.style.getPropertyValue("--tl-hd-lead")),
+            intro: num(stage.style.getPropertyValue("--tl-hd-intro")),
           },
+          head: {
+            lead: prop.getAttribute("data-tl-head-lead"),
+            intro: prop.getAttribute("data-tl-head-intro"),
+          },
+          titles: {
+            cfg: textOf("#configuration .arc-head__title"),
+            ph: textOf("#phases .arc-head__title"),
+            oc: textOf("#outcomes .arc-head__title"),
+          },
+          copies: {
+            cfg: textOf("#configuration .arc-head__copy"),
+            ph: textOf("#phases .arc-head__copy"),
+            oc: textOf("#outcomes .arc-head__copy"),
+          },
+          headLayerHidden: headLayer ? headLayer.hidden : null,
+          headLines: headLines.filter((l) => !l.hidden).map((l) => l.textContent ?? ""),
+          step: prop.getAttribute("data-tl-step"),
+          rows: rows.map((r) => ({
+            st: r.getAttribute("data-tl-row"),
+            vis: cs(r)!.visibility,
+            h: r.getBoundingClientRect().height,
+            bottom: r.getBoundingClientRect().bottom,
+            lit: num(r.style.getPropertyValue("--tl-lit")),
+            head: rect(r.querySelector(".arc-plate__head")),
+            headH: (r.querySelector(".arc-plate__head") as HTMLElement).offsetHeight,
+            name: r.querySelector(".arc-plate__name")?.textContent ?? "",
+          })),
+          stages: stages.map((s) => ({
+            vis: num(s.style.getPropertyValue("--tl-vis")),
+            step: num(s.style.getPropertyValue("--tl-step")),
+            pos: cs(s)!.position,
+            bottom: s.getBoundingClientRect().bottom,
+          })),
+          scan: (() => {
+            const f = oc.querySelector<HTMLElement>(".arc-scan");
+            if (!f) return null;
+            const live = f.querySelector<HTMLElement>(".arc-scan__img--live")!;
+            const edge = f.querySelector<HTMLElement>(".arc-scan__edge")!;
+            const field = f.querySelector<HTMLElement>(".arc-scan__field")!;
+            return {
+              liveClip: cs(live)!.clipPath,
+              edgeBottom: edge.getBoundingClientRect().bottom,
+              fieldBottom: field.getBoundingClientRect().bottom,
+              labels: [...f.querySelectorAll<HTMLElement>(".arc-scan__label")].map(
+                (l) => cs(l)!.clipPath
+              ),
+              leads: [...f.querySelectorAll<HTMLElement>(".arc-scan__lead")].map((l) => ({
+                tag: l.tagName,
+                h: l.offsetHeight,
+                w: l.offsetWidth,
+              })),
+              svgs: f.querySelectorAll("svg").length,
+              ghostOp: cs(f.querySelector(".arc-scan__img--ghost"))!.opacity,
+            };
+          })(),
           cardVis: cs(
             prop.querySelector('[data-board-state="configured"] [data-board-role="card"]')
           )!.visibility,
@@ -2196,8 +2283,32 @@ test.describe("Trinny London pitch variant", () => {
     expect(pinned.chip).toBeNull();
     expect(pinned.cardVis).toBe("visible");
     expect(pinned.ap.prop).toBe(1);
-    expect(pinned.ap.title).toBe(0);
-    expect(pinned.ap.intro).toBe(0);
+    /* ADR-103: the head STANDS. Beat 0's text paints, the other beats' is
+       hidden, no window has opened, the head layer is away. */
+    expect(pinned.hd.lead).toBe(0);
+    expect(pinned.hd.intro).toBe(0);
+    expect(pinned.head.lead).toBeNull();
+    expect(pinned.head.intro).toBeNull();
+    expect(pinned.titles.cfg!.vis, "the board's title stands at the pin").toBe("visible");
+    expect(pinned.titles.ph!.vis).toBe("hidden");
+    expect(pinned.titles.oc!.vis).toBe("hidden");
+    expect(pinned.copies.cfg!.vis).toBe("visible");
+    expect(pinned.copies.ph!.vis).toBe("hidden");
+    expect(pinned.headLayerHidden, "the head layer is in the stage and away").toBe(true);
+    expect(pinned.outcomesPos, "the outcomes are seated over the board too").toBe("absolute");
+    /* ⚠ AND INERT: a beat laid over the stage that paints nothing still takes
+       every hit test, so until the reader is stepping through it the beat is
+       a transparent sheet (ADR-101 §A's awaiting-station ruling, one beat
+       later). The ADR-094 corner probe on plate 1 is what found it. */
+    expect(pinned.outcomesPointer, "a covering beat is pointer-inert").toBe("none");
+    for (const r of pinned.rows) {
+      expect(r.st).toBe("held");
+      expect(r.vis).toBe("hidden");
+      expect(r.lit, "every row lands lit").toBe(1);
+      near(r.h, r.headH, 1, "a row rests as its band");
+    }
+    for (const s of pinned.stages) expect(s.vis, "no stage shown before the steps").toBe(0);
+    expect(pinned.step).toBeNull();
     for (const r of pinned.roles) {
       expect(r.tr, `${r.role} is at identity during the dwell`).toMatch(IDENTITY);
       expect(r.op, `${r.role} is lit during the dwell`).toBe(1);
@@ -2212,13 +2323,16 @@ test.describe("Trinny London pitch variant", () => {
       expect(t, "no transition on a scrubbed property").toBe("0s");
     expect(pinned.running, "nothing runs during the dwell").toBe(0);
 
-    // 5b — the withdraw: the board's head and the ledger closing, the strike's
-    // replay gate latched.
+    // 5b — the withdraw: the ledger closing, the strike's replay gate latched
+    // — and the head NOT closing with it (ADR-103).
     await rollToS(page, 0.55);
     const withdrawing = await scene();
     expect(withdrawing.past, "the scene-past latch is set").toBe(true);
     expect(withdrawing.ap.prop).toBeGreaterThan(0.3);
     expect(withdrawing.ap.prop).toBeLessThan(0.7);
+    expect(withdrawing.titles.cfg!.vis, "the head stands through the withdraw").toBe("visible");
+    expect(withdrawing.copies.cfg!.vis).toBe("visible");
+    expect(withdrawing.head.lead).toBeNull();
 
     // 5c — the fold, in order: the reach is gone, the seat has barely begun.
     await rollToS(page, 0.85);
@@ -2266,7 +2380,8 @@ test.describe("Trinny London pitch variant", () => {
     expect(sliding.plates[0].headVis, "plate 1's band is hidden under the carrier").toBe("hidden");
 
     // 5f — plate 1 lands: the carrier hands over to the real band, and the plate
-    // unrolls out of it; the title is opening.
+    // unrolls out of it; the title is DECODING in place (ADR-103): every
+    // beat's title hidden, the head layer's lines painting mid-shuffle.
     await rollToS(page, 1.5);
     const landed = await scene();
     expect(landed.carriers[0].hidden, "carrier 0 has handed over").toBe(true);
@@ -2275,13 +2390,29 @@ test.describe("Trinny London pitch variant", () => {
     expect(landed.plates[0].headVis).toBe("visible");
     near(landed.plates[0].y, landed.plates[0].headH, 1, "the clip starts at the band's height");
     expect(landed.plates[0].clip).toMatch(/polygon/);
-    expect(landed.ap.title).toBeGreaterThan(0.3);
-    expect(landed.ap.title).toBeLessThan(0.8);
+    expect(landed.hd.lead).toBeGreaterThan(0.3);
+    expect(landed.hd.lead).toBeLessThan(0.8);
+    expect(landed.head.lead).toBe("decode");
+    expect(landed.head.intro, "the paragraph is not yet on its window").toBeNull();
+    expect(landed.titles.cfg!.vis).toBe("hidden");
+    expect(landed.titles.ph!.vis).toBe("hidden");
+    expect(landed.titles.oc!.vis).toBe("hidden");
+    expect(landed.headLayerHidden).toBe(false);
+    expect(landed.headLines.length, "the eyebrow, two title lines and the stamp").toBe(4);
+    /* The title's first line mid-decode: neither the board's nor the phases'. */
+    expect(landed.headLines[1]).not.toBe("The studio today, and");
+    expect(landed.headLines[1]).not.toBe("A modular approach");
+    expect(landed.copies.cfg!.vis, "the board's paragraph still stands").toBe("visible");
     expect(landed.plates[1].st).toBe("held");
 
-    // 5g — the copy: born ON plate 1's band with its words, then travelling.
+    // 5g — the copy: born ON plate 1's band with its words, then travelling;
+    // and the title has handed over to the phases' real text.
     await rollToS(page, 1.65);
     const born = await scene();
+    expect(born.head.lead).toBe("1");
+    expect(born.titles.ph!.vis, "the phases' title shows once the decode lands").toBe("visible");
+    expect(born.titles.cfg!.vis).toBe("hidden");
+    expect(born.headLayerHidden, "the head layer hands over").toBe(true);
     expect(born.plates[0].y).toBeGreaterThan(born.plates[0].headH + 20);
     const c1 = born.carriers[1];
     expect(c1.hidden).toBe(false);
@@ -2315,18 +2446,45 @@ test.describe("Trinny London pitch variant", () => {
     await rollToS(page, 2.6);
     expect((await scene()).plates[2].st).toBe("unroll");
 
-    // 5i — the paragraph, last; then everything whole and still.
+    // 5i — the paragraph, last: TYPING in place (ADR-103), every beat's copy
+    // hidden and one typewriter over the run; then the phases whole and still.
     await rollToS(page, 2.9);
     const opening = await scene();
-    expect(opening.ap.intro).toBeGreaterThan(0.3);
-    expect(opening.ap.intro).toBeLessThan(0.8);
+    expect(opening.hd.intro).toBeGreaterThan(0.3);
+    expect(opening.hd.intro).toBeLessThan(0.8);
+    expect(opening.head.intro).toBe("decode");
+    expect(opening.copies.cfg!.vis).toBe("hidden");
+    expect(opening.copies.ph!.vis).toBe("hidden");
+    /* A typed run is a PREFIX of one paragraph or the other on every frame —
+       never a caps glyph in a sentence — and one typewriter: at most one line
+       is partial, every line before it whole, every line after it empty. */
+    {
+      const lines = opening.headLines.slice(1, -1);
+      const joined = lines.join(" ").trim();
+      const cfg = opening.copies.cfg!.text;
+      const phs = opening.copies.ph!.text;
+      expect(
+        cfg.startsWith(joined) || phs.startsWith(joined),
+        `a prefix of one paragraph: "${joined}"`
+      ).toBe(true);
+      let sawEmpty = false;
+      for (const l of lines) {
+        if (l === "") sawEmpty = true;
+        else expect(sawEmpty, "no text after an empty line — one typewriter").toBe(false);
+      }
+    }
     for (const p of opening.plates) expect(p.st).toBeNull();
-    await rollToS(page, SCENE_SETTLED);
+    await rollToS(page, SCENE_PHASES_SETTLED);
     const settledScene = await scene();
-    expect(settledScene.ap.title).toBe(1);
-    expect(settledScene.ap.intro).toBe(1);
+    expect(settledScene.hd.lead).toBe(1);
+    expect(settledScene.hd.intro).toBe(1);
+    expect(settledScene.head.lead).toBe("1");
+    expect(settledScene.head.intro).toBe("1");
+    expect(settledScene.titles.ph!.vis).toBe("visible");
+    expect(settledScene.copies.ph!.vis).toBe("visible");
     expect(settledScene.layerHidden).toBe(true);
-    expect(settledScene.running, "nothing runs at the settled end").toBe(0);
+    expect(settledScene.headLayerHidden).toBe(true);
+    expect(settledScene.running, "nothing runs with the phases whole").toBe(0);
     for (const p of settledScene.plates) {
       expect(p.st).toBeNull();
       expect(p.vis).toBe("visible");
@@ -2334,15 +2492,150 @@ test.describe("Trinny London pitch variant", () => {
       expect(p.clip).toBe(settledScene.plates[0].clip);
       expect(p.head!.w).toBeGreaterThan(200);
     }
-    near(settledScene.stageTop, 0, 1, "still pinned at the settled end");
+    near(settledScene.stageTop, 0, 1, "still pinned with the phases whole");
+
+    /* ── ADR-103: the outcomes ──
+       The plates collapse to their bands (the title decoding over it), the
+       bands travel to the rows, the paragraph types, then the steps. */
+    // 5k — the collapse: every plate rolling back toward its band, the title
+    // decoding again, the rows still held.
+    await rollToS(page, 3.45);
+    const collapsing = await scene();
+    for (const p of collapsing.plates) {
+      expect(p.st, "a collapsing plate is on the unroll clip").toBe("unroll");
+      expect(p.y).toBeGreaterThan(p.headH + 1);
+    }
+    expect(collapsing.head.lead).toBe("decode");
+    expect(collapsing.titles.ph!.vis).toBe("hidden");
+    expect(collapsing.titles.oc!.vis).toBe("hidden");
+    expect(collapsing.copies.ph!.vis, "the phases' paragraph still stands").toBe("visible");
+    for (const r of collapsing.rows) expect(r.st).toBe("held");
+
+    // 5l — the bands: every plate down to its band's height, the outcomes'
+    // title landed, the rows still held.
+    await rollToS(page, 3.66);
+    const banded = await scene();
+    for (const p of banded.plates) near(p.y, p.headH, 1, "a plate collapsed to its band");
+    expect(banded.head.lead).toBe("2");
+    expect(banded.titles.oc!.vis).toBe("visible");
+    expect(banded.titles.ph!.vis).toBe("hidden");
+    for (const r of banded.rows) expect(r.st).toBe("held");
+
+    // 5m — the stack: three carriers live, every plate held, every row held.
+    await rollToS(page, 3.9);
+    const stacking = await scene();
+    expect(stacking.carriers.filter((c) => !c.hidden).length, "three bands in flight").toBe(3);
+    expect(stacking.carriers[3].hidden).toBe(false);
+    expect(stacking.carriers[4].hidden).toBe(false);
+    expect(stacking.carriers[5].hidden).toBe(false);
+    for (const p of stacking.plates) expect(p.st).toBe("held");
+    for (const r of stacking.rows) expect(r.st).toBe("held");
+
+    // 5n — stacked: the rows shown, every one lit, the paragraph typing.
+    await rollToS(page, 4.25);
+    const stacked = await scene();
+    expect(stacked.layerHidden, "the carriers have handed over").toBe(true);
+    for (const r of stacked.rows) {
+      expect(r.st).toBeNull();
+      expect(r.vis).toBe("visible");
+      expect(r.lit, "the bands land lit").toBe(1);
+      near(r.h, r.headH, 1, "a row is its band until the steps");
+    }
+    expect(stacked.rows[0].name).toBe("A creative tech setup");
+    expect(stacked.head.intro).toBe("decode");
+    expect(stacked.step).toBeNull();
+    for (const s of stacked.stages) expect(s.vis).toBe(0);
+
+    // 5o — step 1: row 1 open and filled, rows 2 and 3 closed and outlined,
+    // stage 1 open with the scan sweeping.
+    await rollToS(page, 4.6);
+    const stepOne = await scene();
+    expect(stepOne.step).toBe("0");
+    expect(stepOne.outcomesPointer, "the beat being read takes the pointer").toBe("auto");
+    expect(stepOne.head.intro).toBe("2");
+    expect(stepOne.copies.oc!.vis).toBe("visible");
+    expect(stepOne.rows[0].h).toBeGreaterThan(stepOne.rows[0].headH + 20);
+    expect(stepOne.rows[0].lit).toBe(1);
+    near(stepOne.rows[1].h, stepOne.rows[1].headH, 1, "row 2 is closed");
+    expect(stepOne.rows[1].lit).toBe(0);
+    expect(stepOne.rows[2].lit).toBe(0);
+    expect(stepOne.stages[0].vis).toBe(1);
+    expect(stepOne.stages[1].vis).toBe(0);
+    expect(stepOne.stages[0].step).toBeGreaterThan(0.2);
+    expect(stepOne.stages[0].step).toBeLessThan(0.6);
+    expect(stepOne.scan, "the scan is stage 1").not.toBeNull();
+    expect(stepOne.scan!.liveClip, "the image is clipped to the sweep").not.toBe("none");
+    expect(stepOne.scan!.edgeBottom, "the edge is inside the field").toBeLessThan(
+      stepOne.scan!.fieldBottom - 4
+    );
+    expect(stepOne.scan!.svgs, "the scan draws no svg").toBe(0);
+    for (const l of stepOne.scan!.leads) {
+      expect(l.tag).toBe("I");
+      expect(l.h, "a leader is a 1px div").toBe(1);
+      expect(l.w).toBeGreaterThan(0);
+    }
+    for (const r of stepOne.rows) expect(r.bottom).toBeLessThanOrEqual(stepOne.stageBottom + 0.5);
+    for (const s of stepOne.stages) expect(s.bottom).toBeLessThanOrEqual(stepOne.stageBottom + 0.5);
+
+    // 5p — the crossover: one row closing as the next opens, both apertures
+    // crossing, the shares summing to one.
+    await rollToS(page, 4.9);
+    const crossing = await scene();
+    expect(crossing.stages[0].vis + crossing.stages[1].vis).toBeCloseTo(1, 1);
+    expect(crossing.stages[0].vis).toBeGreaterThan(0.3);
+    expect(crossing.stages[0].vis).toBeLessThan(0.7);
+    expect(crossing.rows[0].lit).toBeGreaterThan(0.3);
+    expect(crossing.rows[1].lit).toBeGreaterThan(0.3);
+    expect(crossing.stages[0].step, "stage 1's own clock holds at its end").toBe(1);
+
+    // 5q — step 3, then settled: row 3 open, the last stage whole, the scan
+    // finished, nothing running.
+    await rollToS(page, 5.65);
+    const stepThree = await scene();
+    expect(stepThree.step).toBe("2");
+    expect(stepThree.rows[2].h).toBeGreaterThan(stepThree.rows[2].headH + 20);
+    expect(stepThree.rows[2].lit).toBe(1);
+    expect(stepThree.rows[0].lit).toBe(0);
+    expect(stepThree.stages[2].vis).toBe(1);
+    expect(stepThree.stages[0].vis).toBe(0);
+    await rollToS(page, SCENE_SETTLED);
+    const settledAll = await scene();
+    expect(settledAll.step).toBe("2");
+    expect(settledAll.stages[0].step, "the scan finished on its own clock").toBe(1);
+    expect(settledAll.scan!.liveClip).toMatch(/^inset\(0(px|%)?\s+0(px|%)?\s+0(%|px)\)?/);
+    near(
+      settledAll.scan!.edgeBottom,
+      settledAll.scan!.fieldBottom,
+      1.5,
+      "the edge parks on the foot"
+    );
+    for (const clip of settledAll.scan!.labels)
+      expect(clip, "every label open at the end").toMatch(
+        /^inset\(0(px|%)?\s+0(%|px)\s+0(px|%)?\s+0(px|%)?\)$/
+      );
+    expect(settledAll.scan!.ghostOp, "the ghost never changes").toBe(stepOne.scan!.ghostOp);
+    expect(settledAll.running, "nothing runs at the settled end").toBe(0);
+    for (const t of settledAll.transitions)
+      expect(t, "no transition on a scrubbed property").toBe("0s");
+    near(settledAll.stageTop, 0, 1, "still pinned at the settled end");
+    for (const r of settledAll.rows)
+      expect(r.bottom).toBeLessThanOrEqual(settledAll.stageBottom + 0.5);
 
     // 5j — and BACK: the same frames in reverse, and no replayed strike.
+    await rollToS(page, SCENE_PHASES_SETTLED);
+    const backPhases = await scene();
+    for (const p of backPhases.plates) expect(p.st, "the plates are whole again").toBeNull();
+    for (const r of backPhases.rows) expect(r.st, "the rows are held again").toBe("held");
+    expect(backPhases.head.lead).toBe("1");
+    expect(backPhases.titles.ph!.vis).toBe("visible");
     await rollToS(page, 0.55);
     const backMid = await scene();
     expect(backMid.chip).toBeNull();
     expect(backMid.cardVis).toBe("visible");
     for (const p of backMid.plates) expect(p.st).toBe("held");
     expect(backMid.past, "the replay gate stays latched inside the scene").toBe(true);
+    expect(backMid.head.lead).toBeNull();
+    expect(backMid.titles.cfg!.vis, "the board's title is back").toBe("visible");
     await rollToS(page, 0);
     const backRest = await scene();
     expect(backRest.ap.prop).toBe(1);
@@ -2473,11 +2766,136 @@ test.describe("Trinny London pitch variant", () => {
     weld(c2.carriers[2].box!, c2.heads[2].box!, "the second copy lands on plate 3's band");
     expect(c2.carriers[2].kicker).toBe("M3 · about three weeks");
 
-    // 4 — settled: the layer is away and every real band paints.
-    await rollToS(page, SCENE_SETTLED);
+    // 4 — the phases whole: the layer is away and every real band paints.
+    await rollToS(page, SCENE_PHASES_SETTLED);
     const done = await read();
     expect(done.layerHidden, "the layer hands over").toBe(true);
     for (const h of done.heads) expect(h.vis, "the real bands paint").toBe("visible");
+
+    /* 4b — ADR-103: the bands become the rows. Each carrier is born ON the
+       collapsed plate's band and lands ON its row's head, words landed. */
+    const rowHeads = () =>
+      page.evaluate(() =>
+        [
+          ...document.querySelectorAll<HTMLElement>("#outcomes .arc-steps__item .arc-plate__head"),
+        ].map((h) => {
+          const r = h.getBoundingClientRect();
+          return {
+            box: { x: r.x, y: r.y, w: r.width, h: r.height },
+            vis: getComputedStyle(h).visibility,
+          };
+        })
+      );
+    for (const [i, birth, landing, kicker] of [
+      [3, 3.69, 3.978, "01 · The setup"],
+      [4, 3.75, 4.038, "02 · The team"],
+      [5, 3.81, 4.098, "03 · The system"],
+    ] as const) {
+      await rollToS(page, birth);
+      const bornBand = await read();
+      expect(bornBand.carriers[i].hidden).toBe(false);
+      weld(
+        bornBand.carriers[i].box!,
+        bornBand.heads[i - 3].box!,
+        `carrier ${i} is born on band ${i - 3}`
+      );
+      await rollToS(page, landing);
+      const landedRow = await read();
+      const rows = await rowHeads();
+      weld(landedRow.carriers[i].box!, rows[i - 3].box, `carrier ${i} lands on row ${i - 3}`);
+      expect(landedRow.carriers[i].kicker, "the words landed before the box").toBe(kicker);
+    }
+    await rollToS(page, 4.25);
+    for (const r of await rowHeads()) expect(r.vis, "every row paints once landed").toBe("visible");
+
+    /* 4c — the head welds (ADR-103): on the frame a window opens the layer's
+       lines sit on beat k's own pixels with beat k's text; on the frame it
+       closes, on beat k + 1's with its text. ⚠ A `Range` rect is the glyph
+       content area; the leaf is a line box, so the half-leading is what
+       separates the two tops — the same correction the carrier applies. */
+    const headWeld = async (
+      col: "lead" | "intro",
+      beat: string,
+      want: (line: string) => boolean
+    ) => {
+      const w = await page.evaluate(
+        ({ col, beat }) => {
+          const stage = document.querySelector<HTMLElement>("#proposition [data-tl-config-root]")!;
+          const layer = stage.querySelector<HTMLElement>(":scope > .tl-head")!;
+          const lines = [...layer.querySelectorAll<HTMLElement>(".tl-head__line")].filter(
+            (l) => !l.hidden
+          );
+          const head = document.querySelector<HTMLElement>(`${beat} .arc-head`)!;
+          const colEl = head.querySelector<HTMLElement>(
+            col === "lead" ? ":scope > .arc-head__lead" : ":scope > .arc-head__intro"
+          )!;
+          const run = colEl.querySelector<HTMLElement>(
+            col === "lead" ? ":scope > .arc-head__title" : ":scope > .arc-head__copy"
+          )!;
+          const node = [...run.childNodes].find(
+            (n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim()
+          ) as Text;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          const first = range.getClientRects()[0];
+          /* The leaf whose text the run's first line starts with. */
+          const leaf =
+            lines.find(
+              (l) =>
+                (node.textContent ?? "").trim().startsWith(l.textContent ?? "x") &&
+                (l.textContent ?? "").length > 0
+            ) ?? null;
+          if (!leaf || !first)
+            return { found: false as const, text: lines.map((l) => l.textContent) };
+          const lr = leaf.getBoundingClientRect();
+          return {
+            found: true as const,
+            text: leaf.textContent ?? "",
+            dx: lr.left - first.left,
+            dy: lr.top + (lr.height - first.height) / 2 - first.top,
+          };
+        },
+        { col, beat }
+      );
+      expect(
+        w.found,
+        `${beat} ${col}: a leaf on the run's first line (${JSON.stringify(w.text)})`
+      ).toBe(true);
+      if (!w.found) return;
+      expect(want(w.text), `${beat} ${col}: the leaf reads the beat's own line ("${w.text}")`).toBe(
+        true
+      );
+      expect(Math.abs(w.dx), `${beat} ${col}: the leaf sits on the line (x)`).toBeLessThanOrEqual(
+        0.5
+      );
+      expect(Math.abs(w.dy), `${beat} ${col}: the leaf sits on the line (y)`).toBeLessThanOrEqual(
+        0.5
+      );
+    };
+    await rollToS(page, 1.35);
+    await headWeld("lead", "#configuration", (t) => "The studio today, and".startsWith(t));
+    await rollToS(page, 1.638);
+    await headWeld("lead", "#phases", (t) => "A modular approach".startsWith(t));
+    await rollToS(page, 2.79);
+    await headWeld(
+      "intro",
+      "#configuration",
+      (t) =>
+        t.length > 0 &&
+        "The teams are trained on Claude, but nobody owns AI as their day job and the studio still works by hand.".startsWith(
+          t
+        )
+    );
+    await rollToS(page, 3.018);
+    await headWeld(
+      "intro",
+      "#phases",
+      (t) =>
+        t.length > 0 &&
+        "The process from briefing to final delivery has many moving parts, so the work is built in modules".startsWith(
+          t
+        )
+    );
 
     // 5 — the wheel: nothing the carrier is welded to moves while it travels.
     // Six 40px steps from 1.20 stay inside the slide (1.14–1.50) at 1247h:
@@ -2583,13 +3001,14 @@ test.describe("Trinny London pitch variant", () => {
       await page.goto("/arcs/trinny-london/proposal", { waitUntil: "domcontentloaded" });
       await page.waitForSelector(".home-v2-stage");
       await page.waitForTimeout(SETTLE_MS);
-      await rollToS(page, SCENE_SETTLED);
+      await rollToS(page, SCENE_PHASES_SETTLED);
       const read = await page.evaluate(() => {
         const stage = document.querySelector<HTMLElement>("#proposition [data-tl-config-root]")!;
         const plates = [...document.querySelectorAll<HTMLElement>("#phases .arc-plate")];
         const heads = [
           document.querySelector<HTMLElement>("#configuration .arc-head")!,
           document.querySelector<HTMLElement>("#phases .arc-head")!,
+          document.querySelector<HTMLElement>("#outcomes .arc-head")!,
         ];
         return {
           sv: document.getElementById("proposition")!.getAttribute("data-tl-scene"),
@@ -2599,13 +3018,57 @@ test.describe("Trinny London pitch variant", () => {
         };
       });
       const where = `${vp.width}×${vp.height}`;
-      expect(read.sv, `${where}: settled`).toBe(SCENE_SETTLED.toFixed(2));
+      /* ⚠ `rollToS` converges to within 0.01 of the clock, and the stamp is
+         the clock to two places — so 3.0949 stamps "3.09" against a "3.10"
+         string, and it did at 1440×800. Compare the number, at the roll's
+         own tolerance. */
+      expect(
+        Math.abs(Number(read.sv) - SCENE_PHASES_SETTLED),
+        `${where}: the phases whole (sv ${read.sv})`
+      ).toBeLessThanOrEqual(0.011);
       expect(read.feet, `${where}: three plates`).toHaveLength(3);
       for (const foot of read.feet)
         expect(foot, `${where}: a plate's foot inside the stage`).toBeLessThanOrEqual(
           read.stageBottom + 0.5
         );
-      expect(read.gaps[0], `${where}: the two heads share one margin`).toBe(read.gaps[1]);
+      expect(read.gaps[0], `${where}: the three heads share one margin`).toBe(read.gaps[1]);
+      expect(read.gaps[0], `${where}: the three heads share one margin`).toBe(read.gaps[2]);
+      /* ADR-103: the outcomes' CONTENT — the rows (one open) and the stages
+         — against the stage, on a step and at the settled end. */
+      for (const sv of [4.6, SCENE_SETTLED]) {
+        await rollToS(page, sv);
+        const oc = await page.evaluate(() => {
+          const stage = document.querySelector<HTMLElement>("#proposition [data-tl-config-root]")!;
+          const els = [
+            ...document.querySelectorAll<HTMLElement>(
+              "#outcomes .arc-steps__item, #outcomes .arc-steps__stages, #outcomes .arc-scan__verdict"
+            ),
+          ];
+          return {
+            sv: document.getElementById("proposition")!.getAttribute("data-tl-scene"),
+            stageBottom: stage.getBoundingClientRect().bottom,
+            feet: els.map((el) => el.getBoundingClientRect().bottom),
+            openRows: [
+              ...document.querySelectorAll<HTMLElement>("#outcomes .arc-steps__item"),
+            ].filter(
+              (r) =>
+                r.getBoundingClientRect().height >
+                (r.querySelector(".arc-plate__head") as HTMLElement).offsetHeight + 10
+            ).length,
+          };
+        });
+        expect(
+          Math.abs(Number(oc.sv) - sv),
+          `${where}: at ${sv} (sv ${oc.sv})`
+        ).toBeLessThanOrEqual(0.011);
+        expect(oc.openRows, `${where}: one row open at ${sv}`).toBe(1);
+        expect(oc.feet.length).toBeGreaterThanOrEqual(4);
+        for (const foot of oc.feet)
+          expect(
+            foot,
+            `${where}: the outcomes' feet inside the stage at ${sv}`
+          ).toBeLessThanOrEqual(oc.stageBottom + 0.5);
+      }
     }
   });
 
@@ -2637,18 +3100,42 @@ test.describe("Trinny London pitch variant", () => {
       const head = prop.querySelector(".arc-head") as HTMLElement;
       const svgs = [...prop.querySelectorAll(".arc-board__svg")];
       const ph = document.getElementById("phases");
+      const oc = document.getElementById("outcomes");
       return {
         arrive: prop.getAttribute("data-tl-prop-arrive"),
         scene: prop.getAttribute("data-tl-scene"),
         chip: prop.getAttribute("data-tl-chip"),
+        headLead: prop.getAttribute("data-tl-head-lead"),
+        step: prop.getAttribute("data-tl-step"),
         stagePos: getComputedStyle(prop.querySelector("[data-tl-config-root]")!).position,
         phasesPos: ph ? getComputedStyle(ph).position : null,
+        outcomesPos: oc ? getComputedStyle(oc).position : null,
         plates: ph
           ? [...ph.querySelectorAll(".arc-plate")].map((p) => ({
               st: p.getAttribute("data-tl-plate"),
               vis: getComputedStyle(p).visibility,
             }))
           : [],
+        /* ADR-103: the rows stand open and lit, the stages flow, the scan is
+           finished, and every beat's head text paints. */
+        rows: oc
+          ? [...oc.querySelectorAll<HTMLElement>(".arc-steps__item")].map((r) => ({
+              st: r.getAttribute("data-tl-row"),
+              vis: getComputedStyle(r).visibility,
+              open:
+                r.getBoundingClientRect().height >
+                (r.querySelector(".arc-plate__head") as HTMLElement).offsetHeight + 10,
+            }))
+          : [],
+        stages: oc
+          ? [...oc.querySelectorAll<HTMLElement>(".arc-steps__stage")].map(
+              (s) => getComputedStyle(s).position
+            )
+          : [],
+        scanClip: oc ? getComputedStyle(oc.querySelector(".arc-scan__img--live")!).clipPath : null,
+        headTexts: ["#configuration", "#phases", "#outcomes"].map(
+          (id) => getComputedStyle(document.querySelector(`${id} .arc-head__title`)!).visibility
+        ),
         head: {
           vis: getComputedStyle(head).visibility,
           op: getComputedStyle(head).opacity,
@@ -2675,6 +3162,20 @@ test.describe("Trinny London pitch variant", () => {
       expect(p.st).toBeNull();
       expect(p.vis).toBe("visible");
     }
+    expect(read.headLead).toBeNull();
+    expect(read.step).toBeNull();
+    expect(read.outcomesPos, "the outcomes flow under the phases").not.toBe("absolute");
+    expect(read.rows.length).toBe(3);
+    for (const r of read.rows) {
+      expect(r.st).toBeNull();
+      expect(r.vis).toBe("visible");
+      expect(r.open, "every row stands open").toBe(true);
+    }
+    for (const pos of read.stages) expect(pos, "the stages flow").not.toBe("absolute");
+    expect(read.scanClip, "the scan is finished").toMatch(
+      /^inset\(0(px|%)?\s+0(px|%)?\s+0(%|px)\)?/
+    );
+    for (const vis of read.headTexts) expect(vis, "every head's text paints").toBe("visible");
     expect(read.head.vis).toBe("visible");
     expect(read.head.op).toBe("1");
     expect(read.head.w).toBeGreaterThan(400);

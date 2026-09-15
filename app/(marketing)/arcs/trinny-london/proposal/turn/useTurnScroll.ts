@@ -70,16 +70,21 @@ import {
   ctaOutOf,
   feather,
   foldPose,
-  introOpen,
+  headFraction,
+  headState,
   markVeil,
   morphOf,
   plateState,
   productPose,
   propArrival,
   propClose,
+  rowLit,
+  rowState,
   sceneProgress,
   scenePast,
-  titleOpen,
+  stepOf,
+  stepOpen,
+  stepProgress,
   turnProgress,
   unrollY,
   wireRetract,
@@ -89,9 +94,18 @@ import {
   washOf,
   type Arrive,
   type Centre,
+  type HeadState,
   type PlateState,
   type ProductRest,
+  type RowState,
 } from "./turnClock";
+import {
+  measureHeads,
+  mountHeadLayer,
+  parkHeads,
+  writeHeads,
+  type HeadMeasure,
+} from "./headCarrier";
 import { measureSeam, mountSeamLayer, parkSeam, writeSeam, type SeamMeasure } from "./seamCarrier";
 import { turnDecodeFrame } from "./turnDecode";
 import { createTurnWash, type TurnWash } from "./turnWash";
@@ -119,9 +133,16 @@ export function trinnyMorphSpec(): BrandmarkMorphSpec {
 }
 
 const PRODUCT_VARS = ["--tm-dx", "--tm-dy", "--tm-dr", "--tm-s", "--tm-o"] as const;
-/** The scene's channels on the STAGE, which every clipped object inside reads. */
-const SCENE_STAGE_VARS = ["--tl-ap-prop", "--tl-ap-title", "--tl-ap-intro"] as const;
+/** The scene's channels on the STAGE, which every clipped object inside reads.
+ *  `--tl-hd-*` are the head decode's fractions (ADR-103), for the smoke. */
+const SCENE_STAGE_VARS = ["--tl-ap-prop", "--tl-hd-lead", "--tl-hd-intro"] as const;
 const FOLD_VARS = ["--tl-fx", "--tl-fy", "--tl-fs", "--tl-fo"] as const;
+const ROW_VARS = ["--tl-row-h", "--tl-lit"] as const;
+const STAGE_VARS = ["--tl-vis", "--tl-step"] as const;
+/** Every printed channel is guarded against `-0`: `1 − ramp` and a product
+ *  with 0 both produce it, and it prints as `-0.0000` on the stamp the
+ *  harness converges on. */
+const z = (v: number) => (v === 0 ? 0 : v);
 
 /** Everything about the scene that changes only on a relayout. */
 interface SceneMeasure {
@@ -135,6 +156,10 @@ interface SceneMeasure {
   lanes: SVGGElement[];
   /** The three plates, their bands, and the two heights the unroll runs between. */
   plates: { el: HTMLElement; headH: number; plateH: number }[];
+  /** The outcomes' three rows (ADR-103): each a band's height and its whole. */
+  rows: { el: HTMLElement; headH: number; rowH: number }[];
+  /** The outcomes' three stages, one drawing each. */
+  stages: HTMLElement[];
   /** The station's pinned scroll, in viewports — read off its own box. */
   runwayVh: number;
 }
@@ -206,11 +231,18 @@ export function useTurnScroll(): void {
        readout saying "no layer". Mounted once the beats have resolved, it is
        a non-React child React leaves alone. */
     let seamLayer: HTMLElement | null = null;
+    /* The head's own layer (ADR-103): the section head decoding in place
+       between the scene's three beats. Same lifecycle as the seam's. */
+    let headLayer: HTMLElement | null = null;
     let scene: SceneMeasure | null = null;
     let seam: SeamMeasure | null = null;
+    let headM: HeadMeasure | null = null;
     let lastChip = -1;
     let lastPast = -1;
     let lastPlate: PlateState[] = [];
+    let lastRow: RowState[] = [];
+    let lastHead: { lead: HeadState | -1; intro: HeadState | -1 } = { lead: -1, intro: -1 };
+    let lastStep = -2;
     /* ⚠ THE STRIKE IS THE ONLY STATE THIS WRITER KEEPS, and it is state
        because a burst has a DIRECTION. Everything else here is a pure
        function of a rect and survives being recomputed from nothing. */
@@ -231,6 +263,9 @@ export function useTurnScroll(): void {
         prop.removeAttribute("data-tl-scene");
         prop.removeAttribute("data-tl-scene-past");
         prop.removeAttribute("data-tl-chip");
+        prop.removeAttribute("data-tl-head-lead");
+        prop.removeAttribute("data-tl-head-intro");
+        prop.removeAttribute("data-tl-step");
         prop.style.removeProperty("--tl-scene");
       }
       if (sceneStage) for (const v of SCENE_STAGE_VARS) sceneStage.style.removeProperty(v);
@@ -241,11 +276,20 @@ export function useTurnScroll(): void {
           pl.el.removeAttribute("data-tl-plate");
           pl.el.style.removeProperty("--tl-unroll-y");
         }
+        for (const r of scene.rows) {
+          r.el.removeAttribute("data-tl-row");
+          for (const v of ROW_VARS) r.el.style.removeProperty(v);
+        }
+        for (const st of scene.stages) for (const v of STAGE_VARS) st.style.removeProperty(v);
       }
       parkSeam(seamLayer);
+      parkHeads(headLayer);
       lastChip = -1;
       lastPast = -1;
       lastPlate = [];
+      lastRow = [];
+      lastHead = { lead: -1, intro: -1 };
+      lastStep = -2;
       lastSv = -1;
     };
 
@@ -316,13 +360,22 @@ export function useTurnScroll(): void {
       const phases = prop.querySelector<HTMLElement>("#phases");
       const plates = phases ? [...phases.querySelectorAll<HTMLElement>(".arc-plate")] : [];
       const heads = plates.map((p) => p.querySelector<HTMLElement>(".arc-plate__head"));
+      const outcomes = prop.querySelector<HTMLElement>("#outcomes");
+      const rows = outcomes ? [...outcomes.querySelectorAll<HTMLElement>(".arc-steps__item")] : [];
+      const rowHeads = rows.map((r) => r.querySelector<HTMLElement>(".arc-plate__head"));
+      const stages = outcomes
+        ? [...outcomes.querySelectorAll<HTMLElement>(".arc-steps__stage")]
+        : [];
       if (
         !svg ||
         !card ||
         nodes.some((n) => !n) ||
         lanes.some((l) => !l) ||
         plates.length !== 3 ||
-        heads.some((h) => !h)
+        heads.some((h) => !h) ||
+        rows.length !== 3 ||
+        rowHeads.some((h) => !h) ||
+        stages.length !== 3
       ) {
         parkScene();
         return null;
@@ -343,6 +396,20 @@ export function useTurnScroll(): void {
         const b = g.getBBox();
         return { cx: b.x + b.width / 2, cy: b.y + b.height / 2 };
       };
+      /* ⚠ THE ROWS ARE MEASURED WHOLE, THEN COLLAPSED TO THEIR BANDS. A row's
+         height is the channel the steps scrub (`--tl-row-h`), so its full
+         height has to be read with the channel OFF; and `measureSeam`, which
+         runs after this, needs each row's head where it will be LANDED ON —
+         i.e. with every row closed, the accordion at rest. The synchronous
+         `writeScene` that follows `measure()` puts the frame's real state
+         back before anything paints. */
+      const rowsM = rows.map((el) => {
+        el.style.removeProperty("--tl-row-h");
+        const rowH = el.offsetHeight;
+        const headH = el.querySelector<HTMLElement>(".arc-plate__head")!.offsetHeight;
+        return { el, headH, rowH };
+      });
+      for (const r of rowsM) r.el.style.setProperty("--tl-row-h", `${r.headH}px`);
       return {
         svg,
         chip,
@@ -353,6 +420,8 @@ export function useTurnScroll(): void {
           headH: heads[i]!.offsetHeight,
           plateH: el.offsetHeight,
         })),
+        rows: rowsM,
+        stages,
         runwayVh: Math.max(0, (prop.getBoundingClientRect().height - vh) / Math.max(1, vh)),
       };
     };
@@ -383,8 +452,20 @@ export function useTurnScroll(): void {
         prop.setAttribute("data-tl-scene-past", "");
       }
       sceneStage.style.setProperty("--tl-ap-prop", propClose(sv).toFixed(4));
-      sceneStage.style.setProperty("--tl-ap-title", titleOpen(sv).toFixed(4));
-      sceneStage.style.setProperty("--tl-ap-intro", introOpen(sv).toFixed(4));
+      /* The head (ADR-103): its fractions for the smoke, and the two stamps
+         the sheet keys the real heads' visibility on — which beat's text
+         shows, or that the layer is painting mid-decode. Delta-gated: an
+         attribute write is a style invalidation on everything under it. */
+      sceneStage.style.setProperty("--tl-hd-lead", headFraction("lead", sv).toFixed(4));
+      sceneStage.style.setProperty("--tl-hd-intro", headFraction("intro", sv).toFixed(4));
+      for (const col of ["lead", "intro"] as const) {
+        const st = headState(col, sv);
+        if (lastHead[col] !== st) {
+          lastHead[col] = st;
+          if (st) prop.setAttribute(`data-tl-head-${col}`, st);
+          else prop.removeAttribute(`data-tl-head-${col}`);
+        }
+      }
       scene.nodes.forEach((n, k) => {
         const pose = foldPose(k, sv, n.c, scene!.chip);
         n.el.style.setProperty("--tl-fx", `${pose.fx.toFixed(2)}px`);
@@ -421,7 +502,35 @@ export function useTurnScroll(): void {
           pl.el.style.removeProperty("--tl-unroll-y");
         }
       });
+      /* The outcomes (ADR-103): each row HELD until its band lands, then its
+         height scrubbed band → whole as its step opens, its wash filled or
+         ring-only; each stage's aperture and its own clock; the step stamp. */
+      scene.rows.forEach((r, i) => {
+        const st = rowState(i, sv);
+        if (lastRow[i] !== st) {
+          lastRow[i] = st;
+          if (st) r.el.setAttribute("data-tl-row", st);
+          else r.el.removeAttribute("data-tl-row");
+        }
+        const open = stepOpen(i, sv);
+        r.el.style.setProperty(
+          "--tl-row-h",
+          `${(r.headH + (r.rowH - r.headH) * open).toFixed(2)}px`
+        );
+        r.el.style.setProperty("--tl-lit", z(rowLit(i, sv)).toFixed(4));
+      });
+      scene.stages.forEach((el, i) => {
+        el.style.setProperty("--tl-vis", z(stepOpen(i, sv)).toFixed(4));
+        el.style.setProperty("--tl-step", z(stepProgress(i, sv)).toFixed(4));
+      });
+      const step = stepOf(sv).i;
+      if (lastStep !== step) {
+        lastStep = step;
+        if (step >= 0) prop.setAttribute("data-tl-step", String(step));
+        else prop.removeAttribute("data-tl-step");
+      }
       if (seam && seamLayer) writeSeam(seamLayer, seam, sv, svgRect, stageRect);
+      if (headM && headLayer) writeHeads(headLayer, headM, sv);
     };
 
     const measure = () => {
@@ -438,10 +547,16 @@ export function useTurnScroll(): void {
       propWash?.resize();
       scene = measureScene();
       if (scene && sceneStage && !seamLayer) seamLayer = mountSeamLayer(sceneStage);
+      if (scene && sceneStage && !headLayer) headLayer = mountHeadLayer(sceneStage);
       seam =
         scene && seamLayer && root && sceneStage ? measureSeam(seamLayer, root, sceneStage) : null;
+      headM =
+        scene && headLayer && root && sceneStage ? measureHeads(headLayer, root, sceneStage) : null;
       if (scene && prop && sceneStage) {
         lastPlate = [];
+        lastRow = [];
+        lastHead = { lead: -1, intro: -1 };
+        lastStep = -2;
         lastChip = -1;
         lastPast = -1;
         writeScene(
@@ -687,8 +802,12 @@ export function useTurnScroll(): void {
       typeof MutationObserver === "undefined" || !sceneStage
         ? null
         : new MutationObserver((records) => {
-            const layer = seamLayer;
-            if (layer && records.every((r) => layer.contains(r.target))) return;
+            /* Both layers write their own subtrees every frame of a decode
+               (the seam's carriers, the head's lines) and are rebuilt on
+               every measure — none of that is the mount signal. */
+            const layers = [seamLayer, headLayer].filter((l): l is HTMLElement => !!l);
+            if (layers.length > 0 && records.every((r) => layers.some((l) => l.contains(r.target))))
+              return;
             relayout();
           });
     if (mo && sceneStage) {
@@ -705,6 +824,7 @@ export function useTurnScroll(): void {
       mq.removeEventListener("change", relayout);
       park();
       seamLayer?.remove();
+      headLayer?.remove();
       wash?.dispose();
       propWash?.dispose();
     };

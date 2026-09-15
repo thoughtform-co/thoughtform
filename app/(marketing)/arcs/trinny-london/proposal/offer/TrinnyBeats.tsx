@@ -6,6 +6,7 @@ import { ArcBoard } from "@/components/arcs/ArcBoard";
 import { ArcCards } from "@/components/arcs/ArcCards";
 import { ArcFlow } from "@/components/arcs/ArcFlow";
 import { ArcListGroups } from "@/components/arcs/ArcListGroups";
+import { ArcSteps } from "@/components/arcs/ArcSteps";
 import type { ArcSection } from "@/lib/arcs/types";
 
 /**
@@ -20,7 +21,7 @@ import type { ArcSection } from "@/lib/arcs/types";
  * ⚠ NOT `ArcSectionRenderer`. That dispatch statically imports every kind,
  * the dossier console and the holo program's three.js mount among them; the
  * landing-performance doctrine keeps `three` off this route's graph. A
- * page-local switch over the four kinds this page uses is the whole cost of
+ * page-local switch over the five kinds this page uses is the whole cost of
  * that, and the `never` fallthrough keeps it honest — a beat authored in
  * another kind renders nothing, which `trinny-offer.test.ts` fails on.
  * (`configuration` left this switch with ADR-100: the page no longer draws
@@ -103,6 +104,8 @@ function TrinnyBeat({ section, index }: { section: ArcSection; index: number }) 
       return <ArcBoard section={section} index={index} />;
     case "flow":
       return <ArcFlow section={section} index={index} />;
+    case "steps":
+      return <ArcSteps section={section} index={index} />;
     default:
       return null;
   }

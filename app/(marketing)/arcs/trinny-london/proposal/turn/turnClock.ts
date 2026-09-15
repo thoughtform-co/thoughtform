@@ -470,6 +470,12 @@ export const SCENE_CARRY: readonly (readonly [number, number])[] = [
   [1.14, 1.5],
   [1.65, 1.98],
   [2.14, 2.46],
+  /* Carriers 3, 4, 5 (ADR-103): each collapsed plate's band travels to the
+     outcomes' row of the same index — band 1 widens in place, bands 2 and 3
+     travel left and down. Each opens only after its plate has collapsed. */
+  [3.68, 3.98],
+  [3.74, 4.04],
+  [3.8, 4.1],
 ];
 /** Plate `i`'s body unrolls out of its band: the clip's bottom edge runs
  *  from the head's own height to the plate's. */
@@ -478,12 +484,48 @@ export const SCENE_UNROLL: readonly (readonly [number, number])[] = [
   [2.0, 2.26],
   [2.48, 2.74],
 ];
-/** The section's title opens as the first band lands … */
-export const SCENE_TITLE = [1.34, 1.64] as const;
-/** … and its paragraph only once the third plate is whole (owner). */
-export const SCENE_INTRO = [2.78, 3.02] as const;
+/**
+ * Plate `i`'s body rolls BACK into its band (ADR-103), the unroll run in
+ * reverse — last plate first, so the row reads as folding from the far end
+ * toward the band that will travel first.
+ */
+export const SCENE_COLLAPSE: readonly (readonly [number, number])[] = [
+  [3.4, 3.64],
+  [3.32, 3.56],
+  [3.24, 3.48],
+];
+/**
+ * THE HEAD DECODES IN PLACE (ADR-103): it never closes and re-opens. Window
+ * `k` carries beat `k`'s text into beat `k + 1`'s — the eyebrow, the title
+ * and the coord stamps on the lead column, the designator, the paragraph and
+ * its stamp on the intro column. The first pair keeps ADR-102's timing (the
+ * title as band 1 lands, the paragraph once the third plate is whole); the
+ * second runs the title over the collapse and the paragraph after the third
+ * band has landed on its row.
+ */
+export const SCENE_HEAD_LEAD: readonly (readonly [number, number])[] = [
+  [1.34, 1.64],
+  [3.34, 3.64],
+];
+export const SCENE_HEAD_INTRO: readonly (readonly [number, number])[] = [
+  [2.78, 3.02],
+  [4.12, 4.36],
+];
+/**
+ * THE STEPS (ADR-103): once the three bands have landed as rows, the stage
+ * stays pinned and the reader steps through the three deliverables — one
+ * row open and filled, the other two closed and outlined, the stage showing
+ * that row's drawing. `SPAN` is the one dial: viewports per step.
+ */
+export const SCENE_STEPS = 3;
+export const SCENE_STEP_START = 4.4;
+export const SCENE_STEP_SPAN = 0.5;
+/** The first row opens and the others dim over this much of the first step. */
+export const SCENE_STEP_OPEN = 0.12;
+/** The crossover straddling each step boundary: one row closes as the next opens. */
+export const SCENE_STEP_CROSS = 0.16;
 /** Everything real and stationary from here; the runway must reach it. */
-export const SCENE_END = 3.18;
+export const SCENE_END = 5.98;
 /**
  * The words decode over the MIDDLE of a carrier's travel.
  *
@@ -526,15 +568,56 @@ export function scenePast(sv: number): boolean {
   return sv >= SCENE_WITHDRAW[0];
 }
 
-/** The board's own head and the ledger: 1 open, 0 closed to the centre slit. */
+/** The ledger: 1 open, 0 closed to the centre slit. (The board's HEAD no
+ *  longer closes with it — ADR-103: it decodes in place instead.) */
 export function propClose(sv: number): number {
   return 1 - ramp(sv, SCENE_WITHDRAW[0], SCENE_WITHDRAW[1]);
 }
-export function titleOpen(sv: number): number {
-  return ramp(sv, SCENE_TITLE[0], SCENE_TITLE[1]);
+
+export type HeadCol = "lead" | "intro";
+/** Which beat's text a head column shows, or that it is mid-decode. `null`
+ *  is beat 0's (absent stamp = shown, the scene's own law). */
+export type HeadState = "decode" | "1" | "2" | null;
+
+const headWindows = (col: HeadCol) => (col === "lead" ? SCENE_HEAD_LEAD : SCENE_HEAD_INTRO);
+
+/** Head window `k`'s progress on the lead column: 0 before, 1 after. */
+export function headLead(k: number, sv: number): number {
+  const [a, b] = SCENE_HEAD_LEAD[k];
+  return ramp(sv, a, b);
 }
-export function introOpen(sv: number): number {
-  return ramp(sv, SCENE_INTRO[0], SCENE_INTRO[1]);
+/** The same for the intro column. */
+export function headIntro(k: number, sv: number): number {
+  const [a, b] = SCENE_HEAD_INTRO[k];
+  return ramp(sv, a, b);
+}
+/**
+ * The column's state at `sv`: `null` (beat 0's text) → `"decode"` → `"1"` →
+ * `"decode"` → `"2"`, exact at every window's ends. The welds are the two
+ * frames a window opens and closes on: at its start the carrier's leaves are
+ * byte-equal to beat k's text on beat k's pixels, at its end byte-equal to
+ * beat k + 1's on the same pixels.
+ */
+export function headState(col: HeadCol, sv: number): HeadState {
+  const windows = headWindows(col);
+  for (let k = windows.length - 1; k >= 0; k--) {
+    const [a, b] = windows[k];
+    if (sv >= b) return String(k + 1) as "1" | "2";
+    if (sv >= a) return "decode";
+  }
+  return null;
+}
+/** The live window's fraction for the smoke's channel: 0 before any window
+ *  has opened, the running window's own progress mid-decode, 1 once the
+ *  latest has closed. */
+export function headFraction(col: HeadCol, sv: number): number {
+  const windows = headWindows(col);
+  for (let k = windows.length - 1; k >= 0; k--) {
+    const [a, b] = windows[k];
+    if (sv >= b) return 1;
+    if (sv >= a) return ramp(sv, a, b);
+  }
+  return 0;
 }
 
 export function foldWindow(k: number): readonly [number, number] {
@@ -599,19 +682,97 @@ export function carrierWindow(i: number, sv: number): { e: number; live: boolean
 
 export type PlateState = "held" | "unroll" | null;
 
-/** Plate `i` is HELD (nothing of it paints) until its band has landed, UNROLLS
- *  out of that band, and is then its own resting self. */
+/**
+ * Plate `i` is HELD (nothing of it paints) until its band has landed, UNROLLS
+ * out of that band, is then its own resting self — and, since ADR-103, rolls
+ * back into its band (`unroll` again, the clip running the other way), stands
+ * as a band until its carrier is born, and is HELD from that frame: the
+ * carrier is the band from there, on its way to being a row.
+ */
 export function plateState(i: number, sv: number): PlateState {
   if (sv < SCENE_CARRY[i][1]) return "held";
   if (sv < SCENE_UNROLL[i][1]) return "unroll";
-  return null;
+  if (sv < SCENE_COLLAPSE[i][0]) return null;
+  if (sv < SCENE_CARRY[3 + i][0]) return "unroll";
+  return "held";
 }
 
 /** Where plate `i`'s clip bottom sits, px from its own top: its head's height
- *  until the unroll opens, its full height once it has. */
+ *  until the unroll opens, its full height once it has, and back to the
+ *  head's once the collapse has run. Reversible by construction. */
 export function unrollY(i: number, sv: number, headH: number, plateH: number): number {
   const [from, to] = SCENE_UNROLL[i];
-  return headH + (plateH - headH) * ramp(sv, from, to);
+  const [cFrom, cTo] = SCENE_COLLAPSE[i];
+  return headH + (plateH - headH) * (ramp(sv, from, to) - ramp(sv, cFrom, cTo));
+}
+
+export type RowState = "held" | null;
+
+/** Row `i` of the outcomes is HELD (nothing of it paints) until the band that
+ *  becomes it has landed. */
+export function rowState(i: number, sv: number): RowState {
+  return sv < SCENE_CARRY[3 + i][1] ? "held" : null;
+}
+
+/** The scroll at which step `j` opens (`j` = 0 … `SCENE_STEPS`). */
+export function stepBoundary(j: number): number {
+  return SCENE_STEP_START + j * SCENE_STEP_SPAN;
+}
+
+/**
+ * Step `i`'s share of the frame, 0 → 1, the shares summing to 1 at every
+ * `sv` from `SCENE_STEP_START` on: each boundary is a crossover `CROSS`
+ * wide over which one step closes as the next opens, geometrically (a row's
+ * body rolling up as the next rolls down; a stage's aperture shutting as the
+ * next one opens). Before the steps, step 0 holds the whole share.
+ */
+export function stepWeight(i: number, sv: number): number {
+  const half = SCENE_STEP_CROSS / 2;
+  const rise = i === 0 ? 1 : ramp(sv, stepBoundary(i) - half, stepBoundary(i) + half);
+  const fall =
+    i >= SCENE_STEPS - 1 ? 0 : ramp(sv, stepBoundary(i + 1) - half, stepBoundary(i + 1) + half);
+  return rise - fall;
+}
+
+/** Whether step `i`'s row body and its stage are open: the first opens over
+ *  `SCENE_STEP_OPEN` once the stepping starts, the rest ride their share. */
+export function stepOpen(i: number, sv: number): number {
+  if (i === 0) {
+    return Math.min(
+      ramp(sv, SCENE_STEP_START, SCENE_STEP_START + SCENE_STEP_OPEN),
+      stepWeight(0, sv)
+    );
+  }
+  return stepWeight(i, sv);
+}
+
+/**
+ * How filled row `i`'s band is: 1 is the wash and the gold rule at full
+ * width, 0 is ring-only (ADR-089 U4's "the open one filled, the rest
+ * outlined"). ⚠ EVERY ROW IS LIT UNTIL THE STEPPING STARTS: the bands land
+ * washed, so a row that dimmed on its landing frame would change material at
+ * the weld. Rows 2 and 3 dim as row 1 opens.
+ */
+export function rowLit(i: number, sv: number): number {
+  if (i === 0) return stepWeight(0, sv);
+  return Math.max(
+    1 - ramp(sv, SCENE_STEP_START, SCENE_STEP_START + SCENE_STEP_OPEN),
+    stepWeight(i, sv)
+  );
+}
+
+/** The step the reader is on, and how far through it — `-1` before the
+ *  steps begin. */
+export function stepOf(sv: number): { i: number; t: number } {
+  if (sv < SCENE_STEP_START) return { i: -1, t: 0 };
+  const i = Math.min(SCENE_STEPS - 1, Math.floor((sv - SCENE_STEP_START) / SCENE_STEP_SPAN));
+  return { i, t: clamp01((sv - stepBoundary(i)) / SCENE_STEP_SPAN) };
+}
+
+/** Stage `i`'s own clock: 0 before its step, its progress through it, 1 after
+ *  — so a stage's drawing never rewinds while its aperture is closing. */
+export function stepProgress(i: number, sv: number): number {
+  return clamp01((sv - stepBoundary(i)) / SCENE_STEP_SPAN);
 }
 
 /** The chip's corner cut, in the board's own units. ⚠ Pinned equal to

@@ -668,6 +668,28 @@ BoardState<"configured">] }` — ADR-052's **fourth enumerated exception**, afte
   delay that does not apply fails silently**: nothing errors, nothing logs,
   the still is identical, and the result reads as a taste decision. The smoke
   asserts each ladder is strictly increasing and that the ledger's is slower.
+- **The `steps` kind** (ADR-103) = `{ head, items: [{ id, kicker, name, body,
+visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
+  configuration · flow · board · steps). `ArcSteps` (server, no state, no
+  listener, `data-steps-*` only) draws the deliverables as a stepped list
+  beside a stage: each row an `.arc-plate` with only its head band and a body
+  line (the plates' own material — on the Trinny page the phase plates
+  collapse to their bands and travel to BECOME these rows, ADR-101 §B's one
+  material), each stage that item's drawing. ⚠ **EVERY MOTION CHANNEL IS A
+  CUSTOM PROPERTY WITH A FINISHED DEFAULT** (`--tl-row-h`, `--tl-lit`,
+  `--tl-vis`, `--scan-s`): the static render, no-JS and reduced motion read
+  every row open and filled, every stage shown, the scan complete; a route
+  scrubs them (`trinny-london.css`, the writer). ⚠ A `visual` is `scan` (a
+  packshot read by a machine — `ArcScanVisual`: a framed 4:5 field on its
+  own opaque `--arc-plate` bed, a gold edge sweeping the image over its grey
+  ghost, callouts as 7×7 nodes + 1px div leaders + labels on their own bed,
+  a verdict; the checks are the ones the grading gates, no digits, no svg,
+  no opacity, no transition) or `field` (the same frame with one centred
+  node over a designation, for a deliverable whose drawing is to come).
+  ⚠ Copy: `self-sufficient` is banned by the copy law, and `trinny-offer`
+  pins that no row restates a phase's name or deliverable line — the owner:
+  "not a simulacrum of those three modules". Rules for the scene it lives in:
+  `.claude/rules/trinny-london.md` §The head decodes.
 - ⚠ **NO `phases` KIND, AND THAT IS ADR-078 U1's LAW.** The deck draws its
   phases as a rail; on this surface a drawing plots something that HAPPENED,
   and a plan is an argument. Three phases are three `list-groups` columns,

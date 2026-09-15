@@ -1586,6 +1586,366 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   letter-spacing: var(--track-display);
 }
 
+/* ── The steps: a stepped list beside a stage (ADR-103) ─────────────
+   Three deliverables as rows in the plates' own head-band material, and
+   for each a stage on the right. Everything a route scrubs is a custom
+   property with a FINISHED default: `--tl-row-h` (a row's height — absent
+   is `auto`, the body shown), `--tl-lit` (the head's wash and its gold
+   rule, opening from the centre — absent is 1, filled; ADR-089 U4: the open
+   one filled, the rest ring-only), `--tl-vis` on a stage (its centre-out
+   aperture — absent is 1). So the static render, no-JS and reduced motion
+   all read every row open and every stage shown, stacked.
+   ⚠ NO `transition` ON ANY OF THEM: a transition on a scrubbed property is
+   smoothing, and smoothing is lag by another name (ADR-102). */
+.arc-steps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 72px);
+  align-items: start;
+  margin-top: clamp(28px, 4vh, 56px);
+}
+.arc-steps__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.5vh, 18px);
+}
+/* A row is a plate whose only parts are its head band and one body line.
+   Its height is what the scene scrubs (band → whole), and the plate's own
+   clip polygon ends at `100% 100%` so the ring and the cut follow the box
+   and the body is cut away under a closed row. */
+.arc-steps__item {
+  height: var(--tl-row-h, auto);
+}
+.arc-steps__item .arc-plate__head {
+  background-size:
+    calc(var(--tl-lit, 1) * 100%) 100%,
+    calc(var(--tl-lit, 1) * 100%) 100%;
+  background-position: center, center;
+  background-repeat: no-repeat;
+}
+.arc-steps__item .arc-plate__head::before {
+  left: calc((100% - var(--arc-plate-ch)) * (1 - var(--tl-lit, 1)) / 2);
+  width: calc((100% - var(--arc-plate-ch)) * var(--tl-lit, 1));
+}
+.arc-steps__body {
+  margin: 0;
+  padding: clamp(11px, 1.4vh, 15px) clamp(16px, 1.4vw, 22px) clamp(13px, 1.6vh, 18px);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+  font-weight: var(--weight-text);
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--arc-ink-70);
+}
+/* The stages: in flow, stacked, each a definite box (the figure inside is a
+   size container and needs one). A route seats them over each other. */
+.arc-steps__stages {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.5vh, 18px);
+  min-width: 0;
+}
+.arc-steps__stage {
+  position: relative;
+  height: clamp(300px, 46svh, 520px);
+  max-width: 600px;
+}
+@media (max-width: 900px) {
+  .arc-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ── The scan: a packshot read by a machine (ADR-103) ───────────────
+   One input, `--scan-s` (0 → 1), finished by default. The field is 4:5,
+   height-led off the stage's box; the gold edge sweeps it and the live
+   image is CLIPPED to the edge over its own grey ghost; each check's node,
+   leader and label are drawn as the edge passes its anchor; the verdict
+   letters last. Every reveal is a travelling or centre-out clip — no
+   opacity, no transition, no keyframe — so scrolling back plays it in
+   reverse exactly and nothing flickers (ADR-097 U12's law).
+   ⚠ THE FIELD AND EVERY LABEL CARRY THEIR OWN OPAQUE BED (`--arc-plate`):
+   on the Trinny page the scene sits on the coral wash, which no contrast
+   walk can see, and a label over a shader is a label over nothing measurable.
+   ⚠ THE LEADERS ARE 1px DIVS, never svg lines (ADR-068 U6). Gold buys the
+   edge, which parks as the verdict's rule; everything else is dawn ink. */
+.arc-scan {
+  --scan-s: 1;
+  --scan-sweep: 0.62;
+  --scan-open: 0.22;
+  --scan-verdict: 0.8;
+  --scan-fix: 18px;
+  --scan-foot: 30px;
+  --scan-gap: 16px;
+  --scan-row: 34px;
+  --fh: calc(100cqh - var(--scan-fix) - var(--scan-foot));
+  --fw: calc(var(--fh) * 0.8);
+  --scan: clamp(0, var(--scan-s) / var(--scan-sweep), 1);
+  --scan-v: clamp(0, (var(--scan-s) - var(--scan-verdict)) / (1 - var(--scan-verdict)), 1);
+  position: relative;
+  container-type: size;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: visible;
+}
+.arc-scan__fix {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: var(--scan-fix);
+  line-height: var(--scan-fix);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 8px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.arc-scan__fix--r {
+  left: var(--fw);
+  translate: -100% 0;
+}
+/* On a narrow stage (the laptop's ~400px) the two fixes collide over a field
+   ~200px wide; the pass reads from the verdict alone there. */
+@container (max-width: 520px) {
+  .arc-scan__fix--r {
+    display: none;
+  }
+}
+.arc-scan__field {
+  position: absolute;
+  left: 0;
+  top: var(--scan-fix);
+  width: var(--fw);
+  height: var(--fh);
+  background:
+    radial-gradient(var(--arc-grid) 1px, transparent 1.2px) 0 0 / 24px 24px,
+    var(--arc-plate);
+}
+/* The dashed runs: the caption card's own period, 1px on / 5px off. */
+.arc-scan__run {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.arc-scan__run--x::before,
+.arc-scan__run--x::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: repeating-linear-gradient(to right, var(--arc-rule-dash) 0 1px, transparent 1px 6px);
+}
+.arc-scan__run--x::before {
+  top: 0;
+}
+.arc-scan__run--x::after {
+  bottom: 0;
+}
+.arc-scan__run--y::before,
+.arc-scan__run--y::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: repeating-linear-gradient(to bottom, var(--arc-rule-dash) 0 1px, transparent 1px 6px);
+}
+.arc-scan__run--y::before {
+  left: 0;
+}
+.arc-scan__run--y::after {
+  right: 0;
+}
+/* The registration crosses — the head's own 18px mark, on the corners. */
+.arc-scan__cross {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  color: var(--arc-seam);
+  pointer-events: none;
+  z-index: 2;
+}
+.arc-scan__cross::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: currentcolor;
+}
+.arc-scan__cross::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: currentcolor;
+}
+.arc-scan__cross--tl {
+  left: 0;
+  top: 0;
+  translate: -50% -50%;
+}
+.arc-scan__cross--tr {
+  right: 0;
+  top: 0;
+  translate: 50% -50%;
+}
+.arc-scan__cross--bl {
+  left: 0;
+  bottom: 0;
+  translate: -50% 50%;
+}
+.arc-scan__cross--br {
+  right: 0;
+  bottom: 0;
+  translate: 50% 50%;
+}
+/* Two images, one src: the ghost under, the live copy over, clipped to the
+   sweep. Both fill the FIELD's box (the padding insets the picture, the box
+   stays the field's) so the clip's edge and the travelling hairline agree. */
+.arc-scan__img {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 6%;
+  object-fit: contain;
+}
+.arc-scan__img--ghost {
+  filter: grayscale(1);
+  opacity: 0.35;
+}
+.arc-scan__img--live {
+  clip-path: inset(0 0 calc((1 - var(--scan)) * 100%) 0);
+}
+.arc-scan__edge {
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: 0;
+  height: 1px;
+  background: var(--gold-line, rgba(202, 165, 84, 0.34));
+  translate: 0 calc(var(--scan) * var(--fh));
+  z-index: 2;
+  pointer-events: none;
+}
+/* The callouts: a node ON the image, a leader out to the right, a label. */
+.arc-scan__callouts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.arc-scan__callout {
+  --c: clamp(0, (var(--scan-s) - var(--at, 0) * var(--scan-sweep)) / var(--scan-open), 1);
+  --n: clamp(0, var(--c) / 0.15, 1);
+  --l: clamp(0, (var(--c) - 0.1) / 0.45, 1);
+  --b: clamp(0, (var(--c) - 0.5) / 0.5, 1);
+  position: absolute;
+  left: calc(var(--ax, 0.5) * var(--fw));
+  top: calc(var(--scan-fix) + var(--at, 0.5) * var(--fh) - var(--scan-row) / 2);
+  height: var(--scan-row);
+  display: flex;
+  align-items: center;
+  z-index: 3;
+}
+.arc-scan__node {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--arc-ink-60);
+  clip-path: inset(calc((1 - var(--n, 1)) * 50%));
+}
+.arc-scan__lead {
+  flex: 0 0 auto;
+  width: calc(var(--fw) * (1 - var(--ax, 0.5)) - 7px + var(--scan-gap));
+  height: 1px;
+  background: var(--arc-ink-60);
+  clip-path: inset(0 calc((1 - var(--l, 1)) * 100%) 0 0);
+}
+.arc-scan__label {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 9px;
+  border: 1px solid var(--arc-edge);
+  background: var(--arc-plate);
+  white-space: nowrap;
+  clip-path: inset(0 calc((1 - var(--b, 1)) * 100%) 0 0);
+}
+.arc-scan__key {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 8.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+}
+.arc-scan__reading {
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-90);
+}
+.arc-scan__verdict {
+  position: absolute;
+  left: 0;
+  top: calc(var(--scan-fix) + var(--fh) + 10px);
+  width: var(--fw);
+  margin: 0;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink, #caa554);
+  white-space: nowrap;
+}
+.arc-scan__verdict-text {
+  display: inline-block;
+  clip-path: inset(0 calc((1 - var(--scan-v)) * 100%) 0 0);
+}
+/* The field with nothing plotted yet: the same frame, one centred node over
+   its designation. */
+.arc-scan__node--centre {
+  position: absolute;
+  left: calc(50% - 3.5px);
+  top: calc(50% - 16px);
+  z-index: 2;
+}
+.arc-scan__desig {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 8.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+  z-index: 2;
+}
+
 /* ── Anatomy rows ──────────────────────────────────────────────────── */
 .arc-anatomy {
   margin: clamp(40px, 6.5vh, 80px) 0 0;

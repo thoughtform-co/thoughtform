@@ -236,13 +236,91 @@ export const TRINNY_PHASES: ArcSection = {
   ],
 };
 
-/** What `#proposition`'s pinned stage holds (ADR-102): the board, and the
- *  phases seated absolutely over it. `TrinnyConfiguration` renders this. */
-export const TRINNY_SCENE: readonly ArcSection[] = [TRINNY_BOARD, TRINNY_PHASES];
+/**
+ * The outcomes — what the team GETS, the scene's third beat (ADR-103).
+ *
+ * The deck's "What we help build." slide, cut to the three things the owner
+ * named (2026-09-15): a creative tech setup, a team that runs it themselves,
+ * and no long-term dependency on consultants or licences. ⚠ NOT THE PHASES
+ * RESTATED: "I don't want to copy or create a simulacrum of those three
+ * modules because those are the offerings. This is more about what you
+ * actually get." Inside the scene the three phase plates collapse to their
+ * bands and travel here to become these three rows, and the pinned stage
+ * then steps through them one at a time.
+ *
+ * ⚠ DRAFT COPY, HIS PHRASES (the deck's own lede, the Suri `what-we-build`
+ * cards noun-swapped, the discovery call's "not the founder for every
+ * asset"). He rewrites it. `name` ≤ 40 characters: the scene's carrier
+ * letters it on ONE line while it travels. ⚠ "self-sufficient" is banned by
+ * the copy law — say what the team does, not the word.
+ *
+ * ⚠ THE FIRST STAGE IS THE SCAN — a generated packshot read by a machine,
+ * the checks the studio's grading actually gates called out as the edge
+ * passes them. The other two hold the framed FIELD until their own drawing
+ * exists. The scan's image is the same cutout the flow draws; the eight
+ * generated calibration packshots on the Drive are the upgrade, as a 4:5
+ * still, and the anchors are re-authored against whichever lands.
+ */
+export const TRINNY_OUTCOMES: ArcSection = {
+  id: "outcomes",
+  kind: "steps",
+  head: {
+    eyebrow: "Trinny London · what you get",
+    title: { pre: "What we help", em: "build." },
+    sub: "The measure of this work is what the team can do after we leave, and whether it still works when the models change.",
+  },
+  items: [
+    {
+      id: "setup",
+      kicker: "01 · The setup",
+      name: "A creative tech setup",
+      body: "Brand, tone of voice and standards written down as a layer any agent can use, on the studio's own stack: brief to graded asset without the founder in every loop.",
+      visual: {
+        kind: "scan",
+        image: {
+          src: "/trinny-london/naked-ambition.webp",
+          alt: "A Naked Ambition tube, generated in Trinny London's photographic style and graded against the packshot",
+          width: 229,
+          height: 414,
+        },
+        fix: ["Naked Ambition · packshot", "Grading pass"],
+        /* Anchors are fractions of the FIELD, authored by eye against this
+           cutout (the tube stands on the right of it, the swoosh on the left),
+           sorted by `y` because the sweep reads them top to bottom. */
+        checks: [
+          { id: "wordmark", key: "Wordmark", reading: "In place, legible", x: 0.6, y: 0.22 },
+          { id: "colour", key: "Colour", reading: "On the palette", x: 0.72, y: 0.42 },
+          { id: "product", key: "Product", reading: "Matches the packshot", x: 0.62, y: 0.62 },
+          { id: "light", key: "Light", reading: "Matches the set", x: 0.7, y: 0.82 },
+        ],
+        verdict: "Pass · to the studio lead",
+      },
+    },
+    {
+      id: "team",
+      kicker: "02 · The team",
+      name: "A team that runs it themselves",
+      body: "Designers who use AI the way they use Figma, because they know what it is good at and where it gets things wrong. Handover is a real production run, not a document.",
+      visual: { kind: "field", designation: "The loop · run by the team" },
+    },
+    {
+      id: "system",
+      kicker: "03 · The system",
+      name: "No long-term dependency",
+      body: "Files and their own accounts. No consultant to keep, no platform to license beyond the tools they already own. When a better model ships, the setup takes it.",
+      visual: { kind: "field", designation: "The accounts · in Trinny London's name" },
+    },
+  ],
+};
+
+/** What `#proposition`'s pinned stage holds (ADR-102, extended by ADR-103):
+ *  the board, the phases seated absolutely over it, and the outcomes over
+ *  both. `TrinnyConfiguration` renders this. */
+export const TRINNY_SCENE: readonly ArcSection[] = [TRINNY_BOARD, TRINNY_PHASES, TRINNY_OUTCOMES];
 
 /** The offer's beats after the scene, in `#offer` — the flow first since
- *  ADR-102 took the phases into the scene. `startIndex` 2 on the mount keeps
- *  the designators counting on from the two beats above. */
+ *  ADR-102 took the phases into the scene. `startIndex` 3 on the mount keeps
+ *  the designators counting on from the three beats above. */
 export const TRINNY_OFFER_SECTIONS: readonly ArcSection[] = [
   {
     /* THE FLOW (ADR-099, owner 2026-09-13): "a new section where we

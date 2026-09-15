@@ -6,16 +6,17 @@ import { join } from "node:path";
 import {
   TRINNY_BOARD,
   TRINNY_OFFER_SECTIONS,
+  TRINNY_OUTCOMES,
   TRINNY_PHASES,
   TRINNY_SCENE,
 } from "@/app/(marketing)/arcs/trinny-london/proposal/offer/offerSections";
 import { PROPOSAL_COPY_BANS, scanStrings } from "@/lib/arcs/copyLaw";
 import type { BoardState } from "@/lib/arcs/types";
 
-/** Every beat the page mounts, in reading order: the board and the phases
- *  are beats one and two and live in `#proposition`'s pinned scene
- *  (ADR-099 → ADR-100 → ADR-102), the rest follow in `#offer`. */
-const ALL_BEATS = [TRINNY_BOARD, TRINNY_PHASES, ...TRINNY_OFFER_SECTIONS];
+/** Every beat the page mounts, in reading order: the board, the phases and
+ *  the outcomes are beats one to three and live in `#proposition`'s pinned
+ *  scene (ADR-099 → ADR-100 → ADR-102 → ADR-103), the rest follow in `#offer`. */
+const ALL_BEATS = [TRINNY_BOARD, TRINNY_PHASES, TRINNY_OUTCOMES, ...TRINNY_OFFER_SECTIONS];
 
 /** How many strings a state carries — the record's own count. The exact SET
  *  the drawing letters is pinned in `arc-board-fit` (the ledger joins the
@@ -64,7 +65,7 @@ describe("trinny-london offer (ADR-094 U9)", () => {
        failure that says so. */
     const kinds = new Set(ALL_BEATS.map((s) => s.kind));
     for (const kind of kinds) {
-      expect(["list-groups", "cards", "board", "flow"]).toContain(kind);
+      expect(["list-groups", "cards", "board", "flow", "steps"]).toContain(kind);
     }
     /* ⚠ UNIQUE ACROSS BOTH ROOTS, not within each. The ids are DOM ids on
        one page — the board mounts into `#proposition` and the rest into
@@ -79,12 +80,22 @@ describe("trinny-london offer (ADR-094 U9)", () => {
        root; a phases beat back in `#offer` would be a second copy of the
        plates the scene lands on, and a scene without it has nothing to land
        on. `#phases` keeps its id either way, which is what every guard names. */
-    expect(TRINNY_SCENE.map((s) => s.id)).toEqual(["configuration", "phases"]);
+    /* ⚠ AND THE OUTCOMES ARE THE SCENE'S THIRD BEAT (ADR-103): the plates
+       collapse to their bands and travel to its rows inside the same pinned
+       stage, so it lives in the configuration's root too. */
+    expect(TRINNY_SCENE.map((s) => s.id)).toEqual(["configuration", "phases", "outcomes"]);
     expect(TRINNY_SCENE[0]).toBe(TRINNY_BOARD);
     expect(TRINNY_SCENE[1]).toBe(TRINNY_PHASES);
+    expect(TRINNY_SCENE[2]).toBe(TRINNY_OUTCOMES);
     expect(TRINNY_OFFER_SECTIONS[0].id).toBe("flow");
     expect(TRINNY_OFFER_SECTIONS.map((s) => s.id)).not.toContain("phases");
+    expect(TRINNY_OFFER_SECTIONS.map((s) => s.id)).not.toContain("outcomes");
     expect(TRINNY_OFFER_SECTIONS).toHaveLength(7);
+    /* The scene's heads carry no `state` chip: the head carrier letters the
+       three lead runs and the three intro runs and nothing else (ADR-103). */
+    for (const s of TRINNY_SCENE) {
+      expect("head" in s ? s.head?.state : undefined, `${s.id}: a state chip`).toBeUndefined();
+    }
     // The phases are PLATES and the fee is a LEDGER — the two drawings this
     // pass exists for (ADR-098 U2).
     const phases = TRINNY_PHASES;
@@ -155,6 +166,86 @@ describe("trinny-london offer (ADR-094 U9)", () => {
     scanStrings(b, "board", (value, path) => {
       expect(/\d/.test(value), `${path}: a figure on the board`).toBe(false);
     });
+  });
+
+  it("the outcomes are three deliverables, each with a stage (ADR-103)", () => {
+    const o = TRINNY_OUTCOMES;
+    expect(o.kind).toBe("steps");
+    if (o.kind !== "steps") return;
+    expect(o.id).toBe("outcomes");
+    expect(o.items).toHaveLength(3);
+    const ids = o.items.map((i) => i.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const item of o.items) {
+      /* The carrier letters the name on ONE line while the band travels, and
+         the kicker beside it on the band's own row. */
+      expect(item.name.length, `${item.id}: name too long for the band`).toBeLessThanOrEqual(40);
+      expect(item.kicker.length, `${item.id}: kicker too long`).toBeLessThanOrEqual(24);
+      // A few short sentences under the name, never a paragraph.
+      expect(item.body.length, `${item.id}: body too long for the row`).toBeLessThanOrEqual(190);
+      expect(
+        item.body.split(/[.!?]\s/).length,
+        `${item.id}: too many sentences`
+      ).toBeLessThanOrEqual(3);
+    }
+    /* ⚠ NOT THE PHASES RESTATED (owner): no row may carry a phase's own
+       deliverable line or its name. */
+    const phaseLines = new Set<string>();
+    if (TRINNY_PHASES.kind === "list-groups") {
+      for (const g of TRINNY_PHASES.groups) {
+        if (g.blurb) phaseLines.add(g.blurb.toLowerCase());
+        for (const line of g.foot?.lines ?? []) phaseLines.add(line.toLowerCase());
+      }
+    }
+    for (const item of o.items) {
+      expect(phaseLines.has(item.name.toLowerCase()), `${item.id} restates a phase`).toBe(false);
+    }
+
+    /* THE SCAN: a record of a real grading pass. */
+    const scan = o.items[0].visual;
+    expect(scan.kind).toBe("scan");
+    if (scan.kind !== "scan") return;
+    expect(scan.checks.length).toBeGreaterThanOrEqual(3);
+    expect(scan.checks.length).toBeLessThanOrEqual(5);
+    const checkIds = scan.checks.map((c) => c.id);
+    expect(new Set(checkIds).size).toBe(checkIds.length);
+    let lastY = -1;
+    for (const c of scan.checks) {
+      // Inside the field, in the sweep's own order, with room for a row each.
+      expect(c.x).toBeGreaterThanOrEqual(0.06);
+      expect(c.x).toBeLessThanOrEqual(0.94);
+      expect(c.y).toBeGreaterThanOrEqual(0.06);
+      expect(c.y).toBeLessThanOrEqual(0.94);
+      expect(c.y - lastY, `${c.id}: too close to the check above it`).toBeGreaterThanOrEqual(0.16);
+      lastY = c.y;
+      // One mono line each; the label box is `max-content`.
+      expect(c.key.length, `${c.id}: key`).toBeLessThanOrEqual(10);
+      expect(c.reading.length, `${c.id}: reading`).toBeLessThanOrEqual(20);
+    }
+    expect(scan.verdict.length).toBeLessThanOrEqual(28);
+    for (const f of scan.fix) expect(f.length).toBeLessThanOrEqual(26);
+    /* ⚠ NO DIGIT ON THE DRAWING — the house habit on every instrument; a
+       string composed for a label is outside every other scanner. */
+    scanStrings(scan, "scan", (value, path) => {
+      if (path.endsWith(".src") || path.endsWith(".alt")) return;
+      expect(/\d/.test(value), `${path}: a figure on the drawing`).toBe(false);
+    });
+    /* ⚠ THE IMAGE MUST EXIST ON DISK, with its box authored (the flow's own
+       guard): a typo renders an empty frame every geometry gate reads as
+       present. */
+    expect(scan.image.src).toMatch(/^\/[a-z0-9\-/]+\.webp$/);
+    expect(
+      existsSync(join(__dirname, "..", "..", "public", scan.image.src.replace(/^\//, ""))),
+      `${scan.image.src} is missing from public/`
+    ).toBe(true);
+    expect(scan.image.width).toBeGreaterThan(0);
+    expect(scan.image.height).toBeGreaterThan(0);
+    expect(scan.image.alt.length).toBeGreaterThan(0);
+    // The other two hold the framed field, with a designation each.
+    for (const item of o.items.slice(1)) {
+      expect(item.visual.kind).toBe("field");
+      if (item.visual.kind === "field") expect(item.visual.designation.length).toBeGreaterThan(0);
+    }
   });
 
   it("draws the flow from a real template's fields and the client's own renders (ADR-099)", () => {

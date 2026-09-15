@@ -844,7 +844,7 @@ html[data-corridor-exit="true"] .tl-root #proposition {
      same unit (`sceneProgress`, viewport units, NOT normalised), so shortening
      this can only TRUNCATE the scene — it cannot rescale every window with
      nothing failing. `trinny-seam` reads it here and pins `SCENE_END` under it. */
-  --tl-scene-runway: 325svh;
+  --tl-scene-runway: 605svh;
 }
 
 @media (min-width: 961px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
@@ -875,7 +875,8 @@ html[data-corridor-exit="true"] .tl-root #proposition {
      `.arc-sec + .arc-sec` seam would rule a hairline across the top of the
      stage, over the board's head. Never `overflow: clip` the stage — it
      would cut the plates' feet on the frame they matter most. */
-  .tl-root #proposition[data-tl-scene] #phases {
+  .tl-root #proposition[data-tl-scene] #phases,
+  .tl-root #proposition[data-tl-scene] #outcomes {
     position: absolute;
     inset: 0;
     min-height: 0;
@@ -902,13 +903,12 @@ html[data-corridor-exit="true"] .tl-root #proposition {
       margin-bottom: clamp(28px, 5.5vh, 72px);
     }
   }
-  /* The five things the scene clips, promoted for the length of it. Not the
-     svg groups — an svg is one layer, and there is no gain. */
+  /* The things the scene clips, promoted for the length of it: the three
+     plates and the outcomes' three stages. Not the svg groups — an svg is one
+     layer, and there is no gain — and no longer the heads (ADR-103): nothing
+     clips a head any more, it decodes in place. */
   .tl-root #proposition[data-tl-scene] #phases .arc-plate,
-  .tl-root #proposition[data-tl-scene] #phases .arc-head__lead,
-  .tl-root #proposition[data-tl-scene] #phases .arc-head__intro,
-  .tl-root #proposition[data-tl-scene] #configuration .arc-head__lead,
-  .tl-root #proposition[data-tl-scene] #configuration .arc-head__intro {
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-steps__stage {
     will-change: clip-path;
   }
 }
@@ -1394,17 +1394,14 @@ html[data-corridor-exit="true"] .tl-root #proposition {
      reduced motion and a parked writer all read the whole page. */
 
   /* — The withdraw —
-     The board's own head, its dek and the ledger CLOSE on the scrubbed
-     aperture — the caption card's centre-out sweep run backwards, in the
-     `.arc-ap` form arcs.css already uses for its media frames (a clip inset,
-     scrubbed, rather than the keyframed `tl-aperture` above). On the two
-     head COLUMNS, never on `.arc-head`, which carries the arrival's own
-     `clip-path` animation; the columns each hang their chrome (the origin
-     cross, the coord stamps, the close cross) outside their border box,
-     which is what the `--tl-gl-o` overscan clears. At 1 this is
-     `inset(-48px -48px)`, the same coverage as `tl-aperture`'s open frame. */
-  .tl-root #proposition[data-tl-scene] #configuration .arc-head__lead,
-  .tl-root #proposition[data-tl-scene] #configuration .arc-head__intro,
+     The ledger CLOSES on the scrubbed aperture — the caption card's
+     centre-out sweep run backwards, in the `.arc-ap` form arcs.css already
+     uses for its media frames (a clip inset, scrubbed, rather than the
+     keyframed `tl-aperture` above). ⚠ THE HEAD NO LONGER CLOSES WITH IT
+     (ADR-103, owner: the eyebrow "disappears" and the title and paragraph
+     "always appear at the same location"): the board's head stands through
+     the fold and DECODES into the phases' head in place — see "The head"
+     below. At 1 this is `inset(-48px -48px)`, `tl-aperture`'s open frame. */
   .tl-root #proposition[data-tl-scene] [data-board-state="today"] .arc-board__svg {
     clip-path: inset(
       calc(0px - var(--tl-gl-o)) calc(50% - var(--tl-ap-prop, 1) * (50% + var(--tl-gl-o)))
@@ -1465,19 +1462,240 @@ html[data-corridor-exit="true"] .tl-root #proposition {
     );
   }
 
-  /* — The title, then the paragraph —
-     The same scrubbed aperture as the withdraw, opening: the title's column
-     as the first band lands, the paragraph's only once the third plate is
-     whole (owner). */
-  .tl-root #proposition[data-tl-scene] #phases .arc-head__lead {
-    clip-path: inset(
-      calc(0px - var(--tl-gl-o)) calc(50% - var(--tl-ap-title, 1) * (50% + var(--tl-gl-o)))
-    );
+  /* — The head, decoded in place (ADR-103) —
+     ONE head stands through the whole scene. The three beats' heads are
+     pixel-identical on the datum, so beat 0's chrome (the dot grid, the two
+     crosses) serves all three and the other two beats' chrome is hidden for
+     the scene's length; what changes hands is the TEXT. With no stamp beat
+     0's text paints and the others' is hidden; `"decode"` hides all three
+     while the head layer (`headCarrier.ts`) paints mid-decode on the same
+     pixels; `"1"` / `"2"` show the phases' / the outcomes' text. Each column
+     — lead (eyebrow, title, stamp) and intro (designator, paragraph, stamp)
+     — carries its own stamp, on ADR-102's own timing.
+     ⚠ ON THE COLUMNS' CHILDREN, never on `.arc-head__lead` or `.arc-head`
+     (the chrome would go with them; `.arc-head` carries the arrival's own
+     animation). ⚠ Absent is SHOWN, on the beat-0 side: the phone, reduced
+     motion and a parked writer see the three flowing heads whole. */
+  .tl-root #proposition[data-tl-scene] #phases .arc-head .arc-head__grid,
+  .tl-root #proposition[data-tl-scene] #phases .arc-head .arc-head__mark,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-head .arc-head__grid,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-head .arc-head__mark {
+    visibility: hidden;
   }
-  .tl-root #proposition[data-tl-scene] #phases .arc-head__intro {
-    clip-path: inset(
-      calc(0px - var(--tl-gl-o)) calc(50% - var(--tl-ap-intro, 1) * (50% + var(--tl-gl-o)))
-    );
+  .tl-root #proposition[data-tl-scene] #phases .arc-head__lead > .arc-head__desig,
+  .tl-root #proposition[data-tl-scene] #phases .arc-head__lead > .arc-head__title,
+  .tl-root #proposition[data-tl-scene] #phases .arc-head__lead > .arc-head__coord,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-head__lead > .arc-head__desig,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-head__lead > .arc-head__title,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-head__lead > .arc-head__coord,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="decode"]
+    #configuration
+    .arc-head__lead
+    > .arc-head__desig,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="decode"]
+    #configuration
+    .arc-head__lead
+    > .arc-head__title,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="decode"]
+    #configuration
+    .arc-head__lead
+    > .arc-head__coord,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="1"]
+    #configuration
+    .arc-head__lead
+    > .arc-head__desig,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="1"]
+    #configuration
+    .arc-head__lead
+    > .arc-head__title,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="1"]
+    #configuration
+    .arc-head__lead
+    > .arc-head__coord,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="2"]
+    #configuration
+    .arc-head__lead
+    > .arc-head__desig,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="2"]
+    #configuration
+    .arc-head__lead
+    > .arc-head__title,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="2"]
+    #configuration
+    .arc-head__lead
+    > .arc-head__coord,
+  .tl-root #proposition[data-tl-scene] #phases .arc-head__intro > .arc-head__desig,
+  .tl-root #proposition[data-tl-scene] #phases .arc-head__intro > .arc-head__copy,
+  .tl-root #proposition[data-tl-scene] #phases .arc-head__intro > .arc-head__coord,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-head__intro > .arc-head__desig,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-head__intro > .arc-head__copy,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-head__intro > .arc-head__coord,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="decode"]
+    #configuration
+    .arc-head__intro
+    > .arc-head__desig,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="decode"]
+    #configuration
+    .arc-head__intro
+    > .arc-head__copy,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="decode"]
+    #configuration
+    .arc-head__intro
+    > .arc-head__coord,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="1"]
+    #configuration
+    .arc-head__intro
+    > .arc-head__desig,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="1"]
+    #configuration
+    .arc-head__intro
+    > .arc-head__copy,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="1"]
+    #configuration
+    .arc-head__intro
+    > .arc-head__coord,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="2"]
+    #configuration
+    .arc-head__intro
+    > .arc-head__desig,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="2"]
+    #configuration
+    .arc-head__intro
+    > .arc-head__copy,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="2"]
+    #configuration
+    .arc-head__intro
+    > .arc-head__coord {
+    visibility: hidden;
+  }
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="1"]
+    #phases
+    .arc-head__lead
+    > .arc-head__desig,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="1"]
+    #phases
+    .arc-head__lead
+    > .arc-head__title,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="1"]
+    #phases
+    .arc-head__lead
+    > .arc-head__coord,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="2"]
+    #outcomes
+    .arc-head__lead
+    > .arc-head__desig,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="2"]
+    #outcomes
+    .arc-head__lead
+    > .arc-head__title,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-lead="2"]
+    #outcomes
+    .arc-head__lead
+    > .arc-head__coord,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="1"]
+    #phases
+    .arc-head__intro
+    > .arc-head__desig,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="1"]
+    #phases
+    .arc-head__intro
+    > .arc-head__copy,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="1"]
+    #phases
+    .arc-head__intro
+    > .arc-head__coord,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="2"]
+    #outcomes
+    .arc-head__intro
+    > .arc-head__desig,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="2"]
+    #outcomes
+    .arc-head__intro
+    > .arc-head__copy,
+  .tl-root
+    #proposition[data-tl-scene][data-tl-head-intro="2"]
+    #outcomes
+    .arc-head__intro
+    > .arc-head__coord {
+    visibility: visible;
+  }
+
+  /* — The outcomes (ADR-103) —
+     A row is HELD (nothing of it paints) until the band that becomes it has
+     landed; its height then rides `--tl-row-h` (band → whole as its step
+     opens, `arcs.css`'s own rule), its wash `--tl-lit`. The stages sit over
+     each other in one definite box and each opens on the centre-out
+     aperture as its step arrives, the closing one shrinking to the slit
+     while the next grows over it (DOM order). The scan's one input is the
+     stage's own clock. ⚠ NO `transition` on any of it. */
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-plate[data-tl-row="held"] {
+    visibility: hidden;
+  }
+  /* ⚠ A COVERING BEAT IS POINTER-INERT UNTIL IT IS THE ONE BEING READ.
+     `#outcomes` is laid out over the whole stage from the pin, and a box
+     that paints nothing still takes every hit test — the phases' plates
+     under it could not be pointed at (the corner probe found `#outcomes`
+     at all four corners of plate 1). ADR-101 §A's own ruling on the
+     awaiting station, one beat later: the step stamp is the writer's word
+     that the reader is stepping through the outcomes, and before it the
+     beat is a transparent sheet. Not an `animation:` rule, so the `:not()`
+     replay trap (ADR-102) does not apply. */
+  .tl-root #proposition[data-tl-scene]:not([data-tl-step]) #outcomes {
+    pointer-events: none;
+  }
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-steps {
+    --arc-steps-h: clamp(240px, 42svh, 560px);
+  }
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-steps__stages {
+    position: relative;
+    height: var(--arc-steps-h);
+  }
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-steps__stage {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    max-width: none;
+    clip-path: inset(0 calc(50% - var(--tl-vis, 1) * 50%));
+  }
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-scan {
+    --scan-s: var(--tl-step, 1);
+  }
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-scan__img--live,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-scan__lead,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-scan__label {
+    will-change: clip-path;
+  }
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-scan__edge {
+    will-change: translate;
   }
 }
 
@@ -1512,6 +1730,26 @@ html[data-corridor-exit="true"] .tl-root #proposition {
      heads it welds to. */
   z-index: 2;
   pointer-events: none;
+}
+
+/* The head's own layer (ADR-103, `headCarrier.ts`): one leaf per rendered
+   LINE of the head's runs, posed on that line's own pixels and decoding
+   between two beats' text. ⚠ Every typographic value is INLINE, copied from
+   the run's computed style at measure — the layer sits beside `.arc-root`,
+   where none of `--arc-*` resolves, and this sheet is pinned at zero type
+   literals. `nowrap`, so a shuffling run wider than its line runs into the
+   column gap rather than re-wrapping under the reader. */
+.tl-head {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.tl-head__line {
+  position: absolute;
+  left: var(--x, 0px);
+  top: var(--y, 0px);
+  white-space: nowrap;
 }
 
 .tl-seam__carrier {

@@ -54,6 +54,48 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-15 — The head decodes in place, and the plates become the deliverables (ADR-103)
+
+**Trigger:** the owner's next stage on the proposal page — between the board
+and the phases _"the little eyebrow thing above it disappears"_ while _"the
+hero one and the paragraph always appear at the same location"_, so _"morph it
+via a glitch effect"_; and a third beat after the phases, the deck's "What we
+help build." slide cut to HIS three deliverables (_"not a simulacrum of those
+three modules"_): the plates _"collapse a bit and then move to the left,
+vertically stacked"_ into a carousel the reader scrolls through, a clean visual
+per item on the right, the first _"one of the images we've generated"_ with
+_"a super simple computer vision animation"_. The wordmark item in the same
+message had already landed (`e369bfd7`).
+
+- **The head never closes.** ADR-102's withdraw keeps only the ledger svg; a
+  second carrier layer in the stage (`headCarrier.ts`) holds one leaf per
+  rendered LINE of each head run and decodes the three heads into each other
+  on ADR-102's own timing — chrome and title scramble, the paragraph types as
+  ONE typewriter (per-line typing read as three cursors on the still).
+  ⚠ A `Range` rect is the content area: the half-leading comes off or the weld
+  is a line-height off. ⚠ The observer filters BOTH layers.
+- **The `steps` kind** (ADR-052's fifth enumerated exception) renders
+  `#outcomes` inside the same pinned scene: the plates COLLAPSE to their bands
+  (LIFO), three more carriers take the bands to the rows (one material — the
+  rows ARE plate heads), and the stage steps through three items on
+  `SCENE_STEP_SPAN` 0.5, the open row filled and the rest ring-only; the first
+  stage is a computer-vision SCAN of the packshot, every channel finished by
+  default so PRM / no-JS read whole; runway 325 → 605svh.
+- ⚠ **The rows are measured whole, then collapsed** before the seam reads the
+  landing boxes; ⚠ the seam guard reads `headCarrier.ts` as text (a comment
+  saying `scrollY` fails it); ⚠ two 8px mono fixes collide over a 200px field
+  (container query); ⚠ `getBoundingClientRect` on a clipped plate reports the
+  box, not the clip.
+- **Captured:** ADR-103; `.claude/rules/trinny-london.md` §The head decodes;
+  `.claude/rules/arcs.md` §The client model (the `steps` bullet); both
+  `.cursor` mirrors; CLAUDE.md's Trinny bullet; `trinny-seam` (12),
+  `trinny-offer` (6), `arc-terminal-markup`; the smoke's extended scene walk
+  (5k–5q, band → row welds, four head welds, the outcomes' feet, PRM); capture
+  stops 34–42.
+- **Left open:** the runway and the step span (his read), the copy (his
+  voice), a generated 4:5 still for the scan, real drawings for stages 2 and 3,
+  label decoding on the scan, dark.
+
 ### 2026-09-14 (fifth pass) — The proposal heads seat from the frame's centre, on Linear's columns (ADR-099 U2)
 
 **Trigger:** the owner's live read of the proposal page one day after asking

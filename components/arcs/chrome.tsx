@@ -63,6 +63,7 @@ const KIND_DESIG: Record<ArcSectionKind, string> = {
   "tool-index": "INDEX",
   configuration: "SETUP",
   board: "BOARD",
+  steps: "OUTCOMES",
 };
 
 /**
