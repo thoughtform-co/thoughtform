@@ -4321,6 +4321,18 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
     justify-self: stretch;
     max-width: none;
   }
+  /* ⚠ THE TITLE'S MEASURE IS ITS COLUMN, AS LINEAR'S IS (U2, owner: a
+     three-line title under a shared datum seats its body 48px lower than a
+     two-line one, and reads as "a bit lower"). The 20ch cap resolved to
+     541px against a 564px column at 1920 — 23px that cost `TWO PEOPLE,
+     BOTH OF / WHOM DID THIS AT LOOP.` its second line (measured: 552 for
+     two lines). The cap stays on the phone rung, where the column is the
+     band and 20ch is the whole budget. ⚠ A cap cannot buy what the column
+     does not have: three titles on the page need 594–686px for two lines
+     and those are copy. */
+  .arc-root[data-arc-format="proposal"] .arc-head--split .arc-head__title {
+    max-width: none;
+  }
 }
 /* A hairline where one beat ends and the next begins — with the beats
    centred in their own screens, the seam is what tells a reader the

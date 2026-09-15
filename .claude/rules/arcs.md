@@ -187,8 +187,14 @@ no-preference)`, the exact complement of the format's `min-height` release
   off the column's right edge stays on the band's edge and the paragraph takes
   the column (564px = 57ch at 1920; three lines where it was four) — which also
   keeps the scene's centre-out apertures on the column centred on the text.
-  The title keeps 20ch: measured 472 / 531 / 541 against equal tracks of 485 /
-  547 / 564, so no title re-wraps and the head's height is unchanged.
+  The title's measure is its column as well (`max-width: none` in the same
+  gate; the 20ch cap resolved to 541 against 564 at 1920 and cost one title
+  its second line). ⚠ **THE TITLE BUDGET IS TWO LINES, AND IT IS COPY, NOT A
+  CAP** — a three-line title under a shared datum seats its body 48px lower
+  and the beat reads "a bit lower" with the heads on one row (owner, 2026-09-15).
+  Linear holds its head band constant by budgeting the copy (18ch, the break
+  authored as `<br/>`), never by moving the head; a title that needs more than
+  its column for two lines is shortened, on the owner's word, never re-capped.
   ⚠ `.arc-head--split` ONLY — a rule on `.arc-head` at (0,3,0) would flatten
   `--solo` and `--center` (0,1,0). ⚠ GATED AT 901px — the sheet's stacking
   rung is (0,1,0) and loses on specificity from any position, so only the gate

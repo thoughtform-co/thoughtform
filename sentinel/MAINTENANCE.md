@@ -107,6 +107,14 @@ then apply it"_.
   720h, 289.5 at 1247h); it reads `#configuration`'s `paddingTop` against the
   rule with C read off the root, never restated. Three viewports on a serial
   spec needed `test.slow()` — the third shape tipped a 30s budget.
+- **His read of the first cut found the title budget.** The phases beat
+  "feels a bit lower" than the board's with the heads on one row — a
+  three-line title seats its body 48px lower under a shared datum, and Linear
+  holds its head band constant by copy discipline (18ch, the break authored
+  as `<br/>`), never by moving the head. Measured: the 20ch cap resolved 23px
+  under the column and cost one title its second line (lifted); three titles
+  needed 594–686px for two lines against 564 and were shortened on his choice.
+  A cap cannot buy what the column does not have — copy can.
 
 ### 2026-09-14 (fourth pass) — One pinned scene: the configuration becomes the plates (ADR-102)
 

@@ -136,7 +136,7 @@ export const TRINNY_PHASES: ArcSection = {
   layout: "plates",
   head: {
     eyebrow: "Trinny London · the shape of the work",
-    title: { pre: "We propose a modular approach", em: "that compounds." },
+    title: { pre: "A modular approach", em: "that compounds." },
     sub: "The process from briefing to final delivery has many moving parts, so the work is built in modules: Trinny London's team can take the low-hanging fruit first, or run them in parallel.",
   },
   groups: [
@@ -298,7 +298,7 @@ export const TRINNY_OFFER_SECTIONS: readonly ArcSection[] = [
     layout: "columns",
     head: {
       eyebrow: "Trinny London · inside every phase",
-      title: { pre: "How we work together,", em: "inside every phase." },
+      title: { pre: "How we work,", em: "inside every phase." },
       sub: "One loop, run with Trinny London's team. We set it up in week one, then run it beside them until they are running it without us.",
     },
     groups: [
@@ -556,7 +556,7 @@ export const TRINNY_OFFER_SECTIONS: readonly ArcSection[] = [
     layout: "columns",
     head: {
       eyebrow: "Appendix",
-      title: { pre: "Why not just subscribe to", em: "Higgsfield?" },
+      title: { pre: "Why not subscribe to", em: "Higgsfield?" },
       sub: "Because the same models sit behind both. A subscription rents your team a front end to them. This puts them inside the tools the team already uses, on Trinny London's own keys, learning from Trinny London's own work.",
     },
     groups: [

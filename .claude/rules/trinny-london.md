@@ -1093,9 +1093,19 @@ var(--arc-head-datum)`. ⚠ **AND SINCE ADR-099 U2 (2026-09-14, owner: the
   right-rail chrome stays on the band's edge, the paragraph left-anchored at
   the column start (x 996 at 1920, the midpoint plus half the gap) and taking
   the column — three lines where it was four. `.arc-head--split` only, gated
-  at 901px, no `align-self: end` (the eyebrows are the shared line). No title
-  re-wraps at any reference shape, so the head's height and the scene's 720h
-  budget are untouched by this half. ⚠ The scene's centre-out apertures clip
+  at 901px, no `align-self: end` (the eyebrows are the shared line). ⚠ **EVERY
+  TITLE ON THIS PAGE IS TWO LINES AT 1920 AND 1440** (owner, 2026-09-15: the
+  phases beat "feels a bit lower" — a three-line title seats its body 48px
+  lower under a shared datum): the title's measure is its column, and three
+  titles were shortened on his choice (`A modular approach / that compounds.`,
+  `How we work, / inside every phase.`, `Why not subscribe to / Higgsfield?`).
+  ⚠ `Two people, both of whom did this at Loop.` still runs three at
+  1280×720 — 482 needed against a 485 column by the canvas, and the browser
+  wraps it anyway; a laptop-only, pre-existing third line, his copy to cut.
+  A new title is measured against the column at all three reference widths
+  before it ships; one that needs more for two lines is copy to cut, never a
+  cap to raise. The scene's 720h budget gained 42px from the phases title's
+  third line going. ⚠ The scene's centre-out apertures clip
   `.arc-head__intro`; with the paragraph filling the column their centre IS
   the text's — a capped paragraph in a stretched column would wipe off-centre.
 - ⚠ **THE COST IS STILL THE SLACK POOLING AT THE FLOOR, AND THE ANSWER MOVED
