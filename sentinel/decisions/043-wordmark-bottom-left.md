@@ -130,37 +130,55 @@ state while keeping the new content-aligned hero position. Verified at 1440×900
 hero `left` ≈ content edge (145 vs 142), collapsed `left` = `--hud-margin`
 (41 vs 40.5); `transition-property` includes `left`.
 
-## Update (2026-09-15) — the rails connect to the corner chrome; owner's reversal
+## Update (2026-09-15) — the July ruling stands, a third time; the end ticks sit flush
 
-Owner, on the live frame and on the Trinny deck that copies it: the rails
-must CONNECT to the corners — the left track continues the top-left
-bracket's vertical arm with no gap, runs down to the bottom corner band with
-no gap, and the first and last ticks sit flush at the rail's ends (the 100%
-tick had hung 2px below the box since the ladder was authored). This is the
-"extend the hairline into the corner chrome" reading the Update of
-2026-07-16 rejected on sight. The owner was shown that ruling and chose the
-connection; it is reversed on his word.
+Owner, on the Trinny deck's PDF (which copies this frame): "the left rail
+and the bottom-left tick, as well as the bottom-right tick, are not properly
+connected … it's also on our homepage, so we need to fix it once and for
+all." Two things were wrong with how that was read.
 
-What changed: `--hud-rail-y-start` is `margin + corner-zone` (the TL
-bracket's foot); a new `--hud-rail-y-end` beside it, the same value, is what
-`.hud__rail { bottom }`, the casefile's `--fl-rail-bot` and the two labs'
-mirrors all read, so a mirror cannot drift again. The `clamp(16px, 1.8vw,
-32px)` breathing gap and the wordmark `max()` arm are gone from both ends,
-and the rail is vertically centred by construction. On the right the track
-lands on the `.rin-settings` box top (the BR bracket is `border: 0` under
-the instruments, ADR-059); on the left on the collapsed wordmark, whose box
-now starts 5.81% of its visual width left of the track's centre so the
-track runs INTO the T-stem of THOUGHT rather than ending on the serif's tip
-(the stem spans 41.8–61.7 of the lockup's 890.2 viewBox units). Ticks are
-centred on their percent line (`translate: 0 -50%`, like the labels and the
-diamond) with the 0% tick at `0` and the 100% tick at `-100%`; the emitter
-is untouched. The dead `--hud-rail-top` / `--hud-rail-bottom` tokens went
-with it.
+**What he meant** was the END TICKS: the 100% tick's ink had hung 2px BELOW
+the rail box since the ladder was authored (a tick is positioned by its top
+edge with no translate), so the rail's last mark was not on the rail. Fixed
+in CSS alone: ticks are centred on their percent line (`translate: 0 -50%`,
+like the labels, the diamond and the telemetry seats), the `:first-child` of
+`#leftTicks` / `#rightTicks` sits at `0` and the `:last-child` at `-100%`;
+the emitter and its markup pins are untouched.
 
-Consequence, not a decision: the voidwalker datum (ADR-082 U20, hangs from
-`--hud-rail-y-start`) sits 23–26px higher at ≥720h. The stage gains headroom;
-the owner reads the closer pair live. Out of scope, noted: at 1280×720 the
-manifest diamond still paints on the left rail (the desktop hide is
-`min-width: 1101px and min-height: 760px`), and the two "HUD" element
-snapshots in `landing-page.spec.ts` are vacuous (a clipped empty box and an
-opacity-0 element).
+**What was built instead, for one morning,** was the 2026-07-16 round-1
+reading again — the track extended into the top-left bracket's foot and
+down onto the bottom corner band, the collapsed wordmark shifted so the
+track ran into the T-stem of THOUGHT, and the Trinny deck given a top-right
+bracket for its rail to land on. The owner had ticked a "(Recommended)"
+option that described it, never having seen it; on the first still he
+rejected it on sight, exactly as in July: "our brand mark and the Trinny
+London logo are overlapping with the left and right rails … the top-right
+corner is connected to the rail. If you look at our Thoughtform design
+language, this should never happen." **A rail never touches a corner mark
+or a logo; the site's top-right is the nav and carries no bracket.** The
+July geometry is restored to the pixel — `--hud-rail-y-start` =
+`margin + corner-zone + clamp(16px, 1.8vw, 32px)`, the bottom mirroring it
+with the wordmark `max()` arm, the lockup at `--hud-margin`.
+
+What survives from the morning, because it is an improvement in its own
+right: the rail's bottom is a TOKEN now, `--hud-rail-y-end`, read by
+`.hud__rail { bottom }`, the casefile's `--fl-rail-bot`, both labs and
+`scripts/capture-hud-panel-lab.mjs` — the mirror that used to be a literal
+copy can no longer drift; and the dead `--hud-rail-top` /
+`--hud-rail-bottom` tokens are gone.
+
+Two lessons for the record: **an option the owner has not SEEN cannot be
+"recommended"** — a geometry change on the frame is shown as a still before
+it is offered; and **a still must be read for overlaps between chrome and
+marks before anything ships** — the morning's stills showed the rail
+entering the lockup and the reviewer called it "intentional".
+
+Verified after the restore, headed at 1280×720 / 1440×800 / 1920×1247, dark
+and light: TL bracket foot → rail top 23.0 / 25.9 / 32.0, rail bottom →
+settings box top 24.1 / 26.5 / 32.0 (the July numbers), first-tick top −
+rail top 0.0, last-tick bottom − rail bottom 0.0, mid-rail within 1px of
+the midline. Out of scope, noted: at 1280×720 the manifest diamond still
+paints on the left rail (the desktop hide is `min-width: 1101px and
+min-height: 760px`), and the two "HUD" element snapshots in
+`landing-page.spec.ts` are vacuous (a clipped empty box and an opacity-0
+element).

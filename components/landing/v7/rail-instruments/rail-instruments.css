@@ -205,9 +205,10 @@
   right: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(10px, 1.2vw, 18px));
   bottom: max(var(--hud-margin), var(--safe-bottom, 0px));
   height: var(--hud-corner-zone);
-  /* ⚠ `height: --hud-corner-zone` on `bottom: --hud-margin` is what
-     `--hud-rail-y-end` lands on: the right rail's track ends at this box's
-     top edge (ADR-043 Update 2026-09-15). Move one, move the other. */
+  /* ⚠ `height: --hud-corner-zone` on `bottom: --hud-margin` is the band
+     `--hud-rail-y-end` clears: the right rail's track ends
+     `clamp(16px, 1.8vw, 32px)` above this box's top edge and never touches
+     it (ADR-043). Move one, move the other. */
   display: flex;
   align-items: center;
   /* Marks to controls — wider than the gap BETWEEN controls, so the row

@@ -58,16 +58,19 @@
      to them (the services casefile mirrors both; the voidwalker datum hangs
      from the start). Keeping the expressions here prevents a second,
      drifting rail origin.
-     ⚠ THE RAILS CONNECT TO THE CORNER CHROME (ADR-043 Update 2026-09-15,
-     the owner's reversal of the 2026-07-16 breathing gap): the track starts
-     where the TL bracket's vertical arm ends (margin + corner-zone) and ends
-     the same distance up from the floor, where the bottom corner band
-     begins — the `.rin-settings` cluster's box on the right, the collapsed
-     wordmark's box on the left. No gap at either end. The two tokens are one
-     value so mid-rail = the viewport midline by construction (the ADR-031 U8
-     register anchor). */
-  --hud-rail-y-start: calc(var(--hud-margin) + var(--hud-corner-zone));
-  --hud-rail-y-end: var(--hud-rail-y-start);
+     ⚠ THE RAIL NEVER TOUCHES THE CORNER CHROME OR THE WORDMARK (ADR-043
+     Update 2026-07-16, re-affirmed 2026-09-15 — a connected version was
+     shipped for one morning and rejected on sight, twice now). The track
+     starts `clamp(16px, 1.8vw, 32px)` below the TL bracket's foot and its
+     end MIRRORS that above the bottom corner band, with a max() arm that
+     keeps it 8px above the wordmark on short viewports. Both ends are TOKENS
+     so no mirror can drift; what "connected" ever meant was the END TICKS
+     sitting flush at the rail's ends (tick rules below). */
+  --hud-rail-y-start: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px));
+  --hud-rail-y-end: max(
+    calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
+    calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
+  );
   /* Guide hairline offset from the rail-aside outer edge. Held at 0
      so the line lands flush with the corner brackets per the Brand
      Codex Figma reference (file XO8yGN90SfxiG1hmYPGYXn, node 1767:2327).
@@ -476,13 +479,8 @@
      column. On the hero it sits inboard, aligned with the copy; the
      collapse glides it to the rail AND scales it down in one 0.4s move
      (transform-origin: bottom left keeps the shrunk mark pinned in the
-     corner). 0.82 → 0.68: once scrolled it reads as a quiet signature.
-     ⚠ THE T-STEM OF THOUGHT SITS ON THE RAIL LINE (ADR-043 Update
-     2026-09-15): the stem spans 41.8–61.7 of the lockup's 890.2 viewBox
-     units, so the box starts 5.81% of its VISUAL width (0.68 × the clamp)
-     left of the track's centre (margin + 1px), and the track runs straight
-     into the stem instead of ending on the serif's tip. */
-  left: calc(var(--hud-margin) + 1px - 0.0581 * 0.68 * clamp(104px, 8.5vw, 150px));
+     corner). 0.82 → 0.68: once scrolled it reads as a quiet signature. */
+  left: var(--hud-margin);
   transform: scale(0.68);
 }
 .hud__brand img {
@@ -986,22 +984,21 @@
   }
 }
 
-/* Rails — CONNECT to the corner chrome (ADR-043 Update 2026-09-15) */
+/* Rails — clear the corner brackets above and the bottom band below */
 .hud__rail {
   position: absolute;
   top: var(--hud-rail-y-start);
-  /* Both ends read the :root pair (owner, 2026-09-15, reversing the
-     2026-07-16 breathing gap): the track continues the TL bracket's vertical
-     arm with no gap and runs to the bottom corner band with no gap — on the
-     right that band is the `.rin-settings` box (top = 100% − margin −
-     corner-zone; the BR bracket is border 0 under the instruments, ADR-059),
-     on the left the collapsed wordmark's box, whose T-stem the track runs
-     into. Ticks sit at 0–100% of this box and the first and last are FLUSH
-     at its ends (tick rules below). The old max() arm that budgeted the
-     lockup's height is gone: on 16:9 laptops the lockup is 1–1.6px taller
-     than the corner zone (9.5px at 1920×800) and the track runs that far into
-     its BOUNDING BOX, which is the T's stem by design. Mid-rail = the viewport
-     midline exactly (the max() arm used to put it ~0.5px off). */
+  /* Both ends read the :root pair. Bottom end MIRRORS the top (owner,
+     2026-07-16): the ladder's LAST TICK is the rail's terminus, holding the
+     same breathing gap above the bottom corner band (the `.rin-settings`
+     cluster on the right, the collapsed wordmark on the left) as the first
+     tick holds below the TL bracket — the rail is vertically centred, so
+     mid-rail = the viewport midline (the ADR-031 U8 register anchor). The
+     track never extends past the last tick and never touches the corner
+     chrome or the wordmark: a connected version shipped on 2026-07-16 and
+     again on 2026-09-15 and was rejected on sight both times. The max() arm
+     guards the wordmark on short viewports. Ticks sit at 0–100% of this box
+     and the first and last are FLUSH at its ends (tick rules below). */
   bottom: var(--hud-rail-y-end);
   width: var(--hud-rail-width);
   display: flex;
@@ -1030,8 +1027,9 @@
    so the line lands flush with the corner brackets, matching the
    Brand Codex Figma reference). The previous gradient fade was
    retired earlier: the rail must read as a continuous instrument
-   hairline, not a soft glow. It continues the TL bracket's vertical arm
-   and lands on the bottom corner band (ADR-043 Update 2026-09-15). */
+   hairline, not a soft glow. The corner brackets above and the
+   brandmark anchor below give the line breathing room at top +
+   bottom; the line never touches either (ADR-043). */
 .hud__rail__track {
   position: absolute;
   top: 0;
