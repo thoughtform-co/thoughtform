@@ -10,6 +10,10 @@ import "@/components/landing/home-v2/services/casefile/console/console.css";
 import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 import "@/components/landing/home-v2/services/proof-stack/proof-stack.css";
 import "@/components/landing/home-v2/about/about-stage.css";
+// The site footer (ADR-105) — `#contact` is the page's ending and the
+// corridor's opaque cover. BEFORE theme.css like every route sheet, so
+// the light rows cascade last.
+import "@/components/landing/v7/site-footer/site-footer.css";
 // The through-line (ADR-074) — the section sheet and its drawings' sheet,
 // both BEFORE theme.css so the light rows cascade last.
 import "@/components/landing/home-v2/voidwalker/voidwalker.css";
@@ -85,6 +89,16 @@ const CORRIDOR_REPLACED_STATIONS = [
   // `href="#proof"` anchor, which is why the hero and intelligence-layer
   // CTAs were retargeted to #services first.
   "proof",
+  // ⚠ ADR-105: `#practice` was an EMPTY breather — its only child (`approach`)
+  // is stripped above, so what survived was a section shell whose one job was
+  // to be the opaque cover that ends the corridor ambient. A blank panel
+  // sliding over the era stage is what the owner read as wrong, and the
+  // FOOTER (`#contact`) takes the cover role now: `home-v2.css` and
+  // `useCorridorExitScroll` both name it, in the same commit (ADR-030 §6).
+  // Stripping it here is also what rewrites any `href="#practice"` anchor —
+  // except `HudNav`'s, which is hardcoded in React and had to be deleted by
+  // hand (that file's own comment warns about exactly this).
+  "practice",
 ] as const;
 const CORRIDOR_MOUNT_ID = "home-corridor-mount";
 

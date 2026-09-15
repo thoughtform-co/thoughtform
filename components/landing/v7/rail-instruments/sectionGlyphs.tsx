@@ -55,10 +55,13 @@ function Mark({ children }: { children: React.ReactNode }) {
  * ⚠ NOT EVERY KEY IS SEATED. The live roster (ADR-059 U3) is `hero` ·
  * `thesis` · `arc` · `proof` · `services` · `about` top-left and `contact`
  * bottom-right. `navigate` / `encode` / `build` are drawn but unseated —
- * the Arc took one mark for all three — and so is `practice`. They are kept
- * because they are still real beats and a real station, so a roster change
- * does not have to re-draw them; `encode`'s bracket vocabulary is also what
- * the settings corner's session mark borrows.
+ * the Arc took one mark for all three — and so is `practice`, whose STATION
+ * went with ADR-105. They are kept because the three corridor beats are still
+ * real, and because a drawing is cheap to keep and expensive to re-derive;
+ * `encode`'s bracket vocabulary is also what the settings corner's session
+ * mark borrows. ⚠ `practice` is now a glyph with no station AND no seat — the
+ * first of its kind here, and a candidate for deletion once the footer has
+ * been read live.
  */
 export const SECTION_GLYPHS: Readonly<Record<string, ReactElement>> = {
   // ── The journey, top-left ─────────────────────────────────────────────

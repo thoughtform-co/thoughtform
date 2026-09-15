@@ -188,6 +188,15 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
+  /* The site footer (ADR-105). Authored token-only from line one — which is
+     the only way a new sheet enters this map at zero: `proof-stack.css` sat
+     in NEITHER ratchet for a week while its own header said it was in both,
+     and retro-fitting is what this exists to prevent. */
+  "components/landing/v7/site-footer/site-footer.css": {
+    tier: "content",
+    content: { A: 0, B: 0, C: 0 },
+    frame: { A: 0, B: 0, C: 0 },
+  },
 };
 
 /**

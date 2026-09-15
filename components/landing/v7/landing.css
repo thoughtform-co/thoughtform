@@ -9277,9 +9277,15 @@ html {
    size when it computes start/end positions on first refresh, which
    breaks the practice entry/exit math (the section is actually taller
    than 100vh once its chamber + sticky orbit lay out).
-   Disable the optimization for #practice so its real content height is
-   always available to ScrollTrigger. */
-#practice.station {
+
+   ⚠ ADR-105: `#practice` IS DELETED AND THE OPT-OUT MOVES TO `#contact`,
+   with a different reason that needs it just as badly. The footer is the
+   corridor's opaque COVER now (home-v2.css, `useCorridorExitScroll`), and
+   both halves of that lockstep key on its RECT — a 100vh placeholder for a
+   1–2 viewport footer makes the kill edge land somewhere the reader is not.
+   `mobile-sections.md` §4 measured the lie at 360px on the old `#contact`;
+   a bold footer only widens it. */
+#contact.station {
   content-visibility: visible;
   contain-intrinsic-size: auto;
 }
@@ -10101,12 +10107,6 @@ html {
 /* Phone & small-tablet — tighten rhythm, touch-safe CTAs, narrower
    stage so the orbit stays readable in portrait. */
 @media (max-width: 760px) {
-  #practice.station {
-    min-height: 0;
-    /* Floor inputs, not padding — see #definition above. */
-    --station-pad-top: clamp(80px, 16vw, 120px);
-    --station-pad-bottom: clamp(64px, 12vw, 100px);
-  }
   .approach {
     margin-left: 0;
     margin-right: 0;
@@ -12371,9 +12371,9 @@ html {
 
    ⚠ IT IS A FLOOR, NOT A PADDING. `max()` means a station that already
    clears the chrome is byte-identical. Measured at 390x844 (both bands
-   resolve to 56px): #about 120/120, #practice 80/64 and #contact 140/220
-   are unchanged, and #services — which zeroes its bottom padding in
-   services.css so the runway ends flush — moves 0 → 56.
+   resolve to 56px): #about 120/120 and #contact 140/220 are unchanged, and
+   #services — which zeroes its bottom padding in services.css so the runway
+   ends flush — moves 0 → 56. (#practice was 80/64 until ADR-105 deleted it.)
 
    ⚠ AND IT IS LAST IN THE FILE ON PURPOSE. A station's own padding is
    written at id specificity (`#about.station` is (1,1,0)) which outranks
@@ -12411,7 +12411,6 @@ html {
   #definition.station,
   #services.station,
   #about.station,
-  #practice.station,
   #contact.station {
     /* The fallbacks are `.station`'s own `padding: 140px 0 220px`. */
     padding-top: max(var(--station-pad-top, 140px), var(--mobile-chrome-top));

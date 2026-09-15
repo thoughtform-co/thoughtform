@@ -5530,38 +5530,44 @@ html { scroll-behavior: smooth; }
     <div class="vw-root" data-voidwalker-root></div>
   </section>
 
-  <!-- ═══════════ 06 CONTACT ═══════════ -->
+  <!-- ═══════════ 06 CONTACT — THE SITE FOOTER (ADR-105) ═══════════
+       An authored EMPTY SHELL, filled at runtime by `SiteFooterPortal`
+       (`components/landing/v7/site-footer/`) — the same nested-root seam
+       `#about` and `#voidwalker` already carry, and the reason the footer
+       can be React while everything around it is parsed HTML.
+
+       ⚠ IT STAYS A `<section class="station" data-station="contact">`.
+       The rail-manifest drift guard matches `<section … data-station="…">`
+       over this STRING and compares it equal to the manifest's station
+       targets, `useLandingScroll` collects `.station`, the mobile padding
+       floor keys on `#contact.station`, and the corridor's opaque-cover
+       rule is a `~` sibling selector. A `<footer id="contact">` would fall
+       out of all four. The landmark role is `contentinfo` on the React root
+       instead — a `<footer>` nested in a `<section>` is not `contentinfo`
+       anyway.
+
+       ⚠ AND IT MUST STAY INSIDE `<main class="stations">` for that same
+       `~` combinator, and for the z-index reasoning: `.stations` is the
+       stacking context the cover's `z-index: 6` is measured in.
+
+       What was here: "Plot your / course." over a mailto button, plus a
+       three-column `<footer class="foot">` below `</main>` whose three
+       socials were all `href="#"`. Owner, 2026-09-15: "I don't think we
+       need 'Plot Your Course' or the current footer."
+  ═══════════════════════════════════════════════════════════════════ -->
   <section class="station" id="contact" data-station="contact" data-screen-label="10 Contact">
-    <div class="contact" data-m-group>
-      <div class="station__idx" style="justify-content:center">Contact<span class="landmark" style="margin-left:0">Event horizon · destination lock</span></div>
-      <h2 class="contact__title" data-m="title">Plot your<br><em>course.</em></h2>
-      <p class="contact__desc" data-m="body">
-        Ready to navigate intelligence with your team? Send a signal. We'll
-        reply with a route.
-      </p>
-      <div class="contact__cta" data-m="fade">
-        <a href="mailto:hello@thoughtform.co" class="btn btn--solid">Initiate contact<span class="arrow"></span></a>
-      </div>
-      <div class="contact__email" data-m="body">
-        <a href="mailto:hello@thoughtform.co">hello@thoughtform.co</a>
-      </div>
-    </div>
+    <div data-site-footer-root></div>
   </section>
 </main>
 
-<!-- ═══ FOOTER ═══ -->
-<footer class="foot">
-  <div class="foot__l">
-    <img src="assets/logos/Thoughtform_Brandmark.svg" alt=""/>
-    <span>Thoughtform · 2026</span>
-  </div>
-  <div class="foot__c">Navigate intelligence.</div>
-  <div class="foot__r">
-    <a href="#">Twitter</a>
-    <a href="#">LinkedIn</a>
-    <a href="#">GitHub</a>
-  </div>
-</footer>
+<!-- ═══ FOOTER ═══ (deleted, ADR-105 — `#contact` IS the footer now. The
+     old bar sat OUTSIDE `<main class="stations">`, carried no id and was
+     neither a `<section>` nor a `<div>`, so `removeStationsFromBody` could
+     not reach it: it had to go from the source. Its three socials were all
+     `href="#"`, which is the other half of what the owner asked to remove.
+     ⚠ `.foot*` CSS in landing.css STAYS — `/claude-workshop` and
+     `/arcs/trinny-london/proposal` ship this markup from their OWN
+     prototypes and neither has a visual guard on its footer. -->
 
 <!-- ═══ TWEAKS PANEL ═══ -->
 <div class="tweaks" id="tweaks">

@@ -32,6 +32,9 @@ const CORRIDOR_REPLACED_STATIONS = [
   "build",
   "tools",
   "proof",
+  // ADR-105: the empty breather, whose only remaining job was to be the
+  // corridor's opaque cover — the footer (`#contact`) takes that now.
+  "practice",
 ] as const;
 
 // Mirrors app/(marketing)/page.tsx: specs run in array order, each
@@ -174,21 +177,23 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
     const servicesIdx = bodyHtml.search(/<section\b[^>]*\bid="services"/);
     const aboutIdx = bodyHtml.search(/<section\b[^>]*\bid="about"/);
     const voidwalkerIdx = bodyHtml.search(/<section\b[^>]*\bid="voidwalker"/);
-    const practiceIdx = bodyHtml.search(/<section\b[^>]*\bid="practice"/);
+    const contactIdx = bodyHtml.search(/<section\b[^>]*\bid="contact"/);
 
     expect(mountIdx).toBeGreaterThan(0);
     expect(servicesIdx).toBeGreaterThan(mountIdx);
     // #about (the bio) directly follows services — the ADR-033 funnel;
     // #voidwalker (the hologram through-line) follows as a transparent
-    // capable stage; #practice trails as its lockstep ambient cover.
+    // capable stage. ⚠ ADR-105: what trails it is `#contact`, the FOOTER,
+    // which is its lockstep ambient cover; `#practice` held that role and was
+    // otherwise an empty breather, so it went with it.
     expect(aboutIdx).toBeGreaterThan(servicesIdx);
     expect(voidwalkerIdx).toBeGreaterThan(aboutIdx);
-    expect(practiceIdx).toBeGreaterThan(voidwalkerIdx);
+    expect(contactIdx).toBeGreaterThan(voidwalkerIdx);
     // The voidwalker portal slot survives the relocation INSIDE the
     // relocated section (VoidwalkerPortal mounts into it).
     expect(bodyHtml).toMatch(/<div\b[^>]*\bdata-voidwalker-root/);
     expect(bodyHtml.search(/<div\b[^>]*\bdata-voidwalker-root/)).toBeGreaterThan(voidwalkerIdx);
-    expect(bodyHtml.search(/<div\b[^>]*\bdata-voidwalker-root/)).toBeLessThan(practiceIdx);
+    expect(bodyHtml.search(/<div\b[^>]*\bdata-voidwalker-root/)).toBeLessThan(contactIdx);
 
     // Both retired case surfaces are gone, portal slots included.
     // (Element-form assertions: the authored prototype's explanatory
@@ -225,7 +230,7 @@ describe("v7-parse — production homepage station surgery (ADR-018, ADR-021)", 
       corridorMountId: CORRIDOR_MOUNT_ID,
     });
 
-    const order = ["hero", "services", "about", "voidwalker", "practice", "contact"];
+    const order = ["hero", "services", "about", "voidwalker", "contact"];
     let cursor = 0;
     for (const id of order) {
       const idx = bodyHtml.indexOf(`id="${id}"`, cursor);

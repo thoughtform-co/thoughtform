@@ -210,15 +210,24 @@ async function settleScroll(page: Page, capMs = 1600): Promise<void> {
  * waits on the animations themselves — `finished` resolves immediately for an
  * already-finished one — and is a no-op on any surface that does not opt in
  * (`/trinny-london` passes no `arrival`, so there are no animations to await).
+ *
+ * ⚠ **SUBTREE, AND THE CAP HAD TO GROW WITH IT (ADR-104).** The beat is two
+ * passes now: the card's own aperture (720ms), a 200ms hold, and then the
+ * content filling the skeleton (720ms) — and pass 2 runs on `.pf-card__body`
+ * and the two `.pf-cardwire` halves, which are DESCENDANTS. An element's own
+ * `getAnimations()` cannot see them, so this returned at 720ms and handed
+ * every reading after it a half-filled card: the exact flake this helper was
+ * written to remove, one pass later. 3000ms would also have clipped the
+ * 1640ms beat under load.
  */
-async function settleArrival(page: Page, idx: number, capMs = 3000): Promise<void> {
+async function settleArrival(page: Page, idx: number, capMs = 5000): Promise<void> {
   await page.evaluate(
     async ({ i, cap }) => {
       const card = document
         .querySelector<HTMLElement>(`[data-pc-index="${i}"]`)
         ?.querySelector<HTMLElement>(".pf-card");
       if (!card) return;
-      const anims = card.getAnimations();
+      const anims = card.getAnimations({ subtree: true });
       if (anims.length === 0) return;
       await Promise.race([
         Promise.all(anims.map((a) => a.finished.catch(() => undefined))),
@@ -2416,12 +2425,25 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // The four scroll waypoints below cover 10+ viewports each; on this
     // machine `waitForTimeout(900)` regularly ends before Chrome's own
     // smooth scroll does, so the reader sits ~1vh short of the target and
-    // the "under practice" assertion measures ambient state while
-    // `#practice.top` is still positive. Poll until scrollY settles, so
+    // the "under the cover" assertion measures ambient state while
+    // `#contact.top` is still positive. Poll until scrollY settles, so
     // the assertion measures the state the scroll target names.
+    // ⚠ AND A TARGET PAST THE DOCUMENT'S END CAN NEVER SETTLE. `scrollTo`
+    // clamps silently; `waitForFunction` does not, so it waits out its whole
+    // timeout on a page that is already exactly where it was asked to go.
+    // ADR-105 made that reachable: deleting `#practice` took ~1 viewport of
+    // tail off the document, and until the footer is built `#contact.top +
+    // 0.3vh` lands 113px past `maxScroll` at 1440x900 (measured). Clamping
+    // here is right whatever the tail's length — the waypoint means "walk
+    // this far in, or as far as the document allows".
     const scrollAndSettle = async (y: number) => {
-      await page.evaluate((ty) => window.scrollTo(0, ty as number), y);
-      await page.waitForFunction((ty) => Math.abs(window.scrollY - (ty as number)) <= 2, y, {
+      const target = await page.evaluate((ty) => {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        const clamped = Math.max(0, Math.min(ty as number, max));
+        window.scrollTo(0, clamped);
+        return clamped;
+      }, y);
+      await page.waitForFunction((ty) => Math.abs(window.scrollY - (ty as number)) <= 2, target, {
         timeout: 4000,
       });
     };
@@ -2479,7 +2501,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // ⚠ THE COVER MOVED ONE STATION DOWN (ADR-081 / ADR-082 U2). The
     // production hologram makes `#voidwalker` a pinned TRANSPARENT stage,
     // so the ambient survives it exactly as it survives pinned #about and
-    // terminates under `#practice`. The hook's next-station query and the
+    // terminates under `#contact` (ADR-105). The hook's next-station query and the
     // CSS cover rule name that station together.
     /* ⚠ THE WAYPOINT IS ERA 0's SLICE CENTRE, NOT THE RUNWAY'S MIDPOINT.
        Since ADR-082 U10 scroll IS the era selector, so a progress picks an
@@ -2582,11 +2604,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     expect(parseFloat(replayed.mastOpacity)).toBe(1);
     expect(replayed.mastText).toBe("The Intelligence Architect");
 
-    // Walk under #practice: THIS is where the ambient hold ends now. The
+    // Walk under the COVER: THIS is where the ambient hold ends now. The
     // bottom gate is keyed to the SAME rect as the fade envelope, so there
     // is no hard cut at the travel runway's end.
+    // ⚠ ADR-105: the cover is `#contact`, the FOOTER. The `?? contact`
+    // fallback below had been carrying the right answer for a while, but the
+    // read further down still named `#practice` DIRECTLY — so a run would
+    // scroll to the right place and then report `null` for the rect it
+    // asserts on. Both name one station now.
     const underNext = await page.evaluate(() => {
-      const next = document.getElementById("practice") ?? document.getElementById("contact");
+      const next = document.getElementById("contact");
       if (!next) return null;
       return Math.round(
         window.scrollY + next.getBoundingClientRect().top + window.innerHeight * 0.3
@@ -2597,14 +2624,26 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // Wait for the corridor's rAF writer to see the settled scroll.
     await page.waitForTimeout(600);
     const after = await page.evaluate(() => {
-      const pr = document.getElementById("practice");
+      const pr = document.getElementById("contact");
       return {
         ambient: document.documentElement.hasAttribute("data-services-ambient"),
         exit: document.documentElement.hasAttribute("data-corridor-exit"),
         prTopVh: pr ? +(pr.getBoundingClientRect().top / window.innerHeight).toFixed(2) : null,
+        /* ⚠ COVERAGE, NOT A NEGATIVE TOP. `top < 0` was a proxy for "the walk
+           got inside the cover" and it only holds while something FOLLOWS the
+           station. ADR-105 made the cover the FOOTER — the document's last
+           viewport — so its top rests at exactly 0 and there is nowhere
+           further to go. What the ambient's death depends on is that an opaque
+           station FILLS the screen; that is the property, and it is the same
+           correction `about-voidwalker-handoff-boundaries` needed. */
+        coversVh: pr
+          ? pr.getBoundingClientRect().bottom >= window.innerHeight &&
+            pr.getBoundingClientRect().top <= 0
+          : null,
       };
     });
-    expect(after.prTopVh, "the walk actually reached inside #practice (top < 0)").toBeLessThan(0);
+    expect(after.prTopVh, "the walk landed above #contact").toBeLessThanOrEqual(0);
+    expect(after.coversVh, "#contact does not fill the viewport at the kill edge").toBe(true);
     expect(after.ambient).toBe(false);
     expect(after.exit).toBe(false);
   });
@@ -3581,15 +3620,40 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       const sibling = document.querySelector<HTMLElement>('[data-pc-index="1"] .pf-card');
       if (!slot || !card || !sibling) return null;
       const cs = getComputedStyle(card);
+      const clipOf = (el: HTMLElement | null) => (el ? getComputedStyle(el).clipPath : null);
       return {
         arrive: slot.getAttribute("data-pf-arrive"),
         visibility: cs.visibility,
         animationName: cs.animationName,
-        running: card.getAnimations().filter((a) => a.playState === "running").length,
+        /* ⚠ SUBTREE. Pass 2 (ADR-104) animates `.pf-card__body` and the two
+           `.pf-cardwire` halves, which are DESCENDANTS — an element's own
+           `getAnimations()` cannot see them, so the running count would go
+           vacuous exactly where the new clocks are. */
+        running: card.getAnimations({ subtree: true }).filter((a) => a.playState === "running")
+          .length,
         clip: cs.clipPath,
         siblingClip: getComputedStyle(sibling).clipPath,
         translate: cs.translate,
         filter: cs.filter,
+        /* ── PASS 2's REST STATE (ADR-104) ──────────────────────────
+           The skeleton the aperture reveals must be GONE once the card is
+           settled, and the body must be back on the cascade. Both are
+           `fill-mode: backwards`, so a `forwards` typo here would leave the
+           body permanently clipped and the halves pinned — neither of which
+           a settled screenshot would necessarily show. */
+        /* ⚠ A PROBE REPORTS, IT DOES NOT THROW. Reading these through `!`
+           turned a missing element into
+           "getComputedStyle: parameter 1 is not of type 'Element'" — a stack
+           trace that names the harness rather than the page, and says
+           nothing about WHICH element was absent. */
+        wires: card.querySelectorAll(".pf-cardwire").length,
+        bodyClip: clipOf(card.querySelector<HTMLElement>(".pf-card__body")),
+        wireClipL: clipOf(card.querySelector<HTMLElement>(".pf-cardwire--l")),
+        wireClipR: clipOf(card.querySelector<HTMLElement>(".pf-cardwire--r")),
+        /* The skeleton letters nothing — that is what keeps it out of the
+           confidentiality scanner and off the type ladder (ADR-104). */
+        wireText: (card.querySelector<HTMLElement>(".pf-cardwire")?.innerText ?? "").trim(),
+        siblingWires: sibling.querySelectorAll(".pf-cardwire").length,
       };
     });
     expect(glitch, "card 0 never mounted").not.toBeNull();
@@ -3605,6 +3669,29 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     );
     expect(glitch!.translate).toMatch(/^(none|0px( 0px)?)$/);
     expect(glitch!.filter, "the aperture grew a filter (ADR-097 U12: pure motion)").toBe("none");
+
+    /* ── PASS 2: THE CARD ASSEMBLES FROM ITS WIREFRAME (ADR-104) ───────
+       Owner, 2026-09-15: the aperture should reveal "a wireframe of all the
+       elements" and the content should arrive "once it's fully open",
+       because opening onto the ATL's thumbnail "doesn't really work". Both
+       halves of the drawing exist, and once the card is settled the
+       skeleton is fully retracted and the body is back on the cascade.
+       ⚠ ONLY CARD 0 IS DRAWN, because only card 0 opens — a skeleton on a
+       card with no aperture is a layer that never paints. */
+    expect(glitch!.wires, "the skeleton renders as TWO halves (the complement)").toBe(2);
+    expect(glitch!.siblingWires, "a card that never opens was given a skeleton").toBe(0);
+    expect(glitch!.bodyClip, "pass 2 pinned a clip on the body (fill-mode must be backwards)").toBe(
+      "none"
+    );
+    expect(glitch!.wireClipL, "the skeleton's left half did not retract").toBe(
+      "inset(0px 100% 0px 0px)"
+    );
+    expect(glitch!.wireClipR, "the skeleton's right half did not retract").toBe(
+      "inset(0px 0px 0px 100%)"
+    );
+    expect(glitch!.wireText, "the skeleton lettered something (ADR-104: bars and boxes only)").toBe(
+      ""
+    );
 
     /* ── …AND IT IS ABSENT UNTIL IT DOES (ADR-097 U11) ─────────────────
        The half of the ruling a settled read cannot see. Card 0 is solved to

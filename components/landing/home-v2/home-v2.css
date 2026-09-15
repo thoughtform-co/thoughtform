@@ -423,9 +423,16 @@ html[data-corridor-exit="true"] #voidwalker {
 /* ⚠ ADR-081 / ADR-082 U2 — THE COVER MOVED, AND BOTH SIDES MOVE TOGETHER.
    A capable Voidwalker presentation is a pinned TRANSPARENT stage: today
    the hologram, with the retained time-tunnel path sharing the contract.
-   It cannot end the ambient hold, so the opaque cover passes to #practice
-   and `useCorridorExitScroll`'s `nextStation` query names the SAME station
-   while either transparent mode attribute is engaged.
+   It cannot end the ambient hold, so the opaque cover passes to the next
+   opaque station and `useCorridorExitScroll`'s `nextStation` query names the
+   SAME station while either transparent mode attribute is engaged.
+
+   ⚠ ADR-105: THAT STATION IS `#contact` NOW. It was `#practice`, an EMPTY
+   breather kept alive for this one job — and a blank panel sliding over the
+   era stage is exactly what the owner read as wrong. `#contact` is the site
+   footer: a full-bleed key visual over an opaque `var(--void)` ground, so it
+   satisfies the only property this role requires, and the handoff smoke
+   asserts both halves of that (alpha 1 AND a background image).
 
    Splitting those two is the ADR-030 §6 seam bug, now recorded four
    times: the fade envelope and the bottom gate both key to this rect, and
@@ -435,8 +442,8 @@ html[data-corridor-exit="true"] #voidwalker {
    every path where a transparent stage does not engage (flag off, mobile,
    reduced-motion, corridor fallback). Mode-gated transparency lives beside
    each presentation, so the fallback and capable contracts cannot mix. */
-html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"] ~ #practice,
-html[data-corridor-exit="true"] #voidwalker[data-vw-mode="travel"] ~ #practice {
+html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"] ~ #contact,
+html[data-corridor-exit="true"] #voidwalker[data-vw-mode="travel"] ~ #contact {
   position: relative;
   z-index: 6;
   content-visibility: visible;

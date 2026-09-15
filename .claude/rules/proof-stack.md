@@ -174,6 +174,69 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
 
 ## The folder (ADR-097, live on both hosts)
 
+- ⚠ **AND THE FIRST CARD ASSEMBLES FROM A WIREFRAME OF ITSELF (ADR-104,
+  2026-09-15, owner).** _"I would like it to first show a wireframe of all the
+  elements when it slides open, kind of like what we have with the software for
+  few … once it's fully open, all the content is actually revealed, because the
+  slide-in opening with the thumbnail of the ATL doesn't really work."_ So the
+  beat is TWO passes of one scan: pass 1 is ADR-097 U12's aperture, UNCHANGED,
+  revealing `.pf-cardwire` with `.pf-card__body` held at the slit; a 200ms hold;
+  then pass 2, in which the body's clip window grows centre-out while the
+  skeleton's two halves retract to their own walls. Card 0 only.
+  ⚠ **PASS 2's 720ms IS DERIVED** — its edges travel pass 1's distance on pass
+  1's object, so they take pass 1's time, on pass 1's curve. U12's own lesson
+  read forward: **re-solve a timing for the SIZE of the object, and when the
+  object is the same size the timing is the same.** The 200ms hold is the one
+  dial.
+  ⚠ **THE HEAD BAND IS NOT SKELETAL** — it is the card's own MATERIAL (the
+  client's gradient over the housing), not its content, and it is the one strip
+  a covered card shows. The folder arrives REAL and its contents are drawn; the
+  skeleton insets by `--pc-peek` and pass 2 clips one element, not two.
+  ⚠ **PURE MOTION, ZERO FADES STILL BINDS.** A crossfade between skeleton and
+  content would be U12's retired flash in a new costume. The handoff is a seam.
+  ⚠ **THE COMPLEMENT NEEDS TWO HALVES, AND THAT IS ARITHMETIC** — at progress
+  `t` the content holds `[50 − 50t, 50 + 50t]` and the skeleton the two OUTER
+  bands, a disjoint shape **one polygon cannot describe**. `ProofCardWire`
+  renders the drawing twice for that reason alone; the duplication is a
+  technique, not a content fact, so the call site sees one element. `inset()`,
+  never `polygon()` — the children of a chamfered box are square.
+  ⚠ **`backwards`, NEVER `forwards`** (ADR-101's ruling): the 920ms delay holds
+  each `from` frame, and the end falls to the CASCADE — no clip on the body,
+  fully retracted on the halves. A `forwards` fill pins an `inset()` on the body
+  for the rest of the card's life. **The close needs no mirror**: the `out`
+  cascade hides the card, so the interior's state is unobservable through it.
+  ⚠ **IT IS THE CARD'S OWN LAYOUT IN THE CARD'S OWN TOKENS.** Every box mirrors
+  a real one and every colour is `--pf-rule` / `--pf-rule-soft` — within a hair
+  of the casefile kit's `--w-hair` / `--w-fill`, so it is the grammar the owner
+  named AND the lines that survive into the filled card are literally the same
+  colour they were in the skeleton. One new value, `--pf-wire-fill`. Shelling in
+  `.fl-wire` would have imported a `container-type: size` flex column the
+  drawing immediately overrides.
+  ⚠ **A BAR IS A LINE AND ITS ROW IS THAT LINE'S BOX.** The first cut drew one
+  bar for the title and two for the lede and put the register **111px high**
+  (claims at y232 against the real y343) with every other measure correct — the
+  left column read as a different card and the fill became a cut. Each type
+  block is now a grid whose `grid-auto-rows` is `font-size × line-height` off
+  the same tokens the real type uses. Measured after: lede, claims, claim 0, the
+  rail row and the bay all at **dy 0**. ⚠ The line COUNTS are card 0's own, and
+  ⚠ the caption is two lines because the film is CENTRED — its height seats the
+  plate, and a one-line stand-in put the plate 14px low.
+  ⚠ **IT LETTERS NOTHING** — `--fl-mono` resolves only inside `.fl-case` /
+  `.arc-*` and this card is neither, so a label would take a third face; and a
+  drawing with no strings is outside the confidentiality scanner. Smoke-pinned.
+  ⚠ **`getAnimations()` IS PER-ELEMENT, AND TWO HARNESSES WERE BLIND THE SAME
+  WAY.** Pass 2 runs on DESCENDANTS, so `capture-proof-stack --glitch` paused
+  only pass 1 (and would have shot a strip with pass 2 running free) and
+  `settleArrival` returned at 720ms instead of 1640, handing every plate read a
+  half-filled card — **the exact flake that helper exists to remove**. Both take
+  `{ subtree: true }`; the helper's cap is 5000ms. A guard that walks an element
+  cannot see work you moved into its children.
+  ⚠ **CARD 0 MUST STAY A `films` FIELD** — the skeleton follows POSITION, so a
+  re-order leaves it describing a card that moved with every other guard green.
+  `trinny-proof-order.test.ts` is the one assertion that fails on it.
+  ⚠ **Looking at it:** `node scripts/capture-proof-stack.mjs --glitch
+0,360,720,920,1100,1280,1460,1640` — the hold is 920, the fill's midpoint 1280. Rules in [ADR-104](../../sentinel/decisions/104-the-card-assembles-from-its-wireframe.md).
+
 - ⚠ **THE FIRST CARD OPENS, AND ONLY THE FIRST** (ADR-097 U11 for the beat,
   **U12 for the skin**). Owner, 2026-09-13: _"a cool glitch effect where the
   first card appears — the others can just scroll over it as it is now"_; then

@@ -53,7 +53,6 @@ const everything = [
   VOIDWALKER_HEAD.title,
   vwPlain(VOIDWALKER_HEAD.lede),
   vwPlain(VOIDWALKER_HEAD.foot),
-  VOIDWALKER_HEAD.next.label,
   ...VOIDWALKER_BEATS.map(textOf),
 ].join("\n");
 
@@ -220,10 +219,13 @@ describe("voidwalker record — facts at LOCK", () => {
     expect(everything).not.toMatch(/\b1[,.]?000\b|\b16[,.]?000\b|\b\d+k\b|\b100[,.]?000\+/i);
   });
 
-  it("the terminus hands to a section that exists in production", () => {
-    // `#practice` is an empty breather (its body is stripped at parse time),
-    // so the foot may not point there.
-    expect(VOIDWALKER_HEAD.next.href).toBe("#contact");
+  it("letters no terminus link — the footer is what follows (ADR-105)", () => {
+    // Owner, 2026-09-15: "I don't think we need 'Plot Your Course'". The foot
+    // pointed at `#contact`, which is the FOOTER and is directly beneath it —
+    // a "next" link aimed at the thing already arriving. Pinned as an ABSENCE
+    // so it cannot drift back in with a re-word.
+    expect(VOIDWALKER_HEAD).not.toHaveProperty("next");
+    expect(everything).not.toMatch(/plot your course/i);
   });
 });
 

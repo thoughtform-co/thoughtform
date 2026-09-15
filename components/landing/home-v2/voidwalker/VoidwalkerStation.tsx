@@ -460,10 +460,6 @@ function VoidwalkerTimelineStation() {
             <p className="vw-foot__line">
               <Segments segments={VOIDWALKER_HEAD.foot} />
             </p>
-            <a className="vw-foot__next" href={VOIDWALKER_HEAD.next.href}>
-              {VOIDWALKER_HEAD.next.label}
-              <span aria-hidden="true"> ↓</span>
-            </a>
           </footer>
         </div>
       </div>

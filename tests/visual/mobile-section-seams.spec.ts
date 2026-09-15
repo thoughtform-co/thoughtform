@@ -30,7 +30,7 @@ test.describe.configure({ mode: "serial" });
 const PHONE_PROJECTS = new Set(["iphone-14", "iphone-14-pro-max"]);
 
 /** The stations' DOM order on the marketing route, top to bottom. */
-const STATION_IDS = ["hero", "services", "about", "voidwalker", "practice", "contact"] as const;
+const STATION_IDS = ["hero", "services", "about", "voidwalker", "contact"] as const;
 
 /**
  * The always-mounted fixed chrome, by the element that actually PAINTS.
@@ -76,7 +76,7 @@ const CHROME_SELECTORS = [
  * All of them are station INTERIORS — casefile.css, the about bio and its
  * telemetry, the contact headline — which this pass does not own. An entry
  * comes OUT of this list in the same commit as its fix; a collision on a
- * station that is NOT listed (#hero, #voidwalker, #practice are clean at
+ * station that is NOT listed (#hero and #voidwalker are clean at
  * both phone shapes) fails the test outright, which is what stops a sixth
  * appearing quietly.
  */

@@ -31,7 +31,6 @@ export type ManifestEntryId =
   | "services"
   | "about"
   | "voidwalker"
-  | "practice"
   | "contact";
 
 export interface ManifestEntry {
@@ -157,6 +156,11 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
   // the casefile at the TOP of #services now, so it is not a station of
   // its own and the readout would have named the same scroll position
   // twice. `#services` covers it.)
-  { id: "practice", label: "06", name: "Practice", kind: "station", targetId: "practice" },
+  // (⚠ ADR-105: the `practice` row went with the STATION. `#practice` was an
+  // EMPTY breather — its body is stripped at parse time — kept alive only to
+  // be the opaque cover that ends the corridor ambient, and a blank panel
+  // sliding over the era stage is what the owner read as wrong. The footer is
+  // `#contact` and it takes that role. This file's own note that "#practice
+  // has no mark pending its removal" is now spent.)
   { id: "contact", label: "10", name: "Contact", kind: "station", targetId: "contact" },
 ] as const;

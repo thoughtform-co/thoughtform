@@ -497,7 +497,7 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     expect(offenders, JSON.stringify(offenders, null, 2)).toEqual([]);
   });
 
-  test("#practice is an actually opaque station when it kills the corridor", async ({
+  test("#contact is an actually opaque station when it kills the corridor", async ({
     page,
   }, testInfo) => {
     desktopOnly(testInfo);
@@ -507,14 +507,21 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
       timeout: 5_000,
     });
     await expect(page.locator("html")).toHaveAttribute("data-corridor-exit", "true");
-    const practiceY = await page.evaluate(() => {
-      const practice = document.getElementById("practice");
-      if (!practice) throw new Error("Missing #practice");
+    const coverY = await page.evaluate(() => {
+      const cover = document.getElementById("contact");
+      if (!cover) throw new Error("Missing #contact");
       return Math.round(
-        practice.getBoundingClientRect().top + window.scrollY + window.innerHeight * 0.3
+        cover.getBoundingClientRect().top + window.scrollY + window.innerHeight * 0.3
       );
     });
-    await page.evaluate((y) => window.scrollTo({ top: y, behavior: "instant" }), practiceY);
+    /* ⚠ CLAMP: `scrollTo` clamps silently and the cover is the LAST viewport of
+       the document (ADR-105 — it is the footer), so "0.3 viewports inside it"
+       is past the end. Naming the clamp here keeps the waypoint honest rather
+       than relying on the browser to absorb it. */
+    await page.evaluate((y) => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      window.scrollTo({ top: Math.max(0, Math.min(y, max)), behavior: "instant" });
+    }, coverY);
     await page.waitForFunction(
       () =>
         !document.documentElement.hasAttribute("data-services-ambient") &&
@@ -523,21 +530,30 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     await settle(page);
 
     const state = await page.evaluate(() => {
-      const practice = document.getElementById("practice");
-      if (!practice) throw new Error("Missing #practice");
-      const style = getComputedStyle(practice);
+      const cover = document.getElementById("contact");
+      if (!cover) throw new Error("Missing #contact");
+      const style = getComputedStyle(cover);
       return {
-        top: practice.getBoundingClientRect().top,
+        top: cover.getBoundingClientRect().top,
+        bottom: cover.getBoundingClientRect().bottom,
+        vh: window.innerHeight,
         background: style.backgroundColor,
         backgroundImage: style.backgroundImage,
         ambient: document.documentElement.hasAttribute("data-services-ambient"),
         exit: document.documentElement.hasAttribute("data-corridor-exit"),
       };
     });
-    expect(state.top).toBeLessThan(0);
+    /* ⚠ THE PROPERTY IS COVERAGE, NOT A NEGATIVE TOP. This asserted `top < 0`
+       — a proxy for "the walk got inside the station" that only holds while
+       something follows it. ADR-105 made the cover the FOOTER, i.e. the last
+       viewport of the document, so its top rests at exactly 0 and there is
+       nowhere further to go. What the ambient's death actually depends on is
+       that an opaque station FILLS the screen, so that is what is measured. */
+    expect(state.top).toBeLessThanOrEqual(0);
+    expect(state.bottom, "the cover does not fill the viewport").toBeGreaterThanOrEqual(state.vh);
     expect(state.ambient).toBe(false);
     expect(state.exit).toBe(false);
-    expect(cssAlpha(state.background), "#practice owns an opaque ground").toBe(1);
+    expect(cssAlpha(state.background), "#contact owns an opaque ground").toBe(1);
     expect(state.backgroundImage, "the opaque station surface is painted").not.toBe("none");
   });
 });

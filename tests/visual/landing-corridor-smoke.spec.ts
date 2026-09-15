@@ -116,9 +116,9 @@ test.describe("Homepage corridor smoke", () => {
         // and #build retired (the cases orbit the Arc's Build park).
         "about",
         // ADR-082 U2: capable hologram Voidwalker is transparent and
-        // #practice owns the opaque cover; fallback Voidwalker stays opaque.
+        // ⚠ ADR-105: `#contact` — the FOOTER — owns the opaque cover now;
+        // fallback Voidwalker stays opaque and owns it on those paths.
         "voidwalker",
-        "practice",
         "contact",
       ];
       return ids.map((id) => ({ id, top: document.getElementById(id)?.offsetTop ?? -1 }));

@@ -490,6 +490,92 @@
     animation: pf-aperture-close 420ms cubic-bezier(0.65, 0, 0.35, 1);
     animation-fill-mode: none;
   }
+
+  /* ── PASS 2: THE CONTENT FILLS THE WIREFRAME (ADR-104) ──────────────
+     Owner, 2026-09-15: the aperture should reveal _"a wireframe of all the
+     elements"_ first, and _"once it's fully open, all the content is
+     actually revealed"_ — because the slide-in opening onto the ATL's
+     thumbnail _"doesn't really work"_.
+
+     So the beat is two passes of ONE scan:
+       720ms  pass 1 — the card's own aperture, UNCHANGED, revealing the
+              skeleton (`.pf-cardwire`) with the body held at the slit
+       200ms  the hold — what makes the skeleton read as a state rather
+              than as an artefact of the sweep
+       720ms  pass 2 — the body's clip window grows centre-out while the
+              skeleton's two halves retract to their own walls
+
+     ⚠ **720ms IS DERIVED, NOT CHOSEN.** Pass 2's edges travel the same
+     ~575px per side as pass 1's, on the same object, so they take the same
+     time — same edge speed, same curve. ADR-097 U12's lesson read forward:
+     re-solve a timing for the SIZE of the object, and when the object is
+     the same size the timing is the same. Making the second pass quicker
+     would be a taste call with nothing behind it, and it would undo the
+     owner's own ruling on pass 1 ("a bit more subtle … easy in, easy out").
+     The 200ms hold is the one dial.
+
+     ⚠ **PURE MOTION, ZERO FADES — ADR-097 U12's law, unchanged.** No
+     opacity curve, no tear, no `filter`. The retired glitch was three
+     large-area luminance transitions inside 378ms; nothing on this card may
+     reintroduce a flicker, and a crossfade between skeleton and content
+     would be exactly that in a new costume.
+
+     ⚠ **THE COMPLEMENT NEEDS TWO HALVES, AND THAT IS ARITHMETIC.** At
+     progress `t` the content occupies `[50 − 50t, 50 + 50t]` and the
+     skeleton must occupy the two OUTER bands — a disjoint shape one polygon
+     cannot describe. `ProofCardWire` renders the drawing twice for exactly
+     this, and each half is an `inset()` retracting to its own wall.
+
+     ⚠ **`inset()`, NOT `polygon()`** — the children of a chamfered box are
+     square (ADR-065 rule 4), so no chamfer is interpolated here and the
+     simpler function is also the correct one.
+
+     ⚠ **CLIP THE CHILDREN, NEVER `.pf-card`.** `backdrop-filter` is on
+     `.pf-card` alone and no descendant carries one, so clipping the body
+     cannot blind the glass — where a clip on the card or the slot would
+     (the trap this block already records for pass 1). */
+
+  /* The skeleton paints for the whole arrival and nowhere else. */
+  .pf-stack .pf-slot[data-pf-arrive="await"] .pf-cardwire,
+  .pf-stack .pf-slot[data-pf-arrive="in"] .pf-cardwire {
+    visibility: visible;
+  }
+
+  /* Pass 1's state: the body at the slit, the skeleton whole — its two
+     halves meeting on the centre line with no overlap. */
+  .pf-stack .pf-slot[data-pf-arrive="await"] .pf-card__body {
+    clip-path: inset(0 50% 0 50%);
+  }
+  .pf-stack .pf-slot[data-pf-arrive="await"] .pf-cardwire--l {
+    clip-path: inset(0 50% 0 0);
+  }
+  .pf-stack .pf-slot[data-pf-arrive="await"] .pf-cardwire--r {
+    clip-path: inset(0 0 0 50%);
+  }
+
+  /* ⚠ **`backwards`, NEVER `forwards`** (ADR-101's own ruling, and the
+     reason `fill-mode` is `none` on pass 1). The delay is pass 1 plus the
+     hold; `backwards` holds each animation's `from` frame through it — the
+     slit, and the two halves — and then the animation falls to the CASCADE:
+     no clip on the body, fully retracted on the halves, which is each
+     element's own resting declaration. A `forwards` fill would pin an
+     `inset()` on the body for the rest of the card's life, and pin the
+     halves in a state their rest rule already says. */
+  .pf-stack .pf-slot[data-pf-arrive="in"] .pf-card__body {
+    animation: pf-fill 720ms cubic-bezier(0.65, 0, 0.35, 1) 920ms backwards;
+  }
+  .pf-stack .pf-slot[data-pf-arrive="in"] .pf-cardwire--l {
+    animation: pf-fill-wire-l 720ms cubic-bezier(0.65, 0, 0.35, 1) 920ms backwards;
+  }
+  .pf-stack .pf-slot[data-pf-arrive="in"] .pf-cardwire--r {
+    animation: pf-fill-wire-r 720ms cubic-bezier(0.65, 0, 0.35, 1) 920ms backwards;
+  }
+
+  /* ⚠ **THE CLOSE NEEDS NO MIRROR.** On `out` the card runs
+     `pf-aperture-close` and the `out` cascade is `opacity: 0; visibility:
+     hidden`, so the interior's state is unobservable through it. Re-arming
+     lands on `await`, whose rules above already say "body at the slit,
+     skeleton whole". One keyframe trio, not two. */
 }
 
 /* The aperture. `from` is the card's own silhouette with every X at 50% —
@@ -550,6 +636,288 @@
       50% calc(100% - var(--pf-card-ch))
     );
   }
+}
+
+/* ── PASS 2's three clocks (ADR-104) ──────────────────────────────────
+   One travelling edge pair, expressed as a complement: the body's window
+   grows from the centre while each half of the skeleton retracts to its own
+   wall, so at every frame exactly one of the two paints at every x. */
+@keyframes pf-fill {
+  from {
+    clip-path: inset(0 50% 0 50%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes pf-fill-wire-l {
+  from {
+    clip-path: inset(0 50% 0 0);
+  }
+  to {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+@keyframes pf-fill-wire-r {
+  from {
+    clip-path: inset(0 0 0 50%);
+  }
+  to {
+    clip-path: inset(0 0 0 100%);
+  }
+}
+
+/* ══ THE SKELETON (ADR-104) ═══════════════════════════════════════════
+   The card's own layout, drawn — see `ProofCardWire.tsx` for the reasoning.
+   Every box below mirrors a real one declared elsewhere in this sheet, and
+   the pairs are named so they can be moved together. What makes the handoff
+   read as a FILL rather than as a cut is that registration: a bar has to sit
+   where its line of type will.
+
+   ⚠ **DRAWN IN THE CARD'S OWN TOKENS.** `--pf-rule` (.18) and
+   `--pf-rule-soft` (.12) are within a hair of the casefile wireframe kit's
+   `--w-hair` (.15) / `--w-fill` (.13), so this gets the grammar the owner
+   named AND the lines that survive into the filled card — the frame, the
+   rail boxes, the register's two rule weights — are literally the same
+   colour they were in the skeleton. One new value only, below.
+
+   ⚠ **IT LETTERS NOTHING**, so it needs no font and the confidentiality
+   scanner has nothing to walk. */
+
+.pf-stack .pf-cardwire {
+  position: absolute;
+  /* ⚠ BELOW THE HEAD BAND, NOT OVER IT. The band is the card's own MATERIAL
+     — the client's gradient over the TR+BL housing — not its content, and it
+     is the one strip a covered card shows. It arrives REAL; what is drawn is
+     the card's contents. `--pc-peek` is the card's first grid row, so this
+     box is exactly `.pf-card__body`'s. */
+  inset: var(--pc-peek) 0 0 0;
+  pointer-events: none;
+  visibility: hidden;
+  overflow: hidden;
+  /* The one value the card does not already own: a line of type, waiting.
+     A ramp step off `--dawn-rgb` like every other colour in this sheet, so
+     ADR-058's flip paints it on parchment with no branch. */
+  --pf-wire-fill: rgba(var(--dawn-rgb), 0.1);
+}
+
+/* Each half RESTS fully retracted — which is also where its fill animation
+   ends, so `backwards` falls straight through to it with no jump. */
+.pf-stack .pf-cardwire--l {
+  clip-path: inset(0 100% 0 0);
+}
+.pf-stack .pf-cardwire--r {
+  clip-path: inset(0 0 0 100%);
+}
+
+/* mirrors `.pf-card__body` */
+.pf-stack .pf-cardwire__in {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(300px, 2fr) minmax(0, 3fr);
+  min-height: 0;
+}
+
+/* mirrors `.pf-card__record` */
+.pf-stack .pf-cardwire__record {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-content: start;
+  row-gap: clamp(14px, 2vh, 24px);
+  padding: var(--pf-card-py) var(--pf-card-px);
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ── the type blocks: one ROW per rendered line, at that line's own box ──
+   ⚠ **A BAR IS A LINE AND ITS ROW IS THAT LINE'S BOX.** The row height is
+   `font-size × line-height` off the SAME tokens the real type uses
+   (`--pf-display × 1.1`, `--pf-copy × 1.45`), so the block's height is the
+   real block's height and the register below it lands on the real register.
+   Drawn as one bar each, the claims sat at y232 against the real y343 — the
+   left column read as a different card, and the fill became a cut.
+   ⚠ The COUNTS are card 0's own — its title wraps to two display lines and
+   its lede sets four. That is what "authored against card 0" costs; a copy
+   edit long enough to add a line moves this with it. */
+.pf-stack .pf-cardwire__title {
+  display: grid;
+  grid-auto-rows: calc(var(--pf-display) * 1.1);
+  align-items: center;
+  max-width: 22ch;
+}
+
+.pf-stack .pf-cardwire__lede {
+  display: grid;
+  grid-auto-rows: calc(var(--pf-copy) * 1.45);
+  align-items: center;
+  max-width: 34ch;
+}
+
+/* mirrors `.pf-card__claims` */
+.pf-stack .pf-cardwire__claims {
+  grid-row: 3;
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
+  min-height: 0;
+  margin-top: clamp(6px, 1vh, 12px);
+  border-top: 1px solid var(--pf-rule);
+}
+
+/* mirrors `.pf-card__claim` — including the two rule weights, which is what
+   makes the register recognisable before a word of it exists. */
+.pf-stack .pf-cardwire__claim {
+  display: grid;
+  grid-template-columns: var(--pf-glyph) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  align-content: center;
+  min-height: 0;
+  padding-block: clamp(6px, 1.2vh, 14px);
+  border-bottom: 1px solid var(--pf-rule-soft);
+}
+
+/* The closing rule IS the column's floor line, so it takes the seam weight. */
+.pf-stack .pf-cardwire__claim:last-child {
+  border-bottom-color: var(--pf-rule);
+}
+
+/* The glyph's box at `--pf-glyph` — outlined, because a filled square at
+   21px would be the loudest mark in a drawing whose subject is structure. */
+.pf-stack .pf-cardwire__mark {
+  width: var(--pf-glyph);
+  aspect-ratio: 1;
+  border: 1px solid var(--pf-rule);
+}
+
+.pf-stack .pf-cardwire__claim-body {
+  display: grid;
+  gap: calc(var(--pf-copy) * 0.5);
+  min-width: 0;
+}
+
+/* ── the bars: one line of type each, sized off the card's own ladder ── */
+.pf-stack .pf-cardwire__bar {
+  display: block;
+  height: calc(var(--pf-copy) * 0.42);
+  width: 100%;
+  background: var(--pf-wire-fill);
+}
+.pf-stack .pf-cardwire__title .pf-cardwire__bar {
+  height: calc(var(--pf-display) * 0.52);
+}
+.pf-stack .pf-cardwire__bar--mid {
+  width: 62%;
+}
+.pf-stack .pf-cardwire__bar--claim {
+  width: 84%;
+}
+
+/* mirrors `.pf-film__caption` — 11px mono wrapping to two lines, `gap: 2px`.
+   It is what SEATS the plate: the film is centred in its frame, so the
+   caption's height comes half out of the plate's top. */
+.pf-stack .pf-cardwire__cap {
+  display: grid;
+  grid-auto-rows: calc(11px * 1.33);
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+.pf-stack .pf-cardwire__cap .pf-cardwire__bar {
+  height: 6px;
+}
+
+/* mirrors `.pf-card__field` — the terminal's regions on one inset. */
+.pf-stack .pf-cardwire__field {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  row-gap: var(--pf-frame-gap);
+  padding-block: var(--pf-card-py);
+  padding-inline: var(--pf-field-px);
+  min-width: 0;
+  min-height: 0;
+}
+
+/* mirrors `.pf-card__tabs`.
+   ⚠ **THE TWO RAIL TERMS ARE MIRRORED, NOT INHERITED.** `.pf-card__tabs`
+   declares them on ITSELF, so nothing above this element carries them and a
+   `var()` here would fall to its fallback in silence. Move both together. */
+.pf-stack .pf-cardwire__tabs {
+  --pf-rail-hang: 8px;
+  --pf-rail-h: 30px;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  padding-top: var(--pf-rail-hang);
+  min-height: calc(var(--pf-rail-hang) + var(--pf-rail-h));
+}
+
+/* mirrors `ConsoleRail`'s station under the ADR-089 U3/U4 skin: `flex: 1 1 0`
+   boxes with `margin`, never `gap` — two stations therefore take half the
+   rail each, which is what the films card actually shows. */
+.pf-stack .pf-cardwire__stn {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 5px 3px;
+  border: 1px solid var(--pf-rule);
+}
+
+/* mirrors `.pf-card__bay` — the size container, carrying no padding of its
+   own so `100cqh` below is the frame's box. */
+.pf-stack .pf-cardwire__bay {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  container-type: size;
+}
+
+/* mirrors `.pf-field--films`: the closed evidence frame (ADR-097 U10). */
+.pf-stack .pf-cardwire__frame {
+  --pf-film-pad: clamp(16px, 2vw, 32px);
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  justify-items: center;
+  padding: var(--pf-film-pad);
+  border: 1px solid var(--pf-rule);
+}
+
+/* mirrors `.pf-film--portrait` — the 4:5 social cut, height-bound through
+   the same expression, so the skeleton's plate is the box the real poster
+   will land in rather than a rectangle near it. */
+.pf-stack .pf-cardwire__film {
+  --pf-film-ar: 4 / 5;
+  --pf-film-pad: clamp(16px, 2vw, 32px);
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  min-width: 0;
+  width: min(100%, calc((100cqh - 2px - 2 * var(--pf-film-pad) - 26px) * var(--pf-film-ar)));
+}
+
+.pf-stack .pf-cardwire__plate {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--pf-film-ar);
+  background: rgba(var(--dawn-rgb), 0.06);
+}
+
+/* mirrors `.pf-film__cue` — the ring only. The real cue is a filled disc;
+   the skeleton draws where it will be, not what it will be. */
+.pf-stack .pf-cardwire__cue {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: clamp(38px, 12%, 62px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 1px solid var(--pf-rule);
 }
 
 /* ⚠ THE HEAD IS CHROME, NOT THE CLAIM (owner, 2026-09-10). The client on

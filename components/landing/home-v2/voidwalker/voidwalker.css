@@ -780,25 +780,13 @@ html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"].station {
   line-height: 1.55;
   color: var(--dawn-70);
 }
-.vw-foot__next {
-  grid-column: 1 / -1;
-  grid-row: 3;
-  justify-self: center;
-  margin-top: 18px;
-  font-family: var(--vw-mono);
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--gold);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(var(--vw-gold-rgb), 0.35);
-  padding-bottom: 3px;
-}
-.vw-foot__next:hover,
-.vw-foot__next:focus-visible {
-  border-bottom-color: var(--gold);
-  outline: none;
-}
+/* ⚠ `.vw-foot__next` IS DELETED WITH ITS ELEMENT (ADR-105, owner: _"I don't
+   think we need 'Plot Your Course'"_). It was the terminus link — `Next ·
+   Plot your course ↓`, centred under the foot — pointing at `#contact`, which
+   is the FOOTER and sits directly beneath, so it aimed at what was already
+   arriving. The rules go with it rather than staying dead: a styled class with
+   no element is how a deleted affordance comes back by muscle memory. It was
+   explicitly placed (`grid-row: 3`), so the foot's subgrid leaves no hole. */
 
 /* ── 7 · MOTION — only while the hook is engaged ──────────────────── */
 /* The terminal power-on ladder (about-stage.css, verbatim): each panel

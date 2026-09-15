@@ -24,7 +24,6 @@ const LAYOUT: Record<string, { top: number; height: number }> = {
   // ADR-074: the through-line follows the bio (the `proof` station this
   // stub used to carry retired with ADR-056).
   voidwalker: { top: 10600, height: 800 },
-  practice: { top: 11400, height: 800 },
   contact: { top: 12200, height: 800 },
 };
 const SCROLL_HEIGHT = 13000;
@@ -83,7 +82,10 @@ describe("computeDetentTable — proportional detents", () => {
   it("is proportional: the corridor spans more rail than a short station", () => {
     const t = computeDetentTable() as number[];
     const corridorSpan = t[idx("services")] - t[idx("thesis")];
-    const stationSpan = t[idx("contact")] - t[idx("practice")];
+    // ⚠ `voidwalker` → `contact` since ADR-105 deleted `#practice`. It is
+    // still "a short station" for this comparison: the pair simply has to be
+    // two ADJACENT station detents, not these particular two.
+    const stationSpan = t[idx("contact")] - t[idx("voidwalker")];
     expect(corridorSpan).toBeGreaterThan(stationSpan);
   });
 

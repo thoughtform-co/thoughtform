@@ -41,7 +41,6 @@ describe("section readout", () => {
       id: "voidwalker",
       label: "VOIDWALKER",
     });
-    expect(sectionReadout(idxOf("practice"))).toMatchObject({ id: "practice", label: "PRACTICE" });
     expect(sectionReadout(idxOf("contact"))).toMatchObject({ id: "contact", label: "CONTACT" });
   });
 
@@ -52,12 +51,13 @@ describe("section readout", () => {
       "services",
       "about",
       "voidwalker",
-      "practice",
+      // ⚠ `practice` went with its STATION (ADR-105): an empty breather kept
+      // alive only to be the corridor's opaque cover, which the footer is now.
       "contact",
     ]);
     const last = sectionReadout(idxOf("contact"));
-    expect(last.num).toBe("07");
-    expect(last.total).toBe("07");
+    expect(last.num).toBe("06");
+    expect(last.total).toBe("06");
     for (const [i, row] of READOUT_SECTIONS.entries()) {
       // `proof` is the one row with no manifest entry (ADR-056): the casefile
       // shares `#services`' DOM section and rail detent, so it is addressed
@@ -86,7 +86,7 @@ describe("section readout", () => {
     );
     // The flag only ever means anything on services — it must never rewrite
     // another section's label.
-    for (const id of ["about", "voidwalker", "practice", "contact"]) {
+    for (const id of ["about", "voidwalker", "contact"]) {
       expect(sectionReadout(idxOf(id), true).id, id).toBe(id);
     }
   });

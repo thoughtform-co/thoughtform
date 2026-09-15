@@ -1,0 +1,387 @@
+/* ═══════════════════════════════════════════════════════════════════
+   THE SITE FOOTER (ADR-105)
+   ───────────────────────────────────────────────────────────────────
+   Owner, 2026-09-15: one bold ending that combines a key visual, the ask,
+   the contact form and the socials — "that way it's nicely aligned with our
+   hero section". Composition is the Zellic reference he supplied: copy
+   above, the plate bleeding up from the floor, the legal bar on its darkest
+   part.
+
+   ⚠ THE STATION'S OWN GROUND STAYS OPAQUE. `#contact` is the corridor's
+   opaque COVER now (home-v2.css + `useCorridorExitScroll`, one commit), and
+   the handoff guard asserts `alpha === 1` AND a background image on it. So
+   `.station:not(.hero)`'s `var(--void)` + stars are untouched and the plate
+   is a layer INSIDE — not the station's own background, and never
+   `transparent`.
+
+   ⚠ TOKENS ONLY. Every colour is a ramp step off `--dawn-rgb` / `--void-rgb`
+   / `--gold*`, which ADR-058 SWAPS — so one set of declarations paints cream
+   on near-black and ink on parchment with no `[data-theme]` branch here. The
+   ONE thing that cannot swap is the ink sitting on the kept-dark plate; that
+   is re-pinned in theme.css on this element, the `.hero__video__overlay`
+   recipe, and nowhere else.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ⚠ THE STATION GIVES UP ITS BOTTOM PADDING, AND IT IS A TOKEN + A `max()`,
+   NOT A BARE `padding-bottom`. `.station`'s base is a literal `140px 0 220px`,
+   so the plate's floor sat 220px above the page's last pixel and the key
+   visual FLOATED in a band of void — the one thing the reference does not do.
+   landing.css's own note says why this is written with `max()`: a station's
+   padding at id specificity outranks the ≤960 mobile chrome floor OUTRIGHT
+   with no pixel change to say so, so the floor is reproduced here rather than
+   opted out of. `--mobile-chrome-*` is declared only in the ≤960 `:root`, so
+   above that rung the fallback is 0 and this is the desktop value exactly. */
+#contact.station {
+  --station-pad-top: clamp(96px, 12svh, 168px);
+  --station-pad-bottom: 0px;
+  padding-top: max(var(--station-pad-top), var(--mobile-chrome-top, 0px));
+  padding-bottom: max(var(--station-pad-bottom), var(--mobile-chrome-bottom, 0px));
+}
+
+/* ⚠ THE SLOT IS THE FLEX CHILD, NOT `.ft-foot`. The station is a centring
+   flex column and what it lays out is the PORTAL'S CONTAINER — the authored
+   `[data-site-footer-root]` div — with the footer one level inside it. So a
+   `flex: 1` on `.ft-foot` grows nothing: the slot stays content-height, the
+   footer stays content-height inside it, and the plate anchored to the
+   footer's floor stops ~120px above the page's last pixel. Measured before
+   this rule: foot bottom 781 in a 900 viewport. */
+#contact.station > [data-site-footer-root] {
+  flex: 1 1 auto;
+  align-self: stretch;
+  display: flex;
+  min-width: 0;
+}
+
+.ft-foot {
+  /* ⚠ THE PLATE'S BLEED TERM IS THE STATION'S OWN PADDING, NEGATED. An
+     absolutely positioned child resolves against its containing block's
+     PADDING box, so `inset: 0` here stops `--hud-content-inset` short of the
+     viewport on each side — the plate would sit in a frame rather than bleed.
+     This is NOT the re-inset ADR-048 forbids: that rule is about a CONTENT
+     column adding a second inset, and this is a background layer undoing the
+     one it inherited. The ≤960 rung restates it because the station's padding
+     changes there too — the two move together. */
+  --ft-bleed: var(--hud-content-inset);
+  /* ⚠ NOTHING HERE RESISTS THE THEME FLIP, AND THAT IS THE PER-THEME PLATE'S
+     DOING. A single kept-dark plate needed two tokens pinned against the swap
+     — cream ink for the bar sitting on it, a dark wash under that ink — and
+     getting one of them right silently inverted the other. With light on the
+     hero's own light plate, the bar's ink IS the page's ink and the wash IS
+     the page's ground, so both are plain `--dawn-rgb` / `--void-rgb` and
+     theme.css needs no block for this sheet at all. The exception was not
+     tuned away; it stopped existing.
+  /* The plate's share of the footer's height. Enough that the image reads as
+     a picture rather than a strip, and the copy still lands on the station's
+     own ground rather than on the image (the reference's own division). */
+  --ft-plate-h: clamp(300px, 46svh, 620px);
+
+  /* ⚠ DECLARED, NOT INHERITED. `--font-mono` is IBM Plex Mono (ADR-067's
+     standing trap), and a wrapper that letters nothing still hands that face
+     to anything added under it later. Every text element below names its own
+     family; this is the bed, so a new child inherits the PROSE face rather
+     than a third one. The mechanical gate reads the wrappers, which is how a
+     leak like this is visible before a sentence lands in it. */
+  font-family: var(--font-pp-neue-montreal);
+
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  row-gap: clamp(48px, 8svh, 120px);
+  /* ⚠ IT FILLS THE STATION, so the plate's `bottom: 0` IS the page's last
+     pixel. `.station` is a centring flex column, so without this the footer is
+     content-height and centred — and the plate, anchored to THIS box rather
+     than the station's, floats with it. */
+  flex: 1 1 auto;
+  align-self: stretch;
+}
+
+/* ── the key visual, bleeding up from the floor ─────────────────────── */
+.ft-foot__plate {
+  position: absolute;
+  inset: auto calc(var(--ft-bleed) * -1) 0;
+  height: var(--ft-plate-h);
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ft-foot__plate-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* `Key Visual 14d` is parchment ABOVE and void BELOW; what bleeds up in dark
+     is the void half, so the frame is anchored to the image's own floor. */
+  object-position: center bottom;
+}
+
+/* ⚠ `display: none` + `loading="lazy"` IS THE WHOLE MECHANISM: a hidden lazy
+   image is never fetched, so neither theme pays for the other's plate. The
+   hero records the same recipe (theme.css:950-968) and it is why the swap is
+   two elements rather than one `src` the theme store rewrites. */
+.ft-foot__plate-img--light {
+  display: none;
+}
+html[data-theme="light"] .ft-foot__plate-img--dark {
+  display: none;
+}
+html[data-theme="light"] .ft-foot__plate-img--light {
+  display: block;
+  object-position: center center;
+}
+
+/* Feathers the plate into the station's ground at the top, and darkens its
+   foot so the legal bar — and the HUD's own bottom-left brand and
+   bottom-right control cluster, which are fixed at z 60 and print over
+   whatever is under them (ADR-043) — keep their contrast.
+   ⚠ IT IS AUTHORED ON `--void-rgb`, NOT `--void-deep-rgb`. theme.css re-pins
+   `--void-deep-rgb` on `.hero__video__overlay` precisely because in light it
+   resolves to a DIFFERENT parchment from the page's, and a wash written on it
+   re-tints a plate that was already correct — with nothing failing, because
+   the defect reads as a faint cast. */
+.ft-foot__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgb(var(--void-rgb)) 0%,
+      rgba(var(--void-rgb), 0.62) 20%,
+      rgba(var(--void-rgb), 0) 56%
+    ),
+    linear-gradient(to top, rgba(var(--void-rgb), 0.72) 0%, rgba(var(--void-rgb), 0) 34%);
+}
+
+/* ── the content column ─────────────────────────────────────────────── */
+/* ⚠ JOIN THE BAND, NEVER RE-INSET (ADR-048, and ADR-099 U1's own finding).
+   The station already pays `--hud-content-inset` as padding; `--rail-inset`
+   is the REMAINDER up to `--band-margin`, so this lands the column on the
+   same left edge as every other editorial block on the page.
+   ⚠ `--rail-inset` resolves to 0 below the 1200px crossover, so a divergence
+   here is invisible at 1280x720 and 1440x800 and only appears around 1920 —
+   which is the owner's own window. Measure there. */
+.ft-foot__band {
+  position: relative;
+  z-index: 1;
+  max-width: var(--band-max);
+  margin-inline: var(--rail-inset);
+  align-self: start;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  column-gap: clamp(32px, 6vw, 120px);
+  row-gap: clamp(28px, 5svh, 56px);
+  align-items: start;
+  padding-top: clamp(8px, 4svh, 64px);
+}
+
+.ft-foot__head {
+  display: grid;
+  row-gap: clamp(14px, 2svh, 24px);
+  min-width: 0;
+}
+
+.ft-foot__eyebrow {
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 11px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+
+.ft-foot__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-lit);
+  font-size: clamp(34px, 4.6vw, 72px);
+  line-height: 1.04;
+  letter-spacing: var(--track-display);
+  color: var(--dawn);
+  text-wrap: balance;
+}
+
+.ft-foot__lede {
+  margin: 0;
+  max-width: 34ch;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(15px, 1.15vw, 19px);
+  line-height: 1.5;
+  letter-spacing: var(--track-copy);
+  color: rgba(var(--dawn-rgb), 0.74);
+}
+
+/* ── the ask ────────────────────────────────────────────────────────── */
+.ft-foot__act {
+  display: grid;
+  justify-items: start;
+  row-gap: clamp(14px, 2svh, 22px);
+  min-width: 0;
+  align-self: end;
+}
+
+/* ⚠ THE PROOF CARD'S WALKTHROUGH RECIPE (ADR-097 U10), NOT A NEW BUTTON.
+   `--gold-line` rim + `--gold-ink` ink at rest, `--gold` + `--gold-contrast`
+   on hover/focus. Not gold at rest: ADR-063's count, and the house's one
+   big-CTA precedent already reads this way. Square — the children of a
+   chamfered frame are square, and nothing here is a machined housing. */
+.ft-foot__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: clamp(48px, 6svh, 62px);
+  padding-inline: clamp(20px, 2.2vw, 34px);
+  border: 1px solid var(--gold-line);
+  color: var(--gold-ink);
+  text-decoration: none;
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 12px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out,
+    color 200ms ease-out;
+}
+
+.ft-foot__cta:hover,
+.ft-foot__cta:focus-visible {
+  background-color: var(--gold);
+  border-color: var(--gold);
+  color: var(--gold-contrast);
+  outline: none;
+}
+
+.ft-foot__cta-arrow {
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  transition: width 200ms ease-out;
+}
+
+.ft-foot__cta:hover .ft-foot__cta-arrow,
+.ft-foot__cta:focus-visible .ft-foot__cta-arrow {
+  width: 30px;
+}
+
+.ft-foot__mail {
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 12px;
+  letter-spacing: var(--track-label);
+  color: rgba(var(--dawn-rgb), 0.62);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(var(--dawn-rgb), 0.2);
+  padding-bottom: 2px;
+}
+
+.ft-foot__mail:hover,
+.ft-foot__mail:focus-visible {
+  color: var(--dawn);
+  border-bottom-color: rgba(var(--dawn-rgb), 0.5);
+  outline: none;
+}
+
+/* ── the legal bar, on the plate ────────────────────────────────────── */
+/* ⚠ IT SITS ON KEPT-DARK IMAGERY IN BOTH THEMES, so its ink cannot follow
+   the flip: `--dawn-rgb` is cream in dark and INK in light, and ink on a void
+   slab is invisible. theme.css re-pins the triple on this element only — the
+   `.hero__video__overlay` recipe (ADR-058 Lane 0), and the reason this rule
+   needs no `[data-theme]` branch of its own. */
+.ft-foot__bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 32px;
+  max-width: var(--band-max);
+  margin-inline: var(--rail-inset);
+  padding-top: clamp(16px, 2.4svh, 28px);
+  /* ⚠ IT CLEARS THE HUD'S BOTTOM CORNER BAND. The brandmark sits bottom-left
+     and the Contact / session / theme cluster bottom-right, both FIXED at
+     z 60, and they print over whatever is under them (ADR-043). With the
+     station's bottom padding gone this row would otherwise run straight
+     under both. Same two tokens the rails stop short on. */
+  padding-bottom: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(14px, 1.6vw, 26px));
+  border-top: 1px solid rgba(var(--dawn-rgb), 0.16);
+}
+
+.ft-foot__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.62);
+}
+
+.ft-foot__diamond {
+  width: 7px;
+  height: 7px;
+  rotate: 45deg;
+  background: var(--gold);
+}
+
+.ft-foot__socials {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.6vw, 26px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ft-foot__socials a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 44px is the touch floor (ADR-083); the glyph inside is 18px. */
+  width: 44px;
+  height: 44px;
+  color: rgba(var(--dawn-rgb), 0.62);
+  transition: color 180ms ease-out;
+}
+
+.ft-foot__socials a:hover,
+.ft-foot__socials a:focus-visible {
+  color: var(--gold);
+  outline: none;
+}
+
+.ft-foot__socials svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── the narrow rung ────────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .ft-foot {
+    /* The station's padding is a literal 32px below this width, so the
+       plate's negation is too. ⚠ Move both together or the plate stops
+       bleeding on exactly one rung. */
+    --ft-bleed: 32px;
+    --ft-plate-h: clamp(220px, 34svh, 380px);
+    row-gap: clamp(36px, 6svh, 64px);
+  }
+
+  .ft-foot__band {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ft-foot__act {
+    align-self: start;
+  }
+
+  .ft-foot__bar {
+    justify-content: flex-start;
+    gap: 12px 20px;
+  }
+}

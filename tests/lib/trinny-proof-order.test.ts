@@ -100,4 +100,25 @@ describe("the trinny proof order", () => {
       expect(client.accentRgb).toBeNull();
     }
   });
+
+  /**
+   * ADR-104 — the first card assembles from a WIREFRAME of its own layout,
+   * and that drawing is authored against a `films` field: a two-station rail
+   * over a 4:5 plate with a play cue and a two-line caption.
+   *
+   * ⚠ **A RE-ORDER WOULD LEAVE THE SKELETON DESCRIBING A CARD THAT MOVED,
+   * AND EVERY OTHER GUARD WOULD STAY GREEN.** The aperture is card 0's, so
+   * the skeleton follows position rather than content — put the tools card
+   * first and the drawing still renders, still registers against nothing,
+   * and still fills. It would simply be a picture of the wrong card. This is
+   * the one assertion that fails on it.
+   */
+  it("keeps a films field on card 0, which is what the skeleton is drawn against", () => {
+    const def = CASES.find((c) => c.slug === TRINNY_PROOF_CASE)!;
+    const first = def.casefile.tracks.find((t) => t.id === TRINNY_PROOF_ORDER[0])!;
+    expect(
+      first.visual.kind,
+      "card 0 changed kind — redraw `ProofCardWire` against the new field (ADR-104)"
+    ).toBe("films");
+  });
 });

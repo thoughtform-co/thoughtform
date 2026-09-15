@@ -261,13 +261,28 @@ describe("the hook publishes the roster's own SECTOR total", () => {
        beside it. The seed now comes from the roster and the equality check
        compares the total.
 
-       Asserting the two totals DIFFER is what makes this a real guard: if
-       a future variant happened to have seven rows, the bug would be
-       invisible again — so the test that matters is on a roster whose
-       total is not production's. */
-    expect(TRINNY_JOURNEY.sectorRows.length).toBe(6);
-    expect(TRINNY_JOURNEY.sectorRows.length).not.toBe(READOUT_SECTIONS.length);
+       ⚠ AND THE FIRST VERSION OF THIS GUARD PROVED IT BY AN INCIDENTAL
+       INEQUALITY — `TRINNY_JOURNEY.sectorRows.length !== READOUT_SECTIONS
+       .length`, 6 against 7 — which is only a proof while the two numbers
+       happen to differ. Its own comment predicted the failure ("if a future
+       variant happened to have seven rows, the bug would be invisible
+       again") and then it arrived from the OTHER side: ADR-105 deleted the
+       `practice` row and production came DOWN to six. The discriminating
+       roster is now CONSTRUCTED, so neither side moving can blunt it. */
+    const SYNTHETIC = {
+      ...TRINNY_JOURNEY,
+      sectorRows: [...READOUT_SECTIONS.map((r) => r.id), "x1", "x2", "x3"],
+    };
+    expect(SYNTHETIC.sectorRows.length).not.toBe(READOUT_SECTIONS.length);
+    const synthetic = renderHook(() => useJourneyMarks(true, SYNTHETIC));
+    expect(
+      synthetic.result.current.sector.total,
+      "the hook published production's denominator on a variant roster"
+    ).toBe(SYNTHETIC.sectorRows.length);
 
+    // …and the real surface, whose total is now the same 6 as production's
+    // by coincidence. Kept because it is what actually ships.
+    expect(TRINNY_JOURNEY.sectorRows.length).toBe(6);
     const { result } = renderHook(() => useJourneyMarks(true, TRINNY_JOURNEY));
     expect(result.current.sector.total).toBe(6);
     expect(result.current.sector.seat).toBe(0);

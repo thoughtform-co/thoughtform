@@ -26,6 +26,9 @@ const SHEETS = [
      station and a tinted tab, i.e. exactly the `--gold`/`--void` pair below
      was written to catch. */
   "components/landing/home-v2/services/proof-stack/proof-stack.css",
+  /* The site footer (ADR-105) — it paints the page's ending over a
+     KEPT-DARK plate, which is exactly the shape that needs watching. */
+  "components/landing/v7/site-footer/site-footer.css",
   "components/landing/v7/theme.css",
 ];
 

@@ -15,10 +15,11 @@
  * rather than its three corridor beats. Bottom-right is the exit and the controls: the theme
  * switch, Contact, and a session mark only an allowlisted user ever sees.
  *
- * `practice` carries NO mark (owner, same day). It is still a station in
- * `MANIFEST_ENTRIES` and still a readout row, so nothing here breaks — but
- * nothing lights gold while it holds the viewport. That is a known hole,
- * pending the section's own removal.
+ * ⚠ `practice` CARRIED NO MARK (owner, same day), and ADR-105 closed that hole
+ * by deleting the station: `#practice` was an empty breather kept alive to be
+ * the corridor's opaque cover, and the footer takes that role. The known hole
+ * this paragraph described is spent — there is no longer a station that holds
+ * the viewport with nothing lit.
  *
  * ⚠ TWO CLOCKS, and they are not interchangeable. The Arc's beats only
  * exist on the MANIFEST index (`READOUT_SECTIONS` collapses all four to a

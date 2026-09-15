@@ -6,6 +6,7 @@ import { ConsoleRail } from "@/components/landing/home-v2/services/casefile/cons
 import { ProofGlyph } from "@/components/landing/home-v2/services/casefile/ProofGlyph";
 import type { CaseTrack } from "@/lib/cases/types";
 
+import { ProofCardWire } from "./ProofCardWire";
 import { ProofField } from "./ProofField";
 import type { ProofStackClient } from "./proofOrder";
 import { proofTabLabel, proofTabs } from "./proofTabs";
@@ -99,10 +100,17 @@ export function ProofCard({
   track,
   client,
   railSeat = "field",
+  wire = false,
 }: {
   track: CaseTrack;
   client: ProofStackClient;
   railSeat?: ProofRailSeat;
+  /* ⚠ ONLY CARD 0 OPENS, SO ONLY CARD 0 IS DRAWN (ADR-104). The aperture is
+     card 0's alone (ADR-097 U11), and the skeleton exists to be revealed by
+     it — on any other card it would be a layer that never paints. The
+     `/arcs/trinny-london/proposal` host passes nothing and its cards are
+     byte-identical. */
+  wire?: boolean;
 }) {
   const titleId = `pf-card-${track.id}`;
   const claims = track.blocks ?? [];
@@ -236,6 +244,14 @@ export function ProofCard({
           <div className="pf-card__foot" ref={setFootHost} />
         </div>
       </div>
+      {/* ⚠ AFTER THE BODY, AND ABSOLUTE (ADR-104). `.pf-card` is a two-row
+          grid (`--pc-peek` + `1fr`) with exactly two children, so a third
+          in-flow child would become a grid item and break the peek band —
+          `.pf-cardwire` is `position: absolute`, seated below the head band
+          rather than over it. The band is the card's own MATERIAL (the
+          client's gradient over the housing) and arrives real; what is drawn
+          is the card's CONTENTS. */}
+      {wire ? <ProofCardWire /> : null}
     </article>
   );
 }

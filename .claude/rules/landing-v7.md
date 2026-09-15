@@ -35,6 +35,95 @@ Do NOT add `useAuth` or other post-mount-updating subscriptions to
 LandingPage — push them into leaf components (see `CelestialEditorGate`).
 Ref: BEST-PRACTICES "Nested-root portals".
 
+⚠ **THE PAGE ENDS ON A BOLD FOOTER, AND `#practice` IS DELETED
+([ADR-105](../sentinel/decisions/105-the-page-ends-on-a-bold-footer.md), 2026-09-15,
+owner).** `#contact` IS the footer: a key visual bleeding up from the floor, the ask,
+the contact form's slot and the socials, over a legal bar. What the owner read as _"a
+parallax section sliding over"_ the era stage was `#practice` — an EMPTY station (its
+one child `approach` is stripped at parse time) kept alive only to be the opaque COVER
+that ends the corridor ambient, because a hologram `#voidwalker` is a pinned
+TRANSPARENT stage. **The footer takes that role**, so ADR-030 §6's lockstep moves in
+one commit: `home-v2.css`'s `~ #practice` rule, `useCorridorExitScroll`'s `practiceEl`
+query and `landing.css`'s `content-visibility` opt-out all name `#contact`.
+
+- ⚠ **IT STAYS A `<section class="station" data-station="contact">` INSIDE `<main
+class="stations">`.** Four things read that and a `<footer id="contact">` falls out
+  of all of them: the rail-manifest drift guard matches the SECTION tag over the body
+  HTML string, `useLandingScroll` collects `.station`, the mobile padding floor keys on
+  `#contact.station`, and the cover rule is a `~` SIBLING selector (which is also why
+  it cannot leave `<main>`, and why the cover's `z-index: 6` still means something —
+  `.stations` is the stacking context it is measured in). `role="contentinfo"` lives on
+  the React root; a `<footer>` nested in a `<section>` is not `contentinfo` anyway.
+- ⚠ **IT IS A PORTAL INTO AN AUTHORED SHELL — the fourth of these.** `#contact` carries
+  `[data-site-footer-root]` and `SiteFooterPortal` mounts into it, exactly as `#about`
+  and `#voidwalker` do. ⚠ **`contact` MAY NOT JOIN `removeStations`** — that list also
+  rewrites every `href="#<id>"`, so it would strip the id being kept. ⚠ And
+  `removeStationsFromBody` could NOT reach the old `<footer class="foot">`: no id,
+  neither tag, and outside `<main>`. It went from the prototype source, which fires no
+  HMR — hard-reload after.
+- ⚠ **THE NESTED ROOT IS WHAT WILL KEEP THE CONTACT FORM SAFE.** A `LandingPage`
+  re-render re-applies the innerHTML and ORPHANS every nested root — the services cards
+  vanish with no error — and a controlled input re-rendering per keystroke is exactly
+  that. Inside its own root the form's state cannot reach `LandingPage`. ⚠ `useEffect`
+  is no longer imported there at all; anything that adds one back is adding a re-render
+  path to the component that hosts every portal on the page.
+- ⚠ **THE STATION KEEPS ITS OWN OPAQUE `var(--void)` GROUND AND THE PLATE IS A LAYER
+  INSIDE IT.** The handoff guard asserts the cover has `alpha === 1` AND a background
+  image; a station whose only ground is the image fails one of the two.
+- ⚠ **THE PLATE IS PER THEME, AND ONE KEPT-DARK IMAGE WAS TRIED FIRST.** `Key Visual
+14d` bleeds its void half up in dark; in light it cost the FRAME two readings — the
+  right rail's `LOCAL` label and the bottom-left brandmark are dark ink, FIXED at z 60,
+  printing over whatever is beneath (ADR-043). Light takes the hero's own
+  `Gateway_v2-light.webp`, which is also the closest reading of "aligned with our hero
+  section". ⚠ **That choice DELETED a class of exception**: a kept-dark plate needed
+  cream ink and a dark wash pinned against ADR-058's swap, and the first cut re-pinned
+  `--dawn-rgb` on the bar — fixing the ink and **silently inverting the wash**, which
+  then lightened the plate's foot against the very ink it was bedding. Light on a light
+  plate makes both plain tokens and `theme.css` needs no block for the sheet at all.
+  ⚠ `display: none` + `loading="lazy"` is what stops either theme fetching the other's
+  plate; **no `HERO_ROUTES` row** — a footer must never compete with the hero's LCP.
+- ⚠ **THE STATION GIVES UP ITS BOTTOM PADDING THROUGH THE TOKEN AND A `max()`.**
+  `.station`'s base is a literal `140px 0 220px`, so the plate's floor sat 220px above
+  the page's last pixel and the key visual FLOATED in a band of void. Written as a bare
+  `padding-bottom` it would opt out of the ≤960 chrome floor at id specificity with no
+  pixel change to say so (landing.css's own note), so the floor is reproduced.
+  ⚠ **AND THE FLEX CHILD IS THE PORTAL'S SLOT, NOT `.ft-foot`** — measured, the footer's
+  bottom sat at 781 in a 900 viewport and the plate floated with it.
+- ⚠ **THE BAND IS JOINED, NOT RE-INSET** (ADR-048): `max-width: var(--band-max);
+margin-inline: var(--rail-inset)`. `--rail-inset` is 0 below the 1200px crossover, so
+  a divergence is invisible at 1280×720 and 1440×800 — **measure at 1920×1247** (band
+  left 357 = inset 189 + rail 168, width exactly `--band-max`). The legal bar pays
+  `--hud-margin + --hud-corner-zone` of bottom padding, the two tokens the rails stop
+  short on, or it runs under the brandmark and the settings cluster.
+- ⚠ **A SOCIAL LINK IS EITHER REAL OR ABSENT.** `lib/site/socials.ts` is ONE record with
+  two readers (the footer and the About stage, whose four links were `href="#"` too).
+  `null` = decided but unpublished and renders nothing; `"#"` is a guard failure
+  (`tests/lib/socials.test.ts`).
+- ⚠ **"PLOT YOUR COURSE" IS DELETED** with the voidwalker terminus link that pointed at
+  it (`VOIDWALKER_HEAD.next`, its render site and `.vw-foot__next`'s rules). It aimed at
+  `#contact`, which is now the footer directly beneath — a "next" link to what was
+  already arriving — and it was the display-aphorism shape ADR-078's copy law bans.
+- ⚠ **TWO GUARDS WERE PROVING THINGS BY COINCIDENCE, AND THE DELETION EXPOSED BOTH.**
+  `trinny-london-journey` asserted the variant's SECTOR total `!== READOUT_SECTIONS
+.length` (6 against 7) as proof the hook reads the ROSTER — its own comment predicted
+  the failure and it arrived from the other side when production came DOWN to six; the
+  discriminating roster is CONSTRUCTED now. And two scroll waypoints asked for 0.3
+  viewports INSIDE the cover: `#practice` was ~1 viewport of tail, and without it that
+  target lands 113px past `maxScroll` at 1440×900 — `scrollTo` clamps silently,
+  `waitForFunction` does not, so the smoke waited out its timeout on a page already
+  exactly where it was asked to go. Both clamp. ⚠ The cover's own assertion was
+  `top < 0`, a proxy that only holds while something FOLLOWS the station; the footer is
+  the last viewport, so what is measured now is that an opaque station FILLS the screen.
+- ⚠ **`.approach*` AND `.foot*` CSS STAY IN `landing.css`.** The first is inert; the
+  second is still shipped by `/claude-workshop` and `/arcs/trinny-london/proposal` from
+  their OWN prototypes, **neither of which has a visual guard on its footer**.
+- **Verifying:** `node scripts/capture-site-footer.mjs --vp 1920x1247 --theme dark`
+  (and `--theme light`, and `--vp 390x844`) — headed, real scrolls, and it prints the
+  HUD corners' boxes against the plate's, because **nothing mechanical measures contrast
+  over an image**. Plus `about-voidwalker-handoff-boundaries`, the five drift guards
+  (`rail-manifest` · `v7-parse` · `section-label` · `detentTable` ·
+  `rail-instrument-marks`) and `mechanical.mjs --scope ".ft-foot" --prm` in both themes.
+
 ⚠ **ADR-082 U2: `#voidwalker` is the HOLOGRAM on the capable path** — a
 pinned, starless transparent stage the corridor ambient survives, with the
 opaque cover passing to `#practice`. Its inner reveal is reversible and
@@ -42,7 +131,7 @@ finishes a horizontal exit before sticky release; the retained ADR-081 time
 tunnel is not the production composition.
 
 **The funnel is the ADR-033 order, as amended by ADR-054, ADR-056 and ADR-074:** hero →
-corridor (thesis + the Arc) → services (opening with the casefile) → about (bio) → **voidwalker (the hologram through-line — [`.claude/rules/voidwalker.md`](voidwalker.md))** → practice (the capable-path opaque cover) → contact. The paragraph that follows is ADR-054's wording and names **proof (the
+corridor (thesis + the Arc) → services (opening with the casefile) → about (bio) → **voidwalker (the hologram through-line — [`.claude/rules/voidwalker.md`](voidwalker.md))** → **contact (the SITE FOOTER, and the capable-path opaque cover — ADR-105; `practice` is deleted)**. The paragraph that follows is ADR-054's wording and names **proof (the
 client case)** → practice → contact.
 `#tools` and `#build` retired — the four production cases live ONLY on
 the Arc's Build-park cases reveal (click-armed via the CUE — a dotted-leader

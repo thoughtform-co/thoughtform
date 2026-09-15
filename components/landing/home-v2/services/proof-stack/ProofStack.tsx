@@ -171,7 +171,10 @@ export function ProofStack({
             data-pc-index={i}
             style={{ "--i": i, zIndex: i + 1 } as CSSProperties}
           >
-            <ProofCard track={track} client={client} />
+            {/* ⚠ CARD 0 ALONE (ADR-104). The skeleton is what the aperture
+                reveals, and the aperture is card 0's alone — so the two
+                conditions are the same condition and are written as one. */}
+            <ProofCard track={track} client={client} wire={i === 0 && arrival === "glitch"} />
           </div>
         ))}
         <div className="pf-stack__tail" aria-hidden="true" />

@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+/* ⚠ NO `useEffect` — the LAST one went with the dead `#practice`
+   choreography (ADR-105). Anything added back here re-renders the component
+   that owns every nested root. */
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { useLandingScroll } from "./hooks/useLandingScroll";
 import { useRevealMotion } from "./hooks/useRevealMotion";
 import { useBrandmarkJourney } from "./hooks/useBrandmarkJourney";
@@ -21,6 +24,7 @@ import { RAIL_INSTRUMENTS } from "./rail-instruments/flags";
 import type { JourneyRoster } from "./rail-instruments/journeyOrder";
 import { AboutStagePortal } from "@/components/landing/home-v2/about/AboutStagePortal";
 import { VoidwalkerPortal } from "@/components/landing/home-v2/voidwalker/VoidwalkerPortal";
+import { SiteFooterPortal } from "@/components/landing/v7/site-footer/SiteFooterPortal";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
@@ -119,225 +123,13 @@ export function LandingPage({
   // mount so the dissipate hands off into the practical services
   // copy.
   useCorridorMount(rootRef, corridorText, { corridorMountId, debug: false });
-
-  // Hamburger nav was retired per the Brand Codex hero contract — no
-  // `.hud__nav` / `.hud__nav__btn` markup ships in the parsed body
-  // any more, so the previous toggle + smooth-scroll effect would be
-  // a no-op. Section navigation now happens via in-content CTAs
-  // (e.g. the hero "See the practice" link) and the brandmark journey.
-
-  // Practice section choreography. Three coupled layers, all driven
-  // from a single rAF-throttled scroll handler:
-  //
-  //   (1) section observer — toggles `data-practice-active` on the root
-  //       element while `#practice` is engaged with the viewport. CSS
-  //       reads this to crossfade the bottom-left HUD brandmark from
-  //       its filled rendering to the dawn-toned outline asset.
-  //
-  //   (2) phase selector — on each scroll frame picks the
-  //       `.approach__phase` whose center is closest to ~40% of the
-  //       viewport (the natural reading focus) and writes
-  //       `data-active-phase` on `.approach` plus `data-active` on each
-  //       phase. CSS uses these to drive the cumulative orbit-glyph
-  //       ladder (compass / crystal / armature stack with decaying
-  //       opacity) and the orbit-lane / label / readout highlights.
-  //       This pattern avoids IntersectionObserver dead zones that
-  //       leave the active phase stale on mobile, where each phase is
-  //       100vh tall and may never cross a fixed ratio band.
-  //
-  //   (3) telemetry tick — on the same frame, writes scroll progress
-  //       through #practice (0..1) to `--practice-progress` on
-  //       `.approach`, the active phase's compass position to
-  //       `--focus-x` / `--focus-y` on `.approach__orbit__focus`, and
-  //       updates the BRG / DPT / TGT readout text. CSS reads the
-  //       progress var to rotate the scanner sweep; the focus marker's
-  //       transition smooths the snap to each phase position.
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    const phases = Array.from(root.querySelectorAll<HTMLElement>(".approach__phase"));
-    const approach = root.querySelector<HTMLElement>(".approach");
-    const practice = root.querySelector<HTMLElement>("#practice");
-
-    if (!phases.length || !approach) return;
-
-    // Compass positions in the orbit's SVG coord system (viewBox
-    // -180,-180,360,360). These match the existing pillar labels in
-    // the orbit SVG so the focus marker glides between them as phases
-    // change. Values are unit-less for SVG `transform: translate(x y)`.
-    const PHASE_FOCUS: Record<string, { x: number; y: number; n: string }> = {
-      navigate: { x: -100, y: -100, n: "01" },
-      encode: { x: -50, y: 100, n: "02" },
-      build: { x: 80, y: -18, n: "03" },
-    };
-
-    // Lazy queries — these elements live inside the dangerouslySetInnerHTML
-    // body and may be replaced on Fast Refresh / Strict Mode double-mount,
-    // so we resolve them per call instead of capturing once. CSS handles
-    // the transition smoothing, so per-call DOM lookups are cheap. We set
-    // `transform` directly because Chromium does not always recalc the
-    // computed `transform` when only a custom property in
-    // `transform: translate(var(--x), var(--y))` changes on an SVG
-    // element. Inline transform invalidates correctly.
-    const setFocusPosition = (phase: string | null) => {
-      if (!phase) return;
-      const focusEl = root.querySelector<SVGGElement>(".approach__orbit__focus");
-      if (!focusEl) return;
-      const pos = PHASE_FOCUS[phase];
-      if (!pos) return;
-      focusEl.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
-    };
-
-    const setReadoutText = (selector: string, value: string) => {
-      const el = root.querySelector<HTMLElement>(selector);
-      if (el && el.textContent !== value) el.textContent = value;
-    };
-
-    const setActivePhase = (target: HTMLElement | null) => {
-      if (!target) return;
-      const phase = target.getAttribute("data-phase");
-      if (!phase) return;
-      // The attribute / focus / readout writes are idempotent and cheap
-      // (each compares the current value before writing), so we run them
-      // unconditionally. Gating on a phase change would skip the writes
-      // on Strict Mode's second mount where `data-active-phase` is
-      // already set from the first mount but the focus marker / readout
-      // text were never written.
-      if (approach.getAttribute("data-active-phase") !== phase) {
-        approach.setAttribute("data-active-phase", phase);
-      }
-      setFocusPosition(phase);
-      setReadoutText(
-        '.approach__stage__telemetry [data-readout="target"]',
-        PHASE_FOCUS[phase]?.n ?? "01"
-      );
-      phases.forEach((p) => {
-        const next = p === target ? "true" : "false";
-        if (p.getAttribute("data-active") !== next) {
-          p.setAttribute("data-active", next);
-        }
-      });
-    };
-
-    const quoteIsActive = () => {
-      const quote = root.querySelector<HTMLElement>("#buildQuote");
-      if (!quote) return false;
-      const r = quote.getBoundingClientRect();
-      return r.top < window.innerHeight && r.bottom > 0;
-    };
-
-    const pickActivePhase = () => {
-      const vh = window.innerHeight;
-      // 40% from viewport top is the natural reading focus on this layout.
-      const focusY = vh * 0.4;
-      let bestPhase: HTMLElement | null = null;
-      let bestDist = Infinity;
-      for (const p of phases) {
-        const r = p.getBoundingClientRect();
-        if (r.bottom <= 0 || r.top >= vh) continue;
-        const center = r.top + r.height / 2;
-        const dist = Math.abs(center - focusY);
-        if (dist < bestDist) {
-          bestDist = dist;
-          bestPhase = p;
-        }
-      }
-      if (bestPhase) {
-        setActivePhase(bestPhase);
-        return;
-      }
-      // Nothing in viewport — fall back to the phase nearest the
-      // viewport above/below so entering #practice from continuum
-      // immediately reads as Navigate, and entering from About on
-      // upward scroll lands on Build.
-      let nearest: HTMLElement | null = null;
-      let nearestDist = Infinity;
-      for (const p of phases) {
-        const r = p.getBoundingClientRect();
-        const center = r.top + r.height / 2;
-        const dist = Math.abs(center - focusY);
-        if (dist < nearestDist) {
-          nearestDist = dist;
-          nearest = p;
-        }
-      }
-      setActivePhase(nearest);
-    };
-
-    const updateOrbitTelemetry = () => {
-      if (!practice) return;
-      const r = practice.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const total = r.height + vh;
-      // Progress = 0 when the section's top edge meets the viewport
-      // bottom (just entering); 1 when the section's bottom edge meets
-      // the viewport top (just leaving). Clamped to [0, 1].
-      const progress = Math.max(0, Math.min(1, (vh - r.top) / total));
-      approach.style.setProperty("--practice-progress", progress.toFixed(4));
-
-      // Scanner rotation — set directly via inline transform (same
-      // Chromium quirk as the focus marker). One-and-a-half sweeps
-      // (0..540deg) over the section.
-      const scanner = root.querySelector<SVGGElement>(".approach__orbit__scanner");
-      if (scanner) {
-        scanner.style.transform = `rotate(${(progress * 540).toFixed(2)}deg)`;
-      }
-
-      setReadoutText(
-        '.approach__stage__telemetry [data-readout="bearing"]',
-        Math.round((progress * 540) % 360)
-          .toString()
-          .padStart(3, "0")
-      );
-      setReadoutText(
-        '.approach__stage__telemetry [data-readout="depth"]',
-        (progress * 10).toFixed(2)
-      );
-    };
-
-    let raf = 0;
-    const schedule = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        if (quoteIsActive()) {
-          setActivePhase(root.querySelector<HTMLElement>('.approach__phase[data-phase="build"]'));
-          return;
-        }
-        pickActivePhase();
-        updateOrbitTelemetry();
-      });
-    };
-
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    pickActivePhase();
-    updateOrbitTelemetry();
-
-    let practiceIO: IntersectionObserver | null = null;
-    if (practice) {
-      // Activation band: shrink the viewport root by 15% top and bottom
-      // so the brandmark only flips when #practice is solidly engaged,
-      // not at the section boundaries where the user is still reading
-      // the connector or the outgoing through-line.
-      practiceIO = new IntersectionObserver(
-        ([entry]) => {
-          root.setAttribute("data-practice-active", entry?.isIntersecting ? "true" : "false");
-        },
-        { rootMargin: "-15% 0px -15% 0px", threshold: 0 }
-      );
-      practiceIO.observe(practice);
-    }
-
-    return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      if (raf) cancelAnimationFrame(raf);
-      practiceIO?.disconnect();
-      root.removeAttribute("data-practice-active");
-    };
-  }, []);
+  /* ⚠ THE #practice CHOREOGRAPHY EFFECT IS DELETED (ADR-105), AND IT HAD
+     BEEN DEAD FOR LONGER THAN THAT. It drove `--practice-progress`, a phase
+     focus marker around the orbit and a `data-practice-active` flag off
+     `.approach__phase` — and `approach` is in `CORRIDOR_REPLACED_STATIONS`,
+     so `phases.length` has been 0 and the effect has early-returned on every
+     production render since ADR-021. ~185 lines of no-op reading a station
+     that no longer exists. Git history is the archive. */
 
   // Tag motion roles on first mount (replaces the imperative tagging from initV7Runtime).
   // MUST be useLayoutEffect: runs before useRevealMotion's useEffect so the
@@ -497,6 +289,13 @@ export function LandingPage({
           corridor and #practice owns the ambient kill. Static fallbacks are
           solid normal-flow DOM. Same nested-root rules as ServicesPortal. */}
       <VoidwalkerPortal containerRef={rootRef} />
+      {/* The page's ending (ADR-105): a nested root into the
+          [data-site-footer-root] slot inside #contact, which is also the
+          corridor's opaque cover. Same nested-root rules as ServicesPortal
+          — and here they are what keeps the contact form's state out of
+          this component, where a re-render would re-apply the innerHTML and
+          orphan every other portal on the page. */}
+      <SiteFooterPortal containerRef={rootRef} />
       {/* (The ADR-054 #proof decode controller retired with ADR-056: the
           client case is a mounted component inside ServicesStage now, and
           owns its own reveal off the `--svc-proof-in` stage clock.

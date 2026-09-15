@@ -54,8 +54,9 @@ const VEIL_AMBIENT_CAP = 0.12;
 const AMBIENT_ENGAGE_RAW = 0.999;
 /** Fade the ambient particles as the NEXT opaque station approaches. `#about`
  *  is a pinned TRANSPARENT stage, so the ambient hold survives THROUGH it.
- *  In capable hologram mode `#voidwalker` is transparent too and `#practice`
- *  owns the cover/kill edge; static and fallback Voidwalker paths remain
+ *  In capable hologram mode `#voidwalker` is transparent too and `#contact`
+ *  — the site footer (ADR-105) — owns the cover/kill edge; static and
+ *  fallback Voidwalker paths remain
  *  opaque and own that same edge themselves. ABOUT_DECK_STAGE=false restores
  *  #about as the kill target. */
 const NEXT_STATION_FADE_START_VH = 0.6;
@@ -136,7 +137,6 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
     let nextStationEl: HTMLElement | null = null;
     let aboutEl: HTMLElement | null = null;
     let voidwalkerEl: HTMLElement | null = null;
-    let practiceEl: HTMLElement | null = null;
     let contactEl: HTMLElement | null = null;
     let killEl: HTMLElement | null = null;
     // Last-written DOM state, so attributes flip only on edges and the
@@ -192,24 +192,27 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // OPAQUE station below the pinned #about now — a plain normal-flow
       // station, which is the only property this read requires. The slot
       // passed #about → #continuum (ADR-047) → #proof (ADR-054) →
-      // #practice (ADR-056) → here; `#practice` survives as a roleless
-      // breather and is the defensive fallback.
+      // #practice (ADR-056) → here.
+      //
+      // ⚠ ADR-105: `#practice` IS DELETED. It was an EMPTY breather whose
+      // only remaining job was this one — the opaque cover a transparent
+      // Voidwalker cannot be — and a blank panel sliding over the era stage
+      // is what the owner saw. The footer is `#contact`, it is opaque by
+      // construction (a full-bleed key visual over `var(--void)`), and it
+      // takes the role. The chain below is one term shorter, not rerouted.
       // ⚠ Keep this query and home-v2.css's
       // `html[data-corridor-exit="true"] #voidwalker` rule on the SAME
       // station (the ADR-030 §6 seam bug — see the comment below).
       //
       // ⚠ ADR-081 / ADR-082 U2: only an ENGAGED transparent Voidwalker
-      // presentation extends the ambient to #practice. This is a runtime
+      // presentation extends the ambient to #contact. This is a runtime
       // mode decision, not merely a build flag: at 961–1100px the corridor
       // can dock while the hologram deliberately remains an opaque static
       // section, so #voidwalker must resume ownership of the kill there.
-      // home-v2.css mode-gates the #practice stacking rule the same way.
+      // home-v2.css mode-gates the #contact stacking rule the same way.
       if (!aboutEl || !aboutEl.isConnected) aboutEl = root.querySelector<HTMLElement>("#about");
       if (!voidwalkerEl || !voidwalkerEl.isConnected) {
         voidwalkerEl = root.querySelector<HTMLElement>("#voidwalker");
-      }
-      if (!practiceEl || !practiceEl.isConnected) {
-        practiceEl = root.querySelector<HTMLElement>("#practice");
       }
       if (!contactEl || !contactEl.isConnected) {
         contactEl = root.querySelector<HTMLElement>("#contact");
@@ -234,9 +237,9 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         killEl ??
         (ABOUT_DECK_STAGE
           ? voidwalkerTransparent
-            ? (practiceEl ?? contactEl ?? voidwalkerEl)
-            : (voidwalkerEl ?? practiceEl ?? contactEl)
-          : (aboutEl ?? voidwalkerEl ?? practiceEl ?? contactEl));
+            ? (contactEl ?? voidwalkerEl)
+            : (voidwalkerEl ?? contactEl)
+          : (aboutEl ?? voidwalkerEl ?? contactEl));
       if (nextStationEl !== desiredNextStation) nextStationEl = desiredNextStation;
       const nextStationTopVh =
         (nextStationEl?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;

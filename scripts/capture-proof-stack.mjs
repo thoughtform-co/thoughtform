@@ -322,20 +322,32 @@ try {
            replace a CSS animation the WAAPI has already paused — it ADDS one,
            and the count climbed 3 → 6 → 9 across a five-frame strip while every
            computed value still looked right. */
-        for (const a of card.getAnimations()) a.cancel();
+        /* ⚠ SUBTREE. Pass 1 animates the CARD; pass 2 (ADR-104) animates
+           `.pf-card__body` and the two `.pf-cardwire` halves, which are
+           DESCENDANTS — `getAnimations()` on an element returns only its own,
+           so without this the strip freezes pass 1 and lets pass 2 run free. */
+        for (const a of card.getAnimations({ subtree: true })) a.cancel();
         slot.dataset.pfArrive = "await";
         void card.offsetWidth; // restart, not resume
         slot.dataset.pfArrive = "in";
-        const anims = card.getAnimations();
+        const anims = card.getAnimations({ subtree: true });
         for (const a of anims) {
           a.pause();
           a.currentTime = t;
         }
         const cs = getComputedStyle(card);
+        const body = card.querySelector(".pf-card__body");
+        const wire = card.querySelector(".pf-cardwire--l");
         return {
           anims: anims.length,
           opacity: cs.opacity,
           clip: cs.clipPath.slice(0, 46),
+          /* ADR-104's pass 2: the body's window opening and the skeleton's
+             left half retracting are one travelling edge pair — they must
+             stay complementary at every frame. */
+          body: body ? getComputedStyle(body).clipPath : null,
+          wireL: wire ? getComputedStyle(wire).clipPath : null,
+          wireVis: wire ? getComputedStyle(wire).visibility : null,
           filter: cs.filter === "none" ? "none" : cs.filter.slice(0, 38),
           translate: cs.translate,
         };
@@ -348,7 +360,7 @@ try {
     /* Hand the card back its own clock, or every still after this is frozen. */
     await page.evaluate(() => {
       const card = document.querySelectorAll(".pf-slot")[0].querySelector(".pf-card");
-      for (const a of card.getAnimations()) a.finish();
+      for (const a of card.getAnimations({ subtree: true })) a.finish();
     });
   }
 

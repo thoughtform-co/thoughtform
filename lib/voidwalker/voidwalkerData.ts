@@ -96,10 +96,14 @@ export const VOIDWALKER_HEAD = {
   foot: [
     "The same move each time: read a new system early, build the layer that lets people act inside it, step back.",
   ] as readonly VwSegment[],
-  /** The terminus hands to the contact beat — `#practice` is an empty
-   *  breather station in production (its body is stripped at parse time),
-   *  so it is not a destination. */
-  next: { label: "Next · Plot your course", href: "#contact" },
+  /* ⚠ ADR-105: THE TERMINUS LINK IS DELETED (owner, 2026-09-15: _"I don't
+     think we need 'Plot Your Course' or the current footer"_). It read
+     `Next · Plot your course ↓` and pointed at `#contact` — which is the
+     FOOTER now, directly beneath, so the link pointed at what was already
+     coming onto the screen. Two things went with it: an aphoristic display
+     phrase the copy law (ADR-078) would not allow on a head anyway, and the
+     last consumer of an `#practice`-vs-`#contact` destination question that
+     ADR-105 settled by deleting one of them. */
 } as const;
 
 export const VOIDWALKER_BEATS: readonly VoidwalkerBeat[] = [
