@@ -267,11 +267,11 @@ for (const [sv, name, note] of [
   [3.66, "35-scene-bands", "three bands, the outcomes' title landed"],
   [3.9, "36-scene-stack", "the bands travelling to the rows, one material"],
   [4.25, "37-scene-stacked", "a list of three, all lit, the paragraph typing"],
-  [4.6, "38-scene-step1", "row 1 open and filled, the scan sweeping"],
+  [4.6, "38-scene-step1", "row 1 open and filled, the packshot read on the dial"],
   [4.9, "39-scene-crossover", "one row closing as the next opens, both apertures crossing"],
-  [5.15, "40-scene-step2", "row 2 open, the second field"],
-  [5.65, "41-scene-step3", "row 3 open, the third field"],
-  [5.95, "42-scene-settled", "the scene settled — the scan finished"],
+  [5.15, "40-scene-step2", "row 2 open, the run travelling its four stations"],
+  [5.65, "41-scene-step3", "row 3 open, the engagement arc running to its terminus"],
+  [5.95, "42-scene-settled", "the scene settled — every figure on the dial finished"],
 ]) {
   await rollToS(sv);
   await page.waitForTimeout(200);

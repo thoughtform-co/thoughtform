@@ -1658,32 +1658,68 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   }
 }
 
-/* ── The scan: a packshot read by a machine (ADR-103) ───────────────
-   One input, `--scan-s` (0 → 1), finished by default. The field is 4:5,
-   height-led off the stage's box; the gold edge sweeps it and the live
-   image is CLIPPED to the edge over its own grey ghost; each check's node,
-   leader and label are drawn as the edge passes its anchor; the verdict
-   letters last. Every reveal is a travelling or centre-out clip — no
-   opacity, no transition, no keyframe — so scrolling back plays it in
-   reverse exactly and nothing flickers (ADR-097 U12's law).
-   ⚠ THE FIELD AND EVERY LABEL CARRY THEIR OWN OPAQUE BED (`--arc-plate`):
-   on the Trinny page the scene sits on the coral wash, which no contrast
-   walk can see, and a label over a shader is a label over nothing measurable.
-   ⚠ THE LEADERS ARE 1px DIVS, never svg lines (ADR-068 U6). Gold buys the
-   edge, which parks as the verdict's rule; everything else is dawn ink. */
-.arc-scan {
+/* ── The dial: one instrument, read three ways (ADR-106) ────────────
+   The house's own ring register — the About section's orbit drawing and the
+   gateway's concentric armature behind the brandmark — carrying all three
+   deliverables. What changes between stages is what is seated in it: the
+   generated packshot (`scan`), the studio's production run (`loop`), the
+   engagement's terminating arc (`handover`).
+
+   ONE INPUT, `--scan-s` (0 → 1), FINISHED BY DEFAULT. Every reveal is a
+   travelling clip, a centre-out clip or a stroke draw-on — no opacity, no
+   transition, no keyframe — so scrolling back plays it in reverse exactly and
+   nothing flickers (ADR-097 U12's law).
+
+   ⚠ THE DISC AND EVERY LABEL CARRY THEIR OWN OPAQUE BED (`--arc-plate`): on
+   the Trinny page the scene sits on the coral wash, which no contrast walk
+   can see, and line work over a shader is line work over nothing measurable.
+   ⚠ THE LEADERS ARE 1px DIVS, never svg lines (ADR-068 U6).
+   ⚠ EVERY COLOUR IS AN `--arc-dial-*` ALIAS of the ADR-077 ramp. The arc
+   routes do import landing.css, so `--dawn-*` and a raw `--gold` resolve here
+   — which is exactly what would make that mistake silent until the light
+   theme. Gold buys ONE thing per drawing: the sweep's edge on the scan, the
+   lit run on the other two.
+   ⚠ `--dial-d` IS DECLARED HERE AND USED ONLY BY DESCENDANTS. A container's
+   own `cq*` units resolve against its ANCESTOR container, not itself; the
+   value substitutes as a token sequence and resolves in the using element,
+   whose nearest container is this one. */
+.arc-dial {
+  --arc-dial-bed: var(--arc-plate);
+  --arc-dial-line: var(--arc-rule);
+  --arc-dial-line2: var(--arc-rule-dash);
+  --arc-dial-tick: var(--arc-ink-22);
+  --arc-dial-stub: var(--arc-ink-50);
+  --arc-dial-gold: rgba(var(--gold-rgb), 0.3);
+  --arc-dial-gold-soft: rgba(var(--gold-rgb), 0.18);
+  --arc-dial-run: var(--gold-line, rgba(202, 165, 84, 0.34));
+  --arc-dial-engage: var(--arc-ink-50);
+  --arc-dial-hand: var(--arc-ink-90);
+
   --scan-s: 1;
   --scan-sweep: 0.62;
   --scan-open: 0.22;
   --scan-verdict: 0.8;
-  --scan-fix: 18px;
-  --scan-foot: 30px;
-  --scan-gap: 16px;
+  --scan-foot: 26px;
+  --scan-gap: 14px;
   --scan-row: 34px;
-  --fh: calc(100cqh - var(--scan-fix) - var(--scan-foot));
-  --fw: calc(var(--fh) * 0.8);
+
+  /* The dial's box: square, sized by whichever of the stage's axes binds. */
+  --dial-d: min(calc(100cqh - var(--scan-foot)), 100cqw);
+  /* The picture seated in it, as fractions of the dial. Its corners fall just
+     inside the rim, the way the About drawing seats its portrait: the inner
+     rings pass BEHIND the subject rather than stopping short of it. */
+  --img-t0: 0.14;
+  --img-h0: 0.72;
+  --ih: calc(var(--dial-d) * var(--img-h0));
+  --iw: calc(var(--ih) * 0.8);
+  --ix: calc((var(--dial-d) - var(--iw)) / 2);
+  --iy: calc(var(--dial-d) * var(--img-t0));
+
   --scan: clamp(0, var(--scan-s) / var(--scan-sweep), 1);
+  --scan-i: clamp(0, (var(--scan) - var(--img-t0)) / var(--img-h0), 1);
   --scan-v: clamp(0, (var(--scan-s) - var(--scan-verdict)) / (1 - var(--scan-verdict)), 1);
+  --run: clamp(0, var(--scan-s) / 0.72, 1);
+
   position: relative;
   container-type: size;
   width: 100%;
@@ -1691,189 +1727,105 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   margin: 0;
   overflow: visible;
 }
-.arc-scan__fix {
+.arc-dial__field {
   position: absolute;
-  top: 0;
   left: 0;
-  height: var(--scan-fix);
-  line-height: var(--scan-fix);
+  top: 0;
+  width: var(--dial-d);
+  height: var(--dial-d);
+}
+.arc-dial__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* ⚠ THE STATIC LINE WORK IS ONE DEVICE PIXEL AT EVERY STAGE SIZE. A 1-unit
+   rule in this 240-unit crop paints ~1.1px at the laptop and ~2px at the
+   owner's viewport, and the browser pays the difference in alpha — the
+   arithmetic that has cost this house a hairline three times. */
+.arc-dial__hair {
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.arc-dial__bare,
+.arc-dial__cap {
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+/* ⚠ THE DRAW-ON RUNS MAY NOT TAKE `vector-effect` — the browser then ignores
+   `pathLength` and the draw breaks into partial arcs. Their weight is in user
+   units and scales with the dial, which is correct: the lit thing is the one
+   mark allowed to grow with the instrument. */
+.arc-dial__run {
+  stroke-width: 1.4;
+  stroke-linecap: butt;
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - var(--run, 1) * 100);
+}
+.arc-dial__cap {
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - var(--cap, 1) * 100);
+}
+
+/* The two designations, on the dial's own diagonal — `DiagramLabels`' shape in
+   the celestial kit, seated in the circle's empty corners. */
+.arc-dial__fix {
+  position: absolute;
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   font-weight: var(--weight-text);
   font-size: 8px;
+  line-height: 1.2;
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: var(--arc-ink-50);
   white-space: nowrap;
   pointer-events: none;
-}
-.arc-scan__fix--r {
-  left: var(--fw);
-  translate: -100% 0;
-}
-/* On a narrow stage (the laptop's ~400px) the two fixes collide over a field
-   ~200px wide; the pass reads from the verdict alone there. */
-@container (max-width: 520px) {
-  .arc-scan__fix--r {
-    display: none;
-  }
-}
-.arc-scan__field {
-  position: absolute;
-  left: 0;
-  top: var(--scan-fix);
-  width: var(--fw);
-  height: var(--fh);
-  background:
-    radial-gradient(var(--arc-grid) 1px, transparent 1.2px) 0 0 / 24px 24px,
-    var(--arc-plate);
-}
-/* The dashed runs: the caption card's own period, 1px on / 5px off. */
-.arc-scan__run {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.arc-scan__run--x::before,
-.arc-scan__run--x::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: repeating-linear-gradient(to right, var(--arc-rule-dash) 0 1px, transparent 1px 6px);
-}
-.arc-scan__run--x::before {
-  top: 0;
-}
-.arc-scan__run--x::after {
-  bottom: 0;
-}
-.arc-scan__run--y::before,
-.arc-scan__run--y::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: repeating-linear-gradient(to bottom, var(--arc-rule-dash) 0 1px, transparent 1px 6px);
-}
-.arc-scan__run--y::before {
-  left: 0;
-}
-.arc-scan__run--y::after {
-  right: 0;
-}
-/* The registration crosses — the head's own 18px mark, on the corners. */
-.arc-scan__cross {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  color: var(--arc-seam);
-  pointer-events: none;
-  z-index: 2;
-}
-.arc-scan__cross::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 1px;
-  background: currentcolor;
-}
-.arc-scan__cross::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  background: currentcolor;
-}
-.arc-scan__cross--tl {
-  left: 0;
-  top: 0;
-  translate: -50% -50%;
-}
-.arc-scan__cross--tr {
-  right: 0;
-  top: 0;
-  translate: 50% -50%;
-}
-.arc-scan__cross--bl {
-  left: 0;
-  bottom: 0;
-  translate: -50% 50%;
-}
-.arc-scan__cross--br {
-  right: 0;
-  bottom: 0;
-  translate: 50% 50%;
-}
-/* Two images, one src: the ghost under, the live copy over, clipped to the
-   sweep. Both fill the FIELD's box (the padding insets the picture, the box
-   stays the field's) so the clip's edge and the travelling hairline agree. */
-.arc-scan__img {
-  position: absolute;
-  inset: 0;
-  box-sizing: border-box;
-  width: 100%;
-  height: 100%;
-  padding: 6%;
-  object-fit: contain;
-}
-.arc-scan__img--ghost {
-  filter: grayscale(1);
-  opacity: 0.35;
-}
-.arc-scan__img--live {
-  clip-path: inset(0 0 calc((1 - var(--scan)) * 100%) 0);
-}
-.arc-scan__edge {
-  position: absolute;
-  left: -8px;
-  right: -8px;
-  top: 0;
-  height: 1px;
-  background: var(--gold-line, rgba(202, 165, 84, 0.34));
-  translate: 0 calc(var(--scan) * var(--fh));
-  z-index: 2;
-  pointer-events: none;
-}
-/* The callouts: a node ON the image, a leader out to the right, a label. */
-.arc-scan__callouts {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.arc-scan__callout {
-  --c: clamp(0, (var(--scan-s) - var(--at, 0) * var(--scan-sweep)) / var(--scan-open), 1);
-  --n: clamp(0, var(--c) / 0.15, 1);
-  --l: clamp(0, (var(--c) - 0.1) / 0.45, 1);
-  --b: clamp(0, (var(--c) - 0.5) / 0.5, 1);
-  position: absolute;
-  left: calc(var(--ax, 0.5) * var(--fw));
-  top: calc(var(--scan-fix) + var(--at, 0.5) * var(--fh) - var(--scan-row) / 2);
-  height: var(--scan-row);
-  display: flex;
-  align-items: center;
   z-index: 3;
 }
-.arc-scan__node {
+.arc-dial__fix--tl {
+  left: 0;
+  top: 0;
+}
+.arc-dial__fix--br {
+  left: var(--dial-d);
+  top: calc(var(--dial-d) - 10px);
+  translate: -100% 0;
+}
+
+/* A node: 7px, open by default, filled where the record says a hand is on it.
+   It opens from its own centre as the clock reaches it. */
+/* ⚠ ROUND, BECAUSE THE INSTRUMENT IS. The About drawing's own orbit marks
+   are circles and this figure is theirs; a square node on a dial reads as a
+   mark from another drawing. `inset(... round 50%)` is what keeps it round
+   while it opens — a plain inset clips a circle to a square mid-reveal. */
+.arc-dial__node {
   flex: 0 0 auto;
   width: 7px;
   height: 7px;
   border: 1px solid var(--arc-ink-60);
-  clip-path: inset(calc((1 - var(--n, 1)) * 50%));
+  border-radius: 50%;
+  background: transparent;
+  clip-path: inset(calc((1 - var(--n, 1)) * 50%) round 50%);
 }
-.arc-scan__lead {
-  flex: 0 0 auto;
-  width: calc(var(--fw) * (1 - var(--ax, 0.5)) - 7px + var(--scan-gap));
+.arc-dial__node--lit {
+  border-color: var(--arc-dial-hand);
+  background: var(--arc-dial-hand);
+}
+/* ⚠ THE LEADER TAKES THE SLACK, THE LABEL DOES NOT. Its length was a hand
+   computation off the dial's own width, and at the laptop's column that put
+   the label's tail past the stage's right edge — a run clipped by a box no
+   gate measures. The row spans node → figure's right edge, the label is
+   `0 0 auto`, and the leader is whatever is left. */
+.arc-dial__lead {
+  flex: 1 1 auto;
+  min-width: 10px;
   height: 1px;
   background: var(--arc-ink-60);
   clip-path: inset(0 calc((1 - var(--l, 1)) * 100%) 0 0);
 }
-.arc-scan__label {
+.arc-dial__label {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -1882,7 +1834,168 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
   border: 1px solid var(--arc-edge);
   background: var(--arc-plate);
   white-space: nowrap;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 9.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--arc-ink-90);
   clip-path: inset(0 calc((1 - var(--b, 1)) * 100%) 0 0);
+}
+/* A tag rides the dial itself — set ON the ring, on its own bed, opening from
+   its centre so nothing slides across the line work. */
+.arc-dial__tag {
+  position: absolute;
+  left: calc(var(--ax, 0.5) * var(--dial-d));
+  top: calc(var(--at, 0.5) * var(--dial-d));
+  translate: -50% -50%;
+  padding: 2px 5px;
+  background: var(--arc-plate);
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 8.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-90);
+  white-space: nowrap;
+  clip-path: inset(0 calc((1 - var(--c, 1)) * 50%));
+  z-index: 2;
+}
+/* ⚠ CONTENT-WIDTH, NEVER THE DIAL'S. A centred word in a full-width box
+   occupies the whole of its row, and the two side stations sit on exactly that
+   row — the overlap walk read `MAKE` as printing through `THE STUDIO` while
+   nothing on screen touched. A box is what a guard measures, so the box has to
+   be the word. */
+.arc-dial__hub {
+  position: absolute;
+  left: calc(var(--dial-d) / 2);
+  top: calc(var(--dial-d) / 2 - 6px);
+  translate: -50% 0;
+  max-width: calc(var(--dial-d) * 0.42);
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
+  font-weight: var(--weight-text);
+  font-size: 8.5px;
+  line-height: 1.2;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--arc-ink-50);
+  z-index: 2;
+}
+
+/* ── Stage 2: the run ──────────────────────────────────────────────── */
+.arc-dial__stations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+/* Each station's clock is where it sits on the run: the node opens and its tag
+   is drawn as the run arrives, so the figure reads as one gesture round the
+   ring rather than four marks appearing together. */
+.arc-dial__station {
+  --c: clamp(0, (var(--scan-s) - var(--t0, 0) * 0.72 - 0.04) / 0.12, 1);
+  --n: var(--c);
+}
+.arc-dial__station .arc-dial__node {
+  position: absolute;
+  left: calc(var(--ax, 0.5) * var(--dial-d));
+  top: calc(var(--at, 0.5) * var(--dial-d));
+  translate: -50% -50%;
+  z-index: 2;
+}
+/* ⚠ FILLED IS THE TEAM'S HAND, OPEN IS THE MODEL — the whole reading of this
+   figure, and the deliverable's own sentence drawn. */
+.arc-dial__station[data-steps-by="team"] .arc-dial__node {
+  border-color: var(--arc-dial-hand);
+  background: var(--arc-dial-hand);
+}
+
+/* ── Stage 3: the arc that ends ────────────────────────────────────── */
+.arc-dial[data-steps-visual="handover"] {
+  --run: clamp(0, var(--scan-s) / 0.45, 1);
+  --cap: clamp(0, (var(--scan-s) - 0.82) / 0.12, 1);
+}
+.arc-dial__run--outer {
+  --run: clamp(0, (var(--scan-s) - 0.45) / 0.37, 1);
+}
+.arc-dial__tag--arc {
+  color: var(--arc-ink-50);
+}
+.arc-dial__mark {
+  --c: clamp(0, (var(--scan-s) - 0.8) / 0.2, 1);
+  --n: clamp(0, var(--c) / 0.2, 1);
+  --l: clamp(0, (var(--c) - 0.15) / 0.45, 1);
+  --b: clamp(0, (var(--c) - 0.5) / 0.5, 1);
+  position: absolute;
+  left: calc(var(--ax, 0.5) * var(--dial-d));
+  right: 0;
+  top: calc(var(--at, 0.5) * var(--dial-d));
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  height: var(--scan-row);
+  z-index: 3;
+}
+.arc-dial__mark .arc-dial__node {
+  translate: -50% 0;
+}
+
+/* ── Stage 1: the scan — a packshot read by a machine (ADR-103) ─────
+   The picture is seated in the dial and the gold edge sweeps the WHOLE
+   instrument, top to bottom, parking on the dial's own floor as the verdict's
+   rule. The live image is CLIPPED to the edge over its own grey ghost; each
+   check's node, leader and label are drawn as the edge passes its anchor. */
+.arc-scan__img {
+  position: absolute;
+  left: var(--ix);
+  top: var(--iy);
+  width: var(--iw);
+  height: var(--ih);
+  object-fit: contain;
+}
+.arc-scan__img--ghost {
+  filter: grayscale(1);
+  opacity: 0.35;
+}
+.arc-scan__img--live {
+  clip-path: inset(0 0 calc((1 - var(--scan-i)) * 100%) 0);
+}
+.arc-scan__edge {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--dial-d);
+  height: 1px;
+  background: var(--gold-line, rgba(202, 165, 84, 0.34));
+  translate: 0 calc(var(--scan) * var(--dial-d));
+  z-index: 4;
+  pointer-events: none;
+}
+.arc-scan__callouts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+/* ⚠ `--at` IS A FRACTION OF THE PICTURE, `--atd` OF THE DIAL. The anchors are
+   authored against the cutout; the sweep now crosses the whole instrument, so
+   the clock and the seat both run through the picture's own window. */
+.arc-scan__callout {
+  --atd: calc(var(--img-t0) + var(--at, 0.5) * var(--img-h0));
+  --c: clamp(0, (var(--scan-s) - var(--atd) * var(--scan-sweep)) / var(--scan-open), 1);
+  --n: clamp(0, var(--c) / 0.15, 1);
+  --l: clamp(0, (var(--c) - 0.1) / 0.45, 1);
+  --b: clamp(0, (var(--c) - 0.5) / 0.5, 1);
+  position: absolute;
+  left: calc(var(--ix) + var(--ax, 0.5) * var(--iw));
+  right: 0;
+  top: calc(var(--atd) * var(--dial-d) - var(--scan-row) / 2);
+  height: var(--scan-row);
+  display: flex;
+  align-items: center;
+  z-index: 3;
 }
 .arc-scan__key {
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
@@ -1905,8 +2018,8 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
 .arc-scan__verdict {
   position: absolute;
   left: 0;
-  top: calc(var(--scan-fix) + var(--fh) + 10px);
-  width: var(--fw);
+  top: calc(var(--dial-d) + 8px);
+  width: var(--dial-d);
   margin: 0;
   font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
   font-weight: var(--weight-text);
@@ -1920,30 +2033,6 @@ html[data-theme="light"] .arc-hero[data-plate="own"] .hero__bg img {
 .arc-scan__verdict-text {
   display: inline-block;
   clip-path: inset(0 calc((1 - var(--scan-v)) * 100%) 0 0);
-}
-/* The field with nothing plotted yet: the same frame, one centred node over
-   its designation. */
-.arc-scan__node--centre {
-  position: absolute;
-  left: calc(50% - 3.5px);
-  top: calc(50% - 16px);
-  z-index: 2;
-}
-.arc-scan__desig {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  margin: 0;
-  text-align: center;
-  font-family: var(--font-pt-mono, "PT Mono", ui-monospace, monospace);
-  font-weight: var(--weight-text);
-  font-size: 8.5px;
-  line-height: 1.2;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--arc-ink-50);
-  z-index: 2;
 }
 
 /* ── Anatomy rows ──────────────────────────────────────────────────── */
@@ -5842,4 +5931,18 @@ html[data-theme="light"] .arc-root {
 }
 html[data-theme="light"] .arc-root .arc-board {
   --arc-board-green-wash: rgba(var(--atreides-rgb), 0.1);
+}
+
+/* The dial's two raw-gold rungs (ADR-106). Every other colour on the figure
+   aliases a rung the block above already re-derives; these two are alphas of
+   their own, and an alpha inverts its meaning across the flip — the same
+   number recedes toward BLACK on void and toward PARCHMENT here, so a ring
+   that is quiet in dark is a ring that is absent in light.
+
+   The house's own split by role applies: a kept gold OUTLINE takes
+   `--gold-line` on parchment, where raw `--gold` as line work measures under
+   the 3:1 rung. `color-mix` is what lets a solid token carry an alpha. */
+html[data-theme="light"] .arc-root .arc-dial {
+  --arc-dial-gold: color-mix(in srgb, var(--gold-line) 78%, transparent);
+  --arc-dial-gold-soft: color-mix(in srgb, var(--gold-line) 48%, transparent);
 }

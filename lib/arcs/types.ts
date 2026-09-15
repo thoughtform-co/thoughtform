@@ -604,24 +604,68 @@ export interface ArcStepsItem {
 /**
  * The stage's drawing for one deliverable.
  *
+ * ALL THREE ARE THE SAME INSTRUMENT (ADR-106): the house's ring register —
+ * the About section's orbit drawing and the gateway's concentric armature,
+ * the diagram language the owner named. What changes is what is seated in it,
+ * and each figure plots a RECORD rather than a metaphor (ADR-078 U1).
+ *
  * `scan` is the computer-vision read of a generated packshot: a gold edge
- * sweeps the image and the checks the studio's grading actually gates are
- * called out as it passes their anchor — a record of a real grading pass,
- * never a metaphor (ADR-078 U1). `field` is the framed, empty instrument the
- * other two deliverables hold until their own drawing exists.
+ * sweeps the dial and the checks the studio's grading actually gates are
+ * called out as it passes their anchor. `loop` is the production run the team
+ * does itself, four stations on one lit run. `handover` is the engagement's
+ * arc, which terminates, against the setup's circle, which does not.
+ *
+ * ⚠ `fix` IS THE DIAL'S DIAGONAL PAIR — two mono designations in the
+ * circle's empty top-left and bottom-right corners, `DiagramLabels`' own shape
+ * in the celestial kit. Every figure carries it, so the chrome is one rule.
  */
 export type ArcStepsVisual =
   | {
       kind: "scan";
       image: ArcImage & { width: number; height: number };
-      /** The two mono fixes above the field: the subject, and the pass. */
+      /** The dial's diagonal pair: the subject, and the pass. ≤ 26 chars each. */
       fix: readonly [string, string];
-      /** Sorted by `y`, the sweep's own order. `x`/`y` are fractions of the field. */
+      /** Sorted by `y`, the sweep's own order. `x`/`y` are fractions of the
+       *  picture's own box, which is seated inside the dial. */
       checks: readonly ArcStepsCheck[];
       /** The foot line, e.g. "Pass · to the studio lead". */
       verdict: string;
     }
-  | { kind: "field"; designation: string };
+  | {
+      kind: "loop";
+      /** Four stations, clockwise from the top — the run's own order. */
+      stations: readonly [ArcStepsStation, ArcStepsStation, ArcStepsStation, ArcStepsStation];
+      /** The hub's designation, lettered inside the core ring. ≤ 16 chars. */
+      hub: string;
+      fix: readonly [string, string];
+    }
+  | {
+      kind: "handover";
+      /** The closed inner circle: what keeps running. ≤ 16 chars. */
+      inner: string;
+      /** The outer arc: the engagement. ≤ 18 chars. */
+      outer: string;
+      /** The node the arc terminates at. ≤ 14 chars: one mono line in the label. */
+      node: string;
+      fix: readonly [string, string];
+    };
+
+/**
+ * One station on the `loop` figure.
+ *
+ * ⚠ `by` IS THE WHOLE READING. A filled node is the team's hand, an open one
+ * the model — which is how the drawing says what the deliverable's own body
+ * says, that they know what it is good at and where it gets things wrong. A
+ * run where every station is the model, or every station the team, is not this
+ * record; the registry pins at least one of each.
+ */
+export interface ArcStepsStation {
+  id: string;
+  /** Mono label in the dial's annulus at the station's bearing. ≤ 8 chars:
+   *  it is set on the ring, with a tick either side of it. */
+  name: string;
+  by: "team" | "model";
+}
 
 export interface ArcStepsCheck {
   id: string;

@@ -1686,13 +1686,21 @@ html[data-corridor-exit="true"] .tl-root #proposition {
     max-width: none;
     clip-path: inset(0 calc(50% - var(--tl-vis, 1) * 50%));
   }
-  .tl-root #proposition[data-tl-scene] #outcomes .arc-scan {
+  /* The stage's own clock feeds every figure: the scan's sweep, the run's
+     draw-on, the engagement arc's. One input, and the three drawings on the
+     dial are one instrument read three ways (ADR-106). */
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-dial {
     --scan-s: var(--tl-step, 1);
   }
   .tl-root #proposition[data-tl-scene] #outcomes .arc-scan__img--live,
-  .tl-root #proposition[data-tl-scene] #outcomes .arc-scan__lead,
-  .tl-root #proposition[data-tl-scene] #outcomes .arc-scan__label {
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-dial__lead,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-dial__label,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-dial__tag,
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-dial__node {
     will-change: clip-path;
+  }
+  .tl-root #proposition[data-tl-scene] #outcomes .arc-dial__run {
+    will-change: stroke-dashoffset;
   }
   .tl-root #proposition[data-tl-scene] #outcomes .arc-scan__edge {
     will-change: translate;

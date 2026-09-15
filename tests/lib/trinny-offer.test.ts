@@ -241,10 +241,48 @@ describe("trinny-london offer (ADR-094 U9)", () => {
     expect(scan.image.width).toBeGreaterThan(0);
     expect(scan.image.height).toBeGreaterThan(0);
     expect(scan.image.alt.length).toBeGreaterThan(0);
-    // The other two hold the framed field, with a designation each.
+    /* THE RUN (ADR-106): the production run the team does itself, as four
+       stations on one lit ring. ⚠ `by` IS THE WHOLE READING — a filled node
+       is the team's hand, an open one the model — so a run that is all one or
+       all the other has stopped saying what the deliverable's body says. */
+    const loop = o.items[1].visual;
+    expect(loop.kind).toBe("loop");
+    if (loop.kind !== "loop") return;
+    expect(loop.stations).toHaveLength(4);
+    const stationIds = loop.stations.map((st) => st.id);
+    expect(new Set(stationIds).size).toBe(stationIds.length);
+    expect(loop.stations.some((st) => st.by === "team")).toBe(true);
+    expect(loop.stations.some((st) => st.by === "model")).toBe(true);
+    for (const st of loop.stations) {
+      // Set ON the ring, in the annulus, with a tick either side of it.
+      expect(st.name.length, `${st.id}: station name`).toBeLessThanOrEqual(8);
+    }
+    expect(loop.hub.length).toBeGreaterThan(0);
+    expect(loop.hub.length).toBeLessThanOrEqual(16);
+
+    /* THE ARC THAT ENDS (ADR-106): the engagement terminates, the setup does
+       not. Two labels on the dial and one on the node. */
+    const hand = o.items[2].visual;
+    expect(hand.kind).toBe("handover");
+    if (hand.kind !== "handover") return;
+    expect(hand.inner.length).toBeGreaterThan(0);
+    expect(hand.inner.length).toBeLessThanOrEqual(16);
+    expect(hand.outer.length).toBeLessThanOrEqual(18);
+    expect(hand.node.length).toBeLessThanOrEqual(14);
+
+    /* Every figure carries the dial's diagonal pair, and none of them letters
+       a digit — the same law the scan holds, one drawing over. */
+    for (const item of o.items) {
+      expect(item.visual.fix, `${item.id}: the dial's diagonal pair`).toHaveLength(2);
+      for (const f of item.visual.fix) {
+        expect(f.length, `${item.id}: fix too long for the corner`).toBeLessThanOrEqual(26);
+        expect(f.length).toBeGreaterThan(0);
+      }
+    }
     for (const item of o.items.slice(1)) {
-      expect(item.visual.kind).toBe("field");
-      if (item.visual.kind === "field") expect(item.visual.designation.length).toBeGreaterThan(0);
+      scanStrings(item.visual, item.id, (value, path) => {
+        expect(/\d/.test(value), `${path}: a figure on the drawing`).toBe(false);
+      });
     }
   });
 

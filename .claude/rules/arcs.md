@@ -679,13 +679,53 @@ visual }] }` — ADR-052's **fifth enumerated exception** (dossier ·
   CUSTOM PROPERTY WITH A FINISHED DEFAULT** (`--tl-row-h`, `--tl-lit`,
   `--tl-vis`, `--scan-s`): the static render, no-JS and reduced motion read
   every row open and filled, every stage shown, the scan complete; a route
-  scrubs them (`trinny-london.css`, the writer). ⚠ A `visual` is `scan` (a
-  packshot read by a machine — `ArcScanVisual`: a framed 4:5 field on its
-  own opaque `--arc-plate` bed, a gold edge sweeping the image over its grey
-  ghost, callouts as 7×7 nodes + 1px div leaders + labels on their own bed,
-  a verdict; the checks are the ones the grading gates, no digits, no svg,
-  no opacity, no transition) or `field` (the same frame with one centred
-  node over a designation, for a deliverable whose drawing is to come).
+  scrubs them (`trinny-london.css`, the writer).
+  ⚠ **EVERY STAGE IS ONE INSTRUMENT SINCE ADR-106: THE DIAL** (owner,
+  2026-09-15 — the house's diagram language, "the circular things on our
+  homepage … behind our brand mark … also in the About section"). The register
+  is the About drawing's, ported BY HAND: six concentric rings on an
+  alternating dash ladder over ONE OPAQUE DISC, a rim graduated every 15° off
+  the cardinals with a longer stub ON each, four radial spokes on the
+  diagonals, and two mono designations in the circle's empty TL and BR corners
+  (`DiagramLabels`' own shape). The three `visual` kinds are what is SEATED in
+  it: `scan` (the generated packshot at the centre — the rings pass BEHIND the
+  subject, as the About portrait's do — read by a gold edge that sweeps the
+  whole instrument and parks as the verdict's rule, the grading gates' checks
+  called out as it passes their anchor), `loop` (THE RUN: four stations on one
+  lit run, **a filled node the team's hand and an open one the model** — `by`
+  IS the whole reading, and the registry pins at least one of each while the
+  smoke pins the fill from BOTH ends), `handover` (THE ARC THAT ENDS: a closed
+  inner circle beside a short outer arc terminating at a capped node, the track
+  past it drawn BARE — an arc that stops in empty space reads as a rendering
+  fault). `field` is DELETED with the rectangular frame it held.
+  ⚠ **THE GRAMMAR IS COPIED, NEVER IMPORTED** (ADR-100's precedent):
+  `CelestialConnector` / `DiagramSvg` / `shapes/**` are not on the sanctioned
+  cross-tree list, they letter in `--dawn-*` and raw `--gold`, and they carry a
+  `transform` on every tick; `@/lib/celestial` drags Supabase in through its
+  barrel (`@/lib/celestial/orbits` alone is pure). And `PhaseGlyphSvg` is NOT
+  reused though it is a ready-made three — those glyphs MEAN Navigate / Encode
+  / Build, and a silhouette on this site is a proper noun.
+  ⚠ **THE SVG LETTERS NOTHING** — `dialLayout.ts` is pure and emits every
+  label's SEAT as a fraction of the crop; the strings are DOM, on their own
+  opaque beds. ADR-100's declared-`measure` ladder is therefore deliberately
+  absent: it answers a problem SVG `<text>` has and this drawing does not.
+  ⚠ **A DRAW-ON RUN MAY NOT TAKE `vector-effect: non-scaling-stroke`** (the
+  browser then ignores `pathLength` and the draw breaks into partial arcs); the
+  STATIC line work does, so a hairline is one device pixel at every size. A
+  dotted ring cannot draw on at all and this beat may not fade, so it is
+  revealed by a clip. The closed circle is an explicit TWO-ARC PATH starting at
+  twelve o'clock, never a `<circle>` (whose draw-on starts at three o'clock,
+  movable only by a rotate this drawing may not carry). NO SPIN — the About
+  drawing's three rotating orbit groups are what this beat's law forbids.
+  ⚠ **A LABEL'S BOX IS THE FIGURE'S, NOT THE DIAL'S.** The callouts are
+  SIBLINGS of `.arc-dial__field`: nested inside it, `right: 0` resolves against
+  the drawing and every label's tail runs off the end of it, clipped by a box
+  no gate measures. The row spans node → figure's right edge and the LEADER
+  takes the slack — never a hand computation off the dial's width.
+  ⚠ **AND A CENTRED WORD NEEDS A CONTENT-WIDTH BOX.** The hub was full-width
+  with `text-align: center`, and the two side stations sit on exactly that row
+  — the overlap walk read `MAKE` as printing through `THE STUDIO` while nothing
+  on screen touched. **A box is what a guard measures.**
   ⚠ Copy: `self-sufficient` is banned by the copy law, and `trinny-offer`
   pins that no row restates a phase's name or deliverable line — the owner:
   "not a simulacrum of those three modules". Rules for the scene it lives in:

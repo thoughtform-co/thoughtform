@@ -2154,7 +2154,7 @@ test.describe("Trinny London pitch variant", () => {
           ...stages,
           ...headLines,
           ...oc.querySelectorAll<HTMLElement>(
-            ".arc-scan__img--live, .arc-scan__lead, .arc-scan__label, .arc-scan__edge"
+            ".arc-scan__img--live, .arc-dial__lead, .arc-dial__label, .arc-dial__tag, .arc-scan__edge, .arc-dial__run"
           ),
         ];
         return {
@@ -2210,15 +2210,15 @@ test.describe("Trinny London pitch variant", () => {
             if (!f) return null;
             const live = f.querySelector<HTMLElement>(".arc-scan__img--live")!;
             const edge = f.querySelector<HTMLElement>(".arc-scan__edge")!;
-            const field = f.querySelector<HTMLElement>(".arc-scan__field")!;
+            const field = f.querySelector<HTMLElement>(".arc-dial__field")!;
             return {
               liveClip: cs(live)!.clipPath,
               edgeBottom: edge.getBoundingClientRect().bottom,
               fieldBottom: field.getBoundingClientRect().bottom,
-              labels: [...f.querySelectorAll<HTMLElement>(".arc-scan__label")].map(
+              labels: [...f.querySelectorAll<HTMLElement>(".arc-dial__label")].map(
                 (l) => cs(l)!.clipPath
               ),
-              leads: [...f.querySelectorAll<HTMLElement>(".arc-scan__lead")].map((l) => ({
+              leads: [...f.querySelectorAll<HTMLElement>(".arc-dial__lead")].map((l) => ({
                 tag: l.tagName,
                 h: l.offsetHeight,
                 w: l.offsetWidth,
@@ -2227,6 +2227,50 @@ test.describe("Trinny London pitch variant", () => {
               ghostOp: cs(f.querySelector(".arc-scan__img--ghost"))!.opacity,
             };
           })(),
+          /* THE DIAL (ADR-106): one instrument on every stage. Its line work is
+             svg, every string on it is a DOM label, and both halves have to
+             land inside the figure and clear of each other. */
+          dials: [...oc.querySelectorAll<HTMLElement>(".arc-dial")].map((f) => {
+            const svg = f.querySelector("svg.arc-dial__svg");
+            const box = f.getBoundingClientRect();
+            const words = [
+              ...f.querySelectorAll<HTMLElement>(
+                ".arc-dial__fix, .arc-dial__tag, .arc-dial__hub, .arc-dial__label"
+              ),
+            ];
+            return {
+              kind: f.getAttribute("data-steps-visual"),
+              box: { left: box.left, right: box.right, top: box.top, bottom: box.bottom },
+              rings: svg ? svg.querySelectorAll(".arc-dial__rings circle").length : 0,
+              ticks: svg ? svg.querySelectorAll(".arc-dial__grad line").length : 0,
+              spokes: svg ? svg.querySelectorAll(".arc-dial__spokes line").length : 0,
+              bed: svg ? svg.querySelectorAll(".arc-dial__bed").length : 0,
+              runs: [...(svg?.querySelectorAll<SVGPathElement>(".arc-dial__run") ?? [])].map(
+                (r) => ({
+                  off: parseFloat(cs(r)!.strokeDashoffset) || 0,
+                  ve: cs(r)!.getPropertyValue("vector-effect"),
+                })
+              ),
+              caps: [...(svg?.querySelectorAll<SVGLineElement>(".arc-dial__cap") ?? [])].map(
+                (c) => parseFloat(cs(c)!.strokeDashoffset) || 0
+              ),
+              nodes: [...f.querySelectorAll<HTMLElement>("[data-steps-station]")].map((st) => ({
+                by: st.getAttribute("data-steps-by"),
+                filled: cs(st.querySelector(".arc-dial__node"))!.backgroundColor,
+              })),
+              words: words.map((w) => {
+                const r = w.getBoundingClientRect();
+                return {
+                  text: (w.textContent ?? "").trim(),
+                  px: parseFloat(cs(w)!.fontSize),
+                  left: r.left,
+                  right: r.right,
+                  top: r.top,
+                  bottom: r.bottom,
+                };
+              }),
+            };
+          }),
           cardVis: cs(
             prop.querySelector('[data-board-state="configured"] [data-board-role="card"]')
           )!.visibility,
@@ -2568,11 +2612,67 @@ test.describe("Trinny London pitch variant", () => {
     expect(stepOne.scan!.edgeBottom, "the edge is inside the field").toBeLessThan(
       stepOne.scan!.fieldBottom - 4
     );
-    expect(stepOne.scan!.svgs, "the scan draws no svg").toBe(0);
+    /* ⚠ EXACTLY ONE SVG: the dial (ADR-106). The line work is a drawing and
+       the leaders are still 1px DIVS — a stroked single-axis path reports a
+       zero-height rect that every collapse guard reads as absent. */
+    expect(stepOne.scan!.svgs, "the scan draws one svg, the dial").toBe(1);
     for (const l of stepOne.scan!.leads) {
       expect(l.tag).toBe("I");
       expect(l.h, "a leader is a 1px div").toBe(1);
       expect(l.w).toBeGreaterThan(0);
+    }
+
+    /* THE DIAL: one instrument on all three stages, and every string on it
+       inside the figure and clear of its neighbours. */
+    expect(stepOne.dials.map((d) => d.kind)).toEqual(["scan", "loop", "handover"]);
+    for (const d of stepOne.dials) {
+      expect(d.rings, `${d.kind}: the ring ladder`).toBe(6);
+      expect(d.ticks, `${d.kind}: the rim's graduation and its stubs`).toBe(24);
+      expect(d.spokes, `${d.kind}: the radial spokes`).toBe(4);
+      /* ⚠ THE DISC IS LOAD-BEARING: the scene sits on the coral wash, which
+         no contrast walk can see, so line work with no bed is line work over
+         nothing measurable. */
+      expect(d.bed, `${d.kind}: the opaque disc`).toBe(1);
+      for (const r of d.runs) {
+        expect(
+          r.ve,
+          `${d.kind}: a draw-on run may not take vector-effect — the browser then ignores pathLength`
+        ).not.toBe("non-scaling-stroke");
+      }
+      for (const w of d.words) {
+        expect(w.text.length, `${d.kind}: an empty label`).toBeGreaterThan(0);
+        expect(w.px, `${d.kind}/${w.text}: under the mono floor`).toBeGreaterThanOrEqual(8);
+        expect(w.right, `${d.kind}/${w.text}: past the figure`).toBeLessThanOrEqual(
+          d.box.right + 0.5
+        );
+        expect(w.left, `${d.kind}/${w.text}: outside the figure`).toBeGreaterThanOrEqual(
+          d.box.left - 0.5
+        );
+      }
+      /* ⚠ LABEL-ON-LABEL IS THE CHECK CONTAINMENT NEVER MAKES (the map's own
+         finding). Two runs can both be inside the box and inside each other. */
+      for (let i = 0; i < d.words.length; i++) {
+        for (let j = i + 1; j < d.words.length; j++) {
+          const a = d.words[i];
+          const b = d.words[j];
+          const over =
+            a.left < b.right - 0.5 &&
+            b.left < a.right - 0.5 &&
+            a.top < b.bottom - 0.5 &&
+            b.top < a.bottom - 0.5;
+          expect(over, `${d.kind}: "${a.text}" prints through "${b.text}"`).toBe(false);
+        }
+      }
+    }
+    /* ⚠ FILLED IS THE TEAM'S HAND, OPEN IS THE MODEL — the run's whole
+       reading, pinned from BOTH ends so a node cannot be right by accident. */
+    const run = stepOne.dials.find((d) => d.kind === "loop")!;
+    expect(run.nodes.map((n) => n.by)).toEqual(["team", "model", "team", "team"]);
+    for (const n of run.nodes) {
+      const isFilled = n.filled !== "rgba(0, 0, 0, 0)" && n.filled !== "transparent";
+      expect(isFilled, `a ${n.by} station drawn ${isFilled ? "filled" : "open"}`).toBe(
+        n.by === "team"
+      );
     }
     for (const r of stepOne.rows) expect(r.bottom).toBeLessThanOrEqual(stepOne.stageBottom + 0.5);
     for (const s of stepOne.stages) expect(s.bottom).toBeLessThanOrEqual(stepOne.stageBottom + 0.5);
@@ -2614,6 +2714,17 @@ test.describe("Trinny London pitch variant", () => {
         /^inset\(0(px|%)?\s+0(%|px)\s+0(px|%)?\s+0(px|%)?\)$/
       );
     expect(settledAll.scan!.ghostOp, "the ghost never changes").toBe(stepOne.scan!.ghostOp);
+    /* ⚠ EVERY FIGURE IS FINISHED AT THE SETTLED END — each run fully drawn
+       and each terminus capped. A `stroke-dashoffset` left short is a drawing
+       that stops mid-stroke with nothing on screen to say so. */
+    for (const d of settledAll.dials) {
+      for (const r of d.runs) expect(r.off, `${d.kind}: a run left half drawn`).toBeCloseTo(0, 3);
+      for (const c of d.caps) expect(c, `${d.kind}: the terminus uncapped`).toBeCloseTo(0, 3);
+    }
+    expect(
+      settledAll.dials.find((d) => d.kind === "handover")!.caps.length,
+      "the engagement's arc terminates at a drawn cap"
+    ).toBe(1);
     expect(settledAll.running, "nothing runs at the settled end").toBe(0);
     for (const t of settledAll.transitions)
       expect(t, "no transition on a scrubbed property").toBe("0s");

@@ -709,6 +709,64 @@ describe("arcs registry (ADR-052)", () => {
     }
   });
 
+  it("a steps beat's three stages are one dial, read three ways (ADR-106)", () => {
+    /* No registered arc carries a `steps` beat yet — the Trinny page mounts it
+       through its own dispatch and `trinny-offer.test.ts` walks that copy. The
+       walk lives here too so a registered proposal can adopt the kind without
+       the guard arriving a commit late (the board's own precedent). */
+    for (const arc of ARCS) {
+      for (const section of arc.sections) {
+        if (section.kind !== "steps") continue;
+        const at = `${arc.slug}/${section.id}`;
+        const ids = section.items.map((i) => i.id);
+        expect(new Set(ids).size, `${at}: duplicate deliverable id`).toBe(ids.length);
+        for (const item of section.items) {
+          const where = `${at}/${item.id}`;
+          expect(item.name.length, `${where}: name too long for the band`).toBeLessThanOrEqual(40);
+          expect(item.kicker.length, `${where}: kicker`).toBeLessThanOrEqual(24);
+          expect(item.body.length, `${where}: body`).toBeLessThanOrEqual(190);
+          /* ⚠ EVERY FIGURE CARRIES THE DIAL'S DIAGONAL PAIR. It is the one
+             piece of chrome all three share, so a stage without it is a stage
+             drawn on a different instrument. */
+          expect(item.visual.fix, `${where}: the dial's diagonal pair`).toHaveLength(2);
+          for (const f of item.visual.fix) {
+            expect(f.length, `${where}: fix too long for the corner`).toBeLessThanOrEqual(26);
+            expect(f.trim().length, `${where}: an empty corner`).toBeGreaterThan(0);
+          }
+          if (item.visual.kind === "loop") {
+            const stationIds = item.visual.stations.map((st) => st.id);
+            expect(new Set(stationIds).size, `${where}: duplicate station`).toBe(stationIds.length);
+            /* ⚠ `by` IS THE WHOLE READING — a filled node is the team's hand,
+               an open one the model. A run that is all one or all the other
+               has stopped drawing the distinction it exists for. */
+            expect(
+              item.visual.stations.some((st) => st.by === "team"),
+              `${where}: no hand on the run`
+            ).toBe(true);
+            expect(
+              item.visual.stations.some((st) => st.by === "model"),
+              `${where}: nothing the model does`
+            ).toBe(true);
+            for (const st of item.visual.stations) {
+              expect(st.name.length, `${where}/${st.id}: set on the ring`).toBeLessThanOrEqual(8);
+            }
+          }
+          if (item.visual.kind === "handover") {
+            expect(item.visual.inner.length, `${where}: the setup`).toBeLessThanOrEqual(16);
+            expect(item.visual.outer.length, `${where}: the engagement`).toBeLessThanOrEqual(18);
+            expect(item.visual.node.length, `${where}: the node`).toBeLessThanOrEqual(14);
+          }
+          /* ⚠ NO DIGIT ON ANY DRAWING — the house habit on every instrument.
+             The image's own src and alt are addresses, not lettering. */
+          scanArc(item.visual, where, (value, path) => {
+            if (path.endsWith(".src") || path.endsWith(".alt")) return;
+            expect(/\d/.test(value), `${path}: a figure on the drawing`).toBe(false);
+          });
+        }
+      }
+    }
+  });
+
   it("a proposal holds the client-facing copy law (ADR-098)", () => {
     /* A proposal is read by the person being asked to buy it, so the deck's
        own law applies to every string on the page: say the behaviour, never

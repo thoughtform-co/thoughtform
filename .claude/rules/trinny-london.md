@@ -1473,17 +1473,34 @@ carousel that "you scroll through" with a clean visual per item on the right.
   landing boxes; the synchronous `writeScene` after `measure()` restores the
   frame. A row's landing box read with the accordion open is a weld a band's
   height off.
-- **The scan** (`ArcScanVisual`, stage 1) is CSS on `--tl-step`: a 4:5 field
-  on its own opaque `--arc-plate` bed (the scene sits on the coral wash,
-  which no contrast walk sees), the `--arc-grid` matrix, dashed runs, four
-  registration crosses (the head's own mark; ADR-065: framed and observed,
-  not a device); the packshot twice from one src (ghost under, live clipped
-  to the sweep); a 1px `--gold-line` edge that parks as the verdict's rule;
-  four callouts (7×7 node · 1px div leader · label on its own bed) as the
-  edge passes their anchor — the checks the studio's grading gates,
-  composition left to the human on purpose. Every reveal a travelling or
-  centre-out clip. ⚠ The right fix hides under `@container (max-width:
-520px)` — a 200px field cannot carry two 8px runs.
+- **The three stages are ONE DIAL** (`ArcScanVisual` + `steps/dialLayout.ts` +
+  `steps/DialGlyphs.tsx`, ADR-106) driven by `--scan-s`, which the route binds
+  to `--tl-step`: the house's ring register (six rings on an alternating dash
+  ladder over one opaque `--arc-plate` disc, a rim graduated every 15° off the
+  cardinals with a longer stub ON each, four diagonal spokes, two mono
+  designations in the circle's empty TL and BR corners), carrying the packshot
+  on stage 1, THE RUN on stage 2 and THE ARC THAT ENDS on stage 3. The
+  rectangular frame, its dashed runs, its four registration crosses and the
+  `field` kind are all DELETED. The scan's own machinery is untouched: the
+  packshot twice from one src (ghost under, live clipped to the sweep), a 1px
+  `--gold-line` edge that parks as the verdict's rule, four callouts (7×7 node
+  · 1px div leader · label on its own bed) as the edge passes their anchor.
+  Every reveal is a travelling clip, a centre-out clip or a stroke draw-on.
+  ⚠ **THE DISC IS LOAD-BEARING**: the scene sits on the coral wash, which no
+  contrast walk can see, so line work with no bed is line work over nothing
+  measurable.
+  ⚠ **A DRAW-ON RUN MAY NOT TAKE `vector-effect`**, the static line work must,
+  a dotted ring is revealed by a clip (it cannot draw on and may not fade), the
+  closed circle is a two-arc path starting at twelve o'clock, and there is NO
+  SPIN.
+  ⚠ **A LABEL'S BOX IS THE FIGURE'S, NOT THE DIAL'S** — the callouts and the
+  handover's mark are SIBLINGS of `.arc-dial__field`, the row spans node →
+  figure's right edge, and the LEADER takes the slack. ⚠ **The hub is
+  content-width**: full-width with `text-align: center`, its box owned the row
+  the two side stations sit on and the overlap walk read `MAKE` as printing
+  through `THE STUDIO` with nothing touching on screen.
+  ⚠ The container query that hid the right fix is retired with the frame —
+  the two designations are on opposite corners now, not sharing a row.
 - ⚠ **A COVERING BEAT THAT PAINTS NOTHING STILL TAKES EVERY HIT TEST.**
   `#outcomes` sits over the whole stage from the pin, rows held and stages
   shut, and the ADR-098 corner probe found it at all four corners of plate
@@ -1495,9 +1512,15 @@ carousel that "you scroll through" with a clean visual per item on the right.
   them (the ADR-094 block, the plates' feet) rolls to the latter.
 - **Verifying:** `trinny-seam` (the windows, five plate states, six carriers,
   the steps' partition, `typeFrame`), `trinny-offer` (the record, the scan's
-  table, no phase restated), the smoke's extended walk (5k–5q, the band → row
-  welds, four head welds against `Range` rects, the outcomes' feet at 4.6
-  and 5.95, reduced motion), capture stops 34–42.
+  table, the run's `by` split, no phase restated), **`arc-steps-dial` (the
+  dial's arithmetic)**, the smoke's extended walk (5k–5q, the band → row welds,
+  four head welds against `Range` rects, the outcomes' feet at 4.6 and 5.95,
+  the dial's counts / type floor / containment / overlap walk / finished runs,
+  reduced motion), capture stops 34–42.
+  ⚠ **RE-RUN A SCROLL SPEC ON A WARM, QUIET SERVER BEFORE BELIEVING A
+  FAILURE.** Three different cases failed on three consecutive runs and every
+  one passed in isolation: a concurrent session was editing `proof-stack/**`,
+  which this route mounts, so each save fast-refreshed the page mid-drive.
 
 ## The seam: the chip becomes the plates (ADR-101 §B) — RETIRED BY ADR-102
 

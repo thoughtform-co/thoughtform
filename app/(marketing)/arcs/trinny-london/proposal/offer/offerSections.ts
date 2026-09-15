@@ -301,14 +301,30 @@ export const TRINNY_OUTCOMES: ArcSection = {
       kicker: "02 · The team",
       name: "A team that runs it themselves",
       body: "Designers who use AI the way they use Figma, because they know what it is good at and where it gets things wrong. Handover is a real production run, not a document.",
-      visual: { kind: "field", designation: "The loop · run by the team" },
+      visual: {
+        kind: "loop",
+        stations: [
+          { id: "brief", name: "Brief", by: "team" },
+          { id: "make", name: "Make", by: "model" },
+          { id: "grade", name: "Grade", by: "team" },
+          { id: "ship", name: "Ship", by: "team" },
+        ],
+        hub: "The studio",
+        fix: ["The run · in house", "Hands on brief and grade"],
+      },
     },
     {
       id: "system",
       kicker: "03 · The system",
       name: "No long-term dependency",
       body: "Files and their own accounts. No consultant to keep, no platform to license beyond the tools they already own. When a better model ships, the setup takes it.",
-      visual: { kind: "field", designation: "The accounts · in Trinny London's name" },
+      visual: {
+        kind: "handover",
+        inner: "The setup",
+        outer: "The engagement",
+        node: "Handover",
+        fix: ["Accounts · theirs", "The setup keeps running"],
+      },
     },
   ],
 };

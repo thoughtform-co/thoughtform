@@ -2,56 +2,125 @@ import type { CSSProperties } from "react";
 
 import type { ArcStepsVisual } from "@/lib/arcs/types";
 
+import { Dial, HandoverFigure, RunFigure } from "./steps/DialGlyphs";
+import { dialHandover, dialStations } from "./steps/dialLayout";
+
 /**
- * ArcStepsVisualView — the stage's drawing for one `steps` item (ADR-103).
+ * ArcStepsVisualView — the stage's drawing for one `steps` item
+ * (ADR-103, recomposed on the DIAL by ADR-106).
  *
- * THE SCAN: a generated packshot in a framed field, read by a machine. A
- * gold edge sweeps the picture top to bottom and reveals it in colour over
- * its own grey ghost; as the edge passes each check's anchor, a node opens
- * on the image, a leader runs out to the right and its label is drawn; the
- * verdict letters last. The checks are the ones the studio's grading gates
- * (the wordmark, the colour, the product, the light), and composition is
- * absent on purpose: on this record that check is the human's.
+ * ONE INSTRUMENT, READ THREE WAYS. Every stage is the house's ring register —
+ * the About section's orbit drawing and the gateway's concentric armature,
+ * which is the diagram language the owner named (2026-09-15). What changes is
+ * what is seated in it:
+ *
+ *   scan     — the generated packshot, read by a machine. A gold edge sweeps
+ *              the dial and the checks the studio's grading actually gates
+ *              are called out as it passes their anchor.
+ *   loop     — THE RUN. One lit run travelling the track, four stations on it;
+ *              a filled node is the team's hand, an open one the model. That
+ *              is the deliverable's own claim, drawn: they know what it is
+ *              good at and where it gets things wrong.
+ *   handover — THE ARC THAT ENDS. The setup is a closed inner circle that
+ *              keeps running; the engagement is a short arc on the outer
+ *              track that terminates at a capped node.
  *
  * ⚠ EVERY CHANNEL IS A CUSTOM PROPERTY WITH A FINISHED DEFAULT. `--scan-s`
  * is the one input (0 → 1); the route binds it to its scroll clock, and with
- * nothing written the figure renders complete — the static form, no-JS and
- * reduced motion all read the finished pass. No script here, no state.
+ * nothing written every figure renders complete — the static render, no-JS
+ * and reduced motion all read the finished pass. No script here, no state.
  *
- * ⚠ THE GRAMMAR IS THE ARCS' OWN: the head's registration crosses, the
- * dot-matrix bed, hairline runs, 1px DIV leaders (never an svg line — a
- * stroked single-axis path reports a zero-height rect to every collapse
- * guard, ADR-068 U6), mono labels on the role tokens. Gold buys ONE thing:
- * the sweep's edge, which parks as the verdict's rule.
+ * ⚠ THE SVG LETTERS NOTHING. Every string is a DOM label on its own opaque
+ * bed, seated by the `--ax` / `--at` fractions `dialLayout` emits. Leaders are
+ * 1px DIVS, never svg lines (ADR-068 U6: a stroked single-axis path reports a
+ * zero-height rect, which every collapse guard then reads as absent).
  *
  * ⚠ TWO IMAGES, ONE FETCH: the same src twice — the ghost under, static; the
- * live copy over, clipped to the sweep. Plain `<img>`, the flow's own
- * pattern; never `next/image` on an arc plate.
+ * live copy over, clipped to the sweep. Plain `<img>`, the flow's own pattern;
+ * never `next/image` on an arc plate.
  *
- * THE FIELD: the same frame with nothing plotted yet — a centred node over
- * a mono designation, so a deliverable whose drawing is still to come reads
- * as an instrument awaiting its record rather than a hole.
+ * ⚠ GOLD BUYS ONE THING PER DRAWING: the sweep's edge on the scan (which parks
+ * as the verdict's rule), the lit run on the other two.
  */
 export function ArcStepsVisualView({ visual, index }: { visual: ArcStepsVisual; index: number }) {
-  if (visual.kind === "field") {
+  if (visual.kind === "loop") {
+    const seats = dialStations(visual.stations.map((s) => s.id));
     return (
-      <figure className="arc-scan arc-scan--field" data-steps-visual="field" data-steps-i={index}>
-        <span className="arc-scan__fix arc-scan__fix--l" aria-hidden="true" />
-        <div className="arc-scan__field">
-          <ScanFrame />
-          <i className="arc-scan__node arc-scan__node--centre" aria-hidden="true" />
-          <figcaption className="arc-scan__desig">{visual.designation}</figcaption>
+      <figure className="arc-dial" data-steps-visual="loop" data-steps-i={index}>
+        <Fixes fix={visual.fix} />
+        <div className="arc-dial__field">
+          <Dial>
+            <RunFigure />
+          </Dial>
+          <ol className="arc-dial__stations">
+            {visual.stations.map((station, i) => {
+              const seat = seats[i];
+              return (
+                <li
+                  key={station.id}
+                  className="arc-dial__station"
+                  data-steps-station={station.id}
+                  data-steps-by={station.by}
+                  style={{ "--t0": seat.at0 } as CSSProperties}
+                >
+                  <i
+                    className="arc-dial__node"
+                    aria-hidden="true"
+                    style={{ "--ax": seat.ax, "--at": seat.at } as CSSProperties}
+                  />
+                  <span
+                    className="arc-dial__tag"
+                    style={{ "--ax": seat.labelAx, "--at": seat.labelAt } as CSSProperties}
+                  >
+                    {station.name}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+          <figcaption className="arc-dial__hub">{visual.hub}</figcaption>
         </div>
       </figure>
     );
   }
+
+  if (visual.kind === "handover") {
+    const g = dialHandover();
+    return (
+      <figure className="arc-dial" data-steps-visual="handover" data-steps-i={index}>
+        <Fixes fix={visual.fix} />
+        <div className="arc-dial__field">
+          <Dial>
+            <HandoverFigure />
+          </Dial>
+          <span
+            className="arc-dial__tag arc-dial__tag--arc"
+            data-steps-mark="outer"
+            style={{ "--ax": g.arcLabel.ax, "--at": g.arcLabel.at } as CSSProperties}
+          >
+            {visual.outer}
+          </span>
+          <figcaption className="arc-dial__hub">{visual.inner}</figcaption>
+        </div>
+        <span
+          className="arc-dial__mark"
+          data-steps-mark="node"
+          style={{ "--ax": g.node.ax, "--at": g.node.at } as CSSProperties}
+        >
+          <i className="arc-dial__node arc-dial__node--lit" aria-hidden="true" />
+          <i className="arc-dial__lead" aria-hidden="true" />
+          <span className="arc-dial__label">{visual.node}</span>
+        </span>
+      </figure>
+    );
+  }
+
   const { image, fix, checks, verdict } = visual;
   return (
-    <figure className="arc-scan" data-steps-visual="scan" data-steps-i={index}>
-      <span className="arc-scan__fix arc-scan__fix--l">{fix[0]}</span>
-      <span className="arc-scan__fix arc-scan__fix--r">{fix[1]}</span>
-      <div className="arc-scan__field">
-        <ScanFrame />
+    <figure className="arc-dial arc-scan" data-steps-visual="scan" data-steps-i={index}>
+      <Fixes fix={fix} />
+      <div className="arc-dial__field">
+        <Dial />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="arc-scan__img arc-scan__img--ghost"
@@ -83,9 +152,9 @@ export function ArcStepsVisualView({ visual, index }: { visual: ArcStepsVisual; 
             data-steps-check={check.id}
             style={{ "--ax": check.x, "--at": check.y } as CSSProperties}
           >
-            <i className="arc-scan__node" aria-hidden="true" />
-            <i className="arc-scan__lead" aria-hidden="true" />
-            <span className="arc-scan__label">
+            <i className="arc-dial__node" aria-hidden="true" />
+            <i className="arc-dial__lead" aria-hidden="true" />
+            <span className="arc-dial__label arc-scan__label">
               <span className="arc-scan__key">{check.key}</span>
               <span className="arc-scan__reading">{check.reading}</span>
             </span>
@@ -99,18 +168,20 @@ export function ArcStepsVisualView({ visual, index }: { visual: ArcStepsVisual; 
   );
 }
 
-/** The frame: dashed hairline runs on four edges and a registration cross
- *  centred on each corner. Decorative; the field's own children carry the
- *  meaning. */
-function ScanFrame() {
+/**
+ * The two designations, on the dial's own diagonal.
+ *
+ * ⚠ THEY SIT IN THE CIRCLE'S EMPTY CORNERS (top-left and bottom-right), which
+ * is `DiagramLabels`' own shape in the celestial kit and what lets the dial
+ * take the whole of the stage's height. It also retires the container query
+ * the old rectangular frame needed: the two runs shared a row there and
+ * collided over a ~200px field at the laptop.
+ */
+function Fixes({ fix }: { fix: readonly [string, string] }) {
   return (
     <>
-      <i className="arc-scan__run arc-scan__run--x" aria-hidden="true" />
-      <i className="arc-scan__run arc-scan__run--y" aria-hidden="true" />
-      <i className="arc-scan__cross arc-scan__cross--tl" aria-hidden="true" />
-      <i className="arc-scan__cross arc-scan__cross--tr" aria-hidden="true" />
-      <i className="arc-scan__cross arc-scan__cross--bl" aria-hidden="true" />
-      <i className="arc-scan__cross arc-scan__cross--br" aria-hidden="true" />
+      <span className="arc-dial__fix arc-dial__fix--tl">{fix[0]}</span>
+      <span className="arc-dial__fix arc-dial__fix--br">{fix[1]}</span>
     </>
   );
 }
