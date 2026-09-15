@@ -1706,14 +1706,23 @@ test.describe("Trinny London pitch variant", () => {
        BODY is — and the proposal's bodies range from a three-plate row to a
        fee table. Measured 0.107 → 0.197 of the frame across the page's own
        beats before this. Head-bearing beats are seated from the top now, on
-       the homepage masthead's own datum.
+       one datum — and since U2 (owner, 2026-09-14: the heads sat "more
+       toward the top") that datum is SOLVED FROM THE FRAME'S CENTRE,
+       `(100svh − C) / 2` floored at 48 and capped at 360, where C is the
+       composition the sheet names on the root.
 
        ⚠ THE ASSERTION IS THE EQUALITY, NOT THE VALUE. A fixed frac would
        pass on one viewport and lie on another; what the owner asked for is
-       that the heads agree with EACH OTHER. The datum's own value is
-       checked once, loosely, so a wholesale reseat is still caught. */
+       that the heads agree with EACH OTHER. The datum's own value is then
+       checked AGAINST THE RULE, with C read off the sheet: that catches a
+       mis-resolution (a lost gate, a lost `:has()`, an `svh` that stopped
+       being the frame), never a taste change, and says so. */
+    /* Three viewports × three converging rolls: ~12s a viewport, and the
+       default budget is 30s — the third shape (U2) is what tipped it. */
+    test.slow();
     for (const vp of [
       { width: 1920, height: 1247 },
+      { width: 1440, height: 800 },
       { width: 1280, height: 720 },
     ]) {
       await page.setViewportSize(vp);
@@ -1773,10 +1782,27 @@ test.describe("Trinny London pitch variant", () => {
       const where = `${vp.width}×${vp.height}`;
       expect(Math.abs(config - phases), `${where}: config vs phases`).toBeLessThanOrEqual(1);
       expect(Math.abs(config - pricing), `${where}: config vs pricing`).toBeLessThanOrEqual(1);
-      // The datum itself: `clamp(48px, 10.7svh, 148px)` plus the head's own
-      // box, so a band rather than a number — a reseat lands outside it.
-      expect(config, `${where}: the datum`).toBeGreaterThan(40);
-      expect(config, `${where}: the datum`).toBeLessThan(200);
+      /* The datum itself, against the rule that makes it (ADR-099 U2): the
+         beat's top padding IS the datum (`padding-block-start` overrides
+         the token's top value, it does not add to it — measured), and the
+         rule is the frame's centre less half the composition, floored and
+         capped. ⚠ C IS READ OFF THE ROOT, never restated here — a hand
+         copy would drift the day the sheet's number moves. */
+      const datum = await page.evaluate(() => {
+        const beat = document.getElementById("configuration")!;
+        const root = beat.closest<HTMLElement>(".arc-root")!;
+        return {
+          pad: parseFloat(getComputedStyle(beat).paddingTop),
+          comp: parseFloat(getComputedStyle(root).getPropertyValue("--arc-head-composition")),
+          vh: window.innerHeight,
+        };
+      });
+      expect(datum.comp, `${where}: the sheet names C on the root`).toBeGreaterThan(0);
+      const expected = Math.min(360, Math.max(48, (datum.vh - datum.comp) / 2));
+      expect(
+        Math.abs(datum.pad - expected),
+        `${where}: the datum is the frame's centre less C/2 (pad ${datum.pad}, rule ${expected})`
+      ).toBeLessThanOrEqual(1);
     }
   });
 
@@ -2543,9 +2569,14 @@ test.describe("Trinny London pitch variant", () => {
        with every gate green and the sheet claiming a bottom-pad trim had
        recovered it. Measure the CONTENT against the stage, at the reference
        laptop and at the owner's viewport, and pin the two heads' margins
-       equal (the rung that recovers it applies to both). */
+       equal (the rung that recovers it applies to both).
+       ⚠ AND AT 1440×800 SINCE ADR-099 U2: the datum grows with the frame
+       now, and 800h is the first reference shape ABOVE the 760h rung that
+       cuts the heads' margin — the full 9vh margin plus a 100px datum is
+       the tightest tall budget on the page, and it was unguarded. */
     for (const vp of [
       { width: 1280, height: 720 },
+      { width: 1440, height: 800 },
       { width: 1920, height: 1247 },
     ]) {
       await page.setViewportSize(vp);

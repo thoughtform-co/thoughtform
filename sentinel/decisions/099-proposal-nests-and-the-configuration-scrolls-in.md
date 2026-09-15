@@ -101,3 +101,54 @@ The bar ADR-072's dossier and ADR-098's configuration both cleared, and this cle
 ⚠ **ROUTE-SCOPED, AND THE HOMEPAGE HAS THE SAME DIVERGENCE — FLAGGED, NOT TAKEN.** A rule in `landing.css` lands on `/` and `/claude-workshop` (this route's first contract). It is not the same defect there: `/` runs hero → corridor, so the hero's neighbour is a full-bleed canvas rather than nine banded heads, and nothing sits beside it to be inconsistent with. `margin-inline` rather than `-start` because the band is symmetric by law; with a 680px `max-width` the outboard half costs nothing today and is what keeps the rule true if the measure ever grows.
 
 **Files:** one rule, §3c of `app/(marketing)/arcs/trinny-london/proposal/trinny-london.css`.
+
+## Update 2 (2026-09-14, owner) — the datum is solved from the frame's centre, and the head takes Linear's columns
+
+> For our Trinny proposal page, I want you to look at the placement of the elements. Now they're positioned more toward the top, but our actual reference is the Linear website. If you look at the screenshot where you have an H1 on the left and a paragraph on the right, the elements feel nicely centered in the middle. I want you to analyze it, understand the logic, and then apply it.
+
+**§3's datum was the right mechanism with a borrowed number.** `10.7svh` is the homepage services masthead's seat, solved for a beat with a different body. Measured live at his 1920×1247: every proposal head at **0.107** of the frame while the hero's headline sits at **0.305** and `#about`'s title at **0.285** — the nine heads 220–250px above the two seats that open the page — and under most bodies a bare floor: **418px** under the board, 359 under the phases, 566 under pricing, 647 under people, 743 under next steps. At 1280×720 the same beats are full or overflowing; this is a tall-frame defect, and §3's own "the slack pools at the FLOOR" was its name.
+
+### What Linear does (fetched from `static.linear.app`, `PageSection.*.css` + `layout.*.css`)
+
+| rule                             | value                                                                                                 |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `.b-30Va_root`                   | `padding-top: 128px; padding-bottom: 128px` — the section is content-height and the page scrolls      |
+| `.b-30Va_header`                 | `display: grid; grid-template-columns: 1fr 1fr; align-items: start; padding-bottom: 96px`             |
+| title / description              | both `align-self: end` in row 1; the "Learn more" action in a subgrid row 2                           |
+| `.b-30Va_titleContainer` / title | `padding-right: 32px`; `max-width: 18ch`                                                              |
+| `.b-30Va_descriptionText`        | `max-width: 38ch` (≈ the column at 24px), left-anchored at the column start + 32px                    |
+| type                             | title 48px / lh 1 / −0.022em; paragraph 24px / lh 1.33 — 2:1, two title lines = three paragraph lines |
+
+**Nothing is centred against the viewport.** The "centred" read is a narrow band, two equal halves with the paragraph starting at the middle, and a figure filling the space beneath the header so there is no floor to see. On a page of viewport-tall frames "centred" and "one datum for every head" cannot both hold when bodies differ — so the owner was asked, with the three honest options drawn: each beat centred on its own (exact centres, heads landing 180–440px apart — his §3 ruling reversed, and the scene's two heads would need a JS-stamped shared seat); content-height sections, Linear literally (no floors, no deck); or **one datum solved from the frame's centre** — which he took, with the equal columns.
+
+### The datum
+
+`--arc-head-datum: clamp(48px, calc((100svh − var(--arc-head-composition)) / 2), 360px)` with `--arc-head-composition: 600px` on the root: `(H − C) / 2` is where centring a C-tall head + margin + body lands its head, and 600 is the page's mean composition at his viewport. One seat for every head, which is what he ruled; a seat that reads centred, which is what he asked.
+
+| frame     | datum before | datum after | frac after |
+| --------- | ------------ | ----------- | ---------- |
+| 1280×720  | 77.0         | **60**      | 0.083      |
+| 1440×800  | 85.6         | **100**     | 0.125      |
+| 1920×1080 | 115.6        | **240**     | 0.222      |
+| 1920×1247 | 133.4        | **323.5**   | 0.259      |
+
+The two cross at 763h: laptops, already full, barely move (and the scene's plates GAIN 17px at 720h); tall frames do. Floors at 1247h on the Trinny page, measured above the beat's bottom pad: board 368 → **195**, phases 285 → **95**, flow 256 → 66, how-we-work 200 → 10, needs-keeps 279 → 89, pricing 410 → **220**, people 572 → 382, next-steps 668 → 478, appendix 213 → 11. Nothing on his page overflows at 1247h.
+
+⚠ **C IS COUPLED TO ADR-102.** The scene's plates' feet sat at 718.5 of a 720 stage under the old datum, so C may not fall below 563 (a datum over 78.5 at 720h) without re-measuring the feet. The feet guard runs at 1440×800 now as well — the first reference shape above the 760h margin rung, where the full 9vh margin plus a 100px datum is the tightest tall budget on the page.
+⚠ **GATED** to `(min-width: 961px) and (prefers-reduced-motion: no-preference)`, the exact complement of the format's `min-height` release: where a beat is not a frame the frame's centre means nothing, and an ungated 323px of top pad on a scrolling document is the mis-seat in the other direction. (Behaviour change under the release: the beat pads symmetrically with `--arc-sec-pad` where it took a 10.7svh top before.)
+
+### The head
+
+`.arc-root[data-arc-format="proposal"] .arc-head--split` takes `minmax(0, 1fr) minmax(0, 1fr)` (was `1.15fr 1fr`) and its `.arc-head__intro` stretches (`justify-self: stretch; max-width: none`, was `end` + `min(42ch, 100%)`). Measured at 1920: the paragraph moves from x 1147 (153px past the midpoint, 413 wide, four lines) to **x 996** (the midpoint plus half the 72px gap, **564 wide, three lines**); the coord stamp and the close cross stay on the band's edge because the column, not the text, carries them. Title widths 472 / 531 / 541 against equal tracks of 485 / 547 / 564 at the three reference shapes: **no title re-wraps**, so the head's height is unchanged and the scene's 720h budget is untouched by this half. ⚠ `--split` only, never `.arc-head` — a rule there at (0,3,0) flattens `--solo` and `--center` (0,1,0). ⚠ Gated at 901px — the stacking rung is (0,1,0) and loses on specificity from any position in the sheet. ⚠ **Not taken:** Linear's `align-self: end` — the two eyebrows hang 34px above each column's top and are the shared line; Linear's 2:1 ratio and 96px rhythm — not asked. ⚠ Left as a dial: on the two instrument-band beats (films, sheets) the column is 684px and the paragraph takes it; a `max-width: 60ch` belt on `.arc-head__copy` is the one-line answer if that measure reads long.
+
+### The cost moved, and it is on three other pages
+
+The format scope reaches `/arcs/suri-proposal`, `/arcs/perfect-ted-proposal` and `/arcs/hungry-minds-proposal` (§3's own ruling). Their `films` and `sheets` beats sized their console with pure `svh` clamps tuned under the old datum — measured 38 and 66px of floor at 1247h — so the new datum put them **111 and 42px past the frame at 1080h**. Both consoles take the `.arc-intel` budget as a second term now, `100svh − datum − stage-pad − 148 − head-margin`, **scoped to proposal roots**: a fallback would either invalidate the height on the portfolio (`auto`, the console collapsing with nothing throwing) or bind there at laptop heights and shrink its consoles 8–23px; scoping leaves the portfolio byte-identical. 148, not the intel's 124, because these titles run three lines at the band's 44px (145.2 measured). Cost: at 1247h the proposal console is 645px where it was 773 / 798, and its aspect-capped width follows. Measured after: films 3px of floor, sheets 50, at 1080h and 1247h on all three pages.
+
+Long list beats grow past the frame instead — a `min-height` beat grows and the seam marks the next one: Trinny `how-we-work` +49 and `appendix` +34 at 1080h (nothing at 1247h); Hungry Minds `the-rule` +108 / `phases` +57 at 1247h and +167 / +114 at 1080h, both of which already overflowed at laptop heights before this pass. Copy trims are the answer there, not a smaller datum. ⚠ The dossier's head is inside `.arc-dossier__record`, so `:has(> .arc-band > .arc-head)` never reached it; it keeps centring, and the gap to its seated neighbours widens from ~20 to ~170px at 1247h — the housing fills the beat by design, so its head lands near the top anyway.
+
+### The guard
+
+The equality stands (three viewports now, 1440×800 added), and the value is checked **against the rule**: `#configuration`'s computed `paddingTop` equals `clamp(48, (innerHeight − C) / 2, 360)` with C read off the root's `--arc-head-composition`, never restated in the test. It catches a mis-resolution — a lost gate, a lost `:has()`, an `svh` that stopped being the frame — and cannot catch a taste change, which is the honest scope.
+
+**Files:** `components/arcs/arcs.css` (the datum token, the gated rule, the head grammar, the studio budgets) · `tests/visual/trinny-london-smoke.spec.ts` (the datum guard's formula, 1440×800 in both loops) · `.claude/rules/arcs.md`, `.claude/rules/trinny-london.md`, `CLAUDE.md`.

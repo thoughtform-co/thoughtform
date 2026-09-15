@@ -1062,15 +1062,42 @@ center }` seats a head by HALF ITS BEAT'S BODY HEIGHT, so a head's position
   across this page's own beats at 1920×1247, with nothing on any head's box
   saying so. `.arc-root[data-arc-format="proposal"] .arc-sec:has(> .arc-band >
 .arc-head)` takes `align-content: start` and `padding-block-start:
-var(--arc-head-datum)` = `clamp(48px, 10.7svh, 148px)` — the homepage services
-  masthead's own 0.107, which is the value U5 solved for on this station before
-  its pin was retired. ⚠ **IT LIVES IN `arcs.css`, NOT HERE**: `/arcs/suri-
-proposal` and `/arcs/perfect-ted-proposal` have the same defect for the same
-  reason, and a fix scoped to one client's page would be a rule true on one
-  surface. ⚠ **`:has()` is the mechanism** — chapter heads, interstitial
-  callouts and the close band draw no `.arc-head` and keep centring.
+var(--arc-head-datum)`. ⚠ **AND SINCE ADR-099 U2 (2026-09-14, owner: the
+  heads sat _"more toward the top"_; the reference is a Linear feature section
+  where the pair _"feel nicely centered in the middle"_) THE DATUM IS SOLVED
+  FROM THE FRAME'S CENTRE**: `clamp(48px, (100svh − 600px) / 2, 360px)`, C =
+  `--arc-head-composition` on the root — 323.5 at his 1920×1247 (0.26, was
+  0.107; the hero's headline sits at 0.305 and `#about`'s title at 0.285), 240
+  at 1080h, 60 at 720h (was 77). §3's 0.107 was the homepage masthead's,
+  solved for a different beat's body; it put every head 220–250px above the
+  two seats that open the page with 170–740px of bare floor under the bodies.
+  Linear never centres against the viewport (a fixed 128px under a
+  content-height section, the figure filling the rest), and on a page of
+  frames "centred" and "one datum" cannot both hold unless the datum is placed
+  where a centred composition lands — per-beat centring was offered and not
+  taken (his one-datum ruling), content-height sections likewise (not a deck).
+  ⚠ **IT LIVES IN `arcs.css`, NOT HERE**: `/arcs/suri-proposal`,
+  `/arcs/perfect-ted-proposal` and `/arcs/hungry-minds-proposal` have the same
+  defect for the same reason, and a fix scoped to one client's page would be a
+  rule true on one surface. ⚠ **`:has()` is the mechanism** — chapter heads,
+  interstitial callouts and the close band draw no `.arc-head` and keep
+  centring. ⚠ **C IS COUPLED TO THE SCENE**: ADR-102's plates' feet sat at
+  718.5 of a 720 stage under the old 77px datum, so C may not fall below 563
+  (a datum over 78.5 at 720h) without re-measuring the feet; at 600 the room
+  there is 18.5px, and the feet guard now runs at 1440×800 too, the tightest
+  tall shape (the full 9vh margin above the 760h rung plus a 100px datum).
   ⚠ `start` is also the safer overflow: `center` spills equally through top and
   bottom, so `scrollHeight === clientHeight` and every clip gate reports zero.
+- ⚠ **THE PROPOSAL HEAD IS TWO EQUAL COLUMNS (ADR-099 U2), Linear's own
+  grammar**: `1fr 1fr`, the intro column stretched to its track so its
+  right-rail chrome stays on the band's edge, the paragraph left-anchored at
+  the column start (x 996 at 1920, the midpoint plus half the gap) and taking
+  the column — three lines where it was four. `.arc-head--split` only, gated
+  at 901px, no `align-self: end` (the eyebrows are the shared line). No title
+  re-wraps at any reference shape, so the head's height and the scene's 720h
+  budget are untouched by this half. ⚠ The scene's centre-out apertures clip
+  `.arc-head__intro`; with the paragraph filling the column their centre IS
+  the text's — a capped paragraph in a stretched column would wipe off-centre.
 - ⚠ **THE COST IS STILL THE SLACK POOLING AT THE FLOOR, AND THE ANSWER MOVED
   TO THE DRAWING.** U5 left this open and named the trap — giving the record a
   `1fr` row opens ~185px between the head and the drawing, and _a rule is part

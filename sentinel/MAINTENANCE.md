@@ -54,6 +54,60 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-14 (fifth pass) — The proposal heads seat from the frame's centre, on Linear's columns (ADR-099 U2)
+
+**Trigger:** the owner's live read of the proposal page one day after asking
+for the ADR-099 datum — the heads are _"positioned more toward the top"_; his
+reference is a Linear feature section (H2 left, paragraph right) where the pair
+_"feel nicely centered in the middle"_; _"analyze it, understand the logic, and
+then apply it"_.
+
+- **The reference was read off its own CSS, not its screenshot.** Linear's
+  `PageSection` is `padding-top/bottom: 128px` on a CONTENT-HEIGHT section, a
+  `1fr 1fr` header with the title and the paragraph both `align-self: end` and
+  the action in a subgrid row, `18ch` / `38ch` caps, type at exactly 2:1.
+  Nothing is centred against the viewport; the "centred" read is a narrow
+  band, two equal halves, and a figure filling the space so there is no floor.
+- **The defect was arithmetic and one day old.** §3's datum was the homepage
+  masthead's 0.107, solved for a different beat's body; at his 1920×1247 it put
+  every head 220–250px above the hero's headline (0.305) and `#about`'s title
+  (0.285), with 170–740px of bare floor — §3's own "the slack pools at the
+  FLOOR", come due. At 1280×720 the same beats were full.
+- **On a page of viewport-tall frames "centred" and "one datum" conflict when
+  bodies differ**, so the fork went to the owner drawn as three options; he
+  took ONE DATUM SOLVED FROM THE FRAME'S CENTRE — `(100svh − C) / 2`, C = 600,
+  floored 48 and capped 360 — over per-beat centring (his §3 ruling reversed,
+  heads 180–440px apart) and content-height sections (Linear literally, not a
+  deck). 60 at 720h (was 77), 100 / 240 / 323.5 at 800 / 1080 / 1247h; the two
+  datums cross at 763h. Gated to the frame tier, the complement of the
+  format's `min-height` release.
+- ⚠ **C IS COUPLED TO ADR-102**: the scene's plates' feet sat 1.5px inside a
+  720 stage under the old datum, so C ≥ 563; the feet guard runs at 1440×800
+  now, the tightest tall shape (the full 9vh margin above the 760h rung plus
+  a 100px datum).
+- **The head took Linear's columns**, proposal-format only: `.arc-head--split`
+  at `1fr 1fr`, the intro stretched so the right-rail chrome stays put and the
+  paragraph starts at the midpoint and takes the column (three lines where it
+  was four). ⚠ `--split` only (a rule on `.arc-head` at (0,3,0) flattens
+  `--solo`/`--center`), gated at 901px (the stacking rung is (0,1,0) and loses
+  on specificity from any position — source order cannot save it). Not taken:
+  `align-self: end` (the eyebrows are the shared line).
+- ⚠ **THE COST MOVED TO THREE OTHER PAGES.** The format scope reaches Suri,
+  Perfect Ted and Hungry Minds; their films and sheets consoles were `svh`
+  clamps tuned under the old datum (38 / 66px of floor at 1247h) and went 111 /
+  42px past the frame at 1080h. Both take the `.arc-intel` budget as a second
+  term, SCOPED TO PROPOSAL ROOTS — a fallback either invalidates the height on
+  the portfolio (`auto`, a collapsed console with nothing throwing) or binds
+  there at laptop heights; 148 for the head, not the intel's 124, because those
+  titles run three lines. Long list beats grow instead (Trinny `how-we-work`
+  +49 at 1080h; Hungry Minds `the-rule` +108 at 1247h, already over at laptop
+  heights before this).
+- **The guard changed its question**: the datum band `40 < seat < 200` failed
+  at BOTH viewports under the new seat (the eyebrow is datum − 34: 26px at
+  720h, 289.5 at 1247h); it reads `#configuration`'s `paddingTop` against the
+  rule with C read off the root, never restated. Three viewports on a serial
+  spec needed `test.slow()` — the third shape tipped a 30s budget.
+
 ### 2026-09-14 (fourth pass) — One pinned scene: the configuration becomes the plates (ADR-102)
 
 **Trigger:** the owner's live read of ADR-101's seam — it _"jitters and lags"_,

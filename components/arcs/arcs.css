@@ -4237,25 +4237,90 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
    frame — and nothing on any head's own box said so, which is why it reads
    as carelessness rather than as a rule.
 
-   So a head-bearing beat is seated from the TOP, on the datum the homepage's
-   own services masthead uses (frac 0.107) — the value ADR-094 U5 solved for
-   on this very station before its pin was retired. The slack then pools at
-   the FLOOR of a short beat, which is the honest trade: air under a record
-   reads as room, air above it reads as a mis-seat.
+   So a head-bearing beat is seated from the TOP, on ONE datum.
+
+   ⚠ WHICH DATUM IS U2 (owner, 2026-09-14: the heads sit "more toward the
+   top"; the reference is a Linear feature section, where the title and the
+   paragraph "feel nicely centered in the middle"). §3 borrowed the homepage
+   masthead's 0.107 — a number solved for a different beat's body — and at
+   1920×1247 it put every head 220–250px above the hero's headline (0.305)
+   and `#about`'s title (0.285), with 170–740px of bare floor under the
+   bodies. Linear itself never centres against the viewport: its header sits
+   a fixed 128px under a CONTENT-HEIGHT section and the figure fills the
+   rest, so there is no floor to see. On a page of viewport-tall frames the
+   honest translation is a datum SOLVED FROM THE FRAME'S CENTRE: (H − C) / 2
+   is where centring a C-tall composition (head + margin + body) lands its
+   head, and C is the page's mean composition at the owner's viewport. One
+   seat for every head, which is what he ruled; a seat that reads centred,
+   which is what he asked. Resolves 60 at 720h (was 77), 100 at 800h, 240 at
+   1080h, 323.5 at 1247h (0.26 of the frame). The two datums cross at 763h,
+   so laptops, already full, barely move; tall frames do.
+   ⚠ THE FLOOR END IS COUPLED TO ADR-102. The scene's plates' feet sat at
+   718.5 of a 720 stage under the OLD 77px datum, so C may not fall below
+   563 (a datum over 78.5 at 720h) without re-measuring the feet. The 1.5px
+   of room there became 18.5.
+   ⚠ THE COST MOVED. The old datum's cost was the slack pooling at the
+   FLOOR; this one's is that a beat sized in `svh` must budget for a datum
+   that GROWS with the frame — which is why the studio consoles take
+   `--arc-head-datum` as a second term (`.arc-sheets` / `.arc-films`).
 
    ⚠ `:has()` IS THE WHOLE MECHANISM. Only a beat that DRAWS a head takes the
    datum; a chapter head, an interstitial callout and the close band have no
    `.arc-head` and keep centring, which is what they are composed for.
-   ⚠ FORMAT-SCOPED, so it reaches `/arcs/suri-proposal` and
-   `/arcs/perfect-ted-proposal` too — deliberately: they have the same defect
-   for the same reason, and a fix scoped to one client's page would be a rule
-   that is true on one surface. */
+   ⚠ FORMAT-SCOPED, so it reaches `/arcs/suri-proposal`,
+   `/arcs/perfect-ted-proposal` and `/arcs/hungry-minds-proposal` too —
+   deliberately: they have the same defect for the same reason, and a fix
+   scoped to one client's page would be a rule that is true on one surface.
+   ⚠ GATED TO THE TIER WHERE A BEAT OWNS A FRAME — the exact complement of
+   the release at the foot of this block. Where `min-height` is 0 the frame's
+   centre means nothing, and 323px of top pad on a scrolling document would
+   be the mis-seat in the other direction. */
 .arc-root[data-arc-format="proposal"] {
-  --arc-head-datum: clamp(48px, 10.7svh, 148px);
+  /* C: the composition the datum centres. The smoke reads this token off
+     the root, so it is the one number to change. */
+  --arc-head-composition: 600px;
+  /* The floor binds at and under 696h, the ceiling from 1320h. */
+  --arc-head-datum: clamp(48px, calc((100svh - var(--arc-head-composition)) / 2), 360px);
 }
-.arc-root[data-arc-format="proposal"] .arc-sec:has(> .arc-band > .arc-head) {
-  align-content: start;
-  padding-block-start: var(--arc-head-datum);
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .arc-root[data-arc-format="proposal"] .arc-sec:has(> .arc-band > .arc-head) {
+    align-content: start;
+    padding-block-start: var(--arc-head-datum);
+  }
+}
+
+/* ── THE PROPOSAL HEAD IS TWO EQUAL COLUMNS (ADR-099 U2) ────────────────
+   Linear's header grammar, measured off its own sheet: `1fr 1fr`, the
+   paragraph LEFT-ANCHORED at its column's start and the column filling its
+   track. Ours was `1.15fr 1fr` with the paragraph pushed to the band's right
+   edge (`justify-self: end`) — it began 153px past the midpoint at 1920.
+   The intro column stretches, so the chrome hung off its right edge (the
+   coord stamp at `right: 32px`, the close cross at `right: -24px`) stays on
+   the band's edge and only the eyebrow and the paragraph move, to the column
+   start. The paragraph takes the column (564px = 57ch at 1920, 485 = 49ch at
+   1280; the band caps at 1200 so it grows no further), three lines where it
+   was four — and the scene's centre-out apertures on `.arc-head__intro` stay
+   centred on the text. The title keeps its 20ch cap: measured 472 / 531 /
+   541 against equal tracks of 485 / 547 / 564, so no title re-wraps and the
+   head's height is unchanged, which is what keeps ADR-102's 720h budget out
+   of this half.
+   ⚠ `.arc-head--split` ONLY: `--solo` and `--center` set one column at
+   (0,1,0) and this scope is (0,3,0); a rule on `.arc-head` would flatten the
+   dossier's derived head and the chapter head.
+   ⚠ GATED AT 901px, the sheet's own stacking rung: that rung is (0,1,0) and
+   loses to this scope on specificity from ANY position in the sheet, so
+   source order cannot let it win; only the gate can.
+   ⚠ NOT Linear's `align-self: end`: the two eyebrows hang 34px above each
+   column's top and are the shared line; bottom-aligning columns of
+   different heights splits them. */
+@media (min-width: 901px) {
+  .arc-root[data-arc-format="proposal"] .arc-head--split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .arc-root[data-arc-format="proposal"] .arc-head--split .arc-head__intro {
+    justify-self: stretch;
+    max-width: none;
+  }
 }
 /* A hairline where one beat ends and the next begins — with the beats
    centred in their own screens, the seam is what tells a reader the
@@ -4390,6 +4455,37 @@ a.arc-prog__stn-hit:hover ~ .arc-prog__stn-dia {
 .arc-films {
   --arc-films-h: clamp(440px, 64svh, 820px);
   max-width: calc(var(--arc-films-h) * 1.7);
+}
+
+/* ── ON A PROPOSAL THE STUDIO CONSOLES BUDGET FOR THE DATUM (ADR-099 U2).
+   The datum grows with the frame now, and these two clamps were tuned under
+   the old one: measured on the three registered proposals at 1920×1247 the
+   films beat had 38px of floor and the sheets 66 — so the new datum put
+   them 111 and 42px past the frame at 1080h, and ~150 / ~125 at 1247h. The
+   `.arc-intel` precedent: a second term that is the beat's own budget —
+   the frame, less the datum, less the beat's bottom pad, less the head's
+   band, less the head's margin (the 2.6vh rung above). ⚠ 148, NOT THE
+   INTEL'S 124: these heads' titles run THREE lines at the band's 44px
+   (145.2 measured at 1920), where the intel's is a two-line head.
+   ⚠ SCOPED TO THE PROPOSAL ROOT rather than written with a fallback: an
+   unset `--arc-head-datum` on the portfolio would either invalidate the
+   declaration (`height: auto`, the console collapsing with nothing
+   throwing) or, with a fallback, bind at laptop heights and shrink the
+   portfolio's consoles by 8–23px — measured against its own clamps. The
+   portfolio is byte-identical this way, and `arc-portfolio-smoke` says so.
+   Cost, stated: at 1247h the proposal console is 645px where it was 773 /
+   798, and its aspect-capped width follows. */
+.arc-root[data-arc-format="proposal"] .arc-sheets {
+  --arc-sheets-h: min(
+    clamp(440px, 62svh, 780px),
+    calc(100svh - var(--arc-head-datum) - var(--arc-stage-pad) - 148px - clamp(18px, 2.6vh, 34px))
+  );
+}
+.arc-root[data-arc-format="proposal"] .arc-films {
+  --arc-films-h: min(
+    clamp(440px, 64svh, 820px),
+    calc(100svh - var(--arc-head-datum) - var(--arc-stage-pad) - 148px - clamp(18px, 2.6vh, 34px))
+  );
 }
 
 @media (min-width: 981px) and (prefers-reduced-motion: no-preference) {

@@ -138,19 +138,62 @@ An "arc page" is a client landing page (a ported deck) — NOT "the Arc"
   one page's own beats at 1920×1247, which reads as carelessness rather than as
   a rule. `.arc-root[data-arc-format="proposal"] .arc-sec:has(> .arc-band >
 .arc-head)` takes `align-content: start` and `padding-block-start:
-var(--arc-head-datum)` = `clamp(48px, 10.7svh, 148px)`, the homepage services
-  masthead's own 0.107. ⚠ **`:has()` IS THE MECHANISM** — only a beat that DRAWS
-  a head takes it, so chapter heads, interstitial callouts and the close band
-  keep centring, which is what they are composed for. ⚠ **FORMAT-SCOPED, so
-  every proposal arc takes it** (a fix scoped to one client's page would be a
-  rule true on one surface). ⚠ **THE COST, NAMED: the slack pools at the FLOOR
-  of a short beat** — air under a record reads as room, air above it reads as a
-  mis-seat; where a drawing then looks stranded the DRAWING takes a share of the
-  beat (`.arc-flow`'s `min-height`), never the head. ⚠ **THE GUARD ASSERTS THE
-  EQUALITY, NOT THE VALUE** — a fixed frac passes at one viewport and lies at
-  another; what was asked for is that the heads agree with EACH OTHER, at two
-  viewports. ⚠ `.arc-reveal` RESTS TRANSLATED, so measure only after `is-in`
-  and the transition, or the rect is the animation.
+var(--arc-head-datum)`. ⚠ **AND SINCE U2 (2026-09-14, owner: the heads sat
+  "more toward the top"; the reference is a Linear feature section) THE DATUM
+  IS SOLVED FROM THE FRAME'S CENTRE**, not borrowed from the homepage masthead:
+  `clamp(48px, (100svh − var(--arc-head-composition)) / 2, 360px)` with
+  `--arc-head-composition: 600px` on the root — the row where centring a
+  C-tall head + margin + body lands its head, C being the page's mean
+  composition at his viewport. 60 at 720h (was 77) · 100 at 800h · 240 at
+  1080h · 323.5 at 1247h (0.26, was 0.107); the two cross at 763h, so laptops
+  barely move and tall frames do. Linear never centres against the viewport —
+  its header sits 128px under a CONTENT-HEIGHT section and the figure fills the
+  rest — and on a page of viewport-tall frames this is the honest translation:
+  one seat for every head (his ruling), placed where it reads centred (his
+  ask). ⚠ **C IS COUPLED TO ADR-102**: the scene's plates' feet sat 1.5px
+  inside a 720 stage under the old datum, so C ≥ 563 or they overflow at
+  1280×720. ⚠ **GATED** to `(min-width: 961px) and (prefers-reduced-motion:
+no-preference)`, the exact complement of the format's `min-height` release
+  — where a beat is not a frame, the frame's centre means nothing.
+  ⚠ **`:has()` IS THE MECHANISM** — only a beat that DRAWS a head takes it, so
+  chapter heads, interstitial callouts, the close band and the dossier's
+  housed head keep centring, which is what they are composed for.
+  ⚠ **FORMAT-SCOPED, so every proposal arc takes it** — Suri, Perfect Ted and
+  Hungry Minds with the Trinny page (a fix scoped to one client's page would be
+  a rule true on one surface). ⚠ **THE COST MOVED**: the old datum's cost was
+  the slack pooling at the FLOOR (air under a record reads as room, air above
+  it as a mis-seat; a stranded drawing takes a share of the beat, as
+  `.arc-flow`'s `min-height` does, never the head); this one's is that a beat
+  sized in `svh` must budget for a datum that GROWS with the frame — the studio
+  consoles (`.arc-sheets` / `.arc-films`) take `--arc-head-datum` as a second
+  term ON PROPOSAL ROOTS ONLY (a fallback either invalidates the height or
+  binds on the portfolio at laptop heights; scoping is what leaves it
+  byte-identical), and their head allowance is 148, not the intel's 124, because
+  those titles run three lines. Long list beats grow past the frame at 1080h
+  (Trinny `how-we-work` +49, `appendix` +34) and the seam marks the next beat.
+  ⚠ **THE GUARD ASSERTS THE EQUALITY, AND THEN THE VALUE AGAINST THE RULE** —
+  the heads agree with EACH OTHER at three viewports, and `#configuration`'s
+  `paddingTop` equals `clamp(48, (innerHeight − C) / 2, 360)` with C read off
+  the root, never restated in the test; it catches a mis-resolution (a lost
+  gate, a lost `:has()`), not a taste change. ⚠ `.arc-reveal` RESTS
+  TRANSLATED, so measure only after `is-in` and the transition, or the rect is
+  the animation.
+- ⚠ **AND A PROPOSAL HEAD IS TWO EQUAL COLUMNS (ADR-099 U2).** Linear's
+  header grammar off its own sheet: `1fr 1fr`, the paragraph left-anchored at
+  its column's start. Ours was `1.15fr 1fr` with the paragraph pushed to the
+  band's right edge (`justify-self: end`), 153px past the midpoint at 1920.
+  `.arc-root[data-arc-format="proposal"] .arc-head--split` takes equal tracks
+  and its `.arc-head__intro` stretches (`max-width: none`), so the chrome hung
+  off the column's right edge stays on the band's edge and the paragraph takes
+  the column (564px = 57ch at 1920; three lines where it was four) — which also
+  keeps the scene's centre-out apertures on the column centred on the text.
+  The title keeps 20ch: measured 472 / 531 / 541 against equal tracks of 485 /
+  547 / 564, so no title re-wraps and the head's height is unchanged.
+  ⚠ `.arc-head--split` ONLY — a rule on `.arc-head` at (0,3,0) would flatten
+  `--solo` and `--center` (0,1,0). ⚠ GATED AT 901px — the sheet's stacking
+  rung is (0,1,0) and loses on specificity from any position, so only the gate
+  lets it win. ⚠ NOT Linear's `align-self: end`: the two eyebrows hang 34px
+  above each column's top and are the shared line.
 - **The `tool-index` kind** (ADR-079) = `{ head }` and nothing else — the tools
   chapter head, given the four records it opens (number · codename · `subline` ·
   mode), each row opening its own beat. The renderer resolves `PROJECT_CASES`;
