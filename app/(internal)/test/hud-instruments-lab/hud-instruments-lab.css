@@ -554,15 +554,10 @@
   /* Half a mark — what centres the terminal glyph ON the rail's track line
      instead of butting it up against one. */
   --hil-cl-half: 8px;
-  /* The right rail's own bottom terminus, mirrored from `landing.css` so the
-     dock can be placed RELATIVE to where the track actually ends. Kept as
-     one expression rather than a measured pixel: the `max()` arm that wins
-     changes with viewport (arm 1 at 1440, arm 2 at 1280), so any constant
-     here would be right at one size and wrong at the next. */
-  --hil-rail-bottom: max(
-    calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
-    calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
-  );
+  /* The right rail's own bottom terminus, READ from `landing.css`'s token so
+     the dock can be placed RELATIVE to where the track actually ends
+     (ADR-043 Update 2026-09-15: the rail lands on the bottom corner band). */
+  --hil-rail-bottom: var(--hud-rail-y-end);
 }
 
 /* ── THE CLUSTER *IS* THE CORNER (owner, 2026-08-02) ─────────────────────

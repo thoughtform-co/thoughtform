@@ -188,6 +188,20 @@ fade, a z-swap, or a whole-`.hud` clip (it hides the wordmark). That the
 top-right nav is exempt from all of this is why ADR-055 could put the
 journey readout there with no curtain choreography at all.
 
+**The rails CONNECT to the corner chrome (ADR-043 Update 2026-09-15, owner —
+reverses the 2026-07-16 breathing gap).** `--hud-rail-y-start` =
+`margin + corner-zone` (the TL bracket's foot) and `--hud-rail-y-end` (the
+same value) is what `.hud__rail { bottom }`, the casefile's `--fl-rail-bot`,
+the labs' mirrors and the `.rin-settings` box top all agree on; the 0% / 100%
+ticks are flush at the rail's ends via `translate` on `:first-child` /
+`:last-child` of `#leftTicks` / `#rightTicks`; the collapsed wordmark starts
+5.81% of its visual width left of the track's centre so the track runs into
+the T-stem of THOUGHT. Do not reintroduce the `clamp(16px, 1.8vw, 32px)` gap,
+the wordmark `max()` arm, or a second literal copy of either end — read the
+tokens. A rail-end change moves the casefile's tick ladder and the voidwalker
+datum with it (both read the tokens), and re-baselines the ten desktop
+viewport snapshots in `landing-page.spec.ts`.
+
 **The left rail is a single detent diamond (ADR-031 Update 9, supersedes
 the Update 3/6/7/8 rolodex; Update 12 supersedes it ON DESKTOP).** The
 rail DISPLAYS one gold diamond (12px,

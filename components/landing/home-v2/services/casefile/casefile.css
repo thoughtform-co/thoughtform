@@ -177,12 +177,12 @@
      the surface. Top and bottom are unchanged; only the sides move. */
   --fl-hz-lip: rgba(var(--gold-rgb), 0.3);
 
-  /* ── The rail box, mirrored from `.hud__rail` ─────────────────────── */
+  /* ── The rail box, READ from `.hud__rail`'s own :root pair ──────────
+     (ADR-043 Update 2026-09-15). Both ends are tokens now, so this mirror
+     cannot drift from the rail; the ring smoke measures it against the LIVE
+     `.hud__rail` rect at 1.5px either way. */
   --fl-rail-top: var(--hud-rail-y-start);
-  --fl-rail-bot: max(
-    calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
-    calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
-  );
+  --fl-rail-bot: var(--hud-rail-y-end);
   --fl-rail-h: calc(100svh - var(--fl-rail-top) - var(--fl-rail-bot));
 
   /* Tick heights, absolute from the stage top. Names are the ladder index,

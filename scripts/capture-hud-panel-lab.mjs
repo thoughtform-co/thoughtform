@@ -130,9 +130,7 @@ function probe() {
   };
 
   const railY = px("var(--hud-rail-y-start)");
-  const railBot = px(
-    "max(calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px,1.8vw,32px)), calc(var(--hud-margin) + clamp(44px,3.6vw,63px) + 8px))"
-  );
+  const railBot = px("var(--hud-rail-y-end)"); // the rail's own token (ADR-043 Update 2026-09-15)
   const contentInset = px("var(--hud-content-inset)");
   const instrumentInset = px("var(--instrument-inset, 0px)");
   const vw = window.innerWidth;

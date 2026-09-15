@@ -59,10 +59,7 @@
 
   /* ── The rail box, mirrored from `.hud__rail` ─────────────────────── */
   --fl-rail-top: var(--hud-rail-y-start);
-  --fl-rail-bot: max(
-    calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
-    calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
-  );
+  --fl-rail-bot: var(--hud-rail-y-end);
   --fl-rail-h: calc(100svh - var(--fl-rail-top) - var(--fl-rail-bot));
 
   /* Tick heights, absolute from the viewport top. Names are the ladder

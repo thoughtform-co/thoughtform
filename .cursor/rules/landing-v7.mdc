@@ -76,4 +76,18 @@ register during the corridor, `SOURCE BUS · 04` (`ServicesRailRegister`,
 services.css) during services — both on the shared `--rail-register-pitch`
 grid, active row = gold underline.
 
+**The rails CONNECT to the corner chrome (ADR-043 Update 2026-09-15, owner —
+reverses the 2026-07-16 breathing gap).** `--hud-rail-y-start` =
+`margin + corner-zone` (the TL bracket's foot) and `--hud-rail-y-end` (the
+same value) is what `.hud__rail { bottom }`, the casefile's `--fl-rail-bot`,
+the labs' mirrors and the `.rin-settings` box top all agree on; the 0% / 100%
+ticks are flush at the rail's ends via `translate` on `:first-child` /
+`:last-child` of `#leftTicks` / `#rightTicks`; the collapsed wordmark starts
+5.81% of its visual width left of the track's centre so the track runs into
+the T-stem of THOUGHT. Do not reintroduce the `clamp(16px, 1.8vw, 32px)` gap,
+the wordmark `max()` arm, or a second literal copy of either end — read the
+tokens. A rail-end change moves the casefile's tick ladder and the voidwalker
+datum with it, and re-baselines the ten desktop viewport snapshots in
+`landing-page.spec.ts`.
+
 **Process:** `sentinel/MAINTENANCE.md` — Cycle B before large section work; Cycle A after non-trivial fixes.

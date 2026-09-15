@@ -129,3 +129,38 @@ restores the original ADR-043 resting spot (`--hud-margin`) for the SCROLLED
 state while keeping the new content-aligned hero position. Verified at 1440×900:
 hero `left` ≈ content edge (145 vs 142), collapsed `left` = `--hud-margin`
 (41 vs 40.5); `transition-property` includes `left`.
+
+## Update (2026-09-15) — the rails connect to the corner chrome; owner's reversal
+
+Owner, on the live frame and on the Trinny deck that copies it: the rails
+must CONNECT to the corners — the left track continues the top-left
+bracket's vertical arm with no gap, runs down to the bottom corner band with
+no gap, and the first and last ticks sit flush at the rail's ends (the 100%
+tick had hung 2px below the box since the ladder was authored). This is the
+"extend the hairline into the corner chrome" reading the Update of
+2026-07-16 rejected on sight. The owner was shown that ruling and chose the
+connection; it is reversed on his word.
+
+What changed: `--hud-rail-y-start` is `margin + corner-zone` (the TL
+bracket's foot); a new `--hud-rail-y-end` beside it, the same value, is what
+`.hud__rail { bottom }`, the casefile's `--fl-rail-bot` and the two labs'
+mirrors all read, so a mirror cannot drift again. The `clamp(16px, 1.8vw,
+32px)` breathing gap and the wordmark `max()` arm are gone from both ends,
+and the rail is vertically centred by construction. On the right the track
+lands on the `.rin-settings` box top (the BR bracket is `border: 0` under
+the instruments, ADR-059); on the left on the collapsed wordmark, whose box
+now starts 5.81% of its visual width left of the track's centre so the
+track runs INTO the T-stem of THOUGHT rather than ending on the serif's tip
+(the stem spans 41.8–61.7 of the lockup's 890.2 viewBox units). Ticks are
+centred on their percent line (`translate: 0 -50%`, like the labels and the
+diamond) with the 0% tick at `0` and the 100% tick at `-100%`; the emitter
+is untouched. The dead `--hud-rail-top` / `--hud-rail-bottom` tokens went
+with it.
+
+Consequence, not a decision: the voidwalker datum (ADR-082 U20, hangs from
+`--hud-rail-y-start`) sits 23–26px higher at ≥720h. The stage gains headroom;
+the owner reads the closer pair live. Out of scope, noted: at 1280×720 the
+manifest diamond still paints on the left rail (the desktop hide is
+`min-width: 1101px and min-height: 760px`), and the two "HUD" element
+snapshots in `landing-page.spec.ts` are vacuous (a clipped empty box and an
+opacity-0 element).

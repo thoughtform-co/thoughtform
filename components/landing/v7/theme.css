@@ -33,10 +33,10 @@
 
    Placement: the bottom-right chrome band, INBOARD of the `--br` corner
    bracket. That bracket owns [right/bottom: --hud-margin] at
-   --hud-corner-zone; the rail terminus + its byte-pinned 100% tick stop
-   `clamp(16px,1.8vw,32px)` ABOVE the bracket and must not be crowded
-   (landing.css: "a bare dangling hairline reads broken"). So the free
-   slot is beside the bracket on the bottom margin line — which also
+   --hud-corner-zone, and the right rail's track now lands ON that band's
+   top edge (`--hud-rail-y-end`, ADR-043 Update 2026-09-15 — the 2026-07-16
+   breathing gap is reversed), so the band is the rail's terminus and the
+   free slot is beside the bracket on the bottom margin line — which also
    pairs it with the ADR-043 bottom-left wordmark: one chrome band, a
    mark at each end.
 
