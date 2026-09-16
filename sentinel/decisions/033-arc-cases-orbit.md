@@ -214,3 +214,19 @@ ADR-032 code: v1 `6a6bd98`, v2 `c346586`, revert `1100200`.
   topography. The orbit code (ring, hit layer, CTA dock, armed dims,
   `orbitMath`, `arcRingAnchors`) is deleted; the bake grammar was
   extracted to `arc-cases/caseScreenBake.ts` first.
+- **2026-09-16 — the mobile mini-cards are retired.** §5's gate parity had
+  the four production cases surface under the Build caption on capable
+  phones as a static index (`.home-v2-case-chips`, then the 2026-07-15
+  `home-v2-case-cards` 2×2 in `StationTitle`), because a phone runs the
+  corridor but gets no cases orbit / terrace / card. Owner, on the phone
+  build ahead of launch: _"we need to remove those cards in the build section
+  at the bottom — that's a bigger refactor redesign."_ The render block and
+  its CSS are deleted. Two reasons the parity argument no longer holds:
+  since ADR-096 the same four projects ARE the proof stack one station down
+  (`#services` opens on them), so the cards were the same four names a screen
+  early; and a non-interactive 2×2 of codenames under a caption was never the
+  desktop reveal's equivalent, only its inventory. The no-WebGL static
+  fallback's one-line case list (`HomeCorridor`,
+  `.home-v2-fallback-text__cases`) stays — it is the corridor for every width
+  when there is no canvas at all. A mobile arc-cases treatment is its own
+  pass, not a restoration of this one.

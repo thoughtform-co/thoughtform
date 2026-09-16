@@ -261,6 +261,8 @@ epilogue flyover, where mobile is already carrying dissipating-sphere
   a 2×2 grid of mini-cards (`home-v2-case-cards*`) echoing the
   desktop `ArcCasesCard` grammar — codename + tagline per card.
   Still non-interactive per the ADR-033 gate parity rule.
+  ⚠ **DELETED 2026-09-16** (owner) — see ADR-033's addendum of that
+  date; the four cases are the proof stack one station down.
 - **Starfield spread on portrait.** `StaticStarfield` spawn volume
   widened from ±25/±15 to ±30/±22 so the field covers the widest
   portrait frustum (70° vertical FOV at farthest star depth) instead

@@ -1156,67 +1156,6 @@ html[data-corridor-exit="true"] #voidwalker[data-vw-mode="travel"] ~ #contact {
   }
 }
 
-/* ── Mobile Build-park case cards (ADR-033) ───────────────────────
-   The four production cases as static mini-cards under the Build
-   stage's mobile support copy (capable phones run the corridor but get
-   no orbit — gate parity). Rides the support cluster's world anchor +
-   fade; non-interactive.
-
-   Mobile quality pass (2026-07-15): replaced the single-line chip row
-   with a 2x2 grid of two-line cards (codename + tagline) so the case
-   surface matches the desktop `ArcCasesCard` grammar. Each card is a
-   flex-column with the ordinal in gold at the top-left, the codename
-   in dawn beneath it, and the tagline muted below. */
-.home-v2-case-cards {
-  list-style: none;
-  margin: 18px 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  width: min(90vw, 380px);
-  margin-left: auto;
-  margin-right: auto;
-}
-.home-v2-case-cards__card {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px;
-  border: 1px solid rgba(var(--gold-rgb), 0.28);
-  background:
-    linear-gradient(180deg, rgba(var(--gold-rgb), 0.08), rgba(var(--void-rgb), 0)),
-    rgba(var(--void-rgb), 0.65);
-  text-align: left;
-  transition: border-color 200ms ease;
-}
-.home-v2-case-cards__index {
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 9px;
-  letter-spacing: 0.24em;
-  color: var(--gold, #caa554);
-  opacity: 0.9;
-}
-.home-v2-case-cards__codename {
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  font-weight: 700;
-  color: var(--dawn, #ebe3d6);
-  line-height: 1.1;
-}
-.home-v2-case-cards__tagline {
-  font-family: var(--font-pt-mono, ui-monospace, monospace);
-  /* 9.5 → 9 (pass 3 type-scale harmonisation): the mobile arc uses a
-     clean 4-step mono scale — 16 (title) / 12 (codename) / 11 (body) /
-     9 (all meta: kicker, badge, coord, index, tagline). */
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(var(--dawn-rgb), 0.55);
-  line-height: 1.25;
-}
-
 /* Dotted particle frame runs — folded (scaleX 0) until the container
    is armed, then unfold outward from the centre. Fast + no delay:
    the unfold resolves in ~0.26s with the brand deceleration curve,
@@ -3548,10 +3487,6 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
     text-transform: uppercase;
     color: rgba(var(--gold-rgb), 0.5);
     white-space: nowrap;
-  }
-  /* Space the Build-park case cards below the framed caption. */
-  .home-v2-readout__caption + .home-v2-case-cards {
-    margin-top: 16px;
   }
 }
 

@@ -2,7 +2,6 @@
 
 import { useDeviceTier } from "@/lib/hooks/useDeviceTier";
 import type { NodeContent } from "@/lib/home-v2/corridorMap";
-import { PROJECT_CASES } from "@/components/landing/v7/tools-cards/toolCardData";
 
 /**
  * StationTitle — celestial-navigation instrument readout for each
@@ -159,28 +158,13 @@ export function StationTitle({ content, base }: StationTitleProps) {
               dangerouslySetInnerHTML={{ __html: supportHtml }}
             />
           )}
-          {/* Mobile Build-park case index (ADR-033): capable phones run
-              the real corridor but get no cases orbit (gate parity with
-              the CTA layer), so the four production cases surface here
-              as static mini-cards riding the same world anchor + fade
-              as the support copy. Non-interactive by design.
-              Mobile quality pass (2026-07-15): the plain mono chips
-              were upgraded to two-line cards (codename + tagline) that
-              echo the desktop `ArcCasesCard` grammar — same 2x2 grid
-              feel, gold ordinal, dawn codename, muted tagline. */}
-          {isMobile && base === "intelligence" && (
-            <ul className="home-v2-case-cards" aria-label="Production cases">
-              {PROJECT_CASES.map((projectCase) => (
-                <li key={projectCase.id} className="home-v2-case-cards__card">
-                  <span className="home-v2-case-cards__index">{projectCase.index}</span>
-                  <span className="home-v2-case-cards__codename">
-                    {projectCase.codename.toUpperCase()}
-                  </span>
-                  <span className="home-v2-case-cards__tagline">{projectCase.tagline}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          {/* ⚠ THE MOBILE BUILD-PARK MINI-CARDS ARE GONE (owner, 2026-09-16,
+              ADR-033 addendum). ADR-033's gate parity had the four
+              production cases surface here as a static 2×2 under the
+              caption because capable phones get no cases orbit; since
+              ADR-096 the same four projects ARE the proof stack one station
+              down, so the cards were the same four names a screen early.
+              A mobile arc-cases treatment is its own pass. */}
         </div>
       )}
     </>
