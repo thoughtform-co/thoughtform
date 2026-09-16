@@ -31,7 +31,7 @@ import {
  * perspective signal that reads as "we are flying forward".
  */
 export function FlyingCameraRig() {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   // Eased 0..1 blend toward the docked pose. Lerping the effective
   // epilogue scrub between the live (landing) value and the held docked
   // pose means engaging/leaving the dock glides instead of snapping.
@@ -50,22 +50,24 @@ export function FlyingCameraRig() {
     const [lx, ly, lz] = getCameraLookAt(0);
     camera.lookAt(lx, ly, lz);
     camera.up.set(0, 1, 0);
-
-    const applyFov = () => {
-      if ("fov" in camera && (camera as { fov: number }).fov !== undefined) {
-        const aspect = window.innerWidth / window.innerHeight;
-        (camera as { fov: number; updateProjectionMatrix: () => void }).fov = getCameraFov(aspect);
-      }
-      camera.updateProjectionMatrix();
-    };
-    applyFov();
-    window.addEventListener("resize", applyFov);
-    window.addEventListener("orientationchange", applyFov);
-    return () => {
-      window.removeEventListener("resize", applyFov);
-      window.removeEventListener("orientationchange", applyFov);
-    };
+    camera.updateProjectionMatrix();
   }, [camera]);
+
+  useEffect(() => {
+    /* The aspect is the CANVAS's — R3F's `size`, the box it sets
+       `camera.aspect` from — never `window.innerWidth / innerHeight`
+       (ADR-018, 2026-09-16). The canvas is `100svh`; on iOS the window
+       grows past it as the toolbar collapses, so a window-derived fov
+       and a box-derived aspect drifted apart on the one device that
+       matters, and the DOM mirror camera (which reads the same cell)
+       had nothing consistent to mirror. `size` changes on rotate and
+       on a real resize, which is when this must re-run. */
+    if ("fov" in camera && (camera as { fov: number }).fov !== undefined) {
+      const aspect = size.width / Math.max(1, size.height);
+      (camera as { fov: number; updateProjectionMatrix: () => void }).fov = getCameraFov(aspect);
+    }
+    camera.updateProjectionMatrix();
+  }, [camera, size.width, size.height]);
 
   useFrame((_, delta) => {
     // Drive the rig from `paintProgress` so the camera sits at the

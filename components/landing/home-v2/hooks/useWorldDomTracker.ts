@@ -153,9 +153,43 @@ const ANCHOR_ORIGINS: Record<string, string> = {
 /** Make a mirror camera mounted to the same FOV as the R3F scene.
  *  Uses the aspect-aware `getCameraFov` so the DOM projection matches
  *  the canvas camera on portrait viewports (ADR-018 mobile revision). */
-function makeMirrorCamera(): THREE.PerspectiveCamera {
-  const aspect = typeof window !== "undefined" ? window.innerWidth / window.innerHeight : 16 / 9;
+function makeMirrorCamera(aspect: number): THREE.PerspectiveCamera {
   return new THREE.PerspectiveCamera(getCameraFov(aspect), aspect, 0.1, 100);
+}
+
+/**
+ * THE BOX THE DOM PROJECTS INTO IS THE STAGE CELL, NEVER THE WINDOW
+ * (ADR-018, 2026-09-16). The canvas paints into `.home-v2-stage__sticky`
+ * — `100svh` tall, and `100svh` stays SMALL on iOS while
+ * `window.innerHeight` grows to the large viewport as the toolbar
+ * collapses. Projecting NDC into the window and then writing `left/top`
+ * inside the cell pushed every anchor down by `(lvh − svh) / 2` at the
+ * centre, growing away from it: the mark and the phase labels sat ~50px
+ * under the compass frame on a real iPhone while the WebGL frame (drawn
+ * in the cell) was exactly where the world said. Chromium's phone
+ * emulation carries the same class of mismatch (`innerHeight` 912 on an
+ * 844 window), which is why no DOM-vs-DOM probe ever saw it.
+ *
+ * Every root the tracker is handed lives inside that cell — the copy
+ * layer is `inset: 0` in it, the brandmark shell is absolute in it (and
+ * stays a DOM descendant when CSS promotes it to `fixed`, where the
+ * canvas is `fixed` at `100svh` too) — so the cell is the one box both
+ * projectors share. Resolved once per root and observed, never read per
+ * tick: `clientWidth`/`clientHeight` are a layout read, and the cell does
+ * not move when the toolbar does, which is the whole point.
+ */
+export function stageBoxOf(root: Element | null): HTMLElement | null {
+  if (!root) return null;
+  return (root.closest(".home-v2-stage__sticky") as HTMLElement | null) ?? (root as HTMLElement);
+}
+
+/** The projection box: the stage cell's size, the window only while the
+ *  cell measures nothing (before first layout). */
+export function projectionSize(box: HTMLElement | null): { w: number; h: number } {
+  const w = box?.clientWidth ?? 0;
+  const h = box?.clientHeight ?? 0;
+  if (w > 0 && h > 0) return { w, h };
+  return { w: window.innerWidth || 1, h: window.innerHeight || 1 };
 }
 
 /** Sync the mirror camera to the corridor camera path for the
@@ -218,7 +252,9 @@ export function useWorldDomTracker(
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    cameraRef.current = makeMirrorCamera();
+    const stageBox = stageBoxOf(rootRef.current);
+    const box = projectionSize(stageBox);
+    cameraRef.current = makeMirrorCamera(box.w / box.h);
     projectedRef.current = new THREE.Vector3();
     fwdRef.current = new THREE.Vector3();
     toAnchorRef.current = new THREE.Vector3();
@@ -228,13 +264,22 @@ export function useWorldDomTracker(
     const onResize = () => {
       const cam = cameraRef.current;
       if (!cam) return;
-      cam.aspect = window.innerWidth / window.innerHeight;
+      const next = projectionSize(stageBox);
+      box.w = next.w;
+      box.h = next.h;
+      cam.aspect = box.w / box.h;
       // Keep fov in lock-step with the canvas camera (both derive from
       // the same aspect) so the projection never desyncs on rotate.
       cam.fov = getCameraFov(cam.aspect);
       cam.updateProjectionMatrix();
     };
-    window.addEventListener("resize", onResize);
+    // The cell resizes on rotate and on a real resize; it does NOT resize
+    // when an iOS toolbar collapses — which is exactly when `window`
+    // `resize` fires with a height this box must not follow.
+    const ro =
+      stageBox && typeof ResizeObserver !== "undefined" ? new ResizeObserver(onResize) : null;
+    if (ro && stageBox) ro.observe(stageBox);
+    else window.addEventListener("resize", onResize);
 
     const tick = () => {
       rafRef.current = requestAnimationFrame(tick);
@@ -256,8 +301,8 @@ export function useWorldDomTracker(
       const paintProgress = transform.paintProgress;
       syncMirrorCamera(cam, paintProgress);
 
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
+      const vw = box.w;
+      const vh = box.h;
 
       // Camera-forward (used for behind-camera culling).
       const [lx, ly, lz] = getCameraLookAt(paintProgress);
@@ -429,7 +474,8 @@ export function useWorldDomTracker(
     document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
-      window.removeEventListener("resize", onResize);
+      if (ro) ro.disconnect();
+      else window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
       if (rafRef.current != null) {
         cancelAnimationFrame(rafRef.current);

@@ -4507,6 +4507,66 @@ and 13.6–26.8px at 430×932 (12 × the anchor's 1.1–1.15 scale, plus the
 centred wrap's slack on the widest line), from ~25px before; every gutter
 still 24.0–32.3px.
 
+## Addendum (2026-09-16) — one box: the DOM projectors read the stage cell, never the window
+
+Owner, on a real iPhone after the launch fixes: _"in the second section when
+you enter it the brandmark isn't nicely centered in the diagram"_ — the mark
+and the three phase labels ~50px BELOW the compass frame's centre.
+
+**It was not the rise.** The frame (`ThoughtformCompassGate.tsx:515`), the
+mark (`sceneGeom.ts:1672`), the labels (`:2087`) and the body (`:2670`) all
+read `getThoughtformMobileRiseOffset(paintProgress)` off one clock, and the
+station's Y is the camera's — in world space they are co-centred at every
+progress. **It was the projector.** The frame is WebGL, painted into
+`.home-v2-stage__sticky` (`100svh`). The mark is a DOM SVG and the labels are
+DOM anchors, and every DOM projector read the WINDOW: `useWorldDomTracker`'s
+mirror camera aspect and its `vw / vh` NDC→px mapping, the mark's epilogue
+camera (`ProjectedBrandmarkActor`), and the WebGL rig's own fov
+(`FlyingCameraRig`, `viewportAspect()`). On iOS Safari `window.innerHeight`
+is the LARGE viewport once the toolbar collapses while `100svh` stays SMALL,
+so NDC was mapped into a box `(lvh − svh)` taller than the cell the `left/top`
+were then written into: a push of `(lvh − svh) / 2` at the centre, growing
+away from it — ~45–50px on an iPhone 14. Chromium's phone emulation carries
+the same class (`innerHeight` 912 on an 844 window; 34px), which is why
+`probe-thesis-mobile` — DOM boxes against DOM boxes — never saw it.
+
+**The fix is one source of truth.** `stageBoxOf(root)` resolves the cell
+(`root.closest(".home-v2-stage__sticky")`; the copy layer is `inset: 0` in
+it and the brandmark shell stays a DOM descendant when CSS promotes it to
+`fixed`, where the canvas is `fixed` at `100svh` too) and `projectionSize`
+reads its `clientWidth/clientHeight`, observed by a `ResizeObserver` (the
+cell resizes on rotate, never on a toolbar collapse — which is exactly the
+`resize` event the window fires and this box must not follow). The mirror
+camera, the epilogue camera and the tracker's `vw / vh` read it; the rig's
+fov reads R3F's `size`, the same box R3F sets `camera.aspect` from. The
+window is the fallback only while the cell measures nothing.
+
+⚠ **Two things this changes by design.** Every DOM anchor on iOS moves up
+~50px — the caption cards and the phase labels become correct WITH the
+mark. And the two probes' emulation numbers shift by 34px and are
+re-recorded, not "fixed". Desktop is byte-identical where the box is the
+window (Playwright runs `--hide-scrollbars`; the owner's Mac has overlay
+scrollbars); on a classic-scrollbar desktop the DOM anchors were ~7px right
+of the canvas and are exact now.
+
+⚠ **Scroll CLOCKS are out of scope.** `useDepthScroll`, `useCorridorExitScroll`
+and the stage hooks read `innerHeight` to measure scroll TRAVEL, not to
+project; their `svh` disagreement is a different, smaller effect and is
+named, not taken.
+
+**Guard, and it reads the FRAME'S PIXELS.** `landing-corridor-smoke` "the DOM
+mark and the WebGL frame project into ONE box" — phones only, at raw stage
+progress 0.10 (mid-dwell): every DOM layer hidden, the canvas shot, the gold
+dashed square's bounding box found, the DOM mark's centre within 4px of it
+on both axes. ⚠ **Not "the mark at the cell's centre"** — both the mark and
+the frame ride the mobile rise and the camera's look-at, so the cell's
+centre is not the invariant (a first cut asserted it and measured 20px with
+the fix in, which was the mark already DEPARTING the station past
+`thoughtformHold`, not a projection error). `scripts/probe-thesis-frame.mjs`
+makes the same measurement across the dwell. Measured in emulation, mark −
+frame: **pre-fix dy 40.9px / dx 16.0px; fixed dy −1.1…2.4px / dx 0.5px** at
+0.04–0.16.
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

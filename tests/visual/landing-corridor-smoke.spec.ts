@@ -455,6 +455,116 @@ test.describe("Homepage corridor smoke", () => {
     ).toBeGreaterThan(Math.round(arcBaseline * 0.8));
   });
 
+  test("ADR-018 (2026-09-16): the DOM mark and the WebGL frame project into ONE box", async ({
+    page,
+  }) => {
+    /* The compass frame is drawn in the canvas — `.home-v2-stage__sticky`,
+       `100svh` — while the brandmark is a DOM SVG projected by
+       `useWorldDomTracker`. Until 2026-09-16 the tracker projected NDC into
+       `window.innerHeight` and wrote `left/top` inside the cell, so wherever
+       the two differ (iOS with the toolbar collapsed; this emulation, where
+       `innerHeight` overshoots the layout viewport) every DOM anchor sat
+       below — and here also right of — the thing it was welded to.
+
+       ⚠ THE GROUND TRUTH IS THE FRAME'S PIXELS, NOT THE CELL'S CENTRE. Both
+       the mark and the frame ride the mobile rise and the camera's look-at,
+       so "the mark at the cell's centre" is not the invariant — the frame's
+       centre is. The frame is WebGL, so it is read off a screenshot with
+       every DOM layer hidden: the gold dashed square's bounding box, in the
+       middle band of the frame. Measured on the pre-fix tree: dy 40.9px,
+       dx 16.0px. Phones only — on desktop the Thoughtform composition is
+       deliberately off-axis and the frame is not a centred square. */
+    const vp = page.viewportSize();
+    test.skip(!vp || vp.width > 760, "the centred composition is the phone's");
+
+    await rollTo(page, 0);
+    const stage = await page.evaluate(() => {
+      const el = document.querySelector(".home-v2-stage");
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { top: r.top + window.scrollY, h: r.height };
+    });
+    expect(stage, "no corridor stage").not.toBeNull();
+    const vh = await page.evaluate(() => document.documentElement.clientHeight);
+    // Raw stage progress 0.10: mid-dwell, the frame fully drawn, the mark
+    // parked on it (it departs the station past `thoughtformHold`).
+    await rollTo(page, Math.round(stage!.top + 0.1 * (stage!.h - vh)));
+    await page.waitForTimeout(900);
+
+    const mark = await page.evaluate(() => {
+      const m = document.querySelector<HTMLElement>('[data-world-anchor="home-v2.brandmark"]');
+      if (!m) return null;
+      const r = m.getBoundingClientRect();
+      return {
+        cx: r.left + r.width / 2,
+        cy: r.top + r.height / 2,
+        w: r.width,
+        alpha: Number(getComputedStyle(m).opacity),
+        placed: m.style.transform !== "",
+      };
+    });
+    expect(mark, "no DOM mark").not.toBeNull();
+    expect(mark!.placed, "the tracker never placed the mark").toBe(true);
+    expect(mark!.alpha).toBeGreaterThan(0.05);
+
+    const HIDE =
+      ".home-v2-copy-layer, .home-v2-projected-brandmark, .hud, .home-v2-station-headers, .home-v2-readout, .home-v2-mobile-signal";
+    await page.evaluate((sel) => {
+      for (const el of document.querySelectorAll<HTMLElement>(sel)) el.style.visibility = "hidden";
+    }, HIDE);
+    await page.waitForTimeout(150);
+    const shot = await page.screenshot({ clip: { x: 0, y: 0, width: vp!.width, height: vh } });
+    await page.evaluate((sel) => {
+      for (const el of document.querySelectorAll<HTMLElement>(sel)) el.style.visibility = "";
+    }, HIDE);
+
+    // `sharp` is a direct dependency (the hero-plate and capture scripts
+    // decode with it). ⚠ Scan at the DEVICE scale, never downsampled: the
+    // phone projects run at DPR 3 and a resize averages the 1px dashed
+    // lines into the void (the first cut found "no frame" that way).
+    const { default: sharp } = await import("sharp");
+    const { data, info } = await sharp(shot)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const dpr = info.width / vp!.width;
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    let n = 0;
+    // The frame's dashed lines are the gold in the middle band; the star
+    // field is dim and the copy is hidden. Gold: warm, red well over blue.
+    for (let y = Math.round(info.height * 0.14); y < Math.round(info.height * 0.9); y += 1) {
+      for (let x = Math.round(20 * dpr); x < info.width - Math.round(20 * dpr); x += 1) {
+        const i = (y * info.width + x) * 4;
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        if (r > 120 && g > 90 && b < 110 && r > b + 40) {
+          n += 1;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    expect(n, "no gold line work found — the frame did not paint").toBeGreaterThan(80);
+    const frameCx = (minX + maxX) / 2 / dpr;
+    const frameCy = (minY + maxY) / 2 / dpr;
+    const dx = mark!.cx - frameCx;
+    const dy = mark!.cy - frameCy;
+    expect(
+      Math.abs(dy),
+      `the mark sits ${dy.toFixed(1)}px below the frame's centre (frame y ${minY}–${maxY}, mark ${mark!.cy.toFixed(1)})`
+    ).toBeLessThanOrEqual(4);
+    expect(
+      Math.abs(dx),
+      `the mark sits ${dx.toFixed(1)}px right of the frame's centre (frame x ${minX}–${maxX}, mark ${mark!.cx.toFixed(1)})`
+    ).toBeLessThanOrEqual(4);
+  });
+
   // NOTE (2026-07-14): the three Services-hologram tests that lived here
   // (ambient hold, production scan notes, /test/services-demo scan notes)
   // asserted markup retired by the ADR-029/030/033 Services reworks — the

@@ -14,7 +14,12 @@ import {
   getThoughtformMobilePhase,
 } from "./DepthGatewayScene/sceneGeom";
 import { writeBrandmarkScreenRect } from "./brandmarkScreenRectRef";
-import { type WorldAnchor, useWorldDomTracker } from "./hooks/useWorldDomTracker";
+import {
+  type WorldAnchor,
+  projectionSize,
+  stageBoxOf,
+  useWorldDomTracker,
+} from "./hooks/useWorldDomTracker";
 import { BEAT_ORDER } from "@/lib/home-v2/corridorMap";
 import { DOCKED_INSTRUMENT_EPILOGUE_POSE } from "@/lib/home-v2/epilogueTimeline";
 import {
@@ -157,9 +162,12 @@ interface EpilogueScratch {
   hasLastWelded: boolean;
 }
 
-function ensureEpCamera(ep: EpilogueScratch): THREE.PerspectiveCamera {
+function ensureEpCamera(ep: EpilogueScratch, aspect: number): THREE.PerspectiveCamera {
   if (!ep.camera) {
-    const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+    // `aspect` is the STAGE CELL's (the tracker's `vw / vh`), never the
+    // window's (ADR-018, 2026-09-16 — see `stageBoxOf` in
+    // useWorldDomTracker: `100svh` against a toolbar-collapsed
+    // `innerHeight` is what put the mark under the compass frame).
     ep.camera = new THREE.PerspectiveCamera(getCameraFov(aspect), aspect, 0.1, 100);
   }
   return ep.camera;
@@ -218,7 +226,7 @@ function computeWeldedRect(
       basePose.lookAt[2] + (exitPose.lookAt[2] - basePose.lookAt[2]) * tt,
     ];
   }
-  const cam = ensureEpCamera(ep);
+  const cam = ensureEpCamera(ep, vw / Math.max(1, vh));
   cam.position.set(camPos[0], camPos[1], camPos[2]);
   cam.up.set(0, 1, 0);
   cam.lookAt(camLook[0], camLook[1], camLook[2]);
@@ -321,16 +329,24 @@ export function ProjectedBrandmarkActor() {
   // Keep the epilogue mirror camera locked to viewport aspect / fov
   // on resize — matches `useWorldDomTracker` + `EpilogueNewsTicker`.
   useEffect(() => {
+    const stageBox = stageBoxOf(shellRef.current);
     const onResize = () => {
       const cam = epRef.current.camera;
       if (!cam) return;
-      const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+      const box = projectionSize(stageBox);
+      const aspect = box.w / Math.max(1, box.h);
       cam.aspect = aspect;
       cam.fov = getCameraFov(aspect);
       cam.updateProjectionMatrix();
     };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    const ro =
+      stageBox && typeof ResizeObserver !== "undefined" ? new ResizeObserver(onResize) : null;
+    if (ro && stageBox) ro.observe(stageBox);
+    else window.addEventListener("resize", onResize);
+    return () => {
+      if (ro) ro.disconnect();
+      else window.removeEventListener("resize", onResize);
+    };
   }, []);
 
   // Single dynamic anchor that resolves to the brandmark's current
