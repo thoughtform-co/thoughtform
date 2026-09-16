@@ -73,10 +73,24 @@ export function ProofStack({
   tracks,
   client,
   arrival,
+  split = false,
 }: {
   tracks: readonly CaseTrack[];
   client: ProofStackClient;
   arrival?: "glitch";
+  /**
+   * The PHONE's pile (ADR-107): every project as TWO sticky slots — its
+   * record panel, then its field panel — instead of one card, so each fits
+   * the viewport and the field slides up under the record's head band.
+   *
+   * ⚠ THE HOST DECIDES, AND REMOUNTS ON THE DECISION. `ServicesStage` reads
+   * `PROOF_STACK_SPLIT_MEDIA` and passes this WITH a `key` on the element,
+   * because `useStackedCardsScroll` collects its `[data-pc-slot]`s once at
+   * mount — a pile that changed from four slots to eight under a live hook
+   * would be driven on four. Omitted (the Trinny host, every desktop caller)
+   * the render is byte-identical.
+   */
+  split?: boolean;
 }) {
   const runwayRef = useRef<HTMLDivElement>(null);
   useStackedCardsScroll(runwayRef);
@@ -153,30 +167,71 @@ export function ProofStack({
        sheet's fallback (house gold) is the resting state and not a second
        declaration of the same value. */
     <div
-      className="pf-stack"
+      className={split ? "pf-stack pf-stack--split" : "pf-stack"}
       style={
         client.accentRgb ? ({ "--pf-accent-rgb": client.accentRgb } as CSSProperties) : undefined
       }
     >
+      {/* ⚠ `--pc-n` IS THE PEEK COUNT, NOT THE SLOT COUNT. The runway sizes
+          every slot for the LAST one — `100svh − top-base − (n−1)·peek −
+          bottom-safe` — and on the split pile the last slot (field 3) sits
+          under four bands, not seven: a field seats one peek below its own
+          record and the NEXT record seats on that same line. So n is
+          `tracks + 1`, one band per project plus the field's own step. */}
       <div
         className="pf-stack__runway"
         ref={runwayRef}
-        style={{ "--pc-n": tracks.length } as CSSProperties}
+        style={{ "--pc-n": split ? tracks.length + 1 : tracks.length } as CSSProperties}
       >
-        {tracks.map((track, i) => (
-          <div
-            key={track.id}
-            className="pf-slot"
-            data-pc-slot=""
-            data-pc-index={i}
-            style={{ "--i": i, zIndex: i + 1 } as CSSProperties}
-          >
-            {/* ⚠ CARD 0 ALONE (ADR-104). The skeleton is what the aperture
-                reveals, and the aperture is card 0's alone — so the two
-                conditions are the same condition and are written as one. */}
-            <ProofCard track={track} client={client} wire={i === 0 && arrival === "glitch"} />
-          </div>
-        ))}
+        {split
+          ? tracks.flatMap((track, k) => [
+              /* ── THE PAIR (ADR-107) ─────────────────────────────────
+                 Record k pins at `top-base + k·peek`, exactly as a whole
+                 card would. Field k takes `--i: k + 1`: the record's head
+                 row IS `--pc-peek`, so `top-base + (k+1)·peek` is literally
+                 "record k's top + its band" — the field seats UNDER the band
+                 by construction, the ADR-104 `.pf-cardwire { inset:
+                 var(--pc-peek) 0 0 0 }` idiom. It is also record k+1's pin
+                 line, so the next project covers field k edge to edge and
+                 the only thing left of pair k is its band — the tab that
+                 says which folder is underneath. Indices stay positional
+                 (`2k`, `2k+1`) so every measurement scoped to
+                 `[data-pc-index]` still addresses one element. */
+              <div
+                key={`${track.id}:record`}
+                className="pf-slot pf-slot--record"
+                data-pc-slot=""
+                data-pc-index={2 * k}
+                data-pc-panel="record"
+                style={{ "--i": k, zIndex: 2 * k + 1 } as CSSProperties}
+              >
+                <ProofCard track={track} client={client} panel="record" />
+              </div>,
+              <div
+                key={`${track.id}:field`}
+                className="pf-slot pf-slot--field"
+                data-pc-slot=""
+                data-pc-index={2 * k + 1}
+                data-pc-panel="field"
+                style={{ "--i": k + 1, zIndex: 2 * k + 2 } as CSSProperties}
+              >
+                <ProofCard track={track} client={client} panel="field" />
+              </div>,
+            ])
+          : tracks.map((track, i) => (
+              <div
+                key={track.id}
+                className="pf-slot"
+                data-pc-slot=""
+                data-pc-index={i}
+                style={{ "--i": i, zIndex: i + 1 } as CSSProperties}
+              >
+                {/* ⚠ CARD 0 ALONE (ADR-104). The skeleton is what the aperture
+                    reveals, and the aperture is card 0's alone — so the two
+                    conditions are the same condition and are written as one. */}
+                <ProofCard track={track} client={client} wire={i === 0 && arrival === "glitch"} />
+              </div>
+            ))}
         <div className="pf-stack__tail" aria-hidden="true" />
       </div>
     </div>

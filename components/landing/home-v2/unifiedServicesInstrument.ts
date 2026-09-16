@@ -470,3 +470,25 @@ export const SERVICES_PROOF_BROWSE_FRAC = SERVICES_PROOF_STACK
  */
 export const SERVICES_SCROLL_OWNED_MEDIA =
   "(min-width: 961px) and (prefers-reduced-motion: no-preference)";
+
+/**
+ * The PHONE rung on which the proof stack SPLITS each project into two
+ * viewport-fitting panels — the record, then its field — that slide over
+ * each other on the ADR-030 mechanic (ADR-107).
+ *
+ * ⚠ IT IS THE EXACT COMPLEMENT OF THE TWO INERT TERMS `proof-stack.css` KEEPS.
+ * The inert rung is `(max-width: 960px), (max-height: 680px),
+ * (prefers-reduced-motion: reduce)`; this string takes the first term back
+ * and leaves the other two — a short window and a reduced-motion reader
+ * still get the four cards in flow. Two readers: `ServicesStage` (which
+ * markup to render — one slot per card or two) and the split block in
+ * `proof-stack.css` (whether those slots stick). They must answer the same
+ * question, so `tests/lib/proof-stack-split-gate.test.ts` pins the sheet's
+ * literal to this one.
+ *
+ * ⚠ `useMediaQuery`'s SERVER SNAPSHOT IS `false`, so the server always renders
+ * the whole-card tree and a phone swaps to panels after hydration; the pile is
+ * eight viewports below the fold, so the swap is never on screen.
+ */
+export const PROOF_STACK_SPLIT_MEDIA =
+  "(max-width: 960px) and (min-height: 681px) and (prefers-reduced-motion: no-preference)";

@@ -27,7 +27,14 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
 
-const PHONE_PROJECTS = new Set(["iphone-14", "iphone-14-pro-max"]);
+/* The two WebKit phone projects, and (ADR-107) their Chromium-backed copies,
+   which are the ones that can reach the local dev server. */
+const PHONE_PROJECTS = new Set([
+  "iphone-14",
+  "iphone-14-pro-max",
+  "iphone-14-chromium",
+  "iphone-14-pro-max-chromium",
+]);
 
 /** The stations' DOM order on the marketing route, top to bottom. */
 const STATION_IDS = ["hero", "services", "about", "voidwalker", "contact"] as const;

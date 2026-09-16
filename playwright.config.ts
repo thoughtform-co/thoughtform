@@ -45,6 +45,33 @@ export default defineConfig({
         viewport: { width: 390, height: 844 },
       },
     },
+    // ⚠ CHROMIUM-BACKED COPIES OF THE TWO PHONE SHAPES (ADR-107). The
+    // `devices["iPhone 14*"]` descriptors carry `defaultBrowserType: "webkit"`,
+    // and WebKit honours the dev server's `upgrade-insecure-requests` CSP on
+    // localhost — every sub-resource goes to `https://localhost:3003` and the
+    // page renders unstyled (`.claude/rules/mobile-sections.md` "Verifying").
+    // The same descriptors on Chromium keep the viewport, the DPR, the touch
+    // and the mobile UA, and can hit the dev server. Real Safari behaviour
+    // (sticky, `svh`, the GPU) is the owner's device read; these are the
+    // phone geometry guards that can run in CI.
+    {
+      name: "iphone-14-pro-max-chromium",
+      use: {
+        ...devices["iPhone 14 Pro Max"],
+        defaultBrowserType: "chromium",
+        browserName: "chromium",
+        viewport: { width: 430, height: 932 },
+      },
+    },
+    {
+      name: "iphone-14-chromium",
+      use: {
+        ...devices["iPhone 14"],
+        defaultBrowserType: "chromium",
+        browserName: "chromium",
+        viewport: { width: 390, height: 844 },
+      },
+    },
 
     // ═══════════════════════════════════════════════════════════════
     // TABLET VIEWPORT

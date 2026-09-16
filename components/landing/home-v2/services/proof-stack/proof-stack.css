@@ -2271,3 +2271,165 @@
     border-bottom: 1px solid var(--pf-rule);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   8. THE PHONE'S PILE — ONE PROJECT, TWO SHEETS (ADR-107)
+   Owner, 2026-09-16, on the phone build: the cards "are too long because
+   they're one card and don't really fit the viewport. What I want is for
+   every individual panel to fit inside the viewport on mobile … split the
+   top and bottom panels of a card and make sure they slide over each other
+   … it needs to be super clear that when you scroll through it, it's a
+   pair."
+
+   `ProofStack` renders each project as TWO `.pf-slot`s on this rung — the
+   RECORD panel (`.pf-card--record`: the head band over the record) and the
+   FIELD panel (`.pf-card--field`: rail · bay · foot, and NO head of its
+   own). Same hook, same channels; what changes is the geometry, and the
+   geometry is what makes the pair read.
+
+   ⚠ THE GATE IS THE EXACT COMPLEMENT OF THE INERT RUNG'S FIRST TERM, scoped
+   to `.pf-stack--split` (which only the split render carries). Specificity
+   (0,3,0) beats the rung's (0,2,0), so this block RE-STATES what §7 parked —
+   sticky, the card's channels, the tail — and the pre-hydration frame, a
+   short window, a reduced-motion reader and any JS failure all fall
+   through to the static rung by construction. `services.css`'s seat rung is
+   UNTOUCHED: `position: static` at ≤960 puts the pile in flow, and sticky
+   slots IN FLOW is the ADR-094 Trinny mechanic exactly.
+   `PROOF_STACK_SPLIT_MEDIA` (unifiedServicesInstrument.ts) is this string;
+   `tests/lib/proof-stack-split-gate.test.ts` pins the two equal.
+
+   ⚠ THE SEAT IS `--i`, AND THE FIELD'S IS ITS RECORD'S PLUS ONE. Record k
+   pins at `top-base + k·peek`; field k at `top-base + (k+1)·peek`. The
+   record's head row IS `--pc-peek` (the card's grid), so that second line
+   is literally "record k's top + its band": the field seats UNDER the band.
+   And record k+1 pins on the same line, so the next project covers field k
+   edge to edge and what survives of pair k is its band — `--pc-n` is
+   `tracks + 1` for the same reason (ProofStack.tsx).
+
+   ⚠ A RECORD DOES NOT RECEDE FOR ITS OWN FIELD. `--pc-depth` counts every
+   enter above a slot and its first term is the record's own field; a
+   record that scaled and dimmed as its field arrived would read as the
+   field covering a DIFFERENT card. So the record's `--pc-dp` drops that
+   first term and its recession starts only when the NEXT record rises.
+   The record's COPY still leaves on the cover channel (the base rules) —
+   the band stays, the text under the arriving field goes, the field slides
+   over an emptied sheet. And since a later pair counts TWO enters, the
+   per-step recession is halved so one pair is one desktop step.
+
+   ⚠ THE FIELD PANEL IS CUT AT BOTTOM-LEFT ONLY. Its top edge sits under a
+   band; a TR cut there would draw a second housing's corner against a
+   straight edge. ADR-065's single-notch clause — oriented or connected —
+   is the reading: the sheet is connected to the tab above it.
+
+   ⚠ NO BLUR ON THE PHONE. Eight glass panels sliding over one another on a
+   phone GPU, over a bed that (ADR-108) is a live canvas — the per-frame
+   backdrop snapshot is the one cost this card has (ADR-056's measurement).
+   The ground densifies a step instead, the sheet's own recorded fallback. */
+@media (max-width: 960px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  .pf-stack.pf-stack--split .pf-slot {
+    position: sticky;
+    top: calc(var(--pc-top-base) + var(--i) * var(--pc-peek));
+    height: var(--pc-card-h);
+    margin-bottom: calc(var(--pc-n) * var(--pc-peek) + var(--pc-bottom-safe) + var(--pc-dwell));
+  }
+  /* The dwell is a dial per panel kind: the field is what the reader looks
+     at, so it holds longer. */
+  .pf-stack.pf-stack--split .pf-slot--record {
+    --pc-dwell: 12svh;
+    --pc-dp: calc(var(--pc-depth) - var(--pc-cover));
+  }
+  .pf-stack.pf-stack--split .pf-slot--field {
+    --pc-dwell: 18svh;
+  }
+  .pf-stack.pf-stack--split .pf-stack__tail {
+    height: clamp(280px, 40svh, 400px);
+  }
+  .pf-stack.pf-stack--split .pf-card {
+    translate: 0 calc((1 - var(--pc-in)) * var(--pc-rise));
+    --pf-recede: 0.015;
+    --pf-dim: 0.04;
+    transform: scale(calc(1 - var(--pf-recede) * var(--pc-dp)));
+    opacity: calc(var(--pc-in-plate) * (1 - var(--pf-dim) * var(--pc-dp)));
+    --pf-glass-a: 0.74;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .pf-stack.pf-stack--split .pf-card::after {
+    display: block;
+  }
+  .pf-stack.pf-stack--split .pf-card--record {
+    grid-template-rows: var(--pc-peek) minmax(0, 1fr);
+    /* One rung down on both faces, so a title, a lede and four claim bands
+       fit the record's box at 390×844 (card-h 548 − band 52 − padding 40 =
+       456; measured ~370 of ink) and at 780h (392 against ~350). */
+    --pf-display: 22px;
+    --pf-copy: 15px;
+  }
+  .pf-stack.pf-stack--split .pf-card--field {
+    grid-template-rows: minmax(0, 1fr);
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% 100%,
+      var(--pf-card-ch) 100%,
+      0 calc(100% - var(--pf-card-ch))
+    );
+  }
+  .pf-stack.pf-stack--split .pf-card--field::before {
+    clip-path: polygon(
+      evenodd,
+      0 0,
+      100% 0,
+      100% 100%,
+      var(--pf-card-ch) 100%,
+      0 calc(100% - var(--pf-card-ch)),
+      1px 1px,
+      calc(100% - 1px) 1px,
+      calc(100% - 1px) calc(100% - 1px),
+      calc(1px + var(--pf-card-ch-in)) calc(100% - 1px),
+      1px calc(100% - 1px - var(--pf-card-ch-in))
+    );
+  }
+  /* The band: the record's head row, exactly one peek tall whatever it
+     holds (the seat depends on it), the kicker over ONE slim line of the
+     project's title — the pair's name on the tab once the field is up and
+     once the next project has covered it. */
+  .pf-stack.pf-stack--split .pf-card--record .pf-card__head {
+    height: 100%;
+    min-height: 0;
+    padding-block: 0;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    overflow: hidden;
+  }
+  .pf-stack.pf-stack--split .pf-card__headtitle {
+    margin: 0;
+    max-width: 100%;
+    font-family: var(--font-pp-neue-montreal);
+    font-weight: var(--weight-lit);
+    font-size: 13px;
+    line-height: 1.15;
+    letter-spacing: var(--track-display);
+    color: var(--pf-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pf-stack.pf-stack--split .pf-card--record .pf-card__record {
+    /* The base channels, back (§7 parked them at 1 / none). */
+    opacity: calc(var(--pc-in-record) * (1 - var(--pc-cov)));
+    translate: 0 calc((1 - var(--pc-in-record)) * 14px);
+    /* The ≤960 rule draws the record's floor because a field sits under it
+       on the same card; on its own sheet the lip is the floor. */
+    border-bottom: 0;
+  }
+  .pf-stack.pf-stack--split .pf-card--field .pf-card__field {
+    height: auto;
+    /* No record above the rail on this sheet, so the frame's own inset is
+       the rail's datum on all four sides. */
+    padding-top: var(--pf-field-px);
+  }
+}

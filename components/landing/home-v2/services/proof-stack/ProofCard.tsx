@@ -96,11 +96,31 @@ import { proofTabLabel, proofTabs } from "./proofTabs";
  */
 export type ProofRailSeat = "field" | "panel" | "flat";
 
+/**
+ * Which HALF of the card this element is, on a phone (ADR-107).
+ *
+ * The desktop card is one housing with the record on the left and the field
+ * on the right. At `PROOF_STACK_SPLIT_MEDIA` the stack renders each project
+ * as TWO sticky panels instead — `"record"` (the head band + the record) and
+ * `"field"` (the rail, the bay and the foot, and NO head of its own) — so
+ * each fits a phone's viewport and the field slides up under the record's
+ * band. Omitted, the card is the whole housing it has always been, which is
+ * what `/arcs/trinny-london/proposal` and every desktop caller pass.
+ *
+ * ⚠ THE SEAM IS THE CARD'S OWN. Everything with state — the rail's index,
+ * the two portal hosts, the field and the consoles it mounts — is on the
+ * field side; the record is stateless copy. So a project split in two mounts
+ * each console exactly once, and the record panel carries no hook it does
+ * not read.
+ */
+export type ProofCardPanel = "record" | "field";
+
 export function ProofCard({
   track,
   client,
   railSeat = "field",
   wire = false,
+  panel,
 }: {
   track: CaseTrack;
   client: ProofStackClient;
@@ -111,6 +131,7 @@ export function ProofCard({
      `/arcs/trinny-london/proposal` host passes nothing and its cards are
      byte-identical. */
   wire?: boolean;
+  panel?: ProofCardPanel;
 }) {
   const titleId = `pf-card-${track.id}`;
   const claims = track.blocks ?? [];
@@ -135,114 +156,161 @@ export function ProofCard({
     />
   ) : null;
 
+  const title = track.arc ? track.arc.title : track.project;
+
+  /* ── THE HEAD BAND ────────────────────────────────────────────────
+     On the whole card: the client's band, `LOOP EARPLUGS · BUILD`, and
+     nothing else since ADR-097 U7.
+     ⚠ ON THE PHONE'S RECORD PANEL IT ALSO CARRIES THE TITLE, SLIM (ADR-107).
+     The band is what stays visible once the field has slid up under it and
+     once the next project has covered the pair — and three of the four
+     phases read `Build`, so on the pile a band of `client · phase` alone
+     could not say WHICH project's field is open beneath it. One ellipsised
+     line of the arc title under the kicker is the pair's name on the tab;
+     the display title in the record below is untouched. */
+  const head = (
+    <header className="pf-card__head">
+      {/* ⚠ THE BAND IS THE BODY'S GRID WHEN THE RAIL IS IN IT. The identity
+          takes the record's column and the rail takes the field's, so the
+          stations can never reach across the split — and they land on the
+          bay's own verticals rather than near them. */}
+      {inHead ? (
+        <div className="pf-card__headid">
+          <p className="pf-card__kicker">
+            {client.name} · {phase}
+          </p>
+        </div>
+      ) : null}
+      {inHead ? (
+        /* ⚠ IT CARRIES `pf-card__tabs` TOO, so the stations are the SHIPPED
+           stations — the outline, the gold fill among them, the knocked-out
+           diamond, the focus ring. `__headrail` adjusts only the SEATING. A
+           head rail that re-described the station would be a second
+           description of one object, and the two would drift. */
+        <div className="pf-card__tabs pf-card__headrail" ref={setRailHost}>
+          {rail}
+        </div>
+      ) : null}
+      {/* The client from the RECORD (ADR-097) — this was the one string
+          literal on the surface, and the tab's colour now keys off the same
+          `CaseDef` the name comes from. */}
+      {inHead ? null : (
+        <p className="pf-card__kicker">
+          {client.name} · {phase}
+        </p>
+      )}
+      {panel === "record" ? <p className="pf-card__headtitle">{title}</p> : null}
+      {/* ⚠ THE ORDINAL IS GONE (U7, owner: "remove the numbers (01 etc)").
+          It had been the head's whole right slot since ADR-094 U4, kept
+          because `01 … 04` differs per card and was what let the PEEK BAND
+          tell the pile apart. That job is now unheld: three of the four
+          phases read `Build`, so the sliver a covered card shows is
+          `LOOP EARPLUGS · BUILD` on cards 1–3 and `· NAVIGATE` on 4.
+          Recorded rather than argued — the owner has read the pile with the
+          numbers on it for a week. `track.arc.step` stays in the RECORD and
+          `trinny-proof-order.test.ts` still pins the sequence against it;
+          it simply letters nowhere on the card now. */}
+    </header>
+  );
+
+  const record = (
+    <div className="pf-card__record">
+      <h3 className="pf-card__title" id={titleId}>
+        {title}
+      </h3>
+      {track.card ? <p className="pf-card__lede">{track.card.lede}</p> : null}
+      {/* ⚠ THE CLAIM CARRIES ITS SENTENCE NOW (owner: the left panel of
+          the homepage "has a bit more information about each specific
+          thing — let's also use that information"). `CaseBlock` has
+          always been `{ glyph, title, desc }` and this surface printed
+          only the title, so the record was there and the card was not
+          reading it. The sentence goes sr-only below the height rung in
+          `trinny-london.css` — the casefile's own 1070h precedent, and
+          the reason is the same arithmetic: four two-line sentences do
+          not fit a 424px record column at 1280×720. */}
+      <ul className="pf-card__claims">
+        {claims.map((block) => (
+          <li className="pf-card__claim" key={block.title}>
+            <span className="pf-card__mark" aria-hidden="true">
+              {block.glyph ? <ProofGlyph name={block.glyph} /> : null}
+            </span>
+            <span className="pf-card__claim-body">
+              <span className="pf-card__claim-title">{block.title}</span>
+              <span className="pf-card__claim-desc">{block.desc}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  /* `data-proof-settled` is the casefile's arrival gate: the console
+     frame and the map's SVG rest at opacity 0 until an ancestor
+     carries it. This card writes no corridor channel, so the rest
+     state is declared (the arcs' host recipe, arcs.css). */
+  const field = (
+    <div className="pf-card__field" data-proof-settled="">
+      {inHead ? null : (
+        <div className="pf-card__tabs" ref={setRailHost}>
+          {rail}
+        </div>
+      )}
+      {/* ⚠ THE BAY IS THE SIZE CONTAINER, NOT THE FIELD. The ads count
+          their rows and the wireframes derive their `cqh` height off the
+          box they are actually drawn in; left on `.pf-card__field` the
+          container would now include the rail's row and every drawing
+          would be sized against a box it does not fill. */}
+      <div
+        className="pf-card__bay"
+        {...(active ? { role: "tabpanel", "aria-label": active.name } : null)}
+      >
+        <ProofField visual={track.visual} idx={idx} railHost={railHost} footHost={footHost} />
+      </div>
+      {/* ⚠ THE FOOT — the panel's optional third frame (ADR-097 U10). A
+          kind PORTALS one block here: the studio's verdict, the tools'
+          walkthrough button. Always rendered, because the portal needs
+          its target at render time; `.pf-card__foot:empty` collapses it,
+          so the films and the map put nothing here and their frame ends
+          on the record's floor itself. A SELF-CLOSING div — a whitespace
+          child would defeat `:empty`. Outside the bay on purpose: the bay
+          is the size container, and a foot inside it would be one more
+          term in every `cqh` chain. */}
+      <div className="pf-card__foot" ref={setFootHost} />
+    </div>
+  );
+
+  /* ── THE PHONE'S TWO PANELS (ADR-107) ─────────────────────────────
+     The record panel is the head band over the record; the field panel is
+     the field alone, its `article` named by the record's own title (an
+     `aria-labelledby` may point anywhere in the document, and the two
+     panels are siblings in the pile). Neither draws the wireframe — the
+     aperture it is drawn for is gated to desktop. */
+  if (panel === "record") {
+    return (
+      <article className="pf-card pf-card--record" aria-labelledby={titleId}>
+        {head}
+        <div className="pf-card__body">{record}</div>
+      </article>
+    );
+  }
+  if (panel === "field") {
+    return (
+      <article className="pf-card pf-card--field" aria-labelledby={titleId}>
+        <div className="pf-card__body">{field}</div>
+      </article>
+    );
+  }
+
   return (
     <article
       className="pf-card"
       aria-labelledby={titleId}
       {...(inHead ? { "data-pf-rail": railSeat } : null)}
     >
-      <header className="pf-card__head">
-        {/* ⚠ THE BAND IS THE BODY'S GRID WHEN THE RAIL IS IN IT. The identity
-            takes the record's column and the rail takes the field's, so the
-            stations can never reach across the split — and they land on the
-            bay's own verticals rather than near them. */}
-        {inHead ? (
-          <div className="pf-card__headid">
-            <p className="pf-card__kicker">
-              {client.name} · {phase}
-            </p>
-          </div>
-        ) : null}
-        {inHead ? (
-          /* ⚠ IT CARRIES `pf-card__tabs` TOO, so the stations are the SHIPPED
-             stations — the outline, the gold fill among them, the knocked-out
-             diamond, the focus ring. `__headrail` adjusts only the SEATING. A
-             head rail that re-described the station would be a second
-             description of one object, and the two would drift. */
-          <div className="pf-card__tabs pf-card__headrail" ref={setRailHost}>
-            {rail}
-          </div>
-        ) : null}
-        {/* The client from the RECORD (ADR-097) — this was the one string
-            literal on the surface, and the tab's colour now keys off the same
-            `CaseDef` the name comes from. */}
-        {inHead ? null : (
-          <p className="pf-card__kicker">
-            {client.name} · {phase}
-          </p>
-        )}
-        {/* ⚠ THE ORDINAL IS GONE (U7, owner: "remove the numbers (01 etc)").
-            It had been the head's whole right slot since ADR-094 U4, kept
-            because `01 … 04` differs per card and was what let the PEEK BAND
-            tell the pile apart. That job is now unheld: three of the four
-            phases read `Build`, so the sliver a covered card shows is
-            `LOOP EARPLUGS · BUILD` on cards 1–3 and `· NAVIGATE` on 4.
-            Recorded rather than argued — the owner has read the pile with the
-            numbers on it for a week. `track.arc.step` stays in the RECORD and
-            `trinny-proof-order.test.ts` still pins the sequence against it;
-            it simply letters nowhere on the card now. */}
-      </header>
+      {head}
       <div className="pf-card__body">
-        <div className="pf-card__record">
-          <h3 className="pf-card__title" id={titleId}>
-            {track.arc ? track.arc.title : track.project}
-          </h3>
-          {track.card ? <p className="pf-card__lede">{track.card.lede}</p> : null}
-          {/* ⚠ THE CLAIM CARRIES ITS SENTENCE NOW (owner: the left panel of
-              the homepage "has a bit more information about each specific
-              thing — let's also use that information"). `CaseBlock` has
-              always been `{ glyph, title, desc }` and this surface printed
-              only the title, so the record was there and the card was not
-              reading it. The sentence goes sr-only below the height rung in
-              `trinny-london.css` — the casefile's own 1070h precedent, and
-              the reason is the same arithmetic: four two-line sentences do
-              not fit a 424px record column at 1280×720. */}
-          <ul className="pf-card__claims">
-            {claims.map((block) => (
-              <li className="pf-card__claim" key={block.title}>
-                <span className="pf-card__mark" aria-hidden="true">
-                  {block.glyph ? <ProofGlyph name={block.glyph} /> : null}
-                </span>
-                <span className="pf-card__claim-body">
-                  <span className="pf-card__claim-title">{block.title}</span>
-                  <span className="pf-card__claim-desc">{block.desc}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        {/* `data-proof-settled` is the casefile's arrival gate: the console
-            frame and the map's SVG rest at opacity 0 until an ancestor
-            carries it. This card writes no corridor channel, so the rest
-            state is declared (the arcs' host recipe, arcs.css). */}
-        <div className="pf-card__field" data-proof-settled="">
-          {inHead ? null : (
-            <div className="pf-card__tabs" ref={setRailHost}>
-              {rail}
-            </div>
-          )}
-          {/* ⚠ THE BAY IS THE SIZE CONTAINER, NOT THE FIELD. The ads count
-              their rows and the wireframes derive their `cqh` height off the
-              box they are actually drawn in; left on `.pf-card__field` the
-              container would now include the rail's row and every drawing
-              would be sized against a box it does not fill. */}
-          <div
-            className="pf-card__bay"
-            {...(active ? { role: "tabpanel", "aria-label": active.name } : null)}
-          >
-            <ProofField visual={track.visual} idx={idx} railHost={railHost} footHost={footHost} />
-          </div>
-          {/* ⚠ THE FOOT — the panel's optional third frame (ADR-097 U10). A
-              kind PORTALS one block here: the studio's verdict, the tools'
-              walkthrough button. Always rendered, because the portal needs
-              its target at render time; `.pf-card__foot:empty` collapses it,
-              so the films and the map put nothing here and their frame ends
-              on the record's floor itself. A SELF-CLOSING div — a whitespace
-              child would defeat `:empty`. Outside the bay on purpose: the bay
-              is the size container, and a foot inside it would be one more
-              term in every `cqh` chain. */}
-          <div className="pf-card__foot" ref={setFootHost} />
-        </div>
+        {record}
+        {field}
       </div>
       {/* ⚠ AFTER THE BODY, AND ABSOLUTE (ADR-104). `.pf-card` is a two-row
           grid (`--pc-peek` + `1fr`) with exactly two children, so a third

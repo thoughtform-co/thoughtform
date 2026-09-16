@@ -128,10 +128,37 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   reads the STUCK position (`seatProofCard`'s own finding) — it reported 125px
   against a 320px tail. The smoke walks the card instead: parked at its pin,
   parked 80px before the tail is spent, off its line 120px after.
-- ⚠ **THE INERT RUNG IS RESTATED IN TWO SHEETS AND MUST STAY IDENTICAL** —
-  `(max-width: 960px), (max-height: 680px), (prefers-reduced-motion: reduce)`.
-  `proof-stack.css` parks the slots; `services.css` puts the box back in flow.
-  Park one without the other and the pile lands on top of the offer accordion.
+- ⚠ **THE INERT RUNG IS RESTATED IN TWO SHEETS, AND THE SEAT RUNG IS A
+  SUPERSET OF THE PARK RUNG** —
+  `(max-width: 960px), (max-height: 680px), (prefers-reduced-motion: reduce)`
+  in both. `proof-stack.css` §7 parks the slots; `services.css` puts the box
+  back in flow. Put the box in flow without parking and nothing breaks (sticky
+  slots in flow is the Trinny mechanic); park without putting the box in flow
+  and the pile lands on top of the offer accordion. ⚠ **SINCE ADR-107 THE
+  PHONE IS NOT PARKED**: `proof-stack.css` §8, scoped to `.pf-stack--split`
+  on `PROOF_STACK_SPLIT_MEDIA` (`(max-width: 960px) and (min-height: 681px)
+and (prefers-reduced-motion: no-preference)` — the park rung's first term
+  taken back, the other two kept), re-sticks the slots INSIDE the seat rung's
+  ≤960. The seat rung stays as it is; `proof-stack-split-gate.test.ts` pins
+  the sheet's literal to the constant.
+- ⚠ **ON A PHONE EVERY PROJECT IS TWO SHEETS (ADR-107).** `ProofStack`'s
+  `split` renders each track as a RECORD slot (`data-pc-index 2k`, `--i: k`,
+  the head band over the record) and a FIELD slot (`2k+1`, **`--i: k+1`**, the
+  rail · bay · foot with NO head), so the field seats under its record's band
+  — the head row IS `--pc-peek` — and the next record pins on the field's own
+  line. `--pc-n` is `tracks + 1`. `ServicesStage` reads the media and REMOUNTS
+  the stack on it (`key`), because the hook collects its slots once. The
+  record does not recede for its own field (`--pc-dp` drops the cover term on
+  `.pf-slot--record`); a later pair counts two enters, so recede/dim are
+  halved; the field sheet is cut BL only; no blur, `--pf-glass-a` .74; the
+  record's band carries ONE ellipsised line of the arc title
+  (`.pf-card__headtitle`) because three of four phases read `Build`. Omitted
+  (Trinny, desktop), `ProofCard` and `ProofStack` are byte-identical.
+  ⚠ `data-pc-index` runs **0–7 on a phone**; a measurement that assumes
+  `[data-pc-index="1"]` is the second PROJECT is reading the first project's
+  FIELD. `tests/visual/proof-stack-mobile-smoke.spec.ts` (the two Chromium
+  phone projects) is the guard; `capture-proof-stack.mjs --mobile --pairs
+--headless` is the look.
 - **`tracks` is a PROP.** Content by reference, ORDER by route (`proofOrder.ts`,
   shared today). ⚠ The pile's order and each card's `arc.step` can disagree with
   nothing failing — pinned arithmetically by `trinny-proof-order.test.ts` and on
@@ -153,10 +180,12 @@ casefile's place (ADR-096). **One module, one sheet, two hosts.**
   ADR-097 that is TRUE**: the sheet was in neither `type-material-tokens`' PINS
   nor `theme-css-sweep`'s SHEETS for a week while its header and this rule both
   said it was. Both carry it at zero now.
-- ⚠ **FOUR CONSOLES ARE MOUNTED AT ONCE.** `document.querySelector(".fl-con__console")`
-  answers with the SHEETS card whatever is on screen, and `.fl-pda` / `.fl-wire`
-  are unique only by luck. Scope every measurement to `[data-pc-index="N"]` —
-  this is the one thing the single-panel casefile never had to say.
+- ⚠ **FOUR CONSOLES ARE MOUNTED AT ONCE — IN EIGHT SLOTS ON A PHONE.**
+  `document.querySelector(".fl-con__console")` answers with the SHEETS card
+  whatever is on screen, and `.fl-pda` / `.fl-wire` are unique only by luck.
+  Scope every measurement to `[data-pc-index="N"]` — this is the one thing the
+  single-panel casefile never had to say. On the split pile a console lives in
+  the FIELD slot (`2k+1`); the record slot mounts none.
 - ⚠ **`.pf-card` IS A CONTAINING BLOCK FOR `fixed` DESCENDANTS** (it carries a
   `clip-path`). Survivable only because `MediaLightbox` portals to
   `document.body`; a dialog written inline here is trapped in the card.

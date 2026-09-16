@@ -15,7 +15,7 @@
  * Usage:
  *   node scripts/capture-proof-stack.mjs --vp 1440x900 --theme dark
  */
-import { chromium } from "@playwright/test";
+import { chromium, devices } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
 const args = process.argv.slice(2);
@@ -43,11 +43,25 @@ const GLITCH = (argOf("--glitch", "") || "")
   .split(",")
   .map(Number)
   .filter((n) => Number.isFinite(n));
+/* `--mobile` shoots the PHONE's pile (ADR-107): an emulated iPhone context
+   (touch, DPR 3, the mobile UA) at `--vp`, on Chromium — the WebKit device
+   cannot reach the dev server (mobile-sections.md). `--pairs` walks pair 0
+   through its four states: record pinned, field half up, field pinned,
+   record 1 arriving — and shoots each. `--headless` runs new-headless
+   Chromium on SwiftShader; `PW_CHROMIUM` hands over a pinned binary. */
+const MOBILE = args.includes("--mobile");
+const PAIRS = args.includes("--pairs");
+const HEADLESS = args.includes("--headless");
 
 await mkdir(OUT, { recursive: true });
 
-const browser = await chromium.launch({ headless: false });
+const browser = await chromium.launch({
+  headless: HEADLESS,
+  executablePath: process.env.PW_CHROMIUM || undefined,
+  args: HEADLESS ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] : [],
+});
 const ctx = await browser.newContext({
+  ...(MOBILE ? { ...devices["iPhone 14"], defaultBrowserType: "chromium" } : {}),
   viewport: { width: VW, height: VH },
   reducedMotion: "no-preference",
   colorScheme: THEME === "light" ? "light" : "dark",
@@ -248,6 +262,117 @@ try {
      lands `--pc-enter` ≈ smoothstep(.4) = .35 — inside the plate's window
      and before the record's. Re-solved per pass, like the seats above,
      because the corridor grows the document under the first scroll. */
+  /* ── `--pairs`: the phone's pair 0, in its four states (ADR-107) ─────
+     Each state is a seat on one of the first three slots plus an offset,
+     converged on the hook's own `data-pc-state` after a rewind above the
+     pile (a stuck slot's `offsetTop` is its stuck position). What is printed
+     is the pair law: field 0's top against record 0's top + band, the record
+     body's visibility once covered, and record 1 landing on field 0's line. */
+  if (PAIRS) {
+    const seat = async (i, extra) => {
+      for (let pass = 0; pass < 6; pass += 1) {
+        /* ⚠ `<html>` scrolls smoothly, so both scrolls below are ANIMATIONS:
+           wait for scrollY to stop moving (the smokes' `settleScroll`), or the
+           rewind is short, the slot is still stuck, and `offsetTop` reports
+           the stuck position. */
+        const settle = () =>
+          page.evaluate(async () => {
+            const t0 = performance.now();
+            let last = window.scrollY;
+            let still = 0;
+            await new Promise((resolve) => {
+              const tick = () => {
+                const y = window.scrollY;
+                still = Math.abs(y - last) < 0.5 ? still + 1 : 0;
+                last = y;
+                if (still >= 3 || performance.now() - t0 > 1600) resolve();
+                else requestAnimationFrame(tick);
+              };
+              requestAnimationFrame(tick);
+            });
+          });
+        await page.evaluate(() => {
+          const rw = document.querySelector(".pf-stack__runway");
+          window.scrollTo(
+            0,
+            Math.round(rw.getBoundingClientRect().top + window.scrollY - window.innerHeight)
+          );
+        });
+        await settle();
+        const y = await page.evaluate(
+          ({ idx, more }) => {
+            const rw = document.querySelector(".pf-stack__runway");
+            const slot = document.querySelector(`.pf-slot[data-pc-index="${idx}"]`);
+            const pin = Number.parseFloat(getComputedStyle(slot).top) || 0;
+            return Math.round(
+              rw.getBoundingClientRect().top + window.scrollY + slot.offsetTop - pin + more
+            );
+          },
+          { idx: i, more: extra }
+        );
+        await page.evaluate((t) => window.scrollTo(0, t), y);
+        await settle();
+        await page.waitForTimeout(pass === 0 ? 400 : 150);
+        const st = await page.evaluate(
+          (idx) => document.querySelector(`.pf-slot[data-pc-index="${idx}"]`)?.dataset.pcState,
+          i
+        );
+        if (st === "pinned" || st === "covered") return st;
+      }
+      return null;
+    };
+    const read = () =>
+      page.evaluate(() => {
+        const q = (sel) => {
+          const el = document.querySelector(sel);
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return {
+            top: +r.top.toFixed(1),
+            bottom: +r.bottom.toFixed(1),
+            h: +r.height.toFixed(1),
+            vis: getComputedStyle(el).visibility,
+          };
+        };
+        return {
+          states: [...document.querySelectorAll(".pf-slot")]
+            .map((e) => e.dataset.pcState)
+            .join(","),
+          r0: q('[data-pc-index="0"]'),
+          r0head: q('[data-pc-index="0"] .pf-card__head'),
+          r0body: q('[data-pc-index="0"] .pf-card__body'),
+          f0: q('[data-pc-index="1"]'),
+          f0bay: q('[data-pc-index="1"] .pf-card__bay'),
+          r1: q('[data-pc-index="2"]'),
+          records: [0, 2, 4, 6].map((i) => {
+            const el = document.querySelector(`[data-pc-index="${i}"] .pf-card__record`);
+            return el ? `${el.scrollHeight}/${el.clientHeight}` : "—";
+          }),
+        };
+      });
+    const STATES = [
+      ["r0-pinned", 0, 40],
+      ["f0-half", 1, -300],
+      ["f0-pinned", 1, 40],
+      ["r1-arriving", 2, -260],
+      ["r1-pinned", 2, 40],
+    ];
+    console.log(`\n── pairs @ ${tag} ───────────────────────────────────────`);
+    for (const [name, i, extra] of STATES) {
+      const st = await seat(i, extra);
+      const r = await read();
+      console.log(`  ${name.padEnd(12)} seat=${st}  states=${r.states}`);
+      console.log(
+        `    r0 top ${r.r0?.top} band h ${r.r0head?.h} body ${r.r0body?.vis}  ` +
+          `f0 top ${r.f0?.top} (band+${r.f0 && r.r0 ? (r.f0.top - r.r0.top).toFixed(1) : "?"}) ` +
+          `bay h ${r.f0bay?.h}  r1 top ${r.r1?.top}`
+      );
+      await page.screenshot({ path: `${OUT}/proof-pair-${tag}-${name}.png` });
+    }
+    const r = await read();
+    console.log(`  record scroll/client: ${r.records.join("  ")}`);
+  }
+
   if (MID && geo.slots[1]) {
     const s = geo.slots[1];
     let mid = null;

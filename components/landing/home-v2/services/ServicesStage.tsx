@@ -20,6 +20,7 @@ import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { startRingScrollTween } from "@/lib/services-ring/ringScrollTween";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import {
+  PROOF_STACK_SPLIT_MEDIA,
   SERVICES_CARD_DRAWER,
   SERVICES_CARD_RING,
   SERVICES_PROOF_CASEFILE,
@@ -62,6 +63,10 @@ export function ServicesStage() {
   const useHologramCanvas = useMediaQuery(
     "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
   );
+  // ADR-107: the phone rung on which the proof stack splits each project into
+  // a record panel and a field panel. One string, two readers (this and the
+  // sheet's split block); the unit test pins them equal.
+  const proofSplit = useMediaQuery(PROOF_STACK_SPLIT_MEDIA);
 
   // Bridge the active service to the unified corridor instrument (the armillary
   // lives in the corridor canvas) so the active orbit ring still highlights in
@@ -229,8 +234,18 @@ export function ServicesStage() {
            (ADR-097 U11, owner: a glitch where the first card appears). It is a
            prop rather than a rule in the sheet because `/trinny-london` mounts
            the same component and must stay byte-identical — omitted, nothing is
-           observed and no attribute is written. */
-        <ProofStack tracks={proofStackTracks()} client={proofStackClient()} arrival="glitch" />
+           observed and no attribute is written.
+           ⚠ `split` + `key` (ADR-107): on the phone rung every project is two
+           sticky panels, and the pile REMOUNTS when the query flips because the
+           stack hook collects its slots once. The server snapshot is `false`,
+           so SSR is the whole-card tree everywhere. */
+        <ProofStack
+          key={proofSplit ? "split" : "whole"}
+          tracks={proofStackTracks()}
+          client={proofStackClient()}
+          arrival="glitch"
+          split={proofSplit}
+        />
       )}
 
       <div

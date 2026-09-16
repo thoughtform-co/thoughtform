@@ -199,12 +199,27 @@ And two on driving the page:
   not a length; the spec spends them as padding on a throwaway element so
   computed style reports pixels.
 
+## 6 · A sticky pile in flow is not a fixed painter (ADR-107)
+
+`#services` opens on the proof stack, and on the phone rung
+(`PROOF_STACK_SPLIT_MEDIA`) its eight panels are `position: sticky` in normal
+flow. Sticky is bounded by its containing block, so it owes no kill condition
+(law 2 is about `fixed`); it reserves the chrome bands through the station's
+floor like any flowing content (law 1); and it is under law 4's
+`content-visibility` opt-out with everything else — a pile that skipped
+rendering would reflow under the reader's thumb exactly as #contact did.
+Its guard is its own: `proof-stack-mobile-smoke.spec.ts`.
+
 ## Verifying
 
 ```bash
 npx playwright test tests/visual/mobile-section-seams.spec.ts \
   --project=iphone-14 --project=iphone-14-pro-max
 npx playwright test tests/visual/about-voidwalker-handoff-boundaries.spec.ts
+# The Chromium-backed phone projects (ADR-107) CAN reach the dev server:
+npx playwright test tests/visual/mobile-section-seams.spec.ts \
+  tests/visual/proof-stack-mobile-smoke.spec.ts \
+  --project=iphone-14-chromium --project=iphone-14-pro-max-chromium
 ```
 
 ⚠ **THE TWO PHONE PROJECTS CANNOT RUN AGAINST THE LOCAL DEV SERVER TODAY, AND
