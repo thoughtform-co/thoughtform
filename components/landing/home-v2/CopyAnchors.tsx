@@ -117,15 +117,30 @@ export function CopyAnchors({ text }: CopyAnchorsProps) {
         // chevron cue is gone with it (nothing to cue toward). The whole
         // block reads as one instrument — copy above, mark + diagrams
         // below — and drifts off together as the corridor fly begins.
-        <div
-          className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
-          data-world-anchor="thoughtform.leftCopy"
-          data-anchor-origin="center"
-        >
-          <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
-          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
-          <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
-        </div>
+        //
+        // 2026-09-16 (ADR-018 mobile addendum, owner): the TITLE stays
+        // above the mark and the two PARAGRAPHS go BELOW it, as their own
+        // world anchor (`thoughtform.mobileBody`, riding the mark's rise)
+        // — the three-element block above the compass ran its last line
+        // into the NAVIGATE label. Two siblings, one copy set: the strings
+        // are the same `tf.*` the desktop block prints.
+        <>
+          <div
+            className="home-v2-copy-block home-v2-copy-block--thoughtform-left"
+            data-world-anchor="thoughtform.leftCopy"
+            data-anchor-origin="center"
+          >
+            <h2 className="home-v2-copy-title" dangerouslySetInnerHTML={{ __html: tf.titleHtml }} />
+          </div>
+          <div
+            className="home-v2-copy-block home-v2-copy-block--thoughtform-body"
+            data-world-anchor="thoughtform.mobileBody"
+            data-anchor-origin="top-center"
+          >
+            <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body1Html }} />
+            <p className="home-v2-copy-body" dangerouslySetInnerHTML={{ __html: tf.body2Html }} />
+          </div>
+        </>
       ) : (
         <div
           className="home-v2-copy-block home-v2-copy-block--thoughtform-left"

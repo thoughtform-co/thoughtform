@@ -1035,7 +1035,11 @@ export function getThoughtformMobilePhase(rawProgress: number): ThoughtformMobil
  *  `getBrandmarkWorldPosition`, and the `ThoughtformCompassGate` group Y.
  *  Keyed off PAINT progress (the clock both consumers already use).
  *  Desktop returns 0 → provably unchanged. */
-export const MOBILE_THOUGHTFORM_RISE_OFFSET = 0.85;
+/* 0.85 → 0.45 (2026-09-16, ADR-018 mobile addendum): the two paragraphs
+ * moved BELOW the mark (`thoughtform.mobileBody`) and ride this same lift,
+ * so the rest position has to keep the body's last line above the bottom
+ * chrome band (56px) at 390×844 — at 0.85 the body rested below the fold. */
+export const MOBILE_THOUGHTFORM_RISE_OFFSET = 0.45;
 export function getThoughtformMobileRiseOffset(paintProgress: number): number {
   if (!isMobileComposition()) return 0;
   const hold = CORRIDOR_TIMELINE.brandmark.thoughtformHold;
@@ -2031,16 +2035,32 @@ export function getNavigateApparentSizeBoost(paintProgress: number): number {
  *  positions. */
 const MOBILE_PHASE_SCALE = 0.92;
 
-/** World-Y position of the mobile Thoughtform copy anchor
- *  (`thoughtform.leftCopy`). Lifts the whole copy block into the upper
- *  third of the portrait frame so the brandmark + compass diagrams
- *  have the middle/lower two-thirds to themselves. Chosen empirically
- *  for the reference iPhone 14 portrait (390×844 with the corridor's
- *  70° portrait FOV at parkDistance 6.2): +1.35 world units ≈ upper
- *  quarter of the visible frame. Desktop keeps the two-column layout
- *  (world X=-1.8, Y=0), so this constant is read only in the mobile
- *  branch of `thoughtform.leftCopy`'s position resolver. */
-const MOBILE_COPY_ANCHOR_Y = 1.35;
+/** World-Y position of the mobile Thoughtform TITLE anchor
+ *  (`thoughtform.leftCopy`). Lifts the title into the upper part of the
+ *  portrait frame so the brandmark + compass diagrams have the middle to
+ *  themselves. Chosen empirically for the reference iPhone 14 portrait
+ *  (390×844 with the corridor's 70° portrait FOV at the station's park
+ *  distance — `GATE_PARK_DISTANCE` 4.5, the Thoughtform station declares
+ *  none of its own — ≈134 css px per world unit). Desktop keeps the
+ *  two-column layout (world X=-1.8, Y=0), so this constant is read only
+ *  in the mobile branch of `thoughtform.leftCopy`'s position resolver.
+ *
+ *  1.35 → 1.15 (2026-09-16, ADR-018 mobile addendum): the block is the
+ *  `<h2>` ALONE now (~60px tall). At 1.35 a title-only block sat stranded
+ *  in the top fifth with a hole under it; the paragraphs it used to carry
+ *  went below the mark (`MOBILE_COPY_BODY_ANCHOR_Y`). */
+const MOBILE_COPY_ANCHOR_Y = 1.15;
+
+/** World-Y of the mobile Thoughtform BODY anchor (`thoughtform.mobileBody`,
+ *  the two paragraphs) — BELOW the compass (owner, 2026-09-16: "the
+ *  paragraph text needs to be below the brand mark, only on mobile").
+ *  The compass's outer ring reaches −0.75 and ENCODE's label hangs
+ *  `top-right` from (−0.30, −0.60) to ≈ −0.77, so −1.05 leaves ~0.28 world
+ *  units (~38px) of air under the lowest label. The resolver ADDS the
+ *  mobile rise offset, so the body rides up with the mark and the gap is
+ *  constant through the dwell — a body anchored to the rest position
+ *  alone would be left behind by 0.45 units as the mark rises. */
+const MOBILE_COPY_BODY_ANCHOR_Y = -1.05;
 
 /** Position resolver for a Thoughtform phase label at gate-relative
  *  offset `[offsetX, offsetY]`. Folds in the centering pan (desktop)
@@ -2056,12 +2076,18 @@ const MOBILE_COPY_ANCHOR_Y = 1.35;
  *  effectively no-ops. */
 function thoughtformPhasePosition(offsetX: number, offsetY: number): WorldAnchorPosition {
   return (transform: DepthGatewayTransform) => {
-    void transform;
     const mobile = isMobileComposition();
     const s = mobile ? MOBILE_PHASE_SCALE : 1;
+    // ⚠ THE LABELS RIDE THE RISE (2026-09-16). The mark and the compass
+    // rest 0.45 below centre and rise to it by `thoughtformHold`; until
+    // this pass the three labels did NOT, so at rest they floated 0.85
+    // units above the ring they name — invisible while nothing sat under
+    // them, a collision once the body copy moved below the mark. Reads
+    // PAINT progress, the compass gate's own clock. Desktop returns 0.
+    const rise = getThoughtformMobileRiseOffset(transform.paintProgress);
     return [
       thoughtformGateX() + offsetX * s + getSmoothedThoughtformOffsetX(),
-      STATION_THOUGHTFORM.position[1] + offsetY * s,
+      STATION_THOUGHTFORM.position[1] + offsetY * s + rise,
       STATION_THOUGHTFORM.position[2] + 0.05,
     ];
   };
@@ -2627,6 +2653,25 @@ export const COPY_ANCHORS: readonly WorldAnchor[] = [
     // unit. `copyFactor` is 1 through the composed layout (see
     // `getThoughtformMobilePhase`) and only drops in the exit window.
     // No-op on desktop.
+    onPaint: gateThoughtformCopy,
+  },
+  // Mobile-only (2026-09-16, ADR-018 mobile addendum): the two paragraphs
+  // as their OWN block BELOW the compass. The title stays on
+  // `thoughtform.leftCopy` above the mark; this anchor has no DOM node on
+  // desktop (the tracker skips an anchor whose selector finds nothing),
+  // and its resolver is only ever read through the mobile branch.
+  // Owner: "the paragraph text needs to be below the brand mark, only on
+  // mobile" — the block used to sit ABOVE at +1.35 and its third line ran
+  // into the NAVIGATE label.
+  {
+    id: "thoughtform.mobileBody",
+    position: (transform) => [
+      thoughtformGateX() + getSmoothedThoughtformOffsetX(),
+      MOBILE_COPY_BODY_ANCHOR_Y + getThoughtformMobileRiseOffset(transform.paintProgress),
+      STATION_THOUGHTFORM.position[2] + 0.1,
+    ],
+    visibilityBeats: ["thoughtform", "pass-01a", "navigate", "pass-01b"],
+    fadeFrac: 0,
     onPaint: gateThoughtformCopy,
   },
   // Three phase labels — NAVIGATE/ENCODE/BUILD — pinned to the v7

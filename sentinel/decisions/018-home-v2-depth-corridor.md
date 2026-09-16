@@ -4435,6 +4435,56 @@ assertion is the PROPORTION, not the pixels — a pixel bound passes at one
 viewport and means nothing at the other, which is exactly how this survived
 every existing gate.
 
+## 2026-09-16 — mobile: the paragraphs go BELOW the mark
+
+Owner, on the phone build ahead of launch: _"in the second section, I think the
+paragraph text needs to be below the brand mark, only on mobile."_ The
+2026-07-15 composed portrait had put title + both paragraphs in ONE block at
+world Y +1.35 over a compass at gate centre, and the block's third line ran
+into the NAVIGATE label (measured on the owner's own still).
+
+**The block is two anchors now.** The `<h2>` stays on `thoughtform.leftCopy`
+(`MOBILE_COPY_ANCHOR_Y` 1.35 → **1.15** — a title-only block is ~60px and 1.35
+stranded it in the top fifth). The two `<p>`s are their own block on a new
+anchor, **`thoughtform.mobileBody`**, at `MOBILE_COPY_BODY_ANCHOR_Y = −1.05`
+(the compass's outer ring reaches −0.75; ENCODE hangs `top-right` to ≈ −0.77;
++0.28 of air). ⚠ **The body ADDS the mobile rise offset** — the mark and the
+compass rest 0.45 below centre and rise to it by `thoughtformHold`, and a body
+anchored to the rest position alone is left behind by the whole lift.
+
+**Two things moved with it, both mobile-only by construction:**
+
+- **The phase labels ride the rise too** (`thoughtformPhasePosition` adds
+  `getThoughtformMobileRiseOffset(paintProgress)`). They never had — at rest
+  NAVIGATE / ENCODE / BUILD floated 0.85 units above the ring they name, which
+  nothing sat under until the body did. Desktop returns 0, so the desktop
+  labels are byte-identical (`landing-page.spec.ts -g HUD` is the proof).
+- **`MOBILE_THOUGHTFORM_RISE_OFFSET` 0.85 → 0.45.** The copy above no longer
+  needs the room, and at 0.85 the body rested below the fold: the bottom chrome
+  band is 56px (`.claude/rules/mobile-sections.md` §1), and the body's last
+  line has to clear it AT REST, not only at the hold.
+
+Body type one rung down (`clamp(17px, 4.6vw, 21px)`, was `clamp(19px, 5vw,
+24px)`) so two paragraphs fit the ~200px between the lowest label and the
+band; the title's trailing margin is 0 (a centred block's trailing margin
+shifts its visible content off the anchor for nothing).
+
+⚠ **The `MOBILE_COPY_ANCHOR_Y` comment claimed a park distance of 6.2.** The
+Thoughtform station declares none and inherits `GATE_PARK_DISTANCE` **4.5**
+(`corridorMap.ts`); at 390×844 under the 70° portrait FOV that is ≈134 css px
+per world unit, which is the arithmetic the three constants above were set
+against. Corrected in place.
+
+**Measured** (`scripts/probe-thesis-mobile.mjs --headless`, a 35-frame sweep
+of the dwell, worst frame per pair): 390×844 — title 257–314, body 678–780 at
+rest rising to 635–737, body↔ENCODE 46.7px, body bottom 779.5 against the
+788 band; 430×932 — body↔ENCODE 53.6px, body bottom 858.4 against 876. Zero
+overlaps on either shape. ⚠ The probe runs new-headless Chromium on
+SwiftShader (`--use-angle=swiftshader`), which `corridorCapable()` admits
+under `navigator.webdriver` — the first time this corridor has been measured
+without a display; a frame the tracker has not placed is skipped and a shape
+with no measured frame FAILS, so a dead canvas cannot pass it.
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

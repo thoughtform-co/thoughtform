@@ -3273,7 +3273,14 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
      The type scale is harmonised — title and body sit close in size with
      a shared 1.22 line-height — so the block reads as one flowing
      statement rather than a headline over small body text. */
-  .home-v2-copy-block--thoughtform-left {
+  /* 2026-09-16 (ADR-018 mobile addendum): TWO blocks now — the title
+     alone above the mark on `thoughtform.leftCopy`, the two paragraphs
+     below it on `thoughtform.mobileBody` (`--thoughtform-body`). Same
+     width, same centring; the body block's type is one rung down so two
+     paragraphs fit the ~200px between the compass and the bottom chrome
+     band at 390×844. */
+  .home-v2-copy-block--thoughtform-left,
+  .home-v2-copy-block--thoughtform-body {
     width: min(88vw, 430px);
     text-align: center;
   }
@@ -3281,7 +3288,8 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
     margin-bottom: 16px;
   }
   .home-v2-copy-block--thoughtform-left .home-v2-copy-title,
-  .home-v2-copy-block--thoughtform-left .home-v2-copy-body {
+  .home-v2-copy-block--thoughtform-left .home-v2-copy-body,
+  .home-v2-copy-block--thoughtform-body .home-v2-copy-body {
     max-width: none;
     margin-left: auto;
     margin-right: auto;
@@ -3292,13 +3300,20 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
        the beat title and the epilogue head at every phone width, three
        clamps saying the same thing. */
     font-size: var(--m-display-sub);
-    margin-bottom: 20px;
+    /* The title is the block's ONLY child on mobile now (2026-09-16), and
+       the block is centred on its anchor — a trailing 20px margin would
+       shift the visible title 10px up off the anchor for nothing. */
+    margin-bottom: 0;
   }
-  .home-v2-copy-block--thoughtform-left .home-v2-copy-body {
-    font-size: clamp(19px, 5vw, 24px);
-    margin-bottom: 18px;
+  /* The body block (below the mark). One rung under the old size
+     (clamp(19px, 5vw, 24px)): two paragraphs at ~21px/1.22 on 343px run
+     ~8 lines ≈ 200px, which is the room between the compass's lowest
+     label and the bottom chrome band at 390×844. */
+  .home-v2-copy-block--thoughtform-body .home-v2-copy-body {
+    font-size: clamp(17px, 4.6vw, 21px);
+    margin-bottom: 14px;
   }
-  .home-v2-copy-block--thoughtform-left .home-v2-copy-body:last-of-type {
+  .home-v2-copy-block--thoughtform-body .home-v2-copy-body:last-of-type {
     margin-bottom: 0;
   }
   .home-v2-copy-block--thoughtform-left .home-v2-copy-cta-row {
