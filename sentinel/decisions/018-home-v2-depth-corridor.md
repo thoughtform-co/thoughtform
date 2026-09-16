@@ -4485,6 +4485,26 @@ under `navigator.webdriver` — the first time this corridor has been measured
 without a display; a frame the tracker has not placed is skipped and a shape
 with no measured frame FAILS, so a dead canvas cannot pass it.
 
+### Same day — the caption's inner padding
+
+Owner: _"inside the arc, the text at the bottom seems to have some padding on
+the left and right of the text, which makes the text a bit too boxed in."_
+The phone caption (`.home-v2-readout__caption`, the ≤760 reticle
+`StationTitle` renders — `.home-v2-reticle` never mounts on a phone) goes
+`padding: 18px 22px 16px` → **`16px 12px 14px`**. ⚠ **The padding was never
+the binding measure**: `.home-v2-readout__support` carries `max-width: 36ch`
+for the bare desktop paragraph, ≈244px at this rung's 11.3px PT Mono against
+the 253px the 22px padding left inside the box — so the padding could have
+gone to 0 and the text would not have moved. Inside the caption it is
+`max-width: none`; the box is the measure. The width rule and `--copy-gutter`
+are untouched — the frame-to-screen gutter was never the complaint.
+
+Measured (`probe-corridor-caption.mjs --headless`, which now reads the
+paragraph's INK against the frame per gate): ink→frame 16.0–16.5px at 390×844
+and 13.6–26.8px at 430×932 (12 × the anchor's 1.1–1.15 scale, plus the
+centred wrap's slack on the widest line), from ~25px before; every gutter
+still 24.0–32.3px.
+
 ## References
 
 - Star Atlas reference: [experience.staratlas.com](https://experience.staratlas.com/) — depth corridor pattern (camera through persistent world).

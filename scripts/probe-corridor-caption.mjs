@@ -62,11 +62,21 @@
 // dead — which also leaves every world-anchored box untransformed, i.e.
 // passing.
 //
-//   node scripts/probe-corridor-caption.mjs [settleMs]
+//   node scripts/probe-corridor-caption.mjs [--headless] [settleMs]
+//
+// `--headless` runs new-headless Chromium on SwiftShader (see
+// probe-thesis-mobile.mjs — `corridorCapable()` admits it under
+// `navigator.webdriver`); `PW_CHROMIUM=/path/to/chrome` hands over a pinned
+// binary on a harness whose Playwright expects a build it does not have.
 
 import { chromium } from "playwright";
 
-const SETTLE_MS = Number(process.argv[2] ?? 260);
+const ARGS = process.argv.slice(2);
+const HEADLESS = ARGS.includes("--headless");
+const SETTLE_MS = Number(ARGS.find((a) => /^\d+$/.test(a)) ?? 260);
+/** The caption's side padding (home-v2.css, ≤760) — the text-to-frame air
+ *  this probe reads back as INK, since 2026-09-16 (ADR-018). */
+const CAPTION_PAD_X = 12;
 const COPY_GUTTER = 24; // must equal --copy-gutter (home-v2.css, ≤760)
 const TOL = 1;
 /** A gate below this alpha is not on screen, so its box is not a reading. */
@@ -133,8 +143,28 @@ async function readGate(page, base) {
       lines = tops.size;
       text = title.textContent?.trim() ?? "";
     }
+    // ⚠ THE TEXT-TO-FRAME AIR IS READ AS INK, NOT AS THE PARAGRAPH'S BOX.
+    // The paragraph is a block as wide as the caption's content box; what
+    // the reader sees is where its glyphs stop. The widest line's Range
+    // rect is that edge, and the caption's own rect is the frame.
+    let ink = null;
+    if (caption) {
+      const p = caption.querySelector(".home-v2-readout__support");
+      if (p) {
+        const rg = document.createRange();
+        rg.selectNodeContents(p);
+        const rects = Array.from(rg.getClientRects()).filter((r) => r.width > 1);
+        if (rects.length) {
+          const left = Math.min(...rects.map((r) => r.left));
+          const right = Math.max(...rects.map((r) => r.right));
+          const cb = caption.getBoundingClientRect();
+          ink = { left: left - cb.left, right: cb.right - right, runs: rects.length };
+        }
+      }
+    }
     const opacityOf = (el) => (el ? Number(getComputedStyle(el).opacity) : null);
     return {
+      ink,
       caption: box(caption),
       cluster: box(cluster),
       titleLines: lines,
@@ -145,7 +175,11 @@ async function readGate(page, base) {
   }, base);
 }
 
-const browser = await chromium.launch({ headless: false });
+const browser = await chromium.launch({
+  headless: HEADLESS,
+  executablePath: process.env.PW_CHROMIUM || undefined,
+  args: HEADLESS ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] : [],
+});
 let failures = 0;
 
 for (const [name, width, height] of SHAPES) {
@@ -187,7 +221,16 @@ for (const [name, width, height] of SHAPES) {
         const id = `${base}:${key}`;
         const prev = worst.get(id);
         if (!prev || box.width > prev.box.width) {
-          worst.set(id, { box, alpha, y, frac, phase, lines: r.titleLines, text: r.titleText });
+          worst.set(id, {
+            box,
+            alpha,
+            y,
+            frac,
+            phase,
+            lines: r.titleLines,
+            text: r.titleText,
+            ink: r.ink,
+          });
         }
       }
     }
@@ -223,6 +266,15 @@ for (const [name, width, height] of SHAPES) {
       );
       if (key === "cluster") {
         console.log(`              title lines=${s.lines}  "${s.text}"`);
+      }
+      if (key === "caption" && s.ink) {
+        // The box is SCALED by the anchor's perspectiveScale, so the authored
+        // 12px of padding reads as 12 × scale on screen; the wrap is centred,
+        // so the larger side is the widest line's slack, not padding.
+        console.log(
+          `              ink→frame  left=${s.ink.left.toFixed(1)}  right=${s.ink.right.toFixed(1)}  ` +
+            `runs=${s.ink.runs}  (authored pad ${CAPTION_PAD_X}px × the anchor's scale)`
+        );
       }
     }
   }

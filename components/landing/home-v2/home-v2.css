@@ -3435,11 +3435,22 @@ html[data-corridor-exit="true"] .home-v2-mobile-signal {
        second measure to hide behind. */
     width: min(calc((100vw - 2 * var(--copy-gutter)) / var(--copy-pscale)), 360px);
     margin: 0 auto;
-    padding: 18px 22px 16px;
+    /* 22 → 12 of side padding (owner, 2026-09-16: the text "seems to have
+       some padding on the left and right … which makes the text a bit too
+       boxed in"). The frame is the box's own edge, so this padding IS the
+       text-to-frame air; the frame-to-screen gutter is the width rule
+       above and does not move. */
+    padding: 16px 12px 14px;
     text-align: center;
   }
   .home-v2-readout__caption .home-v2-readout__support {
     margin: 0 auto;
+    /* ⚠ THE BINDING MEASURE WAS NEVER THE PADDING. `.home-v2-readout__support`
+       carries `max-width: 36ch` for the bare desktop paragraph, and at this
+       rung's 11.3px PT Mono that is ~244px — NARROWER than the 253px the
+       22px padding left inside the box, so shrinking the padding alone
+       changed nothing visible. Inside the caption the box is the measure. */
+    max-width: none;
   }
   .home-v2-readout__caption-frame {
     position: absolute;
