@@ -59,11 +59,6 @@ export interface ServicesRingProgress {
    *  OPTIONAL: absent on desktop and in every lab, so the ring seats exactly
    *  as it did — the mark's centre, the width law alone. */
   seat?: { cy: number; h: number; w: number };
-  /** THE SPEC SHEET's TOP EDGE (ADR-109), viewport css px, while a sheet is
-   *  open on the phone — the ring lifts its front card clear of it.
-   *  Written by `ServicesSpecSheet` alone (set on open, cleared on close),
-   *  read by the ring's phone fit block. OPTIONAL for the same reason. */
-  sheetTop?: number;
 }
 
 export const servicesRingProgressRef: { current: ServicesRingProgress } = {

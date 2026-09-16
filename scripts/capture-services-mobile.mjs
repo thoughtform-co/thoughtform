@@ -1,7 +1,7 @@
 /**
  * capture-services-mobile — the services beat on a PHONE (ADR-108 / ADR-109):
  * the band's composition (h1 above the ring, the paragraph below), the ring
- * at three beats, and the spec SHEET open over the front card. Stills for the
+ * at three beats, and the front card TURNED OVER (ADR-110). Stills for the
  * owner's read, plus the numbers the composition is solved against.
  *
  *   PW_CHROMIUM=/opt/pw-browsers/chromium node scripts/capture-services-mobile.mjs --theme dark
@@ -123,7 +123,9 @@ const read = () =>
       seat: rect(".svc-ring-seat"),
       intro: rect(".svc-ring-band .services-masthead__intro"),
       front: rect(".svc-ring-hits__hit--front"),
-      sheet: rect(".svc-sheet"),
+      turned: document.querySelector(".svc-ring-hits__hit--front")?.dataset.back === "1",
+      close: rect(".svc-ring-hits__hit--close"),
+      cta: rect(".svc-ring-hits__hit--cta"),
       plates: document.querySelectorAll(".svc-plate").length,
     };
   });
@@ -142,23 +144,28 @@ for (const p of STOPS) {
   await page.screenshot({ path: `${OUT}/band-${p.toFixed(2)}.png` });
 }
 
-// The sheet: tap the front card at the middle stop.
+// The turn (ADR-110): tap the front card at the middle stop, shoot it
+// mid-turn and turned, then turn it back with the ✕.
 await seatBand(0.55);
 await page.waitForTimeout(600);
 const front = await read();
 if (front.front) {
   await page.mouse.click(front.front.x + front.front.w / 2, front.front.y + front.front.h / 2);
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(220);
+  await page.screenshot({ path: `${OUT}/back-mid.png` });
+  await page.waitForTimeout(800);
   const r = await read();
   console.log(
-    `sheet open  data-plate-open ${r.open}  sheet ${JSON.stringify(r.sheet)}  front ${JSON.stringify(r.front)}  intro ${JSON.stringify(r.intro)}`
+    `turned ${r.turned}  data-plate-open ${r.open}  front ${JSON.stringify(r.front)}  close ${JSON.stringify(r.close)}  cta ${JSON.stringify(r.cta)}`
   );
-  await page.screenshot({ path: `${OUT}/sheet-open.png` });
-  const close = await page.$(".svc-sheet__close");
+  await page.screenshot({ path: `${OUT}/back-open.png` });
+  const close = await page.$(".svc-ring-hits__hit--close");
   if (close) {
     await close.click();
-    await page.waitForTimeout(700);
-    console.log(`sheet closed  data-plate-open ${(await read()).open}`);
+    await page.waitForTimeout(800);
+    console.log(
+      `turned back  data-plate-open ${(await read()).open}  turned ${(await read()).turned}`
+    );
   }
 } else {
   console.log("⚠ no front hit target at 0.55 — the ring did not publish");

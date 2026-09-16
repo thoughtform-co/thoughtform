@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { SERVICES } from "../../components/landing/home-v2/services/serviceData";
-import { RING_MOBILE_SEAT_FILL, RING_MOBILE_SHEET_ROOM } from "../../lib/services-ring/ringMath";
+import { RING_MOBILE_SEAT_FILL } from "../../lib/services-ring/ringMath";
 
 /**
  * THE RING ON PHONES (ADR-108) AND ITS BEAT (ADR-109).
@@ -13,9 +13,10 @@ import { RING_MOBILE_SEAT_FILL, RING_MOBILE_SHEET_ROOM } from "../../lib/service
  * BAND whose scroll is the ring's clock, and `ServicesRingHitAreas` shims
  * one button per visible card. Since ADR-109 the band IS the composition:
  * the masthead's title on top, an empty SEAT the ring fills, the paragraph
- * below — the thesis beat's own order — and a tap on the front card raises
- * a SHEET from the band's foot with the drawer's copy as DOM type. The
- * plate accordion does not render on this rung.
+ * below — the thesis beat's own order — and a tap on the front card TURNS
+ * IT OVER (ADR-110): its back face carries the spec, baked, and the hit
+ * layer shims the back's ✕ and CTA onto the card's own rect. The plate
+ * accordion does not render on this rung and nothing DOM rises.
  *
  * ⚠ CHROMIUM PHONE PROJECTS ONLY (the ADR-107 spec's own reason: the WebKit
  * iPhone projects cannot reach the local dev server). The corridor is WebGL,
@@ -158,31 +159,25 @@ function readBand(page: Page) {
       introText:
         document.querySelector(".svc-ring-band .services-masthead__intro")?.textContent?.trim() ??
         "",
-      sheet: (() => {
-        const el = document.querySelector<HTMLElement>(".svc-sheet");
-        if (!el) return null;
-        const r = el.getBoundingClientRect();
-        const close = el.querySelector<HTMLElement>(".svc-sheet__close")?.getBoundingClientRect();
-        const cta = el.querySelector<HTMLAnchorElement>(".svc-sheet__cta");
+      sheetNodes: document.querySelectorAll(".svc-sheet").length,
+      // ADR-110: the turned card's state, all on the hit layer.
+      back: (() => {
+        const front = document.querySelector<HTMLElement>(".svc-ring-hits__hit--front");
+        const cta = document.querySelector<HTMLAnchorElement>(".svc-ring-hits__hit--cta");
+        const close = document.querySelector<HTMLElement>(".svc-ring-hits__hit--close");
+        const box = (el: Element | null) => {
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return { x: r.left, y: r.top, w: r.width, h: r.height };
+        };
         return {
-          open: el.getAttribute("data-open") === "1",
-          role: el.getAttribute("role"),
-          inert: el.hasAttribute("inert"),
-          visibility: getComputedStyle(el).visibility,
-          service: el.getAttribute("data-service"),
-          x: r.left,
-          y: r.top,
-          w: r.width,
-          h: r.height,
-          chip: el.querySelector(".svc-sheet__chip")?.textContent?.trim() ?? "",
-          title: el.querySelector(".svc-sheet__title")?.textContent?.trim() ?? "",
-          lines: el.querySelectorAll(".svc-sheet__list li").length,
-          cells: el.querySelectorAll(".svc-sheet__spec dd").length,
-          closeW: close?.width ?? 0,
-          closeH: close?.height ?? 0,
+          expanded: front?.getAttribute("aria-expanded") ?? null,
+          turned: front?.dataset.back === "1",
+          label: front?.getAttribute("aria-label") ?? "",
+          cta: box(cta),
           ctaHref: cta?.getAttribute("href") ?? null,
-          ctaText: cta?.textContent?.trim() ?? "",
-          backdrop: getComputedStyle(el).backdropFilter,
+          close: box(close),
+          sr: document.querySelector(".svc-ring-hits__sr")?.textContent ?? "",
         };
       })(),
     };
@@ -195,8 +190,8 @@ function readBand(page: Page) {
   });
 }
 
-/** Tap the front card and wait out the sheet's 420ms rise. */
-async function openSheet(page: Page) {
+/** Tap the front card and wait out the turn (~450 ms to settle). */
+async function openBack(page: Page) {
   const s = await readBand(page);
   const front = s.hits.find((h) => h.front);
   expect(front, "no front-card button").toBeTruthy();
@@ -295,11 +290,13 @@ test.describe("the ring on phones (ADR-108)", () => {
       // No plate accordion on this rung: the cards are the offer, the sheet
       // the readable version — and the four plate photographs stay unfetched.
       expect(s.plates, "the plate accordion rendered on the ring rung").toBe(0);
-      // The sheet is mounted, shut and out of the tree.
-      expect(s.sheet, "no sheet in the band").toBeTruthy();
-      expect(s.sheet!.open).toBe(false);
-      expect(s.sheet!.inert).toBe(true);
-      expect(s.sheet!.visibility).toBe("hidden");
+      // Nothing DOM rises on this rung (ADR-110): no sheet, the card shut,
+      // no back shims.
+      expect(s.sheetNodes).toBe(0);
+      expect(s.back.expanded).toBe("false");
+      expect(s.back.turned).toBe(false);
+      expect(s.back.cta).toBeNull();
+      expect(s.back.close).toBeNull();
       expect(s.plateOpen).toBeNull();
     });
   }
@@ -326,103 +323,110 @@ test.describe("the ring on phones (ADR-108)", () => {
   });
 
   for (const theme of ["dark", "light"] as const) {
-    test(`tapping the front card raises the sheet, and ✕ closes it — ${theme}`, async ({
+    test(`tapping the front card turns it over, and ✕ turns it back — ${theme}`, async ({
       page,
     }) => {
       await boot(page, theme);
       await seatBand(page, 0.55);
       const before = await readBand(page);
+      const rest = before.hits.find((h) => h.front)!;
       const serviceId = await page.evaluate(
         () =>
           document.querySelector<HTMLElement>(".svc-ring-hits__hit--front")?.dataset.service ?? null
       );
       expect(serviceId, "the front button names no service").toBeTruthy();
-      const plateIdx = SERVICES.findIndex((sv) => sv.id === serviceId);
-      expect(plateIdx).toBeGreaterThanOrEqual(0);
 
-      await openSheet(page);
+      await openBack(page);
       const s = await readBand(page);
-      const sheet = s.sheet!;
-      // A dialog about the card that was tapped, with the drawer's copy as
-      // DOM type: chip, title, the WHAT lines, the five HOW cells, the CTA.
-      expect(sheet.open).toBe(true);
-      expect(sheet.role).toBe("dialog");
-      expect(sheet.inert).toBe(false);
-      expect(sheet.visibility).toBe("visible");
-      expect(sheet.service).toBe(serviceId);
-      expect(s.plateOpen).toBe("1");
-      expect(sheet.chip.length).toBeGreaterThan(0);
-      expect(sheet.title.length).toBeGreaterThan(10);
-      expect(sheet.lines).toBeGreaterThanOrEqual(3);
-      expect(sheet.cells).toBe(5);
-      expect(sheet.ctaHref).toBe("#contact");
-      expect(sheet.ctaText).toMatch(/^(Book|Scope|Open) /);
-      // Touch floor on the close control; no backdrop blur over the canvas
-      // (ADR-107's phone ruling).
-      expect(sheet.closeW).toBeGreaterThanOrEqual(44);
-      expect(sheet.closeH).toBeGreaterThanOrEqual(44);
-      expect(sheet.backdrop === "none" || sheet.backdrop === "").toBe(true);
-      // Seated inside the frame, clear of the HUD's bottom chrome, and no
-      // higher than the room law allows — the card above it is still a card.
-      expect(sheet.x).toBeGreaterThanOrEqual(0);
-      expect(sheet.x + sheet.w).toBeLessThanOrEqual(s.vw + 1);
-      expect(sheet.y + sheet.h).toBeLessThanOrEqual(s.vh - 56 + 1);
-      const roomFloor = before.seat!.y + RING_MOBILE_SHEET_ROOM * before.seat!.h;
-      expect(sheet.y).toBeGreaterThanOrEqual(roomFloor - 2);
-      // The ring answered: the front card fits the room above the sheet
-      // (its bottom clear of the sheet's top), still inside the frame.
       const front = s.hits.find((h) => h.front);
-      expect(front, "the front card left while the sheet opened").toBeTruthy();
-      expect(front!.y + front!.h).toBeLessThanOrEqual(sheet.y + 1);
-      expect(front!.y).toBeGreaterThanOrEqual(-1);
-      expect(front!.w).toBeGreaterThanOrEqual(44);
-      // The ✕ closes it and the step is untouched.
-      await page.locator(".svc-sheet__close").click();
-      await page.waitForTimeout(600);
+      expect(front, "the front card left while it turned").toBeTruthy();
+      // The card has turned: the face is the way back, the back's ✕ and CTA
+      // are shimmed onto the card's own rect, and its copy is readable.
+      expect(s.back.expanded).toBe("true");
+      expect(s.back.turned).toBe(true);
+      expect(s.back.label).toMatch(/^Close /);
+      expect(s.plateOpen).toBe("1");
+      expect(s.sheetNodes).toBe(0);
+      expect(s.back.ctaHref).toBe("#contact");
+      const inside = (b: { x: number; y: number; w: number; h: number }) =>
+        b.x >= front!.x - 1 &&
+        b.x + b.w <= front!.x + front!.w + 1 &&
+        b.y >= front!.y - 1 &&
+        b.y + b.h <= front!.y + front!.h + 1;
+      expect(s.back.cta, "no CTA shim on the turned card").toBeTruthy();
+      expect(inside(s.back.cta!)).toBe(true);
+      expect(s.back.cta!.h).toBeGreaterThanOrEqual(24);
+      expect(s.back.close, "no ✕ shim on the turned card").toBeTruthy();
+      expect(s.back.close!.w).toBeGreaterThanOrEqual(44);
+      expect(s.back.close!.h).toBeGreaterThanOrEqual(44);
+      const cx = s.back.close!.x + s.back.close!.w / 2;
+      const cy = s.back.close!.y + s.back.close!.h / 2;
+      expect(cx).toBeGreaterThan(front!.x + front!.w * 0.7);
+      expect(cy).toBeLessThan(front!.y + front!.h * 0.2);
+      expect(s.back.sr).toContain("Duration:");
+      expect(s.back.sr).toContain("Leaves with:");
+      // The card keeps its size and its seat when it turns (owner): the
+      // projected rect is the same box mirrored about its centre. ⚠ The
+      // resting rect carries the front pose's TILT (the bias yaw/pitch
+      // foreshortens it ~5 % taller), and the turn eases that bias out — so
+      // the bound is proportional, not a boost detector at 1px.
+      expect(Math.abs(front!.w - rest.w) / rest.w).toBeLessThan(0.06);
+      expect(Math.abs(front!.h - rest.h) / rest.h).toBeLessThan(0.08);
+      expect(Math.abs(front!.y + front!.h / 2 - (rest.y + rest.h / 2))).toBeLessThan(8);
+      expect(front!.y).toBeGreaterThanOrEqual(56 - 1);
+      expect(front!.y + front!.h).toBeLessThanOrEqual(s.vh - 56 + 1);
+
+      // The ✕ turns it back; the step is untouched. A coordinate tap, not
+      // `locator.click()` — Playwright's click scrolls its target "into
+      // view" first, and a nudge of the band is exactly what this case must
+      // not do (it flaked once as step 2 → 0).
+      await page.mouse.click(
+        s.back.close!.x + s.back.close!.w / 2,
+        s.back.close!.y + s.back.close!.h / 2
+      );
+      await page.waitForTimeout(700);
       const after = await readBand(page);
-      expect(after.sheet!.open).toBe(false);
-      expect(after.sheet!.inert).toBe(true);
+      expect(after.back.expanded).toBe("false");
+      expect(after.back.turned).toBe(false);
+      expect(after.back.cta).toBeNull();
       expect(after.plateOpen).toBeNull();
       expect(after.step).toBe(before.step);
-      // And the card returns to its seat.
-      const back = after.hits.find((h) => h.front);
-      expect(back).toBeTruthy();
-      expect(Math.abs(back!.h - (before.hits.find((h) => h.front)?.h ?? 0))).toBeLessThan(12);
     });
   }
 
-  test("Escape, a tap outside and a beat of scroll all close the sheet", async ({ page }) => {
+  test("the face, Escape and a beat of scroll turn the card back; a nudge does not", async ({
+    page,
+  }) => {
     await boot(page);
     await seatBand(page, 0.55);
 
-    await openSheet(page);
-    expect((await readBand(page)).sheet!.open).toBe(true);
+    // Tapping the turned face turns it back.
+    const front = await openBack(page);
+    expect((await readBand(page)).back.turned).toBe(true);
+    await page.mouse.click(front.x + front.w / 2, front.y + front.h / 2);
+    await page.waitForTimeout(700);
+    expect((await readBand(page)).back.expanded).toBe("false");
+
+    await openBack(page);
+    expect((await readBand(page)).back.turned).toBe(true);
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(500);
-    expect((await readBand(page)).sheet!.open).toBe(false);
+    await page.waitForTimeout(700);
+    expect((await readBand(page)).back.expanded).toBe("false");
 
-    await openSheet(page);
-    expect((await readBand(page)).sheet!.open).toBe(true);
-    // The band above the sheet is the scrim: a tap on the title closes it.
-    const s = await readBand(page);
-    await page.mouse.click(s.vw / 2, Math.max(60, s.title!.y - 4));
-    await page.waitForTimeout(500);
-    expect((await readBand(page)).sheet!.open).toBe(false);
-
-    // The step, not 35px of scroll: the sheet survives a nudge inside its
-    // beat and closes once the ring has turned to another card.
-    await openSheet(page);
+    // The step, not 35px of scroll: the card stays turned through a nudge
+    // inside its beat and turns back once the ring has moved on.
+    await openBack(page);
     const openedStep = (await readBand(page)).step;
     await page.evaluate(() => window.scrollBy(0, 60));
     await page.waitForTimeout(400);
     let r = await readBand(page);
     expect(r.step).toBe(openedStep);
-    expect(r.sheet!.open, "a nudge inside the beat closed the sheet").toBe(true);
+    expect(r.back.expanded, "a nudge inside the beat turned the card back").toBe("true");
     await seatBand(page, 0.8);
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(700);
     r = await readBand(page);
     expect(r.step).not.toBe(openedStep);
-    expect(r.sheet!.open, "the ring turned and the sheet stayed").toBe(false);
+    expect(r.back.expanded, "the ring turned and the card stayed open").toBe("false");
   });
 
   test("tapping a side card rolls the band to that card's beat", async ({ page }) => {

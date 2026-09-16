@@ -7,7 +7,6 @@ import { ServicesDesignationLayer } from "./ServicesDesignationLayer";
 import { ServicesMasthead } from "./ServicesMasthead";
 import { ServicesPlateCluster } from "./ServicesPlateCluster";
 import { ServicesRingHitAreas } from "./ServicesRingHitAreas";
-import { ServicesSpecSheet } from "./ServicesSpecSheet";
 import { ServicesCasefile } from "./casefile/ServicesCasefile";
 import { ProofStack } from "./proof-stack/ProofStack";
 import { proofStackClient, proofStackTracks } from "./proof-stack/proofOrder";
@@ -110,11 +109,12 @@ export function ServicesStage() {
      `openPlateRef` module bridge, and this component is its SINGLE WRITER
      (the lab shell is the other, and only ever on its own route). */
   const drawerActive = cardRingActive && SERVICES_CARD_DRAWER;
-  /* ADR-109: on the phone the SAME open state answers with a DOM SHEET
-     (`ServicesSpecSheet`) rising from the band's foot — never the drawer,
-     whose baked pair is unreadable at phone size (the slab arithmetic is in
-     the ADR). One state, two responses; the ring reads it off the same ref. */
-  const sheetActive = cardRingMobileActive;
+  /* ADR-110: on the phone the SAME open state answers with the card's own
+     BACK FACE — a tap turns the card over and its reverse carries the spec —
+     never the drawer, whose baked pair is unreadable at phone size (the slab
+     arithmetic is in ADR-109). One state, two responses; the ring reads it
+     off the same ref. */
+  const flipActive = cardRingMobileActive;
   const [openServiceId, setOpenServiceId] = useState<ServiceId | null>(null);
   const openFrontCard = useCallback((serviceId: ServiceId) => {
     setOpenServiceId(serviceId);
@@ -155,11 +155,11 @@ export function ServicesStage() {
     const openedAt = servicesRingProgressRef.current.progress;
     const openIdx = SERVICES.findIndex((service) => service.id === openServiceId);
     const onScroll = () => {
-      if (sheetActive) {
-        /* ADR-109: the phone's sheet is dismissed by the STEP, not by 35px
-           of scroll — a thumb scrolls in whole beats there, and the sheet is
-           about the card that is FRONT; when the ring has turned to another
-           card the sheet is about the wrong thing. */
+      if (flipActive) {
+        /* ADR-109/110: the phone's open card is dismissed by the STEP, not
+           by 35px of scroll — a thumb scrolls in whole beats there, and the
+           turned card is the one that is FRONT; when the ring has turned to
+           another card the open one turns back. */
         if (activeServiceForProgress(servicesRingProgressRef.current.progress) !== openIdx) {
           setOpenServiceId(null);
         }
@@ -171,7 +171,7 @@ export function ServicesStage() {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [openServiceId, sheetActive]);
+  }, [openServiceId, flipActive]);
 
   // Beat `i` owns service `i` (the lead-in beat was removed 2026-07-17):
   // beat 0 = Advisory front on arrival, beats 1..N-1 rotate in the rest,
@@ -206,8 +206,8 @@ export function ServicesStage() {
     /* ADR-109: on the phone's ring rung a side-card tap ROLLS THE BAND to
        that card's beat (the inverse of `ringMobileClock`, on the band's own
        runway) with the ring's own tween — the same gesture as the desktop's
-       side-card click, on the phone's scroll owner. Any open sheet closes:
-       the step it was about is leaving. The ≤960 + PRM accordion below
+       side-card click, on the phone's scroll owner. Any turned card turns
+       back: the step it was about is leaving. The ≤960 + PRM accordion below
        stays the inert path. */
     const ringMobileNow =
       SERVICES_CARD_RING &&
@@ -303,7 +303,7 @@ export function ServicesStage() {
          over the masthead (the corridor canvas out-stacks the station DOM),
          so the section copy DIMS to read as background — services.css keys
          `--svc-plate-dim` off this attribute. */
-        data-plate-open={(drawerActive || sheetActive) && openServiceId ? "1" : undefined}
+        data-plate-open={(drawerActive || flipActive) && openServiceId ? "1" : undefined}
       >
         <div className="services-stage__items">
           {/* The client casefile (ADR-056) — the corridor epilogue's claim
@@ -335,7 +335,8 @@ export function ServicesStage() {
               the paragraph on row 3), so h1 · the cards · the paragraph
               compose in one screen, the thesis beat's own order. The plate
               accordion does not render on this rung (owner: "we have the
-              rotating cards"); a tap on the front card raises the SHEET. */}
+              rotating cards"); a tap on the front card TURNS IT OVER and its
+              back carries the spec (ADR-110). */}
           {cardRingMobileActive && (
             <div className="svc-ring-runway" data-svc-ring-runway="">
               <div className="svc-ring-band">
@@ -346,11 +347,13 @@ export function ServicesStage() {
                 <ServicesRingHitAreas
                   onSelectService={selectService}
                   /* The whole front face is one button (the `card` face
-                     carries no CTA box to shim); it opens the sheet. */
+                     carries no CTA box to shim); it turns the card over, and
+                     turned, the same face turns it back. The back's baked ✕
+                     and CTA get their shims off the card's own rect. */
                   onOpenFront={openFrontCard}
+                  onCloseDrawer={closeDrawer}
                   openServiceId={openServiceId}
                 />
-                <ServicesSpecSheet openServiceId={openServiceId} onClose={closeDrawer} />
               </div>
             </div>
           )}
@@ -367,9 +370,10 @@ export function ServicesStage() {
             services UI (CSS owns visibility via data-card-ring). Leader
             lines retire with the racks when the ring carries the cards.
             ⚠ NOT on the phone's ring rung (ADR-109): the cards are the
-            offer there and the sheet is the readable version — and the
-            four plate photographs (334 kB) are not fetched for a surface
-            that does not render. PRM and ≤680h phones keep the accordion. */}
+            offer there and the card's BACK is the readable version
+            (ADR-110) — and the four plate photographs (334 kB) are not
+            fetched for a surface that does not render. PRM and ≤680h phones
+            keep the accordion. */}
           {!cardRingMobileActive && (
             <ServicesPlateCluster
               activeServiceId={activeServiceId}

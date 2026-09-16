@@ -233,15 +233,12 @@ band's own padding of `56px + 8px` / `56px + 16px` so both texts clear the
 HUD's chrome bands (§1). No plate accordion follows on this rung. Like the
 pile (§6) the band is sticky in flow and owes no kill condition of its own;
 the ring it seats draws in the FIXED corridor canvas, whose kill is §2's.
-Two interactive things live on it: the hit layer (`.svc-ring-hits__hit`,
-≥44px, z 4) and the SHEET (`ServicesSpecSheet`, `.svc-sheet`, z 6) a front
-tap raises — ⚠ **absolute in the band at `bottom: 56px + 12px`, never
-`position: fixed`**: a fixed sheet would owe §2 an observable kill of its
-own, a band-seated one leaves with the band, and its foot clears the BR
-settings cluster (law 1) by construction. It takes the pointer only while
-out (`data-open`), so the hit layer under it is untouched the rest of the
-time. Its guard is `services-ring-mobile-smoke.spec.ts`; its lockstep with
-the ring is `services-ring-mobile-gate.test.ts`.
+One interactive thing lives on it: the hit layer (`.svc-ring-hits__hit`,
+≥44px, z 4). Since ADR-110 a front tap TURNS THE CARD OVER in the canvas —
+nothing DOM rises (ADR-109's sheet lasted a day), so §2 has nothing new to
+kill; the back's ✕ and CTA are shims inside the card's own rect (the ✕ grown
+to the 44px floor in CSS). Its guard is `services-ring-mobile-smoke.spec.ts`;
+its lockstep with the ring is `services-ring-mobile-gate.test.ts`.
 
 ## Verifying
 

@@ -60,6 +60,7 @@ import {
   BAKE_W,
   BAKE_H,
   BAKE_SCALE_MOBILE,
+  BAKE_SCALE_MOBILE_BACK,
   bakeSize,
   PAD_X,
   CTA_H,
@@ -106,7 +107,18 @@ import {
   type AboutStageProgress,
 } from "@/lib/services-ring/aboutStageProgressRef";
 import { aboutSlotRef, type AboutSlot } from "@/lib/services-ring/aboutSlotRef";
+import {
+  BACK_BULLET_INDENT,
+  BACK_CONTENT_LIMIT,
+  BACK_DIAMOND,
+  BACK_MAX_W,
+  BACK_RUNGS,
+  BACK_TRACKS,
+  backFaceLayout,
+  type BackMeasure,
+} from "@/lib/services-ring/backFace";
 import { openPlateRef } from "@/lib/services-ring/openPlateRef";
+import { TRACK_DISPLAY, setBakeType } from "@/lib/services-ring/ringType";
 import {
   servicesRingProgressRef,
   type ServicesRingProgress,
@@ -169,10 +181,11 @@ import {
   frontPoseBias,
   frontScaleBoost,
   frontScaleEmphasis,
-  RING_MOBILE_SHEET_SIDE_DIM,
+  RING_MOBILE_OPEN_SIDE_DIM,
+  RING_FLIP_BACK_PUBLISH,
+  RING_FLIP_RATE,
   ringMobileFrontWidthPx,
   ringMobileGroupScale,
-  ringMobileSheetFit,
   ringMobileSeatY,
   frontWindowWeight,
   lerp,
@@ -202,7 +215,12 @@ function ringAnchorsWithinEpsilon(next: RingCardAnchor[], prev: RingCardAnchor[]
   for (let i = 0; i < next.length; i++) {
     const a = next[i];
     const b = prev[i];
-    if (a.serviceId !== b.serviceId || a.front !== b.front || a.visible !== b.visible) {
+    if (
+      a.serviceId !== b.serviceId ||
+      a.front !== b.front ||
+      a.visible !== b.visible ||
+      !!a.back !== !!b.back
+    ) {
       return false;
     }
     if (
@@ -255,6 +273,13 @@ const RESUME_IDLE_GAP_MS = 500;
  * because the rebase only ever runs deck-engaged, which requires that same
  * flag — but it is a landmine if either gate ever changes. The drawer entries
  * are last because appending keeps indices 0–5 stable.
+ *
+ * ⚠ The PHONE's own back plane (ADR-110, `flipBack`) is a conditional child
+ * appended after the veil, so it takes index 6 where the drawer would sit —
+ * and it has NO entry here on purpose: the deck never engages on the phone
+ * (`aboutP` is 0 below 961 and `ringMobileClock` caps the progress under
+ * `RING_EXIT_START`), so the rebase never walks that child list. Desktop
+ * never mounts it, so its indices are untouched.
  */
 const DECK_INTRA_ORDERS = [
   RING_CARD_RENDER_ORDERS.glow,
@@ -1583,6 +1608,12 @@ interface DrawerPalette {
   washA: (a: number) => string;
   /** Seam shadow color (the card's overhang). */
   seamA: (a: number) => string;
+  /** Gold set as small TEXT (ADR-063 U2's INK rung; ADR-110 — the back face
+   *  reads it, the drawer keeps its literals). Tensor gold in dark; on
+   *  parchment `--gold-ink`, because #caa554 as text is 1.8:1 there. */
+  goldInk: string;
+  /** Gold as a hairline or outline (the LINE rung, 3:1 on parchment). */
+  goldLine: string;
 }
 
 const DRAWER_DARK: DrawerPalette = {
@@ -1592,6 +1623,8 @@ const DRAWER_DARK: DrawerPalette = {
   goldA: (a) => `rgba(202, 165, 84, ${a})`,
   washA: (a) => `rgba(${DAWN}, ${a})`,
   seamA: (a) => `rgba(5, 4, 3, ${a})`,
+  goldInk: SERVICES_GOLD,
+  goldLine: SERVICES_GOLD,
 };
 const DRAWER_LIGHT: DrawerPalette = {
   ground: "#ece3d6",
@@ -1600,6 +1633,9 @@ const DRAWER_LIGHT: DrawerPalette = {
   goldA: (a) => `rgba(202, 165, 84, ${a})`,
   washA: (a) => `rgba(17, 15, 9, ${a})`,
   seamA: (a) => `rgba(17, 15, 9, ${a * 0.45})`,
+  // theme.css's light `--gold-ink` / `--gold-line` (ADR-063 U2's ramp).
+  goldInk: "#6e5216",
+  goldLine: "#8a6b20",
 };
 
 function bakeDrawerFace(plate: ServicePlate, pal: DrawerPalette): HTMLCanvasElement {
@@ -1797,6 +1833,182 @@ function bakeDrawerFace(plate: ServicePlate, pal: DrawerPalette): HTMLCanvasElem
  *  OTHER two corners for its chrome to align with the flipped silhouette.
  *  (Same TL/BR cut set as the retired Rx(π) flip — a π flip about either
  *  in-plane axis maps the TR/BL diagonal onto the TL/BR one.) */
+/**
+ * THE PHONE CARD's BACK FACE (ADR-110) — the spec the desktop drawer and the
+ * phone sheet carried, on the card's OWN reverse: a tap turns the card over
+ * (`flipBack`) and this is what it shows. Content is `backFaceLayout`'s
+ * (three-free, fit-solved against every record by the gate test; this bake
+ * hands it a real `measureText` so the rows it paints are the rows the guard
+ * bounded). Chrome is the drawer's — ground, wash, the ✕ chit at
+ * `DRAWER_CLOSE_BOX` (the SAME corner and scale as the front's OPEN chit:
+ * ADR-050's one-corner law) — plus the portrait back's MIRRORED chamfer
+ * chrome: the slab's physical BL cut lands at screen BR after `Ry(π)`, while
+ * the texture itself reads upright and unmirrored (`Ry(π)∘Ry(π)` = identity,
+ * the ADR-047 rev 2 lesson). Drawn in bake px under `ctx.scale` like
+ * `bakeCardFace`; every stroke goes through `pal.*` (both themes) and every
+ * rung through `setBakeType` (the ramp, `ringType.ts`).
+ */
+function bakeCardBack(
+  plate: ServicePlate,
+  pal: DrawerPalette,
+  variant: CardFaceVariant,
+  scale: number
+): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  const size = bakeSize(scale);
+  canvas.width = size.w;
+  canvas.height = size.h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+  if (scale !== 1) ctx.scale(scale, scale);
+  const R = BACK_RUNGS;
+  const maxW = BACK_MAX_W;
+
+  // Ground + the drawer's whisper of wash.
+  ctx.fillStyle = pal.ground;
+  ctx.fillRect(0, 0, BAKE_W, BAKE_H);
+  const wash = ctx.createLinearGradient(0, 0, BAKE_W * 0.4, BAKE_H);
+  wash.addColorStop(0, pal.washA(0.05));
+  wash.addColorStop(0.5, pal.washA(0.012));
+  wash.addColorStop(1, pal.goldA(0.03));
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, BAKE_W, BAKE_H);
+
+  // MIRRORED chamfer corners (bakePortraitBack's contract): the production
+  // `card` face keeps the BR cut only (the physical BL chamfer, flipped).
+  const cutTL = variant === "full";
+  ctx.fillStyle = pal.ground;
+  if (cutTL) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(BAKE_CH, 0);
+    ctx.lineTo(0, BAKE_CH);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.moveTo(BAKE_W, BAKE_H - BAKE_CH);
+  ctx.lineTo(BAKE_W, BAKE_H);
+  ctx.lineTo(BAKE_W - BAKE_CH, BAKE_H);
+  ctx.closePath();
+  ctx.fill();
+  const shell = ctx.createLinearGradient(BAKE_W, 0, BAKE_W * 0.75, BAKE_H);
+  shell.addColorStop(0, pal.goldA(0.52));
+  shell.addColorStop(0.38, pal.washA(0.14));
+  shell.addColorStop(0.66, pal.goldA(0.16));
+  shell.addColorStop(1, pal.goldA(0.48));
+  ctx.strokeStyle = shell;
+  ctx.lineWidth = 2.5;
+  traceChamferPathMirrored(ctx, 1.5, cutTL);
+  ctx.stroke();
+  ctx.strokeStyle = pal.goldA(0.85);
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  if (cutTL) {
+    ctx.moveTo(BAKE_CH, 1.5);
+    ctx.lineTo(1.5, BAKE_CH);
+  }
+  ctx.moveTo(BAKE_W - 1.5, BAKE_H - BAKE_CH);
+  ctx.lineTo(BAKE_W - BAKE_CH, BAKE_H - 1.5);
+  ctx.stroke();
+
+  // ✕ chit — the drawer's, at the front's own corner.
+  const closeX = DRAWER_CLOSE_BOX.x * BAKE_W;
+  const closeY = DRAWER_CLOSE_BOX.y * BAKE_H;
+  const closeW = DRAWER_CLOSE_BOX.w * BAKE_W;
+  const closeH = DRAWER_CLOSE_BOX.h * BAKE_H;
+  ctx.strokeStyle = pal.ink(0.22);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(closeX, closeY, closeW, closeH);
+  ctx.strokeStyle = pal.ink(0.6);
+  ctx.lineWidth = 2.5;
+  const cInset = closeW * 0.34;
+  ctx.beginPath();
+  ctx.moveTo(closeX + cInset, closeY + cInset);
+  ctx.lineTo(closeX + closeW - cInset, closeY + closeH - cInset);
+  ctx.moveTo(closeX + closeW - cInset, closeY + cInset);
+  ctx.lineTo(closeX + cInset, closeY + closeH - cInset);
+  ctx.stroke();
+
+  // The rows, solved once against this context's real advances.
+  const measure: BackMeasure = (text, px, family, track) => {
+    setBakeType(ctx, { family, px, track });
+    return ctx.measureText(text).width;
+  };
+  const L = backFaceLayout(plate, measure);
+  ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";
+
+  setBakeType(ctx, { family: "mono", px: R.chip, track: BACK_TRACKS.chip });
+  ctx.fillStyle = pal.goldInk;
+  ctx.fillText(L.chip, PAD_X, L.chipBaseline);
+
+  setBakeType(ctx, { family: "sans", px: R.title, track: TRACK_DISPLAY });
+  ctx.fillStyle = pal.ink(0.92);
+  L.titleLines.forEach((line, i) => ctx.fillText(line, PAD_X, L.titleBaselines[i]));
+
+  const desig = (text: string, y: number) => {
+    setBakeType(ctx, { family: "mono", px: R.desig, track: BACK_TRACKS.desig });
+    ctx.fillStyle = pal.goldInk;
+    ctx.fillText(text.toUpperCase(), PAD_X, y);
+  };
+  desig("01 / What", L.whatBaseline);
+
+  // Breakdown — gold diamonds, never dots (the shape law).
+  for (const bullet of L.bullets) {
+    ctx.fillStyle = pal.goldA(0.6);
+    ctx.save();
+    ctx.translate(PAD_X + 9, bullet.baselines[0] - 12);
+    ctx.rotate(Math.PI / 4);
+    ctx.fillRect(-BACK_DIAMOND / 2, -BACK_DIAMOND / 2, BACK_DIAMOND, BACK_DIAMOND);
+    ctx.restore();
+    setBakeType(ctx, { family: "sans", px: R.bullet });
+    ctx.fillStyle = pal.ink(0.9);
+    bullet.lines.forEach((line, i) =>
+      ctx.fillText(line, PAD_X + BACK_BULLET_INDENT, bullet.baselines[i])
+    );
+  }
+
+  ctx.strokeStyle = pal.ink(0.1);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(PAD_X, L.ruleY);
+  ctx.lineTo(PAD_X + maxW, L.ruleY);
+  ctx.stroke();
+  desig("02 / How", L.howBaseline);
+
+  for (const cell of L.cells) {
+    setBakeType(ctx, { family: "mono", px: R.dt, track: BACK_TRACKS.dt });
+    ctx.fillStyle = pal.ink(0.5);
+    ctx.fillText(cell.label.toUpperCase(), cell.x, cell.dtBaseline);
+    setBakeType(ctx, { family: "sans", px: R.dd });
+    ctx.fillStyle = cell.wide ? pal.goldInk : pal.ink(0.9);
+    cell.lines.forEach((line, i) => ctx.fillText(line, cell.x, cell.ddBaselines[i]));
+  }
+
+  // CTA — the drawer's plate at the shared box, one rung up; the LINE and
+  // INK rungs of the gold ramp, so it holds on parchment.
+  ctx.strokeStyle = pal.goldLine;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(PAD_X, CTA_Y0, maxW, CTA_H);
+  setBakeType(ctx, { family: "mono", px: R.cta, weight: 700, track: BACK_TRACKS.cta });
+  ctx.fillStyle = pal.goldInk;
+  ctx.fillText(L.ctaLabel, PAD_X + 28, L.ctaBaseline);
+  setBakeType(ctx, { family: "mono", px: R.ctaArrow });
+  ctx.textAlign = "right";
+  ctx.fillText("→", PAD_X + maxW - 28, L.ctaBaseline + 2);
+  ctx.textAlign = "left";
+
+  if (process.env.NODE_ENV !== "production" && L.contentBottom > BACK_CONTENT_LIMIT) {
+    console.warn(
+      `[ServicesCardRing] back face "${plate.id}" runs ${Math.round(
+        L.contentBottom - BACK_CONTENT_LIMIT
+      )} bake px into the CTA's clearance`
+    );
+  }
+  return canvas;
+}
+
 /** `cutTopLeft` — the mirrored twin of `traceChamferPath`'s `cutTopRight`:
  *  the flip maps the physical TOP-RIGHT cut to screen TOP-LEFT, so when the
  *  tight silhouette drops the physical TR chamfer the back face must drop
@@ -1953,6 +2165,18 @@ function bakePortraitBack(
  *  card crop as the service photos. */
 const PORTRAIT_BACK_SRC = "/images/services/vince.jpg";
 
+/** A baked back face and the theme it was baked in (ADR-110). */
+interface BackFaceEntry {
+  theme: ThemeMode;
+  texture: THREE.CanvasTexture;
+}
+/** One card's back-face bake ask; `n` makes an identical ask re-fire. */
+interface BackFaceRequest {
+  idx: number;
+  urgent: boolean;
+  n: number;
+}
+
 /* ── Component ──────────────────────────────────────────────────────────── */
 
 export interface ServicesCardRingProps {
@@ -2051,6 +2275,14 @@ export interface ServicesCardRingProps {
    * identical to the ring before this prop existed.
    */
   profile?: "desktop" | "mobile";
+  /**
+   * ADR-110 — the PHONE's open state is the card's own BACK FACE: a tap
+   * turns the card over (`Ry(π)` on a damped clock) and the reverse carries
+   * the spec, baked lazily per card. Mounts one more plane per card (a
+   * conditional LAST child) and nothing else; off, the tree is byte-identical.
+   * The phone mount passes it; desktop keeps the drawer.
+   */
+  flipBack?: boolean;
 }
 
 export function ServicesCardRing({
@@ -2088,6 +2320,7 @@ export function ServicesCardRing({
   glintOpacity = RING_EDGE_GLINT_OPACITY,
   glowOpacity = RING_GLOW_OPACITY,
   profile = "desktop",
+  flipBack = false,
 }: ServicesCardRingProps) {
   const mobileProfile = profile === "mobile";
   const bakeScale = mobileProfile ? BAKE_SCALE_MOBILE : 1;
@@ -2134,12 +2367,30 @@ export function ServicesCardRing({
   const drawerMatRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]);
   /** Per-card damped open level, 0 = shut. The `veilLevelRef` pattern. */
   const drawerLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(0));
-  /* THE PHONE SHEET's clock (ADR-109): one damped level per card toward
-     "this card's sheet is open", the drawer clock's own rate. The phone
-     mounts no drawer (`openDrawer` false — no second bake), so the open
-     state's RESPONSE here is a lift of the ring clear of the sheet and a
-     dim on the side cards; the front card is untouched. */
-  const sheetLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(0));
+  /* THE FLIP's clock (ADR-110): one damped level per card toward "this
+     card is turned over", at `RING_FLIP_RATE`. The phone mounts no drawer
+     (`openDrawer` false — no second slab), so the open state's RESPONSE is
+     the card's own half turn: its back plane carries the spec. */
+  const flipLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(0));
+  /* The BACK FACES (ADR-110), baked lazily per card at
+     `BAKE_SCALE_MOBILE_BACK` and held TWO at a time — the open card's and
+     the front's. Each entry remembers the theme it was baked in, so a theme
+     flip simply makes it stale (the frame loop reads a stale entry as null,
+     the next bake replaces and disposes it) — no setState in an effect. */
+  const [cardBackTextures, setCardBackTextures] = useState<Array<BackFaceEntry | null>>(() =>
+    new Array(RING_COUNT).fill(null)
+  );
+  const cardBackTexturesRef = useRef(cardBackTextures);
+  useEffect(() => {
+    cardBackTexturesRef.current = cardBackTextures;
+  }, [cardBackTextures]);
+  /** The pending bake request: the frame loop latches it (the drawer's
+   *  idiom), the effect below serves it; `n` re-fires an identical ask. */
+  const [backRequest, setBackRequest] = useState<BackFaceRequest | null>(null);
+  const backRequestRef = useRef<BackFaceRequest | null>(null);
+  /** Which two entries the cache keeps: the open card's and the front's. */
+  const backKeepRef = useRef({ open: -1, front: -1 });
+  const backMatRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]);
   const depthWriteRef = useRef<boolean[]>(new Array(RING_COUNT).fill(false));
   const springRef = useRef<RingSpringState>({ pos: 0, vel: 0 });
   const lastWallRef = useRef(-1);
@@ -2505,13 +2756,16 @@ export function ServicesCardRing({
             map: glowTexture,
             transparent: true,
             opacity: 0,
+            /* ADR-110: a turned card must keep its halo — the glow plane
+               sits at +z and a FrontSide halo culls away at full flip. */
+            side: flipBack ? THREE.DoubleSide : THREE.FrontSide,
             depthWrite: false,
             depthTest: true,
             blending: THREE.NormalBlending,
             toneMapped: false,
           })
       ),
-    [glowTexture]
+    [glowTexture, flipBack]
   );
   /* ⚠ THE VEIL IS SILENCED ON ITS MATERIAL, NEVER BY DROPPING THE MESH.
      A drawn face has no photograph for the dot matrix to be a treatment OF,
@@ -2745,6 +2999,80 @@ export function ServicesCardRing({
     // `[drawerTextures]` cleanup effect below, exactly like a glEpoch rebake.
   }, [gl, openDrawer, drawerRequested, ringTheme, anisotropyCap]);
 
+  /* ── The BACK FACE bake is LAZY, PER CARD, and IDLE for the front (ADR-110)
+     The frame loop asks for ONE card's back: URGENTLY when that card was
+     tapped without a texture (the flip's clock is gated on the texture, so
+     the card waits a bake — ~10 ms — rather than turning blank), IDLY for
+     the front card once the ring is parked, so the first tap on the card
+     the reader is looking at never pays the bake on the flip's first frame.
+     The cache holds two entries (the open card's and the front's); anything
+     else is disposed as a new one lands. A theme flip leaves stale entries
+     the loop treats as absent and the next bake replaces. The upload is
+     drained through the warm-up queue below like every other bake. */
+  useEffect(() => {
+    if (!flipBack || !backRequest) return;
+    let disposed = false;
+    let idle = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const { idx } = backRequest;
+    const run = async () => {
+      await waitForCardFonts();
+      if (disposed) return;
+      const canvas = bakeCardBack(
+        SERVICE_PLATES[idx],
+        ringTheme === "light" ? DRAWER_LIGHT : DRAWER_DARK,
+        faceVariant,
+        BAKE_SCALE_MOBILE_BACK
+      );
+      if (disposed) return;
+      const maxAniso = gl.capabilities.getMaxAnisotropy?.() ?? 1;
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(anisotropyCap, maxAniso);
+      texture.needsUpdate = true;
+      setCardBackTextures((prev) => {
+        const next = prev.slice();
+        next[idx]?.texture.dispose();
+        next[idx] = { theme: ringTheme, texture };
+        const keep = backKeepRef.current;
+        let live = next.filter(Boolean).length;
+        for (let i = 0; i < next.length && live > 2; i += 1) {
+          const entry = next[i];
+          if (!entry || i === idx || i === keep.open || i === keep.front) continue;
+          entry.texture.dispose();
+          next[i] = null;
+          live -= 1;
+        }
+        return next;
+      });
+    };
+    if (backRequest.urgent) {
+      void run();
+    } else if ("requestIdleCallback" in window) {
+      idle = window.requestIdleCallback(() => void run(), { timeout: 1500 });
+    } else {
+      timer = setTimeout(() => void run(), 0);
+    }
+    return () => {
+      disposed = true;
+      if (idle && "cancelIdleCallback" in window) window.cancelIdleCallback(idle);
+      if (timer) clearTimeout(timer);
+    };
+  }, [gl, flipBack, backRequest, ringTheme, faceVariant, anisotropyCap]);
+  // Dispose whatever backs are live on unmount (per-entry eviction and
+  // replacement dispose the rest as they go).
+  useEffect(
+    () => () => {
+      for (const entry of cardBackTexturesRef.current) entry?.texture.dispose();
+    },
+    []
+  );
+  /** A card's back texture for the CURRENT theme, or null (unbaked / stale). */
+  const backTextureFor = (i: number): THREE.CanvasTexture | null => {
+    const entry = cardBackTextures[i];
+    return entry && entry.theme === ringTheme ? entry.texture : null;
+  };
+
   // GPU warm-up (2026-07-29 perf pass). The baked CanvasTextures carry
   // `needsUpdate` and upload LAZILY — on the first frame `cardGroup`
   // turns visible, which under ADR-056 is ~60px after the dissipate
@@ -2761,7 +3089,12 @@ export function ServicesCardRing({
   const scene = useThree((s) => s.scene);
   useEffect(() => {
     const queue: THREE.Texture[] = [];
-    for (const texture of [...(textures ?? []), backTexture, ...(drawerTextures ?? [])]) {
+    for (const texture of [
+      ...(textures ?? []),
+      backTexture,
+      ...(drawerTextures ?? []),
+      ...cardBackTextures.map((entry) => entry?.texture ?? null),
+    ]) {
       if (texture && !warmedTexturesRef.current.has(texture)) queue.push(texture);
     }
     if (!queue.length) return;
@@ -2788,7 +3121,7 @@ export function ServicesCardRing({
     return () => {
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [gl, scene, camera, textures, backTexture, drawerTextures]);
+  }, [gl, scene, camera, textures, backTexture, drawerTextures, cardBackTextures]);
 
   // Dispose bakes on replacement/unmount (materials/geometries are
   // declarative — R3F disposes those; the shared back material/geometry
@@ -3064,21 +3397,29 @@ export function ServicesCardRing({
        branch down, with the orbit term the flip does not need). One matrix
        read of the PARENT (the mark's rig), delta-gated so a parked ring
        writes nothing. Desktop never enters this. */
-    let sheetT = 0;
-    let sheetOpenIdx = -1;
-    if (mobileProfile) {
+    /* THE FLIP's clock (ADR-110): each card's level damps toward "turned
+       over" while it is the open card AND its back is baked for this theme
+       (the drawer's own gate — a request never turns a blank slab), at
+       `RING_FLIP_RATE`. `flipOpenIdx` / `flipOpenT` are the loudest card's,
+       for the side dim. */
+    let flipOpenIdx = -1;
+    let flipOpenT = 0;
+    let flipWantIdx = -1;
+    if (flipBack) {
       const wantId = openPlateRef.current.serviceId;
-      const lv = sheetLevelRef.current;
+      const lv = flipLevelRef.current;
       for (let i = 0; i < RING_COUNT; i++) {
-        const want = wantId === SERVICES[i].id ? 1 : 0;
-        lv[i] += (want - lv[i]) * Math.min(1, delta * DRAWER_DAMP_RATE);
-        if (lv[i] > sheetT) {
-          sheetT = lv[i];
-          sheetOpenIdx = i;
+        const wanted = wantId === SERVICES[i].id;
+        if (wanted) flipWantIdx = i;
+        const want = wanted && backTextureFor(i) !== null ? 1 : 0;
+        lv[i] += (want - lv[i]) * Math.min(1, delta * RING_FLIP_RATE);
+        if (lv[i] > flipOpenT) {
+          flipOpenT = lv[i];
+          flipOpenIdx = i;
         }
       }
-      sheetT = smootherstep(0, 1, sheetT);
-      if (sheetT < 0.001) sheetOpenIdx = -1;
+      flipOpenT = smootherstep(0, 1, flipOpenT);
+      if (flipOpenT < 0.001) flipOpenIdx = -1;
     }
     if (mobileProfile && ringGroupRef.current) {
       const ring = ringGroupRef.current;
@@ -3096,23 +3437,10 @@ export function ServicesCardRing({
         /* THE SEAT (ADR-109): the band publishes the free height between the
            masthead's title and its paragraph; the front card takes no more
            than `RING_MOBILE_SEAT_FILL` of it (the width law still caps), and
-           centres on it — lifted clear of the sheet while one is open. */
+           centres on it. The open card (ADR-110) keeps this size: it turns
+           in place. */
         const seat = progressRef.current.seat;
-        const restPx = ringMobileFrontWidthPx(Math.max(1, size.width), seat?.h);
-        /* THE SHEET (ADR-109): while one is open the front card FITS the
-           room the sheet leaves above it — shrinking if it must, lifting
-           just clear of the sheet's top if it fits — on the sheet's own
-           clock. Identity with no sheet, so the rest pose is byte-identical. */
-        const fit = seat
-          ? ringMobileSheetFit({
-              seatCy: seat.cy,
-              seatH: seat.h,
-              cardHpx: restPx * (BAKE_H / BAKE_W),
-              sheetTop: progressRef.current.sheetTop,
-              sheetT,
-            })
-          : { cy: 0, k: 1 };
-        const frontPx = restPx * fit.k;
+        const frontPx = ringMobileFrontWidthPx(Math.max(1, size.width), seat?.h);
         const frontMul = scaleRange[1] * (1 + frontScaleEmphasis(size.width));
         /* The front card orbits `orbitBase` closer to the camera than the
            mark it circles, and that offset scales with the group — so the
@@ -3131,7 +3459,7 @@ export function ServicesCardRing({
         if (Math.abs(ring.scale.x - next) > 1e-4) ring.scale.setScalar(next);
         if (seat) {
           const y = ringMobileSeatY({
-            seatCy: fit.cy,
+            seatCy: seat.cy,
             viewportH: Math.max(1, size.height),
             parentCamY: deckCamScratch.current.y,
             camDepth,
@@ -3193,6 +3521,28 @@ export function ServicesCardRing({
     if (openDrawer && !drawerRequestedRef.current && openPlateRef.current.serviceId) {
       drawerRequestedRef.current = true;
       setDrawerRequested(true);
+    }
+    /* The BACK FACE request (ADR-110): the tapped card's, urgently, when it
+       has no texture for this theme; otherwise the FRONT card's, idly, once
+       parked — so the card the reader is looking at is ready before the
+       tap. The ref is the re-entry guard (one ask per card until it lands). */
+    if (flipBack) {
+      const req = backRequestRef.current;
+      if (flipWantIdx >= 0 && backTextureFor(flipWantIdx) === null) {
+        if (!req || req.idx !== flipWantIdx || !req.urgent) {
+          const ask = { idx: flipWantIdx, urgent: true, n: (req?.n ?? 0) + 1 };
+          backRequestRef.current = ask;
+          setBackRequest(ask);
+        }
+      } else if (parked && backTextureFor(front) === null) {
+        if (!req || req.idx !== front) {
+          const ask = { idx: front, urgent: false, n: (req?.n ?? 0) + 1 };
+          backRequestRef.current = ask;
+          setBackRequest(ask);
+        }
+      }
+      backKeepRef.current.open = flipWantIdx;
+      backKeepRef.current.front = front;
     }
 
     for (let i = 0; i < RING_COUNT; i++) {
@@ -3286,6 +3636,9 @@ export function ServicesCardRing({
         }
         drawerT = smootherstep(0, 1, drawerLevelRef.current[i]);
       }
+      /* The FLIP (ADR-110), phone only: 0 everywhere else, so every term it
+         enters below is byte-identical on desktop. */
+      const flipT = flipBack ? smootherstep(0, 1, flipLevelRef.current[i]) : 0;
 
       /* The held 3/4 pose FLATTENS as the drawer opens (ADR-050 rev 3). The
          drawer extends along card-local +x, which under the parked front
@@ -3343,11 +3696,19 @@ export function ServicesCardRing({
         rigPointerPitchRef.current,
         drawerT
       );
-      const ringYaw = openPairYaw(
-        cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw,
-        rigPointerYawRef.current,
-        drawerT
-      );
+      /* The FLIP adds a half turn about the card's own Y (ADR-110). The
+         FACING yaw stays alive — the phone's dismissal is step-keyed, so a
+         turned card may still be turning with the ring, and a yaw pinned to
+         π would hold it still and swing it ~45° on close (the drawer flattens
+         all yaw because its SEAM breaks under any; the back has no seam).
+         Only the front-pose BIAS eases out, so the turned face is square. */
+      const ringYaw =
+        openPairYaw(
+          cardFacingYaw(placed.rotY, facingBlend) + tilt.yaw + bias.yaw * (1 - flipT),
+          rigPointerYawRef.current,
+          drawerT
+        ) +
+        Math.PI * flipT;
       const ringScale = depthScale(placed.nz, scaleRange);
       // Front-card emphasis (owner 2026-07-17): the in-view card reads
       // BIGGER than its neighbours, more so on narrow viewports. A separate
@@ -3438,13 +3799,13 @@ export function ServicesCardRing({
         ringTheme === "light" ? ([opacityRange[0], 1] as const) : opacityRange,
         opacityWindow
       );
-      /* ADR-109: while the phone's sheet is open the SIDE cards recede so
-         the open card and its sheet read as one thing; identity at 0 and
-         on desktop (`sheetOpenIdx` stays −1 off the phone profile). */
-      const sheetDim =
-        sheetOpenIdx >= 0 && i !== sheetOpenIdx ? 1 - RING_MOBILE_SHEET_SIDE_DIM * sheetT : 1;
+      /* ADR-110: while a phone card is turned over the SIDE cards recede so
+         the open card reads as the one thing on stage; identity at 0 and on
+         desktop (`flipOpenIdx` stays −1 off `flipBack`). */
+      const sideDim =
+        flipOpenIdx >= 0 && i !== flipOpenIdx ? 1 - RING_MOBILE_OPEN_SIDE_DIM * flipOpenT : 1;
       const master =
-        (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * master0 * sheetDim;
+        (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * master0 * sideDim;
       const opacity = depthO * master;
       /* ADR-050 rev 3 — ANTI-GHOST GUARD 2 of 2. The card's face never
          reaches alpha 1 (RING_OPACITY_RANGE tops out at 0.9), so a drawer
@@ -3461,8 +3822,13 @@ export function ServicesCardRing({
          cannot silently diverge to a lower ceiling again (which was the
          defect the owner read as "awkwardly attached"). Face closed is
          byte-identical to the old `lerp(depthO, 1, drawerT)`. */
-      const faceO = openPairAlpha(depthO, drawerT) * master;
+      const faceO = openPairAlpha(depthO, Math.max(drawerT, flipT)) * master;
       material.opacity = faceO;
+      /* The BACK plane (ADR-110) is the same printed material as the face:
+         one alpha, FrontSide-culled until the flip's midpoint, so it needs
+         no gate of its own. */
+      const backMat = backMatRefs.current[i];
+      if (backMat && backMat.opacity !== faceO) backMat.opacity = faceO;
       slabMaterials[i][0].opacity = glassOpacity * depthO * master;
       slabMaterials[i][1].opacity = glassEdgeOpacity * depthO * master;
       /* CLOSED-frame glint crossfades DOWN as the drawer opens, and the
@@ -3552,7 +3918,16 @@ export function ServicesCardRing({
         deckEngaged && (exitP > DECK_DEPTH_WRITE_OFF_EXIT || aboutP > 0)
           ? deckOrder(i, flip ? flip.flipped : false) === RING_COUNT - 1 && opacity > 0.55
           : depthWriteGate(depthWriteRef.current[i], placed.nz) && opacity > 0.55;
-      if (write !== material.depthWrite) material.depthWrite = write;
+      /* ADR-110: past the flip's midpoint the front plane culls away and the
+         BACK plane inherits the elected write (ADR-047 rev 2's `backWrite`
+         idiom) — or the mark's renderOrder-1 points paint over the turned
+         card. The ELECTION is unchanged; only the assignment moves. */
+      const frontWrite = write && flipT <= 0.5;
+      if (frontWrite !== material.depthWrite) material.depthWrite = frontWrite;
+      if (backMat) {
+        const backWriteNow = write && flipT > 0.5;
+        if (backWriteNow !== backMat.depthWrite) backMat.depthWrite = backWriteNow;
+      }
       depthWriteRef.current[i] = write;
       /* The drawer shares the card's ELECTED write boolean rather than
          computing its own gate (ADR-050 rev 3): two independent gates could
@@ -3654,6 +4029,7 @@ export function ServicesCardRing({
             visible: !clipped && !occludedByFront && opacity > 0.1 && deckAnchorsLive,
             front: i === front,
             drawer: drawerRect,
+            back: flipBack ? flipT > RING_FLIP_BACK_PUBLISH : undefined,
           });
         }
       } else {
@@ -3851,6 +4227,40 @@ export function ServicesCardRing({
           >
             <planeGeometry args={[cardW, cardHeight]} />
           </mesh>
+          {/* ── THE PHONE CARD's BACK (ADR-110) ─────────────────────────
+              The card's own reverse, floated behind the back cap at
+              `rotation.y = π` (the portrait back's idiom: the group's own
+              Ry(π) flip composes with it to identity, so the spec reads
+              upright and unmirrored at full turn; the bake mirrors only its
+              chamfer chrome). Per-card material, its map the lazily baked
+              back — mounted with the FLAG, never with the texture (the
+              positional-order rule); opacity rides the face's and the plane
+              is FrontSide-culled until the midpoint, so an unmapped back is
+              never on screen. Appended after the veil so indices 0–5 hold;
+              0.115 sits between the portrait back (0.11) and the veil. */}
+          {flipBack && (
+            <mesh
+              renderOrder={0.115}
+              position={[0, 0, -(slabDepth / 2 + RING_CONTENT_LIFT)]}
+              rotation={[0, Math.PI, 0]}
+              geometry={backGeometry}
+              frustumCulled={false}
+            >
+              <meshBasicMaterial
+                ref={(el) => {
+                  backMatRefs.current[i] = el;
+                }}
+                map={backTextureFor(i)}
+                transparent
+                opacity={0}
+                side={THREE.FrontSide}
+                depthWrite={false}
+                depthTest
+                blending={THREE.NormalBlending}
+                toneMapped={false}
+              />
+            </mesh>
+          )}
           {/* ── The DRAWER (ADR-050 rev 3) — the open state, IN CANVAS ──────
               A second slab of this same device, APPENDED after the veil so
               the existing children keep indices 0–5 (the deck's positional

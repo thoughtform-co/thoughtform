@@ -20,9 +20,10 @@ section, we need the h1 above the cards and then the paragraph below it").
 What changes: the masthead renders INSIDE the band (title · an empty SEAT the
 ring fills · the paragraph — a grid the hook measures and the ring fits to,
 `RING_MOBILE_SEAT_FILL` 0.82), `ServicesPlateCluster` does not render on the
-ring rung, and a tap on the front card raises a DOM **sheet**
-(`ServicesSpecSheet`) instead of scrolling to a plate — `scrollToPlate` is
-deleted and a side-card tap rolls the band to that card's beat. Everything
+ring rung, and a tap on the front card TURNS IT OVER — its back face is the
+spec ([ADR-110](110-the-card-turns-over.md); ADR-109's DOM sheet lasted a
+day) instead of scrolling to a plate — `scrollToPlate` is deleted and a
+side-card tap rolls the band to that card's beat. Everything
 about the rung, the flag, the three readers, the ambient hold, the clock, the
 bake and the scale solve stands; §5 below and "a tap goes to the plate" are
 the superseded parts, and the device checklist is ADR-109's gate too.

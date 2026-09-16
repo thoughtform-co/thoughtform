@@ -139,12 +139,17 @@ three`, no import that transitively reaches three. _Failure mode:_ the seam
    `useQualityStore.countMultiplier > 0.35` (ADR-038's bottom rung gets no
    ring). _Failure mode:_ a "small" phone card baked at the desktop size
    pays the desktop's texture memory for pixels it can never show.
-   ⚠ **The phone's OPEN state is DOM (ADR-109), never a second bake**:
-   `ServicesSpecSheet` carries the drawer's copy as type inside the band, so
-   the phone still bakes four faces and no drawer — and the plate accordion
+   ⚠ **The phone's OPEN state is the card's own BACK (ADR-110), baked LAZILY
+   and held TWO at a time**: `bakeCardBack` at `BAKE_SCALE_MOBILE_BACK` 0.75
+   (630×1020, ≈ 3.43 MB with mips each — the front's 0.5 raster blurs a spec
+   face on a DPR-3 phone), the tapped card's URGENTLY and the front card's
+   IDLE once the ring is parked, evicting whatever is neither; worst live set
+   fronts 6.1 MB + backs 6.9 MB ≈ **13.0 MB**, uploads drained through the
+   `initTexture` warm-up queue. No drawer face is baked; the plate accordion
    does not render on the ring rung, so the four plate photographs (334 kB)
-   are not fetched there. _Failure mode:_ "porting the drawer" doubles the
-   phone's texture budget for a slab whose largest glyph is under 8 css px.
+   are not fetched there. _Failure mode:_ a four-deep cache (19.8 MB) or
+   "porting the drawer" (the 840×1360 slab whose largest glyph is under 8
+   css px) — both pay memory for pixels the phone never shows.
 3. **`@supabase/supabase-js` is never statically imported on the anonymous
    path.** New sign-in flows MUST signal through `authBridge`
    (`notifyAuthSessionStarted()`), not import the client into a root-graph

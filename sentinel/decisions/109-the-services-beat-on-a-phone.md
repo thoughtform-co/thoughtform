@@ -3,6 +3,14 @@
 **Status:** Proposed (2026-09-16) — shipped on ADR-108's rung and flag
 (`SERVICES_CARD_RING_MOBILE`), guarded, pending the owner's read on a real
 device. ADR-108's device checklist is this record's gate too.
+⚠ **§2 (THE SHEET) IS SUPERSEDED BY [ADR-110](110-the-card-turns-over.md)
+(same day, owner: "I don't think we need to have another panel appear … just
+rotate them around their axis so that the back side shows the services")** —
+the open state is the card's own BACK FACE now; `ServicesSpecSheet`, its CSS,
+`sheetTop`, the room law and `ringMobileSheetFit` are deleted. §1 (the band
+composition, the measured seat, the fill law, the seat solve) and the
+step-keyed dismissal and the side-card roll in §2 stand; the drawer
+arithmetic in §2 is still why the drawer is not ported.
 **Amends:** ADR-108 (U1 — the band is the composition, the plates retire on
 the ring rung, a tap no longer scrolls to a plate) · ADR-086 (the phone ring
 rung carries no photographs).

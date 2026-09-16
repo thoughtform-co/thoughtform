@@ -18,7 +18,7 @@ component you can edit in isolation.
 **Read first**
 
 - [ADR-086: The services card carries the work, not the practitioner](../sentinel/decisions/086-services-card-carries-the-work.md) — the LIVE face since 2026-08-30: `card`, the constellation drawing (one cloud, four edge rules) on the centred arrangement with the title pinned to display. ⚠ **Three things keyed off the photograph and none of them errors without one** — the fetch, the veil and the scrims all read `faceUsesPhoto` now; see §The card carries the work below
-- ⚠ [ADR-108: The ring on phones](../sentinel/decisions/108-the-ring-on-phones.md) — **PROPOSED (2026-09-16), shipped behind `SERVICES_CARD_RING_MOBILE`, the owner's DEVICE read is the gate.** The same ring in the same canvas on the phone rung: the corridor's ambient hold engages on phones, a sticky BAND in `ServicesStage` is the ring's seat and clock, the ring draws at a phone profile (half bake, no drawer, no hover, the scale SOLVED at the front card's depth). ⚠ **[ADR-109](../sentinel/decisions/109-the-services-beat-on-a-phone.md) (same day, owner) MAKES THE BAND THE COMPOSITION AND THE OPEN STATE A SHEET** — title · seat · paragraph in one screen, the ring fitted to the measured seat, no plates on the rung, a tap raising `ServicesSpecSheet` (the drawer's copy as DOM type, under a room law the ring fits to). See §The ring on phones below
+- ⚠ [ADR-108: The ring on phones](../sentinel/decisions/108-the-ring-on-phones.md) — **PROPOSED (2026-09-16), shipped behind `SERVICES_CARD_RING_MOBILE`, the owner's DEVICE read is the gate.** The same ring in the same canvas on the phone rung: the corridor's ambient hold engages on phones, a sticky BAND in `ServicesStage` is the ring's seat and clock, the ring draws at a phone profile (half bake, no drawer, no hover, the scale SOLVED at the front card's depth). ⚠ **[ADR-109](../sentinel/decisions/109-the-services-beat-on-a-phone.md) (same day, owner) MAKES THE BAND THE COMPOSITION** — title · seat · paragraph in one screen, the ring fitted to the measured seat, no plates on the rung. ⚠ **[ADR-110](../sentinel/decisions/110-the-card-turns-over.md) (same day, owner) MAKES THE OPEN STATE THE CARD'S OWN BACK** — a tap turns the card π about its Y and a per-card back plane carries the spec, baked lazily at 0.75 through the new `ringType.ts` ramp and fit-solved by `backFace.ts`; ADR-109's DOM sheet lasted a day. See §The ring on phones below
 - [ADR-029: Services card ring](../sentinel/decisions/029-services-card-ring.md) — the ring, and the ONE-OBJECT guardrail
 - [ADR-050: Card face + in-canvas drawer](../sentinel/decisions/050-services-card-face.md) — the tight face, the drawer, the promotion
 - [ADR-025: Services hologram stage](../sentinel/decisions/025-services-hologram-stage.md) — the oscillation history; read before redesigning this surface again
@@ -92,17 +92,18 @@ visualization (owner's own constraint).
 Changing the card's shape or state model touches **six** files in lockstep.
 Change one alone and the surface is incoherent, not merely imperfect:
 
-| File                            | Owns                                                                                   |
-| ------------------------------- | -------------------------------------------------------------------------------------- |
-| `unifiedServicesInstrument.ts`  | the flag (`SERVICES_CARD_RING`, `SERVICES_CARD_DRAWER`)                                |
-| `CorridorArmillary.tsx`         | mounts the ring; passes `faceVariant` / `openDrawer`                                   |
-| `ServicesStage.tsx`             | owns open state; the production `openPlateRef` writer                                  |
-| `ServicesRingHitAreas.tsx`      | every hit target + the sr-only copy of baked text                                      |
-| `ServicesDesignationLayer.tsx`  | callout occlusion against each published card rect                                     |
-| `BrandmarkPhysicsCoreActor.tsx` | publishes `rigPointerYawRef` — the rig yaw the open pair cancels (ADR-050, 2026-07-27) |
-| `casefile/ServicesCasefile.tsx` | the proof casefile that holds the front of the runway (ADR-056)                        |
-| `useCorridorExitScroll.ts`      | the dock gate — on the phone rung `mobile` is `≤960 && !ringMobile` (ADR-108)          |
-| `ringCtaBox.ts`                 | the bake dims AND the phone bake ratio (`BAKE_SCALE_MOBILE`, `bakeSize`) — three-free  |
+| File                            | Owns                                                                                            |
+| ------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `unifiedServicesInstrument.ts`  | the flag (`SERVICES_CARD_RING`, `SERVICES_CARD_DRAWER`)                                         |
+| `CorridorArmillary.tsx`         | mounts the ring; passes `faceVariant` / `openDrawer`                                            |
+| `ServicesStage.tsx`             | owns open state; the production `openPlateRef` writer                                           |
+| `ServicesRingHitAreas.tsx`      | every hit target + the sr-only copy of baked text                                               |
+| `ServicesDesignationLayer.tsx`  | callout occlusion against each published card rect                                              |
+| `BrandmarkPhysicsCoreActor.tsx` | publishes `rigPointerYawRef` — the rig yaw the open pair cancels (ADR-050, 2026-07-27)          |
+| `casefile/ServicesCasefile.tsx` | the proof casefile that holds the front of the runway (ADR-056)                                 |
+| `useCorridorExitScroll.ts`      | the dock gate — on the phone rung `mobile` is `≤960 && !ringMobile` (ADR-108)                   |
+| `ringCtaBox.ts`                 | the bake dims AND the phone bake ratios (`BAKE_SCALE_MOBILE`, `_BACK`, `bakeSize`) — three-free |
+| `backFace.ts` · `ringType.ts`   | the phone back's rows (fit-solved) and the baked type ramp (ADR-110) — three-free               |
 
 `openPlateRef` has a **single-writer contract**: `ServicesStage` in production,
 `CardFaceLabShell` on the lab route. Never add a third.
@@ -383,30 +384,53 @@ RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
   gate test). **No `.svc-plate` on this rung** (`ServicesPlateCluster` is
   not rendered; the photographs are not fetched); PRM and ≤680h keep the
   accordion. ⚠ `display: contents` means the desktop's masthead dim cannot
-  reach here — the phone dims the lead (.35) and the intro (.1) directly.
-- ⚠ **A TAP RAISES THE SHEET, NEVER THE DRAWER (ADR-109).** The desktop's
+  reach here — the phone dims the lead and the intro (.35 each) directly.
+- ⚠ **A TAP TURNS THE CARD OVER — NEVER THE DRAWER, AND NO LONGER A SHEET
+  (ADR-110; ADR-109's DOM sheet lasted a day).** The desktop's
   `openServiceId` / `openPlateRef` / Escape extend to the phone under
-  `sheetActive`; the response is `ServicesSpecSheet` (DOM, inside the band,
-  absolute at `bottom: 56px + 12px`, never fixed) with the drawer's copy —
-  chip · title · `01 / What` · `02 / How` · the CTA — in the slab grammar
-  (`--void-deep-rgb` .84 glass, NO backdrop-filter, gold lip ring, TR notch
-  only, pure `translateY` motion 420/320ms). ⚠ **THE ROOM LAW**: the sheet
-  rises no higher than `RING_MOBILE_SHEET_ROOM` (0.42) of the seat above the
-  seat's top (it bounds its own `max-height` and scrolls inside), and the
-  ring FITS the front card to the room above it (`ringMobileSheetFit` →
-  `{cy, k}`: shrink if it must, lift just clear if it fits) on a per-card
-  `sheetLevel` at `DRAWER_DAMP_RATE`, the side cards dimming by
-  `RING_MOBILE_SHEET_SIDE_DIM`. The first cut lifted without the law and put
-  the card at y −194. ⚠ **DISMISSAL KEYS ON THE STEP** (`activeServiceForProgress`
-  changes), never on `drawerDismissedByScroll`'s 35px; plus ✕, Escape, the
-  scrim. A SIDE tap rolls the band to that card's beat
-  (`servicesMobileBeatScrollTarget` ← `ringMobileBandFraction`, the inverse
-  of `ringMobileClock`, round-tripped in the gate test). The lockstep table
-  above gains `ServicesSpecSheet.tsx` (the phone's open-state surface) and
-  `useServicesStageScroll.ts` (the seat).
-- **Verifying:** `npx vitest run tests/lib/services-ring-mobile-gate.test.ts`
-  (the three readers, the bake, the clock, the scale solve re-projected, the
-  seat, the fit, the beat inverse, the sheet's CSS pins) and
+  `flipActive`; the response is the card's OWN BACK: `flipBack` (the phone
+  mount alone) appends one more plane per card — LAST child, after the veil,
+  so indices 0–5 and `DECK_INTRA_ORDERS` hold — at `−(slabDepth/2 +
+RING_CONTENT_LIFT)`, `rotation.y = π`, FrontSide, renderOrder 0.115, its
+  map the lazily baked back (`bakeCardBack`, `BAKE_SCALE_MOBILE_BACK` 0.75,
+  the drawer's palette, the portrait back's MIRRORED chamfer chrome, the ✕ at
+  `DRAWER_CLOSE_BOX` — the front's OPEN corner). `flipLevelRef` damps at
+  `RING_FLIP_RATE` toward "open AND baked for this theme" (⚠ gated on the
+  texture, or a cold tap turns a blank slab); the normal branch's yaw gains
+  `+ π·flipT`. ⚠ **THE FACING YAW STAYS ALIVE** — only the front-pose bias
+  eases out (`bias.yaw · (1 − flipT)`); the drawer's `openPairYaw` flattens
+  all yaw for its SEAM, and a step-keyed dismissal needs the turned card to
+  keep turning with the ring. ⚠ **THE DEPTH-WRITE HANDS OVER AT THE
+  MIDPOINT** (`front = write ∧ flipT ≤ .5`, `back = write ∧ flipT > .5`; the
+  ELECTION is unchanged) or the mark's points paint over the turned card.
+  The glow goes `DoubleSide` under the flag (a FrontSide halo culls at full
+  turn); the side cards recede by `RING_MOBILE_OPEN_SIDE_DIM`; the back's
+  material takes the face's `openPairAlpha`. **The card keeps its size**
+  (owner) — the ADR-109 seat solve is untouched. ⚠ **TYPE IS SOLVED, NOT
+  REVIEWED**: `backFace.ts`'s `backFaceLayout(plate, measure)` is ONE layout
+  function; the bake hands it `measureText`, the gate test a GENEROUS model,
+  so the rows agree and every record ends above `CTA_Y0 − 24` on rungs ≥ 30
+  bake px (~9 css px chrome on an iPhone 14 — the named cost). Every rung
+  goes through `ringType.ts`'s `setBakeType` (ADR-092's stage-2 seed; the
+  ring file's ratchet pins did not move — never write the property's name in
+  a new comment there). **Cache 2** (the open card's + the front's, ~6.9 MB
+  with mips; entries remember their theme and go stale on a flip — no
+  setState in an effect), the front's back pre-baked IDLE once parked, the
+  tapped card's URGENTLY. Anchors publish `back` past
+  `RING_FLIP_BACK_PUBLISH`; the hit layer's front button becomes a TOGGLE and
+  shims the back's CTA (`RING_CARD_CTA_BOX`) and ✕ (`DRAWER_CLOSE_BOX`, grown
+  to 44 px in CSS) onto the CARD rect (coplanar) plus the sr-only spec.
+  ⚠ **DISMISSAL KEYS ON THE STEP** (`activeServiceForProgress` changes),
+  never on `drawerDismissedByScroll`'s 35px; plus the face, ✕, Escape. A SIDE
+  tap rolls the band to that card's beat (`servicesMobileBeatScrollTarget` ←
+  `ringMobileBandFraction`, the inverse of `ringMobileClock`, round-tripped
+  in the gate test). The lockstep table above gains `backFace.ts` +
+  `ringType.ts` (the back's rows and rungs) and `useServicesStageScroll.ts`
+  (the seat).
+- **Verifying:** `npx vitest run tests/lib/services-ring-mobile-gate.test.ts
+tests/lib/ring-type.test.ts` (the three readers, the bake, the clock, the
+  scale solve re-projected, the seat, the beat inverse, the back's fit over
+  every record, the rungs) and
   `npx playwright test tests/visual/services-ring-mobile-smoke.spec.ts
 --project=iphone-14-chromium --project=iphone-14-pro-max-chromium`; stills
   via `node scripts/capture-services-mobile.mjs --theme dark|light [--vp 430x932]`.

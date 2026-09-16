@@ -2809,7 +2809,8 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       await expect(page.locator(".svc-plate")).toHaveCount(0);
       await expect(page.locator(".svc-ring-band")).toHaveCount(1);
       await expect(page.locator(".svc-ring-hits")).toHaveCount(1);
-      await expect(page.locator(".svc-sheet")).toHaveCount(1);
+      // ADR-110: the open state is the card's own back — nothing DOM rises.
+      await expect(page.locator(".svc-sheet")).toHaveCount(0);
     } else {
       // All four plates present and flowing (racks dissolve to contents).
       await expect(page.locator(".svc-plate")).toHaveCount(4);

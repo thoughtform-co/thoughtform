@@ -6,10 +6,23 @@ import { describe, expect, it } from "vitest";
 import {
   BAKE_H,
   BAKE_SCALE_MOBILE,
+  BAKE_SCALE_MOBILE_BACK,
   BAKE_W,
+  DRAWER_CLOSE_BOX,
   RING_CARD_CTA_BOX,
   bakeSize,
 } from "@/components/landing/home-v2/services/hologram/ringCtaBox";
+import { SERVICE_PLATES } from "@/components/landing/home-v2/services/servicePlateData";
+import {
+  BACK_BULLET_INDENT,
+  BACK_COL_W,
+  BACK_CONTENT_LIMIT,
+  BACK_MAX_W,
+  BACK_RUNGS,
+  BACK_TYPE_FLOOR,
+  backFaceLayout,
+  modelMeasure,
+} from "@/lib/services-ring/backFace";
 import {
   PROOF_STACK_SPLIT_MEDIA,
   SERVICES_RING_MOBILE_MEDIA,
@@ -22,15 +35,15 @@ import {
   RING_MOBILE_FRONT_MAX_PX,
   RING_MOBILE_LEAVE_START,
   RING_MOBILE_RUNWAY_SVH,
+  RING_FLIP_BACK_PUBLISH,
+  RING_FLIP_RATE,
+  RING_MOBILE_OPEN_SIDE_DIM,
   RING_MOBILE_SEAT_FILL,
-  RING_MOBILE_SHEET_CLEAR,
-  RING_MOBILE_SHEET_ROOM,
   activeServiceForProgress,
   ringMobileClock,
   ringMobileFrontWidthPx,
   ringMobileGroupScale,
   ringMobileSeatY,
-  ringMobileSheetFit,
 } from "@/lib/services-ring/ringMath";
 import type { ServicesRingProgress } from "@/lib/services-ring/ringProgressRef";
 
@@ -182,7 +195,6 @@ describe("the seat (ADR-109)", () => {
   it("is optional on the progress record — desktop and every lab never set it", () => {
     const rest: ServicesRingProgress = { progress: 0, proofRelease: 1, proofPresence: 0 };
     expect(rest.seat).toBeUndefined();
-    expect(rest.sheetTop).toBeUndefined();
     // Absent, the width law alone seats the card — byte-identical to ADR-108.
     expect(ringMobileFrontWidthPx(390, undefined)).toBe(ringMobileFrontWidthPx(390));
     expect(ringMobileFrontWidthPx(390, 0)).toBe(ringMobileFrontWidthPx(390));
@@ -223,78 +235,6 @@ describe("the seat (ADR-109)", () => {
     expect(ringMobileSeatY({ ...args, viewportH: 0 })).toBe(0);
   });
 
-  it("fits the front card to the room above the sheet — shrinking only if it must", () => {
-    const seat = { cy: 390.4, h: 538.3 };
-    const cardH = 257.4 / RING_CARD_ASPECT; // 416.8
-    // No sheet, or a shut one: identity.
-    expect(
-      ringMobileSheetFit({
-        seatCy: seat.cy,
-        seatH: seat.h,
-        cardHpx: cardH,
-        sheetTop: undefined,
-        sheetT: 1,
-      })
-    ).toEqual({ cy: seat.cy, k: 1 });
-    expect(
-      ringMobileSheetFit({
-        seatCy: seat.cy,
-        seatH: seat.h,
-        cardHpx: cardH,
-        sheetTop: 347,
-        sheetT: 0,
-      })
-    ).toEqual({ cy: seat.cy, k: 1 });
-    // 390×844 with the sheet at the room law's ceiling: the room above is
-    // 347 − 12 − 121.25 = 213.75 of height for a 417 card → it shrinks to
-    // the room and centres in it, and its bottom clears the sheet.
-    const seatTop = seat.cy - seat.h / 2;
-    const sheetTop = seatTop + RING_MOBILE_SHEET_ROOM * seat.h;
-    const fit = ringMobileSheetFit({
-      seatCy: seat.cy,
-      seatH: seat.h,
-      cardHpx: cardH,
-      sheetTop,
-      sheetT: 1,
-    });
-    const room = sheetTop - RING_MOBILE_SHEET_CLEAR - seatTop;
-    expect(fit.k).toBeCloseTo(room / cardH, 9);
-    expect(fit.k).toBeLessThan(1);
-    expect(fit.cy + (cardH * fit.k) / 2).toBeLessThanOrEqual(
-      sheetTop - RING_MOBILE_SHEET_CLEAR + 1e-9
-    );
-    expect(fit.cy - (cardH * fit.k) / 2).toBeCloseTo(seatTop, 9);
-    // A card that fits keeps its size and lifts just clear.
-    const small = ringMobileSheetFit({
-      seatCy: seat.cy,
-      seatH: seat.h,
-      cardHpx: 100,
-      sheetTop: 600,
-      sheetT: 1,
-    });
-    expect(small.k).toBe(1);
-    expect(small.cy).toBe(seat.cy); // already clear: 390 + 50 < 588
-    const lift = ringMobileSheetFit({
-      seatCy: seat.cy,
-      seatH: seat.h,
-      cardHpx: 200,
-      sheetTop: 400,
-      sheetT: 1,
-    });
-    expect(lift.k).toBe(1);
-    expect(lift.cy).toBeCloseTo(400 - RING_MOBILE_SHEET_CLEAR - 100, 9);
-    // Half way on the sheet's clock: half way on both terms.
-    const mid = ringMobileSheetFit({
-      seatCy: seat.cy,
-      seatH: seat.h,
-      cardHpx: cardH,
-      sheetTop,
-      sheetT: 0.5,
-    });
-    expect(mid.k).toBeCloseTo((1 + fit.k) / 2, 9);
-    expect(mid.cy).toBeCloseTo((seat.cy + fit.cy) / 2, 9);
-  });
-
   it("rolls the band to a card's beat — the inverse of the phone clock", () => {
     for (let i = 0; i < 4; i += 1) {
       const frac = ringMobileBandFraction(i);
@@ -308,32 +248,107 @@ describe("the seat (ADR-109)", () => {
       last = ringMobileBandFraction(i);
     }
   });
+});
 
-  it("keeps the sheet on the band, glass without a blur, and the room law in one place", () => {
-    const css = read("components/landing/home-v2/services/services.css");
-    const at = css.indexOf("THE SHEET (ADR-109)");
-    expect(at, "services.css has no sheet block").toBeGreaterThan(0);
-    // The sheet's rules alone, comments stripped (a comment naming the ban
-    // is not a declaration of it).
-    const block = css
-      .slice(
-        css.indexOf(".svc-sheet-scrim {", at),
-        css.indexOf(".svc-sheet__cta:focus-visible", at)
-      )
-      .replace(/\/\*[\s\S]*?\*\//g, "");
-    const sheetRule = /\.svc-sheet \{([^}]*)\}/.exec(block);
-    expect(sheetRule, "no .svc-sheet rule").not.toBeNull();
-    // Absolute in the sticky band, never fixed (`mobile-sections.md` §7).
-    expect(sheetRule![1]).toMatch(/position:\s*absolute/);
-    expect(block).not.toMatch(/position:\s*fixed/);
-    // No backdrop-filter over a live canvas (ADR-107's phone ruling).
-    expect(block).not.toMatch(/backdrop-filter/);
-    // Pure motion: the sheet's transitions move it, nothing fades it.
-    expect(sheetRule![1]).not.toMatch(/opacity/);
-    // The sheet bounds its height by the SAME constant the ring fits to.
-    const sheet = read("components/landing/home-v2/services/ServicesSpecSheet.tsx");
-    expect(sheet).toContain("RING_MOBILE_SHEET_ROOM");
-    expect(RING_MOBILE_SHEET_ROOM).toBeGreaterThan(0.3);
-    expect(RING_MOBILE_SHEET_ROOM).toBeLessThan(0.6);
+/**
+ * THE CARD TURNS OVER (ADR-110).
+ *
+ * A tap on the phone's front card rotates it π about its own Y; its BACK
+ * plane carries the spec, baked lazily per card. The bake's rows are solved
+ * by `backFaceLayout` against a GENEROUS advance model here (the real bake
+ * measures its own context), so fit is asserted for every record before a
+ * texture exists.
+ */
+describe("the card turns over (ADR-110)", () => {
+  it("bakes the back at a crisper ratio than the front, on the same aspect", () => {
+    expect(BAKE_SCALE_MOBILE_BACK).toBeGreaterThan(BAKE_SCALE_MOBILE);
+    expect(BAKE_SCALE_MOBILE_BACK).toBeLessThanOrEqual(1);
+    const { w, h } = bakeSize(BAKE_SCALE_MOBILE_BACK);
+    expect(w).toBe(630);
+    expect(h).toBe(1020);
+    expect(w / h).toBeCloseTo(BAKE_W / BAKE_H, 3);
+  });
+
+  it("solves every record's back to fit above the CTA, every line inside its measure", () => {
+    for (const plate of SERVICE_PLATES) {
+      const L = backFaceLayout(plate, modelMeasure);
+      expect(L.contentBottom, `${plate.id} runs into the CTA`).toBeLessThanOrEqual(
+        BACK_CONTENT_LIMIT
+      );
+      expect(L.titleLines.length, `${plate.id} title wraps past two lines`).toBeLessThanOrEqual(2);
+      for (const line of L.titleLines) {
+        expect(modelMeasure(line, BACK_RUNGS.title, "sans", -0.02)).toBeLessThanOrEqual(BACK_MAX_W);
+      }
+      for (const bullet of L.bullets) {
+        expect(bullet.lines.length).toBeGreaterThan(0);
+        for (const line of bullet.lines) {
+          expect(modelMeasure(line, BACK_RUNGS.bullet, "sans", 0)).toBeLessThanOrEqual(
+            BACK_MAX_W - BACK_BULLET_INDENT
+          );
+        }
+      }
+      expect(L.cells).toHaveLength(5);
+      for (const cell of L.cells) {
+        const measure = (cell.wide ? BACK_MAX_W : BACK_COL_W) - 24;
+        for (const line of cell.lines) {
+          expect(modelMeasure(line, BACK_RUNGS.dd, "sans", 0)).toBeLessThanOrEqual(measure);
+        }
+      }
+      // The rows descend: chip · title · what · bullets · rule · how · cells.
+      const ys = [
+        L.chipBaseline,
+        ...L.titleBaselines,
+        L.whatBaseline,
+        ...L.bullets.flatMap((b) => b.baselines),
+        L.ruleY,
+        L.howBaseline,
+        ...L.cells.map((c) => c.dtBaseline),
+      ];
+      for (let i = 1; i < ys.length; i += 1) expect(ys[i]).toBeGreaterThan(ys[i - 1] - 1e-9);
+      expect(L.ctaBaseline).toBeGreaterThan(L.contentBottom);
+    }
+  });
+
+  it("letters nothing under the floor", () => {
+    for (const [key, px] of Object.entries(BACK_RUNGS)) {
+      if (/Lh$|Gap$/.test(key)) continue;
+      expect(px, `${key} is under the floor`).toBeGreaterThanOrEqual(BACK_TYPE_FLOOR);
+    }
+  });
+
+  it("publishes the back late in the turn, on a clock that settles under half a second", () => {
+    expect(RING_FLIP_BACK_PUBLISH).toBeGreaterThan(0.5);
+    expect(RING_FLIP_BACK_PUBLISH).toBeLessThan(1);
+    // A first-order damp at RING_FLIP_RATE: level after t seconds is 1 − e^(−rate·t).
+    expect(1 - Math.exp(-RING_FLIP_RATE * 0.45)).toBeGreaterThan(0.9);
+    expect(1 - Math.exp(-RING_FLIP_RATE * 0.1)).toBeLessThan(0.5);
+    expect(RING_MOBILE_OPEN_SIDE_DIM).toBeGreaterThan(0);
+    expect(RING_MOBILE_OPEN_SIDE_DIM).toBeLessThan(1);
+  });
+
+  it("puts the ✕ and the CTA where the front's own boxes are — one corner, one strip", () => {
+    // The back's chit shares the front's OPEN chit corner and scale, and its
+    // CTA the card's strip; the hit layer maps both onto the card's own rect.
+    expect(DRAWER_CLOSE_BOX.x + DRAWER_CLOSE_BOX.w).toBeLessThanOrEqual(1);
+    expect(DRAWER_CLOSE_BOX.y).toBeGreaterThan(0);
+    expect(RING_CARD_CTA_BOX.y).toBeGreaterThan(DRAWER_CLOSE_BOX.y + DRAWER_CLOSE_BOX.h);
+  });
+
+  it("is passed by the phone mount alone, and the sheet is gone", () => {
+    const arm = read("components/landing/home-v2/DepthGatewayScene/CorridorArmillary.tsx");
+    const flips = arm.match(/\bflipBack\b/g) ?? [];
+    expect(flips, "flipBack must appear exactly once in the armillary").toHaveLength(1);
+    const at = arm.indexOf("flipBack");
+    expect(at).toBeGreaterThan(arm.indexOf('profile="mobile"'));
+    expect(at).toBeLessThan(arm.indexOf("openDrawer={SERVICES_CARD_DRAWER}"));
+    for (const p of [
+      "components/landing/home-v2/services/ServicesStage.tsx",
+      "components/landing/home-v2/services/services.css",
+      "lib/services-ring/ringProgressRef.ts",
+      "lib/services-ring/ringMath.ts",
+    ]) {
+      const src = read(p);
+      expect(src, `${p} still names the sheet`).not.toMatch(/ServicesSpecSheet|svc-sheet|sheetTop/);
+    }
   });
 });

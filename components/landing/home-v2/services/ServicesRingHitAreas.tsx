@@ -26,6 +26,25 @@ import type { ServiceId } from "./serviceData";
  *  card so the sliver stays reliably clickable. */
 const MIN_HIT_WIDTH = 44;
 
+/** A shim box of at least the 44px touch floor on BOTH axes, centred on the
+ *  baked control's own centre (viewport px in, host-relative css out). */
+function touchBox(
+  cx: number,
+  cy: number,
+  w: number,
+  h: number,
+  origin: { left: number; top: number }
+): { left: string; top: string; width: string; height: string } {
+  const bw = Math.max(MIN_HIT_WIDTH, w);
+  const bh = Math.max(MIN_HIT_WIDTH, h);
+  return {
+    left: `${(cx - bw / 2 - origin.left).toFixed(1)}px`,
+    top: `${(cy - bh / 2 - origin.top).toFixed(1)}px`,
+    width: `${bw.toFixed(1)}px`,
+    height: `${bh.toFixed(1)}px`,
+  };
+}
+
 export function ServicesRingHitAreas({
   onSelectService,
   onOpenFront,
@@ -91,6 +110,11 @@ export function ServicesRingHitAreas({
             const plate = SERVICE_PLATES.find((p) => p.id === anchor.serviceId);
             if (anchor.front && onOpenFront) {
               const isOpen = openServiceId === anchor.serviceId;
+              /* ADR-110 (phone): the card has TURNED OVER and its back — the
+                 spec — is what this rect shows. The back is coplanar with the
+                 face, so the ✕ and CTA box fractions map straight onto the
+                 card's own rect; the face itself becomes the way back. */
+              const isBack = Boolean(anchor.back);
               // Front card, ADR-050: the whole face opens the drawer. When
               // the drawer is out we ALSO shim its baked controls — the
               // drawer's text lives on a texture, so these are the only
@@ -111,10 +135,64 @@ export function ServicesRingHitAreas({
                       width: `${anchor.w.toFixed(1)}px`,
                       height: `${anchor.h.toFixed(1)}px`,
                     }}
-                    aria-label={`Open ${plate?.chip ?? anchor.serviceId} details`}
+                    data-back={isBack ? "1" : undefined}
+                    aria-label={
+                      isBack
+                        ? `Close ${plate?.chip ?? anchor.serviceId} details`
+                        : `Open ${plate?.chip ?? anchor.serviceId} details`
+                    }
                     aria-expanded={isOpen}
-                    onClick={() => onOpenFront(anchor.serviceId)}
+                    onClick={() =>
+                      isOpen && isBack && onCloseDrawer
+                        ? onCloseDrawer()
+                        : onOpenFront(anchor.serviceId)
+                    }
                   />
+                  {isBack && plate && (
+                    <>
+                      {/* The back's CTA and ✕, over the CARD rect (the back is
+                          coplanar), as LATER siblings so they take the tap
+                          before the face's toggle. */}
+                      {/* Both shims grow to the 44px touch floor ABOUT THEIR
+                          BOX'S CENTRE — a min-size on the box alone anchors
+                          at its top-left and lands a 44px square 13px off a
+                          17px chit (the visual review's first finding). */}
+                      <a
+                        className="svc-ring-hits__hit svc-ring-hits__hit--cta"
+                        href={plate.ctaHref}
+                        style={touchBox(
+                          anchor.x + anchor.w * (RING_CARD_CTA_BOX.x + RING_CARD_CTA_BOX.w / 2),
+                          anchor.y + anchor.h * (RING_CARD_CTA_BOX.y + RING_CARD_CTA_BOX.h / 2),
+                          anchor.w * RING_CARD_CTA_BOX.w,
+                          anchor.h * RING_CARD_CTA_BOX.h,
+                          origin
+                        )}
+                        aria-label={plate.ctaLabel}
+                      />
+                      {onCloseDrawer && (
+                        <button
+                          type="button"
+                          className="svc-ring-hits__hit svc-ring-hits__hit--close"
+                          style={touchBox(
+                            anchor.x + anchor.w * (DRAWER_CLOSE_BOX.x + DRAWER_CLOSE_BOX.w / 2),
+                            anchor.y + anchor.h * (DRAWER_CLOSE_BOX.y + DRAWER_CLOSE_BOX.h / 2),
+                            anchor.w * DRAWER_CLOSE_BOX.w,
+                            anchor.h * DRAWER_CLOSE_BOX.h,
+                            origin
+                          )}
+                          aria-label={`Close ${plate.chip} details`}
+                          onClick={onCloseDrawer}
+                        />
+                      )}
+                      {/* The baked back copy, readable. */}
+                      <p className="svc-ring-hits__sr">
+                        {plate.chip}. {plate.title} {plate.breakdown.join(". ")}. Duration:{" "}
+                        {plate.spec.duration}. Participants: {plate.spec.participants}. Format:{" "}
+                        {plate.spec.format}. Language: {plate.spec.language}. Leaves with:{" "}
+                        {plate.spec.leavesWith}.
+                      </p>
+                    </>
+                  )}
                   {anchor.drawer && plate && (
                     <>
                       <a

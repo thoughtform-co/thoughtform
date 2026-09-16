@@ -368,6 +368,9 @@ const TSX_PINS: Record<string, { letterSpacing: number; bold: number }> = {
     letterSpacing: 18,
     bold: 6,
   },
+  // ADR-110: the back face bakes its type through ringType's one setter
+  // (the ADR-092 stage-2 seed) — the ring file's own pins did not move.
+  "lib/services-ring/ringType.ts": { letterSpacing: 2, bold: 0 },
   "components/landing/home-v2/arc-cases/caseCardBake.ts": { letterSpacing: 16, bold: 9 },
   "components/landing/home-v2/DepthGatewayScene/LatentFieldTunnel.tsx": {
     letterSpacing: 0,

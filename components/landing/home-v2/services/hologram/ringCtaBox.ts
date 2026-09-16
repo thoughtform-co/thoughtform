@@ -26,6 +26,15 @@ export const BAKE_H = 1360;
  * drawing coordinate stays in the 840×1360 space this file describes.
  */
 export const BAKE_SCALE_MOBILE = 0.5;
+/**
+ * The phone card's BACK face bakes at 0.75 (ADR-110): a spec sheet on a
+ * 257 css px card at DPR 3 is 771 device px wide, and the front's 0.5
+ * raster (420 px) would magnify its 30 px chrome rungs 1.84× into a blur;
+ * at 0.75 the texture is 630×1020 (1.22×), 2.57 MB, ≈ 3.43 MB with mips,
+ * baked LAZILY per card and held two at a time. Same ratio contract as
+ * `BAKE_SCALE_MOBILE`: bake px under `ctx.scale`, every box a fraction.
+ */
+export const BAKE_SCALE_MOBILE_BACK = 0.75;
 
 /** The canvas size for a bake at `scale` — the only place a scaled size is
  *  derived, so the face, the veil strip and the guard agree. */

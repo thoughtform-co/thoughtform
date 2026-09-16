@@ -373,6 +373,10 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           publishAnchors
           faceVariant={SERVICES_CARD_DRAWER ? "card" : "full"}
           openDrawer={false}
+          /* ADR-110: the phone's open state is the card's own BACK face — a
+             tap turns it over; no drawer, no DOM sheet. Desktop below never
+             passes this, so its tree is byte-identical. */
+          flipBack
           orbitBase={RING_ORBIT_BASE_RADIUS * RING_MOBILE_RADIUS_MUL}
           masterOpacityGetter={ringMobileHold}
         />

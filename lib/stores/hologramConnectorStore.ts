@@ -77,6 +77,14 @@ export interface RingCardAnchor {
    * foreshortening, so its projection is NOT a linear extension of the card's.
    */
   drawer?: { x: number; y: number; w: number; h: number };
+  /**
+   * Phone only (ADR-110): the card has TURNED OVER past
+   * `RING_FLIP_BACK_PUBLISH` and its BACK face — the spec — is what this
+   * rect shows. The back is coplanar with the face, so `x/y/w/h` describe
+   * it and the DOM layer maps the ✕ and CTA box fractions straight onto
+   * them. Absent on desktop.
+   */
+  back?: boolean;
 }
 
 interface HologramConnectorState {

@@ -1083,11 +1083,15 @@ export function ringMobileClock(p: number): RingMobileClock {
  *  above still caps it; whichever is tighter wins, so a tall phone is
  *  width-bound at 257–260px and a short one height-bound. */
 export const RING_MOBILE_SEAT_FILL = 0.82;
-/** Air between the front card's bottom edge and the open sheet's top. */
-export const RING_MOBILE_SHEET_CLEAR = 12;
-/** How far the side cards dim while the sheet is open (their opacity is
- *  multiplied by `1 − DIM × sheetT`); the front card is untouched. */
-export const RING_MOBILE_SHEET_SIDE_DIM = 0.6;
+/** How far the SIDE cards recede while a card is open on the phone (their
+ *  opacity is multiplied by `1 − DIM × flipT`); the open card is untouched. */
+export const RING_MOBILE_OPEN_SIDE_DIM = 0.6;
+/** Damp rate of the phone card's FLIP level (ADR-110), per second: ~0.76 of
+ *  the way to the publish mark in 0.24 s, visually settled by ~450 ms. */
+export const RING_FLIP_RATE = 6;
+/** The flip level past which the card publishes `back` — the hit layer's ✕
+ *  and CTA shims mount only on a card that has turned. */
+export const RING_FLIP_BACK_PUBLISH = 0.9;
 
 /** The front card's width in css px for a viewport `vw` px wide — and,
  *  when the band's free height `seatH` is known, no taller than
@@ -1135,43 +1139,6 @@ export function ringMobileSeatY(args: {
   const ndcY = 1 - 2 * (seatCy / viewportH);
   const camY = ndcY * depth * halfFovTan;
   return (camY - parentCamY) / parentScale - yOffset * ringScale;
-}
-
-/** The share of the SEAT's height the open sheet must leave above it, so
- *  the open card is still a card and not a sliver: the sheet's box is
- *  bounded to `bandBottom − foot − (seatTop + ROOM·seatH)` and scrolls
- *  inside that; the card FITS the room above (`ringMobileSheetFit`). */
-export const RING_MOBILE_SHEET_ROOM = 0.42;
-
-/**
- * The front card's pose while the phone's sheet is open (ADR-109): its
- * centre `cy` and a SIZE factor `k` on its width, blended from rest by
- * `sheetT` so both ride the sheet's own clock. The room above the sheet is
- * `[seatTop, sheetTop − CLEAR]`; a card taller than the room SHRINKS to it
- * (`k < 1`, aspect kept) and centres in it, a card that fits keeps its
- * size and lifts just clear of the sheet, never above the seat's top.
- * Identity (`cy = seatCy`, `k = 1`) with no sheet or at `sheetT` 0.
- */
-export function ringMobileSheetFit(args: {
-  seatCy: number;
-  seatH: number;
-  cardHpx: number;
-  sheetTop: number | undefined;
-  sheetT: number;
-}): { cy: number; k: number } {
-  const { seatCy, seatH, cardHpx, sheetTop, sheetT } = args;
-  if (sheetTop == null || sheetT <= 0 || cardHpx <= 0) return { cy: seatCy, k: 1 };
-  const t = clamp01(sheetT);
-  const seatTop = seatCy - seatH / 2;
-  const room = sheetTop - RING_MOBILE_SHEET_CLEAR - seatTop;
-  if (room <= 0) return { cy: seatCy, k: 1 };
-  const k = Math.min(1, room / cardHpx);
-  const fitH = cardHpx * k;
-  const openCy = Math.max(
-    seatTop + fitH / 2,
-    Math.min(seatCy, sheetTop - RING_MOBILE_SHEET_CLEAR - fitH / 2)
-  );
-  return { cy: seatCy + (openCy - seatCy) * t, k: 1 + (k - 1) * t };
 }
 
 /**

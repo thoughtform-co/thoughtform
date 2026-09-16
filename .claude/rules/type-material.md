@@ -58,7 +58,10 @@ never swept.
 - **Text baked into a canvas obeys through `ringType.ts`.** `ServicesCardRing`,
   `caseCardBake` and `LatentFieldTunnel` write `ctx.font` and `letterSpacing` into
   WebGL textures no CSS grep can see; they read the rungs from one module that a
-  test asserts equal to `variables.css`. ⚠ The Bold `@font-face` may leave the
+  test asserts equal to `variables.css`. ⚠ **The module exists since ADR-110
+  (2026-09-16) and ONE bake reads it** — the phone card's back
+  (`setBakeType`, `tests/lib/ring-type.test.ts`); the three older bakes still
+  carry literals under their ratchet pins, so stage 2 is seeded, not done. ⚠ The Bold `@font-face` may leave the
   preload only after all three bake at 400, or the textures synthesise a faux-bold
   and `waitForCardFonts()` eats its timeout on every load.
 - **The map SVG is its own pass** (ADR-092 §4): presentation attributes and
