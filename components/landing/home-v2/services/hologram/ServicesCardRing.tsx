@@ -2381,7 +2381,17 @@ export function ServicesCardRing({
     new Array(RING_COUNT).fill(null)
   );
   const cardBackTexturesRef = useRef(cardBackTextures);
+  /* Entries that LEFT the array are disposed HERE, after the commit — never
+     inside the state updater (the perf pass's one finding): until React
+     commits `next[i] = null` the evicted card's material still maps the
+     texture, three's `WebGLTextures` sees a disposed-but-mapped texture and
+     RE-UPLOADS it (630×1020 + mips, on the very frame the new bake lands),
+     and with the entry gone nothing ever disposes that zombie. An updater
+     is pure by contract anyway (StrictMode runs it twice). */
   useEffect(() => {
+    for (const entry of cardBackTexturesRef.current) {
+      if (entry && !cardBackTextures.includes(entry)) entry.texture.dispose();
+    }
     cardBackTexturesRef.current = cardBackTextures;
   }, [cardBackTextures]);
   /** The pending bake request: the frame loop latches it (the drawer's
@@ -2391,6 +2401,7 @@ export function ServicesCardRing({
   /** Which two entries the cache keeps: the open card's and the front's. */
   const backKeepRef = useRef({ open: -1, front: -1 });
   const backMatRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]);
+  const backMeshRefs = useRef<Array<THREE.Mesh | null>>([]);
   const depthWriteRef = useRef<boolean[]>(new Array(RING_COUNT).fill(false));
   const springRef = useRef<RingSpringState>({ pos: 0, vel: 0 });
   const lastWallRef = useRef(-1);
@@ -3031,15 +3042,15 @@ export function ServicesCardRing({
       texture.anisotropy = Math.min(anisotropyCap, maxAniso);
       texture.needsUpdate = true;
       setCardBackTextures((prev) => {
+        // Pure: replacement and eviction only DROP entries here; the mirror
+        // effect above disposes what left, after the commit.
         const next = prev.slice();
-        next[idx]?.texture.dispose();
         next[idx] = { theme: ringTheme, texture };
         const keep = backKeepRef.current;
         let live = next.filter(Boolean).length;
         for (let i = 0; i < next.length && live > 2; i += 1) {
           const entry = next[i];
           if (!entry || i === idx || i === keep.open || i === keep.front) continue;
-          entry.texture.dispose();
           next[i] = null;
           live -= 1;
         }
@@ -3829,6 +3840,13 @@ export function ServicesCardRing({
          no gate of its own. */
       const backMat = backMatRefs.current[i];
       if (backMat && backMat.opacity !== faceO) backMat.opacity = faceO;
+      /* Drawn only while turning (the perf pass): a shut card's back is
+         FrontSide-culled but still a draw call, four of them every frame. */
+      const backMesh = backMeshRefs.current[i];
+      if (backMesh) {
+        const backVisible = flipT > 0.001;
+        if (backMesh.visible !== backVisible) backMesh.visible = backVisible;
+      }
       slabMaterials[i][0].opacity = glassOpacity * depthO * master;
       slabMaterials[i][1].opacity = glassEdgeOpacity * depthO * master;
       /* CLOSED-frame glint crossfades DOWN as the drawer opens, and the
@@ -4240,11 +4258,15 @@ export function ServicesCardRing({
               0.115 sits between the portrait back (0.11) and the veil. */}
           {flipBack && (
             <mesh
+              ref={(el) => {
+                backMeshRefs.current[i] = el;
+              }}
               renderOrder={0.115}
               position={[0, 0, -(slabDepth / 2 + RING_CONTENT_LIFT)]}
               rotation={[0, Math.PI, 0]}
               geometry={backGeometry}
               frustumCulled={false}
+              visible={false}
             >
               <meshBasicMaterial
                 ref={(el) => {

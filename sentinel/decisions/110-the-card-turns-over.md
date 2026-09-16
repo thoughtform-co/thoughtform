@@ -213,6 +213,36 @@ shim, gold text on parchment, the pooled slack, the orphans), all taken.
 ⚠ `back-mid.png` at +220 ms is identical to the open still under SwiftShader
 — the turn itself is the device read's.
 
+## Measured (the perf pass, a sub-agent on the emulated phone)
+
+SwiftShader quantises frames at ~100 ms, so ratios and deltas are the read,
+never absolutes. Scripts in the session scratchpad (`flip-perf2.mjs`), the
+probe wrapping `createTexture` / `texImage2D` / `deleteTexture` to ledger
+every upload.
+
+| measure                                                              | value                                                                                                              |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| tap → `data-back="1"`, the front's back idle-prebaked (parked ≥ 2 s) | 189 ms (2 frames); the bake landed 6.1 s before the tap, its upload drained on the next rAF — the tap paid nothing |
+| tap → turned, COLD (a new front tapped at once)                      | 193 ms; the bake ran at tap + 0, the upload at tap + 89 — **+4 ms** over the warm case                             |
+| the 2D bake, CPU                                                     | back 630×1020 **1.8–4.6 ms**; a front 420×680 1.4–3.7 ms                                                           |
+| long tasks after a tap                                               | the stage's commit (~60 ms, SwiftShader); the bake never one                                                       |
+| frame deltas 1.5 s from the tap vs idle at the same seat             | p50 / p95 / max **identical** (ratio ≈ 1.0)                                                                        |
+| stepped scroll through the band, card turned vs not                  | identical                                                                                                          |
+| textures live after three different cards opened                     | 4 fronts + **2** backs (3 bakes, 3 uploads, 1 delete)                                                              |
+
+⚠ **THE FIRST CUT LEAKED A BACK PER EVICTION, AND THE PROBE SAW IT**: the
+cache evicted by calling `texture.dispose()` INSIDE the state updater, but
+until React commits `next[i] = null` the evicted card's material still maps
+that texture — three's `WebGLTextures` sees a disposed-but-mapped texture
+and **re-uploads it** (630×1020 + mips, on the very frame the new bake lands),
+and with the entry gone nothing disposes the zombie again: 3 backs live
+where 2 were designed, +3.4 MB per eviction. An updater is pure by contract
+anyway. Disposal moved to the mirror effect, AFTER the commit, over the
+entries that left the array (the `[drawerTextures]` cleanup idiom) — the
+re-run shows uploads = bakes and two backs live. And a shut card's back
+plane is `visible = flipT > 0.001` now: FrontSide-culled fragments are still
+four draw calls a frame for three cards that never turn.
+
 ## Guards
 
 - `tests/lib/services-ring-mobile-gate.test.ts` (the card turns over):
@@ -261,7 +291,11 @@ shim, gold text on parchment, the pooled slack, the orphans), all taken.
   measured here; it keeps its literals (a separate pass — `pal.goldInk` is
   ready for it).
 - Mid-turn the projected rect is a sliver and the delta gate publishes every
-  frame for ~450 ms — cheap, but never at rest.
+  frame for ~450 ms — cheap, but never at rest (the perf pass confirmed one
+  `data-back` transition, no flicker).
+- `requestIdleCallback`'s 1500 ms timeout can land the idle bake inside a
+  frame on a busy phone — 2–5 ms of CPU, the upload deferred to the drain
+  rAF. Raise it to 3000 if the device read shows it.
 - The section readout printed a neighbouring service's name on one still
   (`KEYNOTE // SERVICES` under the Embedded card) — the emulator's slow frames
   or a pre-existing readout lag; not this pass's, to be checked on the device.
