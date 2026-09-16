@@ -23,8 +23,10 @@ import {
   PROOF_STACK_SPLIT_MEDIA,
   SERVICES_CARD_DRAWER,
   SERVICES_CARD_RING,
+  SERVICES_CARD_RING_MOBILE,
   SERVICES_PROOF_CASEFILE,
   SERVICES_PROOF_STACK,
+  SERVICES_RING_MOBILE_MEDIA,
   UNIFIED_SERVICES_ARMILLARY,
 } from "../unifiedServicesInstrument";
 
@@ -90,6 +92,12 @@ export function ServicesStage() {
   // plane. Mobile / reduced motion never enters ring mode — the plate
   // accordion stays exactly as before regardless of the flag.
   const cardRingActive = SERVICES_CARD_RING && useHologramCanvas;
+  /* ADR-108: the ring on PHONES — the same WebGL ring, in the corridor canvas,
+     with a phone profile, seated on a sticky band this stage renders between
+     the masthead and the plates. The plates stay the readable offer. The gate
+     is the ONE string `CorridorArmillary` and `useCorridorExitScroll` read. */
+  const ringMobile = useMediaQuery(SERVICES_RING_MOBILE_MEDIA);
+  const cardRingMobileActive = SERVICES_CARD_RING && SERVICES_CARD_RING_MOBILE && ringMobile;
 
   /* ── ADR-050: the open state ───────────────────────────────────────────────
      The card that is currently showing its spec DRAWER. The drawer itself
@@ -210,6 +218,19 @@ export function ServicesStage() {
   // Clicking a side card still glides it to front via `selectService`
   // (the ringScrollTween — an explicit programmatic scroll, unchanged).
 
+  /* ADR-108: a tap on a phone ring card SCROLLS TO ITS PLATE. The ring is the
+     visual there and the plate accordion is the offer, so the card's one
+     affordance is "take me to the readable version". `selectService` on the
+     inert path already opens the plate; the scroll is the rest. */
+  const scrollToPlate = useCallback(
+    (serviceId: ServiceId) => {
+      selectService(serviceId);
+      const plate = document.querySelector<HTMLElement>(`.svc-plate[data-service="${serviceId}"]`);
+      plate?.scrollIntoView({ block: "start", behavior: "smooth" });
+    },
+    [selectService]
+  );
+
   return (
     <>
       {/* ── THE PROOF STACK (ADR-096) ────────────────────────────────────
@@ -253,6 +274,7 @@ export function ServicesStage() {
         ref={stageRef}
         data-active-step="0"
         data-card-ring={SERVICES_CARD_RING ? "on" : "off"}
+        data-card-ring-mobile={cardRingMobileActive ? "on" : undefined}
         /* ADR-050: while a drawer is out the open pair scales up and paints
          over the masthead (the corridor canvas out-stacks the station DOM),
          so the section copy DIMS to read as background — services.css keys
@@ -276,6 +298,30 @@ export function ServicesStage() {
             FIRST in DOM so the mobile/PRM accordion flow puts it above the
             plates for free — on desktop it is absolutely positioned. */}
           {SERVICES_CARD_RING && <ServicesMasthead />}
+
+          {/* ── THE PHONE RING'S SEAT (ADR-108) ─────────────────────────
+              A runway `--svc-ring-mobile-runway` tall with a sticky,
+              viewport-tall, transparent band inside it. The ring draws in
+              the corridor's FIXED canvas behind the station (the ambient
+              hold engages on this rung), so the band paints nothing itself:
+              it is the scroll the ring's clock reads (`useServicesStageScroll`,
+              inert branch) and the host of the hit targets. Between the
+              masthead and the plates, so the offer's order on a phone is
+              proof → title → the cards → the readable plates. */}
+          {cardRingMobileActive && (
+            <div className="svc-ring-runway" data-svc-ring-runway="">
+              <div className="svc-ring-band">
+                <ServicesRingHitAreas
+                  onSelectService={scrollToPlate}
+                  /* The whole front face is one button (the `card` face
+                     carries no CTA box to shim), and it goes to the plate —
+                     never a drawer, which is unreadable at this size. */
+                  onOpenFront={scrollToPlate}
+                  openServiceId={null}
+                />
+              </div>
+            </div>
+          )}
 
           {showServicesCanvas ? <ServicesHologramCanvas activeServiceId={activeServiceId} /> : null}
 

@@ -1025,3 +1025,95 @@ export function exitEnvelope(exit: number, index: number): RingEntrance {
   // slide — offsets stay 0 so the exit choreography is unchanged.
   return { opacity: 1 - t, radiusMul: lerp(1, RING_EXIT_RADIUS_TO, t), offsetX: 0, offsetY: 0 };
 }
+
+// ── THE RING ON PHONES (ADR-108) ──────────────────────────────────────────
+// The phone has no pinned services stage (the offer is a flowing accordion),
+// so the ring gets its own seat: a sticky band between the masthead and the
+// plates, `RING_MOBILE_RUNWAY_SVH` tall, whose scroll is the ring's clock.
+// `ringMobileClock` maps the band's raw progress to the three channels the
+// ring already reads — pure, so the phone's whole choreography is one
+// function a test can walk.
+
+/** The band's runway, in viewport heights (`services.css` declares the same
+ *  number as `--svc-ring-mobile-runway`; the lockstep test pins them). The
+ *  band pins for `RUNWAY − 1` viewports: four beats and a leave. */
+export const RING_MOBILE_RUNWAY_SVH = 3;
+/** The band's ARRIVAL ramp — the share of the pinned travel over which
+ *  `proofRelease` runs 0 → 1, i.e. the fly-in (the entrance windows ride
+ *  `smoothedDissipate × proofRelease`, and the dissipate has long saturated). */
+export const RING_MOBILE_ARRIVE = 0.12;
+/** Where the band's LEAVE begins — past it the ring's master opacity ramps
+ *  to 0 so the cards go with their stage rather than parking behind the
+ *  accordion for the rest of the ambient hold. The ring's own progress is
+ *  spent over `[0, LEAVE_START]` and capped BELOW `RING_EXIT_START`: the
+ *  phone has no about deck to hand the cards to, so the exit-stack beat is
+ *  never entered. */
+export const RING_MOBILE_LEAVE_START = 0.84;
+/** The front card's target width on a phone, as a share of the viewport
+ *  width, and its cap — viewport-first (`seatWorldHeight`), never a world
+ *  constant, so a 360 and a 430 wide phone both seat the card. */
+export const RING_MOBILE_FRONT_VW = 0.66;
+export const RING_MOBILE_FRONT_MAX_PX = 260;
+/** Orbit radius multiplier for the phone's ring — the desktop radius puts
+ *  the side cards' centres ~1.1 card-heights off axis, which on a 390px
+ *  frame is off screen; 0.7 keeps their leading edges in the frame. */
+export const RING_MOBILE_RADIUS_MUL = 0.7;
+
+export interface RingMobileClock {
+  /** Ring progress 0..1 (the 5-beat domain), never reaching the exit beat. */
+  progress: number;
+  /** The arrival ramp (0 off-stage → 1 flown in). */
+  proofRelease: number;
+  /** The band's hold (1 → 0 across the leave). */
+  hold: number;
+}
+
+/** The phone ring's three channels from the band's raw progress `p`
+ *  (0 = the band has just pinned, 1 = it releases). */
+export function ringMobileClock(p: number): RingMobileClock {
+  const t = clamp01(p);
+  const proofRelease = smootherstep(0, RING_MOBILE_ARRIVE, t);
+  const progress = clamp01(t / RING_MOBILE_LEAVE_START) * RING_EXIT_START * 0.999;
+  const hold = 1 - smootherstep(RING_MOBILE_LEAVE_START, 1, t);
+  return { progress, proofRelease, hold };
+}
+
+/** The front card's width in css px for a viewport `vw` px wide. */
+export function ringMobileFrontWidthPx(vw: number): number {
+  return Math.min(RING_MOBILE_FRONT_MAX_PX, vw * RING_MOBILE_FRONT_VW);
+}
+
+/**
+ * The phone ring group's SCALE, solved so the front card lands at a wanted
+ * css width (ADR-108). The front card does not sit at the mark's depth — it
+ * orbits `radius` closer to the camera in ring-local units, and that offset
+ * scales WITH the group, so the solve is implicit in the scale:
+ *
+ *   cardH · s · P · frontMul  =  q · (D − radius · s · P)
+ *   ⇒  s = q · D / (P · (cardH · frontMul + q · radius))
+ *
+ * where `q = 2 · halfFovTan · frontPx·(H/W) / viewportH` is world units per
+ * unit of depth for the wanted card height, `D` the camera depth of the
+ * group's parent (the mark's rig) and `P` that parent's world scale. Solved
+ * at the mark's depth instead (the first cut), the card measured 383px
+ * against a 257px ask at 390 wide — the 0.9-unit orbit offset is ~30 % of a
+ * phone's camera depth, and a card that much closer paints that much
+ * larger. Pure, three-free, unit-pinned.
+ */
+export function ringMobileGroupScale(args: {
+  frontPx: number;
+  viewportH: number;
+  camDepth: number;
+  halfFovTan: number;
+  cardHeight: number;
+  parentScale: number;
+  frontMul: number;
+  radius: number;
+}): number {
+  const { frontPx, viewportH, camDepth, halfFovTan, cardHeight, parentScale, frontMul, radius } =
+    args;
+  if (viewportH <= 0 || camDepth <= 0) return 0;
+  const q = ((frontPx / RING_CARD_ASPECT) / viewportH) * 2 * halfFovTan;
+  const denom = parentScale * (cardHeight * frontMul + q * radius);
+  return denom > 1e-9 ? (q * camDepth) / denom : 0;
+}

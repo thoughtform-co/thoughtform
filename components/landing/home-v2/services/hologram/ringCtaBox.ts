@@ -13,6 +13,26 @@
 export const BAKE_W = 840;
 export const BAKE_H = 1360;
 
+/**
+ * The PHONE's bake ratio (ADR-108). A phone renders the front card ~260 css
+ * px wide at DPR ≤ 1.4 (the mobile GPU profile's ceiling), so a 840×1360
+ * face is 2.3× the pixels it can ever show — and four of them are ~24 MB of
+ * texture with mips on a device the corridor is already taxing. At 0.5 the
+ * four faces are 420×680 (RING_CARD_ASPECT exactly), ≈ 6 MB with mips.
+ *
+ * ⚠ A RATIO, NEVER A SECOND LITERAL. `RING_CARD_CTA_BOX` and the drawer
+ * boxes are FRACTIONS of the face, so they hold at any scale by
+ * construction; the bake draws in bake px under `ctx.scale(s, s)`, so every
+ * drawing coordinate stays in the 840×1360 space this file describes.
+ */
+export const BAKE_SCALE_MOBILE = 0.5;
+
+/** The canvas size for a bake at `scale` — the only place a scaled size is
+ *  derived, so the face, the veil strip and the guard agree. */
+export function bakeSize(scale: number): { w: number; h: number } {
+  return { w: Math.round(BAKE_W * scale), h: Math.round(BAKE_H * scale) };
+}
+
 /** CTA strip geometry inside the baked face (bake pixels). */
 export const PAD_X = 52;
 export const CTA_H = 84; // 42px CSS

@@ -37,6 +37,8 @@ import {
   ABOUT_DECK_STAGE,
   SERVICES_CARD_DRAWER,
   SERVICES_CARD_RING,
+  SERVICES_CARD_RING_MOBILE,
+  SERVICES_RING_MOBILE_MEDIA,
 } from "../unifiedServicesInstrument";
 import {
   HologramOrbits,
@@ -48,7 +50,12 @@ import { readBrandmarkMorph } from "@/lib/brandmark/morphTargetRef";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { aboutFlipT } from "@/lib/services-ring/aboutDeckMath";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
-import { exitProgressForRunway } from "@/lib/services-ring/ringMath";
+import {
+  exitProgressForRunway,
+  RING_MOBILE_RADIUS_MUL,
+  RING_ORBIT_BASE_RADIUS,
+} from "@/lib/services-ring/ringMath";
+import { useQualityStore } from "@/lib/hooks/useQualityTier";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { resolveScenePalette } from "@/lib/theme/palette";
 import {
@@ -136,6 +143,19 @@ const orbitExitGetter = () =>
 const ringEntranceClock = () =>
   getSmoothedDissipate() * servicesRingProgressRef.current.proofRelease;
 
+/** ADR-108: the phone band's HOLD as the ring's master opacity — 1 while the
+ *  band is on screen, 0 once it has released, so the cards leave with their
+ *  stage. Read as `?? 1`: desktop never writes it, and a lab that builds the
+ *  progress record by hand must see the ring unchanged. */
+const ringMobileHold = () => servicesRingProgressRef.current.hold ?? 1;
+
+/** The governor's count rung below which the phone ring does not mount —
+ *  ADR-038's bottom step (0.35) is the "still struggling after DPR 1.0" state,
+ *  and a ring on a device already there is the load nothing adaptive can
+ *  remove in time (ADR-038 U1: a heavy passage shorter than the detection
+ *  latency is fixed structurally). */
+const RING_MOBILE_QUALITY_FLOOR = 0.35;
+
 /* ADR-049 Update 3 (2026-07-18, owner): the continuum beat carries NO orbit
  * emphasis — the waist-ring re-brighten (waistContinuumGetter /
  * continuumWaistSelector, ADR-049 Updates 0–2) is REMOVED. The spectrum is
@@ -213,6 +233,21 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
   const ringCapable = useMediaQuery(
     "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
   );
+  /* ADR-108: the ring on PHONES. Same component, phone PROFILE, on the ONE
+     rung `ServicesStage` (the seat band + hit layer) and
+     `useCorridorExitScroll` (the ambient hold) read — the three readers must
+     answer the same question or a phone gets a band with no ring, or a ring
+     with no canvas behind the station. ⚠ AND THE GOVERNOR HAS A FLOOR: on
+     the bottom count rung (ADR-038's last resort) the ring does not mount at
+     all — four cards or none; half a ring reads as broken. */
+  const ringMobileMedia = useMediaQuery(SERVICES_RING_MOBILE_MEDIA);
+  /* ⚠ A PRIMITIVE SELECTOR, NEVER `useQualityTier()`. That hook builds a
+     fresh object per snapshot, which under `useSyncExternalStore` is the
+     "getSnapshot should be cached" loop — it had no live consumer until this
+     mount and took the whole corridor canvas down on the first phone run. */
+  const countMultiplier = useQualityStore((s) => s.countMultiplier);
+  const ringMobile =
+    SERVICES_CARD_RING_MOBILE && ringMobileMedia && countMultiplier > RING_MOBILE_QUALITY_FLOOR;
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
   // Probe group at identity — its matrixWorld IS the pointer-look space the
@@ -321,6 +356,27 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           scroll-owned rotation (runway progress via servicesRingProgressRef),
           entrance staggered off the same dissipate clock as the orbit
           wrap-on, card rects published for the DOM hit-areas. */}
+      {SERVICES_CARD_RING && ringMobile && !ringCapable && !ringOff && (
+        /* ADR-108 — the phone mount. `profile="mobile"` halves the bakes,
+           drops the portrait back, the anisotropy and the hover pick, and
+           seats the ring viewport-first (the front card at
+           `ringMobileFrontWidthPx`); `openDrawer` stays off; the band's hold
+           is the master opacity so the cards leave with their stage. The
+           desktop mount below is untouched — this branch is exclusive with
+           it by the media gates. */
+        <ServicesCardRing
+          scale={scale}
+          profile="mobile"
+          progressRef={servicesRingProgressRef}
+          dissipateGetter={ringEntranceClock}
+          entrance="scroll"
+          publishAnchors
+          faceVariant={SERVICES_CARD_DRAWER ? "card" : "full"}
+          openDrawer={false}
+          orbitBase={RING_ORBIT_BASE_RADIUS * RING_MOBILE_RADIUS_MUL}
+          masterOpacityGetter={ringMobileHold}
+        />
+      )}
       {SERVICES_CARD_RING && ringCapable && !ringOff && (
         <ServicesCardRing
           scale={scale}

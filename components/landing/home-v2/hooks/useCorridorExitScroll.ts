@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, type RefObject } from "react";
-import { ABOUT_DECK_STAGE, VOIDWALKER_EXTENDS_CORRIDOR } from "../unifiedServicesInstrument";
+import {
+  ABOUT_DECK_STAGE,
+  SERVICES_CARD_RING_MOBILE,
+  SERVICES_RING_MOBILE_MEDIA,
+  VOIDWALKER_EXTENDS_CORRIDOR,
+} from "../unifiedServicesInstrument";
 import { corridorDissipateRef } from "@/lib/home-v2/corridorDissipateRef";
 import { corridorExitSpeedRamp } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
@@ -14,6 +19,7 @@ import { clamp01 } from "@/lib/math";
  *  the module stays SSR-safe. */
 let prmQuery: MediaQueryList | null = null;
 let mobileQuery: MediaQueryList | null = null;
+let ringMobileQuery: MediaQueryList | null = null;
 
 /** Smallest veil/ambient alpha step the compositor can express — the
  *  quantum for the per-frame `<html>` var writes below. Both vars feed
@@ -166,7 +172,16 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       prmQuery ??= window.matchMedia?.("(prefers-reduced-motion: reduce)") ?? null;
       mobileQuery ??= window.matchMedia?.("(max-width: 960px)") ?? null;
       const reducedMotion = prmQuery?.matches ?? false;
-      const mobile = mobileQuery?.matches ?? false;
+      /* ADR-108: a phone on the ring rung is NOT `mobile` for this gate — the
+         dock and the ambient hold engage exactly as on desktop, which is what
+         puts the parked mark (and the ring drawn around it) behind
+         `#services`. Every other consequence of the dock — the fixed canvas,
+         the veil, `data-corridor-exit`, the epilogue signal's CSS belt — is
+         width-agnostic and simply becomes live on the phone. Flag off, or a
+         short / reduced-motion phone ⇒ byte-identical to before. */
+      ringMobileQuery ??= window.matchMedia?.(SERVICES_RING_MOBILE_MEDIA) ?? null;
+      const ringMobile = SERVICES_CARD_RING_MOBILE && (ringMobileQuery?.matches ?? false);
+      const mobile = (mobileQuery?.matches ?? false) && !ringMobile;
       if (!stageEl || !stageEl.isConnected) {
         stageEl = document.querySelector<HTMLElement>(".home-v2-stage");
       }

@@ -6,6 +6,7 @@ import {
   activeServiceForProgress,
   exitProgressForRunway,
   PROOF_RELEASE_PARK,
+  ringMobileClock,
   splitServicesRunway,
 } from "@/lib/services-ring/ringMath";
 import { clamp01 } from "@/lib/math";
@@ -245,6 +246,8 @@ export function useServicesStageScroll(
     let currentProofOut = -1;
     let currentProofLive: boolean | null = null;
     let currentProofSettled: boolean | null = null;
+    // ADR-108: the phone ring's seat band, cached like the runway itself.
+    let ringBandEl: HTMLElement | null = null;
 
     const isInert = () =>
       (window.matchMedia?.("(max-width: 960px)").matches ?? false) ||
@@ -481,10 +484,8 @@ export function useServicesStageScroll(
       // Static layouts (mobile / reduced motion): no stepping, no shrink,
       // content fully in (no scroll-driven entrance).
       if (isInert()) {
-        setStep(stage, 0);
         setArrive(stage, 1, 1);
         setContentIn(stage, 1);
-        setExit(stage, 0);
         // The casefile is static flow content here, resolved and released —
         // it never gates the accordion below it.
         // Resolved, released, and LIVE — here the casefile is static flow
@@ -493,8 +494,45 @@ export function useServicesStageScroll(
         // No client argument either — a seam is a scroll crossing, and a
         // static document shows one client resolved with nothing fading.
         setProof(stage, 1, 0, true);
+
+        /* ── THE PHONE RING'S CLOCK (ADR-108) ────────────────────────────
+           The stage is a flowing accordion here and has no runway of its
+           own, so the ring's seat is the sticky band `ServicesStage` renders
+           between the masthead and the plates (`.svc-ring-runway` /
+           `.svc-ring-band`, mounted only on the ring rung with the flag on).
+           Its raw progress — 0 as it pins, 1 as it releases — is mapped by
+           `ringMobileClock` (pure, ringMath) onto the three channels the
+           ring already reads: `progress` (the beats, never the exit-stack),
+           `proofRelease` (the arrival ramp the entrance windows ride) and
+           `hold` (the leave, multiplied into the ring's opacity on the
+           phone mount only). The mark's dim reads `proofPresence` as on
+           desktop: the pile stands in front of it until the band arrives.
+           ⚠ ONE rect read, of an element cached like the stage's own
+           children. No band ⇒ the pre-ADR-108 inert writes, byte-identical. */
+        if (!ringBandEl || !ringBandEl.isConnected) {
+          ringBandEl = stage.querySelector<HTMLElement>(".svc-ring-runway");
+        }
+        if (ringBandEl) {
+          const vh = window.innerHeight || 1;
+          const band = ringBandEl.getBoundingClientRect();
+          const bandTravel = Math.max(1, band.height - vh);
+          const clock = ringMobileClock(-band.top / bandTravel);
+          const dissipate = readCorridorDissipate(1);
+          const proofIn = smootherstep(PROOF_GATE_START, PROOF_GATE_END, dissipate);
+          servicesRingProgressRef.current.progress = clock.progress;
+          servicesRingProgressRef.current.proofRelease = clock.proofRelease;
+          servicesRingProgressRef.current.hold = clock.hold;
+          servicesRingProgressRef.current.proofPresence = proofIn * (1 - clock.proofRelease);
+          setExit(stage, exitProgressForRunway(clock.progress));
+          setStep(stage, activeServiceForProgress(clock.progress));
+          return;
+        }
+
+        setStep(stage, 0);
+        setExit(stage, 0);
         servicesRingProgressRef.current.progress = 0;
         servicesRingProgressRef.current.proofRelease = 1;
+        servicesRingProgressRef.current.hold = 1;
         // Static flow content, nothing in front of the instrument.
         servicesRingProgressRef.current.proofPresence = 0;
         return;

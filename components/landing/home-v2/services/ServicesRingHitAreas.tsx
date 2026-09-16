@@ -101,6 +101,10 @@ export function ServicesRingHitAreas({
                   <button
                     type="button"
                     className="svc-ring-hits__hit svc-ring-hits__hit--front"
+                    /* The service this button opens, readable off the DOM
+                       (ADR-108's phone smoke follows a tap to the plate that
+                       carries the same id). */
+                    data-service={anchor.serviceId}
                     style={{
                       left: `${(anchor.x - origin.left).toFixed(1)}px`,
                       top: `${(anchor.y - origin.top).toFixed(1)}px`,

@@ -492,3 +492,36 @@ export const SERVICES_SCROLL_OWNED_MEDIA =
  */
 export const PROOF_STACK_SPLIT_MEDIA =
   "(max-width: 960px) and (min-height: 681px) and (prefers-reduced-motion: no-preference)";
+
+/**
+ * Feature flag for THE RING ON PHONES (ADR-108).
+ *
+ * Owner, 2026-09-16: _"In the services section on desktop, we have these
+ * cards rotating around our brand mark particle system. I also want the same
+ * thing on mobile, but we have to make sure that the mobile site's
+ * performance can handle it."_ The desktop ring — the four cards orbiting
+ * the parked mark inside the corridor canvas — mounts on the phone rung too,
+ * with a phone PROFILE (half-size bakes, no drawer, no portrait back, no
+ * hover) and its own seat: a sticky band between the masthead and the plate
+ * accordion whose scroll is the ring's clock. The ring is the VISUAL; the
+ * plates stay the readable offer, and a tap on a card scrolls to its plate.
+ *
+ * ⚠ OFF ⇒ TODAY'S PHONE PAGE, BYTE-IDENTICAL: no dock, no ambient hold, no
+ * band, the accordion alone. It is a flag because the acceptance gate is a
+ * frame-rate the owner reads on his own device, not a number this tree can
+ * measure — a fail there ships the flag off and nothing else moves.
+ */
+export const SERVICES_CARD_RING_MOBILE = true;
+
+/**
+ * The phone rung on which the ring mounts (ADR-108) — ONE string, THREE
+ * readers, and they must never drift (ADR-029's own guardrail, one rung
+ * down): `CorridorArmillary` (whether the ring mounts in the canvas),
+ * `ServicesStage` (whether the seat band and the hit layer render) and
+ * `useCorridorExitScroll` (whether the corridor's ambient hold survives into
+ * `#services` on a phone at all — without it there is no canvas behind the
+ * station to draw into). The same rung the proof stack splits on, so both
+ * phone beats stand or fall on one query; `services-ring-mobile-gate.test.ts`
+ * pins the three readers and the equality.
+ */
+export const SERVICES_RING_MOBILE_MEDIA = PROOF_STACK_SPLIT_MEDIA;

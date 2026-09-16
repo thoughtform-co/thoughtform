@@ -37,8 +37,19 @@ export interface ServicesRingProgress {
    *  Defaults to 0: nothing on screen ⇒ no dim, which is the resting truth
    *  before the first write, with the flag off, and on the inert path. */
   proofPresence: number;
+  /** THE PHONE BAND's HOLD (ADR-108) — 1 while the ring's seat band is on
+   *  screen, ramping to 0 as the band releases, so the cards leave with
+   *  their stage instead of parking behind the plate accordion for the rest
+   *  of the ambient hold. Multiplied into the ring's master opacity ONLY on
+   *  the phone mount (`CorridorArmillary` passes the getter there and
+   *  nowhere else), so the desktop ring never reads it.
+   *
+   *  OPTIONAL, read as `?? 1`: a reader that runs before the first write, on
+   *  desktop, with the phone flag off, or in a lab that builds this record
+   *  by hand must see the ring exactly as it was. */
+  hold?: number;
 }
 
 export const servicesRingProgressRef: { current: ServicesRingProgress } = {
-  current: { progress: 0, proofRelease: 1, proofPresence: 0 },
+  current: { progress: 0, proofRelease: 1, proofPresence: 0, hold: 1 },
 };

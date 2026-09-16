@@ -18,6 +18,7 @@ component you can edit in isolation.
 **Read first**
 
 - [ADR-086: The services card carries the work, not the practitioner](../sentinel/decisions/086-services-card-carries-the-work.md) — the LIVE face since 2026-08-30: `card`, the constellation drawing (one cloud, four edge rules) on the centred arrangement with the title pinned to display. ⚠ **Three things keyed off the photograph and none of them errors without one** — the fetch, the veil and the scrims all read `faceUsesPhoto` now; see §The card carries the work below
+- ⚠ [ADR-108: The ring on phones](../sentinel/decisions/108-the-ring-on-phones.md) — **PROPOSED (2026-09-16), shipped behind `SERVICES_CARD_RING_MOBILE`, the owner's DEVICE read is the gate.** The same ring in the same canvas on the phone rung: the corridor's ambient hold engages on phones, a sticky BAND in `ServicesStage` is the ring's seat and clock, the ring draws at a phone profile (half bake, no drawer, no hover, the scale SOLVED at the front card's depth). See §The ring on phones below
 - [ADR-029: Services card ring](../sentinel/decisions/029-services-card-ring.md) — the ring, and the ONE-OBJECT guardrail
 - [ADR-050: Card face + in-canvas drawer](../sentinel/decisions/050-services-card-face.md) — the tight face, the drawer, the promotion
 - [ADR-025: Services hologram stage](../sentinel/decisions/025-services-hologram-stage.md) — the oscillation history; read before redesigning this surface again
@@ -100,6 +101,8 @@ Change one alone and the surface is incoherent, not merely imperfect:
 | `ServicesDesignationLayer.tsx`  | callout occlusion against each published card rect                                     |
 | `BrandmarkPhysicsCoreActor.tsx` | publishes `rigPointerYawRef` — the rig yaw the open pair cancels (ADR-050, 2026-07-27) |
 | `casefile/ServicesCasefile.tsx` | the proof casefile that holds the front of the runway (ADR-056)                        |
+| `useCorridorExitScroll.ts`      | the dock gate — on the phone rung `mobile` is `≤960 && !ringMobile` (ADR-108)          |
+| `ringCtaBox.ts`                 | the bake dims AND the phone bake ratio (`BAKE_SCALE_MOBILE`, `bakeSize`) — three-free  |
 
 `openPlateRef` has a **single-writer contract**: `ServicesStage` in production,
 `CardFaceLabShell` on the lab route. Never add a third.
@@ -288,7 +291,12 @@ RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
   imports them; a `three` import there drags the WebGL stack into the landing's
   First Load JS.
 - **Keep the ring mount gate and the services DOM gate the SAME media query.**
-  Mobile / reduced motion keep the plate accordion regardless of any flag.
+  Reduced motion keeps the plate accordion regardless of any flag. ⚠ **AND
+  SINCE ADR-108 THE PHONE HAS A SECOND PAIR OF GATES THAT MUST STAY ONE
+  STRING**: `SERVICES_RING_MOBILE_MEDIA` is read by the ring mount, the
+  services DOM AND `useCorridorExitScroll` — three readers, one constant,
+  pinned by source in `services-ring-mobile-gate`. The accordion STAYS on the
+  phone (it is the offer); the ring joins it as the visual above the plates.
 - **No wall-clock motion** (ADR-021) — only scroll clocks, click-driven slides,
   pointer-look, and the bounded spring.
 - **The ring no longer owns the front of its runway (ADR-056).** The proof
@@ -315,6 +323,65 @@ RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
   everywhere else they ride the raw dissipate and nothing would notice. The
   three VISIBLE cards must also keep sharing one window end — the unit test
   fails if they stop.
+
+## The ring on phones (ADR-108, proposed)
+
+- **THREE READERS OF ONE STRING, AND THE FLAG IS THE OFF SWITCH.**
+  `SERVICES_CARD_RING_MOBILE` + `SERVICES_RING_MOBILE_MEDIA` (=
+  `PROOF_STACK_SPLIT_MEDIA` — one phone rung for both `#services` beats).
+  `CorridorArmillary` mounts the phone ring, `ServicesStage` renders the band
+  - the hit layer + `data-card-ring-mobile="on"`, `useCorridorExitScroll`
+    stops treating the rung as `mobile` so the dock and the ambient hold
+    engage. Any one of them on a different string is a phone with a band and
+    no ring, or a ring with no canvas — nothing errors. Flag off ⇒ the old
+    phone page byte for byte, which is the fallback if the device read fails.
+- ⚠ **THE WHOLE PHONE CORRIDOR EXIT CHANGES UNDER THIS FLAG.** The hook's
+  one-line change makes every dock consequence live on phones: the fixed
+  canvas, the veil, `data-corridor-exit`, the `MobileEpilogueSignal` CSS
+  belt, `#services`' transparent ground. `#voidwalker` is the kill exactly
+  as on desktop (the smoke asserts it); `corridorFallback` still wins.
+- **THE BAND IS THE SEAT AND ITS SCROLL IS THE CLOCK.** The stage is unpinned
+  on phones, so `.svc-ring-runway` (300svh, `RING_MOBILE_RUNWAY_SVH`, pinned
+  equal to the sheet by the gate test) holds a sticky 100svh
+  `.svc-ring-band`; `useServicesStageScroll`'s inert branch runs
+  `ringMobileClock(t)` off the band's rect and writes `progress`
+  (five beats over `[0, RING_MOBILE_LEAVE_START]`, capped under
+  `RING_EXIT_START` — the exit stack is never entered), `proofRelease` (the
+  band's arrival ramp — `ringEntranceClock` is UNCHANGED and this is what
+  drives the fly-in), the new optional **`hold`** on `servicesRingProgressRef`
+  (the phone mount's `masterOpacityGetter` and nobody else's — read `?? 1`,
+  so desktop and every lab see the ring as it was) and the step.
+- ⚠ **THE SCALE IS SOLVED AT THE FRONT CARD'S DEPTH, NOT THE MARK'S.**
+  `ringMobileGroupScale` (`ringMath`, three-free): the front card orbits
+  `orbitBase` nearer the camera and that offset scales with the group, so
+  the solve is implicit. Solved at the mark's depth the card measured 383px
+  against a 257px ask — ~1.5×, from ~0.9 units of orbit on a ~3-unit camera
+  depth. The ask is `ringMobileFrontWidthPx(vw) = min(260, 0.66·vw)`; the
+  radius is `RING_ORBIT_BASE_RADIUS × RING_MOBILE_RADIUS_MUL` (0.7) so the
+  side cards stay inside the 70° portrait frustum.
+- **THE PHONE PROFILE**: `profile="mobile"` → bake at `BAKE_SCALE_MOBILE` 0.5
+  through `bakeSize()` with the bake drawing under `ctx.scale` (every
+  coordinate stays in 840×1360 space; the CTA/drawer box fractions hold by
+  construction; ~6 MB of texture with mips against ~32), `openDrawer={false}`
+  (no drawer bake, no open state), no portrait back, no hover pick,
+  anisotropy ≤ 4. Governor floor: `useQualityStore.countMultiplier > 0.35`
+  or no ring at all — never half a ring.
+  ⚠ **READ ONE PRIMITIVE OFF THE QUALITY STORE, NEVER `useQualityTier()`** in
+  the armillary — it returns a fresh object per snapshot and
+  `useSyncExternalStore` loops until the canvas boundary crashes, with the
+  ring publishing nothing and no ring-side error to point at it.
+- **A TAP GOES TO THE PLATE.** Every hit (`onOpenFront` and `onSelectService`)
+  calls `scrollToPlate(id)` → `.svc-plate[data-service]`.`scrollIntoView`; the
+  front button carries `data-service`. No drawer, no CTA shim (the `card`
+  face has none). The `.svc-ring-hits` rules are restored at ≤960 ONLY under
+  `.services-stage[data-card-ring-mobile="on"]`.
+- **Verifying:** `npx vitest run tests/lib/services-ring-mobile-gate.test.ts`
+  (the three readers, the bake, the clock, the scale solve re-projected) and
+  `npx playwright test tests/visual/services-ring-mobile-smoke.spec.ts
+--project=iphone-14-chromium --project=iphone-14-pro-max-chromium`. ⚠ The
+  emulated iPhone lays out 421px wide (ADR-107's finding), so every width
+  ask here is ~8 % generous in emulation; the still and the frame rate are
+  the OWNER's device read, and ADR-108's checklist is the gate.
 
 ## Verifying
 

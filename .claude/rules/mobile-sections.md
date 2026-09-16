@@ -120,6 +120,19 @@ painter that follows:
   attribute is what the guard asserts, and it must not wait on an opacity write
   clearing its own delta threshold.
 
+⚠ **SINCE ADR-108 THE CORRIDOR CANVAS IS A FIXED PAINTER ON PHONES TOO** (on
+the ring rung — `SERVICES_RING_MOBILE_MEDIA`, flag `SERVICES_CARD_RING_MOBILE`).
+`useCorridorExitScroll` no longer treats that rung as `mobile`, so the dock and
+the ambient hold engage: the canvas goes `position: fixed` behind `#services`
+from the dissipate to the kill. Its kill condition is the one the hook already
+names against an observable — **`#voidwalker`'s rect** (ADR-074, the first
+opaque station below the corridor; `data-corridor-kill` first if a route
+stamps one) — and `services-ring-mobile-smoke` asserts the canvas is no longer
+fixed past it. With the dock live, `data-corridor-exit` IS written on this
+path now, so the epilogue signal's CSS belt is real cover here rather than the
+desktop-only insurance recorded above; the IntersectionObserver kill stays the
+primary, because the flag can be off.
+
 ## 3 · A one-screen instrument manages its own interior clearance
 
 `#voidwalker` at `≤700` is the exception to law 1 and it is the exception on
@@ -210,6 +223,17 @@ floor like any flowing content (law 1); and it is under law 4's
 rendering would reflow under the reader's thumb exactly as #contact did.
 Its guard is its own: `proof-stack-mobile-smoke.spec.ts`.
 
+## 7 · The ring's seat band is a sticky band in flow (ADR-108)
+
+Between the masthead and the plate accordion, on the ring rung, `#services`
+carries `.svc-ring-runway` (300svh) with a sticky, transparent, 100svh
+`.svc-ring-band` — the ring's seat and clock. Like the pile (§6) it is sticky
+in flow and owes no kill condition of its own; the ring it seats draws in the
+FIXED corridor canvas, whose kill is §2's. The band's hit layer is the one
+interactive thing on it (`.svc-ring-hits__hit`, ≥44px, z 4 inside the band)
+and every hit scrolls to a plate. Its guard is
+`services-ring-mobile-smoke.spec.ts`.
+
 ## Verifying
 
 ```bash
@@ -219,6 +243,7 @@ npx playwright test tests/visual/about-voidwalker-handoff-boundaries.spec.ts
 # The Chromium-backed phone projects (ADR-107) CAN reach the dev server:
 npx playwright test tests/visual/mobile-section-seams.spec.ts \
   tests/visual/proof-stack-mobile-smoke.spec.ts \
+  tests/visual/services-ring-mobile-smoke.spec.ts \
   --project=iphone-14-chromium --project=iphone-14-pro-max-chromium
 ```
 

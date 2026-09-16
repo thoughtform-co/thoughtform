@@ -59,6 +59,8 @@ import { HologramOrbits } from "./HologramOrbits";
 import {
   BAKE_W,
   BAKE_H,
+  BAKE_SCALE_MOBILE,
+  bakeSize,
   PAD_X,
   CTA_H,
   CTA_Y0,
@@ -166,6 +168,9 @@ import {
   frontCardIndex,
   frontPoseBias,
   frontScaleBoost,
+  frontScaleEmphasis,
+  ringMobileFrontWidthPx,
+  ringMobileGroupScale,
   frontWindowWeight,
   lerp,
   placeCardOnOrbit,
@@ -967,13 +972,19 @@ function bakeCardFace(
   img: HTMLImageElement | null,
   variant: CardFaceVariant = "full",
   pal: FacePalette = FACE_DARK,
-  titleStyle: CardTitleStyle = "framed"
+  titleStyle: CardTitleStyle = "framed",
+  scale: number = 1
 ): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
-  canvas.width = BAKE_W;
-  canvas.height = BAKE_H;
+  /* ADR-108: a scaled bake keeps EVERY drawing coordinate in bake px — the
+     canvas is smaller and the context is scaled, so nothing below knows.
+     Only the pixel readbacks (getImageData) address the canvas's own size. */
+  const size = bakeSize(scale);
+  canvas.width = size.w;
+  canvas.height = size.h;
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
+  if (scale !== 1) ctx.scale(scale, scale);
 
   // Ground — everything outside/under the photo is opaque page color.
   ctx.fillStyle = pal.ground;
@@ -1004,7 +1015,7 @@ function bakeCardFace(
     // Plate tone treatment (LUT pass — gold plate in dark, parchment
     // print in light; see buildGoldToneLut / buildParchmentToneLut).
     const lut = pal.lut();
-    const data = ctx.getImageData(0, 0, BAKE_W, BAKE_H);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const px = data.data;
     for (let i = 0; i < px.length; i += 4) {
       const lum = Math.min(
@@ -1846,7 +1857,7 @@ function bakePortraitBack(
     const dh = img.naturalHeight * scale;
     ctx.drawImage(img, (BAKE_W - dw) / 2, (BAKE_H - dh) / 2, dw, dh);
     const lut = pal.lut();
-    const data = ctx.getImageData(0, 0, BAKE_W, BAKE_H);
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const px = data.data;
     for (let i = 0; i < px.length; i += 4) {
       const lum = Math.min(
@@ -2026,6 +2037,17 @@ export interface ServicesCardRingProps {
   glassEdgeOpacity?: number;
   glintOpacity?: number;
   glowOpacity?: number;
+  /**
+   * THE PHONE PROFILE (ADR-108). `"mobile"` halves the face bakes
+   * (`BAKE_SCALE_MOBILE`, drawn in bake px under `ctx.scale`), skips the
+   * portrait back and the per-frame hover pick, caps anisotropy at 4, and
+   * seats the ring VIEWPORT-FIRST: the group's scale is solved each frame so
+   * the front card lands at `ringMobileFrontWidthPx(viewport)` css px
+   * (`seatWorldHeight`, the ADR-046 seat law) instead of at a world size
+   * tuned for a 40° desktop frustum. `"desktop"` (the default) is byte-
+   * identical to the ring before this prop existed.
+   */
+  profile?: "desktop" | "mobile";
 }
 
 export function ServicesCardRing({
@@ -2062,7 +2084,11 @@ export function ServicesCardRing({
   glassEdgeOpacity = RING_GLASS_EDGE_OPACITY,
   glintOpacity = RING_EDGE_GLINT_OPACITY,
   glowOpacity = RING_GLOW_OPACITY,
+  profile = "desktop",
 }: ServicesCardRingProps) {
+  const mobileProfile = profile === "mobile";
+  const bakeScale = mobileProfile ? BAKE_SCALE_MOBILE : 1;
+  const anisotropyCap = mobileProfile ? 4 : 8;
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
   const gl = useThree((s) => s.gl);
@@ -2630,7 +2656,7 @@ export function ServicesCardRing({
               img = null; // schematic fallback keeps the ring whole
             }
           }
-          return bakeCardFace(plate, img, faceVariant, facePal, titleStyle);
+          return bakeCardFace(plate, img, faceVariant, facePal, titleStyle, bakeScale);
         })
       );
       if (disposed) return;
@@ -2638,14 +2664,16 @@ export function ServicesCardRing({
       const toTexture = (canvas: HTMLCanvasElement) => {
         const texture = new THREE.CanvasTexture(canvas);
         texture.colorSpace = THREE.SRGBColorSpace;
-        texture.anisotropy = Math.min(8, maxAniso);
+        texture.anisotropy = Math.min(anisotropyCap, maxAniso);
         texture.needsUpdate = true;
         return texture;
       };
       setTextures(baked.map(toTexture));
       // The portrait back bakes independently (no fonts, one photo) and
       // only under the deck flag — flag-off never fetches the asset.
-      if (ABOUT_DECK_STAGE) {
+      // ADR-108: the phone never flips a deck (`useAboutStageScroll` bails
+      // below 961), so it never bakes — or fetches — the portrait back.
+      if (ABOUT_DECK_STAGE && !mobileProfile) {
         let portrait: HTMLImageElement | null = null;
         try {
           portrait = await loadImage(PORTRAIT_BACK_SRC);
@@ -2662,7 +2690,7 @@ export function ServicesCardRing({
     // `facePal` (the ring theme) re-runs the bake on a flip — light gets
     // the parchment-print faces; the old set disposes via the `[textures]`
     // cleanup, exactly like a glEpoch rebake.
-  }, [gl, faceVariant, facePal, titleStyle]);
+  }, [gl, faceVariant, facePal, titleStyle, bakeScale, mobileProfile, anisotropyCap]);
 
   /* ── The DRAWER bake is LAZY (ADR-050 promotion, owner 2026-07-26) ────────
      Four drawer faces cost ~18 MB of texture, and most visitors scroll the
@@ -2695,7 +2723,7 @@ export function ServicesCardRing({
             bakeDrawerFace(plate, ringTheme === "light" ? DRAWER_LIGHT : DRAWER_DARK)
           );
           texture.colorSpace = THREE.SRGBColorSpace;
-          texture.anisotropy = Math.min(8, maxAniso);
+          texture.anisotropy = Math.min(anisotropyCap, maxAniso);
           texture.needsUpdate = true;
           return texture;
         })
@@ -2706,7 +2734,7 @@ export function ServicesCardRing({
     };
     // `ringTheme` re-runs the bake on a flip; the old set disposes via the
     // `[drawerTextures]` cleanup effect below, exactly like a glEpoch rebake.
-  }, [gl, openDrawer, drawerRequested, ringTheme]);
+  }, [gl, openDrawer, drawerRequested, ringTheme, anisotropyCap]);
 
   // GPU warm-up (2026-07-29 perf pass). The baked CanvasTextures carry
   // `needsUpdate` and upload LAZILY — on the first frame `cardGroup`
@@ -3013,6 +3041,53 @@ export function ServicesCardRing({
     const backWrite = flip !== null && backMaterial.opacity > 0.55;
     if (backWrite !== backMaterial.depthWrite) backMaterial.depthWrite = backWrite;
 
+    /* ── THE PHONE SEAT (ADR-108): viewport-first, every frame ─────────
+       The desktop ring's world size was tuned by eye for a ~40° landscape
+       frustum; a 70° portrait one projects the same world units at a third
+       of the size, and a phone's width is the one thing the card must be
+       sized against. So on the phone profile the ring group's scale is
+       SOLVED: the front card — depth scale `scaleRange[1]` × the narrow
+       front emphasis — must land at `ringMobileFrontWidthPx(viewport)` css
+       px. `ringMobileGroupScale` (three-free, unit-pinned) solves that at
+       the FRONT CARD's depth — it orbits `orbitBase` nearer the camera than
+       the mark, and that offset scales with the group, so the solve is
+       implicit (the ADR-046 seat law, the deck flip's own arithmetic one
+       branch down, with the orbit term the flip does not need). One matrix
+       read of the PARENT (the mark's rig), delta-gated so a parked ring
+       writes nothing. Desktop never enters this. */
+    if (mobileProfile && ringGroupRef.current) {
+      const ring = ringGroupRef.current;
+      const parent = ring.parent;
+      if (parent) {
+        const persp = camera as THREE.PerspectiveCamera;
+        const halfFovTan = Math.tan(((persp.fov ?? 40) * Math.PI) / 360);
+        deckWorldScratch.current.setFromMatrixPosition(parent.matrixWorld);
+        deckCamScratch.current
+          .copy(deckWorldScratch.current)
+          .applyMatrix4(camera.matrixWorldInverse);
+        const camDepth = Math.max(0.1, -deckCamScratch.current.z);
+        const parentScale =
+          deckParentCol.current.setFromMatrixColumn(parent.matrixWorld, 0).length() || 1;
+        const frontPx = ringMobileFrontWidthPx(Math.max(1, size.width));
+        const frontMul = scaleRange[1] * (1 + frontScaleEmphasis(size.width));
+        /* The front card orbits `orbitBase` closer to the camera than the
+           mark it circles, and that offset scales with the group — so the
+           scale is solved IMPLICITLY (`ringMobileGroupScale`), never at the
+           mark's own depth, which lands the card ~1.5× large. */
+        const next = ringMobileGroupScale({
+          frontPx,
+          viewportH: Math.max(1, size.height),
+          camDepth,
+          halfFovTan,
+          cardHeight,
+          parentScale,
+          frontMul,
+          radius: orbitBase,
+        });
+        if (Math.abs(ring.scale.x - next) > 1e-4) ring.scale.setScalar(next);
+      }
+    }
+
     const parked = dissipate >= ANCHOR_PUBLISH_DISSIPATE;
     const anchors: RingCardAnchor[] = [];
 
@@ -3021,7 +3096,7 @@ export function ServicesCardRing({
     // wins; nothing hovers until parked — and never during the deck life
     // (the veil restores to the full feed read as the cards converge).
     let hovered = -1;
-    if (parked && !deckEngaged) {
+    if (parked && !deckEngaged && !mobileProfile) {
       const pointer = pointerPxRef.current;
       let bestNz = -Infinity;
       for (let i = 0; i < RING_COUNT; i++) {

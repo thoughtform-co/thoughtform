@@ -126,7 +126,19 @@ the type-checker or a test; they are enforced by _you not writing the import._
    bundle. That is why `ringCtaBox.ts` exists.
 2. **`journeyScalars.ts` and `ringCtaBox.ts` stay three-free.** No `import
 three`, no import that transitively reaches three. _Failure mode:_ the seam
-   they hold open (1 & 4 above) silently closes.
+   they hold open (1 & 4 above) silently closes. ⚠ `ringCtaBox.ts` also
+   carries the PHONE bake ratio now (`BAKE_SCALE_MOBILE` 0.5, `bakeSize()`,
+   ADR-108) — it lives there precisely because the DOM hit layer and the
+   gate test read it; a scaled bake draws under `ctx.scale` so every box
+   fraction holds and no second literal exists.
+   2b. **The phone ring's texture budget is the bake ratio, not a smaller
+   card.** Four 840×1360 faces are ~24 MB (+mips ~32) on a device whose front
+   card is ~260 css px at DPR ≤ 1.4; at 0.5 they are ~4.6 MB (+mips ~6.1),
+   no drawer face is baked (`openDrawer={false}`), no portrait back, and
+   anisotropy is capped at 4. The ring mounts only while
+   `useQualityStore.countMultiplier > 0.35` (ADR-038's bottom rung gets no
+   ring). _Failure mode:_ a "small" phone card baked at the desktop size
+   pays the desktop's texture memory for pixels it can never show.
 3. **`@supabase/supabase-js` is never statically imported on the anonymous
    path.** New sign-in flows MUST signal through `authBridge`
    (`notifyAuthSessionStarted()`), not import the client into a root-graph

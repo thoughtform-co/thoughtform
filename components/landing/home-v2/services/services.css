@@ -2986,3 +2986,73 @@
     display: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+ * ADR-108 — THE RING ON PHONES (`.services-stage[data-card-ring-mobile="on"]`)
+ *
+ * The same WebGL ring, drawn in the corridor's FIXED canvas behind the
+ * station (the ambient hold engages on this rung — useCorridorExitScroll),
+ * seated on a sticky band this stage renders between the masthead and the
+ * plate accordion. The band PAINTS NOTHING: it is the scroll the ring's
+ * clock reads (useServicesStageScroll, inert branch) and the host of the hit
+ * targets. The plates below stay the readable offer.
+ *
+ * ⚠ `--svc-ring-mobile-runway` IS `RING_MOBILE_RUNWAY_SVH` (ringMath) WRITTEN
+ * AS A LENGTH — the hook reads the band's rect, so the two agree by
+ * construction, but the lockstep test pins them anyway: a runway edited in
+ * one place changes how much scroll a beat gets and nothing else says so.
+ * ⚠ AFTER the ≤960 `.svc-ring-hits { display: none }` belt above, on
+ * purpose — same specificity is not enough; the attribute-scoped selectors
+ * here are more specific AND later, and both are meant.
+ * ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 960px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  .services-stage[data-card-ring-mobile="on"] .svc-ring-runway {
+    --svc-ring-mobile-runway: 300svh;
+    position: relative;
+    height: var(--svc-ring-mobile-runway);
+    /* Full-bleed inside the stage's inset column: the ring is centred on the
+       viewport, so its targets must be too. */
+    margin-inline: calc(-1 * var(--hud-content-inset, 22px));
+  }
+  .services-stage[data-card-ring-mobile="on"] .svc-ring-band {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    /* The band never captures the page's scroll — the ring is looked at,
+       not dragged. Only the hit targets inside it take pointer events. */
+    pointer-events: none;
+  }
+  .services-stage[data-card-ring-mobile="on"] .svc-ring-hits {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .services-stage[data-card-ring-mobile="on"] .svc-ring-hits__hit {
+    position: absolute;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    pointer-events: auto;
+    cursor: pointer;
+    /* A phone has no hover; the focus ring is the one affordance cue. */
+    -webkit-tap-highlight-color: transparent;
+  }
+  .services-stage[data-card-ring-mobile="on"] .svc-ring-hits__hit:focus-visible {
+    outline: 1px dashed rgba(var(--gold-rgb), 0.55);
+    outline-offset: -4px;
+  }
+  .services-stage[data-card-ring-mobile="on"] .svc-ring-hits__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}
