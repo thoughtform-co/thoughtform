@@ -1078,9 +1078,100 @@ export function ringMobileClock(p: number): RingMobileClock {
   return { progress, proofRelease, hold };
 }
 
-/** The front card's width in css px for a viewport `vw` px wide. */
-export function ringMobileFrontWidthPx(vw: number): number {
-  return Math.min(RING_MOBILE_FRONT_MAX_PX, vw * RING_MOBILE_FRONT_VW);
+/** The share of the band's FREE HEIGHT (between the masthead's title and
+ *  its paragraph) the front card's height may take (ADR-109). The width law
+ *  above still caps it; whichever is tighter wins, so a tall phone is
+ *  width-bound at 257–260px and a short one height-bound. */
+export const RING_MOBILE_SEAT_FILL = 0.82;
+/** Air between the front card's bottom edge and the open sheet's top. */
+export const RING_MOBILE_SHEET_CLEAR = 12;
+/** How far the side cards dim while the sheet is open (their opacity is
+ *  multiplied by `1 − DIM × sheetT`); the front card is untouched. */
+export const RING_MOBILE_SHEET_SIDE_DIM = 0.6;
+
+/** The front card's width in css px for a viewport `vw` px wide — and,
+ *  when the band's free height `seatH` is known, no taller than
+ *  `RING_MOBILE_SEAT_FILL` of it (the aspect never changes: the card's
+ *  height is its width ÷ `RING_CARD_ASPECT`). */
+export function ringMobileFrontWidthPx(vw: number, seatH?: number): number {
+  const byWidth = Math.min(RING_MOBILE_FRONT_MAX_PX, vw * RING_MOBILE_FRONT_VW);
+  if (!seatH || seatH <= 0) return byWidth;
+  return Math.min(byWidth, seatH * RING_MOBILE_SEAT_FILL * RING_CARD_ASPECT);
+}
+
+/**
+ * The ring group's `position.y` (in its PARENT's space — the mark's rig)
+ * that lands the FRONT CARD's centre on viewport css `seatCy` (ADR-109).
+ * The front card sits `radius` nearer the camera than the rig and `yOffset`
+ * above the ring plane, both scaled by the group; the rig's own camera-
+ * space `parentCamY` and `parentScale` are read off its matrix. Screen y is
+ * `(1 − ndcY) / 2 · H`, so the wanted camera-space y at the card's depth is
+ * `(1 − 2·seatCy/H) · depth · halfFovTan`. Pure; the gate test re-projects it.
+ */
+export function ringMobileSeatY(args: {
+  seatCy: number;
+  viewportH: number;
+  parentCamY: number;
+  camDepth: number;
+  halfFovTan: number;
+  parentScale: number;
+  ringScale: number;
+  yOffset: number;
+  radius: number;
+}): number {
+  const {
+    seatCy,
+    viewportH,
+    parentCamY,
+    camDepth,
+    halfFovTan,
+    parentScale,
+    ringScale,
+    yOffset,
+    radius,
+  } = args;
+  if (viewportH <= 0 || parentScale <= 0) return 0;
+  const depth = Math.max(0.1, camDepth - radius * ringScale * parentScale);
+  const ndcY = 1 - 2 * (seatCy / viewportH);
+  const camY = ndcY * depth * halfFovTan;
+  return (camY - parentCamY) / parentScale - yOffset * ringScale;
+}
+
+/** The share of the SEAT's height the open sheet must leave above it, so
+ *  the open card is still a card and not a sliver: the sheet's box is
+ *  bounded to `bandBottom − foot − (seatTop + ROOM·seatH)` and scrolls
+ *  inside that; the card FITS the room above (`ringMobileSheetFit`). */
+export const RING_MOBILE_SHEET_ROOM = 0.42;
+
+/**
+ * The front card's pose while the phone's sheet is open (ADR-109): its
+ * centre `cy` and a SIZE factor `k` on its width, blended from rest by
+ * `sheetT` so both ride the sheet's own clock. The room above the sheet is
+ * `[seatTop, sheetTop − CLEAR]`; a card taller than the room SHRINKS to it
+ * (`k < 1`, aspect kept) and centres in it, a card that fits keeps its
+ * size and lifts just clear of the sheet, never above the seat's top.
+ * Identity (`cy = seatCy`, `k = 1`) with no sheet or at `sheetT` 0.
+ */
+export function ringMobileSheetFit(args: {
+  seatCy: number;
+  seatH: number;
+  cardHpx: number;
+  sheetTop: number | undefined;
+  sheetT: number;
+}): { cy: number; k: number } {
+  const { seatCy, seatH, cardHpx, sheetTop, sheetT } = args;
+  if (sheetTop == null || sheetT <= 0 || cardHpx <= 0) return { cy: seatCy, k: 1 };
+  const t = clamp01(sheetT);
+  const seatTop = seatCy - seatH / 2;
+  const room = sheetTop - RING_MOBILE_SHEET_CLEAR - seatTop;
+  if (room <= 0) return { cy: seatCy, k: 1 };
+  const k = Math.min(1, room / cardHpx);
+  const fitH = cardHpx * k;
+  const openCy = Math.max(
+    seatTop + fitH / 2,
+    Math.min(seatCy, sheetTop - RING_MOBILE_SHEET_CLEAR - fitH / 2)
+  );
+  return { cy: seatCy + (openCy - seatCy) * t, k: 1 + (k - 1) * t };
 }
 
 /**
@@ -1113,7 +1204,7 @@ export function ringMobileGroupScale(args: {
   const { frontPx, viewportH, camDepth, halfFovTan, cardHeight, parentScale, frontMul, radius } =
     args;
   if (viewportH <= 0 || camDepth <= 0) return 0;
-  const q = ((frontPx / RING_CARD_ASPECT) / viewportH) * 2 * halfFovTan;
+  const q = (frontPx / RING_CARD_ASPECT / viewportH) * 2 * halfFovTan;
   const denom = parentScale * (cardHeight * frontMul + q * radius);
   return denom > 1e-9 ? (q * camDepth) / denom : 0;
 }

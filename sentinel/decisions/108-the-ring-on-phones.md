@@ -11,6 +11,22 @@ face) · ADR-056 (the release-gated entrance clock) · ADR-030 §6 / ADR-074
 plate accordion, which stays) · ADR-038 (the quality governor) · ADR-046 (the
 viewport-first seat law).
 
+## Update 1 (2026-09-16) — the band is the composition; the plates retire on this rung
+
+⚠ **SUPERSEDED IN PART BY [ADR-109](109-the-services-beat-on-a-phone.md)**
+(owner, on the live phone read: the plates are "weird blocks … we don't need
+those because we have the rotating cards", and "just like with the second
+section, we need the h1 above the cards and then the paragraph below it").
+What changes: the masthead renders INSIDE the band (title · an empty SEAT the
+ring fills · the paragraph — a grid the hook measures and the ring fits to,
+`RING_MOBILE_SEAT_FILL` 0.82), `ServicesPlateCluster` does not render on the
+ring rung, and a tap on the front card raises a DOM **sheet**
+(`ServicesSpecSheet`) instead of scrolling to a plate — `scrollToPlate` is
+deleted and a side-card tap rolls the band to that card's beat. Everything
+about the rung, the flag, the three readers, the ambient hold, the clock, the
+bake and the scale solve stands; §5 below and "a tap goes to the plate" are
+the superseded parts, and the device checklist is ADR-109's gate too.
+
 ## Context
 
 The owner, walking the phone build ahead of launch (2026-09-16):

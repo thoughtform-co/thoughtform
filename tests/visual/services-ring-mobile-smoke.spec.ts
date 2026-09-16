@@ -1,16 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { SERVICES } from "../../components/landing/home-v2/services/serviceData";
+import { RING_MOBILE_SEAT_FILL, RING_MOBILE_SHEET_ROOM } from "../../lib/services-ring/ringMath";
+
 /**
- * THE RING ON PHONES (ADR-108).
+ * THE RING ON PHONES (ADR-108) AND ITS BEAT (ADR-109).
  *
  * At `SERVICES_RING_MOBILE_MEDIA` the corridor's card ring — the desktop
  * offer beat's WebGL carousel around the parked mark — mounts on a phone
  * too: `useCorridorExitScroll` lets the ambient hold engage (the corridor's
  * canvas goes FIXED behind `#services`), `ServicesStage` renders a sticky
- * SEAT BAND between the masthead and the plate accordion whose scroll is
- * the ring's clock, and `ServicesRingHitAreas` shims one button per visible
- * card that scrolls the reader to that service's plate. The plates stay the
- * offer; the ring is the visual.
+ * BAND whose scroll is the ring's clock, and `ServicesRingHitAreas` shims
+ * one button per visible card. Since ADR-109 the band IS the composition:
+ * the masthead's title on top, an empty SEAT the ring fills, the paragraph
+ * below — the thesis beat's own order — and a tap on the front card raises
+ * a SHEET from the band's foot with the drawer's copy as DOM type. The
+ * plate accordion does not render on this rung.
  *
  * ⚠ CHROMIUM PHONE PROJECTS ONLY (the ADR-107 spec's own reason: the WebKit
  * iPhone projects cannot reach the local dev server). The corridor is WebGL,
@@ -144,8 +149,60 @@ function readBand(page: Page) {
       drawerShims: document.querySelectorAll(".svc-ring-hits__hit--drawer, .svc-ring-hits__close")
         .length,
       hits,
+      // ADR-109: the band's three rows and the sheet.
+      plates: document.querySelectorAll(".svc-plate").length,
+      plateOpen: stage?.getAttribute("data-plate-open") ?? null,
+      title: rect(".svc-ring-band .services-masthead__title"),
+      seat: rect(".svc-ring-seat"),
+      intro: rect(".svc-ring-band .services-masthead__intro"),
+      introText:
+        document.querySelector(".svc-ring-band .services-masthead__intro")?.textContent?.trim() ??
+        "",
+      sheet: (() => {
+        const el = document.querySelector<HTMLElement>(".svc-sheet");
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        const close = el.querySelector<HTMLElement>(".svc-sheet__close")?.getBoundingClientRect();
+        const cta = el.querySelector<HTMLAnchorElement>(".svc-sheet__cta");
+        return {
+          open: el.getAttribute("data-open") === "1",
+          role: el.getAttribute("role"),
+          inert: el.hasAttribute("inert"),
+          visibility: getComputedStyle(el).visibility,
+          service: el.getAttribute("data-service"),
+          x: r.left,
+          y: r.top,
+          w: r.width,
+          h: r.height,
+          chip: el.querySelector(".svc-sheet__chip")?.textContent?.trim() ?? "",
+          title: el.querySelector(".svc-sheet__title")?.textContent?.trim() ?? "",
+          lines: el.querySelectorAll(".svc-sheet__list li").length,
+          cells: el.querySelectorAll(".svc-sheet__spec dd").length,
+          closeW: close?.width ?? 0,
+          closeH: close?.height ?? 0,
+          ctaHref: cta?.getAttribute("href") ?? null,
+          ctaText: cta?.textContent?.trim() ?? "",
+          backdrop: getComputedStyle(el).backdropFilter,
+        };
+      })(),
     };
+    function rect(sel: string) {
+      const el = document.querySelector<HTMLElement>(sel);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.left, y: r.top, w: r.width, h: r.height };
+    }
   });
+}
+
+/** Tap the front card and wait out the sheet's 420ms rise. */
+async function openSheet(page: Page) {
+  const s = await readBand(page);
+  const front = s.hits.find((h) => h.front);
+  expect(front, "no front-card button").toBeTruthy();
+  await page.mouse.click(front!.x + front!.w / 2, front!.y + front!.h / 2);
+  await page.waitForTimeout(900);
+  return front!;
 }
 
 async function boot(page: Page, theme: "dark" | "light" = "dark") {
@@ -200,9 +257,14 @@ test.describe("the ring on phones (ADR-108)", () => {
         expect(h.w, `${h.label} narrower than the 44px touch floor`).toBeGreaterThanOrEqual(44);
         expect(h.h, `${h.label} shorter than the 44px touch floor`).toBeGreaterThanOrEqual(44);
       }
-      const ask = Math.min(260, s.vw * 0.66);
+      // ADR-109: the seat bounds it too — the card's height may take
+      // `RING_MOBILE_SEAT_FILL` of the free band between the two texts.
+      expect(s.seat, "no seat row in the band").toBeTruthy();
+      const ask = Math.min(260, s.vw * 0.66, s.seat!.h * RING_MOBILE_SEAT_FILL * (420 / 680));
       expect(front!.w).toBeGreaterThan(ask * 0.85);
       expect(front!.w).toBeLessThan(ask * 1.15);
+      // The projected rect carries the front pose's tilt; 6 % is that.
+      expect(front!.h).toBeLessThan(s.seat!.h * RING_MOBILE_SEAT_FILL * 1.06);
       // Inside the frame — the first cut solved the scale at the mark's
       // depth and the card spilled past both edges of the phone.
       expect(front!.x).toBeGreaterThanOrEqual(-1);
@@ -213,6 +275,32 @@ test.describe("the ring on phones (ADR-108)", () => {
       // The epilogue signal is a fixed painter and this band is deep inside
       // #services: it is dead and inert here (`mobile-sections.md` §2).
       expect(s.signalInert).toBe(true);
+
+      // ── THE BAND IS THE COMPOSITION (ADR-109) ──
+      // Title above the cards, the paragraph below, all three inside the
+      // frame and clear of the HUD's two 56px chrome bands; the masthead's
+      // typewriter is desktop-only, so the paragraph is resolved text.
+      expect(s.title, "the masthead's title is not in the band").toBeTruthy();
+      expect(s.intro, "the masthead's paragraph is not in the band").toBeTruthy();
+      expect(s.title!.y).toBeGreaterThanOrEqual(56);
+      expect(s.title!.y + s.title!.h).toBeLessThanOrEqual(front!.y + 1);
+      expect(front!.y + front!.h).toBeLessThanOrEqual(s.intro!.y + 1);
+      expect(s.intro!.y + s.intro!.h).toBeLessThanOrEqual(s.vh - 56 + 1);
+      expect(s.introText.length).toBeGreaterThan(80);
+      // The seat is the band between the two texts, and the card sits on it.
+      expect(s.seat!.y).toBeGreaterThanOrEqual(s.title!.y + s.title!.h - 1);
+      expect(s.seat!.y + s.seat!.h).toBeLessThanOrEqual(s.intro!.y + 1);
+      const seatCy = s.seat!.y + s.seat!.h / 2;
+      expect(Math.abs(front!.y + front!.h / 2 - seatCy)).toBeLessThan(s.seat!.h * 0.08);
+      // No plate accordion on this rung: the cards are the offer, the sheet
+      // the readable version — and the four plate photographs stay unfetched.
+      expect(s.plates, "the plate accordion rendered on the ring rung").toBe(0);
+      // The sheet is mounted, shut and out of the tree.
+      expect(s.sheet, "no sheet in the band").toBeTruthy();
+      expect(s.sheet!.open).toBe(false);
+      expect(s.sheet!.inert).toBe(true);
+      expect(s.sheet!.visibility).toBe("hidden");
+      expect(s.plateOpen).toBeNull();
     });
   }
 
@@ -228,8 +316,8 @@ test.describe("the ring on phones (ADR-108)", () => {
     let s = await readBand(page);
     expect(s.hits, "cards published before the band arrived").toHaveLength(0);
 
-    // Past the release: the ring has left with its stage and the plates
-    // below are the offer — nothing shims over them.
+    // Past the release: the ring has left with its stage and the next
+    // station is the page — nothing shims over it.
     await seatBand(page, 1);
     await rollTo(page, Math.round((await bandTop(page)) + vh * 3.4));
     await page.waitForTimeout(400);
@@ -237,34 +325,136 @@ test.describe("the ring on phones (ADR-108)", () => {
     expect(s.hits, "cards still published after the band released").toHaveLength(0);
   });
 
-  test("tapping a card scrolls to its plate", async ({ page }) => {
+  for (const theme of ["dark", "light"] as const) {
+    test(`tapping the front card raises the sheet, and ✕ closes it — ${theme}`, async ({
+      page,
+    }) => {
+      await boot(page, theme);
+      await seatBand(page, 0.55);
+      const before = await readBand(page);
+      const serviceId = await page.evaluate(
+        () =>
+          document.querySelector<HTMLElement>(".svc-ring-hits__hit--front")?.dataset.service ?? null
+      );
+      expect(serviceId, "the front button names no service").toBeTruthy();
+      const plateIdx = SERVICES.findIndex((sv) => sv.id === serviceId);
+      expect(plateIdx).toBeGreaterThanOrEqual(0);
+
+      await openSheet(page);
+      const s = await readBand(page);
+      const sheet = s.sheet!;
+      // A dialog about the card that was tapped, with the drawer's copy as
+      // DOM type: chip, title, the WHAT lines, the five HOW cells, the CTA.
+      expect(sheet.open).toBe(true);
+      expect(sheet.role).toBe("dialog");
+      expect(sheet.inert).toBe(false);
+      expect(sheet.visibility).toBe("visible");
+      expect(sheet.service).toBe(serviceId);
+      expect(s.plateOpen).toBe("1");
+      expect(sheet.chip.length).toBeGreaterThan(0);
+      expect(sheet.title.length).toBeGreaterThan(10);
+      expect(sheet.lines).toBeGreaterThanOrEqual(3);
+      expect(sheet.cells).toBe(5);
+      expect(sheet.ctaHref).toBe("#contact");
+      expect(sheet.ctaText).toMatch(/^(Book|Scope|Open) /);
+      // Touch floor on the close control; no backdrop blur over the canvas
+      // (ADR-107's phone ruling).
+      expect(sheet.closeW).toBeGreaterThanOrEqual(44);
+      expect(sheet.closeH).toBeGreaterThanOrEqual(44);
+      expect(sheet.backdrop === "none" || sheet.backdrop === "").toBe(true);
+      // Seated inside the frame, clear of the HUD's bottom chrome, and no
+      // higher than the room law allows — the card above it is still a card.
+      expect(sheet.x).toBeGreaterThanOrEqual(0);
+      expect(sheet.x + sheet.w).toBeLessThanOrEqual(s.vw + 1);
+      expect(sheet.y + sheet.h).toBeLessThanOrEqual(s.vh - 56 + 1);
+      const roomFloor = before.seat!.y + RING_MOBILE_SHEET_ROOM * before.seat!.h;
+      expect(sheet.y).toBeGreaterThanOrEqual(roomFloor - 2);
+      // The ring answered: the front card fits the room above the sheet
+      // (its bottom clear of the sheet's top), still inside the frame.
+      const front = s.hits.find((h) => h.front);
+      expect(front, "the front card left while the sheet opened").toBeTruthy();
+      expect(front!.y + front!.h).toBeLessThanOrEqual(sheet.y + 1);
+      expect(front!.y).toBeGreaterThanOrEqual(-1);
+      expect(front!.w).toBeGreaterThanOrEqual(44);
+      // The ✕ closes it and the step is untouched.
+      await page.locator(".svc-sheet__close").click();
+      await page.waitForTimeout(600);
+      const after = await readBand(page);
+      expect(after.sheet!.open).toBe(false);
+      expect(after.sheet!.inert).toBe(true);
+      expect(after.plateOpen).toBeNull();
+      expect(after.step).toBe(before.step);
+      // And the card returns to its seat.
+      const back = after.hits.find((h) => h.front);
+      expect(back).toBeTruthy();
+      expect(Math.abs(back!.h - (before.hits.find((h) => h.front)?.h ?? 0))).toBeLessThan(12);
+    });
+  }
+
+  test("Escape, a tap outside and a beat of scroll all close the sheet", async ({ page }) => {
     await boot(page);
-    await seatBand(page, 0.4);
+    await seatBand(page, 0.55);
+
+    await openSheet(page);
+    expect((await readBand(page)).sheet!.open).toBe(true);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
+    expect((await readBand(page)).sheet!.open).toBe(false);
+
+    await openSheet(page);
+    expect((await readBand(page)).sheet!.open).toBe(true);
+    // The band above the sheet is the scrim: a tap on the title closes it.
     const s = await readBand(page);
-    const front = s.hits.find((h) => h.front);
-    expect(front).toBeTruthy();
+    await page.mouse.click(s.vw / 2, Math.max(60, s.title!.y - 4));
+    await page.waitForTimeout(500);
+    expect((await readBand(page)).sheet!.open).toBe(false);
 
-    const serviceId = await page.evaluate(
-      () =>
-        document.querySelector<HTMLElement>(".svc-ring-hits__hit--front")?.dataset.service ?? null
-    );
-    expect(serviceId, "the front button names no service").toBeTruthy();
+    // The step, not 35px of scroll: the sheet survives a nudge inside its
+    // beat and closes once the ring has turned to another card.
+    await openSheet(page);
+    const openedStep = (await readBand(page)).step;
+    await page.evaluate(() => window.scrollBy(0, 60));
+    await page.waitForTimeout(400);
+    let r = await readBand(page);
+    expect(r.step).toBe(openedStep);
+    expect(r.sheet!.open, "a nudge inside the beat closed the sheet").toBe(true);
+    await seatBand(page, 0.8);
+    await page.waitForTimeout(500);
+    r = await readBand(page);
+    expect(r.step).not.toBe(openedStep);
+    expect(r.sheet!.open, "the ring turned and the sheet stayed").toBe(false);
+  });
 
-    await page.mouse.click(front!.x + front!.w / 2, front!.y + front!.h / 2);
+  test("tapping a side card rolls the band to that card's beat", async ({ page }) => {
+    await boot(page);
+    await seatBand(page, 0.55);
+    const s = await readBand(page);
+    const side = await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>(
+        ".svc-ring-hits__hit:not(.svc-ring-hits__hit--front)"
+      );
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2, service: el.dataset.service };
+    });
+    expect(side, "no side-card button").toBeTruthy();
+    const idx = SERVICES.findIndex((sv) => sv.id === side!.service);
+    expect(idx).toBeGreaterThanOrEqual(0);
+    expect(String(idx)).not.toBe(s.step);
+
+    await page.mouse.click(side!.x, side!.y);
     await settleScroll(page, 2400);
-    await page.waitForTimeout(200);
-
-    // The plate the button named lands in the frame's top band: the reader
-    // asked for a service and got its offer, not the band it was looking at.
-    const landed = await page.evaluate((id) => {
-      const plate = document.querySelector<HTMLElement>(`.svc-plate[data-service="${id}"]`);
-      return plate
-        ? plate.getBoundingClientRect().top / document.documentElement.clientHeight
-        : Number.NaN;
-    }, serviceId);
-    expect(landed, `no plate for ${serviceId}`).not.toBeNaN();
-    expect(landed).toBeGreaterThanOrEqual(-0.02);
-    expect(landed).toBeLessThanOrEqual(0.4);
+    await page.waitForTimeout(300);
+    const r = await readBand(page);
+    // The band is still pinned (the roll stayed on its own runway) and the
+    // step is the tapped card's: it is front now.
+    expect(Math.abs(r.bandTop)).toBeLessThanOrEqual(1);
+    expect(r.step).toBe(String(idx));
+    expect(
+      await page.evaluate(
+        () => document.querySelector<HTMLElement>(".svc-ring-hits__hit--front")?.dataset.service
+      )
+    ).toBe(side!.service);
   });
 
   test("#voidwalker still ends the ambient hold", async ({ page }) => {

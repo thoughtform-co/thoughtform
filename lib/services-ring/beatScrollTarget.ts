@@ -9,11 +9,19 @@
 // rotation that brings card i front. Extracted so the two click paths can
 // never drift from the ring math.
 
-import { RING_ARRIVAL_FRAC, RING_COUNT, RING_EXIT_START, RING_TRAVEL_FRAC } from "./ringMath";
+import { clamp01 } from "@/lib/math";
+import {
+  RING_ARRIVAL_FRAC,
+  RING_COUNT,
+  RING_EXIT_START,
+  RING_MOBILE_ARRIVE,
+  RING_MOBILE_LEAVE_START,
+  RING_TRAVEL_FRAC,
+} from "./ringMath";
 
 /** Runway progress p at which card `index` is settled front-centre — the
  *  inverse of `activeServiceForProgress`, at the dwell of each rotation. */
-function frontProgressForService(index: number): number {
+export function frontProgressForService(index: number): number {
   if (index <= 0) return RING_ARRIVAL_FRAC * 0.5; // Advisory: mid-arrival hold
   const rotations = RING_COUNT - 1; // three quarter-turns
   const seg = Math.min(rotations - 1, index - 1); // rotation that dwells on card `index`
@@ -44,4 +52,31 @@ export function servicesBeatScrollTarget(
   const travel = rect.height - vh;
   if (travel <= 0) return null;
   return window.scrollY + rect.top + frontProgressForService(index) * travel;
+}
+
+/**
+ * THE PHONE BAND's fraction (0 = pinned, 1 = released) at which service
+ * `index` is the FRONT card (ADR-109) — the inverse of `ringMobileClock`'s
+ * progress map, which spends the ring's `[0, RING_EXIT_START·0.999]` over
+ * `[0, RING_MOBILE_LEAVE_START]` of the band. Floored at the band's arrival
+ * so a tap on the first card never lands mid fly-in. Pure; the gate test
+ * round-trips it through `ringMobileClock` + `activeServiceForProgress`.
+ */
+export function ringMobileBandFraction(index: number): number {
+  const t = (frontProgressForService(index) / (RING_EXIT_START * 0.999)) * RING_MOBILE_LEAVE_START;
+  return clamp01(Math.max(RING_MOBILE_ARRIVE, t));
+}
+
+/** The document y that seats the band at service `index`'s beat — the
+ *  phone's `servicesBeatScrollTarget`, on the band's own runway. */
+export function servicesMobileBeatScrollTarget(
+  index: number,
+  runway: HTMLElement | null
+): number | null {
+  if (typeof window === "undefined" || !runway) return null;
+  const vh = document.documentElement.clientHeight || window.innerHeight || 1;
+  const rect = runway.getBoundingClientRect();
+  const travel = rect.height - vh;
+  if (travel <= 0) return null;
+  return window.scrollY + rect.top + ringMobileBandFraction(index) * travel;
 }

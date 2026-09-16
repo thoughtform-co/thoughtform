@@ -2792,10 +2792,30 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     });
     await page.waitForTimeout(800);
 
-    // All four plates present and flowing (racks dissolve to contents).
-    await expect(page.locator(".svc-plate")).toHaveCount(4);
-    // No ring overlays mount below the desktop gate.
-    await expect(page.locator(".svc-ring-hits")).toHaveCount(0);
+    /* Two rungs below the desktop gate since ADR-108 / ADR-109. On the RING
+       rung (≤960 ∧ ≥681h ∧ no-PRM — the tablet is on it) the cards are the
+       offer: the band renders with its one hit layer and NO plate accordion
+       (its four photographs stay unfetched). On the INERT rung (PRM, or a
+       phone ≤680h) the accordion is the page exactly as it was, and no ring
+       overlay mounts. `SERVICES_RING_MOBILE_MEDIA`, read here as its own
+       string so the test cannot follow a drifted constant. */
+    const ringRung = await page.evaluate(
+      () =>
+        window.matchMedia(
+          "(max-width: 960px) and (min-height: 681px) and (prefers-reduced-motion: no-preference)"
+        ).matches
+    );
+    if (ringRung) {
+      await expect(page.locator(".svc-plate")).toHaveCount(0);
+      await expect(page.locator(".svc-ring-band")).toHaveCount(1);
+      await expect(page.locator(".svc-ring-hits")).toHaveCount(1);
+      await expect(page.locator(".svc-sheet")).toHaveCount(1);
+    } else {
+      // All four plates present and flowing (racks dissolve to contents).
+      await expect(page.locator(".svc-plate")).toHaveCount(4);
+      // No ring overlays mount below the desktop gate.
+      await expect(page.locator(".svc-ring-hits")).toHaveCount(0);
+    }
     // The about deck-flip stage never engages below the gate (ADR-047):
     // the static voidwalker owns #about and the runway stays flat.
     const aboutStatic = await page.evaluate(() => ({

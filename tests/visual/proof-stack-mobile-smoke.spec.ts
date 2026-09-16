@@ -254,7 +254,13 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     await rollTo(page, y0 + tail - 80);
     const held = await rect(page, '[data-pc-index="7"]');
     expect(Math.abs(held!.top - pin)).toBeLessThanOrEqual(1.5);
-    const masthead = await rect(page, ".services-masthead");
+    /* What waits below the pile: on the ring rung (ADR-109) the masthead
+       renders INSIDE the ring's band as `display: contents` — no box of its
+       own — so the band's runway is the offer's top edge there; the inert
+       rung keeps the flowing masthead. */
+    const masthead =
+      (await rect(page, ".svc-ring-runway")) ?? (await rect(page, ".services-masthead"));
+    expect(masthead, "no offer below the pile").toBeTruthy();
     expect(masthead!.top).toBeGreaterThanOrEqual(held!.bottom - 1);
     await rollTo(page, y0 + tail + 120);
     const gone = await rect(page, '[data-pc-index="7"]');

@@ -180,6 +180,7 @@ export function ServicesRingHitAreas({
                 key={anchor.serviceId}
                 type="button"
                 className="svc-ring-hits__hit"
+                data-service={anchor.serviceId}
                 style={{
                   left: `${left.toFixed(1)}px`,
                   top: `${(anchor.y - origin.top).toFixed(1)}px`,

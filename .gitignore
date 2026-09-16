@@ -57,6 +57,7 @@ yarn-error.log*
 .cursor/trinny-shots/
 .cursor/signal-shots/
 .cursor/redline-shots/
+.cursor/services-mobile/
 
 # Local screenshot captures (root-only, keeps tracked design/inspiration/**.png)
 /*.png

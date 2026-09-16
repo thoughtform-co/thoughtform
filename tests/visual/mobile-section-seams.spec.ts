@@ -79,17 +79,27 @@ const CHROME_SELECTORS = [
  *   #contact  · `.hud__nav__btn`  — `Plot your` overlaps the readout by
  *               1px at the DOCUMENT'S END, where the scroll cannot go
  *               further (390 ONLY; 932 of viewport clears it)
+ *   #voidwalker · `.rin-settings` — NOT voidwalker's own copy: `#contact`'s
+ *               title ("Navigate intelligence", a 293px run from x 32)
+ *               passing under the cluster's column (x 323–367) by 2px,
+ *               because this rest (top + 300) puts `#contact`'s top ~696
+ *               into the frame. Exposed 2026-09-16 when ADR-109 took the
+ *               plate accordion out of `#services` — the shorter page lands
+ *               the emulator in its 912px `innerHeight` state here (it was
+ *               942, which seats the cluster 14px further right); the
+ *               geometry is the footer title's measure, pre-existing
+ *               (390 ONLY)
  *
  * All of them are station INTERIORS — casefile.css, the about bio and its
  * telemetry, the contact headline — which this pass does not own. An entry
  * comes OUT of this list in the same commit as its fix; a collision on a
- * station that is NOT listed (#hero and #voidwalker are clean at
- * both phone shapes) fails the test outright, which is what stops a sixth
- * appearing quietly.
+ * station that is NOT listed (#hero is clean at both phone shapes) fails
+ * the test outright, which is what stops a seventh appearing quietly.
  */
 const KNOWN_CHROME_COLLISIONS: Record<string, readonly string[]> = {
   services: [".hud__nav__btn", ".rin-settings"],
   about: [".hud__nav__btn", ".hud__corner--tl", ".rin-settings"],
+  voidwalker: [".rin-settings"],
   contact: [".hud__nav__btn"],
 };
 

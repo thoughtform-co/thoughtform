@@ -14,6 +14,7 @@ import {
   PROOF_STACK_SPLIT_MEDIA,
   SERVICES_RING_MOBILE_MEDIA,
 } from "@/components/landing/home-v2/unifiedServicesInstrument";
+import { ringMobileBandFraction } from "@/lib/services-ring/beatScrollTarget";
 import {
   RING_CARD_ASPECT,
   RING_EXIT_START,
@@ -21,10 +22,17 @@ import {
   RING_MOBILE_FRONT_MAX_PX,
   RING_MOBILE_LEAVE_START,
   RING_MOBILE_RUNWAY_SVH,
+  RING_MOBILE_SEAT_FILL,
+  RING_MOBILE_SHEET_CLEAR,
+  RING_MOBILE_SHEET_ROOM,
+  activeServiceForProgress,
   ringMobileClock,
   ringMobileFrontWidthPx,
   ringMobileGroupScale,
+  ringMobileSeatY,
+  ringMobileSheetFit,
 } from "@/lib/services-ring/ringMath";
+import type { ServicesRingProgress } from "@/lib/services-ring/ringProgressRef";
 
 /**
  * THE RING ON PHONES — the gate, the bake and the clock (ADR-108).
@@ -147,7 +155,8 @@ describe("the phone ring's clock", () => {
     expect(cssH * RING_CARD_ASPECT).toBeCloseTo(args.frontPx, 6);
     // Solved at the mark's depth instead, the card would paint larger — the
     // first cut's 383px against 257: the orbit term is what closes it.
-    const naive = (2 * args.camDepth * args.halfFovTan * (args.frontPx / RING_CARD_ASPECT / args.viewportH)) /
+    const naive =
+      (2 * args.camDepth * args.halfFovTan * (args.frontPx / RING_CARD_ASPECT / args.viewportH)) /
       (args.cardHeight * args.parentScale * args.frontMul);
     expect(naive).toBeGreaterThan(s);
     expect(ringMobileGroupScale({ ...args, viewportH: 0 })).toBe(0);
@@ -158,5 +167,173 @@ describe("the phone ring's clock", () => {
     expect(ringMobileFrontWidthPx(360)).toBeCloseTo(360 * 0.66, 6);
     expect(ringMobileFrontWidthPx(430)).toBe(RING_MOBILE_FRONT_MAX_PX);
     expect(ringMobileFrontWidthPx(960)).toBe(RING_MOBILE_FRONT_MAX_PX);
+  });
+});
+
+/**
+ * THE BAND IS THE COMPOSITION, AND THE SHEET (ADR-109).
+ *
+ * The band publishes a SEAT (the free height between the masthead's title
+ * and its paragraph); the ring fits its front card to it and centres on it;
+ * a tap raises a SHEET and the card FITS the room the sheet leaves above.
+ * Every number is solved in `ringMath` and re-projected here by hand.
+ */
+describe("the seat (ADR-109)", () => {
+  it("is optional on the progress record — desktop and every lab never set it", () => {
+    const rest: ServicesRingProgress = { progress: 0, proofRelease: 1, proofPresence: 0 };
+    expect(rest.seat).toBeUndefined();
+    expect(rest.sheetTop).toBeUndefined();
+    // Absent, the width law alone seats the card — byte-identical to ADR-108.
+    expect(ringMobileFrontWidthPx(390, undefined)).toBe(ringMobileFrontWidthPx(390));
+    expect(ringMobileFrontWidthPx(390, 0)).toBe(ringMobileFrontWidthPx(390));
+  });
+
+  it("bounds the front card's HEIGHT to the seat's fill share, aspect kept", () => {
+    // 390×844: the seat is ~538 tall → 0.82·538 = 441 of height → 272 of
+    // width, so the card stays width-bound at 257.4 (ADR-108's number).
+    expect(ringMobileFrontWidthPx(390, 538)).toBeCloseTo(390 * 0.66, 6);
+    // A 700h phone: ~393 of seat → height-bound at 0.82·393·(420/680).
+    const short = ringMobileFrontWidthPx(390, 393);
+    expect(short).toBeCloseTo(393 * RING_MOBILE_SEAT_FILL * RING_CARD_ASPECT, 6);
+    expect(short / RING_CARD_ASPECT).toBeLessThanOrEqual(393 * RING_MOBILE_SEAT_FILL + 1e-9);
+    expect(short).toBeLessThan(ringMobileFrontWidthPx(390));
+  });
+
+  it("solves the ring's y so the FRONT CARD's centre lands on the seat's", () => {
+    const args = {
+      seatCy: 390.4,
+      viewportH: 844,
+      parentCamY: -0.31,
+      camDepth: 3.2,
+      halfFovTan: Math.tan((70 * Math.PI) / 360),
+      parentScale: 0.62,
+      ringScale: 0.53,
+      yOffset: -0.04,
+      radius: 1.3 * 0.7,
+    };
+    const y = ringMobileSeatY(args);
+    // Re-project: the card's camera-space y is the rig's plus the ring's y
+    // and the y offset, both scaled by the rig, at the card's own depth.
+    const depth = args.camDepth - args.radius * args.ringScale * args.parentScale;
+    const camY = args.parentCamY + (y + args.yOffset * args.ringScale) * args.parentScale;
+    const screenY = ((1 - camY / (depth * args.halfFovTan)) / 2) * args.viewportH;
+    expect(screenY).toBeCloseTo(args.seatCy, 6);
+    // A seat at the frame's centre with a centred rig is the ring's rest.
+    expect(ringMobileSeatY({ ...args, seatCy: 422, parentCamY: 0, yOffset: 0 })).toBeCloseTo(0, 9);
+    expect(ringMobileSeatY({ ...args, viewportH: 0 })).toBe(0);
+  });
+
+  it("fits the front card to the room above the sheet — shrinking only if it must", () => {
+    const seat = { cy: 390.4, h: 538.3 };
+    const cardH = 257.4 / RING_CARD_ASPECT; // 416.8
+    // No sheet, or a shut one: identity.
+    expect(
+      ringMobileSheetFit({
+        seatCy: seat.cy,
+        seatH: seat.h,
+        cardHpx: cardH,
+        sheetTop: undefined,
+        sheetT: 1,
+      })
+    ).toEqual({ cy: seat.cy, k: 1 });
+    expect(
+      ringMobileSheetFit({
+        seatCy: seat.cy,
+        seatH: seat.h,
+        cardHpx: cardH,
+        sheetTop: 347,
+        sheetT: 0,
+      })
+    ).toEqual({ cy: seat.cy, k: 1 });
+    // 390×844 with the sheet at the room law's ceiling: the room above is
+    // 347 − 12 − 121.25 = 213.75 of height for a 417 card → it shrinks to
+    // the room and centres in it, and its bottom clears the sheet.
+    const seatTop = seat.cy - seat.h / 2;
+    const sheetTop = seatTop + RING_MOBILE_SHEET_ROOM * seat.h;
+    const fit = ringMobileSheetFit({
+      seatCy: seat.cy,
+      seatH: seat.h,
+      cardHpx: cardH,
+      sheetTop,
+      sheetT: 1,
+    });
+    const room = sheetTop - RING_MOBILE_SHEET_CLEAR - seatTop;
+    expect(fit.k).toBeCloseTo(room / cardH, 9);
+    expect(fit.k).toBeLessThan(1);
+    expect(fit.cy + (cardH * fit.k) / 2).toBeLessThanOrEqual(
+      sheetTop - RING_MOBILE_SHEET_CLEAR + 1e-9
+    );
+    expect(fit.cy - (cardH * fit.k) / 2).toBeCloseTo(seatTop, 9);
+    // A card that fits keeps its size and lifts just clear.
+    const small = ringMobileSheetFit({
+      seatCy: seat.cy,
+      seatH: seat.h,
+      cardHpx: 100,
+      sheetTop: 600,
+      sheetT: 1,
+    });
+    expect(small.k).toBe(1);
+    expect(small.cy).toBe(seat.cy); // already clear: 390 + 50 < 588
+    const lift = ringMobileSheetFit({
+      seatCy: seat.cy,
+      seatH: seat.h,
+      cardHpx: 200,
+      sheetTop: 400,
+      sheetT: 1,
+    });
+    expect(lift.k).toBe(1);
+    expect(lift.cy).toBeCloseTo(400 - RING_MOBILE_SHEET_CLEAR - 100, 9);
+    // Half way on the sheet's clock: half way on both terms.
+    const mid = ringMobileSheetFit({
+      seatCy: seat.cy,
+      seatH: seat.h,
+      cardHpx: cardH,
+      sheetTop,
+      sheetT: 0.5,
+    });
+    expect(mid.k).toBeCloseTo((1 + fit.k) / 2, 9);
+    expect(mid.cy).toBeCloseTo((seat.cy + fit.cy) / 2, 9);
+  });
+
+  it("rolls the band to a card's beat — the inverse of the phone clock", () => {
+    for (let i = 0; i < 4; i += 1) {
+      const frac = ringMobileBandFraction(i);
+      expect(frac).toBeGreaterThanOrEqual(RING_MOBILE_ARRIVE);
+      expect(frac).toBeLessThanOrEqual(RING_MOBILE_LEAVE_START);
+      expect(activeServiceForProgress(ringMobileClock(frac).progress)).toBe(i);
+    }
+    let last = -1;
+    for (let i = 0; i < 4; i += 1) {
+      expect(ringMobileBandFraction(i)).toBeGreaterThan(last);
+      last = ringMobileBandFraction(i);
+    }
+  });
+
+  it("keeps the sheet on the band, glass without a blur, and the room law in one place", () => {
+    const css = read("components/landing/home-v2/services/services.css");
+    const at = css.indexOf("THE SHEET (ADR-109)");
+    expect(at, "services.css has no sheet block").toBeGreaterThan(0);
+    // The sheet's rules alone, comments stripped (a comment naming the ban
+    // is not a declaration of it).
+    const block = css
+      .slice(
+        css.indexOf(".svc-sheet-scrim {", at),
+        css.indexOf(".svc-sheet__cta:focus-visible", at)
+      )
+      .replace(/\/\*[\s\S]*?\*\//g, "");
+    const sheetRule = /\.svc-sheet \{([^}]*)\}/.exec(block);
+    expect(sheetRule, "no .svc-sheet rule").not.toBeNull();
+    // Absolute in the sticky band, never fixed (`mobile-sections.md` §7).
+    expect(sheetRule![1]).toMatch(/position:\s*absolute/);
+    expect(block).not.toMatch(/position:\s*fixed/);
+    // No backdrop-filter over a live canvas (ADR-107's phone ruling).
+    expect(block).not.toMatch(/backdrop-filter/);
+    // Pure motion: the sheet's transitions move it, nothing fades it.
+    expect(sheetRule![1]).not.toMatch(/opacity/);
+    // The sheet bounds its height by the SAME constant the ring fits to.
+    const sheet = read("components/landing/home-v2/services/ServicesSpecSheet.tsx");
+    expect(sheet).toContain("RING_MOBILE_SHEET_ROOM");
+    expect(RING_MOBILE_SHEET_ROOM).toBeGreaterThan(0.3);
+    expect(RING_MOBILE_SHEET_ROOM).toBeLessThan(0.6);
   });
 });

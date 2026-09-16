@@ -223,16 +223,25 @@ floor like any flowing content (law 1); and it is under law 4's
 rendering would reflow under the reader's thumb exactly as #contact did.
 Its guard is its own: `proof-stack-mobile-smoke.spec.ts`.
 
-## 7 · The ring's seat band is a sticky band in flow (ADR-108)
+## 7 · The ring's band is a sticky band in flow, and it is the beat (ADR-108, ADR-109)
 
-Between the masthead and the plate accordion, on the ring rung, `#services`
-carries `.svc-ring-runway` (300svh) with a sticky, transparent, 100svh
-`.svc-ring-band` — the ring's seat and clock. Like the pile (§6) it is sticky
-in flow and owes no kill condition of its own; the ring it seats draws in the
-FIXED corridor canvas, whose kill is §2's. The band's hit layer is the one
-interactive thing on it (`.svc-ring-hits__hit`, ≥44px, z 4 inside the band)
-and every hit scrolls to a plate. Its guard is
-`services-ring-mobile-smoke.spec.ts`.
+On the ring rung `#services` carries `.svc-ring-runway` (300svh) with a
+sticky, 100svh `.svc-ring-band` — the ring's seat and clock, and since
+ADR-109 the whole beat's composition: the masthead's title (row 1), an empty
+`.svc-ring-seat` the ring fills (row 2), the paragraph (row 3), inside the
+band's own padding of `56px + 8px` / `56px + 16px` so both texts clear the
+HUD's chrome bands (§1). No plate accordion follows on this rung. Like the
+pile (§6) the band is sticky in flow and owes no kill condition of its own;
+the ring it seats draws in the FIXED corridor canvas, whose kill is §2's.
+Two interactive things live on it: the hit layer (`.svc-ring-hits__hit`,
+≥44px, z 4) and the SHEET (`ServicesSpecSheet`, `.svc-sheet`, z 6) a front
+tap raises — ⚠ **absolute in the band at `bottom: 56px + 12px`, never
+`position: fixed`**: a fixed sheet would owe §2 an observable kill of its
+own, a band-seated one leaves with the band, and its foot clears the BR
+settings cluster (law 1) by construction. It takes the pointer only while
+out (`data-open`), so the hit layer under it is untouched the rest of the
+time. Its guard is `services-ring-mobile-smoke.spec.ts`; its lockstep with
+the ring is `services-ring-mobile-gate.test.ts`.
 
 ## Verifying
 

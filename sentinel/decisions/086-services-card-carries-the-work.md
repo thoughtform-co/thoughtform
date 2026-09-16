@@ -116,7 +116,10 @@ consumer, and every other consumer degrades SILENTLY on a drawn face.
   mobile/PRM accordion — is a different surface with its own IA (ADR-083) built
   around a full-bleed photo window, and the four assets stay live for it. So
   the "not the practitioner" ruling is DESKTOP-ONLY today. Named rather than
-  quietly half-done.
+  quietly half-done. ⚠ **Narrowed by ADR-109 (2026-09-16):** on the phone
+  RING rung (≤960 ∧ ≥681h ∧ no-PRM) the accordion does not render, so the
+  four photographs are not fetched there either; only the PRM / ≤680h
+  accordion still carries them.
 
 ### Verification
 

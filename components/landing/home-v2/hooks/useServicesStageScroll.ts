@@ -248,6 +248,7 @@ export function useServicesStageScroll(
     let currentProofSettled: boolean | null = null;
     // ADR-108: the phone ring's seat band, cached like the runway itself.
     let ringBandEl: HTMLElement | null = null;
+    let ringSeatEl: HTMLElement | null = null;
 
     const isInert = () =>
       (window.matchMedia?.("(max-width: 960px)").matches ?? false) ||
@@ -523,6 +524,25 @@ export function useServicesStageScroll(
           servicesRingProgressRef.current.proofRelease = clock.proofRelease;
           servicesRingProgressRef.current.hold = clock.hold;
           servicesRingProgressRef.current.proofPresence = proofIn * (1 - clock.proofRelease);
+          /* THE SEAT (ADR-109): the free band between the masthead's title
+             and its paragraph, both seated INSIDE the sticky band now, so the
+             ring can size its front card to the height that is left and
+             centre on it. One more rect on this rung, of the empty
+             `.svc-ring-seat` row — the two texts do not move while the band
+             is pinned, but the band itself travels in and out. */
+          if (!ringSeatEl || !ringSeatEl.isConnected) {
+            ringSeatEl = stage.querySelector<HTMLElement>(".svc-ring-seat");
+          }
+          if (ringSeatEl) {
+            const seat = ringSeatEl.getBoundingClientRect();
+            servicesRingProgressRef.current.seat = {
+              cy: seat.top + seat.height / 2,
+              h: seat.height,
+              w: seat.width,
+            };
+          } else {
+            servicesRingProgressRef.current.seat = undefined;
+          }
           setExit(stage, exitProgressForRunway(clock.progress));
           setStep(stage, activeServiceForProgress(clock.progress));
           return;
@@ -533,6 +553,7 @@ export function useServicesStageScroll(
         servicesRingProgressRef.current.progress = 0;
         servicesRingProgressRef.current.proofRelease = 1;
         servicesRingProgressRef.current.hold = 1;
+        servicesRingProgressRef.current.seat = undefined;
         // Static flow content, nothing in front of the instrument.
         servicesRingProgressRef.current.proofPresence = 0;
         return;

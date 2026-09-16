@@ -169,8 +169,11 @@ import {
   frontPoseBias,
   frontScaleBoost,
   frontScaleEmphasis,
+  RING_MOBILE_SHEET_SIDE_DIM,
   ringMobileFrontWidthPx,
   ringMobileGroupScale,
+  ringMobileSheetFit,
+  ringMobileSeatY,
   frontWindowWeight,
   lerp,
   placeCardOnOrbit,
@@ -2131,6 +2134,12 @@ export function ServicesCardRing({
   const drawerMatRefs = useRef<Array<THREE.MeshBasicMaterial | null>>([]);
   /** Per-card damped open level, 0 = shut. The `veilLevelRef` pattern. */
   const drawerLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(0));
+  /* THE PHONE SHEET's clock (ADR-109): one damped level per card toward
+     "this card's sheet is open", the drawer clock's own rate. The phone
+     mounts no drawer (`openDrawer` false — no second bake), so the open
+     state's RESPONSE here is a lift of the ring clear of the sheet and a
+     dim on the side cards; the front card is untouched. */
+  const sheetLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(0));
   const depthWriteRef = useRef<boolean[]>(new Array(RING_COUNT).fill(false));
   const springRef = useRef<RingSpringState>({ pos: 0, vel: 0 });
   const lastWallRef = useRef(-1);
@@ -3055,6 +3064,22 @@ export function ServicesCardRing({
        branch down, with the orbit term the flip does not need). One matrix
        read of the PARENT (the mark's rig), delta-gated so a parked ring
        writes nothing. Desktop never enters this. */
+    let sheetT = 0;
+    let sheetOpenIdx = -1;
+    if (mobileProfile) {
+      const wantId = openPlateRef.current.serviceId;
+      const lv = sheetLevelRef.current;
+      for (let i = 0; i < RING_COUNT; i++) {
+        const want = wantId === SERVICES[i].id ? 1 : 0;
+        lv[i] += (want - lv[i]) * Math.min(1, delta * DRAWER_DAMP_RATE);
+        if (lv[i] > sheetT) {
+          sheetT = lv[i];
+          sheetOpenIdx = i;
+        }
+      }
+      sheetT = smootherstep(0, 1, sheetT);
+      if (sheetT < 0.001) sheetOpenIdx = -1;
+    }
     if (mobileProfile && ringGroupRef.current) {
       const ring = ringGroupRef.current;
       const parent = ring.parent;
@@ -3068,7 +3093,26 @@ export function ServicesCardRing({
         const camDepth = Math.max(0.1, -deckCamScratch.current.z);
         const parentScale =
           deckParentCol.current.setFromMatrixColumn(parent.matrixWorld, 0).length() || 1;
-        const frontPx = ringMobileFrontWidthPx(Math.max(1, size.width));
+        /* THE SEAT (ADR-109): the band publishes the free height between the
+           masthead's title and its paragraph; the front card takes no more
+           than `RING_MOBILE_SEAT_FILL` of it (the width law still caps), and
+           centres on it — lifted clear of the sheet while one is open. */
+        const seat = progressRef.current.seat;
+        const restPx = ringMobileFrontWidthPx(Math.max(1, size.width), seat?.h);
+        /* THE SHEET (ADR-109): while one is open the front card FITS the
+           room the sheet leaves above it — shrinking if it must, lifting
+           just clear of the sheet's top if it fits — on the sheet's own
+           clock. Identity with no sheet, so the rest pose is byte-identical. */
+        const fit = seat
+          ? ringMobileSheetFit({
+              seatCy: seat.cy,
+              seatH: seat.h,
+              cardHpx: restPx * (BAKE_H / BAKE_W),
+              sheetTop: progressRef.current.sheetTop,
+              sheetT,
+            })
+          : { cy: 0, k: 1 };
+        const frontPx = restPx * fit.k;
         const frontMul = scaleRange[1] * (1 + frontScaleEmphasis(size.width));
         /* The front card orbits `orbitBase` closer to the camera than the
            mark it circles, and that offset scales with the group — so the
@@ -3085,6 +3129,20 @@ export function ServicesCardRing({
           radius: orbitBase,
         });
         if (Math.abs(ring.scale.x - next) > 1e-4) ring.scale.setScalar(next);
+        if (seat) {
+          const y = ringMobileSeatY({
+            seatCy: fit.cy,
+            viewportH: Math.max(1, size.height),
+            parentCamY: deckCamScratch.current.y,
+            camDepth,
+            halfFovTan,
+            parentScale,
+            ringScale: next,
+            yOffset,
+            radius: orbitBase,
+          });
+          if (Math.abs(ring.position.y - y) > 1e-4) ring.position.y = y;
+        }
       }
     }
 
@@ -3380,7 +3438,13 @@ export function ServicesCardRing({
         ringTheme === "light" ? ([opacityRange[0], 1] as const) : opacityRange,
         opacityWindow
       );
-      const master = (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * master0;
+      /* ADR-109: while the phone's sheet is open the SIDE cards recede so
+         the open card and its sheet read as one thing; identity at 0 and
+         on desktop (`sheetOpenIdx` stays −1 off the phone profile). */
+      const sheetDim =
+        sheetOpenIdx >= 0 && i !== sheetOpenIdx ? 1 - RING_MOBILE_SHEET_SIDE_DIM * sheetT : 1;
+      const master =
+        (env ? env.opacity : 1) * (stack ? deckBgKill : exit.opacity) * master0 * sheetDim;
       const opacity = depthO * master;
       /* ADR-050 rev 3 — ANTI-GHOST GUARD 2 of 2. The card's face never
          reaches alpha 1 (RING_OPACITY_RANGE tops out at 0.9), so a drawer

@@ -18,7 +18,7 @@ component you can edit in isolation.
 **Read first**
 
 - [ADR-086: The services card carries the work, not the practitioner](../sentinel/decisions/086-services-card-carries-the-work.md) — the LIVE face since 2026-08-30: `card`, the constellation drawing (one cloud, four edge rules) on the centred arrangement with the title pinned to display. ⚠ **Three things keyed off the photograph and none of them errors without one** — the fetch, the veil and the scrims all read `faceUsesPhoto` now; see §The card carries the work below
-- ⚠ [ADR-108: The ring on phones](../sentinel/decisions/108-the-ring-on-phones.md) — **PROPOSED (2026-09-16), shipped behind `SERVICES_CARD_RING_MOBILE`, the owner's DEVICE read is the gate.** The same ring in the same canvas on the phone rung: the corridor's ambient hold engages on phones, a sticky BAND in `ServicesStage` is the ring's seat and clock, the ring draws at a phone profile (half bake, no drawer, no hover, the scale SOLVED at the front card's depth). See §The ring on phones below
+- ⚠ [ADR-108: The ring on phones](../sentinel/decisions/108-the-ring-on-phones.md) — **PROPOSED (2026-09-16), shipped behind `SERVICES_CARD_RING_MOBILE`, the owner's DEVICE read is the gate.** The same ring in the same canvas on the phone rung: the corridor's ambient hold engages on phones, a sticky BAND in `ServicesStage` is the ring's seat and clock, the ring draws at a phone profile (half bake, no drawer, no hover, the scale SOLVED at the front card's depth). ⚠ **[ADR-109](../sentinel/decisions/109-the-services-beat-on-a-phone.md) (same day, owner) MAKES THE BAND THE COMPOSITION AND THE OPEN STATE A SHEET** — title · seat · paragraph in one screen, the ring fitted to the measured seat, no plates on the rung, a tap raising `ServicesSpecSheet` (the drawer's copy as DOM type, under a room law the ring fits to). See §The ring on phones below
 - [ADR-029: Services card ring](../sentinel/decisions/029-services-card-ring.md) — the ring, and the ONE-OBJECT guardrail
 - [ADR-050: Card face + in-canvas drawer](../sentinel/decisions/050-services-card-face.md) — the tight face, the drawer, the promotion
 - [ADR-025: Services hologram stage](../sentinel/decisions/025-services-hologram-stage.md) — the oscillation history; read before redesigning this surface again
@@ -370,18 +370,49 @@ RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
   the armillary — it returns a fresh object per snapshot and
   `useSyncExternalStore` loops until the canvas boundary crashes, with the
   ring publishing nothing and no ring-side error to point at it.
-- **A TAP GOES TO THE PLATE.** Every hit (`onOpenFront` and `onSelectService`)
-  calls `scrollToPlate(id)` → `.svc-plate[data-service]`.`scrollIntoView`; the
-  front button carries `data-service`. No drawer, no CTA shim (the `card`
-  face has none). The `.svc-ring-hits` rules are restored at ≤960 ONLY under
-  `.services-stage[data-card-ring-mobile="on"]`.
+- ⚠ **THE BAND IS THE COMPOSITION (ADR-109, supersedes "a tap goes to the
+  plate").** The masthead renders INSIDE `.svc-ring-band` on this rung — a
+  grid `auto minmax(0,1fr) auto`, the masthead `display: contents`: title ·
+  an empty **`.svc-ring-seat`** · the paragraph. The hook publishes the
+  seat's rect as the OPTIONAL `seat` on `servicesRingProgressRef` (absent on
+  desktop and every lab ⇒ byte-identical there); the ring fits the front
+  card's HEIGHT to `RING_MOBILE_SEAT_FILL` (0.82) of it
+  (`ringMobileFrontWidthPx(vw, seatH)` — the width law still caps, the
+  aspect and the bake never change) and lands its centre on the seat's
+  (`ringMobileSeatY`, solved at the card's own depth, re-projected by the
+  gate test). **No `.svc-plate` on this rung** (`ServicesPlateCluster` is
+  not rendered; the photographs are not fetched); PRM and ≤680h keep the
+  accordion. ⚠ `display: contents` means the desktop's masthead dim cannot
+  reach here — the phone dims the lead (.35) and the intro (.1) directly.
+- ⚠ **A TAP RAISES THE SHEET, NEVER THE DRAWER (ADR-109).** The desktop's
+  `openServiceId` / `openPlateRef` / Escape extend to the phone under
+  `sheetActive`; the response is `ServicesSpecSheet` (DOM, inside the band,
+  absolute at `bottom: 56px + 12px`, never fixed) with the drawer's copy —
+  chip · title · `01 / What` · `02 / How` · the CTA — in the slab grammar
+  (`--void-deep-rgb` .84 glass, NO backdrop-filter, gold lip ring, TR notch
+  only, pure `translateY` motion 420/320ms). ⚠ **THE ROOM LAW**: the sheet
+  rises no higher than `RING_MOBILE_SHEET_ROOM` (0.42) of the seat above the
+  seat's top (it bounds its own `max-height` and scrolls inside), and the
+  ring FITS the front card to the room above it (`ringMobileSheetFit` →
+  `{cy, k}`: shrink if it must, lift just clear if it fits) on a per-card
+  `sheetLevel` at `DRAWER_DAMP_RATE`, the side cards dimming by
+  `RING_MOBILE_SHEET_SIDE_DIM`. The first cut lifted without the law and put
+  the card at y −194. ⚠ **DISMISSAL KEYS ON THE STEP** (`activeServiceForProgress`
+  changes), never on `drawerDismissedByScroll`'s 35px; plus ✕, Escape, the
+  scrim. A SIDE tap rolls the band to that card's beat
+  (`servicesMobileBeatScrollTarget` ← `ringMobileBandFraction`, the inverse
+  of `ringMobileClock`, round-tripped in the gate test). The lockstep table
+  above gains `ServicesSpecSheet.tsx` (the phone's open-state surface) and
+  `useServicesStageScroll.ts` (the seat).
 - **Verifying:** `npx vitest run tests/lib/services-ring-mobile-gate.test.ts`
-  (the three readers, the bake, the clock, the scale solve re-projected) and
+  (the three readers, the bake, the clock, the scale solve re-projected, the
+  seat, the fit, the beat inverse, the sheet's CSS pins) and
   `npx playwright test tests/visual/services-ring-mobile-smoke.spec.ts
---project=iphone-14-chromium --project=iphone-14-pro-max-chromium`. ⚠ The
-  emulated iPhone lays out 421px wide (ADR-107's finding), so every width
-  ask here is ~8 % generous in emulation; the still and the frame rate are
-  the OWNER's device read, and ADR-108's checklist is the gate.
+--project=iphone-14-chromium --project=iphone-14-pro-max-chromium`; stills
+  via `node scripts/capture-services-mobile.mjs --theme dark|light [--vp 430x932]`.
+  ⚠ The emulated iPhone lays out 421px wide (ADR-107's finding), so every
+  width ask here is ~8 % generous in emulation; the still and the frame rate
+  are the OWNER's device read, and ADR-108's checklist is the gate.
 
 ## Verifying
 

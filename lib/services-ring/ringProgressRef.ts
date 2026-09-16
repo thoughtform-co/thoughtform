@@ -48,6 +48,22 @@ export interface ServicesRingProgress {
    *  desktop, with the phone flag off, or in a lab that builds this record
    *  by hand must see the ring exactly as it was. */
   hold?: number;
+  /** THE PHONE BAND's SEAT (ADR-109) — the free band between the masthead's
+   *  title and its paragraph inside the sticky band, in viewport css px:
+   *  centre `cy`, height `h`, width `w`. The ring's phone fit block solves
+   *  the front card's size against `h` and its vertical position against
+   *  `cy`, so h1 · ring · paragraph compose in one screen at every phone
+   *  height. Written by `useServicesStageScroll`'s phone branch (one rect
+   *  per frame on that rung only), read by `ServicesCardRing`.
+   *
+   *  OPTIONAL: absent on desktop and in every lab, so the ring seats exactly
+   *  as it did — the mark's centre, the width law alone. */
+  seat?: { cy: number; h: number; w: number };
+  /** THE SPEC SHEET's TOP EDGE (ADR-109), viewport css px, while a sheet is
+   *  open on the phone — the ring lifts its front card clear of it.
+   *  Written by `ServicesSpecSheet` alone (set on open, cleared on close),
+   *  read by the ring's phone fit block. OPTIONAL for the same reason. */
+  sheetTop?: number;
 }
 
 export const servicesRingProgressRef: { current: ServicesRingProgress } = {
