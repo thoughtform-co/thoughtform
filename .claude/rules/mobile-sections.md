@@ -243,26 +243,33 @@ its lockstep with the ring is `services-ring-mobile-gate.test.ts`.
 ## Verifying
 
 ```bash
-npx playwright test tests/visual/mobile-section-seams.spec.ts \
-  --project=iphone-14 --project=iphone-14-pro-max
 npx playwright test tests/visual/about-voidwalker-handoff-boundaries.spec.ts
-# The Chromium-backed phone projects (ADR-107) CAN reach the dev server:
+# ⚠ The phone projects are `-chromium` (ADR-107 U1 deleted the WebKit ones,
+# which could never reach an HTTP dev server). The suffix now just means
+# "the phone" and is kept because every recorded recipe names it.
 npx playwright test tests/visual/mobile-section-seams.spec.ts \
   tests/visual/proof-stack-mobile-smoke.spec.ts \
   tests/visual/services-ring-mobile-smoke.spec.ts \
   --project=iphone-14-chromium --project=iphone-14-pro-max-chromium
 ```
 
-⚠ **THE TWO PHONE PROJECTS CANNOT RUN AGAINST THE LOCAL DEV SERVER TODAY, AND
-IT IS NOT THIS SPEC'S FAULT.** `devices["iPhone 14*"]` carries
+⚠ **THE WEBKIT PROJECTS ARE DELETED, AND LEAVING THEM IN PLACE COST DAYS OF RED
+CI (ADR-107 U1).** `devices["iPhone 14*"]` and `devices["iPad Mini"]` carry
 `defaultBrowserType: "webkit"`, and WebKit honours the dev server's
-`upgrade-insecure-requests` CSP (`lib/security/headers.mjs:115`) on
-`localhost`, which Chromium exempts. Every sub-resource is then requested over
-`https://localhost:3003` and fails with `SSL connect error`: the page renders
-completely unstyled and `.home-v2-stage` never appears. **`landing-corridor-smoke`
-fails identically on those two projects** — confirm by running it before
-blaming a change. Verified green on both phone shapes by running the same file
-through a Chromium-backed copy of the two projects.
+`upgrade-insecure-requests` CSP (`lib/security/headers.mjs:115`) on `localhost`,
+which Chromium exempts. Every sub-resource is then requested over
+`https://localhost:3003`, the HTTP dev server cannot answer, and the page
+renders with no CSS and no React — so `.home-v2-stage` never appears and the
+corridor specs hang until the 30s timeout.
+⚠ **THAT IS NOT A FLAKE AND NO RETRY CAN HELP IT** — the browser is asking for
+a URL that does not exist. ADR-107 diagnosed it and added `-chromium` COPIES of
+the two phones, but left the WebKit originals in the project list, so they kept
+running and kept failing; `tablet` never got a copy at all. All three are
+Chromium now. CI installs **chromium only** — installing WebKit made the
+browsers LAUNCH, which was never the problem.
+⚠ The `-chromium` suffix stays on the two phones even though nothing is WebKit
+any more: the rules and several ADRs name those projects in their recipes, and
+renaming for tidiness would break every recorded command.
 
 Captures: a headed Playwright script with real scrolls, dark + light, at
 390×844 and 430×932, at hero / mid-corridor / epilogue / services / voidwalker

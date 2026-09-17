@@ -331,12 +331,72 @@ test.describe("Homepage corridor smoke", () => {
     );
     expect(phase, "the walk landed inside the Arc").toBe("navigate");
 
+    /* ⚠ THE PROBE IS INK, AND IT CALIBRATES ITSELF (2026-09-17). It was PNG
+       WEIGHT — floor 150 kB, against a bug measured at 69 kB and a healthy
+       frame at 292 kB. That floor was read on one machine: headless Chromium
+       with software GL renders the same healthy scene at 128-145 kB, i.e.
+       BELOW the floor, so the guard failed on `main` for days while the
+       corridor painted perfectly. The test's own note predicted it — "font/GPU
+       differences move the number between machines" — and a proxy that moves
+       with the environment cannot carry an absolute threshold.
+       So: compare the CENTRE of the frame, where the armillary paints, against
+       a STARFIELD-ONLY strip of the same frame. Both come from one screenshot
+       on one machine, so the GPU, the fonts and the DPR cancel. The bug parked
+       the camera and left the centre as bare starfield — that is exactly the
+       state this ratio collapses to, and it is what no absolute number could
+       express. The HUD chrome is excluded by construction: it lives at the
+       edges and both samples are taken inboard of it. */
     const frame = await page.screenshot();
+    /* ⚠ THE SAMPLE IS THE SCREENSHOT, NEVER THE CANVAS. `toDataURL()` on a
+       WebGL canvas returns a BLANK image unless the context was created with
+       `preserveDrawingBuffer` — measured here as 0.00 % on both samples, on a
+       frame that was painting correctly. Playwright's screenshot is the
+       composited result and is what the reader actually sees. */
+    const ink = await page.evaluate(
+      async ({ png, W, H }) => {
+        const im = new Image();
+        im.src = `data:image/png;base64,${png}`;
+        await im.decode();
+        const cv = new OffscreenCanvas(im.naturalWidth, im.naturalHeight);
+        const cx = cv.getContext("2d")!;
+        cx.drawImage(im, 0, 0);
+        const sx = im.naturalWidth / W;
+        const sy = im.naturalHeight / H;
+        const share = (x: number, y: number, w: number, h: number) => {
+          const d = cx.getImageData(
+            Math.round(x * sx),
+            Math.round(y * sy),
+            Math.max(1, Math.round(w * sx)),
+            Math.max(1, Math.round(h * sy))
+          ).data;
+          let lit = 0;
+          let n = 0;
+          for (let i = 0; i < d.length; i += 4) {
+            n++;
+            if (d[i] + d[i + 1] + d[i + 2] > 90) lit++;
+          }
+          return n ? lit / n : 0;
+        };
+        return {
+          centre: share(W * 0.3, H * 0.2, W * 0.4, H * 0.6),
+          /* Inboard of the left HUD rail (which sits at ~2-4 % of the width),
+             so this strip is starfield and nothing else. */
+          field: share(W * 0.06, H * 0.2, W * 0.14, H * 0.6),
+        };
+      },
+      {
+        png: frame.toString("base64"),
+        W: page.viewportSize()!.width,
+        H: page.viewportSize()!.height,
+      }
+    );
+
     expect(
-      frame.length,
-      `the corridor paints at the Arc (${Math.round(frame.length / 1024)} kB) — ` +
-        "an empty frame here means something upstream took the camera"
-    ).toBeGreaterThan(150_000);
+      ink.centre,
+      `the corridor paints at the Arc (centre ink ${(ink.centre * 100).toFixed(2)} % ` +
+        `against a bare starfield at ${(ink.field * 100).toFixed(2)} %) — ` +
+        "an empty centre here means something upstream took the camera"
+    ).toBeGreaterThan(ink.field * 2 + 0.004);
 
     // And the travel's own mode must not have claimed the station yet:
     // the reader is nine viewports above its runway.

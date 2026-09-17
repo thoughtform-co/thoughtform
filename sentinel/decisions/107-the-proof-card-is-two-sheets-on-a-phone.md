@@ -155,3 +155,76 @@ calc(var(--pc-depth) - var(--pc-cover)) }` drops the first term (the
 `playwright.config.ts` · `tests/lib/proof-stack-split-gate.test.ts` ·
 `tests/visual/proof-stack-mobile-smoke.spec.ts` ·
 `scripts/capture-proof-stack.mjs` · `.claude/rules/proof-stack.md`.
+
+## Update 1 — the WebKit projects are deleted, not worked around (2026-09-17)
+
+ADR-107 found that `devices["iPhone 14*"]` carries
+`defaultBrowserType: "webkit"`, that WebKit honours the dev server's
+`upgrade-insecure-requests` CSP **on localhost** where Chromium exempts it, and
+that every sub-resource therefore goes to `https://localhost:3003` against an
+HTTP server. Its fix was to add `-chromium` COPIES of the two phone shapes.
+
+⚠ **IT ADDED THE COPIES AND LEFT THE ORIGINALS IN THE PROJECT LIST**, so the
+WebKit projects kept running and kept failing — and `tablet`
+(`devices["iPad Mini"]`, also WebKit) never got a copy at all. The result is
+that **`Corridor smokes (Playwright)` has been red on `main` continuously**,
+with `landing-corridor-smoke:97` and `corridor-device-matrix-smoke:37` timing
+out at 30.2s on `iphone-14`, `iphone-14-pro-max` and `tablet`. Both hang on the
+same line — `waitForSelector(".home-v2-stage")` — because the page arrives with
+no CSS and no React.
+
+⚠ **AND NO RETRY COULD EVER HAVE HELPED**: the browser is asking for a URL that
+does not exist. Three retries each simply cost 90s apiece. Measured in WebKit
+locally: `#home-corridor-mount` present, `innerHTML` empty, every
+`_next/static` chunk and every font failing with "A TLS error caused the secure
+connection to fail".
+
+All three projects are Chromium-backed now; the descriptors still carry the
+viewport, DPR, touch and mobile UA, which is what they actually guard. CI
+installs **chromium only** — the workflow installed WebKit with a comment
+saying Chromium-only "left the three WebKit projects failing at browser
+launch", which is true and beside the point: making them launch was never what
+stopped them reaching the server.
+
+⚠ **THE `-chromium` SUFFIX STAYS** on the two phones though nothing is WebKit
+any more. It reads as a lie about the browser, and renaming would break every
+recorded verify recipe in `.claude/rules/mobile-sections.md`,
+`.claude/rules/services-ring.md` and several ADRs. It now means "the phone".
+
+### The other guard this exposed: a byte-size proxy that outlived its machine
+
+`landing-corridor-smoke:324` (ADR-081's "the time tunnel does not claim the
+camera") asserted the frame's **PNG WEIGHT** — floor 150 kB, against a bug
+measured at 69 kB and a healthy frame at 292 kB. It failed on `main` too, and
+it was **not** the WebKit problem: headless Chromium with software GL renders
+the same healthy scene at **128–145 kB**, i.e. below the floor. The corridor
+was painting perfectly; the still proves it.
+
+⚠ **THE TEST PREDICTED ITS OWN FAILURE AND THE PREDICTION WAS NOT ACTED ON** —
+its comment says "font/GPU differences move the number between machines". A
+proxy that moves with the environment cannot carry an absolute threshold.
+
+The probe is **ink, and it calibrates itself**: the centre of the frame, where
+the armillary paints, against a **starfield-only strip of the same frame**.
+Both samples come from one screenshot on one machine, so the GPU, the fonts and
+the DPR cancel. Measured healthy: centre **2.81 %** against field **0.22 %** —
+a 12.8× separation, with the gate at `field × 2 + 0.004` (0.84 %). The bug
+parked the camera and left the centre as bare starfield, which is exactly the
+state this ratio collapses to.
+
+⚠ **THE SAMPLE IS THE SCREENSHOT, NEVER THE CANVAS.** `toDataURL()` on a WebGL
+canvas returns a BLANK image unless the context was created with
+`preserveDrawingBuffer` — the first cut measured 0.00 % on both samples of a
+frame that was painting. Playwright's screenshot is the composited result and
+is what the reader sees. ⚠ The field strip sits at 6–20 % of the width,
+inboard of the left HUD rail (~2–4 %), so it is starfield and nothing else.
+
+### Verifying
+
+```bash
+npx playwright test tests/visual/landing-corridor-smoke.spec.ts \
+  tests/visual/corridor-device-matrix-smoke.spec.ts --reporter=list --workers=1
+```
+
+**54 passed, 0 failed** — the job's first green in days. The new gate was also
+forced to fail, to prove it still can.
