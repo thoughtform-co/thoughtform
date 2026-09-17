@@ -177,13 +177,21 @@ export const SERVICES: readonly Service[] = [
     index: "03",
     verb: "EMBEDDED",
     name: "Embedded AI Partner",
-    kicker: "AN AI CAPABILITY THE TEAM CAN RUN",
-    tagline: "An AI capability the team can run.",
-    body: "A sustained engagement inside the team, turning domain judgment into reusable Skills, tools and tested systems the team can continue to operate and improve.",
+    kicker: "AN INTELLIGENCE CONFIGURATION YOU OWN",
+    tagline: "An intelligence configuration you own.",
+    /* ⚠ THE CARD NAMES THE SHAPE; CREATIVE IS THE PROOF, NOT THE DEFINITION
+       (ADR-111). The doctrine's licence is exact: "the embedded partner's
+       productised shape for creative teams is the configuration sprint; other
+       teams get the same shape with their own workstreams." So the generality
+       is carried by WORKSTREAM (the unit — naming the unit rather than the
+       asset is the whole trick), and the creative instance appears ONCE, here,
+       on a DOM surface with no bake budget, phrased as evidence. It may not
+       travel to the baked face or the phone back. */
+    body: "A modular sprint in three stage-gated workstreams, run on your own keys inside the tools the team already uses. Proven first on creative work; the same shape takes any team's own workstreams.",
     meta: [
-      { label: "Runs", value: "Fixed term" },
-      { label: "Format", value: "Dated handover" },
-      { label: "Leaves", value: "An owned layer" },
+      { label: "Runs", value: "Three workstreams" },
+      { label: "Format", value: "Fixed term · dated handover" },
+      { label: "Leaves", value: "The layer, and the team" },
     ],
     phase: "all",
     ctaLabel: "Scope an engagement",

@@ -89,8 +89,12 @@ visualization (owner's own constraint).
 
 ## What must move together
 
-Changing the card's shape or state model touches **six** files in lockstep.
-Change one alone and the surface is incoherent, not merely imperfect:
+Changing the card's shape or state model touches every file in the table
+below, in lockstep. Change one alone and the surface is incoherent, not merely
+imperfect. ⚠ **THE TABLE IS THE RECORD AND THE PROSE DOES NOT COUNT** — it said
+"six" over ten rows while `CLAUDE.md` said "five", three counts and all of them
+wrong (ADR-111). A number in a sentence beside a list is a number nobody
+updates:
 
 | File                            | Owns                                                                                            |
 | ------------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -107,6 +111,45 @@ Change one alone and the surface is incoherent, not merely imperfect:
 
 `openPlateRef` has a **single-writer contract**: `ServicesStage` in production,
 `CardFaceLabShell` on the lab route. Never add a third.
+
+## The copy law for this surface (ADR-111)
+
+The services cards sell the practice's offer, so the doctrine's own bans apply
+to every string here. ⚠ **They were codified only in `.claude/rules/arcs.md`
+and `.claude/rules/trinny-london.md` until 2026-09-17** — the surface that
+carries the offer had no guard at all, which is how a superseded position
+regresses silently.
+
+- ⚠ **NO PRICE FIELD** (owner, 2026-07-25, restated in `servicePlateData.ts`).
+  Money stays in the proposal. The doctrine prices each workstream as its own
+  stage gate; **the STAGES may be named, the PRICES may not.**
+- ⚠ **BANNED WORDS, from the strategy skill's language bank:**
+  **"self-sufficiency"** (say the behaviour — the approved substitute is "a
+  setup the team runs by itself"; the landing already bans it, ADR-018),
+  **"flywheel"**, **"fractional"** without the cadence AND the dated handover in
+  the same breath, prompts-as-product, **the founder as the offer** (no person
+  named), and Navigate/Encode/Build as three separate products.
+- ⚠ **PRODUCTION CARRIES ITS BOUNDARY OR IT IS NOT MENTIONED.** "Never an
+  ongoing production retainer, never asset delivery as the thing sold" (settled
+  2026-09-12). There is no room for the clause on a card, so the cards say
+  `Fixed term, dated handover` instead — which the doctrine itself calls what
+  separates the engagement from a retainer.
+- ⚠ **STAY IN THE JUDGMENT HALF.** Thoughtform owns the judgment layer, not the
+  data layer — no ontology, knowledge graph, systems of record or permissions in
+  card copy. Name the seam, never model the data.
+- ⚠ **VALUE AND DEPENDENCE IN THE SAME BREATH.** A layer claim stated alone
+  arms whoever wants to cut the experts. The Embedded card names the team as the
+  mechanism twice (`participants`, `leavesWith`) for exactly this reason.
+- ⚠ **THE LEDE IS ≤160ch** (`servicePlateData.ts`: past that it crowds the title
+  band), and ⚠ **THE PHONE BACK'S FIT IS SOLVED BEFORE THE STRING IS WRITTEN,
+  never after.** `tests/lib/services-ring-mobile-gate.test.ts` walks every plate
+  through `backFaceLayout` and fails FIRST on long copy. The cost model is in
+  ADR-111: one paid line of budget, a third title line is fatal (`<= 2` is
+  asserted), and `participants` / `language` growing to two lines is FREE
+  because `rowH = max(...)` and their rows are already two-line tall.
+- ⚠ **`chip` AND `ctaLabel` ARE ACCESSIBLE NAMES.** `ServicesRingHitAreas`
+  builds the sr-only copy from them and `services-ring-smoke` pins the resulting
+  role names. Changing either moves those pins in the same commit.
 
 ## The Proof map allocates work configurations
 

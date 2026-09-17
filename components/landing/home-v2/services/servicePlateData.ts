@@ -208,25 +208,34 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     id: "embedded",
     chip: "Embedded AI Partner",
     statusCode: "BLD-03",
-    title: "An AI capability the team can run.",
+    title: "An intelligence configuration you own.",
     lede: [
-      "A sustained engagement inside the team, turning domain judgment into reusable Skills, tools and tested systems the team can continue to operate and improve.",
+      "A modular sprint in three stage-gated workstreams, on your own keys, in the tools you already use, until the setup is one the team runs by itself.",
     ],
     breakdown: [
-      "We sit in your teams and build with them, not for them",
-      "Strategy and delivery in the same room",
-      "A dated handover of the tools and the people who run them",
+      "Setup and briefing, the first workstream you run alone",
+      "Generation and design, run with your team as the last gate",
+      "Operations and scaling, and the champions who run them",
     ],
+    /* ⚠ `leavesWith` IS THE ONE PAID LINE ON THE PHONE BACK (ADR-111). The back
+       had 67px of slack; a second line there costs 44 and `participants` /
+       `language` growing cost NOTHING (their rows are already two-line tall
+       because `duration` and `format` are, and `rowH = max(...)`). It is spent
+       here because this is where the doctrine's non-negotiable discipline sits:
+       state the layer's value and its DEPENDENCE in the same breath, or the
+       claim arms whoever wants to cut the experts. The team is named as the
+       mechanism twice — here and in `participants` — so the card cannot be read
+       as replacing it. */
     spec: {
       duration: "Fixed term, dated handover",
-      participants: "One or more teams",
-      format: "On site and remote build",
+      participants: "Your team, as the last gate",
+      format: "Your keys, your tools",
       language: "NL / EN",
-      leavesWith: "An AI layer your team owns",
+      leavesWith: "The layer, and the team that runs it",
     },
     feedLabel: "Feed 04 · On site",
     feedStatus: "Standby",
-    includes: ["Fixed term", "Dated handover", "Owned layer", "NL / EN"],
+    includes: ["Three workstreams", "Your own keys", "Dated handover", "NL / EN"],
     ctaLabel: "Scope an engagement",
     ctaHref: "#contact",
     photo: photo("embedded", "Vince Buyssens on site during an embedded engagement", "50% 45%"),

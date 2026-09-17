@@ -7,7 +7,7 @@
  * as being interrogated for the service's substance:
  *   Keynote  → the frame (SHARED FRAME, LIVE DEMOS, SHARED LANGUAGE, ...)
  *   Workshop → the material (REAL BACKLOG, ENCODED SKILLS, ...)
- *   Embedded → the layer (OWNED LAYER, SHIPPED TOOLS, TRAINED PEOPLE, ...)
+ *   Embedded → the configuration (THREE STAGES, YOUR OWN KEYS, TRAINED PEOPLE, ...)
  *   Advisory → the read (AI STRATEGY, WHERE TO INVEST, TESTED LIVE, ...)
  *
  * Copy is intentionally accessible (business terms, not internal
@@ -100,10 +100,12 @@ export const SERVICE_DESIGNATIONS: Record<ServiceId, readonly ServiceDesignation
   ],
   // 03 Embedded AI Partner
   embedded: [
-    D("crown", "OWNED LAYER", "stays with you", "left", 36, -26),
-    D("upper-right-arm", "SHIPPED TOOLS", "inside your teams", "left", 24, -60),
-    D("lower-left-arm", "TRAINED PEOPLE", "who can run it", "right", 24, 60),
-    D("base", "BUILD", "on a fixed term", "right", 36, 36),
+    D("crown", "THREE STAGES", "each one a gate", "left", 36, -26),
+    D("upper-right-arm", "YOUR OWN KEYS", "no seat to renew", "left", 24, -60),
+    D("lower-left-arm", "TRAINED PEOPLE", "who run it after", "right", 24, 60),
+    // Ownership moves to the base's detail, which is the slot that always
+    // reads — stronger than a crown label saying it (ADR-111).
+    D("base", "BUILD", "you own what runs", "right", 36, 36),
   ],
   // 04 Strategic Advisory
   "guided-build": [

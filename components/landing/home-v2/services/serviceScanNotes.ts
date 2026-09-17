@@ -41,9 +41,12 @@ export const SERVICE_SCAN_NOTES: readonly ServiceScanNote[] = [
     label: "Embedded partner",
     coordinate: "CV:09.77 / S-LOCK",
     confidence: 0.94,
-    signals: ["fixed term", "owned layer", "people who can run it"],
+    signals: ["three workstreams", "your own keys", "the team that runs it"],
+    // ⚠ THE "TWO OR THREE AT A TIME" RULING LANDS HERE, not in the spec
+    // (ADR-111). It is a CV-note fact about how the practice runs, and
+    // `participants` would read it as group size.
     summary:
-      "Strategy and build run inside your teams on a fixed term, leaving an owned layer behind.",
+      "Three stage-gated workstreams run inside two or three companies at a time, on their own keys, leaving a layer and the people who run it.",
   },
   {
     id: "scan-advisory-read",
