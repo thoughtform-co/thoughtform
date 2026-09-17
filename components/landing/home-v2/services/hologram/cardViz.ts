@@ -107,8 +107,11 @@ function dia(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): vo
                    both ends marked, everything else left untouched. One real
                    workflow, picked out of all of them.
      embedded      THE MESH — near-neighbour triangulation across the whole
-                   cloud, with the marks seated INSIDE it. A capability that
-                   holds itself up and depends on no single node.
+                   cloud, with the marks seated INSIDE it, three of them, in
+                   order across the body and growing. A capability that holds
+                   itself up and depends on no single node, built in three
+                   stages. (The order is the drawing's own: no traverse, no
+                   numerals — see `mesh()`.)
      guided-build  THE SURVEY — the estate divided into five regions, each
                    linked internally, one dashed gold traverse across their
                    marks, and a handful of nodes deliberately joined to
@@ -291,11 +294,32 @@ function mesh(ctx: CanvasRenderingContext2D, pts: CloudPoint[], pal: VizPalette,
   pts.forEach((p) => cloudNode(ctx, pal, p, true));
 
   // The marks are SEATED — the nodes nearest the viewer, i.e. inside the body
-  // rather than on its rim. An owned layer sits in the middle of a team, and
-  // spacing them through the front twelve keeps three marks from clumping.
-  const byDepth = pts.map((_, i) => i).sort((a, z) => pts[z].depth - pts[a].depth);
+  // rather than on its rim. An owned layer sits in the middle of a team.
+  //
+  // ⚠ THEY ARE SEATED BY PLANE AS WELL AS BY DEPTH, AND THEY GROW (ADR-111).
+  // Depth alone put them wherever the Fibonacci index happened to fall, so
+  // three marks could land in a clump or in no order at all — three arbitrary
+  // specks. One from each horizontal third of the front twelve, at 6 / 7 / 8,
+  // reads as three, in order, seated inside one body. That is what the card
+  // now claims: a modular sprint in three stage-gated workstreams.
+  //
+  // ⚠ WHAT THIS DELIBERATELY DOES NOT DRAW. A traverse, a dashed run, a
+  // bracket or a numeral would each say "gate" more literally, and each is
+  // barred: the traverse is the SURVEY's own property one card over, the rest
+  // are new vocabulary, and this surface bans legends outright. A drawing that
+  // needs explaining is worse than one that says less — the COPY carries
+  // "stage-gated", the drawing carries "three, in order, holding itself up".
+  // Size is already a live variable here (`route()` marks its head at 7 and
+  // its tail at 8 precisely to say the two are not the same thing), so this
+  // borrows nothing new and nothing of the survey's uniform 6.
+  const front = pts
+    .map((_, i) => i)
+    .sort((a, z) => pts[z].depth - pts[a].depth)
+    .slice(0, 12);
+  const byX = front.slice().sort((a, z) => pts[a].px - pts[z].px);
+  const seats = [byX[1], byX[5], byX[9]];
   ctx.fillStyle = pal.gold;
-  for (let k = 0; k < 12; k += 4) dia(ctx, pts[byDepth[k]].px, pts[byDepth[k]].py, 6);
+  seats.forEach((i, k) => dia(ctx, pts[i].px, pts[i].py, 6 + k));
 }
 
 /** ADVISORY — the survey. The whole estate read across, including what is not built. */
@@ -429,7 +453,12 @@ function constellation(
       return route(ctx, pts, pal, R);
     case "guided-build":
       return survey(ctx, pts, pal, R, b);
-    // `embedded`, and the safe default for any id this file does not know.
+    case "embedded":
+      return mesh(ctx, pts, pal, R);
+    // ⚠ The safe default for any id this file does not know — and `embedded`
+    // is named above rather than reached through it (ADR-111). The service
+    // with the most copy churn was arriving here by falling through, which is
+    // one rename away from silently painting the wrong card.
     default:
       return mesh(ctx, pts, pal, R);
   }
