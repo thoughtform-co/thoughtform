@@ -143,7 +143,12 @@ for (const plate of PLATES) {
             jy > 0 ? j - GRID_W : -1,
             jy < GRID_H - 1 ? j + GRID_W : -1,
           ];
-          for (const k of nb) if (k >= 0 && !seen[k] && hit(k)) ((seen[k] = 1), stack.push(k));
+          for (const k of nb) {
+            if (k >= 0 && !seen[k] && hit(k)) {
+              seen[k] = 1;
+              stack.push(k);
+            }
+          }
         }
         if (!best || count > best.count) best = { count, x0: cx0, x1: cx1, y0: cy0, y1: cy1 };
       }
