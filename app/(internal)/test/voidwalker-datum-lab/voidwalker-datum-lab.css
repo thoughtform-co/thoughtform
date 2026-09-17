@@ -41,7 +41,13 @@
        same class of lie U20's note above is about, one term further in. Move
        one rung, move the other. */
     --vwd-mast-top: max(var(--vwd-pad-top-min), var(--hud-corner-foot, 78px));
-    --vwd-trail: clamp(0px, calc(100svh - 1100px), 56px);
+    /* ⚠ AND THE FOURTH SINCE ADR-082 U23. `--vwd-trail-air` is the reel's
+       saving spent as air above the panel heads; a lab that re-declared only
+       the other three would seat its heads 28px higher than the landing and
+       show none of the air this pass is about — the same lie, one term
+       further in. Move one rung, move the other. */
+    --vwd-trail-air: 28px;
+    --vwd-trail: calc(var(--vwd-trail-air) + clamp(0px, calc(100svh - 1100px), 56px));
   }
 }
 

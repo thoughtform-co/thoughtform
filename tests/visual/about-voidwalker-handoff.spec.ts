@@ -203,7 +203,10 @@ async function readEntryPose(page: Page) {
       dossier: actor("[data-vwh-handoff-target='dossier']"),
       base: actor(".vwh__base"),
       rail: actor(".vwd__band"),
-      mastKicker: actor(".vwd__mast__kicker"),
+      /* ⚠ `mastKicker` IS DELETED WITH THE EYEBROW (ADR-082 U23). `actor()`
+         throws on a missing selector, so this key would have failed the whole
+         snapshot on day one — and no assertion ever read it. The mast's own
+         rect is `mast` above, which is what the seat-stability sweep uses. */
     };
   });
 }
@@ -397,7 +400,12 @@ test.describe("About -> Voidwalker card-to-hologram handoff", () => {
             rootTop: root.getBoundingClientRect().top,
             slotOpacity: opacity(".vwh__slot"),
             actorOpacities: [
-              opacity(".vwd__mast__kicker"),
+              /* ⚠ THE FIRST ACTOR IS THE TITLE SINCE ADR-082 U23 — the eyebrow
+                 that held the 0 rung is deleted. The title reads
+                 `var(--vwh-morph, 0)` on the approach rather than the ladder's
+                 own ramp, which is 0 here for the same reason and is the
+                 shared-renderer handoff this case is about. */
+              opacity(".vwd__mast__title"),
               opacity("[data-vwh-handoff-target='dossier']"),
               opacity(".vwh__base"),
               /* The era stop. It was a pip on the HUD rail until the datum

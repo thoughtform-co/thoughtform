@@ -154,9 +154,12 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
+  /* ADR-082 U23 took this from 13 to 1 — the eyebrow's rung left with the
+     element, and the head, tag, facts, press, film, absent, reel and phone tab
+     rungs all moved onto the ramp. The one left is `.vwd__motto`'s .06em. */
   "components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css": {
     tier: "content",
-    content: { A: 13, B: 0, C: 0 },
+    content: { A: 1, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
   "components/arcs/arcs.css": {

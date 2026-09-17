@@ -33,7 +33,12 @@ export function DatumLabShell() {
      size on a 375px screen, which is the exact thing the slider exists to let
      the owner judge. A lab knob may not defeat the default it explores. */
   const [chip, setChip] = useState<number | null>(null);
-  const [bust, setBust] = useState(0.34);
+  /* ⚠ THE BUST KNOB IS GONE AND THIS REPLACES IT (ADR-082 U23). The chips are
+     text stops now, so `--vwd-bust-span` does not exist and a slider for a
+     deleted token is a lie the lab tells (ADR-070 U35). What does want judging
+     by eye is where the reticle sits on the figure — the ring's centre is the
+     one value in that drawing solved by looking rather than by arithmetic. */
+  const [ringCy, setRingCy] = useState(44);
   const [reduced, setReduced] = useState(false);
   /* ⚠ MEASURED, NEVER A LITERAL. `--vwd-bar-h` feeds --vwd-chrome-h feeds
      --vwd-fig-w, so a wrong bar height renders a lab figure column that
@@ -101,7 +106,7 @@ export function DatumLabShell() {
       style={
         {
           ...(chip === null ? null : { "--vwd-chip": `${chip}px` }),
-          "--vwd-bust-span": bust,
+          "--vwd-ret-cy": `calc(${ringCy}% - var(--vwh-base-h, 44px) * 0.5)`,
           /* The composition derives the figure's width from the height its
              own chrome leaves; in the lab the knob bar is part of that —
              so the bar reports its own measured height (see barRef above). */
@@ -126,7 +131,11 @@ export function DatumLabShell() {
         </div>
 
         <label className="dlab__slider">
-          <span className="dlab__lbl">chip {chip === null ? "auto" : `${chip}px`}</span>
+          {/* ⚠ SINCE ADR-082 U23 THIS IS THE REEL'S PITCH, NOT A BOX. No chip is
+              64px wide any more — `--vwd-chip` survives as the term `--vwd-cell`
+              derives from, so the slider still spaces the stops and no longer
+              resizes anything. */}
+          <span className="dlab__lbl">pitch {chip === null ? "auto" : `${chip}px`}</span>
           <input
             type="range"
             min={44}
@@ -138,14 +147,14 @@ export function DatumLabShell() {
         </label>
 
         <label className="dlab__slider">
-          <span className="dlab__lbl">bust {bust.toFixed(2)}</span>
+          <span className="dlab__lbl">ring {ringCy}%</span>
           <input
             type="range"
-            min={0.16}
-            max={0.9}
-            step={0.02}
-            value={bust}
-            onChange={(ev) => setBust(+ev.target.value)}
+            min={20}
+            max={70}
+            step={1}
+            value={ringCy}
+            onChange={(ev) => setRingCy(+ev.target.value)}
           />
         </label>
 

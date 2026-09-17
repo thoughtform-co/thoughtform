@@ -19,7 +19,7 @@ import {
 } from "@/lib/voidwalker/voidwalkerHologramClock";
 import { useVoidwalkerHologramScroll } from "../../hooks/useVoidwalkerHologramScroll";
 
-import { HoloDatumPanels, eraPositionLabel } from "./HoloDatumPanels";
+import { HoloDatumPanels } from "./HoloDatumPanels";
 import { HoloFigure } from "./HoloFigure";
 
 /**
@@ -89,9 +89,7 @@ export function VoidwalkerHologram() {
   const [epoch, setEpoch] = useState(0);
   const [reduced, setReduced] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const kickerRef = useRef<HTMLSpanElement>(null);
   const titleRef = useRef<HTMLSpanElement>(null);
-  const yearRef = useRef<HTMLSpanElement>(null);
   // Set only by `pick`: distinguishes a deliberate era choice (timed, finite)
   // from arrival by scroll (scrubbed, reversible).
   const deliberateRef = useRef(false);
@@ -145,10 +143,17 @@ export function VoidwalkerHologram() {
    * clean replay instead of leaving a one-shot latch behind.
    */
   useLayoutEffect(() => {
-    const targets = [kickerRef.current, titleRef.current, yearRef.current];
+    /* ⚠ ONE TARGET SINCE ADR-082 U23. The eyebrow's two lines are deleted, and
+       the year did not follow them onto SCOPE's head: that head arrives on the
+       0.16 rung of §G's ladder, whose ramp saturates around `--vwh-in` 0.655,
+       while `TITLE_DECODE_WINDOW` closes at 0.18 — a scramble seated there
+       would play out while the element is still transparent and then fade up
+       already finished. The stagger machinery below is left generic on
+       purpose; it simply has nothing to stagger against today. */
+    const targets = [titleRef.current];
     if (targets.some((t) => !t)) return;
 
-    const finals = [eraPositionLabel(eraIdx), era.wardrobe, era.year];
+    const finals = [era.wardrobe];
     const restore = () => {
       targets.forEach((el, i) => {
         if (el) el.textContent = finals[i]!;
@@ -326,7 +331,7 @@ export function VoidwalkerHologram() {
       <HoloDatumPanels
         selectedEraIndex={eraIdx}
         onSelectEra={pick}
-        identityRefs={{ kicker: kickerRef, title: titleRef, year: yearRef }}
+        identityRefs={{ title: titleRef }}
         figure={figureColumn}
       />
     </div>

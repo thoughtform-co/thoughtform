@@ -40,11 +40,24 @@
      smaller"). Everything in the band derives from it, so one number moves
      the whole band rather than one box inside it — which is also what lets
      the lab's slider retune the composition without touching a rule. */
+  /* ⚠ SINCE ADR-082 U23 THIS IS THE REEL'S PITCH DIAL ALONE — no box on the
+     band is 64px any more. The chips are text stops (year over name over a
+     mark), so `--vwd-band-h` derives from the STOP, and `--vwd-cell` keeps
+     reading this so the reel's pitch, its hit-test slack and the probe's
+     assertions are byte-identical to what shipped. */
   --vwd-chip: 64px;
-  --vwd-band-h: calc(var(--vwd-chip) + 52px);
-  /* ⚠ NOT THE DATUM RAILS ANY MORE (ADR-082 U21) — those are deleted. This
-     is the surface's quietest hairline alpha and its one remaining consumer
-     is the phone tab row's top and bottom borders. */
+  /* The text stop, seated on the 44px control floor rather than on a picture. */
+  --vwd-stop-h: 44px;
+  --vwd-band-h: calc(var(--vwd-stop-h) + 20px);
+  /* ⚠ TWO DAWN WEIGHTS, AND NOTHING ELSE RULES ANYTHING (ADR-082 U23).
+     `--vwd-rule-head` divides a REGION — it is the panel's own edge under its
+     title. `--vwd-rail` rules WITHIN one: a fact row, a press item, the phone
+     tab row's borders. Both are dawn, because gold on this station is the lit
+     mark and a structure line in gold competes with it (the casefile learned
+     the same thing one surface over, ADR-089). ⚠ `--vwd-rail` was the datum
+     rails' alpha (deleted, U21) and kept only the phone's tab row; it is the
+     row weight now, which is the value it was always right for. */
+  --vwd-rule-head: 0.3;
   --vwd-rail: 0.12;
 
   /* ── THE REEL. One cell pitch for all five chips, so the offset that centres
@@ -71,11 +84,6 @@
      that the min() hands the box to the column. */
   --vwd-measure: min(100%, 23rem);
 
-  /* How much of the 720×1280 frame a chip shows, and where the head anchor
-     sits inside it. See `.vwd__chip__bust`. */
-  --vwd-bust-span: 0.34;
-  --vwd-bust-lead: 0.1;
-
   /* ⚠ THE FIGURE COLUMN IS WIDTH-DERIVED-FROM-HEIGHT, the production rule
      (the asset is a 720×1280 portrait, so a width-derived column is always
      height-limited). The subtrahend is the composition's own chrome — mast,
@@ -95,11 +103,48 @@
      below and is exactly 0 wherever the datum does not apply.
      ⚠ The figure column stops being height-derived at 1280×720, where the
      230px floor binds — see `--vwd-pad-top`. */
+  /* ⚠ THE REEL'S 52px IS CHARGED BACK, NOT SPENT ON THE FIGURE (ADR-082 U23).
+     Dropping the framed bust took the band from 116px to 64px, and letting
+     that flow into `--vwd-fig-w` would widen the column at 1280×720 — where
+     the panel measure is COLUMN-bound at 365px, not capped — taking 7.7px of
+     reading measure off each side to buy 15px of figure. So the saving is
+     returned as a named term and `band-h + reel-return + trail` is IDENTICALLY
+     U22's `116px + clamp(...)`: `--vwd-chrome-h` and `--vwd-fig-w` come out
+     byte-identical at every rung and on every gate branch. The air the reel
+     gave up is spent above the heads instead, as `--vwd-trail-air`.
+     ⚠ THE SUBSTITUTION IS WANTED HERE, unlike `--vwd-mast-top`'s. Custom
+     properties resolve at computed-value time on the ELEMENT, so this reads
+     whichever `--vwd-trail-air` wins on `.vwd` — 28px under the gate, 0px
+     outside it — which is exactly what keeps the sum constant on both
+     branches. Declaring it from `--vwd-trail` instead would double-count the
+     viewport term. */
+  --vwd-trail-air: 0px;
+  --vwd-reel-return: calc(116px - var(--vwd-band-h) - var(--vwd-trail-air));
   --vwd-chrome-h: calc(
-    var(--vwd-bar-h) + 104px + var(--vwd-band-h) + 44px +
+    var(--vwd-bar-h) + 104px + var(--vwd-band-h) + var(--vwd-reel-return) + 44px +
       (var(--vwd-pad-top) - var(--vwd-pad-top-min)) + var(--vwd-trail)
   );
   --vwd-fig-w: clamp(230px, calc((100svh - var(--vwd-chrome-h)) * 0.5625), 460px);
+
+  /* The reticle's two dials, derived from the column it rings (see
+     `.vwd__reticle`).
+     ⚠ BOTH ARE MEASURED, NOT CHOSEN. The figure is `object-fit: contain`,
+     bottom-anchored in a slot that stops above the projector base, so where it
+     actually PAINTS is not the box's middle and not a base-height subtraction
+     either: measured, its centre sits at 52.2 / 51.1 / 49.7 % of the figure box
+     at the three reference rungs. The first cut solved that by arithmetic
+     (`44% − base/2`) and put the ring's centre at ~40 %, ringing him from the
+     head to the knees — visibly off, and only a still showed it.
+     ⚠ AND 1.14 IS THE COLUMN'S CEILING, NOT A TASTE. The ring may reach into
+     the stage's column gap and may never touch a panel: gap is
+     `clamp(18px, 2.4vw, 52px)`, so the widest lawful ring is
+     `fig-w + 2 × gap` (291 / 381 / 552px) and this leaves ~28px of air at every
+     rung. It covers the middle ~64 % of him — a ring AROUND the figure rather
+     than one CONTAINING him, which is the one place this composition cannot
+     follow the reference: Starfield gives its circle an empty half-screen,
+     and this figure has a reading column 30px away on either side. */
+  --vwd-ret-d: calc(var(--vwd-fig-w) * 1.14);
+  --vwd-ret-cy: 51%;
 
   /* ⚠ THE READING BAND IS THIS PADDING, NOT THE STATION'S. The stage box is
      a full-bleed instrument seated inside the HUD frame (it spans the
@@ -213,7 +258,12 @@
        moves. The `100svh - 1100px` term holds it at exactly 0 at 1280x720,
        1101x800 and 1440x900 — every tight rung is byte-identical, and there
        was no slack there to spend anyway. */
-    --vwd-trail: clamp(0px, calc(100svh - 1100px), 56px);
+    /* ⚠ 28px OF THE REEL'S SAVING, SPENT AS AIR (ADR-082 U23) — it is paid by
+       `--vwd-reel-return` above, not out of the figure's budget, so the 56px
+       ceiling below is still U22's derived number against the 460px cap and
+       does NOT need re-deriving. Re-derive both only if that cap moves. */
+    --vwd-trail-air: 28px;
+    --vwd-trail: calc(var(--vwd-trail-air) + clamp(0px, calc(100svh - 1100px), 56px));
   }
 }
 
@@ -263,18 +313,17 @@
   margin-inline: auto;
   text-align: center;
 }
-.vwd__mast__kicker {
-  display: flex;
-  justify-content: center;
-  gap: clamp(24px, 6vw, 90px);
-  font-family: var(--vwd-mono);
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(var(--vwd-dawn-rgb), 0.45);
-}
+/* ⚠ THE EYEBROW IS DELETED AND THE MAST IS THE TITLE ALONE (ADR-082 U23,
+   owner: the title wants "a bit more breathing room"). `ERA / 04 OF 05` and
+   the year were one flex row above it; between them they cost 20.2px that the
+   title now takes back, and BOTH were said elsewhere — the reel prints the
+   year on every stop and marks the position with one lit diamond, so the pair
+   was the surface's own "said twice" defect at its loudest point.
+   ⚠ THE YEAR SURVIVES, ON SCOPE'S HEAD RULE. See `.vwd__head__tag--year`:
+   a value right-aligned on the panel's own short rule is the reference's
+   grammar verbatim, and it is the first rule under the title. */
 .vwd__mast__title {
-  margin: 6px 0 0;
+  margin: 0;
   font-family: var(--vwd-display);
   font-size: clamp(26px, 3vw, 44px);
   font-weight: 400;
@@ -328,10 +377,13 @@
   gap: 12px;
   margin: 0;
   padding-bottom: clamp(6px, 0.9svh, 10px);
-  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), 0.3);
+  /* ⚠ THE HEAVIER OF TWO DAWN WEIGHTS (ADR-082 U23). A panel's own edge is
+     `--vwd-rule-head`; everything ruled INSIDE it takes `--vwd-rail`. Both are
+     dawn: gold on this surface is the lit mark and nothing else. */
+  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rule-head));
   font-family: var(--vwd-mono);
   font-size: clamp(11px, 0.82vw, 13px);
-  letter-spacing: 0.2em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
 }
 .vwd__head__kicker {
@@ -339,8 +391,20 @@
 }
 .vwd__head__tag {
   font-size: 0.85em;
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-eyebrow);
   color: rgba(var(--vwd-dawn-rgb), 0.4);
+}
+/* ⚠ THE ERA'S DATE, AT THE HEAD'S OWN SIZE (ADR-082 U23). The register's other
+   tags are secondary readouts about the panel (`era.short`, a duration, a
+   count, `None`) and letter at 0.85em; a DATE is the record's own value and may
+   not read smaller than the label beside it. It does NOT join the decode — the
+   `ul` head is a §G actor at `--ci-off: 0.16`, whose ramp saturates around
+   `--vwh-in` 0.655, long after `TITLE_DECODE_WINDOW` closes at 0.18, so a
+   scramble seated here would resolve invisibly and then fade up finished. */
+.vwd__head__tag--year {
+  font-size: 1em;
+  letter-spacing: var(--track-label);
+  color: rgba(var(--vwd-dawn-rgb), 0.7);
 }
 
 /* ⚠ THE BODY DECLARES ITS FAMILY (ADR-067's recorded trap, ADR-082 U21).
@@ -420,34 +484,49 @@
    the rhythm below is solved rather than chosen. Spend it here — gap and row
    padding — before anything touches `--vwd-facts__v`'s size, which is on the
    surface-wide type ladder. */
+/* ⚠ A FACT IS A READOUT ROW: LABEL LEFT, VALUE RIGHT, ON ITS OWN RULE
+   (ADR-082 U23). Stacked, each fact spent a whole line on a 10px label and the
+   column read as four little paragraphs; on one baseline it reads as an
+   instrument, and it gives the panel ~50px back — which is what stops FACTS
+   being the tightest seat at 1280×720.
+   ⚠ `minmax(0, 1fr)` ON THE VALUE IS LOAD-BEARING. `expanse`'s longest value
+   is 36 characters ("LA, to put it in front of Jeff Bezos"); on an `auto auto`
+   grid it would push the label out of the panel instead of wrapping inside its
+   own column. At the narrowest capable rung it takes two lines, by design.
+   ⚠ NO PROGRESS FILL. The reference's meters read a percentage; this record
+   publishes none, and `voidwalker-data.test.ts` fails an invented figure. */
 .vwd__facts {
   display: grid;
-  gap: clamp(6px, 1.05svh, 14px);
+  gap: clamp(4px, 0.8svh, 11px);
   margin: 0;
 }
 .vwd__facts__row {
   display: grid;
-  gap: 2px;
-  padding-bottom: clamp(5px, 0.9svh, 12px);
-  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), 0.1);
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: clamp(12px, 1.4vw, 28px);
+  padding-bottom: clamp(4px, 0.7svh, 9px);
+  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
 }
-.vwd__facts__row:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
+/* ⚠ THE LAST ROW KEEPS ITS RULE, and the `:last-child` exception that dropped
+   it is deleted: in the reference every row terminates on a line and the list's
+   own bottom edge is what closes the panel. */
 .vwd__facts__k {
   font-family: var(--vwd-mono);
   font-size: clamp(9.5px, 0.68vw, 11px);
-  letter-spacing: 0.18em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--vwd-dawn-rgb), 0.5);
 }
 .vwd__facts__v {
   margin: 0;
+  justify-self: end;
+  text-align: right;
   font-family: var(--vwd-display);
-  font-size: clamp(13px, 0.95vw, 16px);
+  font-size: clamp(12.5px, 0.9vw, 15px);
   line-height: 1.3;
   color: rgb(var(--vwd-dawn-rgb));
+  text-wrap: pretty;
 }
 
 /* ── TRANSMISSION ──────────────────────────────────────────────────── */
@@ -492,7 +571,7 @@
 .vwd__film__title {
   font-family: var(--vwd-mono);
   font-size: clamp(10px, 0.72vw, 11.5px);
-  letter-spacing: 0.12em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: rgba(var(--vwd-dawn-rgb), 0.75);
 }
@@ -523,29 +602,38 @@
   margin: 0;
   font-family: var(--vwd-mono);
   font-size: clamp(10px, 0.72vw, 11.5px);
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--vwd-dawn-rgb), 0.35);
 }
 
 /* ── ON RECORD ─────────────────────────────────────────────────────── */
 
+/* The press stack takes the readout grammar too — one rule per item, at the
+   item's FOOT. ⚠ Never under the meta line: a rule between an outlet and its
+   own headline splits the record it is supposed to bound. */
 .vwd__press-stack {
   display: grid;
-  gap: clamp(10px, 1.6svh, 18px);
+  gap: 0;
 }
 .vwd__press {
   display: grid;
   gap: 4px;
+  padding-bottom: clamp(8px, 1.2svh, 14px);
+  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
   text-decoration: none;
   color: inherit;
 }
+.vwd__press + .vwd__press {
+  padding-top: clamp(8px, 1.2svh, 14px);
+}
 .vwd__press__meta {
   display: flex;
+  justify-content: space-between;
   gap: 10px;
   font-family: var(--vwd-mono);
   font-size: clamp(9.5px, 0.68vw, 11px);
-  letter-spacing: 0.16em;
+  letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--vwd-dawn-rgb), 0.45);
 }
@@ -572,6 +660,75 @@ a.vwd__press:focus-visible .vwd__press__headline {
   grid-row: 1 / 5;
   min-height: 0;
   padding-top: clamp(6px, 1svh, 14px);
+  /* ⚠ LOAD-BEARING, NOT TIDINESS (ADR-082 U23). The reticle is absolutely
+     positioned against this box. §G gives `.vwd__figure` an exit `transform`,
+     which would make it a containing block for free — but §G lives inside
+     `prefers-reduced-motion: no-preference`, so under PRM the transform is
+     absent and the ring would resolve against `.vwd__stage` instead and land
+     in the wrong place, on the one branch nobody screenshots. */
+  position: relative;
+}
+
+/* ── THE RETICLE ────────────────────────────────────────────────────
+   One thin ring around the figure with four marks on the diagonals — the
+   reference's own device, drawn at this house's weight (ADR-082 U23).
+
+   ⚠ IT IS SIZED OFF THE FIGURE COLUMN, WHICH IS WHAT KEEPS IT LAWFUL.
+   `--vwd-fig-w` is `clamp(230px, ..., 460px)`, so the box can never exceed
+   487.6px and the committed >700px paint sweep (ADR-082 U21) is satisfied by
+   ARITHMETIC rather than by tuning. The ~3 % overhang each side lands inside
+   the column gap, so the ring reads wider than the figure and still never
+   reaches a panel or the HUD rails' tick ladder.
+   ⚠ DAWN, NEVER GOLD. Gold on this station is the lit mark; a gold ring would
+   be a second one, at the scale of the figure. One rule serves both themes —
+   ADR-058 swaps the dawn triple, so there is no light override to keep in
+   step.
+   ⚠ DESKTOP ONLY. The 701–1100 rung stacks the figure above the panels and the
+   phone gives it the whole screen with the stops over its foot; a ring in
+   either place is ink around an object that is already alone. */
+.vwd__reticle {
+  display: none;
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: var(--vwd-ret-cy);
+  width: var(--vwd-ret-d);
+  height: var(--vwd-ret-d);
+  /* ⚠ THE `translate` PROPERTY, NEVER `transform`. §G writes
+     `transform: translateX(var(--vwd-tear))` on the ladder's members and the
+     figure group's exit on this element's parent; an equivalent `transform`
+     here is simply overwritten, and the ring jumps half its own width the
+     moment the station arms. The independent property composes instead. */
+  translate: -50% -50%;
+  overflow: visible;
+  pointer-events: none;
+}
+/* ⚠ WITHOUT THIS THE RING IS A DIFFERENT WEIGHT PER VIEWPORT. The drawing is
+   200 units wide inside a box that runs 244–488px, so a 1-unit stroke paints
+   0.8px at the floor and 2.4px at the cap. ⚠ And never `shape-rendering:
+   crispEdges` — that aliases a circle; it belongs to the tab glyph's integer
+   grid, not here. */
+.vwd__reticle circle {
+  vector-effect: non-scaling-stroke;
+  fill: none;
+}
+.vwd__reticle__ring {
+  stroke: rgba(var(--vwd-dawn-rgb), 0.22);
+  stroke-width: 1;
+}
+.vwd__reticle__ring2 {
+  stroke: rgba(var(--vwd-dawn-rgb), 0.1);
+  stroke-width: 1;
+}
+.vwd__reticle__dot {
+  fill: rgba(var(--vwd-dawn-rgb), 0.42);
+  stroke: none;
+}
+
+@media (min-width: 1101px) {
+  .vwd__reticle {
+    display: block;
+  }
 }
 .vwd__vwh {
   display: block;
@@ -652,7 +809,7 @@ a.vwd__press:focus-visible .vwd__press__headline {
   appearance: none;
   display: grid;
   justify-items: center;
-  gap: 7px;
+  gap: 6px;
   /* ⚠ THE HIT AREA IS THE CHIP, NOT ITS CELL. A grid item defaults to
      `stretch`, which would make five 110px targets abut with no dead ground
      between them — and a click one pixel off does not merely light the wrong
@@ -681,72 +838,39 @@ a.vwd__press:focus-visible .vwd__press__headline {
    falloff is what makes the window read as one turning instrument rather than
    a strip that happens to have slid. No 3D rotation — this surface has no
    perspective grammar, and the travel plus this is enough to carry it. */
-.vwd__chip__frame {
-  position: relative;
-  display: block;
-  width: var(--vwd-chip);
-  height: var(--vwd-chip);
-  overflow: hidden;
-  border: 1px solid rgba(var(--vwd-dawn-rgb), 0.3);
-  background: rgba(var(--vwd-dawn-rgb), 0.03);
-  opacity: calc(1 - var(--dd) * 0.4);
-  scale: calc(1 - var(--dd) * 0.1);
-  transition:
-    border-color 120ms cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 240ms cubic-bezier(0.16, 1, 0.3, 1),
-    scale 240ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-/* ⚠ `object-fit: cover` CANNOT MAKE A PORTRAIT OUT OF THIS ASSET. A square
-   window over a 720×1280 frame shows `w/h` = 56 % of its height, and the
-   figure occupies ~88 % of the frame (headY→footY), so cover crops to head-
-   to-knees — a whole small person, not a bust. The image is scaled instead:
-   its rendered height is the chip divided by `--vwd-bust-span`, so exactly
-   that fraction of the frame fills the window, and the top offset is solved
-   from the era's OWN `--bust-head` anchor so every era's head lands on the
-   same line whatever its asset does. Both terms are knobs, because framing a
-   portrait is a judgement and the roster is not final. */
-.vwd__chip__bust {
-  position: absolute;
-  left: 50%;
-  translate: -50% 0;
-  top: calc(
-    var(--vwd-bust-lead) * var(--vwd-chip) - var(--bust-head, 0.12) * var(--vwd-chip) /
-      var(--vwd-bust-span)
-  );
-  width: auto;
-  height: calc(var(--vwd-chip) / var(--vwd-bust-span));
-  max-width: none;
-  display: block;
-  /* ⚠ DIM WITH OPACITY, NOT BRIGHTNESS. These are emissive gold-on-black
-     stills; `brightness(.62)` on an image whose ground is already #0a0908
-     takes the whole chip to black and reads as a failed load (it did). */
-  opacity: 0.5;
-  filter: saturate(0.45);
-  transition:
-    opacity 120ms cubic-bezier(0.16, 1, 0.3, 1),
-    filter 120ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-/* The year letters INSIDE the frame's top-left corner — the mockup's own
-   move, and what keeps the chip one object instead of a picture with a
-   caption stack under it. */
+/* ⚠ THE CHIP IS A TEXT STOP (ADR-082 U23, the Starfield pass). It was a 64px
+   framed BUST — a picture of the era with a caption stack under it — and
+   against a reference whose stops are set in line work alone that frame was
+   the heaviest object on the band, competing with the figure it selects. Year
+   over name over the mark, one lit stop, nothing boxed.
+   ⚠ IT COST 52px OF BAND, WHICH IS NOT SPENT ON THE FIGURE — see
+   `--vwd-reel-return` in §A. And it drops five lazily-fetched era posters from
+   the page: the reel no longer paints an image at all. */
 .vwd__chip__year {
-  position: absolute;
-  top: 3px;
-  left: 5px;
   font-family: var(--vwd-mono);
-  font-size: clamp(8.5px, 0.62vw, 10px);
-  letter-spacing: 0.1em;
-  color: rgba(var(--vwd-dawn-rgb), 0.7);
-  text-shadow: 0 1px 2px rgba(10, 9, 8, 0.9);
+  font-size: clamp(9px, 0.66vw, 11px);
+  letter-spacing: var(--track-eyebrow);
+  color: rgba(var(--vwd-dawn-rgb), 0.72);
 }
 .vwd__chip__name {
   font-family: var(--vwd-mono);
   font-size: clamp(8.5px, 0.62vw, 10px);
-  letter-spacing: 0.14em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   white-space: nowrap;
   color: rgba(var(--vwd-dawn-rgb), 0.45);
-  opacity: calc(1 - var(--dd) * 0.5);
+}
+/* The reel's depth: a stop recedes with its distance from the centre, which is
+   what makes the window read as one turning instrument rather than a strip
+   that happened to slide.
+   ⚠ ON THE CHILDREN, NEVER ON `.vwd__chip` — that element's opacity and
+   transform belong to §G's entry ladder (and `about-voidwalker-handoff` reads
+   that opacity), so a falloff declared there is overwritten the moment the
+   station arms. ⚠ AND OPACITY ONLY: the frame could afford a `scale`, but
+   10px mono type at 0.9 goes soft, and a soft label is not a quiet one. */
+.vwd__chip__year,
+.vwd__chip__name {
+  opacity: calc(1 - var(--dd) * 0.55);
   transition: opacity 240ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 /* The active mark is a DIAMOND, never a dot — this system has no circles. */
@@ -757,29 +881,25 @@ a.vwd__press:focus-visible .vwd__press__headline {
   background: transparent;
 }
 
-.vwd__chip[data-on="true"] .vwd__chip__frame {
-  border-color: rgba(var(--vwd-gold-rgb), 0.75);
-}
-.vwd__chip[data-on="true"] .vwd__chip__bust {
-  opacity: 1;
-  filter: none;
-}
+/* ⚠ THE LIT STOP IS INK AND A MARK, NOT A FILL. ADR-089 U4 ruled inverse video
+   for the casefile's station rail — and its own reason is why it does not cross
+   to here: a fill reads as selection when it is FILL AMONG OUTLINES, and these
+   stops have no boxes at all. Filled, the selected chip would be the one
+   painted ground on a station whose committed guard exists to keep grounds off
+   it (ADR-082 U21's >700px sweep bounds width, but the argument it encodes is
+   this one). Gold ink plus the gold diamond, and the band stays line work. */
 .vwd__chip[data-on="true"] .vwd__chip__year,
 .vwd__chip[data-on="true"] .vwd__chip__name {
   color: var(--gold-ink, #caa554);
+  opacity: 1;
 }
 .vwd__chip[data-on="true"] .vwd__chip__mark {
   background: var(--gold, #caa554);
 }
 
-.vwd__chip:hover .vwd__chip__frame,
-.vwd__chip:focus-visible .vwd__chip__frame {
-  border-color: rgba(var(--vwd-dawn-rgb), 0.6);
-}
-.vwd__chip:hover .vwd__chip__bust,
-.vwd__chip:focus-visible .vwd__chip__bust {
-  opacity: 0.78;
-  filter: saturate(0.7);
+.vwd__chip:hover .vwd__chip__name,
+.vwd__chip:focus-visible .vwd__chip__name {
+  color: rgba(var(--vwd-dawn-rgb), 0.8);
 }
 .vwd__chip:focus-visible {
   outline: 1px solid rgba(var(--vwd-gold-rgb), 0.8);
@@ -791,9 +911,8 @@ a.vwd__press:focus-visible .vwd__press__headline {
    a still one. */
 @media (prefers-reduced-motion: reduce) {
   .vwd__band__track,
-  .vwd__chip__frame,
-  .vwd__chip__name,
-  .vwd__chip__bust {
+  .vwd__chip__year,
+  .vwd__chip__name {
     transition: none;
   }
 }
@@ -831,27 +950,34 @@ a.vwd__press:focus-visible .vwd__press__headline {
     overflow: hidden;
   }
 
-  /* ⚠ THIS `padding-top` DELIBERATELY DOES NOT READ `--vwd-pad-top`, AND THAT
-     IS WHY THE PHONE IS UNAFFECTED BY THE RAIL DATUM. It is a longhand at equal
-     specificity later in the file, so it wins over §B's shorthand — today by
-     luck rather than by intent. Making it use the token would hand the phone
-     ~60px of pad pointing at a line that is not even drawn there:
-     `.hud__rail` is `display: none` below 961px. Keep it a literal. */
+  /* ⚠ STILL NOT `--vwd-pad-top`, AND NOW NOT A BARE LITERAL EITHER. The old
+     note stands on its own terms: that token is the RAIL datum, and the rail
+     is `display: none` below 961px, so reading it would hand the phone ~60px
+     of lead pointing at a line nobody draws. What changed is the other half —
+     ADR-082 U23 deleted the eyebrow, so the mast's first glyph is the TITLE at
+     26px instead of an 11px kicker, and it rises into the band where
+     `.hud__nav__btn` paints. `--mobile-chrome-top` is that band, DERIVED from
+     the chrome's own tokens (`.claude/rules/mobile-sections.md` §1 — a literal
+     here is how a painter moves and its reservation does not). It is a FLOOR:
+     where the authored rhythm already clears the chrome, nothing moves. */
   .vwd__sheet {
+    position: relative;
     display: flex;
     flex-direction: column;
-    padding-top: clamp(12px, 2svh, 20px);
+    padding-top: max(clamp(12px, 2svh, 20px), var(--mobile-chrome-top, 56px));
   }
 
   /* The mast keeps the production title clamp — the About name flies into
-     it and translates without scaling, so no rung may step it down. */
+     it and translates without scaling, so no rung may step it down.
+     ⚠ `justify-items: start` IS THE FIX FOR A LATENT DEFECT, not a new choice.
+     §B declares `justify-items: center` on this grid and this rung only ever
+     overrode `text-align`, so every mast row was content-sized and CENTRED
+     while the sheet claimed a left-aligned phone mast. With one row left it is
+     the title itself sitting in the middle of the screen. */
   .vwd__mast {
+    justify-items: start;
     text-align: left;
     padding-bottom: clamp(10px, 1.8svh, 16px);
-  }
-  .vwd__mast__kicker {
-    justify-content: space-between;
-    gap: 12px;
   }
   .vwd__mast__title {
     text-wrap: balance;
@@ -910,9 +1036,12 @@ a.vwd__press:focus-visible .vwd__press__headline {
        characters in ~90px is the binding case for the whole row; at
        0.14em tracking it overran its column and printed off the screen
        edge. The tracking pays for it, not the size — the labels are the
-       only navigation on this surface. */
+       only navigation on this surface. ⚠ `--track-label` (.08em) is what that
+       hand-tuned .06em became under ADR-092's ramp, and it still fits: twelve
+       characters at 9px is 64.8px of glyph plus 7.9 of tracking against a
+       ~90px cell. */
     font-size: clamp(8.5px, 2.4vw, 10px);
-    letter-spacing: 0.06em;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
     color: rgba(var(--vwd-dawn-rgb), 0.45);
   }
@@ -933,7 +1062,7 @@ a.vwd__press:focus-visible .vwd__press__headline {
     display: block;
     margin-top: 2px;
     font-size: 0.82em;
-    letter-spacing: 0.1em;
+    letter-spacing: var(--track-label);
     color: rgba(var(--vwd-dawn-rgb), 0.18);
   }
 
@@ -941,15 +1070,38 @@ a.vwd__press:focus-visible .vwd__press__headline {
      Flat flow instead of the desktop's row grid: with one panel visible at
      a time there is nothing to align across columns, so the desktop's
      shared-row alignment has no work to do here. */
+  /* ⚠ THE READING FITS; IT DOES NOT SCROLL (ADR-082 U23, owner: no scrollbars
+     on the phone). ADR-083 gave this box an inner scroll that released to the
+     page at its bounds, and the trade it named — "visible and escapable" — is
+     the one the owner has now read on a physical phone and rejected. Letting
+     the page take it instead is worse, not better: `.vwd` is a 100svh
+     instrument that `#voidwalker` is exempt from the padding floor FOR
+     (`.claude/rules/mobile-sections.md` law 3), and a phone flick passes the
+     whole station, so "scrolls the page" means "scrolls the reading away".
+     ⚠ `clip`, NEVER `hidden` — the band one rule down records why, and it is
+     the same reason here: `hidden` is a scroll container, so a `.focus()` on
+     anything below the fold sets `scrollTop` and leaves the box quietly
+     offset under its own layout. `clip` also FAILS LOUDLY in the probe, where
+     a scrollbar fails silently.
+     ⚠ WHAT PAYS FOR IT is four trims below, in the recorded order of
+     sacrifice — chrome first, rhythm second, never the type. */
   .vwd__stage {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
-    /* Inner scroll releases to the page at its bounds (ADR-083). */
-    overscroll-behavior-y: auto;
+    overflow: clip;
     padding-top: clamp(12px, 2svh, 18px);
+  }
+  /* ⚠ THE READING RESERVES THE STOPS' STRIP; THE FIGURE DOES NOT. The stops
+     are absolutely positioned over this box (see `.vwd__band` below), which is
+     the point on the figure tab and would be copy printed under a control on
+     every other one. Derived from the stops' own terms so the two cannot
+     drift — the band's lead, one stop, and the chrome band it clears. */
+  .vwd__sheet:not([data-vwd-tab="figure"]) .vwd__stage {
+    padding-bottom: calc(
+      clamp(6px, 1svh, 10px) + var(--vwd-stop-h) + var(--mobile-chrome-bottom, 56px)
+    );
   }
 
   /* ⚠ `[data-cell]` MATCHES THE DESKTOP'S SPECIFICITY — the 701–1100px
@@ -968,11 +1120,26 @@ a.vwd__press:focus-visible .vwd__press__headline {
     justify-self: stretch;
     width: 100%;
   }
+  /* Trims 2 and 3 of the four that buy the clip (see `.vwd__stage`). The foot
+     belongs to the era stops' own chrome clearance now, so a body that also
+     pads its bottom is reserving the same strip twice. */
   .vwd__body {
-    padding-bottom: clamp(16px, 3svh, 28px);
+    padding-bottom: 0;
   }
   .vwd__head + .vwd__body {
-    padding-top: clamp(10px, 1.8svh, 16px);
+    padding-top: clamp(8px, 1.2svh, 14px);
+  }
+
+  /* Trim 1, and the largest: a fact is ONE LINE on the phone. Stacked, four
+     facts spend four whole lines on 10px labels; on one baseline they read as
+     the readout rows the desktop pass made them and give the binding tab
+     (RECORD — facts and the press that reported them are one reading) ~52px
+     back. Every value fits: the longest is `expanse`'s 36-character flight
+     line at ~220px against a 337px column. */
+  .vwd__facts__row {
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    column-gap: 10px;
+    align-items: baseline;
   }
 
   /* Which cells the active tab owns. RECORD is two panels because facts and
@@ -1089,58 +1256,113 @@ a.vwd__press:focus-visible .vwd__press__headline {
     min-height: 0;
   }
 
-  .vwd__film__frame {
-    max-height: none;
-  }
+  /* Trim 4. ⚠ THIS RULE IS DELETED, and it was the single largest avoidable
+     term in the TRANSMISSION budget: uncapped, a 16:9 frame in a 337px column
+     is 190px; §C's own `clamp(96px, 15svh, 150px)` takes it to 96 on a short
+     screen and 150 on a tall one. A poster is the cheapest thing on this tab
+     to shrink — the order of sacrifice puts pixels of a screenshot above a
+     line of the record, every time. */
 
-  /* ── THE ERA REEL holds the foot in every tab state.
-     ⚠ NO `gap`. The track's cells are `--vwd-cell` apart and the centring
-     transform steps by exactly that, so a gap would make the cells sit
-     `cell + gap` apart while the offset still stepped by `cell` — the selected
-     chip drifting off centre by `i × gap`, silently, on the phone only.
-     `padding-inline` is safe: it moves the clip edge and the centring is
-     padding-independent under `justify-self: center`.
+  /* ── THE ERA STOPS RIDE THE FIGURE, AND THERE IS NO BAND (ADR-082 U23,
+     owner: the stops should be "just buttons … on top of that avatar image,
+     but we don't need the panel below it").
 
-     ⚠ AND THE FOOT HAS TO CLEAR THE FIXED BOTTOM-RIGHT CHROME. `.rin-settings`
-     — the theme switch and the session mark — is `position: fixed` on the
-     bottom margin line and is NEVER gated off (rail-instruments.css, in as
-     many words: a theme switch that disappears on a phone is a bug). Inside a
-     100svh instrument the reel's own bottom edge IS the viewport's, so the
-     right-hand chips ran straight underneath that cluster — measured 34.9px of
-     overlap at 390×844, on four of the five eras.
-     ⚠ THE BAND'S BOX CANNOT BE MOVED OUT FROM UNDER IT, ONLY THE CHIPS. Its
-     border box ends on the viewport floor whatever this rule says, and the
-     cluster is inside that floor by construction — so the fix is padding, and
-     the guard measures the CHIPS' union rather than the band's rect.
-     ⚠ `padding-block` IS CENTRING-NEUTRAL FOR THE REEL: the offset that keeps
-     the selected era at the window's centre is horizontal
-     (`translateX((n/2 − i − 0.5) × cell)`), and the window's own
-     `justify-content: center` is unaffected by a vertical pad. The chip the
-     reader chose stays dead centre.
-     ⚠ AND THE TOKEN IS MEASURED FROM THE VIEWPORT FLOOR, SO NOTHING COMES
-     BACK OUT OF IT. `--mobile-chrome-bottom` (landing.css's <=960 block) is
-     already `max(--hud-margin, --safe-bottom) + --hud-corner-zone + 12px` —
-     the margin is INSIDE it. Subtracting `--hud-margin` again reserved 40px
-     where the chrome paints 48 (the 36px control overhangs its own 28px host
-     row by 4px a side), and the chips still ran 7.6px under the cluster with
-     every other reading green. The band's bottom edge IS the floor here —
-     `.vwd` is `height: 100svh` with no bottom margin of its own — so the band
-     reserves the whole band. The `max()` keeps §C's authored foot rhythm as a
-     floor, and the fallback keeps this rule correct standalone. */
+     ⚠ THIS REVERSES HALF OF ADR-082 U19, WHICH IS WHY IT IS WRITTEN DOWN. That
+     ruling spent a band at the foot on BOTH breakpoints, deliberately, so the
+     selector would read as character-select at either size. Desktop keeps it.
+     The phone does not, because there the band was not reading as a selector
+     beside the figure — it was a second object stacked under a figure that had
+     already given up half its screen to make room, and the owner's ask is that
+     the figure be the one thing on it.
+
+     ⚠ IT IS THE SAME NODE, MOVED BY CSS. Not a second element: every node
+     stays mounted (ADR-083), so the tablist, the roving focus, the testid and
+     §G's entry actor all survive a repositioning that touches no markup.
+
+     ⚠ THE REEL IS NEUTRALISED, NOT RE-AUTHORED. Five stops, all visible, so
+     there is nothing to centre and nothing to roll — `transform: none` and a
+     five-column track. The window, its mask and the `(n/2 − i − 0.5)` offset
+     stay in §C untouched for the desktop. */
   .vwd__band {
-    flex: 0 0 auto;
-    padding-inline: clamp(8px, 3vw, 16px);
-    padding-bottom: max(clamp(10px, 1.5svh, 22px), var(--mobile-chrome-bottom, 96px));
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    /* ⚠ ISOLATE. On the alpha branch `.vwh__slot` is `isolation: auto`, so
+       `.vwh__cone`'s `plus-lighter` reaches up through anything stacked over
+       the figure and lights its ink — the stops would glow at the edges. */
+    isolation: isolate;
+    width: auto;
+    margin-inline: 0;
+    padding-inline: clamp(12px, 5vw, 24px);
+    padding-block: clamp(6px, 1svh, 10px) 0;
+    /* ⚠ THE CLEARANCE IS THE WHOLE RULE, AND THE TOKEN IS MEASURED FROM THE
+       VIEWPORT FLOOR. `.rin-settings` is `position: fixed` on the bottom
+       margin line and is never gated off, and inside a 100svh instrument this
+       element's own bottom edge IS that floor — so without this the right-hand
+       stops run under the theme switch (34.9px of measured overlap on four of
+       five eras, the defect the deleted band rule below recorded). Nothing
+       comes back out of `--mobile-chrome-bottom`: `--hud-margin` is already
+       inside it. */
+    padding-bottom: var(--mobile-chrome-bottom, 56px);
+    /* ⚠ ONE RULE, BOTH THEMES. `--void-rgb` flips to parchment under ADR-058,
+       so this is a fade to ink over the corridor in dark and to paper in light
+       with no second block to keep in step.
+       ⚠ IT IS A FADE, NOT A PANEL, AND IT IS NOT WHAT CARRIES THE TYPE. The
+       ask is an unobstructed figure, and a scrim opaque enough to tame what is
+       behind these labels would be the panel this pass deleted: measured, the
+       background under the five stops runs from luminance 8 to 191 — some sit
+       over void, some over the lit figure's boots — and it changes with the
+       era and with every frame of the idle. An unpredictable bed is what the
+       HALO below is for; this only lifts the floor. */
+    background: linear-gradient(to top, rgba(var(--void-rgb), 0.8), rgba(var(--void-rgb), 0));
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  /* ⚠ THE WINDOW'S `overflow: clip` STAYS. Nothing translates here, so it
+     clips nothing — but a focus ring on an edge stop needs the padding above
+     to sit in, and re-declaring `visible` would only invite the scroll
+     container §C's note bans. */
+  .vwd__band__track {
+    grid-auto-columns: minmax(0, 1fr);
+    width: 100%;
+    transform: none;
   }
   .vwd__chip {
-    gap: 5px;
+    justify-self: stretch;
+    width: auto;
+    gap: 4px;
+    padding-inline: 2px;
+    /* No falloff: every stop is on screen, so none of them is off-centre. */
+    --dd: 0;
+  }
+  /* ⚠ THE STOPS ARE THE ONLY NAVIGATION ON THIS SURFACE AND THEY SIT ON THE
+     FIGURE. Over a bed measured between luminance 8 and 191, dawn at .45 is
+     legible on the dark half and absent on the lit half — and this house's own
+     rule is that a label nobody can read is not a quiet label, it is a missing
+     one. Two answers, neither of which is a box: the dormant ink comes up, and
+     every stop carries a HALO in the ground's own colour, which flips with the
+     theme for free (`--void-rgb` is parchment in light, so a light halo under
+     dark ink there). */
+  .vwd__chip__year,
+  .vwd__chip__name {
+    font-size: clamp(8px, 2.2vw, 10px);
+    letter-spacing: var(--track-label);
+    text-shadow:
+      0 1px 2px rgba(var(--void-rgb), 0.95),
+      0 0 7px rgba(var(--void-rgb), 0.9);
   }
   .vwd__chip__name {
-    font-size: clamp(7.5px, 2.1vw, 9px);
-    letter-spacing: 0.08em;
+    color: rgba(var(--vwd-dawn-rgb), 0.62);
   }
   .vwd__chip__year {
-    font-size: clamp(7.5px, 2.1vw, 9px);
+    color: rgba(var(--vwd-dawn-rgb), 0.85);
+  }
+  /* The lit stop's mark gets the same separation — it is a 5px diamond on a
+     moving figure. */
+  .vwd__chip[data-on="true"] .vwd__chip__mark {
+    box-shadow: 0 0 6px rgba(var(--void-rgb), 0.9);
   }
 }
 
@@ -1281,6 +1503,7 @@ a.vwd__press:focus-visible .vwd__press__headline {
   .vwd[data-vwh-ready] .vwd__mast > *,
   .vwd[data-vwh-ready] .vwd__head,
   .vwd[data-vwh-ready] .vwd__body,
+  .vwd[data-vwh-ready] .vwd__figure .vwd__reticle,
   .vwd[data-vwh-ready] .vwd__figure .vwh__base,
   .vwd[data-vwh-ready] .vwd__chip {
     --ci: clamp(0, calc((var(--vwh-in, 0) - var(--ci-off, 0)) / (1 - var(--ci-off, 0))), 1);
@@ -1325,14 +1548,18 @@ a.vwd__press:focus-visible .vwd__press__headline {
         left EMPTY rather than reassigned (ADR-082 U21) — the panels' own
         offsets are what space the arrival, and pulling them all forward to
         close the gap would re-time a choreography nobody asked to change. */
-  .vwd[data-vwh-ready] .vwd__mast__kicker {
-    --ci-off: 0;
-  }
+  /* The 0 rung left with the eyebrow (ADR-082 U23) and is NOT reassigned —
+     same reasoning as U21's empty 0.12: the offsets space the arrival, and
+     pulling them forward to close a gap re-times a choreography nobody asked
+     to change. */
   .vwd[data-vwh-ready] .vwd__mast__title {
     --ci-off: 0.06;
   }
   .vwd[data-vwh-ready] :is(.vwd__head, .vwd__body)[data-cell="ul"] {
     --ci-off: 0.16;
+  }
+  .vwd[data-vwh-ready] .vwd__figure .vwd__reticle {
+    --ci-off: 0.15;
   }
   .vwd[data-vwh-ready] .vwd__figure .vwh__base {
     --ci-off: 0.18;

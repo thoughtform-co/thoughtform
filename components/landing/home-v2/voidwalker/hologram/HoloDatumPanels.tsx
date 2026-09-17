@@ -6,12 +6,7 @@ import {
   MediaLightbox,
   useWalkthrough,
 } from "@/components/landing/home-v2/services/casefile/MediaLightbox";
-import {
-  CHARACTER_ERAS,
-  eraPressBeatIds,
-  resolveCharacterEraHologram,
-  type CharacterEraHologram,
-} from "@/lib/voidwalker/characterEras";
+import { CHARACTER_ERAS, eraPressBeatIds } from "@/lib/voidwalker/characterEras";
 import { VOIDWALKER_BEATS, vwPlain, type VwPress } from "@/lib/voidwalker/voidwalkerData";
 
 /**
@@ -73,12 +68,14 @@ export function eraPositionLabel(index: number, count = CHARACTER_ERAS.length): 
   return `ERA / ${String(index + 1).padStart(2, "0")} OF ${String(count).padStart(2, "0")}`;
 }
 
-/** The three mast lines the scramble kernel writes through. `VoidwalkerHologram`
- *  owns the refs because it owns the decode; this composition only seats them. */
+/** The mast line the scramble kernel writes through. `VoidwalkerHologram` owns
+ *  the ref because it owns the decode; this composition only seats it.
+ *  ⚠ IT WAS THREE UNTIL ADR-082 U23. The eyebrow's two lines are deleted with
+ *  the eyebrow, and the year did NOT follow them into SCOPE's head: that head
+ *  arrives on a later ladder rung than the decode window, so a scramble seated
+ *  there would resolve while the element is still transparent. */
 export interface HoloEraIdentityRefs {
-  kicker: RefObject<HTMLSpanElement | null>;
   title: RefObject<HTMLSpanElement | null>;
-  year: RefObject<HTMLSpanElement | null>;
 }
 
 /**
@@ -102,11 +99,41 @@ function FigureGlyph() {
   );
 }
 
-/** Where a chip's square crop sits on the 720×1280 frame. Azeroth's 0.2352
- *  against the canonical 0.122 is a 130px difference on the source, so
- *  cropping both the same way puts one era's chin where another's eyes are. */
-function bustHeadAnchor(hologram: CharacterEraHologram): number {
-  return hologram.headY;
+/**
+ * The reticle: one thin ring around the figure with four marks on the
+ * diagonals — the reference's own device at this house's weight (ADR-082 U23).
+ *
+ * ⚠ IT IS NOT THE ABOUT DRAWING. `#about`'s orbit is six rings, twenty
+ * graduations, four spokes, three counter-rotating markers and four bearing
+ * numerals, and it is `.voidwalker*`, a namespace this station may not borrow
+ * (`voidwalker.css`'s own rule). That instrument SAYS something about the
+ * portrait it surrounds; this ring seats a figure and says nothing, so it
+ * carries the idea and none of the density.
+ *
+ * ⚠ AND NOTHING IS LETTERED ON IT. The reference's ring carries no type
+ * either — its labels sit in the panels around it, which is where this
+ * surface's already are.
+ */
+function FigureReticle() {
+  /* The four marks sit on the DIAGONALS, where the panels' own alignment does
+     not already point. On the cardinals they would double the grid the four
+     heads draw. */
+  const dots = [45, 135, 225, 315].map((deg) => {
+    const rad = (deg * Math.PI) / 180;
+    return { deg, x: +(96 * Math.sin(rad)).toFixed(3), y: +(-96 * Math.cos(rad)).toFixed(3) };
+  });
+  return (
+    <svg className="vwd__reticle" viewBox="-100 -100 200 200" aria-hidden="true" focusable="false">
+      <circle className="vwd__reticle__ring" cx="0" cy="0" r="96" />
+      {/* The second ring is the reference's doubled edge, at a third of the
+          weight — close enough to read as one drawn wall rather than as two
+          rings with a gap between them. */}
+      <circle className="vwd__reticle__ring2" cx="0" cy="0" r="92.5" />
+      {dots.map((d) => (
+        <circle className="vwd__reticle__dot" key={d.deg} cx={d.x} cy={d.y} r="2.2" />
+      ))}
+    </svg>
+  );
 }
 
 function PressItem({ press }: { press: VwPress }) {
@@ -150,7 +177,6 @@ export function HoloDatumPanels({
   const chipRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [tab, setTab] = useState<DatumTab>("figure");
 
-  const kicker = eraPositionLabel(activeEraIndex);
   const beat = VOIDWALKER_BEATS.find((b) => b.id === era.beatId);
   const facts = era.facts ?? [];
 
@@ -202,25 +228,15 @@ export function HoloDatumPanels({
 
   return (
     <section className="vwd__sheet" data-vwd-era={era.id} data-vwd-tab={tab}>
+      {/* ⚠ THE EYEBROW IS DELETED (ADR-082 U23, owner). `ERA / 04 OF 05` and the
+          year sat above the title and cost it its breathing room — and both were
+          already on screen: the reel prints every era's year on its own stop and
+          marks the open one with a lit diamond. The year survives on SCOPE's
+          head rule, where a right-aligned value on a short rule is the
+          reference's grammar and the reading side says it once.
+          ⚠ `eraPositionLabel` STAYS EXPORTED — `/test/hud-panel-lab`'s era
+          surface letters it in its own header row. */}
       <header className="vwd__mast" data-vwh-region="identity">
-        <p className="vwd__mast__kicker">
-          {/* The decode is DESTRUCTIVE — it writes `textContent` — so each
-              line carries a transparent in-flow GHOST that holds the box and
-              an absolutely overlaid LIVE span as the ref target. Both classes
-              are the production sheet's, shared with the other composition. */}
-          <span className="vwh__decode-line" aria-label={kicker}>
-            <span className="vwh__decode-ghost" data-copy={kicker} aria-hidden="true" />
-            <span className="vwh__decode-live" aria-hidden="true" ref={identityRefs?.kicker}>
-              {kicker}
-            </span>
-          </span>
-          <span className="vwh__decode-line" aria-label={era.year}>
-            <span className="vwh__decode-ghost" data-copy={era.year} aria-hidden="true" />
-            <span className="vwh__decode-live" aria-hidden="true" ref={identityRefs?.year}>
-              {era.year}
-            </span>
-          </span>
-        </p>
         <h2
           className="vwd__mast__title vwh__decode-line"
           aria-label={era.wardrobe}
@@ -228,6 +244,9 @@ export function HoloDatumPanels({
           data-vwh-region="era-title"
           data-testid="voidwalker-era-title"
         >
+          {/* The decode is DESTRUCTIVE — it writes `textContent` — so the line
+              carries a transparent in-flow GHOST that holds the box and an
+              absolutely overlaid LIVE span as the ref target. */}
           <span className="vwh__decode-ghost" data-copy={era.wardrobe} aria-hidden="true" />
           <span className="vwh__decode-live" aria-hidden="true" ref={identityRefs?.title}>
             {era.wardrobe}
@@ -279,6 +298,11 @@ export function HoloDatumPanels({
             SEAT, not the content. */}
         <p className="vwd__head" data-cell="ul">
           <span className="vwd__head__kicker">Scope</span>
+          {/* ⚠ THE ERA'S DATE, AND IT IS THE ONLY PLACE THE READING SIDE SAYS IT
+              (ADR-082 U23). This head already had the tag slot and the
+              `space-between` that seats it; the reference puts a value exactly
+              here, right-aligned on the panel's own rule. */}
+          <span className="vwd__head__tag vwd__head__tag--year">{era.year}</span>
         </p>
         <div
           className="vwd__body"
@@ -382,6 +406,13 @@ export function HoloDatumPanels({
             ⚠ NEVER `data-vwh-ready` here — the slot would take
             `opacity: var(--vwh-morph, 0)` and vanish. */}
         <div className="vwd__figure">
+          {/* ⚠ A SIBLING OF THE FIGURE, NEVER INSIDE IT. `.vwh__slot` is a grid
+              with `place-items: end center` and its own isolation, so a child
+              there becomes a grid item colliding with the media wrap; and
+              `.vwd__vwh` is a single definite cell at two rungs, where an extra
+              child takes a second column. The ring belongs to the COMPOSITION,
+              which is also why it is drawn here and not in `HoloFigure`. */}
+          <FigureReticle />
           <div className="vwh vwd__vwh" data-vwh-era={era.id}>
             {figure}
           </div>
@@ -416,7 +447,6 @@ export function HoloDatumPanels({
         <div className="vwd__band__track">
           {CHARACTER_ERAS.map((item, i) => {
             const selected = i === activeEraIndex;
-            const bust = resolveCharacterEraHologram(item);
             return (
               <button
                 key={item.id}
@@ -437,17 +467,7 @@ export function HoloDatumPanels({
                 onKeyDown={(event) => onChipKeyDown(event, i)}
                 style={{ "--vwd-d": Math.abs(i - activeEraIndex) } as React.CSSProperties}
               >
-                <span className="vwd__chip__frame">
-                  <img
-                    className="vwd__chip__bust"
-                    src={bust.posterPath}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    style={{ "--bust-head": bustHeadAnchor(bust) } as React.CSSProperties}
-                  />
-                  <span className="vwd__chip__year">{item.year}</span>
-                </span>
+                <span className="vwd__chip__year">{item.year}</span>
                 <span className="vwd__chip__name">{item.short}</span>
                 <span className="vwd__chip__mark" aria-hidden="true" />
               </button>
