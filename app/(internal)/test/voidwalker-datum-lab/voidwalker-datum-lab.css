@@ -34,6 +34,14 @@
 @media (min-height: 720px) {
   .dlab.vwd {
     --vwd-pad-top: max(var(--vwd-pad-top-min), var(--hud-rail-y-start, 104px));
+    /* ⚠ ALL THREE, FOR THE SAME REASON (ADR-082 U22). The mast/stage split and
+       the trail are declared in the same gated rule in production, so a lab
+       that re-declared only the total would hang its MAST ~26px lower than the
+       landing and show none of the air between the title and the heads — the
+       same class of lie U20's note above is about, one term further in. Move
+       one rung, move the other. */
+    --vwd-mast-top: max(var(--vwd-pad-top-min), var(--hud-corner-foot, 78px));
+    --vwd-trail: clamp(0px, calc(100svh - 1100px), 56px);
   }
 }
 

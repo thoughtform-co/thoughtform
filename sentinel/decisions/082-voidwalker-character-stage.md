@@ -2165,3 +2165,104 @@ fallback contract against the alpha branch), and the handoff flight asserts
 left/top only (width 480 vs 407 and height 56 vs 42 are the two elements'
 own boxes — content-sized string vs fixed measure, by U11's ruling); the
 ambient-hold case passes.
+
+## Update 22 — the mast rises off the bracket's foot (2026-09-17, owner)
+
+_"In the Era section, do you think we need to place the title (ie The Azeroth
+Teacher etc) a bit higher? … take a look at our era so the elements have more
+breathing room."_ The reference he named is the Linear-inspired head datum this
+house shipped on the proposal pages (ADR-099 U2).
+
+**U20 IS NARROWED, NOT REVERSED, AND THE FINDING IS WHICH GLYPH IT SEATED.**
+U20 put the block on `--hud-rail-y-start` after the owner said SCOPE, FACTS and
+the rest were _"so high, hugging the top part"_ — but the glyph that landed on
+that line is the **KICKER**. The four panel heads he was actually talking about
+have never been on it: they sit at the mast's foot, ~67px below (measured
+201.9 against the kicker's 131 at 1920×1247). So the block's ONE lead can be
+split in two, and the title can rise without a single head moving.
+
+`--vwd-pad-top` stays the TOTAL lead and every consumer keeps reading it;
+`--vwd-mast-top` is new and is what `.vwd__sheet` pads by; `.vwd__mast` carries
+the remainder as a bottom margin. ⚠ **THE SPLIT IS CONSERVATIVE BY
+CONSTRUCTION** — the total does not change, so `--vwd-chrome-h` and
+`--vwd-fig-w` are byte-identical and the figure column does not move (measured
+460px, at its clamp cap, before and after).
+
+**THE DATUM IT MOVES TO IS ALREADY A DRAWN LINE.** `--hud-rail-y-start` is the
+TL bracket's foot **plus `clamp(16px, 1.8vw, 32px)`**, and `landing.css` records
+what that term is for: _"the rail never touches the corner chrome or the
+wordmark"_. It is clearance for a **DRAWN LINE**, and type does not need it.
+`--hud-corner-foot` and `--hud-rail-y-clear` are tokens now, which also makes
+true a claim the rail's own comment already made — _"both ends are TOKENS so no
+mirror can drift"_ — where the sum had in fact been spelled out twice, once in
+`--hud-rail-y-start` and once inside `--hud-rail-y-end`'s `max()`. Every
+computed value is unchanged.
+
+Measured title rise: **23.0px at 1280×720 · 19.8 at 1101×800 · 25.9 at
+1440×900 · 32.0 at 1920×1247** (kicker 131 → 99 at the owner's shape).
+
+**AND THE SECOND HALF IS THE POOLED FLOOR.** `.vwd__stage`'s rows are
+`auto minmax(0,1fr) auto minmax(0,1fr)` and `.vwd__body` is `overflow: hidden`
+with its content top-anchored, so surplus falls to the floor of a box with no
+floor to show — 177px under every panel at 1920×1247 against 14px at 1280×720.
+ADR-070 U14's law and ADR-099 U2's own measurement, on a third surface.
+`--vwd-trail` moves a bounded share of it to between the title and the heads,
+the one place on this composition where air reads as composition rather than as
+a hole. Measured after: the title-to-head gap goes **48.4 → 136.4px** and the
+per-panel foot **177 → 149**.
+
+⚠ **56 IS DERIVED, NOT CHOSEN.** At 1920×1247 the figure's own derivation yields
+`(1247 − 369) × 0.5625 = 494` against the clamp's **460px cap** — 34px of dead
+headroom, i.e. `34 / 0.5625 = 60px` of height that can be spent before the
+column narrows by one pixel. 56 is that budget with slack; **re-derive it rather
+than keeping the number if the cap moves.** `clamp(0px, calc(100svh - 1100px),
+56px)` holds it at exactly **0 at 1280×720, 1101×800 and 1440×900** — every
+tight rung is byte-identical (foot 14 / 51 / 69 before and after), and there was
+no slack at those rungs to spend.
+
+⚠ **THE TRAIL RIDES THE MAST'S MARGIN, NEVER `.vwd__stage`'s `padding-top`.**
+The phone rung declares that as a LONGHAND which beats a shorthand _"today by
+luck rather than by intent"_ — its own comment — and a fourth term in that
+specificity race is how this breaks later. A margin on row 1 of the sheet's
+three-row grid moves the stage down by exactly the trail and shrinks its content
+box by exactly the trail.
+
+⚠ **`--vwd-mast-top`'s BASE MUST READ `--vwd-pad-top-min`, NEVER
+`--vwd-pad-top`.** Custom properties substitute at computed-value time on the
+same element, so a base declaration reading the total would silently follow the
+gated override and the split would evaporate with nothing to throw.
+
+⚠ **`--vwd-chrome-h` GAINS THE TRAIL AND ONLY THE TRAIL.** The split conserves
+the total and adds nothing; the trail is genuinely new height above the stage,
+and the block's own comment forbids folding a new term into the tuned
+`104 + 44` surplus — so it is added as its own difference, exactly as
+`--vwd-pad-top` was.
+
+**THE HANDOFF NEEDED NO LOCKSTEP, AND THAT WAS VERIFIED RATHER THAN ASSUMED.**
+`useVoidwalkerHologramScroll` resolves the era title through `futurePinnedRect()`,
+which walks the real `offsetParent` chain; `aboutVoidwalkerHandoff` is
+position-only; and the spec recomputes the target with its own copy of that
+walk. No literal anywhere. ⚠ One caveat for a future pass: the targets republish
+on a `ResizeObserver` that a pure POSITION change does not fire — safe here
+because this is static CSS resolved before first measurement, but a
+runtime-varying lead would need an explicit republish.
+⚠ `.vwd__mast__title`'s `clamp(26px, 3vw, 44px)` is untouched — byte-locked to
+`.voidwalker__name`, which translates into it without scaling (U6 §1).
+
+**THE LAB RE-DECLARES ALL THREE**, for U20's own reason one term further in: a
+lab that re-declared only the total would hang its mast ~26px lower than the
+landing and show none of the new air. Move one rung, move the other.
+
+⚠ **STILL OPEN, UNCHANGED: 1752×599 clips** (Scope +64 / Facts +43). It is below
+the `min-height: 720px` gate, keeps the compact padding, and this pass neither
+helps nor harms it. And at 1280×720 nothing improves but the title's seat —
+the trail is 0 there by construction and the foot stays at 14px.
+
+**Verifying:** `node scripts/probe-voidwalker-eras.mjs --vp 1280x720`
+(and 1101×800 / 1440×900 / 1920×1247 — all clean, foot 14 / 51 / 69 / 149);
+`node scripts/probe-datum-motion.mjs` (translateX exactly 0 at rest for every
+actor, the reel's `220 / 0 / -220` the one recorded exception);
+`node scripts/probe-about-seam.mjs` (transparent across all four samples);
+`npx playwright test tests/visual/about-voidwalker-handoff.spec.ts` (3 passed).
+⚠ Any `foot` movement at the three tight rungs means the lead was not
+conserved — that is the assertion this split lives or dies on.

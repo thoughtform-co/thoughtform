@@ -97,7 +97,7 @@
      230px floor binds — see `--vwd-pad-top`. */
   --vwd-chrome-h: calc(
     var(--vwd-bar-h) + 104px + var(--vwd-band-h) + 44px +
-      (var(--vwd-pad-top) - var(--vwd-pad-top-min))
+      (var(--vwd-pad-top) - var(--vwd-pad-top-min)) + var(--vwd-trail)
   );
   --vwd-fig-w: clamp(230px, calc((100svh - var(--vwd-chrome-h)) * 0.5625), 460px);
 
@@ -114,7 +114,25 @@
   /* ⚠ THE BLOCK HANGS FROM THE HUD RAIL'S OWN TOP LINE — see the gated rule
      below for why the datum cannot live here. Base value only. */
   --vwd-pad-top-min: clamp(14px, 2.4svh, 26px);
+  /* The TOTAL lead above the STAGE's first row — unchanged in name, in value
+     and in every consumer. */
   --vwd-pad-top: var(--vwd-pad-top-min);
+  /* ⚠ THE MAST'S OWN LEAD, SPLIT OUT OF THE TOTAL (ADR-082 U22). U20 seated
+     the block on the rail's top line and the glyph it put there is the
+     KICKER — the four panel heads it was actually about have never been on
+     that line, they sit ~67px below it at the mast's foot. So the mast can
+     rise without moving a head: the stage keeps `--vwd-pad-top`, the mast
+     takes this. The split is CONSERVATIVE — the total does not change, so
+     `--vwd-chrome-h` and `--vwd-fig-w` are byte-identical.
+     ⚠ IT MUST READ `--vwd-pad-top-min` HERE, NEVER `--vwd-pad-top`: custom
+     properties substitute at computed-value time on the same element, so a
+     base declaration reading the total would silently follow the gated
+     override below and the split would evaporate with nothing to throw. */
+  --vwd-mast-top: var(--vwd-pad-top-min);
+  /* Air between the title and the four heads, spent out of the surplus that
+     otherwise pools under each body. Exactly 0 wherever the datum does not
+     apply, and at every tight reference rung — see the gated rule. */
+  --vwd-trail: 0px;
 
   /* ⚠ A BOUNDED HEIGHT, NOT A FLOOR. Every `flex: 1 1 auto` below needs
      something to shrink against; with `min-height` alone the sheet grows to
@@ -180,6 +198,22 @@
 @media (min-height: 720px) {
   #voidwalker[data-vw-mode="hologram"] .vwd {
     --vwd-pad-top: max(var(--vwd-pad-top-min), var(--hud-rail-y-start, 104px));
+    /* ⚠ THE MAST HANGS FROM THE BRACKET'S FOOT, ONE CLEARANCE HIGHER
+       (ADR-082 U22). `--hud-rail-y-start` IS that foot plus
+       `clamp(16px, 1.8vw, 32px)`, and landing.css records what the clearance
+       is for: "the rail never touches the corner chrome or the wordmark". It
+       is air for a DRAWN LINE, and type does not need it. Measured: the title
+       rises 23.0px at 1280x720, 25.9 at 1440x900, 32.0 at 1920x1247. */
+    --vwd-mast-top: max(var(--vwd-pad-top-min), var(--hud-corner-foot, 78px));
+    /* ⚠ 56 IS DERIVED, NOT CHOSEN. At 1920x1247 the figure's own derivation
+       yields (1247 - 369) * 0.5625 = 494 against the clamp's 460px CAP, i.e.
+       34px of dead headroom, i.e. 34 / 0.5625 = 60px of height that can be
+       spent before the column narrows by a single pixel. 56 is that budget
+       with slack; re-derive it rather than keeping the number if the cap
+       moves. The `100svh - 1100px` term holds it at exactly 0 at 1280x720,
+       1101x800 and 1440x900 — every tight rung is byte-identical, and there
+       was no slack there to spend anyway. */
+    --vwd-trail: clamp(0px, calc(100svh - 1100px), 56px);
   }
 }
 
@@ -190,7 +224,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-height: 0;
-  padding: var(--vwd-pad-top) 0 0;
+  padding: var(--vwd-mast-top) 0 0;
   overflow: hidden;
 }
 
@@ -212,6 +246,17 @@
    instrument reshaping under the reader. The cap also keeps the wrap point
    constant. */
 .vwd__mast {
+  /* ⚠ THE REMAINDER OF THE LEAD, PLUS THE TRAIL (ADR-082 U22). The sheet took
+     the mast's own lead above; what the stage was owed is paid here, so the
+     four heads, the figure and the band do not move by a pixel. It rides the
+     MAST'S MARGIN and never `.vwd__stage`'s `padding-top`: the phone rung
+     declares that as a LONGHAND (see the small-screen block) which beats a
+     shorthand "today by luck rather than by intent" — its own words — and a
+     fourth term in that specificity race is how this breaks later. A margin on
+     row 1 of an `auto minmax(0,1fr) auto` grid moves the stage down by exactly
+     the trail and shrinks its content box by exactly the trail. Outside the
+     gate every term is 0, so this computes to 0px. */
+  margin-bottom: calc(var(--vwd-pad-top) - var(--vwd-mast-top) + var(--vwd-trail));
   display: grid;
   justify-items: center;
   width: min(calc(100% - 2 * var(--vwd-pad-x)), 760px);

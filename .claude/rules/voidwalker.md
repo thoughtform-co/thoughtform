@@ -124,10 +124,34 @@ composition's own entry/exit block, its responsive rungs, and
   shortest reference viewport: the capable gate is width-only, so a half-height
   window on a wide monitor enters hologram mode at 599px tall, where the datum's
   89px comes straight out of the body rows.
-  ⚠ **The lab re-declares BOTH by hand** (`voidwalker-datum-lab.css`) — a rule
-  the lab's selector cannot reach is a composition the lab cannot show, and
+  ⚠ **The lab re-declares ALL THREE by hand** (`voidwalker-datum-lab.css`) — a
+  rule the lab's selector cannot reach is a composition the lab cannot show, and
   without it the window would hang 82px higher than the landing with a figure
   column 15px wider. Move one rung, move the other.
+- ⚠ **THE LEAD IS SPLIT IN TWO, AND U20's DATUM SEATED THE KICKER (ADR-082
+  U22).** The four panel heads U20 was about have never been on the rail line —
+  they sit ~67px below it at the mast's foot. So `--vwd-pad-top` stays the TOTAL
+  lead (every consumer keeps reading it, `--vwd-chrome-h` included), the new
+  `--vwd-mast-top` is what `.vwd__sheet` pads by, and `.vwd__mast` carries the
+  remainder plus `--vwd-trail` as a bottom margin. The mast hangs from
+  `--hud-corner-foot` — the TL bracket's foot — because `--hud-rail-y-start` is
+  that foot plus `clamp(16px, 1.8vw, 32px)` of clearance **for a drawn line**,
+  which type does not need. Title rises 23.0 / 19.8 / 25.9 / 32.0px at the four
+  reference rungs.
+  ⚠ **THE SPLIT IS CONSERVATIVE OR IT IS BROKEN** — the total does not change,
+  so the figure column and every head are byte-identical, and the probe's `foot`
+  at 1280×720 / 1101×800 / 1440×900 (14 / 51 / 69) is the assertion that says
+  so. Any movement there means the lead was not conserved.
+  ⚠ **`--vwd-mast-top`'s BASE READS `--vwd-pad-top-min`, NEVER `--vwd-pad-top`**
+  — custom properties substitute at computed-value time on the same element, so
+  the base would silently follow the gated override and the split would
+  evaporate with nothing to throw.
+  ⚠ **`--vwd-trail` RIDES THE MAST'S MARGIN, never `.vwd__stage`'s
+  `padding-top`** (the phone rung declares that as a longhand which beats a
+  shorthand by luck, not intent), and `--vwd-chrome-h` charges it as its OWN
+  difference — never folded into the tuned `104 + 44` surplus. Its 56px ceiling
+  is DERIVED from the figure's 494-against-460 cap headroom; re-derive it if the
+  cap moves.
   ⚠ **IT COSTS THE PANELS ~13 % OF THE FIGURE COLUMN AND 32–53px OF BODY ROW,**
   paid back out of band padding, the facts' own gap and row padding, and body
   padding-bottom — chrome first, rhythm second, **never the type**. Measured

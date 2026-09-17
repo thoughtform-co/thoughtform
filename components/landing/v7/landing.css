@@ -66,9 +66,19 @@
      keeps it 8px above the wordmark on short viewports. Both ends are TOKENS
      so no mirror can drift; what "connected" ever meant was the END TICKS
      sitting flush at the rail's ends (tick rules below). */
-  --hud-rail-y-start: calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px));
+  /* ⚠ THE FOOT AND THE CLEARANCE ARE TOKENS NOW (ADR-082 U22). The comment
+     above already claimed "both ends are TOKENS so no mirror can drift" — and
+     they were not: the sum was spelled out twice, once here and once inside
+     the max() below. Naming the two halves makes that claim true, and it gives
+     the era stage's mast a datum to hang from: `--hud-corner-foot` is a DRAWN
+     LINE (the TL bracket's foot), while `--hud-rail-y-clear` is the air the
+     TRACK keeps off the corner chrome. Type does not need that clearance.
+     ⚠ Every computed value here is byte-identical to what it replaced. */
+  --hud-corner-foot: calc(var(--hud-margin) + var(--hud-corner-zone));
+  --hud-rail-y-clear: clamp(16px, 1.8vw, 32px);
+  --hud-rail-y-start: calc(var(--hud-corner-foot) + var(--hud-rail-y-clear));
   --hud-rail-y-end: max(
-    calc(var(--hud-margin) + var(--hud-corner-zone) + clamp(16px, 1.8vw, 32px)),
+    calc(var(--hud-corner-foot) + var(--hud-rail-y-clear)),
     calc(var(--hud-margin) + clamp(44px, 3.6vw, 63px) + 8px)
   );
   /* Guide hairline offset from the rail-aside outer edge. Held at 0
