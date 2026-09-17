@@ -2266,3 +2266,266 @@ actor, the reel's `220 / 0 / -220` the one recorded exception);
 `npx playwright test tests/visual/about-voidwalker-handoff.spec.ts` (3 passed).
 ⚠ Any `foot` movement at the three tight rungs means the lead was not
 conserved — that is the assertion this split lives or dies on.
+
+---
+
+## Update 23 — the stage is redrawn on the reference's grammar, and Safari gets real alpha (2026-09-17, owner)
+
+**Status: Accepted.** The owner's read, with three Starfield character/status
+screens attached: the elements "can be much better positioned or designed", and
+what he wants from the reference is "the lines, the cleanliness, and the
+spacing". Plus three asks that arrived with it — the eyebrow is costing the
+title its breathing room, the phone must have no scrollbars, and the phone's
+era panel should go so the stops sit on the avatar itself.
+
+### What the reference actually does
+
+Four things, and none of them is a box: a mono header on a short rule **at the
+panel's own width**; values set **label left, value right, on a thin rule**; one
+**thin circle** around the figure with small marks on the diagonals; and air.
+Its one filled object is an inverse-video active row — which is the single thing
+this pass does NOT take, for a reason recorded under §6.
+
+### 1 · The eyebrow is deleted, and the year moves to SCOPE's rule
+
+`ERA / 04 OF 05` and the year were a flex row above the title. Between them they
+cost **20.2px** that the title now takes back, and **both were already on
+screen**: the reel prints every era's year on its own stop and marks the open
+one with a lit diamond. The pair was this surface's own said-twice defect at its
+loudest point.
+
+The year survives on **SCOPE's head rule, right-aligned** — the head already had
+the tag slot and the `space-between` that seats it, so this is zero new grid
+items and zero new ladder rungs, and a value on a short rule at the panel's own
+width is the reference's grammar verbatim. It letters at the head's full size,
+not the tag's `0.85em`: the register's other tags are secondary readouts ABOUT
+the panel and a date is the record's own value.
+
+⚠ **THE YEAR LEAVES THE DECODE, AND THAT IS ARITHMETIC.** SCOPE's head is a §G
+actor at `--ci-off: 0.16`, whose ramp saturates around `--vwh-in` 0.655, while
+`TITLE_DECODE_WINDOW` closes at **0.18** — a scramble seated there would resolve
+while the element is still transparent and then fade up already finished. The
+kernel's `finals` drops to one entry and `HoloEraIdentityRefs` to `{ title }`.
+⚠ `eraPositionLabel` **stays exported** — `/test/hud-panel-lab`'s era surface
+letters it in its own corner labels.
+
+### 2 · The facts become readout rows, on a two-weight dawn ladder
+
+`.vwd__facts__row` is `minmax(0, auto) minmax(0, 1fr)` on one baseline with a
+rule under **every** row (the `:last-child` exception is deleted — in the
+reference every row terminates on a line and the list's own bottom edge closes
+the panel). The press stack takes the same grammar, its rule at each item's
+**foot**: a rule between an outlet and its own headline splits the record it is
+meant to bound.
+
+⚠ `minmax(0, 1fr)` ON THE VALUE IS LOAD-BEARING. `expanse`'s longest value is 36
+characters; on an `auto auto` grid it pushes the label out of the panel instead
+of wrapping in its own column.
+
+New `--vwd-rule-head` (.3) divides a REGION; `--vwd-rail` (.12) rules within
+one. Both dawn — gold here is the lit mark, and a gold structure line competes
+with it (the casefile learned this one surface over, ADR-089).
+
+**It gives the panel ~50px back**, which is why FACTS stops being the tightest
+seat: the probe's `tightest` changes hands to Scope at every rung.
+
+### 3 · A reticle rings the figure
+
+Two rings (r 96 at dawn .22, r 92.5 at .10 — a doubled edge, not two rings with
+a gap) and four marks on the **diagonals**, where the four panel heads' own
+alignment does not already point. Dawn only. `vector-effect: non-scaling-stroke`,
+or a 1-unit stroke paints 0.8px at the column's floor and 2.4px at its cap — a
+different weight per viewport.
+
+⚠ **IT IS SIZED OFF `--vwd-fig-w`, WHICH IS WHAT KEEPS IT LAWFUL.** That token
+is `clamp(230px, …, 460px)`, so the box can never exceed **487.6px** and the
+committed >700px paint sweep is satisfied by ARITHMETIC rather than by tuning.
+Measured: 243.8 / 280.9 / 330.1 / 487.6 at the four rungs.
+
+⚠ **BOTH DIALS ARE MEASURED, AND THE FIRST CUT PROVES WHY.** The figure is
+`object-fit: contain`, bottom-anchored in a slot that stops above the projector
+base, so where it PAINTS is neither the box's middle nor a base-height
+subtraction: measured, its centre is at **52.2 / 51.1 / 49.7 %** of the figure
+box. The first cut solved it by arithmetic (`44% − base/2`), landed the ring's
+centre at ~40 %, and rang him from the head to the knees. **Only a still showed
+it.** And 1.14 is the column's own ceiling — the ring may reach into the stage's
+column gap and may never touch a panel, so the widest lawful ring is
+`fig-w + 2 × gap` (291 / 381 / 552px) and this leaves ~28px of air at every rung.
+
+⚠ **IT RINGS HIM RATHER THAN CONTAINING HIM, AND THAT IS THE ONE PLACE THIS
+COMPOSITION CANNOT FOLLOW THE REFERENCE.** Starfield gives its circle an empty
+half-screen; this figure has a reading column 30px away on either side.
+
+Three traps, all recorded in the sheet: `.vwd__figure` needs `position: relative`
+**declared** (§G's exit transform would give it one for free, but §G is inside
+`prefers-reduced-motion: no-preference`, so under PRM the ring would resolve
+against `.vwd__stage`); the offset is the **`translate` property**, never
+`transform`, which §G writes; and the ring joins the entry ladder at `--ci-off:
+0.15`, one rung before the projector base.
+
+### 4 · The chips become text stops, on both breakpoints
+
+Year over name over the mark. The framed 64px bust is deleted — against a
+reference whose stops are line work alone, that frame was the heaviest object on
+the band, competing with the figure it selects. It also drops **five lazily
+fetched era posters**: the reel no longer paints an image at all.
+
+⚠ **THE 52px THE BAND GAVE UP IS CHARGED BACK, NOT SPENT ON THE FIGURE.**
+Letting it flow into `--vwd-fig-w` widens the column at 1280×720 — where the
+panel measure is COLUMN-bound at 365px, not capped — taking 7.7px of reading
+measure off each side to buy 15px of figure. So `--vwd-reel-return` returns it
+and **`band-h + reel-return + trail` is identically U22's `116px + clamp(...)`**.
+Measured after: `--vwd-chrome-h` **335.781 / 328.938 / 346.344 / 425** and
+`--vwd-fig-w` **230 / 264.969 / 311.422 / 460** — byte-identical to what shipped,
+on both gate branches. The air goes above the heads instead, as
+`--vwd-trail-air: 28px`.
+
+⚠ `--vwd-chip` survives as the reel's **pitch dial alone** — no box is 64px any
+more — so `--vwd-cell`, the reel's hit-test slack and the probe's pitch
+assertion are unchanged. The lab's BUST knob is deleted with its token and
+replaced by the ring's centre, which is the one value in that drawing solved by
+looking.
+
+### 5 · The phone fits rather than scrolls, and the stops ride the figure
+
+`.vwd__stage` goes to **`overflow: clip`** (never `hidden` — that is a scroll
+container, and a `.focus()` below the fold would leave the box quietly offset).
+ADR-083's inner scroll that "releases to the page at its bounds" is
+**superseded for this station**: `.vwd` is a 100svh instrument that
+`#voidwalker` is exempt from the mobile padding floor FOR, and a phone flick
+passes the whole station, so "scrolls the page" means "scrolls the reading
+away". ADR-083 stays authoritative for the proof casefile.
+
+Four trims pay for it, in the recorded order — chrome first, rhythm second,
+never the type: one-line facts on the phone (−52px), the body's own
+`padding-bottom` (−20, the stops' clearance owns the foot now), the head→body
+gap (−8), and **`.vwd__film__frame { max-height: none }` deleted**, which was
+the largest avoidable term in the binding tab (190px → 96 on a short screen).
+
+The era stops leave the band and ride the figure's foot as plain buttons —
+**the same `nav.vwd__band` node, moved by CSS**, so the tablist, the roving
+focus, the testid and §G's entry actor all survive with no markup change.
+⚠ **THIS REVERSES HALF OF U19** ("the selector must read as character-select on
+BOTH breakpoints"), by owner ruling. Desktop keeps its band. `isolation:
+isolate` on the band, or `.vwh__cone`'s `plus-lighter` reaches up and lights
+the stops' ink.
+
+⚠ **THE STOPS CARRY A HALO, NOT A PANEL.** Measured, their bed runs from
+luminance **8 to 191** — some sit over void, some over the lit figure's boots,
+and it changes with the era and with every frame of the idle. Dawn at .45 was
+legible on one half and absent on the other, which is this house's own "a label
+nobody can read is not a quiet label, it is a missing one". A scrim opaque
+enough to tame 191 would be the panel this pass just deleted, so the answer is
+a text halo in `--void-rgb` — which flips with the theme for free — plus a
+lifted dormant ink.
+
+### 6 · What the reference has that this does not take
+
+**The inverse-video active row.** ADR-089 U4 ruled exactly that for the
+casefile's station rail, and its own reason is why it does not cross to here: a
+fill reads as selection when it is **fill among outlines**, and these stops have
+no boxes at all. Filled, the selected chip would be the one painted ground on a
+station whose committed guard exists to keep grounds off it. Gold ink plus the
+gold diamond; the band stays line work.
+
+### 7 · Safari gets real alpha, and a recorded premise was stale
+
+`.claude/rules/voidwalker.md` and `voidwalker-hologram.css` both asserted that
+"Safari has no self-hostable alpha codec here (HEVC-alpha needs macOS
+videotoolbox)". **It needs macOS videotoolbox and this is macOS**: ffmpeg 8.1.2
+here carries `hevc_videotoolbox` with `-alpha_quality`. So `videoAlphaHevcPath`
+is a new OPTIONAL field — HEVC-with-alpha in a QuickTime `.mov`, `hvc1`-tagged —
+and `holoAlphaSupport` grows a second lane.
+
+⚠ **THE RULING THE PREMISE WAS ATTACHED TO IS NOT STALE: the floor rules stay.**
+They are what an engine with neither codec still gets, and what any era with no
+`.mov` still gets on Safari.
+
+**Encode facts, all measured here:**
+
+- ⚠ `-pix_fmt bgra`. **`yuva420p` is not a pixel format that encoder accepts** —
+  asking for it silently auto-selects `ayuv`.
+- ⚠ `-alpha_quality` **defaults to 0**, which destroys the channel outright, and
+  it is the **dominant size term**: 0.2 → 580 KB, 0.5 → 1.1 MB, 0.75 → 2.8 MB,
+  0.9 → 5.8 MB. Neither `-q:v` nor `-b:v` moves the file meaningfully.
+- ⚠ `-tag:v hvc1` and the `.mov` container are both Safari requirements.
+- ⚠ **`ffprobe` cannot verify alpha** — it reports the base layer's `yuv420p`.
+  Read it back with `alphaextract`.
+
+**The canonical pair ships one** at `alpha_quality 0.5`: **1,175,468 bytes**,
+smaller than both its WebM (1.86 MB) and its MP4 (1.14 MB), at **0.828/255 mean
+alpha error over all 193 frames**. That one file puts **four of the five eras**
+on real alpha in Safari, since they all resolve to it.
+
+⚠ **AZEROTH SHIPS NONE, BY MEASUREMENT.** Its matte carries a plume and three
+companions, and the error **plateaus at ~2.6–2.9/255 at every quality setting**
+while the file runs 4 MB → 12 MB. It misses the ≤1/255 standard at every size,
+so it keeps the floor — which is exactly what it had. Left open.
+
+⚠ **THE BRANCH IS PER-ERA, NOT PER-ENGINE, AND THIS IS THE TRAP.** The codec
+verdict says what the ENGINE can composite; whether THIS era has a file in that
+format is a different question. On Safari, azeroth's engine answers "hevc" and
+its record answers "nothing" — and if the attribute still claimed alpha, the CSS
+would switch the floor off over the opaque MP4 and paint the pane this branch
+exists to remove. An era with no source for the locked codec falls all the way
+back to the floor.
+
+⚠ **THE HEVC PROBE IS CHAINED BEHIND THE VP9 ONE, NEVER RACED.** Where VP9 alpha
+works the second probe never runs, so Chromium and Firefox pay no extra request
+and no extra decode, and a tie can never resolve in favour of the larger, newer,
+less-guarded source. ⚠ And it is a **static asset, not a data URI**: an HEVC
+`.mov`'s parameter sets make it several KB of base64 where the VP9 probe is 581
+bytes, and Safari's `data:` media handling is itself the failure mode that would
+settle `false` and silently change nothing. `canPlayType` is the same trap one
+codec over — `video/quicktime; codecs="hvc1"` answers **"probably" in WebKit
+whether or not the alpha is honoured** (measured).
+
+**Verified in a real WebKit**, which is the thing no CI project can do (every
+Playwright project here is Chromium since ADR-107 U1): the chained module
+returns `{ vp9: false, hevc: true }` in WebKit and `{ vp9: true, hevc: false }`
+in Chromium, and the shipping `.mov` samples alpha 0 on its ground and 255 on
+the figure.
+
+⚠ **AND A SERVER WITHOUT BYTE-RANGE SUPPORT LOOKS EXACTLY LIKE AN UNSUPPORTED
+CODEC.** The first WebKit run reported `MEDIA_ERR_SRC_NOT_SUPPORTED` /
+`NETWORK_NO_SOURCE` on a file it decodes perfectly from a data URI — WebKit
+requires `Range` support for media, and the toy server answering 200 was the
+whole fault. Next's static serving has it; a probe harness may not.
+
+### Measured
+
+|                            | 1280×720 | 1101×800 | 1440×900 | 1920×1247 |
+| -------------------------- | -------- | -------- | -------- | --------- |
+| `foot` before (U22)        | 14       | 51       | 69       | —         |
+| `foot` after, tightest era | **78**   | **75**   | **111**  | **184**   |
+| `--vwd-fig-w`              | 230      | 264.969  | 311.422  | 460       |
+| reticle box                | 243.8    | 280.9    | 330.1    | 487.6     |
+
+Phone: every era × every tab × 390×844, 430×932, 375×667 and the two synthetic
+short shapes (375×553, 390×745) fits with no scroll in any box and no ink cut.
+
+⚠ **1752×599 IS IMPROVED, NOT SOLVED.** It was Scope +64 / Facts +43 on every
+era; it is now one era (`pokemon-go`) overflowing Scope by 28px, with the other
+four clean. Still open, as it was.
+
+### Guards
+
+- **`scripts/probe-voidwalker-phone.mjs`** is new. ⚠ It seats **`.vwd`, not
+  `#voidwalker`** — the station keeps 76px of its own padding on this rung, and
+  every rect compared against FIXED chrome is scroll-dependent, so measuring at
+  a position the reader never rests at reports collisions that are not there.
+  ⚠ Its first cut asked **two wrong questions and both are recorded in it**:
+  `scrollWidth` reported a 31px horizontal overflow at every cell, which is
+  `.gateway` and `.hud` (fixed, 100vw + gutter) and **not a scrollbar** —
+  `scrollTo(200, y)` leaves `scrollX` at 0; and `scrollHeight − clientHeight`
+  counted **192px of decorative projector bloom** hanging past the stage under
+  the figure's own feet. It asks whether anything SCROLLS and whether INK is
+  cut, now.
+- `mastKicker` leaves `about-voidwalker-handoff.spec.ts` — `actor()` throws on a
+  missing selector and no assertion ever read it.
+- The boundaries spec's floor case snapshots the attribute's VALUE and names,
+  in the file, that **no CI project reaches the `hevc` lane**.
+- `character-era-hologram.test.ts` gains the `.mov`-only guard, the optionality
+  case and the azeroth-has-none case. ⚠ The canonical `toEqual` pin is
+  exhaustive and failed first when the field landed — which is the pin working.
+- The type ratchet drops **13 → 1** on `voidwalker-datum.css`.

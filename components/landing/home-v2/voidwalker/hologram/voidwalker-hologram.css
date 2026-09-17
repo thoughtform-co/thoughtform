@@ -201,9 +201,18 @@
    no floor, no isolation, and the corridor reads through everywhere rather
    than only at the wash's soft edges.
 
-   ⚠ DO NOT DELETE THE FALLBACK RULES. Safari has no self-hostable
-   alpha-capable codec here (HEVC-with-alpha cannot be encoded on the authoring
-   machine), so it keeps the floor and must never be worse than it is today.
+   ⚠ THE PREMISE OF THE SENTENCE THAT USED TO SIT HERE IS STALE (ADR-082 U23).
+   It read "Safari has no self-hostable alpha-capable codec here (HEVC-with-alpha
+   cannot be encoded on the authoring machine)". It can: this machine's ffmpeg
+   carries `hevc_videotoolbox` with `-alpha_quality`, and Safari composites
+   HEVC alpha out of a `.mov`. So `data-holo-alpha` now has two lanes — `vp9`
+   and `hevc` — and Safari takes the second one wherever the era ships a `.mov`.
+
+   ⚠ THE RULING THE SENTENCE WAS ATTACHED TO IS NOT STALE: DO NOT DELETE THE
+   FALLBACK RULES. They are what every engine with NEITHER codec still gets,
+   and what any era that ships no `.mov` still gets on Safari — `azeroth` is
+   one, deliberately (its matte misses the fidelity standard at every size).
+   The floor may never be worse than it is today.
    The scanline raster and the edge glow are NOT part of the keying hack and
    stay on both branches — they are the hologram's own grammar. */
 .vwh__slot[data-holo-alpha] {

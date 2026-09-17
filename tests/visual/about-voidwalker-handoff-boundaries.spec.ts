@@ -395,6 +395,11 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
       const wrapRect = wrap.getBoundingClientRect();
       return {
         alphaBranch: slot.hasAttribute("data-holo-alpha"),
+        /* Which lane won. Presence is still the contract every CSS selector
+           reads; the VALUE is here so a regression that lights the attribute
+           with no alpha source behind it fails LOUDLY rather than by its
+           pixels (ADR-082 U23). */
+        alphaCodec: slot.getAttribute("data-holo-alpha"),
         stationBackground: stationStyle.backgroundColor,
         stationBackgroundImage: stationStyle.backgroundImage,
         isolation: slotStyle.isolation,
@@ -419,6 +424,16 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
 
     expect(cssAlpha(state.stationBackground)).toBe(0);
     expect(state.stationBackgroundImage).toBe("none");
+    /* ⚠ NO CI PROJECT REACHES THE `hevc` LANE, AND SAYING SO IS THE POINT.
+       Every phone project here is Chromium (ADR-107 U1 deleted the WebKit
+       ones), and Chromium composites VP9 alpha — so it settles `vp9` and the
+       HEVC probe never even runs. The Safari lane is guarded by
+       `character-era-hologram.test.ts` on the record's side and by a hand walk
+       on a real device; a guard that silently covers two of three branches is
+       worse than one that names the gap. */
+    if (state.alphaBranch) {
+      expect(["vp9", "hevc"], "the lit attribute names a real lane").toContain(state.alphaCodec);
+    }
     /* ⚠ THE FLOOR CONTRACT BRANCHES ON THE CODEC VERDICT (ADR-082 U6), and
        until 2026-09-01 this test asserted only the FALLBACK half — against a
        landing that ships the ALPHA branch, which is why it was permanently

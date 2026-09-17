@@ -7,7 +7,12 @@ import {
   isCharacterEraHologram,
   type CharacterEraHologram,
 } from "@/lib/voidwalker/characterEras";
-import { getHoloAlphaSupport, onHoloAlphaSupport } from "@/lib/voidwalker/holoAlphaSupport";
+import {
+  getHoloAlphaSupport,
+  getHoloHevcAlphaSupport,
+  onHoloAlphaSupport,
+  onHoloHevcAlphaSupport,
+} from "@/lib/voidwalker/holoAlphaSupport";
 
 /**
  * HoloFigure — the hologram slot: the figure, its treatment, and the
@@ -118,14 +123,43 @@ export function HoloFigure({
   // sees it — but reading it live would let a late verdict swap the <source>
   // under a playing element and restart the figure mid-view. `null` (undecided)
   // resolves to the floor path, which is the fail-safe branch.
-  const [alphaMedia] = useState<boolean>(() => getHoloAlphaSupport() === true);
+  const [codec] = useState<"vp9" | "hevc" | null>(() =>
+    getHoloAlphaSupport() === true ? "vp9" : getHoloHevcAlphaSupport() === true ? "hevc" : null
+  );
   const [, forceProbeSettled] = useState(0);
   useEffect(() => {
-    // Only matters if the station somehow mounts before the probe settles;
-    // re-render once so the very next mount reads a decided value.
-    if (getHoloAlphaSupport() !== null) return;
-    return onHoloAlphaSupport(() => forceProbeSettled((n) => n + 1));
+    // Only matters if the station somehow mounts before a probe settles;
+    // re-render once so the very next mount reads a decided value. Both lanes
+    // are watched because the HEVC one settles AFTER the VP9 one on Safari.
+    const offVp9 =
+      getHoloAlphaSupport() === null
+        ? onHoloAlphaSupport(() => forceProbeSettled((n) => n + 1))
+        : undefined;
+    const offHevc =
+      getHoloHevcAlphaSupport() === null
+        ? onHoloHevcAlphaSupport(() => forceProbeSettled((n) => n + 1))
+        : undefined;
+    return () => {
+      offVp9?.();
+      offHevc?.();
+    };
   }, []);
+
+  /* ⚠ THE BRANCH IS PER-ERA, NOT PER-ENGINE, AND THIS IS THE WHOLE TRAP. The
+     codec verdict says what the ENGINE can composite; whether THIS era has a
+     file in that format is a different question. `azeroth` ships no `.mov`
+     (see `characterEras.ts`), so on Safari the engine answers "hevc" and the
+     record answers "nothing" — and if the attribute still claimed alpha the
+     CSS would switch the floor off over the opaque MP4 and paint the black
+     pane this branch exists to remove. An era with no source for the locked
+     codec falls all the way back to the floor. */
+  const alphaSrcForCodec =
+    codec === "vp9"
+      ? productionAsset?.videoAlphaPath
+      : codec === "hevc"
+        ? productionAsset?.videoAlphaHevcPath
+        : undefined;
+  const alphaMedia = codec !== null && (reduced || alphaSrcForCodec !== undefined);
 
   const requestedPosterSrc =
     (alphaMedia ? productionAsset?.posterAlphaPath : productionAsset?.posterPath) ??
@@ -135,7 +169,7 @@ export function HoloFigure({
       : CANONICAL_CHARACTER_ERA_HOLOGRAM.posterPath);
   const requestedVideoSrc = reduced
     ? undefined
-    : ((alphaMedia ? productionAsset?.videoAlphaPath : productionAsset?.videoPath) ?? videoSrc);
+    : ((alphaMedia ? alphaSrcForCodec : productionAsset?.videoPath) ?? videoSrc);
   // ⚠ THE LAST-RESORT POSTER MUST MATCH THE COMPOSITING BRANCH. On the alpha
   // path the floor, the blend and the isolation are all switched off, so an
   // opaque `.jpg` landing here would paint its black ground as a rectangle —
@@ -218,7 +252,11 @@ export function HoloFigure({
       /* The compositing branch. Present ⇒ the media carries real alpha, so the
          floor, the additive blend and this slot's isolation are all switched
          off in CSS. Absent ⇒ the ADR-082 U2 floor path, unchanged. */
-      data-holo-alpha={alphaMedia ? "" : undefined}
+      /* ⚠ PRESENCE IS STILL THE CONTRACT — every `[data-holo-alpha]` selector
+         and the boundaries spec's own `hasAttribute` read it that way — and the
+         VALUE names which lane won, so a regression that lights the attribute
+         with no alpha source behind it is visible rather than inferred. */
+      data-holo-alpha={alphaMedia ? (codec ?? "") : undefined}
       data-vwh-frame-width={productionAsset?.frame.width}
       data-vwh-frame-height={productionAsset?.frame.height}
       data-vwh-head-y={productionAsset?.headY}

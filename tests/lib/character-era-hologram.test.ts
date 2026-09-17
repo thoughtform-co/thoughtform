@@ -14,6 +14,9 @@ describe("ADR-082 · normalized character hologram assets", () => {
     expect(CANONICAL_CHARACTER_ERA_HOLOGRAM).toEqual({
       videoPath: "/videos/voidwalker/holo-idle-thoughtform.mp4",
       videoAlphaPath: "/videos/voidwalker/holo-idle-thoughtform.webm",
+      // ADR-082 U23's Safari alpha source. The `toEqual` above is exhaustive
+      // on purpose, which is why adding the field failed this pin first.
+      videoAlphaHevcPath: "/videos/voidwalker/holo-idle-thoughtform.mov",
       posterPath: "/images/voidwalker/holo-still-thoughtform.jpg",
       posterAlphaPath: "/images/voidwalker/holo-still-thoughtform.webp",
       frame: { width: 720, height: 1280 },
@@ -143,6 +146,68 @@ describe("ADR-082 · normalized character hologram assets", () => {
 
     // And the non-alpha slots keep accepting what they always did.
     expect(isCharacterEraHologram({ ...base, posterPath: "/images/voidwalker/s.jpg" })).toBe(true);
+  });
+
+  /**
+   * ADR-082 U23's Safari lane. The container IS the contract here: Safari
+   * composites HEVC alpha out of a QuickTime `.mov` and NOT out of an `.mp4`,
+   * so admitting the wrong extension switches the floor off over a source the
+   * engine reads as opaque — the black pane the branch exists to remove, in
+   * the one place nobody looks.
+   *
+   * ⚠ NO CI PROJECT CAN EXERCISE THE RENDER PATH (every Playwright project is
+   * Chromium, which takes VP9 and never runs the HEVC probe), so this record
+   * guard and a hand walk on a real device are the whole of its coverage.
+   */
+  it("takes a `.mov` in the HEVC alpha slot, refuses every other container, and stays optional", () => {
+    const base = {
+      videoPath: "/videos/voidwalker/holo-idle-loop.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-loop.webm",
+      posterPath: "/images/voidwalker/holo-still-loop.webp",
+      posterAlphaPath: "/images/voidwalker/holo-still-loop.png",
+      frame: { width: 720, height: 1280 },
+      headY: 0.11,
+      footY: 0.997,
+    } as const satisfies CharacterEraHologram;
+
+    // ⚠ OPTIONAL, AND THAT IS LOAD-BEARING: the two shipped pairs predate the
+    // field and `azeroth` will never carry one, so an absent slot must pass.
+    expect(isCharacterEraHologram(base)).toBe(true);
+    expect(isCharacterEraHologram({ ...base, videoAlphaHevcPath: undefined })).toBe(true);
+
+    expect(
+      isCharacterEraHologram({
+        ...base,
+        videoAlphaHevcPath: "/videos/voidwalker/holo-idle-loop.mov",
+      })
+    ).toBe(true);
+
+    for (const wrong of [
+      "/videos/voidwalker/holo-idle-loop.mp4",
+      "/videos/voidwalker/holo-idle-loop.webm",
+      "/images/voidwalker/holo-still-loop.png",
+      "holo-idle-loop.mov",
+    ]) {
+      expect(isCharacterEraHologram({ ...base, videoAlphaHevcPath: wrong }), wrong).toBe(false);
+    }
+  });
+
+  it("ships the canonical pair's Safari alpha source, and azeroth deliberately without one", () => {
+    // The canonical pair is what four of the five eras resolve to, so this one
+    // file is what puts the Architect, Latent Land, The Expanse and Pokémon GO
+    // on real alpha in Safari.
+    expect(CANONICAL_CHARACTER_ERA_HOLOGRAM.videoAlphaHevcPath).toBe(
+      "/videos/voidwalker/holo-idle-thoughtform.mov"
+    );
+
+    /* ⚠ AZEROTH HAS NONE, BY MEASUREMENT RATHER THAN BY OVERSIGHT. Its matte
+       carries a plume and three companions; encoded against the VP9 master the
+       mean alpha error plateaus at ~2.6/255 at EVERY quality setting while the
+       file runs from 4 MB to 12 MB. It misses the <=1/255 standard at every
+       size, so it keeps the floor on Safari — which is exactly what it had. */
+    const azeroth = CHARACTER_ERAS.find((era) => era.id === "azeroth");
+    expect(azeroth?.hologram).toBeDefined();
+    expect(azeroth?.hologram?.videoAlphaHevcPath).toBeUndefined();
   });
 });
 

@@ -46,8 +46,31 @@ export interface CharacterEraHologram {
   /** VP9/WebM carrying a real alpha channel (`alpha_mode=1`), keyed from the
    *  asset's own luminance. Preferred source: with true alpha the floor, the
    *  blend and the slot's isolation are all unnecessary. Chromium and Firefox
-   *  take this; Safari falls back to `videoPath`. */
+   *  take this; Safari falls back to `videoAlphaHevcPath` and then to
+   *  `videoPath`. */
   videoAlphaPath: string;
+  /** HEVC carrying a real alpha channel, in a QuickTime container, `hvc1`-
+   *  tagged — the SAFARI alpha source (ADR-082 U23).
+   *
+   *  ⚠ OPTIONAL, AND AN ABSENT ONE IS A REAL STATE. An era without this file
+   *  composites through the additive floor on Safari, which is what every era
+   *  did before the field existed, so omitting it is a no-op rather than a
+   *  defect. `azeroth` omits it deliberately: its matte carries a plume and
+   *  three companions, and the encoder plateaus at ~2.6/255 of mean alpha
+   *  error against the VP9 master at EVERY quality setting while the file runs
+   *  to 12 MB — it misses the <=1/255 standard at every size, so it does not
+   *  ship one.
+   *
+   *  ⚠ `.mov`, AND THE CONTAINER IS THE CONTRACT. Safari does not composite
+   *  HEVC alpha out of an `.mp4`, so admitting one here would switch the floor
+   *  OFF over a source whose alpha the engine ignores — the opaque pane this
+   *  branch exists to remove, reinstated where nobody looks.
+   *
+   *  Produced on macOS: `-c:v hevc_videotoolbox -alpha_quality 0.5 -q:v 45
+   *  -pix_fmt bgra -tag:v hvc1`. ⚠ `yuva420p` is NOT a pixel format that
+   *  encoder accepts — asking for it silently yields `ayuv` — and
+   *  `-alpha_quality` DEFAULTS TO 0, which destroys the channel outright. */
+  videoAlphaHevcPath?: string;
   /** Frame-zero poster under `public/images/voidwalker/`. Paints while the
    *  video buffers, so it must match whichever source wins — hence the
    *  alpha-capable sibling below. */
@@ -74,6 +97,7 @@ export interface CharacterEraHologram {
 export const CANONICAL_CHARACTER_ERA_HOLOGRAM = Object.freeze({
   videoPath: "/videos/voidwalker/holo-idle-thoughtform.mp4",
   videoAlphaPath: "/videos/voidwalker/holo-idle-thoughtform.webm",
+  videoAlphaHevcPath: "/videos/voidwalker/holo-idle-thoughtform.mov",
   posterPath: "/images/voidwalker/holo-still-thoughtform.jpg",
   posterAlphaPath: "/images/voidwalker/holo-still-thoughtform.webp",
   frame: Object.freeze({ width: 720, height: 1280 }),
@@ -87,6 +111,10 @@ const HOLOGRAM_VIDEO_PATH = /^\/videos\/voidwalker\/[a-z0-9][a-z0-9._-]*\.mp4$/i
  *  the only one that does. Widening this to `.mp4` would silently admit an
  *  opaque file into the branch whose whole premise is transparency. */
 const HOLOGRAM_VIDEO_ALPHA_PATH = /^\/videos\/voidwalker\/[a-z0-9][a-z0-9._-]*\.webm$/i;
+/** ⚠ `.mov` ONLY, for the reason on the field itself: HEVC alpha in an `.mp4`
+ *  is not composited by Safari, and a `.webm` here would be the VP9 source
+ *  entering the branch that exists because Safari cannot read it. */
+const HOLOGRAM_VIDEO_ALPHA_HEVC_PATH = /^\/videos\/voidwalker\/[a-z0-9][a-z0-9._-]*\.mov$/i;
 const HOLOGRAM_POSTER_PATH = /^\/images\/voidwalker\/[a-z0-9][a-z0-9._-]*\.(?:jpe?g|png|webp)$/i;
 /** Same reasoning one step down: JPEG has no alpha channel. */
 const HOLOGRAM_POSTER_ALPHA_PATH = /^\/images\/voidwalker\/[a-z0-9][a-z0-9._-]*\.(?:png|webp)$/i;
@@ -105,6 +133,11 @@ export function isCharacterEraHologram(value: unknown): value is CharacterEraHol
     HOLOGRAM_VIDEO_PATH.test(candidate.videoPath) &&
     typeof candidate.videoAlphaPath === "string" &&
     HOLOGRAM_VIDEO_ALPHA_PATH.test(candidate.videoAlphaPath) &&
+    /* Optional, so `undefined` passes — but a PRESENT one must be a `.mov`,
+       or the floor would switch off over a source Safari reads as opaque. */
+    (candidate.videoAlphaHevcPath === undefined ||
+      (typeof candidate.videoAlphaHevcPath === "string" &&
+        HOLOGRAM_VIDEO_ALPHA_HEVC_PATH.test(candidate.videoAlphaHevcPath))) &&
     typeof candidate.posterPath === "string" &&
     HOLOGRAM_POSTER_PATH.test(candidate.posterPath) &&
     typeof candidate.posterAlphaPath === "string" &&

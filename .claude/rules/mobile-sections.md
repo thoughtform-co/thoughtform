@@ -151,6 +151,20 @@ What it owes in exchange:
   that the outer band was withheld deliberately so nobody "fixes" the
   exception back into the floor. It is clean at both phone shapes today —
   the guard's collision walk finds nothing on it.
+- ⚠ **AND SINCE ADR-082 U23 IT FITS RATHER THAN SCROLLS.** Its stage is
+  `overflow: clip`, which supersedes ADR-083's inner-scroll release FOR THIS
+  STATION (owner: no scrollbars on the phone): an instrument the outer floor is
+  waived for cannot hand its reading back to a page that passes the whole
+  station in one flick. Its own guard is `scripts/probe-voidwalker-phone.mjs`.
+  ⚠ **THE ERA STOPS NOW SIT ON THE FIGURE AND ARE NEW INK IN THE BR BAND** —
+  they clear `.rin-settings` through `--mobile-chrome-bottom` from inside, as
+  §3 requires, and the probe measures the chips' UNION against the instrument's
+  own floor rather than trusting the padding.
+  ⚠ **A PROBE THAT SEATS `#voidwalker` MEASURES THE WRONG FRAME.** The station
+  keeps its own `padding-block` here, so aligning the STATION's top to the
+  viewport puts the 100svh instrument 76px down and its last 76px — where the
+  stops live — below the fold. Every rect compared against FIXED chrome is
+  scroll-dependent; seat `.vwd`.
 
 ## 4 · `content-visibility: auto` is a desktop optimisation and ≤960 opts out
 
