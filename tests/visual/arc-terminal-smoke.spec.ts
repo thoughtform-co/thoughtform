@@ -345,8 +345,32 @@ test.describe("arc terminal motion (ADR-057)", () => {
        page that is not an arc (ADR-098 U2, the Trinny pitch). */
     const pages = CLIENTS.reduce((n, client) => n + (client.pages?.length ?? 0), 0);
     await expect(cards).toHaveCount(ARCS.length + pages);
-    const chips = await page.locator(".arc-card__chip").allTextContents();
-    expect(new Set(chips).size).toBe(chips.length);
+    /* ⚠ THE SAME DEFECT AS THE COUNT ABOVE, ONE LINE LATER, AND IT OUTLIVED
+       THE FIX (2026-09-17). This asserted that EVERY chip on the grid is
+       unique — true while the overview held one card per format, and false the
+       moment ADR-098 registered a second client proposal. Three clients now
+       legitimately share the chip `proposal`, so 9 cards carry 7 distinct
+       chips and a correct grid failed. A chip is a FORMAT LABEL, not an
+       identifier; what tells two proposals apart is the client's name.
+       ⚠ It was masked for days behind the WebKit corridor failure (ADR-107 U1)
+       — this step never ran, because the step before it bailed first.
+       The invariant the test's own NAME states is that a terminal CUT is
+       distinguishable from the v1 it was cut from, which is what ADR-057 is
+       about. That is what this now says, per pair, derived from the registry. */
+    const chipFor = async (href: string) =>
+      (await page.locator(`.arc-card[href="${href}"] .arc-card__chip`).textContent())?.trim() ?? "";
+    for (const base of ["claude-workshop", "ai-keynote"]) {
+      const v1 = await chipFor(`/arcs/${base}`);
+      const v2 = await chipFor(`/arcs/${base}-v2`);
+      expect(v1, `${base} has a chip`).not.toBe("");
+      expect(v2, `${base}-v2 is distinguishable from its v1 (both read "${v1}")`).not.toBe(v1);
+    }
+    const portfolioChip = await chipFor("/arcs/loop-earplugs");
+    expect(portfolioChip, "the portfolio carries its own chip").not.toBe("");
+    expect(
+      [await chipFor("/arcs/claude-workshop"), await chipFor("/arcs/ai-keynote")],
+      "the portfolio is not labelled as a deck"
+    ).not.toContain(portfolioChip);
     await expect(page.locator('.arc-card[href="/arcs/claude-workshop-v2"]')).toHaveCount(1);
     await expect(page.locator('.arc-card[href="/arcs/ai-keynote-v2"]')).toHaveCount(1);
     await expect(page.locator('.arc-card[href="/arcs/loop-earplugs"]')).toHaveCount(1);
