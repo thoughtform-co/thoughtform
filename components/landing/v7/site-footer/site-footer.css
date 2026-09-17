@@ -78,9 +78,11 @@
      LOAD-BEARING: the plate's negative insets are the station's padding, so
      `.ft-foot` may never gain padding, margin or a border of its own. */
   position: relative;
+  /* crest · band · bar. The `1fr` on the band is what keeps the bar on the
+     floor and leaves the plate its open ground between them (ADR-105 U2). */
   display: grid;
-  grid-template-rows: 1fr auto;
-  row-gap: clamp(48px, 8svh, 120px);
+  grid-template-rows: auto 1fr auto;
+  row-gap: clamp(32px, 5svh, 72px);
   flex: 1 1 auto;
   align-self: stretch;
 }
@@ -160,28 +162,62 @@ html[data-theme="light"] .ft-foot__plate-img--light {
    resolves to a DIFFERENT parchment from the page's, and a wash written on it
    re-tints a plate that was already correct — with nothing failing, because
    the defect reads as a faint cast. */
+/* ⚠ THE TEXT BED IS ROTATED, AND THE ≤960 OVERRIDE IS DELETED WITH IT
+   (ADR-105 U2). The phone rung already stated this law for a band that runs
+   full width at the top of the station — "a horizontal bed washes the wrong
+   half. Rotated — and the stops are read off the band's own box rather than
+   guessed." The desktop band is that same shape now that it carries a link
+   grid under the ask, so both rungs run ONE three-layer family and differ only
+   in `--ft-band-floor`. Sixteen lines of duplicate went, and with it the way
+   the two could drift.
+   ⚠ `--ft-band-floor` IS THE BED'S EXTENT, AND G3 IS WHAT VALIDATES IT — not
+   the band's own box. `capture-site-footer.mjs` prints `bandBottomFrac` (0.815
+   on desktop) as the upper bound the bed never needs to reach: measured, the
+   link grid below the bed sits on the plate's quiet left ground at min 5.97:1,
+   so bedding it would grey the picture to fix nothing. The stops are set by the
+   contrast reading and the stale "~49 %" comment they replace was a guess. */
 .ft-foot__scrim {
+  --ft-band-floor: 52%;
+  /* ⚠ THE BED NEEDS TWO KNOBS, NOT ONE, AND THE PHONE IS WHY. The desktop
+     band sits on the plate's quiet LEFT THIRD; the phone's `object-position`
+     frames the ring's BRIGHT BODY behind the whole column. Same gradient
+     shape, different ground, so the alphas are a rung value like the floor is
+     — measured, at 0.56/0.46 the phone's lede reads 2.84:1 and its CTA 1.61. */
+  --ft-bed-top: 0.56;
+  --ft-bed-mid: 0.46;
+  --ft-bed-low: 0.18;
   position: absolute;
   inset: 0;
   background:
+    /* 1 · the top feather, welding into #voidwalker's void. Unchanged. */
     linear-gradient(
       to bottom,
       rgb(var(--void-rgb)) 0%,
       rgba(var(--void-rgb), 0.5) 6%,
       rgba(var(--void-rgb), 0) 16%
     ),
+    /* 2 · the text bed, over the band's own strip and gone below it, so the
+       ring's body keeps its contrast where no ink sits on it.
+       ⚠ `--ft-bed-top` IS LOAD-BEARING AT BOTH RUNGS. On desktop 0.46 puts the
+       title at 4.45:1 — a real failure, glyph-masked over 22,421 ink pixels,
+       where the display run reaches toward the ring's upper-left approach. */
     linear-gradient(
-      to right,
-      rgba(var(--void-rgb), 0.42) 0%,
-      rgba(var(--void-rgb), 0.24) 36%,
-      rgba(var(--void-rgb), 0) 60%
-    ),
+        to bottom,
+        rgba(var(--void-rgb), var(--ft-bed-top)) 0%,
+        rgba(var(--void-rgb), var(--ft-bed-mid)) calc(var(--ft-band-floor) * 0.62),
+        rgba(var(--void-rgb), var(--ft-bed-low)) var(--ft-band-floor),
+        rgba(var(--void-rgb), 0) calc(var(--ft-band-floor) + 12%)
+      ),
+    /* 3 · the bottom band — the legal bar and the HUD's fixed corners, and the
+       only mechanism that buries the plate's baked caption at ~86-91 % y, since
+       a height-bound cover crop makes `object-position` y a NO-OP at every rung
+       this site is read at. Unchanged. */
     linear-gradient(
-      to top,
-      rgba(var(--void-rgb), 0.78) 0%,
-      rgba(var(--void-rgb), 0.44) 12%,
-      rgba(var(--void-rgb), 0) 30%
-    );
+        to top,
+        rgba(var(--void-rgb), 0.78) 0%,
+        rgba(var(--void-rgb), 0.44) 12%,
+        rgba(var(--void-rgb), 0) 30%
+      );
 }
 
 /* ── the content column ─────────────────────────────────────────────── */
@@ -206,19 +242,128 @@ html[data-theme="light"] .ft-foot__plate-img--light {
    whole.
    The copy sits in the top third: the station's own `--station-pad-top` is
    the seat, so the band's padding is only a trim. */
+/* ── the crest: wordmark left, the Arc's beats right, on a hairline ─── */
+/* ⚠ SAME WIDTH CONTRACT AS `.ft-foot__bar`, so the line at the top and the
+   rule at the floor are the same two edges — that is what makes the whole
+   thing read as a frame instead of a stack. And the border lives HERE, never
+   on `.ft-foot`, whose box IS the station's content box and whose identity the
+   plate's negative insets are measured against. */
+.ft-foot__crest {
+  position: relative;
+  z-index: 1;
+  max-width: var(--band-max);
+  margin-inline: var(--rail-inset);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px 32px;
+  padding-top: clamp(12px, 1.6svh, 22px);
+  border-top: 1px solid rgba(var(--dawn-rgb), 0.16);
+}
+
+.ft-foot__wordmark {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-lit);
+  font-size: clamp(16px, 1.15vw, 20px);
+  letter-spacing: var(--track-display);
+  color: var(--dawn);
+}
+
+.ft-foot__tagline {
+  margin: 0;
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  /* ⚠ 0.62, THE RUNG `.ft-foot__mark` ALREADY PROVES ON THIS SURFACE. At 0.5
+     the mechanical gate reads 4.41:1 at 10px against the station's ground —
+     under the 4.5 floor, and 10px mono is exactly where that floor bites. */
+  color: rgba(var(--dawn-rgb), 0.62);
+}
+
+/* ── the band: the ask, and the link grid under it ──────────────────── */
+/* ⚠ THE CAP IS THE RING'S MEASURED LEFT EDGE, NOT A TASTE VALUE (ADR-105 U2).
+   `scripts/measure-plate-luminance.mjs` profiles `Gateway_v1b`: its bright
+   mass is y 0.23–0.67 and x 0.563–0.896 in IMAGE fractions. Every desktop rung
+   is height-bound (station aspect < image aspect), so the y figures are
+   STATION fractions verbatim — the ring starts a quarter of the way down and
+   there is NO quiet upper region to seat a wide band in. The band therefore
+   clears the ring HORIZONTALLY, which is U1's own conclusion reached with a
+   number instead of an eye: u(0.563) is 0.573 at 1920x1247 and 0.570 at
+   1440x900, so 54vw leaves ~3 % of clearance on both.
+   ⚠ WIDTH ONLY IS CUT, never the inset — the left edge stays the page's
+   editorial column (ADR-048, and the same shape as the `52ch` it replaces). */
 .ft-foot__band {
   position: relative;
   z-index: 1;
-  /* The band's left edge is still the page's editorial column; only its
-     WIDTH is cut, so the measure stays a fraction of `--band-max` rather
-     than a second inset (ADR-048). */
-  max-width: min(var(--band-max), 52ch);
+  --ft-band-right: 54vw;
+  max-width: min(var(--band-max), max(22rem, calc(var(--ft-band-right) - var(--band-margin))));
   margin-inline: var(--rail-inset);
   align-self: start;
   display: grid;
   row-gap: clamp(28px, 5svh, 52px);
   align-items: start;
   padding-top: clamp(0px, 2svh, 32px);
+}
+
+/* ⚠ COUNT-AGNOSTIC BY CONSTRUCTION. Two columns ship; a third is blocked on
+   its destinations, not on this rule, so it costs one data entry and no rung
+   (`lib/site/footer-nav.ts`). `grid-auto-flow: column` with `1fr` tracks takes
+   1, 2 or 3 with no JS-fed count. */
+.ft-foot__nav {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  column-gap: clamp(20px, 2.4vw, 44px);
+}
+
+.ft-foot__col-head {
+  margin: 0 0 clamp(8px, 1.2svh, 14px);
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+  font-size: 10px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  /* ⚠ 0.62 for the same reason — 0.46 measured 3.89:1. A column head is
+     chrome, but chrome a reader has to scan is still text. */
+  color: rgba(var(--dawn-rgb), 0.62);
+}
+
+.ft-foot__col-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ⚠ 44px IS THE TOUCH FLOOR (ADR-083) and it is also what sets the column's
+   row rhythm — five rows come to ~220px, inside the ask's own height, so the
+   grid costs the station no growth on desktop. */
+.ft-foot__link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: clamp(14px, 1vw, 16px);
+  letter-spacing: var(--track-copy);
+  color: rgba(var(--dawn-rgb), 0.78);
+  text-decoration: none;
+  transition: color 160ms ease-out;
+}
+
+.ft-foot__link:hover {
+  color: var(--dawn);
+}
+
+/* ⚠ A REAL RING, NOT A COLOUR SHIFT. These links sit on a photograph, where a
+   hover-coloured focus cue is invisible against half the frame. */
+.ft-foot__link:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 3px;
+  color: var(--dawn);
 }
 
 .ft-foot__head {
@@ -375,41 +520,26 @@ html[data-theme="light"] .ft-foot__plate-img--light {
   background: var(--gold);
 }
 
-.ft-foot__socials {
-  display: flex;
-  align-items: center;
-  gap: clamp(14px, 1.6vw, 26px);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ft-foot__socials a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  /* 44px is the touch floor (ADR-083); the glyph inside is 18px. */
-  width: 44px;
-  height: 44px;
-  color: rgba(var(--dawn-rgb), 0.62);
-  transition: color 180ms ease-out;
-}
-
-.ft-foot__socials a:hover,
-.ft-foot__socials a:focus-visible {
-  color: var(--gold);
-  outline: none;
-}
-
-.ft-foot__socials svg {
-  width: 18px;
-  height: 18px;
-}
-
 /* ── the narrow rung ────────────────────────────────────────────────── */
 @media (max-width: 960px) {
   .ft-foot {
     row-gap: clamp(36px, 6svh, 64px);
+  }
+
+  /* ⚠ THE CAP GOES. It exists to clear the ring on a LANDSCAPE crop; a
+     portrait box is height-bound too and picks its window with `object-position`
+     x instead (below), so the band takes the full column here. */
+  .ft-foot__band {
+    max-width: none;
+  }
+
+  /* Two columns side by side on a ~326px column is ~150px each, which holds
+     "Claude workshop" at this size. THREE would not — which is the other
+     reason the track is count-agnostic rather than pinned at three. */
+  .ft-foot__nav {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: clamp(20px, 3svh, 32px);
   }
 
   /* ⚠ A PORTRAIT BOX HAS NO VERTICAL SLACK, SO ONLY THE X TERM IS A LEVER.
@@ -434,30 +564,16 @@ html[data-theme="light"] .ft-foot__plate-img--light {
     object-position: 24% 50%;
   }
 
-  /* ⚠ THE TEXT BED TURNS WITH THE COLUMN, AND IT HAS TO CLEAR THE WHOLE
-     BLOCK. On desktop the copy is the left third and the bed runs
-     `to right`; here the band is full width at the TOP, so a horizontal bed
-     washes the wrong half. Rotated — and the stops are read off the band's
-     own box rather than guessed: it ends at ~49 % of the station at 390x844,
-     and the CTA's gold rim is the last thing in it, so the wash holds past
-     40 % and is gone by 68 %, leaving the ring's body clear below. A phone
-     is where a picture-backed footer is moodiest; that is the trade. */
+  /* ⚠ ONE KNOB, NOT A SECOND BACKGROUND (ADR-105 U2). The rung used to restate
+     the whole three-layer stack because the desktop bed ran `to right`; the
+     desktop bed is rotated now, so the phone differs only in where the band's
+     floor lands. Read it off the capture's `bandBottomFrac`, never guess it —
+     the band is taller here since it carries the link grid. */
   .ft-foot__scrim {
-    background:
-      linear-gradient(
-        to bottom,
-        rgb(var(--void-rgb)) 0%,
-        rgba(var(--void-rgb), 0.84) 16%,
-        rgba(var(--void-rgb), 0.66) 38%,
-        rgba(var(--void-rgb), 0.24) 54%,
-        rgba(var(--void-rgb), 0) 68%
-      ),
-      linear-gradient(
-        to top,
-        rgba(var(--void-rgb), 0.78) 0%,
-        rgba(var(--void-rgb), 0.44) 12%,
-        rgba(var(--void-rgb), 0) 30%
-      );
+    --ft-band-floor: 80%;
+    --ft-bed-top: 0.95;
+    --ft-bed-mid: 0.78;
+    --ft-bed-low: 0.34;
   }
 
   .ft-foot__bar {

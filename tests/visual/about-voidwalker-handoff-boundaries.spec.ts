@@ -550,7 +550,22 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
        nowhere further to go. What the ambient's death actually depends on is
        that an opaque station FILLS the screen, so that is what is measured. */
     expect(state.top).toBeLessThanOrEqual(0);
-    expect(state.bottom, "the cover does not fill the viewport").toBeGreaterThanOrEqual(state.vh);
+    /* ⚠ ONE SUB-PIXEL OF TOLERANCE, AND IT IS ARITHMETIC RATHER THAN A
+       LOOSENING (ADR-105 U2). This station is the document's LAST element and
+       its height is its content's, which is fractional — text line boxes and
+       `svh` clamps do not land on integers. The browser CEILS `scrollHeight`
+       to compute max scroll, so at the true bottom of the page
+             bottom = vh - 1 + frac(documentHeight)
+       and an exact `>= vh` can only pass when that fraction happens to be
+       zero. It did before ADR-105 U2 and it was LUCK: any copy edit anywhere
+       above moves it. Measured at the failure: body 18979.75, scrollHeight
+       18980, bottom 799.75 against a 800px frame — a quarter of a CSS pixel,
+       below the device grid at DPR 1 and invisible at DPR 2.
+       The property is still coverage; what changed is that the assertion can
+       now express it on a page whose height is not a whole number. */
+    expect(state.bottom, "the cover does not fill the viewport").toBeGreaterThanOrEqual(
+      state.vh - 1
+    );
     expect(state.ambient).toBe(false);
     expect(state.exit).toBe(false);
     expect(cssAlpha(state.background), "#contact owns an opaque ground").toBe(1);

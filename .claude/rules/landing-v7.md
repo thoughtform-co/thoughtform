@@ -67,6 +67,43 @@ class="stations">`.** Four things read that and a `<footer id="contact">` falls 
   that. Inside its own root the form's state cannot reach `LandingPage`. ⚠ `useEffect`
   is no longer imported there at all; anything that adds one back is adding a re-render
   path to the component that hosts every portal on the page.
+- ⚠ **IT CARRIES A NAMED LINK GRID, AND WHAT IT MAY POINT AT IS A RULE
+  ([ADR-105 U2](../sentinel/decisions/105-the-page-ends-on-a-bold-footer.md),
+  2026-09-17, owner).** `lib/site/footer-nav.ts` is the record; it DERIVES from
+  `MANIFEST_ENTRIES` rather than re-typing it, so a renamed station is a test
+  failure and never a dead anchor. ⚠ **`/arcs` AND EVERY ARC SLUG ARE BARRED** —
+  robots.ts leaves them crawlable only so each page's `noindex` is visible, the
+  sitemap names them deliberately absent, and three LIVE CLIENT PROPOSALS sit
+  behind them. `tests/lib/footer-nav.test.ts` asserts every internal path is in
+  the sitemap's URL set, which makes that unmergeable rather than discouraged.
+  ⚠ `href: null` means NOT PUBLISHED and renders nothing (socials.ts's own
+  contract), so a blocked column — `Legal`, and the four formats until a
+  `?service=<id>` deep link exists — is recorded in code, not in a comment.
+- ⚠ **THE BAND CLEARS THE RING HORIZONTALLY, AND THAT IS MEASURED.**
+  `scripts/measure-plate-luminance.mjs` profiles the plate per ASSET: every
+  desktop rung is height-bound, so image-y fractions ARE station-y fractions and
+  only x is cropped. `Gateway_v1b`'s bright mass is y 0.23–0.67 — there is NO
+  quiet upper region, which is why `--ft-band-right: 54vw` cuts the band's WIDTH
+  (never its inset) and why the link columns sit UNDER the ask rather than
+  beside it: 54vw leaves ~680px at 1920, enough for the ask or a column row, not
+  both. ⚠ The same arithmetic makes `object-position` **y** a NO-OP at every rung
+  the site is read at — the baked caption is buried by the scrim's bottom band
+  or not at all.
+- ⚠ **THE BED IS ROTATED AND TAKES TWO KNOBS.** `--ft-band-floor` is its EXTENT
+  (G3 validates it, not the band's box) and `--ft-bed-top/-mid/-low` its weight,
+  because the desktop band sits on the plate's quiet left third while the phone's
+  crop frames the ring's BRIGHT BODY. One gradient family for both rungs — the
+  ≤960 `background` override is deleted. ⚠ `--ft-bed-top` 0.46 puts the title at
+  4.45:1 glyph-masked; 0.56 is load-bearing.
+- ⚠ **THE INK GATE MASKS TO THE GLYPHS, AND ITS FIRST CUT DID NOT.** Gating on
+  the darkest pixel in a text RECT reported a link at 1.36:1 on a footer that
+  reads perfectly, because a 44px row's box is mostly background — a guard
+  measuring a MODEL of the drawing. Two shots; a pixel that differs IS ink.
+- ⚠ **`bottom >= vh` ON `#contact` COULD ONLY PASS BY LUCK.** The station is the
+  document's last element, its height is fractional, and the browser ceils
+  `scrollHeight`, so `bottom = vh − 1 + frac(documentHeight)`. The boundary
+  spec carries one sub-pixel of tolerance; adding a 1px overscan was tried and
+  bought nothing, because an integer does not change a fraction.
 - ⚠ **THE STATION KEEPS ITS OWN OPAQUE `var(--void)` GROUND AND THE PLATE IS A LAYER
   INSIDE IT.** The handoff guard asserts the cover has `alpha === 1` AND a background
   image; a station whose only ground is the image fails one of the two.

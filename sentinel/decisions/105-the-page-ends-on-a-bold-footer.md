@@ -397,3 +397,185 @@ empty (proof that neither theme fetches the other's plate).
 - The CTA column starts ~55 % x at 1440, where the dust trail runs. If the 12px gold mono
   reads badly on the capture, cap the band at `min(var(--band-max), 62%)` at ≥1200.
 - `contact-95.png` still wants re-shooting (it did before this pass too).
+
+## Update 2 — the footer gains its link grid, and the plate is measured (2026-09-17, owner)
+
+Owner, reading U1 live: still not satisfied, with five references supplied
+(`_01_GENERAL REFERENCES/Footer` — Eclipsera, Zellic, Meridian, Lighthouse,
+GIC). **Every one of them carries a NAMED LINK GRID of three to five columns
+and ours carried none**, which is the gap. He picked the **Zellic**
+composition: a hairline with the wordmark and a tracked tagline, a link grid,
+the key visual as the whole ground, the legal bar on the floor.
+
+### 1 · The grid ships TWO columns, because three have nowhere to point
+
+Audited before a row was designed.
+
+**Linkable:** the landing's own station anchors (resolved through
+`MANIFEST_ENTRIES`, so a renamed station is a test failure rather than a dead
+anchor), `/claude-workshop` (the only other indexable route, by explicit owner
+decision, ADR-053), and `mailto:`.
+
+⚠ **`/arcs` AND EVERY ARC SLUG ARE BARRED, AND IT IS NOT A STYLE QUESTION.**
+`app/robots.ts` leaves them crawlable _only_ so each page's
+`robots: { index: false }` is visible; `app/sitemap.ts` names them "noindexed
+client decks, deliberately absent"; and `ARCS` holds **three live client
+proposals**. A footer link there publishes them. `tests/lib/footer-nav.test.ts`
+asserts every internal path is a member of the sitemap's URL set — which makes
+the mistake **unmergeable** rather than merely discouraged, and the guard was
+verified to fail on an `/arcs` row before it was trusted.
+
+⚠ **A "PRACTICE" COLUMN OF THE FOUR FORMATS IS BLOCKED, NOT OMITTED.** Nothing
+reads a URL to open a card (grepped `ServicesStage` / `ServicesCardRing` for
+`location.hash` and `searchParams`), so four rows would all point at
+`#services` — four rows, one destination, four lies. It returns behind a
+`?service=<id>` deep link, which is its own change.
+
+⚠ **`LEGAL` IS AUTHORED WITH BOTH ROWS `null`.** Privacy and Terms have no
+routes. A legal label that is not a link is worse than an absent one, so the
+blocked column is recorded IN CODE — `footerColumns()` drops a column left
+empty — and lights up the day the pages exist. The bar's right side stays
+deliberately bare until then.
+
+`lib/site/footer-nav.ts` is the record; the track is count-agnostic
+(`grid-auto-flow: column`), so a third column costs one data entry and no rung.
+
+### 2 · The composition is solved against a MEASURED plate
+
+`scripts/measure-plate-luminance.mjs` is new and runs **per asset, not per
+viewport**. Both plates are `cover` against a box that IS the station box, and
+every desktop rung is height-bound (station aspect 1.540 / 1.600 / 1.778
+against image 1.778), so
+
+> **image-y fraction === station-y fraction, exactly, on every desktop rung**,
+> and only x is cropped: `u(imageX) = 0.5 + (imageX − 0.5) · A/S`.
+
+`Gateway_v1b`'s bright mass measures **y 0.23–0.67, x 0.563–0.896** in image
+fractions — mask share 0.021, one clean connected component.
+
+⚠ **THAT REFUTES THE PLAN THIS PASS STARTED FROM.** The hypothesis was that
+the band could sit in a quiet upper region above the trail, the way Zellic's
+does over near-black sky; it needed `trailTopFrac ≥ 0.51` and the plate returns
+**0.23**. There is no quiet upper region. **The band clears the ring
+HORIZONTALLY instead — which is U1's own conclusion, reached with a number
+instead of an eye.** `u(0.563)` is 0.573 at 1920×1247 and 0.570 at 1440×900, so
+`--ft-band-right: 54vw` leaves ~3.4 % of clearance; measured `bandRightFrac`
+0.539 / 0.538.
+
+⚠ **AND THAT IS WHY THE LINK COLUMNS SIT UNDER THE ASK RATHER THAN BESIDE IT.**
+54vw leaves ~680px at 1920×1247 — enough for the ask (whose display run needs
+~500px) **or** a column row beside it, not both. U1's principle stands: the
+layout yields, the picture stays whole. The owner's composition survives in
+everything that carries it — the crest, the named grid, the plate as ground,
+the legal bar — and departs only where our plate is busier than Zellic's.
+
+⚠ **AN OPEN ITEM CLOSES WITH ARITHMETIC RATHER THAN A STILL.** U1 left "nudge
+`object-position: center 45%` if the baked caption shows" as the named fix for
+the caption at ~86–91 % y. Height-bound means **there is no vertical crop to
+move** — that nudge is a NO-OP at every rung this site is read at, and only
+becomes a lever above 16:9. The caption is buried by the scrim's bottom band,
+which is the only mechanism available.
+
+### 3 · The bed rotates, and it needs TWO knobs
+
+The desktop `to right` bed died at 60 %, short of a band that now carries a
+grid. It rotates to `to bottom` — which is not an invention but the **≤960
+rung's own resolution**, stated there for a band that runs full width
+("a horizontal bed washes the wrong half. Rotated — and the stops are read off
+the band's own box rather than guessed"). **That deletes the ≤960 `background`
+override entirely**: one three-layer family for both rungs.
+
+⚠ **BUT ONE KNOB WAS NOT ENOUGH, AND THE PHONE IS WHY.** The desktop band sits
+on the plate's quiet left third; the phone's `object-position` frames the ring's
+**bright body** behind the whole column. Same gradient, different ground — so
+the alphas are a rung value like the floor is. Measured at the desktop's
+0.56/0.46, the phone's lede read **2.84:1** and its CTA **1.61:1**.
+
+⚠ **`--ft-band-floor` IS THE BED'S EXTENT AND G3 VALIDATES IT — not the band's
+box.** The capture prints `bandBottomFrac` (0.815 desktop) as the bound the bed
+never needs to reach: the link grid below it sits on quiet ground at 7.99:1, so
+bedding it would grey the picture to fix nothing.
+
+### 4 · The gate that decides, and the defect in its first cut
+
+`capture-site-footer.mjs` gains an ink-contrast reading: hide the ink with
+`visibility` (keeping layout), screenshot the band's own rect so the plate
+arrives WITH its scrim and ground composited, read it back through an
+`OffscreenCanvas`, and measure each text rect against its own computed colour.
+
+⚠ **ITS FIRST CUT WAS WRONG IN THE WAY THIS HOUSE KEEPS GETTING WRONG.** It
+gated on the darkest pixel anywhere in each text RECT and reported
+`.ft-foot__link` at **1.36:1** in light on a footer that reads perfectly —
+because a 44px row's box is mostly background and the light plate's line-art
+landscape runs through it where no glyph does. **A guard measuring a MODEL of
+the drawing rather than the drawing**, one surface further on. The fix is not a
+looser number: two shots, and a pixel that differs between them IS ink. Masked,
+the same link reads **10.32:1**.
+
+⚠ **AND THE MASK DID NOT EXCUSE EVERYTHING — ONE FAILURE WAS REAL.** At
+`--ft-bed-top` 0.46 the title measures **4.45:1** glyph-masked over 22,421 ink
+pixels, where the display run reaches toward the ring's upper-left approach.
+0.56 is load-bearing; both values were measured and the lower one does not
+survive. `.ft-foot__tagline` and `.ft-foot__col-head` also came in at 4.41 and
+3.89 on the mechanical gate at 10px and take `.62`, the rung `.ft-foot__mark`
+already proves here.
+
+### 5 · The coverage assertion could only ever pass by luck
+
+`about-voidwalker-handoff-boundaries:500` asserts `bottom >= vh`. This station
+is the document's LAST element and its height is its content's, which is
+fractional — text line boxes and `svh` clamps do not land on integers. The
+browser CEILS `scrollHeight` to compute max scroll, so at the true bottom
+
+    bottom = vh − 1 + frac(documentHeight)
+
+and an exact `>= vh` passes **only when that fraction is zero**. It was, before
+this pass, and it was luck: any copy edit anywhere above the footer moves it.
+Measured at the failure: body 18979.75, scrollHeight 18980, bottom 799.75
+against 800 — a quarter of a CSS pixel, below the device grid at DPR 1.
+⚠ A 1px overscan on the station was tried first and bought NOTHING, because
+adding an integer does not change a fraction. The assertion carries one
+sub-pixel of tolerance now; the property it tests is unchanged.
+
+### 6 · Also
+
+The **social icon row is deleted** — LinkedIn and X are named rows in Connect,
+and the same two channels as icons in the bar is the same thing said twice on
+one screen. `socials.ts` keeps its `href: null` contract and the Connect column
+is what reads it. The capture's counter moves to `[data-social]` (a count still
+walking `.ft-foot__socials a` would read 0 forever and report it as correct)
+and its dead-link probe widens to `href=""` and a missing `href`.
+`.ft-foot` still takes **no padding, margin or border** — the crest carries the
+hairline, and `plateIsStation` is the assertion that says so.
+
+### Verifying
+
+```bash
+node scripts/measure-plate-luminance.mjs            # per asset, not per viewport
+node scripts/capture-site-footer.mjs --vp 1920x1247 --theme dark|light
+node scripts/capture-site-footer.mjs --vp 1440x900  --theme dark|light
+node scripts/capture-site-footer.mjs --vp 390x844   --theme dark|light
+npx playwright test tests/visual/about-voidwalker-handoff-boundaries.spec.ts --workers=1
+npx vitest run tests/lib/footer-nav.test.ts tests/lib/socials.test.ts \
+  tests/lib/type-material-tokens.test.ts tests/lib/theme-css-sweep.test.ts \
+  tests/lib/rail-manifest.test.ts
+node scripts/design-eval/mechanical.mjs --url / --theme dark|light --scope ".ft-foot" --prm
+```
+
+All six capture cells: **G3 pass**, `plateIsStation true`, `dead links 0`,
+`bandRightFrac` 0.538–0.539 desktop against a ring at 0.570–0.573. Mechanical
+passes in both themes. 8/8 on the boundary spec, 1599 unit tests.
+
+### Still open
+
+- **The LinkedIn and X URLs.** Two lines in `lib/site/socials.ts`; the Connect
+  column shows Email alone until they land, which is correct rather than
+  broken.
+- **Privacy / Terms**, and with them the bar's right side and the Legal column.
+- **The third link column**, behind a `?service=<id>` deep link.
+- **Three brand instances in one viewport** — the fixed HUD wordmark, the
+  crest, and the bar's mark. Read live before accepting; if it is repetition,
+  the BAR's mark shortens to `◆ 2026`, never the crest.
+- The contact form still needs `RESEND_API_KEY`, and
+  `landing-page.spec.ts`'s percentage-scroll snapshots want re-shooting AFTER
+  this (the document grew) — `-g "HUD"` must pass WITHOUT `--update-snapshots`.
