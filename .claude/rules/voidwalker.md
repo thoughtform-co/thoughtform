@@ -106,6 +106,34 @@ composition's own entry/exit block, its responsive rungs, and
   it — `scrollWidth` reports a 31px overflow that is `.gateway`/`.hud` and NOT
   a scrollbar (`scrollX` stays 0), and `scrollHeight` counts 192px of
   decorative projector bloom under the figure's feet.
+- ⚠ **THE ERA FIGURES ARE GENERATED IN-REPO NOW (ADR-082 U24,
+  `scripts/voidwalker-avatar/`, its own README).** Nano Banana Pro still → Veo
+  3.1 idle → `geq` luma key → five deliveries at 720×1280. The offline skill
+  that holds the original chain is on the owner's Windows machine; this is a
+  rebuild from the surviving record, on the same wave layout so a sync merges.
+  ⚠ **THE GATE THAT MATTERS IS SILHOUETTE FRAGMENTATION** — opaque RUNS per hem
+  row, where a skirt is 1 and trousers are 2 (Architect **1.93**, azeroth
+  **4.15**, the draw that shipped-and-dripped **7.87**, the one that ships
+  **1.90**). A robe lit only along its fold highlights keys into vertical strips
+  with the corridor showing between them, and it is NOT the model, the encoder
+  or the LUT — the raw frames are clean, pre- and post-VP9 are identical, and
+  every gain from 5 to 20 does it. ⚠ **A "how dark is the hem" metric RANKS THE
+  SHIPPED ASSETS WORSE THAN THE BROKEN DRAW** (0.530 / 0.528 against 0.681)
+  because what matters is whether the dark cloth reaches the SILHOUETTE EDGE,
+  not how much of it there is. ⚠ And strengthening the prompt's lighting clause
+  did NOT fix it — a second wave of five still scored 7.29–8.98.
+  ⚠ **THE LUT IS DERIVED AND CALIBRATED AGAINST WHAT SHIPS**: `off = corner_max
+  - 6`, `gain = 255 / (p10(lit) − off)`reproduces the thoughtform pair's
+recorded`clip((val-8)\*12)`exactly. ⚠ The ground is sampled at the CORNERS —
+a 20px border ring reads the robe's hem and produced a key that wiped the
+figure. ⚠ **A TRIM ALONE DOES NOT CLOSE A VERY STILL IDLE** (motion 1.2/255,
+best return 3.5 out): the tail is blended into the head and the join is
+measured on the frames that ship. Veo's`last_frame` stays refused.
+⚠ **THE FIGURE IS SEATED, NEVER CROPPED** — the slot's floor IS the projector
+disc, so a figure ending at 0.945 of its canvas hovers above it.
+⚠ **`expanse`IS BLOCKED AND`prompt.py` REFUSES IT BY NAME\*\*: its set-visit
+    folders enumerate zero files, and a words-only wardrobe is the paraphrase
+    U14 recorded. Make them available offline and it runs unchanged.
 - **`voidwalker-hologram.css` IS THE FIGURE'S SHEET NOW** — the slot's
   isolation and masked floor, the alpha branch, the projector base, the phase
   animations, the decode lines, and the four tokens those read. ⚠ **`.vwh`

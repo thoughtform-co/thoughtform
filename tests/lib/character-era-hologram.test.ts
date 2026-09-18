@@ -27,18 +27,41 @@ describe("ADR-082 · normalized character hologram assets", () => {
   });
 
   it("keeps every unauthored era on the canonical pair", () => {
-    // The AZEROTH era is the one authored pair — the WoW warlock Arafel (the
-    // site owner's actual 2020 character) in his own "Daemoniac" transmog,
-    // TALKING, rendered in Blender from `wow.export`'s rigged GLB on an
-    // emissive hologram material by the wave
-    // `voidwalker-avatar/waves/20260830-azeroth-v5-blender`. Every OTHER era
-    // still resolves to the canonical thoughtform pair until its own wave
-    // lands — including the two new 2018/2016 eras, which is exactly what this
-    // walk is here to prove after a roster change.
+    /* TWO eras are authored now, and the comment that stood here named one.
+     *
+     *  · AZEROTH — the WoW warlock Arafel (the owner's actual 2020 character)
+     *    in his own "Daemoniac" transmog, TALKING, rendered in Blender from
+     *    `wow.export`'s rigged GLB on an emissive hologram material, by the
+     *    wave `voidwalker-avatar/waves/20260830-azeroth-v5-blender`.
+     *  · GENAI — the Starhaven captain, from the owner's own reference
+     *    painting with his identity locked from the 2025 shoot, by the wave
+     *    `voidwalker-avatar/waves/20260918-genai-v1` (ADR-082 U23).
+     *
+     * Every OTHER era still resolves to the canonical thoughtform pair until
+     * its own wave lands — `expanse` is BLOCKED on its set-visit photographs
+     * rather than merely unstarted, and that is exactly what this walk proves
+     * after a roster change. */
+    const authored = new Set(["azeroth", "genai"]);
     for (const era of CHARACTER_ERAS) {
-      if (era.id === "azeroth") continue;
+      if (authored.has(era.id)) continue;
       expect(resolveCharacterEraHologram(era), era.id).toBe(CANONICAL_CHARACTER_ERA_HOLOGRAM);
     }
+  });
+
+  it("resolves the genai era to its authored Starhaven hologram", () => {
+    const genai = CHARACTER_ERAS.find((e) => e.id === "genai");
+    expect(genai?.hologram).toBeDefined();
+    expect(isCharacterEraHologram(genai?.hologram)).toBe(true);
+    expect(resolveCharacterEraHologram(genai!)).toBe(genai!.hologram);
+    expect(genai?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-genai-v2.webm");
+    // ⚠ It ships the Safari lane too, unlike azeroth — its matte is one figure
+    // with a clean silhouette, so the encoder meets the fidelity standard.
+    expect(genai?.hologram?.videoAlphaHevcPath).toBe("/videos/voidwalker/holo-idle-genai-v2.mov");
+    /* The anchors are MEASURED off the delivered alpha over every frame, and
+       the figure was SEATED so they land beside the canonical pair's rather
+       than hovering above the projector disc. */
+    expect(genai?.hologram?.footY).toBeCloseTo(0.993, 3);
+    expect(genai?.hologram?.headY).toBeCloseTo(0.0563, 3);
   });
 
   it("resolves the azeroth era to its authored Arafel hologram", () => {

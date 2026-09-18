@@ -140,3 +140,10 @@ docs/design/latent-flight/report.json
 .claude/skills/thoughtform-design/eval/waves/**/*.png
 .claude/skills/thoughtform-design/eval/armada/delivery/*.html
 docs/design/interface-kit/**/*.png
+
+# The avatar chain's WAVES are scratch: reference derives, N rejected draws,
+# thousands of extracted PNG frames and the raw Veo takes. What ships is copied
+# into `public/`; what is worth keeping is the recipe in the scripts and the
+# findings in ADR-082 U24. A single wave runs to hundreds of MB.
+scripts/voidwalker-avatar/waves/
+scripts/voidwalker-avatar/__pycache__/

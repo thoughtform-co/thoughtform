@@ -2529,3 +2529,103 @@ four clean. Still open, as it was.
   case and the azeroth-has-none case. ⚠ The canonical `toEqual` pin is
   exhaustive and failed first when the field landed — which is the pin working.
 - The type ratchet drops **13 → 1** on `voidwalker-datum.css`.
+
+---
+
+## Update 24 — the Latent Land era gets its own figure (2026-09-18, owner)
+
+**Status: Accepted for `genai`. `expanse` is blocked and the block is the
+finding.** The owner supplied the generation keys and asked for the visuals.
+
+The chain is rebuilt in-repo at `scripts/voidwalker-avatar/` — the offline skill
+that holds the original is on his Windows machine, and what survived here is the
+RECORD (U1, U12, U13, U14 and the holo gallery's manifest). The wave layout
+matches so a later sync merges rather than renames. Nano Banana Pro for the
+still, Veo 3.1 for the idle, a `geq` luma key, five deliveries at 720×1280.
+
+### What shipped
+
+`genai` — the Starhaven captain, from the owner's own reference painting with
+his identity locked from the 2025 shoot. Wave `20260918-genai-v3`, delivered as
+`holo-idle-genai-v2.{mp4,webm,mov}` + `holo-still-genai-v2.{jpg,webp}`,
+`headY 0.0563 / footY 0.993`. It ships the Safari lane too, unlike azeroth: one
+figure with a clean silhouette meets the fidelity standard where a plume and
+three companions do not.
+
+⚠ **THE LOADOUT NOW NAMES WHAT THE PLATE SHOWS** (U13's rule). It read
+"Blazer · shirt · Latent Land cape · cap" — the UNIFORM's loadout, carried over
+before the era had a figure. The captain wears none of it.
+
+### ⚠ The gate that matters is SILHOUETTE FRAGMENTATION, and two wrong metrics found it
+
+The first pick shipped for an hour and **dripped**: vertical strips down the
+robe with the corridor showing between them. Three things it was NOT, each ruled
+out by measurement rather than by argument — the model (the raw Veo frames are
+clean), the encoder (pre- and post-VP9 frames are identical), and the LUT (every
+gain from 5 to 20 reproduces it). The cause is in the DRAW: the robe was lit
+only along its fold highlights, so the cloth between them sat at the ground's own
+black level and the key cut the outline into bands.
+
+⚠ **AND THE FIRST METRIC RANKED THE SHIPPED ASSETS WORSE THAN THE BROKEN DRAW.**
+"How much of the hem is at ground level" reads Architect **0.530**, azeroth
+**0.528** and the dripping draw **0.681** — while both shipped assets read
+perfectly solid on the page. The measure was answering the wrong question: what
+matters is not how much dark cloth there is but whether it reaches the
+SILHOUETTE EDGE. The Architect's suit keeps its darks INTERIOR, ringed by lit
+edges, so its alpha stays one piece.
+
+The live gate is opaque RUNS per hem row — a skirt is one, trousers are two:
+
+|                                                 | runs/row |
+| ----------------------------------------------- | -------- |
+| Architect, shipped                              | 1.93     |
+| azeroth, shipped (a plume and three companions) | 4.15     |
+| the draw that dripped                           | 7.87     |
+| **the draw that ships**                         | **1.90** |
+
+⚠ **STRENGTHENING THE PROMPT'S LIGHTING CLAUSE WAS NOT ENOUGH.** A second wave
+of five draws, with the clause naming the hem explicitly, scored 7.29–8.98 —
+every one of them still fragmenting. What passed was the one draw from the FIRST
+wave that happened to be lit throughout. The clause is kept because it is true;
+the GATE is what catches the failure.
+
+### The LUT is derived, and the derivation is calibrated against what ships
+
+`off = corner_max + 6`, `gain = 255 / (p10(lit) − off)`. On their own footage
+that reproduces the thoughtform pair's recorded `clip((val-8)*12)` **exactly**
+and lands azeroth within a step — which is the check that it is a derivation
+rather than a fit. ⚠ **The ground is sampled at the CORNERS, not at a border
+ring**: the robe's hem reaches the bottom edge, and a 20px ring read
+`ground_max` 236 and produced `clip((val-242)*255)`, a key that wipes the figure.
+
+### A trim alone does not close a very still idle
+
+U14's calibration closed a loop whose seam fell to 0.38× its motion baseline —
+but that clip MOVED (motion ~15/255). A breathing figure runs at **1.2**, and
+its best return point still sat **3.5** out, three ordinary frame-steps of jump.
+The tail is blended into the head over 16 frames and the join is measured on the
+frames that ship: seam **0.88** against a **1.59** motion floor. ⚠ This is not
+Veo's first=last trick, which stays refused — that asks the MODEL to land the
+ending and it drifts anyway; this is an overlap-add on frames it already drew.
+
+⚠ **AND THE FIGURE IS SEATED, NEVER CROPPED.** The site seats the media
+bottom-centred in a slot whose floor IS the projector disc, so a figure ending at
+0.945 of its own canvas hovers 5.5 % of the slot above the disc it stands on.
+The frame is SHIFTED; cropping would change the delivered aspect and every
+anchor read against it.
+
+### ⚠ `expanse` is blocked, and the block is a finding rather than a delay
+
+`13_Voidwalker Pictures/The Expanse Set Visit/` and `MCRN/Exports/` both
+enumerate **zero files** — they are cloud-only placeholders on this machine.
+U14 records what a words-only wardrobe produces: a generic cowl, invented spires
+and a nondescript sword, "a paraphrase". `prompt.py` REFUSES the era by name
+rather than drawing a generic sci-fi soldier. Make both folders available
+offline and it runs with no code change.
+
+### Two API facts worth keeping
+
+`GenerateVideosConfig` does carry `negative_prompt` (which the plan flagged as
+uncertain), and it does NOT accept `generate_audio` on the Developer API — that
+field is Gemini Enterprise Agent Platform only and the request is **rejected
+outright** rather than ignored.

@@ -370,10 +370,45 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     beatId: "genai",
     year: "2022",
     wardrobe: "The AI Captain",
-    loadout: "Blazer · shirt · Latent Land cape · cap.",
+    /* ⚠ THE LOADOUT NAMES WHAT THE PLATE SHOWS (ADR-082 U13's rule, applied
+       here by ADR-082 U23's wave). It read "Blazer · shirt · Latent Land cape ·
+       cap" — the UNIFORM's loadout, carried over before this era had a figure
+       of its own. The Starhaven captain wears none of it: he is bare-headed in
+       a cloak over a floor-length robe, and the cap belongs to the Architect. */
+    loadout: "Latent Land cloak · gold cuffs · disc sash · a halo of stars.",
     motto: "The models arrived. Wrote the charter.",
     modelPath: null,
-    stillPath: "/images/vince-portrait.jpg",
+    stillPath: "/images/voidwalker/era-genai.jpg",
+    /* The era's own hologram — wave `20260918-genai-v1`, the Starhaven captain
+       from the owner's own reference painting with his identity locked from the
+       2025 shoot. Nano Banana Pro for the still, Veo 3.1 for the idle, keyed on
+       a LUT measured off this asset (`clip((val-11)*20)`).
+       ⚠ THE LOOP IS CLOSED BY AN OVERLAP, NOT BY A TRIM ALONE. This idle is
+       deliberately almost still (motion 1.19/255 between frames) and its best
+       return point still sat 3.5 out — three ordinary frame-steps of jump. The
+       tail is blended into the head, which takes the seam under the clip's own
+       motion floor: the join is quieter than the movement.
+       ⚠ AND THE FIGURE IS SEATED — the frame is shifted so the boots land on
+       the foot anchor rather than hovering above the projector disc.
+       ⚠ `-v2` BECAUSE `-v1` SHIPPED FOR AN HOUR AND DRIPPED. Its robe was lit
+       only along the fold highlights, so the cloth between them sat at the
+       ground's own black level and the key cut the silhouette into vertical
+       strips with the corridor showing through — measured 7.87 opaque runs per
+       hem row against the Architect's 1.93. Three things it was NOT: the model
+       (the raw frames are clean), the encoder (pre- and post-VP9 are
+       identical), or the LUT (every gain from 5 to 20 does it). The draw that
+       ships holds at 1.90. A cache does not read commit messages, so the
+       replacement takes a new URL. */
+    hologram: {
+      videoPath: "/videos/voidwalker/holo-idle-genai-v2.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-genai-v2.webm",
+      videoAlphaHevcPath: "/videos/voidwalker/holo-idle-genai-v2.mov",
+      posterPath: "/images/voidwalker/holo-still-genai-v2.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-genai-v2.webp",
+      frame: { width: 720, height: 1280 },
+      headY: 0.0563,
+      footY: 0.993,
+    },
     short: "Latent Land",
     facts: [
       { k: "Founded", v: "Starhaven" },
