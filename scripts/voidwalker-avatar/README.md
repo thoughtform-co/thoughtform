@@ -78,17 +78,19 @@ the delivered aspect and every anchor read against it.
 
 ## State
 
-| era       | wave                | status                                    |
-| --------- | ------------------- | ----------------------------------------- |
-| `genai`   | `20260918-genai-v3` | **shipped** — the Starhaven captain       |
-| `expanse` | —                   | ⚠ **BLOCKED**, and `prompt.py` refuses it |
+| era       | wave                  | status                                     |
+| --------- | --------------------- | ------------------------------------------ |
+| `genai`   | `20260918-genai-v3`   | **shipped** — the Starhaven captain        |
+| `expanse` | `20260918-expanse-v1` | **shipped** — the set visit, in MCRN plate |
 
-⚠ **`expanse` IS BLOCKED ON ITS PHOTOGRAPHS, NOT ON EFFORT.**
-`13_Voidwalker Pictures/The Expanse Set Visit/` and `MCRN/Exports/` both
-enumerate ZERO files on this machine — they are cloud-only placeholders. ADR-082
-U14 records what a words-only wardrobe produces: a generic cowl, invented spires
-and a nondescript sword, "a paraphrase". Make both folders available offline and
-the era runs with no code change.
+⚠ **`expanse`'s DRIVE FOLDERS ARE GENUINELY EMPTY, NOT UN-SYNCED.**
+`The Expanse Set Visit/` and `MCRN/Exports/` enumerate zero children while all 38
+sibling folders list normally — there was nothing to move. The owner supplied the
+photographs directly, and the wardrobe clause is written off those.
+
+⚠ **THE REFUSAL STAYS EVEN THOUGH `BLOCKED` IS NOW EMPTY.** The next era without
+a photograph must hit it and stop: ADR-082 U14 measured what a words-only
+wardrobe produces — a generic cowl, invented spires, a nondescript sword.
 
 ## The key
 

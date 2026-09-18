@@ -37,15 +37,28 @@ describe("ADR-082 · normalized character hologram assets", () => {
      *    painting with his identity locked from the 2025 shoot, by the wave
      *    `voidwalker-avatar/waves/20260918-genai-v1` (ADR-082 U23).
      *
-     * Every OTHER era still resolves to the canonical thoughtform pair until
-     * its own wave lands — `expanse` is BLOCKED on its set-visit photographs
-     * rather than merely unstarted, and that is exactly what this walk proves
-     * after a roster change. */
-    const authored = new Set(["azeroth", "genai"]);
+     * Only `loop` and `pokemon-go` still resolve to the canonical pair, and
+     * that is exactly what this walk proves after a roster change. */
+    const authored = new Set(["azeroth", "genai", "expanse"]);
     for (const era of CHARACTER_ERAS) {
       if (authored.has(era.id)) continue;
       expect(resolveCharacterEraHologram(era), era.id).toBe(CANONICAL_CHARACTER_ERA_HOLOGRAM);
     }
+  });
+
+  it("resolves the expanse era to its authored set-visit hologram", () => {
+    const expanse = CHARACTER_ERAS.find((e) => e.id === "expanse");
+    expect(expanse?.hologram).toBeDefined();
+    expect(isCharacterEraHologram(expanse?.hologram)).toBe(true);
+    expect(resolveCharacterEraHologram(expanse!)).toBe(expanse!.hologram);
+    expect(expanse?.hologram?.videoAlphaHevcPath).toBe(
+      "/videos/voidwalker/holo-idle-expanse-v1.mov"
+    );
+    expect(expanse?.hologram?.footY).toBeCloseTo(0.9961, 3);
+    /* ⚠ ITS LOADOUT WAS BYTE-IDENTICAL TO `pokemon-go`'s until this wave, which
+       is what a placeholder looks like. They may never be equal again. */
+    const pokemon = CHARACTER_ERAS.find((e) => e.id === "pokemon-go");
+    expect(expanse?.loadout).not.toBe(pokemon?.loadout);
   });
 
   it("resolves the genai era to its authored Starhaven hologram", () => {

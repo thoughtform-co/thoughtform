@@ -88,8 +88,9 @@ image, extra limbs, extra fingers, a helmet or a staff he is not wearing.
 """.strip()
 
 IDENTITY_HEADER = """
-Use the FIRST reference image for this man's identity and the SECOND for his
-wardrobe. Draw ONE figure: him, wearing that wardrobe.
+Use the FIRST reference image for this man's IDENTITY. Every image after it is
+the WARDROBE — take the garments from them and never the face. Draw ONE figure:
+him, wearing that wardrobe.
 """.strip()
 
 ERA_WARDROBE: dict[str, str] = {
@@ -130,37 +131,49 @@ carries no staff, no rod and no weapon.
 """.strip(),
     # 2018 · "The campaign commander" · the Expanse set visit.
     #
-    # ⚠ BLOCKED, AND IT MUST STAY BLOCKED UNTIL THE PHOTOGRAPHS EXIST LOCALLY.
-    # `13_Voidwalker Pictures/The Expanse Set Visit/` and `MCRN/Exports/` both
-    # enumerate ZERO files on this machine. ADR-082 U14 records what running a
-    # wardrobe through an image model with no picture to point at produces: a
-    # generic cowl, invented spires and a nondescript sword — "a paraphrase".
-    # `run.py` refuses this era rather than drawing a generic sci-fi soldier.
+    # ⚠ WRITTEN OFF THE OWNER'S OWN SET PHOTOGRAPHS, not off the show. He is
+    # wearing the production's MCRN marine armour on the standing set: a matte
+    # black hard-shell rig over his own clothes, with a black kilt panel at the
+    # waist and his cap still on. The clause names what the PHOTOGRAPHS show —
+    # including the cap and the fact that he is in his own trousers under it,
+    # because that is what a set visit looks like and it is what makes the
+    # plate his rather than a costume render.
+    #
+    # ⚠ THE ARMOUR IS THE FRAGMENTATION RISK ON THIS ERA. It is near-black
+    # segmented plate, which is exactly the material that keys into strips if
+    # only its edges are lit (ADR-082 U24). The style block's lit-wardrobe
+    # clause does the work; `grade.py`'s runs-per-row gate is what catches it.
     "expanse": """
-WARDROBE — 2018, on the set visit, in the armour exactly as photographed in the
-second reference image.
+WARDROBE — 2018, on the set visit, in the armour exactly as in the second
+reference image.
 
-A hard-shell vacuum suit in the Martian naval pattern: a matte dark armoured
-spacesuit over a ribbed pressure underlayer; a segmented hard chest plate;
-shoulder caps and upper-arm plates; articulated forearm gauntlets with a wrist
-console; a sectioned waist and hip belt; armoured thigh and shin plates; heavy
-boots. Military-utilitarian — riveted, panelled, matte, worn. Not glossy, not
-superhero armour, not a cape.
+A matte black hard-shell armour rig worn over his own dark clothes. A segmented
+chest plate of raised geometric panels with a ribbed midsection; rounded shoulder
+caps and plated upper arms; articulated forearm gauntlets over knuckled tactical
+gloves; a high dark collar at the throat. A BLACK KILT PANEL hangs from the waist
+to the knee over dark leggings, and he wears his own low dark boots. Military,
+utilitarian, matte and worn — riveted and panelled, never glossy, never chrome,
+and not superhero armour.
 
-THE COLLAR RING IS OPEN AND HIS HEAD IS BARE. He carries no helmet and wears no
-cap, no hood and no visor — his face is fully visible and unobstructed.
+HE WEARS HIS OWN CAP, the flat dark cap from the first reference image, and NO
+HELMET, no hood and no visor. His head and face are bare and fully visible.
+
+His hands are EMPTY and rest at his sides — he carries no rifle and no helmet.
 """.strip(),
 }
 
 #: Eras whose wardrobe reference is not on this machine. `run.py` refuses them.
-BLOCKED: dict[str, str] = {
-    "expanse": (
-        "the set-visit photographs are not available offline — "
-        "'13_Voidwalker Pictures/The Expanse Set Visit/' and 'MCRN/Exports/' "
-        "both enumerate zero files. A words-only wardrobe produces a generic "
-        "sci-fi soldier (ADR-082 U14's recorded v1 failure)."
-    ),
-}
+#:
+#: ⚠ `expanse` WAS HERE UNTIL 2026-09-18 and is not any more. Its set-visit
+#: folders on Drive (`The Expanse Set Visit/`, `MCRN/Exports/`) are genuinely
+#: EMPTY — every one of their 38 sibling folders enumerates its contents, so
+#: this was never an un-synced placeholder — and the owner supplied the
+#: photographs directly instead. The refusal stays in the code because the
+#: reason it existed has not changed: ADR-082 U14 measured what a words-only
+#: wardrobe produces (a generic cowl, invented spires, a nondescript sword),
+#: and the next era without a picture must hit this and stop rather than draw
+#: a paraphrase.
+BLOCKED: dict[str, str] = {}
 
 IDLE_PROMPT = """
 The figure BREATHES and nothing else. A slow, even rise and fall of the chest;

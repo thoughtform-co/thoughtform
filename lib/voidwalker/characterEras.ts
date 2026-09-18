@@ -535,10 +535,34 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     beatId: "expanse",
     year: "2018",
     wardrobe: "The campaign commander",
-    loadout: "Blazer · shirt · lanyard · camera · phone · cap.",
+    /* Named off the owner's own set photographs (ADR-082 U24), not off the
+       show: he is in the production's MCRN marine armour over his own clothes,
+       with the kilt panel at the waist and his cap still on. ⚠ It read
+       "Blazer · shirt · lanyard · camera · phone · cap" — BYTE-IDENTICAL to
+       `pokemon-go`'s, which is what a placeholder looks like, and which is why
+       a scoped edit was needed to change one of them. */
+    loadout: "Marine plate · gauntlets · kilt panel · his own cap.",
     motto: "Venting became a campaign.",
     modelPath: null,
-    stillPath: "/images/services/Vince-4.jpg",
+    stillPath: "/images/voidwalker/era-expanse.jpg",
+    /* The era's own hologram — wave `20260918-expanse-v1`. ⚠ THE WARDROBE
+       REFERENCE IS TWO PHOTOGRAPHS, not one: a solo full-body frame for the
+       silhouette and a lit group frame where the plate's panels actually read.
+       ⚠ AND THE CAP IS THE IDENTITY'S, NOT THE SET'S. He wore a plain dark cap
+       on the day; the figure wears the Thoughtform one he is locked from, which
+       is the cap the Architect wears eight years later. That is the UNIFORM
+       reading rather than the documentary one — recorded because it is a
+       choice, and the loadout says "his own cap" rather than naming it. */
+    hologram: {
+      videoPath: "/videos/voidwalker/holo-idle-expanse-v1.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v1.webm",
+      videoAlphaHevcPath: "/videos/voidwalker/holo-idle-expanse-v1.mov",
+      posterPath: "/images/voidwalker/holo-still-expanse-v1.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v1.webp",
+      frame: { width: 720, height: 1280 },
+      headY: 0.0437,
+      footY: 0.9961,
+    },
     short: "The Expanse",
     facts: [
       { k: "Petition", v: "Past 100,000 signatures" },

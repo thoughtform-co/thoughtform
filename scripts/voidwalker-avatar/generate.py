@@ -141,7 +141,10 @@ def main() -> int:
     ap.add_argument("--era", required=True)
     ap.add_argument("--wave", required=True, help="waves/<dir>")
     ap.add_argument("--identity", required=True, type=Path)
-    ap.add_argument("--wardrobe", required=True, type=Path)
+    # ⚠ MORE THAN ONE WARDROBE REFERENCE IS ALLOWED, and the identity still
+    # goes FIRST. `expanse` needs two: a solo full-body frame for the silhouette
+    # and a lit group frame where the armour's panels actually read.
+    ap.add_argument("--wardrobe", required=True, type=Path, nargs="+")
     ap.add_argument("--draws", type=int, default=6)
     args = ap.parse_args()
 
@@ -157,11 +160,10 @@ def main() -> int:
     key = require("GEMINI_API_KEY")
     prompt = still_prompt(args.era)
 
-    refs = [
-        shrink(args.identity, wave / "refs" / f"identity{args.identity.suffix or '.jpg'}"),
-        shrink(args.wardrobe, wave / "refs" / "wardrobe.jpg"),
-    ]
-    print(f"era {args.era} · {args.draws} draws · refs: identity, wardrobe")
+    refs = [shrink(args.identity, wave / "refs" / f"identity{args.identity.suffix or '.jpg'}")]
+    for i, w in enumerate(args.wardrobe, start=1):
+        refs.append(shrink(w, wave / "refs" / f"wardrobe-{i}.jpg"))
+    print(f"era {args.era} · {args.draws} draws · refs: identity + {len(args.wardrobe)} wardrobe")
 
     made = 0
     for i in range(1, args.draws + 1):

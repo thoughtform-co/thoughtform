@@ -128,12 +128,19 @@ recorded`clip((val-8)\*12)`exactly. ⚠ The ground is sampled at the CORNERS —
 a 20px border ring reads the robe's hem and produced a key that wiped the
 figure. ⚠ **A TRIM ALONE DOES NOT CLOSE A VERY STILL IDLE** (motion 1.2/255,
 best return 3.5 out): the tail is blended into the head and the join is
-measured on the frames that ship. Veo's`last_frame` stays refused.
+measured on the frames that ship. Veo's`last_frame`stays refused.
 ⚠ **THE FIGURE IS SEATED, NEVER CROPPED** — the slot's floor IS the projector
 disc, so a figure ending at 0.945 of its canvas hovers above it.
-⚠ **`expanse`IS BLOCKED AND`prompt.py` REFUSES IT BY NAME\*\*: its set-visit
-    folders enumerate zero files, and a words-only wardrobe is the paraphrase
-    U14 recorded. Make them available offline and it runs unchanged.
+⚠ **BOTH NEW ERAS SHIPPED**:`genai`(the Starhaven captain) and`expanse`(the
+  set visit, in the production's MCRN plate, 3.29 runs/row). ⚠`expanse`'s Drive
+  folders are GENUINELY EMPTY, not un-synced — all 38 siblings enumerate
+  normally — so the owner supplied the photographs directly; its wardrobe takes
+  TWO references (a solo frame for the silhouette, a lit group frame for the
+  panels) and its cap is the IDENTITY's, not the set's, which is the uniform
+  reading taken deliberately. ⚠ Its loadout was BYTE-IDENTICAL to `pokemon-go`'s,
+  so the edit had to be scoped to its own block and a test pins them apart.
+  ⚠ **`prompt.py`'s refusal stays even though `BLOCKED` is empty\*\* — the next era
+    without a photograph must hit it and stop.
 - **`voidwalker-hologram.css` IS THE FIGURE'S SHEET NOW** — the slot's
   isolation and masked floor, the alpha branch, the projector base, the phase
   animations, the decode lines, and the four tokens those read. ⚠ **`.vwh`

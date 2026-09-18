@@ -2614,14 +2614,44 @@ bottom-centred in a slot whose floor IS the projector disc, so a figure ending a
 The frame is SHIFTED; cropping would change the delivered aspect and every
 anchor read against it.
 
-### ⚠ `expanse` is blocked, and the block is a finding rather than a delay
+### `expanse` shipped the same day, once the owner supplied the photographs
 
-`13_Voidwalker Pictures/The Expanse Set Visit/` and `MCRN/Exports/` both
-enumerate **zero files** — they are cloud-only placeholders on this machine.
-U14 records what a words-only wardrobe produces: a generic cowl, invented spires
-and a nondescript sword, "a paraphrase". `prompt.py` REFUSES the era by name
-rather than drawing a generic sci-fi soldier. Make both folders available
-offline and it runs with no code change.
+⚠ **THE DRIVE FOLDERS ARE GENUINELY EMPTY, NOT UN-SYNCED.**
+`13_Voidwalker Pictures/The Expanse Set Visit/` and `MCRN/Exports/` enumerate
+zero children while **all 38 of their sibling folders list their contents
+normally** — so there was nothing to "make available offline" and nothing to
+move. The owner attached the set photographs directly instead.
+
+The wardrobe clause is written off THOSE PHOTOGRAPHS rather than off the show:
+the production's MCRN marine plate over his own clothes, a black kilt panel at
+the waist, his cap still on. ⚠ **TWO WARDROBE REFERENCES, NOT ONE** — a solo
+full-body frame for the silhouette and a lit group frame where the plate's
+panels actually read; `generate.py` takes N wardrobe images now and the identity
+still goes first.
+
+⚠ **AND THE CAP IS THE IDENTITY'S, NOT THE SET'S.** He wore a plain dark cap on
+the day; the figure wears the Thoughtform one he is locked from — the same cap
+the Architect wears eight years later. That is the UNIFORM reading rather than
+the documentary one, taken deliberately, and the loadout says "his own cap"
+rather than naming it.
+
+⚠ **ITS LOADOUT WAS BYTE-IDENTICAL TO `pokemon-go`'s**
+("Blazer · shirt · lanyard · camera · phone · cap"), which is what a placeholder
+looks like — and is why the edit had to be scoped to the era's own block rather
+than done by string. A test now pins the two apart.
+
+Measured: **3.29 runs per hem row** (the gate is 4.5; the armour's hard panels
+light far better than a cloth robe), `headY 0.0437 / footY 0.9961`, and it ships
+the Safari lane.
+
+⚠ **THE REFUSAL STAYS IN THE CODE** even though `BLOCKED` is now empty. The
+reason it existed has not changed: U14 measured what a words-only wardrobe
+produces — a generic cowl, invented spires, a nondescript sword — and the next
+era without a photograph must hit it and stop rather than draw a paraphrase.
+
+⚠ **Left open: the Expanse figure has not been read on the live station.** The
+asset is verified (composited and matted clean, the gate at 3.29, 1603 unit
+tests green), but the session ended before the five-era walk on the page.
 
 ### Two API facts worth keeping
 
