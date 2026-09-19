@@ -111,9 +111,10 @@ export interface ServicePlate {
 }
 
 /** Photo ASSET ids — decoupled from the slot ids because the asset is named
- * after the displayed service ("strategic" has no slot; the Strategic
- * Advisory service occupies the `keynote` slot). Assets are produced by
- * scripts/services-photos/prepare.mjs from the 2026-07-10 `-2` sources. */
+ * after the service it was shot for ("strategic" has no slot; it was Strategic
+ * Advisory's and is the Home session's now — the one shot at a table). Assets
+ * are produced by scripts/services-photos/prepare.mjs from the 2026-07-10
+ * `-2` sources. */
 type ServicePhotoAssetId = ServicePlateId | "strategic";
 
 const photo = (id: ServicePhotoAssetId, alt: string, position: string) => ({
@@ -131,24 +132,39 @@ const photo = (id: ServicePhotoAssetId, alt: string, position: string) => ({
  * ruling). Every title is now the service's OUTCOME STATEMENT and the lede
  * its one-sentence definition; the occupancy follows the owner's
  * progression (shared frame → working setup → internal capability →
- * portfolio direction), so the id → service mapping is now:
- *   keynote  slot (left rack, top)    → 01 Keynote             (keynote photo)
- *   workshop slot (left rack, bottom) → 02 Workshop            (workshop photo)
- *   embedded slot (right rack, top)   → 03 Embedded AI Partner (embedded photo)
- *   guided   slot (right rack, bottom)→ 04 Strategic Advisory  (strategic photo)
- * Status codes re-cut to phase + index (NAV-01 / ENC-02 / BLD-03 / ADV-04)
- * so the mobile chrome reads the same progression. Keeping the ids as slot
- * keys avoids re-tuning every spatial map; the photo for each slot is
- * pointed at the correct asset by hand. All four slots carry photos since
- * the 2026-07-10 `-2` reshoot (ADR-029 card ring); the schematic dot-grid
- * fallback stays wired for any future photo-less service.
+ * portfolio direction).
+ *
+ * RE-CUT 2026-09-19 (ADR-112, owner): Strategic Advisory FOLDS INTO the
+ * embedded offer — the doctrine's "standing session with leadership" is what
+ * Advisory's monthly read becomes inside the embed, and the chip is EMBEDDED
+ * (the doctrine's own flagship word, spanning both altitudes) — and the fourth
+ * slot hosts the HOME SESSION, new on the site: six to eight people at the
+ * owner's table in Antwerp for one morning, the argument in full and then
+ * the skill by hand. The id → service mapping is now:
+ *   keynote  slot (left rack, top)    → 01 Keynote       (keynote photo)
+ *   workshop slot (left rack, bottom) → 02 Workshop      (workshop photo)
+ *   embedded slot (right rack, top)   → 03 Embedded      (embedded photo)
+ *   guided   slot (right rack, bottom)→ 04 Home session  (strategic photo — the
+ *                                       one shot at a table, the slot's own asset)
+ * Status codes are phase + index (NAV-01 / ENC-02 / BLD-03 / NAV-04) so the
+ * mobile chrome reads the progression. Keeping the ids as slot keys avoids
+ * re-tuning every spatial map; the photo for each slot is pointed at the
+ * correct asset by hand. All four slots carry photos since the 2026-07-10
+ * `-2` reshoot (ADR-029 card ring); the schematic dot-grid fallback stays
+ * wired for any future photo-less service.
+ *
+ * ⚠ NO PRICE, NO DIGIT ON THE HOME SESSION. It is the one service ops prices
+ * per seat, and the card law is that money stays in the proposal; digits are
+ * banned on its copy outright (`tests/lib/services-copy.test.ts`) so a rate
+ * cannot creep in as "€450". The phone back's fit is solved before any string
+ * here is written — the same test walks every record through `backFaceLayout`.
  *
  * ⚠ BAKE FIT: the tight face wraps the lede upward from a fixed baseline
  * (ServicesCardRing TIGHT_COPY_BOTTOM), so a longer lede EATS PHOTO, never
- * clips — but the two new long ledes (Embedded 156ch, Advisory 146ch) run
+ * clips — but the two long ledes (Embedded 156ch, Home session 157ch) run
  * four lines at the 35px bake size where the old ones ran three. Verified
- * on the baked faces 2026-08-02; anything longer than ~160ch starts
- * crowding the title band. */
+ * on the baked faces 2026-08-02 and 2026-09-19; anything longer than ~160ch
+ * starts crowding the title band (`LEDE_MAX_CH`, tested). */
 export const SERVICE_PLATES: readonly ServicePlate[] = [
   {
     id: "keynote",
@@ -206,16 +222,20 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
   },
   {
     id: "embedded",
-    chip: "Embedded AI Partner",
+    chip: "Embedded",
     statusCode: "BLD-03",
     title: "An intelligence configuration you own.",
     lede: [
       "A modular sprint in three stage-gated workstreams, on your own keys, in the tools you already use, until the setup is one the team runs by itself.",
     ],
+    /* ADR-112: the leadership altitude enters through the third bullet — the
+       doctrine's "standing session with leadership" is what Advisory's monthly
+       read becomes inside the embed. The bullet stays two lines on the back
+       (the fit test measures it). */
     breakdown: [
       "Setup and briefing, the first workstream you run alone",
       "Generation and design, run with your team as the last gate",
-      "Operations and scaling, and the champions who run them",
+      "Operations and scaling, and a standing session with leadership",
     ],
     /* ⚠ `leavesWith` IS THE ONE PAID LINE ON THE PHONE BACK (ADR-111). The back
        had 67px of slack; a second line there costs 44 and `participants` /
@@ -235,36 +255,38 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     },
     feedLabel: "Feed 04 · On site",
     feedStatus: "Standby",
-    includes: ["Three workstreams", "Your own keys", "Dated handover", "NL / EN"],
+    includes: ["Three workstreams", "Your own keys", "Leadership session", "Dated handover"],
     ctaLabel: "Scope an engagement",
     ctaHref: "#contact",
     photo: photo("embedded", "Vince Buyssens on site during an embedded engagement", "50% 45%"),
   },
   {
     id: "guided-build",
-    chip: "Strategic Advisory",
-    statusCode: "ADV-04",
-    title: "A live map of where AI belongs.",
+    chip: "Home session",
+    statusCode: "NAV-04",
+    title: "The skill, for yourself.",
     lede: [
-      "A recurring portfolio read across workflows, cost, evidence and ownership—showing what to build, what to change and what should remain person-led.",
+      "Six to eight people at a table in Antwerp for one morning: the argument behind the practice, then the skill by hand, with the time a keynote never has.",
     ],
     breakdown: [
-      "A monthly session on the decisions actually in front of you",
-      "Written memos you can forward, not slideware",
-      "On-call reads when something lands mid-month",
+      "The argument in full, then your own work on the table",
+      "Six to eight people, each registered for themselves",
+      "Food and drinks, a printed handout, and the circle after",
     ],
     spec: {
-      duration: "Monthly, ongoing",
-      participants: "The people making the AI calls",
-      format: "Strategic memos and on-call reads",
+      duration: "One morning, three hours",
+      participants: "Six to eight, individually registered",
+      format: "At the table, in Antwerp",
       language: "NL / EN",
-      leavesWith: "Sharper AI calls",
+      leavesWith: "The skill, and the people you sat with",
     },
     feedLabel: "Feed 03 · At the table",
     feedStatus: "Standby",
-    includes: ["Monthly cadence", "Strategic memos", "On-call reads", "NL / EN"],
-    ctaLabel: "Open an advisory",
+    includes: ["Six to eight seats", "One morning", "Antwerp", "NL / EN"],
+    ctaLabel: "Reserve a seat",
     ctaHref: "#contact",
-    photo: photo("strategic", "Vince Buyssens at the table during an advisory session", "50% 32%"),
+    // The slot's own asset: the one shot at a table, which is what a home
+    // session is. The alt says what the picture shows.
+    photo: photo("strategic", "Vince Buyssens at the table, mid-session", "50% 32%"),
   },
 ];

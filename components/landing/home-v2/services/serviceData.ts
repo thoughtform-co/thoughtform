@@ -73,26 +73,30 @@ export interface Service {
  * HARMONIZED 2026-08-02 (owner copy, verbatim). Every card now leads with
  * ONE OUTCOME STATEMENT — a noun phrase naming what the buyer walks away
  * with — and the four progress deliberately: shared frame → working setup →
- * internal capability → portfolio direction. The occupancy moved WITH that
- * progression, so the id → service mapping is now:
+ * internal capability → the skill for yourself.
+ *
+ * RE-CUT 2026-09-19 (ADR-112, owner): Strategic Advisory folds INTO the
+ * embedded offer (the standing session with leadership is the third
+ * workstream's own altitude) and the fourth slot hosts the HOME SESSION. The
+ * id → service mapping is now:
  *   keynote      → 01 Keynote
  *   workshop     → 02 Workshop
- *   embedded     → 03 Embedded AI Partner
- *   guided-build → 04 Strategic Advisory
- * Three of four slot ids re-aligned with their own content in the move
- * (2026-07-09 had rotated them apart); `guided-build` hosting Advisory is
- * the one remaining misnomer — the id is a spatial key, do not rename it
- * (rack position, anchor pick, designation set and scan note all hang off
- * it). Spatial params everywhere stay slot-tuned; labels travel with the
- * service. The Advisory body carries the owner's em dash verbatim — the
- * 2026-07-16 "no em dashes" sweep is superseded where the owner writes one. */
+ *   embedded     → 03 Embedded
+ *   guided-build → 04 Home session
+ * `guided-build` hosting the home session is the same documented misnomer
+ * that hosted Advisory — the id is a spatial key, do not rename it (rack
+ * position, anchor pick, designation set and scan note all hang off it).
+ * Spatial params everywhere stay slot-tuned; labels travel with the service.
+ * The 2026-07-16 "no em dashes" sweep is superseded where the owner writes
+ * one (no record carries one today). */
 /** Section masthead copy (2026-07-16, promoted from /test/services-wordmark —
  * ADR-044). SECTION-level register copy ONLY — the title/intro for #services as
  * a whole, never per-card (ADR-029: card copy stays baked on the WebGL faces).
  * The em line renders gold. Owner copy, 2026-07-16 evening sweep: "THREE
  * DEPTHS." returns DELIBERATELY (an earlier pass retired it as stale) — the
  * intro reframes the count: talk / workshop / embedded term are the three
- * DEPTHS of one loop, and Advisory is the standing read alongside them.
+ * DEPTHS of one loop, and Advisory was the standing read alongside them
+ * (folded into the embed 2026-09-19, ADR-112; the home session is the fourth).
  * The "Services · 04" eyebrow is RETIRED (owner, 2026-07-17) — the last
  * station-index eyebrow on the journey; the corridor heads and the v7
  * stations dropped theirs long ago ("headline reads first").
@@ -176,7 +180,7 @@ export const SERVICES: readonly Service[] = [
     id: "embedded",
     index: "03",
     verb: "EMBEDDED",
-    name: "Embedded AI Partner",
+    name: "Embedded",
     kicker: "AN INTELLIGENCE CONFIGURATION YOU OWN",
     tagline: "An intelligence configuration you own.",
     /* ⚠ THE CARD NAMES THE SHAPE; CREATIVE IS THE PROOF, NOT THE DEFINITION
@@ -186,10 +190,11 @@ export const SERVICES: readonly Service[] = [
        is carried by WORKSTREAM (the unit — naming the unit rather than the
        asset is the whole trick), and the creative instance appears ONCE, here,
        on a DOM surface with no bake budget, phrased as evidence. It may not
-       travel to the baked face or the phone back. */
-    body: "A modular sprint in three stage-gated workstreams, run on your own keys inside the tools the team already uses. Proven first on creative work; the same shape takes any team's own workstreams.",
+       travel to the baked face or the phone back. ADR-112 adds the leadership
+       altitude in the same breath — Advisory's standing read, inside the embed. */
+    body: "A modular sprint in three stage-gated workstreams, run on your own keys inside the tools the team already uses, with a standing session for leadership alongside. Proven first on creative work; the same shape takes any team's own workstreams.",
     meta: [
-      { label: "Runs", value: "Three workstreams" },
+      { label: "Runs", value: "Three workstreams · leadership" },
       { label: "Format", value: "Fixed term · dated handover" },
       { label: "Leaves", value: "The layer, and the team" },
     ],
@@ -201,18 +206,18 @@ export const SERVICES: readonly Service[] = [
   {
     id: "guided-build",
     index: "04",
-    verb: "ADVISORY",
-    name: "Strategic Advisory",
-    kicker: "A LIVE MAP OF WHERE AI BELONGS",
-    tagline: "A live map of where AI belongs.",
-    body: "A recurring portfolio read across workflows, cost, evidence and ownership—showing what to build, what to change and what should remain person-led.",
+    verb: "HOME SESSION",
+    name: "Home session",
+    kicker: "THE SKILL, FOR YOURSELF",
+    tagline: "The skill, for yourself.",
+    body: "Six to eight people at a table in Antwerp for one morning: the argument behind the practice, then the skill by hand, with the time a keynote never has.",
     meta: [
-      { label: "Runs", value: "Monthly cadence" },
-      { label: "Format", value: "Strategic memos · NL/EN" },
-      { label: "Leaves", value: "Sharper AI calls" },
+      { label: "Runs", value: "Navigate" },
+      { label: "Format", value: "One morning · Antwerp · NL/EN" },
+      { label: "Leaves", value: "The skill, and the people" },
     ],
     phase: "navigate",
-    ctaLabel: "Open an advisory",
+    ctaLabel: "Reserve a seat",
     ctaHref: "#contact",
     shapeKey: "loop-forming",
   },

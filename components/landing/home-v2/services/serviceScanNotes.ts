@@ -11,11 +11,11 @@ export interface ServiceScanNote {
 }
 
 /* Keyed by the fixed spatial-slot ids (see servicePlateData). Slot → service
- * mapping as of 2026-08-02 (the harmonization pass): keynote→Keynote,
- * workshop→Workshop, embedded→Embedded AI Partner, guided-build→Strategic
- * Advisory. Coordinates left on their tuned arc positions (they belong to
- * the SLOT); label/signals/summary travel with the service — the same rule
- * the 2026-07-09 remap wrote down. */
+ * mapping as of 2026-09-19 (ADR-112): keynote→Keynote, workshop→Workshop,
+ * embedded→Embedded (Advisory folded in), guided-build→Home session.
+ * Coordinates left on their tuned arc positions (they belong to the SLOT);
+ * label/signals/summary travel with the service — the same rule the
+ * 2026-07-09 remap wrote down. */
 export const SERVICE_SCAN_NOTES: readonly ServiceScanNote[] = [
   {
     id: "scan-keynote-frame",
@@ -49,13 +49,14 @@ export const SERVICE_SCAN_NOTES: readonly ServiceScanNote[] = [
       "Three stage-gated workstreams run inside two or three companies at a time, on their own keys, leaving a layer and the people who run it.",
   },
   {
-    id: "scan-advisory-read",
+    id: "scan-home-session",
     serviceId: "guided-build",
-    label: "Standing read",
+    label: "Home session",
     coordinate: "CV:11.30 / B-LINK",
     confidence: 0.91,
-    signals: ["where to invest", "what to skip", "tested against real work"],
-    summary: "A standing read for the people making the AI calls, kept honest against live work.",
+    signals: ["six to eight seats", "one morning", "the skill by hand"],
+    summary:
+      "Six to eight people at a table in Antwerp for one morning: the argument in full, then the skill built by hand.",
   },
 ];
 

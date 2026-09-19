@@ -371,7 +371,7 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           dissipateGetter={ringEntranceClock}
           entrance="scroll"
           publishAnchors
-          faceVariant={SERVICES_CARD_DRAWER ? "card" : "full"}
+          faceVariant={SERVICES_CARD_DRAWER ? "raster-photo" : "full"}
           openDrawer={false}
           /* ADR-110: the phone's open state is the card's own BACK face — a
              tap turns it over; no drawer, no DOM sheet. Desktop below never
@@ -407,7 +407,7 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
 
              ⚠ Three things keyed off the photograph and none of them errors
              without one — see `faceUsesPhoto` in ServicesCardRing. */
-          faceVariant={SERVICES_CARD_DRAWER ? "card" : "full"}
+          faceVariant={SERVICES_CARD_DRAWER ? "raster-photo" : "full"}
           openDrawer={SERVICES_CARD_DRAWER}
         />
       )}

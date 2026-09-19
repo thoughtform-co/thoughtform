@@ -38,13 +38,6 @@ export interface FaceVariant {
    * row it matters most on.
    */
   pinnedTitle?: CardTitleStyle;
-  /**
-   * The row bakes the RE-CUT four (`serviceRecut.ts`: Keynote · Workshop ·
-   * Embedded with Advisory folded in · Home session) instead of production's
-   * record. The 2026-09-19 material rows carry it; every earlier row keeps
-   * the shipped copy so the survey stays what it was.
-   */
-  recut?: boolean;
   /** An in-canvas figure over the face — V · Volume's point cloud, or one of
    *  the lattice families. */
   figure?: CardFigure;
@@ -245,7 +238,9 @@ export const CANDIDATE_VARIANTS: readonly FaceVariant[] = [
 
 /**
  * THE THREE MATERIALS (owner, 2026-09-19: "holographic ASCII … explore some
- * different directions … JavaScript, three.js, SVGs"), on the RE-CUT four.
+ * different directions … JavaScript, three.js, SVGs"), on the RE-CUT four —
+ * which ARE production's four since ADR-112 (the lab read them first; the
+ * `serviceRecut` module dissolved into `servicePlateData` / `serviceData`).
  *
  * ⚠ ONE FIGURE RECORD, THREE MATERIALS. Every row draws the same subject —
  * `lib/services-ring/serviceFigures`: one estate of work, a structure per
@@ -263,7 +258,6 @@ export const MATERIAL_VARIANTS: readonly FaceVariant[] = [
     face: "raster",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "CANVAS. The figure re-screened as a character grid: PT Mono glyphs on a fixed pitch, one per cell, chosen off a density ramp (· − + = # @) by how much of the structure the cell covers, alpha by the same, every third row losing light as a scan cadence. A near node letters @, a far one ·; the marks stay diamonds. Static bake, zero per-frame cost; the phone takes it unchanged.",
     provenance:
@@ -276,7 +270,6 @@ export const MATERIAL_VARIANTS: readonly FaceVariant[] = [
     figure: "volume",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "THREE.JS. The same figure given its third dimension back — the cloud is a sphere and the constellation projected it flat. Nodes as PT Mono glyph sprites at their own depth over the band, chords as hairlines, the near hemisphere protruding in front of the face. Nothing animates it: it is geometry inside the card's group, so the ring's turn and the rig's pointer-look give it real parallax, which is what makes a hologram read as one. The face bakes the type alone.",
     provenance:
@@ -288,7 +281,6 @@ export const MATERIAL_VARIANTS: readonly FaceVariant[] = [
     face: "wire",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "SVG. The figure as line work on the house ring register — the About drawing's rings on their dash ladder, the rim graduated every 15° off the cardinals, four stubs — emitted ONCE as path data and rendered twice: rasterised into this bake through Path2D, and as the inline SVG strip below, which is the future mobile plate. A technical illustrated line object, not a brighter additive glow.",
     provenance: "The wireframe device · ADR-106's dial (copied, never imported) · ADR-025 U4",
@@ -314,7 +306,6 @@ export const RASTER_VARIANTS: readonly FaceVariant[] = [
     face: "raster-bodies",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "THE RECORD AS FUSED VOLUMES. The same four structures, every one of them turned into a body: the radiant's source a large ball with its room as small ones; the route a worm of fused balls along the walk, no line anywhere; the mesh's reached nodes one lumpy body, the person-led nodes small balls that touch nothing; the table eight balls fused into a ring. Metaballs, shaded from one light, faded with depth. The marks are the record's own.",
     provenance: "serviceFigures · the HORSE's shaded form · the particle body",
@@ -325,7 +316,6 @@ export const RASTER_VARIANTS: readonly FaceVariant[] = [
     face: "raster-solids",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "FOUR PRIMITIVE BODIES, each the structure's claim as a solid: keynote a sphere under one light (one source, the room lit from it, the terminator the frame's reach); workshop a torus (one loop walked end to end); embedded the house's own chamfered slab, TR + BL (a configuration is a machined object); home session eight spheres fused into a ring (the table). No diagram, no line — a form and its shading.",
     provenance: "The wireframe device · the corner law's own slab · the armillary rings",
@@ -336,7 +326,6 @@ export const RASTER_VARIANTS: readonly FaceVariant[] = [
     face: "raster-knots",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "ONE FAMILY, FOUR MEMBERS: a torus knot per service — (1,3) · (2,3) · (3,4) · (2,7) — as a thick tube shaded from one light. The loop is the house's own canon; the crossings are the variable, and the four read as a set because the vocabulary is one tube at one thickness. The most 'object' of the three rows, and the least tied to what a service does.",
     provenance: "The Arc as a loop · the wireframe orbits · the gold armillary",
@@ -368,7 +357,6 @@ export const LATTICE_VARIANTS: readonly FaceVariant[] = [
     figureInk: "gold",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "THE SOLIDS, THROWN UP FROM THE CARD. The same four bodies as the raster's R3 — a sphere under one light, a torus, the house's chamfered slab, eight spheres fused into a ring — voxelised on the raster's grid and floated in front of the face as a lattice of glyph sprites. Head-on it reads as the character matrix; as the ring turns the depth opens. The wireframe orbit sphere and the device box from the reference folder, in this house's material.",
     provenance:
@@ -382,7 +370,6 @@ export const LATTICE_VARIANTS: readonly FaceVariant[] = [
     figureInk: "gold",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "V5's growth rule, grown OUT of the card: every root on the face, every branch leaning toward the viewer, forking by generation, the tips lettered in gold. Keynote one root fanning six primaries wide (the radiant as growth); workshop one vine with short side buds (the route); embedded eight primaries, dense (the mesh); home session eight short shrubs on a ring (the table). The particle body on its platform, as a tree.",
     provenance: "V5 · Dendrite (2026-08-30) · the teleport figure · figureFields.dendriteBody",
@@ -395,7 +382,6 @@ export const LATTICE_VARIANTS: readonly FaceVariant[] = [
     figureInk: "gold",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "A HEIGHTFIELD ON THE CARD — the isometric terrain reference's grammar. Keynote one peak with radial ridges; workshop a broad ridge winding across and rising toward its exit; embedded a plateau with three mounds where the seats sit; home session a crater rim around a flat floor. Protrudes by construction: a relief only ever stands on its ground.",
     provenance: "The ZERO terrain still · figureFields.reliefBody",
@@ -408,7 +394,6 @@ export const LATTICE_VARIANTS: readonly FaceVariant[] = [
     figureInk: "gold",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "The raster's torus knots as a lattice in front of the card — the row that most needs the depth, since a knot is a knot only when its crossings are seen to cross.",
     provenance: "R4 · Knots · figureFields.knotBody",
@@ -439,7 +424,6 @@ export const PORTRAIT_VARIANTS: readonly FaceVariant[] = [
     face: "raster-photo",
     openPlate: false,
     pinnedTitle: "display",
-    recut: true,
     thesis:
       "THE PHOTOGRAPH ITSELF, AS GLYPHS. At rest the whole card is the raster's character matrix lettering the portrait — 78 × 76 PT Mono cells, each a glyph off the shaded ramp by the toned plate's luminance under it, normalised to the plate's own range, every third row losing light — held to a quarter of its alpha under the title band and the paragraph band so the type stays legible over it, the scrims stacked on top. HOVER resolves the photograph proper out of it: the veil plane carries the same composition baked without the glyph pass, and cells of a fixed 42 × 68 grid pop in as a damped level rises, the mosaic under them refining from 24 × 39 to full resolution — the type bands cross-fade crisp on the same clock, so the title and the paragraph never move. One subject at two densities; a resolve, not a swap. Pointer-driven and damped, the veil's own class of motion; desktop only.",
     provenance:

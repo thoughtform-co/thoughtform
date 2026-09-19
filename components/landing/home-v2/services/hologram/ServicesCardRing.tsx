@@ -761,11 +761,12 @@ export type CardFaceVariant =
   | "raster-bodies"
   | "raster-solids"
   | "raster-knots"
-  // Round four (owner, 2026-09-19: no extrusion — "a variant of raster that
-  // fills in most of the card … when you hover over it, it reveals the
-  // photos"): the PHOTOGRAPH ITSELF AS GLYPHS at rest, the photograph proper
-  // resolving out of it on hover through the veil plane (`cardReveal.ts`).
-  // ⚠ Re-opens ADR-086's photo removal on ONE lab row, by his word.
+  // THE LIVE FACE since ADR-112 (owner, 2026-09-19: no extrusion — "a variant
+  // of raster that fills in most of the card … when you hover over it, it
+  // reveals the photos"): the PHOTOGRAPH ITSELF AS GLYPHS at rest, the
+  // photograph proper resolving out of it on hover through the veil plane
+  // (`cardReveal.ts`). Reverses ADR-086's photo removal, on his read of the
+  // lab row; the phone takes the rest bake (no hover, no reveal).
   | "raster-photo";
 
 /**
@@ -924,12 +925,13 @@ const COMPOSITION: Record<string, FaceComposition> = {
     band: "poster",
     pin: "display",
   },
-  /* THE PORTRAIT RASTER (round four). A `full` band: the photograph is
-     lettered edge to edge and the SCRIMS come back with it (they exist to
-     hold copy over an image, and this is one), stacked on the raster's own
-     quiet zones (`lib/services-ring/reveal`). `faceUsesPhoto` is true here,
-     so all three of ADR-086's silent consumers are consumers again on this
-     row: the fetch fires, the veil plane carries the reveal, the band scrims. */
+  /* THE PORTRAIT RASTER — THE LIVE FACE (ADR-112, 2026-09-19). A `full`
+     band: the photograph is lettered edge to edge and the SCRIMS come back
+     with it (they exist to hold copy over an image, and this is one), stacked
+     on the raster's own quiet zones (`lib/services-ring/reveal`).
+     `faceUsesPhoto` is true here, so all three of ADR-086's silent consumers
+     are consumers again: the fetch fires (342 kB of portraits, painted now),
+     the veil plane carries the reveal, the band scrims. */
   "raster-photo": {
     viz: "raster-photo",
     title: "top-centre",
@@ -1174,9 +1176,16 @@ function bakeCardFace(
     // the animatable VEIL plane above this face (Update 3), so hovering a
     // card can resolve the feed exactly like the DOM plate's
     // `[data-state="open"]:hover` did. See buildVeilTexture.
-    const scale = Math.max(BAKE_W / img.naturalWidth, BAKE_H / img.naturalHeight);
-    const dw = img.naturalWidth * scale;
-    const dh = img.naturalHeight * scale;
+    /* ⚠ `fit`, NOT `scale` — this local SHADOWED the function's own `scale`
+       (the phone's 0.5 bake) for months without consequence, until the
+       portrait raster passed "scale" on to `applyGlyphRaster` and got the
+       cover fit instead: the phone's card rastered its top-left QUARTER and
+       kept the photograph on the rest, split on a hard line. Found on the
+       phone still (ADR-112); the desktop bakes at 1.0 on both, so no desktop
+       still could show it. */
+    const fit = Math.max(BAKE_W / img.naturalWidth, BAKE_H / img.naturalHeight);
+    const dw = img.naturalWidth * fit;
+    const dh = img.naturalHeight * fit;
     ctx.drawImage(img, (BAKE_W - dw) / 2, (BAKE_H - dh) / 2, dw, dh);
 
     // Plate tone treatment (LUT pass — gold plate in dark, parchment
@@ -3010,7 +3019,11 @@ export function ServicesCardRing({
             depthTest: true,
             blending: THREE.NormalBlending,
             toneMapped: false,
-            visible: faceUsesPhoto(faceVariant),
+            /* The dot-matrix strip is the PHOTOGRAPH's treatment. On the
+               portrait raster it would be a second screen over the glyphs —
+               which is what this branch is on the PHONE, where the reveal is
+               off (ADR-112: the phone takes the rest bake ALONE). */
+            visible: faceUsesPhoto(faceVariant) && faceVariant !== "raster-photo",
           })
       ),
     [veilTexture, faceVariant, plates, revealMaterials]

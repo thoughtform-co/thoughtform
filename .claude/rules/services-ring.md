@@ -17,7 +17,8 @@ component you can edit in isolation.
 
 **Read first**
 
-- [ADR-086: The services card carries the work, not the practitioner](../sentinel/decisions/086-services-card-carries-the-work.md) — the LIVE face since 2026-08-30: `card`, the constellation drawing (one cloud, four edge rules) on the centred arrangement with the title pinned to display. ⚠ **Three things keyed off the photograph and none of them errors without one** — the fetch, the veil and the scrims all read `faceUsesPhoto` now; see §The card carries the work below
+- ⚠ [ADR-112: The portrait raster, and the four services](../sentinel/decisions/112-the-portrait-raster-and-the-four-services.md) — **THE LIVE FACE since 2026-09-19 (owner): `raster-photo`** — the photograph itself as glyphs at rest, resolving into the photograph on hover through the VEIL PLANE; and the FOUR SERVICES re-cut: Keynote · Workshop · **Embedded** (Advisory folded in) · **Home session**. See §The portrait raster below
+- [ADR-086: The services card carries the work, not the practitioner](../sentinel/decisions/086-services-card-carries-the-work.md) — the face from 2026-08-30 to 2026-09-19: `card`, the constellation drawing (one cloud, four edge rules) on the centred arrangement with the title pinned to display. Superseded on the FACE by ADR-112; the title datum, `faceUsesPhoto` and its finding still bind. ⚠ **Three things keyed off the photograph and none of them errors without one** — the fetch, the veil and the scrims all read `faceUsesPhoto`; see §The card carries the work below
 - ⚠ [ADR-108: The ring on phones](../sentinel/decisions/108-the-ring-on-phones.md) — **PROPOSED (2026-09-16), shipped behind `SERVICES_CARD_RING_MOBILE`, the owner's DEVICE read is the gate.** The same ring in the same canvas on the phone rung: the corridor's ambient hold engages on phones, a sticky BAND in `ServicesStage` is the ring's seat and clock, the ring draws at a phone profile (half bake, no drawer, no hover, the scale SOLVED at the front card's depth). ⚠ **[ADR-109](../sentinel/decisions/109-the-services-beat-on-a-phone.md) (same day, owner) MAKES THE BAND THE COMPOSITION** — title · seat · paragraph in one screen, the ring fitted to the measured seat, no plates on the rung. ⚠ **[ADR-110](../sentinel/decisions/110-the-card-turns-over.md) (same day, owner) MAKES THE OPEN STATE THE CARD'S OWN BACK** — a tap turns the card π about its Y and a per-card back plane carries the spec, baked lazily at 0.75 through the new `ringType.ts` ramp and fit-solved by `backFace.ts`; ADR-109's DOM sheet lasted a day. See §The ring on phones below
 - [ADR-029: Services card ring](../sentinel/decisions/029-services-card-ring.md) — the ring, and the ONE-OBJECT guardrail
 - [ADR-050: Card face + in-canvas drawer](../sentinel/decisions/050-services-card-face.md) — the tight face, the drawer, the promotion
@@ -51,11 +52,82 @@ ref module free of Three/Fiber/Drei so the landing DOM import boundary does not
 regress. The seam is disabled at 961–1100 and on every
 mobile/PRM/corridor-fallback/flag-off path.
 
-## The card carries the work (ADR-086, live)
+## The portrait raster (ADR-112, live)
 
-The face is `card`, not `tight`: a drawn constellation where the photograph
-used to be. Three components and no more — a title, a paragraph, a
-visualization (owner's own constraint).
+The face is `raster-photo`: the photograph itself, as glyphs, resolving into
+the photograph on hover. Four lab rounds in one day led here (materials →
+bodies → the lattice → "no extrusion … a raster that fills most of the card
+… on hover it reveals the photos"); the owner read the row live and promoted
+it with the four services it was baked on.
+
+- **The rest face** is `cardViz.applyGlyphRaster` over the toned plate: 78 × 76
+  PT Mono cells on the raster's 18px pitch, each a glyph off the shaded ramp
+  by the cell's mean luminance, NORMALISED to the plate's 5th–98th percentile
+  (one gamma cannot serve the gold plate's crushed blacks and the parchment
+  print's lifted ones), every third row losing light. ⚠ **A PRINT INVERTS**
+  (`FacePalette.print`): the first light still was a negative. ⚠ **The two
+  type bands are QUIET** — `RASTER_QUIET_HEAD` 300 / `_FOOT` 1060 in
+  `lib/services-ring/reveal.ts` (three-free), eased 40px into the field, at a
+  quarter alpha, with the `full` band's scrims stacked on top. The type draws
+  last. `tests/lib/services-ring-reveal.test.ts` pins that the bands clear the
+  title's second line and the paragraph's first.
+- **The reveal rides the VEIL PLANE** (ADR-050 U3's own "hover resolves the
+  photograph", verb kept, mechanism inverted: the face is the screen, the
+  plane carries the photograph). `hologram/cardReveal.ts` is a ShaderMaterial
+  over the same composition baked WITHOUT the glyph pass (`bakeCardFace`'s
+  `photoOnly` option — ⚠ never a phantom `"reveal"` variant, which five
+  predicates would accept). A FIXED 42 × 68 pop grid, a mosaic refining
+  24 × 39 → full under it, the type bands cross-fading crisp, all off one
+  damped level at `REVEAL_DAMP_RATE` 4.5/s (slower than the veil's 7 so the
+  mosaic is seen refining). ⚠ **`texture2DGradEXT` with the ORIGINAL uv's
+  derivatives**, or every cell border picks a coarse mip and draws a
+  hairline. ⚠ **`.opacity` on a ShaderMaterial is a silent no-op** — the loop
+  keys on the VARIANT (`revealMaterialsRef`, null elsewhere) and writes
+  through `driveRevealMaterial` in the material's module (which is what holds
+  the lint budget: one warning per ref-derived local a property is written
+  on). `uOpacity` is held at 0 while `uMap` is null; an unbound sampler reads
+  opaque.
+- ⚠ **`bakeCardFace`'s `drawn` is `!faceUsesPhoto(variant)`**, never the
+  two-term expansion it was: a third photographed viz was "drawn" and baked
+  the constellation under nothing, silently.
+- **The phone takes the rest bake** (no hover, no reveal; the tap turns the
+  card over). It FETCHES the four portraits now — 342 kB, a cost ADR-109 had
+  counted as absent — and its face is unread on a device. Keeping the phone
+  on `card` was refused: the constellation's `guided-build` drawing is the
+  SURVEY, which means Advisory's person-led work, under the Home session.
+  ⚠ **`bakeCardFace`'s cover fit is `fit`, never `scale`** — as `scale` it
+  shadowed the bake-scale parameter and the phone rastered a QUARTER of its
+  canvas over the photograph (the first phone still). ⚠ The fallback veil is
+  HIDDEN on `raster-photo` (its dots are the photograph's treatment, a second
+  screen over glyphs). **A bake that scales is verified at the scale it ships
+  at** — `scripts/capture-services-mobile.mjs`, not the lab.
+- **Every path keys on `faceVariant === "raster-photo"`**: the bake branch,
+  the reveal bake (no setState otherwise), the veil-material swap (a stable
+  `null` dep on every other face), the loop's write. The v8 face was
+  pixel-diffed before and after: only the scroll-clocked backdrop differed.
+- **The four services** (`servicePlateData.ts` / `serviceData.ts`): Keynote ·
+  Workshop verbatim; **Embedded** — chip is the doctrine's flagship word,
+  ADR-111's title stays, the leadership altitude (Advisory's standing read)
+  enters as the third workstream's own bullet and an include; **Home
+  session** on the `guided-build` slot — six to eight people at the owner's
+  table in Antwerp for one morning, `Reserve a seat`, the slot's own
+  `strategic` photograph. ⚠ **NO DIGIT ON THE HOME SESSION** (ops prices it
+  per seat; `tests/lib/services-copy.test.ts` bans digits outright, the feed
+  label's slot ordinal excepted) and the fit is solved on production by the
+  same test. The designations (AT THE TABLE · THE ARGUMENT · THE SKILL ·
+  NAVIGATE), the scan note and the smoke's role-name pins moved with the
+  chips; the lab's `serviceRecut` module dissolved — no alias.
+- Dials left for the owner's read: the rest raster's base alpha (dim in
+  dark, 15–41 % band coverage), the scan cadence, the ink (the cell's toned
+  colour is one line away).
+
+## The card carries the work (ADR-086, 2026-08-30 → 2026-09-19)
+
+⚠ **Superseded on the FACE by ADR-112 above** — the face was `card`, a drawn
+constellation where the photograph used to be, three components and no more
+(a title, a paragraph, a visualization — owner's own constraint). What
+survives: the title datum off the chit, the `faceUsesPhoto` predicate and its
+three consumers, the `card` face itself as the lab's V8.
 
 - ⚠ **`faceUsesPhoto(variant)` IS ONE PREDICATE BECAUSE THREE THINGS READ IT,
   AND ALL THREE FAIL SILENTLY.** The face bake is not the plate photo's only
@@ -96,18 +168,21 @@ imperfect. ⚠ **THE TABLE IS THE RECORD AND THE PROSE DOES NOT COUNT** — it s
 wrong (ADR-111). A number in a sentence beside a list is a number nobody
 updates:
 
-| File                            | Owns                                                                                            |
-| ------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `unifiedServicesInstrument.ts`  | the flag (`SERVICES_CARD_RING`, `SERVICES_CARD_DRAWER`)                                         |
-| `CorridorArmillary.tsx`         | mounts the ring; passes `faceVariant` / `openDrawer`                                            |
-| `ServicesStage.tsx`             | owns open state; the production `openPlateRef` writer                                           |
-| `ServicesRingHitAreas.tsx`      | every hit target + the sr-only copy of baked text                                               |
-| `ServicesDesignationLayer.tsx`  | callout occlusion against each published card rect                                              |
-| `BrandmarkPhysicsCoreActor.tsx` | publishes `rigPointerYawRef` — the rig yaw the open pair cancels (ADR-050, 2026-07-27)          |
-| `casefile/ServicesCasefile.tsx` | the proof casefile that holds the front of the runway (ADR-056)                                 |
-| `useCorridorExitScroll.ts`      | the dock gate — on the phone rung `mobile` is `≤960 && !ringMobile` (ADR-108)                   |
-| `ringCtaBox.ts`                 | the bake dims AND the phone bake ratios (`BAKE_SCALE_MOBILE`, `_BACK`, `bakeSize`) — three-free |
-| `backFace.ts` · `ringType.ts`   | the phone back's rows (fit-solved) and the baked type ramp (ADR-110) — three-free               |
+| File                                     | Owns                                                                                                                       |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `unifiedServicesInstrument.ts`           | the flag (`SERVICES_CARD_RING`, `SERVICES_CARD_DRAWER`)                                                                    |
+| `CorridorArmillary.tsx`                  | mounts the ring; passes `faceVariant` / `openDrawer`                                                                       |
+| `ServicesStage.tsx`                      | owns open state; the production `openPlateRef` writer                                                                      |
+| `ServicesRingHitAreas.tsx`               | every hit target + the sr-only copy of baked text                                                                          |
+| `ServicesDesignationLayer.tsx`           | callout occlusion against each published card rect                                                                         |
+| `BrandmarkPhysicsCoreActor.tsx`          | publishes `rigPointerYawRef` — the rig yaw the open pair cancels (ADR-050, 2026-07-27)                                     |
+| `casefile/ServicesCasefile.tsx`          | the proof casefile that holds the front of the runway (ADR-056)                                                            |
+| `useCorridorExitScroll.ts`               | the dock gate — on the phone rung `mobile` is `≤960 && !ringMobile` (ADR-108)                                              |
+| `ringCtaBox.ts`                          | the bake dims AND the phone bake ratios (`BAKE_SCALE_MOBILE`, `_BACK`, `bakeSize`) — three-free                            |
+| `backFace.ts` · `ringType.ts`            | the phone back's rows (fit-solved) and the baked type ramp (ADR-110) — three-free                                          |
+| `lib/services-ring/reveal.ts`            | the portrait raster's quiet zones and the reveal's ramps (ADR-112) — three-free, read by the bake, the shader and the test |
+| `hologram/cardReveal.ts`                 | the veil plane's reveal material and its per-frame write (ADR-112)                                                         |
+| `servicePlateData.ts` · `serviceData.ts` | the four services' copy — the chips are ACCESSIBLE NAMES the smoke pins (ADR-112)                                          |
 
 `openPlateRef` has a **single-writer contract**: `ServicesStage` in production,
 `CardFaceLabShell` on the lab route. Never add a third.

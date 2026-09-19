@@ -1,9 +1,12 @@
-# Services figures — four services, three materials (lab pass, 2026-09-19)
+# Services figures — four services, four rounds (2026-09-19)
 
-The `#services` cards' visuals, explored as three holographic materials on ONE
-figure record, on the re-cut four services. Lab only: nothing on `/` moves
-until the owner has read this live. No ADR yet; one follows the winning
-direction (the BOARD-archetype / config-lab precedent).
+The `#services` cards' visuals, explored in four lab rounds in one day on the
+re-cut four services. ⚠ **ROUND FOUR WON AND IS LIVE** — the portrait raster
+(`?v=portrait`) is the homepage's face and the re-cut four are production's
+record since [ADR-112](../../../sentinel/decisions/112-the-portrait-raster-and-the-four-services.md)
+(owner: "ok love it deploy this to our homepage"). The earlier rounds stay in
+the lab as the comparison; every row now bakes production's copy (the lab's
+`serviceRecut` module dissolved into `servicePlateData` / `serviceData`).
 
 ```
 http://localhost:3003/test/services-card-face-lab?v=raster
@@ -270,11 +273,12 @@ agreed. `ringParkProgress(i)` in `ringMath.ts` is the settled park now
    the desktop), and at what density at rest — dim and processed as shot, or
    louder?
 
-## Not in this pass
+## Promoted (ADR-112, same day)
 
-Promotion of the re-cut copy into `servicePlateData.ts` / `serviceData.ts`
-(and with it the a11y-name pins, designations, scan notes, the rail verb),
-the strategy skill's own record of the fold, the mobile plate's photo for the
-home session (the lab's `strategic` stand-in is a lab record; production's
-plate still has none), the portrait raster on the phone (no hover — the rest
-bake alone, unread), an ADR (follows a win).
+The re-cut copy is in `servicePlateData.ts` / `serviceData.ts` with the
+designations, the scan note, the rail verb and the smoke's role-name pins
+moved with it; the home session carries the slot's own `strategic`
+photograph; both `CorridorArmillary` mounts pass `raster-photo`. Still open:
+the strategy skill's own record of the fold (another repo), the phone's face
+on a device (it takes the rest bake and fetches the four portraits), and the
+dials above.

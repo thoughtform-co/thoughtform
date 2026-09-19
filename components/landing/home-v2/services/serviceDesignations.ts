@@ -8,7 +8,7 @@
  *   Keynote  → the frame (SHARED FRAME, LIVE DEMOS, SHARED LANGUAGE, ...)
  *   Workshop → the material (REAL BACKLOG, ENCODED SKILLS, ...)
  *   Embedded → the configuration (THREE STAGES, YOUR OWN KEYS, TRAINED PEOPLE, ...)
- *   Advisory → the read (AI STRATEGY, WHERE TO INVEST, TESTED LIVE, ...)
+ *   Home session → the table (AT THE TABLE, THE ARGUMENT, THE SKILL, ...)
  *
  * Copy is intentionally accessible (business terms, not internal
  * codenames — no Vesper / Heimdall / etc. per the external-evidence rule
@@ -81,8 +81,8 @@ const D = (
  * 2026-07-09 remap established:
  *   keynote  slot → 01 Keynote
  *   workshop slot → 02 Workshop
- *   embedded slot → 03 Embedded AI Partner
- *   guided   slot → 04 Strategic Advisory */
+ *   embedded slot → 03 Embedded      (Advisory folded in, ADR-112)
+ *   guided   slot → 04 Home session  (ADR-112) */
 export const SERVICE_DESIGNATIONS: Record<ServiceId, readonly ServiceDesignation[]> = {
   // 01 Keynote
   keynote: [
@@ -98,7 +98,7 @@ export const SERVICE_DESIGNATIONS: Record<ServiceId, readonly ServiceDesignation
     D("lower-left-arm", "ENCODED SKILLS", "kept after we leave", "right", 24, 60),
     D("base", "ENCODE", "capture what works", "right", 36, 36),
   ],
-  // 03 Embedded AI Partner
+  // 03 Embedded
   embedded: [
     D("crown", "THREE STAGES", "each one a gate", "left", 36, -26),
     D("upper-right-arm", "YOUR OWN KEYS", "no seat to renew", "left", 24, -60),
@@ -107,11 +107,12 @@ export const SERVICE_DESIGNATIONS: Record<ServiceId, readonly ServiceDesignation
     // reads — stronger than a crown label saying it (ADR-111).
     D("base", "BUILD", "you own what runs", "right", 36, 36),
   ],
-  // 04 Strategic Advisory
+  // 04 Home session (ADR-112) — the table, the argument, the skill; the
+  // base keeps the arc designation (the session runs Navigate).
   "guided-build": [
-    D("crown", "AI STRATEGY", "the standing read", "right", 36, -26),
-    D("upper-left-arm", "WHERE TO INVEST", "and what to skip", "right", 24, -60),
-    D("lower-right-arm", "TESTED LIVE", "against real work", "left", 24, 60),
+    D("crown", "AT THE TABLE", "one morning, Antwerp", "right", 36, -26),
+    D("upper-left-arm", "THE ARGUMENT", "in full, with time", "right", 24, -60),
+    D("lower-right-arm", "THE SKILL", "by your own hand", "left", 24, 60),
     D("base", "NAVIGATE", "the operating posture", "left", 36, 36),
   ],
 };

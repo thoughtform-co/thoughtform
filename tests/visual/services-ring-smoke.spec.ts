@@ -2660,9 +2660,9 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // chip, rather than the CTA link the full face used to bake.)
     // Arrival remap (2026-07-17): the ring holds the first slot through the
     // short arrival, then rotates. `data-active-step` = the front-card index
-    // (0..3). Occupancy since the 2026-08-02 harmonization: Keynote /
-    // Workshop / Embedded AI Partner / Strategic Advisory. p=0.18 is in the
-    // arrival window → Keynote front (step 0).
+    // (0..3). Occupancy since the 2026-09-19 re-cut (ADR-112): Keynote /
+    // Workshop / Embedded / Home session. p=0.18 is in the arrival window →
+    // Keynote front (step 0).
     expect(await scrollServicesRunway(page, 0.18)).toBe(true);
     await page.waitForTimeout(1600);
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "0");
@@ -2670,23 +2670,23 @@ test.describe("Services card ring smoke (ADR-029)", () => {
       timeout: 20_000,
     });
 
-    // p=0.58 → the ring has turned two quarter-turns: the Embedded AI
-    // Partner plate is front (step 2).
+    // p=0.58 → the ring has turned two quarter-turns: the Embedded plate is
+    // front (step 2).
     expect(await scrollServicesRunway(page, 0.58)).toBe(true);
     await page.waitForTimeout(1600);
-    await expect(
-      page.getByRole("button", { name: "Open Embedded AI Partner details" })
-    ).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("button", { name: "Open Embedded details" })).toBeVisible({
+      timeout: 20_000,
+    });
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "2");
 
-    // p=0.78 → the LAST service (Strategic Advisory) is front (step 3) — its
-    // own hit target proves the rotation reached the end of the roster while
-    // the hit areas are still alive (they retire in the exit beat).
+    // p=0.78 → the LAST service (Home session) is front (step 3) — its own
+    // hit target proves the rotation reached the end of the roster while the
+    // hit areas are still alive (they retire in the exit beat).
     expect(await scrollServicesRunway(page, 0.78)).toBe(true);
     await page.waitForTimeout(1600);
-    await expect(page.getByRole("button", { name: "Open Strategic Advisory details" })).toBeVisible(
-      { timeout: 20_000 }
-    );
+    await expect(page.getByRole("button", { name: "Open Home session details" })).toBeVisible({
+      timeout: 20_000,
+    });
     await expect(page.locator(".services-stage")).toHaveAttribute("data-active-step", "3");
 
     // Exit-hold beat (ADR-030): deep in the runway the front-card index

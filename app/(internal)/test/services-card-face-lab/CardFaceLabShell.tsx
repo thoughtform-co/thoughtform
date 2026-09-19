@@ -20,7 +20,6 @@ import { FIGURE_SLOTS } from "@/lib/services-ring/serviceFigures";
 import { wireFor, wireInk } from "@/lib/services-ring/serviceWire";
 
 import { CardFaceFrame } from "./CardFaceFrame";
-import { RECUT_PLATES, RECUT_SERVICES } from "./serviceRecut";
 import {
   CANDIDATE_VARIANTS,
   FACE_VARIANTS as BASE_VARIANTS,
@@ -198,11 +197,11 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
   }, []);
 
   const variant = FACE_VARIANTS[variantIdx];
-  /* The record this row bakes: the re-cut four on the material rows, the
-     shipped four everywhere else. Ids are the same four slots either way, so
-     the park math and the ring's clock never change. */
-  const services = variant.recut ? RECUT_SERVICES : SERVICES;
-  const plates = variant.recut ? RECUT_PLATES : SERVICE_PLATES;
+  /* The record every row bakes is PRODUCTION's (ADR-112 promoted the re-cut
+     four; the lab's own copy module dissolved into it). Ids are the same four
+     slots, so the park math and the ring's clock never change. */
+  const services = SERVICES;
+  const plates = SERVICE_PLATES;
   const figure = variant.figure ?? "off";
   const figureInk: CardFigureInk = inkOverride ?? variant.figureInk ?? "ink";
 
@@ -266,7 +265,7 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
           faceVariant={variant.face}
           titleStyle={titleStyle}
           openDrawer={variant.openPlate}
-          plates={variant.recut ? plates : undefined}
+          plates={plates}
           services={services}
           figure={figure}
           figureInk={figureInk}
@@ -281,7 +280,7 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
         onCloseService={onCloseService}
         onSelectService={onSelectService}
         onReplayReady={onReplayReady}
-        plates={variant.recut ? plates : undefined}
+        plates={plates}
       />
 
       {/* ── Lab console ─────────────────────────────────────────────── */}
@@ -395,10 +394,8 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
         </div>
 
         {/* THE RECORD (2026-09-19): the front card's copy, readable off the
-            page. On a material row this is the re-cut four — the strings the
-            owner is being asked to read before any of them moves into
-            production data. */}
-        {variant.recut && (
+            page — production's strings since ADR-112, on every row. */}
+        {
           <dl className="scfl-record" aria-label="The front card's record">
             <div className="scfl-record__row">
               <dt>Chip</dt>
@@ -429,7 +426,7 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
               <dd>{activePlate.ctaLabel}</dd>
             </div>
           </dl>
-        )}
+        }
 
         {/* THE WIRE STRIP: the same path strings the bake rasterises, as
             inline SVG — one source, two surfaces. */}
