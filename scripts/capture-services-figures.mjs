@@ -8,7 +8,13 @@
  *
  *   node scripts/capture-services-figures.mjs
  *   node scripts/capture-services-figures.mjs --v raster,wire --themes dark --vp 1920x1247
+ *   node scripts/capture-services-figures.mjs --v portrait --hover --tag portrait
  *   node scripts/capture-services-figures.mjs --headless      # SwiftShader, for a machine with no display
+ *
+ * `--hover` (round four, the portrait raster): after the rest still the
+ * pointer moves to the front card's centre and two more stills follow — the
+ * resolve mid-way (~150ms, the damped level ≈ 0.49) and resolved (~900ms,
+ * ≈ 0.98). The sheet then lays STATES down and cards across.
  *
  * HEADED BY DEFAULT: the lab is the real WebGL ring under a bloom pass, and
  * a headless SwiftShader context renders it slowly and not always faithfully
@@ -50,6 +56,9 @@ const VIEWPORTS = argOf("--vp", "1600x1000,1920x1247")
   .split(",")
   .map((s) => s.split("x").map(Number));
 const HEADLESS = has("--headless");
+const HOVER = has("--hover");
+/** The states each card is shot in — one at rest, three under `--hover`. */
+const STATES = HOVER ? ["rest", "hover-mid", "hover"] : ["rest"];
 
 /** The four slots, in the ring's order. The park is the RING's own
  *  (`ringParkProgress`, reached through the lab's `?svc=` deep link) — a
@@ -117,7 +126,7 @@ const report = [];
 for (const [vw, vh] of VIEWPORTS) {
   for (const theme of THEMES) {
     const sheetCells = [];
-    for (const variant of VARIANTS) {
+    for (const [vIdx, variant] of VARIANTS.entries()) {
       for (let i = 0; i < SLOTS.length; i++) {
         const ctx = await browser.newContext({
           viewport: { width: vw, height: vh },
@@ -193,10 +202,37 @@ for (const [vw, vh] of VIEWPORTS) {
             errors.length ? `  ⚠ ${errors.length} error(s): ${errors[0]}` : ""
           }`
         );
-        sheetCells.push({ variant, slot: SLOTS[i], file: cardFile, w: clip.width, h: clip.height });
+        sheetCells.push({
+          variant,
+          slot: SLOTS[i],
+          state: "rest",
+          order: vIdx * STATES.length,
+          file: cardFile,
+        });
+        if (HOVER) {
+          /* The reveal is pointer-driven and damped (`REVEAL_DAMP_RATE`): the
+             pointer lands on the card's centre and the two stills read the
+             level where the clock has it, frame-phase jitter and the
+             screenshot's own latency included — a mid still is ≈ 0.49, never
+             exactly. The pick runs whenever the ring is parked, which the lab
+             pins. */
+          await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+          await page.waitForTimeout(150);
+          const midFile = path.join(dir, `${variant}-${SLOTS[i]}-hover-mid.png`);
+          await page.screenshot({ path: midFile, clip });
+          await page.waitForTimeout(750);
+          const hoverFile = path.join(dir, `${variant}-${SLOTS[i]}-hover.png`);
+          await page.screenshot({ path: hoverFile, clip });
+          sheetCells.push(
+            { variant, slot: SLOTS[i], state: "hover-mid", order: vIdx * STATES.length + 1, file: midFile },
+            { variant, slot: SLOTS[i], state: "hover", order: vIdx * STATES.length + 2, file: hoverFile }
+          );
+        }
         await ctx.close();
       }
     }
+    // States down, cards across: every row is one variant in one state.
+    sheetCells.sort((a, b) => a.order - b.order || SLOTS.indexOf(a.slot) - SLOTS.indexOf(b.slot));
 
     /* The contact sheet: materials down, cards across, one per theme. Every
        cell is scaled to one height so the four cards read in a row. */
@@ -209,7 +245,7 @@ for (const [vw, vh] of VIEWPORTS) {
       })
     );
     const cols = SLOTS.length;
-    const rows = VARIANTS.length;
+    const rows = VARIANTS.length * STATES.length;
     const cellW = Math.max(...cells.map((c) => c.w));
     const gap = 24;
     const labelH = 28;
@@ -224,7 +260,9 @@ for (const [vw, vh] of VIEWPORTS) {
       const top = gap + r * (cellH + labelH + gap) + labelH;
       composite.push({ input: c.buf, left, top });
       labels.push(
-        `<text x="${gap + col * (cellW + gap)}" y="${top - 10}" font-family="PT Mono, monospace" font-size="12" letter-spacing="1.5" fill="#caa554">${c.variant.toUpperCase()} · ${c.slot.toUpperCase()}</text>`
+        `<text x="${gap + col * (cellW + gap)}" y="${top - 10}" font-family="PT Mono, monospace" font-size="12" letter-spacing="1.5" fill="#caa554">${c.variant.toUpperCase()} · ${c.slot.toUpperCase()}${
+          c.state === "rest" ? "" : ` · ${c.state.toUpperCase()}`
+        }</text>`
       );
     });
     const svg = Buffer.from(

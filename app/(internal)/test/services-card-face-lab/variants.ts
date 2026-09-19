@@ -415,5 +415,37 @@ export const LATTICE_VARIANTS: readonly FaceVariant[] = [
   },
 ];
 
+/**
+ * THE PORTRAIT RASTER (owner, 2026-09-19, round four, on reading the
+ * lattice: "I don't think I want the extrusion effect. What I actually want is
+ * a variant of raster that fills in most of the card but doesn't make the
+ * title and the bottom paragraph illegible … when you hover over it, it
+ * reveals the photos. In v0 shipped, we had photos of myself. Maybe we can
+ * restore that, but only have them revealed when you hover over it, with some
+ * sort of pixelated effect"; asked what the rest raster is made of: "the
+ * photograph itself, as glyphs").
+ *
+ * ⚠ THIS ROW RE-OPENS ADR-086's PHOTO REMOVAL, on one lab row, by his word.
+ * The defence is the reference board's own second move — V3 Halftone's
+ * reading: the person stays as MATERIAL (processed into the grammar,
+ * recognisable, not a headshot), and the photograph proper appears only under
+ * the hand. All three of ADR-086's silent consumers are consumers again here:
+ * the fetch fires, the veil plane is repurposed, the `full` band scrims.
+ */
+export const PORTRAIT_VARIANTS: readonly FaceVariant[] = [
+  {
+    id: "portrait",
+    label: "R5 · Portrait",
+    face: "raster-photo",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "THE PHOTOGRAPH ITSELF, AS GLYPHS. At rest the whole card is the raster's character matrix lettering the portrait — 78 × 76 PT Mono cells, each a glyph off the shaded ramp by the toned plate's luminance under it, normalised to the plate's own range, every third row losing light — held to a quarter of its alpha under the title band and the paragraph band so the type stays legible over it, the scrims stacked on top. HOVER resolves the photograph proper out of it: the veil plane carries the same composition baked without the glyph pass, and cells of a fixed 42 × 68 grid pop in as a damped level rises, the mosaic under them refining from 24 × 39 to full resolution — the type bands cross-fade crisp on the same clock, so the title and the paragraph never move. One subject at two densities; a resolve, not a swap. Pointer-driven and damped, the veil's own class of motion; desktop only.",
+    provenance:
+      "HORSE 2026 · V3 Halftone's reading of ADR-086 · the veil plane (ADR-050 U3), repurposed",
+  },
+];
+
 /** The two inks the console offers on any figure row. */
 export const FIGURE_INKS = ["ink", "gold"] as const;

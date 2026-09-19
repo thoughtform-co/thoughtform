@@ -33,6 +33,7 @@
 import { sampleShape } from "@/lib/brandmark/sampleShape";
 import { BRANDMARK_FULL_PATHS, BRANDMARK_SHAPE_KEYS } from "@/lib/brandmark/shapes";
 import { HOLO_LIGHT, bodyFor, type Field, type FieldMark } from "@/lib/services-ring/figureFields";
+import { RASTER_SKIP_LUM, rasterQuiet } from "@/lib/services-ring/reveal";
 import { setBakeType } from "@/lib/services-ring/ringType";
 import { FIGURE_INK, figureFor, isFigureSlot, near } from "@/lib/services-ring/serviceFigures";
 import { wireFor, wireInk } from "@/lib/services-ring/serviceWire";
@@ -1431,4 +1432,107 @@ export function applyHalftone(
       ctx.fillRect(cx + off, cy + off, size, size);
     }
   }
+}
+
+/**
+ * Re-letter whatever is already on the canvas as a CHARACTER RASTER — the
+ * photograph itself, as glyphs (lab round four, 2026-09-19; owner: "a variant
+ * of raster that fills in most of the card but doesn't make the title and the
+ * bottom paragraph illegible … when you hover over it, it reveals the photos").
+ *
+ * The halftone's move one grammar over: every cell of the raster's own PT
+ * Mono grid (`RASTER_PX`, 0.6 em wide — 78 × 76 cells on the face) letters one
+ * glyph off the shaded ramp by the toned plate's mean luminance under it, so
+ * the portrait is recognisable at rest but processed into the same matrix the
+ * figure rows letter in (the HORSE reference; ADR-086's own allowance for
+ * photography that stays as MATERIAL). On hover the veil plane resolves the
+ * photograph proper out of it (`cardReveal.ts`) — one subject at two
+ * densities, so the reveal reads as a resolve and not a swap.
+ *
+ * Luminance is NORMALISED to the plate's own range (5th … 98th percentile of
+ * the cells) before the ramp, so the full ramp is spent whatever the LUT did
+ * to the blacks — the gold plate crushes them, the parchment print lifts them
+ * to 30, and one fixed gamma cannot serve both. Cells under `RASTER_SKIP_LUM`
+ * letter nothing, so the void stays void where the photograph is dark.
+ *
+ * The quiet zones (`rasterQuiet`, `lib/services-ring/reveal`) hold the two
+ * type bands at a quarter of their alpha; the scrims the bake draws after
+ * this stack on top. The ink is the house raster's reading ink, so the hover
+ * shifts a monochrome scan into the gold plate; the cell's toned colour (a
+ * continuous reveal) is `pal.ink` → the sampled rgb, one line away.
+ *
+ * `invert` is the PRINT's reading: ink where the photograph is dark, the paper
+ * left bare where it is bright. Without it the parchment face lettered a
+ * NEGATIVE — the figure a void inside a lettered background — because the
+ * parchment LUT puts the paper at the top of the range (the first light
+ * still, 2026-09-19). The gold plate lights where it is bright and keeps the
+ * positive reading.
+ *
+ * Reads the CANVAS's pixels (the phone's half-bake under `ctx.scale`) and
+ * letters in BAKE px — `applyHalftone`'s contract, stated.
+ */
+export function applyGlyphRaster(
+  ctx: CanvasRenderingContext2D,
+  canvasW: number,
+  canvasH: number,
+  scale: number,
+  pal: VizPalette,
+  opts?: { invert?: boolean }
+): void {
+  const bakeW = canvasW / scale;
+  const bakeH = canvasH / scale;
+  const src = ctx.getImageData(0, 0, canvasW, canvasH);
+  const px = src.data;
+
+  const cols = Math.max(8, Math.round(bakeW / (RASTER_PX * 0.6)));
+  const rows = Math.max(8, Math.round(bakeH / RASTER_PX));
+  const cellW = bakeW / cols;
+  const cellH = bakeH / rows;
+
+  // Pass one: every cell's mean luminance, in canvas px, every other pixel.
+  const lums = new Float32Array(cols * rows);
+  for (let r = 0; r < rows; r++) {
+    const y0 = Math.floor(r * cellH * scale);
+    const y1 = Math.min(canvasH, Math.ceil((r + 1) * cellH * scale));
+    for (let c = 0; c < cols; c++) {
+      const x0 = Math.floor(c * cellW * scale);
+      const x1 = Math.min(canvasW, Math.ceil((c + 1) * cellW * scale));
+      let sum = 0;
+      let n = 0;
+      for (let y = y0; y < y1; y += 2) {
+        for (let x = x0; x < x1; x += 2) {
+          const i = (y * canvasW + x) * 4;
+          sum += 0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2];
+          n++;
+        }
+      }
+      lums[r * cols + c] = n ? sum / n / 255 : 0;
+    }
+  }
+  const sorted = Float32Array.from(lums).sort();
+  const lo = sorted[Math.floor(sorted.length * 0.05)];
+  const hi = Math.max(lo + 1e-3, sorted[Math.floor(sorted.length * 0.98)]);
+
+  // Pass two: wipe to ground, letter each cell.
+  ctx.fillStyle = pal.ground;
+  ctx.fillRect(0, 0, bakeW, bakeH);
+  setBakeType(ctx, { family: "mono", px: RASTER_PX, track: 0 });
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (let r = 0; r < rows; r++) {
+    const py = (r + 0.5) * cellH;
+    const quiet = rasterQuiet(py);
+    for (let c = 0; c < cols; c++) {
+      const norm = Math.min(1, Math.max(0, (lums[r * cols + c] - lo) / (hi - lo)));
+      const lum = opts?.invert ? 1 - norm : norm;
+      if (lum < RASTER_SKIP_LUM) continue;
+      const idx = Math.min(VOL_RAMP.length - 1, Math.floor(Math.pow(lum, 0.8) * VOL_RAMP.length));
+      let alpha = (0.3 + 0.7 * lum) * quiet;
+      if (r % VOL_SCAN_EVERY === VOL_SCAN_EVERY - 1) alpha *= VOL_SCAN_KEEP;
+      ctx.fillStyle = pal.ink(alpha);
+      ctx.fillText(VOL_RAMP[idx], (c + 0.5) * cellW, py);
+    }
+  }
+  ctx.textAlign = "start";
+  ctx.textBaseline = "alphabetic";
 }

@@ -97,9 +97,18 @@ export const RECUT_PLATES: readonly ServicePlate[] = [
     includes: ["Six to eight seats", "One morning", "Antwerp", "NL / EN"],
     ctaLabel: "Reserve a seat",
     ctaHref: "#contact",
-    // No photograph: the mobile plate's schematic fallback renders until one
-    // is supplied (and whether mobile keeps photographs at all is ADR-086's
-    // open question).
+    /* The slot's own asset as the LAB's STAND-IN (round four — the portrait
+       raster letters the photograph and resolves it on hover, so a card
+       without one has nothing to letter). `strategic` is the one shot at a
+       table, which is what a home session is; the alt says what the picture
+       shows, not what the old service was. Whether mobile keeps photographs
+       at all is still ADR-086's open question. */
+    photo: {
+      webp: "/images/services/strategic.webp",
+      jpg: "/images/services/strategic.jpg",
+      alt: "Vince Buyssens at the table, mid-session",
+      position: "50% 32%",
+    },
   },
 ];
 

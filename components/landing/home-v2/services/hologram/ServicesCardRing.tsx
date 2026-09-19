@@ -53,7 +53,8 @@ import * as THREE from "three";
 
 import { resolveScenePalette } from "@/lib/theme/palette";
 
-import { applyHalftone, drawCardViz } from "./cardViz";
+import { createRevealMaterial, driveRevealMaterial } from "./cardReveal";
+import { applyGlyphRaster, applyHalftone, drawCardViz } from "./cardViz";
 import {
   VOLUME_QUALITY_FLOOR,
   buildFigureAtlas,
@@ -66,6 +67,7 @@ import {
 } from "./cardFigureVolume";
 import { useQualityStore } from "@/lib/hooks/useQualityTier";
 import { bodyFor } from "@/lib/services-ring/figureFields";
+import { REVEAL_DAMP_RATE } from "@/lib/services-ring/reveal";
 import { isFigureSlot } from "@/lib/services-ring/serviceFigures";
 import { TENSOR_GOLD } from "@/lib/home-v2/goldPalette";
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
@@ -510,12 +512,19 @@ interface FacePalette {
   gold: string;
   chipFill: string;
   chipInk: string;
+  /** A PRINT letters ink where the photograph is DARK; a plate lights where
+   *  it is bright. The portrait raster (round four) inverts on this — the
+   *  first light still lettered a negative, the figure a void in a lettered
+   *  background, because the parchment LUT lifts the paper to the brightest
+   *  value on the face. */
+  print: boolean;
 }
 
 const FACE_DARK: FacePalette = {
   ground: VOID,
   scrimRgb: "5, 4, 3",
   lut: buildGoldToneLut,
+  print: false,
   goldA: (a) => `rgba(202, 165, 84, ${a})`,
   washA: (a) => `rgba(${DAWN}, ${a})`,
   ink: (a) => `rgba(${DAWN}, ${a})`,
@@ -527,6 +536,7 @@ const FACE_LIGHT: FacePalette = {
   ground: "#ece3d6",
   scrimRgb: "236, 227, 214",
   lut: buildParchmentToneLut,
+  print: true,
   goldA: (a) => `rgba(202, 165, 84, ${a})`,
   washA: (a) => `rgba(17, 15, 9, ${a})`,
   ink: (a) => `rgba(17, 15, 9, ${a})`,
@@ -750,7 +760,13 @@ export type CardFaceVariant =
   // … different shapes … volumetric"): shaded bodies, not lines.
   | "raster-bodies"
   | "raster-solids"
-  | "raster-knots";
+  | "raster-knots"
+  // Round four (owner, 2026-09-19: no extrusion — "a variant of raster that
+  // fills in most of the card … when you hover over it, it reveals the
+  // photos"): the PHOTOGRAPH ITSELF AS GLYPHS at rest, the photograph proper
+  // resolving out of it on hover through the veil plane (`cardReveal.ts`).
+  // ⚠ Re-opens ADR-086's photo removal on ONE lab row, by his word.
+  | "raster-photo";
 
 /**
  * An in-canvas FIGURE over the face (2026-09-19): `"volume"` mounts the
@@ -908,6 +924,19 @@ const COMPOSITION: Record<string, FaceComposition> = {
     band: "poster",
     pin: "display",
   },
+  /* THE PORTRAIT RASTER (round four). A `full` band: the photograph is
+     lettered edge to edge and the SCRIMS come back with it (they exist to
+     hold copy over an image, and this is one), stacked on the raster's own
+     quiet zones (`lib/services-ring/reveal`). `faceUsesPhoto` is true here,
+     so all three of ADR-086's silent consumers are consumers again on this
+     row: the fetch fires, the veil plane carries the reveal, the band scrims. */
+  "raster-photo": {
+    viz: "raster-photo",
+    title: "top-centre",
+    para: "foot-centre",
+    band: "full",
+    pin: "display",
+  },
 };
 
 const compositionOf = (v: CardFaceVariant): FaceComposition => COMPOSITION[v] ?? COMPOSITION.tight;
@@ -931,7 +960,7 @@ const compositionOf = (v: CardFaceVariant): FaceComposition => COMPOSITION[v] ??
  */
 const faceUsesPhoto = (v: CardFaceVariant): boolean => {
   const viz = compositionOf(v).viz;
-  return viz === "photo" || viz === "halftone";
+  return viz === "photo" || viz === "halftone" || viz === "raster-photo";
 };
 
 /**
@@ -1098,7 +1127,14 @@ function bakeCardFace(
   variant: CardFaceVariant = "full",
   pal: FacePalette = FACE_DARK,
   titleStyle: CardTitleStyle = "framed",
-  scale: number = 1
+  scale: number = 1,
+  /* `photoOnly` bakes the portrait raster's composition WITHOUT its glyph
+     pass — the same scrims, the same type at the same pixels, the photograph
+     under them — which is the REVEAL texture the veil plane resolves toward
+     (round four). An option and not a variant: a phantom `"reveal"` face
+     would be accepted by `isTightLayout`, `faceUsesPhoto`, `slabGeometry`,
+     `bakeCardBack` and `bakePortraitBack` alike. */
+  opts?: { photoOnly?: boolean }
 ): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   /* ADR-108: a scaled bake keeps EVERY drawing coordinate in bake px — the
@@ -1117,7 +1153,11 @@ function bakeCardFace(
 
   const comp = compositionOf(variant);
 
-  const drawn = comp.viz !== "photo" && comp.viz !== "halftone";
+  /* ⚠ THE PREDICATE, NOT ITS EXPANSION. As `viz !== "photo" && viz !==
+     "halftone"` a third photographed viz would be "drawn", and
+     `drawCardViz` falls through `LANGUAGES[…] ?? constellation` — the
+     constellation baked under nothing, silently. */
+  const drawn = !faceUsesPhoto(variant);
 
   if (drawn) {
     /* A DRAWN visualization instead of a photographed one. The photo is
@@ -1161,6 +1201,21 @@ function bakeCardFace(
        card actually shows, not the raw image. */
     if (comp.viz === "halftone") {
       applyHalftone(ctx, BAKE_W, BAKE_H, { ...pal, ground: pal.ground });
+    } else if (comp.viz === "raster-photo" && !opts?.photoOnly) {
+      /* THE PORTRAIT RASTER (round four): the toned plate re-lettered as the
+         raster's own character grid, quiet under the type bands. Reads the
+         canvas's pixels and letters in bake px — the halftone's contract
+         stated, because this face also bakes at the phone's half size. */
+      applyGlyphRaster(
+        ctx,
+        canvas.width,
+        canvas.height,
+        scale,
+        { ...pal, ground: pal.ground },
+        {
+          invert: pal.print,
+        }
+      );
     }
   } else {
     // Schematic dot-grid stand-in (the `.svc-plate__pbg--schematic` read) for
@@ -2452,6 +2507,12 @@ export function ServicesCardRing({
      drawer's three entries shift by one; the constant table is what
      production walks, byte for byte. */
   const deckIntraOrders = volumeOn ? DECK_INTRA_ORDERS_VOLUME : DECK_INTRA_ORDERS;
+  /* The portrait raster's REVEAL (round four): the veil plane carries the
+     photograph, resolving on hover. Desktop only — the phone has no hover
+     and keeps its rest bake. Every path below keys on this one const: the
+     reveal bake, the material swap, the frame loop's write. Off, each is the
+     shipped code verbatim. */
+  const revealOn = faceVariant === "raster-photo" && !mobileProfile;
   const anisotropyCap = mobileProfile ? 4 : 8;
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
@@ -2463,6 +2524,13 @@ export function ServicesCardRing({
   // ONE geometry across all four back planes — the backs are only ever
   // seen converged (the flip), so identical faces are correct and cheap.
   const [backTexture, setBackTexture] = useState<THREE.CanvasTexture | null>(null);
+  /* The REVEAL textures (round four): per card, the portrait raster's
+     composition baked without its glyph pass — null forever unless
+     `revealOn`, and null per card whose photograph failed to load (that card
+     keeps its schematic rest face and its hover does nothing). */
+  const [revealTextures, setRevealTextures] = useState<Array<THREE.CanvasTexture | null> | null>(
+    null
+  );
   // ADR-050 rev 3: per-card DRAWER faces. Unlike the deck's shared back,
   // each drawer carries its OWN service's spec, so this is a per-card array
   // like `textures`. Null until baked (and forever when `openDrawer` is off).
@@ -2917,8 +2985,21 @@ export function ServicesCardRing({
      `cardGroup.children`, so removing this child renumbers the ADR-047 deck's
      slots (`.claude/rules/services-ring.md` names it as a trap). `visible`
      skips the draw and leaves the child list alone. */
-  const veilMaterials = useMemo(
+  /* The portrait raster's REVEAL materials (round four): on that variant the
+     veil plane's material is the reveal shader, mapped to the card's reveal
+     texture as it lands. ⚠ It REPLACES the dot-matrix veil rather than
+     joining it — `faceUsesPhoto` is true on this row, so the veil would
+     otherwise sit its screen over the glyph raster, a screen door on a
+     screen door (ADR-086 §2's exact failure). Null on every other variant,
+     STABLE, so the memo below runs no more often than it did. */
+  const revealMaterials = useMemo(
     () =>
+      revealOn ? plates.map((_, i) => createRevealMaterial(revealTextures?.[i] ?? null, i)) : null,
+    [revealOn, revealTextures, plates]
+  );
+  const veilMaterials = useMemo<THREE.Material[]>(
+    () =>
+      revealMaterials ??
       plates.map(
         () =>
           new THREE.MeshBasicMaterial({
@@ -2932,8 +3013,15 @@ export function ServicesCardRing({
             visible: faceUsesPhoto(faceVariant),
           })
       ),
-    [veilTexture, faceVariant, plates]
+    [veilTexture, faceVariant, plates, revealMaterials]
   );
+  /* The frame loop writes the reveal's uniforms through a ref (the
+     `figureMaterialsRef` idiom — per-frame writes never reach a memo's own
+     value). */
+  const revealMaterialsRef = useRef<THREE.ShaderMaterial[] | null>(null);
+  useEffect(() => {
+    revealMaterialsRef.current = revealMaterials;
+  }, [revealMaterials]);
   /* ── The VOLUME figure (2026-09-19 lab pass) ─────────────────────────────
      Per-slot geometry (the record in card-local units) and per-card shader
      materials (the opacity clock is per card). The atlas lands from the face
@@ -3091,6 +3179,9 @@ export function ServicesCardRing({
     Array<{ x: number; y: number; w: number; h: number; nz: number } | null>
   >(new Array(RING_COUNT).fill(null));
   const veilLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(1));
+  /** The portrait raster's damped REVEAL level per card, 0 at rest — the
+   *  `veilLevelRef` pattern on a slower clock (`REVEAL_DAMP_RATE`). */
+  const revealLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(0));
   /* ADR-050 rev 3 removed the rev-2 `plateHideRef` channel entirely: the card
      no longer hides when its open state appears, because the open state IS
      this card now (the in-canvas drawer below). Nothing should ever hide the
@@ -3127,7 +3218,19 @@ export function ServicesCardRing({
               img = null; // schematic fallback keeps the ring whole
             }
           }
-          return bakeCardFace(plate, img, faceVariant, facePal, titleStyle, bakeScale);
+          return {
+            face: bakeCardFace(plate, img, faceVariant, facePal, titleStyle, bakeScale),
+            /* The REVEAL (round four): the same composition without the glyph
+               pass, from the same image, so the type lands on the same
+               pixels. Full size on purpose — a 0.75 twin would soften the
+               title on hover, since the bands cross-fade type over type. */
+            reveal:
+              revealOn && img
+                ? bakeCardFace(plate, img, faceVariant, facePal, titleStyle, bakeScale, {
+                    photoOnly: true,
+                  })
+                : null,
+          };
         })
       );
       if (disposed) return;
@@ -3139,7 +3242,10 @@ export function ServicesCardRing({
         texture.needsUpdate = true;
         return texture;
       };
-      setTextures(baked.map(toTexture));
+      setTextures(baked.map((b) => toTexture(b.face)));
+      // Never a setState on the production path: the state stays its
+      // initial null and every consumer's dep is stable.
+      if (revealOn) setRevealTextures(baked.map((b) => (b.reveal ? toTexture(b.reveal) : null)));
       // The volume figure's glyph atlas bakes here, after the fonts, for the
       // same reason the faces do: PT Mono or the fallback face, forever.
       if (volumeOn) setFigureAtlas(buildFigureAtlas());
@@ -3174,6 +3280,7 @@ export function ServicesCardRing({
     anisotropyCap,
     plates,
     volumeOn,
+    revealOn,
   ]);
 
   /* ── The DRAWER bake is LAZY (ADR-050 promotion, owner 2026-07-26) ────────
@@ -3314,6 +3421,7 @@ export function ServicesCardRing({
       ...(textures ?? []),
       backTexture,
       ...(drawerTextures ?? []),
+      ...(revealTextures ?? []),
       ...cardBackTextures.map((entry) => entry?.texture ?? null),
     ]) {
       if (texture && !warmedTexturesRef.current.has(texture)) queue.push(texture);
@@ -3342,7 +3450,7 @@ export function ServicesCardRing({
     return () => {
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [gl, scene, camera, textures, backTexture, drawerTextures, cardBackTextures]);
+  }, [gl, scene, camera, textures, backTexture, drawerTextures, revealTextures, cardBackTextures]);
 
   // Dispose bakes on replacement/unmount (materials/geometries are
   // declarative — R3F disposes those; the shared back material/geometry
@@ -3363,6 +3471,12 @@ export function ServicesCardRing({
       for (const texture of drawerTextures) texture.dispose();
     };
   }, [drawerTextures]);
+  useEffect(() => {
+    if (!revealTextures) return;
+    return () => {
+      for (const texture of revealTextures) texture?.dispose();
+    };
+  }, [revealTextures]);
 
   // ONE geometry + ONE material shared by the four back planes.
   const backGeometry = useMemo(
@@ -4078,10 +4192,25 @@ export function ServicesCardRing({
       // residue; everyone else restores to the full feed read. An open card
       // is force-marked hovered at the pick site above, so it holds the
       // resolved read (and its tilt) while the pointer is on its drawer.
-      const veilTarget = i === hovered ? RING_VEIL_HOVER_LEVEL : 1;
-      veilLevelRef.current[i] +=
-        (veilTarget - veilLevelRef.current[i]) * Math.min(1, delta * VEIL_DAMP_RATE);
-      veilMaterials[i].opacity = veilLevelRef.current[i] * depthO * master;
+      const revealMat = revealMaterialsRef.current?.[i];
+      if (revealMat) {
+        /* THE PORTRAIT RASTER's REVEAL (round four): the veil plane carries
+           the photograph and its level damps toward 1 under the pointer, 0
+           off it, on the reveal's own slower clock. The material's alpha is
+           the face's (`faceO`, as the figure's), held at 0 until its texture
+           is mapped — an unbound sampler reads opaque. ⚠ Keyed on the
+           VARIANT (the ref is null elsewhere), never on the material's type:
+           `.opacity` on a ShaderMaterial is a silent no-op. */
+        const revealTarget = i === hovered ? 1 : 0;
+        revealLevelRef.current[i] +=
+          (revealTarget - revealLevelRef.current[i]) * Math.min(1, delta * REVEAL_DAMP_RATE);
+        driveRevealMaterial(revealMat, revealLevelRef.current[i], faceO);
+      } else {
+        const veilTarget = i === hovered ? RING_VEIL_HOVER_LEVEL : 1;
+        veilLevelRef.current[i] +=
+          (veilTarget - veilLevelRef.current[i]) * Math.min(1, delta * VEIL_DAMP_RATE);
+        veilMaterials[i].opacity = veilLevelRef.current[i] * depthO * master;
+      }
       /* The volume figure is the face's material at every t (its alpha is
          `faceO`), held at 0 until its atlas is mapped — an unbound sampler
          reads opaque, and opaque under gold is a field of squares. `uProj`

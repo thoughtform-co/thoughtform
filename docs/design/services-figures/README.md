@@ -154,10 +154,82 @@ Sheets: `stills/1600x1000/contact-lattice-{dark,light}.png` and the same at
 (the knot and the dendrite fields are the slow ones, a few hundred
 milliseconds each on the main thread, once); nothing per frame.
 
+## Round four: the portrait raster, and the hover that resolves it (owner, same day)
+
+On reading the lattice: "I don't think I want the extrusion effect. What I
+actually want is a variant of raster that fills in most of the card but
+doesn't make the title and the bottom paragraph illegible … The cool thing is
+that when you hover over it, it reveals the photos. In v0 shipped, we had
+photos of myself. Maybe we can restore that, but only have them revealed when
+you hover over it, with some sort of pixelated effect." Asked what the rest
+raster is made of, he chose **the photograph itself, as glyphs**.
+
+```
+http://localhost:3003/test/services-card-face-lab?v=portrait
+```
+
+Hover the front card. ⚠ **This row re-opens ADR-086's photo removal**, on one
+lab row, by his word; the defence is the reference board's own second move
+(V3 Halftone's reading — the person stays as MATERIAL, the photograph proper
+only under the hand). Desktop only: the phone has no hover and keeps the rest
+bake.
+
+**The rest face** (`raster-photo`, `cardViz.applyGlyphRaster`). The whole
+card is the raster's own character matrix lettering the portrait — 78 × 76 PT
+Mono cells on the 18px pitch, each a glyph off the shaded ramp by the toned
+plate's mean luminance under it, every third row losing light. Luminance is
+NORMALISED to the plate's own 5th–98th percentile before the ramp (the gold
+plate crushes the blacks, the parchment print lifts them to 30; one gamma
+cannot serve both), cells under 0.06 letter nothing, and the two TYPE BANDS
+hold the glyphs at a quarter of their alpha (`RASTER_QUIET_HEAD` 300 /
+`RASTER_QUIET_FOOT` 1060, eased 40px into the field) with the `full` band's
+scrims stacked on top — ≈ 13 % at the title's baseline, ≈ 4 % under the
+paragraph. ⚠ **A PRINT INVERTS.** The first light still lettered a NEGATIVE
+(the figure a void inside a lettered background) because the parchment LUT
+puts the paper at the top of the range; `FacePalette.print` is the flag, and
+the raster letters ink where the photograph is dark on parchment and light
+where it is bright on the plate.
+
+**The reveal** (`hologram/cardReveal.ts`, on the ring's existing VEIL PLANE).
+The veil plane already IS the ring's "hover resolves the photograph" (ADR-050
+U3); this row keeps that contract in its verb and inverts its mechanism — the
+face is the screen, the plane carries the photograph: the same composition
+baked WITHOUT the glyph pass (`bakeCardFace`'s `photoOnly`, an option and never
+a phantom variant), so the title and the paragraph land on the same pixels in
+both textures and never move. A ShaderMaterial: cells of a FIXED 42 × 68 grid
+pop in as a damped level rises (`REVEAL_DAMP_RATE` 4.5 — ≈ 0.49 at 150ms,
+≈ 0.98 at 900ms; the veil's own class of motion under ADR-021), the mosaic
+under them refining from 24 × 39 to full resolution, the type bands
+cross-fading crisp on the same clock. ⚠ The mosaic samples with
+`texture2DGradEXT` and the ORIGINAL uv's derivatives — a `floor`'s derivatives
+are zero inside a cell and enormous at its edges, and under mips + anisotropy
+the GPU draws a blurred hairline on every cell border otherwise. Every number
+is in `lib/services-ring/reveal.ts` (three-free), pinned by
+`tests/lib/services-ring-reveal.test.ts`; the shader mirrors its two ramps
+literally (GLSL's `smoothstep`, NOT `ringMath.smootherstep`).
+
+Sheets: `stills/{1600x1000,1920x1247}/contact-portrait-{dark,light}.png` —
+states down (rest · hover-mid · hover), cards across; the capture's `--hover`.
+The home session takes the `strategic` asset (the one shot at a table) as the
+lab's stand-in.
+
+Dials, if the read wants them: the rest raster's base alpha (`0.3 + 0.7·L` —
+the dark face reads dim at 15–41 % band coverage, the scan cadence prominent
+on a portrait), the scan cadence itself (every third row × 0.55, the raster's
+law), and the ink (the house's reading ink; the cell's toned colour is one
+line away and makes the reveal continuous in hue).
+
 ## The seams that keep production byte-identical
 
 - `ServicesCardRing` gained two additive props: `plates` (default
   `SERVICE_PLATES`) and `figure` (default `"off"`).
+- Round four's paths are all keyed on `faceVariant === "raster-photo"`: the
+  bake branch, the reveal bake (no setState otherwise), the veil-material swap
+  (a stable `null` dep in production), the frame loop's write (through a ref,
+  keyed on the variant — `.opacity` on a ShaderMaterial is a silent no-op).
+  `bakeCardFace`'s `drawn` is `!faceUsesPhoto(variant)` now, the same truth
+  table for every shipped face; as the two-term expansion it was, a third
+  photographed viz would have baked the constellation under nothing.
 - `DECK_INTRA_ORDERS` has a second table, `DECK_INTRA_ORDERS_VOLUME`,
   selected by `volumeOn` — a static positional table over a conditional child
   would renumber the drawer during the #about deck flip.
@@ -194,11 +266,15 @@ agreed. `ringParkProgress(i)` in `ringMath.ts` is the settled park now
 4. The home session's copy, and whether "Home session" is the chip.
 5. The mesh's open nodes: is the person-led claim worth carrying on this card
    now that Advisory is inside it, or does the mesh close?
+6. The portrait raster: is the person back on the card (ADR-086 reversed on
+   the desktop), and at what density at rest — dim and processed as shot, or
+   louder?
 
 ## Not in this pass
 
 Promotion of the re-cut copy into `servicePlateData.ts` / `serviceData.ts`
 (and with it the a11y-name pins, designations, scan notes, the rail verb),
 the strategy skill's own record of the fold, the mobile plate's photo for the
-home session (none exists; the schematic fallback renders), a hover "resolve"
-for the raster on the existing damped veil channel.
+home session (the lab's `strategic` stand-in is a lab record; production's
+plate still has none), the portrait raster on the phone (no hover — the rest
+bake alone, unread), an ADR (follows a win).

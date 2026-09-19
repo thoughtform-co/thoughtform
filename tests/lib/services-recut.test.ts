@@ -55,11 +55,15 @@ describe("the re-cut services (lab record)", () => {
     expect(RECUT_SERVICES[2].name).toBe("Embedded");
   });
 
-  it("puts the home session on the guided-build slot, with no photograph and no digit", () => {
+  it("puts the home session on the guided-build slot, on the table photograph, with no digit", () => {
     const h = RECUT_PLATES[3];
     expect(h.id).toBe("guided-build");
     expect(h.chip).toBe("Home session");
-    expect(h.photo).toBeUndefined();
+    // Round four's stand-in: the slot's own asset (the one shot at a table),
+    // so the portrait raster has a photograph to letter on every card.
+    expect(h.photo?.jpg).toBe(SERVICE_PLATES[3].photo?.jpg);
+    expect(h.photo?.webp).toBe(SERVICE_PLATES[3].photo?.webp);
+    expect(h.photo?.alt).not.toMatch(/advisory/i);
     // Ops prices this one per seat; a card may not. No digit anywhere on its
     // COPY — the feed label's `04` is the slot's ordinal (mobile chrome), not
     // an amount, and is the one string let through.
