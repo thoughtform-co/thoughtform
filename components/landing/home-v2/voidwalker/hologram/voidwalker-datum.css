@@ -1361,10 +1361,42 @@ a.vwd__press:focus-visible .vwd__press__headline {
     height: auto;
     min-height: 260px;
   }
+  /* ⚠ EVERY ERA'S HEAD LANDS ON ONE LINE, AND THE FIGURE AND ITS DISC MOVE
+     AS ONE OBJECT (ADR-082 U28, owner 2026-09-19: "the avatars are still too
+     much down; they should be more up"). Measured before: 137–152px of empty
+     stage above the head and the disc sitting ON the band's edge, on every
+     era. The cause is where the fit lives — `.vwh__media` shrinks INSIDE a
+     slot that stays full height and is bottom-seated, so every pixel the fit
+     removes pools above the head; and each canvas carries its own headroom
+     besides (azeroth's head at 0.235 of his canvas, the Architect's at 0.048),
+     so even at fit 1 the head is a quarter of the slot down. Growing the
+     band's reserve would only make the figure smaller (its size IS the
+     slot's), which is the other half of what he asked for.
+     So the COLUMN — slot and base, one object — is lifted by exactly the
+     slack above the head, less `--vwd-head-air`: `--holo-head` is the head's
+     height above the slot's floor as a share of the slot (`fit × (1 − headY)`,
+     written by `VoidwalkerHologram` from the registry), and the slot is the
+     column less the projector base. Nothing about the layout changes — the
+     fit stays on the media, the slot stays bottom-seated, the disc stays on
+     the slot's floor and follows the feet up.
+     ⚠ A TRANSLATE, AND NOT A GRID PERCENTAGE — the first cut sized the slot
+     row `fit × 100%` and Chrome resolved the percentage as `auto` against a
+     stretched `height: auto` column, so every era measured byte-identical to
+     before while the rule looked right. A translate resolves against the box
+     it is on, which is the only definite thing here.
+     ⚠ AND THE SHARE HAS TO BE ON THE COLUMN ITSELF — a custom property never
+     inherits upward; the second cut read the slot's `--holo-fit` from its
+     parent and got 1 at every era.
+     ⚠ THE BAN ON A RUNTIME TRANSFORM IS ABOUT THE MEDIA'S CALIBRATION; this
+     moves the composition's seat and touches no pixel of the figure. §G's
+     exit transform lives on `.vwd__figure`, one level up, and never arms on
+     the phone anyway. */
   .vwd__vwh .vwh__column {
+    --vwd-head-air: 40px;
     grid-area: 1 / 1;
     height: auto;
     min-height: 0;
+    translate: 0 calc(var(--vwd-head-air) - (1 - var(--holo-head, 1)) * (100% - var(--vwh-base-h)));
   }
 
   /* Trim 4. ⚠ THIS RULE IS DELETED, and it was the single largest avoidable
@@ -1505,6 +1537,15 @@ a.vwd__press:focus-visible .vwd__press__headline {
      moving figure. */
   .vwd__chip[data-on="true"] .vwd__chip__mark {
     box-shadow: 0 0 6px rgba(var(--void-rgb), 0.9);
+  }
+  /* ⚠ A HORIZONTAL SWIPE ON THE REEL IS NEVER A PAGE PAN (ADR-082 U28). iOS
+     Safari can pan the viewport toward clipped overflow that Chromium never
+     exposes, and the track behind this window is 5 cells wide (owner, on
+     device: "the section seems to be scrollable left and right"). `pan-y`
+     keeps the vertical gesture and the taps and hands nothing horizontal to
+     the page. */
+  .vwd__band {
+    touch-action: pan-y;
   }
 }
 

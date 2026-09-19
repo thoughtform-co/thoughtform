@@ -6,6 +6,7 @@ import {
   containedHologramPlacement,
   HOLO_FIGURE_SPAN,
   holoFigureFit,
+  holoFigureHeadShare,
   holoFigureStature,
   isCharacterEraHologram,
   resolveCharacterEraHologram,
@@ -322,6 +323,26 @@ describe("ADR-082 U25 · every era paints one figure height", () => {
         6
       );
     }
+  });
+
+  it("the head share is the fitted head's height above the floor, inside the slot (ADR-082 U28)", () => {
+    for (const era of CHARACTER_ERAS) {
+      const hologram = resolveCharacterEraHologram(era);
+      const share = holoFigureHeadShare(hologram);
+      // Inside the slot, and never above the fit's own ceiling — a share past
+      // the fit would put the head outside the media it is drawn in.
+      expect(share, `${era.id} head share`).toBeGreaterThan(0);
+      expect(share, `${era.id} head share`).toBeLessThanOrEqual(holoFigureFit(hologram) + 1e-9);
+      expect(share, `${era.id} head share`).toBeCloseTo(
+        holoFigureFit(hologram) * (1 - hologram.headY),
+        12
+      );
+      // The painted figure hangs from that head line: share − stature must be
+      // the FOOT's height above the floor, which is ≥ 0 for every seated era.
+      expect(share - HOLO_FIGURE_SPAN, `${era.id} foot`).toBeGreaterThanOrEqual(-1e-9);
+    }
+    // A headless record degrades to "the whole slot", never to NaN.
+    expect(holoFigureHeadShare({ headY: Number.NaN, footY: 0.99 })).toBe(1);
   });
 
   it("a standing era's stature IS its span, so U25's arithmetic is unchanged", () => {

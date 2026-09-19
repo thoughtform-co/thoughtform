@@ -3118,3 +3118,185 @@ card **32px of height** and takes 32px off every early card's hole.
 - The figure is **376px against 458 before** — the honest cost of giving the
   band its strip and reserving two title lines. If he reads it as too small,
   the levers in order are the mast reservation, then `--vwd-band-reserve`.
+
+## Update 28 — the head line, the root clip, and the band's air (2026-09-19, owner)
+
+**Status: Accepted, pending the device read.** Four asks in one message, read
+on his phone: _"the avatars are still too much down; they should be more
+up"_, the era section _"seems to be scrollable left and right"_, on
+`#services` the paragraph _"too close to the cards … move everything a bit
+more down so it's nicely centred"_, and _"on mobile the H1 and paragraph
+should be centred"_. Plus one report this pass could not reproduce (§5).
+Every number below is measured at 393×852 unless it says otherwise.
+
+### 1 · Every era's head lands on one line
+
+⚠ **THE FIT MADE EVERY ERA THE SAME HEIGHT AND LEFT EVERY HEAD IN A
+DIFFERENT PLACE.** U25's `--holo-fit` shrinks `.vwh__media` INSIDE a slot that
+stays full height and is bottom-seated, so every pixel the fit removes pools
+ABOVE the head — and each canvas carries its own headroom besides (azeroth's
+head at 0.235 of his canvas, the Architect's at 0.048). Measured: 137–152px
+of empty stage over the head and the projector disc sitting ON the band's
+edge, on all five eras. Growing the band's reserve would have made the
+figure smaller (its size IS the slot's), the other half of what he asked for.
+
+**The COLUMN — slot and base, one object — is lifted by exactly the slack
+above the head, less a fixed `--vwd-head-air` (40px).** `holoFigureHeadShare`
+(`characterEras.ts`, zero-import) is `fit × (1 − headY)`: the head's height
+above the slot's floor as a share of the slot. `VoidwalkerHologram` writes it
+on `.vwh__column` as `--holo-head`, and the phone sheet's translate is
+`head-air − (1 − head) × (100% − base-h)` — the slot being the column less the
+projector base. Nothing about the layout changes: the fit stays on the media,
+the slot stays bottom-seated, the disc stays on the slot's floor and follows
+the feet up.
+
+| era        | air over head | disc off band | before   |
+| ---------- | ------------- | ------------- | -------- |
+| loop       | 60            | 90            | 152 / −2 |
+| genai      | 60            | 88            | 150 / −2 |
+| azeroth    | 60            | 76            | 137 / −2 |
+| expanse    | 60            | 90            | 152 / −2 |
+| pokemon-go | 60            | 90            | 152 / −2 |
+
+The figure is still 376px on every era (U27's law is untouched). The disc
+spread (76–90) is the feet's — azeroth hovers 23px above his (U25 §Left open).
+
+⚠ **THREE CUTS SHIPPED NOTHING BEFORE THIS ONE, AND EVERY ONE LOOKED RIGHT
+IN THE SHEET.**
+
+1. A grid percentage: `grid-template-rows: calc(… × var(--holo-fit)) auto` on
+   the column. Chrome resolved the percentage as `auto` against a stretched
+   `height: auto` column — every era byte-identical to before.
+2. A translate reading `var(--holo-fit)` on the column. **A custom property
+   never inherits UPWARD** — the fit lived on `.vwh__slot`, the column's
+   child, so the column read the fallback `1` at every era. Fixed by writing
+   the value on the column too; then —
+3. ⚠ **THE RULE WAS IN THE WRONG MEDIA BLOCK.** Both new rules landed in the
+   701–1100 tablet block, not the ≤700 phone block, because the two blocks
+   carry the same `.vwd__vwh .vwh__column` rule with the same comment
+   ("the same definite-grid hand-down the phone rung needs"). The browser's
+   `cssRules` walk found the `46.5%` inside `(min-width: 701px)` — the tablet
+   block is byte-identical to HEAD again, and the phone block carries the
+   rule.
+
+Three green-looking edits in a row that measured a no-op: **measure the
+computed `translate` on the element, not the rule in the file.** The
+first cut's "half the slack" (`(fit − 1) × 46.5%`) was also the wrong
+target once it worked — it left the heads at 93–111px on four eras and 137
+on azeroth, i.e. still inconsistent; one head LINE is what reads.
+
+### 2 · The root clips, and the emulator stops lying
+
+⚠ **THE PAGE OVERFLOWED `100vw` BY 31px ON EVERY PHONE, AND TWO RECORDS HAD
+CALLED IT HARMLESS.** U27 wrote "no horizontal scroll exists — the probe's
+31px is `.gateway`/`.hud` at `100vw` plus a Chromium scrollbar"; ADR-107
+recorded "Chromium's emulated iPhone lays the page out 421px wide …
+something overflows `100vw` and the emulator zooms out, so `innerHeight`
+reads 912 on an 844 window", left open. Both were describing the same thing
+from two sides, and the owner's phone was the third: a document wider than
+its viewport, which iOS Safari pans toward regardless of `body`'s
+`overflow-x: hidden` (it reads the root, not the body, and has for a decade).
+
+`landing.css`'s ≤960 block now clips the ROOT: `html, body { overflow-x:
+clip }`. Measured in the iPhone 14 project: **the layout viewport goes from
+421×717 to the device's own 390×664**, `documentElement.scrollWidth` 393 at
+393 — the emulator no longer zooms out, because there is no longer anything
+to fit. That is the mechanism the phone was reporting, and Chromium was
+reproducing it the whole time; it was read as an emulation quirk.
+
+⚠ **`clip`, AND `body` GOES WITH `html`, OR EVERY STICKY ON THE PHONE DIES.**
+The first cut clipped `html` alone and the ring's band measured UNSTUCK
+(top −681px at 40 % of its runway) with nothing erroring. The viewport takes
+`body`'s overflow only while `html`'s is `visible`; the moment the root says
+`clip`, `base.css`'s `overflow-x: hidden` stays ON `body`, which makes it a
+scroll container that never scrolls — and `position: sticky` seats against
+the nearest scrollport. `clip` on both clips without making a scrollport and
+the viewport reads `hidden` from the root.
+
+`.vwd__band` also takes `touch-action: pan-y`, the belt for the gesture
+itself: the reel's track is five cells wide behind a clipped window, and a
+horizontal swipe on it must reach nothing the page can pan.
+
+⚠ **EVERY PHONE MEASUREMENT IN THIS REPO WAS TAKEN 8 % WIDE AND 53px TALL.**
+ADR-107's, ADR-108's and `services-ring.md`'s "421px, so every width ask is
+~8 % generous" notes describe the OLD emulator state; from this commit the
+harness lays out at the device's size and those asks are exact. The one
+consequence that surfaced: at `#voidwalker`'s seams rest (`top + 300`),
+`#contact`'s nav row now passes under the BR bracket (x 346–374, y 620–648
+against the row's 171–358 × 627–638) — the bracket was 31px further right
+and the frame 53px taller before. Same class as the ledger's existing
+`.rin-settings` entry one row up (the footer's header passing under the
+frame on the way in), pinned beside it in `KNOWN_CHROME_COLLISIONS`.
+
+### 3 · The services band on the phone: air, and centred
+
+The band's grid (title · seat · paragraph) had **no `row-gap`**: the seat's
+bottom WAS the paragraph's top (seat 6453–7022, intro 7022 — measured
+absolute), and the ring fits the front card to 82 % of the seat, so the card's
+own bottom edge sat a few px over the copy. `row-gap: clamp(20px, 3.4svh,
+36px)` (≈29px at 852h), `justify-items: center`, `text-align: center` on the
+band, and the lead + intro centred with `margin-inline: auto`. Measured
+after: title 64–121 · seat 150–661 · intro 690–780 in an 852 frame — the
+composition's centre at 422 against the frame's 426, which is what "nicely
+centred" cashes out to on a sticky band with the chrome floors paid.
+
+⚠ **THE DESKTOP IS UNTOUCHED, AND THE COMPLAINT WAS NEVER ABOUT IT.** At
+1920×1247 the paragraph is the masthead's right column (top 136, beside the
+title), not under the card; there is no "paragraph at the bottom" to move.
+Measured before touching anything, so the mobile band is the only change.
+
+### 4 · What was already right
+
+Nothing else in the message needed a change. The title's case, tracking and
+glow are U25's; the figure height is U27's; the band's reserve and the
+gutter are U27's. This pass moved the column, clipped the root, and gave one
+grid a gap.
+
+### 5 · The reload on the proof stack, which this pass cannot reproduce
+
+_"When I'm in the proof section and I talk about the intelligence map, the
+last cards sometimes the site refresh."_ A full walk of the pile at 393×852
+in Chromium — 992 → 9011px, every card — reports **0 console errors, 0
+warnings, 56 MB of JS heap, 1 `<video>`, 1 canvas, 14 images, 41 SVGs, 2531
+nodes**. Nothing here crashes, and nothing here is a memory that grows with
+scrolling.
+
+What a "refresh" on the last cards of a pile IS on iOS is Safari's WebContent
+process being killed and the tab reloaded — "A problem repeatedly occurred"
+if it happens twice — which is a memory/GPU budget, not a JS error, and the
+budget is per-tab. The suspects, in order: the corridor's WebGL canvas, which
+since ADR-108 is a FIXED painter held live behind the whole pile on the phone
+(the ambient hold runs from the dissipate to `#voidwalker`'s kill — four
+proof cards of scroll with a full-screen GL context underneath); the map
+card's plate (the compound carrier — 47 `textPath` labels, the physics fields
+— the most SVG on the page, arriving last); and the videos the film card
+mounts. **This is an owner question, recorded rather than guessed at**: does
+the tab show "A problem repeatedly occurred", and does it happen with Low
+Power Mode on. If the canvas is the cost, the honest lever is ADR-108's own
+flag — the ring rung falls back to the old phone page with no fixed context
+— or a kill that does not wait for `#voidwalker`.
+
+### The guards
+
+- `character-era-hologram.test.ts` pins `holoFigureHeadShare` inside the
+  slot and under the fit, and that `share − HOLO_FIGURE_SPAN` (the foot's
+  height above the floor) is ≥ 0 on every seated era.
+- `mobile-section-seams.spec.ts` gains the `#voidwalker · .hud__corner--br`
+  ledger entry (§2) — 5/5 at the true device size.
+- `probe-voidwalker-phone.mjs`, `probe-voidwalker-eras.mjs --vp 1280x720`
+  (desktop 78/78, unmoved), the three phone smokes `--workers=1` and the
+  desktop boundaries spec all pass; two cases (`services-ring-mobile-smoke`'s
+  side tap, the boundaries spec's static-flow case) failed once inside a full
+  run and passed alone, U27's own finding.
+- The whole unit suite: 96 files, 1629 tests.
+
+### Left open
+
+- **The device read.** Chromium reproduces the zoom-out and its fix; whether
+  iOS stops panning is the phone's to say.
+- **The reload** (§5) needs his answer before a lever is pulled.
+- `probe-voidwalker-figure-span.mjs` still has no phone mode (U27), so the
+  head line is measured by hand rather than by a gate.
+- The `421px` notes in ADR-107 §Left open, ADR-108 and `services-ring.md`
+  are amended in place; the smokes' own recorded numbers (ADR-107's
+  "`innerHeight` 912") describe the old frame and are left as history.

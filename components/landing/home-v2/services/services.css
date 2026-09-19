@@ -3085,6 +3085,23 @@
        the paragraph under-cleared the settings cluster by 18px. */
     padding: calc(var(--mobile-chrome-top) + 8px) var(--hud-content-inset, 22px)
       calc(var(--mobile-chrome-bottom) + 16px);
+    /* ⚠ AIR BETWEEN THE ROWS, AND THE ROWS CENTRED (ADR-082 U28, owner
+       2026-09-19: "the paragraph at the bottom is too much and too close to
+       the cards; can't we move everything a bit more down so it's nicely
+       centered? … on mobile the H1 and paragraph should be centered"). The
+       seat is `1fr` and the ring fits its front card to 0.82 of it, so the
+       card's foot sat on the paragraph's first line with no gap at all
+       (measured: seat bottom 7022, intro top 7022). A row-gap gives the
+       card a floor and the copy a ceiling; the seat pays for it, which is
+       the only thing on this band that can. */
+    row-gap: clamp(20px, 3.4svh, 36px);
+    justify-items: center;
+    text-align: center;
+  }
+  .services-stage[data-card-ring-mobile="on"] .svc-ring-band .services-masthead__lead,
+  .services-stage[data-card-ring-mobile="on"] .svc-ring-band .services-masthead__intro {
+    text-align: center;
+    margin-inline: auto;
   }
   .services-stage[data-card-ring-mobile="on"] .svc-ring-band .services-masthead {
     display: contents;

@@ -267,6 +267,26 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   `chipUnion.left/right` and compared them to nothing, and used the tab row only
   as a driver — which is how a full-bleed row passed 100 cells green. It asserts
   the tabs and the band inside `--hud-margin` AND on the same line as each other.
+- ⚠ **EVERY ERA'S HEAD LANDS ON ONE LINE ON THE PHONE (ADR-082 U28,
+  2026-09-19, owner: "the avatars are still too much down; they should be
+  more up").** U25's fit made every era the same HEIGHT and left every head
+  somewhere else: the media shrinks inside a full-height, bottom-seated slot,
+  so the fit's slack pools ABOVE the head, and each canvas has its own
+  headroom on top (azeroth 0.235, the Architect 0.048). Measured 137–152px of
+  empty stage over the head with the disc ON the band. `holoFigureHeadShare`
+  (`fit × (1 − headY)`, zero-import) is written on `.vwh__column` as
+  `--holo-head`, and the ≤700 sheet translates the COLUMN — slot and disc,
+  one object — by `head-air − (1 − head) × (100% − base-h)`. Every head at
+  60px under the stage's top, the disc 76–90px off the band, the figure still 376. ⚠ **A CUSTOM PROPERTY NEVER INHERITS UPWARD** — a column rule reading
+  the slot's `--holo-fit` got 1 on every era. ⚠ **THE TABLET AND PHONE BLOCKS
+  CARRY THE SAME COLUMN RULE WITH THE SAME COMMENT**, and one cut landed in
+  the wrong one; measure the element's computed `translate`, not the file.
+- ⚠ **THE PHONE PANNED SIDEWAYS, AND THE 31px U27 CALLED HARMLESS WAS WHY
+  (U28).** iOS reads the ROOT's overflow, not `body`'s; `landing.css`'s ≤960
+  block clips `html, body` now (`clip`, both, or every sticky dies — rule
+  `mobile-sections.md` §9), and `.vwd__band` takes `touch-action: pan-y` for
+  the swipe itself. ⚠ Chromium was reproducing the pan as a ZOOM-OUT the
+  whole time (the "421px wide" emulator): the harness lays out at 390 now.
 - **`voidwalker-hologram.css` IS THE FIGURE'S SHEET NOW** — the slot's
   isolation and masked floor, the alpha branch, the projector base, the phase
   animations, the decode lines, and the four tokens those read. ⚠ **`.vwh`

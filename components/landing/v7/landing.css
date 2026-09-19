@@ -8110,6 +8110,27 @@ body.density-dense .station {
   }
 }
 @media (max-width: 960px) {
+  /* ⚠ THE ROOT CLIPS TOO, BECAUSE iOS DOES NOT READ `body` (ADR-082 U28,
+     owner on device: the era section "seems to be scrollable left and
+     right"). `base.css` puts `overflow-x: hidden` on `body` and nothing on
+     `html`, which every Chromium project honours and which iOS Safari has
+     ignored for a decade — it will still pan the visual viewport toward
+     overflowing content. Measured here the document is exactly 393 wide and
+     `scrollTo(400, y)` moves nothing, which is the whole reason this shipped:
+     the defect is invisible in every browser this repo can run. `clip` and
+     not `hidden`, so the root never becomes a scroll container.
+     ⚠ AND `body` GOES TO `clip` WITH IT, OR EVERY STICKY ON THE PHONE DIES.
+     The viewport takes `body`'s overflow only while `html`'s is `visible`;
+     the moment the root says `clip`, `body`'s own `hidden` stays ON `body`,
+     which makes it a scroll container that never scrolls — and `position:
+     sticky` seats against the nearest scrollport, so the ring's band and
+     the proof pile measured unstuck (band top −681px at 40 % of its runway)
+     with nothing erroring. `clip` clips without making a scrollport; the
+     viewport still reads `hidden` from the root. */
+  html,
+  body {
+    overflow-x: clip;
+  }
   :root {
     --hud-content-inset: clamp(24px, 6vw, 40px);
     /* ── Mobile chrome safe-area bands (2026-09-01) ──────────────────

@@ -89,6 +89,18 @@ const CHROME_SELECTORS = [
  *               942, which seats the cluster 14px further right); the
  *               geometry is the footer title's measure, pre-existing
  *               (390 ONLY)
+ *   #voidwalker · `.hud__corner--br` — the same rest, one row lower:
+ *               `#contact`'s nav row ("Navigate · Encode · Build",
+ *               x 171–358, y 627–638) under the bracket (x 346–374,
+ *               y 620–648). Exposed 2026-09-19 when ADR-082 U28 clipped
+ *               `html`/`body` — until then the emulator ZOOMED OUT to fit
+ *               a 31px `100vw` overflow and laid the page out 421×717
+ *               (ADR-107's "421px wide"), which put the bracket 31px
+ *               further right and the whole frame 53px taller than the
+ *               device it was emulating; at the true 390×664 the row and
+ *               the bracket share the last 28px. Same class as the entry
+ *               above: `#contact`'s header passing under the frame on the
+ *               way in, not voidwalker's own copy.
  *
  * All of them are station INTERIORS — casefile.css, the about bio and its
  * telemetry, the contact headline — which this pass does not own. An entry
@@ -99,7 +111,7 @@ const CHROME_SELECTORS = [
 const KNOWN_CHROME_COLLISIONS: Record<string, readonly string[]> = {
   services: [".hud__nav__btn", ".rin-settings"],
   about: [".hud__nav__btn", ".hud__corner--tl", ".rin-settings"],
-  voidwalker: [".rin-settings"],
+  voidwalker: [".rin-settings", ".hud__corner--br"],
   contact: [".hud__nav__btn"],
 };
 

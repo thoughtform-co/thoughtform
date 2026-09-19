@@ -428,6 +428,15 @@ RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
   not rendered; the photographs are not fetched); PRM and ≤680h keep the
   accordion. ⚠ `display: contents` means the desktop's masthead dim cannot
   reach here — the phone dims the lead and the intro (.35 each) directly.
+  ⚠ **THE BAND HAS AIR AND IS CENTRED (ADR-082 U28, 2026-09-19, owner: the
+  paragraph "too close to the cards", "the H1 and paragraph should be
+  centred").** The grid had no `row-gap` — the seat's bottom WAS the
+  paragraph's top, and the front card fills 82 % of the seat. `row-gap:
+clamp(20px, 3.4svh, 36px)`, `justify-items: center`, `text-align: center`,
+  and the lead + intro on `margin-inline: auto`. Measured at 393×852: title
+  64–121 · seat 150–661 · intro 690–780. ⚠ The DESKTOP is untouched: its
+  paragraph is the masthead's right column beside the title, never under the
+  card, so there was nothing there to move.
 - ⚠ **A TAP TURNS THE CARD OVER — NEVER THE DRAWER, AND NO LONGER A SHEET
   (ADR-110; ADR-109's DOM sheet lasted a day).** The desktop's
   `openServiceId` / `openPlateRef` / Escape extend to the phone under
@@ -477,9 +486,12 @@ tests/lib/ring-type.test.ts` (the three readers, the bake, the clock, the
   `npx playwright test tests/visual/services-ring-mobile-smoke.spec.ts
 --project=iphone-14-chromium --project=iphone-14-pro-max-chromium`; stills
   via `node scripts/capture-services-mobile.mjs --theme dark|light [--vp 430x932]`.
-  ⚠ The emulated iPhone lays out 421px wide (ADR-107's finding), so every
-  width ask here is ~8 % generous in emulation; the still and the frame rate
-  are the OWNER's device read, and ADR-108's checklist is the gate.
+  ⚠ The emulated iPhone USED TO lay out 421px wide (ADR-107's finding) — a
+  31px `100vw` overflow the emulator zoomed out to fit; since ADR-082 U28
+  clipped the root it lays out at the device's own 390, so every width ask
+  here is exact now and every phone number recorded before 2026-09-19 was
+  ~8 % generous. The still and the frame rate are the OWNER's device read,
+  and ADR-108's checklist is the gate.
 
 ## Verifying
 

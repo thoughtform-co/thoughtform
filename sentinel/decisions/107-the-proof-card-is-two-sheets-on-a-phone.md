@@ -141,6 +141,11 @@ calc(var(--pc-depth) - var(--pc-cover)) }` drops the first term (the
   out, so `innerHeight` reads 912 on an 844 window. The owner's real-device
   screenshots show no overflow. The smoke measures against
   `documentElement.clientHeight`; the overflow itself is a separate finding.
+  ⚠ **CLOSED BY ADR-082 U28 (2026-09-19)**: the overflow was real (31px of
+  `100vw`), it was the same thing iOS was panning toward on the owner's
+  phone, and the fix is `html, body { overflow-x: clip }` at ≤960. The
+  emulator lays out at the device's own 390×664 now — every phone number
+  measured before that commit was taken 8 % wide and 53px tall.
 - The sheets and map fields have not been read on a phone since ADR-097 U10's
   frames; the `--pairs` capture shoots all four fields for the owner's read.
 - The dwells (12 / 18svh) and the recession halving are dials set by

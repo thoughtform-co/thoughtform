@@ -22,7 +22,7 @@ None of them can see the document. Every one of them prints over whatever is
 underneath. So on a phone the composition is not "the desktop layout, narrower":
 it is **a flowing document under a fixed frame**, and the laws below are what
 keep the two apart. (They are numbered, not counted — the intro said "five"
-through §6, §7 and §8.)
+through §6, §7, §8 and §9.)
 
 **Read first**
 
@@ -294,6 +294,41 @@ and the corridor-exit veil painted through below it.
   a strip of the next section show through; this is the same arithmetic one
   layer down. When a phone report says "a band", "a strip" or "it jumps", check
   the units before looking for a painter.
+
+## 9 · The root clips horizontal overflow, and `body` clips with it (ADR-082 U28)
+
+`base.css` puts `overflow-x: hidden` on `body` and nothing on `html`. Every
+Chromium honours that through the viewport; iOS Safari does not — it reads the
+root, and pans the visual viewport toward anything wider than it. The page WAS
+wider: 31px of `100vw` overflow that two records had called harmless, that the
+owner's phone panned toward ("the section seems to be scrollable left and
+right"), and that **Chromium's mobile emulation was reproducing the whole
+time** by zooming out to fit — the "421px wide, `innerHeight` 912 on an 844
+window" ADR-107 left open. At ≤960 the root clips now:
+
+```css
+html,
+body {
+  overflow-x: clip;
+}
+```
+
+- ⚠ **`clip`, NEVER `hidden`, AND `body` GOES WITH `html`.** The viewport
+  takes `body`'s overflow only while `html`'s is `visible`; clip the root alone
+  and `body`'s own `hidden` stays on `body`, which makes it a scroll container
+  that never scrolls — and every `position: sticky` on the phone (the ring's
+  band, the proof pile) seats against THAT scrollport and never sticks.
+  Measured on the first cut: band top −681px at 40 % of its runway, nothing
+  erroring. `clip` clips without making a scrollport.
+- ⚠ **THE HARNESS LAYS OUT AT THE DEVICE'S SIZE FROM THIS COMMIT.** The iPhone
+  14 project measures 390×664 where it measured 421×717 — every phone number
+  recorded before 2026-09-19 is ~8 % wide and 53px tall, and a guard that was
+  green by that margin can go red on the same code. The seams ledger's
+  `#voidwalker · .hud__corner--br` entry is the one that did.
+- A horizontal gesture inside a clipped reel is the other half:
+  `.vwd__band { touch-action: pan-y }` hands nothing horizontal to the page.
+- ⚠ **Chromium can reproduce the OVERFLOW; only a device can confirm the
+  pan stops.** Same standing as §8.
 
 ## Verifying
 

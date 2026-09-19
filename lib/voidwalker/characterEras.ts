@@ -298,6 +298,26 @@ export function holoFigureFit(
 }
 
 /**
+ * How far above the slot's floor an era's HEAD paints, as a fraction of the
+ * slot's height — `fit × (1 − headY)` (ADR-082 U28).
+ *
+ * The fit makes every era the same HEIGHT; it does not put every head on the
+ * same LINE, because each canvas carries its own headroom (azeroth's head is
+ * at 0.235 of his canvas, the Architect's at 0.048) and the media is seated
+ * on the floor. The phone sheet lifts the whole column so the head lands a
+ * fixed distance below the stage's top whatever the canvas above it holds;
+ * this is the term it subtracts. Height-bound only, which the phone always is
+ * (the column is narrower than 9:16 there).
+ */
+export function holoFigureHeadShare(
+  hologram: Pick<CharacterEraHologram, "headY" | "footY" | "stature">
+): number {
+  const head = hologram.headY;
+  if (!Number.isFinite(head) || head < 0 || head >= 1) return 1;
+  return holoFigureFit(hologram) * (1 - head);
+}
+
+/**
  * One row of the era's FACTS panel — a mono label and its value, read
  * as a dotted-leader pair (the `.arc-card-item__meta-row` grammar).
  *

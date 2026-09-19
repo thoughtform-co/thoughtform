@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import {
@@ -10,7 +11,12 @@ import {
   type ScrambleJob,
 } from "@/lib/home-v2/captionScramble";
 import { clamp01 } from "@/lib/math";
-import { CHARACTER_ERAS, resolveCharacterEraHologram } from "@/lib/voidwalker/characterEras";
+import {
+  CHARACTER_ERAS,
+  holoFigureFit,
+  holoFigureHeadShare,
+  resolveCharacterEraHologram,
+} from "@/lib/voidwalker/characterEras";
 import { voidwalkerHologramProgressRef } from "@/lib/voidwalker/voidwalkerHologramClock";
 
 import {
@@ -298,7 +304,23 @@ export function VoidwalkerHologram() {
      `portrait` handoff target — so it is built once here, where the
      materialize epoch lives, and handed down. */
   const figureColumn = (
-    <div className="vwh__column" data-vwh-region="figure">
+    <div
+      className="vwh__column"
+      data-vwh-region="figure"
+      /* ⚠ THE HEAD LINE IS DECLARED ON THE COLUMN, NOT READ OFF THE SLOT
+         (ADR-082 U28). The phone sheet lifts this column so every era's head
+         lands on one line, and a custom property never inherits UPWARD — the
+         slot's own `--holo-fit` is invisible to its parent, so the first cut,
+         a rule on the column reading `var(--holo-fit, 1)`, measured a no-op
+         at every era while it looked right. Same registry, same functions,
+         one source; `--holo-fit` rides along for a sheet that wants it. */
+      style={
+        {
+          "--holo-fit": holoFigureFit(hologram),
+          "--holo-head": holoFigureHeadShare(hologram),
+        } as React.CSSProperties
+      }
+    >
       <HoloFigure
         hologram={hologram}
         epoch={epoch}
