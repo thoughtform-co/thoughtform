@@ -6,26 +6,39 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
 import type { CardTitleStyle } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
-import type { ServicePlateId } from "@/components/landing/home-v2/services/servicePlateData";
+import {
+  SERVICE_PLATES,
+  type ServicePlateId,
+} from "@/components/landing/home-v2/services/servicePlateData";
 import { openPlateRef } from "@/lib/services-ring/openPlateRef";
-import { activeServiceForProgress } from "@/lib/services-ring/ringMath";
+import { activeServiceForProgress, ringParkProgress } from "@/lib/services-ring/ringMath";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+import { FIGURE_SLOTS } from "@/lib/services-ring/serviceFigures";
+import { wireFor, wireInk } from "@/lib/services-ring/serviceWire";
 
 import { CardFaceFrame } from "./CardFaceFrame";
+import { RECUT_PLATES, RECUT_SERVICES } from "./serviceRecut";
 import {
   CANDIDATE_VARIANTS,
   FACE_VARIANTS as BASE_VARIANTS,
   HOUSE_VARIANTS,
+  MATERIAL_VARIANTS,
   TITLE_NOTE,
   TITLE_STYLES,
 } from "./variants";
 
 /**
- * The board-derived routes, the house instruments, then the proposal — one list
- * for the lab, in that order, because the proposal is the destination and a
- * destination does not sit in the middle of the survey it came out of.
+ * The board-derived routes, the house instruments, the proposal, then the
+ * three MATERIALS on the re-cut four (2026-09-19) — one list for the lab, in
+ * that order, because the proposal is the destination of the survey and the
+ * materials are the next question asked of it.
  */
-const FACE_VARIANTS = [...BASE_VARIANTS, ...HOUSE_VARIANTS, ...CANDIDATE_VARIANTS];
+const FACE_VARIANTS = [
+  ...BASE_VARIANTS,
+  ...HOUSE_VARIANTS,
+  ...CANDIDATE_VARIANTS,
+  ...MATERIAL_VARIANTS,
+];
 
 // three/fiber is client-only; keep it out of the server render entirely so the
 // frame + masthead still paint if WebGL is unavailable.
@@ -39,10 +52,23 @@ const FACE_VARIANTS = [...BASE_VARIANTS, ...HOUSE_VARIANTS, ...CANDIDATE_VARIANT
 // lab must be too, or one dropped context costs the entire study.
 const RingBackdrop = dynamic(() => import("./RingBackdrop"), { ssr: false });
 
-/** Beat-1 midpoint — service 01 front and settled (the orbit lab's default). */
-const DEFAULT_PROGRESS = 0.3;
-/** Park math: centre of service i's beat across the 5-beat runway. */
-const parkFor = (i: number) => (i + 1.5) / 5;
+/**
+ * Park math — the ring's OWN (`ringParkProgress`): the centre of service i's
+ * dwell, where the turn has finished. ⚠ The lab's earlier `(i + 1.5) / 5`
+ * never settled (2026-09-19): with the travel at 0.85 of a segment those
+ * values sat 0.68–0.95 of the way through a quarter-turn, and every still
+ * this lab shot was a card still turning — the readout rounds, so it agreed.
+ */
+const parkFor = (i: number) => ringParkProgress(i);
+/** Service 01 front and settled. */
+const DEFAULT_PROGRESS = parkFor(0);
+/** Below the first park: the lead-in, before the ring has arrived. */
+const LEAD_PROGRESS = 0.05;
+
+/** The lab's two inks for the wire strip — the ramp's own values, inline
+ *  because this strip is lab chrome and the bake reads the same roles through
+ *  `wireInk`. */
+const STRIP_INK = { ink: "235, 227, 214", gold: "202, 165, 84" } as const;
 
 interface ShellProps {
   hudHtml: string;
@@ -82,6 +108,9 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
     if (t && (TITLE_STYLES as readonly string[]).includes(t)) setTitleStyle(t as CardTitleStyle);
     const p = Number.parseFloat(q.get("p") ?? "");
     if (Number.isFinite(p)) setProgress(Math.min(1, Math.max(0, p)));
+    // `?svc=N` parks card N front and settled — what a capture asks for.
+    const svc = Number.parseInt(q.get("svc") ?? "", 10);
+    if (Number.isFinite(svc)) setProgress(parkFor(svc));
   }, []);
 
   const commit = useCallback(
@@ -145,14 +174,21 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
     replayRef.current = fn;
   }, []);
 
+  const variant = FACE_VARIANTS[variantIdx];
+  /* The record this row bakes: the re-cut four on the material rows, the
+     shipped four everywhere else. Ids are the same four slots either way, so
+     the park math and the ring's clock never change. */
+  const services = variant.recut ? RECUT_SERVICES : SERVICES;
+  const plates = variant.recut ? RECUT_PLATES : SERVICE_PLATES;
+
   // Side-card hit → park that service (production scrolls the runway there;
   // the lab drives the same ring math through the progress bridge).
   const onSelectService = useCallback(
     (serviceId: string) => {
-      const i = SERVICES.findIndex((s) => s.id === serviceId);
+      const i = services.findIndex((s) => s.id === serviceId);
       if (i >= 0) commit({ progress: parkFor(i) });
     },
-    [commit]
+    [commit, services]
   );
 
   const onOpenService = useCallback((serviceId: ServicePlateId) => {
@@ -189,8 +225,8 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [openServiceId]);
 
-  const variant = FACE_VARIANTS[variantIdx];
   const activeIndex = activeServiceForProgress(progress);
+  const activePlate = plates[activeIndex];
 
   return (
     <main
@@ -205,6 +241,9 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
           faceVariant={variant.face}
           titleStyle={titleStyle}
           openDrawer={variant.openPlate}
+          plates={variant.recut ? plates : undefined}
+          services={services}
+          figure={variant.figure ?? "off"}
         />
       </CanvasErrorBoundary>
 
@@ -216,6 +255,7 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
         onCloseService={onCloseService}
         onSelectService={onSelectService}
         onReplayReady={onReplayReady}
+        plates={variant.recut ? plates : undefined}
       />
 
       {/* ── Lab console ─────────────────────────────────────────────── */}
@@ -273,7 +313,7 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
 
         <div className="scfl-field">
           <span className="scfl-field__label">
-            RING · SVC {String(activeIndex + 1).padStart(2, "0")}/04 · {SERVICES[activeIndex].verb}
+            RING · SVC {String(activeIndex + 1).padStart(2, "0")}/04 · {services[activeIndex].verb}
           </span>
           <input
             type="range"
@@ -286,12 +326,12 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
             onChange={(e) => commit({ progress: Number.parseFloat(e.target.value) })}
           />
           <div className="scfl-row">
-            {SERVICES.map((s, i) => (
+            {services.map((s, i) => (
               <button
                 key={s.id}
                 type="button"
                 className="scfl-chip scfl-chip--sm"
-                data-on={(activeIndex === i && progress > 0.2) || undefined}
+                data-on={(activeIndex === i && progress >= parkFor(0)) || undefined}
                 onClick={() => commit({ progress: parkFor(i) })}
               >
                 {String(i + 1).padStart(2, "0")}
@@ -300,13 +340,86 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
             <button
               type="button"
               className="scfl-chip scfl-chip--sm"
-              data-on={progress <= 0.2 || undefined}
-              onClick={() => commit({ progress: 0.1 })}
+              data-on={progress < parkFor(0) || undefined}
+              onClick={() => commit({ progress: LEAD_PROGRESS })}
             >
               LEAD
             </button>
           </div>
         </div>
+
+        {/* THE RECORD (2026-09-19): the front card's copy, readable off the
+            page. On a material row this is the re-cut four — the strings the
+            owner is being asked to read before any of them moves into
+            production data. */}
+        {variant.recut && (
+          <dl className="scfl-record" aria-label="The front card's record">
+            <div className="scfl-record__row">
+              <dt>Chip</dt>
+              <dd>{activePlate.chip}</dd>
+            </div>
+            <div className="scfl-record__row">
+              <dt>Title</dt>
+              <dd>{activePlate.title}</dd>
+            </div>
+            <div className="scfl-record__row">
+              <dt>Lede</dt>
+              <dd>{activePlate.lede.map((s) => (typeof s === "string" ? s : s.em)).join("")}</dd>
+            </div>
+            <div className="scfl-record__row">
+              <dt>What</dt>
+              <dd>{activePlate.breakdown.join(" · ")}</dd>
+            </div>
+            <div className="scfl-record__row">
+              <dt>How</dt>
+              <dd>
+                {activePlate.spec.duration} · {activePlate.spec.participants} ·{" "}
+                {activePlate.spec.format} · {activePlate.spec.language} · leaves with:{" "}
+                {activePlate.spec.leavesWith}
+              </dd>
+            </div>
+            <div className="scfl-record__row">
+              <dt>CTA</dt>
+              <dd>{activePlate.ctaLabel}</dd>
+            </div>
+          </dl>
+        )}
+
+        {/* THE WIRE STRIP: the same path strings the bake rasterises, as
+            inline SVG — one source, two surfaces. */}
+        {variant.face === "wire" && (
+          <div className="scfl-wire" aria-label="The four wire figures, as SVG">
+            {FIGURE_SLOTS.map((slot) => {
+              const w = wireFor(slot);
+              return (
+                <svg
+                  key={slot}
+                  viewBox={`${w.vb.x} ${w.vb.y} ${w.vb.w} ${w.vb.h}`}
+                  role="img"
+                  aria-label={slot}
+                >
+                  {[...w.housing, ...w.figure].map((p) => {
+                    const { role, alpha } = wireInk(p.ink);
+                    const a = Math.min(1, alpha * p.alpha);
+                    const colour = `rgba(${STRIP_INK[role]}, ${a.toFixed(3)})`;
+                    return p.fill ? (
+                      <path key={p.id} d={p.d} fill={colour} />
+                    ) : (
+                      <path
+                        key={p.id}
+                        d={p.d}
+                        fill="none"
+                        stroke={colour}
+                        strokeWidth={p.width}
+                        strokeDasharray={p.dash}
+                      />
+                    );
+                  })}
+                </svg>
+              );
+            })}
+          </div>
+        )}
 
         <div className="scfl-toggles">
           <button
@@ -318,7 +431,7 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
             onClick={() =>
               openServiceId
                 ? onCloseService()
-                : onOpenService(SERVICES[activeIndex].id as ServicePlateId)
+                : onOpenService(services[activeIndex].id as ServicePlateId)
             }
           >
             <i className="scfl-toggle__led" aria-hidden="true" />

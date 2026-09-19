@@ -97,6 +97,10 @@
   flex-direction: column;
   gap: 10px;
   width: min(34vw, 330px);
+  /* The material rows print the record and the wire strip under the chips;
+     the console scrolls rather than growing past the frame. */
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
   padding: 14px 16px;
   background: rgba(10, 9, 8, 0.82);
   border: 1px solid rgba(235, 227, 214, 0.14);
@@ -208,6 +212,50 @@
   flex: none;
   transform: rotate(45deg);
   background: rgba(202, 165, 84, 0.6);
+}
+
+/* ── The record (2026-09-19) — the front card's copy, readable ─────────── */
+.scfl-record {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 2px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid rgba(235, 227, 214, 0.12);
+}
+.scfl-record__row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 8px;
+}
+.scfl-record dt {
+  font-family: var(--scfl-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(202, 165, 84, 0.75);
+  padding-top: 2px;
+}
+.scfl-record dd {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: rgba(235, 227, 214, 0.78);
+}
+
+/* ── The wire strip — the four figures as inline SVG ───────────────────── */
+.scfl-wire {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 10px 0 0;
+  border-top: 1px solid rgba(235, 227, 214, 0.12);
+}
+.scfl-wire svg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #050403;
 }
 
 /* ── Desktop gate (parity with the production menus ≥1101×760) ──────── */

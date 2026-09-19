@@ -4,8 +4,12 @@ import { useCallback, useEffect, useRef, type CSSProperties } from "react";
 
 import { ServicesMasthead } from "@/components/landing/home-v2/services/ServicesMasthead";
 import { ServicesRingHitAreas } from "@/components/landing/home-v2/services/ServicesRingHitAreas";
+import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
 import type { ServiceId } from "@/components/landing/home-v2/services/serviceData";
-import type { ServicePlateId } from "@/components/landing/home-v2/services/servicePlateData";
+import type {
+  ServicePlate,
+  ServicePlateId,
+} from "@/components/landing/home-v2/services/servicePlateData";
 
 /**
  * CardFaceFrame — the verbatim #services snapshot, forked from
@@ -57,6 +61,9 @@ interface CardFaceFrameProps {
   onSelectService: (serviceId: ServiceId) => void;
   /** Receives the replay trigger so the console can re-run the reveal. */
   onReplayReady: (replay: () => void) => void;
+  /** The record the hit layer names its targets from (the re-cut four on the
+   *  material rows; production's otherwise). */
+  plates?: readonly ServicePlate[];
 }
 
 export function CardFaceFrame({
@@ -67,8 +74,18 @@ export function CardFaceFrame({
   onCloseService,
   onSelectService,
   onReplayReady,
+  plates,
 }: CardFaceFrameProps) {
   const stageRef = useRef<HTMLDivElement>(null);
+
+  /* THE FRONT CARD'S RECT, READABLE OFF THE DOM (2026-09-19 lab pass). The
+     hit layer shims the front card as a full-rect button only on the drawer
+     rows; everywhere else its DOM is the CTA-box link, so a capture script
+     has no element to measure the card by. This lab-only span carries the
+     published anchor's viewport rect. Never on a production surface — the
+     store is the contract there. */
+  const ringAnchors = useHologramConnectors((s) => s.ringAnchors);
+  const frontAnchor = ringAnchors.find((a) => a.front && a.visible && a.w > 8) ?? null;
 
   /**
    * Replay the masthead reveal by re-driving its arrival clock: drop to 0
@@ -125,10 +142,23 @@ export function CardFaceFrame({
               }
               onCloseDrawer={openPlateEnabled ? onCloseService : undefined}
               openServiceId={openPlateEnabled ? openServiceId : null}
+              plates={plates}
             />
           </div>
         </div>
       </div>
+
+      {frontAnchor && (
+        <span
+          className="scfl-front-rect"
+          hidden
+          data-service={frontAnchor.serviceId}
+          data-x={frontAnchor.x.toFixed(1)}
+          data-y={frontAnchor.y.toFixed(1)}
+          data-w={frontAnchor.w.toFixed(1)}
+          data-h={frontAnchor.h.toFixed(1)}
+        />
+      )}
 
       {/* (The journey menu that used to mount here retired with ADR-055 —
           the readout lives in the nav corner now, which this lab does not

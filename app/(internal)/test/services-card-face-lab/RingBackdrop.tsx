@@ -10,10 +10,12 @@ import {
 } from "@/components/landing/home-v2/services/hologram";
 import type {
   CardFaceVariant,
+  CardFigure,
   CardTitleStyle,
 } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import { STRUCTURAL_ORBITS } from "@/components/landing/home-v2/services/hologram/HologramOrbits";
-import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
+import type { Service } from "@/components/landing/home-v2/services/serviceData";
+import type { ServicePlate } from "@/components/landing/home-v2/services/servicePlateData";
 import { TENSOR_ACCENT, TENSOR_GOLD } from "@/lib/home-v2/goldPalette";
 import type { AboutStageProgress } from "@/lib/services-ring/aboutStageProgressRef";
 import { activeServiceForProgress } from "@/lib/services-ring/ringMath";
@@ -54,6 +56,13 @@ interface RingBackdropProps {
   /** ADR-050 rev 3: mount the in-canvas drawer (V2 only). Its open/closed
    *  state comes from `openPlateRef`, written by the lab shell. */
   openDrawer: boolean;
+  /** The record the ring bakes — production's, or the re-cut four
+   *  (2026-09-19). Omitted, the ring reads `SERVICE_PLATES` itself. */
+  plates?: readonly ServicePlate[];
+  /** The DOM-side record the same variant reads (ids match `plates`). */
+  services: readonly Service[];
+  /** V · Volume's in-canvas figure, or off. */
+  figure: CardFigure;
 }
 
 export default function RingBackdrop({
@@ -61,6 +70,9 @@ export default function RingBackdrop({
   faceVariant,
   titleStyle,
   openDrawer,
+  plates,
+  services,
+  figure,
 }: RingBackdropProps) {
   // ADR-047's about clock stays parked: the deck flip is not part of this
   // study, and the ring's rest pose needs `engaged: false`.
@@ -72,7 +84,7 @@ export default function RingBackdrop({
     return () => clearTimeout(t);
   }, []);
 
-  const activeServiceId = SERVICES[activeServiceForProgress(progress)].id;
+  const activeServiceId = services[activeServiceForProgress(progress)].id;
 
   return (
     <Canvas
@@ -114,6 +126,8 @@ export default function RingBackdrop({
             titleStyle={titleStyle}
             openDrawer={openDrawer}
             publishAnchors
+            plates={plates}
+            figure={figure}
           />
         </ServicesHologramScene>
       </group>

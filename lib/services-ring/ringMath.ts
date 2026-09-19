@@ -443,6 +443,10 @@ export const RING_CARD_RENDER_ORDERS = {
   slab: 0,
   glint: 0.05,
   content: 0.1,
+  /** The V · Volume figure (2026-09-19 lab pass): a point cloud floated over
+   *  the face, between the face and the portrait back. Nests inside the
+   *  card's span, so the deck rebase is unaffected. */
+  figure: 0.105,
   back: 0.11,
   veil: 0.12,
 } as const;
@@ -673,6 +677,25 @@ export function ringIndexForProgress(
   // would push `k + travel` a hair past k+1 and break strict monotonicity.
   const travel = travelFrac > 0 ? Math.min(1, smootherstep(0, 1, Math.min(1, u / travelFrac))) : 1;
   return Math.min(RING_COUNT - 1, k + travel);
+}
+
+/**
+ * The runway progress at which card `index` is FRONT AND SETTLED — the centre
+ * of its dwell, i.e. the last `1 − RING_TRAVEL_FRAC` of the segment that turns
+ * to it — for a lab or a capture that parks the ring by number. Index 0 is
+ * settled anywhere up to the arrival, so it parks ON it.
+ *
+ * ⚠ THE CARD-FACE LAB'S OWN `(i + 1.5) / 5` NEVER SETTLED (found 2026-09-19):
+ * with the travel at 0.85 of a segment, "the centre of beat i" is 0.68–0.95
+ * of the way through a quarter-turn, and every still the lab shot was a card
+ * still turning — `activeServiceForProgress` rounds, so the readout agreed
+ * with a ring that had not arrived. Park here instead.
+ */
+export function ringParkProgress(index: number, travelFrac: number = RING_TRAVEL_FRAC): number {
+  const j = Math.max(0, Math.min(RING_COUNT - 1, Math.round(index)));
+  if (j === 0) return RING_ARRIVAL_FRAC;
+  const seg = j - 1 + (1 + travelFrac) / 2;
+  return RING_ARRIVAL_FRAC + (seg / (RING_COUNT - 1)) * (RING_EXIT_START - RING_ARRIVAL_FRAC);
 }
 
 /** Ring rotation (rad) for runway progress — the scroll-derived TARGET the

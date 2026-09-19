@@ -54,6 +54,17 @@ import * as THREE from "three";
 import { resolveScenePalette } from "@/lib/theme/palette";
 
 import { applyHalftone, drawCardViz } from "./cardViz";
+import {
+  VOLUME_QUALITY_FLOOR,
+  buildFigureAtlas,
+  buildFigureGeometry,
+  createFigureMaterials,
+  figureProjection,
+  type FigureGeometries,
+  type FigureMaterials,
+} from "./cardFigureVolume";
+import { useQualityStore } from "@/lib/hooks/useQualityTier";
+import { isFigureSlot } from "@/lib/services-ring/serviceFigures";
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
 import { HologramOrbits } from "./HologramOrbits";
 import {
@@ -288,6 +299,24 @@ const DECK_INTRA_ORDERS = [
   RING_CARD_RENDER_ORDERS.content,
   RING_CARD_RENDER_ORDERS.back,
   RING_CARD_RENDER_ORDERS.veil,
+  DRAWER_RENDER_ORDERS.slab,
+  DRAWER_RENDER_ORDERS.content,
+  DRAWER_RENDER_ORDERS.glint,
+] as const;
+
+/**
+ * The same table with the V · Volume figure mounted (2026-09-19): one child
+ * group after the veil and before the drawer. Selected per mount by
+ * `volumeOn`; production never mounts the figure and walks the table above.
+ */
+const DECK_INTRA_ORDERS_VOLUME = [
+  RING_CARD_RENDER_ORDERS.glow,
+  RING_CARD_RENDER_ORDERS.slab,
+  RING_CARD_RENDER_ORDERS.glint,
+  RING_CARD_RENDER_ORDERS.content,
+  RING_CARD_RENDER_ORDERS.back,
+  RING_CARD_RENDER_ORDERS.veil,
+  RING_CARD_RENDER_ORDERS.figure,
   DRAWER_RENDER_ORDERS.slab,
   DRAWER_RENDER_ORDERS.content,
   DRAWER_RENDER_ORDERS.glint,
@@ -708,7 +737,19 @@ export type CardFaceVariant =
   | "armillary"
   | "crystal"
   // The proposal, not a survey row: see COMPOSITION.card.
-  | "card";
+  | "card"
+  // The three MATERIALS of the 2026-09-19 lab pass, one figure record each:
+  // a character raster, the type alone under a three.js cloud, a wire.
+  | "raster"
+  | "volume"
+  | "wire";
+
+/**
+ * An in-canvas FIGURE over the face (2026-09-19): `"volume"` mounts one
+ * point-cloud child per card (`cardFigureVolume`). Off, the tree is
+ * byte-identical — the lab passes it; production does not.
+ */
+export type CardFigure = "off" | "volume";
 
 /**
  * The TIGHT layout family — everything except the ADR-029 `full` baseline.
@@ -811,6 +852,23 @@ const COMPOSITION: Record<string, FaceComposition> = {
     band: "poster",
     pin: "display",
   },
+
+  /* ═══ THE THREE MATERIALS (2026-09-19 lab pass) ══════════════════════════
+     The proposal's composition, held fixed — title on the chit datum,
+     paragraph at the foot, the solved poster band, the treatment pinned —
+     with ONE figure record (`lib/services-ring/serviceFigures`) drawn in
+     three materials. Holding everything but the material is what lets the
+     owner judge the material. `volume` letters the type alone: its figure
+     is three.js geometry over the band (`cardFigureVolume`), not a bake. */
+  raster: {
+    viz: "raster",
+    title: "top-centre",
+    para: "foot-centre",
+    band: "poster",
+    pin: "display",
+  },
+  volume: { viz: "none", title: "top-centre", para: "foot-centre", band: "poster", pin: "display" },
+  wire: { viz: "wire", title: "top-centre", para: "foot-centre", band: "poster", pin: "display" },
 };
 
 const compositionOf = (v: CardFaceVariant): FaceComposition => COMPOSITION[v] ?? COMPOSITION.tight;
@@ -1028,7 +1086,9 @@ function bakeCardFace(
        exist to answer is whether the centre of a services card carries the
        practitioner or the work, and across ~40 cards on the reference board
        not one carries the practitioner. See cardViz.ts. */
-    drawCardViz(ctx, comp.viz, plate.id, pal, vizBoxFor(comp.band));
+    // `none` is the volume figure's face: the band is the cloud's, so the
+    // bake letters the type and draws nothing under it.
+    if (comp.viz !== "none") drawCardViz(ctx, comp.viz, plate.id, pal, vizBoxFor(comp.band));
   } else if (img) {
     // Photo, cover-fit (assets are exactly BAKE_W × BAKE_H, so this is
     // 1:1), baked CLEAN — the plate's dot-matrix hologram effect lives on
@@ -2283,6 +2343,19 @@ export interface ServicesCardRingProps {
    * The phone mount passes it; desktop keeps the drawer.
    */
   flipBack?: boolean;
+  /**
+   * THE RECORD THE RING BAKES (2026-09-19 lab pass). Defaults to production's
+   * `SERVICE_PLATES`; the card-face lab passes its re-cut four so the copy
+   * can be read on the real ring before it moves into `servicePlateData`.
+   * Four records, on the four slot ids, always.
+   */
+  plates?: readonly ServicePlate[];
+  /**
+   * An in-canvas figure over the face (V · Volume). `"off"` is byte-identical
+   * to the ring before the prop existed; the lab passes `"volume"`. Never
+   * mounted on the phone profile, and never under the governor's floor.
+   */
+  figure?: CardFigure;
 }
 
 export function ServicesCardRing({
@@ -2321,9 +2394,22 @@ export function ServicesCardRing({
   glowOpacity = RING_GLOW_OPACITY,
   profile = "desktop",
   flipBack = false,
+  plates = SERVICE_PLATES,
+  figure = "off",
 }: ServicesCardRingProps) {
   const mobileProfile = profile === "mobile";
   const bakeScale = mobileProfile ? BAKE_SCALE_MOBILE : 1;
+  /* The volume figure's gate (2026-09-19). ONE primitive off the quality
+     store, never `useQualityTier()` (ADR-108's finding: a fresh object per
+     snapshot loops `useSyncExternalStore` until the canvas boundary crashes).
+     Under the ring's own floor there is no figure at all — never half of one. */
+  const countMultiplier = useQualityStore((s) => s.countMultiplier);
+  const volumeOn = figure === "volume" && !mobileProfile && countMultiplier > VOLUME_QUALITY_FLOOR;
+  /* ⚠ THE DECK'S POSITIONAL TABLE FOLLOWS THE CHILD LIST. With the figure
+     mounted the veil is followed by one more child before the drawer, so the
+     drawer's three entries shift by one; the constant table is what
+     production walks, byte for byte. */
+  const deckIntraOrders = volumeOn ? DECK_INTRA_ORDERS_VOLUME : DECK_INTRA_ORDERS;
   const anisotropyCap = mobileProfile ? 4 : 8;
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
@@ -2702,7 +2788,7 @@ export function ServicesCardRing({
   /* ── Per-card device materials (opacities driven per frame) ── */
   const slabMaterials = useMemo(
     () =>
-      SERVICE_PLATES.map(() => {
+      plates.map(() => {
         const shared = {
           transparent: true,
           opacity: 0,
@@ -2722,11 +2808,11 @@ export function ServicesCardRing({
           new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(walls) }),
         ] as [THREE.MeshBasicMaterial, THREE.MeshBasicMaterial];
       }),
-    [ringTheme]
+    [plates, ringTheme]
   );
   const glintMaterials = useMemo(
     () =>
-      SERVICE_PLATES.map(
+      plates.map(
         () =>
           new THREE.LineBasicMaterial({
             color: new THREE.Color(ringTheme === "light" ? "#caa554" : SERVICES_GOLD),
@@ -2736,7 +2822,7 @@ export function ServicesCardRing({
             toneMapped: false,
           })
       ),
-    [ringTheme]
+    [plates, ringTheme]
   );
   /* The OPEN glint's materials — a separate set from `glintMaterials` so
      the two can cross-fade on `drawerT` (closed frame down, open bracket
@@ -2747,7 +2833,7 @@ export function ServicesCardRing({
     () =>
       !openDrawer
         ? null
-        : SERVICE_PLATES.map(
+        : plates.map(
             () =>
               new THREE.LineBasicMaterial({
                 color: new THREE.Color(ringTheme === "light" ? "#caa554" : SERVICES_GOLD),
@@ -2757,11 +2843,11 @@ export function ServicesCardRing({
                 toneMapped: false,
               })
           ),
-    [openDrawer, ringTheme]
+    [openDrawer, plates, ringTheme]
   );
   const glowMaterials = useMemo(
     () =>
-      SERVICE_PLATES.map(
+      plates.map(
         () =>
           new THREE.MeshBasicMaterial({
             map: glowTexture,
@@ -2776,7 +2862,7 @@ export function ServicesCardRing({
             toneMapped: false,
           })
       ),
-    [glowTexture, flipBack]
+    [glowTexture, flipBack, plates]
   );
   /* ⚠ THE VEIL IS SILENCED ON ITS MATERIAL, NEVER BY DROPPING THE MESH.
      A drawn face has no photograph for the dot matrix to be a treatment OF,
@@ -2791,7 +2877,7 @@ export function ServicesCardRing({
      skips the draw and leaves the child list alone. */
   const veilMaterials = useMemo(
     () =>
-      SERVICE_PLATES.map(
+      plates.map(
         () =>
           new THREE.MeshBasicMaterial({
             map: veilTexture,
@@ -2804,8 +2890,67 @@ export function ServicesCardRing({
             visible: faceUsesPhoto(faceVariant),
           })
       ),
-    [veilTexture, faceVariant]
+    [veilTexture, faceVariant, plates]
   );
+  /* ── The VOLUME figure (2026-09-19 lab pass) ─────────────────────────────
+     Per-slot geometry (the record in card-local units) and per-card shader
+     materials (the opacity clock is per card). The atlas lands from the face
+     bake effect, after the fonts; the materials re-key on it and on the
+     theme, and the frame loop holds them at 0 until it is mapped. Nothing is
+     allocated with the figure off. */
+  const [figureAtlas, setFigureAtlas] = useState<THREE.CanvasTexture | null>(null);
+  useEffect(() => {
+    return () => figureAtlas?.dispose();
+  }, [figureAtlas]);
+  const figureGeometries = useMemo<FigureGeometries[] | null>(
+    () =>
+      volumeOn
+        ? plates.map((plate) =>
+            buildFigureGeometry(isFigureSlot(plate.id) ? plate.id : "embedded", cardW, cardHeight)
+          )
+        : null,
+    [volumeOn, plates, cardW, cardHeight]
+  );
+  useEffect(() => {
+    return () => {
+      if (!figureGeometries) return;
+      for (const g of figureGeometries) {
+        g.points.dispose();
+        g.lines.dispose();
+      }
+    };
+  }, [figureGeometries]);
+  const figureMaterials = useMemo<FigureMaterials[] | null>(
+    () =>
+      volumeOn
+        ? plates.map(() =>
+            createFigureMaterials(
+              // The face palette's own reading ink, as a solid: dawn on dark,
+              // latent night on parchment (FACE_DARK / FACE_LIGHT `ink`).
+              ringTheme === "light" ? "rgb(17, 15, 9)" : `rgb(${DAWN})`,
+              ringTheme === "light" ? "#caa554" : SERVICES_GOLD,
+              figureAtlas
+            )
+          )
+        : null,
+    [volumeOn, plates, ringTheme, figureAtlas]
+  );
+  useEffect(() => {
+    return () => {
+      if (!figureMaterials) return;
+      for (const m of figureMaterials) {
+        m.points.dispose();
+        m.lines.dispose();
+      }
+    };
+  }, [figureMaterials]);
+  /* The frame loop writes the figure's uniforms through a ref (the
+     `matRefs` idiom — per-frame writes never reach a memo's own value). */
+  const figureMaterialsRef = useRef<FigureMaterials[] | null>(null);
+  useEffect(() => {
+    figureMaterialsRef.current = figureMaterials;
+  }, [figureMaterials]);
+
   /* ── Drawer materials (ADR-050 rev 3) ────────────────────────────────────
      Same material RECIPE as the card's slab/glint, but its own instances,
      because the drawer's opacity rides the open clock while the card's rides
@@ -2817,7 +2962,7 @@ export function ServicesCardRing({
     () =>
       !openDrawer
         ? null
-        : SERVICE_PLATES.map(() => {
+        : plates.map(() => {
             const shared = {
               transparent: true,
               opacity: 0,
@@ -2838,13 +2983,13 @@ export function ServicesCardRing({
               new THREE.MeshBasicMaterial({ ...shared, color: new THREE.Color(walls) }),
             ] as [THREE.MeshBasicMaterial, THREE.MeshBasicMaterial];
           }),
-    [openDrawer, ringTheme]
+    [openDrawer, plates, ringTheme]
   );
   const drawerGlintMaterials = useMemo(
     () =>
       !openDrawer
         ? null
-        : SERVICE_PLATES.map(
+        : plates.map(
             () =>
               new THREE.LineBasicMaterial({
                 color: new THREE.Color(ringTheme === "light" ? "#caa554" : SERVICES_GOLD),
@@ -2854,7 +2999,7 @@ export function ServicesCardRing({
                 toneMapped: false,
               })
           ),
-    [openDrawer, ringTheme]
+    [openDrawer, plates, ringTheme]
   );
 
   useEffect(() => {
@@ -2917,7 +3062,7 @@ export function ServicesCardRing({
     (async () => {
       await waitForCardFonts();
       const baked = await Promise.all(
-        SERVICE_PLATES.map(async (plate) => {
+        plates.map(async (plate) => {
           let img: HTMLImageElement | null = null;
           // A drawn face never reaches the image, so it must never FETCH one —
           // the same discipline as the portrait back below ("flag-off never
@@ -2943,6 +3088,9 @@ export function ServicesCardRing({
         return texture;
       };
       setTextures(baked.map(toTexture));
+      // The volume figure's glyph atlas bakes here, after the fonts, for the
+      // same reason the faces do: PT Mono or the fallback face, forever.
+      if (volumeOn) setFigureAtlas(buildFigureAtlas());
       // The portrait back bakes independently (no fonts, one photo) and
       // only under the deck flag — flag-off never fetches the asset.
       // ADR-108: the phone never flips a deck (`useAboutStageScroll` bails
@@ -2964,7 +3112,17 @@ export function ServicesCardRing({
     // `facePal` (the ring theme) re-runs the bake on a flip — light gets
     // the parchment-print faces; the old set disposes via the `[textures]`
     // cleanup, exactly like a glEpoch rebake.
-  }, [gl, faceVariant, facePal, titleStyle, bakeScale, mobileProfile, anisotropyCap]);
+  }, [
+    gl,
+    faceVariant,
+    facePal,
+    titleStyle,
+    bakeScale,
+    mobileProfile,
+    anisotropyCap,
+    plates,
+    volumeOn,
+  ]);
 
   /* ── The DRAWER bake is LAZY (ADR-050 promotion, owner 2026-07-26) ────────
      Four drawer faces cost ~18 MB of texture, and most visitors scroll the
@@ -2992,7 +3150,7 @@ export function ServicesCardRing({
       if (disposed) return;
       const maxAniso = gl.capabilities.getMaxAnisotropy?.() ?? 1;
       setDrawerTextures(
-        SERVICE_PLATES.map((plate) => {
+        plates.map((plate) => {
           const texture = new THREE.CanvasTexture(
             bakeDrawerFace(plate, ringTheme === "light" ? DRAWER_LIGHT : DRAWER_DARK)
           );
@@ -3008,7 +3166,7 @@ export function ServicesCardRing({
     };
     // `ringTheme` re-runs the bake on a flip; the old set disposes via the
     // `[drawerTextures]` cleanup effect below, exactly like a glEpoch rebake.
-  }, [gl, openDrawer, drawerRequested, ringTheme, anisotropyCap]);
+  }, [gl, openDrawer, drawerRequested, ringTheme, anisotropyCap, plates]);
 
   /* ── The BACK FACE bake is LAZY, PER CARD, and IDLE for the front (ADR-110)
      The frame loop asks for ONE card's back: URGENTLY when that card was
@@ -3030,7 +3188,7 @@ export function ServicesCardRing({
       await waitForCardFonts();
       if (disposed) return;
       const canvas = bakeCardBack(
-        SERVICE_PLATES[idx],
+        plates[idx],
         ringTheme === "light" ? DRAWER_LIGHT : DRAWER_DARK,
         faceVariant,
         BAKE_SCALE_MOBILE_BACK
@@ -3069,7 +3227,7 @@ export function ServicesCardRing({
       if (idle && "cancelIdleCallback" in window) window.cancelIdleCallback(idle);
       if (timer) clearTimeout(timer);
     };
-  }, [gl, flipBack, backRequest, ringTheme, faceVariant, anisotropyCap]);
+  }, [gl, flipBack, backRequest, ringTheme, faceVariant, anisotropyCap, plates]);
   // Dispose whatever backs are live on unmount (per-entry eviction and
   // replacement dispose the rest as they go).
   useEffect(
@@ -3872,6 +4030,21 @@ export function ServicesCardRing({
       veilLevelRef.current[i] +=
         (veilTarget - veilLevelRef.current[i]) * Math.min(1, delta * VEIL_DAMP_RATE);
       veilMaterials[i].opacity = veilLevelRef.current[i] * depthO * master;
+      /* The volume figure is the face's material at every t (its alpha is
+         `faceO`), held at 0 until its atlas is mapped — an unbound sampler
+         reads opaque, and opaque under gold is a field of squares. `uProj`
+         is what sizes a sprite in card units at this depth. */
+      const figureMat = figureMaterialsRef.current?.[i];
+      if (figureMat) {
+        const on = figureMat.points.uniforms.uAtlas.value ? faceO : 0;
+        figureMat.points.uniforms.uOpacity.value = on;
+        figureMat.lines.uniforms.uOpacity.value = on;
+        figureMat.points.uniforms.uProj.value = figureProjection(
+          camera,
+          size.height,
+          gl.getPixelRatio()
+        );
+      }
       cardGroup.visible = opacity > 0.004;
 
       /* ── The drawer's transform + ANTI-GHOST GUARD 1 of 2 ────────────────
@@ -4062,8 +4235,8 @@ export function ServicesCardRing({
       if (deckEngaged && (exitP >= DECK_RENDER_REBASE_EXIT || aboutP > 0)) {
         const base = DECK_RENDER_PITCH * deckOrder(i, flip ? flip.flipped : false);
         const kids = cardGroup.children;
-        for (let k = 0; k < kids.length && k < DECK_INTRA_ORDERS.length; k++) {
-          kids[k].renderOrder = base + DECK_INTRA_ORDERS[k];
+        for (let k = 0; k < kids.length && k < deckIntraOrders.length; k++) {
+          kids[k].renderOrder = base + deckIntraOrders[k];
         }
         deckOrderAppliedRef.current = true;
       }
@@ -4079,8 +4252,8 @@ export function ServicesCardRing({
       for (let i = 0; i < RING_COUNT; i++) {
         const kids = cardGroupRefs.current[i]?.children;
         if (!kids) continue;
-        for (let k = 0; k < kids.length && k < DECK_INTRA_ORDERS.length; k++) {
-          kids[k].renderOrder = DECK_INTRA_ORDERS[k];
+        for (let k = 0; k < kids.length && k < deckIntraOrders.length; k++) {
+          kids[k].renderOrder = deckIntraOrders[k];
         }
       }
       deckOrderAppliedRef.current = false;
@@ -4142,7 +4315,7 @@ export function ServicesCardRing({
           masterOpacityGetter={trackExitGetter}
         />
       </group>
-      {SERVICE_PLATES.map((plate, i) => (
+      {plates.map((plate, i) => (
         <group
           key={plate.id}
           ref={(el) => {
@@ -4245,6 +4418,33 @@ export function ServicesCardRing({
           >
             <planeGeometry args={[cardW, cardHeight]} />
           </mesh>
+          {/* ── THE VOLUME FIGURE (2026-09-19 lab pass) ──────────────────
+              One group per card, mounted on the PROP (never on the atlas —
+              the positional-order rule), after the veil so indices 0–5
+              hold and the deck walks `DECK_INTRA_ORDERS_VOLUME`. Static
+              geometry in card-local space: it moves with the card and with
+              nothing else. Between the face (0.1) and the portrait back
+              (0.11); `depthWrite` off on both children, so the mark's
+              points paint through it exactly as through the face. */}
+          {volumeOn && figureGeometries && figureMaterials && (
+            <group
+              renderOrder={RING_CARD_RENDER_ORDERS.figure}
+              position={[0, 0, slabDepth / 2 + RING_CONTENT_LIFT + 0.004]}
+            >
+              <lineSegments
+                renderOrder={RING_CARD_RENDER_ORDERS.figure}
+                geometry={figureGeometries[i].lines}
+                material={figureMaterials[i].lines}
+                frustumCulled={false}
+              />
+              <points
+                renderOrder={RING_CARD_RENDER_ORDERS.figure + 0.001}
+                geometry={figureGeometries[i].points}
+                material={figureMaterials[i].points}
+                frustumCulled={false}
+              />
+            </group>
+          )}
           {/* ── THE PHONE CARD's BACK (ADR-110) ─────────────────────────
               The card's own reverse, floated behind the back cap at
               `rotation.y = π` (the portrait back's idiom: the group's own

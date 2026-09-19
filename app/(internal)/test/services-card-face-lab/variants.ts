@@ -1,5 +1,6 @@
 import type {
   CardFaceVariant,
+  CardFigure,
   CardTitleStyle,
 } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 
@@ -36,6 +37,15 @@ export interface FaceVariant {
    * row it matters most on.
    */
   pinnedTitle?: CardTitleStyle;
+  /**
+   * The row bakes the RE-CUT four (`serviceRecut.ts`: Keynote · Workshop ·
+   * Embedded with Advisory folded in · Home session) instead of production's
+   * record. The 2026-09-19 material rows carry it; every earlier row keeps
+   * the shipped copy so the survey stays what it was.
+   */
+  recut?: boolean;
+  /** An in-canvas figure over the face — V · Volume's point cloud. */
+  figure?: CardFigure;
 }
 
 export const FACE_VARIANTS: readonly FaceVariant[] = [
@@ -226,5 +236,57 @@ export const CANDIDATE_VARIANTS: readonly FaceVariant[] = [
     thesis:
       "THE PROPOSAL. The constellation drawing on the Meridian arrangement — title centred at the head, paragraph centred at the foot — with both open questions closed. The title treatment is PINNED to display (a card that changes when you press a chip has not been decided). The drawing's band is SOLVED rather than picked: centred in the space the type leaves at its worst case across all four services, 100 units of clearance at each end, so no card is composed at another card's expense. And the title's datum is measured off the expand chit — a centred title cannot share the chit's centre line the way a top-left one does, so the answer is the opposite of alignment: clear it far enough to read as its own band. The chit itself does not move; the type does.",
     provenance: "Meridian arrangement · constellation drawing · owner 2026-08-30",
+  },
+];
+
+/**
+ * THE THREE MATERIALS (owner, 2026-09-19: "holographic ASCII … explore some
+ * different directions … JavaScript, three.js, SVGs"), on the RE-CUT four.
+ *
+ * ⚠ ONE FIGURE RECORD, THREE MATERIALS. Every row draws the same subject —
+ * `lib/services-ring/serviceFigures`: one estate of work, a structure per
+ * service (RADIANT · ROUTE · MESH with the person-led nodes left open · THE
+ * TABLE) — and differs ONLY in what it is made of. The composition is V8's,
+ * held fixed. That is the opposite of the survey's rule above and it is
+ * deliberate: the survey asked WHAT to draw and V8 answered; these rows ask
+ * what to draw it IN, and a question about material is only readable when
+ * nothing else moves.
+ */
+export const MATERIAL_VARIANTS: readonly FaceVariant[] = [
+  {
+    id: "raster",
+    label: "R · Raster",
+    face: "raster",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "CANVAS. The figure re-screened as a character grid: PT Mono glyphs on a fixed pitch, one per cell, chosen off a density ramp (· − + = # @) by how much of the structure the cell covers, alpha by the same, every third row losing light as a scan cadence. A near node letters @, a far one ·; the marks stay diamonds. Static bake, zero per-frame cost; the phone takes it unchanged.",
+    provenance:
+      "HORSE 2026 (figma × крона) · the dot-matrix horse · ASCII portraits on the design rack",
+  },
+  {
+    id: "volume",
+    label: "V · Volume",
+    face: "volume",
+    figure: "volume",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "THREE.JS. The same figure given its third dimension back — the cloud is a sphere and the constellation projected it flat. Nodes as PT Mono glyph sprites at their own depth over the band, chords as hairlines, the near hemisphere protruding in front of the face. Nothing animates it: it is geometry inside the card's group, so the ring's turn and the rig's pointer-look give it real parallax, which is what makes a hologram read as one. The face bakes the type alone.",
+    provenance:
+      "The particle body on its platform · the wireframe orbits · ADR-021's card-content clause",
+  },
+  {
+    id: "wire",
+    label: "W · Wire",
+    face: "wire",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "SVG. The figure as line work on the house ring register — the About drawing's rings on their dash ladder, the rim graduated every 15° off the cardinals, four stubs — emitted ONCE as path data and rendered twice: rasterised into this bake through Path2D, and as the inline SVG strip below, which is the future mobile plate. A technical illustrated line object, not a brighter additive glow.",
+    provenance: "The wireframe device · ADR-106's dial (copied, never imported) · ADR-025 U4",
   },
 ];

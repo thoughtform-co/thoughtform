@@ -4,7 +4,7 @@ import { Fragment, useLayoutEffect, useRef, useState } from "react";
 
 import { DRAWER_CLOSE_BOX, DRAWER_CTA_BOX, RING_CARD_CTA_BOX } from "./hologram/ringCtaBox";
 import { useHologramConnectors } from "@/lib/stores/hologramConnectorStore";
-import { SERVICE_PLATES } from "./servicePlateData";
+import { SERVICE_PLATES, type ServicePlate } from "./servicePlateData";
 import type { ServiceId } from "./serviceData";
 
 /**
@@ -50,8 +50,15 @@ export function ServicesRingHitAreas({
   onOpenFront,
   onCloseDrawer,
   openServiceId,
+  plates = SERVICE_PLATES,
 }: {
   onSelectService: (serviceId: ServiceId) => void;
+  /**
+   * The record the accessible names come from (2026-09-19 lab pass). Defaults
+   * to production's; the card-face lab passes its re-cut four so the sr-only
+   * copy and the button names follow the card the ring is actually baking.
+   */
+  plates?: readonly ServicePlate[];
   /**
    * ADR-050. When provided, the FRONT card's hit target becomes a full-rect
    * button that opens the DOM spec plate, instead of the narrow `<a>` shimmed
@@ -107,7 +114,7 @@ export function ServicesRingHitAreas({
         ringAnchors
           .filter((anchor) => anchor.visible && anchor.w > 8)
           .map((anchor) => {
-            const plate = SERVICE_PLATES.find((p) => p.id === anchor.serviceId);
+            const plate = plates.find((p) => p.id === anchor.serviceId);
             if (anchor.front && onOpenFront) {
               const isOpen = openServiceId === anchor.serviceId;
               /* ADR-110 (phone): the card has TURNED OVER and its back — the

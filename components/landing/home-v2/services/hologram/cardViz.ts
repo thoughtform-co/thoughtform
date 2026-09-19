@@ -32,6 +32,9 @@
 
 import { sampleShape } from "@/lib/brandmark/sampleShape";
 import { BRANDMARK_FULL_PATHS, BRANDMARK_SHAPE_KEYS } from "@/lib/brandmark/shapes";
+import { setBakeType } from "@/lib/services-ring/ringType";
+import { FIGURE_INK, figureFor, isFigureSlot, near } from "@/lib/services-ring/serviceFigures";
+import { wireFor, wireInk } from "@/lib/services-ring/serviceWire";
 
 export type VizKey = string;
 
@@ -1000,6 +1003,180 @@ type VizDraw = (
   service: VizKey
 ) => void;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE FIGURE RECORD IN TWO MATERIALS (2026-09-19 lab pass).
+
+   Both read `lib/services-ring/serviceFigures` — the constellation's own
+   cloud and four structures, lifted out of this file into a record so that a
+   raster, a point cloud and a wire draw ONE subject. The third material
+   (V · Volume) is not here: it is three.js geometry in `ServicesCardRing`,
+   and this bake letters the type alone for it (`viz: "none"`).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/** The raster's cell: PT Mono at this size, 0.6 em wide, 1 em tall. On the
+ *  ring the card renders ~0.55× bake, so an 18px cell is a 10px glyph — the
+ *  dot-matrix read of the HORSE 2026 reference, not a readable letter. */
+const RASTER_PX = 18;
+/** The density ramp, dark → light, all PT Mono glyphs. The house glyph pool
+ *  (`captionScramble`'s `·-+`) at its foot. */
+const RASTER_RAMP = ["·", "-", "+", "=", "#", "@"] as const;
+/** Every third row loses light — a scan cadence baked as REMOVED light, the
+ *  voidwalker mask's law: a scanline may only ever take light away. */
+const RASTER_SCAN_EVERY = 3;
+const RASTER_SCAN_KEEP = 0.55;
+
+/**
+ * R · RASTER — the figure re-screened as a character grid. The structure is
+ * drawn FAT into an offscreen coverage field (its marks two-and-a-half times
+ * the constellation's, so a node covers a cell), then every cell letters one
+ * glyph off the ramp by its mean luminance, with alpha by the same. Depth is
+ * already in the field (the record's fade), so a near node letters `@` and a
+ * far one `·`. Static, deterministic, zero per-frame cost.
+ */
+function raster(
+  ctx: CanvasRenderingContext2D,
+  b: VizBox,
+  pal: VizPalette,
+  _rand: () => number,
+  service: VizKey
+): void {
+  const fig = figureFor(isFigureSlot(service) ? service : "embedded");
+  const cols = Math.max(8, Math.round(b.w / (RASTER_PX * 0.6)));
+  const rows = Math.max(8, Math.round(b.h / RASTER_PX));
+  const cellW = b.w / cols;
+  const cellH = b.h / rows;
+
+  // The coverage field, in the band's own px.
+  const fw = Math.max(1, Math.round(b.w));
+  const fh = Math.max(1, Math.round(b.h));
+  const off = document.createElement("canvas");
+  off.width = fw;
+  off.height = fh;
+  const f = off.getContext("2d");
+  if (!f) return;
+  f.fillStyle = "#000";
+  f.fillRect(0, 0, fw, fh);
+  const R = Math.min(fw, fh) / 2;
+  const cx = fw / 2;
+  const cy = fh / 2;
+  const P = fig.points.map((p) => ({ x: cx + p.x * R, y: cy + p.y * R, z: p.z }));
+  const FAT = 2.5;
+  const white = (a: number) => `rgba(255,255,255,${Math.min(1, a).toFixed(3)})`;
+  const open = new Set(fig.unlinked);
+
+  /* THE CHORDS LETTER THE FORM. An ASCII portrait reads through contiguous
+     runs of characters along its edges, and the record's chord alphas are
+     tuned for a hairline on a dark ground — sampled into a cell they letter
+     `·` at best. In the FIELD a chord is coverage, not ink: lifted to a
+     floor of .5 and drawn three cells wide so every chord letters a run. */
+  for (const e of fig.edges) {
+    const a = P[e.a];
+    const z = P[e.b];
+    const ink = FIGURE_INK[e.kind];
+    f.lineWidth = ink.width * FAT * 1.4;
+    f.strokeStyle = white(0.5 + ink.alpha(near((a.z + z.z) / 2)) * 0.8);
+    f.beginPath();
+    f.moveTo(a.x, a.y);
+    f.lineTo(z.x, z.y);
+    f.stroke();
+  }
+  P.forEach((p, i) => {
+    const nz = near(p.z);
+    if (open.has(i)) {
+      f.lineWidth = 2.2;
+      f.strokeStyle = white(0.55 + nz * 0.3);
+      const r = 7;
+      f.strokeRect(p.x - r, p.y - r, r * 2, r * 2);
+      return;
+    }
+    const lit = fig.lit[i];
+    const r = (lit ? FIGURE_INK.nodeR.lit(nz) : FIGURE_INK.nodeR.unlit(nz)) * FAT * 0.9;
+    f.fillStyle = white((lit ? FIGURE_INK.node.lit(nz) : FIGURE_INK.node.unlit(nz)) * 1.1);
+    f.fillRect(p.x - r, p.y - r, r * 2, r * 2);
+  });
+
+  // Sample every cell — the halftone's own walk, one glyph per cell.
+  const px = f.getImageData(0, 0, fw, fh).data;
+  setBakeType(ctx, { family: "mono", px: RASTER_PX, track: 0 });
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (let r = 0; r < rows; r++) {
+    const y0 = Math.floor(r * cellH);
+    const y1 = Math.min(fh, Math.floor((r + 1) * cellH));
+    for (let c = 0; c < cols; c++) {
+      const x0 = Math.floor(c * cellW);
+      const x1 = Math.min(fw, Math.floor((c + 1) * cellW));
+      let sum = 0;
+      let n = 0;
+      for (let y = y0; y < y1; y += 2) {
+        for (let x = x0; x < x1; x += 2) {
+          sum += px[(y * fw + x) * 4];
+          n++;
+        }
+      }
+      if (!n) continue;
+      const L = sum / n / 255;
+      if (L < 0.025) continue;
+      const idx = Math.min(
+        RASTER_RAMP.length - 1,
+        Math.floor(Math.pow(L, 0.5) * RASTER_RAMP.length)
+      );
+      let alpha = 0.4 + 0.6 * Math.min(1, L * 1.6);
+      if (r % RASTER_SCAN_EVERY === RASTER_SCAN_EVERY - 1) alpha *= RASTER_SCAN_KEEP;
+      ctx.fillStyle = pal.ink(alpha);
+      ctx.fillText(RASTER_RAMP[idx], b.x + (c + 0.5) * cellW, b.y + (r + 0.5) * cellH);
+    }
+  }
+  ctx.textAlign = "start";
+  ctx.textBaseline = "alphabetic";
+
+  // The marks stay MARKS: a diamond is the signal in every material, never a
+  // glyph the ramp happened to have.
+  ctx.fillStyle = pal.gold;
+  for (const m of fig.marks) {
+    const p = fig.points[m.i];
+    dia(ctx, b.x + b.w / 2 + p.x * R, b.y + b.h / 2 + p.y * R, m.r * 1.1);
+  }
+}
+
+/**
+ * W · WIRE — the figure as line work on the house ring register, rasterised
+ * from the SAME path strings the lab's DOM strip renders (`serviceWire`).
+ * `Path2D` takes SVG path data; the dash values are in viewBox units and the
+ * context's scale carries them.
+ */
+function wire(
+  ctx: CanvasRenderingContext2D,
+  b: VizBox,
+  pal: VizPalette,
+  _rand: () => number,
+  service: VizKey
+): void {
+  const w = wireFor(isFigureSlot(service) ? service : "embedded");
+  const s = Math.min(b.w, b.h) / w.vb.w;
+  ctx.save();
+  ctx.translate(b.x + b.w / 2, b.y + b.h / 2);
+  ctx.scale(s, s);
+  ctx.lineCap = "butt";
+  for (const p of [...w.housing, ...w.figure]) {
+    const { role, alpha } = wireInk(p.ink);
+    const a = Math.min(1, alpha * p.alpha);
+    const colour = role === "gold" ? (a >= 0.999 ? pal.gold : pal.goldA(a)) : pal.ink(a);
+    const path = new Path2D(p.d);
+    if (p.fill) {
+      ctx.fillStyle = colour;
+      ctx.fill(path);
+    } else {
+      ctx.strokeStyle = colour;
+      ctx.lineWidth = p.width;
+      ctx.setLineDash(p.dash ? p.dash.split(" ").map(Number) : []);
+      ctx.stroke(path);
+    }
+  }
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
 const LANGUAGES: Record<string, VizDraw> = {
   constellation,
   dendrite,
@@ -1010,6 +1187,8 @@ const LANGUAGES: Record<string, VizDraw> = {
   sigil,
   armillary,
   crystal,
+  raster,
+  wire,
 };
 
 export type VizLanguage = keyof typeof LANGUAGES | string;
