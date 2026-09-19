@@ -228,6 +228,67 @@
   mix-blend-mode: normal;
 }
 
+/* ⚠ THE FIGURE OVERSCANS ITS SLOT ON THE ALPHA BRANCH (ADR-082 U29, owner
+   2026-09-19: "the avatar is nicely sized in comparison with the elements
+   around it … we need to do that").
+
+   ⚠ THE BOX WAS NEVER SMALL; THE PICTURE INSIDE IT IS. Measured at the owner's
+   1920×1247 the media box is 460×845 — the figure column at its 460px cap,
+   i.e. all the width the composition has — and the painted figure is 600.5px,
+   71 % of it. Two things spend the rest: every delivery carries transparent
+   headroom above the head (azeroth 0.235 of its canvas), and ADR-082 U25's
+   fit equalises all five eras DOWN to the shortest span (0.7343). Against the
+   reference, where the character fills 61 % of the frame's height, this paints
+   48 %. No chrome trim reaches it: `--vwd-fig-w` is
+   `(100svh − chrome) × 0.5625` and at that viewport it is already 462 against
+   a 460 cap, so the column is capped rather than starved.
+
+   So the media is drawn LARGER THAN ITS SLOT and the surplus is spent on the
+   part of the canvas that is empty. The wrap is `place-items: end center` and
+   the media `object-position: bottom center`, so the growth leaves through the
+   TOP and the sides — the foot edge does not move and the boots stay on the
+   projector disc.
+
+   ⚠ THE CEILING IS THE COLUMN'S, THE SAME LAW THE RETICLE IS SIZED ON — and
+   the ceiling is not the value. The box may reach into the stage's column gap
+   and may never touch a panel, which `fig-w + 2 × gap` puts at 1.199 at the
+   NARROWEST capable rung (1101×800). 1.19 was built and MEASURED LIVE at
+   **1px** of clearance there: that satisfies the law and is not a margin —
+   any rounding in the gap's own `clamp(18px, 2.4vw, 52px)` closes it, and the
+   reticle's precedent leaves ~28px. 1.16 is the shipped value, measured in the
+   hold against the panels' real edges:
+
+     1101×800   picture 307px   air 5px each side
+     1280×720   picture 267px   air 12px
+     1440×900   picture 361px   air 9px
+     1920×1247  picture 534px   air 12px
+
+   ⚠ AND THE BOX IS WHAT IS BOUNDED, NOT THE INK. Most of this element is
+   transparent canvas, so a box in the gutter paints nothing there — but the
+   box is the measurable thing and azeroth's composite is 0.9625 of its canvas
+   WIDE (its spires), so the two are within ~6px of each other on the one era
+   that could touch. Bounding the ink instead would be a bound on a number that
+   changes with every delivery.
+
+   ⚠ ALPHA BRANCH ONLY, AND THAT IS STRUCTURAL. The floor branch fakes
+   transparency with an OPAQUE bed on `.vwh__media-wrap` plus a radial mask to
+   soften its edges (ADR-082 U6), and U27 moved the fit onto that wrap so the
+   bed would scale with the picture. A media overflowing that bed would paint
+   the asset's near-black ground over the mast and the panel heads — the exact
+   rectangle three attempts in this file were spent removing. An engine with
+   neither codec, and `azeroth` on Safari, keep what they have.
+
+   ⚠ NOT A `transform: scale()` (U25). The scanline mask is on this element in
+   absolute px; a transform scales its pitch and gives each era its own raster.
+   ⚠ THE DEFAULT IS 1, so every other home — the figure lab, the phone, the
+   701–1100 rung — is byte-identical without naming this at all. The landing
+   sets it in `voidwalker-datum.css`'s desktop rung, where the column ceiling
+   it is derived from is declared. */
+.vwh__slot[data-holo-alpha] .vwh__media {
+  width: calc(100% * var(--holo-fit, 1) * var(--holo-overscan, 1));
+  height: calc(100% * var(--holo-fit, 1) * var(--holo-overscan, 1));
+}
+
 /* ⚠ ON THE FLOOR BRANCH THE FIT MOVES TO THE WRAP (ADR-082 U27). The floor's
    opaque bed and the vignette that softens its edges both live on
    `.vwh__media-wrap`, which is the full slot — so when U25 shrank the MEDIA

@@ -158,7 +158,12 @@ function FigureReticle() {
  */
 function PressGlyph({ linked }: { linked: boolean }) {
   return (
-    <svg className="vwd__press__glyph" viewBox="0 0 7 7" width="14" height="14" aria-hidden="true">
+    /* ⚠ THE SIZE IS THE SHEET'S (`--vwd-press-mark`, 21px = a 3px cell), and
+       the attributes here are the pre-CSS fallback only. They are kept equal
+       to the token deliberately: an attribute that disagrees with the rule is
+       a second source for one number, and this one has to stay an INTEGER
+       multiple of the 7-cell lattice or the drawing goes soft. */
+    <svg className="vwd__press__glyph" viewBox="0 0 7 7" width="21" height="21" aria-hidden="true">
       {/* ⚠ EVERY OTHER ROW. Packed into consecutive rows the rects merge into
           one blob at 14px — `FigureGlyph`'s own recorded lesson. */}
       <rect className="vwd__press__sk" x="1" y="0" width="5" height="1" />
@@ -179,8 +184,10 @@ function PressItem({ press }: { press: VwPress }) {
   const year = press.date ? press.date.slice(0, 4) : null;
   const body = (
     <>
-      <span className="vwd__press__meta">
+      <span className="vwd__press__well">
         <PressGlyph linked={Boolean(press.href)} />
+      </span>
+      <span className="vwd__press__meta">
         <span className="vwd__press__outlet">{press.outlet}</span>
         {year ? <span className="vwd__press__year">{year}</span> : null}
       </span>

@@ -61,9 +61,15 @@
   --vwd-rail: 0.12;
 
   /* The press mark's cell (ADR-082 U26). ⚠ AN INTEGER MULTIPLE OF THE 7-CELL
-     LATTICE — 14px is a 2px cell, and a fractional one turns a pixel drawing
-     into a blur. It is also the gutter's width, so the two can never drift. */
-  --vwd-press-mark: 14px;
+     LATTICE — 21px is a 3px cell, and a fractional one turns a pixel drawing
+     into a blur.
+     ⚠ 14 → 21 WITH THE WELL (ADR-082 U29): the mark used to sit in a bare
+     gutter beside a 10px label, where 14px was its match; inside a bounded
+     28px well beside type that has grown a rung it read as a speck. The well
+     is the mark PLUS one lattice cell of air on each side (21 + 2 × 3.5), so
+     the two move together and neither is a free number. */
+  --vwd-press-mark: 21px;
+  --vwd-press-well: 28px;
 
   /* ── THE REEL. One cell pitch for all five chips, so the offset that centres
         the selected era is a signed multiple of ONE number. `--vwd-reel` is how
@@ -149,7 +155,23 @@
      follow the reference: Starfield gives its circle an empty half-screen,
      and this figure has a reading column 30px away on either side. */
   --vwd-ret-d: calc(var(--vwd-fig-w) * 1.14);
-  --vwd-ret-cy: 51%;
+  /* ⚠ RE-MEASURED AFTER THE OVERSCAN (ADR-082 U29), NOT RE-DERIVED. The ring
+     is centred on where the figure PAINTS, and the overscan moves that: the
+     picture grows out of a BOTTOM-seated box, so every pixel it gains is
+     above the feet and the centre rises. Measured in the hold, on a seated
+     era: 59.1 % at 1101×800, 58.0 at 1280×720, 57.1 at 1440×900, 56.1 at
+     1920×1247 — one number for a range, as U23's own 52.2/51.1/49.7 was.
+     ⚠ AND IT IS MEASURED ON A SEATED ERA, NOT ON WHICHEVER ONE THE PROBE
+     OPENS. `azeroth` reads ~4 points lower (52.1 at 1920×1247) because it
+     hovers above its own projector disc — `footY` 0.9695 against the seated
+     eras' 0.993–0.998, the defect ADR-082 U25 named and left open, which the
+     overscan magnifies from 23.6px to 27px. Centring the ring on the outlier
+     would bake that defect into a second object; it is one asset re-seat from
+     agreeing with the other four.
+     ⚠ The first cut of this ring solved the centre by arithmetic and rang him
+     from the head to the knees — only a still showed it, and a still is still
+     the only thing that can. */
+  --vwd-ret-cy: 57%;
 
   /* ⚠ THE READING BAND IS THIS PADDING, NOT THE STATION'S. The stage box is
      a full-bleed instrument seated inside the HUD frame (it spans the
@@ -486,11 +508,32 @@
 
 /* ── SCOPE ─────────────────────────────────────────────────────────── */
 
+/* ⚠ THE MOTTO IS A LEDE, NOT A KICKER (ADR-082 U29, owner 2026-09-19: "for
+   Venting Became a Campaign, I don't like that font size or thickness").
+   It was PT Mono at 11–12.5px on a `.06em` literal — the chrome register,
+   which is what made a SENTENCE read as a label and left it thinner than the
+   paragraph it introduces. The reference does the same job with INDUSTRIALIST:
+   the background panel's first line is the body's own face, at the body's
+   size, one weight up and in the panel's accent — so the eye takes it as the
+   opening of the prose rather than as another readout.
+
+   ⚠ THE COLOUR IS UNCHANGED and is the only thing separating it from the
+   paragraph now, which is why the WEIGHT has to do the rest: `--weight-lit`
+   is the house ceiling (500) and PP Neue Montreal ships it. ⚠ NEVER a mono
+   700 — PT Mono has no 500 and a 700 there is the type ratchet's B count.
+
+   ⚠ AND IT RIDES `--band-copy`'s OWN CLAMP RATHER THAN THE TOKEN, at one rung
+   under the prose: the token is the landing's copy size and this line sits
+   inside a panel whose measure is 368px, where the body's 18px cap wraps a
+   52-character motto onto three lines. Dropping the literal `.06em` takes the
+   sheet's ratchet count A from 2 to 1. */
 .vwd__motto {
   margin: 0 0 clamp(8px, 1.2svh, 14px);
-  font-family: var(--vwd-mono);
-  font-size: clamp(11px, 0.8vw, 12.5px);
-  letter-spacing: 0.06em;
+  font-family: var(--vwd-display);
+  font-size: clamp(12.5px, 1.45svh, 17px);
+  font-weight: var(--weight-lit);
+  letter-spacing: var(--track-copy);
+  line-height: 1.4;
   color: var(--gold-ink, #caa554);
 }
 .vwd__prose {
@@ -569,6 +612,10 @@
   text-align: left;
   font: inherit;
 }
+/* ⚠ THE FRAME'S WIDTH IS TRANSFERRED FROM ITS HEIGHT CAP, NOT DECLARED, and
+   the desktop rung below is where that is corrected (ADR-082 U29). Kept here
+   as shipped because the cap is the PHONE's largest budget term — U23 deleted
+   its `max-height: none` to buy the one-screen fit, 190px → 96. */
 .vwd__film__frame {
   position: relative;
   display: block;
@@ -638,33 +685,70 @@
 /* The press stack takes the readout grammar too — one rule per item, at the
    item's FOOT. ⚠ Never under the meta line: a rule between an outlet and its
    own headline splits the record it is supposed to bound. */
+/* ⚠ AN ITEM IS A BOUNDED OBJECT NOW, NOT A RULED ROW (ADR-082 U29, owner
+   2026-09-19: the articles "should have some sort of icons, but they should
+   really feel like a pill, like a sort of subtle button").
+
+   ⚠ THIS REVERSES ADR-082 U26's "AN ICON RATHER THAN A PILL OR A FRAME", and
+   the reason that ruling gave is worth keeping straight: it refused the frame
+   because both alternatives were read as PAINTED GROUNDS, which this station
+   has turned down three times and which its own `>700px` sweep exists to keep
+   off. **An outline is not a ground** — nothing here fills, on any state — and
+   the sweep is untouched besides, since an item is 368px wide against a 700px
+   floor. What U26 was right about survives intact: the mark is DAWN ONLY at
+   .45/.8, there is ONE mark rather than one per outlet, and the lit rule still
+   means the piece links out.
+
+   ⚠ THE AIR IS THE DIVIDER. With four borders per item, a foot rule between
+   two of them is a doubled line — the casefile's own finding at ADR-089 U3,
+   where a box and the track it sat on drew gold twice a pixel apart. So the
+   stack's `gap: 0` becomes real spacing and `.vwd__press`'s `border-bottom`
+   and the sibling's `padding-top` both go.
+
+   ⚠ SQUARE (owner's own call between three geometries). ADR-065's depth ladder
+   puts chrome at 0 and the house carries no radius anywhere; a rounded pill
+   here would be the one radius on the site, and the notch belongs to objects
+   that are oriented or connected, which six peers in a list are not. */
 .vwd__press-stack {
   display: grid;
-  gap: 0;
+  gap: clamp(6px, 0.9svh, 10px);
 }
 .vwd__press {
   display: grid;
-  gap: 4px;
-  padding-bottom: clamp(8px, 1.2svh, 14px);
-  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
+  grid-template-columns: var(--vwd-press-well) minmax(0, 1fr);
+  align-items: center;
+  column-gap: clamp(10px, 1.2svh, 14px);
+  row-gap: 4px;
+  padding: clamp(8px, 1.1svh, 12px) clamp(10px, 1.2svh, 14px);
+  /* The object's own edge takes the REGION weight, as a panel head's does;
+     `--vwd-rail` is what rules inside one and is the well's, below. */
+  border: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rule-head));
   text-decoration: none;
   color: inherit;
+  transition: border-color 160ms ease;
 }
-.vwd__press + .vwd__press {
-  padding-top: clamp(8px, 1.2svh, 14px);
+/* The well spans both text rows so the mark centres on the ITEM rather than on
+   the meta line it used to sit in — which is what makes it read as a button's
+   icon rather than as a bullet. */
+.vwd__press__well {
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: var(--vwd-press-well);
+  height: var(--vwd-press-well);
+  border: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
 }
-/* ⚠ A HELD GUTTER, THEN THE LABEL, THEN THE DATE (ADR-082 U26, owner
-   2026-09-19: the articles "are now just plain text … maybe use an icon").
-   The gutter is a FIXED column, not a flex child, so it holds its width
-   whether or not a mark lands in it — the proof register's own rule, and it
-   is what keeps a future markless item on the same rail as these.
+/* The outlet and the date, on one line in the item's text column. The mark
+   left it for the well (ADR-082 U29), so this is two columns rather than
+   three — and the held gutter that used to keep a markless item on the same
+   rail is now the well itself, which is a box and holds by construction.
    ⚠ `center`, NEVER `baseline`: grid synthesises a replaced element's
    baseline from its BOTTOM edge, so a baseline row would hang the whole meta
-   line off the glyph (the casefile's register learned this on the same
-   idiom). */
+   line off a glyph (the casefile's register learned this on the same idiom).
+   It still applies — `.vwd__press` seats the well on the same law. */
 .vwd__press__meta {
   display: grid;
-  grid-template-columns: var(--vwd-press-mark) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   font-family: var(--vwd-mono);
@@ -696,6 +780,22 @@
 }
 .vwd__press__sig {
   fill: rgba(var(--vwd-dawn-rgb), 0.8);
+}
+/* ⚠ THE STATE IS THE OUTLINE LIFTING, AND IT MAY NEVER BE A FILL. A filled
+   hover would be the one painted ground on a station whose guard exists to
+   keep grounds off it — U26's refusal, which the outline is what survives.
+   `--gold-line` is the 3:1 line-work rung and re-derives itself in light;
+   raw `--gold` is the MARK rung and letters at 1.8:1 on parchment.
+   ⚠ ONLY AN ANCHOR. Two of the six records link nowhere, and they keep the
+   outline — they are records, not dead buttons — but nothing about them may
+   answer a pointer. */
+a.vwd__press:hover,
+a.vwd__press:focus-visible {
+  border-color: var(--gold-line, rgba(202, 165, 84, 0.55));
+}
+a.vwd__press:hover .vwd__press__well,
+a.vwd__press:focus-visible .vwd__press__well {
+  border-color: var(--gold-line, rgba(202, 165, 84, 0.55));
 }
 a.vwd__press:hover .vwd__press__sig,
 a.vwd__press:focus-visible .vwd__press__sig {
@@ -792,6 +892,87 @@ a.vwd__press:focus-visible .vwd__press__headline {
 @media (min-width: 1101px) {
   .vwd__reticle {
     display: block;
+  }
+  /* The figure overscans its slot here and only here — the arithmetic, the
+     ceiling and the alpha-branch gate are recorded on the rule that spends it
+     (`voidwalker-hologram.css`, §THE ALPHA PATH). Declared on `.vwd` so the
+     token sits with the column it is derived from; the media reads it through
+     the cascade and defaults to 1 in every other home. */
+  .vwd {
+    --holo-overscan: 1.16;
+  }
+}
+
+/* ── §B2 · THE DESKTOP TYPE LADDER ──────────────────────────────────
+   ⚠ THE CHROME SCALES WITH THE FRAME'S HEIGHT, NOT ITS WIDTH (ADR-082 U29,
+   owner 2026-09-19: "Scope, Transmission and Record Facts can also have a
+   higher font size … really look at the Starfield screenshots for reference,
+   then try to measure the font size and replicate it").
+
+   MEASURED off `Starfield-1.png` / `Starfield-3.png` at their native 1920×1080,
+   as a share of the frame's HEIGHT, against this stage at the owner's
+   1920×1247:
+
+     panel head (MARS - SHIP)     ~20px = 1.85svh    ours 13px = 1.04svh   56 %
+     readout label (THERMAL)      ~19px = 1.76svh    ours 11px = 0.88svh   50 %
+     readout value (133)          ~19px = 1.76svh    ours 15px = 1.20svh   68 %
+     body paragraph               ~18px = 1.67svh    ours 18px = 1.44svh   86 %
+
+   The body was already near parity and does not move; everything AROUND it was
+   half the reference, which is the "not balanced" read. Every rung below is an
+   `svh` clamp whose FLOOR IS THE VALUE THAT SHIPPED — at 1280×720 the viewport
+   term is under the floor on all six, so the binding short rung is
+   byte-identical and only the tall ones grow. Two ratios, not six: 1.55svh is
+   the HEAD's and 1.2/1.45svh are the ROW's label and value, so the ladder still
+   reads as two weights rather than a list of sizes.
+
+   ⚠ SCOPED TO THE DESKTOP RUNG, AND THAT IS NOT TIDINESS. These rules live in
+   the base block, which the ≤700 sheet does NOT redeclare — so raising them
+   there would grow every string inside a `100svh` instrument whose budget is
+   SOLVED and whose `overflow: clip` hides an overrun in silence (ADR-082 U23's
+   four trims). 1.55svh of an 844px phone is 13.1px against the 11px that fits.
+   The phone and the 701–1100 rung keep the shipped ladder; the reticle is
+   gated here for its own reasons and the two gates are independent. */
+@media (min-width: 1101px) {
+  .vwd__head {
+    font-size: clamp(11px, 1.55svh, 19px);
+  }
+  .vwd__facts__k,
+  .vwd__press__meta {
+    font-size: clamp(9.5px, 1.2svh, 15px);
+  }
+  .vwd__film__title,
+  .vwd__absent {
+    font-size: clamp(10px, 1.2svh, 15px);
+  }
+  /* ⚠ TWO FLOORS, ONE RATIO. The value and the headline share the 1.45svh
+     term but NOT their floors (12.5 and 13 are what shipped), and collapsing
+     them into one rule would take the headline DOWN half a pixel at 1280×720 —
+     a regression bought while raising everything else, which is exactly the
+     kind of thing a floor law exists to catch. */
+  .vwd__facts__v {
+    font-size: clamp(12.5px, 1.45svh, 18px);
+  }
+  .vwd__press__headline {
+    font-size: clamp(13px, 1.45svh, 18px);
+  }
+
+  /* ⚠ THE FILM FRAME FILLS THE MEASURE, AND ITS WIDTH WAS NEVER DECLARED
+     (owner: "I don't know why the thumbnail isn't the same length as the
+     divider, just like we have with the paragraph in Scope"). It is a grid
+     item with an `aspect-ratio` and no width, so its inline size was
+     TRANSFERRED from `max-height` through the ratio — 150 × 16/9 = 267px
+     inside a 368px head rule. Nothing in the sheet ever said "narrower than
+     the panel": the number fell out of a height cap two properties away,
+     which is why it reads as a fault rather than as a size.
+
+     ⚠ WITH THE WIDTH FIXED THE CAP STOPS BEING A SHRINK AND BECOMES A CROP —
+     the poster is already `object-fit: cover` — so it is restated as what it
+     now is: a band. 207px is 368 × 9/16, the frame uncropped at the panel's
+     own measure; the floor is a 3:1 letterbox on a short screen. */
+  .vwd__film__frame {
+    width: 100%;
+    max-height: clamp(120px, 18svh, 207px);
   }
 }
 .vwd__vwh {

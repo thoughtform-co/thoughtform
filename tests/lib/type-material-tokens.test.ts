@@ -169,9 +169,15 @@ const PINS: Record<string, Pin> = {
      `--vwd-display`, so the `pp-neue-montreal` probe in `countBlock` cannot
      see it. The uppercase is real and is covered by the mechanical gate's
      `case` stage, which reads the COMPUTED style. */
+  /* ⚠ BACK TO 1 BY ADR-082 U29 (owner, 2026-09-19): `.vwd__motto` was the
+     other one, and it lost its `.06em` by ceasing to be a mono kicker — the
+     motto is the reference's lede now, so it takes the display face at
+     `--track-copy` and the literal went with the register. The survivor is
+     `.vwd__mast__title`'s `.04em`, which U25 raised this pin for and which is
+     the house display recipe spelled the way four other titles spell it. */
   "components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css": {
     tier: "content",
-    content: { A: 2, B: 0, C: 0 },
+    content: { A: 1, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
   "components/arcs/arcs.css": {

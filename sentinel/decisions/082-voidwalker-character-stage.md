@@ -3300,3 +3300,246 @@ flag — the ring rung falls back to the old phone page with no fixed context
 - The `421px` notes in ADR-107 §Left open, ADR-108 and `services-ring.md`
   are amended in place; the smokes' own recorded numbers (ADR-107's
   "`innerHeight` 912") describe the old frame and are left as history.
+
+## Update 29 — the figure and the panels are balanced on the reference, and the record is a button (2026-09-19, owner)
+
+The owner read the stage live against three of his own character-screen
+references (`Starfield-1`, `Starfield-3`, `Cyberpunk-4`) and named four things:
+
+> "make it more balanced. If you look at the screenshots from Starfield, the
+> avatar is nicely sized in comparison with the elements around it … make sure
+> they all have the same height and are proportional. For example, for Venting
+> Became a Campaign, I don't like that font size or thickness. I think Scope
+> Transmission and Record Facts can also have a higher font size. Really look
+> at the Starfield screenshots for reference, then try to measure the font size
+> and replicate it. For Transmission, when you have a video, I don't know why
+> the thumbnail isn't the same length as the divider, just like we have with the
+> paragraph in Scope … for On the Record, I think those news articles should
+> have some sort of icons, but they should really feel like a pill, like a sort
+> of subtle button."
+
+### 1 · The measurement
+
+Taken off the references at their native 1920×1080 as a share of the frame's
+HEIGHT — which is the axis this composition is already built on
+(`--vwd-fig-w` is `(100svh − chrome) × 0.5625`) — against the live stage at the
+owner's 1920×1247:
+
+| element                    | reference       | shipped        | share |
+| -------------------------- | --------------- | -------------- | ----- |
+| panel head (`MARS - SHIP`) | ~20px = 1.85svh | 13px = 1.04svh | 56 %  |
+| readout label (`THERMAL`)  | ~19px = 1.76svh | 11px = 0.88svh | 50 %  |
+| readout value (`133`)      | ~19px = 1.76svh | 15px = 1.20svh | 68 %  |
+| body paragraph             | ~18px = 1.67svh | 18px = 1.44svh | 86 %  |
+| painted figure height      | 660px = 61 %    | 600.5px = 48 % | 79 %  |
+
+**The body was already at parity and everything around it was half the
+reference.** That is the whole of "not balanced": the paragraph is the one
+thing on this stage that was never measured against the chrome it sits in, so
+the chrome reads as a footnote to it. Nothing here is a taste judgement about
+size — it is one register being twice the other.
+
+### 2 · The figure overscans its slot, because the box was never the small thing
+
+`probe-voidwalker-figure-span` at 1920×1247 reports the media box at
+**460 × 845** — the figure column at its 460px cap, i.e. every pixel of width
+the composition has — painting a **600.5px** figure, 71 % of it. Two things
+spend the rest, and neither is layout: every delivery carries transparent
+headroom above the head (azeroth 0.235 of its canvas), and U25's fit equalises
+all five eras DOWN to the shortest span (0.7343).
+
+⚠ **NO CHROME TRIM REACHES IT.** At that viewport `--vwd-fig-w` computes 462
+against a 460 cap, so the column is CAPPED rather than starved: give the stage
+back 40px of chrome and the figure does not move. The levers are the cap, the
+delivery, or the picture's share of its own box.
+
+So `--holo-overscan` multiplies `.vwh__media`'s box on BOTH axes beside
+`--holo-fit`, and the surplus is spent on the canvas's empty part. The wrap is
+`place-items: end center` and the media `object-position: bottom center`, so
+the growth leaves through the TOP and the sides and the foot edge does not
+move — measured, the boots stay on the projector disc (foot line 1115.6–1119.3
+against 1116.4–1119.5 before).
+
+⚠ **THE CEILING IS THE COLUMN'S — THE RETICLE'S OWN LAW — AND THE CEILING IS
+NOT THE VALUE.** The box may reach into the stage's column gap and may never
+touch a panel, which `fig-w + 2 × gap` puts at 1.199 at the narrowest capable
+rung (1101×800). **1.19 was built and measured live at 1px of clearance
+there**: that satisfies the law and is not a margin — any rounding inside the
+gap's own `clamp(18px, 2.4vw, 52px)` closes it, and the ring this law comes
+from leaves ~28px. The shipped value is **1.16**, measured in the hold against
+the panels' real edges: 5px of air at 1101×800, 12px at 1280×720, 9px at
+1440×900, 12px at 1920×1247. Painted figure **697px**, 56 % of the frame
+against the reference's 61 % and the shipped 48 %.
+
+⚠ **THE BOX IS WHAT IS BOUNDED, NOT THE INK.** Most of this element is
+transparent canvas, so a box in the gutter paints nothing there — but the box
+is the measurable thing, and azeroth's composite is 0.9625 of its canvas WIDE
+(its spires), so on the one era that could touch, the two are within ~6px of
+each other. Bounding the ink instead would be a bound on a number that changes
+with every delivery.
+
+⚠ **ALPHA BRANCH ONLY, AND THAT IS STRUCTURAL RATHER THAN CAUTIOUS.** The
+floor branch fakes transparency with an OPAQUE bed on `.vwh__media-wrap` plus
+a radial mask to soften its edges (U6), and U27 moved the fit onto that wrap so
+the bed would scale with the picture. A media overflowing that bed paints the
+asset's near-black ground over the mast and the panel heads — the exact
+rectangle three attempts in that file were spent removing. An engine with
+neither codec, and `azeroth` on Safari, keep what they have; the default is
+**1**, so the figure lab, the phone and the 701–1100 rung are byte-identical
+without naming it.
+
+⚠ **NOT A `transform: scale()`** (U25). The scanline mask is on that element in
+absolute px; a transform scales its pitch and gives each era its own raster.
+
+### 3 · The type ladder rides `svh`, and every floor is what shipped
+
+Six rungs, on two ratios so the ladder still reads as HEAD then ROW rather than
+as a list of sizes: head `clamp(11px, 1.55svh, 19px)`; label and meta
+`clamp(9.5px, 1.2svh, 15px)`; film title and the absent line
+`clamp(10px, 1.2svh, 15px)`; value `clamp(12.5px, 1.45svh, 18px)`; press
+headline `clamp(13px, 1.45svh, 18px)`.
+
+⚠ **THE FLOOR IS THE VALUE THAT SHIPPED**, so at 1280×720 the viewport term is
+under it on all six and the binding short rung is byte-identical. ⚠ **TWO
+FLOORS, ONE RATIO**: the value and the headline share 1.45svh and NOT their
+floors (12.5 and 13), and collapsing them into one rule takes the headline DOWN
+half a pixel at 1280×720 — a regression bought while raising everything else,
+which is exactly what a floor law is for.
+
+⚠ **SCOPED TO `min-width: 1101px`, AND THE PLAN SAID OTHERWISE.** It assumed
+the ≤700 sheet declares its own sizes; it does not — it redeclares
+`.vwd__facts__row` and nothing else, so a base-block raise would grow every
+string inside a `100svh` instrument whose budget is SOLVED and whose
+`overflow: clip` hides an overrun in silence (U23's four trims). 1.55svh of an
+844px phone is 13.1px against the 11px that fits. The phone and the 701–1100
+rung keep the shipped ladder; measured after, head 11px and `--holo-overscan`
+empty at both.
+
+**The motto is a LEDE, not a kicker.** It was PT Mono at 11–12.5px on a `.06em`
+literal — the chrome register, which is what made a SENTENCE read as a label
+and left it thinner than the paragraph it introduces. The reference does that
+job with `INDUSTRIALIST`: the body's own face, at the body's size, one weight
+up, in the panel's accent. It takes `--vwd-display` at
+`clamp(12.5px, 1.45svh, 17px)` / `--weight-lit` / `--track-copy`, one rung
+under the prose because a 52-character motto wraps to three lines at the body's
+18px cap in a 368px panel. ⚠ NEVER a mono 700 — PT Mono has no 500 and a 700
+there is the ratchet's B count.
+
+### 4 · The film frame fills the measure, and its width was never declared
+
+`.vwd__film__frame` is a grid item with an `aspect-ratio` and no width, so its
+inline size was **TRANSFERRED from `max-height` through the ratio**:
+150 × 16/9 = 267px inside a 368px head rule, and 171px at the 96px floor.
+Nothing in the sheet ever said "narrower than the panel" — the number fell out
+of a height cap two properties away, which is why it reads as a fault rather
+than as a size, and why no guard could have named it.
+
+With the width fixed the cap stops being a shrink and becomes a CROP (the
+poster is already `object-fit: cover`), so it is restated as what it now is: a
+band, `clamp(120px, 18svh, 207px)`, where 207 is 368 × 9/16 — the frame
+uncropped at the panel's own measure. Measured: the frame's box is byte-equal
+to the head's at every rung (280/280 at 1101×800, 368/368 at 1440×900 and
+1920×1247), left and right edges included.
+
+⚠ **THE CAP STAYS AS SHIPPED BELOW 1101px** — it is the PHONE's largest budget
+term, the one U23 deleted `max-height: none` for (190px → 96).
+
+### 5 · A record is a bounded object, and this reverses U26's frame
+
+⚠ **U26 REFUSED THE PILL AND THE FRAME AS PAINTED GROUNDS**, which this station
+has turned down three times and which its own `>700px` sweep exists to keep
+off. **An outline is not a ground** — nothing here fills, in any state — and
+the sweep is untouched besides, since an item is 368px wide against a 700px
+floor. What U26 was right about survives to the line: the mark is DAWN ONLY at
+.45/.8, there is ONE mark rather than one per outlet, and the lit rule still
+means the piece links out.
+
+- `.vwd__press` takes a four-sided `--vwd-rule-head` border (an object's own
+  edge takes the REGION weight, as a panel head's does) and its own padding.
+- ⚠ **THE AIR IS THE DIVIDER.** With four borders per item a foot rule between
+  two of them is a doubled line — ADR-089 U3's finding, where a box and the
+  track it sat on drew gold twice a pixel apart. The stack's `gap: 0` becomes
+  real spacing; the `border-bottom` and the sibling `padding-top` both go.
+- The mark moves into a **well** — a square outlined cell spanning both text
+  rows, so it centres on the ITEM rather than on the meta line, which is what
+  makes it read as a button's icon rather than as a bullet. The meta drops to
+  two columns; the held gutter U26 needed is now a box and holds by
+  construction.
+- `--vwd-press-mark` 14 → **21px**, still an integer multiple of the 7-cell
+  lattice (a 3px cell). In a bare gutter beside a 10px label 14px was its
+  match; inside a 28px well beside type that has grown a rung it is a speck.
+  The well is the mark plus one lattice cell of air each side, so the two
+  cannot drift.
+- ⚠ **THE STATE IS THE OUTLINE LIFTING AND MAY NEVER BE A FILL** — to
+  `--gold-line`, the 3:1 line-work rung that re-derives itself in light, never
+  raw `--gold` (the MARK rung, 1.8:1 on parchment). Anchors only: two of the
+  six records link nowhere and keep the outline, because they are records
+  rather than dead buttons.
+- **Square** — the owner's own call among three geometries. ADR-065 puts chrome
+  at 0 on the depth ladder, a rounded pill would be the one radius on the site,
+  and a notch means oriented-or-connected, which six peers in a list are not.
+
+### 6 · The ring is re-measured, not re-derived
+
+The overscan grows the picture out of a BOTTOM-seated box, so every pixel it
+gains is above the feet and the painted centre rises. `--vwd-ret-cy` 51 → **57 %**,
+measured in the hold on a seated era: 59.1 at 1101×800, 58.0 at 1280×720, 57.1
+at 1440×900, 56.1 at 1920×1247 — one number for a range, as U23's own
+52.2/51.1/49.7 was.
+
+⚠ **MEASURED ON A SEATED ERA, NOT ON WHICHEVER ONE THE PROBE OPENS.** `azeroth`
+reads ~4 points lower (52.1 at 1920×1247) because it hovers above its own
+projector disc — `footY` 0.9695 against the seated eras' 0.993–0.998, the
+defect U25 named and left open, which the overscan magnifies from 23.6px to
+27px. Centring the ring on the outlier would bake that defect into a second
+object; it is one asset re-seat from agreeing with the other four.
+
+`--vwd-ret-d` stays `fig-w × 1.14`. The media now takes more of the gutter than
+the ring does, which is intended: the ring is DRAWN at its edge and a drawn
+line in the gutter is the thing U23's ceiling was written about.
+
+### 7 · The recorded reticle ceiling was stale, and is restated
+
+U23 §3, its measured table and `.claude/rules/voidwalker.md` all say the ring's
+box "can never exceed **487.6px**". That is `--vwd-fig-w × 1.06`; the shipped
+multiplier is **1.14**, which landed in U23's own commit (`8b90f756`), so the
+ceiling is **524.4px** and the table (243.8 / 280.9 / 330.1 / 487.6) is from an
+intermediate cut that was never restated. The CSS comment's own arithmetic
+("~28px of air against 552px") agrees with 1.14. ⚠ **The `>700px` sweep is
+satisfied either way and that is the point of sizing off the clamp** — but a
+number a rule states and a number the sheet computes must be the same number,
+or the next pass tunes against the wrong one.
+
+### Verification
+
+- `probe-voidwalker-figure-span.mjs --vp 1920x1247` — one figure height
+  (697px, 0.00 % spread), foot drift 3.7px, title on the house recipe.
+- `probe-voidwalker-eras.mjs` at **1280×720 / 1101×800 / 1440×900** — all five
+  eras clean at every rung. ⚠ **The `foot` triple moves to 63 / 72 / 98**
+  (was 78 / 75 / 111) and `tightest` changes hands to TRANSMISSION at
+  1280×720, because the film frame is the thing that grew there.
+- `probe-voidwalker-phone.mjs` — fits at every shape, era and tab.
+- `probe-datum-motion.mjs` — `tx` exactly 0 at rest, full travel at exit.
+- `capture-voidwalker-station.mjs --vp 1920x1247` — `handoff: "ready"`, all
+  three targets, `pinned: 0`. The About flight measures `.vwh__slot`, which
+  the overscan does not move.
+- `about-voidwalker-handoff-boundaries.spec.ts` (desktop) — 8/8, including the
+  `>700px` wide-ink sweep.
+- `type-material-tokens`, `character-eras`, `voidwalker-data` — green, and the
+  datum sheet's ratchet pin comes back DOWN to **A: 1** with the motto's
+  literal. ⚠ `ROLE_VAR` is an EXACT match with no fallback, so
+  `var(--track-copy, 0)` counts as a literal — the house spelling is the bare
+  token, and a fallback on a role rung is a second source for one number.
+
+### Left open
+
+- **`azeroth`'s hover is now 27px** and its silhouette fragmentation (U24's
+  4.15 runs/row) is more visible at the larger size. Both are the same asset's
+  recorded defects and both close with one re-delivery.
+- **The figure is 56 % of the frame against the reference's 61 %.** The
+  remaining 5 points are inside the delivery, not the layout: crop the canvas's
+  transparent headroom and every era gains without touching the column. That is
+  an asset pass with the Safari `.mov` lockstep U25 records.
+- The reference letters its labels almost as large as its heads (1.76 against
+  1.85svh); this ladder keeps a clearer step (1.2 against 1.55) because the
+  head is mono caps at `--track-eyebrow` and reads larger than it measures.

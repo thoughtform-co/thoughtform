@@ -61,7 +61,12 @@ composition's own entry/exit block, its responsive rungs, and
   36-character value would otherwise push its label out of the panel. Worth
   ~50px, which is why `tightest` changes hands from Facts to Scope.
   ⚠ **A RETICLE RINGS THE FIGURE** — two rings and four DIAGONAL marks, dawn
-  only, sized off `--vwd-fig-w` so its box can never exceed **487.6px** and the
+  only, sized off `--vwd-fig-w` so its box can never exceed **524.4px** (⚠ U23
+  recorded 487.6, which is `fig-w × 1.06` — an intermediate cut; the shipped
+  multiplier is 1.14 and landed in U23's own commit, so the ADR's table and this
+  clause were a version behind for two days. The sweep holds either way, which
+  is the point of sizing off the clamp — but a number a rule states and a number
+  the sheet computes have to be the same number) and the
   > 700px sweep is satisfied by ARITHMETIC. ⚠ **BOTH DIALS ARE MEASURED**: the
   > figure paints its centre at 49.7–52.2 % of its box (not the box's middle, not
   > a base-height subtraction), and the first cut solved it by arithmetic and
@@ -210,12 +215,31 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   ⚠ **Chromium resolves svh/lvh/dvh to one number**, so every change above is
   byte-identical in CI and the only proof is a device: compare `innerHeight`
   with `.home-v2-stage__canvas`'s `getBoundingClientRect().bottom`.
-- ⚠ **ON RECORD CARRIES A MARK, AND IT IS AN ICON RATHER THAN A PILL OR A
-  FRAME (ADR-082 U26, owner).** Both of the other two are painted grounds this
-  station has refused twice (U20's ghost frame, U21's rails, and the `>700px`
-  sweep that exists to keep grounds off it). `PressGlyph` sits beside
-  `FigureGlyph` on the same grammar — rect-only, 7×7 at integer cells, 14px,
-  `crispEdges`, no text node.
+- ⚠ **ON RECORD CARRIES A MARK, AND SINCE ADR-082 U29 THE ITEM AROUND IT IS A
+  BOUNDED OBJECT (owner, 2026-09-19: the articles "should really feel like a
+  pill, like a sort of subtle button").** U26 refused the pill and the frame
+  because both were read as PAINTED GROUNDS, which this station has turned down
+  twice (U20's ghost frame, U21's rails) and which the `>700px` sweep exists to
+  keep off — **but an outline is not a ground**, nothing here fills in any
+  state, and an item is 368px wide against a 700px floor. So the item takes a
+  four-sided `--vwd-rule-head` border (an object's own edge takes the REGION
+  weight) and the mark sits in a square outlined WELL spanning both its text
+  rows, which is what makes it read as a button's icon rather than as a bullet.
+  ⚠ **THE AIR IS THE DIVIDER** — a foot rule between two bordered items is the
+  doubled line ADR-089 U3 records, so `.vwd__press-stack` gains a real `gap`
+  and the `border-bottom` + sibling `padding-top` go.
+  ⚠ **THE STATE IS THE OUTLINE LIFTING, NEVER A FILL**, to `--gold-line` (the
+  3:1 line-work rung, re-derived in light) and on ANCHORS only — two of the six
+  records link nowhere and keep the outline, because they are records rather
+  than dead buttons. ⚠ **SQUARE** (owner's call among three geometries):
+  ADR-065 puts chrome at 0 on the depth ladder, a radius here would be the only
+  one on the site, and a notch means oriented-or-connected, which six peers in
+  a list are not.
+  ⚠ `--vwd-press-mark` is **21px** (a 3px cell) with the well at 28 — the mark
+  plus one lattice cell of air each side, so the two cannot drift; 14px was its
+  match beside a 10px label in a bare gutter and is a speck inside a well.
+  What U26 ruled and still binds: `PressGlyph` sits beside `FigureGlyph` on the
+  same grammar — rect-only, 7×7 at integer cells, `crispEdges`, no text node.
   ⚠ **ONE MARK, NOT ONE PER OUTLET** — the outlet's NAME is the next thing in
   the row, so a glyph per publication is a second encoding of it, which the
   particle grammar calls decoration. What it earns its gutter with is the INDEX
@@ -226,7 +250,49 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   rule's — the first cut took `--vwd-rule-head`'s .3 and came out quieter than
   the thing it keys. ⚠ A HELD gutter track, and `align-items: center` never
   `baseline` (grid synthesises a replaced element's baseline from its bottom
-  edge). Measured: the RECORD tab's `foot` triple is unchanged at 78 / 75 / 111.
+  edge — it still applies, on the well now). ⚠ U26's `foot` triple of
+  78 / 75 / 111 is **superseded by U29's 63 / 72 / 98**, and the tightest seat
+  changes hands to TRANSMISSION at 1280×720 — the film frame is what grew.
+- ⚠ **THE FIGURE OVERSCANS ITS SLOT, AND THE BOX WAS NEVER THE SMALL THING
+  (ADR-082 U29, owner: "the avatar is nicely sized in comparison with the
+  elements around it").** At 1920×1247 the media box is the figure column at
+  its 460px cap and the painted figure is 71 % of it — the rest is the
+  delivery's transparent headroom plus U25's equalising fit. ⚠ **NO CHROME TRIM
+  REACHES IT**: `--vwd-fig-w` computes 462 against a 460 cap there, so the
+  column is CAPPED rather than starved. `--holo-overscan` multiplies
+  `.vwh__media`'s box on BOTH axes beside `--holo-fit`; the wrap is
+  bottom-seated, so the growth leaves through the top and the sides and the
+  boots stay on the disc.
+  ⚠ **ALPHA BRANCH ONLY** — the floor branch's opaque bed lives on the wrap
+  (U6, U27), and a media overflowing it paints the asset's near-black ground
+  over the mast. ⚠ **THE DEFAULT IS 1**, so the lab, the phone and the
+  701–1100 rung are byte-identical without naming it. ⚠ **THE CEILING IS THE
+  COLUMN'S AND IS NOT THE VALUE** — `fig-w + 2 × gap` gives 1.199 at the
+  narrowest capable rung, which measured **1px** of live clearance; 1.16 ships,
+  with 5–12px of air at the four rungs. ⚠ **NOT A `transform: scale()`** (U25).
+- ⚠ **THE PANEL LADDER RIDES `svh` AND EVERY FLOOR IS WHAT SHIPPED (U29).**
+  The composition is height-derived and the type was on `vw` clamps, so the
+  chrome ran at half the reference's share while the paragraph was at 86 %.
+  Head 1.55svh; label, meta, film title and the absent line 1.2; value and
+  headline 1.45 — two ratios, so the ladder still reads HEAD then ROW.
+  ⚠ **SCOPED TO `min-width: 1101px`**, because the ≤700 sheet declares
+  `.vwd__facts__row` and NOTHING ELSE of the ladder: a base-block raise grows
+  every string inside a `100svh` instrument whose budget is solved and whose
+  `overflow: clip` hides the overrun. ⚠ **TWO FLOORS CAN SHARE ONE RATIO** —
+  the value's 12.5 and the headline's 13 do, and merging them takes the
+  headline DOWN at 1280×720 while everything else rises.
+  ⚠ **THE MOTTO IS A LEDE, NOT A KICKER** — the display face at the body's
+  register and `--weight-lit`, which is what the reference does with
+  `INDUSTRIALIST`; mono at the chrome rung made a SENTENCE read as a label.
+  ⚠ NEVER a mono 700: PT Mono has no 500.
+- ⚠ **A FILM FRAME'S WIDTH IS TRANSFERRED FROM ITS HEIGHT CAP UNLESS DECLARED
+  (U29).** `.vwd__film__frame` had an `aspect-ratio` and no width, so
+  `max-height` set its inline size through the ratio — 267px inside a 368px
+  head rule, which is what the owner read as "not the same length as the
+  divider". With `width: 100%` the cap becomes a CROP (the poster is
+  `object-fit: cover`) and is restated as a band. ⚠ **Desktop only** — that cap
+  is the phone's largest budget term, the one U23 deleted `max-height: none`
+  for.
 - ⚠ **THE LATENT LAND ERA IS 2023** (U26). One authored value with a twin in the
   ADR-074 record — `voidwalkerData.ts`'s `year` AND `sortYear`, the latter
   floored into the travel clock's tick ladder. No test pinned it; the era suite
