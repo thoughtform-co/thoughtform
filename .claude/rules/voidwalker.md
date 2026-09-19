@@ -11,7 +11,9 @@ paths:
   - "lib/home-v2/vwTravelRef.ts"
   - "scripts/capture-voidwalker.mjs"
   - "scripts/capture-voidwalker-travel.mjs"
-  - "scripts/probe-voidwalker-models.mjs"
+  # A glob, because the single `-models` entry left the eras, phone and
+  # figure-span probes outside the rule they are the gates for.
+  - "scripts/probe-voidwalker-*.mjs"
   - "app/(internal)/test/voidwalker-flight-lab/**"
   - "app/(internal)/test/voidwalker-avatar-lab/**"
   - "components/landing/home-v2/DepthGatewayScene/BrandmarkPhysicsCoreActor.tsx"
@@ -141,6 +143,52 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   so the edit had to be scoped to its own block and a test pins them apart.
   ⚠ **`prompt.py`'s refusal stays even though `BLOCKED` is empty\*\* — the next era
     without a photograph must hit it and stop.
+- ⚠ **EVERY ERA PAINTS ONE FIGURE HEIGHT, AND THE TITLE IS ON THE HOUSE RECIPE
+  (ADR-082 U25, 2026-09-18, owner).** The delivery canvas is normalised and the
+  figure inside it never was — `post.py` seats the FOOT and leaves `headY`
+  wherever the generator put it, so the spans ran 0.9524 / 0.9367 / 0.876 /
+  0.7343 inside five boxes that are **identical to the pixel**, which is why no
+  guard on this surface ever saw it: they all measure boxes. `HOLO_FIGURE_SPAN`
+  - `holoFigureFit()` (zero-import, in the registry) become `--holo-fit` on
+    `.vwh__slot` and `.vwh__media` spends it on its box.
+    ⚠ **THE BOX, NEVER A `transform: scale()`** — the scanline mask is on that
+    element in absolute px, so a transform gives each era its own raster.
+    ⚠ **BOTH AXES.** `contain` paints `min(w/720, h/1280)`, and the slot is NOT
+    always the wider of the two: at 1920×1247 it is 460×845 (0.544 against the
+    contract's 0.5625), so the media is WIDTH-bound and a height-only fit is a
+    **no-op at 1** — measured, it left the floor era 20px short of the four it
+    defines while reporting the 3.33 % spread it had just removed.
+    ⚠ **SHRINK-ONLY, CLAMPED AT 1, AND THE CLAMP IS STRUCTURAL** — past ~1.077 the
+    fit re-binds to width and overflows the wrap's inset clip, cutting the head.
+    An era needing more than 1 is an asset to re-deliver; the unit guard fails on
+    a span below the constant rather than letting the clamp do that work. ⚠ And
+    the floor era must return **exactly 1** — `footY - headY` is a float
+    subtraction, and `Math.min` alone hands it `calc(100% * 0.9999999999999999)`.
+    ⚠ **THE SPAN IS 0.7343 BECAUSE AZEROTH CANNOT RISE, NOT BECAUSE IT WAS
+    CHOSEN.** The owner ruled for the 2026 stature; `measure_anchors` — which
+    reports **all four edges** now, because a span change is a WIDTH change —
+    puts azeroth's composite at **0.9625 of the canvas wide**, widest at y 0.531,
+    i.e. mid-torso and not the imps. The 1.212× that 0.876 needs cuts the spires
+    both sides and bisects the right imp. ⚠ And only azeroth could be re-delivered
+    here at all: he is the one era with no `.mov`, HEVC-alpha needs macOS
+    videotoolbox, and re-cutting genai/expanse would leave a stale `.mov` and make
+    Safari disagree with Chrome about the figure's height.
+    ⚠ **THE TITLE'S SIZE WAS NEVER THE PROBLEM** — `.vwd__mast__title` already
+    carried the house clamp at weight 400 in PP Neue; it was missing caps, `.04em`
+    and the 22px gold glow, alone among the site's display titles. The case is a
+    CSS transform, never the authored string, so the `aria-label` and the decode's
+    `textContent` (and the smoke that reads it) are untouched. The ratchet pin
+    rises A 1 → 2 and **C does not move** — the family arrives through
+    `--vwd-display`, which `countBlock`'s probe cannot see.
+    ⚠ **LEFT OPEN, BOTH NAMED IN U25**: the four other eras are 14–23 % shorter
+    than they were; and **azeroth hovers 23.6px above his disc** at 1920×1247
+    (`footY` 0.9695 against the seated eras' 0.993–0.998 — `seat_frames` names
+    this exact asset), closed by a 33-row downward shift its canvas has room for.
+    ⚠ **Verify with `node scripts/probe-voidwalker-figure-span.mjs --vp 1920x1247`**
+    — headed, walks the reel with the KEYBOARD, and measures the PAINTED picture
+    rather than the element box. ⚠ Focus the lit chip first or `Home` goes to the
+    document, scrolls the page to the top, and every era reads identical — which
+    looks like a broken fit and is really a probe that never changed the era.
 - **`voidwalker-hologram.css` IS THE FIGURE'S SHEET NOW** — the slot's
   isolation and masked floor, the alpha branch, the projector base, the phase
   animations, the decode lines, and the four tokens those read. ⚠ **`.vwh`
@@ -662,7 +710,11 @@ transform actors; never transform the shell and either child together. The
 name lands at `[data-vwh-handoff-target="era-title"]` and acquires through the
 same morph as the hologram. The normalized media contract is 720x1280 with
 authored head/foot anchors; `object-fit: contain` stays bottom-centred and no
-runtime calibration transform is allowed. The slot bottom is the projector
+runtime calibration transform is allowed. ⚠ **AMENDED BY ADR-082 U25: THE BAN
+IS ON TRANSFORMS, AND IT STANDS.** `--holo-fit` calibrates the media's BOX on
+both axes from the registry's own measured anchors, shrink-only and clamped at
+1 — a transform would scale the scanline mask's px pitch and give each era its
+own raster, which is the thing the ban is protecting. The slot bottom is the projector
 disc top (`--vwh-base-h` / `--vwh-base-disc-inset`). Keep the local media floor
 contained and the station itself transparent/starless.
 

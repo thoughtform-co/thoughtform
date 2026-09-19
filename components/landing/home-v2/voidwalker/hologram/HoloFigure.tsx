@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import {
   CANONICAL_CHARACTER_ERA_HOLOGRAM,
+  holoFigureFit,
   isCharacterEraHologram,
   type CharacterEraHologram,
 } from "@/lib/voidwalker/characterEras";
@@ -268,6 +269,13 @@ export function HoloFigure({
           "--holo-glow": glow,
           "--holo-blend": blend,
           "--holo-reveal-ms": `${REVEAL_MS}ms`,
+          /* ⚠ EVERY ERA PAINTS THE SAME FIGURE HEIGHT (ADR-082 U25). The
+             delivery canvas is normalised and the figure inside it is not, so
+             this is the shrink that takes each era's own measured span down to
+             `HOLO_FIGURE_SPAN`. Omitted where there is no registry asset (the
+             figure lab passes bare `src`/`videoSrc`), and the sheet's
+             `var(--holo-fit, 1)` is that branch. */
+          ...(productionAsset ? { "--holo-fit": holoFigureFit(productionAsset) } : {}),
         } as React.CSSProperties
       }
     >

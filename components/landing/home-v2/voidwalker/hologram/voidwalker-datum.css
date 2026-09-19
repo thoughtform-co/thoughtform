@@ -322,13 +322,34 @@
    ⚠ THE YEAR SURVIVES, ON SCOPE'S HEAD RULE. See `.vwd__head__tag--year`:
    a value right-aligned on the panel's own short rule is the reference's
    grammar verbatim, and it is the first rule under the title. */
+/* ⚠ THE HOUSE DISPLAY RECIPE, IN FULL (ADR-082 U25, owner 2026-09-18).
+   The size was never the problem — this clamp is byte-locked to
+   `.voidwalker__name` (landing.css) because the About name TRANSLATES into
+   this element without scaling, and both have always been PP Neue at 400.
+   What was missing is everything else the recipe is: caps, .04em, and the
+   22px gold glow that `.services-masthead__title`,
+   `.home-v2-station-header__title`, `.arc-title` and `.voidwalker__name`
+   all carry byte-for-byte. This was the ONE sentence-case, untracked, unlit
+   PP Neue display element on the landing.
+   ⚠ It closes a seam in the handoff rather than opening one: the name arrives
+   in CAPS with a glow and used to dissolve into a title with neither.
+   ⚠ THE CASE IS A CSS TRANSFORM, NEVER THE AUTHORED STRING — `era.wardrobe`
+   stays sentence case, which is what keeps the `aria-label` and the decode's
+   own `textContent` (and the smoke that reads it) unchanged.
+   ⚠ `.04em` IS THE LITERAL EVERY OTHER HOUSE TITLE USES. It is not on
+   ADR-092's role ramp, and minting a token for it here would fork the recipe
+   into two spellings; the ratchet pin moves instead, which is what an ADR
+   line is for. */
 .vwd__mast__title {
   margin: 0;
   font-family: var(--vwd-display);
   font-size: clamp(26px, 3vw, 44px);
   font-weight: 400;
+  letter-spacing: 0.04em;
   line-height: 1.1;
+  text-transform: uppercase;
   color: rgb(var(--vwd-dawn-rgb));
+  text-shadow: 0 0 22px rgba(var(--vwd-gold-rgb), 0.18);
 }
 
 /* ── THE STAGE GRID ─────────────────────────────────────────────────

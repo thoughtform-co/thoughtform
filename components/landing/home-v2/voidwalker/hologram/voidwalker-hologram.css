@@ -228,10 +228,32 @@
   mix-blend-mode: normal;
 }
 
+/* ⚠ `--holo-fit` IS THE BOX, NEVER A `transform: scale()` (ADR-082 U25).
+   Every era is delivered on the same 720x1280 canvas and the figure inside it
+   is not the same size, so each era's media box is taken down to the share
+   that makes all five paint one height. It has to be the BOX because the
+   scanline mask lives on this element and is stated in absolute px — a
+   transform would scale its pitch per era, i.e. give each era its own raster.
+   A smaller box leaves the pitch at 3px, leaves the wrap's vignette and the
+   rest-phase clip alone, and stays bottom-seated on the wrap's own
+   `place-items: end center`, so the picture's foot edge never leaves the disc.
+
+   ⚠ BOTH AXES, AND A HEIGHT-ONLY FIT IS THE TRAP. `contain` paints
+   `min(w/720, h/1280)` of the canvas, and the slot is NOT always the wider of
+   the two — at 1920x1247 it measures 460x845, i.e. 0.544 against the delivery
+   contract's 0.5625, so the media is WIDTH-bound and letterboxes vertically.
+   A height-only fit is then a no-op at 1 and under-scales everywhere else:
+   measured, it left the floor era 20px short of the four it was supposed to
+   define and reported a 3.33 % spread it had just been asked to remove.
+   Scaling both axes makes the term factor straight out of the `min()`, so the
+   picture is exactly `fit` of what it would have been at every viewport.
+
+   ⚠ THE FALLBACK IS 1 AND IT IS LOAD-BEARING — the figure lab mounts this
+   with no registry asset and therefore no anchors to calibrate against. */
 .vwh__media {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: calc(100% * var(--holo-fit, 1));
+  height: calc(100% * var(--holo-fit, 1));
   max-width: none;
   object-fit: contain;
   object-position: bottom center;

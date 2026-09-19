@@ -156,10 +156,22 @@ const PINS: Record<string, Pin> = {
   },
   /* ADR-082 U23 took this from 13 to 1 — the eyebrow's rung left with the
      element, and the head, tag, facts, press, film, absent, reel and phone tab
-     rungs all moved onto the ramp. The one left is `.vwd__motto`'s .06em. */
+     rungs all moved onto the ramp. The one left is `.vwd__motto`'s .06em.
+     ⚠ RAISED TO 2 BY ADR-082 U25 (owner, 2026-09-18), and a raise is a design
+     change rather than drift: `.vwd__mast__title` joins the house display
+     recipe, whose tracking is the `.04em` LITERAL that
+     `.services-masthead__title`, `.home-v2-station-header__title`,
+     `.arc-title` and `.voidwalker__name` all spell the same way. It is not on
+     the role ramp; minting a fifth rung for one title would fork the recipe
+     into two spellings, which is the defect this file exists to count.
+     ⚠ C DOES NOT MOVE, AND THAT IS THE COUNTER'S KNOWN BLIND SPOT, NOT A
+     DODGE: the title's family arrives through this sheet's own
+     `--vwd-display`, so the `pp-neue-montreal` probe in `countBlock` cannot
+     see it. The uppercase is real and is covered by the mechanical gate's
+     `case` stage, which reads the COMPUTED style. */
   "components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css": {
     tier: "content",
-    content: { A: 1, B: 0, C: 0 },
+    content: { A: 2, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
   "components/arcs/arcs.css": {

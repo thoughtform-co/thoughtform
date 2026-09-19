@@ -2659,3 +2659,167 @@ tests green), but the session ended before the five-era walk on the page.
 uncertain), and it does NOT accept `generate_audio` on the Developer API — that
 field is Gemini Enterprise Agent Platform only and the request is **rejected
 outright** rather than ignored.
+
+## Update 25 — one figure height across the eras, and the title joins the house recipe (2026-09-18, owner)
+
+**Status: Accepted on the title, which is shipped and measured. ⚠ ACCEPTED
+UNDER A CORRECTED PREMISE on the figure — the owner ruled that all five eras
+should meet the 2026 figure's stature, and the measurement taken immediately
+afterwards says that stature is unreachable. What shipped is the only datum the
+assets allow. See §3.**
+
+Two readings off the live page, one sentence: _"can you make sure the avatars
+and the videos are all the same height and that the title above them matches how
+we design the other titles — I think it's caps, maybe also the font size."_
+
+### 1 · The figures were never the same height, and the box is why nothing saw it
+
+Every era is delivered on the same 720×1280 canvas, and the figure column is
+9:16 by construction (`--vwd-fig-w` is `(100svh − chrome) × 0.5625`, which is
+exactly 720/1280). So **the media box is identical to the pixel on all five
+eras** — and every guard on this surface measures boxes. The variance is inside
+the canvas: `post.py` normalises the FOOT (`--foot 0.995`) and leaves `headY`
+wherever the generator put it.
+
+| era                             | headY  | footY  | span       | painted at 1920×1247 |
+| ------------------------------- | ------ | ------ | ---------- | -------------------- |
+| `expanse` 2018                  | 0.0437 | 0.9961 | 0.9524     | 778.9px              |
+| `genai` 2022                    | 0.0563 | 0.993  | 0.9367     | 766.0px              |
+| `loop` 2026 / `pokemon-go` 2016 | 0.122  | 0.998  | 0.876      | 716.4px              |
+| `azeroth` 2020                  | 0.2352 | 0.9695 | **0.7343** | **600.5px**          |
+
+A 178px spread inside five identical boxes. Azeroth's share of it is already on
+record as left-open in U18 — `EmoteTalk` widened him 10.6 % and stood him 8 %
+shorter, `footY` did not move, and the whole surplus landed above his head.
+
+### 2 · The fix is `--holo-fit`, and it may only ever shrink
+
+`HOLO_FIGURE_SPAN` and `holoFigureFit()` (`lib/voidwalker/characterEras.ts`,
+still zero-import) take each era's own measured anchors down to one span;
+`HoloFigure` writes the result as `--holo-fit` on `.vwh__slot`, beside the
+`--holo-alpha` / `--holo-scan` / `--holo-glow` it already writes; `.vwh__media`
+spends it on its box.
+
+⚠ **THE BOX, NEVER A `transform: scale()`.** The scanline mask lives on
+`.vwh__media` and is stated in absolute px, so a transform would scale its pitch
+per era — each era its own raster. A smaller box leaves the pitch at 3px, leaves
+the wrap's vignette and the rest-phase clip alone, and stays bottom-seated on
+the wrap's own `place-items: end center`.
+
+⚠ **BOTH AXES, AND A HEIGHT-ONLY FIT IS THE TRAP THIS PASS FELL INTO FIRST.**
+`contain` paints `min(w/720, h/1280)` of the canvas, and the slot is **not**
+always the wider of the two: at 1920×1247 it measures 460×845, i.e. 0.544
+against the contract's 0.5625, so the media is WIDTH-bound and letterboxes
+vertically by 27px. A height-only fit is therefore a **no-op at 1** and
+under-scales everywhere else — measured, it left the floor era 20px short of the
+four it was supposed to define and reported a 3.33 % spread it had just been
+asked to remove. Scaling both axes factors the term straight out of the `min()`.
+
+⚠ **`Math.min(1, …)` IS STRUCTURAL, NOT CAUTIOUS.** Past ~1.077 the fit re-binds
+to width and the media overflows `.vwh__media-wrap`'s inset clip upward, cutting
+the head. An era needing more than 1 is an asset to re-deliver, never a number
+to raise — and `character-era-hologram.test.ts` fails on a span below the
+constant rather than letting the clamp quietly do that work.
+
+⚠ **THE FLOOR ERA RETURNS EXACTLY 1.** `footY − headY` is a float subtraction,
+so the shortest era's span is not bit-equal to the literal it defines and
+`Math.min` alone hands its media `calc(100% * 0.9999999999999999)` —
+pixel-identical, and a lie about the one era this pass does not touch.
+
+Measured after, at 1280×720 / 1440×900 / 1920×1247: **0.00 % spread** at every
+one (300.2 / 406.5 / 600.5px), boots on the disc within 1.5 / 2.1 / 2.3px across
+the four seated eras.
+
+### 3 · The owner's chosen datum is unreachable, and the measurement is why
+
+The ruling was: all five meet the **2026 figure's** stature (span 0.876), with
+azeroth re-delivered to stand taller inside its own canvas. The measurement,
+taken on the delivered alpha rather than assumed, says he cannot.
+
+`measure_anchors()` now reports **all four edges** — ⚠ because a span change is a
+WIDTH change, and the vertical anchors alone cannot answer whether the room
+exists. Azeroth's composite measures **0.9625 of the canvas wide**, touching
+0.0222 and 0.9847, and its widest row is at y 0.531 — **mid-torso, not the
+imps.** Growing him the 1.212× that 0.876 needs would put his ink at 1.166 of
+the canvas: the fel-crystal spires cut on both sides and the right-hand imp
+bisected. The still is in the record. U13's own line settles it — _a plume may
+run off the edge; the man may not_.
+
+⚠ **AND THE SPLIT IS FORCED BY A CODEC, SO EVEN A PARTIAL GROW IS NOT FREE.**
+Azeroth is the one era with no `videoAlphaHevcPath`, so he alone can be
+re-delivered end to end on the Windows machine; `genai` and `expanse` each ship
+a `.mov`, HEVC-with-alpha needs macOS videotoolbox (verified absent — this
+ffmpeg carries `libx265` and no `hevc_videotoolbox`), and re-cutting their video
+would leave a stale `.mov` and make Safari disagree with Chrome about the
+figure's height. U6's "the Safari path may never be worse than today" forbids
+it. A CSS fit covers every engine at once.
+
+So `HOLO_FIGURE_SPAN` is **0.7343** — the shortest delivered span, which is a
+constraint rather than a preference. The named cost: the other four come down
+14–23 %, and the air above their heads grows by that much.
+
+### 4 · The title was the one big title off the house recipe
+
+`.vwd__mast__title` already carried the shared clamp `clamp(26px, 3vw, 44px)` at
+weight 400 in PP Neue Montreal — **the size was never the problem**. What was
+missing is everything else the recipe is: `text-transform: uppercase`,
+`letter-spacing: 0.04em`, and the `0 0 22px rgba(gold, .18)` glow that
+`.services-masthead__title`, `.home-v2-station-header__title`, `.arc-title` and
+`.voidwalker__name` all carry byte-for-byte. It was the only sentence-case,
+untracked, unlit PP Neue display element on the landing.
+
+⚠ **IT CLOSES A SEAM IN THE HANDOFF RATHER THAN OPENING ONE.** The About name
+translates into this element without scaling (U22 / U6 §1) and arrives in CAPS
+with a glow; until now it dissolved into a title with neither.
+
+⚠ **THE CASE IS A CSS TRANSFORM, NEVER THE AUTHORED STRING.** `era.wardrobe`
+stays sentence case, which is what keeps the `aria-label` and the decode's own
+`textContent` unchanged — and is why `services-ring-smoke`'s `mastText`
+assertion cannot break on this.
+
+⚠ **THE RATCHET PIN RISES, AND THAT IS THE DESIGN CHANGE.**
+`voidwalker-datum.css` goes A 1 → 2. `0.04em` is the literal every other house
+title spells the same way; it is not on ADR-092's role ramp, and minting a fifth
+rung for one title would fork the recipe into two spellings, which is the defect
+that file exists to count. ⚠ **C does not move, and that is the counter's known
+blind spot rather than a dodge**: the family arrives through this sheet's own
+`--vwd-display`, which `countBlock`'s `pp-neue-montreal` probe cannot see. The
+uppercase is real and the mechanical gate's `case` stage reads the computed
+style.
+
+Measured: no era wraps at 1101×800, 1280×720, 1440×900 or 1920×1247, and
+`probe-voidwalker-eras`'s `foot` is **78 / 75 / 111** — byte-identical to U23's
+own triple, so the mast did not grow a pixel.
+
+### 5 · Azeroth hovers above his disc, and it is a second defect this exposed
+
+With the heights equal, the remaining difference is the seat: azeroth's boots
+land **23.6px above the projector disc at 1920×1247** (11.8 at 1280×720, 15.9 at
+1440×900) while the other four sit on it within 2px. This is not the fit — it is
+`footY` 0.9695 against the seated eras' 0.993–0.998. `post.py`'s `seat_frames`
+exists for exactly this and names this exact asset in its own docstring ("the
+canonical pair ends at 0.998 and azeroth at 0.970"); azeroth predates the step
+and was never re-seated.
+
+⚠ **THE PROBE REPORTS IT WITH ITS NUMBER RATHER THAN ABSORBING IT.**
+`probe-voidwalker-figure-span` pins the four seated eras tight and prints
+azeroth's hover as a named exception — a guard loosened until it passes is a
+guard that has stopped describing the page.
+
+The close is a **pure 33-row downward shift** of the delivered frames (0.9695 →
+0.995), which the canvas has room for: the composite's own ink ends at 0.9727,
+so 33 rows lands its lowest claw at 0.9982. No scaling, no crop, and no `.mov`
+to regenerate. **Not taken in this pass** — it re-encodes a client-facing asset
+and belongs with whatever the owner rules about §3.
+
+### What it costs, and what is left open
+
+- ⚠ **The four non-azeroth eras are 14–23 % shorter than they were.** That is
+  the price of one height when the shortest era cannot rise, and it is the thing
+  to look at before this is called done.
+- ⚠ **The canonical pair's authored anchors and its delivered ink disagree by
+  1.6 %** (registry 0.122/0.998, measured 0.1102/1.0000). The authored pair is
+  almost certainly right — the key's glow falloff clears the 32/255 cutoff for
+  ~15 rows above the head — so nothing was re-pinned. Named so it is a decision
+  rather than a discrepancy nobody wrote down.
+- **Azeroth's re-seat**, above.

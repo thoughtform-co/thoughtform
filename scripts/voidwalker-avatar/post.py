@@ -298,27 +298,35 @@ def encode(fdir: Path, period: int, lut: dict, out: Path, era: str, version: str
 
 
 def measure_anchors(webm: Path) -> dict:
-    """headY / footY off the DELIVERED alpha, over every frame."""
+    """headY / footY / leftX / rightX off the DELIVERED alpha, over every frame.
+
+    ⚠ ALL FOUR EDGES, BECAUSE A SPAN CHANGE IS A WIDTH CHANGE (ADR-082 U25).
+    Re-seating a figure taller inside the contract canvas scales it on BOTH
+    axes, so the horizontal ink is what says whether the room exists; the
+    vertical anchors alone cannot answer it, and the site's own rule is that a
+    plume may run off the edge but the man may not.
+    """
+    import numpy as np
+
     raw = subprocess.run(
         ["ffmpeg", "-v", "error", "-c:v", "libvpx-vp9", "-i", str(webm),
          "-vf", f"alphaextract,scale={W}:{H}", "-pix_fmt", "gray", "-f", "rawvideo", "-"],
         capture_output=True).stdout
     per = W * H
     n = len(raw) // per
-    top, bottom = H, 0
-    for i in range(n):
-        base = i * per
-        for y in range(H):
-            row = raw[base + y * W: base + y * W + W]
-            if max(row) >= OPAQUE:
-                top = min(top, y)
-                break
-        for y in range(H - 1, -1, -1):
-            row = raw[base + y * W: base + y * W + W]
-            if max(row) >= OPAQUE:
-                bottom = max(bottom, y + 1)
-                break
-    return {"frames": n, "headY": round(top / H, 4), "footY": round(bottom / H, 4)}
+    if not n:
+        raise SystemExit(f"no frames decoded from {webm}")
+    arr = np.frombuffer(raw, dtype=np.uint8)[: n * per].reshape(n, H, W)
+    ink = arr >= OPAQUE
+    ys = np.where(ink.any(axis=2).any(axis=0))[0]
+    xs = np.where(ink.any(axis=1).any(axis=0))[0]
+    if not ys.size or not xs.size:
+        raise SystemExit(f"the key left nothing opaque in {webm}")
+    return {"frames": n,
+            "headY": round(float(ys.min()) / H, 4),
+            "footY": round(float(ys.max() + 1) / H, 4),
+            "leftX": round(float(xs.min()) / W, 4),
+            "rightX": round(float(xs.max() + 1) / W, 4)}
 
 
 def main() -> int:

@@ -212,6 +212,52 @@ export function containedHologramPlacement(
 }
 
 /**
+ * How much of the delivery canvas the figure itself occupies, as every era
+ * must paint it (ADR-082 U25, owner 2026-09-18: "make sure the avatars and the
+ * videos are all the same height").
+ *
+ * ⚠ THE CANVAS IS NORMALISED AND THE FIGURE INSIDE IT NEVER WAS. `post.py`
+ * seats the FOOT (`--foot 0.995`) and leaves `headY` wherever the generator
+ * put it, so the delivered spans run 0.9524 (expanse) · 0.9367 (genai) ·
+ * 0.876 (the canonical pair) · 0.7343 (azeroth) — a 23 % spread inside boxes
+ * that are identical to the pixel. The media box was never the defect.
+ *
+ * ⚠ THIS VALUE IS THE SHORTEST DELIVERED SPAN, AND THAT IS A CONSTRAINT
+ * RATHER THAN A PREFERENCE. Azeroth's composite already measures 0.9625 of
+ * the canvas WIDE — his fel-crystal spires touch both walls at mid-torso —
+ * so growing him to any other era's stature cuts the spires on both sides and
+ * bisects the right-hand imp (measured; the still is in the U25 record). He
+ * cannot rise, so the others come down to him.
+ */
+export const HOLO_FIGURE_SPAN = 0.7343;
+
+/**
+ * The fraction of its slot an era's media may fill so that every era paints a
+ * figure of the same height, still standing on the projector disc.
+ *
+ * ⚠ CLAMPED AT 1 — THE MECHANISM MAY ONLY EVER SHRINK, and the clamp is
+ * structural rather than cautious. The figure column is 9:16 by construction
+ * (`--vwd-fig-w` is `(100svh - chrome) * 0.5625`, which is exactly 720/1280)
+ * and the slot is a little shorter again, so `contain` is height-bound with
+ * ~33px of spare width. Past ~1.077 the fit re-binds to WIDTH and the media
+ * then overflows `.vwh__media-wrap`'s inset clip upward, cutting the head. An
+ * era that would need more than 1 is an asset to re-deliver, never a number
+ * to raise; `character-era-hologram.test.ts` fails rather than let the clamp
+ * quietly do that work.
+ */
+export function holoFigureFit(hologram: Pick<CharacterEraHologram, "headY" | "footY">): number {
+  const span = hologram.footY - hologram.headY;
+  if (!Number.isFinite(span) || span <= 0) return 1;
+  // ⚠ THE FLOOR ERA RETURNS EXACTLY 1, NOT 0.9999999999999999. `footY - headY`
+  // is a float subtraction, so the shortest era's span is not bit-equal to the
+  // literal it defines, and `Math.min` alone would hand its media a height of
+  // `calc(100% * 0.9999999999999999)` — pixel-identical and a lie about the
+  // one era this pass does not touch.
+  if (span <= HOLO_FIGURE_SPAN + 1e-9) return 1;
+  return HOLO_FIGURE_SPAN / span;
+}
+
+/**
  * One row of the era's FACTS panel — a mono label and its value, read
  * as a dotted-leader pair (the `.arc-card-item__meta-row` grammar).
  *

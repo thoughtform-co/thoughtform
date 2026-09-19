@@ -4,6 +4,8 @@ import {
   CANONICAL_CHARACTER_ERA_HOLOGRAM,
   CHARACTER_ERAS,
   containedHologramPlacement,
+  HOLO_FIGURE_SPAN,
+  holoFigureFit,
   isCharacterEraHologram,
   resolveCharacterEraHologram,
   type CharacterEraHologram,
@@ -284,5 +286,48 @@ describe("containedHologramPlacement", () => {
         footY: 1.01,
       })
     ).toBeNull();
+  });
+});
+
+describe("ADR-082 U25 · every era paints one figure height", () => {
+  const spanOf = (h: CharacterEraHologram) => h.footY - h.headY;
+
+  it("no era is delivered shorter than the span every era is fitted to", () => {
+    // ⚠ THIS IS THE GUARD THAT MATTERS, AND IT IS POINTED AT THE CLAMP.
+    // `holoFigureFit` can only ever SHRINK — growth re-binds `contain` to the
+    // column's width and clips the head against the wrap's inset clip — so an
+    // era delivered SHORTER than the span would silently get `fit === 1` and
+    // stay the odd one out with every other assertion green. The clamp must
+    // never be the thing doing the work.
+    for (const era of CHARACTER_ERAS) {
+      const span = spanOf(resolveCharacterEraHologram(era));
+      expect(span, `${era.id} span`).toBeGreaterThanOrEqual(HOLO_FIGURE_SPAN - 1e-9);
+    }
+  });
+
+  it("fits every era to the same span, and shrinks rather than grows", () => {
+    for (const era of CHARACTER_ERAS) {
+      const hologram = resolveCharacterEraHologram(era);
+      const fit = holoFigureFit(hologram);
+      expect(fit, `${era.id} fit`).toBeGreaterThan(0);
+      expect(fit, `${era.id} fit`).toBeLessThanOrEqual(1);
+      // The painted share of the slot, which is what the eye compares.
+      expect(spanOf(hologram) * fit, `${era.id} painted span`).toBeCloseTo(HOLO_FIGURE_SPAN, 6);
+    }
+  });
+
+  it("leaves the shortest era untouched and is the identity on a square-on span", () => {
+    // Azeroth IS the floor (his composite measures 0.9625 of the canvas wide,
+    // so he cannot be re-delivered taller), which means his own render must be
+    // byte-identical to what shipped — a fit of exactly 1, not 0.999.
+    const azeroth = CHARACTER_ERAS.find((e) => e.id === "azeroth");
+    expect(azeroth).toBeDefined();
+    expect(holoFigureFit(resolveCharacterEraHologram(azeroth!))).toBe(1);
+  });
+
+  it("fails closed on unmeasurable anchors instead of emitting NaN CSS", () => {
+    expect(holoFigureFit({ headY: 0.5, footY: 0.5 })).toBe(1);
+    expect(holoFigureFit({ headY: 0.9, footY: 0.1 })).toBe(1);
+    expect(holoFigureFit({ headY: Number.NaN, footY: 0.99 })).toBe(1);
   });
 });
