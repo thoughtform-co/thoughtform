@@ -136,11 +136,51 @@ function FigureReticle() {
   );
 }
 
+/**
+ * The press mark: a record on file, on the SAME grammar `FigureGlyph` uses one
+ * panel over — rect-only, a 7×7 grid at integer cells, the 14px rung, no text
+ * node and no pictogram. Four left-aligned rules of unequal length: a column of
+ * set type, which is what a clipping is.
+ *
+ * ⚠ ONE MARK, NOT ONE PER OUTLET (ADR-082 U26). The particle grammar bans
+ * decorative primitives, and a glyph per publication would be exactly that —
+ * the outlet's NAME is already the next thing in the row, so a second encoding
+ * of it is noise with a distinguishability problem at 7×7. What the mark earns
+ * its gutter with is the INDEX read: five text blocks become five records.
+ *
+ * ⚠ AND THE SIGNAL SAYS SOMETHING TRUE. `linked` lights the last rule when the
+ * piece has a public URL, which two of the six do not — a fact the record
+ * already holds (`VwPress.href`) and the surface never said. No new field.
+ *
+ * ⚠ DAWN ONLY. `ProofGlyph`'s signal layer is gold at alpha 1; on this station
+ * gold means "you are here" on the reel one row below, and five gold pixels in
+ * a reading column would compete with the one mark that is allowed to lead.
+ */
+function PressGlyph({ linked }: { linked: boolean }) {
+  return (
+    <svg className="vwd__press__glyph" viewBox="0 0 7 7" width="14" height="14" aria-hidden="true">
+      {/* ⚠ EVERY OTHER ROW. Packed into consecutive rows the rects merge into
+          one blob at 14px — `FigureGlyph`'s own recorded lesson. */}
+      <rect className="vwd__press__sk" x="1" y="0" width="5" height="1" />
+      <rect className="vwd__press__sk" x="1" y="2" width="3" height="1" />
+      <rect className="vwd__press__sk" x="1" y="4" width="4" height="1" />
+      <rect
+        className={linked ? "vwd__press__sig" : "vwd__press__sk"}
+        x="1"
+        y="6"
+        width="2"
+        height="1"
+      />
+    </svg>
+  );
+}
+
 function PressItem({ press }: { press: VwPress }) {
   const year = press.date ? press.date.slice(0, 4) : null;
   const body = (
     <>
       <span className="vwd__press__meta">
+        <PressGlyph linked={Boolean(press.href)} />
         <span className="vwd__press__outlet">{press.outlet}</span>
         {year ? <span className="vwd__press__year">{year}</span> : null}
       </span>

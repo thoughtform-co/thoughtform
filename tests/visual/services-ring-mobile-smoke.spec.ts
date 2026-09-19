@@ -116,6 +116,18 @@ async function seatBand(page: Page, p: number): Promise<void> {
 
 function readBand(page: Page) {
   return page.evaluate(() => {
+    /* ⚠ A VIEWPORT UNIT IS A STRING UNTIL SOMETHING LAYS IT OUT. `svh`/`lvh`/
+       `dvh` cannot be read off a computed custom property, so they are spent
+       as a height on a throwaway element — the same idiom `mobile-section-
+       seams` uses for the chrome bands' `calc()`. */
+    const probeUnit = (unit: "svh" | "lvh" | "dvh") => {
+      const el = document.createElement("div");
+      el.style.cssText = `position:absolute;visibility:hidden;height:100${unit}`;
+      document.body.appendChild(el);
+      const h = el.getBoundingClientRect().height;
+      el.remove();
+      return h;
+    };
     const doc = document.documentElement;
     const band = document.querySelector<HTMLElement>(".svc-ring-band");
     const canvas = document.querySelector<HTMLElement>(".home-v2-stage__canvas");
@@ -141,6 +153,18 @@ function readBand(page: Page) {
       ambient: doc.getAttribute("data-services-ambient"),
       exit: doc.getAttribute("data-corridor-exit"),
       canvasPosition: canvas ? getComputedStyle(canvas).position : null,
+      canvasBottom: canvas ? canvas.getBoundingClientRect().bottom : Number.NaN,
+      /* ⚠ THE THREE VIEWPORT UNITS, RECORDED RATHER THAN ASSUMED (ADR-082
+         U26). On iOS Safari `svh` is the SMALL viewport and `lvh` the large,
+         and every backdrop here was sized in `svh` while the fixed chrome is
+         pinned to the real floor — so a ~99px strip of the page painted
+         through below the corridor's own void backing. In Chromium all three
+         collapse to one number, which is exactly why no project in this repo
+         could see it; printing them is what makes a future reader check on a
+         device instead of trusting a green run. */
+      svh: probeUnit("svh"),
+      lvh: probeUnit("lvh"),
+      dvh: probeUnit("dvh"),
       ringAttr: stage?.getAttribute("data-card-ring-mobile") ?? null,
       step: stage?.getAttribute("data-active-step") ?? null,
       bandPosition: band ? getComputedStyle(band).position : null,
@@ -235,6 +259,20 @@ test.describe("the ring on phones (ADR-108)", () => {
       expect(s.bandPosition).toBe("sticky");
       expect(Math.abs(s.bandTop)).toBeLessThanOrEqual(1);
       expect(Math.abs(s.bandHeight - s.vh)).toBeLessThanOrEqual(1);
+
+      /* ⚠ THE CANVAS COVERS THE LARGE VIEWPORT, NOT THE SMALL ONE (ADR-082
+         U26). It is the page's only opaque backing through this beat, and at
+         `100svh` it stopped ~99px short on iOS Safari — the strip the owner
+         read as "a pane at the bottom". This assertion is VACUOUS HERE and
+         says so: Chromium collapses svh/lvh/dvh, so `lvh === vh` and the only
+         real proof is a device. It exists to fail if the height is ever
+         re-pinned to the small viewport. */
+      expect(
+        s.canvasBottom,
+        `the corridor canvas stops short of the large viewport ` +
+          `(bottom ${s.canvasBottom}, lvh ${s.lvh}; svh ${s.svh}, dvh ${s.dvh} — ` +
+          `equal in Chromium, so verify on a real iPhone)`
+      ).toBeGreaterThanOrEqual(s.lvh - 1);
       expect(Number(s.step)).toBeGreaterThanOrEqual(1);
 
       // The ring projected: the visible cards published their rects and the

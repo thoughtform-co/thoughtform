@@ -189,6 +189,48 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
     rather than the element box. ⚠ Focus the lit chip first or `Home` goes to the
     document, scrolls the page to the top, and every era reads identical — which
     looks like a broken fit and is really a probe that never changed the era.
+- ⚠ **THE PHONE'S "PANE AT THE BOTTOM" IS THE STRIP BELOW `100svh`, AND NO CI
+  PROJECT CAN SEE IT (ADR-082 U26, 2026-09-19, owner).** On iOS Safari `100svh`
+  is the SMALL viewport, so a backdrop sized in it stops ~99 CSS px above the
+  real floor while the FIXED chrome (`.rin-settings`, `.hud__corner--br`) is
+  pinned to that floor — which is why the theme switch sits inside the band and
+  why it reads as a wash in BOTH themes (`.gateway__grain` blends `overlay` in
+  dark and `multiply` in light: opposite operations, one appearance). Nothing
+  paints it; it is the page showing through where the corridor's void backing
+  ran out. `.home-v2-stage__canvas` takes `height: 100dvh; min-height: 100lvh`
+  — safe to grow because **nothing is laid out inside a backdrop**.
+  ⚠ **AND `.vwd` PAYS FOR THE STRIP TWICE.** The instrument is `100svh`, so
+  `.vwd__band` was reserving `--mobile-chrome-bottom` inside a box that already
+  ends above the chrome. Its clearance is
+  `max(0px, calc(var(--mobile-chrome-bottom) - (100dvh - 100svh)))` now —
+  **`100dvh - 100svh` IS THE LIVE TOOLBAR HEIGHT**, zero while the toolbar is
+  shown (where the clearance is genuinely needed) and the full offset once it
+  collapses. ⚠ The comment that stood here — _"inside a 100svh instrument this
+  element's own bottom edge IS that floor"_ — was FALSE on a real iPhone.
+  ⚠ **Chromium resolves svh/lvh/dvh to one number**, so every change above is
+  byte-identical in CI and the only proof is a device: compare `innerHeight`
+  with `.home-v2-stage__canvas`'s `getBoundingClientRect().bottom`.
+- ⚠ **ON RECORD CARRIES A MARK, AND IT IS AN ICON RATHER THAN A PILL OR A
+  FRAME (ADR-082 U26, owner).** Both of the other two are painted grounds this
+  station has refused twice (U20's ghost frame, U21's rails, and the `>700px`
+  sweep that exists to keep grounds off it). `PressGlyph` sits beside
+  `FigureGlyph` on the same grammar — rect-only, 7×7 at integer cells, 14px,
+  `crispEdges`, no text node.
+  ⚠ **ONE MARK, NOT ONE PER OUTLET** — the outlet's NAME is the next thing in
+  the row, so a glyph per publication is a second encoding of it, which the
+  particle grammar calls decoration. What it earns its gutter with is the INDEX
+  read. ⚠ **The lit rule means the piece LINKS OUT**, which two of the six do
+  not — `VwPress.href` already held it and the surface never said it, so the
+  zero-import record is untouched. ⚠ **DAWN ONLY** (gold is the reel's "you are
+  here"), at `.45` / `.8`: the mark reads at its LABEL's strength, never its
+  rule's — the first cut took `--vwd-rule-head`'s .3 and came out quieter than
+  the thing it keys. ⚠ A HELD gutter track, and `align-items: center` never
+  `baseline` (grid synthesises a replaced element's baseline from its bottom
+  edge). Measured: the RECORD tab's `foot` triple is unchanged at 78 / 75 / 111.
+- ⚠ **THE LATENT LAND ERA IS 2023** (U26). One authored value with a twin in the
+  ADR-074 record — `voidwalkerData.ts`'s `year` AND `sortYear`, the latter
+  floored into the travel clock's tick ladder. No test pinned it; the era suite
+  checks the year's grammar and its reverse-chronological order only.
 - **`voidwalker-hologram.css` IS THE FIGURE'S SHEET NOW** — the slot's
   isolation and masked floor, the alpha branch, the projector base, the phase
   animations, the decode lines, and the four tokens those read. ⚠ **`.vwh`

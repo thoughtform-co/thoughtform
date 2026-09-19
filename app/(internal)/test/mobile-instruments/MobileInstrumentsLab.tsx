@@ -137,7 +137,7 @@ const ERAS: readonly Era[] = [
     ],
   },
   {
-    year: "2022",
+    year: "2023",
     short: "Latent Land",
     title: "The AI Captain",
     motto: "The models arrived. Wrote the charter.",

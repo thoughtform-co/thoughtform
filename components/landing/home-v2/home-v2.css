@@ -250,7 +250,25 @@ html[data-services-ambient="true"] .home-v2-stage__canvas {
   position: fixed;
   inset: 0;
   width: 100vw;
-  height: 100svh;
+  /* ⚠ THE LARGE VIEWPORT, NOT THE SMALL ONE (ADR-082 U26, owner 2026-09-19:
+     "there seems to be a pane at the bottom that consumes a lot of real
+     estate"). `inset: 0` PLUS an explicit height is over-constrained, so
+     `bottom` is dropped — and at `100svh` this backing stopped ~99 CSS px
+     above the real floor on iOS Safari (844 − 745 on a 14), leaving a strip
+     in which the gateway radial, `.gateway__grain` and the corridor-exit veil
+     painted through instead of this void. That strip IS the "pane": it reads
+     as a wash in BOTH themes because the grain blends `overlay` in dark and
+     `multiply` in light, and the theme switch sits inside it because
+     `.rin-settings` is anchored to the REAL floor while every backdrop here
+     was anchored to the small one.
+     ⚠ SAFE TO GROW BECAUSE NOTHING IS LAID OUT IN IT. This is a backdrop with
+     no content, so `dvh` cannot jitter a line of type; the `lvh` floor is what
+     guarantees cover when the toolbar is collapsed. The same idiom already
+     ships at `landing.css`'s pinned-beat rung for the same reason.
+     ⚠ AND NO CI PROJECT CAN SEE THIS — Chromium resolves svh/lvh/dvh to one
+     number, which is why it shipped. */
+  height: 100dvh;
+  min-height: 100lvh;
   z-index: 2;
   /* The WebGL canvas is alpha-transparent. In normal corridor mode the
      sticky stage / parent section provides the dark backing behind those

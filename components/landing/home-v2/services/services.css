@@ -3078,7 +3078,13 @@
     display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto;
     box-sizing: border-box;
-    padding: calc(56px + 8px) var(--hud-content-inset, 22px) calc(56px + 16px);
+    /* ⚠ THE CHROME'S OWN TOKENS, NEVER A LITERAL (`mobile-sections.md` §1,
+       restated here because this rule was the exception). The `56px` was the
+       measured value of `--mobile-chrome-bottom` on a notch-less phone, so on
+       a device WITH a notch — where `--safe-bottom` lifts the band to ~74px —
+       the paragraph under-cleared the settings cluster by 18px. */
+    padding: calc(var(--mobile-chrome-top) + 8px) var(--hud-content-inset, 22px)
+      calc(var(--mobile-chrome-bottom) + 16px);
   }
   .services-stage[data-card-ring-mobile="on"] .svc-ring-band .services-masthead {
     display: contents;

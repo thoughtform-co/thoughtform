@@ -627,7 +627,7 @@ export function travelYear(p: number, years: readonly number[]): number {
  *
  * ⚠ THIS IS THE WHOLE POINT OF A4 AND IT IS NOT `axisT`. The stops are
  * evenly spaced in scroll, but the years they carry are not: 2026→2025 is
- * one year and 2022→2020 is two. A marker driven by runway fraction would
+ * one year and 2023→2020 is three. A marker driven by runway fraction would
  * slide down a proportional axis at a constant rate and land between its
  * own ticks — the gaps would be drawn and then contradicted by the thing
  * moving over them. Driving it from the interpolated YEAR instead makes

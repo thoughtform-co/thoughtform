@@ -94,7 +94,7 @@ him, wearing that wardrobe.
 """.strip()
 
 ERA_WARDROBE: dict[str, str] = {
-    # 2022 · "The AI Captain" · the Starhaven era.
+    # 2023 · "The AI Captain" · the Starhaven era.
     #
     # Read off the owner's own reference painting rather than paraphrased: a
     # long cloak over a floor-length robe, a plated bandolier, a large round
@@ -110,7 +110,7 @@ ERA_WARDROBE: dict[str, str] = {
     # WIDTH-BOUND, so the widest pose sets the scale for the whole figure — a
     # held rod costs height off the man exactly as azeroth's gauntlet did.
     "genai": """
-WARDROBE — 2022, the AI Captain, in the Starhaven captain's habit exactly as in
+WARDROBE — 2023, the AI Captain, in the Starhaven captain's habit exactly as in
 the second reference image.
 
 A long black cloak falling from both shoulders over a floor-length black robe. A
@@ -158,7 +158,8 @@ and not superhero armour.
 HE WEARS HIS OWN CAP, the flat dark cap from the first reference image, and NO
 HELMET, no hood and no visor. His head and face are bare and fully visible.
 
-His hands are EMPTY and rest at his sides — he carries no rifle and no helmet.
+He carries NO HELMET. What is in his hands is set by the POSE block below — do
+not add a prop this wardrobe does not name.
 """.strip(),
 }
 
@@ -196,6 +197,42 @@ The image's own look — gold emissive light on black — does not change over t
 shot.
 """.strip()
 
+#: The idle for an era whose pose is not standing (ADR-082 U26).
+#:
+#: ⚠ THE SHARED IDLE DESCRIBES A STANDING BREATHER. "The smallest weight shift
+#: between the feet" is meaningless on one knee, and "his feet stay exactly
+#: where they are" is the wrong invariant when one of them is a planted knee —
+#: a model given a clause it cannot satisfy satisfies something else.
+ERA_IDLE: dict[str, str] = {
+    "expanse": """
+The figure BREATHES and nothing else, held in his crouch. A slow, even rise and
+fall of the chest and shoulders; the faintest settle of the forearm resting on
+his raised knee; one slow blink. The hand at his ear does not move. He keeps
+looking off-camera at the line ahead of him.
+
+THE CAMERA DOES NOT MOVE. No pan, no tilt, no dolly, no zoom, no push-in, no
+orbit, no handheld drift, no parallax, no rack focus.
+
+HE DOES NOT STAND UP AND HE DOES NOT SHIFT HIS STANCE. The planted knee stays
+on the ground, the forward boot stays flat, the rifle stays exactly where it
+is, angled down and in. No step, no turn, no rise, no gesture, no head turn, no
+speech, no aiming.
+
+THE BACKGROUND STAYS PURE BLACK AND EMPTY. Nothing enters the frame. No
+particles, no smoke, no light rays, no flicker, no new light source, no change
+of exposure. The frame edges stay exactly where they are.
+
+The image's own look — gold emissive light on black — does not change over the
+shot.
+""".strip(),
+}
+
+
+def idle_prompt(era: str | None = None) -> str:
+    """The idle clause for an era — its own if it has one, else the shared."""
+    return ERA_IDLE.get(era or "", IDLE_PROMPT)
+
+
 IDLE_NEGATIVE = (
     "camera movement, pan, tilt, zoom, dolly, orbit, handheld shake; walking, "
     "stepping, turning, gesturing, talking; particles, smoke, light rays, "
@@ -204,12 +241,62 @@ IDLE_NEGATIVE = (
 )
 
 
+#: Eras whose PERFORMANCE is not the shared standing one (ADR-082 U26).
+#:
+#: ⚠ AN OVERRIDE, NEVER AN EDIT TO THE SHARED BLOCK. `STYLE_HOLO_EMISSIVE_BLACK`
+#: carries FRAMING and POSE for every era at once, and `NEGATIVES` bans the prop
+#: class outright ("a helmet or a staff he is not wearing") — so re-posing one
+#: era in place re-poses the Starhaven captain with it, silently, in the same
+#: run. The override is appended LAST so it is the final word the model reads,
+#: and it names what it is replacing rather than hoping to outweigh it.
+#:
+#: ⚠ AND A NON-STANDING POSE COSTS STATURE, WHICH IS THE SITE'S PROBLEM TOO.
+#: The boots law says "if he does not fit, make the figure smaller", and a
+#: crouch with a rifle is the widest pose there is — so the figure lands shorter
+#: in the canvas at the same body scale. `characterEras.ts`'s `stature` field is
+#: what carries that across; `post.py` prints the head width it is derived from.
+ERA_POSE: dict[str, str] = {
+    "expanse": """
+POSE — THIS ERA OVERRIDES THE STANDING POSE AND FRAMING ABOVE.
+
+He is DOWN ON ONE KNEE: the left knee planted on the ground, the right foot
+flat and forward, the right forearm resting across that raised knee. A
+commander who has stopped to read the ground, not a soldier mid-fight.
+
+He carries a FUTURISTIC RIFLE — a matte black, panelled marine carbine of the
+same make as the armour. It is held in the LEFT hand, angled down and IN, its
+stock resting near the planted knee and its barrel pointing at the ground
+inside his own silhouette. The weapon may not cross outside the line of his
+shoulders.
+
+His RIGHT hand is raised to his RIGHT EAR, two fingers touching an earpiece,
+listening — head level, eyes forward and off-camera as if watching a line
+somewhere ahead. Calm, still, receiving instructions. Not shouting, not
+signalling, not aiming.
+
+FRAMING for this pose: the whole crouched figure, head to the planted boot,
+with a band of black beneath him. He sits LOWER in the frame than a standing
+figure would and there is more black above his head — that is correct and
+must not be closed up by zooming in. Vertical, 9:16, camera at his chest
+height, straight on, long lens.
+
+The BOOTS LAW still governs: the rifle and the knee may not touch a side
+wall. If the crouch does not fit, make the whole figure smaller — never crop
+the man and never turn the weapon outward to make room.
+""".strip(),
+}
+
+
 def still_prompt(era: str) -> str:
     """The full lock for one era's still."""
     wardrobe = ERA_WARDROBE.get(era)
     if wardrobe is None:
         raise SystemExit(f"no wardrobe lock for era '{era}'")
-    return "\n\n".join([IDENTITY_HEADER, wardrobe, STYLE_HOLO_EMISSIVE_BLACK, NEGATIVES])
+    parts = [IDENTITY_HEADER, wardrobe, STYLE_HOLO_EMISSIVE_BLACK, NEGATIVES]
+    pose = ERA_POSE.get(era)
+    if pose is not None:
+        parts.append(pose)
+    return "\n\n".join(parts)
 
 
 if __name__ == "__main__":

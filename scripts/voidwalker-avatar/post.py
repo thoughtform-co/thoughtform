@@ -45,6 +45,35 @@ def run(cmd: list[str], **kw) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, capture_output=True, text=True, **kw)
 
 
+def lane(label: str, cmd: list[str]) -> bool:
+    """One encode lane, and it SAYS when it did not run (ADR-082 U26).
+
+    ⚠ `run()` has no `check=True` and `encode()` discarded every return value,
+    so a missing encoder produced no error, no file and no complaint — and
+    `main()` then printed a registry block naming a file that was never
+    written. Two lanes fail that way on Windows: `hevc_videotoolbox` is macOS
+    only, and a missing executable raises `FileNotFoundError` rather than a
+    non-zero exit, which killed the script BEFORE the anchors were measured.
+    """
+    try:
+        p = run(cmd)
+    except FileNotFoundError:
+        print(f"  ! {label}: `{cmd[0]}` is not on PATH — lane skipped")
+        return False
+    if p.returncode != 0:
+        tail = (p.stderr or "").strip().splitlines()
+        print(f"  ! {label}: ffmpeg exited {p.returncode} — {tail[-1] if tail else 'no output'}")
+        return False
+    return True
+
+
+def has_encoder(name: str) -> bool:
+    try:
+        return name in run(["ffmpeg", "-hide_banner", "-encoders"]).stdout
+    except FileNotFoundError:
+        return False
+
+
 def frames(src: Path, out: Path, scale: str | None = None) -> int:
     out.mkdir(parents=True, exist_ok=True)
     if any(out.iterdir()):
@@ -262,33 +291,48 @@ def encode(fdir: Path, period: int, lut: dict, out: Path, era: str, version: str
 
     # 1 · VP9/WebM, real alpha. ⚠ `-auto-alt-ref 0`: alt-ref frames break
     #     libvpx's alpha side-channel. `alpha_mode=1` is what the browser reads.
-    run(["ffmpeg", *common, "-vf", key, "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p",
+    lane("webm", ["ffmpeg", *common, "-vf", key, "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p",
          "-auto-alt-ref", "0", "-crf", "48", "-b:v", "0", "-row-mt", "1",
          "-tile-columns", "2", "-g", "240", "-metadata:s:v:0", "alpha_mode=1",
          str(out / f"{stem}.webm")])
 
     # 2 · H.264/MP4, opaque on black — the existing floor path. No key: the
     #     source is already on pure black.
-    run(["ffmpeg", *common, "-vf", "format=yuv420p", "-c:v", "libx264", "-preset", "veryslow",
+    lane("mp4", ["ffmpeg", *common, "-vf", "format=yuv420p", "-c:v", "libx264", "-preset", "veryslow",
          "-crf", "26", "-profile:v", "high", "-level", "4.0", "-pix_fmt", "yuv420p",
          "-movflags", "+faststart", "-g", "240", str(out / f"{stem}.mp4")])
 
     # 3 · HEVC/MOV, real alpha — the Safari lane (ADR-082 U23). ⚠ `bgra`, not
     #     `yuva420p` (silently swapped for `ayuv`); ⚠ `-alpha_quality` defaults
     #     to 0 and is the dominant size term; ⚠ `hvc1`, and `.mov`.
-    run(["ffmpeg", *common, "-vf", f"{key},format=bgra", "-c:v", "hevc_videotoolbox",
+    if has_encoder("hevc_videotoolbox"):
+        lane("mov", ["ffmpeg", *common, "-vf", f"{key},format=bgra", "-c:v", "hevc_videotoolbox",
          "-alpha_quality", "0.5", "-q:v", "45", "-allow_sw", "1", "-tag:v", "hvc1",
          "-pix_fmt", "bgra", "-movflags", "+faststart", str(out / f"{stem}.mov")])
 
-    # 4 · Posters, frame zero. ⚠ The alpha poster goes through `cwebp`: this
-    #     ffmpeg has no WebP encoder at all.
+    # 4 · Posters, frame zero.
     f0 = fdir / "00001.png"
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(f0), "-vf", "format=yuvj420p",
-         "-q:v", "4", str(out / f"{poster}.jpg")])
+    lane("jpg", ["ffmpeg", "-y", "-loglevel", "error", "-i", str(f0), "-vf", "format=yuvj420p",
+                 "-q:v", "4", str(out / f"{poster}.jpg")])
     tmp = out / "_f0.png"
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(f0), "-vf", key, "-frames:v", "1", str(tmp)])
-    run(["cwebp", "-quiet", "-q", "82", "-alpha_q", "100", "-m", "6", "-sharp_yuv",
-         str(tmp), "-o", str(out / f"{poster}.webp")])
+    lane("webp:key", ["ffmpeg", "-y", "-loglevel", "error", "-i", str(f0), "-vf", key,
+                      "-frames:v", "1", str(tmp)])
+    # ⚠ `cwebp` FIRST, ffmpeg's libwebp AS THE FALLBACK (ADR-082 U26). The note
+    #   that stood here — "this ffmpeg has no WebP encoder at all" — was true of
+    #   the build the chain was written on and FALSE of the one on the Windows
+    #   machine, where `cwebp` is simply absent. A missing executable raises
+    #   `FileNotFoundError` rather than exiting non-zero, so this line killed the
+    #   whole script before `measure_anchors` ever ran: no anchors, no registry
+    #   block, and four delivered files with nothing to seat them by. cwebp keeps
+    #   the lead because it cut the shipped posters; the fallback only has to
+    #   exist for the machine that lacks it.
+    if not lane("webp", ["cwebp", "-quiet", "-q", "82", "-alpha_q", "100", "-m", "6",
+                         "-sharp_yuv", str(tmp), "-o", str(out / f"{poster}.webp")]):
+        if has_encoder("libwebp"):
+            print("    → falling back to ffmpeg's libwebp")
+            lane("webp", ["ffmpeg", "-y", "-loglevel", "error", "-i", str(tmp),
+                          "-c:v", "libwebp", "-lossless", "0", "-quality", "82",
+                          "-pix_fmt", "bgra", str(out / f"{poster}.webp")])
     tmp.unlink(missing_ok=True)
 
     for f in sorted(out.iterdir()):
@@ -322,11 +366,25 @@ def measure_anchors(webm: Path) -> dict:
     xs = np.where(ink.any(axis=1).any(axis=0))[0]
     if not ys.size or not xs.size:
         raise SystemExit(f"the key left nothing opaque in {webm}")
+
+    # ⚠ HEAD WIDTH IS THE POSE-INVARIANT SCALE PROXY (ADR-082 U26). Head-to-foot
+    #   extent measures how big the figure is drawn only while it is STANDING —
+    #   a man on one knee is ~0.6 of his own height at the same body scale. A
+    #   head does not change size with a pose, so the widest ink row in the top
+    #   eighth of the silhouette is what says whether two deliveries draw the
+    #   same man at the same size. The site's `stature` field is authored from
+    #   the ratio of two of these.
+    top, bot = int(ys.min()), int(ys.max())
+    head_rows = ink[:, top:top + max(1, (bot - top + 1) // 8), :].any(axis=0)
+    widths = [int(r.sum()) for r in head_rows if r.any()]
+    head_w = max(widths) if widths else 0
+
     return {"frames": n,
             "headY": round(float(ys.min()) / H, 4),
             "footY": round(float(ys.max() + 1) / H, 4),
             "leftX": round(float(xs.min()) / W, 4),
-            "rightX": round(float(xs.max() + 1) / W, 4)}
+            "rightX": round(float(xs.max() + 1) / W, 4),
+            "headW": round(head_w / W, 4)}
 
 
 def main() -> int:
@@ -389,15 +447,31 @@ def main() -> int:
         {"wave": args.wave, "era": args.era, "version": args.version,
          "loop": period, "key": lut, "seat": seat, "encode": sizes,
          "anchors": anchors}, indent=1))
-    print(f"\nregistry block for characterEras.ts:\n"
-          f'  videoPath: "/videos/voidwalker/holo-idle-{args.era}-{args.version}.mp4",\n'
-          f'  videoAlphaPath: "/videos/voidwalker/holo-idle-{args.era}-{args.version}.webm",\n'
-          f'  videoAlphaHevcPath: "/videos/voidwalker/holo-idle-{args.era}-{args.version}.mov",\n'
-          f'  posterPath: "/images/voidwalker/holo-still-{args.era}-{args.version}.jpg",\n'
-          f'  posterAlphaPath: "/images/voidwalker/holo-still-{args.era}-{args.version}.webp",\n'
-          f'  frame: {{ width: 720, height: 1280 }},\n'
-          f'  headY: {anchors["headY"]},\n'
-          f'  footY: {anchors["footY"]},')
+    # ⚠ THE BLOCK NAMES ONLY WHAT WAS WRITTEN (ADR-082 U26). It printed
+    #   `videoAlphaHevcPath` unconditionally, so a Windows run — where the
+    #   macOS-only HEVC-alpha lane silently produces nothing — handed back a
+    #   registry entry pointing at a file that does not exist, and the Safari
+    #   branch would switch its floor off over a 404.
+    stem = f"holo-idle-{args.era}-{args.version}"
+    still = f"holo-still-{args.era}-{args.version}"
+    rows = [f'  videoPath: "/videos/voidwalker/{stem}.mp4",',
+            f'  videoAlphaPath: "/videos/voidwalker/{stem}.webm",']
+    if f"{stem}.mov" in sizes:
+        rows.append(f'  videoAlphaHevcPath: "/videos/voidwalker/{stem}.mov",')
+    else:
+        rows += ["  // ⚠ NO `videoAlphaHevcPath` — the macOS-only HEVC-alpha lane did",
+                 "  //   not run here. Cut it on a Mac from THIS wave before shipping, or",
+                 "  //   Safari keeps whatever the previous version left on disk."]
+    rows += [f'  posterPath: "/images/voidwalker/{still}.jpg",',
+             f'  posterAlphaPath: "/images/voidwalker/{still}.webp",',
+             "  frame: { width: 720, height: 1280 },",
+             f'  headY: {anchors["headY"]},',
+             f'  footY: {anchors["footY"]},']
+    print("\nregistry block for characterEras.ts:")
+    print("\n".join(rows))
+    print(f"\nhead width {anchors['headW']} of the canvas — the pose-invariant SCALE proxy."
+          f"\n  A NON-STANDING pose authors `stature` from it: the standing delivery's span"
+          f"\n  x (its headW / this headW). A standing one omits the field entirely.")
     return 0
 
 

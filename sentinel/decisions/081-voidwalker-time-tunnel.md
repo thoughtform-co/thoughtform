@@ -248,7 +248,7 @@ the gutter — is DELETED.
 ⚠ **AND THE LADDER ALREADY IS THIS RECORD'S AXIS, EXACTLY.** The rail's
 thirteen ticks are twelve intervals and 2026 → 2014 is twelve years, so
 every year the record lands on seats on an INTEGER RUNG: 2025 on tick 1,
-2022 on 4, 2020 on 6, 2018 on 8, 2016 on 10, 2014 on the terminus.
+2023 on 4, 2020 on 6, 2018 on 8, 2016 on 10, 2014 on the terminus.
 Nothing is added to the ladder and nothing taken from it (ADR-031's
 guardrail holds by arithmetic rather than by care). It is a coincidence
 OF THE RECORD, not a law, and the unit test pins the twelve-year span so

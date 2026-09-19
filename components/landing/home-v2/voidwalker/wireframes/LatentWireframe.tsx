@@ -1,5 +1,5 @@
 /**
- * The GenAI wave (2022) — the hybrid film and the charter. A green chain
+ * The GenAI wave (2023) — the hybrid film and the charter. A green chain
  * PROMPT → FRAMES → CUT welded to the one gold object, RENDER (the
  * casefile's babylon chain at micro scale); below it a film strip of
  * generated frames (the house image mark — a horizon and a sun, line work

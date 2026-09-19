@@ -183,7 +183,7 @@ THE RECORD THIS PANEL LETTERS — use these exact strings, invent nothing:
                      getting creative"
                      MIT TECHNOLOGY REVIEW · 2020
   The five eras, newest first, for any era selector:
-                     2026 ARCHITECT · 2022 LATENT LAND · 2020 AZEROTH ·
+                     2026 ARCHITECT · 2023 LATENT LAND · 2020 AZEROTH ·
                      2018 THE EXPANSE · 2016 POKEMON GO
                      (2020 AZEROTH is the ACTIVE one.)
 `.trim();
@@ -241,7 +241,7 @@ integrated instrument rather than floating text:
   rows, one per era, each row a single line high with the year in mono at the
   left and the era name in PP Neue Montreal beside it:
       2026  ARCHITECT
-      2022  LATENT LAND
+      2023  LATENT LAND
       2020  AZEROTH
       2018  THE EXPANSE
       2016  POKEMON GO
@@ -314,7 +314,7 @@ SELECTOR BAND along the bottom that everything else sits on top of:
   the same man in that era's dress, about 96px square, square-cornered, no
   frame radius — with the year in PT Mono above it and the era name in mono
   below it:
-      2026 ARCHITECT · 2022 LATENT LAND · 2020 AZEROTH ·
+      2026 ARCHITECT · 2023 LATENT LAND · 2020 AZEROTH ·
       2018 THE EXPANSE · 2016 POKEMON GO
   The AZEROTH cell is ACTIVE: its portrait sits at full gold strength while
   the other four are dimmed to cream 35% and desaturated, a gold hairline
@@ -400,7 +400,7 @@ divides a plate:
 
   BOTTOM BAND, full inner width, bounded above by one hairline: the era
   selector as five text stops evenly spaced across the band —
-  2026 ARCHITECT · 2022 LATENT LAND · 2020 AZEROTH · 2018 THE EXPANSE ·
+  2026 ARCHITECT · 2023 LATENT LAND · 2020 AZEROTH · 2018 THE EXPANSE ·
   2016 POKEMON GO — in PT Mono uppercase, four at cream 40% and AZEROTH at
   full cream with a small filled gold diamond beneath it and a short gold
   hairline segment under its label.
@@ -462,7 +462,7 @@ figure stands centre on its projector disc.
        PP Neue Montreal.
 
   THE ERA LADDER: at the far left, standing ON the ground datum, a vertical
-  ladder of five year marks — 2026, 2022, 2020, 2018, 2016 — in PT Mono,
+  ladder of five year marks — 2026, 2023, 2020, 2018, 2016 — in PT Mono,
   each with a short horizontal tick. 2020 is ACTIVE: full cream, a filled
   gold diamond on its tick, the era name AZEROTH lettered in mono beneath it.
 
@@ -856,7 +856,7 @@ sides. Everything connects through the emitter, nothing touches the man.
   hairline: five equal cells divided by short vertical ticks, each holding a
   small square gold scan-line portrait bust of the man in that era's dress
   (~90px, zero radius), year in PT Mono above, era name in mono below:
-  2026 ARCHITECT · 2022 LATENT LAND · 2020 AZEROTH · 2018 THE EXPANSE ·
+  2026 ARCHITECT · 2023 LATENT LAND · 2020 AZEROTH · 2018 THE EXPANSE ·
   2016 POKEMON GO. The AZEROTH cell is ACTIVE — full gold strength while its
   siblings sit dimmed at cream 35%, a gold hairline across the top of its
   cell, and one thin GOLD hairline rising from that cell straight up to the
@@ -925,7 +925,7 @@ all — this variant makes the connection through SHARED STRUCTURE alone:
   evenly spaced, each holding a gold scan-line portrait bust of the man in
   that era's dress, the year in small PT Mono lettered inside the chip's
   top-left corner, the era name in mono centred beneath the chip:
-  2026 ARCHITECT · 2022 LATENT LAND · 2020 AZEROTH · 2018 THE EXPANSE ·
+  2026 ARCHITECT · 2023 LATENT LAND · 2020 AZEROTH · 2018 THE EXPANSE ·
   2016 POKEMON GO. The AZEROTH chip is ACTIVE — its frame goes GOLD, its
   bust full strength, its name gold with a small filled gold diamond
   beneath; the other four chips keep cream 35% frames and dimmed busts.
@@ -987,7 +987,7 @@ between the figure and the readings. Top to bottom:
      hairline: five equal cells divided by short ticks, each a small square
      gold scan-line portrait bust (~54px, zero radius) with the year in PT
      Mono beneath it and the era name in tiny mono under the year:
-     2026 ARCHITECT · 2022 LATENT LAND · 2020 AZEROTH · 2018 THE EXPANSE ·
+     2026 ARCHITECT · 2023 LATENT LAND · 2020 AZEROTH · 2018 THE EXPANSE ·
      2016 POKEMON GO. AZEROTH active: full gold bust, gold hairline across
      its cell's top, small filled gold diamond beneath its name; siblings
      dimmed cream 35%.

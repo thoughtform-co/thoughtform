@@ -72,7 +72,7 @@ key on the station id, so nothing renumbers.
 | `creatives`   | Creatives   | 2014          | The Antwerp community manager      |
 | `the-crowd`   | Pokémon GO  | 2016 (span)   | The street organiser (2016–18)     |
 | `azeroth`     | Classroom   | 2020          | The Azeroth teacher                |
-| `genai`       | Latent Land | 2022          | The AI Captain                     |
+| `genai`       | Latent Land | 2023          | The AI Captain                     |
 | `thoughtform` | Thoughtform | 2025          | The founder                        |
 | `loop`        | Loop        | 2026          | The Intelligence Architect (canon) |
 
@@ -2684,7 +2684,7 @@ wherever the generator put it.
 | era                             | headY  | footY  | span       | painted at 1920×1247 |
 | ------------------------------- | ------ | ------ | ---------- | -------------------- |
 | `expanse` 2018                  | 0.0437 | 0.9961 | 0.9524     | 778.9px              |
-| `genai` 2022                    | 0.0563 | 0.993  | 0.9367     | 766.0px              |
+| `genai` 2023                    | 0.0563 | 0.993  | 0.9367     | 766.0px              |
 | `loop` 2026 / `pokemon-go` 2016 | 0.122  | 0.998  | 0.876      | 716.4px              |
 | `azeroth` 2020                  | 0.2352 | 0.9695 | **0.7343** | **600.5px**          |
 
@@ -2823,3 +2823,130 @@ and belongs with whatever the owner rules about §3.
   ~15 rows above the head — so nothing was re-pinned. Named so it is a decision
   rather than a discrepancy nobody wrote down.
 - **Azeroth's re-seat**, above.
+
+## Update 26 — the phone's dead strip, the Latent Land year, and a mark on the record (2026-09-19, owner)
+
+**Status: Accepted on all three. ⚠ The phone half cannot be verified from this
+machine and says so in its own comments — every CI project is Chromium, which
+resolves `svh`, `lvh` and `dvh` to one number, and that is precisely why it
+shipped.**
+
+Three quality-of-life reads off the live site. ⚠ **thoughtform.co is LIVE now**
+— Vercel is serving this app, not the Framer site — so this is the first
+`#voidwalker` pass whose output is outward-facing on the real domain.
+
+### 1 · The "pane at the bottom" is not a pane — it is the strip below `100svh`
+
+The owner photographed a full-width band ~150px tall at the foot of the phone
+screen, a different tone from the page in BOTH themes, with the theme switch
+sitting inside it, and asked for it to go so "elements can breathe".
+
+**Nothing paints it.** `.home-v2-stage__canvas` is `position: fixed; inset: 0;
+height: 100svh` — and `inset: 0` PLUS an explicit height is over-constrained, so
+`bottom` is dropped. On iOS Safari `100svh` is the SMALL viewport (~745 of 844
+on a 14, the number this repo's own phone probe already records), so the
+corridor's opaque void backing stopped **~99 CSS px above the real floor** and
+the layers underneath painted through: the gateway radial, `.gateway__grain`
+and the corridor-exit veil.
+
+⚠ **THE TONE IS THE PROOF THAT IT IS AN ABSENCE, NOT A PAINT.** It reads lighter
+than the page in dark AND in light because `.gateway__grain` blends `overlay`
+in dark (which lightens black) and `multiply` in light — opposite operations,
+one appearance. A single painted band could not do that.
+
+⚠ **AND THE THEME SWITCH BEING INSIDE IT IS THE DIAGNOSTIC.** `.rin-settings`
+and `.hud__corner--br` are pinned to the REAL viewport floor while every
+backdrop on this page was sized in `svh`. The only two things that can be in
+that strip are the two survivors of the phone HUD, and they were.
+
+The canvas takes `height: 100dvh; min-height: 100lvh` — the idiom `landing.css`
+already ships at the pinned-beat rung, and safe to grow **because nothing is
+laid out inside it**: a backdrop with no content cannot jitter a line of type.
+
+⚠ **IT IS WORSE ON `#voidwalker`, WHICH IS THE SECTION HE NAMED.** `.vwd` is
+`100svh`, so the instrument ends ~99px early — and `.vwd__band` then reserved
+`--mobile-chrome-bottom` INSIDE it, for chrome that is now entirely below it.
+The strip was paid for twice. Its own comment carried the false premise:
+_"inside a 100svh instrument this element's own bottom edge IS that floor"_.
+The reserve is `max(0px, calc(var(--mobile-chrome-bottom) - (100dvh - 100svh)))`
+now — **`100dvh - 100svh` is the live toolbar height**, zero while the toolbar
+is shown (where the clearance is genuinely needed) and the full offset once it
+collapses (where the chrome is below the instrument). Inert in Chromium, worth
+56–74px of screen on a real phone.
+
+⚠ **AND `.svc-ring-band` WAS SPENDING A LITERAL.** Its `calc(56px + 16px)` was
+the measured value of `--mobile-chrome-bottom` on a notch-less phone, so on a
+notched device it under-cleared the settings cluster by 18px. `mobile-sections`
+§1 already required the token — _"derived from the chrome's own tokens, never
+from a literal"_ — and this rule was the exception nobody had caught.
+
+⚠ **THE GUARD WAS VACUOUS AND NOW SAYS SO.** `services-ring-mobile-smoke`
+asserted `bandHeight ≈ vh`, which is trivially true where `svh === lvh`. It
+records all three units and asserts the canvas reaches the large viewport; the
+assertion still cannot fail in Chromium, and its message names that so the next
+reader checks a device instead of trusting a green run.
+
+### 2 · Latent Land is 2023
+
+One authored value (`characterEras.ts`) with one twin in the ADR-074 record
+(`voidwalkerData.ts`'s `year` **and `sortYear`**). Everything the stage prints
+is derived from `era.year`, so no component moved. ⚠ `sortYear` is floored into
+the travel clock's integer tick ladder, so the (unmounted) timeline's marker
+moves with it — a consequence, not a typo. Fifteen further sites stating the
+same fact were swept: comments, the era's own wardrobe lock in `prompt.py`, two
+labs, the mockup generator, and the year tables in ADR-082, ADR-074 and ADR-081.
+**No test pinned it** — the era suite checks the year's grammar and its
+reverse-chronological order, and 2023 satisfies both.
+
+### 3 · ON RECORD gets a mark, and it is an icon rather than a pill
+
+The owner asked for a frame, a pill or an icon, pointing at Starfield. ⚠ **A
+pill is a painted ground and a frame is a box — the two idioms this station has
+refused on the record twice** (U20 deleted the dashed ghost frame, U21 deleted
+the rails, and the committed `>700px` sweep exists to keep grounds off it).
+Starfield's own grammar is icon + label. He ruled for the icon.
+
+`PressGlyph` sits beside `FigureGlyph` in the same component and on the same
+grammar — rect-only, a 7×7 lattice at integer cells, the 14px rung, no text
+node. Four left-aligned rules of unequal length: a column of set type, which is
+what a clipping is.
+
+⚠ **ONE MARK, NOT ONE PER OUTLET.** The particle grammar bans decorative
+primitives, and a glyph per publication would be exactly that — the outlet's
+NAME is the next thing in the row, so a second encoding of it is noise with a
+distinguishability problem at 7×7. What the mark earns its gutter with is the
+INDEX read: five text blocks become five records.
+
+⚠ **AND THE SIGNAL SAYS SOMETHING TRUE AND FREE.** The lit rule means the piece
+has a public URL, which two of the six do not — a fact `VwPress.href` already
+held and the surface never said. No new field, and the zero-import record is
+untouched.
+
+⚠ **DAWN ONLY.** `ProofGlyph`'s signal layer is gold at alpha 1; here gold means
+"you are here" on the reel one row below, and five gold pixels in a reading
+column would compete with the one mark allowed to lead. The two weights are
+`.45` (the outlet's own ink) and `.8`.
+
+⚠ **THE MARK READS AT ITS LABEL'S STRENGTH, NOT ITS RULE'S.** The first cut took
+`--vwd-rule-head`'s `.3` and came out quieter than the outlet beside it — a key
+that recedes behind the thing it keys is an absent key, which is this surface's
+own finding about the seat's dashed line one panel over. Found by looking at the
+still, not by a gate.
+
+⚠ **A HELD GUTTER, AND `center` NEVER `baseline`.** The mark's column is a fixed
+track so it holds its width whether or not a mark lands in it (the proof
+register's rule, and what keeps a future markless item on the same rail); and
+grid synthesises a replaced element's baseline from its BOTTOM edge, so a
+baseline row would hang the whole meta line off the glyph.
+
+Measured after: the RECORD tab's `foot` is **78 / 75 / 111** at the three
+reference rungs — byte-identical to U23's own triple, so the mark costs the
+binding tab nothing — and the phone instrument still fits at all five shapes ×
+five eras × four tabs.
+
+### Also fixed in passing
+
+⚠ **`.claude/rules/voidwalker.md` said `off = corner_max - 6`** where the ADR,
+the avatar README, `post.py:119` and `grade.py:49` all say **`+ 6`**. A `- 6`
+would drop the key threshold BELOW the ground's own black level and admit the
+background as ink. It is the line a reader hits first, and it was wrong.

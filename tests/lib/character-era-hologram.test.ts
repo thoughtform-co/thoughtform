@@ -6,6 +6,7 @@ import {
   containedHologramPlacement,
   HOLO_FIGURE_SPAN,
   holoFigureFit,
+  holoFigureStature,
   isCharacterEraHologram,
   resolveCharacterEraHologram,
   type CharacterEraHologram,
@@ -292,7 +293,7 @@ describe("containedHologramPlacement", () => {
 describe("ADR-082 U25 · every era paints one figure height", () => {
   const spanOf = (h: CharacterEraHologram) => h.footY - h.headY;
 
-  it("no era is delivered shorter than the span every era is fitted to", () => {
+  it("no era is delivered shorter than the stature every era is fitted to", () => {
     // ⚠ THIS IS THE GUARD THAT MATTERS, AND IT IS POINTED AT THE CLAMP.
     // `holoFigureFit` can only ever SHRINK — growth re-binds `contain` to the
     // column's width and clips the head against the wrap's inset clip — so an
@@ -300,20 +301,47 @@ describe("ADR-082 U25 · every era paints one figure height", () => {
     // stay the odd one out with every other assertion green. The clamp must
     // never be the thing doing the work.
     for (const era of CHARACTER_ERAS) {
-      const span = spanOf(resolveCharacterEraHologram(era));
-      expect(span, `${era.id} span`).toBeGreaterThanOrEqual(HOLO_FIGURE_SPAN - 1e-9);
+      const stature = holoFigureStature(resolveCharacterEraHologram(era));
+      expect(stature, `${era.id} stature`).toBeGreaterThanOrEqual(HOLO_FIGURE_SPAN - 1e-9);
     }
   });
 
-  it("fits every era to the same span, and shrinks rather than grows", () => {
+  it("fits every era to the same BODY SCALE, and shrinks rather than grows", () => {
     for (const era of CHARACTER_ERAS) {
       const hologram = resolveCharacterEraHologram(era);
       const fit = holoFigureFit(hologram);
       expect(fit, `${era.id} fit`).toBeGreaterThan(0);
       expect(fit, `${era.id} fit`).toBeLessThanOrEqual(1);
-      // The painted share of the slot, which is what the eye compares.
-      expect(spanOf(hologram) * fit, `${era.id} painted span`).toBeCloseTo(HOLO_FIGURE_SPAN, 6);
+      // ⚠ STATURE, NOT EXTENT (ADR-082 U26). What the eye compares across the
+      // reel is how big the MAN is drawn, and for every standing era that is
+      // its span — so this is the same assertion U25 shipped until a
+      // non-standing pose exists. A kneeling figure matches here and paints a
+      // shorter extent on purpose.
+      expect(holoFigureStature(hologram) * fit, `${era.id} painted stature`).toBeCloseTo(
+        HOLO_FIGURE_SPAN,
+        6
+      );
     }
+  });
+
+  it("a standing era's stature IS its span, so U25's arithmetic is unchanged", () => {
+    // The distinction may only appear where a pose asks for it. If every era
+    // still stands, nothing here may have moved.
+    for (const era of CHARACTER_ERAS) {
+      const hologram = resolveCharacterEraHologram(era);
+      if (hologram.stature !== undefined) continue;
+      expect(holoFigureStature(hologram), `${era.id}`).toBe(spanOf(hologram));
+    }
+  });
+
+  it("an authored stature is what the fit reads, and it may not be a growth lever", () => {
+    // A crouch: a short extent drawn at a standing man's scale.
+    const crouch = { headY: 0.375, footY: 0.995, stature: 0.9524 };
+    expect(holoFigureStature(crouch)).toBe(0.9524);
+    expect(holoFigureFit(crouch)).toBeCloseTo(HOLO_FIGURE_SPAN / 0.9524, 12);
+    // It shrinks like any other era — it cannot be used to make one bigger.
+    expect(holoFigureFit(crouch)).toBeLessThanOrEqual(1);
+    expect(holoFigureFit({ headY: 0.1, footY: 0.9, stature: 0.2 })).toBe(1);
   });
 
   it("leaves the shortest era untouched and is the identity on a square-on span", () => {

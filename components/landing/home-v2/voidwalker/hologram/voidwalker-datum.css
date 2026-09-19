@@ -60,6 +60,11 @@
   --vwd-rule-head: 0.3;
   --vwd-rail: 0.12;
 
+  /* The press mark's cell (ADR-082 U26). ⚠ AN INTEGER MULTIPLE OF THE 7-CELL
+     LATTICE — 14px is a 2px cell, and a fractional one turns a pixel drawing
+     into a blur. It is also the gutter's width, so the two can never drift. */
+  --vwd-press-mark: 14px;
+
   /* ── THE REEL. One cell pitch for all five chips, so the offset that centres
         the selected era is a signed multiple of ONE number. `--vwd-reel` is how
         many cells the window shows; `--vwd-n` is the roster's length, and the
@@ -648,15 +653,53 @@
 .vwd__press + .vwd__press {
   padding-top: clamp(8px, 1.2svh, 14px);
 }
+/* ⚠ A HELD GUTTER, THEN THE LABEL, THEN THE DATE (ADR-082 U26, owner
+   2026-09-19: the articles "are now just plain text … maybe use an icon").
+   The gutter is a FIXED column, not a flex child, so it holds its width
+   whether or not a mark lands in it — the proof register's own rule, and it
+   is what keeps a future markless item on the same rail as these.
+   ⚠ `center`, NEVER `baseline`: grid synthesises a replaced element's
+   baseline from its BOTTOM edge, so a baseline row would hang the whole meta
+   line off the glyph (the casefile's register learned this on the same
+   idiom). */
 .vwd__press__meta {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: var(--vwd-press-mark) minmax(0, 1fr) auto;
+  align-items: center;
   gap: 10px;
   font-family: var(--vwd-mono);
   font-size: clamp(9.5px, 0.68vw, 11px);
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--vwd-dawn-rgb), 0.45);
+}
+.vwd__press__glyph {
+  display: block;
+  width: var(--vwd-press-mark);
+  height: var(--vwd-press-mark);
+  /* ⚠ The grid is authored in whole cells; anything but an integer scale puts
+     a 1-unit rect on a half pixel and the mark goes soft. */
+  shape-rendering: crispEdges;
+}
+/* Two dawn weights, matching the ladder the panel's own rules run on
+   (`--vwd-rule-head` divides a region, `--vwd-rail` rules within one). The lit
+   rule is the record that links out; it is a STEP in the same ink, never a
+   second hue. */
+/* ⚠ THE MARK READS AT ITS LABEL'S STRENGTH, NOT ITS RULE'S. The first cut took
+   `--vwd-rule-head`'s .3 and the mark came out quieter than the outlet beside
+   it — a key that recedes behind the thing it keys is an absent key (this
+   surface's own finding about the seat's dashed line, one panel over). `.45`
+   is the outlet's own ink; the lit rule steps above it and stops short of the
+   headline's .95. */
+.vwd__press__sk {
+  fill: rgba(var(--vwd-dawn-rgb), 0.45);
+}
+.vwd__press__sig {
+  fill: rgba(var(--vwd-dawn-rgb), 0.8);
+}
+a.vwd__press:hover .vwd__press__sig,
+a.vwd__press:focus-visible .vwd__press__sig {
+  fill: var(--gold-ink, #caa554);
 }
 .vwd__press__headline {
   font-family: var(--vwd-display);
@@ -1320,13 +1363,26 @@ a.vwd__press:focus-visible .vwd__press__headline {
     padding-block: clamp(6px, 1svh, 10px) 0;
     /* ⚠ THE CLEARANCE IS THE WHOLE RULE, AND THE TOKEN IS MEASURED FROM THE
        VIEWPORT FLOOR. `.rin-settings` is `position: fixed` on the bottom
-       margin line and is never gated off, and inside a 100svh instrument this
-       element's own bottom edge IS that floor — so without this the right-hand
-       stops run under the theme switch (34.9px of measured overlap on four of
-       five eras, the defect the deleted band rule below recorded). Nothing
-       comes back out of `--mobile-chrome-bottom`: `--hud-margin` is already
-       inside it. */
-    padding-bottom: var(--mobile-chrome-bottom, 56px);
+       margin line and is never gated off, so without this the right-hand stops
+       run under the theme switch (34.9px of measured overlap on four of five
+       eras, the defect the deleted band rule below recorded). Nothing comes
+       back out of `--mobile-chrome-bottom`: `--hud-margin` is already inside it.
+
+       ⚠ BUT "THIS ELEMENT'S OWN BOTTOM EDGE IS THAT FLOOR" IS FALSE ON A REAL
+       iPHONE, AND THAT CLAUSE STOOD HERE UNTIL ADR-082 U26. `.vwd` is
+       `100svh`, which on iOS Safari is the SMALL viewport — so with the
+       toolbar collapsed the instrument ends ~99 CSS px ABOVE the floor the
+       switch is pinned to, and the band then reserved a strip that was already
+       below it. Paid twice, and it is most of the dead screen the owner read
+       as "a pane at the bottom that consumes a lot of real estate".
+       ⚠ `100dvh - 100svh` IS THE LIVE TOOLBAR HEIGHT — zero while the toolbar
+       is shown (where the clearance is genuinely needed, because the
+       instrument's floor and the viewport's coincide) and the full offset once
+       it collapses (where the chrome is below the instrument entirely). So the
+       reserve is what is STILL above the chrome, never a constant.
+       ⚠ INERT IN CI: Chromium resolves dvh and svh to one number, so the term
+       is 0 and every phone project measures exactly what it measured before. */
+    padding-bottom: max(0px, calc(var(--mobile-chrome-bottom, 56px) - (100dvh - 100svh)));
     /* ⚠ ONE RULE, BOTH THEMES. `--void-rgb` flips to parchment under ADR-058,
        so this is a fade to ink over the corridor in dark and to paper in light
        with no second block to keep in step.

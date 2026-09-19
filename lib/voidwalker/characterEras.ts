@@ -88,6 +88,26 @@ export interface CharacterEraHologram {
   headY: number;
   /** Normalized Y coordinate where the boots meet the projector plane. */
   footY: number;
+  /**
+   * The span this figure would occupy IF IT WERE STANDING — the reference the
+   * one-height law normalises against (ADR-082 U26, owner 2026-09-19).
+   *
+   * ⚠ OPTIONAL, AND ABSENT IS THE RULE RATHER THAN THE EXCEPTION. For a
+   * standing figure the stature IS `footY - headY`, so every era that stands
+   * omits this and is byte-identical to the pre-U26 arithmetic. It exists for
+   * a deliberately NON-STANDING pose, where head-to-foot extent stops being a
+   * measure of how big the man is drawn: a commander on one knee is ~0.6 of
+   * his own standing height, and matching that extent to a standing era would
+   * draw him half again as large — the owner's ruling is that he matches their
+   * BODY SCALE and simply sits lower in his box.
+   *
+   * ⚠ IT IS MEASURED, NOT ASSERTED. The scale proxy is HEAD WIDTH, which is
+   * the one dimension a pose does not change (`post.py` reports it): the
+   * stature is the standing delivery's span times the ratio of the two head
+   * widths. Author the arithmetic beside the value or it is a guess in
+   * costume.
+   */
+  stature?: number;
 }
 
 /**
@@ -245,8 +265,28 @@ export const HOLO_FIGURE_SPAN = 0.7343;
  * to raise; `character-era-hologram.test.ts` fails rather than let the clamp
  * quietly do that work.
  */
-export function holoFigureFit(hologram: Pick<CharacterEraHologram, "headY" | "footY">): number {
+/**
+ * What the one-height law measures an era against: its STATURE — the span the
+ * figure would occupy standing — which for a standing figure is simply its
+ * span (ADR-082 U26).
+ *
+ * ⚠ THE DISTINCTION ONLY APPEARS WHEN A POSE IS NOT STANDING, and until one
+ * ships this returns `footY - headY` for all five eras, so the fit below is
+ * byte-identical to what U25 shipped.
+ */
+export function holoFigureStature(
+  hologram: Pick<CharacterEraHologram, "headY" | "footY" | "stature">
+): number {
   const span = hologram.footY - hologram.headY;
+  const authored = hologram.stature;
+  if (typeof authored === "number" && Number.isFinite(authored) && authored > 0) return authored;
+  return span;
+}
+
+export function holoFigureFit(
+  hologram: Pick<CharacterEraHologram, "headY" | "footY" | "stature">
+): number {
+  const span = holoFigureStature(hologram);
   if (!Number.isFinite(span) || span <= 0) return 1;
   // ⚠ THE FLOOR ERA RETURNS EXACTLY 1, NOT 0.9999999999999999. `footY - headY`
   // is a float subtraction, so the shortest era's span is not bit-equal to the
@@ -383,7 +423,7 @@ export interface CharacterEra {
  * black jeans, blazer, turtleneck/shirt, cap) plus per-era gear that
  * makes the moment recognisable: a lanyard and camera for the two
  * crowds (2016's hunts and 2018's campaign), the warlock's own transmog
- * for Azeroth, the cap and film cape for 2022's Latent Land, and the
+ * for Azeroth, the cap and film cape for 2023's Latent Land, and the
  * long coat with the Thoughtform cap + brooch for 2026. These are the
  * WARDROBE LOCKS the skill runs against.
  *
@@ -414,7 +454,7 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
   {
     id: "genai",
     beatId: "genai",
-    year: "2022",
+    year: "2023",
     wardrobe: "The AI Captain",
     /* ⚠ THE LOADOUT NAMES WHAT THE PLATE SHOWS (ADR-082 U13's rule, applied
        here by ADR-082 U23's wave). It read "Blazer · shirt · Latent Land cape ·

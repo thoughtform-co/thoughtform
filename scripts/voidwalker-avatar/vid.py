@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from env import require  # noqa: E402
-from prompt import IDLE_NEGATIVE, IDLE_PROMPT  # noqa: E402
+from prompt import IDLE_NEGATIVE, idle_prompt  # noqa: E402
 
 MODEL = "veo-3.1-generate-preview"
 
@@ -31,6 +31,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--wave", required=True)
     ap.add_argument("--still", default=None, help="defaults to the wave's pick.txt")
+    # The era only selects an IDLE override; absent, the shared standing
+    # breather is used exactly as before (ADR-082 U26).
+    ap.add_argument("--era", default=None)
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent
@@ -55,7 +58,7 @@ def main() -> int:
 
     op = client.models.generate_videos(
         model=MODEL,
-        prompt=IDLE_PROMPT,
+        prompt=idle_prompt(args.era),
         image=types.Image.from_file(location=str(still)),
         config=types.GenerateVideosConfig(
             aspect_ratio="9:16",

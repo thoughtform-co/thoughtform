@@ -72,7 +72,7 @@ section is that sentence unfolded.
 5. **The content is a zero-import record** (`lib/voidwalker/voidwalkerData.ts`,
    the `lib/cases` law): nine beats, chronological — 2014–17 the Antwerp
    creative community · 2016 Pokémon GO · 2016 OPHEF · 2018 Save The Expanse
-   · 2018 the coins · 2020 the locked-down classroom · 2022 the GenAI wave ·
+   · 2018 the coins · 2020 the locked-down classroom · 2023 the GenAI wave ·
    2024 Loop · 2025 Thoughtform. **Six STORY beats carry a wireframe plate
    and a press bar; three WAYPOINTS (the prologue and the two terminus
    beats) are compact rows on the same spine** — that split is how "not

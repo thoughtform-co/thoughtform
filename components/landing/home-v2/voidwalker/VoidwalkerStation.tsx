@@ -299,7 +299,7 @@ function Interlude({ beat }: { beat: VoidwalkerBeat }) {
  * ⚠ AND THE LADDER ALREADY IS THIS RECORD'S AXIS, EXACTLY. The rail's
  * thirteen ticks are twelve intervals; the record runs 2026 → 2014,
  * which is twelve years. Every year the record lands on seats on an
- * INTEGER RUNG — 2025 on tick 1, 2022 on tick 4, 2020 on 6, 2018 on 8,
+ * INTEGER RUNG — 2025 on tick 1, 2023 on tick 4, 2020 on 6, 2018 on 8,
  * 2016 on 10, 2014 on the terminus. So nothing is added to the ladder
  * and nothing is taken from it (ADR-031's guardrail: all thirteen ticks
  * stay). The rail is lettered with years instead of bearings while the

@@ -216,7 +216,7 @@ export function Runway() {
             <span>Creatives · 2014</span>
             <span>The Crowd · 2016</span>
             <span>Azeroth · 2020</span>
-            <span data-on="">Latent Land · 2022</span>
+            <span data-on="">Latent Land · 2023</span>
             <span>Thoughtform · 2025</span>
             <span>Architect · 2026</span>
           </div>

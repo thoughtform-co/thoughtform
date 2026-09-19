@@ -20,8 +20,9 @@ the BR settings cluster (`.rin-settings`, z 60), the two corner brackets, and
 
 None of them can see the document. Every one of them prints over whatever is
 underneath. So on a phone the composition is not "the desktop layout, narrower":
-it is **a flowing document under a fixed frame**, and the five laws below are
-what keep the two apart.
+it is **a flowing document under a fixed frame**, and the laws below are what
+keep the two apart. (They are numbered, not counted — the intro said "five"
+through §6, §7 and §8.)
 
 **Read first**
 
@@ -253,6 +254,46 @@ nothing DOM rises (ADR-109's sheet lasted a day), so §2 has nothing new to
 kill; the back's ✕ and CTA are shims inside the card's own rect (the ✕ grown
 to the 44px floor in CSS). Its guard is `services-ring-mobile-smoke.spec.ts`;
 its lockstep with the ring is `services-ring-mobile-gate.test.ts`.
+
+## 8 · A backdrop is sized in `lvh`; the chrome is pinned to the real floor (ADR-082 U26)
+
+On iOS Safari the three viewport units are three different numbers: `svh` is the
+SMALL viewport (toolbar shown), `lvh` the LARGE (toolbar collapsed), `dvh` the
+live one. **Every piece of fixed chrome on this surface is pinned to the real
+floor** — `.rin-settings` at `bottom: max(--hud-margin, --safe-bottom)`,
+`.hud__corner--br` at `bottom: --hud-margin` — while backdrops were sized in
+`svh`. The gap between them is ~99 CSS px on an iPhone 14 (844 − 745), and what
+shows in it is whatever the backdrop was covering.
+
+That is the defect the owner read as _"a pane at the bottom that consumes a lot
+of real estate"_: `.home-v2-stage__canvas` was `inset: 0` PLUS `height: 100svh`
+— over-constrained, so `bottom` is dropped — and the gateway radial, the grain
+and the corridor-exit veil painted through below it.
+
+- ⚠ **A BACKDROP TAKES `height: 100dvh; min-height: 100lvh`.** Growing one is
+  free _because nothing is laid out inside it_: a fixed pane with no content
+  cannot jitter a line of type when the toolbar collapses. The idiom already
+  ships at `landing.css`'s pinned-beat rung.
+- ⚠ **CONTENT STAYS IN `svh`.** A sticky band or a one-screen instrument sized
+  in `dvh` grows mid-scroll and moves the reading under the thumb — law 4's
+  defect in a new place. `.vwd` and `.svc-ring-band` keep `100svh` deliberately.
+- ⚠ **A `svh` BOX MAY NOT RESERVE THE FULL CHROME BAND.** Its own bottom edge is
+  already above the chrome once the toolbar collapses, so the strip gets paid
+  for twice. `100dvh - 100svh` IS the live toolbar height — zero while the
+  toolbar is shown, the full offset once it is not — so the reserve is
+  `max(0px, calc(var(--mobile-chrome-bottom) - (100dvh - 100svh)))`.
+  `.vwd__band` is the worked example.
+- ⚠ **NO PROJECT IN THIS REPO CAN REPRODUCE ANY OF IT.** Every phone project is
+  Chromium (ADR-107 U1), where all three units collapse to one number — so
+  these rules are byte-identical in CI and a green run proves nothing about
+  them. `services-ring-mobile-smoke` records all three and says so in its own
+  failure message. **The proof is a device**: compare `innerHeight` with
+  `.home-v2-stage__canvas`'s `getBoundingClientRect().bottom`.
+- ⚠ **THIRD TIME FOR THIS UNIT CLASS.** ADR-018's projector bug mapped NDC into
+  an `lvh` box and wrote it into an `svh` cell; `landing.css`'s pinned beat had
+  a strip of the next section show through; this is the same arithmetic one
+  layer down. When a phone report says "a band", "a strip" or "it jumps", check
+  the units before looking for a painter.
 
 ## Verifying
 

@@ -143,8 +143,8 @@ export const VOIDWALKER_BEATS: readonly VoidwalkerBeat[] = [
   },
   {
     id: "genai",
-    year: "2022",
-    sortYear: 2022,
+    year: "2023",
+    sortYear: 2023,
     kind: "story",
     title: ["Then the models arrived."],
     body: [
