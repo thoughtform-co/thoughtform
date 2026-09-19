@@ -2279,6 +2279,21 @@
   .pf-stack .pf-card__tabs .fl-con__rail[data-n="4"] .fl-con__stn {
     margin-right: 0;
   }
+  /* ⚠ THE CONSOLE FILLS ITS BAY, OR THE CARD'S SLACK POOLS AS ONE HOLE.
+     `console.css`'s ≤980 unwrap takes the console's fill away (`position:
+     static; height: auto`), so inside a `1fr` bay it sat as a content-height
+     box at the top with the remainder showing underneath — a gap between two
+     framed things, which reads as a mistake rather than as air. Filled, the
+     stills' own `align-content: center` SPLITS that slack above and below the
+     ads, inside the frame's own border, which is this house's rule one surface
+     over: split the slack, do not pool it. ⚠ It cannot make the ads bigger —
+     the tiles are width-bound at 4/5 — so what this buys is where the surplus
+     goes, not less of it. */
+  .pf-stack .pf-card__bay > .fl-con,
+  .pf-stack .pf-card__bay .fl-con__console {
+    height: 100%;
+    min-height: 0;
+  }
   .pf-stack .pf-card__tabs .fl-con__stn > b {
     white-space: nowrap;
   }
