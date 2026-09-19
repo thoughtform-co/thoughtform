@@ -742,7 +742,12 @@ export type CardFaceVariant =
   // a character raster, the type alone under a three.js cloud, a wire.
   | "raster"
   | "volume"
-  | "wire";
+  | "wire"
+  // The raster's shape families (owner, 2026-09-19: "variants of the raster
+  // … different shapes … volumetric"): shaded bodies, not lines.
+  | "raster-bodies"
+  | "raster-solids"
+  | "raster-knots";
 
 /**
  * An in-canvas FIGURE over the face (2026-09-19): `"volume"` mounts one
@@ -869,6 +874,31 @@ const COMPOSITION: Record<string, FaceComposition> = {
   },
   volume: { viz: "none", title: "top-centre", para: "foot-centre", band: "poster", pin: "display" },
   wire: { viz: "wire", title: "top-centre", para: "foot-centre", band: "poster", pin: "display" },
+  /* The raster's shape families — the same composition, a volumetric body
+     per card lettered through its shading (`cardViz.ts` §The volumetric
+     raster). ⚠ Absent from this map a face falls back to `tight`, the
+     PHOTOGRAPH — silently. */
+  "raster-bodies": {
+    viz: "bodies",
+    title: "top-centre",
+    para: "foot-centre",
+    band: "poster",
+    pin: "display",
+  },
+  "raster-solids": {
+    viz: "solids",
+    title: "top-centre",
+    para: "foot-centre",
+    band: "poster",
+    pin: "display",
+  },
+  "raster-knots": {
+    viz: "knots",
+    title: "top-centre",
+    para: "foot-centre",
+    band: "poster",
+    pin: "display",
+  },
 };
 
 const compositionOf = (v: CardFaceVariant): FaceComposition => COMPOSITION[v] ?? COMPOSITION.tight;

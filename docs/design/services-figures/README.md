@@ -89,6 +89,33 @@ the bake, and as the inline SVG strip in the lab console (the future mobile
 plate). Reference: the wireframe device; ADR-025 U4's "technical illustrated
 line object".
 
+## Round two: the raster's shape families (owner, same day)
+
+On reading the first sheet: "make some variants of the raster … find
+different shapes … like volumetric shape, so no lines as in workshop." Three
+more rows ride one new renderer, `rasterVolume` in `cardViz.ts`: a ray march
+per cell over an implicit body in the band's unit space, one light from the
+upper left, an ambient floor and a rim term (the first cut lit by Lambert
+alone and every unlit half vanished; a sphere read as a crescent), depth
+fade, then a nine-step glyph ramp `· : - = + * # % @`. No line anywhere;
+every card is a solid that reads through its shading.
+
+```
+http://localhost:3003/test/services-card-face-lab?v=bodies
+http://localhost:3003/test/services-card-face-lab?v=solids
+http://localhost:3003/test/services-card-face-lab?v=knots
+```
+
+| row         | the four bodies                                                                                                                                                                                                                                                                                                                    |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R2 · Bodies | the record as fused volumes (metaballs): the radiant's source a large ball with its room as small ones; the route a worm of fused balls along the walk; the mesh's reached nodes one lumpy body with the person-led nodes as small balls touching nothing; the table eight balls fused into a ring. The marks are the record's own |
+| R3 · Solids | a sphere under one light (keynote) · a torus (workshop) · the house's chamfered slab, TR + BL, three-quarters on (embedded) · eight spheres fused into a ring (home session)                                                                                                                                                       |
+| R4 · Knots  | torus knots (1,3) · (2,3) · (3,4) · (2,7) as one thick tube; the loop is the house's canon, the crossings the variable                                                                                                                                                                                                             |
+
+The family's sheet is `stills/1600x1000/contact-raster-dark.png` (the first
+raster on top for reference). Coverage of the band runs 0.10–0.25 across the
+twelve, against 0.04–0.10 for the line figures.
+
 ## The seams that keep production byte-identical
 
 - `ServicesCardRing` gained two additive props: `plates` (default

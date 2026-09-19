@@ -1177,6 +1177,337 @@ function wire(
   ctx.restore();
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE VOLUMETRIC RASTER (owner, 2026-09-19: "variants of the raster …
+   different shapes … volumetric, so no lines as in workshop").
+
+   The raster above letters COVERAGE — a line figure sampled into cells. This
+   one letters a SURFACE: a tiny ray march per cell over an implicit body in
+   the band's own unit space, Lambert-shaded from one light, faded with
+   depth, then the same glyph ramp. A body reads through its shading, which
+   is what a character matrix does best (the HORSE reference is a shaded
+   form, not a diagram). Three shape families ride it, one row each in the
+   lab; every family keeps ADR-086's logic of one vocabulary with four
+   members, so the four cards still read as a set.
+
+   ⚠ THREE-FREE. The march is arithmetic on a closure, not a renderer.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+type Vec3 = readonly [number, number, number];
+/** A signed field over the band's unit space (x right, y down, z toward the
+ *  viewer, the band's inscribed circle at R = 1): negative inside the body. */
+type Field = (x: number, y: number, z: number) => number;
+
+/** The shaded ramp, dark → light. All PT Mono. */
+const VOL_RAMP = ["·", ":", "-", "=", "+", "*", "#", "%", "@"] as const;
+/** One light, upper-left and in front — the direction a HUD's key light comes from. */
+const VOL_LIGHT: Vec3 = (() => {
+  const v: Vec3 = [-0.45, -0.62, 0.64];
+  const l = Math.hypot(v[0], v[1], v[2]);
+  return [v[0] / l, v[1] / l, v[2] / l];
+})();
+const VOL_Z_NEAR = 1.5;
+const VOL_Z_FAR = -1.5;
+const VOL_STEPS = 44;
+const VOL_EPS = 0.012;
+const VOL_SCAN_EVERY = 3;
+const VOL_SCAN_KEEP = 0.55;
+
+/** The march: one ray per cell, front to back, three bisections at the hit,
+ *  the normal by central differences. Cells outside the unit disc's margin
+ *  never march. */
+function rasterVolume(
+  ctx: CanvasRenderingContext2D,
+  b: VizBox,
+  pal: VizPalette,
+  field: Field,
+  marks: ReadonlyArray<{ x: number; y: number; r: number }>
+): void {
+  const cols = Math.max(8, Math.round(b.w / (RASTER_PX * 0.6)));
+  const rows = Math.max(8, Math.round(b.h / RASTER_PX));
+  const cellW = b.w / cols;
+  const cellH = b.h / rows;
+  const R = Math.min(b.w, b.h) / 2;
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  const dz = (VOL_Z_NEAR - VOL_Z_FAR) / VOL_STEPS;
+  const [lx, ly, lz] = VOL_LIGHT;
+
+  setBakeType(ctx, { family: "mono", px: RASTER_PX, track: 0 });
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (let r = 0; r < rows; r++) {
+    const py = b.y + (r + 0.5) * cellH;
+    const y = (py - cy) / R;
+    for (let c = 0; c < cols; c++) {
+      const px = b.x + (c + 0.5) * cellW;
+      const x = (px - cx) / R;
+      if (x * x + y * y > 1.35 * 1.35) continue;
+      let z = VOL_Z_NEAR;
+      let hit = false;
+      for (let s = 0; s < VOL_STEPS; s++) {
+        const z2 = z - dz;
+        if (field(x, y, z2) < 0) {
+          let lo = z2;
+          let hi = z;
+          for (let k = 0; k < 3; k++) {
+            const mid = (lo + hi) / 2;
+            if (field(x, y, mid) < 0) lo = mid;
+            else hi = mid;
+          }
+          z = (lo + hi) / 2;
+          hit = true;
+          break;
+        }
+        z = z2;
+      }
+      if (!hit) continue;
+      const nx = field(x + VOL_EPS, y, z) - field(x - VOL_EPS, y, z);
+      const ny = field(x, y + VOL_EPS, z) - field(x, y - VOL_EPS, z);
+      const nz = field(x, y, z + VOL_EPS) - field(x, y, z - VOL_EPS);
+      const nl = Math.hypot(nx, ny, nz) || 1;
+      const lambert = Math.max(0, (nx * lx + ny * ly + nz * lz) / nl);
+      /* An ambient floor and a RIM: the first cut lit by Lambert alone and
+         the unlit half of every body vanished into the ground — a sphere
+         read as a crescent. A hologram holds its silhouette at the grazing
+         edge, so the rim term lifts where the normal turns away from the
+         viewer, and the floor keeps the dark side lettering `·` and `:`. */
+      const facing = Math.abs(nz / nl);
+      const rim = 0.32 * (1 - facing) * (1 - facing);
+      const shade = Math.min(1, 0.3 + 0.7 * lambert + rim);
+      const depth = (z - VOL_Z_FAR) / (VOL_Z_NEAR - VOL_Z_FAR);
+      const lum = shade * (0.6 + 0.4 * depth);
+      const idx = Math.min(VOL_RAMP.length - 1, Math.floor(Math.pow(lum, 0.8) * VOL_RAMP.length));
+      let alpha = 0.3 + 0.7 * lum;
+      if (r % VOL_SCAN_EVERY === VOL_SCAN_EVERY - 1) alpha *= VOL_SCAN_KEEP;
+      ctx.fillStyle = pal.ink(alpha);
+      ctx.fillText(VOL_RAMP[idx], px, py);
+    }
+  }
+  ctx.textAlign = "start";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = pal.gold;
+  for (const m of marks) dia(ctx, cx + m.x * R, cy + m.y * R, m.r);
+}
+
+/* ── the bodies ─────────────────────────────────────────────────────────── */
+
+/** Rotate about x by `t` (the cloud's own tilt is 0.42): a body posed so it
+ *  reads as a volume rather than a disc. */
+const tiltX =
+  (t: number) =>
+  (x: number, y: number, z: number): Vec3 => [
+    x,
+    y * Math.cos(t) - z * Math.sin(t),
+    y * Math.sin(t) + z * Math.cos(t),
+  ];
+const yawY =
+  (t: number) =>
+  (x: number, y: number, z: number): Vec3 => [
+    x * Math.cos(t) + z * Math.sin(t),
+    y,
+    -x * Math.sin(t) + z * Math.cos(t),
+  ];
+
+const sphereField =
+  (c: Vec3, r: number): Field =>
+  (x, y, z) =>
+    Math.hypot(x - c[0], y - c[1], z - c[2]) - r;
+
+/** Metaballs: the classic `Σ r²/d²` union, negative inside, balls fusing
+ *  where they come within ~2.8 r of each other. */
+const metaballField =
+  (balls: ReadonlyArray<{ c: Vec3; r: number }>): Field =>
+  (x, y, z) => {
+    let s = 0;
+    for (const b of balls) {
+      const dx = x - b.c[0];
+      const dy = y - b.c[1];
+      const dz = z - b.c[2];
+      s += (b.r * b.r) / (dx * dx + dy * dy + dz * dz + 1e-6);
+    }
+    return 1 - s;
+  };
+
+const torusField =
+  (R: number, r: number, tilt: number, yaw: number): Field =>
+  (x, y, z) => {
+    const p = tiltX(tilt)(...yawY(yaw)(x, y, z));
+    const q = Math.hypot(p[0], p[1]) - R;
+    return Math.hypot(q, p[2]) - r;
+  };
+
+/** A slab with the house's TR + BL chamfer (canvas-handed: TR is x > 0, y < 0). */
+const slabField =
+  (a: number, b: number, c: number, ch: number, tilt: number, yaw: number): Field =>
+  (x, y, z) => {
+    const p = tiltX(tilt)(...yawY(yaw)(x, y, z));
+    const box = Math.max(Math.abs(p[0]) - a, Math.abs(p[1]) - b, Math.abs(p[2]) - c);
+    const tr = (p[0] - p[1]) / Math.SQRT2 - ch;
+    const bl = (p[1] - p[0]) / Math.SQRT2 - ch;
+    return Math.max(box, tr, bl);
+  };
+
+const ringOfSpheresField = (n: number, R: number, r: number, tilt: number): Field => {
+  const balls: { c: Vec3; r: number }[] = [];
+  for (let i = 0; i < n; i++) {
+    const th = (i / n) * Math.PI * 2 + Math.PI / n;
+    const p = tiltX(tilt)(R * Math.cos(th), 0, R * Math.sin(th));
+    balls.push({ c: p, r });
+  }
+  return metaballField(balls);
+};
+
+/** A (p, q) torus knot as a tube: the curve sampled, the field the nearest
+ *  sample's sphere. */
+const knotField = (
+  p: number,
+  q: number,
+  R: number,
+  r: number,
+  tube: number,
+  tilt: number,
+  yaw: number
+): Field => {
+  const N = 150;
+  const pts: Vec3[] = [];
+  for (let i = 0; i < N; i++) {
+    const th = (i / N) * Math.PI * 2;
+    const rr = R + r * Math.cos(q * th);
+    const raw: Vec3 = [rr * Math.cos(p * th), r * Math.sin(q * th), rr * Math.sin(p * th)];
+    pts.push(tiltX(tilt)(...yawY(yaw)(...raw)));
+  }
+  return (x, y, z) => {
+    let best = Infinity;
+    for (const c of pts) {
+      const d = Math.hypot(x - c[0], y - c[1], z - c[2]);
+      if (d < best) best = d;
+    }
+    return best - tube;
+  };
+};
+
+/**
+ * R2 · BODIES — the record as fused volumes. The same figure the raster,
+ * the cloud and the wire draw, with every structure turned into a body:
+ * the radiant's source a large ball and its room small ones; the route a
+ * worm of fused balls along the walk (no line anywhere, the owner's ask);
+ * the mesh's reached nodes one lumpy body with the person-led nodes as
+ * small balls that touch nothing; the table eight balls fused into a ring.
+ * The marks are the record's own.
+ */
+function bodies(
+  ctx: CanvasRenderingContext2D,
+  b: VizBox,
+  pal: VizPalette,
+  _rand: () => number,
+  service: VizKey
+): void {
+  const fig = figureFor(isFigureSlot(service) ? service : "embedded");
+  // The cloud sits inside the unit disc with air for the shading; the mesh
+  // body, which fuses most of the estate, takes a smaller scale so it stays
+  // a body IN the band rather than the band.
+  const K = fig.kind === "mesh" ? 0.68 : 0.8;
+  const at = (i: number): Vec3 => [
+    fig.points[i].x * K,
+    fig.points[i].y * K,
+    fig.points[i].z * K * 0.7,
+  ];
+  const balls: { c: Vec3; r: number }[] = [];
+  switch (fig.kind) {
+    case "radiant":
+      balls.push({ c: at(fig.source), r: 0.34 });
+      fig.lit.forEach((lit, i) => {
+        if (lit && i !== fig.source) balls.push({ c: at(i), r: 0.08 });
+      });
+      break;
+    case "route":
+      for (const i of fig.path) balls.push({ c: at(i), r: 0.15 });
+      break;
+    case "table":
+      for (const i of fig.path) balls.push({ c: at(i), r: 0.2 });
+      break;
+    case "mesh":
+    default: {
+      const open = new Set(fig.unlinked);
+      fig.lit.forEach((lit, i) => {
+        if (lit && fig.points[i].z > -0.15) balls.push({ c: at(i), r: 0.105 });
+      });
+      for (const i of open) balls.push({ c: at(i), r: 0.055 });
+      break;
+    }
+  }
+  const marks = fig.marks.map((m) => ({
+    x: fig.points[m.i].x * K,
+    y: fig.points[m.i].y * K,
+    r: m.r * 1.1,
+  }));
+  rasterVolume(ctx, b, pal, metaballField(balls), marks);
+}
+
+/**
+ * R3 · SOLIDS — four primitive bodies, one per service, each the structure's
+ * claim as a solid: keynote a sphere under one light (one source, the room
+ * lit from it); workshop a torus (one loop walked end to end); embedded the
+ * house's own chamfered slab (a configuration is a machined object);
+ * home session eight spheres fused into a ring (the table).
+ */
+function solids(
+  ctx: CanvasRenderingContext2D,
+  b: VizBox,
+  pal: VizPalette,
+  _rand: () => number,
+  service: VizKey
+): void {
+  const slot = isFigureSlot(service) ? service : "embedded";
+  let field: Field;
+  let marks: { x: number; y: number; r: number }[] = [];
+  switch (slot) {
+    case "keynote":
+      field = sphereField([0, 0, 0], 0.84);
+      marks = [{ x: -0.34, y: -0.42, r: 9 }];
+      break;
+    case "workshop":
+      field = torusField(0.6, 0.27, 1.05, 0.35);
+      break;
+    case "guided-build":
+      field = ringOfSpheresField(8, 0.66, 0.24, 1.0);
+      break;
+    case "embedded":
+    default:
+      // Faces the viewer three-quarters on, thick enough for its walls to
+      // shade — the first pose (0.5 / −0.55, 0.14 deep) turned it near
+      // edge-on and a slab seen on edge is a line, which is the one thing
+      // this row is not allowed to be.
+      field = slabField(0.6, 0.76, 0.2, 0.34, 0.22, -0.26);
+      break;
+  }
+  rasterVolume(ctx, b, pal, field, marks);
+}
+
+/**
+ * R4 · KNOTS — one family, four members: a (p, q) torus knot per service,
+ * the tube thick enough to shade. The loop is the house's own canon (the
+ * Arc); the crossings are the variable.
+ */
+function knots(
+  ctx: CanvasRenderingContext2D,
+  b: VizBox,
+  pal: VizPalette,
+  _rand: () => number,
+  service: VizKey
+): void {
+  const slot = isFigureSlot(service) ? service : "embedded";
+  const pq: Record<string, [number, number]> = {
+    keynote: [1, 3],
+    workshop: [2, 3],
+    embedded: [3, 4],
+    "guided-build": [2, 7],
+  };
+  const [p, q] = pq[slot] ?? [2, 3];
+  rasterVolume(ctx, b, pal, knotField(p, q, 0.56, 0.26, 0.13, 0.75, 0.3), []);
+}
+
 const LANGUAGES: Record<string, VizDraw> = {
   constellation,
   dendrite,
@@ -1189,6 +1520,9 @@ const LANGUAGES: Record<string, VizDraw> = {
   crystal,
   raster,
   wire,
+  bodies,
+  solids,
+  knots,
 };
 
 export type VizLanguage = keyof typeof LANGUAGES | string;

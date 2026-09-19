@@ -39,6 +39,9 @@ const has = (flag) => args.includes(flag);
 const PORT = argOf("--port", "3003");
 const OUT = argOf("--out", "docs/design/services-figures/stills");
 const VARIANTS = argOf("--v", "raster,volume,wire").split(",");
+/** Names the contact sheet (`contact-<tag>-<theme>.png`), so a family's sheet
+ *  never overwrites another's. */
+const TAG = argOf("--tag", "");
 const THEMES = argOf("--themes", "dark,light").split(",");
 const VIEWPORTS = argOf("--vp", "1600x1000,1920x1247")
   .split(",")
@@ -224,7 +227,7 @@ for (const [vw, vh] of VIEWPORTS) {
     const svg = Buffer.from(
       `<svg xmlns="http://www.w3.org/2000/svg" width="${sheetW}" height="${sheetH}">${labels.join("")}</svg>`
     );
-    const sheetFile = path.join(OUT, `${vw}x${vh}`, `contact-${theme}.png`);
+    const sheetFile = path.join(OUT, `${vw}x${vh}`, `contact-${TAG ? `${TAG}-` : ""}${theme}.png`);
     await sharp({
       create: { width: sheetW, height: sheetH, channels: 3, background: theme === "light" ? "#ebe3d6" : "#050403" },
     })

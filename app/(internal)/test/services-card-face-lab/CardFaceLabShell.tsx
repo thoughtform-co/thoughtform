@@ -23,6 +23,7 @@ import {
   FACE_VARIANTS as BASE_VARIANTS,
   HOUSE_VARIANTS,
   MATERIAL_VARIANTS,
+  RASTER_VARIANTS,
   TITLE_NOTE,
   TITLE_STYLES,
 } from "./variants";
@@ -38,6 +39,7 @@ const FACE_VARIANTS = [
   ...HOUSE_VARIANTS,
   ...CANDIDATE_VARIANTS,
   ...MATERIAL_VARIANTS,
+  ...RASTER_VARIANTS,
 ];
 
 // three/fiber is client-only; keep it out of the server render entirely so the

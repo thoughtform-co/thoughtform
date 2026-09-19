@@ -290,3 +290,51 @@ export const MATERIAL_VARIANTS: readonly FaceVariant[] = [
     provenance: "The wireframe device · ADR-106's dial (copied, never imported) · ADR-025 U4",
   },
 ];
+
+/**
+ * THE RASTER'S SHAPE FAMILIES (owner, 2026-09-19, on reading the first
+ * sheet: "make some variants of the raster … find different shapes … like
+ * volumetric shape, so no lines as in workshop").
+ *
+ * All three ride ONE renderer (`cardViz.ts` §The volumetric raster): a ray
+ * march per cell over an implicit body, shaded from one light, faded with
+ * depth, lettered through the glyph ramp. The line figures are gone; every
+ * card is a solid that reads through its shading. What differs between the
+ * rows is which bodies, and each row keeps one family with four members so
+ * the set still reads as a set.
+ */
+export const RASTER_VARIANTS: readonly FaceVariant[] = [
+  {
+    id: "bodies",
+    label: "R2 · Bodies",
+    face: "raster-bodies",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "THE RECORD AS FUSED VOLUMES. The same four structures, every one of them turned into a body: the radiant's source a large ball with its room as small ones; the route a worm of fused balls along the walk, no line anywhere; the mesh's reached nodes one lumpy body, the person-led nodes small balls that touch nothing; the table eight balls fused into a ring. Metaballs, shaded from one light, faded with depth. The marks are the record's own.",
+    provenance: "serviceFigures · the HORSE's shaded form · the particle body",
+  },
+  {
+    id: "solids",
+    label: "R3 · Solids",
+    face: "raster-solids",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "FOUR PRIMITIVE BODIES, each the structure's claim as a solid: keynote a sphere under one light (one source, the room lit from it, the terminator the frame's reach); workshop a torus (one loop walked end to end); embedded the house's own chamfered slab, TR + BL (a configuration is a machined object); home session eight spheres fused into a ring (the table). No diagram, no line — a form and its shading.",
+    provenance: "The wireframe device · the corner law's own slab · the armillary rings",
+  },
+  {
+    id: "knots",
+    label: "R4 · Knots",
+    face: "raster-knots",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "ONE FAMILY, FOUR MEMBERS: a torus knot per service — (1,3) · (2,3) · (3,4) · (2,7) — as a thick tube shaded from one light. The loop is the house's own canon; the crossings are the variable, and the four read as a set because the vocabulary is one tube at one thickness. The most 'object' of the three rows, and the least tied to what a service does.",
+    provenance: "The Arc as a loop · the wireframe orbits · the gold armillary",
+  },
+];
