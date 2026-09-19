@@ -216,6 +216,27 @@ for (const [w, h] of SHAPES) {
           navRect: rect(nav),
           settingsRect: rect(settings),
           chipUnion,
+          /* ⚠ THE GUTTER, WHICH THIS PROBE COLLECTED AND THREW AWAY
+             (ADR-082 U27). `chipUnion.left/right` were computed above and
+             compared to nothing, and the tab row was only ever a DRIVER here,
+             never a measurement — so a station running its two hairlines to
+             the viewport's own edges passed 100 cells green. Every horizontal
+             question this file asks is new. */
+          gutter: Number.parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue("--hud-margin")
+          ),
+          tabsRect: (() => {
+            const t = document.querySelector(".vwd__tabs");
+            if (!t) return null;
+            const r = t.getBoundingClientRect();
+            return r.width ? { left: r.left, right: r.right } : null;
+          })(),
+          bandRect: (() => {
+            const t = document.querySelector(".vwd__band");
+            if (!t) return null;
+            const r = t.getBoundingClientRect();
+            return r.width ? { left: r.left, right: r.right } : null;
+          })(),
           chipMin: chips.length
             ? Math.min(...chipBoxes.map((b) => Math.min(b.width, b.height)))
             : null,
@@ -267,6 +288,31 @@ for (const [w, h] of SHAPES) {
         const overlapsX = m.titleInk.right > m.navRect.left && m.titleInk.left < m.navRect.right;
         const overlapsY = m.titleInk.top < m.navRect.bottom && m.titleInk.bottom > m.navRect.top;
         if (overlapsX && overlapsY) bad.push("title under .hud__nav__btn");
+      }
+      /* ⚠ NOTHING TOUCHES THE BORDERS (ADR-082 U27, owner: the elements
+         "should just be contained within the top-left and bottom-right
+         corners"). The corner brackets sit on `--hud-margin`, so that token IS
+         the line, and the tabs and the band must land on it together — "the
+         band the same width as the tabs above" is his second ask and this is
+         the assertion that keeps it true. */
+      const g = m.gutter;
+      if (Number.isFinite(g)) {
+        for (const [name, r] of [
+          ["the tab row", m.tabsRect],
+          ["the era band", m.bandRect],
+        ]) {
+          if (!r) continue;
+          if (r.left < g - 0.5)
+            bad.push(`${name} starts ${(g - r.left).toFixed(1)}px outside the gutter`);
+          if (r.right > w - g + 0.5)
+            bad.push(`${name} ends ${(r.right - (w - g)).toFixed(1)}px outside the gutter`);
+        }
+        if (m.tabsRect && m.bandRect) {
+          const dl = Math.abs(m.tabsRect.left - m.bandRect.left);
+          const dr = Math.abs(m.tabsRect.right - m.bandRect.right);
+          if (Math.max(dl, dr) > 0.5)
+            bad.push(`the band is not the tabs' width (${dl.toFixed(1)}/${dr.toFixed(1)}px apart)`);
+        }
       }
       if (m.chipMin !== null && m.chipMin < 43.5)
         bad.push(`stop target ${m.chipMin.toFixed(1)}px < 44`);

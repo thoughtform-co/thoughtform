@@ -231,6 +231,42 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   ADR-074 record — `voidwalkerData.ts`'s `year` AND `sortYear`, the latter
   floored into the travel clock's tick ladder. No test pinned it; the era suite
   checks the year's grammar and its reverse-chronological order only.
+- ⚠ **THE PHONE HAS ONE GUTTER AND IT IS THE FRAME'S (ADR-082 U27, 2026-09-19,
+  owner: the elements "should just be contained within the top-left and
+  bottom-right corners").** `#voidwalker.station` is `padding-inline: 0` at
+  ≤700, so every child pays its own — and `.vwd__tabs` paid NOTHING, which put
+  its two hairlines on the viewport's edges. `--vwd-pad-x` is `var(--hud-margin)`
+  now, the same line the corner brackets sit on, so "inside the corners" is true
+  by construction; the band spends the same token instead of its own near-twin.
+  ⚠ **MARGIN, NOT PADDING, ON BOTH ROWS** — the tab row's rules ARE its border,
+  and the band is `overflow: clip`, which clips to the padding box. Measured:
+  tabs and band both **16/377**.
+  ⚠ **NO HORIZONTAL SCROLL EXISTS** — `body` is `overflow-x: hidden` and the
+  probe's 31px is `.gateway`/`.hud` at `100vw` plus a CHROMIUM scrollbar.
+- ⚠ **THE REEL IS BACK ON THE PHONE, AND IT REVERSES HALF OF U23 (U27).** Five
+  stops across 361px is a 72px pitch against 65px of ink at 8.6px — **two
+  pixels**, and at five across 8.6px IS the ceiling, so no gutter could have
+  fixed it. Three stops at ~120px carry the names at 11px. ⚠ What U23 ruled
+  against survives: a band with a gutter and a FADE, never a painted ground.
+  ⚠ `--vwd-cell` is solved from the BAND (`(100vw − 2·pad-x)/3`), not the chip.
+- ⚠ **ONE FIGURE HEIGHT ON THE PHONE, AND `--holo-fit` WAS NEVER THE DEFECT
+  (U27).** The fit scales both axes, so the span factors out of `contain`; what
+  was era-dependent is the SLOT — `.vwd__mast__title` wraps to one line or two
+  per era and the stage takes the remainder. "The AI Captain" (1 line) painted
+  the biggest figure and "The campaign commander" (2) the smallest. ⚠ The phone
+  **straddles the binding boundary** and a real iPhone is height-bound at every
+  era, so there the wrap decides outright. A **two-line reservation** fixes it
+  (376px on all five, from 455.7–461.8); ⚠ the clamp is NOT stepped down.
+  ⚠ **AND EVERY TAB RESERVES THE STOPS' STRIP NOW** — it read
+  `:not([data-vwd-tab="figure"])`, which ran the figure's box to the sheet's
+  floor and printed the band over the boots and the disc. `--vwd-band-reserve`
+  and `--vwd-chrome-clear` are declared once and spent by both the band and the
+  stage. ⚠ `probe-voidwalker-figure-span.mjs` still exits below 1101px, so this
+  law is unguarded exactly where it now matters most.
+- ⚠ **THE PROBE'S HORIZONTAL QUESTIONS ARE NEW (U27).** It computed
+  `chipUnion.left/right` and compared them to nothing, and used the tab row only
+  as a driver — which is how a full-bleed row passed 100 cells green. It asserts
+  the tabs and the band inside `--hud-margin` AND on the same line as each other.
 - **`voidwalker-hologram.css` IS THE FIGURE'S SHEET NOW** — the slot's
   isolation and masked floor, the alpha branch, the projector base, the phase
   animations, the decode lines, and the four tokens those read. ⚠ **`.vwh`

@@ -184,10 +184,23 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     }
     // The field seats one peek under its own record; the next record on the
     // same line — `--i` is k for a record and k+1 for its field.
+    /* ⚠ THE PITCH IS READ, NOT PINNED (ADR-082 U27). It was the literal 52,
+       which is what a pitch was on the day this was written — and the phone
+       rung now runs at 44 so every early card gets 32px of its hole back. The
+       LAW is that a field seats exactly one peek under its record; the NUMBER
+       is a dial the composition owns, and a guard that pins the dial fails on
+       a tuning change while saying nothing about the law. */
+    const peek = await page.evaluate(() => {
+      const el = document.querySelector(".pf-stack");
+      return el
+        ? Number.parseFloat(getComputedStyle(el).getPropertyValue("--pc-peek"))
+        : Number.NaN;
+    });
+    expect(peek, "the stack publishes no peek").toBeGreaterThan(0);
     for (let k = 0; k < 4; k += 1) {
       const r = geo.slots[2 * k];
       const f = geo.slots[2 * k + 1];
-      expect(f.top - r.top).toBeCloseTo(52, 0);
+      expect(f.top - r.top).toBeCloseTo(peek, 0);
       if (k < 3) expect(geo.slots[2 * k + 2].top).toBeCloseTo(f.top, 0);
     }
     expect(geo.tail, "the last panel's hold is spent").toBeGreaterThanOrEqual(280);
@@ -215,9 +228,19 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     const body0 = await rect(page, '[data-pc-index="0"] .pf-card__body');
     const field0 = await rect(page, '[data-pc-index="1"] .pf-card__field');
     const bay0 = await rect(page, '[data-pc-index="1"] .pf-card__bay');
-    expect(head0!.height).toBeCloseTo(52, 0);
+    const peek0 = await page.evaluate(() => {
+      const el = document.querySelector(".pf-stack");
+      return el
+        ? Number.parseFloat(getComputedStyle(el).getPropertyValue("--pc-peek"))
+        : Number.NaN;
+    });
+    expect(head0!.height).toBeCloseTo(peek0, 0);
     expect(headTitle, "the record's band carries no slim title").not.toBeNull();
-    expect(field0!.top - slot0!.top).toBeCloseTo(52, 0);
+    expect(field0!.top - slot0!.top).toBeCloseTo(peek0, 0);
+    /* ⚠ THE BAND STILL HAS TO HOLD ITS TITLE. The pitch is a dial, but it is
+       bounded from below by two lines of the card's own 13px name — so the
+       floor is asserted rather than trusted to whoever next tunes it. */
+    expect(peek0, "the peek is under the head band's two-line floor").toBeGreaterThanOrEqual(44);
     expect(head0!.visibility).toBe("visible");
     // The record's copy has left on the cover channel; the band has not.
     expect(body0!.visibility).toBe("hidden");

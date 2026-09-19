@@ -2950,3 +2950,171 @@ five eras × four tabs.
 the avatar README, `post.py:119` and `grade.py:49` all say **`+ 6`**. A `- 6`
 would drop the key threshold BELOW the ground's own black level and admit the
 background as ink. It is the line a reader hits first, and it was wrong.
+
+## Update 27 — the phone gets one gutter, a reel, and a seated figure (2026-09-19, owner)
+
+**Status: Accepted. Every number below is measured at 393×852 on the live
+code.** ⚠ **His screenshots predate the U26 deploy** — the era chip still read
+`2022` — so part of what he photographed was already fixed; what follows is
+what was genuinely open.
+
+### 1 · "Contained within the corners" is one missing gutter
+
+⚠ **THE STATION IS FULL-BLEED AT ≤700 AND ONLY SOME CHILDREN PAY.**
+`voidwalker.css`'s `#voidwalker.station { padding-inline: 0 }` is `(1,1,0)` and
+beats `landing.css`'s 32px station inset, on the argument that "the phone
+character sheet owns its own 16px safe gutter". That is true of the mast and
+the stage, which spend `--vwd-pad-x`; it is true-ish of the band, which spent
+its **own** near-twin `clamp(12px, 5vw, 24px)`; and it was **false of
+`.vwd__tabs`, which spent nothing** — so that row put its two hairlines on the
+viewport's own edges. That is the "elements touch the borders" in the
+photograph.
+
+**One token, and it is the frame's own:** `--vwd-pad-x: var(--hud-margin)`. The
+corner brackets sit on that line — TL at x 16…44, BR ending at 377 — so
+spending the same token makes _"contained within the top-left and bottom-right
+corners"_ true **by construction rather than by eye**. It was
+`clamp(16px, 5vw, 24px)` = 19.65px: close enough to look deliberate, not close
+enough to line up with anything.
+
+⚠ **MARGIN, NOT PADDING, ON BOTH ROWS.** The tab row's rules are its own
+border, so padded they would still run the full width; and the band is
+`overflow: clip`, which clips to the PADDING box, so a padded band would fade
+its reel's edges outside the gutter. Measured after: tabs **16/377**, band
+**16/377** — identical, which is his "a band the same width as the tabs above",
+asserted rather than eyeballed.
+
+⚠ **THERE IS NO HORIZONTAL SCROLL, AND ONE SCREENSHOT LOOKS LIKE THERE IS.**
+`body` carries `overflow-x: hidden` and the 31px `scrollWidth` overhang this
+probe records is `.gateway`/`.hud` measuring `100vw` **plus a Chromium
+scrollbar gutter** — on a phone the two are equal and `scrollTo(400, y)` leaves
+`scrollX` at 0. The shifted frame is a pinch-zoom pan or the stale build.
+
+### 2 · The reel comes back to the phone, and it is arithmetic
+
+Five stops across a 361px band is a **72px pitch**, and `LATENT LAND` and `THE
+EXPANSE` are **65px of ink** at the rung's 8.6px type — **two pixels of
+slack**, no gutter, no separator. **At five across, 8.6px IS the ceiling**, so
+the gutter alone could never have made this row legible. Three stops at ~120px
+carry the names at **11px** with 34px to spare.
+
+⚠ **THIS IS THE THIRD PASS ON THIS OBJECT AND IT REVERSES HALF OF U23.** U19
+put a band on both breakpoints; U23 took it off the phone (_"just buttons … on
+top of that avatar image, but we don't need the panel below it"_) and laid all
+five out flat with `transform: none` and `--dd: 0`. Owner ruling, recorded as
+one. ⚠ **What U23 ruled against survives**: a band with a GUTTER and a FADE,
+never a painted ground — a scrim opaque enough to tame a bed running luminance
+8→191 is exactly the panel it deleted, and the halo still carries the ink. The
+44px target floor, the roving focus and the tablist are untouched, because the
+reel is the same node moved by CSS.
+
+⚠ **THE CELL IS SOLVED FROM THE BAND, NOT THE CHIP** — `--vwd-cell:
+(100vw − 2·pad-x)/3` with `--vwd-reel: 3`, so `reel × cell` IS the margin box
+and the track's translate lands on whole cells.
+
+### 3 · One figure height on the phone, and the fit was never the defect
+
+`--holo-fit` scales both axes, so the era's span factors out of `contain`'s
+`min()`. What was era-dependent is **the slot's own height**: `.vwd__mast__title`
+wraps to one line or two depending on the era's `wardrobe` string, and the
+stage takes the remainder.
+
+| era       | title                  | lines | before          |
+| --------- | ---------------------- | ----- | --------------- |
+| `genai`   | The AI Captain         | **1** | biggest figure  |
+| `expanse` | The campaign commander | **2** | smallest figure |
+
+**Exactly the pair he photographed.** And the phone **straddles the binding
+boundary**: at 390×844 a one-line mast is width-bound and a two-line mast is
+height-bound, while a real iPhone (`svh` 745) is height-bound for every era, so
+there the wrap decides outright. U25's "0.00 % spread" was a **desktop**
+measurement and `probe-voidwalker-figure-span.mjs` exits below 1101px, so
+nothing was watching this.
+
+**A two-line reservation** (`min-height: 2.2em`) makes the slot
+era-independent. ⚠ **The clamp is NOT stepped down** — byte-locked to the About
+name's handoff footprint, and that ban stands. Measured after: **376px on all
+five eras**, from 455.7–461.8 before.
+
+⚠ **AND EVERY TAB RESERVES THE STOPS' STRIP NOW, THE FIGURE INCLUDED.** It read
+`:not([data-vwd-tab="figure"])` on the argument that the stops riding the
+figure was the point of U23 — and it was, but what it produced is the figure's
+box running to the sheet's floor with the band printing over the boots **and
+the projector disc**. The reserve lifts the whole column, figure and disc
+together, so the seating contract is untouched and only the assembly moves.
+`--vwd-band-reserve` and `--vwd-chrome-clear` are declared once on `.vwd` and
+spent by the band and the stage, because these two drifting apart is the defect
+in both directions.
+
+### 4 · The floor branch's rectangle, as a belt
+
+The lighter box around a figure is the FLOOR branch — no alpha, so the wrap's
+opaque bed shows. On current code **only `azeroth` takes it on iOS** (the one
+era with no `.mov`). His shot shows it on `expanse` too, which means either the
+build predates the Safari lane or **the HEVC probe is failing on his device**.
+⚠ **One line settles it, on his phone:** `document.querySelector('#voidwalker
+.vwh__slot').getAttribute('data-holo-alpha')` — `"hevc"` on four eras and
+absent on azeroth is correct; `null` everywhere means the probe is failing.
+
+Either way the fit now moves to the WRAP on that branch, so the bed and its
+vignette scale with the media. ⚠ Without it, a 0.771 fit pulls the bed's hard
+top edge from ~45 % to ~91 % mask opacity — **roughly double the contrast on a
+straight horizontal line**. No era that takes the floor today is shrunk
+(azeroth's fit is exactly 1), so this is protection for the probe-failure case.
+⚠ The media goes back to 100 % of the wrap or the fit applies twice.
+
+### 5 · Proof: the wrapping rail, and the cascade's own hole
+
+**The rail.** Three stations need **369px on a 313px row** and the label is
+already at the house's **10px control floor** — so size could never have closed
+a 56px gap. It came out of chrome: station padding 9→4, the gap 7→5, **the
+doubled seam margin** (the desktop adds `margin-left: 6px` on top of
+`margin-right: 6px`, so every seam cost 12px — that alone was the last 8px),
+and **the mark on the OPEN station only**. A diamond beside a dormant station
+says nothing; the lit one is a filled box that already carries it. ⚠ **The
+budget is state-independent by construction** — exactly one station is lit, so
+the row always spends one mark and a tap cannot re-wrap the row under the
+reader's thumb. Measured: three-station rails are **one line, 44px** on every
+card.
+
+⚠ **FOUR STATIONS CANNOT MAKE ONE LINE AT ANY CHROME BUDGET** — the tools
+rail's handles are 320px of label alone. That row wraps **deliberately**, as
+two equal columns; a ragged 3-then-1 reads as a bug, which is what he was
+looking at.
+
+**The cascade.** `--pc-card-h` is `100svh − top-base − n·peek − bottom-safe`,
+and measured, the **deepest slot lands its bottom exactly on `vh − bottom-safe`
+— the reserve is not slack.** What he is looking at is an EARLY card: slot 1
+pins at 116px and ends at 672 on an 852px screen, so 180px of page shows under
+it for its whole dwell, with nothing to peek into because the next slot is a
+full dwell below in flow. ⚠ **So the only lever is the PITCH, and it is bounded
+from below by the head band** — that band is the card's own title at 13px over
+two lines, so 44px is a floor rather than a preference. 52 → 44 gives every
+card **32px of height** and takes 32px off every early card's hole.
+
+### 6 · The guards, and what they were not asking
+
+- ⚠ **`probe-voidwalker-phone.mjs` COLLECTED `chipUnion.left/right` AND
+  COMPARED THEM TO NOTHING**, and used the tab row only as a DRIVER. Every
+  horizontal question in it is new: the tabs and the band inside `--hud-margin`,
+  and **the two on the same line as each other**, which is the owner's second
+  ask stated as an assertion.
+- ⚠ **`proof-stack-mobile-smoke` PINNED THE PITCH AS THE LITERAL 52.** It reads
+  `--pc-peek` now and asserts the LAW (a field seats one peek under its record)
+  plus the head band's 44px floor — a guard that pins the dial fails on a
+  tuning change while saying nothing about the law.
+- ⚠ **Run the mobile specs with `--workers=1`.** Parallel workers against one
+  dev server produced four different failures across three runs and 9/9 twice
+  serially; `.claude/rules/services-ring.md` already warns to confirm a
+  suspected composition bug across several runs.
+
+### Left open
+
+- **`probe-voidwalker-figure-span.mjs` still exits below 1101px**, so the phone
+  figure's one-height law is measured by hand rather than by a gate. It is the
+  viewport where the law now matters most.
+- **Azeroth's Safari lane** is still a Mac task (ADR-082 U26), and until it
+  ships that era composites through the floor on iOS.
+- The figure is **376px against 458 before** — the honest cost of giving the
+  band its strip and reserving two title lines. If he reads it as too small,
+  the levers in order are the mast reservation, then `--vwd-band-reserve`.

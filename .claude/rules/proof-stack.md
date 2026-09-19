@@ -545,6 +545,37 @@ display: none }` gives the films and the map no row and no second gap; the
   still stuck, `offsetTop` reading 743 for 0, and the seat converging on
   `covered`. Any new scroll-then-measure in these smokes takes the same helper.
 
+## The phone's rail and its pitch (ADR-082 U27, 2026-09-19, owner)
+
+- ⚠ **THREE STATIONS NEED 369px ON A 313px ROW, AND THE TYPE IS AT THE 10px
+  CONTROL FLOOR** — so size could never close it and the 56px came out of
+  CHROME: station padding 9→4, gap 7→5, **the doubled seam margin** (the
+  desktop rule adds `margin-left: 6px` on top of `margin-right: 6px`, so every
+  seam cost 12px — that alone was the last 8px), and **the ◆ on the OPEN
+  station only**. A mark beside a dormant station says nothing; the lit one is
+  a filled box that already carries it.
+  ⚠ **THE BUDGET IS STATE-INDEPENDENT BY CONSTRUCTION** — exactly one station
+  is lit, so the row always spends one mark and a tap cannot re-wrap the row
+  under the reader's thumb.
+- ⚠ **FOUR STATIONS CANNOT MAKE ONE LINE AT ANY BUDGET** (the tools rail is
+  320px of label alone), so that row wraps DELIBERATELY as two equal columns.
+  A ragged 3-then-1 reads as a bug.
+- ⚠ **THE RESERVE IS NOT SLACK, THE CASCADE IS.** `--pc-card-h` is
+  `100svh − top-base − n·peek − bottom-safe` and the DEEPEST slot lands its
+  bottom exactly on `vh − bottom-safe`. The hole the owner saw is under an
+  EARLY card — slot 1 pins at 116px and ends at 672 on an 852px screen, with
+  nothing to peek into because the next slot is a full dwell below in flow.
+  **The only lever is the PITCH**, and it is floored by the head band: that
+  band is the card's own 13px title over two lines, so 44px is a floor rather
+  than a preference. Phone-split only; the desktop pile's 52 is untouched.
+- ⚠ **THE SMOKE READS THE PITCH, IT DOES NOT PIN IT.** It asserted the literal
+  `52` in three places. It reads `--pc-peek` and asserts the LAW (a field seats
+  one peek under its record) plus the 44px floor — a guard that pins the dial
+  fails on a tuning change while saying nothing about the law.
+- ⚠ **RUN THE MOBILE SPECS WITH `--workers=1`.** Parallel workers against one
+  dev server produced four different failures across three runs here, and 9/9
+  twice serially.
+
 ## Verifying
 
 ```bash

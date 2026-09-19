@@ -228,6 +228,28 @@
   mix-blend-mode: normal;
 }
 
+/* ⚠ ON THE FLOOR BRANCH THE FIT MOVES TO THE WRAP (ADR-082 U27). The floor's
+   opaque bed and the vignette that softens its edges both live on
+   `.vwh__media-wrap`, which is the full slot — so when U25 shrank the MEDIA
+   inside it, the bed's hard rectangle pulled inboard into the solid part of
+   that mask: measured, a 0.771 fit takes its top edge from ~45 % mask opacity
+   to ~91 %, i.e. roughly double the contrast on a straight horizontal line.
+   Nothing shows on the alpha branch (there is no bed), and no era that takes
+   the floor today is shrunk — azeroth is the floor era and its fit is exactly
+   1 — so this is a belt against the case where the codec probe fails and an
+   era with a fit below 1 lands here.
+   ⚠ THE MEDIA GOES BACK TO 100 % OF THE WRAP, or the fit would apply twice
+   and the figure would paint at `fit²`. Same painted size, bed and mask now
+   scaled with it. */
+.vwh__slot:not([data-holo-alpha]) .vwh__media-wrap {
+  width: calc(100% * var(--holo-fit, 1));
+  height: calc(100% * var(--holo-fit, 1));
+}
+.vwh__slot:not([data-holo-alpha]) .vwh__media {
+  width: 100%;
+  height: 100%;
+}
+
 /* ⚠ `--holo-fit` IS THE BOX, NEVER A `transform: scale()` (ADR-082 U25).
    Every era is delivered on the same 720x1280 canvas and the figure inside it
    is not the same size, so each era's media box is taken down to the share

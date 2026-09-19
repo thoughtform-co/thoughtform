@@ -1002,8 +1002,27 @@ a.vwd__press:focus-visible .vwd__press__headline {
    decision so nothing has to remount and no measurement moves. */
 @media (max-width: 700px) {
   .vwd {
-    --vwd-pad-x: clamp(16px, 5vw, 24px);
+    /* ⚠ THE GUTTER IS THE HUD'S OWN MARGIN (ADR-082 U27, owner 2026-09-19:
+       the elements "should just be contained within the top-left and
+       bottom-right corners. I think those are good constraints"). The corner
+       brackets sit at `--hud-margin` — x 16…44 on the left, ending at 377 on
+       the right — so spending the SAME token makes "inside the corners" true
+       by construction instead of by eye, and it is one number the mast, the
+       tabs, the stage and the band all read. It was `clamp(16px, 5vw, 24px)`,
+       which is 19.65px here: close enough to look deliberate and not close
+       enough to line up with anything. */
+    --vwd-pad-x: var(--hud-margin, 16px);
     --vwd-chip: clamp(44px, 13vw, 56px);
+    /* THREE STOPS IN THE WINDOW, and the cell is solved from the band's own
+       width rather than from the chip's, so `--vwd-reel * --vwd-cell` is the
+       margin box exactly and the track's translate lands on whole cells. */
+    --vwd-reel: 3;
+    --vwd-cell: calc((100vw - 2 * var(--vwd-pad-x)) / 3);
+    /* The strip the era band occupies, spent TWICE and therefore declared
+       once: the band pads itself by it, and the stage reserves it so the
+       reading — and now the figure — never runs under the stops. */
+    --vwd-chrome-clear: max(0px, calc(var(--mobile-chrome-bottom, 56px) - (100dvh - 100svh)));
+    --vwd-band-reserve: calc(clamp(6px, 1svh, 10px) + var(--vwd-stop-h) + var(--vwd-chrome-clear));
     /* ⚠ A BOUNDED HEIGHT, NOT JUST A FLOOR. With `min-height` alone the
        root grows to its content, so every `flex: 1 1 auto` below it had
        nothing to shrink against: the figure sized to its own aspect, the
@@ -1045,6 +1064,20 @@ a.vwd__press:focus-visible .vwd__press__headline {
   }
   .vwd__mast__title {
     text-wrap: balance;
+    /* ⚠ TWO LINES RESERVED, WHICH IS WHAT MAKES THE FIGURES ONE SIZE
+       (ADR-082 U27, owner: "the sizing of our different characters is also
+       inconsistent"). `--holo-fit` is not the defect — it scales both axes, so
+       the era's span factors out of `contain`. What was era-dependent is the
+       SLOT'S OWN HEIGHT: this title wraps to one line or two depending on the
+       era's `wardrobe` string, and the stage takes whatever is left. "The AI
+       Captain" is one line and paints the biggest figure; "The campaign
+       commander" is two and paints the smallest — exactly the pair he
+       photographed. ⚠ And a real iPhone is HEIGHT-bound at every era (`svh` is
+       745, not 844), so there the wrap decides outright.
+       ⚠ THE CLAMP IS NOT STEPPED DOWN — it is byte-locked to the About name's
+       handoff footprint and that ban stands. A reservation costs the one-line
+       eras ~29px and buys one size for all five. */
+    min-height: 2.2em;
   }
 
   /* ⚠ THE MARK TAKES ITS OWN WIDTH, THE WORDS SHARE THE REST. Four equal
@@ -1055,6 +1088,14 @@ a.vwd__press:focus-visible .vwd__press__headline {
     display: grid;
     grid-template-columns: auto repeat(3, minmax(0, 1fr));
     flex: 0 0 auto;
+    /* ⚠ MARGIN, NOT PADDING, AND THIS ROW IS WHY THE STATION LOOKED
+       EDGE-TO-EDGE (ADR-082 U27). `#voidwalker.station` is `padding-inline: 0`
+       at this rung, so the sheet is full-bleed and every child pays its own
+       gutter — the mast and the stage spend `--vwd-pad-x` and this row spent
+       NOTHING, which put its two hairlines on the viewport's own edges. A
+       margin rather than a padding because the rules are the row's border:
+       padded, they would still run the full width. */
+    margin-inline: var(--vwd-pad-x);
     border-top: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
     border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
   }
@@ -1157,15 +1198,21 @@ a.vwd__press:focus-visible .vwd__press__headline {
     overflow: clip;
     padding-top: clamp(12px, 2svh, 18px);
   }
-  /* ⚠ THE READING RESERVES THE STOPS' STRIP; THE FIGURE DOES NOT. The stops
-     are absolutely positioned over this box (see `.vwd__band` below), which is
-     the point on the figure tab and would be copy printed under a control on
-     every other one. Derived from the stops' own terms so the two cannot
-     drift — the band's lead, one stop, and the chrome band it clears. */
-  .vwd__sheet:not([data-vwd-tab="figure"]) .vwd__stage {
-    padding-bottom: calc(
-      clamp(6px, 1svh, 10px) + var(--vwd-stop-h) + var(--mobile-chrome-bottom, 56px)
-    );
+  /* ⚠ EVERY TAB RESERVES THE STOPS' STRIP NOW, THE FIGURE INCLUDED (ADR-082
+     U27, owner: the characters "should be a bit higher so that the band at the
+     bottom with the different eras has a bit more breathing room").
+
+     It read `:not([data-vwd-tab="figure"])` until this pass, on the argument
+     that the stops riding the figure was the point of U23 — and it was, but
+     what it produced is the figure's box running all the way to the sheet's
+     floor with the band printing over the boots AND the projector disc. The
+     reserve lifts the whole column, figure and disc together, so the seating
+     contract ("the slot's floor IS the disc") is untouched and only the
+     assembly moves. ⚠ It is `--vwd-band-reserve`, the band's own strip
+     declared once on `.vwd` and spent here and there, because these two
+     drifting apart is the defect in both directions. */
+  .vwd__stage {
+    padding-bottom: var(--vwd-band-reserve);
   }
 
   /* ⚠ `[data-cell]` MATCHES THE DESKTOP'S SPECIFICITY — the 701–1100px
@@ -1357,9 +1404,16 @@ a.vwd__press:focus-visible .vwd__press__headline {
        `.vwh__cone`'s `plus-lighter` reaches up through anything stacked over
        the figure and lights its ink — the stops would glow at the edges. */
     isolation: isolate;
+    /* ⚠ THE BAND IS THE TABS' WIDTH, AND THAT IS THE ASK (ADR-082 U27, owner:
+       "maybe it can be a band that's also the same width as the rest, and by
+       'the rest' I mean the tabs above"). One token, so they cannot drift —
+       it spent its own `clamp(12px, 5vw, 24px)` before, a near-twin of
+       `--vwd-pad-x` with a different floor, which agreed at 393px and parted
+       below 320. ⚠ MARGIN, not padding: `overflow: clip` clips to the PADDING
+       box, so a padded band would fade its reel's edges outside the gutter. */
     width: auto;
-    margin-inline: 0;
-    padding-inline: clamp(12px, 5vw, 24px);
+    margin-inline: var(--vwd-pad-x);
+    padding-inline: 0;
     padding-block: clamp(6px, 1svh, 10px) 0;
     /* ⚠ THE CLEARANCE IS THE WHOLE RULE, AND THE TOKEN IS MEASURED FROM THE
        VIEWPORT FLOOR. `.rin-settings` is `position: fixed` on the bottom
@@ -1382,7 +1436,7 @@ a.vwd__press:focus-visible .vwd__press__headline {
        reserve is what is STILL above the chrome, never a constant.
        ⚠ INERT IN CI: Chromium resolves dvh and svh to one number, so the term
        is 0 and every phone project measures exactly what it measured before. */
-    padding-bottom: max(0px, calc(var(--mobile-chrome-bottom, 56px) - (100dvh - 100svh)));
+    padding-bottom: var(--vwd-chrome-clear);
     /* ⚠ ONE RULE, BOTH THEMES. `--void-rgb` flips to parchment under ADR-058,
        so this is a fade to ink over the corridor in dark and to paper in light
        with no second block to keep in step.
@@ -1394,25 +1448,31 @@ a.vwd__press:focus-visible .vwd__press__headline {
        era and with every frame of the idle. An unpredictable bed is what the
        HALO below is for; this only lifts the floor. */
     background: linear-gradient(to top, rgba(var(--void-rgb), 0.8), rgba(var(--void-rgb), 0));
-    -webkit-mask-image: none;
-    mask-image: none;
   }
-  /* ⚠ THE WINDOW'S `overflow: clip` STAYS. Nothing translates here, so it
-     clips nothing — but a focus ring on an edge stop needs the padding above
-     to sit in, and re-declaring `visible` would only invite the scroll
-     container §C's note bans. */
+  /* ⚠ THE PHONE TAKES THE REEL BACK (ADR-082 U27, owner 2026-09-19: the stops
+     "look very ugly … the text isn't legible either"). It is ARITHMETIC, not
+     taste: five stops across a 361px band is a 72px pitch, and `LATENT LAND`
+     and `THE EXPANSE` are 65px of ink at the 8.6px rung — two pixels of slack,
+     no gutter, no separator. At five across, 8.6px IS the ceiling, so the
+     gutter alone could never have fixed it.
+
+     ⚠ THIS IS THE THIRD PASS ON THIS OBJECT AND IT REVERSES HALF OF U23. U19
+     put a band on both breakpoints; U23 took it off the phone ("just buttons …
+     on top of that avatar image, but we don't need the panel below it") and
+     laid all five out flat. Three visible stops at ~120px each carry the names
+     at 11px, which is the first time this row has been readable on a phone.
+     ⚠ WHAT U23 RULED AGAINST SURVIVES: this is a band with a GUTTER and a
+     FADE, never a painted ground — a scrim opaque enough to tame a bed running
+     luminance 8→191 is exactly the panel it deleted, and the halo below is
+     still what carries the ink. */
   .vwd__band__track {
-    grid-auto-columns: minmax(0, 1fr);
-    width: 100%;
-    transform: none;
+    grid-auto-columns: var(--vwd-cell);
+    width: max-content;
+    transform: translateX(calc((var(--vwd-n) / 2 - var(--vwd-i, 0) - 0.5) * var(--vwd-cell)));
   }
   .vwd__chip {
-    justify-self: stretch;
-    width: auto;
     gap: 4px;
     padding-inline: 2px;
-    /* No falloff: every stop is on screen, so none of them is off-centre. */
-    --dd: 0;
   }
   /* ⚠ THE STOPS ARE THE ONLY NAVIGATION ON THIS SURFACE AND THEY SIT ON THE
      FIGURE. Over a bed measured between luminance 8 and 191, dawn at .45 is
@@ -1422,9 +1482,14 @@ a.vwd__press:focus-visible .vwd__press__headline {
      every stop carries a HALO in the ground's own colour, which flips with the
      theme for free (`--void-rgb` is parchment in light, so a light halo under
      dark ink there). */
+  /* ⚠ THE SIZE IS WHAT THE REEL BOUGHT (ADR-082 U27). At five across the cell
+     was 72px and the longest name 65px of ink, so 8.6px was the ceiling; at
+     three across the cell is ~120px and `LATENT LAND` is 82px at 11px — 34px
+     of slack. The reel is not a preference here, it is the only way this row
+     reaches a readable size on a phone. */
   .vwd__chip__year,
   .vwd__chip__name {
-    font-size: clamp(8px, 2.2vw, 10px);
+    font-size: clamp(9.5px, 2.8vw, 11px);
     letter-spacing: var(--track-label);
     text-shadow:
       0 1px 2px rgba(var(--void-rgb), 0.95),

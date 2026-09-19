@@ -2237,6 +2237,47 @@
     min-height: 44px;
     margin: 0 6px 0 0;
     justify-content: center;
+    /* ⚠ THE CHROME PAYS, NOT THE TYPE (ADR-082 U27, owner: "we can make it a
+       bit smaller because right now the third one, THE RED LINE, falls on a
+       new line"). Measured at 393px: three stations need 369px on a 313px row,
+       and the label is ALREADY at the house's 10px control floor — so size
+       could never have closed a 56px gap and the 24px here plus the mark below
+       is where it comes from. */
+    padding: 5px 4px;
+    gap: 5px;
+  }
+  /* ⚠ THE MARK IS ON THE OPEN STATION ONLY. A diamond beside a DORMANT
+     station says nothing — the mark means "you are here", and ADR-089 U4's
+     lit station already carries it as a knocked-out glyph on a filled box, so
+     on a phone the fill is the selection and the other two marks are 16px of
+     chrome apiece buying nothing.
+     ⚠ AND THE BUDGET IS STATE-INDEPENDENT BY CONSTRUCTION: exactly one
+     station is lit at any moment, so the row always spends one mark and the
+     total cannot change when the reader switches — which is what stops a tap
+     re-wrapping the row under their thumb. */
+  .pf-stack .pf-card__tabs .fl-con__stn:not([data-on]) > i {
+    display: none;
+  }
+  /* ⚠ ONE SEPARATOR, NOT TWO. The desktop rule adds `margin-left: 6px` to
+     every station after the first ON TOP OF the `margin-right: 6px` above, so
+     each seam was 12px and the row paid 12px it could not afford. Measured,
+     that alone was the last 8px of the wrap. */
+  .pf-stack .pf-card__tabs .fl-con__stn + .fl-con__stn {
+    margin-left: 0;
+  }
+  /* ⚠ FOUR STATIONS CANNOT MAKE ONE LINE AT ANY CHROME BUDGET, so that row
+     wraps DELIBERATELY instead of raggedly. Measured: the tools rail's four
+     handles are 320px of label alone against 297px of row — there is no
+     padding, mark or tracking left to take, and the type is at the 10px
+     control floor. Two equal columns read as a considered 2x2; a ragged
+     3-then-1 reads as a bug, which is what the owner was looking at. */
+  .pf-stack .pf-card__tabs .fl-con__rail[data-n="4"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 6px;
+  }
+  .pf-stack .pf-card__tabs .fl-con__rail[data-n="4"] .fl-con__stn {
+    margin-right: 0;
   }
   .pf-stack .pf-card__tabs .fl-con__stn > b {
     white-space: nowrap;
@@ -2326,6 +2367,25 @@
    backdrop snapshot is the one cost this card has (ADR-056's measurement).
    The ground densifies a step instead, the sheet's own recorded fallback. */
 @media (max-width: 960px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  .pf-stack.pf-stack--split {
+    /* ⚠ THE CASCADE COSTS EVERY CARD ITS OWN DEPTH, AND THE PHONE PAYS IT FIVE
+       TIMES OVER (ADR-082 U27, owner: "at the bottom we really seem to have some
+       sort of dead space … eating up too much space").
+
+       The reserve is not slack: `--pc-card-h` is `100svh − top-base − n·peek −
+       bottom-safe`, and measured, the DEEPEST slot lands its bottom exactly on
+       `vh − bottom-safe`. What the owner is looking at is an EARLY card — slot 1
+       pins at 116px and ends at 672 on an 852px screen, so 180px of page shows
+       under it for the whole of its dwell, and nothing is there to peek into yet
+       because the next slot is a full dwell below in flow.
+       ⚠ SO THE ONLY LEVER IS THE PITCH, and it is bounded from below by the head
+       band: that band is the card's own title at 13px over two lines, so 44px is
+       the floor, not a preference. 52 → 44 gives every card 32px of height and
+       takes 32px off every early card's hole.
+       ⚠ AND IT IS PHONE-SPLIT-SCOPED — the desktop pile's 52px peek is a
+       composition the owner has read and is untouched. */
+    --pc-peek: 44px;
+  }
   .pf-stack.pf-stack--split .pf-slot {
     position: sticky;
     top: calc(var(--pc-top-base) + var(--i) * var(--pc-peek));
