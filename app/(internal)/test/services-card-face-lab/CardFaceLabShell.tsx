@@ -5,7 +5,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CanvasErrorBoundary } from "@/components/hud/CanvasErrorBoundary";
 import { SERVICES } from "@/components/landing/home-v2/services/serviceData";
-import type { CardTitleStyle } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
+import type {
+  CardFigureInk,
+  CardTitleStyle,
+} from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import {
   SERVICE_PLATES,
   type ServicePlateId,
@@ -21,7 +24,9 @@ import { RECUT_PLATES, RECUT_SERVICES } from "./serviceRecut";
 import {
   CANDIDATE_VARIANTS,
   FACE_VARIANTS as BASE_VARIANTS,
+  FIGURE_INKS,
   HOUSE_VARIANTS,
+  LATTICE_VARIANTS,
   MATERIAL_VARIANTS,
   RASTER_VARIANTS,
   TITLE_NOTE,
@@ -30,9 +35,10 @@ import {
 
 /**
  * The board-derived routes, the house instruments, the proposal, then the
- * three MATERIALS on the re-cut four (2026-09-19) — one list for the lab, in
- * that order, because the proposal is the destination of the survey and the
- * materials are the next question asked of it.
+ * three MATERIALS on the re-cut four (2026-09-19), the raster's shape
+ * families and the lattice families — one list for the lab, in that order,
+ * because the proposal is the destination of the survey and the rounds after
+ * it are the next questions asked of it.
  */
 const FACE_VARIANTS = [
   ...BASE_VARIANTS,
@@ -40,6 +46,7 @@ const FACE_VARIANTS = [
   ...CANDIDATE_VARIANTS,
   ...MATERIAL_VARIANTS,
   ...RASTER_VARIANTS,
+  ...LATTICE_VARIANTS,
 ];
 
 // three/fiber is client-only; keep it out of the server render entirely so the
@@ -81,15 +88,16 @@ interface ShellProps {
  * CardFaceLabShell — owns lab state, the `<html>` attribute bus, the ring
  * progress bridge, and the console.
  *
- * Deep-link state (`?v=` route, `?p=` progress) is read in a MOUNT EFFECT and
- * written through `history.replaceState` — never `useSearchParams`, which
- * forces a CSR bailout of the whole route (the project-cards / section-menu /
- * anchor lab convention).
+ * Deep-link state (`?v=` route, `?p=` progress, `?svc=` park, `?ink=` figure
+ * ink) is read in a MOUNT EFFECT and written through `history.replaceState`
+ * — never `useSearchParams`, which forces a CSR bailout of the whole route
+ * (the project-cards / section-menu / anchor lab convention).
  */
 export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
   const [variantIdx, setVariantIdx] = useState(0);
   const [titleStyle, setTitleStyle] = useState<CardTitleStyle>("framed");
   const [progress, setProgress] = useState(DEFAULT_PROGRESS);
+  const [inkOverride, setInkOverride] = useState<CardFigureInk | null>(null);
   const [openServiceId, setOpenServiceId] = useState<ServicePlateId | null>(null);
   const replayRef = useRef<(() => void) | null>(null);
 
@@ -113,16 +121,26 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
     // `?svc=N` parks card N front and settled — what a capture asks for.
     const svc = Number.parseInt(q.get("svc") ?? "", 10);
     if (Number.isFinite(svc)) setProgress(parkFor(svc));
+    const ink = q.get("ink");
+    if (ink && (FIGURE_INKS as readonly string[]).includes(ink))
+      setInkOverride(ink as CardFigureInk);
   }, []);
 
   const commit = useCallback(
-    (next: { variantIdx?: number; progress?: number; titleStyle?: CardTitleStyle }) => {
+    (next: {
+      variantIdx?: number;
+      progress?: number;
+      titleStyle?: CardTitleStyle;
+      ink?: CardFigureInk;
+    }) => {
       const v = next.variantIdx ?? variantIdx;
       const p = next.progress ?? progress;
       const t = next.titleStyle ?? titleStyle;
+      const ink = next.ink ?? inkOverride;
       if (next.variantIdx !== undefined) setVariantIdx(next.variantIdx);
       if (next.progress !== undefined) setProgress(next.progress);
       if (next.titleStyle !== undefined) setTitleStyle(next.titleStyle);
+      if (next.ink !== undefined) setInkOverride(next.ink);
       // Moving the ring or switching routes must not leave a plate seated on
       // a rect the card has left.
       setOpenServiceId(null);
@@ -130,9 +148,10 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
       url.searchParams.set("v", FACE_VARIANTS[v].id);
       url.searchParams.set("p", p.toFixed(3));
       url.searchParams.set("t", t);
+      if (ink) url.searchParams.set("ink", ink);
       window.history.replaceState(null, "", url.toString());
     },
-    [variantIdx, progress, titleStyle]
+    [variantIdx, progress, titleStyle, inkOverride]
   );
 
   /**
@@ -182,6 +201,8 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
      the park math and the ring's clock never change. */
   const services = variant.recut ? RECUT_SERVICES : SERVICES;
   const plates = variant.recut ? RECUT_PLATES : SERVICE_PLATES;
+  const figure = variant.figure ?? "off";
+  const figureInk: CardFigureInk = inkOverride ?? variant.figureInk ?? "ink";
 
   // Side-card hit → park that service (production scrolls the runway there;
   // the lab drives the same ring math through the progress bridge).
@@ -245,7 +266,8 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
           openDrawer={variant.openPlate}
           plates={variant.recut ? plates : undefined}
           services={services}
-          figure={variant.figure ?? "off"}
+          figure={figure}
+          figureInk={figureInk}
         />
       </CanvasErrorBoundary>
 
@@ -299,6 +321,26 @@ export function CardFaceLabShell({ hudHtml, bodyClass }: ShellProps) {
             </button>
           ))}
         </div>
+
+        {/* THE FIGURE'S INK (round three): the face's reading ink, or Tensor
+            Gold. Only a row with an in-canvas figure has an ink to flip. */}
+        {figure !== "off" && (
+          <div className="scfl-chips" role="tablist" aria-label="Figure ink">
+            {FIGURE_INKS.map((ink) => (
+              <button
+                key={ink}
+                type="button"
+                role="tab"
+                className="scfl-chip"
+                data-on={ink === figureInk || undefined}
+                aria-selected={ink === figureInk}
+                onClick={() => commit({ ink })}
+              >
+                INK · {ink === "gold" ? "TENSOR GOLD" : "DAWN"}
+              </button>
+            ))}
+          </div>
+        )}
 
         <p className="scfl-thesis">{variant.thesis}</p>
         {/* A pinned row ignores the chips, so the console reports the treatment

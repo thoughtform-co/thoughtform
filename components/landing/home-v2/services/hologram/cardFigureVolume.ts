@@ -32,6 +32,7 @@
 import * as THREE from "three";
 
 import { BAKE_H, BAKE_W, PAD_X } from "./ringCtaBox";
+import { HOLO_LIGHT, type Body } from "@/lib/services-ring/figureFields";
 import { FIGURE_INK, figureFor, near, type FigureSlot } from "@/lib/services-ring/serviceFigures";
 
 /** The ring's own floor (`CorridorArmillary`'s phone rule): under it, no
@@ -53,9 +54,13 @@ const SPRITE_PX = { unlit: 20, lit: 30, open: 26, markPer: 2.6 } as const;
 
 export const ATLAS_TILE = 64;
 export const ATLAS_COLS = 4;
-export const ATLAS_ROWS = 1;
-/** Tile index per node class. */
-export const GLYPH = { unlit: 0, lit: 1, mark: 2, open: 3 } as const;
+export const ATLAS_ROWS = 4;
+/** Tile index per node class (the record's cloud), and the first tile of the
+ *  LATTICE's shaded ramp (nine glyphs, dark → light, at 4…12). */
+export const GLYPH = { unlit: 0, lit: 1, mark: 2, open: 3, ramp0: 4 } as const;
+/** The lattice's ramp — the raster's own (`cardViz.ts` VOL_RAMP), so the 2D
+ *  and the 3D materials letter the same body with the same characters. */
+export const LATTICE_RAMP = ["·", ":", "-", "=", "+", "*", "#", "%", "@"] as const;
 
 /**
  * The glyph atlas: four tiles, white on transparent, tinted by `uColor`.
@@ -91,6 +96,14 @@ export function buildFigureAtlas(): THREE.CanvasTexture {
     // 3 · the open square — the person-led work.
     ctx.lineWidth = 6;
     ctx.strokeRect(3 * ATLAS_TILE + 10, 10, ATLAS_TILE - 20, ATLAS_TILE - 20);
+    // 4…12 · the lattice's shaded ramp, PT Mono, one glyph per tile.
+    ctx.font = '400 54px "PT Mono", "IBM Plex Mono", ui-monospace, monospace';
+    LATTICE_RAMP.forEach((g, k) => {
+      const i = GLYPH.ramp0 + k;
+      const col = i % ATLAS_COLS;
+      const row = Math.floor(i / ATLAS_COLS);
+      ctx.fillText(g, col * ATLAS_TILE + c, row * ATLAS_TILE + c + 2);
+    });
   }
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -185,6 +198,163 @@ export function buildFigureGeometry(
   lines.setAttribute("position", new THREE.BufferAttribute(lpos, 3));
   lines.setAttribute("aAlpha", new THREE.BufferAttribute(lalpha, 1));
 
+  return { points, lines };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE LATTICE (owner, 2026-09-19, round three: "continue a bit with volume,
+   where they protrude a bit … use a bit of the raster and have them
+   protrude … not from the back of the card, only from the front, like some
+   sort of hologram").
+
+   A body from `figureFields` voxelised on the CARD'S OWN CELL GRID — the
+   raster's pitch in x and y, the same pitch in z — keeping the surface shell,
+   every cell a glyph off the shaded ramp (one light, ambient, rim, depth),
+   every cell a sprite at its cell's world size. From the front it is the
+   raster; the ring's turn and the rig's pointer-look reveal its depth. And it
+   is thrown UP from the face: the body's back is seated on the face plane and
+   the whole of it protrudes toward the viewer, never through the card.
+
+   Cells are sorted far to near once, so NormalBlending composites them in
+   depth order without a depth write (a depth write here would punch holes in
+   the brandmark's point pass, the same reason the face keeps `depthWrite`
+   off — `.claude/rules/services-ring.md`).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/** The raster's cell, bake px — lockstep with `cardViz.ts` RASTER_PX. */
+export const LATTICE_CELL_PX = 18;
+/** The lattice's pitch in the band's unit space: one cell at R = 328. */
+export const LATTICE_PITCH = LATTICE_CELL_PX / 328;
+/** How much of the body's unit depth is spent in front of the face, in R. */
+export const LATTICE_RELIEF = 0.62;
+/** The grid's reach in unit space, each axis. */
+const LATTICE_REACH = 1.25;
+const LATTICE_EPS = 0.02;
+
+/**
+ * One body, one lattice. Returns the same two geometries the record's cloud
+ * does (points + lines) so the ring mounts either through one child; the
+ * lattice's lines are empty.
+ */
+export function buildLatticeGeometry(
+  body: Body,
+  cardW: number,
+  cardHeight: number
+): FigureGeometries {
+  const { field, marks } = body;
+  const n = Math.ceil((LATTICE_REACH * 2) / LATTICE_PITCH);
+  const at = (i: number) => -LATTICE_REACH + (i + 0.5) * LATTICE_PITCH;
+  // Pass one: occupancy.
+  const inside = new Uint8Array(n * n * n);
+  const idx = (i: number, j: number, k: number) => (k * n + j) * n + i;
+  for (let k = 0; k < n; k++) {
+    const z = at(k);
+    for (let j = 0; j < n; j++) {
+      const y = at(j);
+      for (let i = 0; i < n; i++) {
+        const x = at(i);
+        if (x * x + y * y > 1.3 * 1.3) continue;
+        if (field(x, y, z) < 0) inside[idx(i, j, k)] = 1;
+      }
+    }
+  }
+  // Pass two: the shell — an inside cell with an outside neighbour.
+  const shell: { x: number; y: number; z: number; lum: number }[] = [];
+  const [lx, ly, lz] = HOLO_LIGHT;
+  let zMin = Infinity;
+  let zMax = -Infinity;
+  for (let k = 0; k < n; k++) {
+    for (let j = 0; j < n; j++) {
+      for (let i = 0; i < n; i++) {
+        if (!inside[idx(i, j, k)]) continue;
+        const open =
+          i === 0 ||
+          j === 0 ||
+          k === 0 ||
+          i === n - 1 ||
+          j === n - 1 ||
+          k === n - 1 ||
+          !inside[idx(i - 1, j, k)] ||
+          !inside[idx(i + 1, j, k)] ||
+          !inside[idx(i, j - 1, k)] ||
+          !inside[idx(i, j + 1, k)] ||
+          !inside[idx(i, j, k - 1)] ||
+          !inside[idx(i, j, k + 1)];
+        if (!open) continue;
+        const x = at(i);
+        const y = at(j);
+        const z = at(k);
+        const nx = field(x + LATTICE_EPS, y, z) - field(x - LATTICE_EPS, y, z);
+        const ny = field(x, y + LATTICE_EPS, z) - field(x, y - LATTICE_EPS, z);
+        const nz = field(x, y, z + LATTICE_EPS) - field(x, y, z - LATTICE_EPS);
+        const nl = Math.hypot(nx, ny, nz) || 1;
+        const lambert = Math.max(0, (nx * lx + ny * ly + nz * lz) / nl);
+        const facing = Math.abs(nz / nl);
+        const rim = 0.32 * (1 - facing) * (1 - facing);
+        const shade = Math.min(1, 0.3 + 0.7 * lambert + rim);
+        shell.push({ x, y, z, lum: shade });
+        if (z < zMin) zMin = z;
+        if (z > zMax) zMax = z;
+      }
+    }
+  }
+  if (!shell.length) {
+    zMin = 0;
+    zMax = 1;
+  }
+  // Far to near, for the blend.
+  shell.sort((a, b) => a.z - b.z);
+
+  const sx = cardW / BAKE_W;
+  const sy = cardHeight / BAKE_H;
+  const R = (BAND.h / 2) * sy;
+  const cx = (BAND.x + BAND.w / 2 - BAKE_W / 2) * sx;
+  const cy = (BAKE_H / 2 - (BAND.y + BAND.h / 2)) * sy;
+  const cell = LATTICE_CELL_PX * sy * 1.12;
+  const span = Math.max(1e-6, zMax - zMin);
+  // The body's back on the face plane, its depth spent in front of it.
+  const toLocalZ = (z: number) => 0.004 + (z - zMin) * R * LATTICE_RELIEF;
+
+  const count = shell.length + marks.length;
+  const pos = new Float32Array(count * 3);
+  const glyph = new Float32Array(count);
+  const world = new Float32Array(count);
+  const alpha = new Float32Array(count);
+  shell.forEach((c, i) => {
+    const depth = (c.z - zMin) / span;
+    const lum = c.lum * (0.6 + 0.4 * depth);
+    const ramp = Math.min(
+      LATTICE_RAMP.length - 1,
+      Math.floor(Math.pow(lum, 0.8) * LATTICE_RAMP.length)
+    );
+    pos[i * 3] = cx + c.x * R;
+    pos[i * 3 + 1] = cy - c.y * R;
+    pos[i * 3 + 2] = toLocalZ(c.z);
+    glyph[i] = GLYPH.ramp0 + ramp;
+    world[i] = cell;
+    alpha[i] = 0.35 + 0.65 * lum;
+  });
+  // The marks sit on the surface at their own x, y — the first inside cell
+  // marching from the front.
+  marks.forEach((m, k) => {
+    const i = shell.length + k;
+    let z = LATTICE_REACH;
+    while (z > -LATTICE_REACH && field(m.x, m.y, z) >= 0) z -= LATTICE_PITCH;
+    pos[i * 3] = cx + m.x * R;
+    pos[i * 3 + 1] = cy - m.y * R;
+    pos[i * 3 + 2] = toLocalZ(Math.max(zMin, z)) + 0.004;
+    glyph[i] = GLYPH.mark;
+    world[i] = m.r * SPRITE_PX.markPer * sy;
+    alpha[i] = 1;
+  });
+  const points = new THREE.BufferGeometry();
+  points.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  points.setAttribute("aGlyph", new THREE.BufferAttribute(glyph, 1));
+  points.setAttribute("aWorld", new THREE.BufferAttribute(world, 1));
+  points.setAttribute("aAlpha", new THREE.BufferAttribute(alpha, 1));
+  const lines = new THREE.BufferGeometry();
+  lines.setAttribute("position", new THREE.BufferAttribute(new Float32Array(0), 3));
+  lines.setAttribute("aAlpha", new THREE.BufferAttribute(new Float32Array(0), 1));
   return { points, lines };
 }
 

@@ -11,6 +11,7 @@ import {
 import type {
   CardFaceVariant,
   CardFigure,
+  CardFigureInk,
   CardTitleStyle,
 } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 import { STRUCTURAL_ORBITS } from "@/components/landing/home-v2/services/hologram/HologramOrbits";
@@ -61,8 +62,10 @@ interface RingBackdropProps {
   plates?: readonly ServicePlate[];
   /** The DOM-side record the same variant reads (ids match `plates`). */
   services: readonly Service[];
-  /** V · Volume's in-canvas figure, or off. */
+  /** The in-canvas figure family, or off. */
   figure: CardFigure;
+  /** The figure's ink — the face's, or Tensor Gold. */
+  figureInk: CardFigureInk;
 }
 
 export default function RingBackdrop({
@@ -73,6 +76,7 @@ export default function RingBackdrop({
   plates,
   services,
   figure,
+  figureInk,
 }: RingBackdropProps) {
   // ADR-047's about clock stays parked: the deck flip is not part of this
   // study, and the ring's rest pose needs `engaged: false`.
@@ -128,6 +132,7 @@ export default function RingBackdrop({
             publishAnchors
             plates={plates}
             figure={figure}
+            figureInk={figureInk}
           />
         </ServicesHologramScene>
       </group>

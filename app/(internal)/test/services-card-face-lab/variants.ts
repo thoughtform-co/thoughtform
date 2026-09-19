@@ -1,6 +1,7 @@
 import type {
   CardFaceVariant,
   CardFigure,
+  CardFigureInk,
   CardTitleStyle,
 } from "@/components/landing/home-v2/services/hologram/ServicesCardRing";
 
@@ -44,8 +45,11 @@ export interface FaceVariant {
    * the shipped copy so the survey stays what it was.
    */
   recut?: boolean;
-  /** An in-canvas figure over the face — V · Volume's point cloud. */
+  /** An in-canvas figure over the face — V · Volume's point cloud, or one of
+   *  the lattice families. */
   figure?: CardFigure;
+  /** The figure's default ink on this row (the console's INK chips override). */
+  figureInk?: CardFigureInk;
 }
 
 export const FACE_VARIANTS: readonly FaceVariant[] = [
@@ -338,3 +342,78 @@ export const RASTER_VARIANTS: readonly FaceVariant[] = [
     provenance: "The Arc as a loop · the wireframe orbits · the gold armillary",
   },
 ];
+
+/**
+ * THE LATTICE FAMILIES (owner, 2026-09-19, round three, on reading the
+ * raster's bodies: "continue a bit with volume, where they protrude a bit …
+ * use a bit of the raster and have them protrude … not from the back of the
+ * card, only from the front, like some sort of hologram … the original
+ * holograms folder … Dendrite is also quite interesting … try different
+ * shapes and also try a bit with our Tensor Gold color").
+ *
+ * One material: a body voxelised on the raster's own cell grid, every
+ * surface cell a glyph off the shaded ramp, every cell a sprite at its cell's
+ * size — from the front the raster, under the ring's turn a volume. The
+ * body's back is seated on the face plane and all of it protrudes toward the
+ * viewer; nothing goes through the card. The rows differ in which bodies
+ * (`lib/services-ring/figureFields.ts`), and default to Tensor Gold; the
+ * console's INK chips flip any of them to the face's ink.
+ */
+export const LATTICE_VARIANTS: readonly FaceVariant[] = [
+  {
+    id: "lattice",
+    label: "V2 · Lattice",
+    face: "volume",
+    figure: "lattice",
+    figureInk: "gold",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "THE SOLIDS, THROWN UP FROM THE CARD. The same four bodies as the raster's R3 — a sphere under one light, a torus, the house's chamfered slab, eight spheres fused into a ring — voxelised on the raster's grid and floated in front of the face as a lattice of glyph sprites. Head-on it reads as the character matrix; as the ring turns the depth opens. The wireframe orbit sphere and the device box from the reference folder, in this house's material.",
+    provenance:
+      "The holograms folder · figureFields.solidBody · cardFigureVolume.buildLatticeGeometry",
+  },
+  {
+    id: "dendrite3d",
+    label: "V3 · Dendrite",
+    face: "volume",
+    figure: "dendrite",
+    figureInk: "gold",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "V5's growth rule, grown OUT of the card: every root on the face, every branch leaning toward the viewer, forking by generation, the tips lettered in gold. Keynote one root fanning six primaries wide (the radiant as growth); workshop one vine with short side buds (the route); embedded eight primaries, dense (the mesh); home session eight short shrubs on a ring (the table). The particle body on its platform, as a tree.",
+    provenance: "V5 · Dendrite (2026-08-30) · the teleport figure · figureFields.dendriteBody",
+  },
+  {
+    id: "relief",
+    label: "V4 · Relief",
+    face: "volume",
+    figure: "relief",
+    figureInk: "gold",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "A HEIGHTFIELD ON THE CARD — the isometric terrain reference's grammar. Keynote one peak with radial ridges; workshop a broad ridge winding across and rising toward its exit; embedded a plateau with three mounds where the seats sit; home session a crater rim around a flat floor. Protrudes by construction: a relief only ever stands on its ground.",
+    provenance: "The ZERO terrain still · figureFields.reliefBody",
+  },
+  {
+    id: "knots3d",
+    label: "V5 · Knots",
+    face: "volume",
+    figure: "knots",
+    figureInk: "gold",
+    openPlate: false,
+    pinnedTitle: "display",
+    recut: true,
+    thesis:
+      "The raster's torus knots as a lattice in front of the card — the row that most needs the depth, since a knot is a knot only when its crossings are seen to cross.",
+    provenance: "R4 · Knots · figureFields.knotBody",
+  },
+];
+
+/** The two inks the console offers on any figure row. */
+export const FIGURE_INKS = ["ink", "gold"] as const;

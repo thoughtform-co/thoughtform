@@ -116,6 +116,44 @@ The family's sheet is `stills/1600x1000/contact-raster-dark.png` (the first
 raster on top for reference). Coverage of the band runs 0.10–0.25 across the
 twelve, against 0.04–0.10 for the line figures.
 
+## Round three: the lattice families (owner, same day)
+
+On reading the raster's bodies: "continue a bit with volume, where they
+protrude a bit … use a bit of the raster and have them protrude … not from
+the back of the card, only from the front, like some sort of hologram … the
+original holograms folder … Dendrite is also quite interesting … try
+different shapes and also try a bit with our Tensor Gold color."
+
+One material, `buildLatticeGeometry` in `cardFigureVolume.ts`: a body from
+`lib/services-ring/figureFields.ts` (the shape library the 2D raster now
+reads too, so one body renders in either material) voxelised on the raster's
+own cell grid, the surface shell kept, each cell a glyph sprite off the
+shaded ramp, sorted far to near and composited without a depth write. The
+body's back is seated on the face plane and all of it protrudes toward the
+viewer; nothing goes through the card. Head-on it is the raster; the ring's
+turn and the rig's pointer-look open the depth. The rows default to Tensor
+Gold (`#b08b42`, the mark's own; `#caa554` on parchment) and the console's
+INK chips flip any of them to the face's dawn.
+
+```
+http://localhost:3003/test/services-card-face-lab?v=lattice
+http://localhost:3003/test/services-card-face-lab?v=dendrite3d
+http://localhost:3003/test/services-card-face-lab?v=relief
+http://localhost:3003/test/services-card-face-lab?v=knots3d
+```
+
+| row           | the four bodies                                                                                                                                                                                                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| V2 · Lattice  | the raster's solids in relief: the sphere, the torus, the chamfered slab, the ring of eight                                                                                                                                                                                    |
+| V3 · Dendrite | V5's growth rule grown OUT of the card: every root on the face, every branch leaning toward the viewer, the tips in gold. Keynote fans six primaries; workshop is one vine with side buds (thin by rule); embedded eight primaries, dense; home session eight shrubs on a ring |
+| V4 · Relief   | a heightfield on the card, the terrain reference: one peak with radial ridges · a winding ridge rising toward its exit · a plateau with three mounds where the seats sit · a crater rim around a flat floor                                                                    |
+| V5 · Knots    | the raster's torus knots as lattices, the row that most needs the depth                                                                                                                                                                                                        |
+
+Sheets: `stills/1600x1000/contact-lattice-{dark,light}.png` and the same at
+`1920x1247`. The lattice costs a bake-time march over an 46³ grid per card
+(the knot and the dendrite fields are the slow ones, a few hundred
+milliseconds each on the main thread, once); nothing per frame.
+
 ## The seams that keep production byte-identical
 
 - `ServicesCardRing` gained two additive props: `plates` (default

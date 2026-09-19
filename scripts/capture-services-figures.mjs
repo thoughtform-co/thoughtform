@@ -42,6 +42,9 @@ const VARIANTS = argOf("--v", "raster,volume,wire").split(",");
 /** Names the contact sheet (`contact-<tag>-<theme>.png`), so a family's sheet
  *  never overwrites another's. */
 const TAG = argOf("--tag", "");
+/** The figure's ink on the figure rows (`?ink=ink|gold`); empty keeps each
+ *  row's own default. */
+const INK = argOf("--ink", "");
 const THEMES = argOf("--themes", "dark,light").split(",");
 const VIEWPORTS = argOf("--vp", "1600x1000,1920x1247")
   .split(",")
@@ -130,7 +133,7 @@ for (const [vw, vh] of VIEWPORTS) {
         });
         const url = `http://localhost:${PORT}/test/services-card-face-lab?v=${variant}&svc=${i}${
           theme === "light" ? "&theme=light" : ""
-        }`;
+        }${INK ? `&ink=${INK}` : ""}`;
         await page.goto(url, { waitUntil: "domcontentloaded" });
         // The lab's <main> pins its own data-theme; the ring reads the store,
         // which the ?theme= bootstrap set. Bring the DOM chrome in line.

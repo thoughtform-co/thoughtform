@@ -58,13 +58,16 @@ import {
   VOLUME_QUALITY_FLOOR,
   buildFigureAtlas,
   buildFigureGeometry,
+  buildLatticeGeometry,
   createFigureMaterials,
   figureProjection,
   type FigureGeometries,
   type FigureMaterials,
 } from "./cardFigureVolume";
 import { useQualityStore } from "@/lib/hooks/useQualityTier";
+import { bodyFor } from "@/lib/services-ring/figureFields";
 import { isFigureSlot } from "@/lib/services-ring/serviceFigures";
+import { TENSOR_GOLD } from "@/lib/home-v2/goldPalette";
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
 import { HologramOrbits } from "./HologramOrbits";
 import {
@@ -750,11 +753,17 @@ export type CardFaceVariant =
   | "raster-knots";
 
 /**
- * An in-canvas FIGURE over the face (2026-09-19): `"volume"` mounts one
- * point-cloud child per card (`cardFigureVolume`). Off, the tree is
- * byte-identical — the lab passes it; production does not.
+ * An in-canvas FIGURE over the face (2026-09-19): `"volume"` mounts the
+ * record's cloud as one point-cloud child per card; the LATTICE families
+ * (`"lattice"` the solids, `"dendrite"`, `"relief"`, `"knots"`) mount a body
+ * voxelised on the raster's grid and thrown up in front of the face
+ * (`cardFigureVolume`). Off, the tree is byte-identical — the lab passes
+ * these; production does not.
  */
-export type CardFigure = "off" | "volume";
+export type CardFigure = "off" | "volume" | "lattice" | "dendrite" | "relief" | "knots";
+/** The figure's ink: the face's reading ink, or Tensor Gold (owner, round
+ *  three: "try a bit with our Tensor Gold color"). */
+export type CardFigureInk = "ink" | "gold";
 
 /**
  * The TIGHT layout family — everything except the ADR-029 `full` baseline.
@@ -2386,6 +2395,8 @@ export interface ServicesCardRingProps {
    * mounted on the phone profile, and never under the governor's floor.
    */
   figure?: CardFigure;
+  /** The figure's ink — the face's, or Tensor Gold. Lab-only today. */
+  figureInk?: CardFigureInk;
 }
 
 export function ServicesCardRing({
@@ -2426,6 +2437,7 @@ export function ServicesCardRing({
   flipBack = false,
   plates = SERVICE_PLATES,
   figure = "off",
+  figureInk = "ink",
 }: ServicesCardRingProps) {
   const mobileProfile = profile === "mobile";
   const bakeScale = mobileProfile ? BAKE_SCALE_MOBILE : 1;
@@ -2434,7 +2446,7 @@ export function ServicesCardRing({
      snapshot loops `useSyncExternalStore` until the canvas boundary crashes).
      Under the ring's own floor there is no figure at all — never half of one. */
   const countMultiplier = useQualityStore((s) => s.countMultiplier);
-  const volumeOn = figure === "volume" && !mobileProfile && countMultiplier > VOLUME_QUALITY_FLOOR;
+  const volumeOn = figure !== "off" && !mobileProfile && countMultiplier > VOLUME_QUALITY_FLOOR;
   /* ⚠ THE DECK'S POSITIONAL TABLE FOLLOWS THE CHILD LIST. With the figure
      mounted the veil is followed by one more child before the drawer, so the
      drawer's three entries shift by one; the constant table is what
@@ -2932,15 +2944,17 @@ export function ServicesCardRing({
   useEffect(() => {
     return () => figureAtlas?.dispose();
   }, [figureAtlas]);
-  const figureGeometries = useMemo<FigureGeometries[] | null>(
-    () =>
-      volumeOn
-        ? plates.map((plate) =>
-            buildFigureGeometry(isFigureSlot(plate.id) ? plate.id : "embedded", cardW, cardHeight)
-          )
-        : null,
-    [volumeOn, plates, cardW, cardHeight]
-  );
+  const figureGeometries = useMemo<FigureGeometries[] | null>(() => {
+    if (!volumeOn) return null;
+    return plates.map((plate) => {
+      const slot = isFigureSlot(plate.id) ? plate.id : "embedded";
+      if (figure === "volume") return buildFigureGeometry(slot, cardW, cardHeight);
+      // The lattice families: a body from `figureFields`, voxelised on the
+      // raster's grid and thrown up in front of the face.
+      const family = figure === "lattice" ? "solids" : figure;
+      return buildLatticeGeometry(bodyFor(family, slot), cardW, cardHeight);
+    });
+  }, [volumeOn, figure, plates, cardW, cardHeight]);
   useEffect(() => {
     return () => {
       if (!figureGeometries) return;
@@ -2956,14 +2970,22 @@ export function ServicesCardRing({
         ? plates.map(() =>
             createFigureMaterials(
               // The face palette's own reading ink, as a solid: dawn on dark,
-              // latent night on parchment (FACE_DARK / FACE_LIGHT `ink`).
-              ringTheme === "light" ? "rgb(17, 15, 9)" : `rgb(${DAWN})`,
+              // latent night on parchment (FACE_DARK / FACE_LIGHT `ink`) — or
+              // Tensor Gold, the mark's own, when the lab asks for it (light
+              // takes the light-role gold, the drawer's).
+              figureInk === "gold"
+                ? ringTheme === "light"
+                  ? "#caa554"
+                  : TENSOR_GOLD
+                : ringTheme === "light"
+                  ? "rgb(17, 15, 9)"
+                  : `rgb(${DAWN})`,
               ringTheme === "light" ? "#caa554" : SERVICES_GOLD,
               figureAtlas
             )
           )
         : null,
-    [volumeOn, plates, ringTheme, figureAtlas]
+    [volumeOn, plates, ringTheme, figureAtlas, figureInk]
   );
   useEffect(() => {
     return () => {
