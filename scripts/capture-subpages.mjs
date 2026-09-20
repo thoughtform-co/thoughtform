@@ -320,7 +320,10 @@ function probeFn() {
     knobs,
     k: root.getAttribute("data-sh-k"),
     ready: root.getAttribute("data-sh-ready"),
-    theme: document.documentElement.getAttribute("data-theme"),
+    // The bootstrap stamps `data-theme` for LIGHT only; the dark default is
+    // the attribute's absence (wave-01-sb's first run gated every void cell
+    // on "theme null, wanted dark" — the stills were right, the read was not).
+    theme: document.documentElement.getAttribute("data-theme") ?? "dark",
   };
 }
 
@@ -414,7 +417,7 @@ function runMech(routeWithQuery, theme, vp) {
        the header's chapter row, the rail instruments, and the shared footer
        (the close), which has its own ratchet. */
     "--exclude",
-    ".sh-hud-root, .hud-nav-overlay, .rin-host, .sh-sec--close",
+    ".sh-hud-root, .hud-nav-overlay, .rin-host, .sh-sec--close, .sk-console",
     "--vp",
     `${vp[0]}x${vp[1]}`,
     /* ⚠ THE GATE COUNTS THE WHOLE PAGE; the rubric's twelve (A2) is per STILL.
@@ -454,9 +457,25 @@ function flushManifests() {
   for (const [folder, rows] of manifests) {
     fs.mkdirSync(folder, { recursive: true });
     const file = path.join(folder, "MANIFEST.jsonl");
-    const prior = fs.existsSync(file) ? fs.readFileSync(file, "utf8").trimEnd() : "";
-    const body = rows.map((r) => JSON.stringify(r)).join("\n");
-    fs.writeFileSync(file, (prior ? prior + "\n" : "") + body + "\n");
+    /* A re-shoot of the same cell REPLACES its rows: a manifest that doubled
+       every row on the second run would grade every still twice and hand the
+       gallery two captions for one picture. Rows for other files stay. */
+    const fresh = new Set(rows.map((r) => r.file));
+    const prior = fs.existsSync(file)
+      ? fs
+          .readFileSync(file, "utf8")
+          .split(/\r?\n/)
+          .filter((l) => l.trim())
+          .filter((l) => {
+            try {
+              return !fresh.has(JSON.parse(l).file);
+            } catch {
+              return true;
+            }
+          })
+      : [];
+    const body = [...prior, ...rows.map((r) => JSON.stringify(r))].join("\n");
+    fs.writeFileSync(file, body + "\n");
   }
 }
 const nn = (n) => String(n).padStart(2, "0");

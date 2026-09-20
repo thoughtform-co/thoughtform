@@ -117,6 +117,13 @@ short form:
 - **The negative pole is shot once** from a worktree at the pre-change commit
   (`../01_thoughtform-negative`, `next dev --webpack -p 3004`) into
   `skill/assets/negative/`, and never re-shot.
+- **A wave is one CSS state.** An edit to `sheet.css` between two directions'
+  shoots makes F3 (each direction differs on its axis and no other) false by
+  construction; a fix found mid-wave re-shoots every direction. The capture's
+  manifest write replaces a re-shot file's row rather than appending it.
+- **The grader is told what it may not grade.** The HUD frame (0.1.1) and the
+  close (0.1.2) are excluded in the rubric's grading rules; a check that
+  names something every still carries fails every still.
 - **A wave without `ledger.py tick --handback` never happened.**
 
 ## Verifying

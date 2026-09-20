@@ -1,0 +1,41 @@
+---
+description: The sheet (ADR-114) — the ruled-document grammar for overview subpages (/arcs, /home-sessions, /musings) and the turnstone ship that grades it
+globs:
+  - "components/sheet/**"
+  - "lib/sheet/**"
+  - "lib/sessions/**"
+  - "lib/musings/**"
+  - "content/musings/**"
+  - "app/(marketing)/home-sessions/**"
+  - "app/(marketing)/musings/**"
+  - "app/(marketing)/arcs/page.tsx"
+  - "app/(marketing)/arcs/[slug]/page.tsx"
+  - "app/(internal)/test/subpage-kit/**"
+  - "scripts/capture-subpages.mjs"
+  - ".claude/skills/thoughtform-design/eval/subpages/**"
+alwaysApply: false
+---
+
+# Rule: the sheet (ADR-114)
+
+The canonical rule is `.claude/rules/sheet.md`; this file mirrors it for Cursor.
+
+- A section is ONE arrangement (`SHEET_ARRANGEMENTS`); chrome strings are
+  lettered by renderers, never authored. A new kind is a union member, a
+  renderer case and a rubric row in one commit.
+- The variety law is code (`lib/sheet/composition.ts`) and every real page
+  walks it in `tests/lib/sheet-composition.test.ts`. The chapter cap is on the
+  PRIMARY row.
+- `sheet.css` is token-only, pinned at zero in three ratchets; light re-derives
+  every `--sh-*` alpha in `theme.css`.
+- The first value of every knob is the house; `lib/sheet/directions.json` is
+  the one registry, mirrored into the ship's `armada.toml` and asserted.
+- Every client-console readout is DERIVED from the arcs registry.
+- House formats are CELLS, client arcs are CARDS on the overview.
+- The console imports `useStackedCardsScroll` and copies the proof stack's
+  skin as `--sh-*` tokens; `.sh-root` is `overflow-x: clip`.
+- `data-sh-ready` is the capture's observable; run the capture and the
+  mechanical gate from PowerShell (MSYS rewrites a `/route` argument).
+- A reveal in the viewport's last tenth never lands; the capture waits on 0.88.
+- The negative pole is shot once and never re-shot; a wave without
+  `ledger.py tick --handback` never happened.

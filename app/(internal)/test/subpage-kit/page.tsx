@@ -41,7 +41,7 @@ export default function SubpageKitRoute() {
               <p className="sh-prose__p">
                 Headings take the display face at the lit weight in sentence case. Emphasis is{" "}
                 <em className="sh-prose__em">upright gold</em>, never italic. A quotation sits on a
-                gold hairline:
+                dawn hairline, never a coloured bar:
               </p>
               <blockquote className="sh-prose__blockquote">
                 <p className="sh-prose__p">

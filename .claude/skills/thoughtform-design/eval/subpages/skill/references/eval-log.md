@@ -45,7 +45,51 @@ reconstruction; write it in the session that ran the wave.
   gate, and the gate's whole-page accent count is not the rubric's per-still
   twelve.
 
+## 2026-09-20 — wave 00 graded: the rubric fails the pole, and where it was wrong it was the frame
+
+- 18 stills, 3 runs, 110 seconds, `gemini-flash-latest`. 17 FAIL, 1 PASS
+  (the lawful fixture). Unstable: 2 of 18. Full read in
+  `evals/waves/wave-00-calibration.md`.
+- The pole failed everything it was predicted to fail (C1 B1 B2 A5 C6).
+  Of the four it was predicted to pass, only A3 passed. **D2** was a wrong
+  prediction (the old hero's title is uppercase sans). **A6** failed on the
+  HUD frame's round navigation button, which every still on this site
+  carries — the rubric had no sentence excluding the frame. **A1** failed on
+  bold uppercase mono card titles read as a label in the wrong face.
+- **Rubric 0.1.1:** the grading rules say the frame is never graded; A6 names
+  the button; A1's fails-when says what to look at (paragraphs first, then
+  small uppercase labels, then a third face); the anchor rows move D2 to
+  "should fail" and add the cards still. No severity moved.
+- Ruled out: grading the laptop folder of the pole (it says nothing the
+  owner's viewport does not, and would double-count the ledger).
+
+## 2026-09-20 — wave 01: four directions, one CSS state, graded on 0.1.2
+
+- 4 × 64 stills at 1920 × 1247 (both themes, one per section) and the house
+  direction at 1280 × 720, all in one shoot after the flashcard's head was
+  fixed. Mechanical: zero findings on every real page in both themes; the
+  kit's whole-page accent count is over the 24 budget by design. Graded three
+  times each on `gemini-flash-latest`, ~7 minutes a direction.
+- Keepable on the 42 real-page stills: SB 21 · SC 22 · SD 27 · SE 23.
+  Unstable: 22–25 of 64 per direction — on identical pixels, which is the
+  rubric's wording.
+- What the grader is still wrong about on purpose (pending 0.1.3): the lit
+  timeline node's gold box (A2/E3, SB/SC/SD fail it and SE's rail passes), a
+  one-card pile (E4), a flashcard's figure with no FIG bar (C5), a console
+  still driven past its own head band (C2).
+- What the grader is right about and only the owner can settle: the pile's
+  card does not reach the band's rule (B1/B2 on every console still).
+- Full read, per still: `evals/waves/wave-01.md`. Galleries:
+  `delivery/review-wave-01-{sb,sc,sd,se}.html`. No handback yet.
+
 ## Standing conclusions
 
 - A page's first mechanical run is worth more than its first grade: the
   grader has not seen a still yet and the gate has already moved a token.
+- On deterministic stills the unstable list is the rubric's to-do list. A
+  third of the verdicts moved across three runs in every direction; rewrite
+  those checks in what a grader can see before adding a single new one.
+- A wave is one CSS state. A fix found mid-wave re-shoots every direction.
+- A check that names something the FRAME carries fails every still on the
+  site. The frame is the datum; say so in the grading rules before the first
+  wave, not after.

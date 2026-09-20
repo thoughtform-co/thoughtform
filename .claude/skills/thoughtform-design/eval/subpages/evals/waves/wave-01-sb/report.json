@@ -2,7 +2,7 @@
   "wave": "wave-01-sb",
   "setting": "default",
   "viewport": "1920x1247",
-  "when": "2026-09-20T14:40:53.140Z",
+  "when": "2026-09-20T14:56:26.303Z",
   "cells": [
     {
       "type": "HS",
@@ -18,10 +18,10 @@
         "HS-void__sb_05.png",
         "HS-void__sb_06.png"
       ],
-      "gates": ["theme null, wanted dark"],
+      "gates": [],
       "mech": {
         "code": 0,
-        "seconds": 3.3
+        "seconds": 3.2
       },
       "probe": {
         "accent": 14,
@@ -71,7 +71,7 @@
         },
         "k": "SB",
         "ready": "3|6|985",
-        "theme": null
+        "theme": "dark"
       }
     },
     {
@@ -91,7 +91,7 @@
       "gates": [],
       "mech": {
         "code": 0,
-        "seconds": 3.1
+        "seconds": 3.3
       },
       "probe": {
         "accent": 14,
@@ -156,10 +156,10 @@
         "AR-void__sb_03.png",
         "AR-void__sb_04.png"
       ],
-      "gates": ["theme null, wanted dark"],
+      "gates": [],
       "mech": {
         "code": 0,
-        "seconds": 3.2
+        "seconds": 3.3
       },
       "probe": {
         "accent": 19,
@@ -201,7 +201,7 @@
         },
         "k": "SB",
         "ready": "3|4|985",
-        "theme": null
+        "theme": "dark"
       }
     },
     {
@@ -271,10 +271,10 @@
       "lane": "sb",
       "href": "http://localhost:3003/arcs/loop?k=SB&theme=dark",
       "stills": ["AC-void__sb_01.png", "AC-void__sb_02.png", "AC-void__sb_03.png"],
-      "gates": ["theme null, wanted dark"],
+      "gates": [],
       "mech": {
         "code": 0,
-        "seconds": 3.2
+        "seconds": 3.3
       },
       "probe": {
         "accent": 4,
@@ -312,7 +312,7 @@
         },
         "k": "SB",
         "ready": "3|3|985",
-        "theme": null
+        "theme": "dark"
       }
     },
     {
@@ -325,7 +325,7 @@
       "gates": [],
       "mech": {
         "code": 0,
-        "seconds": 3.1
+        "seconds": 3.2
       },
       "probe": {
         "accent": 4,
@@ -378,10 +378,10 @@
         "MU-void__sb_03.png",
         "MU-void__sb_04.png"
       ],
-      "gates": ["theme null, wanted dark"],
+      "gates": [],
       "mech": {
-        "code": 1,
-        "seconds": 3.1
+        "code": 0,
+        "seconds": 3.2
       },
       "probe": {
         "accent": 10,
@@ -423,7 +423,7 @@
         },
         "k": "SB",
         "ready": "3|4|985",
-        "theme": null
+        "theme": "dark"
       }
     },
     {
@@ -440,8 +440,8 @@
       ],
       "gates": [],
       "mech": {
-        "code": 1,
-        "seconds": 3.1
+        "code": 0,
+        "seconds": 3.2
       },
       "probe": {
         "accent": 10,
@@ -498,9 +498,9 @@
         "MP-void__sb_03.png",
         "MP-void__sb_04.png"
       ],
-      "gates": ["theme null, wanted dark"],
+      "gates": [],
       "mech": {
-        "code": 1,
+        "code": 0,
         "seconds": 3.2
       },
       "probe": {
@@ -543,7 +543,7 @@
         },
         "k": "SB",
         "ready": "3|4|985",
-        "theme": null
+        "theme": "dark"
       }
     },
     {
@@ -560,8 +560,8 @@
       ],
       "gates": [],
       "mech": {
-        "code": 1,
-        "seconds": 3.1
+        "code": 0,
+        "seconds": 3.2
       },
       "probe": {
         "accent": 5,
@@ -625,13 +625,13 @@
         "SK-void__sb_10.png",
         "SK-void__sb_11.png"
       ],
-      "gates": ["theme null, wanted dark"],
+      "gates": [],
       "mech": {
         "code": 1,
-        "seconds": 3.1
+        "seconds": 3.2
       },
       "probe": {
-        "accent": 41,
+        "accent": 40,
         "accentInView": 11,
         "bold": 0,
         "text": 190,
@@ -698,7 +698,7 @@
         },
         "k": "SB",
         "ready": "3|11|985",
-        "theme": null
+        "theme": "dark"
       }
     },
     {
@@ -723,10 +723,10 @@
       "gates": [],
       "mech": {
         "code": 1,
-        "seconds": 3.1
+        "seconds": 3.2
       },
       "probe": {
-        "accent": 41,
+        "accent": 40,
         "accentInView": 11,
         "bold": 0,
         "text": 190,

@@ -54,6 +54,32 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-20 — The sheet: a design system for subpages, and the ship that grades it (ADR-114)
+
+**Trigger:** the owner — _"our current arcs look bad"_, a design system for
+the overview subpages (the arcs index, a Home sessions page, a blog) on
+Hermeus and Lighthouse with the retrofuturistic instruments as the voice,
+_"it's very important that there's some variety in how we build blocks …
+not every section has just three blocks"_, and then the re-scope: _"create
+your own eval pipeline to create all of the landing pages … Don't skip any
+steps."_
+
+- **Cycle B, in full.** ADR-114 (Proposed); `.claude/rules/sheet.md`;
+  `docs/design/subpages/README.md`; the `turnstone` ship with its own
+  `CLAUDE.md`, rubric 0.1 and register strips; five vitest suites and a
+  Playwright smoke; the terminal smoke's overview case moved to the sheet.
+- **Q3 (a class of bug) → BEST-PRACTICES stands on the existing entries**
+  (a composed string is outside every content scanner; a script that waits on
+  a value it set has no wait) — the two new ones are recorded in the ADR: a
+  reveal inside the observer's bottom margin never lands, and MSYS rewrites a
+  child's `/route` argument.
+- **Q4 (two files move together):** `directions.json` ↔ `armada.toml`
+  (asserted by the capture and a test); `sheet.css` ↔ `theme.css` (the light
+  block); `serviceData.ts` ↔ `servicePlateData.ts` (`ctaHref`, pinned);
+  `next.config.mjs` ↔ `content/musings/` (traced, pinned).
+- **Deleted, with their guards' subjects:** `ArcClientPage`, `ArcClientGroups`,
+  `ArcCardGrid`, `ArcCard`, `ArcKindFilter` and ~370 lines of `arcs.css`.
+
 ### 2026-09-20 — The phone's deck flip: the copy un-types, the cards stack, the deck becomes the portrait, `#about` is a band (ADR-115)
 
 **Trigger:** the owner, from his iPhone, hours after ADR-113 — _"when you

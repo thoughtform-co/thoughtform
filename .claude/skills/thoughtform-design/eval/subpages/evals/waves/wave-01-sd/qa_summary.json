@@ -1,0 +1,386 @@
+[
+  {
+    "file": "AC-parchment__sd_02.png",
+    "verdict": "FAIL",
+    "section": "console - engagements",
+    "failed": ["A2", "B3", "C5"]
+  },
+  {
+    "file": "AC-parchment__sd_01.png",
+    "verdict": "RETRY",
+    "section": "split - loop-head",
+    "failed": ["E4"]
+  },
+  {
+    "file": "AC-void__sd_01.png",
+    "verdict": "RETRY",
+    "section": "split - loop-head",
+    "failed": ["B1", "B2", "C2", "E4"]
+  },
+  {
+    "file": "AC-void__sd_02.png",
+    "verdict": "RETRY",
+    "section": "console - engagements",
+    "failed": ["B1", "B2", "D1"]
+  },
+  {
+    "file": "AC-parchment__sd_03.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "AC-void__sd_03.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "AR-void__sd_01.png",
+    "verdict": "RETRY",
+    "section": "split - arcs",
+    "failed": ["B1", "B2", "C2", "D1"]
+  },
+  {
+    "file": "AR-void__sd_02.png",
+    "verdict": "RETRY",
+    "section": "console - clients",
+    "failed": ["B1", "B2", "C2", "C5"]
+  },
+  {
+    "file": "AR-parchment__sd_01.png",
+    "verdict": "PASS_WITH_NOTES",
+    "section": "split - arcs",
+    "failed": ["C5"]
+  },
+  {
+    "file": "AR-parchment__sd_02.png",
+    "verdict": "PASS_WITH_NOTES",
+    "section": "console - clients",
+    "failed": ["C5"]
+  },
+  {
+    "file": "AR-parchment__sd_03.png",
+    "verdict": "PASS",
+    "section": "cells - formats",
+    "failed": []
+  },
+  {
+    "file": "AR-parchment__sd_04.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "AR-void__sd_03.png",
+    "verdict": "PASS",
+    "section": "cells - formats",
+    "failed": []
+  },
+  {
+    "file": "AR-void__sd_04.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "HS-parchment__sd_01.png",
+    "verdict": "FAIL",
+    "section": "split - home-sessions",
+    "failed": ["A6"]
+  },
+  {
+    "file": "HS-parchment__sd_02.png",
+    "verdict": "FAIL",
+    "section": "timeline - calendar",
+    "failed": ["A2", "E3"]
+  },
+  {
+    "file": "HS-void__sd_01.png",
+    "verdict": "FAIL",
+    "section": "split - home-sessions",
+    "failed": ["A2", "B2", "C2", "E3"]
+  },
+  {
+    "file": "HS-void__sd_02.png",
+    "verdict": "FAIL",
+    "section": "timeline - calendar",
+    "failed": ["A2"]
+  },
+  {
+    "file": "HS-void__sd_03.png",
+    "verdict": "FAIL",
+    "section": "steps - reserve",
+    "failed": ["A2"]
+  },
+  {
+    "file": "HS-parchment__sd_03.png",
+    "verdict": "PASS",
+    "section": "steps - reserve",
+    "failed": []
+  },
+  {
+    "file": "HS-parchment__sd_04.png",
+    "verdict": "PASS",
+    "section": "cells - the-morning",
+    "failed": []
+  },
+  {
+    "file": "HS-parchment__sd_05.png",
+    "verdict": "PASS",
+    "section": "row - at-the-table",
+    "failed": []
+  },
+  {
+    "file": "HS-parchment__sd_06.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "HS-void__sd_04.png",
+    "verdict": "PASS",
+    "section": "cells - the-morning",
+    "failed": []
+  },
+  {
+    "file": "HS-void__sd_05.png",
+    "verdict": "PASS",
+    "section": "row - at-the-table",
+    "failed": []
+  },
+  {
+    "file": "HS-void__sd_06.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "MP-void__sd_01.png",
+    "verdict": "RETRY",
+    "section": "split - navigate-the-intelligence-head",
+    "failed": ["C2"]
+  },
+  {
+    "file": "MP-void__sd_02.png",
+    "verdict": "RETRY",
+    "section": "prose - article",
+    "failed": ["B1", "D1"]
+  },
+  {
+    "file": "MP-parchment__sd_01.png",
+    "verdict": "PASS",
+    "section": "split - navigate-the-intelligence-head",
+    "failed": []
+  },
+  {
+    "file": "MP-parchment__sd_02.png",
+    "verdict": "PASS",
+    "section": "prose - article",
+    "failed": []
+  },
+  {
+    "file": "MP-parchment__sd_03.png",
+    "verdict": "PASS",
+    "section": "figure - related",
+    "failed": []
+  },
+  {
+    "file": "MP-parchment__sd_04.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "MP-void__sd_03.png",
+    "verdict": "PASS",
+    "section": "figure - related",
+    "failed": []
+  },
+  {
+    "file": "MP-void__sd_04.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "MU-parchment__sd_01.png",
+    "verdict": "RETRY",
+    "section": "split - musings",
+    "failed": ["E4"]
+  },
+  {
+    "file": "MU-void__sd_01.png",
+    "verdict": "RETRY",
+    "section": "split - musings",
+    "failed": ["E4"]
+  },
+  {
+    "file": "MU-void__sd_03.png",
+    "verdict": "PASS_WITH_NOTES",
+    "section": "table - all-posts",
+    "failed": ["C5"]
+  },
+  {
+    "file": "MU-parchment__sd_02.png",
+    "verdict": "PASS",
+    "section": "figure - featured",
+    "failed": []
+  },
+  {
+    "file": "MU-parchment__sd_03.png",
+    "verdict": "PASS",
+    "section": "table - all-posts",
+    "failed": []
+  },
+  {
+    "file": "MU-parchment__sd_04.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "MU-void__sd_02.png",
+    "verdict": "PASS",
+    "section": "figure - featured",
+    "failed": []
+  },
+  {
+    "file": "MU-void__sd_04.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "SK-parchment__sd_04.png",
+    "verdict": "FAIL",
+    "section": "cells - cells-three",
+    "failed": ["A2", "E3"]
+  },
+  {
+    "file": "SK-parchment__sd_05.png",
+    "verdict": "FAIL",
+    "section": "timeline - timeline-fixture",
+    "failed": ["A2"]
+  },
+  {
+    "file": "SK-void__sd_04.png",
+    "verdict": "FAIL",
+    "section": "cells - cells-three",
+    "failed": ["A2", "A6", "E3"]
+  },
+  {
+    "file": "SK-void__sd_05.png",
+    "verdict": "FAIL",
+    "section": "timeline - timeline-fixture",
+    "failed": ["A2"]
+  },
+  {
+    "file": "SK-parchment__sd_02.png",
+    "verdict": "RETRY",
+    "section": "console - console-fixture",
+    "failed": ["C2"]
+  },
+  {
+    "file": "SK-parchment__sd_09.png",
+    "verdict": "RETRY",
+    "section": "prose - prose-fixture",
+    "failed": ["C4"]
+  },
+  {
+    "file": "SK-parchment__sd_10.png",
+    "verdict": "RETRY",
+    "section": "cells - cells-two",
+    "failed": ["C4"]
+  },
+  {
+    "file": "SK-void__sd_01.png",
+    "verdict": "RETRY",
+    "section": "split - kit",
+    "failed": ["C2"]
+  },
+  {
+    "file": "SK-void__sd_02.png",
+    "verdict": "RETRY",
+    "section": "console - console-fixture",
+    "failed": ["B1", "C2", "C5"]
+  },
+  {
+    "file": "SK-void__sd_09.png",
+    "verdict": "RETRY",
+    "section": "prose - prose-fixture",
+    "failed": ["C4"]
+  },
+  {
+    "file": "SK-parchment__sd_01.png",
+    "verdict": "PASS",
+    "section": "split - kit",
+    "failed": []
+  },
+  {
+    "file": "SK-parchment__sd_03.png",
+    "verdict": "PASS",
+    "section": "row - row-fixture",
+    "failed": []
+  },
+  {
+    "file": "SK-parchment__sd_06.png",
+    "verdict": "PASS",
+    "section": "steps - steps-fixture",
+    "failed": []
+  },
+  {
+    "file": "SK-parchment__sd_07.png",
+    "verdict": "PASS",
+    "section": "table - table-fixture",
+    "failed": []
+  },
+  {
+    "file": "SK-parchment__sd_08.png",
+    "verdict": "PASS",
+    "section": "figure - figure-fixture",
+    "failed": []
+  },
+  {
+    "file": "SK-parchment__sd_11.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  },
+  {
+    "file": "SK-void__sd_03.png",
+    "verdict": "PASS",
+    "section": "row - row-fixture",
+    "failed": []
+  },
+  {
+    "file": "SK-void__sd_06.png",
+    "verdict": "PASS",
+    "section": "steps - steps-fixture",
+    "failed": []
+  },
+  {
+    "file": "SK-void__sd_07.png",
+    "verdict": "PASS",
+    "section": "table - table-fixture",
+    "failed": []
+  },
+  {
+    "file": "SK-void__sd_08.png",
+    "verdict": "PASS",
+    "section": "figure - figure-fixture",
+    "failed": []
+  },
+  {
+    "file": "SK-void__sd_10.png",
+    "verdict": "PASS",
+    "section": "cells - cells-two",
+    "failed": []
+  },
+  {
+    "file": "SK-void__sd_11.png",
+    "verdict": "PASS",
+    "section": "close - contact",
+    "failed": []
+  }
+]

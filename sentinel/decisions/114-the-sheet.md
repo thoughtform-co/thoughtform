@@ -237,12 +237,63 @@ grading rules override it verbatim.
     (0.58 on the void, 0.64 on parchment, ~5.5:1), the 0.5 rung is 0.54, and
     0.4 is line work only. After the lift `/home-sessions` passes the gate in
     both themes with zero findings and 18 accent marks on the whole page.
-11. **`qa.py` prints the type's name and question off the MANIFEST row**
+11. **The flashcard's head was a `span` holding two `span`s**, so the kicker
+    and the title ran on as one line ("PROPOSALHungry Minds · the proposal")
+    and the kicker's bottom margin broke nothing, because a margin on an
+    inline box is not a line break. The grader saw it first (D5 on every
+    console still); the head is a grid now. **A wave is one CSS state**: the
+    fix meant re-shooting all four directions, not patching one.
+12. **A re-shoot must REPLACE a manifest row, never append it.** The first
+    `flushManifests` appended, so a second run of the same cell would have
+    graded every still twice and captioned each picture twice in the
+    gallery; rows are keyed by file now.
+13. **The grader is told what the frame and the close are.** Wave 01's first
+    read failed the flashcards' gold lip as "a card outline drawn in gold"
+    (it is the proof card's own folder device, ADR-097) and graded the close
+    — the shared footer on its kept-dark plate — as a section (A4, B1, C1,
+    C2, C5). Rubric 0.1.2 excepts the lip beside the console's and excludes
+    the close, as 0.1.1 excluded the HUD frame.
+14. **`qa.py` prints the type's name and question off the MANIFEST row**
     (`meta.type_name`, `meta.question`), which `wave.py` writes for a drawn
     wave and a capture has to write itself — the calibration wave's first dry
     run printed `AC - , answering the question ''`. The capture carries both
     now and the calibration rows were backfilled in place (the stills were
     not re-shot).
+
+## Wave 00, graded
+
+Eighteen stills — the negative pole in both themes and the two fixture panels —
+three runs each, 110 seconds. The pole failed every check it was predicted to
+fail (the centred hero, no page rules, the gutter grid, the scrims, the void
+under the head); the lawful fixture passed clean and the broken one failed
+block A. Of the four checks the pole was predicted to PASS, three failed, and
+that is the calibration: D2 was a wrong prediction (the old title shouts), A6
+failed on the HUD frame's round navigation button (which every still on this
+site carries — the rubric had no sentence saying the frame is not graded), and
+A1 failed on bold mono card titles read as the wrong face. Rubric 0.1.1 fixes
+the two that were the instrument's fault and corrects the anchor row. Two of
+eighteen verdicts were unstable across runs. The full read is the ship's
+`evals/waves/wave-00-calibration.md`; nothing is a decision until the owner has
+ticked a gallery.
+
+## Wave 01, graded
+
+Four directions shot in one pass at one CSS state (the first pass was thrown
+away when the flashcard's head turned out to run its kicker into its title):
+64 stills each at 1920 × 1247 in both themes, one per section, and the house
+direction again at 1280 × 720. The mechanical gate reports zero findings on
+every real page in both themes. Rubric 0.1.2, three runs each: keepable on the
+42 real-page stills — house 21, seams 22, editorial 27, grid 23 — with a third
+of every direction's verdicts unstable across runs on identical pixels, which
+is the rubric's wording and not the page. What the grader fails consistently
+splits two ways. Things the sheet does on purpose and the rubric does not yet
+name (pending 0.1.3): the lit timeline node's gold box, a one-card pile, a
+flashcard's figure with no FIG bar, a console still driven past its own head
+band. And one thing only the owner can settle: on every console still the
+fixed-ratio flashcard does not reach the band's rule, which is the
+instrument-versus-sheet tension his brief set up. Nothing is promoted; the
+galleries at `delivery/review-wave-01-<k>.html` are unread. The ship's
+`evals/waves/wave-01.md` carries every still's verdict.
 
 ## Verification
 
@@ -279,6 +330,12 @@ or grid · axis or rail · whether the Loop console expands its four dossier
 beats into flashcards · the twelve-gold budget · the four session dates and
 each client's `since` year. The losing value of every knob goes with its CSS
 and its guards once he has read both (ADR-070 U35).
+
+Two more, from wave 01's grades: whether the pile's card should be seated on
+a rule of its own (the grader fails B1 on every console still because a
+fixed-ratio card cannot reach the band's rule), and whether the lit timeline
+node keeps its gold box (the rail lights its node with a diamond and ink alone
+and passes the same checks the axis fails).
 
 Also open: the register strips prove the RULED grammar and not the corner law
 — Lighthouse's own first screen carries thirteen rounded corners and

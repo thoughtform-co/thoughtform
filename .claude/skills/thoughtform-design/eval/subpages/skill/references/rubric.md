@@ -4,7 +4,7 @@ Grade every candidate before a human sees it, against the register of its own
 theme. Read each still **as someone who has never seen the brief**, with the
 three reference first screens on the desk beside them.
 
-**Version 0.1, 2026-09-20, uncalibrated. Reporting only.** Written from the
+**Version 0.1.2, 2026-09-20, uncalibrated. Reporting only.** Written from the
 reference decode in `DRIVE.md`, from the house's own laws (DESIGN.md, ADR-065,
 ADR-077, ADR-092) and from the owner's three sentences in `brief/VOCABULARY.md`,
 before any owner verdict exists. Nothing here gates. Every check reports,
@@ -34,6 +34,40 @@ Repair history:
   prediction. The negative anchors below name what today's `/arcs` should fail
   and what it should still pass; a check that does not fail the pole it names
   is rewritten as 0.1.1 before wave 01.
+- **0.1.1, 2026-09-20, after wave 00 (18 stills, 3 runs, 2 unstable).** The
+  pole failed everything it was predicted to fail. Three of the four checks it
+  was predicted to PASS failed too, and only one of those was the rubric's
+  error: **D2** was a wrong prediction (the old hero's display title IS
+  uppercase sans; the anchor row is corrected). **A6** failed on the HUD frame's
+  round navigation button at the bottom-left, which every still on this site
+  carries, so the grading rules now say the frame is never graded and A6 names
+  the button. **A1** failed on the old cards' bold uppercase mono titles read
+  as "a label in the sans face"; its fails-when now names what to look at. No
+  check moved its severity.
+- **0.1.2, 2026-09-20, after the first read of wave 01 (the house direction,
+  64 stills, 28 unstable).** Two more things the instrument was wrong about
+  and one it was right about. **A2** failed every console still on "a card
+  outline drawn in gold": the flashcard's lip is the proof card's own folder
+  device (ADR-097), the one gold outline the house draws on a card, so A2's
+  exception names it beside the console's. **The close** — the last still of
+  every page — is the site's shared footer, judged in its own record
+  (ADR-105) and carrying a kept-dark plate by design; it failed A4, B1, C1, C2
+  and C5 as if it were a section, so the grading rules now exclude it. And the
+  grader was RIGHT about the flashcard's head: the kicker ran into the title on
+  one line, which is a page defect and is fixed in the sheet, not here.
+- **Pending 0.1.3 — written down, not applied, so wave 01's grades stay on
+  the text that produced them.** (1) **A2 / E3 on the timeline:** the lit
+  node's box carries a gold outline BY DESIGN (the one lit thing on the axis,
+  with its filled diamond); A2's prose reads it as a gold box outline and E3
+  as selection by colour alone. Name the lit node's box as the third gold
+  outline the sheet draws. (2) **C2 on a driven console:** a still of a pile
+  driven to its second card has scrolled its own head band out of the frame;
+  C2 passes on it. (3) **C5 / E4 on a flashcard:** the card's figure is not a
+  framed figure and carries no FIG bar; a single card is not a pile. (4)
+  **B1 on the pile:** a fixed-ratio card cannot span to the band's rule, and
+  the grader fails it as unseated on every console still — a real question
+  for the owner (seat the pile's column on a rule, or exempt piles), not a
+  wording fix.
 
 ## Grading rules
 
@@ -57,6 +91,16 @@ The grader reads this section into its prompt verbatim.
   the still at THAT value.
 - **The two fixture stills** (lanes `lawful` and `broken`) are graded on block A
   alone; every other check passes on them.
+- **The HUD frame is never graded.** The two vertical rails with their ticks,
+  the corner readouts, the wordmark at the bottom-left, the round navigation
+  button beside it, the small sun at the bottom-right and the header's row of
+  chapter links are the site's own chrome and the datum every page shares.
+  Nothing in them counts toward any check: not its circle, not its gold, not
+  its type. Grade what sits between the rails.
+- **The close is not graded.** The last still of every page is the site's
+  shared footer — the wordmark, the navigation columns, the contact line on a
+  kept-dark plate — which has its own record and is the same on every page of
+  the site. Every check passes on a still whose section is the close.
 - **Count before you judge.** Most of these checks are arithmetic. Count the
   gold objects. Count the full-length rules. Count the line weights. Count the
   faces. Count the things set bolder than their neighbours.
@@ -104,14 +148,14 @@ What the stranger's read may come back with, recorded rather than enforced in
 
 ## A. The register. Any failure here stops the still.
 
-| ID  | Check                                                                                                                                                                                       | Fails when                                                                                                            | Severity |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------- |
-| A1  | **Two faces, by role.** A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences.                                                    | a sentence is set in the monospace face, a label in the sans face, or a third face appears                            | gate     |
-| A2  | **Gold is wayfinding, and it is counted.** Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most.   | more than twelve gold objects, or a structural rule, seam or box outline is drawn in gold, the console's lip excepted | gate     |
-| A3  | **No hue outside the tiers.** Neutral ground, neutral ink, gold, the provenance green. Photographs are taken into the duotone.                                                              | a third hue, a cool tint, a purple or blue, or a photograph in its own colour                                         | gate     |
-| A4  | **The ground is the theme's.** A void subject is dawn ink on a near-black ground; a parchment subject is dark ink on parchment. Judged from the candidate alone.                            | the ground contradicts the subject named in the caption, or two grounds meet with a hard step                         | gate     |
-| A5  | **Flat material.** One ground, one step for a plate. No gradient as decoration, no bloom, no glow, no drop shadow.                                                                          | a ramp, a halo, a glow or a shadow is doing the work a line should do                                                 | critical |
-| A6  | **The corner law.** Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circles. | any rounded corner, a chamfer on the wrong diagonal, a chamfered child inside a chamfered box, or a circular mark     | gate     |
+| ID  | Check                                                                                                                                                                                                                                                                                       | Fails when                                                                                                                                                                                      | Severity |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| A1  | **Two faces, by role.** A monospace face carries labels, keys, kickers, readouts and captions; a proportional sans face carries titles, ledes and paragraphs. Look at the paragraphs first, then at the small uppercase labels.                                                             | a paragraph or a lede is set in the monospace face, a small uppercase label is set in the proportional face, or a third face (a serif, a display face, a second sans) appears between the rails | gate     |
+| A2  | **Gold is wayfinding, and it is counted.** Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most.                                                                                                   | more than twelve gold objects, or a structural rule, seam or box outline is drawn in gold, the console's lip and the flashcards' lip (the folder device, ADR-097) excepted                      | gate     |
+| A3  | **No hue outside the tiers.** Neutral ground, neutral ink, gold, the provenance green. Photographs are taken into the duotone.                                                                                                                                                              | a third hue, a cool tint, a purple or blue, or a photograph in its own colour                                                                                                                   | gate     |
+| A4  | **The ground is the theme's.** A void subject is dawn ink on a near-black ground; a parchment subject is dark ink on parchment. Judged from the candidate alone.                                                                                                                            | the ground contradicts the subject named in the caption, or two grounds meet with a hard step                                                                                                   | gate     |
+| A5  | **Flat material.** One ground, one step for a plate. No gradient as decoration, no bloom, no glow, no drop shadow.                                                                                                                                                                          | a ramp, a halo, a glow or a shadow is doing the work a line should do                                                                                                                           | critical |
+| A6  | **The corner law.** Zero radius anywhere between the rails. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circles. The frame's round navigation button at the bottom-left is chrome, not a mark. | any rounded corner between the rails, a chamfer on the wrong diagonal, a chamfered child inside a chamfered box, or a circular mark on the page itself                                          | gate     |
 
 ## B. The sheet
 
@@ -230,13 +274,14 @@ it should FAIL and what it should still PASS, and a check that does not fail
 the pole it names is rewritten before wave 01. The two fixture panels from
 `/test/design-eval-fixture` anchor block A the same way.
 
-| Anchor                      | File                               | Should fail        | Should still pass |
-| --------------------------- | ---------------------------------- | ------------------ | ----------------- |
-| the old overview, void      | `negative/AR-void__sa_01.png`      | C1, B1, B2, A5, C6 | A1, A3, A6, D2    |
-| the old overview, parchment | `negative/AR-parchment__sa_01.png` | C1, B1, B2, A5, C6 | A1, A3, A6, D2    |
-| the old client page, void   | `negative/AC-void__sa_01.png`      | B1, B2, C2         | A1, A3, A6, D2    |
-| the lawful fixture panel    | `SK-void__lawful_01.png` (wave 00) | nothing in block A | A1 to A6          |
-| the broken fixture panel    | `SK-void__broken_01.png` (wave 00) | A1, A3, A5, A6     | A4                |
+| Anchor                      | File                               | Should fail            | Should still pass |
+| --------------------------- | ---------------------------------- | ---------------------- | ----------------- |
+| the old overview, void      | `negative/AR-void__sa_01.png`      | C1, B1, B2, A5, C6, D2 | A1, A3, A6        |
+| the old overview, parchment | `negative/AR-parchment__sa_01.png` | C1, B1, B2, A5, C6, D2 | A1, A3, A6        |
+| the old client page, void   | `negative/AC-void__sa_01.png`      | B1, B2, C2, D2         | A1, A3, A6        |
+| the old overview's cards    | `negative/AR-void__sa_03.png`      | B1, B2, C5, D1, D5, E4 | A3, A6            |
+| the lawful fixture panel    | `SK-void__lawful_01.png` (wave 00) | nothing in block A     | A1 to A6          |
+| the broken fixture panel    | `SK-void__broken_01.png` (wave 00) | A1, A3, A5, A6         | A4                |
 
 Positive anchors are equally empty and equally required. The first approvals
 from the owner's own gallery become rows here, with their quotes.

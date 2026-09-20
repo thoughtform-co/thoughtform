@@ -107,6 +107,10 @@ const ACCENT_ALLOW = [
   /\.sh-tl__box/,
   /\.sh-stn\.is-on/,
   /\.sh-cta\b/,
+  // The generative figure's one seated diamond: a rotated square drawn as a
+  // gold border on the mark's ::after. It is the MARK the frame exists to
+  // hold (one per figure, ADR-114 §2 `figure`), not a structural line.
+  /\.sh-fig__mark::after/,
 ];
 
 /**

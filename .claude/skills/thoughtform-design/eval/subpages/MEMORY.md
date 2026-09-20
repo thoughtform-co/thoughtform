@@ -33,7 +33,21 @@ home port extracts the tagged lines first.
 - 2026-09-20 `dark` / `light` as subject keys: config.nouns() scrubs subject keys from every harvest note -> armada.toml
 - 2026-09-20 `best` per slot as a decision: draws are sections of one page and pick.py compares them -> skill/references/generation.md
 
+- 2026-09-20 [breakthrough] wave 00 graded: the rubric fails the negative pole on every check it named; the three wrong pass-predictions were the frame's round button (A6), bold mono card titles read as the wrong face (A1) and a title that really shouts (D2); rubric 0.1.1 excludes the frame and rewrites A1 -> evals/waves/wave-00-calibration.md
+- 2026-09-20 the mechanical gate found the sheet's first defect before any grade: dim text at 0.4 alpha painted 3.19:1; dim text sits on a 0.58 rung now -> skill/references/eval-log.md
+
+- 2026-09-20 wave 01 graded on 0.1.2: keepable on the real pages SB 21 / SC 22 / SD 27 / SE 23 of 42; a third of every direction's verdicts unstable on identical pixels, which is the rubric's wording -> evals/waves/wave-01.md
+- 2026-09-20 the flashcard's head ran the kicker into the title; fixed in the sheet and the whole wave re-shot, because a wave is one CSS state -> evals/waves/wave-01.md
+- 2026-09-20 the grader is told what it may not grade: the HUD frame (0.1.1), the close and the folder lip (0.1.2) -> skill/references/rubric.md
+
+## Ruled out
+
+- 2026-09-20 grading the laptop folder before a first handback: 64 more unstable verdicts on an unticked rubric -> evals/waves/wave-01.md
+- 2026-09-20 fixing B1 on the pile before the owner has seen it: the instrument-versus-sheet tension is the brief's own -> evals/waves/wave-01.md
+
 ## Open
 
-- 2026-09-20 wave 00 has not run: whether rubric 0.1 fails the negative pole on the checks it names is unknown until it does -> skill/references/eval-log.md
+- 2026-09-20 the two unstable wave-00 verdicts (AC-parchment 02, AR-parchment 04) are the first thing to re-read once the owner has ticked anything -> evals/waves/wave-00-calibration.md
+- 2026-09-20 pending 0.1.3 (the lit node's box, a one-card pile, a flashcard's figure, a driven console) is written in the rubric's repair history and not applied until the ticks are in -> skill/references/rubric.md
+- 2026-09-20 the owner's rulings: head, ordinal, rules, card, timeline; plus whether the pile's card is seated on a rule and whether the lit node keeps its gold box -> brief/BRIEF.md
 - 2026-09-20 the five rulings for the owner after wave 01: head, ordinal, rules, card, timeline -> brief/BRIEF.md
