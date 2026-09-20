@@ -3020,7 +3020,16 @@
   .services-stage[data-card-ring-mobile="on"] .svc-ring-band {
     position: sticky;
     top: 0;
-    height: 100svh;
+    /* ⚠ THE PINNED BAND IS THE DYNAMIC VIEWPORT (ADR-115 U1, owner's device
+       read): its rows are seated against the HUD's chrome, and the chrome is
+       `position: fixed` — laid out against the viewport Safari's toolbars
+       leave, which is 100dvh, not 100svh. At 100svh the band ended ~100px
+       above the settings row once the bars had collapsed and the reader saw
+       the composition "move up" with a hole under it. The RUNWAY above stays
+       in svh (a scroll distance never moves), so the pinned travel is
+       `330svh − 100dvh` and the hook MEASURES it (`runway − band`) instead of
+       assuming `runway − svh`. The units ratchet names this declaration. */
+    height: 100dvh;
     /* The band never captures the page's scroll — the ring is looked at,
        not dragged. Only the hit targets inside it take pointer events. */
     pointer-events: none;

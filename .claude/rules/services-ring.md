@@ -563,6 +563,15 @@ RING_CONTENT_LIFT)`, `rotation.y = π`, FrontSide, renderOrder 0.115, its
   itself is not, and the side-tap tween's beats rest far outside any proximity
   radius of `#about`'s stop (`mobile-section-seams.spec.ts`, `probe-mobile-
 lockin.mjs`). Rules in `mobile-sections.md` §10.
+- ⚠ **THE PHONE CARD IS 0.8 OF THE FRAME, MAY OVERLAP THE BAND'S TEXTS, AND
+  BAKES AT 0.75 (ADR-115 U1, owner: the card's copy "barely legible").**
+  `RING_MOBILE_FRONT_VW` 0.8 · `RING_MOBILE_FRONT_MAX_PX` 330 ·
+  `RING_MOBILE_SEAT_FILL` **1.25** (an eighth of the seat over the title and
+  the paragraph each side — his allowance; the row gaps absorb most of it)
+  · `BAKE_SCALE_MOBILE` 0.75. At 390 the front card is 312 css px (was 209),
+  its lede 13 css px (was 8.7). The about band's DOM slot mirrors the width
+  law at fill 1.0. ⚠ **AND THE BAND IS `100dvh`**, the runway `330svh`, the
+  hook measuring `runway − band` — see `mobile-sections.md` §11.
 - ⚠ **THE BAND'S EXIT IS THE DECK'S STACK, AND THE DECK FLIPS ON THE ABOUT
   BAND (ADR-115, 2026-09-20, owner: _"the cards should then stack on top of
   each other, rotate them as we have on desktop, and then reveal my profile

@@ -13,6 +13,12 @@ import { blocks, stripComments } from "./helpers/cssBlocks";
  * one day, ADR-082 U26 → ADR-113). mobile-sections.md §8 states the law:
  * content stays in svh; a BACKDROP takes `100dvh; min-height: 100lvh`; the
  * fixed chrome is pinned to the real floor.
+ * ⚠ ONE CLASS OF CONTENT BOX IS THE EXCEPTION (ADR-115 U1): a PINNED band —
+ * sticky, one frame tall, its rows seated against the fixed chrome — takes
+ * 100dvh, because the chrome it meets is laid out in that viewport and a
+ * band ending 100px above the settings row is the hole the owner saw next.
+ * Its runway, its station and its weld stay in svh; a sticky box's height
+ * does not reflow the document.
  *
  * ⚠ CHROMIUM CANNOT SEE ANY OF THIS — every Playwright project resolves the
  * three units to one number, so the phone probes measure the same box before
@@ -92,6 +98,26 @@ const ALLOW: Allow[] = [
     path: /\.home-v2-stage__canvas/,
     why: "the corridor's docked canvas is a BACKDROP: 100dvh with a 100lvh floor, nothing laid out inside it (ADR-082 U26)",
   },
+  /* ADR-115 U1 — THE PINNED BANDS. A sticky band whose rows are seated
+     against the fixed chrome must be the viewport that chrome is laid out
+     in, which is the dynamic one: at 100svh the services band ended ~100px
+     above the settings row once Safari's bars had collapsed, and the owner
+     read the composition as "moving up" with a hole under it. The band is
+     the ONE content box that may be dvh; its runway, its station and its
+     weld stay in svh (an in-flow dvh box reflows the document on every bar
+     transition), the writers MEASURE the pinned travel off the band, and
+     the about band's two snap targets are written in the same dvh so they
+     agree with that measured travel in either bar state. */
+  {
+    sheet: "components/landing/home-v2/services/services.css",
+    path: /\.svc-ring-band$/,
+    why: "the pinned services band ends where the fixed chrome ends (ADR-115 U1); its runway stays 330svh and the hook measures runway − band",
+  },
+  {
+    sheet: "components/landing/home-v2/about/about-band.css",
+    path: /\.voidwalker$|\.voidwalker__snap(-in)?$/,
+    why: "the pinned about band and its two snap targets share the dynamic viewport (ADR-115 U1); the station and the weld stay in svh, the writer measures station − band",
+  },
 ];
 
 /** Today's counts. Lower a pin when a term goes; raising one is an ADR line. */
@@ -103,14 +129,14 @@ const PINS: Record<(typeof SHEETS)[number], number> = {
   "components/landing/v7/rail-instruments/rail-instruments.css": 3,
   "components/landing/v7/site-footer/site-footer.css": 0,
   "components/landing/home-v2/home-v2.css": 2,
-  "components/landing/home-v2/services/services.css": 0,
+  "components/landing/home-v2/services/services.css": 1,
   "components/landing/home-v2/services/proof-stack/proof-stack.css": 0,
   "components/sheet/sheet.css": 0,
   "components/landing/home-v2/services/casefile/casefile.css": 0,
   "components/landing/home-v2/services/casefile/console/console.css": 0,
   "components/landing/home-v2/services/casefile/map/pda/pda.css": 0,
   "components/landing/home-v2/about/about-stage.css": 0,
-  "components/landing/home-v2/about/about-band.css": 0,
+  "components/landing/home-v2/about/about-band.css": 4,
   "components/landing/home-v2/voidwalker/voidwalker.css": 0,
   "components/landing/home-v2/voidwalker/voidwalker-wire.css": 0,
   "components/landing/home-v2/voidwalker/voidwalker-travel.css": 0,

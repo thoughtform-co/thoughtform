@@ -126,6 +126,16 @@ performant route.
 - **Deferred:** the device read (the gate); `scroll-snap-stop: always` on the
   reading target if WebKit flings past it; the pacing dials (62svh exit,
   240svh runway); ADR-112's 342 kB of phone portraits.
+- **U1, the same evening, from his first device read** (the section "moves up
+  and leaves so much white space at the bottom"; the card's copy "barely
+  legible"): in Safari the collapsed bars grow the frame ~100px and the fixed
+  chrome follows while a `100svh` band does not. The two pinned bands are
+  `100dvh` now (the one content box allowed in that unit — the runway, the
+  station and the weld stay in `svh`; the writers measure the pinned travel;
+  the about band's snap targets follow in dvh), the card is 0.8 of the frame
+  at seat fill 1.25 and bakes at 0.75. `phone-viewport-units` pins the two
+  sheets at 1 and 4; the gate test's two bake pins retuned. Second device
+  read pending.
 
 ### 2026-09-20 — The phone locks in: snap seats, one viewport clock, constant reserves (ADR-113)
 

@@ -146,7 +146,9 @@ export function useAboutBandScroll(active: boolean): void {
       if (disposed) return;
       const vh = layoutViewportHeight();
       const r = about.getBoundingClientRect();
-      const p = aboutBandProgress(r.top, r.height, vh);
+      /* ADR-115 U1: the band is 100dvh and the station 240svh, so the pinned
+         travel is `station − band`, measured — the band's box is what pins. */
+      const p = aboutBandProgress(r.top, r.height, band.getBoundingClientRect().height);
       aboutStageProgressRef.current.progress = p;
       aboutStageProgressRef.current.engaged = true;
 

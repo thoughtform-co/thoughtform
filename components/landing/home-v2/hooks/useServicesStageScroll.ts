@@ -249,6 +249,7 @@ export function useServicesStageScroll(
     let currentProofLive: boolean | null = null;
     let currentProofSettled: boolean | null = null;
     // ADR-108: the phone ring's seat band, cached like the runway itself.
+    let ringStickyEl: HTMLElement | null = null;
     let ringBandEl: HTMLElement | null = null;
     let ringSeatEl: HTMLElement | null = null;
 
@@ -516,9 +517,22 @@ export function useServicesStageScroll(
           ringBandEl = stage.querySelector<HTMLElement>(".svc-ring-runway");
         }
         if (ringBandEl) {
-          const vh = layoutViewportHeight();
           const band = ringBandEl.getBoundingClientRect();
-          const bandTravel = Math.max(1, band.height - vh);
+          /* ADR-115 U1: the sticky band is 100dvh (it must end where the
+             fixed chrome ends), the runway 330svh — so the pinned travel is
+             `runway − band`, MEASURED off the band's own box rather than
+             assumed off the layout viewport, and it shrinks by the toolbar's
+             height while the bars are collapsed. The clock stays exact in
+             both bar states; what a bar transition does is advance or rewind
+             it a few percent IN THE READER'S DIRECTION (bars collapse on a
+             downward scroll, expand on an upward one). */
+          if (!ringStickyEl || !ringStickyEl.isConnected) {
+            ringStickyEl = ringBandEl.querySelector<HTMLElement>(".svc-ring-band");
+          }
+          const bandH = ringStickyEl
+            ? ringStickyEl.getBoundingClientRect().height
+            : layoutViewportHeight();
+          const bandTravel = Math.max(1, band.height - bandH);
           /* ADR-115: with the phone deck on, the leave is the EXIT BEAT — the
              clock runs on into it, `--svc-exit` goes live below (the
              masthead un-types on it, the ring stacks on it) and `hold` stays

@@ -1,7 +1,9 @@
 # ADR-115 — The phone's deck flip: the copy un-types, the cards stack, the deck becomes the portrait, and `#about` is a band
 
 - **Status:** Proposed (2026-09-20) — shipped behind `SERVICES_ABOUT_DECK_MOBILE`
-  and guarded; the device read is the gate (§Device checklist). Chromium proves
+  and guarded; deployed; **U1 (same day) answers the first device read** —
+  the pinned bands take the dynamic viewport and the card grows; the second
+  device read is the gate (§Device checklist). Chromium proves
   the clocks, the stamps, the weld, the handover's pixels and the frame deltas;
   it cannot say what a phone's GPU makes of a fifth back plane.
 - **Surface:** the landing on the ring rung (`SERVICES_RING_MOBILE_MEDIA`) —
@@ -399,6 +401,113 @@ His phone, both toolbar states, dark and light, one still per fail:
    lag, one picture at the seam), the eras snap in.
 5. Frame feel and thermal over the exit + flip, twice through. Any fail ⇒
    ship with `SERVICES_ABOUT_DECK_MOBILE = false` and nothing else moves.
+
+## Update 1 (2026-09-20, owner) — the pinned bands take the dynamic viewport; the card grows
+
+The device read, an hour after the deploy, three stills from Safari:
+
+> when you scroll into, for example, the services section and scroll further,
+> the action we have there is that you rotate the cards. At the same time,
+> the entire section also moves up a bit. I think there are different scroll
+> movements competing with each other so harmonize that … The same applies
+> to the next section. It's really annoying because it moves all the elements
+> up and leaves so much white space at the bottom … I also feel that in the
+> services section, the text on the cards is too small. Maybe we can move the
+> bottom paragraph a bit down, or … increase the size of the cards. I don't
+> mind if they may overlap a bit behind the text, but right now the text is
+> barely legible … the hero, the paragraph, and the cards are all nicely
+> positioned. When I scroll, however, you just see that it all moves up.
+> Really, let's fix this once and for all because it's annoying
+
+**What the stills show.** In "services (good)" Safari's toolbars are
+expanded; the band fills the frame and the paragraph sits just above the
+settings row. In "services (bad)" and "About (bad)" the bars have collapsed
+(the minimal URL bar, no bottom bar): the visible frame is ~100 css px
+taller, the fixed chrome has followed it down to the real floor, and the
+band — `100svh`, one small-viewport tall — ends where it did, so the
+composition sits high with a hole under it. Nothing moved up; the frame grew
+down and the band did not. The "competing movements" are two boxes sized
+against two viewports: the chrome against the dynamic one (`position:
+fixed`), the band against the small one.
+
+### The decision
+
+- **A pinned band is the ONE content box sized in `dvh`.** `.svc-ring-band`
+  and `#about > .voidwalker` are `height: 100dvh`: they end where the fixed
+  chrome ends in either bar state, so the paragraph and the chevron seat
+  against the settings row as in the still he named good, and a bar
+  transition moves the band's floor and the chrome's floor TOGETHER — one
+  motion, not two.
+- **The runway, the station and the weld stay in `svh`.** A scroll distance
+  never moves, and an in-flow box in `dvh` would reflow everything below it
+  on every bar transition (a reader in the eras scrolling up would watch the
+  page jump ~100px as the bars re-expand). A sticky box's height changes
+  nothing in flow.
+- **The clocks MEASURE the pinned travel** (`runway − band`, `station −
+band`) instead of assuming `runway − svh`. The travel is ~100px shorter
+  while the bars are collapsed, and a bar transition advances or rewinds the
+  clock a few percent — in the reader's own direction (the bars collapse on a
+  downward scroll and expand on an upward one), so it reads as a slightly
+  faster scrub, never a jump against the motion. The about band's two snap
+  targets are written in the same `dvh` so they agree with the measured
+  travel in either state.
+- **The weld is loose by the bar height while the bars are collapsed**: the
+  services band releases at `330svh − 100dvh`, the about station starts at
+  `330svh − 100svh`. In between the un-typed band scrolls away under the
+  stacked deck, which is on its frozen seat; nothing moves but the bed. The
+  alternative (`margin-top: -100dvh`) is the in-flow reflow above.
+- **The three options, costed**, because the choice is not free:
+  1. dvh band, svh station, measured travel (taken): a few percent of clock
+     drift with the bars, in the scroll's direction; the weld ~100px loose
+     when collapsed; the document never reflows.
+  2. dvh band, constant travel from svh: the band unpins ~9 % before p = 1
+     when collapsed, so the handover never fires and the WebGL deck rides an
+     unpinned band — exactly the lag §4 exists to prevent. Rejected.
+  3. station `140svh + 100dvh` (constant travel): the document below reflows
+     by the bar height on every transition — ADR-113's "settling", one
+     station down. Rejected.
+- **The card grows** (`ringMath`): `RING_MOBILE_FRONT_VW` 0.66 → **0.8**,
+  `RING_MOBILE_FRONT_MAX_PX` 260 → **330**, `RING_MOBILE_SEAT_FILL` 0.82 →
+  **1.25** — the card may overlap the band's title and paragraph by an eighth
+  of the seat each side (his own allowance); the band's row gaps absorb most
+  of it and the card's edges there are chrome and its dark foot, not copy.
+  At 390 wide the front card is **312 css px** where it was 209, its baked
+  lede **13 css px** where it was 8.7. The about band's DOM slot takes the
+  same width law at fill 1.0 (there the name and the paragraph are the
+  reading matter), and the deck's flight lands on it as before.
+- **The phone face bakes at 0.75** (`BAKE_SCALE_MOBILE`, was 0.5), the
+  back's own ratio since ADR-110: a 420px raster magnified 2.2× on a DPR 3
+  screen was the blur half of "barely legible". Four faces ≈ 13.7 MB with
+  mips (was ≈ 6).
+
+### What this reverses, and what it does not
+
+ADR-113 retired the live `dvh` term inside the era stage because a box that
+changes height during the bar animation reflows the page under the reader.
+That law stands for in-flow boxes; it never covered a STICKY band, whose
+height changes nothing outside itself. `phone-viewport-units` names the two
+bands as the one content exception and pins their counts (1 and 4). The era
+stage (`.vwd`, one `100svh` screen in flow, a snap stop) is untouched: below
+it the next station shows, not a hole, and it was not in the read.
+
+### Measured (Chromium, where dvh = svh)
+
+Byte-identical clocks and stamps to the tables above; the front card at
+390×844 is width-bound at 312 css px on the reading frame. The dynamic-
+viewport half is provable only on the device — Chromium resolves both units
+to one number — which is what the second device read is for.
+Probe at 390×844 dark after U1: the about slot 271 × 439 (was 222 × 360),
+the handover mean |Δ| 4.31/255 with 2.44 % of samples over 40 (the bigger
+twin, the same picture), the chevron 439 → 235 → 439, frames p50 4.3ms · p95
+15.6ms · max 18.2ms — unchanged by the larger bake.
+
+### Left open after U1
+
+- The lede's own size on the phone bake (`TIGHT_LEDE_PX` 35 in the 840
+  space): if 13 css px is still small on the device, the next lever is a
+  phone-specific lede rung inside the bake, not a bigger card.
+- The clock drift with the bars is arithmetic (~9 % of the travel at the
+  collapsed extreme); if he feels it, the runway is the dial that dilutes it.
 
 ## Left open
 

@@ -1080,8 +1080,12 @@ export const RING_MOBILE_LEAVE_START = 0.73;
 /** The front card's target width on a phone, as a share of the viewport
  *  width, and its cap — viewport-first (`seatWorldHeight`), never a world
  *  constant, so a 360 and a 430 wide phone both seat the card. */
-export const RING_MOBILE_FRONT_VW = 0.66;
-export const RING_MOBILE_FRONT_MAX_PX = 260;
+/* ADR-115 U1 (owner's device read: the card's copy "barely legible"): 0.66 →
+ *  0.8 of the width and 260 → 330 of cap, with `RING_MOBILE_SEAT_FILL` below
+ *  letting the card overlap the band's two texts. At 390 the front card is
+ *  312 wide where it was 209 (its lede 13 css px where it was 8.7). */
+export const RING_MOBILE_FRONT_VW = 0.8;
+export const RING_MOBILE_FRONT_MAX_PX = 330;
 /** Orbit radius multiplier for the phone's ring — the desktop radius puts
  *  the side cards' centres ~1.1 card-heights off axis, which on a 390px
  *  frame is off screen; 0.7 keeps their leading edges in the frame. */
@@ -1122,7 +1126,13 @@ export function ringMobileClock(p: number, deck = false): RingMobileClock {
  *  its paragraph) the front card's height may take (ADR-109). The width law
  *  above still caps it; whichever is tighter wins, so a tall phone is
  *  width-bound at 257–260px and a short one height-bound. */
-export const RING_MOBILE_SEAT_FILL = 0.82;
+export const RING_MOBILE_SEAT_FILL = 1.25;
+/* ⚠ ABOVE 1 SINCE ADR-115 U1 — the card OVERLAPS the band's title and
+ *  paragraph by an eighth of the seat each side (owner: "I don't mind if they
+ *  may overlap a bit behind the text"); the band's row gaps absorb most of
+ *  it, and the card's top and bottom edges are its chamfer chrome and its
+ *  dark foot, not copy. The width law still caps: at 390 wide the card is
+ *  width-bound at 312 once the seat clears ~404px. */
 /** How far the SIDE cards recede while a card is open on the phone (their
  *  opacity is multiplied by `1 − DIM × flipT`); the open card is untouched. */
 export const RING_MOBILE_OPEN_SIDE_DIM = 0.6;

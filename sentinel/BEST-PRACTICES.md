@@ -1494,6 +1494,21 @@ the same LUT), the object is ONE object at the handover (a stacked deck
 squares up first), and the texture filters like the twin (no mips against a
 browser downsample). Then nothing fades while looked at.
 
+## A pinned band and the fixed chrome share one viewport (ADR-115 U1)
+
+On iOS the toolbars collapse on the first scroll and the frame grows ~100px;
+`position: fixed` chrome is laid out in that dynamic viewport and follows it
+to the real floor, while a `100svh` box stays the size it was. A sticky band
+whose rows seat against that chrome is therefore sized in `dvh` — the one
+content box that may be — and everything in FLOW around it stays in `svh`,
+because an in-flow `dvh` box reflows the document on every bar transition
+(the "settling" ADR-113 removed). The scroll writer then MEASURES the pinned
+travel off the band's own box rather than assuming `runway − svh`, and any
+snap target inside the runway is written in the band's unit so it agrees with
+that travel in either bar state. Chromium resolves every viewport unit to one
+number, so only the device can show the difference; a "the section moves up
+and leaves white space at the bottom" read is this, not a layout bug.
+
 ## An aligned snap position beats coverage inside its radius (ADR-115)
 
 Blink, measured: an aligned snap position attracts every stop within ~280px

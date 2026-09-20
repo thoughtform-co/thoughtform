@@ -2,7 +2,12 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { SERVICES } from "../../components/landing/home-v2/services/serviceData";
 import { ringMobileBandFraction } from "../../lib/services-ring/beatScrollTarget";
-import { RING_MOBILE_LEAVE_START, RING_MOBILE_SEAT_FILL } from "../../lib/services-ring/ringMath";
+import {
+  RING_MOBILE_FRONT_MAX_PX,
+  RING_MOBILE_FRONT_VW,
+  RING_MOBILE_LEAVE_START,
+  RING_MOBILE_SEAT_FILL,
+} from "../../lib/services-ring/ringMath";
 
 /** Each card's beat, as a fraction of the band's own scroll — the clock's
  *  inverse, never a literal: ADR-115 moved the leave and a fixed 0.4 landed
@@ -378,7 +383,11 @@ test.describe("the ring on phones (ADR-108)", () => {
       // ADR-109: the seat bounds it too — the card's height may take
       // `RING_MOBILE_SEAT_FILL` of the free band between the two texts.
       expect(s.seat, "no seat row in the band").toBeTruthy();
-      const ask = Math.min(260, s.vw * 0.66, s.seat!.h * RING_MOBILE_SEAT_FILL * (420 / 680));
+      const ask = Math.min(
+        RING_MOBILE_FRONT_MAX_PX,
+        s.vw * RING_MOBILE_FRONT_VW,
+        s.seat!.h * RING_MOBILE_SEAT_FILL * (420 / 680)
+      );
       expect(front!.w).toBeGreaterThan(ask * 0.85);
       expect(front!.w).toBeLessThan(ask * 1.15);
       // The projected rect carries the front pose's tilt; 6 % is that.
@@ -401,8 +410,14 @@ test.describe("the ring on phones (ADR-108)", () => {
       expect(s.title, "the masthead's title is not in the band").toBeTruthy();
       expect(s.intro, "the masthead's paragraph is not in the band").toBeTruthy();
       expect(s.title!.y).toBeGreaterThanOrEqual(56);
-      expect(s.title!.y + s.title!.h).toBeLessThanOrEqual(front!.y + 1);
-      expect(front!.y + front!.h).toBeLessThanOrEqual(s.intro!.y + 1);
+      /* ADR-115 U1: the card may OVERLAP each text by up to half of what
+         `RING_MOBILE_SEAT_FILL` adds beyond the seat (owner: "I don't mind
+         if they may overlap a bit behind the text") — the same allowance
+         the law makes, so the guard cannot drift from it. At fill 1 this is
+         the ADR-109 "between the two texts" bound to the pixel. */
+      const over = (s.seat!.h * Math.max(0, RING_MOBILE_SEAT_FILL - 1)) / 2 + 1;
+      expect(s.title!.y + s.title!.h).toBeLessThanOrEqual(front!.y + over);
+      expect(front!.y + front!.h).toBeLessThanOrEqual(s.intro!.y + over);
       expect(s.intro!.y + s.intro!.h).toBeLessThanOrEqual(s.vh - 56 + 1);
       expect(s.introText.length).toBeGreaterThan(80);
       // The seat is the band between the two texts, and the card sits on it.

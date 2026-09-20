@@ -73,9 +73,11 @@ export const ABOUT_BAND_SLOT_MIN_PX = 140;
 export const MOBILE_UNTYPE_WINDOW: readonly [number, number] = [0, 0.7];
 
 /** The band's progress from its station's rect: 0 as it pins, 1 as it
- *  releases (`useAboutStageScroll`'s own expression, on the layout viewport). */
-export function aboutBandProgress(top: number, height: number, vh: number): number {
-  const travel = height - vh;
+ *  releases. `bandH` is the sticky band's OWN height (ADR-115 U1: the band is
+ *  100dvh and the station is in svh, so the travel is the difference, and
+ *  only the band's measured box knows it in both of Safari's bar states). */
+export function aboutBandProgress(top: number, height: number, bandH: number): number {
+  const travel = height - bandH;
   const p = travel > 0 ? clamp01(-top / travel) : 0;
   // `-top / travel` at the pin is `-0` (ADR-102's fourth trap): a stamp
   // prints it as "-0.00" and a harness converging on 0 never lands.

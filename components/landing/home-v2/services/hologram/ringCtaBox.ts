@@ -25,7 +25,12 @@ export const BAKE_H = 1360;
  * construction; the bake draws in bake px under `ctx.scale(s, s)`, so every
  * drawing coordinate stays in the 840×1360 space this file describes.
  */
-export const BAKE_SCALE_MOBILE = 0.5;
+/* ⚠ 0.5 → 0.75 WITH ADR-115 U1: the phone card grew to 0.8 of the frame
+ *  (312 css px at 390) and its lede is the thing the owner could not read;
+ *  the back already bakes at 0.75 for the same reason (below), and a face
+ *  magnified 2.2× on a DPR 3 screen was the blur half of "barely legible".
+ *  Four faces at 630×1020 ≈ 10.3 MB flat, ≈ 13.7 MB with mips (was ≈ 6). */
+export const BAKE_SCALE_MOBILE = 0.75;
 /**
  * The phone card's BACK face bakes at 0.75 (ADR-110): a spec sheet on a
  * 257 css px card at DPR 3 is 771 device px wide, and the front's 0.5

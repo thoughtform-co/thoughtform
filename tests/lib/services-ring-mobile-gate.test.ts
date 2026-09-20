@@ -33,6 +33,7 @@ import {
   RING_EXIT_START,
   RING_MOBILE_ARRIVE,
   RING_MOBILE_FRONT_MAX_PX,
+  RING_MOBILE_FRONT_VW,
   RING_MOBILE_LEAVE_START,
   RING_MOBILE_RUNWAY_SVH,
   RING_FLIP_BACK_PUBLISH,
@@ -93,10 +94,14 @@ describe("the phone ring's gate", () => {
 });
 
 describe("the phone bake", () => {
-  it("is half the desktop face, on the card's exact aspect", () => {
+  it("is three quarters of the desktop face, on the card's exact aspect (ADR-115 U1)", () => {
+    // 0.5 → 0.75 with the bigger phone card: its lede is the thing the
+    // owner could not read, and a 420px raster magnified 2.2× on a DPR 3
+    // screen was the blur half of that.
     const { w, h } = bakeSize(BAKE_SCALE_MOBILE);
-    expect(w).toBe(420);
-    expect(h).toBe(680);
+    expect(BAKE_SCALE_MOBILE).toBe(0.75);
+    expect(w).toBe(630);
+    expect(h).toBe(1020);
     expect(w / h).toBeCloseTo(BAKE_W / BAKE_H, 6);
     expect(bakeSize(1)).toEqual({ w: BAKE_W, h: BAKE_H });
   });
@@ -210,8 +215,8 @@ describe("the phone ring's clock", () => {
   });
 
   it("seats the front card by the viewport's width, capped", () => {
-    expect(ringMobileFrontWidthPx(390)).toBeCloseTo(390 * 0.66, 6);
-    expect(ringMobileFrontWidthPx(360)).toBeCloseTo(360 * 0.66, 6);
+    expect(ringMobileFrontWidthPx(390)).toBeCloseTo(390 * RING_MOBILE_FRONT_VW, 6);
+    expect(ringMobileFrontWidthPx(360)).toBeCloseTo(360 * RING_MOBILE_FRONT_VW, 6);
     expect(ringMobileFrontWidthPx(430)).toBe(RING_MOBILE_FRONT_MAX_PX);
     expect(ringMobileFrontWidthPx(960)).toBe(RING_MOBILE_FRONT_MAX_PX);
   });
@@ -237,7 +242,7 @@ describe("the seat (ADR-109)", () => {
   it("bounds the front card's HEIGHT to the seat's fill share, aspect kept", () => {
     // 390×844: the seat is ~538 tall → 0.82·538 = 441 of height → 272 of
     // width, so the card stays width-bound at 257.4 (ADR-108's number).
-    expect(ringMobileFrontWidthPx(390, 538)).toBeCloseTo(390 * 0.66, 6);
+    expect(ringMobileFrontWidthPx(390, 538)).toBeCloseTo(390 * RING_MOBILE_FRONT_VW, 6);
     // A 700h phone: ~393 of seat → height-bound at 0.82·393·(420/680).
     const short = ringMobileFrontWidthPx(390, 393);
     expect(short).toBeCloseTo(393 * RING_MOBILE_SEAT_FILL * RING_CARD_ASPECT, 6);
@@ -294,8 +299,10 @@ describe("the seat (ADR-109)", () => {
  * texture exists.
  */
 describe("the card turns over (ADR-110)", () => {
-  it("bakes the back at a crisper ratio than the front, on the same aspect", () => {
-    expect(BAKE_SCALE_MOBILE_BACK).toBeGreaterThan(BAKE_SCALE_MOBILE);
+  it("bakes the back no softer than the front, on the same aspect", () => {
+    // ADR-110 baked the back CRISPER than a 0.5 front; ADR-115 U1 brought
+    // the front up to meet it, so the invariant is "never softer".
+    expect(BAKE_SCALE_MOBILE_BACK).toBeGreaterThanOrEqual(BAKE_SCALE_MOBILE);
     expect(BAKE_SCALE_MOBILE_BACK).toBeLessThanOrEqual(1);
     const { w, h } = bakeSize(BAKE_SCALE_MOBILE_BACK);
     expect(w).toBe(630);

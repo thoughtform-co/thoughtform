@@ -33,7 +33,7 @@
    ⚠ THE SNAP SEATS (ADR-113 §10 made every station a stop; this station
    drops its own align and carries two absolute, non-sticky targets):
    · `.voidwalker__snap-in`, `end`-aligned, its bottom at the FLIP'S END
-     (`100svh + COVER × travel` tall from the station's top);
+     (`100dvh + COVER × travel` tall from the station's top);
    · `.voidwalker__snap`, `start`-aligned, one screen, at READ.
    MEASURED IN BLINK (scripts/probe-mobile-deck.mjs and a scratch walk of
    six designs, 2026-09-20): an ALIGNED position attracts every stop within
@@ -122,7 +122,15 @@
     top: 0;
     z-index: 1;
     box-sizing: border-box;
-    height: 100svh;
+    /* ⚠ THE DYNAMIC VIEWPORT, like the services band (ADR-115 U1): the
+       chevron and the paragraph seat against the fixed chrome's floor, which
+       Safari's collapsed toolbar moves ~100px down; at 100svh the band left
+       that much hole under the chevron. The STATION stays `240svh` and the
+       weld `-100svh` — an in-flow box in dvh would reflow everything below it
+       on every bar transition. The writer measures the pinned travel
+       (`station − band`); the two snap targets are written in the same dvh
+       so they agree with it in either bar state. */
+    height: 100dvh;
     margin: 0;
     max-width: none;
     display: grid;
@@ -176,7 +184,11 @@
     position: relative;
     inset: auto;
     margin: 0;
-    width: min(260px, 66vw, calc(82cqh * 420 / 680));
+    /* The ring's own phone size law in CSS (`RING_MOBILE_FRONT_MAX_PX`,
+       `RING_MOBILE_FRONT_VW`) — fill 100 % of this seat, where the ring's
+       card may take `RING_MOBILE_SEAT_FILL` and overlap its two texts;
+       here the name and the paragraph are the reading matter. */
+    width: min(330px, 80vw, calc(100cqh * 420 / 680));
     height: auto;
     aspect-ratio: 420 / 680;
     overflow: hidden;
@@ -354,13 +366,13 @@
      pulled the flip back.) */
   #about[data-about-band="on"] .voidwalker__snap-in {
     top: 0;
-    height: calc(100svh + var(--about-band-cover) * (var(--about-band-runway) - 100svh));
+    height: calc(100dvh + var(--about-band-cover) * (var(--about-band-runway) - 100dvh));
     scroll-snap-align: end;
   }
   /* The reading seat. */
   #about[data-about-band="on"] .voidwalker__snap {
-    top: calc(var(--about-band-read) * (var(--about-band-runway) - 100svh));
-    height: 100svh;
+    top: calc(var(--about-band-read) * (var(--about-band-runway) - 100dvh));
+    height: 100dvh;
     scroll-snap-align: start;
   }
 }

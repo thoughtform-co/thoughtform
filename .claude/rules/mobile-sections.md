@@ -487,6 +487,17 @@ image of the same bake before the band unpins. Behind
   the top of the screen. From exit 1 the last live seat is HELD and the flip's
   own `posBlend` glide carries the pivot onto the about band's slot — one
   motion owner, the desktop's.
+- ⚠ **THE PINNED BANDS ARE `100dvh` (ADR-115 U1, owner's device read: the
+  section "moves up and leaves so much white space at the bottom").** Their
+  rows seat against the fixed chrome, and the chrome is laid out in the
+  dynamic viewport, so a `100svh` band ended ~100px above the settings row
+  once Safari's bars had collapsed. The runway, the station and the weld
+  stay in `svh` (an in-flow `dvh` box reflows the document on every bar
+  transition — §8's law, which was always about in-flow boxes); the writers
+  MEASURE the pinned travel (`runway − band`, `station − band`) and the about
+  band's two snap targets are written in `dvh` to match. The weld is loose by
+  the bar height while the bars are collapsed, by choice (the costed
+  alternatives are in the ADR). `phone-viewport-units` names the two bands.
 - **The about band is §7's shape one station down**: the STATION is the runway
   (`--about-band-runway` 240svh), `.voidwalker` the sticky 100svh band on the
   services band's own chrome padding, the seat row a SIZE container whose
