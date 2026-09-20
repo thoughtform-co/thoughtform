@@ -294,6 +294,35 @@ instrument-versus-sheet tension his brief set up. Nothing is promoted; the
 galleries at `delivery/review-wave-01-<k>.html` are unread. The ship's
 `evals/waves/wave-01.md` carries every still's verdict.
 
+## Wave 02, graded — the ruling cost the page its terminations
+
+The three directions that survived U1, re-shot at the new CSS state: 64 stills
+each at 1920 × 1247 in both themes, one per section, plus the house direction
+again at 1280 × 720. The mechanical gate is clean on every real page in both
+themes. Rubric 0.1.3 (U1's own B1 rewrite, given its own version so
+`calibrate.py` does not average two texts), three runs each.
+
+**Every direction graded worse than wave 01** — keepable on the 42 real-page
+stills 17 · 17 · 18 against 21 · 27 · 23 — and the editorial direction, wave
+01's winner at 27, fell furthest. B1 is the wave's most-failed check, and the
+grader says the same thing each time: a rule terminates in open whitespace.
+Measured, it is right about what it sees. The editorial band caps at 1200px
+while the frame's rails keep travelling outward with the window, so a seam now
+ends **38px** short of the rail at 1280 × 720, **43px** at 1440 × 800 and
+**224px at 1920 × 1247** — the shape every still was shot at, and the owner's
+own window. Before U1 the two hairlines at the band's edges were what every
+seam landed on. **Taking a line away takes what it was terminating.**
+
+The second reading is narrower and worth as much: SD's C2 went 5 → 11 and
+every failure is a page masthead. With `head=stack` the kicker sits alone in
+four columns, and the left-hand vertical used to run past it — so the editorial
+direction was the one depending on the rules that went. Confirmed on the still,
+not inferred from the count.
+
+Nothing is changed in the sheet for this: a wave is one CSS state, and the
+answer is the owner's. The record is the ship's `evals/waves/wave-02.md`; the
+galleries are `delivery/review-wave-02-{sb,sd,se}.html`, unread.
+
 ## Verification
 
 ```bash
@@ -335,6 +364,14 @@ a rule of its own (the grader fails B1 on every console still because a
 fixed-ratio card cannot reach the band's rule), and whether the lit timeline
 node keeps its gold box (the rail lights its node with a diamond and ink alone
 and passes the same checks the axis fails).
+
+And one from wave 02, which comes out of U1 itself: **does a seam run out to
+the rails now that the page draws no verticals of its own?** At 1280 × 720 it
+all but does (38px short); at his own 1920 × 1247 it stops 224px short at each
+end and floats in a dark margin, because the editorial band caps at 1200px.
+Three answers, none taken here — leave it, run the seams out to the rails
+(the literal reading of "we already have our rails", one width change), or
+bound the overrun so a seam reaches toward the rail without going full bleed.
 
 Also open: the register strips prove the RULED grammar and not the corner law
 — Lighthouse's own first screen carries thirteen rounded corners and

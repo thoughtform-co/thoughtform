@@ -40,6 +40,9 @@ home port extracts the tagged lines first.
 - 2026-09-20 wave 01 graded on 0.1.2: keepable on the real pages SB 21 / SC 22 / SD 27 / SE 23 of 42; a third of every direction's verdicts unstable on identical pixels, which is the rubric's wording -> evals/waves/wave-01.md
 - 2026-09-20 the flashcard's head ran the kicker into the title; fixed in the sheet and the whole wave re-shot, because a wave is one CSS state -> evals/waves/wave-01.md
 - 2026-09-20 the grader is told what it may not grade: the HUD frame (0.1.1), the close and the folder lip (0.1.2) -> skill/references/rubric.md
+- 2026-09-20 [breakthrough] taking the two verticals away took the TERMINATION of every horizontal: a seam stops 38px short of the rail at 1280 and 224px at the owner's 1920, because the band caps at 1200px while the rails travel -> evals/waves/wave-02.md
+- 2026-09-20 wave 02 graded worse in every direction (keepable 17 / 17 / 18 against 21 / 27 / 23); the editorial direction lost the most, because its stacked head was the one leaning on the left rule -> evals/waves/wave-02.md
+- 2026-09-20 a rubric edit gets a version number even when it is one row; wave 01 on 0.1.2 and wave 02 on 0.1.3 would otherwise have been averaged by calibrate.py -> skill/references/rubric.md
 
 ## Ruled out
 
@@ -52,3 +55,4 @@ home port extracts the tagged lines first.
 - 2026-09-20 pending 0.1.3 (the lit node's box, a one-card pile, a flashcard's figure, a driven console) is written in the rubric's repair history and not applied until the ticks are in -> skill/references/rubric.md
 - 2026-09-20 the owner's rulings: head, ordinal, rules, card, timeline; plus whether the pile's card is seated on a rule and whether the lit node keeps its gold box -> brief/BRIEF.md
 - 2026-09-20 the five rulings for the owner after wave 01: head, ordinal, rules, card, timeline -> brief/BRIEF.md
+- 2026-09-20 does a seam run out to the rails now that it draws no verticals of its own? leave it, run it out, or bound the overrun - measured, written down, not taken -> evals/waves/wave-02.md

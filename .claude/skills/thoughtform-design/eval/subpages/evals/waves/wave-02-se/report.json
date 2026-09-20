@@ -1,0 +1,788 @@
+{
+  "wave": "wave-02-se",
+  "setting": "default",
+  "viewport": "1920x1247",
+  "when": "2026-09-20T15:41:31.175Z",
+  "cells": [
+    {
+      "type": "HS",
+      "theme": "dark",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/home-sessions?k=SE&theme=dark",
+      "stills": [
+        "HS-void__se_01.png",
+        "HS-void__se_02.png",
+        "HS-void__se_03.png",
+        "HS-void__se_04.png",
+        "HS-void__se_05.png",
+        "HS-void__se_06.png"
+      ],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 14,
+        "accentInView": 6,
+        "bold": 0,
+        "text": 75,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.613,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11.9,
+        "radii": 0,
+        "structureHues": 2,
+        "sections": [
+          {
+            "id": "home-sessions",
+            "kind": "split"
+          },
+          {
+            "id": "calendar",
+            "kind": "timeline"
+          },
+          {
+            "id": "reserve",
+            "kind": "steps"
+          },
+          {
+            "id": "the-morning",
+            "kind": "cells"
+          },
+          {
+            "id": "at-the-table",
+            "kind": "row"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|6|985",
+        "theme": "dark"
+      }
+    },
+    {
+      "type": "HS",
+      "theme": "light",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/home-sessions?k=SE&theme=light",
+      "stills": [
+        "HS-parchment__se_01.png",
+        "HS-parchment__se_02.png",
+        "HS-parchment__se_03.png",
+        "HS-parchment__se_04.png",
+        "HS-parchment__se_05.png",
+        "HS-parchment__se_06.png"
+      ],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 14,
+        "accentInView": 6,
+        "bold": 0,
+        "text": 75,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.613,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11.9,
+        "radii": 0,
+        "structureHues": 3,
+        "sections": [
+          {
+            "id": "home-sessions",
+            "kind": "split"
+          },
+          {
+            "id": "calendar",
+            "kind": "timeline"
+          },
+          {
+            "id": "reserve",
+            "kind": "steps"
+          },
+          {
+            "id": "the-morning",
+            "kind": "cells"
+          },
+          {
+            "id": "at-the-table",
+            "kind": "row"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|6|985",
+        "theme": "light"
+      }
+    },
+    {
+      "type": "AR",
+      "theme": "dark",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/arcs?k=SE&theme=dark",
+      "stills": [
+        "AR-void__se_01.png",
+        "AR-void__se_02.png",
+        "AR-void__se_03.png",
+        "AR-void__se_04.png"
+      ],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 19,
+        "accentInView": 6,
+        "bold": 0,
+        "text": 100,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.55,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11.9,
+        "radii": 0,
+        "structureHues": 3,
+        "sections": [
+          {
+            "id": "arcs",
+            "kind": "split"
+          },
+          {
+            "id": "clients",
+            "kind": "console"
+          },
+          {
+            "id": "formats",
+            "kind": "cells"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|4|985",
+        "theme": "dark"
+      }
+    },
+    {
+      "type": "AR",
+      "theme": "light",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/arcs?k=SE&theme=light",
+      "stills": [
+        "AR-parchment__se_01.png",
+        "AR-parchment__se_02.png",
+        "AR-parchment__se_03.png",
+        "AR-parchment__se_04.png"
+      ],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 19,
+        "accentInView": 6,
+        "bold": 0,
+        "text": 100,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.55,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11.9,
+        "radii": 0,
+        "structureHues": 3,
+        "sections": [
+          {
+            "id": "arcs",
+            "kind": "split"
+          },
+          {
+            "id": "clients",
+            "kind": "console"
+          },
+          {
+            "id": "formats",
+            "kind": "cells"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|4|985",
+        "theme": "light"
+      }
+    },
+    {
+      "type": "AC",
+      "theme": "dark",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/arcs/loop?k=SE&theme=dark",
+      "stills": ["AC-void__se_01.png", "AC-void__se_02.png", "AC-void__se_03.png"],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 4,
+        "accentInView": 4,
+        "bold": 0,
+        "text": 20,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.5,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11.9,
+        "radii": 0,
+        "structureHues": 2,
+        "sections": [
+          {
+            "id": "loop-head",
+            "kind": "split"
+          },
+          {
+            "id": "engagements",
+            "kind": "console"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|3|985",
+        "theme": "dark"
+      }
+    },
+    {
+      "type": "AC",
+      "theme": "light",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/arcs/loop?k=SE&theme=light",
+      "stills": ["AC-parchment__se_01.png", "AC-parchment__se_02.png", "AC-parchment__se_03.png"],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 4,
+        "accentInView": 4,
+        "bold": 0,
+        "text": 20,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.5,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11.9,
+        "radii": 0,
+        "structureHues": 2,
+        "sections": [
+          {
+            "id": "loop-head",
+            "kind": "split"
+          },
+          {
+            "id": "engagements",
+            "kind": "console"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|3|985",
+        "theme": "light"
+      }
+    },
+    {
+      "type": "MU",
+      "theme": "dark",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/musings?k=SE&theme=dark",
+      "stills": [
+        "MU-void__se_01.png",
+        "MU-void__se_02.png",
+        "MU-void__se_03.png",
+        "MU-void__se_04.png"
+      ],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 10,
+        "accentInView": 5,
+        "bold": 0,
+        "text": 45,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.511,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11.9,
+        "radii": 0,
+        "structureHues": 2,
+        "sections": [
+          {
+            "id": "musings",
+            "kind": "split"
+          },
+          {
+            "id": "featured",
+            "kind": "figure"
+          },
+          {
+            "id": "all-posts",
+            "kind": "table"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|4|985",
+        "theme": "dark"
+      }
+    },
+    {
+      "type": "MU",
+      "theme": "light",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/musings?k=SE&theme=light",
+      "stills": [
+        "MU-parchment__se_01.png",
+        "MU-parchment__se_02.png",
+        "MU-parchment__se_03.png",
+        "MU-parchment__se_04.png"
+      ],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 10,
+        "accentInView": 5,
+        "bold": 0,
+        "text": 45,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.511,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11.9,
+        "radii": 0,
+        "structureHues": 2,
+        "sections": [
+          {
+            "id": "musings",
+            "kind": "split"
+          },
+          {
+            "id": "featured",
+            "kind": "figure"
+          },
+          {
+            "id": "all-posts",
+            "kind": "table"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|4|985",
+        "theme": "light"
+      }
+    },
+    {
+      "type": "MP",
+      "theme": "dark",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/musings/navigate-the-intelligence?k=SE&theme=dark",
+      "stills": [
+        "MP-void__se_01.png",
+        "MP-void__se_02.png",
+        "MP-void__se_03.png",
+        "MP-void__se_04.png"
+      ],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 5,
+        "accentInView": 2,
+        "bold": 0,
+        "text": 36,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.444,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11.9,
+        "radii": 0,
+        "structureHues": 1,
+        "sections": [
+          {
+            "id": "navigate-the-intelligence-head",
+            "kind": "split"
+          },
+          {
+            "id": "article",
+            "kind": "prose"
+          },
+          {
+            "id": "related",
+            "kind": "figure"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|4|985",
+        "theme": "dark"
+      }
+    },
+    {
+      "type": "MP",
+      "theme": "light",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/musings/navigate-the-intelligence?k=SE&theme=light",
+      "stills": [
+        "MP-parchment__se_01.png",
+        "MP-parchment__se_02.png",
+        "MP-parchment__se_03.png",
+        "MP-parchment__se_04.png"
+      ],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 5,
+        "accentInView": 2,
+        "bold": 0,
+        "text": 36,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.444,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11.9,
+        "radii": 0,
+        "structureHues": 1,
+        "sections": [
+          {
+            "id": "navigate-the-intelligence-head",
+            "kind": "split"
+          },
+          {
+            "id": "article",
+            "kind": "prose"
+          },
+          {
+            "id": "related",
+            "kind": "figure"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|4|985",
+        "theme": "light"
+      }
+    },
+    {
+      "type": "SK",
+      "theme": "dark",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/test/subpage-kit?k=SE&theme=dark",
+      "stills": [
+        "SK-void__se_01.png",
+        "SK-void__se_02.png",
+        "SK-void__se_03.png",
+        "SK-void__se_04.png",
+        "SK-void__se_05.png",
+        "SK-void__se_06.png",
+        "SK-void__se_07.png",
+        "SK-void__se_08.png",
+        "SK-void__se_09.png",
+        "SK-void__se_10.png",
+        "SK-void__se_11.png"
+      ],
+      "gates": [],
+      "mech": {
+        "code": 1,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 39,
+        "accentInView": 11,
+        "bold": 0,
+        "text": 185,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.589,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11,
+        "radii": 0,
+        "structureHues": 3,
+        "sections": [
+          {
+            "id": "kit",
+            "kind": "split"
+          },
+          {
+            "id": "console-fixture",
+            "kind": "console"
+          },
+          {
+            "id": "row-fixture",
+            "kind": "row"
+          },
+          {
+            "id": "cells-three",
+            "kind": "cells"
+          },
+          {
+            "id": "timeline-fixture",
+            "kind": "timeline"
+          },
+          {
+            "id": "steps-fixture",
+            "kind": "steps"
+          },
+          {
+            "id": "table-fixture",
+            "kind": "table"
+          },
+          {
+            "id": "figure-fixture",
+            "kind": "figure"
+          },
+          {
+            "id": "prose-fixture",
+            "kind": "prose"
+          },
+          {
+            "id": "cells-two",
+            "kind": "cells"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|11|985",
+        "theme": "dark"
+      }
+    },
+    {
+      "type": "SK",
+      "theme": "light",
+      "direction": "SE",
+      "lane": "se",
+      "href": "http://localhost:3003/test/subpage-kit?k=SE&theme=light",
+      "stills": [
+        "SK-parchment__se_01.png",
+        "SK-parchment__se_02.png",
+        "SK-parchment__se_03.png",
+        "SK-parchment__se_04.png",
+        "SK-parchment__se_05.png",
+        "SK-parchment__se_06.png",
+        "SK-parchment__se_07.png",
+        "SK-parchment__se_08.png",
+        "SK-parchment__se_09.png",
+        "SK-parchment__se_10.png",
+        "SK-parchment__se_11.png"
+      ],
+      "gates": [],
+      "mech": {
+        "code": 1,
+        "seconds": 3.2
+      },
+      "probe": {
+        "accent": 39,
+        "accentInView": 11,
+        "bold": 0,
+        "text": 185,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.589,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 11,
+        "radii": 0,
+        "structureHues": 7,
+        "sections": [
+          {
+            "id": "kit",
+            "kind": "split"
+          },
+          {
+            "id": "console-fixture",
+            "kind": "console"
+          },
+          {
+            "id": "row-fixture",
+            "kind": "row"
+          },
+          {
+            "id": "cells-three",
+            "kind": "cells"
+          },
+          {
+            "id": "timeline-fixture",
+            "kind": "timeline"
+          },
+          {
+            "id": "steps-fixture",
+            "kind": "steps"
+          },
+          {
+            "id": "table-fixture",
+            "kind": "table"
+          },
+          {
+            "id": "figure-fixture",
+            "kind": "figure"
+          },
+          {
+            "id": "prose-fixture",
+            "kind": "prose"
+          },
+          {
+            "id": "cells-two",
+            "kind": "cells"
+          },
+          {
+            "id": "contact",
+            "kind": "close"
+          }
+        ],
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "grid",
+          "timeline": "rail"
+        },
+        "k": "SE",
+        "ready": "3|11|985",
+        "theme": "light"
+      }
+    }
+  ]
+}

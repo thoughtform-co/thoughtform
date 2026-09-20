@@ -28,3 +28,14 @@ Dated entries: how the work changed, not what was edited.
   are the page's only verticals. The `rules` knob and direction SC are deleted
   with their guards, B1 is rewritten, the first negative anchor of the sheet
   itself is on record, and wave 02 re-shoots SB, SD and SE at the new state.
+- Wave 02 re-shot SB, SD and SE at the post-ruling state and every direction
+  graded WORSE: keepable on the real pages 17 / 17 / 18 against wave 01's
+  21 / 27 / 23, with the editorial direction losing the most. B1 is the
+  wave's most-failed check, and the measurement says the grader is right
+  about what it sees - the band caps at 1200px while the rails travel, so a
+  seam stops 38px short of the rail at 1280 and 224px at the owner's 1920.
+  Taking the verticals away took the terminations of every horizontal with
+  them, and took the stacked head's grounding rule (SD's C2 5 -> 11). Three
+  answers written down, none taken: it is his read. U1's B1 rewrite becomes
+  rubric 0.1.3 with its own ledger rows, because two texts under one version
+  would have been averaged by calibrate.py; pending renumbers to 0.1.4.

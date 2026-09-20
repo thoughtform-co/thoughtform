@@ -98,6 +98,32 @@ reconstruction; write it in the session that ran the wave.
   re-shoots the three remaining directions at the new state and re-grades.
   Wave 01 stays as the record of what he ruled on.
 
+## 2026-09-20 — wave 02: the ruling cost the page its terminations
+
+- Three directions re-shot at the post-U1 state (SB, SD, SE; 64 stills each at
+  1920 × 1247, both themes, one per section) plus SB at 1280 × 720. The
+  mechanical gate is clean on every real page in both themes. Rubric 0.1.3,
+  three runs: keepable on the 42 real-page stills **SB 17 · SD 17 · SE 18**,
+  against wave 01's 21 · 27 · 23. **Every direction graded worse, and the
+  editorial direction lost the most** (27 → 17).
+- **B1 is the wave's most-failed check** and the grader says the same sentence
+  each time: a rule terminates in open whitespace with nothing bounding it.
+  Measured, it is looking at something real — the editorial band caps at
+  1200px while the rails travel outward, so a seam stops **38px** short of the
+  rail at 1280 × 720, **43px** at 1440 × 800 and **224px** at the owner's
+  1920 × 1247. Before U1 the two hairlines at the band's edges were what every
+  seam landed on. Three answers are written down in the wave record and none is
+  taken: leave it, run the seams out to the rails, or bound the overrun.
+- **The stacked head was the one leaning on the left rule.** SD's C2 went 5 →
+  11 and every failure is a page masthead: with `head=stack` the kicker sits
+  alone in four columns and no longer has a vertical past it. Confirmed by
+  looking at the still, not inferred from the count.
+- **U1's B1 rewrite is its own rubric version.** Both waves would have carried
+  0.1.2 on two different texts and `calibrate.py` filters by version, so
+  wave 02 and its 192 ledger rows move to 0.1.3 and the pending block
+  renumbers to 0.1.4.
+- Galleries built for all three; no handback yet, so the wave has not happened.
+
 ## Standing conclusions
 
 - A page's first mechanical run is worth more than its first grade: the
@@ -111,3 +137,10 @@ reconstruction; write it in the session that ran the wave.
 - A check that names something the FRAME carries fails every still on the
   site. The frame is the datum; say so in the grading rules before the first
   wave, not after.
+- Taking a line away takes what it was TERMINATING. The two verticals were
+  also the ends of every horizontal, and removing them cost B1 across three
+  directions while nothing about the seams themselves changed. Before
+  deleting a rule, measure what lands on it.
+- A rubric edit needs a version number even when it is one row. Two waves
+  graded on two B1 texts under one number would have been averaged by
+  `calibrate.py` with nothing failing.

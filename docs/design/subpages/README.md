@@ -52,19 +52,31 @@ four dossier beats into cards · the twelve-gold budget · the four session date
 · each client's `since` year · whether the pile's card is seated on a rule of
 its own · whether the lit timeline node keeps its gold box.
 
-## The galleries (wave 01, unread)
+## The galleries (wave 02, unread)
+
+The state after the owner's first ruling — no verticals of the page's own.
 
 ```
-file:///C:/Users/buyss/Manifold%20Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval/subpages/delivery/review-wave-01-sb.html
-file:///C:/Users/buyss/Manifold%20Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval/subpages/delivery/review-wave-01-sc.html
-file:///C:/Users/buyss/Manifold%20Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval/subpages/delivery/review-wave-01-sd.html
-file:///C:/Users/buyss/Manifold%20Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval/subpages/delivery/review-wave-01-se.html
+file:///C:/Users/buyss/Manifold%20Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval/subpages/delivery/review-wave-02-sb.html
+file:///C:/Users/buyss/Manifold%20Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval/subpages/delivery/review-wave-02-sd.html
+file:///C:/Users/buyss/Manifold%20Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval/subpages/delivery/review-wave-02-se.html
 ```
+
+Wave 01's four galleries are still in `delivery/` and show the state he ruled
+on; SC no longer exists as a direction.
 
 Tick and comment in a gallery, save the handback beside its wave as
 `verdicts-<date>.json`, then from the ship: `python tools/ledger.py tick
---handback <file>` and `python tools/calibrate.py`. The record is
-`evals/waves/wave-01.md`.
+--handback <file>` and `python tools/calibrate.py`. The records are
+`evals/waves/wave-01.md` and `evals/waves/wave-02.md`.
+
+⚠ **Wave 02 grades worse than wave 01 in every direction** (keepable on the
+42 real-page stills 17 · 17 · 18 against 21 · 27 · 23) and the reason is
+measurable: with no verticals of its own, nothing terminates a seam, and the
+editorial band caps at 1200px while the rails keep travelling outward — so a
+seam stops 38px short of the rail at 1280 × 720 and **224px at 1920 × 1247**.
+Whether a seam should now run out to the rails is the open question of the
+wave; it is not changed in the sheet.
 
 ## The ship
 

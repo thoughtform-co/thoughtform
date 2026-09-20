@@ -4,7 +4,7 @@ Grade every candidate before a human sees it, against the register of its own
 theme. Read each still **as someone who has never seen the brief**, with the
 three reference first screens on the desk beside them.
 
-**Version 0.1.2, 2026-09-20, uncalibrated. Reporting only.** Written from the
+**Version 0.1.3, 2026-09-20, uncalibrated. Reporting only.** Written from the
 reference decode in `DRIVE.md`, from the house's own laws (DESIGN.md, ADR-065,
 ADR-077, ADR-092) and from the owner's three sentences in `brief/VOCABULARY.md`,
 before any owner verdict exists. Nothing here gates. Every check reports,
@@ -55,7 +55,7 @@ Repair history:
   and C5 as if it were a section, so the grading rules now exclude it. And the
   grader was RIGHT about the flashcard's head: the kicker ran into the title on
   one line, which is a page defect and is fixed in the sheet, not here.
-- **Pending 0.1.3 — written down, not applied, so wave 01's grades stay on
+- **Pending 0.1.4 — written down, not applied, so wave 01's grades stay on
   the text that produced them.** (1) **A2 / E3 on the timeline:** the lit
   node's box carries a gold outline BY DESIGN (the one lit thing on the axis,
   with its filled diamond); A2's prose reads it as a gold box outline and E3
@@ -68,13 +68,16 @@ Repair history:
   the grader fails it as unseated on every console still — a real question
   for the owner (seat the pile's column on a rule, or exempt piles), not a
   wording fix.
-- **U1, 2026-09-20 — the owner's first ruling, applied.** Off the wave-01
+- **0.1.3 (U1), 2026-09-20 — the owner's first ruling, applied.** Off the wave-01
   gallery's first screen: the two full-height rules at the band's edges go,
   on every page, because the frame's rails are already there. B1 is
   rewritten to the seams alone and gains a fails-when for a vertical rule of
   the page's own; the `rules` knob and direction SC are deleted; F3 names two
   directions; wave 02 re-shoots the remaining three at the new state. The
-  grades of wave 01 stand as the record of what he ruled on.
+  grades of wave 01 stand as the record of what he ruled on, on 0.1.2; wave 02
+  is graded on this text, which is why it carries its own version number -
+  two B1 texts under one number would have averaged two different checks in
+  `calibrate.py`.
 
 ## Grading rules
 
