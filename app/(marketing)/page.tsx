@@ -10,6 +10,11 @@ import "@/components/landing/home-v2/services/casefile/console/console.css";
 import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 import "@/components/landing/home-v2/services/proof-stack/proof-stack.css";
 import "@/components/landing/home-v2/about/about-stage.css";
+// The phone's about BAND (ADR-115) — AFTER about-stage.css and landing.css,
+// because it re-seats the authored `.voidwalker` block on the ring rung and
+// overrides the ≤960 padding floor and the ADR-113 snap block for `#about`
+// (both at the foot of landing.css); BEFORE theme.css like every route sheet.
+import "@/components/landing/home-v2/about/about-band.css";
 // The site footer (ADR-105) — `#contact` is the page's ending and the
 // corridor's opaque cover. BEFORE theme.css like every route sheet, so
 // the light rows cascade last.

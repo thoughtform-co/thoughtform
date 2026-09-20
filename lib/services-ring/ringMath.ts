@@ -1059,19 +1059,24 @@ export function exitEnvelope(exit: number, index: number): RingEntrance {
 
 /** The band's runway, in viewport heights (`services.css` declares the same
  *  number as `--svc-ring-mobile-runway`; the lockstep test pins them). The
- *  band pins for `RUNWAY − 1` viewports: four beats and a leave. */
-export const RING_MOBILE_RUNWAY_SVH = 3;
+ *  band pins for `RUNWAY − 1` viewports: four beats and a leave.
+ *  ⚠ 3 → 3.3 with ADR-115: the four beats keep their 168svh and the extra
+ *  30svh goes to the LEAVE, which is the deck's STACK now (62svh ≈ 520px at
+ *  844h — the one pacing dial on the exit). */
+export const RING_MOBILE_RUNWAY_SVH = 3.3;
 /** The band's ARRIVAL ramp — the share of the pinned travel over which
  *  `proofRelease` runs 0 → 1, i.e. the fly-in (the entrance windows ride
  *  `smoothedDissipate × proofRelease`, and the dissipate has long saturated). */
 export const RING_MOBILE_ARRIVE = 0.12;
-/** Where the band's LEAVE begins — past it the ring's master opacity ramps
- *  to 0 so the cards go with their stage rather than parking behind the
- *  accordion for the rest of the ambient hold. The ring's own progress is
- *  spent over `[0, LEAVE_START]` and capped BELOW `RING_EXIT_START`: the
- *  phone has no about deck to hand the cards to, so the exit-stack beat is
- *  never entered. */
-export const RING_MOBILE_LEAVE_START = 0.84;
+/** Where the band's LEAVE begins. Without the deck (`ringMobileClock`'s
+ *  `deck` false — ADR-110's page) the ring's master opacity ramps to 0 past
+ *  it so the cards go with their stage, and the ring's own progress is spent
+ *  over `[0, LEAVE_START]` and capped BELOW `RING_EXIT_START`. With the deck
+ *  (ADR-115) the leave IS the exit beat: progress runs on to 1, `exitP`
+ *  runs 0 → 1 across it, and `hold` stays 1 — the deck lives past the band
+ *  and dies on the about clock instead. 0.84 → 0.73 with the runway's 3.3,
+ *  so the four beats' scroll is unchanged (0.84 × 200 = 0.73 × 230 svh). */
+export const RING_MOBILE_LEAVE_START = 0.73;
 /** The front card's target width on a phone, as a share of the viewport
  *  width, and its cap — viewport-first (`seatWorldHeight`), never a world
  *  constant, so a 360 and a 430 wide phone both seat the card. */
@@ -1092,13 +1097,25 @@ export interface RingMobileClock {
 }
 
 /** The phone ring's three channels from the band's raw progress `p`
- *  (0 = the band has just pinned, 1 = it releases). */
-export function ringMobileClock(p: number): RingMobileClock {
+ *  (0 = the band has just pinned, 1 = it releases). `deck` (ADR-115,
+ *  `SERVICES_ABOUT_DECK_MOBILE`) lets the leave be the EXIT BEAT: the four
+ *  beats still take `[0, LEAVE_START]`, then progress runs `RING_EXIT_START
+ *  → 1` linearly across the leave so `exitProgressForRunway` runs 0 → 1
+ *  (the deck STACKS), and `hold` stays 1. Off, ADR-110's clock verbatim. */
+export function ringMobileClock(p: number, deck = false): RingMobileClock {
   const t = clamp01(p);
   const proofRelease = smootherstep(0, RING_MOBILE_ARRIVE, t);
-  const progress = clamp01(t / RING_MOBILE_LEAVE_START) * RING_EXIT_START * 0.999;
-  const hold = 1 - smootherstep(RING_MOBILE_LEAVE_START, 1, t);
-  return { progress, proofRelease, hold };
+  if (!deck) {
+    const progress = clamp01(t / RING_MOBILE_LEAVE_START) * RING_EXIT_START * 0.999;
+    const hold = 1 - smootherstep(RING_MOBILE_LEAVE_START, 1, t);
+    return { progress, proofRelease, hold };
+  }
+  const L = RING_MOBILE_LEAVE_START;
+  const progress =
+    t <= L
+      ? (t / L) * RING_EXIT_START
+      : RING_EXIT_START + ((t - L) / (1 - L)) * (1 - RING_EXIT_START);
+  return { progress: clamp01(progress), proofRelease, hold: 1 };
 }
 
 /** The share of the band's FREE HEIGHT (between the masthead's title and

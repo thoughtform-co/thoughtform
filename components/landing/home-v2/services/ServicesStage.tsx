@@ -156,6 +156,18 @@ export function ServicesStage() {
     const openIdx = SERVICES.findIndex((service) => service.id === openServiceId);
     const onScroll = () => {
       if (flipActive) {
+        /* ADR-115: the band's EXIT turns it back too. The deck stacks the
+           card on the exit clock and its spec-sheet back plane paints OVER
+           the portrait back (renderOrder 0.115 against 0.11), so an open
+           card may not ride into the stack. The exit is the stage's own
+           inline var — the ring reads the same clock. */
+        const exitRaw = Number.parseFloat(
+          stageRef.current?.style.getPropertyValue("--svc-exit") ?? ""
+        );
+        if (exitRaw > 0) {
+          setOpenServiceId(null);
+          return;
+        }
         /* ADR-109/110: the phone's open card is dismissed by the STEP, not
            by 35px of scroll — a thumb scrolls in whole beats there, and the
            turned card is the one that is FRONT; when the ring has turned to

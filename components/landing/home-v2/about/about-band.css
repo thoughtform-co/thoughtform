@@ -1,0 +1,366 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   THE PHONE'S ABOUT BAND (ADR-115, owner 2026-09-20)
+
+   "I think it would be nice to have my name at the top, similar to 'AI
+   capability your team owns.' … Below it would be the first paragraph of
+   my bio … The rest of it is revealed with a small chevron. If you click on
+   it, the text moves upward and the rest is revealed downward. … when you
+   scroll down, the cards collapse and are replaced, rotate, or transform
+   into that profile picture of myself. This also means that the parallax
+   section from the About section should disappear."
+
+   On the ring rung `#about` is a STICKY BAND inside a runway — the services
+   band's own composition one station down: name · seat · first paragraph,
+   with the role line under the name and the chevron under the paragraph.
+   The seat is what the WebGL deck lands on (the writer measures
+   `.voidwalker__orbit__portrait`'s rect into `aboutSlotRef`), and the DOM
+   image inside it is the SAME bake the deck flips to, shown once the deck
+   hands over. Every rule below is keyed on `#about[data-about-band="on"]`,
+   the writer's stamp (ADR-108's attribute precedent): no JS, the ring's
+   flag off, reduced motion, a short window — the static about stands.
+
+   ⚠ THE WELD. `margin-top: -100svh` on the station (ADR-047 U3's sweep, the
+   same arithmetic): the services band's pinned travel ends exactly where
+   this station begins, so the band pins on the frame the stack completes
+   (exit = 1 ⇔ about p = 0) and the services band scrolls away UNDERNEATH
+   it, blank. Both bottom paddings on the services side are zeroed for it —
+   a padding there is a fraction of the exit the stack would still be
+   running when this band pins.
+
+   ⚠ CONTENT STAYS IN `svh` (mobile-sections.md §8): the runway, the band,
+   the snap target. `phone-viewport-units` pins this sheet at zero `dvh`.
+
+   ⚠ THE SNAP SEATS (ADR-113 §10 made every station a stop; this station
+   drops its own align and carries two absolute, non-sticky targets):
+   · `.voidwalker__snap-in`, `end`-aligned, its bottom at the FLIP'S END
+     (`100svh + COVER × travel` tall from the station's top);
+   · `.voidwalker__snap`, `start`-aligned, one screen, at READ.
+   MEASURED IN BLINK (scripts/probe-mobile-deck.mjs and a scratch walk of
+   six designs, 2026-09-20): an ALIGNED position attracts every stop within
+   ~280px in either direction, and a covering area never overrides one —
+   the spec's "any position where the area covers the snapport is valid"
+   only holds where no aligned position is in range. So a `start` cover at
+   the weld pulled every stop in the flip BACK to the weld, and no cover at
+   all let `#services`' own covering edge do the same. With the cover's
+   aligned END at the flip's end the resting states are: the WELD (the exit
+   tail is pulled forward onto it — the stack completes), the FLIP'S END
+   (a stop inside the flip completes the flip; a stop in the name's window
+   goes back to it, name still blank), the READING SEAT (a stop in the copy's
+   window or past the seat lands on it), and free scroll past the seat's
+   radius. Nothing rests on a half-decoded line.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* The new markup is invisible to every other viewport: the chevron and the
+   snap target are gone, the rest's wrapper is transparent to layout, the
+   picture is transparent to the portrait's own rules. */
+.voidwalker__more {
+  display: none;
+}
+.voidwalker__rest,
+.voidwalker__rest__in {
+  display: contents;
+}
+.voidwalker__snap,
+.voidwalker__snap-in {
+  display: none;
+}
+.voidwalker__orbit__portrait picture {
+  display: contents;
+}
+
+/* THE CLUSTER GOES ON EVERY PHONE RUNG (owner: "the parallax section from
+   the About section should disappear"): the orbit svg, the particle halo and
+   the four corner readouts — with their staggered emerge. The portrait stays,
+   because below the ring rung (reduced motion, a short window) there is no
+   deck to become it. Desktop keeps the cluster on its fallback path. */
+@media (max-width: 960px) {
+  .voidwalker__orbit__svg,
+  .voidwalker__orbit__particles,
+  .voidwalker__orbit__label {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  /* ── THE STATION IS THE RUNWAY ─────────────────────────────────────── */
+  #about.station[data-about-band="on"] {
+    --about-band-runway: 240svh;
+    --about-band-read: 0.62;
+    --about-band-cover: 0.26;
+    display: block;
+    position: relative;
+    margin-top: -100svh;
+    padding: 0;
+    min-height: var(--about-band-runway);
+    /* Transparent: the deck is in the corridor's fixed canvas BEHIND the
+       station (`#services`'s own form on this rung). */
+    background: transparent;
+    /* The two targets below are the stops (see the header). */
+    scroll-snap-align: none;
+    content-visibility: visible;
+    contain-intrinsic-size: none;
+  }
+  #about.station[data-about-band="on"]::before {
+    display: none;
+  }
+  #about[data-about-band="on"] .station__idx,
+  #about[data-about-band="on"] .about-stage-root {
+    display: none;
+  }
+  /* The services side of the weld: nothing may sit between the band's
+     runway and this station (see the header). */
+  #services.station:has(.services-stage[data-card-ring-mobile="on"]) {
+    padding-bottom: 0;
+  }
+  .services-stage[data-card-ring-mobile="on"] {
+    padding-bottom: 0;
+  }
+
+  /* ── THE BAND ──────────────────────────────────────────────────────── */
+  #about[data-about-band="on"] .voidwalker {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    box-sizing: border-box;
+    height: 100svh;
+    margin: 0;
+    max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    /* name · role · SEAT · the first paragraph · the rest · the chevron */
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+    row-gap: clamp(12px, 2.2svh, 22px);
+    justify-items: center;
+    align-items: start;
+    text-align: center;
+    /* The chrome's own tokens (mobile-sections.md §1), the services band's
+       own numbers: the two 56px bands are the HUD's. */
+    padding: calc(var(--mobile-chrome-top) + 8px) var(--hud-content-inset, 22px)
+      calc(var(--mobile-chrome-bottom) + 16px);
+    /* The band paints copy; only the chevron takes a tap. */
+    pointer-events: none;
+  }
+  #about[data-about-band="on"] .voidwalker__copy {
+    display: contents;
+  }
+  #about[data-about-band="on"] .voidwalker__name {
+    grid-row: 1;
+    margin: 0;
+  }
+  #about[data-about-band="on"] .voidwalker__role {
+    grid-row: 2;
+    margin: 0;
+    justify-content: center;
+  }
+  #about[data-about-band="on"] .voidwalker__role::after {
+    display: none;
+  }
+
+  /* ── THE SEAT ──────────────────────────────────────────────────────── */
+  /* The orbit box is the seat row — a SIZE container, so the slot inside
+     can take a share of its height (`cqh`): the ring's own fill law,
+     `min(260px, 0.66·vw, 0.82·seatH·aspect)`, written in CSS so the DOM
+     slot and the WebGL card agree by construction. */
+  #about[data-about-band="on"] .voidwalker__orbit {
+    grid-row: 3;
+    container-type: size;
+    width: 100%;
+    max-width: none;
+    aspect-ratio: auto;
+    min-height: 0;
+    align-self: stretch;
+    display: grid;
+    place-items: center;
+  }
+  #about[data-about-band="on"] .voidwalker__orbit__portrait {
+    position: relative;
+    inset: auto;
+    margin: 0;
+    width: min(260px, 66vw, calc(82cqh * 420 / 680));
+    height: auto;
+    aspect-ratio: 420 / 680;
+    overflow: hidden;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    /* Opaque: by the handover the deck has squared up, and four back planes
+       at the ring's 0.9 exactly behind one another composite to opaque. */
+    opacity: 1;
+  }
+  #about[data-about-band="on"] .voidwalker__orbit__portrait::after {
+    display: none;
+  }
+  #about[data-about-band="on"] .voidwalker__orbit__portrait img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    /* Before the bake lands (no JS, the first frames) the phone source is
+       the bake's own photo under the plate treatment's CSS twin — the
+       `.svc-plate__pbg` chain the LUT reproduces. */
+    filter: grayscale(1) sepia(0.5) hue-rotate(-9deg) saturate(1.35) brightness(0.84) contrast(1.08);
+  }
+  #about[data-about-band="on"][data-about-portrait="baked"] .voidwalker__orbit__portrait img {
+    filter: none;
+  }
+  /* While the WebGL deck owns the seat the DOM image is hidden; under the
+     portrait floor (the chevron's expanded copy on a short phone) too. */
+  #about[data-about-band="on"][data-about-deck="live"] .voidwalker__orbit__portrait,
+  #about[data-about-band="on"][data-about-slot="hidden"] .voidwalker__orbit__portrait {
+    visibility: hidden;
+  }
+
+  /* ── THE COPY ──────────────────────────────────────────────────────── */
+  #about[data-about-band="on"] .voidwalker__copy > .voidwalker__bio {
+    grid-row: 4;
+    margin: 0;
+    max-width: 38ch;
+    line-height: 1.5;
+  }
+  /* The rest of the bio: the house disclosure idiom (services.css's
+     `grid-template-rows: 0fr → 1fr`, always in the DOM so it can GROW). The
+     seat row is `1fr`, so the copy rising takes its height from the
+     portrait — "the text moves upward and the rest is revealed downward". */
+  #about[data-about-band="on"] .voidwalker__rest {
+    grid-row: 5;
+    display: grid;
+    grid-template-rows: 0fr;
+    /* Folded, the rest is HIDDEN as well as clipped: a `0fr` row clips its
+       text out of sight, but every glyph still reports a rect (the seams
+       guard read two lines of it under the settings cluster with nothing on
+       screen). The flip waits for the fold on close and leads it on open. */
+    visibility: hidden;
+    transition:
+      grid-template-rows 420ms var(--ease-out, ease-out),
+      visibility 0s 420ms;
+    width: 100%;
+    max-width: 38ch;
+  }
+  #about[data-about-band="on"] .voidwalker[data-bio-open="1"] .voidwalker__rest {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    transition:
+      grid-template-rows 420ms var(--ease-out, ease-out),
+      visibility 0s 0s;
+  }
+  #about[data-about-band="on"] .voidwalker__rest__in {
+    display: block;
+    min-height: 0;
+    overflow: hidden;
+  }
+  #about[data-about-band="on"] .voidwalker__rest .voidwalker__bio {
+    margin: 0 0 12px;
+    line-height: 1.5;
+  }
+  /* The meta rows and the socials leave the phone band: the eras carry the
+     base and the years, the footer the socials (ADR-105) — and with them in
+     the disclosure the expanded copy took the whole seat at 844h (measured:
+     the rest ran 418px and the portrait was left 17px). */
+  #about[data-about-band="on"] .voidwalker__meta,
+  #about[data-about-band="on"] .voidwalker__links {
+    display: none;
+  }
+
+  /* ── THE CHEVRON ───────────────────────────────────────────────────── */
+  #about[data-about-band="on"] .voidwalker__more {
+    grid-row: 6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--gold);
+    pointer-events: auto;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #about[data-about-band="on"] .voidwalker__more::before {
+    /* The house chevron: a 7px border box (home-v2.css's cue), turned to
+       point DOWN; UP once the rest is open. */
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: translateY(-2px) rotate(135deg);
+    opacity: 0.6;
+    transition: transform 320ms var(--ease-out, ease-out);
+  }
+  #about[data-about-band="on"] .voidwalker[data-bio-open="1"] .voidwalker__more::before {
+    transform: translateY(2px) rotate(-45deg);
+  }
+  #about[data-about-band="on"] .voidwalker__more:focus-visible {
+    outline: 1px dashed rgba(var(--gold-rgb), 0.55);
+    outline-offset: -4px;
+  }
+
+  /* ── THE DECODE ────────────────────────────────────────────────────── */
+  /* The reveal system's one-shot emerge is neutralised on the band: the
+     writer owns visibility through the run stamps below, and a `[data-m]`
+     transform would move a line the leaves are posed on. */
+  #about[data-about-band="on"] [data-m] {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+    filter: none;
+    transition: none;
+  }
+  /* A run's real text is hidden before its window and while the leaves
+     decode it; shown once resolved (`1`). Absent stamp = shown. */
+  #about[data-about-band="on"][data-vw-name="pending"] .voidwalker__name,
+  #about[data-about-band="on"][data-vw-name="pending"] .voidwalker__role,
+  #about[data-about-band="on"][data-vw-name="decode"] .voidwalker__name,
+  #about[data-about-band="on"][data-vw-name="decode"] .voidwalker__role,
+  #about[data-about-band="on"][data-vw-copy="pending"] .voidwalker__copy > .voidwalker__bio,
+  #about[data-about-band="on"][data-vw-copy="decode"] .voidwalker__copy > .voidwalker__bio {
+    visibility: hidden;
+  }
+  /* The chevron and the rest arrive with the paragraph. */
+  #about[data-about-band="on"]:not([data-vw-copy="1"]) .voidwalker__more,
+  #about[data-about-band="on"]:not([data-vw-copy="1"]) .voidwalker__rest {
+    visibility: hidden;
+  }
+  #about[data-about-band="on"] .voidwalker__decode {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    text-align: left;
+  }
+  #about[data-about-band="on"] .voidwalker__decode__line {
+    position: absolute;
+    left: var(--x, 0px);
+    top: var(--y, 0px);
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  /* ── THE SNAP SEATS ────────────────────────────────────────────────── */
+  #about[data-about-band="on"] .voidwalker__snap,
+  #about[data-about-band="on"] .voidwalker__snap-in {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+  }
+  /* The flip's end: `end`-aligned, so its ONE aligned position is its
+     bottom edge on the snapport's bottom — the flip landed, the name not
+     yet decoding. (Its start would be the weld, and a start there is what
+     pulled the flip back.) */
+  #about[data-about-band="on"] .voidwalker__snap-in {
+    top: 0;
+    height: calc(100svh + var(--about-band-cover) * (var(--about-band-runway) - 100svh));
+    scroll-snap-align: end;
+  }
+  /* The reading seat. */
+  #about[data-about-band="on"] .voidwalker__snap {
+    top: calc(var(--about-band-read) * (var(--about-band-runway) - 100svh));
+    height: 100svh;
+    scroll-snap-align: start;
+  }
+}

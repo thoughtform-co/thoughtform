@@ -1,6 +1,6 @@
 /**
  * lineLeaves — the rendered LINE BOXES of a text run, and a leaf dressed in
- * the run's own face (ADR-103's `headCarrier` idiom, lifted for ADR-114).
+ * the run's own face (ADR-103's `headCarrier` idiom, lifted for ADR-115).
  *
  * A decode that writes a run's `textContent` re-wraps it: the shuffle's
  * glyphs are mono caps against a proportional face, so a decoding line is

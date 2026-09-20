@@ -40,6 +40,7 @@ import {
   RING_MOBILE_OPEN_SIDE_DIM,
   RING_MOBILE_SEAT_FILL,
   activeServiceForProgress,
+  exitProgressForRunway,
   ringMobileClock,
   ringMobileFrontWidthPx,
   ringMobileGroupScale,
@@ -109,7 +110,7 @@ describe("the phone bake", () => {
 });
 
 describe("the phone ring's clock", () => {
-  it("rests off-stage at the pin and never enters the exit-stack beat", () => {
+  it("rests off-stage at the pin and never enters the exit-stack beat (deck off)", () => {
     const at0 = ringMobileClock(0);
     expect(at0.progress).toBe(0);
     expect(at0.proofRelease).toBe(0);
@@ -123,7 +124,7 @@ describe("the phone ring's clock", () => {
     }
   });
 
-  it("flies in over the arrival share, then holds, then leaves", () => {
+  it("flies in over the arrival share, then holds, then leaves (deck off)", () => {
     expect(ringMobileClock(RING_MOBILE_ARRIVE).proofRelease).toBe(1);
     expect(ringMobileClock(RING_MOBILE_ARRIVE / 2).proofRelease).toBeCloseTo(0.5, 6);
     expect(ringMobileClock(RING_MOBILE_LEAVE_START).hold).toBe(1);
@@ -132,11 +133,13 @@ describe("the phone ring's clock", () => {
   });
 
   it("is monotonic in progress and continuous across every window", () => {
-    let last = -1;
-    for (let p = 0; p <= 1; p += 0.005) {
-      const { progress } = ringMobileClock(p);
-      expect(progress).toBeGreaterThanOrEqual(last);
-      last = progress;
+    for (const deck of [false, true]) {
+      let last = -1;
+      for (let p = 0; p <= 1; p += 0.005) {
+        const { progress } = ringMobileClock(p, deck);
+        expect(progress).toBeGreaterThanOrEqual(last);
+        last = progress;
+      }
     }
     // The four beats are spent by the leave: a reader who scrolls the band
     // sees every card before the ring goes.
@@ -144,6 +147,37 @@ describe("the phone ring's clock", () => {
       RING_EXIT_START * 0.999,
       6
     );
+  });
+
+  /* ADR-115: with the phone deck the leave IS the exit beat. */
+  it("enters the exit beat over the leave with the deck on, and holds", () => {
+    // Identical to the deck-off clock through the four beats (bar the cap).
+    for (let p = 0; p <= RING_MOBILE_LEAVE_START; p += 0.01) {
+      const off = ringMobileClock(p, false);
+      const on = ringMobileClock(p, true);
+      expect(on.proofRelease).toBe(off.proofRelease);
+      expect(on.progress).toBeCloseTo(off.progress / 0.999, 9);
+      expect(on.hold).toBe(1);
+    }
+    // The leave runs progress from the exit's start to 1, linearly, so
+    // `exitProgressForRunway` runs 0 → 1 across it — the deck's stack clock.
+    expect(ringMobileClock(RING_MOBILE_LEAVE_START, true).progress).toBeCloseTo(RING_EXIT_START, 9);
+    expect(ringMobileClock(1, true).progress).toBe(1);
+    expect(exitProgressForRunway(ringMobileClock(RING_MOBILE_LEAVE_START, true).progress)).toBe(0);
+    expect(exitProgressForRunway(ringMobileClock(1, true).progress)).toBe(1);
+    const mid = (RING_MOBILE_LEAVE_START + 1) / 2;
+    expect(exitProgressForRunway(ringMobileClock(mid, true).progress)).toBeCloseTo(0.5, 6);
+    // The cards never fade with the band: the deck dies on the about clock.
+    for (let p = 0; p <= 1.0001; p += 0.01) expect(ringMobileClock(p, true).hold).toBe(1);
+  });
+
+  it("keeps the four beats' scroll where ADR-110 left it (3 × 0.84 = 3.3 × 0.73 svh)", () => {
+    // The runway grew for the exit alone; the beats' pinned travel did not
+    // move, so every tap-to-beat target lands where it did.
+    const beats = (RING_MOBILE_RUNWAY_SVH - 1) * RING_MOBILE_LEAVE_START;
+    expect(beats).toBeCloseTo(2 * 0.84, 2);
+    // And the exit has real scroll: ≥ 60svh (≈ 500px at 844h).
+    expect((RING_MOBILE_RUNWAY_SVH - 1) * (1 - RING_MOBILE_LEAVE_START)).toBeGreaterThan(0.6);
   });
 
   it("solves the group's scale so the FRONT CARD, not the mark, lands at the ask", () => {

@@ -1,7 +1,11 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import {
   ABOUT_BAND_COPY_WINDOW,
+  ABOUT_BAND_COVER,
   ABOUT_BAND_DONE,
   ABOUT_BAND_FLIP_WINDOW,
   ABOUT_BAND_KILL,
@@ -9,13 +13,18 @@ import {
   ABOUT_BAND_READ,
   ABOUT_BAND_RUNWAY_SVH,
   ABOUT_BAND_SLOT_MIN_PX,
+  ABOUT_BAND_SQUARE_WINDOW,
   MOBILE_UNTYPE_WINDOW,
   aboutBandCopyT,
   aboutBandNameT,
   aboutBandProgress,
   aboutBandSnapOffset,
+  aboutBandSquareT,
   mobileUntypeT,
 } from "@/lib/services-ring/aboutBandMath";
+
+const ROOT = join(__dirname, "..", "..");
+const SHEET = readFileSync(join(ROOT, "components/landing/home-v2/about/about-band.css"), "utf8");
 import {
   runSlice,
   scrambleLinesIn,
@@ -25,7 +34,7 @@ import {
 } from "@/lib/home-v2/scrubbedDecode";
 
 /**
- * THE PHONE'S ABOUT BAND (ADR-114) — the windows, the seat and the scrubbed
+ * THE PHONE'S ABOUT BAND (ADR-115) — the windows, the seat and the scrubbed
  * decode, walked. The ring's flip rides ADR-047's own window; everything
  * here is what the band adds after it.
  */
@@ -37,12 +46,37 @@ describe("the about band's ladder", () => {
     expect(ABOUT_BAND_NAME_WINDOW[0]).toBeLessThan(ABOUT_BAND_NAME_WINDOW[1]);
     expect(ABOUT_BAND_NAME_WINDOW[1]).toBeLessThanOrEqual(ABOUT_BAND_COPY_WINDOW[0]);
     expect(ABOUT_BAND_COPY_WINDOW[0]).toBeLessThan(ABOUT_BAND_COPY_WINDOW[1]);
-    // The reading state is where the copy has just landed — the snap seat.
-    expect(ABOUT_BAND_READ).toBe(ABOUT_BAND_COPY_WINDOW[1]);
+    // The reading state is a hair past the copy's landing — the snap seat
+    // is solved to a pixel and may never rest on `decode`.
+    expect(ABOUT_BAND_READ).toBeGreaterThan(ABOUT_BAND_COPY_WINDOW[1]);
+    expect(ABOUT_BAND_READ - ABOUT_BAND_COPY_WINDOW[1]).toBeLessThan(0.05);
     expect(ABOUT_BAND_READ).toBeLessThan(ABOUT_BAND_DONE);
+    // The deck squares up between the seat and the handover.
+    expect(ABOUT_BAND_SQUARE_WINDOW[0]).toBeGreaterThanOrEqual(ABOUT_BAND_READ);
+    expect(ABOUT_BAND_SQUARE_WINDOW[1]).toBeLessThan(ABOUT_BAND_DONE);
+    expect(aboutBandSquareT(ABOUT_BAND_SQUARE_WINDOW[0])).toBe(0);
+    expect(aboutBandSquareT(ABOUT_BAND_SQUARE_WINDOW[1])).toBe(1);
+    // The flip's-end seat sits past the flip and short of the name's window
+    // — a stop pulled onto it shows the portrait alone.
+    expect(ABOUT_BAND_COVER).toBeGreaterThan(ABOUT_BAND_FLIP_WINDOW[1]);
+    expect(ABOUT_BAND_COVER).toBeLessThan(ABOUT_BAND_NAME_WINDOW[0]);
     // The handover: DOM first, then the deck — both paint in between.
     expect(ABOUT_BAND_DONE).toBeLessThan(ABOUT_BAND_KILL);
     expect(ABOUT_BAND_KILL).toBeLessThanOrEqual(1);
+  });
+
+  it("is what the sheet declares (the lockstep)", () => {
+    // `services-ring-mobile-gate`'s own pin for the ring band, one station
+    // down: a runway, a seat or a cover edited in one place changes how
+    // much scroll a beat gets and nothing else says so.
+    const num = (name: string) => {
+      const m = new RegExp(`${name}:\\s*([0-9.]+)(svh)?;`).exec(SHEET);
+      expect(m, `about-band.css declares no ${name}`).not.toBeNull();
+      return Number.parseFloat(m![1]!);
+    };
+    expect(num("--about-band-runway")).toBe(ABOUT_BAND_RUNWAY_SVH * 100);
+    expect(num("--about-band-read")).toBe(ABOUT_BAND_READ);
+    expect(num("--about-band-cover")).toBe(ABOUT_BAND_COVER);
   });
 
   it("gives every beat real scroll on a phone", () => {

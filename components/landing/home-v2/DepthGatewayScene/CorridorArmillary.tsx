@@ -28,13 +28,14 @@
  */
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { getSmoothedDissipate } from "./motionFollower";
 import { brandmarkScanAnchorPointsRef, type BrandmarkFeatureId } from "../brandmarkScanAnchorsRef";
 import {
   ABOUT_DECK_STAGE,
+  SERVICES_ABOUT_DECK_MOBILE,
   SERVICES_CARD_DRAWER,
   SERVICES_CARD_RING,
   SERVICES_CARD_RING_MOBILE,
@@ -248,6 +249,17 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
   const countMultiplier = useQualityStore((s) => s.countMultiplier);
   const ringMobile =
     SERVICES_CARD_RING_MOBILE && ringMobileMedia && countMultiplier > RING_MOBILE_QUALITY_FLOOR;
+  /* ADR-115: the about band's DOM portrait shows only once the deck has
+     handed over — and at once when there is NO deck (the governor's floor, a
+     dead canvas). The band cannot see this canvas, so the phone mount says
+     so on `<html>`: an observable, cleared on unmount (mobile-sections.md
+     §2's rule for anything a fixed painter's absence changes). */
+  const ringMobileLive = SERVICES_CARD_RING && ringMobile && !ringCapable && !ringOff;
+  useEffect(() => {
+    if (!ringMobileLive) return;
+    document.documentElement.setAttribute("data-card-ring-live", "on");
+    return () => document.documentElement.removeAttribute("data-card-ring-live");
+  }, [ringMobileLive]);
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
   // Probe group at identity — its matrixWorld IS the pointer-look space the
@@ -377,6 +389,10 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
              tap turns it over; no drawer, no DOM sheet. Desktop below never
              passes this, so its tree is byte-identical. */
           flipBack
+          /* ADR-115: the phone takes the ADR-047 deck on its OWN flag — the
+             exit beat stacks the cards and the about band's clock flips them
+             to the portrait. Off, the phone ring is ADR-110's verbatim. */
+          deckFlip={SERVICES_ABOUT_DECK_MOBILE}
           orbitBase={RING_ORBIT_BASE_RADIUS * RING_MOBILE_RADIUS_MUL}
           masterOpacityGetter={ringMobileHold}
         />

@@ -1,0 +1,413 @@
+# ADR-115 — The phone's deck flip: the copy un-types, the cards stack, the deck becomes the portrait, and `#about` is a band
+
+- **Status:** Proposed (2026-09-20) — shipped behind `SERVICES_ABOUT_DECK_MOBILE`
+  and guarded; the device read is the gate (§Device checklist). Chromium proves
+  the clocks, the stamps, the weld, the handover's pixels and the frame deltas;
+  it cannot say what a phone's GPU makes of a fifth back plane.
+- **Surface:** the landing on the ring rung (`SERVICES_RING_MOBILE_MEDIA`) —
+  the services band's exit and everything `#about` is on a phone.
+- **Supersedes:** [ADR-110](110-the-card-turns-over.md)'s exit (the cards
+  faded with their band; they stack now) · [ADR-045](045-about-emerge-rail-parity.md)'s
+  phone surface (the orbit cluster and its emerge are gone on every ≤960 rung)
+  · [ADR-113](113-the-phone-locks-in.md)'s `#about` stop (the station's top;
+  two targets inside its runway now). Desktop is byte-identical.
+- **Related:** [ADR-047](047-about-deck-flip-stage.md) (the deck the phone
+  takes — the stack on the exit clock, the flip on the about clock, the portrait
+  back, the slot the deck lands on), [ADR-108](108-the-ring-on-phones.md) /
+  [ADR-109](109-the-services-beat-on-a-phone.md) (the band, the seat law, the
+  phone profile), [ADR-103](103-the-head-decodes-in-place-and-the-plates-become-the-deliverables.md)
+  (the per-line decode idiom lifted here), [ADR-097 U12](097-proof-card-is-a-folder.md)
+  (no luminance flicker, anywhere), [ADR-112](112-the-portrait-raster-and-the-four-services.md)
+  (the phone's 342 kB of portraits — unchanged; this pass adds 61 kB and takes
+  183 away).
+- **Rules:** [`.claude/rules/mobile-sections.md`](../../.claude/rules/mobile-sections.md)
+  §11, [`.claude/rules/services-ring.md`](../../.claude/rules/services-ring.md)
+  §The ring on phones, [`.claude/rules/landing-v7.md`](../../.claude/rules/landing-v7.md)
+  §about.
+
+## The ask
+
+Owner, 2026-09-20, after ADR-113 deployed, from his iPhone:
+
+> When you scroll past the "AI capability your team owns" section, all the text
+> should disappear with a glitch effect. The cards should then stack on top of
+> each other, rotate them as we have on desktop, and then reveal my profile
+> picture. Let's see whether, in terms of performance, this is the best route.
+>
+> I think it would be nice to have my name at the top, similar to "AI capability
+> your team owns." That's where my name, Vince Buyssens, would end up. Below it
+> would be the first paragraph of my bio text … The rest of it is revealed with a
+> small chevron. If you click on it, the text moves upward and the rest is
+> revealed downward.
+>
+> It's a different behavior than desktop but I think it's fine. It's just
+> important that when you scroll down, the cards collapse and are replaced,
+> rotate, or transform into that profile picture of myself. This also means
+> that the parallax section from the About section should disappear. Also, as a
+> best practice, remove those.
+>
+> I know it's quite some work and to really look at performance but I think
+> this is the best route.
+
+## What the phone did before
+
+- The services beat was one 330svh… no: one **300svh** sticky band (title ·
+  seat · paragraph, ADR-109) whose scroll was the ring's clock. At the band's
+  release the cards **faded** (`ringMobileClock`'s `hold`) — the ring's
+  progress was capped `× 0.999` below `RING_EXIT_START`, so ADR-047's stack
+  beat was never entered on a phone and `--svc-exit` was pinned 0. The
+  masthead's decode is gated `min-width: 961px`: the phone's copy was static
+  text that scrolled away resolved.
+- ADR-047's deck lived in the same `ServicesCardRing`, gated on
+  `ABOUT_DECK_STAGE && (exitP > 0 || aboutP > 0)`; `aboutP` is 0 on a phone
+  because `useAboutStageScroll` bails below 961, and the phone profile skipped
+  the portrait bake.
+- `#about` on a phone was the parsed prototype block: name · role · three
+  paragraphs · meta · links, and the orbit cluster (portrait + rings svg +
+  particle halo + four corner readouts) with ADR-045's staggered emerge. No
+  scroll parallax touched `#about` (retired 2026-07-16); the only live
+  `[data-parallax]` on a phone was the hero plate at 0.03. The "parallax
+  section" he means is that cluster and its emerge.
+
+## The performance answer
+
+**Reusing the WebGL cards is the cheap route, and the only one that can look
+like the desktop.** The faces are bakes, not files (ADR-112's raster is a glyph
+grid drawn into a texture); a DOM stack would need a second copy of four faces
+the DOM cannot draw, plus four 3D-transformed layers over a live canvas. The
+canvas is already `position: fixed` and painting every frame on this rung
+through `#services` AND `#about` (the ambient hold's kill is `#voidwalker`), so
+the deck costs **pose math on four existing groups** in the beats and, during
+the flip only, the four portrait back planes (`visible` only while a flip is
+live). One-off: one 2D bake at `BAKE_SCALE_MOBILE_BACK` (2.6 MB flat, no
+mips), asked for lazily when the band first pins; and the portrait fetch —
+`/images/services/vince.jpg`, **61 kB** — while deleting the cluster takes
+the 183 kB `vince-portrait.jpg`, twelve halo spans and an animated svg off the
+phone page. Rejected: a second canvas (ADR-108: the one cost no bake ratio
+recovers), DOM clones, and a deck that rides an unpinned band (a rAF writer
+posing a WebGL object against a compositor scroll lands one step behind every
+step — ADR-102's measurement; hence §4).
+
+Measured in Chromium at 390×844 (a proxy; the device is the reading): frame
+deltas over the exit and the flip, 24px a frame — **p50 4.2ms, p95 17–24ms,
+max ≤ 28ms** (`scripts/probe-mobile-deck.mjs`).
+
+## The decision (five changes, in page order)
+
+### 1 · The services band's exit: the copy un-types, the cards stack
+
+- `ringMobileClock(p, deck)` (`ringMath.ts`): with the deck on, the four beats
+  keep `[0, LEAVE_START]` and the leave runs progress `RING_EXIT_START → 1`
+  linearly, so `exitProgressForRunway` runs 0 → 1 across it (the stack) and
+  `hold` stays 1 (the deck dies on the about clock instead). Off, ADR-110's
+  clock verbatim. `RING_MOBILE_RUNWAY_SVH` 3 → **3.3** and
+  `RING_MOBILE_LEAVE_START` 0.84 → **0.73**: the beats' scroll is unchanged
+  (0.84 × 200 = 0.73 × 230 svh) and the stack gets **62svh ≈ 520px** at 844h,
+  the exit's one pacing dial. `services.css`'s `--svc-ring-mobile-runway`
+  moves with it; the gate test pins them.
+- `--svc-exit` goes live on the phone. `ServicesStage` closes a turned card on
+  its first frame (`--svc-exit > 0`), and the ring snaps `flipLevelRef` shut
+  on `deckEngaged` — ADR-110's back plane paints at renderOrder 0.115, OVER
+  the portrait back at 0.11, and a flick can reach the stack inside the
+  damped turn's 450ms.
+- `ServicesMasthead` gains a PHONE branch: it observes the stage's inline
+  `--svc-exit` (the same style observer the desktop uses, no new scroll
+  listener) and scrubs the copy OUT over `MOBILE_UNTYPE_WINDOW` `[0, 0.7]` of
+  the exit — the title lines through the house kernel run backwards
+  (`scrambleLinesOut`), the paragraph un-typed from its tail. Reversible in
+  either direction (`scrambleFrame` is pure in `t`; `advanceScrambles`, which
+  latches, is never used). No opacity, no fade: the un-type IS the glitch.
+- ⚠ **A run that leaves must keep its cells.** `{ from: text, to: "" }`
+  resolves every landed character to NOTHING, so the string shrinks from its
+  head and the survivors crawl left on a left-anchored leaf — a title leaving
+  that way reads as a scroll. `scrambleLinesOut` is the incoming decode with
+  its time reversed: every character keeps its cell (`" "` before its window),
+  the block empties from the right of each line and the last line first.
+- ⚠ **Both texts are CENTRED, so the real text is hidden and LEAVES decode
+  over it.** A decoding run is wider than its resting self (mono caps against
+  a proportional face) and a centred line would re-centre every frame.
+  `decodeLayer.ts` (ADR-103's head carrier, generalised) holds one absolutely
+  posed leaf per RENDERED LINE, `white-space: nowrap`, dressed in the run's
+  computed face, over the real text which `[data-untype]` hides by
+  `visibility`; `lib/home-v2/lineLeaves.ts` (lifted out of the Trinny route)
+  walks the lines with a `Range`. Measured lazily on the first live frame and
+  on resize.
+- `CorridorArmillary`'s phone mount passes `deckFlip={SERVICES_ABOUT_DECK_MOBILE}`
+  (a new `ServicesCardRing` prop, default `ABOUT_DECK_STAGE`, so the desktop
+  mount is untouched). The stack runs `deckStackEnvelope` unchanged; the
+  `DECK_*` placements are in orbit units and scale with the phone's
+  `orbitBase` (0.7×).
+
+### 2 · The weld, and the seat that freezes
+
+- `#about.station` on the rung takes `margin-top: -100svh` and zero vertical
+  padding (ADR-047 U3's sweep, the same arithmetic), and the services side
+  zeroes its two bottom paddings (`#services.station:has(…)` and the stage):
+  the about band's runway begins where the services band's pinned travel
+  ends, so the band pins on the frame the stack completes (exit = 1 ⇔ about
+  p = 0) and the services band scrolls away UNDERNEATH it, blank.
+  **Measured: the travel end and `#about`'s top at −0.5px, together.** A
+  padding on the services side is a fraction of the exit the stack would still
+  be running when the band pins (the first cut left the station's 56px floor
+  and the band pinned at exit 0.89).
+- ⚠ **The phone ring group is seated on the SERVICES seat rect every frame**
+  (ADR-109's `ringMobileSeatY`); as the services band leaves under the pinned
+  about band that rect rides up and would drag the stacked deck off the top of
+  the screen. From `exitP ≥ 1` (or the about clock's first frame) the last
+  live seat is HELD (`mobileSeatHoldRef`), and the flip's own `posBlend`
+  glide carries the pivot onto the about band's seat — the desktop's one
+  motion owner. Released when both clocks are back at rest.
+- `useAboutStageScroll`'s `disengage` was already idempotent, so the phone
+  writer owns the same `aboutStageProgressRef` the desktop stage writes — and
+  the mark's flip-window dim (`BrandmarkPhysicsCoreActor`, `orbitExitGetter`)
+  comes for free, exactly as on desktop.
+
+### 3 · `#about` is a band: name · portrait · first paragraph · chevron
+
+- **Markup** (`landing-v7-motion.html`, parsed at build): a `<button
+class="voidwalker__more">` after ¶1 (the house 7px border-box chevron,
+  turned down, up when open; a 44px target), a `.voidwalker__rest` /
+  `__rest__in` pair wrapping ¶2, ¶3 and the meta (`display: contents` off the
+  rung — desktop PRM/fallback byte-identical), the portrait's `<img>` inside a
+  `<picture>` whose `(max-width: 960px)` source is `/images/services/vince.jpg`
+  (the bake's own photo — one photo on the phone), and two snap targets. No
+  angle-bracket syntax in the comments (the relocate walkers regex-scan the
+  raw HTML).
+- **Layout** (`about-band.css`, keyed on `#about[data-about-band="on"]`, the
+  writer's stamp, inside the rung — ADR-108's attribute precedent: no JS, the
+  flag off, reduced motion or a short window keep the static about): the
+  STATION is the runway (`--about-band-runway` **240svh**), `.voidwalker` the
+  sticky band (`top: 0; height: 100svh`, grid `auto auto minmax(0,1fr) auto
+auto auto` = name · role · SEAT · ¶1 · the rest · the chevron, the services
+  band's own chrome padding; `.voidwalker__copy { display: contents }`). The
+  seat row is a SIZE container and the portrait box inside it is `min(260px,
+66vw, 82cqh × 420/680)` at `420/680` — ADR-109's fill law in CSS, so the DOM
+  slot and the WebGL card agree by construction (measured 222.4 × 360 at
+  390×844, against the ring's 222 × 360). The station is transparent (the
+  deck is in the canvas behind it), its radial washes off. The orbit svg, the
+  halo and the readouts are `display: none` on EVERY ≤960 rung (his "remove the
+  parallax section"); the emerge is neutralised on the band (`[data-m]` at
+  (1,1,1) over `.is-in`'s (0,3,0)).
+- **The meta rows and the socials leave the phone band** (the eras carry the
+  base and the years, the footer the socials since ADR-105) — with them in the
+  disclosure the expanded copy ran 418px and left the portrait 17px at 844h.
+  With ¶2 and ¶3 alone: rest 204px, the portrait keeps **193px** at 844h.
+- **The writer** (`useAboutBandScroll`, mounted by `AboutStage` as `AboutBand`
+  in the same nested root): `p = clamp01(−top / (height − layoutViewportHeight()))`
+  (`-0` guarded — ADR-102's trap), written to `aboutStageProgressRef` (the
+  ring's flip clock) and the slot's rect to `aboutSlotRef` per frame while the
+  runway intersects (ADR-047 U2's gate); the stamps `data-about-band`,
+  `data-about-deck` (`live` / `done`), `data-vw-name` / `data-vw-copy`
+  (`pending` → `decode` → `1`, ADR-103's `headState`: the real text hidden
+  before its window and shown after it, the leaves painting only between),
+  `data-about-slot="hidden"` under the portrait floor (`ABOUT_BAND_SLOT_MIN_PX`
+  140), `--about-band-p` for the guards.
+- **Windows** (`lib/services-ring/aboutBandMath.ts`, unit-pinned): FLIP =
+  ADR-047's `[0, 0.22]` (shared with the ring); NAME + ROLE scramble in
+  `[0.30, 0.42]`; ¶1 TYPES in `[0.42, 0.60]`; READ **0.62**; the deck squares
+  up over `[0.62, 0.9]`; DONE 0.995; KILL 0.999. The name's window opens a hair
+  AFTER the flip's-end seat (0.26) — measured: a window opening ON the seat
+  rested on three leaves of glyph noise. READ sits a hair past the copy's
+  landing for the same reason: a seat is solved to a pixel and may never rest
+  on `decode`.
+- **The chevron** toggles `data-bio-open` on the band and `aria-expanded`;
+  `.voidwalker__rest` grows `grid-template-rows: 0fr → 1fr` over 420ms (the
+  house idiom, always in the DOM); the seat row is `1fr`, so the copy rising
+  takes its height from the portrait — "the text moves upward and the rest is
+  revealed downward". The writer runs every frame of the transition (no scroll
+  fires) so the deck follows the slot, and re-measures the lines. Under the
+  floor the slot is invalidated: the DOM image hides AND the deck is killed —
+  never the desktop's centre-screen fallback seat, which the first cut showed
+  as a 360px portrait floating over the copy. Measured at 844h: slot 360 → 193
+  → 360, rest 0 → 204 → 0.
+
+### 4 · The handover: the deck dies as the band unpins, the DOM portrait takes over
+
+- After the runway the band must scroll as a DOCUMENT (a deck riding an
+  unpinned band would lag the compositor a wheel step, every step). So the
+  WebGL deck is killed on one frame at `ABOUT_BAND_KILL` 0.999 and the DOM
+  image shows from `ABOUT_BAND_DONE` 0.995: a few frames of both, never
+  neither, and nothing fades while looked at.
+- ⚠ **The DOM image IS the bake.** `bakePortraitBack` and its palette lift out
+  of the ring into `lib/services-ring/portraitBake.ts` (three-free, so the
+  landing's First Load JS may reach it — `landing-import-doctrine` walks the
+  graph) with a `scale` argument and a per-theme memo, `portraitBakeFor`: the
+  ring's phone profile turns that canvas into its texture, the writer turns
+  the same canvas into a blob URL on the picture's phone source. One bake,
+  one fetch, two readers. A CSS twin of the LUT would not have matched.
+- ⚠ **Three things had to move for the frame to be one picture** (measured
+  with `sharp` on the seat's rect at p 0.99 against 1.0): mean |Δ| **18.7/255,
+  12.5 % of samples over 40** → **9.4 / 6.7 %** → **3.6 / 1.7 %**.
+  1. THE DECK SQUARES UP (`ABOUT_BAND_SQUARE_WINDOW`, phone only): ADR-047's
+     hand-stacked x/y jitter runs to zero, so the three rear cards' edges and
+     their portraits (showing through the 0.9-alpha front) vanish behind the
+     front card. Pure motion.
+  2. THE NEAREST CARD SITS ON THE PIVOT'S DEPTH: the seat scale is solved at
+     the pivot, but after the π flip the deck-rear card (index 0) is a z-pitch
+     nearer the camera — ~3 % larger than the twin, its chamfer stroke off the
+     slot's edge. The square-up shifts the deck by card 0's offset.
+  3. NO MIPS ON THE PORTRAIT TEXTURE (`LinearFilter`): the twin is the same
+     630×1020 canvas the browser downsamples once; a trilinear blend at ~0.7×
+     read softer than it. 2.6 MB flat instead of 3.4.
+     The DOM image is opaque; four back planes at 0.9 exactly behind one another
+     composite to opaque.
+- Fail-static ladder: no JS → the phone `<picture>` source under the plate
+  treatment's CSS twin (the `.svc-plate__pbg` chain) in the band's slot; ring
+  off (the governor's floor, a dead canvas — `data-card-ring-live` absent on
+  `<html>`, stamped by the phone mount) → the same, shown at once; reduced
+  motion or under 681h → not on the rung, the static about minus the cluster.
+
+### 5 · Parallax off on the phone
+
+`useLandingScroll`'s `[data-parallax]` loop is skipped at ≤960: the hero
+plate's 0.03 drift and its `will-change: translate` layer go on phones — a
+per-frame rect read and a main-thread follower of a compositor scroll, the
+class of motion `mobile-sections.md` exists to keep off the phone. Desktop
+keeps it.
+
+## The snap seats, measured in Blink
+
+ADR-113 made `#about.station` a `start` stop. With the weld that top is
+"cards stacked, band blank", and a band with windows needs its OWN seats:
+
+- A scratch walk of six designs (`scrollTo` stops from −250 to +1100px around
+  the weld, 390×844) found Blink's law: **an aligned position attracts every
+  stop within ~280px in either direction, and a covering area never overrides
+  one** — the spec's "any position where the area covers the snapport is a
+  valid snap position" only holds where no aligned position is in range.
+  A `start`-aligned cover at the weld pulled every stop inside the flip BACK
+  to the weld (the first cut: the band could not be scrolled into its first
+  111px); no cover at all let `#services`' own covering edge do the same.
+- So: `.voidwalker__snap-in`, `end`-aligned, `100svh + 0.26 × travel` tall
+  from the station's top — the one position it names is its bottom on the
+  fold, THE FLIP'S END (portrait landed, no text yet); `.voidwalker__snap`,
+  `start`-aligned, one screen, at READ; the station itself `none`. Both full
+  width and `pointer-events: none`. Resting states: the WELD (the exit's last
+  ~250px are pulled forward — the stack completes), the FLIP'S END (a stop in
+  the flip completes it, a stop in the name's window comes back to it), the
+  READING SEAT (a stop in the copy's window or within ~280px past the seat
+  lands on it), and free scroll beyond. **Nothing rests on a half-decoded
+  line** — the probe fails on a landing inside either window.
+
+| asked (p)                 | lands    | state                                       |
+| ------------------------- | -------- | ------------------------------------------- |
+| 0.02                      | 0.02     | inside the flip, held by `#services`' cover |
+| 0.11 · 0.22 · 0.30 · 0.36 | **0.26** | the flip's end — portrait alone             |
+| 0.45 · 0.55 · 0.80        | **0.62** | the reading seat                            |
+| 0.62 · 0.99 · 1.0         | as asked | the seat; the handover                      |
+
+## Measured (Chromium, 390×844, dark)
+
+| stop                    | reading                                                             |
+| ----------------------- | ------------------------------------------------------------------- | --- | ------------------------ |
+| band f 0.73 (the leave) | exit 0.000, step 3, 3 targets, copy resolved                        |
+| f 0.825                 | exit 0.350, `[data-untype="live"]`, 7 leaves / 84 glyphs, 0 targets |
+| f 0.919                 | exit 0.699, 7 leaves / 4 glyphs                                     |
+| f 0.99                  | exit 0.963, `gone`, 0 glyphs                                        |
+| f 1.0                   | the travel ends at −0.5 and `#about`'s top is at −0.5 — the weld    |
+| about p 0.02            | deck live, name/copy pending, slot 222.4 × 360 at y 205             |
+| p 0.30 → 0.36           | name `decode`, 3 leaves, 19 → 52 glyphs                             |
+| p 0.62                  | name 1, copy 1, no leaf, deck live, DOM hidden                      |
+| p 0.99 → 1.0            | deck live → done, DOM hidden → visible (blob), bake stamped         |
+| handover                | mean                                                                | Δ   | 3.63/255, 1.67 % over 40 |
+| chevron                 | slot 360 → 192.8 → 360; rest 0 → 204 → 0                            |
+| snap −40                | lands at p 0.620                                                    |
+| frames                  | p50 4.2ms · p95 17–24ms · max ≤ 28ms                                |
+
+## What the guards learned
+
+- ⚠ **A fixed band fraction is a bet on the beats' geometry.** The smoke's
+  `seatBand(0.4)` landed mid-turn once the leave moved (two cards facing the
+  reader, not three) and its 0.55 → 0.8 step-change read inside the exit. Each
+  beat is `ringMobileBandFraction(i)` now — the clock's inverse, never a
+  literal.
+- ⚠ **A station's MID rest is an arbitrary position in a multi-viewport
+  station.** The ring band's runway grew 30svh and `#services`' mid slid into
+  the proof pile, where a field sheet's sentence passes under the settings
+  cluster — the §1 class no floor can reach. Ledgered, not tolerated: the seat
+  and NEAR read `(none)`.
+- ⚠ **A station's rests are its STATES, and a band with targets has three.**
+  ADR-113's NEAR (`top + 340`) and MID (half the height) were pulled by the
+  two targets — 33px back onto the flip's end at 390×844, 309px onto the
+  reading seat at 430×932 — and the seek reported a miss on a page doing
+  exactly what it should. `stationRests("about")` returns the reading seat,
+  the flip's end and the release frame (p = 1, past both radii).
+- ⚠ **The covering rule is a rule about a BOX, and an `end` target's box ends
+  on the fold.** ADR-113's glide case held that a stop 60px past a station
+  taller than the screen STAYS; 60px past the flip's-end target the bottom
+  of the screen is uncovered and the aligned position pulls the stop back —
+  by design (a stop inside the name's window returns to the portrait alone).
+  The case reads the alignment before applying the rule.
+- ⚠ **A harness that insists on its own number reads a snap as a miss.** The
+  probe's seats return their LANDING and print `pulled`; the smoke's
+  `seatAboutBand` likewise. What is asserted is the page's state at the
+  landing, and that no landing is inside a decode window.
+- ⚠ **The dev server reloads the page under a long scripted walk** (the HMR
+  socket dropped mid-run and the document collapsed to its pre-mount height);
+  the scratch walks capture `pageerror` and print the document's height with
+  every trial.
+- ⚠ **`lib/musings/copyLaw.ts` fails `tsc` in this tree** — the other
+  session's in-progress edit, outside this pass.
+
+## Files
+
+`components/landing/home-v2/unifiedServicesInstrument.ts` (`SERVICES_ABOUT_DECK_MOBILE`)
+· `lib/services-ring/ringMath.ts` · `lib/services-ring/aboutBandMath.ts` (new)
+· `lib/services-ring/portraitBake.ts` (new) · `lib/home-v2/lineLeaves.ts`
+(new) · `lib/home-v2/scrubbedDecode.ts` (new) ·
+`components/landing/home-v2/decodeLayer.ts` (new) ·
+`components/landing/home-v2/services/hologram/ServicesCardRing.tsx` ·
+`components/landing/home-v2/DepthGatewayScene/CorridorArmillary.tsx` ·
+`components/landing/home-v2/hooks/useServicesStageScroll.ts` ·
+`components/landing/home-v2/services/ServicesStage.tsx` ·
+`components/landing/home-v2/services/ServicesMasthead.tsx` ·
+`components/landing/home-v2/services/services.css` ·
+`components/landing/home-v2/about/{AboutStage.tsx, AboutBand.tsx,
+useAboutBandScroll.ts, about-band.css}` · `app/(marketing)/page.tsx` ·
+`public/prototypes/v7/landing-v7-motion.html` ·
+`components/landing/v7/hooks/useLandingScroll.ts` ·
+`app/(marketing)/arcs/trinny-london/proposal/turn/headCarrier.ts` (imports the
+lifted walker) · `tests/lib/{about-band-math, services-ring-mobile-gate,
+phone-viewport-units, layout-viewport-height}.test.ts` ·
+`tests/visual/{services-ring-mobile-smoke, mobile-section-seams}.spec.ts` ·
+`scripts/probe-mobile-deck.mjs` (new).
+
+## Verifying
+
+```bash
+npx vitest run tests/lib/about-band-math.test.ts tests/lib/services-ring-mobile-gate.test.ts tests/lib/phone-viewport-units.test.ts tests/lib/layout-viewport-height.test.ts tests/lib/landing-import-doctrine.test.ts tests/lib/trinny-seam.test.ts
+npx playwright test tests/visual/services-ring-mobile-smoke.spec.ts tests/visual/proof-stack-mobile-smoke.spec.ts tests/visual/mobile-section-seams.spec.ts --workers=1 --project=iphone-14-chromium --project=iphone-14-pro-max-chromium
+npx playwright test tests/visual/landing-page.spec.ts -g "HUD" --project=desktop      # unchanged, no --update-snapshots
+npx playwright test tests/visual/services-ring-smoke.spec.ts tests/visual/trinny-london-smoke.spec.ts tests/visual/about-voidwalker-handoff-boundaries.spec.ts --project=desktop
+node scripts/probe-mobile-deck.mjs --theme dark && node scripts/probe-mobile-deck.mjs --theme light   # headed; stills in .cursor/mobile-deck/
+```
+
+## Device checklist (the gate)
+
+His phone, both toolbar states, dark and light, one still per fail:
+
+1. Scroll past the fourth service card: the title and the paragraph glitch out
+   while the four cards collapse into one stack; nothing flickers; scroll back
+   and it all unwinds. A stop inside the last stretch completes the stack.
+2. Keep scrolling: the stack turns over into the portrait, then the name and
+   the role decode in above it, then the first paragraph types in below. A stop
+   inside the flip completes it; a stop anywhere near the reading state lands
+   on it. Nothing rests half-decoded.
+3. The chevron: the paragraph rises, the two paragraphs unfold, the portrait
+   shrinks with it (and hides on a short phone); close restores.
+4. Scroll on: the portrait rides the band up as an ordinary page (no swim, no
+   lag, one picture at the seam), the eras snap in.
+5. Frame feel and thermal over the exit + flip, twice through. Any fail ⇒
+   ship with `SERVICES_ABOUT_DECK_MOBILE = false` and nothing else moves.
+
+## Left open
+
+- The device read.
+- `scroll-snap-stop: always` on `.voidwalker__snap`, if a fling overshoots the
+  reading state on WebKit (whose proximity radius is undocumented).
+- The exit's 62svh and the about runway's 240svh — pacing dials, his read.
+- The flip's-end and reading seats on WebKit: the radius arithmetic above is
+  Blink's; a smaller radius widens the dead zone between the two (a stop there
+  goes back to the flip's end), a larger one narrows it. Either way no stop
+  rests mid-decode.
+- The 342 kB of ADR-112 portraits on the phone, unchanged.

@@ -197,8 +197,14 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       const isActive = link.getAttribute("data-station") === activeKey;
       link.classList.toggle("is-active", isActive);
     });
-    // Parallax (reuses `reduceMotion` cached at the top of the frame)
-    if (!reduceMotion && scrollY !== lastScrollY.current) {
+    // Parallax (reuses `reduceMotion` cached at the top of the frame).
+    // ⚠ NOT ON A PHONE (ADR-115, owner: "as a best practice, remove those"):
+    // the drift is a per-frame rect read plus a `translate` layer on the hero
+    // plate, a compositor scroll's one main-thread follower — the class of
+    // motion mobile-sections.md exists to keep off the phone. Desktop keeps
+    // it; one matchMedia read per frame, like `reduceMotion`.
+    const phone = window.matchMedia("(max-width: 960px)").matches;
+    if (!reduceMotion && !phone && scrollY !== lastScrollY.current) {
       lastScrollY.current = scrollY;
       const viewportCenter = scrollY + vh / 2;
       root.querySelectorAll<HTMLElement>("[data-parallax]").forEach((el) => {

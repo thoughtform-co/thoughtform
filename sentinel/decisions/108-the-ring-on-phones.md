@@ -212,3 +212,7 @@ layout width (ADR-107's finding) makes every width ask ~8 % generous here.
 `tests/visual/services-ring-mobile-smoke.spec.ts` ·
 `.claude/rules/services-ring.md` · `.claude/rules/mobile-sections.md` ·
 `.claude/skills/landing-performance/SKILL.md`.
+
+## Update (2026-09-20) — ADR-115
+
+Behind `SERVICES_ABOUT_DECK_MOBILE` (off ⇒ this ADR byte-identical): the band's EXIT enters the stack (`ringMobileClock(p, deck)` runs `progress` past `RING_EXIT_START` and `hold` stays 1; `RING_MOBILE_RUNWAY_SVH` 3.3 / `RING_MOBILE_LEAVE_START` 0.73 keep the beats' scroll and give the stack 62svh), the phone profile bakes the portrait back lazily, and the seat FREEZES from exit 1. See [ADR-115](115-the-phones-deck-flip.md).

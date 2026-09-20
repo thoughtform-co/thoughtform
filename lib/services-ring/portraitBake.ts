@@ -1,11 +1,11 @@
 /**
  * portraitBake — the deck's PORTRAIT BACK face and the card-face palette it
- * is drawn in, lifted out of `ServicesCardRing.tsx` (ADR-114) so a DOM tree
+ * is drawn in, lifted out of `ServicesCardRing.tsx` (ADR-115) so a DOM tree
  * can bake the same canvas the WebGL deck shows.
  *
  * THREE-FREE ON PURPOSE. On the phone the deck flips to this portrait inside
  * the corridor canvas and then HANDS OVER to a DOM `<img>` in the about
- * band's seat before the band unpins (ADR-114 §4) — and the two may not
+ * band's seat before the band unpins (ADR-115 §4) — and the two may not
  * differ by a pixel, because the frame they cross on is the one the reader
  * is looking at. So the DOM side does not imitate the bake with a CSS filter
  * chain; it runs THIS function and shows the blob. That is only possible if
@@ -229,7 +229,7 @@ export const PORTRAIT_BACK_SRC = "/images/services/vince.jpg";
  *
  * `cutTopLeft` is `faceVariant === "full"` on the ring: the `tight` slab has
  * no physical TR chamfer, so its back drops the mirrored TL chrome.
- * `scale` (ADR-114) draws the same 840×1360 drawing into a canvas of
+ * `scale` (ADR-115) draws the same 840×1360 drawing into a canvas of
  * `bakeSize(scale)` — the phone's ratio, every coordinate still in bake px.
  */
 export function bakePortraitBack(
@@ -347,7 +347,7 @@ export function bakePortraitBack(
   return canvas;
 }
 
-/* ── One bake, two readers (ADR-114) ─────────────────────────────────────
+/* ── One bake, two readers (ADR-115) ─────────────────────────────────────
  * On the phone the ring's back planes and the about band's DOM `<img>` show
  * the SAME canvas — the handover between them is pixel-identical only if
  * neither re-draws it. So the bake is memoised here per theme and scale, as

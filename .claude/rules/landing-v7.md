@@ -253,6 +253,19 @@ mobile/PRM/fallback/flag-off). Flag: `ABOUT_DECK_STAGE`. Paint-stack rows
 4c–4e in ADR-008. Every disengage path must clear `data-about-mode`
 (including the media-flip null-render — the hook disengages when its
 stage ref goes null).
+⚠ **ON THE PHONE RUNG `#about` IS A BAND SINCE ADR-115 (2026-09-20)** —
+`AboutStage` mounts `AboutBand` there instead of the stage: the parsed
+`.voidwalker` block becomes a sticky 100svh band inside a 240svh station
+(name · role · the portrait's seat · ¶1 · the rest behind a chevron), welded
+to the services band by `-100svh`, the ring's deck stacking on the services
+exit and flipping to the portrait on the band's clock, handing over to a DOM
+image of the same bake before the band unpins. The prototype carries the
+`.voidwalker__more` button, the `.voidwalker__rest` wrapper, the portrait
+`<picture>` (phone source = the bake's own photo) and two snap targets; all
+of it is `display: contents` / `none` off the rung, so the desktop and the
+PRM/fallback about are byte-identical. The orbit cluster and its ADR-045
+emerge are `display: none` on every ≤960 rung (his "remove the parallax
+section"). Rules: `mobile-sections.md` §11.
 
 **Proposed About→Voidwalker portrait handoff — unshipped/unpushed, pending visual
 approval.** Only the capable path (`min-width: 1101px`, motion allowed, flags

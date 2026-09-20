@@ -142,9 +142,11 @@ import {
   VOID,
   bakePortraitBack,
   loadImage,
+  portraitBakeFor,
   traceChamferPathMirrored,
   type FacePalette,
 } from "@/lib/services-ring/portraitBake";
+import { ABOUT_BAND_KILL, aboutBandSquareT } from "@/lib/services-ring/aboutBandMath";
 import { openPlateRef } from "@/lib/services-ring/openPlateRef";
 import { TRACK_DISPLAY, setBakeType } from "@/lib/services-ring/ringType";
 import {
@@ -297,7 +299,7 @@ const RESUME_IDLE_GAP_MS = 500;
  * parks `aboutProgressRef` at 0). Keep the two in lockstep.
  *
  * ⚠ The back plane at index 4 is CONDITIONAL on `deckFlip` (the desktop flag
- * `ABOUT_DECK_STAGE` by default, the phone's own since ADR-114); with the
+ * `ABOUT_DECK_STAGE` by default, the phone's own since ADR-115); with the
  * flag off the positional map shifts by one from there on. Harmless today
  * because the rebase only ever runs deck-engaged, which requires that same
  * flag — but it is a landmine if either gate ever changes. The drawer entries
@@ -2158,7 +2160,7 @@ export interface ServicesCardRingProps {
   /**
    * The ABOUT DECK (ADR-047): the exit beat STACKS the cards and the about
    * clock FLIPS the deck to the portrait back. Defaults to the desktop flag;
-   * the phone mount passes `SERVICES_ABOUT_DECK_MOBILE` (ADR-114), so the
+   * the phone mount passes `SERVICES_ABOUT_DECK_MOBILE` (ADR-115), so the
    * two surfaces roll back independently. Off, the deck branch never runs
    * and the portrait back plane is not mounted.
    */
@@ -2251,6 +2253,15 @@ export function ServicesCardRing({
   // ONE geometry across all four back planes — the backs are only ever
   // seen converged (the flip), so identical faces are correct and cheap.
   const [backTexture, setBackTexture] = useState<THREE.CanvasTexture | null>(null);
+  /* ADR-115: the PHONE's portrait bake is LAZY — asked for by the frame loop
+     the first time the band has pinned (`proofRelease` > 0), never at mount,
+     so a phone that never reaches the offer fetches no photo. Latched once. */
+  const [portraitWanted, setPortraitWanted] = useState(false);
+  const portraitWantedRef = useRef(false);
+  /* The four portrait back planes, for the `visible` gate (ADR-115: drawn
+     only while the deck is flipping — a FrontSide-culled plane is still a
+     draw call, four of them every frame, ADR-110's own finding). */
+  const portraitMeshRefs = useRef<Array<THREE.Mesh | null>>([]);
   /* The REVEAL textures (round four): per card, the portrait raster's
      composition baked without its glyph pass — null forever unless
      `revealOn`, and null per card whose photograph failed to load (that card
@@ -2295,6 +2306,8 @@ export function ServicesCardRing({
      (`openDrawer` false — no second slab), so the open state's RESPONSE is
      the card's own half turn: its back plane carries the spec. */
   const flipLevelRef = useRef<number[]>(new Array(RING_COUNT).fill(0));
+  /* The phone seat's hold across the services → about handover (ADR-115). */
+  const mobileSeatHoldRef = useRef({ cy: 0, h: 0, w: 0, valid: false });
   /* The BACK FACES (ADR-110), baked lazily per card at
      `BAKE_SCALE_MOBILE_BACK` and held TWO at a time — the open card's and
      the front's. Each entry remembers the theme it was baked in, so a theme
@@ -3196,6 +3209,34 @@ export function ServicesCardRing({
     if (!backTexture) return;
     return () => backTexture.dispose();
   }, [backTexture]);
+  /* THE PHONE'S PORTRAIT (ADR-115). The desktop bakes its portrait back in
+     the face effect above; the phone bakes it HERE, lazily, at the back's
+     ratio (`BAKE_SCALE_MOBILE_BACK`, 630×1020), from the memo the about
+     band's DOM `<img>` reads too — ONE bake, two readers, so the frame the
+     deck hands over to the DOM is pixel-identical. Re-runs on a theme flip
+     (a new memo key); the old texture disposes through the effect above. */
+  useEffect(() => {
+    if (!deckFlip || !mobileProfile || !portraitWanted) return;
+    let disposed = false;
+    const maxAniso = gl.capabilities.getMaxAnisotropy?.() ?? 1;
+    portraitBakeFor(ringTheme, BAKE_SCALE_MOBILE_BACK, faceVariant === "full").then((canvas) => {
+      if (disposed) return;
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(anisotropyCap, maxAniso);
+      /* No mips, linear: the DOM twin is the same 630×1020 canvas the
+         browser downsamples once; a trilinear blend between mip 0 and 1 at
+         ~0.7× read SOFTER than it on the handover frame (measured). Also
+         2.6 MB flat instead of 3.4 with mips. */
+      texture.generateMipmaps = false;
+      texture.minFilter = THREE.LinearFilter;
+      texture.needsUpdate = true;
+      setBackTexture(texture);
+    });
+    return () => {
+      disposed = true;
+    };
+  }, [deckFlip, mobileProfile, portraitWanted, ringTheme, faceVariant, gl, anisotropyCap]);
   useEffect(() => {
     if (!drawerTextures) return;
     return () => {
@@ -3316,11 +3357,30 @@ export function ServicesCardRing({
     // The complete shared-actor path disables that fade and hands opacity
     // directly to the complementary renderer takeover, preventing a blank
     // frame at the About/Voidwalker seam.
+    /* ADR-115: on the PHONE the deck does not fade on the about tail — it is
+       killed on one frame at `ABOUT_BAND_KILL`, just after the about band's
+       DOM portrait (the same bake) has shown at `ABOUT_BAND_DONE`, so the
+       reader sees one picture throughout and the band then scrolls away as
+       a document with the portrait in it. Nothing may fade while looked at. */
     const deckBgKill = deckEngaged
       ? handoffActive
         ? rendererOwnership.webglPortrait
-        : 1 - aboutDeckFadeT(aboutP)
+        : mobileProfile
+          ? aboutP >= ABOUT_BAND_KILL ||
+            (exitP >= 1 && !aboutProgressRef.current.engaged) ||
+            /* The band's seat is under the portrait floor (the chevron's
+               expanded copy on a short phone): the DOM image hides and so
+               does the deck — never the desktop's centre-screen fallback
+               seat, which put a 360px portrait over the copy. */
+            (aboutP > 0 && aboutProgressRef.current.engaged && !aboutSlotSource.current.valid)
+            ? 0
+            : 1
+          : 1 - aboutDeckFadeT(aboutP)
       : 1;
+    /* THE DECK SQUARES UP (ADR-115, phone only): the hand-stacked x/y jitter
+       runs to zero between the reading seat and the handover, so the DOM
+       image takes over from ONE card. Identity on desktop. */
+    const deckSquare = mobileProfile && deckEngaged ? aboutBandSquareT(aboutP) : 0;
 
     // Flip-phase shared geometry (one inverse parent matrix + camera terms
     // + the pivot's seat for all four cards — scratch objects only).
@@ -3475,6 +3535,14 @@ export function ServicesCardRing({
       for (let i = 0; i < RING_COUNT; i++) {
         const wanted = wantId === SERVICES[i].id;
         if (wanted) flipWantIdx = i;
+        /* ADR-115: the deck's engage SNAPS a turned card shut. `ServicesStage`
+           closes it on the exit's first frame, but the damped level takes
+           ~450ms to land and a flick can reach the stack inside that — and
+           this back plane (0.115) paints OVER the portrait back (0.11). */
+        if (deckEngaged) {
+          lv[i] = 0;
+          continue;
+        }
         const want = wanted && backTextureFor(i) !== null ? 1 : 0;
         lv[i] += (want - lv[i]) * Math.min(1, delta * RING_FLIP_RATE);
         if (lv[i] > flipOpenT) {
@@ -3503,7 +3571,28 @@ export function ServicesCardRing({
            than `RING_MOBILE_SEAT_FILL` of it (the width law still caps), and
            centres on it. The open card (ADR-110) keeps this size: it turns
            in place. */
-        const seat = progressRef.current.seat;
+        /* THE SEAT FREEZES ONCE THE DECK IS THE ABOUT CLOCK'S (ADR-115). The
+           services band leaves UNDER the pinned about band (the −100svh
+           weld) and its seat rect rides up with it; a ring group still
+           seated on it would drag the stacked deck off the top of the
+           screen. So from `exitP ≥ 1` (or the about clock's first frame) the
+           last live seat is HELD, and the flip's own `posBlend` glide is what
+           carries the pivot onto the about band's seat — the desktop's one
+           motion owner. Released the moment both clocks are back at rest. */
+        const seatHold = deckEngaged && (exitP >= 1 || aboutP > 0);
+        const held = mobileSeatHoldRef.current;
+        const liveSeat = progressRef.current.seat;
+        if (!seatHold) {
+          if (liveSeat) {
+            held.cy = liveSeat.cy;
+            held.h = liveSeat.h;
+            held.w = liveSeat.w;
+            held.valid = true;
+          } else {
+            held.valid = false;
+          }
+        }
+        const seat = seatHold && held.valid ? held : liveSeat;
         const frontPx = ringMobileFrontWidthPx(Math.max(1, size.width), seat?.h);
         const frontMul = scaleRange[1] * (1 + frontScaleEmphasis(size.width));
         /* The front card orbits `orbitBase` closer to the camera than the
@@ -3607,6 +3696,18 @@ export function ServicesCardRing({
       }
       backKeepRef.current.open = flipWantIdx;
       backKeepRef.current.front = front;
+    }
+    /* THE PHONE'S PORTRAIT ASK (ADR-115): once the band has pinned the deck
+       is a few beats away — bake now, idle, so the flip never turns a blank
+       slab. Latched: one ask for the ring's life. */
+    if (
+      deckFlip &&
+      mobileProfile &&
+      !portraitWantedRef.current &&
+      progressRef.current.proofRelease > 0
+    ) {
+      portraitWantedRef.current = true;
+      setPortraitWanted(true);
     }
 
     for (let i = 0; i < RING_COUNT; i++) {
@@ -3814,9 +3915,16 @@ export function ServicesCardRing({
         // named the left↔right travel DIRECTION — the literal Rx shipped
         // first and read as a top-over-bottom tumble.
         const off = DECK_OFFSETS[i];
-        const offX = off.x * flipRigidScale;
-        const offY = off.y * flipRigidScale;
-        const offZ = off.z * flipRigidScale;
+        const offX = off.x * flipRigidScale * (1 - deckSquare);
+        const offY = off.y * flipRigidScale * (1 - deckSquare);
+        /* The square-up also seats the NEAREST card on the pivot's depth.
+           The seat scale is solved at the pivot, but after the π flip the
+           deck-rear card (index 0, the most negative offset) is the one
+           nearest the camera — a z-pitch nearer than the pivot, so it
+           projected ~3 % larger than the DOM twin and lost its chamfer
+           stroke off the slot's edge (measured). Shifting the whole deck by
+           card 0's offset puts that card ON the pivot and the rest behind. */
+        const offZ = (off.z - DECK_OFFSETS[0].z * deckSquare) * flipRigidScale;
         cardGroup.position.set(
           flipPivotX + offX * flipCos + offZ * flipSin,
           flipPivotY + offY,
@@ -3899,6 +4007,14 @@ export function ServicesCardRing({
       if (backMesh) {
         const backVisible = flipT > 0.001;
         if (backMesh.visible !== backVisible) backMesh.visible = backVisible;
+      }
+      /* The PORTRAIT back likewise (ADR-115): only while the deck is
+         flipping. Its material's opacity is 0 outside the flip anyway, so
+         the pixels are unchanged; the draw calls are not. */
+      const portraitMesh = portraitMeshRefs.current[i];
+      if (portraitMesh) {
+        const portraitVisible = flip !== null;
+        if (portraitMesh.visible !== portraitVisible) portraitMesh.visible = portraitVisible;
       }
       slabMaterials[i][0].opacity = glassOpacity * depthO * master;
       slabMaterials[i][1].opacity = glassEdgeOpacity * depthO * master;
@@ -4309,12 +4425,16 @@ export function ServicesCardRing({
               the flip AND is already dead via the stack's glowMul). */}
           {deckFlip && (
             <mesh
+              ref={(el) => {
+                portraitMeshRefs.current[i] = el;
+              }}
               renderOrder={0.11}
               position={[0, 0, -(slabDepth / 2 + RING_CONTENT_LIFT)]}
               rotation={[0, Math.PI, 0]}
               geometry={backGeometry}
               material={backMaterial}
               frustumCulled={false}
+              visible={false}
             />
           )}
           {/* Hologram veil — the plate's dot-matrix feed read over the

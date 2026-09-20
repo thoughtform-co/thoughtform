@@ -320,3 +320,7 @@ four draw calls a frame for three cards that never turn.
 `.claude/rules/services-ring.md` ·
 `.claude/rules/mobile-sections.md` · `.claude/rules/type-material.md` ·
 `.claude/skills/landing-performance/SKILL.md`.
+
+## Update (2026-09-20) — ADR-115
+
+Behind `SERVICES_ABOUT_DECK_MOBILE` (off ⇒ this ADR byte-identical): the exit no longer fades the cards — they STACK, and a turned card is closed on the exit's first frame (`ServicesStage` on `--svc-exit > 0`, the ring snapping `flipLevelRef` shut on `deckEngaged`, because this ADR's back plane at 0.115 paints over the portrait back at 0.11). See [ADR-115](115-the-phones-deck-flip.md).

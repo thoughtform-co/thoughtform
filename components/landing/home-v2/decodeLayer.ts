@@ -1,6 +1,6 @@
 /**
  * decodeLayer — a layer of per-line LEAVES that decodes a host's runs in
- * place, scrubbed by a clock the caller owns (ADR-114; ADR-103's head
+ * place, scrubbed by a clock the caller owns (ADR-115; ADR-103's head
  * carrier, generalised for the phone's two bands).
  *
  * Why a layer and not the real text: a decoding run is wider than its

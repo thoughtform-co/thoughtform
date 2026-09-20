@@ -563,6 +563,31 @@ RING_CONTENT_LIFT)`, `rotation.y = π`, FrontSide, renderOrder 0.115, its
   itself is not, and the side-tap tween's beats rest far outside any proximity
   radius of `#about`'s stop (`mobile-section-seams.spec.ts`, `probe-mobile-
 lockin.mjs`). Rules in `mobile-sections.md` §10.
+- ⚠ **THE BAND'S EXIT IS THE DECK'S STACK, AND THE DECK FLIPS ON THE ABOUT
+  BAND (ADR-115, 2026-09-20, owner: _"the cards should then stack on top of
+  each other, rotate them as we have on desktop, and then reveal my profile
+  picture"_).** Behind `SERVICES_ABOUT_DECK_MOBILE`: `ringMobileClock(p, deck)`
+  runs `progress` past `RING_EXIT_START` over the leave
+  (`RING_MOBILE_RUNWAY_SVH` 3.3 / `RING_MOBILE_LEAVE_START` 0.73 — the four
+  beats' scroll is unchanged, the stack gets 62svh) and `hold` stays 1;
+  `--svc-exit` goes live on the phone, `ServicesStage` closes a turned card on
+  its first frame and the ring snaps `flipLevelRef` shut on `deckEngaged`
+  (ADR-110's back plane paints OVER the portrait back). The phone mount passes
+  `deckFlip` (a prop, default `ABOUT_DECK_STAGE`, so the desktop mount is
+  untouched); the phone profile bakes the portrait back lazily through
+  `portraitBakeFor` — the three-free memo `lib/services-ring/portraitBake.ts`
+  that the about band's DOM image ALSO reads, which is what makes the handover
+  one picture. ⚠ **THE SEAT FREEZES FROM EXIT 1**: `ringMobileSeatY` reads the
+  services seat every frame and that rect leaves with the band;
+  `mobileSeatHoldRef` holds the last live seat and the flip's `posBlend` glide
+  carries the pivot onto the about slot. ⚠ **THE DECK SQUARES UP** over
+  `ABOUT_BAND_SQUARE_WINDOW` (phone only: `DECK_OFFSETS`' x/y → 0, card 0
+  shifted onto the pivot's depth) so the DOM twin takes over from ONE card, and
+  the portrait texture takes NO MIPS — three things the handover diff found
+  (18.7 → 3.6/255). The masthead's phone branch un-types the copy on the exit
+  (`decodeLayer` leaves over the centred text; `scrambleLinesOut` is the
+  incoming decode time-reversed, so a leaving run keeps its cells). The rule is
+  `mobile-sections.md` §11; the record ADR-115.
 - **Verifying:** `npx vitest run tests/lib/services-ring-mobile-gate.test.ts
 tests/lib/ring-type.test.ts` (the three readers, the bake, the clock, the
   scale solve re-projected, the seat, the beat inverse, the back's fit over

@@ -5333,34 +5333,46 @@ html { scroll-behavior: smooth; }
           change for over a decade: social media, online communities, now
           <em>intelligence itself.</em>
         </p>
-        <p class="voidwalker__bio" data-m="body">
-          AI is different: it isn't software to command, but an
-          <span class="voidwalker__bio-accent">intelligence to navigate</span>.
-          Through Thoughtform, he helps teams build that
-          relationship, mapping the fit between their work and the
-          intelligence available.
-        </p>
-        <p class="voidwalker__bio" data-m="body">
-          He runs the same practice inside
-          <span class="voidwalker__bio-mark">Loop Earplugs</span>, leading AI
-          adoption: advising leadership, embedding with teams, building the
-          tools behind the marketing engine.
-        </p>
+        <!-- THE REST OF THE BIO (ADR-115): on the phone's ring rung the
+             band shows the first paragraph and this wrapper is a disclosure
+             the chevron below it opens; everywhere else both are transparent
+             to layout (about-band.css: `display: contents` / `display: none`).
+             The button is authored so the no-JS page and the fallback rungs
+             keep a complete, static about. No angle-bracket syntax in this
+             comment: the v7-parse relocate walkers regex-scan the raw HTML. -->
+        <div class="voidwalker__rest" id="about-rest">
+          <div class="voidwalker__rest__in">
+            <p class="voidwalker__bio" data-m="body">
+              AI is different: it isn't software to command, but an
+              <span class="voidwalker__bio-accent">intelligence to navigate</span>.
+              Through Thoughtform, he helps teams build that
+              relationship, mapping the fit between their work and the
+              intelligence available.
+            </p>
+            <p class="voidwalker__bio" data-m="body">
+              He runs the same practice inside
+              <span class="voidwalker__bio-mark">Loop Earplugs</span>, leading AI
+              adoption: advising leadership, embedding with teams, building the
+              tools behind the marketing engine.
+            </p>
 
-        <div class="voidwalker__meta">
-          <div class="voidwalker__meta__cell">
-            <span class="voidwalker__meta__k">Base</span>
-            <span class="voidwalker__meta__v">Antwerp · BE</span>
-          </div>
-          <div class="voidwalker__meta__cell">
-            <span class="voidwalker__meta__k">Practice</span>
-            <span class="voidwalker__meta__v">10+ yrs</span>
-          </div>
-          <div class="voidwalker__meta__cell">
-            <span class="voidwalker__meta__k">Also at</span>
-            <span class="voidwalker__meta__v">Loop Earplugs</span>
+            <div class="voidwalker__meta">
+              <div class="voidwalker__meta__cell">
+                <span class="voidwalker__meta__k">Base</span>
+                <span class="voidwalker__meta__v">Antwerp · BE</span>
+              </div>
+              <div class="voidwalker__meta__cell">
+                <span class="voidwalker__meta__k">Practice</span>
+                <span class="voidwalker__meta__v">10+ yrs</span>
+              </div>
+              <div class="voidwalker__meta__cell">
+                <span class="voidwalker__meta__k">Also at</span>
+                <span class="voidwalker__meta__v">Loop Earplugs</span>
+              </div>
+            </div>
           </div>
         </div>
+        <button class="voidwalker__more" type="button" aria-expanded="false" aria-controls="about-rest" aria-label="Read the rest of the bio"></button>
 
         <div class="voidwalker__links" aria-label="Elsewhere">
           <a href="#" aria-label="LinkedIn" title="LinkedIn">
@@ -5494,12 +5506,24 @@ html { scroll-behavior: smooth; }
           <span class="d" style="--a: 348deg;--r: 42%;"></span>
         </div>
 
-        <!-- portrait, centered, black-and-white -->
+        <!-- portrait, centered, black-and-white. On the phone's ring rung
+             (ADR-115) this box is the band's SEAT: the WebGL deck flips to
+             the portrait over it and hands over to this image, whose phone
+             source is the bake's own photo (the writer swaps in the bake). -->
         <div class="voidwalker__orbit__portrait" data-m="portrait">
-          <img src="assets/vince-portrait.jpg" alt="Vince Buyssens, founder of Thoughtform" loading="lazy"/>
+          <picture>
+            <source media="(max-width: 960px)" srcset="/images/services/vince.jpg" />
+            <img src="assets/vince-portrait.jpg" alt="Vince Buyssens, founder of Thoughtform" loading="lazy"/>
+          </picture>
         </div>
       </div>
     </div>
+
+    <!-- THE SNAP SEATS (ADR-115): two absolute targets inside the runway —
+         the cover over the flip, and the reading seat; only the ring rung
+         displays them (about-band.css). -->
+    <div class="voidwalker__snap-in" aria-hidden="true"></div>
+    <div class="voidwalker__snap" aria-hidden="true"></div>
 
     <!-- ABOUT STAGE (ADR-047): on the capable desktop path the React
          portal (AboutStagePortal) mounts the pinned deck-flip stage into

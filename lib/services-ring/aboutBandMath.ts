@@ -1,5 +1,5 @@
 /**
- * aboutBandMath — the phone's about BAND, as numbers (ADR-114).
+ * aboutBandMath — the phone's about BAND, as numbers (ADR-115).
  *
  * On the ring rung `#about` is a sticky band inside a runway of
  * `ABOUT_BAND_RUNWAY_SVH` viewports: the deck FLIPS to the portrait on
@@ -23,15 +23,38 @@ import { smootherstep } from "./ringMath";
  *  pins for `RUNWAY − 1` viewports: the flip, the decode, the reading hold. */
 export const ABOUT_BAND_RUNWAY_SVH = 2.4;
 
-/** The name and the role scramble in — after the flip has landed. */
-export const ABOUT_BAND_NAME_WINDOW: readonly [number, number] = [0.26, 0.4];
+/** The name and the role scramble in — after the flip has landed, and a
+ *  hair after the flip's-end snap seat (`ABOUT_BAND_COVER`): a stop pulled
+ *  onto that seat must show the portrait alone, not the decode's first
+ *  frame (measured: a window opening ON the seat rested on three leaves of
+ *  glyph noise). */
+export const ABOUT_BAND_NAME_WINDOW: readonly [number, number] = [0.3, 0.42];
 
 /** The first paragraph types in, one typewriter across its lines. */
-export const ABOUT_BAND_COPY_WINDOW: readonly [number, number] = [0.4, 0.62];
+export const ABOUT_BAND_COPY_WINDOW: readonly [number, number] = [0.42, 0.6];
 
 /** THE READING STATE — the snap seat (ADR-113 §10): a stop near it lands
- *  here, with the portrait on the seat and both texts resolved. */
-export const ABOUT_BAND_READ = ABOUT_BAND_COPY_WINDOW[1];
+ *  here, with the portrait on the seat and both texts resolved. A hair past
+ *  the copy's window, not on it: the seat is solved to a pixel and a landing
+ *  a fraction short of the window's end would rest on `decode`. */
+export const ABOUT_BAND_READ = 0.62;
+
+/** THE FLIP'S-END SEAT — `.voidwalker__snap-in` is `100svh + COVER × travel`
+ *  tall from the station's top and `end`-aligned, so the one position it
+ *  names is its bottom on the fold: the flip landed, the portrait alone.
+ *  ⚠ MEASURED IN BLINK (about-band.css's header): an aligned position pulls
+ *  every stop within ~280px either way and a covering area never overrides
+ *  one — so a stop inside the flip completes the flip here, a stop in the
+ *  name's window comes back here, and a stop in the copy's window goes on
+ *  to the reading seat. Nothing rests mid-decode. A hair past the flip
+ *  (`ABOUT_FLIP_WINDOW[1]` 0.22) and short of the name's window. */
+export const ABOUT_BAND_COVER = 0.26;
+
+/** THE DECK SQUARES UP before the handover: the four cards' hand-stacked
+ *  x/y jitter (ADR-047's `DECK_OFFSETS`) runs to zero over this window, so
+ *  what the DOM takes over from is ONE card — the rear three exactly behind
+ *  the front, their edges and their portraits gone. Pure motion. */
+export const ABOUT_BAND_SQUARE_WINDOW: readonly [number, number] = [ABOUT_BAND_READ, 0.9];
 
 /** The DOM portrait shows from here (the handover's first half) … */
 export const ABOUT_BAND_DONE = 0.995;
@@ -64,6 +87,9 @@ export function aboutBandNameT(p: number): number {
 }
 export function aboutBandCopyT(p: number): number {
   return smootherstep(ABOUT_BAND_COPY_WINDOW[0], ABOUT_BAND_COPY_WINDOW[1], clamp01(p));
+}
+export function aboutBandSquareT(p: number): number {
+  return smootherstep(ABOUT_BAND_SQUARE_WINDOW[0], ABOUT_BAND_SQUARE_WINDOW[1], clamp01(p));
 }
 /** The un-type's own clock from the services exit clock, LINEAR: the kernel
  *  and the typewriter ease per character, so an eased envelope on top would

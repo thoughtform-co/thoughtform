@@ -33,6 +33,8 @@ const ADOPTERS = [
   "components/landing/home-v2/MobileEpilogueSignal.tsx",
   "components/landing/v7/HudNav.tsx",
   "lib/services-ring/beatScrollTarget.ts",
+  // ADR-115: the phone's about band is a runway in svh, read by one writer.
+  "components/landing/home-v2/about/useAboutBandScroll.ts",
 ];
 
 /** The one deliberate exception: `--hero-lift = scrollY / innerHeight` is

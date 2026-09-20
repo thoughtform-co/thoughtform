@@ -1,7 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { SERVICES } from "../../components/landing/home-v2/services/serviceData";
-import { RING_MOBILE_SEAT_FILL } from "../../lib/services-ring/ringMath";
+import { ringMobileBandFraction } from "../../lib/services-ring/beatScrollTarget";
+import { RING_MOBILE_LEAVE_START, RING_MOBILE_SEAT_FILL } from "../../lib/services-ring/ringMath";
+
+/** Each card's beat, as a fraction of the band's own scroll — the clock's
+ *  inverse, never a literal: ADR-115 moved the leave and a fixed 0.4 landed
+ *  mid-turn, where only two cards face the reader. */
+const BEAT = [0, 1, 2, 3].map((i) => ringMobileBandFraction(i));
 
 /**
  * THE RING ON PHONES (ADR-108) AND ITS BEAT (ADR-109).
@@ -224,6 +230,85 @@ async function openBack(page: Page) {
   return front!;
 }
 
+/* ── ADR-115: the about band ──────────────────────────────────────────── */
+
+/** Seat the about band at progress `p` (0 = pinned at the weld, 1 = the
+ *  runway's end). Returns the LANDING — a stop near a snap seat is pulled
+ *  onto it, and that pull is the page's own behaviour, not a miss. */
+async function seatAboutBand(page: Page, p: number): Promise<number> {
+  let landed = Number.NaN;
+  for (let pass = 0; pass < 4; pass += 1) {
+    const target = await page.evaluate((prog) => {
+      const el = document.getElementById("about")!;
+      const r = el.getBoundingClientRect();
+      const vh = document.documentElement.clientHeight;
+      return Math.round(r.top + window.scrollY + prog * (r.height - vh));
+    }, p);
+    await rollTo(page, target);
+    await page.waitForTimeout(350);
+    landed = await page.evaluate(
+      () =>
+        Number.parseFloat(
+          document.getElementById("about")!.style.getPropertyValue("--about-band-p")
+        ) || 0
+    );
+    if (Math.abs(landed - p) < 0.008) return landed;
+  }
+  return landed;
+}
+
+function readAbout(page: Page) {
+  return page.evaluate(() => {
+    const about = document.getElementById("about");
+    const band = about?.querySelector<HTMLElement>(":scope > .voidwalker") ?? null;
+    const slot = about?.querySelector<HTMLElement>(".voidwalker__orbit__portrait") ?? null;
+    const img = slot?.querySelector<HTMLImageElement>("img") ?? null;
+    const name = about?.querySelector<HTMLElement>(".voidwalker__name") ?? null;
+    const copy = about?.querySelector<HTMLElement>(".voidwalker__copy > .voidwalker__bio") ?? null;
+    const rest = about?.querySelector<HTMLElement>(".voidwalker__rest") ?? null;
+    const restBio = about?.querySelector<HTMLElement>(".voidwalker__rest .voidwalker__bio") ?? null;
+    const more = about?.querySelector<HTMLElement>(".voidwalker__more") ?? null;
+    const cluster = about?.querySelector<HTMLElement>(".voidwalker__orbit__svg") ?? null;
+    const rect = (el: HTMLElement | null) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: r.left, y: r.top, w: r.width, h: r.height };
+    };
+    const vis = (el: HTMLElement | null) => (el ? getComputedStyle(el).visibility : null);
+    return {
+      p: Number.parseFloat(about?.style.getPropertyValue("--about-band-p") ?? "NaN"),
+      band: about?.getAttribute("data-about-band") ?? null,
+      deck: about?.getAttribute("data-about-deck") ?? null,
+      vwName: about?.getAttribute("data-vw-name") ?? null,
+      vwCopy: about?.getAttribute("data-vw-copy") ?? null,
+      slotState: about?.getAttribute("data-about-slot") ?? null,
+      portrait: about?.getAttribute("data-about-portrait") ?? null,
+      aboutTop: about ? about.getBoundingClientRect().top : Number.NaN,
+      bandPosition: band ? getComputedStyle(band).position : null,
+      bandTop: band ? band.getBoundingClientRect().top : Number.NaN,
+      bandHeight: band ? band.getBoundingClientRect().height : Number.NaN,
+      bioOpen: band?.getAttribute("data-bio-open") ?? null,
+      slot: rect(slot),
+      imgVisible: vis(img),
+      imgSrc: img?.currentSrc ?? "",
+      nameVisible: vis(name),
+      nameText: name?.textContent?.trim() ?? "",
+      copyVisible: vis(copy),
+      copyText: copy?.textContent?.trim() ?? "",
+      rest: rect(rest),
+      restBioVisible: vis(restBio),
+      more: rect(more),
+      moreExpanded: more?.getAttribute("aria-expanded") ?? null,
+      clusterDisplay: cluster ? getComputedStyle(cluster).display : null,
+      leaves: Array.from(
+        document.querySelectorAll<HTMLElement>(".voidwalker__decode__line")
+      ).filter((l) => !l.hidden).length,
+      ringLive: document.documentElement.getAttribute("data-card-ring-live"),
+      vh: document.documentElement.clientHeight,
+    };
+  });
+}
+
 async function boot(page: Page, theme: "dark" | "light" = "dark") {
   await page.goto(theme === "light" ? "/?theme=light" : "/", { waitUntil: "domcontentloaded" });
   await page.waitForSelector(".services-stage", { timeout: 60_000 });
@@ -242,7 +327,7 @@ test.describe("the ring on phones (ADR-108)", () => {
       await boot(page, theme);
       expect(await bandTop(page), "the seat band is not rendered on the ring rung").not.toBeNaN();
 
-      await seatBand(page, 0.4);
+      await seatBand(page, BEAT[1]!);
       const s = await readBand(page);
 
       // The stage declares the rung it took, and the corridor's exit hook
@@ -453,6 +538,10 @@ test.describe("the ring on phones (ADR-108)", () => {
 
     // The step, not 35px of scroll: the card stays turned through a nudge
     // inside its beat and turns back once the ring has moved on.
+    // ⚠ ADR-115: the band's last 27 % is the EXIT now (the deck stacks and
+    // the hit layer retires), so the beat change is read from one card's
+    // dwell to another's — both before the leave.
+    await seatBand(page, BEAT[1]!);
     await openBack(page);
     const openedStep = (await readBand(page)).step;
     await page.evaluate(() => window.scrollBy(0, 60));
@@ -460,11 +549,75 @@ test.describe("the ring on phones (ADR-108)", () => {
     let r = await readBand(page);
     expect(r.step).toBe(openedStep);
     expect(r.back.expanded, "a nudge inside the beat turned the card back").toBe("true");
-    await seatBand(page, 0.8);
+    await seatBand(page, BEAT[3]!);
     await page.waitForTimeout(700);
     r = await readBand(page);
     expect(r.step).not.toBe(openedStep);
     expect(r.back.expanded, "the ring turned and the card stayed open").toBe("false");
+  });
+
+  /* ── ADR-115: the exit stacks the deck, and the copy un-types ─────────── */
+  test("the band's exit un-types the copy and retires the cards' targets (ADR-115)", async ({
+    page,
+  }) => {
+    await boot(page);
+    // Inside the beats: the copy stands resolved, the front card is a target.
+    await seatBand(page, BEAT[3]!);
+    let s = await readBand(page);
+    expect(s.hits.length).toBe(3);
+    const untypeOf = () =>
+      page.evaluate(() => {
+        const head = document.querySelector<HTMLElement>(".svc-ring-band .services-masthead");
+        const stage = document.querySelector<HTMLElement>(".services-stage");
+        const leaves = Array.from(
+          document.querySelectorAll<HTMLElement>(".svc-ring-band__decode__line")
+        ).filter((l) => !l.hidden);
+        return {
+          stamp: head?.getAttribute("data-untype") ?? null,
+          exit: Number.parseFloat(stage?.style.getPropertyValue("--svc-exit") ?? "0") || 0,
+          leaves: leaves.length,
+          leafText: leaves.map((l) => l.textContent ?? "").join("|"),
+          titleVisible: head
+            ? getComputedStyle(
+                head.querySelector<HTMLElement>(".services-masthead__title-line > span")!
+              ).visibility
+            : null,
+        };
+      });
+    let u = await untypeOf();
+    expect(u.exit).toBe(0);
+    expect(u.stamp).toBeNull();
+    expect(u.titleVisible).toBe("visible");
+
+    // A third of the way into the exit: the exit clock is live, the real
+    // copy is hidden under the leaves, which are mid-decode (some glyphs
+    // still standing, some gone), and the cards have stopped being targets
+    // — the deck is stacking and nothing may take a tap.
+    const L = RING_MOBILE_LEAVE_START;
+    await seatBand(page, L + (1 - L) * 0.35);
+    u = await untypeOf();
+    s = await readBand(page);
+    expect(u.exit).toBeGreaterThan(0.2);
+    expect(u.exit).toBeLessThan(0.6);
+    expect(u.stamp).toBe("live");
+    expect(u.titleVisible).toBe("hidden");
+    expect(u.leaves, "no decode leaves painting mid-exit").toBeGreaterThan(0);
+    expect(u.leafText.replace(/[\s|]/g, "").length).toBeGreaterThan(0);
+    expect(s.hits, "the cards still take taps while the deck stacks").toHaveLength(0);
+    expect(s.plateOpen).toBeNull();
+
+    // The exit spent: the copy is gone (blank leaves, stamp `gone`), still
+    // hidden, and scrolling back re-types it — the decode is scrubbed.
+    await seatBand(page, 0.995);
+    u = await untypeOf();
+    expect(u.exit).toBeGreaterThan(0.9);
+    expect(u.stamp).toBe("gone");
+    expect(u.leafText.replace(/[\s|]/g, "")).toBe("");
+    await seatBand(page, BEAT[3]!);
+    u = await untypeOf();
+    expect(u.stamp).toBeNull();
+    expect(u.titleVisible).toBe("visible");
+    expect((await readBand(page)).hits.length).toBe(3);
   });
 
   test("tapping a side card rolls the band to that card's beat", async ({ page }) => {
@@ -532,5 +685,141 @@ test.describe("the ring on phones (ADR-108)", () => {
     expect(s.hits).toHaveLength(0);
     expect(s.ambient).not.toBe("true");
     expect(s.canvasPosition).not.toBe("fixed");
+    // ADR-115: no about band either — the static about, minus the cluster.
+    const a = await readAbout(page);
+    expect(a.band).toBeNull();
+    expect(a.clusterDisplay).toBe("none");
+  });
+
+  /* ── ADR-115: THE ABOUT BAND ───────────────────────────────────────────
+     The deck flips to the portrait on `#about`'s own clock, the name and the
+     first paragraph decode in, the band holds at a reading seat, and at the
+     runway's end the WebGL portrait hands over to a DOM image of the same
+     bake. Everything below is read off the writer's stamps and the band's
+     own boxes; the pixels are the probe's (`scripts/probe-mobile-deck.mjs`). */
+  for (const theme of ["dark", "light"] as const) {
+    test(`#about is a band welded to the ring's exit; the deck flips and hands over to the DOM — ${theme}`, async ({
+      page,
+    }) => {
+      await boot(page, theme);
+      // The weld: the band pins on the frame the ring band's travel ends.
+      await seatBand(page, 1);
+      let a = await readAbout(page);
+      expect(a.band, "the about band did not engage on the ring rung").toBe("on");
+      expect(a.bandPosition).toBe("sticky");
+      expect(
+        Math.abs(a.aboutTop),
+        "the about band is not welded to the ring band's release"
+      ).toBeLessThanOrEqual(2);
+      expect(Math.abs(a.bandTop)).toBeLessThanOrEqual(2);
+      expect(Math.abs(a.bandHeight - a.vh)).toBeLessThanOrEqual(1);
+      expect(a.clusterDisplay, "the orbit cluster is still drawn on the phone").toBe("none");
+      expect(a.ringLive, "the phone ring did not declare itself live").toBe("on");
+      // Before the flip has landed: nothing decoded, the DOM portrait hidden
+      // (the WebGL deck owns the seat), the seat measured for it.
+      expect(a.vwName).toBe("pending");
+      expect(a.vwCopy).toBe("pending");
+      expect(a.deck).toBe("live");
+      expect(a.imgVisible).toBe("hidden");
+      expect(a.nameVisible).toBe("hidden");
+      expect(a.slot, "no seat for the deck").toBeTruthy();
+      expect(a.slot!.h).toBeGreaterThanOrEqual(140);
+
+      // A stop inside the flip completes it: the flip's-end seat.
+      const flipEnd = await seatAboutBand(page, 0.11);
+      expect(flipEnd).toBeGreaterThan(0.22);
+      expect(flipEnd).toBeLessThan(0.3);
+      a = await readAbout(page);
+      expect(a.vwName, "the name decodes on the flip's-end seat").toBe("pending");
+
+      // The reading seat: everything resolved, the real text shown, no leaf.
+      const read = await seatAboutBand(page, 0.62);
+      expect(Math.abs(read - 0.62)).toBeLessThan(0.01);
+      a = await readAbout(page);
+      expect(a.vwName).toBe("1");
+      expect(a.vwCopy).toBe("1");
+      expect(a.nameVisible).toBe("visible");
+      expect(a.nameText.toLowerCase()).toContain("vince buyssens");
+      expect(a.copyVisible).toBe("visible");
+      expect(a.copyText.length).toBeGreaterThan(60);
+      expect(a.leaves).toBe(0);
+      expect(a.deck).toBe("live");
+      expect(a.imgVisible).toBe("hidden");
+      expect(a.more, "no chevron").toBeTruthy();
+      expect(a.more!.w).toBeGreaterThanOrEqual(44);
+      expect(a.more!.h).toBeGreaterThanOrEqual(44);
+      expect(a.more!.y + a.more!.h).toBeLessThanOrEqual(a.vh - 56 + 1);
+      // The band's rows, in order and clear of the chrome bands.
+      expect(a.slot!.y).toBeGreaterThanOrEqual(56);
+      expect(a.slot!.y + a.slot!.h).toBeLessThanOrEqual(a.vh - 56);
+      const nameBox = await page.evaluate(() => {
+        const r = document.querySelector(".voidwalker__name")!.getBoundingClientRect();
+        return { y: r.top, b: r.bottom };
+      });
+      expect(nameBox.y).toBeGreaterThanOrEqual(56);
+      expect(nameBox.b).toBeLessThanOrEqual(a.slot!.y + 1);
+      const copyBox = await page.evaluate(() => {
+        const r = document
+          .querySelector(".voidwalker__copy > .voidwalker__bio")!
+          .getBoundingClientRect();
+        return { y: r.top, b: r.bottom };
+      });
+      expect(copyBox.y).toBeGreaterThanOrEqual(a.slot!.y + a.slot!.h - 1);
+      expect(copyBox.b).toBeLessThanOrEqual(a.more!.y + 1);
+
+      // The handover: at the runway's end the DOM image (the bake, a blob)
+      // shows and the deck is done; back on the seat the deck owns it again.
+      await seatAboutBand(page, 1);
+      a = await readAbout(page);
+      expect(a.deck).toBe("done");
+      expect(a.imgVisible).toBe("visible");
+      expect(a.portrait, "the DOM portrait is the photo, not the bake").toBe("baked");
+      expect(a.imgSrc.startsWith("blob:"), `the picture's source is ${a.imgSrc.slice(0, 30)}`).toBe(
+        true
+      );
+      await seatAboutBand(page, 0.62);
+      a = await readAbout(page);
+      expect(a.deck).toBe("live");
+      expect(a.imgVisible).toBe("hidden");
+    });
+  }
+
+  test("the chevron unfolds the rest of the bio and the seat gives up its height (ADR-115)", async ({
+    page,
+  }) => {
+    await boot(page);
+    await seatBand(page, 1);
+    await seatAboutBand(page, 0.62);
+    const closed = await readAbout(page);
+    expect(closed.moreExpanded).toBe("false");
+    expect(closed.restBioVisible).toBe("hidden");
+    expect(closed.rest!.h).toBeLessThan(2);
+
+    await page.mouse.click(
+      closed.more!.x + closed.more!.w / 2,
+      closed.more!.y + closed.more!.h / 2
+    );
+    await page.waitForTimeout(800);
+    const open = await readAbout(page);
+    expect(open.bioOpen).toBe("1");
+    expect(open.moreExpanded).toBe("true");
+    expect(open.rest!.h, "the rest did not unfold").toBeGreaterThan(120);
+    expect(open.restBioVisible).toBe("visible");
+    // The copy rose and the seat paid for it; on this shape the portrait is
+    // still a portrait (over the floor) — a shorter phone hides it instead.
+    expect(open.slot!.h).toBeLessThan(closed.slot!.h);
+    if (open.slotState !== "hidden") {
+      expect(open.slot!.h).toBeGreaterThanOrEqual(140);
+      expect(open.imgVisible === "hidden" || open.deck === "live").toBe(true);
+    }
+    // Nothing runs under the settings row.
+    expect(open.more!.y + open.more!.h).toBeLessThanOrEqual(open.vh - 56 + 1);
+
+    await page.mouse.click(open.more!.x + open.more!.w / 2, open.more!.y + open.more!.h / 2);
+    await page.waitForTimeout(800);
+    const again = await readAbout(page);
+    expect(again.bioOpen).toBeNull();
+    expect(again.moreExpanded).toBe("false");
+    expect(Math.abs(again.slot!.h - closed.slot!.h)).toBeLessThanOrEqual(2);
   });
 });

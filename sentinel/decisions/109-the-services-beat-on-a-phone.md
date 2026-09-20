@@ -251,3 +251,7 @@ width is what the law caps. Zero `.svc-plate` on the rung; the band's
 `scripts/capture-services-mobile.mjs` (new) ·
 `.claude/rules/services-ring.md` · `.claude/rules/mobile-sections.md` ·
 `.claude/skills/landing-performance/SKILL.md`.
+
+## Update (2026-09-20) — ADR-115
+
+Behind `SERVICES_ABOUT_DECK_MOBILE` (off ⇒ this ADR byte-identical): the band's copy UN-TYPES on the exit (a phone branch in `ServicesMasthead` over per-line leaves, `MOBILE_UNTYPE_WINDOW` `[0, 0.7]`), the station's bottom paddings are 0 on the rung (the about band is welded `-100svh` to the band's travel), and the seat law is restated in CSS on the about band's slot. See [ADR-115](115-the-phones-deck-flip.md).

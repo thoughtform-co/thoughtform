@@ -110,7 +110,15 @@ const CHROME_SELECTORS = [
  *               screen and its rest is its SEAT now; that position is not
  *               a rest any more.
  */
-const KNOWN_CHROME_COLLISIONS: Record<string, readonly string[]> = {};
+const KNOWN_CHROME_COLLISIONS: Record<string, readonly string[]> = {
+  /* ADR-115 (2026-09-20): the ring band's runway grew 300 → 330svh for the
+     deck's exit, and `#services`' MID rest (half its height) slid ~15svh
+     down into the proof pile — where a field sheet's sentence ("Relative
+     draw measured against workload.") passes under the settings cluster and
+     the BR bracket, mid-station copy the padding floor cannot reach (§1).
+     Measured on both phone projects; the seat and NEAR read `(none)`. */
+  services: [".rin-settings", ".hud__corner--br"],
+};
 
 const BOOT_TIMEOUT = 20_000;
 const SEEK_TIMEOUT = 12_000;
@@ -214,12 +222,29 @@ async function rollTo(page: Page, y: number) {
  *  corridor's lazy content moves them. */
 async function snapSeats(page: Page): Promise<number[]> {
   return page.evaluate(() => {
-    const tops: number[] = [];
-    for (const sel of ["#services", "#about", "#contact", ".vwd"]) {
+    /* Every aligned position the page declares, by what its alignment NAMES:
+       a `start` stop's top, an `end` stop's bottom on the snapport's bottom
+       (ADR-115's flip's-end target). `#about` is listed for the flag-off
+       page, where it is still a `start` stop; on the band it computes `none`
+       and drops out, and its two targets take its place. */
+    const seats: number[] = [];
+    const vh = document.documentElement.clientHeight;
+    for (const sel of [
+      "#services",
+      "#about",
+      ".voidwalker__snap-in",
+      ".voidwalker__snap",
+      "#contact",
+      ".vwd",
+    ]) {
       const el = document.querySelector<HTMLElement>(sel);
-      if (el) tops.push(el.getBoundingClientRect().top + window.scrollY);
+      if (!el) continue;
+      const align = getComputedStyle(el).scrollSnapAlign;
+      if (align === "none") continue;
+      const r = el.getBoundingClientRect();
+      seats.push((align.includes("end") ? r.bottom - vh : r.top) + window.scrollY);
     }
-    return tops;
+    return seats;
   });
 }
 
@@ -449,11 +474,39 @@ async function stationRests(page: Page, id: string): Promise<{ label: string; y:
   return page.evaluate((stationId) => {
     const el = document.getElementById(stationId);
     if (!el) throw new Error(`missing station #${stationId}`);
-    const seatEl = stationId === "voidwalker" ? (el.querySelector<HTMLElement>(".vwd") ?? el) : el;
+    // The seat is the INSTRUMENT: `.vwd` for the eras; the reading state's
+    // snap target for the about band (ADR-115), the station otherwise.
+    const seatEl =
+      stationId === "voidwalker"
+        ? (el.querySelector<HTMLElement>(".vwd") ?? el)
+        : stationId === "about"
+          ? (el.querySelector<HTMLElement>(".voidwalker__snap") ?? el)
+          : el;
     const r = el.getBoundingClientRect();
     const top = r.top + window.scrollY;
     const seat = Math.round(seatEl.getBoundingClientRect().top + window.scrollY);
     const rests = [{ label: "seat", y: seat }];
+    /* ADR-115: the about BAND's rests are its three holdable STATES, not
+       NEAR and MID — a runway with two aligned targets inside it pulls
+       `top + 340` back onto the flip's end (33px at 390×844) and half its
+       height onto the reading seat (309px at 430×932), and the seek reports
+       a miss on a page doing exactly what it should. The reading seat
+       (`.voidwalker__snap`), the flip's end (`.voidwalker__snap-in`'s bottom
+       on the fold) and the RELEASE (the band's last pinned frame, p = 1,
+       past both radii — the handover) are where a reader can stop. */
+    if (stationId === "about" && el.getAttribute("data-about-band") === "on") {
+      const snapIn = el.querySelector<HTMLElement>(".voidwalker__snap-in");
+      if (snapIn) {
+        rests.push({
+          label: "flip-end",
+          y: Math.round(
+            snapIn.getBoundingClientRect().bottom + window.scrollY - window.innerHeight
+          ),
+        });
+      }
+      rests.push({ label: "release", y: Math.round(top + r.height - window.innerHeight) });
+      return rests;
+    }
     if (r.height > window.innerHeight * 1.6) {
       rests.push({ label: "near", y: Math.round(top + 340) });
       rests.push({ label: "mid", y: Math.round(top + r.height * 0.5) });
@@ -491,13 +544,99 @@ test.describe("mobile section seams", () => {
         const seam = await page.evaluate(
           ({ a, b }) => {
             const ae = document.getElementById(a)!.getBoundingClientRect();
-            const be = document.getElementById(b)!.getBoundingClientRect();
-            return { aBottom: ae.bottom, bTop: be.top };
+            const bEl = document.getElementById(b)!;
+            const be = bEl.getBoundingClientRect();
+            /* ADR-115: the ONE sanctioned overlap. `#about` on the ring rung
+               is welded to `#services` by exactly one small viewport
+               (`margin-top: -100svh`), so its band pins on the frame the
+               services band's travel ends. Inside the weld the services
+               band's copy must be BLANK (its `[data-untype]` stamp reads
+               `gone`) — an overlap over legible copy is the defect this case
+               exists for. */
+            const weld = b === "about" && bEl.getAttribute("data-about-band") === "on";
+            const probe = document.createElement("div");
+            probe.style.cssText = "position:absolute;visibility:hidden;height:100svh";
+            document.body.appendChild(probe);
+            const svh = probe.getBoundingClientRect().height;
+            probe.remove();
+            const untype =
+              document
+                .querySelector(".svc-ring-band .services-masthead")
+                ?.getAttribute("data-untype") ?? null;
+            // What the about band PAINTS at this position: every text-bearing
+            // element (and the portrait) inside the sticky band that is
+            // visible and inside the frame. Before its windows the band's
+            // runs are `visibility: hidden` by the run stamps, and the DOM
+            // portrait by `data-about-deck="live"`.
+            const inked: string[] = [];
+            if (weld) {
+              const band = bEl.querySelector<HTMLElement>(".voidwalker");
+              const els = band
+                ? [...band.querySelectorAll<HTMLElement>("h1, h2, h3, p, button, img, span, a")]
+                : [];
+              for (const el of els) {
+                if (!el.textContent?.trim() && el.tagName !== "IMG") continue;
+                const cs = getComputedStyle(el);
+                if (cs.visibility === "hidden" || cs.display === "none") continue;
+                if (Number.parseFloat(cs.opacity) < 0.05) continue;
+                const r = el.getBoundingClientRect();
+                if (r.width < 1 || r.height < 1) continue;
+                if (r.bottom <= 0 || r.top >= window.innerHeight) continue;
+                inked.push(
+                  `${el.className || el.tagName}: ${(el.textContent ?? "").trim().slice(0, 40)}`
+                );
+              }
+            }
+            return {
+              aBottom: ae.bottom,
+              bTop: be.top,
+              bTopDoc: be.top + window.scrollY,
+              weld,
+              svh,
+              untype,
+              inked,
+            };
           },
           { a: aId, b: bId }
         );
         // 1px of tolerance: the corridor host's own sticky runway lands on
         // fractional device pixels, and a seam is a seam at 0.5px.
+        if (seam.weld) {
+          expect(
+            seam.aBottom - seam.bTop,
+            `#about's weld to #services is not one viewport (${(seam.aBottom - seam.bTop).toFixed(1)} against ${seam.svh})`
+          ).toBeCloseTo(seam.svh, 0);
+          // Mid-seam the services band is still pinned with half a viewport
+          // of its exit to run, so its copy is mid-un-type (`live`) — and the
+          // about band, half a viewport down, may paint NOTHING yet: two
+          // bands inside one weld, at most one of them lettered.
+          expect(seam.untype, "the services band's copy is not un-typing inside the weld").toMatch(
+            /^(live|gone)$/
+          );
+          expect(
+            seam.inked,
+            "the about band prints while the services band's copy is still on screen"
+          ).toEqual([]);
+          // Then the weld frame itself — #about's top on the frame's top, the
+          // services band's travel ended: its copy must be GONE.
+          const landed = await seekTo(page, Math.round(seam.bTopDoc));
+          await settle(page, SETTLE_MS);
+          const atWeld = await page.evaluate(() => ({
+            untype:
+              document
+                .querySelector(".svc-ring-band .services-masthead")
+                ?.getAttribute("data-untype") ?? null,
+            aboutTop: document.getElementById("about")!.getBoundingClientRect().top,
+          }));
+          expect(
+            Math.abs(atWeld.aboutTop),
+            `the weld frame could not be seated (landed ${landed}, #about top ${atWeld.aboutTop.toFixed(1)})`
+          ).toBeLessThan(2);
+          expect(atWeld.untype, "the services band's copy is still printed at the weld").toBe(
+            "gone"
+          );
+          return;
+        }
         expect(
           seam.bTop,
           `#${bId} starts ${(seam.aBottom - seam.bTop).toFixed(1)}px inside #${aId}`
@@ -752,12 +891,24 @@ test.describe("mobile section seams", () => {
     const report = await page.evaluate(() =>
       [...document.querySelectorAll<HTMLElement>(".station")].map((el) => {
         const s = getComputedStyle(el);
+        /* ADR-115: a station whose composition is a sticky BAND reserves the
+           chrome ON THE BAND (ADR-109's `.svc-ring-band`, and `#about`'s
+           `.voidwalker` under `data-about-band`), and its own paddings are 0
+           — the weld needs the two stations' travel to abut. The floor is
+           whichever of the two reserves it. */
+        const band =
+          el.id === "about" && el.getAttribute("data-about-band") === "on"
+            ? el.querySelector<HTMLElement>(":scope > .voidwalker")
+            : el.querySelector<HTMLElement>(".svc-ring-band");
+        const b = band ? getComputedStyle(band) : null;
+        const bandTop = b ? Number.parseFloat(b.paddingTop) : 0;
+        const bandBottom = b ? Number.parseFloat(b.paddingBottom) : 0;
         return {
           id: el.id || "(none)",
           hero: el.classList.contains("hero"),
           cover: el.classList.contains("station--cover"),
-          padTop: Number.parseFloat(s.paddingTop),
-          padBottom: Number.parseFloat(s.paddingBottom),
+          padTop: Math.max(Number.parseFloat(s.paddingTop), bandTop),
+          padBottom: Math.max(Number.parseFloat(s.paddingBottom), bandBottom),
           contentVisibility: s.contentVisibility,
         };
       })
@@ -787,9 +938,31 @@ test.describe("mobile section seams", () => {
 
   /* ── ADR-113: the stations are snap stops ─────────────────────────── */
 
-  const SNAP_STOPS = ["#services", "#about", "#contact", ".vwd"] as const;
+  /* ADR-115: `#about`'s stops are two absolute targets inside its runway —
+     the FLIP'S END (`.voidwalker__snap-in`, `end`-aligned: its bottom on the
+     snapport's bottom is the one position it names) and the READING SEAT
+     (`.voidwalker__snap`, `start`-aligned, one screen: a stop near it lands
+     on it, from either side) — never the station itself and never the
+     sticky band. ⚠ Measured in Blink: an aligned position attracts within
+     ~280px either way and a covering area never overrides one. */
+  const SNAP_STOPS = [
+    "#services",
+    ".voidwalker__snap-in",
+    ".voidwalker__snap",
+    "#contact",
+    ".vwd",
+  ] as const;
+  /** The alignment each stop declares; `end` names its BOTTOM edge. */
+  const SNAP_ALIGN: Record<(typeof SNAP_STOPS)[number], "start" | "end"> = {
+    "#services": "start",
+    ".voidwalker__snap-in": "end",
+    ".voidwalker__snap": "start",
+    "#contact": "start",
+    ".vwd": "start",
+  };
   const NOT_SNAP_AREAS = [
     "#hero",
+    "#about",
     "#voidwalker",
     ".home-v2-stage",
     ".home-v2-stage__sticky",
@@ -797,6 +970,7 @@ test.describe("mobile section seams", () => {
     ".pf-slot",
     ".svc-ring-runway",
     ".svc-ring-band",
+    ".voidwalker",
     ".vwd__band",
   ] as const;
 
@@ -831,7 +1005,8 @@ test.describe("mobile section seams", () => {
       /^y( proximity)?$/
     );
     for (const [sel, v] of snap.stops) {
-      expect(v, `${sel} is not a snap stop`).toMatch(/^start/);
+      const want = SNAP_ALIGN[sel as (typeof SNAP_STOPS)[number]];
+      expect(v, `${sel} is not a snap stop (${want})`).toMatch(new RegExp(`^${want}`));
     }
     // ⚠ The seat is the INSTRUMENT: `#voidwalker` keeps ~67px of its own
     // padding on the phone, so a station-top stop would seat the 100svh
@@ -849,18 +1024,35 @@ test.describe("mobile section seams", () => {
     phonesOnly(testInfo);
     await boot(page);
 
+    // A stop's SEAT is the scroll position its alignment names: the top for
+    // `start`, the bottom edge less the snapport for `end` (ADR-115's cover).
     const seatOf = (sel: string) =>
-      page.evaluate((s) => {
-        const el = document.querySelector<HTMLElement>(s);
-        if (!el) throw new Error(`missing ${s}`);
-        return Math.round(el.getBoundingClientRect().top + window.scrollY);
-      }, sel);
+      page.evaluate(
+        ({ s, align }) => {
+          const el = document.querySelector<HTMLElement>(s);
+          if (!el) throw new Error(`missing ${s}`);
+          const r = el.getBoundingClientRect();
+          const vh = document.documentElement.clientHeight;
+          return Math.round((align === "end" ? r.bottom - vh : r.top) + window.scrollY);
+        },
+        { s: sel, align: SNAP_ALIGN[sel as (typeof SNAP_STOPS)[number]] }
+      );
+    // The stop's box relative to its seat: `top` is 0 on the seat for both
+    // alignments (an `end` target's seat puts its bottom on the fold).
     const topOf = (sel: string) =>
-      page.evaluate((s) => {
-        const el = document.querySelector<HTMLElement>(s)!;
-        const r = el.getBoundingClientRect();
-        return { top: r.top, height: r.height, vh: window.innerHeight };
-      }, sel);
+      page.evaluate(
+        ({ s, align }) => {
+          const el = document.querySelector<HTMLElement>(s)!;
+          const r = el.getBoundingClientRect();
+          const vh = document.documentElement.clientHeight;
+          return {
+            top: align === "end" ? r.bottom - vh : r.top,
+            height: r.height,
+            vh: window.innerHeight,
+          };
+        },
+        { s: sel, align: SNAP_ALIGN[sel as (typeof SNAP_STOPS)[number]] }
+      );
     const maxScroll = () =>
       page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
 
@@ -895,7 +1087,16 @@ test.describe("mobile section seams", () => {
         landings.push(
           `${sel} seat+60 → top ${past.top.toFixed(1)} (h ${Math.round(past.height)} / vh ${past.vh})`
         );
-        if (past.height > past.vh + 1) {
+        /* ADR-115: the covering rule needs a box that still COVERS the
+           snapport 60px past its seat. A `start` station taller than the
+           screen does; an `end` target's box ends on the fold at its seat,
+           so 60px past it the bottom of the screen is uncovered and the
+           aligned position pulls the stop back — which is what the flip's
+           end is FOR (a stop inside the name's window returns to the
+           portrait alone). Measured in Blink, about-band.css's header. */
+        const covers =
+          past.height > past.vh + 1 && SNAP_ALIGN[sel as (typeof SNAP_STOPS)[number]] === "start";
+        if (covers) {
           expect(
             past.top,
             `${sel}: a station taller than the screen was pulled back to its seat from 60px past it`
@@ -903,7 +1104,7 @@ test.describe("mobile section seams", () => {
         } else {
           expect(
             Math.abs(past.top),
-            `${sel}: the one-screen instrument did not snap back from 60px past its seat`
+            `${sel}: the seat did not pull a stop 60px past it back (a one-screen instrument, or an end-aligned target)`
           ).toBeLessThanOrEqual(1.5);
         }
       });

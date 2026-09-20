@@ -612,3 +612,21 @@ Voidwalker entry retimes to `[0, .14]`, renderer takeover completes in
 same morph with complementary opacity and a horizontal tear no larger than
 2.5px. The clocks stay pure and reversible, and About's existing exit envelope
 is reused rather than summed with a second portal envelope.
+
+## Update 13 (2026-09-20, owner) — the phone takes the deck (ADR-115)
+
+The stack, the flip, the portrait back and the slot glide run on the PHONE
+RUNG now, unchanged in their math: `ServicesCardRing` takes `deckFlip` as a
+PROP (default `ABOUT_DECK_STAGE`, so this ADR's mount is byte-identical) and
+the phone mount passes `SERVICES_ABOUT_DECK_MOBILE`. The exit clock is the
+services band's own leave (`ringMobileClock` with the deck on), the about
+clock is a new writer (`useAboutBandScroll`) on the same
+`aboutStageProgressRef` / `aboutSlotRef` this ADR's stage writes, and U3's
+`-100svh` sweep becomes the phone's WELD. Three things this ADR did not need:
+the seat FREEZES from exit 1 (the phone ring is posed on the services seat,
+which leaves with its band), the deck SQUARES UP before a hard kill so a DOM
+image of the same bake can take over pixel-for-pixel (nothing fades while
+looked at — the phone band unpins and scrolls as a document), and
+`bakePortraitBack` is lifted into three-free
+`lib/services-ring/portraitBake.ts` with a per-theme memo both readers share.
+See [ADR-115](115-the-phones-deck-flip.md).

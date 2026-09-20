@@ -51,7 +51,7 @@
 
 import { decodeClock, headIntro, headLead, type HeadCol } from "./turnClock";
 import { seamDecodeFrame, seamWall, typeCounts, typedSlice, type SeamPair } from "./seamDecode";
-/* The line walker and the leaf's dressing are the house's since ADR-114
+/* The line walker and the leaf's dressing are the house's since ADR-115
    (`lib/home-v2/lineLeaves.ts`) — the phone's two bands decode centred runs
    on the same per-line leaves. Byte-identical to the functions this file
    carried; only their home moved. */

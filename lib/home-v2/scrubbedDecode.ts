@@ -1,6 +1,6 @@
 /**
  * scrubbedDecode — a set of lines typed on, or un-typed off, by SCROLL
- * POSITION (ADR-114; the Trinny turn's idiom, `turnDecode.ts`, one station
+ * POSITION (ADR-115; the Trinny turn's idiom, `turnDecode.ts`, one station
  * over, and `seamDecode.ts`'s wall).
  *
  * The house kernel's `scrambleFrame` is PURE in elapsed `t` and has no

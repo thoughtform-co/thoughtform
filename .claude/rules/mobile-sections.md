@@ -15,7 +15,11 @@ paths:
   - "lib/services-ring/beatScrollTarget.ts"
   - "tests/visual/mobile-section-seams.spec.ts"
   - "scripts/probe-mobile-lockin.mjs"
-description: Each section stands on its own on a phone — the two chrome bands, the kill condition every fixed painter owes, the snap seats, the layout-viewport clock, and the guard
+  - "components/landing/home-v2/about/about-band.css"
+  - "components/landing/home-v2/about/useAboutBandScroll.ts"
+  - "lib/services-ring/aboutBandMath.ts"
+  - "scripts/probe-mobile-deck.mjs"
+description: Each section stands on its own on a phone — the two chrome bands, the kill condition every fixed painter owes, the snap seats, the layout-viewport clock, the one sanctioned weld (the deck flip), and the guard
 ---
 
 # Rule: Each section stands on its own on mobile
@@ -450,11 +454,108 @@ chrome and content in one scrollport at the cost of seating the bottom row at
 `100svh` — ~99px above the real floor when the toolbar is collapsed, this
 rule's §8 inverted. It waits on his screen recording of a collapse.
 
+## 11 · The deck flip: one sanctioned weld, and two seats inside one runway (ADR-115)
+
+Owner, 2026-09-20, from his phone: _"when you scroll past the 'AI capability
+your team owns' section, all the text should disappear with a glitch effect.
+The cards should then stack on top of each other, rotate them as we have on
+desktop, and then reveal my profile picture."_ On the ring rung `#about` is a
+BAND now — name · role · the portrait's seat · the first paragraph · a chevron
+for the rest — and the ring's four WebGL cards stack on the services band's
+exit, flip to the portrait on the about band's clock, and hand over to a DOM
+image of the same bake before the band unpins. Behind
+`SERVICES_ABOUT_DECK_MOBILE`; off, ADR-110's phone page and ADR-113's stops.
+
+- **The weld is the ONE overlap §5's guard sanctions.** `#about.station` takes
+  `margin-top: -100svh` and zero padding, and `#services` zeroes its bottom
+  paddings on the rung: the about runway begins where the services band's
+  pinned travel ends (exit 1 ⇔ about p 0, measured at −0.5px both), and the
+  services band scrolls away UNDER the pinned about band, blank — its copy
+  un-typed over the first 70 % of the exit (`[data-untype]` on the masthead:
+  `live` → `gone`). The overlap case measures BOTH positions: mid-seam the
+  about band may paint nothing (every run `visibility: hidden` by its stamps,
+  the portrait by `data-about-deck="live"`) while the services copy is
+  mid-un-type; at the weld frame the copy must be `gone`. ⚠ A padding left on
+  either side is a fraction of the exit the stack is still running when the
+  band pins — the first cut left the station's 56px floor and pinned at 0.89.
+  §1's guard reads the BAND's padding where a station is a sticky band
+  (`.svc-ring-band`, `#about > .voidwalker`): the band reserves the chrome,
+  the station's own paddings are 0.
+- ⚠ **A SEAT INSIDE THE WELD IS THE SERVICES SEAT, FROZEN.** The phone ring is
+  posed on `.svc-ring-seat`'s rect every frame; as the services band leaves
+  under the about band that rect rides up and would drag the stacked deck off
+  the top of the screen. From exit 1 the last live seat is HELD and the flip's
+  own `posBlend` glide carries the pivot onto the about band's slot — one
+  motion owner, the desktop's.
+- **The about band is §7's shape one station down**: the STATION is the runway
+  (`--about-band-runway` 240svh), `.voidwalker` the sticky 100svh band on the
+  services band's own chrome padding, the seat row a SIZE container whose
+  portrait box is ADR-109's fill law in CSS (`min(260px, 66vw, 82cqh × 420/680)`
+  at `420/680`, so the DOM slot and the card agree by construction). The
+  orbit cluster and its emerge are `display: none` on EVERY ≤960 rung. The
+  writer (`useAboutBandScroll`) reads the layout viewport (§10) and writes the
+  desktop's own `aboutStageProgressRef` and `aboutSlotRef`; the stamps are
+  `data-about-band` · `data-about-deck` · `data-vw-name` / `data-vw-copy` ·
+  `data-about-slot` · `data-bio-open`.
+- ⚠ **TWO SNAP TARGETS INSIDE ONE RUNWAY, AND THE STATION IS NOT A STOP** —
+  which amends §10's list for `#about`. A band with decode windows cannot rest
+  on its top (cards stacked, band blank) or mid-window; it rests at THE FLIP'S
+  END (`.voidwalker__snap-in`, `end`-aligned, `100svh + 0.26 × travel` tall
+  from the station's top — the one position it names is its bottom on the
+  fold) and at THE READING STATE (`.voidwalker__snap`, `start`, one screen at
+  0.62). Both full-width, absolute, `pointer-events: none`;
+  `stationRests("about")` returns the band's three holdable STATES — the reading seat, the flip's end and the release frame (p = 1) — never NEAR/MID, which the two radii pull.
+  ⚠ **MEASURED IN BLINK (two scratch walks, 390×844): an aligned position
+  pulls every stop within ~280px either way, and a covering area never
+  overrides one** — the spec's "any position where the area covers the
+  snapport is valid" holds only where no aligned position is in range. A
+  `start` cover at the weld pulled every stop inside the flip BACK to the
+  weld (the band could not be scrolled into its first 111px); no cover at all
+  let `#services`' own covering edge do the same. The `end`-aligned target is
+  what makes a stop inside the flip COMPLETE it.
+  ⚠ **And ADR-113's covering rule needs a box that still covers the
+  snapport past its seat**: a `start` station taller than the screen holds a
+  stop 60px past it; an `end` target's box ends on the fold at its seat, so
+  60px past it the aligned position pulls the stop back — the glide case
+  asserts the rule by ALIGNMENT, not by height alone.
+- **The handover** (ADR-115 §4): the WebGL deck is killed at 0.999 and the DOM
+  portrait shows from 0.995 — a few frames of both, never neither, and the two
+  are ONE picture because the `<img>` is a blob of the same `portraitBakeFor`
+  canvas the ring textures (measured mean |Δ| 3.6/255 on the seat's rect).
+  After the runway the portrait rides the band up as a document — a rAF writer
+  posing a WebGL object against a compositor scroll would lag a step every
+  step (ADR-102's measurement), so nothing in the canvas may follow an
+  unpinned band.
+- **The chevron** toggles `data-bio-open`; `.voidwalker__rest` grows `0fr →
+1fr` (420ms) and the seat row gives up its height — under
+  `ABOUT_BAND_SLOT_MIN_PX` (140) the slot is invalidated, the DOM image hides
+  AND the deck is killed (never the desktop's centre-screen fallback seat). The
+  writer runs every frame of the transition because no scroll fires.
+- **Parallax is off on phones** (`useLandingScroll`'s `[data-parallax]` loop
+  gated `> 960`): a per-frame rect read and a main-thread follower of a
+  compositor scroll, the class §2 exists to keep off the phone.
+- ⚠ **The ring band's runway grew 30svh for the stack** (`RING_MOBILE_RUNWAY_SVH`
+  3.3, `--svc-ring-mobile-runway` 330svh, the gate test's lockstep), and
+  `#services`' MID rest slid into the proof pile where a field sheet's sentence
+  passes under the settings cluster — the §1 class no floor can reach, ledgered
+  in `KNOWN_CHROME_COLLISIONS.services`, not tolerated: the seat and NEAR read
+  `(none)`.
+- **The guards**: `about-band-math.test.ts` (the ladder, the sheet lockstep,
+  the decode's monotonicity), `services-ring-mobile-gate.test.ts` (the clock
+  with the deck on and off, the runway pair), the ring smoke's three ADR-115
+  cases (the un-type, the band + handover in both themes, the chevron),
+  `mobile-section-seams` (the weld, the two targets), and
+  `scripts/probe-mobile-deck.mjs` — headed, real scrolls, the exit in stops,
+  the about band in stops with each landing's pull reported, the handover
+  diff with `sharp`, the chevron, frame deltas. **The device is the gate**
+  (ADR-115 §Device checklist).
+
 ## Verifying
 
 ```bash
 npx vitest run tests/lib/layout-viewport-height.test.ts tests/lib/phone-viewport-units.test.ts
 node scripts/probe-mobile-lockin.mjs --theme dark   # headed; the radius sweep, ±40/+60 landings, stills
+node scripts/probe-mobile-deck.mjs --theme dark      # headed; the exit, the about band, the handover diff, the chevron (ADR-115)
 node scripts/probe-voidwalker-phone.mjs             # byte-identical to before ADR-113 — Chromium cannot see the unit
 npx playwright test tests/visual/about-voidwalker-handoff-boundaries.spec.ts
 # ⚠ The phone projects are `-chromium` (ADR-107 U1 deleted the WebKit ones,

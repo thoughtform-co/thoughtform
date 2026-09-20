@@ -15,6 +15,7 @@ import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
 import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 import { browseClientCount, browseSeamClocks } from "../services/casefile/browseMap";
 import {
+  SERVICES_ABOUT_DECK_MOBILE,
   SERVICES_PROOF_BROWSE_FRAC,
   SERVICES_PROOF_RUNWAY_VH,
   SERVICES_PROOF_SEGMENTS,
@@ -518,7 +519,11 @@ export function useServicesStageScroll(
           const vh = layoutViewportHeight();
           const band = ringBandEl.getBoundingClientRect();
           const bandTravel = Math.max(1, band.height - vh);
-          const clock = ringMobileClock(-band.top / bandTravel);
+          /* ADR-115: with the phone deck on, the leave is the EXIT BEAT — the
+             clock runs on into it, `--svc-exit` goes live below (the
+             masthead un-types on it, the ring stacks on it) and `hold` stays
+             1 because the deck now dies on the about clock, not here. */
+          const clock = ringMobileClock(-band.top / bandTravel, SERVICES_ABOUT_DECK_MOBILE);
           const dissipate = readCorridorDissipate(1);
           const proofIn = smootherstep(PROOF_GATE_START, PROOF_GATE_END, dissipate);
           servicesRingProgressRef.current.progress = clock.progress;

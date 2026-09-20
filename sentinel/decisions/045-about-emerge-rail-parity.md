@@ -119,3 +119,14 @@ contract stands unchanged** — station padding + `--rail-inset`, "compose
 the same two layers, never invent a third inset" — the band system IS that
 composition, now capped. The services.css `--masthead-inset` fallback calc
 deliberately keeps the pre-band formula (standalone-harness path).
+
+## Update (2026-09-20) — the phone surface is superseded by ADR-115
+
+On the ring rung `#about` is a sticky BAND (name · role · the portrait's seat
+· ¶1 · a chevron for the rest) welded to the services band, and the orbit
+cluster — the portrait, the rings svg, the particle halo, the four readouts
+and THIS ADR's staggered emerge — is `display: none` on every ≤960 rung
+(owner: _"the parallax section from the About section should disappear"_).
+The band neutralises `[data-m]` at (1,1,1). Desktop PRM/fallback keeps the
+emerge byte-identically. See
+[ADR-115](115-the-phones-deck-flip.md).

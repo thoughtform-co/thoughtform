@@ -2,9 +2,16 @@
 
 import { useEffect, useRef } from "react";
 
+import { AboutBand } from "./AboutBand";
 import { ABOUT_STAGE, type BioSegment } from "./aboutStageData";
 import { useAboutStageScroll } from "../hooks/useAboutStageScroll";
-import { ABOUT_DECK_STAGE } from "../unifiedServicesInstrument";
+import {
+  ABOUT_DECK_STAGE,
+  SERVICES_ABOUT_DECK_MOBILE,
+  SERVICES_CARD_RING,
+  SERVICES_CARD_RING_MOBILE,
+  SERVICES_RING_MOBILE_MEDIA,
+} from "../unifiedServicesInstrument";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { aboutCopyT } from "@/lib/services-ring/aboutDeckMath";
@@ -131,6 +138,16 @@ export function AboutStage() {
   const nameRef = useRef<HTMLSpanElement>(null);
   const roleRef = useRef<HTMLDivElement>(null);
   const capable = useMediaQuery("(min-width: 961px) and (prefers-reduced-motion: no-preference)");
+  /* ADR-115: on the ring rung the PHONE gets the about BAND instead — a
+     controller over the authored `.voidwalker` block, in this same nested
+     root. Never both: the two gates are disjoint by width. */
+  const phoneRung = useMediaQuery(SERVICES_RING_MOBILE_MEDIA);
+  const phoneBand =
+    SERVICES_CARD_RING &&
+    SERVICES_CARD_RING_MOBILE &&
+    SERVICES_ABOUT_DECK_MOBILE &&
+    phoneRung &&
+    !capable;
   useAboutStageScroll(stageRef, slotRef, clusterRef, copyShellRef, nameActorRef, dossierActorRef);
 
   // Identity decode (owner, 2026-07-16): the name / role eyebrow
@@ -183,8 +200,9 @@ export function AboutStage() {
 
   // Below the gate the static .voidwalker fallback owns the section — no
   // duplicate DOM (the hook also never engages, so `data-about-mode`
-  // stays absent and the runway stays flat).
-  if (!ABOUT_DECK_STAGE || !capable) return null;
+  // stays absent and the runway stays flat). On the phone's ring rung that
+  // block is the BAND, and this root mounts its controller (ADR-115).
+  if (!ABOUT_DECK_STAGE || !capable) return <AboutBand active={phoneBand} />;
 
   return (
     <div className="about-stage" ref={stageRef} data-about-step="0">

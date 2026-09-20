@@ -525,3 +525,26 @@ export const SERVICES_CARD_RING_MOBILE = true;
  * pins the three readers and the equality.
  */
 export const SERVICES_RING_MOBILE_MEDIA = PROOF_STACK_SPLIT_MEDIA;
+
+/**
+ * Feature flag for THE PHONE'S DECK FLIP (ADR-115).
+ *
+ * Owner, 2026-09-20: _"When you scroll past the 'AI capability your team
+ * owns' section, all the text should disappear with a glitch effect. The
+ * cards should then stack on top of each other, rotate them as we have on
+ * desktop, and then reveal my profile picture."_ On the ring rung the
+ * services band's copy UN-TYPES over the band's exit while the four cards
+ * STACK (ADR-047's own exit beat, entered on the phone for the first time),
+ * `#about` becomes a sticky band welded to the services band's release, the
+ * deck FLIPS to the portrait on the about clock, the name and the first
+ * paragraph decode in, and a chevron discloses the rest of the bio.
+ *
+ * ⚠ OFF ⇒ ADR-110's PHONE PAGE, BYTE-IDENTICAL: the ring's clock caps below
+ * the exit beat and the cards fade with their band; `#about` keeps its
+ * static layout (minus the orbit cluster, which the owner retired
+ * unconditionally). Read by `useServicesStageScroll` (the clock),
+ * `CorridorArmillary` (the ring's `deckFlip` prop), `ServicesMasthead` (the
+ * un-type) and `AboutStage` (whether the band mounts). It is a flag because
+ * the acceptance gate is his device.
+ */
+export const SERVICES_ABOUT_DECK_MOBILE = true;

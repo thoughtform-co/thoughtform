@@ -3,7 +3,21 @@
 import { useEffect, useRef } from "react";
 
 import { SERVICES_MASTHEAD } from "./serviceData";
+import {
+  SERVICES_ABOUT_DECK_MOBILE,
+  SERVICES_CARD_RING_MOBILE,
+  SERVICES_RING_MOBILE_MEDIA,
+} from "../unifiedServicesInstrument";
+import {
+  measureDecodeLayer,
+  mountDecodeLayer,
+  setDecodeLayerLive,
+  unmountDecodeLayer,
+  writeDecodeRun,
+  type DecodeRunSpec,
+} from "../decodeLayer";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
+import { mobileUntypeT } from "@/lib/services-ring/aboutBandMath";
 
 /**
  * ServicesMasthead — the #services register handover (ADR-044, 2026-07-16).
@@ -126,22 +140,103 @@ const PARA_CHARS_PER_S = 220;
  *  prints (the slit needs to crack open first). */
 const PARA_START_DELAY_S = 0.12;
 
+/**
+ * THE PHONE'S UN-TYPE (ADR-115). Owner, 2026-09-20: "when you scroll past the
+ * 'AI capability your team owns' section, all the text should disappear with
+ * a glitch effect." On the ring rung the band's copy never decodes IN (it
+ * stands resolved from first paint — the desktop's typewriter is gated
+ * above) and it leaves on the band's EXIT clock: the title lines scramble
+ * out and the paragraph un-types from its tail, scrubbed on `--svc-exit`,
+ * reversible in either direction of travel (`scrubbedDecode`: the kernel is
+ * pure in `t`; `advanceScrambles`, which latches, is never used here).
+ *
+ * Both texts are CENTRED, so a decoding run that re-wrapped would re-centre
+ * every frame: the real text is hidden by `visibility` (`[data-untype]`,
+ * services.css) and a layer of per-line LEAVES (`decodeLayer`) paints over
+ * it on the band — the ghost/live law with one leaf per rendered line.
+ * Measured lazily on the first live frame and again on resize.
+ *
+ * Reads the stage's inline `--svc-exit` through the SAME style observer the
+ * desktop controller uses (no new scroll listener); writes only inside the
+ * band. Returns the cleanup.
+ */
+function phoneUntype(root: HTMLElement, stage: HTMLElement, typed: HTMLElement): () => void {
+  const band = root.parentElement;
+  if (!band) return () => {};
+  const title = root.querySelector<HTMLElement>(".services-masthead__title");
+  const specs: DecodeRunSpec[] = [];
+  if (title) specs.push({ el: title, mode: "scramble" });
+  specs.push({ el: typed, mode: "type" });
+  const layer = mountDecodeLayer(band, "svc-ring-band__decode");
+  let measured = false;
+  let u = -1;
+
+  const measure = () => {
+    measureDecodeLayer(layer, band, specs, "svc-ring-band__decode__line");
+    measured = true;
+  };
+  const readExit = () => {
+    const raw = Number.parseFloat(stage.style.getPropertyValue("--svc-exit"));
+    return Number.isFinite(raw) ? raw : 0;
+  };
+  const write = () => {
+    const next = mobileUntypeT(readExit());
+    const live = next > 0 && next < 1;
+    if (next === u && (!live || measured)) return;
+    u = next;
+    if (live && !measured) measure();
+    for (const run of layer.runs) writeDecodeRun(run, u, "out", live);
+    setDecodeLayerLive(layer, live);
+    const state = u <= 0 ? null : u >= 1 ? "gone" : "live";
+    if (state) root.setAttribute("data-untype", state);
+    else root.removeAttribute("data-untype");
+  };
+
+  const observer = new MutationObserver(write);
+  observer.observe(stage, { attributes: true, attributeFilter: ["style"] });
+  const onResize = () => {
+    measured = false;
+    if (u > 0 && u < 1) {
+      measure();
+      for (const run of layer.runs) writeDecodeRun(run, u, "out", true);
+    }
+  };
+  window.addEventListener("resize", onResize, { passive: true });
+  write();
+
+  return () => {
+    observer.disconnect();
+    window.removeEventListener("resize", onResize);
+    unmountDecodeLayer(layer);
+    root.removeAttribute("data-untype");
+  };
+}
+
 export function ServicesMasthead() {
   const rootRef = useRef<HTMLElement | null>(null);
   const lineRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const typedRef = useRef<HTMLSpanElement | null>(null);
 
   useEffect(() => {
+    const root = rootRef.current;
+    const stage = root?.closest<HTMLElement>(".services-stage");
+    const typed = typedRef.current;
+    if (!root || !stage || !typed) return;
+
+    /* THE PHONE (ADR-115): the copy un-types on the band's exit; nothing
+       decodes in. Gated on the ring rung and both phone flags — off, the
+       phone keeps its static copy exactly as before. */
+    const phoneDeck =
+      SERVICES_CARD_RING_MOBILE &&
+      SERVICES_ABOUT_DECK_MOBILE &&
+      (window.matchMedia?.(SERVICES_RING_MOBILE_MEDIA).matches ?? false);
+    if (phoneDeck) return phoneUntype(root, stage, typed);
+
     // Enhanced tier only — mirrors the stage's hologram/ring gate.
     const enhanced = window.matchMedia(
       "(min-width: 961px) and (prefers-reduced-motion: no-preference)"
     ).matches;
     if (!enhanced) return;
-
-    const root = rootRef.current;
-    const stage = root?.closest<HTMLElement>(".services-stage");
-    const typed = typedRef.current;
-    if (!root || !stage || !typed) return;
 
     const targetSources: Array<{ el: HTMLSpanElement | null; text: string }> =
       SERVICES_MASTHEAD.titleLines.map((line, i) => ({

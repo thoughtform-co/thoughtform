@@ -3007,7 +3007,10 @@
  * ══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 960px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
   .services-stage[data-card-ring-mobile="on"] .svc-ring-runway {
-    --svc-ring-mobile-runway: 300svh;
+    /* 300 → 330svh with ADR-115: the last 62svh of pinned travel is the
+       deck's STACK now (ringMath's `RING_MOBILE_LEAVE_START` 0.73), the four
+       beats keep their 168svh. */
+    --svc-ring-mobile-runway: 330svh;
     position: relative;
     height: var(--svc-ring-mobile-runway);
     /* Full-bleed inside the stage's inset column: the ring is centred on the
@@ -3133,5 +3136,42 @@
     .svc-ring-band
     .services-masthead__intro {
     opacity: 0.35;
+  }
+
+  /* ── THE COPY UN-TYPES ON THE BAND'S EXIT (ADR-115) ─────────────────────
+     Owner (2026-09-20): "when you scroll past the 'AI capability your team
+     owns' section, all the text should disappear with a glitch effect". The
+     glitch is the house decode run BACKWARDS, scrubbed on `--svc-exit`
+     (`ServicesMasthead`'s phone branch): the title lines scramble out, the
+     paragraph un-types from its tail. Both are CENTRED, so the real text is
+     hidden by `visibility` for the window and a layer of per-line LEAVES
+     (`decodeLayer.ts`) paints over it, each leaf posed on its own line's
+     pixels — nothing in layout moves. `[data-untype]` is the writer's stamp:
+     absent = resolved, `live` = decoding, `gone` = blank. No opacity, no
+     fade: a luminance flicker is what ADR-097 U12 retired. */
+  .services-stage[data-card-ring-mobile="on"] .svc-ring-band__decode {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    text-align: left;
+  }
+  .services-stage[data-card-ring-mobile="on"] .svc-ring-band__decode__line {
+    position: absolute;
+    left: var(--x, 0px);
+    top: var(--y, 0px);
+    margin: 0;
+    white-space: nowrap;
+  }
+  .services-stage[data-card-ring-mobile="on"]
+    .svc-ring-band
+    .services-masthead[data-untype]
+    .services-masthead__title-line
+    > span:first-child,
+  .services-stage[data-card-ring-mobile="on"]
+    .svc-ring-band
+    .services-masthead[data-untype]
+    .services-masthead__intro-typed {
+    visibility: hidden;
   }
 }

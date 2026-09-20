@@ -1479,6 +1479,35 @@ partial run, not the empty one and the full one.
 
 ---
 
+## Hand a WebGL object to the DOM before its band unpins (ADR-115)
+
+A canvas object posed against a sticky band is stable only while the band is
+PINNED — every rect it is welded to is stationary. Once the band scrolls as a
+document, a rAF writer posing the object against a compositor scroll lands
+one wheel step behind every step (ADR-102's measurement, the "jitters and
+lags"). So a WebGL object that must ride an unpinned band does not: it is
+KILLED on one frame while a DOM twin of the same pixels shows from the frame
+before, and the DOM carries it. Three conditions for the seam to be one
+picture, each found by diffing the seat's rect across the handover: the twin
+IS the bake (one canvas, two readers — a memo, never a CSS re-derivation of
+the same LUT), the object is ONE object at the handover (a stacked deck
+squares up first), and the texture filters like the twin (no mips against a
+browser downsample). Then nothing fades while looked at.
+
+## An aligned snap position beats coverage inside its radius (ADR-115)
+
+Blink, measured: an aligned snap position attracts every stop within ~280px
+in either direction, and a covering area never overrides one. The spec's "any
+position where the area covers the snapport is valid" holds only where no
+aligned position is in range. Two consequences for a runway with windows: a
+`start` target at its top pulls every stop inside the first window BACK to
+the top (a band that "cannot be scrolled into its first 111px"), and NO
+target lets the neighbouring station's covering edge do the same. Name the
+resting STATES as targets — an `end`-aligned box whose bottom is the state
+COMPLETES a stop inside the window before it — and make the station itself
+`none`. A harness that insists on its own number reads every one of these
+pulls as a miss: seat, report the landing, assert the page's state there.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.
@@ -1487,4 +1516,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-09-14_
+_Last updated: 2026-09-20_

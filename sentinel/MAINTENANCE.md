@@ -54,6 +54,53 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-20 — The phone's deck flip: the copy un-types, the cards stack, the deck becomes the portrait, `#about` is a band (ADR-115)
+
+**Trigger:** the owner, from his iPhone, hours after ADR-113 — _"when you
+scroll past the 'AI capability your team owns' section, all the text should
+disappear with a glitch effect. The cards should then stack on top of each
+other, rotate them as we have on desktop, and then reveal my profile picture
+… my name at the top … the first paragraph of my bio … the rest revealed
+with a small chevron … the parallax section from the About section should
+disappear."_ And the question underneath it: is reusing the WebGL cards the
+performant route.
+
+- **The answer is yes, and it is the only route that can look like the
+  desktop.** The faces are bakes the DOM cannot draw; the canvas already
+  paints every frame through `#services` and `#about` on this rung; the deck
+  is pose math on four existing groups plus four back planes visible only
+  during the flip; one lazy bake and a 61 kB photo against a 183 kB image and
+  a cluster deleted. Measured in Chromium at 390×844: p50 4.2ms, p95 17–24ms.
+- **Five changes on the ring rung, all behind `SERVICES_ABOUT_DECK_MOBILE`:**
+  the services band's exit enters ADR-047's stack while the copy UN-TYPES over
+  per-line leaves; `#about` welds `-100svh` to the band's travel and the ring's
+  seat freezes from exit 1; `#about` becomes a sticky band (name · role · seat
+  · ¶1 · chevron) with a scrubbed decode on its own windows; the deck squares
+  up and hands over to a DOM image of the same bake before the band unpins;
+  parallax is off on phones. Desktop byte-identical (the HUD snapshots and the
+  desktop smokes).
+- **Three lifts** (`portraitBake`, `lineLeaves`, `scrubbedDecode` — three-free,
+  shared with the Trinny route) landed as their own zero-visual-change commit.
+- **Blink's snap law, measured** (two scratch walks): an aligned position
+  attracts every stop within ~280px and a covering area never overrides one.
+  The station is `none`; two targets inside the runway (the flip's end,
+  `end`-aligned; the reading state, `start`) are the seats.
+- **The handover diff found three things** (18.7 → 3.6/255): the fanned deck
+  (squared up), the nearest card a z-pitch large (shifted onto the pivot), and
+  trilinear mips (`LinearFilter`).
+- **Records:** ADR-115 (new); ADR-047 U13, ADR-108/109/110 pointers, ADR-045
+  and ADR-113 U1; `mobile-sections.md` §11 (+ paths, Verifying),
+  `services-ring.md` §The ring on phones, `landing-v7.md` §about; CLAUDE.md's
+  phone bullet; BEST-PRACTICES (the handover, the snap radius).
+- **Guards:** `about-band-math.test.ts` (new), `services-ring-mobile-gate`
+  (the clock with the deck), `phone-viewport-units` / `layout-viewport-height`
+  (the new sheet and writer), `services-ring-mobile-smoke` (three ADR-115
+  cases), `mobile-section-seams` (the weld measured at two positions, the two
+  targets), `scripts/probe-mobile-deck.mjs` (new, headed).
+- **Deferred:** the device read (the gate); `scroll-snap-stop: always` on the
+  reading target if WebKit flings past it; the pacing dials (62svh exit,
+  240svh runway); ADR-112's 342 kB of phone portraits.
+
 ### 2026-09-20 — The phone locks in: snap seats, one viewport clock, constant reserves (ADR-113)
 
 **Trigger:** the owner, from his iPhone, with six stills — _"when I enter a

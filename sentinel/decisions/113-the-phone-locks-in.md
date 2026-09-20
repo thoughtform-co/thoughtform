@@ -323,3 +323,19 @@ node scripts/probe-voidwalker-phone.mjs      # byte-identical
 - The sticky-frame follow-up, if the transient does not settle.
 - `#contact`'s `100dvh` floor on a device: the legal bar should hug the real
   floor and nothing above it should move while the bar animates.
+
+## Update 1 (2026-09-20) — `#about` is not a stop; two targets inside its runway (ADR-115)
+
+`#about.station` drops its `scroll-snap-align` on the ring rung: it is a
+240svh runway welded `-100svh` to the services band, and its top (cards
+stacked, band blank) is not a state to rest on. Two absolute, full-width
+targets inside it are: `.voidwalker__snap-in` (`end`-aligned, `100svh + 0.26 ×
+travel` tall from the station's top — the flip's end) and `.voidwalker__snap`
+(`start`, one screen at 0.62 — the reading state). ⚠ **MEASURED IN BLINK: an
+aligned position attracts every stop within ~280px either way, and a covering
+area never overrides one** — the spec's covering rule holds only where no
+aligned position is in range, so this ADR's "a stop past a TALLER station
+stays" is the covering rule in its own radius-free zone. `SNAP_STOPS` in
+`mobile-section-seams` names the two targets with their alignment;
+`stationRests("about")`'s seat is the reading target. See
+[ADR-115](115-the-phones-deck-flip.md).
