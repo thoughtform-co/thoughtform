@@ -2517,9 +2517,31 @@
   .hero__desc {
     max-width: 100%;
   }
+  /* `ArcClose` borrows this strip for its actions and keeps stacking them. */
   .hero__cta {
     flex-direction: column;
     align-items: stretch;
+  }
+  /* The landing hero's own pair sits SIDE BY SIDE (owner, 2026-09-20: "since
+     we are on mobile, I definitely think we can reduce the width of these
+     buttons and place them next to each other"). Each button is content-
+     sized on a tighter inset and grown to share the row, so the pair reads
+     as one line with no ragged right edge. The base rule's `flex-wrap: wrap`
+     is the fallback on the narrowest phones, where the second button drops
+     to its own line and fills it. ⚠ 360px IS THE BINDING WIDTH, and the
+     inset and the gap are what pay for it: the labels are 145.6 + 96.1px
+     of type at the 11.2px floor (constant below ~430), so at 14px/10px the
+     pair needed 300px of a 296px row and wrapped by four pixels. At 10px/8px
+     it needs 289.7 — and since both buttons GROW, the visible inset is never
+     the 10px minimum (13px at 360, ~28px at 390). Measured: one row at 360,
+     390 and 430; two rows at 320; every button 44.8px tall. */
+  .hero .hero__cta {
+    flex-direction: row;
+    gap: 8px;
+  }
+  .hero .hero__cta__btn {
+    flex: 1 1 auto;
+    padding: 13px 10px;
   }
   .hero__cta__btn {
     justify-content: center;

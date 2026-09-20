@@ -209,14 +209,23 @@ and (prefers-reduced-motion: no-preference)` — the park rung's first term
   few … once it's fully open, all the content is actually revealed, because the
   slide-in opening with the thumbnail of the ATL doesn't really work."_ So the
   beat is TWO passes of one scan: pass 1 is ADR-097 U12's aperture, UNCHANGED,
-  revealing `.pf-cardwire` with `.pf-card__body` held at the slit; a 200ms hold;
-  then pass 2, in which the body's clip window grows centre-out while the
-  skeleton's two halves retract to their own walls. Card 0 only.
+  revealing `.pf-cardwire` with `.pf-card__body` held at the slit; then pass 2,
+  in which the body's clip window grows centre-out while the skeleton's two
+  halves retract to their own walls. Card 0 only.
   ⚠ **PASS 2's 720ms IS DERIVED** — its edges travel pass 1's distance on pass
   1's object, so they take pass 1's time, on pass 1's curve. U12's own lesson
   read forward: **re-solve a timing for the SIZE of the object, and when the
-  object is the same size the timing is the same.** The 200ms hold is the one
-  dial.
+  object is the same size the timing is the same.**
+  ⚠ **THERE IS NO HOLD, AND PASS 2 STARTS INSIDE PASS 1's TAIL (ADR-104 U1,
+  2026-09-20, owner: _"I want the content to be shown a little faster"_).**
+  The 200ms hold plus pass 2's own ease-in was ~350ms in which nothing on the
+  card moved. Pass 2 is delayed **560ms** (measured: the aperture is 94.7 %
+  open there; the content window is a ~60px slit, 5.3 %, when it lands at
+  720; 50 % at 920), so the content is
+  opening the frame the sweep ends — filled at **1280ms**, was 1640, both
+  durations and the curve untouched. ⚠ Little slack under it: at 480 the two
+  edge pairs read as one gesture. If it still reads slow, the next dial is
+  pass 2's DURATION, on his word, not the delay.
   ⚠ **THE HEAD BAND IS NOT SKELETAL** — it is the card's own MATERIAL (the
   client's gradient over the housing), not its content, and it is the one strip
   a covered card shows. The folder arrives REAL and its contents are drawn; the
@@ -229,7 +238,7 @@ and (prefers-reduced-motion: no-preference)` — the park rung's first term
   renders the drawing twice for that reason alone; the duplication is a
   technique, not a content fact, so the call site sees one element. `inset()`,
   never `polygon()` — the children of a chamfered box are square.
-  ⚠ **`backwards`, NEVER `forwards`** (ADR-101's ruling): the 920ms delay holds
+  ⚠ **`backwards`, NEVER `forwards`** (ADR-101's ruling): the 560ms delay holds
   each `from` frame, and the end falls to the CASCADE — no clip on the body,
   fully retracted on the halves. A `forwards` fill pins an `inset()` on the body
   for the rest of the card's life. **The close needs no mirror**: the `out`
@@ -264,7 +273,7 @@ and (prefers-reduced-motion: no-preference)` — the park rung's first term
   re-order leaves it describing a card that moved with every other guard green.
   `trinny-proof-order.test.ts` is the one assertion that fails on it.
   ⚠ **Looking at it:** `node scripts/capture-proof-stack.mjs --glitch
-0,360,720,920,1100,1280,1460,1640` — the hold is 920, the fill's midpoint 1280. Rules in [ADR-104](../../sentinel/decisions/104-the-card-assembles-from-its-wireframe.md).
+0,360,560,720,920,1100,1280` — pass 2 begins at 560, the fill's midpoint is 920. Rules in [ADR-104](../../sentinel/decisions/104-the-card-assembles-from-its-wireframe.md).
 
 - ⚠ **THE FIRST CARD OPENS, AND ONLY THE FIRST** (ADR-097 U11 for the beat,
   **U12 for the skin**). Owner, 2026-09-13: _"a cool glitch effect where the

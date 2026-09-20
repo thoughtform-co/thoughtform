@@ -1,6 +1,8 @@
 # ADR-104: The proof card assembles from its wireframe
 
-- **Status:** Proposed (2026-09-15) — shipped and guarded, pending the owner's live read
+- **Status:** Proposed (2026-09-15) — shipped and guarded, pending the owner's live read.
+  ⚠ **U1 (2026-09-20, owner, on the live read): the hold is deleted and pass 2 starts
+  inside pass 1's ease-out tail — filled at 1280ms, was 1640.** See Update 1.
 - **Surface:** `#services`' evidence beat, proof card 0 only
 - **Supersedes:** nothing. It EXTENDS [ADR-097 U11/U12](097-proof-card-is-a-folder.md);
   every number and every law of the aperture itself is untouched.
@@ -201,6 +203,48 @@ npx vitest run tests/lib/trinny-proof-order.test.ts
 
 ⚠ **Cancel the animations before restarting a replay** — toggling the attribute alone
 ADDS a CSS animation the WAAPI has paused rather than replacing it.
+
+## Update 1 — the hold goes, and pass 2 starts inside pass 1's tail (2026-09-20, owner)
+
+Owner, on the live read:
+
+> In the proof section, when we have the cards appear, we first show a wireframe version
+> of our first card and then the content. I want the content to be shown a little faster.
+
+What he was seeing was the SEAM between the two passes, and it was dead time: the 200ms
+hold, and then pass 2's own ease-in on top of it — `easeInOutCubic` moves its edges under
+4 % in its first 150ms — so for ~350ms after the aperture landed nothing on the card
+visibly moved. That stillness is what this update spends, not the sweep.
+
+- **The hold is deleted.** It was "the one dial" above, and it is spent.
+- **Pass 2 is delayed 560ms, not 920** — it begins inside pass 1's ease-out tail. Measured
+  on the capture's paused clock at 1440×900: at 560ms the aperture is **94.7 %** open; when
+  it lands at 720ms pass 2's own ease-in has the content window at **5.3 %**, a ~60px slit
+  at the centre; 50 % at 920; the body on `none` and both halves fully retracted at 1280.
+  The skeleton still reads whole through the whole sweep, and the content is already
+  opening on the frame the aperture finishes.
+- **Both durations and the curve are untouched.** §"720ms is derived" still binds — the
+  edges travel the same distance on the same object. What changed is WHEN the second pair
+  starts, not how fast it moves, so the owner's ruling on pass 1's pacing is not undone.
+
+Filled card at **1280ms** from the trigger, was 1640. Pure motion, zero fades, the
+`backwards` fill — all unchanged; the three `animation` declarations move their delay and
+nothing else.
+
+⚠ **The delay has little slack left.** At 480ms pass 1 is ~85 % open and pass 2 is already
+~15 % (a ~170px window) while the aperture is still travelling — the two edge pairs
+start to read as one gesture, and the "wireframe first" beat of §The ask goes with it. If
+the content still reads slow, the next dial is pass 2's DURATION, a departure from the
+derivation above to be taken on his word, not the delay.
+
+Guards: `settleArrival` awaits the animations themselves and needed no change (its
+comment records the new beat). The capture's landmarks are
+`--glitch 0,360,560,720,920,1100,1280` — pass 2 begins at 560, its midpoint is 920.
+
+```bash
+node scripts/capture-proof-stack.mjs --vp 1440x900 --theme dark --glitch 0,360,560,720,920,1100,1280
+npx playwright test tests/visual/services-ring-smoke.spec.ts --project=desktop -g "proof stack holds the stage"
+```
 
 ## Left open
 

@@ -500,19 +500,37 @@
      So the beat is two passes of ONE scan:
        720ms  pass 1 — the card's own aperture, UNCHANGED, revealing the
               skeleton (`.pf-cardwire`) with the body held at the slit
-       200ms  the hold — what makes the skeleton read as a state rather
-              than as an artefact of the sweep
+       560ms  pass 2 STARTS, inside pass 1's ease-out tail — there is no
+              hold, so the content is moving the frame the aperture lands
        720ms  pass 2 — the body's clip window grows centre-out while the
-              skeleton's two halves retract to their own walls
+              skeleton's two halves retract to their own walls; filled
+              at 1280ms from the trigger
 
      ⚠ **720ms IS DERIVED, NOT CHOSEN.** Pass 2's edges travel the same
      ~575px per side as pass 1's, on the same object, so they take the same
      time — same edge speed, same curve. ADR-097 U12's lesson read forward:
      re-solve a timing for the SIZE of the object, and when the object is
      the same size the timing is the same. Making the second pass quicker
-     would be a taste call with nothing behind it, and it would undo the
-     owner's own ruling on pass 1 ("a bit more subtle … easy in, easy out").
-     The 200ms hold is the one dial.
+     would undo the owner's own ruling on pass 1 ("a bit more subtle … easy
+     in, easy out").
+
+     ⚠ **THE HOLD IS DELETED AND THE TWO EASE TAILS OVERLAP (ADR-104 U1,
+     owner, 2026-09-20: "I want the content to be shown a little faster").**
+     The first cut held the skeleton 200ms and then spent pass 2's ease-in
+     on top of that — `easeInOutCubic` moves its edges under 4 % in its
+     first 150ms — so for ~350ms after the aperture landed nothing on the
+     card visibly moved. That stillness is what is spent, not the sweep:
+     pass 2 is delayed 560ms, not 920. Measured on the paused clock: at 560
+     the aperture is 94.7 % open; when it lands at 720 pass 2's own ease-in
+     has the content window at 5.3 %, a ~60px slit at the centre; 50 % at
+     920; body `none` and both halves retracted at 1280 — the skeleton
+     still reads whole through the sweep and the content is already opening
+     the moment it ends. 1640 → 1280ms to a filled card, both durations and
+     the curve untouched. ⚠ The delay has little slack left: at 480 pass 1
+     is ~85 % open while pass 2 is already ~15 % (~170px), and the two edge
+     pairs read as one gesture — the "wireframe first" beat goes with it.
+     If it still reads slow, the next dial is pass 2's DURATION, taken on
+     the owner's word against the derivation above.
 
      ⚠ **PURE MOTION, ZERO FADES — ADR-097 U12's law, unchanged.** No
      opacity curve, no tear, no `filter`. The retired glitch was three
@@ -554,21 +572,22 @@
   }
 
   /* ⚠ **`backwards`, NEVER `forwards`** (ADR-101's own ruling, and the
-     reason `fill-mode` is `none` on pass 1). The delay is pass 1 plus the
-     hold; `backwards` holds each animation's `from` frame through it — the
-     slit, and the two halves — and then the animation falls to the CASCADE:
+     reason `fill-mode` is `none` on pass 1). The delay is 560ms — pass 1
+     less its ease-out tail (U1); `backwards` holds each animation's `from`
+     frame through it — the slit, and the two halves — and then the
+     animation falls to the CASCADE:
      no clip on the body, fully retracted on the halves, which is each
      element's own resting declaration. A `forwards` fill would pin an
      `inset()` on the body for the rest of the card's life, and pin the
      halves in a state their rest rule already says. */
   .pf-stack .pf-slot[data-pf-arrive="in"] .pf-card__body {
-    animation: pf-fill 720ms cubic-bezier(0.65, 0, 0.35, 1) 920ms backwards;
+    animation: pf-fill 720ms cubic-bezier(0.65, 0, 0.35, 1) 560ms backwards;
   }
   .pf-stack .pf-slot[data-pf-arrive="in"] .pf-cardwire--l {
-    animation: pf-fill-wire-l 720ms cubic-bezier(0.65, 0, 0.35, 1) 920ms backwards;
+    animation: pf-fill-wire-l 720ms cubic-bezier(0.65, 0, 0.35, 1) 560ms backwards;
   }
   .pf-stack .pf-slot[data-pf-arrive="in"] .pf-cardwire--r {
-    animation: pf-fill-wire-r 720ms cubic-bezier(0.65, 0, 0.35, 1) 920ms backwards;
+    animation: pf-fill-wire-r 720ms cubic-bezier(0.65, 0, 0.35, 1) 560ms backwards;
   }
 
   /* ⚠ **THE CLOSE NEEDS NO MIRROR.** On `out` the card runs

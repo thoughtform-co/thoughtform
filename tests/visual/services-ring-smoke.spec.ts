@@ -212,13 +212,14 @@ async function settleScroll(page: Page, capMs = 1600): Promise<void> {
  * (`/trinny-london` passes no `arrival`, so there are no animations to await).
  *
  * ⚠ **SUBTREE, AND THE CAP HAD TO GROW WITH IT (ADR-104).** The beat is two
- * passes now: the card's own aperture (720ms), a 200ms hold, and then the
- * content filling the skeleton (720ms) — and pass 2 runs on `.pf-card__body`
- * and the two `.pf-cardwire` halves, which are DESCENDANTS. An element's own
- * `getAnimations()` cannot see them, so this returned at 720ms and handed
- * every reading after it a half-filled card: the exact flake this helper was
- * written to remove, one pass later. 3000ms would also have clipped the
- * 1640ms beat under load.
+ * passes now: the card's own aperture (720ms), and the content filling the
+ * skeleton (720ms) from 560ms — inside the aperture's ease-out tail, no hold
+ * since U1 — so the card is filled at 1280ms (was 1640). Pass 2 runs on
+ * `.pf-card__body` and the two `.pf-cardwire` halves, which are DESCENDANTS.
+ * An element's own `getAnimations()` cannot see them, so this returned at
+ * 720ms and handed every reading after it a half-filled card: the exact flake
+ * this helper was written to remove, one pass later. 3000ms would also have
+ * clipped the beat under load.
  */
 async function settleArrival(page: Page, idx: number, capMs = 5000): Promise<void> {
   await page.evaluate(
