@@ -18,7 +18,8 @@ description: The sheet — the ruled-document grammar for overview subpages (the
 # Rule: the sheet
 
 A subpage is a ruled document: content-height sections on a twelve-column
-band whose own rules the page draws, inside the HUD frame. It is the site's
+band between the frame's rails, seamed between sections, inside the HUD
+frame (U1: the rails are the page's only verticals). It is the site's
 THIRD grammar — the corridor and the decks under `/arcs` are the other two —
 and the first for a page that lists things.
 
@@ -50,6 +51,9 @@ and the first for a page that lists things.
   theme sweep and the phone-unit sweep; light re-derives every `--sh-*` alpha
   in `theme.css` under `html[data-theme="light"] .sh-root`. A literal in it
   fails a test the hour it is written.
+- **No vertical rule of the page's own** (ADR-114 U1, owner 2026-09-20: "we
+  already have our rails"). A section divides itself with seams and shared
+  cell edges; the smoke asserts it as paint on every route.
 - **The first value of every knob is the house.** `lib/sheet/directions.json`
   is THE registry; the page imports it, the capture reads it by path, the
   ship's `armada.toml` mirrors it (a lane per direction, a type per page) and

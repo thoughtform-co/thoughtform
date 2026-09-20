@@ -68,6 +68,13 @@ Repair history:
   the grader fails it as unseated on every console still — a real question
   for the owner (seat the pile's column on a rule, or exempt piles), not a
   wording fix.
+- **U1, 2026-09-20 — the owner's first ruling, applied.** Off the wave-01
+  gallery's first screen: the two full-height rules at the band's edges go,
+  on every page, because the frame's rails are already there. B1 is
+  rewritten to the seams alone and gains a fails-when for a vertical rule of
+  the page's own; the `rules` knob and direction SC are deleted; F3 names two
+  directions; wave 02 re-shoots the remaining three at the new state. The
+  grades of wave 01 stand as the record of what he ruled on.
 
 ## Grading rules
 
@@ -159,11 +166,11 @@ What the stranger's read may come back with, recorded rather than enforced in
 
 ## B. The sheet
 
-| ID  | Check                                                                                                                                                                          | Fails when                                                                                                      | Severity |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | -------- |
-| B1  | **The page draws its own rules and panels are seated on them.** Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone. | a panel or a cell edge floats with no rule behind it, or a rule stops short of the band with nothing to stop it | critical |
-| B2  | **Cells share edges.** Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes.         | two cells are separated by air, a line is drawn twice a pixel apart, or a box sits inside a cell                | critical |
-| B3  | **One line weight, one hue, three alphas.** Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed line is the two-up divider.        | a second weight, a second hue on structure, more than three distinguishable alphas, or a dashed rule elsewhere  | critical |
+| ID  | Check                                                                                                                                                                                                                                                       | Fails when                                                                                                                                                                                        | Severity |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| B1  | **The page divides itself with seams, and panels are seated on them.** A hairline seam between sections, the head band's rule under every kicker, and no vertical rule of the page's own: the frame's two rails are its only verticals (owner, 2026-09-20). | a section has no seam above it, a panel or a cell edge floats with no rule behind it, a rule stops short of the band with nothing to stop it, or the page draws a full-height vertical of its own | critical |
+| B2  | **Cells share edges.** Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes.                                                                                      | two cells are separated by air, a line is drawn twice a pixel apart, or a box sits inside a cell                                                                                                  | critical |
+| B3  | **One line weight, one hue, three alphas.** Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed line is the two-up divider.                                                                                     | a second weight, a second hue on structure, more than three distinguishable alphas, or a dashed rule elsewhere                                                                                    | critical |
 
 ## C. Composition
 
@@ -201,7 +208,7 @@ What the stranger's read may come back with, recorded rather than enforced in
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------- |
 | F1  | **The variety law is read on the sheet.** Across a page's stills no two consecutive sections share an arrangement, no arrangement appears more than twice, at least three appear, and figures change side. | two consecutive stills show the same arrangement, one arrangement carries the page, or every figure sits on one side           | critical |
 | F2  | **One grammar across the set.** The six pages, both themes and both viewports read as one instrument; the light stills re-derive rather than inherit; no page reproduces a reference beat for beat.        | a page reads as a different site, a light still is a dark one washed out, or a page is a reference site with the copy replaced | critical |
-| F3  | **Each direction differs on the axis it claims, and no other.** SC erases the long rules; SD stacks the head and drops the ordinals; SE grids the cards and rails the timeline.                            | two directions' stills are indistinguishable, or one moves an axis it did not claim                                            | critical |
+| F3  | **Each direction differs on the axis it claims, and no other.** SD stacks the head and drops the ordinals; SE grids the cards and rails the timeline.                                                      | two directions' stills are indistinguishable, or one moves an axis it did not claim                                            | critical |
 
 ## K. The kit
 
@@ -283,7 +290,11 @@ the pole it names is rewritten before wave 01. The two fixture panels from
 | the lawful fixture panel    | `SK-void__lawful_01.png` (wave 00) | nothing in block A     | A1 to A6          |
 | the broken fixture panel    | `SK-void__broken_01.png` (wave 00) | A1, A3, A5, A6         | A4                |
 
-Positive anchors are equally empty and equally required. The first approvals
+| the sheet's own long rules | `wave-01-sb/HS-void__sb_01.png` | B1 (as rewritten) | everything else |
+
+The last row is the owner's first ruling on the sheet itself (2026-09-20,
+`brief/VOCABULARY.md`): the two full-height rules at the band's edges are
+rejected on every page. Positive anchors are still empty. The first approvals
 from the owner's own gallery become rows here, with their quotes.
 
 ## The harness

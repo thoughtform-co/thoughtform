@@ -28,6 +28,8 @@ The canonical rule is `.claude/rules/sheet.md`; this file mirrors it for Cursor.
   PRIMARY row.
 - `sheet.css` is token-only, pinned at zero in three ratchets; light re-derives
   every `--sh-*` alpha in `theme.css`.
+- No vertical rule of the page's own: the frame's rails are the only verticals
+  (ADR-114 U1); a section divides itself with seams and shared cell edges.
 - The first value of every knob is the house; `lib/sheet/directions.json` is
   the one registry, mirrored into the ship's `armada.toml` and asserted.
 - Every client-console readout is DERIVED from the arcs registry.

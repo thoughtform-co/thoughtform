@@ -69,4 +69,18 @@ This ship.
 
 ## Verdicts
 
-None yet. The first gallery's ticks go here, dated, verbatim.
+### 2026-09-20 — the first read of the wave-01 gallery (the house direction's arcs overview)
+
+> Just a general note: those vertical borders, or vertical dividers, which you
+> took from Lighthouse, I do not want those. We already have our rails so
+> remove them across all our pages. Thank you
+
+Decoded: the two full-height hairlines at the band's edges duplicate the
+frame's own rails; a sheet page divides itself with SEAMS and nothing else.
+The `rules` knob (sheet · seams) is decided at "seams" and deleted with its
+direction SC; B1 is rewritten ("the page divides itself with seams … no
+vertical rule of the page's own"); the gallery's first screen becomes the
+first negative anchor of the sheet itself. Applied on every page the same
+hour (ADR-114 U1); wave 02 re-shoots the remaining three directions at the new
+state. Not yet ruled on: the two-up figure's short dashed divider, which is
+stripe.dev's and not a rail's length — flagged in the reply, left in place.

@@ -1,5 +1,5 @@
 {
-  "$comment": "THE ONE REGISTRY for the sheet's knobs (ADR-114). Read by the pages (TS import, through lib/sheet/directions.ts) and by scripts/capture-subpages.mjs (readFileSync), and mirrored into the ship's armada.toml. Two readers, one record: a direction cannot be shot that the page cannot draw. TYPE IDS ARE LETTERS ONLY - the armada's filename grammar takes letters before the first dash. THE FIRST VALUE OF EVERY KNOB IS THE HOUSE: direction SB is every knob at its first value, and every other direction is an argument someone has to make against it. SA is not a knob set at all: it is the NEGATIVE POLE, today's /arcs shot once before the sheet replaced it.",
+  "$comment": "THE ONE REGISTRY for the sheet's knobs (ADR-114). Read by the pages (TS import, through lib/sheet/directions.ts) and by scripts/capture-subpages.mjs (readFileSync), and mirrored into the ship's armada.toml. Two readers, one record: a direction cannot be shot that the page cannot draw. TYPE IDS ARE LETTERS ONLY - the armada's filename grammar takes letters before the first dash. THE FIRST VALUE OF EVERY KNOB IS THE HOUSE: direction SB is every knob at its first value, and every other direction is an argument someone has to make against it. The `rules` knob (two full-height rules at the band's edges, or seams alone) was DELETED on 2026-09-20 by the owner's ruling - the frame's rails are the page's only verticals - and its seams direction SC went with it (ADR-114 U1). SA is not a knob set at all: it is the NEGATIVE POLE, today's /arcs shot once before the sheet replaced it.",
   "knobs": {
     "head": {
       "values": ["split", "stack"],
@@ -10,11 +10,6 @@
       "values": ["on", "off"],
       "label": "Ordinal",
       "note": "on = every section's head band letters 01 / 02 / … (Hermeus, Prime Intellect: ordinals as wayfinding). off = the kicker alone (the casefile's own no-ordinal ruling, ADR-066)."
-    },
-    "rules": {
-      "values": ["sheet", "seams"],
-      "label": "Rules",
-      "note": "sheet = two full-height hairlines at the band's edges plus a seam between sections (Tensorlake, Kindled). seams = the seams alone; the page's edges are air."
     },
     "card": {
       "values": ["stack", "grid"],
@@ -35,7 +30,10 @@
       "shape": "a centred hero over a gutter grid of chamfered posters, no page rules",
       "pole": "negative",
       "lane": "sa",
-      "routes": { "AR": "/arcs", "AC": "/arcs/loop" },
+      "routes": {
+        "AR": "/arcs",
+        "AC": "/arcs/loop"
+      },
       "knobs": null
     },
     {
@@ -46,30 +44,32 @@
       "knobs": {}
     },
     {
-      "id": "SC",
-      "name": "Seams",
-      "question": "does the page still read as seated with the full-height rules gone and only the seams left?",
-      "shape": "the same sheet with its two long rules erased",
-      "knobs": { "rules": "seams" }
-    },
-    {
       "id": "SD",
       "name": "Editorial",
       "question": "does the head read better stacked on the right with no ordinals, or does the page lose its wayfinding?",
       "shape": "kicker left, title and paragraphs stacked right, no section numerals",
-      "knobs": { "head": "stack", "ordinal": "off" }
+      "knobs": {
+        "head": "stack",
+        "ordinal": "off"
+      }
     },
     {
       "id": "SE",
       "name": "Grid",
       "question": "does a static grid of flashcards and a vertical date rail say the same thing as the pile and the axis, with less motion?",
       "shape": "cards in two columns, the sessions on a rail",
-      "knobs": { "card": "grid", "timeline": "rail" }
+      "knobs": {
+        "card": "grid",
+        "timeline": "rail"
+      }
     }
   ],
   "wave": {
     "themes": ["dark", "light"],
-    "settings": { "default": "1920x1247", "laptop": "1280x720" },
-    "note": "4 directions x 6 types x 2 themes at the default viewport, one still per section; laptop for SB first. 1920x1247 is the owner's own window; 1280x720 is the binding one."
+    "settings": {
+      "default": "1920x1247",
+      "laptop": "1280x720"
+    },
+    "note": "3 directions x 6 types x 2 themes at the default viewport, one still per section; laptop for SB first. 1920x1247 is the owner's own window; 1280x720 is the binding one."
   }
 }

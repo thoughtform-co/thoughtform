@@ -43,7 +43,7 @@ the sheet's gold budget.
 | Prime Intellect     | black / white           | 0     | one sans, one mono | 150 rules; ordinals as wayfinding         | 15 objects on a page       | the ordinal, the twelve-object budget                       |
 | Hermeus /propulsion | white / near-black      | 0     | one sans, one mono | `02 / Roadmap` heads over a hairline      | one lit box on the roadmap | the split head, the dated axis with one lit node            |
 | stripe.dev          | paper / ink             | 0     | one mono, one sans | `/ SECTION` labels, `[ FIG. 1 ]` frames   | one                        | the FIG caption bar, the metadata column, the dashed two-up |
-| Kindled + Kindred   | paper / ink             | 0     | one sans, one mono | a drawn grid, cells sharing edges         | none                       | the band rules, chrome at the extremes                      |
+| Kindled + Kindred   | paper / ink             | 0     | one sans, one mono | a drawn grid, cells sharing edges         | none                       | the seams between sections, chrome at the extremes          |
 
 The live readings land in `readings/<site>.json` when `--register` runs, and
 this table is updated from them in the same session.

@@ -36,7 +36,8 @@ ticked, not in the moment someone needs a still.
 ## The look, in one paragraph
 
 A subpage is a ruled sheet: content-height sections on a twelve-column band
-whose own rules the page draws, inside the site's HUD frame. The head is a
+between the frame's rails, which are the page's only verticals, seamed between
+sections, inside the site's HUD frame. The head is a
 split, never a centred hero. Every section opens on a kicker, an ordinal and a
 hairline, and consecutive sections differ. Cells share edges; nothing floats;
 zero radius, no shadow, one line weight in one hue at three alphas. Two faces

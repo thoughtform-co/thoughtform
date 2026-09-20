@@ -61,7 +61,8 @@ graders = ["gemini-flash-latest"]
 # `tests/lib/sheet-directions.test.ts` both assert the mirror.
 sa = "render-3004"        # the negative pole: today's /arcs, shot from a worktree at the pre-change commit
 sb = "render-3003"        # House: every knob at its first value
-sc = "render-3003"        # Seams: rules=seams
+# sc (Seams: rules=seams) was retired on 2026-09-20 with the `rules` knob: the
+# owner ruled the frame's rails the page's only verticals (ADR-114 U1).
 sd = "render-3003"        # Editorial: head=stack ordinal=off
 se = "render-3003"        # Grid: card=grid timeline=rail
 lawful = "render-3003"    # /test/design-eval-fixture .fixture-good (wave 00)

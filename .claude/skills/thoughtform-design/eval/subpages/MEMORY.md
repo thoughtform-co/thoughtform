@@ -22,6 +22,7 @@ home port extracts the tagged lines first.
 - 2026-09-20 the mechanical gate runs per cell before capture; exit 2 refuses the cell, exit 1 is recorded -> scripts/capture-subpages.mjs
 - 2026-09-20 the negative pole is today's old /arcs shot once from a worktree at the pre-change commit, never re-shot -> skill/assets/negative/
 - 2026-09-20 [verdict] the owner's brief, three sentences that became the variety law, the console and the negative pole -> brief/VOCABULARY.md
+- 2026-09-20 [verdict] the first ruling on the sheet: the full-height vertical rules go on every page, the frame's rails are the only verticals; the `rules` knob and SC deleted, B1 rewritten -> brief/VOCABULARY.md
 
 ## Learned
 

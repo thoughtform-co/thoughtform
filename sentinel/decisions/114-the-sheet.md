@@ -67,7 +67,8 @@ derive from the registry; posts are MDX files in the repo; the routes are
 The corridor has one grammar, the decks under `/arcs` another, and until now a
 page that LISTS things had none: the old overview was a centred hero over a
 gutter grid of chamfered posters. The sheet is a **ruled document**: content-
-height sections on a twelve-column band whose own rules the page draws, inside
+height sections on a twelve-column band between the frame's rails, seamed
+between sections (U1: the rails are the page's only verticals), inside
 the site's HUD frame and on its rails, with the corner readout naming the
 section. Root `.sh-root`, one sheet `components/sheet/sheet.css` (token-only
 from line one and pinned at zero literals in the type ratchet), its own ink
@@ -130,12 +131,10 @@ first value of every knob is the house.**
 | ---------- | ----------------- | ------------------------------------------------------------------------- |
 | `head`     | `split` · `stack` | title left / paragraphs right, or kicker left with the pair stacked right |
 | `ordinal`  | `on` · `off`      | `01 /` numerals on the head bands, or the kicker alone                    |
-| `rules`    | `sheet` · `seams` | two full-height rules plus seams, or the seams alone                      |
 | `card`     | `stack` · `grid`  | the pile stacks on scroll, or sits in a static two-column grid            |
 | `timeline` | `axis` · `rail`   | the horizontal dated axis, or the vertical date rail                      |
 
-Directions: `SA` the negative pole (today's old `/arcs`, no knobs), `SB` house,
-`SC` seams, `SD` editorial (`head=stack ordinal=off`), `SE` grid
+Directions: `SA` the negative pole (today's old `/arcs`, no knobs), `SB` house, `SD` editorial (`head=stack ordinal=off`), `SE` grid
 (`card=grid timeline=rail`). Each moves one axis against `SB` and no other.
 
 ### 5. The pages
@@ -321,12 +320,12 @@ http://localhost:3003/musings/navigate-the-intelligence
 http://localhost:3003/test/subpage-kit
 ```
 
-with `?k=SB|SC|SD|SE&theme=dark|light` on any of them.
+with `?k=SB|SD|SE&theme=dark|light` on any of them.
 
 ## Left open — the owner's rulings after wave 01
 
-Split or stacked head · ordinals on or off · full-height rules or seams · pile
-or grid · axis or rail · whether the Loop console expands its four dossier
+Split or stacked head · ordinals on or off · pile or grid · axis or rail
+(full-height rules or seams: ruled, see U1) · whether the Loop console expands its four dossier
 beats into flashcards · the twelve-gold budget · the four session dates and
 each client's `since` year. The losing value of every knob goes with its CSS
 and its guards once he has read both (ADR-070 U35).
@@ -342,3 +341,35 @@ Also open: the register strips prove the RULED grammar and not the corner law
 stripe.dev's sixteen (`references/register/readings/`), so a grader shown the
 strip as "the register" must be told, as the rubric does, that A6 is the
 house's law and not the references'.
+
+## U1 — 2026-09-20, owner: the rails are the page's only verticals
+
+Off the first screen of the wave-01 gallery (the arcs overview on the house
+direction):
+
+> Just a general note: those vertical borders, or vertical dividers, which you
+> took from Lighthouse, I do not want those. We already have our rails so
+> remove them across all our pages.
+
+The two full-height hairlines at the band's edges — cluster A's "the page
+draws its own rules", taken from Lighthouse, Tensorlake and Kindled — are
+deleted from `sheet.css` on every page. The references draw those rules
+because they have no frame; this site's HUD already draws two rails with ticks
+at the viewport's edges, and a second pair inside them read as clutter. A
+sheet page divides itself with seams between sections, the head band's rule
+and cells that share edges, and nothing vertical of its own.
+
+What went with it, per ADR-070 U35: the `rules` knob (`sheet` · `seams`) and
+direction SC, from `directions.json`, `directions.ts`, the ship's lane and
+lanes table, and their tests; B1 is rewritten to the seams alone with a
+fails-when for a vertical rule of the page's own; the smoke asserts, as paint
+and not as a knob, that no box between the rails on any route is a hairline
+as tall as its section; the gallery's first screen becomes the sheet's first
+negative anchor. Wave 02 re-shoots the three remaining directions at the new
+state; wave 01 stays as the record of what he ruled on. Not ruled on and left
+in place: the two-up figure's short dashed divider, which is stripe.dev's and
+not a rail's length.
+
+The lesson for the next reference decode: read the frame before copying a
+reference's chrome. The first thing the owner ruled on was the one thing the
+references gave the page that the site already had.

@@ -75,11 +75,17 @@ describe("the sheet's directions (ADR-114)", () => {
   });
 
   it("the URL seeds a direction, a knob overrides it, and a typo falls back to the house", () => {
-    expect(parseSheetQuery(new URLSearchParams("k=SC"))).toEqual({
-      knobs: { ...SH_DEFAULTS, rules: "seams" },
-      k: "SC",
+    expect(parseSheetQuery(new URLSearchParams("k=SD"))).toEqual({
+      knobs: { ...SH_DEFAULTS, head: "stack", ordinal: "off" },
+      k: "SD",
     });
-    expect(parseSheetQuery(new URLSearchParams("k=SC&rules=sheet")).k).toBe("SB");
+    expect(parseSheetQuery(new URLSearchParams("k=SD&head=split&ordinal=on")).k).toBe("SB");
+    /* The `rules` knob was deleted by the owner's ruling (ADR-114 U1): a URL
+       that still names it changes nothing and resolves to the house. */
+    expect(parseSheetQuery(new URLSearchParams("rules=seams"))).toEqual({
+      knobs: SH_DEFAULTS,
+      k: "SB",
+    });
     expect(parseSheetQuery(new URLSearchParams("k=NOPE&head=banana"))).toEqual({
       knobs: SH_DEFAULTS,
       k: "SB",

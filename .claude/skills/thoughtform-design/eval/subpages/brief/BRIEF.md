@@ -35,7 +35,7 @@ rubric checks:
 
 ## What he decides after wave 01
 
-Split or stacked head · ordinals on or off · full-height rules or seams · pile
-or grid · axis or rail · whether the Loop console expands its four dossier
+Split or stacked head · ordinals on or off · pile or grid · axis or rail
+(full-height rules or seams was ruled on 2026-09-20: seams alone) · whether the Loop console expands its four dossier
 beats into flashcards · the twelve-gold budget · the four session dates and
 each client's `since` year.

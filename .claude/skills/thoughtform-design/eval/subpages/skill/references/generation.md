@@ -71,7 +71,8 @@ set holds in common.
 SHEET. The subject is one subpage of the practice's site drawn as a ruled
 sheet: a document of content-height sections on a twelve-column band, inside
 the site's own HUD frame, on its rails, with the corner readout naming the
-section. It is a live render, not a mockup. The page draws its own rules;
+section. It is a live render, not a mockup. The frame's two rails are the
+page's only verticals; the page divides itself with a seam between sections;
 cells share edges; nothing floats on a ground; there is no shadow and no
 radius anywhere.
 

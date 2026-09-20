@@ -40,7 +40,6 @@ per-direction table for free.
 | -------- | --------- | -------------------------------------------- | ----------------------------------------------------------------- |
 | `sa`     | SA        | none; the negative pole, today's old `/arcs` | what the owner said looks bad, so a check can be shown to fail it |
 | `sb`     | SB        | none; every knob at its first value          | does the house sheet read as one instrument across six pages?     |
-| `sc`     | SC        | `rules=seams`                                | does the page still read as seated with the long rules erased?    |
 | `sd`     | SD        | `head=stack ordinal=off`                     | is the stacked head better, or does the page lose its wayfinding? |
 | `se`     | SE        | `card=grid timeline=rail`                    | do a static grid and a date rail say the same with less motion?   |
 | `lawful` | —         | the site's lawful fixture panel              | wave 00: block A must pass it                                     |

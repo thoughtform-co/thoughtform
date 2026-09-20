@@ -24,7 +24,7 @@ harvest note, and those two words are in every sentence about a theme.
      `DRIVE.md`); the page draws its own grid and every panel is seated on it.
   3. **Prime Intellect** — 150 rules, 15 accent objects on a whole page
      (2026-09-05); ordinals as wayfinding, cells sharing edges.
-- **What the strip proves:** the ruled sheet (rules, seams, seated cells), the
+- **What the strip proves:** the ruled sheet (seams, seated cells), the
   head band (kicker, ordinal, hairline), the accent budget, the two-face type.
 - **What it does not prove:** any ground, any layout, any composition of THIS
   page. A candidate is not judged for looking unlike it.

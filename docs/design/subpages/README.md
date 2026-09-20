@@ -7,7 +7,7 @@ map.
 ## The pages
 
 Dev server today: `http://localhost:3003` (read the port off the running
-server before quoting one). Any of these takes `?k=SB|SC|SD|SE` and
+server before quoting one). Any of these takes `?k=SB|SD|SE` and
 `&theme=dark|light`.
 
 ```
@@ -29,11 +29,10 @@ http://localhost:3003/test/subpage-kit
 | ---------- | ------- | ------- | ---------------------------------------------------- |
 | `head`     | `split` | `stack` | title left / copy right, or kicker left / both right |
 | `ordinal`  | `on`    | `off`   | `01 /` on the head bands                             |
-| `rules`    | `sheet` | `seams` | two full-height rules, or seams alone                |
 | `card`     | `stack` | `grid`  | the pile stacks on scroll, or a static grid          |
 | `timeline` | `axis`  | `rail`  | horizontal dated axis, or a vertical date rail       |
 
-Directions: `SB` house · `SC` seams · `SD` editorial (`head=stack ordinal=off`)
+Directions: `SB` house · `SD` editorial (`head=stack ordinal=off`)
 · `SE` grid (`card=grid timeline=rail`) · `SA` the negative pole (the old
 `/arcs`, shot once). One record: `lib/sheet/directions.json`.
 
@@ -48,8 +47,7 @@ once; one lit node; one open step; five chapters at most. Code:
 
 ## What the owner is being asked
 
-After wave 01's gallery: split or stacked head · ordinals on or off · rules or
-seams · pile or grid · axis or rail · whether the Loop console expands its
+After wave 01's gallery: split or stacked head · ordinals on or off · pile or grid · axis or rail · whether the Loop console expands its
 four dossier beats into cards · the twelve-gold budget · the four session dates
 · each client's `since` year · whether the pile's card is seated on a rule of
 its own · whether the lit timeline node keeps its gold box.
@@ -101,6 +99,8 @@ then from the ship: `python tools/doctor.py` → `qa.py --batch <wave> --runs 3`
 - A wave is one CSS state: a sheet fix mid-wave re-shoots every direction.
 - Tell the grader what the frame and the close are, or it fails every still
   on them.
+- The rails are the page's only verticals (owner, 2026-09-20): a page never
+  draws a full-height rule of its own; the `rules` knob is gone.
 
 ## Verifying
 

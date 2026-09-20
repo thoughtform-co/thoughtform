@@ -326,18 +326,45 @@ test.describe("subpages (ADR-114)", () => {
     expect(ticks).toBeGreaterThanOrEqual(3);
   });
 
-  test("?k=SC writes its knobs on the root and erases the long rules", async ({ page }) => {
-    await page.goto("/home-sessions?k=SC");
+  test("?k=SD writes its knobs on the root and drops the ordinals", async ({ page }) => {
+    await page.goto("/home-sessions?k=SD");
     await page.locator(".sh-root[data-sh-ready]").waitFor({ timeout: 45_000 });
     const root = page.locator(".sh-root");
-    await expect(root).toHaveAttribute("data-sh-k", "SC");
-    const knobs = knobsFor("SC");
+    await expect(root).toHaveAttribute("data-sh-k", "SD");
+    const knobs = knobsFor("SD");
     for (const [key, value] of Object.entries(knobs))
       await expect(root).toHaveAttribute(`data-sh-${key}`, value);
-    const rule = await page
-      .locator(".sh-sec--timeline")
-      .evaluate((el) => getComputedStyle(el, "::before").content);
-    expect(rule === "none" || rule === '""' || rule === "normal").toBe(true);
+    await expect(page.locator(".sh-head__ord")).toHaveCount(0);
+  });
+
+  test("the frame's rails are the page's only verticals (ADR-114 U1)", async ({ page }) => {
+    /* The owner, 2026-09-20, off the first gallery: the two full-height rules
+       at the band's edges "I do not want those. We already have our rails".
+       Asserted as paint, not as a knob: no box between the rails, on any
+       route, is a hairline as tall as its section. */
+    for (const route of ROUTES) {
+      await ready(page, route);
+      const verticals = await page.evaluate(() => {
+        const out: string[] = [];
+        for (const sec of document.querySelectorAll(".sh-sec")) {
+          const h = sec.getBoundingClientRect().height;
+          for (const pseudo of ["::before", "::after"]) {
+            const cs = getComputedStyle(sec, pseudo);
+            if (cs.content !== "none" && parseFloat(cs.width) <= 2 && parseFloat(cs.height) > 200)
+              out.push(`${sec.id}${pseudo} ${cs.width}x${cs.height}`);
+          }
+          for (const el of sec.querySelectorAll("*")) {
+            if (el.closest(".sh-hud-root, .hud-nav-overlay, .rin-host")) continue;
+            const b = el.getBoundingClientRect();
+            const bg = getComputedStyle(el).backgroundColor;
+            if (b.width <= 2 && b.height > Math.max(240, h * 0.8) && bg !== "rgba(0, 0, 0, 0)")
+              out.push(`${sec.id} ${el.className} ${Math.round(b.width)}x${Math.round(b.height)}`);
+          }
+        }
+        return out.slice(0, 6);
+      });
+      expect(verticals, `${route}: a full-height vertical rule`).toEqual([]);
+    }
   });
 
   test("the kit's pile stacks under a panel that sticks", async ({ page }) => {

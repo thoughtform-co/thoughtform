@@ -12,7 +12,7 @@ import registry from "./directions.json";
  * after mount — a reader without JS gets the house.
  */
 
-export const SH_KNOB_KEYS = ["head", "ordinal", "rules", "card", "timeline"] as const;
+export const SH_KNOB_KEYS = ["head", "ordinal", "card", "timeline"] as const;
 export type ShKnobKey = (typeof SH_KNOB_KEYS)[number];
 export type ShKnobs = Record<ShKnobKey, string>;
 

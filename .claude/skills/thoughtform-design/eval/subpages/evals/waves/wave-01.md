@@ -163,6 +163,16 @@ wording (pending 0.1.3); one is a question for the owner. No direction is
 promoted: the ticks decide, and until `ledger.py tick --handback` has read
 them, this wave has not happened.
 
+## After the record: the first ruling
+
+The owner's first read of this wave's gallery (the house direction's arcs
+overview, first screen) ruled the two full-height rules at the band's edges
+out on every page: "we already have our rails". Applied the same hour as
+ADR-114 U1; the `rules` knob and direction SC are deleted, so SC's 64 stills
+and grades here are the record of a direction that no longer exists, and the
+SB/SD/SE stills show a state he has rejected. Wave 02 re-shoots the three
+remaining directions at the new state on rubric 0.1.2 with B1 rewritten.
+
 ## Record
 
 - `qa_results.json` and `qa_summary.json` (per still, from the gallery) in

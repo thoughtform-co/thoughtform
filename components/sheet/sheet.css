@@ -2,13 +2,14 @@
    THE SHEET — the subpage grammar (ADR-114)
 
    A subpage is a RULED SHEET: a document of content-height sections on a
-   twelve-column band whose own rules the page draws. Two full-height
-   hairlines run at the band's edges, a seam spans the band between
+   twelve-column band between the frame's rails, which are the page's only
+   verticals (owner, 2026-09-20 — ADR-114 U1); a seam spans the band between
    sections, cells share edges, and nothing floats on a ground — no gutter
    grid, no radius, no shadow, no bloom. It is what the owner's references
    agree on (Lighthouse, Tensorlake, Prime Intellect: 147 and 150 structure
    lines in ONE hue) and what the house already stated as law one surface
-   over (ADR-089: the structure is dawn, the marks are gold).
+   over (ADR-089: the structure is dawn, the marks are gold) — minus the
+   references' own full-height rules, which this site's frame already draws.
 
    ⚠ TOKENS ONLY. Every colour is a ramp step off `--dawn-rgb` /
    `--void-deep-rgb` / `--gold*`, which ADR-058 SWAPS between themes — so one
@@ -123,29 +124,11 @@
   padding-block-start: calc(var(--sh-sec-pad) + clamp(48px, 7svh, 96px));
 }
 
-/* THE PAGE DRAWS ITS OWN RULES. Two hairlines at the band's edges, one
-   per section (a root pseudo would paint UNDER the opaque sections), so
-   they run continuous by adjacency down the whole document. */
-.sh-sec::before,
-.sh-sec::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--sh-rule);
-  pointer-events: none;
-}
-.sh-sec::before {
-  left: var(--band-margin, var(--hud-content-inset, 48px));
-}
-.sh-sec::after {
-  right: var(--band-margin, var(--hud-content-inset, 48px));
-}
-.sh-root[data-sh-rules="seams"] .sh-sec::before,
-.sh-root[data-sh-rules="seams"] .sh-sec::after {
-  display: none;
-}
+/* THE FRAME'S RAILS ARE THE PAGE'S ONLY VERTICALS (owner, 2026-09-20: the
+   full-height rules at the band's edges, taken from Lighthouse, "I do not
+   want those. We already have our rails"). A sheet page divides itself
+   with SEAMS between sections and nothing else; the `rules` knob that
+   once toggled the two hairlines is deleted with them (ADR-114 U1). */
 
 /* The band: the editorial text band (ADR-048), the same edge every other
    editorial block on the site lands on. Never re-inset per section. */

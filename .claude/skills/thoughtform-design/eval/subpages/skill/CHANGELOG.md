@@ -23,3 +23,8 @@ Dated entries: how the work changed, not what was edited.
   0.1.2. The sheet's fix meant one consistent re-shoot of all four directions;
   the capture's manifest write became idempotent (a re-shot file replaces its
   row) and its theme read stopped gating every dark cell on a null attribute.
+- The owner's first ruling, off the wave-01 gallery's first screen: the two
+  full-height rules at the band's edges go on every page — the frame's rails
+  are the page's only verticals. The `rules` knob and direction SC are deleted
+  with their guards, B1 is rewritten, the first negative anchor of the sheet
+  itself is on record, and wave 02 re-shoots SB, SD and SE at the new state.

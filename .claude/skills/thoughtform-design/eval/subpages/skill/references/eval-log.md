@@ -82,10 +82,28 @@ reconstruction; write it in the session that ran the wave.
 - Full read, per still: `evals/waves/wave-01.md`. Galleries:
   `delivery/review-wave-01-{sb,sc,sd,se}.html`. No handback yet.
 
+## 2026-09-20 — the first owner ruling: the rails are the page's only verticals
+
+- Off the wave-01 gallery's first screen (the house direction's arcs
+  overview): _"those vertical borders, or vertical dividers, which you took
+  from Lighthouse, I do not want those. We already have our rails so remove
+  them across all our pages."_ Verbatim in `brief/VOCABULARY.md`.
+- Applied the same hour: the two `.sh-sec` pseudo hairlines deleted from the
+  sheet, the `rules` knob and direction SC deleted from the registry, the
+  ship's lane and lanes table, B1 rewritten (seams alone, and a fails-when for
+  a vertical rule of the page's own), the smoke asserting no full-height
+  vertical between the rails on any route, and the gallery's first screen
+  recorded as the sheet's first negative anchor.
+- Wave 01's SB/SD/SE stills show a state the owner has rejected; wave 02
+  re-shoots the three remaining directions at the new state and re-grades.
+  Wave 01 stays as the record of what he ruled on.
+
 ## Standing conclusions
 
 - A page's first mechanical run is worth more than its first grade: the
   grader has not seen a still yet and the gate has already moved a token.
+- The first thing the owner rules on is what the reference gave the page that
+  the site already had. Read the frame before copying a reference's chrome.
 - On deterministic stills the unstable list is the rubric's to-do list. A
   third of the verdicts moved across three runs in every direction; rewrite
   those checks in what a grader can see before adding a single new one.
