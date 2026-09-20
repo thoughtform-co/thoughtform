@@ -20,6 +20,7 @@ import { SOFTWARE_FEW_LINE, VINCE_BIO_LEAD, VINCE_PORTRAIT } from "./shared/vinc
 export const AI_KEYNOTE_ARC: ArcDef = {
   slug: "ai-keynote",
   format: "keynote",
+  status: "shipped",
   cardTitle: "The creative AI keynote",
   cardLede:
     "The speed layer for creative teams — proof from the floor, the substrate argument, and where agents take it.",

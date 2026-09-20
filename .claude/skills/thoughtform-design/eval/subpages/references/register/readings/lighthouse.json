@@ -1,0 +1,15 @@
+{
+  "site": "lighthouse",
+  "url": "https://www.lighthousehq.com/",
+  "title": "Lighthouse | Business Immigration for Frontier Talent",
+  "ground": "rgb(24, 24, 24)",
+  "rules": 9,
+  "structureColours": 3,
+  "radii": 13,
+  "text": 16,
+  "bold": 8,
+  "boldShare": 0.5,
+  "families": ["JetBrains Mono", "Sorts Mill Goudy", "PP Neue Montreal"],
+  "hues": [],
+  "when": "2026-09-20T14:25:19.091Z"
+}

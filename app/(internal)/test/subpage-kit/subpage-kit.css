@@ -1,0 +1,45 @@
+/* The kit's own chrome (ADR-114) — the console that prints the direction.
+   Lab-only; tokens all the same. */
+.sk-console {
+  position: fixed;
+  right: clamp(16px, 2vw, 32px);
+  bottom: clamp(72px, 9svh, 110px);
+  z-index: 70;
+  display: grid;
+  row-gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.28);
+  background: rgba(var(--void-deep-rgb), 0.86);
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.7);
+}
+.sk-console__row {
+  margin: 0;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+.sk-console__k {
+  color: rgba(var(--dawn-rgb), 0.4);
+}
+.sk-console__v {
+  color: rgba(var(--dawn-rgb), 0.9);
+}
+.sk-console__links {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(var(--dawn-rgb), 0.12);
+  gap: 8px;
+  justify-content: flex-start;
+}
+.sk-console__link {
+  color: var(--gold-ink);
+  text-decoration: none;
+}
+.sk-console__link:hover {
+  color: var(--gold-ink-lit);
+}

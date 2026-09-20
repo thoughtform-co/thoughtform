@@ -1,0 +1,120 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { describe, expect, it } from "vitest";
+
+import {
+  SH_DEFAULTS,
+  SH_DIRECTIONS,
+  SH_DRAWABLE,
+  SH_KNOB_KEYS,
+  SH_KNOB_LIST,
+  SH_WAVE,
+  directionOf,
+  knobAttrs,
+  knobsFor,
+  parseSheetQuery,
+} from "@/lib/sheet/directions";
+
+/**
+ * The sheet's knobs and directions (ADR-114), and the mirror between the
+ * registry the pages draw from and the ship that grades them.
+ *
+ * ⚠ TWO READERS, ONE RECORD. `lib/sheet/directions.json` is imported by the
+ * page and read by `scripts/capture-subpages.mjs`; the ship's `armada.toml`
+ * names a LANE per direction and a TYPE per page. A direction with no lane
+ * shoots a still nobody grades; a lane with no direction grades a still
+ * nobody shot. The capture asserts this on every run; this test asserts it
+ * on every push.
+ */
+
+const ROOT = join(__dirname, "..", "..");
+const SHIP = join(ROOT, ".claude", "skills", "thoughtform-design", "eval", "subpages");
+
+describe("the sheet's directions (ADR-114)", () => {
+  it("ids are letters only and unique; exactly one negative pole", () => {
+    const ids = SH_DIRECTIONS.map((d) => d.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) expect(id).toMatch(/^[A-Z]+$/);
+    const poles = SH_DIRECTIONS.filter((d) => d.pole === "negative");
+    expect(poles).toHaveLength(1);
+    expect(poles[0].knobs).toBeNull();
+    expect(poles[0].lane).toBe(poles[0].id.toLowerCase());
+    expect(Object.keys(poles[0].routes ?? {})).toEqual(["AR", "AC"]);
+    expect(SH_DRAWABLE.some((d) => d.id === poles[0].id)).toBe(false);
+  });
+
+  it("the first value of every knob is the house, and SB is every knob at that value", () => {
+    for (const { key, def } of SH_KNOB_LIST) {
+      expect(def.values.length, key).toBeGreaterThanOrEqual(2);
+      expect(new Set(def.values).size, key).toBe(def.values.length);
+      expect(SH_DEFAULTS[key]).toBe(def.values[0]);
+      expect(def.label.length).toBeGreaterThan(0);
+      expect(def.note.length).toBeGreaterThan(0);
+    }
+    expect(knobsFor("SB")).toEqual(SH_DEFAULTS);
+    expect(directionOf(SH_DEFAULTS)).toBe("SB");
+  });
+
+  it("every other direction moves at least one axis, and resolves back to itself", () => {
+    for (const d of SH_DRAWABLE) {
+      const knobs = knobsFor(d.id);
+      for (const k of SH_KNOB_KEYS) {
+        const def = SH_KNOB_LIST.find((x) => x.key === k)!.def;
+        expect(def.values, `${d.id}: ${k}=${knobs[k]}`).toContain(knobs[k]);
+      }
+      if (d.id !== "SB") expect(Object.keys(d.knobs ?? {}).length, d.id).toBeGreaterThan(0);
+      expect(directionOf(knobs), d.id).toBe(d.id);
+    }
+  });
+
+  it("knob attributes are all five, in registry order", () => {
+    const attrs = knobAttrs(SH_DEFAULTS);
+    expect(Object.keys(attrs)).toEqual(SH_KNOB_KEYS.map((k) => `data-sh-${k}`));
+    expect(attrs["data-sh-head"]).toBe("split");
+  });
+
+  it("the URL seeds a direction, a knob overrides it, and a typo falls back to the house", () => {
+    expect(parseSheetQuery(new URLSearchParams("k=SC"))).toEqual({
+      knobs: { ...SH_DEFAULTS, rules: "seams" },
+      k: "SC",
+    });
+    expect(parseSheetQuery(new URLSearchParams("k=SC&rules=sheet")).k).toBe("SB");
+    expect(parseSheetQuery(new URLSearchParams("k=NOPE&head=banana"))).toEqual({
+      knobs: SH_DEFAULTS,
+      k: "SB",
+    });
+    /* A hand-mixed set that IS no direction is reported as "", never as the
+       nearest one — a still has to be traceable to the set that drew it. */
+    expect(parseSheetQuery(new URLSearchParams("card=grid")).k).toBe("");
+  });
+
+  it("the wave names both themes and the two viewports", () => {
+    expect(SH_WAVE.themes).toEqual(["dark", "light"]);
+    expect(Object.keys(SH_WAVE.settings)).toContain("default");
+    for (const vp of Object.values(SH_WAVE.settings)) expect(vp).toMatch(/^\d{3,4}x\d{3,4}$/);
+  });
+
+  it("mirrors the ship: a lane per direction, a type per page, every lane a render lane", () => {
+    const toml = readFileSync(join(SHIP, "armada.toml"), "utf8");
+    const lanesBlock = toml.split("[models.lanes]")[1]?.split(/\n\[/)[0] ?? "";
+    const lanes = Object.fromEntries(
+      [...lanesBlock.matchAll(/^([a-z0-9]+)\s*=\s*"([^"]+)"/gm)].map((m) => [m[1], m[2]])
+    );
+    for (const d of SH_DIRECTIONS) {
+      const lane = d.lane ?? d.id.toLowerCase();
+      expect(lanes[lane], `no lane for ${d.id}`).toMatch(/^render-\d{2,5}$/);
+    }
+    for (const lane of ["lawful", "broken"]) expect(lanes[lane], lane).toMatch(/^render-\d{2,5}$/);
+    const types = [...toml.matchAll(/^\[types\.([A-Z]+)\]/gm)].map((m) => m[1]);
+    expect(types.sort()).toEqual(["AC", "AR", "HS", "MP", "MU", "SK"]);
+    for (const t of types) {
+      const block = toml.split(`[types.${t}]`)[1].split(/\n\[/)[0];
+      expect(block, `${t}: no ROUTE`).toMatch(/^shot = "ROUTE: \/[a-z0-9/-]*"/m);
+    }
+    for (const t of Object.keys(SH_DIRECTIONS.find((d) => d.pole === "negative")?.routes ?? {}))
+      expect(types).toContain(t);
+    const subjects = [...toml.matchAll(/^\[subjects\.([a-z]+)\]/gm)].map((m) => m[1]);
+    expect(subjects.sort()).toEqual(["parchment", "void"]);
+  });
+});

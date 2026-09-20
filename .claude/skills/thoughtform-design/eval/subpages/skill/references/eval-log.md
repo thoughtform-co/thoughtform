@@ -1,0 +1,51 @@
+# Eval log
+
+Append-only. One dated entry per wave: what it cost, what it found, what was
+ruled out, and the standing conclusion. A log written afterwards is a
+reconstruction; write it in the session that ran the wave.
+
+## 2026-09-20 — the ship is built; nothing graded yet
+
+- Rubric 0.1 written from the reference decode (`DRIVE.md`), the house's laws
+  and the owner's three sentences, before any verdict exists. Every check is a
+  prediction. Reporting only.
+- The negative anchors name what today's `/arcs` should fail (C1, B1, B2, A5,
+  C6) and what it should still pass (A1, A3, A6, D2). Wave 00 tests the rubric
+  against them; a check that does not fail the pole it names is rewritten as
+  0.1.1 before wave 01.
+- The candidates are deterministic. Every verdict that moves across three runs
+  is the grader's, and the unstable list is the first thing to read.
+
+## 2026-09-20 — wave 00: the register, the negative pole and the fixtures are shot
+
+- **The register strips are written** from six live first screens at
+  1440 × 900 (`--register`), readings in `references/register/readings/`:
+  Lighthouse 9 rules / 13 radii, Tensorlake 42 / 9, Prime Intellect 30 / 0,
+  Hermeus 16 / 0, stripe.dev 34 / 16, Kindled from the local reference file.
+  ⚠ Two of the six references carry rounded corners on their first screen:
+  the strip proves the RULED grammar and not the corner law, and the rubric's
+  grading rules say so.
+- **The negative pole is shot** from the pre-change tree on port 3004, lane
+  `sa`, into `skill/assets/negative/`: the overview five screens and the Loop
+  client page two at 1920 × 1247 (three at 1280 × 720), both themes; 30
+  stills. ⚠ The first shoot timed out on every cell: the capture waited for
+  every in-view reveal to land, and a reveal in the viewport's last tenth
+  never does (the observer's −10 % margin). The wait uses 0.88 now.
+- **The fixture panels are shot** as lanes `lawful` / `broken`, both themes.
+- **`doctor.py` is clear**: 2 subjects, 6 types, 2 settings, 29 checks
+  (26 per frame, 3 set level), every lane a render lane, the grader's key
+  present by name. Four warnings, all expected before a first grade.
+- **The mechanical gate found the sheet's first defect before any grade
+  did:** on `/home-sessions` the readout label, the tick label and the
+  step's date at 0.4 alpha painted 3.19:1 on the void, and the 0.5 rung
+  4.41:1, against the 4.5:1 floor. Dim TEXT moved to a 0.58 rung
+  (`--sh-ink-dim`, 0.64 in light) and the 0.5 rung to 0.54; 0.4 is line
+  work only. Also found: the frame inside `.sh-root` (the rail telemetry at
+  0.11em and 2.2:1, the chapter row, the footer) has to be excluded from the
+  gate, and the gate's whole-page accent count is not the rubric's per-still
+  twelve.
+
+## Standing conclusions
+
+- A page's first mechanical run is worth more than its first grade: the
+  grader has not seen a still yet and the gate has already moved a token.

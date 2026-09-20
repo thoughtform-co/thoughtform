@@ -15,6 +15,7 @@ import { THEME_TOGGLE } from "@/components/landing/v7/themeToggle";
 import { ArcHudNav } from "./ArcHudNav";
 import { ArcRailInstruments } from "./ArcRailInstruments";
 import { ARC_TERMINAL_MEDIA } from "./arcMotion";
+import { useArcReveal } from "./useArcReveal";
 import { useArcScroll } from "./useArcScroll";
 import { useArcTerminalMotion } from "./useArcTerminalMotion";
 
@@ -115,34 +116,20 @@ export function ArcShell({
     // right on detail pages but dead on the overview; on an arc the
     // brand should exit to the landing either way.
     root.querySelector(".hud__brand")?.setAttribute("href", "/");
+  }, []);
 
-    // Same gate the terminal controller and the terminal CSS use — one
-    // constant, or a viewport band gets both systems (or neither).
-    if (motion === "terminal" && window.matchMedia(ARC_TERMINAL_MEDIA).matches) return;
-
-    // Reveal opt-in — content is visible by default (no-JS contract,
-    // the Shards reveal pattern); JS opts INTO the animated state.
-    root.classList.add("is-arc-js");
-    const nodes = Array.from(root.querySelectorAll<HTMLElement>(".arc-reveal"));
-    if (nodes.length === 0) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      nodes.forEach((node) => node.classList.add("is-in"));
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-in");
-            io.unobserve(entry.target);
-          }
-        }
-      },
-      { rootMargin: "0px 0px -10% 0px", threshold: 0.08 }
-    );
-    nodes.forEach((node) => io.observe(node));
-    return () => io.disconnect();
-  }, [motion]);
+  // Reveal opt-in — content is visible by default (no-JS contract,
+  // the Shards reveal pattern); JS opts INTO the animated state. The
+  // observer is `useArcReveal` (lifted for the sheet, ADR-114); the gate
+  // is the one the terminal controller and the terminal CSS use — one
+  // constant, or a viewport band gets both systems (or neither).
+  useArcReveal({
+    rootRef,
+    selector: ".arc-reveal",
+    jsClass: "is-arc-js",
+    skip: () => motion === "terminal" && window.matchMedia(ARC_TERMINAL_MEDIA).matches,
+    deps: [motion],
+  });
 
   return (
     <main

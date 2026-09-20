@@ -42,6 +42,9 @@ export interface ClientPageDef {
   lede: string;
   image: { src: string; alt: string };
   kind: ArcKind;
+  /** Where the page's engagement stands (ADR-114) — a pitch is a proposal
+   *  out until the client answers it. */
+  status?: "proposed" | "running" | "shipped";
 }
 
 export interface ClientDef {
@@ -56,6 +59,13 @@ export interface ClientDef {
   lede: string;
   /** Pages of the client's that are not arcs, listed FIRST in the band. */
   pages?: readonly ClientPageDef[];
+  /**
+   * The year the relationship began (ADR-114) — a four-digit string the
+   * client console letters as `Since`. Required on every client (the
+   * registry test). ⚠ OWNER-TO-CONFIRM: the values below are the practice's
+   * own reading of when each conversation started, not a signed date.
+   */
+  since?: string;
 }
 
 export const TRINNY_CLIENT: ClientDef = {
@@ -75,32 +85,38 @@ export const TRINNY_CLIENT: ClientDef = {
       lede: "The Loop proof as a stack of cards, the mark re-formed as theirs, the configuration their team would own, and the offer.",
       image: { src: "/images/services/embedded.webp", alt: "" },
       kind: "production",
+      status: "proposed",
     },
   ],
+  since: "2026",
 };
 
 export const LOOP_CLIENT: ClientDef = {
   slug: "loop",
   name: "Loop Earplugs",
   lede: "Three years inside the creative team: the films, the studio's own ads, the tools it wrote, and the map that routes the work.",
+  since: "2023",
 };
 
 export const SURI_CLIENT: ClientDef = {
   slug: "suri",
   name: "Suri",
   lede: "An electric toothbrush brand in London, and a creative team that will run its own imagery.",
+  since: "2026",
 };
 
 export const PERFECT_TED_CLIENT: ClientDef = {
   slug: "perfect-ted",
   name: "Perfect Ted",
   lede: "A matcha brand in London, and a range that outgrew the photography behind it.",
+  since: "2026",
 };
 
 export const HUNGRY_MINDS_CLIENT: ClientDef = {
   slug: "hungry-minds",
   name: "Hungry Minds",
   lede: "A publisher of hand-illustrated books, and a team that would write its own briefs from its own reviews.",
+  since: "2026",
 };
 
 /** Every client with an engagement on the site, in the order the overview

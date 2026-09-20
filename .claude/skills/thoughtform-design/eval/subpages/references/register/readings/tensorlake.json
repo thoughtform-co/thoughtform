@@ -1,0 +1,15 @@
+{
+  "site": "tensorlake",
+  "url": "https://www.tensorlake.ai/",
+  "title": "Tensorlake — Sandboxes for AI Agents",
+  "ground": "rgb(22, 23, 21)",
+  "rules": 42,
+  "structureColours": 3,
+  "radii": 9,
+  "text": 64,
+  "bold": 1,
+  "boldShare": 0.016,
+  "families": ["JetBrains Mono", "PP Neue Montreal"],
+  "hues": ["120", "150", "30", "210"],
+  "when": "2026-09-20T14:25:23.306Z"
+}

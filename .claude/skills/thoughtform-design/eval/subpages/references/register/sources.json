@@ -1,0 +1,16 @@
+{
+  "$comment": "The two register strips (ADR-114): three reference first screens per theme, shot live at 1440x900 by `node scripts/capture-subpages.mjs --register` or taken from a local reference still, stacked top to bottom into <subject>.png. A `url` is shot and read (readings/<site>.json); a `file` is resized and top-cropped, with no live reading. Order is the order in the strip.",
+  "void": [
+    { "site": "lighthouse", "url": "https://www.lighthousehq.com/" },
+    { "site": "tensorlake", "url": "https://www.tensorlake.ai/" },
+    { "site": "prime-intellect", "url": "https://www.primeintellect.ai/" }
+  ],
+  "parchment": [
+    { "site": "hermeus-propulsion", "url": "https://www.hermeus.com/propulsion" },
+    { "site": "stripe-dev", "url": "https://stripe.dev/" },
+    {
+      "site": "kindled-grid",
+      "file": "I:/My Drive/01_Thoughtform Branding/07_Artifacts Branding/_01_GENERAL REFERENCES/Grid System.jpg"
+    }
+  ]
+}

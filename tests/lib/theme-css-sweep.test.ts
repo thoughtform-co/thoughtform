@@ -29,6 +29,11 @@ const SHEETS = [
   /* The site footer (ADR-105) — it paints the page's ending over a
      KEPT-DARK plate, which is exactly the shape that needs watching. */
   "components/landing/v7/site-footer/site-footer.css",
+  /* The sheet (ADR-114) — the subpages' grammar, read by `/arcs`,
+     `/home-sessions` and `/musings`. It fills a station and a timeline node
+     with gold and lifts every alpha for light in theme.css, which is the
+     exact pair this sweep exists to catch. */
+  "components/sheet/sheet.css",
   "components/landing/v7/theme.css",
 ];
 

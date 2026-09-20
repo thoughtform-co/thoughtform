@@ -284,7 +284,7 @@ export const SERVICE_PLATES: readonly ServicePlate[] = [
     feedStatus: "Standby",
     includes: ["Six to eight seats", "One morning", "Antwerp", "NL / EN"],
     ctaLabel: "Reserve a seat",
-    ctaHref: "#contact",
+    ctaHref: "/home-sessions",
     // The slot's own asset: the one shot at a table, which is what a home
     // session is. The alt says what the picture shows.
     photo: photo("strategic", "Vince Buyssens at the table, mid-session", "50% 32%"),

@@ -1,0 +1,15 @@
+{
+  "site": "hermeus-propulsion",
+  "url": "https://www.hermeus.com/propulsion",
+  "title": "Propulsion Systems & Engine Development | Hermeus",
+  "ground": "rgb(236, 236, 236)",
+  "rules": 16,
+  "structureColours": 1,
+  "radii": 0,
+  "text": 17,
+  "bold": 0,
+  "boldShare": 0,
+  "families": ["Texgyreheros"],
+  "hues": [],
+  "when": "2026-09-20T14:25:49.751Z"
+}

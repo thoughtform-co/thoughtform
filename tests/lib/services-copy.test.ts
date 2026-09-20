@@ -70,6 +70,11 @@ describe("the four services (ADR-112)", () => {
     expect(SERVICES[3].id).toBe("guided-build");
     expect(SERVICES[3].name).toBe("Home session");
     expect(SERVICES[3].verb).toBe("HOME SESSION");
+    /* ADR-114: the seat is reserved on its own page, not at the landing's
+       contact foot. Both records, because the ring and the phone read
+       different ones and a CTA that lands two places is a defect. */
+    expect(SERVICES[3].ctaHref).toBe("/home-sessions");
+    expect(h.ctaHref).toBe("/home-sessions");
   });
 
   it("carries no trace of the folded service", () => {

@@ -97,6 +97,16 @@ const ACCENT_ALLOW = [
   /\.home-v2-signal-cta/,
   /\.home-v2-copy-cta/,
   /\.svc-plate__cta/,
+  // The sheet (ADR-114): the one lit timeline node, the picked station and
+  // the outlined CTA are the three places gold is SPENT on a subpage, each
+  // once per still, inside the twelve-object budget the rubric counts.
+  /\.sh-tl__item\.is-lit/,
+  // The lit node's BOX carries the gold outline (only `.is-lit .sh-tl__box`
+  // is gold in sheet.css; the rule is keyed on the parent, the paint lands on
+  // the child, and this stage reads the child's own selector).
+  /\.sh-tl__box/,
+  /\.sh-stn\.is-on/,
+  /\.sh-cta\b/,
 ];
 
 /**

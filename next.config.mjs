@@ -63,6 +63,11 @@ const nextConfig = {
       "./.claude/skills/thoughtform-design/references/particle-icon-grammar.md",
       "./.claude/skills/thoughtform-design/references/tokens.md",
     ],
+    // The musings (ADR-114) are FILES read by path at request time; without
+    // this the index and the post route work in dev and 500 on Vercel.
+    "/musings": ["./content/musings/**"],
+    "/musings/[slug]": ["./content/musings/**"],
+    "/sitemap.xml": ["./content/musings/**"],
   },
   ...(exportMode
     ? {

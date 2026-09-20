@@ -1072,3 +1072,26 @@ html[data-theme="light"] .hud__brand::after {
 html[data-theme="light"] .rin-session__panel {
   --rin-panel-edge: rgba(var(--dawn-rgb), 0.16);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE SHEET (ADR-114) - the subpage grammar's ramp, re-derived.
+   An alpha that recedes toward black on void recedes toward parchment
+   here, so every rung is lifted rather than inherited (the `.arc-root`
+   block's own law). The line ladder lifts ~1.8x at the light end and
+   compresses at the heavy one (the datum holds .55 in both themes, like
+   `--hud-rail-line`); the plate is a recess on parchment and goes opaque
+   for the reason `--arc-plate` does. The lip re-derives itself through
+   `--gold-line` and needs no row.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .sh-root {
+  --sh-ink-90: rgba(var(--dawn-rgb), 0.92);
+  --sh-ink-70: rgba(var(--dawn-rgb), 0.78);
+  --sh-ink-50: rgba(var(--dawn-rgb), 0.62);
+  --sh-ink-40: rgba(var(--dawn-rgb), 0.58);
+  --sh-ink-dim: rgba(var(--dawn-rgb), 0.64);
+  --sh-ink-28: rgba(var(--dawn-rgb), 0.42);
+  --sh-seam: rgba(var(--dawn-rgb), 0.42);
+  --sh-rule: rgba(var(--dawn-rgb), 0.22);
+  --sh-plate: rgb(var(--void-deep-rgb));
+  --sh-recess: rgba(var(--dawn-rgb), 0.05);
+}

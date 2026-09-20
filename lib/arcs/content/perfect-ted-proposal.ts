@@ -20,6 +20,7 @@ import { MODE_LEGEND } from "./shared/loop-tools";
 export const PERFECT_TED_PROPOSAL_ARC: ArcDef = {
   slug: "perfect-ted-proposal",
   format: "proposal",
+  status: "proposed",
   client: "perfect-ted",
   kind: "production",
   theme: "light",

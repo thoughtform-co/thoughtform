@@ -1,0 +1,22 @@
+import { SiteFooter } from "@/components/landing/v7/site-footer/SiteFooter";
+
+/**
+ * The close (ADR-114): the site's own footer (ADR-105), seated as the last
+ * section. `SiteFooter` reads two padding tokens off its station and its
+ * plate negates them to reach the viewport's edge; `.sh-sec--close` declares
+ * that pair, so the page ends on the plate's last pixel exactly as the
+ * landing does. Mounted directly — `SiteFooterPortal` exists for the parsed
+ * prototype body, which this page does not have.
+ */
+export function SheetClose({ id }: { id: string }) {
+  return (
+    <section
+      id={id}
+      className="sh-sec sh-sec--close"
+      data-sh-arrangement="close"
+      aria-label="Contact"
+    >
+      <SiteFooter />
+    </section>
+  );
+}

@@ -32,6 +32,7 @@ import { MODE_LEGEND } from "./shared/loop-tools";
 export const HUNGRY_MINDS_PROPOSAL_ARC: ArcDef = {
   slug: "hungry-minds-proposal",
   format: "proposal",
+  status: "proposed",
   client: "hungry-minds",
   kind: "production",
   theme: "light",

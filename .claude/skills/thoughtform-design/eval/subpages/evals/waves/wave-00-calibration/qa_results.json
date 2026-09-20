@@ -1,0 +1,2121 @@
+{
+  "wave": "wave-00-calibration",
+  "rubric_version": "0.1",
+  "gating": false,
+  "graded_at": "2026-09-20T16:42:40",
+  "runs": 3,
+  "checks": [
+    {
+      "id": "A1",
+      "check": "**Two faces, by role.** A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences.",
+      "fails_when": "a sentence is set in the monospace face, a label in the sans face, or a third face appears",
+      "severity": "gate",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "A2",
+      "check": "**Gold is wayfinding, and it is counted.** Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most.",
+      "fails_when": "more than twelve gold objects, or a structural rule, seam or box outline is drawn in gold, the console's lip excepted",
+      "severity": "gate",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "A3",
+      "check": "**No hue outside the tiers.** Neutral ground, neutral ink, gold, the provenance green. Photographs are taken into the duotone.",
+      "fails_when": "a third hue, a cool tint, a purple or blue, or a photograph in its own colour",
+      "severity": "gate",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "A4",
+      "check": "**The ground is the theme's.** A void subject is dawn ink on a near-black ground; a parchment subject is dark ink on parchment. Judged from the candidate alone.",
+      "fails_when": "the ground contradicts the subject named in the caption, or two grounds meet with a hard step",
+      "severity": "gate",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "A5",
+      "check": "**Flat material.** One ground, one step for a plate. No gradient as decoration, no bloom, no glow, no drop shadow.",
+      "fails_when": "a ramp, a halo, a glow or a shadow is doing the work a line should do",
+      "severity": "critical",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "A6",
+      "check": "**The corner law.** Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circles.",
+      "fails_when": "any rounded corner, a chamfer on the wrong diagonal, a chamfered child inside a chamfered box, or a circular mark",
+      "severity": "gate",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "B1",
+      "check": "**The page draws its own rules and panels are seated on them.** Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone.",
+      "fails_when": "a panel or a cell edge floats with no rule behind it, or a rule stops short of the band with nothing to stop it",
+      "severity": "critical",
+      "set_level": false,
+      "block": "B. The sheet"
+    },
+    {
+      "id": "B2",
+      "check": "**Cells share edges.** Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes.",
+      "fails_when": "two cells are separated by air, a line is drawn twice a pixel apart, or a box sits inside a cell",
+      "severity": "critical",
+      "set_level": false,
+      "block": "B. The sheet"
+    },
+    {
+      "id": "B3",
+      "check": "**One line weight, one hue, three alphas.** Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed line is the two-up divider.",
+      "fails_when": "a second weight, a second hue on structure, more than three distinguishable alphas, or a dashed rule elsewhere",
+      "severity": "critical",
+      "set_level": false,
+      "block": "B. The sheet"
+    },
+    {
+      "id": "C1",
+      "check": "**The head is composed on the rules, never centred.** A name kicker and a sentence-case display title on one side, the paragraphs on the other, and no hero image anywhere.",
+      "fails_when": "the title is centred, a hero image or a full-bleed picture opens the page, or the head fills a whole viewport",
+      "severity": "critical",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "C2",
+      "check": "**Every section opens on a head band**: a mono kicker, an ordinal where the knob is on, one hairline under both.",
+      "fails_when": "a section has no kicker, the ordinal is missing where the knob is on or present where it is off, or the band has no rule",
+      "severity": "critical",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "C3",
+      "check": "**A timeline plots a record.** The mornings sit on a dated axis at their dates or on a vertical date rail; exactly one node is lit; past ones are dim. On the sessions page only.",
+      "fails_when": "the items are evenly spread regardless of date, none or more than one is lit, or a past item reads as live",
+      "severity": "critical",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "C4",
+      "check": "**Ruled rows align and one step is open.** In rows and steps, the fields align down the column on one hairline per row; in a steps section exactly one item is elaborated.",
+      "fails_when": "fields wander between rows, a row has no rule, or none or more than one step is open",
+      "severity": "critical",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "C5",
+      "check": "**Figures are framed.** A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone.",
+      "fails_when": "a picture is dropped on the page bare, a two-up has no divider, or a photograph shows its own colour",
+      "severity": "minor",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "C6",
+      "check": "**Split the slack, and one first read.** Vertical surplus is shared, never pooled under one block; from across the room one thing leads.",
+      "fails_when": "a block sits high over a hole, or nothing leads and three things lead together",
+      "severity": "minor",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "D1",
+      "check": "**Nothing above the weight ceiling.** Emphasis is ink and size, never bold; the monospace face is never bold.",
+      "fails_when": "a label, a row, a key or a claim is set bolder than its neighbours, or any monospace text is bold",
+      "severity": "critical",
+      "set_level": false,
+      "block": "D. Type and density"
+    },
+    {
+      "id": "D2",
+      "check": "**Case ranks.** The sans is sentence case; only the monospace chrome is uppercase.",
+      "fails_when": "a sans title or sentence is shouted, or everything is uppercase so case says nothing",
+      "severity": "critical",
+      "set_level": false,
+      "block": "D. Type and density"
+    },
+    {
+      "id": "D3",
+      "check": "**Labels of one rank share one rung.** Kickers track alike, readout labels track alike, captions track alike.",
+      "fails_when": "two labels at the same rank are visibly differently tracked",
+      "severity": "minor",
+      "set_level": false,
+      "block": "D. Type and density"
+    },
+    {
+      "id": "D4",
+      "check": "**Nothing is under the floor, and chrome sits at the extremes.** Every string reads at the still's own scale; chrome at the top and the bottom.",
+      "fails_when": "any string is too small to read, or chrome sits in the middle of a section",
+      "severity": "critical",
+      "set_level": false,
+      "block": "D. Type and density"
+    },
+    {
+      "id": "D5",
+      "check": "**Three registers on a card.** A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face.",
+      "fails_when": "a card has two registers, the kicker carries the claim, or the title is set in the monospace face",
+      "severity": "critical",
+      "set_level": false,
+      "block": "D. Type and density"
+    },
+    {
+      "id": "E1",
+      "check": "**The console's head bar is fused to the housing** with a designation at each end: the name left, a slashed kicker right.",
+      "fails_when": "the bar floats inside the panel with air on every side, or it carries one designation",
+      "severity": "critical",
+      "set_level": false,
+      "block": "E. The instrument"
+    },
+    {
+      "id": "E2",
+      "check": "**The readout column is a record.** Labels dim, values lit, every value something a reader could check against the site: a count, a standing, a chip, a year, a list of kinds.",
+      "fails_when": "a label and a value share one weight of ink, a value is empty, or a value is a claim rather than a fact",
+      "severity": "critical",
+      "set_level": false,
+      "block": "E. The instrument"
+    },
+    {
+      "id": "E3",
+      "check": "**Selection is elaboration, never fill or hue.** The picked station is the one filled thing in its row; the open step grows lines; the lit node grows a filled diamond; nothing else changes colour.",
+      "fails_when": "selection is signalled by a colour swap alone, more than one thing in a row is filled, or the open item is the same size as the rest",
+      "severity": "critical",
+      "set_level": false,
+      "block": "E. The instrument"
+    },
+    {
+      "id": "E4",
+      "check": "**The flashcards are a pile on the sheet.** Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peeking by their heads. Where card=grid, a static two-column grid with the same three registers.",
+      "fails_when": "a card shows its figure at the top, the front card is cut, the pile reads as a gallery grid where card=stack, or the grid has gutters wider than a hairline where card=grid",
+      "severity": "critical",
+      "set_level": false,
+      "block": "E. The instrument"
+    },
+    {
+      "id": "F1",
+      "check": "**The variety law is read on the sheet.** Across a page's stills no two consecutive sections share an arrangement, no arrangement appears more than twice, at least three appear, and figures change side.",
+      "fails_when": "two consecutive stills show the same arrangement, one arrangement carries the page, or every figure sits on one side",
+      "severity": "critical",
+      "set_level": true,
+      "block": "F. Set level"
+    },
+    {
+      "id": "F2",
+      "check": "**One grammar across the set.** The six pages, both themes and both viewports read as one instrument; the light stills re-derive rather than inherit; no page reproduces a reference beat for beat.",
+      "fails_when": "a page reads as a different site, a light still is a dark one washed out, or a page is a reference site with the copy replaced",
+      "severity": "critical",
+      "set_level": true,
+      "block": "F. Set level"
+    },
+    {
+      "id": "F3",
+      "check": "**Each direction differs on the axis it claims, and no other.** SC erases the long rules; SD stacks the head and drops the ordinals; SE grids the cards and rails the timeline.",
+      "fails_when": "two directions' stills are indistinguishable, or one moves an axis it did not claim",
+      "severity": "critical",
+      "set_level": true,
+      "block": "F. Set level"
+    },
+    {
+      "id": "K1",
+      "check": "**Every arrangement and every state once, captioned, and the fixtures labelled as fixtures.** On the specimen sheet only.",
+      "fails_when": "an arrangement is missing, a state (lit, open, picked, draft) is missing, or a fixture reads as a claim",
+      "severity": "critical",
+      "set_level": false,
+      "block": "K. The kit"
+    },
+    {
+      "id": "K2",
+      "check": "**The specimens share one grammar.** The kit's sections read as one sheet, not a collection of components.",
+      "fails_when": "two specimens contradict each other on a rule the other sections share",
+      "severity": "critical",
+      "set_level": false,
+      "block": "K. The kit"
+    }
+  ],
+  "unstable": ["AC-parchment__sa_02.png", "AR-parchment__sa_04.png"],
+  "verdict_counts": {
+    "FAIL": 17,
+    "PASS": 1
+  },
+  "failed_counts": {
+    "A1": 9,
+    "A2": 5,
+    "A3": 2,
+    "A4": 3,
+    "A5": 4,
+    "A6": 15,
+    "B1": 14,
+    "B2": 12,
+    "B3": 7,
+    "C1": 8,
+    "C2": 14,
+    "C5": 10,
+    "C6": 13,
+    "D1": 10,
+    "D2": 6,
+    "D4": 3,
+    "D5": 10,
+    "E3": 2,
+    "E4": 10
+  },
+  "set_level": [
+    "set: 3 image types present (AC, AR, SK); the difference table is audited at generation time",
+    "set: F1, F2, F3 are graded across the wave by eye, not by this harness. Look at the contact sheet before the frames."
+  ],
+  "results": [
+    {
+      "file": "AC-parchment__sa_01.png",
+      "path": "evals\\waves\\wave-00-calibration\\AC - Arcs client\\AC-parchment__sa_01.png",
+      "slot": "AC-parchment",
+      "type": "AC",
+      "type_name": "Arcs client",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 1",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "creative studio case study page",
+      "stranger_counts": "1 main region, 2 vertical rules, 2 accent-colored elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "minimalist client case study splash",
+      "part_count_note": "1 centered hero cluster, 2 perimeter tick rulers, 1 circular control",
+      "checks": {
+        "A1": false,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": true,
+        "B3": false,
+        "C1": false,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": false,
+        "D1": true,
+        "D2": false,
+        "D3": true,
+        "D4": false,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences."
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B3",
+          "severity": "critical",
+          "check": "One line weight, one hue, three alphas. Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed line is the two-up divider."
+        },
+        {
+          "id": "C1",
+          "severity": "critical",
+          "check": "The head is composed on the rules, never centred. A name kicker and a sentence-case display title on one side, the paragraphs on the other, and no hero image anywhere."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D2",
+          "severity": "critical",
+          "check": "Case ranks. The sans is sentence case; only the monospace chrome is uppercase."
+        },
+        {
+          "id": "D4",
+          "severity": "critical",
+          "check": "Nothing is under the floor, and chrome sits at the extremes. Every string reads at the still's own scale; chrome at the top and the bottom."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "centered hero layout with unanchored text elements and circular marks",
+      "notes": "The candidate represents the unruled negative pole, showing an all-caps centered title, non-compliant circular chrome, and dashed section dividers. | Candidate exhibits negative-pole traits including an unruled centered title and circular controls. | The candidate reflects an unruled, centered layout lacking structural panel seating. It introduces circular marks, uppercase sans headings, and a third typeface.",
+      "runs": 3,
+      "split_answers": {
+        "A5": "2/3 said it passed",
+        "D4": "1/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AC-parchment__sa_02.png",
+      "path": "evals\\waves\\wave-00-calibration\\AC - Arcs client\\AC-parchment__sa_02.png",
+      "slot": "AC-parchment",
+      "type": "AC",
+      "type_name": "Arcs client",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 2",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "portfolio project card",
+      "stranger_counts": "2 distinct regions, 0 full-span rules, and 3 accent-coloured elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "isolated portfolio project card",
+      "part_count_note": "Found 1 floating card, 0 page-spanning rules, and a single dominant duotone image.",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": true,
+        "C1": false,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": false,
+        "C6": false,
+        "D1": false,
+        "D2": false,
+        "D3": true,
+        "D4": true,
+        "D5": false,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": false,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "C1",
+          "severity": "critical",
+          "check": "The head is composed on the rules, never centred. A name kicker and a sentence-case display title on one side, the paragraphs on the other, and no hero image anywhere."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D1",
+          "severity": "critical",
+          "check": "Nothing above the weight ceiling. Emphasis is ink and size, never bold; the monospace face is never bold."
+        },
+        {
+          "id": "D2",
+          "severity": "critical",
+          "check": "Case ranks. The sans is sentence case; only the monospace chrome is uppercase."
+        },
+        {
+          "id": "D5",
+          "severity": "critical",
+          "check": "Three registers on a card. A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face."
+        },
+        {
+          "id": "E4",
+          "severity": "critical",
+          "check": "The flashcards are a pile on the sheet. Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peek"
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "check": "Figures are framed. A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "Floating card without supporting rules or structural seams",
+      "notes": "The candidate lacks page rules and section framing, floating a single card in negative space. The title registers and card hierarchy do not follow structural grammar. | The design presents an unanchored floating card without section rules or shared hairlines. Text styling uses uppercase shouting and bold mono weights contrary to grammar specifications. | The candidate reflects the negative pole design, displaying an isolated card floating in space without boundary hairlines. The title uses bold monospace styling and the supporting copy falls well below legible contrast levels.",
+      "runs": 3,
+      "split_answers": {
+        "A1": "2/3 said it passed",
+        "A5": "2/3 said it passed",
+        "A6": "1/3 said it passed",
+        "B3": "2/3 said it passed",
+        "C1": "1/3 said it passed",
+        "D1": "1/3 said it passed",
+        "D4": "2/3 said it passed"
+      },
+      "run_verdicts": ["RETRY", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AC-void__sa_01.png",
+      "path": "evals\\waves\\wave-00-calibration\\AC - Arcs client\\AC-void__sa_01.png",
+      "slot": "AC-void",
+      "type": "AC",
+      "type_name": "Arcs client",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 1",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "portfolio project case study page",
+      "stranger_counts": "two distinct regions, two full-height vertical rules, and three accent-coloured elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "centered portfolio hero screen",
+      "part_count_note": "counted centered title block, peripheral ticks, and circular emblem against reference grammar",
+      "checks": {
+        "A1": false,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": true,
+        "B3": false,
+        "C1": false,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": false,
+        "D1": true,
+        "D2": false,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences."
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B3",
+          "severity": "critical",
+          "check": "One line weight, one hue, three alphas. Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed line is the two-up divider."
+        },
+        {
+          "id": "C1",
+          "severity": "critical",
+          "check": "The head is composed on the rules, never centred. A name kicker and a sentence-case display title on one side, the paragraphs on the other, and no hero image anywhere."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D2",
+          "severity": "critical",
+          "check": "Case ranks. The sans is sentence case; only the monospace chrome is uppercase."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "centered layout without structural hairlines",
+      "notes": "The layout uses an unanchored centered hero composition with floating elements and uppercase display typography. | Candidate exhibits the negative pole grammar with floating centered display type, an unauthorized serif mark, and circular UI elements. | The hero layout centers content without anchoring rules or section bands. A circular token and third serif typeface breach core grammar constraints.",
+      "runs": 3,
+      "split_answers": {
+        "A1": "1/3 said it passed",
+        "D4": "2/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AC-void__sa_02.png",
+      "path": "evals\\waves\\wave-00-calibration\\AC - Arcs client\\AC-void__sa_02.png",
+      "slot": "AC-void",
+      "type": "AC",
+      "type_name": "Arcs client",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 2",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "portfolio showcase page",
+      "stranger_counts": "four distinct regions, two full-height vertical rules, and one badge in the brightest accent colour",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "isolated floating card component",
+      "part_count_note": "counted one chamfered floating panel, one gold badge, and standard perimeter HUD chrome",
+      "checks": {
+        "A1": false,
+        "A2": false,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": false,
+        "C1": false,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": false,
+        "C6": false,
+        "D1": false,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": false,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": false,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences."
+        },
+        {
+          "id": "A2",
+          "severity": "gate",
+          "check": "Gold is wayfinding, and it is counted. Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most"
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "B3",
+          "severity": "critical",
+          "check": "One line weight, one hue, three alphas. Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed line is the two-up divider."
+        },
+        {
+          "id": "C1",
+          "severity": "critical",
+          "check": "The head is composed on the rules, never centred. A name kicker and a sentence-case display title on one side, the paragraphs on the other, and no hero image anywhere."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D1",
+          "severity": "critical",
+          "check": "Nothing above the weight ceiling. Emphasis is ink and size, never bold; the monospace face is never bold."
+        },
+        {
+          "id": "D5",
+          "severity": "critical",
+          "check": "Three registers on a card. A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face."
+        },
+        {
+          "id": "E4",
+          "severity": "critical",
+          "check": "The flashcards are a pile on the sheet. Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peek"
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "check": "Figures are framed. A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "floating card unseated from page rules with gold structural stroke",
+      "notes": "The panel floats disconnected in the void without section structural rules. Card title uses bold monospace type and layout reverses standard card registers. | Candidate exhibits negative pole traits: floating card lacking structural rules, gold box stroke, and uncaptioned bare figure. | Candidate exhibits the negative pole layout: an unseated card floating centrally without grid rules. The card places the figure at the top and sets the title in monospace.",
+      "runs": 3,
+      "split_answers": {
+        "D2": "2/3 said it passed",
+        "D4": "2/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-parchment__sa_01.png",
+      "path": "evals\\waves\\wave-00-calibration\\AR - Arcs overview\\AR-parchment__sa_01.png",
+      "slot": "AR-parchment",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 1",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "portfolio directory page",
+      "stranger_counts": "two distinct layout zones, two full-height vertical ruler lines, and four bright gold accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "centered portfolio landing screen",
+      "part_count_note": "counted 1 centered display title, 4 segmented filter buttons, and 2 full-height vertical margin rulers",
+      "checks": {
+        "A1": false,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": false,
+        "C1": false,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": false,
+        "D1": false,
+        "D2": false,
+        "D3": true,
+        "D4": false,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": false,
+        "E4": true,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences."
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "B3",
+          "severity": "critical",
+          "check": "One line weight, one hue, three alphas. Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed line is the two-up divider."
+        },
+        {
+          "id": "C1",
+          "severity": "critical",
+          "check": "The head is composed on the rules, never centred. A name kicker and a sentence-case display title on one side, the paragraphs on the other, and no hero image anywhere."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D1",
+          "severity": "critical",
+          "check": "Nothing above the weight ceiling. Emphasis is ink and size, never bold; the monospace face is never bold."
+        },
+        {
+          "id": "D2",
+          "severity": "critical",
+          "check": "Case ranks. The sans is sentence case; only the monospace chrome is uppercase."
+        },
+        {
+          "id": "D4",
+          "severity": "critical",
+          "check": "Nothing is under the floor, and chrome sits at the extremes. Every string reads at the still's own scale; chrome at the top and the bottom."
+        },
+        {
+          "id": "E3",
+          "severity": "critical",
+          "check": "Selection is elaboration, never fill or hue. The picked station is the one filled thing in its row; the open step grows lines; the lit node grows a filled diamond; nothing else cha"
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "centered title and floating unruled elements",
+      "notes": "Candidate intentionally exhibits negative pole antipatterns. Layout features an all-caps centered hero floating over generous whitespace without standard framing rules. | The view exemplifies the unruled negative pattern: text is centered, navigation buttons float with gutters, and circular chrome marks appear. | The layout uses centered alignments, all-caps sans display text, and floating guttered buttons rather than a ruled grid. It exhibits several negative-pole traits including circular elements and dashed decorative dividers.",
+      "runs": 3,
+      "split_answers": {
+        "A1": "1/3 said it passed",
+        "B2": "1/3 said it passed",
+        "D1": "1/3 said it passed",
+        "D4": "1/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-parchment__sa_02.png",
+      "path": "evals\\waves\\wave-00-calibration\\AR - Arcs overview\\AR-parchment__sa_02.png",
+      "slot": "AR-parchment",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 2",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "design portfolio case study index",
+      "stranger_counts": "two project sections, two full-height vertical ruler lines, and three tan accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "portfolio case study feed",
+      "part_count_note": "counted 2 project sections, 2 vertical ruler lines, and 2 floating cards against the structural register",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": false,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": true,
+        "C1": true,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": false,
+        "C6": false,
+        "D1": true,
+        "D2": false,
+        "D3": true,
+        "D4": true,
+        "D5": false,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": false,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "A5",
+          "severity": "critical",
+          "check": "Flat material. One ground, one step for a plate. No gradient as decoration, no bloom, no glow, no drop shadow."
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D2",
+          "severity": "critical",
+          "check": "Case ranks. The sans is sentence case; only the monospace chrome is uppercase."
+        },
+        {
+          "id": "D5",
+          "severity": "critical",
+          "check": "Three registers on a card. A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face."
+        },
+        {
+          "id": "E4",
+          "severity": "critical",
+          "check": "The flashcards are a pile on the sheet. Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peek"
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "check": "Figures are framed. A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "floating unruled cards with gradient overlays and circular badge",
+      "notes": "The layout uses floating cards separated by negative space rather than seated hairline rules. Decorative image gradients and a circular bottom mark breach the strict grammar. | Lacks full structural rules and shared-edge layout. Cards float loosely with improper framing and circular elements present. | The layout relies on unseated floating cards and circular marks, omitting structural framing and section kickers.",
+      "runs": 3,
+      "split_answers": {
+        "A5": "1/3 said it passed",
+        "C1": "2/3 said it passed",
+        "D2": "1/3 said it passed",
+        "D4": "2/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-parchment__sa_03.png",
+      "path": "evals\\waves\\wave-00-calibration\\AR - Arcs overview\\AR-parchment__sa_03.png",
+      "slot": "AR-parchment",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 3",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "creative agency portfolio page",
+      "stranger_counts": "three regions, two full-height rules, and two accent-coloured elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "creative portfolio project feed",
+      "part_count_note": "counted two floating poster cards, several tick marks on margin rules, and absent structural panel hairlines",
+      "checks": {
+        "A1": false,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": true,
+        "C1": false,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": false,
+        "C6": false,
+        "D1": false,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": false,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": false,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences."
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "C1",
+          "severity": "critical",
+          "check": "The head is composed on the rules, never centred. A name kicker and a sentence-case display title on one side, the paragraphs on the other, and no hero image anywhere."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D1",
+          "severity": "critical",
+          "check": "Nothing above the weight ceiling. Emphasis is ink and size, never bold; the monospace face is never bold."
+        },
+        {
+          "id": "D5",
+          "severity": "critical",
+          "check": "Three registers on a card. A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face."
+        },
+        {
+          "id": "E4",
+          "severity": "critical",
+          "check": "The flashcards are a pile on the sheet. Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peek"
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "check": "Figures are framed. A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "floating chamfered posters separated by gutters without continuous structural hairlines",
+      "notes": "Candidate exhibits intentional negative pole traits, lacking framing hairlines and cell-sharing structure. Circular tokens violate the strict corner constraints. | The layout violates framing grammar by floating unseated cards over arbitrary margins. Structural section head bands and standard card registers are omitted. | Candidate demonstrates the negative layout pole with unseated cards, floating gutters, and missing structural frame rules.",
+      "runs": 3,
+      "split_answers": {
+        "A1": "1/3 said it passed",
+        "C1": "1/3 said it passed",
+        "D1": "1/3 said it passed",
+        "D4": "2/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-parchment__sa_04.png",
+      "path": "evals\\waves\\wave-00-calibration\\AR - Arcs overview\\AR-parchment__sa_04.png",
+      "slot": "AR-parchment",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 4",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "design agency portfolio page",
+      "stranger_counts": "three main content blocks, two full-height vertical rules, two gold accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "unanchored portfolio card layout",
+      "part_count_note": "counted 2 floating cards, 0 page-seating rules, 1 gold badge, and wide air gutters",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": true,
+        "C1": true,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": false,
+        "C6": false,
+        "D1": false,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": false,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": false,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D1",
+          "severity": "critical",
+          "check": "Nothing above the weight ceiling. Emphasis is ink and size, never bold; the monospace face is never bold."
+        },
+        {
+          "id": "D5",
+          "severity": "critical",
+          "check": "Three registers on a card. A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face."
+        },
+        {
+          "id": "E4",
+          "severity": "critical",
+          "check": "The flashcards are a pile on the sheet. Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peek"
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "check": "Figures are framed. A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "floating chamfered posters separated by gutters with no structural seating rules",
+      "notes": "The negative pole layout drops isolated cards over open space without boundary hairlines or formal framing. Figures lack caption brackets and register formatting. | The layout uses floating guttered cards rather than shared-seam structural rulings. Circular mark violations and top-aligned card imagery break component rules. | The negative pole layout leaves panels floating without structural bounding lines or standardized head bands. Sub-card text falls below contrast thresholds and monospace chrome is set bold.",
+      "runs": 3,
+      "split_answers": {
+        "A6": "1/3 said it passed",
+        "C1": "2/3 said it passed",
+        "C6": "1/3 said it passed",
+        "D1": "1/3 said it passed",
+        "D4": "2/3 said it passed"
+      },
+      "run_verdicts": ["RETRY", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-parchment__sa_05.png",
+      "path": "evals\\waves\\wave-00-calibration\\AR - Arcs overview\\AR-parchment__sa_05.png",
+      "slot": "AR-parchment",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 5",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "creative studio portfolio page",
+      "stranger_counts": "three regions, two full-height rules, two accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "creative studio portfolio page",
+      "part_count_note": "two marginal rulers, one partial card, and one main chamfered project card",
+      "checks": {
+        "A1": false,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": false,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": true,
+        "C1": false,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": false,
+        "C6": false,
+        "D1": false,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": false,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": false,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences."
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "A5",
+          "severity": "critical",
+          "check": "Flat material. One ground, one step for a plate. No gradient as decoration, no bloom, no glow, no drop shadow."
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "C1",
+          "severity": "critical",
+          "check": "The head is composed on the rules, never centred. A name kicker and a sentence-case display title on one side, the paragraphs on the other, and no hero image anywhere."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D1",
+          "severity": "critical",
+          "check": "Nothing above the weight ceiling. Emphasis is ink and size, never bold; the monospace face is never bold."
+        },
+        {
+          "id": "D5",
+          "severity": "critical",
+          "check": "Three registers on a card. A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face."
+        },
+        {
+          "id": "E4",
+          "severity": "critical",
+          "check": "The flashcards are a pile on the sheet. Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peek"
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "check": "Figures are framed. A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "floating chamfered poster without structural hairlines or proper framing",
+      "notes": "The candidate lacks structural grid hairlines and exhibits non-standard chamfer geometry alongside image gradient fills. Unused space pools heavily on the right half. | The layout uses floating cards separated by gutters rather than shared hairlines. Figures lack standard bracketed framing bars. | The negative pole layout leaves excess pooled empty space and uses floating chamfered elements. Typography misassigns monospace roles and includes circular iconography.",
+      "runs": 3,
+      "split_answers": {
+        "A1": "1/3 said it passed",
+        "A5": "1/3 said it passed",
+        "B3": "2/3 said it passed",
+        "C1": "1/3 said it passed",
+        "D1": "1/3 said it passed",
+        "D2": "2/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-void__sa_01.png",
+      "path": "evals\\waves\\wave-00-calibration\\AR - Arcs overview\\AR-void__sa_01.png",
+      "slot": "AR-void",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 1",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "creative studio portfolio landing page",
+      "stranger_counts": "4 distinct regions, 2 full-height rules, 4 bright accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "creative studio hero landing screen",
+      "part_count_note": "counted 1 centred headline, 1 filter group, 2 tick rails, and 1 circular mark",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": false,
+        "C1": false,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": false,
+        "D1": false,
+        "D2": false,
+        "D3": true,
+        "D4": false,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": false,
+        "E4": true,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "B3",
+          "severity": "critical",
+          "check": "One line weight, one hue, three alphas. Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed line is the two-up divider."
+        },
+        {
+          "id": "C1",
+          "severity": "critical",
+          "check": "The head is composed on the rules, never centred. A name kicker and a sentence-case display title on one side, the paragraphs on the other, and no hero image anywhere."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D1",
+          "severity": "critical",
+          "check": "Nothing above the weight ceiling. Emphasis is ink and size, never bold; the monospace face is never bold."
+        },
+        {
+          "id": "D2",
+          "severity": "critical",
+          "check": "Case ranks. The sans is sentence case; only the monospace chrome is uppercase."
+        },
+        {
+          "id": "D4",
+          "severity": "critical",
+          "check": "Nothing is under the floor, and chrome sits at the extremes. Every string reads at the still's own scale; chrome at the top and the bottom."
+        },
+        {
+          "id": "E3",
+          "severity": "critical",
+          "check": "Selection is elaboration, never fill or hue. The picked station is the one filled thing in its row; the open step grows lines; the lit node grows a filled diamond; nothing else cha"
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "centred display title and floating filter bar without structural rules",
+      "notes": "Candidate exhibits legacy layout traits including centred all-caps typography, filled button selection, and lack of bounding seams. | The view displays the negative-pole pattern with all-caps centered display type, floating disconnected filter buttons, and dashed decorative rules. | Candidate exhibits legacy centering, uppercase display shouting, and isolated floating filter buttons. Structural framing and hairline cell alignment are absent.",
+      "runs": 3,
+      "split_answers": {
+        "A1": "2/3 said it passed",
+        "D4": "1/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-void__sa_02.png",
+      "path": "evals\\waves\\wave-00-calibration\\AR - Arcs overview\\AR-void__sa_02.png",
+      "slot": "AR-void",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 2",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "design agency portfolio page",
+      "stranger_counts": "five distinct regions, two full-height vertical rules, and two bright ochre proposal badges",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "portfolio index section",
+      "part_count_note": "counted two floating project cards, two horizontal section dividers, and tick-mark rails on both margins",
+      "checks": {
+        "A1": false,
+        "A2": false,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": true,
+        "C1": true,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": false,
+        "C6": false,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": false,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": false,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences."
+        },
+        {
+          "id": "A2",
+          "severity": "gate",
+          "check": "Gold is wayfinding, and it is counted. Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most"
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D5",
+          "severity": "critical",
+          "check": "Three registers on a card. A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face."
+        },
+        {
+          "id": "E4",
+          "severity": "critical",
+          "check": "The flashcards are a pile on the sheet. Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peek"
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "check": "Figures are framed. A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "floating card layout violates grid and rule seating grammar",
+      "notes": "The layout uses floating chamfered cards across pooled empty space rather than edge-sharing ruled cells. Section heads lack mono kickers and the circular HUD mark violates corner constraints. | Candidate exhibits legacy layout traits with unanchored cards, missing section kickers, and gold structural outlines. | The layout represents the unruled legacy pole, displaying free-floating card objects over an ungrounded dark field. Multiple grammatical constraints regarding head bands, framing rules, and card registers fail.",
+      "runs": 3,
+      "split_answers": {
+        "A2": "1/3 said it passed",
+        "B3": "2/3 said it passed",
+        "C1": "2/3 said it passed",
+        "D1": "2/3 said it passed",
+        "D2": "2/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-void__sa_03.png",
+      "path": "evals\\waves\\wave-00-calibration\\AR - Arcs overview\\AR-void__sa_03.png",
+      "slot": "AR-void",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 3",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "design studio portfolio page",
+      "stranger_counts": "3 main content sections, 2 full-height ruler lines, and 1 bright accent badge",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "dark theme portfolio index",
+      "part_count_note": "counted 2 floating cards, 2 perimeter ruler rails, and 1 circular mark",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": true,
+        "C1": true,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": false,
+        "C6": false,
+        "D1": false,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": false,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": false,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D1",
+          "severity": "critical",
+          "check": "Nothing above the weight ceiling. Emphasis is ink and size, never bold; the monospace face is never bold."
+        },
+        {
+          "id": "D5",
+          "severity": "critical",
+          "check": "Three registers on a card. A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face."
+        },
+        {
+          "id": "E4",
+          "severity": "critical",
+          "check": "The flashcards are a pile on the sheet. Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peek"
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "check": "Figures are framed. A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "floating chamfered cards with top figures and no grounding page rules",
+      "notes": "The layout relies on floating poster cards rather than shared structural rules. Circular mark and inverted card register hierarchy violate structural rules. | Negative pole state correctly exhibits detached floating card structures, missing section bands, and inverted card hierarchies. | The layout features floating chamfered cards with figures at the top rather than seated panels on continuous rules. Section header lacks a kicker and card frames violate color and ordering rules.",
+      "runs": 3,
+      "split_answers": {
+        "A1": "2/3 said it passed",
+        "A2": "2/3 said it passed",
+        "A6": "1/3 said it passed",
+        "B3": "2/3 said it passed",
+        "C6": "1/3 said it passed",
+        "D1": "1/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-void__sa_04.png",
+      "path": "evals\\waves\\wave-00-calibration\\AR - Arcs overview\\AR-void__sa_04.png",
+      "slot": "AR-void",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 4",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "design studio portfolio case study feed",
+      "stranger_counts": "three main layout panels, two full-height vertical margin rules, and four gold accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "dark theme portfolio feed with chamfered card modules",
+      "part_count_note": "counted floating chamfered cards, margin rule marks, and circular badge",
+      "checks": {
+        "A1": true,
+        "A2": false,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": true,
+        "B1": false,
+        "B2": false,
+        "B3": false,
+        "C1": true,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": false,
+        "C6": true,
+        "D1": false,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": false,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": false,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A2",
+          "severity": "gate",
+          "check": "Gold is wayfinding, and it is counted. Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "B3",
+          "severity": "critical",
+          "check": "One line weight, one hue, three alphas. Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed line is the two-up divider."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D1",
+          "severity": "critical",
+          "check": "Nothing above the weight ceiling. Emphasis is ink and size, never bold; the monospace face is never bold."
+        },
+        {
+          "id": "D5",
+          "severity": "critical",
+          "check": "Three registers on a card. A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face."
+        },
+        {
+          "id": "E4",
+          "severity": "critical",
+          "check": "The flashcards are a pile on the sheet. Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peek"
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "check": "Figures are framed. A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "cards float unseated without shared boundary rules",
+      "notes": "Panels float detached over the ground rather than sharing hairlines. Figures lack standard bracketed framing bars, and the monospace kicker text exhibits bold styling. | The specimen exhibits the negative pole layout with unanchored cards and gold outlines rather than a ruled sheet. Section headings lack the required kicker structure. | The layout represents the negative fixture pole with unruled margins and floating chamfered cards. Figures sit at the top of cards without proper framing bars, and monospace bold type is applied to titles.",
+      "runs": 3,
+      "split_answers": {
+        "A1": "2/3 said it passed",
+        "A2": "1/3 said it passed",
+        "A6": "2/3 said it passed",
+        "B3": "1/3 said it passed",
+        "C6": "2/3 said it passed",
+        "D1": "1/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-void__sa_05.png",
+      "path": "evals\\waves\\wave-00-calibration\\AR - Arcs overview\\AR-void__sa_05.png",
+      "slot": "AR-void",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "channel": "old arcs - screen 5",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "creative studio portfolio page",
+      "stranger_counts": "4 regions, 2 full-height rules, 3 accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "portfolio index section",
+      "part_count_note": "counted 2 floating cards, 2 perimeter tick rails, and 1 section header against reference",
+      "checks": {
+        "A1": true,
+        "A2": false,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": false,
+        "B1": false,
+        "B2": false,
+        "B3": false,
+        "C1": true,
+        "C2": false,
+        "C3": true,
+        "C4": true,
+        "C5": false,
+        "C6": false,
+        "D1": false,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": false,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": false,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A2",
+          "severity": "gate",
+          "check": "Gold is wayfinding, and it is counted. Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most"
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page draws its own rules and panels are seated on them. Two full-height hairlines at the band's edges and a seam between sections; where rules=seams, the seams alone."
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "B3",
+          "severity": "critical",
+          "check": "One line weight, one hue, three alphas. Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed line is the two-up divider."
+        },
+        {
+          "id": "C2",
+          "severity": "critical",
+          "check": "Every section opens on a head band: a mono kicker, an ordinal where the knob is on, one hairline under both."
+        },
+        {
+          "id": "D1",
+          "severity": "critical",
+          "check": "Nothing above the weight ceiling. Emphasis is ink and size, never bold; the monospace face is never bold."
+        },
+        {
+          "id": "D5",
+          "severity": "critical",
+          "check": "Three registers on a card. A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face."
+        },
+        {
+          "id": "E4",
+          "severity": "critical",
+          "check": "The flashcards are a pile on the sheet. Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peek"
+        },
+        {
+          "id": "C5",
+          "severity": "minor",
+          "check": "Figures are framed. A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone."
+        },
+        {
+          "id": "C6",
+          "severity": "minor",
+          "check": "Split the slack, and one first read. Vertical surplus is shared, never pooled under one block; from across the room one thing leads."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "floating chamfered cards detached from page rules with gold structural borders",
+      "notes": "Candidate exhibits floating cards with gold outlines across pooled empty space. It lacks bounding structural rules and standardized figure framing. | The layout uses floating guttered cards rather than rules and shared seams. Gold is applied directly to structural borders, and the monospace headers are set bold. | The view lacks structural bounding rules and seats floating cards with gold outlines. Card titles are rendered in bold monospace below image frames.",
+      "runs": 3,
+      "split_answers": {
+        "A1": "2/3 said it passed",
+        "A6": "1/3 said it passed",
+        "D1": "1/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "SK-parchment__broken_01.png",
+      "path": "evals\\waves\\wave-00-calibration\\SK - Subpage kit\\SK-parchment__broken_01.png",
+      "slot": "SK-parchment",
+      "type": "SK",
+      "type_name": "Subpage kit",
+      "question": "the site's own fixture: does block A pass the lawful panel and fail the broken one? (lane broken)",
+      "channel": "fixture - broken",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "accessibility contrast test page",
+      "stranger_counts": "1 main region, 0 full-span rules, and 1 bright yellow accent dot",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "broken fixture test panel",
+      "part_count_note": "1 text box, 1 circular marker, and gradient background counted against register rules",
+      "checks": {
+        "A1": false,
+        "A2": false,
+        "A3": false,
+        "A4": false,
+        "A5": false,
+        "A6": false,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences."
+        },
+        {
+          "id": "A2",
+          "severity": "gate",
+          "check": "Gold is wayfinding, and it is counted. Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most"
+        },
+        {
+          "id": "A3",
+          "severity": "gate",
+          "check": "No hue outside the tiers. Neutral ground, neutral ink, gold, the provenance green. Photographs are taken into the duotone."
+        },
+        {
+          "id": "A4",
+          "severity": "gate",
+          "check": "The ground is the theme's. A void subject is dawn ink on a near-black ground; a parchment subject is dark ink on parchment. Judged from the candidate alone."
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "A5",
+          "severity": "critical",
+          "check": "Flat material. One ground, one step for a plate. No gradient as decoration, no bloom, no glow, no drop shadow."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "unauthorized blue gradient ground and circular gold marker",
+      "notes": "The fixture intentionally violates block A grammar via banned typography, off-tier hues, gradient treatment, and circular geometry. Remaining blocks pass per fixture testing protocol. | The intentional failure fixture violates color tiers, flatness, and geometry constraints. Subsequent blocks B through K pass by rule. | Candidate intentionally breaks foundation rules with saturated gradient fill, non-standard font, and round marker. Blocks B through K pass automatically for fixture lanes.",
+      "runs": 3,
+      "split_answers": {},
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "SK-parchment__lawful_01.png",
+      "path": "evals\\waves\\wave-00-calibration\\SK - Subpage kit\\SK-parchment__lawful_01.png",
+      "slot": "SK-parchment",
+      "type": "SK",
+      "type_name": "Subpage kit",
+      "question": "the site's own fixture: does block A pass the lawful panel and fail the broken one? (lane lawful)",
+      "channel": "fixture - lawful",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "minimalist design system specimen",
+      "stranger_counts": "1 region, 0 rules, 1 accent element",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "lawful fixture specimen",
+      "part_count_note": "1 text group, 1 gold diamond accent, 0 rules",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": false,
+        "A5": true,
+        "A6": true,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A4",
+          "severity": "gate",
+          "check": "The ground is the theme's. A void subject is dawn ink on a near-black ground; a parchment subject is dark ink on parchment. Judged from the candidate alone."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "ground contradicts specified light theme",
+      "notes": "The panel adheres to typography and accent constraints but renders on void ground despite the light theme designation. All other block checks pass automatically for the fixture lane. | Candidate shows void ground styling despite light theme specification in the subject. Other Block A criteria conform to lawful fixture rules. | The candidate renders on a dark void ground despite the light theme designation. All checks outside block A automatically pass per fixture grading rules.",
+      "runs": 3,
+      "split_answers": {},
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "SK-void__broken_01.png",
+      "path": "evals\\waves\\wave-00-calibration\\SK - Subpage kit\\SK-void__broken_01.png",
+      "slot": "SK-void",
+      "type": "SK",
+      "type_name": "Subpage kit",
+      "question": "the site's own fixture: does block A pass the lawful panel and fail the broken one? (lane broken)",
+      "channel": "fixture - broken",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "contrast accessibility test page",
+      "stranger_counts": "1 main region, 0 full-width rules, 1 bright yellow accent dot",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "broken fixture test panel",
+      "part_count_note": "1 panel, 0 structural rules, 1 circular gold dot",
+      "checks": {
+        "A1": false,
+        "A2": true,
+        "A3": false,
+        "A4": false,
+        "A5": false,
+        "A6": false,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a sans face carries titles and sentences."
+        },
+        {
+          "id": "A3",
+          "severity": "gate",
+          "check": "No hue outside the tiers. Neutral ground, neutral ink, gold, the provenance green. Photographs are taken into the duotone."
+        },
+        {
+          "id": "A4",
+          "severity": "gate",
+          "check": "The ground is the theme's. A void subject is dawn ink on a near-black ground; a parchment subject is dark ink on parchment. Judged from the candidate alone."
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere. The console's panel and the flashcards carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circl"
+        },
+        {
+          "id": "A5",
+          "severity": "critical",
+          "check": "Flat material. One ground, one step for a plate. No gradient as decoration, no bloom, no glow, no drop shadow."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "Violates core design rules across block A",
+      "notes": "The broken fixture deliberately breaks typography, contrast, geometry, and hue standards. Blocks outside block A pass by fixture lane rules. | Candidate intentionally breaks foundation grammar across typography, chromatic tiers, material flatness, and corner geometry. Non-block A checks pass automatically per fixture rules. | Broken fixture intentionally violates typography, palette, and geometry requirements. Only Block A is evaluated per instructions.",
+      "runs": 3,
+      "split_answers": {
+        "A2": "2/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "SK-void__lawful_01.png",
+      "path": "evals\\waves\\wave-00-calibration\\SK - Subpage kit\\SK-void__lawful_01.png",
+      "slot": "SK-void",
+      "type": "SK",
+      "type_name": "Subpage kit",
+      "question": "the site's own fixture: does block A pass the lawful panel and fail the broken one? (lane lawful)",
+      "channel": "fixture - lawful",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "design philosophy card",
+      "stranger_counts": "one content region, zero full-span rules, one accent-coloured diamond",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "fixture card block",
+      "part_count_note": "counted 1 text block, 1 diamond mark, 0 extra hues",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": true,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true
+      },
+      "failed": [],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "PASS",
+      "worst_issue": "",
+      "notes": "Candidate satisfies lawful block A requirements on dark void ground with one gold mark. | Lawful fixture specimen satisfies all Block A typographic, hue, and geometry requirements. | Candidate correctly satisfies all Block A requirements for the lawful fixture panel. Other sections pass per fixture rules.",
+      "runs": 3,
+      "split_answers": {},
+      "run_verdicts": ["PASS", "PASS", "PASS"]
+    }
+  ]
+}

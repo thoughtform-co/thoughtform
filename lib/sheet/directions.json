@@ -1,0 +1,75 @@
+{
+  "$comment": "THE ONE REGISTRY for the sheet's knobs (ADR-114). Read by the pages (TS import, through lib/sheet/directions.ts) and by scripts/capture-subpages.mjs (readFileSync), and mirrored into the ship's armada.toml. Two readers, one record: a direction cannot be shot that the page cannot draw. TYPE IDS ARE LETTERS ONLY - the armada's filename grammar takes letters before the first dash. THE FIRST VALUE OF EVERY KNOB IS THE HOUSE: direction SB is every knob at its first value, and every other direction is an argument someone has to make against it. SA is not a knob set at all: it is the NEGATIVE POLE, today's /arcs shot once before the sheet replaced it.",
+  "knobs": {
+    "head": {
+      "values": ["split", "stack"],
+      "label": "Head",
+      "note": "split = the title in the left five columns and the paragraphs opposite (Hermeus). stack = the kicker alone on the left and the title with its paragraphs stacked on the right. The owner's sentence reads both ways; the wave decides."
+    },
+    "ordinal": {
+      "values": ["on", "off"],
+      "label": "Ordinal",
+      "note": "on = every section's head band letters 01 / 02 / … (Hermeus, Prime Intellect: ordinals as wayfinding). off = the kicker alone (the casefile's own no-ordinal ruling, ADR-066)."
+    },
+    "rules": {
+      "values": ["sheet", "seams"],
+      "label": "Rules",
+      "note": "sheet = two full-height hairlines at the band's edges plus a seam between sections (Tensorlake, Kindled). seams = the seams alone; the page's edges are air."
+    },
+    "card": {
+      "values": ["stack", "grid"],
+      "label": "Cards",
+      "note": "stack = the console's flashcards stack on scroll under a sticky panel (the proof stack's mechanic). grid = the same cards in a static two-column grid."
+    },
+    "timeline": {
+      "values": ["axis", "rail"],
+      "label": "Timeline",
+      "note": "axis = a horizontal dated axis with the sessions seated on it at their dates (Hermeus roadmap). rail = a vertical date rail with the sessions opposite (Hermeus detail) — also the phone's own layout."
+    }
+  },
+  "directions": [
+    {
+      "id": "SA",
+      "name": "Old arcs",
+      "question": "the negative pole: what the owner said looks bad, byte-identical, so every check that names it can be shown to fail it",
+      "shape": "a centred hero over a gutter grid of chamfered posters, no page rules",
+      "pole": "negative",
+      "lane": "sa",
+      "routes": { "AR": "/arcs", "AC": "/arcs/loop" },
+      "knobs": null
+    },
+    {
+      "id": "SB",
+      "name": "House",
+      "question": "does the sheet at its own values read as one instrument across six pages, both themes and both viewports?",
+      "shape": "the ruled sheet: split head, ordinals, full-height rules, the pile, the axis",
+      "knobs": {}
+    },
+    {
+      "id": "SC",
+      "name": "Seams",
+      "question": "does the page still read as seated with the full-height rules gone and only the seams left?",
+      "shape": "the same sheet with its two long rules erased",
+      "knobs": { "rules": "seams" }
+    },
+    {
+      "id": "SD",
+      "name": "Editorial",
+      "question": "does the head read better stacked on the right with no ordinals, or does the page lose its wayfinding?",
+      "shape": "kicker left, title and paragraphs stacked right, no section numerals",
+      "knobs": { "head": "stack", "ordinal": "off" }
+    },
+    {
+      "id": "SE",
+      "name": "Grid",
+      "question": "does a static grid of flashcards and a vertical date rail say the same thing as the pile and the axis, with less motion?",
+      "shape": "cards in two columns, the sessions on a rail",
+      "knobs": { "card": "grid", "timeline": "rail" }
+    }
+  ],
+  "wave": {
+    "themes": ["dark", "light"],
+    "settings": { "default": "1920x1247", "laptop": "1280x720" },
+    "note": "4 directions x 6 types x 2 themes at the default viewport, one still per section; laptop for SB first. 1920x1247 is the owner's own window; 1280x720 is the binding one."
+  }
+}

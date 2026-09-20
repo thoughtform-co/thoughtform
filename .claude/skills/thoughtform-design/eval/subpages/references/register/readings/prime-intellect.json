@@ -1,0 +1,15 @@
+{
+  "site": "prime-intellect",
+  "url": "https://www.primeintellect.ai/",
+  "title": "Prime Intellect - The Open Superintelligence Stack",
+  "ground": "rgba(0, 0, 0, 0)",
+  "rules": 30,
+  "structureColours": 5,
+  "radii": 0,
+  "text": 39,
+  "bold": 0,
+  "boldShare": 0,
+  "families": ["ABC Favorit Mono", "Geist", "Geist Mono"],
+  "hues": ["120"],
+  "when": "2026-09-20T14:25:28.743Z"
+}

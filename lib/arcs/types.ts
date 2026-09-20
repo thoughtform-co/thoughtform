@@ -734,6 +734,14 @@ export interface ArcDef {
    */
   kind?: ArcKind;
   /**
+   * Where the engagement stands (ADR-114) — the one fact the `/arcs`
+   * overview's client console derives its readout from. `proposed` is a
+   * proposal out with the client, `running` an engagement in progress,
+   * `shipped` delivered. Required on every client-bound arc (the registry
+   * test), because a uniform set of consoles may not drop a row on one.
+   */
+  status?: "proposed" | "running" | "shipped";
+  /**
    * Lock the page to one theme (ADR-093's mechanism, ADR-098's use). A
    * proposal is composed on paper and has no dark reading.
    *

@@ -211,6 +211,14 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
+  /* The sheet (ADR-114) — the subpages' grammar, on three public routes.
+     Token-only from line one, and pinned here the same hour it was written,
+     because a sheet enters this map at zero or never does. */
+  "components/sheet/sheet.css": {
+    tier: "content",
+    content: { A: 0, B: 0, C: 0 },
+    frame: { A: 0, B: 0, C: 0 },
+  },
   /* The site footer (ADR-105). Authored token-only from line one — which is
      the only way a new sheet enters this map at zero: `proof-stack.css` sat
      in NEITHER ratchet for a week while its own header said it was in both,

@@ -1,0 +1,248 @@
+# armada.toml - the structure of this engagement. Read at runtime by every tool.
+#
+# THIS SHIP GRADES RENDERED PAGES, NOT GENERATED PHOTOGRAPHS, and the shape
+# below is the whole of the adaptation. Nothing here draws: every candidate is a
+# Playwright still of a live route at a direction, a theme and a viewport, shot
+# by `scripts/capture-subpages.mjs` in the site repo. `wave.py`, `generate.py`,
+# `explore.py` and `crop.py` are never run. What IS run is the half of the
+# harness that judges: doctor, qa, contact sheet, pick, board, review gallery,
+# ledger, calibrate, harvest.
+#
+# ⚠ THE THREE PROSE FILES STILL BIND. `skill/references/rubric.md` is parsed at
+# runtime by `qa.py`; `skill/references/generation.md` is what `doctor.py`
+# checks and what a reader opens to learn how a candidate is made - it
+# describes a CAPTURE where the template describes a prompt.
+#
+# ⚠ HOW THE HARNESS'S SLOTS ARE USED HERE (ADR-114 §8):
+#   subject  = a THEME (void = dark, parchment = light); its identity is a
+#              REGISTER STRIP of three reference first screens, never a page
+#   type     = a PAGE (one route each; `shot` carries the route)
+#   lane     = a DIRECTION (the knob set the still was drawn at), plus the
+#              negative pole and the two fixture lanes for calibration
+#   draw     = a SECTION (draw 01 is the first screen, 02.. one per section)
+#   setting  = a VIEWPORT (default 1920x1247, laptop 1280x720)
+
+[engagement]
+name = "subpages"
+title = "Subpages - the sheet, graded"
+started = "2026-09-20"
+# One word, chosen by a person, never derived from the client's name. The
+# fleet's birds run to kittiwake; a turnstone works the tideline, turning stones
+# over to read what is under them.
+callsign = "turnstone"
+
+[drive]
+# ⚠ THE PIXELS LIVE IN THE REPO ON THIS SHIP, which reverses the harness's
+# default, because every still is REGENERABLE FROM A URL: a deterministic render
+# of a route at a knob set, a theme and a viewport. The wave PNGs are gitignored
+# by the site repo; what is committed is the two register strips (the identity
+# of each subject), the negative pole under skill/assets/negative/, and the
+# text record inside evals/waves/.
+root = 'C:/Users/buyss/Manifold Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval/subpages'
+source = "references/register"
+creation = "evals/waves"
+final = "picks"
+
+[env]
+# Read BY NAME. No tool ever prints a value. The one canonical .env on this
+# machine, shared by every generation surface here.
+canonical = 'C:/Users/buyss/Manifold Delta/Artifacts/Arcs_In The Pocket/projects/20260820-ai-readiness/skill/scripts/.env'
+
+[models]
+# The grader. Dated snapshot: capability is the rule, the ids drift.
+default = "sb"
+graders = ["gemini-flash-latest"]
+[models.lanes]
+# ⚠ CAPTURE LANES, NOT MODELS. A lane names what made the candidate so the
+# manifest and the gallery can say so; no tool in this ship ever calls one.
+# Every value is `render-<port>`: a render lane, which asks for no API key.
+# ⚠ MIRRORED FROM `lib/sheet/directions.json`: one lane per direction, the id
+# lowercased. `scripts/capture-subpages.mjs` and
+# `tests/lib/sheet-directions.test.ts` both assert the mirror.
+sa = "render-3004"        # the negative pole: today's /arcs, shot from a worktree at the pre-change commit
+sb = "render-3003"        # House: every knob at its first value
+sc = "render-3003"        # Seams: rules=seams
+sd = "render-3003"        # Editorial: head=stack ordinal=off
+se = "render-3003"        # Grid: card=grid timeline=rail
+lawful = "render-3003"    # /test/design-eval-fixture .fixture-good (wave 00)
+broken = "render-3003"    # /test/design-eval-fixture .fixture-bad  (wave 00)
+
+[prompt]
+scale_clause = "SCALE. The subject is {scale}. Everything around it is sized to agree with that."
+# The paragraph of the shared block a setting swaps. Its first words.
+swap_paragraph = "VIEWPORT."
+max_refs = 3
+
+[refs]
+refuse = ["DO NOT TRAIN", "SUPERSEDED", "DUPLICATE"]
+# A register strip is 1440x2700; the model-ready copy is downscaled to 2048 on
+# the long side, which keeps every rule in it legible.
+model_ready_px = 2048
+model_ready_mb = 6
+
+[formats]
+anchor = 0.5
+[formats.cuts]
+# No second cut: a still is shot at the shape it is judged at, because the
+# viewport IS one of the variables. Cropping one into another would be a
+# picture of a composition nothing renders.
+"16:9" = []
+
+[harvest]
+changelogs = ["skill/CHANGELOG.md"]
+eval_logs = ["skill/references/eval-log.md"]
+prompt_logs = []
+waves = "evals/waves"
+sections = []
+memory = "MEMORY.md"
+
+[figma]
+file = ""
+folder = ""
+
+[site]
+client = ""
+page = ""
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SUBJECTS - a theme, and the register it is judged against.
+#
+#  ⚠ `identity` IS A REGISTER STRIP, NOT A PAGE. Three reference first screens
+#  stacked (void: Lighthouse, Tensorlake, Prime Intellect; parchment: Hermeus,
+#  stripe.dev, Kindled), made once by the capture's `--register` and committed
+#  under references/register/. `qa.py` attaches it as image 2 and the gallery
+#  puts it in every lightbox. It proves a GRAMMAR - rules, cells, head bands,
+#  labels, frames, readouts - and never a ground, a layout or a content.
+#
+#  ⚠ AND A DIFFERENCE FROM IT IS NOT A FAULT. `qa.py`'s built-in preamble calls
+#  image 2 an identity photograph whose deviations are defects; the rubric's
+#  `## Grading rules` overrides that verbatim, and it is the first thing to
+#  check if a run scores every still down for not being the references.
+#
+#  Not `dark`/`light`: `config.nouns()` scrubs subject keys as words from every
+#  harvest note, and those two words are in every sentence about a theme.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[subjects.void]
+noun = "the dark theme - dawn ink on the void"
+proof = "the page draws its own rules and every panel is seated on one"
+place = "the site's own HUD frame"
+identity = "void.png"
+
+[subjects.parchment]
+noun = "the light theme - void ink on parchment"
+proof = "every alpha re-derived for the flip, the same rules at the same weight"
+place = "the site's own HUD frame"
+identity = "parchment.png"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TYPES - one per page.
+#
+#  `shot` carries the ROUTE (the capture reads it: `ROUTE: <path>`), `subject`
+#  says what the page is for in one sentence, and `camera` / `position` /
+#  `shape` are the difference table `doctor.py` checks: which ladder, what the
+#  first screen holds, what the page's own instrument is. No two may share all
+#  three - two types with one difference table are one page shot twice.
+#
+#  ⚠ THE IDS ARE LETTERS. `config.parse_name`'s grammar takes only letters
+#  before the first dash; `S1` would fall to its unknown-shape branch - lane
+#  empty, draw 0 - and every tool downstream would read a different file than
+#  the capture wrote, silently.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[types.HS]
+name = "Home sessions"
+question = "does an event page read as one sheet: the offer, the calendar plotted, one seat to reserve?"
+channel = "public event page"
+ar = "16:9"
+camera = "split, timeline, steps, cells, row, close"
+position = "the offer's title left and its paragraphs right, a spec readout under them"
+shape = "a dated axis with four mornings seated on it and the next one lit"
+shot = "ROUTE: /home-sessions"
+subject = "The fourth service's own page: six to eight people at the owner's table in Antwerp, one morning. Its copy is the services card's record; its dates are the sessions registry; the seat is reserved by mail."
+camera_line = "One still per section, the section's head band at the pin; the first still is the first screen."
+
+[types.AR]
+name = "Arcs overview"
+question = "does the client console read as an instrument - a record beside a pile - and does the set of five read as one?"
+channel = "client index (noindex)"
+ar = "16:9"
+camera = "split, console set, cells, close"
+position = "the practice's claim left, a kind filter right, then one console per client"
+shape = "a sticky terminal panel with a five-row readout beside a pile of portrait flashcards"
+shot = "ROUTE: /arcs"
+subject = "Every engagement, one console per client: the panel letters five facts derived from the registry, the pile holds the client's pages and arcs newest first, the house formats close as four cells."
+camera_line = "One still per section; the console set is driven until its second slot pins where a console holds more than one card."
+
+[types.AC]
+name = "Arcs client"
+question = "does one client's page stand on its console alone?"
+channel = "client page (noindex)"
+ar = "16:9"
+camera = "split, one console, close"
+position = "the client's name left and its lede right, the console under them"
+shape = "one console: the panel, the readout, the client's cards"
+shot = "ROUTE: /arcs/loop"
+subject = "One client's engagements: the same console the overview draws for them, alone on the sheet."
+camera_line = "Three stills: the first screen, the console at its pin, the close."
+
+[types.MU]
+name = "Musings index"
+question = "does a blog index read as a ruled table under two framed features, and not as a card grid?"
+channel = "public blog index"
+ar = "16:9"
+camera = "split, figure two-up, table, close"
+position = "the practice's note left, two framed features on a dashed divider, every post as a ruled row"
+shape = "a FIG-barred figure pair and a hairline table with a tree glyph on every title"
+shot = "ROUTE: /musings"
+subject = "Every post as a row: date, title, summary, tags, under a tag station row; two features framed above with a caption bar each."
+camera_line = "One still per section; the table's station row is at rest with All picked."
+
+[types.MP]
+name = "Musings post"
+question = "does an article carry a sticky metadata column beside prose at the copy measure, with every figure framed?"
+channel = "public article"
+ar = "16:9"
+camera = "split, prose, figure two-up, close"
+position = "the title left and the summary right, then the metadata column beside the body"
+shape = "a sticky readout column and a column of prose at sixty-eight characters"
+shot = "ROUTE: /musings/navigate-the-intelligence"
+subject = "One post: its title and summary as the head, the compiled body beside a metadata readout, two related posts framed at the foot."
+camera_line = "One still per section; the prose still is shot with the metadata column pinned."
+
+[types.SK]
+name = "Subpage kit"
+question = "does every arrangement and state of the sheet share one grammar on one page?"
+channel = "internal specimen page"
+ar = "16:9"
+camera = "every arrangement once: split, console, row, cells, timeline, steps, table, figure, prose, cells, close"
+position = "the specimen sheet, fixtures labelled as fixtures"
+shape = "the whole vocabulary, one section each, on the house knobs unless the URL says otherwise"
+shot = "ROUTE: /test/subpage-kit"
+subject = "The specimen sheet: every arrangement and every state the sheet has, on fixtures, graded on block K and the register alone."
+camera_line = "One still per section; the four-card console fixture is driven to its second slot's pin."
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SETTINGS - a viewport. The theme is carried by the SUBJECT, because a light
+#  still and a dark still of one page are two candidates a reader compares
+#  rather than one candidate in two lights. `default` is the owner's own window;
+#  `laptop` is the binding one and writes into a `-laptop` wave folder suffix,
+#  never into the filename.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[settings.default]
+surface = "1920x1247"
+anchors = false
+
+[settings.laptop]
+surface = "1280x720"
+anchors = false
+[settings.laptop.places]
+void = "the site's own HUD frame at 1280x720, the binding viewport"
+parchment = "the site's own HUD frame at 1280x720, the binding viewport"
+
+[anchors]
+
+[detail_for]
+
+[attach]

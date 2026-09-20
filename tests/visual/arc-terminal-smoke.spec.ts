@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { CLIENTS } from "@/lib/arcs/clients";
-import { ARCS } from "@/lib/arcs/registry";
+import { ARCS, houseArcs } from "@/lib/arcs/registry";
 
 import { beatState, driveTo, parkBeat, prepare } from "./helpers/arcTerminal";
 
@@ -332,47 +332,46 @@ test.describe("arc terminal motion (ADR-057)", () => {
     }
   });
 
-  test("the overview lists both cuts and the portfolio with distinguishable chips", async ({
+  test("the overview lists both cuts and the portfolio with distinguishable kickers", async ({
     page,
   }) => {
-    await prepare(page, "/arcs");
-    const cards = page.locator(".arc-card");
-    /* ⚠ DERIVED FROM THE REGISTRY, NOT COUNTED BY HAND (ADR-098). This was
-       `5` — two v1 decks, their two terminal cuts and the portfolio — and
-       the first arc registered after it turned a true statement about the
-       grid into a failure about a number. The invariant is "every arc has
-       a card", and that is what this now says — plus a card per client
-       page that is not an arc (ADR-098 U2, the Trinny pitch). */
+    /* ⚠ THE OVERVIEW IS ON THE SHEET SINCE ADR-114 — one console per client,
+       every engagement a flashcard — so the card is `.sh-card` and the chip
+       is its KICKER. The invariants are ADR-098's, unchanged: every arc has a
+       card, plus one per client page that is not an arc; and a terminal CUT
+       is distinguishable from the v1 it was cut from (ADR-057). The stamp is
+       the sheet's own readiness observable, which the capture waits on too. */
+    await page.goto("/arcs");
+    await page.locator(".sh-root[data-sh-ready]").waitFor({ timeout: 30_000 });
+    /* ADR-098's two partitions, drawn two ways: a client-bound arc is a CARD in
+       its client's console, a house format is a CELL in the formats section.
+       Every arc reaches the page exactly once either way. */
+    const house = houseArcs();
     const pages = CLIENTS.reduce((n, client) => n + (client.pages?.length ?? 0), 0);
-    await expect(cards).toHaveCount(ARCS.length + pages);
-    /* ⚠ THE SAME DEFECT AS THE COUNT ABOVE, ONE LINE LATER, AND IT OUTLIVED
-       THE FIX (2026-09-17). This asserted that EVERY chip on the grid is
-       unique — true while the overview held one card per format, and false the
-       moment ADR-098 registered a second client proposal. Three clients now
-       legitimately share the chip `proposal`, so 9 cards carry 7 distinct
-       chips and a correct grid failed. A chip is a FORMAT LABEL, not an
-       identifier; what tells two proposals apart is the client's name.
-       ⚠ It was masked for days behind the WebKit corridor failure (ADR-107 U1)
-       — this step never ran, because the step before it bailed first.
-       The invariant the test's own NAME states is that a terminal CUT is
-       distinguishable from the v1 it was cut from, which is what ADR-057 is
-       about. That is what this now says, per pair, derived from the registry. */
+    await expect(page.locator(".sh-card")).toHaveCount(ARCS.length - house.length + pages);
+    await expect(page.locator("a.sh-cell")).toHaveCount(Math.min(4, house.length));
     const chipFor = async (href: string) =>
-      (await page.locator(`.arc-card[href="${href}"] .arc-card__chip`).textContent())?.trim() ?? "";
+      (
+        await page
+          .locator(
+            `.sh-card[href="${href}"] .sh-card__kicker, a.sh-cell[href="${href}"] .sh-cell__kicker`
+          )
+          .textContent()
+      )?.trim() ?? "";
     for (const base of ["claude-workshop", "ai-keynote"]) {
       const v1 = await chipFor(`/arcs/${base}`);
       const v2 = await chipFor(`/arcs/${base}-v2`);
-      expect(v1, `${base} has a chip`).not.toBe("");
+      expect(v1, `${base} has a kicker`).not.toBe("");
       expect(v2, `${base}-v2 is distinguishable from its v1 (both read "${v1}")`).not.toBe(v1);
     }
     const portfolioChip = await chipFor("/arcs/loop-earplugs");
-    expect(portfolioChip, "the portfolio carries its own chip").not.toBe("");
+    expect(portfolioChip, "the portfolio carries its own kicker").not.toBe("");
     expect(
       [await chipFor("/arcs/claude-workshop"), await chipFor("/arcs/ai-keynote")],
       "the portfolio is not labelled as a deck"
     ).not.toContain(portfolioChip);
-    await expect(page.locator('.arc-card[href="/arcs/claude-workshop-v2"]')).toHaveCount(1);
-    await expect(page.locator('.arc-card[href="/arcs/ai-keynote-v2"]')).toHaveCount(1);
-    await expect(page.locator('.arc-card[href="/arcs/loop-earplugs"]')).toHaveCount(1);
+    await expect(page.locator('a.sh-cell[href="/arcs/claude-workshop-v2"]')).toHaveCount(1);
+    await expect(page.locator('a.sh-cell[href="/arcs/ai-keynote-v2"]')).toHaveCount(1);
+    await expect(page.locator('.sh-card[href="/arcs/loop-earplugs"]')).toHaveCount(1);
   });
 });

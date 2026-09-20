@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { ArcClientPage } from "@/components/arcs/ArcClientPage";
 import { ArcHero } from "@/components/arcs/ArcHero";
 import { ArcSectionRenderer } from "@/components/arcs/ArcSectionRenderer";
 import { ArcShell } from "@/components/arcs/ArcShell";
+import { SheetRenderer } from "@/components/sheet/SheetRenderer";
+import { SheetShell } from "@/components/sheet/SheetShell";
 import { clientSlugs, getClient } from "@/lib/arcs/clients";
-import { arcSlugs, arcsOf, getArc } from "@/lib/arcs/registry";
+import { arcSlugs, getArc } from "@/lib/arcs/registry";
+import { clientSheetSections } from "@/lib/sheet/arcs";
+import { chaptersOf } from "@/lib/sheet/composition";
 import { sliceV7Sections } from "@/lib/v7-parse";
 
 import "@/components/landing/v7/landing.css";
@@ -23,6 +26,9 @@ import "@/components/landing/home-v2/services/casefile/console/console.css";
 // gets bytes and no matching rule.
 import "@/components/landing/home-v2/services/casefile/map/pda/pda.css";
 import "@/components/arcs/arcs.css";
+// The sheet (ADR-114) — the CLIENT page renders on it; an arc gets bytes and
+// no matching rule. After arcs.css, before theme.css.
+import "@/components/sheet/sheet.css";
 // Theme sheet LAST (ADR-058) — after arcs.css so the light cascade wins.
 import "@/components/landing/v7/theme.css";
 // The corner instruments (ADR-059 U6). LAST, mirroring the landing route
@@ -97,13 +103,20 @@ export default async function ArcPage({ params }: ArcRouteParams) {
   const slice = sliceV7Sections([]);
   const client = getClient(slug);
   if (client) {
+    /* A client page is a SHEET page (ADR-114): a split head with the
+       client's name and lede, that client's console at page scale, the
+       close. `SheetShell` is the index-style shell — no hero, rails
+       uncovered from the first paint. */
+    const sections = clientSheetSections(client);
     return (
-      <ArcClientPage
-        client={client}
-        arcs={arcsOf(client.slug)}
+      <SheetShell
         hudHtml={slice.hudHtml}
         bodyClass={slice.bodyClass}
-      />
+        page={`arcs-${client.slug}`}
+        chapters={chaptersOf(sections)}
+      >
+        <SheetRenderer sections={sections} />
+      </SheetShell>
     );
   }
   const arc = getArc(slug);

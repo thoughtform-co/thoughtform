@@ -63,6 +63,7 @@ export const PORTFOLIO_ARC: ArcDef = {
      link already forwarded still lands here. */
   client: "loop",
   format: "portfolio",
+  status: "shipped",
   /* ⚠ NO `motion` — this page FLOWS (ADR-076, owner 2026-08-24). The
      terminal grammar pins every section and resolves its masthead with a
      decode, which reads as a deck being presented; this is a portfolio a

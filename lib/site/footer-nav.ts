@@ -108,6 +108,11 @@ const AUTHORED: readonly FooterColumn[] = [
       station("about"),
       station("voidwalker"),
       { label: "Claude workshop", href: "/claude-workshop" },
+      /* The sheet pages (ADR-114). Musings stays `null` until a post is
+         published: the sitemap lists the index only once it has something
+         to list, and this row may not outrun it. */
+      { label: "Home sessions", href: "/home-sessions" },
+      { label: "Musings", href: null },
     ],
   },
   {

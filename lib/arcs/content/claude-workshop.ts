@@ -14,6 +14,7 @@ import type { ArcDef } from "../types";
 export const CLAUDE_WORKSHOP_ARC: ArcDef = {
   slug: "claude-workshop",
   format: "workshop",
+  status: "shipped",
   cardTitle: "The Claude workshop",
   cardLede:
     "A hands-on getting-started chapter — the right toggles, the right models, connectors, and your first Skills.",

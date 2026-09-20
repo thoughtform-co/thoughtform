@@ -218,7 +218,7 @@ export const SERVICES: readonly Service[] = [
     ],
     phase: "navigate",
     ctaLabel: "Reserve a seat",
-    ctaHref: "#contact",
+    ctaHref: "/home-sessions",
     shapeKey: "loop-forming",
   },
 ];

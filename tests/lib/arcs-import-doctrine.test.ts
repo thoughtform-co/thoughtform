@@ -19,7 +19,9 @@ import { describe, expect, it } from "vitest";
  */
 
 const ROOT = join(__dirname, "..", "..");
-const GUARDED = ["components/arcs", "lib/arcs"];
+/* ADR-114 adds the sheet: it mounts the arcs' header and rail instruments
+   and is served on three public routes, so it takes the same doctrine. */
+const GUARDED = ["components/arcs", "lib/arcs", "components/sheet", "lib/sheet"];
 
 /** Bare specifiers no file under the guarded trees may STATICALLY import. */
 const BANNED = [/^three(\/|$)/, /^@react-three\//, /^postprocessing(\/|$)/, /^@supabase\//];

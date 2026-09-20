@@ -33,6 +33,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./"),
+      // The server-only marker throws outside a server component; the tests
+      // that read lib/musings/registry are readers by design (ADR-114).
+      "server-only": path.resolve(__dirname, "./tests/stubs/server-only.ts"),
     },
   },
 });

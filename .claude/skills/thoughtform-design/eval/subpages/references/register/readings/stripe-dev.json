@@ -1,0 +1,15 @@
+{
+  "site": "stripe-dev",
+  "url": "https://stripe.dev/",
+  "title": "Stripe Dot Dev",
+  "ground": "rgb(232, 232, 232)",
+  "rules": 34,
+  "structureColours": 2,
+  "radii": 16,
+  "text": 26,
+  "bold": 1,
+  "boldShare": 0.038,
+  "families": ["sohne-mono", "sohne-var"],
+  "hues": [],
+  "when": "2026-09-20T14:25:54.846Z"
+}
