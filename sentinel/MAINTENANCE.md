@@ -54,6 +54,68 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-20 — The phone locks in: snap seats, one viewport clock, constant reserves (ADR-113)
+
+**Trigger:** the owner, from his iPhone, with six stills — _"when I enter a
+section, the components or the section itself take a bit to settle into the
+right position. Before it does, it's either too high or too low … when you
+scroll to the section, the components lock in … you can move the section and
+its elements around a bit, and that's super annoying."_ The Eras stage with
+its title ON the TL bracket in one still and its era stops THROUGH the
+settings icon in the next; the services band's title 27px under the readout
+with the toolbar collapsed. Everything through ADR-082 U29 was live on his
+phone when he took them.
+
+- **Three defects, one symptom.** `#voidwalker`'s phone instrument was a
+  one-screen block in normal flow with nothing locking it (the pin and the
+  runway are `min-width: 1101px`), so it sat wherever the scroll stopped —
+  both Eras stills. A live `dvh` term (`--vwd-chrome-clear`, U26) reflowed
+  the era band for every frame of the toolbar animation. And every scroll
+  writer divided svh-authored geometry by `window.innerHeight`, which follows
+  the toolbar on iOS — the ring's beat clock, the pile's `--pc-depth`, the
+  corridor camera, the epilogue signal all stepped while the thumb was still.
+- **Snap seats.** `html { scroll-snap-type: y proximity }` on the phone rung;
+  `#services` · `#about` · `#contact` · `.vwd` are `start` stops. ⚠ The seat
+  is the INSTRUMENT, never `#voidwalker` (its padding would put the stops
+  below the fold). Not the hero, not the corridor host, no sticky child, no
+  scroll-padding, not PRM-gated. A stop past a station taller than the screen
+  stays (the covering rule); the one-screen instrument snaps from either side.
+- **One clock.** `lib/viewport/layoutViewportHeight()` —
+  `documentElement.clientHeight || innerHeight` — adopted by
+  `useServicesStageScroll`, `useStackedCardsScroll`, `useCorridorExitScroll`,
+  `useDepthScroll`, `MobileEpilogueSignal`, `HudNav`, `beatScrollTarget`;
+  `--hero-lift` stays on `innerHeight` (paired with the hero's `100dvh`).
+  Desktop byte-identical by arithmetic; the HUD snapshots passed unchanged.
+- **No live unit inside content.** `--vwd-chrome-clear` is the constant band
+  again (U26 reversed — 56px of figure column in the collapsed state is the
+  price of stillness); `.station`'s `100dvh` floor is KEPT because it binds
+  only on `#contact`, the footer, whose legal bar should hug the real floor.
+- ⚠ **Four things the harness had to learn.** A programmatic scroll is a snap
+  candidate (the seams spec's rests moved to the seats plus a mid read past
+  the radius; `seekTo` accepts a landing on a seat; `rollTo` waits on
+  `scrollend`); `scroll-snap-type: y proximity` computes to `"y"`; Chromium
+  resolves every viewport unit to one number, so the units are proven by
+  SOURCE ratchets (`layout-viewport-height`, `phone-viewport-units`) and the
+  device, never by a phone project; the ring smoke's `#contact does not fill
+the viewport at the kill edge` failure is pre-existing (reproduced with the
+  old read) and is the footer's sub-pixel `bottom >= vh` the landing rule
+  already records.
+- **Deferred, gated on his screen recording:** the fixed-vs-sticky transient
+  (iOS lays out `position: fixed` against the layout viewport with hysteresis
+  during the bar animation while sticky content rides the visual viewport); a
+  whole-document sticky HUD would fix it at the cost of seating the bottom
+  row 99px above the real floor when the toolbar is collapsed.
+- **Captured:** ADR-113; ADR-082 U30; `mobile-sections.md` §3, §5, §8, the
+  new §10, Verifying and its `paths:`; `voidwalker.md` (the U26 bullet);
+  `services-ring.md` §The ring on phones; CLAUDE.md's new phone bullet;
+  BEST-PRACTICES ×2; `tests/lib/layout-viewport-height.test.ts`,
+  `tests/lib/phone-viewport-units.test.ts` (+ `tests/lib/helpers/cssBlocks.ts`,
+  lifted from `type-material-tokens`); `mobile-section-seams` (rests → seats,
+  snap-aware seek, three new cases, the horizontal audit);
+  `scripts/probe-mobile-lockin.mjs`; the memory note.
+- **Left open:** the device read (the checklist is in ADR-113), the
+  `scroll-snap-stop: always` dial, the sticky-frame follow-up.
+
 ### 2026-09-15 — The head decodes in place, and the plates become the deliverables (ADR-103)
 
 **Trigger:** the owner's next stage on the proposal page — between the board

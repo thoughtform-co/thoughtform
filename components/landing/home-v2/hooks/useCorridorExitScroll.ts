@@ -11,6 +11,7 @@ import { corridorDissipateRef } from "@/lib/home-v2/corridorDissipateRef";
 import { corridorExitSpeedRamp } from "@/lib/home-v2/epilogueTimeline";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { clamp01 } from "@/lib/math";
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 /** Lazily-constructed MediaQueryList singletons (2026-07-29 perf pass —
  *  `window.matchMedia()` was being CONSTRUCTED twice per scroll frame;
@@ -167,7 +168,7 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       const services = servicesEl;
       if (!services) return;
 
-      const vh = window.innerHeight || 1;
+      const vh = layoutViewportHeight();
       const servicesRect = services.getBoundingClientRect();
       prmQuery ??= window.matchMedia?.("(prefers-reduced-motion: reduce)") ?? null;
       mobileQuery ??= window.matchMedia?.("(max-width: 960px)") ?? null;

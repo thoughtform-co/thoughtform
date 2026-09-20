@@ -2,6 +2,7 @@
 
 import { useEffect, type RefObject } from "react";
 import { clamp01 } from "@/lib/math";
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 // `clamp01` now comes from `@/lib/math` (Phase-5 consolidation).
 /** Smoothstep on [0,1] — hook eases, CSS maps linearly (house pattern). */
@@ -121,7 +122,7 @@ export function useStackedCardsScroll(runwayRef: RefObject<HTMLElement | null>):
         return;
       }
 
-      const vh = window.innerHeight || 1;
+      const vh = layoutViewportHeight();
 
       // Reads first (batched), then writes — never interleaved.
       const enters = slots.map((slot, i) => {

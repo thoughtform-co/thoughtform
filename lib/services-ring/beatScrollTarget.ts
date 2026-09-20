@@ -10,6 +10,7 @@
 // never drift from the ring math.
 
 import { clamp01 } from "@/lib/math";
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 import {
   RING_ARRIVAL_FRAC,
   RING_COUNT,
@@ -47,7 +48,7 @@ export function servicesBeatScrollTarget(
   if (typeof window === "undefined") return null;
   const el = runway ?? document.querySelector<HTMLElement>(".services-stage-root");
   if (!el) return null;
-  const vh = window.innerHeight || 1;
+  const vh = layoutViewportHeight();
   const rect = el.getBoundingClientRect();
   const travel = rect.height - vh;
   if (travel <= 0) return null;
@@ -74,7 +75,7 @@ export function servicesMobileBeatScrollTarget(
   runway: HTMLElement | null
 ): number | null {
   if (typeof window === "undefined" || !runway) return null;
-  const vh = document.documentElement.clientHeight || window.innerHeight || 1;
+  const vh = layoutViewportHeight();
   const rect = runway.getBoundingClientRect();
   const travel = rect.height - vh;
   if (travel <= 0) return null;

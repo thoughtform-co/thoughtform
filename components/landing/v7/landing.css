@@ -1820,7 +1820,15 @@
   /* Viewport-isolated sections: each station fills at least the full
      visible viewport so the next section's title never peeks at the
      bottom edge during normal reading. `100dvh` tracks mobile browser
-     chrome dynamically; `100vh` is the fallback for older engines. */
+     chrome dynamically; `100vh` is the fallback for older engines.
+     ⚠ ON A PHONE THIS `dvh` BINDS ON ONE STATION AND IS KEPT THERE (ADR-113).
+     `#services`, `#about` and `#voidwalker` are taller than any viewport, so
+     the floor never reaches them; `#contact` — the footer, the document's
+     last viewport — is the one it sizes, and it is the one station that
+     SHOULD follow the toolbar: its grid is `auto 1fr auto` with the slot
+     stretched, so the growth goes into the middle row and the legal bar hugs
+     the real floor with the settings cluster. Every other phone box stays in
+     svh (mobile-sections.md §8, §10); the units ratchet names this one. */
   min-height: 100vh;
   min-height: 100dvh;
   /* Asymmetric padding biases the flex-centered content slightly above
@@ -12466,5 +12474,48 @@ html {
     /* The fallbacks are `.station`'s own `padding: 140px 0 220px`. */
     padding-top: max(var(--station-pad-top, 140px), var(--mobile-chrome-top));
     padding-bottom: max(var(--station-pad-bottom, 220px), var(--mobile-chrome-bottom));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE PHONE LOCKS IN (ADR-113, owner 2026-09-20: "when you scroll to the
+   section, the components lock in … when you're inside a section, you can
+   move the section and its elements around a bit, and that's super
+   annoying").
+
+   The stations are SNAP STOPS on the phone rung, `proximity` on the root
+   scroller. A stop short of a station glides onto its top; a stop past a
+   station TALLER than the screen stays where it is (the covering rule —
+   right for a section you read down); the one-screen instrument in
+   `#voidwalker` snaps from either side, and its seat is `.vwd`'s own top
+   (voidwalker.css), never the station's — the station keeps ~67px of
+   padding here, and a station-top seat puts the era stops below the fold.
+   · NOT the hero: a stop at 0 would drag the half-lifted curtain back.
+   · NOT the corridor host: `.home-v2-stage` is 820svh with no snap area,
+     so proximity cannot fire inside it — its one reachable stop is
+     `#services`' seat at its end, which is the lock-in wanted there.
+   · NO `scroll-padding-top`: the stations reserve `--mobile-chrome-top`
+     inside their own padding (the floor above) and `.vwd` clears the
+     chrome from inside; a scroll-padding would pay the top band twice.
+   · NOT gated on reduced motion: snap is UA scrolling, not an authored
+     animation, and a reduced-motion reader has the same chrome to collide
+     with.
+   · `scroll-snap-stop: always` on `.vwd` is the one dial, held back until
+     the device shows a fling from #about overshooting the instrument.
+   Sticky children (the ring band, the proof slots) create no snap
+   positions, and the ring's beat tween ends ≥1000px from #about's stop.
+   This block declares NO padding, so the floor above stays the last
+   padding rule in the file. Guard: `tests/visual/mobile-section-seams
+   .spec.ts`; the desktop declares none of this and its HUD snapshots are
+   the byte-identity proof.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 960px) {
+  html {
+    scroll-snap-type: y proximity;
+  }
+  #services.station,
+  #about.station,
+  #contact.station {
+    scroll-snap-align: start;
   }
 }

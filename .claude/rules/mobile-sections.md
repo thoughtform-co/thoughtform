@@ -5,8 +5,17 @@ paths:
   - "components/landing/home-v2/home-v2.css"
   - "components/landing/home-v2/MobileEpilogueSignal.tsx"
   - "components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css"
+  - "components/landing/home-v2/voidwalker/voidwalker.css"
+  - "components/landing/home-v2/hooks/useServicesStageScroll.ts"
+  - "components/landing/home-v2/hooks/useCorridorExitScroll.ts"
+  - "components/landing/home-v2/hooks/useDepthScroll.ts"
+  - "components/landing/v7/tools-cards/useStackedCardsScroll.ts"
+  - "components/landing/v7/HudNav.tsx"
+  - "lib/viewport/**"
+  - "lib/services-ring/beatScrollTarget.ts"
   - "tests/visual/mobile-section-seams.spec.ts"
-description: Each section stands on its own on a phone — the two chrome bands, the kill condition every fixed painter owes, and the guard
+  - "scripts/probe-mobile-lockin.mjs"
+description: Each section stands on its own on a phone — the two chrome bands, the kill condition every fixed painter owes, the snap seats, the layout-viewport clock, and the guard
 ---
 
 # Rule: Each section stands on its own on mobile
@@ -166,6 +175,21 @@ What it owes in exchange:
   viewport puts the 100svh instrument 76px down and its last 76px — where the
   stops live — below the fold. Every rect compared against FIXED chrome is
   scroll-dependent; seat `.vwd`.
+- ⚠ **AND SINCE ADR-113 THE ENGINE SEATS IT TOO: `.vwd` IS THE STATION'S SNAP
+  STOP** (`scroll-snap-align: start` in `voidwalker.css`'s ≤960 block, on the
+  instrument and never on `#voidwalker` — the probe's seat law, written into
+  the sheet). Until then nothing locked the instrument to the viewport at all:
+  it sat wherever the scroll happened to stop, ~50px high in one of the
+  owner's stills (the title on the TL bracket) and ~100px low in the other
+  (the era stops under the settings icon). §10 has the law.
+- ⚠ **ITS CHROME RESERVE IS A CONSTANT AGAIN.** ADR-082 U26 made
+  `--vwd-chrome-clear` a live term (`--mobile-chrome-bottom − (100dvh −
+100svh)`) so the strip was not paid twice once the toolbar collapsed, and
+  ADR-113 took it back out the next day: the term made the band, the stage's
+  floor and the figure's slot reflow for every frame of the bar animation,
+  which the owner read as the section "settling". 56px of figure column in the
+  collapsed state is the price of stillness. `phone-viewport-units.test.ts`
+  pins the sheet at zero `dvh`/`lvh` terms.
 
 ## 4 · `content-visibility: auto` is a desktop optimisation and ≤960 opts out
 
@@ -190,14 +214,28 @@ real height is**, and on a scroll-driven surface it cannot.
 
 ## 5 · `mobile-section-seams.spec.ts` is the guard, and it extends in the same commit
 
-`tests/visual/mobile-section-seams.spec.ts`, phone projects only. Five cases:
-station-to-station seams · chrome-over-copy at every station's rest ·
-the signal dead over #services · every chrome rect inside a band · the floor
-and the opt-out live on computed style.
+`tests/visual/mobile-section-seams.spec.ts`, phone projects only. Eight cases:
+station-to-station seams · chrome-over-copy at every station's rest, and no
+sideways overflow there (ADR-113) · the signal dead over #services · every
+chrome rect inside a band · the floor and the opt-out live on computed style ·
+the stations are snap stops and nothing inside them is (ADR-113) · a stop
+short of a station glides onto its seat and the one-screen instrument seats
+itself from either side (ADR-113) · the desktop declares no snap.
+
+⚠ **A STATION'S REST IS ITS SEAT, PLUS A MID READ ON THE TALL ONES (ADR-113).**
+The old single rest, `top + min(0.35h, 300)`, sat within 11px of Blink's
+proximity radius at 430×932 (a third of the snapport, 311; measured 280 in
+40px steps) — one layout shift from being pulled onto the seat with the seek
+reporting a miss. `stationRests()` returns the seat (the station's top; `.vwd`'s
+top for #voidwalker) and, for a station taller than ~1.6 viewports, two more
+reads: NEAR at `top + 340`, the first position a reader can hold past the
+seat, where the ledger's collisions were measured; and MID at half its height,
+for a long station's middle. Copy is read under the chrome at all three.
 
 **A new station, or new fixed chrome, extends this spec in the same commit.**
 Add the station id to `STATION_IDS`, the painter to `CHROME_SELECTORS`; a
-painter absent from that list is a painter nothing measures.
+painter absent from that list is a painter nothing measures. A new snap stop
+goes in `SNAP_STOPS`; anything that must NOT snap in `NOT_SNAP_AREAS`.
 
 Three things the spec had to learn, all of them measured, all of them the kind
 of thing that makes a green run meaningless:
@@ -226,6 +264,15 @@ And two on driving the page:
   `getPropertyValue("--mobile-chrome-top")` returns the authored expression,
   not a length; the spec spends them as padding on a throwaway element so
   computed style reports pixels.
+- ⚠ **A PROGRAMMATIC SCROLL IS A SNAP CANDIDATE (ADR-113).** Chromium re-snaps
+  after a `scrollTo` exactly as after a flick, so a harness target inside the
+  radius of a seat LANDS ON THE SEAT and a seek that insists on its own number
+  never settles. `seekTo` accepts a landing within 1.5px of a seat as settled
+  (`snapSeats()`), and `rollTo` waits on `settleSnap` — `scrollend`, or twelve
+  still frames, capped — because the snap animation starts a few frames after
+  the smooth scroll stops and a three-frame still can resolve in the gap.
+  ⚠ `scroll-snap-type: y proximity` COMPUTES TO `"y"`: proximity is the
+  default strictness and the serialisation drops it.
 
 ## 6 · A sticky pile in flow is not a fixed painter (ADR-107)
 
@@ -277,12 +324,18 @@ and the corridor-exit veil painted through below it.
 - ⚠ **CONTENT STAYS IN `svh`.** A sticky band or a one-screen instrument sized
   in `dvh` grows mid-scroll and moves the reading under the thumb — law 4's
   defect in a new place. `.vwd` and `.svc-ring-band` keep `100svh` deliberately.
-- ⚠ **A `svh` BOX MAY NOT RESERVE THE FULL CHROME BAND.** Its own bottom edge is
-  already above the chrome once the toolbar collapses, so the strip gets paid
-  for twice. `100dvh - 100svh` IS the live toolbar height — zero while the
-  toolbar is shown, the full offset once it is not — so the reserve is
-  `max(0px, calc(var(--mobile-chrome-bottom) - (100dvh - 100svh)))`.
-  `.vwd__band` is the worked example.
+- ⚠ **A `svh` BOX RESERVES THE CONSTANT CHROME BAND, AND PAYS IT TWICE ON
+  PURPOSE (ADR-113, reversing this bullet's first cut).** U26 reserved
+  `max(0px, calc(var(--mobile-chrome-bottom) - (100dvh - 100svh)))` on
+  `.vwd__band` — `100dvh − 100svh` being the live toolbar height — so the
+  strip was not paid once the toolbar collapsed. That term is a `dvh` INSIDE
+  CONTENT, and it reflowed the band, the stage's floor and the figure's slot
+  for every frame of the bar animation: the owner's "the components take a bit
+  to settle". The reserve is `var(--mobile-chrome-bottom)` again; the 56px it
+  costs in the collapsed state buys a box that does not move. **No live unit
+  inside content, ever** — `tests/lib/phone-viewport-units.test.ts` walks the
+  landing's sheets and allows `dvh`/`lvh` by SELECTOR only (the canvas
+  backdrop, the hero, the curtain clips, `.station`'s floor on `#contact`).
 - ⚠ **NO PROJECT IN THIS REPO CAN REPRODUCE ANY OF IT.** Every phone project is
   Chromium (ADR-107 U1), where all three units collapse to one number — so
   these rules are byte-identical in CI and a green run proves nothing about
@@ -328,11 +381,81 @@ body {
 - A horizontal gesture inside a clipped reel is the other half:
   `.vwd__band { touch-action: pan-y }` hands nothing horizontal to the page.
 - ⚠ **Chromium can reproduce the OVERFLOW; only a device can confirm the
-  pan stops.** Same standing as §8.
+  pan stops.** Same standing as §8. Since ADR-113 the seams spec measures it
+  at every rest — `scrollWidth ≤ clientWidth`, `scrollX` still 0 after a
+  `scrollTo(400, y)`, and no visible box past the viewport's right edge.
+
+## 10 · The stations are snap stops, and the writers read the layout viewport (ADR-113)
+
+Owner, 2026-09-20, from his phone: _"when I enter a section, the components or
+the section itself take a bit to settle into the right position … it's either
+too high or too low … when you scroll to the section, the components lock in
+… you can move the section and its elements around a bit."_ Two defects with
+one symptom, and two laws.
+
+**The seats.** On the phone rung the root is `scroll-snap-type: y proximity`
+(landing.css's last block) and `#services`, `#about`, `#contact` and `.vwd`
+are `scroll-snap-align: start`. A stop short of a seat glides onto it; a stop
+past a station TALLER than the screen stays where the reader stopped (the
+covering rule — right for a section you read down); the one-screen instrument
+snaps from either side.
+
+- ⚠ **THE SEAT IS THE INSTRUMENT, NEVER THE STATION** — §3's probe law,
+  written into the sheet. A `#voidwalker` stop would seat `.vwd` ~67px down
+  and its era stops below the fold.
+- ⚠ **NOT the hero** (a stop at 0 drags the half-lifted curtain back), **NOT
+  the corridor host** (820svh, no snap area, so proximity cannot fire inside
+  it — its one reachable stop is `#services`' seat at its end), **no sticky
+  child** (the ring band, the proof slots — they seat on their own runways).
+- ⚠ **NO `scroll-padding-top`.** The stations reserve `--mobile-chrome-top` in
+  their own padding and `.vwd` clears from inside; a scroll-padding pays the
+  band twice.
+- ⚠ **NOT gated on reduced motion** — snap is UA scrolling, not an authored
+  animation, and a reduced-motion reader has the same chrome to collide with.
+- `scroll-snap-stop: always` on `.vwd` is the one dial, held until the device
+  shows a fling from #about overshooting the instrument.
+- The ring's side-tap tween (`ringScrollTween`, per-frame instant `scrollTo`)
+  ends far outside any proximity radius of #about's stop; the seams spec's
+  "snap-landings" attachment records the measured landings, and
+  `scripts/probe-mobile-lockin.mjs` prints the radius per stop.
+
+**The clock.** On iOS `window.innerHeight` follows the toolbar (+~99px on an
+iPhone 14) while every runway on this site is authored in `svh`, which holds
+— so a clock that divided one by the other moved while the thumb was still:
+the ring rotated a fraction of a beat, the pile's `--pc-depth` stepped its
+scale and opacity, the corridor camera drifted, the epilogue signal jumped.
+`lib/viewport/layoutViewportHeight()` — `documentElement.clientHeight ||
+innerHeight`, the initial containing block — is what the writers read now:
+`useServicesStageScroll`, `useStackedCardsScroll`, `useCorridorExitScroll`,
+`useDepthScroll`, `MobileEpilogueSignal`, `HudNav`, `beatScrollTarget`.
+
+- ⚠ **THE ONE EXCEPTION IS `--hero-lift`** (`useLandingScroll`): it divides by
+  `innerHeight` BECAUSE the hero is `100dvh` — lift = 1 ⇔ the curtain has
+  cleared, on every device. `layout-viewport-height.test.ts` pins the
+  adopters by source and pins that exception at exactly one read.
+- ⚠ **DESKTOP IS BYTE-IDENTICAL BY ARITHMETIC**: `clientHeight` excludes only
+  a horizontal scrollbar and this site never renders one. The HUD snapshots
+  are the proof.
+- ⚠ **CHROMIUM CANNOT SEE WHICH VIEWPORT A WRITER READS** — `svh`, `dvh`,
+  `lvh`, `clientHeight` and `innerHeight` are one number there, and a
+  `setViewportSize` moves all of them. The source pin and the device are the
+  two proofs.
+
+**What is deferred, and why.** The 27px by which the services band's title
+sat under the fixed readout in the collapsed-toolbar still is iOS laying out
+`position: fixed` against the layout viewport, which WebKit updates with
+hysteresis during the bar animation, while the sticky band rides the visual
+viewport. No unit fixes a transient. A whole-document sticky HUD would put
+chrome and content in one scrollport at the cost of seating the bottom row at
+`100svh` — ~99px above the real floor when the toolbar is collapsed, this
+rule's §8 inverted. It waits on his screen recording of a collapse.
 
 ## Verifying
 
 ```bash
+npx vitest run tests/lib/layout-viewport-height.test.ts tests/lib/phone-viewport-units.test.ts
+node scripts/probe-mobile-lockin.mjs --theme dark   # headed; the radius sweep, ±40/+60 landings, stills
+node scripts/probe-voidwalker-phone.mjs             # byte-identical to before ADR-113 — Chromium cannot see the unit
 npx playwright test tests/visual/about-voidwalker-handoff-boundaries.spec.ts
 # ⚠ The phone projects are `-chromium` (ADR-107 U1 deleted the WebKit ones,
 # which could never reach an HTTP dev server). The suffix now just means

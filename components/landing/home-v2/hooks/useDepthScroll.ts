@@ -10,6 +10,7 @@ import {
   useDepthGatewayStore,
 } from "@/lib/stores/depthGatewayStore";
 import { isMobileComposition } from "@/lib/hooks/useDeviceTier";
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 import { getMobilePaintProgress } from "../DepthGatewayScene/sceneGeom";
 
 /** Fraction of the sticky stage that belongs to the calibrated
@@ -78,7 +79,7 @@ export function useDepthScroll(stageRef: React.RefObject<HTMLDivElement | null>)
     if (!stage) return;
 
     const rect = stage.getBoundingClientRect();
-    const vh = window.innerHeight;
+    const vh = layoutViewportHeight();
     const stageHeight = rect.height;
     const scrubHeight = Math.max(1, stageHeight - vh);
 

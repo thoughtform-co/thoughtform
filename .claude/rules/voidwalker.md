@@ -204,14 +204,24 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   paints it; it is the page showing through where the corridor's void backing
   ran out. `.home-v2-stage__canvas` takes `height: 100dvh; min-height: 100lvh`
   — safe to grow because **nothing is laid out inside a backdrop**.
-  ⚠ **AND `.vwd` PAYS FOR THE STRIP TWICE.** The instrument is `100svh`, so
-  `.vwd__band` was reserving `--mobile-chrome-bottom` inside a box that already
-  ends above the chrome. Its clearance is
-  `max(0px, calc(var(--mobile-chrome-bottom) - (100dvh - 100svh)))` now —
-  **`100dvh - 100svh` IS THE LIVE TOOLBAR HEIGHT**, zero while the toolbar is
-  shown (where the clearance is genuinely needed) and the full offset once it
-  collapses. ⚠ The comment that stood here — _"inside a 100svh instrument this
-  element's own bottom edge IS that floor"_ — was FALSE on a real iPhone.
+  ⚠ **AND `.vwd` PAYS FOR THE STRIP TWICE — BY DECISION SINCE ADR-113.** The
+  instrument is `100svh`, so `.vwd__band` reserves `--mobile-chrome-bottom`
+  inside a box that already ends above the chrome once the toolbar collapses.
+  U26 answered that with a LIVE term (`max(0px, calc(--mobile-chrome-bottom -
+(100dvh - 100svh)))`, the toolbar's own height) and **ADR-113 (2026-09-20,
+  owner) took it back out the next day**: the term reflowed the band, the
+  stage's floor and the figure's slot for every frame of the bar animation,
+  which he read as the section "settling". `--vwd-chrome-clear` is the
+  constant again; 56px of figure column in the collapsed state is the price of
+  a box that does not move, and `phone-viewport-units.test.ts` pins the sheet
+  at zero `dvh`/`lvh`. ⚠ The comment that stood here before U26 — _"inside a
+  100svh instrument this element's own bottom edge IS that floor"_ — was
+  FALSE on a real iPhone and stays false; the reserve is paid knowingly.
+  ⚠ **AND `.vwd` IS THE PHONE'S SNAP SEAT** (`scroll-snap-align: start`,
+  `voidwalker.css` ≤960; the root is `y proximity`, landing.css's last block)
+  — the probe's seat law written into the sheet. Nothing locked the
+  instrument before: the owner's two stills were the same box ~50px high and
+  ~100px low. Rules in `mobile-sections.md` §10.
   ⚠ **Chromium resolves svh/lvh/dvh to one number**, so every change above is
   byte-identical in CI and the only proof is a device: compare `innerHeight`
   with `.home-v2-stage__canvas`'s `getBoundingClientRect().bottom`.

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useActiveSection } from "./hooks/useActiveSection";
 import { advanceScrambles, queueScramble, type ScrambleJob } from "@/lib/home-v2/captionScramble";
 import { readoutDetail } from "@/lib/rail-manifest/sectionLabel";
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 /**
  * Top-right HUD navigation for the v7 landing page (Brand Codex
@@ -100,7 +101,7 @@ export function HudNav({ items = NAV_ITEMS }: { items?: readonly NavItem[] } = {
     let raf = 0;
     const evaluate = () => {
       raf = 0;
-      const past = window.scrollY > window.innerHeight * 0.5;
+      const past = window.scrollY > layoutViewportHeight() * 0.5;
       setCollapsed((prev) => (prev === past ? prev : past));
     };
     const schedule = () => {

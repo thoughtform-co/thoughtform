@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { epilogueBand, dissipateBand } from "@/lib/home-v2/epilogueTimeline";
 import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
 import { getSmoothedEpilogueProgress } from "./DepthGatewayScene/motionFollower";
 
@@ -113,7 +114,7 @@ export function MobileEpilogueSignal() {
       // Match the desktop signal's exit lift so the mobile block also
       // scrolls up with the dissipating sphere instead of just fading
       // in place.
-      const vhNow = typeof window !== "undefined" ? window.innerHeight || 1 : 1;
+      const vhNow = typeof window !== "undefined" ? layoutViewportHeight() : 1;
       const liftPx = -exitDissipate * vhNow;
 
       if (Math.abs(opacity - lastOpacity) > 0.002) {

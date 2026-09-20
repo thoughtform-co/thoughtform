@@ -24,6 +24,8 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { blocks, stripComments } from "./helpers/cssBlocks";
+
 const ROOT = join(__dirname, "..", "..");
 const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
 
@@ -231,30 +233,11 @@ const FRAME_SEL = /(^|[\s,>+~])\.(hud\b|hud__|hud-nav|rail-manifest|rin-|home-v2
 const ROLE_VAR = /^var\(--track-(copy|display|label|eyebrow)\)$/;
 const ZERO = new Set(["0", "0em", "0px", "normal", "inherit", "initial", "unset"]);
 
-const stripComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "");
+/* `stripComments` and the nesting-aware `blocks()` walker live in
+   `./helpers/cssBlocks` since ADR-113 — `phone-viewport-units` walks with the
+   same pair, and one walker is what keeps the two ratchets reading a sheet
+   the same way. */
 const stripFontFace = (css: string) => css.replace(/@font-face\s*\{[^}]*\}/g, "");
-
-/** Walk a sheet into (selector path, declarations) pairs, nesting-aware, so a
- *  rule inside `@media` still carries its own selector. */
-function blocks(css: string): { path: string; decls: string }[] {
-  const out: { path: string; decls: string }[] = [];
-  const stack: string[] = [];
-  let buf = "";
-  for (const ch of css) {
-    if (ch === "{") {
-      stack.push(buf.trim());
-      buf = "";
-    } else if (ch === "}") {
-      const decls = buf;
-      buf = "";
-      const sel = stack.pop() ?? "";
-      out.push({ path: [...stack, sel].join(" "), decls });
-    } else {
-      buf += ch;
-    }
-  }
-  return out;
-}
 
 function countBlock(decls: string): Counts {
   let A = 0;

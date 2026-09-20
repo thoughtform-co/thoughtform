@@ -10,11 +10,16 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
  * `.home-v2-mobile-signal`. Every one of them paints over whatever is
  * scrolling underneath, and none of them can see the document.
  *
- * The four laws this file holds, in the order they fail:
+ * The laws this file holds, in the order they fail:
  *   1. stations do not overlap each other,
- *   2. no station copy is handed to the chrome,
+ *   2. no station copy is handed to the chrome (and nothing overflows the
+ *      viewport sideways),
  *   3. the epilogue signal is dead by the time #services owns the screen,
- *   4. the chrome stays inside the two bands the stations reserve.
+ *   4. the chrome stays inside the two bands the stations reserve,
+ *   5. the padding floor and the content-visibility opt-out are live,
+ *   6. the stations are snap stops and nothing inside them is (ADR-113),
+ *   7. a stop short of a station glides onto its seat, and the one-screen
+ *      instrument seats itself from either side (ADR-113).
  *
  * ⚠ NEVER NAVIGATE BY A HARDCODED PIXEL COUNT (landing-corridor-smoke's
  * law). The corridor stage is sized in viewport units and its lazy content
@@ -23,6 +28,16 @@ import { expect, test, type Page, type TestInfo } from "@playwright/test";
  * viewport-stepped scroll, then a Playwright-side loop with a timeout that
  * re-reads where the page actually is. No bare waits, no teleports; the
  * corridor is WebGL and only a real scroll drives its frameloop.
+ *
+ * ⚠ A PROGRAMMATIC SCROLL IS A SNAP CANDIDATE (ADR-113). The root scroller is
+ * `scroll-snap-type: y proximity` on the phone rung, and Chromium re-snaps
+ * after a `scrollTo` exactly as after a flick — so a target inside the
+ * proximity radius of a station's seat LANDS ON THE SEAT, and a seek that
+ * insists on its own number never settles. `seekTo` therefore accepts a
+ * landing on a seat as settled and reports it; `rollTo` waits for the snap
+ * animation, not a fixed 650ms; and every rest below is either a seat or a
+ * mid-station read well outside the radius (Blink's is a third of the
+ * snapport: ~221px at 390×664, ~310px at 430×932).
  */
 
 test.describe.configure({ mode: "serial" });
@@ -62,58 +77,40 @@ const CHROME_SELECTORS = [
  * The ≤960 padding floors reserve the two bands at a station's ENDS; they
  * cannot reach a multi-viewport station's middle, and the TR scrim buys
  * LEGIBILITY for what passes behind the corner without licensing a
- * collision. These are the ink runs that still land inside a chrome rect at
- * the stations' own rest positions, measured 2026-09-01 at 390x844 (the
- * binding phone) with the values at 430x932 noted:
+ * collision. This map lists the ink runs that still land inside a chrome rect
+ * at the stations' rest positions. An entry comes OUT in the same commit as
+ * the measurement that finds it gone; a collision on ANY station fails the
+ * test outright, which is what stops one appearing quietly.
  *
- *   #services · `.hud__nav__btn`  — the casefile's `27 → 47` counter
- *               (glyph [279,8,52,11], 10px) and the `Intelligence Map`
- *               title (glyph [53,31,241,39], 32.8px)
- *   #services · `.rin-settings`   — a `DEEP` lane label and the directory
- *               sentence at the station's foot
- *   #about    · `.hud__nav__btn`  — a 15px bio line at the top of the beat
- *   #about    · `.hud__corner--tl`— the same line's left end (390 ONLY;
- *               430x932 is clear, the wider column moves it inboard)
- *   #about    · `.rin-settings`   — the beat's `MODE` / `∂ · 0.001`
- *               telemetry at the foot, on the settings row's own line
- *   #contact  · `.hud__nav__btn`  — `Plot your` overlaps the readout by
- *               1px at the DOCUMENT'S END, where the scroll cannot go
- *               further (390 ONLY; 932 of viewport clears it)
- *   #voidwalker · `.rin-settings` — NOT voidwalker's own copy: `#contact`'s
- *               title ("Navigate intelligence", a 293px run from x 32)
- *               passing under the cluster's column (x 323–367) by 2px,
- *               because this rest (top + 300) puts `#contact`'s top ~696
- *               into the frame. Exposed 2026-09-16 when ADR-109 took the
- *               plate accordion out of `#services` — the shorter page lands
- *               the emulator in its 912px `innerHeight` state here (it was
- *               942, which seats the cluster 14px further right); the
- *               geometry is the footer title's measure, pre-existing
- *               (390 ONLY)
- *   #voidwalker · `.hud__corner--br` — the same rest, one row lower:
- *               `#contact`'s nav row ("Navigate · Encode · Build",
- *               x 171–358, y 627–638) under the bracket (x 346–374,
- *               y 620–648). Exposed 2026-09-19 when ADR-082 U28 clipped
- *               `html`/`body` — until then the emulator ZOOMED OUT to fit
- *               a 31px `100vw` overflow and laid the page out 421×717
- *               (ADR-107's "421px wide"), which put the bracket 31px
- *               further right and the whole frame 53px taller than the
- *               device it was emulating; at the true 390×664 the row and
- *               the bracket share the last 28px. Same class as the entry
- *               above: `#contact`'s header passing under the frame on the
- *               way in, not voidwalker's own copy.
+ * ⚠ EMPTY SINCE ADR-113 (2026-09-20), BY MEASUREMENT. The rests moved with
+ * the snap seats — `stationRests()`: the seat, then NEAR (`top + 340`, the
+ * first position a reader can hold past the seat) and MID (half the height)
+ * on the tall stations — and the register read `(none)` on every station at
+ * all three, on both phone projects (390×844, 430×932). The six entries the
+ * old single rest (`top + min(0.35h, 300)`) carried, kept here as the record
+ * of what to look for if one returns:
  *
- * All of them are station INTERIORS — casefile.css, the about bio and its
- * telemetry, the contact headline — which this pass does not own. An entry
- * comes OUT of this list in the same commit as its fix; a collision on a
- * station that is NOT listed (#hero is clean at both phone shapes) fails
- * the test outright, which is what stops a seventh appearing quietly.
+ *   #services · `.hud__nav__btn` / `.rin-settings` — the casefile's `27 → 47`
+ *               counter and `Intelligence Map` title under the readout, a
+ *               `DEEP` lane label and the directory sentence at the foot
+ *               (measured 2026-09-01, before ADR-096/107 replaced the casefile
+ *               with the pile; the pile's sheets are clear at seat, near, mid)
+ *   #about    · `.hud__nav__btn` / `.hud__corner--tl` / `.rin-settings` — a
+ *               15px bio line at the top of the beat under the readout (and
+ *               its left end under the bracket at 390), the `MODE` / `∂`
+ *               telemetry on the settings row's line at the foot. At the seat
+ *               the beat's top sits inside its own 56px band; at `top + 340`
+ *               that line has scrolled clear.
+ *   #contact  · `.hud__nav__btn` — `Plot your` under the readout at the
+ *               document's end (ADR-105 deleted that line with the footer)
+ *   #voidwalker · `.rin-settings` / `.hud__corner--br` — never voidwalker's
+ *               own copy: `#contact`'s title and nav row passing under the
+ *               cluster and the bracket because the old rest (`top + 300`)
+ *               put `#contact`'s top ~696px into the frame. `.vwd` is one
+ *               screen and its rest is its SEAT now; that position is not
+ *               a rest any more.
  */
-const KNOWN_CHROME_COLLISIONS: Record<string, readonly string[]> = {
-  services: [".hud__nav__btn", ".rin-settings"],
-  about: [".hud__nav__btn", ".hud__corner--tl", ".rin-settings"],
-  voidwalker: [".rin-settings", ".hud__corner--br"],
-  contact: [".hud__nav__btn"],
-};
+const KNOWN_CHROME_COLLISIONS: Record<string, readonly string[]> = {};
 
 const BOOT_TIMEOUT = 20_000;
 const SEEK_TIMEOUT = 12_000;
@@ -155,6 +152,47 @@ async function boot(page: Page) {
   await settle(page, SETTLE_MS);
 }
 
+/**
+ * Wait for the scroll — the smooth `scrollTo` AND the snap animation that
+ * Chromium starts at scroll-end — to come to rest: `scrollend` if the engine
+ * fires it, else twelve consecutive still frames, capped.
+ * ⚠ A THREE-FRAME STILL IS NOT ENOUGH HERE: the snap starts a few frames
+ * after the smooth scroll stops, and a read taken in that gap sees a page
+ * that is about to move again.
+ */
+async function settleSnap(page: Page, capMs = 1500) {
+  await page.evaluate(
+    (cap) =>
+      new Promise<void>((resolve) => {
+        const start = performance.now();
+        let last = window.scrollY;
+        let still = 0;
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          window.removeEventListener("scrollend", onEnd);
+          resolve();
+        };
+        const onEnd = () => {
+          // One more frame so the post-snap layout is what gets read.
+          requestAnimationFrame(() => requestAnimationFrame(finish));
+        };
+        window.addEventListener("scrollend", onEnd, { once: true });
+        const tick = () => {
+          if (done) return;
+          const now = window.scrollY;
+          still = Math.abs(now - last) < 0.5 ? still + 1 : 0;
+          last = now;
+          if (still >= 12 || performance.now() - start > cap) finish();
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+    capMs
+  );
+}
+
 /** Roll to `y` in viewport-sized steps so the WebGL frameloop sees the travel. */
 async function rollTo(page: Page, y: number) {
   await page.evaluate(async (target: number) => {
@@ -168,6 +206,21 @@ async function rollTo(page: Page, y: number) {
     window.scrollTo(0, target);
   }, y);
   await page.waitForTimeout(SETTLE_MS);
+  await settleSnap(page);
+}
+
+/** The document y of every snap seat on the page (ADR-113): the three
+ *  station stops and the instrument's own top. Read fresh each time — the
+ *  corridor's lazy content moves them. */
+async function snapSeats(page: Page): Promise<number[]> {
+  return page.evaluate(() => {
+    const tops: number[] = [];
+    for (const sel of ["#services", "#about", "#contact", ".vwd"]) {
+      const el = document.querySelector<HTMLElement>(sel);
+      if (el) tops.push(el.getBoundingClientRect().top + window.scrollY);
+    }
+    return tops;
+  });
 }
 
 /**
@@ -177,6 +230,9 @@ async function rollTo(page: Page, y: number) {
  * height moves under the scroll and a single pass can land ~1200px short
  * (seen at the #services approach). The loop is the fix, the timeout is
  * what keeps it a test rather than a hang.
+ * ⚠ AND A LANDING ON A SNAP SEAT COUNTS AS SETTLED (ADR-113): the engine
+ * has answered the request the way it answers a reader's flick, and a loop
+ * that keeps asking for the un-snapped number never converges.
  */
 async function seekTo(page: Page, y: number, tolerance = 8): Promise<number> {
   const deadline = Date.now() + SEEK_TIMEOUT;
@@ -190,8 +246,65 @@ async function seekTo(page: Page, y: number, tolerance = 8): Promise<number> {
       () => document.documentElement.scrollHeight - window.innerHeight
     );
     if (y >= capped && at >= capped - tolerance) return at;
+    // Snapped: the page is resting on a seat within reach of the ask.
+    const seats = await snapSeats(page);
+    if (seats.some((s) => Math.abs(at - s) <= 1.5)) return at;
   }
   throw new Error(`seek never settled on ${y} (last read ${at})`);
+}
+
+/**
+ * Nothing on the page may be wider than the viewport, and the page may not
+ * pan sideways (ADR-082 U28 clipped the root; this is the CI half of that
+ * device read). Fixed chrome is skipped — `.gateway`/`.hud` are `100vw` plus
+ * a gutter by design and never scroll — and so is anything under an
+ * ancestor that clips or scrolls in x (the era reel's five-cell track behind
+ * its three-cell window is wider on purpose and creates no scrollable
+ * overflow). Candidate sources, should this ever go red: `.station:not(.hero)`'s
+ * `100vw` margin trick, `.svc-ring-runway`'s negative `margin-inline`, the
+ * entry-hold cell (`home-v2.css`), the canvas' `100vw`.
+ */
+async function horizontalOverflow(
+  page: Page
+): Promise<{ scrollWidth: number; clientWidth: number; scrollX: number; wide: string[] }> {
+  return page.evaluate(() => {
+    const y = window.scrollY;
+    const clientWidth = document.documentElement.clientWidth;
+    const scrollWidth = document.documentElement.scrollWidth;
+    window.scrollTo(400, y);
+    const scrollX = window.scrollX;
+    window.scrollTo(0, y);
+    const clipsX = (el: Element): boolean => {
+      let p: Element | null = el.parentElement;
+      while (p && p !== document.documentElement) {
+        const o = getComputedStyle(p).overflowX;
+        if (o === "clip" || o === "hidden" || o === "auto" || o === "scroll") return true;
+        p = p.parentElement;
+      }
+      return false;
+    };
+    const wide: string[] = [];
+    const vh = window.innerHeight;
+    for (const el of document.body.querySelectorAll<HTMLElement>("*")) {
+      const s = getComputedStyle(el);
+      if (s.display === "none" || s.visibility === "hidden") continue;
+      if (Number.parseFloat(s.opacity) < 0.05) continue;
+      if (s.position === "fixed") continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) continue;
+      if (r.bottom < 0 || r.top > vh) continue;
+      if (r.right <= clientWidth + 1 && r.left >= -1) continue;
+      if (clipsX(el)) continue;
+      const tag = el.tagName.toLowerCase();
+      const cls =
+        el.className && typeof el.className === "string"
+          ? `.${el.className.trim().split(/\s+/).slice(0, 2).join(".")}`
+          : "";
+      wide.push(`${tag}${cls} [${Math.round(r.left)}…${Math.round(r.right)}]`);
+      if (wide.length >= 12) break;
+    }
+    return { scrollWidth, clientWidth, scrollX, wide };
+  });
 }
 
 /** Scroll until `probe()` reports true, in viewport-fraction steps. */
@@ -311,20 +424,41 @@ async function visibleChrome(page: Page, selectors: readonly string[]): Promise<
 }
 
 /**
- * The scroll position at which a station is "at rest" — its own reading beat.
+ * The scroll positions at which a station is "at rest" — where a reader
+ * actually stops on it, as `{ label, y }` pairs.
+ *
  * ⚠ THE HERO'S REST IS scrollY 0 AND NOTHING ELSE. It is the departing
  * curtain (ADR-022 v8): any position inside its own viewport is the card
  * mid-travel with its headline half off the top, which is a motion frame,
  * not a beat anyone reads.
+ *
+ * ⚠ SINCE ADR-113 THE FIRST REST IS THE SEAT — the station's snap stop
+ * (`.vwd`'s top for #voidwalker, whose station keeps its own padding), which
+ * is where a stop anywhere inside the proximity radius ends up. The old single
+ * rest, `top + min(0.35h, 300)`, sat within 11px of Blink's radius at 430×932
+ * (a third of the snapport: 311; measured 280 in 40px steps) — one layout
+ * shift from being pulled onto the seat with the seek reporting a miss. A
+ * station taller than ~1.6 viewports keeps two more reads: NEAR, at `top +
+ * 340` — the first position a reader can hold past the seat, where the old
+ * rest's collisions (the bio line under the readout) were measured — and MID,
+ * at half its height, for a long station's middle (the pile). The ledger
+ * below is about those two.
  */
-async function stationRest(page: Page, id: string): Promise<number> {
-  if (id === "hero") return 0;
+async function stationRests(page: Page, id: string): Promise<{ label: string; y: number }[]> {
+  if (id === "hero") return [{ label: "seat", y: 0 }];
   return page.evaluate((stationId) => {
     const el = document.getElementById(stationId);
     if (!el) throw new Error(`missing station #${stationId}`);
+    const seatEl = stationId === "voidwalker" ? (el.querySelector<HTMLElement>(".vwd") ?? el) : el;
     const r = el.getBoundingClientRect();
     const top = r.top + window.scrollY;
-    return Math.round(top + Math.min(r.height * 0.35, 300));
+    const seat = Math.round(seatEl.getBoundingClientRect().top + window.scrollY);
+    const rests = [{ label: "seat", y: seat }];
+    if (r.height > window.innerHeight * 1.6) {
+      rests.push({ label: "near", y: Math.round(top + 340) });
+      rests.push({ label: "mid", y: Math.round(top + r.height * 0.5) });
+    }
+    return rests;
   }, id);
 }
 
@@ -377,105 +511,133 @@ test.describe("mobile section seams", () => {
     await boot(page);
 
     const open: string[] = [];
+    const sideways: string[] = [];
     for (const id of STATION_IDS) {
       const exists = await page.evaluate((s) => Boolean(document.getElementById(s)), id);
       if (!exists) continue;
 
-      await test.step(`#${id}`, async () => {
-        await seekTo(page, await stationRest(page, id));
-        await settle(page, SETTLE_MS);
+      // Warm the lazy corridor before the rests are solved: a seat read
+      // from the hero is a seat the mount then moves.
+      const rests = await stationRests(page, id);
+      for (const rest of rests) {
+        await test.step(`#${id} @${rest.label}`, async () => {
+          await seekTo(page, rest.y);
+          await settle(page, SETTLE_MS);
 
-        const chrome = await visibleChrome(page, CHROME_SELECTORS);
-        // ⚠ #hero legitimately paints NO frame: the whole HUD is clipped
-        // away behind the curtain until `--hero-lift` opens it. Everywhere
-        // else, finding nothing means the probe has stopped measuring.
-        if (id !== "hero") {
+          // Law 2's other axis (ADR-082 U28 / ADR-113): nothing wider than
+          // the viewport, and no sideways pan, at every rest.
+          const h = await horizontalOverflow(page);
+          sideways.push(
+            `#${id} @${rest.label}: scrollWidth ${h.scrollWidth}/${h.clientWidth}, scrollX ${h.scrollX}` +
+              (h.wide.length ? `, wide: ${h.wide.join(" | ")}` : "")
+          );
+          expect(h.scrollX, `#${id} @${rest.label}: the page pans sideways`).toBe(0);
           expect(
-            chrome.length,
-            "no fixed chrome found — the probe is measuring nothing"
-          ).toBeGreaterThan(0);
-        }
+            h.scrollWidth,
+            `#${id} @${rest.label}: the document is wider than the viewport`
+          ).toBeLessThanOrEqual(h.clientWidth + 1);
+          expect(h.wide, `#${id} @${rest.label}: content overflows the viewport sideways`).toEqual(
+            []
+          );
 
-        const hits = await page.evaluate((boxes) => {
-          /**
-           * ⚠ AN ELEMENT BOX IS NOT AN INK BOX, AND THE FIRST CUT OF THIS
-           * TEST FAILED ON THE DIFFERENCE. A `.fl-brief` container is 200px
-           * tall around a 39px line of type, so an element-rect test reports
-           * a collision for a headline sitting 90px clear of the corner.
-           * Range client rects are the actual glyph runs — one per line box,
-           * measured where the letters are.
-           *
-           * ⚠ AND `elementsFromPoint` CANNOT DO THIS JOB AT ALL: it skips
-           * `pointer-events: none`, which is every piece of chrome on this
-           * surface, and it answers about a POINT when the question is about
-           * an AREA. The chrome is z 60 over everything, so any station ink
-           * inside a chrome rect is by definition painting underneath it.
-           */
-          const found: { sel: string; text: string; rect: number[]; fontSize: number }[] = [];
-          for (const station of document.querySelectorAll(".station")) {
-            const walker = document.createTreeWalker(station, NodeFilter.SHOW_TEXT);
-            let node: Node | null;
-            while ((node = walker.nextNode())) {
-              const text = (node.textContent || "").trim();
-              if (text.length < 2) continue;
-              const parent = node.parentElement;
-              if (!parent) continue;
-              const cs = getComputedStyle(parent);
-              if (cs.display === "none" || cs.visibility === "hidden") continue;
-              if (Number.parseFloat(cs.opacity) < 0.05) continue;
-              const range = document.createRange();
-              range.selectNodeContents(node);
-              for (const r of Array.from(range.getClientRects())) {
-                if (r.width < 1 || r.height < 1) continue;
-                for (const box of boxes) {
-                  const b = box.rect;
-                  if (
-                    r.left < b.x + b.width &&
-                    b.x < r.right &&
-                    r.top < b.y + b.height &&
-                    b.y < r.bottom
-                  ) {
-                    found.push({
-                      sel: box.sel,
-                      text: text.slice(0, 40),
-                      rect: [
-                        Math.round(r.left),
-                        Math.round(r.top),
-                        Math.round(r.width),
-                        Math.round(r.height),
-                      ],
-                      fontSize: Number.parseFloat(cs.fontSize),
-                    });
+          const chrome = await visibleChrome(page, CHROME_SELECTORS);
+          // ⚠ #hero legitimately paints NO frame: the whole HUD is clipped
+          // away behind the curtain until `--hero-lift` opens it. Everywhere
+          // else, finding nothing means the probe has stopped measuring.
+          if (id !== "hero") {
+            expect(
+              chrome.length,
+              "no fixed chrome found — the probe is measuring nothing"
+            ).toBeGreaterThan(0);
+          }
+
+          const hits = await page.evaluate((boxes) => {
+            /**
+             * ⚠ AN ELEMENT BOX IS NOT AN INK BOX, AND THE FIRST CUT OF THIS
+             * TEST FAILED ON THE DIFFERENCE. A `.fl-brief` container is 200px
+             * tall around a 39px line of type, so an element-rect test reports
+             * a collision for a headline sitting 90px clear of the corner.
+             * Range client rects are the actual glyph runs — one per line box,
+             * measured where the letters are.
+             *
+             * ⚠ AND `elementsFromPoint` CANNOT DO THIS JOB AT ALL: it skips
+             * `pointer-events: none`, which is every piece of chrome on this
+             * surface, and it answers about a POINT when the question is about
+             * an AREA. The chrome is z 60 over everything, so any station ink
+             * inside a chrome rect is by definition painting underneath it.
+             */
+            const found: { sel: string; text: string; rect: number[]; fontSize: number }[] = [];
+            for (const station of document.querySelectorAll(".station")) {
+              const walker = document.createTreeWalker(station, NodeFilter.SHOW_TEXT);
+              let node: Node | null;
+              while ((node = walker.nextNode())) {
+                const text = (node.textContent || "").trim();
+                if (text.length < 2) continue;
+                const parent = node.parentElement;
+                if (!parent) continue;
+                const cs = getComputedStyle(parent);
+                if (cs.display === "none" || cs.visibility === "hidden") continue;
+                if (Number.parseFloat(cs.opacity) < 0.05) continue;
+                const range = document.createRange();
+                range.selectNodeContents(node);
+                for (const r of Array.from(range.getClientRects())) {
+                  if (r.width < 1 || r.height < 1) continue;
+                  for (const box of boxes) {
+                    const b = box.rect;
+                    if (
+                      r.left < b.x + b.width &&
+                      b.x < r.right &&
+                      r.top < b.y + b.height &&
+                      b.y < r.bottom
+                    ) {
+                      found.push({
+                        sel: box.sel,
+                        text: text.slice(0, 40),
+                        rect: [
+                          Math.round(r.left),
+                          Math.round(r.top),
+                          Math.round(r.width),
+                          Math.round(r.height),
+                        ],
+                        fontSize: Number.parseFloat(cs.fontSize),
+                      });
+                    }
                   }
                 }
               }
             }
+            return found;
+          }, chrome);
+
+          for (const h of hits) {
+            open.push(
+              `#${id} @${rest.label} ${h.sel} ∩ "${h.text}" @[${h.rect.join(",")}] ${h.fontSize}px`
+            );
           }
-          return found;
-        }, chrome);
 
-        for (const h of hits) {
-          open.push(`#${id} ${h.sel} ∩ "${h.text}" @[${h.rect.join(",")}] ${h.fontSize}px`);
-        }
+          const collided = [...new Set(hits.map((h) => h.sel))].sort();
+          const allowed = [...(KNOWN_CHROME_COLLISIONS[id] ?? [])].sort();
+          const unlisted = collided.filter((sel) => !allowed.includes(sel));
 
-        const collided = [...new Set(hits.map((h) => h.sel))].sort();
-        const allowed = [...(KNOWN_CHROME_COLLISIONS[id] ?? [])].sort();
-        const unlisted = collided.filter((sel) => !allowed.includes(sel));
-
-        expect(
-          unlisted,
-          `NEW chrome-over-copy on #${id}: ${hits
-            .filter((h) => unlisted.includes(h.sel))
-            .map((h) => `${h.sel} ∩ "${h.text}"`)
-            .join(" | ")}`
-        ).toEqual([]);
-      });
+          expect(
+            unlisted,
+            `NEW chrome-over-copy on #${id} @${rest.label}: ${hits
+              .filter((h) => unlisted.includes(h.sel))
+              .map((h) => `${h.sel} ∩ "${h.text}"`)
+              .join(" | ")}`
+          ).toEqual([]);
+        });
+      }
     }
 
     // The register, on every run, passing or not — an allowlist nobody can
     // read is an allowlist that grows.
     await testInfo.attach("chrome-over-copy", {
       body: open.length ? open.join("\n") : "(none)",
+      contentType: "text/plain",
+    });
+    await testInfo.attach("horizontal-overflow", {
+      body: sideways.join("\n"),
       contentType: "text/plain",
     });
   });
@@ -552,29 +714,31 @@ test.describe("mobile section seams", () => {
       const exists = await page.evaluate((s) => Boolean(document.getElementById(s)), id);
       if (!exists) continue;
 
-      await test.step(`#${id}`, async () => {
-        await seekTo(page, await stationRest(page, id));
-        await settle(page, SETTLE_MS);
+      for (const rest of await stationRests(page, id)) {
+        await test.step(`#${id} @${rest.label}`, async () => {
+          await seekTo(page, rest.y);
+          await settle(page, SETTLE_MS);
 
-        const vh = await page.evaluate(() => window.innerHeight);
-        const chrome = await visibleChrome(page, CHROME_SELECTORS);
-        if (id !== "hero") expect(chrome.length).toBeGreaterThan(0);
+          const vh = await page.evaluate(() => window.innerHeight);
+          const chrome = await visibleChrome(page, CHROME_SELECTORS);
+          if (id !== "hero") expect(chrome.length).toBeGreaterThan(0);
 
-        const strays = chrome.filter((c) => {
-          const inTop = c.rect.y + c.rect.height <= bands.top + 1;
-          const inBottom = c.rect.y >= vh - bands.bottom - 1;
-          return !inTop && !inBottom;
+          const strays = chrome.filter((c) => {
+            const inTop = c.rect.y + c.rect.height <= bands.top + 1;
+            const inBottom = c.rect.y >= vh - bands.bottom - 1;
+            return !inTop && !inBottom;
+          });
+
+          expect(
+            strays.map(
+              (s) =>
+                `${s.sel} at y ${s.rect.y.toFixed(1)}…${(s.rect.y + s.rect.height).toFixed(1)} ` +
+                `(bands: 0…${bands.top}, ${vh - bands.bottom}…${vh})`
+            ),
+            "fixed chrome is painting outside the bands the stations reserve — either move it back into a band or re-derive the two tokens in this same commit"
+          ).toEqual([]);
         });
-
-        expect(
-          strays.map(
-            (s) =>
-              `${s.sel} at y ${s.rect.y.toFixed(1)}…${(s.rect.y + s.rect.height).toFixed(1)} ` +
-              `(bands: 0…${bands.top}, ${vh - bands.bottom}…${vh})`
-          ),
-          "fixed chrome is painting outside the bands the stations reserve — either move it back into a band or re-derive the two tokens in this same commit"
-        ).toEqual([]);
-      });
+      }
     }
   });
 
@@ -618,6 +782,217 @@ test.describe("mobile section seams", () => {
         st.padBottom,
         `#${st.id} does not reserve the bottom chrome band`
       ).toBeGreaterThanOrEqual(bands.bottom - 0.5);
+    }
+  });
+
+  /* ── ADR-113: the stations are snap stops ─────────────────────────── */
+
+  const SNAP_STOPS = ["#services", "#about", "#contact", ".vwd"] as const;
+  const NOT_SNAP_AREAS = [
+    "#hero",
+    "#voidwalker",
+    ".home-v2-stage",
+    ".home-v2-stage__sticky",
+    ".pf-stack",
+    ".pf-slot",
+    ".svc-ring-runway",
+    ".svc-ring-band",
+    ".vwd__band",
+  ] as const;
+
+  async function readSnap(page: Page) {
+    return page.evaluate(
+      ({ stops, inert }) => {
+        const align = (sel: string) => {
+          const el = document.querySelector<HTMLElement>(sel);
+          return el ? getComputedStyle(el).scrollSnapAlign : "(absent)";
+        };
+        return {
+          root: getComputedStyle(document.documentElement).scrollSnapType,
+          stops: stops.map((s) => [s, align(s)] as const),
+          inert: inert.map((s) => [s, align(s)] as const),
+        };
+      },
+      { stops: [...SNAP_STOPS], inert: [...NOT_SNAP_AREAS] }
+    );
+  }
+
+  test("the stations are snap stops, and nothing inside them is (ADR-113)", async ({
+    page,
+  }, testInfo) => {
+    phonesOnly(testInfo);
+    await boot(page);
+
+    const snap = await readSnap(page);
+    // ⚠ `scroll-snap-type: y proximity` COMPUTES TO `"y"`: proximity is the
+    // default strictness and the serialisation drops it. `y mandatory` would
+    // keep its keyword — and would be the wrong container for this page.
+    expect(snap.root, "the root is not a proximity snap container on the phone").toMatch(
+      /^y( proximity)?$/
+    );
+    for (const [sel, v] of snap.stops) {
+      expect(v, `${sel} is not a snap stop`).toMatch(/^start/);
+    }
+    // ⚠ The seat is the INSTRUMENT: `#voidwalker` keeps ~67px of its own
+    // padding on the phone, so a station-top stop would seat the 100svh
+    // instrument 67px down and its era stops below the fold. The hero and
+    // the corridor host are deliberately not stops, and no sticky child
+    // (the ring band, the proof slots) may become one.
+    for (const [sel, v] of snap.inert) {
+      expect(v, `${sel} became a snap area`).toMatch(/^(none|\(absent\))$/);
+    }
+  });
+
+  test("a stop short of a station glides onto its seat; the instrument seats itself (ADR-113)", async ({
+    page,
+  }, testInfo) => {
+    phonesOnly(testInfo);
+    await boot(page);
+
+    const seatOf = (sel: string) =>
+      page.evaluate((s) => {
+        const el = document.querySelector<HTMLElement>(s);
+        if (!el) throw new Error(`missing ${s}`);
+        return Math.round(el.getBoundingClientRect().top + window.scrollY);
+      }, sel);
+    const topOf = (sel: string) =>
+      page.evaluate((s) => {
+        const el = document.querySelector<HTMLElement>(s)!;
+        const r = el.getBoundingClientRect();
+        return { top: r.top, height: r.height, vh: window.innerHeight };
+      }, sel);
+    const maxScroll = () =>
+      page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+
+    const landings: string[] = [];
+    for (const sel of SNAP_STOPS) {
+      await test.step(sel, async () => {
+        // Get near first so the lazy corridor has mounted, then re-read the
+        // seat: a seat solved from the hero is a seat the mount then moves.
+        await seekTo(page, Math.max(0, (await seatOf(sel)) - 40));
+        const seat = await seatOf(sel);
+
+        // Short of the seat: inside the proximity radius, so the stop
+        // glides onto it — the owner's "components lock in".
+        await rollTo(page, Math.max(0, seat - 40));
+        const short = await topOf(sel);
+        landings.push(`${sel} seat−40 → top ${short.top.toFixed(1)}`);
+        expect(
+          Math.abs(short.top),
+          `${sel}: a stop 40px short of the seat did not glide onto it`
+        ).toBeLessThanOrEqual(1.5);
+
+        // Past the seat. A station TALLER than the screen stays where the
+        // reader stopped (the covering rule — right for a section you read
+        // down); the one-screen instrument snaps back, which is the second
+        // of the owner's two stills.
+        if (seat + 60 > (await maxScroll())) {
+          landings.push(`${sel} seat+60 → (past the document's end, not asked)`);
+          return;
+        }
+        await rollTo(page, seat + 60);
+        const past = await topOf(sel);
+        landings.push(
+          `${sel} seat+60 → top ${past.top.toFixed(1)} (h ${Math.round(past.height)} / vh ${past.vh})`
+        );
+        if (past.height > past.vh + 1) {
+          expect(
+            past.top,
+            `${sel}: a station taller than the screen was pulled back to its seat from 60px past it`
+          ).toBeLessThanOrEqual(-58);
+        } else {
+          expect(
+            Math.abs(past.top),
+            `${sel}: the one-screen instrument did not snap back from 60px past its seat`
+          ).toBeLessThanOrEqual(1.5);
+        }
+      });
+    }
+
+    // The seated instrument, both stills at once: the era stops on screen
+    // above the settings row, the title clear of the readout and the TL
+    // bracket. This is what the snap is FOR.
+    await test.step(".vwd seated", async () => {
+      await seekTo(page, await seatOf(".vwd"));
+      await settle(page, SETTLE_MS);
+      const chrome = await visibleChrome(page, [
+        ".hud__nav__btn",
+        ".hud__corner--tl",
+        ".rin-settings",
+      ]);
+      const seated = await page.evaluate((boxes) => {
+        const vwd = document.querySelector<HTMLElement>(".vwd")!;
+        const band = vwd.querySelector<HTMLElement>(".vwd__band");
+        const title = vwd.querySelector<HTMLElement>(".vwd__mast__title");
+        const hits: string[] = [];
+        if (title) {
+          const range = document.createRange();
+          range.selectNodeContents(title);
+          for (const r of Array.from(range.getClientRects())) {
+            for (const b of boxes) {
+              const x = b.rect;
+              if (
+                r.left < x.x + x.width &&
+                x.x < r.right &&
+                r.top < x.y + x.height &&
+                x.y < r.bottom
+              ) {
+                hits.push(`${b.sel} ∩ title`);
+              }
+            }
+          }
+        }
+        const settings = boxes.find((b) => b.sel === ".rin-settings");
+        const bandRect = band?.getBoundingClientRect() ?? null;
+        // ⚠ THE BAND'S BOX REACHES THE FLOOR BY DESIGN — it is `bottom: 0`
+        // inside `.vwd` and its padding-bottom IS the chrome reserve. What may
+        // not run under the settings row is the STOPS' ink: the chips' union,
+        // which `probe-voidwalker-phone.mjs` measures the same way.
+        const chips = Array.from(vwd.querySelectorAll<HTMLElement>(".vwd__chip"))
+          .map((c) => c.getBoundingClientRect())
+          .filter((r) => r.width > 0 && r.height > 0);
+        const chipsBottom = chips.length ? Math.max(...chips.map((r) => r.bottom)) : null;
+        return {
+          vwdTop: vwd.getBoundingClientRect().top,
+          bandBottom: bandRect ? bandRect.bottom : null,
+          chipsBottom,
+          settingsTop: settings ? settings.rect.y : null,
+          vh: window.innerHeight,
+          hits,
+        };
+      }, chrome);
+      expect(Math.abs(seated.vwdTop), "the instrument is not on its seat").toBeLessThanOrEqual(1.5);
+      expect(seated.bandBottom, "the era band is missing").not.toBeNull();
+      expect(seated.bandBottom!, "the era band is below the fold").toBeLessThanOrEqual(
+        seated.vh + 1
+      );
+      expect(seated.chipsBottom, "no era stops are painting").not.toBeNull();
+      expect(seated.chipsBottom!, "the era stops are below the fold").toBeLessThanOrEqual(
+        seated.vh + 1
+      );
+      if (seated.settingsTop !== null) {
+        expect(
+          seated.chipsBottom!,
+          `the era stops (bottom ${seated.chipsBottom!.toFixed(1)}) run under the settings row (top ${seated.settingsTop.toFixed(1)})`
+        ).toBeLessThanOrEqual(seated.settingsTop + 0.5);
+      }
+      expect(seated.hits, "the title prints under the chrome").toEqual([]);
+    });
+
+    await testInfo.attach("snap-landings", {
+      body: landings.join("\n"),
+      contentType: "text/plain",
+    });
+  });
+
+  test("the desktop declares no snap (byte-identity)", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "the snap seats are a phone rule");
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".home-v2-stage", { timeout: BOOT_TIMEOUT });
+    const snap = await readSnap(page);
+    expect(snap.root).toBe("none");
+    for (const [sel, v] of [...snap.stops, ...snap.inert]) {
+      expect(v, `${sel} snaps on the desktop`).toMatch(/^(none|\(absent\))$/);
     }
   });
 });

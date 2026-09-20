@@ -554,6 +554,15 @@ RING_CONTENT_LIFT)`, `rotation.y = π`, FrontSide, renderOrder 0.115, its
   in the gate test). The lockstep table above gains `backFace.ts` +
   `ringType.ts` (the back's rows and rungs) and `useServicesStageScroll.ts`
   (the seat).
+- ⚠ **THE BAND'S CLOCK READS THE LAYOUT VIEWPORT (ADR-113).** `bandTravel` is
+  `300svh − vh`, and `vh` was `window.innerHeight` — which on iOS follows the
+  toolbar, so the ring rotated ~4.6 % of its runway while the thumb was still.
+  `useServicesStageScroll` reads `layoutViewportHeight()` now (the ICB, what
+  `100svh` resolves to). ⚠ And the band lives INSIDE a snap area: `#services`
+  is a `scroll-snap-align: start` stop on the phone rung; the sticky band
+  itself is not, and the side-tap tween's beats rest far outside any proximity
+  radius of `#about`'s stop (`mobile-section-seams.spec.ts`, `probe-mobile-
+lockin.mjs`). Rules in `mobile-sections.md` §10.
 - **Verifying:** `npx vitest run tests/lib/services-ring-mobile-gate.test.ts
 tests/lib/ring-type.test.ts` (the three readers, the bake, the clock, the
   scale solve re-projected, the seat, the beat inverse, the back's fit over

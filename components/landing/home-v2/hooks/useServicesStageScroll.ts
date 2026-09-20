@@ -12,6 +12,7 @@ import {
 import { clamp01 } from "@/lib/math";
 import { readCorridorDissipate } from "@/lib/home-v2/corridorDissipateRef";
 import { servicesRingProgressRef } from "@/lib/services-ring/ringProgressRef";
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 import { browseClientCount, browseSeamClocks } from "../services/casefile/browseMap";
 import {
   SERVICES_PROOF_BROWSE_FRAC,
@@ -514,7 +515,7 @@ export function useServicesStageScroll(
           ringBandEl = stage.querySelector<HTMLElement>(".svc-ring-runway");
         }
         if (ringBandEl) {
-          const vh = window.innerHeight || 1;
+          const vh = layoutViewportHeight();
           const band = ringBandEl.getBoundingClientRect();
           const bandTravel = Math.max(1, band.height - vh);
           const clock = ringMobileClock(-band.top / bandTravel);
@@ -573,7 +574,7 @@ export function useServicesStageScroll(
       const dissipate = readCorridorDissipate(1);
       const runway = stage.parentElement; // .services-stage-root (the tall slot)
       if (!runway) return;
-      const vh = window.innerHeight || 1;
+      const vh = layoutViewportHeight();
       const r = runway.getBoundingClientRect();
       const travel = r.height - vh;
 

@@ -411,6 +411,46 @@ pin (`sv`) and every window authored in the same unit, a shorter runway can
 only TRUNCATE the scene — and a unit test can read the runway out of the
 sheet and pin the last window under it (ADR-102, `trinny-seam`).
 
+### `innerHeight` follows the phone's toolbar; the geometry it drives is in `svh`
+
+**Why it matters:** on iOS Safari `window.innerHeight` grows by the toolbar's
+height (~99px on an iPhone 14) as the bar collapses, while `100svh` — every
+runway, band and card height on this site — holds. A scroll clock that divides
+an svh-sized runway by `innerHeight` therefore MOVES WHILE THE THUMB IS STILL:
+the ring rotated a fraction of a beat, the proof pile's `--pc-depth` stepped
+its scale and opacity, the corridor camera drifted, the epilogue signal
+jumped. The owner read all of it as "the section takes a bit to settle".
+
+```ts
+// ✅ the initial containing block — what 100svh resolves to, stable across the bar
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
+const vh = layoutViewportHeight(); // documentElement.clientHeight || innerHeight
+
+// ❌ the dynamic viewport, against an svh runway
+const vh = window.innerHeight;
+```
+
+The one exception is `--hero-lift = scrollY / innerHeight`: the hero is
+`100dvh` on purpose, so that pair is self-consistent and lift = 1 ⇔ the
+curtain has cleared. `layout-viewport-height.test.ts` pins the adopters by
+source and that exception at exactly one read; desktop is byte-identical by
+arithmetic (`clientHeight` excludes only a horizontal scrollbar, which this
+site never renders). ⚠ Chromium resolves every viewport unit to one number,
+so no CI project can tell the two reads apart — the source pin and the device
+are the proofs (ADR-113, `mobile-sections.md` §10).
+
+### A programmatic scroll is a snap candidate
+
+**Why it matters:** with `scroll-snap-type: y proximity` on the root (the
+phone rung since ADR-113), Chromium re-snaps after a `scrollTo` exactly as
+after a flick. A harness seat inside the proximity radius of a station's stop
+LANDS ON THE STOP, and a seek loop that insists on its own number never
+converges — it reads as a hang, not as a snap. Accept a landing within a pixel
+or two of a seat as settled and report it; wait on `scrollend` or a dozen
+still frames, because the snap animation starts a few frames after the smooth
+scroll stops. And read the computed value as `"y"`: proximity is the default
+strictness and the serialisation drops it (`mobile-section-seams.spec.ts`).
+
 ## 🧷 DOM Pinning & ScrollTrigger (brandmark / fixed actors)
 
 > See also: [ADR-010](decisions/010-brandmark-choreography.md), `.claude/skills/brandmark-choreography/SKILL.md`.  

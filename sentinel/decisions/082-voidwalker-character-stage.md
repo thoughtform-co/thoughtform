@@ -3543,3 +3543,29 @@ or the next pass tunes against the wrong one.
 - The reference letters its labels almost as large as its heads (1.76 against
   1.85svh); this ladder keeps a clearer step (1.2 against 1.55) because the
   head is mono caps at `--track-eyebrow` and reads larger than it measures.
+
+## Update 30 — the phone's instrument is a snap seat, and U26's live reserve is reversed (2026-09-20, owner)
+
+A pointer: the decision is [ADR-113](113-the-phone-locks-in.md). Two things
+about this station change under it, both on the phone rung only.
+
+- **`.vwd` is the station's snap stop** — `scroll-snap-align: start` on the
+  INSTRUMENT (`voidwalker.css` ≤960), never on `#voidwalker`, whose padding
+  would seat the 100svh box ~67px down and its era stops below the fold (U23's
+  probe law, now in the sheet). Until this, nothing locked the instrument to
+  the viewport at all: the owner's two stills were the same box ~50px high
+  (the title on the TL bracket) and ~100px low (the stops under the settings
+  icon). Both land now.
+- **U26 §1's live reserve is retired.** `--vwd-chrome-clear` was
+  `max(0px, calc(var(--mobile-chrome-bottom) - (100dvh - 100svh)))` so the
+  strip below the svh box was not paid twice once the toolbar collapsed. The
+  term is a `dvh` inside content and it reflowed the band, the stage's floor
+  and the figure's slot for every frame of the bar animation — what he read as
+  the section "settling". It is `var(--mobile-chrome-bottom)` again; the 56px
+  of figure column it costs in the collapsed state buys a box that does not
+  move. U26's canvas backdrop (`100dvh; min-height: 100lvh`) is untouched —
+  nothing is laid out inside a backdrop, which is the whole distinction.
+
+`probe-voidwalker-phone.mjs` is byte-identical before and after (Chromium
+resolves the units to one number); `phone-viewport-units.test.ts` pins the
+datum sheet at zero `dvh`/`lvh` terms.

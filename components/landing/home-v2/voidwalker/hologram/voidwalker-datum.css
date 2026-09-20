@@ -1201,8 +1201,18 @@ a.vwd__press:focus-visible .vwd__press__headline {
     --vwd-cell: calc((100vw - 2 * var(--vwd-pad-x)) / 3);
     /* The strip the era band occupies, spent TWICE and therefore declared
        once: the band pads itself by it, and the stage reserves it so the
-       reading — and now the figure — never runs under the stops. */
-    --vwd-chrome-clear: max(0px, calc(var(--mobile-chrome-bottom, 56px) - (100dvh - 100svh)));
+       reading — and now the figure — never runs under the stops.
+       ⚠ A CONSTANT, AND IT WAS A LIVE TERM FOR ONE DAY (ADR-113, owner
+       2026-09-20: "the components … take a bit to settle"). ADR-082 U26 made
+       it `max(0px, calc(--mobile-chrome-bottom - (100dvh - 100svh)))` so the
+       reserve was not paid twice once the toolbar collapsed — and
+       `100dvh − 100svh` is the live toolbar height, so the reserve, the
+       stage's floor and the figure's slot REFLOWED FOR EVERY FRAME OF THE BAR
+       ANIMATION. Content stays in svh (mobile-sections.md §8); the strip
+       below the svh box belongs to the canvas backdrop, and the chrome sits
+       in it. 56px of figure column in the collapsed state is the price of
+       stillness. */
+    --vwd-chrome-clear: var(--mobile-chrome-bottom, 56px);
     --vwd-band-reserve: calc(clamp(6px, 1svh, 10px) + var(--vwd-stop-h) + var(--vwd-chrome-clear));
     /* ⚠ A BOUNDED HEIGHT, NOT JUST A FLOOR. With `min-height` alone the
        root grows to its content, so every `flex: 1 1 auto` below it had
@@ -1635,20 +1645,21 @@ a.vwd__press:focus-visible .vwd__press__headline {
        eras, the defect the deleted band rule below recorded). Nothing comes
        back out of `--mobile-chrome-bottom`: `--hud-margin` is already inside it.
 
-       ⚠ BUT "THIS ELEMENT'S OWN BOTTOM EDGE IS THAT FLOOR" IS FALSE ON A REAL
-       iPHONE, AND THAT CLAUSE STOOD HERE UNTIL ADR-082 U26. `.vwd` is
-       `100svh`, which on iOS Safari is the SMALL viewport — so with the
-       toolbar collapsed the instrument ends ~99 CSS px ABOVE the floor the
-       switch is pinned to, and the band then reserved a strip that was already
-       below it. Paid twice, and it is most of the dead screen the owner read
-       as "a pane at the bottom that consumes a lot of real estate".
-       ⚠ `100dvh - 100svh` IS THE LIVE TOOLBAR HEIGHT — zero while the toolbar
-       is shown (where the clearance is genuinely needed, because the
-       instrument's floor and the viewport's coincide) and the full offset once
-       it collapses (where the chrome is below the instrument entirely). So the
-       reserve is what is STILL above the chrome, never a constant.
-       ⚠ INERT IN CI: Chromium resolves dvh and svh to one number, so the term
-       is 0 and every phone project measures exactly what it measured before. */
+       ⚠ "THIS ELEMENT'S OWN BOTTOM EDGE IS THAT FLOOR" IS FALSE ON A REAL
+       iPHONE. `.vwd` is `100svh`, the SMALL viewport, so with the toolbar
+       collapsed the instrument ends ~99 CSS px ABOVE the floor the switch is
+       pinned to, and this reserve is then a strip that is already clear of
+       the chrome — paid twice. ADR-082 U26 answered that with a LIVE term
+       (`100dvh − 100svh`, the toolbar's height) and ADR-113 took it back out
+       the next day: the term made the band, the stage's floor and the
+       figure's slot reflow for every frame of the toolbar animation, which
+       the owner read as the section "settling". The strip below the svh box
+       is the canvas backdrop's to fill (`100dvh; min-height: 100lvh`), not
+       this instrument's to grow into; a constant reserve costs 56px of figure
+       column in the collapsed state and moves nothing while the bar animates.
+       ⚠ INERT IN CI EITHER WAY: Chromium resolves dvh and svh to one number,
+       so the phone projects measure the same box before and after — the
+       units ratchet (`phone-viewport-units.test.ts`) is the in-repo proof. */
     padding-bottom: var(--vwd-chrome-clear);
     /* ⚠ ONE RULE, BOTH THEMES. `--void-rgb` flips to parchment under ADR-058,
        so this is a fade to ink over the corridor in dark and to paper in light

@@ -922,6 +922,18 @@ html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"].station {
     padding-top: clamp(56px, 9svh, 96px);
     padding-bottom: clamp(56px, 9svh, 96px);
   }
+  /* ADR-113: the phone's snap seat is the INSTRUMENT, never the station.
+     The station keeps the padding above, so a station-top seat would put
+     the 100svh instrument ~67px down and its era stops below the fold —
+     `probe-voidwalker-phone.mjs`'s own seat law. `.vwd` is one snapport
+     tall, so a stop on either side of it snaps to it: both of the owner's
+     stills (the title on the bracket, the stops under the settings icon)
+     were this instrument seated ~50px high and ~100px low, with nothing
+     locking it. The root's `scroll-snap-type: y proximity` is landing.css's
+     last block. */
+  .vwd {
+    scroll-snap-align: start;
+  }
   .vw {
     --vw-lane: 32px;
     column-gap: 16px;
