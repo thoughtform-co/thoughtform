@@ -51,6 +51,11 @@
 
 import { decodeClock, headIntro, headLead, type HeadCol } from "./turnClock";
 import { seamDecodeFrame, seamWall, typeCounts, typedSlice, type SeamPair } from "./seamDecode";
+/* The line walker and the leaf's dressing are the house's since ADR-114
+   (`lib/home-v2/lineLeaves.ts`) — the phone's two bands decode centred runs
+   on the same per-line leaves. Byte-identical to the functions this file
+   carried; only their home moved. */
+import { dress, firstText, lineBoxes, type Line } from "@/lib/home-v2/lineLeaves";
 
 /** The three scene beats, in reading order. */
 const BEATS = ["#configuration", "#phases", "#outcomes"] as const;
@@ -107,16 +112,6 @@ interface Run {
   mode: "scramble" | "type";
 }
 
-/** The first non-blank Text child of an element — the title's `pre`, which
- *  React renders as its own node beside the `" "` and the `<em>`. */
-function firstText(el: Element | null): Text | null {
-  if (!el) return null;
-  for (const n of el.childNodes) {
-    if (n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim()) return n as Text;
-  }
-  return null;
-}
-
 /** A column's runs, in reading order. A run the head does not carry (no
  *  `em`, say) is simply absent on both sides. */
 function runsOf(head: HTMLElement, col: HeadCol): Run[] {
@@ -138,67 +133,6 @@ function runsOf(head: HTMLElement, col: HeadCol): Run[] {
     push(intro?.querySelector<HTMLElement>(":scope > .arc-head__coord") ?? null, "scramble");
   }
   return runs;
-}
-
-interface Line {
-  text: string;
-  left: number;
-  top: number;
-  height: number;
-}
-
-/**
- * The rendered lines of one text node: every word's rect, grouped by the
- * line it sits on. The line's text is the node's own substring from its
- * first word's start to its last word's end, so a line reads exactly as the
- * browser broke it.
- */
-function lineBoxes(node: Text): Line[] {
-  const text = node.textContent ?? "";
-  const lines: (Line & { end: number; start: number })[] = [];
-  const re = /\S+/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text))) {
-    const range = document.createRange();
-    range.setStart(node, m.index);
-    range.setEnd(node, m.index + m[0].length);
-    const r = range.getBoundingClientRect();
-    range.detach();
-    if (r.width === 0 && r.height === 0) continue;
-    const last = lines[lines.length - 1];
-    if (last && Math.abs(last.top - r.top) < 2) {
-      last.end = m.index + m[0].length;
-      last.left = Math.min(last.left, r.left);
-      last.height = Math.max(last.height, r.height);
-    } else {
-      lines.push({
-        text: "",
-        start: m.index,
-        end: m.index + m[0].length,
-        left: r.left,
-        top: r.top,
-        height: r.height,
-      });
-    }
-  }
-  return lines.map((l) => ({
-    text: text.slice(l.start, l.end),
-    left: l.left,
-    top: l.top,
-    height: l.height,
-  }));
-}
-
-/** Write the run's face onto a leaf, once. */
-function dress(leaf: HTMLElement, cs: CSSStyleDeclaration): void {
-  leaf.style.fontFamily = cs.fontFamily;
-  leaf.style.fontSize = cs.fontSize;
-  leaf.style.fontWeight = cs.fontWeight;
-  leaf.style.lineHeight = cs.lineHeight;
-  leaf.style.letterSpacing = cs.letterSpacing;
-  leaf.style.textTransform = cs.textTransform;
-  leaf.style.color = cs.color;
-  leaf.style.textShadow = cs.textShadow;
 }
 
 /**
