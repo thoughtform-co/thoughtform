@@ -1,8 +1,10 @@
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 /**
- * MediaLightbox — one film or walkthrough, over the page, at its own shape.
+ * MediaLightbox — one film, walkthrough or still, over the page, at its own
+ * shape.
  *
  * Extracted from `FilmsPlate` (2026-07-31) so the tool gallery reuses it
  * rather than growing a second copy. That is not tidiness: the two behaviours
@@ -37,11 +39,27 @@ interface MediaLightboxProps {
    * the only thing a caller without `embed` can notice, which is nothing.
    *
    * ⚠ The `src` must be an origin `frame-src` allows (`lib/security/headers.mjs`
-   * names one: `youtube-nocookie.com`). A URL from anywhere else renders
-   * today, because the CSP still ships report-only, and dies the day it is
-   * enforced — check the console, not the picture.
+   * names one: `youtube-nocookie.com`). The CSP is ENFORCED (since 2026-09-01),
+   * so a URL from anywhere else is a blank frame with a console violation —
+   * check the console, not the picture.
    */
   embed?: { src: string; title: string };
+  /**
+   * A STILL instead of a film (ADR-082 U31 — the era stage's transmission pile
+   * holds images beside videos). Ignored when `embed` is passed; wins over
+   * `src`, which a caller with a still has no reason to pass.
+   *
+   * ⚠ ADDITIVE ON THE SAME TERMS AS `embed`. `tests/lib/media-lightbox-markup
+   * .test.tsx` pinned the `src` and `embed` branches BEFORE this one existed,
+   * and both snapshots must pass untouched.
+   *
+   * ⚠ `width` / `height` ARE THE FILE'S OWN PIXELS. The dialog shows the image
+   * WHOLE, at its own shape — the card that opened it shows a `cover` window —
+   * and the frame shrinks to the image rather than holding a 16:9 box around
+   * it, so a portrait photograph does not sit in a letterbox with its label a
+   * column away. Self-hosted or an origin `img-src` names; nothing else loads.
+   */
+  image?: { src: string; alt: string; width: number; height: number };
   /** Mono caps line above the video, e.g. "Smug Owl · Loop ATL". */
   label: string;
   /** Second half of that line, e.g. "16:9 master · 30 sec". */
@@ -178,8 +196,10 @@ export function useDialogShell(onClose: () => void) {
   return { dialogRef, close };
 }
 
-export function MediaLightbox({ src, embed, label, meta, onClose }: MediaLightboxProps) {
+export function MediaLightbox({ src, embed, image, label, meta, onClose }: MediaLightboxProps) {
   const { dialogRef, close } = useDialogShell(onClose);
+  /* `embed` outranks everything, as it always has; a still outranks a file. */
+  const still = embed ? undefined : image;
 
   return createPortal(
     <div
@@ -197,7 +217,9 @@ export function MediaLightbox({ src, embed, label, meta, onClose }: MediaLightbo
         if (e.target === e.currentTarget) close();
       }}
     >
-      <div className="fl-lightbox__frame">
+      <div
+        className={still ? "fl-lightbox__frame fl-lightbox__frame--still" : "fl-lightbox__frame"}
+      >
         <span className="fl-lightbox__label">
           {label}
           {meta ? (
@@ -221,6 +243,18 @@ export function MediaLightbox({ src, embed, label, meta, onClose }: MediaLightbo
             allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
             allowFullScreen
             referrerPolicy="strict-origin-when-cross-origin"
+          />
+        ) : still ? (
+          /* The still, WHOLE. `sizes` names the frame's own ceiling (1120px
+             inside the dialog's padding), so the optimizer never serves a
+             wider file than the box can show. */
+          <Image
+            className="fl-lightbox__still"
+            src={still.src}
+            alt={still.alt}
+            width={still.width}
+            height={still.height}
+            sizes="(max-width: 1184px) 100vw, 1120px"
           />
         ) : (
           <video

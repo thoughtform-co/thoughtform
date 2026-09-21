@@ -71,6 +71,54 @@ describe("MediaLightbox markup (ADR-082 U31 pin)", () => {
     expect(el?.querySelector("video")).toBeNull();
   });
 
+  it("the `image` branch — a still, whole, in a frame that shrinks to it", () => {
+    render(
+      <MediaLightbox
+        image={{
+          src: "/images/voidwalker/media/film-latent-land.jpg",
+          alt: "A frame from the film.",
+          width: 960,
+          height: 540,
+        }}
+        label="Welcome to Latent Land"
+        meta="2023"
+        onClose={noop}
+      />
+    );
+    const el = dialog();
+    const img = el?.querySelector<HTMLImageElement>("img.fl-lightbox__still");
+    expect(img?.getAttribute("alt")).toBe("A frame from the film.");
+    // The file's own pixels: the box is solved from these, never from 16:9.
+    expect(img?.getAttribute("width")).toBe("960");
+    expect(img?.getAttribute("height")).toBe("540");
+    expect(el?.querySelector(".fl-lightbox__frame")?.className).toBe(
+      "fl-lightbox__frame fl-lightbox__frame--still"
+    );
+    // One medium per dialog.
+    expect(el?.querySelector("video, iframe")).toBeNull();
+    expect(el?.querySelector(".fl-lightbox__close")?.textContent).toBe("Close");
+  });
+
+  it("an embed outranks a still, and the frame keeps the film's box", () => {
+    render(
+      <MediaLightbox
+        embed={{ src: "https://www.youtube-nocookie.com/embed/a5-DcdfxCvU", title: "t" }}
+        image={{
+          src: "/images/voidwalker/media/film-latent-land.jpg",
+          alt: "a",
+          width: 1,
+          height: 1,
+        }}
+        label="t"
+        onClose={noop}
+      />
+    );
+    const el = dialog();
+    expect(el?.querySelector("iframe")).not.toBeNull();
+    expect(el?.querySelector("img")).toBeNull();
+    expect(el?.querySelector(".fl-lightbox__frame")?.className).toBe("fl-lightbox__frame");
+  });
+
   it("omits the meta separator when there is no meta", () => {
     render(<MediaLightbox src="/videos/cases/smug-owl.mp4" label="Smug Owl" onClose={noop} />);
     expect(dialog()?.querySelector(".fl-lightbox__label")?.innerHTML).toBe("Smug Owl");

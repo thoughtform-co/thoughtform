@@ -6463,6 +6463,35 @@
     0 30px 80px rgba(0, 0, 0, 0.6);
 }
 
+/* A STILL, AT ITS OWN SHAPE (ADR-082 U31 — the era stage's transmission pile
+   holds images beside films). The film's box is 16:9 by declaration; a still's
+   is whatever the file is, so the FRAME shrinks to the picture instead of
+   holding a wide box around it — otherwise a portrait photograph sits in a
+   letterbox with its label a column away on the left and Close a column away
+   on the right.
+   ⚠ `width: auto` + `height: auto` UNDER BOTH MAXIMA. The `<img>` carries the
+   file's pixel size as attributes (next/image), and the two `max-*` terms
+   transfer through its aspect ratio, so whichever binds, the other follows.
+   ⚠ NO GROUND. There is no letterbox to fill, and a cut-out with alpha should
+   sit on the dialog's own scrim rather than on a black plate. */
+.fl-lightbox__frame--still {
+  width: auto;
+  max-width: min(1120px, 100%);
+}
+.fl-lightbox__still {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(100svh - clamp(120px, 18vh, 200px));
+  border: 1px dashed var(--fl-lb-border);
+  border-radius: 0;
+  box-shadow:
+    0 0 0 1px rgba(var(--dawn-rgb), 0.05),
+    0 0 60px rgba(var(--gold-rgb), 0.1),
+    0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
 .fl-lightbox__close {
   align-self: flex-end;
   appearance: none;
