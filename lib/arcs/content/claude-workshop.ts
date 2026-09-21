@@ -15,6 +15,7 @@ export const CLAUDE_WORKSHOP_ARC: ArcDef = {
   slug: "claude-workshop",
   format: "workshop",
   status: "shipped",
+  date: "2026-07-27",
   cardTitle: "The Claude workshop",
   cardLede:
     "A hands-on getting-started chapter — the right toggles, the right models, connectors, and your first Skills.",

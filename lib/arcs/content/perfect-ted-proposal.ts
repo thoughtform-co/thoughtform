@@ -21,6 +21,7 @@ export const PERFECT_TED_PROPOSAL_ARC: ArcDef = {
   slug: "perfect-ted-proposal",
   format: "proposal",
   status: "proposed",
+  date: "2026-09-12",
   client: "perfect-ted",
   kind: "production",
   theme: "light",

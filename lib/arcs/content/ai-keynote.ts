@@ -21,6 +21,7 @@ export const AI_KEYNOTE_ARC: ArcDef = {
   slug: "ai-keynote",
   format: "keynote",
   status: "shipped",
+  date: "2026-07-27",
   cardTitle: "The creative AI keynote",
   cardLede:
     "The speed layer for creative teams — proof from the floor, the substrate argument, and where agents take it.",

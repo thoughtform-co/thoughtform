@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { caseModeLabel, dossierHead } from "@/components/arcs/ArcDossier";
@@ -832,6 +835,58 @@ describe("arcs registry (ADR-052)", () => {
       // drift the moment either page's copy is edited.
       expect(v2?.sections).toBe(v1?.sections);
       expect(v2?.hero).toBe(v1?.hero);
+    }
+  });
+
+  it("every engagement carries its filing date, and the order agrees with it (ADR-118)", () => {
+    /* ADR-098 refused a date that "only ever feeds a sort" — a second place
+       for the order to be wrong. The date feeds the overview's MONITOR now,
+       a plot, so it exists; and the registry's order is checked AGAINST it
+       rather than standing beside it as a second fact. */
+    const ISO = /^\d{4}-\d{2}-\d{2}$/;
+    const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+    const valid = (iso: string) => {
+      const [y, m, d] = iso.split("-").map(Number);
+      const t = new Date(Date.UTC(y, m - 1, d));
+      return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+    };
+    const dated: { id: string; date: string; client?: string }[] = [
+      ...ARCS.map((a) => ({ id: a.slug, date: a.date, client: a.client })),
+      ...CLIENTS.flatMap((c) =>
+        (c.pages ?? []).map((p) => ({ id: p.href, date: p.date, client: c.slug }))
+      ),
+    ];
+    for (const { id, date, client } of dated) {
+      expect(date, `${id}: date`).toMatch(ISO);
+      expect(valid(date), `${id}: ${date} is a real day`).toBe(true);
+      expect(date <= tomorrow, `${id}: ${date} is in the future`).toBe(true);
+      const since = client ? getClient(client)?.since : undefined;
+      if (since)
+        expect(date.slice(0, 4) >= since, `${id}: filed before its client's since`).toBe(true);
+    }
+    // Inside a client the registry is newest first, and the dates must agree.
+    for (const c of CLIENTS) {
+      const dates = arcsOf(c.slug).map((a) => a.date);
+      expect([...dates].sort().reverse(), `${c.slug}: arcs newest first`).toEqual(dates);
+    }
+  });
+
+  it("a terminal cut files its OWN date, never its v1's by the spread (ADR-118)", () => {
+    /* The v2 modules spread their v1 wholesale, so a v2 that authored no
+       date would silently inherit v1's and plot on top of it. */
+    const pairs: readonly [string, string][] = [
+      ["claude-workshop", "claude-workshop-v2"],
+      ["ai-keynote", "ai-keynote-v2"],
+    ];
+    for (const [v1Slug, v2Slug] of pairs) {
+      const v1 = getArc(v1Slug)!;
+      const v2 = getArc(v2Slug)!;
+      expect(v2.date >= v1.date, `${v2Slug} is dated no earlier than ${v1Slug}`).toBe(true);
+      const src = readFileSync(
+        join(__dirname, "..", "..", "lib", "arcs", "content", `${v2Slug}.ts`),
+        "utf8"
+      );
+      expect(src, `${v2Slug} authors its own date`).toMatch(/^\s*date: "\d{4}-\d{2}-\d{2}",$/m);
     }
   });
 });

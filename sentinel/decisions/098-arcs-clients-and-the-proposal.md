@@ -66,6 +66,12 @@ that already shares their v1's sections.
 first within a client. A date that only ever feeds a sort is a second place for
 the same fact to be wrong.
 
+⚠ **REVERSED BY [ADR-118](118-the-arcs-overview-is-an-instrument.md) §5
+(2026-09-21), on this paragraph's own terms**: the date feeds a PLOT there —
+the overview's monitor places each engagement by it — and the registry order it
+could contradict is guarded against it, so the two cannot tell two stories.
+U2's "pages lead" goes with it: a client's pages and arcs sort together by date.
+
 **The chip stays `cardChip ?? format`.** Two productions would print one word
 twice on the overview, and `arc-terminal-smoke` asserts the chips distinguish
 the cards.

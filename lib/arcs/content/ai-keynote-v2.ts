@@ -13,6 +13,8 @@ export const AI_KEYNOTE_V2_ARC: ArcDef = {
   ...AI_KEYNOTE_ARC,
   slug: "ai-keynote-v2",
   motion: "terminal",
+  // The cut's OWN date — the spread above would inherit v1's (ADR-118).
+  date: "2026-08-01",
   cardTitle: "The creative AI keynote · V2",
   cardChip: "keynote · v2",
   meta: {

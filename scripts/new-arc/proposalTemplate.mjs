@@ -23,7 +23,13 @@ export const constantCase = (slug) => slug.replace(/[^a-z0-9]+/gi, "_").toUpperC
 /** A TypeScript string literal with the quotes and escapes a name needs. */
 const q = (value) => JSON.stringify(String(value));
 
-export function proposalModule({ client, name, engagement = "proposal", kind = "production" }) {
+/**
+ * `date` is the day the engagement is FILED (ADR-118): the arcs overview plots
+ * it. It is a parameter, never read off the clock here, so the template stays
+ * pure and its test deterministic; the script passes today unless told.
+ */
+export function proposalModule({ client, name, engagement = "proposal", kind = "production", date }) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date ?? ""))) throw new Error(`proposalModule: a YYYY-MM-DD date is required, got ${date}`);
   const slug = `${client}-${engagement}`;
   const CONST = `${constantCase(slug)}_ARC`;
   const N = name;
@@ -51,6 +57,10 @@ export const ${CONST}: ArcDef = {
   format: "proposal",
   client: ${q(client)},
   kind: ${q(kind)},
+  // A proposal is out until the client answers it (ADR-114).
+  status: "proposed",
+  // Filed today; the overview's monitor plots it (ADR-118). OWNER-TO-CONFIRM.
+  date: ${q(date)},
   theme: "light",
   cardTitle: ${q(`${N} · the ${engagement}`)},
   cardLede:

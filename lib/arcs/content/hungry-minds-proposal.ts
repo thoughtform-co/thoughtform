@@ -33,6 +33,7 @@ export const HUNGRY_MINDS_PROPOSAL_ARC: ArcDef = {
   slug: "hungry-minds-proposal",
   format: "proposal",
   status: "proposed",
+  date: "2026-09-13",
   client: "hungry-minds",
   kind: "production",
   theme: "light",

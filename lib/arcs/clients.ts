@@ -45,6 +45,9 @@ export interface ClientPageDef {
   /** Where the page's engagement stands (ADR-114) — a pitch is a proposal
    *  out until the client answers it. */
   status?: "proposed" | "running" | "shipped";
+  /** When the page was filed, `YYYY-MM-DD` — `ArcDef.date`'s twin (ADR-118),
+   *  OWNER-TO-CONFIRM. */
+  date: string;
 }
 
 export interface ClientDef {
@@ -86,6 +89,7 @@ export const TRINNY_CLIENT: ClientDef = {
       image: { src: "/images/services/embedded.webp", alt: "" },
       kind: "production",
       status: "proposed",
+      date: "2026-09-09",
     },
   ],
   since: "2026",

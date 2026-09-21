@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 /* A plain .mjs script module, deliberately untyped: the scaffold is a
@@ -21,7 +24,13 @@ import { PROPOSAL_COPY_BANS } from "@/lib/arcs/copyLaw";
  * here is the part that is cheap to run on every commit.
  */
 const build = (over: Record<string, string> = {}) =>
-  proposalModule({ client: "acme", name: "Acme", engagement: "proposal", ...over }) as string;
+  proposalModule({
+    client: "acme",
+    name: "Acme",
+    engagement: "proposal",
+    date: "2026-09-21",
+    ...over,
+  }) as string;
 
 describe("the proposal scaffold (ADR-098)", () => {
   it("names the module and the constant from the slug", () => {
@@ -32,6 +41,23 @@ describe("the proposal scaffold (ADR-098)", () => {
     expect(src).toContain('client: "acme"');
     expect(src).toContain('format: "proposal"');
     expect(src).toContain('theme: "light"');
+  });
+
+  it("files the arc with the fields the registry requires (ADR-114, ADR-118)", () => {
+    /* A scaffolded arc used to fail the registry on day one: it wrote no
+       `status`, and the overview's console requires one on every client-bound
+       arc. Since ADR-118 the monitor plots `date` too. */
+    const src = build();
+    expect(src).toContain('status: "proposed"');
+    expect(src).toContain('date: "2026-09-21"');
+    // The date is a parameter, never the clock: a template that read the
+    // clock would make this test depend on the day it runs.
+    expect(() => build({ date: "" })).toThrow(/YYYY-MM-DD/);
+    expect(() => build({ date: "21/09/2026" })).toThrow(/YYYY-MM-DD/);
+    // A NEW client's record carries its `since` year too — the console's
+    // readout requires one on every client (sheet-arcs).
+    const script = readFileSync(join(__dirname, "..", "..", "scripts", "new-arc.mjs"), "utf8");
+    expect(script).toMatch(/since: \$\{JSON\.stringify\(DATE\.slice\(0, 4\)\)\}/);
   });
 
   it("leaves NO placeholder but the configuration's ghost tile", () => {

@@ -48,6 +48,9 @@ const CLIENT = arg("--client");
 const NAME = arg("--name", CLIENT);
 const ENGAGEMENT = arg("--engagement", "proposal");
 const KIND = arg("--kind", "production");
+/* The day the engagement is filed (ADR-118) — the overview plots it. Local
+   date, today unless `--date` says otherwise. */
+const DATE = arg("--date", new Date().toLocaleDateString("en-CA"));
 
 const die = (msg) => {
   console.error("\n  " + msg + "\n");
@@ -59,6 +62,7 @@ if (!CLIENT) die('a client slug is required: --client suri --name "Suri"');
 if (!kebab.test(CLIENT)) die(`--client must be kebab-case: ${CLIENT}`);
 if (!kebab.test(ENGAGEMENT)) die(`--engagement must be kebab-case: ${ENGAGEMENT}`);
 if (!["keynote", "workshop", "production"].includes(KIND)) die(`unknown --kind: ${KIND}`);
+if (!/^\d{4}-\d{2}-\d{2}$/.test(DATE)) die(`--date must be YYYY-MM-DD: ${DATE}`);
 
 const SLUG = `${CLIENT}-${ENGAGEMENT}`;
 const CONST = `${constantCase(SLUG)}_ARC`;
@@ -81,7 +85,7 @@ const plan = (rel, body) => writes.push([rel, body]);
 if (existsSync(MODULE)) {
   die(`${MODULE} already exists. Standing a page up over live work is not recoverable.`);
 }
-plan(MODULE, proposalModule({ client: CLIENT, name: NAME, engagement: ENGAGEMENT, kind: KIND }));
+plan(MODULE, proposalModule({ client: CLIENT, name: NAME, engagement: ENGAGEMENT, kind: KIND, date: DATE }));
 
 // ── 2 · the client record, if it is missing ──────────────────────────────
 const clientsRel = path.join("lib", "arcs", "clients.ts");
@@ -92,6 +96,8 @@ if (!clientKnown) {
   slug: ${JSON.stringify(CLIENT)},
   name: ${JSON.stringify(NAME)},
   lede: ${JSON.stringify(`An engagement with ${NAME}.`)},
+  // The year the relationship began (ADR-114) — the filing year until you say otherwise.
+  since: ${JSON.stringify(DATE.slice(0, 4))},
 };
 
 `;

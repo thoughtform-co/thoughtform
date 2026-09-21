@@ -18,9 +18,10 @@ import type { ArcDef } from "./types";
  * is a page handed to one reader, not a deck a room was shown.
  *
  * ⚠ THE ORDER IS THE ORDER (ADR-098). Inside a client, newest engagement
- * first: `arcsOf` preserves this array's sequence, and no arc carries a
- * date, because a field that only ever feeds a sort is a second place for
- * the same fact to be wrong.
+ * first: `arcsOf` preserves this array's sequence. Since ADR-118 every arc
+ * also carries a `date` — it feeds the overview's monitor, a PLOT — and
+ * `arcs-registry` checks that each client's sequence here agrees with its
+ * dates, so the order and the dates cannot tell two stories.
  */
 export const ARCS: readonly ArcDef[] = [
   HUNGRY_MINDS_PROPOSAL_ARC,

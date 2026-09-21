@@ -742,6 +742,22 @@ export interface ArcDef {
    */
   status?: "proposed" | "running" | "shipped";
   /**
+   * When the engagement was FILED on the site — `YYYY-MM-DD` (ADR-118). The
+   * arcs overview plots every engagement at this date on its monitor and
+   * sorts each client's log rows by it.
+   *
+   * ⚠ IT REVERSES ADR-098's "NO `date` FIELD" ON THAT RULING'S OWN TERMS: it
+   * refused a date that "only ever feeds a sort", because a sort-only field
+   * is a second place for the order to be wrong. This one feeds a PLOT, and
+   * the order it implies is checked against the registry rather than being a
+   * second fact (`arcs-registry`).
+   *
+   * ⚠ OWNER-TO-CONFIRM, like `ClientDef.since`: seeded from the page's first
+   * commit, which is when the page was made, not when the engagement began.
+   * A `-v2` cut authors its OWN — the spread from v1 would inherit v1's.
+   */
+  date: string;
+  /**
    * Lock the page to one theme (ADR-093's mechanism, ADR-098's use). A
    * proposal is composed on paper and has no dark reading.
    *

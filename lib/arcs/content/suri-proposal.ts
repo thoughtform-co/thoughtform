@@ -33,6 +33,7 @@ export const SURI_PROPOSAL_ARC: ArcDef = {
   slug: "suri-proposal",
   format: "proposal",
   status: "proposed",
+  date: "2026-09-12",
   client: "suri",
   /* Light, like the pitch page: this is composed on paper and there is no
      dark reading of it. ⚠ The route's row in `LIGHT_LOCKED_ROUTES` is the
