@@ -37,12 +37,32 @@
   --mon-read-w: clamp(140px, 10.4vw, 200px);
   --mon-mark: clamp(9px, 0.6vw, 12px);
   --mon-h: calc(100svh - var(--hud-rail-y-start) - var(--hud-rail-y-end));
-  /* The log (ADR-118 U1): the air between the list and the dossier, and
-     between one block and the next. `--log-block-h` is NOT here — it needs
-     `--log-n`, which lives on the list (§4). */
+  /* The log (ADR-118 U1, U2): the air between the list and the dossier,
+     between one block and the next, and before each kind's section.
+     `--log-block-h` is NOT here — it needs `--log-n` and `--log-heads`,
+     which live on the list (§4). */
   --log-gutter: clamp(48px, 6vw, 112px);
   --log-gap: clamp(4px, 0.9svh, 12px);
+  --log-sec-gap: clamp(10px, 1.8svh, 22px);
+  /* A block's floor: a sans title over a mono line with air either side.
+     At 52 the ninth block ended 5px under the fold at 1280 × 720. */
+  --log-block-min: 50px;
+  /* The block's notch, bottom-left — the codex's corner (U2). */
+  --log-ch: clamp(9px, 0.8vw, 13px);
+  /* ⚠ NOT `ch − 1px`: insetting a 45° cut by d shortens its leg by
+     d(2 − √2) ≈ 0.586d. */
+  --log-ch-in: calc(var(--log-ch) - 0.586px);
+  /* The kind-of-page mark: 7 cells, so only a multiple of 7 (4px cells). */
+  --log-icon: 28px;
+  --log-icon-gap: clamp(10px, 0.9vw, 16px);
+  --log-title: clamp(16px, 1.1vw, 21px);
   --ap-ease: cubic-bezier(0.65, 0, 0.35, 1);
+}
+@media (min-width: 1600px) {
+  .sh-root[data-sh-profile="instrument"] {
+    /* 5px cells on a tall desktop. */
+    --log-icon: 35px;
+  }
 }
 
 .sh-sec--monitor,
@@ -76,7 +96,9 @@
   transform: scale(0.68);
 }
 
-/* The mono chrome every strip, label and reading shares. */
+/* The mono chrome every strip, label and reading shares. ⚠ A new mono class
+   left out of this list inherits the sans: the family and the transform live
+   here, never beside the class's own rule. */
 .sh-mon__datum,
 .sh-mon__terminus,
 .sh-mon__cell-label,
@@ -85,11 +107,12 @@
 .sh-mon__lane-reading,
 .sh-mon__since,
 .sh-mon__ticks,
-.sh-log__client,
+.sh-log__head,
+.sh-log__eng,
 .sh-log__date,
 .sh-dos__band,
-.sh-dos__keys,
-.sh-dos__chapters {
+.sh-dos__status,
+.sh-dos__keys {
   font-family: var(--font-pt-mono);
   font-size: var(--sh-chrome);
   font-weight: var(--weight-text);
@@ -114,10 +137,14 @@
 /* ⚠ A clip CUTS a border and never strokes one (ADR-089), so the edge is an
    evenodd RING on `::before`; the inner leg is `ch − 0.586px`, not `ch − 1`
    (`--sh-card-ch-in`, sheet.css). The monitor's ring is dawn — structure —
-   and the dossier's is the gold lip, the one gold outline the log draws. */
+   and the dossier's is the gold lip, the one gold outline the log draws.
+   ⚠ EACH CONTOUR IS CLOSED, BACK ON ITS OWN FIRST POINT (U2). Written as
+   one open path — outer's last point straight to inner's first — the two
+   bridges crossed down the left side and `evenodd` painted a bow-tie: the
+   left edge full width at the corners and nothing at mid-height. Closed, the
+   only bridge is the zero-width hop between the two first points. */
 .sh-mon__in,
-.sh-root:not([data-sh-dossier="pair"]) .sh-dos__in,
-.sh-root[data-sh-dossier="pair"] .sh-dos__plate {
+.sh-dos__in {
   position: relative;
   background: var(--sh-plate);
   clip-path: polygon(
@@ -130,8 +157,7 @@
   );
 }
 .sh-mon__in::before,
-.sh-root:not([data-sh-dossier="pair"]) .sh-dos__in::before,
-.sh-root[data-sh-dossier="pair"] .sh-dos__plate::before {
+.sh-dos__in::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -146,19 +172,20 @@
     100% 100%,
     var(--sh-card-ch) 100%,
     0 calc(100% - var(--sh-card-ch)),
+    0 0,
     1px 1px,
     calc(100% - 1px - var(--sh-card-ch-in)) 1px,
     calc(100% - 1px) calc(1px + var(--sh-card-ch-in)),
     calc(100% - 1px) calc(100% - 1px),
     calc(1px + var(--sh-card-ch-in)) calc(100% - 1px),
-    1px calc(100% - 1px - var(--sh-card-ch-in))
+    1px calc(100% - 1px - var(--sh-card-ch-in)),
+    1px 1px
   );
 }
 .sh-mon__in {
   --ring: var(--sh-seam);
 }
-.sh-dos__in,
-.sh-dos__plate {
+.sh-dos__in {
   --ring: var(--sh-lip);
 }
 
@@ -562,13 +589,13 @@
 }
 
 /* ── 4. The log ───────────────────────────────────────────────────── */
-/* ⚠ BLOCKS, A GUTTER, ONE FLOOR (ADR-118 U1, owner: "more breathing room
-   between the two panels … more like blocks instead of glorified word
-   document"). The first cut was an OUTLINE — six client heads over one-line
-   rows on hairlines, the chosen row butting straight into the dossier — and
-   ended ~100px short of the dossier's floor at his window. Now one bordered
-   block per engagement, a gutter between the panels, and the blocks DIVIDE
-   the device's height so the list sits on the dossier's floor. */
+/* ⚠ THE REFERENCES' COMPOSITION, TAKEN LITERALLY (ADR-118 U2, owner: "Have
+   you actually looked at these references?"). U1 read them "by role" and
+   drew a ruled column of look-alike boxes under a row of filter tabs, which
+   he called a glorified PowerPoint. Now: the Ripperdoc list's SECTION HEADS
+   divide it by kind, the red codex list's ICON sits left of every plate, the
+   plate is NOTCHED bottom-left and carries the client as its title. The list
+   may run past the screen; the dossier stays pinned beside it. */
 .sh-log {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
@@ -576,48 +603,55 @@
   align-items: start;
 }
 .sh-log__list {
-  /* ⚠ DECLARED HERE, BESIDE `--log-n` (written inline by SheetLog). A custom
-     property resolves where it is declared: on the root this would compute
-     against a missing `n`, go invalid, and every block would fall back to its
-     content's height with nothing erroring. The height is n blocks and n gaps
-     under the head strip, filling the device; the floor keeps two lines
-     legible (and admits a tenth engagement at 1280 × 720), the ceiling stops
-     a short record from blowing a block up. `n` counts EVERY row, so a filter
-     never resizes a block — the list just ends sooner. */
+  /* ⚠ DECLARED HERE, BESIDE `--log-n` AND `--log-heads` (written inline by
+     SheetLog). A custom property resolves where it is declared: on the root
+     it would compute against a missing count, go invalid, and every block
+     would fall back to its content's height with nothing erroring. The
+     blocks share what the device leaves after the section heads and the
+     gaps, so the list ends on the dossier's floor while that leaves each its
+     floor; below it (a laptop's nine) the list simply runs on. */
   --log-block-h: clamp(
-    44px,
-    calc((var(--mon-h) - var(--mon-strip-h) - var(--log-n) * var(--log-gap)) / var(--log-n)),
+    var(--log-block-min),
+    calc(
+      (
+          var(--mon-h) - var(--log-heads) * var(--mon-strip-h) - (var(--log-heads) - 1) *
+            var(--log-sec-gap) - var(--log-n) * var(--log-gap)
+        ) /
+        var(--log-n)
+    ),
     9svh
   );
   min-width: 0;
 }
-/* The head strip: the filter, as tall as the dossier's band and level with it,
-   so the two panels share a datum as well as a floor. The stations fill it. */
-.sh-log__filter {
-  height: var(--mon-strip-h);
-}
-.sh-log__filter .sh-stns {
-  height: 100%;
-  margin: 0 -3px;
-  flex-wrap: nowrap;
-  align-items: stretch;
-}
-.sh-log__filter .sh-stn {
-  margin-block: 0;
-  padding-block: 0;
-  white-space: nowrap;
-}
-/* ⚠ THE NARROW DESKTOP RUNG. The four stations are ~343px on one line and a
-   strip may not wrap (it is level with the dossier's band). At 5/12 of the
-   band the list is 309px at 1024 wide and ~287px at 961 — measured 34px short
-   at 1024 × 768 — so below 1100 the list takes half and the stations tighten. */
+/* ⚠ THE NARROW DESKTOP RUNG (961–1100). A block's mono line holds the
+   bracketed engagement and the date side by side (~230px for `[ THE
+   PORTFOLIO ]`); at 5/12 of the band beside a 28px icon it clips at 961, so
+   below 1100 the list takes half. */
 @media (min-width: 961px) and (max-width: 1100px) {
   .sh-log {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
-  .sh-log__filter .sh-stn {
-    padding-inline: 8px;
-  }
+}
+.sh-log__sec + .sh-log__sec {
+  margin-top: var(--log-sec-gap);
+}
+/* A section head: the kind, its count, on the seam — the Ripperdoc's
+   OWNED / STORE. The first is as tall as the dossier's band and level with
+   it, so the two panels share a datum as well as a floor. */
+.sh-log__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  height: var(--mon-strip-h);
+  margin: 0;
+  border-bottom: 1px solid var(--sh-seam);
+  color: var(--sh-ink-90);
+  letter-spacing: var(--track-eyebrow);
+}
+.sh-log__head-n {
+  color: var(--sh-ink-dim);
 }
 .sh-log__rows {
   margin: 0;
@@ -628,96 +662,143 @@
   margin-top: var(--log-gap);
 }
 
-/* A block: a mono line — the standing diamond, the client, the bracketed date
-   at the right end — over the title in sans. Square, outlined, one size, one
-   gap; the chosen one filled. The DOM says client, title, date; the grid seats
-   the date on the first line so the title has the whole second. */
+/* A block: the mark, then the plate. The DOM says name, engagement, date;
+   the plate seats the name over one mono line. */
 .sh-log__row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas:
-    "mark client date"
-    ". title title";
-  align-content: center;
+  grid-template-columns: var(--log-icon) minmax(0, 1fr);
+  column-gap: var(--log-icon-gap);
   align-items: center;
-  column-gap: 12px;
-  row-gap: clamp(2px, 0.5svh, 6px);
   box-sizing: border-box;
-  min-height: var(--log-block-h);
-  padding: 0 var(--mon-pad);
-  border: 1px solid var(--sh-seam);
-  background: var(--sh-plate);
+  height: var(--log-block-h);
   color: var(--sh-ink-90);
   text-decoration: none;
-  transition:
-    background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  /* A key step brings a row below the fold up to the rails, not under them. */
+  scroll-margin-block: var(--hud-rail-y-start) var(--hud-rail-y-end);
 }
-.sh-log__mark {
-  grid-area: mark;
-  width: 7px;
-  height: 7px;
+.sh-glyph {
+  display: block;
+  width: var(--log-icon);
+  height: var(--log-icon);
+}
+.sh-glyph__sk {
+  fill: var(--sh-ink-70);
+}
+.sh-glyph__sig {
+  fill: var(--sh-ink);
+}
+.sh-glyph__dr {
+  fill: var(--sh-ink-28);
+}
+.sh-log__row.is-on .sh-glyph__sk {
+  fill: var(--sh-ink);
+}
+
+/* The plate, notched BOTTOM-LEFT (the codex's corner, the lower end of the
+   lawful TR + BL diagonal — ADR-065's uniform-set clause). ⚠ A clip CUTS a
+   border, so the edge is the closed evenodd ring on `::before`; nothing is
+   set against the cut — the text pads past it (ADR-098 U5: a cut is free
+   only where nothing is set against it). ⚠ The fill is a BACKGROUND on the
+   plate, never a pseudo-element: both contrast walks read ancestors'
+   `backgroundColor` and are blind to a painted `::before`. */
+.sh-log__plate {
+  position: relative;
+  display: grid;
+  align-content: center;
+  row-gap: clamp(2px, 0.5svh, 6px);
   box-sizing: border-box;
-  border: 1px solid var(--sh-ink-70);
-  rotate: 45deg;
+  height: 100%;
+  min-width: 0;
+  padding: 0 var(--mon-pad) 0 max(var(--mon-pad), calc(var(--log-ch) + 4px));
+  background: var(--sh-plate);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, var(--log-ch) 100%, 0 calc(100% - var(--log-ch)));
+  transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.sh-log__mark[data-standing="shipped"] {
-  background: var(--sh-ink-70);
+.sh-log__plate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--ring, var(--sh-seam));
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    100% 0,
+    100% 100%,
+    var(--log-ch) 100%,
+    0 calc(100% - var(--log-ch)),
+    0 0,
+    1px 1px,
+    calc(100% - 1px) 1px,
+    calc(100% - 1px) calc(100% - 1px),
+    calc(1px + var(--log-ch-in)) calc(100% - 1px),
+    1px calc(100% - 1px - var(--log-ch-in)),
+    1px 1px
+  );
 }
-.sh-log__client {
-  grid-area: client;
+/* The client — the block's title, one step up and lit (owner: "more
+   prominent, not too big"). */
+.sh-log__name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--log-title);
+  font-weight: var(--weight-lit);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  white-space: nowrap;
+  color: var(--sh-ink);
+}
+.sh-log__line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.sh-log__eng {
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
   color: var(--sh-ink-70);
-  letter-spacing: var(--track-eyebrow);
 }
 .sh-log__date {
-  grid-area: date;
+  flex: none;
   color: var(--sh-ink-dim);
   white-space: nowrap;
 }
-.sh-log__title {
-  grid-area: title;
-  min-width: 0;
-  overflow: hidden;
-  font-size: var(--sh-copy);
-  line-height: 1.2;
-  white-space: nowrap;
-}
-.sh-log__row:hover,
-.sh-log__row:focus-visible {
-  border-color: var(--sh-ink-50);
+.sh-log__row:hover .sh-log__plate,
+.sh-log__row:focus-visible .sh-log__plate {
+  --ring: var(--sh-ink-50);
   background: var(--sh-recess);
-  outline: none;
 }
+/* ONE focus ring for every state, in ink: on the filled block a
+   gold-contrast ring would cross the icon's gutter as dark on the ground. */
 .sh-log__row:focus-visible {
   outline: 1px solid var(--sh-ink-70);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
-/* The chosen block: FILLED among outlined peers (ADR-089 U4), its ink knocked
-   out on `--gold-contrast`, never the void family. */
-.sh-log__row.is-on {
+/* The chosen block: FILLED among outlined peers (ADR-089 U4), the ring joined
+   to the fill, its ink knocked out on `--gold-contrast`, never the void
+   family. ⚠ A new text class on the plate joins this list, or it prints
+   cream on gold. */
+.sh-log__row.is-on .sh-log__plate {
+  --ring: var(--gold);
   background: var(--gold);
-  border-color: var(--gold);
-  color: var(--gold-contrast);
 }
-.sh-log__row.is-on .sh-log__client,
+.sh-log__row.is-on .sh-log__name,
+.sh-log__row.is-on .sh-log__eng,
 .sh-log__row.is-on .sh-log__date {
   color: var(--gold-contrast);
 }
-.sh-log__row.is-on .sh-log__mark {
-  border-color: var(--gold-contrast);
-}
-.sh-log__row.is-on .sh-log__mark[data-standing="shipped"] {
-  background: var(--gold-contrast);
-}
-.sh-log__row.is-on:focus-visible {
-  outline: 1px solid var(--gold-contrast);
-  outline-offset: -5px;
-}
 
 /* ── 5. The dossier ───────────────────────────────────────────────── */
+/* ⚠ ONE DEVICE: the band, the brief and its status strip, the client's
+   configuration DRAWN (U2 — the first screen, a picture with a text plate
+   under it, went: "that key visual with the text … that's not elegant"),
+   and the way in. An engagement with no configuration is as tall as what it
+   says — no board, no picture, no pooled air. */
 .sh-log__dossiers {
   position: sticky;
   top: var(--hud-rail-y-start);
@@ -727,21 +808,20 @@
 .sh-dos {
   height: 100%;
 }
+.sh-dos:not([data-board]) {
+  height: auto;
+}
 .sh-dos[hidden] {
   display: none;
 }
 .sh-dos__in {
   height: 100%;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
 }
-.sh-root[data-sh-dossier="pair"] .sh-dos__in {
-  row-gap: clamp(6px, 0.9svh, 12px);
-}
-.sh-dos__plate--head {
-  display: grid;
-  grid-template-rows: auto minmax(clamp(96px, 14svh, 180px), 1fr);
-  min-height: 0;
+.sh-dos:not([data-board]) .sh-dos__in {
+  height: auto;
+  grid-template-rows: auto auto auto;
 }
 .sh-dos__band {
   display: flex;
@@ -766,69 +846,34 @@ a.sh-dos__desig:focus-visible {
 .sh-dos__kind {
   color: var(--sh-ink-dim);
 }
-.sh-dos__img {
-  position: relative;
-  min-height: 0;
-  overflow: hidden;
+.sh-dos__brief {
+  padding: clamp(12px, 1.8svh, 24px) var(--mon-pad) clamp(10px, 1.5svh, 20px);
   border-bottom: 1px solid var(--sh-rule);
 }
-.sh-dos__img img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: grayscale(1) sepia(0.5) hue-rotate(-9deg) saturate(1.35) brightness(0.84) contrast(1.08);
-}
-.sh-dos__body {
-  padding: clamp(12px, 1.8svh, 26px) var(--mon-pad) 0;
-}
-.sh-dos__title {
-  margin: 0;
-  font-size: var(--sh-h2);
-  font-weight: var(--weight-lit);
-  line-height: 1.1;
-  letter-spacing: var(--track-display);
-  color: var(--sh-ink);
-}
 .sh-dos__lede {
-  margin: clamp(6px, 0.9svh, 12px) 0 0;
-  max-width: 64ch;
-  font-size: var(--sh-copy);
-  line-height: 1.45;
-  color: var(--sh-ink-70);
-}
-.sh-dos__cols {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  column-gap: var(--sh-gutter);
-  margin-top: clamp(10px, 1.6svh, 22px);
-}
-.sh-dos__readout .sh-readout__k,
-.sh-dos__readout .sh-readout__v {
-  padding-block: clamp(2px, 0.45svh, 6px);
-}
-.sh-dos__chapters {
   margin: 0;
-  padding: 0;
-  list-style: none;
-  line-height: 1.5;
-}
-.sh-dos__chapters a {
-  display: flex;
-  gap: 12px;
-  padding-block: clamp(2px, 0.45svh, 6px);
-  border-top: 1px solid var(--sh-rule);
+  max-width: 60ch;
+  font-size: var(--sh-lede);
+  line-height: 1.35;
   color: var(--sh-ink-90);
-  text-decoration: none;
 }
-.sh-dos__chapters a:hover,
-.sh-dos__chapters a:focus-visible {
-  color: var(--gold-ink);
-  outline: none;
+/* The status strip: the three readings the readout table held, on one line. */
+.sh-dos__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px clamp(16px, 1.6vw, 28px);
+  margin: clamp(8px, 1.2svh, 14px) 0 0;
 }
-.sh-dos__ch-n {
+.sh-dos__reading {
+  display: flex;
+  gap: 8px;
+}
+.sh-dos__reading dt {
   color: var(--sh-ink-dim);
+}
+.sh-dos__reading dd {
+  margin: 0;
+  color: var(--sh-ink-90);
 }
 .sh-dos__foot {
   display: flex;
@@ -853,6 +898,133 @@ a.sh-dos__desig:focus-visible {
 }
 .sh-dos__keys span + kbd {
   margin-left: 10px;
+}
+
+/* ── 5b. The configuration board ──────────────────────────────────── */
+/* The client's intelligence configuration (`SheetConfiguration`): the one
+   bright die of workstreams, the chips around it for what it runs on and
+   inside, the buses between. The board's own ground is a faint dot bed —
+   the reference's PCB, one step under the rule — laid on the BOX, not in the
+   SVG, so a crop letterboxed by `meet` never shows the bed's edge. */
+.sh-dos__board {
+  position: relative;
+  min-height: 0;
+  /* The traces off the die's free edges run past the crop and stop HERE, on
+     the board's own edge, however `meet` letterboxes the crop. */
+  overflow: hidden;
+  border-bottom: 1px solid var(--sh-rule);
+  background-image: radial-gradient(circle, var(--sh-rule) 0.8px, transparent 1px);
+  background-size: 16px 16px;
+  background-position: 8px 8px;
+}
+/* ⚠ THE CONTAINER IS THE INSET BOX, so its aspect IS the crops' box. It
+   needs a definite size in both axes (`container-type: size`) — the grid's
+   `minmax(0, 1fr)` row gives the board one, and the phone gives it an
+   aspect-ratio (§7). */
+.sh-cfg {
+  position: absolute;
+  inset: clamp(6px, 1svh, 14px) clamp(8px, 0.8vw, 14px);
+  margin: 0;
+  container: cfg / size;
+}
+.sh-cfg__crop {
+  position: absolute;
+  inset: 0;
+  display: none;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* ⚠ ONE CROP SHOWS, AND THE BOX PICKS IT — `configLayout`'s `CROP_SWITCH`
+   restated: under 480px wide the narrow stack, else the aspect picks at the
+   geometric mean of two crops' aspects (1.134, 1.397). Later rules win. */
+.sh-cfg__crop[data-crop="narrow"] {
+  display: block;
+}
+@container cfg (min-width: 480px) {
+  .sh-cfg__crop[data-crop="narrow"] {
+    display: none;
+  }
+  .sh-cfg__crop[data-crop="tall"] {
+    display: block;
+  }
+}
+@container cfg (min-width: 480px) and (min-aspect-ratio: 1134 / 1000) {
+  .sh-cfg__crop[data-crop="tall"] {
+    display: none;
+  }
+  .sh-cfg__crop[data-crop="mid"] {
+    display: block;
+  }
+}
+@container cfg (min-width: 480px) and (min-aspect-ratio: 1397 / 1000) {
+  .sh-cfg__crop[data-crop="mid"] {
+    display: none;
+  }
+  .sh-cfg__crop[data-crop="wide"] {
+    display: block;
+  }
+}
+.sh-cfg__ghosts {
+  stroke: var(--sh-rule);
+}
+.sh-cfg__buses {
+  stroke: var(--sh-ink-50);
+}
+.sh-cfg__pin {
+  fill: var(--sh-ink);
+}
+.sh-cfg__chip-plate {
+  fill: var(--sh-ground);
+}
+.sh-cfg__chip-band {
+  fill: var(--sh-recess);
+}
+.sh-cfg__chip-seam {
+  stroke: var(--sh-rule);
+}
+.sh-cfg__chip-edge {
+  stroke: var(--sh-seam);
+}
+.sh-cfg__chip-rule {
+  stroke: var(--sh-ink-50);
+}
+/* The die: INK, its words knocked out — the one filled object on the board,
+   and not gold, because gold on this page is state. */
+.sh-cfg__die-plate {
+  fill: var(--sh-ink);
+}
+.sh-cfg__die-seam {
+  stroke: var(--sh-knock-dim);
+}
+.sh-cfg__die-rule {
+  stroke: var(--sh-knock-rule);
+}
+.sh-cfg__die-seam--ghost {
+  stroke-dasharray: 3 3;
+}
+.sh-cfg__t--mono {
+  font-family: var(--font-pt-mono);
+  font-weight: var(--weight-text);
+}
+.sh-cfg__t--sans {
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+}
+.sh-cfg__t--lit {
+  font-weight: var(--weight-lit);
+}
+.sh-cfg__t--knock {
+  fill: var(--sh-knock);
+}
+.sh-cfg__t--knock-dim {
+  fill: var(--sh-knock-dim);
+}
+.sh-cfg__t--ink {
+  fill: var(--sh-ink-90);
+}
+.sh-cfg__t--ink-dim {
+  fill: var(--sh-ink-dim);
 }
 
 /* ── 6. Motion — clips, never opacity ─────────────────────────────── */
@@ -948,38 +1120,25 @@ a.sh-dos__desig:focus-visible {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 24px;
   }
-  /* No rails to fill between on a phone: one fixed block height. And no band
-     to be level with, so the strip may wrap; the stations tighten so the four
-     usually keep one line (at 375 wide they ran 0.4px past it untightened). */
+  /* No rails to fill between on a phone: one fixed block height. */
   .sh-log__list {
-    --log-block-h: 56px;
-  }
-  .sh-log__filter {
-    height: auto;
-  }
-  .sh-log__filter .sh-stns {
-    flex-wrap: wrap;
-    row-gap: 6px;
-  }
-  .sh-log__filter .sh-stn {
-    padding: 7px 8px;
+    --log-block-h: 60px;
   }
   .sh-log__dossiers {
     position: static;
     height: auto;
   }
+  .sh-dos,
   .sh-dos__in {
     height: auto;
   }
-  .sh-dos__plate--head {
-    grid-template-rows: auto;
+  .sh-dos__in {
+    grid-template-rows: auto auto auto auto;
   }
-  .sh-dos__img {
-    aspect-ratio: 16 / 10;
-  }
-  .sh-dos__cols {
-    grid-template-columns: minmax(0, 1fr);
-    row-gap: 14px;
+  /* The board takes the narrow crop's own shape, so the container has the
+     definite height `container-type: size` needs and the crop fills it. */
+  .sh-dos__board {
+    aspect-ratio: 420 / 520;
   }
   .sh-dos__keys {
     display: none;

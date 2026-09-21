@@ -12,17 +12,9 @@ import registry from "./directions.json";
  * after mount — a reader without JS gets the house.
  */
 
-/** The sheet's four, then the arcs instrument's three (ADR-118; `rows` was
- *  deleted with direction SH by ADR-118 U1). */
-export const SH_KNOB_KEYS = [
-  "head",
-  "ordinal",
-  "card",
-  "timeline",
-  "span",
-  "dossier",
-  "frame",
-] as const;
+/** The sheet's four, then the arcs instrument's two (ADR-118; `rows` was
+ *  deleted with direction SH by U1, `dossier` with SJ by U2). */
+export const SH_KNOB_KEYS = ["head", "ordinal", "card", "timeline", "span", "frame"] as const;
 export type ShKnobKey = (typeof SH_KNOB_KEYS)[number];
 export type ShKnobs = Record<ShKnobKey, string>;
 

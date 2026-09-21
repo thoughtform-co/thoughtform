@@ -201,39 +201,81 @@ export interface SheetMonitorMark {
   slot?: number;
 }
 
-/** One engagement of the log — drawn as one BLOCK since ADR-118 U1. */
+/**
+ * One engagement of the log — a notched block with its page's icon since
+ * ADR-118 U2 (owner: "some sort of icon like we have on the red one").
+ */
 export interface SheetLogRow {
   id: string;
-  /** What the page is — proposal, pitch, portfolio, workshop, keynote. In
-   *  the record and lettered NOWHERE on the overview since ADR-118 U1: every
-   *  title already said it, and the chips' four widths made the title column
-   *  ragged. Kept so the copy law still walks it and it can come back in one
-   *  line of markup. */
+  /** What the page is — proposal, pitch, portfolio, workshop, keynote. Keys
+   *  the block's ICON (`lib/sheet/logGlyphs.ts`), which is where U1's
+   *  unlettered chip went. */
   chip: string;
-  /** Sentence case, the client's name taken off: the block letters the
-   *  client on its own line directly above. */
-  title: string;
-  /** `YYYY-MM-DD`; the renderer letters it bracketed. */
+  /** The block's title: the client, or a house format's own name. */
+  name: string;
+  /** What the engagement is — `The proposal`, `House format · V2`. The
+   *  renderer letters it BRACKETED; a record never stores a bracket (the copy
+   *  law bans them in data). */
+  engagement: string;
+  /** `YYYY-MM-DD`. */
   date: string;
   standing: SheetStanding;
-  /** The filter's token. */
+  /** The engagement's kind, which IS the section it sits in. */
   kind: string;
   href: string;
 }
 
-/** The id of the log's one group that is not a client: the house formats. */
-export const SHEET_LOG_HOUSE_GROUP = "formats";
-
 /**
- * One run of the log: a client's engagements, or the house formats.
- * ⚠ NOT DRAWN AS A GROUP SINCE ADR-118 U1 — the heads went, and `name` letters
- * on every block of the run as its client line. The runs are ordered by their
- * newest filing, the house formats last (`instrumentViolations`, law 7).
+ * One section of the log: every engagement of one KIND (ADR-118 U2 — the
+ * owner: the kinds "should not be tabs on top. They should actually divide
+ * the list"). Sections run by their newest filing; rows newest first.
  */
 export interface SheetLogGroup {
+  /** The kind: `keynote` · `workshop` · `production`. */
   id: string;
+  /** The kind, plural, as the section's head letters it. */
   name: string;
   rows: readonly SheetLogRow[];
+}
+
+/** One workstream at the centre of a configuration — a type of work the
+ *  client wants the setup to do. */
+export interface SheetConfigRow {
+  id: string;
+  name: string;
+  /** What it turns into what — the proposal's own words. */
+  note?: string;
+  /** The module it belongs to, `M1`, lettered at the row's right end. */
+  tag?: string;
+  /** The unscoped next workstream, drawn dashed. At most one, and last. */
+  ghost?: true;
+}
+
+/** One thing the configuration is linked to: a model, a class of model, a tool. */
+export interface SheetConfigLink {
+  id: string;
+  kind: "llm" | "model" | "design" | "ops";
+  /** The chip's kicker (`STACK_KIND_LABEL`). */
+  kicker: string;
+  name: string;
+  /** How many of the configuration's workstreams name it — the ribbon's weight. */
+  users: number;
+}
+
+/** The most workstreams a board seats at its centre (a ghost aside), and the
+ *  most links around it — the kit draws both ceilings (ADR-118 U2). */
+export const CONFIG_MAX_ROWS = 4;
+export const CONFIG_MAX_LINKS = 8;
+
+/**
+ * A client's intelligence configuration as the dossier draws it (ADR-118 U2):
+ * the types of work at the centre, what it runs on and inside around it.
+ * DERIVED from the proposal's own record (`lib/sheet/configuration.ts`),
+ * never authored for the drawing.
+ */
+export interface SheetConfiguration {
+  rows: readonly SheetConfigRow[];
+  links: readonly SheetConfigLink[];
 }
 
 /** Everything the dossier says about one engagement. */
@@ -244,13 +286,17 @@ export interface SheetDossier {
   designation: { name: string; href?: string };
   /** The head band's right-hand word — the kind, singular. */
   kind: string;
+  /** The engagement's card title — the dossier's accessible name. */
   title: string;
+  /** The one-line brief. */
   lede: string;
-  image: { src: string; alt: string; width: number; height: number };
-  /** Label/value pairs a reader could check against the registry. */
-  readout: readonly SheetReadoutRow[];
-  /** The arc's chapters, in page order; empty for a page with none. */
-  chapters: readonly { id: string; label: string; href: string }[];
+  /** The status strip under the brief: facts a reader could check against
+   *  the registry — where it stands, when it was filed, how long it is. */
+  status: readonly SheetReadoutRow[];
+  /** The client's configuration, drawn; null for an engagement that has none
+   *  (the portfolio, the house formats — "not every type of arc has this
+   *  intelligence configuration", owner, ADR-118 U2). */
+  configuration: SheetConfiguration | null;
   cta: { label: string; href: string };
 }
 
@@ -371,7 +417,8 @@ export type SheetSection = SheetSectionBase &
     | {
         /** The instrument's second frame: the record, opened (ADR-118). */
         kind: "log";
-        filter: SheetStations;
+        /** One section per kind (ADR-118 U2), which is what the kind FILTER
+         *  was until the owner asked for it to divide the list instead. */
         groups: readonly SheetLogGroup[];
         dossiers: readonly SheetDossier[];
         /** The one filled row, chosen on the server: the newest engagement. */

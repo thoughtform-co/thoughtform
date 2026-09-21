@@ -9,23 +9,6 @@ export const SHEET_SWAP_MS = 180;
 const HASH = /^#arc=([a-z0-9-]+)$/;
 
 /**
- * How long a dossier waits for its picture before it settles without one — a
- * picture that fails, or one the browser has not reached, may not hold the
- * observable forever. Under the 5s a test's expectation waits.
- */
-const PICTURE_WAIT_MS = 2500;
-
-/** The dossier's picture has decoded (or failed, or the wait ran out). */
-function pictured(dossier: Element | null): Promise<void> {
-  const img = dossier?.querySelector("img");
-  if (!img) return Promise.resolve();
-  return Promise.race([
-    img.decode().catch(() => undefined),
-    new Promise<void>((done) => window.setTimeout(done, PICTURE_WAIT_MS)),
-  ]).then(() => undefined);
-}
-
-/**
  * SheetInstrumentController — the ONE client file of the arcs instrument
  * (ADR-118).
  *
@@ -37,11 +20,10 @@ function pictured(dossier: Element | null): Promise<void> {
  *  - a plain click on a row or a mark SELECTS; a modified click (new tab, a
  *    download) keeps the link's own behaviour, and so does a click the
  *    keyboard produced (`detail === 0`): ENTER on a focused row OPENS it;
- *  - ↑ / ↓ on a row move over the rows the filter leaves VISIBLE;
+ *  - ↑ / ↓ on a row walk every row, ACROSS the kind sections (U2), and bring
+ *    the next one into view — the list may run past the screen now;
  *  - a mark's click also seats the log and focuses its row;
- *  - `#arc=<id>` on arrival selects and seats;
- *  - when the filter hides the chosen row, the choice moves to the first
- *    row still shown.
+ *  - `#arc=<id>` on arrival selects and seats.
  *
  * ⚠ IT IMPORTS NO REGISTRY, AND MAY NOT. A client component that imported
  * `lib/arcs` would put every client's name and lede into a PUBLIC chunk for a
@@ -50,13 +32,14 @@ function pictured(dossier: Element | null): Promise<void> {
  * changes.
  *
  * ⚠ `data-dos-id` ON THE ROOT IS THE CAPTURE'S OBSERVABLE: it is removed when
- * a swap starts and written only when the incoming dossier has SETTLED — a
- * value the page computed, never one a script can satisfy by itself.
- * SETTLED is the aperture open AND the picture decoded (bounded by
- * `PICTURE_WAIT_MS`), on arrival as on a swap. The first cut wrote it on the
- * aperture's timer alone, and the capture shot seventeen dossiers whose
- * pictures were still streaming in — an observable that fires before the
- * thing it names is a timer with a better name.
+ * a swap starts and written only when the incoming dossier has SETTLED — its
+ * aperture open — a value the page computed, never one a script can satisfy by
+ * itself. Until U2 settled also meant the dossier's picture had decoded; the
+ * picture is gone (the configuration is inline SVG, painted with the markup),
+ * and with it the wait. ⚠ On arrival the server's choice is written at once —
+ * and a deep link that names the choice ALREADY made writes it too: `select()`
+ * does nothing for the current id, and until U2 only the picture's promise
+ * covered that path.
  */
 export function SheetInstrumentController() {
   const markerRef = useRef<HTMLSpanElement>(null);
@@ -69,7 +52,6 @@ export function SheetInstrumentController() {
     const prm = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     const rows = () => [...root.querySelectorAll<HTMLAnchorElement>(".sh-log__row")];
-    const shown = () => rows().filter((r) => !r.closest("[hidden]"));
     const rowFor = (id: string) =>
       root.querySelector<HTMLAnchorElement>(`.sh-log__row[data-id="${CSS.escape(id)}"]`);
 
@@ -78,15 +60,6 @@ export function SheetInstrumentController() {
     let lastSwap = 0;
     let settleTimer = 0;
     let disposed = false;
-    const dossierFor = (id: string) => root.querySelector(`.sh-dos[data-id="${CSS.escape(id)}"]`);
-    // The server's choice settles once its picture has; a deep link below may
-    // move the choice first, and then this one never writes.
-    if (current) {
-      const first = current;
-      void pictured(dossierFor(first)).then(() => {
-        if (!disposed && current === first) root.setAttribute("data-dos-id", first);
-      });
-    }
 
     // Arm the arrival apertures only now that a script is here to open them.
     root.classList.add("is-sh-inst");
@@ -135,11 +108,11 @@ export function SheetInstrumentController() {
         current = id;
         root!.removeAttribute("data-dos-id");
         window.clearTimeout(settleTimer);
+        // The timer, not `animationend`: a rapid step cancels the animation it
+        // would have waited on, and a cancelled one never ends.
         const settle = () => {
           incoming?.classList.remove("is-swap");
-          void pictured(incoming).then(() => {
-            if (!disposed && current === id) root!.setAttribute("data-dos-id", id);
-          });
+          if (!disposed && current === id) root!.setAttribute("data-dos-id", id);
         };
         if (animate && incoming) {
           void (incoming as HTMLElement).offsetWidth; // restart the keyframes
@@ -147,13 +120,14 @@ export function SheetInstrumentController() {
           settleTimer = window.setTimeout(settle, SHEET_SWAP_MS + 20);
         } else settle();
 
-        // The dossier's own title, never the block's: three blocks read "The
-        // proposal" since the client moved to its own line (ADR-118 U1).
+        // The dossier's own name (its `aria-label`, U2), never the block's
+        // alone: three blocks read "The proposal" under three clients.
         const title =
-          (incoming as HTMLElement | null)?.querySelector(".sh-dos__title")?.textContent ??
-          row.querySelector(".sh-log__title")?.textContent ??
-          "";
-        if (status) status.textContent = `${title} selected`;
+          (incoming as HTMLElement | null)?.getAttribute("aria-label") ??
+          `${row.querySelector(".sh-log__name")?.textContent ?? ""} ${
+            row.querySelector(".sh-log__eng")?.textContent ?? ""
+          }`;
+        if (status) status.textContent = `${title.trim()} selected`;
       }
       if (opts.hash !== false) {
         const url = `${location.pathname}${location.search}#arc=${id}`;
@@ -162,9 +136,18 @@ export function SheetInstrumentController() {
       if (opts.focus) row.focus({ preventScroll: true });
     }
 
-    function seatLog() {
-      log?.scrollIntoView({ block: "start", behavior: prm.matches ? "auto" : "smooth" });
+    function seatLog(behavior: ScrollBehavior) {
+      log?.scrollIntoView({ block: "start", behavior });
     }
+
+    /* A row the list pushed below the fold (U2: the list may run past the
+       screen) is brought up just far enough to show whole; the dossier is
+       sticky, so it stays where the reader was looking. `scroll-margin` on the
+       row keeps it clear of the frame's rails. */
+    function reveal(row: HTMLElement | null, behavior: ScrollBehavior) {
+      row?.scrollIntoView({ block: "nearest", behavior });
+    }
+    const motion = (): ScrollBehavior => (prm.matches ? "auto" : "smooth");
 
     const onClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0) return;
@@ -182,8 +165,9 @@ export function SheetInstrumentController() {
       if (mark?.dataset.id) {
         e.preventDefault();
         select(mark.dataset.id);
-        seatLog();
-        rowFor(mark.dataset.id)?.focus({ preventScroll: true });
+        const next = rowFor(mark.dataset.id);
+        seatLog(motion());
+        next?.focus({ preventScroll: true });
       }
     };
 
@@ -191,37 +175,31 @@ export function SheetInstrumentController() {
       if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
       const row = (e.target as Element | null)?.closest<HTMLAnchorElement>(".sh-log__row");
       if (!row) return;
-      const list = shown();
+      const list = rows();
       const i = list.indexOf(row);
       const next = list[i + (e.key === "ArrowDown" ? 1 : -1)];
       e.preventDefault();
-      if (next?.dataset.id) select(next.dataset.id, { focus: true });
-    };
-
-    // The filter hides rows by attribute; follow it when it hides the choice.
-    const mo = new MutationObserver(() => {
-      if (!current) return;
-      if (rowFor(current)?.closest("[hidden]")) {
-        const first = shown()[0];
-        if (first?.dataset.id) select(first.dataset.id, { hash: false });
+      if (next?.dataset.id) {
+        select(next.dataset.id, { focus: true });
+        reveal(next, "auto");
       }
-    });
-    mo.observe(root, { attributes: true, attributeFilter: ["data-sh-kind"] });
+    };
 
     root.addEventListener("click", onClick);
     root.addEventListener("keydown", onKey);
 
     const deep = HASH.exec(location.hash)?.[1];
     if (deep && rowFor(deep)) {
-      select(deep, { hash: false });
-      log?.scrollIntoView({ block: "start", behavior: "auto" });
-    }
+      if (deep !== current) select(deep, { hash: false });
+      else root.setAttribute("data-dos-id", deep);
+      seatLog("auto");
+      reveal(rowFor(deep), "auto");
+    } else if (current) root.setAttribute("data-dos-id", current);
 
     return () => {
       disposed = true;
       root.removeEventListener("click", onClick);
       root.removeEventListener("keydown", onKey);
-      mo.disconnect();
       io?.disconnect();
       window.clearTimeout(settleTimer);
       root.classList.remove("is-sh-inst");

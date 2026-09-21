@@ -211,26 +211,70 @@ describe("the instrument's law (ADR-118)", () => {
         /newest first/,
       ],
       [
-        "the clients in registry order rather than by their newest filing",
-        [
-          monitor,
-          {
-            ...log,
-            groups: [...log.groups.slice(0, -1).reverse(), log.groups[log.groups.length - 1]],
-          },
-        ],
-        /order of their newest filing/,
+        "the kind sections in kind order rather than by their newest filing",
+        [monitor, { ...log, groups: [...log.groups].reverse() }],
+        /sections are not in order of their newest filing/,
       ],
       [
-        "the house formats opening the list",
+        "a row filed under another kind's section",
         [
           monitor,
           {
             ...log,
-            groups: [log.groups[log.groups.length - 1], ...log.groups.slice(0, -1)],
+            groups: log.groups.map((g, i) =>
+              i === 0 ? { ...g, rows: [...g.rows, log.groups[1].rows[0]] } : g
+            ),
           },
         ],
-        /house formats do not close/,
+        /sits in the .+ section/,
+      ],
+      [
+        "a configuration past its ceiling",
+        [
+          monitor,
+          {
+            ...log,
+            dossiers: log.dossiers.map((d) =>
+              d.configuration
+                ? {
+                    ...d,
+                    configuration: {
+                      ...d.configuration,
+                      links: Array.from({ length: 9 }, (_, i) => ({
+                        id: `x${i}`,
+                        kind: "ops" as const,
+                        kicker: "Ops",
+                        name: `Tool ${i}`,
+                        users: 1,
+                      })),
+                    },
+                  }
+                : d
+            ),
+          },
+        ],
+        /configuration of 9 links/,
+      ],
+      [
+        "a link no workstream names",
+        [
+          monitor,
+          {
+            ...log,
+            dossiers: log.dossiers.map((d) =>
+              d.configuration
+                ? {
+                    ...d,
+                    configuration: {
+                      ...d.configuration,
+                      links: d.configuration.links.map((l) => ({ ...l, users: 0 })),
+                    },
+                  }
+                : d
+            ),
+          },
+        ],
+        /is named by 0 of/,
       ],
     ];
     for (const [name, ladder, re] of cases) {
@@ -250,8 +294,14 @@ describe("the kit exercises what the record does not hold yet (ADR-118)", () => 
     expect(monitor.plot.now.date).toBe(KIT_NOW);
   });
 
-  it("holds a three-engagement group, a run in progress, a same-day pair and an entering lane", () => {
-    expect(Math.max(...log.groups.map((g) => g.rows.length))).toBeGreaterThanOrEqual(3);
+  it("holds a three-engagement client, a run in progress, a same-day pair and an entering lane", () => {
+    /* Counted per CLIENT, not per section: since U2 the sections are kinds,
+       and a production section of five would satisfy "three in a group"
+       with no client holding three. */
+    const rows = log.groups.flatMap((g) => g.rows);
+    const perClient = new Map<string, number>();
+    for (const r of rows) perClient.set(r.name, (perClient.get(r.name) ?? 0) + 1);
+    expect(Math.max(...perClient.values())).toBeGreaterThanOrEqual(3);
     expect(monitor.plot.marks.some((m) => m.standing === "running")).toBe(true);
     const twins = monitor.plot.marks.filter((m) => m.slot !== undefined);
     expect(twins.map((m) => m.slot)).toEqual([-0.5, 0.5]);
@@ -259,21 +309,26 @@ describe("the kit exercises what the record does not hold yet (ADR-118)", () => 
     expect(monitor.plot.lanes.some((l) => l.since)).toBe(true);
   });
 
-  it("holds a client-bound row the kind filter can hide", () => {
-    const kinds = new Set(log.groups.flatMap((g) => g.rows.map((r) => r.kind)));
-    expect(kinds.size).toBeGreaterThan(1);
-    expect(log.filter.stations.map((s) => s.id).sort()).toEqual([...kinds].sort());
+  it("sections a client's keynote beside a house format's V2 cut, and draws the ceiling", () => {
+    const keynotes = log.groups.find((g) => g.id === "keynote")!;
+    expect(keynotes.rows.map((r) => [r.name, r.engagement])).toEqual([
+      ["The fixture keynote", "House format · V2"],
+      ["Meridian", "The keynote"],
+    ]);
+    const ceiling = log.dossiers.find((d) => d.id === "northwind-proposal")!.configuration!;
+    expect(ceiling.rows.filter((r) => !r.ghost)).toHaveLength(4);
+    expect(ceiling.links).toHaveLength(8);
   });
 
   it("orders the log by filing and the monitor by registry, whatever order the registry is in", () => {
-    /* ADR-118 U1. The kit's own registry order already IS its filing order,
-       so it cannot tell the two apart; reversed, it can. The log's runs must
-       not move (newest filing first, the formats last) while the lanes follow
-       the registry they were handed. */
+    /* ADR-118 U1, kept by U2. The kit's own registry order already IS its
+       filing order, so it cannot tell the two apart; reversed, it can. The
+       log's sections must not move (newest filing first) while the lanes
+       follow the registry they were handed. */
     const reversed = [...KIT_CLIENTS].reverse();
     const [m, l] = split(instrumentSections(kitEngagements(), reversed, KIT_NOW));
     expect(l.groups.map((g) => g.id)).toEqual(log.groups.map((g) => g.id));
-    expect(l.groups.map((g) => g.id)).toEqual(["northwind", "halcyon", "meridian", "formats"]);
+    expect(l.groups.map((g) => g.id)).toEqual(["production", "keynote", "workshop"]);
     expect(m.plot.lanes.filter((x) => !x.id.startsWith("formats-")).map((x) => x.id)).toEqual(
       reversed.map((c) => c.slug)
     );

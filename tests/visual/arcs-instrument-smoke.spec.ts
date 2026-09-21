@@ -1,6 +1,14 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import sharp from "sharp";
 
+import {
+  BOARD_BOX_PX,
+  CFG_FLOOR_PX,
+  CONFIG_CROPS,
+  CROP_SWITCH,
+  cropFor,
+} from "@/components/sheet/config/configLayout";
 import { CLIENTS } from "@/lib/arcs/clients";
 import { ARCS } from "@/lib/arcs/registry";
 import { letterDateShort } from "@/lib/sheet/dates";
@@ -13,10 +21,14 @@ import { letterDateShort } from "@/lib/sheet/dates";
  *     itself, NOW left of an engagement;
  *   - a dossier that is not the chosen row — for ANY row, because the gate
  *     never measures a hidden dossier;
- *   - since ADR-118 U1, a log that stops being blocks beside a gutter: a block
- *     of another size, text that clips, a strip off the dossier's band, a list
- *     that ends short of the dossier's floor;
- *   - keys that walk into a row the filter has hidden;
+ *   - since U1, a block of another size, text that clips, a list that ends
+ *     short of the dossier's floor while it could reach it;
+ *   - since U2, a section head off the dossier's band, an icon inside its
+ *     plate, a notch on the wrong corner, a ring that thins to nothing at
+ *     mid-height, a board on a page with no configuration (or none on a
+ *     proposal), a crop that is not the one its box asks for, type under the
+ *     floor, and words on the die the die's own ink swallows;
+ *   - keys that stop at a section's edge, or walk into a row off the screen;
  *   - the frame's chrome printing over the device.
  *
  * ⚠ Under `next dev` the owner's gate is open (ADR-117); that is the only
@@ -35,6 +47,13 @@ const RECORD = [
   ...CLIENTS.flatMap((c) => (c.pages ?? []).map((p) => ({ href: p.href, date: p.date }))),
 ];
 const NEWEST = [...RECORD].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))[0];
+/** The engagements whose dossier draws a configuration: the proposals. */
+const CONFIGURED = new Set([
+  "hungry-minds-proposal",
+  "perfect-ted-proposal",
+  "suri-proposal",
+  "trinny-london-pitch",
+]);
 
 async function open(page: Page, url = "/arcs") {
   await page.goto(url);
@@ -58,13 +77,14 @@ async function seatLog(page: Page) {
 }
 
 /**
- * The seated log's geometry (ADR-118 U1): the gutter, the head strip, the
- * blocks and the floor, each with the TOKEN it answers to.
+ * The seated log's geometry (ADR-118 U1, U2): the gutter, the section heads,
+ * the blocks and the floor, each with the TOKEN it answers to.
  *
- * ⚠ A TOKEN IS A STRING UNTIL SOMETHING LAYS IT OUT: `--log-gutter` and
- * `--log-block-h` are clamp()s, so each is resolved by a probe element laid out
- * in the list — the block height's probe MUST sit inside `.sh-log__list`,
- * which is where `--log-n` lives and where the token is declared.
+ * ⚠ A TOKEN IS A STRING UNTIL SOMETHING LAYS IT OUT: `--log-gutter`,
+ * `--log-block-h` and `--log-block-min` are clamp()s or lengths, so each is
+ * resolved by a probe element laid out in the list — the block height's probe
+ * MUST sit inside `.sh-log__list`, which is where `--log-n` and `--log-heads`
+ * live and where the token is declared.
  */
 async function readLog(page: Page) {
   return page.evaluate(() => {
@@ -80,32 +100,35 @@ async function readLog(page: Page) {
       p.remove();
       return v;
     };
-    const blocks = [...document.querySelectorAll<HTMLElement>(".sh-log__row")].filter(
-      (b) => !b.closest("[hidden]")
-    );
-    const stations = [...q(".sh-log__filter").querySelectorAll(".sh-stn")].map((s) => r(s));
+    const blocks = [...document.querySelectorAll<HTMLElement>(".sh-log__row")];
+    const heads = [...document.querySelectorAll<HTMLElement>(".sh-log__head")];
     const d = q(".sh-dos:not([hidden]) .sh-dos__in");
     return {
       monBottom: r(q("#monitor")).bottom,
       listTop: r(list).top,
-      listRight: r(list).right,
       dosTop: r(dos).top,
       dosBottom: r(dos).bottom,
       gutter: r(dos).left - r(list).right,
       gutterToken: probe("width", "--log-gutter"),
-      stripBottom: r(q(".sh-log__filter")).bottom,
+      headBottom: r(heads[0]).bottom,
       bandBottom: r(d.querySelector(".sh-dos__band")!).bottom,
-      stationRows: new Set(stations.map((s) => Math.round(s.top))).size,
-      stationsRight: Math.max(...stations.map((s) => s.right)),
+      heads: heads.length,
+      logHeads: Number(list.style.getPropertyValue("--log-heads")),
       blocks: blocks.length,
       logN: Number(list.style.getPropertyValue("--log-n")),
       blockToken: probe("height", "--log-block-h"),
-      floorClamp: 44,
+      floorClamp: probe("height", "--log-block-min"),
       ceilClamp: 0.09 * innerHeight,
       heights: blocks.map((b) => r(b).height),
       lastBottom: r(blocks[blocks.length - 1]).bottom,
+      // The icon sits LEFT of its plate, outside it (the codex's arrangement).
+      iconInside: blocks
+        .filter(
+          (b) => r(b.querySelector(".sh-glyph")!).right > r(b.querySelector(".sh-log__plate")!).left
+        )
+        .map((b) => b.dataset.id),
       clipped: blocks.flatMap((b) =>
-        [".sh-log__client", ".sh-log__title"]
+        [".sh-log__name", ".sh-log__eng", ".sh-log__date"]
           .map((sel) => b.querySelector<HTMLElement>(sel)!)
           .filter((t) => t.scrollWidth > t.clientWidth + 1 || t.getClientRects().length > 1)
           .map((t) => `${b.dataset.id} ${t.className}`)
@@ -127,26 +150,29 @@ function expectSeatedLog(s: Awaited<ReturnType<typeof readLog>>) {
     47
   );
   expect(
-    Math.abs(s.stripBottom - s.bandBottom),
-    "the filter strip is level with the dossier's band"
+    Math.abs(s.headBottom - s.bandBottom),
+    "the first section head is level with the dossier's band"
   ).toBeLessThanOrEqual(1);
-  expect(s.stationRows, "the four stations keep one line").toBe(1);
-  expect(s.stationsRight, "the stations stay inside the list").toBeLessThanOrEqual(
-    s.listRight + 0.5
-  );
+  expect(s.logHeads, "--log-heads counts every section head").toBe(s.heads);
   expect(s.logN, "--log-n counts every block").toBe(s.blocks);
   // ⚠ A TRANSFORMED OR FRACTIONAL RECT NEEDS AN EPSILON; half a pixel is it.
   expect(
     s.heights.filter((h) => Math.abs(h - s.blockToken) > 0.5).map((h) => h.toFixed(2)),
     `every block is --log-block-h (${s.blockToken.toFixed(2)})`
   ).toEqual([]);
-  // One floor — while the block height is free to divide the device. At a
-  // clamp it cannot, and the list runs short or long by design.
+  // One floor — while the block height is free to divide the device. At the
+  // floor the list runs on past the dossier (owner: "I don't mind that it
+  // extends beyond the viewport section"); at the ceiling it ends short.
   if (s.blockToken > s.floorClamp + 0.5 && s.blockToken < s.ceilClamp - 0.5)
     expect(
       Math.abs(s.lastBottom - s.dosBottom),
       `the list ends on the dossier's floor (${s.lastBottom.toFixed(1)} vs ${s.dosBottom.toFixed(1)})`
     ).toBeLessThanOrEqual(1);
+  else if (s.blockToken <= s.floorClamp + 0.5)
+    expect(s.lastBottom, "at the floor the list runs past the dossier").toBeGreaterThan(
+      s.dosBottom - 1
+    );
+  expect(s.iconInside, "an icon inside its plate").toEqual([]);
   expect(s.clipped, "block text that clips or wraps").toEqual([]);
   expect(s.dossierClipped, "the dossier's foot is inside its housing").toBe(false);
 }
@@ -217,7 +243,7 @@ test.describe("the arcs instrument (ADR-118)", () => {
         expect(g.scrollW).toBeLessThanOrEqual(w + 1);
 
         // Seated, nothing of the monitor is in view, and the list and the
-        // dossier share a datum AND a floor, a gutter apart (ADR-118 U1).
+        // dossier share a datum, a gutter apart (ADR-118 U1, U2).
         await seatLog(page);
         const s = await readLog(page);
         expect(s.monBottom).toBeLessThanOrEqual(1);
@@ -238,13 +264,45 @@ test.describe("the arcs instrument (ADR-118)", () => {
         expect(s.blocks, "the kit's record").toBe(8);
         expectSeatedLog(s);
       });
+
+      test(`the board is the crop its box asks for, filled, lettered above the floor, at ${w}x${h}`, async ({
+        page,
+      }) => {
+        await open(page);
+        await seatLog(page);
+        const b = await readBoard(page);
+        expect(b, "the newest proposal draws its configuration").not.toBeNull();
+        if (!b) return;
+        const want = cropFor(b.box.w, b.box.h);
+        expect(b.crops, "one crop is shown").toEqual([want]);
+        const pinned = BOARD_BOX_PX[`${w}x${h}` as keyof typeof BOARD_BOX_PX];
+        if (pinned) {
+          expect(
+            Math.abs(b.box.w - pinned.w) / pinned.w,
+            "the box the floor is set against (w)"
+          ).toBeLessThan(0.02);
+          expect(
+            Math.abs(b.box.h - pinned.h) / pinned.h,
+            "the box the floor is set against (h)"
+          ).toBeLessThan(0.02);
+        }
+        expect(b.fill, `the ${want} crop fills its box`).toBeGreaterThan(0.9);
+        expect(b.minName, "a name on the board").toBeGreaterThanOrEqual(CFG_FLOOR_PX.name - 0.05);
+        expect(b.minKicker, "a kicker on the board").toBeGreaterThanOrEqual(
+          CFG_FLOOR_PX.kicker - 0.05
+        );
+        expect(b.overlaps, "two of the board's words print through each other").toEqual([]);
+        expect(
+          b.knock.every((c) => c >= 4.5),
+          `the die's words on its ink: ${b.knock.join(", ")}`
+        ).toBe(true);
+      });
     });
   }
 
-  /* ⚠ THE NARROW DESKTOP RUNG (961–1100). The four filter stations are ~343px
-     on one line and the strip may not wrap — it is level with the dossier's
-     band — while 5/12 of the band is 309px at 1024 wide: the list takes half
-     there. Measured 34px over at 1024 × 768 before that rung existed. */
+  /* ⚠ THE NARROW DESKTOP RUNG (961–1100). A block's mono line holds the
+     bracketed engagement and the date side by side; at 5/12 of the band it
+     clipped at 961, so the list takes half there. */
   for (const [w, h] of [
     [1024, 768],
     [961, 700],
@@ -254,13 +312,72 @@ test.describe("the arcs instrument (ADR-118)", () => {
         viewport: { width: w, height: h },
         contextOptions: { reducedMotion: "no-preference" },
       });
-      test(`the strip keeps one line inside the list, at ${w}x${h}`, async ({ page }) => {
+      test(`every block keeps its lines unclipped, at ${w}x${h}`, async ({ page }) => {
         await open(page);
         await seatLog(page);
         expectSeatedLog(await readLog(page));
+        const b = await readBoard(page);
+        expect(b?.crops, "under 480px wide the board stacks").toEqual(["narrow"]);
+        expect(b!.box.w).toBeLessThan(CROP_SWITCH.minWidthPx);
       });
     });
   }
+
+  test("every block's notch is bottom-left, and its ring holds at mid-height", async ({ page }) => {
+    await open(page);
+    await seatLog(page);
+    const corners = await page.evaluate(() => {
+      const plate = document.querySelectorAll<HTMLElement>(
+        ".sh-log__row:not(.is-on) .sh-log__plate"
+      )[0];
+      const b = plate.getBoundingClientRect();
+      const probe = document.createElement("div");
+      probe.style.width = "var(--log-ch)";
+      plate.appendChild(probe);
+      const ch = probe.getBoundingClientRect().width;
+      probe.remove();
+      const i = ch * 0.35;
+      const at = (x: number, y: number) => plate.contains(document.elementFromPoint(x, y));
+      return {
+        ch,
+        tl: at(b.left + i, b.top + i),
+        tr: at(b.right - i, b.top + i),
+        br: at(b.right - i, b.bottom - i),
+        bl: at(b.left + i, b.bottom - i),
+        box: { x: b.left, y: b.top, w: b.width, h: b.height },
+      };
+    });
+    // ⚠ PINNED FROM BOTH ENDS (ADR-065 U4/U5): the cut EXISTS at BL, and the
+    // other three corners are square.
+    expect(corners.ch).toBeGreaterThan(8);
+    expect(corners.bl, "the bottom-left corner is cut").toBe(false);
+    expect([corners.tl, corners.tr, corners.br], "the other three are square").toEqual([
+      true,
+      true,
+      true,
+    ]);
+
+    /* THE RING'S LEFT EDGE, READ AS PIXELS, ON A BLOCK AND ON THE DOSSIER.
+       The first cut wrote both contours as one open path and `evenodd` painted
+       a bow-tie: on the tall housings a full edge at the corners and nothing at
+       mid-height, on a 50px block a half-strength edge all the way down. A DOM
+       walk cannot see a `::before`'s paint, so the edges are shot and read:
+       the left edge at mid-height must carry most of the top edge's energy at
+       mid-width, whatever sub-pixel the box sits on. Measured at 1440 × 800,
+       1440 × 900 and 1920 × 1247: closed 0.88–1.21 on a block and 0.64–0.79
+       on the dossier; the open path 0.31–0.52 and 0.16–0.27. The thresholds
+       sit between the two on each object. */
+    expect(await ringRatio(page, corners.box), "a block's left edge at mid-height").toBeGreaterThan(
+      0.65
+    );
+    const dos = await page.evaluate(() =>
+      document.querySelector(".sh-dos:not([hidden]) .sh-dos__in")!.getBoundingClientRect().toJSON()
+    );
+    expect(
+      await ringRatio(page, { x: dos.x, y: dos.y, w: dos.width, h: dos.height }),
+      "the dossier's left edge at mid-height"
+    ).toBeGreaterThan(0.5);
+  });
 
   test("the plot is the record: one mark per engagement, at its date, left of NOW", async ({
     page,
@@ -302,14 +419,14 @@ test.describe("the arcs instrument (ADR-118)", () => {
     );
   });
 
-  test("every row opens ITS dossier: title, date and target agree", async ({ page }) => {
+  test("every row opens ITS dossier: name, date, target and board agree", async ({ page }) => {
     await open(page);
     await seatLog(page);
     const rows = await page.$$eval(".sh-log__row", (els) =>
       els.map((el) => ({
         id: el.getAttribute("data-id")!,
         href: el.getAttribute("href")!,
-        title: el.querySelector(".sh-log__title")!.textContent!.trim(),
+        name: el.querySelector(".sh-log__name")!.textContent!.trim(),
       }))
     );
     expect(rows).toHaveLength(RECORD.length);
@@ -328,60 +445,69 @@ test.describe("the arcs instrument (ADR-118)", () => {
         );
         const one = shown[0];
         const read = Object.fromEntries(
-          [...one.querySelectorAll(".sh-readout__row")].map((r) => [
-            r.querySelector(".sh-readout__k")!.textContent!.trim(),
-            r.querySelector(".sh-readout__v")!.textContent!.trim(),
+          [...one.querySelectorAll(".sh-dos__reading")].map((r) => [
+            r.querySelector("dt")!.textContent!.trim(),
+            r.querySelector("dd")!.textContent!.trim(),
           ])
         );
-        const img = one.querySelector("img");
         return {
           shown: shown.length,
           id: one.dataset.id,
-          title: one.querySelector(".sh-dos__title")!.textContent!.trim(),
+          title: one.getAttribute("aria-label") ?? "",
+          desig: one.querySelector(".sh-dos__desig")!.textContent!.trim(),
           filed: read.Filed,
           cta: one.querySelector(".sh-cta")!.getAttribute("href"),
-          pictured: Boolean(img && img.complete && img.naturalWidth > 0),
+          board: one.querySelectorAll(".sh-cfg").length,
+          images: one.querySelectorAll("img").length,
+          running: one.getAnimations({ subtree: true }).some((a) => a.playState === "running"),
+          swapping: one.classList.contains("is-swap"),
         };
       });
       expect(d.shown, row.id).toBe(1);
       expect(d.id, row.id).toBe(row.id);
-      // SETTLED means the picture too: the first cut settled on the aperture's
-      // timer, and a lazy picture was still streaming in under it.
-      expect(d.pictured, `${row.id}'s picture had not loaded when it settled`).toBe(true);
+      // SETTLED means the aperture has opened: nothing still running on it.
+      expect(d.running || d.swapping, `${row.id} settled mid-swap`).toBe(false);
+      // A client's block names the client its dossier's band designates; a
+      // house format's names its own title ("The Loop portfolio" carries no
+      // client prefix, so the title alone cannot say whose it is).
       expect(
-        d.title.toLowerCase().endsWith(row.title.toLowerCase()),
-        `${d.title} / ${row.title}`
+        d.desig === `// ${row.name}` || d.title.includes(row.name),
+        `${d.desig} · ${d.title} / ${row.name}`
       ).toBe(true);
       expect(d.filed, row.id).toBe(letterDateShort(byHref.get(row.href)!));
       expect(d.cta, row.id).toBe(row.href);
+      expect(d.images, `${row.id}: the dossier's picture is gone (U2)`).toBe(0);
+      expect(d.board, `${row.id}: a board`).toBe(CONFIGURED.has(row.id) ? 1 : 0);
     }
     // The choice is in the address, and the address chooses.
     expect(page.url()).toMatch(new RegExp(`#arc=${rows[rows.length - 1].id}$`));
   });
 
-  test("the keys walk the rows the filter leaves, and Enter opens", async ({ page }) => {
+  test("the keys walk every row across the sections, bring it into view, and Enter opens", async ({
+    page,
+  }) => {
     await open(page);
     await seatLog(page);
-    await page
-      .locator(".sh-stn", { hasText: /^Keynote/i })
-      .first()
-      .click();
-    await expect(page.locator(".sh-root")).toHaveAttribute("data-sh-kind", "keynote");
-    const visible = await page.$$eval(".sh-log__row", (els) =>
-      els.filter((el) => !el.closest("[hidden]")).map((el) => el.getAttribute("data-id"))
+    const order = await page.$$eval(".sh-log__sec", (secs) =>
+      secs.map((s) =>
+        [...s.querySelectorAll(".sh-log__row")].map((r) => r.getAttribute("data-id")!)
+      )
     );
-    expect(visible.length).toBeGreaterThan(1);
-    // The filter hid the chosen row, so the choice moved to the first one shown.
-    await expect(page.locator(".sh-root")).toHaveAttribute("data-dos-id", visible[0]!);
-    await page.locator(`.sh-log__row[data-id="${visible[0]}"]`).focus();
+    expect(order.length, "the kinds divide the list").toBeGreaterThan(1);
+    // The last row of the first section steps into the first of the second.
+    const [from, to] = [order[0][order[0].length - 1], order[1][0]];
+    await page.locator(`.sh-log__row[data-id="${from}"]`).focus();
     await page.keyboard.press("ArrowDown");
-    await expect(page.locator(".sh-root")).toHaveAttribute("data-dos-id", visible[1]!);
-    expect(await page.evaluate(() => document.activeElement?.getAttribute("data-id"))).toBe(
-      visible[1]
-    );
+    await expect(page.locator(".sh-root")).toHaveAttribute("data-dos-id", to);
+    expect(await page.evaluate(() => document.activeElement?.getAttribute("data-id"))).toBe(to);
+    // The step brought the row fully into view, whatever the list's length.
+    const box = await page.locator(`.sh-log__row[data-id="${to}"]`).boundingBox();
+    const vh = page.viewportSize()!.height;
+    expect(box!.y).toBeGreaterThanOrEqual(0);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(vh + 0.5);
     await page.keyboard.press("ArrowUp");
-    await expect(page.locator(".sh-root")).toHaveAttribute("data-dos-id", visible[0]!);
-    const href = await page.locator(`.sh-log__row[data-id="${visible[0]}"]`).getAttribute("href");
+    await expect(page.locator(".sh-root")).toHaveAttribute("data-dos-id", from);
+    const href = await page.locator(`.sh-log__row[data-id="${from}"]`).getAttribute("href");
     await page.keyboard.press("Enter");
     await page.waitForURL((u) => u.pathname === href, { timeout: 30_000 });
   });
@@ -408,6 +534,17 @@ test.describe("the arcs instrument (ADR-118)", () => {
     );
   });
 
+  test("a deep link to the row the server already chose still settles", async ({ page }) => {
+    /* U2: `select()` does nothing for the current id, and until the picture
+       went only its decode promise wrote the observable on that path. */
+    const newest = await (async () => {
+      await open(page);
+      return page.locator('.sh-log__row[aria-current="true"]').getAttribute("data-id");
+    })();
+    await open(page, `/arcs#arc=${newest}`);
+    await expect(page.locator(".sh-root")).toHaveAttribute("data-dos-id", newest!);
+  });
+
   test.describe("under reduced motion", () => {
     test.use({ contextOptions: { reducedMotion: "reduce" } });
     test("nothing is armed, and a choice settles at once", async ({ page }) => {
@@ -424,7 +561,7 @@ test.describe("the arcs instrument (ADR-118)", () => {
     });
   });
 
-  test("the kit draws what the record does not hold: a same-day pair, a run, an entering lane", async ({
+  test("the kit draws what the record does not hold: a same-day pair, a run, an entering lane, the ceiling", async ({
     page,
   }) => {
     const res = await page.goto("/test/arcs-instrument-kit");
@@ -439,6 +576,13 @@ test.describe("the arcs instrument (ADR-118)", () => {
     expect(overlap, "the same-day pair prints through itself").toBe(false);
     await expect(page.locator(".sh-mon__run--open")).toHaveCount(1);
     await expect(page.locator(".sh-mon__since")).toHaveCount(1);
+    // The ceiling: four workstreams, a ghost, eight links, on the page.
+    await seatLog(page);
+    const cfg = page.locator(".sh-dos:not([hidden]) .sh-cfg");
+    await expect(cfg).toHaveAttribute("data-cfg-rows", "5");
+    await expect(cfg).toHaveAttribute("data-cfg-links", "8");
+    const b2 = await readBoard(page);
+    expect(b2?.overlaps).toEqual([]);
   });
 
   test("both themes hold 4.5:1 on every reading", async ({ page }) => {
@@ -451,7 +595,7 @@ test.describe("the arcs instrument (ADR-118)", () => {
         await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
       else expect(await page.locator("html").getAttribute("data-theme")).not.toBe("light");
       const ratios = await page.$$eval(
-        ".sh-mon__reading dt, .sh-mon__reading dd, .sh-mon__cell-label, .sh-mon__lane-name, .sh-mon__lane-reading, .sh-mon__tick, .sh-log__client, .sh-log__title, .sh-log__date, .sh-dos:not([hidden]) .sh-readout__k, .sh-dos:not([hidden]) .sh-dos__lede",
+        ".sh-mon__reading dt, .sh-mon__reading dd, .sh-mon__cell-label, .sh-mon__lane-name, .sh-mon__lane-reading, .sh-mon__tick, .sh-log__head-name, .sh-log__head-n, .sh-log__name, .sh-log__eng, .sh-log__date, .sh-dos:not([hidden]) .sh-dos__reading dt, .sh-dos:not([hidden]) .sh-dos__reading dd, .sh-dos:not([hidden]) .sh-dos__lede",
         (els) => {
           const parse = (s: string) => {
             const m = s.match(/rgba?\(([^)]+)\)/);
@@ -499,6 +643,127 @@ test.describe("the arcs instrument (ADR-118)", () => {
       expect(ratios.length).toBeGreaterThan(30);
       const low = ratios.filter((r) => r.ratio < 4.5);
       expect(low, `${theme}: under 4.5:1`).toEqual([]);
+      // And the board's own words, on their own fills (a DOM walk reads the
+      // die's ground as the page's — its ink is an SVG fill).
+      await seatLog(page);
+      const b = await readBoard(page);
+      expect(
+        b!.knock.every((c) => c >= 4.5),
+        `${theme}: the die's words ${b!.knock.join(", ")}`
+      ).toBe(true);
+      expect(
+        b!.chips.every((c) => c >= 4.5),
+        `${theme}: the chips' words ${b!.chips.join(", ")}`
+      ).toBe(true);
     }
   });
 });
+
+/**
+ * How much of a clipped ring's top edge its left edge carries, at mid-height:
+ * both strips are six pixels across the edge, each pixel's distance from the
+ * strip's inner end summed, so a 1px line split across two device pixels
+ * counts the same as one landing on a single pixel. 1 is a whole ring.
+ */
+async function ringRatio(page: Page, box: { x: number; y: number; w: number; h: number }) {
+  const strip = async (clip: { x: number; y: number; width: number; height: number }) => {
+    const shot = await page.screenshot({ clip });
+    const { data, info } = await sharp(shot).raw().toBuffer({ resolveWithObject: true });
+    const px: number[] = [];
+    for (let i = 0; i < info.width * info.height; i++)
+      px.push(
+        (data[i * info.channels] + data[i * info.channels + 1] + data[i * info.channels + 2]) / 3
+      );
+    const base = px[px.length - 1]; // the inner end, on the plate
+    return px.reduce((sum, v) => sum + Math.abs(v - base), 0);
+  };
+  const left = await strip({
+    x: Math.floor(box.x) - 2,
+    y: Math.round(box.y + box.h / 2),
+    width: 6,
+    height: 1,
+  });
+  const top = await strip({
+    x: Math.round(box.x + box.w / 2),
+    y: Math.floor(box.y) - 2,
+    width: 1,
+    height: 6,
+  });
+  return top > 0 ? left / top : 0;
+}
+
+/**
+ * The shown dossier's board, read in the browser: its box, the crop the page
+ * shows, how much of the box it fills, the smallest name and kicker it paints,
+ * any two words that print through each other, and the contrast of the die's
+ * and the chips' words on their own fills.
+ */
+async function readBoard(page: Page) {
+  const crops = CONFIG_CROPS.map((c) => ({ id: c.id, w: c.w, h: c.h }));
+  return page.evaluate((cropList) => {
+    const cfg = document.querySelector<HTMLElement>(".sh-dos:not([hidden]) .sh-cfg");
+    if (!cfg) return null;
+    const box = cfg.getBoundingClientRect();
+    const shown = [...cfg.querySelectorAll<SVGSVGElement>(".sh-cfg__crop")].filter(
+      (s) => getComputedStyle(s).display !== "none"
+    );
+    const svg = shown[0];
+    const crop = cropList.find((c) => c.id === svg.dataset.crop)!;
+    const s = Math.min(box.width / crop.w, box.height / crop.h);
+    const fill = (crop.w * s * crop.h * s) / (box.width * box.height);
+    const texts = [...svg.querySelectorAll<SVGTextElement>("text")];
+    const px = (t: SVGTextElement) =>
+      t.getScreenCTM()!.a * parseFloat(t.getAttribute("font-size")!);
+    const mono = (t: SVGTextElement) => t.classList.contains("sh-cfg__t--mono");
+    const rects = texts.map((t) => ({ t, b: t.getBoundingClientRect() }));
+    const overlaps: string[] = [];
+    for (let i = 0; i < rects.length; i++)
+      for (let j = i + 1; j < rects.length; j++) {
+        const [a, b] = [rects[i].b, rects[j].b];
+        const ix = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+        const iy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+        if (ix > 1 && iy > 1)
+          overlaps.push(`${rects[i].t.textContent} / ${rects[j].t.textContent}`);
+      }
+    const parse = (str: string) => {
+      const m = str.match(/rgba?\(([^)]+)\)/);
+      if (m) {
+        const p = m[1]
+          .split(/[,/\s]+/)
+          .filter(Boolean)
+          .map(parseFloat);
+        return { r: p[0], g: p[1], b: p[2] };
+      }
+      const c = str.match(/color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)/);
+      if (c) return { r: +c[1] * 255, g: +c[2] * 255, b: +c[3] * 255 };
+      return null;
+    };
+    const lum = (c: { r: number; g: number; b: number }) => {
+      const f = (v: number) => {
+        const x = v / 255;
+        return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+      };
+      return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+    };
+    const ratio = (fg: string, bg: string) => {
+      const [a, b] = [parse(fg), parse(bg)];
+      if (!a || !b) return 0;
+      const [l1, l2] = [lum(a), lum(b)];
+      return +((Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)).toFixed(2);
+    };
+    const dieFill = getComputedStyle(svg.querySelector(".sh-cfg__die-plate")!).fill;
+    const chipFill = getComputedStyle(svg.querySelector(".sh-cfg__chip-plate")!).fill;
+    const onDie = texts.filter((t) => /knock/.test(t.getAttribute("class") ?? ""));
+    const onChip = texts.filter((t) => /--ink/.test(t.getAttribute("class") ?? ""));
+    return {
+      box: { w: +box.width.toFixed(1), h: +box.height.toFixed(1) },
+      crops: shown.map((x) => x.dataset.crop),
+      fill,
+      minName: Math.min(...texts.filter((t) => !mono(t)).map(px)),
+      minKicker: Math.min(...texts.filter(mono).map(px)),
+      overlaps,
+      knock: onDie.map((t) => ratio(getComputedStyle(t).fill, dieFill)),
+      chips: onChip.map((t) => ratio(getComputedStyle(t).fill, chipFill)),
+    };
+  }, crops);
+}

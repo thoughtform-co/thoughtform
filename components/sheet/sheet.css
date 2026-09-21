@@ -59,6 +59,13 @@
   --sh-ground: var(--void);
   --sh-plate: rgba(var(--void-deep-rgb), 0.62);
   --sh-recess: rgba(var(--dawn-rgb), 0.035);
+  /* KNOCKED-OUT ink: words set ON an ink-filled object — the arcs dossier's
+     configuration die (ADR-118 U2). The ground's own colour and two blends of
+     it into the ink, so both flip with ADR-058's swap and need no light row:
+     the dim rung measures ~6.4:1 on the die in dark and ~7.2:1 in light. */
+  --sh-knock: var(--sh-ground);
+  --sh-knock-dim: color-mix(in srgb, var(--sh-ground) 66%, var(--sh-ink));
+  --sh-knock-rule: color-mix(in srgb, var(--sh-ground) 30%, var(--sh-ink));
   /* the lip: the housing's one sanctioned gold line, FLAT (ADR-092 U1) */
   --sh-lip: color-mix(in srgb, var(--gold-line) 30%, transparent);
   --sh-lip-lit: color-mix(in srgb, var(--gold-line) 70%, transparent);

@@ -18,22 +18,24 @@
  * Since ADR-118 the overview is an INSTRUMENT — `arcsInstrumentSections` —
  * and the same rule holds for every reading it letters: the monitor's
  * tallies, its lanes, its axis and the dossiers' readouts are all computed
- * from the registry here and recomputed a second way in `sheet-arcs`.
+ * from the registry here and recomputed a second way in `sheet-arcs`. Since
+ * U2 the dossier also DRAWS the client's configuration, read off the
+ * proposal's own record (`./configuration.ts`), never authored.
  *
- * Imports `lib/arcs` and the theme lock's route list (both pure).
+ * Imports `lib/arcs` (pure data, the Trinny pitch's offer record included).
  */
 
 import { CLIENTS, KIND_LABEL, clientPageCount, kindOf } from "@/lib/arcs/clients";
-import PREVIEWS from "@/lib/arcs/previews.json";
 import type { ClientDef } from "@/lib/arcs/clients";
+import { TRINNY_BOARD, TRINNY_PHASES } from "@/lib/arcs/content/trinny-london-offer";
 import { arcsOf, houseArcs } from "@/lib/arcs/registry";
 import type { ArcDef, ArcKind } from "@/lib/arcs/types";
-import { isLightLockedPath } from "@/lib/theme/themeLock";
 
 import { atOnWindow, axisWindow } from "./axis";
+import { configurationFromBoard, configurationFromSection } from "./configuration";
 import { letterDateShort } from "./dates";
-import { SHEET_LOG_HOUSE_GROUP } from "./types";
 import type {
+  SheetConfiguration,
   SheetConsoleDef,
   SheetDossier,
   SheetFlashcard,
@@ -179,38 +181,6 @@ export const KIND_ONE: Record<ArcKind, string> = {
   production: "Production",
 };
 
-/**
- * The card images' own size. Read off the files, never typed from memory:
- * `sheet-arcs` opens every card image the instrument can show and asserts
- * its header says this.
- */
-export const CARD_IMAGE_SIZE = { width: 840, height: 1360 } as const;
-
-/** One picture the dossier shows: its source, its words, its real size. */
-export interface EngagementImage {
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
-}
-
-/**
- * The engagement's own FIRST SCREEN where one has been shot
- * (`scripts/capture-arc-previews.mjs`, sizes read off the written files),
- * else its card photograph at the card's own size.
- *
- * ⚠ THE PREVIEW IS OPTIONAL BY DESIGN: a page scaffolded unattended
- * (`scripts/new-arc.mjs`) has no preview yet, and a registry that failed
- * for want of one would break the day-one command. It falls back to the
- * card, and a preview's own entry is checked against its file.
- */
-export function pictureOf(id: string, title: string, card: { src: string; alt: string }) {
-  const shot = (PREVIEWS as Record<string, { src: string; width: number; height: number }>)[id];
-  return shot
-    ? { src: shot.src, alt: `The first screen of ${title}`, width: shot.width, height: shot.height }
-    : { ...card, ...CARD_IMAGE_SIZE };
-}
-
 /** The three standings in the order a tally reads them. */
 const STANDINGS: readonly SheetStanding[] = ["proposed", "running", "shipped"];
 
@@ -222,24 +192,44 @@ export interface Engagement {
   lane: string;
   client: ClientDef | null;
   isArc: boolean;
-  /** The log row's chip: what the page is. */
+  /** What the page is — proposal, pitch, portfolio, workshop, keynote. */
   chip: string;
   cardTitle: string;
   lede: string;
-  image: EngagementImage;
   kind: ArcKind;
   standing: SheetStanding;
   date: string;
   href: string;
   /** The arc's section count, or null for a page with no registry sections. */
   sections: number | null;
-  chapters: { id: string; label: string; href: string }[];
-  lightOnly: boolean;
+  /** The client's intelligence configuration, drawn in the dossier — null for
+   *  an engagement that has none (ADR-118 U2). */
+  configuration: SheetConfiguration | null;
 }
 
 function standingOf(status: SheetStanding | undefined, what: string): SheetStanding {
   if (!status) throw new Error(`${what} carries no status (ADR-114)`);
   return status;
+}
+
+/**
+ * Where a client page that is NOT an arc keeps its configuration (ADR-118
+ * U2). Trinny London's proposal is the pitch page (ADR-098 U2), whose record
+ * is its own board and phases; an arc carries a `configuration` section
+ * instead. Keyed by the page's href — the one field the overview and the page
+ * share.
+ */
+const PAGE_CONFIGURATIONS: Record<string, () => SheetConfiguration> = {
+  "/arcs/trinny-london/proposal": () => {
+    if (TRINNY_BOARD.kind !== "board" || TRINNY_PHASES.kind !== "list-groups")
+      throw new Error("the Trinny London record is not a board and its phases");
+    return configurationFromBoard(TRINNY_BOARD, TRINNY_PHASES);
+  },
+};
+
+function arcConfiguration(arc: ArcDef): SheetConfiguration | null {
+  const s = arc.sections.find((x) => x.kind === "configuration");
+  return s?.kind === "configuration" ? configurationFromSection(s) : null;
 }
 
 /** Every engagement on the overview exactly once, in LOG order: each client's
@@ -254,16 +244,12 @@ export function engagements(): Engagement[] {
     chip: arc.format,
     cardTitle: arc.cardTitle,
     lede: arc.cardLede,
-    image: pictureOf(arc.slug, arc.cardTitle, arc.cardImage),
     kind: kindOf(arc),
     standing: standingOf(arc.status, arc.slug),
     date: arc.date,
     href: `/arcs/${arc.slug}`,
     sections: arc.sections.length,
-    chapters: arc.sections
-      .filter((s) => s.menuPrimary && s.menuLabel)
-      .map((s) => ({ id: s.id, label: s.menuLabel ?? s.id, href: `/arcs/${arc.slug}#${s.id}` })),
-    lightOnly: isLightLockedPath(`/arcs/${arc.slug}`),
+    configuration: arcConfiguration(arc),
   });
   for (const client of CLIENTS) {
     for (const page of client.pages ?? [])
@@ -275,14 +261,12 @@ export function engagements(): Engagement[] {
         chip: page.chip,
         cardTitle: page.title,
         lede: page.lede,
-        image: pictureOf(`${client.slug}-${page.chip}`, page.title, page.image),
         kind: page.kind,
         standing: standingOf(page.status, page.href),
         date: page.date,
         href: page.href,
         sections: null,
-        chapters: [],
-        lightOnly: isLightLockedPath(page.href),
+        configuration: PAGE_CONFIGURATIONS[page.href]?.() ?? null,
       });
     for (const arc of arcsOf(client.slug)) out.push(fromArc(arc, client));
   }
@@ -295,24 +279,38 @@ function newestFirst<T extends { date: string }>(items: readonly T[]): T[] {
   return [...items].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 
-/** The log row's title: the card's, with the client's name taken off,
- *  because the block's own client line directly above already says it. */
-export function rowTitleOf(e: Pick<Engagement, "cardTitle" | "client">): string {
-  const prefix = e.client ? `${e.client.name} · ` : "";
-  if (!prefix || !e.cardTitle.startsWith(prefix)) return e.cardTitle;
-  const rest = e.cardTitle.slice(prefix.length);
-  return rest.charAt(0).toUpperCase() + rest.slice(1);
+/** The suffix a `-v2` cut's card title carries. */
+const V2 = " · V2";
+
+/**
+ * A block's two lines (ADR-118 U2): its TITLE — the client, lettered larger
+ * than anything else on the block (owner: "the title of the client should be
+ * more prominent, not too big") — and what the engagement IS, which the
+ * renderer brackets (`[ THE PROPOSAL ]`, the Ripperdoc's `[ HACKING
+ * IMMUNITY ]`). A house format has no client, so its title is its own name
+ * and its engagement says it is a house format, and which cut.
+ *
+ * ⚠ `The <chip>`, NEVER THE CARD TITLE WITH THE CLIENT TAKEN OFF: "The Loop
+ * portfolio" carries no client prefix, so the Loop block read "Loop
+ * Earplugs" over "the Loop portfolio" — the client twice.
+ */
+export function blockLines(
+  e: Pick<Engagement, "client" | "chip" | "cardTitle">
+): Pick<SheetLogRow, "name" | "engagement"> {
+  if (e.client) return { name: e.client.name, engagement: `The ${e.chip.toLowerCase()}` };
+  const v2 = e.cardTitle.endsWith(V2);
+  return {
+    name: v2 ? e.cardTitle.slice(0, -V2.length) : e.cardTitle,
+    engagement: v2 ? `House format${V2}` : "House format",
+  };
 }
 
-/** The dossier's readout: facts a reader could check against the registry. */
-export function dossierReadout(e: Engagement): SheetReadoutRow[] {
+/** The dossier's status strip: where it stands, when it was filed, how long. */
+export function dossierStatus(e: Engagement): SheetReadoutRow[] {
   return [
-    { label: "Client", value: e.client?.name ?? "Thoughtform" },
-    { label: "Kind", value: KIND_ONE[e.kind] },
     { label: "Standing", value: STANDING[e.standing] },
     { label: "Filed", value: letterDateShort(e.date) },
     ...(e.sections === null ? [] : [{ label: "Sections", value: String(e.sections) }]),
-    { label: "Theme", value: e.lightOnly ? "Light only" : "Dark and light" },
   ];
 }
 
@@ -343,8 +341,8 @@ export function arcsInstrumentSections(today: string): SheetSection[] {
 /**
  * The instrument over ANY set of engagements — the registry's, or the kit's
  * fixtures (`/test/arcs-instrument-kit`), which is how a three-engagement
- * group, a same-day collision and a run still in progress get drawn before
- * the real record holds one.
+ * group, a same-day collision, a run still in progress and a configuration at
+ * its ceiling get drawn before the real record holds one.
  */
 export function instrumentSections(
   all: readonly Engagement[],
@@ -408,38 +406,25 @@ export function instrumentSections(
   const rowOf = (e: Engagement): SheetLogRow => ({
     id: e.id,
     chip: e.chip,
-    title: rowTitleOf(e),
+    ...blockLines(e),
     date: e.date,
     standing: e.standing,
     kind: e.kind,
     href: e.href,
   });
-  /* ⚠ THE LOG'S RUNS ARE ORDERED BY THEIR NEWEST FILING, the house formats
-     last (ADR-118 U1); the monitor's LANES above keep registry order. Drawn
-     as one column of dated blocks, the log reads top to bottom as time, and
-     registry order put Trinny (09·09) over Suri (09·12) — a sorting bug to
-     the eye once no group head explained it. A lane that moved every time
-     something was filed would be a worse monitor, so the two orders differ on
-     purpose; the lit mark is what ties the frames. A tie keeps registry
-     order (`newestFirst` is stable). */
-  const runs = newestFirst(
-    clients.map((c) => {
-      const rows = newestFirst(all.filter((e) => e.client === c)).map(rowOf);
-      return { date: rows[0].date, group: { id: c.slug, name: c.name, rows } };
+  /* ⚠ THE LOG IS SECTIONED BY KIND (ADR-118 U2, owner: the kinds "should not
+     be tabs on top. They should actually divide the list on the left, like
+     we have in the third screenshot" — the Ripperdoc's OWNED / STORE). Each
+     section's rows run newest first and the sections by their newest filing,
+     so the list still reads top to bottom as time; a tie keeps `KINDS`'
+     order (`newestFirst` is stable). The monitor's LANES keep registry order,
+     as since U1: two orders on purpose, tied by the lit mark. */
+  const groups: SheetLogGroup[] = newestFirst(
+    KINDS.filter((k) => all.some((e) => e.kind === k)).map((k) => {
+      const rows = newestFirst(all.filter((e) => e.kind === k)).map(rowOf);
+      return { date: rows[0].date, group: { id: k, name: KIND_LABEL[k], rows } };
     })
-  ).map((r) => r.group);
-  const groups: SheetLogGroup[] = [
-    ...runs,
-    ...(all.some((e) => !e.client)
-      ? [
-          {
-            id: SHEET_LOG_HOUSE_GROUP,
-            name: "Thoughtform formats",
-            rows: newestFirst(all.filter((e) => !e.client)).map(rowOf),
-          },
-        ]
-      : []),
-  ];
+  ).map((s) => s.group);
   const byId = new Map(all.map((e) => [e.id, e]));
 
   const dossiers: SheetDossier[] = groups
@@ -454,14 +439,11 @@ export function instrumentSections(
         kind: KIND_ONE[e.kind],
         title: e.cardTitle,
         lede: e.lede,
-        image: e.image,
-        readout: dossierReadout(e),
-        chapters: e.chapters,
+        status: dossierStatus(e),
+        configuration: e.configuration,
         cta: { label: e.isArc ? "Open arc" : "Open page", href: e.href },
       };
     });
-
-  const kindsPresent = KINDS.filter((k) => all.some((e) => e.kind === k));
 
   return [
     {
@@ -529,12 +511,7 @@ export function instrumentSections(
       id: "log",
       menuLabel: "Log",
       menuPrimary: true,
-      ariaLabel: "The engagements by client, newest first",
-      filter: {
-        attr: "kind",
-        label: "Filter the log by kind",
-        stations: kindsPresent.map((k) => ({ id: k, name: KIND_LABEL[k] })),
-      },
+      ariaLabel: "The engagements by kind, newest first",
       groups,
       dossiers,
       selected: selected.id,

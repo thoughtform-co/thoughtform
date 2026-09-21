@@ -72,7 +72,9 @@ sg = "render-3003"        # Full record: span=full (AR, AK)
 # sh (Plates: rows=boxed) was retired on 2026-09-21 with the `rows` knob: the
 # owner read the ruled log as "a glorified word document", and the house went
 # past both values to one bordered block per engagement (ADR-118 U1).
-sj = "render-3003"        # Pair: dossier=pair (AR, AK)
+# sj (Pair: dossier=pair) was retired on 2026-09-21 with the `dossier` knob:
+# the dossier's picture became the client's configuration, drawn, and there
+# was no image plate left to split from a text plate (ADR-118 U2).
 sl = "render-3003"        # Rails: frame=rails (AR, AK)
 lawful = "render-3003"    # /test/design-eval-fixture .fixture-good (wave 00)
 broken = "render-3003"    # /test/design-eval-fixture .fixture-bad  (wave 00)

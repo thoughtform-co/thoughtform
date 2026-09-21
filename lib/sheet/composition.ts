@@ -13,8 +13,8 @@
  */
 
 import { atOnWindow } from "./axis";
-import { INSTRUMENT_ARRANGEMENTS, SHEET_LOG_HOUSE_GROUP } from "./types";
-import type { SheetArrangement, SheetSection } from "./types";
+import { CONFIG_MAX_LINKS, CONFIG_MAX_ROWS, INSTRUMENT_ARRANGEMENTS } from "./types";
+import type { SheetArrangement, SheetConfiguration, SheetSection } from "./types";
 
 /** ArcHudNav's item shape, restated so this module imports no component. */
 export interface SheetChapter {
@@ -136,12 +136,15 @@ const AT_EPSILON = 1e-9;
  *  5. The terminus's `Marks` reading is the number of marks (M3's count).
  *  6. The monitor's marks, the log's rows and the dossiers are ONE set of
  *     ids, and the lit mark is the selected row.
- *  7. Within a group the rows run newest first, and every row's kind is one
- *     the filter offers. The groups are drawn as ONE column of blocks since
- *     ADR-118 U1, which reads top to bottom as time: the client runs are
- *     ordered by their newest filing (a tie is allowed) and the house
- *     formats close the list.
- *  8. No readout letters an empty value, and the chapter row is capped.
+ *  7. The log is SECTIONED BY KIND (ADR-118 U2 — the owner's "they should
+ *     actually divide the list"): every row's kind IS its section's id, no
+ *     section is empty, within a section the rows run newest first, and the
+ *     sections run by their newest filing (a tie is allowed) — so the list
+ *     still reads top to bottom as time.
+ *  8. A configuration, where a dossier draws one, seats 1–4 workstreams (and
+ *     at most one ghost, last) and 1–8 links, each named by at least one of
+ *     the workstreams and by no more than all of them.
+ *  9. No readout letters an empty value, and the chapter row is capped.
  */
 export function instrumentViolations(sections: readonly SheetSection[]): string[] {
   const kinds = sections.map((s) => s.kind);
@@ -210,28 +213,25 @@ export function instrumentViolations(sections: readonly SheetSection[]): string[
   if (!rowIds.includes(log.selected)) out.push(`log: selected row ${log.selected} not found`);
   if (monitor.lit !== log.selected) out.push("the lit mark is not the selected row");
 
-  const offered = log.filter.stations.map((s) => s.id);
   for (const g of log.groups) {
-    if (g.rows.length === 0) out.push(`log: group ${g.id} is empty`);
+    if (g.rows.length === 0) out.push(`log: section ${g.id} is empty`);
     const gd = g.rows.map((r) => r.date);
     if (gd.join() !== [...gd].sort().reverse().join()) out.push(`log: ${g.id} is not newest first`);
     for (const r of g.rows)
-      if (!offered.includes(r.kind)) out.push(`log: ${r.id}'s kind ${r.kind} is not a filter`);
+      if (r.kind !== g.id) out.push(`log: ${r.id} (a ${r.kind}) sits in the ${g.id} section`);
   }
-  const house = log.groups.findIndex((g) => g.id === SHEET_LOG_HOUSE_GROUP);
-  if (house !== -1 && house !== log.groups.length - 1)
-    out.push("log: the house formats do not close the list");
-  const heads = log.groups
-    .filter((g) => g.id !== SHEET_LOG_HOUSE_GROUP)
-    .map((g) => g.rows.reduce((d, r) => (r.date > d ? r.date : d), ""));
+  const heads = log.groups.map((g) => g.rows.reduce((d, r) => (r.date > d ? r.date : d), ""));
   if (heads.join() !== [...heads].sort().reverse().join())
-    out.push("log: the clients are not in order of their newest filing");
+    out.push("log: the sections are not in order of their newest filing");
+
+  for (const d of log.dossiers)
+    if (d.configuration) out.push(...configurationViolations(d.configuration, d.id));
 
   const readouts = [
     ...monitor.datum.readings,
     ...monitor.cells.flatMap((c) => c.rows),
     ...monitor.terminus,
-    ...log.dossiers.flatMap((d) => d.readout),
+    ...log.dossiers.flatMap((d) => d.status),
   ];
   for (const r of readouts)
     if (!r.label || !r.value) out.push(`a readout letters an empty ${r.label || "label"}`);
@@ -243,6 +243,32 @@ export function instrumentViolations(sections: readonly SheetSection[]): string[
   if (chapters.length > SHEET_CHAPTER_CAP)
     out.push(`${chapters.length} chapters (max ${SHEET_CHAPTER_CAP})`);
 
+  return out;
+}
+
+/**
+ * A drawn configuration's bounds (ADR-118 U2, law 8). The board's layout is a
+ * slot table sized for these ceilings and the kit draws both; a record past
+ * either would be laid out against slots that do not exist — a chip off the
+ * crop, a row under the die's floor — with nothing erroring.
+ */
+export function configurationViolations(c: SheetConfiguration, where: string): string[] {
+  const out: string[] = [];
+  const real = c.rows.filter((r) => !r.ghost);
+  const ghosts = c.rows.filter((r) => r.ghost);
+  if (real.length < 1 || real.length > CONFIG_MAX_ROWS)
+    out.push(`${where}: a configuration of ${real.length} workstreams (1–${CONFIG_MAX_ROWS})`);
+  if (ghosts.length > 1) out.push(`${where}: more than one ghost workstream`);
+  if (ghosts.length === 1 && !c.rows[c.rows.length - 1].ghost)
+    out.push(`${where}: the ghost workstream is not last`);
+  if (c.links.length < 1 || c.links.length > CONFIG_MAX_LINKS)
+    out.push(`${where}: a configuration of ${c.links.length} links (1–${CONFIG_MAX_LINKS})`);
+  const ids = [...c.rows.map((r) => r.id), ...c.links.map((l) => l.id)];
+  if (new Set(ids).size !== ids.length) out.push(`${where}: configuration ids are not unique`);
+  for (const l of c.links)
+    if (l.users < 1 || l.users > real.length)
+      out.push(`${where}: ${l.id} is named by ${l.users} of ${real.length} workstreams`);
+  for (const r of c.rows) if (!r.name) out.push(`${where}: a workstream with no name`);
   return out;
 }
 

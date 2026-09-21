@@ -119,8 +119,11 @@ const ACCENT_ALLOW = [
   // one per still, inside the rubric's twelve.
   /\.sh-mon__mark\.is-lit/,
   /\.sh-mon__now/,
-  /\.sh-log__row\.is-on/,
-  /\.sh-dos__(in|plate)::before/,
+  // The filled block (ADR-118 U2): its gold is the PLATE's background and its
+  // ring's, so it is declared by the plate's own first class — the entry
+  // `.sh-log__row.is-on` could never match a name this stage builds.
+  /\.sh-log__plate/,
+  /\.sh-dos__in::before/,
 ];
 
 /**

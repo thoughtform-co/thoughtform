@@ -147,11 +147,11 @@ if (VIEWPORT.length !== 2 || VIEWPORT.some((n) => !n)) {
 const subjectOf = (theme) => (theme === "light" ? "parchment" : "void");
 const laneOf = (d) => d.lane ?? d.id.toLowerCase();
 const knobsOf = (d) => ({ ...DEFAULTS, ...(d.knobs ?? {}) });
-/* A still's caption names only the knobs its page draws: the instrument's three
+/* A still's caption names only the knobs its page draws: the instrument's two
    on the arcs overview and its kit (`rows` went with direction SH, ADR-118
-   U1), the sheet's four everywhere else. A caption that listed all seven
-   would hand the grader settings the still cannot show. */
-const INSTRUMENT_KNOBS = ["span", "dossier", "frame"];
+   U1; `dossier` with SJ, U2), the sheet's four everywhere else. A caption
+   that listed all six would hand the grader settings the still cannot show. */
+const INSTRUMENT_KNOBS = ["span", "frame"];
 const knobStr = (knobs, typeId) =>
   KNOB_KEYS.filter((k) => INSTRUMENT_KNOBS.includes(k) === (typeId === "AR" || typeId === "AK"))
     .map((k) => `${k}=${knobs[k]}`)
@@ -491,12 +491,16 @@ async function driveStack(page, sectionId, vp) {
  * The row is chosen off the page, never by slug: the first visible row whose
  * standing differs from the chosen one, else the last visible row — so the
  * swap still shows the dossier's other face when the record has one.
+ * ⚠ VISIBLE MEANS ON SCREEN since ADR-118 U2: the list may run past the fold,
+ * and a click on a row under it scrolls the page, so the still would be shot
+ * off the seat the capture measured.
  */
 async function driveLog(page, vp) {
   const pick = await page.evaluate(() => {
-    const rows = [...document.querySelectorAll(".sh-log__row")].filter(
-      (r) => !r.closest("[hidden]") && r.getBoundingClientRect().height > 0
-    );
+    const rows = [...document.querySelectorAll(".sh-log__row")].filter((r) => {
+      const b = r.getBoundingClientRect();
+      return !r.closest("[hidden]") && b.height > 0 && b.top >= 0 && b.bottom <= innerHeight;
+    });
     const chosen = rows.find((r) => r.getAttribute("aria-current") === "true");
     const from = chosen?.getAttribute("data-id") ?? null;
     const standing = chosen?.getAttribute("data-status");

@@ -335,12 +335,14 @@ test.describe("arc terminal motion (ADR-057)", () => {
   test("the overview lists both cuts and the portfolio, each distinguishable", async ({ page }) => {
     /* ⚠ THE OVERVIEW IS AN INSTRUMENT SINCE ADR-118 — a monitor that plots every
        engagement and a log that lists it — so an engagement is a BLOCK, and its
-       client line and title together are what a reader tells it apart by (the
-       chip is in the record and lettered nowhere since ADR-118 U1). ADR-098's
-       invariants hold unchanged: every arc reaches the overview exactly once,
-       plus one per client page that is not an arc; and a terminal CUT is
-       distinguishable from the v1 it was cut from (ADR-057). The stamp is the
-       sheet's own readiness observable, which the capture waits on too.
+       title and bracketed line together are what a reader tells it apart by
+       (U2: the title is the CLIENT, the bracket what the engagement is — `The
+       proposal`, or `House format · V2` for a cut). ADR-098's invariants hold
+       unchanged: every arc reaches the overview exactly once, plus one per
+       client page that is not an arc; and a terminal CUT is distinguishable
+       from the v1 it was cut from (ADR-057) — by its bracket now, since a cut
+       and its v1 share their name. The stamp is the sheet's own readiness
+       observable, which the capture waits on too.
        ⚠ Under `next dev` the owner's gate is open (ADR-117), which is the only
        reason this page is reachable from a smoke at all. */
     await page.goto("/arcs");
@@ -352,9 +354,9 @@ test.describe("arc terminal motion (ADR-057)", () => {
       await expect(page.locator(`.sh-log__row[href="/arcs/${arc.slug}"]`), arc.slug).toHaveCount(1);
     const rowFor = async (href: string) => {
       const row = page.locator(`.sh-log__row[href="${href}"]`);
-      const client = (await row.locator(".sh-log__client").textContent())?.trim() ?? "";
-      const title = (await row.locator(".sh-log__title").textContent())?.trim() ?? "";
-      return { client, both: `${client} ${title}` };
+      const client = (await row.locator(".sh-log__name").textContent())?.trim() ?? "";
+      const line = (await row.locator(".sh-log__eng").textContent())?.trim() ?? "";
+      return { client, both: `${client} ${line}` };
     };
     for (const base of ["claude-workshop", "ai-keynote"]) {
       const v1 = await rowFor(`/arcs/${base}`);

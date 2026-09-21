@@ -1,13 +1,9 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 import { CLIENTS, KIND_LABEL, clientPageCount, kindOf } from "@/lib/arcs/clients";
 import { PROPOSAL_COPY_BANS, scanStrings } from "@/lib/arcs/copyLaw";
 import { ARCS, arcSlugs, arcsOf, houseArcs } from "@/lib/arcs/registry";
 import {
-  CARD_IMAGE_SIZE,
   KIND_ONE,
   STANDING,
   arcsInstrumentSections,
@@ -18,9 +14,8 @@ import {
   kindsOf,
 } from "@/lib/sheet/arcs";
 import { letterDateShort } from "@/lib/sheet/dates";
+import { LOG_GLYPHS } from "@/lib/sheet/logGlyphs";
 import type { SheetSection } from "@/lib/sheet/types";
-import PREVIEWS from "@/lib/arcs/previews.json";
-import { isLightLockedPath } from "@/lib/theme/themeLock";
 
 /**
  * The client console's record, recomputed (ADR-114).
@@ -121,7 +116,7 @@ describe("the arcs sheet (ADR-114)", () => {
 const TODAY = "2026-09-21";
 
 /** Every engagement the registry holds, recomputed without `engagements()`:
- *  each client's pages, each arc — its date, standing, kind and page. */
+ *  each client's pages, each arc — its date, standing, kind, page and chip. */
 function registryRecord() {
   const out: {
     id: string;
@@ -131,7 +126,9 @@ function registryRecord() {
     kind: string;
     href: string;
     title: string;
+    chip: string;
     sections: number | null;
+    configured: boolean;
   }[] = [];
   for (const c of CLIENTS)
     for (const p of c.pages ?? [])
@@ -143,7 +140,11 @@ function registryRecord() {
         kind: p.kind,
         href: p.href,
         title: p.title,
+        chip: p.chip,
         sections: null,
+        // The pitch page is Trinny London's proposal (ADR-098 U2), and its
+        // board and phases are the one configuration a client page carries.
+        configured: p.href === "/arcs/trinny-london/proposal",
       });
   for (const a of ARCS)
     out.push({
@@ -154,23 +155,11 @@ function registryRecord() {
       kind: kindOf(a),
       href: `/arcs/${a.slug}`,
       title: a.cardTitle,
+      chip: a.format,
       sections: a.sections.length,
+      configured: a.sections.some((s) => s.kind === "configuration"),
     });
   return out;
-}
-
-/** A webp's pixel size, read off its header (VP8 / VP8L / VP8X). */
-function webpSize(file: string): { width: number; height: number } {
-  const b = readFileSync(file);
-  const fourcc = b.toString("ascii", 12, 16);
-  if (fourcc === "VP8X") return { width: 1 + b.readUIntLE(24, 3), height: 1 + b.readUIntLE(27, 3) };
-  if (fourcc === "VP8 ")
-    return { width: b.readUInt16LE(26) & 0x3fff, height: b.readUInt16LE(28) & 0x3fff };
-  if (fourcc === "VP8L") {
-    const bits = b.readUInt32LE(21);
-    return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
-  }
-  throw new Error(`${file}: not a webp this reader knows (${fourcc})`);
 }
 
 describe("the arcs instrument, recomputed from the registry (ADR-118)", () => {
@@ -244,88 +233,84 @@ describe("the arcs instrument, recomputed from the registry (ADR-118)", () => {
     expect(monitor.lit).toBe(newest.id);
   });
 
-  it("runs the log by client, the newest filing first, the formats last, each title without its client's name", () => {
-    /* ADR-118 U1: the log is one column of blocks and reads top to bottom as
-       time. Recomputed from the record: a client's run sits where its newest
-       filing puts it — a tie keeps registry order — and the house formats
-       close the list. The monitor's lanes keep registry order (above). */
-    const newestOf = (slug: string) =>
+  it("sections the log by kind, each newest first, the sections by their newest filing", () => {
+    /* ADR-118 U2: the kinds DIVIDE the list (the owner, on U1's filter tabs).
+       Recomputed from the record: a section per kind present, a tie keeping
+       the vocabulary's order (keynote, workshop, production). */
+    const kinds = ["keynote", "workshop", "production"].filter((k) =>
+      record.some((r) => r.kind === k)
+    );
+    const newestOf = (k: string) =>
       record
-        .filter((r) => r.client === slug)
+        .filter((r) => r.kind === k)
         .map((r) => r.date)
         .sort()
         .reverse()[0];
-    const clients = CLIENTS.filter((c) => record.some((r) => r.client === c.slug));
-    const byFiling = [...clients].sort((a, b) =>
-      newestOf(a.slug) < newestOf(b.slug) ? 1 : newestOf(a.slug) > newestOf(b.slug) ? -1 : 0
+    const byFiling = [...kinds].sort((a, b) =>
+      newestOf(a) < newestOf(b) ? 1 : newestOf(a) > newestOf(b) ? -1 : 0
     );
-    expect(log.groups.map((g) => g.name)).toEqual([
-      ...byFiling.map((c) => c.name),
-      ...(record.some((r) => !r.client) ? ["Thoughtform formats"] : []),
-    ]);
-    for (const g of log.groups) {
-      for (const row of g.rows) {
-        expect(row.title.startsWith(`${g.name} · `), row.id).toBe(false);
-        expect(row.title.length, row.id).toBeGreaterThan(0);
-        expect(row.title[0], row.id).toBe(row.title[0].toUpperCase());
+    expect(log.groups.map((g) => g.id)).toEqual(byFiling);
+    expect(log.groups.map((g) => g.name)).toEqual(
+      byFiling.map((k) => KIND_LABEL[k as keyof typeof KIND_LABEL])
+    );
+    for (const g of log.groups)
+      expect(
+        g.rows.map((r) => r.date),
+        g.id
+      ).toEqual([...g.rows.map((r) => r.date)].sort().reverse());
+  });
+
+  it("names every block for its client, and brackets what the engagement is", () => {
+    /* The title is the CLIENT (owner: "more prominent, not too big"); the
+       bracket is `The <chip>` — never the card title with the client taken
+       off, which made the Loop block say "Loop" twice — or, for a house
+       format, `House format` and its cut. */
+    for (const r of record) {
+      const row = log.groups.flatMap((g) => g.rows).find((x) => x.id === r.id)!;
+      const client = CLIENTS.find((c) => c.slug === r.client);
+      expect(row.chip, r.id).toBe(r.chip);
+      if (client) {
+        expect(row.name, r.id).toBe(client.name);
+        expect(row.engagement, r.id).toBe(`The ${r.chip}`);
+      } else {
+        const v2 = r.title.endsWith(" · V2");
+        expect(v2, `${r.id}: a -v2 id and a · V2 title agree`).toBe(r.id.endsWith("-v2"));
+        expect(row.name, r.id).toBe(v2 ? r.title.slice(0, -" · V2".length) : r.title);
+        expect(row.engagement, r.id).toBe(v2 ? "House format · V2" : "House format");
       }
+      expect(row.engagement, r.id).not.toMatch(/[[\]]/);
     }
   });
 
-  it("files a dossier per row whose every readout is a fact the registry holds", () => {
+  it("files a dossier per row whose status is a fact the registry holds", () => {
     for (const r of record) {
       const d = log.dossiers.find((x) => x.id === r.id);
       expect(d, r.id).toBeDefined();
       if (!d) continue;
-      const read = Object.fromEntries(d.readout.map((row) => [row.label, row.value]));
+      const read = Object.fromEntries(d.status.map((row) => [row.label, row.value]));
       const client = CLIENTS.find((c) => c.slug === r.client);
-      expect(read.Client, r.id).toBe(client?.name ?? "Thoughtform");
-      expect(read.Kind, r.id).toBe(KIND_ONE[r.kind as keyof typeof KIND_ONE]);
+      expect(Object.keys(read), r.id).toEqual(
+        r.sections === null ? ["Standing", "Filed"] : ["Standing", "Filed", "Sections"]
+      );
       expect(read.Standing, r.id).toBe(STANDING[r.status as keyof typeof STANDING]);
       expect(read.Filed, r.id).toBe(letterDateShort(r.date));
       expect(read.Sections, r.id).toBe(r.sections === null ? undefined : String(r.sections));
-      expect(read.Theme, r.id).toBe(isLightLockedPath(r.href) ? "Light only" : "Dark and light");
+      expect(d.kind, r.id).toBe(KIND_ONE[r.kind as keyof typeof KIND_ONE]);
       expect(d.title, r.id).toBe(r.title);
       expect(d.cta.href, r.id).toBe(r.href);
       expect(d.designation.href, r.id).toBe(client ? `/arcs/${client.slug}` : undefined);
-      const arc = ARCS.find((a) => a.slug === r.id);
-      expect(
-        d.chapters.map((c) => c.id),
-        r.id
-      ).toEqual(arc ? arc.sections.filter((s) => s.menuPrimary).map((s) => s.id) : []);
-      for (const c of d.chapters) expect(c.href, r.id).toBe(`${r.href}#${c.id}`);
+      // Only a proposal draws a configuration — "not every type of arc has
+      // this intelligence configuration" (owner, ADR-118 U2).
+      expect(d.configuration !== null, `${r.id}: a board`).toBe(r.configured);
     }
-  });
-
-  it("every preview names a real engagement, and its file is the size it declares", () => {
-    /* The first screens (`scripts/capture-arc-previews.mjs`) are optional per
-       engagement — a scaffolded arc falls back to its card — but every entry
-       the manifest HAS must point at a page on the overview and a real file. */
-    const ids = new Set(record.map((r) => r.id));
-    for (const [id, p] of Object.entries(PREVIEWS)) {
-      expect(ids.has(id), `${id}: a preview for no engagement`).toBe(true);
-      expect(p.src).toBe(`/arcs/previews/${id}.webp`);
-      expect(webpSize(join(__dirname, "..", "..", "public", p.src)), id).toEqual({
-        width: p.width,
-        height: p.height,
-      });
-      expect(log.dossiers.find((d) => d.id === id)?.image.src, id).toBe(p.src);
-    }
-  });
-
-  it("declares every picture at the size its file says", () => {
-    for (const d of log.dossiers) {
-      const size = webpSize(join(__dirname, "..", "..", "public", d.image.src));
-      expect(size, d.image.src).toEqual({ width: d.image.width, height: d.image.height });
-    }
-    expect(CARD_IMAGE_SIZE).toEqual({ width: 840, height: 1360 });
   });
 
   it("composes no string the copy law refuses, and none unrendered", () => {
     /* Every string the instrument COMPOSES — readouts, lanes, the axis, the
-       mark labels, the row titles — is built here, outside every content
-       scanner (ADR-070 U15). The card copy it carries (a lede, a title) is
-       the decks' own and answers to the arcs registry's law. */
+       mark labels, the block lines, the configurations — is built here,
+       outside every content scanner (ADR-070 U15). The card copy it carries
+       (a lede, a title) is the decks' own and answers to the arcs registry's
+       law. */
     const composed = {
       datum: monitor.datum,
       cells: monitor.cells,
@@ -333,9 +318,12 @@ describe("the arcs instrument, recomputed from the registry (ADR-118)", () => {
       lanes: monitor.plot.lanes,
       windows: monitor.plot.windows,
       labels: monitor.plot.marks.map((m) => m.label),
-      rows: log.groups.map((g) => ({ name: g.name, rows: g.rows.map((r) => [r.chip, r.title]) })),
-      readouts: log.dossiers.map((d) => [d.kind, d.readout, d.cta.label, d.designation.name]),
-      filter: log.filter,
+      rows: log.groups.map((g) => ({
+        name: g.name,
+        rows: g.rows.map((r) => [r.chip, r.name, r.engagement]),
+      })),
+      readouts: log.dossiers.map((d) => [d.kind, d.status, d.cta.label, d.designation.name]),
+      configurations: log.dossiers.map((d) => d.configuration),
     };
     scanStrings(composed, "instrument", (value, path) => {
       expect(value, `${path}: an unrendered value`).not.toMatch(/undefined|\bNaN\b|\[object/);
@@ -343,7 +331,10 @@ describe("the arcs instrument, recomputed from the registry (ADR-118)", () => {
     });
   });
 
-  it("keeps the house formats on the overview: every arc reaches it exactly once", () => {
+  it("keeps the house formats on the overview: every arc reaches it exactly once, one icon each", () => {
+    for (const g of log.groups)
+      for (const r of g.rows)
+        expect(LOG_GLYPHS[r.chip], `${r.id}: no icon for ${r.chip}`).toBeDefined();
     const rowIds = log.groups.flatMap((g) => g.rows.map((r) => r.id));
     for (const a of ARCS)
       expect(

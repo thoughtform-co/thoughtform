@@ -61,7 +61,7 @@ describe("the sheet's directions (ADR-114)", () => {
   });
 
   it("a direction is scoped to the pages whose knobs it moves", () => {
-    const instrument = ["span", "dossier", "frame"];
+    const instrument = ["span", "frame"];
     for (const d of SH_DRAWABLE) {
       const moved = Object.keys(d.knobs ?? {});
       if (moved.length === 0) {
@@ -119,14 +119,16 @@ describe("the sheet's directions (ADR-114)", () => {
       knobs: SH_DEFAULTS,
       k: "SB",
     });
-    /* So was the `rows` knob, with its direction SH (ADR-118 U1): the log is
-       blocks now, so an old gallery link to either lands on the house. */
-    for (const stale of ["rows=boxed", "k=SH"])
+    /* So was the `rows` knob, with its direction SH (ADR-118 U1), and the
+       `dossier` knob with SJ (U2): an old gallery link to any of them lands
+       on the house. */
+    for (const stale of ["rows=boxed", "k=SH", "dossier=pair", "k=SJ"])
       expect(parseSheetQuery(new URLSearchParams(stale)), stale).toEqual({
         knobs: SH_DEFAULTS,
         k: "SB",
       });
     expect(SH_DIRECTIONS.map((d) => d.id)).not.toContain("SH");
+    expect(SH_DIRECTIONS.map((d) => d.id)).not.toContain("SJ");
     expect(parseSheetQuery(new URLSearchParams("k=NOPE&head=banana"))).toEqual({
       knobs: SH_DEFAULTS,
       k: "SB",
