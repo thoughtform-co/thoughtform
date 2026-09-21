@@ -219,6 +219,14 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
+  /* The arcs instrument (ADR-118) — the owner's overview, a monitor and a
+     log on the sheet's ramp. Token-only from line one and pinned the hour it
+     was written, the same way sheet.css entered. */
+  "components/sheet/instrument.css": {
+    tier: "content",
+    content: { A: 0, B: 0, C: 0 },
+    frame: { A: 0, B: 0, C: 0 },
+  },
   /* The site footer (ADR-105). Authored token-only from line one — which is
      the only way a new sheet enters this map at zero: `proof-stack.css` sat
      in NEITHER ratchet for a week while its own header said it was in both,

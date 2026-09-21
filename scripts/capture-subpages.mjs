@@ -410,7 +410,10 @@ async function stillLife(page, sectionId) {
       const scope = id ? document.getElementById(id) : document;
       if (!scope) return true;
       if (!document.querySelector(".is-sh-js, .is-arc-js")) return true;
-      const inView = [...scope.querySelectorAll(".sh-reveal, .arc-reveal")].filter((r) => {
+      /* `.sh-ap-root` is the arcs instrument's arrival (ADR-118): a device
+         whose parts open on a clip once it is in view — shot before its
+         `is-in`, a still would be a closed aperture. */
+      const inView = [...scope.querySelectorAll(".sh-reveal, .arc-reveal, .sh-ap-root")].filter((r) => {
         const b = r.getBoundingClientRect();
         /* ⚠ The reveal observer's rootMargin is -10% at the bottom (useArcReveal),
            so a node in the viewport's last tenth never lands until it is

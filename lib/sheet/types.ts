@@ -18,7 +18,15 @@
  * places.
  */
 
-/** The arrangement vocabulary. Every section is exactly one of these. */
+/**
+ * The arrangement vocabulary. Every section is exactly one of these.
+ *
+ * ⚠ THE LAST TWO ARE NOT DOCUMENT ARRANGEMENTS (ADR-118). `monitor` and `log`
+ * are the two frames of the arcs overview's INSTRUMENT: a page that holds
+ * either holds exactly those two, in that order, and is judged by
+ * `instrumentViolations` rather than the variety law — it has no split, no
+ * close and no ordinals, by decision.
+ */
 export const SHEET_ARRANGEMENTS = [
   "split",
   "row",
@@ -30,7 +38,12 @@ export const SHEET_ARRANGEMENTS = [
   "figure",
   "prose",
   "close",
+  "monitor",
+  "log",
 ] as const;
+
+/** The two arrangements that make an instrument page (ADR-118). */
+export const INSTRUMENT_ARRANGEMENTS = ["monitor", "log"] as const;
 
 export type SheetArrangement = (typeof SHEET_ARRANGEMENTS)[number];
 
@@ -117,6 +130,115 @@ export interface SheetConsoleDef {
   };
   cards: readonly SheetFlashcard[];
   data?: Record<string, string>;
+}
+
+/* ------------------------------------------------ the instrument (ADR-118) */
+
+/** Where an engagement stands — the registry's three words, never a fourth. */
+export type SheetStanding = "proposed" | "running" | "shipped";
+
+/**
+ * A value the monitor carries for BOTH of its time windows.
+ *
+ * ⚠ THE WINDOW IS A KNOB, AND A KNOB IS AN ATTRIBUTE THE CLIENT MAY FLIP
+ * (`span`, `?k=SG`), so the server renders both answers and CSS picks one.
+ * A window chosen on the server would make the direction unshootable.
+ */
+export interface SheetSpan<T> {
+  /** The engagements' own stretch, in whole divisions (the house). */
+  active: T;
+  /** The whole record, from the oldest relationship to today. */
+  full: T;
+}
+
+/** One window of the monitor's time axis: whole divisions, day-linear. */
+export interface SheetAxisWindow {
+  /** `YYYY-MM-DD`, the first day of the first division. */
+  from: string;
+  /** `YYYY-MM-DD`, the last day of the last division, inclusive. */
+  to: string;
+  division: "week" | "month" | "quarter";
+  /** The division size as the title row letters it — `1 week`. */
+  divisionLabel: string;
+  /** The window as the title row letters it — `20 Jul to 27 Sep 2026`. */
+  rangeLabel: string;
+  /** Every division boundary from the first (at 0), as a fraction of the
+   *  window; `label` is empty where the boundary is drawn and not lettered. */
+  ticks: readonly { at: number; label: string }[];
+}
+
+/** One lane of the monitor: a client, or one kind of house format. */
+export interface SheetMonitorLane {
+  id: string;
+  /** Lettered at the lane's left end. */
+  name: string;
+  /** Lettered at the lane's right end — a reading, never a label. */
+  reading: string;
+  /** The year a relationship began, lettered at the lane's left edge only
+   *  when it began before the window opens (the lane ENTERS the plot). */
+  since?: string;
+}
+
+/** One engagement, seated on its lane at the date it was filed. */
+export interface SheetMonitorMark {
+  /** The engagement's id — the same id names its log row and its dossier. */
+  id: string;
+  lane: string;
+  /** `YYYY-MM-DD`. */
+  date: string;
+  /** Where the date sits on each window, 0..1, at the middle of its day. */
+  at: SheetSpan<number>;
+  standing: SheetStanding;
+  /** The accessible name: what it is, where it stands, when it was filed. */
+  label: string;
+  /** The arc's section count (one dot each), or null for a page the
+   *  registry does not hold sections for — a bare mark, never a fake count. */
+  sections: number | null;
+  /** The engagement's page: a mark is a real link without script. */
+  href: string;
+  /** Present only when several engagements share this lane AND this day: the
+   *  mark's step off the lane's rule, centred on it (-0.5, +0.5, …). */
+  slot?: number;
+}
+
+/** One engagement row of the log. */
+export interface SheetLogRow {
+  id: string;
+  /** The chip: what the page is — proposal, pitch, portfolio, workshop, keynote. */
+  chip: string;
+  /** Sentence case, the client's name taken off where the group head says it. */
+  title: string;
+  /** `YYYY-MM-DD`; the renderer letters it bracketed. */
+  date: string;
+  standing: SheetStanding;
+  /** The filter's token. */
+  kind: string;
+  href: string;
+}
+
+/** One group of the log: a client, or the house formats. */
+export interface SheetLogGroup {
+  id: string;
+  name: string;
+  rows: readonly SheetLogRow[];
+}
+
+/** Everything the dossier says about one engagement. */
+export interface SheetDossier {
+  /** = the row's id and the mark's. */
+  id: string;
+  /** The designation in the head band — the client, linking to its page. */
+  designation: { name: string; href?: string };
+  /** The head band's right-hand word — the kind, singular. */
+  kind: string;
+  title: string;
+  lede: string;
+  image: { src: string; alt: string; width: number; height: number };
+  /** Label/value pairs a reader could check against the registry. */
+  readout: readonly SheetReadoutRow[];
+  /** The arc's chapters, in page order; empty for a page with none. */
+  chapters: readonly { id: string; label: string; href: string }[];
+  cta: { label: string; href: string };
 }
 
 interface SheetSectionBase {
@@ -212,6 +334,36 @@ export type SheetSection = SheetSectionBase &
         meta: readonly SheetReadoutRow[];
       }
     | { kind: "close" }
+    | {
+        /** The instrument's first frame: the record, plotted (ADR-118). */
+        kind: "monitor";
+        /** The strip it hangs from: a name and its readings. */
+        datum: { name: string; readings: readonly SheetReadoutRow[] };
+        /** The first readout cell: the page's own name and one line. */
+        identity: { name: string; lede: string };
+        /** The other readout cells, each a label over its rows. */
+        cells: readonly { id: string; label: string; rows: readonly SheetReadoutRow[] }[];
+        plot: {
+          windows: SheetSpan<SheetAxisWindow>;
+          lanes: readonly SheetMonitorLane[];
+          /** Sorted by date, oldest first. */
+          marks: readonly SheetMonitorMark[];
+          now: { date: string; label: string; at: SheetSpan<number> };
+        };
+        /** The strip it sits on; its `Marks` reading is the diamonds' count. */
+        terminus: readonly SheetReadoutRow[];
+        /** The one lit mark — the log's selection, on the server. */
+        lit: string;
+      }
+    | {
+        /** The instrument's second frame: the record, opened (ADR-118). */
+        kind: "log";
+        filter: SheetStations;
+        groups: readonly SheetLogGroup[];
+        dossiers: readonly SheetDossier[];
+        /** The one filled row, chosen on the server: the newest engagement. */
+        selected: string;
+      }
   );
 
 export interface SheetPageDef {

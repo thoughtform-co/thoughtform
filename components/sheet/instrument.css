@@ -1,0 +1,905 @@
+/* ═══════════════════════════════════════════════════════════════════
+   THE INSTRUMENT — the arcs overview's monitor and log (ADR-118)
+
+   The owner's page (ADR-117), and the one page on the sheet that is not a
+   document: two full screens, a MONITOR that plots every engagement at the
+   date it was filed and a LOG that opens it. It reads the sheet's ramp and
+   adds none: every colour below is a `--sh-*` rung (re-derived for light in
+   theme.css), a gold role token or a ramp step, so this file carries no
+   light block of its own.
+
+   ⚠ TOKENS ONLY — pinned at zero in `type-material-tokens`,
+   `theme-css-sweep` and `phone-viewport-units` from the hour it was
+   written, like `sheet.css`.
+
+   ⚠ BOTH DEVICES ARE AS TALL AS THE RAILS. `--hud-rail-y-start` and
+   `--hud-rail-y-end` are the frame's own datum and terminus (landing.css);
+   the monitor hangs from the first tick and sits on the last, and the
+   dossier sticks at the same two edges, so nothing in either device runs
+   under the fixed wordmark.
+
+   ⚠ NO FADES, NO FLICKER (the house law since ADR-097 U12). What moves is a
+   CLIP: the caption card's centre-out aperture on arrival, the NOW drop, the
+   dossier's 180ms swap — each a shape opening, never an opacity. Reduced
+   motion and no-JS render everything at rest: nothing is armed until the
+   controller adds `is-sh-inst`, and every armed rule sits under
+   `no-preference`.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── 0. Tokens ────────────────────────────────────────────────────── */
+.sh-root[data-sh-profile="instrument"] {
+  --mon-pad: clamp(14px, 1.25vw, 24px);
+  --mon-strip-h: clamp(28px, 2.9svh, 36px);
+  --mon-title-h: clamp(22px, 2.4svh, 30px);
+  --mon-tick-h: clamp(22px, 2.4svh, 30px);
+  --mon-name-w: clamp(150px, 10.4vw, 200px);
+  --mon-read-w: clamp(140px, 10.4vw, 200px);
+  --mon-mark: clamp(9px, 0.6vw, 12px);
+  --mon-h: calc(100svh - var(--hud-rail-y-start) - var(--hud-rail-y-end));
+  --log-row-h: clamp(32px, 4.4svh, 56px);
+  --log-head-h: clamp(26px, 3.4svh, 42px);
+  --ap-ease: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.sh-sec--monitor,
+.sh-sec--log {
+  box-sizing: border-box;
+  padding: var(--hud-rail-y-start) var(--instrument-margin) var(--hud-rail-y-end);
+}
+.sh-sec--monitor {
+  height: 100svh;
+}
+.sh-sec--log {
+  min-height: 100svh;
+}
+
+/* The mono chrome every strip, label and reading shares. */
+.sh-mon__datum,
+.sh-mon__terminus,
+.sh-mon__cell-label,
+.sh-mon__title-row,
+.sh-mon__lane-name,
+.sh-mon__lane-reading,
+.sh-mon__since,
+.sh-mon__ticks,
+.sh-log__head,
+.sh-log__chip,
+.sh-log__date,
+.sh-dos__band,
+.sh-dos__keys,
+.sh-dos__chapters {
+  font-family: var(--font-pt-mono);
+  font-size: var(--sh-chrome);
+  font-weight: var(--weight-text);
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+
+.sh-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── 1. The housings — TR+BL, square children, a clipped ring ─────── */
+/* ⚠ A clip CUTS a border and never strokes one (ADR-089), so the edge is an
+   evenodd RING on `::before`; the inner leg is `ch − 0.586px`, not `ch − 1`
+   (`--sh-card-ch-in`, sheet.css). The monitor's ring is dawn — structure —
+   and the dossier's is the gold lip, the one gold outline the log draws. */
+.sh-mon__in,
+.sh-root:not([data-sh-dossier="pair"]) .sh-dos__in,
+.sh-root[data-sh-dossier="pair"] .sh-dos__plate {
+  position: relative;
+  background: var(--sh-plate);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--sh-card-ch)) 0,
+    100% var(--sh-card-ch),
+    100% 100%,
+    var(--sh-card-ch) 100%,
+    0 calc(100% - var(--sh-card-ch))
+  );
+}
+.sh-mon__in::before,
+.sh-root:not([data-sh-dossier="pair"]) .sh-dos__in::before,
+.sh-root[data-sh-dossier="pair"] .sh-dos__plate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--ring, var(--sh-seam));
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--sh-card-ch)) 0,
+    100% var(--sh-card-ch),
+    100% 100%,
+    var(--sh-card-ch) 100%,
+    0 calc(100% - var(--sh-card-ch)),
+    1px 1px,
+    calc(100% - 1px - var(--sh-card-ch-in)) 1px,
+    calc(100% - 1px) calc(1px + var(--sh-card-ch-in)),
+    calc(100% - 1px) calc(100% - 1px),
+    calc(1px + var(--sh-card-ch-in)) calc(100% - 1px),
+    1px calc(100% - 1px - var(--sh-card-ch-in))
+  );
+}
+.sh-mon__in {
+  --ring: var(--sh-seam);
+}
+.sh-dos__in,
+.sh-dos__plate {
+  --ring: var(--sh-lip);
+}
+
+/* ── 2. The monitor ───────────────────────────────────────────────── */
+.sh-mon {
+  height: 100%;
+}
+.sh-mon__in {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+}
+
+/* The datum strip it hangs from, and the terminus it sits on. The right
+   end of the datum and the left end of the terminus run under the two cut
+   corners, so each pads past its own chamfer. */
+.sh-mon__datum,
+.sh-mon__terminus {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 1.6vw, 28px);
+  min-height: var(--mon-strip-h);
+  color: var(--sh-ink-70);
+}
+.sh-mon__datum {
+  justify-content: space-between;
+  padding: 0 calc(var(--sh-card-ch) + var(--mon-pad)) 0 var(--mon-pad);
+  border-bottom: 1px solid var(--sh-seam);
+}
+.sh-mon__terminus {
+  padding: 0 var(--mon-pad) 0 calc(var(--sh-card-ch) + var(--mon-pad));
+  border-top: 1px solid var(--sh-seam);
+}
+.sh-mon__name {
+  margin: 0;
+  color: var(--gold-ink);
+  letter-spacing: var(--track-eyebrow);
+}
+.sh-mon__readings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px clamp(16px, 1.6vw, 28px);
+  margin: 0;
+}
+.sh-mon__reading {
+  display: flex;
+  gap: 8px;
+}
+.sh-mon__reading dt {
+  color: var(--sh-ink-dim);
+}
+.sh-mon__reading dd {
+  margin: 0;
+  color: var(--sh-ink-90);
+}
+
+/* Four readout cells, unequal and sharing their edges. ⚠ The widths follow
+   the longest READING each cell holds, measured at 1280: two twelfths hold
+   `Proposal out 4` and `Productions 5`; the latest engagement's client and
+   date need three, or `Hungry Minds` wraps under its own label. */
+.sh-mon__cells {
+  display: grid;
+  grid-template-columns: 5fr 2fr 2fr 3fr;
+  border-bottom: 1px solid var(--sh-seam);
+}
+.sh-mon__cell {
+  min-width: 0;
+  padding: clamp(10px, 1.4svh, 18px) var(--mon-pad);
+}
+.sh-mon__cell + .sh-mon__cell {
+  border-left: 1px solid var(--sh-rule);
+}
+.sh-mon__title {
+  margin: 0;
+  font-size: var(--sh-h2);
+  font-weight: var(--weight-lit);
+  line-height: 1.05;
+  letter-spacing: var(--track-display);
+  color: var(--sh-ink);
+}
+.sh-mon__lede {
+  margin: clamp(4px, 0.8svh, 10px) 0 0;
+  font-size: var(--sh-copy);
+  line-height: 1.35;
+  color: var(--sh-ink-70);
+}
+.sh-mon__cell-label {
+  margin: 0 0 clamp(4px, 0.6svh, 8px);
+  color: var(--sh-ink-dim);
+  letter-spacing: var(--track-eyebrow);
+}
+.sh-mon__readout .sh-readout__k,
+.sh-mon__readout .sh-readout__v {
+  padding-block: clamp(1px, 0.3svh, 4px);
+  border-top: 0;
+}
+
+/* The plot: a title row inside its top edge, then the field. */
+.sh-mon__plot {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+.sh-mon__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: var(--mon-title-h);
+  padding: 0 var(--mon-pad);
+  border-bottom: 1px solid var(--sh-rule);
+  color: var(--sh-ink-70);
+}
+.sh-mon__key {
+  display: flex;
+  gap: clamp(14px, 1.4vw, 24px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sh-mon__key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.sh-mon__scale {
+  margin: 0;
+  white-space: nowrap;
+}
+.sh-mon__scale-k {
+  color: var(--sh-ink-dim);
+}
+.sh-mon__scale-sep {
+  display: inline-block;
+  width: clamp(12px, 1.2vw, 20px);
+}
+
+/* The standing glyph: open is a proposal out, filled is delivered, and a run
+   still in progress is open with a dotted tail. The key draws the same. */
+.sh-mon__glyph {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--sh-ink-70);
+  rotate: 45deg;
+  flex: none;
+}
+.sh-mon__glyph[data-standing="shipped"] {
+  background: var(--sh-ink-70);
+}
+.sh-mon__tail {
+  width: 12px;
+  margin-left: -5px;
+  border-top: 1px dotted var(--sh-ink-70);
+}
+
+.sh-mon__field {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+}
+
+/* The graticule's verticals: the window's division lines, dotted, and the
+   NOW cursor. ⚠ THESE ARE A SCALE INSIDE AN OBJECT, not rules of the page
+   (ADR-114 U1 bans the latter); the smoke names this box as the one place a
+   vertical may paint. */
+.sh-mon__grid {
+  position: absolute;
+  top: 0;
+  bottom: var(--mon-tick-h);
+  left: var(--mon-name-w);
+  right: var(--mon-read-w);
+  pointer-events: none;
+}
+.sh-mon__div {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--at) * 100%);
+  width: 0;
+  border-left: 1px dotted var(--sh-seam);
+}
+.sh-mon [data-window="full"] {
+  display: none;
+}
+.sh-root[data-sh-span="full"] .sh-mon [data-window="active"] {
+  display: none;
+}
+.sh-root[data-sh-span="full"] .sh-mon .sh-mon__scale > [data-window="full"] {
+  display: inline;
+}
+.sh-root[data-sh-span="full"] .sh-mon .sh-mon__div[data-window="full"],
+.sh-root[data-sh-span="full"] .sh-mon .sh-mon__tick[data-window="full"] {
+  display: block;
+}
+
+/* Which window every positioned thing reads. */
+.sh-t {
+  --t: var(--t-active);
+  --now: var(--now-active, 0);
+}
+.sh-root[data-sh-span="full"] .sh-t {
+  --t: var(--t-full);
+  --now: var(--now-full, 0);
+}
+
+.sh-mon__now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--t) * 100%);
+  width: 0;
+  border-left: 1px dotted var(--gold-line);
+}
+.sh-mon__now::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5.5px;
+  width: 9px;
+  height: 9px;
+  background: var(--gold);
+  rotate: 45deg;
+}
+
+/* The lanes: a name at the left end, the track, a reading at the right. */
+.sh-mon__lanes {
+  display: grid;
+  grid-template-rows: repeat(var(--lanes), minmax(0, 1fr));
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sh-mon__lane {
+  display: grid;
+  grid-template-columns: var(--mon-name-w) minmax(0, 1fr) var(--mon-read-w);
+  align-items: center;
+  min-height: 0;
+}
+.sh-mon__lane-name {
+  padding: 0 12px 0 var(--mon-pad);
+  color: var(--sh-ink-90);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sh-mon__lane-reading {
+  padding: 0 var(--mon-pad) 0 12px;
+  text-align: right;
+  color: var(--sh-ink-dim);
+  white-space: nowrap;
+}
+.sh-mon__track {
+  position: relative;
+  align-self: stretch;
+}
+.sh-mon__track::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px solid var(--sh-rule);
+}
+
+/* A mark: a small DAWN diamond on its date; opaque, so a division line
+   never shows through an open one. The lit mark is the log's choice and the
+   one gold mark on the plot. */
+.sh-mon__mark {
+  --m: var(--mon-mark);
+  position: absolute;
+  left: calc(var(--t) * 100%);
+  top: calc(50% + var(--slot, 0) * (var(--m) + 6px));
+  z-index: 2;
+  width: var(--m);
+  height: var(--m);
+  box-sizing: border-box;
+  translate: -50% -50%;
+  rotate: 45deg;
+  border: 1px solid var(--sh-ink-90);
+  background: var(--sh-ground);
+}
+.sh-mon__mark[data-standing="shipped"] {
+  background: var(--sh-ink-90);
+}
+.sh-mon__mark::before {
+  content: "";
+  position: absolute;
+  inset: -9px;
+}
+.sh-mon__mark:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 4px;
+}
+/* ⚠ An OUTLINE takes `--gold-line` (a fill keeps `--gold`): byte-equal in
+   dark, the 3:1 line rung on parchment, where raw gold as a stroke fades. */
+.sh-mon__mark.is-lit {
+  --m: calc(var(--mon-mark) * 1.45);
+  border: 2px solid var(--gold-line);
+}
+.sh-mon__mark.is-lit[data-standing="shipped"] {
+  background: var(--gold);
+}
+
+/* The page's sections, one dot each, in three rows over the mark.
+   ⚠ THE LANE IS THE BUDGET: at 1280 × 720 a lane is ~47px, and a matrix
+   seated a whole mark above the lit one printed through the title row. It
+   clears the lit mark's top VERTEX (0.707 of its larger side), not its box. */
+.sh-mon__dots {
+  position: absolute;
+  left: calc(var(--t) * 100%);
+  bottom: calc(50% - var(--slot, 0) * (var(--mon-mark) + 6px) + var(--mon-mark) * 1.05 + 3px);
+  display: grid;
+  grid-template-rows: repeat(3, 2px);
+  grid-auto-flow: column;
+  gap: 2px;
+  translate: -50% 0;
+  pointer-events: none;
+}
+.sh-mon__dots.is-below {
+  bottom: auto;
+  top: calc(50% + var(--slot, 0) * (var(--mon-mark) + 6px) + var(--mon-mark) * 1.05 + 3px);
+}
+.sh-mon__dots > i {
+  width: 2px;
+  height: 2px;
+  background: var(--sh-ink-40);
+}
+
+/* The runs: a relationship older than the window enters from the left edge;
+   an engagement still in progress runs on to NOW. */
+.sh-mon__run {
+  position: absolute;
+  top: 50%;
+  height: 0;
+  border-top: 1px dotted var(--sh-ink-70);
+}
+.sh-mon__run--since {
+  left: 0;
+  width: calc(var(--t) * 100%);
+}
+.sh-mon__run--open {
+  left: calc(var(--t) * 100%);
+  width: calc((var(--now) - var(--t)) * 100%);
+}
+.sh-mon__since {
+  position: absolute;
+  left: 8px;
+  bottom: calc(50% + 6px);
+  color: var(--sh-ink-dim);
+  white-space: nowrap;
+}
+
+/* The tick row: the dates along the plot's foot, and NOW's own label. */
+.sh-mon__ticks {
+  position: relative;
+  height: var(--mon-tick-h);
+  margin: 0 var(--mon-read-w) 0 var(--mon-name-w);
+  border-top: 1px solid var(--sh-rule);
+  color: var(--sh-ink-dim);
+}
+.sh-mon__tick,
+.sh-mon__now-label {
+  position: absolute;
+  top: 50%;
+  translate: 5px -50%;
+  white-space: nowrap;
+}
+.sh-mon__tick {
+  left: calc(var(--at) * 100%);
+}
+.sh-mon__now-label {
+  left: calc(var(--t) * 100%);
+  color: var(--gold-ink);
+  letter-spacing: var(--track-eyebrow);
+}
+
+/* ── 3. The frame=rails direction (SL) ────────────────────────────── */
+/* The datum's top edge and the terminus's bottom edge run out to the HUD's
+   rails, landing on the first and last ticks (both sit flush at the rails'
+   ends, landing.css). ⚠ Nothing here moves a rail. */
+.sh-root[data-sh-frame="rails"] .sh-mon {
+  position: relative;
+}
+.sh-root[data-sh-frame="rails"] .sh-mon::before,
+.sh-root[data-sh-frame="rails"] .sh-mon::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--hud-margin) - var(--instrument-margin));
+  right: calc(var(--hud-margin) - var(--instrument-margin));
+  height: 0;
+  border-top: 1px solid var(--sh-seam);
+  pointer-events: none;
+}
+.sh-root[data-sh-frame="rails"] .sh-mon::before {
+  top: 0;
+}
+.sh-root[data-sh-frame="rails"] .sh-mon::after {
+  bottom: 0;
+}
+
+/* ── 4. The log ───────────────────────────────────────────────────── */
+.sh-log {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: start;
+}
+.sh-root[data-sh-rows="boxed"] .sh-log {
+  column-gap: var(--sh-gutter);
+}
+.sh-log__list {
+  min-width: 0;
+}
+.sh-log__filter {
+  padding-bottom: clamp(6px, 1svh, 12px);
+}
+.sh-log__filter .sh-stns {
+  margin: -4px -3px 0;
+}
+
+.sh-log__group + .sh-log__group {
+  margin-top: clamp(8px, 1.4svh, 18px);
+}
+.sh-log__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+  min-height: var(--log-head-h);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--sh-seam);
+  color: var(--sh-ink-dim);
+  letter-spacing: var(--track-eyebrow);
+}
+.sh-log__count {
+  color: var(--sh-ink-70);
+}
+.sh-log__rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A row: one line — diamond, chip, title, bracketed date — and it never wraps. */
+.sh-log__row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  min-height: var(--log-row-h);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--sh-rule);
+  color: var(--sh-ink-90);
+  text-decoration: none;
+  transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sh-log__mark {
+  width: 7px;
+  height: 7px;
+  box-sizing: border-box;
+  border: 1px solid var(--sh-ink-70);
+  rotate: 45deg;
+}
+.sh-log__mark[data-standing="shipped"] {
+  background: var(--sh-ink-70);
+}
+.sh-log__chip,
+.sh-log__date {
+  color: var(--sh-ink-dim);
+  white-space: nowrap;
+}
+.sh-log__title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--sh-copy);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.sh-log__row:hover,
+.sh-log__row:focus-visible {
+  background: var(--sh-recess);
+  outline: none;
+}
+/* The chosen row: FILLED among outlined peers (ADR-089 U4), its ink knocked
+   out on `--gold-contrast`, never the void family. */
+.sh-log__row.is-on {
+  background: var(--gold);
+  border-bottom-color: var(--gold);
+  color: var(--gold-contrast);
+}
+.sh-log__row.is-on .sh-log__chip,
+.sh-log__row.is-on .sh-log__date {
+  color: var(--gold-contrast);
+}
+.sh-log__row.is-on .sh-log__mark {
+  border-color: var(--gold-contrast);
+}
+.sh-log__row.is-on .sh-log__mark[data-standing="shipped"] {
+  background: var(--gold-contrast);
+}
+.sh-log__row.is-on:focus-visible {
+  outline: 1px solid var(--gold-contrast);
+  outline-offset: -4px;
+}
+.sh-root[data-sh-rows="boxed"] .sh-log__row {
+  margin-top: 5px;
+  border: 1px solid var(--sh-rule);
+}
+.sh-root[data-sh-rows="boxed"] .sh-log__row.is-on {
+  border-color: var(--gold);
+}
+
+/* ── 5. The dossier ───────────────────────────────────────────────── */
+.sh-log__dossiers {
+  position: sticky;
+  top: var(--hud-rail-y-start);
+  height: var(--mon-h);
+  min-width: 0;
+}
+.sh-dos {
+  height: 100%;
+}
+.sh-dos[hidden] {
+  display: none;
+}
+.sh-dos__in {
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.sh-root[data-sh-dossier="pair"] .sh-dos__in {
+  row-gap: clamp(6px, 0.9svh, 12px);
+}
+.sh-dos__plate--head {
+  display: grid;
+  grid-template-rows: auto minmax(clamp(96px, 14svh, 180px), 1fr);
+  min-height: 0;
+}
+.sh-dos__band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: var(--mon-strip-h);
+  padding: 0 calc(var(--sh-card-ch) + var(--mon-pad)) 0 var(--mon-pad);
+  border-bottom: 1px solid var(--sh-seam);
+}
+.sh-dos__desig {
+  color: var(--gold-ink);
+  letter-spacing: var(--track-eyebrow);
+  text-decoration: none;
+}
+a.sh-dos__desig:hover,
+a.sh-dos__desig:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  outline: none;
+}
+.sh-dos__kind {
+  color: var(--sh-ink-dim);
+}
+.sh-dos__img {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border-bottom: 1px solid var(--sh-rule);
+}
+.sh-dos__img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) sepia(0.5) hue-rotate(-9deg) saturate(1.35) brightness(0.84) contrast(1.08);
+}
+.sh-dos__body {
+  padding: clamp(12px, 1.8svh, 26px) var(--mon-pad) 0;
+}
+.sh-dos__title {
+  margin: 0;
+  font-size: var(--sh-h2);
+  font-weight: var(--weight-lit);
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+  color: var(--sh-ink);
+}
+.sh-dos__lede {
+  margin: clamp(6px, 0.9svh, 12px) 0 0;
+  max-width: 64ch;
+  font-size: var(--sh-copy);
+  line-height: 1.45;
+  color: var(--sh-ink-70);
+}
+.sh-dos__cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--sh-gutter);
+  margin-top: clamp(10px, 1.6svh, 22px);
+}
+.sh-dos__readout .sh-readout__k,
+.sh-dos__readout .sh-readout__v {
+  padding-block: clamp(2px, 0.45svh, 6px);
+}
+.sh-dos__chapters {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: 1.5;
+}
+.sh-dos__chapters a {
+  display: flex;
+  gap: 12px;
+  padding-block: clamp(2px, 0.45svh, 6px);
+  border-top: 1px solid var(--sh-rule);
+  color: var(--sh-ink-90);
+  text-decoration: none;
+}
+.sh-dos__chapters a:hover,
+.sh-dos__chapters a:focus-visible {
+  color: var(--gold-ink);
+  outline: none;
+}
+.sh-dos__ch-n {
+  color: var(--sh-ink-dim);
+}
+.sh-dos__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(10px, 1.6svh, 20px) var(--mon-pad) clamp(10px, 1.6svh, 20px)
+    calc(var(--sh-card-ch) + var(--mon-pad));
+}
+.sh-dos__keys {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--sh-ink-dim);
+}
+.sh-dos__keys kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--sh-rule);
+  font: inherit;
+  color: var(--sh-ink-70);
+}
+.sh-dos__keys span + kbd {
+  margin-left: 10px;
+}
+
+/* ── 6. Motion — clips, never opacity ─────────────────────────────── */
+@keyframes sh-ap-open {
+  from {
+    clip-path: inset(0 50% 0 50%);
+  }
+  to {
+    clip-path: inset(-24px);
+  }
+}
+@keyframes sh-now-drop {
+  from {
+    clip-path: inset(-12px -12px 100% -12px);
+  }
+  to {
+    clip-path: inset(-12px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sh-root.is-sh-inst .sh-ap-root:not(.is-in) .sh-ap {
+    clip-path: inset(0 50% 0 50%);
+  }
+  .sh-root.is-sh-inst .sh-ap-root:not(.is-in) .sh-mon__now {
+    clip-path: inset(-12px -12px 100% -12px);
+  }
+  .sh-root.is-sh-inst .sh-ap-root.is-in .sh-ap {
+    animation: sh-ap-open 420ms var(--ap-ease) calc(var(--ap-i, 0) * 60ms) backwards;
+  }
+  .sh-root.is-sh-inst .sh-ap-root.is-in .sh-mon__now {
+    animation: sh-now-drop 360ms var(--ap-ease) 540ms backwards;
+  }
+  .sh-root.is-sh-inst .sh-dos.is-swap {
+    animation: sh-ap-open 180ms var(--ap-ease) both;
+  }
+}
+
+/* ── 7. The phone — a stacked fallback until the desktop pick ─────── */
+@media (max-width: 960px) {
+  .sh-sec--monitor,
+  .sh-sec--log {
+    height: auto;
+    min-height: 0;
+    padding: calc(var(--mobile-chrome-top, 64px) + 12px) 16px 32px;
+  }
+  .sh-sec--log {
+    padding-top: 16px;
+  }
+  .sh-mon__in {
+    height: auto;
+  }
+  .sh-mon__cells {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .sh-mon__cell--id {
+    grid-column: 1 / -1;
+  }
+  .sh-mon__cell + .sh-mon__cell {
+    border-left: 0;
+    border-top: 1px solid var(--sh-rule);
+  }
+  .sh-mon__title-row {
+    flex-wrap: wrap;
+    padding-block: 8px;
+  }
+  .sh-mon__scale {
+    white-space: normal;
+  }
+  .sh-mon__lanes {
+    grid-template-rows: none;
+  }
+  .sh-mon__lane {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 44px;
+    padding-top: 8px;
+  }
+  .sh-mon__track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0 var(--mon-pad);
+  }
+  .sh-mon__grid {
+    left: var(--mon-pad);
+    right: var(--mon-pad);
+  }
+  .sh-mon__ticks {
+    margin: 0 var(--mon-pad);
+  }
+  .sh-mon__tick:nth-child(even) {
+    display: none;
+  }
+  .sh-log {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 24px;
+  }
+  .sh-log__dossiers {
+    position: static;
+    height: auto;
+  }
+  .sh-dos__in {
+    height: auto;
+  }
+  .sh-dos__plate--head {
+    grid-template-rows: auto;
+  }
+  .sh-dos__img {
+    aspect-ratio: 16 / 10;
+  }
+  .sh-dos__cols {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 14px;
+  }
+  .sh-dos__keys {
+    display: none;
+  }
+}

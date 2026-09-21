@@ -111,6 +111,16 @@ const ACCENT_ALLOW = [
   // gold border on the mark's ::after. It is the MARK the frame exists to
   // hold (one per figure, ADR-114 §2 `figure`), not a structural line.
   /\.sh-fig__mark::after/,
+  // The arcs instrument (ADR-118): gold is STATE there and nothing else — the
+  // one lit mark, the NOW cursor (a 1px dotted drop the height of the plot,
+  // which the one-long-side rule would read as a structural rule), the one
+  // filled row and the dossier's lip (declarative, like the proof card's: a
+  // clipped ring is a pseudo's background this stage does not read). Each is
+  // one per still, inside the rubric's twelve.
+  /\.sh-mon__mark\.is-lit/,
+  /\.sh-mon__now/,
+  /\.sh-log__row\.is-on/,
+  /\.sh-dos__(in|plate)::before/,
 ];
 
 /**

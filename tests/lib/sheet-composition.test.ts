@@ -142,6 +142,11 @@ function mk(
       return { ...base, kind, meta: [], ...extra } as SheetSection;
     case "close":
       return { ...base, kind, ...extra } as SheetSection;
+    case "monitor":
+    case "log":
+      // The instrument's frames are exercised on real ladders in
+      // sheet-instrument.test.ts; a minimal one of either proves nothing.
+      throw new Error(`mk: build a ${kind} from instrumentSections, not by hand`);
   }
 }
 

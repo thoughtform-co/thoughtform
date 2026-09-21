@@ -105,4 +105,24 @@ describe("the arcs' import doctrine", () => {
     // …and through the one leaf the ADR names.
     expect(dynamicReaches).toBe(1);
   });
+
+  it("lets no CLIENT file under the sheet import a registry (ADR-117, ADR-118)", () => {
+    /* `/arcs` is the owner's page, gated on the server. A client component
+       that imported a registry would put every client's name and lede into
+       a PUBLIC chunk the gate cannot see — the instrument's controller reads
+       everything it knows off the DOM for exactly this reason. */
+    const REGISTRY =
+      /^@\/lib\/(arcs|cases|sessions|musings)(\/|$)|^@\/lib\/sheet\/(arcs|home-sessions|musings)$/;
+    const clientFiles = files.filter((f) => /^\s*["']use client["']/.test(readFileSync(f, "utf8")));
+    const rels = clientFiles.map((f) => relative(ROOT, f).split(sep).join("/"));
+    // A guard that walks nothing is worse than none: the controller must be in it.
+    expect(rels).toContain("components/sheet/SheetInstrumentController.tsx");
+    const offenders: string[] = [];
+    for (const [i, file] of clientFiles.entries()) {
+      if (!rels[i].startsWith("components/sheet/")) continue;
+      for (const spec of staticSpecifiers(readFileSync(file, "utf8")))
+        if (REGISTRY.test(spec)) offenders.push(`${rels[i]} → ${spec}`);
+    }
+    expect(offenders, offenders.join("\n")).toEqual([]);
+  });
 });

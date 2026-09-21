@@ -7,6 +7,8 @@ import { SheetCells } from "./SheetCells";
 import { SheetClose } from "./SheetClose";
 import { SheetConsole } from "./SheetConsole";
 import { SheetFigure } from "./SheetFigure";
+import { SheetLog } from "./SheetLog";
+import { SheetMonitor } from "./SheetMonitor";
 import { SheetHead } from "./SheetParts";
 import { SheetProse } from "./SheetProse";
 import { SheetRow } from "./SheetRow";
@@ -38,6 +40,10 @@ export function SheetRenderer({
     <>
       {sections.map((section, index) => {
         if (section.kind === "close") return <SheetClose key={section.id} id={section.id} />;
+        // The instrument's two frames draw their own section: no band, no head,
+        // no ordinal (ADR-118).
+        if (section.kind === "monitor") return <SheetMonitor key={section.id} section={section} />;
+        if (section.kind === "log") return <SheetLog key={section.id} section={section} />;
         const ordinal = ordinalOf(sections, index);
         const kicker = section.kicker ?? section.menuLabel ?? section.kind;
         return (
@@ -80,6 +86,9 @@ function SectionBody({ section, slot }: { section: SheetSection; slot?: ReactNod
     case "prose":
       return <SheetProse section={section}>{slot}</SheetProse>;
     case "close":
+    case "monitor":
+    case "log":
+      // Drawn above, outside the band; never reached here.
       return null;
     default: {
       const never: never = section;

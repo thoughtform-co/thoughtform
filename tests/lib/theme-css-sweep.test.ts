@@ -34,6 +34,9 @@ const SHEETS = [
      with gold and lifts every alpha for light in theme.css, which is the
      exact pair this sweep exists to catch. */
   "components/sheet/sheet.css",
+  /* The arcs instrument (ADR-118): it fills the chosen row with gold and
+     knocks its ink out, which is the pair this sweep exists to watch. */
+  "components/sheet/instrument.css",
   "components/landing/v7/theme.css",
 ];
 

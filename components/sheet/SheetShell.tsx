@@ -27,6 +27,9 @@ interface SheetShellProps {
   chapters: readonly SheetChapter[];
   /** The knobs the server renders; the house unless a lab says otherwise. */
   knobs?: ShKnobs;
+  /** `instrument` for the arcs overview's monitor and log (ADR-118): the
+   *  capture's probe reads it to know which law a still answers to. */
+  profile?: "document" | "instrument";
   children: ReactNode;
 }
 
@@ -56,6 +59,7 @@ export function SheetShell({
   page,
   chapters,
   knobs = SH_DEFAULTS,
+  profile = "document",
   children,
 }: SheetShellProps) {
   const rootRef = useRef<HTMLElement>(null);
@@ -110,6 +114,7 @@ export function SheetShell({
       ref={rootRef}
       className={`sh-root ${bodyClass}`}
       data-sh-page={page}
+      data-sh-profile={profile}
       {...knobAttrs(knobs)}
       /* No selector reads `[data-theme="dark"]` (ADR-058 forbids authoring
          one); this answers "what theme is this subtree" to anything that

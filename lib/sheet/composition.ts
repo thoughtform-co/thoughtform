@@ -9,9 +9,11 @@
  * 60). So the law is mechanised here, pure, and walked over every real page
  * by `tests/lib/sheet-composition.test.ts` before a still is ever shot.
  *
- * Zero runtime imports.
+ * Imports nothing outside `lib/sheet`, and nothing inside it that does.
  */
 
+import { atOnWindow } from "./axis";
+import { INSTRUMENT_ARRANGEMENTS } from "./types";
 import type { SheetArrangement, SheetSection } from "./types";
 
 /** ArcHudNav's item shape, restated so this module imports no component. */
@@ -44,6 +46,8 @@ export function compositionViolations(sections: readonly SheetSection[]): string
   const out: string[] = [];
   const kinds = sections.map((s) => s.kind);
   if (kinds.length === 0) return ["a page has no sections"];
+  // An instrument page answers to its own law, never to the document's.
+  if (kinds.some((k) => isInstrument(k))) return instrumentViolations(sections);
 
   if (kinds[0] !== "split") out.push(`the first section is ${kinds[0]}, not split`);
   if (kinds[kinds.length - 1] !== "close")
@@ -104,6 +108,133 @@ export function compositionViolations(sections: readonly SheetSection[]): string
   return out;
 }
 
+function isInstrument(kind: SheetArrangement): boolean {
+  return (INSTRUMENT_ARRANGEMENTS as readonly SheetArrangement[]).includes(kind);
+}
+
+type Monitor = Extract<SheetSection, { kind: "monitor" }>;
+type Log = Extract<SheetSection, { kind: "log" }>;
+
+/** A position may drift this far from the one its date implies (float noise). */
+const AT_EPSILON = 1e-9;
+
+/**
+ * The instrument's law (ADR-118): what makes a monitor and a log ONE device
+ * rather than two panels that happen to share a page.
+ *
+ * ⚠ THE HALF A GRADER CANNOT SEE. Blocks M and L of the ship's rubric judge a
+ * still; a still cannot count whether the lit diamond IS the filled row, or
+ * whether a mark sits at its own date. Those are properties of the data, so
+ * they are asserted here, on every ladder that holds either arrangement:
+ *
+ *  1. The page is exactly `monitor` then `log`.
+ *  2. Every mark sits on a real lane, every lane holds a mark, and the marks
+ *     are sorted oldest first.
+ *  3. Both windows hold every date and NOW, every mark sits where its date
+ *     puts it, and no engagement is filed after NOW.
+ *  4. The ticks are division boundaries: from 0, strictly rising, under 1.
+ *  5. The terminus's `Marks` reading is the number of marks (M3's count).
+ *  6. The monitor's marks, the log's rows and the dossiers are ONE set of
+ *     ids, and the lit mark is the selected row.
+ *  7. Within a group the rows run newest first, and every row's kind is one
+ *     the filter offers.
+ *  8. No readout letters an empty value, and the chapter row is capped.
+ */
+export function instrumentViolations(sections: readonly SheetSection[]): string[] {
+  const kinds = sections.map((s) => s.kind);
+  if (kinds.length !== 2 || kinds[0] !== "monitor" || kinds[1] !== "log")
+    return [`an instrument page is monitor then log, not ${kinds.join(" · ")}`];
+  const monitor = sections[0] as Monitor;
+  const log = sections[1] as Log;
+  const out: string[] = [];
+  const unique = (ids: readonly string[], what: string) => {
+    if (new Set(ids).size !== ids.length) out.push(`${what} are not unique`);
+  };
+
+  if (monitor.id === log.id) out.push("the monitor and the log share an id");
+
+  const { plot } = monitor;
+  const laneIds = plot.lanes.map((l) => l.id);
+  const markIds = plot.marks.map((m) => m.id);
+  unique(laneIds, "monitor: lane ids");
+  unique(markIds, "monitor: mark ids");
+  for (const m of plot.marks)
+    if (!laneIds.includes(m.lane)) out.push(`monitor: ${m.id} sits on no lane (${m.lane})`);
+  for (const lane of plot.lanes)
+    if (!plot.marks.some((m) => m.lane === lane.id)) out.push(`monitor: lane ${lane.id} is empty`);
+  const dates = plot.marks.map((m) => m.date);
+  if (dates.join() !== [...dates].sort().join()) out.push("monitor: marks are not oldest first");
+
+  for (const w of ["active", "full"] as const) {
+    const win = plot.windows[w];
+    const inside = (iso: string) => iso >= win.from && iso <= win.to;
+    for (const m of plot.marks) {
+      if (!inside(m.date)) out.push(`monitor: ${m.id} falls outside the ${w} window`);
+      if (Math.abs(m.at[w] - atOnWindow(win, m.date)) > AT_EPSILON)
+        out.push(`monitor: ${m.id} is not seated at its date on the ${w} window`);
+    }
+    if (!inside(plot.now.date)) out.push(`monitor: now falls outside the ${w} window`);
+    if (Math.abs(plot.now.at[w] - atOnWindow(win, plot.now.date)) > AT_EPSILON)
+      out.push(`monitor: now is not seated at its date on the ${w} window`);
+    const ats = win.ticks.map((t) => t.at);
+    if (ats[0] !== 0) out.push(`monitor: the ${w} window's ticks do not start at 0`);
+    for (let i = 1; i < ats.length; i++)
+      if (!(ats[i] > ats[i - 1])) out.push(`monitor: the ${w} window's ticks do not rise`);
+    if (ats.some((a) => a >= 1)) out.push(`monitor: a ${w} tick sits at or past the end`);
+  }
+  for (const m of plot.marks)
+    if (m.date > plot.now.date) out.push(`monitor: ${m.id} is filed after now`);
+
+  const marks = monitor.terminus.find((r) => r.label === "Marks");
+  if (marks?.value !== String(plot.marks.length))
+    out.push("monitor: the terminus's Marks reading is not the number of marks");
+  if (monitor.datum.readings.length < 2) out.push("monitor: the datum carries under two readings");
+  if (monitor.terminus.length < 3) out.push("monitor: the terminus carries under three readings");
+
+  const rows = log.groups.flatMap((g) => g.rows);
+  const rowIds = rows.map((r) => r.id);
+  const dossierIds = log.dossiers.map((d) => d.id);
+  unique(
+    log.groups.map((g) => g.id),
+    "log: group ids"
+  );
+  unique(rowIds, "log: row ids");
+  unique(dossierIds, "log: dossier ids");
+  const set = (ids: readonly string[]) => [...ids].sort().join();
+  if (set(markIds) !== set(rowIds)) out.push("the monitor's marks are not the log's rows");
+  if (set(rowIds) !== set(dossierIds)) out.push("the log's rows are not its dossiers");
+  if (!markIds.includes(monitor.lit)) out.push(`monitor: lit mark ${monitor.lit} not found`);
+  if (!rowIds.includes(log.selected)) out.push(`log: selected row ${log.selected} not found`);
+  if (monitor.lit !== log.selected) out.push("the lit mark is not the selected row");
+
+  const offered = log.filter.stations.map((s) => s.id);
+  for (const g of log.groups) {
+    if (g.rows.length === 0) out.push(`log: group ${g.id} is empty`);
+    const gd = g.rows.map((r) => r.date);
+    if (gd.join() !== [...gd].sort().reverse().join()) out.push(`log: ${g.id} is not newest first`);
+    for (const r of g.rows)
+      if (!offered.includes(r.kind)) out.push(`log: ${r.id}'s kind ${r.kind} is not a filter`);
+  }
+
+  const readouts = [
+    ...monitor.datum.readings,
+    ...monitor.cells.flatMap((c) => c.rows),
+    ...monitor.terminus,
+    ...log.dossiers.flatMap((d) => d.readout),
+  ];
+  for (const r of readouts)
+    if (!r.label || !r.value) out.push(`a readout letters an empty ${r.label || "label"}`);
+  for (const lane of plot.lanes)
+    if (!lane.name || !lane.reading) out.push(`monitor: lane ${lane.id} is unlettered`);
+
+  const chapters = sections.filter((s) => s.menuPrimary);
+  for (const s of chapters) if (!s.menuLabel) out.push(`${s.id}: a chapter with no menu label`);
+  if (chapters.length > SHEET_CHAPTER_CAP)
+    out.push(`${chapters.length} chapters (max ${SHEET_CHAPTER_CAP})`);
+
+  return out;
+}
+
 /**
  * The drawer's rows and the chapter row, derived from the ladder.
  *
@@ -125,12 +256,13 @@ export function chaptersOf(sections: readonly SheetSection[]): SheetChapter[] {
 }
 
 /** The ordinal a section's head band letters — `01`, `02`, … by position,
- *  the split (the page head) uncounted. */
+ *  the split (the page head) uncounted. The instrument's two frames carry no
+ *  head band and so no ordinal (ADR-118). */
 export function ordinalOf(sections: readonly SheetSection[], index: number): string | null {
+  const counted = (x: SheetSection) =>
+    x.kind !== "split" && x.kind !== "close" && !isInstrument(x.kind);
   const s = sections[index];
-  if (!s || s.kind === "split" || s.kind === "close") return null;
-  const n = sections
-    .slice(0, index + 1)
-    .filter((x) => x.kind !== "split" && x.kind !== "close").length;
+  if (!s || !counted(s)) return null;
+  const n = sections.slice(0, index + 1).filter(counted).length;
   return String(n).padStart(2, "0");
 }
