@@ -32,16 +32,49 @@ const ROOT = join(__dirname, "..", "..");
 const SHIP = join(ROOT, ".claude", "skills", "thoughtform-design", "eval", "subpages");
 
 describe("the sheet's directions (ADR-114)", () => {
-  it("ids are letters only and unique; exactly one negative pole", () => {
+  it("ids are letters only and unique; the negative poles are not knob sets", () => {
     const ids = SH_DIRECTIONS.map((d) => d.id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(id).toMatch(/^[A-Z]+$/);
     const poles = SH_DIRECTIONS.filter((d) => d.pole === "negative");
-    expect(poles).toHaveLength(1);
-    expect(poles[0].knobs).toBeNull();
-    expect(poles[0].lane).toBe(poles[0].id.toLowerCase());
+    // SA: the old /arcs, shot once (ADR-114). SF: the sheet overview,
+    // promoted from wave-02 when the instrument replaced it (ADR-118).
+    expect(poles.map((p) => p.id)).toEqual(["SA", "SF"]);
+    for (const p of poles) {
+      expect(p.knobs, p.id).toBeNull();
+      expect(p.lane, p.id).toBe(p.id.toLowerCase());
+      expect(
+        SH_DRAWABLE.some((d) => d.id === p.id),
+        p.id
+      ).toBe(false);
+    }
     expect(Object.keys(poles[0].routes ?? {})).toEqual(["AR", "AC"]);
-    expect(SH_DRAWABLE.some((d) => d.id === poles[0].id)).toBe(false);
+    expect(Object.keys(poles[1].routes ?? {})).toEqual(["AR"]);
+    // A promoted pole names the wave, the lane and the stills it is copied
+    // from — byte-identical, never re-shot.
+    expect(poles[1].from).toEqual({
+      wave: "wave-02-sb",
+      lane: "sb",
+      stills: [1, 2, 3],
+      commit: "7124f146",
+    });
+  });
+
+  it("a direction is scoped to the pages whose knobs it moves", () => {
+    const instrument = ["span", "rows", "dossier", "frame"];
+    for (const d of SH_DRAWABLE) {
+      const moved = Object.keys(d.knobs ?? {});
+      if (moved.length === 0) {
+        expect(d.types, `${d.id}: the house is shot everywhere`).toBeUndefined();
+        continue;
+      }
+      expect(d.types?.length, `${d.id}: a scoped direction`).toBeGreaterThan(0);
+      const onInstrument = moved.every((k) => instrument.includes(k));
+      const onDocument = moved.every((k) => !instrument.includes(k));
+      expect(onInstrument || onDocument, `${d.id} moves both kinds of knob`).toBe(true);
+      if (onInstrument) expect(d.types).toEqual(["AR", "AK"]);
+      else expect(d.types).not.toContain("AR");
+    }
   });
 
   it("the first value of every knob is the house, and SB is every knob at that value", () => {
@@ -68,7 +101,7 @@ describe("the sheet's directions (ADR-114)", () => {
     }
   });
 
-  it("knob attributes are all five, in registry order", () => {
+  it("knob attributes are every knob, in registry order", () => {
     const attrs = knobAttrs(SH_DEFAULTS);
     expect(Object.keys(attrs)).toEqual(SH_KNOB_KEYS.map((k) => `data-sh-${k}`));
     expect(attrs["data-sh-head"]).toBe("split");
@@ -113,13 +146,15 @@ describe("the sheet's directions (ADR-114)", () => {
     }
     for (const lane of ["lawful", "broken"]) expect(lanes[lane], lane).toMatch(/^render-\d{2,5}$/);
     const types = [...toml.matchAll(/^\[types\.([A-Z]+)\]/gm)].map((m) => m[1]);
-    expect(types.sort()).toEqual(["AC", "AR", "HS", "MP", "MU", "SK"]);
+    expect(types.sort()).toEqual(["AC", "AK", "AR", "HS", "MP", "MU", "SK"]);
     for (const t of types) {
       const block = toml.split(`[types.${t}]`)[1].split(/\n\[/)[0];
       expect(block, `${t}: no ROUTE`).toMatch(/^shot = "ROUTE: \/[a-z0-9/-]*"/m);
     }
-    for (const t of Object.keys(SH_DIRECTIONS.find((d) => d.pole === "negative")?.routes ?? {}))
-      expect(types).toContain(t);
+    for (const pole of SH_DIRECTIONS.filter((d) => d.pole === "negative"))
+      for (const t of Object.keys(pole.routes ?? {})) expect(types, pole.id).toContain(t);
+    for (const d of SH_DIRECTIONS)
+      for (const t of d.types ?? []) expect(types, `${d.id} names type ${t}`).toContain(t);
     const subjects = [...toml.matchAll(/^\[subjects\.([a-z]+)\]/gm)].map((m) => m[1]);
     expect(subjects.sort()).toEqual(["parchment", "void"]);
   });

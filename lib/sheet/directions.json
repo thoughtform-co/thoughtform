@@ -1,5 +1,5 @@
 {
-  "$comment": "THE ONE REGISTRY for the sheet's knobs (ADR-114). Read by the pages (TS import, through lib/sheet/directions.ts) and by scripts/capture-subpages.mjs (readFileSync), and mirrored into the ship's armada.toml. Two readers, one record: a direction cannot be shot that the page cannot draw. TYPE IDS ARE LETTERS ONLY - the armada's filename grammar takes letters before the first dash. THE FIRST VALUE OF EVERY KNOB IS THE HOUSE: direction SB is every knob at its first value, and every other direction is an argument someone has to make against it. The `rules` knob (two full-height rules at the band's edges, or seams alone) was DELETED on 2026-09-20 by the owner's ruling - the frame's rails are the page's only verticals - and its seams direction SC went with it (ADR-114 U1). SA is not a knob set at all: it is the NEGATIVE POLE, today's /arcs shot once before the sheet replaced it.",
+  "$comment": "THE ONE REGISTRY for the sheet's knobs (ADR-114) and the arcs instrument's (ADR-118). Read by the pages (TS import, through lib/sheet/directions.ts) and by scripts/capture-subpages.mjs (readFileSync), and mirrored into the ship's armada.toml. Two readers, one record: a direction cannot be shot that the page cannot draw. TYPE IDS ARE LETTERS ONLY - the armada's filename grammar takes letters before the first dash. THE FIRST VALUE OF EVERY KNOB IS THE HOUSE: direction SB is every knob at its first value, and every other direction is an argument someone has to make against it. A direction's `types` scopes it to the pages whose knobs it moves (absent = every page): SD and SE move the document pages' head, ordinals, pile and timeline; SG, SH, SJ and SL move the arcs instrument's span, rows, dossier and frame, which only /arcs and its fixture kit draw. The `rules` knob (two full-height rules at the band's edges, or seams alone) was DELETED on 2026-09-20 by the owner's ruling - the frame's rails are the page's only verticals - and its seams direction SC went with it (ADR-114 U1). SA and SF are not knob sets: they are NEGATIVE POLES. SA is the old /arcs, shot once before the sheet replaced it; SF is the sheet's own overview, promoted byte-identical from wave-02-sb before the instrument replaced it (`from`).",
   "knobs": {
     "head": {
       "values": ["split", "stack"],
@@ -20,6 +20,26 @@
       "values": ["axis", "rail"],
       "label": "Timeline",
       "note": "axis = a horizontal dated axis with the sessions seated on it at their dates (Hermeus roadmap). rail = a vertical date rail with the sessions opposite (Hermeus detail) — also the phone's own layout."
+    },
+    "span": {
+      "values": ["active", "full"],
+      "label": "Span",
+      "note": "The arcs monitor's time axis. active = whole weeks from the first filed engagement to now; a relationship older than the axis enters open from the left edge. full = the whole record since the oldest relationship, linear — honest, and it buries nine marks in its last twentieth."
+    },
+    "rows": {
+      "values": ["ruled", "boxed"],
+      "label": "Rows",
+      "note": "The arcs log's rows. ruled = one-line rows on shared hairlines that end on the dossier's edge, the picked row filled. boxed = each row its own outlined plate with air between (the game references' literal grammar)."
+    },
+    "dossier": {
+      "values": ["one", "pair"],
+      "label": "Dossier",
+      "note": "The arcs log's card. one = a single chamfered housing, image over text, square children. pair = an image plate over a text plate, each its own housing (the detail card reference, literally)."
+    },
+    "frame": {
+      "values": ["housing", "rails"],
+      "label": "Frame",
+      "note": "The arcs monitor's edges. housing = one bounded housing on the instrument band, every rule ending on its own edge. rails = the header and foot strips run out to the HUD's rails, the literal reading of 'we already have our rails' and wave 02's unanswered question."
     }
   },
   "directions": [
@@ -37,10 +57,28 @@
       "knobs": null
     },
     {
+      "id": "SF",
+      "name": "Sheet arcs",
+      "question": "the second negative pole: the sheet overview the owner asked to replace with an instrument, byte-identical, so every monitor and log check can be shown to fail it",
+      "shape": "a split head over one console per client and a two-by-two of house formats",
+      "pole": "negative",
+      "lane": "sf",
+      "routes": {
+        "AR": "/arcs"
+      },
+      "from": {
+        "wave": "wave-02-sb",
+        "lane": "sb",
+        "stills": [1, 2, 3],
+        "commit": "7124f146"
+      },
+      "knobs": null
+    },
+    {
       "id": "SB",
       "name": "House",
-      "question": "does the sheet at its own values read as one instrument across six pages, both themes and both viewports?",
-      "shape": "the ruled sheet: split head, ordinals, full-height rules, the pile, the axis",
+      "question": "does every page read as one grammar at its own values — the document pages as ruled sheets, the arcs overview as one instrument — across both themes and both viewports?",
+      "shape": "the ruled sheet: split head, ordinals, the pile, the axis; on the arcs overview the monitor and the log",
       "knobs": {}
     },
     {
@@ -48,6 +86,7 @@
       "name": "Editorial",
       "question": "does the head read better stacked on the right with no ordinals, or does the page lose its wayfinding?",
       "shape": "kicker left, title and paragraphs stacked right, no section numerals",
+      "types": ["HS", "AC", "MU", "MP", "SK"],
       "knobs": {
         "head": "stack",
         "ordinal": "off"
@@ -58,9 +97,50 @@
       "name": "Grid",
       "question": "does a static grid of flashcards and a vertical date rail say the same thing as the pile and the axis, with less motion?",
       "shape": "cards in two columns, the sessions on a rail",
+      "types": ["HS", "AC", "MU", "MP", "SK"],
       "knobs": {
         "card": "grid",
         "timeline": "rail"
+      }
+    },
+    {
+      "id": "SG",
+      "name": "Full record",
+      "question": "does the whole record on one linear axis say more than the active window, or does it bury nine marks in its last twentieth?",
+      "shape": "the same monitor on an axis from the oldest relationship to now",
+      "types": ["AR", "AK"],
+      "knobs": {
+        "span": "full"
+      }
+    },
+    {
+      "id": "SH",
+      "name": "Plates",
+      "question": "do rows as separate outlined plates read closer to the references, or do they cost the list its seat on the dossier?",
+      "shape": "the log with boxed rows",
+      "types": ["AR", "AK"],
+      "knobs": {
+        "rows": "boxed"
+      }
+    },
+    {
+      "id": "SJ",
+      "name": "Pair",
+      "question": "does the reference's image plate over a text plate read better than one housing?",
+      "shape": "the dossier as two housings",
+      "types": ["AR", "AK"],
+      "knobs": {
+        "dossier": "pair"
+      }
+    },
+    {
+      "id": "SL",
+      "name": "Rails",
+      "question": "do the monitor's strips read as part of the frame when they run out to the HUD's rails, or does a rule that meets a rail read as a second frame?",
+      "shape": "the monitor's header and foot strips running to the rails",
+      "types": ["AR", "AK"],
+      "knobs": {
+        "frame": "rails"
       }
     }
   ],
@@ -70,6 +150,6 @@
       "default": "1920x1247",
       "laptop": "1280x720"
     },
-    "note": "3 directions x 6 types x 2 themes at the default viewport, one still per section; laptop for SB first. 1920x1247 is the owner's own window; 1280x720 is the binding one."
+    "note": "Each direction on its own types x 2 themes at the default viewport, one still per section (the arcs log adds a third still, after a second engagement is picked); laptop for SB first. 1920x1247 is the owner's own window; 1280x720 is the binding one."
   }
 }

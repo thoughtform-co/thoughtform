@@ -1,5 +1,5 @@
 {
-  "$comment": "The two register strips (ADR-114): three reference first screens per theme, shot live at 1440x900 by `node scripts/capture-subpages.mjs --register` or taken from a local reference still, stacked top to bottom into <subject>.png. A `url` is shot and read (readings/<site>.json); a `file` is resized and top-cropped, with no live reading. Order is the order in the strip.",
+  "$comment": "The register strips (ADR-114): three reference first screens per theme, shot live at 1440x900 by `node scripts/capture-subpages.mjs --register` or taken from a local reference still, stacked top to bottom into <subject>.png. A `url` is shot and read (readings/<site>.json); a `file` is resized and top-cropped, with no live reading. Order is the order in the strip. The two `arcs-*` entries are LOCAL strips (ADR-118): the owner's game-UI references for the arcs instrument, composed into the IGNORED `_shots/arcs-instrument/` folder as JPEGs at their own aspect and attached as image 3 on the arcs overview and its kit only. They are third-party images and the repository is public, so they are never written where the ship opts pictures back into git; `--register --only arcs-monitor,arcs-log` rebuilds them from the files named here, which live in the same ignored folder.",
   "void": [
     { "site": "lighthouse", "url": "https://www.lighthousehq.com/" },
     { "site": "tensorlake", "url": "https://www.tensorlake.ai/" },
@@ -12,5 +12,33 @@
       "site": "kindled-grid",
       "file": "I:/My Drive/01_Thoughtform Branding/07_Artifacts Branding/_01_GENERAL REFERENCES/Grid System.jpg"
     }
-  ]
+  ],
+  "arcs-monitor": {
+    "local": true,
+    "out": "_shots/arcs-instrument/arcs-monitor.jpg",
+    "layers": [
+      {
+        "site": "vilimovsky-quest-display",
+        "file": "references/register/_shots/arcs-instrument/ref-4-vilimovsky-quest-display.png"
+      }
+    ]
+  },
+  "arcs-log": {
+    "local": true,
+    "out": "_shots/arcs-instrument/arcs-log.jpg",
+    "layers": [
+      {
+        "site": "cp2077-codex",
+        "file": "references/register/_shots/arcs-instrument/ref-1-cp2077-codex.webp"
+      },
+      {
+        "site": "cp2077-detail-card",
+        "file": "references/register/_shots/arcs-instrument/ref-2-cp2077-detail-card.png"
+      },
+      {
+        "site": "cp2077-journal",
+        "file": "references/register/_shots/arcs-instrument/ref-3-cp2077-journal.png"
+      }
+    ]
+  }
 }

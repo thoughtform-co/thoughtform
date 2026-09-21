@@ -15,10 +15,14 @@
  *     <ship>/evals/waves/<wave>[-laptop]/mechanical.json      the gate's read, per cell
  *     <ship>/evals/waves/<wave>[-laptop]/report.json          the probe's own read
  *
- * and three calibration modes:
+ * and four calibration modes:
  *
- *     --register                 the two register strips (the subjects' identities)
+ *     --register [--only k,k]    the register strips (the subjects' identities, and
+ *                                the arcs instrument's LOCAL strips, ADR-118)
  *     --control  --wave <w>      the negative pole: today's OLD /arcs from --port-old, lane `sa`
+ *     --promote-pole <ID> --wave <w>
+ *                                a pole PROMOTED byte-identical from an earlier wave's
+ *                                stills (`from` in the registry) — SF, the sheet overview
  *     --fixture  --wave <w>      the site's lawful / broken fixture panels, lanes `lawful` / `broken`
  *
  * then, from the ship at <ship>:
@@ -96,9 +100,25 @@ const MODE_FIXTURE = has("--fixture");
 const MODE_REGISTER = has("--register");
 const NO_MECH = has("--no-mech");
 const MAX_CONTROL_STILLS = Number(argOf("--control-stills", "5"));
+const PROMOTE = argOf("--promote-pole", "");
+const ONLY_REGISTER = listOf("--only");
 
 /** Where a section's head band sits when a still is shot: under the header. */
 const PIN = 96;
+/* The arcs instrument's two frames are each one full screen (ADR-118): they
+   are shot flush, at their own top, or 96px of the monitor's foot lands in
+   the log's still. */
+const PIN_BY_KIND = { monitor: 0, log: 0 };
+
+/* The arcs instrument's pages attach a SECOND register as image 3 — the game
+   references the owner's brief named (ADR-118) — composed by `--register`
+   into the ship's IGNORED `_shots/` folder. ⚠ LOCAL ONLY: the repository is
+   public and these are third-party images, so they are never opted in; on a
+   machine without them `qa.py` simply attaches nothing extra. */
+const INSTRUMENT_TYPES = new Set(["AR", "AK"]);
+const LOCAL_REGISTER = path.join(REGISTER, "_shots", "arcs-instrument");
+const instrumentRegister = (kind) =>
+  path.join(LOCAL_REGISTER, `${kind === "monitor" ? "arcs-monitor" : "arcs-log"}.jpg`);
 
 if (!WAVE && !DRY && !MODE_REGISTER) {
   console.error("  --wave <name> is required (e.g. wave-01-sb), except with --register or --dry-run");
@@ -108,8 +128,15 @@ if (!WAVE && !DRY && !MODE_REGISTER) {
 const reg = JSON.parse(fs.readFileSync(REGISTRY, "utf8"));
 const KNOB_KEYS = Object.keys(reg.knobs);
 const DEFAULTS = Object.fromEntries(KNOB_KEYS.map((k) => [k, reg.knobs[k].values[0]]));
-const POLE = reg.directions.find((d) => d.pole === "negative");
+/* Two negative poles since ADR-118: SA, shot once from a worktree (`--control`),
+   and SF, promoted byte-identical from a wave already on disk
+   (`--promote-pole SF`). `.find()` would have taken the first and silently
+   ignored the second. */
+const POLES = reg.directions.filter((d) => d.pole === "negative");
+const SHOT_POLE = POLES.find((d) => d.routes && !d.from);
 const DRAWABLE = reg.directions.filter((d) => d.knobs !== null);
+/** A direction is shot only on the page types whose knobs it moves. */
+const scopedTo = (d, typeId) => !d.types || d.types.includes(typeId);
 const DIRECTIONS = DRAWABLE.filter((d) => !ONLY_K.length || ONLY_K.includes(d.id));
 const THEMES = reg.wave.themes.filter((t) => !ONLY_THEMES.length || ONLY_THEMES.includes(t));
 const VIEWPORT = (VP_OVERRIDE || reg.wave.settings[SETTING] || "").split("x").map(Number);
@@ -120,7 +147,15 @@ if (VIEWPORT.length !== 2 || VIEWPORT.some((n) => !n)) {
 const subjectOf = (theme) => (theme === "light" ? "parchment" : "void");
 const laneOf = (d) => d.lane ?? d.id.toLowerCase();
 const knobsOf = (d) => ({ ...DEFAULTS, ...(d.knobs ?? {}) });
-const knobStr = (knobs) => KNOB_KEYS.map((k) => `${k}=${knobs[k]}`).join(" ");
+/* A still's caption names only the knobs its page draws: the instrument's four
+   on the arcs overview and its kit, the sheet's four everywhere else. A
+   caption that listed all eight would hand the grader four settings the
+   still cannot show. */
+const INSTRUMENT_KNOBS = ["span", "rows", "dossier", "frame"];
+const knobStr = (knobs, typeId) =>
+  KNOB_KEYS.filter((k) => INSTRUMENT_KNOBS.includes(k) === (typeId === "AR" || typeId === "AK"))
+    .map((k) => `${k}=${knobs[k]}`)
+    .join(" ");
 
 /* ── The ship, read by hand ──────────────────────────────────────────────────
  * A minimal TOML read: `[section.ID]` blocks of `key = "string"` lines. The
@@ -198,10 +233,14 @@ function assertMirror(ship) {
     if (!/^[A-Z]+$/.test(t.id)) problems.push(`type id ${t.id} is not letters only`);
     if (!t.route.startsWith("/")) problems.push(`type ${t.id} has no ROUTE in its shot`);
   }
-  for (const [typeId, route] of Object.entries(POLE?.routes ?? {})) {
-    const t = ship.types.find((x) => x.id === typeId);
-    if (!t) problems.push(`the negative pole names type ${typeId} (${route}), which armada.toml lacks`);
-  }
+  for (const pole of POLES)
+    for (const [typeId, route] of Object.entries(pole.routes ?? {})) {
+      const t = ship.types.find((x) => x.id === typeId);
+      if (!t) problems.push(`the negative pole ${pole.id} names type ${typeId} (${route}), which armada.toml lacks`);
+    }
+  for (const d of reg.directions)
+    for (const typeId of d.types ?? [])
+      if (!ship.types.some((x) => x.id === typeId)) problems.push(`direction ${d.id} is scoped to type ${typeId}, which armada.toml lacks`);
   if (ship.subjects.length !== 2) problems.push(`expected two subjects (void, parchment), found ${ship.subjects.length}`);
   if (problems.length) {
     console.error("  THE REGISTRY AND THE SHIP HAVE DRIFTED.");
@@ -215,7 +254,7 @@ function assertMirror(ship) {
  * knows: the arrangement sequence and the variety law read off the DOM. Every
  * still carries its numbers into the manifest and the report; `qa.py` never
  * sees them, because a grader handed the answer stops looking. */
-function probeFn() {
+function probeFn(knobKeys) {
   const root = document.querySelector(".sh-root");
   if (!root) return { err: "no .sh-root" };
   const isGold = (s) => {
@@ -281,26 +320,47 @@ function probeFn() {
   const secs = [...root.querySelectorAll(".sh-sec[data-sh-arrangement]")];
   const seq = secs.map((s) => s.getAttribute("data-sh-arrangement"));
   const violations = [];
-  if (seq[0] !== "split") violations.push("the first section is not the split");
-  if (seq[seq.length - 1] !== "close") violations.push("the last section is not the close");
-  if (seq.filter((k) => k === "split").length !== 1) violations.push("split count is not one");
-  if (seq.filter((k) => k === "close").length !== 1) violations.push("close count is not one");
-  for (let i = 1; i < seq.length; i++) if (seq[i] === seq[i - 1]) violations.push(`two consecutive ${seq[i]}`);
-  const counts = new Map();
-  for (const k of seq) bump(counts, k);
-  for (const [k, n] of counts) if (n > 2) violations.push(`${k} appears ${n} times`);
-  if (new Set(seq).size < 3) violations.push("fewer than three arrangements");
-  if (root.querySelectorAll('.sh-cells[data-n="3"]').length > 1) violations.push("three cells twice");
-  for (const s of secs) {
-    const kind = s.getAttribute("data-sh-arrangement");
-    if (kind === "timeline" && s.querySelectorAll(".sh-tl__item.is-lit").length !== 1)
-      violations.push(`${s.id}: lit items != 1`);
-    if (kind === "steps" && s.querySelectorAll(".sh-steps__item.is-open").length !== 1)
-      violations.push(`${s.id}: open items != 1`);
+  const profile = root.getAttribute("data-sh-profile") ?? "document";
+  if (profile === "instrument") {
+    /* The arcs instrument's own law (ADR-118, `instrumentViolations` in
+       lib/sheet/composition.ts): exactly the monitor then the log, no close;
+       one lit mark, one chosen row, and they name the same engagement; the
+       settled dossier is the chosen one. Read off the DOM, as the document
+       law below is, so a still can never be graded on a page that broke it. */
+    if (seq.join(",") !== "monitor,log") violations.push(`the instrument is ${seq.join(",") || "empty"}, not monitor,log`);
+    const lit = [...root.querySelectorAll(".sh-mon__mark.is-lit")];
+    const chosen = [...root.querySelectorAll('.sh-log__row[aria-current="true"]')];
+    if (lit.length !== 1) violations.push(`lit marks ${lit.length} != 1`);
+    if (chosen.length !== 1) violations.push(`chosen rows ${chosen.length} != 1`);
+    const litId = lit[0]?.getAttribute("data-id");
+    const chosenId = chosen[0]?.getAttribute("data-id");
+    if (litId && chosenId && litId !== chosenId) violations.push(`the lit mark (${litId}) is not the chosen row (${chosenId})`);
+    const settled = root.getAttribute("data-dos-id");
+    if (chosenId && settled && settled !== chosenId) violations.push(`the dossier (${settled}) is not the chosen row (${chosenId})`);
+  } else {
+    if (seq[0] !== "split") violations.push("the first section is not the split");
+    if (seq[seq.length - 1] !== "close") violations.push("the last section is not the close");
+    if (seq.filter((k) => k === "split").length !== 1) violations.push("split count is not one");
+    if (seq.filter((k) => k === "close").length !== 1) violations.push("close count is not one");
+    for (let i = 1; i < seq.length; i++) if (seq[i] === seq[i - 1]) violations.push(`two consecutive ${seq[i]}`);
+    const counts = new Map();
+    for (const k of seq) bump(counts, k);
+    for (const [k, n] of counts) if (n > 2) violations.push(`${k} appears ${n} times`);
+    if (new Set(seq).size < 3) violations.push("fewer than three arrangements");
+    if (root.querySelectorAll('.sh-cells[data-n="3"]').length > 1) violations.push("three cells twice");
+    for (const s of secs) {
+      const kind = s.getAttribute("data-sh-arrangement");
+      if (kind === "timeline" && s.querySelectorAll(".sh-tl__item.is-lit").length !== 1)
+        violations.push(`${s.id}: lit items != 1`);
+      if (kind === "steps" && s.querySelectorAll(".sh-steps__item.is-open").length !== 1)
+        violations.push(`${s.id}: open items != 1`);
+    }
   }
 
+  // Only the registry's knobs are knobs: a station row's `data-sh-kind`, the
+  // profile and the instrument's selection are state, never a direction.
   const knobs = {};
-  for (const a of root.getAttributeNames()) if (a.startsWith("data-sh-") && !["data-sh-ready", "data-sh-page", "data-sh-k"].includes(a)) knobs[a.slice(8)] = root.getAttribute(a);
+  for (const k of knobKeys ?? []) if (root.hasAttribute(`data-sh-${k}`)) knobs[k] = root.getAttribute(`data-sh-${k}`);
 
   const sorted = [...tracks.entries()].sort((a, b) => b[1] - a[1]);
   return {
@@ -316,6 +376,7 @@ function probeFn() {
     radii,
     structureHues: struct.size,
     sections: secs.map((s) => ({ id: s.id, kind: s.getAttribute("data-sh-arrangement") })),
+    profile,
     violations,
     knobs,
     k: root.getAttribute("data-sh-k"),
@@ -400,6 +461,40 @@ async function driveStack(page, sectionId, vp) {
     await page.waitForTimeout(70);
   }
   return { slots: n, driven: false };
+}
+
+/**
+ * Pick a second engagement in the arcs log (ADR-118) and wait until the page
+ * says the dossier has SETTLED on it — `data-dos-id` on the root, a value the
+ * page computed after its swap, never one this script set.
+ *
+ * The row is chosen off the page, never by slug: the first visible row whose
+ * standing differs from the chosen one, else the last visible row — so the
+ * swap still shows the dossier's other face when the record has one.
+ */
+async function driveLog(page, vp) {
+  const pick = await page.evaluate(() => {
+    const rows = [...document.querySelectorAll(".sh-log__row")].filter(
+      (r) => !r.closest("[hidden]") && r.getBoundingClientRect().height > 0
+    );
+    const chosen = rows.find((r) => r.getAttribute("aria-current") === "true");
+    const from = chosen?.getAttribute("data-id") ?? null;
+    const standing = chosen?.getAttribute("data-status");
+    const other =
+      rows.find((r) => r !== chosen && r.getAttribute("data-status") !== standing) ??
+      [...rows].reverse().find((r) => r !== chosen);
+    return { from, to: other?.getAttribute("data-id") ?? null, rows: rows.length };
+  });
+  if (!pick.to) return { driven: false, ...pick };
+  await page.locator(`.sh-log__row[data-id="${pick.to}"]`).first().click();
+  await page.waitForFunction(
+    (id) => document.querySelector(".sh-root")?.getAttribute("data-dos-id") === id,
+    pick.to,
+    { timeout: 10000 }
+  );
+  // Park the pointer off the list, so no hover state is in the still.
+  await page.mouse.move(vp[0] - 4, vp[1] - 4);
+  return { driven: true, ...pick };
 }
 
 /* ── The mechanical gate ───────────────────────────────────────────────────*/
@@ -496,7 +591,9 @@ async function newPage(browser, vp) {
 async function shootWave(browser, ship, waveDir) {
   const types = ship.types.filter((t) => !ONLY_TYPES.length || ONLY_TYPES.includes(t.id));
   const cells = [];
-  for (const t of types) for (const theme of THEMES) for (const d of DIRECTIONS) cells.push({ t, theme, d });
+  for (const t of types)
+    for (const theme of THEMES)
+      for (const d of DIRECTIONS) if (scopedTo(d, t.id)) cells.push({ t, theme, d });
   console.log(
     `  wave ${WAVE}${SETTING === "default" ? "" : "-" + SETTING} at ${VIEWPORT.join("x")}: ${types.length} types x ${THEMES.length} themes x ${DIRECTIONS.length} directions = ${cells.length} cells`
   );
@@ -533,7 +630,7 @@ async function shootWave(browser, ship, waveDir) {
       await page.goto(href, { waitUntil: "domcontentloaded", timeout: 120000 });
       await settle(page, c.d.id);
       await stillLife(page, null);
-      const probe = await page.evaluate(probeFn);
+      const probe = await page.evaluate(probeFn, KNOB_KEYS);
       cell.probe = probe;
       const sections = await page.evaluate(() =>
         [...document.querySelectorAll(".sh-sec[data-sh-arrangement]")].map((s) => ({
@@ -542,22 +639,40 @@ async function shootWave(browser, ship, waveDir) {
           top: Math.round(s.getBoundingClientRect().top + scrollY),
         }))
       );
-      const N = sections.length;
+      /* One still per section; the arcs log adds a SECOND still after another
+         engagement is picked (the swap state), so the dossier is judged on a
+         face the server did not author. */
+      const shots = [];
+      for (const s of sections) {
+        shots.push({ s, state: "rest" });
+        if (s.kind === "log") shots.push({ s, state: "swap" });
+      }
+      const N = shots.length;
+      const instrument = INSTRUMENT_TYPES.has(c.t.id);
       for (let i = 0; i < N; i++) {
-        const s = sections[i];
-        await scrollToY(page, i === 0 ? 0 : Math.max(0, s.top - PIN));
-        await stillLife(page, s.id);
+        const { s, state } = shots[i];
         let stack = null;
-        if (s.kind === "console" && knobs.card === "stack") {
-          stack = await driveStack(page, s.id, VIEWPORT);
+        let drive = null;
+        if (state === "rest") {
+          await scrollToY(page, i === 0 ? 0 : Math.max(0, s.top - (PIN_BY_KIND[s.kind] ?? PIN)));
+          await stillLife(page, s.id);
+          if (s.kind === "console" && knobs.card === "stack") {
+            stack = await driveStack(page, s.id, VIEWPORT);
+            await stillLife(page, s.id);
+          }
+        } else {
+          drive = await driveLog(page, VIEWPORT);
           await stillLife(page, s.id);
         }
-        const inView = (await page.evaluate(probeFn)).accentInView;
+        const inView = (await page.evaluate(probeFn, KNOB_KEYS)).accentInView;
         const file = `${c.t.id}-${subject}__${lane}_${nn(i + 1)}.png`;
         fs.mkdirSync(folder, { recursive: true });
         await page.screenshot({ path: path.join(folder, file), animations: "disabled" });
         const seconds = +((Date.now() - t0) / 1000).toFixed(2);
         cell.stills.push(file);
+        const references = [path.join(REGISTER, `${subject}.png`)];
+        if (instrument) references.push(instrumentRegister(s.kind));
+        const what = state === "swap" ? `section "${s.id}" (${s.kind}) after a second engagement is picked` : `section "${s.id}" (${s.kind})`;
         addRow(folder, {
           file,
           slot: `${c.t.id}-${subject}`,
@@ -565,8 +680,8 @@ async function shootWave(browser, ship, waveDir) {
           model: "chromium (playwright)",
           model_lane: lane,
           seconds,
-          references: [path.join(REGISTER, `${subject}.png`)],
-          reference_names: [`${subject}.png`],
+          references,
+          reference_names: references.map((r) => path.basename(r)),
           settings: { ar: "16:9", size: VIEWPORT.join("x"), quality: "dsf1", setting: SETTING },
           prompt: href,
           meta: {
@@ -584,12 +699,13 @@ async function shootWave(browser, ship, waveDir) {
             direction: c.d.id,
             knobs,
             still: `${i + 1} of ${N}`,
-            section: { index: i + 1, id: s.id, kind: s.kind },
+            section: { index: i + 1, id: s.id, kind: s.kind, state },
             stack,
+            drive,
             accentInView: inView,
             mech: cell.mech ?? null,
-            subject_noun: `${c.t.name}, ${c.theme} theme at ${VIEWPORT.join("x")}, still ${i + 1} of ${N}: section "${s.id}" (${s.kind}); direction ${c.d.id}, ${knobStr(knobs)}`,
-            channel: `${s.kind} - ${s.id}`,
+            subject_noun: `${c.t.name}, ${c.theme} theme at ${VIEWPORT.join("x")}, still ${i + 1} of ${N}: ${what}; direction ${c.d.id}, ${knobStr(knobs, c.t.id)}`,
+            channel: `${s.kind} - ${s.id}${state === "swap" ? " (swap)" : ""}`,
           },
         });
       }
@@ -628,14 +744,14 @@ async function shootWave(browser, ship, waveDir) {
 
 /** The negative pole: today's OLD /arcs, from the pre-change tree, lane `sa`. */
 async function shootControl(browser, ship, waveDir) {
-  if (!POLE?.routes) {
+  if (!SHOT_POLE?.routes) {
     console.error("  the registry has no negative pole with routes");
     return 1;
   }
   let failed = 0;
   const negDir = SETTING === "default" ? NEGATIVE : path.join(NEGATIVE, SETTING);
   fs.mkdirSync(negDir, { recursive: true });
-  for (const [typeId, route] of Object.entries(POLE.routes)) {
+  for (const [typeId, route] of Object.entries(SHOT_POLE.routes)) {
     const t = ship.types.find((x) => x.id === typeId);
     if (!t || (ONLY_TYPES.length && !ONLY_TYPES.includes(typeId))) continue;
     for (const theme of THEMES) {
@@ -655,7 +771,7 @@ async function shootControl(browser, ship, waveDir) {
         for (let i = 0; i < N; i++) {
           await scrollToY(page, i * step);
           await stillLife(page, null);
-          const file = `${t.id}-${subject}__${laneOf(POLE)}_${nn(i + 1)}.png`;
+          const file = `${t.id}-${subject}__${laneOf(SHOT_POLE)}_${nn(i + 1)}.png`;
           fs.mkdirSync(folder, { recursive: true });
           const dest = path.join(folder, file);
           await page.screenshot({ path: dest, animations: "disabled" });
@@ -665,7 +781,7 @@ async function shootControl(browser, ship, waveDir) {
             slot: `${t.id}-${subject}`,
             draw: i + 1,
             model: "chromium (playwright)",
-            model_lane: laneOf(POLE),
+            model_lane: laneOf(SHOT_POLE),
             seconds: +((Date.now() - t0) / 1000).toFixed(2),
             references: [path.join(REGISTER, `${subject}.png`)],
             reference_names: [`${subject}.png`],
@@ -674,18 +790,18 @@ async function shootControl(browser, ship, waveDir) {
             meta: {
               type: t.id,
               type_name: t.name,
-              question: POLE.question,
+              question: SHOT_POLE.question,
               page: t.name,
               route,
               theme,
               subject,
               viewport: VIEWPORT.join("x"),
               setting: SETTING,
-              direction: POLE.id,
+              direction: SHOT_POLE.id,
               pole: "negative",
               still: `${i + 1} of ${N}`,
               section: { index: i + 1, id: `screen-${i + 1}`, kind: "old-arcs" },
-              subject_noun: `${t.name} BEFORE the sheet (the negative pole, ${POLE.shape}), ${theme} theme at ${VIEWPORT.join("x")}, screen ${i + 1} of ${N}`,
+              subject_noun: `${t.name} BEFORE the sheet (the negative pole, ${SHOT_POLE.shape}), ${theme} theme at ${VIEWPORT.join("x")}, screen ${i + 1} of ${N}`,
               channel: `old arcs - screen ${i + 1}`,
             },
           });
@@ -697,6 +813,96 @@ async function shootControl(browser, ship, waveDir) {
       } finally {
         await ctx.close();
       }
+    }
+  }
+  return failed;
+}
+
+/**
+ * A negative pole PROMOTED rather than shot (ADR-118): the stills an earlier
+ * wave already holds, copied BYTE-IDENTICAL into the negative folder and into
+ * this wave under the pole's own lane, with their manifest rows rewritten to
+ * say what they are now. The pole is what the owner asked to replace, so it
+ * is the page as it stood — and a re-shoot of it is a different anchor.
+ *
+ * ⚠ THE COPY IS VERIFIED BY HASH, both ends: an anchor that differs from its
+ * source by a byte is not the anchor the calibration read.
+ */
+async function promotePole(ship, waveDir) {
+  const { createHash } = await import("node:crypto");
+  const hashOf = (p) => createHash("sha256").update(fs.readFileSync(p)).digest("hex");
+  const pole = POLES.find((d) => d.id === PROMOTE);
+  if (!pole?.from) {
+    console.error(`  ${PROMOTE} is not a promotable pole (it needs \`from\` in the registry)`);
+    return 1;
+  }
+  const { wave: fromWave, lane: fromLane, stills } = pole.from;
+  const srcWave = path.join(WAVES, fromWave + (SETTING === "default" ? "" : "-" + SETTING));
+  const negDir = SETTING === "default" ? NEGATIVE : path.join(NEGATIVE, SETTING);
+  let failed = 0;
+  for (const typeId of Object.keys(pole.routes ?? {})) {
+    const t = ship.types.find((x) => x.id === typeId);
+    if (!t) continue;
+    const srcFolder = path.join(srcWave, `${t.id} - ${t.name}`);
+    const folder = path.join(waveDir, `${t.id} - ${t.name}`);
+    const srcRows = new Map(
+      fs.existsSync(path.join(srcFolder, "MANIFEST.jsonl"))
+        ? fs
+            .readFileSync(path.join(srcFolder, "MANIFEST.jsonl"), "utf8")
+            .split(/\r?\n/)
+            .filter((l) => l.trim())
+            .map((l) => JSON.parse(l))
+            .map((r) => [r.file, r])
+        : []
+    );
+    for (const theme of THEMES) {
+      const subject = subjectOf(theme);
+      stills.forEach((n, i) => {
+        const srcFile = `${t.id}-${subject}__${fromLane}_${nn(n)}.png`;
+        const src = path.join(srcFolder, srcFile);
+        const file = `${t.id}-${subject}__${laneOf(pole)}_${nn(i + 1)}.png`;
+        if (!fs.existsSync(src)) {
+          console.log(`    promote ${srcFile}: MISSING in ${srcWave}`);
+          failed++;
+          return;
+        }
+        fs.mkdirSync(folder, { recursive: true });
+        fs.mkdirSync(negDir, { recursive: true });
+        for (const dest of [path.join(folder, file), path.join(negDir, file)]) {
+          fs.copyFileSync(src, dest);
+          if (hashOf(dest) !== hashOf(src)) {
+            console.log(`    promote ${file}: the copy differs from its source`);
+            failed++;
+          }
+        }
+        const row = srcRows.get(srcFile) ?? {};
+        const section = row.meta?.section ?? { index: n, id: `still-${n}`, kind: "unknown" };
+        const references = [path.join(REGISTER, `${subject}.png`)];
+        if (INSTRUMENT_TYPES.has(t.id)) references.push(instrumentRegister(i === 0 ? "monitor" : "log"));
+        addRow(folder, {
+          ...row,
+          file,
+          slot: `${t.id}-${subject}`,
+          draw: i + 1,
+          model_lane: laneOf(pole),
+          references,
+          reference_names: references.map((r) => path.basename(r)),
+          meta: {
+            ...(row.meta ?? {}),
+            type: t.id,
+            type_name: t.name,
+            question: pole.question,
+            direction: pole.id,
+            pole: "negative",
+            promoted_from: `${fromWave}/${srcFile} @ ${pole.from.commit}`,
+            still: `${i + 1} of ${stills.length}`,
+            section,
+            subject_noun: `${t.name} BEFORE the instrument (negative pole ${pole.id}: ${pole.shape}), ${theme} theme at ${VIEWPORT.join("x")}, still ${i + 1} of ${stills.length}: section "${section.id}" (${section.kind})`,
+            channel: `sheet arcs - ${section.kind}`,
+          },
+        });
+        console.log(`    promote ${srcFile} -> ${file}`);
+      });
     }
   }
   return failed;
@@ -832,6 +1038,42 @@ function registerProbeFn() {
   };
 }
 
+/**
+ * A LOCAL register strip (ADR-118): local reference stills stacked at their
+ * own aspect, written as a JPEG into the ship's ignored `_shots/` folder.
+ * ⚠ Never under `references/register/` itself — the ship opts every PNG
+ * there back into git, and these are third-party images in a public repo.
+ */
+async function composeLocalStrip(sharp, key, entry, W) {
+  const out = path.join(REGISTER, entry.out);
+  if (!out.startsWith(path.join(REGISTER, "_shots") + path.sep)) {
+    console.error(`    ${key}: a local strip must be written under _shots/, not ${entry.out}`);
+    return 1;
+  }
+  const layers = [];
+  let top = 0;
+  for (const src of entry.layers ?? []) {
+    const file = path.join(SHIP, src.file);
+    if (!fs.existsSync(file)) {
+      console.error(`    ${key}: missing ${src.file} (local only — copy the owner's reference there first)`);
+      return 1;
+    }
+    const buf = await sharp(file).resize({ width: W }).png().toBuffer();
+    const { height } = await sharp(buf).metadata();
+    layers.push({ input: buf, top, left: 0 });
+    top += height ?? 0;
+  }
+  if (!layers.length) return 1;
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  await sharp({ create: { width: W, height: top, channels: 3, background: "#0a0908" } })
+    .composite(layers)
+    .jpeg({ quality: 88 })
+    .toFile(out);
+  const kb = Math.round(fs.statSync(out).size / 1024);
+  console.log(`    ${key}: ${layers.length} layer(s) -> ${path.relative(SHIP, out)} (${W}x${top}, ${kb} kB, local only)`);
+  return 0;
+}
+
 /** The two register strips: three reference first screens stacked per theme. */
 async function makeRegister(browser) {
   const { default: sharp } = await import("sharp");
@@ -849,6 +1091,11 @@ async function makeRegister(browser) {
     H = 900;
   let failed = 0;
   for (const [subject, list] of Object.entries(sources)) {
+    if (ONLY_REGISTER.length && !ONLY_REGISTER.includes(subject)) continue;
+    if (list && typeof list === "object" && !Array.isArray(list) && list.local) {
+      failed += await composeLocalStrip(sharp, subject, list, W);
+      continue;
+    }
     if (!Array.isArray(list)) continue; // the file's own `$comment`
     const layers = [];
     for (const src of list) {
@@ -920,20 +1167,39 @@ async function makeRegister(browser) {
   assertMirror(ship);
 
   if (DRY) {
-    console.log(`  registry: ${DRAWABLE.map((d) => d.id).join(" ")} + pole ${POLE?.id}; ship lanes: ${Object.keys(ship.lanes).join(" ")}`);
+    console.log(`  registry: ${DRAWABLE.map((d) => `${d.id}${d.types ? `(${d.types.join("+")})` : ""}`).join(" ")} + poles ${POLES.map((p) => p.id).join(" ")}; ship lanes: ${Object.keys(ship.lanes).join(" ")}`);
     console.log(`  types: ${ship.types.map((t) => `${t.id} ${t.route}`).join(" · ")}`);
     console.log(`  setting ${SETTING} = ${VIEWPORT.join("x")}; themes ${THEMES.join(",")}; directions ${DIRECTIONS.map((d) => d.id).join(",")}`);
     for (const t of ship.types) {
       const href = `http://localhost:${PORT}${t.route}`;
-      const status = await fetch(href).then((r) => r.status).catch((e) => `ERR ${e.message}`);
-      console.log(`    ${t.id} ${href} -> ${status}`);
+      /* ⚠ A STATUS IS NOT A PAGE. /arcs is the owner's page (ADR-117): on a
+         server that enforces the gate it answers the site's 404 — or, on a
+         misconfigured one, a sheet-less shell — and a capture against either
+         shoots nothing worth grading. So the body must carry the sheet. */
+      const res = await fetch(href).catch((e) => ({ status: `ERR ${e.message}`, text: async () => "" }));
+      const body = await res.text();
+      const sheet = /class="[^"]*\bsh-root\b/.test(body);
+      /* The `/test/*` kits render behind the `(internal)` layout's client gate,
+         so their server HTML carries no sheet by design; only a public route's
+         body can be held to it. */
+      const held = !t.route.startsWith("/test/");
+      console.log(`    ${t.id} ${href} -> ${res.status}${held && res.status === 200 && !sheet ? "  ⚠ NO SHEET IN THE BODY" : ""}`);
     }
-    if (POLE?.routes)
-      for (const [typeId, route] of Object.entries(POLE.routes)) {
+    for (const pole of POLES)
+      for (const [typeId, route] of Object.entries(pole.routes ?? {})) {
+        if (pole.from) {
+          const src = path.join(WAVES, pole.from.wave, `${typeId} - ${ship.types.find((x) => x.id === typeId)?.name}`);
+          console.log(`    pole ${pole.id} ${typeId} promoted from ${path.relative(SHIP, src)} -> ${fs.existsSync(src) ? "present" : "MISSING"}`);
+          continue;
+        }
         const href = `http://localhost:${PORT_OLD}${route}`;
         const status = await fetch(href).then((r) => r.status).catch((e) => `ERR ${e.message}`);
-        console.log(`    pole ${typeId} ${href} -> ${status}`);
+        console.log(`    pole ${pole.id} ${typeId} ${href} -> ${status}`);
       }
+    for (const kind of ["monitor", "log"]) {
+      const p = instrumentRegister(kind);
+      console.log(`    register ${path.basename(p)} (local) -> ${fs.existsSync(p) ? "present" : "absent: run --register --only arcs-monitor,arcs-log"}`);
+    }
     process.exit(0);
   }
 
@@ -945,8 +1211,9 @@ async function makeRegister(browser) {
       const waveDir = path.join(WAVES, WAVE + (SETTING === "default" ? "" : "-" + SETTING));
       fs.mkdirSync(waveDir, { recursive: true });
       if (MODE_CONTROL) failed += await shootControl(browser, ship, waveDir);
+      if (PROMOTE) failed += await promotePole(ship, waveDir);
       if (MODE_FIXTURE) failed += await shootFixture(browser, ship, waveDir);
-      if (!MODE_CONTROL && !MODE_FIXTURE && !MODE_REGISTER) failed += await shootWave(browser, ship, waveDir);
+      if (!MODE_CONTROL && !MODE_FIXTURE && !MODE_REGISTER && !PROMOTE) failed += await shootWave(browser, ship, waveDir);
       flushManifests();
       console.log(`  wrote ${waveDir}`);
     }

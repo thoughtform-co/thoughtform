@@ -3,7 +3,7 @@ import registry from "./directions.json";
 /**
  * lib/sheet/directions — the typed reader over `directions.json` (ADR-114).
  *
- * The knobs are the sheet's DIMENSIONS in the Mosaic sense: five interpretable
+ * The knobs are the sheet's DIMENSIONS in the Mosaic sense: interpretable
  * axes a still can be steered along. They travel as `data-sh-<knob>`
  * attributes on `.sh-root`; every rule in `sheet.css` that answers a knob
  * keys on that attribute, so a still is always traceable to the exact set
@@ -12,7 +12,17 @@ import registry from "./directions.json";
  * after mount — a reader without JS gets the house.
  */
 
-export const SH_KNOB_KEYS = ["head", "ordinal", "card", "timeline"] as const;
+/** The sheet's four, then the arcs instrument's four (ADR-118). */
+export const SH_KNOB_KEYS = [
+  "head",
+  "ordinal",
+  "card",
+  "timeline",
+  "span",
+  "rows",
+  "dossier",
+  "frame",
+] as const;
 export type ShKnobKey = (typeof SH_KNOB_KEYS)[number];
 export type ShKnobs = Record<ShKnobKey, string>;
 
@@ -39,11 +49,16 @@ export interface ShDirection {
   name: string;
   question: string;
   shape: string;
-  /** `null` on the negative pole — it is not a knob set. */
+  /** `null` on a negative pole — it is not a knob set. */
   knobs: Partial<ShKnobs> | null;
   pole?: "negative";
   lane?: string;
   routes?: Record<string, string>;
+  /** The page types this direction is shot on; absent = every page. A
+   *  direction may only move the knobs of the pages it is scoped to. */
+  types?: string[];
+  /** A pole PROMOTED byte-identical from an earlier wave rather than shot. */
+  from?: { wave: string; lane: string; stills: number[]; commit: string };
 }
 
 export const SH_DIRECTIONS = registry.directions as ShDirection[];
@@ -70,7 +85,7 @@ export function directionOf(knobs: ShKnobs): string {
   return hit ? hit.id : "";
 }
 
-/** The attributes a knob set writes on `.sh-root`, in registry order, always all five. */
+/** The attributes a knob set writes on `.sh-root`, in registry order, always every knob. */
 export function knobAttrs(knobs: ShKnobs): Record<`data-sh-${ShKnobKey}`, string> {
   return Object.fromEntries(SH_KNOB_KEYS.map((k) => [`data-sh-${k}`, knobs[k]])) as Record<
     `data-sh-${ShKnobKey}`,

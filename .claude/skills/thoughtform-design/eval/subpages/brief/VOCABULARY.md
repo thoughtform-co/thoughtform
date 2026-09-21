@@ -67,6 +67,55 @@ This ship.
 - Routes: `/home-sessions` and `/musings`.
 - The negative pole: "Shoot once, keep stills".
 
+## 2026-09-21 — the arcs overview becomes an instrument
+
+> First off, this page should only be accessible to me when I am logged in,
+> so it should not be accessible to external people.
+
+The gate (ADR-117): the overview is gated in the page on a signed pass; the
+client pages and the arcs stay public by link. Not a rubric check — a
+property of the route, proven against a production build.
+
+> for the first section, the hero section, it should be full viewport, and it
+> should look like a sort of grid timeline, like the fourth screenshot that
+> indicates the different projects mapped onto it.
+
+The monitor (block M): one full screen, a gridded plot with a datum strip and
+a terminus strip, every engagement plotted at its date (M1–M4). The fourth
+screenshot is Vilimovský's "Quest custom display" — decoded in `DRIVE.md`,
+attached as image 3 on the monitor still.
+
+> in the next section, which should be like a new viewport, with "new
+> viewport" I mean it should not overlap with the hero section
+
+The log starts where the monitor ends. Asserted by the smoke as geometry
+(monitor bottom = log top, nothing of the monitor in view when seated), never
+graded by eye.
+
+> on the left side we have a minimalistic list of the different Arcs, the
+> different clients. Maybe we can have subsections per client, so they really
+> feel like quests from a video game. When you click on them, on the right
+> side, a card should then appear, a bit like the second screenshot, with all
+> the information of that specific Arc.
+
+The log (block L): client group heads over one-line rows (L1), one filled row
+(L2), one dossier seated on the list (L3) that IS the filled row (L4). The
+first and third screenshots (the codex, the journal) and the second (the
+detail card) are image 3 on the log stills.
+
+> This is a bigger redesign, but this feels for me much closer to an
+> interface and the look and feel of Thoughtform.
+
+Why AR stops being a document: the rubric's grading rules scope the
+document-only checks away from it (0.2.0), and the stranger's read for it
+files "document" and "card grid" as findings.
+
+> Really think through this, analyze it, and then really run your eval
+> pipeline like you did when you created this.
+
+This ship, again: the decode, a second negative pole (SF, the sheet overview,
+promoted byte-identical), rubric 0.2.0, a calibration wave, then wave 03.
+
 ## Verdicts
 
 ### 2026-09-20 — the first read of the wave-01 gallery (the house direction's arcs overview)

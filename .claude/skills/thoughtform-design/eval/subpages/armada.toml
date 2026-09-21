@@ -63,8 +63,15 @@ sa = "render-3004"        # the negative pole: today's /arcs, shot from a worktr
 sb = "render-3003"        # House: every knob at its first value
 # sc (Seams: rules=seams) was retired on 2026-09-20 with the `rules` knob: the
 # owner ruled the frame's rails the page's only verticals (ADR-114 U1).
-sd = "render-3003"        # Editorial: head=stack ordinal=off
-se = "render-3003"        # Grid: card=grid timeline=rail
+sd = "render-3003"        # Editorial: head=stack ordinal=off (the document pages only)
+se = "render-3003"        # Grid: card=grid timeline=rail (the document pages only)
+# The arcs instrument (ADR-118), 2026-09-21: /arcs became the owner's private
+# instrument - a monitor and a log - and the sheet's overview became a pole.
+sf = "render-3003"        # negative pole 2: the sheet overview at 7124f146, promoted from wave-02-sb, never re-shot
+sg = "render-3003"        # Full record: span=full (AR, AK)
+sh = "render-3003"        # Plates: rows=boxed (AR, AK)
+sj = "render-3003"        # Pair: dossier=pair (AR, AK)
+sl = "render-3003"        # Rails: frame=rails (AR, AK)
 lawful = "render-3003"    # /test/design-eval-fixture .fixture-good (wave 00)
 broken = "render-3003"    # /test/design-eval-fixture .fixture-bad  (wave 00)
 
@@ -163,17 +170,36 @@ shot = "ROUTE: /home-sessions"
 subject = "The fourth service's own page: six to eight people at the owner's table in Antwerp, one morning. Its copy is the services card's record; its dates are the sessions registry; the seat is reserved by mail."
 camera_line = "One still per section, the section's head band at the pin; the first still is the first screen."
 
+#  ⚠ AR IS NOT A DOCUMENT SINCE 2026-09-21 (ADR-118). The owner's brief made
+#  the overview his private INSTRUMENT: a full-screen monitor plotting every
+#  engagement at its date, then a full-screen log of client groups beside one
+#  dossier. The rubric's grading rules scope C1, C2, C5, D5, E1, E3 and E4
+#  away from it and blocks M and L judge it instead. Its stills attach a
+#  SECOND register as image 3 (the game-UI references, LOCAL ONLY - the
+#  repository is public).
 [types.AR]
 name = "Arcs overview"
-question = "does the client console read as an instrument - a record beside a pile - and does the set of five read as one?"
-channel = "client index (noindex)"
+question = "does the private overview read as a device - a monitor that plots the record and a log that opens it - and not as a page about one?"
+channel = "private instrument (owner only, noindex)"
 ar = "16:9"
-camera = "split, console set, cells, close"
-position = "the practice's claim left, a kind filter right, then one console per client"
-shape = "a sticky terminal panel with a five-row readout beside a pile of portrait flashcards"
+camera = "monitor, log"
+position = "a full-screen monitor: a header strip, four readout cells, a laned plot of every engagement at the date it was filed, a foot strip"
+shape = "a dated graticule with one lit mark and a NOW cursor, then a grouped list with one filled row against one chamfered dossier"
 shot = "ROUTE: /arcs"
-subject = "Every engagement, one console per client: the panel letters five facts derived from the registry, the pile holds the client's pages and arcs newest first, the house formats close as four cells."
-camera_line = "One still per section; the console set is driven until its second slot pins where a console holds more than one card."
+subject = "Every engagement the registry holds, plotted on its client's lane at the date it was filed, then listed by client with a dossier for the chosen one. Every lettered value is derived from the registry."
+camera_line = "Three stills: the monitor at scroll zero, the log at its own top with the newest engagement chosen, the log after a second engagement is picked."
+
+[types.AK]
+name = "Arcs instrument kit"
+question = "does every state of the monitor and the log share one grammar when the record is harder than the real one?"
+channel = "internal specimen page"
+ar = "16:9"
+camera = "monitor, log, on fixtures"
+position = "the monitor over a fixture record: a client with three engagements, two marks on one date, a running engagement, a relationship older than the axis"
+shape = "every state of a mark, a group, a row and the dossier once, fixtures labelled as fixtures"
+shot = "ROUTE: /test/arcs-instrument-kit"
+subject = "The instrument's specimen: the same monitor and log over a fixture record built to exercise what the real one cannot yet - grouping, collisions, a running run - graded on blocks M, L and K."
+camera_line = "Three stills: the monitor, the log at rest, the log after a second pick."
 
 [types.AC]
 name = "Arcs client"

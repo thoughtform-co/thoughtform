@@ -50,6 +50,16 @@ harvest note, and those two words are in every sentence about a theme.
   caption bar, an index as a ruled table.
 - **What it does not prove:** as above.
 
+## The arcs instrument's second register (ADR-118)
+
+Not a subject: a subject is a theme, and the instrument is shot in both. On
+the Arcs overview and its kit (AR, AK) the capture writes a SECOND reference
+into each manifest row, which `qa.py` attaches as image 3 — `arcs-monitor.jpg`
+on the monitor still, `arcs-log.jpg` on the log stills — composed from the
+owner's four game-UI references and kept LOCAL (see `DRIVE.md`). It proves the
+instrument's grammar the way the theme strips prove the sheet's; the grading
+rules say what it may not prove.
+
 ## Not yet in the pack
 
 - No positive anchor: nothing the owner has approved. The first tick in a

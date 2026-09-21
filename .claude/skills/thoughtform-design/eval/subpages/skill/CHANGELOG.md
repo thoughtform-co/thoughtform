@@ -39,3 +39,24 @@ Dated entries: how the work changed, not what was edited.
   answers written down, none taken: it is his read. U1's B1 rewrite becomes
   rubric 0.1.3 with its own ledger rows, because two texts under one version
   would have been averaged by calibrate.py; pending renumbers to 0.1.4.
+
+## 2026-09-21
+
+- The Arcs overview leaves the sheet's document grammar: the owner's brief
+  makes it his private instrument — a monitor that plots the record, then a
+  log that opens it. Rubric 0.2.0 judges it with two new blocks (M, the
+  monitor; L, the log), scopes seven document checks away from it, and
+  attaches a second register as image 3 on its stills: the four game and
+  concept references, composed into two strips kept LOCAL, because the
+  repository is public.
+- A second negative pole, SF, is yesterday's overview itself, promoted
+  byte-identical from wave 02 rather than re-shot. The capture learned to
+  promote a pole, to hold more than one, to rebuild one register strip
+  without re-shooting the others, and to scope a direction to the pages it
+  can move (SD/SE on the documents; SG/SH/SJ/SL on the instrument).
+- The calibration wave failed the pole on all eight new checks for their
+  stated reasons, unanimously, at both viewports. The one surprise was the
+  rubric's own: a gold bullet written as a list read as the WHOLE list and
+  failed the pole's console lip on A2, three runs of three, on pixels wave 02
+  had passed. 0.2.1 makes it additive. The lawful fixture turns out never to
+  have been lawful on parchment; recorded.

@@ -1,0 +1,1197 @@
+{
+  "wave": "wave-03-calibration",
+  "rubric_version": "0.2.0",
+  "gating": false,
+  "graded_at": "2026-09-21T07:25:14",
+  "runs": 3,
+  "checks": [
+    {
+      "id": "A1",
+      "check": "**Two faces, by role.** A monospace face carries labels, keys, kickers, readouts and captions; a proportional sans face carries titles, ledes and paragraphs. Look at the paragraphs first, then at the small uppercase labels.",
+      "fails_when": "a paragraph or a lede is set in the monospace face, a small uppercase label is set in the proportional face, or a third face (a serif, a display face, a second sans) appears between the rails",
+      "severity": "gate",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "A2",
+      "check": "**Gold is wayfinding, and it is counted.** Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most.",
+      "fails_when": "more than twelve gold objects, or a structural rule, seam or box outline is drawn in gold, the console's lip, the flashcards' lip (the folder device, ADR-097) and the Arcs overview's dossier lip excepted",
+      "severity": "gate",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "A3",
+      "check": "**No hue outside the tiers.** Neutral ground, neutral ink, gold, the provenance green. Photographs are taken into the duotone.",
+      "fails_when": "a third hue, a cool tint, a purple or blue, or a photograph in its own colour",
+      "severity": "gate",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "A4",
+      "check": "**The ground is the theme's.** A void subject is dawn ink on a near-black ground; a parchment subject is dark ink on parchment. Judged from the candidate alone.",
+      "fails_when": "the ground contradicts the subject named in the caption, or two grounds meet with a hard step",
+      "severity": "gate",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "A5",
+      "check": "**Flat material.** One ground, one step for a plate. No gradient as decoration, no bloom, no glow, no drop shadow.",
+      "fails_when": "a ramp, a halo, a glow or a shadow is doing the work a line should do",
+      "severity": "critical",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "A6",
+      "check": "**The corner law.** Zero radius anywhere between the rails. The console's panel, the flashcards, and the Arcs overview's monitor housing and dossier carry the top-right and bottom-left chamfer; their children are square; marks are diamonds, never circles. The frame's round navigation button at the bottom-left is chrome, not a mark.",
+      "fails_when": "any rounded corner between the rails, a chamfer on the wrong diagonal, a chamfered child inside a chamfered box, or a circular mark on the page itself",
+      "severity": "gate",
+      "set_level": false,
+      "block": "A. The register. Any failure here stops the still."
+    },
+    {
+      "id": "B1",
+      "check": "**The page divides itself with seams, and panels are seated on them.** A hairline seam between sections, the head band's rule under every kicker, and no vertical rule of the page's own: the frame's two rails are its only verticals (owner, 2026-09-20).",
+      "fails_when": "a section has no seam above it, a panel or a cell edge floats with no rule behind it, a rule stops short of the band with nothing to stop it, or the page draws a full-height vertical of its own",
+      "severity": "critical",
+      "set_level": false,
+      "block": "B. The sheet"
+    },
+    {
+      "id": "B2",
+      "check": "**Cells share edges.** Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes.",
+      "fails_when": "two cells are separated by air, a line is drawn twice a pixel apart, or a box sits inside a cell",
+      "severity": "critical",
+      "set_level": false,
+      "block": "B. The sheet"
+    },
+    {
+      "id": "B3",
+      "check": "**One line weight, one hue, three alphas.** Every structural line is the neutral ink at one pixel; only its alpha ranks it. The only dashed lines are the two-up divider and, on the Arcs overview and its kit, the plot's dotted scale.",
+      "fails_when": "a second weight, a second hue on structure, more than three distinguishable alphas, or a dashed rule elsewhere",
+      "severity": "critical",
+      "set_level": false,
+      "block": "B. The sheet"
+    },
+    {
+      "id": "C1",
+      "check": "**The head is composed on the rules, never centred.** A name kicker and a sentence-case display title on one side, the paragraphs on the other, and no hero image anywhere. On the Arcs overview and its kit this check is passed.",
+      "fails_when": "the title is centred, a hero image or a full-bleed picture opens the page, or the head fills a whole viewport",
+      "severity": "critical",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "C2",
+      "check": "**Every section opens on a head band**: a mono kicker, an ordinal where the knob is on, one hairline under both. On the Arcs overview and its kit this check is passed.",
+      "fails_when": "a section has no kicker, the ordinal is missing where the knob is on or present where it is off, or the band has no rule",
+      "severity": "critical",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "C3",
+      "check": "**A timeline plots a record.** The mornings sit on a dated axis at their dates or on a vertical date rail; exactly one node is lit; past ones are dim. On the sessions page only.",
+      "fails_when": "the items are evenly spread regardless of date, none or more than one is lit, or a past item reads as live",
+      "severity": "critical",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "C4",
+      "check": "**Ruled rows align and one step is open.** In rows and steps, the fields align down the column on one hairline per row; in a steps section exactly one item is elaborated.",
+      "fails_when": "fields wander between rows, a row has no rule, or none or more than one step is open",
+      "severity": "critical",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "C5",
+      "check": "**Figures are framed.** A figure carries a bracketed FIG caption bar above and a mono caption below; a two-up sits on a dashed divider; photographs are in the duotone. On the Arcs overview and its kit this check is passed.",
+      "fails_when": "a picture is dropped on the page bare, a two-up has no divider, or a photograph shows its own colour",
+      "severity": "minor",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "C6",
+      "check": "**Split the slack, and one first read.** Vertical surplus is shared, never pooled under one block; from across the room one thing leads.",
+      "fails_when": "a block sits high over a hole, or nothing leads and three things lead together",
+      "severity": "minor",
+      "set_level": false,
+      "block": "C. Composition"
+    },
+    {
+      "id": "D1",
+      "check": "**Nothing above the weight ceiling.** Emphasis is ink and size, never bold; the monospace face is never bold.",
+      "fails_when": "a label, a row, a key or a claim is set bolder than its neighbours, or any monospace text is bold",
+      "severity": "critical",
+      "set_level": false,
+      "block": "D. Type and density"
+    },
+    {
+      "id": "D2",
+      "check": "**Case ranks.** The sans is sentence case; only the monospace chrome is uppercase.",
+      "fails_when": "a sans title or sentence is shouted, or everything is uppercase so case says nothing",
+      "severity": "critical",
+      "set_level": false,
+      "block": "D. Type and density"
+    },
+    {
+      "id": "D3",
+      "check": "**Labels of one rank share one rung.** Kickers track alike, readout labels track alike, captions track alike.",
+      "fails_when": "two labels at the same rank are visibly differently tracked",
+      "severity": "minor",
+      "set_level": false,
+      "block": "D. Type and density"
+    },
+    {
+      "id": "D4",
+      "check": "**Nothing is under the floor, and chrome sits at the extremes.** Every string reads at the still's own scale; chrome at the top and the bottom.",
+      "fails_when": "any string is too small to read, or chrome sits in the middle of a section",
+      "severity": "critical",
+      "set_level": false,
+      "block": "D. Type and density"
+    },
+    {
+      "id": "D5",
+      "check": "**Three registers on a card.** A flashcard reads kicker, title, paragraph in that order and the claim is never in the monospace face. On the Arcs overview and its kit this check is passed.",
+      "fails_when": "a card has two registers, the kicker carries the claim, or the title is set in the monospace face",
+      "severity": "critical",
+      "set_level": false,
+      "block": "D. Type and density"
+    },
+    {
+      "id": "E1",
+      "check": "**The console's head bar is fused to the housing** with a designation at each end: the name left, a slashed kicker right. On the Arcs overview and its kit this check is passed.",
+      "fails_when": "the bar floats inside the panel with air on every side, or it carries one designation",
+      "severity": "critical",
+      "set_level": false,
+      "block": "E. The instrument"
+    },
+    {
+      "id": "E2",
+      "check": "**The readout column is a record.** Labels dim, values lit, every value something a reader could check against the site: a count, a standing, a chip, a year, a list of kinds.",
+      "fails_when": "a label and a value share one weight of ink, a value is empty, or a value is a claim rather than a fact",
+      "severity": "critical",
+      "set_level": false,
+      "block": "E. The instrument"
+    },
+    {
+      "id": "E3",
+      "check": "**Selection is elaboration, never fill or hue.** The picked station is the one filled thing in its row; the open step grows lines; the lit node grows a filled diamond; nothing else changes colour. On the Arcs overview and its kit this check is passed.",
+      "fails_when": "selection is signalled by a colour swap alone, more than one thing in a row is filled, or the open item is the same size as the rest",
+      "severity": "critical",
+      "set_level": false,
+      "block": "E. The instrument"
+    },
+    {
+      "id": "E4",
+      "check": "**The flashcards are a pile on the sheet.** Kicker and title at the top, the duotone figure in the middle, the paragraph at the bottom; the front card whole and the ones behind it peeking by their heads. Where card=grid, a static two-column grid with the same three registers. On the Arcs overview and its kit this check is passed.",
+      "fails_when": "a card shows its figure at the top, the front card is cut, the pile reads as a gallery grid where card=stack, or the grid has gutters wider than a hairline where card=grid",
+      "severity": "critical",
+      "set_level": false,
+      "block": "E. The instrument"
+    },
+    {
+      "id": "M1",
+      "check": "**A device between a datum and a terminus.** Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. The screen is one instrument, not a title over columns: a full-width header strip at its top carrying a name at the left and at least two small readings to its right, a full-width foot strip at its bottom carrying at least three small readings, and everything else seated between the two. Count the strips and count the labels on each.",
+      "fails_when": "the still opens on a large title with paragraphs or columns under it, either strip is missing, a strip carries fewer labels than stated, or the instrument stops well short of the bottom of the screen and leaves an empty band under it",
+      "severity": "critical",
+      "set_level": false,
+      "block": "M. The monitor. Still 1 of the Arcs overview and its kit."
+    },
+    {
+      "id": "M2",
+      "check": "**The plot is a labelled graticule.** Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. The largest region is a gridded plot: horizontal lanes, every lane lettered with a name at its left end and a reading at its right end, date labels along its foot, and inside its top edge a title row that letters the division size and the date range. Count the lanes, then count the lane names: the two numbers are equal.",
+      "fails_when": "a lane has no name, the foot carries no dates, the division size or the range is not lettered, or the grid is empty decoration with nothing seated on it",
+      "severity": "critical",
+      "set_level": false,
+      "block": "M. The monitor. Still 1 of the Arcs overview and its kit."
+    },
+    {
+      "id": "M3",
+      "check": "**Marks sit on dates, on lanes.** Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. Every engagement is one small diamond seated on a lane; the diamonds are unevenly spaced because the dates are uneven; an open diamond is a proposal out and a filled one is delivered, and a key inside the plot says so. Count the diamonds: the foot strip letters the same number.",
+      "fails_when": "the marks are evenly spread like a bullet row, a mark floats between two lanes, a mark is a circle or a pill, there is no key, or the lettered count disagrees with the diamonds you can count",
+      "severity": "critical",
+      "set_level": false,
+      "block": "M. The monitor. Still 1 of the Arcs overview and its kit."
+    },
+    {
+      "id": "M4",
+      "check": "**One lit mark and one cursor.** Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. Exactly one diamond is lit in gold, the chosen engagement, and exactly one gold cursor lettered NOW marks today on the time axis. Lanes, division lines, lane names and every other mark are neutral ink. Count the gold objects inside the plot: two.",
+      "fails_when": "no diamond or more than one is lit, the cursor is missing or doubled, or a lane, a division line, a lane name or a second mark is drawn in gold",
+      "severity": "critical",
+      "set_level": false,
+      "block": "M. The monitor. Still 1 of the Arcs overview and its kit."
+    },
+    {
+      "id": "L1",
+      "check": "**Group headers and one-line rows.** Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. The left column is a list in which a group header (a client name in small uppercase mono with a count at its right end) is visibly a different kind of row from an engagement row (one line: a small diamond, a chip, a sentence-case title, and a bracketed date at the right end). Count the group headers and count the engagement rows.",
+      "fails_when": "a group header and an engagement row look alike, an engagement row wraps onto a second line or is cut off, a row has no bracketed date at its right end, or the dates do not align down one right-hand edge",
+      "severity": "critical",
+      "set_level": false,
+      "block": "L. The log. Still 2 and later of the Arcs overview and its kit."
+    },
+    {
+      "id": "L2",
+      "check": "**Exactly one filled row.** Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. One engagement row is filled solid gold with its text knocked out dark, and every other row is unfilled. Where rows=ruled the rows are divided by single hairlines; where rows=boxed each row is its own outlined plate. The filter row above the list has one filled box of its own, which is a separate control and is not counted. Count the filled engagement rows: one.",
+      "fails_when": "no row or more than one row is filled, the chosen row differs only by text colour or by an outline, a group header is filled, or the text on the fill cannot be read",
+      "severity": "critical",
+      "set_level": false,
+      "block": "L. The log. Still 2 and later of the Arcs overview and its kit."
+    },
+    {
+      "id": "L3",
+      "check": "**The dossier is one housing, seated on the list.** Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. Right of the list sits one bordered housing with its top-right and bottom-left corners cut: a small header band fused to its top edge, a wide picture that reaches both side edges of the housing, then a sentence-case title, a lede, a column of label and value pairs, a short numbered chapter list where the engagement has chapters, and a foot row of key hints. Its top edge is level with the top of the list and, where rows=ruled, its left edge meets the list with no gutter. Where dossier=pair the same content is two housings, a picture plate over a text plate, with one narrow gap between them.",
+      "fails_when": "the detail is loose text with no housing, the picture floats with air on every side, the housing starts visibly above or below the top of the list, a wide gutter of empty ground separates it from a ruled list, or the housing is cut off by the bottom of the screen",
+      "severity": "critical",
+      "set_level": false,
+      "block": "L. The log. Still 2 and later of the Arcs overview and its kit."
+    },
+    {
+      "id": "L4",
+      "check": "**The dossier is the filled row.** Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. Read the title in the filled row and the title in the dossier: they name the same engagement, and the dossier's date reading matches the bracketed date in that row. Every value in the dossier's readout is a fact a reader could check: a client, a kind, a standing, a date, a count.",
+      "fails_when": "the dossier names a different engagement than the filled row, the dates disagree, a readout value is empty or is a code that means nothing, or a value is a claim rather than a fact",
+      "severity": "critical",
+      "set_level": false,
+      "block": "L. The log. Still 2 and later of the Arcs overview and its kit."
+    },
+    {
+      "id": "F1",
+      "check": "**The variety law is read on the sheet.** Across a page's stills no two consecutive sections share an arrangement, no arrangement appears more than twice, at least three appear, and figures change side. The Arcs overview and its kit are exempt: two full-screen instruments by design, judged by M and L.",
+      "fails_when": "two consecutive stills show the same arrangement, one arrangement carries the page, or every figure sits on one side",
+      "severity": "critical",
+      "set_level": true,
+      "block": "F. Set level"
+    },
+    {
+      "id": "F2",
+      "check": "**One grammar across the set.** The six pages, both themes and both viewports read as one instrument; the light stills re-derive rather than inherit; no page reproduces a reference beat for beat.",
+      "fails_when": "a page reads as a different site, a light still is a dark one washed out, or a page is a reference site with the copy replaced",
+      "severity": "critical",
+      "set_level": true,
+      "block": "F. Set level"
+    },
+    {
+      "id": "F3",
+      "check": "**Each direction differs on the axis it claims, and no other.** On the document pages SD stacks the head and drops the ordinals and SE grids the cards and rails the timeline; on the Arcs overview and its kit SG changes only the monitor's span, SH only the log's rows, SJ only the dossier and SL only the monitor's frame.",
+      "fails_when": "two directions' stills are indistinguishable, or one moves an axis it did not claim",
+      "severity": "critical",
+      "set_level": true,
+      "block": "F. Set level"
+    },
+    {
+      "id": "K1",
+      "check": "**Every arrangement and every state once, captioned, and the fixtures labelled as fixtures.** On the two specimen pages only: the subpage kit shows every document arrangement and its states; the arcs instrument kit shows every instrument state, a proposed, a running and a delivered mark, the lit mark, a client group, the chosen row, a filtered-out row, and the dossier with and without a picture.",
+      "fails_when": "an arrangement is missing, a state (lit, open, picked, draft, chosen, filtered out) is missing, or a fixture reads as a claim",
+      "severity": "critical",
+      "set_level": false,
+      "block": "K. The kit"
+    },
+    {
+      "id": "K2",
+      "check": "**The specimens share one grammar.** On the two specimen pages only: each kit's sections read as one sheet or one instrument, not a collection of components.",
+      "fails_when": "two specimens contradict each other on a rule the other sections share",
+      "severity": "critical",
+      "set_level": false,
+      "block": "K. The kit"
+    }
+  ],
+  "unstable": ["SK-parchment__lawful_01.png"],
+  "verdict_counts": {
+    "FAIL": 4,
+    "RETRY": 5,
+    "PASS": 1
+  },
+  "failed_counts": {
+    "A1": 2,
+    "A2": 3,
+    "A3": 2,
+    "A4": 3,
+    "A5": 2,
+    "A6": 2,
+    "B1": 2,
+    "B2": 3,
+    "L1": 4,
+    "L2": 4,
+    "L3": 4,
+    "L4": 4,
+    "M1": 2,
+    "M2": 2,
+    "M3": 2,
+    "M4": 2
+  },
+  "set_level": [
+    "set: 2 image types present (AR, SK); the difference table is audited at generation time",
+    "set: F1, F2, F3 are graded across the wave by eye, not by this harness. Look at the contact sheet before the frames."
+  ],
+  "results": [
+    {
+      "file": "AR-void__sf_01.png",
+      "path": "evals\\waves\\wave-03-calibration\\AR - Arcs overview\\AR-void__sf_01.png",
+      "slot": "AR-void",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the second negative pole: the sheet overview the owner asked to replace with an instrument, byte-identical, so every monitor and log check can be shown to fail it",
+      "channel": "sheet arcs - split",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png", "arcs-monitor.jpg"],
+      "reads_as_stranger": "creative consultancy portfolio page",
+      "stranger_counts": "five distinct content regions, two full-height vertical rules, and seven amber accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "split-head portfolio overview with client console and proposal card",
+      "part_count_note": "counted 7 gold text/outline elements, 2 floating cards separated by air, 0 graticule lanes or instrument strips against the monitor register",
+      "checks": {
+        "A1": true,
+        "A2": false,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": true,
+        "B1": false,
+        "B2": false,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true,
+        "L1": true,
+        "L2": true,
+        "L3": true,
+        "L4": true,
+        "M1": false,
+        "M2": false,
+        "M3": false,
+        "M4": false
+      },
+      "failed": [
+        {
+          "id": "A2",
+          "severity": "gate",
+          "check": "Gold is wayfinding, and it is counted. Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most"
+        },
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page divides itself with seams, and panels are seated on them. A hairline seam between sections, the head band's rule under every kicker, and no vertical rule of the page's own"
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "M1",
+          "severity": "critical",
+          "check": "A device between a datum and a terminus. Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. The screen is one instrument, not a tit"
+        },
+        {
+          "id": "M2",
+          "severity": "critical",
+          "check": "The plot is a labelled graticule. Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. The largest region is a gridded plot: horizont"
+        },
+        {
+          "id": "M3",
+          "severity": "critical",
+          "check": "Marks sit on dates, on lanes. Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. Every engagement is one small diamond seated on a "
+        },
+        {
+          "id": "M4",
+          "severity": "critical",
+          "check": "One lit mark and one cursor. Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. Exactly one diamond is lit in gold, the chosen enga"
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "Candidate is a negative-pole document layout with a split head and floating cards instead of the required instrument monitor with graticule and datum/terminus strips.",
+      "notes": "Fails block M monitor checks as designed for this negative pole fixture. Additionally violates grammar rules with a gold box outline, floating guttered cards, bold type weights, and colored structural borders. | Candidate depicts the document-based split layout prior to replacement by the instrument monitor. Consequently, all block M monitor requirements fail. | Candidate presents a document layout rather than the required monitor graticule and datum strips. Multiple structural outlines and spacing violations occur.",
+      "runs": 3,
+      "split_answers": {
+        "B3": "2/3 said it passed",
+        "D1": "2/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "SK-parchment__broken_01.png",
+      "path": "evals\\waves\\wave-03-calibration\\SK - Subpage kit\\SK-parchment__broken_01.png",
+      "slot": "SK-parchment",
+      "type": "SK",
+      "type_name": "Subpage kit",
+      "question": "the site's own fixture: does block A pass the lawful panel and fail the broken one? (lane broken)",
+      "channel": "fixture - broken",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "developer test page",
+      "stranger_counts": "two distinct regions, zero full-length rules, and one bright accent dot",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "broken fixture test screen",
+      "part_count_note": "counted 1 circular gold dot and 1 text block on a blue-purple gradient ground",
+      "checks": {
+        "A1": false,
+        "A2": false,
+        "A3": false,
+        "A4": false,
+        "A5": false,
+        "A6": false,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true,
+        "L1": true,
+        "L2": true,
+        "L3": true,
+        "L4": true,
+        "M1": true,
+        "M2": true,
+        "M3": true,
+        "M4": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a proportional sans face carries titles, ledes and paragraphs. Look at the paragraphs fir"
+        },
+        {
+          "id": "A2",
+          "severity": "gate",
+          "check": "Gold is wayfinding, and it is counted. Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most"
+        },
+        {
+          "id": "A3",
+          "severity": "gate",
+          "check": "No hue outside the tiers. Neutral ground, neutral ink, gold, the provenance green. Photographs are taken into the duotone."
+        },
+        {
+          "id": "A4",
+          "severity": "gate",
+          "check": "The ground is the theme's. A void subject is dawn ink on a near-black ground; a parchment subject is dark ink on parchment. Judged from the candidate alone."
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere between the rails. The console's panel, the flashcards, and the Arcs overview's monitor housing and dossier carry the top-right and bottom-left"
+        },
+        {
+          "id": "A5",
+          "severity": "critical",
+          "check": "Flat material. One ground, one step for a plate. No gradient as decoration, no bloom, no glow, no drop shadow."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "intentional violations of block A including banned typeface, purple gradient ground, and circular mark",
+      "notes": "The fixture panel intentionally breaks block A requirements as a negative test. Per grading rules, only block A is evaluated on fixture stills, and all subsequent blocks pass. | The fixture intentionally violates block A criteria via blue gradient fills, prohibited typefaces, and circular marks. Non-block A checks pass per fixture evaluation protocol. | Intentional negative fixture panel correctly fails block A criteria (gradient fill, purple ground, circular mark, banned face). Per the grading rules for fixture lanes, all checks outside block A automatically pass.",
+      "runs": 3,
+      "split_answers": {
+        "A2": "1/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "SK-parchment__lawful_01.png",
+      "path": "evals\\waves\\wave-03-calibration\\SK - Subpage kit\\SK-parchment__lawful_01.png",
+      "slot": "SK-parchment",
+      "type": "SK",
+      "type_name": "Subpage kit",
+      "question": "the site's own fixture: does block A pass the lawful panel and fail the broken one? (lane lawful)",
+      "channel": "fixture - lawful",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png"],
+      "reads_as_stranger": "design guideline specimen page",
+      "stranger_counts": "1 region, 0 rules, 1 accent element",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "design guideline fixture panel",
+      "part_count_note": "counted 1 text block, 1 diamond mark, 0 rules against register",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": false,
+        "A5": true,
+        "A6": true,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true,
+        "L1": true,
+        "L2": true,
+        "L3": true,
+        "L4": true,
+        "M1": true,
+        "M2": true,
+        "M3": true,
+        "M4": true
+      },
+      "failed": [
+        {
+          "id": "A4",
+          "severity": "gate",
+          "check": "The ground is the theme's. A void subject is dawn ink on a near-black ground; a parchment subject is dark ink on parchment. Judged from the candidate alone."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "dark void ground rendered when the subject specifies light theme",
+      "notes": "The fixture panel displays on void dark ground despite the subject calling for light theme, violating A4. Per grading rules for fixture stills, checks outside block A pass automatically. | The candidate renders on a dark void ground despite the light theme designation. All non-block A checks pass automatically for fixture stills. | The lawful fixture panel cleanly passes all block A rules, displaying two typefaces by role, square corners, flat material on void ground, and a single gold diamond accent.",
+      "runs": 3,
+      "split_answers": {
+        "A4": "1/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "PASS"]
+    },
+    {
+      "file": "SK-void__broken_01.png",
+      "path": "evals\\waves\\wave-03-calibration\\SK - Subpage kit\\SK-void__broken_01.png",
+      "slot": "SK-void",
+      "type": "SK",
+      "type_name": "Subpage kit",
+      "question": "the site's own fixture: does block A pass the lawful panel and fail the broken one? (lane broken)",
+      "channel": "fixture - broken",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "design compliance test page",
+      "stranger_counts": "1 region, 0 full-length rules, 1 bright accent element",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "broken fixture test panel",
+      "part_count_note": "1 text block with banned serif face and low contrast, 1 circular mark, saturated purple-blue gradient ground violating color and material rules",
+      "checks": {
+        "A1": false,
+        "A2": false,
+        "A3": false,
+        "A4": false,
+        "A5": false,
+        "A6": false,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true,
+        "L1": true,
+        "L2": true,
+        "L3": true,
+        "L4": true,
+        "M1": true,
+        "M2": true,
+        "M3": true,
+        "M4": true
+      },
+      "failed": [
+        {
+          "id": "A1",
+          "severity": "gate",
+          "check": "Two faces, by role. A monospace face carries labels, keys, kickers, readouts and captions; a proportional sans face carries titles, ledes and paragraphs. Look at the paragraphs fir"
+        },
+        {
+          "id": "A2",
+          "severity": "gate",
+          "check": "Gold is wayfinding, and it is counted. Count the gold objects. Each should have a job: what is lit, what is picked, what is open, what to press, what a kicker names. Twelve at most"
+        },
+        {
+          "id": "A3",
+          "severity": "gate",
+          "check": "No hue outside the tiers. Neutral ground, neutral ink, gold, the provenance green. Photographs are taken into the duotone."
+        },
+        {
+          "id": "A4",
+          "severity": "gate",
+          "check": "The ground is the theme's. A void subject is dawn ink on a near-black ground; a parchment subject is dark ink on parchment. Judged from the candidate alone."
+        },
+        {
+          "id": "A6",
+          "severity": "gate",
+          "check": "The corner law. Zero radius anywhere between the rails. The console's panel, the flashcards, and the Arcs overview's monitor housing and dossier carry the top-right and bottom-left"
+        },
+        {
+          "id": "A5",
+          "severity": "critical",
+          "check": "Flat material. One ground, one step for a plate. No gradient as decoration, no bloom, no glow, no drop shadow."
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "FAIL",
+      "worst_issue": "Banned typeface, purple gradient background, and circular mark in broken fixture panel",
+      "notes": "The broken fixture panel intentionally breaks Block A requirements: illegal serif typeface, purple-blue gradient background, unapproved hue, and a circular mark. | Candidate displays intentional anti-pattern violations across tier hues, ground gradient, and marker geometry. Graded strictly on block A per fixture instructions. | The specimen panel intentionally violates Block A guidelines via decorative gradients, unauthorized hues, circular marks, and invalid typography. Non-Block A checks pass per fixture grading rules.",
+      "runs": 3,
+      "split_answers": {
+        "A2": "1/3 said it passed"
+      },
+      "run_verdicts": ["FAIL", "FAIL", "FAIL"]
+    },
+    {
+      "file": "AR-parchment__sf_01.png",
+      "path": "evals\\waves\\wave-03-calibration\\AR - Arcs overview\\AR-parchment__sf_01.png",
+      "slot": "AR-parchment",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the second negative pole: the sheet overview the owner asked to replace with an instrument, byte-identical, so every monitor and log check can be shown to fail it",
+      "channel": "sheet arcs - split",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png", "arcs-monitor.jpg"],
+      "reads_as_stranger": "creative agency portfolio page",
+      "stranger_counts": "six content regions, two full-height vertical rulers, and three ochre accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "agency portfolio overview page",
+      "part_count_note": "counted two floating cards and split editorial layout missing instrument structure",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": true,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true,
+        "L1": true,
+        "L2": true,
+        "L3": true,
+        "L4": true,
+        "M1": false,
+        "M2": false,
+        "M3": false,
+        "M4": false
+      },
+      "failed": [
+        {
+          "id": "M1",
+          "severity": "critical",
+          "check": "A device between a datum and a terminus. Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. The screen is one instrument, not a tit"
+        },
+        {
+          "id": "M2",
+          "severity": "critical",
+          "check": "The plot is a labelled graticule. Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. The largest region is a gridded plot: horizont"
+        },
+        {
+          "id": "M3",
+          "severity": "critical",
+          "check": "Marks sit on dates, on lanes. Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. Every engagement is one small diamond seated on a "
+        },
+        {
+          "id": "M4",
+          "severity": "critical",
+          "check": "One lit mark and one cursor. Judged on still 1 of the Arcs overview and its kit only; on every other still this check is passed. Exactly one diamond is lit in gold, the chosen enga"
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "RETRY",
+      "worst_issue": "negative pole document lacks required instrument monitor grammar",
+      "notes": "The view renders the pre-instrument document layout with floating cards separated by gutters. It completely omits the required graticule plot, boundary datum strips, and mark timeline. | Still 1 of the AR negative pole presents a document layout with split head and console rather than the instrument monitor, failing M1-M4 as intended. | Candidate displays the negative-pole sheet overview with a split head, filter bar, console, and card pile instead of the required monitor instrument with header/foot datum strips and graticule plot.",
+      "runs": 3,
+      "split_answers": {
+        "B1": "2/3 said it passed",
+        "B2": "2/3 said it passed"
+      },
+      "run_verdicts": ["RETRY", "RETRY", "RETRY"]
+    },
+    {
+      "file": "AR-parchment__sf_02.png",
+      "path": "evals\\waves\\wave-03-calibration\\AR - Arcs overview\\AR-parchment__sf_02.png",
+      "slot": "AR-parchment",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the second negative pole: the sheet overview the owner asked to replace with an instrument, byte-identical, so every monitor and log check can be shown to fail it",
+      "channel": "sheet arcs - console",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png", "arcs-log.jpg"],
+      "reads_as_stranger": "design agency client portfolio page",
+      "stranger_counts": "5 distinct regions, 2 full-height rules, and 1 element in the brightest accent colour",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "client overview document section",
+      "part_count_note": "counted 2 primary panels floating across a multi-column spread against the instrument register",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": true,
+        "B1": false,
+        "B2": false,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true,
+        "L1": false,
+        "L2": false,
+        "L3": false,
+        "L4": false,
+        "M1": true,
+        "M2": true,
+        "M3": true,
+        "M4": true
+      },
+      "failed": [
+        {
+          "id": "B1",
+          "severity": "critical",
+          "check": "The page divides itself with seams, and panels are seated on them. A hairline seam between sections, the head band's rule under every kicker, and no vertical rule of the page's own"
+        },
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "L1",
+          "severity": "critical",
+          "check": "Group headers and one-line rows. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. The left column is a list in which a "
+        },
+        {
+          "id": "L2",
+          "severity": "critical",
+          "check": "Exactly one filled row. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. One engagement row is filled solid gold with i"
+        },
+        {
+          "id": "L3",
+          "severity": "critical",
+          "check": "The dossier is one housing, seated on the list. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. Right of the list sits"
+        },
+        {
+          "id": "L4",
+          "severity": "critical",
+          "check": "The dossier is the filled row. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. Read the title in the filled row and th"
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "RETRY",
+      "worst_issue": "retains document card format rather than instrument log structure",
+      "notes": "The view renders the deprecated document layout with separated cards instead of an instrument log and dossier. Consequently, required log rows and structural seam alignments are absent. | This still represents the negative pole document overview prior to replacement with an instrument. As expected, it fails the log requirements (L1-L4) and separates panels with empty space rather than shared hairline seams (B1, B2). | Candidate displays the deprecated sheet layout with floating cards rather than the integrated log instrument.",
+      "runs": 3,
+      "split_answers": {},
+      "run_verdicts": ["RETRY", "RETRY", "RETRY"]
+    },
+    {
+      "file": "AR-parchment__sf_03.png",
+      "path": "evals\\waves\\wave-03-calibration\\AR - Arcs overview\\AR-parchment__sf_03.png",
+      "slot": "AR-parchment",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the second negative pole: the sheet overview the owner asked to replace with an instrument, byte-identical, so every monitor and log check can be shown to fail it",
+      "channel": "sheet arcs - cells",
+      "subject": "parchment",
+      "setting": "default",
+      "references": ["parchment__mr3a99378783.png", "arcs-log.jpg"],
+      "reads_as_stranger": "workshop and keynote offerings catalog",
+      "stranger_counts": "3 distinct regions, 5 full-span dividing rules, 2 gold accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "formats grid cell overview",
+      "part_count_note": "counted 4 format cells in a two-by-two grid with 1 section header against instrument log register",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": true,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true,
+        "L1": false,
+        "L2": false,
+        "L3": false,
+        "L4": false,
+        "M1": true,
+        "M2": true,
+        "M3": true,
+        "M4": true
+      },
+      "failed": [
+        {
+          "id": "L1",
+          "severity": "critical",
+          "check": "Group headers and one-line rows. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. The left column is a list in which a "
+        },
+        {
+          "id": "L2",
+          "severity": "critical",
+          "check": "Exactly one filled row. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. One engagement row is filled solid gold with i"
+        },
+        {
+          "id": "L3",
+          "severity": "critical",
+          "check": "The dossier is one housing, seated on the list. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. Right of the list sits"
+        },
+        {
+          "id": "L4",
+          "severity": "critical",
+          "check": "The dossier is the filled row. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. Read the title in the filled row and th"
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "RETRY",
+      "worst_issue": "negative pole document layout fails required instrument log and dossier specification",
+      "notes": "Candidate displays the legacy document formats 2x2 grid rather than the instrument log view mandated for still 3 of type AR. Blocks L1 through L4 fail by design for this negative pole fixture. | As the negative pole sheet overview, it lacks the required log layout, filled row, and dossier, while introducing an internal vertical seam. | As the designated negative pole preceding the instrument redesign, this still correctly exhibits the document sheet grammar rather than the instrument log, intentionally failing the log checks L1 through L4.",
+      "runs": 3,
+      "split_answers": {
+        "B1": "2/3 said it passed",
+        "C6": "2/3 said it passed"
+      },
+      "run_verdicts": ["RETRY", "RETRY", "RETRY"]
+    },
+    {
+      "file": "AR-void__sf_02.png",
+      "path": "evals\\waves\\wave-03-calibration\\AR - Arcs overview\\AR-void__sf_02.png",
+      "slot": "AR-void",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the second negative pole: the sheet overview the owner asked to replace with an instrument, byte-identical, so every monitor and log check can be shown to fail it",
+      "channel": "sheet arcs - console",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png", "arcs-log.jpg"],
+      "reads_as_stranger": "creative agency client portfolio page",
+      "stranger_counts": "five distinct regions, two full-height vertical rules, and six bright accent elements",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "client portfolio overview section",
+      "part_count_note": "two client consoles with side-by-side proposal cards floating over empty ground",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": true,
+        "B1": true,
+        "B2": false,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true,
+        "L1": false,
+        "L2": false,
+        "L3": false,
+        "L4": false,
+        "M1": true,
+        "M2": true,
+        "M3": true,
+        "M4": true
+      },
+      "failed": [
+        {
+          "id": "B2",
+          "severity": "critical",
+          "check": "Cells share edges. Where a section is divided, the divisions are one hairline apiece and the cells meet on it. No gutter grid, no doubled line, no boxes in boxes."
+        },
+        {
+          "id": "L1",
+          "severity": "critical",
+          "check": "Group headers and one-line rows. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. The left column is a list in which a "
+        },
+        {
+          "id": "L2",
+          "severity": "critical",
+          "check": "Exactly one filled row. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. One engagement row is filled solid gold with i"
+        },
+        {
+          "id": "L3",
+          "severity": "critical",
+          "check": "The dossier is one housing, seated on the list. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. Right of the list sits"
+        },
+        {
+          "id": "L4",
+          "severity": "critical",
+          "check": "The dossier is the filled row. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. Read the title in the filled row and th"
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "RETRY",
+      "worst_issue": "negative pole document format lacks required instrument log structure",
+      "notes": "Shows the pre-instrument document layout with floating unseated cards rather than the instrument log graticule and dossier structure. | As the negative pole sheet overview under the AR specification, this still displays paired client console panels and proposal cards instead of the instrument log. Consequently, all block L checks (L1, L2, L3, L4) fail as expected. | Fails log instrument checks (L1-L4) and shared edge constraints (B2) as expected for the negative pole console overview.",
+      "runs": 3,
+      "split_answers": {
+        "B1": "2/3 said it passed",
+        "B2": "1/3 said it passed"
+      },
+      "run_verdicts": ["RETRY", "RETRY", "RETRY"]
+    },
+    {
+      "file": "AR-void__sf_03.png",
+      "path": "evals\\waves\\wave-03-calibration\\AR - Arcs overview\\AR-void__sf_03.png",
+      "slot": "AR-void",
+      "type": "AR",
+      "type_name": "Arcs overview",
+      "question": "the second negative pole: the sheet overview the owner asked to replace with an instrument, byte-identical, so every monitor and log check can be shown to fail it",
+      "channel": "sheet arcs - cells",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png", "arcs-log.jpg"],
+      "reads_as_stranger": "service offerings catalogue page",
+      "stranger_counts": "three layout regions, one full-height vertical dividing rule, and five text elements in bright amber",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "service offerings format catalog",
+      "part_count_note": "counted four format cells in a two-by-two grid with five gold labels and horizontal dividing rules",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": true,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true,
+        "L1": false,
+        "L2": false,
+        "L3": false,
+        "L4": false,
+        "M1": true,
+        "M2": true,
+        "M3": true,
+        "M4": true
+      },
+      "failed": [
+        {
+          "id": "L1",
+          "severity": "critical",
+          "check": "Group headers and one-line rows. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. The left column is a list in which a "
+        },
+        {
+          "id": "L2",
+          "severity": "critical",
+          "check": "Exactly one filled row. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. One engagement row is filled solid gold with i"
+        },
+        {
+          "id": "L3",
+          "severity": "critical",
+          "check": "The dossier is one housing, seated on the list. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. Right of the list sits"
+        },
+        {
+          "id": "L4",
+          "severity": "critical",
+          "check": "The dossier is the filled row. Judged on still 2 and later of the Arcs overview and its kit only; on every other still this check is passed. Read the title in the filled row and th"
+        }
+      ],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "RETRY",
+      "worst_issue": "missing instrument log structure and dossier housing",
+      "notes": "Candidate shows the negative-pole sheet overview rather than the instrument layout. Consequently, all log list and dossier requirements fail as expected. | Candidate displays catalog cells instead of the required log list and dossier housing for an Arcs overview late still. Consequently, block L checks fail as intended for this negative pole fixture. | Candidate correctly represents the pre-instrument negative pole document format (a 2x2 cells section). In accordance with the negative pole definition, log and dossier checks L1 through L4 fail as intended.",
+      "runs": 3,
+      "split_answers": {},
+      "run_verdicts": ["RETRY", "RETRY", "RETRY"]
+    },
+    {
+      "file": "SK-void__lawful_01.png",
+      "path": "evals\\waves\\wave-03-calibration\\SK - Subpage kit\\SK-void__lawful_01.png",
+      "slot": "SK-void",
+      "type": "SK",
+      "type_name": "Subpage kit",
+      "question": "the site's own fixture: does block A pass the lawful panel and fail the broken one? (lane lawful)",
+      "channel": "fixture - lawful",
+      "subject": "void",
+      "setting": "default",
+      "references": ["void__mr9a7214f574.png"],
+      "reads_as_stranger": "design system guideline specimen",
+      "stranger_counts": "one region, zero rules, one accent element",
+      "grader": "gemini-flash-latest",
+      "reads_as_grader": "lawful fixture specimen panel",
+      "part_count_note": "counted 1 monospace kicker, 1 sans paragraph, 1 gold diamond, 0 rules",
+      "checks": {
+        "A1": true,
+        "A2": true,
+        "A3": true,
+        "A4": true,
+        "A5": true,
+        "A6": true,
+        "B1": true,
+        "B2": true,
+        "B3": true,
+        "C1": true,
+        "C2": true,
+        "C3": true,
+        "C4": true,
+        "C5": true,
+        "C6": true,
+        "D1": true,
+        "D2": true,
+        "D3": true,
+        "D4": true,
+        "D5": true,
+        "E1": true,
+        "E2": true,
+        "E3": true,
+        "E4": true,
+        "K1": true,
+        "K2": true,
+        "L1": true,
+        "L2": true,
+        "L3": true,
+        "L4": true,
+        "M1": true,
+        "M2": true,
+        "M3": true,
+        "M4": true
+      },
+      "failed": [],
+      "failed_advisory": [],
+      "unanswered": [],
+      "verdict": "PASS",
+      "worst_issue": "",
+      "notes": "The lawful fixture panel correctly adheres to all block A styling constraints on the void ground with two type roles and a single gold diamond accent. | The lawful fixture demonstrates all Block A rules strictly: two families by role, dark void ground, flat rendering, square geometry, and a single diamond accent mark. | The specimen adheres strictly to the block A criteria on flat void ground with compliant typography and a single diamond accent. Blocks B through K automatically pass per fixture evaluation rules.",
+      "runs": 3,
+      "split_answers": {},
+      "run_verdicts": ["PASS", "PASS", "PASS"]
+    }
+  ]
+}

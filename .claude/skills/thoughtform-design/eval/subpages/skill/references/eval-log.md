@@ -124,6 +124,41 @@ reconstruction; write it in the session that ran the wave.
   renumbers to 0.1.4.
 - Galleries built for all three; no handback yet, so the wave has not happened.
 
+## 2026-09-21 — the Arcs overview becomes an instrument; rubric 0.2.0, then 0.2.1
+
+- **The brief** (verbatim in `brief/VOCABULARY.md`): the overview is his
+  private page; its first screen "a sort of grid timeline" with the projects
+  mapped onto it, its second "a new viewport" listing the arcs per client
+  "like quests from a video game", with a card for the one clicked. Four
+  references, decoded into counts in `DRIVE.md` (dated). The gate shipped
+  first (ADR-117); the page is still the sheet.
+- **Rubric 0.2.0** judges AR as an instrument: block **M** (the monitor,
+  still 1) and block **L** (the log, stills 2+), eight critical rows, each
+  carrying its own scope sentence; seven document checks are scoped away from
+  AR in the grading rules. `doctor.py`: 37 checks (34 per frame, 3 set level).
+  A second REGISTER rides as image 3 on AR stills, composed locally from the
+  game references and never committed (the repository is public).
+- **A second negative pole, SF**: the sheet overview itself, promoted
+  byte-identical from `wave-02-sb` (commit `7124f146`), both themes, both
+  viewports. The capture gained `--promote-pole`, `--only` for the register,
+  multi-pole support and a per-direction `types` scope (SD/SE on the document
+  pages, SG/SH/SJ/SL on AR and its kit).
+- **Calibration** (`evals/waves/wave-03-calibration.md`): all eight M/L rows
+  failed the pole for their stated reason on all twelve stills, unanimously —
+  L3 included, which was left unpredicted and failed for L3's own reason.
+  Block A was predicted to pass and did not in one place: **A2 on the void
+  monitor still, three runs of three, on pixels wave 02 passed**. The cause
+  was the new gold bullet's grammar — it listed the instrument's gold as if
+  the list were complete, and so replaced A2's own. **0.2.1** makes it
+  additive and scoped; block A now passes the pole by majority everywhere, and
+  two laptop stills keep one dissenting run each (one of them reading the
+  frame's wordmark printed over the sheet's lede at 720h, which is real).
+- **The lawful fixture was never lawful on parchment**: its panel paints the
+  void ground under `?theme=light`, A4 fails it 3/3 and is right to, and wave
+  00's record listed only the void row. Recorded, not fixed here.
+- Cost: ~2.5 minutes of grading per rubric version for 16 stills. No handback;
+  the calibration closes when the first instrument wave is ticked.
+
 ## Standing conclusions
 
 - A page's first mechanical run is worth more than its first grade: the
@@ -144,3 +179,6 @@ reconstruction; write it in the session that ran the wave.
 - A rubric edit needs a version number even when it is one row. Two waves
   graded on two B1 texts under one number would have been averaged by
   `calibrate.py` with nothing failing.
+- A grading rule that lists what something IS on one page reads as the whole
+  list. Scope an addition as an addition — "may also be" — or it silently
+  repeals the check it meant to extend.
