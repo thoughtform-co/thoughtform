@@ -54,6 +54,37 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-21 — the arcs dossier reads like travel data (ADR-118 U3)
+
+**Trigger:** the owner, on U2's stills with Starfield's TRAVEL DATA panel:
+the band should take _"the same type of gradient as in our proof section"_,
+the configuration _"like Tensor Gold. Same with the accents"_, the button big
+at the bottom with no key hints, and the standing part _"like a terminal type
+of interface … jump time with a frame, and then, to the right of it, the
+value"_. Asked, he dropped the brief's sentence.
+
+- **Cycle A, the dossier only.** The band takes the proof card's folder tint;
+  a readout of framed keys (filled, `--sh-well`) with framed right-set values
+  replaces the brief and its strip; the die is `--gold` with its words on
+  `--gold-contrast`, its legs gold, its wires amber, the kind codes
+  `--gold-ink`; one full-width button (the proof card's `.pf-watch`) replaces
+  the CTA and the hints. `SheetDossier.lede` / `Engagement.lede` are deleted.
+  ADR-118 U3.
+- **Post-incident rows triggered:** a gradient is invisible to both contrast
+  walks (the smoke composites the band's tint at each word's x); a pixel
+  check whose reference edge runs along a tint measures the tint (the ring
+  check reads the dossier's bottom edge now, re-proven closed 0.64–1.10 vs
+  open 0.20–0.51); the board's floor at 1280 × 720 was one sentence away from
+  failing on a dossier no test opened (every proposal's board is asserted
+  now); and `--sh-knock` pointing at the ground would have put parchment words
+  on gold in light (retargeted to `--gold-contrast`).
+- **Verified:** vitest 22 files / 468 (ratchets at zero); `arcs-instrument-smoke`
+  26/26; `arc-terminal-smoke`'s overview case; `subpages-smoke` 14/15 (the kit
+  pile, pre-existing); the mechanical gate 8/8, 10 of 24 gold marks; tsc and
+  eslint clean.
+- **Not pushed** (U2 and U3 go together on his word). ⚠ The ship's rubric
+  must count the configuration as one gold object before wave 04.
+
 ### 2026-09-21 — the arcs log takes the references' composition, and the dossier draws the configuration (ADR-118 U2)
 
 **Trigger:** the owner, on U1's stills: _"it really feels like a fucking

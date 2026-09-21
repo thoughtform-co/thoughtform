@@ -209,3 +209,40 @@ inside, buses between, the links read out of the proposal's own sentences. The
 sections, the icons and the notched plates, the dossier's board gets checks of
 its own, and L1's "cut off" clause allows a block cut by the screen's bottom,
 which he allowed.
+
+### 2026-09-21 — the read of U2's stills, with Starfield's travel-data panel
+
+> I think the top part of the right card should have the same type of
+> gradient as in our proof section. And then the color of the intelligence
+> configuration thingy should be like Tensor Gold. Same with the accents. And
+> then the open arc button should be big at the top. We don't need the
+> up-down select-enter-open. It should just be like a button at the bottom.
+> And then I think that part with the standing field, whatever it is, should
+> feel more like a data interface thing, better structured, instead of just
+> one sentence and then just a few smaller texts. I think we can really make
+> that like a terminal type of interface. Just like the screenshot you have,
+> jump time with a frame, and then, to the right of it, the value. That's what
+> I want.
+
+Asked where the brief's sentence goes once the readings are rows: **"Drop it,
+rows only."**
+
+Decoded, each against a precedent the house already had:
+
+- **"the same type of gradient as in our proof section"** is the proof card's
+  folder band (`.pf-card__head`, gold .28 running to a quarter).
+- **"Tensor Gold"** is `--gold`, #caa554 in both themes. "The accents" are
+  what the homepage board itself paints gold: the wires (amber), the die's
+  legs, and the kind codes (its "keys in Tensor gold", `--gold-ink`). The
+  chips' frames stay neutral; he struck coloured top rules on 2026-09-15.
+- **"big at the top … a button at the bottom"** reads as big, at the bottom:
+  where Starfield's JUMP sits, and the proof card's full-width walkthrough
+  button.
+- **"jump time with a frame, and then … the value"** is Starfield's readout
+  cell: the key filled and framed, the value framed beside it and set right.
+  The house had label and value on a rule (the Voidwalker facts), never the
+  frame.
+
+Applied the same day (ADR-118 U3). For wave 04: a dossier row for the
+readout's frames, and the gold budget counts the configuration as ONE object,
+or his ruling grades as a defect.

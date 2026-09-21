@@ -12,7 +12,11 @@
   kinds DIVIDE the list, every block carries its page's icon and a notch, and
   the dossier DRAWS the client's intelligence configuration where the picture
   was. U1's gutter and sticky dossier stand; its filter, its client line and
-  its picture do not.
+  its picture do not. ⚠ **[U3](#u3-2026-09-21-owner--the-dossier-reads-like-travel-data)
+  (same day, his read of U2 with Starfield's travel-data panel) IS THE LIVE
+  DOSSIER**: the proof card's band tint, a readout of framed keys in place of
+  the brief, the configuration in Tensor gold, one big button. The log is
+  untouched.
 - **Surface:** `/arcs` — the owner's page since [ADR-117](117-the-owners-pass.md)
   — and only it. The sheet ([ADR-114](114-the-sheet.md)) stays the grammar of
   `/home-sessions`, `/musings`, every client page and the kit.
@@ -586,15 +590,112 @@ the icons' contact sheet.
 its L rows, and L1's "cut off" clause must allow a block cut by the screen's
 bottom, which the owner allowed. It waits for his read of the stills.
 
+## U3 (2026-09-21, owner) — the dossier reads like travel data
+
+**The read.** On U2's stills, with Starfield's TRAVEL DATA panel beside them:
+_"I think the top part of the right card should have the same type of
+gradient as in our proof section. And then the color of the intelligence
+configuration thingy should be like Tensor Gold. Same with the accents. And
+then the open arc button should be big … We don't need the up-down
+select-enter-open. It should just be like a button at the bottom. And then I
+think that part with the standing field, whatever it is, should feel more like
+a data interface thing, better structured, instead of just one sentence and
+then just a few smaller texts … like a terminal type of interface. Just like
+the screenshot you have, jump time with a frame, and then, to the right of it,
+the value."_ Asked where the brief's sentence goes once the readings become
+rows, he chose **drop it: rows only**. The log is untouched.
+
+**Nothing here is invented; each piece is a house precedent the reference
+matched.**
+
+- **The band** is the proof card's folder band (ADR-097, `.pf-card__head`):
+  gold at .28 running to a quarter of itself, .22 in light, under the
+  housing's own TR cut — `--sh-band-from` / `--sh-band-to`, one colour for
+  every client (the registry holds none; house gold is the proof card's own
+  fallback). It stays `--mon-strip-h` tall, so the log's first head is still
+  level with it. ⚠ **Both contrast walks read `backgroundColor` and are blind
+  to a gradient**: a band word would be measured against the plate under the
+  tint and pass whatever the tint did. The smoke composites the tint at each
+  word's own x — measured 5.5–5.7:1 in dark and 4.8–5.0 in light (the
+  designation in `--gold-ink` at the strong end is the tight one).
+- **The readout** is Starfield's cell, which the house did not yet have (the
+  Voidwalker facts, ADR-082 U23, are label and value on a rule, no frame):
+  each row a key FILLED with a new `--sh-well` (dawn .07, light .08 — the same
+  ~6 L\* step on parchment) and framed in `--sh-seam`, its value framed beside
+  it on the shared edge and set right; rows 3px apart; the keys one column at
+  40 %. ⚠ **A fill on every key cell is a column's material, not a state** —
+  ADR-082 U29's "an outline is not a ground" and ADR-089 U4's "fill among
+  outlines" are about ONE fill among outlined peers. Keys measure 7.2–7.5:1 on
+  their well. The rows are `dossierStatus` unchanged (Standing · Filed ·
+  Sections; a client's page that is not an arc has no Sections).
+- **The sentence is gone** with `SheetDossier.lede` and `Engagement.lede`,
+  whose only reader it was. The card title stays the article's `aria-label`.
+- **The configuration is Tensor gold, the board is not.** "Tensor gold" is
+  `--gold` (#caa554) in both themes (theme.css, ADR-058), and "the accents" are
+  what the homepage board itself paints gold: the die filled `--gold` with its
+  words on `--gold-contrast` (the `--sh-knock*` tokens retargeted), its legs
+  `--gold`, its wires amber (`--sh-amb`: `--gold-line` at 80 %, the board's
+  `--pda-amb`), the chips' kind codes `--gold-ink` (the board's "keys in Tensor
+  gold"). The chips' frames and top rules and the faint traces stay dawn: they
+  are the board, and a coloured top rule on a card is the frontend mark he
+  struck on 2026-09-15. ⚠ **The knock-out retarget was required, not only
+  wanted**: `--sh-knock` was `--sh-ground` = `--void`, parchment in light, and
+  void-coloured words on gold are the exact pair `theme-css-sweep` exists for.
+  The die's words measure 5.2–8.6:1.
+- **One big button.** `.sh-dos__foot .sh-cta` fills the foot at
+  `clamp(44px, 5.5svh, 60px)` — the proof card's own `.pf-watch`, outlined at
+  rest and filled on hover and focus — with its label centred. The printed
+  hints are deleted; ↑/↓ and Enter still work. Scoped to the dossier, so
+  `.sh-cta` stays the small outlined CTA on `/home-sessions`.
+
+### What the pass found
+
+1. **The board has no height to spare at 1280 × 720**, and the brief's
+   sentence was the variable in it: the board's box is what the band, the
+   block above it and the foot leave, and the one proposal with the longest
+   sentence (Trinny's, 120 characters) would have been the first under the
+   floor — on a dossier no test opened. The readout and the button are sized
+   (`--dos-row-h`, `--dos-read-pad`) to take a little less than what they
+   replaced, so every box GREW (3.5–14px; `BOARD_BOX_PX` re-pinned) and every
+   crop held; and the smoke now asserts crop, fill and floor on EVERY
+   proposal at all three shapes.
+2. **The ring check's reference edge moved.** It compares the dossier's left
+   edge at mid-height with its top edge, and the top now runs along the
+   band's tint, which lifts the strip's inner end: the closed ring read 0.35
+   against a 0.5 threshold. The reference is the BOTTOM edge now; re-proven
+   in dark at four shapes — closed 0.64–1.10, the open bow-tie 0.20–0.51 —
+   and the threshold rose to 0.58.
+
+### Verification
+
+vitest 22 files / 468 (the three CSS ratchets at zero, `sheet-config-fit`
+against the new boxes); `arcs-instrument-smoke` 26/26 (the travel-data read at
+three shapes, every proposal's board at three shapes, the band words on the
+tint, the readout's frames, the button, the Tensor-gold die, legs, codes and
+wires in both themes); `arc-terminal-smoke`'s overview case; `subpages-smoke`
+14/15 (the pre-existing kit pile); the mechanical gate 8/8 PASS, gold marks
+10 of 24 (it reads neither an SVG fill nor a gradient); tsc and eslint clean.
+Stills looked at: 1920 × 1247 and 1280 × 720 in both themes (Hungry Minds,
+Trinny, Loop), the kit's ceiling, the phone.
+
+**Not graded.** ⚠ The ship's rubric counts gold per OBJECT (twelve per still);
+before wave 04 it must count the configuration as one object, or his ruling
+grades as a defect.
+
 ## Left open
 
+- **Since U3, his to rule on the first still:** the key cells' fill (one
+  token, `--sh-well`); the button's label centred like the homepage's
+  walkthrough button rather than right-set with a keycap like JUMP; one band
+  colour for every client; the accents as the wires, legs and kind codes, with
+  the chip frames neutral; the rows full width with the keys at 40 %.
 - **Since U2, his to rule on the first still:** the icons, especially the
-  proposal's (the most abstract of the five, and three blocks carry it); the
-  die in ink rather than a gold wash; whether the board's traces off the die's
-  free edges read as a board or as noise; the kind codes (`LLM`, `MODEL`,
-  `DESIGN`, `OPS`); the owner's seat (the proposals name one — "Kate, the last
-  gate" — and a `seat` kind is the first thing to add if the board reads thin);
-  the status strip's three readings.
+  proposal's (the most abstract of the five, and three blocks carry it);
+  whether the board's traces off the die's free edges read as a board or as
+  noise; the kind codes (`LLM`, `MODEL`, `DESIGN`, `OPS`); the owner's seat
+  (the proposals name one — "Kate, the last gate" — and a `seat` kind is the
+  first thing to add if the board reads thin). (The die's colour and the
+  status strip were ruled in U3.)
 - **The portfolio and the house formats draw no board.** "Keep the proposals
   for now." Their panel is as tall as what it says, which leaves the column
   under it empty at his window.

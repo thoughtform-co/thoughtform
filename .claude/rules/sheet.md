@@ -109,7 +109,9 @@ and the first for a page that lists things.
 The overview, the owner's page. Two screens: a MONITOR that plots every
 engagement at the date it was filed, then a LOG divided by kind — one notched
 block per engagement with its page's icon, one filled — a gutter from its
-DOSSIER, which draws the client's intelligence configuration (ADR-118 U1, U2).
+DOSSIER, read like a travel-data panel: a tinted band, a readout, the client's
+intelligence configuration drawn in Tensor gold, one big button (ADR-118 U1,
+U2, U3).
 
 - **Two arrangements, exactly, in that order.** `monitor` and `log` are in
   `SHEET_ARRANGEMENTS`, but a ladder that holds either is judged by
@@ -144,12 +146,30 @@ DOSSIER, which draws the client's intelligence configuration (ADR-118 U1, U2).
   `.is-on`, `data-id`, `data-status`, `aria-current`) and none fails loudly.
   Below 1100 wide the list takes half (the mono line clips at 5/12); on a phone
   the blocks are 60px.
+- ⚠ **THE DOSSIER READS LIKE TRAVEL DATA (ADR-118 U3, owner, with Starfield's
+  panel beside U2's still).** The BAND takes the proof card's folder tint
+  (`.pf-card__head`: gold `--sh-band-from` .28 running to a quarter, light .22,
+  one colour for every client) and stays `--mon-strip-h` tall — the log's
+  first head is level with it. ⚠ **Both contrast walks are blind to a
+  gradient**: the smoke composites the tint at each band word's own x. The
+  brief's SENTENCE is gone (owner, asked: rows only) — the dossier's name is
+  still its `aria-label`. The READOUT (`.sh-dos__readout`, `dossierStatus`) is
+  Starfield's cell: each row a key FILLED (`--sh-well`) and framed in
+  `--sh-seam`, its value framed beside it sharing the edge and set right, rows
+  3px apart, the keys one column (40 %). ⚠ A fill on EVERY key is a column's
+  material, not a state (ADR-082 U29's law is about one fill among outlines).
+  The WAY IN is one full-width button (`.sh-dos__foot .sh-cta`, the proof
+  card's `.pf-watch` — outlined at rest, filled on hover/focus), and the
+  printed key hints are deleted; the keys still work. `--dos-row-h` and
+  `--dos-read-pad` are sized so the readout and the button take no more
+  height than the brief, its strip and the hints did — the board's floor at
+  1280 × 720 has ~1.5px to spare.
 - ⚠ **THE DOSSIER DRAWS THE CLIENT'S CONFIGURATION, AND ONLY A PROPOSAL HAS
-  ONE (ADR-118 U2).** Band, brief, a status strip (Standing · Filed ·
-  Sections), the BOARD, the way in; the picture, the chapters and the readout
-  table are deleted. The board (`components/sheet/config/`, server-only) is one
-  INK die of the proposal's workstreams with chips around it for what it runs
-  on and inside, joined by multi-wire buses — the CP2077 circuit reference in
+  ONE (ADR-118 U2).** Band, readout, the BOARD, the way in; the picture, the
+  chapters and the readout table are deleted. The board
+  (`components/sheet/config/`, server-only) is one TENSOR-GOLD die (U3 — U2
+  drew it in ink) of the proposal's workstreams with chips around it for what
+  it runs on and inside, joined by multi-wire buses — the CP2077 circuit reference in
   the proof board's grammar, the pure helpers imported (`ribbon.ts`,
   `substrateKit`), the glyphs copied onto `--sh-*` (the PDA's glyph files are
   CLIENT files and would leak a registry type into a public chunk). ⚠ **Nothing
@@ -164,9 +184,16 @@ DOSSIER, which draws the client's intelligence configuration (ADR-118 U1, U2).
   aspect so no desktop box is more than 10 % letterbox. ⚠ **Fit is declared**
   (`configGeom` emits every string with its measure) and the floor (names
   ≥ 11px, kickers ≥ 10px) is asserted against the MEASURED boxes
-  (`BOARD_BOX_PX`, the smoke holds them to 2 %). ⚠ The line steps clear the
-  font's EM BOX, not its ink. The portfolio and the house formats draw no board
-  (owner: "keep the proposals for now"); their panel is as tall as what it says.
+  (`BOARD_BOX_PX`, the smoke holds them to 2 %) — and since U3 on EVERY
+  proposal's board, not the default one, at all three shapes. ⚠ The line
+  steps clear the font's EM BOX, not its ink. ⚠ **THE CONFIGURATION IS TENSOR
+  GOLD, THE BOARD IS NOT** (U3): the die `--gold` with its words on
+  `--gold-contrast` (`--sh-knock*` — never the ground, which is parchment in
+  light), its legs `--gold`, its wires `--sh-amb` (the homepage board's amber
+  through `--gold-line`), the chips' kind codes `--gold-ink`; the chips'
+  frames and top rules and the faint traces stay dawn. The portfolio and the
+  house formats draw no board (owner: "keep the proposals for now"); their
+  panel is as tall as what it says.
 - **Every reading is derived** (`arcsInstrumentSections`, `lib/sheet/arcs.ts`)
   from `CLIENTS`, `ARCS`, `status`, `since` and `date`, and `sheet-arcs`
   recomputes each a second way. `today` is a PARAMETER: the page asks the
@@ -222,10 +249,14 @@ DOSSIER, which draws the client's intelligence configuration (ADR-118 U1, U2).
   the dossier's aperture is the ARTICLE and its chamfer is `__in`.
   ⚠ The capture's `stillLife` waits on `.sh-ap-root` as on a reveal — shot
   before its `is-in`, a still is a closed aperture.
-- **Gold is state and nothing else**: the lit mark (an OUTLINE, so
-  `--gold-line`), the NOW cursor, the filled block, the CTA and the dossier's
-  lip; `mechanical.mjs` names them. The monitor's ring is dawn, the icons and
-  the configuration's die are INK. ⚠ The gate names an element by its FIRST
+- **Gold is state, and since U3 the configuration**: the lit mark (an
+  OUTLINE, so `--gold-line`), the NOW cursor, the filled block, the button and
+  the dossier's lip, then — by the owner's ruling — the band's tint and the
+  drawn configuration (die, legs, wires, kind codes). The monitor's ring is
+  dawn and the icons are ink. ⚠ The gate reads neither an SVG fill nor a
+  gradient, so its count (10 of 24) did not move; the ship's rubric, which
+  counts gold per object, must count the configuration as ONE before wave 04.
+  ⚠ The gate names an element by its FIRST
   class and never reads a background, so a two-class ACCENT_ALLOW entry
   (`.sh-stn.is-on`, `.sh-log__row.is-on`) never matches; the filled block is
   declared by `.sh-log__plate`, and state is read off `aria-current`,

@@ -52,14 +52,22 @@ The canonical rule is `.claude/rules/sheet.md`; this file mirrors it for Cursor.
   under the floor the list runs past the screen beside the sticky dossier.
   The sections run by newest filing; the monitor's lanes keep registry order.
   The `rows` (SH) and `dossier` (SJ) knobs are deleted.
+- The dossier reads like travel data (ADR-118 U3): the band in the proof
+  card's folder tint (gold .28 → a quarter, light .22; the smoke composites
+  it under each band word, because the contrast walks cannot see a
+  gradient), a READOUT of framed keys (filled with `--sh-well`) with their
+  values framed beside them and set right, and one full-width button (the
+  proof card's `.pf-watch`). The brief's sentence and the printed key hints
+  are gone; the keys still work.
 - The dossier draws the client's intelligence configuration, proposals only:
-  band, brief, status strip, the BOARD (`components/sheet/config/`, server
-  SVG — an ink die of workstreams, chips for what it runs on and inside,
-  buses), the way in. Links are DERIVED from each workstream's own `where` /
-  `runs` (`lib/arcs/stack.ts`), pinned per proposal in `sheet-config-fit`.
-  Four crops, a container query picks one (≤ 10 % letterbox); fit is declared
-  and the type floor is asserted against measured boxes. Every evenodd ring
-  closes BOTH contours, or it paints a bow-tie.
+  the BOARD (`components/sheet/config/`, server SVG — a Tensor-gold die of
+  workstreams with its words on `--gold-contrast`, gold legs, amber wires,
+  gold-ink kind codes on dawn chips). Links are DERIVED from each workstream's
+  own `where` / `runs` (`lib/arcs/stack.ts`), pinned per proposal in
+  `sheet-config-fit`. Four crops, a container query picks one (≤ 10 %
+  letterbox); fit is declared and the type floor is asserted against measured
+  boxes, on every proposal. Every evenodd ring closes BOTH contours, or it
+  paints a bow-tie.
 - The frame's wordmark is DOCKED from the first frame on the instrument: the
   hero lockup sat 7px under the monitor's corner. The smoke asserts
   clearance, not order ("under the device" passed at 7px).

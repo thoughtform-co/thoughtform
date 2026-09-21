@@ -80,18 +80,25 @@ the lit mark is the chosen row. `tests/lib/sheet-instrument.test.ts`.
 
 ## What the owner is being asked
 
-**On the instrument, after U2's first stills (the references' composition,
-the configuration drawn):** the five page icons, the proposal's most of all
-(the most abstract, and three blocks carry it); the die in ink rather than a
-gold wash; whether the traces off the die's free edges read as a board or as
-noise; the kind codes (`LLM` · `MODEL` · `DESIGN` · `OPS`); the owner's seat,
-not drawn yet ("Kate, the last gate" is in the proposals); the status strip's
-three readings; and every link the matchers read out of his own sentences,
-pinned per proposal in `tests/lib/sheet-config-fit.test.ts`. The adaptations
-from the references, each his to veto: ink instead of their red and lavender,
-no invented serial codes, no scroll-track widget, no third tier of small
-squares, model names generic as the proposals say them. Wave 04 (rubric
-0.3.0) waits for that read.
+**On the instrument, after U3's stills (the dossier as travel data):** the
+key cells' fill (`--sh-well`, one token); the big button's label centred (the
+homepage's walkthrough button) rather than right-set with a keycap like
+Starfield's JUMP; one band colour for every client; the "accents" read as the
+wires, the die's legs and the kind codes, with the chip frames neutral; the
+rows full width with the keys at 40 %.
+
+**Still open from U2's stills (the references' composition, the
+configuration drawn):** the five page icons, the proposal's most of all (the
+most abstract, and three blocks carry it); whether the traces off the die's
+free edges read as a board or as noise; the kind codes (`LLM` · `MODEL` ·
+`DESIGN` · `OPS`); the owner's seat, not drawn yet ("Kate, the last gate" is
+in the proposals); and every link the matchers read out of his own
+sentences, pinned per proposal in `tests/lib/sheet-config-fit.test.ts`. The
+adaptations from the references, each his to veto: no invented serial codes,
+no scroll-track widget, no third tier of small squares, model names generic
+as the proposals say them. (The die's colour — Tensor gold — and the status
+strip — a readout — he ruled in U3.) Wave 04 (rubric 0.3.0) waits for his
+read, and its gold count must take the configuration as ONE object.
 
 **Still open from U1's stills (the log as blocks):** the gutter's width
 (`--log-gutter`, one token); the filled block's weight (the dial, if it reads
@@ -202,6 +209,10 @@ then from the ship: `python tools/doctor.py` → `qa.py --batch <wave> --runs 3`
   passed the half-strength edge.
 - `--log-block-h` needs `--log-n` AND `--log-heads`, both written on the LIST;
   miss one and the calc goes invalid with nothing erroring.
+- A gradient is invisible to both contrast walks (they read
+  `backgroundColor`): the dossier's band words are composited on the tint at
+  their own x in the smoke, and a pixel check whose reference edge runs along
+  a tint measures the tint — the ring check reads the dossier's BOTTOM edge.
 - Hidden text is a box: an sr-only title fails `subpages-smoke`'s overrun walk.
   Name a thing with `aria-label` instead.
 - The frame's wordmark is the HERO lockup until half a screen of scroll, and
