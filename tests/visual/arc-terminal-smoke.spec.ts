@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { CLIENTS } from "@/lib/arcs/clients";
-import { ARCS, houseArcs } from "@/lib/arcs/registry";
+import { ARCS } from "@/lib/arcs/registry";
 
 import { beatState, driveTo, parkBeat, prepare } from "./helpers/arcTerminal";
 
@@ -332,46 +332,40 @@ test.describe("arc terminal motion (ADR-057)", () => {
     }
   });
 
-  test("the overview lists both cuts and the portfolio with distinguishable kickers", async ({
-    page,
-  }) => {
-    /* ⚠ THE OVERVIEW IS ON THE SHEET SINCE ADR-114 — one console per client,
-       every engagement a flashcard — so the card is `.sh-card` and the chip
-       is its KICKER. The invariants are ADR-098's, unchanged: every arc has a
-       card, plus one per client page that is not an arc; and a terminal CUT
-       is distinguishable from the v1 it was cut from (ADR-057). The stamp is
-       the sheet's own readiness observable, which the capture waits on too. */
+  test("the overview lists both cuts and the portfolio, each distinguishable", async ({ page }) => {
+    /* ⚠ THE OVERVIEW IS AN INSTRUMENT SINCE ADR-118 — a monitor that plots every
+       engagement and a log that lists it — so an engagement is a ROW, and its
+       chip and title together are what a reader tells it apart by. ADR-098's
+       invariants hold unchanged: every arc reaches the overview exactly once,
+       plus one per client page that is not an arc; and a terminal CUT is
+       distinguishable from the v1 it was cut from (ADR-057). The stamp is the
+       sheet's own readiness observable, which the capture waits on too.
+       ⚠ Under `next dev` the owner's gate is open (ADR-117), which is the only
+       reason this page is reachable from a smoke at all. */
     await page.goto("/arcs");
     await page.locator(".sh-root[data-sh-ready]").waitFor({ timeout: 30_000 });
-    /* ADR-098's two partitions, drawn two ways: a client-bound arc is a CARD in
-       its client's console, a house format is a CELL in the formats section.
-       Every arc reaches the page exactly once either way. */
-    const house = houseArcs();
     const pages = CLIENTS.reduce((n, client) => n + (client.pages?.length ?? 0), 0);
-    await expect(page.locator(".sh-card")).toHaveCount(ARCS.length - house.length + pages);
-    await expect(page.locator("a.sh-cell")).toHaveCount(Math.min(4, house.length));
-    const chipFor = async (href: string) =>
-      (
-        await page
-          .locator(
-            `.sh-card[href="${href}"] .sh-card__kicker, a.sh-cell[href="${href}"] .sh-cell__kicker`
-          )
-          .textContent()
-      )?.trim() ?? "";
+    await expect(page.locator(".sh-log__row")).toHaveCount(ARCS.length + pages);
+    await expect(page.locator(".sh-mon__mark")).toHaveCount(ARCS.length + pages);
+    for (const arc of ARCS)
+      await expect(page.locator(`.sh-log__row[href="/arcs/${arc.slug}"]`), arc.slug).toHaveCount(1);
+    const rowFor = async (href: string) => {
+      const row = page.locator(`.sh-log__row[href="${href}"]`);
+      const chip = (await row.locator(".sh-log__chip").textContent())?.trim() ?? "";
+      const title = (await row.locator(".sh-log__title").textContent())?.trim() ?? "";
+      return { chip, both: `${chip} ${title}` };
+    };
     for (const base of ["claude-workshop", "ai-keynote"]) {
-      const v1 = await chipFor(`/arcs/${base}`);
-      const v2 = await chipFor(`/arcs/${base}-v2`);
-      expect(v1, `${base} has a kicker`).not.toBe("");
-      expect(v2, `${base}-v2 is distinguishable from its v1 (both read "${v1}")`).not.toBe(v1);
+      const v1 = await rowFor(`/arcs/${base}`);
+      const v2 = await rowFor(`/arcs/${base}-v2`);
+      expect(v1.chip, `${base} has a chip`).not.toBe("");
+      expect(v2.both, `${base}-v2 is distinguishable from its v1 ("${v1.both}")`).not.toBe(v1.both);
     }
-    const portfolioChip = await chipFor("/arcs/loop-earplugs");
-    expect(portfolioChip, "the portfolio carries its own kicker").not.toBe("");
+    const portfolio = await rowFor("/arcs/loop-earplugs");
+    expect(portfolio.chip, "the portfolio carries its own chip").not.toBe("");
     expect(
-      [await chipFor("/arcs/claude-workshop"), await chipFor("/arcs/ai-keynote")],
+      [(await rowFor("/arcs/claude-workshop")).chip, (await rowFor("/arcs/ai-keynote")).chip],
       "the portfolio is not labelled as a deck"
-    ).not.toContain(portfolioChip);
-    await expect(page.locator('a.sh-cell[href="/arcs/claude-workshop-v2"]')).toHaveCount(1);
-    await expect(page.locator('a.sh-cell[href="/arcs/ai-keynote-v2"]')).toHaveCount(1);
-    await expect(page.locator('.sh-card[href="/arcs/loop-earplugs"]')).toHaveCount(1);
+    ).not.toContain(portfolio.chip);
   });
 });

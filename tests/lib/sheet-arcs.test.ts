@@ -11,7 +11,6 @@ import {
   KIND_ONE,
   STANDING,
   arcsInstrumentSections,
-  arcsSheetSections,
   clientReadout,
   clientSheetSections,
   consoleCardsOf,
@@ -102,38 +101,6 @@ describe("the arcs sheet (ADR-114)", () => {
       expect(console.panel.href).toBe(`/arcs/${client.slug}`);
       expect(console.data).toEqual({ "sh-filter": "kind", kinds: kindsOf(client).join(" ") });
       for (const k of kindsOf(client)) expect(KINDS).toContain(k);
-    }
-  });
-
-  it("the overview is split · console · cells · close, the consoles in registry order", () => {
-    const sections = arcsSheetSections();
-    expect(sections.map((s) => s.kind)).toEqual(["split", "console", "cells", "close"]);
-    const split = sections[0];
-    if (split.kind !== "split") throw new Error("no split");
-    expect(split.stations?.attr).toBe("kind");
-    expect(split.stations?.stations.map((s) => s.id)).toEqual(KINDS);
-    const consoles = sections[1];
-    if (consoles.kind !== "console") throw new Error("no console set");
-    expect(consoles.consoles.map((c) => c.id)).toEqual(CLIENTS_LISTED.map((c) => c.slug));
-    const cells = sections[2];
-    if (cells.kind !== "cells") throw new Error("no cells");
-    expect(cells.n).toBe(4);
-    expect(cells.cells.map((c) => c.href)).toEqual(
-      houseArcs()
-        .slice(0, 4)
-        .map((a) => `/arcs/${a.slug}`)
-    );
-    /* Every arc reaches the overview exactly once: the client-bound ones as
-       cards, the house formats as cells (ADR-098's two partitions). */
-    const cardHrefs = consoles.consoles.flatMap((c) => c.cards.map((k) => k.href));
-    const arcHrefs = ARCS.map((a) => `/arcs/${a.slug}`);
-    for (const href of arcHrefs) {
-      const onCards = cardHrefs.includes(href);
-      const onCells = cells.cells.some((c) => c.href === href);
-      expect(
-        onCards !== onCells,
-        `${href} appears ${onCards && onCells ? "twice" : "nowhere"}`
-      ).toBe(true);
     }
   });
 

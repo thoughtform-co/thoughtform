@@ -48,7 +48,11 @@ const OVERVIEW_TELLS = [
   "Perfect Ted",
   "Trinny London",
   "Loop Earplugs",
-  "hand-illustrated books",
+  /* A phrase ONLY the overview letters — the instrument's own line (ADR-118).
+     It was a client lede while the overview drew the consoles; the instrument
+     letters no client lede, and a tell the owner's copy lacks would let the
+     leak checks above pass on a page that shows nothing. */
+  "plotted at the date it was filed",
 ];
 
 const results = [];

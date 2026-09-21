@@ -1,6 +1,11 @@
 /**
- * lib/sheet/arcs — the `/arcs` overview and the client pages, as sheet
- * ladders over the arcs registry (ADR-114).
+ * lib/sheet/arcs — the client pages as sheet ladders (ADR-114), and the
+ * `/arcs` overview as an INSTRUMENT (ADR-118), both over the arcs registry.
+ *
+ * ⚠ THE OVERVIEW'S SHEET LADDER IS DELETED. `arcsSheetSections` (split ·
+ * console · cells · close) was the overview until ADR-118; its stills are the
+ * ship's negative pole SF, promoted from wave 02, and git history holds the
+ * code. The client console below still draws every `/arcs/<client>` page.
  *
  * ⚠ EVERY READOUT IS DERIVED. The client console's facts are computed from
  * `CLIENTS`, `ARCS` and two optional fields (`ArcDef.status`,
@@ -138,52 +143,6 @@ export function consoleFor(client: ClientDef, chapter = true): SheetConsoleDef {
     cards: consoleCardsOf(client),
     data: { "sh-filter": "kind", kinds: kindsOf(client).join(" ") },
   };
-}
-
-/** The overview's ladder: split · console (the client set) · cells (the
- *  house formats) · close. */
-export function arcsSheetSections(): SheetSection[] {
-  const clients = CLIENTS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0);
-  const house = houseArcs();
-  return [
-    {
-      kind: "split",
-      id: "arcs",
-      name: "Client arcs",
-      title: { pre: "The briefing,", em: "as a place." },
-      paragraphs: [
-        "Every engagement gets an arc: the context, the proof and the practice on one page, in the same instrument the work ships in.",
-        "One console per client. The pile on its right is the work, newest first.",
-      ],
-      stations: {
-        attr: "kind",
-        label: "Filter the arcs by kind",
-        stations: KINDS.map((k) => ({ id: k, name: KIND_LABEL[k] })),
-      },
-    },
-    {
-      kind: "console",
-      id: "clients",
-      kicker: "Clients",
-      consoles: clients.map((c) => consoleFor(c)),
-    },
-    {
-      kind: "cells",
-      id: "formats",
-      kicker: "Thoughtform formats",
-      menuLabel: "Formats",
-      n: 4,
-      cells: house.slice(0, 4).map((arc) => ({
-        id: arc.slug,
-        kicker: arc.cardChip ?? arc.format,
-        body: [arc.cardLede],
-        caption: arc.cardTitle,
-        href: `/arcs/${arc.slug}`,
-        data: { "sh-filter": "kind", kinds: kindOf(arc) },
-      })),
-    },
-    { kind: "close", id: "contact", menuLabel: "Contact" },
-  ];
 }
 
 /** One client's page: split · its console · close. */

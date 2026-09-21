@@ -5,7 +5,7 @@ import { CLIENTS, clientPageCount } from "@/lib/arcs/clients";
 import { PROPOSAL_COPY_BANS, scanStrings } from "@/lib/arcs/copyLaw";
 import { arcsOf } from "@/lib/arcs/registry";
 import type { MusingPost } from "@/lib/musings/types";
-import { arcsSheetSections, clientSheetSections } from "@/lib/sheet/arcs";
+import { arcsInstrumentSections, clientSheetSections } from "@/lib/sheet/arcs";
 import {
   SHEET_CHAPTER_CAP,
   chaptersOf,
@@ -51,7 +51,9 @@ function post(slug: string, over: Partial<MusingPost> = {}): MusingPost {
 const POSTS = [post("one", { featured: true }), post("two", { date: "2026-09-07" }), post("three")];
 
 const LADDERS: Record<string, SheetSection[]> = {
-  arcs: arcsSheetSections(),
+  /* The overview is the instrument since ADR-118 — the variety law defers
+     to `instrumentViolations` for it (sheet-instrument.test.ts). */
+  arcs: arcsInstrumentSections("2026-09-20"),
   ...Object.fromEntries(
     CLIENTS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0).map((c) => [
       `arcs/${c.slug}`,
@@ -244,7 +246,7 @@ describe("the sheet's variety law (ADR-114)", () => {
     }
   });
 
-  it("chapters are capped at five and the overview's are the client consoles", () => {
+  it("chapters are capped at five and the overview's are its two frames", () => {
     const many: SheetSection[] = [
       mk("split", "a"),
       ...["b", "c", "d", "e", "f", "g"].map((id, i) =>
@@ -255,8 +257,7 @@ describe("the sheet's variety law (ADR-114)", () => {
     expect(compositionViolations(many).some((v) => /chapter/i.test(v))).toBe(true);
 
     const chapters = chaptersOf(LADDERS.arcs).filter((c) => c.primary);
-    const clients = CLIENTS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0);
-    expect(chapters.map((c) => c.id)).toEqual(clients.map((c) => c.slug));
+    expect(chapters.map((c) => c.id)).toEqual(["monitor", "log"]);
   });
 
   it("ordinals count the sections after the split, two digits, and the split has none", () => {

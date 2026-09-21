@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import { CLIENTS, clientPageCount } from "@/lib/arcs/clients";
-import { ARCS, arcsOf, houseArcs } from "@/lib/arcs/registry";
+import { arcsOf } from "@/lib/arcs/registry";
 import { clientReadout } from "@/lib/sheet/arcs";
 import { compositionViolations } from "@/lib/sheet/composition";
 import { knobsFor } from "@/lib/sheet/directions";
@@ -18,6 +18,12 @@ import type { SheetSection } from "@/lib/sheet/types";
  *   - a box that overruns the band at the binding viewport (ink rects,
  *     not bounding boxes — a centred overflow reports zero);
  *   - a readout on the client console that disagrees with the registry;
+ *
+ * ⚠ `/arcs` IS NOT A DOCUMENT SINCE ADR-118. It is the owner's instrument —
+ * a monitor and a log — and answers to `instrumentViolations`, which
+ * `arcs-instrument-smoke` asks of its DOM; here it is walked for what every
+ * sheet route owes (the rails, the band, the verticals, the phone) and
+ * skipped by the document law. The client console lives on the client pages.
  *   - a knob that the URL set and the root did not take;
  *   - the pile that never stacks, or a panel that does not stick;
  *   - the sessions page lighting one morning and opening another.
@@ -45,8 +51,16 @@ async function ready(page: Page, url: string) {
   const stamp = (await page.locator(".sh-root").getAttribute("data-sh-ready")) ?? "";
   const [loaded, sections, rail] = stamp.split("|").map(Number);
   expect(loaded, `${url}: faces loaded`).toBeGreaterThanOrEqual(2);
-  expect(sections, `${url}: sections`).toBeGreaterThanOrEqual(3);
-  expect(rail, `${url}: rail height`).toBeGreaterThan(0);
+  // A document is at least split · one · close; the instrument is its two frames.
+  expect(sections, `${url}: sections`).toBeGreaterThanOrEqual(2);
+  // A phone draws no rails (≤960), so the stamp's rail height is 0 there by design.
+  if ((page.viewportSize()?.width ?? 1280) > 960)
+    expect(rail, `${url}: rail height`).toBeGreaterThan(0);
+}
+
+/** `instrument` for the arcs overview (ADR-118), `document` for every sheet. */
+async function profileOf(page: Page) {
+  return (await page.locator(".sh-root").getAttribute("data-sh-profile")) ?? "document";
 }
 
 /** The DOM's ladder, as the data model, so the law can be asked of the page. */
@@ -59,16 +73,31 @@ async function domLadder(page: Page): Promise<SheetSection[]> {
       lit: el.querySelectorAll(".sh-tl__item.is-lit").length,
       open: el.querySelectorAll(".sh-steps__item.is-open").length,
       primary: el.querySelectorAll(".sh-console__panel").length,
+      cells: el.querySelectorAll(".sh-cells > .sh-cell").length,
+      consoles: el.querySelectorAll("article.sh-console").length,
     }))
   );
-  // Only the fields the law reads are reconstructed; the rest is filler.
+  /* Only the fields the law reads are reconstructed; the rest is filler.
+     ⚠ The filler has to be COUNTED from the DOM: an empty `cells` or
+     `consoles` array is a violation of its own ("0 cells declared", "a
+     console section with no consoles"), so a reconstruction that left them
+     empty failed every page that has either — the page was never asked. */
   return raw.map((r) => {
     const base = { id: r.id, kicker: r.id };
     switch (r.kind) {
       case "split":
         return { ...base, kind: "split", name: "", title: {}, paragraphs: [] };
       case "cells":
-        return { ...base, kind: "cells", n: Number(r.n) as 2 | 3 | 4, cells: [] };
+        return {
+          ...base,
+          kind: "cells",
+          n: Number(r.n) as 2 | 3 | 4,
+          cells: Array.from({ length: r.cells }, (_, i) => ({
+            id: `${r.id}-${i}`,
+            kicker: "",
+            body: [],
+          })),
+        };
       case "timeline":
         return {
           ...base,
@@ -85,7 +114,15 @@ async function domLadder(page: Page): Promise<SheetSection[]> {
           open: "x",
         };
       case "console":
-        return { ...base, kind: "console", consoles: [] };
+        return {
+          ...base,
+          kind: "console",
+          consoles: Array.from({ length: r.consoles }, (_, i) => ({
+            id: `${r.id}-${i}`,
+            panel: { name: "", readout: [{ label: "", value: "" }], lede: "" },
+            cards: [],
+          })),
+        };
       case "close":
         return { ...base, kind: "close" };
       case "row":
@@ -176,6 +213,12 @@ test.describe("subpages (ADR-114)", () => {
         els.map((e) => e.getAttribute("data-sh-arrangement"))
       );
       for (const k of kinds) expect(SHEET_ARRANGEMENTS as readonly string[]).toContain(k);
+      if ((await profileOf(page)) === "instrument") {
+        // Its own law is asked of its own DOM in arcs-instrument-smoke.
+        expect(kinds).toEqual(["monitor", "log"]);
+        await expect(page.locator(".sh-head__ord")).toHaveCount(0);
+        return;
+      }
       expect(compositionViolations(await domLadder(page))).toEqual([]);
       // Every head band letters an ordinal on the house knob, none on the split.
       const ords = await page.$$eval(
@@ -198,84 +241,103 @@ test.describe("subpages (ADR-114)", () => {
     });
   }
 
+  /* ⚠ FIXTURE CONTEXTS, NEVER `browser.newContext()`: a hand-made context
+     inherits none of the project's options — storage state included — so on a
+     server where `/arcs` is gated (ADR-117) it would measure a 404. */
   for (const [w, h] of VIEWPORTS) {
-    test(`nothing overruns the band at ${w}x${h}`, async ({ browser }) => {
-      const ctx = await browser.newContext({
+    test.describe(`at ${w}x${h}`, () => {
+      test.use({
         viewport: { width: w, height: h },
-        reducedMotion: "no-preference",
+        contextOptions: { reducedMotion: "no-preference" },
       });
-      const page = await ctx.newPage();
-      for (const route of ROUTES) {
-        await ready(page, route);
-        const over = await page.evaluate(() => {
-          const out: string[] = [];
-          if (document.documentElement.scrollWidth > innerWidth + 1)
-            out.push(
-              `document scrollWidth ${document.documentElement.scrollWidth} > ${innerWidth}`
-            );
-          const band = document.querySelector(".sh-band") as HTMLElement | null;
-          const left = band ? band.getBoundingClientRect().left : 0;
-          const right = band ? band.getBoundingClientRect().right : innerWidth;
-          for (const el of document.querySelectorAll(".sh-sec *")) {
-            if (!(el instanceof HTMLElement)) continue;
-            if (el.closest(".sh-hud-root, .ft-foot")) continue;
-            const hasText = [...el.childNodes].some(
-              (n) => n.nodeType === 3 && n.textContent!.trim().length > 0
-            );
-            if (!hasText) continue;
-            const range = document.createRange();
-            range.selectNodeContents(el);
-            const r = range.getBoundingClientRect();
-            if (r.width === 0) continue;
-            if (r.left < left - 1 || r.right > right + 1)
+      test(`nothing overruns the band at ${w}x${h}`, async ({ page }) => {
+        for (const route of ROUTES) {
+          await ready(page, route);
+          const over = await page.evaluate(() => {
+            const out: string[] = [];
+            if (document.documentElement.scrollWidth > innerWidth + 1)
               out.push(
-                `${el.className || el.tagName}: ink ${Math.round(r.left)}..${Math.round(r.right)} outside band ${Math.round(left)}..${Math.round(right)}`
+                `document scrollWidth ${document.documentElement.scrollWidth} > ${innerWidth}`
               );
-            if (el.scrollWidth > el.clientWidth + 2 && getComputedStyle(el).overflowX !== "visible")
-              out.push(
-                `${el.className || el.tagName}: clipped ${el.scrollWidth} > ${el.clientWidth}`
+            /* The instrument sits on the INSTRUMENT band (the 1440 breakout,
+             ADR-048), a document on the text band: measure each against its own. */
+            const band = document.querySelector(".sh-band, .sh-mon") as HTMLElement | null;
+            const left = band ? band.getBoundingClientRect().left : 0;
+            const right = band ? band.getBoundingClientRect().right : innerWidth;
+            for (const el of document.querySelectorAll(".sh-sec *")) {
+              if (!(el instanceof HTMLElement)) continue;
+              if (el.closest(".sh-hud-root, .ft-foot")) continue;
+              const hasText = [...el.childNodes].some(
+                (n) => n.nodeType === 3 && n.textContent!.trim().length > 0
               );
-          }
-          return out.slice(0, 8);
-        });
-        expect(over, `${route} at ${w}x${h}`).toEqual([]);
-      }
-      await ctx.close();
+              if (!hasText) continue;
+              const range = document.createRange();
+              range.selectNodeContents(el);
+              const r = range.getBoundingClientRect();
+              if (r.width === 0) continue;
+              if (r.left < left - 1 || r.right > right + 1)
+                out.push(
+                  `${el.className || el.tagName}: ink ${Math.round(r.left)}..${Math.round(r.right)} outside band ${Math.round(left)}..${Math.round(right)}`
+                );
+              if (
+                el.scrollWidth > el.clientWidth + 2 &&
+                getComputedStyle(el).overflowX !== "visible"
+              )
+                out.push(
+                  `${el.className || el.tagName}: clipped ${el.scrollWidth} > ${el.clientWidth}`
+                );
+            }
+            return out.slice(0, 8);
+          });
+          expect(over, `${route} at ${w}x${h}`).toEqual([]);
+        }
+      });
     });
   }
 
-  test("the phone reads as one column and nothing sticks", async ({ browser }) => {
-    const ctx = await browser.newContext({
-      viewport: { width: 390, height: 844 },
-      isMobile: true,
-      hasTouch: true,
+  test.describe("on the phone", () => {
+    test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    test("the phone reads as one column and nothing sticks", async ({ page }) => {
+      await ready(page, "/home-sessions");
+      const lead = await page.locator(".sh-split__lead").boundingBox();
+      const copy = await page.locator(".sh-split__copy").boundingBox();
+      expect(
+        lead && copy && copy.y > lead.y + lead.height - 1,
+        "the copy stacks under the lead"
+      ).toBe(true);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)
+      ).toBe(true);
+      await ready(page, "/arcs/loop");
+      const pos = await page
+        .locator(".sh-console__panel")
+        .first()
+        .evaluate((el) => getComputedStyle(el).position);
+      expect(pos).not.toBe("sticky");
+      // The instrument stacks too: the dossier stops sticking and sits under the list.
+      await ready(page, "/arcs");
+      const dossier = page.locator(".sh-log__dossiers");
+      expect(await dossier.evaluate((el) => getComputedStyle(el).position)).not.toBe("sticky");
+      const list = await page.locator(".sh-log__list").boundingBox();
+      const dos = await dossier.boundingBox();
+      expect(
+        list && dos && dos.y >= list.y + list.height - 1,
+        "the dossier sits under the list"
+      ).toBe(true);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)
+      ).toBe(true);
     });
-    const page = await ctx.newPage();
-    await ready(page, "/home-sessions");
-    const lead = await page.locator(".sh-split__lead").boundingBox();
-    const copy = await page.locator(".sh-split__copy").boundingBox();
-    expect(
-      lead && copy && copy.y > lead.y + lead.height - 1,
-      "the copy stacks under the lead"
-    ).toBe(true);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
-      true
-    );
-    await ready(page, "/arcs");
-    const pos = await page
-      .locator(".sh-console__panel")
-      .first()
-      .evaluate((el) => getComputedStyle(el).position);
-    expect(pos).not.toBe("sticky");
-    await ctx.close();
   });
 
-  test("/arcs: every console's readout equals the registry's, and the pile holds every engagement", async ({
+  test("every client page's console reads the registry, and its pile holds every engagement", async ({
     page,
   }) => {
-    await ready(page, "/arcs");
+    /* The overview drew these consoles until ADR-118; the client pages still
+       do, one each (ADR-098 §2), so the readout is checked where it lives. */
     const clients = CLIENTS.filter((c) => clientPageCount(c, arcsOf(c.slug)) > 0);
     for (const client of clients) {
+      await ready(page, `/arcs/${client.slug}`);
       const rows = await page.$$eval(`article#${client.slug} .sh-readout__row`, (els) =>
         els.map((el) => [
           el.querySelector(".sh-readout__k")?.textContent?.trim(),
@@ -287,24 +349,6 @@ test.describe("subpages (ADR-114)", () => {
       expect(cards, `${client.slug}: cards`).toBe(
         arcsOf(client.slug).length + (client.pages?.length ?? 0)
       );
-    }
-    const pages = clients.reduce((n, c) => n + (c.pages?.length ?? 0), 0);
-    await expect(page.locator(".sh-card")).toHaveCount(ARCS.length - houseArcs().length + pages);
-    await expect(page.locator("a.sh-cell")).toHaveCount(Math.min(4, houseArcs().length));
-    // The kind filter narrows whole consoles, never slots.
-    await page
-      .locator(".sh-stn", { hasText: /^Keynote/i })
-      .first()
-      .click();
-    await expect(page.locator(".sh-root")).toHaveAttribute("data-sh-kind", "keynote");
-    const hidden = await page.$$eval("article.sh-console[hidden]", (els) => els.map((e) => e.id));
-    for (const client of clients) {
-      const kinds = [
-        ...(client.pages ?? []).map((p) => p.kind),
-        ...arcsOf(client.slug).map((a) => a.kind ?? "production"),
-      ];
-      if (!kinds.includes("keynote"))
-        expect(hidden, `${client.slug} hides without a keynote`).toContain(client.slug);
     }
   });
 
@@ -334,7 +378,14 @@ test.describe("subpages (ADR-114)", () => {
     const knobs = knobsFor("SD");
     for (const [key, value] of Object.entries(knobs))
       await expect(root).toHaveAttribute(`data-sh-${key}`, value);
-    await expect(page.locator(".sh-head__ord")).toHaveCount(0);
+    /* The renderer always letters the ordinals and the knob HIDES them
+       (`data-sh-ordinal="off"`, sheet.css), so "dropped" means none PAINTS —
+       a count of the elements asks about the markup and can never be 0. */
+    const painted = await page.$$eval(
+      ".sh-head__ord",
+      (els) => els.filter((el) => el.getClientRects().length > 0).length
+    );
+    expect(painted).toBe(0);
   });
 
   test("the frame's rails are the page's only verticals (ADR-114 U1)", async ({ page }) => {
@@ -354,7 +405,10 @@ test.describe("subpages (ADR-114)", () => {
               out.push(`${sec.id}${pseudo} ${cs.width}x${cs.height}`);
           }
           for (const el of sec.querySelectorAll("*")) {
-            if (el.closest(".sh-hud-root, .hud-nav-overlay, .rin-host")) continue;
+            /* ⚠ THE ONE NAMED EXEMPTION: the arcs monitor's graticule (ADR-118) —
+               its dotted divisions and the NOW drop are a SCALE inside a bounded
+               object, not rules of the page. Nothing else may paint a vertical. */
+            if (el.closest(".sh-hud-root, .hud-nav-overlay, .rin-host, .sh-mon__grid")) continue;
             const b = el.getBoundingClientRect();
             const bg = getComputedStyle(el).backgroundColor;
             if (b.width <= 2 && b.height > Math.max(240, h * 0.8) && bg !== "rgba(0, 0, 0, 0)")
@@ -395,7 +449,12 @@ test.describe("subpages (ADR-114)", () => {
     for (const theme of ["dark", "light"]) {
       await page.goto(`/home-sessions?theme=${theme}`);
       await page.locator(".sh-root[data-sh-ready]").waitFor({ timeout: 45_000 });
-      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      /* ⚠ DARK IS THE ABSENCE OF THE ATTRIBUTE (ADR-058): the bootstrap only
+         ever writes `data-theme="light"`, so asserting "dark" waited on a
+         value nothing sets. */
+      if (theme === "light")
+        await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+      else expect(await page.locator("html").getAttribute("data-theme")).not.toBe("light");
       grounds.push(
         await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor)
       );

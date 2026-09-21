@@ -34,7 +34,7 @@ describe("the owner's gate (ADR-117)", () => {
     const body = page.slice(page.indexOf("export default async function"));
     const gate = body.indexOf("await assertOwner()");
     expect(gate, "assertOwner is called").toBeGreaterThan(0);
-    for (const later of ["sliceV7Sections(", "arcsSheetSections(", "arcsInstrumentSections("]) {
+    for (const later of ["sliceV7Sections(", "arcsInstrumentSections(", "todayIn("]) {
       const at = body.indexOf(later);
       if (at >= 0) expect(at, `${later} runs after the gate`).toBeGreaterThan(gate);
     }
