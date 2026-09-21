@@ -223,13 +223,40 @@ function probe() {
     const railBound = el.classList.contains("fl-panel__viz");
     const bottom = railBound ? frame.bottom : vh;
     const top = railBound ? frame.top : 0;
+    /* ⚠ THE FIGURE IS MEASURED WHERE IT PAINTS, NOT BY ITS SLOT'S BOX (ADR-082
+       U31). The slot is the delivery's whole 9:16 canvas, and the figure inside
+       it carries transparent headroom — a quarter of the canvas on `azeroth`.
+       For as long as the slot stood on the floor of its cell that headroom was
+       inside the stage and the box was a fair proxy; since U31 the figure CELL
+       rises until the painted CAP reaches the panel heads' row line, so the
+       empty top of the box legitimately passes the viewport's top edge on a
+       tall window while the man stands 180px inside it. Gating the box failed
+       22 cells that a reader would call correct — a guard measuring a model of
+       the drawing (ADR-070 U34), the other way round from usual.
+       The painted extent is `contain`'s own arithmetic off the two anchors the
+       slot already publishes; horizontally the box is still the right thing,
+       because the ink's left and right are not published and the box bounds
+       them. */
+    let paintTop = r.top;
+    let paintBottom = r.bottom;
+    if (el.classList.contains("vwh__slot")) {
+      const media = el.querySelector(".vwh__media");
+      const headY = Number.parseFloat(el.getAttribute("data-vwh-head-y") ?? "NaN");
+      const footY = Number.parseFloat(el.getAttribute("data-vwh-foot-y") ?? "NaN");
+      if (media && Number.isFinite(headY) && Number.isFinite(footY)) {
+        const m = media.getBoundingClientRect();
+        const picture = Math.min(m.width / 720, m.height / 1280) * 1280;
+        paintTop = m.bottom - picture * (1 - headY);
+        paintBottom = m.bottom - picture * (1 - footY);
+      }
+    }
     contained.push({
       sel: el.className.split(" ")[0] + (el.dataset.cell ? "[" + el.dataset.cell + "]" : ""),
       ok:
         r.left >= frame.left - 1 &&
         r.right <= frame.right + 1 &&
-        r.top >= top - 1 &&
-        r.bottom <= bottom + 1,
+        paintTop >= top - 1 &&
+        paintBottom <= bottom + 1,
       box: {
         x: Math.round(r.x),
         y: Math.round(r.y),
