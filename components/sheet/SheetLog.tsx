@@ -137,13 +137,19 @@ function Dossier({ dossier: d, hidden }: { dossier: SheetDossier; hidden: boolea
             <span className="sh-dos__kind">{d.kind}</span>
           </header>
           <div className="sh-dos__img">
+            {/* ⚠ EAGER, AT LOW PRIORITY, AND NEVER `lazy`. A hidden dossier's
+                lazy picture only starts to load when a swap unhides it, so it
+                streamed in top-down AFTER the 180ms aperture had opened — the
+                swap "settled" on a half-painted plate, and seventeen of wave
+                03's twenty second-pick stills were shot that way. The monitor
+                holds no image, so nothing on the first screen waits for these. */}
             {/* eslint-disable-next-line @next/next/no-img-element -- a duotoned still at a declared size, the sheet's own figure recipe */}
             <img
               src={d.image.src}
               alt={d.image.alt}
               width={d.image.width}
               height={d.image.height}
-              loading="lazy"
+              fetchPriority="low"
               decoding="async"
             />
           </div>

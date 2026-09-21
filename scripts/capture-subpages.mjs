@@ -434,6 +434,23 @@ async function stillLife(page, sectionId) {
       { timeout: 4000 }
     )
     .catch(() => {});
+  /* Every picture in view has DECODED. A picture still streaming paints
+     top-down, and a still shot mid-stream is a defect the grader reads as the
+     page's own: wave 03's first shoot put seventeen half-painted dossiers in
+     front of it (ADR-118). Bounded and never a veto — a broken image
+     decodes to a rejection, which counts as done. */
+  await page
+    .evaluate(async () => {
+      const inView = [...document.images].filter((img) => {
+        const b = img.getBoundingClientRect();
+        return b.bottom > 0 && b.top < innerHeight && b.width > 0 && b.height > 0;
+      });
+      await Promise.race([
+        Promise.all(inView.map((img) => img.decode().catch(() => undefined))),
+        new Promise((done) => setTimeout(done, 15000)),
+      ]);
+    })
+    .catch(() => {});
   await page.waitForTimeout(320);
 }
 

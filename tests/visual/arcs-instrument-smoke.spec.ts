@@ -217,16 +217,21 @@ test.describe("the arcs instrument (ADR-118)", () => {
             r.querySelector(".sh-readout__v")!.textContent!.trim(),
           ])
         );
+        const img = one.querySelector("img");
         return {
           shown: shown.length,
           id: one.dataset.id,
           title: one.querySelector(".sh-dos__title")!.textContent!.trim(),
           filed: read.Filed,
           cta: one.querySelector(".sh-cta")!.getAttribute("href"),
+          pictured: Boolean(img && img.complete && img.naturalWidth > 0),
         };
       });
       expect(d.shown, row.id).toBe(1);
       expect(d.id, row.id).toBe(row.id);
+      // SETTLED means the picture too: the first cut settled on the aperture's
+      // timer, and a lazy picture was still streaming in under it.
+      expect(d.pictured, `${row.id}'s picture had not loaded when it settled`).toBe(true);
       expect(
         d.title.toLowerCase().endsWith(row.title.toLowerCase()),
         `${d.title} / ${row.title}`

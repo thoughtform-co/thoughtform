@@ -9,6 +9,23 @@ export const SHEET_SWAP_MS = 180;
 const HASH = /^#arc=([a-z0-9-]+)$/;
 
 /**
+ * How long a dossier waits for its picture before it settles without one — a
+ * picture that fails, or one the browser has not reached, may not hold the
+ * observable forever. Under the 5s a test's expectation waits.
+ */
+const PICTURE_WAIT_MS = 2500;
+
+/** The dossier's picture has decoded (or failed, or the wait ran out). */
+function pictured(dossier: Element | null): Promise<void> {
+  const img = dossier?.querySelector("img");
+  if (!img) return Promise.resolve();
+  return Promise.race([
+    img.decode().catch(() => undefined),
+    new Promise<void>((done) => window.setTimeout(done, PICTURE_WAIT_MS)),
+  ]).then(() => undefined);
+}
+
+/**
  * SheetInstrumentController — the ONE client file of the arcs instrument
  * (ADR-118).
  *
@@ -35,6 +52,11 @@ const HASH = /^#arc=([a-z0-9-]+)$/;
  * ⚠ `data-dos-id` ON THE ROOT IS THE CAPTURE'S OBSERVABLE: it is removed when
  * a swap starts and written only when the incoming dossier has SETTLED — a
  * value the page computed, never one a script can satisfy by itself.
+ * SETTLED is the aperture open AND the picture decoded (bounded by
+ * `PICTURE_WAIT_MS`), on arrival as on a swap. The first cut wrote it on the
+ * aperture's timer alone, and the capture shot seventeen dossiers whose
+ * pictures were still streaming in — an observable that fires before the
+ * thing it names is a timer with a better name.
  */
 export function SheetInstrumentController() {
   const markerRef = useRef<HTMLSpanElement>(null);
@@ -55,7 +77,16 @@ export function SheetInstrumentController() {
       root.querySelector('.sh-log__row[aria-current="true"]')?.getAttribute("data-id") ?? null;
     let lastSwap = 0;
     let settleTimer = 0;
-    if (current) root.setAttribute("data-dos-id", current);
+    let disposed = false;
+    const dossierFor = (id: string) => root.querySelector(`.sh-dos[data-id="${CSS.escape(id)}"]`);
+    // The server's choice settles once its picture has; a deep link below may
+    // move the choice first, and then this one never writes.
+    if (current) {
+      const first = current;
+      void pictured(dossierFor(first)).then(() => {
+        if (!disposed && current === first) root.setAttribute("data-dos-id", first);
+      });
+    }
 
     // Arm the arrival apertures only now that a script is here to open them.
     root.classList.add("is-sh-inst");
@@ -106,7 +137,9 @@ export function SheetInstrumentController() {
         window.clearTimeout(settleTimer);
         const settle = () => {
           incoming?.classList.remove("is-swap");
-          if (current === id) root!.setAttribute("data-dos-id", id);
+          void pictured(incoming).then(() => {
+            if (!disposed && current === id) root!.setAttribute("data-dos-id", id);
+          });
         };
         if (animate && incoming) {
           void (incoming as HTMLElement).offsetWidth; // restart the keyframes
@@ -180,6 +213,7 @@ export function SheetInstrumentController() {
     }
 
     return () => {
+      disposed = true;
       root.removeEventListener("click", onClick);
       root.removeEventListener("keydown", onKey);
       mo.disconnect();
