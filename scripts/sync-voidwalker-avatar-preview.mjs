@@ -37,6 +37,10 @@ const REPO = resolve(__dirname, "..");
 // which is the same on both known dev machines.
 const SKILL_WAVES = "C:\\Users\\buyss\\.claude\\skills\\voidwalker-avatar\\waves";
 const SKILL_EVALS = "C:\\Users\\buyss\\.claude\\skills\\voidwalker-avatar\\evals";
+// The in-repo chain (ADR-082 U31). ⚠ The two-root edit shipped READING this
+// constant without DECLARING it, so the first run died on a ReferenceError
+// before it copied a byte — and nothing else imports the script to notice.
+const REPO_WAVES = join(REPO, "scripts", "voidwalker-avatar", "waves");
 const DEST = join(REPO, "public", "_previews", "voidwalker-avatar");
 
 const clean = process.argv.includes("--clean");
@@ -86,6 +90,15 @@ const METADATA_EXTENSIONS = new Set([".json", ".md"]);
  */
 const SCRATCH_DIRS =
   /^(_|frames?$|frames?[-_]|loop$|graded$|refs$|render$|render[-_]|gif-raw$|gif-framed$|capture|framed|veo-framed$|nano-framed$|kling-framed$)/i;
+
+/**
+ * ⚠ A BLIND SHEET'S ANSWER KEY NEVER REACHES THE MIRROR. `gold.py --selftest`
+ * writes `g0-key.json` beside the G0 pair and `sheet.py` writes `sheet-key.json`
+ * beside every pick sheet — the letter-to-source map that makes the sheet blind.
+ * `.json` is otherwise mirrored as metadata, so without this the answer sits one
+ * URL away from the question on the page he is asked to judge it on.
+ */
+const ANSWER_KEY = /(^|[-_])key\.json$/i;
 
 async function walk(dir, base = dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -141,7 +154,7 @@ async function main() {
     const ext = file.rel.slice(file.rel.lastIndexOf(".")).toLowerCase();
     const isMedia = MEDIA_EXTENSIONS.has(ext);
     const isMeta = METADATA_EXTENSIONS.has(ext);
-    if (!isMedia && !isMeta) {
+    if ((!isMedia && !isMeta) || ANSWER_KEY.test(file.rel.split("/").pop() ?? "")) {
       skipped++;
       continue;
     }
@@ -175,10 +188,7 @@ async function main() {
     }
   }
 
-  await writeFile(
-    join(DEST, "manifest.json"),
-    JSON.stringify(manifest, null, 2)
-  );
+  await writeFile(join(DEST, "manifest.json"), JSON.stringify(manifest, null, 2));
 
   console.log(
     `synced ${copiedMedia} media files (${(totalBytes / (1024 * 1024)).toFixed(1)} MB) across ${Object.keys(manifest.waves).length} waves to ${relative(REPO, DEST)}`

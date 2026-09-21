@@ -9,7 +9,8 @@ history — lives on the owner's Windows machine
 (`C:\Users\buyss\.claude\skills\voidwalker-avatar\`). What is reconstructed here
 comes from the record that DID survive: ADR-082 U1/U12/U13/U14 and the holo
 gallery's manifest. The wave layout (`waves/<YYYYMMDD>-<era>-v<N>/`) matches, and
-`sync-voidwalker-avatar-preview.mjs` mirrors BOTH trees into the gallery.
+`sync-voidwalker-avatar-preview.mjs` mirrors BOTH trees into the gallery — never
+a wave's `refs/` (other people's faces) and never a blind sheet's `*-key.json`.
 
 ## Two routes, and which one an era takes
 

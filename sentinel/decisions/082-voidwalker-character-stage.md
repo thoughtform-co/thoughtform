@@ -3800,7 +3800,11 @@ panel lab's era surface 86 cells, 0 failures.
 ### Left open
 
 - **G0 → the figures.** The blind pair (the grade beside the model's restyle) is
-  with the owner. On his word: colour plates for `genai` and `expanse` (G1 pick),
+  with the owner, and heads the holo gallery as an `AWAITING` run beside the
+  dry-run plate (a new `plate` kind, never under the treatment). ⚠ The preview
+  sync shipped READING the in-repo root without declaring it, so its first run
+  died on a ReferenceError; fixed, and it now keeps every blind sheet's
+  `*-key.json` out of the served mirror. On his word: colour plates for `genai` and `expanse` (G1 pick),
   the route check against a model edit (G1b), Veo idles, the chroma matte and the
   grade (G2), the install (G3). ⚠ The install brings `stature` for the kneeling
   Expanse (`holoFigureHeadShare` becomes `fit × (1 − (footY − stature))`) and

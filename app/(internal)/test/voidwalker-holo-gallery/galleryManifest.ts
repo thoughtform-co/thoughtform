@@ -6,7 +6,9 @@
  * from `public/_previews/voidwalker-avatar/`, which `.gitignore` excludes and
  * `scripts/sync-voidwalker-avatar-preview.mjs` populates by copying the
  * offline `voidwalker-avatar` skill's `waves/` folder (585 MB across 15
- * waves — nothing that size belongs in a deploy).
+ * waves — nothing that size belongs in a deploy) and, since ADR-082 U31, the
+ * in-repo chain's `scripts/voidwalker-avatar/waves/` — never a wave's `refs/`
+ * (other people's faces) and never a blind sheet's answer key.
  *
  *   node scripts/sync-voidwalker-avatar-preview.mjs
  *
@@ -19,7 +21,13 @@
 
 const MIRROR = "/_previews/voidwalker-avatar";
 
-export type AssetKind = "video" | "still" | "sheet" | "diagnostic" | "source";
+/**
+ * ⚠ A `plate` IS NEVER SHOWN UNDER THE TREATMENT (ADR-082 U31). It is a figure
+ * drawn in full colour on a flat key ground, judged for LIKENESS and pose; the
+ * gold is applied afterwards by `gold.py`. A scanline mask and an additive
+ * blend over a colour photograph show neither the likeness nor the look.
+ */
+export type AssetKind = "video" | "still" | "sheet" | "diagnostic" | "source" | "plate";
 
 export interface GalleryAsset {
   /** Stable id, used for the DOM and the play-all wiring. */
@@ -34,6 +42,10 @@ export interface GalleryAsset {
   note: string;
   /** Approximate on-disk size, for the payload conversation. */
   mb?: number;
+  /** A landscape sheet takes two card widths. The cards are sized for one
+   *  standing figure, and a side-by-side pair at that width is two 80px men —
+   *  too small to judge the one thing a pair is for. */
+  wide?: boolean;
 }
 
 export interface GalleryRun {
@@ -42,7 +54,8 @@ export interface GalleryRun {
   wave: string;
   title: string;
   date: string;
-  status: "SHIPPING" | "SUPERSEDED" | "REJECTED" | "INTERMEDIATE";
+  /** `AWAITING` is a run that exists to ask the owner something. */
+  status: "SHIPPING" | "SUPERSEDED" | "REJECTED" | "INTERMEDIATE" | "AWAITING";
   /** The ADR update that records it, when one does. */
   adr?: string;
   /** What this run did, and what was wrong with it. */
@@ -50,6 +63,8 @@ export interface GalleryRun {
   assets: readonly GalleryAsset[];
 }
 
+const G0 = `${MIRROR}/20260921-calibration-v1`;
+const V11 = `${MIRROR}/20260921-azeroth-v11`;
 const V5 = `${MIRROR}/20260830-azeroth-v5-blender`;
 const V4 = `${MIRROR}/20260829-azeroth-v4`;
 const V3 = `${MIRROR}/20260829-azeroth-v3`;
@@ -60,14 +75,93 @@ const TF4 = `${MIRROR}/20260826-thoughtform-v4`;
 
 export const GALLERY_RUNS: readonly GalleryRun[] = [
   {
+    id: "g0-gold",
+    wave: "20260921-calibration-v1",
+    title: "G0 — the Architect's gold: drawn by the model, or graded?",
+    date: "2026-09-21",
+    status: "AWAITING",
+    adr: "ADR-082 U31",
+    summary: [
+      "THE QUESTION. The pair below is the Architect twice, from the same photograph at the same scale. One is the image model's own gold restyle of it — the frame that ships as the Architect. The other is that photograph run through `gold.py`: a tone curve, a gold ramp and a highlight-weighted bloom, fitted to that pair once and frozen as numbers. Which is which, and would you take either as the Architect's look? ⚠ The answer key is not mirrored to this page.",
+      'WHY IT IS ASKED. Latent Land and The Expanse were drawn in ONE step ("a volumetric hologram") and read hot beside him: deep-interior p75 luma 172 (genai-v2) and 170 (expanse-v1) against the Architect\'s ~91–103. The cause is the key, not the prompt — a luma key needs black cloth over-lit to survive it, and over-lit black cloth IS the glow. If the grade passes, the new figures are drawn in full colour on a flat blue ground, where a likeness can be judged, and made gold by arithmetic.',
+      "MEASURED. Held out on a 32px checkerboard the grade reproduces the model's frame to 9.3/255 a pixel; the model re-drawing that same frame disagrees with ITSELF by 19.6. ⚠ An average is not a verdict: the two are not identical, and they differ most at the CONTOUR (one carries a brighter rim down the sleeves, the other a softer halo round the face and hands) and in how far the jacket's folds are lifted. Those are the places to look.",
+      "THE DRY RUN, FREE. His own photograph keyed onto the plate ground stands in for a model plate, to prove the plate stage end to end: ground off 0 (σ 1.7), spill 0, p50 26, 25.9 % of the figure under luma 16 — his own source sits at 26 %, which is why that gate is 30 % and not a round number that fails the reference — and a gold preview at p75 88.2 with 4.2 % above 200, inside his band (p75 80–130, ≤12 %).",
+      "Nothing has been spent. Six colour plates per era (~$0.80 each era) wait on this answer.",
+    ],
+    assets: [
+      {
+        id: "g0-pair",
+        kind: "sheet",
+        src: `${G0}/g0-blind-pair.png`,
+        label: "the blind pair · A | B",
+        note: "Same photograph, same scale, pure black. One is the model's restyle that ships as the Architect; the other is the deterministic grade. Judge on the contour and the jacket.",
+        mb: 1.25,
+        wide: true,
+      },
+      {
+        id: "g0-plate",
+        kind: "plate",
+        src: `${G0}/plates/plate-architect-synthetic.png`,
+        label: "dry-run plate · his photograph on the key ground",
+        note: "Not a model draw: the Architect's own photograph, keyed and laid on flat #0A28D2 to stand in for one. This is what a plate IS — full colour, a flat ground under the boots, no shadow, nothing lit for the key.",
+      },
+      {
+        id: "g0-gold",
+        kind: "still",
+        src: `${G0}/gold/plate-architect-synthetic.gold-on-black.jpg`,
+        alphaSrc: `${G0}/gold/plate-architect-synthetic.gold.png`,
+        label: "its gold preview",
+        note: "gold.py on that plate: key the ground, un-mix the edge, grade, bloom — free, and written for every plate so a pick is never made on colour alone. p75 88.2 · 4.2 % above 200.",
+      },
+      {
+        id: "g0-sheet",
+        kind: "sheet",
+        src: `${G0}/sheet.jpg`,
+        label: "the pick sheet · the form G1 comes back in",
+        note: "Each era's six plates return like this: plate · gold preview · the face at the same face height as his reference, lettered blind.",
+      },
+    ],
+  },
+  {
+    id: "az-v11",
+    wave: "20260921-azeroth-v11",
+    title: "Azeroth v11 — v10, whole and seated",
+    date: "2026-09-21",
+    status: "SHIPPING",
+    adr: "ADR-082 U31",
+    summary: [
+      'THE SAME 240 FRAMES AS v10, MOVED DOWN 33 ROWS. Owner: "some parts are falling off" — and he stood above his disc. Neither fault was in the pixels. The wrap clipped its media to its own box and masked it with a radial vignette, and Azeroth is the one era whose fit is 1: at the stage\'s 1.16 overscan his 533.6px picture sat in a 460px wrap and lost ~27px of pauldron a side. The clip now opens to the media box, and the mask comes off on the alpha branch at ≥1101px.',
+      "AND HE STOOD 23.6px ABOVE HIS DISC (footY 0.9695). The 33 rows taken off the top were asserted EMPTY (max alpha 0 on all 240 frames) before the shift, so nothing of him is lost. ⚠ headY 0.261 / footY 0.9953 are v10's own anchors + 0.0258, authored TOGETHER — measured and rounded separately they give a span that makes the floor era's fit 0.99986, not 1.",
+    ],
+    assets: [
+      {
+        id: "az-v11-idle",
+        kind: "video",
+        src: `${V11}/out/holo-idle-azeroth-v11.mp4`,
+        alphaSrc: `${V11}/out/holo-idle-azeroth-v11.webm`,
+        label: "v11 · v10 re-seated (live on the site)",
+        note: "Same CRF as v10, same figure, 33 rows lower: his boots now stand on the frame's floor, where the stage draws his disc. ⚠ The pauldron crop was never in this file — it was the stage's clip, and it is fixed in CSS, so v10 would show whole on today's stage too.",
+        mb: 3.28,
+      },
+      {
+        id: "az-v11-still",
+        kind: "still",
+        src: `${V11}/out/holo-still-azeroth-v11.jpg`,
+        alphaSrc: `${V11}/out/holo-still-azeroth-v11.webp`,
+        label: "poster",
+        note: "headY 0.261 / footY 0.9953.",
+      },
+    ],
+  },
+  {
     id: "az-v10",
     wave: "20260830-azeroth-v5-blender",
     title: "Azeroth v10 — he asks, he explains, he settles",
     date: "2026-08-31",
-    status: "SHIPPING",
+    status: "SUPERSEDED",
     adr: "ADR-082 U18",
     summary: [
-      "⚠ ONE WAVE, SEVEN CUTS. v10 is live; v9, v8, v7 and v6 are what it came from, and the card below holds the wave's first cut and the companion-free control. This page is for comparison, not for a changelog — a card per version would say less than two that each carry their own findings.",
+      "⚠ ONE WAVE, SEVEN CUTS. v10 was live until v11 re-seated it (2026-09-21, the card above); v9, v8, v7 and v6 are what it came from, and the card below holds the wave's first cut and the companion-free control. This page is for comparison, not for a changelog — a card per version would say less than two that each carry their own findings.",
       "v10 IS A CHAIN OF THREE OF THE MODEL'S OWN EMOTES — EmoteTalkQuestion → EmoteTalk → EmoteTalkSubdued, back to back on one NLA track (owner). ⚠ THE JUNCTIONS COST NOTHING, AND HOW WoW AUTHORS A CYCLE IS WHY: an emote's last frame duplicates its first, and all three talk emotes start and end on the same neutral stand — so laying each strip's START on the previous strip's END overwrites that duplicate with an identical pose. No crossfade, which would smear the hands mid-gesture. And the periods add to 43.2 + 48.0 + 148.8 = 240.0 frames exactly, i.e. ten seconds on the nose.",
       "⚠ THE PRICE IS SCALE, AND IT IS ARITHMETIC RATHER THAN COMPOSITION. The frame is WIDTH-bound and the fit takes the widest pose in the whole loop, so the 0.5625 slot then decides the height — reach costs size. Measured per emote: 1.400 m in Subdued (all pauldron), 1.446 m in Question, 1.549 m in EmoteTalk where the gauntlet swings out. That one emote widens him 10.6 % and stands him 8 % shorter in the slot; headY goes 0.159 → 0.235 and footY does not move, so the surplus is all above his head and the projector disc is where it was. Put v10 beside v9 to see exactly what the fuller gesture costs.",
       "THE WAIST PIECE IS OFF THE FIGURE (owner: the belt's glow is distracting). Its buckle carries the set's fel orb, which even under the v6 fel cap was the brightest single object on the man — a hologram whose loudest feature is a belt buckle is pointing at the wrong thing. ⚠ The BODY's own belt geoset stays: it never glowed, and dropping it too would cut a notch in the robe where the item used to sit.",
@@ -89,7 +183,7 @@ export const GALLERY_RUNS: readonly GalleryRun[] = [
         kind: "video",
         src: `${V5}/holo-idle-azeroth-v10.mp4`,
         alphaSrc: `${V5}/holo-idle-azeroth-v10.webm`,
-        label: "v10 · the three-emote chain, no belt (live on the site)",
+        label: "v10 · the three-emote chain, no belt (superseded by v11)",
         note: "Question → Talk → Subdued in one 10.0s loop, the waist item removed, and the left imp trimmed 0.58 → 0.55 m and pulled in. ⚠ 3.28 MB against v9's 2.22 — the asset is 61 % longer at the same CRF, so it is 0.33 MB/s against v9's 0.37: cheaper per second, dearer per file.",
         mb: 3.28,
       },

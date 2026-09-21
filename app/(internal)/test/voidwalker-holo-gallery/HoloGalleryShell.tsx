@@ -25,6 +25,7 @@ const STATUS_TONE: Record<string, string> = {
   SUPERSEDED: "hg-status--super",
   REJECTED: "hg-status--reject",
   INTERMEDIATE: "hg-status--inter",
+  AWAITING: "hg-status--await",
 };
 
 export function HoloGalleryShell() {
@@ -229,10 +230,11 @@ function AssetCard({
   onMissing: (file: string) => void;
 }) {
   const isVideo = asset.kind === "video";
-  // ⚠ DIAGNOSTICS AND SHEETS NEVER TAKE THE TREATMENT. A hole map or a contact
-  // sheet under a scanline raster and an additive blend is unreadable — the
-  // whole point of those frames is that they show their subject plainly.
-  const plain = asset.kind === "diagnostic" || asset.kind === "sheet";
+  // ⚠ DIAGNOSTICS, SHEETS AND PLATES NEVER TAKE THE TREATMENT. A hole map or a
+  // contact sheet under a scanline raster and an additive blend is unreadable —
+  // the whole point of those frames is that they show their subject plainly —
+  // and a plate is judged for likeness in colour, before any gold exists.
+  const plain = asset.kind === "diagnostic" || asset.kind === "sheet" || asset.kind === "plate";
   const src = alphaFirst && asset.alphaSrc ? asset.alphaSrc : asset.src;
 
   const treatment = plain
@@ -248,7 +250,11 @@ function AssetCard({
       } satisfies React.CSSProperties);
 
   return (
-    <figure className="hg__card" style={{ width: scale }} data-kind={asset.kind}>
+    <figure
+      className="hg__card"
+      style={{ width: asset.wide ? scale * 2 : scale }}
+      data-kind={asset.kind}
+    >
       <div className="hg__card__stage" style={{ minHeight: Math.round(scale * 1.4) }}>
         {isVideo ? (
           <video

@@ -206,6 +206,11 @@
 .hg-status--inter {
   color: var(--hg-gold);
 }
+/* A question for the owner, not a result: full-strength ink, dashed. */
+.hg-status--await {
+  color: #ebe3d6;
+  border-style: dashed;
+}
 .hg__adr {
   color: var(--hg-gold);
 }
@@ -256,7 +261,8 @@
 /* Diagnostics and sheets are read, not judged — give them room and no frame
    treatment, and let them sit on a neutral ground whatever the backdrop is. */
 .hg__card[data-kind="diagnostic"] .hg__card__stage,
-.hg__card[data-kind="sheet"] .hg__card__stage {
+.hg__card[data-kind="sheet"] .hg__card__stage,
+.hg__card[data-kind="plate"] .hg__card__stage {
   background: #14120f;
 }
 
