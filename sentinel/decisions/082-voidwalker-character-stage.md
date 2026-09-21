@@ -3569,3 +3569,244 @@ about this station change under it, both on the phone rung only.
 `probe-voidwalker-phone.mjs` is byte-identical before and after (Chromium
 resolves the units to one number); `phone-viewport-units.test.ts` pins the
 datum sheet at zero `dvh`/`lvh` terms.
+
+## Update 31 — the figure rises, the record becomes a device, and the figures are graded, not glowed (2026-09-21, owner)
+
+The owner, in one message about the era stage:
+
+- _"What I've been repeatedly trying to ask is to move the avatars in our era
+  section a bit up because right now they're a bit down. The fourth screenshot
+  from Starfield, I think, is a good reference."_
+- _"the World of Warcraft era avatar seems to be hitting some sort of borders,
+  in the sense that some parts are falling off."_ And: _"I want the avatars to
+  be more or less the same size, but I just want to make sure that it all looks
+  cohesive and nice."_
+- _"The AI Captain era, Latent Land, feels a bit too glowing in comparison with
+  the Intelligence Architect one. The Intelligence Architect one is the main
+  reference."_ — with a new painting to iterate from: _"a bit of a matte
+  painting, retro-futuristic poster type of aesthetic … heroic."_
+- _"there may be cases where I have multiple videos, and I want them to be
+  stacked a bit … The video needs to live inside a card, including the title
+  … the sort of glass effect like we have in the services section … it's not
+  just videos. It can support every type of asset, image or video."_
+- _"I think we need me as a soldier … crouching on one knee … holding the gun
+  in one hand, holding it upwards, and my other hand should be in my ear …
+  This should be like a live-action-ish type of thing."_
+- _"the band at the bottom should be more like a sort of thumbnail gallery
+  that should be a bit more clear."_ And: _"I'm not a fan of the on-record
+  buttons. They feel like glorified PowerPoint frames, so let's make them
+  tighter."_
+
+Asked while planning, he chose: a FOLDER TAB for the media card's head, TAGGED
+ROWS for the record, ALL FIVE busts in a row for the band (knowingly reversing
+his own U20 reel), and a 2016 figure of its own (he will supply the photo).
+
+### What was measured
+
+| finding                                         | evidence                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The figure stands low, and has since U25        | modelled head / feet / centre at 33–38 % / 87–90 % / 61–62 % of the frame at every rung; the Starfield reference is 16 / 78 / 47                                                                                                                                                                                                 |
+| Why                                             | the slot is BOTTOM-seated on the disc and `--holo-fit` shrinks the media inside it, so every pixel of slack pools above the head. U28 lifted the phone; nothing ever moved desktop                                                                                                                                               |
+| The Azeroth crop has two causes                 | `.vwh__media-wrap` carries `clip-path: inset(0)` AND a radial mask (a mask hides overflow too). He is the one era at fit 1, so under U29's overscan his box is 533.6px in a 460px wrap — ~27px of pauldron cut per side                                                                                                          |
+| He also hovered                                 | 27.3px above his disc at 1920 × 1247 (`footY` 0.9695), the defect U25 named and left open                                                                                                                                                                                                                                        |
+| "Too glowing" is in the asset and is structural | the CSS look is uniform across eras; the Architect was made in TWO steps (a photoreal still, then a restyle into gold) and reads as a gold-toned photograph; `genai-v2` and `expanse-v1` were drawn in ONE step and came back as emissive sculptures. Deep-interior p75 luma: Architect ~103 · genai-v2 172.4 · expanse-v1 170.0 |
+| Why one step glows                              | the alpha is a LUMA key, so black cloth must be over-lit to survive it — and over-lit black cloth is the glow                                                                                                                                                                                                                    |
+
+### A · The figure rises — as `top`, never `translate`
+
+`.vwd__figure` takes `position: relative; top: −lift`, where the lift is solved
+so the painted cap lands on the stage's top edge — the four panel heads' own row
+line. Era-INDEPENDENT on purpose: it uses `HOLO_FIGURE_SPAN`, written once as
+`--holo-span` by `HoloDatumPanels` from the registry, so the disc line never
+moves between eras and a kneeling figure simply has more air above.
+
+- ⚠ **A `translate` WOULD HAVE SHIPPED GREEN AND BROKEN THE HANDOFF.**
+  `futurePinnedRect` measures the About → Voidwalker `portrait` seat with OFFSET
+  geometry and "deliberately ignores every live actor transform", and the
+  handoff spec copies that arithmetic — so a translated seat would have landed
+  the flying portrait card 95–148px below the hologram with every spec agreeing.
+  `top` moves the box `offsetTop` reads. The weld spec now asserts the slot's
+  rect equals the offset chain ±2px and that the lift is real (< −40).
+- ⚠ **ALPHA BRANCH ONLY**, gated through `--vwd-rise: 1` in the existing
+  `min-height: 720px` hologram rule (default 0 ⇒ `top: 0px`, a true no-op on PRM,
+  the fallback, short windows and ≤1100). On the floor branch the lifted opaque
+  bed would dim the title.
+- `--vwh-base-h` / `--vwh-base-disc-inset` are declared on `.vwh, .vwd` together:
+  a custom property never inherits upward, and the lift has to read them on the
+  figure's own ancestor.
+- **The reticle is arithmetic now**: on the alpha branch it centres on the
+  painted figure from the same terms (`--vwd-ret-cy`'s measured 57 % stays for
+  the floor branch). Measured within 1–1.6px of the figure's centre at four rungs.
+- **The lift exposed the under-glow's cliff** — `.vwh__base__glow` is a
+  half-ellipse whose hot centre sits on its box's bottom edge, which the band
+  used to bury; in open air it drew a hard floor. It is a centred radial on the
+  desktop datum stage.
+- Measured: lift −148.3px at 1920 × 1247, −103.9 at 1280 × 720, −136.8 at
+  1101 × 800, −128.9 at 1440 × 900; head / feet / centre 20.7 / 76.9 / 48.8 % at
+  1920 × 1247 and 21.8 / 70.4 / 46.1 % at 1280 × 720; the figure's height
+  unchanged (696.6px / 348.3px); slack 27–67px at the four rungs.
+
+### B · Azeroth is whole and seated
+
+- **The release** (`voidwalker-hologram.css`, alpha branch): a `--holo-spill`
+  number drives `--holo-clip-x` / `--holo-clip-top` (plain percentages, so they
+  interpolate), used by the base clip, the rest clip AND `vwhReveal`'s keyframes,
+  so his pauldrons do not pop 27px when the wipe ends. The mask comes off under
+  `@media (min-width: 1101px) .vwd …[data-holo-alpha]` only — the phone, the
+  tablet and the figure lab are byte-identical. Byte-identical everywhere the
+  spill is 0, which is every era but the floor era.
+- **`-v11` is `-v10` shifted down 33 rows** (`reseat_azeroth.py`, asserting the
+  dropped rows are empty on all 240 frames) — no scale, no crop, no re-render.
+  ⚠ Both anchors are authored as `v10 + 33/1280` (0.261 / 0.9953), never
+  re-rounded: rounding each separately gives a span of 0.7344 and
+  `holoFigureFit` returns 0.99986 for the ONE era whose fit must be exactly 1.
+- Measured: cut L/R 0/0; all five eras on one foot line (954.8–958.4 at
+  1920 × 1247); one disc line (960; 507.6 at 1280 × 720).
+
+### C · The band is a five-bust gallery (≥701px) — reversing U20 and U23
+
+Five hairline-framed busts, the year in the frame's corner, the name under it,
+the lit era taking `--gold-line` on its frame and a diamond on the frame's
+bottom edge. The lit frame MOVES; the row does not.
+
+- **The busts belong to the DELIVERY**: `CharacterEraHologram.thumbPath` is
+  REQUIRED, a 192×128 WebP ≤10 KB cut by `thumb.py` from the poster by HEAD
+  MARKS (one head size, one eye line across the row — five deliveries draw their
+  heads at five sizes). Two eras on one hologram share a bust by construction;
+  the unit suite pins the bust's version to the poster's.
+- ⚠ **`--vwd-band-h`, `--vwd-reel-return` and `--vwd-chrome-h` are NOT edited**
+  — they are an accounting identity that keeps `--vwd-fig-w` byte-identical. The
+  band's real growth is paid from the slot's width-bound slack and the band's
+  own padding; the painted figure is unchanged at every rung.
+- **This reverses his own U20 reel and U23's text stops**, by his choice.
+- ⚠ **THE PHONE KEEPS U27's THREE-STOP TEXT REEL.** Five busts need ~58px
+  with a name line against the phone's solved 44px stop: either the figure
+  gives up ~14px of height (after U28 lifted it on his device read) or the busts
+  shrink to ~42 × 28 with a 14px head, which is less clear than the text. The
+  frame is `display: contents` below 701px and the bust `display: none` (with
+  `loading="lazy"`, never fetched). Offered, not taken without a device read.
+
+### D · TRANSMISSION is a pile of glass folder cards, and holds stills
+
+**The record**: `film?: CharacterEraFilm` → `media?: readonly CharacterEraMedia[]`,
+a closed union where each kind names the one transport the CSP allows — `embed`
+(the nocookie player, the site's one third-party frame), `video` (self-hosted
+mp4; `media-src` is `'self'`, so a CMS row for a video syncs its file into
+`public/videos/voidwalker/media/`) and `image`. `isCharacterEraMedia` is the seam
+a later loader validates rows through; `eraMedia()` is the one accessor (guarded,
+then capped). ⚠ **`CHARACTER_ERA_MEDIA_MAX = 4` IS ARITHMETIC**: four staggered
+tabs fit a card at the narrowest capable rung; a fifth runs off it.
+
+**The lightbox** grows an `image` branch — the still WHOLE at its own shape, the
+frame shrinking to it — pinned additive by a markup snapshot of the `src` and
+`embed` branches committed first (nothing had pinned the dialog's own markup).
+
+**The card** (`EraMediaStack`): one silhouette per card — a tab, a 45° slant, a
+square body — glass clipped to it, the lip a CLOSED evenodd ring. The front card
+carries the frame and the title INSIDE its body, in the reading face, wrapping,
+never clamped; the cards behind stand empty, stepped up and to the right.
+
+- ⚠ **TABS BY DEPTH, NEVER BY INDEX.** A card two deep is also shifted two steps
+  right, so an index-ordered tab LEFT of the front one slides under it. By depth
+  every tab is further right and further up than the one before it. Choosing a
+  card rotates the pile (240ms, position only — no fade).
+- ⚠ **THE RING IS CLOSED, AND ITS SLANT SHIFTS 0.414px.** `.pf-card`'s ring is
+  the open form ADR-118 found paints a bow-tie across a concave outline, and this
+  outline has two concave corners. A 45° edge offset 1px inward meets a
+  horizontal edge at `1 − √2 = −0.414` — 0.586 is the chamfer-between-axis-edges
+  case, which this is not.
+- ⚠ **A BACK CARD RENDERS NO BODY** (the proof pile's own law: the glass looks
+  onto empty folders), and **no player is ever mounted** — a card frames a STILL.
+- ⚠ **EVERY TAB STAYS A BUTTON** (`aria-pressed`): a chosen tab turned into a
+  label would unmount the element holding focus.
+- ⚠ **IT FITS BY CONSTRUCTION.** ≥1101px the seat is a size container, the pile
+  may not be taller than it, and the frame is the one flex item that gives.
+  ⚠ Its `min-height: 72px` is load-bearing: an `aspect-ratio` flex item's
+  automatic minimum is its transferred size, so without it the frame would not
+  shrink at all. ⚠ `container-type: size` is gated to ≥1101 — ungated it computes
+  the ≤1100 content-height bodies to ZERO. The phone seat hands its flex-shrunk
+  height down the same way (a four-card pile ran 24.5px through the stage's
+  floor at 375 × 553 under `overflow: clip` before it did).
+- **The frost is front-card-only and waits for the seat's entry ladder** (`--ci`
+  ≥ 0.6): an ancestor at opacity < 1 is the backdrop root. No id in that selector,
+  so light's `backdrop-filter: none` (theme.css BLOCK 4d) can win.
+- The head's tag reads the FRONT card's duration; an empty seat says "No
+  transmission on record", and the phone's disabled tab notes "none".
+
+### E · ON RECORD is tagged rows — superseding U29's bounded object
+
+U29 heard _"a pill, like a sort of subtle button"_ and drew four borders round
+each record with a square well for its mark; read live, those stacked boxes are a
+slide's content boxes. A record is a ROW now: the outlet in a framed TAG (the
+`/arcs` readout's framed key at chip scale), the year, a 7×7 pixel arrow ONLY
+where the record links out (PT Mono has no U+2197), the headline under, one
+`--vwd-rail` hairline at the row's FOOT. The well and the document mark go. What
+U26 and U29 ruled about ink stands: dawn only, and the state is lines and ink
+lifting to `--gold-line` / `--gold-ink`, never a fill, on anchors only.
+
+### F · The figures: grade the light, code the screen
+
+"Bake the light" narrows. The model draws the man in FULL COLOUR on a flat
+`#0A28D2` ground (identity, wardrobe, pose); a deterministic grade calibrated on
+the Architect makes him gold; the CSS half is untouched.
+
+- **`gold.py`**: a luma curve and a gold ramp measured off the Architect's
+  photoreal `canonical-02.jpg` against the model's own restyle of that exact
+  frame, frozen as literals with their provenance. Held out on a 32px
+  checkerboard they reproduce the restyle to **9.3/255** — the model disagrees
+  with ITSELF by 19.6 re-drawing the same frame. His contour carries a
+  highlight-weighted BLOOM (`0.695 · gauss(24.3px per 1280) * luma²`, 1.5 luma
+  mean error; 12.5 off the face, 2.3 off the trousers), rebuilt through his own
+  luma key so a new era composites over the corridor the way he does.
+- ⚠ **A FINDING IT CORRECTS**: a first pass measured his edge as DARKER than his
+  interior. That was against a matte thresholded from the restyle's own luma,
+  whose boundary sits inside the glow; against his true outline there is no
+  falloff, and the real effect is the opposite one — an outer bloom.
+- **The exposure gate**: deep-interior p75 in [80, 130] and ≤12 % above 200.
+  The Architect passes (his restyle ~91–103, this grade ~88–98); genai-v2 and
+  expanse-v1 fail at 172 and 170. ⚠ **azeroth-v11 fails too, at 137.6** — not
+  asked about and not touched; recorded.
+- **The chain**: `env.py` reads the ONE canonical key file (names only, no
+  fallback); `generate.py` labels every reference `IMAGE n — ROLE`, sends the
+  key in the `x-goog-api-key` header, writes a prompt sidecar per draw, and its
+  plate stage refuses references nobody has looked at; `refs.py` cuts each
+  reference to its role (the painting BELOW its figure's beard — its face and
+  skin are not his — and the other visitors out of the set frames); the plate
+  locks name no artist, show or studio; `grade.py`'s plate gates are calibrated
+  on the Architect's own source (26 % of his figure is under luma 16, so the
+  crush gate is 30 %, not a round number that fails the reference); `sheet.py` is
+  the blind pick sheet; `pokemon-go` is BLOCKED until its photograph lands.
+
+### Guards
+
+`character-eras` (the union, each kind's traps, files on disk, an image's size
+read off the file) · `character-era-hologram` (`thumbPath`, `-v11`'s anchors and
+exact fit) · `media-lightbox-markup` · `era-media-stack-markup` ·
+`voidwalker-datum-sheet` (the closed ring, the 0.414 shift, the gated container,
+the frame's minimum, no id on the blur rule, four tabs fit and a fifth does not,
+rows not boxes) · `theme-css-sweep` now reads the datum sheet (it read the
+figure's sheet and not the 2,300-line composition around it) · the weld and
+boundaries specs · `scripts/capture-era-media.mjs` (fit gated on every rotation
+at five shapes) · `probe-voidwalker-figure-span` (no era UNSEATED; heads on the
+line, one disc line, the ring on the figure) · `gold.py --selftest`. The HUD
+panel lab's containment gate measured the slot's BOX, whose transparent headroom
+now passes the viewport's top by design; it measures the painted extent.
+
+Measured at the end: eras probe clean at 1280 × 720 / 1101 × 800 / 1440 × 900
+(tightest foot 26 / 51 / 58, TRANSMISSION now the tightest seat); the phone probe
+identical but for TRANSMISSION (foot ≥ 121.7px); both handoff specs 11/11; the
+panel lab's era surface 86 cells, 0 failures.
+
+### Left open
+
+- **G0 → the figures.** The blind pair (the grade beside the model's restyle) is
+  with the owner. On his word: colour plates for `genai` and `expanse` (G1 pick),
+  the route check against a model edit (G1b), Veo idles, the chroma matte and the
+  grade (G2), the install (G3). ⚠ The install brings `stature` for the kneeling
+  Expanse (`holoFigureHeadShare` becomes `fit × (1 − (footY − stature))`) and
+  drops those eras' `.mov`s — HEVC alpha needs macOS VideoToolbox, so desktop
+  Safari takes the floor for re-cut eras until a Mac cuts them.
+- **2016** waits on his photograph.
+- **The phone's gallery** (C) — his call on a device.
+- **PRM is unlifted** (no hologram mode, so no lift), by the gate's design.
+- **Nothing is pushed.**

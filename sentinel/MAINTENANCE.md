@@ -54,6 +54,44 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-21 — the era stage: the figure rises, the record is rebuilt, the figures are graded (ADR-082 U31)
+
+**Trigger:** the owner, on `#voidwalker`: the avatars sit too low ("what I've
+been repeatedly trying to ask"), Azeroth has "parts falling off", Latent Land is
+"too glowing" beside the Architect, TRANSMISSION should be stacked glass cards
+that hold images too, ON RECORD reads as "glorified PowerPoint frames", the band
+should be a clearer thumbnail gallery, and the Expanse figure should kneel,
+live-action, rifle upright, hand to his earpiece.
+
+- **Cycle A + B.** The figure's cell lifts by `top` (alpha branch, gated); the
+  alpha branch releases its clip and mask; `azeroth-v11` is v10 seated 33 rows;
+  ≥701px the band is a five-bust gallery (`thumbPath`, `thumb.py`); `film?`
+  becomes `media?: CharacterEraMedia[]` with `MediaLightbox` gaining an image
+  branch (pinned first) and `EraMediaStack` rendering glass folder cards; ON
+  RECORD is tagged rows; the avatar chain gains the two-step route (`gold.py`,
+  `refs.py`, `sheet.py`, plate gates, the canonical key file). ADR-082 U31.
+- **Post-incident rows triggered:** a `translate` lift would have been invisible
+  to the handoff, which reads the seat through the OFFSET chain, and to its spec,
+  which copies that arithmetic (BEST-PRACTICES; the weld spec compares rect and
+  offset); an `aspect-ratio` flex item does not shrink without an explicit
+  minimum, and a four-card pile ran 24.5px under the phone stage's floor under
+  `overflow: clip` (BEST-PRACTICES; `capture-era-media.mjs`); a matte cut from
+  the image being measured put "the edge" in the glow and reversed a finding
+  (BEST-PRACTICES; `gold.py`); the datum lab mounted its figure before the codec
+  probes settled and showed the floor branch — no overscan, no lift — while the
+  landing showed both (BEST-PRACTICES; the lab waits now); the HUD panel lab's
+  containment gate measured the slot's BOX, whose transparent headroom now
+  legitimately passes the viewport top (it measures the painted extent);
+  `theme-css-sweep` never read the datum sheet.
+- **Verified:** vitest (character-eras, character-era-hologram, media-lightbox,
+  era-media-stack, voidwalker-datum-sheet, theme-css-sweep, type-material
+  ratchet, phone units); both handoff specs 11/11; the eras probe at three
+  rungs; the phone probe (only TRANSMISSION moves); the figure-span probe;
+  `capture-era-media.mjs` at five shapes; the panel lab's era surface 86/86;
+  `gold.py --selftest`; tsc and eslint clean.
+- **Not pushed.** The figures (C2 onward) wait on the owner's G0 read of the
+  grade; the phone gallery is his device call; 2016 waits on his photograph.
+
 ### 2026-09-21 — the arcs dossier reads like travel data (ADR-118 U3)
 
 **Trigger:** the owner, on U2's stills with Starfield's TRAVEL DATA panel:

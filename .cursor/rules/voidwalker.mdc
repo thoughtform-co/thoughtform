@@ -29,6 +29,28 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
 - [ADR-083: Mobile evidence instruments](../sentinel/decisions/083-mobile-evidence-instruments.md) — proposed phone-only character instrument
 - [ADR-074: The through-line](../sentinel/decisions/074-voidwalker-through-line.md) — retained record/fallback machinery
 - [ADR-047](../sentinel/decisions/047-about-deck-flip-stage.md) (the station before it, whose exit relies on this one's top) · [ADR-056](../sentinel/decisions/056-services-proof-casefile.md) (the cover role's previous holder) · [ADR-068](../sentinel/decisions/068-casefile-glyphed-index-and-tool-dossier.md) (the wireframe grammar this forks) · [ADR-059](../sentinel/decisions/059-rail-instruments.md) (the journey mark, and the telemetry the right guard clears)
+- ⚠ The full, current rule is `.claude/rules/voidwalker.md`; this mirror is
+  condensed. The live composition is the datum stage (`HoloDatumPanels` +
+  `voidwalker-datum.css`), and ADR-082 U31 is its latest pass.
+
+## The era stage after ADR-082 U31 (2026-09-21, owner)
+
+- ⚠ **THE FIGURE RISES AS `top`, NEVER `translate`** — the About → Voidwalker
+  seat is read through the OFFSET chain, which a transform does not move. Alpha
+  branch only, gated by `--vwd-rise: 1` in the `min-height: 720px` hologram rule.
+- ⚠ **THE ALPHA BRANCH RELEASES ITS CLIP AND MASK** (`--holo-spill`), so the
+  overscan no longer cuts the floor era; zero spill is byte-identical.
+  `azeroth-v11` is v10 seated 33 rows (anchors `v10 + 33/1280`, never re-rounded).
+- ⚠ **≥701px THE BAND IS A FIVE-BUST GALLERY** (`thumbPath` required on every
+  delivery); the phone keeps its three-stop text reel. `--vwd-band-h`,
+  `--vwd-reel-return` and `--vwd-chrome-h` are an accounting identity — not edited.
+- ⚠ **TRANSMISSION IS A PILE OF GLASS FOLDER CARDS** (`EraMediaStack`, `media?:
+  CharacterEraMedia[]` read through `eraMedia()`, max 4): tabs by DEPTH, a CLOSED
+  evenodd lip, no body on a back card, no player mounted, fit by construction
+  (`container-type: size` at ≥1101 ONLY; the frame's `min-height` is load-bearing).
+- ⚠ **ON RECORD IS TAGGED ROWS** — U29's bounded object is superseded.
+- ⚠ **A FIGURE IS DRAWN IN COLOUR AND GRADED GOLD** (`scripts/voidwalker-avatar/gold.py`,
+  the Architect's measured curve, ramp and bloom, and the exposure gate).
 
 ## Contracts
 

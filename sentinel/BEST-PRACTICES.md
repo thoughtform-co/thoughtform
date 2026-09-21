@@ -1586,6 +1586,58 @@ here "beside the column by 16px, or under it by the frame's gap" — and prove
 it fails on the state you are fixing. The same holds for every overlap check
 in this repo: "does not intersect" is not "does not crowd".
 
+## A seat measured with `offsetTop` cannot see a transform (ADR-082 U31)
+
+The era stage's figure had to rise ~95–148px. The obvious move is a
+`translate` on its cell, and it would have shipped green: the About → Voidwalker
+handoff measures the hologram's landing seat through the OFFSET chain
+(`futurePinnedRect`, which "deliberately ignores every live actor transform"),
+and the handoff spec copies that same arithmetic. A translated seat keeps its
+offset position, so the flying portrait card would have landed 95–148px below
+the figure it hands over to, and the spec — reading the same offset chain —
+would have agreed with it. The lift is `position: relative; top` instead,
+which moves the box that `offsetTop` reads. Before moving anything another
+module measures, find HOW it measures: a rect-based reader sees transforms, an
+offset-based one does not, and a test that copies the reader's arithmetic
+inherits its blindness. The guard that closes it compares the two readings:
+`getBoundingClientRect().top` against the offset chain, ±2px.
+
+## An `aspect-ratio` flex item will not shrink without an explicit minimum (ADR-082 U31)
+
+The transmission card's frame is the one item allowed to give when the seat
+is short, and it would not: a flex item's automatic minimum size is its
+content size, and for an item with `aspect-ratio` that is the size TRANSFERRED
+through the ratio from its width. `flex: 0 1 auto` computed correctly, the seat
+was a size container, and a four-card pile still ran 24.5px through the
+phone stage's floor at 375 × 553 — under `overflow: clip`, so silently. An
+explicit `min-height` (72px, still a picture) is what lets it shrink. The same
+clause is why its WIDTH must be declared: without `width: 100%` the inline
+size is transferred from `max-height` and the frame comes out narrower than
+its card for a reason nobody wrote down (U29's finding, one object earlier).
+
+## A matte cut from the image you are measuring biases the measurement (ADR-082 U31)
+
+"The Architect's edge is darker than his interior — 57 against 68" was
+measured against a matte made by thresholding the restyle's OWN luma. Its
+boundary therefore sat wherever the glow fell below the threshold, i.e. inside
+the glow, and "the edge" was the glow's tail. Against his true outline (the
+photograph's figure) the edge matches the interior and the real effect is an
+OUTER bloom — the opposite correction. When a region is defined by a threshold
+on quantity X, any statistic of X at that region's boundary is partly the
+threshold talking. Measure against a boundary drawn from something else.
+
+## A window onto production must wait for every verdict production locks at mount (ADR-082 U31)
+
+`HoloFigure` locks its codec branch at mount and treats an undecided probe as
+the fallback. On the landing the probe has settled minutes earlier; in a lab
+the figure is the first thing on the page, so it mounted on the floor branch
+and stayed there — and every alpha-branch-only rule (the overscan, the lift,
+the clip release) was absent from the lab while present on the landing. The
+hud-panel lab learned this in 2026-09; the datum lab repeated it until this
+pass. A lab that mounts a production component inherits every "decided once"
+input that component has, and has to wait for each of them the way production
+implicitly does.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.

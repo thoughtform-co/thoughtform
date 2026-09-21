@@ -126,7 +126,7 @@ describe("the media card's silhouette and its lip (ADR-082 U31)", () => {
     expect(stack).toContain("var(--vwd-mtab-fch, 7)");
   });
 
-  it("four tabs fit a card at the narrowest capable rung, and a fifth would not", () => {
+  it("four tabs fit a card at the narrowest capable rung, and a fifth does not", () => {
     // The sheet's own arithmetic at 1101×800, restated: fs 9.6 (1.2svh), tab
     // height 22 (the clamp's floor), step 4.8 (0.6svh), a ~297px seat.
     const fs = 9.6;
@@ -139,7 +139,7 @@ describe("the media card's silhouette and its lip (ADR-082 U31)", () => {
     const fits = (n: number) => wf + (n - 1) * (wb + 2) <= seat - (n - 1) * step;
     expect(fits(CHARACTER_ERA_MEDIA_MAX)).toBe(true);
     // ⚠ This is what the record's cap IS. Raising it is a redesign of the row.
-    expect(fits(CHARACTER_ERA_MEDIA_MAX + 2)).toBe(false);
+    expect(fits(CHARACTER_ERA_MEDIA_MAX + 1)).toBe(false);
   });
 });
 

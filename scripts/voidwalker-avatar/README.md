@@ -58,9 +58,9 @@ the install.
   preceded by an `IMAGE n — ROLE` label; the key travels in the
   `x-goog-api-key` header, never the URL; every draw writes a prompt sidecar.
   A plate wave refuses references nobody has looked at (`refs.json` `looked`).
-- **`gold.py`** — the grade: the Architect's measured curve and ramp (10.5/255
-  held out, against the model's own 19.6 self-disagreement), his measured bloom,
-  and the exposure gate.
+- **`gold.py`** — the grade: the Architect's measured curve and ramp (9.3/255
+  held out on his true outline, against the model's own 19.6 self-disagreement),
+  his measured bloom, and the exposure gate.
 - **`grade.py`** — the deterministic gates, before a human looks.
 - **`vid.py`** — Veo. ⚠ `last_frame` is not used: the first=last trick was
   measured leaving a seam louder than the movement.

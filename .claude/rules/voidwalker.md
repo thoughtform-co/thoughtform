@@ -44,6 +44,53 @@ and mobile-mode rules (~1100 lines of `voidwalker-hologram.css`), the
 composition's own entry/exit block, its responsive rungs, and
 `tests/visual/voidwalker-character-sheet.spec.ts`.
 
+- ⚠ **ADR-082 U31 (2026-09-21, owner) — READ BEFORE ANYTHING BELOW ABOUT THE
+  FIGURE'S SEAT, THE BAND, TRANSMISSION, ON RECORD OR HOW A FIGURE IS MADE.**
+  - **THE FIGURE RISES, AS `top`, NEVER `translate`.** `.vwd__figure` is lifted
+    until the painted cap sits on the stage's top edge (the heads' row line),
+    solved from `HOLO_FIGURE_SPAN` (`--holo-span`, written once by
+    `HoloDatumPanels`) so the disc line is era-independent. ⚠
+    `futurePinnedRect` and the handoff spec read the portrait seat through the
+    OFFSET chain, which a transform does not move — a `translate` lift lands the
+    flying card 95–148px low with every spec agreeing. The weld spec asserts rect
+    = offset chain ±2px. ⚠ Alpha branch only, via `--vwd-rise: 1` inside the
+    `min-height: 720px` hologram gate (0 ⇒ `top: 0px` on every other path), and
+    both labs re-declare it by hand. ⚠ `--vwh-base-h` / `--vwh-base-disc-inset`
+    are declared on `.vwh, .vwd` together. On the alpha branch the RETICLE is
+    arithmetic (centred on the painted figure); `--vwd-ret-cy` is the floor
+    branch's alone.
+  - **THE ALPHA BRANCH RELEASES ITS CLIP AND ITS MASK** (`--holo-spill` →
+    `--holo-clip-x` / `--holo-clip-top`, in the base clip, the rest clip AND
+    `vwhReveal`'s keyframes; the mask off at `min-width: 1101px` on `.vwd` only),
+    because a mask hides overflow too — the overscan was cutting ~27px of
+    Azeroth's pauldrons per side. ⚠ Zero spill ⇒ byte-identical. `azeroth-v11`
+    is v10 seated 33 rows; its anchors are `v10 + 33/1280`, never re-rounded,
+    or the floor era's fit stops being exactly 1.
+  - **THE BAND IS A FIVE-BUST GALLERY FROM 701px UP** (reversing U20's reel and
+    U23's text stops, by his choice). `thumbPath` is REQUIRED on every delivery
+    (`thumb.py`, head marks, ≤10 KB). ⚠ `--vwd-band-h`, `--vwd-reel-return` and
+    `--vwd-chrome-h` are an accounting identity and are NOT edited. ⚠ The phone
+    keeps U27's text reel: five busts cost the solved figure ~14px or shrink to
+    a 14px head, and that is a device call.
+  - **TRANSMISSION IS A PILE OF GLASS FOLDER CARDS** (`EraMediaStack`), fed by
+    `media?: CharacterEraMedia[]` (embed · video · image; read through
+    `eraMedia()`, capped at 4 by the tab row's arithmetic). ⚠ Tabs ordered by
+    DEPTH; the lip a CLOSED evenodd ring with the slant's inner ends at
+    −0.414px; a back card renders no body; no player mounted; every tab a
+    button. ⚠ It fits BY CONSTRUCTION: `container-type: size` on the seat at
+    ≥1101 ONLY (ungated it zeroes the ≤1100 bodies), the frame the one item that
+    gives, its `min-height: 72px` load-bearing. ⚠ The frost is front-card-only,
+    waits on `--ci`, and carries no id so light can switch it off.
+    `scripts/capture-era-media.mjs` gates fit on every rotation; the lab's
+    `?media=N` is the pile's only real subject until the record grows.
+  - **ON RECORD IS TAGGED ROWS**, superseding U29's bounded object (read live,
+    stacked boxes were a slide's content boxes): a framed tag, the year, a 7×7
+    arrow ONLY where the record links out, the headline, a hairline at the foot.
+  - **A FIGURE IS DRAWN IN COLOUR AND GRADED GOLD** — see
+    `scripts/voidwalker-avatar/README.md`. The one-step "volumetric hologram"
+    route is what reads as "too glowing" (deep-interior p75 172 / 170 against
+    the Architect's ~103). `gold.py` holds the Architect's measured curve, ramp
+    and bloom and the exposure gate every delivery must pass.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title
@@ -76,7 +123,8 @@ composition's own entry/exit block, its responsive rungs, and
   > `no-preference`, so PRM would resolve the ring against `.vwd__stage`); the
   > offset is the **`translate` property**, never `transform`; entry rung 0.15.
   > ⚠ **THE CHIPS ARE TEXT STOPS** on both breakpoints — the framed bust is gone
-  > with five lazily-fetched posters. ⚠ **ITS 52px IS CHARGED BACK, NOT SPENT ON
+  > with five lazily-fetched posters. (⚠ From 701px up, U31 brings busts back —
+  > ≤10 KB each, cut for the purpose, never the posters.) ⚠ **ITS 52px IS CHARGED BACK, NOT SPENT ON
   > THE FIGURE**: `--vwd-reel-return` keeps `band-h + reel-return + trail`
   > identically U22's `116px + clamp(...)`, so `--vwd-chrome-h` and
   > `--vwd-fig-w` are byte-identical on both gate branches (335.781 / 328.938 /
@@ -185,7 +233,8 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
     `textContent` (and the smoke that reads it) are untouched. The ratchet pin
     rises A 1 → 2 and **C does not move** — the family arrives through
     `--vwd-display`, which `countBlock`'s probe cannot see.
-    ⚠ **LEFT OPEN, BOTH NAMED IN U25**: the four other eras are 14–23 % shorter
+    ⚠ **LEFT OPEN, BOTH NAMED IN U25** (the hover is CLOSED by U31's
+    `azeroth-v11`): the four other eras are 14–23 % shorter
     than they were; and **azeroth hovers 23.6px above his disc** at 1920×1247
     (`footY` 0.9695 against the seated eras' 0.993–0.998 — `seat_frames` names
     this exact asset), closed by a 33-row downward shift its canvas has room for.
@@ -225,9 +274,11 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   ⚠ **Chromium resolves svh/lvh/dvh to one number**, so every change above is
   byte-identical in CI and the only proof is a device: compare `innerHeight`
   with `.home-v2-stage__canvas`'s `getBoundingClientRect().bottom`.
-- ⚠ **ON RECORD CARRIES A MARK, AND SINCE ADR-082 U29 THE ITEM AROUND IT IS A
-  BOUNDED OBJECT (owner, 2026-09-19: the articles "should really feel like a
-  pill, like a sort of subtle button").** U26 refused the pill and the frame
+- ⚠ **SUPERSEDED BY U31 (tagged rows; the well and the document mark are
+  deleted) — kept for the ink laws, which still bind.** **ON RECORD CARRIES A
+  MARK, AND SINCE ADR-082 U29 THE ITEM AROUND IT IS A BOUNDED OBJECT (owner,
+  2026-09-19: the articles "should really feel like a pill, like a sort of
+  subtle button").** U26 refused the pill and the frame
   because both were read as PAINTED GROUNDS, which this station has turned down
   twice (U20's ghost frame, U21's rails) and which the `>700px` sweep exists to
   keep off — **but an outline is not a ground**, nothing here fills in any
@@ -296,7 +347,9 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   `INDUSTRIALIST`; mono at the chrome rung made a SENTENCE read as a label.
   ⚠ NEVER a mono 700: PT Mono has no 500.
 - ⚠ **A FILM FRAME'S WIDTH IS TRANSFERRED FROM ITS HEIGHT CAP UNLESS DECLARED
-  (U29).** `.vwd__film__frame` had an `aspect-ratio` and no width, so
+  (U29)** — the frame is the media card's `.vwd__mcard__frame` since U31, and the
+  law carried over with it (plus: an `aspect-ratio` flex item needs an explicit
+  `min-height` to shrink). `.vwd__film__frame` had an `aspect-ratio` and no width, so
   `max-height` set its inline size through the ratio — 267px inside a 368px
   head rule, which is what the owner read as "not the same length as the
   divider". With `width: 100%` the cap becomes a CROP (the poster is
@@ -482,6 +535,12 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   Short-and-wide is a genuinely unsolved shape for this composition, improved
   rather than fixed; do not read a green probe at the reference viewports as
   clearance there.
+- **Verifying (U31 adds):** `node scripts/probe-voidwalker-figure-span.mjs --vp
+1920x1247` (heads on the row line, one disc line, the ring on the figure, no
+  cut, no era UNSEATED), `node scripts/capture-era-media.mjs --vp 1280x720` and
+  `--vp 375x553` (the pile's fit on every rotation), and `python
+scripts/voidwalker-avatar/gold.py --selftest` (the exposure gate a delivery
+  must pass).
 - **Verifying:** `node scripts/probe-voidwalker-eras.mjs --vp 1280x720` is the
   height gate — it walks every era and reports each panel's overflow AND its
   `foot` headroom, plus the reel's pitch against the widest rendered chip name
@@ -499,7 +558,9 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   offset and scroll-derived era at each stop. ⚠ Headless is wrong twice over:
   the corridor is WebGL, and Chromium has no H.264 so the MP4 fallback paints
   nothing.
-- ⚠ **THE ERA BAND IS A REEL WINDOW (ADR-082 U20)** — the selected era is
+- ⚠ **FROM 701px UP THIS IS SUPERSEDED BY U31's FIVE-BUST GALLERY** (the track
+  is `transform: none`, `--vwd-reel: 5`); the reel below still governs the
+  phone. **THE ERA BAND IS A REEL WINDOW (ADR-082 U20)** — the selected era is
   always at its centre and the track turns behind a bounded window, so the reel
   rotates as the reader travels the runway. **A full-width track cannot roll**:
   five cells come to ~550px against a 1440px band, so centring only shoves the

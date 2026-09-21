@@ -163,7 +163,9 @@
      eras' 0.993–0.998, the defect ADR-082 U25 named and left open, which the
      overscan magnifies from 23.6px to 27px. Centring the ring on the outlier
      would bake that defect into a second object; it is one asset re-seat from
-     agreeing with the other four.
+     agreeing with the other four. (⚠ CLOSED IN ADR-082 U31: `azeroth-v11` is
+     that re-seat, and on the alpha branch the ring is now centred by
+     arithmetic on the painted figure — this 57 % is the floor branch's.)
      ⚠ The first cut of this ring solved the centre by arithmetic and rang him
      from the head to the knees — only a still showed it, and a still is still
      the only thing that can. */

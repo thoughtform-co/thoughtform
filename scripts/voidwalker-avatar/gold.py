@@ -28,8 +28,8 @@ zero offset (0.79), so the restyle is the photo, pixel for pixel, re-lit.
          check that the two tables compose.
 
   Held out (a 32px checkerboard: fit on one colour, score on the other) the
-  frozen tables reproduce the model's restyle to 10.5/255 mean absolute error
-  per channel. The model disagrees with ITSELF by 19.6/255 re-drawing the same
+  frozen tables reproduce the model's restyle to 9.3/255 mean absolute error
+  per channel on his true outline (10.5 on the restyle's own luma matte). The model disagrees with ITSELF by 19.6/255 re-drawing the same
   frame (ADR-082 U14). The deterministic grade is closer to the model's own
   output than the model is.
 
