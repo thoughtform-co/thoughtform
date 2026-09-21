@@ -1,5 +1,12 @@
 # ADR-114 — The sheet: a design system for subpages, and the ship that grades it
 
+- ⚠ **THE `/arcs` OVERVIEW LEFT THE SHEET ON 2026-09-21**: it is the owner's
+  page ([ADR-117](117-the-owners-pass.md)) and an INSTRUMENT, a monitor and a log
+  ([ADR-118](118-the-arcs-overview-is-an-instrument.md)). Everything below that
+  concerns the overview (its split head, the client consoles on it, the formats
+  cells, the open rulings about the pile and its seat) is the record of the page
+  it replaced, which the ship keeps as negative pole SF. The client pages, the
+  sessions page, the musings and the kit are still sheets.
 - **Status:** Proposed (2026-09-20) — shipped and guarded; the owner's read of
   the first wave's gallery is the gate, and five of the sheet's rulings are his
   (§Left open).

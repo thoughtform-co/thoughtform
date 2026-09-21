@@ -1523,6 +1523,69 @@ COMPLETES a stop inside the window before it — and make the station itself
 `none`. A harness that insists on its own number reads every one of these
 pulls as a miss: seat, report the landing, assert the page's state there.
 
+## A test that asks for something nothing produces stays red, and reads as noise (ADR-118)
+
+Four assertions in `subpages-smoke` were red from the day they were written,
+each for one reason: they waited on a value no code ever produces. The DOM
+ladder rebuilt cells and consoles as EMPTY arrays, which the law it was fed
+rejects on its own ("0 cells declared", "a console section with no
+consoles"); the theme case waited on `data-theme="dark"`, which nothing
+writes (dark is the attribute's absence, ADR-058); the knob case counted the
+ordinals the knob only HIDES; and the phone case asked for a rail height on a
+viewport that draws no rails. A permanently red case teaches everyone to skip
+the spec, so the regressions it was written for walk past it. Before blaming
+the page, ask whether ANY state of the code can satisfy the assertion. Count
+filler from the DOM, assert what the user sees (painted, not present), and
+state the absence a theme is encoded as.
+
+## A hand-made browser context inherits nothing (ADR-118)
+
+`browser.newContext()` in a Playwright test starts from Playwright's
+defaults, not the project's `use` block — so a storage state (the owner's
+pass on a gated route), a colour scheme or a base URL set in the config never
+reaches it, and a gated page measures a 404 that reads as a broken layout.
+Size a context with `test.describe` + `test.use({ viewport, contextOptions })`
+and take the `page` fixture. ⚠ `reducedMotion` goes in `contextOptions`; it is
+not a top-level fixture.
+
+## A stale alternate-distDir build breaks `tsc` when a route is added
+
+`tsconfig.json` includes the generated route types of every guarded
+`NEXT_DIST_DIR` (`.next-verify`, `.next-build`), which is right — until a
+build there is older than a route. Then its `LayoutRoutes` and the dev
+server's disagree about the new route and `tsc` fails in
+`.next/dev/types/validator.ts` on code nobody touched. Delete your own stale
+build (it regenerates on the next one); a stale `.next/types` from someone
+else's `next build` is theirs, and CI builds fresh.
+
+## An observable written on a timer names a state the page has not reached (ADR-118)
+
+The arcs log's `data-dos-id` said "this dossier has settled", and it was
+written when the 180ms swap aperture's timer fired. The dossiers' pictures
+were `loading="lazy"` inside `hidden` articles, so a picture only began to
+load when a swap unhid it, and it streamed in top-down under an attribute
+that already claimed the swap was over. The capture waited on it correctly,
+every gate was green, and seventeen of twenty stills went to the grader with
+a half-painted plate. Nothing threw: the observable was lying, and everything
+downstream believed it. Write a "settled" observable when the THING has
+happened (here `img.decode()`, bounded so a failed picture cannot hold it
+forever), never when a clock says it should have. And give the claim a guard
+that can fail: the smoke now reads the picture's load state at the moment
+the attribute appears. Run against the old code first, it failed.
+
+## An ORDER assertion is not a CLEARANCE assertion (ADR-118)
+
+The arcs instrument's smoke said "the wordmark sits under the device" —
+`brand.top >= device.bottom` — and it was true: the frame's hero lockup sat
+7px below the monitor's rule at 1280 × 720, inside the device's own column,
+on every monitor still, and the test passed at three viewports. What the
+page owed was CLEARANCE (the frame's breathing gap, in one axis or the
+other), and an assertion about which side of a line something is on cannot
+see how close it is to the line. Write the claim you mean with its number —
+here "beside the column by 16px, or under it by the frame's gap" — and prove
+it fails on the state you are fixing. The same holds for every overlap check
+in this repo: "does not intersect" is not "does not crowd".
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.
@@ -1531,4 +1594,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-09-20_
+_Last updated: 2026-09-21_

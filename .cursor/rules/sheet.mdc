@@ -1,5 +1,5 @@
 ---
-description: The sheet (ADR-114) — the ruled-document grammar for overview subpages (/arcs, /home-sessions, /musings) and the turnstone ship that grades it
+description: The sheet (ADR-114) — the ruled-document grammar for subpages (/home-sessions, /musings, the client pages), the arcs overview's instrument (ADR-118), and the turnstone ship that grades both
 globs:
   - "components/sheet/**"
   - "lib/sheet/**"
@@ -11,6 +11,9 @@ globs:
   - "app/(marketing)/arcs/page.tsx"
   - "app/(marketing)/arcs/[slug]/page.tsx"
   - "app/(internal)/test/subpage-kit/**"
+  - "app/(internal)/test/arcs-instrument-kit/**"
+  - "scripts/capture-arc-previews.mjs"
+  - "lib/arcs/previews.json"
   - "scripts/capture-subpages.mjs"
   - ".claude/skills/thoughtform-design/eval/subpages/**"
 alwaysApply: false
@@ -33,7 +36,26 @@ The canonical rule is `.claude/rules/sheet.md`; this file mirrors it for Cursor.
 - The first value of every knob is the house; `lib/sheet/directions.json` is
   the one registry, mirrored into the ship's `armada.toml` and asserted.
 - Every client-console readout is DERIVED from the arcs registry.
-- House formats are CELLS, client arcs are CARDS on the overview.
+- `/arcs` is NOT a document (ADR-118): it is the owner's instrument, a
+  `monitor` then a `log`, judged by `instrumentViolations` (every mark at
+  its own date on both windows, the lit mark IS the selected row, one id
+  set across marks, rows and dossiers). Both windows are rendered and
+  `.sh-t` picks one, because `span` is a client-side knob.
+- Each device is as tall as the rails; the graticule is DOM (never a
+  `viewBox`) and is the one named exemption to the rails-only verticals.
+- The frame's wordmark is DOCKED from the first frame on the instrument: the
+  hero lockup sat 7px under the monitor's corner. The smoke asserts
+  clearance, not order ("under the device" passed at 7px).
+- `SheetInstrumentController` is the ONE client file and imports NO
+  registry — a client chunk is public, the page is not (ADR-117);
+  `arcs-import-doctrine` fails any client file under the sheet that does.
+- `data-dos-id` on the root is the observable: written only when the
+  incoming dossier has settled — aperture open AND picture decoded (bounded
+  at 2.5s); settling on the aperture's timer alone shot seventeen
+  half-painted plates. Motion is clips, never opacity.
+- The dossier's picture is the engagement's first screen
+  (`capture-arc-previews.mjs`), optional per engagement, loaded EAGER at
+  `fetchpriority="low"` — never `lazy` inside a `hidden` dossier.
 - The console imports `useStackedCardsScroll` and copies the proof stack's
   skin as `--sh-*` tokens; `.sh-root` is `overflow-x: clip`.
 - `data-sh-ready` is the capture's observable; run the capture and the

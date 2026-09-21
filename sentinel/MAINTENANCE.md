@@ -54,6 +54,67 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-21 — `/arcs` is the owner's instrument: a pass, a monitor, a log (ADR-117, ADR-118)
+
+**Trigger:** the owner — the overview _"should only be accessible to me when I
+am logged in"_; its first screen _"a sort of grid timeline … the different
+projects mapped onto it"_; the next _"a new viewport"_ with the arcs listed
+per client _"so they really feel like quests from a video game"_ and a card
+for the one clicked; _"really run your eval pipeline"_.
+
+- **Cycle B, in full.** ADR-117 (the owner's pass: `force-dynamic`, gated in
+  the page, never in `proxy.ts`) and ADR-118 (the instrument), both Proposed;
+  `.claude/rules/auth.md`, `sheet.md` §The arcs instrument, `arcs.md` (the
+  `date` field) and their `.cursor` mirrors; LANGUAGE (Monitor, Log, the
+  log's dossier); `docs/design/subpages/README.md`; the turnstone ship's
+  rubric 0.2.1 (blocks M and L), its second negative pole SF, a calibration
+  wave and wave 03.
+- **Q1 (a guard that was not guarding):** the capture's observable
+  `data-dos-id` fired on the swap's timer while the dossier's lazy picture was
+  still streaming in, and wave 03's first shoot sent seventeen of twenty
+  second-pick stills to the grader half-painted with every gate green — the
+  grades were discarded and the wave re-shot on the fix (`25edb81a`). The
+  smoke now reads the picture at the moment the attribute appears, and failed
+  on the old code before it passed on the new. And the smoke's "the
+  wordmark sits under the device" was true while the frame's hero lockup sat
+  7px under the monitor's corner on every monitor still — the wordmark is
+  docked from the first frame now (`ccd56876`), the guard asserts clearance
+  and fails without the rule, and the wave was shot a third time. And four
+  `subpages-smoke` cases had been red since ADR-114, each asking for
+  something no code produces.
+- **Q3 (a class of bug) → BEST-PRACTICES:** five entries — a test that asks
+  for what nothing produces; a hand-made browser context inherits nothing; a
+  stale alternate-`distDir` build breaks `tsc`; an observable written on a
+  timer names a state the page has not reached; an order assertion is not a
+  clearance assertion.
+- **Q4 (files that move together):** `lib/sheet/directions.json` ↔ the ship's
+  `armada.toml` (four new knobs, five directions, asserted by the capture and
+  a test); `lib/arcs/previews.json` ↔ `public/arcs/previews/` (a test re-reads
+  every file's header); `mechanical.mjs`'s `ACCENT_ALLOW` ↔ the instrument's
+  gold (four named marks); `todayIn` is called by the page alone, so a test
+  pins the day.
+- **Verified:** vitest 220/220 over the thirteen suites that bind this work;
+  `tsc` clean in source (its only two errors are in a `.next/types` left by a
+  2026-09-20 `next build` that predates the kit route — not this session's
+  build, not cleared); `arcs-instrument-smoke` 10/10 on `next dev`; on a
+  production build with a signed pass, the instrument, sheet and terminal
+  smokes 33 passed, 1 skipped (the kit is proxy-blocked there);
+  `verify-owner-gate` 31/31; the mechanical gate clean on `/arcs` and the kit
+  in both themes at 1920×1247 and 1280×720.
+- ⚠ **Left as found:** `npm run lint` 339/337 and services-ring's `#contact`
+  cover assertion (both recorded in the entry below); the shared 3003 dev
+  server's `/arcs/[slug]` worker still answers 500 and needs a restart, which
+  is the owner's call — stopping it was refused as someone else's workload,
+  so this pass verified on its own build instead.
+- **Wave 03** (the turnstone ship, rubric 0.2.1, three runs; ten folders,
+  120 stills, the mechanical gate clean on every cell): the house passes
+  every still at both viewports; the rubric separates only SG (its full
+  axis merges marks, M3), so the pick between SB, SH, SJ and SL is the
+  owner's eye. The log stills are byte-identical across three directions, and
+  7 of 8 identical triples got one verdict. The stranger reads the monitor as
+  a timeline dashboard and the log as an archive, never a quest journal.
+  Ten galleries and an index, `delivery/review-wave-03.html`; no handback.
+
 ### 2026-09-21 — The phone's ruling sheets fit their bay; the epilogue hands the top to the first card (ADR-116)
 
 **Trigger:** the owner, from his iPhone — the studio card's GOVERNANCE and RED

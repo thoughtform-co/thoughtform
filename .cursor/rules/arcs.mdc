@@ -36,6 +36,14 @@ rather than shared. A `theme: "light"` arc is two halves — the mount and a
 hand-written `LIGHT_LOCKED_ROUTES` row. `scripts/new-arc.mjs` scaffolds a
 client page in one command and ships finished copy, never placeholders.
 
+⚠ ADR-118: `/arcs` is the owner's page (ADR-117) and an INSTRUMENT — a
+monitor that plots every engagement at its filing date, then a log that opens
+it (contracts in `.cursor/rules/sheet.mdc`). Every `ArcDef` and
+`ClientPageDef` carries `date` (YYYY-MM-DD, OWNER-TO-CONFIRM), reversing
+ADR-098's no-date ruling on its own terms: it feeds a plot, and
+`arcs-registry` checks each client's registry order against it. A `-v2` cut
+authors its own `date:` line; the scaffold takes `--date`.
+
 ⚠ ADR-098 U1: the journey row in the top-left corner is hidden on EVERY
 surface now — the arcs asked, then the homepage, so the rule and the bracket's
 return live in `rail-instruments.css` (the ≤960 rung promoted to every width)

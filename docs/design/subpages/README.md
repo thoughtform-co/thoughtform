@@ -1,29 +1,37 @@
-# The subpages — the sheet
+# The subpages — the sheet, and the arcs instrument
 
-The ruled-document grammar for pages that list things (ADR-114), and the
-eval ship that grades it. Read the ADR for the decision; this is the working
+The ruled-document grammar for pages that list things (ADR-114), the arcs
+overview's INSTRUMENT (ADR-118 — the owner's page since ADR-117), and the eval
+ship that grades both. Read the ADRs for the decisions; this is the working
 map.
 
 ## The pages
 
 Dev server today: `http://localhost:3003` (read the port off the running
-server before quoting one). Any of these takes `?k=SB|SD|SE` and
+server before quoting one). The document pages take `?k=SB|SD|SE`, the arcs
+overview and its kit take `?k=SB|SG|SH|SJ|SL`, and every page takes
 `&theme=dark|light`.
 
 ```
-http://localhost:3003/home-sessions
 http://localhost:3003/arcs
+http://localhost:3003/test/arcs-instrument-kit
+http://localhost:3003/home-sessions
 http://localhost:3003/arcs/loop
 http://localhost:3003/musings
 http://localhost:3003/musings/navigate-the-intelligence
 http://localhost:3003/test/subpage-kit
 ```
 
-`/test/subpage-kit` is internal (proxy-blocked in production); the rest ship.
-`/arcs` and its client pages stay noindex; the musings' seed posts are drafts
+⚠ `/arcs` is the owner's page. Under `next dev` its gate is open, so the
+capture and the smokes reach it; in production a stranger gets the site's
+404 and the owner needs his pass (it is minted when he signs in at `/admin`).
+The two `/test/*` kits are proxy-blocked in production; the rest ship. `/arcs`
+and its client pages stay noindex; the musings' seed posts are drafts
 (reachable, noindexed, hidden from the index in production).
 
 ## The knobs
+
+The sheet's four, on the document pages:
 
 | knob       | house   | other   | moves                                                |
 | ---------- | ------- | ------- | ---------------------------------------------------- |
@@ -32,11 +40,24 @@ http://localhost:3003/test/subpage-kit
 | `card`     | `stack` | `grid`  | the pile stacks on scroll, or a static grid          |
 | `timeline` | `axis`  | `rail`  | horizontal dated axis, or a vertical date rail       |
 
-Directions: `SB` house · `SD` editorial (`head=stack ordinal=off`)
-· `SE` grid (`card=grid timeline=rail`) · `SA` the negative pole (the old
-`/arcs`, shot once). One record: `lib/sheet/directions.json`.
+The instrument's four, on `/arcs` and its kit:
 
-## The arrangements, and the law
+| knob      | house     | other   | moves                                                    |
+| --------- | --------- | ------- | -------------------------------------------------------- |
+| `span`    | `active`  | `full`  | the plot's window: the active weeks, or 2023 to now      |
+| `rows`    | `ruled`   | `boxed` | the log's rows on hairlines, or as outlined plates       |
+| `dossier` | `one`     | `pair`  | one housing, or an image plate over a text plate         |
+| `frame`   | `housing` | `rails` | the monitor closed on itself, or its strips out to rails |
+
+Directions, document pages: `SB` house · `SD` editorial
+(`head=stack ordinal=off`) · `SE` grid (`card=grid timeline=rail`) · `SA` the
+negative pole (the old `/arcs`, shot once). Directions, the instrument: `SB`
+house · `SG` full record · `SH` plates · `SJ` pair · `SL` rails · `SF` the
+second negative pole (yesterday's sheet overview, promoted from wave 02,
+never re-shot). A direction's `types` scopes it, so AR is never shot at SD or
+SE. One record: `lib/sheet/directions.json`.
+
+## The arrangements, and the laws
 
 split · row · cells · console · timeline · steps · table · figure · prose ·
 close. A page opens on the split and ends on the close; consecutive sections
@@ -45,16 +66,41 @@ once; one lit node; one open step; five chapters at most. Code:
 `lib/sheet/composition.ts`; every real page walks it in
 `tests/lib/sheet-composition.test.ts`.
 
+monitor · log are the instrument's, exactly two and in that order, and a
+ladder holding either is judged by `instrumentViolations` instead: every mark
+at its own date on both windows, on a real lane, oldest first; NOW inside both
+windows and right of every mark; one id set across marks, rows and dossiers;
+the lit mark is the chosen row. `tests/lib/sheet-instrument.test.ts`.
+
 ## What the owner is being asked
 
-After wave 01's gallery: split or stacked head · ordinals on or off · pile or grid · axis or rail · whether the Loop console expands its
-four dossier beats into cards · the twelve-gold budget · the four session dates
-· each client's `since` year · whether the pile's card is seated on a rule of
-its own · whether the lit timeline node keeps its gold box.
+**On the instrument, after wave 03's galleries:** the house against each of
+the four directions; the nine seeded `Filed` dates (a page's first commit,
+not the engagement's start); the section dots over each mark; whether the
+plot's dotted divisions sit right with "the rails are the only verticals";
+and what the log should read as to a stranger, who calls it an ARCHIVE, not a
+quest journal (§Wave 03 below).
 
-## The galleries (wave 02, unread)
+**On the document pages, after wave 01's galleries:** split or stacked head ·
+ordinals on or off · pile or grid · axis or rail · the twelve-gold budget ·
+the four session dates · each client's `since` year · whether the pile's card
+is seated on a rule of its own · whether the lit timeline node keeps its gold
+box. The questions that only concerned the overview — the pile or grid there,
+its seat, the Loop console's four dossier beats on it — lapsed with ADR-118.
 
-The state after the owner's first ruling — no verticals of the page's own.
+## The galleries
+
+**Wave 03 — the arcs instrument.** One index, ten galleries (five directions
+× two viewports):
+
+```
+file:///C:/Users/buyss/Manifold%20Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval/subpages/delivery/review-wave-03.html
+```
+
+The record is `evals/waves/wave-03.md`; the calibration against the pole is
+`evals/waves/wave-03-calibration.md`.
+
+**Wave 02 — the sheet after the first ruling, unread:**
 
 ```
 file:///C:/Users/buyss/Manifold%20Delta/Artifacts/01_thoughtform/.claude/skills/thoughtform-design/eval/subpages/delivery/review-wave-02-sb.html
@@ -68,15 +114,15 @@ on; SC no longer exists as a direction.
 Tick and comment in a gallery, save the handback beside its wave as
 `verdicts-<date>.json`, then from the ship: `python tools/ledger.py tick
 --handback <file>` and `python tools/calibrate.py`. The records are
-`evals/waves/wave-01.md` and `evals/waves/wave-02.md`.
+`evals/waves/wave-0N.md`.
 
 ⚠ **Wave 02 grades worse than wave 01 in every direction** (keepable on the
 42 real-page stills 17 · 17 · 18 against 21 · 27 · 23) and the reason is
 measurable: with no verticals of its own, nothing terminates a seam, and the
 editorial band caps at 1200px while the rails keep travelling outward — so a
 seam stops 38px short of the rail at 1280 × 720 and **224px at 1920 × 1247**.
-Whether a seam should now run out to the rails is the open question of the
-wave; it is not changed in the sheet.
+The instrument answers it on `/arcs` by closing each device on itself (the
+monitor's strips end on its own housing); `SL` shows the other answer.
 
 ## The ship
 
@@ -90,6 +136,7 @@ node scripts/capture-subpages.mjs --control --wave wave-00-calibration --port-ol
 node scripts/capture-subpages.mjs --fixture --wave wave-00-calibration
 node scripts/capture-subpages.mjs --wave wave-01-sb --k SB
 node scripts/capture-subpages.mjs --wave wave-01-sb --k SB --setting laptop
+node scripts/capture-subpages.mjs --wave wave-03-sg --k SG --types AR,AK --port 3003
 ```
 
 then from the ship: `python tools/doctor.py` → `qa.py --batch <wave> --runs 3`
@@ -99,7 +146,6 @@ then from the ship: `python tools/doctor.py` → `qa.py --batch <wave> --runs 3`
 
 ## Traps
 
-- The house formats are cells, the client arcs are cards; count them apart.
 - The chapter cap is on the primary row, not the drawer.
 - `server-only` is stubbed for vitest; the real marker stays for Next.
 - Run the gate and the capture from PowerShell (MSYS path conversion).
@@ -112,8 +158,23 @@ then from the ship: `python tools/doctor.py` → `qa.py --batch <wave> --runs 3`
 - Tell the grader what the frame and the close are, or it fails every still
   on them.
 - The rails are the page's only verticals (owner, 2026-09-20): a page never
-  draws a full-height rule of its own; the `rules` knob is gone.
+  draws a full-height rule of its own; the `rules` knob is gone. The plot's
+  dotted divisions are the one named exemption (`.sh-mon__grid`).
+- The instrument's devices arrive on a clip: the capture waits on
+  `.sh-ap-root` as on a reveal, or it shoots a closed aperture.
+- ⚠ A still shot while a picture streams in is a defect the grader reads as
+  the page's: `data-dos-id` settles only once the dossier's picture has
+  decoded, and the capture decodes every picture in view. Wave 03's first
+  shoot, before either, sent seventeen half-painted dossiers to the grader.
+- The frame's wordmark is the HERO lockup until half a screen of scroll, and
+  a device as wide as the instrument band ends right over it; the instrument
+  shows it docked from the first frame. Read every still for chrome near a
+  mark: no gate does, and "under the device" was true at 7px.
+- Dark is the ABSENCE of `data-theme`; nothing writes `data-theme="dark"`.
+- A client file under `components/sheet` imports no registry: its chunk is
+  public and `/arcs` is not.
 
 ## Verifying
 
-See ADR-114 §Verification and `.claude/rules/sheet.md` §Verifying.
+See ADR-114 §Verification, ADR-118 §As built, and `.claude/rules/sheet.md`
+§Verifying.

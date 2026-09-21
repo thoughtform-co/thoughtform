@@ -31,6 +31,9 @@ and the first for a page that lists things.
   the URLs, the knobs, the rulings the owner is being asked, verifying.
 - [ADR-092](../../sentinel/decisions/092-type-material-tokens.md) — the type
   tokens every rule in `sheet.css` reads.
+- [ADR-118](../../sentinel/decisions/118-the-arcs-overview-is-an-instrument.md)
+  — the arcs overview as an INSTRUMENT (a monitor and a log), the `date` field,
+  and rubric blocks M and L; §The arcs instrument below.
 
 ## Contracts
 
@@ -71,10 +74,10 @@ and the first for a page that lists things.
   in `lib/sheet/arcs.ts` — and `tests/lib/sheet-arcs.test.ts` recomputes
   them. A composed string is outside every content scanner (ADR-070 U15), so
   the readouts are walked through the copy law there.
-- **The house formats are CELLS; the client-bound arcs are CARDS.** On the
-  overview `.sh-card` counts `ARCS.length − houseArcs().length + Σ pages`
-  and `a.sh-cell` counts the house formats. The terminal smoke's overview
-  case reads the kicker off whichever the href lands on.
+- ⚠ **`/arcs` IS NOT A DOCUMENT SINCE ADR-118.** It is the owner's
+  INSTRUMENT — a `monitor` then a `log` — and answers to its own law, not the
+  variety law; see §The arcs instrument below. The client pages
+  (`/arcs/<client>`) are still sheets, and each still draws its console.
 - **The console imports the stack's MECHANISM and copies its SKIN.**
   `useStackedCardsScroll` drives `[data-pc-slot]` slots; the chamfer, the
   evenodd lip ring and the pile geometry are `--sh-*` tokens in `sheet.css`,
@@ -100,6 +103,94 @@ and the first for a page that lists things.
 - **A declared image size is read off the file**, never typed: the table
   photograph is 840×1360 and was declared 1600×2000 for an hour with nothing
   failing.
+
+## The arcs instrument (ADR-118)
+
+The overview, the owner's page. Two screens: a MONITOR that plots every
+engagement at the date it was filed, then a LOG that lists them per client
+with one filled row against its DOSSIER.
+
+- **Two arrangements, exactly, in that order.** `monitor` and `log` are in
+  `SHEET_ARRANGEMENTS`, but a ladder that holds either is judged by
+  `instrumentViolations` (`lib/sheet/composition.ts`): every mark at its own
+  date on BOTH windows, on a real lane, oldest first; NOW inside both windows
+  and right of every mark; the terminus's `Marks` reading equal to the marks;
+  ONE id set across marks, rows and dossiers; the lit mark IS the selected
+  row; each group newest first. None of this is visible in a still, which is
+  why it is code. Neither frame letters an ordinal or a head band.
+- **Every reading is derived** (`arcsInstrumentSections`, `lib/sheet/arcs.ts`)
+  from `CLIENTS`, `ARCS`, `status`, `since` and `date`, and `sheet-arcs`
+  recomputes each a second way. `today` is a PARAMETER: the page asks the
+  practice's clock once (`todayIn(PRACTICE_TIME_ZONE)`), a test pins it,
+  nothing in `lib/sheet` reads a clock.
+- **The axis is `lib/sheet/axis.ts`**: whole weeks with one of lead-in while
+  the record fits in sixteen, then months, then quarters; a date sits at the
+  MIDDLE of its day. The division that holds today gives NOW its label AND its
+  line — a dotted boundary a few pixels off the cursor read as a doubled one.
+- ⚠ **BOTH WINDOWS ARE RENDERED.** `span` is a knob the client may flip after
+  mount (`?k=SG`), so every positioned thing carries `--t-active` and
+  `--t-full` and `.sh-t` picks one; the ticks and the scale carry
+  `data-window`. A window chosen on the server makes a direction unshootable.
+- **Each device is as tall as the rails**: padding is `--hud-rail-y-start` /
+  `--hud-rail-y-end`, so the monitor hangs from the first tick, sits on the
+  last, and ends above the fixed wordmark; the dossier sticks at the same two
+  edges. The smoke asserts both, at three viewports.
+- ⚠ **THE WORDMARK IS DOCKED FROM THE FIRST FRAME ON THE INSTRUMENT.** At
+  scroll 0 `.hud__brand` is the HERO lockup, aligned to the content column,
+  and a device as wide as the instrument band ends right over it (7px at
+  1280×720). `instrument.css` styles it as the frame's own docked state
+  (`.is-collapsed`: the rail's corner, 0.68) in both of its states; the
+  class stays the scroll writers'. The smoke asserts CLEARANCE — beside the
+  column by 16px or under it by the frame's gap — because "under the device"
+  was true at 7px and passed.
+- **The graticule is DOM, never an SVG `viewBox`** — a crop letterboxes one
+  axis at every desktop shape. Its dotted divisions and NOW drop are the ONE
+  named exemption to "the rails are the only verticals" (`.sh-mon__grid`).
+- ⚠ **ONE CLIENT FILE, AND IT IMPORTS NO REGISTRY.**
+  `SheetInstrumentController` reads everything off the DOM; a client chunk is
+  public and the page is not (ADR-117). `arcs-import-doctrine` fails any
+  client file under `components/sheet` that imports `lib/arcs`, `lib/cases`,
+  `lib/sessions`, `lib/musings` or `lib/sheet/{arcs,home-sessions,musings}`.
+- **The server chooses** — the newest engagement is filled, lit and shown
+  before a line of script runs; every dossier is rendered and all but one are
+  `hidden`. A plain click selects, a modified click and a KEYBOARD click
+  (`detail === 0`, Enter on a focused row) keep the link's own behaviour;
+  ↑/↓ walk the rows the filter leaves; `#arc=<id>` deep-links; a filter that
+  hides the chosen row moves the choice to the first one shown.
+- ⚠ **`data-dos-id` ON THE ROOT IS THE OBSERVABLE**: removed when a swap
+  starts, written only when the incoming dossier has settled — its aperture
+  open AND its picture decoded (bounded at 2.5s). The capture and the smoke
+  wait on it, never on a timer. ⚠ **The first cut settled on the aperture's
+  timer alone**, the pictures were `loading="lazy"` inside `hidden` dossiers,
+  and wave 03's first shoot put seventeen half-painted plates in front of the
+  grader with every gate green; the smoke now asserts each settled dossier's
+  picture has loaded, and was run against the old code to prove it fails.
+  The pictures are EAGER at `fetchpriority="low"` — the monitor holds no image,
+  so nothing on the first screen waits for them.
+- **Motion is CLIPS**: a centre-out aperture on each device's arrival (armed
+  only once the controller runs, under `no-preference`), a NOW drop, a 180ms
+  dossier swap that rapid steps skip. One element holds one `clip-path`, so
+  the dossier's aperture is the ARTICLE and its chamfer is `__in`.
+  ⚠ The capture's `stillLife` waits on `.sh-ap-root` as on a reveal — shot
+  before its `is-in`, a still is a closed aperture.
+- **Gold is state and nothing else**: the lit mark (an OUTLINE, so
+  `--gold-line`), the NOW cursor, the filled row, the picked station, the CTA
+  and the dossier's lip; `mechanical.mjs` names the four the one-long-side
+  rule would misread. The monitor's own ring is dawn.
+- **The dossier's picture is the engagement's first screen**
+  (`scripts/capture-arc-previews.mjs` → `public/arcs/previews/` +
+  `lib/arcs/previews.json`, sizes read off the files), OPTIONAL per
+  engagement: a scaffolded arc falls back to its card at the card's size.
+- **`/test/arcs-instrument-kit` (type `AK`)** draws what the record does not
+  hold yet — a three-engagement client with one running, a same-day pair on
+  one lane, a relationship older than the window, a filterable row — with NOW
+  pinned, and `?fake=even|fills` for the two fakes M3 and L2 are written
+  against. It is proxy-blocked in production, so its smoke case skips there.
+- **Verifying:** `tests/lib/sheet-instrument.test.ts`, `sheet-arcs`,
+  `tests/visual/arcs-instrument-smoke.spec.ts` (runs on `next dev`, where the
+  gate is open, or on a build with a signed pass in the storage state — a
+  hand-made `browser.newContext()` inherits none of it), and the mechanical
+  gate on `/arcs` and the kit in both themes at 1920×1247 and 1280×720.
 
 ## The ship
 
@@ -140,7 +231,9 @@ short form:
 
 ```bash
 npx vitest run tests/lib/sheet-composition.test.ts tests/lib/sheet-directions.test.ts tests/lib/sheet-arcs.test.ts tests/lib/sessions-registry.test.ts tests/lib/musings-registry.test.ts
+npx vitest run tests/lib/sheet-instrument.test.ts
 npx playwright test tests/visual/subpages-smoke.spec.ts --project=desktop
+npx playwright test tests/visual/arcs-instrument-smoke.spec.ts --project=desktop
 npx playwright test tests/visual/arc-terminal-smoke.spec.ts --project=desktop   # the arcs stay byte-identical
 node scripts/capture-subpages.mjs --dry-run
 ```
