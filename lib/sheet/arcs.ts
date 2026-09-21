@@ -24,6 +24,7 @@
  */
 
 import { CLIENTS, KIND_LABEL, clientPageCount, kindOf } from "@/lib/arcs/clients";
+import PREVIEWS from "@/lib/arcs/previews.json";
 import type { ClientDef } from "@/lib/arcs/clients";
 import { arcsOf, houseArcs } from "@/lib/arcs/registry";
 import type { ArcDef, ArcKind } from "@/lib/arcs/types";
@@ -184,6 +185,31 @@ export const KIND_ONE: Record<ArcKind, string> = {
  */
 export const CARD_IMAGE_SIZE = { width: 840, height: 1360 } as const;
 
+/** One picture the dossier shows: its source, its words, its real size. */
+export interface EngagementImage {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * The engagement's own FIRST SCREEN where one has been shot
+ * (`scripts/capture-arc-previews.mjs`, sizes read off the written files),
+ * else its card photograph at the card's own size.
+ *
+ * ⚠ THE PREVIEW IS OPTIONAL BY DESIGN: a page scaffolded unattended
+ * (`scripts/new-arc.mjs`) has no preview yet, and a registry that failed
+ * for want of one would break the day-one command. It falls back to the
+ * card, and a preview's own entry is checked against its file.
+ */
+export function pictureOf(id: string, title: string, card: { src: string; alt: string }) {
+  const shot = (PREVIEWS as Record<string, { src: string; width: number; height: number }>)[id];
+  return shot
+    ? { src: shot.src, alt: `The first screen of ${title}`, width: shot.width, height: shot.height }
+    : { ...card, ...CARD_IMAGE_SIZE };
+}
+
 /** The three standings in the order a tally reads them. */
 const STANDINGS: readonly SheetStanding[] = ["proposed", "running", "shipped"];
 
@@ -199,7 +225,7 @@ export interface Engagement {
   chip: string;
   cardTitle: string;
   lede: string;
-  image: { src: string; alt: string };
+  image: EngagementImage;
   kind: ArcKind;
   standing: SheetStanding;
   date: string;
@@ -227,7 +253,7 @@ export function engagements(): Engagement[] {
     chip: arc.format,
     cardTitle: arc.cardTitle,
     lede: arc.cardLede,
-    image: arc.cardImage,
+    image: pictureOf(arc.slug, arc.cardTitle, arc.cardImage),
     kind: kindOf(arc),
     standing: standingOf(arc.status, arc.slug),
     date: arc.date,
@@ -248,7 +274,7 @@ export function engagements(): Engagement[] {
         chip: page.chip,
         cardTitle: page.title,
         lede: page.lede,
-        image: page.image,
+        image: pictureOf(`${client.slug}-${page.chip}`, page.title, page.image),
         kind: page.kind,
         standing: standingOf(page.status, page.href),
         date: page.date,
@@ -417,7 +443,7 @@ export function instrumentSections(
         kind: KIND_ONE[e.kind],
         title: e.cardTitle,
         lede: e.lede,
-        image: { ...e.image, ...CARD_IMAGE_SIZE },
+        image: e.image,
         readout: dossierReadout(e),
         chapters: e.chapters,
         cta: { label: e.isArc ? "Open arc" : "Open page", href: e.href },

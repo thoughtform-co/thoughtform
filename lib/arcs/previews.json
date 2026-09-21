@@ -1,0 +1,47 @@
+{
+  "ai-keynote": {
+    "src": "/arcs/previews/ai-keynote.webp",
+    "width": 1280,
+    "height": 800
+  },
+  "ai-keynote-v2": {
+    "src": "/arcs/previews/ai-keynote-v2.webp",
+    "width": 1280,
+    "height": 800
+  },
+  "claude-workshop": {
+    "src": "/arcs/previews/claude-workshop.webp",
+    "width": 1280,
+    "height": 800
+  },
+  "claude-workshop-v2": {
+    "src": "/arcs/previews/claude-workshop-v2.webp",
+    "width": 1280,
+    "height": 800
+  },
+  "hungry-minds-proposal": {
+    "src": "/arcs/previews/hungry-minds-proposal.webp",
+    "width": 1280,
+    "height": 800
+  },
+  "loop-earplugs": {
+    "src": "/arcs/previews/loop-earplugs.webp",
+    "width": 1280,
+    "height": 800
+  },
+  "perfect-ted-proposal": {
+    "src": "/arcs/previews/perfect-ted-proposal.webp",
+    "width": 1280,
+    "height": 800
+  },
+  "suri-proposal": {
+    "src": "/arcs/previews/suri-proposal.webp",
+    "width": 1280,
+    "height": 800
+  },
+  "trinny-london-pitch": {
+    "src": "/arcs/previews/trinny-london-pitch.webp",
+    "width": 1280,
+    "height": 800
+  }
+}

@@ -19,6 +19,7 @@ import {
 } from "@/lib/sheet/arcs";
 import { letterDateShort } from "@/lib/sheet/dates";
 import type { SheetSection } from "@/lib/sheet/types";
+import PREVIEWS from "@/lib/arcs/previews.json";
 import { isLightLockedPath } from "@/lib/theme/themeLock";
 
 /**
@@ -280,6 +281,22 @@ describe("the arcs instrument, recomputed from the registry (ADR-118)", () => {
         r.id
       ).toEqual(arc ? arc.sections.filter((s) => s.menuPrimary).map((s) => s.id) : []);
       for (const c of d.chapters) expect(c.href, r.id).toBe(`${r.href}#${c.id}`);
+    }
+  });
+
+  it("every preview names a real engagement, and its file is the size it declares", () => {
+    /* The first screens (`scripts/capture-arc-previews.mjs`) are optional per
+       engagement — a scaffolded arc falls back to its card — but every entry
+       the manifest HAS must point at a page on the overview and a real file. */
+    const ids = new Set(record.map((r) => r.id));
+    for (const [id, p] of Object.entries(PREVIEWS)) {
+      expect(ids.has(id), `${id}: a preview for no engagement`).toBe(true);
+      expect(p.src).toBe(`/arcs/previews/${id}.webp`);
+      expect(webpSize(join(__dirname, "..", "..", "public", p.src)), id).toEqual({
+        width: p.width,
+        height: p.height,
+      });
+      expect(log.dossiers.find((d) => d.id === id)?.image.src, id).toBe(p.src);
     }
   });
 

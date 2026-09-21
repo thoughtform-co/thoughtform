@@ -1,5 +1,5 @@
 import type { ClientDef } from "@/lib/arcs/clients";
-import { instrumentSections } from "@/lib/sheet/arcs";
+import { CARD_IMAGE_SIZE, instrumentSections } from "@/lib/sheet/arcs";
 import type { Engagement } from "@/lib/sheet/arcs";
 import type { SheetSection } from "@/lib/sheet/types";
 
@@ -32,10 +32,12 @@ const HALCYON = client("halcyon", "Halcyon", "2026");
 const MERIDIAN = client("meridian", "Meridian", "2026");
 export const KIT_CLIENTS: readonly ClientDef[] = [NORTHWIND, HALCYON, MERIDIAN];
 
+/* The card photographs, at the size their files declare (sheet-arcs reads
+   every dossier picture's header against it). */
 const IMAGES = {
-  embedded: { src: "/images/services/embedded.webp", alt: "" },
-  workshop: { src: "/images/services/workshop.webp", alt: "" },
-  keynote: { src: "/images/services/keynote.webp", alt: "" },
+  embedded: { src: "/images/services/embedded.webp", alt: "", ...CARD_IMAGE_SIZE },
+  workshop: { src: "/images/services/workshop.webp", alt: "", ...CARD_IMAGE_SIZE },
+  keynote: { src: "/images/services/keynote.webp", alt: "", ...CARD_IMAGE_SIZE },
 };
 
 function fixture(
