@@ -4,7 +4,9 @@
   Everything below has landed (see §As built); wave 03 is shot, graded and in
   ten galleries behind one index (`delivery/review-wave-03.html` in the ship).
   The owner's tick on those galleries is the acceptance; until then every
-  section below is a proposal.
+  section below is a proposal. ⚠ **[U1](#u1-2026-09-21-owner--the-log-is-blocks-a-gutter-from-the-dossier)
+  (same day, his live read) redraws the LOG** as blocks a gutter from the
+  dossier; wave 03's log stills are superseded, its monitor stills stand.
 - **Surface:** `/arcs` — the owner's page since [ADR-117](117-the-owners-pass.md)
   — and only it. The sheet ([ADR-114](114-the-sheet.md)) stays the grammar of
   `/home-sessions`, `/musings`, every client page and the kit.
@@ -68,6 +70,11 @@ plot (commit activity was measured as a denser signal and dropped: forty
 commits on one pitch, one to three everywhere else).
 
 ### 3 · The log opens it
+
+⚠ **THE LIST BELOW IS SUPERSEDED BY [U1](#u1-2026-09-21-owner--the-log-is-blocks-a-gutter-from-the-dossier)**
+— no group heads, no chips, no zero gutter: one block per engagement, a gutter
+between the panels, one floor. The dossier, the selection law and the no-registry
+rule below still bind.
 
 Left, five of twelve: a `<nav>` of real links — kind-filter stations, then one
 group head per client over one-line rows (`diamond · chip · title … [date]`),
@@ -299,8 +306,111 @@ cell — shot THREE times: findings 7 and 11 each threw a whole shoot away
   rails' end at 720 high, and SL's strips touch the rails' end ticks (clear
   of every label and mark, by its stated condition).
 
+## U1 (2026-09-21, owner) — the log is blocks, a gutter from the dossier
+
+**The read**, of the built log, live: _"good foundation but it looks messy. It
+needs more breathing room between the two panels. And each section on the left
+side needs to feel more like blocks instead of glorified word document. So
+let's simplify the arc subpage."_ His reference: the codex list — a column of
+bordered PLATES, a wide gap, one panel.
+
+**What the still held, counted.** The left column was an OUTLINE: 43 lettered
+strings and 15 hairlines in six heading-rule-line runs, five of the six heads
+over ONE row. Every chip restated its own title (`PROPOSAL` / "The proposal",
+nine of nine), and the chips' four widths started the titles at four x
+positions. The chosen row butted into the dossier's lip — the zero gutter was
+§3's own design. And the two panels shared a top and nothing else: the list
+ended ~100px above the dossier's floor at his window (279px on the kit).
+
+**Decision.**
+
+- **One BLOCK per engagement** — a bordered square box (the filter stations'
+  grammar at row scale, ADR-089 U3/U4): a mono line (the standing diamond, the
+  client, the bracketed date at the right end) over the sans title; one gap
+  between blocks; the chosen block FILLED `--gold` on `--gold-contrast`, every
+  other outlined on `--sh-plate`. The DOM reads client, title, date; the grid
+  seats the date on the first line.
+- **The heads, the counts and the chips go.** The client is each block's own
+  first line; a client with several engagements reads as a RUN of blocks under
+  one name (the kit's Northwind). `SheetLogRow.chip` stays in the record,
+  lettered nowhere — the copy law still walks it, one line brings it back.
+- **A gutter**: `--log-gutter: clamp(48px, 6vw, 112px)` — 76.8px at 1280, 112 at
+  1920 (SH had 40).
+- **One datum, one floor.** The filter is a head strip exactly `--mon-strip-h`
+  tall, level with the dossier's band at both edges; the blocks DIVIDE the
+  device's height: `--log-block-h: clamp(44px, (mon-h − strip − n·gap) / n,
+9svh)`, `n` written inline by the server as `--log-n`. ⚠ **The token is
+  declared ON THE LIST**, beside `--log-n`: a custom property resolves where it
+  is declared, so on the root it would compute against a missing `n`, go
+  invalid, and every block would fall back to its content with nothing
+  erroring. ⚠ **The ceiling is 9svh, not 8**: at 8 the kit's eight blocks hit
+  the clamp at 1920 × 1247 and ended 61px short — the one-floor claim failing on
+  the fixture that exists to be harder than the record. `n` counts every row,
+  so a filter never resizes a block; the list just ends sooner.
+- **The runs are ordered by their NEWEST FILING, the house formats last** (law
+  7 of `instrumentViolations`, two break-cases, and a reversed-registry proof on
+  the kit). Registry order put Trinny (09·09) over Suri (09·12), a sorting bug
+  once no head explained it. **The monitor's lanes keep registry order** — a
+  lane that moved every time something was filed would be a worse monitor —
+  and the lit mark is what ties the frames.
+- **The `rows` knob and direction `SH` are DELETED**: he read the ruled value
+  and the house went past the boxed one. `SG`, `SJ`, `SL` stay open.
+- **The narrow desktop rung (961–1100)**: the four stations are ~343px on one
+  line and a strip level with a band may not wrap; at 5/12 the list is 309px at
+  1024 wide (measured 34px over), so the list takes half and the stations
+  tighten to 8px. **On a phone** the strip may wrap and the blocks are a fixed
+  56px.
+
+**Measured** (`arcs-instrument-smoke`, 15/15): 50.5px blocks at 1280 × 720,
+56.5 at 1440 × 800, 94.2 at 1920 × 1247 and 107.4 on the kit there; the list
+within 0.14px of the dossier's floor at every shape; the strip level with the
+band to 0px; the stations one line with 33.5px spare at 961 and 31.6 on a 375
+phone. The gutter, block and floor guards were run against the OLD geometry
+(injected) and fail it: gutter 0, nine blocks off the token, the floor 119.5px
+short.
+
+**Findings.**
+
+1. **A token that needs a value from lower in the tree is declared THERE.**
+   `--log-n` lives on the list; a `--log-block-h` on the root is guaranteed-
+   invalid and every block falls back to `auto` with no error — the house's "a
+   custom property is a string until something lays it out", one level up.
+2. **The mechanical gate had a DEAD allow-list entry.** `.sh-stn.is-on` never
+   matched, because `describe()` names an element by its first class; the
+   picked station passed only by being under 32px. Stretched to the 36px strip
+   at 1920 it surfaced as a structural gold violation. The gate now counts
+   `[aria-pressed="true"]` as state, beside `aria-current` and
+   `aria-selected` — a pressed toggle is state by definition, and the rubric
+   already named the picked station as one.
+3. **A fixture that is harder than the record is what catches a ceiling.** The
+   real nine never touch 9svh; the kit's eight would have hit 8svh at 1920.
+4. **Five readers find a block by its strings** — `.sh-log__row`, `.is-on`,
+   `data-id`, `data-status`, `aria-current`, `data-sh-filter` on the `<li>`
+   (the controller, the station row, the capture's second pick, the preview
+   capture, the kit's fills fake) — and none of them fails loudly. All kept.
+5. **The tenth engagement is a cliff at 1280 × 720.** Ten blocks land exactly
+   on the 44px floor there (44.8); the eleventh runs the list ~42px past the
+   rails, flowing in the page under the sticky dossier.
+
+**Not graded yet.** A wave is one CSS state, and the gutter and the fill are
+his to tune on the first still; wave 04 (rubric 0.3.0: L1 blocks, L2 one filled
+block, L3 a gutter and one floor; wave 03's house log stills promoted as a third
+negative pole, `SR`) waits for his word. Wave 03's MONITOR stills are unchanged
+by this update.
+
 ## Left open
 
+- **Since U1, his to rule on the first still:** the gutter's width (one
+  token); the filled block's weight — a solid slab about 1.55× the area of the
+  row he saw filled, where the dial if it reads heavy is the FILL (a gold wash
+  with a gold outline), never the box; whether the chip should come back as a
+  second right-hand reading; and the dossier's `Client` and `Kind` rows, which
+  its own band already letters.
+- **A pre-existing red, not this ADR's:** `subpages-smoke`'s "the kit's pile
+  stacks under a panel that sticks" fails on `/test/subpage-kit` — its starting
+  scroll (`top − 96`) leaves the panel at y 217 against a 64px sticky seat, so
+  it measures the panel before it has stuck (153px). The page loads none of
+  U1's files.
 - **The dates are seeds.** Git says when a page was made, not when the
   engagement happened. One line each to correct.
 - **The plot's dotted divisions are verticals inside an object.** The rubric
@@ -315,7 +425,9 @@ cell — shot THREE times: findings 7 and 11 each threw a whole shoot away
   pass, so it is the grammar the references share; a stranger names it by its
   content, nine real engagements, rather than by its genre. Whether "they
   really feel like quests" wants it dressed more like a game's menu is his
-  call; nothing was changed to move a word.
+  call; nothing was changed to move a word. ⚠ His own read agreed with the
+  stranger's before the galleries did — "a glorified word document" — and U1 is
+  the answer; wave 04's stranger's read is where it gets measured again.
 - **The docked wordmark on a first screen is new to him.** Everywhere else
   on the site the first screen carries the hero lockup; on the instrument it
   sits docked in the rail's corner from the start (finding 11). It is in

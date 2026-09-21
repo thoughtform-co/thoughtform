@@ -107,8 +107,8 @@ and the first for a page that lists things.
 ## The arcs instrument (ADR-118)
 
 The overview, the owner's page. Two screens: a MONITOR that plots every
-engagement at the date it was filed, then a LOG that lists them per client
-with one filled row against its DOSSIER.
+engagement at the date it was filed, then a LOG of one block per engagement,
+one filled, a gutter from its DOSSIER (ADR-118 U1).
 
 - **Two arrangements, exactly, in that order.** `monitor` and `log` are in
   `SHEET_ARRANGEMENTS`, but a ladder that holds either is judged by
@@ -116,8 +116,25 @@ with one filled row against its DOSSIER.
   date on BOTH windows, on a real lane, oldest first; NOW inside both windows
   and right of every mark; the terminus's `Marks` reading equal to the marks;
   ONE id set across marks, rows and dossiers; the lit mark IS the selected
-  row; each group newest first. None of this is visible in a still, which is
-  why it is code. Neither frame letters an ordinal or a head band.
+  row; each group newest first, the client runs by their NEWEST FILING and the
+  house formats last (U1). None of this is visible in a still, which is why it
+  is code. Neither frame letters an ordinal or a head band.
+- ⚠ **THE LOG IS BLOCKS, A GUTTER FROM THE DOSSIER, ON ONE FLOOR (ADR-118 U1,
+  owner: "more like blocks instead of glorified word document").** One
+  bordered block per engagement — the client and the bracketed date on a mono
+  line over the title — one gap apart; no group heads, no chips (`chip` stays
+  in the record, lettered nowhere); `--log-gutter` between the panels; the
+  filter a head strip level with the dossier's band. The blocks DIVIDE the
+  device's height: `--log-block-h` from `--log-n`, which the server writes on
+  the list. ⚠ **The token is declared ON THE LIST, where `--log-n` lives** — on
+  the root it goes invalid and every block falls back to its content with
+  nothing erroring. ⚠ The ceiling is 9svh because the KIT's eight hit 8svh at
+  1920 and ended 61px short. ⚠ The monitor's LANES keep registry order while the
+  log's runs are ordered by filing: two orders on purpose. ⚠ Five readers find
+  a block by its strings (`.sh-log__row`, `.is-on`, `data-id`, `data-status`,
+  `aria-current`, `data-sh-filter` on the `<li>`) and none fails loudly. Below
+  1100 wide the list takes half (the stations are ~343px and may not wrap
+  there); on a phone the strip wraps and the blocks are 56px.
 - **Every reading is derived** (`arcsInstrumentSections`, `lib/sheet/arcs.ts`)
   from `CLIENTS`, `ARCS`, `status`, `since` and `date`, and `sheet-arcs`
   recomputes each a second way. `today` is a PARAMETER: the page asks the
@@ -174,9 +191,13 @@ with one filled row against its DOSSIER.
   ⚠ The capture's `stillLife` waits on `.sh-ap-root` as on a reveal — shot
   before its `is-in`, a still is a closed aperture.
 - **Gold is state and nothing else**: the lit mark (an OUTLINE, so
-  `--gold-line`), the NOW cursor, the filled row, the picked station, the CTA
+  `--gold-line`), the NOW cursor, the filled block, the picked station, the CTA
   and the dossier's lip; `mechanical.mjs` names the four the one-long-side
-  rule would misread. The monitor's own ring is dawn.
+  rule would misread. The monitor's own ring is dawn. ⚠ The gate names an
+  element by its FIRST class, so a two-class ACCENT_ALLOW entry
+  (`.sh-stn.is-on`) never matches; state is read off `aria-current`,
+  `aria-selected` and — since U1, when the picked station grew to 36px —
+  `aria-pressed`.
 - **The dossier's picture is the engagement's first screen**
   (`scripts/capture-arc-previews.mjs` → `public/arcs/previews/` +
   `lib/arcs/previews.json`, sizes read off the files), OPTIONAL per

@@ -133,3 +133,25 @@ first negative anchor of the sheet itself. Applied on every page the same
 hour (ADR-114 U1); wave 02 re-shoots the remaining three directions at the new
 state. Not yet ruled on: the two-up figure's short dashed divider, which is
 stripe.dev's and not a rail's length — flagged in the reply, left in place.
+
+### 2026-09-21 — the first live read of the instrument's log (before any gallery)
+
+> Ok thanks, good foundation but it looks messy. It needs more breathing room
+> between the two panels. And each section on the left side needs to feel more
+> like blocks instead of glorified word document. So let's simplify the arc
+> subpage.
+
+With the codex list as his reference: a column of bordered plates, a wide gap,
+one panel. Decoded against the still: the list was an OUTLINE (six client heads
+over one-line rows on hairlines, five heads over one row; a chip restating every
+title; 43 strings, 15 hairlines), the chosen row butted into the dossier (the
+zero gutter was ADR-118 §3's own design), and the list ended ~100px above the
+dossier's floor. Applied the same hour (ADR-118 U1): one bordered block per
+engagement, the client and the date over the title; no heads, no chips; a
+gutter of `clamp(48px, 6vw, 112px)`; the filter level with the dossier's band;
+the blocks dividing the device so the list ends on the dossier's floor; the
+runs ordered by their newest filing. The `rows` knob and direction SH are
+deleted — he read one value and the house went past the other. His read agreed
+with wave 03's stranger ("archive", never "quest journal") before he had seen
+the galleries. For wave 04: L1 becomes blocks, L2 one filled block, L3 a gutter
+and one floor, and wave 03's house log stills become a negative pole (SR).

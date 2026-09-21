@@ -9,7 +9,7 @@ map.
 
 Dev server today: `http://localhost:3003` (read the port off the running
 server before quoting one). The document pages take `?k=SB|SD|SE`, the arcs
-overview and its kit take `?k=SB|SG|SH|SJ|SL`, and every page takes
+overview and its kit take `?k=SB|SG|SJ|SL`, and every page takes
 `&theme=dark|light`.
 
 ```
@@ -40,21 +40,24 @@ The sheet's four, on the document pages:
 | `card`     | `stack` | `grid`  | the pile stacks on scroll, or a static grid          |
 | `timeline` | `axis`  | `rail`  | horizontal dated axis, or a vertical date rail       |
 
-The instrument's four, on `/arcs` and its kit:
+The instrument's three, on `/arcs` and its kit:
 
 | knob      | house     | other   | moves                                                    |
 | --------- | --------- | ------- | -------------------------------------------------------- |
 | `span`    | `active`  | `full`  | the plot's window: the active weeks, or 2023 to now      |
-| `rows`    | `ruled`   | `boxed` | the log's rows on hairlines, or as outlined plates       |
 | `dossier` | `one`     | `pair`  | one housing, or an image plate over a text plate         |
 | `frame`   | `housing` | `rails` | the monitor closed on itself, or its strips out to rails |
+
+⚠ The `rows` knob (ruled · boxed) and its direction `SH` are deleted (ADR-118
+U1): the owner read the ruled log as "a glorified word document", and the
+house went past both values — one bordered block per engagement, a gutter
+from the dossier, one floor. A stale `?k=SH` lands on the house.
 
 Directions, document pages: `SB` house · `SD` editorial
 (`head=stack ordinal=off`) · `SE` grid (`card=grid timeline=rail`) · `SA` the
 negative pole (the old `/arcs`, shot once). Directions, the instrument: `SB`
-house · `SG` full record · `SH` plates · `SJ` pair · `SL` rails · `SF` the
-second negative pole (yesterday's sheet overview, promoted from wave 02,
-never re-shot). A direction's `types` scopes it, so AR is never shot at SD or
+house · `SG` full record · `SJ` pair · `SL` rails · `SF` the second negative
+pole (yesterday's sheet overview, promoted from wave 02, never re-shot). A direction's `types` scopes it, so AR is never shot at SD or
 SE. One record: `lib/sheet/directions.json`.
 
 ## The arrangements, and the laws
@@ -74,12 +77,20 @@ the lit mark is the chosen row. `tests/lib/sheet-instrument.test.ts`.
 
 ## What the owner is being asked
 
+**On the instrument, after U1's first stills (the log as blocks):** the
+gutter's width (`--log-gutter`, one token); the filled block's weight (the
+dial, if it reads heavy, is the fill, never the box); whether the chip comes
+back as a second right-hand reading. Wave 04 (rubric 0.3.0) waits for that
+read.
+
 **On the instrument, after wave 03's galleries:** the house against each of
-the four directions; the nine seeded `Filed` dates (a page's first commit,
+the three remaining directions (the monitor stills stand; the log stills are
+superseded by U1); the nine seeded `Filed` dates (a page's first commit,
 not the engagement's start); the section dots over each mark; whether the
 plot's dotted divisions sit right with "the rails are the only verticals";
 and what the log should read as to a stranger, who calls it an ARCHIVE, not a
-quest journal (§Wave 03 below).
+quest journal (§Wave 03 below) — his own read, "a glorified word document",
+agreed, and U1 is the answer.
 
 **On the document pages, after wave 01's galleries:** split or stacked head ·
 ordinals on or off · pile or grid · axis or rail · the twelve-gold budget ·

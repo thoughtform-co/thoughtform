@@ -43,6 +43,13 @@ The canonical rule is `.claude/rules/sheet.md`; this file mirrors it for Cursor.
   `.sh-t` picks one, because `span` is a client-side knob.
 - Each device is as tall as the rails; the graticule is DOM (never a
   `viewBox`) and is the one named exemption to the rails-only verticals.
+- The log is BLOCKS since ADR-118 U1: one bordered block per engagement (the
+  client and the date over the title), a `--log-gutter` from the dossier, the
+  filter level with the dossier's band, and `--log-block-h` DIVIDING the
+  device so the list ends on its floor — declared on the LIST, where the
+  server writes `--log-n` (on the root it goes invalid silently). The runs are
+  ordered by newest filing, the formats last; the monitor's lanes keep
+  registry order. The `rows` knob and direction SH are deleted.
 - The frame's wordmark is DOCKED from the first frame on the instrument: the
   hero lockup sat 7px under the monitor's corner. The smoke asserts
   clearance, not order ("under the device" passed at 7px).

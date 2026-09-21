@@ -54,6 +54,33 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-21 — the arcs log is blocks, a gutter from the dossier (ADR-118 U1)
+
+**Trigger:** the owner, live, on the first log: _"it looks messy. It needs
+more breathing room between the two panels. And each section on the left side
+needs to feel more like blocks instead of glorified word document."_
+
+- **Cycle A, on a surface built the same morning.** One bordered block per
+  engagement, no group heads, no chips (the field stays, lettered nowhere), a
+  `--log-gutter`, the filter level with the dossier's band, and the blocks
+  dividing the device so the list ends on the dossier's floor; the runs
+  ordered by newest filing (a new law in `instrumentViolations`); the `rows`
+  knob and direction SH deleted with their mirrors. ADR-118 U1.
+- **Post-incident rows triggered:** a token that needs a value from lower in
+  the tree is declared THERE (`--log-block-h` beside `--log-n`, rule added to
+  `sheet.md`); the mechanical gate's two-class ACCENT_ALLOW entry was dead
+  (`describe()` takes the first class) and a pressed toggle is state now; the
+  9svh ceiling exists because the kit, not the record, hit 8svh.
+- **Verified:** vitest 173/173 (sheet suites + the three CSS ratchets, still
+  zero); `arcs-instrument-smoke` 15/15 incl. the kit and the 961–1100 rung, its
+  new guards shown to fail on the old geometry; `arc-terminal-smoke` green;
+  the mechanical gate clean on `/arcs` and the kit, both themes, both
+  viewports; tsc clean. ⚠ `subpages-smoke` "the kit's pile stacks under a panel
+  that sticks" is RED and pre-existing: it starts at `top − 96`, where the
+  panel sits at its natural y 217 against a 64px sticky seat, so it measures
+  before the panel has stuck — `/test/subpage-kit` loads none of U1's files.
+- **Not pushed; wave 04 waits for his read** of the first stills.
+
 ### 2026-09-21 — `/arcs` is the owner's instrument: a pass, a monitor, a log (ADR-117, ADR-118)
 
 **Trigger:** the owner — the overview _"should only be accessible to me when I
