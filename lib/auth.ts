@@ -25,6 +25,10 @@ export async function signOut() {
 
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
+  // The owner's pass ends with the session (ADR-117). AuthProvider clears it
+  // on SIGNED_OUT too; this is the belt for a sign-out with no provider
+  // subscribed.
+  await import("./auth/ownerPassClient").then((m) => m.clearOwnerPass()).catch(() => {});
 }
 
 export async function getSession() {

@@ -34,6 +34,12 @@ and the first for a page that lists things.
 
 ## Contracts
 
+- ⚠ **`/arcs` IS THE OWNER'S PAGE (ADR-117).** `force-dynamic`, and
+  `assertOwner()` is the first thing it does — anything added to the page
+  renders AFTER that call, never before it, and the page may never become
+  static again (`owner-gate-doctrine`). Under `next dev` the gate is open, so
+  the capture and the smokes reach it; `OWNER_GATE=enforce` closes it locally.
+  The client pages (`/arcs/<client>`) are public and are not gated.
 - **A section is ONE arrangement from the vocabulary** (`SHEET_ARRANGEMENTS`),
   as data in `lib/sheet/types.ts`, drawn by `components/sheet/SheetRenderer`.
   A new kind is a union member, a renderer case (the switch is exhaustive) and

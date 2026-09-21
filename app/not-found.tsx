@@ -3,6 +3,9 @@ import Link from "next/link";
 export default function NotFound() {
   return (
     <div
+      /* The owner's pass (ADR-117) reads this to tell "the overview answered
+         with a 404" from the overview itself, and re-mints once. */
+      data-tf-404=""
       style={{
         display: "flex",
         flexDirection: "column",

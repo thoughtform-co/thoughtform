@@ -52,7 +52,13 @@ const QUARANTINE_ROOTS = [
 
 // Plus a couple of standalone files we just rename directly.
 const QUARANTINE_FILES = [
-  "middleware.ts",
+  // Next 16 renamed `middleware.ts` to `proxy.ts`; the old name no longer
+  // exists, so the export was building WITH the proxy in place.
+  "proxy.ts",
+  // The arcs overview is the owner's page (ADR-117): force-dynamic and
+  // gated on a cookie, so it cannot be exported — and a shareable zip must
+  // never carry the page that lists every client.
+  "app/(marketing)/arcs/page.tsx",
 ];
 
 const moves = [];

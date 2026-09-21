@@ -12,15 +12,24 @@
  */
 import { chromium } from "playwright";
 
+import { COOKIE, signPass } from "./owner-pass/signPass.mjs";
+
 const base = process.argv.includes("--base")
   ? process.argv[process.argv.indexOf("--base") + 1]
   : "http://localhost:3113";
+
+/* `/arcs` is the owner's page (ADR-117): a production build answers it with a
+   404 unless the request carries his pass. The sweep signs one when it is
+   handed the server's own secret (`OWNER_PASS_SECRET`, from the environment,
+   never printed); without it the route is SKIPPED LOUDLY rather than swept
+   as a 404 page that happens to live at that path. */
+const OWNER_ROOT = process.env.OWNER_PASS_SECRET?.trim() || null;
 
 const ROUTES = [
   "/",
   "/claude-workshop",
   "/arcs/trinny-london/proposal",
-  "/arcs",
+  ...(OWNER_ROOT ? ["/arcs"] : []),
   "/arcs/loop-earplugs",
   "/arcs/ai-keynote",
   /* The proposal (ADR-098): a new section kind with its own client leaf,
@@ -34,9 +43,24 @@ const THEMES = ["dark", "light"];
 const browser = await chromium.launch({ headless: false });
 const violations = [];
 
+if (!OWNER_ROOT) {
+  console.log(
+    "SKIPPED /arcs — the overview is owner-gated (ADR-117); set OWNER_PASS_SECRET to the server's own value to sweep it."
+  );
+}
+
 for (const route of ROUTES) {
   for (const theme of THEMES) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    if (route === "/arcs" && OWNER_ROOT) {
+      await page.context().addCookies([
+        {
+          name: COOKIE,
+          value: signPass(OWNER_ROOT, Math.floor(Date.now() / 1000) + 3600),
+          url: `${base}/arcs`,
+        },
+      ]);
+    }
     const tag = `${route} [${theme}]`;
 
     await page.addInitScript(() => {

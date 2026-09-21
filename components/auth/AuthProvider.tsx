@@ -24,6 +24,21 @@ function hasAuthParamsInUrl(): boolean {
   return window.location.hash.includes("access_token=") || window.location.search.includes("code=");
 }
 
+/**
+ * The owner's pass rides the session (ADR-117): minted for the allowlisted
+ * email once a session exists, cleared when it ends. The module is imported
+ * LAZILY from inside the session callbacks, so a visitor with no session
+ * never fetches it — the anonymous path stays free of it and of Supabase.
+ */
+function syncOwnerPass(session: Session | null): void {
+  if (!session) return;
+  void import("@/lib/auth/ownerPassClient").then((m) => m.syncOwnerPass(session)).catch(() => {});
+}
+
+function clearOwnerPass(): void {
+  void import("@/lib/auth/ownerPassClient").then((m) => m.clearOwnerPass()).catch(() => {});
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -87,15 +102,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+        syncOwnerPass(session);
       });
 
       // Listen for auth changes
       const {
         data: { subscription: sub },
-      } = supabase.auth.onAuthStateChange((_event, session) => {
+      } = supabase.auth.onAuthStateChange((event, session) => {
         if (disposed) return;
         setSession(session);
         setUser(session?.user ?? null);
+        if (event === "SIGNED_OUT") clearOwnerPass();
+        else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") syncOwnerPass(session);
       });
       subscription = sub;
     };

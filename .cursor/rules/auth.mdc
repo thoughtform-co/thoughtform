@@ -13,4 +13,6 @@ Gates on the client are **UX only**; **server** must verify tokens and allowlist
 
 **Read first:** `sentinel/decisions/003-auth-centralization.md`, `lib/auth/allowed-user.ts` (`isAllowedUserEmail()`). See also `.cursor/rules/admin-access.mdc`.
 
+**The owner's pass (ADR-117):** `/arcs` is gated in the page (`force-dynamic` + `assertOwner()` from `lib/auth/ownerGate.ts`), never in `proxy.ts` (a proxy path check leaks through `.rsc` / `.segments` URLs) and never client-side. The mint (`/api/owner-pass`) uses `verifyAllowlistedBearer` — no dev bypass. The pass is `Path=/arcs`, carries no identity, fails closed, and no other API route may read it. Full rule: `.claude/rules/auth.md`.
+
 **Process:** `sentinel/MAINTENANCE.md`

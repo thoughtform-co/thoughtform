@@ -48,6 +48,14 @@ export interface ServerEnvSchema {
   // ─── Auth allowlist ──────────────────────────────────────────
   /** Allowlisted admin email (single-admin model, ADR-003). */
   NEXT_PUBLIC_ALLOWED_EMAIL?: string;
+  /**
+   * The owner's pass root (ADR-117) — at least 32 characters, server-only.
+   * Optional: unset, the pass key is DERIVED from the service-role key, so the
+   * gate works with nothing configured. Set but short, the gate fails CLOSED.
+   */
+  OWNER_PASS_SECRET?: string;
+  /** "enforce" turns the owner's gate on outside production (ADR-117). */
+  OWNER_GATE?: string;
 
   // ─── Vercel KV (optional) ────────────────────────────────────
   KV_URL?: string;
@@ -103,6 +111,7 @@ type EnvKey = keyof ServerEnvSchema;
 
 const SECRET_KEYS = new Set<EnvKey>([
   "SUPABASE_SERVICE_ROLE_KEY",
+  "OWNER_PASS_SECRET",
   "ANTHROPIC_API_KEY",
   "VOYAGE_API_KEY",
   "REPLICATE_API_TOKEN",

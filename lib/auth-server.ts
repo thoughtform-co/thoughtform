@@ -36,24 +36,23 @@ export async function getServerUser(request: Request) {
 }
 
 /**
- * Check if the current request is from an authorized admin user.
- * Validates the Bearer token and checks the user's email against the allowlist.
+ * The STRICT check: a Bearer token that resolves to a real Supabase user
+ * whose email is the allowlisted one — with NO development bypass.
  *
- * @param request - The incoming request with Authorization header
- * @returns true if the request is from the allowed admin user
+ * For anything whose result outlives the request, where a dev
+ * short-circuit would mint something valid in production (the owner's
+ * pass, ADR-117). `isAuthorized` below is this plus its dev shortcut.
  */
-export async function isAuthorized(request: Request): Promise<boolean> {
-  // In development, allow all (for easier testing)
-  if (process.env.NODE_ENV === "development") {
-    return true;
-  }
-
+export async function verifyAllowlistedBearer(request: Request): Promise<boolean> {
   const authHeader = request.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return false;
   }
 
   const token = authHeader.slice(7);
+  if (!token) {
+    return false;
+  }
   const supabase = createServerClient();
   if (!supabase) {
     return false;
@@ -68,4 +67,20 @@ export async function isAuthorized(request: Request): Promise<boolean> {
   }
 
   return isAllowedUserEmail(user.email);
+}
+
+/**
+ * Check if the current request is from an authorized admin user.
+ * Validates the Bearer token and checks the user's email against the allowlist.
+ *
+ * @param request - The incoming request with Authorization header
+ * @returns true if the request is from the allowed admin user
+ */
+export async function isAuthorized(request: Request): Promise<boolean> {
+  // In development, allow all (for easier testing)
+  if (process.env.NODE_ENV === "development") {
+    return true;
+  }
+
+  return verifyAllowlistedBearer(request);
 }

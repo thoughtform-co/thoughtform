@@ -175,6 +175,13 @@ function SessionControl() {
         <Link href="/admin" className="rin-session__row" onClick={() => setOpen(false)}>
           Admin tools
         </Link>
+        {/* The owner's private overview (ADR-117). A plain anchor, never
+            `Link`: the router may cache a prefetched 404 from before the
+            pass was minted, and a full load always asks the server. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- a full load is the point (ADR-117) */}
+        <a href="/arcs" className="rin-session__row" onClick={() => setOpen(false)}>
+          Arcs
+        </a>
         <button
           type="button"
           className="rin-session__row"

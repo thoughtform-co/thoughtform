@@ -141,3 +141,20 @@ await fetch("/api/particles/config", {
 - `NEXT_PUBLIC_ALLOWED_EMAIL` is intentionally public (just an email)
 - Actual auth is via Supabase magic link + token validation
 - Never trust client-side auth state for server operations
+
+---
+
+## Amendment — 2026-09-21: the owner's pass ([ADR-117](117-the-owners-pass.md))
+
+One cookie now exists beside the Bearer model, and Alternative 2's CSRF
+reasoning does not reach it, because it is not a session:
+
+- **`tf_owner`** = `v1.<expiry>.<HMAC>` — no identity, no Supabase token, a
+  derived key, fails closed, 7 days.
+- **Minted only by `POST /api/owner-pass`**, behind
+  `verifyAllowlistedBearer` — the Bearer check of §2 with **no development
+  bypass** (`isAuthorized` keeps its shortcut and now delegates to it).
+- **Authorises one GET render of one page**, `/arcs`, checked in the page
+  (`lib/auth/ownerGate.ts`), never in `proxy.ts`. `Path=/arcs`, so the browser
+  never sends it to `/api/*`; no API route may read it
+  (`tests/lib/owner-gate-doctrine.test.ts`). `requireAdmin` stays Bearer-only.
