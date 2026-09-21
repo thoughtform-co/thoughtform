@@ -199,6 +199,12 @@ one page, and no file under `app/api/**` but the mint route may name it
   taken here; the pre-paint scripts need a route test that does not letter
   the routes. `verify-owner-gate` tests for overview CONTENT (client names),
   never for the slugs, for exactly this reason.
+- **On Vercel `/%61rcs` answers 500, not 404** (measured after deploy,
+  2026-09-21). Vercel resolves percent-encoded paths to their routes
+  (`/%68ome-sessions` is 200), so the encoded overview reaches the page, and
+  there the gate's `notFound()` renders as Next's generic error shell. No
+  client data is in it and local `next start` answers 404; recorded, not
+  chased.
 - **`OWNER_PASS_SECRET` in Vercel** (Production and Preview — previews run as
   production, and the owner signs in per preview host). Not needed on day one;
   the derived key works. The owner generates and sets it; no session reads or
