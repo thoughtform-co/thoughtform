@@ -334,8 +334,9 @@ test.describe("arc terminal motion (ADR-057)", () => {
 
   test("the overview lists both cuts and the portfolio, each distinguishable", async ({ page }) => {
     /* ⚠ THE OVERVIEW IS AN INSTRUMENT SINCE ADR-118 — a monitor that plots every
-       engagement and a log that lists it — so an engagement is a ROW, and its
-       chip and title together are what a reader tells it apart by. ADR-098's
+       engagement and a log that lists it — so an engagement is a BLOCK, and its
+       client line and title together are what a reader tells it apart by (the
+       chip is in the record and lettered nowhere since ADR-118 U1). ADR-098's
        invariants hold unchanged: every arc reaches the overview exactly once,
        plus one per client page that is not an arc; and a terminal CUT is
        distinguishable from the v1 it was cut from (ADR-057). The stamp is the
@@ -351,21 +352,21 @@ test.describe("arc terminal motion (ADR-057)", () => {
       await expect(page.locator(`.sh-log__row[href="/arcs/${arc.slug}"]`), arc.slug).toHaveCount(1);
     const rowFor = async (href: string) => {
       const row = page.locator(`.sh-log__row[href="${href}"]`);
-      const chip = (await row.locator(".sh-log__chip").textContent())?.trim() ?? "";
+      const client = (await row.locator(".sh-log__client").textContent())?.trim() ?? "";
       const title = (await row.locator(".sh-log__title").textContent())?.trim() ?? "";
-      return { chip, both: `${chip} ${title}` };
+      return { client, both: `${client} ${title}` };
     };
     for (const base of ["claude-workshop", "ai-keynote"]) {
       const v1 = await rowFor(`/arcs/${base}`);
       const v2 = await rowFor(`/arcs/${base}-v2`);
-      expect(v1.chip, `${base} has a chip`).not.toBe("");
+      expect(v1.client, `${base} says whose it is`).not.toBe("");
       expect(v2.both, `${base}-v2 is distinguishable from its v1 ("${v1.both}")`).not.toBe(v1.both);
     }
     const portfolio = await rowFor("/arcs/loop-earplugs");
-    expect(portfolio.chip, "the portfolio carries its own chip").not.toBe("");
+    expect(portfolio.client, "the portfolio says whose it is").not.toBe("");
     expect(
-      [(await rowFor("/arcs/claude-workshop")).chip, (await rowFor("/arcs/ai-keynote")).chip],
+      [(await rowFor("/arcs/claude-workshop")).client, (await rowFor("/arcs/ai-keynote")).client],
       "the portfolio is not labelled as a deck"
-    ).not.toContain(portfolio.chip);
+    ).not.toContain(portfolio.client);
   });
 });

@@ -201,12 +201,17 @@ export interface SheetMonitorMark {
   slot?: number;
 }
 
-/** One engagement row of the log. */
+/** One engagement of the log — drawn as one BLOCK since ADR-118 U1. */
 export interface SheetLogRow {
   id: string;
-  /** The chip: what the page is — proposal, pitch, portfolio, workshop, keynote. */
+  /** What the page is — proposal, pitch, portfolio, workshop, keynote. In
+   *  the record and lettered NOWHERE on the overview since ADR-118 U1: every
+   *  title already said it, and the chips' four widths made the title column
+   *  ragged. Kept so the copy law still walks it and it can come back in one
+   *  line of markup. */
   chip: string;
-  /** Sentence case, the client's name taken off where the group head says it. */
+  /** Sentence case, the client's name taken off: the block letters the
+   *  client on its own line directly above. */
   title: string;
   /** `YYYY-MM-DD`; the renderer letters it bracketed. */
   date: string;
@@ -216,7 +221,15 @@ export interface SheetLogRow {
   href: string;
 }
 
-/** One group of the log: a client, or the house formats. */
+/** The id of the log's one group that is not a client: the house formats. */
+export const SHEET_LOG_HOUSE_GROUP = "formats";
+
+/**
+ * One run of the log: a client's engagements, or the house formats.
+ * ⚠ NOT DRAWN AS A GROUP SINCE ADR-118 U1 — the heads went, and `name` letters
+ * on every block of the run as its client line. The runs are ordered by their
+ * newest filing, the house formats last (`instrumentViolations`, law 7).
+ */
 export interface SheetLogGroup {
   id: string;
   name: string;

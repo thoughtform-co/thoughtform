@@ -37,8 +37,11 @@
   --mon-read-w: clamp(140px, 10.4vw, 200px);
   --mon-mark: clamp(9px, 0.6vw, 12px);
   --mon-h: calc(100svh - var(--hud-rail-y-start) - var(--hud-rail-y-end));
-  --log-row-h: clamp(32px, 4.4svh, 56px);
-  --log-head-h: clamp(26px, 3.4svh, 42px);
+  /* The log (ADR-118 U1): the air between the list and the dossier, and
+     between one block and the next. `--log-block-h` is NOT here — it needs
+     `--log-n`, which lives on the list (§4). */
+  --log-gutter: clamp(48px, 6vw, 112px);
+  --log-gap: clamp(4px, 0.9svh, 12px);
   --ap-ease: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
@@ -82,8 +85,7 @@
 .sh-mon__lane-reading,
 .sh-mon__since,
 .sh-mon__ticks,
-.sh-log__head,
-.sh-log__chip,
+.sh-log__client,
 .sh-log__date,
 .sh-dos__band,
 .sh-dos__keys,
@@ -560,62 +562,99 @@
 }
 
 /* ── 4. The log ───────────────────────────────────────────────────── */
+/* ⚠ BLOCKS, A GUTTER, ONE FLOOR (ADR-118 U1, owner: "more breathing room
+   between the two panels … more like blocks instead of glorified word
+   document"). The first cut was an OUTLINE — six client heads over one-line
+   rows on hairlines, the chosen row butting straight into the dossier — and
+   ended ~100px short of the dossier's floor at his window. Now one bordered
+   block per engagement, a gutter between the panels, and the blocks DIVIDE
+   the device's height so the list sits on the dossier's floor. */
 .sh-log {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  column-gap: var(--log-gutter);
   align-items: start;
 }
-.sh-root[data-sh-rows="boxed"] .sh-log {
-  column-gap: var(--sh-gutter);
-}
 .sh-log__list {
+  /* ⚠ DECLARED HERE, BESIDE `--log-n` (written inline by SheetLog). A custom
+     property resolves where it is declared: on the root this would compute
+     against a missing `n`, go invalid, and every block would fall back to its
+     content's height with nothing erroring. The height is n blocks and n gaps
+     under the head strip, filling the device; the floor keeps two lines
+     legible (and admits a tenth engagement at 1280 × 720), the ceiling stops
+     a short record from blowing a block up. `n` counts EVERY row, so a filter
+     never resizes a block — the list just ends sooner. */
+  --log-block-h: clamp(
+    44px,
+    calc((var(--mon-h) - var(--mon-strip-h) - var(--log-n) * var(--log-gap)) / var(--log-n)),
+    9svh
+  );
   min-width: 0;
 }
+/* The head strip: the filter, as tall as the dossier's band and level with it,
+   so the two panels share a datum as well as a floor. The stations fill it. */
 .sh-log__filter {
-  padding-bottom: clamp(6px, 1svh, 12px);
+  height: var(--mon-strip-h);
 }
 .sh-log__filter .sh-stns {
-  margin: -4px -3px 0;
+  height: 100%;
+  margin: 0 -3px;
+  flex-wrap: nowrap;
+  align-items: stretch;
 }
-
-.sh-log__group + .sh-log__group {
-  margin-top: clamp(8px, 1.4svh, 18px);
+.sh-log__filter .sh-stn {
+  margin-block: 0;
+  padding-block: 0;
+  white-space: nowrap;
 }
-.sh-log__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin: 0;
-  min-height: var(--log-head-h);
-  padding: 0 12px;
-  border-bottom: 1px solid var(--sh-seam);
-  color: var(--sh-ink-dim);
-  letter-spacing: var(--track-eyebrow);
-}
-.sh-log__count {
-  color: var(--sh-ink-70);
+/* ⚠ THE NARROW DESKTOP RUNG. The four stations are ~343px on one line and a
+   strip may not wrap (it is level with the dossier's band). At 5/12 of the
+   band the list is 309px at 1024 wide and ~287px at 961 — measured 34px short
+   at 1024 × 768 — so below 1100 the list takes half and the stations tighten. */
+@media (min-width: 961px) and (max-width: 1100px) {
+  .sh-log {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .sh-log__filter .sh-stn {
+    padding-inline: 8px;
+  }
 }
 .sh-log__rows {
   margin: 0;
   padding: 0;
   list-style: none;
 }
+.sh-log__item {
+  margin-top: var(--log-gap);
+}
 
-/* A row: one line — diamond, chip, title, bracketed date — and it never wraps. */
+/* A block: a mono line — the standing diamond, the client, the bracketed date
+   at the right end — over the title in sans. Square, outlined, one size, one
+   gap; the chosen one filled. The DOM says client, title, date; the grid seats
+   the date on the first line so the title has the whole second. */
 .sh-log__row {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "mark client date"
+    ". title title";
+  align-content: center;
   align-items: center;
   column-gap: 12px;
-  min-height: var(--log-row-h);
-  padding: 0 12px;
-  border-bottom: 1px solid var(--sh-rule);
+  row-gap: clamp(2px, 0.5svh, 6px);
+  box-sizing: border-box;
+  min-height: var(--log-block-h);
+  padding: 0 var(--mon-pad);
+  border: 1px solid var(--sh-seam);
+  background: var(--sh-plate);
   color: var(--sh-ink-90);
   text-decoration: none;
-  transition: background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    background-color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .sh-log__mark {
+  grid-area: mark;
   width: 7px;
   height: 7px;
   box-sizing: border-box;
@@ -625,12 +664,21 @@
 .sh-log__mark[data-standing="shipped"] {
   background: var(--sh-ink-70);
 }
-.sh-log__chip,
+.sh-log__client {
+  grid-area: client;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--sh-ink-70);
+  letter-spacing: var(--track-eyebrow);
+}
 .sh-log__date {
+  grid-area: date;
   color: var(--sh-ink-dim);
   white-space: nowrap;
 }
 .sh-log__title {
+  grid-area: title;
   min-width: 0;
   overflow: hidden;
   font-size: var(--sh-copy);
@@ -639,17 +687,22 @@
 }
 .sh-log__row:hover,
 .sh-log__row:focus-visible {
+  border-color: var(--sh-ink-50);
   background: var(--sh-recess);
   outline: none;
 }
-/* The chosen row: FILLED among outlined peers (ADR-089 U4), its ink knocked
+.sh-log__row:focus-visible {
+  outline: 1px solid var(--sh-ink-70);
+  outline-offset: 2px;
+}
+/* The chosen block: FILLED among outlined peers (ADR-089 U4), its ink knocked
    out on `--gold-contrast`, never the void family. */
 .sh-log__row.is-on {
   background: var(--gold);
-  border-bottom-color: var(--gold);
+  border-color: var(--gold);
   color: var(--gold-contrast);
 }
-.sh-log__row.is-on .sh-log__chip,
+.sh-log__row.is-on .sh-log__client,
 .sh-log__row.is-on .sh-log__date {
   color: var(--gold-contrast);
 }
@@ -661,14 +714,7 @@
 }
 .sh-log__row.is-on:focus-visible {
   outline: 1px solid var(--gold-contrast);
-  outline-offset: -4px;
-}
-.sh-root[data-sh-rows="boxed"] .sh-log__row {
-  margin-top: 5px;
-  border: 1px solid var(--sh-rule);
-}
-.sh-root[data-sh-rows="boxed"] .sh-log__row.is-on {
-  border-color: var(--gold);
+  outline-offset: -5px;
 }
 
 /* ── 5. The dossier ───────────────────────────────────────────────── */
@@ -901,6 +947,22 @@ a.sh-dos__desig:focus-visible {
   .sh-log {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 24px;
+  }
+  /* No rails to fill between on a phone: one fixed block height. And no band
+     to be level with, so the strip may wrap; the stations tighten so the four
+     usually keep one line (at 375 wide they ran 0.4px past it untightened). */
+  .sh-log__list {
+    --log-block-h: 56px;
+  }
+  .sh-log__filter {
+    height: auto;
+  }
+  .sh-log__filter .sh-stns {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .sh-log__filter .sh-stn {
+    padding: 7px 8px;
   }
   .sh-log__dossiers {
     position: static;

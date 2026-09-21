@@ -13,7 +13,7 @@
  */
 
 import { atOnWindow } from "./axis";
-import { INSTRUMENT_ARRANGEMENTS } from "./types";
+import { INSTRUMENT_ARRANGEMENTS, SHEET_LOG_HOUSE_GROUP } from "./types";
 import type { SheetArrangement, SheetSection } from "./types";
 
 /** ArcHudNav's item shape, restated so this module imports no component. */
@@ -137,7 +137,10 @@ const AT_EPSILON = 1e-9;
  *  6. The monitor's marks, the log's rows and the dossiers are ONE set of
  *     ids, and the lit mark is the selected row.
  *  7. Within a group the rows run newest first, and every row's kind is one
- *     the filter offers.
+ *     the filter offers. The groups are drawn as ONE column of blocks since
+ *     ADR-118 U1, which reads top to bottom as time: the client runs are
+ *     ordered by their newest filing (a tie is allowed) and the house
+ *     formats close the list.
  *  8. No readout letters an empty value, and the chapter row is capped.
  */
 export function instrumentViolations(sections: readonly SheetSection[]): string[] {
@@ -215,6 +218,14 @@ export function instrumentViolations(sections: readonly SheetSection[]): string[
     for (const r of g.rows)
       if (!offered.includes(r.kind)) out.push(`log: ${r.id}'s kind ${r.kind} is not a filter`);
   }
+  const house = log.groups.findIndex((g) => g.id === SHEET_LOG_HOUSE_GROUP);
+  if (house !== -1 && house !== log.groups.length - 1)
+    out.push("log: the house formats do not close the list");
+  const heads = log.groups
+    .filter((g) => g.id !== SHEET_LOG_HOUSE_GROUP)
+    .map((g) => g.rows.reduce((d, r) => (r.date > d ? r.date : d), ""));
+  if (heads.join() !== [...heads].sort().reverse().join())
+    out.push("log: the clients are not in order of their newest filing");
 
   const readouts = [
     ...monitor.datum.readings,

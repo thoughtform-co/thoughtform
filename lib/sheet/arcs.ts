@@ -32,6 +32,7 @@ import { isLightLockedPath } from "@/lib/theme/themeLock";
 
 import { atOnWindow, axisWindow } from "./axis";
 import { letterDateShort } from "./dates";
+import { SHEET_LOG_HOUSE_GROUP } from "./types";
 import type {
   SheetConsoleDef,
   SheetDossier,
@@ -294,8 +295,8 @@ function newestFirst<T extends { date: string }>(items: readonly T[]): T[] {
   return [...items].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
 }
 
-/** The log row's title: the card's, with the client's name taken off when
- *  the group head above it already says it. */
+/** The log row's title: the card's, with the client's name taken off,
+ *  because the block's own client line directly above already says it. */
 export function rowTitleOf(e: Pick<Engagement, "cardTitle" | "client">): string {
   const prefix = e.client ? `${e.client.name} · ` : "";
   if (!prefix || !e.cardTitle.startsWith(prefix)) return e.cardTitle;
@@ -413,16 +414,26 @@ export function instrumentSections(
     kind: e.kind,
     href: e.href,
   });
+  /* ⚠ THE LOG'S RUNS ARE ORDERED BY THEIR NEWEST FILING, the house formats
+     last (ADR-118 U1); the monitor's LANES above keep registry order. Drawn
+     as one column of dated blocks, the log reads top to bottom as time, and
+     registry order put Trinny (09·09) over Suri (09·12) — a sorting bug to
+     the eye once no group head explained it. A lane that moved every time
+     something was filed would be a worse monitor, so the two orders differ on
+     purpose; the lit mark is what ties the frames. A tie keeps registry
+     order (`newestFirst` is stable). */
+  const runs = newestFirst(
+    clients.map((c) => {
+      const rows = newestFirst(all.filter((e) => e.client === c)).map(rowOf);
+      return { date: rows[0].date, group: { id: c.slug, name: c.name, rows } };
+    })
+  ).map((r) => r.group);
   const groups: SheetLogGroup[] = [
-    ...clients.map((c) => ({
-      id: c.slug,
-      name: c.name,
-      rows: newestFirst(all.filter((e) => e.client === c)).map(rowOf),
-    })),
+    ...runs,
     ...(all.some((e) => !e.client)
       ? [
           {
-            id: "formats",
+            id: SHEET_LOG_HOUSE_GROUP,
             name: "Thoughtform formats",
             rows: newestFirst(all.filter((e) => !e.client)).map(rowOf),
           },
@@ -518,7 +529,7 @@ export function instrumentSections(
       id: "log",
       menuLabel: "Log",
       menuPrimary: true,
-      ariaLabel: "The engagements, by client",
+      ariaLabel: "The engagements by client, newest first",
       filter: {
         attr: "kind",
         label: "Filter the log by kind",

@@ -1,5 +1,5 @@
 {
-  "$comment": "THE ONE REGISTRY for the sheet's knobs (ADR-114) and the arcs instrument's (ADR-118). Read by the pages (TS import, through lib/sheet/directions.ts) and by scripts/capture-subpages.mjs (readFileSync), and mirrored into the ship's armada.toml. Two readers, one record: a direction cannot be shot that the page cannot draw. TYPE IDS ARE LETTERS ONLY - the armada's filename grammar takes letters before the first dash. THE FIRST VALUE OF EVERY KNOB IS THE HOUSE: direction SB is every knob at its first value, and every other direction is an argument someone has to make against it. A direction's `types` scopes it to the pages whose knobs it moves (absent = every page): SD and SE move the document pages' head, ordinals, pile and timeline; SG, SH, SJ and SL move the arcs instrument's span, rows, dossier and frame, which only /arcs and its fixture kit draw. The `rules` knob (two full-height rules at the band's edges, or seams alone) was DELETED on 2026-09-20 by the owner's ruling - the frame's rails are the page's only verticals - and its seams direction SC went with it (ADR-114 U1). SA and SF are not knob sets: they are NEGATIVE POLES. SA is the old /arcs, shot once before the sheet replaced it; SF is the sheet's own overview, promoted byte-identical from wave-02-sb before the instrument replaced it (`from`).",
+  "$comment": "THE ONE REGISTRY for the sheet's knobs (ADR-114) and the arcs instrument's (ADR-118). Read by the pages (TS import, through lib/sheet/directions.ts) and by scripts/capture-subpages.mjs (readFileSync), and mirrored into the ship's armada.toml. Two readers, one record: a direction cannot be shot that the page cannot draw. TYPE IDS ARE LETTERS ONLY - the armada's filename grammar takes letters before the first dash. THE FIRST VALUE OF EVERY KNOB IS THE HOUSE: direction SB is every knob at its first value, and every other direction is an argument someone has to make against it. A direction's `types` scopes it to the pages whose knobs it moves (absent = every page): SD and SE move the document pages' head, ordinals, pile and timeline; SG, SJ and SL move the arcs instrument's span, dossier and frame, which only /arcs and its fixture kit draw. The `rules` knob (two full-height rules at the band's edges, or seams alone) was DELETED on 2026-09-20 by the owner's ruling - the frame's rails are the page's only verticals - and its seams direction SC went with it (ADR-114 U1). The `rows` knob (ruled one-line rows, or boxed plates) was DELETED on 2026-09-21 with its direction SH (ADR-118 U1): the owner read the ruled log as 'a glorified word document' and asked for blocks, and the house went past both values - one bordered block per engagement, a gutter, no group heads. SA and SF are not knob sets: they are NEGATIVE POLES. SA is the old /arcs, shot once before the sheet replaced it; SF is the sheet's own overview, promoted byte-identical from wave-02-sb before the instrument replaced it (`from`).",
   "knobs": {
     "head": {
       "values": ["split", "stack"],
@@ -25,11 +25,6 @@
       "values": ["active", "full"],
       "label": "Span",
       "note": "The arcs monitor's time axis. active = whole weeks from the first filed engagement to now; a relationship older than the axis enters open from the left edge. full = the whole record since the oldest relationship, linear — honest, and it buries nine marks in its last twentieth."
-    },
-    "rows": {
-      "values": ["ruled", "boxed"],
-      "label": "Rows",
-      "note": "The arcs log's rows. ruled = one-line rows on shared hairlines that end on the dossier's edge, the picked row filled. boxed = each row its own outlined plate with air between (the game references' literal grammar)."
     },
     "dossier": {
       "values": ["one", "pair"],
@@ -111,16 +106,6 @@
       "types": ["AR", "AK"],
       "knobs": {
         "span": "full"
-      }
-    },
-    {
-      "id": "SH",
-      "name": "Plates",
-      "question": "do rows as separate outlined plates read closer to the references, or do they cost the list its seat on the dossier?",
-      "shape": "the log with boxed rows",
-      "types": ["AR", "AK"],
-      "knobs": {
-        "rows": "boxed"
       }
     },
     {

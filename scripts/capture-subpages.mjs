@@ -147,11 +147,11 @@ if (VIEWPORT.length !== 2 || VIEWPORT.some((n) => !n)) {
 const subjectOf = (theme) => (theme === "light" ? "parchment" : "void");
 const laneOf = (d) => d.lane ?? d.id.toLowerCase();
 const knobsOf = (d) => ({ ...DEFAULTS, ...(d.knobs ?? {}) });
-/* A still's caption names only the knobs its page draws: the instrument's four
-   on the arcs overview and its kit, the sheet's four everywhere else. A
-   caption that listed all eight would hand the grader four settings the
-   still cannot show. */
-const INSTRUMENT_KNOBS = ["span", "rows", "dossier", "frame"];
+/* A still's caption names only the knobs its page draws: the instrument's three
+   on the arcs overview and its kit (`rows` went with direction SH, ADR-118
+   U1), the sheet's four everywhere else. A caption that listed all seven
+   would hand the grader settings the still cannot show. */
+const INSTRUMENT_KNOBS = ["span", "dossier", "frame"];
 const knobStr = (knobs, typeId) =>
   KNOB_KEYS.filter((k) => INSTRUMENT_KNOBS.includes(k) === (typeId === "AR" || typeId === "AK"))
     .map((k) => `${k}=${knobs[k]}`)

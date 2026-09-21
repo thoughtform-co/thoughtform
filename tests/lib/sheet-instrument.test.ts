@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { kitSections, KIT_NOW } from "@/app/(internal)/test/arcs-instrument-kit/fixtures";
-import { arcsInstrumentSections } from "@/lib/sheet/arcs";
+import {
+  kitEngagements,
+  kitSections,
+  KIT_CLIENTS,
+  KIT_NOW,
+} from "@/app/(internal)/test/arcs-instrument-kit/fixtures";
+import { arcsInstrumentSections, instrumentSections } from "@/lib/sheet/arcs";
 import { atOnWindow, axisWindow } from "@/lib/sheet/axis";
 import {
   chaptersOf,
@@ -205,6 +210,28 @@ describe("the instrument's law (ADR-118)", () => {
         ],
         /newest first/,
       ],
+      [
+        "the clients in registry order rather than by their newest filing",
+        [
+          monitor,
+          {
+            ...log,
+            groups: [...log.groups.slice(0, -1).reverse(), log.groups[log.groups.length - 1]],
+          },
+        ],
+        /order of their newest filing/,
+      ],
+      [
+        "the house formats opening the list",
+        [
+          monitor,
+          {
+            ...log,
+            groups: [log.groups[log.groups.length - 1], ...log.groups.slice(0, -1)],
+          },
+        ],
+        /house formats do not close/,
+      ],
     ];
     for (const [name, ladder, re] of cases) {
       const v = instrumentViolations(ladder);
@@ -236,5 +263,20 @@ describe("the kit exercises what the record does not hold yet (ADR-118)", () => 
     const kinds = new Set(log.groups.flatMap((g) => g.rows.map((r) => r.kind)));
     expect(kinds.size).toBeGreaterThan(1);
     expect(log.filter.stations.map((s) => s.id).sort()).toEqual([...kinds].sort());
+  });
+
+  it("orders the log by filing and the monitor by registry, whatever order the registry is in", () => {
+    /* ADR-118 U1. The kit's own registry order already IS its filing order,
+       so it cannot tell the two apart; reversed, it can. The log's runs must
+       not move (newest filing first, the formats last) while the lanes follow
+       the registry they were handed. */
+    const reversed = [...KIT_CLIENTS].reverse();
+    const [m, l] = split(instrumentSections(kitEngagements(), reversed, KIT_NOW));
+    expect(l.groups.map((g) => g.id)).toEqual(log.groups.map((g) => g.id));
+    expect(l.groups.map((g) => g.id)).toEqual(["northwind", "halcyon", "meridian", "formats"]);
+    expect(m.plot.lanes.filter((x) => !x.id.startsWith("formats-")).map((x) => x.id)).toEqual(
+      reversed.map((c) => c.slug)
+    );
+    expect(instrumentViolations([m, l])).toEqual([]);
   });
 });

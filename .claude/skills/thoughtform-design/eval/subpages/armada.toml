@@ -69,7 +69,9 @@ se = "render-3003"        # Grid: card=grid timeline=rail (the document pages on
 # instrument - a monitor and a log - and the sheet's overview became a pole.
 sf = "render-3003"        # negative pole 2: the sheet overview at 7124f146, promoted from wave-02-sb, never re-shot
 sg = "render-3003"        # Full record: span=full (AR, AK)
-sh = "render-3003"        # Plates: rows=boxed (AR, AK)
+# sh (Plates: rows=boxed) was retired on 2026-09-21 with the `rows` knob: the
+# owner read the ruled log as "a glorified word document", and the house went
+# past both values to one bordered block per engagement (ADR-118 U1).
 sj = "render-3003"        # Pair: dossier=pair (AR, AK)
 sl = "render-3003"        # Rails: frame=rails (AR, AK)
 lawful = "render-3003"    # /test/design-eval-fixture .fixture-good (wave 00)

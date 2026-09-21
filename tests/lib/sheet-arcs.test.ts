@@ -244,10 +244,23 @@ describe("the arcs instrument, recomputed from the registry (ADR-118)", () => {
     expect(monitor.lit).toBe(newest.id);
   });
 
-  it("groups the log by client in registry order, newest first, each title without its client's name", () => {
+  it("runs the log by client, the newest filing first, the formats last, each title without its client's name", () => {
+    /* ADR-118 U1: the log is one column of blocks and reads top to bottom as
+       time. Recomputed from the record: a client's run sits where its newest
+       filing puts it — a tie keeps registry order — and the house formats
+       close the list. The monitor's lanes keep registry order (above). */
+    const newestOf = (slug: string) =>
+      record
+        .filter((r) => r.client === slug)
+        .map((r) => r.date)
+        .sort()
+        .reverse()[0];
     const clients = CLIENTS.filter((c) => record.some((r) => r.client === c.slug));
+    const byFiling = [...clients].sort((a, b) =>
+      newestOf(a.slug) < newestOf(b.slug) ? 1 : newestOf(a.slug) > newestOf(b.slug) ? -1 : 0
+    );
     expect(log.groups.map((g) => g.name)).toEqual([
-      ...clients.map((c) => c.name),
+      ...byFiling.map((c) => c.name),
       ...(record.some((r) => !r.client) ? ["Thoughtform formats"] : []),
     ]);
     for (const g of log.groups) {

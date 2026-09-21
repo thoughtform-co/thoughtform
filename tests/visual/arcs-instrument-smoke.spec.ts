@@ -13,7 +13,9 @@ import { letterDateShort } from "@/lib/sheet/dates";
  *     itself, NOW left of an engagement;
  *   - a dossier that is not the chosen row — for ANY row, because the gate
  *     never measures a hidden dossier;
- *   - a row that wraps or clips at the binding viewport;
+ *   - since ADR-118 U1, a log that stops being blocks beside a gutter: a block
+ *     of another size, text that clips, a strip off the dossier's band, a list
+ *     that ends short of the dossier's floor;
  *   - keys that walk into a row the filter has hidden;
  *   - the frame's chrome printing over the device.
  *
@@ -53,6 +55,100 @@ async function seatLog(page: Page) {
   await page.waitForFunction(() =>
     document.getAnimations().every((a) => a.playState !== "running")
   );
+}
+
+/**
+ * The seated log's geometry (ADR-118 U1): the gutter, the head strip, the
+ * blocks and the floor, each with the TOKEN it answers to.
+ *
+ * ⚠ A TOKEN IS A STRING UNTIL SOMETHING LAYS IT OUT: `--log-gutter` and
+ * `--log-block-h` are clamp()s, so each is resolved by a probe element laid out
+ * in the list — the block height's probe MUST sit inside `.sh-log__list`,
+ * which is where `--log-n` lives and where the token is declared.
+ */
+async function readLog(page: Page) {
+  return page.evaluate(() => {
+    const r = (el: Element) => el.getBoundingClientRect();
+    const q = (sel: string) => document.querySelector<HTMLElement>(sel)!;
+    const list = q(".sh-log__list");
+    const dos = q(".sh-log__dossiers");
+    const probe = (prop: "width" | "height", token: string) => {
+      const p = document.createElement("div");
+      p.style[prop] = `var(${token})`;
+      list.appendChild(p);
+      const v = r(p)[prop];
+      p.remove();
+      return v;
+    };
+    const blocks = [...document.querySelectorAll<HTMLElement>(".sh-log__row")].filter(
+      (b) => !b.closest("[hidden]")
+    );
+    const stations = [...q(".sh-log__filter").querySelectorAll(".sh-stn")].map((s) => r(s));
+    const d = q(".sh-dos:not([hidden]) .sh-dos__in");
+    return {
+      monBottom: r(q("#monitor")).bottom,
+      listTop: r(list).top,
+      listRight: r(list).right,
+      dosTop: r(dos).top,
+      dosBottom: r(dos).bottom,
+      gutter: r(dos).left - r(list).right,
+      gutterToken: probe("width", "--log-gutter"),
+      stripBottom: r(q(".sh-log__filter")).bottom,
+      bandBottom: r(d.querySelector(".sh-dos__band")!).bottom,
+      stationRows: new Set(stations.map((s) => Math.round(s.top))).size,
+      stationsRight: Math.max(...stations.map((s) => s.right)),
+      blocks: blocks.length,
+      logN: Number(list.style.getPropertyValue("--log-n")),
+      blockToken: probe("height", "--log-block-h"),
+      floorClamp: 44,
+      ceilClamp: 0.09 * innerHeight,
+      heights: blocks.map((b) => r(b).height),
+      lastBottom: r(blocks[blocks.length - 1]).bottom,
+      clipped: blocks.flatMap((b) =>
+        [".sh-log__client", ".sh-log__title"]
+          .map((sel) => b.querySelector<HTMLElement>(sel)!)
+          .filter((t) => t.scrollWidth > t.clientWidth + 1 || t.getClientRects().length > 1)
+          .map((t) => `${b.dataset.id} ${t.className}`)
+      ),
+      dossierClipped: r(d.querySelector(".sh-dos__foot")!).bottom > r(d).bottom + 1,
+    };
+  });
+}
+
+function expectSeatedLog(s: Awaited<ReturnType<typeof readLog>>) {
+  expect(Math.abs(s.listTop - s.dosTop), "the dossier is level with the list").toBeLessThanOrEqual(
+    1
+  );
+  expect(
+    Math.abs(s.gutter - s.gutterToken),
+    `the gutter is --log-gutter (${s.gutter.toFixed(1)} vs ${s.gutterToken.toFixed(1)})`
+  ).toBeLessThanOrEqual(1);
+  expect(s.gutter, "breathing room between the panels (owner, ADR-118 U1)").toBeGreaterThanOrEqual(
+    47
+  );
+  expect(
+    Math.abs(s.stripBottom - s.bandBottom),
+    "the filter strip is level with the dossier's band"
+  ).toBeLessThanOrEqual(1);
+  expect(s.stationRows, "the four stations keep one line").toBe(1);
+  expect(s.stationsRight, "the stations stay inside the list").toBeLessThanOrEqual(
+    s.listRight + 0.5
+  );
+  expect(s.logN, "--log-n counts every block").toBe(s.blocks);
+  // ⚠ A TRANSFORMED OR FRACTIONAL RECT NEEDS AN EPSILON; half a pixel is it.
+  expect(
+    s.heights.filter((h) => Math.abs(h - s.blockToken) > 0.5).map((h) => h.toFixed(2)),
+    `every block is --log-block-h (${s.blockToken.toFixed(2)})`
+  ).toEqual([]);
+  // One floor — while the block height is free to divide the device. At a
+  // clamp it cannot, and the list runs short or long by design.
+  if (s.blockToken > s.floorClamp + 0.5 && s.blockToken < s.ceilClamp - 0.5)
+    expect(
+      Math.abs(s.lastBottom - s.dosBottom),
+      `the list ends on the dossier's floor (${s.lastBottom.toFixed(1)} vs ${s.dosBottom.toFixed(1)})`
+    ).toBeLessThanOrEqual(1);
+  expect(s.clipped, "block text that clips or wraps").toEqual([]);
+  expect(s.dossierClipped, "the dossier's foot is inside its housing").toBe(false);
 }
 
 test.describe("the arcs instrument (ADR-118)", () => {
@@ -120,42 +216,48 @@ test.describe("the arcs instrument (ADR-118)", () => {
           );
         expect(g.scrollW).toBeLessThanOrEqual(w + 1);
 
-        // Seated, nothing of the monitor is in view, and the dossier is level with the list.
+        // Seated, nothing of the monitor is in view, and the list and the
+        // dossier share a datum AND a floor, a gutter apart (ADR-118 U1).
         await seatLog(page);
-        const s = await page.evaluate(() => {
-          const r = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
-          return {
-            monBottom: r("#monitor").bottom,
-            listTop: r(".sh-log__list").top,
-            listRight: r(".sh-log__list").right,
-            dosTop: r(".sh-log__dossiers").top,
-            dosLeft: r(".sh-log__dossiers").left,
-            dosBottom: r(".sh-log__dossiers").bottom,
-            wrapped: [...document.querySelectorAll<HTMLElement>(".sh-log__row")]
-              .filter((row) => !row.closest("[hidden]"))
-              .filter((row) => {
-                const t = row.querySelector<HTMLElement>(".sh-log__title")!;
-                return t.scrollWidth > t.clientWidth + 1 || t.getClientRects().length > 1;
-              })
-              .map((row) => row.dataset.id),
-            dossierClipped: (() => {
-              const d = document.querySelector<HTMLElement>(".sh-dos:not([hidden]) .sh-dos__in")!;
-              const foot = d.querySelector(".sh-dos__foot")!.getBoundingClientRect();
-              return foot.bottom > d.getBoundingClientRect().bottom + 1;
-            })(),
-          };
-        });
+        const s = await readLog(page);
         expect(s.monBottom).toBeLessThanOrEqual(1);
-        expect(
-          Math.abs(s.listTop - s.dosTop),
-          "the dossier is level with the list"
-        ).toBeLessThanOrEqual(1);
-        expect(
-          Math.abs(s.listRight - s.dosLeft),
-          "no gutter between list and dossier"
-        ).toBeLessThanOrEqual(1);
-        expect(s.wrapped, "rows that wrap or clip").toEqual([]);
-        expect(s.dossierClipped, "the dossier's foot is inside its housing").toBe(false);
+        expectSeatedLog(s);
+      });
+
+      test(`the kit's log keeps the same seat, on a record of eight, at ${w}x${h}`, async ({
+        page,
+      }) => {
+        const res = await page.goto("/test/arcs-instrument-kit");
+        test.skip(
+          res?.status() === 404,
+          "the kit is internal: proxy-blocked on a production server"
+        );
+        await open(page, "/test/arcs-instrument-kit");
+        await seatLog(page);
+        const s = await readLog(page);
+        expect(s.blocks, "the kit's record").toBe(8);
+        expectSeatedLog(s);
+      });
+    });
+  }
+
+  /* ⚠ THE NARROW DESKTOP RUNG (961–1100). The four filter stations are ~343px
+     on one line and the strip may not wrap — it is level with the dossier's
+     band — while 5/12 of the band is 309px at 1024 wide: the list takes half
+     there. Measured 34px over at 1024 × 768 before that rung existed. */
+  for (const [w, h] of [
+    [1024, 768],
+    [961, 700],
+  ] as const) {
+    test.describe(`at the narrow rung, ${w}x${h}`, () => {
+      test.use({
+        viewport: { width: w, height: h },
+        contextOptions: { reducedMotion: "no-preference" },
+      });
+      test(`the strip keeps one line inside the list, at ${w}x${h}`, async ({ page }) => {
+        await open(page);
+        await seatLog(page);
+        expectSeatedLog(await readLog(page));
       });
     });
   }
@@ -349,7 +451,7 @@ test.describe("the arcs instrument (ADR-118)", () => {
         await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
       else expect(await page.locator("html").getAttribute("data-theme")).not.toBe("light");
       const ratios = await page.$$eval(
-        ".sh-mon__reading dt, .sh-mon__reading dd, .sh-mon__cell-label, .sh-mon__lane-name, .sh-mon__lane-reading, .sh-mon__tick, .sh-log__head, .sh-log__chip, .sh-log__title, .sh-log__date, .sh-dos:not([hidden]) .sh-readout__k, .sh-dos:not([hidden]) .sh-dos__lede",
+        ".sh-mon__reading dt, .sh-mon__reading dd, .sh-mon__cell-label, .sh-mon__lane-name, .sh-mon__lane-reading, .sh-mon__tick, .sh-log__client, .sh-log__title, .sh-log__date, .sh-dos:not([hidden]) .sh-readout__k, .sh-dos:not([hidden]) .sh-dos__lede",
         (els) => {
           const parse = (s: string) => {
             const m = s.match(/rgba?\(([^)]+)\)/);

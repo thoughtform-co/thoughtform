@@ -147,7 +147,12 @@ export function SheetInstrumentController() {
           settleTimer = window.setTimeout(settle, SHEET_SWAP_MS + 20);
         } else settle();
 
-        const title = row.querySelector(".sh-log__title")?.textContent ?? "";
+        // The dossier's own title, never the block's: three blocks read "The
+        // proposal" since the client moved to its own line (ADR-118 U1).
+        const title =
+          (incoming as HTMLElement | null)?.querySelector(".sh-dos__title")?.textContent ??
+          row.querySelector(".sh-log__title")?.textContent ??
+          "";
         if (status) status.textContent = `${title} selected`;
       }
       if (opts.hash !== false) {

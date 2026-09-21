@@ -347,10 +347,17 @@ try {
         const nums = layer.replace(/rgba?\([^)]*\)/, "").match(/-?[\d.]+px/g) || [];
         return nums.length >= 3 ? parseFloat(nums[2]) : 0;
       };
+      /* ⚠ A PRESSED TOGGLE IS STATE, like a current or a selected one. The
+         sheet's picked station (`aria-pressed="true"`) passed this stage only by
+         being under 32px: its ACCENT_ALLOW entry `.sh-stn.is-on` never matched,
+         because `describe()` names an element by its FIRST class. When ADR-118
+         U1 stretched the log's stations to the 36px head strip at 1920, the
+         dead entry surfaced as a violation on a control the rubric itself
+         names as state. */
       const isStateful = (el) =>
         el === document.activeElement ||
         el.matches(
-          '[data-on],[data-active],[data-lit],[data-lead],[data-seat],[data-stack-emphasis],[aria-selected="true"],[aria-current]'
+          '[data-on],[data-active],[data-lit],[data-lead],[data-seat],[data-stack-emphasis],[aria-selected="true"],[aria-pressed="true"],[aria-current]'
         );
 
       // Gold painted on an edge: mark, allowed, or structure.
