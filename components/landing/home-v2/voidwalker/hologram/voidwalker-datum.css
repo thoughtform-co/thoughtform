@@ -60,16 +60,12 @@
   --vwd-rule-head: 0.3;
   --vwd-rail: 0.12;
 
-  /* The press mark's cell (ADR-082 U26). ⚠ AN INTEGER MULTIPLE OF THE 7-CELL
-     LATTICE — 21px is a 3px cell, and a fractional one turns a pixel drawing
-     into a blur.
-     ⚠ 14 → 21 WITH THE WELL (ADR-082 U29): the mark used to sit in a bare
-     gutter beside a 10px label, where 14px was its match; inside a bounded
-     28px well beside type that has grown a rung it read as a speck. The well
-     is the mark PLUS one lattice cell of air on each side (21 + 2 × 3.5), so
-     the two move together and neither is a free number. */
-  --vwd-press-mark: 21px;
-  --vwd-press-well: 28px;
+  /* The link-out arrow's cell. ⚠ AN INTEGER MULTIPLE OF THE 7-CELL LATTICE —
+     14px is a 2px cell, and a fractional one turns a pixel drawing into a
+     blur. (It was 21px inside U29's 28px well; ADR-082 U31 took the well and
+     the document mark with it, and the arrow sits on the meta line beside a
+     ~10px label, which is where 14px was always the match.) */
+  --vwd-press-mark: 14px;
 
   /* ── THE REEL. One cell pitch for all five chips, so the offset that centres
         the selected era is a signed multiple of ONE number. `--vwd-reel` is how
@@ -625,63 +621,384 @@
   text-wrap: pretty;
 }
 
-/* ── TRANSMISSION ──────────────────────────────────────────────────── */
+/* ── TRANSMISSION ──────────────────────────────────────────────────────
+   A PILE OF GLASS FOLDER CARDS (ADR-082 U31, owner 2026-09-21: "there may be
+   cases where I have multiple videos, and I want them to be stacked a bit …
+   The video needs to live inside a card, including the title … the sort of
+   glass effect like we have in the services section when all the cards
+   collapse … it's not just videos. It can support every type of asset").
 
-.vwd__film {
-  appearance: none;
+   It was one bare 16:9 frame over a mono caps line. It is `EraMediaStack`
+   now: one card per asset, every card the same FOLDER — a tab, a 45° slant, a
+   square body, cut from ONE silhouette — with the front card carrying the
+   frame and the title INSIDE its body, and the cards behind it standing empty,
+   stepped up and to the right, their tabs fanned along the top edge.
+
+   ⚠ THIS IS THE STATION'S ONE GLASS HOUSING, AND A TAB IS LAWFUL HERE WHERE
+   ADR-097 U1 TOOK ONE OFF THE PROOF CARD. That tab carried a TINT across a
+   1150px housing and left the row's top-right open; this one carries a
+   DESIGNATION on a 368px card, was the owner's own pick among three heads,
+   and is what makes a pile of identical cards countable from the front.
+
+   ⚠ THE MATERIAL IS COPIED FROM `proof-stack.css`, NEVER IMPORTED (ADR-100's
+   precedent): its tokens live on `.pf-stack`, which this station is not
+   inside. Scanline under the copy, a corner bloom stated in PIXELS (the
+   proof card's 460×300 is for a housing; a percentage here lights the whole
+   card), `--void-deep-rgb` glass — void in dark, parchment in light, so one
+   declaration paints both themes — and NO `brightness()`.
+
+   ⚠ NO `border` ANYWHERE ON THE CARD. A `clip-path` cuts a border and never
+   strokes one (ADR-089), so the lip is a clipped RING on `::before`.
+   ⚠ AND THE RING IS CLOSED — both contours return to their first point
+   (`components/sheet/instrument.css`'s form). `.pf-card`'s ring is the OPEN
+   form, which ADR-118 found paints a bow-tie across a concave outline; this
+   outline has two concave corners.
+   ⚠ THE SLANT'S INNER ENDS SHIFT BY 0.414px, NOT 0.586. A 45° edge offset
+   inward by 1px moves along x by √2; where it meets a HORIZONTAL edge that is
+   itself 1px in, the x of the join is `1 − √2 = −0.414` from the outer point.
+   (0.586 is the chamfer-between-two-axis-edges case, which this is not.) */
+
+.vwd__mstack {
+  /* ── The pile's dials. */
+  --vwd-mtab-h: clamp(22px, 2.6svh, 30px);
+  --vwd-mtab-fs: clamp(9.5px, 0.68vw, 11px);
+  --vwd-mtab-gap: 2px;
+  /* How far each card stands up-and-right of the one in front of it. It is
+     paid for out of the FRAME's height, so it opens with the viewport. */
+  --vwd-mstack-step: clamp(3px, 0.6svh, 8px);
+  --vwd-mpad: clamp(7px, 1svh, 12px);
+  --vwd-mglass-a: 0.62;
+  --vwd-mbloom-a: 0.1;
+  --vwd-mblur: 10px;
+  --vwd-mlip: color-mix(in srgb, var(--gold-line) 30%, transparent);
+
+  /* ── The tab widths, SOLVED FROM THE TYPE. PT Mono's advance is 0.6em and
+     `--track-label` adds .08em, so a character is 0.68 of the size. The front
+     tab letters `KIND NN` behind a 5px mark and two 6px gaps (`--vwd-mtab-fch` characters,
+     written inline by the component); a back tab letters its own two-digit
+     index. Each reserves the slant's own width on the right, because that
+     corner of the tab is not there.
+     ⚠ FOUR IS THE CEILING AND IT IS THIS ARITHMETIC (`CHARACTER_ERA_MEDIA_MAX`):
+     `wf + 3 × (wb + gap)` against a card that is `3 × step` narrower than its
+     seat clears by ~10px at 1101×800 and ~25px at 1920×1247. A fifth tab runs
+     off its own card. */
+  --_adv: calc(var(--vwd-mtab-fs) * 0.68);
+  --_wf: calc(var(--_adv) * var(--vwd-mtab-fch, 7) + 31px + var(--vwd-mtab-h));
+  --_wb: calc(var(--_adv) * 2 + 14px + var(--vwd-mtab-h));
+  --_lift: calc((var(--vwd-mn, 1) - 1) * var(--vwd-mstack-step));
+
+  position: relative;
   display: grid;
-  gap: 8px;
-  width: 100%;
-  padding: 0;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  min-height: 0;
+  /* The pile's own room: the cards behind the front one are TRANSLATED into
+     this padding, so the stack's box is the pile's whole silhouette and
+     nothing it paints can leave the seat. */
+  padding: var(--_lift) var(--_lift) 0 0;
+}
+
+.vwd__mcard {
+  /* 0 for the front card, 1 for every card behind it. */
+  --_back: min(var(--vwd-md, 0), 1);
+  --_t: var(--vwd-mtab-h);
+  --_w: calc(var(--_wf) + var(--_back) * (var(--_wb) - var(--_wf)));
+  /* ⚠ BY DEPTH, NEVER BY INDEX. Each card behind takes the next place to the
+     right, and it is also SHIFTED right by its own depth — so every tab is
+     further right and further up than the one before it and no two slants can
+     meet. In index order a tab LEFT of the front one slides under it. */
+  --_x0: calc(
+    var(--_back) * (var(--_wf) + var(--vwd-mtab-gap)) + max(var(--vwd-md, 0) - 1, 0) *
+      (var(--_wb) + var(--vwd-mtab-gap))
+  );
+  --_x1: calc(var(--_x0) + var(--_w));
+
+  grid-area: 1 / 1;
+  position: relative;
+  z-index: calc(10 - var(--vwd-md, 0));
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: calc(var(--_t) + var(--vwd-mpad)) var(--vwd-mpad) var(--vwd-mpad);
+  translate: calc(var(--vwd-md, 0) * var(--vwd-mstack-step))
+    calc(var(--vwd-md, 0) * -1 * var(--vwd-mstack-step));
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(var(--vwd-gold-rgb), 0.025) 0 1px,
+      transparent 1px 3px
+    ),
+    radial-gradient(
+      220px 150px at calc(100% - 44px) calc(var(--_t) - 24px),
+      rgba(var(--vwd-gold-rgb), var(--vwd-mbloom-a)),
+      transparent 62%
+    ),
+    /* The tab's own fill — a MATERIAL, on every card, never a state. It is a
+       rectangle; the silhouette below cuts its slant. */
+    linear-gradient(rgba(var(--vwd-dawn-rgb), 0.1), rgba(var(--vwd-dawn-rgb), 0.1)) var(--_x0) 0 /
+      var(--_w) var(--_t) no-repeat,
+    /* A card sinks toward the GROUND as it recedes — void in dark, parchment
+       in light — which is the proof pile's own depth law in one term. */
+    rgba(var(--void-deep-rgb), calc(var(--vwd-mglass-a) + 0.09 * min(var(--vwd-md, 0), 3)));
+  clip-path: polygon(
+    0 var(--_t),
+    var(--_x0) var(--_t),
+    var(--_x0) 0,
+    calc(var(--_x1) - var(--_t)) 0,
+    var(--_x1) var(--_t),
+    100% var(--_t),
+    100% 100%,
+    0 100%
+  );
+}
+
+/* The lip. Outer contour, closed; inner contour 1px in, closed; `evenodd`
+   makes the middle a hole. */
+.vwd__mcard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--vwd-mlip);
+  clip-path: polygon(
+    evenodd,
+    0 var(--_t),
+    var(--_x0) var(--_t),
+    var(--_x0) 0,
+    calc(var(--_x1) - var(--_t)) 0,
+    var(--_x1) var(--_t),
+    100% var(--_t),
+    100% 100%,
+    0 100%,
+    0 var(--_t),
+    1px calc(var(--_t) + 1px),
+    calc(var(--_x0) + 1px) calc(var(--_t) + 1px),
+    calc(var(--_x0) + 1px) 1px,
+    calc(var(--_x1) - var(--_t) - 0.414px) 1px,
+    calc(var(--_x1) - 0.414px) calc(var(--_t) + 1px),
+    calc(100% - 1px) calc(var(--_t) + 1px),
+    calc(100% - 1px) calc(100% - 1px),
+    1px calc(100% - 1px),
+    1px calc(var(--_t) + 1px)
+  );
+}
+
+/* The glass. FRONT CARD ONLY — a blur is a per-frame backdrop snapshot
+   (ADR-056 measured it), and the cards behind have nothing to separate from.
+   ⚠ IT WAITS FOR THE SEAT TO SETTLE. §G's entry ladder runs OPACITY on
+   `.vwd__body`, and an ancestor at opacity < 1 is the backdrop root: the blur
+   would sample an empty group and frost nothing. `--ci` is that ladder's own
+   clock, inherited; its opacity reaches exactly 1 at `--ci` ≈ 0.59, so the
+   frost ramps in over .6 → .8, after it. Absent (`--ci` unset: PRM, the static
+   paths, the lab) it rests at 1.
+   ⚠ NO ID IN THIS SELECTOR. Light's `backdrop-filter: none` in theme.css has
+   to win on specificity, and an id here cannot be beaten from there. */
+@supports (backdrop-filter: blur(2px)) {
+  .vwd__mcard[data-vwd-media-depth="0"] {
+    --_rest: clamp(0, calc((var(--ci, 1) - 0.6) * 5), 1);
+    -webkit-backdrop-filter: blur(calc(var(--_rest) * var(--vwd-mblur)));
+    backdrop-filter: blur(calc(var(--_rest) * var(--vwd-mblur)));
+  }
+}
+/* Without the frost the front glass shows the lips of the cards behind it as
+   ghost lines a step inside its own left and bottom edges. A denser pane is
+   the recorded fallback. */
+@supports not (backdrop-filter: blur(2px)) {
+  .vwd__mstack {
+    --vwd-mglass-a: 0.9;
+  }
+}
+
+.vwd__mcard__tab {
+  appearance: none;
+  position: absolute;
+  top: 0;
+  left: var(--_x0);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: var(--_w);
+  height: var(--_t);
+  margin: 0;
+  /* The right pad is the slant: that corner of the tab is cut away. */
+  padding: 0 calc(var(--_t) + 4px) 0 10px;
   background: transparent;
   border: 0;
   cursor: pointer;
-  text-align: left;
-  font: inherit;
+  font-family: var(--vwd-mono);
+  font-size: var(--vwd-mtab-fs);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-label);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(var(--vwd-dawn-rgb), 0.5);
 }
-/* ⚠ THE FRAME'S WIDTH IS TRANSFERRED FROM ITS HEIGHT CAP, NOT DECLARED, and
-   the desktop rung below is where that is corrected (ADR-082 U29). Kept here
-   as shipped because the cap is the PHONE's largest budget term — U23 deleted
-   its `max-height: none` to buy the one-screen fit, 190px → 96. */
-.vwd__film__frame {
+/* The front tab is the pile's "this one is open" and answers nothing. */
+.vwd__mcard__tab[aria-pressed="true"] {
+  cursor: default;
+  color: rgb(var(--vwd-dawn-rgb));
+}
+/* ⚠ THE ONE GOLD THING ON THE CARD AT REST, and it is 5px — gold on this
+   station is the lit mark and nothing else (ADR-082 U23). Square: the filled
+   DIAMOND means "you are here" on the era band one row down. */
+.vwd__mcard__mark {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  background: var(--gold);
+}
+.vwd__mcard__tab[aria-pressed="true"] .vwd__mcard__idx {
+  color: rgba(var(--vwd-dawn-rgb), 0.55);
+}
+.vwd__mcard__tab[aria-pressed="false"]:hover,
+.vwd__mcard__tab[aria-pressed="false"]:focus-visible {
+  color: rgb(var(--vwd-dawn-rgb));
+}
+.vwd__mcard__tab:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: -3px;
+}
+/* The card a pointer is about to bring forward lifts its own lip. */
+.vwd__mcard:has(> .vwd__mcard__tab[aria-pressed="false"]:hover)::before,
+.vwd__mcard:has(> .vwd__mcard__tab[aria-pressed="false"]:focus-visible)::before {
+  background: var(--gold-line);
+}
+
+.vwd__mcard__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: var(--vwd-mpad);
+}
+
+/* The frame: the asset's STILL, in a window. `cover`, and `focus` on the
+   record says where the window looks — the whole asset is the dialog's job.
+   ⚠ `width: 100%` IS DECLARED (ADR-082 U29's finding on the frame this
+   replaces): with an `aspect-ratio` and no width, the inline size is
+   TRANSFERRED from `max-height` through the ratio and the frame comes out
+   narrower than the card for no reason anyone wrote down. Declared, the cap
+   is a CROP — which it is restated as: a band. */
+.vwd__mcard__frame {
+  appearance: none;
   position: relative;
   display: block;
-  aspect-ratio: 16 / 9;
-  max-height: clamp(96px, 15svh, 150px);
-  overflow: hidden;
-  border: 1px solid rgba(var(--vwd-dawn-rgb), 0.25);
-}
-.vwd__film__poster {
+  flex: 0 1 auto;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 16 / 9;
+  /* ⚠ LOAD-BEARING, NOT A FLOOR FOR LOOKS. The frame is the ONE thing in the
+     card allowed to give when its seat is short (the desktop rung and the
+     phone both constrain it), and a flex item with an `aspect-ratio` has an
+     AUTOMATIC minimum of its transferred size — so without an explicit
+     minimum it refuses to shrink at all and the card overflows its seat with
+     every property computing correctly. 72px is a ~4.6:1 letterbox at the
+     measure: still a picture. */
+  min-height: 72px;
+  max-height: clamp(96px, 15svh, 150px);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid rgba(var(--vwd-dawn-rgb), 0.25);
+  cursor: pointer;
+}
+.vwd__mcard__still {
   object-fit: cover;
-  display: block;
   filter: grayscale(0.4) contrast(1.05);
 }
-.vwd__film__play {
+/* The cue's well. ⚠ THE ONE GROUND ON THE CARD THAT IS NOT GLASS, and it has
+   to be: it sits on a photograph, where an outline alone is legible over one
+   frame and lost over the next (the era stops' halo, U23, for the same
+   reason). `--void-rgb` flips with the theme, so the glyph's dawn ink always
+   has its own ground under it. */
+.vwd__mcard__cue {
   position: absolute;
   inset: 50% auto auto 50%;
   translate: -50% -50%;
-  width: 0;
-  height: 0;
-  border-left: 13px solid rgb(var(--vwd-dawn-rgb));
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  background: rgba(var(--void-rgb), 0.62);
+  border: 1px solid rgba(var(--vwd-dawn-rgb), 0.55);
 }
-.vwd__film__title {
-  font-family: var(--vwd-mono);
-  font-size: clamp(10px, 0.72vw, 11.5px);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  color: rgba(var(--vwd-dawn-rgb), 0.75);
+.vwd__mcard__cue svg {
+  display: block;
+  fill: rgb(var(--vwd-dawn-rgb));
+  shape-rendering: crispEdges;
 }
-.vwd__film:hover .vwd__film__frame,
-.vwd__film:focus-visible .vwd__film__frame {
-  border-color: rgba(var(--vwd-gold-rgb), 0.6);
+.vwd__mcard[data-vwd-media-kind="embed"] .vwd__mcard__cue svg,
+.vwd__mcard[data-vwd-media-kind="video"] .vwd__mcard__cue svg {
+  /* A triangle is the one drawing here with a diagonal. */
+  shape-rendering: geometricPrecision;
 }
-.vwd__film:hover .vwd__film__title,
-.vwd__film:focus-visible .vwd__film__title {
+/* ⚠ THE STATE IS LINES LIFTING, NEVER A FILL (ADR-082 U29's law for this
+   station): the card's lip, the frame's edge and the well's edge go to
+   `--gold-line`, the 3:1 line-work rung that re-derives itself in light. */
+.vwd__mcard:has(.vwd__mcard__frame:hover)::before,
+.vwd__mcard:has(.vwd__mcard__frame:focus-visible)::before {
+  background: var(--gold-line);
+}
+.vwd__mcard__frame:hover,
+.vwd__mcard__frame:focus-visible {
+  border-color: var(--gold-line);
+}
+.vwd__mcard__frame:hover .vwd__mcard__cue,
+.vwd__mcard__frame:focus-visible .vwd__mcard__cue {
+  border-color: var(--gold-line);
+}
+.vwd__mcard__frame:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 2px;
+}
+
+/* ⚠ THE TITLE IS INSIDE THE CARD AND IN THE READING FACE (owner: "cards where
+   the title is part of it" — and his own doubt about a title in the notch, "if
+   the title is too long, that may not work"). It was a mono caps line under a
+   bare frame. Sentence case, because case only ranks if the sans does not
+   shout (ADR-092); it WRAPS, to two lines at the record's 60-character
+   ceiling, and is never clamped. */
+.vwd__mcard__title {
+  flex: 0 0 auto;
+  margin: 0;
+  font-family: var(--vwd-display);
+  font-size: clamp(13px, 0.98vw, 16.5px);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-copy);
+  line-height: 1.3;
+  color: rgba(var(--vwd-dawn-rgb), 0.95);
+  text-wrap: balance;
+}
+.vwd__mcard:has(.vwd__mcard__frame:hover) .vwd__mcard__title,
+.vwd__mcard:has(.vwd__mcard__frame:focus-visible) .vwd__mcard__title {
   color: var(--gold-ink, #caa554);
+}
+
+/* Choosing a card ROTATES the pile: each silhouette slides to its new depth
+   and its tab to its new place. One eased gesture, position only — no fade,
+   no flicker (the owner's standing rule on motion). The z-order and the body
+   swap at once; what travels is ≤ 3 steps of a few pixels.
+   ⚠ A CLICK-DRIVEN TRANSITION, NOT PART OF §G. That ladder is scroll-owned and
+   allows no transitions on its actors; these cards are not its actors — the
+   BODY around them is. */
+@media (prefers-reduced-motion: no-preference) {
+  .vwd__mcard {
+    transition:
+      translate 240ms cubic-bezier(0.65, 0, 0.35, 1),
+      clip-path 240ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  .vwd__mcard::before {
+    transition: clip-path 240ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  .vwd__mcard__tab {
+    transition:
+      left 240ms cubic-bezier(0.65, 0, 0.35, 1),
+      width 240ms cubic-bezier(0.65, 0, 0.35, 1),
+      color 160ms ease;
+  }
 }
 
 /* ── AN ABSENT SEAT ────────────────────────────────────────────────
@@ -709,124 +1026,93 @@
 
 /* ── ON RECORD ─────────────────────────────────────────────────────── */
 
-/* The press stack takes the readout grammar too — one rule per item, at the
-   item's FOOT. ⚠ Never under the meta line: a rule between an outlet and its
-   own headline splits the record it is supposed to bound. */
-/* ⚠ AN ITEM IS A BOUNDED OBJECT NOW, NOT A RULED ROW (ADR-082 U29, owner
-   2026-09-19: the articles "should have some sort of icons, but they should
-   really feel like a pill, like a sort of subtle button").
+/* ⚠ A RECORD IS A TAGGED ROW, NOT A BOX (ADR-082 U31, owner 2026-09-21: "I'm
+   not a fan of the on-record buttons. They feel like glorified PowerPoint
+   frames, so let's make them tighter").
 
-   ⚠ THIS REVERSES ADR-082 U26's "AN ICON RATHER THAN A PILL OR A FRAME", and
-   the reason that ruling gave is worth keeping straight: it refused the frame
-   because both alternatives were read as PAINTED GROUNDS, which this station
-   has turned down three times and which its own `>700px` sweep exists to keep
-   off. **An outline is not a ground** — nothing here fills, on any state — and
-   the sweep is untouched besides, since an item is 368px wide against a 700px
-   floor. What U26 was right about survives intact: the mark is DAWN ONLY at
-   .45/.8, there is ONE mark rather than one per outlet, and the lit rule still
-   means the piece links out.
+   ⚠ THIS SUPERSEDES ADR-082 U29's BOUNDED OBJECT, and the ruling it answered
+   is the same one read a second time. U29 heard "a pill, like a sort of subtle
+   button" and drew four borders round each record with a square well for its
+   mark; read live, two or three of those stacked in a column ARE a slide's
+   content boxes — the frame was carrying nothing a row does not, and U29's own
+   defence of it ("an outline is not a ground") was an answer to the paint
+   sweep, never to how it looked. What goes: the item's border, the well, the
+   document mark, `--vwd-press-well`. What U26 and U29 ruled about INK stands:
+   dawn only, and the state is a line lifting, never a fill.
 
-   ⚠ THE AIR IS THE DIVIDER. With four borders per item, a foot rule between
-   two of them is a doubled line — the casefile's own finding at ADR-089 U3,
-   where a box and the track it sat on drew gold twice a pixel apart. So the
-   stack's `gap: 0` becomes real spacing and `.vwd__press`'s `border-bottom`
-   and the sibling's `padding-top` both go.
-
-   ⚠ SQUARE (owner's own call between three geometries). ADR-065's depth ladder
-   puts chrome at 0 and the house carries no radius anywhere; a rounded pill
-   here would be the one radius on the site, and the notch belongs to objects
-   that are oriented or connected, which six peers in a list are not. */
+   THE ROW: the outlet in a framed TAG — the /arcs dossier's framed key
+   (`components/sheet/instrument.css`, the owner's own Starfield readout) at
+   chip scale: a well at dawn .07 inside a seam at dawn .28 — then the year,
+   then a link-out arrow at the row's far end WHERE THE RECORD LINKS OUT, the
+   headline under, and one `--vwd-rail` hairline at the row's FOOT.
+   ⚠ THE RULE IS AT THE FOOT, NEVER UNDER THE META LINE (U23's own note): a
+   rule between an outlet and its headline splits the record it bounds.
+   ⚠ AND THE LAST ROW KEEPS ITS RULE, as the facts' last row does one panel up
+   — in the reference every row terminates on a line and the list's own bottom
+   edge is what closes the panel.
+   ⚠ THE TAG'S FILL IS A COLUMN'S MATERIAL, NOT A STATE — every tag carries it,
+   which is the distinction ADR-118 U3 drew about the same cell. It is ~120px
+   of dawn at .07, against a paint sweep that starts at 700px. */
 .vwd__press-stack {
   display: grid;
-  gap: clamp(6px, 0.9svh, 10px);
 }
 .vwd__press {
   display: grid;
-  grid-template-columns: var(--vwd-press-well) minmax(0, 1fr);
-  align-items: center;
-  column-gap: clamp(10px, 1.2svh, 14px);
-  row-gap: 4px;
-  padding: clamp(8px, 1.1svh, 12px) clamp(10px, 1.2svh, 14px);
-  /* The object's own edge takes the REGION weight, as a panel head's does;
-     `--vwd-rail` is what rules inside one and is the well's, below. */
-  border: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rule-head));
+  row-gap: clamp(4px, 0.6svh, 7px);
+  padding: clamp(7px, 1svh, 11px) 0;
+  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
   text-decoration: none;
   color: inherit;
-  transition: border-color 160ms ease;
 }
-/* The well spans both text rows so the mark centres on the ITEM rather than on
-   the meta line it used to sit in — which is what makes it read as a button's
-   icon rather than as a bullet. */
-.vwd__press__well {
-  grid-row: 1 / 3;
-  display: grid;
-  place-items: center;
-  width: var(--vwd-press-well);
-  height: var(--vwd-press-well);
-  border: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
+/* The first row hangs straight off the head's own rule. */
+.vwd__press:first-child {
+  padding-top: 0;
 }
-/* The outlet and the date, on one line in the item's text column. The mark
-   left it for the well (ADR-082 U29), so this is two columns rather than
-   three — and the held gutter that used to keep a markless item on the same
-   rail is now the well itself, which is a box and holds by construction.
-   ⚠ `center`, NEVER `baseline`: grid synthesises a replaced element's
-   baseline from its BOTTOM edge, so a baseline row would hang the whole meta
-   line off a glyph (the casefile's register learned this on the same idiom).
-   It still applies — `.vwd__press` seats the well on the same law. */
+/* The tag, the year, and the arrow pushed to the row's end.
+   ⚠ `center`, NEVER `baseline`: a flex row synthesises a replaced element's
+   baseline from its BOTTOM edge, so a baseline row would hang the whole line
+   off the arrow's box (the casefile's register learned this on the same
+   idiom, and U26 recorded it here). */
 .vwd__press__meta {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  gap: clamp(8px, 0.8vw, 12px);
+  min-width: 0;
   font-family: var(--vwd-mono);
   font-size: clamp(9.5px, 0.68vw, 11px);
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--vwd-dawn-rgb), 0.45);
 }
-.vwd__press__glyph {
+.vwd__press__tag {
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 0.36em 0.62em 0.32em;
+  overflow: hidden;
+  background: rgba(var(--vwd-dawn-rgb), 0.07);
+  border: 1px solid rgba(var(--vwd-dawn-rgb), 0.28);
+  line-height: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: rgba(var(--vwd-dawn-rgb), 0.8);
+  transition:
+    border-color 160ms ease,
+    color 160ms ease;
+}
+.vwd__press__year {
+  flex: 0 0 auto;
+}
+.vwd__press__arrow {
+  flex: 0 0 auto;
   display: block;
   width: var(--vwd-press-mark);
   height: var(--vwd-press-mark);
-  /* ⚠ The grid is authored in whole cells; anything but an integer scale puts
-     a 1-unit rect on a half pixel and the mark goes soft. */
-  shape-rendering: crispEdges;
-}
-/* Two dawn weights, matching the ladder the panel's own rules run on
-   (`--vwd-rule-head` divides a region, `--vwd-rail` rules within one). The lit
-   rule is the record that links out; it is a STEP in the same ink, never a
-   second hue. */
-/* ⚠ THE MARK READS AT ITS LABEL'S STRENGTH, NOT ITS RULE'S. The first cut took
-   `--vwd-rule-head`'s .3 and the mark came out quieter than the outlet beside
-   it — a key that recedes behind the thing it keys is an absent key (this
-   surface's own finding about the seat's dashed line, one panel over). `.45`
-   is the outlet's own ink; the lit rule steps above it and stops short of the
-   headline's .95. */
-.vwd__press__sk {
+  margin-left: auto;
   fill: rgba(var(--vwd-dawn-rgb), 0.45);
-}
-.vwd__press__sig {
-  fill: rgba(var(--vwd-dawn-rgb), 0.8);
-}
-/* ⚠ THE STATE IS THE OUTLINE LIFTING, AND IT MAY NEVER BE A FILL. A filled
-   hover would be the one painted ground on a station whose guard exists to
-   keep grounds off it — U26's refusal, which the outline is what survives.
-   `--gold-line` is the 3:1 line-work rung and re-derives itself in light;
-   raw `--gold` is the MARK rung and letters at 1.8:1 on parchment.
-   ⚠ ONLY AN ANCHOR. Two of the six records link nowhere, and they keep the
-   outline — they are records, not dead buttons — but nothing about them may
-   answer a pointer. */
-a.vwd__press:hover,
-a.vwd__press:focus-visible {
-  border-color: var(--gold-line, rgba(202, 165, 84, 0.55));
-}
-a.vwd__press:hover .vwd__press__well,
-a.vwd__press:focus-visible .vwd__press__well {
-  border-color: var(--gold-line, rgba(202, 165, 84, 0.55));
-}
-a.vwd__press:hover .vwd__press__sig,
-a.vwd__press:focus-visible .vwd__press__sig {
-  fill: var(--gold-ink, #caa554);
+  /* ⚠ The lattice is authored in whole cells; anything but an integer scale
+     puts a 1-unit rect on a half pixel and the mark goes soft. */
+  shape-rendering: crispEdges;
+  transition: fill 160ms ease;
 }
 .vwd__press__headline {
   font-family: var(--vwd-display);
@@ -835,9 +1121,29 @@ a.vwd__press:focus-visible .vwd__press__sig {
   color: rgba(var(--vwd-dawn-rgb), 0.95);
   text-wrap: pretty;
 }
+/* ⚠ THE STATE IS LINES AND INK LIFTING, NEVER A FILL — U26's refusal, which
+   has survived two redraws. `--gold-line` is the 3:1 line-work rung and
+   `--gold-ink` the 4.5:1 text rung; both re-derive themselves in light, where
+   raw `--gold` letters at 1.8:1 on parchment.
+   ⚠ ONLY AN ANCHOR. A record that links nowhere is still a record — it keeps
+   its tag and its rule — but nothing about it may answer a pointer, and it
+   carries no arrow to suggest it would. */
+a.vwd__press:hover .vwd__press__tag,
+a.vwd__press:focus-visible .vwd__press__tag {
+  border-color: var(--gold-line);
+  color: var(--gold-ink);
+}
+a.vwd__press:hover .vwd__press__arrow,
+a.vwd__press:focus-visible .vwd__press__arrow {
+  fill: var(--gold-ink);
+}
 a.vwd__press:hover .vwd__press__headline,
 a.vwd__press:focus-visible .vwd__press__headline {
-  color: var(--gold-ink, #caa554);
+  color: var(--gold-ink);
+}
+a.vwd__press:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 3px;
 }
 
 /* ── THE FIGURE ─────────────────────────────────────────────────────
@@ -1043,9 +1349,18 @@ a.vwd__press:focus-visible .vwd__press__headline {
   .vwd__press__meta {
     font-size: clamp(9.5px, 1.2svh, 15px);
   }
-  .vwd__film__title,
   .vwd__absent {
     font-size: clamp(10px, 1.2svh, 15px);
+  }
+  /* The media card's two rungs, on the ladder's two ROW ratios: the tab is a
+     label (1.2svh), the title a value (1.45svh, the headline's own floor).
+     ⚠ The tab caps at 13, not 15: its width is solved from this size, and four
+     of them have to fit across a card (`--_wf` / `--_wb`). */
+  .vwd__mstack {
+    --vwd-mtab-fs: clamp(9.5px, 1.2svh, 13px);
+  }
+  .vwd__mcard__title {
+    font-size: clamp(13px, 1.45svh, 18px);
   }
   /* ⚠ TWO FLOORS, ONE RATIO. The value and the headline share the 1.45svh
      term but NOT their floors (12.5 and 13 are what shipped), and collapsing
@@ -1059,21 +1374,31 @@ a.vwd__press:focus-visible .vwd__press__headline {
     font-size: clamp(13px, 1.45svh, 18px);
   }
 
-  /* ⚠ THE FILM FRAME FILLS THE MEASURE, AND ITS WIDTH WAS NEVER DECLARED
-     (owner: "I don't know why the thumbnail isn't the same length as the
-     divider, just like we have with the paragraph in Scope"). It is a grid
-     item with an `aspect-ratio` and no width, so its inline size was
-     TRANSFERRED from `max-height` through the ratio — 150 × 16/9 = 267px
-     inside a 368px head rule. Nothing in the sheet ever said "narrower than
-     the panel": the number fell out of a height cap two properties away,
-     which is why it reads as a fault rather than as a size.
+  /* ⚠ THE PILE FITS ITS SEAT BY CONSTRUCTION, AND THE FRAME IS WHAT GIVES
+     (ADR-082 U31). The seat is a `minmax(0, 1fr)` row of a bounded stage, so
+     its height is whatever the viewport leaves — ~209px at 1280×720, ~380 at
+     1920×1247 — while a card's chrome is fixed: a tab, two pads, a title that
+     may wrap, a step per card behind it. Solved as a `max-height` per rung that
+     is five numbers to keep in step with a ladder; solved as LAYOUT it is one:
+     the seat is a size container, the pile may not be taller than it, and the
+     frame is the one flex item allowed to shrink (its `min-height` in the base
+     rule is what lets it). The title never clips and the pile never leaves its
+     seat, at any height, with any count.
 
-     ⚠ WITH THE WIDTH FIXED THE CAP STOPS BEING A SHRINK AND BECOMES A CROP —
-     the poster is already `object-fit: cover` — so it is restated as what it
-     now is: a band. 207px is 368 × 9/16, the frame uncropped at the panel's
-     own measure; the floor is a 3:1 letterbox on a short screen. */
-  .vwd__film__frame {
-    width: 100%;
+     ⚠ GATED TO THIS RUNG, AND UNGATED IT COLLAPSES THE OTHER TWO. Size
+     containment makes a box's height independent of its content; here the row
+     is `1fr` and never asked the content anyway, but at ≤1100px the bodies are
+     content-height flow, where the same declaration computes them to ZERO.
+
+     The cap is U29's: 207px is 368 × 9/16, the frame uncropped at the panel's
+     own measure. */
+  .vwd__body[data-cell="ll"] {
+    container-type: size;
+  }
+  .vwd__mstack {
+    max-height: 100cqh;
+  }
+  .vwd__mcard__frame {
     max-height: clamp(120px, 18svh, 207px);
   }
 }
@@ -1719,6 +2044,31 @@ a.vwd__press:focus-visible .vwd__press__headline {
     align-items: baseline;
   }
 
+  /* ── THE MEDIA PILE ON A PHONE (ADR-082 U31). Same DOM, same cards; the tabs
+     ARE the stepper, so they are the one thing here that has to be a thumb's
+     size. ⚠ THE SLOP GOES DOWN, NOT UP: a `clip-path` clips hit-testing as
+     well as paint, and the strip above a tab is outside its card's silhouette
+     — so the 44px is the 32px tab plus the 12px pad under it, which is why
+     `--vwd-mpad` is 12 on this rung and not the desktop's 7–12 clamp.
+     ⚠ THE FRAME'S CAP IS A BUDGET TERM. The reading FITS on this rung
+     (`overflow: clip`, U23), and the frame is its largest avoidable term: 435px
+     is the head, the card's own chrome, the mast, the tab row and the band's
+     reserve at the shortest shape the probe walks, so the cap hands the frame
+     what is left and never more than its natural 16:9. */
+  .vwd__mstack {
+    --vwd-mtab-h: 32px;
+    --vwd-mtab-fs: 10px;
+    --vwd-mpad: 12px;
+  }
+  .vwd__mcard__tab[aria-pressed="false"]::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 -12px;
+  }
+  .vwd__mcard__frame {
+    max-height: clamp(96px, calc(100svh - 435px), 200px);
+  }
+
   /* Which cells the active tab owns. RECORD is two panels because facts and
      the press that reported them are one reading. */
   .vwd__head,
@@ -1749,6 +2099,24 @@ a.vwd__press:focus-visible .vwd__press__headline {
   .vwd__sheet[data-vwd-tab="scope"] .vwd__head,
   .vwd__sheet[data-vwd-tab="transmission"] .vwd__head {
     display: flex;
+  }
+  /* ⚠ THE TRANSMISSION SEAT HANDS ITS HEIGHT DOWN, SO THE FRAME GIVES HERE TOO
+     (ADR-082 U31). This rung FITS rather than scrolls, and a four-card pile on
+     the shortest shape the probe walks (375×553) measured 24.5px through the
+     stage's floor, into the era stops' strip, under `overflow: clip` — i.e.
+     silently. The seat is a flex item of the stage and already SHRINKS to fit
+     (its `overflow: hidden` zeroes its automatic minimum); as a plain block it
+     then clipped a pile that kept its natural height. One definite row hands
+     the shrunk height to the pile, the pile's own `1fr` row hands it to the
+     card, and the frame — the card's one shrinkable item — pays, down to its
+     72px floor. With room to spare the row is content-height and this is a
+     no-op, which is every real phone today.
+     ⚠ (0,4,0), AFTER the display list above: that list's `[data-cell="ll"]`
+     is (0,3,0) and also matches the HEAD, which the rule between them turns
+     back into a flex row. */
+  .vwd__sheet[data-vwd-tab="transmission"] .vwd__body[data-cell="ll"] {
+    display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   }
   .vwd__sheet[data-vwd-tab="record"] .vwd__head:not([data-cell="ur"]):not([data-cell="lr"]),
   .vwd__sheet[data-vwd-tab="scope"] .vwd__head:not([data-cell="ul"]),

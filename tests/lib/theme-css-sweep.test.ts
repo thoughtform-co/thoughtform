@@ -21,6 +21,10 @@ const SHEETS = [
   "components/landing/home-v2/voidwalker/voidwalker-wire.css",
   "components/landing/home-v2/voidwalker/voidwalker-travel.css",
   "components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css",
+  /* The era stage's composition sheet (ADR-082 U19). Outside this sweep until
+     ADR-082 U31 gave it glass cards with a gold mark and a themed pane — the
+     figure's sheet was listed and the 2,300-line composition around it was not. */
+  "components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css",
   /* The proof card's sheet (ADR-096 → ADR-097) — read by BOTH public routes
      and absent from this list until the folder pass gave it a gold-filled
      station and a tinted tab, i.e. exactly the `--gold`/`--void` pair below

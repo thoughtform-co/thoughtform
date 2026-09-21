@@ -415,6 +415,32 @@ html[data-theme="light"] .pf-stack {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   BLOCK 4d — the era stage's media cards, re-derived (ADR-082 U31)
+
+   The transmission pile is the proof card's glass at card scale, so it takes
+   the same two corrections for the same two reasons. The LIP needs nothing:
+   it is `color-mix()` of `--gold-line`. The BLOOM is an alpha, and an alpha
+   inverts across the flip — a corner catching light on the void is a smear on
+   parchment. And the FROST goes: the bed is faded on this side, so a blur
+   would re-snapshot every frame to separate the card from nothing.
+   ⚠ WHICH IS WHY THE PANE GETS DENSER HERE. Unfrosted, the front glass shows
+   the lips of the cards behind it as ghost lines a step inside its own left
+   and bottom edges; at .9 they are gone. Parchment over parchment loses
+   nothing by it — the card reads by its lip and its tab on this side, as the
+   proof card does.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .vwd__mstack {
+  --vwd-mbloom-a: 0.06;
+  --vwd-mglass-a: 0.9;
+}
+@supports (backdrop-filter: blur(2px)) {
+  html[data-theme="light"] .vwd__mcard[data-vwd-media-depth="0"] {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 html[data-theme="light"] .fl-panel__viz {
   background: transparent;
   border-color: transparent;

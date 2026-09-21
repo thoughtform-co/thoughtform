@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { HoloDatumPanels } from "@/components/landing/home-v2/voidwalker/hologram/HoloDatumPanels";
 import { HoloFigure } from "@/components/landing/home-v2/voidwalker/hologram/HoloFigure";
@@ -9,7 +9,61 @@ import {
   holoFigureFit,
   holoFigureHeadShare,
   resolveCharacterEraHologram,
+  type CharacterEraMedia,
 } from "@/lib/voidwalker/characterEras";
+import {
+  getHoloAlphaSupport,
+  getHoloHevcAlphaSupport,
+  onHoloAlphaSupport,
+  onHoloHevcAlphaSupport,
+} from "@/lib/voidwalker/holoAlphaSupport";
+
+/**
+ * The pile fixture (ADR-082 U31). The record holds ONE film on two eras today,
+ * so the transmission pile's real subject — several cards, a still among them,
+ * a title that wraps — exists nowhere a reader can look at it. `?media=N` (or
+ * the PILE knob) hands the first N of these to EVERY era through
+ * `HoloDatumPanels`' fixture seam.
+ *
+ * ⚠ THE ASSETS ARE THE TWO SHIPPED POSTERS, USED TWICE — once as a film's
+ * poster, once as a still in its own right. A fixture that needed its own
+ * files would be shipping placeholder art in `public/`; this one proves the
+ * geometry and the three dialogs with what is already there. It goes through
+ * `eraMedia()` like the record does, so it cannot show a card the landing's
+ * guard would refuse.
+ */
+const PILE_FIXTURE: readonly CharacterEraMedia[] = [
+  {
+    kind: "embed",
+    youtubeId: "jFVezT4mznU",
+    title: "Welcome to Latent Land",
+    poster: "/images/voidwalker/media/film-latent-land.jpg",
+  },
+  {
+    kind: "image",
+    src: "/images/voidwalker/media/film-save-the-expanse.jpg",
+    width: 960,
+    height: 540,
+    title: "A still, with a title long enough to take its second line",
+    alt: "A frame from the campaign film, used here as a fixture still.",
+    focus: [0.5, 0.35],
+  },
+  {
+    kind: "embed",
+    youtubeId: "a5-DcdfxCvU",
+    title: "How the power of fans saved The Expanse",
+    duration: "2:14",
+    poster: "/images/voidwalker/media/film-save-the-expanse.jpg",
+  },
+  {
+    kind: "image",
+    src: "/images/voidwalker/media/film-latent-land.jpg",
+    width: 960,
+    height: 540,
+    title: "Latent Land, a plate",
+    alt: "A frame from the Latent Land film, used here as a fixture still.",
+  },
+];
 
 /**
  * DatumLabShell — the knob bar around the SHIPPED datum composition.
@@ -26,10 +80,54 @@ import {
  * additionally derives the era from the runway's own progress and pins the
  * scroll on a click.
  */
+const subscribeNever = () => () => {};
+const readSearch = () => window.location.search;
+const readNoSearch = () => "";
+
+/* ⚠ THE FIGURE MOUNTS ONLY AFTER BOTH ALPHA PROBES SETTLE (ADR-082 U31 — the
+   hud-panel lab's own finding, which this lab never took). `HoloFigure` LOCKS
+   its codec at mount and treats an undecided probe as the FLOOR branch: right
+   on the landing, where the station is four sections down and the verdict is
+   minutes old, and wrong here, where the figure is the first thing on the
+   page. Mounted early it stayed on the floor branch for the life of the page —
+   so the lab showed no overscan (U29) and, since U31, NO LIFT, both of which
+   are alpha-branch-only. A window that shows the fallback while the landing
+   shows the real thing is the defect this file's header forbids.
+   Both lanes, because on Safari the HEVC verdict lands after the VP9 one. */
+const subscribeAlphaProbe = (notify: () => void) => {
+  const offVp9 = onHoloAlphaSupport(notify);
+  const offHevc = onHoloHevcAlphaSupport(notify);
+  return () => {
+    offVp9();
+    offHevc();
+  };
+};
+const readAlphaSettled = () => getHoloAlphaSupport() !== null && getHoloHevcAlphaSupport() !== null;
+const readAlphaUnsettled = () => false;
+
 export function DatumLabShell() {
+  /* `?media=N` seeds the pile and `?era=<id>` the era, so a capture can ask
+     for one state by URL rather than by clicking through the bar.
+     ⚠ A SNAPSHOT, NOT AN EFFECT. The server has no query, so the first render
+     must not read one — and seeding state from an effect is a cascading render
+     the hooks lint refuses. `useSyncExternalStore` hydrates on the server's
+     empty string and re-renders once on the client's real one; the knobs below
+     then hold `null` until TOUCHED, so the URL is the default and a click
+     outranks it. */
+  const search = useSyncExternalStore(subscribeNever, readSearch, readNoSearch);
+  const alphaSettled = useSyncExternalStore(
+    subscribeAlphaProbe,
+    readAlphaSettled,
+    readAlphaUnsettled
+  );
+  const query = new URLSearchParams(search);
+  const seedEra = CHARACTER_ERAS.findIndex((item) => item.id === query.get("era"));
+  const seedPile = /^[0-4]$/.test(query.get("media") ?? "") ? Number(query.get("media")) : null;
+
   /* Azeroth: the only era with its own authored hologram, and the subject of
      every mockup in the pass — so the lab opens where the review left off. */
-  const [eraIdx, setEraIdx] = useState(2);
+  const [eraPick, setEraIdx] = useState<number | null>(null);
+  const eraIdx = eraPick ?? (seedEra >= 0 ? seedEra : 2);
   const [epoch, setEpoch] = useState(0);
   /* ⚠ NULL UNTIL TOUCHED, because an inline style beats every stylesheet rule
      including a media query. Seeded at 64 the knob wrote `--vwd-chip: 64px`
@@ -53,6 +151,11 @@ export function DatumLabShell() {
      bottom seat, 1 puts the cap on the panel heads' row line. Null until
      touched, like `chip`, so the lab opens on production's value. */
   const [rise, setRise] = useState<number | null>(null);
+  /* "record" = each era's OWN record, which is what the lab opens on. A number
+     is the fixture pile's size, 0 included — an empty seat is a reading too.
+     `undefined` is UNTOUCHED, where the URL's seed (if any) speaks. */
+  const [pilePick, setPile] = useState<number | "record" | undefined>(undefined);
+  const pile = pilePick === undefined ? seedPile : pilePick === "record" ? null : pilePick;
   const [reduced, setReduced] = useState(false);
   /* ⚠ MEASURED, NEVER A LITERAL. `--vwd-bar-h` feeds --vwd-chrome-h feeds
      --vwd-fig-w, so a wrong bar height renders a lab figure column that
@@ -191,6 +294,29 @@ export function DatumLabShell() {
           />
         </label>
 
+        <div className="dlab__grp">
+          <span className="dlab__lbl">Pile</span>
+          <button
+            type="button"
+            className="dlab__btn"
+            data-on={pile === null}
+            onClick={() => setPile("record")}
+          >
+            record
+          </button>
+          {[0, 1, 2, 3, 4].map((n) => (
+            <button
+              key={n}
+              type="button"
+              className="dlab__btn"
+              data-on={pile === n}
+              onClick={() => setPile(n)}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+
         <button
           type="button"
           className="dlab__btn dlab__btn--go"
@@ -204,7 +330,8 @@ export function DatumLabShell() {
         selectedEraIndex={eraIdx}
         onSelectEra={pick}
         idPrefix="datum-lab"
-        figure={figureColumn}
+        figure={alphaSettled ? figureColumn : null}
+        mediaFixture={pile === null ? undefined : PILE_FIXTURE.slice(0, pile)}
       />
     </main>
   );

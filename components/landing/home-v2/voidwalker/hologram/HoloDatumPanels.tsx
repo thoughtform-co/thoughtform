@@ -8,11 +8,17 @@ import {
 } from "@/components/landing/home-v2/services/casefile/MediaLightbox";
 import {
   CHARACTER_ERAS,
+  eraMedia,
+  eraMediaDuration,
+  eraMediaEmbedSrc,
   eraPressBeatIds,
   HOLO_FIGURE_SPAN,
   resolveCharacterEraHologram,
+  type CharacterEraMedia,
 } from "@/lib/voidwalker/characterEras";
 import { VOIDWALKER_BEATS, vwPlain, type VwPress } from "@/lib/voidwalker/voidwalkerData";
+
+import { EraMediaStack } from "./EraMediaStack";
 
 /**
  * HoloDatumPanels — the D2 "datum rails" composition (owner's wave-2 pick,
@@ -142,59 +148,99 @@ function FigureReticle() {
 }
 
 /**
- * The press mark: a record on file, on the SAME grammar `FigureGlyph` uses one
- * panel over — rect-only, a 7×7 grid at integer cells, the 14px rung, no text
- * node and no pictogram. Four left-aligned rules of unequal length: a column of
- * set type, which is what a clipping is.
+ * The link-out mark: a 7×7 pixel arrow, up and to the right — on the SAME
+ * grammar `FigureGlyph` uses one panel over (rect-only, integer cells,
+ * `crispEdges`, no text node). It is drawn because PT Mono HAS NO U+2197: a
+ * typed arrow would fall to a system face in the middle of a mono line.
  *
- * ⚠ ONE MARK, NOT ONE PER OUTLET (ADR-082 U26). The particle grammar bans
- * decorative primitives, and a glyph per publication would be exactly that —
- * the outlet's NAME is already the next thing in the row, so a second encoding
- * of it is noise with a distinguishability problem at 7×7. What the mark earns
- * its gutter with is the INDEX read: five text blocks become five records.
+ * ⚠ IT SAYS ONE TRUE THING AND ONLY WHERE IT IS TRUE: this record opens
+ * somewhere. It renders ONLY on an entry with a public URL (`VwPress.href`), so
+ * a record that links nowhere carries no mark rather than a dimmed one — the
+ * U26 document glyph lit one rule of four to say the same thing, which asked
+ * the reader to compare a mark against its neighbours to read it.
  *
- * ⚠ AND THE SIGNAL SAYS SOMETHING TRUE. `linked` lights the last rule when the
- * piece has a public URL, which two of the six do not — a fact the record
- * already holds (`VwPress.href`) and the surface never said. No new field.
- *
- * ⚠ DAWN ONLY. `ProofGlyph`'s signal layer is gold at alpha 1; on this station
- * gold means "you are here" on the reel one row below, and five gold pixels in
- * a reading column would compete with the one mark that is allowed to lead.
+ * ⚠ DAWN AT REST, as every mark in this column has been since U26: gold on
+ * this station is the era band's "you are here".
  */
-function PressGlyph({ linked }: { linked: boolean }) {
+function PressArrow() {
   return (
-    /* ⚠ THE SIZE IS THE SHEET'S (`--vwd-press-mark`, 21px = a 3px cell), and
-       the attributes here are the pre-CSS fallback only. They are kept equal
-       to the token deliberately: an attribute that disagrees with the rule is
-       a second source for one number, and this one has to stay an INTEGER
-       multiple of the 7-cell lattice or the drawing goes soft. */
-    <svg className="vwd__press__glyph" viewBox="0 0 7 7" width="21" height="21" aria-hidden="true">
-      {/* ⚠ EVERY OTHER ROW. Packed into consecutive rows the rects merge into
-          one blob at 14px — `FigureGlyph`'s own recorded lesson. */}
-      <rect className="vwd__press__sk" x="1" y="0" width="5" height="1" />
-      <rect className="vwd__press__sk" x="1" y="2" width="3" height="1" />
-      <rect className="vwd__press__sk" x="1" y="4" width="4" height="1" />
-      <rect
-        className={linked ? "vwd__press__sig" : "vwd__press__sk"}
-        x="1"
-        y="6"
-        width="2"
-        height="1"
-      />
+    /* ⚠ 14px = a 2px cell. The size is the sheet's (`--vwd-press-mark`); these
+       attributes are the pre-CSS fallback and are kept equal to it, because it
+       has to stay an INTEGER multiple of the 7-cell lattice or it goes soft. */
+    <svg className="vwd__press__arrow" viewBox="0 0 7 7" width="14" height="14" aria-hidden="true">
+      <rect x="2" y="0" width="5" height="1" />
+      <rect x="6" y="1" width="1" height="4" />
+      <rect x="5" y="1" width="1" height="1" />
+      <rect x="4" y="2" width="1" height="1" />
+      <rect x="3" y="3" width="1" height="1" />
+      <rect x="2" y="4" width="1" height="1" />
+      <rect x="1" y="5" width="1" height="1" />
+      <rect x="0" y="6" width="1" height="1" />
     </svg>
   );
 }
 
+/**
+ * The one dialog for whatever the front card holds. Each kind names the ONE
+ * transport the CSP allows for it (`CharacterEraMedia`'s own note), and the
+ * lightbox already has a branch per transport — so this is a switch, not a
+ * second lightbox (rules/proof.md: "One lightbox, `MediaLightbox`").
+ */
+function MediaDialog({
+  item,
+  meta,
+  onClose,
+}: {
+  item: CharacterEraMedia;
+  meta: string;
+  onClose: () => void;
+}) {
+  switch (item.kind) {
+    case "embed":
+      return (
+        <MediaLightbox
+          embed={{ src: eraMediaEmbedSrc(item), title: item.title }}
+          label={item.title}
+          meta={meta}
+          onClose={onClose}
+        />
+      );
+    case "video":
+      return <MediaLightbox src={item.src} label={item.title} meta={meta} onClose={onClose} />;
+    case "image":
+      return (
+        <MediaLightbox
+          image={{ src: item.src, alt: item.alt, width: item.width, height: item.height }}
+          label={item.title}
+          meta={meta}
+          onClose={onClose}
+        />
+      );
+  }
+}
+
+/**
+ * One press record, as a TAGGED ROW (ADR-082 U31, owner 2026-09-21: "I'm not a
+ * fan of the on-record buttons. They feel like glorified PowerPoint frames, so
+ * let's make them tighter").
+ *
+ * U29 drew each record as a bounded object — four borders, a square well, a
+ * document mark — and the read, live, was a slide's content box. A record is a
+ * ROW now: the outlet in a framed TAG (the /arcs readout's framed key, at chip
+ * scale), the year beside it, the link-out arrow at the row's end where there
+ * is somewhere to go, the headline under, and one hairline between records.
+ * Nothing encloses the row, so nothing reads as a button that might be dead.
+ *
+ * ⚠ THE WHOLE ROW IS STILL THE LINK — a tag the size of a word is not a target.
+ */
 function PressItem({ press }: { press: VwPress }) {
   const year = press.date ? press.date.slice(0, 4) : null;
   const body = (
     <>
-      <span className="vwd__press__well">
-        <PressGlyph linked={Boolean(press.href)} />
-      </span>
       <span className="vwd__press__meta">
-        <span className="vwd__press__outlet">{press.outlet}</span>
+        <span className="vwd__press__tag">{press.outlet}</span>
         {year ? <span className="vwd__press__year">{year}</span> : null}
+        {press.href ? <PressArrow /> : null}
       </span>
       <span className="vwd__press__headline">{press.headline}</span>
     </>
@@ -214,6 +260,16 @@ export interface HoloDatumPanelsProps {
   idPrefix?: string;
   /** `HoloFigure` plus the projector base, placed inside the stage grid. */
   figure: ReactNode;
+  /**
+   * ⚠ A LAB FIXTURE SEAM, AND PRODUCTION PASSES NOTHING. The record holds one
+   * film on two eras today, so the pile's real subject — three or four cards,
+   * a still among them — exists nowhere a reader can look at it. The datum
+   * lab's `?media=` hands a pile in here for EVERY era; omitted, each era
+   * reads its own `media` and the render is byte-identical. It still goes
+   * through `eraMedia()`, so a fixture cannot show a card the guard would
+   * refuse on the landing.
+   */
+  mediaFixture?: readonly CharacterEraMedia[];
 }
 
 export function HoloDatumPanels({
@@ -222,12 +278,26 @@ export function HoloDatumPanels({
   identityRefs,
   idPrefix = "voidwalker",
   figure,
+  mediaFixture,
 }: HoloDatumPanelsProps) {
   const era = CHARACTER_ERAS[selectedEraIndex] ?? CHARACTER_ERAS[0];
   const activeEraIndex = CHARACTER_ERAS.indexOf(era);
   const panelId = `${idPrefix}-datum-panel`;
   const chipRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [tab, setTab] = useState<DatumTab>("figure");
+
+  const mediaFor = (e: (typeof CHARACTER_ERAS)[number] | undefined) =>
+    eraMedia(mediaFixture ? { media: mediaFixture } : e);
+  const media = mediaFor(era);
+  /* ⚠ THE PILE'S FRONT IS KEYED ON THE ERA IT WAS CHOSEN IN. The era is
+     scroll-derived as well as clicked (ADR-082 U10), so "reset the pile when
+     the era changes" written as an effect would be a second writer racing the
+     scroll clock and would paint one frame of the OLD index against the NEW
+     era's pile. Derived, a stale choice simply stops matching and reads 0. */
+  const [mediaPick, setMediaPick] = useState<{ era: string; i: number }>({ era: era.id, i: 0 });
+  const mediaFront = mediaPick.era === era.id && mediaPick.i < media.length ? mediaPick.i : 0;
+  const frontItem = media[mediaFront];
+  const frontDuration = frontItem ? eraMediaDuration(frontItem) : undefined;
 
   const beat = VOIDWALKER_BEATS.find((b) => b.id === era.beatId);
   const facts = era.facts ?? [];
@@ -244,7 +314,7 @@ export function HoloDatumPanels({
      target era is known here and the reader never sees an empty active tab. */
   const selectEra = (index: number) => {
     const next = CHARACTER_ERAS[index];
-    if (tab === "transmission" && !next?.film) setTab("record");
+    if (tab === "transmission" && mediaFor(next).length === 0) setTab("record");
     onSelectEra(index);
   };
 
@@ -320,7 +390,7 @@ export function HoloDatumPanels({
           <FigureGlyph />
         </button>
         {MOBILE_READINGS.map((t) => {
-          const unavailable = t === "transmission" && !era.film;
+          const unavailable = t === "transmission" && media.length === 0;
           return (
             <button
               key={t}
@@ -332,7 +402,9 @@ export function HoloDatumPanels({
               onClick={() => setTab(t)}
             >
               {t}
-              {unavailable ? <span className="vwd__tab__note">no film</span> : null}
+              {/* "none", not "no film": the seat holds stills as well as films
+                  since ADR-082 U31, so the absence is the SEAT's. */}
+              {unavailable ? <span className="vwd__tab__note">none</span> : null}
             </button>
           );
         })}
@@ -384,45 +456,38 @@ export function HoloDatumPanels({
 
         {/* ── LOWER LEFT · TRANSMISSION ──────────────────────────── */}
         {/* ⚠ THE TAG STATES THE ABSENCE. Without it this head cannot tell "no
-            film" from `genai`'s "a film with no authored duration" — both
-            printed nothing, so the reader saw an identical head above two
-            different records. */}
+            transmission" from `genai`'s "a film with no authored duration" —
+            both printed nothing, so the reader saw an identical head above two
+            different records. With a pile it reads the FRONT card's duration,
+            so it follows the rotation; a still has none and prints nothing. */}
         <p className="vwd__head" data-cell="ll">
           <span className="vwd__head__kicker">Transmission</span>
-          {era.film ? (
-            era.film.duration ? (
-              <span className="vwd__head__tag">{era.film.duration}</span>
+          {frontItem ? (
+            frontDuration ? (
+              <span className="vwd__head__tag">{frontDuration}</span>
             ) : null
           ) : (
             <span className="vwd__head__tag">None</span>
           )}
         </p>
         <div className="vwd__body" data-cell="ll" data-vwh-region="transmission">
-          {era.film ? (
-            <button
-              type="button"
-              className="vwd__film"
-              onClick={(e) => open(e.currentTarget)}
-              aria-haspopup="dialog"
-              aria-label={`Play: ${era.film.title}`}
-            >
-              <span className="vwd__film__frame">
-                <img
-                  className="vwd__film__poster"
-                  src={era.film.poster}
-                  alt=""
-                  loading="lazy"
-                  decoding="async"
-                />
-                <span className="vwd__film__play" aria-hidden="true" />
-              </span>
-              <span className="vwd__film__title">{era.film.title}</span>
-            </button>
+          {media.length > 0 ? (
+            /* Keyed on the era: two eras' piles are different objects, and a
+               card that outlived its era would transition its silhouette from
+               one record's depth to another's. */
+            <EraMediaStack
+              key={era.id}
+              items={media}
+              front={mediaFront}
+              onFront={(i) => setMediaPick({ era: era.id, i })}
+              onOpen={open}
+              idPrefix={`${idPrefix}-${era.id}`}
+            />
           ) : (
-            /* An absent film is a real reading, not an empty slot — and it is
-               SAID rather than drawn. The dashed ghost frame this replaces was
-               the empty-slot idiom itself. */
-            <p className="vwd__absent">No film on record</p>
+            /* An absent transmission is a real reading, not an empty slot — and
+               it is SAID rather than drawn. The dashed ghost frame this replaces
+               was the empty-slot idiom itself. */
+            <p className="vwd__absent">No transmission on record</p>
           )}
         </div>
 
@@ -562,16 +627,8 @@ export function HoloDatumPanels({
         </div>
       </nav>
 
-      {watching && era.film ? (
-        <MediaLightbox
-          embed={{
-            src: `https://www.youtube-nocookie.com/embed/${era.film.youtubeId}?autoplay=1&rel=0`,
-            title: era.film.title,
-          }}
-          label={era.film.title}
-          meta={era.year}
-          onClose={close}
-        />
+      {watching && frontItem ? (
+        <MediaDialog item={frontItem} meta={era.year} onClose={close} />
       ) : null}
     </section>
   );

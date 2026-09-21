@@ -311,11 +311,11 @@ if (PHONE) {
 
   /* ⚠ ERAS OUTSIDE, READINGS INSIDE — the loop order is a contract, not a
      preference. `selectEra` silently drops TRANSMISSION back to RECORD when
-     the era it is moving to has no film, so walking eras inside a held
+     the era it is moving to has no transmission, so walking eras inside a held
      transmission tab reads that tab exactly once and then measures RECORD
      four more times while reporting "transmission". Setting the era first and
      switching readings under it cannot degrade: a reading change never moves
-     the reel, and the tab is `disabled` where there is no film. */
+     the reel, and the tab is `disabled` where there is no transmission. */
   for (let i = 0; i < eras.length; i += 1) {
     if (i > 0) {
       await page.locator("#voidwalker [data-vwh-era-tab][data-on='true']").first().focus();
@@ -328,7 +328,7 @@ if (PHONE) {
       const btn = page.locator("#voidwalker .vwd__tab").nth(t);
       if (await btn.isDisabled()) {
         console.log(
-          `  -  ${String(eras[i]).padEnd(11)} ${tabNames[t].padEnd(13)} disabled (no film)`
+          `  -  ${String(eras[i]).padEnd(11)} ${tabNames[t].padEnd(13)} disabled (no transmission)`
         );
         continue;
       }

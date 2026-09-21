@@ -20,9 +20,17 @@ import { DatumLabShell } from "./DatumLabShell";
    flag `VOIDWALKER_DATUM_STAGE` is deleted with the losing composition,
    ADR-082 U19); this route only adds a knob bar around them, so
    anything retuned here lands on the home page without a translation and
-   there is no second drawing to keep in sync. */
+   there is no second drawing to keep in sync.
+
+   ⚠ `casefile.css` IS HERE FOR THE LIGHTBOX ALONE (ADR-082 U31). The
+   transmission cards open `MediaLightbox`, whose rules live in that sheet —
+   on the landing it is already loaded for the casefile, and without it a card
+   pressed in this lab opened an unstyled dialog at the foot of the document.
+   Everything else in it is scoped under `.fl-case` / `.fl-con` and reaches
+   nothing on this page. */
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
+import "@/components/landing/home-v2/services/casefile/casefile.css";
 import "@/components/landing/home-v2/voidwalker/voidwalker.css";
 import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css";
 import "@/components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css";

@@ -1,12 +1,27 @@
+import { existsSync, statSync } from "node:fs";
+import path from "node:path";
+
+import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
 import {
   CHARACTER_ERAS,
   CHARACTER_ERA_COUNT,
+  CHARACTER_ERA_MEDIA_MAX,
+  eraMedia,
+  eraMediaDuration,
+  eraMediaEmbedSrc,
+  eraMediaKindLabel,
+  eraMediaStill,
   eraPressBeatIds,
   findCharacterEra,
+  isCharacterEraMedia,
+  type CharacterEraMedia,
 } from "@/lib/voidwalker/characterEras";
 import { VOIDWALKER_BEATS } from "@/lib/voidwalker/voidwalkerData";
+
+const PUBLIC_DIR = path.join(process.cwd(), "public");
+const onDisk = (publicPath: string) => path.join(PUBLIC_DIR, publicPath);
 
 /**
  * ADR-082 — the character stage's era registry.
@@ -44,7 +59,10 @@ function eraCopy(era: (typeof CHARACTER_ERAS)[number]): string {
     era.motto,
     era.loadout,
     ...(era.facts ?? []).flatMap((f) => [f.k, f.v]),
-    era.film?.title ?? "",
+    // ⚠ THE RAW LIST, NOT `eraMedia()`. The accessor drops what fails the
+    // guard and what is past the cap — and a string that is authored but not
+    // rendered today is one cap-bump from being on the public page unscanned.
+    ...(era.media ?? []).flatMap((m) => [m.title, m.kind === "image" ? m.alt : ""]),
   ].join(" • ");
 }
 
@@ -178,28 +196,174 @@ describe("ADR-082 U2 · the era panels' content", () => {
     }
   });
 
-  it("films are nocookie-embeddable and fit the plate's bar", () => {
-    for (const era of CHARACTER_ERAS) {
-      if (!era.film) continue;
-      expect(era.film.youtubeId, `${era.id} youtubeId`).toMatch(/^[\w-]{11}$/);
-      expect(era.film.title.length, `${era.id} film title`).toBeLessThanOrEqual(60);
-      if (era.film.duration !== undefined) {
-        expect(era.film.duration, `${era.id} film duration`).toMatch(/^\d{1,2}:\d{2}$/);
-      }
-      // The poster is the affordance -- a transmission without one is a
-      // text bar nobody reads as a video (owner). SELF-HOSTED, because
-      // img-src does not name ytimg and the player must stay the page's
-      // only third-party thing, built only after a click.
-      expect(era.film.poster, `${era.id} film poster`).toMatch(
-        /^\/images\/voidwalker\/[^\s]+\.(jpg|webp)$/
-      );
-    }
-  });
-
   it("does not put a second film on the RECORD (the interlude stays alone)", () => {
     // The era registry is where a second transmission lives, precisely
     // so `voidwalker-data.test.ts`'s exactly-one-film pin keeps holding.
     // If this ever fails, someone moved an era film onto a beat.
     expect(VOIDWALKER_BEATS.filter((b) => b.film)).toHaveLength(1);
+  });
+});
+
+/**
+ * ADR-082 U31 — the TRANSMISSION pile. `film?` became `media?`, a list of a
+ * closed three-way union (embed · video · image), because the owner's seat has
+ * to hold "every type of asset, image or video", several at once.
+ */
+describe("ADR-082 U31 · the era's transmission pile", () => {
+  const embed: CharacterEraMedia = {
+    kind: "embed",
+    youtubeId: "a5-DcdfxCvU",
+    title: "A film",
+    poster: "/images/voidwalker/media/film-save-the-expanse.jpg",
+  };
+  const video: CharacterEraMedia = {
+    kind: "video",
+    src: "/videos/voidwalker/media/a-cut.mp4",
+    title: "A cut",
+    poster: "/images/voidwalker/media/a-cut.jpg",
+    duration: "0:30",
+  };
+  const image: CharacterEraMedia = {
+    kind: "image",
+    src: "/images/voidwalker/media/a-still.webp",
+    width: 1600,
+    height: 900,
+    title: "A still",
+    alt: "What the still shows.",
+  };
+
+  it("every authored entry passes the guard, and no pile is past the cap", () => {
+    for (const era of CHARACTER_ERAS) {
+      const raw = era.media ?? [];
+      // ⚠ The accessor TRUNCATES, so the pile a reader sees can be shorter than
+      // the one the author wrote with nothing on screen to say so. This is the
+      // assertion that says so.
+      expect(raw.length, `${era.id} pile is past the tab row's cap`).toBeLessThanOrEqual(
+        CHARACTER_ERA_MEDIA_MAX
+      );
+      for (const item of raw) {
+        expect(isCharacterEraMedia(item), `${era.id} · "${item.title}"`).toBe(true);
+      }
+      expect(eraMedia(era)).toEqual(raw);
+    }
+    // Four, and the number is the tab row's arithmetic at 1101×800.
+    expect(CHARACTER_ERA_MEDIA_MAX).toBe(4);
+  });
+
+  it("the two films that shipped as `film` are still the record, as embeds", () => {
+    const front = (id: string) => eraMedia(findCharacterEra(id))[0];
+    expect(front("genai")).toMatchObject({ kind: "embed", youtubeId: "jFVezT4mznU" });
+    expect(front("expanse")).toMatchObject({
+      kind: "embed",
+      youtubeId: "a5-DcdfxCvU",
+      duration: "2:14",
+    });
+    for (const id of ["loop", "azeroth", "pokemon-go"]) {
+      expect(eraMedia(findCharacterEra(id)), `${id} has no transmission`).toEqual([]);
+    }
+  });
+
+  it("every file a pile names is self-hosted, on disk, and the shape it claims", async () => {
+    for (const era of CHARACTER_ERAS) {
+      for (const item of eraMedia(era)) {
+        const still = eraMediaStill(item);
+        // Self-hosted: `img-src` does not name ytimg and `media-src` is 'self',
+        // so an absolute URL is a request the CSP refuses.
+        expect(still, `${era.id} still`).not.toMatch(/^https?:|^\/\//);
+        expect(existsSync(onDisk(still)), `${era.id} · ${still} is not on disk`).toBe(true);
+        if (item.kind === "video") {
+          expect(item.src).not.toMatch(/^https?:|^\/\//);
+          expect(existsSync(onDisk(item.src)), `${era.id} · ${item.src} is not on disk`).toBe(true);
+        }
+        if (item.kind === "image") {
+          // The lightbox solves its box from these two numbers.
+          const meta = await sharp(onDisk(item.src)).metadata();
+          expect([meta.width, meta.height], `${era.id} · ${item.src}`).toEqual([
+            item.width,
+            item.height,
+          ]);
+          expect(item.alt, `${era.id} alt restates the title`).not.toBe(item.title);
+        } else {
+          // A film's poster is its own frame: 16:9, and light — the card is
+          // lazily fetched but four of them is still a pile.
+          const meta = await sharp(onDisk(item.poster)).metadata();
+          expect((meta.width ?? 0) / (meta.height ?? 1), `${item.poster} aspect`).toBeCloseTo(
+            16 / 9,
+            2
+          );
+          expect(statSync(onDisk(item.poster)).size, `${item.poster} weight`).toBeLessThanOrEqual(
+            120 * 1024
+          );
+        }
+      }
+    }
+  });
+
+  it("the guard fails closed on each kind's own traps", () => {
+    for (const ok of [embed, video, image]) expect(isCharacterEraMedia(ok)).toBe(true);
+
+    const bad: Array<[string, unknown]> = [
+      ["no kind", { ...embed, kind: undefined }],
+      ["an unknown kind", { ...embed, kind: "audio" }],
+      ["a blank title", { ...embed, title: "  " }],
+      ["a title past the card's two lines", { ...embed, title: "x".repeat(61) }],
+      [
+        "a YouTube URL where the id belongs",
+        { ...embed, youtubeId: "https://youtu.be/a5-DcdfxCvU" },
+      ],
+      ["a remote poster", { ...embed, poster: "https://i.ytimg.com/vi/a5-DcdfxCvU/hq.jpg" }],
+      // The figure's own posters live one folder up; a pile poster does not.
+      [
+        "a poster outside media/",
+        { ...embed, poster: "/images/voidwalker/holo-still-thoughtform.jpg" },
+      ],
+      ["a duration that is not M:SS", { ...embed, duration: "2m14s" }],
+      // `media-src` is 'self': a bucket URL is blocked outright.
+      ["a remote video", { ...video, src: "https://cdn.example.com/a-cut.mp4" }],
+      ["a webm with no fallback beside it", { ...video, src: "/videos/voidwalker/media/a.webm" }],
+      ["a video outside media/", { ...video, src: "/videos/voidwalker/holo-idle-thoughtform.mp4" }],
+      ["a video without a poster", { ...video, poster: undefined }],
+      ["an image without its size", { ...image, width: undefined }],
+      ["a fractional size", { ...image, height: 900.5 }],
+      ["an image without alt", { ...image, alt: "" }],
+      ["alt past 140", { ...image, alt: "x".repeat(141) }],
+      ["a focus outside the asset", { ...image, focus: [0.5, 1.2] }],
+      ["a focus with one term", { ...image, focus: [0.5] }],
+      ["a path that climbs out", { ...image, src: "/images/voidwalker/media/../../secret.png" }],
+    ];
+    for (const [why, value] of bad) {
+      expect(isCharacterEraMedia(value), why).toBe(false);
+    }
+    expect(isCharacterEraMedia(null)).toBe(false);
+    expect(isCharacterEraMedia("film")).toBe(false);
+    expect(isCharacterEraMedia({ ...image, focus: [0, 1] })).toBe(true);
+  });
+
+  it("the accessor drops what fails and truncates at the cap, without throwing", () => {
+    const five = [embed, video, image, embed, video] as const;
+    expect(eraMedia({ media: five })).toHaveLength(CHARACTER_ERA_MEDIA_MAX);
+    expect(eraMedia({ media: five })[0]).toBe(embed);
+    const mixed = [embed, { kind: "audio", title: "no" } as unknown as CharacterEraMedia, image];
+    expect(eraMedia({ media: mixed })).toEqual([embed, image]);
+    expect(eraMedia(undefined)).toEqual([]);
+    expect(eraMedia({})).toEqual([]);
+  });
+
+  it("derives the card's still, tag and designation from the kind", () => {
+    expect(eraMediaStill(embed)).toBe(embed.kind === "embed" ? embed.poster : "");
+    expect(eraMediaStill(image)).toBe("/images/voidwalker/media/a-still.webp");
+    expect(eraMediaDuration(video)).toBe("0:30");
+    expect(eraMediaDuration(embed)).toBeUndefined();
+    expect(eraMediaDuration(image)).toBeUndefined();
+    // ⚠ Two words, ONE LENGTH CLASS: the tab's width is solved from the longer.
+    expect(eraMediaKindLabel(embed)).toBe("Film");
+    expect(eraMediaKindLabel(video)).toBe("Film");
+    expect(eraMediaKindLabel(image)).toBe("Image");
+    // The one frame origin the CSP names, spelled once.
+    if (embed.kind === "embed") {
+      expect(eraMediaEmbedSrc(embed)).toBe(
+        "https://www.youtube-nocookie.com/embed/a5-DcdfxCvU?autoplay=1&rel=0"
+      );
+    }
   });
 });

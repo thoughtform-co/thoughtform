@@ -363,36 +363,188 @@ export interface CharacterEraFact {
 }
 
 /**
- * A film that belongs to the ERA rather than to a beat.
+ * One asset in an era's TRANSMISSION pile (ADR-082 U31, owner 2026-09-21:
+ * "there may be cases where I have multiple videos, and I want them to be
+ * stacked … And I should also be able to upload images there, so it's not just
+ * videos. We can build a CMS-ish type of thing later … It can support every
+ * type of asset, image or video").
  *
- * ⚠ THIS IS DELIBERATELY NOT `VwBeat.film`. `voidwalker-data.test.ts`
- * pins the record to EXACTLY ONE film (the Expanse interlude is a row
- * in the timeline, not a beat), so hanging a second one off a beat
- * fails CI. The era registry is the presentation layer — two eras can
- * carry a transmission here without the record growing a second
- * interlude it does not have.
+ * It was `film?: CharacterEraFilm` — one optional YouTube film per era. It is a
+ * LIST of a three-way union now, and the union is closed on purpose: each kind
+ * names the one transport this site's CSP actually allows for it.
  *
- * The player is `youtube-nocookie.com/embed/{youtubeId}`, built only
- * after a click, inside `MediaLightbox` — the ONE third-party frame on
- * this site and the one origin `lib/security/headers.mjs` names in
- * `frame-src`. A new origin is a decision, not a field edit.
+ *   · `embed` — the `youtube-nocookie.com/embed/{youtubeId}` player, built only
+ *     after a click, inside `MediaLightbox`. Still the ONE third-party frame on
+ *     this site and the one origin `lib/security/headers.mjs` names in
+ *     `frame-src`. A new origin is a decision, not a field edit.
+ *   · `video` — a SELF-HOSTED mp4. ⚠ Not a preference: `media-src` is
+ *     `'self' blob: data:`, so a bucket URL is blocked outright. A future CMS
+ *     row for a video therefore SYNCS its file into `public/videos/voidwalker/
+ *     media/` at build; it never streams from storage.
+ *   · `image` — a self-hosted still. (`img-src` does allow `*.supabase.co`, so
+ *     this is the one kind a CMS could serve remotely — but that is a loader's
+ *     decision, and the loader validates through `isCharacterEraMedia` below,
+ *     whose path pattern is what it would have to widen, on purpose.)
+ *
+ * ⚠ THIS IS DELIBERATELY NOT `VwBeat.film`. `voidwalker-data.test.ts` pins the
+ * record to EXACTLY ONE film (the Expanse interlude is a row in the timeline,
+ * not a beat), so hanging a second one off a beat fails CI. The era registry is
+ * the presentation layer — an era can carry four transmissions here without the
+ * record growing an interlude it does not have.
  */
-export interface CharacterEraFilm {
+interface CharacterEraMediaBase {
+  /** ≤60 chars — lettered INSIDE the card, under its frame. Wraps to two
+   *  lines; never clamped. */
+  title: string;
+  /**
+   * Where the card's `cover` frame looks, as fractions of the asset —
+   * `[x, y]`, each 0…1, default centre. The card shows a 16:9 window of
+   * whatever it is given (a portrait photograph included); the WHOLE asset is
+   * the lightbox's job, so this only has to keep the subject in the window.
+   */
+  focus?: readonly [number, number];
+}
+
+export interface CharacterEraMediaEmbed extends CharacterEraMediaBase {
+  kind: "embed";
   /** The YouTube id — 11 chars, the `nocookie` embed's whole payload. */
   youtubeId: string;
-  /** ≤60 chars — what the plate's bar letters. */
-  title: string;
-  /** `M:SS`, when it is known. Chrome; the plate omits the row without it. */
-  duration?: string;
   /**
-   * The SELF-HOSTED poster under `public/images/voidwalker/` — the
-   * video's own frame, 16:9, ≤120 KB. Required: a transmission without
-   * a thumbnail is a text bar nobody reads as a video (owner,
-   * 2026-08-26). Self-hosted because `img-src` does not name ytimg and
-   * a poster must not be the page's first third-party request — the
-   * player stays the only external thing, and only after a click.
+   * The SELF-HOSTED poster under `public/images/voidwalker/media/` — the
+   * video's own frame, 16:9, ≤120 KB. Required: a transmission without a
+   * thumbnail is a text bar nobody reads as a video (owner, 2026-08-26).
+   * Self-hosted because `img-src` does not name ytimg and a poster must not be
+   * the page's first third-party request — the player stays the only external
+   * thing, and only after a click.
    */
   poster: string;
+  /** `M:SS`, when it is known. Chrome; the head's tag omits it otherwise. */
+  duration?: string;
+}
+
+export interface CharacterEraMediaVideo extends CharacterEraMediaBase {
+  kind: "video";
+  /** H.264 mp4 under `public/videos/voidwalker/media/`. */
+  src: string;
+  /** Frame-zero poster under `public/images/voidwalker/media/`. Required for
+   *  the same reason as the embed's — and because no `<video>` is mounted
+   *  until a click (the casefile's poster-first law). */
+  poster: string;
+  duration?: string;
+}
+
+export interface CharacterEraMediaImage extends CharacterEraMediaBase {
+  kind: "image";
+  /** The still under `public/images/voidwalker/media/`. */
+  src: string;
+  /** The file's OWN pixel size. The lightbox shows the image at its own shape,
+   *  and a box solved for the wrong aspect letterboxes inside itself — so the
+   *  unit suite reads the file and compares. */
+  width: number;
+  height: number;
+  /** ≤140 chars. What the picture SHOWS, for a reader who cannot see it; the
+   *  title says what it IS and the two may not be the same string. */
+  alt: string;
+}
+
+export type CharacterEraMedia =
+  | CharacterEraMediaEmbed
+  | CharacterEraMediaVideo
+  | CharacterEraMediaImage;
+
+/**
+ * How many assets one era's pile may hold.
+ *
+ * ⚠ THE CAP IS ARITHMETIC, NOT TASTE. The pile is drawn as file folders whose
+ * tabs STAGGER along the top edge — the front card's tab letters its full
+ * designation, each card behind it shows an index-only tab to its right — and
+ * at the narrowest capable rung (1101×800, a 280px seat) four tabs come to
+ * 267.8px. A fifth overflows the card it belongs to. Raising this number is a
+ * redesign of the tab row, which is why the guard below truncates rather than
+ * trusting the author.
+ */
+export const CHARACTER_ERA_MEDIA_MAX = 4;
+
+const ERA_MEDIA_IMAGE_PATH =
+  /^\/images\/voidwalker\/media\/[a-z0-9][a-z0-9._-]*\.(?:jpe?g|png|webp|avif)$/i;
+/** ⚠ MP4 ONLY, AND ONLY UNDER `/videos/` — see `video` above. A `.webm` here
+ *  would be a file Safari cannot play with no fallback source beside it. */
+const ERA_MEDIA_VIDEO_PATH = /^\/videos\/voidwalker\/media\/[a-z0-9][a-z0-9._-]*\.mp4$/i;
+const ERA_MEDIA_YOUTUBE_ID = /^[\w-]{11}$/;
+const ERA_MEDIA_DURATION = /^\d{1,2}:\d{2}$/;
+
+const isUnit = (n: unknown): n is number => typeof n === "number" && n >= 0 && n <= 1;
+const isPixels = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n) && n > 0;
+
+/**
+ * Runtime guard for one pile entry — the seam a future CMS loader validates its
+ * rows through, which is why it checks shapes a literal in this file could
+ * never get wrong. Fails CLOSED: an entry that does not pass is not rendered.
+ */
+export function isCharacterEraMedia(value: unknown): value is CharacterEraMedia {
+  if (!value || typeof value !== "object") return false;
+  const c = value as Record<string, unknown>;
+
+  if (typeof c.title !== "string" || c.title.trim() === "" || c.title.length > 60) return false;
+  if (c.focus !== undefined) {
+    if (!Array.isArray(c.focus) || c.focus.length !== 2) return false;
+    if (!isUnit(c.focus[0]) || !isUnit(c.focus[1])) return false;
+  }
+  const durationOk =
+    c.duration === undefined ||
+    (typeof c.duration === "string" && ERA_MEDIA_DURATION.test(c.duration));
+  const posterOk = typeof c.poster === "string" && ERA_MEDIA_IMAGE_PATH.test(c.poster);
+
+  switch (c.kind) {
+    case "embed":
+      return (
+        typeof c.youtubeId === "string" &&
+        ERA_MEDIA_YOUTUBE_ID.test(c.youtubeId) &&
+        posterOk &&
+        durationOk
+      );
+    case "video":
+      return (
+        typeof c.src === "string" && ERA_MEDIA_VIDEO_PATH.test(c.src) && posterOk && durationOk
+      );
+    case "image":
+      return (
+        typeof c.src === "string" &&
+        ERA_MEDIA_IMAGE_PATH.test(c.src) &&
+        isPixels(c.width) &&
+        isPixels(c.height) &&
+        typeof c.alt === "string" &&
+        c.alt.trim() !== "" &&
+        c.alt.length <= 140
+      );
+    default:
+      return false;
+  }
+}
+
+/** The still a card frames: an image IS its own poster. */
+export function eraMediaStill(item: CharacterEraMedia): string {
+  return item.kind === "image" ? item.src : item.poster;
+}
+
+/** `M:SS` where the asset has one. An image has no duration, by type. */
+export function eraMediaDuration(item: CharacterEraMedia): string | undefined {
+  return item.kind === "image" ? undefined : item.duration;
+}
+
+/**
+ * The tab's designation — what KIND of record the card is. Two words, one
+ * length: the tab's width is solved from the longer of them, and a third word
+ * is a new width.
+ */
+export function eraMediaKindLabel(item: CharacterEraMedia): "Film" | "Image" {
+  return item.kind === "image" ? "Image" : "Film";
+}
+
+/** The embed's whole URL. One place, so the CSP's one allowed frame origin is
+ *  spelled once. */
+export function eraMediaEmbedSrc(item: CharacterEraMediaEmbed): string {
+  return `https://www.youtube-nocookie.com/embed/${item.youtubeId}?autoplay=1&rel=0`;
 }
 
 export interface CharacterEra {
@@ -458,8 +610,13 @@ export interface CharacterEra {
    * neighbour without duplicating a word of the record.
    */
   pressBeatIds?: readonly string[];
-  /** The era's transmission, when one exists. See `CharacterEraFilm`. */
-  film?: CharacterEraFilm;
+  /**
+   * The era's TRANSMISSION pile, front card first — films and stills, up to
+   * `CHARACTER_ERA_MEDIA_MAX`. Absent (or empty) is a real reading: the seat
+   * says "No transmission on record". Read it through `eraMedia()`, never
+   * directly — that is where the guard and the cap are applied.
+   */
+  media?: readonly CharacterEraMedia[];
 }
 
 /**
@@ -552,11 +709,14 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     ],
     // The film the era is named for. Its id lives as a source comment on
     // the `genai` beat; the record has no second `film` field to put it in.
-    film: {
-      youtubeId: "jFVezT4mznU",
-      title: "Welcome to Latent Land",
-      poster: "/images/voidwalker/film-latent-land.jpg",
-    },
+    media: [
+      {
+        kind: "embed",
+        youtubeId: "jFVezT4mznU",
+        title: "Welcome to Latent Land",
+        poster: "/images/voidwalker/media/film-latent-land.jpg",
+      },
+    ],
   },
   {
     id: "azeroth",
@@ -722,12 +882,15 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // The coins post is the other 2018 crowd and has no era of its own,
     // so this seat prints its press card beside the campaign's.
     pressBeatIds: ["expanse", "coins"],
-    film: {
-      youtubeId: "a5-DcdfxCvU",
-      title: "How the power of fans saved The Expanse",
-      duration: "2:14",
-      poster: "/images/voidwalker/film-save-the-expanse.jpg",
-    },
+    media: [
+      {
+        kind: "embed",
+        youtubeId: "a5-DcdfxCvU",
+        title: "How the power of fans saved The Expanse",
+        duration: "2:14",
+        poster: "/images/voidwalker/media/film-save-the-expanse.jpg",
+      },
+    ],
   },
   {
     id: "pokemon-go",
@@ -782,4 +945,20 @@ export function resolveCharacterEraHologram(
  *  the renderer and the guard cannot disagree about the default. */
 export function eraPressBeatIds(era: CharacterEra): readonly string[] {
   return era.pressBeatIds ?? [era.beatId];
+}
+
+/**
+ * An era's TRANSMISSION pile as the surface may render it: guarded, then
+ * capped. One place, so the renderer, the phone's tab gate and the unit suite
+ * cannot disagree about what "has a transmission" means.
+ *
+ * ⚠ IT TRUNCATES RATHER THAN THROWS. The cap is the tab row's arithmetic
+ * (`CHARACTER_ERA_MEDIA_MAX`), and a fifth card drawn is a tab through the
+ * card's own edge on a public page; the unit suite is what tells the AUTHOR
+ * the fifth was dropped.
+ */
+export function eraMedia(
+  era: Pick<CharacterEra, "media"> | null | undefined
+): readonly CharacterEraMedia[] {
+  return (era?.media ?? []).filter(isCharacterEraMedia).slice(0, CHARACTER_ERA_MEDIA_MAX);
 }
