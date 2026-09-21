@@ -2,8 +2,9 @@
 
 - **Status:** Proposed (2026-09-21) — **BUILT, awaiting the owner's read.**
   Everything below has landed (see §As built); wave 03 is shot, graded and in
-  five galleries. The owner's tick on those galleries is the acceptance; until
-  then every section below is a proposal.
+  ten galleries behind one index (`delivery/review-wave-03.html` in the ship).
+  The owner's tick on those galleries is the acceptance; until then every
+  section below is a proposal.
 - **Surface:** `/arcs` — the owner's page since [ADR-117](117-the-owners-pass.md)
   — and only it. The sheet ([ADR-114](114-the-sheet.md)) stays the grammar of
   `/home-sessions`, `/musings`, every client page and the kit.
