@@ -197,6 +197,11 @@ function gate(s, n, label) {
     fail(
       `${at}: the title's last line runs ${px(front.titleInk.b - front.card.b)}px out of its card`
     );
+  // ADR-082 U32: the title LEADS the frame — its ink ends above the picture.
+  if (front.titleInk && front.frame && front.titleInk.b > front.frame.t + 0.5)
+    fail(
+      `${at}: the title does not sit above the frame (ink ends ${px(front.titleInk.b - front.frame.t)}px into it)`
+    );
   if (byDepth.slice(1).some((c) => c.frame || c.title))
     fail(`${at}: a card behind the front one renders a body`);
 }
@@ -217,7 +222,9 @@ for (const n of PILES) {
     const tab = page.locator(".vwd__tab", { hasText: /^transmission/i });
     if (n === 0) {
       if (!(await tab.isDisabled())) fail("pile 0: the phone's TRANSMISSION tab is not disabled");
-      console.log(`  pile 0 · phone tab disabled, note "${await tab.locator(".vwd__tab__note").textContent()}"`);
+      console.log(
+        `  pile 0 · phone tab disabled, note "${await tab.locator(".vwd__tab__note").textContent()}"`
+      );
       continue;
     }
     await page.waitForSelector(`.vwd__mstack[data-vwd-media-count="${n}"]`, {

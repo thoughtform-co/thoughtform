@@ -83,6 +83,17 @@ composition's own entry/exit block, its responsive rungs, and
     waits on `--ci`, and carries no id so light can switch it off.
     `scripts/capture-era-media.mjs` gates fit on every rotation; the lab's
     `?media=N` is the pile's only real subject until the record grows.
+    ⚠ **U32 (same evening, owner): THE TITLE LEADS THE FRAME, IN MONO
+    CAPITALS** — above the picture, `--vwd-mono` + uppercase + `--track-label`
+    on the LABEL ratio (`clamp(10px, 1.2svh, 15px)` ≥1101), full ink. Capitals
+    are the mono's job here (uppercase on the sans is an ADR-092 finding), and
+    it still wraps, never clamps. The markup test pins title → frame and the
+    capture fails a title whose ink does not end above the frame.
+  - ⚠ **THE LEDE IS THE PARAGRAPH'S OWN FIRST LINE (U32, his second read of
+    "Venting became a campaign")** — `.vwd__motto` reads the prose's own
+    `--band-copy` and its ink at full strength, `--weight-lit` the only
+    difference. Never a clamp of its own (U29's height clamp put a 14.5px lede
+    over an 18px paragraph at his window) and never gold: gold is the lit mark.
   - **ON RECORD IS TAGGED ROWS**, superseding U29's bounded object (read live,
     stacked boxes were a slide's content boxes): a framed tag, the year, a 7×7
     arrow ONLY where the record links out, the headline, a hairline at the foot.

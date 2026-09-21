@@ -157,6 +157,10 @@ export function EraMediaStack({ items, front, onFront, onOpen, idPrefix }: EraMe
 
             {isFront ? (
               <div className="vwd__mcard__body" id={bodyId}>
+                {/* The title LEADS the frame (owner, 2026-09-21, ADR-082 U32):
+                    a name read before the picture it names, in the station's
+                    capitals face. */}
+                <p className="vwd__mcard__title">{item.title}</p>
                 <button
                   type="button"
                   className="vwd__mcard__frame"
@@ -179,7 +183,6 @@ export function EraMediaStack({ items, front, onFront, onOpen, idPrefix }: EraMe
                   />
                   <MediaCue kind={item.kind} />
                 </button>
-                <p className="vwd__mcard__title">{item.title}</p>
               </div>
             ) : null}
           </div>

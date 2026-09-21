@@ -118,6 +118,12 @@ describe("EraMediaStack markup (ADR-082 U31)", () => {
     expect(cards.map((c) => c.querySelectorAll(".vwd__mcard__body").length)).toEqual([0, 1, 0]);
     expect(root.querySelectorAll(".vwd__mcard__frame")).toHaveLength(1);
     expect(root.querySelector(".vwd__mcard__title")?.textContent).toBe("A cut");
+    // ADR-082 U32 (owner): the title LEADS the frame — read before the picture.
+    const body = root.querySelector(".vwd__mcard__body")!;
+    expect([...body.children].map((c) => c.className)).toEqual([
+      "vwd__mcard__title",
+      "vwd__mcard__frame",
+    ]);
     // The pressed tab names the body it controls.
     const front = cards[1]!;
     expect(front.querySelector(".vwd__mcard__tab")?.getAttribute("aria-controls")).toBe(

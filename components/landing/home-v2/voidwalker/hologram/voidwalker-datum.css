@@ -542,24 +542,30 @@
    size, one weight up and in the panel's accent — so the eye takes it as the
    opening of the prose rather than as another readout.
 
-   ⚠ THE COLOUR IS UNCHANGED and is the only thing separating it from the
-   paragraph now, which is why the WEIGHT has to do the rest: `--weight-lit`
-   is the house ceiling (500) and PP Neue Montreal ships it. ⚠ NEVER a mono
-   700 — PT Mono has no 500 and a 700 there is the type ratchet's B count.
-
-   ⚠ AND IT RIDES `--band-copy`'s OWN CLAMP RATHER THAN THE TOKEN, at one rung
-   under the prose: the token is the landing's copy size and this line sits
-   inside a panel whose measure is 368px, where the body's 18px cap wraps a
-   52-character motto onto three lines. Dropping the literal `.06em` takes the
-   sheet's ratchet count A from 2 to 1. */
+   ⚠ U32 (owner, 2026-09-21 — the SECOND read of this line: "the font-color /
+   font-size of Venting became a campaign also feels VERY out of place") TAKES
+   U29 AT ITS WORD. U29 said "the body's size" and shipped a clamp of its own,
+   `clamp(12.5px, 1.45svh, 17px)`, on the HEIGHT: at his 1936×1002 window that
+   is 14.5px over an 18px paragraph — a lede SMALLER than the prose it opens —
+   and in gold, the only gold sentence on a station where gold is the lit mark
+   and nothing else (ADR-082 U23). So it reads the prose's OWN token and its
+   OWN ink at full strength (the prose runs at .8), and the WEIGHT is the one
+   thing separating them: `--weight-lit` is the house ceiling (500) and PP Neue
+   Montreal ships it. ⚠ NEVER a mono 700 — PT Mono has no 500 and a 700 there
+   is the type ratchet's B count.
+   ⚠ U29's reason for a rung under — "a 52-character motto wraps onto three
+   lines" — no longer has a subject: the longest motto on the record is 45
+   characters (`loop`), two lines at 18px in the 368px panel. `text-wrap:
+   balance` keeps a two-line lede from ending on one word. */
 .vwd__motto {
   margin: 0 0 clamp(8px, 1.2svh, 14px);
   font-family: var(--vwd-display);
-  font-size: clamp(12.5px, 1.45svh, 17px);
+  font-size: var(--band-copy, clamp(14px, 1.05vw, 17px));
   font-weight: var(--weight-lit);
   letter-spacing: var(--track-copy);
   line-height: 1.4;
-  color: var(--gold-ink, #caa554);
+  color: rgb(var(--vwd-dawn-rgb));
+  text-wrap: balance;
 }
 .vwd__prose {
   margin: 0;
@@ -957,21 +963,28 @@
   outline-offset: 2px;
 }
 
-/* ⚠ THE TITLE IS INSIDE THE CARD AND IN THE READING FACE (owner: "cards where
-   the title is part of it" — and his own doubt about a title in the notch, "if
-   the title is too long, that may not work"). It was a mono caps line under a
-   bare frame. Sentence case, because case only ranks if the sans does not
-   shout (ADR-092); it WRAPS, to two lines at the record's 60-character
-   ceiling, and is never clamped. */
+/* ⚠ THE TITLE IS INSIDE THE CARD, ABOVE THE FRAME, IN CAPITALS (ADR-082 U32,
+   owner 2026-09-21: "the title of the video should be above the video in all
+   caps"). U31 set it UNDER the frame in the reading face, sentence case. It
+   stays inside the body — his own doubt about a title in the notch ("if the
+   title is too long, that may not work") still stands — and now leads the
+   picture it names.
+   ⚠ CAPITALS ARE THE MONO'S JOB ON THIS STATION: every other capitalised line
+   here (the heads, the fact keys, the tab, the outlet tags) is PT Mono, and
+   uppercase on the sans is a type-material finding (ADR-092). Full-strength
+   ink, one step brighter than a fact key — it is the record's NAME, not a
+   label for one. It WRAPS, to two lines at the record's 60-character ceiling,
+   and is never clamped: the frame below it is what gives. */
 .vwd__mcard__title {
   flex: 0 0 auto;
   margin: 0;
-  font-family: var(--vwd-display);
-  font-size: clamp(13px, 0.98vw, 16.5px);
+  font-family: var(--vwd-mono);
+  font-size: clamp(10px, 0.8vw, 12px);
   font-weight: var(--weight-text);
-  letter-spacing: var(--track-copy);
-  line-height: 1.3;
-  color: rgba(var(--vwd-dawn-rgb), 0.95);
+  letter-spacing: var(--track-label);
+  line-height: 1.35;
+  text-transform: uppercase;
+  color: rgb(var(--vwd-dawn-rgb));
   text-wrap: balance;
 }
 .vwd__mcard:has(.vwd__mcard__frame:hover) .vwd__mcard__title,
@@ -1354,15 +1367,17 @@ a.vwd__press:focus-visible {
   .vwd__absent {
     font-size: clamp(10px, 1.2svh, 15px);
   }
-  /* The media card's two rungs, on the ladder's two ROW ratios: the tab is a
-     label (1.2svh), the title a value (1.45svh, the headline's own floor).
-     ⚠ The tab caps at 13, not 15: its width is solved from this size, and four
-     of them have to fit across a card (`--_wf` / `--_wb`). */
+  /* The media card's two rungs, both on the LABEL ratio (1.2svh) now that the
+     title is mono capitals (U32) — capitals at the value ratio's 18px would
+     outshout the heads above them. ⚠ The tab caps at 13, not 15: its width is
+     solved from this size, and four of them have to fit across a card
+     (`--_wf` / `--_wb`). The title's measure is the card's, so it takes the
+     fact keys' own 15. */
   .vwd__mstack {
     --vwd-mtab-fs: clamp(9.5px, 1.2svh, 13px);
   }
   .vwd__mcard__title {
-    font-size: clamp(13px, 1.45svh, 18px);
+    font-size: clamp(10px, 1.2svh, 15px);
   }
   /* ⚠ TWO FLOORS, ONE RATIO. The value and the headline share the 1.45svh
      term but NOT their floors (12.5 and 13 are what shipped), and collapsing

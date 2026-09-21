@@ -170,6 +170,29 @@ describe("the pile fits its seat by construction (ADR-082 U31)", () => {
   });
 });
 
+describe("the owner's second read (ADR-082 U32)", () => {
+  it("sets the card title in capitals, and capitals are the mono's job", () => {
+    // Uppercase on the sans is a type-material finding (ADR-092); every other
+    // capitalised line on this station is PT Mono.
+    const title = ruleBody(css, ".vwd__mcard__title");
+    expect(title).toMatch(/font-family:\s*var\(--vwd-mono\)/);
+    expect(title).toMatch(/text-transform:\s*uppercase/);
+    expect(title).toMatch(/letter-spacing:\s*var\(--track-label\)/);
+  });
+
+  it("gives the lede the paragraph's own size and ink — never a gold sentence", () => {
+    // U29 said "the body's size" and shipped a height clamp of its own, which
+    // put an 18px paragraph under a 14.5px lede at the owner's window.
+    const motto = ruleBody(css, ".vwd__motto");
+    const prose = ruleBody(css, ".vwd__prose");
+    const sizeOf = (body: string) => body.match(/font-size:\s*([^;]+);/)?.[1]?.trim();
+    expect(sizeOf(motto)).toBe(sizeOf(prose));
+    expect(motto).not.toMatch(/gold/);
+    expect(motto).toMatch(/color:\s*rgb\(var\(--vwd-dawn-rgb\)\)/);
+    expect(motto).toMatch(/font-weight:\s*var\(--weight-lit\)/);
+  });
+});
+
 describe("the glass (ADR-082 U31)", () => {
   it("frosts the FRONT card only, behind @supports, with no id in the selector", () => {
     // The DECLARATION, not the `@supports (backdrop-filter: blur(2px))` test.

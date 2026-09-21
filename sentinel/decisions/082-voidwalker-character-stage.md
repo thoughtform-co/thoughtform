@@ -3814,3 +3814,54 @@ panel lab's era surface 86 cells, 0 failures.
 - **The phone's gallery** (C) — his call on a device.
 - **PRM is unlifted** (no hologram mode, so no lift), by the gate's design.
 - **Nothing is pushed.**
+
+## Update 32 — the film's title leads its frame, and the lede is the paragraph's own first line (2026-09-21, owner)
+
+Owner, the same evening, on the live stage: _"the title of the video should be
+above the video in all caps"_ — and _"the font-color / font-size of 'Venting
+became a campaign' also feels VERY out of place"_, the SECOND read of that line
+(U29 was the first).
+
+**The title leads the frame.** `EraMediaStack` renders the title BEFORE the
+frame in the front card's body, in capitals. Capitals are PT Mono's job on this
+station — every other capitalised line is mono (the heads, the fact keys, the
+tab, the outlet tags) and uppercase on the sans is a type-material finding
+(ADR-092) — so his "IBM Sans or whatever" was read as the station's capitals
+face; a third family here would break ADR-067's two-by-role law. It takes
+`--track-label`, full-strength ink (one step above a fact key: it is the
+record's NAME, not a label for one) and the LABEL ratio, `clamp(10px, 1.2svh,
+15px)` from 1101px and `clamp(10px, 0.8vw, 12px)` below — capitals at the value
+ratio's 18px would outshout the heads above them. It still wraps and is never
+clamped; the frame is still the one thing that gives.
+
+**The lede is the paragraph's own first line.** U29 said "the body's size" and
+shipped a clamp of its own on the HEIGHT, `clamp(12.5px, 1.45svh, 17px)`: at his
+1936 × 1002 window that measured **14.5px over an 18px paragraph** — a lede
+smaller than the prose it opens — in gold, the only gold sentence on a station
+where gold is the lit mark and nothing else (U23). It now reads the prose's own
+token (`--band-copy`) and ink at full strength (the prose runs at .8), with
+`--weight-lit` the one difference and `text-wrap: balance`. U29's reason for a
+rung under — a 52-character motto on three lines — has no subject left: the
+longest motto on the record is 45 characters, two lines.
+
+Guards: the markup test pins title → frame; the sheet test pins the title's
+face, case and tracking and the lede's size equal to the prose's with no gold;
+`capture-era-media` fails a title whose ink does not end above the frame.
+Measured after: the pile gates pass at 1936 × 1002, 1920 × 1247, 1280 × 720,
+1101 × 800, 375 × 553 and 390 × 844; the eras probe is clean at five desktop
+shapes (tightest foot 63px at 1101 × 800, 68 at 1280 × 720, SCOPE now the
+tightest seat); the phone probe is clean.
+
+**The Expanse drafts (U31 §C2) are drawn.** Six plates from the prompt locks in
+`20260921-expanse-v3` — the owner ran the call himself when this session's
+permission check stopped it as a paid transaction. Three kept his likeness (the
+beard, the brow); three came back clean-shaven strangers. One of six held the
+flat ground: the model drifts the blue off `#0A28D2` and lays a gradient on it,
+so the chroma matte has to estimate the ground PER PLATE rather than trust the
+lock. G1 is his pick.
+
+- ⚠ **G0 HELD THE PLATES, AND THE PLATES NEVER DEPENDED ON IT.** Both gold
+  routes — the deterministic grade and the model's own quiet edit — start from a
+  colour plate, so the only step G0 decides is the gold one. A gate belongs on
+  the step whose outcome it changes; holding everything upstream of it only
+  spends the owner's evening.

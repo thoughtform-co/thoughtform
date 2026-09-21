@@ -48,6 +48,11 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
   CharacterEraMedia[]` read through `eraMedia()`, max 4): tabs by DEPTH, a CLOSED
   evenodd lip, no body on a back card, no player mounted, fit by construction
   (`container-type: size` at ≥1101 ONLY; the frame's `min-height` is load-bearing).
+  ⚠ U32: the card's title LEADS the frame, in PT Mono capitals on the label ratio
+  (uppercase on the sans is an ADR-092 finding); it wraps, never clamps.
+- ⚠ **THE LEDE IS THE PARAGRAPH'S OWN FIRST LINE (U32)** — `.vwd__motto` reads the
+  prose's `--band-copy` and full ink, `--weight-lit` the only difference; never a
+  size clamp of its own, never gold.
 - ⚠ **ON RECORD IS TAGGED ROWS** — U29's bounded object is superseded.
 - ⚠ **A FIGURE IS DRAWN IN COLOUR AND GRADED GOLD** (`scripts/voidwalker-avatar/gold.py`,
   the Architect's measured curve, ramp and bloom, and the exposure gate).
