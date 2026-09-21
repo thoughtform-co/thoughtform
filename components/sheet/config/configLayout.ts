@@ -95,10 +95,13 @@ export function cropFor(w: number, h: number): ConfigCropId {
  * no longer exists.
  */
 export const BOARD_BOX_PX = {
-  "1280x720": { w: 530.9, h: 345 },
-  "1440x800": { w: 597.8, h: 392.5 },
-  "1920x1080": { w: 746.7, h: 569.5 },
-  "1920x1247": { w: 746.7, h: 716.6 },
+  // Re-measured for ADR-118 U3: the readout's three framed rows and the one
+  // big button took a little less height than U2's brief, its strip and the
+  // key hints, so every box grew by 3.5–14px and every crop held.
+  "1280x720": { w: 530.9, h: 348.5 },
+  "1440x800": { w: 597.8, h: 406.9 },
+  "1920x1080": { w: 746.7, h: 581.1 },
+  "1920x1247": { w: 746.7, h: 721.4 },
 } as const;
 
 /** How much of a box a crop fills under `meet`, 0..1 (the rest is letterbox). */
@@ -182,7 +185,10 @@ export interface Rect {
   h: number;
 }
 
-export type ConfigInk = "knock" | "knock-dim" | "ink" | "ink-dim";
+/** A letter's ink, resolved by a class (`.sh-cfg__t--<ink>`). `knock*` sit on
+ *  the Tensor-gold die, `ink*` on a chip, and `gold` is a chip's kind code —
+ *  the homepage board's key in Tensor gold (ADR-118 U3). */
+export type ConfigInk = "knock" | "knock-dim" | "ink" | "ink-dim" | "gold";
 
 export interface ConfigLetter extends LetterSpec {
   face: "mono" | "sans";
@@ -559,7 +565,7 @@ function chipLetters(l: SheetConfigLink, r: Rect): ConfigLetter[] {
       x: r.x + CHIP.pad,
       y: r.y + 13,
       anchor: "start",
-      ink: "ink-dim",
+      ink: "gold",
     },
   ];
   sansLines(l.name, CFG_FS.chipName, chipNameMeasure(r.w), 2).forEach(({ line, measure }, i) =>

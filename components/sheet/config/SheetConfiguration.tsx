@@ -23,9 +23,13 @@ import {
  * DIE at the centre — the types of work the setup is for, the proposal's own
  * workstreams, a module tag at each row's end — dark chamfered chips around it
  * for what it runs on and inside, multi-wire buses with 45° jogs between them,
- * and a faint board behind. The die is filled in INK with its words knocked
- * out, not in gold: on this page gold is STATE (the chosen block, NOW, the
- * CTA), and the reference's own centre chip is neutral.
+ * and a faint board behind. ⚠ THE CONFIGURATION IS TENSOR GOLD (U3, owner:
+ * "the color of the intelligence configuration thingy should be like Tensor
+ * Gold. Same with the accents") — the die filled with `--gold` and its words
+ * knocked out on `--gold-contrast`, its legs gold, its wires amber, the chips'
+ * kind codes in `--gold-ink`: what the homepage board paints gold. U2 drew the
+ * die in ink while gold on this page was state alone. The chips' frames and
+ * the faint traces stay dawn: they are the board, not the configuration.
  *
  * ⚠ THE GRAMMAR IS COPIED, THE PURE HELPERS ARE IMPORTED (ADR-100's
  * precedent). `ribbonPaths` and `housing` come from the proof board's pure

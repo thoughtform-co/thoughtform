@@ -59,13 +59,28 @@
   --sh-ground: var(--void);
   --sh-plate: rgba(var(--void-deep-rgb), 0.62);
   --sh-recess: rgba(var(--dawn-rgb), 0.035);
-  /* KNOCKED-OUT ink: words set ON an ink-filled object — the arcs dossier's
-     configuration die (ADR-118 U2). The ground's own colour and two blends of
-     it into the ink, so both flip with ADR-058's swap and need no light row:
-     the dim rung measures ~6.4:1 on the die in dark and ~7.2:1 in light. */
-  --sh-knock: var(--sh-ground);
-  --sh-knock-dim: color-mix(in srgb, var(--sh-ground) 66%, var(--sh-ink));
-  --sh-knock-rule: color-mix(in srgb, var(--sh-ground) 30%, var(--sh-ink));
+  /* The readout's KEY cell (ADR-118 U3): Starfield's filled label, a step
+     above the recess because it has to read as a frame. A fill on EVERY key
+     cell is a column's material, never a state. */
+  --sh-well: rgba(var(--dawn-rgb), 0.07);
+  /* KNOCKED-OUT ink: words set ON a Tensor-gold object — the arcs dossier's
+     configuration die (ADR-118 U3; it was ink in U2). ⚠ `--gold-contrast`,
+     NEVER the ground: `--sh-ground` is `--void`, which is parchment in light,
+     and void-coloured words on gold are the pair `theme-css-sweep` exists
+     for. `--gold` and `--gold-contrast` hold in both themes, so no light row:
+     the dim rung is ~5.6:1 on the die in dark and ~5.2:1 in light (the smoke
+     measures both). */
+  --sh-knock: var(--gold-contrast);
+  --sh-knock-dim: color-mix(in srgb, var(--gold-contrast) 75%, var(--gold));
+  --sh-knock-rule: color-mix(in srgb, var(--gold-contrast) 40%, var(--gold));
+  /* The configuration's WIRES (ADR-118 U3): amber, the homepage board's own
+     conductor (`--pda-amb`) — through `--gold-line`, so light re-derives. */
+  --sh-amb: color-mix(in srgb, var(--gold-line) 80%, transparent);
+  /* The dossier's head BAND: the proof card's folder tint (ADR-097,
+     `.pf-card__head`) — gold at .28 running to a quarter of it. Light row in
+     theme.css. */
+  --sh-band-from: rgba(var(--gold-rgb), 0.28);
+  --sh-band-to: rgba(var(--gold-rgb), 0.07);
   /* the lip: the housing's one sanctioned gold line, FLAT (ADR-092 U1) */
   --sh-lip: color-mix(in srgb, var(--gold-line) 30%, transparent);
   --sh-lip-lit: color-mix(in srgb, var(--gold-line) 70%, transparent);

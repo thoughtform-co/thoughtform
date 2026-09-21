@@ -79,7 +79,6 @@ function fixture(
     client: null,
     isArc: true,
     chip: "proposal",
-    lede: "A fixture engagement: the instrument's grammar on a record the real one does not hold yet.",
     kind: "production",
     href,
     sections: 12,

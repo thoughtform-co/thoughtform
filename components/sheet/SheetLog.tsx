@@ -24,11 +24,13 @@ type Log = Extract<SheetSection, { kind: "log" }>;
  * and when it was filed. One is filled.
  *
  * Right, seven of twelve, a gutter away: the dossier, one housing, sticky at
- * the rails' top — its band, the one-line brief and a status strip, the
- * client's CONFIGURATION drawn where the key visual was (owner: "that key
- * visual with the text: what the fuck is that?"), and the way in. An
- * engagement with no configuration (the portfolio, the house formats) shows
- * no board and no picture: the housing is as tall as what it says.
+ * the rails' top, read like a travel-data panel (U3) — the band in the proof
+ * card's folder tint, a READOUT of framed keys with their values to the right
+ * (owner: "jump time with a frame, and then, to the right of it, the value";
+ * asked where the brief's sentence goes, he dropped it), the client's
+ * CONFIGURATION drawn in Tensor gold where the key visual was, and one big
+ * button. An engagement with no configuration (the portfolio, the house
+ * formats) shows no board: the housing is as tall as what it says.
  *
  * ⚠ THE LIST MAY RUN PAST THE SCREEN (owner: "I don't mind that it extends
  * beyond the viewport section"). The blocks still divide the device's height
@@ -144,36 +146,27 @@ function Dossier({ dossier: d, hidden }: { dossier: SheetDossier; hidden: boolea
           )}
           <span className="sh-dos__kind">{d.kind}</span>
         </header>
-        <div className="sh-dos__brief">
-          {/* The dossier's NAME is the card's title, carried as the article's
-              `aria-label` and lettered nowhere: the band names the client and
-              the brief is what a sighted reader takes (U2 — "said twice" is
-              this surface's defect, and hidden text is a box that clips by
-              design in every band walk). */}
-          <p className="sh-dos__lede">{d.lede}</p>
-          <dl className="sh-dos__status">
-            {d.status.map((s) => (
-              <div className="sh-dos__reading" key={s.label}>
-                <dt>{s.label}</dt>
-                <dd>{s.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+        {/* The dossier's NAME is the card's title, carried as the article's
+            `aria-label` and lettered nowhere: the band names the client (U2 —
+            "said twice" is this surface's defect, and hidden text is a box
+            that clips by design in every band walk). */}
+        <dl className="sh-dos__readout">
+          {d.status.map((s) => (
+            <div className="sh-dos__row" key={s.label}>
+              <dt className="sh-dos__key">{s.label}</dt>
+              <dd className="sh-dos__val">{s.value}</dd>
+            </div>
+          ))}
+        </dl>
         {d.configuration ? (
           <div className="sh-dos__board">
             <SheetConfiguration config={d.configuration} client={d.designation.name} />
           </div>
         ) : null}
+        {/* ONE big button (U3). The keys still walk the list and Enter still
+            opens; the owner struck their printed hints. */}
         <footer className="sh-dos__foot">
           <SheetCta href={d.cta.href} label={d.cta.label} />
-          <p className="sh-dos__keys" aria-hidden="true">
-            <kbd>Up</kbd>
-            <kbd>Down</kbd>
-            <span>Select</span>
-            <kbd>Enter</kbd>
-            <span>Open</span>
-          </p>
         </footer>
       </div>
     </article>

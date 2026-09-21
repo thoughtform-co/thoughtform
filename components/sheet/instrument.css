@@ -56,6 +56,12 @@
   --log-icon: 28px;
   --log-icon-gap: clamp(10px, 0.9vw, 16px);
   --log-title: clamp(16px, 1.1vw, 21px);
+  /* The dossier's readout (ADR-118 U3): one row's height, and the air
+     around the table. Together they take about the height the brief and its
+     status strip took, which is the budget the board's type floor at
+     1280 × 720 allows. */
+  --dos-row-h: clamp(22px, 2.4svh, 30px);
+  --dos-read-pad: clamp(8px, 1svh, 14px);
   --ap-ease: cubic-bezier(0.65, 0, 0.35, 1);
 }
 @media (min-width: 1600px) {
@@ -111,8 +117,8 @@
 .sh-log__eng,
 .sh-log__date,
 .sh-dos__band,
-.sh-dos__status,
-.sh-dos__keys {
+.sh-dos__key,
+.sh-dos__val {
   font-family: var(--font-pt-mono);
   font-size: var(--sh-chrome);
   font-weight: var(--weight-text);
@@ -794,11 +800,13 @@
 }
 
 /* ── 5. The dossier ───────────────────────────────────────────────── */
-/* ⚠ ONE DEVICE: the band, the brief and its status strip, the client's
-   configuration DRAWN (U2 — the first screen, a picture with a text plate
-   under it, went: "that key visual with the text … that's not elegant"),
-   and the way in. An engagement with no configuration is as tall as what it
-   says — no board, no picture, no pooled air. */
+/* ⚠ ONE DEVICE, READ TOP TO BOTTOM LIKE A TRAVEL-DATA PANEL (U3): the band
+   (the proof card's folder tint), the readout (framed keys, their values to
+   the right — the owner: "jump time with a frame, and then, to the right of
+   it, the value"), the client's configuration DRAWN (U2 — the first screen, a
+   picture with a text plate under it, went), and one big button. The brief's
+   sentence is gone (owner, asked: rows only). An engagement with no
+   configuration is as tall as what it says — no board, no pooled air. */
 .sh-log__dossiers {
   position: sticky;
   top: var(--hud-rail-y-start);
@@ -823,6 +831,12 @@
   height: auto;
   grid-template-rows: auto auto auto;
 }
+/* The band is the proof card's folder BAND (ADR-097, `.pf-card__head`): the
+   same gold, running to a quarter of itself, under the housing's own TR cut.
+   ⚠ It stays `--mon-strip-h` tall — the log's first section head is level
+   with it, and the smoke holds the two to a pixel. ⚠ Both contrast walks
+   read `backgroundColor` and are blind to a gradient, so the smoke measures
+   each word on the band against the tint AT ITS OWN x. */
 .sh-dos__band {
   display: flex;
   align-items: center;
@@ -831,6 +845,7 @@
   min-height: var(--mon-strip-h);
   padding: 0 calc(var(--sh-card-ch) + var(--mon-pad)) 0 var(--mon-pad);
   border-bottom: 1px solid var(--sh-seam);
+  background: linear-gradient(90deg, var(--sh-band-from) 0%, var(--sh-band-to) 100%);
 }
 .sh-dos__desig {
   color: var(--gold-ink);
@@ -846,58 +861,73 @@ a.sh-dos__desig:focus-visible {
 .sh-dos__kind {
   color: var(--sh-ink-dim);
 }
-.sh-dos__brief {
-  padding: clamp(12px, 1.8svh, 24px) var(--mon-pad) clamp(10px, 1.5svh, 20px);
+/* The READOUT (U3): Starfield's travel data — each row two cells, the key
+   FILLED and framed, the value framed beside it and set to the right. The
+   rows stand 3px apart as separate frames, and every row shares one
+   template, so the keys are one column. ⚠ The fill is on EVERY key cell: a
+   column's material, not a state — ADR-082 U29's "an outline is not a
+   ground" is about one fill among outlines. */
+.sh-dos__readout {
+  display: grid;
+  row-gap: 3px;
+  margin: 0;
+  padding: var(--dos-read-pad) var(--mon-pad);
   border-bottom: 1px solid var(--sh-rule);
 }
-.sh-dos__lede {
-  margin: 0;
-  max-width: 60ch;
-  font-size: var(--sh-lede);
-  line-height: 1.35;
-  color: var(--sh-ink-90);
+.sh-dos__row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
 }
-/* The status strip: the three readings the readout table held, on one line. */
-.sh-dos__status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px clamp(16px, 1.6vw, 28px);
-  margin: clamp(8px, 1.2svh, 14px) 0 0;
-}
-.sh-dos__reading {
-  display: flex;
-  gap: 8px;
-}
-.sh-dos__reading dt {
-  color: var(--sh-ink-dim);
-}
-.sh-dos__reading dd {
-  margin: 0;
-  color: var(--sh-ink-90);
-}
-.sh-dos__foot {
+.sh-dos__key,
+.sh-dos__val {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: clamp(10px, 1.6svh, 20px) var(--mon-pad) clamp(10px, 1.6svh, 20px)
-    calc(var(--sh-card-ch) + var(--mon-pad));
-}
-.sh-dos__keys {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  box-sizing: border-box;
+  min-width: 0;
+  height: var(--dos-row-h);
   margin: 0;
-  color: var(--sh-ink-dim);
+  padding: 0 clamp(8px, 0.7vw, 12px);
+  border: 1px solid var(--sh-seam);
+  white-space: nowrap;
 }
-.sh-dos__keys kbd {
-  padding: 1px 5px;
-  border: 1px solid var(--sh-rule);
-  font: inherit;
+.sh-dos__key {
+  background: var(--sh-well);
   color: var(--sh-ink-70);
 }
-.sh-dos__keys span + kbd {
-  margin-left: 10px;
+.sh-dos__val {
+  justify-content: flex-end;
+  border-left: 0;
+  color: var(--sh-ink);
+}
+/* The way in: ONE big button across the foot (U3 — the owner: "just like a
+   button at the bottom"; the key hints went). The proof card's own
+   full-width button (`.pf-watch`, ADR-097 U10): a gold outline at rest,
+   FILLED on hover and focus with its ink on `--gold-contrast`. ⚠ Scoped to
+   the dossier: `.sh-cta` stays the small outlined CTA everywhere else. */
+.sh-dos__foot {
+  display: grid;
+  padding: clamp(8px, 0.8svh, 12px) var(--mon-pad) clamp(8px, 0.8svh, 12px)
+    calc(var(--sh-card-ch) + var(--mon-pad));
+}
+.sh-dos__foot .sh-cta {
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: clamp(44px, 5.5svh, 60px);
+  letter-spacing: var(--track-eyebrow);
+  transition:
+    color 180ms ease-out,
+    background-color 180ms ease-out,
+    border-color 180ms ease-out;
+}
+.sh-dos__foot .sh-cta:hover,
+.sh-dos__foot .sh-cta:focus-visible {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+.sh-dos__foot .sh-cta:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
 }
 
 /* ── 5b. The configuration board ──────────────────────────────────── */
@@ -905,7 +935,16 @@ a.sh-dos__desig:focus-visible {
    bright die of workstreams, the chips around it for what it runs on and
    inside, the buses between. The board's own ground is a faint dot bed —
    the reference's PCB, one step under the rule — laid on the BOX, not in the
-   SVG, so a crop letterboxed by `meet` never shows the bed's edge. */
+   SVG, so a crop letterboxed by `meet` never shows the bed's edge.
+   ⚠ THE CONFIGURATION IS TENSOR GOLD, THE BOARD IS NOT (U3, owner: "the
+   color of the intelligence configuration thingy should be like Tensor Gold.
+   Same with the accents"). What the homepage board paints gold is what goes
+   gold here: the die (`--gold`, the one filled object), its legs, the wires
+   (amber, `--pda-amb`'s value through `--gold-line`) and the chips' kind
+   codes (`--gold-ink`, the board's "keys in Tensor gold"). The chips' frames
+   and top rules and the faint traces stay dawn — they are the board, and a
+   coloured top rule on a card is the frontend mark the owner struck
+   (2026-09-15). Gold on this page is state AND the configuration. */
 .sh-dos__board {
   position: relative;
   min-height: 0;
@@ -969,10 +1008,10 @@ a.sh-dos__desig:focus-visible {
   stroke: var(--sh-rule);
 }
 .sh-cfg__buses {
-  stroke: var(--sh-ink-50);
+  stroke: var(--sh-amb);
 }
 .sh-cfg__pin {
-  fill: var(--sh-ink);
+  fill: var(--gold);
 }
 .sh-cfg__chip-plate {
   fill: var(--sh-ground);
@@ -989,10 +1028,11 @@ a.sh-dos__desig:focus-visible {
 .sh-cfg__chip-rule {
   stroke: var(--sh-ink-50);
 }
-/* The die: INK, its words knocked out — the one filled object on the board,
-   and not gold, because gold on this page is state. */
+/* The die: TENSOR GOLD, its words knocked out on `--gold-contrast` — the one
+   filled object on the board, the same metal as the chosen block beside it
+   (U3; U2 drew it in ink while gold was state alone). */
 .sh-cfg__die-plate {
-  fill: var(--sh-ink);
+  fill: var(--gold);
 }
 .sh-cfg__die-seam {
   stroke: var(--sh-knock-dim);
@@ -1025,6 +1065,11 @@ a.sh-dos__desig:focus-visible {
 }
 .sh-cfg__t--ink-dim {
   fill: var(--sh-ink-dim);
+}
+/* A chip's kind code — the homepage board's key, in its own role token (the
+   text rung: `--gold` itself is a MARK and fails as small type on parchment). */
+.sh-cfg__t--gold {
+  fill: var(--gold-ink);
 }
 
 /* ── 6. Motion — clips, never opacity ─────────────────────────────── */
@@ -1139,8 +1184,5 @@ a.sh-dos__desig:focus-visible {
      definite height `container-type: size` needs and the crop fills it. */
   .sh-dos__board {
     aspect-ratio: 420 / 520;
-  }
-  .sh-dos__keys {
-    display: none;
   }
 }

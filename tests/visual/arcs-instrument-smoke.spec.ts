@@ -28,6 +28,12 @@ import { letterDateShort } from "@/lib/sheet/dates";
  *     mid-height, a board on a page with no configuration (or none on a
  *     proposal), a crop that is not the one its box asks for, type under the
  *     floor, and words on the die the die's own ink swallows;
+ *   - since U3, a band without the proof card's tint or a word on it the tint
+ *     swallows, a readout row that is not a filled, framed key beside its
+ *     right-set value, a button that is not the foot's width, a die that is
+ *     not Tensor gold, and a board under its floor on ANY proposal — the
+ *     brief's sentence and the rows used to share one block, and the longest
+ *     sentence is what shrank the board;
  *   - keys that stop at a section's edge, or walk into a row off the screen;
  *   - the frame's chrome printing over the device.
  *
@@ -54,6 +60,11 @@ const CONFIGURED = new Set([
   "suri-proposal",
   "trinny-london-pitch",
 ]);
+/** An arc's readout carries its section count; a client's page has none. */
+const ARC_HREFS = new Set(ARCS.map((a) => `/arcs/${a.slug}`));
+/** The band's tint at its strong end, by theme (sheet.css / theme.css), and
+ *  its far end, a quarter of it — the proof card's folder band (ADR-097). */
+const BAND_ALPHA = { dark: 0.28, light: 0.22 } as const;
 
 async function open(page: Page, url = "/arcs") {
   await page.goto(url);
@@ -294,8 +305,47 @@ test.describe("the arcs instrument (ADR-118)", () => {
         expect(b.overlaps, "two of the board's words print through each other").toEqual([]);
         expect(
           b.knock.every((c) => c >= 4.5),
-          `the die's words on its ink: ${b.knock.join(", ")}`
+          `the die's words on its gold: ${b.knock.join(", ")}`
         ).toBe(true);
+      });
+
+      test(`the dossier reads like travel data: a tinted band, framed keys, one big button, at ${w}x${h}`, async ({
+        page,
+      }) => {
+        await open(page);
+        await seatLog(page);
+        expectTravelData(await readDossier(page), "dark");
+      });
+
+      /* ⚠ EVERY PROPOSAL, NOT THE DEFAULT ONE. The board takes what the
+         readout and the button leave, and until U3 the block above it held a
+         sentence whose length varied by client — the longest (Trinny's, 120
+         characters) was what would have pushed a board under its floor, on a
+         dossier no test ever opened. */
+      test(`every proposal's board keeps its crop, its fill and its floor, at ${w}x${h}`, async ({
+        page,
+      }) => {
+        await open(page);
+        await seatLog(page);
+        for (const id of CONFIGURED) {
+          await page.locator(`.sh-log__row[data-id="${id}"]`).click();
+          await expect(page.locator(".sh-root")).toHaveAttribute("data-dos-id", id);
+          await page.waitForFunction(() =>
+            document.getAnimations().every((a) => a.playState !== "running")
+          );
+          const b = await readBoard(page);
+          expect(b, `${id} draws its configuration`).not.toBeNull();
+          if (!b) continue;
+          expect(b.crops, `${id}: one crop, the box's`).toEqual([cropFor(b.box.w, b.box.h)]);
+          expect(b.fill, `${id}: the crop fills its box`).toBeGreaterThan(0.9);
+          expect(b.minName, `${id}: a name on the board`).toBeGreaterThanOrEqual(
+            CFG_FLOOR_PX.name - 0.05
+          );
+          expect(b.minKicker, `${id}: a kicker on the board`).toBeGreaterThanOrEqual(
+            CFG_FLOOR_PX.kicker - 0.05
+          );
+          expect(b.overlaps, `${id}: words printing through each other`).toEqual([]);
+        }
       });
     });
   }
@@ -364,19 +414,24 @@ test.describe("the arcs instrument (ADR-118)", () => {
        walk cannot see a `::before`'s paint, so the edges are shot and read:
        the left edge at mid-height must carry most of the top edge's energy at
        mid-width, whatever sub-pixel the box sits on. Measured at 1440 × 800,
-       1440 × 900 and 1920 × 1247: closed 0.88–1.21 on a block and 0.64–0.79
-       on the dossier; the open path 0.31–0.52 and 0.16–0.27. The thresholds
-       sit between the two on each object. */
+       1440 × 900 and 1920 × 1247: closed 0.88–1.21 on a block, the open path
+       0.31–0.52 (the dossier's own numbers are below). The thresholds sit
+       between the two on each object. */
     expect(await ringRatio(page, corners.box), "a block's left edge at mid-height").toBeGreaterThan(
       0.65
     );
+    /* ⚠ THE DOSSIER'S REFERENCE IS ITS BOTTOM EDGE SINCE U3: its top edge runs
+       along the band's gold tint, which lifts the strip's inner end and
+       inflates the reference. Re-measured on the bottom edge, in dark: closed
+       0.64–1.10 and the open path 0.20–0.51 across 1280 × 720 … 1920 × 1247
+       (1440 × 900, this project's default, reads 0.64 against 0.20). */
     const dos = await page.evaluate(() =>
       document.querySelector(".sh-dos:not([hidden]) .sh-dos__in")!.getBoundingClientRect().toJSON()
     );
     expect(
-      await ringRatio(page, { x: dos.x, y: dos.y, w: dos.width, h: dos.height }),
+      await ringRatio(page, { x: dos.x, y: dos.y, w: dos.width, h: dos.height }, "bottom"),
       "the dossier's left edge at mid-height"
-    ).toBeGreaterThan(0.5);
+    ).toBeGreaterThan(0.58);
   });
 
   test("the plot is the record: one mark per engagement, at its date, left of NOW", async ({
@@ -444,19 +499,23 @@ test.describe("the arcs instrument (ADR-118)", () => {
           (x) => !x.hidden
         );
         const one = shown[0];
-        const read = Object.fromEntries(
-          [...one.querySelectorAll(".sh-dos__reading")].map((r) => [
-            r.querySelector("dt")!.textContent!.trim(),
-            r.querySelector("dd")!.textContent!.trim(),
-          ])
-        );
+        const rows = [...one.querySelectorAll(".sh-dos__row")].map((r) => [
+          r.querySelector(".sh-dos__key")!.textContent!.trim(),
+          r.querySelector(".sh-dos__val")!.textContent!.trim(),
+        ]);
+        const read = Object.fromEntries(rows);
         return {
           shown: shown.length,
           id: one.dataset.id,
           title: one.getAttribute("aria-label") ?? "",
           desig: one.querySelector(".sh-dos__desig")!.textContent!.trim(),
+          keys: rows.map(([k]) => k),
           filed: read.Filed,
-          cta: one.querySelector(".sh-cta")!.getAttribute("href"),
+          cta: one.querySelector(".sh-dos__foot .sh-cta")!.getAttribute("href"),
+          ctas: one.querySelectorAll(".sh-cta").length,
+          // U3: the sentence and the printed key hints are gone.
+          sentences: one.querySelectorAll(".sh-dos__lede, .sh-dos__brief").length,
+          hints: one.querySelectorAll(".sh-dos__keys, kbd").length,
           board: one.querySelectorAll(".sh-cfg").length,
           images: one.querySelectorAll("img").length,
           running: one.getAnimations({ subtree: true }).some((a) => a.playState === "running"),
@@ -475,7 +534,15 @@ test.describe("the arcs instrument (ADR-118)", () => {
         `${d.desig} · ${d.title} / ${row.name}`
       ).toBe(true);
       expect(d.filed, row.id).toBe(letterDateShort(byHref.get(row.href)!));
+      // The readout is the registry's own facts, in order; only an arc has
+      // sections to count.
+      expect(d.keys, `${row.id}: the readout's keys`).toEqual(
+        ARC_HREFS.has(row.href) ? ["Standing", "Filed", "Sections"] : ["Standing", "Filed"]
+      );
       expect(d.cta, row.id).toBe(row.href);
+      expect(d.ctas, `${row.id}: one way in`).toBe(1);
+      expect(d.sentences, `${row.id}: the brief's sentence is gone (U3)`).toBe(0);
+      expect(d.hints, `${row.id}: the key hints are gone (U3)`).toBe(0);
       expect(d.images, `${row.id}: the dossier's picture is gone (U2)`).toBe(0);
       expect(d.board, `${row.id}: a board`).toBe(CONFIGURED.has(row.id) ? 1 : 0);
     }
@@ -595,7 +662,7 @@ test.describe("the arcs instrument (ADR-118)", () => {
         await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
       else expect(await page.locator("html").getAttribute("data-theme")).not.toBe("light");
       const ratios = await page.$$eval(
-        ".sh-mon__reading dt, .sh-mon__reading dd, .sh-mon__cell-label, .sh-mon__lane-name, .sh-mon__lane-reading, .sh-mon__tick, .sh-log__head-name, .sh-log__head-n, .sh-log__name, .sh-log__eng, .sh-log__date, .sh-dos:not([hidden]) .sh-dos__reading dt, .sh-dos:not([hidden]) .sh-dos__reading dd, .sh-dos:not([hidden]) .sh-dos__lede",
+        ".sh-mon__reading dt, .sh-mon__reading dd, .sh-mon__cell-label, .sh-mon__lane-name, .sh-mon__lane-reading, .sh-mon__tick, .sh-log__head-name, .sh-log__head-n, .sh-log__name, .sh-log__eng, .sh-log__date, .sh-dos:not([hidden]) .sh-dos__key, .sh-dos:not([hidden]) .sh-dos__val, .sh-dos:not([hidden]) .sh-cta",
         (els) => {
           const parse = (s: string) => {
             const m = s.match(/rgba?\(([^)]+)\)/);
@@ -643,9 +710,12 @@ test.describe("the arcs instrument (ADR-118)", () => {
       expect(ratios.length).toBeGreaterThan(30);
       const low = ratios.filter((r) => r.ratio < 4.5);
       expect(low, `${theme}: under 4.5:1`).toEqual([]);
+      // The band's words sit on a GRADIENT, which the walk above cannot see;
+      // the dossier's travel-data read measures each on the tint at its x.
+      await seatLog(page);
+      expectTravelData(await readDossier(page), theme as "dark" | "light");
       // And the board's own words, on their own fills (a DOM walk reads the
       // die's ground as the page's — its ink is an SVG fill).
-      await seatLog(page);
       const b = await readBoard(page);
       expect(
         b!.knock.every((c) => c >= 4.5),
@@ -655,18 +725,39 @@ test.describe("the arcs instrument (ADR-118)", () => {
         b!.chips.every((c) => c >= 4.5),
         `${theme}: the chips' words ${b!.chips.join(", ")}`
       ).toBe(true);
+      // THE CONFIGURATION IS TENSOR GOLD (U3): the die is `--gold` in both
+      // themes, its legs too, the kind codes `--gold-ink` and the wires amber
+      // off `--gold-line`. The board around it stays dawn.
+      const gold = [202, 165, 84];
+      const goldLine = theme === "light" ? [138, 107, 32] : gold;
+      const goldInk = theme === "light" ? [110, 82, 22] : gold;
+      expect(b!.die, `${theme}: the die`).toEqual(gold);
+      expect(b!.pins, `${theme}: the die's legs`).toEqual(gold);
+      expect(b!.codes.length, `${theme}: a kind code per chip`).toBeGreaterThan(0);
+      for (const c of b!.codes) expect(c, `${theme}: a kind code`).toEqual(goldInk);
+      expect(b!.bus?.rgb, `${theme}: the wires`).toEqual(goldLine);
+      expect(b!.bus?.a, `${theme}: the wires' alpha`).toBeCloseTo(0.8, 2);
     }
   });
 });
 
 /**
- * How much of a clipped ring's top edge its left edge carries, at mid-height:
- * both strips are six pixels across the edge, each pixel's distance from the
- * strip's inner end summed, so a 1px line split across two device pixels
- * counts the same as one landing on a single pixel. 1 is a whole ring.
+ * How much of a clipped ring's reference edge its left edge carries, at
+ * mid-height: every strip is six pixels across the edge, each pixel's
+ * distance from the strip's INNER end summed, so a 1px line split across two
+ * device pixels counts the same as one landing on a single pixel. 1 is a
+ * whole ring. The reference is the top edge at mid-width, or the bottom edge
+ * where the top runs along a tint (the dossier's band, U3).
  */
-async function ringRatio(page: Page, box: { x: number; y: number; w: number; h: number }) {
-  const strip = async (clip: { x: number; y: number; width: number; height: number }) => {
+async function ringRatio(
+  page: Page,
+  box: { x: number; y: number; w: number; h: number },
+  ref: "top" | "bottom" = "top"
+) {
+  const strip = async (
+    clip: { x: number; y: number; width: number; height: number },
+    innerAtStart = false
+  ) => {
     const shot = await page.screenshot({ clip });
     const { data, info } = await sharp(shot).raw().toBuffer({ resolveWithObject: true });
     const px: number[] = [];
@@ -674,7 +765,7 @@ async function ringRatio(page: Page, box: { x: number; y: number; w: number; h: 
       px.push(
         (data[i * info.channels] + data[i * info.channels + 1] + data[i * info.channels + 2]) / 3
       );
-    const base = px[px.length - 1]; // the inner end, on the plate
+    const base = innerAtStart ? px[0] : px[px.length - 1]; // the inner end, on the plate
     return px.reduce((sum, v) => sum + Math.abs(v - base), 0);
   };
   const left = await strip({
@@ -683,13 +774,24 @@ async function ringRatio(page: Page, box: { x: number; y: number; w: number; h: 
     width: 6,
     height: 1,
   });
-  const top = await strip({
-    x: Math.round(box.x + box.w / 2),
-    y: Math.floor(box.y) - 2,
-    width: 1,
-    height: 6,
-  });
-  return top > 0 ? left / top : 0;
+  const edge =
+    ref === "top"
+      ? await strip({
+          x: Math.round(box.x + box.w / 2),
+          y: Math.floor(box.y) - 2,
+          width: 1,
+          height: 6,
+        })
+      : await strip(
+          {
+            x: Math.round(box.x + box.w / 2),
+            y: Math.ceil(box.y + box.h) - 4,
+            width: 1,
+            height: 6,
+          },
+          true
+        );
+  return edge > 0 ? left / edge : 0;
 }
 
 /**
@@ -732,11 +834,22 @@ async function readBoard(page: Page) {
           .split(/[,/\s]+/)
           .filter(Boolean)
           .map(parseFloat);
-        return { r: p[0], g: p[1], b: p[2] };
+        return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
       }
-      const c = str.match(/color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)/);
-      if (c) return { r: +c[1] * 255, g: +c[2] * 255, b: +c[3] * 255 };
+      // `color-mix()` computes to `color(srgb r g b / a)`.
+      const c = str.match(/color\(srgb ([\d.]+) ([\d.]+) ([\d.]+)(?:\s*\/\s*([\d.]+))?/);
+      if (c)
+        return {
+          r: +c[1] * 255,
+          g: +c[2] * 255,
+          b: +c[3] * 255,
+          a: c[4] === undefined ? 1 : +c[4],
+        };
       return null;
+    };
+    const rgbOf = (str: string) => {
+      const c = parse(str);
+      return c ? [Math.round(c.r), Math.round(c.g), Math.round(c.b)] : null;
     };
     const lum = (c: { r: number; g: number; b: number }) => {
       const f = (v: number) => {
@@ -754,7 +867,9 @@ async function readBoard(page: Page) {
     const dieFill = getComputedStyle(svg.querySelector(".sh-cfg__die-plate")!).fill;
     const chipFill = getComputedStyle(svg.querySelector(".sh-cfg__chip-plate")!).fill;
     const onDie = texts.filter((t) => /knock/.test(t.getAttribute("class") ?? ""));
-    const onChip = texts.filter((t) => /--ink/.test(t.getAttribute("class") ?? ""));
+    // A chip's name (`--ink`) and its kind code (`--gold`, U3).
+    const onChip = texts.filter((t) => /--(ink|gold)\b/.test(t.getAttribute("class") ?? ""));
+    const bus = parse(getComputedStyle(svg.querySelector(".sh-cfg__buses")!).stroke);
     return {
       box: { w: +box.width.toFixed(1), h: +box.height.toFixed(1) },
       crops: shown.map((x) => x.dataset.crop),
@@ -764,6 +879,173 @@ async function readBoard(page: Page) {
       overlaps,
       knock: onDie.map((t) => ratio(getComputedStyle(t).fill, dieFill)),
       chips: onChip.map((t) => ratio(getComputedStyle(t).fill, chipFill)),
+      die: rgbOf(dieFill),
+      pins: rgbOf(getComputedStyle(svg.querySelector(".sh-cfg__pin")!).fill),
+      codes: texts
+        .filter((t) => t.classList.contains("sh-cfg__t--gold"))
+        .map((t) => rgbOf(getComputedStyle(t).fill)),
+      bus: bus
+        ? { rgb: [Math.round(bus.r), Math.round(bus.g), Math.round(bus.b)], a: bus.a }
+        : null,
     };
   }, crops);
+}
+
+/**
+ * The shown dossier as travel data (ADR-118 U3): the band's tint and each
+ * word on it, the readout's cells, and the button.
+ *
+ * ⚠ THE BAND IS A GRADIENT, AND BOTH CONTRAST WALKS READ `backgroundColor`
+ * ALONE — a word on it would be measured against the plate beneath and pass
+ * whatever the tint did. So the tint is composited HERE, at the word's own
+ * centre, over the dossier's plate and the page's ground.
+ */
+async function readDossier(page: Page) {
+  return page.evaluate(() => {
+    type C = { r: number; g: number; b: number; a: number };
+    const parse = (s: string): C | null => {
+      const m = s.match(/rgba?\(([^)]+)\)/);
+      if (!m) return null;
+      const p = m[1].split(/[,/]/).map((x) => parseFloat(x));
+      return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+    };
+    const over = (top: C, bed: C): C => ({
+      r: top.r * top.a + bed.r * (1 - top.a),
+      g: top.g * top.a + bed.g * (1 - top.a),
+      b: top.b * top.a + bed.b * (1 - top.a),
+      a: 1,
+    });
+    const lum = (c: C) => {
+      const f = (v: number) => {
+        const x = v / 255;
+        return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+      };
+      return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+    };
+    const ratio = (a: C, b: C) => {
+      const [l1, l2] = [lum(a), lum(b)];
+      return +((Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05)).toFixed(2);
+    };
+    /** The grounds under `el`, composited up to the first opaque one. */
+    const bedOf = (el: Element): C => {
+      const layers: C[] = [];
+      for (let n: Element | null = el; n; n = n.parentElement) {
+        const c = parse(getComputedStyle(n).backgroundColor);
+        if (c && c.a > 0) {
+          layers.push(c);
+          if (c.a >= 0.999) break;
+        }
+      }
+      let bed: C = { r: 0, g: 0, b: 0, a: 1 };
+      const html = parse(getComputedStyle(document.documentElement).backgroundColor);
+      if (html && html.a > 0) bed = over(html, bed);
+      for (const l of layers.reverse()) bed = over(l, bed);
+      return bed;
+    };
+    const r = (el: Element) => el.getBoundingClientRect();
+    const d = document.querySelector<HTMLElement>(".sh-dos:not([hidden]) .sh-dos__in")!;
+    const band = d.querySelector<HTMLElement>(".sh-dos__band")!;
+    const image = getComputedStyle(band).backgroundImage;
+    const stops = [...image.matchAll(/rgba?\([^)]+\)/g)].map((m) => parse(m[0])!);
+    const plate = bedOf(band);
+    const bb = r(band);
+    const words = [...band.querySelectorAll<HTMLElement>(".sh-dos__desig, .sh-dos__kind")].map(
+      (el) => {
+        const b = r(el);
+        const t = Math.min(1, Math.max(0, (b.left + b.width / 2 - bb.left) / bb.width));
+        const [first, last] = [stops[0], stops[stops.length - 1]];
+        const tint: C = {
+          r: first.r + (last.r - first.r) * t,
+          g: first.g + (last.g - first.g) * t,
+          b: first.b + (last.b - first.b) * t,
+          a: first.a + (last.a - first.a) * t,
+        };
+        const ground = over(tint, plate);
+        const ink = over(parse(getComputedStyle(el).color)!, ground);
+        return { what: el.textContent!.trim(), ratio: ratio(ink, ground) };
+      }
+    );
+    const borders = (s: CSSStyleDeclaration) =>
+      ["top", "right", "bottom", "left"].map((side) =>
+        parseFloat(s.getPropertyValue(`border-${side}-width`))
+      );
+    const rows = [...d.querySelectorAll<HTMLElement>(".sh-dos__row")].map((row) => {
+      const k = row.querySelector<HTMLElement>(".sh-dos__key")!;
+      const v = row.querySelector<HTMLElement>(".sh-dos__val")!;
+      const [ks, vs] = [getComputedStyle(k), getComputedStyle(v)];
+      const text = document.createRange();
+      text.selectNodeContents(v);
+      const tb = text.getBoundingClientRect();
+      return {
+        key: k.textContent!.trim(),
+        keyW: r(k).width,
+        keyFill: parse(ks.backgroundColor)?.a ?? 0,
+        keyBorders: borders(ks),
+        valBorders: borders(vs),
+        // Set to the right means inside the cell's own right padding.
+        valueGap: r(v).right - tb.right,
+        valuePad: parseFloat(vs.paddingRight) + parseFloat(vs.borderRightWidth),
+        valueLeftGap: tb.left - r(v).left,
+      };
+    });
+    const foot = d.querySelector<HTMLElement>(".sh-dos__foot")!;
+    const fs = getComputedStyle(foot);
+    return {
+      image,
+      stops,
+      words,
+      rows,
+      footInner: r(foot).width - parseFloat(fs.paddingLeft) - parseFloat(fs.paddingRight),
+      ctas: [...foot.querySelectorAll<HTMLElement>(".sh-cta")].map((c) => ({
+        w: r(c).width,
+        h: r(c).height,
+      })),
+    };
+  });
+}
+
+function expectTravelData(s: Awaited<ReturnType<typeof readDossier>>, theme: "dark" | "light") {
+  // The band: the proof card's folder tint — gold at the theme's alpha,
+  // running to a quarter of it — and every word on it legible ON it.
+  expect(s.image, "the band is a gradient").toMatch(/linear-gradient/);
+  expect(s.stops.length, "the band's stops").toBeGreaterThanOrEqual(2);
+  for (const c of s.stops)
+    expect([c.r, c.g, c.b], "the band's tint is gold").toEqual([202, 165, 84]);
+  expect(s.stops[0].a, `${theme}: the band's strong end`).toBeCloseTo(BAND_ALPHA[theme], 2);
+  expect(s.stops[s.stops.length - 1].a, `${theme}: a quarter at its far end`).toBeCloseTo(
+    BAND_ALPHA[theme] / 4,
+    2
+  );
+  expect(s.words.length, "the designation and the kind").toBe(2);
+  expect(
+    s.words.filter((w) => w.ratio < 4.5),
+    `${theme}: a word on the band under 4.5:1`
+  ).toEqual([]);
+  // The readout: every key FILLED and framed on all four sides; every value
+  // framed on three (its left edge is the key's) and set to the right.
+  expect(s.rows.length, "the readout's rows").toBeGreaterThanOrEqual(2);
+  for (const row of s.rows) {
+    expect(row.keyFill, `${row.key}: the key cell is filled`).toBeGreaterThan(0);
+    expect(
+      row.keyBorders.every((b) => b >= 1),
+      `${row.key}: the key is framed`
+    ).toBe(true);
+    const [top, right, bottom, left] = row.valBorders;
+    expect(
+      [top >= 1, right >= 1, bottom >= 1, left],
+      `${row.key}: the value's frame shares the key's edge`
+    ).toEqual([true, true, true, 0]);
+    expect(row.valueGap, `${row.key}: the value is set to the right`).toBeLessThanOrEqual(
+      row.valuePad + 1.5
+    );
+    expect(row.valueLeftGap, `${row.key}: … and away from its key`).toBeGreaterThan(row.valueGap);
+  }
+  const widths = s.rows.map((row) => row.keyW);
+  expect(Math.max(...widths) - Math.min(...widths), "the keys are one column").toBeLessThanOrEqual(
+    0.5
+  );
+  // One big button across the foot.
+  expect(s.ctas.length, "one way in").toBe(1);
+  expect(s.ctas[0].w, "the button spans the foot").toBeGreaterThanOrEqual(s.footInner - 1);
+  expect(s.ctas[0].h, "the button is big").toBeGreaterThanOrEqual(43.5);
 }

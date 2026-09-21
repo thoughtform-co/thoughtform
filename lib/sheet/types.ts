@@ -288,10 +288,10 @@ export interface SheetDossier {
   kind: string;
   /** The engagement's card title — the dossier's accessible name. */
   title: string;
-  /** The one-line brief. */
-  lede: string;
-  /** The status strip under the brief: facts a reader could check against
-   *  the registry — where it stands, when it was filed, how long it is. */
+  /** The dossier's READOUT, a framed key and its value per row (ADR-118 U3):
+   *  facts a reader could check against the registry — where it stands, when
+   *  it was filed, how long it is. It replaced the one-line brief, which the
+   *  owner dropped. */
   status: readonly SheetReadoutRow[];
   /** The client's configuration, drawn; null for an engagement that has none
    *  (the portfolio, the house formats — "not every type of arc has this

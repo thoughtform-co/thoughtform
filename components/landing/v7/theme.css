@@ -1080,8 +1080,12 @@ html[data-theme="light"] .rin-session__panel {
    block's own law). The line ladder lifts ~1.8x at the light end and
    compresses at the heavy one (the datum holds .55 in both themes, like
    `--hud-rail-line`); the plate is a recess on parchment and goes opaque
-   for the reason `--arc-plate` does. The lip re-derives itself through
-   `--gold-line` and needs no row.
+   for the reason `--arc-plate` does. The lip and the configuration's wires
+   re-derive themselves through `--gold-line` and need no row; the knock-out
+   ink is `--gold-contrast` on `--gold`, which hold in both themes. The
+   dossier's band takes the proof card's own light alpha (.22, a quarter at
+   the far end — `.pf-stack` above), and the readout's key cell the same
+   perceived step as in dark (~6 L*), which on parchment is .08.
    ═══════════════════════════════════════════════════════════════════ */
 html[data-theme="light"] .sh-root {
   --sh-ink-90: rgba(var(--dawn-rgb), 0.92);
@@ -1094,4 +1098,7 @@ html[data-theme="light"] .sh-root {
   --sh-rule: rgba(var(--dawn-rgb), 0.22);
   --sh-plate: rgb(var(--void-deep-rgb));
   --sh-recess: rgba(var(--dawn-rgb), 0.05);
+  --sh-well: rgba(var(--dawn-rgb), 0.08);
+  --sh-band-from: rgba(var(--gold-rgb), 0.22);
+  --sh-band-to: rgba(var(--gold-rgb), 0.055);
 }

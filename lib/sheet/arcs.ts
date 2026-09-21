@@ -195,7 +195,6 @@ export interface Engagement {
   /** What the page is — proposal, pitch, portfolio, workshop, keynote. */
   chip: string;
   cardTitle: string;
-  lede: string;
   kind: ArcKind;
   standing: SheetStanding;
   date: string;
@@ -243,7 +242,6 @@ export function engagements(): Engagement[] {
     isArc: true,
     chip: arc.format,
     cardTitle: arc.cardTitle,
-    lede: arc.cardLede,
     kind: kindOf(arc),
     standing: standingOf(arc.status, arc.slug),
     date: arc.date,
@@ -260,7 +258,6 @@ export function engagements(): Engagement[] {
         isArc: false,
         chip: page.chip,
         cardTitle: page.title,
-        lede: page.lede,
         kind: page.kind,
         standing: standingOf(page.status, page.href),
         date: page.date,
@@ -305,7 +302,8 @@ export function blockLines(
   };
 }
 
-/** The dossier's status strip: where it stands, when it was filed, how long. */
+/** The dossier's readout (ADR-118 U3): where it stands, when it was filed,
+ *  how long — one framed key and its value per row. */
 export function dossierStatus(e: Engagement): SheetReadoutRow[] {
   return [
     { label: "Standing", value: STANDING[e.standing] },
@@ -438,7 +436,6 @@ export function instrumentSections(
           : { name: "Thoughtform" },
         kind: KIND_ONE[e.kind],
         title: e.cardTitle,
-        lede: e.lede,
         status: dossierStatus(e),
         configuration: e.configuration,
         cta: { label: e.isArc ? "Open arc" : "Open page", href: e.href },
