@@ -6,7 +6,12 @@ import {
   MediaLightbox,
   useWalkthrough,
 } from "@/components/landing/home-v2/services/casefile/MediaLightbox";
-import { CHARACTER_ERAS, eraPressBeatIds } from "@/lib/voidwalker/characterEras";
+import {
+  CHARACTER_ERAS,
+  eraPressBeatIds,
+  HOLO_FIGURE_SPAN,
+  resolveCharacterEraHologram,
+} from "@/lib/voidwalker/characterEras";
 import { VOIDWALKER_BEATS, vwPlain, type VwPress } from "@/lib/voidwalker/voidwalkerData";
 
 /**
@@ -451,8 +456,17 @@ export function HoloDatumPanels({
             The `.vwh` wrapper carries the token block and the slot rules;
             this sheet flattens its grid so `.vwh__column` fills the cell.
             ⚠ NEVER `data-vwh-ready` here — the slot would take
-            `opacity: var(--vwh-morph, 0)` and vanish. */}
-        <div className="vwd__figure">
+            `opacity: var(--vwh-morph, 0)` and vanish.
+            ⚠ `--holo-span` IS THE REGISTRY'S `HOLO_FIGURE_SPAN`, WRITTEN HERE
+            ONCE (ADR-082 U31). The desktop lift is solved on THIS element from
+            the height every standing era paints, and a second hand-typed
+            0.7343 in the sheet is a number that drifts the day a delivery
+            re-cuts the floor era. This component is mounted whole by the landing
+            and by both labs, so one write covers every home. */}
+        <div
+          className="vwd__figure"
+          style={{ "--holo-span": HOLO_FIGURE_SPAN } as React.CSSProperties}
+        >
           {/* ⚠ A SIBLING OF THE FIGURE, NEVER INSIDE IT. `.vwh__slot` is a grid
               with `place-items: end center` and its own isolation, so a child
               there becomes a grid item colliding with the media wrap; and
@@ -470,17 +484,23 @@ export function HoloDatumPanels({
             under it was a third long horizontal line. */}
       </div>
 
-      {/* ── THE ERA REEL ─────────────────────────────────────────────
-          Five hairline-framed chips, the year lettered inside the top-left
-          corner and the name beneath the bust. Selection takes gold on the
-          frame, the name and a filled diamond — colour AND elaboration
-          together here because the chip is the control, not a card in a set.
+      {/* ── THE ERA GALLERY ──────────────────────────────────────────
+          ⚠ ALL FIVE IN A ROW FROM 701px UP (ADR-082 U31, owner 2026-09-21: the
+          band "should be more like a sort of thumbnail gallery that should be a
+          bit more clear"; asked whether it stays a centred reel he chose "all
+          five in a row"). That knowingly reverses his own 2026-08-31 rolodex
+          ruling (U20) and U23's text stops: five hairline-framed busts, the
+          year lettered inside the frame's corner, the name under it, and the lit
+          era takes gold on the frame, the name and a diamond seated on the
+          frame's bottom edge. The lit frame MOVES; the row does not.
 
-          The band is a bounded WINDOW and the track turns behind it, so the
-          selected era is always at its centre; `--vwd-i` is the only thing the
-          composition needs to know to place it, and `--vwd-d` gives each chip
-          its distance from that centre for the depth falloff. Both are plain
-          integers — the arithmetic lives in the sheet. */}
+          ⚠ THE FRAME IS `display: contents` BELOW 701px, so the phone keeps
+          U27's three-stop text reel byte for byte — the year falls back into
+          the chip's own grid and the bust is `display: none`, which with
+          `loading="lazy"` means it is never fetched there either.
+
+          `--vwd-i` and `--vwd-d` are still written: the phone's reel reads both,
+          and they are plain integers — the arithmetic lives in the sheet. */}
       <nav
         className="vwd__band"
         aria-label="Era"
@@ -514,7 +534,26 @@ export function HoloDatumPanels({
                 onKeyDown={(event) => onChipKeyDown(event, i)}
                 style={{ "--vwd-d": Math.abs(i - activeEraIndex) } as React.CSSProperties}
               >
-                <span className="vwd__chip__year">{item.year}</span>
+                <span className="vwd__chip__frame">
+                  {/* The bust belongs to the DELIVERY (`thumbPath`), so two eras
+                      on one hologram share it by construction. Decorative: the
+                      button already names the era. 192×128 is the file's own
+                      size, declared so the frame reserves its box. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- a 7-10 KB
+                      pre-cut WebP with alpha; the optimizer would re-encode it
+                      for nothing and add a request hop per era. */}
+                  <img
+                    className="vwd__chip__thumb"
+                    src={resolveCharacterEraHologram(item).thumbPath}
+                    alt=""
+                    width={192}
+                    height={128}
+                    loading="lazy"
+                    decoding="async"
+                    draggable={false}
+                  />
+                  <span className="vwd__chip__year">{item.year}</span>
+                </span>
                 <span className="vwd__chip__name">{item.short}</span>
                 <span className="vwd__chip__mark" aria-hidden="true" />
               </button>

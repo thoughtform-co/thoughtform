@@ -1133,6 +1133,11 @@ html[data-theme="light"] .hpl[data-hpl-surface] {
 @media (min-height: 720px) {
   .hpl .vwd {
     --vwd-pad-top: max(var(--vwd-pad-top-min), var(--hud-rail-y-start, 104px));
+    /* ⚠ AND THE FIGURE'S LIFT, FOR THE SAME REASON (ADR-082 U31). Production arms
+       `--vwd-rise: 1` in that same gated rule; a lab that mounts the stage whole
+       and leaves the figure on its old bottom seat is showing a composition that
+       no longer ships. */
+    --vwd-rise: 1;
   }
 }
 

@@ -173,6 +173,28 @@
      the only thing that can. */
   --vwd-ret-cy: 57%;
 
+  /* ── THE LIFT (ADR-082 U31, owner 2026-09-21: "What I've been repeatedly
+        trying to ask is to move the avatars in our era section a bit up").
+     The slot is BOTTOM-seated on the projector disc and the media shrinks
+     inside it (`--holo-fit`, U25), so every pixel of slack pools ABOVE the
+     head: measured, the cap sat at 33–38 % of the frame and the boots at
+     87–90 %, against a reference whose figure is centred at 47 %. U25 and U29
+     both changed the figure's SIZE; nothing on desktop ever changed where it
+     STANDS. The phone got its head line in U28 — this is that law, one
+     breakpoint up. The rule that spends these lives in the >=1101px block.
+       `--vwd-fig-pad`   the figure cell's top pad, a token now because the
+                         lift has to subtract it (0 where the lift owns the head)
+       `--vwd-rise`      0 = today's seat, 1 = the cap on the stage's top edge,
+                         i.e. on the four panel heads' own row line
+       `--vwd-rise-air`  air kept between that line and the cap
+     ⚠ `--vwd-rise` DEFAULTS TO 0 AND IS SET TO 1 ONLY BY THE GATED HOLOGRAM
+     RULE BELOW, so desktop-PRM, the corridor fallback, a window under 720px
+     tall and both narrower rungs compute `top: 0px` — a true no-op, where a
+     zero-valued `translate` would still have made a stacking context. */
+  --vwd-fig-pad: clamp(6px, 1svh, 14px);
+  --vwd-rise: 0;
+  --vwd-rise-air: 0px;
+
   /* ⚠ THE READING BAND IS THIS PADDING, NOT THE STATION'S. The stage box is
      a full-bleed instrument seated inside the HUD frame (it spans the
      viewport — originally so the U19 rails could run edge to edge; the
@@ -291,6 +313,11 @@
        does NOT need re-deriving. Re-derive both only if that cap moves. */
     --vwd-trail-air: 28px;
     --vwd-trail: calc(var(--vwd-trail-air) + clamp(0px, calc(100svh - 1100px), 56px));
+    /* The figure rises here and only here (ADR-082 U31) — see `--vwd-rise`. It
+       shares this gate for the same reason the datum does: the station has
+       surrendered its own padding and pinned, so the stage's top edge IS the
+       line the four heads hang from, and there is height to spend. */
+    --vwd-rise: 1;
   }
 }
 
@@ -823,7 +850,7 @@ a.vwd__press:focus-visible .vwd__press__headline {
   grid-column: 2;
   grid-row: 1 / 5;
   min-height: 0;
-  padding-top: clamp(6px, 1svh, 14px);
+  padding-top: var(--vwd-fig-pad);
   /* ⚠ LOAD-BEARING, NOT TIDINESS (ADR-082 U23). The reticle is absolutely
      positioned against this box. §G gives `.vwd__figure` an exit `transform`,
      which would make it a containing block for free — but §G lives inside
@@ -900,6 +927,81 @@ a.vwd__press:focus-visible .vwd__press__headline {
      the cascade and defaults to 1 in every other home. */
   .vwd {
     --holo-overscan: 1.16;
+    /* The lift owns the head's position here, so the cell's own top pad has
+       nothing left to do — and its 6–14px is the first thing the thumbnail
+       gallery's taller band is paid out of. Paint-neutral: the slot is
+       WIDTH-bound at every capable rung, so a taller slot paints the same
+       figure. */
+    --vwd-fig-pad: 0px;
+  }
+
+  /* ⚠ THE FIGURE RISES BY RELATIVE `top`, AND `translate` WOULD HAVE SHIPPED
+     BROKEN AND GREEN (ADR-082 U31). The About→Voidwalker handoff flies the
+     portrait card into this figure's SLOT, and `futurePinnedRect`
+     (`useVoidwalkerHologramScroll.ts`) measures that seat with OFFSET geometry —
+     "deliberately ignores every live actor transform" — as does the handoff
+     spec, which copies the same math. A transform lift would land the card
+     95–141px BELOW the hologram that replaces it with every spec passing.
+     `top` on a relatively positioned box moves `offsetTop` with it.
+     ⚠ ONE OBJECT: the reticle, the slot and the disc are all inside this box,
+     so they rise together and the boots never leave the disc.
+     ⚠ ERA-INDEPENDENT ON PURPOSE. It is solved from `--holo-span` — the
+     registry's `HOLO_FIGURE_SPAN`, written on this element by the component, so
+     the number exists once — and NOT from the era's own anchors: every standing
+     era paints one height (U25), so one lift puts every cap on one line AND
+     every disc on one line. A kneeling figure keeps the same disc and simply
+     has more air above him, which is the owner's U26 ruling ("he simply sits
+     lower in his box") carried across.
+       slot  = the cell less its pad and the projector base
+       pict  = the painted canvas: width-bound (fig-w × 16/9) or height-bound
+       head  = where the cap paints today, from the cell's top
+     ⚠ ALPHA BRANCH ONLY, and structurally: on the floor branch the wrap
+     carries an OPAQUE bed whose top edge sits at 45–67 % mask opacity, and
+     lifted it lands on the title row and dims its middle letters — U29's own
+     reason for gating the overscan.
+     ⚠ FAIL-STATIC. An unresolved token makes `top` invalid → `auto`; a missing
+     span falls back to 1, which lifts a full-canvas figure by nothing. */
+  .vwd__figure:has(.vwh__slot[data-holo-alpha]) {
+    --_slot: calc(100% - var(--vwd-fig-pad) - var(--vwh-base-h) + var(--vwh-base-disc-inset));
+    --_pict: min(calc(var(--vwd-fig-w) * 16 / 9), var(--_slot));
+    --_head: calc(
+      var(--vwd-fig-pad) + var(--_slot) - var(--_pict) * var(--holo-overscan, 1) *
+        var(--holo-span, 1)
+    );
+    top: calc(-1 * max(0px, (var(--_head) - var(--vwd-rise-air)) * var(--vwd-rise, 0)));
+  }
+  /* ⚠ AND THE RING IS CENTRED BY THE SAME ARITHMETIC, NOT BY A MEASURED
+     PERCENTAGE (ADR-082 U31). `--vwd-ret-cy: 57%` is "one number for a range"
+     — U23 and U29 both re-measured it (52.2/51.1/49.7, then 59.1/58.0/57.1/56.1
+     across the four rungs) because a percentage of the CELL cannot follow a
+     picture whose size is solved from the cell's WIDTH. The lift already knows
+     where the cap paints and how tall the figure is, so the ring's centre is
+     simply the middle of that span, exact at every rung. `--_head` and `--_pict`
+     carry a `100%` that resolves against THIS element's containing block, which
+     is `.vwd__figure` — the same box they were solved on — so the two agree.
+     ⚠ The floor branch keeps the measured 57 %: it has no overscan and no lift,
+     and it is what U23's number was measured on. */
+  .vwd__figure:has(.vwh__slot[data-holo-alpha]) .vwd__reticle {
+    top: calc(var(--_head) + var(--_pict) * var(--holo-overscan, 1) * var(--holo-span, 1) / 2);
+  }
+
+  /* ⚠ THE UNDER-GLOW FADES ON EVERY SIDE HERE, BECAUSE THE LIFT EXPOSED ITS
+     CLIFF (ADR-082 U31). `.vwh__base__glow` is a half-ellipse whose hot centre
+     sits ON its box's bottom edge, 1.4 base-heights under the disc — so it ends
+     in a flat horizontal cut. For as long as the disc stood directly on the era
+     band that cut was buried in the stops; with 95–148px of open frame under
+     the disc it painted a soft rectangle with a hard floor, in mid-air, and
+     only the still showed it. It is the figure sheet's own law, recorded on
+     `.vwh__cone` one rule up from it: "an additive layer must fade on every
+     side, not just one". Centred on the disc, it has no edge to draw.
+     ⚠ Scoped to the desktop datum stage — the phone's bloom runs under its own
+     band's fade and stays what it was. */
+  .vwd .vwh__base__glow {
+    background: radial-gradient(
+      ellipse 50% 44% at 50% 50%,
+      rgba(var(--vwh-gold-rgb), 0.16),
+      transparent 72%
+    );
   }
 }
 
@@ -1158,6 +1260,179 @@ a.vwd__press:focus-visible .vwd__press__headline {
   .vwd__band__track,
   .vwd__chip__year,
   .vwd__chip__name {
+    transition: none;
+  }
+}
+
+/* The bust's frame, in its NEUTRAL state: below 701px the chip is still U27's
+   text stop, so the frame dissolves (`contents` hands the year back to the
+   chip's own grid, in source order) and the bust is not rendered — which, with
+   `loading="lazy"`, also means it is never fetched on a phone. */
+.vwd__chip__frame {
+  display: contents;
+}
+.vwd__chip__thumb {
+  display: none;
+}
+
+/* ── §C2 · THE GALLERY (>=701px) ─────────────────────────────────────
+   ⚠ ALL FIVE ERAS IN A ROW, AND THE LIT FRAME MOVES (ADR-082 U31, owner
+   2026-09-21: the band "should be more like a sort of thumbnail gallery that
+   should be a bit more clear"; asked reel-or-row, he chose "all five in a
+   row"). Two recorded rulings are REVERSED here, knowingly, and both by him:
+
+     · U20's centred reel (his own 2026-08-31 "carousel rolodex … the one
+       you've selected should always be in the middle"). In practice the first
+       and last eras sat dead-centre with nothing on one side — his stills show
+       2026 with an empty left half — and a reader could never see how many
+       eras there are. The reel survives below 701px, where five names do not
+       fit (U27's arithmetic) and a window is the honest answer.
+     · U23's text stops. The chip is a framed BUST again, which U23 took out —
+       but what U23 objected to was a 64px frame as "the heaviest object on the
+       band", fed by five lazily-fetched FULL posters (~363 KB). These are
+       44–52px tall at 3:2, fed by 7–10 KB busts cut for the job
+       (`CharacterEraHologram.thumbPath`), and the frame is a hairline.
+
+   ⚠ WHAT DID NOT CHANGE, BECAUSE EACH IS A RECORDED TRAP: `overflow: clip`
+   (never `hidden`); NO `gap` on the track; the chip keeps its own width
+   (`justify-self: center`) so targets never abut — a mis-click PINS THE SCROLL
+   to the wrong era; no rule on the band's top edge; the tablist, the roving
+   focus and the testid; `--vwd-i` / `--vwd-d` still written by the component.
+
+   ⚠ THE BAND STAYS UNDER 700px BY ARITHMETIC, NOT BY TUNING. Five cells at a
+   pitch clamped to 128px is 640px at any viewport, so the committed >700px
+   paint sweep (ADR-082 U21) cannot see it — and it paints no ground, border or
+   image of its own regardless. Each FRAME carries a border and is <=78px wide.
+
+   ⚠ `--vwd-band-h`, `--vwd-reel-return` AND `--vwd-chrome-h` ARE DELIBERATELY
+   NOT TOUCHED. They are an accounting identity whose only job is to hold
+   `--vwd-fig-w` byte-identical (230 / 264.97 / 311.43 / 460 at the four
+   rungs). The band's real +16…21px is paid in the LAYOUT, out of the figure
+   slot's width-bound slack (`slotH − fig-w × 16/9`: 48 / 70 / 48 / 27px before
+   this pass) plus chrome — this block's own band padding and chip gap, and the
+   figure cell's top pad, which the lift now owns. The painted figure is
+   unchanged at every rung; the panel bodies give up ~10px each
+   (`foot` 63 / 72 / 98 → ~53 / 62 / 88). Chrome first, rhythm second, never
+   the type.
+   ⚠ `--vwd-chip` IS THE BUST'S WIDTH HERE, so the lab's one slider still
+   retunes the whole band: the frame, and through `--vwd-cell` the pitch. A
+   bigger bust than this is a decision with a price — it is paid out of
+   `--vwd-trail-air`, i.e. the four panel heads rise. */
+@media (min-width: 701px) {
+  .vwd {
+    --vwd-chip: clamp(66px, 6svh, 78px);
+    --vwd-thumb-h: calc(var(--vwd-chip) * 2 / 3);
+    --vwd-reel: 5;
+    --vwd-cell: clamp(104px, calc(var(--vwd-chip) + 3.2vw), 128px);
+  }
+
+  .vwd__band {
+    padding-block: clamp(6px, 0.8svh, 10px) clamp(8px, 1.1svh, 14px);
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  /* The row does not turn, so there is nothing to offset and nothing to ease. */
+  .vwd__band__track {
+    transform: none;
+    transition: none;
+  }
+
+  .vwd__chip {
+    /* ⚠ DECLARED, NOT INHERITED FROM §G. The diamond is positioned against
+       this box, and §G's transform — which would make it a containing block for
+       free — lives inside `prefers-reduced-motion: no-preference`. The reticle
+       learned this one panel over (ADR-082 U23). */
+    position: relative;
+    gap: 5px;
+    /* Every dormant bust reads at one weight: in a row that does not turn there
+       is no "distance from the centre" to recede by. */
+    --dd: 0;
+  }
+
+  .vwd__chip__frame {
+    position: relative;
+    display: block;
+    width: var(--vwd-chip);
+    height: var(--vwd-thumb-h);
+    /* The panel heads' own weight — a frame is an object's edge, and on this
+       station an object's edge takes the REGION rule (ADR-082 U29). Dawn, so it
+       flips with the theme for free. */
+    border: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rule-head));
+    overflow: hidden;
+    transition: border-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .vwd__chip__thumb {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Dormant is QUIET, not absent: half strength and half saturation, so the
+       row reads as five people and one of them lit. */
+    opacity: 0.5;
+    filter: saturate(0.45);
+    transition:
+      opacity 240ms cubic-bezier(0.16, 1, 0.3, 1),
+      filter 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* The year moves INTO the frame's corner — it costs no height there, and a
+     second line under the name is what would push the bust under 42px on a
+     1080-tall screen. The halo is `--void-rgb`, which flips with the theme. */
+  .vwd__chip__year {
+    position: absolute;
+    left: 4px;
+    top: 3px;
+    font-size: clamp(8.5px, 0.95svh, 11px);
+    letter-spacing: var(--track-label);
+    line-height: 1;
+    color: rgba(var(--vwd-dawn-rgb), 0.85);
+    text-shadow:
+      0 1px 2px rgba(var(--void-rgb), 0.95),
+      0 0 6px rgba(var(--void-rgb), 0.85);
+  }
+  .vwd__chip__name {
+    font-size: clamp(9.5px, 1.05svh, 12px);
+    line-height: 1.25;
+    color: rgba(var(--vwd-dawn-rgb), 0.5);
+  }
+
+  /* ⚠ THE DIAMOND SITS ON THE FRAME'S BOTTOM EDGE, out of the flow. In the flow
+     it cost every chip 11px of band for a mark only one of them lights. */
+  .vwd__chip__mark {
+    position: absolute;
+    left: 50%;
+    top: var(--vwd-thumb-h);
+    translate: -50% -50%;
+  }
+
+  /* ⚠ THE LIT ERA IS AN OUTLINE LIFTING, NEVER A FILL — U23's argument, which
+     survives the return of the frame: nothing on this band paints a ground. */
+  .vwd__chip[data-on="true"] .vwd__chip__frame {
+    border-color: var(--gold-line, #caa554);
+  }
+  .vwd__chip[data-on="true"] .vwd__chip__thumb {
+    opacity: 1;
+    filter: none;
+  }
+  /* Inside the frame the year stays DAWN when lit: gold type over a gold bust
+     is the one place on this band where the lit colour would cost legibility. */
+  .vwd__chip[data-on="true"] .vwd__chip__year {
+    color: rgb(var(--vwd-dawn-rgb));
+  }
+  .vwd__chip:hover .vwd__chip__thumb,
+  .vwd__chip:focus-visible .vwd__chip__thumb {
+    opacity: 0.85;
+    filter: saturate(0.8);
+  }
+  .vwd__chip[data-on="true"]:hover .vwd__chip__thumb,
+  .vwd__chip[data-on="true"]:focus-visible .vwd__chip__thumb {
+    opacity: 1;
+    filter: none;
+  }
+}
+@media (min-width: 701px) and (prefers-reduced-motion: reduce) {
+  .vwd__chip__frame,
+  .vwd__chip__thumb {
     transition: none;
   }
 }

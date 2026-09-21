@@ -1,3 +1,6 @@
+import { existsSync, statSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -23,11 +26,51 @@ describe("ADR-082 · normalized character hologram assets", () => {
       videoAlphaHevcPath: "/videos/voidwalker/holo-idle-thoughtform.mov",
       posterPath: "/images/voidwalker/holo-still-thoughtform.jpg",
       posterAlphaPath: "/images/voidwalker/holo-still-thoughtform.webp",
+      // ADR-082 U31's era-band bust. Exhaustive on purpose, again: a new field
+      // on the delivery contract has to fail this pin before it ships.
+      thumbPath: "/images/voidwalker/holo-thumb-thoughtform.webp",
       frame: { width: 720, height: 1280 },
       headY: 0.122,
       footY: 0.998,
     });
     expect(isCharacterEraHologram(CANONICAL_CHARACTER_ERA_HOLOGRAM)).toBe(true);
+  });
+
+  it("gives every delivery its own bust, cut from its own poster (ADR-082 U31)", () => {
+    /* The era band is a thumbnail gallery, and U23 had dropped the framed bust
+       WITH five lazily-fetched full posters (~363 KB). So the bust is a small
+       file of its own, REQUIRED on the delivery, and three things are pinned:
+         · it carries its poster's version — a re-cut figure cannot keep a
+           stale bust (`holo-still-azeroth-v11` ⇒ `holo-thumb-azeroth-v11`);
+         · it is on disk, a WebP, and inside the 10 KB budget;
+         · two eras share a bust only by sharing a DELIVERY — never by two
+           strings that happen to be equal. */
+    const stem = (p: string, prefix: string) =>
+      p
+        .slice(p.lastIndexOf("/") + 1)
+        .replace(prefix, "")
+        .replace(/\.[a-z0-9]+$/i, "");
+    const seen = new Map<string, CharacterEraHologram>();
+    for (const era of CHARACTER_ERAS) {
+      const h = resolveCharacterEraHologram(era);
+      expect(stem(h.thumbPath, "holo-thumb-"), era.id).toBe(stem(h.posterAlphaPath, "holo-still-"));
+      const file = join(process.cwd(), "public", h.thumbPath);
+      expect(existsSync(file), `${era.id}: ${h.thumbPath} is on disk`).toBe(true);
+      expect(statSync(file).size, `${era.id}: bust budget`).toBeLessThanOrEqual(10_240);
+      const owner = seen.get(h.thumbPath);
+      if (owner) expect(owner, `${era.id} shares a bust only with its own delivery`).toBe(h);
+      seen.set(h.thumbPath, h);
+    }
+    // A thumbnail is never a full poster in disguise.
+    expect(
+      isCharacterEraHologram({
+        ...CANONICAL_CHARACTER_ERA_HOLOGRAM,
+        thumbPath: CANONICAL_CHARACTER_ERA_HOLOGRAM.posterAlphaPath,
+      })
+    ).toBe(false);
+    const { thumbPath: _dropped, ...withoutThumb } = CANONICAL_CHARACTER_ERA_HOLOGRAM;
+    void _dropped;
+    expect(isCharacterEraHologram(withoutThumb), "the bust is required").toBe(false);
   });
 
   it("keeps every unauthored era on the canonical pair", () => {
@@ -143,6 +186,7 @@ describe("ADR-082 · normalized character hologram assets", () => {
       videoAlphaPath: "/videos/voidwalker/holo-idle-loop.webm",
       posterPath: "/images/voidwalker/holo-still-loop.webp",
       posterAlphaPath: "/images/voidwalker/holo-still-loop.png",
+      thumbPath: "/images/voidwalker/holo-thumb-loop.webp",
       frame: { width: 720, height: 1280 },
       headY: 0.11,
       footY: 0.997,
@@ -176,6 +220,7 @@ describe("ADR-082 · normalized character hologram assets", () => {
       videoAlphaPath: "/videos/voidwalker/holo-idle-loop.webm",
       posterPath: "/images/voidwalker/holo-still-loop.webp",
       posterAlphaPath: "/images/voidwalker/holo-still-loop.png",
+      thumbPath: "/images/voidwalker/holo-thumb-loop.webp",
       frame: { width: 720, height: 1280 },
       headY: 0.11,
       footY: 0.997,
@@ -216,6 +261,7 @@ describe("ADR-082 · normalized character hologram assets", () => {
       videoAlphaPath: "/videos/voidwalker/holo-idle-loop.webm",
       posterPath: "/images/voidwalker/holo-still-loop.webp",
       posterAlphaPath: "/images/voidwalker/holo-still-loop.png",
+      thumbPath: "/images/voidwalker/holo-thumb-loop.webp",
       frame: { width: 720, height: 1280 },
       headY: 0.11,
       footY: 0.997,

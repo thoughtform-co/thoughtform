@@ -405,6 +405,11 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
         isolation: slotStyle.isolation,
         floorBackground: wrapStyle.backgroundColor,
         mask: wrapStyle.maskImage || wrapStyle.webkitMaskImage,
+        clip: wrapStyle.clipPath,
+        media: (() => {
+          const r = media.getBoundingClientRect();
+          return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+        })(),
         blend: mediaStyle.mixBlendMode,
         stationWidth: stationRect.width,
         slot: {
@@ -445,6 +450,37 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
       expect(state.isolation, "alpha branch: isolation off").toBe("auto");
       expect(cssAlpha(state.floorBackground), "alpha branch: no local floor").toBe(0);
       expect(state.blend, "alpha branch: no additive blend").toBe("normal");
+      /* ⚠ THE MEDIA MUST FIT INSIDE ITS OWN WRAP'S CLIP (ADR-082 U31). The
+         asserts below pin the WRAP inside the SLOT, which a `clip-path` cannot
+         change — so nothing here could see that U29's overscan drew the floor
+         era's media LARGER than the wrap and the wrap's `inset(0)` sliced ~27px
+         of azeroth's pauldrons off each side. Two halves, because a vignette
+         hides overflow as well as a clip does: the mask is off on this branch
+         at the capable width, and the clip — resolved to px, percentages being
+         of the wrap's own box — opens at least as far as the media box. */
+      expect(state.mask, "alpha branch: no vignette to hide the overscan").toBe("none");
+      const m = /inset\(([^)]*)\)/.exec(state.clip ?? "");
+      const parts = m ? m[1].trim().split(/\s+/) : ["0px"];
+      const [, r, , l] =
+        parts.length === 1
+          ? [parts[0], parts[0], parts[0], parts[0]]
+          : parts.length === 2
+            ? [parts[0], parts[1], parts[0], parts[1]]
+            : parts.length === 3
+              ? [parts[0], parts[1], parts[2], parts[1]]
+              : parts;
+      const px = (v: string, base: number) =>
+        v.endsWith("%") ? (Number.parseFloat(v) / 100) * base : Number.parseFloat(v) || 0;
+      const ww = state.wrap.right - state.wrap.left;
+      /* ⚠ SIDES ONLY HERE. This read is taken at runway 0.04 — mid-acquisition,
+         where the TOP inset is wiping up from 62 % on purpose — so the top edge
+         is asserted in the held read below, on the era that actually spills. */
+      expect(state.media.left, "the clip opens to the media's left edge").toBeGreaterThanOrEqual(
+        state.wrap.left + px(l, ww) - 1
+      );
+      expect(state.media.right, "the clip opens to the media's right edge").toBeLessThanOrEqual(
+        state.wrap.right - px(r, ww) + 1
+      );
     } else {
       expect(state.isolation).toBe("isolate");
       expect(cssAlpha(state.floorBackground), "the additive media has an opaque local floor").toBe(
@@ -510,6 +546,54 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     });
 
     expect(offenders, JSON.stringify(offenders, null, 2)).toEqual([]);
+
+    /* ⚠ AND THE FLOOR ERA'S MEDIA FITS ITS WRAP'S CLIP, AT REST (ADR-082 U31).
+       azeroth is the one era whose `fit` is exactly 1, so under the desktop
+       overscan its media box is LARGER than the wrap (that is what cut his
+       pauldrons). Held and acquired, all three open edges are checked; the
+       bottom stays the wrap's own, because the boots are seated on it.
+       ⚠ 0.44 IS HIS SLICE'S CENTRE, NOT 0.4. The era is scroll-derived WITH
+       HYSTERESIS (ADR-082 U10), so a reader arriving from above is still on the
+       previous era until ~0.409 — and a scrubbed arrival, unlike a click, does
+       not restart the 900ms materialize that animates this very clip. */
+    await walkToRunwayProgress(page, ".vw--hologram", 0.44);
+    await settle(page, 600);
+    const paint = await page.evaluate(() => {
+      const slot = document.querySelector<HTMLElement>("#voidwalker .vwh__slot");
+      const wrap = document.querySelector<HTMLElement>("#voidwalker .vwh__media-wrap");
+      const media = document.querySelector<HTMLElement>("#voidwalker .vwh__media");
+      const sheet = document.querySelector<HTMLElement>("#voidwalker .vwd__sheet");
+      if (!slot || !wrap || !media) throw new Error("Missing hologram media");
+      const w = wrap.getBoundingClientRect();
+      const b = media.getBoundingClientRect();
+      const m = /inset\(([^)]*)\)/.exec(getComputedStyle(wrap).clipPath || "");
+      const parts = m ? m[1].trim().split(/\s+/) : ["0px"];
+      const [t, r, , l] =
+        parts.length === 1
+          ? [parts[0], parts[0], parts[0], parts[0]]
+          : parts.length === 2
+            ? [parts[0], parts[1], parts[0], parts[1]]
+            : parts.length === 3
+              ? [parts[0], parts[1], parts[2], parts[1]]
+              : parts;
+      const px = (v: string, base: number) =>
+        v.endsWith("%") ? (Number.parseFloat(v) / 100) * base : Number.parseFloat(v) || 0;
+      return {
+        alpha: slot.hasAttribute("data-holo-alpha"),
+        era: sheet?.getAttribute("data-vwd-era") ?? null,
+        spills: b.width > w.width + 1,
+        cutLeft: Math.max(0, w.left + px(l, w.width) - b.left),
+        cutRight: Math.max(0, b.right - (w.right - px(r, w.width))),
+        cutTop: Math.max(0, w.top + px(t, w.height) - b.top),
+      };
+    });
+    if (paint.alpha) {
+      expect(paint.era, "runway 0.44 holds on the floor era").toBe("azeroth");
+      expect(paint.spills, "the floor era's media really is larger than its wrap").toBe(true);
+      expect(paint.cutLeft, "nothing cut off the media's left").toBeLessThanOrEqual(1);
+      expect(paint.cutRight, "nothing cut off the media's right").toBeLessThanOrEqual(1);
+      expect(paint.cutTop, "nothing cut off the media's top").toBeLessThanOrEqual(1);
+    }
   });
 
   test("#contact is an actually opaque station when it kills the corridor", async ({

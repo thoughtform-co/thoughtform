@@ -371,6 +371,46 @@ test.describe("About -> Voidwalker card-to-hologram handoff", () => {
           );
         }
 
+        /* ⚠ THE SEAT THE CARD FLIES TO MUST BE THE SEAT THE HOLOGRAM PAINTS IN
+           (ADR-082 U31). Every target above is measured with OFFSET geometry —
+           `futurePinnedRect` "deliberately ignores every live actor transform",
+           so the flight is solvable before the station pins. That makes one
+           class of change invisible to this whole spec: a figure moved by a
+           TRANSFORM. U31 lifts the figure ~95–148px, and the first design used
+           `translate`; the card would have landed that far BELOW the hologram
+           replacing it, with every assertion here green, because both sides of
+           each comparison came off the same blind arithmetic. So once the
+           station holds, the slot's PAINTED rect is compared with the offset
+           chain — the one check that a transform lift fails and a relative
+           `top` passes. */
+        await setVoidwalkerProgress(page, 0.3);
+        const seatTruth = await page.evaluate(() => {
+          const root = document.querySelector<HTMLElement>(".vwd");
+          const slot = document.querySelector<HTMLElement>("[data-vwh-handoff-target='portrait']");
+          const figure = document.querySelector<HTMLElement>(".vwd__figure");
+          if (!root || !slot || !figure) throw new Error("Missing portrait seat");
+          let y = 0;
+          let node: HTMLElement | null = slot;
+          while (node && node !== root) {
+            y += node.offsetTop;
+            node = node.offsetParent as HTMLElement | null;
+          }
+          return {
+            offsetTop: root.getBoundingClientRect().top + y,
+            paintedTop: slot.getBoundingClientRect().top,
+            lift: Number.parseFloat(getComputedStyle(figure).top) || 0,
+          };
+        });
+        expectNear(
+          seatTruth.paintedTop,
+          seatTruth.offsetTop,
+          2,
+          "the portrait seat's offset geometry is where the slot actually paints"
+        );
+        // And the lift is really armed on the capable path — a percentage `top`
+        // that failed to resolve reads 0 and would make the check above vacuous.
+        expect(seatTruth.lift, "the figure is lifted on the capable path").toBeLessThan(-40);
+
         // Flight and copy windows end before/About's release by contract.
         expect(ABOUT_FLIGHT_END).toBeLessThan(ABOUT_RESOLVE_END);
         expect(ABOUT_RESOLVE_END).toBeLessThan(1);

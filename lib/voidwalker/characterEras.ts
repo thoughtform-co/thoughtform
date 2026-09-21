@@ -79,6 +79,26 @@ export interface CharacterEraHologram {
    *  cannot hold alpha, so without this the boot frame would flash an opaque
    *  black rectangle before the first video frame arrives. */
   posterAlphaPath: string;
+  /**
+   * The era band's BUST (ADR-082 U31, owner 2026-09-21: the band "should be
+   * more like a sort of thumbnail gallery that should be a bit more clear") —
+   * a 192×128 WebP with alpha, ≤10 KB, cut from `posterAlphaPath` by
+   * `scripts/voidwalker-avatar/thumb.py`.
+   *
+   * ⚠ IT BELONGS TO THE DELIVERY, NOT TO THE ERA, AND THAT IS WHY IT IS HERE.
+   * Two eras that resolve to one hologram (`loop` and `pokemon-go` both take the
+   * canonical pair until 2016 gets a figure of its own) share one bust BY
+   * CONSTRUCTION rather than by two strings that have to be kept equal, and a
+   * re-cut figure cannot pass the guard with its predecessor's thumbnail: the
+   * unit suite pins the thumb's version suffix to the poster's.
+   * ⚠ REQUIRED. U23 dropped the framed bust along with five lazily-fetched
+   * FULL posters (~363 KB); an optional field falling back to `posterAlphaPath`
+   * is exactly that weight coming back the first time one is forgotten.
+   * ⚠ THE CROP IS SOLVED FROM HEAD MARKS — the deliveries draw their heads at
+   * different sizes, so a fixed window gives five busts at five scales. One
+   * head size and one eye line across the row is `thumb.py`'s whole job.
+   */
+  thumbPath: string;
   /** The normalized delivery canvas. Exact by contract. */
   frame: {
     readonly width: 720;
@@ -120,6 +140,7 @@ export const CANONICAL_CHARACTER_ERA_HOLOGRAM = Object.freeze({
   videoAlphaHevcPath: "/videos/voidwalker/holo-idle-thoughtform.mov",
   posterPath: "/images/voidwalker/holo-still-thoughtform.jpg",
   posterAlphaPath: "/images/voidwalker/holo-still-thoughtform.webp",
+  thumbPath: "/images/voidwalker/holo-thumb-thoughtform.webp",
   frame: Object.freeze({ width: 720, height: 1280 }),
   headY: 0.122,
   footY: 0.998,
@@ -138,6 +159,10 @@ const HOLOGRAM_VIDEO_ALPHA_HEVC_PATH = /^\/videos\/voidwalker\/[a-z0-9][a-z0-9._
 const HOLOGRAM_POSTER_PATH = /^\/images\/voidwalker\/[a-z0-9][a-z0-9._-]*\.(?:jpe?g|png|webp)$/i;
 /** Same reasoning one step down: JPEG has no alpha channel. */
 const HOLOGRAM_POSTER_ALPHA_PATH = /^\/images\/voidwalker\/[a-z0-9][a-z0-9._-]*\.(?:png|webp)$/i;
+/** ⚠ `holo-thumb-` IS PART OF THE PATTERN. The bust sits on the void like the
+ *  figure does, so it must carry alpha (WebP), and the prefix is what stops a
+ *  full 130 KB poster being admitted as a "thumbnail" — the weight U23 removed. */
+const HOLOGRAM_THUMB_PATH = /^\/images\/voidwalker\/holo-thumb-[a-z0-9][a-z0-9._-]*\.webp$/i;
 
 /** Runtime guard for data coming from future generated-asset manifests. */
 export function isCharacterEraHologram(value: unknown): value is CharacterEraHologram {
@@ -162,6 +187,8 @@ export function isCharacterEraHologram(value: unknown): value is CharacterEraHol
     HOLOGRAM_POSTER_PATH.test(candidate.posterPath) &&
     typeof candidate.posterAlphaPath === "string" &&
     HOLOGRAM_POSTER_ALPHA_PATH.test(candidate.posterAlphaPath) &&
+    typeof candidate.thumbPath === "string" &&
+    HOLOGRAM_THUMB_PATH.test(candidate.thumbPath) &&
     frame?.width === 720 &&
     frame.height === 1280 &&
     typeof headY === "number" &&
@@ -511,6 +538,7 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
       videoAlphaHevcPath: "/videos/voidwalker/holo-idle-genai-v2.mov",
       posterPath: "/images/voidwalker/holo-still-genai-v2.jpg",
       posterAlphaPath: "/images/voidwalker/holo-still-genai-v2.webp",
+      thumbPath: "/images/voidwalker/holo-thumb-genai-v2.webp",
       frame: { width: 720, height: 1280 },
       headY: 0.0563,
       footY: 0.993,
@@ -637,6 +665,7 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
       videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v11.webm",
       posterPath: "/images/voidwalker/holo-still-azeroth-v11.jpg",
       posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v11.webp",
+      thumbPath: "/images/voidwalker/holo-thumb-azeroth-v11.webp",
       frame: { width: 720, height: 1280 },
       headY: 0.261,
       footY: 0.9953,
@@ -678,6 +707,7 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
       videoAlphaHevcPath: "/videos/voidwalker/holo-idle-expanse-v1.mov",
       posterPath: "/images/voidwalker/holo-still-expanse-v1.jpg",
       posterAlphaPath: "/images/voidwalker/holo-still-expanse-v1.webp",
+      thumbPath: "/images/voidwalker/holo-thumb-expanse-v1.webp",
       frame: { width: 720, height: 1280 },
       headY: 0.0437,
       footY: 0.9961,

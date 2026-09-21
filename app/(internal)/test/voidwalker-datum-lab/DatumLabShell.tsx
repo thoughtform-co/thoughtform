@@ -4,7 +4,12 @@ import { useEffect, useRef, useState } from "react";
 
 import { HoloDatumPanels } from "@/components/landing/home-v2/voidwalker/hologram/HoloDatumPanels";
 import { HoloFigure } from "@/components/landing/home-v2/voidwalker/hologram/HoloFigure";
-import { CHARACTER_ERAS, resolveCharacterEraHologram } from "@/lib/voidwalker/characterEras";
+import {
+  CHARACTER_ERAS,
+  holoFigureFit,
+  holoFigureHeadShare,
+  resolveCharacterEraHologram,
+} from "@/lib/voidwalker/characterEras";
 
 /**
  * DatumLabShell — the knob bar around the SHIPPED datum composition.
@@ -33,12 +38,21 @@ export function DatumLabShell() {
      size on a 375px screen, which is the exact thing the slider exists to let
      the owner judge. A lab knob may not defeat the default it explores. */
   const [chip, setChip] = useState<number | null>(null);
-  /* ⚠ THE BUST KNOB IS GONE AND THIS REPLACES IT (ADR-082 U23). The chips are
-     text stops now, so `--vwd-bust-span` does not exist and a slider for a
-     deleted token is a lie the lab tells (ADR-070 U35). What does want judging
-     by eye is where the reticle sits on the figure — the ring's centre is the
-     one value in that drawing solved by looking rather than by arithmetic. */
-  const [ringCy, setRingCy] = useState(44);
+  /* ⚠ THE RING KNOB IS GONE, AND `rise` REPLACES IT (ADR-082 U31). U23 put a
+     `ring` slider here because the reticle's centre was "the one value in that
+     drawing solved by looking rather than by arithmetic". It is arithmetic now:
+     on the alpha branch the ring is centred on the painted figure by the same
+     terms the lift is solved from, so `--vwd-ret-cy` no longer reaches it — and
+     a slider for a token nothing reads is a lie the lab tells (ADR-070 U35).
+     ⚠ IT WAS ALSO LYING BEFORE THAT: it wrote `calc(44% − var(--vwh-base-h,
+     44px) × .5)` inline on `.vwd`, where `--vwh-base-h` did not resolve (it
+     lived on `.vwh`, a descendant), so the 44px fallback always won AND the
+     inline value overrode production's measured 57 % — the lab's ring had been
+     in the wrong place since it was added.
+     What wants judging by eye now is how far the figure RISES: 0 is the old
+     bottom seat, 1 puts the cap on the panel heads' row line. Null until
+     touched, like `chip`, so the lab opens on production's value. */
+  const [rise, setRise] = useState<number | null>(null);
   const [reduced, setReduced] = useState(false);
   /* ⚠ MEASURED, NEVER A LITERAL. `--vwd-bar-h` feeds --vwd-chrome-h feeds
      --vwd-fig-w, so a wrong bar height renders a lab figure column that
@@ -80,7 +94,20 @@ export function DatumLabShell() {
   /* The same node production builds, so the figure's own treatment and its
      `portrait` handoff target are the shipped ones. */
   const figureColumn = (
-    <div className="vwh__column" data-vwh-region="figure">
+    <div
+      className="vwh__column"
+      data-vwh-region="figure"
+      /* ⚠ PRODUCTION'S OWN TWO TOKENS (`VoidwalkerHologram.tsx`). The lab's
+         column omitted them, so the phone rung's head-line lift — which reads
+         `--holo-head` off this element — computed against the fallback `1` here
+         and the lab showed a different phone than the landing. */
+      style={
+        {
+          "--holo-fit": holoFigureFit(hologram),
+          "--holo-head": holoFigureHeadShare(hologram),
+        } as React.CSSProperties
+      }
+    >
       <HoloFigure
         hologram={hologram}
         epoch={epoch}
@@ -106,7 +133,7 @@ export function DatumLabShell() {
       style={
         {
           ...(chip === null ? null : { "--vwd-chip": `${chip}px` }),
-          "--vwd-ret-cy": `calc(${ringCy}% - var(--vwh-base-h, 44px) * 0.5)`,
+          ...(rise === null ? null : { "--vwd-rise": rise }),
           /* The composition derives the figure's width from the height its
              own chrome leaves; in the lab the knob bar is part of that —
              so the bar reports its own measured height (see barRef above). */
@@ -131,30 +158,36 @@ export function DatumLabShell() {
         </div>
 
         <label className="dlab__slider">
-          {/* ⚠ SINCE ADR-082 U23 THIS IS THE REEL'S PITCH, NOT A BOX. No chip is
-              64px wide any more — `--vwd-chip` survives as the term `--vwd-cell`
-              derives from, so the slider still spaces the stops and no longer
-              resizes anything. */}
-          <span className="dlab__lbl">pitch {chip === null ? "auto" : `${chip}px`}</span>
+          {/* ⚠ SINCE ADR-082 U31 THIS IS THE BUST'S WIDTH AGAIN. From 701px up the
+              band is a five-bust gallery and `--vwd-chip` is the frame's width
+              (its height follows at 3:2, and the pitch through `--vwd-cell`), so
+              one slider still retunes the whole band. Below 701px it is what
+              U23 left it: the text reel's pitch alone.
+              ⚠ THE PRICE OF A BIGGER BUST IS NOT SHOWN BY THE SLIDER. Past
+              ~52px of height the band outgrows the figure slot's width-bound
+              slack and the FIGURE starts to shrink; `probe-voidwalker-figure-
+              span` prints that slack, and the honest payer is `--vwd-trail-air`
+              (the four panel heads rise). */}
+          <span className="dlab__lbl">bust {chip === null ? "auto" : `${chip}px`}</span>
           <input
             type="range"
             min={44}
             max={120}
             step={2}
-            value={chip ?? 64}
+            value={chip ?? 72}
             onChange={(ev) => setChip(+ev.target.value)}
           />
         </label>
 
         <label className="dlab__slider">
-          <span className="dlab__lbl">ring {ringCy}%</span>
+          <span className="dlab__lbl">rise {rise === null ? "auto" : rise.toFixed(2)}</span>
           <input
             type="range"
-            min={20}
-            max={70}
-            step={1}
-            value={ringCy}
-            onChange={(ev) => setRingCy(+ev.target.value)}
+            min={0}
+            max={1}
+            step={0.05}
+            value={rise ?? 1}
+            onChange={(ev) => setRise(+ev.target.value)}
           />
         </label>
 

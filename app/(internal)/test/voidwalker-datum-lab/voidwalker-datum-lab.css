@@ -48,6 +48,12 @@
        further in. Move one rung, move the other. */
     --vwd-trail-air: 28px;
     --vwd-trail: calc(var(--vwd-trail-air) + clamp(0px, calc(100svh - 1100px), 56px));
+    /* ⚠ AND THE FIFTH SINCE ADR-082 U31. The figure's lift is armed by
+       `--vwd-rise: 1` in that same gated production rule; without it here the
+       lab would show the figure on its old bottom seat with a five-bust band
+       under it — the composition this pass replaced, presented as current.
+       The `rise` knob writes the same token inline, so it overrides this. */
+    --vwd-rise: 1;
   }
 }
 

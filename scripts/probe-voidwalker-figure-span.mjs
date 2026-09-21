@@ -162,8 +162,33 @@ const read = () =>
         right: Math.max(0, box.right - Math.min(lim.right, open.right)),
       };
     }
+    /* ── THE LIFT (ADR-082 U31). Four numbers nothing reported before:
+         · `liftPx`   the figure cell's computed `top` — the lift itself. It is
+                      RELATIVE POSITION, not a transform, because the handoff's
+                      seat is measured with offset geometry; and a percentage
+                      `top` that failed to resolve would read `auto`/0 here.
+         · `headPx`   where the cap PAINTS (viewport px), against
+         · `stagePx`  the stage's top edge — the four panel heads' own row line,
+                      which is where `--vwd-rise: 1` puts every standing cap.
+         · `slackPx`  `slotH − slotW × 16/9`: the height the stage can still
+                      lose before the picture starts to shrink. The thumbnail
+                      band is paid out of this, so it may never go negative. */
+    const figure = document.querySelector("#voidwalker .vwd__figure");
+    const stage = document.querySelector("#voidwalker .vwd__stage");
+    const disc = document.querySelector("#voidwalker .vwh__base__disc");
+    const ring = document.querySelector("#voidwalker .vwd__reticle");
+    const ringBox = ring && getComputedStyle(ring).display !== "none" ? ring.getBoundingClientRect() : null;
+    const slotBox = slot.getBoundingClientRect();
+    const liftRaw = figure ? getComputedStyle(figure).top : "auto";
     return {
       fit,
+      liftPx: Number.parseFloat(liftRaw) || 0,
+      headPx: Number((box.bottom - picture * (1 - headY)).toFixed(1)),
+      stagePx: stage ? Number(stage.getBoundingClientRect().top.toFixed(1)) : null,
+      discPx: disc ? Number(disc.getBoundingClientRect().top.toFixed(1)) : null,
+      // The reticle's centre, against the middle of the painted figure.
+      ringPx: ringBox ? Number((ringBox.top + ringBox.height / 2).toFixed(1)) : null,
+      slackPx: Number((slotBox.height - (slotBox.width * 16) / 9).toFixed(1)),
       cutL: cut ? Number(cut.left.toFixed(1)) : null,
       cutR: cut ? Number(cut.right.toFixed(1)) : null,
       masked: mask !== null && mask !== "none",
@@ -256,7 +281,43 @@ for (const r of rows.filter((x) => UNSEATED.has(x.era))) {
 }
 console.log(`title          case=${t.case}  track=${t.track}  glow=${t.glow}`);
 
+const heads = rows.map((r) => r.headPx);
+const discs = rows.map((r) => r.discPx).filter((v) => v !== null);
+const lifted = rows.some((r) => Math.abs(r.liftPx) > 0.5);
+console.log(
+  `lift           top ${rows[0].liftPx}px  · stage top ${rows[0].stagePx}  · heads ${Math.min(...heads)} .. ${Math.max(...heads)}  · disc ${Math.min(...discs)} .. ${Math.max(...discs)}  · ring ${rows[0].ringPx} vs figure centre ${((rows[0].headPx + rows[0].footPx) / 2).toFixed(1)}  · slack ${rows[0].slackPx}px`
+);
+console.log(
+  `               head / feet / centre  ${((Math.min(...heads) / VH) * 100).toFixed(1)} / ${((Math.max(...fs) / VH) * 100).toFixed(1)} / ${(((Math.min(...heads) + Math.max(...fs)) / 2 / VH) * 100).toFixed(1)} % of the frame`
+);
+
 const fails = [];
+/* ⚠ THE LIFT'S THREE LAWS (ADR-082 U31). They are asserted only where the lift
+   is armed — PRM, the corridor fallback and a window under 720px tall compute
+   `top: 0px` by design, and the probe must stay usable there. */
+if (lifted) {
+  // Every standing cap on the panel heads' row line. ±6px is the spread of the
+  // deliveries' own foot seats (0.993–0.998) carried up through one span.
+  for (const r of rows) {
+    const off = r.headPx - r.stagePx;
+    if (Math.abs(off) > 6)
+      fails.push(`${r.era}: the cap paints ${off.toFixed(1)}px off the stage's top edge (limit ±6)`);
+  }
+  // One disc line: the lift is era-independent, so the disc may not move.
+  if (Math.max(...discs) - Math.min(...discs) > 0.5)
+    fails.push(`the projector disc moves ${(Math.max(...discs) - Math.min(...discs)).toFixed(1)}px between eras`);
+  // The ring is centred on the painted figure by arithmetic, not by a dial.
+  for (const r of rows) {
+    if (r.ringPx === null) continue;
+    const mid = (r.headPx + r.footPx) / 2;
+    if (Math.abs(r.ringPx - mid) > 6)
+      fails.push(`${r.era}: the reticle is ${(r.ringPx - mid).toFixed(1)}px off the figure's centre (limit ±6)`);
+  }
+}
+if (rows[0].slackPx < 0)
+  fails.push(
+    `the slot is height-bound by ${(-rows[0].slackPx).toFixed(1)}px — the band has started to shrink the figure`
+  );
 if (spreadPct > SPREAD_LIMIT_PCT)
   fails.push(`figure heights spread ${spreadPct.toFixed(2)} % (limit ${SPREAD_LIMIT_PCT})`);
 if (footDrift > FOOT_DRIFT_LIMIT_PX)

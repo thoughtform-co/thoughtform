@@ -47,13 +47,23 @@
      perceives; this is the base an additive blend adds onto, and there is
      no theme in which it may be light. */
   --vwh-floor-rgb: 10, 9, 8;
-  /* One height ladder owns both the projector silhouette and its contact
-     plane. The disc top is the authored floor Vince stands on; deriving the
-     overlap from this inset (rather than a percentage of column WIDTH) keeps
-     that floor coincident with the slot bottom at every aspect. */
+  position: relative;
+}
+
+/* One height ladder owns both the projector silhouette and its contact
+   plane. The disc top is the authored floor Vince stands on; deriving the
+   overlap from this inset (rather than a percentage of column WIDTH) keeps
+   that floor coincident with the slot bottom at every aspect.
+   ⚠ DECLARED ON BOTH HOSTS, ONCE (ADR-082 U31). They lived on `.vwh` alone,
+   which is a DESCENDANT of `.vwd__figure` — and the datum stage's lift is
+   computed ON `.vwd__figure` from these two numbers. A custom property never
+   inherits upward, so there they resolved to nothing: the lab's own
+   `--vwd-ret-cy` had been quietly taking its `44px` fallback for the same
+   reason. One grouped rule rather than a copy, so the pair cannot drift. */
+.vwh,
+.vwd {
   --vwh-base-h: clamp(34px, 6svh, 58px);
   --vwh-base-disc-inset: clamp(7.5px, 1.32svh, 12.8px);
-  position: relative;
 }
 
 /* ── The figure column ───────────────────────────────────────────────
