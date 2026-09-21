@@ -1,0 +1,74 @@
+[
+  {
+    "file": "AK-parchment__sl_01.png",
+    "verdict": "PASS",
+    "section": "monitor - monitor (rest)",
+    "failed": []
+  },
+  {
+    "file": "AK-parchment__sl_02.png",
+    "verdict": "PASS",
+    "section": "log - log (rest)",
+    "failed": []
+  },
+  {
+    "file": "AK-parchment__sl_03.png",
+    "verdict": "PASS",
+    "section": "log - log (swap)",
+    "failed": []
+  },
+  {
+    "file": "AK-void__sl_01.png",
+    "verdict": "PASS",
+    "section": "monitor - monitor (rest)",
+    "failed": []
+  },
+  {
+    "file": "AK-void__sl_02.png",
+    "verdict": "PASS",
+    "section": "log - log (rest)",
+    "failed": []
+  },
+  {
+    "file": "AK-void__sl_03.png",
+    "verdict": "PASS",
+    "section": "log - log (swap)",
+    "failed": []
+  },
+  {
+    "file": "AR-parchment__sl_01.png",
+    "verdict": "PASS",
+    "section": "monitor - monitor (rest)",
+    "failed": []
+  },
+  {
+    "file": "AR-parchment__sl_02.png",
+    "verdict": "PASS",
+    "section": "log - log (rest)",
+    "failed": []
+  },
+  {
+    "file": "AR-parchment__sl_03.png",
+    "verdict": "PASS",
+    "section": "log - log (swap)",
+    "failed": []
+  },
+  {
+    "file": "AR-void__sl_01.png",
+    "verdict": "PASS",
+    "section": "monitor - monitor (rest)",
+    "failed": []
+  },
+  {
+    "file": "AR-void__sl_02.png",
+    "verdict": "PASS",
+    "section": "log - log (rest)",
+    "failed": []
+  },
+  {
+    "file": "AR-void__sl_03.png",
+    "verdict": "PASS",
+    "section": "log - log (swap)",
+    "failed": []
+  }
+]

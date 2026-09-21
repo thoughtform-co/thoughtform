@@ -159,6 +159,51 @@ reconstruction; write it in the session that ran the wave.
 - Cost: ~2.5 minutes of grading per rubric version for 16 stills. No handback;
   the calibration closes when the first instrument wave is ticked.
 
+## 2026-09-21 — wave 03: the instrument, five directions at two viewports, shot three times
+
+- **What was shot:** the house and four directions (SG full record, SH boxed
+  rows, SJ image-over-text pair, SL strips out to the rails), each moving one
+  knob, on the overview (AR) and its kit (AK), both themes, at 1920 × 1247
+  and 1280 × 720 — ten folders, 120 stills, three runs each on 0.2.1. The
+  laptop stills are graded this time, because the fit binds there.
+- **The first shoot was thrown away** because the page's settle observable
+  fired on the swap's timer while a lazy picture was still streaming in:
+  seventeen of twenty second-pick stills went to the grader half-painted,
+  every gate green. Found by looking at one still, then measured over the
+  wave (runs of perfectly flat rows up to 593px tall inside the dossier). The
+  fix is the page's; the capture now also decodes every picture in view.
+- **The second was thrown away** because the frame's hero lockup sat 7–15px
+  under the monitor's bottom-left corner on every monitor still: found by
+  reading the rails direction's still for chrome near a mark, a check that
+  no gate and no rubric row makes. The smoke's "under the device" had passed.
+  The page shows the frame's docked wordmark from the first frame now.
+- **The third shoot, graded:** the house 12/12 at both viewports (3 split
+  verdicts of 24); SH 12/12 at both with nothing unstable; SL 12/12 and 11/12;
+  SJ 11/12 and 12/12; SG 9/12 and 10/12. The mechanical gate clean on every
+  cell. Every M and L row failed the pole unanimously and passes the
+  instrument everywhere except where a direction's own knob breaks one.
+- **The rubric separates exactly one direction, for the reason it exists:**
+  SG's full axis merges the two same-lane format pairs into one diamond each,
+  so the grader counts 7 marks against the strip's 9 (M3), and at 1280 NOW's
+  gold head crowds the lit mark (M4). The choice between SB, SH, SJ and SL is
+  the owner's eye; the checks do not make it.
+- **Identical pixels, three folders:** the log stills are byte-identical in
+  SB, SG and SL (their knobs only move the monitor), and 7 of 8 triples got
+  the same verdict everywhere. The flip is L3/B2 reading a gutter that is not
+  there on the parchment log at 1280 — the first row to rewrite after a
+  handback.
+- **The stranger:** the monitor is a "client engagement timeline dashboard"
+  on every still; the log is an ARCHIVE, a catalogue or a portfolio index on
+  every still, never a quest journal or a game menu. On neither of the
+  rubric's lines; recorded as the owner's question, and nothing on the page
+  was changed to move a word.
+- **A mechanism request goes home:** the harness has no per-type rubric, so
+  every M and L row carries its own scope sentence and is asked of every
+  still. No row misfired on a still it does not own, but the workaround costs
+  eight sentences and a grader's attention on every document still.
+- Cost: three shoots (~15 minutes each), two thrown away; ~2.5 minutes of
+  grading per folder, three runs each, for the ten that count.
+
 ## Standing conclusions
 
 - A page's first mechanical run is worth more than its first grade: the
@@ -182,3 +227,11 @@ reconstruction; write it in the session that ran the wave.
 - A grading rule that lists what something IS on one page reads as the whole
   list. Scope an addition as an addition — "may also be" — or it silently
   repeals the check it meant to extend.
+- A capture's observable is part of the PAGE, and it can lie: a "settled"
+  attribute written on a timer shot seventeen half-painted stills with every
+  gate green. Settle on the thing itself, and measure the wave for the
+  failure's signature before grading it.
+- No check on this ship reads chrome against a mark. Read every still for a
+  line, a device or copy crowding the frame's wordmark or corners before it
+  is graded — both of wave 03's thrown-away shoots were found by looking,
+  with every gate green.

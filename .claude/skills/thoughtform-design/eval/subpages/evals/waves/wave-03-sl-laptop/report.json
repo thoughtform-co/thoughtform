@@ -1,0 +1,212 @@
+{
+  "wave": "wave-03-sl",
+  "setting": "laptop",
+  "viewport": "1280x720",
+  "when": "2026-09-21T07:55:00.445Z",
+  "cells": [
+    {
+      "type": "AR",
+      "theme": "dark",
+      "direction": "SL",
+      "lane": "sl",
+      "href": "http://localhost:3003/arcs?k=SL&theme=dark",
+      "stills": ["AR-void__sl_01.png", "AR-void__sl_02.png", "AR-void__sl_03.png"],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 15.6
+      },
+      "probe": {
+        "accent": 9,
+        "accentInView": 4,
+        "bold": 0,
+        "text": 127,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.756,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10.5,
+        "radii": 0,
+        "structureHues": 4,
+        "sections": [
+          {
+            "id": "monitor",
+            "kind": "monitor"
+          },
+          {
+            "id": "log",
+            "kind": "log"
+          }
+        ],
+        "profile": "instrument",
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "stack",
+          "timeline": "axis",
+          "span": "active",
+          "rows": "ruled",
+          "dossier": "one",
+          "frame": "rails"
+        },
+        "k": "SL",
+        "ready": "3|2|541",
+        "theme": "dark"
+      }
+    },
+    {
+      "type": "AR",
+      "theme": "light",
+      "direction": "SL",
+      "lane": "sl",
+      "href": "http://localhost:3003/arcs?k=SL&theme=light",
+      "stills": ["AR-parchment__sl_01.png", "AR-parchment__sl_02.png", "AR-parchment__sl_03.png"],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 14.7
+      },
+      "probe": {
+        "accent": 9,
+        "accentInView": 4,
+        "bold": 0,
+        "text": 127,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.756,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10.5,
+        "radii": 0,
+        "structureHues": 6,
+        "sections": [
+          {
+            "id": "monitor",
+            "kind": "monitor"
+          },
+          {
+            "id": "log",
+            "kind": "log"
+          }
+        ],
+        "profile": "instrument",
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "stack",
+          "timeline": "axis",
+          "span": "active",
+          "rows": "ruled",
+          "dossier": "one",
+          "frame": "rails"
+        },
+        "k": "SL",
+        "ready": "3|2|541",
+        "theme": "light"
+      }
+    },
+    {
+      "type": "AK",
+      "theme": "dark",
+      "direction": "SL",
+      "lane": "sl",
+      "href": "http://localhost:3003/test/arcs-instrument-kit?k=SL&theme=dark",
+      "stills": ["AK-void__sl_01.png", "AK-void__sl_02.png", "AK-void__sl_03.png"],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 14.3
+      },
+      "probe": {
+        "accent": 9,
+        "accentInView": 4,
+        "bold": 0,
+        "text": 114,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.772,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10.5,
+        "radii": 0,
+        "structureHues": 4,
+        "sections": [
+          {
+            "id": "monitor",
+            "kind": "monitor"
+          },
+          {
+            "id": "log",
+            "kind": "log"
+          }
+        ],
+        "profile": "instrument",
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "stack",
+          "timeline": "axis",
+          "span": "active",
+          "rows": "ruled",
+          "dossier": "one",
+          "frame": "rails"
+        },
+        "k": "SL",
+        "ready": "3|2|541",
+        "theme": "dark"
+      }
+    },
+    {
+      "type": "AK",
+      "theme": "light",
+      "direction": "SL",
+      "lane": "sl",
+      "href": "http://localhost:3003/test/arcs-instrument-kit?k=SL&theme=light",
+      "stills": ["AK-parchment__sl_01.png", "AK-parchment__sl_02.png", "AK-parchment__sl_03.png"],
+      "gates": [],
+      "mech": {
+        "code": 0,
+        "seconds": 13.6
+      },
+      "probe": {
+        "accent": 9,
+        "accentInView": 4,
+        "bold": 0,
+        "text": 114,
+        "boldShare": 0,
+        "rungs": 4,
+        "topRungShare": 0.772,
+        "families": ["PT Mono", "PP Neue Montreal"],
+        "minPx": 10.5,
+        "radii": 0,
+        "structureHues": 6,
+        "sections": [
+          {
+            "id": "monitor",
+            "kind": "monitor"
+          },
+          {
+            "id": "log",
+            "kind": "log"
+          }
+        ],
+        "profile": "instrument",
+        "violations": [],
+        "knobs": {
+          "head": "split",
+          "ordinal": "on",
+          "card": "stack",
+          "timeline": "axis",
+          "span": "active",
+          "rows": "ruled",
+          "dossier": "one",
+          "frame": "rails"
+        },
+        "k": "SL",
+        "ready": "3|2|541",
+        "theme": "light"
+      }
+    }
+  ]
+}

@@ -60,3 +60,25 @@ Dated entries: how the work changed, not what was edited.
   failed the pole's console lip on A2, three runs of three, on pixels wave 02
   had passed. 0.2.1 makes it additive. The lawful fixture turns out never to
   have been lawful on parchment; recorded.
+- The instrument was built (ADR-118) and wave 03 shot the house and its four
+  directions at two viewports. The first shoot was thrown away: the page's
+  settle observable fired on the swap's timer while a lazy picture was still
+  streaming in, and seventeen of twenty second-pick stills reached the grader
+  half-painted with every gate green. The fix is the page's (it settles on
+  the picture's decode, and loads the pictures eagerly at low priority), the
+  capture decodes every picture in view before a still, and the whole wave was
+  re-shot. A capture's observable is part of the page, and it can lie.
+- The re-shoot was thrown away too: reading a still for chrome near a mark
+  found the frame's hero lockup 7px under the monitor's corner on every
+  monitor still, while the smoke's "under the device" passed and the grader
+  said nothing. The page shows the frame's docked wordmark from the first
+  frame now, and the wave was shot a third time. No check on this ship
+  reads chrome against a mark; the eye did.
+- Wave 03 graded on the third shoot: the house passes every still at both
+  viewports, and the rubric separates only the full-record direction (its
+  merged marks fail M3), so the choice between the house and the plates, the
+  pair and the rails is the owner's eye. The log stills are byte-identical
+  across three directions, which made the grader's own noise measurable for
+  the first time: 7 of 8 identical triples agree, and the one flip names the
+  row to rewrite (L3's gutter). The stranger reads the log as an archive,
+  never a quest journal. Ten galleries and one index await his ticks.

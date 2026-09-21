@@ -1,0 +1,90 @@
+[
+  {
+    "type": "AR",
+    "theme": "dark",
+    "direction": "SB",
+    "url": "http://localhost:3003/arcs?k=SB&theme=dark",
+    "code": 0,
+    "seconds": 17.7,
+    "tail": [
+      "  PASS  textShadowScrim 0",
+      "  NOTE  accentMarks (budget 24) 13",
+      "        p.sh-mon__name text",
+      "        span.sh-mon__now Left",
+      "        a.sh-mon__mark Top/Right/Bottom/Left",
+      "        span.sh-mon__now-label text",
+      "        button.sh-stn Top/Right/Bottom/Left",
+      "        button.sh-stn fill",
+      "        … and 7 more",
+      "  tracking readout: 4 rung(s) on 153 text nodes; top rung 0.080em carries 80 %",
+      "        0.080em×122  0.150em×18  0.000em×11  -0.020em×2",
+      "  MECHANICAL PASS"
+    ]
+  },
+  {
+    "type": "AR",
+    "theme": "light",
+    "direction": "SB",
+    "url": "http://localhost:3003/arcs?k=SB&theme=light",
+    "code": 0,
+    "seconds": 15.5,
+    "tail": [
+      "  PASS  textShadowScrim 0",
+      "  NOTE  accentMarks (budget 24) 13",
+      "        p.sh-mon__name text",
+      "        span.sh-mon__now Left",
+      "        a.sh-mon__mark Top/Right/Bottom/Left",
+      "        span.sh-mon__now-label text",
+      "        button.sh-stn Top/Right/Bottom/Left",
+      "        button.sh-stn fill",
+      "        … and 7 more",
+      "  tracking readout: 4 rung(s) on 153 text nodes; top rung 0.080em carries 80 %",
+      "        0.080em×122  0.150em×18  0.000em×11  -0.020em×2",
+      "  MECHANICAL PASS"
+    ]
+  },
+  {
+    "type": "AK",
+    "theme": "dark",
+    "direction": "SB",
+    "url": "http://localhost:3003/test/arcs-instrument-kit?k=SB&theme=dark",
+    "code": 0,
+    "seconds": 21.2,
+    "tail": [
+      "  PASS  textShadowScrim 0",
+      "  NOTE  accentMarks (budget 24) 13",
+      "        p.sh-mon__name text",
+      "        span.sh-mon__now Left",
+      "        a.sh-mon__mark Top/Right/Bottom/Left",
+      "        span.sh-mon__now-label text",
+      "        button.sh-stn Top/Right/Bottom/Left",
+      "        button.sh-stn fill",
+      "        … and 7 more",
+      "  tracking readout: 4 rung(s) on 139 text nodes; top rung 0.080em carries 81 %",
+      "        0.080em×113  0.150em×14  0.000em×10  -0.020em×2",
+      "  MECHANICAL PASS"
+    ]
+  },
+  {
+    "type": "AK",
+    "theme": "light",
+    "direction": "SB",
+    "url": "http://localhost:3003/test/arcs-instrument-kit?k=SB&theme=light",
+    "code": 0,
+    "seconds": 22.2,
+    "tail": [
+      "  PASS  textShadowScrim 0",
+      "  NOTE  accentMarks (budget 24) 13",
+      "        p.sh-mon__name text",
+      "        span.sh-mon__now Left",
+      "        a.sh-mon__mark Top/Right/Bottom/Left",
+      "        span.sh-mon__now-label text",
+      "        button.sh-stn Top/Right/Bottom/Left",
+      "        button.sh-stn fill",
+      "        … and 7 more",
+      "  tracking readout: 4 rung(s) on 139 text nodes; top rung 0.080em carries 81 %",
+      "        0.080em×113  0.150em×14  0.000em×10  -0.020em×2",
+      "  MECHANICAL PASS"
+    ]
+  }
+]
