@@ -20,12 +20,32 @@ measure is: how many separate opaque RUNS does a row of the hem contain? A
 skirt is one. Trousers are two. Eight is a figure coming apart.
 
 Measured: Architect 1.93 · azeroth 4.15 · the dripping draw 7.87 · the pick 1.90.
+
+⚠ A PLATE (ADR-082 U31, `--stage plate`) IS GRADED ON DIFFERENT GATES, because
+it fails differently. It is a full-colour figure on a flat #0A28D2 ground, cut
+by a CHROMA key, so fragmentation cannot happen and a dark hem is harmless.
+What can go wrong is the ground and the cloth:
+
+  K1  the ground is not the lock's flat blue (a gradient or a floor keys badly)
+  K3  blue SPILL on the figure's edge (the model lit him with his own ground)
+  P1  crushed blacks: black cloth drawn as black has no folds left to grade.
+      ⚠ CALIBRATED ON THE ARCHITECT'S OWN SOURCE, which is darker than intuition:
+      his photo has 25.8 % of its figure under luma 16 (p50 26.2) and still made
+      the reference look. The Starhaven painting has 42.1 % (p50 19.2) — the
+      crushed case the plate lock's key light is there to prevent. The gate sits
+      between them at 30 %, never at a round number that fails the reference.
+  D2/D3 the boots law — nothing cut at the floor, nothing touching a side wall.
+
+and it writes a free GOLD PREVIEW of every plate (`gold.py`), so the owner picks
+from what will actually ship rather than from a colour photograph.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -99,11 +119,101 @@ def measure(path: Path) -> dict:
             "corner": corner}
 
 
+PLATE_CRUSH_MAX = 0.30
+PLATE_P50 = (22.0, 60.0)
+PLATE_SPILL_MAX = 0.08
+
+
+def measure_plate(path: Path, out: Path) -> dict:
+    """The plate gates, and the gold preview. See the module note."""
+    import gold
+    from PIL import Image
+    from scipy import ndimage
+
+    rgb = np.asarray(Image.open(path).convert("RGB")).astype(np.float32)
+    h, w, _ = rgb.shape
+    alpha = gold.key_matte(rgb)
+    fig = alpha > 0.5
+    findings = []
+
+    # K1 · the ground: the four corners against the lock, and its evenness
+    c = 24
+    corners = np.concatenate([rgb[:c, :c].reshape(-1, 3), rgb[:c, -c:].reshape(-1, 3),
+                              rgb[-c:, :c].reshape(-1, 3), rgb[-c:, -c:].reshape(-1, 3)])
+    off = float(np.abs(corners.mean(0) - np.array(gold.KEY_GROUND)).max())
+    ground = rgb[alpha < 0.02]
+    spread = float(ground.std(0).max()) if ground.size else 99.0
+    if off > 28:
+        findings.append(f"K1 the ground is off the lock by {off:.0f} (corners {corners.mean(0).round(0)})")
+    if spread > 14:
+        findings.append(f"K1 the ground is not flat (std {spread:.1f})")
+
+    # K3 · spill: the model lit him with his own ground, and the key reads the
+    # blue cast as TRANSLUCENCY. ⚠ Measured on a band 2-8px INSIDE the edge,
+    # never on the edge itself: an edge pixel is part ground by anti-aliasing,
+    # and a gate that counts it fails a perfectly cut figure (it did, at 16 %).
+    band = ndimage.binary_erosion(fig, iterations=2) & ~ndimage.binary_erosion(fig, iterations=8)
+    spill = float((alpha[band] < 0.9).mean()) if band.any() else 0.0
+    if spill > PLATE_SPILL_MAX:
+        findings.append(f"K3 blue spill: {spill:.0%} of the band inside the edge keys as translucent")
+
+    # P1 · readable blacks
+    y = gold.luma(rgb)[ndimage.binary_erosion(fig, iterations=4)]
+    p50 = float(np.percentile(y, 50)) if y.size else 0.0
+    crush = float((y < 16).mean()) if y.size else 1.0
+    if crush > PLATE_CRUSH_MAX:
+        findings.append(f"P1 {crush:.0%} of the figure is crushed under luma 16 (Architect 26 %)")
+    if not (PLATE_P50[0] <= p50 <= PLATE_P50[1]):
+        findings.append(f"P1 figure p50 {p50:.0f} is outside [{PLATE_P50[0]:.0f}, {PLATE_P50[1]:.0f}]")
+
+    # D2/D3 · the boots law, on the key matte
+    if fig[-2:, :].any():
+        findings.append("D2 the figure runs off the bottom edge")
+    if fig[:, :3].any() or fig[:, -3:].any():
+        findings.append("D3 the figure touches a side wall")
+    ys = np.where(fig.any(axis=1))[0]
+    top = float(ys.min() / h) if ys.size else 0.0
+    bottom = float(1 - (ys.max() + 1) / h) if ys.size else 0.0
+
+    expo = gold.plate(path, out)
+    return {"ok": not findings, "why": "; ".join(findings), "ground_off": round(off, 1),
+            "ground_std": round(spread, 1), "spill": round(spill, 3), "p50": round(p50, 1),
+            "crush": round(crush, 3), "top": round(top, 3), "bottom": round(bottom, 3),
+            "gold": expo}
+
+
+def main_plate(wave: Path) -> int:
+    plates = sorted((wave / "plates").glob("*.png"))
+    if not plates:
+        raise SystemExit(f"no plates in {wave / 'plates'}")
+    out = wave / "gold"
+    rows = {}
+    for f in plates:
+        m = measure_plate(f, out)
+        rows[f.name] = m
+        g = m["gold"]
+        print(f"{'ok  ' if m['ok'] else 'FAIL'} {f.name}  ground {m['ground_off']:4.0f}/{m['ground_std']:4.1f}"
+              f"  spill {m['spill']:.2f}  p50 {m['p50']:5.1f}  crush {m['crush']:.2f}"
+              f"  top {m['top']:.3f} floor {m['bottom']:.3f}"
+              f"  | gold p75 {g['p75']:5.1f} hot {g['hot']:.2f} {'ok' if g['ok'] else 'OFF'}"
+              + (f"  — {m['why']}" if m["why"] else ""))
+    (wave / "plates.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
+    passing = [n for n, m in rows.items() if m["ok"]]
+    print()
+    print(f"{len(passing)} of {len(rows)} pass the plate gates; gold previews in {out}")
+    return 0 if passing else 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--wave", required=True)
+    ap.add_argument("--stage", choices=("still", "plate"), default="still")
     args = ap.parse_args()
-    stills = Path(__file__).resolve().parent / "waves" / args.wave / "stills"
+    wave_dir = Path(__file__).resolve().parent / "waves" / args.wave
+    if args.stage == "plate":
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        return main_plate(wave_dir)
+    stills = wave_dir / "stills"
     rows = []
     for f in sorted(stills.glob("*.png")):
         m = measure(f)

@@ -6,93 +6,105 @@ files and the two anchors the site seats them by.
 ⚠ **THE RECIPE IS THE OFFLINE SKILL'S; THE EXECUTABLE HERE IS A REBUILD.** The
 original `voidwalker-avatar` skill — prompt locks, wave scripts, 585 MB of
 history — lives on the owner's Windows machine
-(`C:\Users\buyss\.claude\skills\voidwalker-avatar\`), and `sync-voidwalker-avatar-preview.mjs`
-still points at it. What is reconstructed here comes from the record that DID
-survive: ADR-082 U1/U12/U13/U14 and the holo gallery's manifest. The wave layout
-(`waves/<YYYYMMDD>-<era>-v<N>/`) matches so a later sync merges rather than
-renames.
+(`C:\Users\buyss\.claude\skills\voidwalker-avatar\`). What is reconstructed here
+comes from the record that DID survive: ADR-082 U1/U12/U13/U14 and the holo
+gallery's manifest. The wave layout (`waves/<YYYYMMDD>-<era>-v<N>/`) matches, and
+`sync-voidwalker-avatar-preview.mjs` mirrors BOTH trees into the gallery.
+
+## Two routes, and which one an era takes
+
+**One step (`--stage still`) — the original.** The image model draws the era as
+"a volumetric hologram" on black; Veo animates it; a luma key cuts it. It shipped
+`genai-v2` and `expanse-v1`, and it is what the owner read as "too glowing": a
+luma key needs black cloth OVER-LIT to survive, so the model lights the cloth
+until it glows. Measured on the deep interior, those two sit at p75 luma
+172 and 170 against the Architect's ~103.
+
+**Two steps (`--stage plate`) — ADR-082 U31: grade the light, code the screen.**
+The Architect was made in two steps (a photoreal colour still, then a restyle
+into gold), which is why he reads as a gold-toned photograph. So the model now
+draws the man in FULL COLOUR on a flat `#0A28D2` ground — identity, wardrobe,
+pose — and `gold.py` does the gold deterministically, on a curve and a ramp
+measured off the Architect himself. The key is a chroma key, so the cloth no
+longer has to glow to stay in the picture.
 
 ```
-python3 scripts/voidwalker-avatar/env.py --check GEMINI_API_KEY
-python3 scripts/voidwalker-avatar/generate.py --era genai --wave 20260918-genai-v1 \
-  --identity "<a frame from the identity shoot>" --wardrobe "<the era's reference>"
-python3 scripts/voidwalker-avatar/grade.py --wave 20260918-genai-v1   # then LOOK
-echo "<the chosen file>" > scripts/voidwalker-avatar/waves/<wave>/pick.txt
-python3 scripts/voidwalker-avatar/vid.py  --wave <wave>
-python3 scripts/voidwalker-avatar/post.py --wave <wave> --era genai --version v2
+python scripts/voidwalker-avatar/env.py --check GEMINI_API_KEY      # name + length only
+python scripts/voidwalker-avatar/gold.py --selftest                 # free; G0's blind pair
+python scripts/voidwalker-avatar/refs.py --era genai --wave <wave>  # crops + refs.json, then LOOK
+python scripts/voidwalker-avatar/generate.py --era genai --wave <wave> --stage plate --dry-run
+python scripts/voidwalker-avatar/generate.py --era genai --wave <wave> --stage plate
+python scripts/voidwalker-avatar/grade.py --wave <wave> --stage plate   # gates + a gold preview each
+python scripts/voidwalker-avatar/sheet.py --wave <wave>                 # the blind pick sheet
 ```
 
-`post.py` prints the block to paste into `lib/voidwalker/characterEras.ts`.
+The owner's gates are the clock: **G0** the blind pair (is this grade the
+Architect's look?), **G1** the plate pick (is it him?), **G2** the idle, **G3**
+the install.
 
 ## What each stage is defending against
 
-- **`prompt.py`** — the lock. ⚠ Its first two paragraphs are the recorded
-  breakthrough: "gold monochrome emissive" returns A MAN IN A BROWN SUIT, and
-  "a VOLUMETRIC HOLOGRAM" is what gives the model permission to EMIT. The raster
-  is then SUBTRACTED, because a model told "hologram" draws the scanlines too —
-  and the site adds those in CSS, where one block retunes every era.
+- **`env.py`** — reads `GEMINI_API_KEY` from the ONE canonical key file the
+  practice shares (`…\Arcs_In The Pocket\projects\20260820-ai-readiness\skill\scripts\.env`),
+  or `VOIDWALKER_ENV_FILE` when set. ⚠ Never copy the key here: a second copy is
+  a second thing to rotate. It loads only the names it uses, prints names and
+  lengths only, and a missing or refused key STOPS the run — no fallback.
+- **`prompt.py`** — the locks. The plate locks name no artist, show or studio;
+  a look is described by its properties (a medium, a light, a lens). The
+  one-step style block's first two paragraphs are the recorded breakthrough for
+  THAT route ("a volumetric hologram" is what gave the model permission to emit).
 - **`generate.py`** — six draws, because run-to-run variance on this model is
-  19.6/255 against 5.0 between adjacent frames of real motion. One draw is not a
-  sample. The identity ref is attached FIRST; a previous draw is never fed back.
+  19.6/255 against 5.0 between adjacent frames of real motion. Every reference is
+  preceded by an `IMAGE n — ROLE` label; the key travels in the
+  `x-goog-api-key` header, never the URL; every draw writes a prompt sidecar.
+  A plate wave refuses references nobody has looked at (`refs.json` `looked`).
+- **`gold.py`** — the grade: the Architect's measured curve and ramp (10.5/255
+  held out, against the model's own 19.6 self-disagreement), his measured bloom,
+  and the exposure gate.
 - **`grade.py`** — the deterministic gates, before a human looks.
 - **`vid.py`** — Veo. ⚠ `last_frame` is not used: the first=last trick was
   measured leaving a seam louder than the movement.
 - **`post.py`** — the loop, the key, the five encodes, the anchors.
 
-## Three findings this rebuild paid for
+## Findings this chain paid for
 
-**1 · The gate that matters is SILHOUETTE FRAGMENTATION.** The first pick keyed
-into a figure that "dripped" — vertical strips down the robe with the corridor
-showing between them. It was not the model (the raw frames are clean), not the
-encoder (pre- and post-VP9 are identical), and not the LUT (every gain from 5 to
-20 does it). The robe was lit only along its fold highlights, so the cloth
-between them sat at the ground's own black level and the key cut the outline
-into bands. ⚠ **And a "how dark is the hem" metric ranked the SHIPPED assets
-WORSE than the broken draw** (Architect 0.530, azeroth 0.528, the bad draw
-0.681) while both shipped assets read perfectly solid — because what matters is
-whether the dark cloth reaches the SILHOUETTE EDGE, not how much of it there is.
-The live measure is opaque RUNS per hem row: a skirt is one, trousers are two.
-Architect **1.93** · azeroth **4.15** · the dripping draw **7.87** · the pick
-**1.90**.
+**1 · Silhouette fragmentation is the one-step route's failure.** A robe lit
+only along its fold highlights keys into vertical strips. The measure is opaque
+RUNS per hem row: Architect **1.93** · azeroth **4.15** · a dripping draw
+**7.87**. A "how dark is the hem" metric ranked the shipped assets WORSE than the
+broken draw, because what matters is whether dark cloth reaches the SILHOUETTE
+EDGE.
 
-**2 · The LUT is derived, and the derivation is calibrated against what ships.**
-`off = corner_max + 6`, `gain = 255 / (p10(lit) - off)`. On their own footage
-that reproduces the thoughtform pair's recorded `clip((val-8)*12)` exactly and
-lands azeroth within a step. ⚠ **The ground is sampled at the CORNERS, not at a
-border ring** — the robe's hem reaches the bottom edge, and a ring read
-`ground_max` 236 and produced a key that wiped the figure.
+**2 · The luma-key LUT is derived** (`off = corner_max + 6`,
+`gain = 255 / (p10(lit) − off)`) and sampled at the CORNERS — a border ring read
+the hem and produced a key that wiped the figure.
 
-**3 · A trim alone does not close a very still idle.** The recipe's calibration
-closed a loop whose seam fell to 0.38× its motion baseline — but that clip MOVED
-(motion ~15/255). A breathing figure runs at 1.2, and its best return point
-still sat three ordinary frame-steps out. The tail is blended into the head over
-16 frames instead, measured on the frames that ship. ⚠ This is not Veo's
-first=last trick, which is still refused: that asks the MODEL to land the ending
-and it drifts anyway; this is an overlap-add on frames it already drew.
+**3 · A trim alone does not close a very still idle**; the tail is blended into
+the head, measured on the frames that ship.
 
-⚠ **AND THE FIGURE IS SEATED.** Veo places the boots where it likes; the site
-seats the media bottom-centred in a slot whose floor IS the projector disc, so a
-figure ending at 0.945 of its own canvas hovers 5.5 % of the slot above the disc
-it stands on. `post.py` shifts the frame — never crops it, which would change
-the delivered aspect and every anchor read against it.
+**4 · The Architect's edge is not darker than his interior** (ADR-082 U31). A
+first measure said it was — against the restyle's OWN luma matte, whose boundary
+sits in the glow. Against his true outline the edge matches the interior; what
+he has is a highlight-weighted outer BLOOM (12.5 luma off the face, 2.3 off the
+trousers), which `gold.py` reproduces.
+
+⚠ **THE FIGURE IS SEATED.** The site seats the media bottom-centred on the
+projector disc, so a figure ending above the canvas floor hovers. `post.py`
+shifts the frame — never crops it.
 
 ## State
 
-| era       | wave                  | status                                     |
-| --------- | --------------------- | ------------------------------------------ |
-| `genai`   | `20260918-genai-v3`   | **shipped** — the Starhaven captain        |
-| `expanse` | `20260918-expanse-v1` | **shipped** — the set visit, in MCRN plate |
+| era          | wave                  | status                                                      |
+| ------------ | --------------------- | ----------------------------------------------------------- |
+| `genai`      | `20260918-genai-v3`   | shipped (one-step, `-v2`) — re-cut on the two-step route    |
+| `expanse`    | `20260918-expanse-v1` | shipped (one-step) — re-cut kneeling, on the two-step route |
+| `azeroth`    | offline `v5-blender`  | shipped `-v11` (v10 seated 33 rows, `reseat_azeroth.py`)    |
+| `pokemon-go` | —                     | **blocked** until the owner's photograph lands              |
 
-⚠ **`expanse`'s DRIVE FOLDERS ARE GENUINELY EMPTY, NOT UN-SYNCED.**
-`The Expanse Set Visit/` and `MCRN/Exports/` enumerate zero children while all 38
-sibling folders list normally — there was nothing to move. The owner supplied the
-photographs directly, and the wardrobe clause is written off those.
+⚠ **THE REFUSAL STAYS.** An era without a photograph hits `BLOCKED` and stops:
+ADR-082 U14 measured what a words-only wardrobe produces.
 
-⚠ **THE REFUSAL STAYS EVEN THOUGH `BLOCKED` IS NOW EMPTY.** The next era without
-a photograph must hit it and stop: ADR-082 U14 measured what a words-only
-wardrobe produces — a generic cowl, invented spires, a nondescript sword.
-
-## The key
-
-`scripts/voidwalker-avatar/.env`, one `GEMINI_API_KEY=` line, gitignored by
-`.gitignore:77`. `env.py` prints names and lengths, never a value.
+⚠ **`waves/` IS GITIGNORED, AND `refs/` IS NEVER MIRRORED.** A wave's references
+are crops of the owner's photographs and of the people beside him in them; the
+sync script excludes `refs/` by name and `public/_previews` is in
+`.vercelignore`.

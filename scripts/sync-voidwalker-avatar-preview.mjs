@@ -2,9 +2,15 @@
 /**
  * sync-voidwalker-avatar-preview.mjs
  *
- * Copies the voidwalker-avatar skill's `waves/` folder into
- * `public/_previews/voidwalker-avatar/` so the internal preview route
- * at `/test/voidwalker-avatar-preview` can serve them.
+ * Copies the voidwalker-avatar waves into `public/_previews/voidwalker-avatar/`
+ * so the internal preview route at `/test/voidwalker-avatar-preview` can serve
+ * them.
+ *
+ * ⚠ TWO SOURCES SINCE ADR-082 U31. The offline skill's `waves/` holds the
+ * history (azeroth, the canonical pair); the in-repo chain
+ * (`scripts/voidwalker-avatar/waves/`) holds everything since ADR-082 U24 —
+ * genai, expanse, and the two-step plates. Both use `waves/<YYYYMMDD>-<era>-v<N>/`,
+ * so they merge by wave id; a wave present in both takes the in-repo copy.
  *
  * ⚠ READ-ONLY against the skill: this script only READS from the source
  * waves and WRITES to the repo's `public/_previews/`. It never mutates
@@ -68,8 +74,18 @@ const METADATA_EXTENSIONS = new Set([".json", ".md"]);
  * comment above records, one pipeline later: a frame folder is a WORKING SET,
  * regenerable from the scripts beside it, and only its NAME distinguishes it.
  */
+/**
+ * ⚠ AND THE IN-REPO CHAIN'S WORKING SETS (ADR-082 U31): `post.py` writes
+ * `veo/frames/`, `veo/loop/` and `graded/`, which a bare-name rule has to name.
+ *
+ * ⚠ `refs/` IS NOT A WORKING SET, IT IS A PRIVACY BOUNDARY. A wave's references
+ * are crops of the owner's photographs AND of the people standing beside him in
+ * them — the Expanse set frames carry three other visitors — and a mirror into
+ * `public/` is one deploy away from serving them. It is excluded by name here
+ * and `public/_previews` is in `.vercelignore` besides; neither alone is enough.
+ */
 const SCRATCH_DIRS =
-  /^(_|frames?[-_]|render$|render[-_]|gif-raw$|gif-framed$|capture|framed|veo-framed$|nano-framed$|kling-framed$)/i;
+  /^(_|frames?$|frames?[-_]|loop$|graded$|refs$|render$|render[-_]|gif-raw$|gif-framed$|capture|framed|veo-framed$|nano-framed$|kling-framed$)/i;
 
 async function walk(dir, base = dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -93,8 +109,9 @@ async function ensureDir(dir) {
 }
 
 async function main() {
-  if (!existsSync(SKILL_WAVES)) {
-    console.error(`ERROR: skill waves folder not found at ${SKILL_WAVES}`);
+  const roots = [SKILL_WAVES, REPO_WAVES].filter((root) => existsSync(root));
+  if (!roots.length) {
+    console.error(`ERROR: no waves folder found at ${SKILL_WAVES} or ${REPO_WAVES}`);
     process.exit(2);
   }
 
@@ -105,10 +122,14 @@ async function main() {
 
   await ensureDir(DEST);
 
-  const files = await walk(SKILL_WAVES);
+  /* Later roots win on a shared relative path — the in-repo chain is listed
+     last, so its copy of a wave is the one that lands. */
+  const byRel = new Map();
+  for (const root of roots) for (const file of await walk(root)) byRel.set(file.rel, file);
+  const files = [...byRel.values()];
   const manifest = {
     generated_at: new Date().toISOString(),
-    source: SKILL_WAVES,
+    source: roots,
     waves: /** @type {Record<string, any>} */ ({}),
   };
 

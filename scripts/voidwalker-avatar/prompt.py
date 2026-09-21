@@ -174,7 +174,17 @@ not add a prop this wardrobe does not name.
 #: wardrobe produces (a generic cowl, invented spires, a nondescript sword),
 #: and the next era without a picture must hit this and stop rather than draw
 #: a paraphrase.
-BLOCKED: dict[str, str] = {}
+BLOCKED: dict[str, str] = {
+    # ⚠ 2016 HAS NO FIGURE OF ITS OWN (ADR-082 U31). It resolves to the canonical
+    # pair today — the Architect in the Thoughtform cap, ten years early. The
+    # owner will supply a photograph; the era's wardrobe lock is read OFF that
+    # photograph (logos blanked, the crowd cropped out), never written first.
+    "pokemon-go": (
+        "no wardrobe photograph yet. It goes in "
+        r"I:\My Drive\01_Thoughtform Branding\13_Voidwalker Pictures\2016_Pokemon GO"
+        " — then write this era's wardrobe lock from it before drawing."
+    ),
+}
 
 IDLE_PROMPT = """
 The figure BREATHES and nothing else. A slow, even rise and fall of the chest;
@@ -205,18 +215,17 @@ shot.
 #: a model given a clause it cannot satisfy satisfies something else.
 ERA_IDLE: dict[str, str] = {
     "expanse": """
-The figure BREATHES and nothing else, held in his crouch. A slow, even rise and
-fall of the chest and shoulders; the faintest settle of the forearm resting on
-his raised knee; one slow blink. The hand at his ear does not move. He keeps
-looking off-camera at the line ahead of him.
+The figure BREATHES and nothing else, held in his kneel. A slow, even rise and
+fall of the chest and shoulders; once, the fingers at his ear press the earpiece
+a little more firmly; one slow blink. He keeps looking off-camera.
 
 THE CAMERA DOES NOT MOVE. No pan, no tilt, no dolly, no zoom, no push-in, no
 orbit, no handheld drift, no parallax, no rack focus.
 
 HE DOES NOT STAND UP AND HE DOES NOT SHIFT HIS STANCE. The planted knee stays
-on the ground, the forward boot stays flat, the rifle stays exactly where it
-is, angled down and in. No step, no turn, no rise, no gesture, no head turn, no
-speech, no aiming.
+on the ground, the forward boot stays flat, the rifle stays VERTICAL exactly
+where it is — no sway, no tilt, no lowering, no aiming. No step, no turn, no
+rise, no head turn, no speech.
 
 THE BACKGROUND STAYS PURE BLACK AND EMPTY. Nothing enters the frame. No
 particles, no smoke, no light rays, no flicker, no new light source, no change
@@ -252,39 +261,237 @@ IDLE_NEGATIVE = (
 #:
 #: ⚠ AND A NON-STANDING POSE COSTS STATURE, WHICH IS THE SITE'S PROBLEM TOO.
 #: The boots law says "if he does not fit, make the figure smaller", and a
-#: crouch with a rifle is the widest pose there is — so the figure lands shorter
+#: kneel with a raised rifle is the tallest-and-widest pose there is — so the figure lands shorter
 #: in the canvas at the same body scale. `characterEras.ts`'s `stature` field is
 #: what carries that across; `post.py` prints the head width it is derived from.
 ERA_POSE: dict[str, str] = {
     "expanse": """
 POSE — THIS ERA OVERRIDES THE STANDING POSE AND FRAMING ABOVE.
 
-He is DOWN ON ONE KNEE: the left knee planted on the ground, the right foot
-flat and forward, the right forearm resting across that raised knee. A
-commander who has stopped to read the ground, not a soldier mid-fight.
+He is DOWN ON ONE KNEE: the right knee planted on the ground, the left foot
+flat and forward, the torso upright and turned a few degrees so both knees
+read. A commander who has stopped to take a report, not a soldier mid-fight.
 
-He carries a FUTURISTIC RIFLE — a matte black, panelled marine carbine of the
-same make as the armour. It is held in the LEFT hand, angled down and IN, its
-stock resting near the planted knee and its barrel pointing at the ground
-inside his own silhouette. The weapon may not cross outside the line of his
-shoulders.
+His RIGHT hand holds a compact, matte black, panelled carbine UPRIGHT by the
+pistol grip, the stock braced against the front of his right hip and the
+barrel pointing STRAIGHT UP, inside the line of his shoulders. He is not
+aiming, and his finger is outside the trigger guard.
 
-His RIGHT hand is raised to his RIGHT EAR, two fingers touching an earpiece,
-listening — head level, eyes forward and off-camera as if watching a line
-somewhere ahead. Calm, still, receiving instructions. Not shouting, not
-signalling, not aiming.
+His LEFT hand is raised to his LEFT EAR, two fingers pressing a small earpiece,
+the elbow out and level — head level, eyes off-camera, mouth closed, listening.
 
-FRAMING for this pose: the whole crouched figure, head to the planted boot,
-with a band of black beneath him. He sits LOWER in the frame than a standing
-figure would and there is more black above his head — that is correct and
+FRAMING for this pose: the whole kneeling figure, the muzzle to the planted
+boot, with a band of black beneath him. He sits LOWER in the frame than a
+standing figure would and there is more black above him — that is correct and
 must not be closed up by zooming in. Vertical, 9:16, camera at his chest
 height, straight on, long lens.
 
-The BOOTS LAW still governs: the rifle and the knee may not touch a side
-wall. If the crouch does not fit, make the whole figure smaller — never crop
-the man and never turn the weapon outward to make room.
+The BOOTS LAW still governs: the rifle and the knee may not touch a side wall.
+If the kneel does not fit, make the whole figure smaller — never crop the man
+and never tip the weapon outward to make room.
 """.strip(),
 }
+
+
+# ══ THE TWO-STEP ROUTE (ADR-082 U31) ═══════════════════════════════════════
+#
+# ⚠ "GRADE THE LIGHT, CODE THE SCREEN" NARROWS "BAKE THE LIGHT". The Architect —
+# the look the owner holds every era to — was made in TWO steps: a photoreal
+# colour still, then a restyle into gold. The eras drawn in ONE step ("a
+# volumetric hologram") came back as emissive sculptures with blown eyes
+# (interior p75 luma 181.8 and 191.1 against the Architect's 105.3), and the
+# cause is structural rather than a matter of wording: the alpha is a LUMA key,
+# so black cloth must be over-lit or it keys out, and over-lit black cloth is
+# the glow. So the model now does what it is good at — the man, the wardrobe,
+# the pose, in full colour, on a flat key ground — and `gold.py` does the gold
+# deterministically, on a curve measured off the Architect himself.
+#
+# ⚠ NO ARTIST, SHOW OR STUDIO IS NAMED IN ANY PROMPT. The look is described by
+# its PROPERTIES — a medium, a light, a lens — never by whose it is.
+#
+# ⚠ THE REFERENCE ROLES ARE THE ONES `generate.py` LABELS: each image arrives
+# preceded by `IMAGE n — ROLE`, in `refs/refs.json`'s order, and the locks below
+# address them by number.
+
+#: The ground every plate stands on. BLUE because it is the complement of gold
+#: AND of skin, and because at a luma weight of .114 its edge-mix moves the grade
+#: roughly five times less than a green's would — and its luma sits near the
+#: cloth's own, so a cloth edge does not brighten against it.
+KEY_GROUND = """
+THE GROUND: one perfectly uniform, saturated deep blue, hex #0A28D2 — a flat
+digital fill from edge to edge and UNDER his boots. It is not a backdrop: no
+gradient, no vignette, no texture, no horizon, no floor plane. He casts NO
+shadow on it and it casts NO light on him — no blue rim, no blue bounce, no
+blue reflection anywhere on the figure. As if he were cut out and laid on flat
+coloured paper.
+""".strip()
+
+PLATE_LOCK: dict[str, str] = {
+    # 2023 · the AI Captain. The owner's own painting of the character is the
+    # WARDROBE and the PAINT HANDLING; its face is not his, which is why it is
+    # attached cropped at the collar and why the identity images come first.
+    "genai": """
+IMAGE 1 and IMAGE 2 are this man's IDENTITY. IMAGE 3 is the WARDROBE and the
+PAINT HANDLING — a painting cropped at the collar, headless on purpose: take its
+garments and its brushwork, never a face or a skin tone from it. IMAGE 4 is his
+HANDS. Draw ONE figure: this man, full length, in that wardrobe.
+
+HIS FACE, unchanged and recognisable at a glance: a long oval face, a heavy
+straight brow, hooded dark eyes with real irises, a straight nose, a short
+close-trimmed beard that thins at the cheeks, his own warm olive skin.
+BARE-HEADED: the head shaved to the skin — no cap, no hood, no crown.
+
+THE HABIT, exactly as IMAGE 3: a long black cloak with a high standing collar and
+a ragged hem over a floor-length black robe; a bandolier from the left shoulder
+to the right hip set with small metal plates; a sash-belt closed by ONE LARGE
+ROUND GOLD DISC; a smaller gold boss at the breast; THICK STACKED GOLD CUFFS
+three bands deep on both forearms; two medallions on a fine chain; a slim
+gold-banded rod WORN at the hip inside the line of the cloak — never held, never
+projecting past it. His hands are EMPTY and hang at his sides, backs to the
+camera, with his own tattoos and his gold signet ring as in IMAGE 4.
+
+THE HALO: a thin gold ring behind his head with five or six small FOUR-POINTED
+stars set ON the ring — fine line and solid shapes. No glow, no sparkle dust.
+
+PAINTED as heroic cinema key art: acrylic over a tight pencil drawing, realism
+first. Confident brushwork in the cloth, tighter in the face and the metal.
+Sculpted values, decisive edges. The blacks are PAINTED AS CLOTH.
+
+LIT by two fixtures only: a broad soft white bounce below the camera as the KEY,
+reaching into every fold, so the black cloth reads dark-to-mid charcoal and
+nothing is crushed; and one small hard warm source high to camera-right, drawing
+a HAIRLINE rim on the crown and the tops of the shoulders only.
+
+CAMERA LOW, at hip height, tilted up a little; 85mm or longer.
+
+FRAMING 9:16: the whole figure, from the highest star to the soles. The top of
+the skull about 11 % down from the top edge, the soles about 5 % up from the
+bottom edge, and nothing touching any edge. If he does not fit, make him smaller.
+
+DO NOT: a hologram, a glow, glowing eyes, gold-tinted skin, a monochrome image;
+a rock, a ledge, sand, a floor, a shadow; blue light on the figure; text or a
+signature; a crop; a second figure; anything held in his hands.
+""".strip(),
+    # 2018 · the campaign commander, on the set visit. Live action: the owner's
+    # own brief is "realistic … a live-action-ish type of thing".
+    "expanse": """
+IMAGE 1 and IMAGE 2 are this man's IDENTITY. IMAGE 3 is the WARDROBE SILHOUETTE —
+a headless crop from the neck to the floor: take the armour, the kilt panel and
+the leggings, and ignore the trainers, the suitcase and the wall. IMAGE 4 shows
+the ARMOUR PANELS lit. IMAGE 5 is HIS BOOTS. Draw ONE figure: this man, in that
+armour.
+
+HIS FACE, unchanged and recognisable at a glance, and HIS OWN CAP as in IMAGE 1
+and IMAGE 2 — no helmet, no visor. His face is fully visible.
+
+Matte black hard-shell armour: a moulded chest plate of raised geometric panels,
+a ribbed flexible midsection, a buckled pouch, rounded shoulder caps, plated
+upper arms, long articulated forearm gauntlets, hex-grip tactical gloves, a high
+ribbed collar. A BLACK KILT PANEL to the knee over black leggings; black socks
+with three thin white bands; HIS OWN worn black lace-up combat boots from
+IMAGE 5. A used production costume — scuffed, semi-matte, never glossy, never a
+superhero suit; no insignia and no lettering on it.
+
+POSE: DOWN ON ONE KNEE. The torso upright, turned a few degrees so both knees
+read. The RIGHT knee on the ground, the LEFT foot flat in front, the kilt draped
+over the raised thigh.
+
+His RIGHT hand holds a compact, matte black, panelled carbine UPRIGHT by the
+pistol grip, the STOCK BRACED AGAINST THE FRONT OF HIS RIGHT HIP, the barrel
+pointing STRAIGHT UP, inside the line of his shoulders; its muzzle sits a little
+above the cap and is the highest thing in the picture. He is NOT aiming, and his
+finger is outside the trigger guard.
+
+His LEFT hand is raised to his LEFT ear, two fingers pressing a small black
+earpiece, the elbow out and level; a thin boom mic runs along his jaw. Head
+level, turned slightly, EYES OFF THE LENS, mouth closed — a commander receiving
+a report.
+
+PHOTOGRAPHED as a unit-stills costume plate: photoreal, natural colour,
+ungraded. 85mm at f/5.6, the camera square-on at his chest height, about 90 cm
+from the ground. Real skin; no computer-graphics smoothness.
+
+LIT by a six-foot octabox 45 degrees to camera-left as the KEY, with a catchlight
+in the eyes, and a broad white bounce to camera-right one and a half stops under
+as the FILL, so the black armour reads dark-to-mid charcoal with its panel lines
+visible. NO backlight, no rim light, no kicker.
+
+FRAMING 9:16: he sits LOW in the frame — the muzzle about 28 % down from the top
+edge, the top of the cap about 36 % down, the ground contact about 5 % up from
+the bottom edge. From the top of the cap to the bottom of the beard is about 13 %
+of the frame's height — a standing man's head size: do NOT zoom in to fill the
+space above him. Nothing touches an edge. Never tip the rifle outward to make
+room.
+
+DO NOT: a hologram, a glow, gold, a 3D game render, a statue; an aimed,
+shouldered or downward-pointing rifle, or two hands on it; a helmet; insignia; a
+set, a floor slab, a platform, a cast shadow, smoke; blue light on the figure; a
+crop.
+""".strip(),
+}
+
+
+def plate_prompt(era: str) -> str:
+    """The full lock for one era's COLOUR PLATE — the two-step route's first half."""
+    lock = PLATE_LOCK.get(era)
+    if lock is None:
+        raise SystemExit(f"no plate lock for era '{era}'")
+    return lock + "\n\n" + KEY_GROUND
+
+
+#: The idle for a PLATE (Veo image-to-video). The ground is the key colour now,
+#: so the invariant is that it STAYS the key colour — a ground that drifts in
+#: value is a matte that drifts with it.
+PLATE_IDLE: dict[str, tuple[str, str]] = {
+    "genai": (
+        "A slow, shallow breath under the cloak; the hem stirs and settles; one slow "
+        "blink — that is everything",
+        "his feet, his head, his eyes on the lens, his arms, all the metalwork, the ring "
+        "of stars (a fixed object: no rotation, no twinkle, no pulse), and THE PAINT "
+        "(the brushwork is fixed to the cloth like a printed surface; it never shimmers "
+        "and it is never repainted)",
+    ),
+    "expanse": (
+        "He holds the kneel and breathes; once he presses the earpiece a little more "
+        "firmly; his eyes flick to the right and return; one small nod; one blink",
+        "the planted knee and the flat boot, the rifle VERTICAL (no sway, no tilt, no "
+        "lowering, no aiming), the raised elbow, the cap and the kilt, the closed mouth, "
+        "and all of him inside the frame",
+    ),
+}
+
+
+def plate_idle_prompt(era: str, prop_wording: bool = False) -> str:
+    """The idle clause for a plate. `prop_wording` is the one re-word the chain
+    allows if the video model refuses a weapon beside a real face; a second
+    refusal means that era ships its poster only."""
+    action, still = PLATE_IDLE[era]
+    if prop_wording:
+        action = action.replace("rifle", "costume prop carbine")
+        still = still.replace("rifle", "costume prop carbine")
+    return (
+        f"LOCKED STATIC FRAME on a heavy tripod. {action}. WHAT STAYS STILL: {still}. "
+        "The background is a FLAT UNIFORM BLUE, the same value in every corner on every "
+        "frame. The lighting does not change. Real time."
+    )
+
+
+#: Route A′: the Architect's own second step, as ONE change to a picked plate.
+#: The owner's word for Latent Land was "too glowing"; every clause below is a
+#: property of the Architect's restyle, measured, said in words.
+EDIT_QUIET_HOLOGRAM = """
+Keep the image exactly as it is — the same man, face, eyes, garments, pose,
+framing and edges; do not redraw or re-sculpt any surface. Make ONE change:
+re-present the figure as a VOLUMETRIC HOLOGRAM of warm antique-gold light on pure
+black, and keep it QUIET — this same picture printed in gold light, not a glowing
+statue. One hue: deep amber in the darks, rich gold in the mids, pale champagne
+only on skin and polished metal. The black cloth becomes a DIM, EVEN deep amber
+with its folds legible, about a third as bright as the skin. The eyes stay real
+eyes with dark irises. NO white-hot fold lines, NO bright rim, NO glowing
+sockets, NO bloom; a soft falloff at the outline over a few pixels. The
+background is PURE #000000. No scan lines, grid, motes, chromatic split, cone,
+base, frame or text.
+""".strip()
 
 
 def still_prompt(era: str) -> str:
@@ -303,4 +510,5 @@ if __name__ == "__main__":
     import sys
 
     era = sys.argv[1] if len(sys.argv) > 1 else "genai"
-    print(still_prompt(era))
+    stage = sys.argv[2] if len(sys.argv) > 2 else "still"
+    print(plate_prompt(era) if stage == "plate" else still_prompt(era))

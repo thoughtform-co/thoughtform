@@ -66,3 +66,11 @@ public/gateway-motion
 #                              NOT deployed: it is client work on a page ADR-078
 #                              frames as unlisted, and public/ is world-fetchable.
 public/prototypes/portfolio-prototype.html
+# - _previews/            -> the voidwalker-avatar wave mirror
+#                            (scripts/sync-voidwalker-avatar-preview.mjs). It is
+#                            gitignored, and that is NOT enough on its own: the
+#                            CLI deploys by THIS file once it exists, not by
+#                            .gitignore, so a local `vercel deploy` would upload
+#                            a per-machine cache that can hold crops of other
+#                            people's faces (ADR-082 U31). Listed here as well.
+public/_previews
