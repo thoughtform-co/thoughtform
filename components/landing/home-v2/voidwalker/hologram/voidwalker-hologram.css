@@ -176,8 +176,13 @@
     transparent 92%
   );
   /* The reveal wipes up from the base. `clip-path` is animated only for
-     the 900ms event — see the phase rules below. */
-  clip-path: inset(0 0 0 0);
+     the 900ms event — see the phase rules below.
+     ⚠ THE TOP AND SIDE INSETS ARE TOKENS, AND THEIR DEFAULT IS THE `0` THIS
+     RULE ALWAYS HAD (ADR-082 U31). On the alpha branch a media box may be
+     LARGER than this wrap — see `--holo-spill` below — and a clip at the wrap's
+     own box is what cut azeroth's pauldrons. Every other home resolves both to
+     0 % and is byte-identical. */
+  clip-path: inset(var(--holo-clip-top, 0%) var(--holo-clip-x, 0%) 0 var(--holo-clip-x, 0%));
 }
 
 /* ── THE ALPHA PATH ──────────────────────────────────────────────────
@@ -223,6 +228,24 @@
 }
 .vwh__slot[data-holo-alpha] .vwh__media-wrap {
   background: none;
+  /* ⚠ THE CLIP OPENS EXACTLY TO THE MEDIA BOX, AND NO FURTHER (ADR-082 U31,
+     owner: the Azeroth avatar "seems to be hitting some sort of borders … some
+     parts are falling off"). U29's overscan draws the media LARGER than this
+     wrap and its own comment says the growth "leaves through the TOP and the
+     sides" — true of the BOX and false of the PAINT, because this element
+     clips at its border box two rules up. Only the floor era could show it:
+     azeroth's fit is exactly 1, so at 1.16 his box is 533.6px in a 460px wrap,
+     his ink is 0.9625 of that box, and ~27px of pauldron was sliced off each
+     side. The other four eras' boxes are 411–447px and were never touched,
+     which is why it read as one broken asset rather than as a rule.
+     `--holo-spill` is how far the box exceeds the wrap, as a NUMBER (0 for
+     every era whose `fit × overscan` is ≤ 1, so they are byte-identical); the
+     two insets are plain percentages so they still interpolate inside
+     `vwhReveal`. ⚠ THEY MUST BE USED IN THE KEYFRAMES AND THE REST RULE TOO —
+     opened at rest alone, his shoulders pop 27px the frame the wipe ends. */
+  --holo-spill: calc(max(1, var(--holo-fit, 1) * var(--holo-overscan, 1)) - 1);
+  --holo-clip-x: calc(-50% * var(--holo-spill));
+  --holo-clip-top: calc(-100% * var(--holo-spill));
 }
 .vwh__slot[data-holo-alpha] .vwh__media {
   mix-blend-mode: normal;
@@ -248,6 +271,11 @@
    the media `object-position: bottom center`, so the growth leaves through the
    TOP and the sides — the foot edge does not move and the boots stay on the
    projector disc.
+   ⚠ THAT SENTENCE WAS TRUE OF THE BOX AND FALSE OF THE PAINT UNTIL ADR-082
+   U31: the wrap clipped at its own border box, so on the one era whose box
+   actually exceeds the wrap (the floor era, fit 1) the growth did not leave
+   through the sides at all — it was cut there. `--holo-spill` above is what
+   makes it true.
 
    ⚠ THE CEILING IS THE COLUMN'S, THE SAME LAW THE RETICLE IS SIZED ON — and
    the ceiling is not the value. The box may reach into the stage's column gap
@@ -287,6 +315,29 @@
 .vwh__slot[data-holo-alpha] .vwh__media {
   width: calc(100% * var(--holo-fit, 1) * var(--holo-overscan, 1));
   height: calc(100% * var(--holo-fit, 1) * var(--holo-overscan, 1));
+}
+
+/* ⚠ AND THE WRAP'S VIGNETTE COMES OFF WHERE THE MEDIA OVERSCANS (ADR-082 U31).
+   Opening the clip is half of it: a `mask-image` hides everything outside the
+   mask's own painting area too (`mask-clip` defaults to the border box), so
+   with the clip open the radial ellipse above would still end azeroth's
+   pauldrons at the wrap — and inside the wrap it was already fading them to
+   ~55 % at the edge, which is most of why the cut read as "falling off" rather
+   than as a clean crop. The vignette exists to soften the FLOOR branch's
+   opaque bed; on real alpha there is no bed for it to soften.
+   ⚠ SCOPED TO THE DATUM STAGE AT >=1101px — the one home that sets
+   `--holo-overscan`. The phone, the 701–1100 rung and the figure lab keep the
+   vignette and stay byte-identical; their media never leaves the wrap.
+   ⚠ THE NAMED COST: without the vignette every era's extremities read
+   brighter on desktop — heads ~+9 % at 1280×720 to ~+22 % at 1920×1247, boots
+   ~+16 % — because the ellipse was dimming them. The boots now meet the disc
+   at full strength, which is the grounded read; judged on a still, both
+   themes, not assumed. */
+@media (min-width: 1101px) {
+  .vwd .vwh__slot[data-holo-alpha] .vwh__media-wrap {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
 }
 
 /* ⚠ ON THE FLOOR BRANCH THE FIT MOVES TO THE WRAP (ADR-082 U27). The floor's
@@ -438,8 +489,15 @@
   --vwh-holo-drop: clamp(0, calc((var(--vwh-holo-acquire) - 0.14) * 12), 1);
   opacity: var(--vwh-holo-acquire);
 }
+/* ⚠ THE ACQUISITION ENDS ON THE OPENED CLIP, NOT ON ZERO (ADR-082 U31). At
+   `acquire` 1 the top inset is `--holo-clip-top` and at 0 it is the old 62 % —
+   one linear blend between the two, so with no spill (`--holo-clip-top` 0 %)
+   it is the expression that shipped, value for value. */
 .vwd[data-vwh-ready] .vwh__slot[data-phase="rest"] .vwh__media-wrap {
-  clip-path: inset(calc((1 - var(--vwh-holo-acquire)) * 62%) 0 0 0);
+  clip-path: inset(
+    calc(var(--holo-clip-top, 0%) * var(--vwh-holo-acquire) + (1 - var(--vwh-holo-acquire)) * 62%)
+      var(--holo-clip-x, 0%) 0 var(--holo-clip-x, 0%)
+  );
 }
 .vwd[data-vwh-ready] .vwh__slot[data-phase="rest"] .vwh__media {
   transform: translateX(calc((var(--vwh-holo-strike) - var(--vwh-holo-drop)) * 3px));
@@ -456,44 +514,52 @@
   animation: vwhSettle 640ms steps(8, end) both;
 }
 
+/* ⚠ EVERY SIDE INSET IS `--holo-clip-x` AND EVERY FULLY-OPEN TOP IS
+   `--holo-clip-top` (ADR-082 U31). They are the wrap's own tokens, 0 % unless
+   the media box is larger than the wrap, so with no spill these are the
+   keyframes that shipped. With one, the wipe opens to the same box the rest
+   rule holds — a reveal that ended on `inset(0 0 0 0)` would show the floor
+   era's shoulders cut for 900ms and then pop them 27px wide. The partial tops
+   (48 / 38 / 12 %) stay literal: they are the tear's own bands, measured on the
+   wrap, and a spill does not move them. */
 @keyframes vwhReveal {
   0% {
     opacity: 0;
-    clip-path: inset(48% 0 48% 0);
+    clip-path: inset(48% var(--holo-clip-x, 0%) 48% var(--holo-clip-x, 0%));
     transform: translateX(-3px);
   }
   10% {
     opacity: 1;
-    clip-path: inset(0 0 0 0);
+    clip-path: inset(var(--holo-clip-top, 0%) var(--holo-clip-x, 0%) 0 var(--holo-clip-x, 0%));
     transform: translateX(3px);
   }
   18% {
-    clip-path: inset(0 0 62% 0);
+    clip-path: inset(var(--holo-clip-top, 0%) var(--holo-clip-x, 0%) 62% var(--holo-clip-x, 0%));
     transform: translateX(-2.5px);
   }
   26% {
-    clip-path: inset(0 0 0 0);
+    clip-path: inset(var(--holo-clip-top, 0%) var(--holo-clip-x, 0%) 0 var(--holo-clip-x, 0%));
     transform: translateX(2px);
   }
   34% {
-    clip-path: inset(38% 0 24% 0);
+    clip-path: inset(38% var(--holo-clip-x, 0%) 24% var(--holo-clip-x, 0%));
     transform: translateX(-2px);
   }
   44% {
-    clip-path: inset(0 0 0 0);
+    clip-path: inset(var(--holo-clip-top, 0%) var(--holo-clip-x, 0%) 0 var(--holo-clip-x, 0%));
     transform: translateX(1.5px);
   }
   56% {
-    clip-path: inset(12% 0 0 0);
+    clip-path: inset(12% var(--holo-clip-x, 0%) 0 var(--holo-clip-x, 0%));
     transform: translateX(-1px);
   }
   68% {
-    clip-path: inset(0 0 0 0);
+    clip-path: inset(var(--holo-clip-top, 0%) var(--holo-clip-x, 0%) 0 var(--holo-clip-x, 0%));
     transform: translateX(0.5px);
   }
   100% {
     opacity: 1;
-    clip-path: inset(0 0 0 0);
+    clip-path: inset(var(--holo-clip-top, 0%) var(--holo-clip-x, 0%) 0 var(--holo-clip-x, 0%));
     transform: none;
   }
 }

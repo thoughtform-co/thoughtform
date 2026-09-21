@@ -43,17 +43,15 @@ const SPREAD_LIMIT_PCT = 1.5;
 /* The boots must keep the disc. The fit scales the picture about the box's
    bottom edge, so where the boots land is `(1 - footY)` of the picture — a
    property of the DELIVERY, not of the fit.
-   ⚠ AZEROTH IS EXCLUDED, AND IT IS A NAMED PRE-EXISTING DEFECT RATHER THAN A
-   LOOSENED NUMBER. `post.py`'s `seat_frames` seats every delivery's foot at
-   0.995 and says in its own docstring that "the canonical pair ends at 0.998
-   and azeroth at 0.970"; azeroth predates that step and was never re-seated,
-   so its whole composite hovers ~2.7 % of the picture above the disc — 23.6px
-   at 1920x1247, measured, and visible in the still. The four seated eras are
-   pinned tight here; azeroth's hover is REPORTED with its number so that
-   re-seating it (a 33-row shift, which its canvas has room for) is a
-   measurable close rather than a taste call. */
+   ⚠ NO ERA IS EXCLUDED ANY MORE (ADR-082 U31). `azeroth` stood here as a named
+   pre-existing defect from U25 — its delivery predated `post.py`'s seat step
+   and hovered 23.6px above the disc at 1920x1247 (27.3 under U29's overscan).
+   `-v11` is the 33-row shift this comment asked for
+   (`scripts/voidwalker-avatar/reseat_azeroth.py`), so all five eras are pinned
+   to one foot line. The set stays as the mechanism: an era that lands here
+   again must arrive with its number and its reason, never as a looser limit. */
 const FOOT_DRIFT_LIMIT_PX = 8;
-const UNSEATED = new Set(["azeroth"]);
+const UNSEATED = new Set([]);
 
 const browser = await chromium.launch({ headless: args.includes("--headless") });
 const page = await (
@@ -120,8 +118,55 @@ const read = () =>
        exactly the error that made the first cut of the fit a no-op. */
     const picture = Math.min(box.width / 720, box.height / 1280) * 1280;
     const ts = getComputedStyle(title);
+
+    /* ⚠ THE WRAP'S CLIP AGAINST THE PAINTED BOX (ADR-082 U31). Every guard on
+       this surface asked whether the wrap sits inside the slot — it does, a
+       `clip-path` does not change a rect — and none asked whether the MEDIA
+       sits inside the wrap's clip. That is how U29's overscan shipped azeroth
+       with ~27px of pauldron cut off each side: his is the one box larger than
+       its wrap. The computed `inset()` is resolved to px here (a percentage is
+       of the wrap's own width / height) and the media box must fit inside the
+       opened area. ⚠ A mask hides overflow as well, so an opened clip under a
+       live `mask-image` is still a crop — the mask is reported beside it. */
+    const wrap = document.querySelector("#voidwalker .vwh__media-wrap");
+    let cut = null;
+    let mask = null;
+    if (wrap) {
+      const wr = wrap.getBoundingClientRect();
+      const ws = getComputedStyle(wrap);
+      mask = ws.maskImage || ws.webkitMaskImage || "none";
+      const m = /inset\(([^)]*)\)/.exec(ws.clipPath || "");
+      const parts = m ? m[1].trim().split(/\s+/) : ["0px"];
+      const px = (v, base) =>
+        v.endsWith("%") ? (Number.parseFloat(v) / 100) * base : Number.parseFloat(v) || 0;
+      // CSS shorthand expansion: 1 → all, 2 → v h, 3 → t h b, 4 → t r b l.
+      const [t, r, b, l] =
+        parts.length === 1
+          ? [parts[0], parts[0], parts[0], parts[0]]
+          : parts.length === 2
+            ? [parts[0], parts[1], parts[0], parts[1]]
+            : parts.length === 3
+              ? [parts[0], parts[1], parts[2], parts[1]]
+              : parts;
+      const open = {
+        top: wr.top + px(t, wr.height),
+        right: wr.right - px(r, wr.width),
+        bottom: wr.bottom - px(b, wr.height),
+        left: wr.left + px(l, wr.width),
+      };
+      const hidden = mask !== "none";
+      // With a mask on, the paintable area is the wrap's own box at most.
+      const lim = hidden ? { top: wr.top, right: wr.right, bottom: wr.bottom, left: wr.left } : open;
+      cut = {
+        left: Math.max(0, Math.max(lim.left, open.left) - box.left),
+        right: Math.max(0, box.right - Math.min(lim.right, open.right)),
+      };
+    }
     return {
       fit,
+      cutL: cut ? Number(cut.left.toFixed(1)) : null,
+      cutR: cut ? Number(cut.right.toFixed(1)) : null,
+      masked: mask !== null && mask !== "none",
       span: Number((footY - headY).toFixed(4)),
       box: `${Math.round(box.width)}x${Math.round(box.height)}`,
       figurePx: Number((picture * (footY - headY)).toFixed(1)),
@@ -171,16 +216,19 @@ for (let i = 0; i < tabs.length; i++) {
 await browser.close();
 
 console.log(`\n${VW}x${VH}\n`);
-console.log(["era", "fit", "span", "mediaBox", "figure", "footLine", "titleW", "lines"].join("  "));
+console.log(
+  ["era", "fit", "span", "mediaBox", "figure", "footLine", "cut L/R", "titleW", "lines"].join("  ")
+);
 for (const r of rows) {
   console.log(
     [
       r.era.padEnd(11),
-      String(r.fit).padEnd(6),
+      String(Number(r.fit.toFixed(4))).padEnd(6),
       String(r.span).padEnd(7),
       r.box.padEnd(9),
       `${r.figurePx}px`.padEnd(8),
       `${r.footPx}`.padEnd(9),
+      `${r.cutL}/${r.cutR}${r.masked ? " M" : ""}`.padEnd(11),
       String(r.titleW).padEnd(7),
       r.titleLines,
     ].join("  ")
@@ -213,6 +261,15 @@ if (spreadPct > SPREAD_LIMIT_PCT)
   fails.push(`figure heights spread ${spreadPct.toFixed(2)} % (limit ${SPREAD_LIMIT_PCT})`);
 if (footDrift > FOOT_DRIFT_LIMIT_PX)
   fails.push(`the seated eras' boots left the disc by ${footDrift.toFixed(1)}px`);
+/* ⚠ THE MEDIA BOX MAY NOT BE CUT BY ITS OWN WRAP (ADR-082 U31). 1px is
+   sub-pixel rounding on a percentage inset; anything above it is a crop. */
+for (const r of rows) {
+  const worst = Math.max(r.cutL ?? 0, r.cutR ?? 0);
+  if (worst > 1)
+    fails.push(
+      `${r.era}: the wrap cuts ${r.cutL}px / ${r.cutR}px off the media box (L/R)${r.masked ? " — a mask-image is still live on the wrap" : ""}`
+    );
+}
 if (rows.some((r) => r.titleLines > 1)) fails.push("the era title wrapped");
 if (t.case !== "uppercase") fails.push("the title is not on the house recipe (case)");
 if (!t.glow) fails.push("the title is not on the house recipe (glow)");

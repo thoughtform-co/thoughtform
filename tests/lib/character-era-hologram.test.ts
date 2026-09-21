@@ -93,11 +93,12 @@ describe("ADR-082 · normalized character hologram assets", () => {
     // messages, so a new URL is the only guarantee the new figure reaches the
     // reader. v6 capped the fel mask, v7 stood the imp arc off the figure, v8
     // seated a class in front and v9 removed it again; v10 chains three talk
-    // emotes and takes the waist piece off.
-    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth-v10.mp4");
-    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth-v10.webm");
-    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth-v10.jpg");
-    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth-v10.webp");
+    // emotes and takes the waist piece off; v11 is v10 SEATED — the same 240
+    // frames moved down 33 rows so his boots reach the disc (ADR-082 U31).
+    expect(resolved.videoPath).toBe("/videos/voidwalker/holo-idle-azeroth-v11.mp4");
+    expect(resolved.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-azeroth-v11.webm");
+    expect(resolved.posterPath).toBe("/images/voidwalker/holo-still-azeroth-v11.jpg");
+    expect(resolved.posterAlphaPath).toBe("/images/voidwalker/holo-still-azeroth-v11.webp");
     // Measured off the DELIVERED alpha at the opaque cutoff 32/255, over all
     // 240 frames rather than frame zero — a talking idle's head and hands move,
     // so an anchor read from one pose is wrong for the other 239. They agree
@@ -117,8 +118,18 @@ describe("ADR-082 · normalized character hologram assets", () => {
     // cut an 81px-tall flat edge through the left pauldron on 117 of 149
     // frames, and a gauntlet is worn: "a plume may run off the edge; the man
     // may not".
-    expect(resolved.headY).toBeCloseTo(0.2352, 3);
-    expect(resolved.footY).toBeCloseTo(0.9695, 3);
+    //
+    // ⚠ v11's PAIR IS v10's PLUS 33/1280 ON BOTH, EXACTLY (ADR-082 U31). The
+    // shift cannot change the span, and the span is `HOLO_FIGURE_SPAN`: he is
+    // the floor era, so his fit must be exactly 1. Re-measuring and rounding
+    // each anchor on its own gives 0.2609 / 0.9953 — a span of 0.7344, a fit of
+    // 0.99986, and a red "floor era returns exactly 1" below for a reason that
+    // would look like float noise.
+    expect(resolved.headY).toBe(0.261);
+    expect(resolved.footY).toBe(0.9953);
+    expect(+(resolved.footY - resolved.headY).toFixed(4)).toBe(0.7343);
+    // Seated: every era's boots end inside the last 1 % of the canvas now.
+    expect(resolved.footY).toBeGreaterThanOrEqual(0.99);
     // Sanity: the head anchor is above the foot anchor and both are inside
     // the frame — the same law the runtime guard enforces on every era.
     expect(resolved.headY).toBeLessThan(resolved.footY);

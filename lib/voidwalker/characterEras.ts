@@ -619,14 +619,27 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     // surplus is all above his head. Cropping to recover it is not available:
     // a gauntlet is worn, and U13's line is "a plume may run off the edge; the
     // man may not".
+    //
+    // ⚠ `-v11` IS v10 SEATED, NOTHING ELSE (ADR-082 U31). U25 named the defect
+    // and left it open: every other era's boots end at 0.993–0.998 of the
+    // canvas and his ended at 0.9695, so on a slot whose floor IS the projector
+    // disc he hovered 23.6px at 1920×1247 — 27.3 once U29's overscan magnified
+    // it. The close is a pure 33-row downward SHIFT of the same 240 rendered
+    // frames (`scripts/voidwalker-avatar/reseat_azeroth.py`): no scale, no crop,
+    // no re-render, and the composite's lowest claw lands at row 1277 of 1279.
+    // ⚠ BOTH ANCHORS ARE AUTHORED AS `v10 + 33/1280`, NEVER RE-ROUNDED. The
+    // figure-only render measures head row 334 / foot row 1274, i.e. 0.2609 /
+    // 0.9953, and rounding those separately gives a span of 0.7344 — which makes
+    // `holoFigureFit` return 0.99986 for the ONE era whose fit must be exactly 1
+    // (`HOLO_FIGURE_SPAN` is his span, and the unit guard says so).
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-azeroth-v10.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v10.webm",
-      posterPath: "/images/voidwalker/holo-still-azeroth-v10.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v10.webp",
+      videoPath: "/videos/voidwalker/holo-idle-azeroth-v11.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-azeroth-v11.webm",
+      posterPath: "/images/voidwalker/holo-still-azeroth-v11.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-azeroth-v11.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.2352,
-      footY: 0.9695,
+      headY: 0.261,
+      footY: 0.9953,
     },
     short: "Azeroth",
     facts: [
