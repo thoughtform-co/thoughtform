@@ -95,11 +95,25 @@ test.describe("the arcs instrument (ADR-118)", () => {
         // The device hangs from the rail's first tick and sits on its last.
         expect(Math.abs(g.device.top - g.rail.top)).toBeLessThanOrEqual(1.5);
         expect(Math.abs(g.device.bottom - g.rail.bottom)).toBeLessThanOrEqual(1.5);
-        // …so the frame's wordmark and chapter row never print over it.
-        if (g.brand)
-          expect(g.brand.top, "the wordmark sits under the device").toBeGreaterThanOrEqual(
-            g.device.bottom - 1
-          );
+        // …so the frame's wordmark and chapter row never print over it, and the
+        // wordmark is CLEAR of it: beside the device's column by at least the
+        // floor of the frame's breathing gap, or under it by the whole gap
+        // (clamp(16px, 1.8vw, 32px)). "Under the device" alone passed while
+        // the hero-size lockup sat 7px beneath the monitor's corner at
+        // 1280 × 720, 108px inside its column — it is docked from the first
+        // frame now. ⚠ The vertical clearance IS the frame's own rail-to-
+        // wordmark gap (the device ends on the rail), 24.8px at 1440 × 800
+        // against a nominal 25.9, so it cannot be the only way to pass.
+        if (g.brand) {
+          const gap = Math.min(32, Math.max(16, 0.018 * w));
+          const clearX = g.device.left - g.brand.right;
+          const clearY = g.brand.top - g.device.bottom;
+          expect(clearY, "the wordmark sits under the device").toBeGreaterThanOrEqual(-1);
+          expect(
+            clearX >= 16 || clearY >= gap - 1,
+            `the wordmark clears the device (beside ${clearX.toFixed(1)}px, under ${clearY.toFixed(1)}px, gap ${gap.toFixed(1)}px)`
+          ).toBe(true);
+        }
         if (g.nav && g.nav.height > 0)
           expect(g.nav.bottom, "the chapter row sits over the device").toBeLessThanOrEqual(
             g.device.top + 1
