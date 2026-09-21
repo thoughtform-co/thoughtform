@@ -155,3 +155,57 @@ deleted — he read one value and the house went past the other. His read agreed
 with wave 03's stranger ("archive", never "quest journal") before he had seen
 the galleries. For wave 04: L1 becomes blocks, L2 one filled block, L3 a gutter
 and one floor, and wave 03's house log stills become a negative pole (SR).
+
+### 2026-09-21 — the read of U1's stills (the log as blocks), with three references
+
+> I don't really like our design because it really feels like a fucking
+> glorified PowerPoint … Have you actually looked at these references?
+
+With three screens beside it: a game inventory's circuit board, a red codex
+list, and a vendor's software list split OWNED / STORE. His points, verbatim
+where they carry the ruling:
+
+> the title of the client should be more prominent, not too big
+
+> [the tabs] should not be tabs on top. They should actually divide the list on
+> the left, like we have in the third screenshot
+
+> I don't mind that it extends beyond the viewport section … we can keep the
+> right panel sticky
+
+> The card should also have notches on the left of it. I feel there should also
+> be some sort of icon like we have on the red one
+
+> that key visual with the text: what the fuck is that? … What I want instead is
+> like a visual of the intelligence configuration … that sort of node from a
+> computer, like we have on our homepage in the proof section, and also that
+> first screenshot
+
+Asked, he set the diagram's model himself:
+
+> At the center, we should showcase the type of intelligence configuration:
+> generate images, generate ads, or generate a video. That's the core
+> intelligence configuration they want. Around it, we can link the LLM they
+> use, like whether they use Figma, etc. It should just really be a scalable
+> thing because, for some other clients, it might be more complex
+
+and kept, of the old panel, "the one-line brief, status readings, Open arc
+button + key hints"; drew it for the proposals only ("is that not every type
+of arc has this intelligence configuration?"); and chose the kind of page for
+the icon.
+
+Decoded: U1 and the cut before it both took the references BY ROLE ("a list",
+"a card") and rebuilt each role in the sheet's own document grammar — a ruled
+column under a tab strip beside a picture with a text plate. **A reference's
+COMPOSITION is the brief; its roles are not** (his era-stage verdict on the
+title-over-columns skeleton, a second time). Applied the same day (ADR-118
+U2): the kinds divide the list under heads level with the dossier's band; a
+block is a page icon beside a plate notched bottom-left, the client as its
+title over the bracketed engagement and the date; the dossier keeps its band,
+brief, status strip and CTA, and for a proposal draws its configuration — an
+ink die of the workstreams at the centre, chips for what they run on and
+inside, buses between, the links read out of the proposal's own sentences. The
+`dossier` knob and direction SJ are deleted. For wave 04: the L rows want the
+sections, the icons and the notched plates, the dossier's board gets checks of
+its own, and L1's "cut off" clause allows a block cut by the screen's bottom,
+which he allowed.

@@ -7,6 +7,12 @@
   section below is a proposal. ⚠ **[U1](#u1-2026-09-21-owner--the-log-is-blocks-a-gutter-from-the-dossier)
   (same day, his live read) redraws the LOG** as blocks a gutter from the
   dossier; wave 03's log stills are superseded, its monitor stills stand.
+  ⚠ **[U2](#u2-2026-09-21-owner--the-references-composition-and-the-configuration-drawn)
+  (same day, his read of U1: "a glorified PowerPoint") IS THE LIVE LOG**: the
+  kinds DIVIDE the list, every block carries its page's icon and a notch, and
+  the dossier DRAWS the client's intelligence configuration where the picture
+  was. U1's gutter and sticky dossier stand; its filter, its client line and
+  its picture do not.
 - **Surface:** `/arcs` — the owner's page since [ADR-117](117-the-owners-pass.md)
   — and only it. The sheet ([ADR-114](114-the-sheet.md)) stays the grammar of
   `/home-sessions`, `/musings`, every client page and the kit.
@@ -398,14 +404,213 @@ block, L3 a gutter and one floor; wave 03's house log stills promoted as a third
 negative pole, `SR`) waits for his word. Wave 03's MONITOR stills are unchanged
 by this update.
 
+## U2 (2026-09-21, owner) — the references' composition, and the configuration drawn
+
+**The read.** On U1, the same afternoon: _"it really feels like a fucking
+glorified PowerPoint … Have you actually looked at these references?"_ Then,
+point by point: the client's title _"should be more prominent, not too big"_;
+the kind tabs _"should not be tabs on top. They should actually divide the list
+on the left, like we have in the third screenshot"_ (the Ripperdoc's OWNED /
+STORE); _"I don't mind that it extends beyond the viewport section … we can keep
+the right panel sticky"_; _"The card should also have notches on the left of
+it"_; _"some sort of icon like we have on the red one"_ (the codex list). And
+on the dossier: _"that key visual with the text: what the fuck is that? That's
+not elegant … What I want instead is like a visual of the intelligence
+configuration … that sort of node from a computer, like we have on our homepage
+in the proof section, and also that first screenshot"_ (the CP2077 inventory
+circuit board). Asked, he set the diagram's model himself: _"At the center, we
+should showcase the type of intelligence configuration: generate images,
+generate ads, or generate a video … Around it, we can link the LLM they use,
+like whether they use Figma, etc. It should just really be a scalable thing"_;
+the panel keeps _"the one-line brief, status readings, Open arc button + key
+hints"_; only the proposals draw one (_"is that not every type of arc has this
+intelligence configuration?"_); the icon is the kind of page.
+
+**The finding.** U1 and the first cut both took the references BY ROLE — "a
+list", "a card" — and rebuilt each role in the sheet's own document grammar,
+which is how a list of three game screens came out as a ruled column under a
+tab strip beside a picture with a text plate. His standing verdict on that
+skeleton (title over columns, a picture on top) was already on record from the
+era stage. **A reference's COMPOSITION is the brief; its roles are not.** This
+update adopts the three compositions literally and adapts strings, tokens and
+guards only, each adaptation named below.
+
+### The log: sections, icons, notched plates
+
+- **The kinds divide the list** — a mono head per kind (name left, count
+  right) on a seam, the first as tall as the dossier's band and level with it.
+  Sections run by their newest filing (a tie keeps keynote before workshop),
+  rows newest first inside. ⚠ **The filter is deleted, and so is the law that
+  read it** (`log.filter`, the log's station row, the controller's
+  filter-follow, "kind … is not a filter"); U1's client-run order law and
+  `SHEET_LOG_HOUSE_GROUP` go with the runs. `SheetStationRow` itself stays —
+  `/musings` and the subpage kit mount it. Law 7 is now: every row's kind IS its
+  section's id; sections newest filing first.
+- **A block is the icon, then the plate** (the codex's arrangement, the icon
+  outside the plate, inside the link). The plate carries the CLIENT as its
+  title — sans at `--weight-lit`, `clamp(16px, 1.1vw, 21px)` — over one mono
+  line: what the engagement is, bracketed by the renderer, and the date at the
+  right end (the Ripperdoc's price). ⚠ **The bracket is `The <chip>`, never the
+  card title with the client taken off**: "The Loop portfolio" carries no client
+  prefix, so the Loop block read "Loop Earplugs" over "the Loop portfolio".
+  House formats have no client: the title is the format's name less ` · V2`,
+  the bracket `House format` or `House format · V2`. ⚠ A bracket is never
+  STORED (the copy law bans them in data); `SheetLogRow` is `name` +
+  `engagement` + `chip`, and `title` is gone so a stale reader fails loudly.
+- **One notch, bottom-left** — the codex's own corner and the lower end of the
+  lawful TR + BL diagonal (ADR-065's uniform-set clause); a closed evenodd ring
+  on `::before` (a clip cuts a border), the text padded past the cut (ADR-098
+  U5). The `.is-on` fill is a BACKGROUND on the plate with the ring joined to
+  it: both contrast walks read ancestors' `backgroundColor` and are blind to a
+  painted pseudo.
+- **The icon is the kind of page** — five 7×7 marks in the particle-icon
+  grammar (`lib/sheet/logGlyphs.ts`, rendered by `SheetGlyph`): a proposal (a
+  sheet with its corner turned and a seal), a pitch (one trajectory at one
+  target), a portfolio (four tiles, the newest open), a workshop (a table), a
+  keynote (a screen on a stand). Keyed by the row's `chip`, which is where U1's
+  unlettered chip went. ⚠ **Ink, never gold** — the proof register letters its
+  signal in `--gold`, and on this page gold is state; nine gold pixels would be
+  nine marks claiming to be chosen. ⚠ **Their own table, not five more
+  `PROOF_GLYPHS` keys** — that table is closed over the casefile's register; the
+  grammar's rules are lifted into `tests/lib/helpers/glyphGrammar.ts` instead.
+  28px (4px cells), 35px from 1600 wide.
+- **The list may run past the screen.** The blocks still divide the device's
+  height (`--log-block-h` from `--log-n` AND `--log-heads`, both written on the
+  list) while that leaves each block its 50px floor, so at his window the nine
+  land on the dossier's floor (81px each); on a laptop the floor binds and the
+  list runs 26–77px past the rails beside the sticky dossier. ⚠ **52 was the
+  first floor and put the ninth block 5px under the fold at 1280 × 720.** A key
+  step now brings its row into view (`scroll-margin` + `block: "nearest"`).
+
+### The dossier: the configuration, drawn
+
+- **One device**: the band, the one-line brief with a status strip under it
+  (Standing · Filed · Sections — the readout table's three facts that say
+  something the band does not), the BOARD, and the way in. The picture, the
+  chapters and the readout table are deleted, with `public/arcs/previews/`,
+  `lib/arcs/previews.json`, `scripts/capture-arc-previews.mjs` and `pictureOf`.
+  The dossier's name is its card title as the article's `aria-label`, lettered
+  nowhere (the band names the client).
+- **The board** (`components/sheet/config/`): ONE BRIGHT DIE at the centre —
+  the proposal's workstreams, one row each, a module tag (`M1`) at the row's
+  right end, the proposal's own note under the name, the unscoped next
+  workstream a dashed ghost row — and DARK CHAMFERED CHIPS around it, one per
+  thing it runs on or inside, each with a kind code (`LLM`, `MODEL`, `DESIGN`,
+  `OPS`) and a name, joined to the die by multi-wire BUSES with 45° jogs, with
+  faint traces off the die's free edges and a dot bed behind. ⚠ **The die is
+  INK with its words knocked out, not gold** — gold is state here, and the
+  reference's own centre is neutral; `--sh-knock` / `--sh-knock-dim` /
+  `--sh-knock-rule` are blends of the ground into the ink, so both themes flip
+  with ADR-058's swap and need no light row.
+- **Nothing is authored for it.** Rows are each proposal's
+  `configuration.teams[]` (`name`, `work` split into note and tag) and a named
+  `next`; ⚠ **a bracketed placeholder is not a workstream** — Suri's and
+  Perfect Ted's `[Next team]` is the scaffold's marker and is dropped. Links are
+  DERIVED: `lib/arcs/stack.ts` is a small vocabulary (Claude, image and video
+  generation, Figma, Monday, Slack) whose matchers are run over each
+  workstream's own `where` and `runs` sentences; a bus is `2 + 2 ×` the
+  workstreams that name its chip (to eight wires). `sheet-config-fit` pins every
+  proposal's result `toEqual`, so a prose edit that moves a chip fails there by
+  name. Trinny London's proposal is the pitch page, not an arc: its board is its
+  own configured board's four tools (each used by the whole configuration) over
+  its three phase plates, and its record moved to
+  `lib/arcs/content/trinny-london-offer.ts` so a `lib/` module can read it — the
+  route's old path re-exports it and its five importers are untouched.
+- ⚠ **FOUR CROPS, AND THE BOX PICKS ONE.** The board's box runs from 1.54 wide
+  on a laptop to 1.04 at his window, and `meet` fits by the smaller ratio: one
+  crop letterboxes one end (ADR-070 U12, a fourth time). `wide` 1.55 and `mid`
+  1.26 FLANK the die (chips in two columns); `tall` 1.02 and `narrow` 0.81 STACK
+  it (a row above, a row below). A container query on the board box shows the
+  crop its aspect asks for, switching at the geometric mean of neighbours, so
+  no desktop shape leaves more than 10 % of the box empty (measured: 0.99 /
+  0.99 / 0.96 / 0.98 at 1280 × 720 / 1440 × 800 / 1920 × 1080 / 1920 × 1247).
+  ⚠ **The first spacing (1.44 · 1.19 · 0.97) left 13 % empty at 1920 × 1080** —
+  two neighbouring crops may differ by at most (1/0.9)² ≈ 1.23 in aspect. Under
+  480px wide (the phone and the 961–1100 rung) the board takes `narrow`
+  whatever its shape.
+- ⚠ **FIT IS DECLARED, NOT REVIEWED** (ADR-100's idiom). `configGeom` emits
+  every lettered string with its measure and every object with its box;
+  `sheet-config-fit` walks all four real boards and the kit's ceiling on all
+  four crops (152 cases): every string and word inside its measure, no sliced
+  tail, every letter inside its own object, every object inside the crop and
+  clear of the others, every bus from its chip's port to the die's edge and
+  clear of every other object and bus. The type floor (names ≥ 11px, kickers
+  ≥ 10px) is asserted against the MEASURED boxes (`BOARD_BOX_PX`), which the
+  smoke holds to within 2 %. ⚠ **The em box, not the ink**: a name and its note
+  14 units apart printed their `<text>` boxes through each other by a pixel at
+  1440 × 800 — the steps are 17.5 and 16 now.
+
+### What the pass found that the plan did not
+
+1. **The ring every housing on the page drew was a bow-tie.** Both contours of
+   the evenodd ring were written as ONE open path — the outer's last point
+   straight to the inner's first — so the two bridges crossed down the left
+   side: on the monitor and the dossier a full edge at the corners and nothing
+   at mid-height, on a 50px block a half-strength edge all the way down. Each
+   contour now returns to its own first point. ⚠ **The first pixel guard could
+   not see it**: comparing mid-height with a quarter passed the block's
+   half-strength edge (both halves equally faint); the smoke now compares the
+   left edge's energy with the TOP edge's, measured 0.64–1.21 closed against
+   0.16–0.52 open. The same fault in `sheet.css`'s console and the homepage's
+   `proof-stack.css` is flagged, not touched here.
+2. **A deep link to the row the server already chose never settled** once the
+   picture's decode promise went: `select()` does nothing for the current id,
+   and that promise was the only writer of `data-dos-id` on that path. The
+   controller writes it on arrival now, and a smoke case holds it.
+3. **Hidden text is a box every band walk reports as clipped.** The first cut
+   carried the dossier's title and the board's description as sr-only text,
+   and `subpages-smoke`'s overrun walk failed `/arcs` at three shapes. Both are
+   `aria-label`s now (the board is one `img`); no sr-only text was added.
+4. **The mechanical gate's `.sh-log__row.is-on` entry was dead** — the gate
+   names an element by its FIRST class and never reads a background — so it
+   is re-pointed at the plate that paints the fill. 8/8 cells pass with ten
+   gold marks against the budget of 24 (thirteen before: the picked filter
+   station went).
+
+### Verification
+
+vitest: the sheet suites, `sheet-config-fit` (152), `sheet-log-glyphs`, the
+Trinny offer and board suites (the moved module), the import and owner-gate
+doctrines and the three CSS ratchets — 17 files, 406 tests. Playwright desktop:
+`arcs-instrument-smoke` 20/20 (the seat at three shapes and the kit, the narrow
+rung, the notch hit-tested from both ends, the ring read as pixels, the board's
+crop / fill / floor / overlaps / knock-out contrast, keys across sections, the
+two deep links, reduced motion, both themes at 4.5:1); `arc-terminal-smoke`'s
+overview case; `subpages-smoke` 14/15 (the one red is the pre-existing
+subpage-kit pile, below). The mechanical gate on `/arcs` and the kit, both
+themes, 1920 × 1247 and 1280 × 720: 8/8 PASS. Stills looked at in both themes
+at 1920 × 1247, 1920 × 1080 and 1280 × 720, the kit's ceiling, the phone, and
+the icons' contact sheet.
+
+**Not graded yet.** Wave 04 (rubric 0.3.0) now wants U2's blocks and board in
+its L rows, and L1's "cut off" clause must allow a block cut by the screen's
+bottom, which the owner allowed. It waits for his read of the stills.
+
 ## Left open
 
+- **Since U2, his to rule on the first still:** the icons, especially the
+  proposal's (the most abstract of the five, and three blocks carry it); the
+  die in ink rather than a gold wash; whether the board's traces off the die's
+  free edges read as a board or as noise; the kind codes (`LLM`, `MODEL`,
+  `DESIGN`, `OPS`); the owner's seat (the proposals name one — "Kate, the last
+  gate" — and a `seat` kind is the first thing to add if the board reads thin);
+  the status strip's three readings.
+- **The portfolio and the house formats draw no board.** "Keep the proposals
+  for now." Their panel is as tall as what it says, which leaves the column
+  under it empty at his window.
+- **Perfect Ted's configuration is still the scaffold's** — Suri's three
+  workstreams with the names swapped; its board mirrors what its proposal page
+  already says publicly.
+- **The links are matchers' reading of his sentences**, pinned in
+  `sheet-config-fit`; a wrong one is corrected there, or in the proposal's own
+  prose.
+- **The board is small on the 961–1100 rung** (the narrow crop in a short box,
+  ~7–9px type) and on a phone (~9px kickers). The floor is asserted at the four
+  desktop reference shapes only.
 - **Since U1, his to rule on the first still:** the gutter's width (one
   token); the filled block's weight — a solid slab about 1.55× the area of the
   row he saw filled, where the dial if it reads heavy is the FILL (a gold wash
-  with a gold outline), never the box; whether the chip should come back as a
-  second right-hand reading; and the dossier's `Client` and `Kind` rows, which
-  its own band already letters.
+  with a gold outline), never the box.
 - **A pre-existing red, not this ADR's:** `subpages-smoke`'s "the kit's pile
   stacks under a panel that sticks" fails on `/test/subpage-kit` — its starting
   scroll (`top − 96`) leaves the panel at y 217 against a 64px sticky seat, so
@@ -434,7 +639,5 @@ by this update.
   every monitor still of wave 03, so he rules on it with the rest.
 - **The phone is a functional fallback**, not a design: the lanes stack and
   the dossier unsticks under the list. A phone pass follows his desktop pick.
-- **The pictures load eagerly**, nine of them, ~770 kB at low priority. At
-  thirty engagements that wants warming on intent instead.
 - **The lawful fixture was never lawful on parchment** (the calibration wave):
   it paints the void ground under the light theme.

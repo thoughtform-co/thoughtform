@@ -42,7 +42,10 @@ it (contracts in `.cursor/rules/sheet.mdc`). Every `ArcDef` and
 `ClientPageDef` carries `date` (YYYY-MM-DD, OWNER-TO-CONFIRM), reversing
 ADR-098's no-date ruling on its own terms: it feeds a plot, and
 `arcs-registry` checks each client's registry order against it. A `-v2` cut
-authors its own `date:` line; the scaffold takes `--date`.
+authors its own `date:` line; the scaffold takes `--date`. Since ADR-118 U2
+the log's dossier DRAWS each proposal's configuration from its own
+`configuration` section — an edit to a workstream's `where` / `runs` prose
+moves a chip, and `sheet-config-fit` pins each reading by name.
 
 ⚠ ADR-098 U1: the journey row in the top-left corner is hidden on EVERY
 surface now — the arcs asked, then the homepage, so the rule and the bracket's

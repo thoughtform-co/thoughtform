@@ -107,8 +107,9 @@ and the first for a page that lists things.
 ## The arcs instrument (ADR-118)
 
 The overview, the owner's page. Two screens: a MONITOR that plots every
-engagement at the date it was filed, then a LOG of one block per engagement,
-one filled, a gutter from its DOSSIER (ADR-118 U1).
+engagement at the date it was filed, then a LOG divided by kind — one notched
+block per engagement with its page's icon, one filled — a gutter from its
+DOSSIER, which draws the client's intelligence configuration (ADR-118 U1, U2).
 
 - **Two arrangements, exactly, in that order.** `monitor` and `log` are in
   `SHEET_ARRANGEMENTS`, but a ladder that holds either is judged by
@@ -116,25 +117,56 @@ one filled, a gutter from its DOSSIER (ADR-118 U1).
   date on BOTH windows, on a real lane, oldest first; NOW inside both windows
   and right of every mark; the terminus's `Marks` reading equal to the marks;
   ONE id set across marks, rows and dossiers; the lit mark IS the selected
-  row; each group newest first, the client runs by their NEWEST FILING and the
-  house formats last (U1). None of this is visible in a still, which is why it
-  is code. Neither frame letters an ordinal or a head band.
-- ⚠ **THE LOG IS BLOCKS, A GUTTER FROM THE DOSSIER, ON ONE FLOOR (ADR-118 U1,
-  owner: "more like blocks instead of glorified word document").** One
-  bordered block per engagement — the client and the bracketed date on a mono
-  line over the title — one gap apart; no group heads, no chips (`chip` stays
-  in the record, lettered nowhere); `--log-gutter` between the panels; the
-  filter a head strip level with the dossier's band. The blocks DIVIDE the
-  device's height: `--log-block-h` from `--log-n`, which the server writes on
-  the list. ⚠ **The token is declared ON THE LIST, where `--log-n` lives** — on
-  the root it goes invalid and every block falls back to its content with
-  nothing erroring. ⚠ The ceiling is 9svh because the KIT's eight hit 8svh at
-  1920 and ended 61px short. ⚠ The monitor's LANES keep registry order while the
-  log's runs are ordered by filing: two orders on purpose. ⚠ Five readers find
-  a block by its strings (`.sh-log__row`, `.is-on`, `data-id`, `data-status`,
-  `aria-current`, `data-sh-filter` on the `<li>`) and none fails loudly. Below
-  1100 wide the list takes half (the stations are ~343px and may not wrap
-  there); on a phone the strip wraps and the blocks are 56px.
+  row; every row in its KIND's section, each section newest first and the
+  sections by their NEWEST FILING (U2); a drawn configuration inside its
+  ceilings (`configurationViolations`: 1–4 workstreams and one ghost, 1–8
+  links, each named by at least one workstream). None of this is visible in a
+  still, which is why it is code. Neither frame letters an ordinal.
+- ⚠ **THE LOG IS THE REFERENCES' COMPOSITION, TAKEN LITERALLY (ADR-118 U2,
+  owner: "a glorified PowerPoint … have you actually looked at these
+  references?").** The kinds DIVIDE the list — a mono head per kind (name,
+  count) on a seam, the first level with the dossier's band — where U1 had them
+  as filter tabs; `log.filter` and the log's station row are deleted
+  (`SheetStationRow` stays for `/musings` and the subpage kit). A block is the
+  kind-of-page ICON (`LOG_GLYPHS`, ink never gold, outside the plate) then a
+  PLATE notched bottom-left: the client as its title (sans, lit, one step up),
+  over one mono line — the engagement bracketed by the renderer (`The <chip>`,
+  or `House format · V2`) and the date. ⚠ **A bracket is never stored** (the
+  copy law bans it in data). ⚠ **The notch is a CLOSED evenodd ring** on
+  `::before`, and the fill is the plate's BACKGROUND (a painted pseudo is
+  invisible to both contrast walks). The blocks divide the device's height
+  (`--log-block-h` from `--log-n` AND `--log-heads`, written on the list — ⚠ the
+  token is declared ON THE LIST, or it goes invalid silently) above a 50px
+  floor; under it the list runs past the screen beside the sticky dossier (the
+  owner allowed it) and a key step scrolls its row into view. ⚠ The monitor's
+  LANES keep registry order while the log's sections run by filing: two orders
+  on purpose. ⚠ Four readers find a block by its strings (`.sh-log__row`,
+  `.is-on`, `data-id`, `data-status`, `aria-current`) and none fails loudly.
+  Below 1100 wide the list takes half (the mono line clips at 5/12); on a phone
+  the blocks are 60px.
+- ⚠ **THE DOSSIER DRAWS THE CLIENT'S CONFIGURATION, AND ONLY A PROPOSAL HAS
+  ONE (ADR-118 U2).** Band, brief, a status strip (Standing · Filed ·
+  Sections), the BOARD, the way in; the picture, the chapters and the readout
+  table are deleted. The board (`components/sheet/config/`, server-only) is one
+  INK die of the proposal's workstreams with chips around it for what it runs
+  on and inside, joined by multi-wire buses — the CP2077 circuit reference in
+  the proof board's grammar, the pure helpers imported (`ribbon.ts`,
+  `substrateKit`), the glyphs copied onto `--sh-*` (the PDA's glyph files are
+  CLIENT files and would leak a registry type into a public chunk). ⚠ **Nothing
+  is authored for it**: rows are `configuration.teams[]`, links are
+  `lib/arcs/stack.ts`'s matchers run over each workstream's own `where`/`runs`
+  sentence, pinned `toEqual` per proposal in `sheet-config-fit`; a bracketed
+  `[Next team]` is the scaffold's placeholder and is dropped. Trinny's board is
+  its own configured board's tools over its phases, read from
+  `lib/arcs/content/trinny-london-offer.ts` (the route re-exports it). ⚠ **FOUR
+  CROPS, A CONTAINER QUERY PICKS ONE** (`CROP_SWITCH`, mirrored by hand in
+  `instrument.css` and pinned there): neighbouring crops differ by ≤ 1.23 in
+  aspect so no desktop box is more than 10 % letterbox. ⚠ **Fit is declared**
+  (`configGeom` emits every string with its measure) and the floor (names
+  ≥ 11px, kickers ≥ 10px) is asserted against the MEASURED boxes
+  (`BOARD_BOX_PX`, the smoke holds them to 2 %). ⚠ The line steps clear the
+  font's EM BOX, not its ink. The portfolio and the house formats draw no board
+  (owner: "keep the proposals for now"); their panel is as tall as what it says.
 - **Every reading is derived** (`arcsInstrumentSections`, `lib/sheet/arcs.ts`)
   from `CLIENTS`, `ARCS`, `status`, `since` and `date`, and `sheet-arcs`
   recomputes each a second way. `today` is a PARAMETER: the page asks the
@@ -172,18 +204,18 @@ one filled, a gutter from its DOSSIER (ADR-118 U1).
   before a line of script runs; every dossier is rendered and all but one are
   `hidden`. A plain click selects, a modified click and a KEYBOARD click
   (`detail === 0`, Enter on a focused row) keep the link's own behaviour;
-  ↑/↓ walk the rows the filter leaves; `#arc=<id>` deep-links; a filter that
-  hides the chosen row moves the choice to the first one shown.
+  ↑/↓ walk every row ACROSS the kind sections and scroll the next into view;
+  `#arc=<id>` deep-links.
 - ⚠ **`data-dos-id` ON THE ROOT IS THE OBSERVABLE**: removed when a swap
   starts, written only when the incoming dossier has settled — its aperture
-  open AND its picture decoded (bounded at 2.5s). The capture and the smoke
-  wait on it, never on a timer. ⚠ **The first cut settled on the aperture's
-  timer alone**, the pictures were `loading="lazy"` inside `hidden` dossiers,
-  and wave 03's first shoot put seventeen half-painted plates in front of the
-  grader with every gate green; the smoke now asserts each settled dossier's
-  picture has loaded, and was run against the old code to prove it fails.
-  The pictures are EAGER at `fetchpriority="low"` — the monitor holds no image,
-  so nothing on the first screen waits for them.
+  open. The capture and the smoke wait on it, never on a timer. ⚠ Until U2 it
+  also waited on the dossier's picture decoding (wave 03's first shoot put
+  seventeen half-painted plates in front of the grader with every gate green);
+  the picture is gone — the board is inline SVG, painted with the markup — and
+  with it the wait. ⚠ **On arrival it is written at once, a deep link to the
+  already-chosen row included**: `select()` does nothing for the current id,
+  and the picture's promise was the only writer on that path (a smoke case
+  holds it).
 - **Motion is CLIPS**: a centre-out aperture on each device's arrival (armed
   only once the controller runs, under `no-preference`), a NOW drop, a 180ms
   dossier swap that rapid steps skip. One element holds one `clip-path`, so
@@ -191,27 +223,28 @@ one filled, a gutter from its DOSSIER (ADR-118 U1).
   ⚠ The capture's `stillLife` waits on `.sh-ap-root` as on a reveal — shot
   before its `is-in`, a still is a closed aperture.
 - **Gold is state and nothing else**: the lit mark (an OUTLINE, so
-  `--gold-line`), the NOW cursor, the filled block, the picked station, the CTA
-  and the dossier's lip; `mechanical.mjs` names the four the one-long-side
-  rule would misread. The monitor's own ring is dawn. ⚠ The gate names an
-  element by its FIRST class, so a two-class ACCENT_ALLOW entry
-  (`.sh-stn.is-on`) never matches; state is read off `aria-current`,
-  `aria-selected` and — since U1, when the picked station grew to 36px —
-  `aria-pressed`.
-- **The dossier's picture is the engagement's first screen**
-  (`scripts/capture-arc-previews.mjs` → `public/arcs/previews/` +
-  `lib/arcs/previews.json`, sizes read off the files), OPTIONAL per
-  engagement: a scaffolded arc falls back to its card at the card's size.
+  `--gold-line`), the NOW cursor, the filled block, the CTA and the dossier's
+  lip; `mechanical.mjs` names them. The monitor's ring is dawn, the icons and
+  the configuration's die are INK. ⚠ The gate names an element by its FIRST
+  class and never reads a background, so a two-class ACCENT_ALLOW entry
+  (`.sh-stn.is-on`, `.sh-log__row.is-on`) never matches; the filled block is
+  declared by `.sh-log__plate`, and state is read off `aria-current`,
+  `aria-selected` and `aria-pressed`.
 - **`/test/arcs-instrument-kit` (type `AK`)** draws what the record does not
   hold yet — a three-engagement client with one running, a same-day pair on
-  one lane, a relationship older than the window, a filterable row — with NOW
-  pinned, and `?fake=even|fills` for the two fakes M3 and L2 are written
-  against. It is proxy-blocked in production, so its smoke case skips there.
+  one lane, a relationship older than the window, a house format's V2 cut, and
+  a configuration AT ITS CEILING (four workstreams, a ghost, eight links) —
+  with NOW pinned, and `?fake=even|fills` for the two fakes M3 and L2 are
+  written against. It is proxy-blocked in production, so its smoke case skips
+  there.
 - **Verifying:** `tests/lib/sheet-instrument.test.ts`, `sheet-arcs`,
-  `tests/visual/arcs-instrument-smoke.spec.ts` (runs on `next dev`, where the
-  gate is open, or on a build with a signed pass in the storage state — a
-  hand-made `browser.newContext()` inherits none of it), and the mechanical
-  gate on `/arcs` and the kit in both themes at 1920×1247 and 1280×720.
+  `sheet-config-fit` (the board, every proposal on every crop, the rings'
+  closure), `sheet-log-glyphs`, `tests/visual/arcs-instrument-smoke.spec.ts`
+  (runs on `next dev`, where the gate is open, or on a build with a signed pass
+  in the storage state — a hand-made `browser.newContext()` inherits none of
+  it), and the mechanical gate on `/arcs` and the kit in both themes at
+  1920×1247 and 1280×720, run as the capture runs it (`--scope ".sh-root"` and
+  the frame excluded — scoped to `body` it fails on the HUD's own chrome).
 
 ## The ship
 

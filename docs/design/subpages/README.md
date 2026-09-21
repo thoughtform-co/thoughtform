@@ -9,7 +9,7 @@ map.
 
 Dev server today: `http://localhost:3003` (read the port off the running
 server before quoting one). The document pages take `?k=SB|SD|SE`, the arcs
-overview and its kit take `?k=SB|SG|SJ|SL`, and every page takes
+overview and its kit take `?k=SB|SG|SL`, and every page takes
 `&theme=dark|light`.
 
 ```
@@ -40,24 +40,27 @@ The sheet's four, on the document pages:
 | `card`     | `stack` | `grid`  | the pile stacks on scroll, or a static grid          |
 | `timeline` | `axis`  | `rail`  | horizontal dated axis, or a vertical date rail       |
 
-The instrument's three, on `/arcs` and its kit:
+The instrument's two, on `/arcs` and its kit:
 
-| knob      | house     | other   | moves                                                    |
-| --------- | --------- | ------- | -------------------------------------------------------- |
-| `span`    | `active`  | `full`  | the plot's window: the active weeks, or 2023 to now      |
-| `dossier` | `one`     | `pair`  | one housing, or an image plate over a text plate         |
-| `frame`   | `housing` | `rails` | the monitor closed on itself, or its strips out to rails |
+| knob    | house     | other   | moves                                                    |
+| ------- | --------- | ------- | -------------------------------------------------------- |
+| `span`  | `active`  | `full`  | the plot's window: the active weeks, or 2023 to now      |
+| `frame` | `housing` | `rails` | the monitor closed on itself, or its strips out to rails |
 
 ⚠ The `rows` knob (ruled · boxed) and its direction `SH` are deleted (ADR-118
 U1): the owner read the ruled log as "a glorified word document", and the
 house went past both values — one bordered block per engagement, a gutter
 from the dossier, one floor. A stale `?k=SH` lands on the house.
+⚠ So are the `dossier` knob (one · pair) and its direction `SJ` (ADR-118 U2):
+the pair only ever split the dossier's picture from its text, and the picture
+is gone — the dossier DRAWS the client's configuration now. A stale `?k=SJ` or
+`dossier=pair` lands on the house.
 
 Directions, document pages: `SB` house · `SD` editorial
 (`head=stack ordinal=off`) · `SE` grid (`card=grid timeline=rail`) · `SA` the
 negative pole (the old `/arcs`, shot once). Directions, the instrument: `SB`
-house · `SG` full record · `SJ` pair · `SL` rails · `SF` the second negative
-pole (yesterday's sheet overview, promoted from wave 02, never re-shot). A direction's `types` scopes it, so AR is never shot at SD or
+house · `SG` full record · `SL` rails · `SF` the second negative pole
+(yesterday's sheet overview, promoted from wave 02, never re-shot). A direction's `types` scopes it, so AR is never shot at SD or
 SE. One record: `lib/sheet/directions.json`.
 
 ## The arrangements, and the laws
@@ -77,11 +80,23 @@ the lit mark is the chosen row. `tests/lib/sheet-instrument.test.ts`.
 
 ## What the owner is being asked
 
-**On the instrument, after U1's first stills (the log as blocks):** the
-gutter's width (`--log-gutter`, one token); the filled block's weight (the
-dial, if it reads heavy, is the fill, never the box); whether the chip comes
-back as a second right-hand reading. Wave 04 (rubric 0.3.0) waits for that
-read.
+**On the instrument, after U2's first stills (the references' composition,
+the configuration drawn):** the five page icons, the proposal's most of all
+(the most abstract, and three blocks carry it); the die in ink rather than a
+gold wash; whether the traces off the die's free edges read as a board or as
+noise; the kind codes (`LLM` · `MODEL` · `DESIGN` · `OPS`); the owner's seat,
+not drawn yet ("Kate, the last gate" is in the proposals); the status strip's
+three readings; and every link the matchers read out of his own sentences,
+pinned per proposal in `tests/lib/sheet-config-fit.test.ts`. The adaptations
+from the references, each his to veto: ink instead of their red and lavender,
+no invented serial codes, no scroll-track widget, no third tier of small
+squares, model names generic as the proposals say them. Wave 04 (rubric
+0.3.0) waits for that read.
+
+**Still open from U1's stills (the log as blocks):** the gutter's width
+(`--log-gutter`, one token); the filled block's weight (the dial, if it reads
+heavy, is the fill, never the box). U1's third question — whether the chip
+comes back — U2 answered: it is the bracket (`[ THE PROPOSAL ]`) and the icon.
 
 **On the instrument, after wave 03's galleries:** the house against each of
 the three remaining directions (the monitor stills stand; the log stills are
@@ -174,9 +189,21 @@ then from the ship: `python tools/doctor.py` → `qa.py --batch <wave> --runs 3`
 - The instrument's devices arrive on a clip: the capture waits on
   `.sh-ap-root` as on a reveal, or it shoots a closed aperture.
 - ⚠ A still shot while a picture streams in is a defect the grader reads as
-  the page's: `data-dos-id` settles only once the dossier's picture has
-  decoded, and the capture decodes every picture in view. Wave 03's first
-  shoot, before either, sent seventeen half-painted dossiers to the grader.
+  the page's: wave 03's first shoot sent seventeen half-painted dossiers to the
+  grader. The dossier carries no picture since U2 and `data-dos-id` settles on
+  its aperture alone — written on arrival too, or a deep link to the row the
+  server already chose never settles. The capture still decodes every picture
+  in view before a shot.
+- ⚠ Every evenodd ring closes BOTH contours (each repeats its first point).
+  Written as one open path, the two bridges cross down the left side and the
+  ring paints a bow-tie: a full edge at the corners, nothing at mid-height.
+  Every housing on `/arcs` shipped that way until U2; the smoke reads the left
+  edge's energy against the top edge's, since a mid-height-vs-quarter check
+  passed the half-strength edge.
+- `--log-block-h` needs `--log-n` AND `--log-heads`, both written on the LIST;
+  miss one and the calc goes invalid with nothing erroring.
+- Hidden text is a box: an sr-only title fails `subpages-smoke`'s overrun walk.
+  Name a thing with `aria-label` instead.
 - The frame's wordmark is the HERO lockup until half a screen of scroll, and
   a device as wide as the instrument band ends right over it; the instrument
   shows it docked from the first frame. Read every still for chrome near a

@@ -54,6 +54,46 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-21 — the arcs log takes the references' composition, and the dossier draws the configuration (ADR-118 U2)
+
+**Trigger:** the owner, on U1's stills: _"it really feels like a fucking
+glorified PowerPoint … Have you actually looked at these references?"_ — the
+kinds _"should actually divide the list on the left"_, the cards want _"notches
+on the left"_ and _"some sort of icon"_, and the dossier's key visual goes for
+_"a visual of the intelligence configuration … that sort of node from a
+computer"_.
+
+- **Cycle A, the same surface a second time in a day.** The kinds divide the
+  log (the filter and its law deleted), a block is a page icon beside a plate
+  notched bottom-left with the client as its title, and the list may run past
+  the screen beside the sticky dossier. The dossier keeps its band, brief,
+  status strip and CTA; the picture, chapters and readout go with
+  `public/arcs/previews/`, `previews.json` and `capture-arc-previews.mjs`; a
+  proposal's dossier DRAWS its configuration (`components/sheet/config/`), the
+  links derived from its own sentences (`lib/arcs/stack.ts`). The `dossier`
+  knob and direction SJ are deleted with their mirrors. The Trinny offer
+  record moved to `lib/arcs/content/trinny-london-offer.ts` (the route's old
+  path re-exports it). ADR-118 U2.
+- **Post-incident rows triggered:** every evenodd ring on the page was OPEN —
+  one path through both contours paints a bow-tie — and a mid-height pixel
+  check passed it (rule in `sheet.md`; the smoke compares edge energies; the
+  same fault in `sheet.css`'s console and `proof-stack.css` is flagged, not
+  fixed); a deep link to the already-chosen row stopped settling when the
+  picture's promise went (the controller writes `data-dos-id` on arrival); an
+  sr-only name fails every band walk (`aria-label` instead); the gate's
+  `.sh-log__row.is-on` entry went dead a second time (re-pointed at the plate);
+  SVG line steps clear the em box, not the ink; neighbouring crops may differ
+  by at most 1.23 in aspect or the shape between them letterboxes (13 % at
+  1920 × 1080 on the first spacing). ⚠ And a capture trap: `node` handed a
+  `/c/…` path under `MSYS_NO_PATHCONV=1` writes to `C:\c\…` — pass `C:/…`.
+- **Verified:** vitest 17 files / 406 (the sheet suites, `sheet-config-fit`
+  152, `sheet-log-glyphs`, the Trinny suites, the import and gate doctrines,
+  the three CSS ratchets at zero); `arcs-instrument-smoke` 20/20;
+  `arc-terminal-smoke`'s overview case; `subpages-smoke` 14/15 (the kit pile,
+  pre-existing, U1's entry below); the mechanical gate 8/8 on `/arcs` and the
+  kit, both themes, both viewports; tsc clean.
+- **Not pushed; wave 04 waits for his read** of the stills.
+
 ### 2026-09-21 — the arcs log is blocks, a gutter from the dossier (ADR-118 U1)
 
 **Trigger:** the owner, live, on the first log: _"it looks messy. It needs
