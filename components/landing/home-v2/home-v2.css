@@ -2059,10 +2059,48 @@ html:not([data-signal-live]) .home-v2-signal-ticker {
    class of failure the observer exists for in the first place.
    `visibility: hidden` as well as `opacity: 0` because the inline
    `opacity` the frame loop writes is what `!important` is beating, and a
-   0-opacity fixed block still takes taps in some engines. */
-html[data-corridor-exit="true"] .home-v2-mobile-signal {
+   0-opacity fixed block still takes taps in some engines.
+   ⚠ KEYED ON `data-services-ambient`, NOT `data-corridor-exit` (ADR-116).
+   Since ADR-108 made the dock live on phones, `data-corridor-exit` is written
+   at DOCK ENGAGE — measured at 390×844 with #services' top still 1.25
+   viewports below the fold — so this belt was the thing that emptied the top
+   of the screen before the first proof card had even started to rise.
+   `data-services-ambient` is written once the dissipate has finished, i.e.
+   once the corridor has actually handed the page back — the moment this
+   belt always claimed to mark. A phone off the dock rung writes neither. */
+html[data-services-ambient="true"] .home-v2-mobile-signal {
   opacity: 0 !important;
   visibility: hidden;
+}
+
+/* ── The hand-off (ADR-116) — the block un-types in place on the first
+   proof card's clock (`MobileEpilogueSignal.tsx`, `signalHandoff.ts`).
+   `[data-untype]` is the writer's stamp: absent = whole, `live` = leaving,
+   `gone` = blank. The real title and label are hidden by `visibility` and a
+   layer of per-line leaves (`decodeLayer`) paints over them — nothing in
+   layout moves (the services band's own idiom, services.css). The button's
+   frame closes CENTRE-OUT over what its label left: pure motion, no fade
+   (ADR-097 U12). The leaves are dressed inline in the runs' own face, so
+   nothing here declares type. */
+.home-v2-mobile-signal[data-untype] .home-v2-mobile-signal__title,
+.home-v2-mobile-signal[data-untype] .home-v2-mobile-signal__cta-label {
+  visibility: hidden;
+}
+.home-v2-mobile-signal[data-untype] .home-v2-mobile-signal__cta {
+  clip-path: inset(0 calc(var(--sig-frame, 0) * 50%));
+}
+.home-v2-mobile-signal__decode {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  text-align: left;
+}
+.home-v2-mobile-signal__decode__line {
+  position: absolute;
+  left: var(--x, 0px);
+  top: var(--y, 0px);
+  margin: 0;
+  white-space: nowrap;
 }
 
 .home-v2-mobile-signal[inert] {
