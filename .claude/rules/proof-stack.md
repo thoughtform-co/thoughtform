@@ -554,6 +554,39 @@ display: none }` gives the films and the map no row and no second gap; the
   still stuck, `offsetTop` reading 743 for 0, and the seat converging on
   `covered`. Any new scroll-then-measure in these smokes takes the same helper.
 
+## The phone's ruling sheets (ADR-116, 2026-09-21, owner)
+
+- ⚠ **A FIELD SHEET'S CONTENTS FIT ITS BAY, AND THAT IS NOW MEASURED.** The
+  bay is a DEFINITE box on a phone (`overflow: hidden`, `container-type:
+size`), while `casefile.css`'s ≤960 block stacks the comparison and the
+  quadrants and un-clamps every sentence for hosts where height is free. On
+  the card that flow was cut mid-line (875px of comparison in a 375px bay).
+  The card now keeps each sheet's DRAWING and drops its SENTENCES, which the
+  foot frame's verdict carries: GOVERNANCE is two tiles on one line (kicker ·
+  name · picture · quoted claim), RED LINE is the 2×2 round `NO AI UGC` (tag ·
+  claim). Rules in `proof-stack.css`'s ≤960 block, `.pf-stack`-scoped, so both
+  proof hosts take them and neither the arc nor the casefile does. The
+  sentences are sr-only, never deleted.
+- ⚠ **THE TWO TILES SHARE THEIR ROWS BY `subgrid`** (head · slack · picture ·
+  claim · slack) so the two pictures are one size on one line. The picture's
+  row is capped at the tile's inner width (`calc(50cqw − 22px)`) and the grid
+  fills a capped track before the `fr` rows, so the pair centres with the
+  slack split round it. ⚠ **The tile's own `row-gap` must equal the parent's
+  (0)** — a subgrid takes the difference out of its items, which shrank the
+  picture 9px at 844h with every gate green.
+- ⚠ **`100cqh` INSIDE THE SHEET IS THE BAY** (`console.css`'s ≤980 unwrap takes
+  the console's container away); `− 2px` is the console's border.
+- ⚠ **THE CROSS IS `--hub-cross`**, declared once on `.fl-caps-block--hub
+.fl-caps--sheet` and painted by `background-image: var(--hub-cross)`;
+  casefile's phone block takes it off a stacked list at THAT selector's
+  specificity (its (0,1,0) reset never won — the stray vertical line on every
+  host) and the card paints it back on its own 2×2.
+- **The guard** is `proof-stack-mobile-smoke`'s ADR-116 case: painted text
+  runs' Range rects inside the bay and inside their own tile or quadrant, the
+  pictures square, equal, on one line and ≥72px, the quadrants a 2×2 with the
+  cross, the hub over no risk. It finds the sheets slot by what it carries
+  (`.pf-field--sheets`), never by index.
+
 ## The phone's rail and its pitch (ADR-082 U27, 2026-09-19, owner)
 
 - ⚠ **THREE STATIONS NEED 369px ON A 313px ROW, AND THE TYPE IS AT THE 10px

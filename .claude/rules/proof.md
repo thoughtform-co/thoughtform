@@ -1077,7 +1077,12 @@ The Studio and ATL rows' composition, and the console's paint.
   not the box** — a 1:1 block is a 550px stamp in the arc's landscape console.
   ⚠ **The cross is two gradients on the grid, not borders on the cells** (a
   border cannot open the gap the hub needs, and the card is glass);
-  `background-repeat: no-repeat` is load-bearing. ⚠ The hairline is
+  `background-repeat: no-repeat` is load-bearing. ⚠ **Since ADR-116 the two
+  gradients are ONE custom property, `--hub-cross`**, painted by
+  `background-image: var(--hub-cross)` — and a reset must match the PAINTING
+  selector's specificity: the ≤960 block's bare `.fl-caps--sheet` reset lost
+  to `.fl-caps-block--hub .fl-caps--sheet`, so the cross ran through every
+  stacked quadrant on every phone host until 2026-09-21. ⚠ The hairline is
   `--con-hair`, not the bands' raw gold (which had no light value on two of
   the three hosts), and the hub takes `--con-dim`, the line-work rung — full
   `--gold-line` is the console's LIT state and reads as a control.

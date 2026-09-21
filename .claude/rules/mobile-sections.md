@@ -134,6 +134,29 @@ painter that follows:
   attribute is what the guard asserts, and it must not wait on an opacity write
   clearing its own delta threshold.
 
+⚠ **AND WHERE THE PILE IS SPLIT, THE SIGNAL'S EXIT IS THE FIRST CARD'S
+([ADR-116](../sentinel/decisions/116-the-phone-hands-the-top-to-the-card.md),
+2026-09-21, owner: it "disappears a bit too quickly, resulting in a bit of a
+void on top").** On `PROOF_STACK_SPLIT_MEDIA` the block HOLDS its seat (no
+lift, no `SIGNAL_OUT`) and UN-TYPES in place on slot 0's own `--pc-enter`,
+inverted to the card's top (`lib/home-v2/signalHandoff.ts`) — whole until the
+card has risen into view, gone as its top reaches 16px under the block. Two
+consequences for this law:
+
+- ⚠ **THE CSS BELT IS KEYED ON `data-services-ambient`, NOT
+  `data-corridor-exit`.** ADR-108 made the dock live on phones, and
+  `data-corridor-exit` is written at DOCK ENGAGE — measured with `#services`'
+  top still 1.25 viewports below the fold — so the belt was what emptied the
+  top of the screen before the first card had started to rise. Ambient is
+  written once the dissipate has finished, the moment the belt always claimed.
+- **The split rung's kill is the CARD's rect** crossing 15 % of the viewport,
+  observed — the observable the reader can see, per this law. ⚠ Its observer
+  carries a **100000px top margin**, so "intersecting" means "the card's top is
+  above the line" even once the pile has left the viewport upward; without it a
+  jump from past the pile back to the corridor crosses no edge and the epilogue
+  stays dead on the reader's return. The 45 % observer below still serves the
+  corridor path (no split pile, or its hook has not written: NaN).
+
 ⚠ **SINCE ADR-108 THE CORRIDOR CANVAS IS A FIXED PAINTER ON PHONES TOO** (on
 the ring rung — `SERVICES_RING_MOBILE_MEDIA`, flag `SERVICES_CARD_RING_MOBILE`).
 `useCorridorExitScroll` no longer treats that rung as `mobile`, so the dock and
@@ -143,9 +166,10 @@ names against an observable — **`#voidwalker`'s rect** (ADR-074, the first
 opaque station below the corridor; `data-corridor-kill` first if a route
 stamps one) — and `services-ring-mobile-smoke` asserts the canvas is no longer
 fixed past it. With the dock live, `data-corridor-exit` IS written on this
-path now, so the epilogue signal's CSS belt is real cover here rather than the
-desktop-only insurance recorded above; the IntersectionObserver kill stays the
-primary, because the flag can be off.
+path now — at DOCK ENGAGE, which is why the epilogue signal's CSS belt moved
+to `data-services-ambient` (ADR-116, above: keyed on the exit attribute it
+killed the signal a viewport early); the observed kills stay the primary,
+because the flag can be off.
 
 ## 3 · A one-screen instrument manages its own interior clearance
 

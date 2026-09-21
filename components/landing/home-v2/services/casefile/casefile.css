@@ -5679,7 +5679,11 @@
      never the string with these. */
   --hub-gap-x: 64px;
   --hub-gap-y: 28px;
-  background-image:
+  /* ⚠ THE CROSS IS A PROPERTY, PAINTED BY `background-image: var(--hub-cross)`
+     (ADR-116). The ≤960 block below takes it off a stacked list and the phone
+     proof card puts it back on its own 2×2 — one declaration of the drawing,
+     two consumers, so neither has to re-type both gradients. */
+  --hub-cross:
     linear-gradient(
       to bottom,
       var(--con-hair, rgba(var(--gold-rgb), 0.13)) 0 calc(50% - var(--hub-gap-y)),
@@ -5692,6 +5696,7 @@
       transparent calc(50% - var(--hub-gap-x)) calc(50% + var(--hub-gap-x)),
       var(--con-hair, rgba(var(--gold-rgb), 0.13)) calc(50% + var(--hub-gap-x)) 100%
     );
+  background-image: var(--hub-cross);
   background-size:
     1px 100%,
     100% 1px;
@@ -7016,6 +7021,15 @@
     grid-template-rows: none;
     grid-auto-rows: auto;
     padding: 0 0 4px;
+    background-image: none;
+  }
+  /* ⚠ THE LINE ABOVE NEVER TOOK THE CROSS OFF (ADR-116). The cross is drawn
+     by `.fl-caps-block--hub .fl-caps--sheet` at (0,2,0) and that reset is
+     (0,1,0), so specificity beat source order and a 1px vertical rule ran
+     down the middle of the stacked list, through every quadrant's text —
+     on the phone proof card, on the Trinny card and on the portfolio arc
+     below 960px. The reset has to match the selector that paints. */
+  .fl-caps-block--hub .fl-caps--sheet {
     background-image: none;
   }
   .fl-caps--sheet .fl-cap {

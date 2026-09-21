@@ -54,6 +54,43 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-21 — The phone's ruling sheets fit their bay; the epilogue hands the top to the first card (ADR-116)
+
+**Trigger:** the owner, from his iPhone — the studio card's GOVERNANCE and RED
+LINE _"were never optimized for mobile"_, and the epilogue title and button
+_"disappear a bit too quickly, resulting in a bit of a void on top … disappear
+in sync with the cards of the proof section"_; the CTA to read _"How it looks
+in practice"_.
+
+- **Cycle A.** ADR-116 (Proposed); `mobile-sections.md` §2 (the belt's
+  attribute, the card's kill line), `proof-stack.md` §The phone's ruling
+  sheets, `proof.md` (the cross as `--hub-cross`).
+- **Q1 (a guard that was not guarding):** `proof-stack-mobile-smoke` measured
+  only the RECORD sheet, so 875px of comparison in a 375px bay shipped green —
+  it reads the field sheet's ink now. And `mobile-section-seams` pinned the
+  45 % kill as law; on the split rung it now pins the hold and the hand-off.
+- **Q3 (a class of bug):** a reset at lower specificity than the rule it
+  resets is silently dead (the cross); an attribute whose meaning moved under
+  a belt keyed on it (`data-corridor-exit`, ADR-108) kills a painter early; a
+  subgrid's own gap is subtracted from its items. All three are in ADR-116.
+- **The copy (shared epilogue, every route):** the CTA reads `HOW IT LOOKS IN
+PRACTICE` — desktop and mobile together; the line below (2026-09-14) is the
+  record of the one it replaced.
+- **Verified:** `tsc` clean; the unit suite 1724/1724 (the new
+  `signal-handoff` included); the phone smokes 12/12 (`proof-stack-mobile`)
+  and 40/40 + 2 skipped (`mobile-section-seams`, `services-ring-mobile`) on
+  both phone projects; `trinny-london-smoke` 15/15; `landing-page` 14/14 with
+  NO re-baseline (the HUD frames and the two epilogue frames unchanged);
+  `arc-portfolio-smoke` 13/13 + 1 skipped on a fresh worktree server.
+  ⚠ **Two pre-existing reds, measured on bare HEAD and left for their own
+  passes:** `npm run lint` is at 339 warnings against the 337 ratchet, and
+  services-ring's `#contact` cover assertion (`bottom >= innerHeight`, the
+  luck-dependent form `landing-v7.md` names) fails without any change here.
+  And the shared 3003 server's `/arcs/[slug]` static-paths worker had died
+  (`Jest worker encountered 2 child process exceptions` since 14:21 in its
+  log) — every `/arcs/<slug>` answered 500 there and 200 on a fresh server and
+  on thoughtform.co; it needs a restart, which is the owner's call.
+
 ### 2026-09-20 — The sheet: a design system for subpages, and the ship that grades it (ADR-114)
 
 **Trigger:** the owner — _"our current arcs look bad"_, a design system for

@@ -801,6 +801,77 @@ test.describe("mobile section seams", () => {
     });
     expect(alive, "the mobile signal is not mounted on this width").toBe("block");
 
+    /* ⚠ WHERE THE PILE IS SPLIT, THE EXIT IS THE FIRST CARD'S (ADR-116), and
+       the 45 % kill below is the defect the owner reported: the block HOLDS
+       its seat and un-types on the card's own clock instead, and the kill is
+       the card's rect crossing 15 % of the viewport. Both phone projects are
+       on that rung; the corridor path keeps its own assertions below. */
+    const split = await page.evaluate(
+      () => !!document.querySelector("#services .pf-stack--split [data-pc-slot]")
+    );
+    if (split) {
+      const read = () =>
+        page.evaluate(() => {
+          const sig = document.querySelector<HTMLElement>(".home-v2-mobile-signal")!;
+          const svc = document.getElementById("services")!;
+          const vh = document.documentElement.clientHeight;
+          const r = sig.getBoundingClientRect();
+          return {
+            topPct: svc.getBoundingClientRect().top / vh,
+            opacity: Number.parseFloat(getComputedStyle(sig).opacity),
+            inert: sig.hasAttribute("inert"),
+            untype: sig.getAttribute("data-untype"),
+            top: r.top,
+            bottom: r.bottom,
+            leaves: [
+              ...sig.querySelectorAll<HTMLElement>(".home-v2-mobile-signal__decode__line"),
+            ].filter((l) => !l.hidden && (l.textContent ?? "").trim()).length,
+          };
+        });
+      const svcDoc = await page.evaluate(
+        () => document.getElementById("services")!.getBoundingClientRect().top + window.scrollY
+      );
+      const vh = await page.evaluate(() => document.documentElement.clientHeight);
+      await seekTo(page, Math.max(0, Math.round(svcDoc - 1.6 * vh)));
+
+      // At the line the old kill fired on, the block is whole and unmoved.
+      await seekTo(page, Math.round(svcDoc - 0.45 * vh));
+      await settle(page, SETTLE_MS);
+      const held = await read();
+      expect(held.topPct).toBeGreaterThan(0.4);
+      expect(held.opacity, "the block is gone before the first card arrives").toBeGreaterThan(0.9);
+      expect(held.untype, "the block is leaving before the card reaches it").toBeNull();
+      expect(held.inert).toBe(false);
+
+      // Just outside #services' snap radius: leaving, in place — never moved.
+      await seekTo(page, Math.round(svcDoc - 0.38 * vh));
+      await settle(page, SETTLE_MS);
+      const mid = await read();
+      expect(mid.untype, `mid hand-off at ${mid.topPct.toFixed(3)}`).toBe("live");
+      expect(mid.leaves, "nothing is decoding in the leaving layer").toBeGreaterThan(0);
+      expect(Math.abs(mid.top - held.top), "the block moved while leaving").toBeLessThan(0.5);
+      expect(mid.inert, "a leaving button still takes taps").toBe(true);
+
+      // On #services' seat the card has arrived: the block is gone and inert.
+      await seekTo(page, Math.round(svcDoc));
+      await settle(page, SETTLE_MS);
+      const seated = await read();
+      expect(Math.abs(seated.topPct)).toBeLessThan(0.02);
+      expect(seated.untype).toBe("gone");
+      expect(seated.opacity, "the signal is still painting over #services").toBeLessThanOrEqual(
+        0.01
+      );
+      expect(seated.inert, "the signal still takes taps over #services").toBe(true);
+
+      // Reversible: back up the page, whole again.
+      await seekTo(page, Math.round(svcDoc - 0.6 * vh));
+      await settle(page, SETTLE_MS);
+      const back = await read();
+      expect(back.untype, "the hand-off latched one way").toBeNull();
+      expect(back.opacity).toBeGreaterThan(0.9);
+      return;
+    }
+
     await seekUntil(
       page,
       Math.max(0, svcTop - 1600),

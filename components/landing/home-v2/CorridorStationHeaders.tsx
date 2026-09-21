@@ -1237,10 +1237,14 @@ function SignalActions() {
           ⚠ THE NOTE UNDER IT IS DELETED (same pass): "Before the labs sell it
           back to you." was the line that framed the ticker's headlines as
           the reason the claim is urgent; the owner took it out, and the
-          ticker stands on its own. */}
+          ticker stands on its own.
+          ⚠ AND IT READS "HOW IT LOOKS IN PRACTICE" SINCE 2026-09-21 (owner).
+          Still a move onto the proof, still `#services` — the label now
+          names what the reader lands on rather than whose work it was. Two
+          surfaces carry it: `MobileEpilogueSignal` moves with this one. */}
       <a className="home-v2-signal-cta" href="#services">
         <ChevronCluster />
-        <span className="home-v2-signal-cta__label">HOW WE DID IT AT LOOP</span>
+        <span className="home-v2-signal-cta__label">HOW IT LOOKS IN PRACTICE</span>
         <ChevronCluster flipped />
       </a>
     </div>

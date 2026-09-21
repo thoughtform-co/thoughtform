@@ -2345,6 +2345,152 @@
     border-right: 0;
     border-bottom: 1px solid var(--pf-rule);
   }
+
+  /* ── THE STUDIO CARD'S TWO RULING SHEETS FIT THEIR BAY (ADR-116) ─────────
+     Owner, 2026-09-21, from his phone: THE GOVERNANCE and THE RED LINE "were
+     never optimized for mobile … make them more minimalistic so that they
+     fit on the card".
+
+     ⚠ TWO SHEETS DISAGREED. `casefile.css`'s ≤960 block STACKS the
+     comparison, un-clamps every sentence and stacks the four quadrants — the
+     right move for the casefile and the arc, where the console unwraps into
+     ordinary flow and height is free. On this card the bay is a DEFINITE box
+     (`overflow: hidden`, a size container), so that flow was cut mid-line:
+     measured at 390×844, 875px of comparison in a 375px bay and the fourth
+     risk off the floor. ADR-107 budgeted the RECORD sheet and nothing
+     measured a field sheet's contents.
+
+     So each sheet keeps the drawing it has on the desktop and drops its
+     SENTENCES, which the foot frame's verdict already carries in one line
+     (the PRINCIPLE, the POSITION): the comparison is two tiles on one line
+     — kicker, name, the picture, the quoted claim — and the red line is its
+     four quadrants round the named centre, tag and claim alone (owner's
+     picks). The sentences leave the paint, not the tree (the sr-only idiom
+     `.pf-card__claim-desc` already uses), so a screen reader still hears
+     every word.
+
+     ⚠ `100cqh` IS THE BAY. `console.css`'s ≤980 unwrap takes the console's
+     own container away, so the bay (`container-type: size`) is the nearest
+     size container, and `- 2px` is the console's border. Sizing the two
+     bodies directly leaves the unwrap chain — and THE WORK's ads — alone. */
+  /* ⚠ ONE SET OF ROWS FOR BOTH TILES, shared by subgrid: head · slack ·
+     PICTURE · claim · slack. Each tile sizing its own rows put the two
+     pictures at two sizes (107 against 90px at 360×740), because the claims
+     wrap to different lengths and the picture is what absorbs; the sheet's
+     argument is two categories on ONE line, so the pictures share a row and a
+     size and the claims start on one line under them.
+     ⚠ THE PICTURE'S ROW IS CAPPED AT THE TILE'S INNER WIDTH — half the console
+     (`100cqw − 2px`) less the tile's 10px sides and the second tile's 1px
+     hairline — and the grid fills a capped track BEFORE it hands the rest to
+     the two `fr` rows (measured, Chromium): so on a short bay the picture
+     shrinks, on a tall one it stops at a square and the surplus SPLITS above
+     and below the picture-and-claim pair. Centring the picture alone in a
+     `1fr` row was the first cut, and it read as three floating things. */
+  .pf-stack .pf-field--sheets .fl-cmp {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, calc(50cqw - 22px)) auto minmax(0, 1fr);
+    row-gap: 0;
+    height: calc(100cqh - 2px);
+    overflow: hidden;
+  }
+  .pf-stack .pf-field--sheets .fl-cmp__col {
+    grid-row: 1 / -1;
+    grid-template-rows: subgrid;
+    /* ⚠ A SUBGRID'S OWN GAP IS TAKEN OUT OF ITS ITEMS: the base column's
+       `row-gap: clamp(6px, 1.1svh, 16px)` against the parent's 0 took half
+       the difference off each side of the picture (9.3px at 844h, a 116px
+       square in a 125px row). It must match the parent's. */
+    row-gap: 0;
+    padding: 12px 10px;
+    overflow: hidden;
+  }
+  /* The picture and the claim become the tile's own grid items. The
+     exemplars and the description leave the flow below. */
+  .pf-stack .pf-field--sheets .fl-cmp__middle {
+    display: contents;
+  }
+  /* Margins, not a row-gap: five tracks would spend four gaps, two of them
+     round a slack row that is already air. These are the floors that hold
+     when the slack is spent. */
+  .pf-stack .pf-field--sheets .fl-cmp__head {
+    grid-row: 1;
+    margin-bottom: 10px;
+  }
+  .pf-stack .pf-field--sheets .fl-cmp__read {
+    grid-row: 4;
+    margin-top: 8px;
+  }
+  /* The hairline goes back between the two — the line the sheet is about. */
+  .pf-stack .pf-field--sheets .fl-cmp__col + .fl-cmp__col {
+    border-top: 0;
+    border-left: 1px solid var(--con-hair2);
+  }
+  /* ⚠ THE LABEL RUNG, not the eyebrow: `REAL PHOTOGRAPHY` at .15em is 118px
+     against a 111px tile on a 360px phone and would break over two lines,
+     seating the two pictures at two heights. */
+  .pf-stack .pf-field--sheets .fl-cmp__kicker {
+    letter-spacing: var(--track-label);
+  }
+  .pf-stack .pf-field--sheets .fl-cmp__name {
+    font-size: var(--pf-copy);
+  }
+  /* ⚠ THE PICTURE IS THE ABSORBER AND IT STAYS SQUARE: its HEIGHT is its
+     row and its width follows from the ratio (`width: auto`, never
+     stretched, or the ratio is over-constrained and dropped). */
+  .pf-stack .pf-field--sheets .fl-cmp__figure {
+    grid-row: 3;
+    justify-self: start;
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    height: 100%;
+    max-width: none;
+    aspect-ratio: 1;
+  }
+  .pf-stack .pf-field--sheets .fl-cmp__desc,
+  .pf-stack .pf-field--sheets .fl-cmp__ex,
+  .pf-stack .pf-field--sheets .fl-caps--sheet .fl-cap__d {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  /* THE RED LINE: the 2×2 and its cross come back, inside the bay. */
+  .pf-stack .pf-field--sheets .fl-caps-block {
+    height: calc(100cqh - 2px);
+  }
+  .pf-stack .pf-field--sheets .fl-caps-block--hub .fl-caps--sheet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    padding: 0;
+    background-image: var(--hub-cross);
+  }
+  .pf-stack .pf-field--sheets .fl-caps--sheet .fl-cap {
+    padding: 10px;
+  }
+  .pf-stack .pf-field--sheets .fl-caps--sheet .fl-cap + .fl-cap {
+    border-top: 0;
+  }
+  /* ⚠ THE BASE TITLE RUNG'S FLOOR. The sheet's chrome-lg (13.2px here) puts
+     `RELATIONSHIPS` at 116px against a 112px quadrant on a 360px phone, and a
+     word cannot wrap — it would print through the cross. */
+  .pf-stack .pf-field--sheets .fl-caps--sheet .fl-cap__t {
+    font-size: 12px;
+  }
+  .pf-stack .pf-field--sheets .fl-caps-block__hub {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    order: 0;
+    margin: 0;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

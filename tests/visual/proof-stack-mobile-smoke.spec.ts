@@ -308,6 +308,150 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     }
   });
 
+  /* ⚠ THE FIELD SHEET'S CONTENTS HAD NO GUARD (ADR-116). Every case above
+     measures the RECORD, so the studio card's comparison ran 875px in a 375px
+     bay, and its red line printed the desktop cross through a stacked list,
+     with every case green. This one reads INK — each painted text run's Range
+     rects — against the bay and against its own tile or quadrant, because a
+     bounding box is not ink and a centred spill reports zero. */
+  test("the studio card's ruling sheets fit their bay (ADR-116)", async ({ page }) => {
+    await openPile(page);
+    const idx = await page.evaluate(() => {
+      const plate = document.querySelector(".pf-slot--field .pf-field--sheets");
+      return plate?.closest<HTMLElement>("[data-pc-slot]")?.dataset.pcIndex ?? null;
+    });
+    expect(idx, "no field sheet carries the sheets plate").not.toBeNull();
+    expect(await seatSlot(page, Number(idx))).toBe("pinned");
+    const scope = `.pf-slot[data-pc-index="${idx}"]`;
+
+    const inkOutside = (container: string, within: string) =>
+      page.evaluate(
+        ({ sc, c, w }) => {
+          const hidden = (el: Element | null): boolean => {
+            for (let p = el; p && p !== document.body; p = p.parentElement) {
+              const cs = getComputedStyle(p);
+              if (cs.visibility === "hidden" || cs.clipPath === "inset(50%)") return true;
+            }
+            return false;
+          };
+          const out: string[] = [];
+          for (const box of document.querySelectorAll<HTMLElement>(`${sc} ${w}`)) {
+            const b = box.getBoundingClientRect();
+            const walk = document.createTreeWalker(box.closest(c) ?? box, NodeFilter.SHOW_TEXT);
+            for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+              if (!(n.textContent ?? "").trim() || !box.contains(n) || hidden(n.parentElement))
+                continue;
+              const range = document.createRange();
+              range.selectNodeContents(n);
+              for (const r of range.getClientRects()) {
+                if (r.width < 1) continue;
+                if (
+                  r.top < b.top - 0.5 ||
+                  r.bottom > b.bottom + 0.5 ||
+                  r.left < b.left - 0.5 ||
+                  r.right > b.right + 0.5
+                )
+                  out.push(`${w}: "${(n.textContent ?? "").trim().slice(0, 28)}"`);
+              }
+            }
+          }
+          return [...new Set(out)];
+        },
+        { sc: scope, c: container, w: within }
+      );
+
+    // ── THE GOVERNANCE: two tiles on one line, one picture size ──
+    await page.locator(`${scope} [role="tab"]`, { hasText: "GOVERNANCE" }).click();
+    await page.waitForTimeout(300);
+    expect(await inkOutside(".pf-card__bay", ".pf-card__bay")).toEqual([]);
+    expect(await inkOutside(".fl-cmp", ".fl-cmp__col")).toEqual([]);
+    const cmp = await page.evaluate((sc) => {
+      const q = (s: string) => [...document.querySelectorAll<HTMLElement>(`${sc} ${s}`)];
+      const box = (el: HTMLElement) => el.getBoundingClientRect();
+      const srOnly = (el: HTMLElement) => getComputedStyle(el).clipPath === "inset(50%)";
+      return {
+        cols: q(".fl-cmp__col").map((c) => ({ l: box(c).left, r: box(c).right, t: box(c).top })),
+        figs: q(".fl-cmp__figure").map((f) => ({
+          w: box(f).width,
+          h: box(f).height,
+          t: box(f).top,
+        })),
+        claims: q(".fl-cmp__claim").map((c) => box(c).top),
+        desc: q(".fl-cmp__desc").map((d) => ({
+          sr: srOnly(d),
+          text: (d.textContent ?? "").length,
+        })),
+        ex: q(".fl-cmp__ex").map((d) => ({
+          sr: srOnly(d),
+          items: d.querySelectorAll("li").length,
+        })),
+      };
+    }, scope);
+    expect(cmp.cols).toHaveLength(2);
+    expect(cmp.cols[1].l, "the tiles are stacked, not side by side").toBeGreaterThanOrEqual(
+      cmp.cols[0].r - 1
+    );
+    expect(cmp.figs).toHaveLength(2);
+    for (const f of cmp.figs) {
+      expect(Math.abs(f.w - f.h), "a picture is not square").toBeLessThanOrEqual(1);
+      expect(f.h, "a picture shrank past legibility").toBeGreaterThanOrEqual(72);
+    }
+    expect(Math.abs(cmp.figs[0].h - cmp.figs[1].h), "the two pictures differ").toBeLessThanOrEqual(
+      1
+    );
+    expect(
+      Math.abs(cmp.figs[0].t - cmp.figs[1].t),
+      "the pictures are off one line"
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(cmp.claims[0] - cmp.claims[1]),
+      "the claims start on two lines"
+    ).toBeLessThanOrEqual(1);
+    // The sentences leave the paint, not the tree.
+    for (const d of cmp.desc) expect(d).toEqual({ sr: true, text: expect.any(Number) });
+    for (const d of cmp.desc) expect(d.text).toBeGreaterThan(40);
+    for (const e of cmp.ex) expect(e).toEqual({ sr: true, items: 3 });
+
+    // ── THE RED LINE: four quadrants round the named centre ──
+    await page.locator(`${scope} [role="tab"]`, { hasText: "RED LINE" }).click();
+    await page.waitForTimeout(300);
+    expect(await inkOutside(".pf-card__bay", ".pf-card__bay")).toEqual([]);
+    expect(await inkOutside(".fl-caps--sheet", ".fl-cap")).toEqual([]);
+    const caps = await page.evaluate((sc) => {
+      const cells = [...document.querySelectorAll<HTMLElement>(`${sc} .fl-caps--sheet .fl-cap`)];
+      const hub = document.querySelector<HTMLElement>(`${sc} .fl-caps-block__hub`)!;
+      const h = hub.getBoundingClientRect();
+      const ink = (sel: string) =>
+        cells.flatMap((c) => {
+          const el = c.querySelector(sel);
+          if (!el) return [];
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          return [...range.getClientRects()].map((r) => ({
+            l: r.left,
+            r: r.right,
+            t: r.top,
+            b: r.bottom,
+          }));
+        });
+      const hits = [...ink(".fl-cap__t"), ...ink(".fl-cap__tag")].filter(
+        (r) => r.l < h.right && r.r > h.left && r.t < h.bottom && r.b > h.top
+      ).length;
+      return {
+        tops: [...new Set(cells.map((c) => Math.round(c.getBoundingClientRect().top)))].length,
+        lefts: [...new Set(cells.map((c) => Math.round(c.getBoundingClientRect().left)))].length,
+        cross: getComputedStyle(document.querySelector(`${sc} .fl-caps--sheet`)!).backgroundImage,
+        hubHits: hits,
+        desc: cells.map((c) => getComputedStyle(c.querySelector(".fl-cap__d")!).clipPath),
+      };
+    }, scope);
+    expect(caps.tops, "the quadrants are not two rows").toBe(2);
+    expect(caps.lefts, "the quadrants are not two columns").toBe(2);
+    expect(caps.cross, "the cross is gone from the card").toContain("linear-gradient");
+    expect(caps.hubHits, "the hub prints through a risk").toBe(0);
+    expect(caps.desc).toEqual(["inset(50%)", "inset(50%)", "inset(50%)", "inset(50%)"]);
+  });
+
   test("reduced motion and a short window keep the whole card in flow", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/", { waitUntil: "domcontentloaded" });
