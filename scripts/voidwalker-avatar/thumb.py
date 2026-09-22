@@ -56,8 +56,10 @@ MARKS: dict[str, dict] = {
     "azeroth": dict(poster="holo-still-azeroth-v11.webp", out="holo-thumb-azeroth-v11.webp",
                     crown=0.2875, chin=0.383, eye=0.332, cx=0.465),
     # v2 kneels (ADR-082 U32): the crown is the CAP's, not the rifle's muzzle,
-    # which is the ink's top at 0.100.
-    "expanse": dict(poster="holo-still-expanse-v2.webp", out="holo-thumb-expanse-v2.webp",
+    # which is the ink's top at 0.100. v3 (U33, the scene) is the same plate on
+    # the same seat — its frame zero matches v2's head to 0.996 alpha IoU at zero
+    # offset, the crown on the same row — so the marks carry over, measured.
+    "expanse": dict(poster="holo-still-expanse-v3.webp", out="holo-thumb-expanse-v3.webp",
                     crown=0.1836, chin=0.340, eye=0.271, cx=0.444),
 }
 

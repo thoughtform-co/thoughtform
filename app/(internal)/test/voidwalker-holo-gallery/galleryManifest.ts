@@ -63,6 +63,7 @@ export interface GalleryRun {
   assets: readonly GalleryAsset[];
 }
 
+const EX5 = `${MIRROR}/20260922-expanse-v5`;
 const EX4 = `${MIRROR}/20260922-expanse-v4`;
 const G0 = `${MIRROR}/20260921-calibration-v1`;
 const V11 = `${MIRROR}/20260921-azeroth-v11`;
@@ -76,11 +77,60 @@ const TF4 = `${MIRROR}/20260826-thoughtform-v4`;
 
 export const GALLERY_RUNS: readonly GalleryRun[] = [
   {
+    id: "ex-v3",
+    wave: "20260922-expanse-v5",
+    title: "The Expanse v3 — he scouts, then aims",
+    date: "2026-09-22",
+    status: "SHIPPING",
+    adr: "ADR-082 U33",
+    summary: [
+      "Owner: v2 \"is just sighing and breathing as if he's having anxiety … I really want a pose where he looks around, turns his head like he's scouting, and then takes his gun to aim.\" The same plate as v2 (his likeness, the futuristic rifle), animated as a SCENE: he listens at the earpiece, scouts left and right, takes the front grip, swings the rifle down and holds the aim.",
+      "⚠ TAKE 1 AIMED OFF THE FRAME. Asked in words to aim past the camera, Veo swung the rifle out level to the right and the barrel ran off the edge for ~2.7 s. So the aim was DRAWN first as a still (three edits; aim_03 is no wider than the kneel, 63–72px inside both walls) and take 2 runs from the plate TO that still.",
+      "⚠ VEO MORPHS INTO A DRAWN LAST FRAME. From f171 the front glove shifts and a skin-coloured patch appears as the model lands on the still (motion jumps 0.2 → 2.2). The aim is already held and clean f144–f170, so the loop is a PING-PONG cut at f160: both turns fall on still frames, 320 frames, 13.3 s.",
+      "Graded like v2 (×0.85, deep-interior p75 108.6, 3.1 % hot), seated +54px, stature 1.0074 unchanged — same plate, same scale. Flicker reads 6.64 over the clip, but that is the SWING (10.2); the three holds read 2.1–3.1 against v2's idle at 2.47.",
+    ],
+    assets: [
+      {
+        id: "ex-v3-idle",
+        kind: "video",
+        src: `${EX5}/out/holo-idle-expanse-v3.mp4`,
+        alphaSrc: `${EX5}/out/holo-idle-expanse-v3.webm`,
+        label: "v3 · the scene: listen, scout, aim (live on the site)",
+        note: "Ping-pong of take 2 cut at f160. No `.mov`: Safari takes the floor for this era until a Mac cuts one from veo/graded/.",
+        mb: 1.29,
+      },
+      {
+        id: "ex-v3-strip2",
+        kind: "sheet",
+        src: `${EX5}/strip-take2.jpg`,
+        label: "take 2, twelve frames across 8 s",
+        note: "f0–f52 listening and scouting, f69–f119 the grip and the swing, f122 onward the held aim; the loop turns at f160.",
+        wide: true,
+      },
+      {
+        id: "ex-v3-strip1",
+        kind: "sheet",
+        src: `${EX5}/strip-take1.jpg`,
+        label: "take 1 (not used): the aim runs off the right edge",
+        note: "The same scene asked in words alone; f104–f156 the barrel crosses the frame edge.",
+        wide: true,
+      },
+      {
+        id: "ex-v3-aims",
+        kind: "sheet",
+        src: `${EX5}/aim-stills.jpg`,
+        label: "the rest plate and the three drawn aims (aim_03 used)",
+        note: "Edits of the plate: the pose above the waist changes, the knee, boot and scale do not.",
+        wide: true,
+      },
+    ],
+  },
+  {
     id: "ex-v2",
     wave: "20260922-expanse-v4",
     title: "The Expanse v2 — on one knee, drawn in colour, graded gold",
     date: "2026-09-22",
-    status: "SHIPPING",
+    status: "SUPERSEDED",
     adr: "ADR-082 U32",
     summary: [
       'THE FIRST FIGURE MADE THE TWO-STEP WAY. Plate F of `20260921-expanse-v3` (his likeness held; three of six plates lost it), its rifle alone EDITED futuristic (owner: "only the gun needs to look more futuristic"), a Veo idle, then `post.py --matte ground`: the blue keyed out, the edge un-mixed, the Architect\'s curve and bloom per frame, one exposure scalar (×0.85 → deep-interior p75 109, his band).',

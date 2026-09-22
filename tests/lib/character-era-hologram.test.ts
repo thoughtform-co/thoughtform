@@ -98,11 +98,12 @@ describe("ADR-082 · normalized character hologram assets", () => {
     expect(expanse?.hologram).toBeDefined();
     expect(isCharacterEraHologram(expanse?.hologram)).toBe(true);
     expect(resolveCharacterEraHologram(expanse!)).toBe(expanse!.hologram);
-    // ⚠ v2 (ADR-082 U32) SHIPS WITHOUT A `.mov`, and v1's is deleted with it:
+    // ⚠ v2 (ADR-082 U32) SHIPPED WITHOUT A `.mov`, and v1's was deleted with it:
     // an HEVC-alpha file pointing at the standing v1 figure would show Safari
-    // a different man. Safari takes the floor until a Mac cuts v2's.
+    // a different man. v3 (U33, the scene) keeps that: Safari takes the floor
+    // until a Mac cuts one.
     expect(expanse?.hologram?.videoAlphaHevcPath).toBeUndefined();
-    expect(expanse?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-expanse-v2.webm");
+    expect(expanse?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-expanse-v3.webm");
     expect(expanse?.hologram?.footY).toBeCloseTo(0.9953, 3);
     // He KNEELS: his stature is authored, measured off the head (see the record).
     expect(expanse?.hologram?.stature).toBeCloseTo(1.0074, 4);

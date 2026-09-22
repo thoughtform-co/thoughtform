@@ -922,15 +922,26 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
        (crown 0.1836, beard 0.340, frame zero) against the Architect's 0.136
        (thumb.py's marks) over a standing span of 0.876 — 0.876 × 0.1564 /
        0.136 = 1.0074. Taller than `footY`, because this canvas draws him 15 %
-       larger; the fit takes it back down to the Architect's own body scale. */
+       larger; the fit takes it back down to the Architect's own body scale.
+       ⚠ `-v3` IS A SCENE, NOT AN IDLE (ADR-082 U33, owner: v2 "is just sighing
+       and breathing as if he's having anxiety … a pose where he looks around,
+       turns his head like he's scouting … and then takes his gun to aim"). The
+       same plate: he listens, scouts, takes the front grip and holds an aim
+       that was DRAWN first (asked in words, Veo aimed off the frame), looped
+       as a ping-pong cut inside the held aim — Veo morphs into a drawn last
+       frame, so the loop turns before it lands.
+       ⚠ `stature` IS UNCHANGED BECAUSE IT WAS RE-MEASURED, not inherited: v3's
+       frame zero matches v2's head to 0.996 alpha IoU at zero offset.
+       ⚠ `headY` 0.0875 is the rifle mid-swing, the ink's highest point in the
+       loop; the stature, not the ink, is what seats him. */
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-expanse-v2.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v2.webm",
-      posterPath: "/images/voidwalker/holo-still-expanse-v2.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v2.webp",
-      thumbPath: "/images/voidwalker/holo-thumb-expanse-v2.webp",
+      videoPath: "/videos/voidwalker/holo-idle-expanse-v3.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v3.webm",
+      posterPath: "/images/voidwalker/holo-still-expanse-v3.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v3.webp",
+      thumbPath: "/images/voidwalker/holo-thumb-expanse-v3.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.1,
+      headY: 0.0875,
       footY: 0.9953,
       stature: 1.0074,
     },
