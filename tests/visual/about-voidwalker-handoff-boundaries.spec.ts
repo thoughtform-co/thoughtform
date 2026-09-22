@@ -596,7 +596,7 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     }
   });
 
-  test("#contact is an actually opaque station when it kills the corridor", async ({
+  test("#musings is an actually opaque station when it kills the corridor", async ({
     page,
   }, testInfo) => {
     desktopOnly(testInfo);
@@ -607,16 +607,19 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     });
     await expect(page.locator("html")).toHaveAttribute("data-corridor-exit", "true");
     const coverY = await page.evaluate(() => {
-      const cover = document.getElementById("contact");
-      if (!cover) throw new Error("Missing #contact");
+      const cover = document.getElementById("musings");
+      if (!cover) throw new Error("Missing #musings");
       return Math.round(
         cover.getBoundingClientRect().top + window.scrollY + window.innerHeight * 0.3
       );
     });
-    /* ⚠ CLAMP: `scrollTo` clamps silently and the cover is the LAST viewport of
-       the document (ADR-105 — it is the footer), so "0.3 viewports inside it"
-       is past the end. Naming the clamp here keeps the waypoint honest rather
-       than relying on the browser to absorb it. */
+    /* ⚠ CLAMP, AND IT IS KEPT THOUGH THE COVER MOVED. Under ADR-105 the
+       cover WAS the footer, i.e. the document's last viewport, so "0.3
+       viewports inside it" was past the end and `scrollTo` clamped silently.
+       ADR-119 made the cover `#musings`, which has three viewports of runway
+       under it, so the waypoint lands comfortably now — but the clamp stays,
+       because the property the waypoint wants is "get inside the cover" and
+       nothing about it should depend on how much page follows. */
     await page.evaluate((y) => {
       const max = document.documentElement.scrollHeight - window.innerHeight;
       window.scrollTo({ top: Math.max(0, Math.min(y, max)), behavior: "instant" });
@@ -629,8 +632,8 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     await settle(page);
 
     const state = await page.evaluate(() => {
-      const cover = document.getElementById("contact");
-      if (!cover) throw new Error("Missing #contact");
+      const cover = document.getElementById("musings");
+      if (!cover) throw new Error("Missing #musings");
       const style = getComputedStyle(cover);
       return {
         top: cover.getBoundingClientRect().top,
@@ -645,13 +648,25 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     /* ⚠ THE PROPERTY IS COVERAGE, NOT A NEGATIVE TOP. This asserted `top < 0`
        — a proxy for "the walk got inside the station" that only holds while
        something follows it. ADR-105 made the cover the FOOTER, i.e. the last
-       viewport of the document, so its top rests at exactly 0 and there is
+       viewport of the document, so its top rested at exactly 0 and there was
        nowhere further to go. What the ambient's death actually depends on is
-       that an opaque station FILLS the screen, so that is what is measured. */
+       that an opaque station FILLS the screen, so that is what is measured.
+       ⚠ ADR-119 MOVED THE COVER ONTO A THREE-VIEWPORT STATION, AND THE
+       ASSERTION IS NOT LOOSENED BACK. `#musings` has runway under it, so
+       `top < 0` would pass again — which is exactly why it is not restored:
+       it would be passing by coincidence a second time, and the next pass
+       that moves the cover onto a one-viewport station would find a green
+       guard and a dead canvas. Coverage is the property either way. */
     expect(state.top).toBeLessThanOrEqual(0);
     /* ⚠ ONE SUB-PIXEL OF TOLERANCE, AND IT IS ARITHMETIC RATHER THAN A
-       LOOSENING (ADR-105 U2). This station is the document's LAST element and
-       its height is its content's, which is fractional — text line boxes and
+       LOOSENING (ADR-105 U2). ⚠ THE COVER IS NO LONGER THE STATION THIS
+       PARAGRAPH IS ABOUT — ADR-119 moved it to `#musings`, three viewports
+       tall, where the fraction cannot bind. The tolerance is KEPT and the
+       reasoning KEPT WITH IT, because `#contact` is still the document's last
+       element and this exact arithmetic is what any future assertion on it
+       has to survive. The record follows.
+       Under ADR-105 the cover WAS the document's LAST element and
+       its height was its content's, which is fractional — text line boxes and
        `svh` clamps do not land on integers. The browser CEILS `scrollHeight`
        to compute max scroll, so at the true bottom of the page
              bottom = vh - 1 + frac(documentHeight)
@@ -667,7 +682,7 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     );
     expect(state.ambient).toBe(false);
     expect(state.exit).toBe(false);
-    expect(cssAlpha(state.background), "#contact owns an opaque ground").toBe(1);
+    expect(cssAlpha(state.background), "#musings owns an opaque ground").toBe(1);
     expect(state.backgroundImage, "the opaque station surface is painted").not.toBe("none");
   });
 });

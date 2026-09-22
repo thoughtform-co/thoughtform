@@ -65,6 +65,11 @@ const nextConfig = {
     ],
     // The musings (ADR-114) are FILES read by path at request time; without
     // this the index and the post route work in dev and 500 on Vercel.
+    // ⚠ THE HOMEPAGE IS A FOURTH READER SINCE ADR-119 — `#musings` racks the
+    // posts, so `/` reads the same folder. The tracer follows IMPORTS and
+    // this folder is opened by path, so every route that reaches it has to
+    // be named; a missing row is invisible in dev by construction.
+    "/": ["./content/musings/**"],
     "/musings": ["./content/musings/**"],
     "/musings/[slug]": ["./content/musings/**"],
     "/sitemap.xml": ["./content/musings/**"],

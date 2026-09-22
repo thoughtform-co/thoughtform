@@ -124,6 +124,10 @@ export const JOURNEY_MARKS: readonly JourneyMark[] = [
   // section past the Arc; `rowIdx` throws if the manifest row is missing,
   // so this line and `MANIFEST_ENTRIES` move in one commit.
   row("voidwalker"),
+  // ADR-119: the rack follows the through-line. Row-clocked like every
+  // section past the Arc; `rowIdx` throws if the readout row is missing, so
+  // this line and `MANIFEST_ENTRIES` move in one commit.
+  row("musings"),
 ];
 
 /**

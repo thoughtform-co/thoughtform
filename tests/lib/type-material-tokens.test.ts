@@ -236,6 +236,14 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
+  /* The musings rack (ADR-119) — `#musings`, on the landing route. Authored
+     token-only from line one and pinned the hour it was written, which is the
+     only way a sheet enters this map at zero. */
+  "components/landing/home-v2/musings/musings.css": {
+    tier: "content",
+    content: { A: 0, B: 0, C: 0 },
+    frame: { A: 0, B: 0, C: 0 },
+  },
 };
 
 /**

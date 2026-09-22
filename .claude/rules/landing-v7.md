@@ -191,6 +191,41 @@ class="stations">`.** Four things read that and a `<footer id="contact">` falls 
   (`rail-manifest` · `v7-parse` · `section-label` · `detentTable` ·
   `rail-instrument-marks`) and `mechanical.mjs --scope ".ft-foot" --prm` in both themes.
 
+⚠ **THE WRITING IS A RACK, AND THE FOOTER IS A BED
+([ADR-119](../sentinel/decisions/119-the-musings-rack.md), 2026-09-22, owner).**
+`#musings` sits between the era stage and the footer: a masthead on the editorial
+band and a five-deep CSS-3D rack of post cards, one card in view facing the
+reader and the rest rotated about the vertical axis — "a jukebox or rotodex …
+it really feels like you're scrolling through a digital folder". Rules:
+[`.claude/rules/musings.md`](musings.md).
+
+- ⚠ **IT IS THE CORRIDOR'S OPAQUE COVER NOW, AND `#contact` IS NOT.** The rack is
+  the first opaque station below the corridor, so it takes the role by POSITION
+  rather than by choice — an opaque station the hook does not name hard-cuts the
+  canvas at its own top edge. **ADR-030 §6's lockstep therefore has FOUR readers
+  and they move in one commit**: `home-v2.css`'s `~ #musings` rule,
+  `useCorridorExitScroll`'s next-station query, the handoff spec's cover case, and
+  `services-ring-smoke`'s ambient-hold case — which reads it TWICE, once to solve
+  the waypoint and once to assert on it. ⚠ `?? contactEl` is load-bearing:
+  `/claude-workshop` and the Trinny proposal mount the same hook from their own
+  prototypes and have no `#musings`.
+- ⚠ **AND THAT IS WHAT FREES THE FOOTER TO BE HELD (ADR-105 U3).**
+  `html[data-ft-reveal] #contact.station { position: sticky; bottom: 0; z-index: 0 }`
+  — one rule, ADR-105's whole geometry untouched, sticky a no-op at the document's
+  end. **A cover cannot also be the thing being uncovered.** ⚠ The gate is the
+  mechanism, not a refinement: ungated, sticky-bottom pulls the footer to the
+  frame's floor from scroll 0 and it paints straight through the TRANSPARENT era
+  stage over the live corridor. ⚠ Pinned, never transformed — the GIC reference
+  does not move either, and a main-thread follower lags by one wheel step.
+- ⚠ **THE RACK IS A LIFT FROM `latent-cases/CaseOrbitStage.tsx`**, archived
+  prototype code whose only consumer is `/test/latent-cases`. Three things
+  changed and none may be "restored": its `setState`-per-frame drive (ADR-002 —
+  one writer, CSS custom properties), its three-card slot table (a triptych, not
+  a rack) and its reduced-motion branch (a reading surface degrades to a LIST).
+- ⚠ **AN ABSENT `data-mu-ready` MEANS SHOWN** — the rest state is a horizontal
+  rail, which is the finished page on every phone, under reduced motion and with
+  no script at all.
+
 ⚠ **ADR-082 U2: `#voidwalker` is the HOLOGRAM on the capable path** — a
 pinned, starless transparent stage the corridor ambient survives, with the
 opaque cover passing to `#practice`. Its inner reveal is reversible and

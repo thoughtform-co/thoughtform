@@ -150,6 +150,24 @@ export const SECTION_GLYPHS: Readonly<Record<string, ReactElement>> = {
       <path d="M12 13.8l2.3 2.3L12 18.4l-2.3-2.3Z" fill="currentColor" />
     </Mark>
   ),
+  /**
+   * Three offset leaves with the front one filled — the rack, seen from
+   * above: a folder you are part-way through (ADR-119).
+   *
+   * Straight-line only, like the rest of the set, and the FILL is what says
+   * which leaf is in view — the same device `voidwalker` above uses for the
+   * beat you are on, and the one thing the drawing has to carry at 16px. A
+   * fanned set of three at an angle was drawn first and collapsed into a
+   * grey smudge at this size, which is `glyphs.ts`'s recorded verdict on the
+   * v2 silhouettes arriving a third time.
+   */
+  musings: (
+    <Mark>
+      <path d="M4.5 8h12M6.5 12h12" />
+      <path d="M8.5 16h12v4.5h-12z" fill="currentColor" stroke="none" />
+      <path d="M8.5 16h12v4.5h-12z" />
+    </Mark>
+  ),
   /** A standard on a mast — dispatches from the practice. */
   practice: (
     <Mark>

@@ -44,8 +44,8 @@ const PRODUCTION_PARSE_OPTIONS = {
 };
 
 describe("MANIFEST_ENTRIES data model", () => {
-  it("has 9 entries with unique ids in the expected journey order (beat granularity)", () => {
-    expect(MANIFEST_ENTRIES).toHaveLength(9);
+  it("has 10 entries with unique ids in the expected journey order (beat granularity)", () => {
+    expect(MANIFEST_ENTRIES).toHaveLength(10);
     const ids = MANIFEST_ENTRIES.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
     // Update 9: the corridor is FOUR beats (thesis + the Arc's three moves),
@@ -59,8 +59,12 @@ describe("MANIFEST_ENTRIES data model", () => {
       "services",
       "about",
       "voidwalker",
+      // ADR-119: the rack follows the through-line, and it is the corridor's
+      // opaque COVER now.
+      "musings",
       // ⚠ `practice` went with its STATION (ADR-105) — an empty breather kept
-      // alive only to be the corridor's opaque cover, which the footer is now.
+      // alive only to be the corridor's opaque cover, which the RACK is now;
+      // the footer held the role in between and gave it up to become a bed.
       "contact",
     ]);
   });

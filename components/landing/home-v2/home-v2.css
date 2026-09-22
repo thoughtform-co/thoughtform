@@ -445,14 +445,24 @@ html[data-corridor-exit="true"] #voidwalker {
    opaque station and `useCorridorExitScroll`'s `nextStation` query names the
    SAME station while either transparent mode attribute is engaged.
 
-   ⚠ ADR-105: THAT STATION IS `#contact` NOW. It was `#practice`, an EMPTY
-   breather kept alive for this one job — and a blank panel sliding over the
-   era stage is exactly what the owner read as wrong. `#contact` is the site
-   footer: a full-bleed key visual over an opaque `var(--void)` ground, so it
-   satisfies the only property this role requires, and the handoff smoke
-   asserts both halves of that (alpha 1 AND a background image).
+   ⚠ ADR-119: THAT STATION IS `#musings` NOW. It was `#contact` (ADR-105)
+   and `#practice` before that — an EMPTY breather kept alive for this one
+   job, which is what the owner read as a blank panel sliding over the era
+   stage. The rack is the first opaque station below the corridor now, and it
+   HAS to take the role rather than being exempted from it: an opaque station
+   the hook does not name hard-cuts the canvas at its own top edge.
 
-   Splitting those two is the ADR-030 §6 seam bug, now recorded four
+   ⚠ AND THAT IS WHAT FREES THE FOOTER TO BE HELD. With the cover here,
+   `#contact` needs neither this rule nor its `z-index: 6`, so it can become
+   the sticky bed the rack scrolls over (ADR-105 U3) — the two halves of one
+   change. A cover cannot also be the thing being uncovered.
+
+   `#musings` keeps `.station:not(.hero)`'s own `var(--void)` ground and
+   stars, so it satisfies the only property this role requires, and the
+   handoff smoke asserts both halves of that (alpha 1 AND a background
+   image).
+
+   Splitting those two is the ADR-030 §6 seam bug, now recorded five
    times: the fade envelope and the bottom gate both key to this rect, and
    naming different stations hard-cuts the canvas at one of their edges.
 
@@ -460,8 +470,8 @@ html[data-corridor-exit="true"] #voidwalker {
    every path where a transparent stage does not engage (flag off, mobile,
    reduced-motion, corridor fallback). Mode-gated transparency lives beside
    each presentation, so the fallback and capable contracts cannot mix. */
-html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"] ~ #contact,
-html[data-corridor-exit="true"] #voidwalker[data-vw-mode="travel"] ~ #contact {
+html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"] ~ #musings,
+html[data-corridor-exit="true"] #voidwalker[data-vw-mode="travel"] ~ #musings {
   position: relative;
   z-index: 6;
   content-visibility: visible;

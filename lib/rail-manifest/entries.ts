@@ -31,6 +31,7 @@ export type ManifestEntryId =
   | "services"
   | "about"
   | "voidwalker"
+  | "musings"
   | "contact";
 
 export interface ManifestEntry {
@@ -151,6 +152,17 @@ export const MANIFEST_ENTRIES: readonly ManifestEntry[] = [
     name: "Voidwalker",
     kind: "station",
     targetId: "voidwalker",
+  },
+  {
+    // ADR-119: the writing, as a rack you flip through — and the station
+    // that takes the OPAQUE COVER role off `#contact`, which is what frees
+    // the footer to be a held bed. `09B` rather than a renumber: the labels
+    // are authored station numbers and `contact` keeps its `10`.
+    id: "musings",
+    label: "09B",
+    name: "Musings",
+    kind: "station",
+    targetId: "musings",
   },
   // (The ADR-054 `proof` row retired with ADR-056: the client case is
   // the casefile at the TOP of #services now, so it is not a station of

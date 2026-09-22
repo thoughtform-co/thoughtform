@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { extractV7Text, getV7Content } from "@/lib/v7-parse";
 import { LandingPage } from "@/components/landing/v7";
 import { getCelestialSlotsCached } from "@/lib/celestial/queries";
+import { cardsFor } from "@/lib/musings/cards";
+import { listedPosts } from "@/lib/musings/registry";
 import "@/components/landing/v7/landing.css";
 import "@/components/landing/home-v2/home-v2.css";
 import "@/components/landing/home-v2/services/services.css";
@@ -15,10 +17,17 @@ import "@/components/landing/home-v2/about/about-stage.css";
 // overrides the ≤960 padding floor and the ADR-113 snap block for `#about`
 // (both at the foot of landing.css); BEFORE theme.css like every route sheet.
 import "@/components/landing/home-v2/about/about-band.css";
-// The site footer (ADR-105) — `#contact` is the page's ending and the
-// corridor's opaque cover. BEFORE theme.css like every route sheet, so
-// the light rows cascade last.
+// The site footer (ADR-105) — `#contact` is the page's ending, and since
+// ADR-105 U3 a HELD BED the rack scrolls over rather than the corridor's
+// cover. BEFORE theme.css like every route sheet, so the light rows
+// cascade last.
 import "@/components/landing/v7/site-footer/site-footer.css";
+// The musings rack (ADR-119) — `#musings`, the writing as a folder you flip,
+// and the station that took the corridor's opaque COVER role off `#contact`.
+// AFTER landing.css, because it overrides the ≤960 padding floor's input and
+// the ADR-113 snap block for its own station; BEFORE theme.css like every
+// route sheet.
+import "@/components/landing/home-v2/musings/musings.css";
 // The through-line (ADR-074) — the section sheet and its drawings' sheet,
 // both BEFORE theme.css so the light rows cascade last.
 import "@/components/landing/home-v2/voidwalker/voidwalker.css";
@@ -139,6 +148,15 @@ export default async function Home() {
   });
   const corridorText = extractV7Text();
   const celestialSlots = await getCelestialSlotsCached();
+  /* ADR-119: the rack's record, read on the server and projected before it
+     crosses into a client tree. ⚠ `cardsFor` is what leaves `body` — every
+     post's whole MDX source — out of the landing's payload; `listedPosts`
+     shows drafts in development and published posts in production, which is
+     the same window `/musings` lists. ⚠ AND `content/musings/` IS OPAQUE TO
+     NEXT'S TRACER: `next.config.mjs` must name THIS route under
+     `outputFileTracingIncludes`, or the landing works in dev and 500s on
+     Vercel (the trap `lib/musings/registry.ts`'s own header records). */
+  const musings = cardsFor(listedPosts());
 
   return (
     <>
@@ -153,6 +171,7 @@ export default async function Home() {
         celestialSlots={celestialSlots}
         corridorText={corridorText}
         corridorMountId={CORRIDOR_MOUNT_ID}
+        musings={musings}
       />
     </>
   );

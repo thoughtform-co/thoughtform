@@ -33,7 +33,11 @@ export interface SocialLink {
 export const CONTACT_EMAIL = "hello@thoughtform.co";
 
 export const SOCIALS: readonly SocialLink[] = [
-  { href: null, label: "LinkedIn", icon: "linkedin" },
+  /* The one URL this file had been waiting for since ADR-105 (owner supplied
+     it 2026-09-22). It lights in BOTH readers at once — the footer's Connect
+     column and the About stage's list — which is the whole reason the record
+     is one array rather than a fifth inline list. */
+  { href: "https://www.linkedin.com/in/starhaven/", label: "LinkedIn", icon: "linkedin" },
   { href: null, label: "X", icon: "x" },
   { href: null, label: "Instagram", icon: "instagram" },
   { href: null, label: "YouTube", icon: "youtube" },

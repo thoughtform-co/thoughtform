@@ -73,6 +73,8 @@ const NAV_ITEMS: readonly NavItem[] = [
   { num: "02", label: "About", href: "#about" },
   // ADR-074: the through-line follows the bio.
   { num: "03", label: "Voidwalker", href: "#voidwalker" },
+  // ADR-119: the rack follows the through-line.
+  { num: "04", label: "Musings", href: "#musings" },
   // ⚠ ADR-105: `Practice` is deleted with its station. This list is hardcoded
   // in React, so the parse-time link cleanup above cannot reach it — the
   // comment above this array names exactly that, and it is what would have

@@ -831,10 +831,19 @@ handoff and the `701–1100px` complete fallback alone.
   `useVoidwalkerHologramScroll` writes `data-vw-mode="hologram"` only at
   `min-width: 1101px`, with motion allowed and a live corridor. That mode
   removes station padding and the inherited void + star surface. The corridor
-  ambient survives to `#practice`; `VOIDWALKER_EXTENDS_CORRIDOR` permits the
+  ambient survives past this station; `VOIDWALKER_EXTENDS_CORRIDOR` permits the
   handoff, while the live mode attribute makes `useCorridorExitScroll` and the
   CSS cover choose that rect in lockstep. Without the mode, `#voidwalker`
   remains the first opaque cover and owns the kill.
+  ⚠ **THE STATION THAT TAKES THE COVER HAS MOVED TWICE AND IS `#musings` NOW**
+  ([ADR-119](../sentinel/decisions/119-the-musings-rack.md), 2026-09-22) — it was
+  `#practice` when this paragraph was written, then `#contact` under ADR-105, and
+  the rack is the first opaque station below the corridor today. ⚠ The lockstep
+  has FOUR readers, not two: `home-v2.css`'s `~ #musings` rule,
+  `useCorridorExitScroll`'s query, `about-voidwalker-handoff-boundaries`' cover
+  case and `services-ring-smoke`'s ambient-hold case (which reads it twice).
+  Splitting them hard-cuts the canvas at one of their edges — ADR-030 §6, on
+  record as hit five times. Rules: [`musings.md`](musings.md).
 - **Every hologram path is starless.** `data-vw-surface="hologram"` removes
   `v7-stars.svg` on static fallbacks too. Mobile, tablet, PRM, flag-off and
   corridor-fallback remain solid-void normal flow; they never inherit the

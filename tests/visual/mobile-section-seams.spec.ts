@@ -52,7 +52,7 @@ const PHONE_PROJECTS = new Set([
 ]);
 
 /** The stations' DOM order on the marketing route, top to bottom. */
-const STATION_IDS = ["hero", "services", "about", "voidwalker", "contact"] as const;
+const STATION_IDS = ["hero", "services", "about", "voidwalker", "musings", "contact"] as const;
 
 /**
  * The always-mounted fixed chrome, by the element that actually PAINTS.
@@ -220,6 +220,20 @@ async function rollTo(page: Page, y: number) {
 /** The document y of every snap seat on the page (ADR-113): the three
  *  station stops and the instrument's own top. Read fresh each time — the
  *  corridor's lazy content moves them. */
+/**
+ * Every selector `snapSeats` will consider. Exported from the helper so the
+ * stop list can be walked against it — see the note inside `snapSeats`.
+ */
+const SEAT_CANDIDATES = [
+  "#services",
+  "#about",
+  ".voidwalker__snap-in",
+  ".voidwalker__snap",
+  "#musings",
+  "#contact",
+  ".vwd",
+] as const;
+
 async function snapSeats(page: Page): Promise<number[]> {
   return page.evaluate(() => {
     /* Every aligned position the page declares, by what its alignment NAMES:
@@ -234,6 +248,15 @@ async function snapSeats(page: Page): Promise<number[]> {
       "#about",
       ".voidwalker__snap-in",
       ".voidwalker__snap",
+      /* ADR-119. ⚠ THIS LIST IS A SECOND HAND-WRITTEN COPY AND IT IS NOT THE
+         SAME QUESTION AS `SNAP_STOPS`: that one is "what MUST be a stop",
+         this is "every aligned position the page MIGHT declare", filtered by
+         computed `scrollSnapAlign` — which is why `#about` is here and not
+         there. They cannot be merged, so `SEAT_CANDIDATES` below is walked
+         against `SNAP_STOPS` instead: adding a stop and forgetting this list
+         makes the engine snap to a position `seekTo` does not recognise, and
+         every seek near it runs out its timeout with nothing to say. */
+      "#musings",
       "#contact",
       ".vwd",
     ]) {
@@ -1020,6 +1043,10 @@ test.describe("mobile section seams", () => {
     "#services",
     ".voidwalker__snap-in",
     ".voidwalker__snap",
+    /* ADR-119: the rack is a flowing station with a horizontal RAIL inside it
+       on this rung. The rail has its own scroller, so it creates no snap
+       position on the page's, and the station's own top is the only stop. */
+    "#musings",
     "#contact",
     ".vwd",
   ] as const;
@@ -1028,6 +1055,7 @@ test.describe("mobile section seams", () => {
     "#services": "start",
     ".voidwalker__snap-in": "end",
     ".voidwalker__snap": "start",
+    "#musings": "start",
     "#contact": "start",
     ".vwd": "start",
   };
@@ -1041,6 +1069,9 @@ test.describe("mobile section seams", () => {
     ".pf-slot",
     ".svc-ring-runway",
     ".svc-ring-band",
+    /* The rack's own rail: a sideways scroller inside a snapping station.
+       `touch-action: pan-y` keeps its gesture off the document. */
+    ".mu__rack",
     ".voidwalker",
     ".vwd__band",
   ] as const;
@@ -1126,6 +1157,16 @@ test.describe("mobile section seams", () => {
       );
     const maxScroll = () =>
       page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+
+    /* ⚠ EVERY STOP MUST BE A SEAT `seekTo` KNOWS ABOUT. The two lists ask
+       different questions and cannot be merged, but a stop missing from the
+       candidates makes the engine snap to a position the harness does not
+       recognise: the seek runs out its 30s timeout and reports "never
+       settled" with no hint that a list is short. Measured on the rack's
+       first run (`seek never settled on 20871, last read 20911` — 40px, the
+       glide it was asking for). */
+    for (const stop of SNAP_STOPS)
+      expect(SEAT_CANDIDATES, `${stop} is a stop but not a seat candidate`).toContain(stop);
 
     const landings: string[] = [];
     for (const sel of SNAP_STOPS) {

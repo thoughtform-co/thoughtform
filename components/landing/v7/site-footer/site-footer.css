@@ -53,6 +53,58 @@
   padding-bottom: var(--ft-pad-bottom);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   THE FOOTER IS A BED THE RACK SCROLLS OVER (ADR-105 Update 3)
+
+   Owner, 2026-09-22: "I want the footer, like the general intelligence
+   company's footer, to be visible and parallaxed … and the musings section
+   needs to scroll over it."
+
+   That reference is a REVEAL, not a travel: GIC's footer does not move — it
+   is held at the frame's floor and progressively UNCOVERED as the block above
+   it scrolls away. So this is one declaration and no writer of its own, and
+   ⚠ **IT IS NOT A TRANSFORM.** A main-thread `translateY` off a scroll
+   variable lags the compositor by exactly one wheel step, every step
+   (measured on `/arcs/trinny-london/proposal`'s hero hold: 227.2 / 243.2 /
+   243.2 repeating) — "which is why the homepage holds its corridor with
+   `position: fixed` rather than a transform". No easing hides a frame of lag.
+
+   ⚠ **EVERY TERM OF ADR-105's GEOMETRY IS UNTOUCHED.** `--ft-pad-*`, the
+   plate's negation of exactly those, the band's 54vw, the three-layer scrim,
+   the two plates' `display` swap. At the document's end a sticky-bottom box
+   is at its natural seat, so sticky is a NO-OP there and `plateIsStation`
+   still measures the rect it always did.
+
+   ⚠ **IT IS GATED ON A STAMP, AND THE GATE IS THE WHOLE MECHANISM.** Ungated,
+   `position: sticky; bottom: 0` with `.stations` as the containing block pulls
+   this station up to the frame's floor from scroll 0 — and `#voidwalker` on
+   the capable path is a pinned TRANSPARENT stage, so the footer would paint
+   straight through the era stage over the live corridor. `useMusingsScroll`
+   writes `data-ft-reveal` on `<html>` only while `#musings`' top has passed
+   the frame's top, i.e. while that opaque station fills the screen and the
+   snap is invisible behind it — and it CLEARS it on the way back up, on
+   unmount, and on the inert rung. An armed stamp with no writer is the
+   failure this rule cannot survive.
+
+   ⚠ **AND IT ONLY WORKS BECAUSE THE COVER MOVED** (ADR-119 §4). While
+   `#contact` was the corridor's kill cover, `home-v2.css` gave it
+   `position: relative; z-index: 6` during the exit band — a cover cannot
+   also be the thing being uncovered. `#musings` holds that role now.
+
+   ⚠ **NOT ON THE PHONE AND NOT UNDER REDUCED MOTION**, which is not a media
+   query here but a property of the stamp: the writer parks on that rung and
+   removes it. `#contact` is a snap stop at ≤960 and its bottom padding is
+   solved against fixed chrome in the DYNAMIC viewport — a held footer there
+   would seat the legal bar against a floor that moves with the toolbar.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-ft-reveal] #contact.station {
+  position: sticky;
+  bottom: 0;
+  /* Under `#musings`, which activates its own inherited `z-index: 2` with a
+     `position: relative`. Both are inside `.stations`' stacking context. */
+  z-index: 0;
+}
+
 /* ⚠ THE SLOT IS THE FLEX CHILD, NOT `.ft-foot`. The station is a centring
    flex column and what it lays out is the PORTAL'S CONTAINER — the authored
    `[data-site-footer-root]` div — with the footer one level inside it. So a

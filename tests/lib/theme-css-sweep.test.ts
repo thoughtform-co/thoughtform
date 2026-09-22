@@ -33,6 +33,11 @@ const SHEETS = [
   /* The site footer (ADR-105) — it paints the page's ending over a
      KEPT-DARK plate, which is exactly the shape that needs watching. */
   "components/landing/v7/site-footer/site-footer.css",
+  /* The musings rack (ADR-119) — `#musings`, the writing as a folder you
+     flip. Token-only from line one and registered the hour it was written,
+     the way `sheet.css` entered: it lights a card's edge and a plotted mark
+     with gold, which is the pair this sweep exists to watch. */
+  "components/landing/home-v2/musings/musings.css",
   /* The sheet (ADR-114) — the subpages' grammar, read by `/arcs`,
      `/home-sessions` and `/musings`. It fills a station and a timeline node
      with gold and lifts every alpha for light in theme.css, which is the

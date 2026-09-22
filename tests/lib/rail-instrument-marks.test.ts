@@ -77,6 +77,8 @@ describe("rail instrument marks", () => {
     expect(goldAt(idxOf("about"))).toEqual(["about"]);
     // ADR-074: the through-line has its own mark, directly after the bio.
     expect(goldAt(idxOf("voidwalker"))).toEqual(["voidwalker"]);
+    // ADR-119: the rack follows the through-line.
+    expect(goldAt(idxOf("musings"))).toEqual(["musings"]);
     expect(goldAt(idxOf("contact"))).toEqual(["contact"]);
     // Everything before the live mark reads `passed`, everything after
     // `ahead` — no gaps, no marks stuck behind a range's end.
@@ -89,6 +91,11 @@ describe("rail instrument marks", () => {
       "passed",
       "passed",
       "here",
+      "ahead",
+      // ADR-119 seats a `musings` mark between voidwalker and contact, so the
+      // tail is one `ahead` longer. ⚠ The array is FIXED-LENGTH on purpose: a
+      // mark added to `JOURNEY_MARKS` and not here fails, which is the only
+      // thing that catches a mark with no state of its own.
       "ahead",
       "ahead",
     ]);

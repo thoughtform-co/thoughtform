@@ -1,0 +1,507 @@
+/* ═══════════════════════════════════════════════════════════════════
+   THE MUSINGS RACK — `#musings`, the writing as a folder you flip (ADR-119)
+
+   Owner, 2026-09-22: the post in view is a clean card with a thumbnail, a
+   title and a summary; the others sit beside it ROTATED ABOUT THE VERTICAL
+   AXIS so their sides show — "a jukebox or rotodex … it really feels like
+   you're scrolling through a digital folder" — and it comes into view as you
+   scroll away from the era stage.
+
+   ⚠ TOKENS ONLY, FROM LINE ONE. Every colour is a ramp step off
+   `--dawn-rgb` / `--void-rgb` / `--void-deep-rgb` / `--gold-rgb` /
+   `--gold-line`, which ADR-058 SWAPS — so one set of declarations paints
+   cream on near-black and ink on parchment, and `theme.css` carries NO block
+   for this sheet. Every letter-spacing is an ADR-092 role token and every
+   weight is at or under `--weight-lit`. `type-material-tokens` and
+   `theme-css-sweep` pin it at zero, registered the hour it was written: that
+   is the only way a sheet enters those maps (`proof-stack.css` sat in neither
+   for a week while its own header claimed both).
+
+   ⚠ THE STATION IS THE CORRIDOR'S OPAQUE COVER (ADR-119 §4). Its ground and
+   stars are `.station:not(.hero)`'s own and are NOT touched here — the
+   handoff guard asserts the cover has `alpha === 1` AND a background image,
+   and a station whose only ground is its content fails both.
+
+   ⚠ AN ABSENT `data-mu-ready` MEANS SHOWN. The rest state — no script, a
+   reduced-motion reader, any phone — is a horizontal RAIL of the same cards,
+   and it is the finished page rather than a fallback. Everything 3D is gated
+   on the stamp AND on the rung, so the two can never disagree about which
+   layout is live.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── The station's own box ───────────────────────────────────────────
+   ⚠ `--station-pad-*` ARE DECLARED, NOT JUST OVERRIDDEN. A station that
+   writes `padding-top`/`padding-bottom` at id specificity beats the ≤960
+   chrome floor outright with no pixel change to say so (mobile-sections.md
+   §1), so the contract runs the other way: declare the two tokens and let
+   the floor block re-state them through `max()`.
+
+   ⚠ AND IT GIVES UP `content-visibility`. `.station:not(.hero)` pairs
+   `content-visibility: auto` with a ONE-VIEWPORT intrinsic guess, and this
+   station is three to four — the browser corrects it the moment the station
+   enters the rendering window and the document reflows under the reader.
+   The cover also keys on this station's RECT, and a 100vh placeholder for a
+   four-viewport box puts the corridor's kill edge where the reader is not
+   (ADR-105's own reason, one station along). */
+#musings.station {
+  --station-pad-top: 0px;
+  --station-pad-bottom: 0px;
+  display: block;
+  content-visibility: visible;
+  contain-intrinsic-size: none;
+  /* ⚠ THE `position` IS WHAT ACTIVATES THE INHERITED `z-index: 2`, AND IT IS
+     THE OTHER HALF OF THE FOOTER'S BED (ADR-105 U3). `.station:not(.hero)`
+     declares `z-index: 2` on a STATIC box, where it is inert; the footer
+     below is `position: sticky; z-index: 0` while armed, so without a
+     positioned station above it the held plate would paint over the rack it
+     is meant to be uncovered by. Declared here rather than in the
+     corridor-exit cover rule because that rule only holds while
+     `data-corridor-exit` is true, and the footer stays held long after the
+     ambient has died. */
+  position: relative;
+}
+
+/* ── The ramp and the ladder ─────────────────────────────────────── */
+.mu {
+  --mu-ink: var(--dawn);
+  --mu-ink-2: rgba(var(--dawn-rgb), 0.74);
+  --mu-ink-3: rgba(var(--dawn-rgb), 0.5);
+  --mu-rule: rgba(var(--dawn-rgb), 0.16);
+  --mu-rule-soft: rgba(var(--dawn-rgb), 0.1);
+  --mu-plate: rgba(var(--void-deep-rgb), 0.62);
+  --mu-edge: rgba(var(--dawn-rgb), 0.2);
+
+  /* One type ladder. Chrome is PT Mono, prose is PP Neue Montreal — two
+     families by ROLE (ADR-067), and anything whose content is a sentence
+     declares its face EXPLICITLY, because inheriting gets `--font-mono`
+     (IBM Plex) from an ancestor and that is a documented third face. */
+  --mu-chrome: clamp(10px, 0.72vw, 12px);
+  --mu-copy: clamp(13px, 0.95vw, 16px);
+  --mu-card-title: clamp(18px, 1.5vw, 26px);
+  --mu-display: clamp(28px, 3.2vw, 52px);
+
+  /* The card, and the corner. ⚠ ONE NOTCH, TOP-RIGHT — his corner every
+     time (ADR-097's proof card, ADR-098 U5's plates, ADR-082 U37's record
+     cards). `--mu-chi` is the RING's inner leg: insetting a 45° cut by `d`
+     shortens its leg by `d(2 − √2)` ≈ 0.586d, so it is not `ch − 1px`. */
+  --mu-card-w: clamp(300px, 26vw, 420px);
+  --mu-card-h: clamp(336px, 52svh, 464px);
+  --mu-ch: clamp(14px, 1.6vw, 22px);
+  --mu-chi: calc(var(--mu-ch) - 0.586px);
+
+  /* The runway. ⚠ THE STEP IS THE ONE DIAL AND IT COSTS PAGE LENGTH:
+     every card adds `--mu-step` of document. At five posts the station is
+     ~3.2 viewports, at seven ~4.0. The reading band is 70 % of the travel
+     (`RACK_READ` in `rackMath.ts`), so a step of 42svh gives each card
+     about 0.4 of a viewport to be read in. */
+  --mu-step: 42svh;
+  --mu-tail: 55svh;
+
+  /* ⚠ DECLARED, NOT INHERITED — ADR-067's STANDING TRAP, AND THE MECHANICAL
+     GATE FOUND IT HERE EXACTLY AS IT FOUND IT ON THE FOOTER (ADR-105). The
+     ambient `--font-mono` is IBM Plex Mono, NOT this surface's `--font-pt-mono`,
+     so every wrapper that letters nothing still hands a THIRD face to whatever
+     is added under it later. First run: 13 `fonts` violations, all of them on
+     boxes with no text in them. Each text element below names its own family;
+     this is the bed, so a new child inherits the PROSE face rather than a
+     third one. */
+  font-family: var(--font-pp-neue-montreal);
+
+  position: relative;
+  width: 100%;
+}
+
+/* ── The runway and the pinned stage ─────────────────────────────── */
+.mu__runway {
+  position: relative;
+  width: 100%;
+}
+
+/* ⚠ THE PIN IS GATED ON THE WRITTEN STAMP, the `#voidwalker[data-vw-mode]`
+   recipe: the geometry and the poser turn on together, so there is never a
+   frame of a pinned stage holding cards nothing has posed. The document
+   grows by the runway at hydration, exactly as the corridor's lazy chunks
+   already grow it — every scroll helper on this page re-solves rather than
+   trusting one measured `y`. */
+.mu[data-mu-ready] .mu__runway {
+  height: calc(100svh + (var(--mu-n, 1) - 1) * var(--mu-step) + var(--mu-tail));
+}
+.mu[data-mu-ready] .mu__stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+}
+
+/* ⚠ THREE CONTENT-HEIGHT ROWS, CENTRED AS ONE GROUP — NEVER A `1fr` MIDDLE.
+   The first cut gave the rack row `minmax(0, 1fr)`, which is the same
+   slack-pooling defect this house has now measured four times (ADR-070 U14's
+   tail share, ADR-069 U1's title baseline, ADR-088's directory seams): the
+   frame is 1247px at the owner's viewport and the content is 613, so the 1fr
+   row absorbed all 634px of surplus and centred the rack inside it — putting
+   **205px between the masthead's baseline and the top card** and the same
+   again above the button. Measured on the still: three disconnected objects
+   with two holes between them.
+   With `auto` rows the whole group centres and the surplus splits ABOVE the
+   head and BELOW the foot, where it is the frame rather than a hole. Air
+   around a composition is room; air inside one is a mis-seat. */
+.mu__stage {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  align-content: center;
+  row-gap: clamp(20px, 3.2svh, 52px);
+  padding-block: clamp(56px, 9svh, 120px);
+}
+
+/* ── The masthead ────────────────────────────────────────────────────
+   ⚠ IT JOINS THE EDITORIAL BAND, IT DOES NOT RE-INSET (ADR-048). The
+   station is already inset by `--hud-content-inset`; `--rail-inset` is what
+   lands the edge on `--band-margin`, and it resolves to ZERO below the
+   1200px crossover — so a divergence here is invisible at 1280×720 and
+   1440×800 and shows only around 1920, which is the owner's own window. */
+.mu__head {
+  max-width: var(--band-max);
+  margin-inline: var(--rail-inset);
+  display: grid;
+  row-gap: clamp(6px, 0.8svh, 14px);
+}
+.mu__kicker {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.mu__title {
+  margin: 0;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--mu-display);
+  font-weight: var(--weight-lit);
+  line-height: 1.04;
+  letter-spacing: var(--track-display);
+  color: var(--mu-ink);
+}
+
+/* ── The rig ─────────────────────────────────────────────────────────
+   Rest: a rail. The cards are in flow, the box scrolls sideways, and each
+   card is a snap stop. ⚠ `touch-action: pan-y` hands nothing horizontal to
+   the page (mobile-sections.md §9 — the root clips at ≤960 and a gesture
+   inside a clipped reel must not pan the document). */
+.mu__rig {
+  min-width: 0;
+}
+.mu__rack {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(14px, 1.6vw, 28px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  touch-action: pan-y;
+  padding-block: 4px;
+  scrollbar-width: none;
+}
+.mu__rack::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── The card ────────────────────────────────────────────────────────
+   ⚠ NO `backdrop-filter`. The proof card can afford one because it is ONE
+   card; five overlapping planes inside a `preserve-3d` context, on a page
+   already running the corridor's canvas, is five backdrop SNAPSHOTS a frame
+   — and ADR-056's measurement of exactly that cost is why the casefile's
+   blur waits for `data-proof-settled`. The plate is a flat translucent
+   ground instead, which reads the same at this size. */
+.mu-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--mu-card-w);
+  min-height: var(--mu-card-h);
+  scroll-snap-align: center;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--mu-plate);
+  color: var(--mu-ink);
+  text-decoration: none;
+  overflow: hidden;
+  /* The silhouette: the fill is genuinely CUT, because a ring drawn over a
+     square corner is a diagonal with nothing behind it. */
+  clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
+}
+
+/* ⚠ THE EDGE IS A CLOSED TWO-CONTOUR RING, NEVER A `border`: a clip CUTS a
+   border and never strokes one, so a chamfered box with `border: 1px` has no
+   line on its diagonal. Outer contour, then the inner one 1px in with its
+   own shortened leg; `evenodd` makes the middle a hole.
+   ⚠ BOTH CONTOURS CLOSE. Every housing on `/arcs` painted a bow-tie until
+   ADR-118 U2, because one of them did not. */
+.mu-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: var(--mu-edge);
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--mu-ch)) 0,
+    100% var(--mu-ch),
+    100% 100%,
+    0 100%,
+    0 0,
+    1px 1px,
+    calc(100% - 1px - var(--mu-chi)) 1px,
+    calc(100% - 1px) calc(1px + var(--mu-chi)),
+    calc(100% - 1px) calc(100% - 1px),
+    1px calc(100% - 1px),
+    1px 1px
+  );
+}
+
+.mu-card[data-mu-front]::before {
+  background: var(--gold-line);
+}
+
+.mu-card:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 3px;
+}
+
+/* ── The card's body ─────────────────────────────────────────────── */
+.mu-card__body {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  row-gap: clamp(6px, 0.7svh, 12px);
+  padding: clamp(12px, 1.5svh, 20px) clamp(14px, 1.4vw, 22px) clamp(14px, 1.8svh, 24px);
+  border-top: 1px solid var(--mu-rule);
+}
+.mu-card__kicker {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+/* ⚠ THE SEPARATOR INHERITS THE KICKER'S OWN INK. Dimmed to `--mu-ink-3` it
+   measured **4.41:1 at 10.37px** on the mechanical gate — under the 4.5 floor,
+   on a glyph that is three characters wide and easy to argue is decorative.
+   It is not worth arguing: a mid-dot separates by SHAPE, so it needs no value
+   of its own, and the run reads as one line of chrome rather than a value, a
+   whisper and a value. The air is the whole treatment. */
+.mu-card__dot {
+  padding-inline: 0.5em;
+}
+.mu-card__title {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--mu-card-title);
+  font-weight: var(--weight-lit);
+  line-height: 1.12;
+  letter-spacing: var(--track-display);
+  color: var(--mu-ink);
+}
+.mu-card__lede {
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--mu-copy);
+  font-weight: var(--weight-text);
+  line-height: 1.42;
+  letter-spacing: var(--track-copy);
+  color: var(--mu-ink-2);
+}
+
+/* ── The drawn cover ─────────────────────────────────────────────────
+   Three readings off the record: the post's Arc beat as a glyph, its filing
+   date as a lit mark on a baseline, and a substrate whose pitch is seeded
+   off the slug. `lib/musings/cover.ts` resolves all of it. Nothing here is
+   lettered — the card's own kicker prints the date, and a figure said twice
+   on one card is what this surface has removed a console head, a foot and a
+   designator for. */
+.mu-cover {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: rgba(var(--void-rgb), 0.5);
+  color: var(--mu-ink-3);
+}
+.mu-cover__field {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(var(--dawn-rgb), 0.22) 0.8px, transparent 1.2px);
+  background-size: var(--mu-cover-pitch, 11px) var(--mu-cover-pitch, 11px);
+  background-position: center;
+}
+.mu-cover__beat {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 34%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  color: rgba(var(--dawn-rgb), 0.62);
+}
+.mu-cover__axis {
+  position: absolute;
+  left: clamp(10px, 6%, 26px);
+  right: clamp(10px, 6%, 26px);
+  bottom: 22%;
+  height: 1px;
+  background: var(--mu-rule);
+}
+.mu-cover__mark {
+  position: absolute;
+  bottom: calc(22% - 2px);
+  width: 5px;
+  height: 5px;
+  transform: translateX(-50%);
+  background: rgba(var(--dawn-rgb), 0.28);
+}
+.mu-cover__mark--lit {
+  bottom: calc(22% - 3px);
+  width: 7px;
+  height: 7px;
+  background: var(--gold);
+}
+
+/* ── The way out, and the empty state ───────────────────────────── */
+.mu__foot {
+  max-width: var(--band-max);
+  margin-inline: var(--rail-inset);
+}
+.mu__all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  padding: 0.65em 1.2em;
+  border: 1px solid var(--mu-edge);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--mu-ink-2);
+  text-decoration: none;
+  transition:
+    border-color 200ms ease,
+    color 200ms ease;
+}
+.mu__all:hover,
+.mu__all:focus-visible {
+  border-color: var(--gold-line);
+  color: var(--mu-ink);
+}
+.mu__all-arrow {
+  width: 14px;
+  height: 1px;
+  background: currentColor;
+}
+.mu__empty {
+  margin: 0;
+  max-width: var(--band-max);
+  margin-inline: var(--rail-inset);
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--mu-copy);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-copy);
+  color: var(--mu-ink-3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE RACK — 3D, and only where the writer is live
+
+   ⚠ THE RUNG IS MIRRORED BY HAND FROM `MUSINGS_RACK_MEDIA` in
+   `useMusingsScroll.ts`, and `tests/lib/musings-rack.test.ts` asserts the
+   two carry the same query. A writer and a sheet that disagree about the
+   rung is a rack posed in 3D inside a box laid out as a flat rail.
+
+   ⚠ THE PERSPECTIVE IS ON THE RIG AND THE IDLE YAW ON THE RACK, one level
+   apart: `perspective` resolves against the element that DECLARES it, so a
+   yaw on the same box swings every card's vanishing point with it and the
+   beat reads as leaning rather than as a rack turning.
+   ═══════════════════════════════════════════════════════════════════ */
+/* ⚠ THE STATION GIVES UP ITS PADDING ON THE DESKTOP RUNG ONLY, AND THE FIRST
+   CUT DECLARED IT UNCONDITIONALLY — WHICH IS THE TRAP `mobile-sections.md` §1
+   NAMES IN SO MANY WORDS. A station that writes `padding-top` at id
+   specificity ties with the ≤960 chrome floor (also `#musings.station`, also
+   (1,1,0)) and wins on source order, because `musings.css` is imported AFTER
+   `landing.css`. The floor silently resolved to 0 and the eyebrow printed
+   under the TL corner bracket at the station's seat — found by
+   `mobile-section-seams`, invisible in every desktop still.
+   The tokens above stay unconditional so the floor's `max()` has its input;
+   the raw zeroing lives here, where the pinned stage owns its own air and
+   both paddings would otherwise come out of the runway (the sticky child
+   travels inside its container's CONTENT box). */
+@media (min-width: 961px) {
+  #musings.station {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .mu[data-mu-ready] .mu__rig {
+    position: relative;
+    perspective: 1600px;
+    perspective-origin: 50% 50%;
+    transform-style: preserve-3d;
+  }
+
+  .mu[data-mu-ready] .mu__rack {
+    position: relative;
+    display: block;
+    height: 100%;
+    min-height: var(--mu-card-h);
+    overflow: visible;
+    gap: 0;
+    padding-block: 0;
+    scroll-snap-type: none;
+    transform-style: preserve-3d;
+    transform: rotateY(var(--mu-drift, 0deg));
+  }
+
+  /* The pose is assigned by the writer. What lives here is only what the
+     writer does NOT own: the seat the transform is measured from, the
+     detent's easing, and the silhouette.
+
+     ⚠ THE CURVE IS THE HOUSE'S SETTLED PAIR, RE-SOLVED FOR THIS OBJECT'S
+     SIZE. The drawing this rack is lifted from eases 480ms on an expo-out
+     (`cubic-bezier(0.19, 1, 0.22, 1)`), which is 84 % travelled in its first
+     fifth — fine on its own card, and 2.5× too fast in pixels on an object
+     this size. ADR-097 U12's finding, taken as law: copy a reference for
+     what it DOES and re-solve its timing for the size of the thing you put
+     it on. 720ms ease-in-out is half-travelled at 360ms and readable end to
+     end. */
+  .mu[data-mu-ready] .mu-card {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    flex: none;
+    min-height: 0;
+    height: var(--mu-card-h);
+    scroll-snap-align: none;
+    transform-style: preserve-3d;
+    transition:
+      transform 720ms cubic-bezier(0.65, 0, 0.35, 1),
+      opacity 720ms cubic-bezier(0.65, 0, 0.35, 1),
+      filter 480ms ease;
+  }
+}
+
+/* ── The phone ───────────────────────────────────────────────────────
+   The rail is the rest state, so there is almost nothing to say. What it
+   does need is the band's own inset released — the rail bleeds to the
+   station's edges so a card can sit half off-screen and read as a rail
+   rather than as a cropped grid. */
+@media (max-width: 960px) {
+  .mu__stage {
+    row-gap: clamp(14px, 2svh, 24px);
+    padding-block: clamp(24px, 4svh, 48px);
+  }
+  .mu {
+    --mu-card-w: min(78vw, 320px);
+    --mu-card-h: auto;
+  }
+  .mu-card {
+    min-height: 0;
+  }
+}

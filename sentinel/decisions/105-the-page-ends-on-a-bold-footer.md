@@ -579,3 +579,50 @@ passes in both themes. 8/8 on the boundary spec, 1599 unit tests.
 - The contact form still needs `RESEND_API_KEY`, and
   `landing-page.spec.ts`'s percentage-scroll snapshots want re-shooting AFTER
   this (the document grew) — `-g "HUD"` must pass WITHOUT `--update-snapshots`.
+
+## Update 3 — the footer is a bed the rack scrolls over (2026-09-22, owner)
+
+> I want the footer, like the general intelligence company's footer, to be visible
+> and parallaxed. That needs to be fixed, and the musings section needs to scroll
+> over it.
+
+**The record lives in [ADR-119](119-the-musings-rack.md)**, because it is one
+change with the new station and neither half works alone. The short form:
+
+```css
+html[data-ft-reveal] #contact.station {
+  position: sticky;
+  bottom: 0;
+  z-index: 0;
+}
+```
+
+- ⚠ **EVERY TERM OF U1 AND U2's GEOMETRY IS UNTOUCHED** — `--ft-pad-*`, the
+  plate's negation of exactly those, `--ft-band-right: 54vw`, the three-layer bed,
+  the two plates' `display` swap. At the document's end a sticky-bottom box sits
+  at its natural seat, so sticky is a **no-op** there and `plateIsStation` still
+  measures the rect it always did. The capture is unchanged and still passes.
+- ⚠ **THIS STATION IS NO LONGER THE CORRIDOR'S COVER**, and that is what made it
+  possible: `home-v2.css` gives the cover `position: relative; z-index: 6` during
+  the exit band, and **a cover cannot also be the thing being uncovered**.
+  `#musings` — the first opaque station below the corridor now — takes the role.
+  U0's own §"IT KEEPS `id=\"contact\"`" is untouched: the station, its id, its
+  place inside `<main class="stations">` and the four things that read them all
+  stand.
+- ⚠ **THE GATE IS THE MECHANISM, NOT A REFINEMENT.** Ungated, sticky-bottom pulls
+  this station to the frame's floor from scroll 0 — and `#voidwalker` on the
+  capable path is a pinned TRANSPARENT stage, so the footer would paint straight
+  through the era stage over the live corridor. `useMusingsScroll` arms the stamp
+  only while the rack's top has passed the frame's top, and clears it on the way
+  back up, on unmount and on the inert rung.
+- ⚠ **PINNED, NEVER TRANSFORMED**, and the GIC reference does not move either —
+  it is uncovered. A main-thread `translateY` off a scroll variable lags the
+  compositor by one wheel step, every step.
+- ⚠ **NOT ON THE PHONE**, which is a property of the stamp rather than a media
+  query: the writer parks on that rung. `#contact` is a snap stop at ≤960 and its
+  bottom padding is solved against fixed chrome in the DYNAMIC viewport.
+- **Also in this pass:** the `Musings` row in `lib/site/footer-nav.ts` is lit
+  (`/musings`, the three posts published), and `lib/site/socials.ts`'s LinkedIn
+  URL — one of the two inputs U2 left open — has landed. The Connect column and
+  the About stage light together, which is the whole reason that record is one
+  array.

@@ -51,13 +51,16 @@ describe("section readout", () => {
       "services",
       "about",
       "voidwalker",
+      // ADR-119: the rack.
+      "musings",
       // ⚠ `practice` went with its STATION (ADR-105): an empty breather kept
-      // alive only to be the corridor's opaque cover, which the footer is now.
+      // alive only to be the corridor's opaque cover, which the RACK is now;
+      // the footer held the role in between and gave it up to become a bed.
       "contact",
     ]);
     const last = sectionReadout(idxOf("contact"));
-    expect(last.num).toBe("06");
-    expect(last.total).toBe("06");
+    expect(last.num).toBe("07");
+    expect(last.total).toBe("07");
     for (const [i, row] of READOUT_SECTIONS.entries()) {
       // `proof` is the one row with no manifest entry (ADR-056): the casefile
       // shares `#services`' DOM section and rail detent, so it is addressed

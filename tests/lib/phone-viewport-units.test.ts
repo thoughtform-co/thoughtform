@@ -57,6 +57,7 @@ const SHEETS = [
   "components/landing/home-v2/voidwalker/voidwalker-travel.css",
   "components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css",
   "components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css",
+  "components/landing/home-v2/musings/musings.css",
 ] as const;
 
 type Allow = { sheet: string; path: RegExp; why: string };
@@ -144,6 +145,7 @@ const PINS: Record<(typeof SHEETS)[number], number> = {
   "components/landing/home-v2/voidwalker/voidwalker-travel.css": 0,
   "components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css": 0,
   "components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css": 0,
+  "components/landing/home-v2/musings/musings.css": 0,
 };
 
 const LIVE_UNIT = /\d(?:\.\d+)?(?:dvh|lvh)\b/;

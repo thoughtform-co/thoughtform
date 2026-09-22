@@ -144,6 +144,7 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
     let nextStationEl: HTMLElement | null = null;
     let aboutEl: HTMLElement | null = null;
     let voidwalkerEl: HTMLElement | null = null;
+    let musingsEl: HTMLElement | null = null;
     let contactEl: HTMLElement | null = null;
     let killEl: HTMLElement | null = null;
     // Last-written DOM state, so attributes flip only on edges and the
@@ -216,6 +217,19 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // is what the owner saw. The footer is `#contact`, it is opaque by
       // construction (a full-bleed key visual over `var(--void)`), and it
       // takes the role. The chain below is one term shorter, not rerouted.
+      //
+      // ⚠ ADR-119: AND NOW IT IS `#musings`, WITH `#contact` AS THE FALLBACK.
+      // The rack is the first opaque station below the corridor, so it takes
+      // the role by position rather than by choice — an opaque station this
+      // read does not name hard-cuts the canvas at its own top. ⚠ THE `??`
+      // IS LOAD-BEARING AND IS NOT DEFENSIVE: `/claude-workshop` and the
+      // Trinny proposal mount this same hook from their OWN prototypes,
+      // neither of which has a `#musings`, and on those routes the answer is
+      // still `#contact`. A bare `musingsEl` would leave both with no cover
+      // and no error.
+      // ⚠ AND THAT IS WHAT FREES THE FOOTER: with the cover here, `#contact`
+      // can become the sticky bed the rack scrolls over (ADR-105 U3). A
+      // cover cannot also be the thing being uncovered.
       // ⚠ Keep this query and home-v2.css's
       // `html[data-corridor-exit="true"] #voidwalker` rule on the SAME
       // station (the ADR-030 §6 seam bug — see the comment below).
@@ -229,6 +243,9 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       if (!aboutEl || !aboutEl.isConnected) aboutEl = root.querySelector<HTMLElement>("#about");
       if (!voidwalkerEl || !voidwalkerEl.isConnected) {
         voidwalkerEl = root.querySelector<HTMLElement>("#voidwalker");
+      }
+      if (!musingsEl || !musingsEl.isConnected) {
+        musingsEl = root.querySelector<HTMLElement>("#musings");
       }
       if (!contactEl || !contactEl.isConnected) {
         contactEl = root.querySelector<HTMLElement>("#contact");
@@ -253,9 +270,9 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         killEl ??
         (ABOUT_DECK_STAGE
           ? voidwalkerTransparent
-            ? (contactEl ?? voidwalkerEl)
-            : (voidwalkerEl ?? contactEl)
-          : (aboutEl ?? voidwalkerEl ?? contactEl));
+            ? (musingsEl ?? contactEl ?? voidwalkerEl)
+            : (voidwalkerEl ?? musingsEl ?? contactEl)
+          : (aboutEl ?? voidwalkerEl ?? musingsEl ?? contactEl));
       if (nextStationEl !== desiredNextStation) nextStationEl = desiredNextStation;
       const nextStationTopVh =
         (nextStationEl?.getBoundingClientRect().top ?? servicesRect.bottom) / vh;

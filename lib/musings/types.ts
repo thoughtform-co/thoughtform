@@ -29,3 +29,25 @@ export interface MusingPost {
   /** The MDX source, frontmatter stripped. */
   body: string;
 }
+
+/**
+ * What the HOMEPAGE's musings rack is given (ADR-119).
+ *
+ * ⚠ **IT EXISTS TO LEAVE `body` BEHIND.** The rack is a client component in a
+ * nested root on the landing route, so whatever it receives is serialised
+ * into the page's payload — and `body` is the post's entire MDX source. The
+ * landing's import doctrine keeps three.js and Supabase off the anonymous
+ * path; shipping every word of every post to a surface that letters a
+ * one-sentence summary would be the same defect in content rather than code.
+ *
+ * `cardsFor()` in `lib/musings/cards.ts` is the one place the projection is
+ * made, so no caller can widen it by accident.
+ */
+export interface MusingCardData {
+  slug: string;
+  title: string;
+  date: string;
+  summary: string;
+  tags: readonly string[];
+  readingMinutes: number;
+}

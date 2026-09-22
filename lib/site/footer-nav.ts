@@ -108,11 +108,14 @@ const AUTHORED: readonly FooterColumn[] = [
       station("about"),
       station("voidwalker"),
       { label: "Claude workshop", href: "/claude-workshop" },
-      /* The sheet pages (ADR-114). Musings stays `null` until a post is
-         published: the sitemap lists the index only once it has something
-         to list, and this row may not outrun it. */
+      /* The sheet pages (ADR-114). ⚠ MUSINGS IS LIT SINCE ADR-119 — the
+         three posts are published (`draft: false`) and the homepage carries
+         a station that racks them, so a footer row pointing at the index is
+         no longer outrunning anything. The `null` it held until then is the
+         contract working, not a placeholder: the row was decided and its
+         destination had nothing to list. */
       { label: "Home sessions", href: "/home-sessions" },
-      { label: "Musings", href: null },
+      { label: "Musings", href: "/musings" },
     ],
   },
   {

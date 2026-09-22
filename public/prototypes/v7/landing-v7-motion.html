@@ -5554,6 +5554,38 @@ html { scroll-behavior: smooth; }
     <div class="vw-root" data-voidwalker-root></div>
   </section>
 
+  <!-- ═══════════════════════════════ 09B MUSINGS — THE RACK (ADR-119) ═══
+       An authored EMPTY SHELL, filled at runtime by `MusingsPortal`
+       (`components/landing/home-v2/musings/`) — the FIFTH nested root on
+       this page, after services, about, voidwalker and the footer.
+
+       ⚠ IT IS AUTHORED HERE, AND THAT IS WHY IT NEEDS NO RELOCATE SPEC.
+       `voidwalker`, `about` and `services` are hoisted to the corridor
+       mount by `CORRIDOR_RELOCATED_STATIONS` in `app/(marketing)/page.tsx`,
+       so a station written between the voidwalker shell and the footer
+       lands exactly where it reads: after the era stage, before `#contact`.
+       The ORDER is still owned by that file and by `MANIFEST_ENTRIES` —
+       never by editing this HTML — and `tests/lib/rail-manifest.test.ts`
+       matches `<section … data-station="…">` over this string against the
+       manifest, 1:1, in DOM order.
+
+       ⚠ IT IS THE CORRIDOR'S OPAQUE COVER NOW, in place of `#contact`
+       (ADR-119; `#contact` held the role under ADR-105 and `#practice`
+       before that). `home-v2.css`'s cover rule and
+       `useCorridorExitScroll`'s next-station query name THIS station
+       together — splitting them hard-cuts the canvas at one of their edges,
+       which is ADR-030 §6's seam bug and is on record as hit five times.
+
+       ⚠ IT STAYS A `<section class="station" data-station="musings">`
+       INSIDE `<main class="stations">`. The drift guard reads the section
+       tag off this string, `useLandingScroll` collects `.station`, the
+       ≤960 padding floor keys on `#musings.station`, and the cover rule is
+       a `~` SIBLING selector — which is also why it cannot leave `<main>`.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="station" id="musings" data-station="musings" data-screen-label="09B Musings">
+    <div data-musings-root></div>
+  </section>
+
   <!-- ═══════════ 06 CONTACT — THE SITE FOOTER (ADR-105) ═══════════
        An authored EMPTY SHELL, filled at runtime by `SiteFooterPortal`
        (`components/landing/v7/site-footer/`) — the same nested-root seam

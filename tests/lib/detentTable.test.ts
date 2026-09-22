@@ -24,9 +24,14 @@ const LAYOUT: Record<string, { top: number; height: number }> = {
   // ADR-074: the through-line follows the bio (the `proof` station this
   // stub used to carry retired with ADR-056).
   voidwalker: { top: 10600, height: 800 },
-  contact: { top: 12200, height: 800 },
+  // ADR-119: the rack, between the through-line and the footer. Given a
+  // multi-viewport height because that is what it is — a pinned runway of
+  // `100svh + (n − 1) · step + tail` — so the proportional-span assertion
+  // below is comparing against a realistic neighbour.
+  musings: { top: 11400, height: 2400 },
+  contact: { top: 13800, height: 800 },
 };
-const SCROLL_HEIGHT = 13000;
+const SCROLL_HEIGHT = 14600;
 
 function stubEl(top: number, height: number): HTMLElement {
   const el = document.createElement("div");
@@ -82,10 +87,13 @@ describe("computeDetentTable — proportional detents", () => {
   it("is proportional: the corridor spans more rail than a short station", () => {
     const t = computeDetentTable() as number[];
     const corridorSpan = t[idx("services")] - t[idx("thesis")];
-    // ⚠ `voidwalker` → `contact` since ADR-105 deleted `#practice`. It is
-    // still "a short station" for this comparison: the pair simply has to be
-    // two ADJACENT station detents, not these particular two.
-    const stationSpan = t[idx("contact")] - t[idx("voidwalker")];
+    // ⚠ `voidwalker` → `musings` since ADR-119 seated the rack between the
+    // through-line and the footer (it was `voidwalker` → `contact` after
+    // ADR-105 deleted `#practice`). The pair simply has to be two ADJACENT
+    // station detents, not these particular two — and the rack is the one
+    // neighbour that is itself multi-viewport, which is why it is the
+    // honest comparison to make now.
+    const stationSpan = t[idx("musings")] - t[idx("voidwalker")];
     expect(corridorSpan).toBeGreaterThan(stationSpan);
   });
 

@@ -12470,6 +12470,11 @@ html {
   #definition.station,
   #services.station,
   #about.station,
+  /* ADR-119: the rack declares `--station-pad-*: 0px` and zero padding at id
+     specificity (its stage owns its own air on the capable rung), so without
+     an arm here it would opt straight out of the chrome bands with no pixel
+     change to say so — mobile-sections.md §1's contract exactly. */
+  #musings.station,
   #contact.station {
     /* The fallbacks are `.station`'s own `padding: 140px 0 220px`. */
     padding-top: max(var(--station-pad-top, 140px), var(--mobile-chrome-top));
@@ -12515,6 +12520,12 @@ html {
   }
   #services.station,
   #about.station,
+  /* ADR-119: the rack is a stop. On this rung it is a flowing station with a
+     horizontal RAIL inside it — the rail is not a snap area of the page's
+     scroller (it has its own), so the station's own top is the only stop it
+     creates and `touch-action: pan-y` on the rail keeps a sideways gesture
+     off the document (mobile-sections.md §9). */
+  #musings.station,
   #contact.station {
     scroll-snap-align: start;
   }

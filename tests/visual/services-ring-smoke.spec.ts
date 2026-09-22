@@ -2608,13 +2608,16 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // Walk under the COVER: THIS is where the ambient hold ends now. The
     // bottom gate is keyed to the SAME rect as the fade envelope, so there
     // is no hard cut at the travel runway's end.
-    // ⚠ ADR-105: the cover is `#contact`, the FOOTER. The `?? contact`
-    // fallback below had been carrying the right answer for a while, but the
-    // read further down still named `#practice` DIRECTLY — so a run would
-    // scroll to the right place and then report `null` for the rect it
-    // asserts on. Both name one station now.
+    // ⚠ ADR-119: the cover is `#musings`, THE RACK. It was `#contact` under
+    // ADR-105 and `#practice` before that, and this spec has now been the
+    // THIRD copy of that identity twice running: the `?? contact` fallback
+    // carried the right answer for a while while the read further down still
+    // named `#practice` directly, so a run scrolled to the right place and
+    // reported `null` for the rect it asserts on. Both reads name one station
+    // — and `home-v2.css`'s cover rule and `useCorridorExitScroll`'s query
+    // are the other two that move with them (ADR-030 §6).
     const underNext = await page.evaluate(() => {
-      const next = document.getElementById("contact");
+      const next = document.getElementById("musings");
       if (!next) return null;
       return Math.round(
         window.scrollY + next.getBoundingClientRect().top + window.innerHeight * 0.3
@@ -2625,7 +2628,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // Wait for the corridor's rAF writer to see the settled scroll.
     await page.waitForTimeout(600);
     const after = await page.evaluate(() => {
-      const pr = document.getElementById("contact");
+      const pr = document.getElementById("musings");
       return {
         ambient: document.documentElement.hasAttribute("data-services-ambient"),
         exit: document.documentElement.hasAttribute("data-corridor-exit"),
@@ -2633,18 +2636,21 @@ test.describe("Services card ring smoke (ADR-029)", () => {
         /* ⚠ COVERAGE, NOT A NEGATIVE TOP. `top < 0` was a proxy for "the walk
            got inside the cover" and it only holds while something FOLLOWS the
            station. ADR-105 made the cover the FOOTER — the document's last
-           viewport — so its top rests at exactly 0 and there is nowhere
+           viewport — so its top rested at exactly 0 and there was nowhere
            further to go. What the ambient's death depends on is that an opaque
            station FILLS the screen; that is the property, and it is the same
-           correction `about-voidwalker-handoff-boundaries` needed. */
+           correction `about-voidwalker-handoff-boundaries` needed.
+           ⚠ ADR-119 moved the cover onto a THREE-VIEWPORT station, where
+           `top < 0` would pass again — which is why it is not restored: it
+           would be passing by coincidence a second time. */
         coversVh: pr
           ? pr.getBoundingClientRect().bottom >= window.innerHeight &&
             pr.getBoundingClientRect().top <= 0
           : null,
       };
     });
-    expect(after.prTopVh, "the walk landed above #contact").toBeLessThanOrEqual(0);
-    expect(after.coversVh, "#contact does not fill the viewport at the kill edge").toBe(true);
+    expect(after.prTopVh, "the walk landed above #musings").toBeLessThanOrEqual(0);
+    expect(after.coversVh, "#musings does not fill the viewport at the kill edge").toBe(true);
     expect(after.ambient).toBe(false);
     expect(after.exit).toBe(false);
   });

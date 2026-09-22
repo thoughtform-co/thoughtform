@@ -24,7 +24,9 @@ import { RAIL_INSTRUMENTS } from "./rail-instruments/flags";
 import type { JourneyRoster } from "./rail-instruments/journeyOrder";
 import { AboutStagePortal } from "@/components/landing/home-v2/about/AboutStagePortal";
 import { VoidwalkerPortal } from "@/components/landing/home-v2/voidwalker/VoidwalkerPortal";
+import { MusingsPortal } from "@/components/landing/home-v2/musings/MusingsPortal";
 import { SiteFooterPortal } from "@/components/landing/v7/site-footer/SiteFooterPortal";
+import type { MusingCardData } from "@/lib/musings/types";
 import { ServicesPortal } from "@/components/landing/home-v2/services";
 import { useCorridorExitScroll } from "@/components/landing/home-v2/hooks/useCorridorExitScroll";
 import { CelestialEditorGate } from "@/components/admin/CelestialEditor/CelestialEditorGate";
@@ -59,6 +61,18 @@ interface LandingPageProps {
    */
   navItems?: readonly NavItem[];
   journey?: JourneyRoster;
+  /**
+   * The musings rack's record (ADR-119) — the posts `#musings` racks.
+   *
+   * PLAIN DATA, set once by the server route and never changed, which is
+   * what makes it safe here for the same reason `navItems` is: this
+   * component may not hold a subscription (its `dangerouslySetInnerHTML`
+   * body hosts nested `createRoot`s that a re-render ORPHANS — the services
+   * cards vanish with no error), and a constant prop costs no re-render at
+   * all. Omitted on the variant routes, whose own prototypes carry no
+   * `#musings` shell for the portal to find.
+   */
+  musings?: readonly MusingCardData[];
 }
 
 export function LandingPage({
@@ -69,6 +83,7 @@ export function LandingPage({
   corridorMountId = "home-corridor-mount",
   navItems,
   journey,
+  musings,
 }: LandingPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const brandmarkActorRef = useRef<BrandmarkActorHandle>(null);
@@ -286,9 +301,21 @@ export function LandingPage({
       {/* The through-line (ADR-074 / ADR-082 U2): a nested root into the
           [data-voidwalker-root] slot inside #voidwalker. Production renders
           the era hologram; its capable pinned stage is transparent over the
-          corridor and #practice owns the ambient kill. Static fallbacks are
-          solid normal-flow DOM. Same nested-root rules as ServicesPortal. */}
+          corridor and #musings owns the ambient kill (it was #practice, then
+          #contact under ADR-105, and this comment named the first of those
+          two passes after it was deleted). Static fallbacks are solid
+          normal-flow DOM. Same nested-root rules as ServicesPortal. */}
       <VoidwalkerPortal containerRef={rootRef} />
+      {/* The rack (ADR-119): a nested root into the [data-musings-root] slot
+          inside #musings — the writing as a folder you flip through, and the
+          station that took the corridor's opaque COVER role off #contact,
+          which is what frees the footer to be a held bed (ADR-105 U3).
+          ⚠ RENDERED ONLY WHEN THERE IS A RECORD: the variant routes fork
+          their own prototypes and carry no #musings shell, so the portal
+          would find no slot and return — but not passing the prop at all is
+          what says so in one place instead of relying on that. Same
+          nested-root rules as ServicesPortal. */}
+      {musings ? <MusingsPortal containerRef={rootRef} posts={musings} /> : null}
       {/* The page's ending (ADR-105): a nested root into the
           [data-site-footer-root] slot inside #contact, which is also the
           corridor's opaque cover. Same nested-root rules as ServicesPortal
