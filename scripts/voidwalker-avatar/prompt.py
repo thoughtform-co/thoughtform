@@ -451,12 +451,19 @@ PLATE_IDLE: dict[str, tuple[str, str]] = {
         "(the brushwork is fixed to the cloth like a printed surface; it never shimmers "
         "and it is never repainted)",
     ),
+    # ⚠ AN IDLE, NOT A PERFORMANCE (owner, 2026-09-22: "animate it like an
+    # idle, subtle movement"). The first lock asked for an earpiece press, an
+    # eye flick, a nod and a blink in eight seconds — four beats of acting. The
+    # Architect's idle is a breath; this is too.
     "expanse": (
-        "He holds the kneel and breathes; once he presses the earpiece a little more "
-        "firmly; his eyes flick to the right and return; one small nod; one blink",
+        "He holds the kneel, steady and alert, and simply breathes: a slow, shallow "
+        "breath lifts his chest and shoulders a little and settles again; his weight "
+        "eases a fraction onto the planted knee and back; one slow blink — that is "
+        "everything, a living pause rather than a performance",
         "the planted knee and the flat boot, the rifle VERTICAL (no sway, no tilt, no "
-        "lowering, no aiming), the raised elbow, the cap and the kilt, the closed mouth, "
-        "and all of him inside the frame",
+        "lowering, no aiming), the hand at the earpiece and its raised elbow, his head "
+        "and his gaze (he keeps looking exactly where he is looking), the cap and the "
+        "kilt, the closed mouth, and all of him inside the frame",
     ),
 }
 
@@ -474,19 +481,52 @@ PLATE_IDLE_NEGATIVE = (
 )
 
 
+#: A pose the video model will "resolve" if it is only listed among the things
+#: that stay still. ⚠ MEASURED, take 1 (2026-09-22): told "the hand at the
+#: earpiece ... stays still" at the END of the prompt, Veo dropped the hand to
+#: his side and lifted his head inside the first two seconds and held THAT for
+#: the other six — a calmer pose, and a loop that can never close on frame 0.
+#: The hold goes FIRST now, in the picture's terms, and the moves it made are
+#: banned by name in the negative.
+PLATE_IDLE_HOLD: dict[str, str] = {
+    "expanse": (
+        "THE POSE IS HELD FOR ALL EIGHT SECONDS. The hand raised to his ear — on the "
+        "LEFT of the picture — stays pressed to the earpiece the whole time and never "
+        "drops. His head does not turn, tilt or lift, and his eyes keep looking exactly "
+        "where they look in the first frame. The last frame is the first frame's pose."
+    ),
+}
+
+PLATE_IDLE_NEGATIVE_EXTRA: dict[str, str] = {
+    "expanse": (
+        "lowering the hand from the ear, dropping the arm, resting the hand on the knee, "
+        "turning the head, tilting or lifting the head, looking up, looking at the camera, "
+        "changing the pose"
+    ),
+}
+
+
 def plate_idle_prompt(era: str, prop_wording: bool = False) -> str:
     """The idle clause for a plate. `prop_wording` is the one re-word the chain
     allows if the video model refuses a weapon beside a real face; a second
     refusal means that era ships its poster only."""
     action, still = PLATE_IDLE[era]
+    hold = PLATE_IDLE_HOLD.get(era, "")
     if prop_wording:
         action = action.replace("rifle", "costume prop carbine")
         still = still.replace("rifle", "costume prop carbine")
+    lead = f"{hold} Within that pose: {action}" if hold else action
     return (
-        f"LOCKED STATIC FRAME on a heavy tripod. {action}. WHAT STAYS STILL: {still}. "
+        f"LOCKED STATIC FRAME on a heavy tripod. {lead}. WHAT STAYS STILL: {still}. "
         "The background is a FLAT UNIFORM BLUE, the same value in every corner on every "
         "frame. The lighting does not change. Real time."
     )
+
+
+def plate_idle_negative(era: str) -> str:
+    """The plate idle's negative, plus the era's own named moves (see above)."""
+    extra = PLATE_IDLE_NEGATIVE_EXTRA.get(era)
+    return f"{PLATE_IDLE_NEGATIVE}; {extra}" if extra else PLATE_IDLE_NEGATIVE
 
 
 #: ADR-082 U32 (owner, 2026-09-22): "the images you made were good, but only the

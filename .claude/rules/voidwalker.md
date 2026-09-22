@@ -97,6 +97,12 @@ composition's own entry/exit block, its responsive rungs, and
   - **ON RECORD IS TAGGED ROWS**, superseding U29's bounded object (read live,
     stacked boxes were a slide's content boxes): a framed tag, the year, a 7×7
     arrow ONLY where the record links out, the headline, a hairline at the foot.
+  - ⚠ **A KNEELING ERA IS MEASURED BY THE MAN IT DRAWS (U32, `expanse-v2`).**
+    Its `stature` (measured off crown→beard against the Architect's marks,
+    never guessed) drives the fit AND the phone's seat — `holoFigureHeadShare`
+    reads `footY − stature`, which may sit ABOVE the canvas and is not bad
+    data. `data-vwh-stature` rides the slot; the figure-span probe compares
+    standing heights, never ink. A standing era authors no stature.
   - **A FIGURE IS DRAWN IN COLOUR AND GRADED GOLD** — see
     `scripts/voidwalker-avatar/README.md`. The one-step "volumetric hologram"
     route is what reads as "too glowing" (deep-interior p75 172 / 170 against

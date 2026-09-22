@@ -55,8 +55,10 @@ MARKS: dict[str, dict] = {
     # v11 = v10 + 33 rows (0.0258): the marks move with the frames.
     "azeroth": dict(poster="holo-still-azeroth-v11.webp", out="holo-thumb-azeroth-v11.webp",
                     crown=0.2875, chin=0.383, eye=0.332, cx=0.465),
-    "expanse": dict(poster="holo-still-expanse-v1.webp", out="holo-thumb-expanse-v1.webp",
-                    crown=0.047, chin=0.181, eye=0.129, cx=0.508),
+    # v2 kneels (ADR-082 U32): the crown is the CAP's, not the rifle's muzzle,
+    # which is the ink's top at 0.100.
+    "expanse": dict(poster="holo-still-expanse-v2.webp", out="holo-thumb-expanse-v2.webp",
+                    crown=0.1836, chin=0.340, eye=0.271, cx=0.444),
 }
 
 

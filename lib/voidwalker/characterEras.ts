@@ -335,12 +335,30 @@ export function holoFigureFit(
  * fixed distance below the stage's top whatever the canvas above it holds;
  * this is the term it subtracts. Height-bound only, which the phone always is
  * (the column is narrower than 9:16 there).
+ *
+ * ⚠ A NON-STANDING POSE READS ITS STANDING HEAD, NOT ITS INK (ADR-082 U32).
+ * With a `stature` authored, the line the phone seats is `footY − stature` —
+ * where a standing figure's head would be — never `headY`, which on a kneeling
+ * commander is the RIFLE's muzzle: seating that on the head line lifts his
+ * whole column, disc and all, off the line every standing era's disc sits on.
+ * A standing era has no `stature`, so `footY − stature` IS its `headY` and the
+ * share is byte-identical to U28's.
  */
 export function holoFigureHeadShare(
   hologram: Pick<CharacterEraHologram, "headY" | "footY" | "stature">
 ): number {
-  const head = hologram.headY;
-  if (!Number.isFinite(head) || head < 0 || head >= 1) return 1;
+  if (hologram.stature === undefined) {
+    const head = hologram.headY;
+    if (!Number.isFinite(head) || head < 0 || head >= 1) return 1;
+    return holoFigureFit(hologram) * (1 - head);
+  }
+  // ⚠ A STANDING HEAD MAY SIT ABOVE THE CANVAS. The expanse delivery draws him
+  // larger than the Architect (head 0.156 of the canvas against 0.136), so his
+  // stature is 1.007 and `footY − stature` is −0.012: a head that is not IN the
+  // picture because he is kneeling. That is a real value, not bad data — the
+  // standing-era guard would read it as "no head" and drop the column 40px.
+  const head = hologram.footY - holoFigureStature(hologram);
+  if (!Number.isFinite(head) || head >= 1) return 1;
   return holoFigureFit(hologram) * (1 - head);
 }
 
@@ -853,24 +871,33 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     motto: "Venting became a campaign.",
     modelPath: null,
     stillPath: "/images/voidwalker/era-expanse.jpg",
-    /* The era's own hologram — wave `20260918-expanse-v1`. ⚠ THE WARDROBE
-       REFERENCE IS TWO PHOTOGRAPHS, not one: a solo full-body frame for the
-       silhouette and a lit group frame where the plate's panels actually read.
-       ⚠ AND THE CAP IS THE IDENTITY'S, NOT THE SET'S. He wore a plain dark cap
-       on the day; the figure wears the Thoughtform one he is locked from, which
-       is the cap the Architect wears eight years later. That is the UNIFORM
-       reading rather than the documentary one — recorded because it is a
-       choice, and the loadout says "his own cap" rather than naming it. */
+    /* The era's own hologram — `-v2`, ADR-082 U32: HIM ON ONE KNEE, rifle
+       upright, his other hand at the earpiece (owner, 2026-09-21), drawn in
+       COLOUR on the key ground (plate F of wave `20260921-expanse-v3`), its
+       rifle alone EDITED futuristic (wave `20260922-expanse-v4`, edit A), a
+       Veo idle held to the pose (take 2 — take 1 dropped the hand), keyed and
+       graded gold on the Architect's curve by `post.py --matte ground`, looped
+       as a PING-PONG because a subtle idle never returns to its first frame.
+       ⚠ THE CAP IS STILL THE IDENTITY'S, NOT THE SET'S (the v1 ruling): the
+       Thoughtform cap the Architect wears eight years later.
+       ⚠ NO `videoAlphaHevcPath`: HEVC alpha needs macOS VideoToolbox, and v1's
+       `.mov` is deleted with it, so desktop Safari takes the floor for this
+       era until a Mac cuts one from the wave's RGBA frames.
+       ⚠ `stature` IS MEASURED: his crown→beard is 0.1564 of this canvas
+       (crown 0.1836, beard 0.340, frame zero) against the Architect's 0.136
+       (thumb.py's marks) over a standing span of 0.876 — 0.876 × 0.1564 /
+       0.136 = 1.0074. Taller than `footY`, because this canvas draws him 15 %
+       larger; the fit takes it back down to the Architect's own body scale. */
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-expanse-v1.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v1.webm",
-      videoAlphaHevcPath: "/videos/voidwalker/holo-idle-expanse-v1.mov",
-      posterPath: "/images/voidwalker/holo-still-expanse-v1.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v1.webp",
-      thumbPath: "/images/voidwalker/holo-thumb-expanse-v1.webp",
+      videoPath: "/videos/voidwalker/holo-idle-expanse-v2.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v2.webm",
+      posterPath: "/images/voidwalker/holo-still-expanse-v2.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v2.webp",
+      thumbPath: "/images/voidwalker/holo-thumb-expanse-v2.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.0437,
-      footY: 0.9961,
+      headY: 0.1,
+      footY: 0.9953,
+      stature: 1.0074,
     },
     short: "The Expanse",
     facts: [

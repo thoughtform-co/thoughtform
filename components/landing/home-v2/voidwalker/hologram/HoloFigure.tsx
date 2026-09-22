@@ -262,6 +262,12 @@ export function HoloFigure({
       data-vwh-frame-height={productionAsset?.frame.height}
       data-vwh-head-y={productionAsset?.headY}
       data-vwh-foot-y={productionAsset?.footY}
+      // A NON-STANDING pose's standing span (ADR-082 U32) — absent on every
+      // standing era, so their markup is unchanged; the probes read it to
+      // measure a kneeling figure by the man it draws, not by its ink.
+      data-vwh-stature={
+        productionAsset && "stature" in productionAsset ? productionAsset.stature : undefined
+      }
       style={
         {
           "--holo-alpha": alpha,

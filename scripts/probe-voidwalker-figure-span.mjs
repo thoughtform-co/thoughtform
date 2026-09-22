@@ -105,8 +105,17 @@ const read = () =>
     const title = document.querySelector("#voidwalker .vwd__mast__title");
     if (!slot || !media || !title) return null;
     const box = media.getBoundingClientRect();
-    const headY = Number.parseFloat(slot.getAttribute("data-vwh-head-y") ?? "NaN");
+    const inkY = Number.parseFloat(slot.getAttribute("data-vwh-head-y") ?? "NaN");
     const footY = Number.parseFloat(slot.getAttribute("data-vwh-foot-y") ?? "NaN");
+    /* ⚠ A KNEELING ERA IS MEASURED BY THE MAN IT DRAWS (ADR-082 U32). Its ink
+       tops out at a rifle's muzzle ~0.9 of a standing height down, so its
+       painted extent, its "cap" and its centre are not a standing era's. With
+       `data-vwh-stature` present the head line is `footY − stature` — where a
+       standing head would paint — and every law below reads that; the ink's
+       own top is reported beside it. */
+    const stature = Number.parseFloat(slot.getAttribute("data-vwh-stature") ?? "NaN");
+    const kneels = Number.isFinite(stature);
+    const headY = kneels ? footY - stature : inkY;
     const fit = Number.parseFloat(getComputedStyle(slot).getPropertyValue("--holo-fit") || "1");
     /* ⚠ THE PAINTED MEDIA, NOT THE ELEMENT BOX. `contain` paints
        `min(w/720, h/1280)` of the canvas and the FIGURE is `(footY - headY)`
@@ -156,7 +165,9 @@ const read = () =>
       };
       const hidden = mask !== "none";
       // With a mask on, the paintable area is the wrap's own box at most.
-      const lim = hidden ? { top: wr.top, right: wr.right, bottom: wr.bottom, left: wr.left } : open;
+      const lim = hidden
+        ? { top: wr.top, right: wr.right, bottom: wr.bottom, left: wr.left }
+        : open;
       cut = {
         left: Math.max(0, Math.max(lim.left, open.left) - box.left),
         right: Math.max(0, box.right - Math.min(lim.right, open.right)),
@@ -177,7 +188,8 @@ const read = () =>
     const stage = document.querySelector("#voidwalker .vwd__stage");
     const disc = document.querySelector("#voidwalker .vwh__base__disc");
     const ring = document.querySelector("#voidwalker .vwd__reticle");
-    const ringBox = ring && getComputedStyle(ring).display !== "none" ? ring.getBoundingClientRect() : null;
+    const ringBox =
+      ring && getComputedStyle(ring).display !== "none" ? ring.getBoundingClientRect() : null;
     const slotBox = slot.getBoundingClientRect();
     const liftRaw = figure ? getComputedStyle(figure).top : "auto";
     return {
@@ -195,6 +207,9 @@ const read = () =>
       span: Number((footY - headY).toFixed(4)),
       box: `${Math.round(box.width)}x${Math.round(box.height)}`,
       figurePx: Number((picture * (footY - headY)).toFixed(1)),
+      kneels,
+      inkPx: Number((picture * (footY - inkY)).toFixed(1)),
+      inkTopPx: Number((box.bottom - picture * (1 - inkY)).toFixed(1)),
       // Where the boots land, in viewport px — the disc's own line.
       footPx: Number((box.bottom - picture * (1 - footY)).toFixed(1)),
       titleW: Math.round(title.getBoundingClientRect().width),
@@ -273,6 +288,11 @@ console.log(
 console.log(
   `foot line      ${Math.min(...fs).toFixed(1)} .. ${Math.max(...fs).toFixed(1)} px  (drift ${footDrift.toFixed(1)}, seated eras only)`
 );
+for (const r of rows.filter((x) => x.kneels)) {
+  console.log(
+    `  · ${r.era} KNEELS: a standing ${r.figurePx}px man drawn as ${r.inkPx}px of ink; its top (the muzzle) paints at ${r.inkTopPx}, ${(r.inkTopPx - r.headPx).toFixed(1)}px under his standing head line`
+  );
+}
 for (const r of rows.filter((x) => UNSEATED.has(x.era))) {
   const hover = Math.max(...fs) - r.footPx;
   console.log(
@@ -301,17 +321,23 @@ if (lifted) {
   for (const r of rows) {
     const off = r.headPx - r.stagePx;
     if (Math.abs(off) > 6)
-      fails.push(`${r.era}: the cap paints ${off.toFixed(1)}px off the stage's top edge (limit ±6)`);
+      fails.push(
+        `${r.era}: the cap paints ${off.toFixed(1)}px off the stage's top edge (limit ±6)`
+      );
   }
   // One disc line: the lift is era-independent, so the disc may not move.
   if (Math.max(...discs) - Math.min(...discs) > 0.5)
-    fails.push(`the projector disc moves ${(Math.max(...discs) - Math.min(...discs)).toFixed(1)}px between eras`);
+    fails.push(
+      `the projector disc moves ${(Math.max(...discs) - Math.min(...discs)).toFixed(1)}px between eras`
+    );
   // The ring is centred on the painted figure by arithmetic, not by a dial.
   for (const r of rows) {
     if (r.ringPx === null) continue;
     const mid = (r.headPx + r.footPx) / 2;
     if (Math.abs(r.ringPx - mid) > 6)
-      fails.push(`${r.era}: the reticle is ${(r.ringPx - mid).toFixed(1)}px off the figure's centre (limit ±6)`);
+      fails.push(
+        `${r.era}: the reticle is ${(r.ringPx - mid).toFixed(1)}px off the figure's centre (limit ±6)`
+      );
   }
 }
 if (rows[0].slackPx < 0)

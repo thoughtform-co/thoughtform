@@ -63,6 +63,7 @@ export interface GalleryRun {
   assets: readonly GalleryAsset[];
 }
 
+const EX4 = `${MIRROR}/20260922-expanse-v4`;
 const G0 = `${MIRROR}/20260921-calibration-v1`;
 const V11 = `${MIRROR}/20260921-azeroth-v11`;
 const V5 = `${MIRROR}/20260830-azeroth-v5-blender`;
@@ -74,6 +75,46 @@ const TF5 = `${MIRROR}/20260826-thoughtform-v5`;
 const TF4 = `${MIRROR}/20260826-thoughtform-v4`;
 
 export const GALLERY_RUNS: readonly GalleryRun[] = [
+  {
+    id: "ex-v2",
+    wave: "20260922-expanse-v4",
+    title: "The Expanse v2 — on one knee, drawn in colour, graded gold",
+    date: "2026-09-22",
+    status: "SHIPPING",
+    adr: "ADR-082 U32",
+    summary: [
+      'THE FIRST FIGURE MADE THE TWO-STEP WAY. Plate F of `20260921-expanse-v3` (his likeness held; three of six plates lost it), its rifle alone EDITED futuristic (owner: "only the gun needs to look more futuristic"), a Veo idle, then `post.py --matte ground`: the blue keyed out, the edge un-mixed, the Architect\'s curve and bloom per frame, one exposure scalar (×0.85 → deep-interior p75 109, his band).',
+      '⚠ TAKE 1 DROPPED THE HAND. Told the hand at the earpiece "stays still" at the END of the prompt, Veo lowered it and lifted his head inside two seconds, then held THAT — a calmer pose, and a loop that can never close. Take 2 states the hold FIRST and bans the moves by name, and it held.',
+      "⚠ A SUBTLE IDLE NEVER RETURNS TO ITS FIRST FRAME (0.3/255 a frame, 2.0 from frame zero at the end), so it loops as a PING-PONG — forward then back, 382 frames, no seam and no cross-fade ghosting. And Veo letterboxed the 0.558 plate with 2–3px of black that a ground key reads as figure: the outer 4px are repainted with the ground first.",
+      "He kneels, so the site reads his STATURE (1.0074, measured off crown→beard against the Architect's) and he paints at the Architect's own body scale; the phone seats his standing head, not the muzzle.",
+    ],
+    assets: [
+      {
+        id: "ex-v2-idle",
+        kind: "video",
+        src: `${EX4}/out/holo-idle-expanse-v2.mp4`,
+        alphaSrc: `${EX4}/out/holo-idle-expanse-v2.webm`,
+        label: "v2 · the kneel, rifle upright, hand at the earpiece (live on the site)",
+        note: "Ping-pong of take 2. No `.mov`: HEVC alpha needs macOS, so Safari takes the floor for this era until a Mac cuts one from veo/graded/.",
+        mb: 0.89,
+      },
+      {
+        id: "ex-v2-still",
+        kind: "still",
+        src: `${EX4}/out/holo-still-expanse-v2.jpg`,
+        alphaSrc: `${EX4}/out/holo-still-expanse-v2.webp`,
+        label: "poster",
+        note: "headY 0.100 (the muzzle) / footY 0.9953 · stature 1.0074 · head marks crown 0.1836, beard 0.340.",
+      },
+      {
+        id: "ex-v4-sheet",
+        kind: "sheet",
+        src: `${EX4}/sheet.jpg`,
+        label: "the three rifle edits (A shipped)",
+        note: "⚠ The face zooms are WRONG here — the sheet's skin-colour face finder locked onto the brick-red foregrip. The likeness was checked on hand-cut crops.",
+      },
+    ],
+  },
   {
     id: "g0-gold",
     wave: "20260921-calibration-v1",

@@ -98,10 +98,14 @@ describe("ADR-082 · normalized character hologram assets", () => {
     expect(expanse?.hologram).toBeDefined();
     expect(isCharacterEraHologram(expanse?.hologram)).toBe(true);
     expect(resolveCharacterEraHologram(expanse!)).toBe(expanse!.hologram);
-    expect(expanse?.hologram?.videoAlphaHevcPath).toBe(
-      "/videos/voidwalker/holo-idle-expanse-v1.mov"
-    );
-    expect(expanse?.hologram?.footY).toBeCloseTo(0.9961, 3);
+    // ⚠ v2 (ADR-082 U32) SHIPS WITHOUT A `.mov`, and v1's is deleted with it:
+    // an HEVC-alpha file pointing at the standing v1 figure would show Safari
+    // a different man. Safari takes the floor until a Mac cuts v2's.
+    expect(expanse?.hologram?.videoAlphaHevcPath).toBeUndefined();
+    expect(expanse?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-expanse-v2.webm");
+    expect(expanse?.hologram?.footY).toBeCloseTo(0.9953, 3);
+    // He KNEELS: his stature is authored, measured off the head (see the record).
+    expect(expanse?.hologram?.stature).toBeCloseTo(1.0074, 4);
     /* ⚠ ITS LOADOUT WAS BYTE-IDENTICAL TO `pokemon-go`'s until this wave, which
        is what a placeholder looks like. They may never be equal again. */
     const pokemon = CHARACTER_ERAS.find((e) => e.id === "pokemon-go");
@@ -386,14 +390,19 @@ describe("ADR-082 U25 · every era paints one figure height", () => {
     for (const era of CHARACTER_ERAS) {
       const hologram = resolveCharacterEraHologram(era);
       const share = holoFigureHeadShare(hologram);
-      // Inside the slot, and never above the fit's own ceiling — a share past
-      // the fit would put the head outside the media it is drawn in.
+      // Inside the slot, and — for a STANDING era — never above the fit's own
+      // ceiling, which would put the head outside the media it is drawn in. A
+      // kneeling era's standing head may sit above its canvas (U32: expanse's
+      // is at −0.012), so its bound is the slot.
       expect(share, `${era.id} head share`).toBeGreaterThan(0);
-      expect(share, `${era.id} head share`).toBeLessThanOrEqual(holoFigureFit(hologram) + 1e-9);
-      expect(share, `${era.id} head share`).toBeCloseTo(
-        holoFigureFit(hologram) * (1 - hologram.headY),
-        12
+      expect(share, `${era.id} head share`).toBeLessThanOrEqual(
+        hologram.stature === undefined ? holoFigureFit(hologram) + 1e-9 : 1
       );
+      // A non-standing pose seats its STANDING head (`footY − stature`, U32);
+      // a standing era's is its own `headY`.
+      const head =
+        hologram.stature === undefined ? hologram.headY : hologram.footY - hologram.stature;
+      expect(share, `${era.id} head share`).toBeCloseTo(holoFigureFit(hologram) * (1 - head), 12);
       // The painted figure hangs from that head line: share − stature must be
       // the FOOT's height above the floor, which is ≥ 0 for every seated era.
       expect(share - HOLO_FIGURE_SPAN, `${era.id} foot`).toBeGreaterThanOrEqual(-1e-9);
@@ -420,6 +429,18 @@ describe("ADR-082 U25 · every era paints one figure height", () => {
     // It shrinks like any other era — it cannot be used to make one bigger.
     expect(holoFigureFit(crouch)).toBeLessThanOrEqual(1);
     expect(holoFigureFit({ headY: 0.1, footY: 0.9, stature: 0.2 })).toBe(1);
+  });
+
+  it("a kneeling era seats its standing head on the phone, not its rifle's muzzle (U32)", () => {
+    // The ink's top is the muzzle at 0.07; a standing man at this scale would
+    // have his crown at footY − stature. The share reads the latter, so the
+    // column lifts like a standing era's and the disc stays on the same line.
+    const kneel = { headY: 0.07, footY: 0.995, stature: 0.88 };
+    const fit = holoFigureFit(kneel);
+    expect(holoFigureHeadShare(kneel)).toBeCloseTo(fit * (1 - (0.995 - 0.88)), 12);
+    expect(holoFigureHeadShare(kneel)).toBeLessThan(fit * (1 - kneel.headY));
+    // Painted foot above the floor: share − painted stature = fit × (1 − footY).
+    expect(holoFigureHeadShare(kneel) - fit * 0.88).toBeCloseTo(fit * (1 - 0.995), 12);
   });
 
   it("leaves the shortest era untouched and is the identity on a square-on span", () => {

@@ -3878,6 +3878,33 @@ lock. G1 is his pick.
   RGBA. Proven on a synthetic clip of edit A (loop closed, drift 1.0, p75
   108.6, seated +35px, flicker 3.5, no fringe on the dark ground); no Veo clip
   exists yet.
+- **AND IT SHIPPED AS `expanse-v2`** (owner: _"animate it like an idle, subtle
+  movement"_). Edit A, a Veo idle, `post.py --matte ground`; installed with
+  `stature` 1.0074 (crown→beard 0.1564 of its canvas against the Architect's
+  0.136, over his 0.876 — larger than `footY`, because this canvas draws him
+  15 % bigger). v1's five files are deleted from `public/` WITH its `.mov`, so
+  Safari takes the floor for this era until a Mac cuts v2's.
+  - ⚠ **TAKE 1 DROPPED THE HAND.** "The hand at the earpiece stays still",
+    listed at the END of the prompt, was resolved inside two seconds into a
+    calmer pose (hand at his side, head lifted) and held for the other six. The
+    HOLD goes first now, in the picture's terms, and the moves are banned by
+    name in an era negative (`PLATE_IDLE_HOLD`, `PLATE_IDLE_NEGATIVE_EXTRA`).
+  - ⚠ **A SUBTLE IDLE NEVER COMES BACK.** 0.3/255 a frame, and the last frame
+    2.0 from the first: no period for a trim and no tail for an overlap. It
+    loops as a PING-PONG (`--loop pingpong`, 382 frames) — no seam, and none of
+    a cross-fade's ghosting, which would have half-drawn the blink.
+  - ⚠ **VEO LETTERBOXED THE PLATE.** 1536 × 2752 is 0.558 against 0.5625, and
+    the 2–3px black bars key as FIGURE (black carries no blue); one survived the
+    choke and put `rightX` on the canvas wall. The outer 4px are repainted with
+    the ground before the key.
+  - ⚠ **THE PHONE SEATS HIS STANDING HEAD, NOT HIS MUZZLE.**
+    `holoFigureHeadShare` reads `footY − stature` when a stature is authored —
+    here −0.012, above the canvas, which the standing guard would have called
+    "no head" and dropped the column 40px. Standing eras are byte-identical.
+    `HoloFigure` writes `data-vwh-stature` and `probe-voidwalker-figure-span`
+    measures a kneeling era by the man it draws: one standing height 696.6px on
+    all five (0.00 % spread), the disc line unmoved, the muzzle reported 77.5px
+    under his standing head line.
 - ⚠ **G0 HELD THE PLATES, AND THE PLATES NEVER DEPENDED ON IT.** Both gold
   routes — the deterministic grade and the model's own quiet edit — start from a
   colour plate, so the only step G0 decides is the gold one. A gate belongs on

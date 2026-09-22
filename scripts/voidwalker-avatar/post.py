@@ -219,6 +219,41 @@ def build_loop(src: Path, fdir: Path, period: int, blend: int) -> dict:
             "closed": seam < motion * 1.25}
 
 
+def build_pingpong(src: Path, fdir: Path) -> dict:
+    """The clip forward, then backward: a loop CLOSED BY CONSTRUCTION.
+
+    ⚠ FOR THE IDLE THAT DRIFTS AND NEVER RETURNS (ADR-082 U32, expanse take 2).
+    A subtle idle — a breath, a weight shift, one blink — moved 0.3/255 a frame
+    and ended 2.0 from its own first frame: no return point for a trim, and no
+    tail past the period for `build_loop` to overlap. A long cross-fade was the
+    other way out and it GHOSTS whatever moves inside it (a blink in the window
+    arrives half-transparent). Played back and forth there is no seam at all —
+    the motion reverses, which a breath does anyway — and every frame is one
+    the model drew. The cost is length: 2n − 2 frames."""
+    import numpy as np
+
+    buf = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(src), "-vf", f"scale={W}:{H}:flags=lanczos",
+         "-pix_fmt", "rgb24", "-f", "rawvideo", "-"], capture_output=True).stdout
+    per = W * H * 3
+    n = len(buf) // per
+    arr = np.frombuffer(buf, dtype=np.uint8)[: n * per].reshape(n, H, W, 3)
+    out = np.concatenate([arr, arr[-2:0:-1]])
+    fdir.mkdir(parents=True, exist_ok=True)
+    for f in fdir.glob("*.png"):
+        f.unlink()
+    pipe = subprocess.Popen(
+        ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
+         "-s", f"{W}x{H}", "-framerate", str(FPS), "-i", "-", str(fdir / "%05d.png")],
+        stdin=subprocess.PIPE)
+    pipe.communicate(out.tobytes())
+    small = out[:, ::8, ::8].mean(-1)
+    motion = float(np.abs(np.diff(small, axis=0)).mean())
+    seam = float(np.abs(small[-1] - small[0]).mean())
+    return {"period": len(out), "blend": 0, "frames": len(out), "loop": "pingpong",
+            "seam": round(seam, 3), "motion": round(motion, 3), "closed": True}
+
+
 def seat_frames(fdir: Path, lut: dict, foot_target: float) -> dict:
     """Slide the figure down the canvas so its boots land on the foot anchor.
 
@@ -384,8 +419,17 @@ def ground_frames(loopdir: Path, outdir: Path, foot_target: float, target_p75: f
     drift = float(np.abs(corners - ground).max())
 
     k = H / 1280
+    # ⚠ VEO LETTERBOXES A PLATE THAT IS NOT EXACTLY 9:16 — 1–3px of BLACK down
+    #   both sides for a 1536×2752 plate (0.558 against 0.5625). Black carries
+    #   no blue, so the ground key reads it as solid figure; the choke erases a
+    #   2px bar and a 3px one survives it, which put `rightX` at 1.0 on the
+    #   first take through. The BOOTS LAW keeps the man off every edge, so the
+    #   outer band is repainted with the ground before anything is keyed.
+    BORDER = 4
 
     def figure(rgb: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        rgb = rgb.copy()
+        rgb[:BORDER], rgb[-BORDER:], rgb[:, :BORDER], rgb[:, -BORDER:] = ground, ground, ground, ground
         a = gold.key_matte(rgb, tuple(float(v) for v in ground))
         # Specks: the ground is flat, so anything opaque and SMALL out there is
         # the model's noise, never the man.
@@ -550,9 +594,13 @@ def main_ground(args: argparse.Namespace, wave: Path, raw: Path) -> int:
     print(f"trim alone: period {period['period']}/{period['frames']}  seam "
           f"{period['seam']}  motion {period['motion']}  {'closed' if period['closed'] else 'OPEN'}")
     loopdir = wave / "veo" / "loop"
-    joined = build_loop(raw, loopdir, period["period"], args.blend)
-    print(f"overlap {joined['blend']}f: seam {joined['seam']}  motion {joined['motion']}  "
-          f"{'CLOSED' if joined['closed'] else 'STILL OPEN — re-draw'}")
+    if args.loop == "pingpong":
+        joined = build_pingpong(raw, loopdir)
+        print(f"ping-pong: {joined['frames']} frames, seam {joined['seam']}  motion {joined['motion']}  CLOSED")
+    else:
+        joined = build_loop(raw, loopdir, period["period"], args.blend)
+        print(f"overlap {joined['blend']}f: seam {joined['seam']}  motion {joined['motion']}  "
+              f"{'CLOSED' if joined['closed'] else 'STILL OPEN — re-draw, or --loop pingpong'}")
     if not joined["closed"]:
         print("⚠ the loop does not close; ship nothing from this take.")
         return 1
@@ -617,6 +665,8 @@ def main() -> int:
     # clip already gold on black, keyed by brightness.
     ap.add_argument("--matte", choices=("luma", "ground"), default="luma")
     ap.add_argument("--clip", default=None, help="the Veo clip under veo/ (default raw.mp4)")
+    ap.add_argument("--loop", choices=("trim", "pingpong"), default="trim",
+                    help="ground route: trim to the clip's own period, or play it back and forth")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent

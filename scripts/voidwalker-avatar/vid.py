@@ -24,8 +24,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from env import require  # noqa: E402
 from prompt import (  # noqa: E402
     IDLE_NEGATIVE,
-    PLATE_IDLE_NEGATIVE,
     idle_prompt,
+    plate_idle_negative,
     plate_idle_prompt,
 )
 
@@ -63,7 +63,7 @@ def main() -> int:
 
     if plate:
         prompt = plate_idle_prompt(args.era, args.prop_wording)
-        negative = PLATE_IDLE_NEGATIVE
+        negative = plate_idle_negative(args.era)
         if args.prop_wording:
             negative = negative.replace("rifle", "costume prop carbine")
     else:
