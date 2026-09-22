@@ -4,7 +4,15 @@ import { useEffect, useRef, useState } from "react";
 
 import { clamp01 } from "@/lib/math";
 import { scrambleDuration, scrambleFrame } from "@/lib/home-v2/captionScramble";
-import { shelfClock, shelfGeom, shelfIndex, shelfPose, typedCount } from "@/lib/musings/shelfMath";
+import {
+  shelfArrive,
+  shelfClock,
+  shelfGeom,
+  shelfIndex,
+  shelfPose,
+  typedCount,
+  type ShelfArrive,
+} from "@/lib/musings/shelfMath";
 import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 /**
@@ -165,6 +173,10 @@ export function useMusingsScroll(
      * touched it. Reading it from the record instead would be a second copy of
      * every string, free to drift from the one on screen.
      */
+    /* ⚠ THE ARRIVAL IS STATE, DECIDED ONCE PER CROSSING — never re-derived
+       from `p` each frame, which is what makes it a burst and not a channel. */
+    let arrive: ShelfArrive | null = null;
+
     let decodeTargets: { el: HTMLElement; type: boolean; text: string }[] | null = null;
     const targets = () => {
       const station = stationRef.current;
@@ -199,7 +211,10 @@ export function useMusingsScroll(
     /** Put every decoded run back to the string React rendered. */
     const restoreHead = () => {
       const station = stationRef.current;
-      if (station) station.style.removeProperty("--mu-head");
+      if (station) {
+        station.style.removeProperty("--mu-head");
+        station.removeAttribute("data-mu-arrive");
+      }
       if (!decodeTargets) return;
       for (const t of decodeTargets) if (t.el.textContent !== t.text) t.el.textContent = t.text;
     };
@@ -208,6 +223,11 @@ export function useMusingsScroll(
       const station = stationRef.current;
       if (station) {
         station.removeAttribute("data-mu-ready");
+        /* ⚠ AND THE ARRIVAL'S STAMP, OR A PARKED SHELF STAYS SHUT. Both hidden
+           states key on the stamp's PRESENCE, so leaving one behind on a rung
+           that will never write again hides the beat for good. */
+        station.removeAttribute("data-mu-arrive");
+        arrive = null;
         station.style.removeProperty("--mu-entry");
         station.style.removeProperty("--mu-drift");
       }
@@ -277,6 +297,12 @@ export function useMusingsScroll(
       station.style.setProperty("--mu-entry", clock.entry.toFixed(4));
       station.style.setProperty("--mu-drift", `${clock.drift.toFixed(3)}deg`);
       writeHead(clock.head);
+
+      const nextArrive = shelfArrive(arrive, p);
+      if (nextArrive !== arrive) {
+        arrive = nextArrive;
+        station.dataset.muArrive = nextArrive;
+      }
       if (!station.hasAttribute("data-mu-ready")) station.setAttribute("data-mu-ready", "");
 
       const cards = cardsRef.current;
@@ -363,9 +389,11 @@ export function useMusingsScroll(
          Left behind, it would hold a transparent, promoted station over a dead
          corridor for the rest of the document. */
       section()?.removeAttribute("data-mu-mode");
-      /* ⚠ And the decoded runs go back to the strings React rendered. The
-         station's markup outlives this root — it is parsed HTML — so a head
-         left mid-scramble would stay mid-scramble on the page. */
+      /* ⚠ And the decoded runs go back to the strings React rendered, with
+         the head's own channel and the arrival's stamp. On a true unmount this
+         is insurance — `.mu` is THIS component's root and goes with it — but a
+         fast refresh re-runs the effect against a node that survives, and a
+         head left mid-scramble there stays mid-scramble on the page. */
       restoreHead();
     };
   }, [runwayRef, stationRef, cardsRef, bandRef, count]);

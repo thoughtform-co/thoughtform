@@ -863,6 +863,132 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   THE SHELF'S ARRIVAL — a centre-out APERTURE, and nothing fades
+
+   Owner, on the live read: _"the text should appear with a glitch effect,
+   and then the cards should come into view."_
+
+   ⚠ AND THE GLITCH HE MEANS IS NOT A FLASH. He asked for one on the proof
+   card, read it live and pulled it the same day as a photosensitivity risk —
+   countable, at ~4 dark↔light alternations a second against WCAG 2.3.1's
+   three-per-second threshold (ADR-097 U12). The house's object arrival since
+   is the corridor caption card's centre-out aperture: PURE MOTION, zero
+   fades, no opacity curve, no tear, no `filter`. This is the third host of
+   that pair of numbers — 720ms in, 420ms out, `cubic-bezier(0.65, 0, 0.35, 1)`
+   — and ⚠ **THE THREE MOVE TOGETHER**: `proof-stack.css` and the Trinny
+   route's `tl-aperture*` carry the same two, and one changing alone is a
+   house grammar with a different clock on one surface.
+
+   ⚠ ON THE CARD'S FACE, NEVER THE RACK. A `clip-path` on the `preserve-3d`
+   pivot or on either of its ancestors flattens the shelf, which is the
+   grouping-property law this card was split for.
+   ⚠ AND ON THE STAGE RUNG ONLY. Below it the writer parks, so an `await`
+   state would hide a shelf nothing was ever going to open.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  /* ⚠ AN ABSENT STAMP MEANS SHOWN. The two hidden states paint identically
+     and both are gated on the stamp's presence, so a parked writer, a page
+     whose script never ran and a reduced-motion reader all get the finished
+     shelf (ADR-101 §A's polarity law). */
+  /* ⚠ THE SPINE ARRIVES WITH THE FACE, AND THE FIRST CUT FORGOT IT. The
+     aperture is on the face because that is where the clip may live; the
+     spines are siblings, so a shelf "before it arrives" painted two lettered
+     strips standing in an empty frame under a half-decoded head — on the
+     still, and on no gate. A slab is one object: both of its planes open on
+     one clock.
+     ⚠ The HIDING may not move up to the pivot, however obvious that looks:
+     `opacity` there is a grouping property and would flatten the shelf's 3D
+     context, which is the whole reason this card has two layers. */
+  .mu[data-mu-ready][data-mu-arrive="await"] .mu-card__front,
+  .mu[data-mu-ready][data-mu-arrive="await"] .mu-card__spine,
+  .mu[data-mu-ready][data-mu-arrive="out"] .mu-card__front,
+  .mu[data-mu-ready][data-mu-arrive="out"] .mu-card__spine,
+  /* The way out is part of the beat, not chrome standing over it: it arrives
+     with the shelf and leaves with it. ⚠ `visibility: hidden` also takes it
+     out of the tab order, which is what an absent control owes. */
+  .mu[data-mu-ready][data-mu-arrive="await"] .mu__all,
+  .mu[data-mu-ready][data-mu-arrive="out"] .mu__all {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .mu[data-mu-ready][data-mu-arrive="in"] .mu-card__spine,
+  .mu[data-mu-ready][data-mu-arrive="in"] .mu__all {
+    animation: mu-aperture-spine 720ms cubic-bezier(0.65, 0, 0.35, 1) none;
+  }
+  .mu[data-mu-ready][data-mu-arrive="out"] .mu-card__spine,
+  .mu[data-mu-ready][data-mu-arrive="out"] .mu__all {
+    animation: mu-aperture-spine-close 420ms cubic-bezier(0.65, 0, 0.35, 1) none;
+  }
+
+  .mu[data-mu-ready][data-mu-arrive="in"] .mu-card__front {
+    /* ⚠ `fill-mode: none`. The last frame IS the cascade's own silhouette, so
+       a `forwards` fill would pin a `clip-path` on the face for the rest of
+       the page and freeze the notch the ring is drawn against. */
+    animation: mu-aperture 720ms cubic-bezier(0.65, 0, 0.35, 1) none;
+  }
+
+  .mu[data-mu-ready][data-mu-arrive="out"] .mu-card__front {
+    animation: mu-aperture-close 420ms cubic-bezier(0.65, 0, 0.35, 1) none;
+  }
+}
+
+/* `from` is the card's own silhouette with every X at 50% and every Y
+   untouched — a zero-width slit down the middle at full height — and `to` is
+   that silhouette verbatim. FIVE points on both ends and one fill rule, so
+   the polygon interpolates point for point instead of snapping discrete, the
+   sweep is purely lateral, and the shape is never square for a frame. */
+@keyframes mu-aperture {
+  from {
+    clip-path: polygon(50% 0, 50% 0, 50% var(--mu-ch), 50% 100%, 50% 100%);
+  }
+  to {
+    clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
+  }
+}
+
+/* The iris shutting. ⚠ IT HOLDS `opacity` AND `visibility` ITSELF: the `out`
+   cascade above already says `opacity: 0; visibility: hidden`, so a close
+   that animated the clip alone would play on a face nobody can see. It ends
+   on the slit, where nothing paints, and the cascade takes over from there
+   with no pop and nothing interpolating `visibility`. */
+/* The spine's own sweep. It is a plain rectangle — no chamfer — so the slit
+   is an `inset`, opening on the same clock as the face beside it. */
+@keyframes mu-aperture-spine {
+  from {
+    clip-path: inset(0 50% 0 50%);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+@keyframes mu-aperture-spine-close {
+  from {
+    opacity: 1;
+    visibility: visible;
+    clip-path: inset(0);
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+    clip-path: inset(0 50% 0 50%);
+  }
+}
+
+@keyframes mu-aperture-close {
+  from {
+    opacity: 1;
+    visibility: visible;
+    clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+    clip-path: polygon(50% 0, 50% 0, 50% var(--mu-ch), 50% 100%, 50% 100%);
+  }
+}
+
 /* ── The phone ───────────────────────────────────────────────────────
    The rail is the rest state, so there is almost nothing to say. What it
    does need is the band's own inset released — the rail bleeds to the

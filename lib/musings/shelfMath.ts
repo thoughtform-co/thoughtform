@@ -199,6 +199,56 @@ export const SHELF_HEAD_IN = [0.08, 0.24] as const;
 export const SHELF_HEAD_OUT = [0.84, 0.94] as const;
 
 /**
+ * The shelf's own arrival — a BOUNDED BURST on a hysteresis, not a channel.
+ *
+ * The owner's order, stated in one sentence: _"the text should appear with a
+ * glitch effect, and then the cards should come into view."_ So the head
+ * decodes first (`SHELF_HEAD_IN`) and the slabs materialise after it, which
+ * is what puts `SHELF_ARRIVE_IN` past the head's own window.
+ *
+ * ⚠ IT IS A BURST BECAUSE IT HAS A DIRECTION AND A PROGRESS VALUE DOES NOT
+ * (ADR-021's one sanctioned exception, ADR-101 §A's `arriveNext`). The two
+ * thresholds are a hysteresis so a reader resting on the edge does not
+ * re-trigger it every frame.
+ * ⚠ AND THE CLOSE IS AT `SHELF_ARRIVE_END`, PAST THE READING BAND'S OWN END
+ * (0.94) — a shelf that shut while the last slab was still being read would
+ * take the reading away to play an animation.
+ */
+export const SHELF_ARRIVE_IN = 0.26;
+export const SHELF_ARRIVE_OUT = 0.22;
+export const SHELF_ARRIVE_END = 0.97;
+
+export type ShelfArrive = "await" | "in" | "out";
+
+/**
+ * The next arrival state, given the last one and the station's progress.
+ *
+ * ⚠ COPIED from `turnClock.ts`'s `arriveNext` — seven lines, and a landing
+ * component importing a route module is a dependency in the wrong direction
+ * (the arcs already say this of `pda.css`). Lifting it to `lib/` is the
+ * follow-up; the copy is pinned against the original's own behaviour.
+ *
+ * ⚠ NaN LEAVES THE STATE ALONE: a rect read during a relayout can hand this a
+ * non-finite value, and the one thing a burst must never do is fire because a
+ * measurement was briefly unavailable.
+ * ⚠ AND A DEEP RELOAD SEEDS `in`, NOT `await` — landing mid-beat plays the
+ * arrival once and ends on the cascade's own identity, which is what the
+ * reader would have seen had they scrolled to it. Seeding `await` there would
+ * leave the shelf hidden until they scrolled back and forward again.
+ * ⚠ `await` IS NOT `out`. Both paint nothing; `out` plays the close and
+ * `await` has never been seen, and collapsing them shuts the shelf on the way
+ * IN.
+ */
+export function shelfArrive(prev: ShelfArrive | null, p: number): ShelfArrive {
+  const at = prev ?? "await";
+  if (!Number.isFinite(p)) return at;
+  if (p >= SHELF_ARRIVE_END) return at === "in" ? "out" : at;
+  if (p >= SHELF_ARRIVE_IN) return "in";
+  if (p <= SHELF_ARRIVE_OUT) return at === "in" ? "out" : at;
+  return at;
+}
+
+/**
  * How many characters of a typed run are shown at `f`.
  *
  * ⚠ IT ROUNDS UP FROM THE FIRST NON-ZERO FRACTION, so the first character

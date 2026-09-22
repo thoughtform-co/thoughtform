@@ -14,6 +14,9 @@ import {
 import {
   SHELF_GAP_PX,
   SHELF_SPINE_PX,
+  SHELF_ARRIVE_END,
+  SHELF_ARRIVE_IN,
+  SHELF_ARRIVE_OUT,
   SHELF_TURN,
   shelfClock,
   shelfGeom,
@@ -21,6 +24,7 @@ import {
   shelfIndex,
   shelfOffset,
   shelfPose,
+  shelfArrive,
   shelfWidth,
   typedCount,
 } from "@/lib/musings/shelfMath";
@@ -239,6 +243,56 @@ describe("shelfClock", () => {
   });
 });
 
+describe("shelfArrive — the bounded burst", () => {
+  it("opens AFTER the head has resolved, never with it", () => {
+    // The owner's order: the text appears with a glitch effect, THEN the cards
+    // come into view. `SHELF_HEAD_IN` closes at 0.24.
+    expect(SHELF_ARRIVE_IN).toBeGreaterThan(0.24);
+    expect(shelfClock(SHELF_ARRIVE_IN, N).head).toBeCloseTo(1, 6);
+  });
+
+  it("holds the shelf open past the reading band's own end", () => {
+    // A shelf that shut while the last slab was being read would take the
+    // reading away to play an animation.
+    expect(SHELF_ARRIVE_END).toBeGreaterThan(0.94);
+    expect(shelfArrive("in", 0.94)).toBe("in");
+  });
+
+  it("is a hysteresis, so resting on the edge does not re-trigger it", () => {
+    expect(SHELF_ARRIVE_OUT).toBeLessThan(SHELF_ARRIVE_IN);
+    expect(shelfArrive("in", (SHELF_ARRIVE_IN + SHELF_ARRIVE_OUT) / 2)).toBe("in");
+    expect(shelfArrive("await", (SHELF_ARRIVE_IN + SHELF_ARRIVE_OUT) / 2)).toBe("await");
+  });
+
+  it("closes on the way back and on the way past, and re-opens either way", () => {
+    expect(shelfArrive("in", 0.1)).toBe("out");
+    expect(shelfArrive("in", 0.99)).toBe("out");
+    expect(shelfArrive("out", 0.5)).toBe("in");
+  });
+
+  it("keeps `await` and `out` APART", () => {
+    // ⚠ Both paint nothing, but `out` plays the close and `await` has never
+    // been seen — collapsing them shuts the shelf on the way IN.
+    expect(shelfArrive("await", 0.1)).toBe("await");
+    expect(shelfArrive("await", 0.99)).toBe("await");
+    expect(shelfArrive("out", 0.1)).toBe("out");
+  });
+
+  it("seeds `in` on a deep reload past the threshold, never `await`", () => {
+    // Landing mid-beat plays the arrival once and ends on the cascade, which
+    // is what the reader would have seen had they scrolled to it.
+    expect(shelfArrive(null, 0.5)).toBe("in");
+    expect(shelfArrive(null, 0)).toBe("await");
+  });
+
+  it("leaves the state alone on a non-finite reading", () => {
+    // A rect read during a relayout hands this NaN, and the one thing a burst
+    // must never do is fire because a measurement was briefly unavailable.
+    expect(shelfArrive("await", Number.NaN)).toBe("await");
+    expect(shelfArrive("in", Number.POSITIVE_INFINITY)).toBe("in");
+  });
+});
+
 describe("the masthead", () => {
   it("carries the two designations, one state chip and a two-line title", () => {
     // The services masthead's own anatomy: one gold survey element, the em on
@@ -452,6 +506,40 @@ describe("the rung is mirrored by hand, so pin it", () => {
       expect(body).not.toMatch(/(^|[\s;])filter\s*:(?!\s*none)/);
       expect(body).not.toMatch(/(^|[\s;])opacity\s*:/);
     }
+  });
+
+  it("the aperture carries the house's ONE pair of numbers, on all three hosts", () => {
+    /* ⚠ A THIRD COPY JOINS A TWO-HOST LOCKSTEP. 720ms in / 420ms out on
+       `cubic-bezier(0.65, 0, 0.35, 1)` is ADR-097 U12's settled pair — the
+       caption card's own expo-out is 84 % open at 90ms, which is right on a
+       509px card and 2.5× too fast in pixels on an object this size. One
+       host changing alone is a house grammar running a different clock on one
+       surface, which is exactly the shape of drift nothing on screen reports. */
+    const IN = "720ms cubic-bezier(0.65, 0, 0.35, 1)";
+    const OUT = "420ms cubic-bezier(0.65, 0, 0.35, 1)";
+    const hosts = [
+      SHEET,
+      "components/landing/home-v2/services/proof-stack/proof-stack.css",
+      "app/(marketing)/arcs/trinny-london/proposal/trinny-london.css",
+    ];
+    for (const host of hosts) {
+      const css = read(host);
+      expect(css, `${host} carries the aperture's in`).toContain(IN);
+      expect(css, `${host} carries the aperture's out`).toContain(OUT);
+    }
+  });
+
+  it("gates every aperture rule on the stamp AND the rung", () => {
+    // Both hidden states key on `data-mu-arrive`'s PRESENCE, so a rule outside
+    // the stamp's scope would hide a shelf nothing was ever going to open —
+    // on a phone, under reduced motion and on a page whose script never ran.
+    const sheet = read(SHEET);
+    for (const m of sheet.matchAll(/\[data-mu-arrive="(await|out|in)"\]/g)) {
+      const before = sheet.slice(0, m.index ?? 0);
+      expect(before.lastIndexOf(`@media ${RUNG} {`)).toBeGreaterThan(-1);
+      expect(before).toContain("[data-mu-ready]");
+    }
+    expect(read(HOOK)).toContain('removeAttribute("data-mu-arrive")');
   });
 
   it("the writer publishes no opacity and no filter per card", () => {
