@@ -63,6 +63,7 @@ export interface GalleryRun {
   assets: readonly GalleryAsset[];
 }
 
+const PG1 = `${MIRROR}/20260922-pokemon-go-v1`;
 const EX5 = `${MIRROR}/20260922-expanse-v5`;
 const EX4 = `${MIRROR}/20260922-expanse-v4`;
 const G0 = `${MIRROR}/20260921-calibration-v1`;
@@ -76,6 +77,55 @@ const TF5 = `${MIRROR}/20260826-thoughtform-v5`;
 const TF4 = `${MIRROR}/20260826-thoughtform-v4`;
 
 export const GALLERY_RUNS: readonly GalleryRun[] = [
+  {
+    id: "pg-v1",
+    wave: "20260922-pokemon-go-v1",
+    title: "2016 v1 — the trainer, drawn as a cel, graded gold",
+    date: "2026-09-22",
+    status: "SHIPPING",
+    adr: "ADR-082 U33",
+    summary: [
+      'Owner: "a Pokémon-style version of myself, similar to Ash Ketchum with a hat, but … with my facial features" — anime, like the show, his call. No show, character or studio is named in the lock; the costume is lettered by its parts, and his face and boots are the only references.',
+      "⚠ HE STANDS ON MAGENTA. The blue key reads a navy vest through at α 0.27 and jeans at 0.78; magenta's key (min(R,B) − G) leaves every colour he wears opaque, and it cut all six plates whole.",
+      "⚠ A CEL GRADES HOT. Even drawn in a deep palette, at the lowest exposure the chain allows (×0.85) the deep interior's p75 is 112.8 — inside the Architect's band — but 15.3 % of it sits above 200 against his 4 %: flat skin on bare forearms and the cap's white panel. Reported, not re-lit.",
+      "Plate 2 (the brows, the hooded eyes, the beard thinning at the cheeks, the ball at his chest); the sheet's face finder took the CAP on three of six, so the heads were cut by hand. Veo refused the first idle on its SOUNDTRACK (uncharged); the retry directs the sound as near-silence. A ping-pong, 382 frames.",
+    ],
+    assets: [
+      {
+        id: "pg-v1-idle",
+        kind: "video",
+        src: `${PG1}/out/holo-idle-pokemon-go-v1.mp4`,
+        alphaSrc: `${PG1}/out/holo-idle-pokemon-go-v1.webm`,
+        label: "v1 · the trainer's idle (live on the site)",
+        note: "Ping-pong of one take: the brim hand holds, the ball turns in his fingers, the grin warms. No `.mov`.",
+        mb: 0.43,
+      },
+      {
+        id: "pg-v1-plates",
+        kind: "sheet",
+        src: `${PG1}/plates-and-gold.jpg`,
+        label: "the six plates on magenta, each beside its gold preview",
+        note: "Graded at the exposure that ships (×0.85). Plate 2 used.",
+        wide: true,
+      },
+      {
+        id: "pg-v1-heads",
+        kind: "sheet",
+        src: `${PG1}/heads.jpg`,
+        label: "the heads, cut by hand, beside his reference",
+        note: "The blind sheet's skin-blob finder landed on the cap for three plates; these crops are what the pick was made on.",
+        wide: true,
+      },
+      {
+        id: "pg-v1-strip",
+        kind: "sheet",
+        src: `${PG1}/strip-idle.jpg`,
+        label: "the idle, twelve frames across 8 s",
+        note: "The pose holds for the whole take; the drawing does not boil.",
+        wide: true,
+      },
+    ],
+  },
   {
     id: "ex-v3",
     wave: "20260922-expanse-v5",

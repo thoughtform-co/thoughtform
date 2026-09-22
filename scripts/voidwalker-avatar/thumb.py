@@ -61,6 +61,11 @@ MARKS: dict[str, dict] = {
     # offset, the crown on the same row — so the marks carry over, measured.
     "expanse": dict(poster="holo-still-expanse-v3.webp", out="holo-thumb-expanse-v3.webp",
                     crown=0.1836, chin=0.340, eye=0.271, cx=0.444),
+    # 2016's trainer (ADR-082 U33), a cel: the crown is the CAP's top, and the
+    # drawn head is larger than a photographed one (0.175 of the canvas against
+    # the Architect's 0.136) — the marks centre it, one eye line across the row.
+    "pokemon-go": dict(poster="holo-still-pokemon-go-v1.webp", out="holo-thumb-pokemon-go-v1.webp",
+                       crown=0.040, chin=0.215, eye=0.145, cx=0.505),
 }
 
 

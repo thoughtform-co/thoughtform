@@ -108,6 +108,19 @@ composition's own entry/exit block, its responsive rungs, and
     route is what reads as "too glowing" (deep-interior p75 172 / 170 against
     the Architect's ~103). `gold.py` holds the Architect's measured curve, ramp
     and bloom and the exposure gate every delivery must pass.
+  - ⚠ **U33 (2026-09-22, owner): A FIGURE MAY PERFORM A SCENE, AND A PLATE
+    STANDS ON ITS ERA'S GROUND.** The Expanse (`-v3`) scouts and aims — a
+    scene runs from the plate TO a DRAWN end pose (`generate.py --edit-kind
+aim`, framing checked before a video is paid for; asked in words, Veo
+    aimed off the frame) and loops as a ping-pong cut inside a hold. ⚠ A
+    video model MORPHS into a drawn last frame; cut before it. ⚠ At the site's
+    body scale the column holds ~0.6 m either side of his centre, so an aim
+    must turn the torso or foreshorten — never a profile from a square-on
+    chest. The 2016 trainer (`pokemon-go-v1`, anime, his own brief) stands on
+    MAGENTA (`scripts/voidwalker-avatar/grounds.py`): blue keys his vest and
+    jeans through. A cel is drawn in a DEEP palette, because the Architect's
+    curve lifts mid-tones hard. The piles are real on three eras now; gate
+    them with `capture-era-media --record`, not the lab's fixture.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title

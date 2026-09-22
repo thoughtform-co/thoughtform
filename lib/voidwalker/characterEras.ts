@@ -979,10 +979,39 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     beatId: "pokemon-go",
     year: "2016",
     wardrobe: "The street organiser",
-    loadout: "Blazer · shirt · lanyard · camera · phone · cap.",
+    // ⚠ THE LOADOUT NAMES WHAT THE PLATE SHOWS (U13's rule). It read the
+    // uniform's "Blazer · shirt · lanyard · camera · phone · cap." while this
+    // era resolved to the canonical figure; the figure is the trainer now.
+    loadout: "Trainer's cap · vest · fingerless gloves · a capture ball.",
     motto: "The crowd was the work.",
     modelPath: null,
     stillPath: "/images/vince-portrait.jpg",
+    /* The era's own hologram — `-v1`, ADR-082 U33 (owner: "a Pokémon-style
+       version of myself, similar to Ash Ketchum with a hat, but … with my
+       facial features"; anime, "like the show", his call). Drawn as a CEL on
+       the MAGENTA ground (`scripts/voidwalker-avatar/grounds.py` — the blue key
+       reads a navy vest and jeans through), his face from the 2025 shoot and
+       his own boots, then graded gold on the Architect's curve like every
+       two-step figure. Plate 2 of `20260922-pokemon-go-v1`; an idle held to the
+       pose (the brim hand up, the ball at his chest), looped as a ping-pong.
+       ⚠ IT GRADES HOT AND THAT IS REPORTED, NOT RE-LIT: at the lowest exposure
+       the chain allows (×0.85) the deep interior's p75 is 112.8, inside the
+       Architect's band, but 15.3 % of it sits above 200 against his 4 % — flat
+       cel skin and the cap's white panel. Widening the clamp is the histogram
+       match the chain refuses; the owner's eye is the gate.
+       ⚠ STANDING, SO NO `stature`: `headY` is the ink's top over the loop,
+       measured the way every standing era's is.
+       ⚠ NO `videoAlphaHevcPath` — Safari takes the floor until a Mac cuts one. */
+    hologram: {
+      videoPath: "/videos/voidwalker/holo-idle-pokemon-go-v1.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-pokemon-go-v1.webm",
+      posterPath: "/images/voidwalker/holo-still-pokemon-go-v1.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-pokemon-go-v1.webp",
+      thumbPath: "/images/voidwalker/holo-thumb-pokemon-go-v1.webp",
+      frame: { width: 720, height: 1280 },
+      headY: 0.0148,
+      footY: 0.9953,
+    },
     short: "Pokémon GO",
     // ⚠ FOUR ROWS, NOT FIVE — THE FACTS SEAT IS FIXED. A fifth row
     // ("Same years · A hashtag became a party") overran `--vwh-seat-h` and

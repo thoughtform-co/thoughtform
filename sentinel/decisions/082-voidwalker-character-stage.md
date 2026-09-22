@@ -3910,3 +3910,153 @@ lock. G1 is his pick.
   colour plate, so the only step G0 decides is the gold one. A gate belongs on
   the step whose outcome it changes; holding everything upstream of it only
   spends the owner's evening.
+
+## Update 33 — the piles stack on the record, the Expanse scouts and aims, and 2016 is drawn as a cel (2026-09-22, owner)
+
+The owner, in one message: the Expanse idle reads as anxiety — _"he's just
+sighing and breathing … I really want to have a pose where he looks around,
+turns his head like he's scouting the thing, and then takes his gun to aim"_;
+four more films for TRANSMISSION, so _"we can see the stacked effect"_; and for
+2016, _"a Pokémon-style version of myself, similar to Ash Ketchum with a hat,
+but … with my facial features"_. Two questions were put back to him and he
+answered both: the look is ANIME, like the show, and the aim is PAST THE CAMERA.
+
+### A · The piles stack on the record
+
+`expanse` gains the set-visit film (`pNlYOGwt1nA`, 3:58) behind its front card;
+`loop` gets its first pile, a keynote (`EQKIiqVyjJk`, 10:36) and a podcast
+(`bouBxlVy3zc`, 1:02:11); `genai` gains the behind-the-scenes (`T6z9sbGl04Y`,
+7:06) and its front film's own 2:55, which was never authored — the head's tag
+reads the FRONT card's length, so the pile would have printed a blank tag on one
+card and a time on the other. Titles are the sources' own words with the channel
+suffix and HIS NAME taken off (two source titles were 63 characters against the
+card's 60, and the station is already him). Posters are the videos' own
+thumbnails, self-hosted at 960 × 540; the podcast's is pillarboxed as YouTube
+shows it. The duration grammar takes `H:MM:SS` past an hour, two-digit minutes
+only. ⚠ `capture-era-media --record` gates an era's OWN pile — every gate before
+this ran on the lab's fixture, and a fixture that fits proves only that the
+fixture's titles fit. Measured: every rotation of all three piles fits at
+1280 × 720, 375 × 553 and 1920 × 1247, and the tag follows the front card.
+
+### B · The chain: a scene, and a ground per era
+
+- **A SCENE IS DRAWN WITH THE PLATE AS BOTH ENDS** (`vid.py --scene`). U14's
+  refusal of `last_frame` stands for an IDLE — the model lands near the frame,
+  not on it, and a near-still idle has nothing to hide the drift in. An action
+  this big cannot come home by luck in eight seconds, so a scene is written to
+  HOLD at both ends and `post.py --loop settle` dissolves the drift onto frame
+  0 afterwards. ⚠ The seam is gated on the HELD second's own motion, never the
+  clip's average, which an action inflates until any seam passes.
+- **THE GROUND IS THE ERA'S** (`grounds.py`, one table for the prompt's words
+  AND the key). Blue stays the default. The trainer's navy vest keys at α 0.27 on
+  it and his jeans at 0.78, so he stands on MAGENTA, whose key `min(R, B) − G`
+  leaves every colour he wears opaque. `gold.key_matte` keys any saturated
+  ground; for blue it is exactly `B − max(R, G)`, and the blue plate's gates
+  measure byte-identically before and after.
+- **THE PLATE PREVIEW IS GRADED AT THE EXPOSURE THAT SHIPS** — solved as
+  `post.py` solves it (one shared `solve_exposure`), where it was graded at
+  1.0, a setting nothing ships at.
+- ⚠ **THE BORDER REPAINT CAN CUT A FIGURE CLEANLY.** U32 repaints the outer 4px
+  with the ground before the key; a muzzle that reaches an edge is not reported
+  as touching it — it is cut there, and the matte looks perfect. Any ink within
+  6px of a wall is a problem now.
+
+### C · The Expanse scouts and aims
+
+⚠ **TAKE 1 AIMED OFF THE FRAME.** Told in words to aim past the camera,
+foreshortened across his chest, Veo swung the rifle out level to the RIGHT of the
+picture and the barrel ran off the frame edge for ~2.7 s (f104–f156): the one
+pose the stage cannot hold. A video model finds the physically easy aim, and the
+easy aim from that grip is sideways. The action was otherwise right — he
+listens, scouts, raises, aims and comes home.
+
+**So the aim is DRAWN first, as a still** (`generate.py --stage edit --edit-kind
+aim`), where the framing can be checked before a video is paid for, and the scene
+runs from the plate TO that still (`--ending aim --last`) and loops as a
+PING-PONG: both ends are holds, so neither turn has a velocity to bounce off.
+⚠ **THE STILL IS THREE-QUARTER, NOT END-ON, AND IT FITS.** All three edits —
+asked for "nearly end-on" — turned his torso toward the picture's right and kept
+the carbine compact, which the arithmetic behind "past the camera" (a profile
+aim from a square-on torso, ~0.95 m to the muzzle against a ~0.6 m column) did
+not allow for. `aim_03` spans 0.087–0.900 of the width against the rest plate's
+0.105–0.893 — no wider than the kneel — with the knee and the boot where they
+were. The owner is told it is three-quarter, not past the lens.
+
+⚠ **VEO MORPHS INTO A DRAWN LAST FRAME.** Take 2 listens, scouts, takes the
+front grip, swings the rifle down and holds the aim from f122 — and from f171 the
+front glove shifts and a skin-coloured patch opens on it as the model lands on
+the still (frame motion 0.2 → 2.2). The aim is held and clean f144–f170 (0.21–0.40
+a frame, the opening hold's own level), so the loop is a ping-pong CUT at f160
+(`post.py --cut`): both turns fall on still frames, 320 frames, 13.3 s. The
+lesson generalises: **a drawn last frame buys the framing and costs the landing,
+so cut before the landing.** Graded like v2 (×0.85, p75 108.6, 3.1 % hot), seated
++54px; the mid-swing muzzle comes within 20px of the right wall and the elbow
+within 10px of the left for under a second, where only the bloom (≤ 37/255)
+reaches the canvas edge.
+
+⚠ **T2 JUDGES A SCENE BY ITS MEDIAN FRAME.** The interior flicker gate exists to
+catch a grade that strobes, and on an idle the mean is that measure; a scene's
+mean is its action. The swing reads 10.2 and the three holds 2.1–3.1, against
+v2's idle at 2.47 — so a scene (`settle`, or a `--cut` ping-pong) is gated on the
+median (5.75 here, against 6.0), and both are printed.
+
+⚠ **`stature` WAS RE-MEASURED, NOT INHERITED.** v3's frame zero matches v2's head
+band to 0.996 alpha IoU at zero offset, the crown on the same row, so 1.0074 and
+the thumb's marks carry over as a measurement. `headY` 0.0875 is the rifle
+mid-swing; the stature, not the ink, is what seats him.
+
+### D · 2016 is drawn as a cel
+
+Six plates on magenta from `20260922-pokemon-go-v1` (his face and his boots as
+the only references — a picture of the character the costume echoes is exactly
+what the no-names rule keeps out). The key cut all six whole. ⚠ **EVERY PLATE
+GRADES HOTTER THAN THE ARCHITECT**, even drawn in the deep palette: at the
+lowest exposure the chain allows (×0.85) three sit inside his p75 band (109–122)
+but all six carry 15–22 % of their deep interior above 200 against his 4 % and
+the gate's 12 %. The hot pixels are flat SKIN — the bare forearms of a
+short-sleeved vest, a drawn face larger than a photographed one — and the cap's
+off-white panel; a cel has no shading gradient to hold them down. Reported, and
+shipped on the owner's eye rather than re-lit, because widening the clamp is the
+histogram match this chain refuses. ⚠ The sheet's skin-blob face finder took the
+CAP on three of six; the likeness was judged on hand-cut heads. The pick is
+plate 2 (the brows, the hooded eyes, the beard thinning at the cheeks, and the
+lock's own pose: the ball at chest height, the other hand on the brim).
+
+⚠ **VEO REFUSED THE FIRST IDLE ON ITS AUDIO.** No video, "an issue with the
+audio for your prompt", uncharged. Veo always draws a soundtrack and the
+Developer API will not take `generate_audio`, so the sound is DIRECTED
+(`PLATE_IDLE_SOUND`: near-silence, no music, no voice) and music is banned in
+the era's negative — the likeliest reading is the audio model reaching for a
+cartoon's theme song. The retry rendered: the brim hand holds, the ball turns in
+his fingers, the grin warms, and the drawing does not boil. A ping-pong, 382
+frames; ground drift 1.0, seat +9px, flicker 1.45.
+
+**Installed as `pokemon-go-v1`** — standing, so no `stature` (`headY` 0.0148,
+`footY` 0.9953), thumbed off the CAP's top with his drawn head larger than a
+photographed one (0.175 of the canvas against the Architect's 0.136), and the
+loadout re-lettered to what the plate shows (U13's rule; it letters nowhere on
+the sheet). **`loop` is now the only era on the canonical pair — it IS the
+Architect.** No `.mov`: Safari takes the floor for both new figures.
+
+### Verified
+
+Era suites 96/96 and `tsc` clean. The figure-span probe at 1920 × 1247 paints
+one standing height on all five (696.6px, 0.00 %), every era uncut, heads
+258.2–261.8 against the stage top at 263.4. The eras probe is clean at 1280 × 720
+and 1101 × 800 with four panels on EVERY era now (the Architect's TRANSMISSION
+seat held an absence before) and the tightest foot unchanged at 68 / 63px. The
+phone probe fits at every shape, era and tab. The station walks with the handoff
+`ready` and `pinned` 0 at all five era centres. The gallery shows both runs, and
+the mirror still keeps a blind sheet's key out (404).
+
+### Left open
+
+- The Expanse aims three-quarter to the picture's right, not past the lens as
+  the owner chose; it is what fits and what both models drew. A true end-on aim
+  is a re-draw of the still.
+- The trainer's hot share (15.3 % against 12 %) ships on the owner's eye.
+- ⚠ **One intermediate commit is not self-consistent**: the v2 deletions were
+  staged before the chain commit (11026ec4) and landed in it, one commit ahead
+  of v3's files (0f11ef2f). The tip is correct; history was not rewritten in a
+  tree two sessions share.
+- Safari `.mov` for `expanse-v3` and `pokemon-go-v1` needs a Mac.

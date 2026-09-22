@@ -84,9 +84,10 @@ describe("ADR-082 · normalized character hologram assets", () => {
      *    painting with his identity locked from the 2025 shoot, by the wave
      *    `voidwalker-avatar/waves/20260918-genai-v1` (ADR-082 U23).
      *
-     * Only `loop` and `pokemon-go` still resolve to the canonical pair, and
-     * that is exactly what this walk proves after a roster change. */
-    const authored = new Set(["azeroth", "genai", "expanse"]);
+     * Only `loop` still resolves to the canonical pair — it IS the Architect —
+     * and that is exactly what this walk proves after a roster change.
+     * (`pokemon-go` got its own figure in ADR-082 U33: the trainer, a cel.) */
+    const authored = new Set(["azeroth", "genai", "expanse", "pokemon-go"]);
     for (const era of CHARACTER_ERAS) {
       if (authored.has(era.id)) continue;
       expect(resolveCharacterEraHologram(era), era.id).toBe(CANONICAL_CHARACTER_ERA_HOLOGRAM);
@@ -111,6 +112,21 @@ describe("ADR-082 · normalized character hologram assets", () => {
        is what a placeholder looks like. They may never be equal again. */
     const pokemon = CHARACTER_ERAS.find((e) => e.id === "pokemon-go");
     expect(expanse?.loadout).not.toBe(pokemon?.loadout);
+  });
+
+  it("resolves the pokemon-go era to its authored trainer (ADR-082 U33)", () => {
+    const pokemon = CHARACTER_ERAS.find((e) => e.id === "pokemon-go");
+    expect(pokemon?.hologram).toBeDefined();
+    expect(isCharacterEraHologram(pokemon?.hologram)).toBe(true);
+    expect(resolveCharacterEraHologram(pokemon!)).toBe(pokemon!.hologram);
+    expect(pokemon?.hologram?.videoAlphaPath).toBe(
+      "/videos/voidwalker/holo-idle-pokemon-go-v1.webm"
+    );
+    // Standing: the span IS the stature, so none is authored.
+    expect(pokemon?.hologram?.stature).toBeUndefined();
+    // No `.mov` exists for it; Safari takes the floor until a Mac cuts one.
+    expect(pokemon?.hologram?.videoAlphaHevcPath).toBeUndefined();
+    expect(pokemon?.hologram?.footY).toBeCloseTo(0.9953, 3);
   });
 
   it("resolves the genai era to its authored Starhaven hologram", () => {
