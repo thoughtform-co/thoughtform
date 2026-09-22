@@ -363,6 +363,14 @@ node scripts/design-eval/mechanical.mjs --url / --theme dark  --scope ".mu" --pr
 node scripts/design-eval/mechanical.mjs --url / --theme light --scope ".mu" --prm
 ```
 
+⚠ **IT FAILS, AND HAS SINCE U1: 8 violations in dark, 9 in light (measured
+2026-09-22).** They come from the services masthead's grammar, copied: the
+title's gold glow (×5; the services masthead lists the same five), the
+designations at 4.41 / 3.40:1, the coords at 1.43 / 1.40:1, and in light the
+gold title line at 1.83:1. ADR-119 U2 §Left open has the breakdown. A NEW
+finding beyond that list is a regression; that list itself is an open owner
+call, not a pass.
+
 ⚠ **AND LOOK AT THE STILLS.** Every defect this pass found that mattered to the
 composition — the pooled slack that put 205px between the masthead and the top
 card — was invisible to every green gate. ⚠ **RE-RUN A SCROLL SPEC ON A WARM,

@@ -693,3 +693,23 @@ order (~1.4s). PASS at 1920×1247 dark and light, 1280×720 and 390×844.
   `tabIndex={-1}` / `aria-hidden` but keep their `href`, so a click on one opens
   that post. Rolling the row to it instead (the era band's side-tap idiom) is the
   obvious follow-up; not taken without his read.
+- ⚠ **THE MECHANICAL GATE ON `.mu` HAS FAILED SINCE U1, AND NOTHING SAID SO.**
+  U0 recorded a PASS; U1 copied the services masthead's grammar and ran no gate;
+  run on 2026-09-22 after U2 (`--prm`, 1440×900) it reports 8 violations in dark
+  and 9 in light. None of them is U2's; U2 changed no colour, size or shadow.
+  - **Text shadow ×5, both themes.** This is the house display title's 22px
+    gold glow, which the gate bans outright ("gold is a glow and fails"). The
+    services masthead, the object he pointed at, lists the SAME five entries
+    element for element when scoped the same way. U2's inner decode spans are
+    two of the five: they inherit the glow, and the services masthead has the
+    same two. This is a question for ADR-092 about the recipe, not a musings
+    defect.
+  - **`.mu__desig`: 4.41:1 in dark and 3.40:1 in light**, at 9.5px against the
+    4.5 floor (`--mu-ink-3`, dawn .5, with no light re-derivation). A value fix,
+    not taken without his word.
+  - **`.mu__coord`: 1.43:1 and 1.40:1** at 8px (`--mu-rule`). Faint by the
+    house survey grammar (the arcs head paints its coords at dawn .22; the
+    services masthead uses `--survey-ink-faint`), so it is a design call.
+  - **Light only: the title's gold line at 1.83:1** on parchment (needs 3). It
+    is raw `--gold` as text, exactly as on the services masthead; the ramp's
+    ink rung would fix both surfaces at once.
