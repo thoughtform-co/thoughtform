@@ -40,6 +40,17 @@ from prompt import (  # noqa: E402
 )
 
 MODEL = "veo-3.1-generate-preview"
+#: ⚠ VEO 3 ALWAYS DRAWS A SOUNDTRACK, AND IT CAN REFUSE A CLIP ON IT ALONE
+#: (ADR-082 U34). The standing commander was refused five times — "an issue with
+#: the audio for your prompt", uncharged — through a directed near-silence, a
+#: physical-only action, the prop re-wording and a "his lips stay closed"
+#: clause: the refusal followed the PICTURE, not the words. The plate had caught
+#: him MID-WORD, and a speaking man gets a voice; closing the mouth on the plate
+#: (`generate.py --edit-kind mouth`) rendered on the first try. ⚠ Veo 2 (which
+#: draws no audio) answers 404 for this key: the key serves the three Veo 3.1
+#: variants only (`ListModels`), so `--model` picks among those (the lite one
+#: rejects `negativePrompt`).
+MODELS = ("veo-3.1-generate-preview", "veo-3.1-fast-generate-preview", "veo-3.1-lite-generate-preview")
 
 
 def main() -> int:
@@ -69,8 +80,11 @@ def main() -> int:
                     help="scene: back to the first frame, or on to the drawn aim still (--last)")
     ap.add_argument("--last", default=None,
                     help="scene: the last frame, a file in the wave's plates/ (default: the plate itself)")
+    ap.add_argument("--model", choices=MODELS, default=MODEL,
+                    help="the Veo variant (the default is the full model)")
     ap.add_argument("--dry-run", action="store_true", help="print the request, send nothing")
     args = ap.parse_args()
+    model = args.model
 
     root = Path(__file__).resolve().parent
     wave = root / "waves" / args.wave
@@ -112,7 +126,7 @@ def main() -> int:
     raw = out_dir / (f"{stem}.raw.mp4" if plate else "raw.mp4")
     if args.dry_run:
         ends = f"  (last_frame = {last.name})" if args.scene else ""
-        print(f"veo · {MODEL} · from {still.name} -> {raw.name}{ends}\n\nPROMPT\n{prompt}\n\nNEGATIVE\n{negative}")
+        print(f"veo · {model} · from {still.name} -> {raw.name}{ends}\n\nPROMPT\n{prompt}\n\nNEGATIVE\n{negative}")
         return 0
     if raw.exists():
         print(f"{raw} already on disk — kept (delete it to re-draw)")
@@ -122,16 +136,16 @@ def main() -> int:
     from google.genai import types
 
     client = genai.Client(api_key=require("GEMINI_API_KEY"))
-    print(f"veo · {MODEL} · from {still.name}")
+    print(f"veo · {model} · from {still.name}")
 
     extra = {"last_frame": types.Image.from_file(location=str(last))} if args.scene else {}
+    extra["resolution"] = "720p"
     op = client.models.generate_videos(
-        model=MODEL,
+        model=model,
         prompt=prompt,
         image=types.Image.from_file(location=str(still)),
         config=types.GenerateVideosConfig(
             aspect_ratio="9:16",
-            resolution="720p",
             duration_seconds=8,
             negative_prompt=negative,
             # The figure is a hologram of a real person; the model needs this

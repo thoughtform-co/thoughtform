@@ -534,19 +534,33 @@ PLATE_IDLE: dict[str, tuple[str, str]] = {
         "(the brushwork is fixed to the cloth like a printed surface; it never shimmers "
         "and it is never repainted)",
     ),
-    # ⚠ AN IDLE, NOT A PERFORMANCE (owner, 2026-09-22: "animate it like an
-    # idle, subtle movement"). The first lock asked for an earpiece press, an
-    # eye flick, a nod and a blink in eight seconds — four beats of acting. The
-    # Architect's idle is a breath; this is too.
+    # ⚠ THE COMMANDER (ADR-082 U34, owner: "more like a general or commander,
+    # maybe holding my gun but then pointing in the distance, giving commands.
+    # Make it subtle"). v2's kneeling breather (U32) read as "sighing … as if
+    # he's having anxiety", and v3's scene (U33) became this pose. The plate is
+    # `plate-expanse-mouth_01` (`command_01` with its lips closed) — he points
+    # to the RIGHT of the picture and holds the rifle low across his body, the
+    # MIRROR of what EDIT_COMMAND asked — so the idle is written in THAT
+    # picture's terms. Still an idle, not a performance: no gesture at all.
+    # ⚠ THE ACTION IS SAID IN PHYSICAL TERMS ONLY. "Sending his people on" and
+    # "an order carried out" were refused on the SOUNDTRACK (uncharged) — and so
+    # was every wording after them, physical ones included, because the cause
+    # was the first plate's PARTED MOUTH (see PLATE_IDLE_HOLD). The rule stays
+    # anyway: words that describe a spoken order still invite a voice.
+    # ⚠ AND THE HAND DOES NOT MOVE AT ALL. Take 1 from the closed-mouth plate
+    # was told "the raised hand moves forward a finger's width … and settles
+    # back"; Veo read an invitation to GESTURE, swung the forearm upright into a
+    # raised index finger ("wait") at 1.25 s and held it until 4.5 s. Measured:
+    # the hand's reach fell 0.890 → 0.81 of the canvas. A pointing hand is the
+    # most gesture-shaped thing in the picture, so it gets no motion of its own.
     "expanse": (
-        "He holds the kneel, steady and alert, and simply breathes: a slow, shallow "
-        "breath lifts his chest and shoulders a little and settles again; his weight "
-        "eases a fraction onto the planted knee and back; one slow blink — that is "
-        "everything, a living pause rather than a performance",
-        "the planted knee and the flat boot, the rifle VERTICAL (no sway, no tilt, no "
-        "lowering, no aiming), the hand at the earpiece and its raised elbow, his head "
-        "and his gaze (he keeps looking exactly where he is looking), the cap and the "
-        "kilt, the closed mouth, and all of him inside the frame",
+        "He holds the pose and breathes: a slow breath lifts his chest and settles; his "
+        "head turns a fraction further toward where he points and back; one blink — "
+        "nothing more",
+        "his feet and his stance, the rifle held low across his body (no raising, no "
+        "aiming, no swing), the pointing arm and its hand (level, pointing forward, the "
+        "index finger never turning upward), the cap, the kilt and the earpiece, his "
+        "mouth, and all of him inside the frame",
     ),
     # 2016 · the trainer (ADR-082 U33): an idle, like the others — a breath and a
     # small life in the hand, never a throw.
@@ -584,11 +598,23 @@ PLATE_IDLE_NEGATIVE = (
 #: The hold goes FIRST now, in the picture's terms, and the moves it made are
 #: banned by name in the negative.
 PLATE_IDLE_HOLD: dict[str, str] = {
+    # ⚠ U32's lesson, one pose on: a raised arm the model is not told to HOLD is
+    # an arm it will lower, so the hold is stated first and in picture terms.
+    # ⚠ AND HE DOES NOT SPEAK. The first commander plate caught him with his
+    # lips parted, as if mid-order, and five takes were refused on the
+    # SOUNDTRACK: a model that reads a man speaking draws his voice, and a real
+    # person's voice is what an audio filter refuses. Saying so here did NOT
+    # fix it — a first frame outranks a sentence — so the PLATE was fixed
+    # (`--edit-kind mouth`), and this clause keeps the closed mouth closed.
     "expanse": (
-        "THE POSE IS HELD FOR ALL EIGHT SECONDS. The hand raised to his ear — on the "
-        "LEFT of the picture — stays pressed to the earpiece the whole time and never "
-        "drops. His head does not turn, tilt or lift, and his eyes keep looking exactly "
-        "where they look in the first frame. The last frame is the first frame's pose."
+        "THE POSE IS HELD FOR ALL EIGHT SECONDS. The arm raised on the RIGHT of the "
+        "picture keeps pointing forward into the distance, level, the whole time; it "
+        "never drops and never lifts, and its hand and index finger stay exactly where "
+        "they are in the first frame. The rifle stays low across his body in the hand on "
+        "the LEFT of the picture. He "
+        "keeps looking where he points. HE DOES NOT SPEAK: his lips are closed in the "
+        "first frame and stay closed, and they never move. The last frame is the first "
+        "frame's pose."
     ),
     # ⚠ The brim hand is the trainer's version of the earpiece: a raised hand
     #   the model would "resolve" to his side if it were only listed as still.
@@ -602,8 +628,10 @@ PLATE_IDLE_HOLD: dict[str, str] = {
 
 PLATE_IDLE_NEGATIVE_EXTRA: dict[str, str] = {
     "expanse": (
-        "lowering the hand from the ear, dropping the arm, resting the hand on the knee, "
-        "turning the head, tilting or lifting the head, looking up, looking at the camera, "
+        "lowering the pointing arm, dropping the arm, raising the forearm, a finger "
+        "pointing up, a raised index finger, a hand gesture, waving, beckoning, raising "
+        "the rifle, shouldering or aiming the rifle, stepping, walking, turning away, "
+        "looking at the camera, speaking, talking, moving lips, an open mouth, shouting, "
         "changing the pose"
     ),
 }
@@ -625,16 +653,18 @@ PLATE_IDLE_NEGATIVE_OWN: dict[str, str] = {
 
 #: ⚠ VEO ALWAYS DRAWS A SOUNDTRACK, AND THE SOUNDTRACK CAN SINK THE CLIP
 #: (ADR-082 U33). The trainer's first idle came back with no video and "an issue
-#: with the audio for your prompt" — uncharged, and the likeliest reading is the
-#: audio model reaching for a cartoon's theme song. The Developer API refuses
-#: `generate_audio` (see vid.py), so the sound is DIRECTED instead: the asset is
-#: muted at the element, and the only job of the audio is not to be refused.
-PLATE_IDLE_SOUND: dict[str, str] = {
-    "pokemon-go": (
-        "SOUND: near-silence — a faint, even room tone and nothing else. No music, no song, "
-        "no voice, no sound effects."
-    ),
-}
+#: with the audio for your prompt" — uncharged — and U34's commander ("giving
+#: commands") came back the same way, so it is not a theme song: it is whatever
+#: the audio model reaches for when the picture suggests a sound — there, a man
+#: caught mid-word, which no sentence could silence. The Developer
+#: API refuses `generate_audio` (see vid.py), so the sound is DIRECTED instead,
+#: on EVERY plate clip: the asset is muted at the element, and the only job of
+#: the audio is not to be refused.
+PLATE_SOUND = (
+    "SOUND: near-silence — a faint, even room tone and nothing else. No music, no song, "
+    "no voice, no speech, no sound effects."
+)
+PLATE_IDLE_SOUND: dict[str, str] = {}
 
 
 def ground_word(era: str | None) -> str:
@@ -652,12 +682,17 @@ def plate_idle_prompt(era: str, prop_wording: bool = False) -> str:
         action = action.replace("rifle", "costume prop carbine")
         still = still.replace("rifle", "costume prop carbine")
     lead = f"{hold} Within that pose: {action}" if hold else action
-    sound = PLATE_IDLE_SOUND.get(era)
+    sound = PLATE_IDLE_SOUND.get(era, PLATE_SOUND)
     return (
         f"LOCKED STATIC FRAME on a heavy tripod. {lead}. WHAT STAYS STILL: {still}. "
         f"The background is a FLAT UNIFORM {ground_word(era)}, the same value in every corner on every "
-        "frame. The lighting does not change. Real time." + (f" {sound}" if sound else "")
+        f"frame. The lighting does not change. Real time. {sound}"
     )
+
+
+#: The soundtrack's own bans, appended to every plate clip's negative (see
+#: PLATE_SOUND for why).
+PLATE_SOUND_NEGATIVE = "music, a song, singing, speech, voices, shouting, sound effects"
 
 
 def plate_idle_negative(era: str) -> str:
@@ -665,7 +700,8 @@ def plate_idle_negative(era: str) -> str:
     if era in PLATE_IDLE_NEGATIVE_OWN:
         return PLATE_IDLE_NEGATIVE_OWN[era]
     extra = PLATE_IDLE_NEGATIVE_EXTRA.get(era)
-    return f"{PLATE_IDLE_NEGATIVE}; {extra}" if extra else PLATE_IDLE_NEGATIVE
+    base = f"{PLATE_IDLE_NEGATIVE}; {extra}" if extra else PLATE_IDLE_NEGATIVE
+    return f"{base}; {PLATE_SOUND_NEGATIVE}"
 
 
 #: A SCENE for a plate (ADR-082 U33, owner: "I really want to have a pose where
@@ -753,11 +789,12 @@ def plate_scene_prompt(era: str, prop_wording: bool = False, ending: str = "home
     scene = table.get(era)
     if scene is None:
         raise SystemExit(f"no '{ending}' scene is authored for era '{era}'")
+    scene = f"{scene} {PLATE_SOUND}"
     return scene.replace("rifle", "costume prop carbine") if prop_wording else scene
 
 
 def plate_scene_negative(era: str) -> str:
-    return PLATE_SCENE_NEGATIVE[era]
+    return f"{PLATE_SCENE_NEGATIVE[era]}; {PLATE_SOUND_NEGATIVE}"
 
 
 #: ADR-082 U32 (owner, 2026-09-22): "the images you made were good, but only the
@@ -839,14 +876,94 @@ gradient, and no blue light on the figure. Nothing touches a frame edge.
 """
 
 
+#: ADR-082 U34 (owner, 2026-09-22): "if I'm the campaign commander, then maybe I
+#: should be more like a general or commander, maybe holding my gun but then
+#: pointing in the distance, giving commands. Make it subtle … Maybe I shouldn't
+#: be kneeling." An EDIT of plate F, because plate F is the one that holds his
+#: likeness and the rifle he already approved.
+#: ⚠ THE ARM IS FORESHORTENED FOR THE SAME REASON THE AIM WAS: at the site's body
+#:   scale his column holds ~0.6 m either side of his centre, and an arm flung
+#:   out sideways from a square-on chest reaches ~0.9 m.
+#: ⚠ AND HE MAY NOT BE SHRUNK TO MAKE ROOM: every era paints one standing
+#:   height, and the site refuses a figure spanning under 0.7343 of its canvas.
+#: ⚠ THE MOUTH IS CLOSED, AND "OR JUST PARTED" WAS A FIVE-REFUSAL MISTAKE. The
+#:   first cut allowed "closed or just parted as if giving the command"; the
+#:   model drew him mid-word, and Veo — which must start ON that frame and
+#:   always draws a soundtrack — gave the speaking man a voice. The audio filter
+#:   refused every idle (five takes, uncharged), whatever the prompt said about
+#:   silence: a first frame outranks a sentence. Fixed on the picked plate by
+#:   EDIT_MOUTH below; fixed here so a redraw cannot bring it back.
+EDIT_COMMAND = """
+IMAGE 1 is the photograph to edit.
+
+Keep exactly as IMAGE 1: the same man, the same face and beard, the cap, the
+earpiece in his ear and the boom mic, the armour, the kilt panel, the leggings,
+the socks, the boots, the SAME futuristic rifle, the light, and the flat blue
+ground.
+
+Make ONE change: his pose. He STANDS — no longer kneeling — upright and
+planted, his feet about a shoulder-width apart, his weight settled, his torso
+turned a few degrees toward the LEFT of the picture. A commander giving an order
+to his people: calm, certain, not shouting.
+
+The rifle hangs LOW in the hand on the RIGHT of the picture, held by its grip at
+his side, the muzzle pointing down toward the ground a little ahead of his boot,
+his finger outside the trigger guard. He is not aiming.
+
+The other arm — the hand on the LEFT of the picture — is raised and POINTS into
+the distance: forward and a little to the LEFT of the picture, the arm
+FORESHORTENED toward the viewer so the pointing hand stays well inside the
+frame. No part of him reaches out sideways past the line of his shoulders by
+more than a hand's width. His head turns toward where he points, his eyes on the
+distance, his MOUTH CLOSED, lips together: he has given the order and is silent.
+
+FRAMING 9:16: the whole standing figure, from the top of the cap to the soles.
+The top of the cap about 6 % down from the top edge, the soles about 3 % up
+from the bottom edge, nothing touching any edge. He is drawn at a standing man's
+full height in this frame — do NOT make him smaller to fit the arm; keep the arm
+foreshortened instead.
+
+Photoreal, lit by the same light as IMAGE 1. No legible text, numbers or logos.
+The ground stays one perfectly uniform blue, #0A28D2, edge to edge — no shadow,
+no gradient, no floor, and no blue light on the figure.
+"""
+
+
+#: ADR-082 U34: the smallest edit in the chain — the picked commander plate
+#: with its mouth closed, and nothing else. See EDIT_COMMAND's ⚠ for why a
+#: parted mouth is a plate a video model cannot animate in silence.
+EDIT_MOUTH = """
+IMAGE 1 is the photograph to edit.
+
+Keep IMAGE 1 exactly as it is: the same man, the same face, the same beard, the
+cap, the earpiece and the boom mic, the armour, the kilt, the leggings, the
+socks, the boots, the rifle, the pose, BOTH arms and both hands, the framing,
+his size, the light, and the flat blue ground. Do not redraw, re-light or
+re-sculpt anything except his mouth.
+
+Make ONE change: his MOUTH IS CLOSED. His lips rest together, relaxed, the jaw
+settled; no teeth show. He has given the order and is silent now, calm and
+certain. Nothing else in his face changes: the same eyes, the same brow, the
+same gaze toward where he points.
+
+No legible text, numbers or logos. The ground stays one perfectly uniform blue,
+#0A28D2, edge to edge — no shadow, no gradient, and no blue light on the figure.
+"""
+
+
 def edit_prompt(era: str, n_design: int, kind: str = "rifle") -> str:
     """The one-change edit for a picked plate. `n_design` is how many photographs
     of the new rifle follow IMAGE 1 (0 means the words alone carry it); `kind`
-    "aim" is the scene's end pose instead (ADR-082 U33)."""
+    "aim" is the scene's end pose (ADR-082 U33), "command" the standing
+    commander (U34), "mouth" that commander with his mouth closed (U34)."""
     if era != "expanse":
         raise SystemExit(f"no plate edit is authored for era '{era}'")
     if kind == "aim":
         return EDIT_AIM.strip()
+    if kind == "command":
+        return EDIT_COMMAND.strip()
+    if kind == "mouth":
+        return EDIT_MOUTH.strip()
     if n_design:
         nums = " and ".join(f"IMAGE {i}" for i in range(2, 2 + n_design))
         clause = (
