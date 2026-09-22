@@ -4060,3 +4060,159 @@ the mirror still keeps a blind sheet's key out (404).
   of v3's files (0f11ef2f). The tip is correct; history was not rewritten in a
   tree two sessions share.
 - Safari `.mov` for `expanse-v3` and `pokemon-go-v1` needs a Mac.
+
+## Update 34 — every folder the same, one bucket for one film, and the Expanse commands (2026-09-22, owner)
+
+The owner, on U33 live: TRANSMISSION's notch — _"look at this as a digital
+folder, and every folder looks the same. The notch is the same in every
+structure … stack it from a different vantage point, so you can still see the
+stack thing"_, with a reference of identical folders cascaded down-right, every
+tab readable; the Twitch recording of his class, _"add that to Supabase and then
+add it here"_, plus two more films; and the Expanse as _"more like a general or
+commander, maybe holding my gun but then pointing in the distance, giving
+commands. Make it subtle … Maybe I shouldn't be kneeling."_ Asked how the
+recording should be served, he answered **stream from Supabase**.
+
+### A · Every folder the same, on a diagonal
+
+**This reverses U31's "tabs ordered by depth, fanned along the top edge".** U31
+drew the front card's tab wide (`■ FILM 01`) and each card behind as a narrow
+index fanned to its right, so a reader could see "02" — which he understood and
+rejected: that is not what a folder looks like.
+
+- **One card, one tab.** Every card is `W − (n−1)·dx` wide; every tab sits
+  flush at its card's top-left and is `--_wt` wide, solved ONCE from the widest
+  designation (`IMAGE NN`: 7 mono advances + the mark + the slant), so every
+  notch is the same notch. The silhouette is six points — `(0,0) (w−t,0) (w,t)
+(100%,t) (100%,100%) (0,100%)` — and the lip stays U31's CLOSED evenodd ring
+  with the slant's inner ends at −0.414px.
+- **The cascade.** The card at depth `d` sits `d` steps up and left of the
+  front one: `--vwd-mstack-dy` IS `--vwd-mtab-h`, so each tab behind reads WHOLE
+  just above the card in front (his reference's read), and `--vwd-mstack-dx`
+  (`clamp(10px, 1.2svh, 18px)`) leaves a sliver of each card behind on the left.
+  The pile's padding is the cascade's own extent, so the front card's box is
+  where the cards are.
+- **One notch, one state.** Every tab letters `■ KIND NN` (the index only where
+  there is a pile); the mark is gold on the open card and dawn behind. Every tab
+  stays a `<button>`; a back card still renders no body; the rotation is a 240ms
+  position-only ease.
+- ⚠ **THE TAP TARGET CHANGED WITH THE GEOMETRY.** A back tab's `::after` spans
+  two tab heights and is clipped by its card's silhouette; the old downward slop
+  is gone, because the area under a back tab now belongs to the card in front.
+- ⚠ **THE CAP IS A HEIGHT NOW: 4 → 3.** Each card behind costs the front frame
+  one tab height. At 1280 × 720 (seat 194.7): one card's frame is 113.9 (100.4
+  with a two-line title), two are 91.9 (78.4 two-line), three are **72.0 — the
+  floor, exactly** — and four break it. The phone (`--vwd-mpad` 12 → 10) draws
+  at most two; a third is reachable by rotation (`[data-vwd-media-depth="2"]` is
+  `display: none` there). The lab's `?media=` and `capture-era-media --piles`
+  take 0–3 and refuse the rest, because a pile the lab will not mount is a still
+  of the wrong subject, gated green.
+- **Guards.** The markup test pins `KIND NN` and exactly one lit mark; the sheet
+  test pins the six-point silhouette, the ring, one tab width, the step equal to
+  the tab height and the cap's arithmetic; `capture-era-media` asserts identical
+  card and tab boxes, each card exactly one step up-left of the next, every back
+  tab SEEN WHOLE (an `elementFromPoint` hit test at four inset points — a tab can
+  sit inside the pile's box and still be covered) and the pile inside its seat.
+
+### B · Three more films, one of them streamed from Supabase
+
+- **2016** gets its first pile: _Pokémon GO hunt in the Zoo of Antwerp (2016)_
+  (`tRdaNTpxmR8`, 0:55). **2020** gets the Thomas More film (`qm4KlfvJc9A`,
+  2:02); its source title is 64 characters against the card's 60, so "my
+  classes" came out. **Every era carries a pile now.** Posters are the videos'
+  own thumbnails, self-hosted at 960 × 540.
+- ⚠ **`media-src` NAMES ONE REMOTE HOST, BY OWNER RULING.** This reverses the
+  2026-09-01 pin that no http(s) origin may ever join it — made on his
+  instruction, and made narrow: `https://ehijwavsxbvnxsrunegu.supabase.co`, the
+  site's own project, named in full. **Never the `*.supabase.co` glob** that
+  `img-src` and `connect-src` carry — that would let any project on the platform
+  serve video here. `security-headers.test.ts` pins it from both directions
+  (that origin, no other, no wildcard).
+- **The registry carries its own copy** (`ERA_MEDIA_STORAGE_ORIGIN`; the file
+  imports nothing), asserted equal to the CSP's `ERA_MEDIA_ORIGIN`. A `video`
+  may name a PUBLIC `.mp4` in the `era-media` bucket and nothing else: another
+  project, another bucket, a signed object (it expires), plain http, a `.webm`
+  and a path that climbs out are each refused by the guard. **The poster stays
+  self-hosted** — it is the one request a card makes at rest, and it may not be
+  the page's first third-party call.
+- ⚠ **A POLICY WIDENED FOR ONE FILM IS PROVEN BY PLAYING IT UNDER
+  ENFORCEMENT.** `sweep-csp-enforced.mjs` now seats `#voidwalker`, picks
+  `--era-media` with the KEYBOARD (the reel keeps two chips outside its clip, so
+  its first cut — a pointer click — never changed the era, and its silent catch
+  hid that), opens the pile's FRONT card and counts requests to the bucket's
+  host. Zero requests means the step proved nothing about the widening, and it
+  says so.
+- **The recording itself is PENDING.** Its filename names the game, and the
+  standing hook refuses any command that does; the owner copies it under a
+  neutral name, and the upload, the card at the FRONT of 2020's pile and the
+  sweep's step against it follow.
+
+### C · The Expanse commands, standing
+
+A pose EDIT of plate F — the plate that holds his likeness and the rifle he
+approved (`generate.py --edit-kind command`, `EDIT_COMMAND`). Three draws;
+`command_02` is the only one drawn exactly as asked (the rifle on the picture's
+right, the point to its left) and it garbled the cap's lettering; `command_03`
+grew a ghost rifle and boot; so `command_01` (ink 0.123–0.891 of the width).
+⚠ It is the MIRROR of the request — the point on the picture's RIGHT, the rifle
+in the hand on the LEFT — so the idle is written in that picture's terms, never
+the edit's.
+
+⚠ **THE FIRST PLATE HAD HIM MID-WORD, AND VEO GAVE HIM A VOICE.** `EDIT_COMMAND`
+allowed "his mouth closed or just parted as if giving the command", and the
+model drew the parted, speaking mouth. Veo starts ON that frame and always draws
+a soundtrack; every idle from it came back refused on the AUDIO, uncharged —
+five takes: the plain wording, a directed near-silence, physical-only verbs, the
+prop wording, and a clause that his lips stay closed. **A first frame outranks a
+sentence.** `--edit-kind mouth` (`EDIT_MOUTH`, one change) closed the lips —
+silhouette IoU 0.998 against its source, the ink bounds unchanged — and the idle
+rendered on the first try. The clause in `EDIT_COMMAND` is fixed so a redraw
+cannot bring it back.
+
+⚠ **TAKE 1 RAISED A FINGER.** Told the pointing hand "moves forward a finger's
+width, slowly, and settles back", Veo swung the forearm upright into a raised
+index finger ("wait") at 1.25 s and held it to 4.5 s — the hand's reach fell
+0.890 → 0.81 of the canvas. **A pointing hand is the most gesture-shaped thing in
+the picture, so it gets no motion of its own**; take 2 bans the upturned finger
+by name and holds the point f0–f175 (reach 0.885–0.907), dropping the arm only
+from f174. Its lids lower three times for ~0.7 s — slow blinks at a size (the
+eyes are ~5px at the stage's scale) that reads as life, not fatigue. ⚠ **A HOLD
+IS JUDGED BY TRACKING IT**, per frame, not by a strip of eight frames — a strip
+can land on both ends of a gesture and look held.
+
+**Installed as `expanse-v4`** — a ping-pong cut at f168, inside the hold: 336
+frames, 14 s, seam 0.63. Graded ×0.85 (deep-interior p75 129, 7 % above 200 —
+hotter than v3's 109, inside the gate), seated +49px, flicker 1.33, ground drift
+1.0, ink 0.125–0.918 of the width (the pointing hand 59px inside the right
+wall). **He stands, so there is no `stature`** — `headY` 0.1047 is the cap's
+glow at the anchor's α ≥ 32, over the head's own columns, and the span is his
+own cap-to-soles. **No era kneels now**; the kneeling law, its code and its unit
+fixtures stay for the next one that does. The bust is re-marked off v4's own
+frame zero, never carried from the kneel. v3 is archived to
+`waves/_shipped/expanse-v3`. Spend: three command edits, two mouth edits, two
+idles — about $7.10, the envelope the owner approved with one re-take.
+
+### Verified
+
+Era, hologram, pile, sheet, CSP, theme and type suites 221/221, `tsc` clean. The
+figure-span probe at 1920 × 1247 paints one standing height on all five (696.6px,
+0.00 %; the commander's fit 0.8245), every era uncut, the disc line 954.8–958.4.
+The eras probe is clean at 1280 × 720 and 1101 × 800, four panels on every era,
+the tightest foot unchanged at 68 / 63px. The phone probe fits at every shape,
+era and tab. `capture-era-media --record` passes every rotation of every era's
+own pile at 1280 × 720, 1101 × 800, 1920 × 1247, 375 × 553 and 390 × 844, and the
+fixture at the cap passes at 1280 × 720 (frame 72.0), 375 × 553 and 1920 × 1247.
+The enforced production build serves `media-src 'self' blob: data:
+https://ehijwavsxbvnxsrunegu.supabase.co`, and `sweep-csp-enforced.mjs` is
+CLEAN against it — nine routes in both themes (the owner's `/arcs` on a signed
+pass), the walkthrough, and the TRANSMISSION step opening 2020's front card.
+⚠ Its request count to the bucket is **0**, which is the step stating what it
+did not prove: until the recording is uploaded, nothing on the site asks that
+host for anything.
+
+### Left open
+
+- The Twitch recording (§B) — the file, the bucket, the card, the sweep's step
+  against it.
+- Safari `.mov` for `expanse-v4` needs a Mac.
+- The commander grades hotter than v3 (p75 129 against 109), inside the gate.

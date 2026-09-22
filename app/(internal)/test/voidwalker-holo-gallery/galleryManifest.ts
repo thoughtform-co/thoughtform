@@ -64,6 +64,7 @@ export interface GalleryRun {
 }
 
 const PG1 = `${MIRROR}/20260922-pokemon-go-v1`;
+const EX6 = `${MIRROR}/20260922-expanse-v6`;
 const EX5 = `${MIRROR}/20260922-expanse-v5`;
 const EX4 = `${MIRROR}/20260922-expanse-v4`;
 const G0 = `${MIRROR}/20260921-calibration-v1`;
@@ -127,11 +128,68 @@ export const GALLERY_RUNS: readonly GalleryRun[] = [
     ],
   },
   {
+    id: "ex-v4",
+    wave: "20260922-expanse-v6",
+    title: "The Expanse v4 — the commander, standing, points into the distance",
+    date: "2026-09-22",
+    status: "SHIPPING",
+    adr: "ADR-082 U34",
+    summary: [
+      "Owner: \"if I'm the campaign commander … more like a general or commander, maybe holding my gun but then pointing in the distance, giving commands. Make it subtle … Maybe I shouldn't be kneeling.\" A pose EDIT of v2/v3's plate F (his likeness and the rifle he approved): he stands, the rifle low in one hand, the other arm pointing, foreshortened so the hand stays inside the column.",
+      '⚠ THE FIRST PLATE HAD HIM MID-WORD, AND VEO GAVE HIM A VOICE. The edit allowed "closed or just parted as if giving the command"; the model drew the parted, speaking mouth, and every idle from it — five takes, whatever the prompt said about silence — was refused on the SOUNDTRACK (uncharged). A first frame outranks a sentence: a second, one-change edit closed the lips, and the idle rendered on the first try.',
+      "⚠ TAKE 1 RAISED A FINGER. Told the hand \"moves forward a finger's width … and settles back\", Veo swung the forearm upright into a raised index finger at 1.25 s and held it to 4.5 s (the hand's reach fell 0.890 → 0.81). Take 2 gives the hand no motion of its own and bans the upturned finger by name; it holds the point for 7.3 s and drops the arm at f174.",
+      "A PING-PONG cut at f168, inside the hold: 336 frames, 14 s. Graded ×0.85 (deep-interior p75 129, 7 % hot), seated +49px, flicker 1.33, the pointing hand 59px inside the right wall. He STANDS, so no stature: the span is his own cap-to-soles.",
+    ],
+    assets: [
+      {
+        id: "ex-v4-idle",
+        kind: "video",
+        src: `${EX6}/out/holo-idle-expanse-v4.mp4`,
+        alphaSrc: `${EX6}/out/holo-idle-expanse-v4.webm`,
+        label: "v4 · the commander, pointing, breathing (live on the site)",
+        note: "Ping-pong of take 2 cut at f168. No `.mov`: Safari takes the floor for this era until a Mac cuts one from veo/graded/.",
+        mb: 0.63,
+      },
+      {
+        id: "ex-v4-strip2",
+        kind: "sheet",
+        src: `${EX6}/strip-take2.jpg`,
+        label: "take 2, twelve frames across 8 s",
+        note: "The point holds f0–f175; the last frame here (f176) is where the arm starts to drop, past the loop's turn at f168.",
+        wide: true,
+      },
+      {
+        id: "ex-v4-strip1",
+        kind: "sheet",
+        src: `${EX6}/strip-take1.jpg`,
+        label: "take 1 (not used): the raised finger",
+        note: "The hand was given a motion of its own and turned it into a gesture — the forearm upright, a finger raised, 1.25–4.5 s.",
+        wide: true,
+      },
+      {
+        id: "ex-v4-plates",
+        kind: "plate",
+        src: `${EX6}/plates.jpg`,
+        label: "the commander plate, then its mouth closed (mouth_01 used)",
+        note: "Edits of plate F: the pose, then the lips alone. mouth_02 reached the frame's right and bottom edges and was dropped.",
+        wide: true,
+      },
+      {
+        id: "ex-v4-heads",
+        kind: "plate",
+        src: `${EX6}/heads.jpg`,
+        label: "the three heads: mid-word, then closed twice",
+        note: "mouth_01 keeps the source's eyes and brow; silhouette IoU 0.998 against the plate it edits.",
+        wide: true,
+      },
+    ],
+  },
+  {
     id: "ex-v3",
     wave: "20260922-expanse-v5",
     title: "The Expanse v3 — he scouts, then aims",
     date: "2026-09-22",
-    status: "SHIPPING",
+    status: "SUPERSEDED",
     adr: "ADR-082 U33",
     summary: [
       "Owner: v2 \"is just sighing and breathing as if he's having anxiety … I really want a pose where he looks around, turns his head like he's scouting, and then takes his gun to aim.\" The same plate as v2 (his likeness, the futuristic rifle), animated as a SCENE: he listens at the earpiece, scouts left and right, takes the front grip, swings the rifle down and holds the aim.",
@@ -145,7 +203,7 @@ export const GALLERY_RUNS: readonly GalleryRun[] = [
         kind: "video",
         src: `${EX5}/out/holo-idle-expanse-v3.mp4`,
         alphaSrc: `${EX5}/out/holo-idle-expanse-v3.webm`,
-        label: "v3 · the scene: listen, scout, aim (live on the site)",
+        label: "v3 · the scene: listen, scout, aim",
         note: "Ping-pong of take 2 cut at f160. No `.mov`: Safari takes the floor for this era until a Mac cuts one from veo/graded/.",
         mb: 1.29,
       },

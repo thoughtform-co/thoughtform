@@ -47,7 +47,28 @@ python scripts/voidwalker-avatar/vid.py --wave <wave> --stage plate --era expans
 python scripts/voidwalker-avatar/post.py --wave <wave> --era expanse --version v3 --matte ground --clip <plate-stem>.scene.raw.mp4 --loop settle
 # ...and if it will not settle, the same take cut in a HELD beat and played back and forth
 python scripts/voidwalker-avatar/post.py ... --loop pingpong --cut <frame in the hold>
+# ADR-082 U34: a NEW POSE is an edit of the picked plate, and a parted mouth is fixed on the plate
+python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage edit --edit-kind command --source <plate F>
+python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage edit --edit-kind mouth --source <the picked command plate>
 ```
+
+⚠ **A PLATE WITH A PARTED MOUTH CANNOT BE ANIMATED IN SILENCE (U34).** Veo
+starts ON the plate and always draws a soundtrack; a man caught mid-word gets a
+voice, and the audio filter refuses the clip ("an issue with the audio for your
+prompt", uncharged). The commander's first plate was refused five times — plain
+wording, a directed near-silence, physical-only verbs, the prop wording, and a
+"his lips stay closed" clause. A first frame outranks a sentence: `--edit-kind
+mouth` closes the lips and changes nothing else (silhouette IoU 0.998 against
+its source), and the idle rendered on the first try. Look at the MOUTH before a
+plate goes to video.
+
+⚠ **A HAND GIVEN A MOTION OF ITS OWN BECOMES A GESTURE (U34).** Told the pointing
+hand "moves forward a finger's width … and settles back", Veo swung the forearm
+upright into a raised index finger from 1.25 s to 4.5 s — the reach fell 0.890 →
+0.81 of the canvas. The re-take gives the hand no motion and bans the upturned
+finger by name; it held 7.3 s. Judge a held pose by TRACKING it (the hand's
+reach and height per frame), not by a strip of eight frames, which can land on
+both ends of a gesture and look held.
 
 ⚠ **THE GROUND IS THE ERA'S, NOT ALWAYS BLUE (U33, `grounds.py`).** Blue is the
 default because it is gold's and skin's complement. It is the wrong key for a
@@ -130,7 +151,7 @@ shifts the frame — never crops it.
 | era          | wave                     | status                                                   |
 | ------------ | ------------------------ | -------------------------------------------------------- |
 | `genai`      | `20260918-genai-v3`      | shipped (one-step, `-v2`) — re-cut on the two-step route |
-| `expanse`    | `20260922-expanse-v5`    | the scene (U33): scouts, aims past the lens, `-v3`       |
+| `expanse`    | `20260922-expanse-v6`    | the commander (U34): stands, points, `-v4`; v3 archived  |
 | `azeroth`    | offline `v5-blender`     | shipped `-v11` (v10 seated 33 rows, `reseat_azeroth.py`) |
 | `pokemon-go` | `20260922-pokemon-go-v1` | the trainer as a cel, on magenta (U33), `-v1`            |
 

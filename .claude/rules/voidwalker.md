@@ -74,10 +74,12 @@ composition's own entry/exit block, its responsive rungs, and
     a 14px head, and that is a device call.
   - **TRANSMISSION IS A PILE OF GLASS FOLDER CARDS** (`EraMediaStack`), fed by
     `media?: CharacterEraMedia[]` (embed · video · image; read through
-    `eraMedia()`, capped at 4 by the tab row's arithmetic). ⚠ Tabs ordered by
-    DEPTH; the lip a CLOSED evenodd ring with the slant's inner ends at
-    −0.414px; a back card renders no body; no player mounted; every tab a
-    button. ⚠ It fits BY CONSTRUCTION: `container-type: size` on the seat at
+    `eraMedia()`, capped at **3** since U34 — the cascade's HEIGHT, where U31's
+    4 was a fanned tab row's width). ⚠ **SUPERSEDED ON THE TABS BY U34: every
+    card and every tab is the SAME**, stacked down-right one tab height a step
+    (see the U34 bullet below); what survives: the lip a CLOSED evenodd ring
+    with the slant's inner ends at −0.414px; a back card renders no body; no
+    player mounted; every tab a button. ⚠ It fits BY CONSTRUCTION: `container-type: size` on the seat at
     ≥1101 ONLY (ungated it zeroes the ≤1100 bodies), the frame the one item that
     gives, its `min-height: 72px` load-bearing. ⚠ The frost is front-card-only,
     waits on `--ci`, and carries no id so light can switch it off.
@@ -121,6 +123,35 @@ aim`, framing checked before a video is paid for; asked in words, Veo
     jeans through. A cel is drawn in a DEEP palette, because the Architect's
     curve lifts mid-tones hard. The piles are real on three eras now; gate
     them with `capture-era-media --record`, not the lab's fixture.
+  - ⚠ **U34 (2026-09-22, owner): EVERY FOLDER THE SAME, ON A DIAGONAL.**
+    _"Every folder looks the same. The notch is the same in every structure …
+    stack it from a different vantage point."_ One card size (`W − (n−1)·dx`),
+    ONE tab flush at each card's top-left, its width `--_wt` solved once from
+    `IMAGE NN`; the card at depth `d` sits `d` steps up-left of the front
+    (`--vwd-mstack-dy` IS `--vwd-mtab-h`, so each tab behind reads whole above
+    the card in front; `--vwd-mstack-dx` a sliver). Every tab letters
+    `KIND NN`; the mark is gold on the open card and dawn behind — one notch,
+    one state. A back tab's hit area is two tab heights, clipped by the
+    silhouette (the area under a back tab belongs to the card in front, so
+    the old downward slop is gone). ⚠ **THE CAP IS A HEIGHT NOW: 3** — at
+    1280×720 each card behind costs the front frame one tab height, and three
+    land the frame on its 72px floor exactly; the phone draws at most two
+    (`--vwd-mpad` 10) and reaches the third by rotation. The lab's `?media=`
+    and `capture-era-media --piles` take 0–3 and refuse the rest.
+    ⚠ **`media-src` NAMES ONE REMOTE HOST, BY OWNER RULING** (_"stream from
+    Supabase"_): the site's own project, never the `*.supabase.co` glob,
+    pinned from both directions; a `video` may name a PUBLIC `.mp4` in the
+    `era-media` bucket (`ERA_MEDIA_STORAGE_ORIGIN`, the registry's copy,
+    asserted equal to the CSP's). Posters stay self-hosted. The enforced sweep
+    plays a pile's front card (`--era-media`) and counts requests to the host.
+    ⚠ **The Expanse STANDS now** (`-v4`, the commander): no era kneels, so no
+    era authors `stature` — the law and its code stay for the next one that
+    does. ⚠ **A PLATE WITH A PARTED MOUTH CANNOT BE ANIMATED IN SILENCE**: Veo
+    starts on it, reads a man speaking, draws a voice, and its audio filter
+    refuses the clip (five takes, uncharged, whatever the prompt said). Fix
+    the PLATE (`generate.py --edit-kind mouth`), never the sentence. ⚠ And a
+    pointing hand given ANY motion of its own becomes a gesture — take 1
+    raised the index finger for 3.3 s.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title

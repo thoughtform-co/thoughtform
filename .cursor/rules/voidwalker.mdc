@@ -45,9 +45,14 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
   delivery); the phone keeps its three-stop text reel. `--vwd-band-h`,
   `--vwd-reel-return` and `--vwd-chrome-h` are an accounting identity — not edited.
 - ⚠ **TRANSMISSION IS A PILE OF GLASS FOLDER CARDS** (`EraMediaStack`, `media?:
-  CharacterEraMedia[]` read through `eraMedia()`, max 4): tabs by DEPTH, a CLOSED
+  CharacterEraMedia[]` read through `eraMedia()`, max **3** since U34): a CLOSED
   evenodd lip, no body on a back card, no player mounted, fit by construction
   (`container-type: size` at ≥1101 ONLY; the frame's `min-height` is load-bearing).
+  ⚠ **U34: EVERY FOLDER THE SAME** — one card size, one tab flush top-left (width
+  solved from `IMAGE NN`), each card behind one tab height up and a sliver left, so
+  every tab reads whole; the mark gold on the open card, dawn behind. The cap is the
+  cascade's HEIGHT at 1280×720 (three land the frame on its 72px floor); the phone
+  draws two.
   ⚠ U32: the card's title LEADS the frame, in PT Mono capitals on the label ratio
   (uppercase on the sans is an ADR-092 finding); it wraps, never clamps.
 - ⚠ **THE LEDE IS THE PARAGRAPH'S OWN FIRST LINE (U32)** — `.vwd__motto` reads the
@@ -61,6 +66,12 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
   stands on its ERA's key ground (`grounds.py`; the 2016 trainer on magenta). An
   aim must fit ~0.6 m either side of his centre at the site's body scale.
   `capture-era-media --record` gates the real piles.
+- ⚠ **U34: `media-src` NAMES ONE REMOTE HOST** (the site's own Supabase project,
+  owner's ruling — never the glob); a `video` may name a public `.mp4` in the
+  `era-media` bucket, the registry's copy of the origin asserted equal to the CSP's.
+  The Expanse STANDS (`-v4`, the commander) — no era authors `stature` now. ⚠ A plate
+  with a parted mouth gets a voice from Veo and an audio refusal: fix the PLATE
+  (`--edit-kind mouth`), never the sentence.
 
 ## Contracts
 

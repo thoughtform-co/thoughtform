@@ -101,13 +101,16 @@ describe("ADR-082 · normalized character hologram assets", () => {
     expect(resolveCharacterEraHologram(expanse!)).toBe(expanse!.hologram);
     // ⚠ v2 (ADR-082 U32) SHIPPED WITHOUT A `.mov`, and v1's was deleted with it:
     // an HEVC-alpha file pointing at the standing v1 figure would show Safari
-    // a different man. v3 (U33, the scene) keeps that: Safari takes the floor
+    // a different man. v3 (U33) and v4 (U34) keep that: Safari takes the floor
     // until a Mac cuts one.
     expect(expanse?.hologram?.videoAlphaHevcPath).toBeUndefined();
-    expect(expanse?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-expanse-v3.webm");
+    expect(expanse?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-expanse-v4.webm");
+    expect(expanse?.hologram?.thumbPath).toBe("/images/voidwalker/holo-thumb-expanse-v4.webp");
     expect(expanse?.hologram?.footY).toBeCloseTo(0.9953, 3);
-    // He KNEELS: his stature is authored, measured off the head (see the record).
-    expect(expanse?.hologram?.stature).toBeCloseTo(1.0074, 4);
+    // ⚠ v4 STANDS (U34, the commander), so no stature is authored: the span is
+    // the delivery's own head-to-foot, like every other standing era. A stature
+    // left behind from the kneel would seat a standing man as a kneeling one.
+    expect(expanse?.hologram?.stature).toBeUndefined();
     /* ⚠ ITS LOADOUT WAS BYTE-IDENTICAL TO `pokemon-go`'s until this wave, which
        is what a placeholder looks like. They may never be equal again. */
     const pokemon = CHARACTER_ERAS.find((e) => e.id === "pokemon-go");

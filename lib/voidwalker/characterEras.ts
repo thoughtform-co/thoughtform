@@ -966,20 +966,26 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
        that was DRAWN first (asked in words, Veo aimed off the frame), looped
        as a ping-pong cut inside the held aim — Veo morphs into a drawn last
        frame, so the loop turns before it lands.
-       ⚠ `stature` IS UNCHANGED BECAUSE IT WAS RE-MEASURED, not inherited: v3's
-       frame zero matches v2's head to 0.996 alpha IoU at zero offset.
-       ⚠ `headY` 0.0875 is the rifle mid-swing, the ink's highest point in the
-       loop; the stature, not the ink, is what seats him. */
+       ⚠ `-v4` STANDS AND COMMANDS (ADR-082 U34, owner: "more like a general or
+       commander, maybe holding my gun but then pointing in the distance, giving
+       commands. Make it subtle … Maybe I shouldn't be kneeling"). A new plate,
+       EDITED from plate F (the likeness and the rifle he approved), then its
+       mouth closed by a second edit — the first cut had him mid-word, and Veo,
+       which must start on that frame, gave the speaking man a voice its audio
+       filter refused five times. The idle holds the point and breathes, looped
+       as a ping-pong cut at f168, before the take's arm drops.
+       ⚠ STANDING, SO NO `stature`: `headY` is the cap's top, the ink's highest
+       point over the loop (the pointing hand sits below it). No era kneels now;
+       the kneeling law and its code stay for the next one that does. */
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-expanse-v3.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v3.webm",
-      posterPath: "/images/voidwalker/holo-still-expanse-v3.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v3.webp",
-      thumbPath: "/images/voidwalker/holo-thumb-expanse-v3.webp",
+      videoPath: "/videos/voidwalker/holo-idle-expanse-v4.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v4.webm",
+      posterPath: "/images/voidwalker/holo-still-expanse-v4.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v4.webp",
+      thumbPath: "/images/voidwalker/holo-thumb-expanse-v4.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.0875,
+      headY: 0.1047,
       footY: 0.9953,
-      stature: 1.0074,
     },
     short: "The Expanse",
     facts: [
