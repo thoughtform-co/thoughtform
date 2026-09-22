@@ -55,7 +55,7 @@ import { seamDecodeFrame, seamWall, typeCounts, typedSlice, type SeamPair } from
    (`lib/home-v2/lineLeaves.ts`) — the phone's two bands decode centred runs
    on the same per-line leaves. Byte-identical to the functions this file
    carried; only their home moved. */
-import { dress, firstText, lineBoxes, type Line } from "@/lib/home-v2/lineLeaves";
+import { dress, firstText, lineBoxes } from "@/lib/home-v2/lineLeaves";
 
 /** The three scene beats, in reading order. */
 const BEATS = ["#configuration", "#phases", "#outcomes"] as const;
