@@ -609,12 +609,26 @@ html[data-ft-reveal] #contact.station {
   U0's own §"IT KEEPS `id=\"contact\"`" is untouched: the station, its id, its
   place inside `<main class="stations">` and the four things that read them all
   stand.
+  ⚠ **RE-POINTED BY [ADR-119 U1](119-the-musings-rack.md) (2026-09-22): ON THE
+  CAPABLE RUNG THE COVER IS `.mu__band`, NOT `#musings`.** That station is a
+  TRANSPARENT stage there — the era's own recipe, because an opaque station in
+  normal flow could only arrive by travelling over a pinned one, which the owner
+  read as parallax — and its opaque end is one 100svh full-bleed band at the foot
+  of its runway. Nothing about this station's half changes; what changes is the
+  EDGE the stamp arms on (below).
 - ⚠ **THE GATE IS THE MECHANISM, NOT A REFINEMENT.** Ungated, sticky-bottom pulls
   this station to the frame's floor from scroll 0 — and `#voidwalker` on the
   capable path is a pinned TRANSPARENT stage, so the footer would paint straight
   through the era stage over the live corridor. `useMusingsScroll` arms the stamp
-  only while the rack's top has passed the frame's top, and clears it on the way
-  back up, on unmount and on the inert rung.
+  only once the beat's opaque edge has passed the frame's top, and clears it on
+  the way back up, on unmount and on the inert rung.
+  ⚠ **AND THAT EDGE MOVED WITH ADR-119 U1.** On the stage rung it is the BAND's
+  top — the last viewport of the station — because the three viewports above it
+  are now transparent over a live canvas, and a bed armed there would hold the
+  footer at z 0 under the corridor for the whole beat. Off that rung the runway's
+  own top is still right, and the fallback is not a convenience: it is the other
+  two rungs. The band's top is also the frame in which the corridor dies, so the
+  bed arms exactly where the canvas stops painting.
 - ⚠ **PINNED, NEVER TRANSFORMED**, and the GIC reference does not move either —
   it is uncovered. A main-thread `translateY` off a scroll variable lags the
   compositor by one wheel step, every step.

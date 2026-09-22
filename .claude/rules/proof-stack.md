@@ -618,6 +618,20 @@ size`), while `casefile.css`'s ≤960 block stacks the comparison and the
   dev server produced four different failures across three runs here, and 9/9
   twice serially.
 
+## The aperture's numbers have THREE hosts
+
+⚠ **720ms in / 420ms out on `cubic-bezier(0.65, 0, 0.35, 1)` is ONE PAIR OF
+NUMBERS ACROSS THE SITE**, and since [ADR-119 U1](../../sentinel/decisions/119-the-musings-rack.md)
+(2026-09-22) it has a third host: `proof-stack.css`'s `pf-aperture*`, the Trinny
+route's `tl-aperture*`, and the musings shelf's `mu-aperture*`. The pair is
+ADR-097 U12's settled reading — the corridor caption card's own expo-out is 84 %
+open at 90ms, which is right on a 509px card and 2.5× too fast in pixels on an
+object this size — so **copy a reference for what it DOES and re-solve its
+timing for the size of the object you put it on**, then keep every host on the
+result. `tests/lib/musings-shelf.test.ts` pins all three by source; one changing
+alone is a house grammar running a different clock on one surface, with nothing
+on screen to report it.
+
 ## Verifying
 
 ```bash

@@ -1264,12 +1264,14 @@ ease-in-out, PURE MOTION with zero fades) — `tl-aperture` · `tl-aperture-clos
   ladder with a per-part aperture would have deleted an owner ruling to buy
   one more sweep (and a `clip-path` percentage on an SVG `<g>` does not
   resolve against a per-group box in any case).
-- ⚠ **THE SWEEP IS EASE-IN-OUT, AND BOTH HOSTS CARRY ONE PAIR OF NUMBERS**
+- ⚠ **THE SWEEP IS EASE-IN-OUT, AND THREE HOSTS CARRY ONE PAIR OF NUMBERS**
   (owner, same day: _"a bit more subtle … a bit too fast … easy in, easy
   out"_). The caption card's expo-out is 84 % open at 90ms — fine at its own
   509px, 2.5× too fast in pixels on objects this size. 720ms in / 420ms out on
-  `cubic-bezier(0.65, 0, 0.35, 1)`, matching `proof-stack.css` exactly; change
-  one and change the other. ⚠ `tl-settle` keeps its OWN curve and both
+  `cubic-bezier(0.65, 0, 0.35, 1)`, matching `proof-stack.css` exactly — and,
+  since [ADR-119 U1](../../sentinel/decisions/119-the-musings-rack.md)
+  (2026-09-22), the musings shelf's `mu-aperture*` as well. Change one and change
+  all three; `tests/lib/musings-shelf.test.ts` pins them by source. ⚠ `tl-settle` keeps its OWN curve and both
   durations (640 / 960) — it is a fade on ADR-100 U3's ladder, not the sweep,
   and that ruling is stated in those two numbers.
 - **Left open:** the two durations (720 / 420); the beats below `#phases`

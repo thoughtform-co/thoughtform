@@ -308,3 +308,270 @@ is the frame. Air around a composition is room; air inside one is a mis-seat.
 - `landing-page.spec.ts`'s percentage-scroll snapshots want re-shooting — the
   document grew by a station. A deliberate `--update-snapshots` pass, and
   `-g "HUD"` must pass untouched before it.
+
+---
+
+## Update 1 — the shelf, the stage and the services masthead (2026-09-22, owner)
+
+He read the rack live and gave three corrections, all in one message.
+
+> _"The placement of the hero one and the paragraphs is completely different
+> from the services section. The services section has the type of typography,
+> font size, etc., that we want, so I'm not sure what went wrong here."_
+>
+> _"The background of the musings section scrolls parallax-style over the era
+> section. That should not happen. Instead, as the components of the era
+> section disappear, the components of the musings section should appear with a
+> glitch effect. The text should appear with a glitch effect, and then the cards
+> should come into view."_
+>
+> _"I do not want a copy of the services flow where we have cards rotating
+> around it. I only want the scroll to happen horizontally, but the blog posts
+> that are not in view should be rotated 90° so we see the side. It's like
+> putting LPs or CDs in a closet or on a shelf, where you see the back instead
+> of the front, or the side instead of the front."_
+
+Plus a constraint named twice: keep the footer's reveal, and _"it's important
+that we don't break anything on our site so please scope this out."_
+
+Three rulings taken in the session that scoped it: the card is a **solid plate**
+over the corridor; the **corridor stays alive** through the whole beat, dying
+only on the last viewport; and the readout defect in §5 is fixed in this pass,
+after verifying it live.
+
+### 1 · It was never parallax, and that is why it had to change shape
+
+An opaque station in normal flow can only arrive by TRAVELLING, and
+`#voidwalker` on the capable path is a PINNED transparent stage that does not
+move. One moving box over one held box IS the read he named. Measured: the
+musings ground entered the fold at era progress **0.375**, with every era
+element still seated (their exit opens at 0.74). It is the same complaint that
+deleted `#practice` (ADR-105).
+
+So on the capable rung `#musings` is the `#voidwalker` recipe exactly —
+transparent, promoted, the corridor alive behind it for the whole beat — and
+its opaque end is one 100svh full-bleed `.mu__band` at the foot of its runway,
+which is both the corridor's kill edge and the edge the footer's bed arms on.
+Three rungs, and the lower two are byte-identical:
+
+| rung                                       | `data-mu-mode` | station              | cover       | footer bed          |
+| ------------------------------------------ | -------------- | -------------------- | ----------- | ------------------- |
+| ≥1101, motion, live corridor, hologram era | `stage`        | transparent, z 6     | `.mu__band` | armed on the band   |
+| 961–1100 (shelf, no stage)                 | —              | opaque               | `#musings`  | armed on the runway |
+| ≤960 / PRM / no JS                         | —              | opaque, flowing rail | `#musings`  | never armed         |
+
+- ⚠ **THE WRITER HAD NO HANDLE ON THE STATION AT ALL.** `stationRef` is the
+  portal's `.mu` root, one level inside the authored slot, so every rule written
+  against `#musings[data-mu-mode]` would have matched NOTHING — silently, with
+  the page reading as before. Resolved by climbing (`closest("#musings")`).
+- ⚠ **TRANSPARENCY AND PROMOTION ARE ORTHOGONAL.** The docked canvas composites
+  at its host's z 3 (`fixed` changes a containing block, never paint order, and
+  the host is `isolation: isolate`); `#musings` carries an inherited z 2. An
+  un-promoted transparent stage paints its head and cards BEHIND the corridor —
+  invisible, every geometry gate green. z 6 while transparent is what
+  `#services`, `#about` and `#voidwalker` all already do, so the `~ #musings`
+  cover rule is REPLACED, never deleted.
+- ⚠ **NOT `data-corridor-kill`.** It is consulted before the whole chain, so a
+  stamp on the band would also win at 961–1100, under PRM and on the fallback,
+  where `#musings` is opaque again — ADR-030 §6 a sixth time. And `killEl` is
+  cached against `isConnected` and never re-queries when an attribute is
+  removed. The mode-gated term in `useCorridorExitScroll` keeps every fallback
+  byte-identical, and `?? contactEl` stays load-bearing for `/claude-workshop`
+  and the Trinny proposal.
+- ⚠ **NO WELD.** The about→voidwalker `-120svh` overlap exists because a WebGL
+  deck is handed across that seam; nothing crosses here. The era's exit
+  saturates at 0.96 with **6.4svh** of pinned, empty, transparent frame to
+  spare, then releases as `#musings` pins — and both boxes being transparent,
+  the reader sees only the corridor across the whole seam. That gap IS the beat.
+- Both cover guards moved in the same commit and both needed the same
+  correction: the band is EXACTLY 100svh, so a walk 0.3 viewports into it covers
+  `vh − 1` and the coverage assertion fails. Every earlier cover was three
+  viewports tall and absorbed the walk. The property is asserted at the edge it
+  is claimed on — the band's own top — and what shows one pixel past it is the
+  held footer beginning to be revealed, which is the reveal working rather than
+  a cover failing.
+
+### 2 · The rack becomes a SHELF
+
+Not Cover Flow with a bigger angle. A rack FANS: every card at its own angle,
+five covers at five attitudes. A shelf has exactly **two states** — facing out,
+or turned a full 90° showing a spine — and the reader pulls one out.
+
+- ⚠ **A SINGLE PLANE TURNED 90° PROJECTS TO A LINE**, whichever edge it is
+  hinged on. So the object is the real one: a slab with a FACE and a SPINE, a
+  quarter turn apart about one hinge. `.mu-card` is the pivot
+  (`rotateY(0)` open / `rotateY(90deg)` closed, `transform-origin: left center`),
+  `.mu-card__front` the face, `.mu-card__spine` a `--mu-spine` strip pre-rotated
+  `rotateY(-90deg)` about the same edge. At the pivot's 90° the two compose to
+  the identity on the spine — it faces the reader occupying exactly its own
+  width — while the face is edge-on; at 0° the other way round. One angle drives
+  both and nothing cross-fades.
+- ⚠ **THE PIVOT TURNS AWAY FROM THE READER** (`+90`, which maps the face's +x to
+  −z). At −90 the face swings toward the frame and, under the rig's perspective,
+  reaches over its neighbour on the way across.
+- ⚠ **AND THE PIVOT MAY CARRY A TRANSFORM AND NOTHING ELSE.** `overflow` other
+  than `visible`, `clip-path` other than `none`, an `opacity` under 1 and a
+  `filter` other than `none` are each GROUPING properties: they force
+  `transform-style: flat` on the element that declares them, whatever it also
+  says about `preserve-3d` (CSS Transforms 2 §3). This card declared **all
+  four**, so the spine would have rendered as a zero-width strip — transform
+  applied, element measurable, every geometry gate green. The face takes the
+  clip and the overflow; the other two are DELETED with the fan, because on a
+  shelf a closed slab is not a dimmed slab, it is a slab seen edge-on.
+- ⚠ **THE SHELF STANDS STILL AND THE OPEN SLAB WALKS ALONG IT.** The first cut
+  centred the open slab on the rig, which at three posts put a 420px card in the
+  middle of a 1200px band under a head banded across the whole of it — one
+  object floating in the centre of a composition whose every other element is on
+  the band's left edge. Left-anchored, the head, the shelf and the way out are
+  one column, and it is also what a row of records does. The travel is bounded
+  by construction: at `MUSINGS_RACK_MAX` (7) the furthest seat is **336px**,
+  inside the band at every viewport this rung opens at.
+- `rackMath.ts` → `shelfMath.ts`. The five-deep slot table, the wrap, the fly-in
+  from a stacked plane and the arrival blur are gone; the track is cumulative
+  widths (the open slab takes its face, every other one a spine) and the detent
+  and the reading band are unchanged. The yaw is CONSTANT once the beat has
+  arrived — a drift tracking the reading position swings the whole shelf every
+  time a slab turns, which is two motions on one gesture.
+- The plate goes to **0.94** (the solid-plate ruling; 0.62 was tuned against an
+  opaque station, and nothing mechanical can read a translucent plate over a
+  live canvas — the gate composites against a background COLOUR).
+- **The phone keeps the flat rail.** A spine is a desktop object.
+
+### 3 · The head is the services masthead, COPIED
+
+`ServicesMasthead` could not have been imported if it were wanted: zero props,
+`closest(".services-stage")`, every clock a `--svc-*` channel no hook writes
+here, and ABSOLUTE inside a pinned stage where this head is in flow. The
+canonical in-flow copy is `ArcSectionHead` + `arcs.css`, and this is its third
+instance. What arrives: the two-column split sharing one top line, the
+designations hung above each block, the one gold state chip, the coordinate
+stamps under each block's foot, the two registration crosses, the masked
+dot-grid lifts, and the ladder — PP Neue Montreal at `clamp(26px, 3vw, 44px)` /
+0.04em / 1.1 with the gold-washed shadow, the em line gold at `--weight-lit`,
+PT Mono 9.5px at the eyebrow rung and 8px at the coord rung.
+
+- ⚠ **THE TYPE RATCHET'S PIN GOES `A: 0 → 1`, WITH ITS REASON.** No role token
+  carries `0.04em` and the nearest (`--track-display`, −0.02em) is visibly
+  tighter at 44px, which would make this a different object from the one he
+  pointed at. ONE rule, and the pin only goes down from here — raising it is a
+  design change and it is recorded as one.
+- ⚠ **THE STRINGS ARE AUTHORED UPPERCASE AND THE SHEET TRANSFORMS NOTHING**
+  (ADR-092's own recipe). `--mu-display` retires with the line it sized.
+- ⚠ **THE RIGHT-HAND SURVEY CHROME YIELDS TO THE FRAME BELOW 1700px.** The close
+  cross hangs 24px outboard of an end-justified brief, and as the viewport
+  narrows the band's right edge walks toward the right rail, whose BEARING /
+  SECTOR / LOCAL readouts are right-aligned to it and reach ~100px inboard.
+  Measured at 1280×720: the band ends at x 1148, `BEARING` begins at 1133, and
+  the cross lands on its line. The brief's TEXT never collides (42ch stops
+  short); only the marks do. The LEFT pair stays — the left rail letters nothing.
+
+**The decode is SCRUBBED, not queued.** `--mu-head` is one scalar rising over
+`[.08, .24]` and falling over `[.84, .94]`, and `scrambleFrame` is PURE in its
+`t` — so the head un-types on the way out with no second job, no latch and
+nothing to get wrong scrolling back. ⚠ `advanceScrambles` may NOT be used: it
+DROPS finished jobs, and a dropped job is a latch nothing can unwind (ADR-095's
+finding on the turn's own title). Two registers, the masthead's own: the chrome
+and the title SCRAMBLE, the paragraph TYPES. Every channel's absent value is the
+FINISHED page. The heading carries an `aria-label`, because a reader arriving
+mid-decode would otherwise be handed the shuffle.
+
+### 4 · The cards come into view on an aperture
+
+⚠ **THE GLITCH HE MEANS IS NOT A FLASH.** He asked for one on the proof card,
+read it live and pulled it the same day as a photosensitivity risk — countable,
+at ~4 dark↔light alternations a second against WCAG 2.3.1's three-per-second
+general-flash threshold (ADR-097 U12). The house's object arrival since is the
+corridor caption card's centre-out APERTURE: pure motion, zero fades. This is
+its **third host**, and the three now carry ONE pair of numbers — 720ms in,
+420ms out, `cubic-bezier(0.65, 0, 0.35, 1)` — pinned in lockstep by source.
+
+- ⚠ **ON THE CARD'S FACE, NEVER THE RACK** (§2's grouping-property law).
+- ⚠ **AND THE SPINE ARRIVES WITH THE FACE.** The first cut put the aperture on
+  the face alone, so the shelf "before it arrives" painted two lettered strips
+  standing in an empty frame under a half-decoded head. Seen on the still, on no
+  gate. A slab is ONE object and both of its planes open on one clock. ⚠ The
+  hiding may not move up to the pivot however obvious that looks — `opacity`
+  there is the same grouping property.
+- ⚠ **A BOUNDED BURST ON A HYSTERESIS** (ADR-021's one sanctioned exception): a
+  burst has a DIRECTION and a progress value does not. `shelfArrive` is
+  `turnClock.ts`'s `arriveNext` copied — a landing component importing a route
+  module is a dependency in the wrong direction; lifting it to `lib/` is the
+  named follow-up. NaN leaves the state alone, a deep reload seeds `in`, and
+  `await` is NOT `out`.
+- ⚠ **IT CLOSES AT 0.97, PAST THE READING BAND'S OWN END (0.94).** A shelf that
+  shut while the last slab was still being read would take the reading away to
+  play an animation.
+
+### 5 · A live defect the footer's bed already shipped
+
+`useLandingScroll` picks the active station from the PAINTED rect, last wins,
+`#contact` last. Since ADR-105 U3 `#contact` is `position: sticky; bottom: 0`
+while the bed is armed, so its painted top is `≤ 0` at every scroll position —
+the corner readout said **CONTACT for the entire musings beat** and the
+`musings` row never lit. Measured at 1024×760: `contact` from p 0.14 onward.
+
+⚠ **AND THE OBVIOUS FIX DOES NOT WORK, WHICH IS THE DURABLE HALF.** `offsetTop`
+was supposed to be the layout answer — `clickToNavigate.ts` says "which sticky
+does not move" — and it reports the STUCK position too. Probed live inside the
+beat: `#contact.offsetTop` = **17174** against `#musings`'s **17217**, a station
+beginning 43px BEFORE the one above it, which cannot happen in flow. That
+comment predates this surface having a sticky station.
+
+So the truth for a stuck station is the bottom edge of the one ABOVE it, which
+is in normal flow: `position === "sticky" ? max(ownTop, prevBottom) : ownTop`.
+⚠ Narrowed to `sticky` deliberately — a blanket `max` would break the phone's
+`#about`, which takes a `-100svh` weld (ADR-115) and legitimately begins above
+its predecessor's bottom.
+
+### What the guards found that the stills did not, and the reverse
+
+- ⚠ **A BOUNDING RECT IS NOT THE SHAPE, AND UNDER A 3D YAW IT IS NOT EVEN THE
+  RIGHT QUADRILATERAL.** The shelf stands at a few degrees about Y under the
+  rig's perspective, so a card projects to a TRAPEZOID and
+  `getBoundingClientRect` returns its axis-aligned bound — a box whose four
+  corners are all OUTSIDE the shape. Probed there, a card with one lawful notch
+  reported three unlawful ones. The points are resolved through markers laid out
+  in the face's OWN space, which is this house's custom-property law applied to
+  geometry.
+- ⚠ **`elementFromPoint` AND `elementsFromPoint()[0]` DISAGREE INSIDE A 3D
+  RENDERING CONTEXT, AND THE SINGULAR ONE IS WRONG.** Measured on the same six
+  points at 1920×1247: the plural form returns `span.mu-cover__field` /
+  `a.mu-card`, the singular form returns `div.mu__rig` / `div.mu__rack` — the
+  `preserve-3d` ANCESTORS, at points the card demonstrably paints. ADR-098 U5
+  chose a hit test over a regex because a computed `clip-path` measures its own
+  serialisation; this is the next layer of the same lesson.
+- ⚠ **A PROBE AT `ch × 0.5` LANDS EXACTLY ON THE CHAMFER'S DIAGONAL.** The
+  `onCut` gate read FALSE at 1920×1247 and TRUE at 390×844 on one unchanged
+  card, resolving by rounding. It is deleted: `tr` already probes 30 % along the
+  cut, well inside the removed triangle, which is the question. **A gate whose
+  answer depends on which side of a pixel a device lands is not a gate.**
+- ⚠ **AND THE NOTCH IS ASKED OF THE FACE NOW**, because the pivot still occupies
+  its full unclipped box and `card.contains(el)` is true inside the chamfer.
+
+### Guards added
+
+`musings-rack.test.ts` → `musings-shelf.test.ts` (55): the track, the two
+angles, the rotate-last order, the shelf standing still, the travel inside the
+band, the detent, the clock, the head clock's three states and its rise-and-fall
+ONCE (a head that un-typed and re-typed inside one beat is a flicker), the
+arrival's hysteresis and its five states, `typedCount`, the masthead's anatomy /
+authored case / digit ban / `coordStamp` pinned against `components/arcs/
+chrome`'s original, the sheet's spine and gap px against `shelfMath`'s, the
+three-host aperture lockstep, that NO rule ending on `.mu-card` carries a
+grouping property on any rung, and that the writer publishes no per-card
+`opacity` or `filter`. The capture gains the spine's own box and ink per closed
+slab, the band as the cover, the stage-mode branch on the corridor gate, and
+`data-active-station` at every stop.
+
+### Left open
+
+- **Three posts is a sparse shelf.** 420 + 2 × 56 = 532px of a 1200px band
+  however it is anchored; the record already says the rack wants five.
+- **`arriveNext` is copied, not lifted.** The third copy of a pure seven-line
+  hysteresis; `lib/` is where it belongs.
+- **The head's designation passes under the TL bracket mid-scroll on a phone** —
+  the §1 class `mobile-sections.md` names, which no padding can reach and the
+  seams spec measures only at rests.
+- **`clickToNavigate.ts` still says sticky does not move `offsetTop`.** Its own
+  behaviour is unaffected today (the bed only arms inside this beat), but the
+  comment is wrong and the next reader will believe it.
