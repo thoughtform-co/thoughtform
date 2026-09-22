@@ -67,7 +67,14 @@
 .mu {
   --mu-ink: var(--dawn);
   --mu-ink-2: rgba(var(--dawn-rgb), 0.74);
-  --mu-ink-3: rgba(var(--dawn-rgb), 0.5);
+  /* ⚠ EVERY `--mu-ink-*` RUNG IS TEXT, AND THE THIRD WAS UNDER THE FLOOR
+     (ADR-119 U3). At .5 the 9.5px designations measured 4.41:1 here and 3.40:1
+     on parchment, against 4.5. .54 clears it with margin on the void (4.99), and
+     light re-derives it in theme.css — an alpha inverts its meaning across the
+     flip. The drawings that borrowed this rung moved to `--mu-draw` at the old
+     value, so a cover and a cross are byte-identical. */
+  --mu-ink-3: rgba(var(--dawn-rgb), 0.54);
+  --mu-draw: rgba(var(--dawn-rgb), 0.5);
   --mu-rule: rgba(var(--dawn-rgb), 0.16);
   --mu-rule-soft: rgba(var(--dawn-rgb), 0.1);
   /* ⚠ THE PLATE IS SOLID, BY THE OWNER'S RULING, AND 0.62 WAS TUNED
@@ -278,8 +285,12 @@
      never collapses or jumps during the reveal — the masthead's own rule. */
   min-height: 1.1em;
 }
+/* ⚠ GOLD AS TEXT TAKES THE INK RUNG (ADR-063 U2), like the state chip beside
+   it. Byte-identical in dark, where the ink rung IS the mark's value; on
+   parchment the mark's raw gold lettered this line at 1.83:1 and the ink rung
+   letters it at 5.7 (ADR-119 U3). */
 .mu__title-line--em {
-  color: var(--gold);
+  color: var(--gold-ink);
   font-weight: var(--weight-lit);
 }
 
@@ -422,7 +433,7 @@
   top: calc(100% + 22px);
   right: -24px;
   transform: translate(50%, -50%);
-  color: var(--mu-ink-3);
+  color: var(--mu-draw);
 }
 
 /* The masked dot-grid lift under each block. */
@@ -651,7 +662,7 @@
   aspect-ratio: 16 / 10;
   overflow: hidden;
   background: rgba(var(--void-rgb), 0.5);
-  color: var(--mu-ink-3);
+  color: var(--mu-draw);
 }
 .mu-cover__field {
   position: absolute;

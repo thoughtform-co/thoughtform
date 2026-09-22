@@ -363,13 +363,16 @@ node scripts/design-eval/mechanical.mjs --url / --theme dark  --scope ".mu" --pr
 node scripts/design-eval/mechanical.mjs --url / --theme light --scope ".mu" --prm
 ```
 
-⚠ **IT FAILS, AND HAS SINCE U1: 8 violations in dark, 9 in light (measured
-2026-09-22).** They come from the services masthead's grammar, copied: the
-title's gold glow (×5; the services masthead lists the same five), the
-designations at 4.41 / 3.40:1, the coords at 1.43 / 1.40:1, and in light the
-gold title line at 1.83:1. ADR-119 U2 §Left open has the breakdown. A NEW
-finding beyond that list is a regression; that list itself is an open owner
-call, not a pass.
+⚠ **IT FAILS WITH SIX FINDINGS IN EACH THEME, AND THOSE SIX ARE KNOWN (U3,
+2026-09-22).** They are the title's gold glow (×5, the house display recipe the
+gate bans; the services masthead lists the same five) and the coord stamps at
+1.43 / 1.40:1 (faint by the survey grammar). Both are open owner calls. U3
+fixed the other two U1 had copied in: the designations and the light gold
+line. A SEVENTH finding is a regression.
+
+⚠ **Every `--mu-ink-*` rung is TEXT.** The third is .54 here and .62 on
+parchment (`theme.css` BLOCK 4e). A drawing that wants a quieter ink takes
+`--mu-draw`, never a text rung, or a contrast fix darkens the covers.
 
 ⚠ **AND LOOK AT THE STILLS.** Every defect this pass found that mattered to the
 composition — the pooled slack that put 205px between the masthead and the top

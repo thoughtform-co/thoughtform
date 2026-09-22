@@ -449,6 +449,20 @@ html[data-theme="light"] .fl-lightbox--frame {
   --fl-lbf-glass-a: 0.9;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   BLOCK 4e — the musings station's quietest text, re-derived (ADR-119 U3)
+
+   The station's ink ramp is `--dawn-rgb` at an alpha, which the flip swaps to
+   ink on parchment — and an alpha inverts its meaning across the flip. The
+   third rung letters 9.5px designations, and at the dark side's value it read
+   3.40:1 here against 4.5. .62 reads 4.95 and stays under the second rung's
+   7.4, so the ladder keeps its order. The drawings that share the ramp
+   (`--mu-draw`) are not text and do not move.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .mu {
+  --mu-ink-3: rgba(var(--dawn-rgb), 0.62);
+}
+
 html[data-theme="light"] .fl-panel__viz {
   background: transparent;
   border-color: transparent;

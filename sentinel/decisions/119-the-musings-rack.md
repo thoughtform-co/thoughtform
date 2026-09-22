@@ -713,3 +713,40 @@ order (~1.4s). PASS at 1920×1247 dark and light, 1280×720 and 390×844.
   - **Light only: the title's gold line at 1.83:1** on parchment (needs 3). It
     is raw `--gold` as text, exactly as on the services masthead; the ramp's
     ink rung would fix both surfaces at once.
+  - ⚠ **The designations and the gold line are FIXED by U3, below.** The glow
+    and the coords stand as recorded here.
+
+## Update 3 — the designations and the light gold line clear their floors (2026-09-22, owner)
+
+The owner: _"fix the musings label contrast and the light gold line"_. Two of
+U2's open gate findings, and only those two.
+
+- **The designations.** `--mu-ink-3` was the ramp's third TEXT rung and sat
+  under the floor: 4.41:1 in dark and 3.40:1 in light for the 9.5px mono
+  designations, against 4.5.
+  - Dark takes .54 (4.99:1). Light re-derives it in `theme.css` BLOCK 4e at
+    .62 (4.95:1), because an alpha inverts its meaning across the flip.
+  - Both stay under the second rung (8.66 / 7.38), so the ladder keeps its
+    order.
+  - The `.mu__empty` line rides the same rung and rises with it; it is text.
+- ⚠ **The drawings that borrowed the text rung moved off it rather than
+  darkening.** The cover's glyph and substrate (`.mu-cover`'s `currentColor`)
+  and the close cross read `--mu-draw` now, at the old .5 in both themes, so
+  they are byte-identical. Every `--mu-ink-*` rung is text, and a drawing
+  that wants a quieter ink names its own.
+- **The gold line.** `.mu__title-line--em` takes `--gold-ink`, like the state
+  chip beside it (ADR-063 U2: gold as TEXT takes the ink rung). In dark the
+  ink rung IS the mark's value, so the dark title is byte-identical; on
+  parchment it reads 5.73:1.
+- **What stays open, deliberately.** The title's gold glow (×5, the house
+  display recipe the gate bans outright) and the 8px coord stamps (faint by
+  the survey grammar).
+- ⚠ **The services masthead carries the SAME two defects**: raw `--gold` on
+  its em line in light, and its designations at dawn .4 with no light value.
+  It passed the gate only because PRM hides that chrome. Not taken here; it is
+  a different surface's pass.
+
+**Measured.** `mechanical.mjs --scope ".mu" --prm` goes from 8 → 6 findings in
+dark and 9 → 6 in light: the glow ×5 and the coords, nothing else. Also green:
+`theme-css-sweep`, `musings-row`, `type-material-tokens`, `phone-viewport-units`
+(189 tests), and `capture-musings-rack` at 1920 × 1247 in both themes.
