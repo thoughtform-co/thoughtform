@@ -1,11 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════════
-   THE MUSINGS RACK — `#musings`, the writing as a folder you flip (ADR-119)
+   THE MUSINGS ROW — `#musings`, the writing as a row you scroll (ADR-119 U2)
 
    Owner, 2026-09-22: the post in view is a clean card with a thumbnail, a
-   title and a summary; the others sit beside it ROTATED ABOUT THE VERTICAL
-   AXIS so their sides show — "a jukebox or rotodex … it really feels like
-   you're scrolling through a digital folder" — and it comes into view as you
-   scroll away from the era stage.
+   title and a summary; the others are "rotated on the x-axis" — a jukebox /
+   carousel / rolodex. His pick after U0's fan and U1's shelf: the card being
+   read upright and CENTRED, the others left and right of it TIPPED BACK about
+   their horizontal axis, flat panes with no skeuomorphism, the row sliding
+   sideways as the reader scrolls. The head decodes in place, like the
+   services masthead, and never travels.
 
    ⚠ TOKENS ONLY, FROM LINE ONE. Every colour is a ramp step off
    `--dawn-rgb` / `--void-rgb` / `--void-deep-rgb` / `--gold-rgb` /
@@ -76,7 +78,6 @@
      corridor behind it; the whisper that is left is what keeps it a plate on
      a stage rather than a hole cut through one. */
   --mu-plate: rgba(var(--void-deep-rgb), 0.94);
-  --mu-spine-plate: rgba(var(--void-deep-rgb), 0.97);
   --mu-edge: rgba(var(--dawn-rgb), 0.2);
 
   /* One type ladder. Chrome is PT Mono, prose is PP Neue Montreal — two
@@ -96,26 +97,16 @@
   --mu-ch: clamp(14px, 1.6vw, 22px);
   --mu-chi: calc(var(--mu-ch) - 0.586px);
 
-  /* ⚠ THE SHELF'S TWO PX TERMS ARE MIRRORED BY HAND FROM `shelfMath.ts`
-     (`SHELF_SPINE_PX` / `SHELF_GAP_PX`) and `tests/lib/musings-shelf.test.ts`
-     asserts the numbers agree. The track is laid out in the writer and the
-     spine is DRAWN here, so a disagreement is slabs that overlap or stand
-     apart with nothing erroring. They are flat px on purpose: a `clamp()`
-     would have to be resolved through a probe every frame to lay the track
-     out, and a spine is chrome that has no reason to scale. */
-  --mu-spine: 46px;
-  --mu-shelf-gap: 10px;
-
   /* The runway. ⚠ THE STEP IS THE ONE DIAL AND IT COSTS PAGE LENGTH:
      every card adds `--mu-step` of document. At five posts the station is
      ~3.2 viewports, at seven ~4.0. The reading band is 70 % of the travel
-     (`SHELF_READ` in `shelfMath.ts`), so a step of 42svh gives each card
+     (`ROW_READ` in `rowMath.ts`), so a step of 42svh gives each card
      about 0.4 of a viewport to be read in. */
   --mu-step: 42svh;
   /* ⚠ RE-SOLVED FOR THE BAND (ADR-119 U1), NOT INHERITED. It was 55svh of
      trailing slack that let the last card dwell before the station ended. On
      the stage rung the station is transparent and the BAND is what follows, so
-     55svh of held, empty, transparent frame between the shelf closing and the
+     55svh of held, empty, transparent frame between the row closing and the
      band's edge is dead scroll over a corridor the reader has finished with.
      18svh is the dwell the last card actually needs; the band supplies the
      rest of the ending. Off the stage rung there is no band, so the original
@@ -303,9 +294,51 @@
   font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
   line-height: 1.5;
   color: var(--mu-ink-2);
-  /* The typewriter blanks and re-fills this run, so the block holds its own
-     height or the head re-flows under the reader mid-decode. */
-  min-height: 4.5em;
+}
+/* ⚠ GHOST AND LIVE — the services masthead's own pair (ADR-119 U2). The
+   hidden ghost holds the paragraph's WHOLE box in flow; the typed layer is
+   ABSOLUTE over it, so the typewriter never grows or shrinks the head. A box
+   that resizes under a pinned stage is layout churn, and the scroll anchor
+   answers layout churn by nudging the page under the reader. U1 reserved a
+   guessed `min-height: 4.5em` instead, which is right for one measure and a
+   jump at every other. */
+.mu__brief-ghost {
+  visibility: hidden;
+}
+.mu__brief-typed {
+  position: absolute;
+  inset: 0;
+}
+
+/* ⚠ THE CRT CURSOR IS COPIED FROM `.services-masthead__cursor`, NUMBER FOR
+   NUMBER (ADR-119 U2 — "just like we have in the services section"). It rides
+   the first title line still decoding and the paragraph while it types, and
+   only on the way IN; the writer lights it with `data-live` on the line.
+   ⚠ It is ONE glyph, and its blink is 1 → 0.25 on two hard steps a second —
+   the station-header canon — not a large-area luminance change (ADR-097 U12's
+   flash law is about area and count, and this is neither). */
+.mu__cursor {
+  display: none;
+  margin-left: 0.06em;
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(var(--gold-rgb), 0.55);
+  transform: translateY(-0.04em) scaleY(0.78);
+  transform-origin: center bottom;
+  pointer-events: none;
+}
+[data-mu-cursor][data-live] .mu__cursor {
+  display: inline-block;
+  animation: mu-cursor-blink 1.05s steps(2, start) infinite;
+}
+@keyframes mu-cursor-blink {
+  0%,
+  49.999% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.25;
+  }
 }
 
 /* Designation labels — PT Mono, hung above each block's head-left. */
@@ -459,9 +492,6 @@
     display: block;
     margin-bottom: 12px;
   }
-  .mu__brief {
-    min-height: 0;
-  }
 }
 
 /* ── The rig ─────────────────────────────────────────────────────────
@@ -498,14 +528,13 @@
    `visible`, `clip-path` other than `none`, an `opacity` under 1 and a
    `filter` other than `none` are each GROUPING properties: they force
    `transform-style: flat` on the element that declares them, whatever that
-   element also says about `preserve-3d` (CSS Transforms 2 sec. 3). This card
-   declared all four, so a face and a spine inside it would have been
-   flattened into one plane and a spine turned 90 degrees would render as a
-   zero-width strip — with the transform applied, the element measurable, and
-   every geometry gate green. The face below takes `overflow` and the clip; it
-   has no 3D children, so they cost it nothing. The other two left with the
-   fan: on a shelf a closed card is not a dimmed card, it is a card seen
-   edge-on, so there is no per-card opacity and no arrival blur to publish. */
+   element also says about `preserve-3d` (CSS Transforms 2 sec. 3). U1's
+   shelf found this the hard way — a flattened pivot rendered its 90° spine as
+   a zero-width strip with every geometry gate green. The row's card is one
+   pane now, but the law stays: the face takes `overflow` and the clip, and
+   the pivot stays a transform so the card keeps its place in the row's one 3D
+   context. The row's depth is its geometry (ADR-119 U2: no shading, no
+   material), so there is no per-card opacity or blur to publish either. */
 .mu-card {
   position: relative;
   flex: 0 0 auto;
@@ -561,58 +590,6 @@
 
 .mu-card[data-mu-front] .mu-card__front::before {
   background: var(--gold-line);
-}
-
-/* ── The spine ──────────────────────────────────────────────
-   What the reader sees of a closed slab: the side, lettered, the way a record
-   on a shelf shows its spine. It exists only where the shelf does — the flat
-   rail below 961px, under reduced motion and on the fallback shows faces, so
-   a spine there would be a second copy of every title in the document. */
-.mu-card__spine {
-  display: none;
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 1;
-  width: var(--mu-spine);
-  height: 100%;
-  transform-origin: left center;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding-block: clamp(12px, 1.6svh, 20px);
-  overflow: hidden;
-  background: var(--mu-spine-plate);
-  border-inline-end: 1px solid var(--mu-edge);
-}
-
-/* ⚠ SET VERTICALLY, NOT ROTATED. A `rotate(90deg)` inside a `preserve-3d`
-   pivot is a THIRD transform in the same 3D context, and the browser then
-   rasterises the type against the composed matrix rather than the screen.
-   `writing-mode` is a layout mode: the glyphs stay on the pixel grid. */
-.mu-card__spine-title {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  font-family: var(--font-pt-mono);
-  font-size: var(--mu-chrome);
-  font-weight: var(--weight-text);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  color: var(--mu-ink-2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-height: 0;
-}
-.mu-card__spine-date {
-  writing-mode: vertical-rl;
-  font-family: var(--font-pt-mono);
-  font-size: var(--mu-chrome);
-  font-weight: var(--weight-text);
-  letter-spacing: var(--track-eyebrow);
-  color: var(--gold-ink);
-  flex: 0 0 auto;
 }
 
 .mu-card:focus-visible {
@@ -759,17 +736,25 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   THE RACK — 3D, and only where the writer is live
+   THE ROW — 3D, and only where the writer is live
 
    ⚠ THE RUNG IS MIRRORED BY HAND FROM `MUSINGS_RACK_MEDIA` in
-   `useMusingsScroll.ts`, and `tests/lib/musings-rack.test.ts` asserts the
+   `useMusingsScroll.ts`, and `tests/lib/musings-row.test.ts` asserts the
    two carry the same query. A writer and a sheet that disagree about the
-   rung is a rack posed in 3D inside a box laid out as a flat rail.
+   rung is a row posed in 3D inside a box laid out as a flat rail.
 
-   ⚠ THE PERSPECTIVE IS ON THE RIG AND THE IDLE YAW ON THE RACK, one level
-   apart: `perspective` resolves against the element that DECLARES it, so a
-   yaw on the same box swings every card's vanishing point with it and the
-   beat reads as leaning rather than as a rack turning.
+   ⚠ NO SHARED 3D CONTEXT, AND NO `perspective` PROPERTY — EACH CARD CARRIES
+   ITS OWN `perspective()` (`rowPose`). The first cut of this row put the
+   perspective on `.mu__rig` over a `preserve-3d` rack, as U1's shelf did, and
+   inside this sticky, promoted stage the compositor resolved it somewhere
+   other than `getBoundingClientRect` did: a tipped neighbour PAINTED as a 30px
+   sliver ~140px below its own reported rect, with every geometry gate green.
+   A perspective in the card's own matrix is resolved in one place. The cards
+   never intersect (their depth is floored so they cannot), so paint order is
+   plain z-index — the card being read over its neighbours, each step out
+   under the last.
+   ⚠ `.mu__window` holds the band's box and the edge FADE; the rig and the
+   rack are plain boxes the cards are seated in.
    ═══════════════════════════════════════════════════════════════════ */
 /* ⚠ THE STATION GIVES UP ITS PADDING ON THE DESKTOP RUNG ONLY, AND THE FIRST
    CUT DECLARED IT UNCONDITIONALLY — WHICH IS THE TRAP `mobile-sections.md` §1
@@ -791,19 +776,31 @@
 }
 
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  .mu[data-mu-ready] .mu__rig {
-    position: relative;
-    perspective: 1600px;
-    perspective-origin: 50% 50%;
-    transform-style: preserve-3d;
-  }
-
-  /* The shelf stands on the editorial band's own left edge, so the head, the
-     slabs and the way out are one column (ADR-119 U1). The band's box, not
-     the station's — the same pair `.mu__head` and `.mu__foot` ride. */
-  .mu[data-mu-ready] .mu__rig {
+  /* ⚠ THE ROW IS CENTRED, BY THE OWNER'S RULING (ADR-119 U2: "the entire
+     stack of Musings should be centered"). U1 stood the shelf on the band's
+     left edge by a session decision; the card being read sits on the band's
+     centre now and the row slides past it. The window keeps the BAND's box —
+     the same pair `.mu__head` rides — so the centre it seats on is the page's.
+     ⚠ THE FADE IS WHAT BOUNDS THE ROW, AND IT FINISHES 3 % INSIDE THE WINDOW.
+     Cards two and more steps out reach past the band at every rung, and at
+     1280×720 the band's right edge runs 15px PAST the rail's BEARING readout
+     (U1's measurement) — a fade that ended on the edge would still lay a
+     faint plate under live telemetry. Fully transparent from 97 % out, the
+     row stops ~15px short of it there; `capture-musings-rack` asserts it.
+     ⚠ The window carries vertical PADDING because a mask hides everything
+     outside its box: without it the front card's focus ring, 3px outboard of
+     the card, would be masked away at the top and bottom edges. */
+  .mu[data-mu-ready] .mu__window {
     max-width: var(--band-max);
     margin-inline: var(--rail-inset);
+    padding-block: 8px;
+    -webkit-mask-image: linear-gradient(90deg, transparent 3%, #000 12%, #000 88%, transparent 97%);
+    mask-image: linear-gradient(90deg, transparent 3%, #000 12%, #000 88%, transparent 97%);
+  }
+
+  .mu[data-mu-ready] .mu__rig {
+    position: relative;
+    height: var(--mu-card-h);
   }
 
   .mu[data-mu-ready] .mu__rack {
@@ -815,51 +812,37 @@
     gap: 0;
     padding-block: 0;
     scroll-snap-type: none;
-    transform-style: preserve-3d;
-    transform: rotateY(var(--mu-drift, 0deg));
   }
 
   /* The pose is assigned by the writer. What lives here is only what the
      writer does NOT own: the seat the transform is measured from, the
      detent's easing, and the silhouette.
 
-     ⚠ THE CURVE IS THE HOUSE'S SETTLED PAIR, RE-SOLVED FOR THIS OBJECT'S
-     SIZE. The drawing this rack is lifted from eases 480ms on an expo-out
-     (`cubic-bezier(0.19, 1, 0.22, 1)`), which is 84 % travelled in its first
-     fifth — fine on its own card, and 2.5× too fast in pixels on an object
-     this size. ADR-097 U12's finding, taken as law: copy a reference for
-     what it DOES and re-solve its timing for the size of the thing you put
-     it on. 720ms ease-in-out is half-travelled at 360ms and readable end to
-     end. */
+     ⚠ EVERY CARD IS SEATED ON THE RIG'S CENTRE, AND THAT IS THE EYE. `inset: 0;
+     margin: auto` centres the card's own LAYOUT box, so its transform-origin
+     (its centre) is the rig's centre — which is where `rowPose`'s leading
+     `perspective()` puts the eye for every card. A seat anywhere else moves
+     that card's vanishing point with it, and the row stops sharing one view.
+     ⚠ THE ORIGIN IS THE CARD'S OWN CENTRE, so the tip turns each card about its
+     horizontal centre line — the row keeps one mid-line.
+     ⚠ THE CURVE IS THE HOUSE'S SETTLED PAIR, RE-SOLVED FOR THIS OBJECT'S SIZE
+     (ADR-097 U12): 720ms ease-in-out is half-travelled at 360ms and readable
+     end to end on a card this size. */
   .mu[data-mu-ready] .mu-card {
     position: absolute;
-    /* ⚠ `left: 0`, because `shelfOffset` is measured from the SHELF'S LEFT END
-       rather than the rig's centre. The two move together: a centre seat under
-       a left-anchored track puts the whole shelf half a band out. */
-    left: 0;
-    top: 50%;
+    inset: 0;
+    margin: auto;
     flex: none;
     min-height: 0;
     height: var(--mu-card-h);
     scroll-snap-align: none;
-    transform-style: preserve-3d;
-    /* ⚠ THE HINGE IS THE LEFT EDGE, AND THE TRACK IS MEASURED TO IT.
-       `shelfOffset` returns each slab's hinge, so a `center` origin would put
-       the open card right and every closed one half a face out. */
-    transform-origin: left center;
+    transform-origin: 50% 50%;
     transition: transform 720ms cubic-bezier(0.65, 0, 0.35, 1);
   }
 
-  /* The face and the spine are a quarter turn apart about the one hinge, so
-     one angle on the pivot shows exactly one of them. Neither fades. */
-  .mu[data-mu-ready] .mu-card__front,
-  .mu[data-mu-ready] .mu-card__spine {
-    backface-visibility: hidden;
-  }
-
-  .mu[data-mu-ready] .mu-card__spine {
-    display: flex;
-    transform: rotateY(-90deg);
+  /* The way out centres under the row it belongs to. */
+  .mu[data-mu-ready] .mu__foot {
+    text-align: center;
   }
 }
 
@@ -880,32 +863,24 @@
    route's `tl-aperture*` carry the same two, and one changing alone is a
    house grammar with a different clock on one surface.
 
-   ⚠ ON THE CARD'S FACE, NEVER THE RACK. A `clip-path` on the `preserve-3d`
-   pivot or on either of its ancestors flattens the shelf, which is the
-   grouping-property law this card was split for.
-   ⚠ AND ON THE STAGE RUNG ONLY. Below it the writer parks, so an `await`
-   state would hide a shelf nothing was ever going to open.
+   ⚠ ON THE CARD'S FACE, NEVER THE PIVOT OR THE RACK. The pivot carries the
+   pose and nothing else (the law U1's shelf was split for, kept so a shared
+   3D context can come back without a hunt), and a clip on the rack would cut
+   every card at once.
+   ⚠ AND ON THE ROW'S RUNG ONLY. Below it the writer parks, so an `await`
+   state would hide a row nothing was ever going to open.
    ═══════════════════════════════════════════════════════════════════ */
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
   /* ⚠ AN ABSENT STAMP MEANS SHOWN. The two hidden states paint identically
      and both are gated on the stamp's presence, so a parked writer, a page
      whose script never ran and a reduced-motion reader all get the finished
-     shelf (ADR-101 §A's polarity law). */
-  /* ⚠ THE SPINE ARRIVES WITH THE FACE, AND THE FIRST CUT FORGOT IT. The
-     aperture is on the face because that is where the clip may live; the
-     spines are siblings, so a shelf "before it arrives" painted two lettered
-     strips standing in an empty frame under a half-decoded head — on the
-     still, and on no gate. A slab is one object: both of its planes open on
-     one clock.
+     row (ADR-101 §A's polarity law).
      ⚠ The HIDING may not move up to the pivot, however obvious that looks:
-     `opacity` there is a grouping property and would flatten the shelf's 3D
-     context, which is the whole reason this card has two layers. */
+     `opacity` there is a grouping property. */
   .mu[data-mu-ready][data-mu-arrive="await"] .mu-card__front,
-  .mu[data-mu-ready][data-mu-arrive="await"] .mu-card__spine,
   .mu[data-mu-ready][data-mu-arrive="out"] .mu-card__front,
-  .mu[data-mu-ready][data-mu-arrive="out"] .mu-card__spine,
   /* The way out is part of the beat, not chrome standing over it: it arrives
-     with the shelf and leaves with it. ⚠ `visibility: hidden` also takes it
+     with the row and leaves with it. ⚠ `visibility: hidden` also takes it
      out of the tab order, which is what an absent control owes. */
   .mu[data-mu-ready][data-mu-arrive="await"] .mu__all,
   .mu[data-mu-ready][data-mu-arrive="out"] .mu__all {
@@ -913,13 +888,11 @@
     visibility: hidden;
   }
 
-  .mu[data-mu-ready][data-mu-arrive="in"] .mu-card__spine,
   .mu[data-mu-ready][data-mu-arrive="in"] .mu__all {
-    animation: mu-aperture-spine 720ms cubic-bezier(0.65, 0, 0.35, 1) none;
+    animation: mu-aperture-slit 720ms cubic-bezier(0.65, 0, 0.35, 1) none;
   }
-  .mu[data-mu-ready][data-mu-arrive="out"] .mu-card__spine,
   .mu[data-mu-ready][data-mu-arrive="out"] .mu__all {
-    animation: mu-aperture-spine-close 420ms cubic-bezier(0.65, 0, 0.35, 1) none;
+    animation: mu-aperture-slit-close 420ms cubic-bezier(0.65, 0, 0.35, 1) none;
   }
 
   .mu[data-mu-ready][data-mu-arrive="in"] .mu-card__front {
@@ -953,9 +926,9 @@
    that animated the clip alone would play on a face nobody can see. It ends
    on the slit, where nothing paints, and the cascade takes over from there
    with no pop and nothing interpolating `visibility`. */
-/* The spine's own sweep. It is a plain rectangle — no chamfer — so the slit
-   is an `inset`, opening on the same clock as the face beside it. */
-@keyframes mu-aperture-spine {
+/* The way out's own sweep. It is a plain rectangle — no chamfer — so the slit
+   is an `inset`, opening on the same clock as the cards above it. */
+@keyframes mu-aperture-slit {
   from {
     clip-path: inset(0 50% 0 50%);
   }
@@ -963,7 +936,7 @@
     clip-path: inset(0);
   }
 }
-@keyframes mu-aperture-spine-close {
+@keyframes mu-aperture-slit-close {
   from {
     opacity: 1;
     visibility: visible;

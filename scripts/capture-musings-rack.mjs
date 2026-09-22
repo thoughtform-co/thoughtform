@@ -1,5 +1,5 @@
 /**
- * Shoot the musings rack and the footer's bed (ADR-119 / ADR-105 U3), and
+ * Shoot the musings row and the footer's bed (ADR-119 U2 / ADR-105 U3), and
  * measure what no unit test and no mechanical gate can.
  *
  * ⚠ **HEADED, AND REAL SCROLLS.** The rack is the first opaque station under a
@@ -8,12 +8,20 @@
  * which decide whether this station is painting as the ambient's COVER — never
  * publish. `scripts/capture-site-footer.mjs`'s own law, one station up.
  *
- * ⚠ **THE THINGS THAT CANNOT BE GATED ANY OTHER WAY.** `shelfMath` is pure and
- * unit-pinned, but nothing there knows whether the browser applied a pose to
- * an element, whether a card's ink prints through its neighbour, or whether
- * the footer is actually uncovering. Specifically:
+ * ⚠ **THE THINGS THAT CANNOT BE GATED ANY OTHER WAY.** `rowMath` and
+ * `headDecode` are pure and unit-pinned, but nothing there knows whether the
+ * browser applied a pose to an element, whether a card's ink prints through
+ * its neighbour, or whether the footer is actually uncovering. Specifically:
  *   · `coverOpaque`   — the station's own ground, the ADR-030 §6 contract.
  *   · `poses`         — every card's transform actually assigned, not computed.
+ *   · `tilt`          — every neighbour's COMPUTED matrix is a pure X rotation
+ *                       (U2: "rotated on the x-axis"; U0 and U1 were Y).
+ *   · `centred`       — the card being read sits on the band's centre (U2).
+ *   · `headBlank`     — the head is EMPTY at every stop the stage is not parked:
+ *                       text never travels (U2 — U1's head was never blank).
+ *   · `headWhole`     — and whole through the reading band.
+ *   · `telemetry`     — the row's fade is fully transparent before the right
+ *                       rail's readouts begin, so no plate lies under them.
  *   · `frontInk`      — the front card's title/lede clear of its neighbours.
  *   · `detent`        — one whole card per step of the reading band.
  *   · `reveal`        — the footer's visible height growing as the rack leaves.
@@ -176,10 +184,32 @@ const readRack = () =>
       contactBox: box(contact),
       revealed: px(Math.max(0, Math.min(vh, vh - mb))),
 
-      clock: {
-        entry: cs(mu)?.getPropertyValue("--mu-entry").trim() || null,
-        drift: cs(mu)?.getPropertyValue("--mu-drift").trim() || null,
-      },
+      /* ⚠ PARKED IS THE RUNWAY COVERING THE FRAME — the writer's own test. The
+         head may only show while this is true (U2). */
+      pinned: (() => {
+        const r = document.querySelector(".mu__runway")?.getBoundingClientRect();
+        return r ? r.top <= 0.5 && r.bottom >= vh - 0.5 : false;
+      })(),
+      headState: (() => {
+        const runs = [...document.querySelectorAll(".mu__head [data-mu-decode]")];
+        const title = [...document.querySelectorAll(".mu__title [data-mu-decode]")]
+          .map((e) => e.textContent)
+          .join(" ");
+        const brief = document.querySelector(".mu__brief-typed [data-mu-decode]")?.textContent ?? "";
+        const ghost = document.querySelector(".mu__brief-ghost")?.textContent ?? "";
+        return {
+          level: cs(mu)?.getPropertyValue("--mu-head").trim() || null,
+          blank: runs.every((e) => (e.textContent ?? "").trim() === ""),
+          whole:
+            title === (document.querySelector(".mu__title")?.getAttribute("aria-label") ?? "") &&
+            brief === ghost,
+          sample: title.slice(0, 24),
+        };
+      })(),
+      windowBox: box(document.querySelector(".mu__window")),
+      rin: [...document.querySelectorAll(".rin-tele")]
+        .map((e) => box(e))
+        .filter((b) => b && b.w > 0 && b.h > 0),
       front,
       cards: cards.map((c, i) => {
         const s = getComputedStyle(c);
@@ -202,15 +232,18 @@ const readRack = () =>
           kickerPx: px(
             parseFloat(getComputedStyle(c.querySelector(".mu-card__kicker")).fontSize)
           ),
-          /* ⚠ THE PIVOT'S OWN RECT SAYS NOTHING ABOUT A CLOSED SLAB. At
-             `rotateY(90deg)` the card's border box extends BACKWARD in z, so
-             under the rig's perspective it projects to a 20–35px sliver — a
-             number that looks like a spine and is the foreshortened FACE.
-             What the reader sees is the spine's own box, and it is the one
-             thing a flattened 3D context would collapse to zero. */
-          spine: box(c.querySelector(".mu-card__spine")),
-          spineInk: inkOf(c.querySelector(".mu-card__spine-title")),
-          turn: c.dataset.muTurn ?? null,
+          tilt: c.dataset.muTilt ?? null,
+          /* ⚠ THE COMPUTED MATRIX, NOT THE ASSIGNED STRING: a pure rotation
+             about X leaves the X basis untouched — m11 = 1 and m12 = m13 =
+             m21 = m31 = 0 — whatever the tilt and wherever the translate.
+             Any Y or Z turn, from any rule, shows up here. */
+          pureX: (() => {
+            const m = s.transform.match(/matrix3d\(([^)]+)\)/);
+            if (!m) return s.transform === "none" || /^matrix\(1, 0, 0, 1,/.test(s.transform);
+            const v = m[1].split(",").map(Number);
+            const ok = (a, b) => Math.abs(a - b) < 1e-3;
+            return ok(v[0], 1) && ok(v[1], 0) && ok(v[2], 0) && ok(v[4], 0) && ok(v[8], 0);
+          })(),
           cover: box(c.querySelector(".mu-cover")),
           beat: !!c.querySelector(".mu-cover__beat"),
           litMark: box(c.querySelector(".mu-cover__mark--lit")),
@@ -243,11 +276,12 @@ const readNotch = () =>
        inside it for a square one. */
     const d = ch * 0.3;
 
-    /* ⚠ A BOUNDING RECT IS NOT THE SHAPE, AND UNDER A 3D YAW IT IS NOT EVEN
-       THE RIGHT QUADRILATERAL. The shelf stands at `--mu-drift` (a few
-       degrees about Y) under the rig's perspective, so a card projects to a
-       TRAPEZOID and `getBoundingClientRect` reports its axis-aligned bound —
-       a box whose four corners are all OUTSIDE the shape. Probed there, every
+    /* ⚠ A BOUNDING RECT IS NOT THE SHAPE, AND UNDER A 3D POSE IT IS NOT EVEN
+       THE RIGHT QUADRILATERAL. U1's shelf stood at a few degrees about Y, so a
+       card projected to a TRAPEZOID and `getBoundingClientRect` reported its
+       axis-aligned bound — a box whose four corners are all OUTSIDE the shape.
+       The row's open card is upright, but the probe keeps the method: it is
+       the one that stays right if a pose ever moves it. Probed there, every
        corner of a correctly notched card reports "cut", and the gate agrees
        with itself while measuring nothing: four falses read as three
        unlawful notches. So the probe points are resolved the way this house
@@ -323,7 +357,9 @@ const readNotch = () =>
   });
 
 /* ── The walk ───────────────────────────────────────────────────────── */
-const stops = [0.02, 0.14, 0.3, 0.45, 0.6, 0.75, 0.9, 0.99];
+/* ⚠ −0.3 AND 1.15 ARE OFF THE PIN ON PURPOSE: the approach and the release,
+   where the stage travels and the head must be EMPTY (U2). */
+const stops = [-0.3, 0.02, 0.14, 0.3, 0.45, 0.6, 0.75, 0.9, 0.99, 1.15];
 const walk = [];
 for (const p of stops) {
   const landed = await rollToP(p);
@@ -339,7 +375,22 @@ for (const p of stops) {
    corners report "cut" — which is how the first run of this script reported a
    square card as notched on three sides. Seat it first. */
 await rollToP(0.45);
-await page.waitForTimeout(820);
+/* ⚠ WAIT ON THE ARRIVAL, NEVER A FIXED SLEEP (ADR-119 U2). Re-entering the
+   beat from below replays the owner's order — the head decodes (~0.7s), THEN
+   the row's aperture opens (0.72s) — so a probe that sleeps for the detent
+   alone reads the face mid-aperture, with every corner outside its clip. */
+/* ⚠ ONLY WHERE THE ROW RUNS. On the phone rung the writer parks and there is
+   no arrival stamp at all — the rail is the finished page. */
+if (W > 960)
+  await page.waitForFunction(
+    () => {
+      const mu = document.querySelector(".mu");
+      const face = document.querySelector(".mu-card[data-mu-front] .mu-card__front");
+      return mu?.dataset.muArrive === "in" && face && face.getAnimations().length === 0;
+    },
+    null,
+    { timeout: 8000 }
+  );
 const notch = await readNotch();
 
 /* Past the rack: the footer uncovering, then the document's end. */
@@ -380,23 +431,24 @@ line(`cards     ${first.cards.length} · type ${first.cards[0]?.titlePx}/${first
 line(`notch     ch ${notch?.ch} · mid ${notch?.mid} · TL ${notch?.tl} TR ${notch?.tr} BL ${notch?.bl} BR ${notch?.br}`);
 line(`notch     hits ${JSON.stringify(notch?.hits)}`);
 line("");
-line("  p      landed  ready  open   entry   drift   ambient/exit  ftReveal  readout   #contact            revealed");
+line("  p      landed  ready  pinned open  head (level · text)              ambient/exit  ftReveal  readout   #contact            revealed");
 for (const s of walk) {
   const pad = (v, n) => String(v).padEnd(n);
+  const head = s.headState ? `${s.headState.level ?? "—"} · "${s.headState.sample}"` : "—";
   line(
-    `  ${pad(s.p, 6)} ${pad(s.landed, 7)} ${pad(s.muReady, 6)} ${pad(s.front, 6)} ` +
-      `${pad(s.clock.entry, 7)} ${pad(s.clock.drift, 7)} ${pad(`${s.ambient}/${s.exit}`, 13)} ` +
+    `  ${pad(s.p, 6)} ${pad(s.landed, 7)} ${pad(s.muReady, 6)} ${pad(s.pinned, 6)} ${pad(s.front, 5)} ` +
+      `${pad(head, 34)} ${pad(`${s.ambient}/${s.exit}`, 13)} ` +
       `${pad(s.ftReveal, 9)} ${pad(s.activeStation, 9)} ${pad(`${s.contactPosition} z${s.contactZ} y${s.contactBox?.y}`, 19)} ${s.revealed}`
   );
 }
 
-/* Poses and ink, at the stop where the rack is fully open. */
-const open = walk.find((s) => Number(s.clock?.entry) > 0.98) ?? walk[3];
+/* Poses and ink, at a stop where the row is open and being read. */
+const open = walk.find((s) => s.p === 0.45) ?? walk[4];
 line(`\n── poses at p ${open.p} (front ${open.front}) ──`);
 for (const c of open.cards) {
   line(
     `  ${c.i}${c.front ? "*" : " "} op ${String(c.opacity).padEnd(6)} z ${String(c.zIndex).padEnd(3)} ` +
-      `box ${JSON.stringify(c.box)} beat ${c.beat ? "y" : "-"}  ${c.assigned ?? "NO POSE ASSIGNED"}`
+      `tilt ${String(c.tilt).padEnd(3)} pureX ${c.pureX ? "y" : "N"} box ${JSON.stringify(c.box)}  ${c.assigned ?? "NO POSE ASSIGNED"}`
   );
 }
 
@@ -423,9 +475,9 @@ if (f) {
 }
 line(`\nfront ink  ${clashes.length === 0 ? "clear of every card above it" : clashes.join(" · ")}`);
 
-/* The spine's width, mirrored from `shelfMath.ts`'s `SHELF_SPINE_PX`, which
-   `tests/lib/musings-shelf.test.ts` pins against the sheet. */
-const SPINE_PX = 46;
+/* The row's tilt, mirrored from `rowMath.ts`'s `ROW_TILT`, which
+   `tests/lib/musings-row.test.ts` pins. */
+const ROW_TILT = 60;
 
 /* ── The gates ──────────────────────────────────────────────────────── */
 const fails = [];
@@ -439,7 +491,7 @@ const fails = [];
    corridor and the KILL is the band at the foot. The cover contract (ADR-030
    §6 — its own opaque ground AND a painted surface) is unchanged; it is asked
    of the band. */
-const killStop = walk.find((s) => typeof s.p === "number" && s.p >= 0.3);
+const killStop = walk.find((s) => typeof s.p === "number" && s.p >= 0.3 && s.p <= 0.99);
 if (killStop) {
   if (killStop.stageMode && !(killStop.ambient && killStop.exit))
     fails.push(`the corridor died inside the shelf (ambient ${killStop.ambient}, exit ${killStop.exit})`);
@@ -457,39 +509,59 @@ for (const s of walk) {
   if (phone) {
     if (s.muReady) fails.push(`the rack posed itself on the phone rung at p ${s.p}`);
     if (s.ftReveal) fails.push(`the footer's bed armed on the phone rung at p ${s.p}`);
-  } else if (!s.muReady) fails.push(`no data-mu-ready at p ${s.p}`);
+  } else if (!s.muReady && s.p >= 0 && s.p <= 1) fails.push(`no data-mu-ready at p ${s.p}`);
 }
 if (!phone) {
   const seen = new Set(walk.filter((s) => typeof s.p === "number").map((s) => s.front));
   if (seen.size < 2) fails.push(`the detent never advanced (front stayed ${[...seen]})`);
   if (open.cards.some((c) => !c.assigned)) fails.push("a card was never posed by the writer");
   if (clashes.length) fails.push(`front ink under a card above it: ${clashes.join(", ")}`);
-  /* ⚠ THE SPINE IS THE ONE THING A FLATTENED PIVOT COLLAPSES, and every
-     other reading survives it: the transform is assigned, the element is
-     measurable, the track steps correctly, and the closed slab renders as a
-     sliver of foreshortened FACE that looks like a spine in a number. So it
-     is asked of the spine's own box, against the width the track laid out. */
+  /* ⚠ THE ROW TURNS ABOUT X AND NOTHING ELSE (U2), asked of the COMPUTED
+     matrix so no rule anywhere can slip a Y turn back in. */
   for (const c of open.cards) {
+    if (!c.pureX) fails.push(`card ${c.i} carries a rotation other than about X`);
     if (c.front) {
-      if (c.turn !== "0") fails.push(`the open slab reads turn ${c.turn}`);
+      if (c.tilt !== "0") fails.push(`the card being read reads tilt ${c.tilt}`);
       continue;
     }
-    if (c.turn !== "90") fails.push(`a closed slab reads turn ${c.turn}, not 90`);
-    const w = c.spine?.w ?? 0;
-    if (w < SPINE_PX - 4) fails.push(`slab ${c.i}'s spine is ${w}px, not ~${SPINE_PX}`);
-    if (!c.spineInk) fails.push(`slab ${c.i}'s spine letters nothing`);
+    if (c.tilt !== String(ROW_TILT)) fails.push(`card ${c.i} reads tilt ${c.tilt}, not ${ROW_TILT}`);
+  }
+  /* ⚠ CENTRED ON THE BAND (U2 — "the entire stack … should be centered"). The
+     card being read is upright, so its rect IS its shape. */
+  const fc = open.cards[open.front];
+  if (fc?.box && open.windowBox) {
+    const dx = fc.box.x + fc.box.w / 2 - (open.windowBox.x + open.windowBox.w / 2);
+    if (Math.abs(dx) > 2) fails.push(`the card being read sits ${dx.toFixed(1)}px off the band's centre`);
+  }
+  /* ⚠ THE FADE ENDS BEFORE THE TELEMETRY BEGINS. The window's mask is fully
+     transparent from 97 % out, so that is the row's last paintable column. */
+  if (open.windowBox && open.rin.length) {
+    const lastInk = open.windowBox.x + open.windowBox.w * 0.97;
+    const firstTele = Math.min(...open.rin.map((b) => b.x));
+    if (lastInk > firstTele + 0.5)
+      fails.push(`the row can paint to x ${lastInk.toFixed(0)}, past the readouts at ${firstTele}`);
+  }
+  /* ⚠ TEXT NEVER TRAVELS (U2). Wherever the stage is not parked the head is
+     EMPTY — U1's head was never blank, so its glyphs rode the stage in and
+     out — and through the reading band it is whole. */
+  for (const s of walk) {
+    if (typeof s.p !== "number" || !s.headState) continue;
+    if (!s.pinned && !s.headState.blank)
+      fails.push(`the head shows "${s.headState.sample}" on a moving stage at p ${s.p}`);
+    if (s.pinned && s.p >= 0.3 && s.p <= 0.9 && !s.headState.whole)
+      fails.push(`the head is not whole in the reading band at p ${s.p} ("${s.headState.sample}")`);
   }
   /* ⚠ THE BED ARMS ON THE BAND'S TOP, NOT THE RUNWAY'S (ADR-119 U1). On the
      stage rung the shelf's whole runway is transparent, so an armed bed there
      would put the held footer under a live canvas for three viewports. The
      edge is the band's own top, which is the last viewport of the station. */
-  const ends = walk.filter((s) => typeof s.p === "number" && s.p >= 0.9);
+  const ends = walk.filter((s) => typeof s.p === "number" && s.p >= 0.9 && s.p <= 0.99);
   const armed = walk.filter((s) => s.ftReveal);
   if (!armed.length) fails.push("the footer's bed was never armed");
   /* ⚠ THE READOUT NAMES THIS STATION FOR THE WHOLE BEAT. It is the one thing
      the sticky bed can silently take away, and nothing measured it. */
   for (const s of walk) {
-    if (typeof s.p !== "number") continue;
+    if (typeof s.p !== "number" || s.p < 0 || s.p > 1) continue;
     if (s.activeStation !== "musings")
       fails.push(`the HUD reads ${s.activeStation} at p ${s.p}, not musings`);
   }

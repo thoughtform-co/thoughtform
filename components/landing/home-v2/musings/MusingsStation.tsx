@@ -9,37 +9,32 @@ import { MusingCard } from "./MusingCard";
 import { useMusingsScroll } from "./useMusingsScroll";
 
 /**
- * `#musings` — the writing, as a rack you flip through (ADR-119).
+ * `#musings` — the writing, as a row you scroll along (ADR-119, U2).
  *
  * The owner's ask, 2026-09-22: the post in view is a clean card with a
- * thumbnail, a title and a summary; the others sit beside it ROTATED ABOUT
- * THE VERTICAL AXIS so their sides show — "a jukebox or rotodex … it really
- * feels like you're scrolling through a digital folder" — and the whole thing
- * comes into view as you scroll away from the era stage.
+ * thumbnail, a title and a summary, and the others are "rotated on the
+ * x-axis" — a jukebox / carousel / rolodex. After two readings of that on the
+ * vertical axis (U0's fan, U1's shelf) he chose the ROW (U2): the card being
+ * read upright in the centre, the others left and right of it tipped back
+ * about their horizontal axis, flat panes with no skeuomorphism, the row
+ * sliding sideways as the reader scrolls.
  *
- * Composition: the masthead on the editorial band, the rack under it, one way
- * out. The rig's geometry is `lib/musings/rackMath.ts` and the clock is
- * `useMusingsScroll`; this file is the arrangement and nothing else.
+ * Composition: the masthead on the editorial band, the row under it, one way
+ * out. The geometry is `lib/musings/rowMath.ts`, the head's decode
+ * `lib/musings/headDecode.ts`, and the clock `useMusingsScroll`; this file is
+ * the arrangement and nothing else.
  *
- * ⚠ **THE STATION IS THE CORRIDOR'S OPAQUE COVER NOW** (ADR-119 §4, taking
- * the role from `#contact`, which held it under ADR-105). Two consequences
- * that are not this component's to fix but are its to know: the station keeps
- * `.station:not(.hero)`'s own `var(--void)` ground and stars — the handoff
- * guard asserts `alpha === 1` AND a background image, and a station whose
- * only ground is its content fails both — and `home-v2.css`'s cover rule and
- * `useCorridorExitScroll`'s next-station query must name `#musings` together
- * (ADR-030 §6's seam bug, on record as hit five times).
+ * ⚠ **ON THE STAGE RUNG THE STATION IS TRANSPARENT AND `.mu__band` IS THE
+ * COVER** (ADR-119 U1 §1): the corridor stays alive behind the whole beat and
+ * dies on the band. Off it the station is opaque again and is its own cover.
  *
- * ⚠ **THE PERSPECTIVE IS ON THE RIG AND THE IDLE YAW ON THE RACK**, one level
- * apart: `perspective` resolves against the element that declares it, so a
- * yaw on the same box swings every card's vanishing point with it and the
- * beat reads as leaning rather than as a rack turning.
+ * ⚠ **THE PERSPECTIVE IS ON THE RIG AND THE FADE ON THE WINDOW ABOVE IT.** A
+ * `mask-image` is a grouping property — on the rig or the rack it would flatten
+ * the row's 3D context into one plane — so it lives on `.mu__window`, which is
+ * outside that context and only ever sees the rendered row.
  *
- * ⚠ **EVERY CARD RENDERS, ALWAYS, INCLUDING THE ONES POSED AT ZERO.** The
- * drawing this is lifted from returns `null` before its entry clock opens;
- * this station cannot, because it is the cover. The POSE is what hides a
- * card — parked behind, at opacity 0, on the side it left on, so a card
- * entering the rack travels in rather than fading in on the spot.
+ * ⚠ **EVERY CARD RENDERS, ALWAYS.** The POSE is what places a card; the
+ * arrival's aperture is what hides one.
  */
 export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) {
   const runwayRef = useRef<HTMLDivElement | null>(null);
@@ -85,14 +80,25 @@ export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) 
                   heading overrides its contents and is stable for the whole
                   beat. The paragraph needs no equivalent — the typewriter only
                   truncates, so every frame of it is real prose. */}
+              {/* ⚠ THE DECODED RUN IS AN INNER SPAN, NOT THE LINE. The decode
+                  writes `textContent`, which would wipe a sibling — so the
+                  line holds the run AND the CRT cursor, and the cursor hangs
+                  on the line (`data-mu-cursor`, lit by `data-live`) the way
+                  `ServicesMasthead` hangs its own. `data-mu-order` is the
+                  line's stagger slot: 0.18s apart, services' own number. */}
               <h2 className="mu__title" aria-label={MUSINGS_TITLE_TEXT}>
-                {MUSINGS_MASTHEAD.titleLines.map((line) => (
+                {MUSINGS_MASTHEAD.titleLines.map((line, i) => (
                   <span
                     key={line.text}
                     className={`mu__title-line${line.em ? " mu__title-line--em" : ""}`}
-                    data-mu-decode="scramble"
+                    data-mu-cursor=""
                   >
-                    {line.text}
+                    <span data-mu-decode="scramble" data-mu-order={i}>
+                      {line.text}
+                    </span>
+                    <span className="mu__cursor" aria-hidden="true">
+                      █
+                    </span>
                   </span>
                 ))}
               </h2>
@@ -108,8 +114,21 @@ export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) 
               <span className="mu__state" aria-hidden="true" data-mu-decode="scramble">
                 {MUSINGS_MASTHEAD.state}
               </span>
-              <p className="mu__brief" data-mu-decode="type">
-                {MUSINGS_MASTHEAD.brief}
+              {/* ⚠ GHOST AND LIVE, services' own pair: the hidden ghost holds
+                  the paragraph's whole box in flow and the typed layer is
+                  ABSOLUTE over it, so the typewriter never reflows the head —
+                  a growing box under a pinned stage is layout churn the scroll
+                  anchor answers by nudging the page. */}
+              <p className="mu__brief" data-mu-cursor="">
+                <span className="mu__brief-ghost" aria-hidden="true">
+                  {MUSINGS_MASTHEAD.brief}
+                </span>
+                <span className="mu__brief-typed">
+                  <span data-mu-decode="type">{MUSINGS_MASTHEAD.brief}</span>
+                  <span className="mu__cursor" aria-hidden="true">
+                    █
+                  </span>
+                </span>
               </p>
               <span className="mu__coord mu__coord--r" aria-hidden="true">
                 {MUSINGS_COORDS[1]}
@@ -119,17 +138,19 @@ export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) 
           </header>
 
           {posts.length > 0 ? (
-            <div className="mu__rig">
-              <div className="mu__rack">
-                {posts.map((post, i) => (
-                  <MusingCard
-                    key={post.slug}
-                    post={post}
-                    index={i}
-                    isFront={i === front}
-                    cardRef={setCard(i)}
-                  />
-                ))}
+            <div className="mu__window">
+              <div className="mu__rig">
+                <div className="mu__rack">
+                  {posts.map((post, i) => (
+                    <MusingCard
+                      key={post.slug}
+                      post={post}
+                      index={i}
+                      isFront={i === front}
+                      cardRef={setCard(i)}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           ) : (

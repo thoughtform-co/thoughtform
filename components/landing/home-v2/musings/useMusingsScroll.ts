@@ -3,86 +3,85 @@
 import { useEffect, useRef, useState } from "react";
 
 import { clamp01 } from "@/lib/math";
-import { scrambleDuration, scrambleFrame } from "@/lib/home-v2/captionScramble";
 import {
-  shelfArrive,
-  shelfClock,
-  shelfGeom,
-  shelfIndex,
-  shelfPose,
-  typedCount,
-  type ShelfArrive,
-} from "@/lib/musings/shelfMath";
+  HEAD_OUT_SPEEDUP,
+  headFrame,
+  headRunLive,
+  headSpan,
+  headTarget,
+  type HeadMode,
+  type HeadRun,
+  type HeadWant,
+} from "@/lib/musings/headDecode";
+import {
+  rowArrive,
+  rowGeom,
+  rowIndex,
+  rowPose,
+  rowReadIndex,
+  type RowArrive,
+} from "@/lib/musings/rowMath";
 import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 /**
  * The musings station's ONE scroll writer (ADR-119).
  *
  * It owns everything that moves in this beat, and it publishes two kinds of
- * thing: the rack's per-card pose, assigned straight onto the elements, and
- * two attributes — `data-mu-ready` on the station and **`data-ft-reveal` on
- * `<html>`**, which is what arms the footer's held bed (ADR-105 U3).
+ * thing: the row's per-card pose, assigned straight onto the elements, and
+ * a handful of attributes — `data-mu-ready` / `data-mu-arrive` on `.mu`,
+ * `data-mu-mode` on the STATION and **`data-ft-reveal` on `<html>`**, which is
+ * what arms the footer's held bed (ADR-105 U3).
  *
- * ⚠ **IT RENDERS NOTHING PER FRAME.** The drawing this rack is lifted from
- * (`latent-cases/useLatentCaseScroll.ts`) calls `setState` inside its rAF on
- * every scroll event — a React re-render across every card, every frame, on a
- * page that is running a WebGL corridor two stations up. ADR-002's law is one
- * writer publishing CSS custom properties; the only React state here is the
- * front card's index, which changes at a DETENT — a handful of times across
- * the whole station.
+ * ⚠ **IT RENDERS NOTHING PER FRAME.** The only React state is the front card's
+ * index, which changes at a DETENT — a handful of times across the station.
+ * ADR-002's law is one writer publishing CSS custom properties.
  *
- * ⚠ **IT IS A PURE FUNCTION OF ONE RECT, SO SCROLLING BACK UNWINDS EXACTLY**
- * (ADR-021, the motion-sickness ruling). No clock, no latch, no easing state.
+ * ⚠ **THE ROW IS A PURE FUNCTION OF ONE RECT, SO SCROLLING BACK UNWINDS IT
+ * EXACTLY** (ADR-021). The HEAD is the one thing here with a clock of its own
+ * (ADR-119 U2): scroll decides where it is going, a bounded burst walks it
+ * there, and it snaps blank the moment the stage is not parked.
  *
- * ⚠ **IT READS THE LAYOUT VIEWPORT, NOT `innerHeight`** (ADR-113): the
- * runway is authored in `svh`, and on iOS `innerHeight` follows the toolbar —
- * a clock dividing one by the other moves while the thumb is still.
+ * ⚠ **IT READS THE LAYOUT VIEWPORT, NOT `innerHeight`** (ADR-113): the runway
+ * is authored in `svh`, and on iOS `innerHeight` follows the toolbar.
  */
 
 /**
- * The rung the 3D rack draws on.
+ * The rung the 3D row draws on.
  *
  * ⚠ **BYTE-EQUAL TO `SERVICES_SCROLL_OWNED_MEDIA`, AND MIRRORED BY HAND IN
  * `musings.css`.** It is not an alias of it: that constant answers "does
  * `#services` own the wheel", and coupling this station's geometry to that
- * question would mean a change there silently re-rung this rack. The strings
- * being equal is a fact about the two rungs, not a dependency — and
- * `tests/lib/musings-rack.test.ts` asserts the CSS carries the same query,
- * because a writer and a sheet that disagree about the rung is a rack posed
- * in 3D inside a box laid out as a flat rail.
+ * question would mean a change there silently re-rung this row.
+ * `tests/lib/musings-row.test.ts` asserts the sheet carries the same query.
  */
 export const MUSINGS_RACK_MEDIA = "(min-width: 961px) and (prefers-reduced-motion: no-preference)";
 
 /**
  * The rung the station becomes a TRANSPARENT STAGE on (ADR-119 U1).
  *
- * ⚠ **THERE ARE THREE RUNGS HERE, NOT TWO, AND CONFLATING THEM IS THE DEFECT
- * THIS CONSTANT EXISTS TO PREVENT.** The rack draws from 961px
- * (`MUSINGS_RACK_MEDIA`); the era stage is only a hologram from **1101px**, and
- * this station may only go transparent where there is a live corridor behind it
- * to be transparent ONTO. So 961–1100 is a real rung with a 3D rack and an
- * OPAQUE station, and it must stay byte-identical to what shipped in ADR-119 —
- * every new behaviour (the transparency, the promotion, the band as the cover,
- * the band as the footer's reveal edge) hangs on the stamp this gate writes.
+ * ⚠ **THREE RUNGS, NOT TWO.** The row draws from 961px; the era stage is only a
+ * hologram from **1101px**, and this station may only go transparent where
+ * there is a live corridor behind it. 961–1100 is a real rung with a 3D row
+ * and an OPAQUE station.
  *
- * ⚠ **THE ERA'S MODE IS READ OFF THE DOM, NEVER COPIED AS A FLAG.** A second
- * copy of "is the corridor live and capable" is how two surfaces end up
- * disagreeing about one fact; `#voidwalker[data-vw-mode="hologram"]` is written
- * by `useVoidwalkerHologramScroll` under its own full capability gate, so
- * reading it is reading the answer rather than re-deriving it. It is also the
- * exact predicate `voidwalker.css`'s own transparency rule keys on.
+ * ⚠ **THE ERA'S MODE IS READ OFF THE DOM, NEVER COPIED AS A FLAG** —
+ * `#voidwalker[data-vw-mode="hologram"]` is written under the era's own full
+ * capability gate, so reading it is reading the answer.
  */
 export const MUSINGS_STAGE_MEDIA =
   "(min-width: 1101px) and (prefers-reduced-motion: no-preference)";
 
-/** Where in the head's own clock the paragraph starts typing. */
-const HEAD_TYPE_LEAD = 0.35;
-
 export interface MusingsScrollState {
   /** The detented front card. React state — it changes a handful of times. */
   front: number;
-  /** False on the inert rung: the rack rests as a list and nothing is posed. */
+  /** False on the inert rung: the row rests as a list and nothing is posed. */
   live: boolean;
+}
+
+interface HeadTarget extends HeadRun {
+  el: HTMLElement;
+  /** The line this run's CRT cursor hangs on, if it has one. */
+  host: HTMLElement | null;
 }
 
 export function useMusingsScroll(
@@ -104,16 +103,11 @@ export function useMusingsScroll(
     const mqStage = window.matchMedia(MUSINGS_STAGE_MEDIA);
 
     /**
-     * The `#musings` STATION — not `.mu`, which is what `stationRef` actually
-     * holds.
+     * The `#musings` STATION — not `.mu`, which is what `stationRef` holds.
      *
-     * ⚠ **THE WRITER HAD NO HANDLE ON THE STATION AT ALL**, and that is a trap
-     * worth naming: `stationRef` is the portal's own root (`<div class="mu">`)
-     * one level inside the authored `[data-musings-root]` slot, so every rule
-     * written against `#musings[data-mu-mode]` would have matched NOTHING —
-     * silently, with the page simply reading as it did before. Resolved by
-     * climbing rather than by a second ref, because the portal mounts into the
-     * parsed HTML and the station is not this component's to render.
+     * ⚠ `stationRef` is the portal's own root one level inside the authored
+     * `[data-musings-root]` slot, so every rule written against
+     * `#musings[data-mu-mode]` needs the station itself. Resolved by climbing.
      */
     let sectionEl: HTMLElement | null = null;
     const section = () => {
@@ -125,129 +119,162 @@ export function useMusingsScroll(
 
     /**
      * Is the station a transparent stage over a live corridor this frame?
-     *
-     * Re-read EVERY frame, never hoisted: a resize across 1101px and the era's
-     * own engage/disengage both change the answer, and `useCorridorExitScroll`
-     * re-derives its cover from this same stamp on its own cadence.
+     * Re-read EVERY frame: a resize across 1101px and the era's own
+     * engage/disengage both change the answer. ⚠ BOTH transparent modes,
+     * `hologram` and `travel` — the pair `home-v2.css` and `voidwalker.css`
+     * key on (ADR-030 §6).
      */
     const stageMode = () => {
       if (!mqStage.matches) return false;
-      /* ⚠ BOTH TRANSPARENT MODES, THE SAME PAIR `home-v2.css` AND
-         `voidwalker.css` KEY ON. `travel` is the retained time-tunnel path and
-         it shares the hologram's contract exactly: a pinned TRANSPARENT stage
-         the ambient survives. Naming only `hologram` here would make this
-         station opaque on a path where the corridor is still live behind it —
-         the two sheets and this writer have to answer one question the same
-         way (ADR-030 §6). */
       const mode = document.getElementById("voidwalker")?.dataset.vwMode;
       return mode === "hologram" || mode === "travel";
     };
 
-    /**
-     * Put everything back the way the sheet rests it.
-     *
-     * ⚠ **AN ABSENT STAMP MEANS SHOWN** — the house's polarity law (ADR-099's
-     * ground, ADR-101 §A's awaiting station). The phone, a reduced-motion
-     * reader and a page whose script never ran all get the rack as a plain
-     * rail of cards, which is the finished page and not a fallback.
-     */
-    /**
-     * The masthead's decode — SCRUBBED, never queued.
-     *
-     * ⚠ **THE KERNEL IS IMPORTED AND THE DRIVER IS NOT.** `scrambleFrame` is
-     * the site's ONE decode kernel (`lib/home-v2/captionScramble.ts`) and it
-     * is pure in `t`, which is what lets a scroll-derived clock run it in both
-     * directions for free. ⚠ `advanceScrambles` may NOT be used: it walks a
-     * job list against a wall clock and DROPS finished jobs, and a dropped job
-     * is a latch that scrolling back up would find nothing to unwind — the
-     * defect ADR-095 records on the turn's own title.
-     *
-     * Two registers, the services masthead's own (ADR-103's law stated on a
-     * third surface): the chrome and the title SCRAMBLE, the paragraph TYPES.
-     * The caps glyph pool reads as noise through lowercase prose, and a
-     * sentence that shuffles is a sentence nobody starts reading.
-     *
-     * ⚠ **THE TARGETS ARE CACHED ON FIRST SIGHT, FROM THE DOM.** React renders
-     * the finished strings — which is what a reader with no script keeps — so
-     * the true text is whatever was in the element before this writer first
-     * touched it. Reading it from the record instead would be a second copy of
-     * every string, free to drift from the one on screen.
-     */
     /* ⚠ THE ARRIVAL IS STATE, DECIDED ONCE PER CROSSING — never re-derived
        from `p` each frame, which is what makes it a burst and not a channel. */
-    let arrive: ShelfArrive | null = null;
+    let arrive: RowArrive | null = null;
 
-    let decodeTargets: { el: HTMLElement; type: boolean; text: string }[] | null = null;
+    /* ── The head (ADR-119 U2) ──────────────────────────────────────────
+       `level` is 0 blank → 1 whole, and null until the first live frame, so a
+       deep reload that lands parked inside the band can show the head WHOLE
+       with no replay (the services masthead's silent reconstruction). */
+    let headLevel: number | null = null;
+    let headWant: HeadWant | null = null;
+    let burstRaf: number | null = null;
+    let burstLast = 0;
+
+    /**
+     * The decode's targets, cached on first sight, FROM THE DOM. React renders
+     * the finished strings — what a reader with no script keeps — so the true
+     * text is whatever was in the element before this writer touched it.
+     */
+    let decodeTargets: HeadTarget[] | null = null;
+    let span = 0;
     const targets = () => {
       const station = stationRef.current;
       if (!station) return [];
       if (decodeTargets && decodeTargets.every((t) => t.el.isConnected)) return decodeTargets;
       decodeTargets = [...station.querySelectorAll<HTMLElement>("[data-mu-decode]")].map((el) => ({
         el,
-        type: el.dataset.muDecode === "type",
         text: el.textContent ?? "",
+        mode: (el.dataset.muDecode === "type" ? "type" : "scramble") as HeadMode,
+        order: Number(el.dataset.muOrder ?? 0) || 0,
+        host: el.closest<HTMLElement>("[data-mu-cursor]"),
       }));
+      span = headSpan(decodeTargets);
       return decodeTargets;
     };
 
-    const writeHead = (h: number) => {
+    /** Write the head at `level`: every run's frame, the chrome's channel, the cursor. */
+    const writeHead = (level: number, rising: boolean) => {
       const station = stationRef.current;
-      if (station) station.style.setProperty("--mu-head", h.toFixed(4));
-      for (const t of targets()) {
-        let next: string;
-        if (t.type) {
-          /* The paragraph follows the title rather than racing it: it opens
-             at 0.35 of the head's own clock and finishes with it. */
-          const f = (h - HEAD_TYPE_LEAD) / (1 - HEAD_TYPE_LEAD);
-          next = t.text.slice(0, typedCount(t.text.length, f));
-        } else {
-          const dur = scrambleDuration("", t.text);
-          next = scrambleFrame({ from: "", to: t.text }, h * dur) ?? t.text;
-        }
+      if (station) station.style.setProperty("--mu-head", level.toFixed(4));
+      const runs = targets();
+      /* The CRT cursor rides the FIRST title line still decoding and the
+         paragraph while it types — services' own rule — and only on the way
+         IN: an un-type is a leaving, not a typing. */
+      let titleCursor = false;
+      for (const t of runs) {
+        const next = headFrame(t, level, span);
         if (t.el.textContent !== next) t.el.textContent = next;
+        if (!t.host) continue;
+        let live = rising && headRunLive(t, level, span);
+        if (live && t.mode === "scramble") {
+          if (titleCursor) live = false;
+          else titleCursor = true;
+        }
+        t.host.toggleAttribute("data-live", live);
       }
+    };
+
+    const stopBurst = () => {
+      if (burstRaf != null) window.cancelAnimationFrame(burstRaf);
+      burstRaf = null;
+    };
+
+    /** Snap the head to a level with no burst: the park gate and the deep reload. */
+    const setHead = (level: number) => {
+      stopBurst();
+      headLevel = level;
+      writeHead(level, false);
+    };
+
+    /**
+     * The bounded burst. It walks `headLevel` toward `headWant` at 1/span per
+     * second going up and `HEAD_OUT_SPEEDUP`/span going down, and it stops the
+     * frame it arrives. Reaching 1 asks the scroll writer for one more frame,
+     * because the row's arrival waits on the head (the owner's order).
+     */
+    const burst = (now: number) => {
+      burstRaf = null;
+      if (headLevel == null || headWant == null) return;
+      const dt = Math.min(0.1, Math.max(0, (now - burstLast) / 1000));
+      burstLast = now;
+      const rate = span > 0 ? 1 / span : Infinity;
+      const rising = headWant > headLevel;
+      const step = (rising ? rate : rate * HEAD_OUT_SPEEDUP) * dt;
+      headLevel = rising
+        ? Math.min(headWant, headLevel + step)
+        : Math.max(headWant, headLevel - step);
+      writeHead(headLevel, rising);
+      if (headLevel !== headWant) {
+        burstRaf = window.requestAnimationFrame(burst);
+      } else if (headLevel === 1) {
+        onScroll();
+      }
+    };
+
+    const startBurst = () => {
+      if (burstRaf != null) return;
+      burstLast = performance.now();
+      burstRaf = window.requestAnimationFrame(burst);
     };
 
     /** Put every decoded run back to the string React rendered. */
     const restoreHead = () => {
+      stopBurst();
+      headLevel = null;
+      headWant = null;
       const station = stationRef.current;
       if (station) {
         station.style.removeProperty("--mu-head");
         station.removeAttribute("data-mu-arrive");
       }
       if (!decodeTargets) return;
-      for (const t of decodeTargets) if (t.el.textContent !== t.text) t.el.textContent = t.text;
+      for (const t of decodeTargets) {
+        if (t.el.textContent !== t.text) t.el.textContent = t.text;
+        t.host?.removeAttribute("data-live");
+      }
     };
 
+    /**
+     * Put everything back the way the sheet rests it.
+     *
+     * ⚠ **AN ABSENT STAMP MEANS SHOWN** — the house's polarity law. The phone, a
+     * reduced-motion reader and a page whose script never ran all get the row
+     * as a plain rail of cards, which is the finished page and not a fallback.
+     */
     const park = () => {
       const station = stationRef.current;
       if (station) {
         station.removeAttribute("data-mu-ready");
-        /* ⚠ AND THE ARRIVAL'S STAMP, OR A PARKED SHELF STAYS SHUT. Both hidden
-           states key on the stamp's PRESENCE, so leaving one behind on a rung
-           that will never write again hides the beat for good. */
+        /* ⚠ AND THE ARRIVAL'S STAMP, OR A PARKED ROW STAYS SHUT. */
         station.removeAttribute("data-mu-arrive");
         arrive = null;
-        station.style.removeProperty("--mu-entry");
-        station.style.removeProperty("--mu-drift");
       }
-      /* ⚠ THE STAGE MODE GOES WITH IT, AND THE STATION IS OPAQUE AGAIN. The
-         transparency, the promotion and the band all key on this stamp, so a
-         parked writer must leave a station that paints its own ground — or a
-         reader on the inert rung gets a transparent box over a dead corridor,
-         which is the gateway radial bleeding through (ADR-008 rule 1). */
+      /* ⚠ THE STAGE MODE GOES WITH IT, AND THE STATION IS OPAQUE AGAIN, or a
+         reader on the inert rung gets a transparent box over a dead corridor
+         (ADR-008 rule 1). */
       section()?.removeAttribute("data-mu-mode");
       restoreHead();
       for (const el of cardsRef.current) {
         if (!el) continue;
         el.style.removeProperty("transform");
         el.style.removeProperty("z-index");
-        delete el.dataset.muTurn;
+        delete el.dataset.muTilt;
       }
-      /* ⚠ THE FOOTER'S BED IS DISARMED TOO, AND IT HAS TO BE. Left stamped on
-         a rung that never writes again, `#contact` would be `position: sticky`
-         for the rest of the document — see the `reveal` write below for why
-         that is fatal above this station. */
+      /* ⚠ THE FOOTER'S BED IS DISARMED TOO: left stamped on a rung that never
+         writes again, `#contact` would be sticky for the rest of the document. */
       document.documentElement.removeAttribute("data-ft-reveal");
       if (frontRef.current !== 0) {
         frontRef.current = 0;
@@ -268,9 +295,7 @@ export function useMusingsScroll(
       }
 
       /* The stage stamp, before anything reads it. `useCorridorExitScroll`
-         resolves its cover off this attribute on its own cadence, so it is
-         written on the way in and removed the frame the rung stops matching —
-         never left behind for another writer to find. */
+         resolves its cover off this attribute on its own cadence. */
       const sec = section();
       const stage = stageMode();
       if (sec) {
@@ -286,64 +311,73 @@ export function useMusingsScroll(
 
       /* The pinned clock: how far the runway's top has passed the frame's
          top, over the travel the sticky child actually has. `offsetHeight`
-         rather than the rect's height, so a transform anywhere above cannot
-         enter the arithmetic. */
+         rather than the rect's height, so a transform above cannot enter it. */
       const travel = Math.max(1, runway.offsetHeight - vh);
       const p = clamp01(-rect.top / travel);
+      /* ⚠ PARKED IS THE RUNWAY COVERING THE FRAME, which is exactly when the
+         sticky stage is still. `p` alone cannot say it: it clamps to 0 all the
+         way up the approach and to 1 all the way through the release. */
+      const pinned = rect.top <= 0.5 && rect.bottom >= vh - 0.5;
 
-      const clock = shelfClock(p, count);
-      const open = shelfIndex(clock.index, count);
+      /* ── The head: decide where it is going, then get it there. ── */
+      targets();
+      const want = headTarget(headWant, p, pinned);
+      if (!pinned) {
+        /* ⚠ TEXT NEVER TRAVELS. Unparked, the head is blank NOW — a burst
+           still playing would print on a moving stage. */
+        headWant = 0;
+        if (headLevel !== 0) setHead(0);
+      } else if (headLevel == null) {
+        /* The first live frame: a deep reload parked inside the band shows the
+           head whole, with no replay; anything else starts blank. */
+        headWant = want;
+        setHead(want);
+      } else if (want !== headWant || headLevel !== want) {
+        headWant = want;
+        if (headLevel !== want) startBurst();
+      }
 
-      station.style.setProperty("--mu-entry", clock.entry.toFixed(4));
-      station.style.setProperty("--mu-drift", `${clock.drift.toFixed(3)}deg`);
-      writeHead(clock.head);
-
-      const nextArrive = shelfArrive(arrive, p);
+      /* ── The row's arrival, AFTER the head (the owner's order). ── */
+      let nextArrive = rowArrive(arrive, p);
+      if (nextArrive === "in" && arrive !== "in" && (headLevel ?? 0) < 1)
+        nextArrive = arrive ?? "await";
       if (nextArrive !== arrive) {
         arrive = nextArrive;
         station.dataset.muArrive = nextArrive;
       }
       if (!station.hasAttribute("data-mu-ready")) station.setAttribute("data-mu-ready", "");
 
+      const open = rowIndex(rowReadIndex(p, count), count);
       const cards = cardsRef.current;
-      /* ⚠ THE FACE'S WIDTH IS MEASURED, AND IT IS `offsetWidth`. It comes
-         from `--mu-card-w`, a `clamp()`, so no constant can stand in for it
-         (ADR-102's law: a custom property is a string until something lays it
-         out). `offsetWidth` is the border-box LAYOUT width, which a transform
-         does not move — the rect would report the slab's projection and
-         collapse to a few px the moment it turned. */
-      const w = cards.find((el) => el)?.offsetWidth ?? 0;
-      if (w > 0) {
-        const g = shelfGeom(w);
+      /* ⚠ THE FACE'S SIZE IS MEASURED, AND IT IS `offsetWidth`/`offsetHeight`.
+         Both come from `clamp()`s, so no constant can stand in for them, and
+         the LAYOUT box is what a transform does not move — the rect would
+         report a tipped card's projection. */
+      const first = cards.find((el) => el);
+      const w = first?.offsetWidth ?? 0;
+      const h = first?.offsetHeight ?? 0;
+      if (w > 0 && h > 0) {
+        const g = rowGeom(w, h);
         for (let i = 0; i < cards.length; i++) {
           const el = cards[i];
           if (!el) continue;
-          const pose = shelfPose(i, count, open, g);
+          const pose = rowPose(i, count, open, g);
           el.style.transform = pose.transform;
           el.style.zIndex = String(pose.zIndex);
-          if (el.dataset.muTurn !== String(pose.turn)) el.dataset.muTurn = String(pose.turn);
+          if (el.dataset.muTilt !== String(pose.tilt)) el.dataset.muTilt = String(pose.tilt);
         }
       }
 
       /**
-       * ⚠ **THE FOOTER'S BED IS ARMED ON `rect.top <= 0`, AND IT MUST BE
-       * REVERSIBLE.** `#contact` becomes `position: sticky; bottom: 0` while
-       * this attribute is present, and a sticky-bottom box is pulled UP to
-       * the frame's floor from anywhere above its natural seat — so armed one
-       * station too early it would paint the whole footer behind
-       * `#voidwalker`, which on the capable path is a TRANSPARENT pinned
-       * stage over the live corridor. `rect.top <= 0` is exactly "this
-       * opaque station's top has passed the frame's top", i.e. the station
-       * fills the screen and the snap is invisible behind it; scrolling back
-       * above the station clears it in the same frame.
+       * ⚠ **THE FOOTER'S BED IS ARMED ON THE COVER'S TOP REACHING THE FRAME'S,
+       * AND IT MUST BE REVERSIBLE.** `#contact` becomes `position: sticky;
+       * bottom: 0` while this attribute is present, and a sticky-bottom box is
+       * pulled UP to the frame's floor from anywhere above its seat — armed a
+       * station early it would paint the whole footer through the transparent
+       * era stage. On the stage rung the edge is the BAND's (the station is
+       * transparent there); off it the station is opaque and its runway's own
+       * top is right.
        */
-      /* ⚠ ON THE STAGE RUNG THE EDGE IS THE BAND'S, NOT THE RUNWAY'S. The
-         paragraph above is the whole argument, and it turns on the station
-         being OPAQUE — which on this rung it is not. What fills the screen and
-         hides the snap is the band; it is also the frame in which the corridor
-         has just died, so the bed arms exactly where the canvas stops painting
-         rather than three viewports earlier over a live one. Off the stage rung
-         the station is opaque again and the runway's own top is still right. */
       const revealTop =
         stage && bandRef.current ? bandRef.current.getBoundingClientRect().top : rect.top;
       if (revealTop <= 0) document.documentElement.setAttribute("data-ft-reveal", "");
@@ -357,21 +391,30 @@ export function useMusingsScroll(
       }
     };
 
-    const onScroll = () => {
+    function onScroll() {
       if (rafRef.current != null) return;
       rafRef.current = window.requestAnimationFrame(() => {
         rafRef.current = null;
         tick();
       });
-    };
+    }
 
     /* A rung change re-asks the whole question, including the two stamps. */
     const onMq = () => onScroll();
+
+    /* ⚠ A HIDDEN TAB STOPS rAF MID-BURST. On the way back the head settles
+       where it was going — never left half-shuffled over a parked stage. */
+    const onVisibility = () => {
+      if (document.hidden || headWant == null || headLevel == null) return;
+      if (headLevel !== headWant) setHead(headWant);
+      onScroll();
+    };
 
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     mq.addEventListener("change", onMq);
     mqStage.addEventListener("change", onMq);
+    document.addEventListener("visibilitychange", onVisibility);
     tick();
 
     return () => {
@@ -379,21 +422,19 @@ export function useMusingsScroll(
       window.removeEventListener("resize", onScroll);
       mq.removeEventListener("change", onMq);
       mqStage.removeEventListener("change", onMq);
+      document.removeEventListener("visibilitychange", onVisibility);
       if (rafRef.current != null) window.cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
       /* ⚠ The stamp lives on `<html>`, outside this station's subtree, so
          unmounting without clearing it leaves the footer sticky forever. */
       document.documentElement.removeAttribute("data-ft-reveal");
       /* ⚠ And the mode lives on the STATION, which this component does not
-         render — the portal's root unmounts and the authored section stays.
-         Left behind, it would hold a transparent, promoted station over a dead
-         corridor for the rest of the document. */
+         render — left behind, it would hold a transparent, promoted station
+         over a dead corridor for the rest of the document. */
       section()?.removeAttribute("data-mu-mode");
-      /* ⚠ And the decoded runs go back to the strings React rendered, with
-         the head's own channel and the arrival's stamp. On a true unmount this
-         is insurance — `.mu` is THIS component's root and goes with it — but a
-         fast refresh re-runs the effect against a node that survives, and a
-         head left mid-scramble there stays mid-scramble on the page. */
+      /* ⚠ And the decoded runs go back to the strings React rendered. A fast
+         refresh re-runs the effect against a node that survives, and a head
+         left mid-scramble there stays mid-scramble on the page. */
       restoreHead();
     };
   }, [runwayRef, stationRef, cardsRef, bandRef, count]);
