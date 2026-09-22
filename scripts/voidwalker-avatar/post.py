@@ -219,7 +219,80 @@ def build_loop(src: Path, fdir: Path, period: int, blend: int) -> dict:
             "closed": seam < motion * 1.25}
 
 
-def build_pingpong(src: Path, fdir: Path) -> dict:
+def decode_rgb(src: Path, cut: int | None = None):
+    """The clip's frames at the delivery size, as one uint8 array; `cut` keeps
+    frames 0..cut."""
+    import numpy as np
+
+    buf = subprocess.run(
+        ["ffmpeg", "-v", "error", "-i", str(src), "-vf", f"scale={W}:{H}:flags=lanczos",
+         "-pix_fmt", "rgb24", "-f", "rawvideo", "-"], capture_output=True).stdout
+    per = W * H * 3
+    n = len(buf) // per
+    arr = np.frombuffer(buf, dtype=np.uint8)[: n * per].reshape(n, H, W, 3)
+    return arr[: cut + 1] if cut is not None else arr
+
+
+def write_frames(out, fdir: Path) -> None:
+    import numpy as np
+
+    fdir.mkdir(parents=True, exist_ok=True)
+    for f in fdir.glob("*.png"):
+        f.unlink()
+    pipe = subprocess.Popen(
+        ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
+         "-s", f"{W}x{H}", "-framerate", str(FPS), "-i", "-", str(fdir / "%05d.png")],
+        stdin=subprocess.PIPE)
+    pipe.communicate(np.asarray(out).clip(0, 255).astype(np.uint8).tobytes())
+
+
+def build_settle(src: Path, fdir: Path, cut: int | None = None, k_max: int = FPS) -> dict:
+    """A SCENE's loop (ADR-082 U33): the clip was drawn with Veo's `last_frame`
+    set to its own first frame, so it BEGINS AND ENDS on one held pose. The
+    model's last frame lands on frame 0 and is dropped; the frames before it
+    are dissolved onto frame 0 over `k` frames, so the join is a still pose
+    fading into the same still pose.
+
+    ⚠ THIS IS NOT U14's REFUSED TRICK AGAIN. That asked first=last to close a
+    near-still idle, where the model's drift (15.35/255) was as loud as the
+    motion (14.19) and there was nothing to hide it in. A scene is held at both
+    ends and the drift is dissolved AFTER the fact, on frames the model drew.
+
+    ⚠ GATED AGAINST THE HELD SECOND, NEVER THE CLIP'S AVERAGE. An action clip's
+    mean frame step is inflated by the action, and against it any seam passes.
+    What the dissolve adds is `drift / (k + 1)` of change per frame ON TOP of a
+    held pose, so that step is compared with the held second's own motion (and a
+    0.75/255 floor, the encoder's noise on a still frame); `k` grows until it
+    passes or reaches a second, which is all the hold there is."""
+    import numpy as np
+
+    arr = decode_rgb(src, cut).astype(np.float32)
+    n = len(arr)
+    if n < FPS * 3:
+        raise SystemExit(f"{n} frames is too short for a scene")
+    small = arr[:, ::8, ::8].mean(-1)
+    steps = np.abs(np.diff(small, axis=0)).mean(axis=(1, 2))
+    m = n - 1                                   # frame n-1 is the model's copy of frame 0
+    held = float(steps[m - FPS:m - 1].mean())   # the last second, before the copy
+    drift = float(np.abs(small[m - 1] - small[0]).mean())
+    floor = max(1.25 * held, 0.75)
+    k = next((k for k in range(6, k_max + 1) if drift / (k + 1) <= floor), k_max)
+    out = arr[:m].copy()
+    for j in range(k):
+        t = (j + 1) / (k + 1)
+        i = m - k + j
+        out[i] = arr[i] * (1 - t) + arr[0] * t
+    write_frames(out, fdir)
+    osmall = out[:, ::8, ::8].mean(-1)
+    seam = float(np.abs(osmall[-1] - osmall[0]).mean())
+    motion = float(np.abs(np.diff(osmall, axis=0)).mean())
+    return {"period": len(out), "blend": k, "frames": len(out), "loop": "settle",
+            "drift": round(drift, 3), "held": round(held, 3), "step": round(drift / (k + 1), 3),
+            "seam": round(seam, 3), "motion": round(motion, 3),
+            "closed": drift / (k + 1) <= floor}
+
+
+def build_pingpong(src: Path, fdir: Path, cut: int | None = None) -> dict:
     """The clip forward, then backward: a loop CLOSED BY CONSTRUCTION.
 
     ⚠ FOR THE IDLE THAT DRIFTS AND NEVER RETURNS (ADR-082 U32, expanse take 2).
@@ -229,24 +302,17 @@ def build_pingpong(src: Path, fdir: Path) -> dict:
     other way out and it GHOSTS whatever moves inside it (a blink in the window
     arrives half-transparent). Played back and forth there is no seam at all —
     the motion reverses, which a breath does anyway — and every frame is one
-    the model drew. The cost is length: 2n − 2 frames."""
+    the model drew. The cost is length: 2n − 2 frames.
+
+    ⚠ `cut` (ADR-082 U33) is the SCENE's fallback: a scene that will not settle
+    back onto its first frame is cut in the middle of a HELD beat (the aim) and
+    played back from there. Both turning points are then holds, so the reversal
+    has no velocity to bounce off."""
     import numpy as np
 
-    buf = subprocess.run(
-        ["ffmpeg", "-v", "error", "-i", str(src), "-vf", f"scale={W}:{H}:flags=lanczos",
-         "-pix_fmt", "rgb24", "-f", "rawvideo", "-"], capture_output=True).stdout
-    per = W * H * 3
-    n = len(buf) // per
-    arr = np.frombuffer(buf, dtype=np.uint8)[: n * per].reshape(n, H, W, 3)
+    arr = decode_rgb(src, cut)
     out = np.concatenate([arr, arr[-2:0:-1]])
-    fdir.mkdir(parents=True, exist_ok=True)
-    for f in fdir.glob("*.png"):
-        f.unlink()
-    pipe = subprocess.Popen(
-        ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
-         "-s", f"{W}x{H}", "-framerate", str(FPS), "-i", "-", str(fdir / "%05d.png")],
-        stdin=subprocess.PIPE)
-    pipe.communicate(out.tobytes())
+    write_frames(out, fdir)
     small = out[:, ::8, ::8].mean(-1)
     motion = float(np.abs(np.diff(small, axis=0)).mean())
     seam = float(np.abs(small[-1] - small[0]).mean())
@@ -441,20 +507,8 @@ def ground_frames(loopdir: Path, outdir: Path, foot_target: float, target_p75: f
         return gold.unmix(rgb, a, ground), gold.finish_edge(a, k)
 
     fg0, a0 = figure(load(files[0]))
-
-    def p75_at(e: float) -> float:
-        return gold.exposure_gate(gold.luma(gold.grade(fg0, e)), a0 > 0.5)["p75"]
-
-    lo, hi = 0.85, 1.35
-    if p75_at(lo) >= target_p75:
-        exposure = lo
-    elif p75_at(hi) <= target_p75:
-        exposure = hi
-    else:
-        for _ in range(18):
-            mid = (lo + hi) / 2
-            lo, hi = (mid, hi) if p75_at(mid) < target_p75 else (lo, mid)
-        exposure = (lo + hi) / 2
+    # One copy of the bisection, shared with the plate preview (ADR-082 U33).
+    exposure = gold.solve_exposure(fg0, a0 > 0.5, target_p75)
     gate0 = gold.exposure_gate(gold.luma(gold.grade(fg0, exposure)), a0 > 0.5)
 
     # ⚠ TWO PASSES, ONE FRAME IN MEMORY. A clip is ~192 frames of 720x1280
@@ -466,6 +520,12 @@ def ground_frames(loopdir: Path, outdir: Path, foot_target: float, target_p75: f
     for f in list(outdir.glob("*.png")) + list(tmp.glob("*.png")):
         f.unlink()
     lowest, highest = -1, H
+    # ⚠ THE SIDE WALLS ARE WATCHED ON THE KEY, BEFORE ANY SEAT (ADR-082 U33). The
+    #   BORDER band above is repainted with the ground, so a muzzle that reaches
+    #   an edge is not reported as touching it — it is CUT there, cleanly, and
+    #   the matte looks perfect. A scene that swings a rifle is the first idle on
+    #   this chain that can do it.
+    left, right, top_row = W, -1, H
     for i, f in enumerate(files, start=1):
         fg, a = figure(load(f))
         rgb_out, a_out = gold.compose(gold.grade(fg, exposure), a, k)
@@ -473,7 +533,16 @@ def ground_frames(loopdir: Path, outdir: Path, foot_target: float, target_p75: f
         rows = np.where((rgba[..., 3] >= OPAQUE).any(axis=1))[0]
         if rows.size:
             lowest, highest = max(lowest, int(rows.max())), min(highest, int(rows.min()))
+        cols = np.where((a >= 0.5).any(axis=0))[0]
+        if cols.size:
+            left, right = min(left, int(cols.min())), max(right, int(cols.max()))
+        krows = np.where((a >= 0.5).any(axis=1))[0]
+        if krows.size:
+            top_row = min(top_row, int(krows.min()))
         Image.fromarray(rgba, "RGBA").save(tmp / f"{i:05d}.png")
+    wall = BORDER + 2
+    walls = [side for side, hit in (("left", left <= wall), ("right", right >= W - 1 - wall),
+                                    ("top", top_row <= wall)) if hit]
     if lowest < 0:
         raise SystemExit("the ground key left nothing opaque — check the plate's ground")
 
@@ -506,7 +575,8 @@ def ground_frames(loopdir: Path, outdir: Path, foot_target: float, target_p75: f
     return {"ground": [round(float(v), 1) for v in ground], "ground_drift": round(drift, 1),
             "exposure": round(exposure, 3), "p75": gate0["p75"], "hot": gate0["hot"],
             "exposure_ok": gate0["ok"], "shift": shift, "foot_before": round(foot / H, 4),
-            "top_cut": top_cut, "flicker": round(flicker, 2), "frames": len(files)}
+            "top_cut": top_cut, "flicker": round(flicker, 2), "frames": len(files),
+            "walls": walls, "ink_x": [left, right], "ink_top": top_row}
 
 
 def encode_rgba(gdir: Path, n: int, out: Path, era: str, version: str) -> dict:
@@ -595,8 +665,14 @@ def main_ground(args: argparse.Namespace, wave: Path, raw: Path) -> int:
           f"{period['seam']}  motion {period['motion']}  {'closed' if period['closed'] else 'OPEN'}")
     loopdir = wave / "veo" / "loop"
     if args.loop == "pingpong":
-        joined = build_pingpong(raw, loopdir)
-        print(f"ping-pong: {joined['frames']} frames, seam {joined['seam']}  motion {joined['motion']}  CLOSED")
+        joined = build_pingpong(raw, loopdir, args.cut)
+        print(f"ping-pong{f' (cut at {args.cut})' if args.cut is not None else ''}: {joined['frames']} "
+              f"frames, seam {joined['seam']}  motion {joined['motion']}  CLOSED")
+    elif args.loop == "settle":
+        joined = build_settle(raw, loopdir, args.cut)
+        print(f"settle: drift {joined['drift']} onto frame 0 over {joined['blend']}f = "
+              f"{joined['step']}/frame against the held second's {joined['held']}  "
+              f"{'CLOSED' if joined['closed'] else 'STILL OPEN — try --loop pingpong --cut <aim hold>'}")
     else:
         joined = build_loop(raw, loopdir, period["period"], args.blend)
         print(f"overlap {joined['blend']}f: seam {joined['seam']}  motion {joined['motion']}  "
@@ -619,6 +695,9 @@ def main_ground(args: argparse.Namespace, wave: Path, raw: Path) -> int:
         problems.append("the seat pushed opaque rows off the TOP of the canvas")
     if g["flicker"] > 6.0:
         problems.append(f"T2 interior flicker {g['flicker']} > 6.0")
+    if g["walls"]:
+        problems.append(f"the figure reaches the {'/'.join(g['walls'])} wall (ink x {g['ink_x']}, "
+                        f"top {g['ink_top']}) — the border repaint would cut it there")
     for p in problems:
         print(f"  ! {p}")
 
@@ -665,8 +744,11 @@ def main() -> int:
     # clip already gold on black, keyed by brightness.
     ap.add_argument("--matte", choices=("luma", "ground"), default="luma")
     ap.add_argument("--clip", default=None, help="the Veo clip under veo/ (default raw.mp4)")
-    ap.add_argument("--loop", choices=("trim", "pingpong"), default="trim",
-                    help="ground route: trim to the clip's own period, or play it back and forth")
+    ap.add_argument("--loop", choices=("trim", "pingpong", "settle"), default="trim",
+                    help="ground route: trim to the clip's own period, play it back and forth, "
+                         "or (a scene drawn with last_frame) dissolve its end onto frame 0")
+    ap.add_argument("--cut", type=int, default=None,
+                    help="ground route: keep frames 0..N first (a scene's ping-pong fallback, cut in a hold)")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent

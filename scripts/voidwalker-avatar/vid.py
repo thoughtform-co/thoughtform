@@ -1,11 +1,19 @@
 """
 vid — the picked still becomes an 8-second idle, through Veo.
 
-⚠ `last_frame` IS NOT USED, AND THAT IS A RECORDED MEASUREMENT. ADR-082 U14
-tried Veo's first=last trick to close the loop and it left a seam of 15.35/255
-against 14.19 of real motion — "the jump was louder than the movement". The
-loop is closed by TRIMMING to the clip's own detected period instead (see
-`period.py`), which took that seam to 5.69 against 15.10.
+⚠ `last_frame` IS NOT USED FOR AN IDLE, AND THAT IS A RECORDED MEASUREMENT.
+ADR-082 U14 tried Veo's first=last trick to close the loop and it left a seam of
+15.35/255 against 14.19 of real motion — "the jump was louder than the
+movement". An idle's loop is closed by TRIMMING to the clip's own detected
+period instead (see `period.py`), which took that seam to 5.69 against 15.10.
+
+⚠ A SCENE IS THE ONE PLACE IT IS USED (`--scene`, ADR-082 U33, owner: "he looks
+around, turns his head like he's scouting … and then takes his gun to aim").
+An action that big cannot return to its own first frame by luck in eight
+seconds, so the plate is passed as BOTH ends. What U14 measured still holds —
+the model lands near the frame, not on it — which is why a scene is written to
+HOLD at both ends and `post.py --loop settle` dissolves the residual drift onto
+frame 0 afterwards, gated against the held second rather than the action.
 
 ⚠ THE STILL IS THE STYLE. Per-frame restyling through the image model was
 measured and rejected (U14): two calls on the SAME frame differ by 19.6/255
@@ -27,6 +35,8 @@ from prompt import (  # noqa: E402
     idle_prompt,
     plate_idle_negative,
     plate_idle_prompt,
+    plate_scene_negative,
+    plate_scene_prompt,
 )
 
 MODEL = "veo-3.1-generate-preview"
@@ -48,6 +58,11 @@ def main() -> int:
         action="store_true",
         help="plate stage: the one re-word allowed if the model refuses a weapon beside a real face",
     )
+    ap.add_argument(
+        "--scene",
+        action="store_true",
+        help="plate stage: the era's SCENE, drawn with the plate as its first AND last frame",
+    )
     ap.add_argument("--dry-run", action="store_true", help="print the request, send nothing")
     args = ap.parse_args()
 
@@ -60,8 +75,15 @@ def main() -> int:
         raise SystemExit(f"picked {'plate' if plate else 'still'} not found: {still}")
     if plate and not args.era:
         raise SystemExit("the plate stage needs --era (the idle is authored per era)")
+    if args.scene and not plate:
+        raise SystemExit("--scene is a plate-stage option")
 
-    if plate:
+    if args.scene:
+        prompt = plate_scene_prompt(args.era, args.prop_wording)
+        negative = plate_scene_negative(args.era)
+        if args.prop_wording:
+            negative = negative.replace("rifle", "costume prop carbine")
+    elif plate:
         prompt = plate_idle_prompt(args.era, args.prop_wording)
         negative = plate_idle_negative(args.era)
         if args.prop_wording:
@@ -73,10 +95,13 @@ def main() -> int:
     out_dir = wave / "veo"
     out_dir.mkdir(parents=True, exist_ok=True)
     # A plate's clip is named for the plate: a second pick must not find the
-    # first pick's clip on disk and "keep" it.
-    raw = out_dir / (f"{Path(pick).stem}.raw.mp4" if plate else "raw.mp4")
+    # first pick's clip on disk and "keep" it. A scene is named apart from an
+    # idle of the same plate for the same reason.
+    stem = Path(pick).stem + (".scene" if args.scene else "")
+    raw = out_dir / (f"{stem}.raw.mp4" if plate else "raw.mp4")
     if args.dry_run:
-        print(f"veo · {MODEL} · from {still.name} -> {raw.name}\n\nPROMPT\n{prompt}\n\nNEGATIVE\n{negative}")
+        ends = "  (last_frame = the same plate)" if args.scene else ""
+        print(f"veo · {MODEL} · from {still.name} -> {raw.name}{ends}\n\nPROMPT\n{prompt}\n\nNEGATIVE\n{negative}")
         return 0
     if raw.exists():
         print(f"{raw} already on disk — kept (delete it to re-draw)")
@@ -88,6 +113,7 @@ def main() -> int:
     client = genai.Client(api_key=require("GEMINI_API_KEY"))
     print(f"veo · {MODEL} · from {still.name}")
 
+    extra = {"last_frame": types.Image.from_file(location=str(still))} if args.scene else {}
     op = client.models.generate_videos(
         model=MODEL,
         prompt=prompt,
@@ -105,6 +131,7 @@ def main() -> int:
             # Platform field and the Developer API rejects the request outright
             # rather than ignoring it. The asset is muted at the element
             # anyway, so the only cost is bytes in `raw.mp4`, which never ship.
+            **extra,
         ),
     )
 

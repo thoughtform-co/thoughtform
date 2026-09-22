@@ -50,6 +50,8 @@ IDENTITY = [
     ("identity-2.jpg", "IDENTITY", BANK / "colour-04.jpg", (0, 0, 1143, 1010),
      "the face at a second angle and light; cut above the chest"),
 ]
+BOOTS = ("boots.jpg", "HIS BOOTS", BANK / "boots-detail.jpg", (260, 0, 1100, 585),
+         "his boots on the stage; the audience's heads are below the box")
 RECIPES: dict[str, list[tuple[str, str, Path, tuple[int, int, int, int] | None, str]]] = {
     "genai": IDENTITY + [
         ("wardrobe-paint.jpg", "WARDROBE + PAINT HANDLING", PAINTING, (0, 830, 1600, 3040),
@@ -64,9 +66,13 @@ RECIPES: dict[str, list[tuple[str, str, Path, tuple[int, int, int, int] | None, 
         ("armour-panels.jpg", "ARMOUR PANELS", DRIVE / "The Expanse Set Visit" / "1 (2).jpg",
          (1180, 560, 1600, 820),
          "his own torso, seated, the plates lit; the three other visitors are outside the box"),
-        ("boots.jpg", "HIS BOOTS", BANK / "boots-detail.jpg", (260, 0, 1100, 585),
-         "his boots on the stage; the audience's heads are below the box"),
+        BOOTS,
     ],
+    # 2016 · the trainer, drawn as a cel (ADR-082 U33). ⚠ NO WARDROBE PICTURE,
+    # ON PURPOSE: the costume is invented from the owner's brief and lettered in
+    # the lock; a reference picture of the character it echoes is exactly what
+    # the no-names rule keeps out of the request. The face and the boots are his.
+    "pokemon-go": IDENTITY + [BOOTS],
 }
 
 

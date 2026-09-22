@@ -42,7 +42,24 @@ python scripts/voidwalker-avatar/generate.py --era expanse --wave <new-wave> --s
 # the picked plate -> an 8s idle on the ground (paid), then route B's key + gold, per frame:
 python scripts/voidwalker-avatar/vid.py --wave <wave> --stage plate --era expanse --still <plate.png>
 python scripts/voidwalker-avatar/post.py --wave <wave> --era expanse --version v2 --matte ground --clip <plate-stem>.raw.mp4
+# or a SCENE (ADR-082 U33): the plate as first AND last frame, the end dissolved onto frame 0
+python scripts/voidwalker-avatar/vid.py --wave <wave> --stage plate --era expanse --scene
+python scripts/voidwalker-avatar/post.py --wave <wave> --era expanse --version v3 --matte ground --clip <plate-stem>.scene.raw.mp4 --loop settle
+# ...and if it will not settle, the same take cut in a HELD beat and played back and forth
+python scripts/voidwalker-avatar/post.py ... --loop pingpong --cut <frame in the hold>
 ```
+
+⚠ **THE GROUND IS THE ERA'S, NOT ALWAYS BLUE (U33, `grounds.py`).** Blue is the
+default because it is gold's and skin's complement. It is the wrong key for a
+wardrobe that carries blue: the 2016 trainer's navy vest keys at α 0.27 on it and
+his jeans at 0.78 (`gold.py --selftest` prints both). He stands on MAGENTA, whose
+key `min(R, B) − G` leaves every colour he wears opaque. One table feeds the
+prompt's words and the key's arithmetic, so they cannot disagree.
+
+⚠ **A CEL MUST BE DRAWN IN A DEEP PALETTE.** The Architect's curve lifts
+mid-tones hard (photo luma 70 lands near 155), so a bright flat-colour figure
+arrives above his band at every exposure the chain allows. The plate preview is
+graded at the exposure `post.py` will solve, so the sheet shows the real risk.
 
 ⚠ `sheet.py`'s face finder is a skin-colour blob, and the rifle edit's brick-red
 foregrip is skin-coloured enough to win: on an edit wave the face zoom can land
@@ -72,9 +89,15 @@ the install.
   held out on his true outline, against the model's own 19.6 self-disagreement),
   his measured bloom, and the exposure gate.
 - **`grade.py`** — the deterministic gates, before a human looks.
-- **`vid.py`** — Veo. ⚠ `last_frame` is not used: the first=last trick was
-  measured leaving a seam louder than the movement.
-- **`post.py`** — the loop, the key, the five encodes, the anchors.
+- **`vid.py`** — Veo. ⚠ `last_frame` is not used for an IDLE: the first=last
+  trick was measured leaving a seam louder than the movement. A SCENE
+  (`--scene`) is the one exception — an action that big cannot come home by
+  luck — and it is written to HOLD at both ends so the drift can be dissolved.
+- **`post.py`** — the loop, the key, the five encodes, the anchors. ⚠ `settle`
+  is gated on the HELD second's motion, never the clip's average (an action
+  inflates that until anything passes). ⚠ The outer 4px are repainted with the
+  ground before the key, so a muzzle that reaches an edge would be CUT there,
+  cleanly — any ink within 6px of a wall is reported as a problem.
 
 ## Findings this chain paid for
 
@@ -104,15 +127,17 @@ shifts the frame — never crops it.
 
 ## State
 
-| era          | wave                  | status                                                      |
-| ------------ | --------------------- | ----------------------------------------------------------- |
-| `genai`      | `20260918-genai-v3`   | shipped (one-step, `-v2`) — re-cut on the two-step route    |
-| `expanse`    | `20260918-expanse-v1` | shipped (one-step) — re-cut kneeling, on the two-step route |
-| `azeroth`    | offline `v5-blender`  | shipped `-v11` (v10 seated 33 rows, `reseat_azeroth.py`)    |
-| `pokemon-go` | —                     | **blocked** until the owner's photograph lands              |
+| era          | wave                     | status                                                   |
+| ------------ | ------------------------ | -------------------------------------------------------- |
+| `genai`      | `20260918-genai-v3`      | shipped (one-step, `-v2`) — re-cut on the two-step route |
+| `expanse`    | `20260922-expanse-v5`    | the scene (U33): scouts, aims past the lens, `-v3`       |
+| `azeroth`    | offline `v5-blender`     | shipped `-v11` (v10 seated 33 rows, `reseat_azeroth.py`) |
+| `pokemon-go` | `20260922-pokemon-go-v1` | the trainer as a cel, on magenta (U33), `-v1`            |
 
-⚠ **THE REFUSAL STAYS.** An era without a photograph hits `BLOCKED` and stops:
-ADR-082 U14 measured what a words-only wardrobe produces.
+⚠ **THE REFUSAL STAYS, EMPTY.** An era without a photograph hits `BLOCKED` and
+stops: ADR-082 U14 measured what a words-only wardrobe produces. 2016 left it by
+the owner's own brief — an invented costume drawn as a cel, the likeness still
+locked by photographs — not because the rule changed.
 
 ⚠ **`waves/` IS GITIGNORED, AND `refs/` IS NEVER MIRRORED.** A wave's references
 are crops of the owner's photographs and of the people beside him in them; the

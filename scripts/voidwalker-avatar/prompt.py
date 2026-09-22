@@ -23,6 +23,12 @@ because a model told "hologram" will otherwise draw the scanlines too.
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from grounds import KEY_GROUNDS, ground_name  # noqa: E402
+
 STYLE_HOLO_EMISSIVE_BLACK = """
 A VOLUMETRIC HOLOGRAM of this man — a body of light standing in a dark
 projection volume. Not a photograph of a man, not a costume shoot, not a tinted
@@ -174,17 +180,14 @@ not add a prop this wardrobe does not name.
 #: wardrobe produces (a generic cowl, invented spires, a nondescript sword),
 #: and the next era without a picture must hit this and stop rather than draw
 #: a paraphrase.
-BLOCKED: dict[str, str] = {
-    # ⚠ 2016 HAS NO FIGURE OF ITS OWN (ADR-082 U31). It resolves to the canonical
-    # pair today — the Architect in the Thoughtform cap, ten years early. The
-    # owner will supply a photograph; the era's wardrobe lock is read OFF that
-    # photograph (logos blanked, the crowd cropped out), never written first.
-    "pokemon-go": (
-        "no wardrobe photograph yet. It goes in "
-        r"I:\My Drive\01_Thoughtform Branding\13_Voidwalker Pictures\2016_Pokemon GO"
-        " — then write this era's wardrobe lock from it before drawing."
-    ),
-}
+#:
+#: ⚠ 2016 LEFT THIS LIST BY THE OWNER'S OWN BRIEF, NOT BY A PHOTOGRAPH ARRIVING
+#: (ADR-082 U33: "let's just try to create a Pokémon-style version of myself,
+#: similar to Ash Ketchum with a hat, but … with my facial features"). The rule
+#: above is about a REAL wardrobe drawn from words — a paraphrase of clothes
+#: that exist. This one is a COSTUME INVENTED ON PURPOSE, drawn as a cel, and the
+#: thing a photograph protects, the likeness, is still locked by photographs.
+BLOCKED: dict[str, str] = {}
 
 IDLE_PROMPT = """
 The figure BREATHES and nothing else. A slow, even rise and fall of the chest;
@@ -326,6 +329,23 @@ blue reflection anywhere on the figure. As if he were cut out and laid on flat
 coloured paper.
 """.strip()
 
+
+def key_ground_text(era: str | None) -> str:
+    """The ground clause for an era's plate (ADR-082 U33, `grounds.py`). A blue
+    era gets KEY_GROUND byte-for-byte, so a re-draw of genai or expanse reads the
+    exact words its sidecar recorded."""
+    name = ground_name(era)
+    if name == "blue":
+        return KEY_GROUND
+    _, hexv, words = KEY_GROUNDS[name]
+    return (
+        f"THE GROUND: one perfectly uniform, {words}, hex {hexv} — a flat digital fill "
+        "from edge to edge and UNDER his boots. It is not a backdrop: no gradient, no "
+        "vignette, no texture, no horizon, no floor plane. He casts NO shadow on it and it "
+        f"casts NO light on him — no {name} rim, no {name} bounce, no {name} reflection "
+        "anywhere on the figure. As if he were cut out and laid on flat coloured paper."
+    )
+
 PLATE_LOCK: dict[str, str] = {
     # 2023 · the AI Captain. The owner's own painting of the character is the
     # WARDROBE and the PAINT HANDLING; its face is not his, which is why it is
@@ -428,6 +448,69 @@ shouldered or downward-pointing rifle, or two hands on it; a helmet; insignia; a
 set, a floor slab, a platform, a cast shadow, smoke; blue light on the figure; a
 crop.
 """.strip(),
+    # 2016 · the street organiser, drawn as a cel (ADR-082 U33, owner: "a
+    # Pokémon-style version of myself, similar to Ash Ketchum with a hat, but
+    # … with my facial features"; anime, "like the show", his own call).
+    # ⚠ NO SHOW, CHARACTER OR STUDIO IS NAMED: the medium is described by its
+    #   properties and the costume by its parts.
+    # ⚠ THE PALETTE IS DEEP BY DESIGN, NOT BY TASTE. The gold curve lifts
+    #   mid-tones hard (photo luma 70 lands at ~155, 90 at ~176), so a bright
+    #   cel palette arrives above the Architect's band (p75 80-130) even at the
+    #   lowest exposure the chain allows. A dusk palette keeps the flats in the
+    #   deep ambers and leaves the face as the brightest thing on him, which is
+    #   where the Architect's own light sits.
+    # ⚠ AND HE STANDS ON MAGENTA (`grounds.py`): the vest, the jeans and the
+    #   gloves carry blue and green, which a blue key would read through.
+    # ⚠ THE BOOTS LAW STILL BINDS: his own boots, the jeans' turn-up on them.
+    "pokemon-go": """
+IMAGE 1 and IMAGE 2 are this man's IDENTITY. IMAGE 3 is HIS BOOTS. Draw ONE
+figure: this man, full length, standing.
+
+DRAWN as hand-inked Japanese television cel animation of the late 1990s: bold,
+clean black outlines of an even weight around every shape; flat cel colours with
+exactly ONE hard-edged shadow tone each and a few simple highlights; large,
+expressive eyes with a single white catchlight; simplified anatomy with a
+slightly larger head. Not a photograph, not a 3D render, not a painting, and no
+soft gradient inside any colour.
+
+HIS FACE, drawn in that style and still recognisable as him at a glance: a long
+oval face, heavy straight brows, dark hooded eyes with real irises, a straight
+nose, and HIS SHORT, CLOSE-TRIMMED DARK BEARD that thins at the cheeks, drawn as
+one flat dark shape with a clean outline. The sides of his head are shaved close
+under the cap; no hair sticks out from it.
+
+THE OUTFIT: a baseball cap worn facing forward — a deep crimson crown, an
+off-white front panel, a curved brim, and NO logo, letter or symbol on it; a
+short-sleeved deep-navy vest-jacket with white trim at the collar and the hem,
+open over a plain black crew-neck T-shirt; dark-green fingerless gloves; dark
+indigo jeans that end in a thick single-fold turn-up resting on HIS OWN worn
+black lace-up combat boots, exactly as IMAGE 3 — never trainers.
+
+THE PALETTE IS DEEP AND SATURATED, the way a dusk scene is coloured in that
+style: the crimson, the navy, the indigo and the green are all dark, their
+shadow tones darker still. Apart from his face and the white half of the ball,
+nothing on him is bright.
+
+POSE: standing, his weight settled, his feet about a shoulder-width apart, his
+body turned a few degrees, looking at the camera with a confident half-smile.
+His RIGHT hand holds a small red-and-white ball, the size of an apple, at chest
+height and turned a little toward the viewer — split across its middle by a
+black band with a round white button at the front. His LEFT hand grips the brim
+of his cap. Both elbows stay close enough to his body that neither reaches an
+edge.
+
+LIT flatly, the way a cel is: the one shadow tone falls on the side away from
+the picture's left. No rim light, no glow, no bloom, no lens effect.
+
+FRAMING 9:16: the whole figure, from the top of the cap to the soles. The top of
+the cap about 7 % down from the top edge, the soles about 4 % up from the bottom
+edge, and nothing touching any edge. If he does not fit, make him smaller.
+
+DO NOT: a photograph, a 3D render, a painting; a hologram, a glow, gold; a logo,
+letters or numbers anywhere; a creature, a pet or a companion beside him; a
+second figure; a floor, a cast shadow, a horizon; magenta light on the figure;
+a crop.
+""".strip(),
 }
 
 
@@ -436,7 +519,7 @@ def plate_prompt(era: str) -> str:
     lock = PLATE_LOCK.get(era)
     if lock is None:
         raise SystemExit(f"no plate lock for era '{era}'")
-    return lock + "\n\n" + KEY_GROUND
+    return lock + "\n\n" + key_ground_text(era)
 
 
 #: The idle for a PLATE (Veo image-to-video). The ground is the key colour now,
@@ -464,6 +547,18 @@ PLATE_IDLE: dict[str, tuple[str, str]] = {
         "lowering, no aiming), the hand at the earpiece and its raised elbow, his head "
         "and his gaze (he keeps looking exactly where he is looking), the cap and the "
         "kilt, the closed mouth, and all of him inside the frame",
+    ),
+    # 2016 · the trainer (ADR-082 U33): an idle, like the others — a breath and a
+    # small life in the hand, never a throw.
+    "pokemon-go": (
+        "He stands easy and breathes: a slow breath lifts his shoulders a little and "
+        "settles; his thumb turns the red-and-white ball a little in his fingers and back; "
+        "the half-smile warms a touch; one blink — that is everything",
+        "his feet and his stance, the hand on the brim of the cap, the ball staying in his "
+        "hand at chest height (never thrown, never tossed, never dropped), his head and his "
+        "eyes on the camera, the outlines and the flat colours (the drawing stays the same "
+        "drawing on every frame: nothing is redrawn, no line boils or shimmers), and all of "
+        "him inside the frame",
     ),
 }
 
@@ -495,6 +590,14 @@ PLATE_IDLE_HOLD: dict[str, str] = {
         "drops. His head does not turn, tilt or lift, and his eyes keep looking exactly "
         "where they look in the first frame. The last frame is the first frame's pose."
     ),
+    # ⚠ The brim hand is the trainer's version of the earpiece: a raised hand
+    #   the model would "resolve" to his side if it were only listed as still.
+    "pokemon-go": (
+        "THE POSE IS HELD FOR ALL EIGHT SECONDS. The hand on the brim of his cap — on the "
+        "RIGHT of the picture — stays on the brim the whole time and never drops, and the "
+        "ball stays in the other hand at chest height. He keeps looking at the camera. The "
+        "last frame is the first frame's pose."
+    ),
 }
 
 PLATE_IDLE_NEGATIVE_EXTRA: dict[str, str] = {
@@ -504,6 +607,26 @@ PLATE_IDLE_NEGATIVE_EXTRA: dict[str, str] = {
         "changing the pose"
     ),
 }
+
+#: An era whose idle negative is its OWN, not the shared one plus extras. The
+#: shared one bans rifle moves and blue light; the trainer has no rifle, and his
+#: ground is magenta.
+PLATE_IDLE_NEGATIVE_OWN: dict[str, str] = {
+    "pokemon-go": (
+        "camera movement, pan, tilt, zoom, dolly, orbit, handheld shake; walking, turning "
+        "away, talking; throwing, tossing, dropping or swapping the ball; lowering the hand "
+        "from the cap; redrawn or boiling lines, shimmering colours, a change of style; "
+        "particles, smoke, sparkles, light rays, flicker, exposure change; a gradient, "
+        "vignette, floor, horizon or shadow on the ground; magenta light on the figure; a "
+        "creature or a second figure; text, watermark; the figure leaving the frame; "
+        "cropped boots"
+    ),
+}
+
+
+def ground_word(era: str | None) -> str:
+    """The ground's colour as the idle and scene prompts say it: `BLUE`, `MAGENTA`."""
+    return ground_name(era).upper()
 
 
 def plate_idle_prompt(era: str, prop_wording: bool = False) -> str:
@@ -518,15 +641,78 @@ def plate_idle_prompt(era: str, prop_wording: bool = False) -> str:
     lead = f"{hold} Within that pose: {action}" if hold else action
     return (
         f"LOCKED STATIC FRAME on a heavy tripod. {lead}. WHAT STAYS STILL: {still}. "
-        "The background is a FLAT UNIFORM BLUE, the same value in every corner on every "
+        f"The background is a FLAT UNIFORM {ground_word(era)}, the same value in every corner on every "
         "frame. The lighting does not change. Real time."
     )
 
 
 def plate_idle_negative(era: str) -> str:
     """The plate idle's negative, plus the era's own named moves (see above)."""
+    if era in PLATE_IDLE_NEGATIVE_OWN:
+        return PLATE_IDLE_NEGATIVE_OWN[era]
     extra = PLATE_IDLE_NEGATIVE_EXTRA.get(era)
     return f"{PLATE_IDLE_NEGATIVE}; {extra}" if extra else PLATE_IDLE_NEGATIVE
+
+
+#: A SCENE for a plate (ADR-082 U33, owner: "I really want to have a pose where
+#: he looks around, turns his head like he's scouting the thing, and then takes
+#: his gun to aim"). Drawn with the plate as its first AND last frame
+#: (`vid.py --scene`), so the action must END where it began.
+#:
+#: ⚠ HE AIMS PAST THE LENS, AND THAT IS ARITHMETIC (owner's call, from the
+#:   numbers). The site paints every era at one body scale — 696.6px standing at
+#:   1920x1247, 387px a metre — and his figure column holds about 0.6 m either
+#:   side of his centre. A profile aim puts the muzzle ~0.95 m out (0.2 m to the
+#:   shoulder, 0.75 m of carbine), so the only full aim that fits is one pointed
+#:   within ~30° of the camera's axis: foreshortened across his chest.
+#: ⚠ BOTH ENDS ARE HOLDS, SAID IN THE PROMPT. `post.py --loop settle` dissolves
+#:   the model's drift onto frame 0, which is invisible only over a held pose.
+#: ⚠ THE PICTURE'S TERMS, NEVER HIS. Plate F has the rifle in his LEFT hand, on
+#:   the RIGHT of the picture; "his right hand" put it in the wrong hand once.
+PLATE_SCENE: dict[str, str] = {
+    "expanse": (
+        "LOCKED STATIC FRAME on a heavy tripod; the camera never moves. The shot BEGINS "
+        "AND ENDS ON THE FIRST FRAME'S POSE: he kneels, the hand on the LEFT of the "
+        "picture pressed to his earpiece, the rifle upright in the hand on the RIGHT of the "
+        "picture. In between, one continuous action, in real time. First he holds for half "
+        "a second. Then, still listening, he SCOUTS: his head turns slowly further to the "
+        "LEFT of the picture, holds, sweeps across to the RIGHT of the picture, and comes "
+        "back. Then the hand on the left leaves the earpiece and takes the rifle's front "
+        "grip, the rifle comes down from upright into his shoulder on the RIGHT of the "
+        "picture, and he AIMS PAST THE CAMERA: the barrel points toward the viewer and a "
+        "little to the LEFT of the picture, foreshortened across his chest, never straight "
+        "into the lens. He holds the aim, steady, for a breath. Then he lifts the rifle "
+        "back to upright in the same hand, and the other hand returns to the earpiece. For "
+        "the last second he is completely still, in the first frame's pose. The planted "
+        "knee and the forward boot never move, and he never stands. The rifle and both "
+        "elbows stay inside the picture — nothing crosses a frame edge. The background is "
+        "a FLAT UNIFORM BLUE, the same value in every corner on every frame. The lighting "
+        "does not change."
+    ),
+}
+
+PLATE_SCENE_NEGATIVE: dict[str, str] = {
+    "expanse": (
+        "firing, a muzzle flash, recoil, smoke, shell casings, sparks; the barrel pointing "
+        "straight into the lens; the rifle, the muzzle or an elbow leaving the frame; "
+        "standing up, stepping, walking; camera movement, pan, tilt, zoom, dolly, handheld "
+        "shake; a gradient, vignette, floor, horizon or shadow on the ground; blue light on "
+        "the figure; particles, light rays, flicker, exposure change; text, watermark; a "
+        "second figure; cropped boots"
+    ),
+}
+
+
+def plate_scene_prompt(era: str, prop_wording: bool = False) -> str:
+    """The scene clause for a plate (see PLATE_SCENE)."""
+    scene = PLATE_SCENE.get(era)
+    if scene is None:
+        raise SystemExit(f"no scene is authored for era '{era}'")
+    return scene.replace("rifle", "costume prop carbine") if prop_wording else scene
+
+
+def plate_scene_negative(era: str) -> str:
+    return PLATE_SCENE_NEGATIVE[era]
 
 
 #: ADR-082 U32 (owner, 2026-09-22): "the images you made were good, but only the

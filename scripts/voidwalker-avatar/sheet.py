@@ -34,6 +34,8 @@ from PIL import Image, ImageDraw
 EXPECTED_FACE = {
     "genai": (0.40, 0.09, 0.60, 0.23),
     "expanse": (0.38, 0.34, 0.62, 0.50),
+    # ADR-082 U33: standing, cap top ~7 % down, the drawn head a little large.
+    "pokemon-go": (0.37, 0.08, 0.63, 0.22),
 }
 COL_H = 560
 FACE_H = 180

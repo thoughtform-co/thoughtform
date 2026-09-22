@@ -26,8 +26,9 @@ it fails differently. It is a full-colour figure on a flat #0A28D2 ground, cut
 by a CHROMA key, so fragmentation cannot happen and a dark hem is harmless.
 What can go wrong is the ground and the cloth:
 
-  K1  the ground is not the lock's flat blue (a gradient or a floor keys badly)
-  K3  blue SPILL on the figure's edge (the model lit him with his own ground)
+  K1  the ground is not the era's flat lock colour (`grounds.py`: blue, or the
+      2016 trainer's magenta) — a gradient or a floor keys badly
+  K3  ground SPILL on the figure's edge (the model lit him with his own ground)
   P1  crushed blacks: black cloth drawn as black has no folds left to grade.
       ⚠ CALIBRATED ON THE ARCHITECT'S OWN SOURCE, which is darker than intuition:
       his photo has 25.8 % of its figure under luma 16 (p50 26.2) and still made
@@ -122,25 +123,34 @@ def measure(path: Path) -> dict:
 PLATE_CRUSH_MAX = 0.30
 PLATE_P50 = (22.0, 60.0)
 PLATE_SPILL_MAX = 0.08
+#: ⚠ A CEL HAS NO BLACK CLOTH TO CRUSH (ADR-082 U33). P1's p50 band describes a
+#: photographed charcoal wardrobe; a flat-colour drawing sits wherever its
+#: palette sits, and the band would fail it for being a drawing. The crush share
+#: still reports, and the gold preview's exposure gate — the one that says
+#: whether it will read "too glowing" — still binds.
+CEL_ERAS = {"pokemon-go"}
 
 
-def measure_plate(path: Path, out: Path) -> dict:
+def measure_plate(path: Path, out: Path, era: str | None = None) -> dict:
     """The plate gates, and the gold preview. See the module note."""
     import gold
+    from grounds import ground_name, ground_rgb
     from PIL import Image
     from scipy import ndimage
 
     rgb = np.asarray(Image.open(path).convert("RGB")).astype(np.float32)
     h, w, _ = rgb.shape
+    lock = ground_rgb(era)
     alpha = gold.key_matte(rgb)
     fig = alpha > 0.5
     findings = []
 
-    # K1 · the ground: the four corners against the lock, and its evenness
+    # K1 · the ground: the four corners against THIS ERA's lock (grounds.py),
+    # and its evenness
     c = 24
     corners = np.concatenate([rgb[:c, :c].reshape(-1, 3), rgb[:c, -c:].reshape(-1, 3),
                               rgb[-c:, :c].reshape(-1, 3), rgb[-c:, -c:].reshape(-1, 3)])
-    off = float(np.abs(corners.mean(0) - np.array(gold.KEY_GROUND)).max())
+    off = float(np.abs(corners.mean(0) - np.array(lock)).max())
     ground = rgb[alpha < 0.02]
     spread = float(ground.std(0).max()) if ground.size else 99.0
     if off > 28:
@@ -155,7 +165,7 @@ def measure_plate(path: Path, out: Path) -> dict:
     band = ndimage.binary_erosion(fig, iterations=2) & ~ndimage.binary_erosion(fig, iterations=8)
     spill = float((alpha[band] < 0.9).mean()) if band.any() else 0.0
     if spill > PLATE_SPILL_MAX:
-        findings.append(f"K3 blue spill: {spill:.0%} of the band inside the edge keys as translucent")
+        findings.append(f"K3 {ground_name(era)} spill: {spill:.0%} of the band inside the edge keys as translucent")
 
     # P1 · readable blacks
     y = gold.luma(rgb)[ndimage.binary_erosion(fig, iterations=4)]
@@ -163,7 +173,7 @@ def measure_plate(path: Path, out: Path) -> dict:
     crush = float((y < 16).mean()) if y.size else 1.0
     if crush > PLATE_CRUSH_MAX:
         findings.append(f"P1 {crush:.0%} of the figure is crushed under luma 16 (Architect 26 %)")
-    if not (PLATE_P50[0] <= p50 <= PLATE_P50[1]):
+    if era not in CEL_ERAS and not (PLATE_P50[0] <= p50 <= PLATE_P50[1]):
         findings.append(f"P1 figure p50 {p50:.0f} is outside [{PLATE_P50[0]:.0f}, {PLATE_P50[1]:.0f}]")
 
     # D2/D3 · the boots law, on the key matte
@@ -175,27 +185,38 @@ def measure_plate(path: Path, out: Path) -> dict:
     top = float(ys.min() / h) if ys.size else 0.0
     bottom = float(1 - (ys.max() + 1) / h) if ys.size else 0.0
 
-    expo = gold.plate(path, out)
+    # ⚠ THE PREVIEW IS GRADED AT THE EXPOSURE THAT WILL SHIP (ADR-082 U33) —
+    # solved, as post.py solves it — on this era's own ground.
+    expo = gold.plate(path, out, exposure=None, ground=lock)
+    if era in CEL_ERAS and not expo["ok"]:
+        findings.append(f"G the gold preview is outside the Architect's band (p75 {expo['p75']}, "
+                        f"hot {expo['hot']}) at exposure x{expo['exposure']}")
     return {"ok": not findings, "why": "; ".join(findings), "ground_off": round(off, 1),
             "ground_std": round(spread, 1), "spill": round(spill, 3), "p50": round(p50, 1),
             "crush": round(crush, 3), "top": round(top, 3), "bottom": round(bottom, 3),
             "gold": expo}
 
 
-def main_plate(wave: Path) -> int:
+#: The eras a wave's own name can name (`20260922-pokemon-go-v1` → pokemon-go),
+#: the way sheet.py reads it.
+ERAS = ("pokemon-go", "expanse", "genai", "azeroth", "loop")
+
+
+def main_plate(wave: Path, era: str | None = None) -> int:
     plates = sorted((wave / "plates").glob("*.png"))
     if not plates:
         raise SystemExit(f"no plates in {wave / 'plates'}")
+    era = era or next((e for e in ERAS if f"-{e}-" in wave.name), None)
     out = wave / "gold"
     rows = {}
     for f in plates:
-        m = measure_plate(f, out)
+        m = measure_plate(f, out, era)
         rows[f.name] = m
         g = m["gold"]
         print(f"{'ok  ' if m['ok'] else 'FAIL'} {f.name}  ground {m['ground_off']:4.0f}/{m['ground_std']:4.1f}"
               f"  spill {m['spill']:.2f}  p50 {m['p50']:5.1f}  crush {m['crush']:.2f}"
               f"  top {m['top']:.3f} floor {m['bottom']:.3f}"
-              f"  | gold p75 {g['p75']:5.1f} hot {g['hot']:.2f} {'ok' if g['ok'] else 'OFF'}"
+              f"  | gold x{g['exposure']} p75 {g['p75']:5.1f} hot {g['hot']:.2f} {'ok' if g['ok'] else 'OFF'}"
               + (f"  — {m['why']}" if m["why"] else ""))
     (wave / "plates.json").write_text(json.dumps(rows, indent=1), encoding="utf-8")
     passing = [n for n, m in rows.items() if m["ok"]]
@@ -208,11 +229,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--wave", required=True)
     ap.add_argument("--stage", choices=("still", "plate"), default="still")
+    ap.add_argument("--era", default=None, help="plate stage: defaults to the era the wave's name carries")
     args = ap.parse_args()
     wave_dir = Path(__file__).resolve().parent / "waves" / args.wave
     if args.stage == "plate":
         sys.path.insert(0, str(Path(__file__).resolve().parent))
-        return main_plate(wave_dir)
+        return main_plate(wave_dir, args.era)
     stills = wave_dir / "stills"
     rows = []
     for f in sorted(stills.glob("*.png")):

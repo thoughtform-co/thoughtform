@@ -111,7 +111,10 @@ EXPOSURE_P75 = (80.0, 130.0)
 EXPOSURE_HOT_SHARE = 0.12
 HOT = 200
 
-KEY_GROUND = (10, 40, 210)  # #0A28D2 — the plate lock's ground
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from grounds import KEY_GROUNDS, ground_rgb  # noqa: E402
+
+KEY_GROUND = KEY_GROUNDS["blue"][0]  # #0A28D2 — the plate lock's default ground
 
 SKILL_WAVES = Path(r"C:\Users\buyss\.claude\skills\voidwalker-avatar\waves")
 PAIR_PHOTO = SKILL_WAVES / "20260826-thoughtform-v3" / "canonical-02.jpg"
@@ -133,18 +136,52 @@ def grade(rgb: np.ndarray, exposure: float = 1.0) -> np.ndarray:
     return np.stack([np.interp(t, rx, [c[i] for _, c in RAMP_KNOTS]) for i in range(3)], -1)
 
 
+def _ground_channels(ground) -> tuple[list[int], list[int]]:
+    """The ground's own channels (within half of its brightest) and the rest."""
+    g = [float(v) for v in ground]
+    top = max(g)
+    own = [c for c in range(3) if g[c] >= 0.5 * top]
+    rest = [c for c in range(3) if c not in own]
+    if not rest or top - max(g[c] for c in rest) < 80:
+        raise ValueError(f"ground {tuple(round(v) for v in g)} is not a saturated key colour")
+    return own, rest
+
+
+def chroma_signal(rgb: np.ndarray, ground) -> np.ndarray:
+    """How much of the GROUND's colour a pixel carries: the ground's own channels
+    (their minimum, when there are two) minus the brightest of the others.
+
+    ⚠ FOR BLUE THIS IS EXACTLY `B − max(R, G)`, the U31 key, to the value — the
+    generalisation is what lets the 2016 trainer stand on magenta (ADR-082 U33,
+    `grounds.py`) without moving a pixel of the blue eras."""
+    own, rest = _ground_channels(ground)
+    s = rgb[..., own[0]] if len(own) == 1 else rgb[..., own].min(-1)
+    o = rgb[..., rest[0]] if len(rest) == 1 else np.maximum(rgb[..., rest[0]], rgb[..., rest[1]])
+    return s - o
+
+
+def corner_ground(rgb: np.ndarray, c: int = 16) -> np.ndarray:
+    """The ground as the frame's four corners report it (the median pixel)."""
+    px = np.concatenate([rgb[:c, :c].reshape(-1, 3), rgb[:c, -c:].reshape(-1, 3),
+                         rgb[-c:, :c].reshape(-1, 3), rgb[-c:, -c:].reshape(-1, 3)])
+    return np.median(px, axis=0)
+
+
 def key_matte(rgb: np.ndarray, ground: tuple[int, int, int] | None = None) -> np.ndarray:
-    """Alpha from a flat blue ground: `1 − clip((b − .10·bG) / (.75·bG))`, with
-    `b = B − max(R, G)`. `bG` is read off the CORNERS (grade.py's lesson: a
-    border ring reads the hem), and falls back to the lock's own value."""
-    b = rgb[..., 2] - np.maximum(rgb[..., 0], rgb[..., 1])
+    """Alpha from a flat key ground: `1 − clip((s − .10·sG) / (.75·sG))`, with
+    `s = chroma_signal` (for blue, `B − max(R, G)`). Without a `ground` the
+    ground and `sG` are read off the CORNERS (grade.py's lesson: a border ring
+    reads the hem)."""
     if ground is None:
+        g = corner_ground(rgb)
+        b = chroma_signal(rgb, g)
         h, w = b.shape
         c = 16
         corners = np.concatenate([b[:c, :c].ravel(), b[:c, -c:].ravel(), b[-c:, :c].ravel(), b[-c:, -c:].ravel()])
         bG = float(np.median(corners))
     else:
-        bG = float(ground[2] - max(ground[0], ground[1]))
+        b = chroma_signal(rgb, ground)
+        bG = float(chroma_signal(np.asarray(ground, np.float32)[None, None, :], ground)[0, 0])
     bG = max(bG, 40.0)
     return 1.0 - np.clip((b - 0.10 * bG) / (0.75 * bG), 0.0, 1.0)
 
@@ -310,19 +347,53 @@ def selftest(out: Path) -> int:
     arch = rows[0][1]["ok"] and rows[1][1]["ok"]
     loud = [n for n, r in rows if "genai-v2" in n or "expanse-v1" in n]
     loud_fail = all(not r["ok"] for n, r in rows if n in loud)
-    print("\nself-test", "PASSES" if (arch and loud_fail and err < 15) else "FAILS",
-          "— the Architect passes, the two one-step draws fail, the tables hold out")
-    return 0 if (arch and loud_fail and err < 15) else 1
+
+    print("\nthe key on another era's ground (ADR-082 U33)")
+    magenta = selftest_magenta()
+
+    passes = arch and loud_fail and err < 15 and magenta
+    print("\nself-test", "PASSES" if passes else "FAILS",
+          "— the Architect passes, the two one-step draws fail, the tables hold out,"
+          " and the magenta ground keys the trainer's colours whole")
+    return 0 if passes else 1
 
 
-def plate(path: Path, out: Path, exposure: float = 1.0) -> dict:
-    """A plate on the key ground -> a gold PREVIEW (RGBA and on-black)."""
+def solve_exposure(fg: np.ndarray, mask: np.ndarray, target_p75: float = 105.0) -> float:
+    """The ONE exposure scalar a delivery may carry: bisected inside grade()'s
+    own clamp [0.85, 1.35] until the deep interior's p75 lands on `target_p75`
+    (the Architect sits ~91-103). A figure that cannot reach it keeps the clamp's
+    end and FAILS the gate — which is the report, never a wider clamp."""
+    def p75_at(e: float) -> float:
+        return exposure_gate(luma(grade(fg, e)), mask)["p75"]
+
+    lo, hi = 0.85, 1.35
+    if p75_at(lo) >= target_p75:
+        return lo
+    if p75_at(hi) <= target_p75:
+        return hi
+    for _ in range(18):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if p75_at(mid) < target_p75 else (lo, mid)
+    return (lo + hi) / 2
+
+
+def plate(path: Path, out: Path, exposure: float | None = 1.0,
+          ground: tuple[int, int, int] | None = None) -> dict:
+    """A plate on the key ground -> a gold PREVIEW (RGBA and on-black).
+
+    `exposure=None` SOLVES the scalar the way `post.py` will (ADR-082 U33): a
+    preview graded at 1.0 says what the plate looks like at a setting nothing
+    will ship at. `ground` defaults to the blue lock; a plate on another era's
+    ground passes its own (`grounds.ground_rgb(era)`)."""
     out.mkdir(parents=True, exist_ok=True)
     rgb = np.asarray(Image.open(path).convert("RGB")).astype(np.float32)
-    alpha = key_matte(rgb)
-    fg = unmix(rgb, alpha, np.array(KEY_GROUND, np.float32))
+    g = np.array(ground if ground is not None else KEY_GROUND, np.float32)
+    alpha = key_matte(rgb, tuple(float(v) for v in g)) if ground is not None else key_matte(rgb)
+    fg = unmix(rgb, alpha, g)
     k = rgb.shape[0] / 1280
     fig_a = finish_edge(alpha, k)
+    if exposure is None:
+        exposure = solve_exposure(fg, alpha > 0.5)
     gold = grade(fg, exposure)
     out_rgb, a = compose(gold, fig_a, k)
     rgba = np.dstack([out_rgb, a * 255]).clip(0, 255).astype(np.uint8)
@@ -330,7 +401,35 @@ def plate(path: Path, out: Path, exposure: float = 1.0) -> dict:
     Image.fromarray(rgba, "RGBA").save(out / f"{stem}.gold.png")
     on_black = (out_rgb * a[..., None]).clip(0, 255).astype(np.uint8)
     Image.fromarray(on_black).save(out / f"{stem}.gold-on-black.jpg", quality=90)
-    return exposure_gate(luma(gold), fig_a > 0.5)
+    return {**exposure_gate(luma(gold), fig_a > 0.5), "exposure": round(float(exposure), 3)}
+
+
+def selftest_magenta() -> bool:
+    """ADR-082 U33: the key on the MAGENTA ground, on the 2016 trainer's own
+    colours — every one of them must key opaque and the ground clear. And the
+    blue key on those same colours, to show why the trainer does not stand on
+    blue (his vest and jeans would key through)."""
+    patches = {
+        "crimson cap": (140, 20, 30), "red ball": (220, 30, 40), "navy vest": (25, 35, 80),
+        "blue vest": (40, 90, 200), "indigo jeans": (40, 45, 90), "green gloves": (60, 160, 60),
+        "dark green": (20, 70, 30), "skin": (220, 170, 140), "white": (240, 240, 240),
+        "black": (15, 15, 15),
+    }
+    ok = True
+    for name, rgb_ground in (("magenta", KEY_GROUNDS["magenta"][0]), ("blue", KEY_GROUNDS["blue"][0])):
+        img = np.zeros((96, 32 * len(patches), 3), np.float32) + np.array(rgb_ground, np.float32)
+        for i, col in enumerate(patches.values()):
+            img[32:64, 32 * i + 4:32 * i + 28] = col
+        a = key_matte(img, rgb_ground)
+        per = {n: float(a[40:56, 32 * i + 8:32 * i + 24].min()) for i, n in enumerate(patches)}
+        clear = float(a[:16].max())
+        weak = {n: round(v, 2) for n, v in per.items() if v < 0.99}
+        print(f"  {name:8} ground clear {1 - clear:.2f} · patches under 0.99: {weak or 'none'}")
+        if name == "magenta":
+            ok = ok and not weak and clear <= 0.01
+        else:
+            ok = ok and "blue vest" in weak  # the conflict the magenta ground exists for
+    return ok
 
 
 def main() -> int:
