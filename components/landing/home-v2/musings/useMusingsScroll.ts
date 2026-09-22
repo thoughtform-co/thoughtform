@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { clamp01 } from "@/lib/math";
-import { rackClock, rackIndex, rackPose, wrapDistance } from "@/lib/musings/rackMath";
+import { shelfClock, shelfGeom, shelfIndex, shelfPose } from "@/lib/musings/shelfMath";
 import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 /**
@@ -144,7 +144,6 @@ export function useMusingsScroll(
       if (station) {
         station.removeAttribute("data-mu-ready");
         station.style.removeProperty("--mu-entry");
-        station.style.removeProperty("--mu-fan");
         station.style.removeProperty("--mu-drift");
       }
       /* ⚠ THE STAGE MODE GOES WITH IT, AND THE STATION IS OPAQUE AGAIN. The
@@ -156,9 +155,8 @@ export function useMusingsScroll(
       for (const el of cardsRef.current) {
         if (!el) continue;
         el.style.removeProperty("transform");
-        el.style.removeProperty("opacity");
-        el.style.removeProperty("filter");
         el.style.removeProperty("z-index");
+        delete el.dataset.muTurn;
       }
       /* ⚠ THE FOOTER'S BED IS DISARMED TOO, AND IT HAS TO BE. Left stamped on
          a rung that never writes again, `#contact` would be `position: sticky`
@@ -207,23 +205,31 @@ export function useMusingsScroll(
       const travel = Math.max(1, runway.offsetHeight - vh);
       const p = clamp01(-rect.top / travel);
 
-      const clock = rackClock(p, count);
-      const front = rackIndex(clock.index, count);
+      const clock = shelfClock(p, count);
+      const open = shelfIndex(clock.index, count);
 
       station.style.setProperty("--mu-entry", clock.entry.toFixed(4));
-      station.style.setProperty("--mu-fan", clock.fan.toFixed(4));
       station.style.setProperty("--mu-drift", `${clock.drift.toFixed(3)}deg`);
       if (!station.hasAttribute("data-mu-ready")) station.setAttribute("data-mu-ready", "");
 
       const cards = cardsRef.current;
-      for (let i = 0; i < cards.length; i++) {
-        const el = cards[i];
-        if (!el) continue;
-        const pose = rackPose(wrapDistance(i, front, count), clock.entry, clock.fan);
-        el.style.transform = pose.transform;
-        el.style.opacity = pose.opacity.toFixed(4);
-        el.style.filter = pose.filter;
-        el.style.zIndex = String(pose.zIndex);
+      /* ⚠ THE FACE'S WIDTH IS MEASURED, AND IT IS `offsetWidth`. It comes
+         from `--mu-card-w`, a `clamp()`, so no constant can stand in for it
+         (ADR-102's law: a custom property is a string until something lays it
+         out). `offsetWidth` is the border-box LAYOUT width, which a transform
+         does not move — the rect would report the slab's projection and
+         collapse to a few px the moment it turned. */
+      const w = cards.find((el) => el)?.offsetWidth ?? 0;
+      if (w > 0) {
+        const g = shelfGeom(w);
+        for (let i = 0; i < cards.length; i++) {
+          const el = cards[i];
+          if (!el) continue;
+          const pose = shelfPose(i, count, open, g);
+          el.style.transform = pose.transform;
+          el.style.zIndex = String(pose.zIndex);
+          if (el.dataset.muTurn !== String(pose.turn)) el.dataset.muTurn = String(pose.turn);
+        }
       }
 
       /**
@@ -250,11 +256,11 @@ export function useMusingsScroll(
       if (revealTop <= 0) document.documentElement.setAttribute("data-ft-reveal", "");
       else document.documentElement.removeAttribute("data-ft-reveal");
 
-      if (front !== frontRef.current) {
-        frontRef.current = front;
-        setState({ front, live: true });
+      if (open !== frontRef.current) {
+        frontRef.current = open;
+        setState({ front: open, live: true });
       } else {
-        setState((s) => (s.live ? s : { front, live: true }));
+        setState((s) => (s.live ? s : { front: open, live: true }));
       }
     };
 
@@ -291,7 +297,7 @@ export function useMusingsScroll(
          corridor for the rest of the document. */
       section()?.removeAttribute("data-mu-mode");
     };
-  }, [runwayRef, stationRef, cardsRef, count]);
+  }, [runwayRef, stationRef, cardsRef, bandRef, count]);
 
   return state;
 }

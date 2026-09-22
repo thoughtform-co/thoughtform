@@ -68,7 +68,15 @@
   --mu-ink-3: rgba(var(--dawn-rgb), 0.5);
   --mu-rule: rgba(var(--dawn-rgb), 0.16);
   --mu-rule-soft: rgba(var(--dawn-rgb), 0.1);
-  --mu-plate: rgba(var(--void-deep-rgb), 0.62);
+  /* ⚠ THE PLATE IS SOLID, BY THE OWNER'S RULING, AND 0.62 WAS TUNED
+     AGAINST AN OPAQUE STATION. The card sits over the LIVE corridor now, and
+     nothing mechanical can measure a translucent plate against a moving
+     canvas — the gate composites against a background COLOUR. A near-opaque
+     ground is the one value that reads the same at every frame of the
+     corridor behind it; the whisper that is left is what keeps it a plate on
+     a stage rather than a hole cut through one. */
+  --mu-plate: rgba(var(--void-deep-rgb), 0.94);
+  --mu-spine-plate: rgba(var(--void-deep-rgb), 0.97);
   --mu-edge: rgba(var(--dawn-rgb), 0.2);
 
   /* One type ladder. Chrome is PT Mono, prose is PP Neue Montreal — two
@@ -89,10 +97,20 @@
   --mu-ch: clamp(14px, 1.6vw, 22px);
   --mu-chi: calc(var(--mu-ch) - 0.586px);
 
+  /* ⚠ THE SHELF'S TWO PX TERMS ARE MIRRORED BY HAND FROM `shelfMath.ts`
+     (`SHELF_SPINE_PX` / `SHELF_GAP_PX`) and `tests/lib/musings-shelf.test.ts`
+     asserts the numbers agree. The track is laid out in the writer and the
+     spine is DRAWN here, so a disagreement is slabs that overlap or stand
+     apart with nothing erroring. They are flat px on purpose: a `clamp()`
+     would have to be resolved through a probe every frame to lay the track
+     out, and a spine is chrome that has no reason to scale. */
+  --mu-spine: 46px;
+  --mu-shelf-gap: 10px;
+
   /* The runway. ⚠ THE STEP IS THE ONE DIAL AND IT COSTS PAGE LENGTH:
      every card adds `--mu-step` of document. At five posts the station is
      ~3.2 viewports, at seven ~4.0. The reading band is 70 % of the travel
-     (`RACK_READ` in `rackMath.ts`), so a step of 42svh gives each card
+     (`SHELF_READ` in `shelfMath.ts`), so a step of 42svh gives each card
      about 0.4 of a viewport to be read in. */
   --mu-step: 42svh;
   /* ⚠ RE-SOLVED FOR THE BAND (ADR-119 U1), NOT INHERITED. It was 55svh of
@@ -260,6 +278,18 @@
    — and ADR-056's measurement of exactly that cost is why the casefile's
    blur waits for `data-proof-settled`. The plate is a flat translucent
    ground instead, which reads the same at this size. */
+/* ⚠ THE PIVOT CARRIES A TRANSFORM AND NOTHING ELSE. `overflow` other than
+   `visible`, `clip-path` other than `none`, an `opacity` under 1 and a
+   `filter` other than `none` are each GROUPING properties: they force
+   `transform-style: flat` on the element that declares them, whatever that
+   element also says about `preserve-3d` (CSS Transforms 2 sec. 3). This card
+   declared all four, so a face and a spine inside it would have been
+   flattened into one plane and a spine turned 90 degrees would render as a
+   zero-width strip — with the transform applied, the element measurable, and
+   every geometry gate green. The face below takes `overflow` and the clip; it
+   has no 3D children, so they cost it nothing. The other two left with the
+   fan: on a shelf a closed card is not a dimmed card, it is a card seen
+   edge-on, so there is no per-card opacity and no arrival blur to publish. */
 .mu-card {
   position: relative;
   flex: 0 0 auto;
@@ -267,10 +297,16 @@
   min-height: var(--mu-card-h);
   scroll-snap-align: center;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  background: var(--mu-plate);
+  grid-template-rows: minmax(0, 1fr);
   color: var(--mu-ink);
   text-decoration: none;
+}
+
+.mu-card__front {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-area: 1 / 1;
+  background: var(--mu-plate);
   overflow: hidden;
   /* The silhouette: the fill is genuinely CUT, because a ring drawn over a
      square corner is a diagonal with nothing behind it. */
@@ -283,7 +319,7 @@
    own shortened leg; `evenodd` makes the middle a hole.
    ⚠ BOTH CONTOURS CLOSE. Every housing on `/arcs` painted a bow-tie until
    ADR-118 U2, because one of them did not. */
-.mu-card::before {
+.mu-card__front::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -307,8 +343,60 @@
   );
 }
 
-.mu-card[data-mu-front]::before {
+.mu-card[data-mu-front] .mu-card__front::before {
   background: var(--gold-line);
+}
+
+/* ── The spine ──────────────────────────────────────────────
+   What the reader sees of a closed slab: the side, lettered, the way a record
+   on a shelf shows its spine. It exists only where the shelf does — the flat
+   rail below 961px, under reduced motion and on the fallback shows faces, so
+   a spine there would be a second copy of every title in the document. */
+.mu-card__spine {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  width: var(--mu-spine);
+  height: 100%;
+  transform-origin: left center;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-block: clamp(12px, 1.6svh, 20px);
+  overflow: hidden;
+  background: var(--mu-spine-plate);
+  border-inline-end: 1px solid var(--mu-edge);
+}
+
+/* ⚠ SET VERTICALLY, NOT ROTATED. A `rotate(90deg)` inside a `preserve-3d`
+   pivot is a THIRD transform in the same 3D context, and the browser then
+   rasterises the type against the composed matrix rather than the screen.
+   `writing-mode` is a layout mode: the glyphs stay on the pixel grid. */
+.mu-card__spine-title {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 0;
+}
+.mu-card__spine-date {
+  writing-mode: vertical-rl;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  font-weight: var(--weight-text);
+  letter-spacing: var(--track-eyebrow);
+  color: var(--gold-ink);
+  flex: 0 0 auto;
 }
 
 .mu-card:focus-visible {
@@ -528,10 +616,23 @@
     height: var(--mu-card-h);
     scroll-snap-align: none;
     transform-style: preserve-3d;
-    transition:
-      transform 720ms cubic-bezier(0.65, 0, 0.35, 1),
-      opacity 720ms cubic-bezier(0.65, 0, 0.35, 1),
-      filter 480ms ease;
+    /* ⚠ THE HINGE IS THE LEFT EDGE, AND THE TRACK IS MEASURED TO IT.
+       `shelfOffset` returns each slab's hinge, so a `center` origin would put
+       the open card right and every closed one half a face out. */
+    transform-origin: left center;
+    transition: transform 720ms cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  /* The face and the spine are a quarter turn apart about the one hinge, so
+     one angle on the pivot shows exactly one of them. Neither fades. */
+  .mu[data-mu-ready] .mu-card__front,
+  .mu[data-mu-ready] .mu-card__spine {
+    backface-visibility: hidden;
+  }
+
+  .mu[data-mu-ready] .mu-card__spine {
+    display: flex;
+    transform: rotateY(-90deg);
   }
 }
 

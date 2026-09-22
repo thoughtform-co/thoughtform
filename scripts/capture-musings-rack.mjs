@@ -8,7 +8,7 @@
  * which decide whether this station is painting as the ambient's COVER — never
  * publish. `scripts/capture-site-footer.mjs`'s own law, one station up.
  *
- * ⚠ **THE THINGS THAT CANNOT BE GATED ANY OTHER WAY.** `rackMath` is pure and
+ * ⚠ **THE THINGS THAT CANNOT BE GATED ANY OTHER WAY.** `shelfMath` is pure and
  * unit-pinned, but nothing there knows whether the browser applied a pose to
  * an element, whether a card's ink prints through its neighbour, or whether
  * the footer is actually uncovering. Specifically:
@@ -104,6 +104,15 @@ const readRack = () =>
       return { x: px(r.left), y: px(r.top), w: px(r.width), h: px(r.height) };
     };
     const st = document.getElementById("musings");
+    /* ⚠ THE COVER IS THE BAND, NOT THE STATION (ADR-119 U1). On the stage
+       rung `#musings` is TRANSPARENT and promoted — the corridor is alive
+       behind the whole beat, by the owner's ruling — and the opaque thing
+       that kills it is the 100svh `.mu__band` at the foot of the runway. On
+       every lower rung the station is opaque again and IS its own cover, so
+       the fallback is not a convenience: it is the other two rungs. */
+    const band = document.querySelector("#musings .mu__band");
+    const stage = st?.dataset.muMode === "stage";
+    const cover = stage && band ? band : st;
     const mu = document.querySelector(".mu");
     const cs = (el) => (el ? getComputedStyle(el) : null);
     const cards = [...document.querySelectorAll(".mu-card")];
@@ -149,11 +158,12 @@ const readRack = () =>
 
       /* The cover contract (ADR-030 §6): its own opaque ground AND a painted
          surface. A station whose only ground is its content fails both. */
-      coverGround: cs(st)?.backgroundColor ?? null,
-      coverImage: (cs(st)?.backgroundImage ?? "none").slice(0, 26),
+      coverGround: cs(cover)?.backgroundColor ?? null,
+      coverImage: (cs(cover)?.backgroundImage ?? "none").slice(0, 26),
       coverPosition: cs(st)?.position ?? null,
+      stageMode: stage,
       coverZ: cs(st)?.zIndex ?? null,
-      coverBox: box(st),
+      coverBox: box(cover),
 
       /* The footer's bed. `revealed` is how much of it the reader can see. */
       contactPosition: cs(contact)?.position ?? null,
@@ -163,7 +173,6 @@ const readRack = () =>
 
       clock: {
         entry: cs(mu)?.getPropertyValue("--mu-entry").trim() || null,
-        fan: cs(mu)?.getPropertyValue("--mu-fan").trim() || null,
         drift: cs(mu)?.getPropertyValue("--mu-drift").trim() || null,
       },
       front,
@@ -188,6 +197,15 @@ const readRack = () =>
           kickerPx: px(
             parseFloat(getComputedStyle(c.querySelector(".mu-card__kicker")).fontSize)
           ),
+          /* ⚠ THE PIVOT'S OWN RECT SAYS NOTHING ABOUT A CLOSED SLAB. At
+             `rotateY(90deg)` the card's border box extends BACKWARD in z, so
+             under the rig's perspective it projects to a 20–35px sliver — a
+             number that looks like a spine and is the foreshortened FACE.
+             What the reader sees is the spine's own box, and it is the one
+             thing a flattened 3D context would collapse to zero. */
+          spine: box(c.querySelector(".mu-card__spine")),
+          spineInk: inkOf(c.querySelector(".mu-card__spine-title")),
+          turn: c.dataset.muTurn ?? null,
           cover: box(c.querySelector(".mu-cover")),
           beat: !!c.querySelector(".mu-cover__beat"),
           litMark: box(c.querySelector(".mu-cover__mark--lit")),
@@ -212,27 +230,85 @@ const readRack = () =>
 const readNotch = () =>
   page.evaluate(() => {
     const card = document.querySelector(".mu-card[data-mu-front]");
-    if (!card) return null;
-    const r = card.getBoundingClientRect();
+    const face = card?.querySelector(".mu-card__front");
+    if (!card || !face) return null;
     const ch = parseFloat(getComputedStyle(card).getPropertyValue("--mu-ch")) || 18;
     /* A point well inside each corner's chamfer triangle: 30 % along the cut
        from the corner, which is outside the polygon for a cut corner and
        inside it for a square one. */
     const d = ch * 0.3;
-    const probe = (x, y) => {
-      const el = document.elementFromPoint(Math.round(x), Math.round(y));
-      return el ? card.contains(el) || el === card : false;
-    };
-    return {
-      ch: Math.round(ch * 10) / 10,
-      tl: probe(r.left + d, r.top + d),
-      tr: probe(r.right - d, r.top + d),
-      bl: probe(r.left + d, r.bottom - d),
-      br: probe(r.right - d, r.bottom - d),
+
+    /* ⚠ A BOUNDING RECT IS NOT THE SHAPE, AND UNDER A 3D YAW IT IS NOT EVEN
+       THE RIGHT QUADRILATERAL. The shelf stands at `--mu-drift` (a few
+       degrees about Y) under the rig's perspective, so a card projects to a
+       TRAPEZOID and `getBoundingClientRect` reports its axis-aligned bound —
+       a box whose four corners are all OUTSIDE the shape. Probed there, every
+       corner of a correctly notched card reports "cut", and the gate agrees
+       with itself while measuring nothing: four falses read as three
+       unlawful notches. So the probe points are resolved the way this house
+       resolves a custom property — through a real element laid out in the
+       face's OWN space, whose rect is the projected position of that local
+       point (ADR-102's law, one surface over). */
+    /* ⚠ EVERY MARKER IS SEATED, READ AND REMOVED BEFORE ANY HIT TEST RUNS.
+       Interleaving them reads the earlier points against a subtree that the
+       later `appendChild`/`remove` pairs are still mutating, and the singular
+       `elementFromPoint` then answers about a layout that no longer exists
+       while `elementsFromPoint`, called after the last mutation, answers
+       correctly — two readings of the same point disagreeing, which is how
+       this probe reported a card it could not reach at all. */
+    const local = {
+      tl: [`${d}px`, `${d}px`],
+      tr: [`calc(100% - ${d}px)`, `${d}px`],
+      bl: [`${d}px`, `calc(100% - ${d}px)`],
+      br: [`calc(100% - ${d}px)`, `calc(100% - ${d}px)`],
       /* The ring itself: a pixel just inside the diagonal should be the ring's
          own paint, i.e. still the card. */
-      onCut: probe(r.right - ch * 0.5, r.top + ch * 0.5),
+      onCut: [`calc(100% - ${ch * 0.5}px)`, `${ch * 0.5}px`],
+      /* The centre, which must hit whatever happens at the corners — a card
+         the probe cannot reach at all is a broken probe, not a square card. */
+      mid: ["50%", "50%"],
     };
+
+    const points = {};
+    for (const [k, [lx, ly]] of Object.entries(local)) {
+      const m = document.createElement("i");
+      m.style.cssText = `position:absolute;left:${lx};top:${ly};width:0;height:0;pointer-events:none`;
+      face.appendChild(m);
+      const b = m.getBoundingClientRect();
+      m.remove();
+      points[k] = [Math.round(b.left), Math.round(b.top)];
+    }
+    /* Settle the subtree the markers were appended to before hit-testing it. */
+    void face.getBoundingClientRect();
+
+    const hits = {};
+    const out = { ch: Math.round(ch * 10) / 10 };
+    /* ⚠ **`elementFromPoint` AND `elementsFromPoint()[0]` DISAGREE INSIDE A 3D
+       RENDERING CONTEXT, AND THE SINGULAR ONE IS WRONG HERE.** Measured at
+       1920×1247 on the same six points: the plural form returns
+       `span.mu-cover__field` / `a.mu-card`, the singular form returns
+       `div.mu__rig` / `div.mu__rack` — the shelf's `preserve-3d` ANCESTORS, at
+       a point the card demonstrably paints. Every corner then reads "cut" and
+       a card with one lawful notch is reported as having three unlawful ones,
+       with no pixel on screen to say so. ADR-098 U5 chose a hit test over a
+       regex because a computed `clip-path` measures its own serialisation;
+       this is the next layer of the same lesson — a hit test is only a hit
+       test if it walks the stack the browser actually painted.
+
+       ⚠ AND THE QUESTION IS ASKED OF THE FACE, NOT THE CARD. The clip lives on
+       `.mu-card__front` since the pivot had to give up every grouping
+       property; the PIVOT still occupies its full unclipped box, so
+       `card.contains(el)` is true inside the chamfer and the notch reads as
+       absent. */
+    for (const [k, [x, y]] of Object.entries(points)) {
+      const el = document.elementsFromPoint(x, y)[0] ?? null;
+      hits[k] = el
+        ? `${el.tagName.toLowerCase()}.${(el.className || "").toString().split(" ")[0]}`
+        : "null";
+      out[k] = el ? face.contains(el) || el === face : false;
+    }
+    out.hits = hits;
+    return out;
   });
 
 /* ── The walk ───────────────────────────────────────────────────────── */
@@ -291,19 +367,20 @@ line(`          position ${first.coverPosition} z ${first.coverZ} · vh ${first.
 line(`head      ${JSON.stringify(first.head)} · display ${first.titlePx}px`);
 line(`cards     ${first.cards.length} · type ${first.cards[0]?.titlePx}/${first.cards[0]?.ledePx}/${first.cards[0]?.kickerPx}px`);
 line(`notch     ch ${notch?.ch} · TL ${notch?.tl} TR ${notch?.tr} BL ${notch?.bl} BR ${notch?.br} · onCut ${notch?.onCut}`);
+line(`notch     mid ${notch?.mid} · hits ${JSON.stringify(notch?.hits)}`);
 line("");
-line("  p      landed  ready  front  entry   fan     ambient/exit  ftReveal  #contact            revealed");
+line("  p      landed  ready  open   entry   drift   ambient/exit  ftReveal  #contact            revealed");
 for (const s of walk) {
   const pad = (v, n) => String(v).padEnd(n);
   line(
     `  ${pad(s.p, 6)} ${pad(s.landed, 7)} ${pad(s.muReady, 6)} ${pad(s.front, 6)} ` +
-      `${pad(s.clock.entry, 7)} ${pad(s.clock.fan, 7)} ${pad(`${s.ambient}/${s.exit}`, 13)} ` +
+      `${pad(s.clock.entry, 7)} ${pad(s.clock.drift, 7)} ${pad(`${s.ambient}/${s.exit}`, 13)} ` +
       `${pad(s.ftReveal, 9)} ${pad(`${s.contactPosition} z${s.contactZ} y${s.contactBox?.y}`, 19)} ${s.revealed}`
   );
 }
 
 /* Poses and ink, at the stop where the rack is fully open. */
-const open = walk.find((s) => Number(s.clock?.fan) > 0.98) ?? walk[3];
+const open = walk.find((s) => Number(s.clock?.entry) > 0.98) ?? walk[3];
 line(`\n── poses at p ${open.p} (front ${open.front}) ──`);
 for (const c of open.cards) {
   line(
@@ -335,15 +412,33 @@ if (f) {
 }
 line(`\nfront ink  ${clashes.length === 0 ? "clear of every card above it" : clashes.join(" · ")}`);
 
+/* The spine's width, mirrored from `shelfMath.ts`'s `SHELF_SPINE_PX`, which
+   `tests/lib/musings-shelf.test.ts` pins against the sheet. */
+const SPINE_PX = 46;
+
 /* ── The gates ──────────────────────────────────────────────────────── */
 const fails = [];
+/* ⚠ THE CORRIDOR IS ALIVE THROUGH THE WHOLE BEAT, BY THE OWNER'S RULING
+   (ADR-119 U1), SO THIS GATE ASKS THE OPPOSITE QUESTION IT USED TO. The rack
+   shipped as an opaque station and the first version of this gate asserted the
+   corridor was DEAD inside it; the owner read that live and it is the complaint
+   that deleted `#practice` (ADR-105) — an opaque station in normal flow can
+   only arrive by TRAVELLING over a pinned stage that does not move, which is
+   what he named as parallax. On the stage rung the cards paint over the living
+   corridor and the KILL is the band at the foot. The cover contract (ADR-030
+   §6 — its own opaque ground AND a painted surface) is unchanged; it is asked
+   of the band. */
 const killStop = walk.find((s) => typeof s.p === "number" && s.p >= 0.3);
 if (killStop) {
-  if (killStop.ambient || killStop.exit)
-    fails.push(`the corridor is still live inside the rack (ambient ${killStop.ambient}, exit ${killStop.exit})`);
+  if (killStop.stageMode && !(killStop.ambient && killStop.exit))
+    fails.push(`the corridor died inside the shelf (ambient ${killStop.ambient}, exit ${killStop.exit})`);
+  if (!killStop.stageMode && (killStop.ambient || killStop.exit))
+    fails.push(`the corridor outlived an opaque station (ambient ${killStop.ambient}, exit ${killStop.exit})`);
   if (!/^rgba?\([^)]*, 1\)$|^rgb\(/.test(killStop.coverGround ?? ""))
     fails.push(`the cover's ground is not opaque: ${killStop.coverGround}`);
   if ((killStop.coverImage ?? "none") === "none") fails.push("the cover paints no surface");
+  if (killStop.stageMode && (killStop.coverBox?.h ?? 0) < killStop.vh - 1)
+    fails.push(`the band is ${killStop.coverBox?.h}px against a ${killStop.vh}px frame`);
 }
 const phone = W <= 960;
 for (const s of walk) {
@@ -358,8 +453,32 @@ if (!phone) {
   if (seen.size < 2) fails.push(`the detent never advanced (front stayed ${[...seen]})`);
   if (open.cards.some((c) => !c.assigned)) fails.push("a card was never posed by the writer");
   if (clashes.length) fails.push(`front ink under a card above it: ${clashes.join(", ")}`);
+  /* ⚠ THE SPINE IS THE ONE THING A FLATTENED PIVOT COLLAPSES, and every
+     other reading survives it: the transform is assigned, the element is
+     measurable, the track steps correctly, and the closed slab renders as a
+     sliver of foreshortened FACE that looks like a spine in a number. So it
+     is asked of the spine's own box, against the width the track laid out. */
+  for (const c of open.cards) {
+    if (c.front) {
+      if (c.turn !== "0") fails.push(`the open slab reads turn ${c.turn}`);
+      continue;
+    }
+    if (c.turn !== "90") fails.push(`a closed slab reads turn ${c.turn}, not 90`);
+    const w = c.spine?.w ?? 0;
+    if (w < SPINE_PX - 4) fails.push(`slab ${c.i}'s spine is ${w}px, not ~${SPINE_PX}`);
+    if (!c.spineInk) fails.push(`slab ${c.i}'s spine letters nothing`);
+  }
+  /* ⚠ THE BED ARMS ON THE BAND'S TOP, NOT THE RUNWAY'S (ADR-119 U1). On the
+     stage rung the shelf's whole runway is transparent, so an armed bed there
+     would put the held footer under a live canvas for three viewports. The
+     edge is the band's own top, which is the last viewport of the station. */
   const ends = walk.filter((s) => typeof s.p === "number" && s.p >= 0.9);
-  if (ends.some((s) => !s.ftReveal)) fails.push("the footer's bed was not armed inside the rack");
+  const armed = walk.filter((s) => s.ftReveal);
+  if (!armed.length) fails.push("the footer's bed was never armed");
+  if (!open.stageMode && ends.some((s) => !s.ftReveal))
+    fails.push("the footer's bed was not armed inside the shelf");
+  if (open.stageMode && ends.some((s) => s.ftReveal))
+    fails.push("the footer's bed armed while the shelf was still over the live corridor");
   const half = walk.find((s) => s.p === "footer-half");
   const end = walk.find((s) => s.p === "footer-end");
   if (half && end && !(end.revealed > half.revealed + 8))
@@ -368,8 +487,16 @@ if (!phone) {
     fails.push(`#contact is ${end.contactPosition}, not sticky, at the document's end`);
 }
 if (notch) {
-  if (!notch.tl || !notch.bl || !notch.br) fails.push("a corner other than the top-right is cut");
-  if (notch.tr) fails.push("the top-right corner is NOT cut");
+  /* ⚠ PINNED FROM BOTH ENDS, AND THE CENTRE FIRST. A one-sided read cannot
+     tell a notch from a card the probe never reached: under the shelf's yaw
+     the old rect-corner probe missed the shape entirely and reported three
+     unlawful notches on a card that has one. */
+  if (!notch.mid) fails.push("the probe never reached the open card at all");
+  else {
+    if (!notch.tl || !notch.bl || !notch.br) fails.push("a corner other than the top-right is cut");
+    if (notch.tr) fails.push("the top-right corner is NOT cut");
+    if (notch.onCut) fails.push("the face paints inside its own cut");
+  }
 }
 for (const c of open.cards)
   if (c.front && (c.titlePx < 16 || c.ledePx < 12 || c.kickerPx < 10))

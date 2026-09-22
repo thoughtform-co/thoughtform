@@ -55,18 +55,37 @@ export function MusingCard({
       aria-hidden={isFront ? undefined : true}
       style={{ "--mu-i": index } as CSSProperties}
     >
-      <MusingCover slug={post.slug} date={post.date} tags={post.tags} />
+      {/* The FACE. Every grouping property lives here and none on the pivot
+          above: `overflow`, `clip-path`, the writer's `opacity` and its
+          `filter` each force `transform-style: flat` on the element that
+          declares them (CSS Transforms 2 sec. 3), and a flattened pivot
+          renders a 90-degree child as a zero-width strip. The face has no 3D
+          children of its own, so it may carry all four. */}
+      <span className="mu-card__front">
+        <MusingCover slug={post.slug} date={post.date} tags={post.tags} />
 
-      <span className="mu-card__body">
-        <span className="mu-card__kicker">
-          {rackDate(post.date)}
-          <span className="mu-card__dot" aria-hidden="true">
-            ·
+        <span className="mu-card__body">
+          <span className="mu-card__kicker">
+            {rackDate(post.date)}
+            <span className="mu-card__dot" aria-hidden="true">
+              ·
+            </span>
+            {post.readingMinutes} min
           </span>
-          {post.readingMinutes} min
+          <span className="mu-card__title">{post.title}</span>
+          <span className="mu-card__lede">{post.summary}</span>
         </span>
-        <span className="mu-card__title">{post.title}</span>
-        <span className="mu-card__lede">{post.summary}</span>
+      </span>
+
+      {/* The SPINE. Pre-rotated a quarter turn about the same left edge the
+          pivot hinges on, so at the pivot's own 90 degrees the two compose to
+          the identity and this is what faces the reader — the shelf's closed
+          state, occupying exactly the width the track laid out for it.
+          `aria-hidden`, because it letters the same title the face already
+          carries and a screen reader must not hear the shelf twice. */}
+      <span className="mu-card__spine" aria-hidden="true">
+        <span className="mu-card__spine-title">{post.title}</span>
+        <span className="mu-card__spine-date">{rackDate(post.date)}</span>
       </span>
     </a>
   );
