@@ -218,9 +218,11 @@ def main() -> int:
     )
     # ADR-082 U33: `aim` draws a scene's END POSE from the picked plate, so its
     # framing is checked before a video is paid for.
-    ap.add_argument("--edit-kind", choices=("rifle", "aim", "command", "mouth"), default="rifle",
+    ap.add_argument("--edit-kind", choices=("rifle", "aim", "command", "mouth", "aim-stand"),
+                    default="rifle",
                     help="edit stage: the rifle swap (U32), the scene's aim pose (U33), "
-                         "the standing commander (U34) or its mouth closed (U34)")
+                         "the standing commander (U34), its mouth closed (U34), or the "
+                         "commander's standing aim through the optic (U35)")
     ap.add_argument("--identity", type=Path, help="still stage: the identity frame")
     # ⚠ MORE THAN ONE WARDROBE REFERENCE IS ALLOWED, and the identity still
     # goes FIRST. `expanse` needs two: a solo full-body frame for the silhouette
@@ -264,6 +266,9 @@ def main() -> int:
         elif args.edit_kind == "mouth":
             stem = f"plate-{args.era}-mouth"
             note_tail = "Change only his mouth; every other pixel of IMAGE 1 is fixed."
+        elif args.edit_kind == "aim-stand":
+            stem = f"plate-{args.era}-aimstand"
+            note_tail = "Change only the pose above the waist; his stance and his size are fixed."
         else:
             stem = f"plate-{args.era}-edit"
             note_tail = "Change only the rifle; everything else in IMAGE 1 is fixed."

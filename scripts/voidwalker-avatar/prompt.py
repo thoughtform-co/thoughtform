@@ -719,25 +719,26 @@ def plate_idle_negative(era: str) -> str:
 #:   the model's drift onto frame 0, which is invisible only over a held pose.
 #: ⚠ THE PICTURE'S TERMS, NEVER HIS. Plate F has the rifle in his LEFT hand, on
 #:   the RIGHT of the picture; "his right hand" put it in the wrong hand once.
+#: ⚠ U35 (owner, 2026-09-22): the kneeling scout-and-aim of U33 (`-v3`) is
+#:   recorded in ADR-082 U33 and git; the Expanse STANDS since U34, so every
+#:   `expanse` scene below is the COMMANDER's, in `plate-expanse-mouth_01`'s own
+#:   picture terms — the pointing arm on the RIGHT of the picture, the rifle low
+#:   in the hand on the LEFT. A kneeling text left under this key would draw a
+#:   standing man on one knee the first time anyone ran `--ending home`.
 PLATE_SCENE: dict[str, str] = {
     "expanse": (
         "LOCKED STATIC FRAME on a heavy tripod; the camera never moves. The shot BEGINS "
-        "AND ENDS ON THE FIRST FRAME'S POSE: he kneels, the hand on the LEFT of the "
-        "picture pressed to his earpiece, the rifle upright in the hand on the RIGHT of the "
-        "picture. In between, one continuous action, in real time. First he holds for half "
-        "a second. Then, still listening, he SCOUTS: his head turns slowly further to the "
-        "LEFT of the picture, holds, sweeps across to the RIGHT of the picture, and comes "
-        "back. Then the hand on the left leaves the earpiece and takes the rifle's front "
-        "grip, the rifle comes down from upright into his shoulder on the RIGHT of the "
-        "picture, and he AIMS PAST THE CAMERA: the barrel points toward the viewer and a "
-        "little to the LEFT of the picture, foreshortened across his chest, never straight "
-        "into the lens. He holds the aim, steady, for a breath. Then he lifts the rifle "
-        "back to upright in the same hand, and the other hand returns to the earpiece. For "
-        "the last second he is completely still, in the first frame's pose. The planted "
-        "knee and the forward boot never move, and he never stands. The rifle and both "
-        "elbows stay inside the picture — nothing crosses a frame edge. The background is "
-        "a FLAT UNIFORM BLUE, the same value in every corner on every frame. The lighting "
-        "does not change."
+        "AND ENDS ON THE FIRST FRAME'S POSE: he stands, pointing into the distance with the "
+        "arm on the RIGHT of the picture, the rifle low in the hand on the LEFT of the "
+        "picture. In between, one continuous action, in real time. He holds the point for a "
+        "second, steady. Then the pointing hand comes in and presses the earpiece at his "
+        "ear; he tilts his head to it and MOUTHS one short order into the boom mic — his "
+        "lips move for a moment, then close. Then the hand goes back out and he points "
+        "again, holding the first frame's pose, completely still, for the last second. His "
+        "feet stay planted exactly where they are; his body does not sway, bob or step. His "
+        "eyes stay open and alert; he blinks normally and quickly, never slowly. The rifle "
+        "and both elbows stay inside the picture. The background is a FLAT UNIFORM BLUE, the "
+        "same value in every corner on every frame. The lighting does not change."
     ),
 }
 
@@ -745,10 +746,11 @@ PLATE_SCENE_NEGATIVE: dict[str, str] = {
     "expanse": (
         "firing, a muzzle flash, recoil, smoke, shell casings, sparks; the barrel pointing "
         "straight into the lens; the rifle, the muzzle or an elbow leaving the frame; "
-        "standing up, stepping, walking; camera movement, pan, tilt, zoom, dolly, handheld "
-        "shake; a gradient, vignette, floor, horizon or shadow on the ground; blue light on "
-        "the figure; particles, light rays, flicker, exposure change; text, watermark; a "
-        "second figure; cropped boots"
+        "kneeling, crouching, stepping, walking, swaying, bobbing; slow blinking, eyes "
+        "closing, drooping eyelids, half-closed eyes, a drowsy look; camera movement, pan, "
+        "tilt, zoom, dolly, handheld shake; a gradient, vignette, floor, horizon or shadow on "
+        "the ground; blue light on the figure; particles, light rays, flicker, exposure "
+        "change; text, watermark; a second figure; cropped boots"
     ),
 }
 
@@ -762,33 +764,63 @@ PLATE_SCENE_NEGATIVE: dict[str, str] = {
 #:   video is paid for), and the scene runs from the plate TO that still
 #:   (`vid.py --scene --ending aim --last <aim still>`) and loops as a
 #:   ping-pong: both ends are the two holds, so neither turn has a velocity.
+#: ⚠ U35 (owner, 2026-09-22): "I need to use my headpiece to voice commands. I
+#:   need to look through my weapon. I need to point." The commander's scene
+#:   runs point → the order at the earpiece → the aim, and ends on a DRAWN aim
+#:   (`EDIT_AIM_STANDING`) for the reason above.
+#: ⚠ THE ORDER IS MOUTHED, NOT SPOKEN. A speaking man is what the audio filter
+#:   refused five times in U34 (a voice drawn for a real face); lips that move
+#:   for a moment under a directed near-silence are the one version of "voice
+#:   commands" with a chance of passing. `PLATE_SCENE_AIM_LISTEN` is the named
+#:   fallback when even that is refused: he listens and nods, lips closed.
+#: ⚠ AND HIS EYES ARE SAID. v4's idle lowered its lids three times for ~0.7 s,
+#:   which the owner read as "a zombie"; "one blink" had been the whole brief.
 PLATE_SCENE_AIM: dict[str, str] = {
     "expanse": (
         "LOCKED STATIC FRAME on a heavy tripod; the camera never moves. The shot BEGINS "
-        "ON THE FIRST FRAME'S POSE — he kneels, the hand on the LEFT of the picture pressed "
-        "to his earpiece, the rifle upright in the hand on the RIGHT of the picture — and "
-        "ENDS ON THE LAST FRAME'S POSE, the aim. In between, one continuous action, in real "
-        "time. First he holds for half a second, listening. Then he SCOUTS: his head turns "
-        "slowly to the LEFT of the picture, holds, sweeps across to the RIGHT of the picture, "
-        "and comes back to the centre. Then the hand at his ear leaves the earpiece and takes "
-        "the rifle's front grip as the rifle comes DOWN from upright toward the camera, into "
-        "his shoulder, and he settles into the last frame's aim and HOLDS IT, completely "
-        "still, for the last second and a half. The rifle never swings out sideways and "
-        "never leaves the picture: it comes down toward the viewer, short in the frame, as "
-        "in the last frame. The planted knee and the forward boot never move, and he never "
-        "stands. The background is a FLAT UNIFORM BLUE, the same value in every corner on "
-        "every frame. The lighting does not change."
+        "ON THE FIRST FRAME'S POSE — he stands, pointing into the distance with the arm on "
+        "the RIGHT of the picture, the rifle low in the hand on the LEFT of the picture — "
+        "and ENDS ON THE LAST FRAME'S POSE, looking through the rifle's optic. In between, "
+        "one continuous action, in real time. First he holds the point for a second, "
+        "steady. Then the pointing hand comes in and presses the earpiece at his ear; he "
+        "tilts his head to it and MOUTHS one short order into the boom mic — his lips move "
+        "for a moment, then close. Then that hand leaves the earpiece and takes the rifle's "
+        "front grip, the rifle comes up into his shoulder, and he settles into the last "
+        "frame's aim — his eye behind the optic, looking toward the RIGHT of the picture, "
+        "where he pointed — and HOLDS IT, completely still, for the last second and a half. "
+        "His feet stay planted exactly where they are for the whole shot; his body does not "
+        "sway, bob or step. His eyes stay open and alert; he blinks normally and quickly, "
+        "never slowly. The rifle never swings out sideways and never leaves the picture. "
+        "The background is a FLAT UNIFORM BLUE, the same value in every corner on every "
+        "frame. The lighting does not change."
     ),
 }
 
+#: The fallback of the scene above, word for word but the order: he LISTENS.
+PLATE_SCENE_AIM_LISTEN: dict[str, str] = {
+    era: text.replace(
+        "he tilts his head to it and MOUTHS one short order into the boom mic — his lips move "
+        "for a moment, then close.",
+        "he tilts his head to it, LISTENING, and gives one short nod — his lips stay closed.",
+    )
+    for era, text in PLATE_SCENE_AIM.items()
+}
 
-def plate_scene_prompt(era: str, prop_wording: bool = False, ending: str = "home") -> str:
+
+def plate_scene_prompt(
+    era: str, prop_wording: bool = False, ending: str = "home", listen: bool = False
+) -> str:
     """The scene clause for a plate: back HOME to the first frame (PLATE_SCENE),
-    or on to the drawn AIM (PLATE_SCENE_AIM)."""
-    table = PLATE_SCENE_AIM if ending == "aim" else PLATE_SCENE
+    or on to the drawn AIM (PLATE_SCENE_AIM, or its LISTEN fallback)."""
+    if ending == "aim":
+        table = PLATE_SCENE_AIM_LISTEN if listen else PLATE_SCENE_AIM
+    else:
+        table = PLATE_SCENE
     scene = table.get(era)
     if scene is None:
         raise SystemExit(f"no '{ending}' scene is authored for era '{era}'")
+    if listen and scene == PLATE_SCENE_AIM.get(era):
+        raise SystemExit(f"the listen fallback did not change '{era}'s scene — its order sentence moved")
     scene = f"{scene} {PLATE_SOUND}"
     return scene.replace("rifle", "costume prop carbine") if prop_wording else scene
 
@@ -929,6 +961,43 @@ no gradient, no floor, and no blue light on the figure.
 """
 
 
+#: ADR-082 U35: the commander scene's END POSE — he looks through the rifle's
+#: optic where he was pointing — drawn as a still so its framing can be checked
+#: before a video is paid for (EDIT_AIM's reason, one pose on). ⚠ In IMAGE 1's
+#: terms, which are the MIRROR of EDIT_COMMAND's ask: the pointing arm is on the
+#: RIGHT of the picture and the rifle in the hand on the LEFT. ⚠ Standing, so the
+#: feet are named as fixed: Veo interpolates from the plate to this still, and a
+#: boot that moved between them would slide.
+EDIT_AIM_STANDING = """
+IMAGE 1 is the photograph to edit.
+
+Keep exactly as IMAGE 1: the same man, the same face and beard, the cap, the
+earpiece in his ear and the boom mic, the armour, the kilt panel, the leggings,
+the socks, the boots; his STANCE — standing, both feet planted exactly where
+they are; his size and his place in the picture; the light; and the flat blue
+ground.
+
+Make ONE change, to his pose above the waist: he has brought the SAME rifle up
+and looks through its small optic, aiming where he was pointing. The hand on
+the LEFT of the picture — the one holding the rifle in IMAGE 1 — holds the
+pistol grip, the stock is in his shoulder, and the hand on the RIGHT of the
+picture — the one that was pointing — now holds the rifle's front grip. His
+cheek rests on the stock, his eye behind the optic, his gaze along the barrel.
+
+He aims toward the RIGHT of the picture and a little toward the viewer:
+THREE-QUARTER, so the rifle is foreshortened and SHORT in the picture. Its
+muzzle stays well inside the frame, and no part of the rifle reaches out past
+his own shoulders by more than a hand's width. Never aimed straight into the
+lens. His mouth is closed.
+
+The same futuristic rifle as IMAGE 1 — its shapes, its panels, its red parts —
+photoreal, a used production prop, faintly scuffed, never glossy, never
+glowing, lit by the same light. No legible text, numbers or logos. The ground
+stays one perfectly uniform blue, #0A28D2, edge to edge — no shadow, no
+gradient, and no blue light on the figure. Nothing touches a frame edge.
+"""
+
+
 #: ADR-082 U34: the smallest edit in the chain — the picked commander plate
 #: with its mouth closed, and nothing else. See EDIT_COMMAND's ⚠ for why a
 #: parted mouth is a plate a video model cannot animate in silence.
@@ -964,6 +1033,8 @@ def edit_prompt(era: str, n_design: int, kind: str = "rifle") -> str:
         return EDIT_COMMAND.strip()
     if kind == "mouth":
         return EDIT_MOUTH.strip()
+    if kind == "aim-stand":
+        return EDIT_AIM_STANDING.strip()
     if n_design:
         nums = " and ".join(f"IMAGE {i}" for i in range(2, 2 + n_design))
         clause = (

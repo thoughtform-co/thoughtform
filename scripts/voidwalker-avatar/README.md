@@ -50,7 +50,22 @@ python scripts/voidwalker-avatar/post.py ... --loop pingpong --cut <frame in the
 # ADR-082 U34: a NEW POSE is an edit of the picked plate, and a parted mouth is fixed on the plate
 python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage edit --edit-kind command --source <plate F>
 python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage edit --edit-kind mouth --source <the picked command plate>
+# ADR-082 U35: a SCENE TO A DRAWN END POSE — draw the pose first, then run the plate to it
+python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage edit --edit-kind aim-stand --source <the mouth plate>
+python scripts/voidwalker-avatar/vid.py --wave <wave> --stage plate --era expanse --scene --ending aim --last <the picked aimstand plate>
+# ...and only if the spoken beat is refused: he LISTENS at the earpiece instead (lips closed, one nod)
+python scripts/voidwalker-avatar/vid.py ... --scene --ending aim --last <aimstand> --listen
 ```
+
+⚠ **A SPOKEN BEAT IS MOUTHED, NEVER VOICED (U35).** The commander's scene has
+him press the earpiece and give an order. After U34's five audio refusals the
+order is MOUTHED under directed near-silence, on a plate whose lips are closed at
+frame zero — that passed. `--listen` swaps the order for a listening beat and
+is the recorded fallback; the stem gets `-listen` so the two takes never
+overwrite each other. ⚠ **"A ZOMBIE" IS SLOW BLINKS**: v4's lids lowered three
+times for ~0.7 s, so the scene asks for eyes open and alert with normal quick
+blinks and bans slow blinks, drooping lids and eyes closing BY NAME in the
+prompt and the negative.
 
 ⚠ **A PLATE WITH A PARTED MOUTH CANNOT BE ANIMATED IN SILENCE (U34).** Veo
 starts ON the plate and always draws a soundtrack; a man caught mid-word gets a
@@ -143,15 +158,16 @@ he has is a highlight-weighted outer BLOOM (12.5 luma off the face, 2.3 off the
 trousers), which `gold.py` reproduces.
 
 ⚠ **THE FIGURE IS SEATED.** The site seats the media bottom-centred on the
-projector disc, so a figure ending above the canvas floor hovers. `post.py`
-shifts the frame — never crops it.
+seat line (the projector disc's top until ADR-082 U35 deleted the disc; the
+seat box is still there), so a figure ending above the canvas floor hovers.
+`post.py` shifts the frame — never crops it.
 
 ## State
 
 | era          | wave                     | status                                                   |
 | ------------ | ------------------------ | -------------------------------------------------------- |
 | `genai`      | `20260918-genai-v3`      | shipped (one-step, `-v2`) — re-cut on the two-step route |
-| `expanse`    | `20260922-expanse-v6`    | the commander (U34): stands, points, `-v4`; v3 archived  |
+| `expanse`    | `20260922-expanse-v7`    | the commander performs (U35): point → order → aim, `-v5` |
 | `azeroth`    | offline `v5-blender`     | shipped `-v11` (v10 seated 33 rows, `reseat_azeroth.py`) |
 | `pokemon-go` | `20260922-pokemon-go-v1` | the trainer as a cel, on magenta (U33), `-v1`            |
 

@@ -80,6 +80,10 @@ def main() -> int:
                     help="scene: back to the first frame, or on to the drawn aim still (--last)")
     ap.add_argument("--last", default=None,
                     help="scene: the last frame, a file in the wave's plates/ (default: the plate itself)")
+    # ⚠ ADR-082 U35: the fallback when the MOUTHED order is refused on its audio —
+    # he listens at the earpiece and nods, lips closed. Named apart on disk.
+    ap.add_argument("--listen", action="store_true",
+                    help="scene (--ending aim): the listening take instead of the mouthed order")
     ap.add_argument("--model", choices=MODELS, default=MODEL,
                     help="the Veo variant (the default is the full model)")
     ap.add_argument("--dry-run", action="store_true", help="print the request, send nothing")
@@ -103,8 +107,10 @@ def main() -> int:
     if args.ending == "aim" and last == still:
         raise SystemExit("--ending aim needs --last, the drawn aim still")
 
+    if args.listen and not (args.scene and args.ending == "aim"):
+        raise SystemExit("--listen is the aim scene's fallback: pass --scene --ending aim")
     if args.scene:
-        prompt = plate_scene_prompt(args.era, args.prop_wording, args.ending)
+        prompt = plate_scene_prompt(args.era, args.prop_wording, args.ending, args.listen)
         negative = plate_scene_negative(args.era)
         if args.prop_wording:
             negative = negative.replace("rifle", "costume prop carbine")
@@ -122,7 +128,11 @@ def main() -> int:
     # A plate's clip is named for the plate: a second pick must not find the
     # first pick's clip on disk and "keep" it. A scene is named apart from an
     # idle of the same plate for the same reason.
-    stem = Path(pick).stem + (f".scene{'-aim' if args.ending == 'aim' else ''}" if args.scene else "")
+    stem = Path(pick).stem + (
+        f".scene{'-aim' if args.ending == 'aim' else ''}{'-listen' if args.listen else ''}"
+        if args.scene
+        else ""
+    )
     raw = out_dir / (f"{stem}.raw.mp4" if plate else "raw.mp4")
     if args.dry_run:
         ends = f"  (last_frame = {last.name})" if args.scene else ""
