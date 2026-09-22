@@ -43,6 +43,7 @@ import { useMusingsScroll } from "./useMusingsScroll";
 export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) {
   const runwayRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const bandRef = useRef<HTMLDivElement | null>(null);
   const cardsRef = useRef<(HTMLElement | null)[]>([]);
 
   /* A stable per-index ref callback. A fresh closure each render makes React
@@ -55,7 +56,7 @@ export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) 
     []
   );
 
-  const { front } = useMusingsScroll(runwayRef, rootRef, cardsRef, posts.length);
+  const { front } = useMusingsScroll(runwayRef, rootRef, cardsRef, posts.length, bandRef);
 
   return (
     <div className="mu" ref={rootRef} style={{ "--mu-n": posts.length } as CSSProperties}>
@@ -106,6 +107,23 @@ export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) 
           </div>
         </div>
       </div>
+
+      {/* ⚠ THE BAND IS THE STATION'S OPAQUE END, AND IT DOES TWO JOBS (ADR-119
+          U1 §4). On the stage rung the station itself is TRANSPARENT over the
+          live corridor, so something has to (a) be the corridor's kill edge —
+          an opaque surface that fills the frame, which is the only property
+          `about-voidwalker-handoff-boundaries` actually asserts — and (b) be
+          the thing that lifts off the held footer, which is what the reveal
+          means. One 100svh full-bleed box is both, and the two edges are the
+          same rect by construction rather than by two tuned numbers.
+
+          ⚠ It is `display: none` off the stage rung: at 961–1100, under PRM and
+          on the phone the STATION is opaque again and is its own cover, and a
+          second opaque viewport there would be a blank screen nobody asked for.
+
+          ⚠ Named `__band`, not `__tail`: `--mu-tail` already exists as the
+          runway's trailing slack and means something else entirely. */}
+      <div className="mu__band" ref={bandRef} aria-hidden="true" />
     </div>
   );
 }

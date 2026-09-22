@@ -95,7 +95,15 @@
      (`RACK_READ` in `rackMath.ts`), so a step of 42svh gives each card
      about 0.4 of a viewport to be read in. */
   --mu-step: 42svh;
-  --mu-tail: 55svh;
+  /* ⚠ RE-SOLVED FOR THE BAND (ADR-119 U1), NOT INHERITED. It was 55svh of
+     trailing slack that let the last card dwell before the station ended. On
+     the stage rung the station is transparent and the BAND is what follows, so
+     55svh of held, empty, transparent frame between the shelf closing and the
+     band's edge is dead scroll over a corridor the reader has finished with.
+     18svh is the dwell the last card actually needs; the band supplies the
+     rest of the ending. Off the stage rung there is no band, so the original
+     slack is restored below. */
+  --mu-tail: 18svh;
 
   /* ⚠ DECLARED, NOT INHERITED — ADR-067's STANDING TRAP, AND THE MECHANICAL
      GATE FOUND IT HERE EXACTLY AS IT FOUND IT ON THE FOOTER (ADR-105). The
@@ -130,6 +138,46 @@
   position: sticky;
   top: 0;
   height: 100svh;
+}
+
+/* ── The band: the station's opaque end ──────────────────────────────
+   ⚠ IT PAINTS THE STATION'S OWN GROUND, AND THE RECIPE IS COPIED FROM
+   `.station:not(.hero)` RATHER THAN INHERITED. On the stage rung the station
+   is transparent, so this box is the only opaque surface left — and the cover
+   contract asserts exactly two things (`alpha === 1` AND a painted
+   background-image), which is what these two declarations are.
+
+   ⚠ FULL BLEED, AND THE IDENTITY ONLY RESOLVES HERE. `calc(50% - 50vw)` is
+   `−inset` only while the containing block is the station's CONTENT box —
+   50 % of `(100vw − 2·inset)` minus 50vw. `.mu` is `width: 100%` of that box,
+   so a band inside `.mu` still resolves correctly; move it into any narrower
+   wrapper and the bleed silently becomes a margin.
+
+   ⚠ `display: none` OFF THE STAGE RUNG. At 961–1100, under reduced motion and
+   on the phone the STATION is opaque and is its own cover; a second opaque
+   viewport there is a blank screen at the end of the beat. */
+.mu__band {
+  display: none;
+}
+#musings[data-mu-mode="stage"] .mu__band {
+  display: block;
+  position: relative;
+  /* Above the sticky stage in the one frame their boxes touch, and above the
+     held footer — though the station's own stacking context already guarantees
+     the second (see `#musings.station`'s `position` note). */
+  z-index: 1;
+  height: 100svh;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background-color: var(--void);
+  background-image: url("/v7-stars.svg");
+  background-size: 1600px 900px;
+  background-position: center top;
+  background-repeat: repeat;
+}
+/* The runway keeps its original trailing dwell where no band follows it. */
+#musings:not([data-mu-mode="stage"]) .mu {
+  --mu-tail: 55svh;
 }
 
 /* ⚠ THREE CONTENT-HEIGHT ROWS, CENTRED AS ONE GROUP — NEVER A `1fr` MIDDLE.

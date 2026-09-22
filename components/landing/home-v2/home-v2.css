@@ -470,11 +470,43 @@ html[data-corridor-exit="true"] #voidwalker {
    every path where a transparent stage does not engage (flag off, mobile,
    reduced-motion, corridor fallback). Mode-gated transparency lives beside
    each presentation, so the fallback and capable contracts cannot mix. */
-html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"] ~ #musings,
-html[data-corridor-exit="true"] #voidwalker[data-vw-mode="travel"] ~ #musings {
+/* ⚠ ADR-119 U1 — THE RACK IS A TRANSPARENT STAGE NOW, AND THE PROMOTION STAYS.
+   The sibling form above became `#musings[data-mu-mode="stage"]`: one stamp,
+   written by `useMusingsScroll` under the same four-term gate (≥1101, motion
+   allowed, and `#voidwalker` in one of its two transparent modes — read off the
+   DOM, never a second flag), so the writer, this rule and
+   `useCorridorExitScroll`'s cover query cannot disagree about which station is
+   which.
+
+   ⚠ **TRANSPARENCY AND PROMOTION ARE ORTHOGONAL, AND DROPPING THE PROMOTION IS
+   THE DEFECT THIS COMMENT EXISTS TO PREVENT.** Inside `.stations` the docked
+   canvas composites at its HOST's `z-index: 3` — `position: fixed` changes a
+   box's containing block, never its paint order, and `.home-corridor-host` is
+   `isolation: isolate`, so the canvas cannot escape it. `#musings.station`
+   carries `position: relative` with `.station:not(.hero)`'s inherited
+   `z-index: 2`, i.e. BELOW that. An un-promoted transparent stage therefore
+   paints its masthead and its cards BEHIND the corridor — invisible, with
+   every geometry gate green, because nothing measures paint order. That is why
+   `#services`, `#about` and `#voidwalker` are all z 6 here WHILE transparent:
+   the ground is given up, the layer is not.
+
+   ⚠ The `> *` companion is the same reason one level down: the station opens a
+   stacking context at 6, and its children need an order inside it that keeps
+   the stage over the band the reader has not reached yet.
+
+   ⚠ THE STATION'S OPAQUE END IS `.mu__band`, not the station. It is what the
+   corridor's kill edge and the footer's reveal both key on; see
+   `musings.css` §The band and `.claude/rules/musings.md`. */
+html[data-corridor-exit="true"] #musings[data-mu-mode="stage"].station {
   position: relative;
   z-index: 6;
   content-visibility: visible;
+  background-color: transparent;
+  background-image: none;
+}
+html[data-corridor-exit="true"] #musings[data-mu-mode="stage"].station > * {
+  position: relative;
+  z-index: 7;
 }
 
 /* Services section length — taller than a single viewport so the

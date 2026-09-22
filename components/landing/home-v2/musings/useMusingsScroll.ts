@@ -44,6 +44,28 @@ import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
  */
 export const MUSINGS_RACK_MEDIA = "(min-width: 961px) and (prefers-reduced-motion: no-preference)";
 
+/**
+ * The rung the station becomes a TRANSPARENT STAGE on (ADR-119 U1).
+ *
+ * ⚠ **THERE ARE THREE RUNGS HERE, NOT TWO, AND CONFLATING THEM IS THE DEFECT
+ * THIS CONSTANT EXISTS TO PREVENT.** The rack draws from 961px
+ * (`MUSINGS_RACK_MEDIA`); the era stage is only a hologram from **1101px**, and
+ * this station may only go transparent where there is a live corridor behind it
+ * to be transparent ONTO. So 961–1100 is a real rung with a 3D rack and an
+ * OPAQUE station, and it must stay byte-identical to what shipped in ADR-119 —
+ * every new behaviour (the transparency, the promotion, the band as the cover,
+ * the band as the footer's reveal edge) hangs on the stamp this gate writes.
+ *
+ * ⚠ **THE ERA'S MODE IS READ OFF THE DOM, NEVER COPIED AS A FLAG.** A second
+ * copy of "is the corridor live and capable" is how two surfaces end up
+ * disagreeing about one fact; `#voidwalker[data-vw-mode="hologram"]` is written
+ * by `useVoidwalkerHologramScroll` under its own full capability gate, so
+ * reading it is reading the answer rather than re-deriving it. It is also the
+ * exact predicate `voidwalker.css`'s own transparency rule keys on.
+ */
+export const MUSINGS_STAGE_MEDIA =
+  "(min-width: 1101px) and (prefers-reduced-motion: no-preference)";
+
 export interface MusingsScrollState {
   /** The detented front card. React state — it changes a handful of times. */
   front: number;
@@ -55,7 +77,8 @@ export function useMusingsScroll(
   runwayRef: React.RefObject<HTMLElement | null>,
   stationRef: React.RefObject<HTMLElement | null>,
   cardsRef: React.MutableRefObject<(HTMLElement | null)[]>,
-  count: number
+  count: number,
+  bandRef: React.RefObject<HTMLElement | null>
 ): MusingsScrollState {
   const [state, setState] = useState<MusingsScrollState>({ front: 0, live: false });
   const rafRef = useRef<number | null>(null);
@@ -66,6 +89,47 @@ export function useMusingsScroll(
     if (count <= 0) return;
 
     const mq = window.matchMedia(MUSINGS_RACK_MEDIA);
+    const mqStage = window.matchMedia(MUSINGS_STAGE_MEDIA);
+
+    /**
+     * The `#musings` STATION — not `.mu`, which is what `stationRef` actually
+     * holds.
+     *
+     * ⚠ **THE WRITER HAD NO HANDLE ON THE STATION AT ALL**, and that is a trap
+     * worth naming: `stationRef` is the portal's own root (`<div class="mu">`)
+     * one level inside the authored `[data-musings-root]` slot, so every rule
+     * written against `#musings[data-mu-mode]` would have matched NOTHING —
+     * silently, with the page simply reading as it did before. Resolved by
+     * climbing rather than by a second ref, because the portal mounts into the
+     * parsed HTML and the station is not this component's to render.
+     */
+    let sectionEl: HTMLElement | null = null;
+    const section = () => {
+      if (!sectionEl || !sectionEl.isConnected) {
+        sectionEl = stationRef.current?.closest<HTMLElement>("#musings") ?? null;
+      }
+      return sectionEl;
+    };
+
+    /**
+     * Is the station a transparent stage over a live corridor this frame?
+     *
+     * Re-read EVERY frame, never hoisted: a resize across 1101px and the era's
+     * own engage/disengage both change the answer, and `useCorridorExitScroll`
+     * re-derives its cover from this same stamp on its own cadence.
+     */
+    const stageMode = () => {
+      if (!mqStage.matches) return false;
+      /* ⚠ BOTH TRANSPARENT MODES, THE SAME PAIR `home-v2.css` AND
+         `voidwalker.css` KEY ON. `travel` is the retained time-tunnel path and
+         it shares the hologram's contract exactly: a pinned TRANSPARENT stage
+         the ambient survives. Naming only `hologram` here would make this
+         station opaque on a path where the corridor is still live behind it —
+         the two sheets and this writer have to answer one question the same
+         way (ADR-030 §6). */
+      const mode = document.getElementById("voidwalker")?.dataset.vwMode;
+      return mode === "hologram" || mode === "travel";
+    };
 
     /**
      * Put everything back the way the sheet rests it.
@@ -83,6 +147,12 @@ export function useMusingsScroll(
         station.style.removeProperty("--mu-fan");
         station.style.removeProperty("--mu-drift");
       }
+      /* ⚠ THE STAGE MODE GOES WITH IT, AND THE STATION IS OPAQUE AGAIN. The
+         transparency, the promotion and the band all key on this stamp, so a
+         parked writer must leave a station that paints its own ground — or a
+         reader on the inert rung gets a transparent box over a dead corridor,
+         which is the gateway radial bleeding through (ADR-008 rule 1). */
+      section()?.removeAttribute("data-mu-mode");
       for (const el of cardsRef.current) {
         if (!el) continue;
         el.style.removeProperty("transform");
@@ -111,6 +181,20 @@ export function useMusingsScroll(
       if (!mq.matches) {
         park();
         return;
+      }
+
+      /* The stage stamp, before anything reads it. `useCorridorExitScroll`
+         resolves its cover off this attribute on its own cadence, so it is
+         written on the way in and removed the frame the rung stops matching —
+         never left behind for another writer to find. */
+      const sec = section();
+      const stage = stageMode();
+      if (sec) {
+        if (stage) {
+          if (sec.dataset.muMode !== "stage") sec.dataset.muMode = "stage";
+        } else if (sec.dataset.muMode) {
+          sec.removeAttribute("data-mu-mode");
+        }
       }
 
       const vh = layoutViewportHeight();
@@ -154,7 +238,16 @@ export function useMusingsScroll(
        * fills the screen and the snap is invisible behind it; scrolling back
        * above the station clears it in the same frame.
        */
-      if (rect.top <= 0) document.documentElement.setAttribute("data-ft-reveal", "");
+      /* ⚠ ON THE STAGE RUNG THE EDGE IS THE BAND'S, NOT THE RUNWAY'S. The
+         paragraph above is the whole argument, and it turns on the station
+         being OPAQUE — which on this rung it is not. What fills the screen and
+         hides the snap is the band; it is also the frame in which the corridor
+         has just died, so the bed arms exactly where the canvas stops painting
+         rather than three viewports earlier over a live one. Off the stage rung
+         the station is opaque again and the runway's own top is still right. */
+      const revealTop =
+        stage && bandRef.current ? bandRef.current.getBoundingClientRect().top : rect.top;
+      if (revealTop <= 0) document.documentElement.setAttribute("data-ft-reveal", "");
       else document.documentElement.removeAttribute("data-ft-reveal");
 
       if (front !== frontRef.current) {
@@ -179,17 +272,24 @@ export function useMusingsScroll(
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     mq.addEventListener("change", onMq);
+    mqStage.addEventListener("change", onMq);
     tick();
 
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       mq.removeEventListener("change", onMq);
+      mqStage.removeEventListener("change", onMq);
       if (rafRef.current != null) window.cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
       /* ⚠ The stamp lives on `<html>`, outside this station's subtree, so
          unmounting without clearing it leaves the footer sticky forever. */
       document.documentElement.removeAttribute("data-ft-reveal");
+      /* ⚠ And the mode lives on the STATION, which this component does not
+         render — the portal's root unmounts and the authored section stays.
+         Left behind, it would hold a transparent, promoted station over a dead
+         corridor for the rest of the document. */
+      section()?.removeAttribute("data-mu-mode");
     };
   }, [runwayRef, stationRef, cardsRef, count]);
 

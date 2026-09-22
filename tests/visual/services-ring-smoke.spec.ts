@@ -2616,19 +2616,24 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // reported `null` for the rect it asserts on. Both reads name one station
     // — and `home-v2.css`'s cover rule and `useCorridorExitScroll`'s query
     // are the other two that move with them (ADR-030 §6).
+    // ⚠ THE WAYPOINT IS THE BAND'S OWN TOP, NOT 0.3vh PAST IT. The band is
+    // EXACTLY `100svh` — one pixel inside it and it covers `vh − 1`, with the
+    // held footer showing in the gap, which is the reveal working rather than
+    // a cover failing. Every earlier cover was three viewports tall and
+    // absorbed the walk; this one is the edge itself, so the assertion is made
+    // where the envelope actually reaches zero. Same correction as the
+    // handoff spec's cover case, in the same commit.
     const underNext = await page.evaluate(() => {
-      const next = document.getElementById("musings");
+      const next = document.querySelector<HTMLElement>("#musings .mu__band");
       if (!next) return null;
-      return Math.round(
-        window.scrollY + next.getBoundingClientRect().top + window.innerHeight * 0.3
-      );
+      return Math.ceil(window.scrollY + next.getBoundingClientRect().top);
     });
     expect(underNext).not.toBeNull();
     await scrollAndSettle(underNext as number);
     // Wait for the corridor's rAF writer to see the settled scroll.
     await page.waitForTimeout(600);
     const after = await page.evaluate(() => {
-      const pr = document.getElementById("musings");
+      const pr = document.querySelector<HTMLElement>("#musings .mu__band");
       return {
         ambient: document.documentElement.hasAttribute("data-services-ambient"),
         exit: document.documentElement.hasAttribute("data-corridor-exit"),
@@ -2649,8 +2654,10 @@ test.describe("Services card ring smoke (ADR-029)", () => {
           : null,
       };
     });
-    expect(after.prTopVh, "the walk landed above #musings").toBeLessThanOrEqual(0);
-    expect(after.coversVh, "#musings does not fill the viewport at the kill edge").toBe(true);
+    expect(after.prTopVh, "the walk landed above the musings band").toBeLessThanOrEqual(0);
+    expect(after.coversVh, "the musings band does not fill the viewport at the kill edge").toBe(
+      true
+    );
     expect(after.ambient).toBe(false);
     expect(after.exit).toBe(false);
   });
