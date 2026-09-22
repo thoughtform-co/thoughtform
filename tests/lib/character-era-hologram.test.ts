@@ -104,8 +104,8 @@ describe("ADR-082 · normalized character hologram assets", () => {
     // a different man. v3 (U33) and v4 (U34) keep that: Safari takes the floor
     // until a Mac cuts one.
     expect(expanse?.hologram?.videoAlphaHevcPath).toBeUndefined();
-    expect(expanse?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-expanse-v4.webm");
-    expect(expanse?.hologram?.thumbPath).toBe("/images/voidwalker/holo-thumb-expanse-v4.webp");
+    expect(expanse?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-expanse-v5.webm");
+    expect(expanse?.hologram?.thumbPath).toBe("/images/voidwalker/holo-thumb-expanse-v5.webp");
     expect(expanse?.hologram?.footY).toBeCloseTo(0.9953, 3);
     // ⚠ v4 STANDS (U34, the commander), so no stature is authored: the span is
     // the delivery's own head-to-foot, like every other standing era. A stature

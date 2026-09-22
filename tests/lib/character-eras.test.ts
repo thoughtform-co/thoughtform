@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import {
   CHARACTER_ERAS,
   CHARACTER_ERA_COUNT,
+  CHARACTER_ERA_FACT_KEYS,
   CHARACTER_ERA_MEDIA_MAX,
   eraMedia,
   eraMediaDuration,
@@ -131,27 +132,35 @@ describe("ADR-082 · character era registry", () => {
 });
 
 describe("ADR-082 U2 · the era panels' content", () => {
-  it("every era carries 3-5 facts, and each row fits its column", () => {
+  it("every era carries the SAME four facts, in order (ADR-082 U35)", () => {
+    // Owner: "needs to be uniform … a clear system that works for every
+    // [era]". One vocabulary, so a reader compares the same questions across
+    // five eras — the per-era keys this replaces could not be compared at all.
+    expect(CHARACTER_ERA_FACT_KEYS).toEqual(["Base", "Move", "Reach", "Result"]);
     for (const era of CHARACTER_ERAS) {
-      const facts = era.facts ?? [];
-      expect(facts.length, `${era.id} fact count`).toBeGreaterThanOrEqual(3);
-      expect(facts.length, `${era.id} fact count`).toBeLessThanOrEqual(5);
-      for (const f of facts) {
-        // The label column is mono caps at a fixed measure; the value
-        // takes the rest of a ~34ch panel and must not wrap to three.
-        expect(f.k.length, `${era.id} fact key "${f.k}"`).toBeLessThanOrEqual(14);
+      expect(
+        (era.facts ?? []).map((f) => f.k),
+        `${era.id} facts`
+      ).toEqual([...CHARACTER_ERA_FACT_KEYS]);
+      for (const f of era.facts ?? []) {
+        // A value sits under its label in a half-panel cell; it may wrap to
+        // two lines there, and 44 is still the measured ceiling.
         expect(f.v.length, `${era.id} fact value "${f.v}"`).toBeLessThanOrEqual(44);
-        expect(f.k.trim(), `${era.id} fact key blank`).not.toBe("");
         expect(f.v.trim(), `${era.id} fact value blank`).not.toBe("");
       }
     }
   });
 
-  it("fact labels are unique within an era (no row says the same thing twice)", () => {
-    for (const era of CHARACTER_ERAS) {
-      const keys = (era.facts ?? []).map((f) => f.k.toLowerCase());
-      expect(new Set(keys).size, `${era.id} duplicate fact key`).toBe(keys.length);
-    }
+  it("the facts quote the record's own figures, never a rounding of them", () => {
+    // The two counts the record carries, verbatim, and the Loop canon.
+    const fact = (id: string, k: string) =>
+      findCharacterEra(id)?.facts?.find((f) => f.k === k)?.v ?? "";
+    expect(fact("expanse", "Reach")).toBe("Past 100,000 signatures");
+    expect(fact("pokemon-go", "Reach")).toMatch(/^Sixteen thousand/);
+    // "22 teams briefed" is the BRIEFED set; the 14 using the layer is a
+    // different set, and the wording is all that keeps them apart.
+    expect(fact("loop", "Reach")).toBe("22 teams briefed");
+    expect(fact("loop", "Result")).toBe("47+ Skills encoded");
   });
 
   it("runs the RECORD's envelope over every lettered string", () => {

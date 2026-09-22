@@ -58,7 +58,18 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
 - ⚠ **THE LEDE IS THE PARAGRAPH'S OWN FIRST LINE (U32)** — `.vwd__motto` reads the
   prose's `--band-copy` and full ink, `--weight-lit` the only difference; never a
   size clamp of its own, never gold.
-- ⚠ **ON RECORD IS TAGGED ROWS** — U29's bounded object is superseded.
+- ⚠ **U35: ON RECORD IS CARDS** — a four-sided outline and no ground, a thumbnail
+  well holding one mark per coverage KIND (`VW_OUTLET_KIND`), the headline, then the
+  medium (`OUTLET · YEAR`); U31's tagged rows and U29's bounded object are both
+  superseded. The well is PADDED, never centred (a centred 21px mark goes soft).
+- ⚠ **U35: FACTS IS ONE 2×2 GRID ON ONE SCHEMA** — `CHARACTER_ERA_FACT_KEYS`
+  (Base · Move · Reach · Result) on every era, in order, each cell a dawn mark
+  (`lib/voidwalker/eraMarks.ts`) and the key over the value.
+- ⚠ **U35: THE POP-UP IS THE CARD AT DIALOG SCALE** — `MediaLightbox`'s additive
+  `frame={{ tab }}`, one 16:9 box for every kind, the material on `::before` so
+  CLOSE is not clipped; every still is `unoptimized` (a stuck optimizer key left a
+  card black). The disc, ring, glow and cone are deleted; `.vwh__base` stays as an
+  unpainted seat box.
 - ⚠ **A FIGURE IS DRAWN IN COLOUR AND GRADED GOLD** (`scripts/voidwalker-avatar/gold.py`,
   the Architect's measured curve, ramp and bloom, and the exposure gate).
 - ⚠ **U33: A SCENE RUNS FROM THE PLATE TO A DRAWN END POSE** (Veo morphs into a
@@ -69,9 +80,11 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
 - ⚠ **U34: `media-src` NAMES ONE REMOTE HOST** (the site's own Supabase project,
   owner's ruling — never the glob); a `video` may name a public `.mp4` in the
   `era-media` bucket, the registry's copy of the origin asserted equal to the CSP's.
-  The Expanse STANDS (`-v4`, the commander) — no era authors `stature` now. ⚠ A plate
+  The Expanse STANDS (the commander) — no era authors `stature` now. ⚠ A plate
   with a parted mouth gets a voice from Veo and an audio refusal: fix the PLATE
-  (`--edit-kind mouth`), never the sentence.
+  (`--edit-kind mouth`), never the sentence. Since U35 (`-v5`) he performs a SCENE —
+  point, a MOUTHED order at the earpiece, then through the optic to a drawn end pose
+  (`--edit-kind aim-stand`); `vid.py --listen` is the fallback.
 
 ## Contracts
 

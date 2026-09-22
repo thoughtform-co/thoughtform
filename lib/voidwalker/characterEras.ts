@@ -363,20 +363,38 @@ export function holoFigureHeadShare(
 }
 
 /**
- * One row of the era's FACTS panel — a mono label and its value, read
- * as a dotted-leader pair (the `.arc-card-item__meta-row` grammar).
+ * The FOUR labels every era's FACTS panel carries, in this order (ADR-082 U35,
+ * owner 2026-09-22: "really keep it factual and needs to be uniform. Command
+ * posts, that's a bit vague, so let's really come up with a clear system that
+ * works for every [era]"). Where it happened · what he did · how far it went ·
+ * what came of it — the owner chose the set and its values.
+ *
+ * ⚠ ONE VOCABULARY, SO EVERY ERA READS THE SAME QUESTIONS. The keys used to be
+ * per era ("Petition", "Command post", "Field site" …), so no two panels could
+ * be compared and one of them ("Command post: A Discord") said almost nothing.
+ * ⚠ REACH STATES SCOPE IN WORDS WHERE THE RECORD HAS NO COUNT — only 2018 and
+ * 2016 carry a figure in `voidwalkerData.ts`, and a number here that is not in
+ * the record is a claim with no source.
+ */
+export const CHARACTER_ERA_FACT_KEYS = ["Base", "Move", "Reach", "Result"] as const;
+export type CharacterEraFactKey = (typeof CHARACTER_ERA_FACT_KEYS)[number];
+
+/**
+ * One cell of the era's FACTS grid (ADR-082 U35: a mark, the label, the value
+ * under it — Starfield's stat grid, where U23 drew label-left/value-right rows).
  *
  * ⚠ THE VALUES ARE THE RECORD'S OWN PHRASINGS, NOT NEW CLAIMS. Where a
- * figure appears it is quoted from `voidwalkerData.ts` verbatim ("about
- * a thousand", "Sixteen thousand", "Past 100,000 signatures"), because
- * that record is at LOCK and its guard bans the rounded forms (`1,000`,
- * `16,000`, `\d+k`). A fact that wants a NEW number is a record edit
- * first, in `voidwalkerData.ts`, with its own pin.
+ * figure appears it is quoted from `voidwalkerData.ts` verbatim ("Sixteen
+ * thousand", "Past 100,000 signatures"), because that record is at LOCK and
+ * its guard bans the rounded forms (`1,000`, `16,000`, `\d+k`). The two Loop
+ * figures ("22 teams briefed", "47+ Skills") are the casefile's published
+ * canon, where "22 briefed" stays apart from the 14 teams USING the layer. A
+ * fact that wants a NEW number is a record edit first, with its own pin.
  */
 export interface CharacterEraFact {
-  /** ≤14 chars — the row's label, mono caps, dim, left. */
-  k: string;
-  /** ≤44 chars — the value, bright, right. One line at the panel's measure. */
+  /** One of the four labels, in `CHARACTER_ERA_FACT_KEYS` order. */
+  k: CharacterEraFactKey;
+  /** ≤44 chars — the value, under its label; it may wrap, never clamps. */
   v: string;
 }
 
@@ -640,9 +658,10 @@ export interface CharacterEra {
    */
   short: string;
   /**
-   * The FACTS panel's rows — 3-5 of them, the left column's lead.
-   * Optional in the type so an era can ship without one; every era
-   * carries facts today and the guard pins the count where present.
+   * The FACTS grid's four cells (ADR-082 U35): exactly `CHARACTER_ERA_FACT_KEYS`,
+   * in that order, on every era — the upper-right panel. Optional in the type
+   * so an era can ship without one; every era carries all four today and the
+   * guard pins the keys and their order where present.
    */
   facts?: readonly CharacterEraFact[];
   /**
@@ -695,10 +714,10 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     stillPath: "/images/services/vince.jpg",
     short: "Architect",
     facts: [
-      { k: "Seat", v: "Loop Earplugs" },
-      { k: "Owns", v: "The map between work and intelligence" },
-      { k: "Decides", v: "Which setup runs which workflow" },
-      { k: "Answers for", v: "What it inherits, and the outcome" },
+      { k: "Base", v: "Loop Earplugs" },
+      { k: "Move", v: "Maps which setup runs which workflow" },
+      { k: "Reach", v: "22 teams briefed" },
+      { k: "Result", v: "47+ Skills encoded" },
     ],
     /* ADR-082 U33 (owner, 2026-09-22): the era's first pile — a keynote and a
        podcast. ⚠ THE TITLES ARE THE SOURCES' OWN WORDS WITH HIS NAME TAKEN OFF:
@@ -768,10 +787,10 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     },
     short: "Latent Land",
     facts: [
-      { k: "Founded", v: "Starhaven" },
-      { k: "First", v: "Hybrid AI-video production in Belgium" },
-      { k: "Campaign", v: "Under Armour, with Anthony Joshua" },
-      { k: "Charter", v: "UBA/ACC AI Charter, co-drafted" },
+      { k: "Base", v: "Starhaven" },
+      { k: "Move", v: "Belgium's first hybrid AI-video production" },
+      { k: "Reach", v: "Under Armour, with Anthony Joshua" },
+      { k: "Result", v: "UBA/ACC AI Charter, co-drafted" },
     ],
     // The film the era is named for. Its id lives as a source comment on
     // the `genai` beat; the record has no second `film` field to put it in.
@@ -909,10 +928,10 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     },
     short: "Azeroth",
     facts: [
-      { k: "Field site", v: "Azeroth" },
-      { k: "Course", v: "Online Communities" },
-      { k: "Also ran", v: "Social Media Storytelling" },
-      { k: "The exit", v: "Built into the calendar" },
+      { k: "Base", v: "Thomas More" },
+      { k: "Move", v: "Taught inside Azeroth" },
+      { k: "Reach", v: "Two courses" },
+      { k: "Result", v: "Built into the calendar" },
     ],
     /* ADR-082 U34: the class itself, on his own channel. ⚠ The source title is
        64 characters against the card's 60 — "my classes" comes off, the rest is
@@ -976,23 +995,32 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
        as a ping-pong cut at f168, before the take's arm drops.
        ⚠ STANDING, SO NO `stature`: `headY` is the cap's top, the ink's highest
        point over the loop (the pointing hand sits below it). No era kneels now;
-       the kneeling law and its code stay for the next one that does. */
+       the kneeling law and its code stay for the next one that does.
+       ⚠ `-v5` PERFORMS (ADR-082 U35, owner: v4 read as "floating … like a
+       zombie, like my eyes are opening and closing … I need to use my
+       headpiece to voice commands. I need to look through my weapon. I need
+       to point"). A SCENE from the same plate to a DRAWN aim through the optic:
+       he holds the point, presses the earpiece and gives the order (his lips
+       move under a directed near-silence, which the audio filter passed where
+       U34's parted-mouth plate had been refused five times), raises the rifle
+       and holds the aim — a ping-pong cut at f168, inside the hold, before
+       Veo's landing morph. His boots do not move a pixel across the take. */
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-expanse-v4.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v4.webm",
-      posterPath: "/images/voidwalker/holo-still-expanse-v4.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v4.webp",
-      thumbPath: "/images/voidwalker/holo-thumb-expanse-v4.webp",
+      videoPath: "/videos/voidwalker/holo-idle-expanse-v5.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v5.webm",
+      posterPath: "/images/voidwalker/holo-still-expanse-v5.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v5.webp",
+      thumbPath: "/images/voidwalker/holo-thumb-expanse-v5.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.1047,
+      headY: 0.1039,
       footY: 0.9953,
     },
     short: "The Expanse",
     facts: [
-      { k: "Petition", v: "Past 100,000 signatures" },
-      { k: "Command post", v: "A Discord" },
-      { k: "The flight", v: "LA, to put it in front of Jeff Bezos" },
-      { k: "Outcome", v: "Three more seasons" },
+      { k: "Base", v: "Reddit, then a Discord" },
+      { k: "Move", v: "Flew to LA, in front of Jeff Bezos" },
+      { k: "Reach", v: "Past 100,000 signatures" },
+      { k: "Result", v: "Three more seasons" },
     ],
     // The coins post is the other 2018 crowd and has no era of its own,
     // so this seat prints its press card beside the campaign's.
@@ -1055,18 +1083,14 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
       footY: 0.9953,
     },
     short: "Pokémon GO",
-    // ⚠ FOUR ROWS, NOT FIVE — THE FACTS SEAT IS FIXED. A fifth row
-    // ("Same years · A hashtag became a party") overran `--vwh-seat-h` and
-    // printed straight through the ON RECORD heading below it: measured 34px
-    // of ink collision at 1440x900, and invisible to any per-string budget
-    // because every value was well inside its own limit. The dropped row was
-    // the Ophef beat's summary, and that beat's press card is already the
-    // second card in ON RECORD — so the seat is honest and nothing is lost.
+    // The four cells every era carries (ADR-082 U35). The record's "about a
+    // thousand" street hunt stays in the beat's own prose; the zoo hunt is the
+    // larger count, so it is the one REACH names.
     facts: [
-      { k: "Co-founded", v: "Pokémon GO Belgium" },
-      { k: "First", v: "Pokémon GO consultant, advising Unizo" },
-      { k: "Street hunt", v: "About a thousand" },
-      { k: "Zoo hunt", v: "Sixteen thousand" },
+      { k: "Base", v: "Antwerp" },
+      { k: "Move", v: "Co-founded Pokémon GO Belgium" },
+      { k: "Reach", v: "Sixteen thousand at the zoo hunt" },
+      { k: "Result", v: "Belgium's first Pokémon GO consultant" },
     ],
     // Ophef is the same year's other crowd and has no era of its own.
     pressBeatIds: ["pokemon-go", "ophef"],

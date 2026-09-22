@@ -11,12 +11,19 @@ import {
   eraMedia,
   eraMediaDuration,
   eraMediaEmbedSrc,
+  eraMediaKindLabel,
   eraPressBeatIds,
   HOLO_FIGURE_SPAN,
   resolveCharacterEraHologram,
   type CharacterEraMedia,
 } from "@/lib/voidwalker/characterEras";
-import { VOIDWALKER_BEATS, vwPlain, type VwPress } from "@/lib/voidwalker/voidwalkerData";
+import { ERA_MARKS, type EraMark, type EraMarkKey } from "@/lib/voidwalker/eraMarks";
+import {
+  VOIDWALKER_BEATS,
+  vwOutletKind,
+  vwPlain,
+  type VwPress,
+} from "@/lib/voidwalker/voidwalkerData";
 
 import { EraMediaStack } from "./EraMediaStack";
 
@@ -90,10 +97,11 @@ export interface HoloEraIdentityRefs {
 }
 
 /**
- * The figure mark: a standing figure over its projector plane, on the
- * particle-icon grammar — rect-only, a 7×7 grid at integer cells, the 14px
- * compact rung, no text node and no pictogram. The DISC carries the signal
- * because the disc is the gold object on the stage itself.
+ * The figure mark: a standing figure on its ground line, on the particle-icon
+ * grammar — rect-only, a 7×7 grid at integer cells, the 14px compact rung, no
+ * text node and no pictogram. The GROUND LINE carries the signal: it is the
+ * seat the boots land on. (It stood for the stage's gold projector disc until
+ * ADR-082 U35 deleted the disc; the seat it marked is still there.)
  */
 function FigureGlyph() {
   return (
@@ -148,6 +156,43 @@ function FigureReticle() {
 }
 
 /**
+ * One of the era stage's drawn marks (`lib/voidwalker/eraMarks.ts`, ADR-082
+ * U35): the facts grid's four and the press cards' three thumbnails. Rect-only
+ * on the 7×7 lattice, `crispEdges`, no text node — the same grammar as
+ * `FigureGlyph` and `PressArrow`. The three layers are three classes so the
+ * SHEET owns their dawn ladder (and light re-derives it through the token).
+ * ⚠ 21px = a 3px cell: the size is the sheet's, and it stays an INTEGER
+ * multiple of the lattice or the mark goes soft.
+ */
+function EraMarkSvg({ mark, className }: { mark: EraMark; className: string }) {
+  const cells = (pts: EraMark["sk"], layer: "sk" | "sig" | "dr") =>
+    pts.map(([x, y]) => (
+      <rect
+        key={`${layer}${x}-${y}`}
+        className={`vwd__mk__${layer}`}
+        x={x}
+        y={y}
+        width="1"
+        height="1"
+      />
+    ));
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 7 7"
+      width="21"
+      height="21"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {cells(mark.dr, "dr")}
+      {cells(mark.sk, "sk")}
+      {cells(mark.sig, "sig")}
+    </svg>
+  );
+}
+
+/**
  * The link-out mark: a 7×7 pixel arrow, up and to the right — on the SAME
  * grammar `FigureGlyph` uses one panel over (rect-only, integer cells,
  * `crispEdges`, no text node). It is drawn because PT Mono HAS NO U+2197: a
@@ -189,12 +234,20 @@ function PressArrow() {
 function MediaDialog({
   item,
   meta,
+  tab,
   onClose,
 }: {
   item: CharacterEraMedia;
   meta: string;
+  /** The card's own tab lettering (`Film 02`), so the dialog is that card. */
+  tab: string;
   onClose: () => void;
 }) {
+  /* ⚠ THE DIALOG IS THE CARD AT DIALOG SCALE (ADR-082 U35, owner: the pop-up
+     "needs to be uniform. It also needs to sit in a frame"). `frame` is the
+     lightbox's additive seam: the same tab, the same lip, and ONE 16:9 box for
+     a film, a video and a still alike. Every other caller passes nothing. */
+  const frame = { tab };
   switch (item.kind) {
     case "embed":
       return (
@@ -202,17 +255,27 @@ function MediaDialog({
           embed={{ src: eraMediaEmbedSrc(item), title: item.title }}
           label={item.title}
           meta={meta}
+          frame={frame}
           onClose={onClose}
         />
       );
     case "video":
-      return <MediaLightbox src={item.src} label={item.title} meta={meta} onClose={onClose} />;
+      return (
+        <MediaLightbox
+          src={item.src}
+          label={item.title}
+          meta={meta}
+          frame={frame}
+          onClose={onClose}
+        />
+      );
     case "image":
       return (
         <MediaLightbox
           image={{ src: item.src, alt: item.alt, width: item.width, height: item.height }}
           label={item.title}
           meta={meta}
+          frame={frame}
           onClose={onClose}
         />
       );
@@ -220,34 +283,47 @@ function MediaDialog({
 }
 
 /**
- * One press record, as a TAGGED ROW (ADR-082 U31, owner 2026-09-21: "I'm not a
- * fan of the on-record buttons. They feel like glorified PowerPoint frames, so
- * let's make them tighter").
+ * One press record, as a CARD (ADR-082 U35, owner 2026-09-22: "I want them to
+ * look like cards … on the left side, a thumbnail, and then we need a title and
+ * then the medium" — the Ripperdoc's OWNED/STORE rows). This REVERSES U31's
+ * tagged rows by his ruling, and it is not U29's bounded object come back:
+ * that one's well held a DOCUMENT mark that said nothing the headline did not,
+ * this one's thumbnail says what KIND of coverage it was (a newspaper, a
+ * magazine, a broadcast — `vwOutletKind`), and the outlet reads under the
+ * headline as the medium.
  *
- * U29 drew each record as a bounded object — four borders, a square well, a
- * document mark — and the read, live, was a slide's content box. A record is a
- * ROW now: the outlet in a framed TAG (the /arcs readout's framed key, at chip
- * scale), the year beside it, the link-out arrow at the row's end where there
- * is somewhere to go, the headline under, and one hairline between records.
- * Nothing encloses the row, so nothing reads as a button that might be dead.
- *
- * ⚠ THE WHOLE ROW IS STILL THE LINK — a tag the size of a word is not a target.
+ * ⚠ AN OUTLINE, NEVER A GROUND — the station's law since U29, and the >700px
+ * paint sweep would not notice a card narrower than that painting one.
+ * ⚠ THE WHOLE CARD IS STILL THE LINK where the record opens somewhere; one that
+ * does not (the Gazet van Antwerpen piece) is the same card without the arrow,
+ * a record rather than a dead button.
  */
-function PressItem({ press }: { press: VwPress }) {
+function PressCard({ press }: { press: VwPress }) {
   const year = press.date ? press.date.slice(0, 4) : null;
+  const kind: EraMarkKey = vwOutletKind(press.outlet);
   const body = (
     <>
-      <span className="vwd__press__meta">
-        <span className="vwd__press__tag">{press.outlet}</span>
-        {year ? <span className="vwd__press__year">{year}</span> : null}
-        {press.href ? <PressArrow /> : null}
+      <span className="vwd__pcard__thumb" data-vwd-press-kind={kind} aria-hidden="true">
+        <EraMarkSvg mark={ERA_MARKS[kind]} className="vwd__pcard__mark" />
       </span>
-      <span className="vwd__press__headline">{press.headline}</span>
+      <span className="vwd__pcard__text">
+        <span className="vwd__pcard__title">{press.headline}</span>
+        <span className="vwd__pcard__medium">
+          {press.outlet}
+          {year ? (
+            <>
+              <i aria-hidden="true"> · </i>
+              {year}
+            </>
+          ) : null}
+        </span>
+      </span>
+      {press.href ? <PressArrow /> : null}
     </>
   );
-  if (!press.href) return <div className="vwd__press">{body}</div>;
+  if (!press.href) return <div className="vwd__pcard">{body}</div>;
   return (
-    <a className="vwd__press" href={press.href} target="_blank" rel="noreferrer noopener">
+    <a className="vwd__pcard" href={press.href} target="_blank" rel="noreferrer noopener">
       {body}
     </a>
   );
@@ -444,10 +520,20 @@ export function HoloDatumPanels({
           <span className="vwd__head__tag">{era.short}</span>
         </p>
         <div className="vwd__body" data-cell="ur" data-vwh-region="record">
+          {/* ⚠ A GRID OF FOUR CELLS, THE SAME FOUR ON EVERY ERA (ADR-082 U35,
+              Starfield's stat grid): the mark and the label on one line, the
+              value under it. The mark rides INSIDE the `dt` — a `div` in a
+              `dl` may hold only its terms and descriptions. */}
           <dl className="vwd__facts">
             {facts.map((f) => (
-              <div className="vwd__facts__row" key={f.k}>
-                <dt className="vwd__facts__k">{f.k}</dt>
+              <div className="vwd__facts__cell" key={f.k} data-vwd-fact={f.k.toLowerCase()}>
+                <dt className="vwd__facts__k">
+                  <EraMarkSvg
+                    mark={ERA_MARKS[f.k.toLowerCase() as EraMarkKey]}
+                    className="vwd__facts__mark"
+                  />
+                  {f.k}
+                </dt>
                 <dd className="vwd__facts__v">{f.v}</dd>
               </div>
             ))}
@@ -506,7 +592,7 @@ export function HoloDatumPanels({
           {press.length > 0 ? (
             <div className="vwd__press-stack">
               {press.map((p) => (
-                <PressItem key={`${p.outlet}-${p.headline.slice(0, 24)}`} press={p} />
+                <PressCard key={`${p.outlet}-${p.headline.slice(0, 24)}`} press={p} />
               ))}
             </div>
           ) : (
@@ -544,9 +630,9 @@ export function HoloDatumPanels({
           </div>
         </div>
 
-        {/* The ground datum stood here until ADR-082 U21. The figure keeps its
-            own projector disc, which is what actually seats it; the drawn plane
-            under it was a third long horizontal line. */}
+        {/* The ground datum stood here until ADR-082 U21 — a third long
+            horizontal line. What seats the figure is its own seat box
+            (`.vwh__base`), unpainted since ADR-082 U35 deleted the disc. */}
       </div>
 
       {/* ── THE ERA GALLERY ──────────────────────────────────────────
@@ -628,7 +714,18 @@ export function HoloDatumPanels({
       </nav>
 
       {watching && frontItem ? (
-        <MediaDialog item={frontItem} meta={era.year} onClose={close} />
+        <MediaDialog
+          item={frontItem}
+          meta={era.year}
+          /* The front card's own lettering — `EraMediaStack`'s rule: the
+             index only where there is a pile. */
+          tab={
+            media.length > 1
+              ? `${eraMediaKindLabel(frontItem)} ${String(mediaFront + 1).padStart(2, "0")}`
+              : eraMediaKindLabel(frontItem)
+          }
+          onClose={close}
+        />
       ) : null}
     </section>
   );

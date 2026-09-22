@@ -96,7 +96,7 @@ composition's own entry/exit block, its responsive rungs, and
     `--band-copy` and its ink at full strength, `--weight-lit` the only
     difference. Never a clamp of its own (U29's height clamp put a 14.5px lede
     over an 18px paragraph at his window) and never gold: gold is the lit mark.
-  - **ON RECORD IS TAGGED ROWS**, superseding U29's bounded object (read live,
+  - ⚠ SUPERSEDED BY U35 (cards) — **ON RECORD IS TAGGED ROWS**, superseding U29's bounded object (read live,
     stacked boxes were a slide's content boxes): a framed tag, the year, a 7×7
     arrow ONLY where the record links out, the headline, a hairline at the foot.
   - ⚠ **A KNEELING ERA IS MEASURED BY THE MAN IT DRAWS (U32, `expanse-v2`).**
@@ -152,6 +152,37 @@ aim`, framing checked before a video is paid for; asked in words, Veo
     the PLATE (`generate.py --edit-kind mouth`), never the sentence. ⚠ And a
     pointing hand given ANY motion of its own becomes a gesture — take 1
     raised the index finger for 3.3 s.
+  - ⚠ **U35 (2026-09-22, owner): CARDS, ONE GRID, ONE FRAME, NO DISC.**
+    - **ON RECORD IS CARDS** (reversing U31's tagged rows): `.vwd__pcard`, a
+      four-sided outline and NO ground, square, the air the divider; a
+      thumbnail well holding one mark per coverage KIND (`VW_OUTLET_KIND`:
+      newspaper · magazine · broadcast), the headline, then the medium
+      (`OUTLET · YEAR`); the state lifts on anchors only. ⚠ The well is
+      PADDED (`content-box` + `--vwd-pcard-pad`), never centred — a 21px mark
+      centred in an even box lands on a half pixel.
+    - **FACTS IS ONE GRID ON ONE SCHEMA** (reversing U23's readout rows):
+      every era carries `CHARACTER_ERA_FACT_KEYS` — Base · Move · Reach ·
+      Result — in order, two cells a row, a mark and the key over the value.
+      The phone keeps two columns (measured) and RECORD takes one section gap
+      above ON RECORD's head.
+    - **THE MARKS** (`lib/voidwalker/eraMarks.ts`, zero-import) are seven 7×7
+      glyphs on the particle grammar, DAWN ONLY; a new one re-runs the
+      unlabelled contact sheet (the magazine took four cuts).
+    - **THE POP-UP IS THE CARD AT DIALOG SCALE**: `MediaLightbox`'s additive
+      `frame={{ tab }}`, one 16:9 box for every kind, sized by WIDTH against
+      the frame's height. ⚠ Its material is the card's `::before` (a clip cuts
+      a box's children, and CLOSE sits outside the silhouette); no box-shadow,
+      by name; the block is global because the dialog portals out of `.vwd`.
+    - **THE DISC, RING, GLOW AND CONE ARE DELETED; `.vwh__base` IS KEPT AS AN
+      UNPAINTED SEAT BOX** — the slot, the lift, the reticle, the phone's
+      translate and the handoff seat all read it.
+    - **EVERY STILL IS `unoptimized`** on the card and in the dialog: one stuck
+      dev-optimizer key left a card black for good. `capture-era-media` fails a
+      front still undecoded 3 s after a rotation and measures every dialog.
+    - **The Expanse performs** (`-v5`): point → the earpiece and a MOUTHED
+      order → through the optic, a SCENE to a drawn end pose (`--edit-kind
+aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
+      the fallback if a spoken beat is ever refused.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title
@@ -206,8 +237,10 @@ aim`, framing checked before a video is paid for; asked in words, Veo
   `.vwd__film__frame { max-height: none }` DELETED (190px → 96 on a short
   screen, the largest avoidable term). ⚠ The era stops are **the same
   `nav.vwd__band` node moved by CSS**, which is what keeps the tablist, the
-  roving focus, the testid and §G's actor; `isolation: isolate`, or
-  `.vwh__cone`'s `plus-lighter` lights their ink. **This reverses half of U19**
+  roving focus, the testid and §G's actor; `isolation: isolate` (it kept
+  `.vwh__cone`'s `plus-lighter` off their ink; the cone is deleted since U35
+  and the isolation stays for whatever blends under the figure next).
+  **This reverses half of U19**
   (the band on BOTH breakpoints) by owner ruling; desktop keeps its band.
   ⚠ **THEY CARRY A HALO, NOT A PANEL** — measured, their bed runs luminance
   **8 to 191** and changes with the era and every frame of the idle, so dawn at
@@ -336,7 +369,10 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   byte-identical in CI and the only proof is a device: compare `innerHeight`
   with `.home-v2-stage__canvas`'s `getBoundingClientRect().bottom`.
 - ⚠ **SUPERSEDED BY U31 (tagged rows; the well and the document mark are
-  deleted) — kept for the ink laws, which still bind.** **ON RECORD CARRIES A
+  deleted), AND U31 BY U35 (cards whose thumbnail is the coverage's KIND) —
+  kept for the ink laws, which still bind. Its "two of the six link nowhere"
+  is stale: of the seven records ONE renders unlinked (the Gazet van
+  Antwerpen piece).** **ON RECORD CARRIES A
   MARK, AND SINCE ADR-082 U29 THE ITEM AROUND IT IS A BOUNDED OBJECT (owner,
   2026-09-19: the articles "should really feel like a pill, like a sort of
   subtle button").** U26 refused the pill and the frame
@@ -597,9 +633,11 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   rather than fixed; do not read a green probe at the reference viewports as
   clearance there.
 - **Verifying (U31 adds):** `node scripts/probe-voidwalker-figure-span.mjs --vp
-1920x1247` (heads on the row line, one disc line, the ring on the figure, no
-  cut, no era UNSEATED), `node scripts/capture-era-media.mjs --vp 1280x720` and
-  `--vp 375x553` (the pile's fit on every rotation), and `python
+1920x1247` (heads on the row line, one seat line — the disc line until U35
+  deleted the disc — the ring on the figure, no cut, no era UNSEATED),
+  `node scripts/capture-era-media.mjs --vp 1280x720 --record --era <each>` and
+  `--vp 375x553` (the pile's fit on every rotation, and since U35 every front
+  still decoded and every framed dialog 16:9 inside the viewport), and `python
 scripts/voidwalker-avatar/gold.py --selftest` (the exposure gate a delivery
   must pass).
 - **Verifying:** `node scripts/probe-voidwalker-eras.mjs --vp 1280x720` is the

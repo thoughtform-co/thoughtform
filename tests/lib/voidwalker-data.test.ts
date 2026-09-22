@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   VOIDWALKER_BEATS,
   VOIDWALKER_HEAD,
+  VW_OUTLET_KIND,
   vwPlain,
   type VoidwalkerBeat,
 } from "@/lib/voidwalker/voidwalkerData";
@@ -186,6 +187,19 @@ describe("voidwalker record — envelope", () => {
       expect(OUTLETS.has(b.press.outlet), `${b.id} outlet "${b.press.outlet}"`).toBe(true);
       if (b.press.href) expect(b.press.href, `${b.id} href`).toMatch(/^https:\/\//);
       if (b.press.date) expect(b.press.date, `${b.id} date`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+
+  it("every outlet names its kind of coverage, and only three kinds exist (ADR-082 U35)", () => {
+    // The press card's thumbnail is a drawn mark per KIND; an outlet without
+    // one would render a card with the fallback's picture and nothing failing.
+    expect(Object.keys(VW_OUTLET_KIND).sort()).toEqual([...OUTLETS].sort());
+    expect(new Set(Object.values(VW_OUTLET_KIND))).toEqual(
+      new Set(["newspaper", "magazine", "broadcast"])
+    );
+    for (const b of VOIDWALKER_BEATS) {
+      if (!b.press) continue;
+      expect(VW_OUTLET_KIND, `${b.id} outlet "${b.press.outlet}"`).toHaveProperty(b.press.outlet);
     }
   });
 

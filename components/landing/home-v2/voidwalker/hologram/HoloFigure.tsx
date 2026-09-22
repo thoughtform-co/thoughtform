@@ -337,9 +337,10 @@ export function HoloFigure({
       {/* ⚠ NO SCANLINE OVERLAY. The cadence rides the media's own MASK
           (holo-lab.css) — an overlay that multiplies across the slot
           darkens the bare ground too and paints a black box around the
-          hologram. Only the projection cone is a layer, and it is
-          additive, so it has nothing to darken. */}
-      <div className="vwh__cone" aria-hidden="true" />
+          hologram.
+          ⚠ AND NO PROJECTION CONE (ADR-082 U35): its radial gold hot spot sat
+          on the projector disc, and went with it — the "circular paint at
+          the bottom" the owner asked to remove. */}
     </figure>
   );
 }

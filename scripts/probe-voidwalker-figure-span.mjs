@@ -1,6 +1,12 @@
 /**
  * probe-voidwalker-figure-span — does every era paint a figure of the SAME
- * HEIGHT, still standing on the projector disc? (ADR-082 U25.)
+ * HEIGHT, still standing on the seat line? (ADR-082 U25.)
+ *
+ * ⚠ THE SEAT LINE IS THE SLOT'S FLOOR, NOT A PAINTED DISC (ADR-082 U35). The
+ * projector disc the boots stood on was deleted (the owner read it as
+ * floating); its top was the slot's floor by construction, so the line the
+ * probe holds every era to is measured there now — the check keeps its
+ * meaning instead of quietly passing on a missing element.
  *
  * ⚠ THE BOX WAS NEVER THE DEFECT, WHICH IS WHY NOTHING CAUGHT THIS. Every era
  * is delivered on the same 720x1280 canvas and the figure column is 9:16 by
@@ -186,7 +192,6 @@ const read = () =>
                       band is paid out of this, so it may never go negative. */
     const figure = document.querySelector("#voidwalker .vwd__figure");
     const stage = document.querySelector("#voidwalker .vwd__stage");
-    const disc = document.querySelector("#voidwalker .vwh__base__disc");
     const ring = document.querySelector("#voidwalker .vwd__reticle");
     const ringBox =
       ring && getComputedStyle(ring).display !== "none" ? ring.getBoundingClientRect() : null;
@@ -197,7 +202,8 @@ const read = () =>
       liftPx: Number.parseFloat(liftRaw) || 0,
       headPx: Number((box.bottom - picture * (1 - headY)).toFixed(1)),
       stagePx: stage ? Number(stage.getBoundingClientRect().top.toFixed(1)) : null,
-      discPx: disc ? Number(disc.getBoundingClientRect().top.toFixed(1)) : null,
+      // The seat line — the slot's floor, which the deleted disc's top was.
+      seatPx: Number(slotBox.bottom.toFixed(1)),
       // The reticle's centre, against the middle of the painted figure.
       ringPx: ringBox ? Number((ringBox.top + ringBox.height / 2).toFixed(1)) : null,
       slackPx: Number((slotBox.height - (slotBox.width * 16) / 9).toFixed(1)),
@@ -302,10 +308,10 @@ for (const r of rows.filter((x) => UNSEATED.has(x.era))) {
 console.log(`title          case=${t.case}  track=${t.track}  glow=${t.glow}`);
 
 const heads = rows.map((r) => r.headPx);
-const discs = rows.map((r) => r.discPx).filter((v) => v !== null);
+const seats = rows.map((r) => r.seatPx);
 const lifted = rows.some((r) => Math.abs(r.liftPx) > 0.5);
 console.log(
-  `lift           top ${rows[0].liftPx}px  · stage top ${rows[0].stagePx}  · heads ${Math.min(...heads)} .. ${Math.max(...heads)}  · disc ${Math.min(...discs)} .. ${Math.max(...discs)}  · ring ${rows[0].ringPx} vs figure centre ${((rows[0].headPx + rows[0].footPx) / 2).toFixed(1)}  · slack ${rows[0].slackPx}px`
+  `lift           top ${rows[0].liftPx}px  · stage top ${rows[0].stagePx}  · heads ${Math.min(...heads)} .. ${Math.max(...heads)}  · seat ${Math.min(...seats)} .. ${Math.max(...seats)}  · ring ${rows[0].ringPx} vs figure centre ${((rows[0].headPx + rows[0].footPx) / 2).toFixed(1)}  · slack ${rows[0].slackPx}px`
 );
 console.log(
   `               head / feet / centre  ${((Math.min(...heads) / VH) * 100).toFixed(1)} / ${((Math.max(...fs) / VH) * 100).toFixed(1)} / ${(((Math.min(...heads) + Math.max(...fs)) / 2 / VH) * 100).toFixed(1)} % of the frame`
@@ -325,10 +331,10 @@ if (lifted) {
         `${r.era}: the cap paints ${off.toFixed(1)}px off the stage's top edge (limit ±6)`
       );
   }
-  // One disc line: the lift is era-independent, so the disc may not move.
-  if (Math.max(...discs) - Math.min(...discs) > 0.5)
+  // One seat line: the lift is era-independent, so the seat may not move.
+  if (Math.max(...seats) - Math.min(...seats) > 0.5)
     fails.push(
-      `the projector disc moves ${(Math.max(...discs) - Math.min(...discs)).toFixed(1)}px between eras`
+      `the seat line moves ${(Math.max(...seats) - Math.min(...seats)).toFixed(1)}px between eras`
     );
   // The ring is centred on the painted figure by arithmetic, not by a dial.
   for (const r of rows) {
@@ -365,4 +371,4 @@ if (fails.length) {
   console.log(`\nx ${fails.join("\n  x ")}`);
   process.exit(1);
 }
-console.log("\nok  one figure height, boots on the disc, title on the house recipe");
+console.log("\nok  one figure height, boots on the seat line, title on the house recipe");

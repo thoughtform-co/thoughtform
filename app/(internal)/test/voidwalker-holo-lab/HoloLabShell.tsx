@@ -202,14 +202,10 @@ export function HoloLabShell() {
               reduced={reduced}
             />
 
-            {/* ⚠ MOCK. On the real page the brandmark itself flattens and
-                descends into this position — the base is not a graphic we
-                draw, it is where the site's own mark ends up. */}
-            <div className="vwh__base" data-vwh-region="platform" aria-hidden="true">
-              <span className="vwh__base__disc" />
-              <span className="vwh__base__ring" />
-              <span className="vwh__base__glow" />
-            </div>
+            {/* The seat: geometry only, the disc deleted (ADR-082 U35) — the
+                same empty box as the landing, so the lab seats the figure
+                exactly where the page does. */}
+            <div className="vwh__base" data-vwh-region="platform" aria-hidden="true" />
           </div>
         </div>
       </section>

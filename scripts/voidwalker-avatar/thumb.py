@@ -55,11 +55,14 @@ MARKS: dict[str, dict] = {
     # v11 = v10 + 33 rows (0.0258): the marks move with the frames.
     "azeroth": dict(poster="holo-still-azeroth-v11.webp", out="holo-thumb-azeroth-v11.webp",
                     crown=0.2875, chin=0.383, eye=0.332, cx=0.465),
-    # v4 STANDS (ADR-082 U34, the commander): a new plate, so the marks are
+    # v4 STANDS (ADR-082 U34, the commander): a new plate, so the marks were
     # re-read off its own frame zero, never carried from v2/v3's kneel. The
     # crown is the cap's top in the head's own columns (the pointing hand is
     # lower and further out); the chin is the beard's bottom above the collar.
-    "expanse": dict(poster="holo-still-expanse-v4.webp", out="holo-thumb-expanse-v4.webp",
+    # v5 (U35, the scene) starts ON that plate at the same seat — its frame zero
+    # matches v4's head band to 0.995 alpha IoU, the crown on the same row — so
+    # the marks carry over, measured.
+    "expanse": dict(poster="holo-still-expanse-v5.webp", out="holo-thumb-expanse-v5.webp",
                     crown=0.1148, chin=0.237, eye=0.174, cx=0.445),
     # 2016's trainer (ADR-082 U33), a cel: the crown is the CAP's top, and the
     # drawn head is larger than a photographed one (0.175 of the canvas against

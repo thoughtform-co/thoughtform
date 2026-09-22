@@ -132,13 +132,9 @@ export function ErasSurface({
              900ms reveal on every capture frame. */
           initialMaterialization="scroll"
         />
-        {/* The projector base is a DOM mock in every non-landing home — on
-            the real page the site's own brandmark descends into it. */}
-        <div className="vwh__base" data-vwh-region="platform" aria-hidden="true">
-          <span className="vwh__base__disc" />
-          <span className="vwh__base__ring" />
-          <span className="vwh__base__glow" />
-        </div>
+        {/* The seat: geometry only, the disc deleted (ADR-082 U35) — the
+            landing's own empty box, so this home seats the figure the same. */}
+        <div className="vwh__base" data-vwh-region="platform" aria-hidden="true" />
       </div>
     );
 

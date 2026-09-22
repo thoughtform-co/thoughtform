@@ -4216,3 +4216,201 @@ host for anything.
   against it.
 - Safari `.mov` for `expanse-v4` needs a Mac.
 - The commander grades hotter than v3 (p75 129 against 109), inside the gate.
+
+## Update 35 — the Expanse performs, the record is cards, the facts are one grid, the pop-up sits in a frame, and the disc is gone (2026-09-22, owner)
+
+The owner, on U34 live, with four references (the Architect's stage, the
+Ripperdoc's OWNED/STORE list, Starfield's status grid, a framed lightbox): the
+Expanse _"I feel like I'm floating. I should be more steady, and I look like a
+zombie … I need to use my headpiece to voice commands. I need to look through
+my weapon. I need to point"_; ON RECORD _"look like cards … on the left side, a
+thumbnail, and then we need a title and then the medium"_; FACTS _"icons, make
+a bit of a grid … factual and needs to be uniform. Command posts, that's a bit
+vague"_; the pop-up _"needs to be uniform. It also needs to sit in a frame"_;
+the disc _"if it's a separate element, I would just remove the circle"_; and
+_"make sure that every video has a proper thumbnail, because some of them
+don't"_. Asked, he chose **a drawn mark per card** for the press thumbnails and
+**Base · Move · Reach · Result** for the facts, with the values below.
+
+### A · Every thumbnail loads
+
+⚠ **THE BLACK THUMBNAIL WAS A STUCK OPTIMIZER JOB, NOT A MISSING POSTER.** All
+eight posters were fine on disk. After a rotation the new front card's lazy
+`next/image` asked the dev optimizer for `film-leverage-ai.jpg` at `w=640` as
+WebP, and that ONE key never answered (60 s) while every other encoded in
+11–40 ms — reproduced in the browser pane, then with `curl` carrying the
+browser's own `Accept` header. A restart clears it; the durable fix is not
+depending on the optimizer at all: the card's still and the framed dialog's
+still are `unoptimized`, served straight from `/public` (the posters are
+already 960 × 540 and the registry pins them ≤120 KB). The markup test pins the
+raw `/images/voidwalker/media/…` src and no `/_next/image` srcset; the capture
+fails a front still that has not decoded 3 s after any rotation.
+
+### B · The disc is deleted, and the seat is kept
+
+The disc, its ring and its glow (`.vwh__base__disc` / `__ring` / `__glow`) and
+the gold projection cone (`.vwh__cone`) were DOM paint — U2's mock of a
+brandmark descent — never part of any video. They are deleted from
+`VoidwalkerHologram`, `HoloFigure`, both sheets and the three labs' hand-copied
+columns. ⚠ **THE `.vwh__base` BOX STAYS, UNPAINTED**, because five things read
+it: the slot's floor, the desktop lift (U31), the reticle's centre, the phone's
+column translate (U28) and the About handoff's portrait seat. Removing the
+paint and keeping the box moves none of them — the figure-span probe measures
+the seat at 960 on every era, byte-identical. The probe's disc query is
+re-pointed at the seat line and its "one disc line" check is "one seat line",
+so it still asserts something. `.vwh__ground` (the floor branch's compositing
+floor) and `.vwh__edge` (the era click's materialize line) stay.
+
+### C · FACTS is one grid of four, on one schema
+
+**This reverses U23's readout rows.** Every era carries the same four keys, in
+order — `CHARACTER_ERA_FACT_KEYS`: **Base · Move · Reach · Result** — so a
+reader can compare eras cell for cell, where U23's per-era keys could only be
+read one era at a time. Starfield's grid: two cells a row, a mark and the mono
+key on one line, the value under it, every cell ending on its own
+`--vwd-rail` hairline. `minmax(0, 1fr)` on both columns is load-bearing.
+
+| era  | Base                   | Move                                       | Reach                             | Result                                |
+| ---- | ---------------------- | ------------------------------------------ | --------------------------------- | ------------------------------------- |
+| 2026 | Loop Earplugs          | Maps which setup runs which workflow       | 22 teams briefed                  | 47+ Skills encoded                    |
+| 2023 | Starhaven              | Belgium's first hybrid AI-video production | Under Armour, with Anthony Joshua | UBA/ACC AI Charter, co-drafted        |
+| 2020 | Thomas More            | Taught inside Azeroth                      | Two courses                       | Built into the calendar               |
+| 2018 | Reddit, then a Discord | Flew to LA, in front of Jeff Bezos         | Past 100,000 signatures           | Three more seasons                    |
+| 2016 | Antwerp                | Co-founded Pokémon GO Belgium              | Sixteen thousand at the zoo hunt  | Belgium's first Pokémon GO consultant |
+
+⚠ "22 teams briefed" and "47+" are the casefile's published canon and the
+test pins them; the 22-BRIEFED wording stays distinct from the 14 teams using
+the layer. Where the record has no count (2020, 2023), the value states scope
+in words rather than inventing one. ⚠ The phone keeps TWO columns: its RECORD
+tab measured fit at every shape and era (tightest 86px at 375 × 553), so the
+recorded one-column fallback was never needed — and RECORD takes one section
+gap above ON RECORD's head, because a grid ending on a row of cell rules made
+the next head read as a fifth fact.
+
+### D · ON RECORD is cards
+
+**This reverses U31's tagged rows, by his ruling, and it is not U29 come
+back.** U29's well held a DOCUMENT mark that said nothing the headline did not;
+this card's thumbnail is its PICTURE — what KIND of coverage it was — and the
+outlet reads under the headline as the MEDIUM, the Ripperdoc row's own order.
+
+- **The card** (`.vwd__pcard`): a four-sided outline on the region rule, NO
+  ground (the >700px sweep and the station's older law: an outline is not a
+  ground), square, the air between cards the divider. The thumbnail well on
+  the left, the headline in the display face (wraps, never clamps), the medium
+  in mono caps (`OUTLET · YEAR`), ↗ on linked cards only. The state is the
+  outline and the ink lifting to `--gold-line` / `--gold-ink`, on anchors
+  only; the Gazet van Antwerpen card links nowhere and keeps its outline.
+- **One mark per KIND**, from a zero-import `VW_OUTLET_KIND` beside `OUTLETS`
+  (newspaper: Gazet van Antwerpen, De Standaard, De Tijd, HLN · magazine: MIT
+  Technology Review, Newsweek · broadcast: CNN), pinned total over `OUTLETS` by
+  the record test.
+- ⚠ **THE WELL IS PADDED, NEVER CENTRED.** A 21px mark centred in an even box
+  lands on a half pixel and every rect goes soft, so the well is
+  `content-box`, the mark's own size plus `--vwd-pcard-pad` (10) plus its
+  border — 43px by construction. The sheet test pins the padding and bans a
+  centring property on the well.
+- The retired names — U29's `__well` / `--vwd-press-well` / `__glyph`, U31's
+  `__tag` / `__meta` / `__headline` — are banned by name in the sheet test.
+
+### E · The seven marks
+
+`lib/voidwalker/eraMarks.ts` (zero-import): four fact marks (Base a pin, Move a
+stepped route, Reach a burst, Result a flag) and three outlet kinds
+(newspaper, magazine, broadcast), on the particle-icon grammar — 7 × 7, a
+skeleton, a 1–3 pixel signal, a 1–2 pixel drift one step along one axis and
+never on the form, ≤16 skeleton + signal pixels. **Dawn only**: gold on this
+station is the era band's "you are here". `EraMarkSvg` renders them rect-only
+with `crispEdges` and no text node; the sheet owns the three-layer dawn ladder,
+so light re-derives it through the token. `era-marks.test.ts` pins the lattice,
+the counts, the drift law and that no two marks are the same. ⚠ **THE CONTACT
+SHEET, JUDGED UNLABELLED, IS WHAT MADE THE MAGAZINE** — its first cut read as a
+"C", its second as a person (it mirrored the phone's figure tab), its third was
+17 pixels; the fourth, a masthead over a framed picture, is 16.
+
+### F · The pop-up is the card at dialog scale
+
+`MediaLightbox` gains an optional, ADDITIVE `frame={{ tab }}`. Omitted, every
+other caller renders byte-identically — the `media-lightbox-markup` snapshots,
+taken before `frame` existed, pass untouched. Given, the dialog is the
+TRANSMISSION card: the folder silhouette (tab flush top-left, its 45° slant,
+the body), the glass, the CLOSED lip ring with the slant's inner ends at
+−0.414px, the tab lettering the card it came from (`■ FILM 02`, the index only
+where there is a pile — `EraMediaStack`'s own rule), the title in mono caps
+over the picture, and **ONE 16:9 box that a film, a self-hosted video and a
+still all fill the same way** (a still `contain` on black, both themes —
+kept-dark imagery). The era stage's `MediaDialog` passes it for all three kinds.
+
+- ⚠ **THE BOX IS SIZED BY WIDTH AGAINST THE FRAME'S HEIGHT**: the card is the
+  smallest of `1120px + 2·pad`, the viewport, and the width whose 16:9 box plus
+  the card's chrome (tab band, three pads, two title lines) fits the viewport's
+  height. Measured: 950 × 534.3 at 1280 × 720, 990.6 × 557.2 at 1101 × 800,
+  1120 × 630 at 1920 × 1247, 323 × 181.7 at 375 × 553, 334.4 × 188.1 at
+  390 × 844 — where the unframed dialog's `max-height` broke a film's ratio at
+  1280 × 720.
+- ⚠ **THE MATERIAL IS THE CARD'S `::before`, NOT ITS OWN BACKGROUND.** A
+  `clip-path` clips a box's children too, and CLOSE sits in the band right of
+  the tab, outside the silhouette; so the silhouette cuts the material layer
+  and the ring, and the card itself is unclipped. CLOSE stops 6px above the
+  body's lip, so its border and the lip never meet as a doubled rule; its hit
+  area is 10px proud on every side for the phone's 44px.
+- ⚠ **NO BOX-SHADOW — A DEPARTURE FROM ADR-006, NAMED.** A clipped silhouette
+  cannot carry one, the dashed border is the unframed dialog's grammar, and the
+  scrim at .82 with its blur lifts the card already.
+- ⚠ **PORTALLED, SO NOTHING FROM `.vwd` RESOLVES**: the block is global
+  (`.fl-lightbox--frame`, in `casefile.css` beside the dialog it varies), reads
+  the global ramp, and theme.css re-derives its bloom and glass for light as it
+  does the pile's.
+- A YouTube embed paints black for a beat before the player draws — seen in a
+  capture and checked live: the film plays inside the frame.
+
+### G · The Expanse performs, standing (`expanse-v5`)
+
+A SCENE, not an idle: he holds the point, presses the earpiece and gives a short
+order, takes the front grip, raises the rifle and looks through its optic
+toward where he pointed, and holds the aim. The end pose is DRAWN first
+(`generate.py --edit-kind aim-stand`, `EDIT_AIM_STANDING`, an edit of
+`plate-expanse-mouth_01`); of three draws `aimstand_03` keeps the legs (IoU
+0.979 against the plate) with 280 / 137px of margin. `vid.py --scene --ending
+aim --last` runs plate → pose on the commander's `PLATE_SCENE_AIM`: feet
+planted, no sway, no bob, **eyes open and alert with normal quick blinks** —
+slow blinks, drooping lids and eyes closing banned by name, which answers "a
+zombie" (v4's three ~0.7 s lid-lowerings). ⚠ **THE ORDER IS MOUTHED UNDER
+DIRECTED NEAR-SILENCE**, the one form a speaking beat can take after five
+audio refusals in U34 (a first frame with a parted mouth gets a voice drawn);
+it passed, and the listening fallback (`vid.py --listen`,
+`PLATE_SCENE_AIM_LISTEN`: he tilts his head to it and nods, lips closed) was
+never needed.
+
+Judged by TRACKING: the soles move 0.000 over the whole clip, the rifle's ink
+reaches 0.926 of the width, the aim holds f152–176 and Veo's landing morph
+starts at f178 — so the ping-pong cut is at f168, inside the hold. Installed:
+336 frames, closed, seam 0.675; ground drift 2.0; graded ×0.85 (deep-interior
+p75 129.6, 7 % above 200); seated +49px; flicker median 4.12 (a scene moves);
+anchors `headY` 0.1039, `footY` 0.9953, ink x 0.1056–0.9319. He stands, so no
+`stature`. The bust re-marks off v5's own frame zero (head-band IoU 0.9946
+against v4's marks). v4 is archived to `waves/_shipped/expanse-v4`; the holo
+gallery carries `ex-v5` as SHIPPING and `ex-v4` as SUPERSEDED. Spend: three
+edits and one scene, about $3.60, inside the envelope he approved.
+
+### Verified
+
+Era, hologram, pile, dialog, sheet, record, marks, CSS-sweep, type and
+phone-unit suites 257/257; `tsc` clean in the source (two errors are the
+generated `.next` route types, which the other session's new
+`/test/arcs-instrument-kit` put out of step between the dev and build folders).
+The eras probe is clean at 1280 × 720, 1101 × 800 and 1920 × 1247, four panels
+on every era, the tightest foot 68 / 63 / 162px — Scope's, unchanged; the grid
+is never the binding seat. The figure-span probe: one height on all five
+(696.6px, 0.00 %), one seat line (960), the ring on the figure. The phone probe
+fits at every shape, era and tab. `capture-era-media --record` passes every
+rotation of every era's pile AND every framed dialog at 1280 × 720,
+1101 × 800, 1920 × 1247, 375 × 553 and 390 × 844, and the fixture at the cap
+(two films and a still) passes at 1280 × 720 and 390 × 844 — the still's box
+the films' box to the pixel.
+
+### Left open
+
+- The Twitch recording (U34 §B) still waits on the owner's copy of the file.
+- Safari `.mov` for `expanse-v5` needs a Mac.
+- The phone's new cards and grid are unread on a device.

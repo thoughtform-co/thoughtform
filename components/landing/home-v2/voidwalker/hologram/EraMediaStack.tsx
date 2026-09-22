@@ -72,7 +72,7 @@ const pad2 = (n: number) => String(n).padStart(2, "0");
 /**
  * The cue in the frame's square well: a play triangle for a film, four corner
  * ticks for a still. Rect- and polygon-only on a 7×7 lattice, the station's
- * own glyph grammar (`FigureGlyph`, `PressGlyph`).
+ * own glyph grammar (`FigureGlyph`, `PressArrow`, `EraMarkSvg`).
  * ⚠ SQUARE, NOT ROUND. There are no circles on this station but the reticle,
  * and the filled diamond one row down means "you are here".
  */
@@ -163,13 +163,21 @@ export function EraMediaStack({ items, front, onFront, onOpen, idPrefix }: EraMe
                   {/* Keyed on the still so a rotation decodes the new plate
                       rather than repainting the old one under a new src (the
                       casefile's films plate, same reason). `fill` + `cover`:
-                      the card shows a WINDOW; the whole asset is the dialog's. */}
+                      the card shows a WINDOW; the whole asset is the dialog's.
+                      ⚠ `unoptimized` (ADR-082 U35): a rotated card's still is a
+                      fresh request, and one stuck optimizer job (one file, one
+                      width, one format) left it BLACK for good with nothing
+                      erroring — the owner's "some of them don't have a
+                      thumbnail". The posters are already 960×540 and pinned
+                      under 120 KB, so there is nothing to optimise; served
+                      straight from /public, a card cannot wait on a job. */}
                   <Image
                     key={eraMediaStill(item)}
                     className="vwd__mcard__still"
                     src={eraMediaStill(item)}
                     alt=""
                     fill
+                    unoptimized
                     sizes="(max-width: 700px) 100vw, 368px"
                     style={{ objectPosition: `${focus[0] * 100}% ${focus[1] * 100}%` }}
                   />

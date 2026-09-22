@@ -149,6 +149,21 @@ describe("EraMediaStack markup (ADR-082 U31)", () => {
     expect(viewing.querySelector(".vwd__mcard")?.getAttribute("data-vwd-media-kind")).toBe("image");
   });
 
+  it("serves the still straight from /public, never through the optimizer (ADR-082 U35)", () => {
+    // ⚠ One stuck `/_next/image` job — one file, one width, one format — left a
+    // rotated card black for good with nothing erroring. The posters are
+    // already the size a card needs, so no request of the pile may depend on a
+    // job; if this fails, someone re-routed the still.
+    for (const front of [0, 1, 2]) {
+      const img = parse(render([film, cut, still], front)).querySelector<HTMLImageElement>(
+        "img.vwd__mcard__still"
+      );
+      const src = img?.getAttribute("src") ?? "";
+      expect(src, `front ${front}`).toMatch(/^\/images\/voidwalker\/media\/[a-z0-9-]+\.jpg$/);
+      expect(img?.getAttribute("srcset") ?? "", `front ${front}`).not.toContain("/_next/image");
+    }
+  });
+
   it("mounts no player — a card frames a STILL, the dialog builds the rest", () => {
     const html = render([film, cut, still], 1);
     expect(html).not.toMatch(/<video|<iframe|youtube/i);

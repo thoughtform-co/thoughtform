@@ -67,6 +67,18 @@
      ~10px label, which is where 14px was always the match.) */
   --vwd-press-mark: 14px;
 
+  /* ADR-082 U35's drawn marks, on the same law (integer multiples of the
+     7-cell lattice). A fact's mark sits beside a ~10px mono label, so it takes
+     the 2px cell; a press card's THUMBNAIL is the card's picture, so it takes
+     the 3px cell inside a well padded by a whole number of pixels.
+     ⚠ THE WELL IS PADDED, NEVER CENTRED: a 21px mark centred in an even box
+     lands on a half pixel and every rect goes soft, so the mark's offset is
+     `--vwd-pcard-pad` by construction and the well's size is whatever that
+     sums to (21 + 2 × 10 + 2 × 1 = 43px). */
+  --vwd-fact-mark: 14px;
+  --vwd-pcard-mark: 21px;
+  --vwd-pcard-pad: 10px;
+
   /* ── THE REEL. One cell pitch for all five chips, so the offset that centres
         the selected era is a signed multiple of ONE number. `--vwd-reel` is how
         many cells the window shows; `--vwd-n` is the roster's length, and the
@@ -578,55 +590,76 @@
 
 /* ── FACTS ─────────────────────────────────────────────────────────── */
 
-/* ⚠ THE FOUR ROWS ARE A FIXED SEAT AND 1280×720 IS THE BINDING RUNG. The seat
-   is what `characterEras.ts` records a fifth fact overrunning; since ADR-082
-   U20 moved the block onto the HUD rail's datum it is 14px tighter still, so
-   the rhythm below is solved rather than chosen. Spend it here — gap and row
-   padding — before anything touches `--vwd-facts__v`'s size, which is on the
-   surface-wide type ladder. */
-/* ⚠ A FACT IS A READOUT ROW: LABEL LEFT, VALUE RIGHT, ON ITS OWN RULE
-   (ADR-082 U23). Stacked, each fact spent a whole line on a 10px label and the
-   column read as four little paragraphs; on one baseline it reads as an
-   instrument, and it gives the panel ~50px back — which is what stops FACTS
-   being the tightest seat at 1280×720.
-   ⚠ `minmax(0, 1fr)` ON THE VALUE IS LOAD-BEARING. `expanse`'s longest value
-   is 36 characters ("LA, to put it in front of Jeff Bezos"); on an `auto auto`
-   grid it would push the label out of the panel instead of wrapping inside its
-   own column. At the narrowest capable rung it takes two lines, by design.
+/* ⚠ FOUR CELLS, THE SAME FOUR ON EVERY ERA (ADR-082 U35, owner: "icons, make a
+   bit of a grid … really keep it factual and needs to be uniform"). Base ·
+   Move · Reach · Result, Starfield's stat grid: a mark and the label on one
+   line, the value under it, two cells a row, and every cell ending on its own
+   `--vwd-rail` hairline. This SUPERSEDES U23's readout rows (label left, value
+   right), whose per-era keys could not be compared across eras.
+   ⚠ 1280×720 IS STILL THE BINDING RUNG. A value now wraps inside HALF the
+   panel, so the grid gives back the width it takes in height — the eras probe
+   is what decides that it fits, never this comment.
+   ⚠ `minmax(0, 1fr)` ON BOTH COLUMNS IS LOAD-BEARING: an `auto` column sizes
+   to its longest value and pushes its neighbour out of the panel.
    ⚠ NO PROGRESS FILL. The reference's meters read a percentage; this record
    publishes none, and `voidwalker-data.test.ts` fails an invented figure. */
 .vwd__facts {
   display: grid;
-  gap: clamp(4px, 0.8svh, 11px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(14px, 1.6vw, 28px);
+  row-gap: clamp(8px, 1.2svh, 16px);
   margin: 0;
 }
-.vwd__facts__row {
+.vwd__facts__cell {
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
-  align-items: baseline;
-  column-gap: clamp(12px, 1.4vw, 28px);
-  padding-bottom: clamp(4px, 0.7svh, 9px);
+  align-content: start;
+  row-gap: clamp(4px, 0.6svh, 7px);
+  min-width: 0;
+  padding-bottom: clamp(6px, 0.9svh, 11px);
   border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
 }
-/* ⚠ THE LAST ROW KEEPS ITS RULE, and the `:last-child` exception that dropped
-   it is deleted: in the reference every row terminates on a line and the list's
-   own bottom edge is what closes the panel. */
+/* The mark and the label on one line. ⚠ `center`, never `baseline`: a flex row
+   synthesises a replaced element's baseline from its BOTTOM edge (U26). */
 .vwd__facts__k {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
   font-family: var(--vwd-mono);
   font-size: clamp(9.5px, 0.68vw, 11px);
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
   color: rgba(var(--vwd-dawn-rgb), 0.5);
 }
+.vwd__facts__mark {
+  flex: 0 0 auto;
+  display: block;
+  width: var(--vwd-fact-mark);
+  height: var(--vwd-fact-mark);
+  /* ⚠ The lattice is authored in whole cells; a non-integer scale puts a rect
+     on a half pixel and the mark goes soft. */
+  shape-rendering: crispEdges;
+}
 .vwd__facts__v {
   margin: 0;
-  justify-self: end;
-  text-align: right;
   font-family: var(--vwd-display);
   font-size: clamp(12.5px, 0.9vw, 15px);
   line-height: 1.3;
   color: rgb(var(--vwd-dawn-rgb));
   text-wrap: pretty;
+}
+/* The marks' three layers — DAWN ONLY: the signal is the brightest dawn, never
+   gold, because gold on this station is the era band's "you are here". One
+   rule for the facts' marks and the press cards' thumbnails, so the two sets
+   cannot drift apart. `--vwd-dawn-rgb` flips with the theme, so light
+   re-derives the ladder for free. */
+.vwd__mk__sk {
+  fill: rgba(var(--vwd-dawn-rgb), 0.62);
+}
+.vwd__mk__sig {
+  fill: rgb(var(--vwd-dawn-rgb));
+}
+.vwd__mk__dr {
+  fill: rgba(var(--vwd-dawn-rgb), 0.3);
 }
 
 /* ── TRANSMISSION ──────────────────────────────────────────────────────
@@ -1055,122 +1088,111 @@
 
 /* ── ON RECORD ─────────────────────────────────────────────────────── */
 
-/* ⚠ A RECORD IS A TAGGED ROW, NOT A BOX (ADR-082 U31, owner 2026-09-21: "I'm
-   not a fan of the on-record buttons. They feel like glorified PowerPoint
-   frames, so let's make them tighter").
+/* ⚠ A RECORD IS A CARD (ADR-082 U35, owner 2026-09-22: "I want them to look
+   like cards … on the left side, a thumbnail, and then we need a title and then
+   the medium", pointing at the Ripperdoc's OWNED/STORE rows).
 
-   ⚠ THIS SUPERSEDES ADR-082 U29's BOUNDED OBJECT, and the ruling it answered
-   is the same one read a second time. U29 heard "a pill, like a sort of subtle
-   button" and drew four borders round each record with a square well for its
-   mark; read live, two or three of those stacked in a column ARE a slide's
-   content boxes — the frame was carrying nothing a row does not, and U29's own
-   defence of it ("an outline is not a ground") was an answer to the paint
-   sweep, never to how it looked. What goes: the item's border, the well, the
-   document mark, `--vwd-press-well`. What U26 and U29 ruled about INK stands:
-   dawn only, and the state is a line lifting, never a fill.
+   ⚠ THIS REVERSES U31's TAGGED ROWS BY HIS RULING, AND IT IS NOT U29 COME BACK.
+   U29's well held a DOCUMENT mark that said nothing the headline did not, and
+   read live as a slide's content box. This card's thumbnail is the card's
+   PICTURE — what kind of coverage it was (newspaper · magazine · broadcast,
+   `VW_OUTLET_KIND`) — and the outlet reads under the headline as the medium,
+   which is the Ripperdoc row's own order: item, name, detail.
+   What U26, U29 and U31 ruled about INK stands: dawn only, the state is a line
+   lifting, never a fill.
 
-   THE ROW: the outlet in a framed TAG — the /arcs dossier's framed key
-   (`components/sheet/instrument.css`, the owner's own Starfield readout) at
-   chip scale: a well at dawn .07 inside a seam at dawn .28 — then the year,
-   then a link-out arrow at the row's far end WHERE THE RECORD LINKS OUT, the
-   headline under, and one `--vwd-rail` hairline at the row's FOOT.
-   ⚠ THE RULE IS AT THE FOOT, NEVER UNDER THE META LINE (U23's own note): a
-   rule between an outlet and its headline splits the record it bounds.
-   ⚠ AND THE LAST ROW KEEPS ITS RULE, as the facts' last row does one panel up
-   — in the reference every row terminates on a line and the list's own bottom
-   edge is what closes the panel.
-   ⚠ THE TAG'S FILL IS A COLUMN'S MATERIAL, NOT A STATE — every tag carries it,
-   which is the distinction ADR-118 U3 drew about the same cell. It is ~120px
-   of dawn at .07, against a paint sweep that starts at 700px. */
+   ⚠ AN OUTLINE, NEVER A GROUND — the card is ~368px against a paint sweep
+   (`about-voidwalker-handoff-boundaries`) that starts at 700px, and the
+   station's law is older than the sweep: an outline is not a ground.
+   ⚠ SQUARE (ADR-065: chrome sits at 0 on the depth ladder; U29's own call).
+   ⚠ THE AIR IS THE DIVIDER — a rule between two bordered cards is the doubled
+   line ADR-089 U3 records. */
 .vwd__press-stack {
   display: grid;
+  gap: clamp(6px, 0.9svh, 10px);
 }
-.vwd__press {
+.vwd__pcard {
   display: grid;
-  row-gap: clamp(4px, 0.6svh, 7px);
-  padding: clamp(7px, 1svh, 11px) 0;
-  border-bottom: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rail));
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: clamp(10px, 0.9vw, 14px);
+  padding: clamp(6px, 0.8svh, 9px);
+  border: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rule-head));
   text-decoration: none;
   color: inherit;
+  transition: border-color 160ms ease;
 }
-/* The first row hangs straight off the head's own rule. */
-.vwd__press:first-child {
-  padding-top: 0;
+/* The card's picture: a square well holding the kind's mark. `content-box`
+   so the well is the mark plus its padding plus its border, in whole pixels. */
+.vwd__pcard__thumb {
+  box-sizing: content-box;
+  display: block;
+  width: var(--vwd-pcard-mark);
+  height: var(--vwd-pcard-mark);
+  padding: var(--vwd-pcard-pad);
+  border: 1px solid rgba(var(--vwd-dawn-rgb), 0.2);
 }
-/* The tag, the year, and the arrow pushed to the row's end.
-   ⚠ `center`, NEVER `baseline`: a flex row synthesises a replaced element's
-   baseline from its BOTTOM edge, so a baseline row would hang the whole line
-   off the arrow's box (the casefile's register learned this on the same
-   idiom, and U26 recorded it here). */
-.vwd__press__meta {
-  display: flex;
-  align-items: center;
-  gap: clamp(8px, 0.8vw, 12px);
+.vwd__pcard__mark {
+  display: block;
+  width: var(--vwd-pcard-mark);
+  height: var(--vwd-pcard-mark);
+  shape-rendering: crispEdges;
+}
+.vwd__pcard__text {
+  display: grid;
+  row-gap: clamp(3px, 0.45svh, 6px);
   min-width: 0;
+}
+.vwd__pcard__title {
+  font-family: var(--vwd-display);
+  font-size: clamp(13px, 0.98vw, 16.5px);
+  line-height: 1.3;
+  color: rgba(var(--vwd-dawn-rgb), 0.95);
+  text-wrap: pretty;
+  transition: color 160ms ease;
+}
+/* The medium: the outlet, and its year where the record dates it. */
+.vwd__pcard__medium {
   font-family: var(--vwd-mono);
   font-size: clamp(9.5px, 0.68vw, 11px);
   letter-spacing: var(--track-eyebrow);
   text-transform: uppercase;
-  color: rgba(var(--vwd-dawn-rgb), 0.45);
+  color: rgba(var(--vwd-dawn-rgb), 0.5);
 }
-.vwd__press__tag {
-  flex: 0 1 auto;
-  min-width: 0;
-  padding: 0.36em 0.62em 0.32em;
-  overflow: hidden;
-  background: rgba(var(--vwd-dawn-rgb), 0.07);
-  border: 1px solid rgba(var(--vwd-dawn-rgb), 0.28);
-  line-height: 1;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: rgba(var(--vwd-dawn-rgb), 0.8);
-  transition:
-    border-color 160ms ease,
-    color 160ms ease;
-}
-.vwd__press__year {
-  flex: 0 0 auto;
+.vwd__pcard__medium i {
+  font-style: normal;
 }
 .vwd__press__arrow {
-  flex: 0 0 auto;
   display: block;
+  align-self: start;
   width: var(--vwd-press-mark);
   height: var(--vwd-press-mark);
-  margin-left: auto;
   fill: rgba(var(--vwd-dawn-rgb), 0.45);
   /* ⚠ The lattice is authored in whole cells; anything but an integer scale
      puts a 1-unit rect on a half pixel and the mark goes soft. */
   shape-rendering: crispEdges;
   transition: fill 160ms ease;
 }
-.vwd__press__headline {
-  font-family: var(--vwd-display);
-  font-size: clamp(13px, 0.98vw, 16.5px);
-  line-height: 1.32;
-  color: rgba(var(--vwd-dawn-rgb), 0.95);
-  text-wrap: pretty;
-}
 /* ⚠ THE STATE IS LINES AND INK LIFTING, NEVER A FILL — U26's refusal, which
-   has survived two redraws. `--gold-line` is the 3:1 line-work rung and
+   has survived three redraws. `--gold-line` is the 3:1 line-work rung and
    `--gold-ink` the 4.5:1 text rung; both re-derive themselves in light, where
    raw `--gold` letters at 1.8:1 on parchment.
-   ⚠ ONLY AN ANCHOR. A record that links nowhere is still a record — it keeps
-   its tag and its rule — but nothing about it may answer a pointer, and it
+   ⚠ ONLY AN ANCHOR. A record that links nowhere is still a card — it keeps its
+   outline and its picture — but nothing about it may answer a pointer, and it
    carries no arrow to suggest it would. */
-a.vwd__press:hover .vwd__press__tag,
-a.vwd__press:focus-visible .vwd__press__tag {
+a.vwd__pcard:hover,
+a.vwd__pcard:focus-visible {
   border-color: var(--gold-line);
-  color: var(--gold-ink);
 }
-a.vwd__press:hover .vwd__press__arrow,
-a.vwd__press:focus-visible .vwd__press__arrow {
+a.vwd__pcard:hover .vwd__press__arrow,
+a.vwd__pcard:focus-visible .vwd__press__arrow {
   fill: var(--gold-ink);
 }
-a.vwd__press:hover .vwd__press__headline,
-a.vwd__press:focus-visible .vwd__press__headline {
+a.vwd__pcard:hover .vwd__pcard__title,
+a.vwd__pcard:focus-visible .vwd__pcard__title {
   color: var(--gold-ink);
 }
-a.vwd__press:focus-visible {
+a.vwd__pcard:focus-visible {
   outline: 1px solid var(--gold-line);
   outline-offset: 3px;
 }
@@ -1278,8 +1300,9 @@ a.vwd__press:focus-visible {
      spec, which copies the same math. A transform lift would land the card
      95–141px BELOW the hologram that replaces it with every spec passing.
      `top` on a relatively positioned box moves `offsetTop` with it.
-     ⚠ ONE OBJECT: the reticle, the slot and the disc are all inside this box,
-     so they rise together and the boots never leave the disc.
+     ⚠ ONE OBJECT: the reticle, the slot and the seat are all inside this box,
+     so they rise together and the boots never leave the seat line. (The seat
+     painted a projector disc until ADR-082 U35; its box is what binds.)
      ⚠ ERA-INDEPENDENT ON PURPOSE. It is solved from `--holo-span` — the
      registry's `HOLO_FIGURE_SPAN`, written on this element by the component, so
      the number exists once — and NOT from the era's own anchors: every standing
@@ -1320,24 +1343,10 @@ a.vwd__press:focus-visible {
     top: calc(var(--_head) + var(--_pict) * var(--holo-overscan, 1) * var(--holo-span, 1) / 2);
   }
 
-  /* ⚠ THE UNDER-GLOW FADES ON EVERY SIDE HERE, BECAUSE THE LIFT EXPOSED ITS
-     CLIFF (ADR-082 U31). `.vwh__base__glow` is a half-ellipse whose hot centre
-     sits ON its box's bottom edge, 1.4 base-heights under the disc — so it ends
-     in a flat horizontal cut. For as long as the disc stood directly on the era
-     band that cut was buried in the stops; with 95–148px of open frame under
-     the disc it painted a soft rectangle with a hard floor, in mid-air, and
-     only the still showed it. It is the figure sheet's own law, recorded on
-     `.vwh__cone` one rule up from it: "an additive layer must fade on every
-     side, not just one". Centred on the disc, it has no edge to draw.
-     ⚠ Scoped to the desktop datum stage — the phone's bloom runs under its own
-     band's fade and stays what it was. */
-  .vwd .vwh__base__glow {
-    background: radial-gradient(
-      ellipse 50% 44% at 50% 50%,
-      rgba(var(--vwh-gold-rgb), 0.16),
-      transparent 72%
-    );
-  }
+  /* ⚠ THE UNDER-GLOW THAT U31 RE-CENTRED HERE IS DELETED WITH THE DISC
+     (ADR-082 U35). What it taught stays true of any layer that returns under
+     the figure: with 95–148px of open frame below the seat, an additive paint
+     that ends in a cut shows the cut in mid-air. */
 }
 
 /* ── §B2 · THE DESKTOP TYPE LADDER ──────────────────────────────────
@@ -1375,7 +1384,7 @@ a.vwd__press:focus-visible {
     font-size: clamp(11px, 1.55svh, 19px);
   }
   .vwd__facts__k,
-  .vwd__press__meta {
+  .vwd__pcard__medium {
     font-size: clamp(9.5px, 1.2svh, 15px);
   }
   .vwd__absent {
@@ -1393,15 +1402,15 @@ a.vwd__press:focus-visible {
   .vwd__mcard__title {
     font-size: clamp(10px, 1.2svh, 15px);
   }
-  /* ⚠ TWO FLOORS, ONE RATIO. The value and the headline share the 1.45svh
+  /* ⚠ TWO FLOORS, ONE RATIO. The value and the card title share the 1.45svh
      term but NOT their floors (12.5 and 13 are what shipped), and collapsing
-     them into one rule would take the headline DOWN half a pixel at 1280×720 —
+     them into one rule would take the title DOWN half a pixel at 1280×720 —
      a regression bought while raising everything else, which is exactly the
      kind of thing a floor law exists to catch. */
   .vwd__facts__v {
     font-size: clamp(12.5px, 1.45svh, 18px);
   }
-  .vwd__press__headline {
+  .vwd__pcard__title {
     font-size: clamp(13px, 1.45svh, 18px);
   }
 
@@ -1939,8 +1948,9 @@ a.vwd__press:focus-visible {
   .vwd__tab__sig {
     fill: rgba(var(--vwd-dawn-rgb), 0.3);
   }
-  /* Lit, the disc takes the gold — the same role it carries on the stage
-     itself, so the mark and the drawing agree about what the signal is. */
+  /* Lit, the ground line takes the gold — the seat the boots land on. (It
+     mirrored the stage's gold projector disc until ADR-082 U35 deleted the
+     disc; the seat is still the figure's one fixed line.) */
   .vwd__tab--figure[data-on="true"] .vwd__tab__sk {
     fill: rgb(var(--vwd-dawn-rgb));
   }
@@ -2063,16 +2073,19 @@ a.vwd__press:focus-visible {
     padding-top: clamp(8px, 1.2svh, 14px);
   }
 
-  /* Trim 1, and the largest: a fact is ONE LINE on the phone. Stacked, four
-     facts spend four whole lines on 10px labels; on one baseline they read as
-     the readout rows the desktop pass made them and give the binding tab
-     (RECORD — facts and the press that reported them are one reading) ~52px
-     back. Every value fits: the longest is `expanse`'s 36-character flight
-     line at ~220px against a 337px column. */
-  .vwd__facts__row {
-    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
-    column-gap: 10px;
-    align-items: baseline;
+  /* Trim 1, and the largest (U23's, re-cut for ADR-082 U35's grid): the facts
+     are the binding tab's (RECORD — facts and the press that reported them are
+     one reading) largest term, so the grid keeps its two columns and spends
+     the least air it can: one tight gap between cells and a cell's own rule
+     close under its value. The probe walks every era at five shapes; the
+     fallback, if one overflows, is one column — never smaller type. */
+  .vwd__facts {
+    column-gap: 12px;
+    row-gap: 8px;
+  }
+  .vwd__facts__cell {
+    row-gap: 3px;
+    padding-bottom: 6px;
   }
 
   /* ── THE MEDIA PILE ON A PHONE (ADR-082 U31, U34). Same DOM, same cards; the
@@ -2198,6 +2211,13 @@ a.vwd__press:focus-visible {
   .vwd__sheet[data-vwd-tab="transmission"] .vwd__body[data-cell="ll"] {
     margin-bottom: auto;
   }
+  /* RECORD is TWO panels in one reading, and the facts GRID (ADR-082 U35) ends
+     on a row of cell rules — with no air between them ON RECORD's head read as
+     a fifth fact. One section gap, a step above the head→body gap, so the pair
+     stays one reading and two panels. */
+  .vwd__sheet[data-vwd-tab="record"] .vwd__head[data-cell="lr"] {
+    margin-top: clamp(16px, 2.6svh, 24px);
+  }
 
   /* The figure fills the area it now has to itself. Width-bound here (the
      desktop derives it from height because it shares the row with four
@@ -2299,9 +2319,11 @@ a.vwd__press:focus-visible {
     right: 0;
     bottom: 0;
     z-index: 2;
-    /* ⚠ ISOLATE. On the alpha branch `.vwh__slot` is `isolation: auto`, so
-       `.vwh__cone`'s `plus-lighter` reaches up through anything stacked over
-       the figure and lights its ink — the stops would glow at the edges. */
+    /* ⚠ ISOLATE. On the alpha branch `.vwh__slot` is `isolation: auto`, so an
+       additive layer in it reaches up through anything stacked over the
+       figure and lights its ink. The layer that did it (`.vwh__cone`) is gone
+       since ADR-082 U35; the isolation stays, because it costs nothing and
+       the next additive layer would light the stops without a warning. */
     isolation: isolate;
     /* ⚠ THE BAND IS THE TABS' WIDTH, AND THAT IS THE ASK (ADR-082 U27, owner:
        "maybe it can be a band that's also the same width as the rest, and by

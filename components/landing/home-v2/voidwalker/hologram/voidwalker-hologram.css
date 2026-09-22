@@ -440,25 +440,11 @@
     drop-shadow(0 0 calc(24px * var(--holo-glow, 1)) rgba(var(--vwh-gold-rgb), 0.22));
 }
 
-/* The projection cast — light in the air between base and figure. */
-.vwh__cone {
-  position: absolute;
-  inset: 42% 12% 0;
-  mix-blend-mode: plus-lighter;
-  /* ⚠ AN ADDITIVE LAYER MUST FADE ON EVERY SIDE, NOT JUST ONE. This was a
-     `linear-gradient(to top, …)` and it lit a hard-edged RECTANGLE around
-     the legs — the last visible box after the floor was fixed. A linear
-     ramp fades along one axis only; its left, right and bottom edges are
-     cliffs, and `plus-lighter` renders a cliff as a seam. The radial fades
-     in every direction, so the cone has no edges to draw. */
-  background: radial-gradient(
-    ellipse 62% 96% at 50% 104%,
-    rgba(var(--vwh-gold-rgb), calc(0.14 * var(--holo-glow, 1))),
-    rgba(var(--vwh-gold-rgb), calc(0.05 * var(--holo-glow, 1))) 42%,
-    transparent 76%
-  );
-  pointer-events: none;
-}
+/* ⚠ THE PROJECTION CONE IS DELETED (ADR-082 U35, owner: the disc made him
+   "feel like I'm floating"). It was a plus-lighter radial whose hot spot sat
+   ON the projector disc, so it went with the disc. Its one lesson survives in
+   the record: an additive layer must fade on every side, or plus-lighter
+   renders the cliff as a seam. */
 
 /* ── The materialize ─────────────────────────────────────────────────
    The figure wipes up out of the base, an edge bar rides the reveal
@@ -631,45 +617,20 @@
   }
 }
 
-/* ── The projector base ──────────────────────────────────────────────
-   ⚠ A MOCK. On the real page the site's brandmark flattens and descends
-   into this position; the base is where the mark ENDS UP, not a graphic
-   the section draws. Kept here so the composition can be judged. */
+/* ── The seat ────────────────────────────────────────────────────────
+   ⚠ AN EMPTY BOX, AND IT IS LOAD-BEARING (ADR-082 U35). It held the
+   projector disc, ring and glow — a mock of a brandmark descent that was
+   never built — and the owner read a figure standing on it as FLOATING, so
+   the paint is deleted. The box is not: the slot's floor is `margin-top`'s
+   negative inset above it, and the desktop lift, the reticle's centre, the
+   phone column's translate and the About handoff's portrait seat all read
+   `--vwh-base-h` / `--vwh-base-disc-inset` through it. Removing it would grow
+   the slot by `base-h − inset` and move every era's figure. */
 .vwh__base {
   position: relative;
-  display: grid;
-  place-items: center;
   width: min(300px, 52%);
   height: var(--vwh-base-h);
   margin-top: calc(0px - var(--vwh-base-disc-inset));
-}
-.vwh__base__disc {
-  position: absolute;
-  inset: var(--vwh-base-disc-inset) 0 var(--vwh-base-disc-inset);
-  border: 1px solid rgba(var(--vwh-gold-rgb), 0.55);
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse at 50% 50%,
-    rgba(var(--vwh-gold-rgb), 0.22),
-    rgba(var(--vwh-gold-rgb), 0.06) 60%,
-    transparent 78%
-  );
-}
-.vwh__base__ring {
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgba(var(--vwh-gold-rgb), 0.22);
-  border-radius: 50%;
-}
-.vwh__base__glow {
-  position: absolute;
-  inset: -140% -10%;
-  background: radial-gradient(
-    ellipse 50% 60% at 50% 100%,
-    rgba(var(--vwh-gold-rgb), 0.16),
-    transparent 70%
-  );
-  pointer-events: none;
 }
 
 /* ── Reduced motion ──────────────────────────────────────────────────

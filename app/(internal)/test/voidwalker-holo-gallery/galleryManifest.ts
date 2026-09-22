@@ -64,6 +64,7 @@ export interface GalleryRun {
 }
 
 const PG1 = `${MIRROR}/20260922-pokemon-go-v1`;
+const EX7 = `${MIRROR}/20260922-expanse-v7`;
 const EX6 = `${MIRROR}/20260922-expanse-v6`;
 const EX5 = `${MIRROR}/20260922-expanse-v5`;
 const EX4 = `${MIRROR}/20260922-expanse-v4`;
@@ -128,11 +129,52 @@ export const GALLERY_RUNS: readonly GalleryRun[] = [
     ],
   },
   {
+    id: "ex-v5",
+    wave: "20260922-expanse-v7",
+    title: "The Expanse v5 — he points, gives the order, looks through the scope",
+    date: "2026-09-22",
+    status: "SHIPPING",
+    adr: "ADR-082 U35",
+    summary: [
+      "Owner, on v4: \"I feel like I'm floating … I look like a zombie, like my eyes are opening and closing. There needs to be a bit more movement. I need to use my headpiece to voice commands. I need to look through my weapon. I need to point.\" A SCENE from v4's own plate to a DRAWN end pose: he holds the point, presses the earpiece and gives the order, raises the rifle and holds the aim through the optic.",
+      "⚠ THE END POSE IS DRAWN FIRST (three edits of the plate; aimstand_03 keeps the legs closest, 0.979 IoU, and its eye sits on the optic). U33's lesson: asked in words, Veo aims the easy way, off the frame.",
+      "⚠ THE ORDER IS MOUTHED UNDER A DIRECTED NEAR-SILENCE, and the audio filter passed it on the first take — where U34's plate, caught mid-word, was refused five times. His eyes stay open through the shot; the slow blinks and sway are banned by name.",
+      "His boots do not move a pixel across all 192 frames. A PING-PONG cut at f168, inside the aim's quiet hold (motion 0.33–0.54) before Veo's landing morph from f178: 336 frames, 14 s. Graded ×0.85 (7 % hot), seated +49px, flicker median 4.12 (a scene), the rifle 0.932 of the width at its widest.",
+    ],
+    assets: [
+      {
+        id: "ex-v5-idle",
+        kind: "video",
+        src: `${EX7}/out/holo-idle-expanse-v5.mp4`,
+        alphaSrc: `${EX7}/out/holo-idle-expanse-v5.webm`,
+        label: "v5 · point, order, aim (live on the site)",
+        note: "Ping-pong of the scene cut at f168. No `.mov`: Safari takes the floor for this era until a Mac cuts one from veo/graded/.",
+        mb: 0.98,
+      },
+      {
+        id: "ex-v5-strip",
+        kind: "sheet",
+        src: `${EX7}/strip-scene.jpg`,
+        label: "the scene, twelve frames across 8 s",
+        note: "f0–f32 the point, f40–f88 the earpiece and the order, f96–f112 the rifle up, f112 onward the aim; the loop turns at f168.",
+        wide: true,
+      },
+      {
+        id: "ex-v5-aims",
+        kind: "plate",
+        src: `${EX7}/aim-stills.jpg`,
+        label: "the plate and the three drawn aims (aimstand_03 used)",
+        note: "Edits of the plate: the pose above the waist changes, the stance and the size do not.",
+        wide: true,
+      },
+    ],
+  },
+  {
     id: "ex-v4",
     wave: "20260922-expanse-v6",
     title: "The Expanse v4 — the commander, standing, points into the distance",
     date: "2026-09-22",
-    status: "SHIPPING",
+    status: "SUPERSEDED",
     adr: "ADR-082 U34",
     summary: [
       "Owner: \"if I'm the campaign commander … more like a general or commander, maybe holding my gun but then pointing in the distance, giving commands. Make it subtle … Maybe I shouldn't be kneeling.\" A pose EDIT of v2/v3's plate F (his likeness and the rifle he approved): he stands, the rifle low in one hand, the other arm pointing, foreshortened so the hand stays inside the column.",
@@ -146,7 +188,7 @@ export const GALLERY_RUNS: readonly GalleryRun[] = [
         kind: "video",
         src: `${EX6}/out/holo-idle-expanse-v4.mp4`,
         alphaSrc: `${EX6}/out/holo-idle-expanse-v4.webm`,
-        label: "v4 · the commander, pointing, breathing (live on the site)",
+        label: "v4 · the commander, pointing, breathing",
         note: "Ping-pong of take 2 cut at f168. No `.mov`: Safari takes the floor for this era until a Mac cuts one from veo/graded/.",
         mb: 0.63,
       },

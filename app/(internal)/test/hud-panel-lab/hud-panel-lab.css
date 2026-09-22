@@ -1430,42 +1430,15 @@ html[data-theme="light"] .hpl[data-hpl-surface] {
   border-bottom: 1px solid var(--hpl-seam);
 }
 
-/* ── FACTS as a listing (key 6/16 | value 10/16) ─────────────────────────
-   The dump's own columns: one continuous rule down the key|value seam at the
-   casefile's 37.5% split, through every row and gap — on the `dl`, not the
-   `dd`, because baseline-aligned rows no longer stretch their cells and a
-   border-left on the value would read as a dashed rule. A `::before` on a
-   grid container that is `position: absolute` takes no track.
-   ⚠ ONE VALUE PER ERA WRAPS TO TWO LINES at 1280 (the 36–37-character ones)
-   and never three; FACTS stops being the binding seat by 38–55px, which is
-   the split's structural gift to a composition that had 15px of headroom.
-   `5fr 11fr` would fit every value on one line — a departure from the seed's
-   37.5%, so it is an owner question, not a default. */
-.hpl-eras[data-hpl-dir="v6"] .vwd__facts {
-  position: relative;
-}
-.hpl-eras[data-hpl-dir="v6"] .vwd__facts::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(100% * 6 / 16);
-  width: 1px;
-  background: var(--hpl-rule);
-  pointer-events: none;
-}
-.hpl-eras[data-hpl-dir="v6"] .vwd__facts__row {
-  grid-template-columns: 6fr 10fr;
-  align-items: baseline;
-  gap: 0;
+/* ── FACTS as a listing — RETIRED WITH THE ROWS IT DIVIDED ───────────────
+   This drew one rule down the key|value seam at 6/16 of a readout-ROW list.
+   ADR-082 U35 made the facts a 2×2 grid of cells (a mark and a key over the
+   value), so there is no key|value seam left for a listing to rule, and a
+   6/16 line would slice the left column of cells in two. The cells take the
+   listing's hairline colour instead, which is the one part that still has a
+   subject. */
+.hpl-eras[data-hpl-dir="v6"] .vwd__facts__cell {
   border-bottom-color: var(--hpl-rule);
-}
-.hpl-eras[data-hpl-dir="v6"] .vwd__facts__k {
-  padding-right: 8px;
-}
-.hpl-eras[data-hpl-dir="v6"] .vwd__facts__v {
-  padding-left: 8px;
-  text-wrap: pretty;
 }
 
 /* ── The cursor: the active era's mark ───────────────────────────────────
@@ -1492,8 +1465,9 @@ html[data-theme="light"] .hpl[data-hpl-surface] {
 }
 
 /* ── `?ink=oxide` — provenance meta in the seed's second hue ─────────────
-   The press meta (outlet · year) and the heads' tags; never the copy. */
-.hpl[data-hpl-ink="oxide"] .hpl-eras[data-hpl-dir="v6"] .vwd__press__meta,
+   The press card's medium (outlet · year) and the heads' tags; never the
+   copy. */
+.hpl[data-hpl-ink="oxide"] .hpl-eras[data-hpl-dir="v6"] .vwd__pcard__medium,
 .hpl[data-hpl-ink="oxide"] .hpl-eras[data-hpl-dir="v6"] .vwd__head__tag {
   color: var(--hpl-oxide);
 }

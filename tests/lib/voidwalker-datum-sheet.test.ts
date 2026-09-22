@@ -241,34 +241,79 @@ describe("the glass (ADR-082 U31)", () => {
   });
 });
 
-describe("ON RECORD is tagged rows, not boxes (ADR-082 U31)", () => {
-  it("rules a record at its FOOT and draws nothing round it", () => {
-    const row = ruleBody(css, ".vwd__press");
-    expect(row).toMatch(/border-bottom:\s*1px solid/);
-    // U29's bounded object is what the owner read as "PowerPoint frames".
-    expect(row).not.toMatch(/(^|[;\s])border:\s/);
+describe("ON RECORD is cards (ADR-082 U35)", () => {
+  it("outlines a card on all four sides and never gives it a ground", () => {
+    const card = ruleBody(css, ".vwd__pcard");
+    expect(card).toMatch(/(^|[;\s])border:\s*1px solid/);
+    // An outline is not a ground: the >700px paint sweep, and the station's law.
+    expect(card).not.toMatch(/background/);
+    expect(ruleBody(css, ".vwd__pcard__thumb")).not.toMatch(/background/);
+    // Square — chrome sits at 0 on ADR-065's depth ladder.
+    expect(card).not.toMatch(/border-radius|clip-path/);
+    // The air between cards is the divider, never a rule.
+    expect(ruleBody(css, ".vwd__press-stack")).toMatch(/(^|[;\s])gap:/);
+    expect(card).not.toMatch(/border-bottom/);
+  });
+
+  it("keeps U29's and U31's retired parts retired", () => {
+    // U29's document mark in a well, and U31's tagged row, by their own names.
     expect(css).not.toContain(".vwd__press__well");
     expect(css).not.toContain("--vwd-press-well");
     expect(css).not.toContain(".vwd__press__glyph");
+    expect(css).not.toContain(".vwd__press__tag");
+    expect(css).not.toContain(".vwd__press__meta");
+    expect(css).not.toContain(".vwd__press__headline");
   });
 
-  it("keeps the link-out mark on the pixel lattice", () => {
+  it("seats every mark on the pixel lattice", () => {
     // 7 cells: anything but an integer multiple goes soft.
-    const px = Number(/--vwd-press-mark:\s*(\d+)px/.exec(css)?.[1]);
-    expect(px % 7).toBe(0);
-    expect(ruleBody(css, ".vwd__press__arrow")).toContain("shape-rendering: crispEdges");
+    for (const token of ["--vwd-press-mark", "--vwd-fact-mark", "--vwd-pcard-mark"]) {
+      const px = Number(new RegExp(`${token}:\\s*(\\d+)px`).exec(css)?.[1]);
+      expect(px, token).toBeGreaterThan(0);
+      expect(px % 7, token).toBe(0);
+    }
+    for (const selector of [".vwd__press__arrow", ".vwd__pcard__mark", ".vwd__facts__mark"])
+      expect(ruleBody(css, selector), selector).toContain("shape-rendering: crispEdges");
+  });
+
+  it("pads the thumbnail's mark into place rather than centring it", () => {
+    // A 21px mark centred in an even box lands on a half pixel.
+    const thumb = ruleBody(css, ".vwd__pcard__thumb");
+    expect(thumb).toMatch(/box-sizing:\s*content-box/);
+    expect(thumb).toMatch(/padding:\s*var\(--vwd-pcard-pad\)/);
+    expect(thumb).not.toMatch(/place-items|justify-content|align-items/);
+    expect(Number.isInteger(Number(/--vwd-pcard-pad:\s*(\d+)px/.exec(css)?.[1]))).toBe(true);
   });
 
   it("lifts lines and ink on hover — never a fill, and only on an anchor", () => {
     const hover = css
       .split("}")
-      .filter((r) => /\.vwd__press[^{]*:(hover|focus-visible)/.test(r.split("{")[0] ?? ""));
+      .filter((r) => /\.vwd__pcard[^{]*:(hover|focus-visible)/.test(r.split("{")[0] ?? ""));
     expect(hover.length).toBeGreaterThan(0);
     for (const rule of hover) {
       const [selector = "", body = ""] = rule.split("{");
       for (const part of selector.split(","))
-        expect(part.trim().startsWith("a.vwd__press")).toBe(true);
+        expect(part.trim().startsWith("a.vwd__pcard")).toBe(true);
       expect(body).not.toMatch(/background/);
+    }
+  });
+});
+
+describe("FACTS is one grid of four (ADR-082 U35)", () => {
+  it("lays the facts out two cells a row, each ending on its own rule", () => {
+    expect(ruleBody(css, ".vwd__facts")).toMatch(
+      /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/
+    );
+    expect(ruleBody(css, ".vwd__facts__cell")).toMatch(/border-bottom:\s*1px solid/);
+    // U23's readout row is gone with its per-era keys.
+    expect(css).not.toContain(".vwd__facts__row");
+  });
+
+  it("draws the marks in dawn alone — gold on this station is the band's 'you are here'", () => {
+    for (const layer of ["sk", "sig", "dr"]) {
+      const body = ruleBody(css, `.vwd__mk__${layer}`);
+      expect(body).toMatch(/--vwd-dawn-rgb/);
+      expect(body).not.toMatch(/gold/);
     }
   });
 });

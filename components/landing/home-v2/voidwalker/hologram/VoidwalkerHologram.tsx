@@ -41,12 +41,15 @@ import { HoloFigure } from "./HoloFigure";
  *
  * ⚠ TWO THINGS ARE DELIBERATELY STILL LOOK-DEV.
  *
- * 1. THE PROJECTOR BASE is a DOM MOCK. On the real page the site's own
- *    brandmark flattens and descends into that position — a WebGL
- *    choreography against `BrandmarkPhysicsCoreActor`'s camera-welded
- *    park, its own pass. The gold disc + ring + glow sits here as the
- *    seat that mark will eventually take; the composition above it does
- *    not change when it does.
+ * 1. THE SEAT IS AN EMPTY BOX, AND THE DISC THAT SAT ON IT IS GONE (ADR-082
+ *    U35, owner: "now it feels like I'm floating … If it's a separate
+ *    element, I would just remove the circle"). It was a DOM mock of a
+ *    brandmark descent that was never built — a gold disc, ring and glow —
+ *    and every era's boots stood on its top edge, which read as a figure
+ *    hovering over a platform. ⚠ THE BOX STAYS: the slot's floor, the desktop
+ *    lift, the reticle's centre, the phone column's translate and the About
+ *    handoff's portrait seat all read `.vwh__base`'s geometry, so only its
+ *    PAINT went and nothing moved.
  * 2. ERA SWITCHING IS DELIBERATE. The stage scroll clock owns only entry,
  *    reading hold and exit; choosing one of the five loadouts remains a
  *    tab, pointer, or keyboard action.
@@ -333,12 +336,8 @@ export function VoidwalkerHologram() {
         initialMaterialization="scroll"
       />
 
-      {/* Placeholder for the brandmark descent — see file header. */}
-      <div className="vwh__base" data-vwh-region="platform" aria-hidden="true">
-        <span className="vwh__base__disc" />
-        <span className="vwh__base__ring" />
-        <span className="vwh__base__glow" />
-      </div>
+      {/* The SEAT: geometry only, painted nothing — see file header. */}
+      <div className="vwh__base" data-vwh-region="platform" aria-hidden="true" />
     </div>
   );
 

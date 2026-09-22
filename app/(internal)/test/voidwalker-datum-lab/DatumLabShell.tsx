@@ -221,12 +221,8 @@ export function DatumLabShell() {
         glow={1}
         reduced={reduced}
       />
-      {/* ⚠ MOCK — see the file header. */}
-      <div className="vwh__base" data-vwh-region="platform" aria-hidden="true">
-        <span className="vwh__base__disc" />
-        <span className="vwh__base__ring" />
-        <span className="vwh__base__glow" />
-      </div>
+      {/* The seat: geometry only, the disc deleted (ADR-082 U35). */}
+      <div className="vwh__base" data-vwh-region="platform" aria-hidden="true" />
     </div>
   );
 

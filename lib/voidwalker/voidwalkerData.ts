@@ -39,6 +39,31 @@ export interface VwPress {
   href?: string;
 }
 
+/** What KIND of coverage an outlet is — the drawn mark a press card's
+ *  thumbnail carries (ADR-082 U35, owner: "on the left side, a thumbnail"; he
+ *  chose a drawn mark over the publisher's photograph and the outlet's logo).
+ *  The OUTLET says which; the mark says what sort of thing it was.
+ *  ⚠ TOTAL OVER THE RECORD'S OUTLETS — `voidwalker-data.test.ts` fails on a
+ *  press entry whose outlet has no kind, so a new outlet cannot render a card
+ *  with no picture. */
+export const VW_OUTLET_KIND = {
+  "Gazet van Antwerpen": "newspaper",
+  "De Standaard": "newspaper",
+  "De Tijd": "newspaper",
+  HLN: "newspaper",
+  "MIT Technology Review": "magazine",
+  Newsweek: "magazine",
+  CNN: "broadcast",
+} as const satisfies Record<string, "newspaper" | "magazine" | "broadcast">;
+
+export type VwOutletKind = (typeof VW_OUTLET_KIND)[keyof typeof VW_OUTLET_KIND];
+
+/** The outlet's kind, or `newspaper` for an outlet the table has not met — a
+ *  card always carries a mark; the guard is what stops the fallback shipping. */
+export function vwOutletKind(outlet: string): VwOutletKind {
+  return (VW_OUTLET_KIND as Record<string, VwOutletKind>)[outlet] ?? "newspaper";
+}
+
 /** The six drawings, keyed for the wireframe registry. */
 export type VwWireId = "hunt" | "ophef" | "expanse" | "coins" | "azeroth" | "latent";
 

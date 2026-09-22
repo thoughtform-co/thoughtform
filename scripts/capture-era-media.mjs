@@ -30,6 +30,13 @@
  *   · the frame kept its 72px floor
  *   · choosing a back tab brings THAT card to the front, and the head's tag
  *     follows the front card's duration
+ *   · ADR-082 U35: the front card's still DECODES after every rotation, inside
+ *     3 s — a rotated card's still is a fresh request, and one stuck optimizer
+ *     job left it black for good with every other gate green
+ *   · ADR-082 U35: the pop-up is the FRAMED dialog for every front card — one
+ *     card inside the viewport, its box 16:9 to a pixel whatever it holds, its
+ *     tab lettering the card it came from, CLOSE on screen and answering, and
+ *     a still inside it decoded
  *
  * ⚠ HEADED BY DEFAULT. Headless Chromium has no H.264, so the figure beside
  * the pile paints nothing and a still looks like a broken stage. The gates do
@@ -267,6 +274,114 @@ function gate(s, n, label) {
     fail(`${at}: a card behind the front one renders a body`);
 }
 
+/** The front card's still has decoded (ADR-082 U35's black thumbnail). */
+async function frontStillLoads(at) {
+  await page
+    .waitForFunction(
+      () => {
+        const img = document.querySelector('.vwd__mcard[data-vwd-media-depth="0"] .vwd__mcard__still');
+        return img instanceof HTMLImageElement && img.complete && img.naturalWidth > 0;
+      },
+      undefined,
+      { timeout: 3_000 }
+    )
+    .catch(() => fail(`${at}: the front card's still did not decode within 3 s`));
+}
+
+/** Open the front card, measure the FRAMED dialog, close it (ADR-082 U35). */
+async function dialogGate(at, expectTab) {
+  const frame = page.locator('.vwd__mcard[data-vwd-media-depth="0"] .vwd__mcard__frame');
+  if (!(await frame.count())) return fail(`${at}: no front frame to open`);
+  await frame.click();
+  const dlg = page.locator(".fl-lightbox--frame");
+  try {
+    await dlg.waitFor({ state: "visible", timeout: 5_000 });
+  } catch {
+    return fail(`${at}: the framed dialog did not open`);
+  }
+  // The card's entry is a 300ms scale; a rect read mid-scale is a rect in flight.
+  await page.evaluate(() =>
+    Promise.all(
+      [...document.querySelectorAll(".fl-lightbox, .fl-lightbox__card")]
+        .flatMap((el) => el.getAnimations())
+        .map((a) => a.finished.catch(() => {}))
+    )
+  );
+  const isStill = await page.locator(".fl-lightbox__box img").count();
+  if (isStill) {
+    await page
+      .waitForFunction(
+        () => {
+          const img = document.querySelector(".fl-lightbox__box img");
+          return img instanceof HTMLImageElement && img.complete && img.naturalWidth > 0;
+        },
+        undefined,
+        { timeout: 3_000 }
+      )
+      .catch(() => fail(`${at}: the dialog's still did not decode within 3 s`));
+  }
+  const m = await page.evaluate(() => {
+    const r = (sel) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const b = el.getBoundingClientRect();
+      return { l: b.left, t: b.top, r: b.right, b: b.bottom, w: b.width, h: b.height };
+    };
+    const close = document.querySelector(".fl-lightbox--frame .fl-lightbox__close");
+    let closeHit = false;
+    if (close) {
+      const b = close.getBoundingClientRect();
+      closeHit =
+        document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2)?.closest(".fl-lightbox__close") ===
+        close;
+    }
+    return {
+      vw: document.documentElement.clientWidth,
+      vh: innerHeight,
+      cards: document.querySelectorAll(".fl-lightbox__card").length,
+      card: r(".fl-lightbox__card"),
+      box: r(".fl-lightbox__box"),
+      close: r(".fl-lightbox--frame .fl-lightbox__close"),
+      tab: document.querySelector(".fl-lightbox__tab")?.textContent ?? "",
+      media: [...document.querySelectorAll(".fl-lightbox__box > *")].map((el) => el.tagName.toLowerCase()),
+      closeHit,
+    };
+  });
+  console.log(
+    `  ${at} · dialog "${m.tab}" · card ${m.card ? `${px(m.card.w)}x${px(m.card.h)}` : "-"}` +
+      ` · box ${m.box ? `${px(m.box.w)}x${px(m.box.h)}` : "-"} · ${m.media.join("+")}`
+  );
+  if (m.cards !== 1) fail(`${at}: the dialog renders ${m.cards} cards`);
+  if (m.tab !== expectTab) fail(`${at}: the dialog's tab reads "${m.tab}", the card's reads "${expectTab}"`);
+  if (!m.box) fail(`${at}: the dialog has no box`);
+  else if (Math.abs(m.box.w * (9 / 16) - m.box.h) > 1)
+    fail(`${at}: the box is ${px(m.box.w)}x${px(m.box.h)}, not 16:9`);
+  if (m.media.length !== 1) fail(`${at}: the box holds ${m.media.length} media`);
+  if (m.card && (m.card.l < -0.5 || m.card.t < -0.5 || m.card.r > m.vw + 0.5 || m.card.b > m.vh + 0.5))
+    fail(
+      `${at}: the card leaves the viewport (${px(m.card.l)},${px(m.card.t)} – ${px(m.card.r)},${px(m.card.b)})`
+    );
+  if (!m.closeHit) fail(`${at}: CLOSE is covered or off screen`);
+  if (OUT) {
+    await page.mouse.move(4, 4);
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: `${OUT}/${VW}x${VH}-${THEME}-dialog-${expectTab.replace(/\s+/g, "-").toLowerCase()}.png` });
+  }
+  await page.locator(".fl-lightbox--frame .fl-lightbox__close").click();
+  await dlg.waitFor({ state: "detached", timeout: 5_000 }).catch(() => fail(`${at}: CLOSE did not close the dialog`));
+}
+
+/** The front card's own tab lettering, which the dialog must repeat. The pile
+ *  letters the kind and the index as two spans with a CSS gap between them, so
+ *  its `textContent` has no space; the dialog's is one string with one. */
+const frontTab = () =>
+  page.evaluate(() => {
+    const tab = document.querySelector('.vwd__mcard[data-vwd-media-depth="0"] .vwd__mcard__tab');
+    const kind = tab?.querySelector(".vwd__mcard__kind")?.textContent ?? "";
+    const idx = tab?.querySelector(".vwd__mcard__idx")?.textContent ?? "";
+    return idx ? `${kind} ${idx}` : kind;
+  });
+
 console.log(`\nera media · ${VW}x${VH} · ${THEME} · era ${ERA}`);
 
 for (const seed of PILES) {
@@ -342,6 +457,7 @@ for (const seed of PILES) {
   }
 
   gate(s, n, "");
+  await dialogGate(`pile ${n} · card 0`, await frontTab());
 
   if (OUT) {
     // Park the pointer off the pile, or the still records a hover.
@@ -385,6 +501,8 @@ for (const seed of PILES) {
     );
     if (!focusOk) fail(`pile ${n}: the pressed tab lost focus`);
     gate(after, n, ` · card ${target} forward`);
+    await frontStillLoads(`pile ${n} · card ${target} forward`);
+    await dialogGate(`pile ${n} · card ${target}`, await frontTab());
     if (OUT) {
       const pad = 28;
       // Park the pointer off the pile, or the still records a hover.
