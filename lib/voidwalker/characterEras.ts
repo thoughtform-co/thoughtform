@@ -938,8 +938,21 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     ],
     /* ADR-082 U34: the class itself, on his own channel. ⚠ The source title is
        64 characters against the card's 60 — "my classes" comes off, the rest is
-       his own words. */
+       his own words.
+       The FRONT card is the recording of the class as it ran, live on his
+       Twitch channel — the one film the site streams from its own Supabase
+       bucket (U34's pending card, landed U39). Its poster is the frame where an
+       in-game chat bubble reads "We're having an online course" beside his
+       webcam, both in the lower third — so the card's crop looks there. */
     media: [
+      {
+        kind: "video",
+        src: `${ERA_MEDIA_STORAGE_ORIGIN}/storage/v1/object/public/era-media/azeroth/wow-class-twitch.mp4`,
+        title: "The World of Warcraft class, live on Twitch",
+        duration: "0:28",
+        poster: "/images/voidwalker/media/film-azeroth-class-twitch.jpg",
+        focus: [0.5, 0.85],
+      },
       {
         kind: "embed",
         youtubeId: "qm4KlfvJc9A",

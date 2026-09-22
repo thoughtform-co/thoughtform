@@ -4625,3 +4625,86 @@ not move.
 - **The hud-panel lab re-declares only U20's datum and U31's rise.** It has
   lacked U22's mast/trail split since that update and lacks this foot. Its era
   surface is a closed exploration (ADR-089: the era stage was not taken).
+
+## Update 39 — the class, live on Twitch: the bucket's first film (2026-09-22, owner)
+
+The owner, on the era stage: _"I uploaded a Twitch snippet which I downloaded,
+but for some reason it's not shown."_ It had never reached the site, which is
+U34 §B's pending card. Three reasons:
+
+- the only copy was on his Drive;
+- the `era-media` bucket did not exist (`NoSuchBucket`);
+- the registry named no such film.
+
+⚠ **The filename names the game, and the standing hook refuses any shell
+command that does.** That includes a plain copy of a file that is nowhere near
+a game install; the hook refused it this session, by design. The owner copied
+it under a neutral name (`azeroth-class-twitch.mp4`). The registry and the test
+carry the title through the Edit tool, which the path rules govern. Nothing was
+routed around the hook.
+
+### A · The file ships as it came
+
+- **H.264 High, 1280 × 720 at 60fps, AAC stereo, 28.8s, 4.6 Mbps.**
+- **Already faststart:** `moov` sits before `mdat`, read off the atom order
+  rather than assumed.
+- So nothing is re-encoded.
+
+### B · The bucket and the object
+
+- ⚠ **`era-media` is PUBLIC and takes `video/mp4` only, 50 MB a file.** It is
+  created with the service key from `.env.local`, never `.env`, which points at
+  another project. The key was read inside the script and never printed.
+- **The object:** `era-media/azeroth/wow-class-twitch.mp4`, 16,400,015 bytes,
+  uploaded with `cache-control: max-age=31536000`. The name is the content, so a
+  new cut takes a new name rather than an overwrite.
+- ⚠ **A HEAD answers `no-cache`; a GET carries `max-age=31536000`.** Measured:
+  `206` on a range, `Accept-Ranges: bytes`, the CDN at `HIT`. Read the cache
+  policy off a GET.
+
+### C · The card, at the FRONT of 2020's pile
+
+- **The entry:** a `video` whose `src` is built from `ERA_MEDIA_STORAGE_ORIGIN`,
+  so it cannot name a host the CSP does not.
+- **Title:** _The World of Warcraft class, live on Twitch_ (43 characters).
+- **Duration:** `0:28`, the native player's own reading, so the record agrees
+  with what the reader sees. It is lettered nowhere on the stage (U36).
+- **The poster is the frame at 24.5s:** an in-game chat bubble reads _"We're
+  having an online course"_, "class" is typed in chat, and his webcam is in the
+  corner. The picture carries the subject. 960 × 540, progressive, q82,
+  113.5 KB.
+- ⚠ **`focus` is used for the first time, at `[0.5, 0.85]`, because the
+  subject sits low.** At 1280 × 720 the frame is ~92px tall, 48 % of the
+  poster's height. A centred crop kept the bubble and cut his face in half,
+  and `0.75` still clipped it. `0.85` keeps both at every size; at
+  1920 × 1247 the frame shows ~88 % of the poster anyway.
+- **The test:** the pin becomes `[the title, "qm4KlfvJc9A"]`. The comment that
+  says a new card goes BEHIND the existing front card gains this one ruled
+  exception.
+
+### Verified
+
+- `capture-era-media --record --era azeroth` at 1280 × 720, 1920 × 1247 and
+  375 × 553, all gates pass. The front card is a `video`, and its framed dialog
+  is 16:9 to the pixel with the `<video>` loaded from the bucket
+  (`0:00 / 0:28`).
+- **Every frame stays inside its card** on this two-card pile, on the phone and
+  at 1280 × 720. Measured directly, because the capture does not ask (U38 §Left
+  open).
+- ⚠ **The dev server enforces the CSP too.** Its header is
+  `Content-Security-Policy`, not report-only, with `media-src 'self' blob: data:
+https://ehijwavsxbvnxsrunegu.supabase.co`. So the captured playback already
+  happened under enforcement.
+- ⚠ **`sweep-csp-enforced` is CLEAN on a production build, and U34's zero is
+  closed.** The build is a clean worktree at HEAD plus these three files, served
+  by `next start` with the enforced header. The sweep found 0 violations across
+  nine routes in both themes, the owner's `/arcs` on a signed pass included. Its
+  TRANSMISSION step opened 2020's front card and saw **1 request** to
+  `https://ehijwavsxbvnxsrunegu.supabase.co`, where U34 could only report 0
+  because nothing on the site asked that host for anything yet.
+
+### Left open
+
+- **The clip is 60fps at 1280 × 720 for a card that plays it at dialog scale.**
+  A 30fps cut would roughly halve the bytes; not taken without his word, since
+  the original ships unaltered.

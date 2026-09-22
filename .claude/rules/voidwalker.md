@@ -217,6 +217,21 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
       column). The capture has no frame-inside-card gate yet, and the lab's
       three-card fixture overruns its card there while the landing's pile fits.
       Measure a pile question on the landing's rows.
+  - ⚠ **U39 (2026-09-22, owner): THE BUCKET EXISTS AND HOLDS ONE FILM.**
+    2020's Twitch recording of the class is the FRONT card of Azeroth's pile,
+    a `video` streamed from `era-media/azeroth/wow-class-twitch.mp4`.
+    - **The bucket:** PUBLIC, `video/mp4` only, 50 MB a file, created with
+      `.env.local`'s service key (never `.env`, which is another project).
+    - ⚠ **Read the cache policy off a GET.** A HEAD answers `no-cache` while a
+      GET carries the `max-age=31536000` set at upload.
+    - **The card:** `src` is built from `ERA_MEDIA_STORAGE_ORIGIN`, the
+      duration is the native player's own reading, and `focus` is used for the
+      first time (`[0.5, 0.85]`, because the subject sits low and the 1280×720
+      frame shows 48 % of the poster).
+    - ⚠ **A file whose NAME names the game is still refused by the shell
+      hook**, even when it is nowhere near an install. The owner copies it
+      under a neutral name; the Edit tool carries the title into code. Never
+      route around the hook.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title

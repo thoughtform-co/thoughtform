@@ -278,13 +278,15 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
 
   it("every era carries its own pile, front card first (ADR-082 U33–U34)", () => {
     // The owner's films, in the order he gave them. A new card goes BEHIND the
-    // era's existing front card, so the two films above stay the record's lead.
+    // era's existing front card, so the two films above stay the record's lead —
+    // with ONE ruled exception: 2020's Twitch recording of the class itself goes
+    // to the FRONT of its pile (ADR-082 U34 §B), the bucket's one film.
     const pile = (id: string) =>
       eraMedia(findCharacterEra(id)).map((m) => (m.kind === "embed" ? m.youtubeId : m.title));
     expect(pile("expanse")).toEqual(["a5-DcdfxCvU", "pNlYOGwt1nA"]);
     expect(pile("loop")).toEqual(["EQKIiqVyjJk", "bouBxlVy3zc"]);
     expect(pile("genai")).toEqual(["jFVezT4mznU", "T6z9sbGl04Y"]);
-    expect(pile("azeroth")).toEqual(["qm4KlfvJc9A"]);
+    expect(pile("azeroth")).toEqual(["The World of Warcraft class, live on Twitch", "qm4KlfvJc9A"]);
     expect(pile("pokemon-go")).toEqual(["tRdaNTpxmR8"]);
     // Every card in a pile states its length, so the head's tag never goes
     // blank on one card and prints a time on the next.
