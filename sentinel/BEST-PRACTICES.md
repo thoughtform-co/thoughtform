@@ -972,6 +972,8 @@ When using `clip-path` for non-rectangular shapes, the border gets clipped too. 
 
 **Why it matters:** CSS `clip-path` clips everything including borders. SVG gives precise stroke control.
 
+⚠ **It clips the element's CHILDREN too.** A control seated outside the silhouette — a close key in the band beside a folder's tab — vanishes if it is a descendant of the clipped box. Clip the material LAYER (`::before` for the ground, `::after` for a lip ring) and leave the box itself unclipped (ADR-082 U35's framed lightbox).
+
 ---
 
 ### Scroll Clipping vs Decorative Clipping
@@ -1341,6 +1343,19 @@ rendered media and slot bounds—not only the parent dimensions.
 
 **Why it matters:** the mask can make the spill look plausible while hit
 targets and reading order are already compromised.
+
+### A still that is already the right size does not need the optimizer
+
+One `next/image` optimizer key — one file, one width, one format — can hang
+forever while every other key encodes in milliseconds, and the image it feeds
+stays black with nothing erroring (ADR-082 U35: a rotated card's lazy still,
+`w=640` as WebP). A poster already cut to its display size and budget
+(960 × 540, ≤120 KB) gains nothing from a re-encode: give it `unoptimized`, pin
+the raw `src` in a markup test, and gate "decoded within N seconds" on every
+state that requests a fresh image — a rotation, a tab, a dialog.
+
+**Why it matters:** the failure is one key, so it appears only on the state
+that asks for it, and a restart "fixes" it until the next time.
 
 ### Critical phone geometry cannot wait for a runtime mode attribute
 
