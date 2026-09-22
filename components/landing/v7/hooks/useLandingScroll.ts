@@ -174,9 +174,32 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     const stations = Array.from(root.querySelectorAll<HTMLElement>(".station"));
     const viewportMid = scrollY + vh / 2;
     let activeStation = stations[0];
+    /* ⚠ **A STUCK STATION'S PAINTED TOP IS NOT WHERE IT LIVES, AND
+       `offsetTop` DOES NOT RESCUE YOU.** Since ADR-105 U3 `#contact` is
+       `position: sticky; bottom: 0` for the whole of the musings beat, so its
+       painted top is `vh − h` with `h ≥ vh` — `≤ 0` at EVERY scroll position
+       once the bed is armed — and this is a LAST-WINS loop over stations in
+       document order with `#contact` last. The HUD's corner readout therefore
+       said CONTACT for the entire beat and the `musings` row never lit.
+       ⚠ **MEASURED, because the obvious fix does not work**: `offsetTop`
+       reports the STUCK position too. At 1024×760 inside the beat,
+       `#contact.offsetTop` read **17174** against `#musings`'s **17217** — a
+       station beginning BEFORE the one above it, which cannot happen in flow.
+       (`lib/rail-manifest/clickToNavigate.ts` says "which sticky does not
+       move"; that was written before this surface had a sticky station.)
+       So the truth for a stuck station is the bottom edge of the one ABOVE
+       it, which is in normal flow and whose rect can be trusted.
+       ⚠ Narrowed to `sticky` deliberately: a blanket `max` would break the
+       phone's `#about`, which takes a `-100svh` weld (ADR-115) and legitimately
+       begins above its predecessor's bottom. */
+    let prevBottom = Number.NEGATIVE_INFINITY;
     for (const station of stations) {
-      const stationTop = scrollY + station.getBoundingClientRect().top;
+      const rect = station.getBoundingClientRect();
+      const ownTop = scrollY + rect.top;
+      const stationTop =
+        getComputedStyle(station).position === "sticky" ? Math.max(ownTop, prevBottom) : ownTop;
       if (stationTop <= viewportMid) activeStation = station;
+      prevBottom = ownTop + rect.height;
     }
     const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";
 

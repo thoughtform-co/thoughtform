@@ -154,6 +154,11 @@ const readRack = () =>
       ambient: document.documentElement.hasAttribute("data-services-ambient"),
       exit: document.documentElement.hasAttribute("data-corridor-exit"),
       ftReveal: document.documentElement.hasAttribute("data-ft-reveal"),
+      /* ⚠ THE HUD'S OWN READOUT. `#contact` is sticky through this beat, and
+         a picker reading the PAINTED rect reports it as the active station
+         from the moment the bed arms — the corner said CONTACT for the whole
+         of the musings beat and the `musings` row never lit. */
+      activeStation: document.documentElement.getAttribute("data-active-station"),
       muReady: mu?.hasAttribute("data-mu-ready") ?? false,
 
       /* The cover contract (ADR-030 §6): its own opaque ground AND a painted
@@ -375,13 +380,13 @@ line(`cards     ${first.cards.length} · type ${first.cards[0]?.titlePx}/${first
 line(`notch     ch ${notch?.ch} · mid ${notch?.mid} · TL ${notch?.tl} TR ${notch?.tr} BL ${notch?.bl} BR ${notch?.br}`);
 line(`notch     hits ${JSON.stringify(notch?.hits)}`);
 line("");
-line("  p      landed  ready  open   entry   drift   ambient/exit  ftReveal  #contact            revealed");
+line("  p      landed  ready  open   entry   drift   ambient/exit  ftReveal  readout   #contact            revealed");
 for (const s of walk) {
   const pad = (v, n) => String(v).padEnd(n);
   line(
     `  ${pad(s.p, 6)} ${pad(s.landed, 7)} ${pad(s.muReady, 6)} ${pad(s.front, 6)} ` +
       `${pad(s.clock.entry, 7)} ${pad(s.clock.drift, 7)} ${pad(`${s.ambient}/${s.exit}`, 13)} ` +
-      `${pad(s.ftReveal, 9)} ${pad(`${s.contactPosition} z${s.contactZ} y${s.contactBox?.y}`, 19)} ${s.revealed}`
+      `${pad(s.ftReveal, 9)} ${pad(s.activeStation, 9)} ${pad(`${s.contactPosition} z${s.contactZ} y${s.contactBox?.y}`, 19)} ${s.revealed}`
   );
 }
 
@@ -481,6 +486,13 @@ if (!phone) {
   const ends = walk.filter((s) => typeof s.p === "number" && s.p >= 0.9);
   const armed = walk.filter((s) => s.ftReveal);
   if (!armed.length) fails.push("the footer's bed was never armed");
+  /* ⚠ THE READOUT NAMES THIS STATION FOR THE WHOLE BEAT. It is the one thing
+     the sticky bed can silently take away, and nothing measured it. */
+  for (const s of walk) {
+    if (typeof s.p !== "number") continue;
+    if (s.activeStation !== "musings")
+      fails.push(`the HUD reads ${s.activeStation} at p ${s.p}, not musings`);
+  }
   if (!open.stageMode && ends.some((s) => !s.ftReveal))
     fails.push("the footer's bed was not armed inside the shelf");
   if (open.stageMode && ends.some((s) => s.ftReveal))
