@@ -341,6 +341,162 @@ def encode(fdir: Path, period: int, lut: dict, out: Path, era: str, version: str
     return sizes
 
 
+def ground_frames(loopdir: Path, outdir: Path, foot_target: float, target_p75: float = 105.0) -> dict:
+    """ROUTE B (ADR-082 U31/U32): a PLATE's loop — a colour figure on the flat
+    key ground — keyed, un-mixed, graded gold on the Architect's own curve,
+    bloomed, and seated. Straight-alpha RGBA PNGs out, one per loop frame.
+
+    ⚠ ONE GROUND FOR THE WHOLE CLIP, and its drift is REPORTED. A key read off
+    each frame's own corners follows the model's exposure wobble and makes the
+    edge breathe; the median of every frame's corners is the ground, and the
+    furthest any frame strays from it is `ground_drift` (K2: Veo held it).
+    ⚠ ONE EXPOSURE SCALAR FOR THE CLIP, solved on frame one to land the deep
+    interior's p75 on `target_p75` (the Architect sits ~91-103) and clamped to
+    gold.grade's own [0.85, 1.35]. Never a histogram match: that would re-light
+    every era to one picture.
+    ⚠ THE SEAT PADS TRANSPARENT. `seat_frames` shifts on-black RGB frames and
+    pads with zeros, which a LUMA key reads as ground; under a ground key the
+    frame is already RGBA, so the padding is simply alpha 0.
+    """
+    import numpy as np
+    from PIL import Image
+    from scipy import ndimage
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import gold
+
+    files = sorted(loopdir.glob("*.png"))
+    if not files:
+        raise SystemExit(f"no loop frames in {loopdir}")
+
+    def load(f: Path) -> np.ndarray:
+        return np.asarray(Image.open(f).convert("RGB")).astype(np.float32)
+
+    c = 16
+    corners = []
+    for f in files:
+        rgb = load(f)
+        px = np.concatenate([rgb[:c, :c].reshape(-1, 3), rgb[:c, -c:].reshape(-1, 3),
+                             rgb[-c:, :c].reshape(-1, 3), rgb[-c:, -c:].reshape(-1, 3)])
+        corners.append(np.median(px, axis=0))
+    corners = np.array(corners)
+    ground = np.median(corners, axis=0)
+    drift = float(np.abs(corners - ground).max())
+
+    k = H / 1280
+
+    def figure(rgb: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        a = gold.key_matte(rgb, tuple(float(v) for v in ground))
+        # Specks: the ground is flat, so anything opaque and SMALL out there is
+        # the model's noise, never the man.
+        lab, n = ndimage.label(a > 0.5)
+        if n > 1:
+            sizes = ndimage.sum(np.ones_like(a), lab, range(1, n + 1))
+            keep = np.isin(lab, 1 + np.where(sizes >= 400)[0])
+            a = np.where(keep | (a <= 0.5), a, 0.0)
+        return gold.unmix(rgb, a, ground), gold.finish_edge(a, k)
+
+    fg0, a0 = figure(load(files[0]))
+
+    def p75_at(e: float) -> float:
+        return gold.exposure_gate(gold.luma(gold.grade(fg0, e)), a0 > 0.5)["p75"]
+
+    lo, hi = 0.85, 1.35
+    if p75_at(lo) >= target_p75:
+        exposure = lo
+    elif p75_at(hi) <= target_p75:
+        exposure = hi
+    else:
+        for _ in range(18):
+            mid = (lo + hi) / 2
+            lo, hi = (mid, hi) if p75_at(mid) < target_p75 else (lo, mid)
+        exposure = (lo + hi) / 2
+    gate0 = gold.exposure_gate(gold.luma(gold.grade(fg0, exposure)), a0 > 0.5)
+
+    # ⚠ TWO PASSES, ONE FRAME IN MEMORY. A clip is ~192 frames of 720x1280
+    #   RGBA, ~700 MB as one array and several times that once it is shifted and
+    #   measured; the seat needs only each frame's lowest and highest opaque row.
+    outdir.mkdir(parents=True, exist_ok=True)
+    tmp = outdir / "_ungraded-seat"
+    tmp.mkdir(exist_ok=True)
+    for f in list(outdir.glob("*.png")) + list(tmp.glob("*.png")):
+        f.unlink()
+    lowest, highest = -1, H
+    for i, f in enumerate(files, start=1):
+        fg, a = figure(load(f))
+        rgb_out, a_out = gold.compose(gold.grade(fg, exposure), a, k)
+        rgba = np.dstack([rgb_out, a_out * 255]).clip(0, 255).astype(np.uint8)
+        rows = np.where((rgba[..., 3] >= OPAQUE).any(axis=1))[0]
+        if rows.size:
+            lowest, highest = max(lowest, int(rows.max())), min(highest, int(rows.min()))
+        Image.fromarray(rgba, "RGBA").save(tmp / f"{i:05d}.png")
+    if lowest < 0:
+        raise SystemExit("the ground key left nothing opaque — check the plate's ground")
+
+    # The seat: the lowest row any frame paints opaque lands on the foot anchor.
+    foot = lowest + 1
+    shift = int(round(foot_target * H)) - foot
+    top_cut = shift < 0 and highest < -shift
+
+    # T2: frame-to-frame change inside the figure — a grade that strobes is
+    # the per-frame restyle U14 rejected, arriving by another road.
+    diffs, prev = [], None
+    for f in sorted(tmp.glob("*.png")):
+        fr = np.asarray(Image.open(f))
+        seated = np.zeros_like(fr)
+        if shift >= 0:
+            seated[shift:] = fr[: H - shift]
+        else:
+            seated[: H + shift] = fr[-shift:]
+        Image.fromarray(seated, "RGBA").save(outdir / f.name)
+        y = 0.299 * seated[..., 0] + 0.587 * seated[..., 1] + 0.114 * seated[..., 2]
+        inside = seated[..., 3] >= 128
+        if prev is not None:
+            both = inside & prev[1]
+            if both.any():
+                diffs.append(float(np.abs(y - prev[0])[both].mean()))
+        prev = (y, inside)
+        f.unlink()
+    tmp.rmdir()
+    flicker = float(np.mean(diffs)) if diffs else 0.0
+    return {"ground": [round(float(v), 1) for v in ground], "ground_drift": round(drift, 1),
+            "exposure": round(exposure, 3), "p75": gate0["p75"], "hot": gate0["hot"],
+            "exposure_ok": gate0["ok"], "shift": shift, "foot_before": round(foot / H, 4),
+            "top_cut": top_cut, "flicker": round(flicker, 2), "frames": len(files)}
+
+
+def encode_rgba(gdir: Path, n: int, out: Path, era: str, version: str) -> dict:
+    """Every lane from the graded RGBA frames (ADR-082 U31). ⚠ The MP4 is the
+    frame composited OVER BLACK with `overlay`, never `alphamerge` (U12)."""
+    out.mkdir(parents=True, exist_ok=True)
+    stem = f"holo-idle-{era}-{version}"
+    poster = f"holo-still-{era}-{version}"
+    src = str(gdir / "%05d.png")
+    common = ["-y", "-loglevel", "error", "-framerate", str(FPS), "-i", src, "-frames:v", str(n), "-an"]
+    lane("webm", ["ffmpeg", *common, "-c:v", "libvpx-vp9", "-pix_fmt", "yuva420p",
+         "-auto-alt-ref", "0", "-crf", "48", "-b:v", "0", "-row-mt", "1",
+         "-tile-columns", "2", "-g", "240", "-metadata:s:v:0", "alpha_mode=1",
+         str(out / f"{stem}.webm")])
+    lane("mp4", ["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", f"color=black:s={W}x{H}:r={FPS}",
+         "-framerate", str(FPS), "-i", src, "-frames:v", str(n), "-an",
+         "-filter_complex", "[0:v][1:v]overlay=shortest=1:format=auto,format=yuv420p",
+         "-c:v", "libx264", "-preset", "veryslow", "-crf", "26", "-profile:v", "high", "-level", "4.0",
+         "-movflags", "+faststart", "-g", "240", str(out / f"{stem}.mp4")])
+    f0 = gdir / "00001.png"
+    lane("jpg", ["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", f"color=black:s={W}x{H}",
+                 "-i", str(f0), "-filter_complex", "[0:v][1:v]overlay=format=auto,format=yuvj420p",
+                 "-frames:v", "1", "-q:v", "4", str(out / f"{poster}.jpg")])
+    if not lane("webp", ["cwebp", "-quiet", "-q", "82", "-alpha_q", "100", "-m", "6",
+                         "-sharp_yuv", str(f0), "-o", str(out / f"{poster}.webp")]):
+        if has_encoder("libwebp"):
+            print("    → falling back to ffmpeg's libwebp")
+            lane("webp", ["ffmpeg", "-y", "-loglevel", "error", "-i", str(f0),
+                          "-c:v", "libwebp", "-lossless", "0", "-quality", "82",
+                          "-pix_fmt", "bgra", str(out / f"{poster}.webp")])
+    return {f.name: f.stat().st_size for f in sorted(out.iterdir())
+            if f.is_file() and f.name.startswith((stem, poster))}
+
+
 def measure_anchors(webm: Path) -> dict:
     """headY / footY / leftX / rightX off the DELIVERED alpha, over every frame.
 
@@ -387,6 +543,66 @@ def measure_anchors(webm: Path) -> dict:
             "headW": round(head_w / W, 4)}
 
 
+def main_ground(args: argparse.Namespace, wave: Path, raw: Path) -> int:
+    """Route B end to end: close the loop, key + grade every frame, encode from
+    RGBA, measure the anchors off what was delivered."""
+    period = detect_period(raw)
+    print(f"trim alone: period {period['period']}/{period['frames']}  seam "
+          f"{period['seam']}  motion {period['motion']}  {'closed' if period['closed'] else 'OPEN'}")
+    loopdir = wave / "veo" / "loop"
+    joined = build_loop(raw, loopdir, period["period"], args.blend)
+    print(f"overlap {joined['blend']}f: seam {joined['seam']}  motion {joined['motion']}  "
+          f"{'CLOSED' if joined['closed'] else 'STILL OPEN — re-draw'}")
+    if not joined["closed"]:
+        print("⚠ the loop does not close; ship nothing from this take.")
+        return 1
+
+    gdir = wave / "veo" / "graded"
+    g = ground_frames(loopdir, gdir, args.foot)
+    print(f"ground {g['ground']} (drift {g['ground_drift']})  exposure x{g['exposure']} -> "
+          f"p75 {g['p75']} hot {g['hot']} {'ok' if g['exposure_ok'] else 'OFF'}  "
+          f"seat {g['shift']:+d}px (boots were at {g['foot_before']})  flicker {g['flicker']}")
+    problems = []
+    if g["ground_drift"] > 12:
+        problems.append(f"K2 the ground drifted {g['ground_drift']} over the clip")
+    if not g["exposure_ok"]:
+        problems.append("the deep interior is outside the Architect's exposure band")
+    if g["top_cut"]:
+        problems.append("the seat pushed opaque rows off the TOP of the canvas")
+    if g["flicker"] > 6.0:
+        problems.append(f"T2 interior flicker {g['flicker']} > 6.0")
+    for p in problems:
+        print(f"  ! {p}")
+
+    sizes = encode_rgba(gdir, joined["frames"], wave / "out", args.era, args.version)
+    for name, size in sizes.items():
+        print(f"  {name:38} {size / 1024:8.0f} KB")
+    stem = f"holo-idle-{args.era}-{args.version}"
+    still = f"holo-still-{args.era}-{args.version}"
+    anchors = measure_anchors(wave / "out" / f"{stem}.webm")
+    print(f"anchors: headY {anchors['headY']}  footY {anchors['footY']}  "
+          f"x {anchors['leftX']}-{anchors['rightX']}  over {anchors['frames']} frames")
+    (wave / "manifest.json").write_text(json.dumps(
+        {"wave": args.wave, "era": args.era, "version": args.version, "route": "ground",
+         "clip": raw.name, "loop": {**period, **joined}, "grade": g, "encode": sizes,
+         "anchors": anchors, "problems": problems}, indent=1))
+    print("\nregistry block for characterEras.ts:")
+    print("\n".join([
+        f'  videoPath: "/videos/voidwalker/{stem}.mp4",',
+        f'  videoAlphaPath: "/videos/voidwalker/{stem}.webm",',
+        "  // ⚠ NO `videoAlphaHevcPath` — HEVC alpha needs macOS VideoToolbox; cut it",
+        "  //   on a Mac from this wave's veo/graded/ RGBA frames before shipping one.",
+        f'  posterPath: "/images/voidwalker/{still}.jpg",',
+        f'  posterAlphaPath: "/images/voidwalker/{still}.webp",',
+        "  frame: { width: 720, height: 1280 },",
+        f'  headY: {anchors["headY"]},',
+        f'  footY: {anchors["footY"]},',
+    ]))
+    print(f"\nhead width {anchors['headW']} of the canvas — a NON-STANDING pose authors `stature`"
+          f"\n  from it (the standing delivery's span x its headW / this headW).")
+    return 0 if not problems else 2
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--wave", required=True)
@@ -396,13 +612,21 @@ def main() -> int:
                     help="where the boots should land on the canvas (canonical 0.998)")
     ap.add_argument("--blend", type=int, default=16,
                     help="frames of tail-into-head overlap (see build_loop)")
+    # ADR-082 U31/U32: `ground` is route B — a colour PLATE's clip on the flat
+    # key ground, keyed and graded gold here. `luma` is the one-step route: a
+    # clip already gold on black, keyed by brightness.
+    ap.add_argument("--matte", choices=("luma", "ground"), default="luma")
+    ap.add_argument("--clip", default=None, help="the Veo clip under veo/ (default raw.mp4)")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent
     wave = root / "waves" / args.wave
-    raw = wave / "veo" / "raw.mp4"
+    raw = wave / "veo" / (args.clip or "raw.mp4")
     if not raw.exists():
         raise SystemExit(f"no veo output at {raw}")
+
+    if args.matte == "ground":
+        return main_ground(args, wave, raw)
 
     fdir = wave / "veo" / "frames"
     n = frames(raw, fdir)

@@ -22,7 +22,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from env import require  # noqa: E402
-from prompt import IDLE_NEGATIVE, idle_prompt  # noqa: E402
+from prompt import (  # noqa: E402
+    IDLE_NEGATIVE,
+    PLATE_IDLE_NEGATIVE,
+    idle_prompt,
+    plate_idle_prompt,
+)
 
 MODEL = "veo-3.1-generate-preview"
 
@@ -34,18 +39,45 @@ def main() -> int:
     # The era only selects an IDLE override; absent, the shared standing
     # breather is used exactly as before (ADR-082 U26).
     ap.add_argument("--era", default=None)
+    # ADR-082 U31: a PLATE is a colour figure on the key ground. It animates
+    # with the ground-hold prompt, and the gold comes afterwards, per frame,
+    # from gold.py — never from the video model.
+    ap.add_argument("--stage", choices=("still", "plate"), default="still")
+    ap.add_argument(
+        "--prop-wording",
+        action="store_true",
+        help="plate stage: the one re-word allowed if the model refuses a weapon beside a real face",
+    )
+    ap.add_argument("--dry-run", action="store_true", help="print the request, send nothing")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parent
     wave = root / "waves" / args.wave
     pick = args.still or (wave / "pick.txt").read_text().strip()
-    still = wave / "stills" / pick
+    plate = args.stage == "plate"
+    still = wave / ("plates" if plate else "stills") / pick
     if not still.exists():
-        raise SystemExit(f"picked still not found: {still}")
+        raise SystemExit(f"picked {'plate' if plate else 'still'} not found: {still}")
+    if plate and not args.era:
+        raise SystemExit("the plate stage needs --era (the idle is authored per era)")
+
+    if plate:
+        prompt = plate_idle_prompt(args.era, args.prop_wording)
+        negative = PLATE_IDLE_NEGATIVE
+        if args.prop_wording:
+            negative = negative.replace("rifle", "costume prop carbine")
+    else:
+        prompt = idle_prompt(args.era)
+        negative = IDLE_NEGATIVE
 
     out_dir = wave / "veo"
     out_dir.mkdir(parents=True, exist_ok=True)
-    raw = out_dir / "raw.mp4"
+    # A plate's clip is named for the plate: a second pick must not find the
+    # first pick's clip on disk and "keep" it.
+    raw = out_dir / (f"{Path(pick).stem}.raw.mp4" if plate else "raw.mp4")
+    if args.dry_run:
+        print(f"veo · {MODEL} · from {still.name} -> {raw.name}\n\nPROMPT\n{prompt}\n\nNEGATIVE\n{negative}")
+        return 0
     if raw.exists():
         print(f"{raw} already on disk — kept (delete it to re-draw)")
         return 0
@@ -58,13 +90,13 @@ def main() -> int:
 
     op = client.models.generate_videos(
         model=MODEL,
-        prompt=idle_prompt(args.era),
+        prompt=prompt,
         image=types.Image.from_file(location=str(still)),
         config=types.GenerateVideosConfig(
             aspect_ratio="9:16",
             resolution="720p",
             duration_seconds=8,
-            negative_prompt=IDLE_NEGATIVE,
+            negative_prompt=negative,
             # The figure is a hologram of a real person; the model needs this
             # to be explicit rather than inferred.
             person_generation="allow_adult",

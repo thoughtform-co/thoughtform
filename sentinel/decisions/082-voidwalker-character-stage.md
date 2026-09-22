@@ -3860,6 +3860,24 @@ flat ground: the model drifts the blue off `#0A28D2` and lays a gradient on it,
 so the chroma matte has to estimate the ground PER PLATE rather than trust the
 lock. G1 is his pick.
 
+- **THE RIFLE IS AN EDIT, NOT A RE-DRAW** (owner, 2026-09-22: _"the images you
+  made were good, but only the gun needs to look more futuristic"_, with two
+  photographs of production prop rifles). `generate.py --stage edit` changes
+  ONE thing in plate F and writes into its own wave (`20260922-expanse-v4`) so
+  the gates and the sheet read an edit as a plate; three edits kept his face
+  pixel-for-pixel at sheet scale. ⚠ The edit is placed in the PICTURE's terms
+  ("the right side of the picture, in the same hand") — plate F holds the rifle
+  in the hand the plate lock did NOT name, and a prompt that says "right hand"
+  invites the model to move it and redraw both arms. ⚠ The design is said in
+  words as well as shown, so the edit holds without the photographs.
+- **ROUTE B'S VIDEO STEP EXISTS** — `vid.py --stage plate` animates a plate with
+  the ground-hold prompt and its own negative (`IDLE_NEGATIVE` bans
+  "background", which fights a key ground), and `post.py --matte ground` keys
+  every loop frame on ONE clip ground (drift reported), grades it on one
+  exposure scalar, seats it on transparent padding and encodes every lane from
+  RGBA. Proven on a synthetic clip of edit A (loop closed, drift 1.0, p75
+  108.6, seated +35px, flicker 3.5, no fringe on the dark ground); no Veo clip
+  exists yet.
 - ⚠ **G0 HELD THE PLATES, AND THE PLATES NEVER DEPENDED ON IT.** Both gold
   routes — the deterministic grade and the model's own quiet edit — start from a
   colour plate, so the only step G0 decides is the gold one. A gate belongs on

@@ -37,7 +37,16 @@ python scripts/voidwalker-avatar/generate.py --era genai --wave <wave> --stage p
 python scripts/voidwalker-avatar/generate.py --era genai --wave <wave> --stage plate
 python scripts/voidwalker-avatar/grade.py --wave <wave> --stage plate   # gates + a gold preview each
 python scripts/voidwalker-avatar/sheet.py --wave <wave>                 # the blind pick sheet
+# ONE change to a picked plate, into a NEW wave (its plates/ are the edits, so grade + sheet read them):
+python scripts/voidwalker-avatar/generate.py --era expanse --wave <new-wave> --stage edit --source <plate.png> [--design <photo> ...]
+# the picked plate -> an 8s idle on the ground (paid), then route B's key + gold, per frame:
+python scripts/voidwalker-avatar/vid.py --wave <wave> --stage plate --era expanse --still <plate.png>
+python scripts/voidwalker-avatar/post.py --wave <wave> --era expanse --version v2 --matte ground --clip <plate-stem>.raw.mp4
 ```
+
+⚠ `sheet.py`'s face finder is a skin-colour blob, and the rifle edit's brick-red
+foregrip is skin-coloured enough to win: on an edit wave the face zoom can land
+on the rifle. Crop the face yourself before calling a likeness.
 
 The owner's gates are the clock: **G0** the blind pair (is this grade the
 Architect's look?), **G1** the plate pick (is it him?), **G2** the idle, **G3**

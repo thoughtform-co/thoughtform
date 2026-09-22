@@ -58,7 +58,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from env import require  # noqa: E402
-from prompt import BLOCKED, plate_prompt, still_prompt  # noqa: E402
+from prompt import BLOCKED, edit_prompt, plate_prompt, still_prompt  # noqa: E402
 
 MODEL = "gemini-3-pro-image"
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -204,7 +204,18 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--era", required=True)
     ap.add_argument("--wave", required=True, help="waves/<dir>")
-    ap.add_argument("--stage", choices=("still", "plate"), default="still")
+    ap.add_argument("--stage", choices=("still", "plate", "edit"), default="still")
+    # ⚠ THE EDIT STAGE WRITES INTO ITS OWN WAVE'S `plates/` (ADR-082 U32), so
+    # grade.py and sheet.py read an edit exactly as they read a plate — the
+    # gates, the gold preview and the blind face zoom come for free.
+    ap.add_argument("--source", type=Path, help="edit stage: the picked plate to change")
+    ap.add_argument(
+        "--design",
+        type=Path,
+        nargs="*",
+        default=[],
+        help="edit stage: photographs of the new rifle's DESIGN (optional; the words carry it without them)",
+    )
     ap.add_argument("--identity", type=Path, help="still stage: the identity frame")
     # ⚠ MORE THAN ONE WARDROBE REFERENCE IS ALLOWED, and the identity still
     # goes FIRST. `expanse` needs two: a solo full-body frame for the silhouette
@@ -219,7 +230,7 @@ def main() -> int:
 
     root = Path(__file__).resolve().parent
     wave = root / "waves" / args.wave
-    out_dir = wave / ("plates" if args.stage == "plate" else "stills")
+    out_dir = wave / ("plates" if args.stage in ("plate", "edit") else "stills")
     out_dir.mkdir(parents=True, exist_ok=True)
     manifest = wave / "MANIFEST.jsonl"
 
@@ -228,6 +239,19 @@ def main() -> int:
         refs = plate_refs(wave)
         stem = f"plate-{args.era}"
         note_tail = "Vary only the draw; the man, the wardrobe, the pose and the light are fixed."
+    elif args.stage == "edit":
+        if not args.source or not args.source.exists():
+            raise SystemExit(f"the edit stage needs --source, an existing plate: {args.source}")
+        missing = [d for d in args.design if not d.exists()]
+        if missing:
+            raise SystemExit("design photograph(s) not found: " + ", ".join(map(str, missing)))
+        prompt = edit_prompt(args.era, len(args.design))
+        # The source goes UNSHRUNK: it is the likeness being kept, not a hint.
+        refs = [("THE PHOTOGRAPH TO EDIT", args.source)]
+        for i, d in enumerate(args.design, start=1):
+            refs.append(("RIFLE DESIGN", shrink(d, wave / "refs" / f"rifle-design-{i}.jpg")))
+        stem = f"plate-{args.era}-edit"
+        note_tail = "Change only the rifle; everything else in IMAGE 1 is fixed."
     else:
         if not args.identity or not args.wardrobe:
             raise SystemExit("the still stage needs --identity and --wardrobe")

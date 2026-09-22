@@ -461,6 +461,19 @@ PLATE_IDLE: dict[str, tuple[str, str]] = {
 }
 
 
+#: ⚠ NOT `IDLE_NEGATIVE`. That one bans "background" outright, which was right
+#: for a figure on black and fights a plate whose FLAT KEY GROUND is the one
+#: thing the video must keep; what a plate cannot have is a ground that CHANGES
+#: (a gradient, a floor, a shadow, blue light spilling onto the figure).
+PLATE_IDLE_NEGATIVE = (
+    "camera movement, pan, tilt, zoom, dolly, orbit, handheld shake; standing up, "
+    "walking, turning away, talking; lowering, swinging or aiming the rifle; "
+    "particles, smoke, light rays, flicker, exposure change; a gradient, vignette, "
+    "floor, horizon or shadow on the ground; blue light on the figure; text, "
+    "watermark; a second figure; the figure leaving the frame; cropped boots"
+)
+
+
 def plate_idle_prompt(era: str, prop_wording: bool = False) -> str:
     """The idle clause for a plate. `prop_wording` is the one re-word the chain
     allows if the video model refuses a weapon beside a real face; a second
@@ -474,6 +487,66 @@ def plate_idle_prompt(era: str, prop_wording: bool = False) -> str:
         "The background is a FLAT UNIFORM BLUE, the same value in every corner on every "
         "frame. The lighting does not change. Real time."
     )
+
+
+#: ADR-082 U32 (owner, 2026-09-22): "the images you made were good, but only the
+#: gun needs to look more futuristic", with two photographs of production prop
+#: rifles. ⚠ AN EDIT OF THE PICKED PLATE, NEVER A RE-DRAW: three of the six
+#: plates lost his likeness, and an edit keeps the one that has it.
+#: ⚠ The design is ALSO said in words, read off his two photographs, so the
+#: edit holds when the photographs cannot be attached — and so the model is
+#: told WHICH of their properties to take (shapes, panels, colours), not their
+#: side-on angle, their white ground or their stencilled markings.
+RIFLE_DESIGN = (
+    "angular matte black polymer; a long squared handguard pierced by rows of "
+    "horizontal slotted vents; a flat top rail carrying a small low optic in a boxy "
+    "housing; a squared stock with a light-grey side panel; a ribbed pistol grip; "
+    "a few restrained accent parts in muted brick red (the optic's housing, an angled "
+    "front grip) and ONE small red hazard-triangle decal; a short squared muzzle. "
+    "Industrial and military rather than sleek: a tool, not a toy"
+)
+
+EDIT_RIFLE = """
+IMAGE 1 is the photograph to edit.{design_clause}
+
+Keep IMAGE 1 exactly as it is: the same man, the same face and beard, the cap,
+the earpiece and the boom mic, the armour, the kilt, the socks, the boots, the
+pose, both hands, the framing, the light, and the flat blue ground. Do not
+redraw, re-light or re-sculpt anything except the rifle.
+
+Make ONE change: replace the rifle he is holding upright with a FUTURISTIC
+CARBINE — {design}.
+
+It is held EXACTLY where and how the old one is: on the RIGHT SIDE OF THE
+PICTURE, in the same hand and the same grip, standing VERTICAL beside his
+shoulder, its stock resting where the old stock rests, its muzzle a little above
+the cap. Do not move it to the other hand and do not change either arm. His
+finger rests outside the trigger guard. The same length as the old rifle and
+lit by the same light (a soft key from camera-left, a gentle fill from the
+right) — photoreal and physically there: a used production prop, faintly
+scuffed, never glossy, never glowing.
+
+No legible text, numbers or logos anywhere on it. The ground stays one
+perfectly uniform blue, #0A28D2, edge to edge — no shadow, no gradient, and no
+blue light on the figure.
+"""
+
+
+def edit_prompt(era: str, n_design: int) -> str:
+    """The one-change edit for a picked plate. `n_design` is how many photographs
+    of the new rifle follow IMAGE 1 (0 means the words alone carry it)."""
+    if era != "expanse":
+        raise SystemExit(f"no plate edit is authored for era '{era}'")
+    if n_design:
+        nums = " and ".join(f"IMAGE {i}" for i in range(2, 2 + n_design))
+        clause = (
+            f" {nums} show only the DESIGN of the new rifle — take its shapes, "
+            "panels and colours; ignore their angle, their background, their scale "
+            "and any lettering on them."
+        )
+    else:
+        clause = ""
+    return EDIT_RIFLE.format(design_clause=clause, design=RIFLE_DESIGN)
 
 
 #: Route A′: the Architect's own second step, as ONE change to a picked plate.
