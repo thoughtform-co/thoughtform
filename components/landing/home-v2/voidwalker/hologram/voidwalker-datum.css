@@ -383,9 +383,8 @@
    title now takes back, and BOTH were said elsewhere — the reel prints the
    year on every stop and marks the position with one lit diamond, so the pair
    was the surface's own "said twice" defect at its loudest point.
-   ⚠ THE YEAR SURVIVES, ON SCOPE'S HEAD RULE. See `.vwd__head__tag--year`:
-   a value right-aligned on the panel's own short rule is the reference's
-   grammar verbatim, and it is the first rule under the title. */
+   (U23 kept the year on SCOPE's head rule; ADR-082 U36 took it off with the
+   other three head tags, so the band is the one place it is lettered.) */
 /* ⚠ THE HOUSE DISPLAY RECIPE, IN FULL (ADR-082 U25, owner 2026-09-18).
    The size was never the problem — this clamp is byte-locked to
    `.voidwalker__name` (landing.css) because the About name TRANSLATES into
@@ -474,23 +473,13 @@
 .vwd__head__kicker {
   color: rgb(var(--vwd-dawn-rgb));
 }
-.vwd__head__tag {
-  font-size: 0.85em;
-  letter-spacing: var(--track-eyebrow);
-  color: rgba(var(--vwd-dawn-rgb), 0.4);
-}
-/* ⚠ THE ERA'S DATE, AT THE HEAD'S OWN SIZE (ADR-082 U23). The register's other
-   tags are secondary readouts about the panel (`era.short`, a duration, a
-   count, `None`) and letter at 0.85em; a DATE is the record's own value and may
-   not read smaller than the label beside it. It does NOT join the decode — the
-   `ul` head is a §G actor at `--ci-off: 0.16`, whose ramp saturates around
-   `--vwh-in` 0.655, long after `TITLE_DECODE_WINDOW` closes at 0.18, so a
-   scramble seated here would resolve invisibly and then fade up finished. */
-.vwd__head__tag--year {
-  font-size: 1em;
-  letter-spacing: var(--track-label);
-  color: rgba(var(--vwd-dawn-rgb), 0.7);
-}
+/* ⚠ A HEAD IS ITS NAME AND ITS RULE (ADR-082 U36, owner: "we don't need these
+   little numbers"). The right-hand tags are DELETED on all four heads — SCOPE's
+   year, FACTS' era name, TRANSMISSION's duration and ON RECORD's count, and
+   the `None` two of them printed for an empty seat. Each said something the
+   stage already says (the band letters every year and names the open era; the
+   cards count themselves; an empty seat is its body's own line). The heads'
+   height is unchanged — the kicker was always the taller line. */
 
 /* ⚠ THE BODY DECLARES ITS FAMILY (ADR-067's recorded trap, ADR-082 U21).
    It inherited `--font-mono` — IBM Plex Mono, NOT this surface's PT Mono —

@@ -152,43 +152,43 @@ aim`, framing checked before a video is paid for; asked in words, Veo
     the PLATE (`generate.py --edit-kind mouth`), never the sentence. ⚠ And a
     pointing hand given ANY motion of its own becomes a gesture — take 1
     raised the index finger for 3.3 s.
-  - ⚠ **U35 (2026-09-22, owner): CARDS, ONE GRID, ONE FRAME, NO DISC.**
-    - **ON RECORD IS CARDS** (reversing U31's tagged rows): `.vwd__pcard`, a
-      four-sided outline and NO ground, square, the air the divider; a
-      thumbnail well holding one mark per coverage KIND (`VW_OUTLET_KIND`:
-      newspaper · magazine · broadcast), the headline, then the medium
-      (`OUTLET · YEAR`); the state lifts on anchors only. ⚠ The well is
-      PADDED (`content-box` + `--vwd-pcard-pad`), never centred — a 21px mark
-      centred in an even box lands on a half pixel.
-    - **FACTS IS ONE GRID ON ONE SCHEMA** (reversing U23's readout rows):
-      every era carries `CHARACTER_ERA_FACT_KEYS` — Base · Move · Reach ·
-      Result — in order, two cells a row, a mark and the key over the value.
-      The phone keeps two columns (measured) and RECORD takes one section gap
-      above ON RECORD's head.
-    - **THE MARKS** (`lib/voidwalker/eraMarks.ts`, zero-import) are seven 7×7
-      glyphs on the particle grammar, DAWN ONLY; a new one re-runs the
-      unlabelled contact sheet (the magazine took four cuts).
-    - **THE POP-UP IS THE CARD AT DIALOG SCALE**: `MediaLightbox`'s additive
-      `frame={{ tab }}`, one 16:9 box for every kind, sized by WIDTH against
-      the frame's height. ⚠ Its material is the card's `::before` (a clip cuts
-      a box's children, and CLOSE sits outside the silhouette); no box-shadow,
-      by name; the block is global because the dialog portals out of `.vwd`.
-    - **THE DISC, RING, GLOW AND CONE ARE DELETED; `.vwh__base` IS KEPT AS AN
-      UNPAINTED SEAT BOX** — the slot, the lift, the reticle, the phone's
-      translate and the handoff seat all read it.
-    - **EVERY STILL IS `unoptimized`** on the card and in the dialog: one stuck
-      dev-optimizer key left a card black for good. `capture-era-media` fails a
-      front still undecoded 3 s after a rotation and measures every dialog.
-    - **The Expanse performs** (`-v5`): point → the earpiece and a MOUTHED
-      order → through the optic, a SCENE to a drawn end pose (`--edit-kind
+  - ⚠ **U35 (2026-09-22, owner): CARDS, ONE GRID, ONE FRAME, NO DISC.** - **ON RECORD IS CARDS** (reversing U31's tagged rows): `.vwd__pcard`, a
+    four-sided outline and NO ground, square, the air the divider; a
+    thumbnail well holding one mark per coverage KIND (`VW_OUTLET_KIND`:
+    newspaper · magazine · broadcast), the headline, then the medium
+    (`OUTLET · YEAR`); the state lifts on anchors only. ⚠ The well is
+    PADDED (`content-box` + `--vwd-pcard-pad`), never centred — a 21px mark
+    centred in an even box lands on a half pixel. - **FACTS IS ONE GRID ON ONE SCHEMA** (reversing U23's readout rows):
+    every era carries `CHARACTER_ERA_FACT_KEYS` — Base · Move · Reach ·
+    Result — in order, two cells a row, a mark and the key over the value.
+    The phone keeps two columns (measured) and RECORD takes one section gap
+    above ON RECORD's head. - **THE MARKS** (`lib/voidwalker/eraMarks.ts`, zero-import) are seven 7×7
+    glyphs on the particle grammar, DAWN ONLY; a new one re-runs the
+    unlabelled contact sheet (the magazine took four cuts). - **THE POP-UP IS THE CARD AT DIALOG SCALE**: `MediaLightbox`'s additive
+    `frame={{ tab }}`, one 16:9 box for every kind, sized by WIDTH against
+    the frame's height. ⚠ Its material is the card's `::before` (a clip cuts
+    a box's children, and CLOSE sits outside the silhouette); no box-shadow,
+    by name; the block is global because the dialog portals out of `.vwd`. - **THE DISC, RING, GLOW AND CONE ARE DELETED; `.vwh__base` IS KEPT AS AN
+    UNPAINTED SEAT BOX** — the slot, the lift, the reticle, the phone's
+    translate and the handoff seat all read it. - **EVERY STILL IS `unoptimized`** on the card and in the dialog: one stuck
+    dev-optimizer key left a card black for good. `capture-era-media` fails a
+    front still undecoded 3 s after a rotation and measures every dialog. - **The Expanse performs** (`-v5`): point → the earpiece and a MOUTHED
+    order → through the optic, a SCENE to a drawn end pose (`--edit-kind
 aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
-      the fallback if a spoken beat is ever refused.
+    the fallback if a spoken beat is ever refused.
+  - ⚠ **U36 (2026-09-22, owner): A PANEL HEAD IS ITS NAME AND ITS RULE.** _"We
+    don't need these little numbers."_ No head carries a right-hand tag — not
+    SCOPE's year, FACTS' era name, TRANSMISSION's duration, ON RECORD's count,
+    nor an empty seat's `None`. The band letters the years and names the open
+    era, the cards count themselves, and an absence is its body's own line. The
+    sheet test pins `.vwd__head__tag` absent from the CSS and the component.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title
   20.2px and were both already on screen (the reel prints every year and marks
   the open one), so the year moved to SCOPE's head rule, right-aligned, at the
-  head's full size. ⚠ It left the DECODE because that head is a §G actor at
+  head's full size (⚠ and U36 deleted it there, with every head tag — the band
+  is the one place a year is lettered now). ⚠ It left the DECODE because that head is a §G actor at
   `--ci-off: 0.16` whose ramp saturates around `--vwh-in` 0.655, after
   `TITLE_DECODE_WINDOW` closes at 0.18 — a scramble there resolves while the
   element is still transparent. `finals` is one entry; ⚠ `eraPositionLabel`
@@ -695,10 +695,10 @@ scripts/voidwalker-avatar/gold.py --selftest` (the exposure gate a delivery
   mono line — no box, no glyph. The dashed 16:9 ghost frame is deleted (it was
   the empty-slot idiom itself), and ON RECORD gained the same line: it used to
   render a heading over literally no text nodes, which is why the era probe
-  reported `panels=3` on `loop` where every other era reports 4. Both heads
-  print `None` in `.vwd__head__tag` when empty — which also disambiguates
-  TRANSMISSION, where "no film" and `genai`'s "film with no authored duration"
-  both printed nothing. ⚠ **Not a diamond**: the filled gold diamond means "you
+  reported `panels=3` on `loop` where every other era reports 4. ⚠ The heads'
+  `None` tag that stood beside it is DELETED since U36 (no head carries a tag;
+  the body's line is the one statement of an absence, and every era has a pile
+  since U34). ⚠ **Not a diamond**: the filled gold diamond means "you
   are here" on the reel one row below, so the same glyph as an absence marker
   inverts its own meaning on one screen.
 - **The entry/exit choreography is ported** (`voidwalker-datum.css` §G) — the

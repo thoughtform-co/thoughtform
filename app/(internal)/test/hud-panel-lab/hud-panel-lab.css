@@ -1465,10 +1465,9 @@ html[data-theme="light"] .hpl[data-hpl-surface] {
 }
 
 /* ── `?ink=oxide` — provenance meta in the seed's second hue ─────────────
-   The press card's medium (outlet · year) and the heads' tags; never the
-   copy. */
-.hpl[data-hpl-ink="oxide"] .hpl-eras[data-hpl-dir="v6"] .vwd__pcard__medium,
-.hpl[data-hpl-ink="oxide"] .hpl-eras[data-hpl-dir="v6"] .vwd__head__tag {
+   The press card's medium (outlet · year); never the copy. (The heads' tags
+   took it too until ADR-082 U36 deleted them.) */
+.hpl[data-hpl-ink="oxide"] .hpl-eras[data-hpl-dir="v6"] .vwd__pcard__medium {
   color: var(--hpl-oxide);
 }
 

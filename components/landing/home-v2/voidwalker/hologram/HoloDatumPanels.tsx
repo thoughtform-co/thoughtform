@@ -9,7 +9,6 @@ import {
 import {
   CHARACTER_ERAS,
   eraMedia,
-  eraMediaDuration,
   eraMediaEmbedSrc,
   eraMediaKindLabel,
   eraPressBeatIds,
@@ -373,7 +372,6 @@ export function HoloDatumPanels({
   const [mediaPick, setMediaPick] = useState<{ era: string; i: number }>({ era: era.id, i: 0 });
   const mediaFront = mediaPick.era === era.id && mediaPick.i < media.length ? mediaPick.i : 0;
   const frontItem = media[mediaFront];
-  const frontDuration = frontItem ? eraMediaDuration(frontItem) : undefined;
 
   const beat = VOIDWALKER_BEATS.find((b) => b.id === era.beatId);
   const facts = era.facts ?? [];
@@ -428,10 +426,9 @@ export function HoloDatumPanels({
     <section className="vwd__sheet" data-vwd-era={era.id} data-vwd-tab={tab}>
       {/* ⚠ THE EYEBROW IS DELETED (ADR-082 U23, owner). `ERA / 04 OF 05` and the
           year sat above the title and cost it its breathing room — and both were
-          already on screen: the reel prints every era's year on its own stop and
-          marks the open one with a lit diamond. The year survives on SCOPE's
-          head rule, where a right-aligned value on a short rule is the
-          reference's grammar and the reading side says it once.
+          already on screen: the band prints every era's year on its own stop and
+          marks the open one. (U23 kept the year on SCOPE's head rule; U36 took
+          it off with the other three head tags, so the band is where it lives.)
           ⚠ `eraPositionLabel` STAYS EXPORTED — `/test/hud-panel-lab`'s era
           surface letters it in its own header row. */}
       <header className="vwd__mast" data-vwh-region="identity">
@@ -495,14 +492,15 @@ export function HoloDatumPanels({
         {/* ── UPPER LEFT · SCOPE ─────────────────────────────────────
             ⚠ Carries the `dossier` handoff target: it holds the top-left
             seat the About dossier flies into, and that target follows the
-            SEAT, not the content. */}
+            SEAT, not the content.
+            ⚠ A HEAD IS ITS NAME AND ITS RULE, NOTHING ELSE (ADR-082 U36, owner:
+            "we don't need these little numbers"). The four right-hand tags —
+            this year, FACTS' era name, TRANSMISSION's duration, ON RECORD's
+            count — each said something the stage already says: the band
+            letters every year and names the open era, and the cards are there
+            to be counted. An empty seat is said by its body's own line. */}
         <p className="vwd__head" data-cell="ul">
           <span className="vwd__head__kicker">Scope</span>
-          {/* ⚠ THE ERA'S DATE, AND IT IS THE ONLY PLACE THE READING SIDE SAYS IT
-              (ADR-082 U23). This head already had the tag slot and the
-              `space-between` that seats it; the reference puts a value exactly
-              here, right-aligned on the panel's own rule. */}
-          <span className="vwd__head__tag vwd__head__tag--year">{era.year}</span>
         </p>
         <div
           className="vwd__body"
@@ -517,7 +515,6 @@ export function HoloDatumPanels({
         {/* ── UPPER RIGHT · FACTS ────────────────────────────────── */}
         <p className="vwd__head" data-cell="ur">
           <span className="vwd__head__kicker">Facts</span>
-          <span className="vwd__head__tag">{era.short}</span>
         </p>
         <div className="vwd__body" data-cell="ur" data-vwh-region="record">
           {/* ⚠ A GRID OF FOUR CELLS, THE SAME FOUR ON EVERY ERA (ADR-082 U35,
@@ -541,20 +538,11 @@ export function HoloDatumPanels({
         </div>
 
         {/* ── LOWER LEFT · TRANSMISSION ──────────────────────────── */}
-        {/* ⚠ THE TAG STATES THE ABSENCE. Without it this head cannot tell "no
-            transmission" from `genai`'s "a film with no authored duration" —
-            both printed nothing, so the reader saw an identical head above two
-            different records. With a pile it reads the FRONT card's duration,
-            so it follows the rotation; a still has none and prints nothing. */}
+        {/* The head carried the front card's duration, and `None` for an empty
+            seat (U20's disambiguation), until ADR-082 U36. The absence is the
+            body's own line below, and every era carries a pile since U34. */}
         <p className="vwd__head" data-cell="ll">
           <span className="vwd__head__kicker">Transmission</span>
-          {frontItem ? (
-            frontDuration ? (
-              <span className="vwd__head__tag">{frontDuration}</span>
-            ) : null
-          ) : (
-            <span className="vwd__head__tag">None</span>
-          )}
         </p>
         <div className="vwd__body" data-cell="ll" data-vwh-region="transmission">
           {media.length > 0 ? (
@@ -580,13 +568,6 @@ export function HoloDatumPanels({
         {/* ── LOWER RIGHT · ON RECORD ────────────────────────────── */}
         <p className="vwd__head" data-cell="lr">
           <span className="vwd__head__kicker">On record</span>
-          {press.length > 0 ? (
-            <span className="vwd__head__tag">
-              {String(press.length).padStart(2, "0")} {press.length === 1 ? "item" : "items"}
-            </span>
-          ) : (
-            <span className="vwd__head__tag">None</span>
-          )}
         </p>
         <div className="vwd__body" data-cell="lr" data-vwh-region="on-record">
           {press.length > 0 ? (

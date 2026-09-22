@@ -28,8 +28,8 @@
  *   · the title is not clipped (scrollHeight vs clientHeight is useless on a
  *     box that wraps; the last line's Range rect is inside the card)
  *   · the frame kept its 72px floor
- *   · choosing a back tab brings THAT card to the front, and the head's tag
- *     follows the front card's duration
+ *   · choosing a back tab brings THAT card to the front (the head's duration
+ *     tag that used to follow it is deleted since ADR-082 U36)
  *   · ADR-082 U35: the front card's still DECODES after every rotation, inside
  *     3 s — a rotated card's still is a fresh request, and one stuck optimizer
  *     job left it black for good with every other gate green
@@ -167,7 +167,6 @@ const read = () =>
         titleInk,
       };
     });
-    const tag = document.querySelector('.vwd__head[data-cell="ll"] .vwd__head__tag');
     const stage = document.querySelector(".vwd__stage");
     const stageFloor = stage
       ? stage.getBoundingClientRect().bottom - parseFloat(getComputedStyle(stage).paddingBottom)
@@ -178,7 +177,6 @@ const read = () =>
       content,
       stack: box(stack),
       cards,
-      tag: tag?.textContent ?? "",
       absent: document.querySelector('.vwd__body[data-cell="ll"] .vwd__absent')?.textContent ?? "",
     };
   });
@@ -200,7 +198,7 @@ function gate(s, n, label) {
   console.log(
     `  ${at} · seat ${px(s.seat.w)}x${px(s.seat.h)} · pile ${px(s.stack.w)}x${px(s.stack.h)}` +
       ` · frame ${front?.frame ? `${px(front.frame.w)}x${px(front.frame.h)}` : "-"}` +
-      ` · title ${front?.titleInk?.lines ?? 0} line(s) · tag "${s.tag}"`
+      ` · title ${front?.titleInk?.lines ?? 0} line(s)`
   );
 
   if (s.cards.length !== n) fail(`${at}: ${s.cards.length} cards rendered`);
@@ -478,7 +476,6 @@ for (const seed of PILES) {
 
   // ── The rotation. Bring EVERY card to the front in turn — by its own tab,
   //    which is a different place each time — and re-run every fit gate on it:
-  //    the head's tag must follow the front card's duration (a still has none),
   //    the pressed tab must keep focus, and a title that wraps must still fit.
   for (let target = 1; target < n; target++) {
     await page.locator(".vwd__mcard").nth(target).locator(".vwd__mcard__tab").click();

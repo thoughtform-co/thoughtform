@@ -323,3 +323,17 @@ describe("what ADR-082 U31 retired stays retired", () => {
     expect(css).not.toContain(".vwd__film");
   });
 });
+
+describe("a panel head is its name and its rule (ADR-082 U36)", () => {
+  it("carries no right-hand tag — no year, era name, duration, count or None", () => {
+    // Owner: "we don't need these little numbers". The band letters every year
+    // and names the open era; the cards count themselves; an empty seat is its
+    // body's own line.
+    expect(css).not.toContain(".vwd__head__tag");
+    const panels = readFileSync(
+      join(ROOT, "components/landing/home-v2/voidwalker/hologram/HoloDatumPanels.tsx"),
+      "utf8"
+    );
+    expect(panels).not.toContain("vwd__head__tag");
+  });
+});

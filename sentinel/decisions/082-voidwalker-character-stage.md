@@ -4414,3 +4414,38 @@ the films' box to the pixel.
 - The Twitch recording (U34 §B) still waits on the owner's copy of the file.
 - Safari `.mov` for `expanse-v5` needs a Mac.
 - The phone's new cards and grid are unread on a device.
+
+## Update 36 — a panel head is its name and its rule (2026-09-22, owner)
+
+The owner, pointing at SCOPE's `2020`: _"We don't need these little numbers in
+either scope, transmission, or facts on RECORD. Just like the subtitle or
+whatever."_ The right-hand tag is **deleted on all four heads**:
+
+- SCOPE's year (U23 moved it there when the eyebrow went)
+- FACTS' era name (`era.short`)
+- TRANSMISSION's front-card duration
+- ON RECORD's `NN items`
+- the `None` that TRANSMISSION and ON RECORD printed for an empty seat (U20)
+
+Each one said something the stage already says:
+
+- The band letters every year and names the open era.
+- The cards count themselves.
+- An empty seat is said by its body's own line (`No transmission on record`,
+  `No press on record`).
+- U20's reason for `None`, telling "no transmission" apart from "a film with
+  no duration", had lapsed: every era has carried a pile since U34.
+
+⚠ **The duration is now lettered nowhere.** `eraMediaDuration` stays in the
+registry and its test, because the record still holds the value; only
+`HoloDatumPanels`' read of it went.
+
+⚠ **Nothing moves.** The kicker was always the taller line in each head:
+
+- all four heads measure 39.5px tall, as before
+- the eras probe reports the same headroom (68px at the tightest, 106px on
+  the Architect)
+
+The sheet test pins the absence in the CSS and in the component source. The
+capture script's tag read is gone (it logged the tag and never gated on it).
+The hud-panel lab's `?ink=oxide` rule loses its dead selector.
