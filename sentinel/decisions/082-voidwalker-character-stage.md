@@ -4487,3 +4487,141 @@ Verified:
 - the phone fits at every shape, era and tab (RECORD tightest 86.1px at
   375 × 553)
 - stills at 1920 × 1247 in both themes, at rest and on hover
+
+## Update 38 — the band's foot mirrors the title's datum (2026-09-22, owner)
+
+The owner, on the stage at his 1936 × 1221: _"we can move the elements a bit
+up. If we move Transmission and On Record a bit up, then the thumbnails at the
+bottom can also move up … they have the same margin at the bottom relative to
+the margin above the Intelligence Architect title … Really follow design,
+frontend, responsive best practices here."_
+
+**Measured before.** The title's box hung from `--hud-corner-foot` (99px at his
+window; U22's mast datum). The band ended flush with the frame's floor, so the
+five names' last glyphs sat ~12px off it. The two margins were 106px and 12px.
+
+### A · The foot is the mast's datum, mirrored in ink
+
+`--vwd-foot` is how far the band's last glyph stands above the floor:
+
+```css
+--vwd-foot: min(
+  calc(
+    var(--vwd-mast-top) + 0.16 * var(--vwd-title-fs) - var(--vwd-band-pad-b) - 0.36 *
+      var(--vwd-name-fs)
+  ),
+  max(0px, (100svh - 720px) * 0.4)
+);
+```
+
+- ⚠ **In ink, not in boxes.** The title's caps start 0.16 of its size below its
+  box (PP Neue Montreal at 1.1), and the names' caps end 0.36 of theirs above
+  their line box (PT Mono at 1.25). Both were measured off the pixels at
+  1920 × 1247 (7px and 4.3px). A box mirror would leave the bottom ~11px lighter
+  than the top at every size.
+- **`--vwd-title-fs`** is the title's clamp as a token, so the foot can read it.
+  It stays byte-locked to `.voidwalker__name`, because the About name translates
+  into it without scaling.
+- The foot is `0px` on `.vwd` and set only inside the hologram rung's gated rule
+  (`min-height: 720px`). The phone, 701–1100 and every fallback are untouched.
+
+### B · Paid by the panels, never by the figure
+
+Padding the sheet's bottom was the obvious move, and it would have shrunk him:
+
+- The figure's slot is the stage's full height, and it was only 24–33px taller
+  than his width-bound picture at the desktop rungs
+  (`--_pict = min(fig-w · 16/9, slot)`).
+- Raising the band ~88px would tip him height-bound, ~7.7 % smaller, silently.
+- The portrait handoff would then land a card larger than the hologram it hands
+  over to.
+
+What ships instead:
+
+- **The band leaves the flow.** `position: absolute; bottom: var(--vwd-foot)` on
+  a `position: relative` sheet, both gated on `#voidwalker[data-vw-mode="hologram"]`.
+- **The stage gains a fifth row** for the band's zone,
+  `calc(var(--vwd-band-box) + var(--vwd-foot))`, and the figure spans
+  `grid-row: 1 / 6`.
+- **The arithmetic.** The stage grows by the band's height, and rows 1–4 lose
+  exactly the foot, half from each body. That is what lifts TRANSMISSION and ON
+  RECORD, by `foot / 2`; their floors rise by the whole foot. The figure's cell
+  grows by the band's height, and U31's lift is solved from the cell, so the cap
+  stays on the head row and the boots stay on their line. Measured slack under
+  the picture is now 120.6 / 116.5 / 118.1px at 1920 × 1247 / 1920 × 1080 /
+  1280 × 720 (it was 24–33), with one figure height and 0 cut on every era.
+  `--vwd-fig-w` and `--vwd-chrome-h` are untouched.
+- ⚠ **`--vwd-band-box` is derived from the tokens that draw the band.** The
+  row must know the band's height before the band is laid out, so the ≥701
+  band's padding, the chip's gap and the name's size and leading became
+  `--vwd-band-pad-t` / `-pad-b`, `--vwd-chip-gap`, `--vwd-name-fs` /
+  `--vwd-name-lh`. The band, the chip and the name READ them. A second literal
+  copy anywhere is the drift this exists to prevent. `44px` is the chip's own
+  `min-height`.
+- ⚠ **Layout, never transform.** The About handoff reads OFFSET geometry, and
+  §G owns every transform on these boxes.
+
+### C · Exact from ~900 tall; eased below
+
+The full foot costs each body row half of it, and the shortest reference cannot
+afford that:
+
+- At 1280 × 720 the full foot is ~61px, i.e. ~30 off each body.
+- That is all of the frame a two-card pile with a two-line title has to give
+  (the record's worst today), and more than a three-card pile's ~8px (the cap).
+- So the foot eases in over the first 180px above 720 tall (`0.4`). At 720 it
+  is 0, and the band sits exactly where it did.
+
+Margins measured on the landing, in ink (the title's top against the names'
+last glyph to the floor):
+
+| viewport          | top | bottom |
+| ----------------- | --- | ------ |
+| 1936 × 1221 (his) | 106 | 106    |
+| 1920 × 1247       | 106 | 106    |
+| 1920 × 1080       | 106 | 106    |
+| 1440 × 900        | 86  | 85     |
+| 1440 × 800        | 81  | 45     |
+| 1280 × 720        | 73  | 12     |
+
+At his window the band rises 88px, TRANSMISSION and ON RECORD 44px, and the
+pile ends ~35px above the band's box. SCOPE, FACTS, the title and the figure do
+not move.
+
+### Verified
+
+- `probe-voidwalker-eras`, all clean at every rung. Tightest SCOPE foot:
+  68 / 47 / 40 / 72 / 118px at 1280 × 720 / 1101 × 800 / 1440 × 800 /
+  1920 × 1080 / 1920 × 1247.
+- `probe-voidwalker-figure-span` at 1920 × 1247, 1920 × 1080 and 1280 × 720:
+  one figure height, seat line unmoved, ring on the figure, 0 cut.
+- `capture-era-media`, all gates pass:
+  - fixture piles 1–3 at 1280 × 720, 1440 × 900 and 1920 × 1247
+  - pile 3 at 1366 × 768, 1440 × 800 and 1536 × 864
+  - each era's own pile at 1440 × 900 and 1920 × 1080
+- The handoff specs (11 passed), and the sheet, unit, token, sweep and era
+  suites (177 passed).
+- The datum lab mirrors the foot and its four structural rules character for
+  character (`voidwalker-datum-lab.css`). A lab without them would gate the pile
+  in a seat half a foot taller than the landing gives it.
+
+### Left open
+
+- ⚠ **The capture never asks whether the frame stays inside its card.** Found
+  this pass: in the lab, the three-card fixture with a two-line title overruns
+  its card's content box by 15.6px at 1280 × 720 (8.4px past the card's own
+  edge), with every gate green. The frame holds its 72px floor, and the card, a
+  clamped grid item, lets it spill.
+  - **It is the lab's squeeze, not the landing's.** The lab's TRANSMISSION seat
+    is exactly 24px shorter than the landing's at every size: its 48px knob bar
+    comes out of the sheet, and `--vwd-bar-h` corrects the figure column for
+    that but not the panel rows. On the landing the same pile keeps 8.4px of
+    frame at 1280 × 720 and 13–22px from 768 to 900 tall, foot included.
+  - So the gate waits until the lab's rows are faithful, flagged as its own
+    task. No era carries three cards today.
+- **The phase constant has room on the landing's arithmetic.** Raise it only
+  after measuring the worst pile on the landing's rows. The lab cannot measure
+  it truthfully yet.
+- **The hud-panel lab re-declares only U20's datum and U31's rise.** It has
+  lacked U22's mast/trail split since that update and lacks this foot. Its era
+  surface is a closed exploration (ADR-089: the era stage was not taken).

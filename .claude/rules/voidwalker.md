@@ -189,6 +189,34 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
     itself is unclipped, the border's pixel moved into the padding, the notch is
     `--vwd-pcard-ch`, and ⚠ the ↗ arrow steps `2px 4px` clear of the cut —
     seated on the padding it came within 2.8px of the diagonal at 1280×720.
+  - ⚠ **U38 (2026-09-22, owner): THE BAND'S FOOT MIRRORS THE TITLE'S DATUM.**
+    _"The same margin at the bottom relative to the margin above the …
+    title."_
+    - **The value.** `--vwd-foot` is `--vwd-mast-top` mirrored in INK (the
+      title's caps 0.16em under its box, the names' 0.36em above their line
+      box), eased in over the first 180px above 720 tall (`0.4`). It is exact
+      from ~900 up (106/106 at his window) and 0 at 720.
+    - ⚠ **Paid by the panels, never the figure.** The band goes ABSOLUTE at
+      `bottom: var(--vwd-foot)` and the stage reserves its zone as a FIFTH
+      ROW (`--vwd-band-box + --vwd-foot`), which the figure spans. Rows 1–4
+      lose exactly the foot, half from each body, and the figure's slot grows
+      by the band's height.
+    - Padding the sheet instead would tip the figure height-bound (its slot
+      had 24–33px of slack) and shrink him ~7.7 %, with the handoff card
+      landing larger than the hologram.
+    - ⚠ **`--vwd-band-box` is derived from the tokens the band, chip and name
+      READ** (`--vwd-band-pad-t/-b`, `--vwd-chip-gap`, `--vwd-name-fs/-lh`),
+      so the row knows the band's height before it is laid out. Never a second
+      literal.
+    - Layout only (`bottom`, rows): the handoff reads offset geometry and §G
+      owns the transforms.
+    - The datum lab mirrors the foot and its four structural rules; the
+      hud-panel lab does not (it has lagged since U22).
+    - ⚠ **The lab's panel rows are 24px shorter than the landing's** (its 48px
+      knob bar comes out of the sheet; `--vwd-bar-h` corrects only the figure
+      column). The capture has no frame-inside-card gate yet, and the lab's
+      three-card fixture overruns its card there while the landing's pile fits.
+      Measure a pile question on the landing's rows.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title

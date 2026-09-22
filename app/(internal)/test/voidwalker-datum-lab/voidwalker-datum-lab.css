@@ -54,6 +54,36 @@
        under it — the composition this pass replaced, presented as current.
        The `rise` knob writes the same token inline, so it overrides this. */
     --vwd-rise: 1;
+    /* ⚠ AND THE FOOT SINCE ADR-082 U38, WITH ITS FOUR STRUCTURAL RULES BELOW.
+       Production floats the band at the mirrored datum and reserves its zone
+       as a fifth stage row; a lab that re-declared neither would measure the
+       TRANSMISSION pile in a seat ~half a foot taller than the landing gives
+       it — `capture-era-media` passing a pile the landing cannot hold. The
+       expression is production's, character for character. */
+    --vwd-foot: min(
+      calc(
+        var(--vwd-mast-top) + 0.16 * var(--vwd-title-fs) - var(--vwd-band-pad-b) - 0.36 *
+          var(--vwd-name-fs)
+      ),
+      max(0px, (100svh - 720px) * 0.4)
+    );
+  }
+  .dlab.vwd .vwd__sheet {
+    position: relative;
+  }
+  .dlab.vwd .vwd__band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--vwd-foot);
+  }
+  .dlab.vwd .vwd__stage {
+    grid-template-rows:
+      auto minmax(0, 1fr) auto minmax(0, 1fr)
+      calc(var(--vwd-band-box) + var(--vwd-foot));
+  }
+  .dlab.vwd .vwd__figure {
+    grid-row: 1 / 6;
   }
 }
 

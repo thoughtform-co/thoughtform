@@ -240,6 +240,15 @@
      otherwise pools under each body. Exactly 0 wherever the datum does not
      apply, and at every tight reference rung — see the gated rule. */
   --vwd-trail: 0px;
+  /* ⚠ THE TITLE'S SIZE IS A TOKEN SO THE FOOT CAN READ IT (ADR-082 U38). The
+     value is byte-locked to `.voidwalker__name` (landing.css) — the About name
+     TRANSLATES into this title without scaling — so it may not change here
+     without changing there. */
+  --vwd-title-fs: clamp(26px, 3vw, 44px);
+  /* ⚠ THE FOOT (ADR-082 U38): how far the era band's last glyph sits above the
+     frame's floor. 0 everywhere but the hologram rung's gated rule below,
+     which mirrors the title's own datum into it. */
+  --vwd-foot: 0px;
 
   /* ⚠ A BOUNDED HEIGHT, NOT A FLOOR. Every `flex: 1 1 auto` below needs
      something to shrink against; with `min-height` alone the sheet grows to
@@ -331,6 +340,65 @@
        surrendered its own padding and pinned, so the stage's top edge IS the
        line the four heads hang from, and there is height to spend. */
     --vwd-rise: 1;
+    /* ⚠ THE FOOT MIRRORS THE MAST (ADR-082 U38, owner 2026-09-22: the band
+       should sit "the same margin at the bottom relative to the margin above
+       the Intelligence Architect title"). The title hangs from the TL bracket's
+       foot; the band's last glyph now stands the same distance above the
+       frame's floor — which is the top edge of the bottom brackets, the
+       wordmark's top line.
+       ⚠ IN INK, NOT IN BOXES. The title's caps start 0.16 of its size below
+       its box (PP Neue Montreal at 1.1), and the names' caps end 0.36 of
+       theirs above their line box (PT Mono at 1.25) — measured off the pixels
+       at 1920×1247 (7px and 4.3px). Mirroring the boxes would leave the bottom
+       ~11px lighter than the top at every size.
+       ⚠ AND IT IS PAID BY THE PANELS, NEVER THE FIGURE — see the band-zone row
+       below. The full value costs each body row half of it, which the shortest
+       reference (1280×720) cannot afford: ~61px there is ~30 off each body,
+       all of the frame a two-card pile with a two-line title has to give (the
+       record's worst today) and more than a three-card one's ~8 (the cap). So
+       it eases in over the first 180px above 720 tall (`0.4`) and is exact
+       from ~900 up, which covers 1440×900, 1920×1080 and the owner's
+       1920×1247. */
+    --vwd-foot: min(
+      calc(
+        var(--vwd-mast-top) + 0.16 * var(--vwd-title-fs) - var(--vwd-band-pad-b) - 0.36 *
+          var(--vwd-name-fs)
+      ),
+      max(0px, (100svh - 720px) * 0.4)
+    );
+  }
+
+  /* ⚠ THE BAND LEAVES THE FLOW SO THE FIGURE CAN KEEP ITS SLOT (ADR-082 U38).
+     Padding the sheet's bottom was the obvious move and it SHRINKS HIM: the
+     figure's slot is the stage's full height and is only 24–33px taller than
+     its width-bound picture at the desktop rungs (`--_pict = min(fig-w · 16/9,
+     slot)`), so raising the band ~85px would tip it height-bound and paint him
+     ~7.7 % smaller, silently — and the portrait handoff would then land a card
+     larger than the hologram it hands over to. Instead the band floats at the
+     foot, the stage keeps the whole height, and a fifth row reserves the band's
+     zone: the four panel rows lose exactly the foot (half from each body, which
+     is what lifts TRANSMISSION and ON RECORD), while the figure spans all five
+     rows and its slot GROWS by the band's own height. U31's lift is solved from
+     the cell, so the cap stays on the head row and the boots stay where they
+     are.
+     ⚠ LAYOUT, NEVER TRANSFORM: the About handoff reads OFFSET geometry, and §G
+     owns every transform on these boxes. */
+  #voidwalker[data-vw-mode="hologram"] .vwd__sheet {
+    position: relative;
+  }
+  #voidwalker[data-vw-mode="hologram"] .vwd__band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--vwd-foot);
+  }
+  #voidwalker[data-vw-mode="hologram"] .vwd__stage {
+    grid-template-rows:
+      auto minmax(0, 1fr) auto minmax(0, 1fr)
+      calc(var(--vwd-band-box) + var(--vwd-foot));
+  }
+  #voidwalker[data-vw-mode="hologram"] .vwd__figure {
+    grid-row: 1 / 6;
   }
 }
 
@@ -409,7 +477,7 @@
 .vwd__mast__title {
   margin: 0;
   font-family: var(--vwd-display);
-  font-size: clamp(26px, 3vw, 44px);
+  font-size: var(--vwd-title-fs);
   font-weight: 400;
   letter-spacing: 0.04em;
   line-height: 1.1;
@@ -1724,10 +1792,30 @@ a.vwd__pcard:focus-visible {
     --vwd-thumb-h: calc(var(--vwd-chip) * 2 / 3);
     --vwd-reel: 5;
     --vwd-cell: clamp(104px, calc(var(--vwd-chip) + 3.2vw), 128px);
+    /* ⚠ THE BAND'S HEIGHT IS DERIVED FROM THE TOKENS THAT DRAW IT (ADR-082
+       U38). On the hologram rung the band leaves the flow and the stage
+       reserves its zone as a grid row, so that row has to know the band's
+       height before the band is laid out. Every term below is what the band,
+       the chip and the name READ — change one here and both move; a second
+       literal copy anywhere is the drift this exists to prevent.
+       ⚠ `44px` is the chip's own `min-height` (the hit-area floor). */
+    --vwd-band-pad-t: clamp(6px, 0.8svh, 10px);
+    --vwd-band-pad-b: clamp(8px, 1.1svh, 14px);
+    --vwd-chip-gap: 5px;
+    --vwd-name-fs: clamp(9.5px, 1.05svh, 12px);
+    --vwd-name-lh: 1.25;
+    --vwd-band-box: calc(
+      var(--vwd-band-pad-t) +
+        max(
+          44px,
+          var(--vwd-thumb-h) + var(--vwd-chip-gap) + var(--vwd-name-fs) * var(--vwd-name-lh)
+        ) +
+        var(--vwd-band-pad-b)
+    );
   }
 
   .vwd__band {
-    padding-block: clamp(6px, 0.8svh, 10px) clamp(8px, 1.1svh, 14px);
+    padding-block: var(--vwd-band-pad-t) var(--vwd-band-pad-b);
     -webkit-mask-image: none;
     mask-image: none;
   }
@@ -1743,7 +1831,7 @@ a.vwd__pcard:focus-visible {
        free — lives inside `prefers-reduced-motion: no-preference`. The reticle
        learned this one panel over (ADR-082 U23). */
     position: relative;
-    gap: 5px;
+    gap: var(--vwd-chip-gap);
     /* Every dormant bust reads at one weight: in a row that does not turn there
        is no "distance from the centre" to recede by. */
     --dd: 0;
@@ -1791,8 +1879,8 @@ a.vwd__pcard:focus-visible {
       0 0 6px rgba(var(--void-rgb), 0.85);
   }
   .vwd__chip__name {
-    font-size: clamp(9.5px, 1.05svh, 12px);
-    line-height: 1.25;
+    font-size: var(--vwd-name-fs);
+    line-height: var(--vwd-name-lh);
     color: rgba(var(--vwd-dawn-rgb), 0.5);
   }
 
