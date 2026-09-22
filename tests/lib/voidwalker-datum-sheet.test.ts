@@ -82,33 +82,35 @@ describe("the media card's silhouette and its lip (ADR-082 U31)", () => {
   const silhouette = polygonPoints(ruleBody(css, ".vwd__mcard"));
   const ring = polygonPoints(ruleBody(css, ".vwd__mcard::before"));
 
-  it("is one eight-point folder: tab, 45° slant, square body", () => {
-    expect(silhouette).toHaveLength(8);
+  it("is one six-point folder: the tab flush at its top-left, a 45° slant, a square body", () => {
+    expect(silhouette).toHaveLength(6);
+    // ADR-082 U34: the tab sits at the card's own corner on EVERY card.
+    expect(silhouette[0]).toBe("0 0");
     // The slant: a horizontal run of the tab's own height — 45° by construction.
-    expect(silhouette[3]).toBe("calc(var(--_x1) - var(--_t)) 0");
-    expect(silhouette[4]).toBe("var(--_x1) var(--_t)");
+    expect(silhouette[1]).toBe("calc(var(--_wt) - var(--_t)) 0");
+    expect(silhouette[2]).toBe("var(--_wt) var(--_t)");
   });
 
   it("draws the lip as a CLOSED evenodd ring — both contours return to their start", () => {
     expect(ring[0]).toBe("evenodd");
     const pts = ring.slice(1);
-    // 8 outer + close, 8 inner + close.
-    expect(pts).toHaveLength(18);
-    const outer = pts.slice(0, 9);
-    const inner = pts.slice(9);
+    // 6 outer + close, 6 inner + close.
+    expect(pts).toHaveLength(14);
+    const outer = pts.slice(0, 7);
+    const inner = pts.slice(7);
     // ⚠ The open form (`.pf-card`'s) paints a bow-tie across a concave outline
-    // (ADR-118), and this outline has two concave corners.
-    expect(outer[8], "the outer contour is not closed").toBe(outer[0]);
-    expect(inner[8], "the inner contour is not closed").toBe(inner[0]);
+    // (ADR-118), and this outline has a concave corner.
+    expect(outer[6], "the outer contour is not closed").toBe(outer[0]);
+    expect(inner[6], "the inner contour is not closed").toBe(inner[0]);
     // The ring's outer contour IS the card's silhouette, point for point.
-    expect(outer.slice(0, 8)).toEqual(silhouette);
+    expect(outer.slice(0, 6)).toEqual(silhouette);
   });
 
   it("shifts the slant's inner ends by 0.414px, the 45°-meets-horizontal join", () => {
-    const inner = ring.slice(10);
+    const inner = ring.slice(8);
     // 1 − √2. (0.586 is the chamfer BETWEEN two axis edges, which this is not.)
-    expect(inner[3]).toBe("calc(var(--_x1) - var(--_t) - 0.414px) 1px");
-    expect(inner[4]).toBe("calc(var(--_x1) - 0.414px) calc(var(--_t) + 1px)");
+    expect(inner[1]).toBe("calc(var(--_wt) - var(--_t) - 0.414px) 1px");
+    expect(inner[2]).toBe("calc(var(--_wt) - 0.414px) calc(var(--_t) + 1px)");
     expect(ring.join(" ")).not.toContain("0.586");
   });
 
@@ -116,30 +118,39 @@ describe("the media card's silhouette and its lip (ADR-082 U31)", () => {
     expect(ruleBody(css, ".vwd__mcard")).not.toMatch(/(^|[;\s])border(-[a-z]+)?\s*:/);
   });
 
-  it("orders the tabs by DEPTH and solves their widths from the type", () => {
-    const card = ruleBody(css, ".vwd__mcard");
-    expect(card).toContain("--_back: min(var(--vwd-md, 0), 1)");
-    expect(card).toContain("max(var(--vwd-md, 0) - 1, 0)");
+  it("gives every card ONE tab width, solved from the type (ADR-082 U34)", () => {
     const stack = ruleBody(css, ".vwd__mstack");
-    // PT Mono's 0.6em advance + `--track-label`'s .08em.
+    // PT Mono's 0.6em advance + `--track-label`'s .08em, for `IMAGE NN`.
     expect(stack).toContain("--_adv: calc(var(--vwd-mtab-fs) * 0.68)");
-    expect(stack).toContain("var(--vwd-mtab-fch, 7)");
+    expect(stack).toContain("--_wt: calc(var(--_adv) * 7 + 31px + var(--vwd-mtab-h))");
+    // ⚠ Nothing in the card may vary the tab by depth: the depth is the pile's.
+    const card = ruleBody(css, ".vwd__mcard");
+    expect(card).not.toMatch(/--_x0|--_back|--_wf|--_wb/);
+    expect(ruleBody(css, ".vwd__mcard__tab")).toContain("width: var(--_wt)");
   });
 
-  it("four tabs fit a card at the narrowest capable rung, and a fifth does not", () => {
-    // The sheet's own arithmetic at 1101×800, restated: fs 9.6 (1.2svh), tab
-    // height 22 (the clamp's floor), step 4.8 (0.6svh), a ~297px seat.
-    const fs = 9.6;
+  it("stacks each card behind one TAB HEIGHT up and a step left, and reserves it", () => {
+    const stack = ruleBody(css, ".vwd__mstack");
+    // ⚠ Less than a tab height slides the next card's tab row over this tab.
+    expect(stack).toContain("--vwd-mstack-dy: var(--vwd-mtab-h)");
+    const card = ruleBody(css, ".vwd__mcard");
+    expect(card).toContain("calc(var(--vwd-md, 0) * -1 * var(--vwd-mstack-dx))");
+    expect(card).toContain("calc(var(--vwd-md, 0) * -1 * var(--vwd-mstack-dy))");
+    // The room the cards behind stand in is the pile's own padding, top and left.
+    expect(stack).toMatch(/padding:\s*calc\(var\(--_steps\) \* var\(--vwd-mstack-dy\)\) 0 0/);
+  });
+
+  it("three cards fit the binding seat and a fourth breaks the frame's floor", () => {
+    // 1280×720, measured (capture-era-media): a 194.7px seat, a card of
+    // 22 (tab) + 7.2 (pad) + 27 (a two-line title) + 7.2 (gap) + 7.2 (pad)
+    // around a frame whose cap is 108px and whose floor is 72px.
+    const seat = 194.7;
     const t = 22;
-    const step = 4.8;
-    const seat = 297;
-    const adv = fs * 0.68;
-    const wf = adv * 7 + 31 + t; // `IMAGE NN`
-    const wb = adv * 2 + 14 + t;
-    const fits = (n: number) => wf + (n - 1) * (wb + 2) <= seat - (n - 1) * step;
-    expect(fits(CHARACTER_ERA_MEDIA_MAX)).toBe(true);
-    // ⚠ This is what the record's cap IS. Raising it is a redesign of the row.
-    expect(fits(CHARACTER_ERA_MEDIA_MAX + 1)).toBe(false);
+    const chrome = t + 7.2 + 27 + 7.2 + 7.2;
+    const frame = (n: number) => Math.min(108, seat - (n - 1) * t - chrome);
+    expect(frame(CHARACTER_ERA_MEDIA_MAX)).toBeGreaterThanOrEqual(72);
+    // ⚠ This is what the record's cap IS. Raising it is a redesign of the pile.
+    expect(frame(CHARACTER_ERA_MEDIA_MAX + 1)).toBeLessThan(72);
   });
 });
 

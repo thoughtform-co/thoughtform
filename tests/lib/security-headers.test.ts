@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { buildContentSecurityPolicy, buildSecurityHeaders } from "@/lib/security/headers";
+import {
+  buildContentSecurityPolicy,
+  buildSecurityHeaders,
+  ERA_MEDIA_ORIGIN,
+} from "@/lib/security/headers";
+import { ERA_MEDIA_STORAGE_ORIGIN } from "@/lib/voidwalker/characterEras";
 
 /**
  * Security headers wired into `next.config.mjs`. These are
@@ -39,12 +44,22 @@ describe("buildContentSecurityPolicy", () => {
      this file's stated job. The exact-list matches below mean a new media
      origin or a second embeddable host has to come here and argue for
      itself; a host appended silently fails instead. */
-  it("keeps media self-hosted — a remote src is how video leaves the repo", () => {
+  it("keeps media self-hosted, plus ONE named bucket the owner chose (ADR-082 U34)", () => {
     const csp = buildContentSecurityPolicy();
-    // data: is the hologram codec probe (inline content, not a remote
-    // host); no http(s) origin may ever join this list.
-    expect(csp).toContain("media-src 'self' blob: data:;");
-    expect(csp).not.toMatch(/media-src[^;]*https?:\/\//);
+    // data: is the hologram codec probe (inline content, not a remote host).
+    // The one remote origin is the site's own Supabase project, named in full:
+    // the owner's "stream from Supabase" for the era stage's films, 2026-09-22.
+    expect(csp).toContain(`media-src 'self' blob: data: ${ERA_MEDIA_ORIGIN};`);
+    const media = /media-src([^;]*)/.exec(csp)?.[1] ?? "";
+    // ⚠ Exactly that origin and no other — and never a wildcard, which would
+    // let any project on the platform serve video here.
+    expect(media.match(/https?:\/\/[^\s;]+/g)).toEqual([ERA_MEDIA_ORIGIN]);
+    expect(media).not.toContain("*");
+  });
+
+  it("names the same media origin the era registry allows a video to stream from", () => {
+    // The registry is zero-import, so it carries its own copy; one string.
+    expect(ERA_MEDIA_STORAGE_ORIGIN).toBe(ERA_MEDIA_ORIGIN);
   });
 
   it("frames exactly one origin: the owner's own film, cookie-free (ADR-074 U2)", () => {

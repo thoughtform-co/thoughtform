@@ -19,10 +19,10 @@ import {
 } from "@/lib/voidwalker/holoAlphaSupport";
 
 /**
- * The pile fixture (ADR-082 U31). The record holds ONE film on two eras today,
- * so the transmission pile's real subject — several cards, a still among them,
- * a title that wraps — exists nowhere a reader can look at it. `?media=N` (or
- * the PILE knob) hands the first N of these to EVERY era through
+ * The pile fixture (ADR-082 U31). Since U33–U34 every era carries a real pile of
+ * films, but none of them holds a STILL, a three-card pile or a title long
+ * enough to wrap — which is what this is for. `?media=N` (or the PILE knob,
+ * 0–3 since U34's cap) hands the first N of these to EVERY era through
  * `HoloDatumPanels`' fixture seam.
  *
  * ⚠ THE ASSETS ARE THE TWO SHIPPED POSTERS, USED TWICE — once as a film's
@@ -122,7 +122,7 @@ export function DatumLabShell() {
   );
   const query = new URLSearchParams(search);
   const seedEra = CHARACTER_ERAS.findIndex((item) => item.id === query.get("era"));
-  const seedPile = /^[0-4]$/.test(query.get("media") ?? "") ? Number(query.get("media")) : null;
+  const seedPile = /^[0-3]$/.test(query.get("media") ?? "") ? Number(query.get("media")) : null;
 
   /* Azeroth: the only era with its own authored hologram, and the subject of
      every mockup in the pass — so the lab opens where the review left off. */
@@ -304,7 +304,7 @@ export function DatumLabShell() {
           >
             record
           </button>
-          {[0, 1, 2, 3, 4].map((n) => (
+          {[0, 1, 2, 3].map((n) => (
             <button
               key={n}
               type="button"

@@ -14,6 +14,7 @@ import {
   eraMediaKindLabel,
   eraMediaStill,
   eraPressBeatIds,
+  ERA_MEDIA_STORAGE_ORIGIN,
   findCharacterEra,
   isCharacterEraMedia,
   type CharacterEraMedia,
@@ -246,8 +247,10 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
       }
       expect(eraMedia(era)).toEqual(raw);
     }
-    // Four, and the number is the tab row's arithmetic at 1101×800.
-    expect(CHARACTER_ERA_MEDIA_MAX).toBe(4);
+    // Three since ADR-082 U34, and the number is the CASCADE's height at
+    // 1280×720 (each card behind costs the front frame one tab height); U31's
+    // four was the width of a fanned tab row that no longer exists.
+    expect(CHARACTER_ERA_MEDIA_MAX).toBe(3);
   });
 
   it("the two films that shipped as `film` are still the record, as embeds", () => {
@@ -258,12 +261,13 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
       youtubeId: "a5-DcdfxCvU",
       duration: "2:14",
     });
-    for (const id of ["azeroth", "pokemon-go"]) {
-      expect(eraMedia(findCharacterEra(id)), `${id} has no transmission`).toEqual([]);
+    // ADR-082 U34: no era is without a transmission any more.
+    for (const era of CHARACTER_ERAS) {
+      expect(eraMedia(era).length, `${era.id} has no transmission`).toBeGreaterThan(0);
     }
   });
 
-  it("three eras carry a real pile, front card first (ADR-082 U33)", () => {
+  it("every era carries its own pile, front card first (ADR-082 U33–U34)", () => {
     // The owner's films, in the order he gave them. A new card goes BEHIND the
     // era's existing front card, so the two films above stay the record's lead.
     const pile = (id: string) =>
@@ -271,9 +275,11 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
     expect(pile("expanse")).toEqual(["a5-DcdfxCvU", "pNlYOGwt1nA"]);
     expect(pile("loop")).toEqual(["EQKIiqVyjJk", "bouBxlVy3zc"]);
     expect(pile("genai")).toEqual(["jFVezT4mznU", "T6z9sbGl04Y"]);
+    expect(pile("azeroth")).toEqual(["qm4KlfvJc9A"]);
+    expect(pile("pokemon-go")).toEqual(["tRdaNTpxmR8"]);
     // Every card in a pile states its length, so the head's tag never goes
     // blank on one card and prints a time on the next.
-    for (const id of ["expanse", "loop", "genai"]) {
+    for (const id of CHARACTER_ERAS.map((e) => e.id)) {
       for (const item of eraMedia(findCharacterEra(id))) {
         expect(
           item.kind === "image" || Boolean(item.duration),
@@ -283,17 +289,28 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
     }
   });
 
-  it("every file a pile names is self-hosted, on disk, and the shape it claims", async () => {
+  it("every file a pile names is self-hosted or in the one bucket, and the shape it claims", async () => {
     for (const era of CHARACTER_ERAS) {
       for (const item of eraMedia(era)) {
         const still = eraMediaStill(item);
-        // Self-hosted: `img-src` does not name ytimg and `media-src` is 'self',
-        // so an absolute URL is a request the CSP refuses.
+        // Self-hosted: `img-src` does not name ytimg, so an absolute URL is a
+        // request the CSP refuses — and a poster is the one request a card
+        // makes at rest, so it may never be the page's first third-party call.
         expect(still, `${era.id} still`).not.toMatch(/^https?:|^\/\//);
         expect(existsSync(onDisk(still)), `${era.id} · ${still} is not on disk`).toBe(true);
         if (item.kind === "video") {
-          expect(item.src).not.toMatch(/^https?:|^\/\//);
-          expect(existsSync(onDisk(item.src)), `${era.id} · ${item.src} is not on disk`).toBe(true);
+          // ADR-082 U34: a video is on disk OR a public object in the era-media
+          // bucket, the one remote origin `media-src` names. A remote src is
+          // not fetched here (a unit suite does not go to the network); the
+          // live object is HEADed in the U34 verification.
+          if (/^https?:/.test(item.src)) {
+            expect(item.src.startsWith(`${ERA_MEDIA_STORAGE_ORIGIN}/`), item.src).toBe(true);
+          } else {
+            expect(item.src).not.toMatch(/^\/\//);
+            expect(existsSync(onDisk(item.src)), `${era.id} · ${item.src} is not on disk`).toBe(
+              true
+            );
+          }
         }
         if (item.kind === "image") {
           // The lightbox solves its box from these two numbers.
@@ -340,8 +357,45 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
       ["a duration that is not M:SS", { ...embed, duration: "2m14s" }],
       // Past an hour the minutes take two digits.
       ["an hour with one-digit minutes", { ...embed, duration: "1:2:11" }],
-      // `media-src` is 'self': a bucket URL is blocked outright.
+      // `media-src` names ONE bucket (ADR-082 U34): anything else remote is a
+      // request the enforced policy blocks outright.
       ["a remote video", { ...video, src: "https://cdn.example.com/a-cut.mp4" }],
+      [
+        "another Supabase project",
+        {
+          ...video,
+          src: "https://abcdefghijklmnop.supabase.co/storage/v1/object/public/era-media/a.mp4",
+        },
+      ],
+      [
+        "a signed object (it expires)",
+        { ...video, src: `${ERA_MEDIA_STORAGE_ORIGIN}/storage/v1/object/sign/era-media/a.mp4` },
+      ],
+      [
+        "another bucket in the project",
+        {
+          ...video,
+          src: `${ERA_MEDIA_STORAGE_ORIGIN}/storage/v1/object/public/voices-media/a.mp4`,
+        },
+      ],
+      [
+        "a webm in the bucket",
+        { ...video, src: `${ERA_MEDIA_STORAGE_ORIGIN}/storage/v1/object/public/era-media/a.webm` },
+      ],
+      [
+        "a bucket path that climbs out",
+        {
+          ...video,
+          src: `${ERA_MEDIA_STORAGE_ORIGIN}/storage/v1/object/public/era-media/../voices-media/a.mp4`,
+        },
+      ],
+      [
+        "the bucket over plain http",
+        {
+          ...video,
+          src: `${ERA_MEDIA_STORAGE_ORIGIN.replace("https:", "http:")}/storage/v1/object/public/era-media/a.mp4`,
+        },
+      ],
       ["a webm with no fallback beside it", { ...video, src: "/videos/voidwalker/media/a.webm" }],
       ["a video outside media/", { ...video, src: "/videos/voidwalker/holo-idle-thoughtform.mp4" }],
       ["a video without a poster", { ...video, poster: undefined }],
@@ -359,6 +413,14 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
     expect(isCharacterEraMedia(null)).toBe(false);
     expect(isCharacterEraMedia("film")).toBe(false);
     expect(isCharacterEraMedia({ ...image, focus: [0, 1] })).toBe(true);
+    // ADR-082 U34: the one remote a video may name — a public object, mp4, in
+    // the site's own era-media bucket, nested folders allowed.
+    expect(
+      isCharacterEraMedia({
+        ...video,
+        src: `${ERA_MEDIA_STORAGE_ORIGIN}/storage/v1/object/public/era-media/azeroth/a-cut.mp4`,
+      })
+    ).toBe(true);
     // ADR-082 U33: a length past an hour reads as one (the podcast is 62 min).
     for (const d of ["0:30", "10:36", "62:11", "1:02:11"]) {
       expect(isCharacterEraMedia({ ...embed, duration: d }), d).toBe(true);

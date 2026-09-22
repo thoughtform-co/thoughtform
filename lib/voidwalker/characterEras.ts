@@ -443,7 +443,10 @@ export interface CharacterEraMediaEmbed extends CharacterEraMediaBase {
 
 export interface CharacterEraMediaVideo extends CharacterEraMediaBase {
   kind: "video";
-  /** H.264 mp4 under `public/videos/voidwalker/media/`. */
+  /** H.264 mp4 under `public/videos/voidwalker/media/` — or, since ADR-082
+   *  U34, a PUBLIC object in the site's own Supabase `era-media` bucket
+   *  (`ERA_MEDIA_STORAGE_ORIGIN`), the one remote origin `media-src` names.
+   *  Owner, 2026-09-22: "add that to Supabase", and "stream from Supabase". */
   src: string;
   /** Frame-zero poster under `public/images/voidwalker/media/`. Required for
    *  the same reason as the embed's — and because no `<video>` is mounted
@@ -474,21 +477,38 @@ export type CharacterEraMedia =
 /**
  * How many assets one era's pile may hold.
  *
- * ⚠ THE CAP IS ARITHMETIC, NOT TASTE. The pile is drawn as file folders whose
- * tabs STAGGER along the top edge — the front card's tab letters its full
- * designation, each card behind it shows an index-only tab to its right — and
- * at the narrowest capable rung (1101×800, a 280px seat) four tabs come to
- * 267.8px. A fifth overflows the card it belongs to. Raising this number is a
- * redesign of the tab row, which is why the guard below truncates rather than
+ * ⚠ THE CAP IS ARITHMETIC, NOT TASTE, AND SINCE ADR-082 U34 IT IS A HEIGHT.
+ * The pile is a stack of identical folders seen on a diagonal: each card
+ * behind the front one stands one TAB HEIGHT up, so its tab reads whole above
+ * the card in front — and every one of those rises is paid for out of the
+ * front card's frame. At 1280×720 a fourth card pushes the frame under its
+ * 72px floor. (U31's cap was 4, and it was the WIDTH of a row of fanned tabs,
+ * which no longer exists.) The shortest phone draws the front two of a
+ * three-card pile and rotates the third in. Raising this number is a
+ * redesign of the pile, which is why the guard below truncates rather than
  * trusting the author.
  */
-export const CHARACTER_ERA_MEDIA_MAX = 4;
+export const CHARACTER_ERA_MEDIA_MAX = 3;
 
 const ERA_MEDIA_IMAGE_PATH =
   /^\/images\/voidwalker\/media\/[a-z0-9][a-z0-9._-]*\.(?:jpe?g|png|webp|avif)$/i;
 /** ⚠ MP4 ONLY, AND ONLY UNDER `/videos/` — see `video` above. A `.webm` here
  *  would be a file Safari cannot play with no fallback source beside it. */
 const ERA_MEDIA_VIDEO_PATH = /^\/videos\/voidwalker\/media\/[a-z0-9][a-z0-9._-]*\.mp4$/i;
+/**
+ * The site's own Supabase project: the ONE remote origin a `video` may stream
+ * from (ADR-082 U34). ⚠ A COPY, BECAUSE THIS FILE IMPORTS NOTHING — the CSP's
+ * `media-src` names `ERA_MEDIA_ORIGIN` in `lib/security/headers.mjs`, and
+ * `security-headers.test.ts` asserts the two are one string. A video src that
+ * names any other host would be one the enforced policy blocks outright.
+ */
+export const ERA_MEDIA_STORAGE_ORIGIN = "https://ehijwavsxbvnxsrunegu.supabase.co";
+/** A PUBLIC object in the `era-media` bucket, mp4 only — never a signed or an
+ *  authenticated path (those expire, or need a key the page must not hold). */
+const ERA_MEDIA_STORAGE_VIDEO = new RegExp(
+  `^${ERA_MEDIA_STORAGE_ORIGIN.replace(/\./g, "\\.")}/storage/v1/object/public/era-media/[a-z0-9][a-z0-9._/-]*\\.mp4$`,
+  "i"
+);
 const ERA_MEDIA_YOUTUBE_ID = /^[\w-]{11}$/;
 /** `M:SS` / `MM:SS`, or `H:MM:SS` — ADR-082 U33: the Architect's podcast runs
  *  62 minutes, and "62:11" is a length nobody reads at a glance. Past an hour
@@ -527,7 +547,11 @@ export function isCharacterEraMedia(value: unknown): value is CharacterEraMedia 
       );
     case "video":
       return (
-        typeof c.src === "string" && ERA_MEDIA_VIDEO_PATH.test(c.src) && posterOk && durationOk
+        typeof c.src === "string" &&
+        (ERA_MEDIA_VIDEO_PATH.test(c.src) ||
+          (ERA_MEDIA_STORAGE_VIDEO.test(c.src) && !c.src.includes(".."))) &&
+        posterOk &&
+        durationOk
       );
     case "image":
       return (
@@ -890,6 +914,18 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
       { k: "Also ran", v: "Social Media Storytelling" },
       { k: "The exit", v: "Built into the calendar" },
     ],
+    /* ADR-082 U34: the class itself, on his own channel. ⚠ The source title is
+       64 characters against the card's 60 — "my classes" comes off, the rest is
+       his own words. */
+    media: [
+      {
+        kind: "embed",
+        youtubeId: "qm4KlfvJc9A",
+        title: "How I used World of Warcraft to teach at Thomas More",
+        duration: "2:02",
+        poster: "/images/voidwalker/media/film-wow-class-thomas-more.jpg",
+      },
+    ],
   },
   {
     id: "expanse",
@@ -1028,6 +1064,16 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     ],
     // Ophef is the same year's other crowd and has no era of its own.
     pressBeatIds: ["pokemon-go", "ophef"],
+    // ADR-082 U34: the zoo hunt, on his own channel, the source's own title.
+    media: [
+      {
+        kind: "embed",
+        youtubeId: "tRdaNTpxmR8",
+        title: "Pokémon GO hunt in the Zoo of Antwerp (2016)",
+        duration: "0:55",
+        poster: "/images/voidwalker/media/film-pokemon-zoo-hunt.jpg",
+      },
+    ],
   },
 ];
 

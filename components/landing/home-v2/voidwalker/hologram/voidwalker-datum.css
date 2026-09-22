@@ -639,8 +639,19 @@
    It was one bare 16:9 frame over a mono caps line. It is `EraMediaStack`
    now: one card per asset, every card the same FOLDER — a tab, a 45° slant, a
    square body, cut from ONE silhouette — with the front card carrying the
-   frame and the title INSIDE its body, and the cards behind it standing empty,
-   stepped up and to the right, their tabs fanned along the top edge.
+   frame and the title INSIDE its body, and the cards behind it standing empty.
+
+   ⚠ EVERY FOLDER IS THE SAME FOLDER, AND THE PILE IS SEEN ON A DIAGONAL
+   (ADR-082 U34, owner 2026-09-22: "look at this as a digital folder, and every
+   folder looks the same. The notch is the same in every structure … stack it
+   from a different vantage point, so you can still see the stack"). U31
+   fanned the tabs along one top edge — a wide one in front, narrow index tabs
+   behind it — so the number showed, and the cards stopped reading as files.
+   Now every card is one size with one tab, flush at its own top-left, and each
+   card behind the front one stands ONE TAB HEIGHT UP and a small step LEFT:
+   every tab reads whole above the card in front of it, which is how his
+   reference pile of folders reads, and nothing about any card says it is the
+   front one except that it is in front.
 
    ⚠ THIS IS THE STATION'S ONE GLASS HOUSING, AND A TAB IS LAWFUL HERE WHERE
    ADR-097 U1 TOOK ONE OFF THE PROOF CARD. That tab carried a TINT across a
@@ -670,55 +681,47 @@
   /* ── The pile's dials. */
   --vwd-mtab-h: clamp(22px, 2.6svh, 30px);
   --vwd-mtab-fs: clamp(9.5px, 0.68vw, 11px);
-  --vwd-mtab-gap: 2px;
-  /* How far each card stands up-and-right of the one in front of it. It is
-     paid for out of the FRAME's height, so it opens with the viewport. */
-  --vwd-mstack-step: clamp(3px, 0.6svh, 8px);
+  /* The cascade's two steps. ⚠ THE RISE IS THE TAB'S OWN HEIGHT, AND LESS IS
+     NOT A SUBTLER VERSION OF IT: the card in front starts its own tab row one
+     step down, so any rise under a tab height slides that row over the lower
+     part of the tab behind and hides its lettering. The lateral step is
+     small — enough to show each card's left edge as a sliver. Both are paid
+     for out of the FRONT card's frame, which is the one thing here that gives. */
+  --vwd-mstack-dy: var(--vwd-mtab-h);
+  --vwd-mstack-dx: clamp(10px, 1.2svh, 18px);
   --vwd-mpad: clamp(7px, 1svh, 12px);
   --vwd-mglass-a: 0.62;
   --vwd-mbloom-a: 0.1;
   --vwd-mblur: 10px;
   --vwd-mlip: color-mix(in srgb, var(--gold-line) 30%, transparent);
 
-  /* ── The tab widths, SOLVED FROM THE TYPE. PT Mono's advance is 0.6em and
-     `--track-label` adds .08em, so a character is 0.68 of the size. The front
-     tab letters `KIND NN` behind a 5px mark and two 6px gaps (`--vwd-mtab-fch` characters,
-     written inline by the component); a back tab letters its own two-digit
-     index. Each reserves the slant's own width on the right, because that
-     corner of the tab is not there.
-     ⚠ FOUR IS THE CEILING AND IT IS THIS ARITHMETIC (`CHARACTER_ERA_MEDIA_MAX`):
-     `wf + 3 × (wb + gap)` against a card that is `3 × step` narrower than its
-     seat clears by ~10px at 1101×800 and ~25px at 1920×1247. A fifth tab runs
-     off its own card. */
+  /* ── ONE TAB WIDTH, SOLVED FROM THE TYPE. PT Mono's advance is 0.6em and
+     `--track-label` adds .08em, so a character is 0.68 of the size. Every tab
+     is sized for the widest designation there is — `IMAGE NN`, seven
+     characters behind a 5px mark and two 6px gaps — plus the slant's own width
+     on the right, because that corner of the tab is not there. One width is
+     what makes every notch the same notch.
+     ⚠ THREE IS THE CEILING AND IT IS NOW A HEIGHT (`CHARACTER_ERA_MEDIA_MAX`):
+     each card behind costs the front card's frame one tab height, and at
+     1280×720 a fourth pushes the frame under its 72px floor. U31's ceiling was
+     the WIDTH of a fanned tab row, and that row is gone. */
   --_adv: calc(var(--vwd-mtab-fs) * 0.68);
-  --_wf: calc(var(--_adv) * var(--vwd-mtab-fch, 7) + 31px + var(--vwd-mtab-h));
-  --_wb: calc(var(--_adv) * 2 + 14px + var(--vwd-mtab-h));
-  --_lift: calc((var(--vwd-mn, 1) - 1) * var(--vwd-mstack-step));
+  --_wt: calc(var(--_adv) * 7 + 31px + var(--vwd-mtab-h));
+  --_steps: calc(var(--vwd-mn, 1) - 1);
 
   position: relative;
   display: grid;
   grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   min-height: 0;
-  /* The pile's own room: the cards behind the front one are TRANSLATED into
-     this padding, so the stack's box is the pile's whole silhouette and
-     nothing it paints can leave the seat. */
-  padding: var(--_lift) var(--_lift) 0 0;
+  /* The pile's own room: the cards behind the front one are TRANSLATED up and
+     left into this padding, so the stack's box is the pile's whole silhouette
+     and nothing it paints can leave the seat. The front card is the content
+     box — bottom-right, where his reference keeps it. */
+  padding: calc(var(--_steps) * var(--vwd-mstack-dy)) 0 0 calc(var(--_steps) * var(--vwd-mstack-dx));
 }
 
 .vwd__mcard {
-  /* 0 for the front card, 1 for every card behind it. */
-  --_back: min(var(--vwd-md, 0), 1);
   --_t: var(--vwd-mtab-h);
-  --_w: calc(var(--_wf) + var(--_back) * (var(--_wb) - var(--_wf)));
-  /* ⚠ BY DEPTH, NEVER BY INDEX. Each card behind takes the next place to the
-     right, and it is also SHIFTED right by its own depth — so every tab is
-     further right and further up than the one before it and no two slants can
-     meet. In index order a tab LEFT of the front one slides under it. */
-  --_x0: calc(
-    var(--_back) * (var(--_wf) + var(--vwd-mtab-gap)) + max(var(--vwd-md, 0) - 1, 0) *
-      (var(--_wb) + var(--vwd-mtab-gap))
-  );
-  --_x1: calc(var(--_x0) + var(--_w));
 
   grid-area: 1 / 1;
   position: relative;
@@ -728,8 +731,11 @@
   min-width: 0;
   min-height: 0;
   padding: calc(var(--_t) + var(--vwd-mpad)) var(--vwd-mpad) var(--vwd-mpad);
-  translate: calc(var(--vwd-md, 0) * var(--vwd-mstack-step))
-    calc(var(--vwd-md, 0) * -1 * var(--vwd-mstack-step));
+  /* Each card behind the front one stands one step up and to the left per
+     card in front of it. Every card is the same size, so this translate is
+     the ONLY thing that differs between them. */
+  translate: calc(var(--vwd-md, 0) * -1 * var(--vwd-mstack-dx))
+    calc(var(--vwd-md, 0) * -1 * var(--vwd-mstack-dy));
   background:
     repeating-linear-gradient(
       to bottom,
@@ -743,17 +749,16 @@
     ),
     /* The tab's own fill — a MATERIAL, on every card, never a state. It is a
        rectangle; the silhouette below cuts its slant. */
-    linear-gradient(rgba(var(--vwd-dawn-rgb), 0.1), rgba(var(--vwd-dawn-rgb), 0.1)) var(--_x0) 0 /
-      var(--_w) var(--_t) no-repeat,
+    linear-gradient(rgba(var(--vwd-dawn-rgb), 0.1), rgba(var(--vwd-dawn-rgb), 0.1)) 0 0 / var(--_wt)
+      var(--_t) no-repeat,
     /* A card sinks toward the GROUND as it recedes — void in dark, parchment
        in light — which is the proof pile's own depth law in one term. */
     rgba(var(--void-deep-rgb), calc(var(--vwd-mglass-a) + 0.09 * min(var(--vwd-md, 0), 3)));
+  /* Six points: the tab flush at the card's top-left, its 45° slant, the body. */
   clip-path: polygon(
-    0 var(--_t),
-    var(--_x0) var(--_t),
-    var(--_x0) 0,
-    calc(var(--_x1) - var(--_t)) 0,
-    var(--_x1) var(--_t),
+    0 0,
+    calc(var(--_wt) - var(--_t)) 0,
+    var(--_wt) var(--_t),
     100% var(--_t),
     100% 100%,
     0 100%
@@ -771,24 +776,20 @@
   background: var(--vwd-mlip);
   clip-path: polygon(
     evenodd,
-    0 var(--_t),
-    var(--_x0) var(--_t),
-    var(--_x0) 0,
-    calc(var(--_x1) - var(--_t)) 0,
-    var(--_x1) var(--_t),
+    0 0,
+    calc(var(--_wt) - var(--_t)) 0,
+    var(--_wt) var(--_t),
     100% var(--_t),
     100% 100%,
     0 100%,
-    0 var(--_t),
-    1px calc(var(--_t) + 1px),
-    calc(var(--_x0) + 1px) calc(var(--_t) + 1px),
-    calc(var(--_x0) + 1px) 1px,
-    calc(var(--_x1) - var(--_t) - 0.414px) 1px,
-    calc(var(--_x1) - 0.414px) calc(var(--_t) + 1px),
+    0 0,
+    1px 1px,
+    calc(var(--_wt) - var(--_t) - 0.414px) 1px,
+    calc(var(--_wt) - 0.414px) calc(var(--_t) + 1px),
     calc(100% - 1px) calc(var(--_t) + 1px),
     calc(100% - 1px) calc(100% - 1px),
     1px calc(100% - 1px),
-    1px calc(var(--_t) + 1px)
+    1px 1px
   );
 }
 
@@ -822,12 +823,12 @@
   appearance: none;
   position: absolute;
   top: 0;
-  left: var(--_x0);
+  left: 0;
   z-index: 2;
   display: flex;
   align-items: center;
   gap: 6px;
-  width: var(--_w);
+  width: var(--_wt);
   height: var(--_t);
   margin: 0;
   /* The right pad is the slant: that corner of the tab is cut away. */
@@ -849,17 +850,37 @@
   cursor: default;
   color: rgb(var(--vwd-dawn-rgb));
 }
-/* ⚠ THE ONE GOLD THING ON THE CARD AT REST, and it is 5px — gold on this
-   station is the lit mark and nothing else (ADR-082 U23). Square: the filled
-   DIAMOND means "you are here" on the era band one row down. */
+/* ⚠ EVERY TAB CARRIES THE MARK, AND IT IS GOLD ONLY ON THE OPEN FOLDER (U34):
+   one notch, one state. It is 5px — gold on this station is the lit mark and
+   nothing else (ADR-082 U23). Square: the filled DIAMOND means "you are here"
+   on the era band one row down. */
 .vwd__mcard__mark {
   flex: 0 0 auto;
   width: 5px;
   height: 5px;
+  background: rgba(var(--vwd-dawn-rgb), 0.35);
+}
+.vwd__mcard__tab[aria-pressed="true"] .vwd__mcard__mark {
   background: var(--gold);
 }
-.vwd__mcard__tab[aria-pressed="true"] .vwd__mcard__idx {
+.vwd__mcard__idx {
   color: rgba(var(--vwd-dawn-rgb), 0.55);
+}
+/* ⚠ A CARD BEHIND IS PRESSED ANYWHERE IT SHOWS (U34). In the cascade the strip
+   under a back tab belongs to the card in front, so the tab alone is one tab
+   height of target — under the phone's 44px. The tab's own hit area therefore
+   runs across the card's top two tab heights; the card's silhouette clips it
+   (a `clip-path` clips hit-testing too) and the card in front covers the rest,
+   so what answers is exactly the part of this folder the reader can see. The
+   tab stays the one control — the keyboard and a reader of names get the same
+   `<button>`. */
+.vwd__mcard__tab[aria-pressed="false"]::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  /* Wider than any card; the silhouette is what trims it. */
+  width: 999px;
+  height: calc(var(--_t) + var(--vwd-mstack-dy));
 }
 .vwd__mcard__tab[aria-pressed="false"]:hover,
 .vwd__mcard__tab[aria-pressed="false"]:focus-visible {
@@ -992,27 +1013,20 @@
   color: var(--gold-ink, #caa554);
 }
 
-/* Choosing a card ROTATES the pile: each silhouette slides to its new depth
-   and its tab to its new place. One eased gesture, position only — no fade,
-   no flicker (the owner's standing rule on motion). The z-order and the body
-   swap at once; what travels is ≤ 3 steps of a few pixels.
+/* Choosing a card ROTATES the pile: each folder slides to its new place on the
+   diagonal. One eased gesture, position only — no fade, no flicker (the
+   owner's standing rule on motion). The z-order and the body swap at once;
+   what travels is ≤ 2 steps. Every card is the same silhouette now (U34), so
+   nothing but the translate has anything to interpolate.
    ⚠ A CLICK-DRIVEN TRANSITION, NOT PART OF §G. That ladder is scroll-owned and
    allows no transitions on its actors; these cards are not its actors — the
    BODY around them is. */
 @media (prefers-reduced-motion: no-preference) {
   .vwd__mcard {
-    transition:
-      translate 240ms cubic-bezier(0.65, 0, 0.35, 1),
-      clip-path 240ms cubic-bezier(0.65, 0, 0.35, 1);
-  }
-  .vwd__mcard::before {
-    transition: clip-path 240ms cubic-bezier(0.65, 0, 0.35, 1);
+    transition: translate 240ms cubic-bezier(0.65, 0, 0.35, 1);
   }
   .vwd__mcard__tab {
-    transition:
-      left 240ms cubic-bezier(0.65, 0, 0.35, 1),
-      width 240ms cubic-bezier(0.65, 0, 0.35, 1),
-      color 160ms ease;
+    transition: color 160ms ease;
   }
 }
 
@@ -1370,9 +1384,9 @@ a.vwd__press:focus-visible {
   /* The media card's two rungs, both on the LABEL ratio (1.2svh) now that the
      title is mono capitals (U32) — capitals at the value ratio's 18px would
      outshout the heads above them. ⚠ The tab caps at 13, not 15: its width is
-     solved from this size, and four of them have to fit across a card
-     (`--_wf` / `--_wb`). The title's measure is the card's, so it takes the
-     fact keys' own 15. */
+     solved from this size (`--_wt`), and a tab past a third of the card reads
+     as a header bar rather than a folder's notch. The title's measure is the
+     card's, so it takes the fact keys' own 15. */
   .vwd__mstack {
     --vwd-mtab-fs: clamp(9.5px, 1.2svh, 13px);
   }
@@ -2061,12 +2075,15 @@ a.vwd__press:focus-visible {
     align-items: baseline;
   }
 
-  /* ── THE MEDIA PILE ON A PHONE (ADR-082 U31). Same DOM, same cards; the tabs
-     ARE the stepper, so they are the one thing here that has to be a thumb's
-     size. ⚠ THE SLOP GOES DOWN, NOT UP: a `clip-path` clips hit-testing as
-     well as paint, and the strip above a tab is outside its card's silhouette
-     — so the 44px is the 32px tab plus the 12px pad under it, which is why
-     `--vwd-mpad` is 12 on this rung and not the desktop's 7–12 clamp.
+  /* ── THE MEDIA PILE ON A PHONE (ADR-082 U31, U34). Same DOM, same cards; the
+     tabs ARE the stepper. A card behind answers across its whole visible strip
+     (the tab's `::after`, above), which is the tab's 32px plus the band beside
+     the tab in front — so `--vwd-mpad` no longer has to carry a hit slop and
+     comes down to 10, which is what pays for the cascade's rise here.
+     ⚠ A THIRD CARD IS NOT DRAWN ON THIS RUNG: two rises cost the frame 64px on
+     the shortest shape the probe walks, and the frame has 72 to give. The pile
+     is still whole — choosing the card behind rotates the third one in — and
+     the room it would have taken is simply not reserved.
      ⚠ THE FRAME'S CAP IS A BUDGET TERM. The reading FITS on this rung
      (`overflow: clip`, U23), and the frame is its largest avoidable term: 435px
      is the head, the card's own chrome, the mast, the tab row and the band's
@@ -2075,12 +2092,11 @@ a.vwd__press:focus-visible {
   .vwd__mstack {
     --vwd-mtab-h: 32px;
     --vwd-mtab-fs: 10px;
-    --vwd-mpad: 12px;
+    --vwd-mpad: 10px;
+    --_steps: min(calc(var(--vwd-mn, 1) - 1), 1);
   }
-  .vwd__mcard__tab[aria-pressed="false"]::after {
-    content: "";
-    position: absolute;
-    inset: 0 0 -12px;
+  .vwd__mcard[data-vwd-media-depth="2"] {
+    display: none;
   }
   .vwd__mcard__frame {
     max-height: clamp(96px, calc(100svh - 435px), 200px);

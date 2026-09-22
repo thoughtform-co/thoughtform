@@ -8,7 +8,15 @@
  * every SecurityPolicyViolationEvent plus every console message that
  * names the policy. Zero findings is the gate for flipping enforcement on.
  *
- *   node scripts/sweep-csp-enforced.mjs [--base http://localhost:3113]
+ *   node scripts/sweep-csp-enforced.mjs [--base http://localhost:3113] [--era-media azeroth]
+ *
+ * ⚠ ADR-082 U34 ADDED THE ERA STAGE'S TRANSMISSION TO THE WALK. `media-src`
+ * names ONE remote origin now (the site's own Supabase project, the era-media
+ * bucket), and a policy widened for one film is only proven by PLAYING that
+ * film under enforcement. On the landing (dark) the sweep seats `#voidwalker`,
+ * picks `--era-media` by its bust, opens the pile's FRONT card, and lists every
+ * request it saw to the bucket's host — zero requests means the step proved
+ * nothing about the widening, and says so.
  */
 import { chromium } from "playwright";
 
@@ -17,6 +25,12 @@ import { COOKIE, signPass } from "./owner-pass/signPass.mjs";
 const base = process.argv.includes("--base")
   ? process.argv[process.argv.indexOf("--base") + 1]
   : "http://localhost:3113";
+const ERA_MEDIA = process.argv.includes("--era-media")
+  ? process.argv[process.argv.indexOf("--era-media") + 1]
+  : "azeroth";
+/* Read from the policy's own module, so the sweep can never check a host the
+   header does not name. */
+const { ERA_MEDIA_ORIGIN } = await import("../lib/security/headers.mjs");
 
 /* `/arcs` is the owner's page (ADR-117): a production build answers it with a
    404 unless the request carries his pass. The sweep signs one when it is
@@ -112,6 +126,55 @@ for (const route of ROUTES) {
         } catch {
           violations.push(`${tag} note: walkthrough lightbox not clickable in sweep (non-fatal)`);
         }
+      }
+
+      // ADR-082 U34: the era stage's TRANSMISSION front card, on `--era-media`.
+      const bucketHits = [];
+      page.on("request", (req) => {
+        if (req.url().startsWith(`${ERA_MEDIA_ORIGIN}/`)) bucketHits.push(req.url());
+      });
+      try {
+        /* Seated as `probe-voidwalker-eras.mjs` seats it: 45 % into the
+           station's runway, walked there in steps (a jump skips the writers),
+           then the era driven with the KEYBOARD — the reel keeps two chips
+           outside its clip window, so a pointer click can land on nothing. */
+        await page.evaluate(async () => {
+          const runway = document.querySelector("#voidwalker .vw");
+          if (!runway) return;
+          const to = Math.round(
+            runway.getBoundingClientRect().top + window.scrollY + 0.45 * (runway.offsetHeight - window.innerHeight)
+          );
+          let y = window.scrollY;
+          while (Math.abs(to - y) > 600) {
+            y += Math.sign(to - y) * 600;
+            window.scrollTo(0, y);
+            await new Promise((r) => setTimeout(r, 90));
+          }
+          window.scrollTo(0, to);
+        });
+        await page.waitForTimeout(1500);
+        const eras = await page
+          .locator("#voidwalker [data-vwh-era-tab]")
+          .evaluateAll((els) => els.map((e) => e.getAttribute("data-vwh-era-tab")));
+        const target = eras.indexOf(ERA_MEDIA);
+        if (target < 0) throw new Error(`no era "${ERA_MEDIA}" on the rail`);
+        await page.locator("#voidwalker [data-vwh-era-tab][data-on='true']").first().focus();
+        await page.keyboard.press("Home");
+        for (let k = 0; k < target; k++) await page.keyboard.press("ArrowRight");
+        await page.waitForTimeout(2000);
+        const front = page
+          .locator(`.vwd__sheet[data-vwd-era="${ERA_MEDIA}"] .vwd__mcard[data-vwd-media-depth="0"] .vwd__mcard__frame`)
+          .first();
+        await front.click({ timeout: 4000, force: true });
+        await page.waitForTimeout(4000);
+        await page.keyboard.press("Escape");
+        console.log(
+          `${tag} transmission · ${ERA_MEDIA} front card opened · ${bucketHits.length} request(s) to ${ERA_MEDIA_ORIGIN}`
+        );
+      } catch (err) {
+        violations.push(
+          `${tag} note: the ${ERA_MEDIA} transmission card was not reachable in sweep — ${String(err?.message ?? err).split("\n")[0]}`
+        );
       }
     }
 

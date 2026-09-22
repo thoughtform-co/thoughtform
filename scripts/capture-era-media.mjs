@@ -19,8 +19,11 @@
  *   · the pile sits INSIDE its seat (the frame is what gives, never the title)
  *   · every tab sits inside ITS OWN card's box — a tab past the card's right
  *     edge is clipped away by the silhouette it belongs to, silently
- *   · tabs climb monotonically: each is further right AND further up than the
- *     one before it (the by-depth order's whole argument)
+ *   · ADR-082 U34: ONE FOLDER — every card the front card's size, every tab the
+ *     same notch at its card's top-left, each card behind exactly one step
+ *     up-left and risen at least its tab's height, and every tab behind the
+ *     front card SEEN whole (hit-tested; the card in front answers otherwise).
+ *     A card the phone does not draw is skipped, never failed.
  *   · the tab's lettering ends before its slant begins
  *   · the title is not clipped (scrollHeight vs clientHeight is useless on a
  *     box that wraps; the last line's Range rect is inside the card)
@@ -33,14 +36,17 @@
  * not need the figure; the stills do. `--headless` is for the gates alone.
  *
  *   node scripts/capture-era-media.mjs --vp 1920x1247 --theme dark --out <dir>
- *   node scripts/capture-era-media.mjs --vp 1280x720  --piles 1,4
+ *   node scripts/capture-era-media.mjs --vp 1280x720  --piles 1,3
  *   node scripts/capture-era-media.mjs --vp 1280x720  --record --era loop
  *
  * ⚠ `--record` GATES THE ERA'S OWN PILE (ADR-082 U33), not the fixture: the
  * URL carries no `media=`, so the lab mounts the registry's pile for `--era`
  * and the card count is read off the pile's published `data-vwd-media-count`.
- * Since U33 three eras carry a real pile, and a fixture that fits proves only
+ * Since U34 every era carries a real pile, and a fixture that fits proves only
  * that the fixture's titles fit.
+ * ⚠ THE FIXTURE STOPS AT 3 (U34): the cap is the cascade's HEIGHT now, and the
+ * lab's `?media=` refuses 4 — a pile it would not mount is a still of the
+ * wrong subject, gated green.
  */
 import { mkdirSync } from "node:fs";
 
@@ -57,7 +63,12 @@ const THEME = argOf("--theme", "dark");
 const ERA = argOf("--era", "genai");
 const RECORD = args.includes("--record");
 /* `null` is the record's own pile, whose size is only known once it renders. */
-const PILES = RECORD ? [null] : argOf("--piles", "1,2,3,4").split(",").map(Number);
+const PILES = RECORD ? [null] : argOf("--piles", "1,2,3").split(",").map(Number);
+const BAD_PILE = PILES.find((n) => n !== null && !(Number.isInteger(n) && n >= 0 && n <= 3));
+if (BAD_PILE !== undefined) {
+  console.error(`--piles ${BAD_PILE}: the lab mounts 0–3 cards (the U34 cap); anything else shoots the wrong subject`);
+  process.exit(2);
+}
 const OUT = argOf("--out", "");
 if (OUT) mkdirSync(OUT, { recursive: true });
 /* The sheet's own phone rung. There the reading FITS rather than scrolls
@@ -118,13 +129,30 @@ const read = () =>
         titleInk = { b: Math.max(...rects.map((r) => r.bottom)), lines: rects.length };
       }
       const tabH = tab ? tab.getBoundingClientRect().height : 0;
+      /* ADR-082 U34: a tab behind the front card must be SEEN whole — hit-test
+         four points just inside its lettered part (left of the slant). A card
+         in front that slides over it answers instead, and says so. */
+      let tabSeen = null;
+      const shown = card.getBoundingClientRect().width > 0;
+      if (tab && shown) {
+        const b = tab.getBoundingClientRect();
+        const pts = [
+          [b.left + 3, b.top + 3],
+          [b.right - b.height - 3, b.top + 3],
+          [b.left + 3, b.bottom - 3],
+          [b.right - b.height - 3, b.bottom - 3],
+        ];
+        tabSeen = pts.every(([x, y]) => document.elementFromPoint(x, y)?.closest(".vwd__mcard__tab") === tab);
+      }
       return {
         depth: Number(card.dataset.vwdMediaDepth),
         kind: card.dataset.vwdMediaKind,
+        shown,
         card: box(card),
         tab: box(tab),
         tabText: tab?.textContent ?? "",
         pressed: tab?.getAttribute("aria-pressed"),
+        tabSeen,
         ink,
         slantStart: tab ? tab.getBoundingClientRect().right - tabH : null,
         frame: box(card.querySelector(".vwd__mcard__frame")),
@@ -177,9 +205,15 @@ function gate(s, n, label) {
     fail(
       `${at}: the pile leaves its seat (pile ${px(s.stack.t)}–${px(s.stack.b)}, seat ${px(s.content.t)}–${px(s.content.b)})`
     );
-  for (const c of byDepth) {
+  const drawn = byDepth.filter((c) => c.shown);
+  for (const c of drawn) {
     // A card is translated INTO the pile's padding; its box must stay inside the pile's.
-    if (c.card.r > s.stack.r + 0.5 || c.card.t < s.stack.t - 0.5)
+    if (
+      c.card.r > s.stack.r + 0.5 ||
+      c.card.t < s.stack.t - 0.5 ||
+      c.card.l < s.stack.l - 0.5 ||
+      c.card.b > s.stack.b + 0.5
+    )
       fail(`${at} · depth ${c.depth}: the card leaves the pile's box`);
     if (c.tab.r > c.card.r + 0.5)
       fail(`${at} · depth ${c.depth}: the tab runs ${px(c.tab.r - c.card.r)}px past its own card`);
@@ -187,12 +221,30 @@ function gate(s, n, label) {
       fail(
         `${at} · depth ${c.depth}: "${c.tabText}" runs ${px(c.ink.r - c.slantStart)}px into its slant`
       );
+    // ⚠ ADR-082 U34: every card behind the front one shows its WHOLE tab.
+    if (c.depth > 0 && c.tabSeen === false)
+      fail(`${at} · depth ${c.depth}: the card in front covers this tab ("${c.tabText}")`);
   }
-  for (let i = 1; i < byDepth.length; i++) {
-    const a = byDepth[i - 1];
-    const b = byDepth[i];
-    if (!(b.tab.l >= a.tab.r - 0.5)) fail(`${at}: tab ${b.depth} overlaps tab ${a.depth}`);
-    if (!(b.tab.t < a.tab.t)) fail(`${at}: tab ${b.depth} does not climb above tab ${a.depth}`);
+  // ⚠ ONE FOLDER: every card the same size, every tab the same notch at the same
+  // corner, and each card behind exactly one step up-left of the card in front.
+  const f0 = drawn[0];
+  for (const c of drawn) {
+    if (Math.abs(c.card.w - f0.card.w) > 0.5 || Math.abs(c.card.h - f0.card.h) > 0.5)
+      fail(`${at} · depth ${c.depth}: the card is not the front card's size`);
+    if (Math.abs(c.tab.w - f0.tab.w) > 0.5 || Math.abs(c.tab.h - f0.tab.h) > 0.5)
+      fail(`${at} · depth ${c.depth}: the tab is not the same notch as the front card's`);
+    if (Math.abs(c.tab.l - c.card.l) > 0.5 || Math.abs(c.tab.t - c.card.t) > 0.5)
+      fail(`${at} · depth ${c.depth}: the tab is not at its card's top-left corner`);
+  }
+  for (let i = 1; i < drawn.length; i++) {
+    const a = drawn[i - 1];
+    const b = drawn[i];
+    const dx = a.card.l - b.card.l;
+    const dy = a.card.t - b.card.t;
+    if (!(dx > 0.5)) fail(`${at}: card ${b.depth} is not to the left of card ${a.depth}`);
+    // Less than a tab height and the card in front's tab row covers this tab.
+    if (dy < a.tab.h - 0.5)
+      fail(`${at}: card ${b.depth} rises ${px(dy)}px, under its tab's ${px(a.tab.h)}px`);
   }
   if (!front) {
     fail(`${at}: no front card`);

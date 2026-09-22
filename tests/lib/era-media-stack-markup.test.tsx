@@ -61,10 +61,11 @@ describe("EraMediaStack markup (ADR-082 U31)", () => {
     // `FILM 01` on the only card an era holds is an ordinal with nothing to order.
     expect(tabs[0]!.textContent).toBe("Film");
     expect(root.querySelector(".vwd__mstack")?.getAttribute("aria-label")).toBe("Transmission");
-    // Four characters of `Film`, no index: the sheet solves the tab's width from this.
+    // ADR-082 U34: one tab width for every card, solved in the SHEET — the
+    // component no longer writes a per-pile character count.
     expect(
       root.querySelector<HTMLElement>(".vwd__mstack")?.style.getPropertyValue("--vwd-mtab-fch")
-    ).toBe("4");
+    ).toBe("");
   });
 
   it("orders a pile BY DEPTH, cyclically, from whichever card is in front", () => {
@@ -81,19 +82,18 @@ describe("EraMediaStack markup (ADR-082 U31)", () => {
     expect(depths(-1)).toEqual([0, 1, 2]);
   });
 
-  it("the front tab letters KIND + its own index; a tab behind letters its index alone", () => {
+  it("every tab letters the same thing — its mark, its KIND and its own index (ADR-082 U34)", () => {
     const root = parse(render([film, cut, still], 2));
     const tabs = [...root.querySelectorAll(".vwd__mcard__tab")];
-    expect(tabs.map((t) => t.textContent)).toEqual(["01", "02", "Image03"]);
-    // ⚠ The COUNT is never lettered: the tabs fanned behind the front one ARE it.
+    // One notch, one lettering, on every folder, whichever card is in front.
+    expect(tabs.map((t) => t.textContent)).toEqual(["Film01", "Film02", "Image03"]);
+    // ⚠ The COUNT is never lettered: the tabs stacked above the front one ARE it.
     expect(root.textContent).not.toMatch(/\/\s*03/);
-    // `Image` + two digits.
-    expect(
-      root.querySelector<HTMLElement>(".vwd__mstack")?.style.getPropertyValue("--vwd-mtab-fch")
-    ).toBe("7");
-    // The one gold mark on the card sits on the FRONT tab and nowhere else.
-    expect(root.querySelectorAll(".vwd__mcard__mark")).toHaveLength(1);
-    expect(tabs[2]!.querySelector(".vwd__mcard__mark")).not.toBeNull();
+    // Every tab carries the mark; the SHEET lights the pressed one's alone.
+    expect(root.querySelectorAll(".vwd__mcard__mark")).toHaveLength(3);
+    for (const tab of tabs) expect(tab.querySelector(".vwd__mcard__mark")).not.toBeNull();
+    expect(tabs.filter((t) => t.getAttribute("aria-pressed") === "true")).toHaveLength(1);
+    expect(tabs[2]!.getAttribute("aria-pressed")).toBe("true");
   });
 
   it("every tab stays a button in every state, and says what it is", () => {

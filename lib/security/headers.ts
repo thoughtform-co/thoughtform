@@ -9,6 +9,7 @@
 export {
   buildContentSecurityPolicy,
   buildSecurityHeaders,
+  ERA_MEDIA_ORIGIN,
   THOUGHTFORM_SECURITY_HEADERS,
 } from "./headers.mjs";
 

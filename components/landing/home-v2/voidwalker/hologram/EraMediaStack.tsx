@@ -25,18 +25,18 @@ import {
  * title INSIDE the body (his own worry about a title in the notch: "if the
  * title is too long, that may not work" — so the tab letters a DESIGNATION,
  * which is always short, and the title wraps where there is room for it).
- * The cards behind it are empty folders stepped up and to the right, their
- * tabs fanned along the top edge, which is how a drawer of files actually
- * reads from the front.
+ * The cards behind it are empty folders.
  *
- * ⚠ THE TABS ARE ORDERED BY DEPTH, NOT BY INDEX. The front card's tab is the
- * wide one at the left; each card behind it takes the next place to the right
- * and letters its OWN index. Index order with the front tab "expanding in
- * place" was the first sketch, and it does not survive the pile's own offset:
- * a card two deep is shifted two steps right, so a tab that sits LEFT of the
- * front one slides under it and the two slants collide. By depth, every offset
- * is monotonic — each tab is further right AND further up than the one before
- * it, and nothing can overlap. Picking a card rotates the pile.
+ * ⚠ EVERY FOLDER IS THE SAME FOLDER (ADR-082 U34, owner 2026-09-22: "every
+ * folder looks the same. The notch is the same in every structure … stack it
+ * from a different vantage point"). U31 fanned the tabs along one top edge —
+ * a wide `FILM 01` in front, narrow index tabs behind it — so a count showed
+ * and the cards stopped reading as files. Now every tab letters the same
+ * thing in the same place (`■ KIND NN`, flush at its own card's top-left), and
+ * the PILE shows the depth: each card behind stands one tab height up and a
+ * step to the left, so its tab reads whole above the card in front of it.
+ * What says "this one is open" is that it is in front, and its mark is lit.
+ * Picking a card rotates the pile.
  *
  * ⚠ A BACK CARD RENDERS NO BODY. The front card is glass, so whatever a card
  * behind it paints shows through the padding round the frame and under the
@@ -101,13 +101,9 @@ export function EraMediaStack({ items, front, onFront, onOpen, idPrefix }: EraMe
   const frontIndex = front >= 0 && front < count ? front : 0;
   /* ⚠ THE INDEX LETTERS ONLY WHERE THERE IS A PILE. `FILM 01` on the only card
      an era holds is an ordinal with nothing to order — and the count itself is
-     never lettered at all: the tabs fanned behind the front one ARE the count,
+     never lettered at all: the tabs stacked above the front one ARE the count,
      so `01/03` would be the surface saying it twice. */
   const piled = count > 1;
-  /* The front tab's width is solved in the sheet from its CHARACTER count —
-     PT Mono has one advance — and every card needs it, because each tab behind
-     starts where the front one ends. */
-  const frontChars = eraMediaKindLabel(items[frontIndex]!).length + (piled ? 2 : 0);
 
   return (
     <div
@@ -115,7 +111,7 @@ export function EraMediaStack({ items, front, onFront, onOpen, idPrefix }: EraMe
       role="group"
       aria-label={piled ? `Transmissions, ${count} on record` : "Transmission"}
       data-vwd-media-count={count}
-      style={{ "--vwd-mn": count, "--vwd-mtab-fch": frontChars } as CSSProperties}
+      style={{ "--vwd-mn": count } as CSSProperties}
     >
       {items.map((item, i) => {
         /* How many cards stand in front of this one. Cyclic, so choosing a
@@ -144,15 +140,11 @@ export function EraMediaStack({ items, front, onFront, onOpen, idPrefix }: EraMe
                 if (!isFront) onFront(i);
               }}
             >
-              {isFront ? (
-                <>
-                  <span className="vwd__mcard__mark" aria-hidden="true" />
-                  <span className="vwd__mcard__kind">{kind}</span>
-                  {piled ? <span className="vwd__mcard__idx">{pad2(i + 1)}</span> : null}
-                </>
-              ) : (
-                <span className="vwd__mcard__idx">{pad2(i + 1)}</span>
-              )}
+              {/* One notch, one lettering, on every card: only the mark's state
+                  (lit on the open folder) says which one is in front. */}
+              <span className="vwd__mcard__mark" aria-hidden="true" />
+              <span className="vwd__mcard__kind">{kind}</span>
+              {piled ? <span className="vwd__mcard__idx">{pad2(i + 1)}</span> : null}
             </button>
 
             {isFront ? (
