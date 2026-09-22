@@ -1271,7 +1271,7 @@ ease-in-out, PURE MOTION with zero fades) — `tl-aperture` · `tl-aperture-clos
   `cubic-bezier(0.65, 0, 0.35, 1)`, matching `proof-stack.css` exactly — and,
   since [ADR-119 U1](../../sentinel/decisions/119-the-musings-rack.md)
   (2026-09-22), the musings shelf's `mu-aperture*` as well. Change one and change
-  all three; `tests/lib/musings-shelf.test.ts` pins them by source. ⚠ `tl-settle` keeps its OWN curve and both
+  all three; `tests/lib/musings-row.test.ts` pins them by source. ⚠ `tl-settle` keeps its OWN curve and both
   durations (640 / 960) — it is a fade on ADR-100 U3's ladder, not the sweep,
   and that ruling is stated in those two numbers.
 - **Left open:** the two durations (720 / 420); the beats below `#phases`

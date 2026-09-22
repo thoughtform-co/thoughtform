@@ -575,3 +575,121 @@ slab, the band as the cover, the stage-mode branch on the corridor gate, and
 - **`clickToNavigate.ts` still says sticky does not move `offsetTop`.** Its own
   behaviour is unaffected today (the bed only arms inside this beat), but the
   comment is wrong and the next reader will believe it.
+
+## Update 2 — the row, and a head that decodes in place (2026-09-22, owner)
+
+He read U1 live and gave three notes in one message:
+
+> _"The texts, like the H1 and the paragraph, shouldn't move into view. It should
+> just appear with a glitch effect, just like we have in the services section."_
+>
+> _"The entire stack of Musings should be centered. Now it's aligned to the left
+> for some reason."_
+>
+> _"We want some sort of jukebox carousel rolodex effect where we see the other
+> cards rotated on the x-axis, but now it looks really bad. I think the cards
+> need to have some sort of 3D effect, like we have with the services cards. I
+> don't want an exact copy, but I think that's a good design primitive."_
+
+Two answers taken in session, both his: _"I don't want a physical shelf or
+whatever. It's more about the effect where the cards that are not in view are
+rotated on the x-axis. I don't want any skeuomorphism"_ — and, shown three forms
+of a rotation about X, **"Row, others tipped back"**: the card being read upright
+in the centre, the others tipped back about their horizontal axis, the row
+sliding sideways.
+
+### 1 · The head was pinned all along. What moved was text that was never blank
+
+U1 scrubbed the decode off the scroll position and blanked it by asking the
+kernel for its frame at `t = 0`. `scrambleFrame` opens each character's shuffle
+window `SCRAMBLE_SHUFFLE_S` BEFORE it resolves, so at `t = 0` the first three or
+four characters of every run are random glyphs — `F-ZO` / `TSJ` on U1's own
+`p 0.02` still, `GZHI` / `VAB` on his. The head was never empty: those glyphs rode
+the stage up the frame on the approach and again on the release, and re-rolled
+on every scroll frame. **The services masthead is blank until parked, then
+decodes on its own clock.** So:
+
+- `lib/musings/headDecode.ts` (pure): `headFrame(run, level, span)` is `""` at
+  level 0 for every run — the regression the test exists for — and the writer
+  may not call `scrambleFrame` itself. Services' numbers: lines 0.18s apart, the
+  paragraph typing at 220 chars/s behind 0.12s; the span is ~0.7s.
+- ⚠ **TIME DRIVES THE LEVEL, SCROLL DECIDES THE TARGET.** `headTarget(prev, p,
+pinned)` answers 0 or 1 — reveal at p ≥ 0.02, leave at ≥ 0.965 or < 0.01, a
+  hysteresis band at each end — and a bounded rAF burst walks the level there (up
+  over the span, down twice as fast). A scrubbed decode resolves at the speed of
+  the reader's thumb and stands half-shuffled when it stops, which is not the
+  effect he pointed at. ⚠ The level is still ONE scalar, so the un-type is the
+  decode played backwards in each character's own cell and there is nothing to
+  latch — `advanceScrambles` stays banned.
+- ⚠ **NEVER SHOWN ON A MOVING STAGE.** `pinned` is the runway covering the frame;
+  unparked, the level snaps to 0 at once (the masthead motion law's
+  force-blank). A deep reload parked in the band shows the head whole with no
+  replay; a hidden tab settles the burst on return.
+- Services parity: the CRT cursor (`.mu__cursor`, number for number) on the line
+  decoding and the paragraph while it types; the paragraph a GHOST/TYPED pair so
+  typing never reflows the head (U1's `min-height: 4.5em` was a guess).
+- **The cards wait for the head.** `data-mu-arrive="in"` holds until the level is
+  1 — "the text should appear with a glitch effect, and then the cards" — and
+  the row now closes at 0.95, before the head leaves at 0.965, so the exit is the
+  entry backwards.
+
+### 2 · The row: centred, tipped about X, flat
+
+`lib/musings/shelfMath.ts` → `lib/musings/rowMath.ts`. The card being read is
+upright on the rig's centre; the others sit symmetrically either side, tipped
+back `ROW_TILT` (60°, top away) and set back in depth, spreading and receding
+with their distance from it. 60° on stills: 65° made each neighbour a squat
+sliver, 45° let its copy compete. No spine, no slab, no lit edge, no shading —
+the depth is the rotation and the perspective. The detent and its 720ms glide
+are unchanged; `--mu-drift` (the shelf's yaw) is deleted, the row being
+symmetric. `.mu__foot` centres under it.
+
+- ⚠ **AN ANCESTOR `perspective` PAINTED ~140px OFF ITS OWN MEASURED RECT.** The
+  first cut kept U1's structure — `perspective` on `.mu__rig` over a
+  `preserve-3d` rack — and inside this sticky, promoted stage the compositor
+  resolved that perspective somewhere other than `getBoundingClientRect` did: a
+  tipped neighbour's cover glyph painted ~125px right and ~140px below its
+  reported rect, the whole card a 30px sliver under the mid-line. **Every rect
+  matched the arithmetic and every gate built on the rects passed; only the
+  still disagreed.** Removing the window's mask changed nothing; flattening the
+  rig changed nothing. The cure is structural: `rowPose` opens on
+  `perspective(ROW_PERSPECTIVE px)`, every card is seated on the rig's centre
+  (`inset: 0; margin: auto`) so its own transform-origin is the one eye, and the
+  cards share no 3D context — paint order is plain z-index.
+- ⚠ **A TIPPED CARD'S NEAR EDGE STAYS BEHIND THE UPRIGHT ONE.** Tipping swings the
+  bottom edge toward the reader by `(h/2)·sin(tilt)`; the first neighbour's depth
+  is floored on the face's HEIGHT (`rowNearDepth`) so a covered card can never
+  stand in front of the card covering it.
+- ⚠ **THE FADE IS ON `.mu__window` AND ENDS 3 % INSIDE IT.** Cards past ±1 reach
+  beyond the band; at 1280×720 the band's right edge runs 15px past the rail's
+  BEARING readout, so the fade finishes before the edge. A mask is a grouping
+  property — never on the rig, the rack or a card — and hides everything outside
+  its box, so the window pads 8px for the front card's focus ring.
+
+### Guards
+
+`musings-shelf.test.ts` → `musings-row.test.ts` (60): the pose (upright centre,
+X-only tilt on every card at every open index, symmetry, monotonic recession,
+the near-edge floor at four face shapes, one function list with the perspective
+first and the rotation last, z-order, clamping), the detent and reading band,
+the arrival (closing before the head leaves), `headFrame` (EMPTY at level 0,
+whole at 1, monotonic typing, the stagger, the span inside services' window,
+the cursor), `headTarget` (never unparked, both hysteresis bands, the deep
+reload, NaN), and the source ratchets — no spine or yaw anywhere, the seat on
+the rig's centre, no ancestor `perspective` or `preserve-3d` in the sheet, the
+fade on the window, no grouping property on the pivot, the aperture's lockstep,
+the writer never calling `scrambleFrame`. `capture-musings-rack` gains the
+computed-matrix pure-X gate, the centring gate (±2px), the head EMPTY at every
+unparked stop (−0.3 and 1.15 were added for exactly that) and whole through the
+reading band, and the fade ending before the readouts; its arrival probe waits on
+the stamp and a finished animation, because re-entering from below replays the
+order (~1.4s). PASS at 1920×1247 dark and light, 1280×720 and 390×844.
+
+### Left open
+
+- **Three posts.** The row wants five: at three the first and last detents show
+  neighbours on one side only.
+- **A side card is a link nobody can see as one.** Tipped cards stay
+  `tabIndex={-1}` / `aria-hidden` but keep their `href`, so a click on one opens
+  that post. Rolling the row to it instead (the era band's side-tap idiom) is the
+  obvious follow-up; not taken without his read.

@@ -628,7 +628,7 @@ ADR-097 U12's settled reading — the corridor caption card's own expo-out is 84
 open at 90ms, which is right on a 509px card and 2.5× too fast in pixels on an
 object this size — so **copy a reference for what it DOES and re-solve its
 timing for the size of the object you put it on**, then keep every host on the
-result. `tests/lib/musings-shelf.test.ts` pins all three by source; one changing
+result. `tests/lib/musings-row.test.ts` pins all three by source; one changing
 alone is a house grammar running a different clock on one surface, with nothing
 on screen to report it.
 

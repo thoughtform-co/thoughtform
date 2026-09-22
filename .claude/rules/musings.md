@@ -4,15 +4,25 @@ paths:
   - "lib/musings/**"
   - "content/musings/**"
   - "scripts/capture-musings-rack.mjs"
-description: The musings shelf (#musings), its transparent stage and the footer's held bed
+description: The musings row (#musings), its transparent stage and the footer's held bed
 ---
 
-# Rule: the musings shelf
+# Rule: the musings row
 
-`#musings` — the writing as a shelf you flip through: the services masthead's
-grammar on the editorial band, a row of CSS-3D slabs of which one faces out and
-the rest show their spines, one way out. It sits between the era stage and the
-footer.
+`#musings` — the writing as a row you scroll along: the services masthead's
+grammar on the editorial band, decoding in place; a row of flat CSS-3D cards
+of which the one being read stands upright and CENTRED and the rest lean back
+about their horizontal axis; one way out. It sits between the era stage and
+the footer.
+
+⚠ **[ADR-119 U2](../../sentinel/decisions/119-the-musings-rack.md) (2026-09-22,
+owner) IS THE LIVE FORM, AND IT IS THE THIRD READING OF ONE SENTENCE.** He has
+said "rotated on the x-axis" since U0. U0 fanned the cards about Y (he read it
+as a copy of the services ring), U1 turned them 90° about Y to show spines (he
+read it as a "physical shelf … skeuomorphism"). Shown three forms side by side
+he chose the ROW: `rotateX` and nothing else, flat panes, depth from rotation
+and perspective only. **Do not bring a Y turn, a spine, a slab or a lit edge
+back** — `musings-row.test.ts` and the capture's `pureX` gate both refuse it.
 
 ⚠ **SINCE [ADR-119 U1](../../sentinel/decisions/119-the-musings-rack.md)
 (2026-09-22, owner) THE STATION IS NOT THE COVER — ITS LAST VIEWPORT IS.** On
@@ -27,7 +37,7 @@ byte-identical to what U0 shipped:
 | rung                                       | `data-mu-mode` | station              | cover       | footer bed          |
 | ------------------------------------------ | -------------- | -------------------- | ----------- | ------------------- |
 | ≥1101, motion, live corridor, hologram era | `stage`        | transparent, z 6     | `.mu__band` | armed on the band   |
-| 961–1100 (shelf, no stage)                 | —              | opaque               | `#musings`  | armed on the runway |
+| 961–1100 (row, no stage)                   | —              | opaque               | `#musings`  | armed on the runway |
 | ≤960 / PRM / no JS                         | —              | opaque, flowing rail | `#musings`  | never armed         |
 
 ⚠ The PAGE `/musings` is a different surface with a different grammar — the
@@ -48,57 +58,71 @@ to the sheet's variety law. They share exactly one thing: the record.
 
 ## Contracts
 
-- **The geometry is PURE and lives in `lib/musings/shelfMath.ts`** — three-free,
-  zero DOM, unit-pinned. `shelfHinges` · `shelfOffset` · `shelfPose` ·
-  `shelfIndex` · `shelfClock` · `shelfArrive` · `typedCount`. The writer assigns
-  what it returns; nothing else computes a pose.
-- ⚠ **IT IS A SHELF, NOT A FAN, AND THE DIFFERENCE IS NOT A MATTER OF DEGREE**
-  (owner: the posts not in view are _"rotated 90° so we see the side … like
-  putting LPs or CDs in a closet or on a shelf"_). A rack has every card at its
-  own angle; a shelf has **exactly two states** and the reader pulls one out.
-  `shelfPose` emits only `0` and `SHELF_TURN`, and a test asserts the set has
-  two members. The detent is what keeps them two — a scrubbed shelf has every
-  slab at its own angle, which IS the fan.
-- ⚠ **A SLAB IS A PIVOT, A FACE AND A SPINE**, the last two a quarter turn apart
-  about one hinge (`transform-origin: left center`). A single plane turned 90°
-  projects to a LINE whichever edge it hinges on, so the object is the real one;
-  at the pivot's 90° the two transforms compose to the identity on the spine and
-  the face is edge-on. ⚠ The pivot turns AWAY (`+90`) — at −90 the face swings
-  toward the reader and reaches over its neighbour under the rig's perspective.
+- **The geometry is PURE and lives in `lib/musings/rowMath.ts`** — three-free,
+  zero DOM, unit-pinned: `rowGeom` · `rowNearDepth` · `rowSeat` · `rowPose` ·
+  `rowIndex` · `rowReadIndex` · `rowArrive`. The head's decode is
+  `lib/musings/headDecode.ts` (`headFrame` · `headTarget` · `headSpan`). The
+  writer assigns what they return; nothing else computes a pose or a frame.
+- ⚠ **THE ROW TURNS ABOUT X, AND ONLY ABOUT X.** The card being read is
+  upright (`rotateX(0)`); every other card is tipped back `ROW_TILT` (60°, top
+  away) and set back in depth, symmetrically either side, spreading and
+  receding with its distance from the centre. 60° was chosen on stills: at 65°
+  a neighbour is a squat sliver, at 45° its copy competes with the card being
+  read. The detent stays (one scroll step per card, U0's ruling) and every card
+  glides on one 720ms ease-in-out.
+- ⚠ **THE ROW IS CENTRED ON THE CARD BEING READ** (U2: "the entire stack …
+  should be centered"). U1 stood its shelf on the band's left edge by a session
+  decision; that is reversed by the owner. The window keeps the band's box, so
+  the centre it seats on is the page's, and `.mu__foot` centres under it.
+- ⚠ **EACH CARD CARRIES ITS OWN `perspective()`; THE SHEET DECLARES NO
+  `perspective` PROPERTY AND NO `preserve-3d`.** Measured: with the perspective
+  on `.mu__rig` over a `preserve-3d` rack (U1's structure), the compositor inside
+  this sticky, promoted stage resolved it somewhere other than
+  `getBoundingClientRect` did — a tipped neighbour's cover glyph PAINTED ~125px
+  right and ~140px below its own reported rect, the whole card a 30px sliver
+  under the mid-line, **every geometry gate green**. `rowPose` opens on
+  `perspective(ROW_PERSPECTIVE px)`; every card is seated on the rig's centre
+  (`inset: 0; margin: auto`), so its transform-origin — the eye — is the same
+  point for all of them. The cards share no 3D context, so paint order is plain
+  z-index (the card being read over its neighbours, each step out under the
+  last).
+- ⚠ **A TIPPED CARD'S NEAR EDGE STAYS BEHIND THE UPRIGHT ONE, BY CONSTRUCTION.**
+  Tipping swings the bottom edge toward the reader by `(h/2)·sin(tilt)`, so the
+  first neighbour's depth is floored on the face's HEIGHT (`rowNearDepth`), not
+  just scaled off its width — a neighbour whose edge stood in front of the card
+  that covers it would be a drawing that contradicts itself. Unit-pinned at
+  four face shapes, the 961px rung's narrow one included.
+- ⚠ **THE EDGE FADE IS ON `.mu__window`, AND IT ENDS 3 % INSIDE IT.** Cards
+  two and more steps out reach past the band; the fade dissolves them before
+  the band's edge, and at 1280×720 the band's right edge runs 15px PAST the
+  rail's BEARING readout, so a fade that ended on the edge would still lay a
+  faint plate under live telemetry. The window carries `padding-block: 8px` —
+  a mask hides everything outside its box, the front card's focus ring
+  included.
 - ⚠ **THE PIVOT CARRIES A TRANSFORM AND NOTHING ELSE.** `overflow` ≠ visible,
-  `clip-path` ≠ none, `opacity` < 1 and `filter` ≠ none are GROUPING properties:
-  each forces `transform-style: flat` on the element that declares it, whatever
-  it also says about `preserve-3d` (CSS Transforms 2 §3). This card declared all
-  four, and a flattened pivot renders its spine as a zero-width strip —
-  transform applied, element measurable, every geometry gate green. The FACE
-  takes the clip and the overflow; the other two left with the fan, because a
-  closed slab is not a dimmed slab but a slab seen edge-on. A source ratchet
-  walks every rule whose selector ENDS on `.mu-card`.
-- ⚠ **THE SHELF STANDS STILL AND THE OPEN SLAB WALKS ALONG IT.** Centring the
-  open slab on the rig put one object in the middle of a band whose every other
-  element is on its left edge; left-anchored, the head, the shelf and the way
-  out are one column — and a row of records does not move when you pull one out.
-  Bounded by construction: at `MUSINGS_RACK_MAX` the furthest seat is 336px.
-- ⚠ **THE YAW IS CONSTANT once the beat has arrived.** A drift tracking the
-  reading position swings the whole shelf every time a slab turns — two motions
-  on one gesture, and the one the reader is following is the smaller.
+  `clip-path` ≠ none, `opacity` < 1 and `filter` ≠ none are GROUPING properties
+  (CSS Transforms 2 §3). The row has no shared 3D context now, but the law stays
+  so one can come back without a hunt: the FACE takes the clip and the
+  overflow, and a source ratchet walks every rule whose selector ENDS on
+  `.mu-card`.
 - **The plate is SOLID** (0.94, the owner's ruling). 0.62 was tuned against an
   opaque station; the card sits over a live canvas now, and nothing mechanical
   can read a translucent plate there — the gate composites against a background
   COLOUR.
 - ⚠ **ONE WRITER, AND IT RENDERS NOTHING PER FRAME.** `useMusingsScroll` reads
-  one rect in a rAF and publishes `--mu-entry` / `--mu-drift` / `--mu-head`,
-  `data-mu-ready` and `data-mu-arrive` on `.mu`, `data-mu-mode` on the STATION,
-  `data-ft-reveal` on `<html>`, and a transform per card. The ONLY React state is the front index, which changes at a DETENT.
-  A `setState` in the rAF is a re-render across every card, every frame, on a
-  page running a WebGL corridor two stations up (ADR-002).
+  one rect in a rAF and publishes `--mu-head` (the head's level), `data-mu-ready`
+  and `data-mu-arrive` on `.mu`, `data-mu-mode` on the STATION, `data-ft-reveal`
+  on `<html>`, a transform and `data-mu-tilt` per card, and `data-live` on the
+  head's cursor hosts. The ONLY React state is the front index, which changes at
+  a DETENT. A `setState` in the rAF is a re-render across every card, every
+  frame, on a page running a WebGL corridor two stations up (ADR-002).
 - ⚠ **AN ABSENT `data-mu-ready` MEANS SHOWN.** The rest state — no script, a
   reduced-motion reader, any phone — is a horizontal RAIL of the same cards,
-  and it is the finished page rather than a fallback. Every 3D rule is gated on
+  and it is the finished page rather than a fallback. Every row rule is gated on
   the stamp AND on the rung, so the two can never disagree about which layout
-  is live; `musings-shelf.test.ts` asserts both halves off the source.
+  is live; `musings-row.test.ts` asserts both halves off the source.
 - ⚠ **THE RUNG IS MIRRORED BY HAND** between `MUSINGS_RACK_MEDIA` in the writer
-  and `@media` in the sheet. A writer and a sheet that disagree is a shelf posed
+  and `@media` in the sheet. A writer and a sheet that disagree is a row posed
   in 3D inside a box laid out as a flat rail — neither errors, and neither is
   visible in a still taken at the other rung. Pinned by source.
 - ⚠ **THE COVER LOCKSTEP HAS FOUR READERS AND THEY MOVE IN ONE COMMIT**
@@ -168,27 +192,57 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   cross hangs 24px outboard of an end-justified brief, and the right rail's
   BEARING / SECTOR / LOCAL readouts are right-aligned to the rail and reach
   ~100px inboard. Measured at 1280×720 — band ends at 1148, `BEARING` begins at 1133. The brief's TEXT never collides; only the marks do.
-- **The head's decode is SCRUBBED, never queued.** `--mu-head` is one scalar
-  rising over `[.08, .24]` and falling over `[.84, .94]`; `scrambleFrame` is
-  PURE in its `t`, so the head un-types on the way out with no second job and no
-  latch. ⚠ `advanceScrambles` may NOT be used — it DROPS finished jobs, and a
-  dropped job is a latch nothing can unwind. Two registers: chrome and title
-  SCRAMBLE, the paragraph TYPES. ⚠ The heading carries an `aria-label`, or a
-  reader arriving mid-decode is handed the shuffle.
-- **The cards arrive on a centre-out APERTURE, after the head** (the owner's own
-  order). ⚠ **The glitch he means is NOT a flash** — he pulled one from the
-  proof card as a photosensitivity risk (ADR-097 U12), and the house's object
-  arrival is pure motion with zero fades. ⚠ **This is the THIRD host of one pair
-  of numbers** (720ms in / 420ms out, `cubic-bezier(0.65, 0, 0.35, 1)`, with
-  `proof-stack.css` and the Trinny route) and a source ratchet pins all three.
-  ⚠ On the card's FACE, never the rack; ⚠ **and the SPINE arrives with it** — the
-  first cut left two lettered strips standing in an empty frame under a
-  half-decoded head, seen on the still and on no gate. ⚠ The hiding may not move
-  up to the pivot: `opacity` there is the same grouping property.
-  ⚠ It is a BOUNDED BURST on a hysteresis (`shelfArrive`, `arriveNext` copied):
+- ⚠ **THE HEAD DECODES IN PLACE, ON THE SERVICES MASTHEAD'S CLOCK (U2: "the
+  texts … shouldn't move into view … just like we have in the services
+  section").** U1 scrubbed it off the scroll position and asked the kernel for
+  its frame at `t = 0` to blank it — but `scrambleFrame` opens a character's
+  shuffle window BEFORE it resolves, so at `t = 0` the first 3–4 characters of
+  every run were random glyphs (`F-ZO` / `TSJ`). **The head was never blank**,
+  and those glyphs rode the stage in and out of the frame, re-rolling every
+  scroll frame. Now:
+  - **`headFrame` returns `""` at level 0**, for every run — the regression the
+    test exists for — and the writer may not call `scrambleFrame` itself.
+  - **TIME DRIVES THE LEVEL, SCROLL DECIDES THE TARGET.** `headTarget` picks 0
+    or 1 (reveal at p ≥ 0.02, leave at ≥ 0.965 or < 0.01, a hysteresis band at
+    each end); a bounded rAF burst walks the level there — up over the whole
+    span (~0.7s: lines 0.18s apart, the paragraph typing at 220 chars/s behind
+    0.12s, services' numbers), down twice as fast. ADR-021's sanctioned kind,
+    the services masthead's own clock.
+  - **NEVER SHOWN ON A MOVING STAGE**: unparked (the runway not covering the
+    frame) the level snaps to 0 at once — the masthead motion law's
+    force-blank. A deep reload parked inside the band shows the head whole,
+    with no replay; a hidden tab settles the burst on return.
+  - ⚠ The level is still ONE scalar, so the un-type is the decode played
+    backwards in each character's own cell — no second job, nothing to latch.
+    `advanceScrambles` stays banned for that reason.
+  - The CRT cursor (`.mu__cursor`, copied from `.services-masthead__cursor`)
+    rides the first title line still decoding and the paragraph while it types,
+    lit by `data-live` on its `[data-mu-cursor]` host. ⚠ The decoded run is an
+    INNER span — `textContent` would wipe a sibling cursor.
+  - ⚠ The paragraph is a GHOST/TYPED pair (a hidden ghost holds the box, the
+    typed layer is absolute): typing never reflows the head. U1's
+    `min-height: 4.5em` was a guess right at one measure.
+  - Two registers stay: chrome and title SCRAMBLE, the paragraph TYPES. ⚠ The
+    heading carries an `aria-label`, or a reader arriving mid-decode is handed
+    the shuffle. The survey chrome fades with `--mu-head`.
+- **The cards arrive on a centre-out APERTURE, AFTER THE HEAD HAS RESOLVED**
+  (the owner's own order: "the text should appear with a glitch effect, and
+  then the cards should come into view"). The writer holds `data-mu-arrive="in"`
+  until the head's level is 1, and the burst's last frame asks for one more
+  tick. ⚠ **The glitch he means is NOT a flash** — he pulled one from the proof
+  card as a photosensitivity risk (ADR-097 U12). ⚠ **This is the THIRD host of
+  one pair of numbers** (720ms in / 420ms out, `cubic-bezier(0.65, 0, 0.35, 1)`,
+  with `proof-stack.css` and the Trinny route) and a source ratchet pins all
+  three. ⚠ On the card's FACE, never the pivot or the rack; the way out
+  (`.mu__all`) opens on its own rectangle slit on the same clock.
+  ⚠ It is a BOUNDED BURST on a hysteresis (`rowArrive`, `arriveNext` copied):
   NaN leaves the state alone, a deep reload seeds `in`, `await` is NOT `out`,
-  and it closes at 0.97 — past the reading band's own end, because a shelf that
-  shut while the last slab was being read would take the reading away.
+  and it closes at **0.95** — past the reading band's own end (0.94), and BEFORE
+  the head leaves (0.965), so the exit is the entry backwards.
+  ⚠ **Re-entering from below replays the order** (the head decodes, then the
+  aperture opens: ~1.4s end to end), so a probe must WAIT on
+  `data-mu-arrive="in"` and a face with no running animation — never sleep for
+  the detent alone. The capture does.
 - **The card takes ONE notch, TOP-RIGHT** — his corner every time (ADR-097's
   proof card, ADR-098 U5's plates, ADR-082 U37's record cards). ⚠ A clip CUTS a
   border and never strokes one, so the fill is clipped and the edge is a closed
@@ -214,9 +268,9 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   ⚠ `next.config.mjs` must name `/` under `outputFileTracingIncludes` for
   `content/musings/**`: the tracer follows imports and this folder is opened by
   path, so a missing row works in dev and 500s on Vercel.
-- ⚠ **THE SHELF WANTS FIVE POSTS.** At three it is 532px of a 1200px band
-  however it is anchored, and most of the beat is air. That is correct
-  arithmetic and no guard can see it.
+- ⚠ **THE ROW WANTS FIVE POSTS.** At three it is a centre card with one
+  neighbour each side at best (none on one side at either end); five fills the
+  fade at both edges. Past ±2 the cards recede into the fade, so seven is fine.
 - **`--mu-step` is the one dial and it costs page length** — every card adds it
   to the document. Five posts ≈ 3.2 viewports, seven ≈ 4.0.
 
@@ -241,14 +295,22 @@ position: sticky; bottom: 0; z-index: 0 }`, with `#musings.station`
 
 ## What a still shows and a gate does not, and the reverse
 
-- ⚠ **A BOUNDING RECT IS NOT THE SHAPE, AND UNDER A 3D YAW IT IS NOT EVEN THE
-  RIGHT QUADRILATERAL.** The shelf stands at a few degrees about Y under the
-  rig's perspective, so a card projects to a TRAPEZOID and
-  `getBoundingClientRect` returns its axis-aligned BOUND — a box whose four
-  corners are all outside the shape. Probed there, a card with one lawful notch
-  reported three unlawful ones. The capture resolves its probe points through
-  markers laid out in the face's OWN space (this house's custom-property law,
-  applied to geometry).
+- ⚠ **A BOUNDING RECT CAN BE WRONG ABOUT WHERE A 3D ELEMENT PAINTS — NOT JUST
+  LOOSE, WRONG (U2).** With an ANCESTOR `perspective` inside this sticky,
+  promoted stage, `getBoundingClientRect` and the compositor disagreed by
+  ~125px across and ~140px down on a tipped card: the rects were exactly what
+  the arithmetic predicted, every gate built on them passed, and the still
+  showed a 30px sliver. **Only a still — or an element-to-ink comparison —
+  catches a projection the compositor resolved differently.** The cure is
+  structural (a `perspective()` per card, above), and any future 3D pass on
+  this station is read on stills before its numbers are believed.
+- ⚠ **A BOUNDING RECT IS NOT THE SHAPE, AND UNDER A 3D POSE IT IS NOT EVEN THE
+  RIGHT QUADRILATERAL.** U1's shelf stood at a few degrees about Y, so a card
+  projected to a TRAPEZOID and `getBoundingClientRect` returned its axis-aligned
+  BOUND — a box whose four corners are all outside the shape. Probed there, a
+  card with one lawful notch reported three unlawful ones. The capture resolves
+  its probe points through markers laid out in the face's OWN space (this
+  house's custom-property law, applied to geometry).
 - ⚠ **`elementFromPoint` AND `elementsFromPoint()[0]` DISAGREE INSIDE A 3D
   RENDERING CONTEXT, AND THE SINGULAR ONE IS WRONG.** Measured on the same six
   points at 1920×1247: the plural form returns the card's own descendants, the
@@ -275,7 +337,7 @@ position: sticky; bottom: 0; z-index: 0 }`, with `#musings.station`
 ## Verifying
 
 ```bash
-npx vitest run tests/lib/musings-shelf.test.ts tests/lib/rail-manifest.test.ts \
+npx vitest run tests/lib/musings-row.test.ts tests/lib/rail-manifest.test.ts \
   tests/lib/v7-parse.test.ts tests/lib/section-label.test.ts \
   tests/lib/rail-instrument-marks.test.ts tests/lib/detentTable.test.ts \
   tests/lib/footer-nav.test.ts tests/lib/socials.test.ts \
@@ -287,6 +349,9 @@ npx playwright test tests/visual/landing-page.spec.ts -g "HUD" --project=desktop
 npx playwright test tests/visual/mobile-section-seams.spec.ts \
   --project=iphone-14-chromium --project=iphone-14-pro-max-chromium
 node scripts/capture-musings-rack.mjs --vp 1920x1247 --theme dark   # and light, 1280x720, 390x844
+# the capture gates: pure-X tilt on every card's COMPUTED matrix, the card being read
+# centred on the band (±2px), the head EMPTY at every unparked stop and whole in the
+# reading band, and the fade ending before the right rail's readouts
 node scripts/capture-site-footer.mjs  --vp 1920x1247 --theme dark   # U3 must not move it
 ```
 
