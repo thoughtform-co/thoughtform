@@ -63,6 +63,12 @@ def main() -> int:
         action="store_true",
         help="plate stage: the era's SCENE, drawn with the plate as its first AND last frame",
     )
+    # ⚠ ADR-082 U33, after take 1 aimed sideways off the frame: the scene can
+    # end on a DRAWN still instead of coming home, and loops as a ping-pong.
+    ap.add_argument("--ending", choices=("home", "aim"), default="home",
+                    help="scene: back to the first frame, or on to the drawn aim still (--last)")
+    ap.add_argument("--last", default=None,
+                    help="scene: the last frame, a file in the wave's plates/ (default: the plate itself)")
     ap.add_argument("--dry-run", action="store_true", help="print the request, send nothing")
     args = ap.parse_args()
 
@@ -77,9 +83,14 @@ def main() -> int:
         raise SystemExit("the plate stage needs --era (the idle is authored per era)")
     if args.scene and not plate:
         raise SystemExit("--scene is a plate-stage option")
+    last = (wave / "plates" / args.last) if args.last else still
+    if args.scene and not last.exists():
+        raise SystemExit(f"the scene's last frame is not on disk: {last}")
+    if args.ending == "aim" and last == still:
+        raise SystemExit("--ending aim needs --last, the drawn aim still")
 
     if args.scene:
-        prompt = plate_scene_prompt(args.era, args.prop_wording)
+        prompt = plate_scene_prompt(args.era, args.prop_wording, args.ending)
         negative = plate_scene_negative(args.era)
         if args.prop_wording:
             negative = negative.replace("rifle", "costume prop carbine")
@@ -97,10 +108,10 @@ def main() -> int:
     # A plate's clip is named for the plate: a second pick must not find the
     # first pick's clip on disk and "keep" it. A scene is named apart from an
     # idle of the same plate for the same reason.
-    stem = Path(pick).stem + (".scene" if args.scene else "")
+    stem = Path(pick).stem + (f".scene{'-aim' if args.ending == 'aim' else ''}" if args.scene else "")
     raw = out_dir / (f"{stem}.raw.mp4" if plate else "raw.mp4")
     if args.dry_run:
-        ends = "  (last_frame = the same plate)" if args.scene else ""
+        ends = f"  (last_frame = {last.name})" if args.scene else ""
         print(f"veo · {MODEL} · from {still.name} -> {raw.name}{ends}\n\nPROMPT\n{prompt}\n\nNEGATIVE\n{negative}")
         return 0
     if raw.exists():
@@ -113,7 +124,7 @@ def main() -> int:
     client = genai.Client(api_key=require("GEMINI_API_KEY"))
     print(f"veo · {MODEL} · from {still.name}")
 
-    extra = {"last_frame": types.Image.from_file(location=str(still))} if args.scene else {}
+    extra = {"last_frame": types.Image.from_file(location=str(last))} if args.scene else {}
     op = client.models.generate_videos(
         model=MODEL,
         prompt=prompt,

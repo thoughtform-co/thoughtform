@@ -619,7 +619,20 @@ PLATE_IDLE_NEGATIVE_OWN: dict[str, str] = {
         "particles, smoke, sparkles, light rays, flicker, exposure change; a gradient, "
         "vignette, floor, horizon or shadow on the ground; magenta light on the figure; a "
         "creature or a second figure; text, watermark; the figure leaving the frame; "
-        "cropped boots"
+        "cropped boots; music, a song, a theme tune, singing, speech, voices, sound effects"
+    ),
+}
+
+#: ⚠ VEO ALWAYS DRAWS A SOUNDTRACK, AND THE SOUNDTRACK CAN SINK THE CLIP
+#: (ADR-082 U33). The trainer's first idle came back with no video and "an issue
+#: with the audio for your prompt" — uncharged, and the likeliest reading is the
+#: audio model reaching for a cartoon's theme song. The Developer API refuses
+#: `generate_audio` (see vid.py), so the sound is DIRECTED instead: the asset is
+#: muted at the element, and the only job of the audio is not to be refused.
+PLATE_IDLE_SOUND: dict[str, str] = {
+    "pokemon-go": (
+        "SOUND: near-silence — a faint, even room tone and nothing else. No music, no song, "
+        "no voice, no sound effects."
     ),
 }
 
@@ -639,10 +652,11 @@ def plate_idle_prompt(era: str, prop_wording: bool = False) -> str:
         action = action.replace("rifle", "costume prop carbine")
         still = still.replace("rifle", "costume prop carbine")
     lead = f"{hold} Within that pose: {action}" if hold else action
+    sound = PLATE_IDLE_SOUND.get(era)
     return (
         f"LOCKED STATIC FRAME on a heavy tripod. {lead}. WHAT STAYS STILL: {still}. "
         f"The background is a FLAT UNIFORM {ground_word(era)}, the same value in every corner on every "
-        "frame. The lighting does not change. Real time."
+        "frame. The lighting does not change. Real time." + (f" {sound}" if sound else "")
     )
 
 
@@ -703,11 +717,42 @@ PLATE_SCENE_NEGATIVE: dict[str, str] = {
 }
 
 
-def plate_scene_prompt(era: str, prop_wording: bool = False) -> str:
-    """The scene clause for a plate (see PLATE_SCENE)."""
-    scene = PLATE_SCENE.get(era)
+#: ⚠ TAKE 1 AIMED SIDEWAYS (2026-09-22). Told in words to aim "past the camera
+#:   … foreshortened across his chest", Veo swung the rifle out to the RIGHT of
+#:   the picture, level, and the barrel ran off the frame edge for ~2.7 s — the
+#:   one pose the stage cannot hold. A video model finds the physically easy
+#:   aim, and the easy aim from that grip is sideways. So the aim is DRAWN
+#:   first, as a still (`EDIT_AIM`, where the framing can be checked before a
+#:   video is paid for), and the scene runs from the plate TO that still
+#:   (`vid.py --scene --ending aim --last <aim still>`) and loops as a
+#:   ping-pong: both ends are the two holds, so neither turn has a velocity.
+PLATE_SCENE_AIM: dict[str, str] = {
+    "expanse": (
+        "LOCKED STATIC FRAME on a heavy tripod; the camera never moves. The shot BEGINS "
+        "ON THE FIRST FRAME'S POSE — he kneels, the hand on the LEFT of the picture pressed "
+        "to his earpiece, the rifle upright in the hand on the RIGHT of the picture — and "
+        "ENDS ON THE LAST FRAME'S POSE, the aim. In between, one continuous action, in real "
+        "time. First he holds for half a second, listening. Then he SCOUTS: his head turns "
+        "slowly to the LEFT of the picture, holds, sweeps across to the RIGHT of the picture, "
+        "and comes back to the centre. Then the hand at his ear leaves the earpiece and takes "
+        "the rifle's front grip as the rifle comes DOWN from upright toward the camera, into "
+        "his shoulder, and he settles into the last frame's aim and HOLDS IT, completely "
+        "still, for the last second and a half. The rifle never swings out sideways and "
+        "never leaves the picture: it comes down toward the viewer, short in the frame, as "
+        "in the last frame. The planted knee and the forward boot never move, and he never "
+        "stands. The background is a FLAT UNIFORM BLUE, the same value in every corner on "
+        "every frame. The lighting does not change."
+    ),
+}
+
+
+def plate_scene_prompt(era: str, prop_wording: bool = False, ending: str = "home") -> str:
+    """The scene clause for a plate: back HOME to the first frame (PLATE_SCENE),
+    or on to the drawn AIM (PLATE_SCENE_AIM)."""
+    table = PLATE_SCENE_AIM if ending == "aim" else PLATE_SCENE
+    scene = table.get(era)
     if scene is None:
-        raise SystemExit(f"no scene is authored for era '{era}'")
+        raise SystemExit(f"no '{ending}' scene is authored for era '{era}'")
     return scene.replace("rifle", "costume prop carbine") if prop_wording else scene
 
 
@@ -758,11 +803,50 @@ blue light on the figure.
 """
 
 
-def edit_prompt(era: str, n_design: int) -> str:
+#: ADR-082 U33: the scene's END POSE, drawn as a still so its framing can be
+#: checked before a video is paid for (see PLATE_SCENE_AIM for why). ⚠ ONE
+#: change, but a big one — the pose above the waist — so everything below it
+#: and the picture's scale are named as fixed: Veo interpolates from the plate
+#: to this still, and a knee that moved between them would slide.
+#: ⚠ END-ON, BECAUSE THE STAGE IS NARROW: at the site's body scale his figure
+#: column holds ~0.6 m either side of his centre and a profile aim needs ~0.95.
+EDIT_AIM = """
+IMAGE 1 is the photograph to edit.
+
+Keep exactly as IMAGE 1: the same man, the same face and beard, the cap, the
+earpiece in his ear and the boom mic, the armour, the kilt, the socks, the
+boots; the planted knee and the forward boot EXACTLY where they are; his size
+and his place in the picture; the light; and the flat blue ground.
+
+Make ONE change, to his pose above the waist: he has brought the SAME rifle up
+and is AIMING it. The stock is in his shoulder on the RIGHT of the picture. The
+hand on the RIGHT of the picture holds the pistol grip; the hand on the LEFT of
+the picture — the one at his ear in IMAGE 1 — now holds the rifle's front grip.
+His cheek rests on the stock, his eye behind the small optic, his gaze along the
+barrel.
+
+He aims PAST THE CAMERA: the barrel points toward the viewer and a little to the
+LEFT of the picture, seen nearly END-ON, so the rifle is SHORT in the picture.
+Its muzzle sits in front of his chest, well inside the frame, and no part of the
+rifle reaches out sideways past his own shoulders. Never aimed straight into
+the lens, and never pointing sideways.
+
+The same futuristic rifle as IMAGE 1 — its shapes, its panels, its red parts —
+photoreal, a used production prop, faintly scuffed, never glossy, never
+glowing, lit by the same light. No legible text, numbers or logos. The ground
+stays one perfectly uniform blue, #0A28D2, edge to edge — no shadow, no
+gradient, and no blue light on the figure. Nothing touches a frame edge.
+"""
+
+
+def edit_prompt(era: str, n_design: int, kind: str = "rifle") -> str:
     """The one-change edit for a picked plate. `n_design` is how many photographs
-    of the new rifle follow IMAGE 1 (0 means the words alone carry it)."""
+    of the new rifle follow IMAGE 1 (0 means the words alone carry it); `kind`
+    "aim" is the scene's end pose instead (ADR-082 U33)."""
     if era != "expanse":
         raise SystemExit(f"no plate edit is authored for era '{era}'")
+    if kind == "aim":
+        return EDIT_AIM.strip()
     if n_design:
         nums = " and ".join(f"IMAGE {i}" for i in range(2, 2 + n_design))
         clause = (

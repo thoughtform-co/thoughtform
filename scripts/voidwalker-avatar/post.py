@@ -572,10 +572,17 @@ def ground_frames(loopdir: Path, outdir: Path, foot_target: float, target_p75: f
         f.unlink()
     tmp.rmdir()
     flicker = float(np.mean(diffs)) if diffs else 0.0
+    # ⚠ THE MEDIAN IS WHAT A SCENE IS JUDGED BY (ADR-082 U33). T2 exists to
+    #   catch a grade that STROBES, and on an idle the mean is that measure. A
+    #   scene's mean is its ACTION — the Expanse's swing reads 10.2 while its
+    #   three holds read 2.1-3.1, against v2's idle at 2.47 — so the frame a
+    #   scene spends most of its time on is the honest reading.
+    flicker_p50 = float(np.median(diffs)) if diffs else 0.0
     return {"ground": [round(float(v), 1) for v in ground], "ground_drift": round(drift, 1),
             "exposure": round(exposure, 3), "p75": gate0["p75"], "hot": gate0["hot"],
             "exposure_ok": gate0["ok"], "shift": shift, "foot_before": round(foot / H, 4),
-            "top_cut": top_cut, "flicker": round(flicker, 2), "frames": len(files),
+            "top_cut": top_cut, "flicker": round(flicker, 2), "flicker_p50": round(flicker_p50, 2),
+            "frames": len(files),
             "walls": walls, "ink_x": [left, right], "ink_top": top_row}
 
 
@@ -685,7 +692,8 @@ def main_ground(args: argparse.Namespace, wave: Path, raw: Path) -> int:
     g = ground_frames(loopdir, gdir, args.foot)
     print(f"ground {g['ground']} (drift {g['ground_drift']})  exposure x{g['exposure']} -> "
           f"p75 {g['p75']} hot {g['hot']} {'ok' if g['exposure_ok'] else 'OFF'}  "
-          f"seat {g['shift']:+d}px (boots were at {g['foot_before']})  flicker {g['flicker']}")
+          f"seat {g['shift']:+d}px (boots were at {g['foot_before']})  flicker {g['flicker']} "
+          f"(median frame {g['flicker_p50']})")
     problems = []
     if g["ground_drift"] > 12:
         problems.append(f"K2 the ground drifted {g['ground_drift']} over the clip")
@@ -693,8 +701,10 @@ def main_ground(args: argparse.Namespace, wave: Path, raw: Path) -> int:
         problems.append("the deep interior is outside the Architect's exposure band")
     if g["top_cut"]:
         problems.append("the seat pushed opaque rows off the TOP of the canvas")
-    if g["flicker"] > 6.0:
-        problems.append(f"T2 interior flicker {g['flicker']} > 6.0")
+    scene = args.loop == "settle" or args.cut is not None
+    t2 = g["flicker_p50"] if scene else g["flicker"]
+    if t2 > 6.0:
+        problems.append(f"T2 interior flicker {t2} > 6.0 ({'median frame, a scene' if scene else 'mean'})")
     if g["walls"]:
         problems.append(f"the figure reaches the {'/'.join(g['walls'])} wall (ink x {g['ink_x']}, "
                         f"top {g['ink_top']}) — the border repaint would cut it there")

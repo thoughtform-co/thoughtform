@@ -216,6 +216,10 @@ def main() -> int:
         default=[],
         help="edit stage: photographs of the new rifle's DESIGN (optional; the words carry it without them)",
     )
+    # ADR-082 U33: `aim` draws a scene's END POSE from the picked plate, so its
+    # framing is checked before a video is paid for.
+    ap.add_argument("--edit-kind", choices=("rifle", "aim"), default="rifle",
+                    help="edit stage: the rifle swap (U32) or the scene's aim pose (U33)")
     ap.add_argument("--identity", type=Path, help="still stage: the identity frame")
     # ⚠ MORE THAN ONE WARDROBE REFERENCE IS ALLOWED, and the identity still
     # goes FIRST. `expanse` needs two: a solo full-body frame for the silhouette
@@ -245,13 +249,17 @@ def main() -> int:
         missing = [d for d in args.design if not d.exists()]
         if missing:
             raise SystemExit("design photograph(s) not found: " + ", ".join(map(str, missing)))
-        prompt = edit_prompt(args.era, len(args.design))
+        prompt = edit_prompt(args.era, len(args.design), args.edit_kind)
         # The source goes UNSHRUNK: it is the likeness being kept, not a hint.
         refs = [("THE PHOTOGRAPH TO EDIT", args.source)]
         for i, d in enumerate(args.design, start=1):
             refs.append(("RIFLE DESIGN", shrink(d, wave / "refs" / f"rifle-design-{i}.jpg")))
-        stem = f"plate-{args.era}-edit"
-        note_tail = "Change only the rifle; everything else in IMAGE 1 is fixed."
+        if args.edit_kind == "aim":
+            stem = f"plate-{args.era}-aim"
+            note_tail = "Change only the pose above the waist; everything else in IMAGE 1 is fixed."
+        else:
+            stem = f"plate-{args.era}-edit"
+            note_tail = "Change only the rifle; everything else in IMAGE 1 is fixed."
     else:
         if not args.identity or not args.wardrobe:
             raise SystemExit("the still stage needs --identity and --wardrobe")
