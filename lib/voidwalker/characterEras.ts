@@ -413,10 +413,13 @@ export interface CharacterEraFact {
  *     after a click, inside `MediaLightbox`. Still the ONE third-party frame on
  *     this site and the one origin `lib/security/headers.mjs` names in
  *     `frame-src`. A new origin is a decision, not a field edit.
- *   · `video` — a SELF-HOSTED mp4. ⚠ Not a preference: `media-src` is
- *     `'self' blob: data:`, so a bucket URL is blocked outright. A future CMS
- *     row for a video therefore SYNCS its file into `public/videos/voidwalker/
- *     media/` at build; it never streams from storage.
+ *   · `video` — an H.264 mp4, self-hosted under `public/videos/voidwalker/
+ *     media/` OR, since ADR-082 U34, a PUBLIC object in the site's own
+ *     Supabase `era-media` bucket (owner: "stream from Supabase"). ⚠ That
+ *     bucket's project is the ONE remote host `media-src` names, in full and
+ *     never as the `*.supabase.co` glob, so any other storage URL is still
+ *     blocked outright — `ERA_MEDIA_STORAGE_VIDEO` below is the guard, and the
+ *     poster stays self-hosted either way.
  *   · `image` — a self-hosted still. (`img-src` does allow `*.supabase.co`, so
  *     this is the one kind a CMS could serve remotely — but that is a loader's
  *     decision, and the loader validates through `isCharacterEraMedia` below,
