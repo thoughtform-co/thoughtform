@@ -100,19 +100,28 @@ export function shelfWidth(n: number, g: ShelfGeom): number {
 }
 
 /**
- * Slab `i`'s offset from the RIG'S CENTRE, in px.
+ * Slab `i`'s offset from the SHELF'S LEFT END, in px.
  *
- * The shelf slides rather than the reader: the open slab's own centre is put
- * on the rig's centre, so the offsets are hinges minus `hinge(open) + w / 2`.
+ * ⚠ **THE SHELF STANDS STILL AND THE OPEN SLAB TRAVELS ALONG IT**, which is
+ * the whole of the owner's object: a row of records on a shelf does not slide
+ * past you when you pull one out — you pull one out, the rest close up, and
+ * the shelf is where it was. The first cut centred the open slab on the rig
+ * instead, and at three posts that put a 420px card in the middle of a 1200px
+ * band under a head banded across the whole of it: one object floating in the
+ * centre of a composition whose every other element is on the band's left
+ * edge. Left-anchored, the head, the shelf and the way out are one column.
+ *
  * ⚠ The value is measured to the slab's HINGE, not its centre, because that
  * is where the pivot's `transform-origin` is — a centre-referenced offset
  * would be right for the open card and half a face out for every closed one.
+ * ⚠ And the travel is BOUNDED by construction: at `MUSINGS_RACK_MAX` posts the
+ * open slab's furthest seat is `(max − 1) × (spine + gap)`, 336px, inside the
+ * editorial band at every viewport this rung opens at.
  */
 export function shelfOffset(i: number, n: number, open: number, g: ShelfGeom): number {
   const xs = shelfHinges(n, open, g);
   if (!xs.length) return 0;
-  const k = Math.min(n - 1, Math.max(0, open));
-  return xs[Math.min(n - 1, Math.max(0, i))] - (xs[k] + g.w / 2);
+  return xs[Math.min(n - 1, Math.max(0, i))];
 }
 
 export interface ShelfPose {
@@ -180,10 +189,29 @@ export interface ShelfClock {
   index: number;
   /** The whole-shelf idle yaw, in degrees. */
   drift: number;
+  /** The masthead's own clock: 0 blank, 1 fully resolved. */
+  head: number;
 }
 
 export const SHELF_ENTRY = [0.0, 0.16] as const;
 export const SHELF_READ = [0.24, 0.94] as const;
+export const SHELF_HEAD_IN = [0.08, 0.24] as const;
+export const SHELF_HEAD_OUT = [0.84, 0.94] as const;
+
+/**
+ * How many characters of a typed run are shown at `f`.
+ *
+ * ⚠ IT ROUNDS UP FROM THE FIRST NON-ZERO FRACTION, so the first character
+ * appears the instant the run opens rather than a twelfth of the way through
+ * it — a typewriter that starts on an empty line for a fifth of its window
+ * reads as a stall, not as typing.
+ */
+export function typedCount(len: number, f: number): number {
+  if (len <= 0) return 0;
+  const t = clamp01(f);
+  if (t <= 0) return 0;
+  return Math.max(1, Math.min(len, Math.ceil(t * len)));
+}
 
 export function shelfClock(p: number, n: number): ShelfClock {
   const t = clamp01(p);
@@ -201,5 +229,20 @@ export function shelfClock(p: number, n: number): ShelfClock {
      would swing the whole shelf every time a card turned. */
   const drift = -4 * smoothstep(0.4, 1, entry);
 
-  return { entry, index, drift };
+  /* ⚠ ONE SCALAR, RISING THEN FALLING, AND THAT IS WHAT MAKES THE DECODE
+     REVERSIBLE FOR NOTHING. `scrambleFrame` is PURE in its `t` (the house's one
+     decode kernel), so a clock that falls runs the same frames backwards and
+     the head un-types on the way out with no second job, no latch and no
+     state to get wrong — which is exactly why `advanceScrambles` may not be
+     used here: it DROPS finished jobs, and a dropped job is a latch nothing
+     can unwind (ADR-095's law, `turnDecode.ts`'s idiom).
+     ⚠ AND ITS ABSENT VALUE IS 1, NOT 0. The sheet reads `var(--mu-head, 1)`
+     and the writer only ever blanks a run it is also going to fill, so a
+     reader with no script, on a phone or under reduced motion gets the head
+     whole — the house's polarity law, one station over (ADR-101 §A). */
+  const head =
+    smoothstep(SHELF_HEAD_IN[0], SHELF_HEAD_IN[1], t) *
+    (1 - smoothstep(SHELF_HEAD_OUT[0], SHELF_HEAD_OUT[1], t));
+
+  return { entry, index, drift, head };
 }

@@ -261,9 +261,15 @@ const readNotch = () =>
       tr: [`calc(100% - ${d}px)`, `${d}px`],
       bl: [`${d}px`, `calc(100% - ${d}px)`],
       br: [`calc(100% - ${d}px)`, `calc(100% - ${d}px)`],
-      /* The ring itself: a pixel just inside the diagonal should be the ring's
-         own paint, i.e. still the card. */
-      onCut: [`calc(100% - ${ch * 0.5}px)`, `${ch * 0.5}px`],
+      /* ⚠ NO `onCut` PROBE. It asked at `ch × 0.5` from the corner, which is
+         EXACTLY ON the cut's diagonal (the chamfer runs from `(w − ch, 0)` to
+         `(w, ch)`, so `y = x − (w − ch)` passes through that point) — a
+         boundary case that resolves by rounding and read FALSE at 1920×1247
+         and TRUE at 390×844 on one unchanged card. And it was redundant: `tr`
+         already probes 30 % along the cut, well inside the removed triangle,
+         which is the question. A gate whose answer depends on which side of a
+         pixel a device lands is not a gate.
+         The ring cannot be hit-tested at all — it is `pointer-events: none`. */
       /* The centre, which must hit whatever happens at the corners — a card
          the probe cannot reach at all is a broken probe, not a square card. */
       mid: ["50%", "50%"],
@@ -366,8 +372,8 @@ line(`cover     ground ${first.coverGround} · image ${first.coverImage}`);
 line(`          position ${first.coverPosition} z ${first.coverZ} · vh ${first.vh}`);
 line(`head      ${JSON.stringify(first.head)} · display ${first.titlePx}px`);
 line(`cards     ${first.cards.length} · type ${first.cards[0]?.titlePx}/${first.cards[0]?.ledePx}/${first.cards[0]?.kickerPx}px`);
-line(`notch     ch ${notch?.ch} · TL ${notch?.tl} TR ${notch?.tr} BL ${notch?.bl} BR ${notch?.br} · onCut ${notch?.onCut}`);
-line(`notch     mid ${notch?.mid} · hits ${JSON.stringify(notch?.hits)}`);
+line(`notch     ch ${notch?.ch} · mid ${notch?.mid} · TL ${notch?.tl} TR ${notch?.tr} BL ${notch?.bl} BR ${notch?.br}`);
+line(`notch     hits ${JSON.stringify(notch?.hits)}`);
 line("");
 line("  p      landed  ready  open   entry   drift   ambient/exit  ftReveal  #contact            revealed");
 for (const s of walk) {
@@ -495,7 +501,6 @@ if (notch) {
   else {
     if (!notch.tl || !notch.bl || !notch.br) fails.push("a corner other than the top-right is cut");
     if (notch.tr) fails.push("the top-right corner is NOT cut");
-    if (notch.onCut) fails.push("the face paints inside its own cut");
   }
 }
 for (const c of open.cards)

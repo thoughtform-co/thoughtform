@@ -236,12 +236,20 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
-  /* The musings rack (ADR-119) — `#musings`, on the landing route. Authored
+  /* The musings shelf (ADR-119) — `#musings`, on the landing route. Authored
      token-only from line one and pinned the hour it was written, which is the
-     only way a sheet enters this map at zero. */
+     only way a sheet enters this map at zero.
+     ⚠ A: 0 → 1 (ADR-119 U1, 2026-09-22). The owner asked for the SERVICES
+     MASTHEAD's typography on this head verbatim, and that ladder's display
+     tracking is `0.04em` — no role token carries it, and the nearest one
+     (`--track-display`, −0.02em) is visibly tighter at 44px, which would make
+     this head a different object from the one he pointed at. ONE rule
+     (`.mu__title`) and no other; `arcs.css` carries its own copy of the same
+     ladder under the same terms. **Raising a pin is a design change and this
+     one is recorded as such** — the pin only ever goes down from here. */
   "components/landing/home-v2/musings/musings.css": {
     tier: "content",
-    content: { A: 0, B: 0, C: 0 },
+    content: { A: 1, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
 };

@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, type CSSProperties } from "react";
 
+import { MUSINGS_COORDS, MUSINGS_MASTHEAD, MUSINGS_TITLE_TEXT } from "@/lib/musings/mastheadData";
 import type { MusingCardData } from "@/lib/musings/types";
 
 import { MusingCard } from "./MusingCard";
@@ -62,10 +63,60 @@ export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) 
     <div className="mu" ref={rootRef} style={{ "--mu-n": posts.length } as CSSProperties}>
       <div className="mu__runway" ref={runwayRef}>
         <div className="mu__stage">
-          <div className="mu__head">
-            <span className="mu__kicker">Musings</span>
-            <h2 className="mu__title">Notes from the practice</h2>
-          </div>
+          {/* ⚠ THE SERVICES MASTHEAD'S GRAMMAR, COPIED (ADR-119 U1, owner:
+              "the services section has the typography, font size, etc., that
+              we want"). Two columns sharing one top line — the title left
+              under its designation and origin cross, the brief right under
+              its own designation and the single gold state chip — each block
+              on a masked dot-grid lift with a coordinate stamp dropped under
+              its foot. The record and the stamps are `lib/musings/
+              mastheadData.ts`; the strings are authored uppercase and this
+              sheet declares no `text-transform` (ADR-092). */}
+          <header className="mu__head">
+            <div className="mu__head-lead">
+              <i className="mu__grid" aria-hidden="true" />
+              <i className="mu__mark mu__mark--origin" aria-hidden="true" />
+              <span className="mu__desig" aria-hidden="true" data-mu-decode="scramble">
+                {MUSINGS_MASTHEAD.desigTitle}
+              </span>
+              {/* ⚠ THE ACCESSIBLE NAME IS THE UNDECODED TITLE. The scramble
+                  writes `textContent`, so a reader reaching the heading
+                  mid-decode would be given the shuffle; an `aria-label` on the
+                  heading overrides its contents and is stable for the whole
+                  beat. The paragraph needs no equivalent — the typewriter only
+                  truncates, so every frame of it is real prose. */}
+              <h2 className="mu__title" aria-label={MUSINGS_TITLE_TEXT}>
+                {MUSINGS_MASTHEAD.titleLines.map((line) => (
+                  <span
+                    key={line.text}
+                    className={`mu__title-line${line.em ? " mu__title-line--em" : ""}`}
+                    data-mu-decode="scramble"
+                  >
+                    {line.text}
+                  </span>
+                ))}
+              </h2>
+              <span className="mu__coord" aria-hidden="true">
+                {MUSINGS_COORDS[0]}
+              </span>
+            </div>
+            <div className="mu__head-brief">
+              <i className="mu__grid" aria-hidden="true" />
+              <span className="mu__desig" aria-hidden="true" data-mu-decode="scramble">
+                {MUSINGS_MASTHEAD.desigBrief}
+              </span>
+              <span className="mu__state" aria-hidden="true" data-mu-decode="scramble">
+                {MUSINGS_MASTHEAD.state}
+              </span>
+              <p className="mu__brief" data-mu-decode="type">
+                {MUSINGS_MASTHEAD.brief}
+              </p>
+              <span className="mu__coord mu__coord--r" aria-hidden="true">
+                {MUSINGS_COORDS[1]}
+              </span>
+              <i className="mu__mark mu__mark--close" aria-hidden="true" />
+            </div>
+          </header>
 
           {posts.length > 0 ? (
             <div className="mu__rig">

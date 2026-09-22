@@ -3,7 +3,14 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { coordStamp as arcCoordStamp } from "@/components/arcs/chrome";
 import { beatOf, coverSpec, slugSeed, yearFraction } from "@/lib/musings/cover";
+import {
+  MUSINGS_COORDS,
+  MUSINGS_MASTHEAD,
+  MUSINGS_TITLE_TEXT,
+  coordStamp,
+} from "@/lib/musings/mastheadData";
 import {
   SHELF_GAP_PX,
   SHELF_SPINE_PX,
@@ -15,6 +22,7 @@ import {
   shelfOffset,
   shelfPose,
   shelfWidth,
+  typedCount,
 } from "@/lib/musings/shelfMath";
 
 /**
@@ -68,12 +76,27 @@ describe("shelfHinges — the track", () => {
 });
 
 describe("shelfOffset — the slide", () => {
-  it("puts the OPEN slab's own centre on the rig's centre", () => {
-    for (let open = 0; open < N; open++) {
-      // The offset is measured to the hinge, which is the left edge, so the
-      // open slab's hinge sits half a face to the left of centre.
-      expect(shelfOffset(open, N, open, G)).toBeCloseTo(-G.w / 2, 9);
+  it("stands the shelf still and walks the open slab along it", () => {
+    // ⚠ The shelf does not slide past the reader — a row of records does not
+    // move when you pull one out. The first slab's hinge is the shelf's left
+    // end whichever slab is open, and the OPEN one walks right by one spine
+    // pitch per step.
+    for (let open = 0; open < N; open++) expect(shelfOffset(0, N, open, G)).toBe(0);
+    for (let open = 1; open < N; open++) {
+      expect(shelfOffset(open, N, open, G) - shelfOffset(open - 1, N, open - 1, G)).toBeCloseTo(
+        G.spine + G.gap,
+        9
+      );
     }
+  });
+
+  it("keeps the open slab's travel inside the editorial band", () => {
+    // At the registry's ceiling the furthest seat is (max − 1) × pitch, which
+    // has to fit the band beside the face itself.
+    const MAX = 7;
+    const far = shelfOffset(MAX - 1, MAX, MAX - 1, G);
+    expect(far).toBeCloseTo((MAX - 1) * (G.spine + G.gap), 9);
+    expect(far + G.w).toBeLessThan(1200);
   });
 
   it("seats every other slab in track order, left to right", () => {
@@ -143,7 +166,10 @@ describe("shelfPose", () => {
 
   it("emits a transform the writer can assign verbatim", () => {
     expect(shelfPose(0, N, 0, G).transform).toBe(
-      `translateY(-50%) translateX(${(-G.w / 2).toFixed(2)}px) rotateY(0deg)`
+      "translateY(-50%) translateX(0.00px) rotateY(0deg)"
+    );
+    expect(shelfPose(1, N, 0, G).transform).toBe(
+      `translateY(-50%) translateX(${(G.w + G.gap).toFixed(2)}px) rotateY(90deg)`
     );
   });
 });
@@ -210,6 +236,102 @@ describe("shelfClock", () => {
     const c = shelfClock(0.6, 1);
     expect(c.index).toBe(0);
     expect(shelfIndex(c.index, 1)).toBe(0);
+  });
+});
+
+describe("the masthead", () => {
+  it("carries the two designations, one state chip and a two-line title", () => {
+    // The services masthead's own anatomy: one gold survey element, the em on
+    // the SECOND line. More than one gold thing is the ration broken.
+    expect(MUSINGS_MASTHEAD.titleLines).toHaveLength(2);
+    expect(MUSINGS_MASTHEAD.titleLines.filter((l) => l.em)).toHaveLength(1);
+    expect(MUSINGS_MASTHEAD.titleLines[1].em).toBe(true);
+    expect(MUSINGS_MASTHEAD.state).toBe("OPEN");
+  });
+
+  it("authors every display string UPPERCASE, because the sheet transforms none", () => {
+    // ⚠ ADR-092: `text-transform: uppercase` on a PP Neue Montreal element is
+    // a finding the type ratchet fails, so the case lives in the record — the
+    // way `SERVICES_MASTHEAD` carries its own.
+    for (const line of MUSINGS_MASTHEAD.titleLines) expect(line.text).toBe(line.text.toUpperCase());
+    expect(MUSINGS_MASTHEAD.desigTitle).toBe(MUSINGS_MASTHEAD.desigTitle.toUpperCase());
+    expect(MUSINGS_MASTHEAD.desigBrief).toBe(MUSINGS_MASTHEAD.desigBrief.toUpperCase());
+    // The brief is PROSE and stays sentence case — it is the one run that types.
+    expect(MUSINGS_MASTHEAD.brief).not.toBe(MUSINGS_MASTHEAD.brief.toUpperCase());
+  });
+
+  it("letters no digit but the designations' own index", () => {
+    // The copy law: a station's brief makes no claim the station cannot show,
+    // and a count of posts is a number that goes stale on the next commit.
+    expect(MUSINGS_MASTHEAD.brief).not.toMatch(/\d/);
+    expect(MUSINGS_TITLE_TEXT).not.toMatch(/\d/);
+  });
+
+  it("stamps the same coordinates the arcs' own chrome would", () => {
+    // ⚠ `coordStamp` is COPIED rather than imported (the landing's import
+    // doctrine), so the two arithmetics are pinned against each other. A copy
+    // that drifted would print a different survey on one surface with nothing
+    // failing.
+    for (const salt of [1, 2, 7])
+      expect(coordStamp("musings", salt)).toBe(arcCoordStamp("musings", salt));
+    expect(MUSINGS_COORDS).toEqual([coordStamp("musings", 1), coordStamp("musings", 2)]);
+    for (const c of MUSINGS_COORDS) expect(c).toMatch(/^\d{4} \/ \d{4}$/);
+  });
+});
+
+describe("the head's clock", () => {
+  it("is blank at the top, whole through the reading band, and blank again at the end", () => {
+    expect(shelfClock(0, N).head).toBeCloseTo(0, 6);
+    expect(shelfClock(0.3, N).head).toBeCloseTo(1, 6);
+    expect(shelfClock(0.8, N).head).toBeCloseTo(1, 6);
+    expect(shelfClock(1, N).head).toBeCloseTo(0, 6);
+  });
+
+  it("resolves before the shelf starts stepping, and holds through every step", () => {
+    // The owner's own order: the era empties, the head decodes, THEN the
+    // cards come into view. A head still resolving over a shelf already
+    // turning is two arrivals at once.
+    expect(shelfClock(0.24, N).head).toBeCloseTo(1, 6);
+    expect(shelfIndex(shelfClock(0.24, N).index, N)).toBe(0);
+    for (let i = 24; i <= 84; i++) expect(shelfClock(i / 100, N).head).toBeGreaterThan(0.999);
+  });
+
+  it("rises and falls once, with no plateau of its own inside the windows", () => {
+    let prev = 0;
+    let peaked = false;
+    for (let i = 0; i <= 1000; i++) {
+      const h = shelfClock(i / 1000, N).head;
+      expect(h).toBeGreaterThanOrEqual(-1e-9);
+      expect(h).toBeLessThanOrEqual(1 + 1e-9);
+      if (h + 1e-9 < prev) peaked = true;
+      // ⚠ Once it has turned over it may never rise again: a head that
+      // un-typed and re-typed inside one beat is a flicker, which is the one
+      // thing this station may not do.
+      else if (peaked) expect(h).toBeLessThanOrEqual(prev + 1e-9);
+      prev = h;
+    }
+    expect(peaked).toBe(true);
+  });
+});
+
+describe("typedCount", () => {
+  it("shows the first character the instant the run opens", () => {
+    // A typewriter that stands on an empty line for a fifth of its window
+    // reads as a stall, not as typing.
+    expect(typedCount(40, 0)).toBe(0);
+    expect(typedCount(40, 0.001)).toBe(1);
+    expect(typedCount(40, 1)).toBe(40);
+  });
+
+  it("is monotonic and clamped", () => {
+    let prev = -1;
+    for (let i = 0; i <= 200; i++) {
+      const n = typedCount(37, i / 100 - 0.5);
+      expect(n).toBeGreaterThanOrEqual(prev);
+      expect(n).toBeLessThanOrEqual(37);
+      prev = n;
+    }
+    expect(typedCount(0, 1)).toBe(0);
   });
 });
 

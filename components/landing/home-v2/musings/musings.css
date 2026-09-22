@@ -86,7 +86,6 @@
   --mu-chrome: clamp(10px, 0.72vw, 12px);
   --mu-copy: clamp(13px, 0.95vw, 16px);
   --mu-card-title: clamp(18px, 1.5vw, 26px);
-  --mu-display: clamp(28px, 3.2vw, 52px);
 
   /* The card, and the corner. ⚠ ONE NOTCH, TOP-RIGHT — his corner every
      time (ADR-097's proof card, ADR-098 U5's plates, ADR-082 U37's record
@@ -219,33 +218,250 @@
 }
 
 /* ── The masthead ────────────────────────────────────────────────────
-   ⚠ IT JOINS THE EDITORIAL BAND, IT DOES NOT RE-INSET (ADR-048). The
-   station is already inset by `--hud-content-inset`; `--rail-inset` is what
-   lands the edge on `--band-margin`, and it resolves to ZERO below the
-   1200px crossover — so a divergence here is invisible at 1280×720 and
-   1440×800 and shows only around 1920, which is the owner's own window. */
+   ⚠ THE SERVICES MASTHEAD'S GRAMMAR, COPIED RUNG FOR RUNG (ADR-119 U1,
+   owner on the live read: _"the placement of the hero one and the paragraphs
+   is completely different from the services section. The services section has
+   the type of typography, font size, etc., that we want."_). What arrives is
+   `services.css`'s `.services-masthead` — the two-column split sharing one top
+   line, the designations hung above each block, the one gold state chip, the
+   coordinate stamps under each block's foot, the two registration crosses and
+   the masked dot-grid lift — via `arcs.css`'s own in-flow copy of it, which is
+   the canonical one: the original is ABSOLUTE inside a pinned stage, reads
+   `--svc-*` channels no hook writes here, takes zero props and finds its own
+   stage with `closest(".services-stage")`.
+
+   ⚠ IT JOINS THE EDITORIAL BAND, IT DOES NOT RE-INSET (ADR-048). The station
+   is already inset by `--hud-content-inset`; `--rail-inset` is what lands the
+   edge on `--band-margin`, and it resolves to ZERO below the 1200px crossover
+   — so a divergence here is invisible at 1280×720 and 1440×800 and shows only
+   around 1920, which is the owner's own window. */
 .mu__head {
   max-width: var(--band-max);
   margin-inline: var(--rail-inset);
+  position: relative;
   display: grid;
-  row-gap: clamp(6px, 0.8svh, 14px);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 72px);
+  align-items: start;
 }
-.mu__kicker {
-  font-family: var(--font-pt-mono);
-  font-size: var(--mu-chrome);
-  font-weight: var(--weight-text);
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  color: var(--gold-ink);
+.mu__head-lead {
+  position: relative;
 }
+.mu__head-brief {
+  position: relative;
+  justify-self: end;
+  max-width: min(42ch, 100%);
+  padding-top: 6px;
+}
+
+/* ⚠ THE DISPLAY LADDER IS THE MASTHEAD'S OWN, AND `--mu-display` IS RETIRED
+   WITH IT. `clamp(26px, 3vw, 44px)` at 0.04em / 1.1 with the gold-washed
+   shadow is `.home-v2-station-header__title`'s voice — the one big-title face
+   of the whole journey, which the owner named on this surface for the same
+   reason he named it on that one.
+   ⚠ THE STRINGS ARE AUTHORED UPPERCASE AND NOTHING HERE TRANSFORMS THEM
+   (ADR-092): a `text-transform: uppercase` on a PP Neue Montreal element is a
+   finding the type ratchet fails, and `lib/musings/mastheadData.ts` carries
+   the lines the way `SERVICES_MASTHEAD` carries its own.
+   ⚠ 0.04em IS THE SHEET'S ONE TYPE LITERAL, and it is deliberate: the role
+   token nearest it is `--track-display` at −0.02em, which is visibly tighter
+   at 44px and would make this head a different object from the one he pointed
+   at. The ratchet's pin for this file moves 0 → 1 with this rule and no
+   other; `arcs.css` carries its copy under the same terms. */
 .mu__title {
   margin: 0;
+  max-width: 20ch;
+  position: relative;
+  z-index: 1;
   font-family: var(--font-pp-neue-montreal);
-  font-size: var(--mu-display);
-  font-weight: var(--weight-lit);
-  line-height: 1.04;
-  letter-spacing: var(--track-display);
+  font-weight: var(--weight-text);
+  font-size: clamp(26px, 3vw, 44px);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
   color: var(--mu-ink);
+  text-shadow: 0 0 22px rgba(var(--gold-rgb), 0.18);
+}
+.mu__title-line {
+  display: block;
+  /* Reserve the line box while the decode has the text blanked, so the band
+     never collapses or jumps during the reveal — the masthead's own rule. */
+  min-height: 1.1em;
+}
+.mu__title-line--em {
+  color: var(--gold);
+  font-weight: var(--weight-lit);
+}
+
+.mu__brief {
+  margin: 0;
+  position: relative;
+  z-index: 1;
+  /* ⚠ DECLARED EXPLICITLY. Inheriting gets `--font-mono` (IBM Plex) from an
+     ancestor, which is the documented third face (ADR-067). */
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.5;
+  color: var(--mu-ink-2);
+  /* The typewriter blanks and re-fills this run, so the block holds its own
+     height or the head re-flows under the reader mid-decode. */
+  min-height: 4.5em;
+}
+
+/* Designation labels — PT Mono, hung above each block's head-left. */
+.mu__desig {
+  position: absolute;
+  top: -34px;
+  left: 0;
+  font-family: var(--font-pt-mono);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--mu-ink-3);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* The state chip — the single gold survey element, at the brief's head-right. */
+.mu__state {
+  position: absolute;
+  top: -34px;
+  right: 0;
+  font-family: var(--font-pt-mono);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  color: var(--gold-ink);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Coordinate stamps — faint PT Mono, keyed to each block's own foot. */
+.mu__coord {
+  position: absolute;
+  top: calc(100% + 22px);
+  left: 0;
+  font-family: var(--font-pt-mono);
+  font-size: 8px;
+  line-height: 1;
+  letter-spacing: var(--track-label);
+  color: var(--mu-rule);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.mu__coord--r {
+  left: auto;
+  right: 32px;
+}
+
+/* The registration crosses — 1px arms via ::before/::after. */
+.mu__mark {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+.mu__mark::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: currentcolor;
+}
+.mu__mark::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: currentcolor;
+}
+.mu__mark--origin {
+  top: -26px;
+  left: -24px;
+  transform: translate(-50%, -50%);
+  color: var(--gold);
+}
+.mu__mark--close {
+  top: calc(100% + 22px);
+  right: -24px;
+  transform: translate(50%, -50%);
+  color: var(--mu-ink-3);
+}
+
+/* The masked dot-grid lift under each block. */
+.mu__grid {
+  position: absolute;
+  inset: -16px -22px;
+  z-index: 0;
+  background-image: radial-gradient(rgba(var(--dawn-rgb), 0.07) 1px, transparent 1.2px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  mask-image: radial-gradient(110% 130% at 50% 50%, #000 45%, transparent 98%);
+  pointer-events: none;
+}
+
+/* ⚠ THE SURVEY CHROME RIDES THE HEAD'S OWN CLOCK, AND ITS ABSENT VALUE IS 1.
+   The stamps, the crosses and the grid lifts are not decoded — they are the
+   instrument the decode happens inside — so they fade with `--mu-head`, whose
+   default is the finished page: no script, reduced motion and every phone
+   read the head whole. */
+.mu__desig,
+.mu__state,
+.mu__coord,
+.mu__mark,
+.mu__grid {
+  opacity: var(--mu-head, 1);
+}
+
+/* ⚠ THE RIGHT-HAND CHROME YIELDS TO THE FRAME'S OWN TELEMETRY. The close
+   cross hangs 24px OUTBOARD of the brief block, and the brief block is
+   end-justified on the editorial band — so as the viewport narrows the band's
+   right edge walks toward the right rail, whose BEARING / SECTOR / LOCAL
+   readouts are right-aligned to it and reach ~100px inboard. Measured at
+   1280×720: the band ends at x 1148, `BEARING` begins at 1133 and the cross
+   lands on its line. The brief's TEXT never collides (42ch stops short); only
+   the survey marks do, and a registration mark printed through a live readout
+   is the one thing they cannot do.
+   ⚠ It is the RIGHT-hand pair alone: the left rail letters nothing, so the
+   origin cross has the whole margin to hang in at every width. */
+@media (max-width: 1700px) {
+  .mu__mark--close,
+  .mu__coord--r {
+    display: none;
+  }
+}
+
+/* ── The head, stacked ───────────────────────────────────────────────
+   Below the band's own crossover the two columns cannot share a line: the
+   brief's 42ch and the title's 20ch together need more measure than the
+   station has, and the chrome hung at ±34px collides with the block above. */
+@media (max-width: 900px) {
+  .mu__head {
+    grid-template-columns: 1fr;
+    gap: clamp(28px, 5svh, 48px);
+  }
+  .mu__head-brief {
+    justify-self: start;
+    max-width: 52ch;
+    padding-top: 0;
+  }
+  .mu__mark,
+  .mu__coord {
+    display: none;
+  }
+  .mu__desig,
+  .mu__state {
+    position: static;
+    display: block;
+    margin-bottom: 12px;
+  }
+  .mu__brief {
+    min-height: 0;
+  }
 }
 
 /* ── The rig ─────────────────────────────────────────────────────────
@@ -582,6 +798,14 @@
     transform-style: preserve-3d;
   }
 
+  /* The shelf stands on the editorial band's own left edge, so the head, the
+     slabs and the way out are one column (ADR-119 U1). The band's box, not
+     the station's — the same pair `.mu__head` and `.mu__foot` ride. */
+  .mu[data-mu-ready] .mu__rig {
+    max-width: var(--band-max);
+    margin-inline: var(--rail-inset);
+  }
+
   .mu[data-mu-ready] .mu__rack {
     position: relative;
     display: block;
@@ -609,7 +833,10 @@
      end. */
   .mu[data-mu-ready] .mu-card {
     position: absolute;
-    left: 50%;
+    /* ⚠ `left: 0`, because `shelfOffset` is measured from the SHELF'S LEFT END
+       rather than the rig's centre. The two move together: a centre seat under
+       a left-anchored track puts the whole shelf half a band out. */
+    left: 0;
     top: 50%;
     flex: none;
     min-height: 0;

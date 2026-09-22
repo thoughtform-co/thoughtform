@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { clamp01 } from "@/lib/math";
-import { shelfClock, shelfGeom, shelfIndex, shelfPose } from "@/lib/musings/shelfMath";
+import { scrambleDuration, scrambleFrame } from "@/lib/home-v2/captionScramble";
+import { shelfClock, shelfGeom, shelfIndex, shelfPose, typedCount } from "@/lib/musings/shelfMath";
 import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 /**
@@ -65,6 +66,9 @@ export const MUSINGS_RACK_MEDIA = "(min-width: 961px) and (prefers-reduced-motio
  */
 export const MUSINGS_STAGE_MEDIA =
   "(min-width: 1101px) and (prefers-reduced-motion: no-preference)";
+
+/** Where in the head's own clock the paragraph starts typing. */
+const HEAD_TYPE_LEAD = 0.35;
 
 export interface MusingsScrollState {
   /** The detented front card. React state — it changes a handful of times. */
@@ -139,6 +143,67 @@ export function useMusingsScroll(
      * reader and a page whose script never ran all get the rack as a plain
      * rail of cards, which is the finished page and not a fallback.
      */
+    /**
+     * The masthead's decode — SCRUBBED, never queued.
+     *
+     * ⚠ **THE KERNEL IS IMPORTED AND THE DRIVER IS NOT.** `scrambleFrame` is
+     * the site's ONE decode kernel (`lib/home-v2/captionScramble.ts`) and it
+     * is pure in `t`, which is what lets a scroll-derived clock run it in both
+     * directions for free. ⚠ `advanceScrambles` may NOT be used: it walks a
+     * job list against a wall clock and DROPS finished jobs, and a dropped job
+     * is a latch that scrolling back up would find nothing to unwind — the
+     * defect ADR-095 records on the turn's own title.
+     *
+     * Two registers, the services masthead's own (ADR-103's law stated on a
+     * third surface): the chrome and the title SCRAMBLE, the paragraph TYPES.
+     * The caps glyph pool reads as noise through lowercase prose, and a
+     * sentence that shuffles is a sentence nobody starts reading.
+     *
+     * ⚠ **THE TARGETS ARE CACHED ON FIRST SIGHT, FROM THE DOM.** React renders
+     * the finished strings — which is what a reader with no script keeps — so
+     * the true text is whatever was in the element before this writer first
+     * touched it. Reading it from the record instead would be a second copy of
+     * every string, free to drift from the one on screen.
+     */
+    let decodeTargets: { el: HTMLElement; type: boolean; text: string }[] | null = null;
+    const targets = () => {
+      const station = stationRef.current;
+      if (!station) return [];
+      if (decodeTargets && decodeTargets.every((t) => t.el.isConnected)) return decodeTargets;
+      decodeTargets = [...station.querySelectorAll<HTMLElement>("[data-mu-decode]")].map((el) => ({
+        el,
+        type: el.dataset.muDecode === "type",
+        text: el.textContent ?? "",
+      }));
+      return decodeTargets;
+    };
+
+    const writeHead = (h: number) => {
+      const station = stationRef.current;
+      if (station) station.style.setProperty("--mu-head", h.toFixed(4));
+      for (const t of targets()) {
+        let next: string;
+        if (t.type) {
+          /* The paragraph follows the title rather than racing it: it opens
+             at 0.35 of the head's own clock and finishes with it. */
+          const f = (h - HEAD_TYPE_LEAD) / (1 - HEAD_TYPE_LEAD);
+          next = t.text.slice(0, typedCount(t.text.length, f));
+        } else {
+          const dur = scrambleDuration("", t.text);
+          next = scrambleFrame({ from: "", to: t.text }, h * dur) ?? t.text;
+        }
+        if (t.el.textContent !== next) t.el.textContent = next;
+      }
+    };
+
+    /** Put every decoded run back to the string React rendered. */
+    const restoreHead = () => {
+      const station = stationRef.current;
+      if (station) station.style.removeProperty("--mu-head");
+      if (!decodeTargets) return;
+      for (const t of decodeTargets) if (t.el.textContent !== t.text) t.el.textContent = t.text;
+    };
+
     const park = () => {
       const station = stationRef.current;
       if (station) {
@@ -152,6 +217,7 @@ export function useMusingsScroll(
          reader on the inert rung gets a transparent box over a dead corridor,
          which is the gateway radial bleeding through (ADR-008 rule 1). */
       section()?.removeAttribute("data-mu-mode");
+      restoreHead();
       for (const el of cardsRef.current) {
         if (!el) continue;
         el.style.removeProperty("transform");
@@ -210,6 +276,7 @@ export function useMusingsScroll(
 
       station.style.setProperty("--mu-entry", clock.entry.toFixed(4));
       station.style.setProperty("--mu-drift", `${clock.drift.toFixed(3)}deg`);
+      writeHead(clock.head);
       if (!station.hasAttribute("data-mu-ready")) station.setAttribute("data-mu-ready", "");
 
       const cards = cardsRef.current;
@@ -296,6 +363,10 @@ export function useMusingsScroll(
          Left behind, it would hold a transparent, promoted station over a dead
          corridor for the rest of the document. */
       section()?.removeAttribute("data-mu-mode");
+      /* ⚠ And the decoded runs go back to the strings React rendered. The
+         station's markup outlives this root — it is parsed HTML — so a head
+         left mid-scramble would stay mid-scramble on the page. */
+      restoreHead();
     };
   }, [runwayRef, stationRef, cardsRef, bandRef, count]);
 
