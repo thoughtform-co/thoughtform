@@ -73,6 +73,9 @@ About bio, while this surface uses `.vw*` / `.vwh*`.
 - ⚠ **U36: A PANEL HEAD IS ITS NAME AND ITS RULE** — no right-hand tag on any head
   (no year, era name, duration, count or `None`); the band carries the years and the
   open era, and an absence is its body's own line.
+- ⚠ **U37: THE RECORD CARDS TAKE ONE NOTCH, TOP-RIGHT** — the edge is a closed
+  evenodd ring on `::before` (a clip cuts a border), the card unclipped, and the ↗
+  arrow steps clear of the cut.
 - ⚠ **A FIGURE IS DRAWN IN COLOUR AND GRADED GOLD** (`scripts/voidwalker-avatar/gold.py`,
   the Architect's measured curve, ramp and bloom, and the exposure gate).
 - ⚠ **U33: A SCENE RUNS FROM THE PLATE TO A DRAWN END POSE** (Veo morphs into a

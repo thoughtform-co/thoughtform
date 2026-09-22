@@ -4449,3 +4449,41 @@ registry and its test, because the record still holds the value; only
 The sheet test pins the absence in the CSS and in the component source. The
 capture script's tag read is gone (it logged the tag and never gated on it).
 The hud-panel lab's `?ink=oxide` rule loses its dead selector.
+
+## Update 37 — the record cards take a notch, top-right (2026-09-22, owner)
+
+The owner, on a press card: _"the record buttons need a notch"_. **This
+reverses U29/U35's "square", by his ruling.** It takes the corner he has kept
+every other time (the proof card, ADR-097 U1; the arcs plates, ADR-098 U5): the
+TOP-RIGHT, the upper end of ADR-065's lawful TR + BL diagonal. A single notch
+means oriented-or-connected, and each of these records links out to its
+article. What sits inside stays square (rule 4): the well, the text.
+
+- ⚠ **The edge is a ring, not a border.** A `clip-path` cuts a border and never
+  strokes the diagonal (ADR-089). The outline is therefore a CLOSED evenodd
+  ring on `.vwd__pcard::before`, with the diagonal's inner ends shifted by
+  0.414px (the TRANSMISSION lip's own derivation). The card itself is NOT
+  clipped, so nothing it holds can be cut. The border's 1px moved into the
+  padding, so every box inside sits where it did: 117.5px and 71.6px cards
+  before and after.
+- **The notch:** `--vwd-pcard-ch: clamp(10px, 1svh, 14px)`. That is 10px at
+  1280 × 720 and 12.7px at the owner's viewport.
+- ⚠ **The arrow steps clear of the cut.** It sits in that corner, and ADR-098
+  U5's lesson applies: a cut is free only where nothing is set against it.
+  Seated on the padding alone, its tip came within 2.8px of the diagonal at
+  1280 × 720. The fix is `margin: 2px 4px 0 0`, measured 7.1px clear there and
+  9.4px at 1936 × 1273; the 2px also sits it on the title's cap line.
+- **The state:** the ring lifts to `--gold-line` on anchors only, diagonal
+  included. The focus outline stays as the keyboard indicator.
+- **Guards:** the sheet test pins the outer contour point for point (TR alone),
+  both contours closed, the 0.414px shift, no `border` and no `clip-path` on
+  the card, and the arrow's step. The hover guard admits exactly one
+  `background`: the ring's line, on `::before`.
+
+Verified:
+
+- the eras probe clean at 1280 × 720 and 1101 × 800 (tightest foot unchanged,
+  68 / 63px)
+- the phone fits at every shape, era and tab (RECORD tightest 86.1px at
+  375 × 553)
+- stills at 1920 × 1247 in both themes, at rest and on hover

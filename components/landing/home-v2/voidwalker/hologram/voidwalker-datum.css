@@ -78,6 +78,9 @@
   --vwd-fact-mark: 14px;
   --vwd-pcard-mark: 21px;
   --vwd-pcard-pad: 10px;
+  /* The press card's TOP-RIGHT notch (ADR-082 U37, owner: "the record buttons
+     need a notch"): its 45° leg, measured along both edges from the corner. */
+  --vwd-pcard-ch: clamp(10px, 1svh, 14px);
 
   /* ── THE REEL. One cell pitch for all five chips, so the offset that centres
         the selected era is a signed multiple of ONE number. `--vwd-reel` is how
@@ -1093,7 +1096,17 @@
    ⚠ AN OUTLINE, NEVER A GROUND — the card is ~368px against a paint sweep
    (`about-voidwalker-handoff-boundaries`) that starts at 700px, and the
    station's law is older than the sweep: an outline is not a ground.
-   ⚠ SQUARE (ADR-065: chrome sits at 0 on the depth ladder; U29's own call).
+   ⚠ ONE NOTCH, TOP-RIGHT (ADR-082 U37, owner: "the record buttons need a
+   notch"). It reverses U29's "square", by his ruling, on the corner he has
+   kept every other time (the proof card's, the arcs plates': ADR-097 U1,
+   ADR-098 U5), which is the top end of ADR-065's lawful TR + BL diagonal. A
+   single notch MEANS oriented-or-connected, and each of these records links
+   out to its article. What sits inside is square (rule 4): the well, the text.
+   ⚠ THE EDGE IS A RING, NOT A BORDER — a `clip-path` cuts a border and never
+   strokes the diagonal (ADR-089), so the outline is a CLOSED evenodd ring on
+   `::before` and the card itself is NOT clipped (nothing it holds may be cut).
+   The border's 1px moved into the padding, so every box inside sits where it
+   did.
    ⚠ THE AIR IS THE DIVIDER — a rule between two bordered cards is the doubled
    line ADR-089 U3 records. */
 .vwd__press-stack {
@@ -1101,15 +1114,42 @@
   gap: clamp(6px, 0.9svh, 10px);
 }
 .vwd__pcard {
+  position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   column-gap: clamp(10px, 0.9vw, 14px);
-  padding: clamp(6px, 0.8svh, 9px);
-  border: 1px solid rgba(var(--vwd-dawn-rgb), var(--vwd-rule-head));
+  padding: calc(clamp(6px, 0.8svh, 9px) + 1px);
   text-decoration: none;
   color: inherit;
-  transition: border-color 160ms ease;
+}
+/* The outline, notched: outer contour closed, inner contour 1px in closed,
+   `evenodd` makes the middle a hole. ⚠ The diagonal's inner ends shift by
+   0.414px (1 − √2: a 45° edge 1px in, meeting an axis edge 1px in) — the
+   TRANSMISSION lip's own derivation, and the arcs plates' `ch − 0.586px` inner
+   leg measured from the other end. */
+.vwd__pcard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(var(--vwd-dawn-rgb), var(--vwd-rule-head));
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--vwd-pcard-ch)) 0,
+    100% var(--vwd-pcard-ch),
+    100% 100%,
+    0 100%,
+    0 0,
+    1px 1px,
+    calc(100% - var(--vwd-pcard-ch) - 0.414px) 1px,
+    calc(100% - 1px) calc(var(--vwd-pcard-ch) + 0.414px),
+    calc(100% - 1px) calc(100% - 1px),
+    1px calc(100% - 1px),
+    1px 1px
+  );
+  transition: background-color 160ms ease;
 }
 /* The card's picture: a square well holding the kind's mark. `content-box`
    so the well is the mark plus its padding plus its border, in whole pixels. */
@@ -1154,6 +1194,12 @@
 .vwd__press__arrow {
   display: block;
   align-self: start;
+  /* ⚠ THE ARROW SITS IN THE NOTCH'S CORNER, SO IT STEPS CLEAR OF THE CUT
+     (ADR-082 U37) — ADR-098 U5's lesson that a cut is free only where nothing
+     is set against it. Seated on the padding alone its tip came within 2.8px
+     of the diagonal at 1280×720; 2px down and 4px in keeps it ~7px clear at
+     every rung, and the 2px also sits it on the title's cap line. */
+  margin: 2px 4px 0 0;
   width: var(--vwd-press-mark);
   height: var(--vwd-press-mark);
   fill: rgba(var(--vwd-dawn-rgb), 0.45);
@@ -1169,9 +1215,9 @@
    ⚠ ONLY AN ANCHOR. A record that links nowhere is still a card — it keeps its
    outline and its picture — but nothing about it may answer a pointer, and it
    carries no arrow to suggest it would. */
-a.vwd__pcard:hover,
-a.vwd__pcard:focus-visible {
-  border-color: var(--gold-line);
+a.vwd__pcard:hover::before,
+a.vwd__pcard:focus-visible::before {
+  background: var(--gold-line);
 }
 a.vwd__pcard:hover .vwd__press__arrow,
 a.vwd__pcard:focus-visible .vwd__press__arrow {

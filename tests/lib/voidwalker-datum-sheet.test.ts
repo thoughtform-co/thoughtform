@@ -242,17 +242,54 @@ describe("the glass (ADR-082 U31)", () => {
 });
 
 describe("ON RECORD is cards (ADR-082 U35)", () => {
-  it("outlines a card on all four sides and never gives it a ground", () => {
+  it("outlines a card and never gives it a ground", () => {
     const card = ruleBody(css, ".vwd__pcard");
-    expect(card).toMatch(/(^|[;\s])border:\s*1px solid/);
     // An outline is not a ground: the >700px paint sweep, and the station's law.
     expect(card).not.toMatch(/background/);
     expect(ruleBody(css, ".vwd__pcard__thumb")).not.toMatch(/background/);
-    // Square — chrome sits at 0 on ADR-065's depth ladder.
-    expect(card).not.toMatch(/border-radius|clip-path/);
-    // The air between cards is the divider, never a rule.
+    // No radius (ADR-065), and the air between cards is the divider, never a rule.
+    expect(card).not.toMatch(/border-radius/);
     expect(ruleBody(css, ".vwd__press-stack")).toMatch(/(^|[;\s])gap:/);
-    expect(card).not.toMatch(/border-bottom/);
+  });
+
+  describe("with ONE notch, top-right (ADR-082 U37)", () => {
+    const ring = polygonPoints(ruleBody(css, ".vwd__pcard::before"));
+
+    it("draws the edge as a ring — a clip cuts a border and never strokes one", () => {
+      const card = ruleBody(css, ".vwd__pcard");
+      expect(card).not.toMatch(/(^|[;\s])border(-[a-z]+)?\s*:/);
+      // ⚠ The CARD is not clipped: nothing it holds may be cut, and the ring is
+      // what carries the silhouette.
+      expect(card).not.toMatch(/clip-path/);
+      expect(card).toMatch(/position:\s*relative/);
+    });
+
+    it("cuts the top-right corner alone, on the lawful diagonal's top end", () => {
+      expect(ring[0]).toBe("evenodd");
+      const outer = ring.slice(1, 7);
+      expect(outer).toEqual([
+        "0 0",
+        "calc(100% - var(--vwd-pcard-ch)) 0",
+        "100% var(--vwd-pcard-ch)",
+        "100% 100%",
+        "0 100%",
+        "0 0",
+      ]);
+    });
+
+    it("closes both contours and shifts the diagonal's inner ends by 0.414px", () => {
+      const inner = ring.slice(7);
+      expect(inner).toHaveLength(6);
+      expect(inner[5], "the inner contour is not closed").toBe(inner[0]);
+      expect(inner[1]).toBe("calc(100% - var(--vwd-pcard-ch) - 0.414px) 1px");
+      expect(inner[2]).toBe("calc(100% - 1px) calc(var(--vwd-pcard-ch) + 0.414px)");
+    });
+
+    it("steps the link-out arrow clear of the cut it sits beside", () => {
+      // Seated on the padding alone its tip came within 2.8px of the diagonal
+      // at 1280×720; measured ~7px clear with the step, 9.4 at 1936×1273.
+      expect(ruleBody(css, ".vwd__press__arrow")).toMatch(/margin:\s*2px 4px 0 0/);
+    });
   });
 
   it("keeps U29's and U31's retired parts retired", () => {
@@ -292,9 +329,14 @@ describe("ON RECORD is cards (ADR-082 U35)", () => {
     expect(hover.length).toBeGreaterThan(0);
     for (const rule of hover) {
       const [selector = "", body = ""] = rule.split("{");
-      for (const part of selector.split(","))
-        expect(part.trim().startsWith("a.vwd__pcard")).toBe(true);
-      expect(body).not.toMatch(/background/);
+      const parts = selector.split(",").map((p) => p.trim());
+      for (const part of parts) expect(part.startsWith("a.vwd__pcard")).toBe(true);
+      // ⚠ The one `background` allowed is the RING's — a 1px line painted
+      // through its evenodd clip, lifting to the line-work rung. Anything else
+      // is a fill.
+      if (parts.every((p) => p.endsWith("::before")))
+        expect(body.trim()).toMatch(/^background:\s*var\(--gold-line\);?$/);
+      else expect(body).not.toMatch(/background/);
     }
   });
 });

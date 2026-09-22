@@ -182,6 +182,13 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
     nor an empty seat's `None`. The band letters the years and names the open
     era, the cards count themselves, and an absence is its body's own line. The
     sheet test pins `.vwd__head__tag` absent from the CSS and the component.
+  - ⚠ **U37 (2026-09-22, owner): THE RECORD CARDS TAKE ONE NOTCH, TOP-RIGHT**
+    (_"the record buttons need a notch"_ — reversing U29/U35's "square", on the
+    corner he keeps: the proof card's, the arcs plates'). The edge is a CLOSED
+    evenodd ring on `.vwd__pcard::before` (a clip cuts a border), the card
+    itself is unclipped, the border's pixel moved into the padding, the notch is
+    `--vwd-pcard-ch`, and ⚠ the ↗ arrow steps `2px 4px` clear of the cut —
+    seated on the padding it came within 2.8px of the diagonal at 1280×720.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title
