@@ -34,9 +34,12 @@ interface MediaLightboxProps {
    *
    * ⚠ ADDITIVE ON PURPOSE. `FilmsPlate`, `ToolGallery` and the portfolio
    * arc's `ArcDossierConsole` all render this component, and
-   * `tests/lib/tool-gallery-markup.test.tsx` pins that markup byte-for-byte
-   * — so the `src` path below must stay exactly what it was. This branch is
-   * the only thing a caller without `embed` can notice, which is nothing.
+   * `tests/lib/media-lightbox-markup.test.tsx` pins the `src` branch's markup
+   * by snapshot (`tool-gallery-markup`'s own snapshot renders the dialog
+   * CLOSED, so it pins nothing of this file — the claim that it did was
+   * stale until ADR-082 U35) — so the `src` path below must stay exactly what
+   * it was. This branch is the only thing a caller without `embed` can
+   * notice, which is nothing.
    *
    * ⚠ The `src` must be an origin `frame-src` allows (`lib/security/headers.mjs`
    * names one: `youtube-nocookie.com`). The CSP is ENFORCED (since 2026-09-01),
@@ -64,6 +67,20 @@ interface MediaLightboxProps {
   label: string;
   /** Second half of that line, e.g. "16:9 master · 30 sec". */
   meta?: string;
+  /**
+   * The FRAMED dialog (ADR-082 U35 — the era stage's pop-up, owner: it "needs
+   * to be uniform. It also needs to sit in a frame"). Given, the dialog is the
+   * TRANSMISSION card at dialog scale: the card's tab (`tab`, e.g. `Film 02`),
+   * its glass and lip, the title in mono caps, and ONE 16:9 box that a film, a
+   * self-hosted video and a still all fill the same way — where the unframed
+   * dialog gives a still a box of its own shape and lets a film's box break
+   * its ratio at a short viewport.
+   *
+   * ⚠ ADDITIVE ON THE SAME TERMS AS `embed` AND `image`. Omitted, the render is
+   * byte-identical; the `media-lightbox-markup` snapshot is the proof, and
+   * every caller but the era stage passes nothing.
+   */
+  frame?: { tab: string };
   onClose: () => void;
 }
 
@@ -196,10 +213,94 @@ export function useDialogShell(onClose: () => void) {
   return { dialogRef, close };
 }
 
-export function MediaLightbox({ src, embed, image, label, meta, onClose }: MediaLightboxProps) {
+export function MediaLightbox({
+  src,
+  embed,
+  image,
+  label,
+  meta,
+  frame,
+  onClose,
+}: MediaLightboxProps) {
   const { dialogRef, close } = useDialogShell(onClose);
   /* `embed` outranks everything, as it always has; a still outranks a file. */
   const still = embed ? undefined : image;
+
+  if (frame) {
+    return createPortal(
+      <div
+        className="fl-lightbox fl-lightbox--frame"
+        role="dialog"
+        aria-modal="true"
+        aria-label={label}
+        tabIndex={-1}
+        ref={dialogRef}
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) close();
+        }}
+      >
+        <div className="fl-lightbox__card">
+          <div className="fl-lightbox__head">
+            {/* The card's own tab: the mark lit, because this IS the open card. */}
+            <span className="fl-lightbox__tab">
+              <span className="fl-lightbox__mark" aria-hidden="true" />
+              {frame.tab}
+            </span>
+            <button type="button" className="fl-lightbox__close" onClick={close}>
+              Close
+            </button>
+          </div>
+          <p className="fl-lightbox__title">
+            {label}
+            {meta ? (
+              <>
+                <i aria-hidden="true"> · </i>
+                {meta}
+              </>
+            ) : null}
+          </p>
+          {/* ONE box for every kind. It is sized by WIDTH against the frame's
+              height, so it stays 16:9 at every viewport; what is inside fills
+              it — a player, a file, or a still shown whole (`contain`) on the
+              box's own dark ground. */}
+          <div className="fl-lightbox__box">
+            {embed ? (
+              <iframe
+                className="fl-lightbox__media"
+                src={embed.src}
+                title={embed.title}
+                allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+            ) : still ? (
+              /* `unoptimized` for the reason the era pile's card still is
+                 (ADR-082 U35): a stuck optimizer job leaves the box black. */
+              <Image
+                className="fl-lightbox__media fl-lightbox__media--still"
+                src={still.src}
+                alt={still.alt}
+                fill
+                unoptimized
+                sizes="(max-width: 1184px) 100vw, 1120px"
+              />
+            ) : (
+              <video
+                className="fl-lightbox__media"
+                src={src}
+                controls
+                autoPlay
+                playsInline
+                aria-label={label}
+                onEnded={close}
+              />
+            )}
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  }
 
   return createPortal(
     <div

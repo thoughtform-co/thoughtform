@@ -124,3 +124,93 @@ describe("MediaLightbox markup (ADR-082 U31 pin)", () => {
     expect(dialog()?.querySelector(".fl-lightbox__label")?.innerHTML).toBe("Smug Owl");
   });
 });
+
+/**
+ * The FRAMED dialog (ADR-082 U35 — the era stage's pop-up, owner: it "needs to
+ * be uniform. It also needs to sit in a frame"). Additive: the snapshots above
+ * were taken before `frame` existed and must pass untouched.
+ */
+describe("MediaLightbox — the framed dialog (ADR-082 U35)", () => {
+  const STILL = "/images/voidwalker/media/film-latent-land.jpg";
+  const kinds = [
+    {
+      name: "a film on its channel",
+      props: {
+        embed: { src: "https://www.youtube-nocookie.com/embed/a5-DcdfxCvU?autoplay=1", title: "t" },
+      },
+      media: "iframe",
+    },
+    { name: "a self-hosted video", props: { src: "/videos/cases/smug-owl.mp4" }, media: "video" },
+    {
+      name: "a still",
+      props: { image: { src: STILL, alt: "A frame.", width: 960, height: 540 } },
+      media: "img",
+    },
+  ] as const;
+
+  for (const kind of kinds) {
+    it(`gives ${kind.name} the same card and the same box`, () => {
+      render(
+        <MediaLightbox
+          {...kind.props}
+          label="Welcome to Latent Land"
+          meta="2023"
+          frame={{ tab: "Film 02" }}
+          onClose={noop}
+        />
+      );
+      const el = dialog();
+      expect(el?.className).toBe("fl-lightbox fl-lightbox--frame");
+      expect(el?.getAttribute("role")).toBe("dialog");
+      expect(el?.getAttribute("aria-modal")).toBe("true");
+      // One card, its tab lettering the card it came from, the mark lit.
+      const card = el?.querySelectorAll(".fl-lightbox__card");
+      expect(card).toHaveLength(1);
+      expect(el?.querySelector(".fl-lightbox__tab")?.textContent).toBe("Film 02");
+      expect(el?.querySelector(".fl-lightbox__tab .fl-lightbox__mark")).not.toBeNull();
+      // The title leads the picture.
+      const title = el?.querySelector(".fl-lightbox__title");
+      expect(title?.textContent).toBe("Welcome to Latent Land · 2023");
+      expect(title?.nextElementSibling?.className).toBe("fl-lightbox__box");
+      // ONE box, holding exactly one medium, whatever the kind.
+      const boxes = el?.querySelectorAll(".fl-lightbox__box");
+      expect(boxes).toHaveLength(1);
+      const inside = boxes?.[0]?.querySelectorAll("iframe, video, img");
+      expect(inside).toHaveLength(1);
+      expect(inside?.[0]?.tagName.toLowerCase()).toBe(kind.media);
+      expect(inside?.[0]?.classList.contains("fl-lightbox__media")).toBe(true);
+      // None of the unframed dialog's shape-of-its-own classes.
+      expect(
+        el?.querySelector(".fl-lightbox__frame, .fl-lightbox__video, .fl-lightbox__still")
+      ).toBeNull();
+      expect(el?.querySelector(".fl-lightbox__close")?.textContent).toBe("Close");
+    });
+  }
+
+  it("serves the still straight from /public, never through the optimizer", () => {
+    // One stuck optimizer job left a card's still black for good (ADR-082 U35).
+    render(
+      <MediaLightbox
+        image={{ src: STILL, alt: "A frame.", width: 960, height: 540 }}
+        label="t"
+        frame={{ tab: "Image" }}
+        onClose={noop}
+      />
+    );
+    const img = dialog()?.querySelector<HTMLImageElement>("img.fl-lightbox__media");
+    expect(img?.getAttribute("src")).toBe(STILL);
+    expect(img?.getAttribute("srcset") ?? "").not.toContain("/_next/image");
+  });
+
+  it("omits the meta separator when there is no meta", () => {
+    render(
+      <MediaLightbox
+        src="/videos/cases/smug-owl.mp4"
+        label="Smug Owl"
+        frame={{ tab: "Video" }}
+        onClose={noop}
+      />
+    );
+    expect(dialog()?.querySelector(".fl-lightbox__title")?.innerHTML).toBe("Smug Owl");
+  });
+});

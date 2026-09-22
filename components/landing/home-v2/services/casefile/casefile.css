@@ -6520,6 +6520,209 @@
   outline-offset: 2px;
 }
 
+/* ── THE FRAMED DIALOG (ADR-082 U35) ────────────────────────────────────
+   The era stage's pop-up (owner, 2026-09-22: it "needs to be uniform. It also
+   needs to sit in a frame"). Given `frame`, the dialog is the TRANSMISSION
+   card at dialog scale: the same folder — a tab flush at the top-left, its
+   45° slant, a square body — the same glass and closed lip ring, the tab
+   lettering the card it came from, the title in mono capitals over the
+   picture, and ONE 16:9 box that a film, a self-hosted video and a still all
+   fill the same way. Every other caller passes no `frame` and none of this
+   applies to it.
+
+   ⚠ PORTALLED, SO NOTHING FROM `.vwd` RESOLVES HERE. The card's material is
+   restated from the global ramp (`--dawn-rgb`, `--void-deep-rgb`,
+   `--gold-line`) and its two alphas are tokens on this root, which theme.css
+   re-derives for light exactly as it does the pile's.
+   ⚠ THE MATERIAL IS THE CARD'S `::before`, NEVER ITS OWN BACKGROUND. A
+   `clip-path` clips a box's CHILDREN too, and CLOSE sits in the band right
+   of the tab — outside the folder's silhouette. So the silhouette cuts the
+   material layer and the lip ring, and the card itself is left unclipped.
+   ⚠ NO BOX-SHADOW, AND THAT IS A DEPARTURE FROM ADR-006: the dashed border
+   and the three-part shadow are the unframed dialog's grammar, a clipped
+   silhouette cannot carry a shadow (the clip cuts it), and the scrim at .82
+   with its blur already lifts the card off the page.
+   ⚠ THE BOX IS SIZED BY WIDTH AGAINST THE FRAME'S HEIGHT. The card's width is
+   the smallest of its ceiling, the viewport, and the width whose 16:9 box
+   plus the card's own chrome (the tab band, three pads, two title lines)
+   fits the viewport's height — so the box is 16:9 at every shape, where the
+   unframed dialog's `max-height` breaks a film's ratio at 1280×720. */
+.fl-lightbox--frame {
+  /* The scrim's own inset, as one term: it is spent as padding here AND
+     subtracted from the height the box may take. */
+  --_edge: clamp(16px, 4vw, 64px);
+  --_t: clamp(26px, 3svh, 34px);
+  --_pad: clamp(10px, 1.4svh, 16px);
+  --_fs: clamp(10px, 1.1svh, 12px);
+  /* ONE TAB WIDTH, SOLVED FROM THE TYPE, as the pile's: PT Mono's advance is
+     0.6em and `--track-label` adds .08em, so a character is 0.68 of the size;
+     eight of them (`IMAGE 02`) behind a 5px mark and its gaps, plus the
+     slant's own width on the right, because that corner is not there. */
+  --_wt: calc(var(--_fs) * 0.68 * 8 + 31px + var(--_t));
+  --fl-lbf-glass-a: 0.62;
+  --fl-lbf-bloom-a: 0.1;
+  padding: var(--_edge);
+}
+.fl-lightbox__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--_pad);
+  width: min(
+    calc(1120px + 2 * var(--_pad)),
+    100%,
+    calc(
+      (100svh - 2 * var(--_edge) - var(--_t) - 3 * var(--_pad) - 2.7 * var(--_fs)) * 16 / 9 + 2 *
+        var(--_pad)
+    )
+  );
+  padding: calc(var(--_t) + var(--_pad)) var(--_pad) var(--_pad);
+  animation: modalFocusIn 0.3s ease-out;
+}
+.fl-lightbox__card::before,
+.fl-lightbox__card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+/* The glass: a scanline, a corner bloom stated in PIXELS (a percentage of a
+   1150px card lights the whole card), the tab's own fill — a material on the
+   tab, never a state — and the ground, void in dark and parchment in light. */
+.fl-lightbox__card::before {
+  z-index: 0;
+  background:
+    repeating-linear-gradient(to bottom, rgba(var(--gold-rgb), 0.025) 0 1px, transparent 1px 3px),
+    radial-gradient(
+      420px 240px at calc(100% - 80px) calc(var(--_t) - 40px),
+      rgba(var(--gold-rgb), var(--fl-lbf-bloom-a)),
+      transparent 62%
+    ),
+    linear-gradient(rgba(var(--dawn-rgb), 0.1), rgba(var(--dawn-rgb), 0.1)) 0 0 / var(--_wt)
+      var(--_t) no-repeat,
+    rgba(var(--void-deep-rgb), var(--fl-lbf-glass-a));
+  clip-path: polygon(
+    0 0,
+    calc(var(--_wt) - var(--_t)) 0,
+    var(--_wt) var(--_t),
+    100% var(--_t),
+    100% 100%,
+    0 100%
+  );
+}
+/* The lip. Outer contour closed, inner contour 1px in closed, `evenodd` makes
+   the middle a hole. ⚠ THE SLANT'S INNER ENDS SHIFT BY 0.414px — the pile's
+   own derivation (a 45° edge 1px in, meeting a horizontal edge 1px in). */
+.fl-lightbox__card::after {
+  z-index: 2;
+  background: color-mix(in srgb, var(--gold-line) 30%, transparent);
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(var(--_wt) - var(--_t)) 0,
+    var(--_wt) var(--_t),
+    100% var(--_t),
+    100% 100%,
+    0 100%,
+    0 0,
+    1px 1px,
+    calc(var(--_wt) - var(--_t) - 0.414px) 1px,
+    calc(var(--_wt) - 0.414px) calc(var(--_t) + 1px),
+    calc(100% - 1px) calc(var(--_t) + 1px),
+    calc(100% - 1px) calc(100% - 1px),
+    1px calc(100% - 1px),
+    1px 1px
+  );
+}
+/* The band: the tab at the left, CLOSE at the right. */
+.fl-lightbox__head {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  height: var(--_t);
+}
+.fl-lightbox__tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: var(--_wt);
+  height: var(--_t);
+  /* The right pad is the slant: that corner of the tab is cut away. */
+  padding: 0 calc(var(--_t) + 4px) 0 10px;
+  font-family: var(--fl-mono, var(--font-pt-mono, ui-monospace, monospace));
+  font-size: var(--_fs);
+  letter-spacing: var(--track-label);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgb(var(--dawn-rgb));
+}
+/* Gold: this IS the open card (the pile's mark is gold on the open folder
+   alone). */
+.fl-lightbox__mark {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  background: var(--gold);
+}
+/* ⚠ CLOSE STOPS SHORT OF THE BODY'S LIP: flush with the tab's top, 6px above
+   the line the body starts on, so its bottom border and the lip never meet
+   as a doubled rule (ADR-089 U3's finding, the third time on this site). */
+.fl-lightbox--frame .fl-lightbox__close {
+  position: relative;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  height: calc(var(--_t) - 6px);
+  padding: 0 14px;
+  font-size: var(--_fs);
+}
+/* Past the phone's 44px target whatever the band's height. */
+.fl-lightbox--frame .fl-lightbox__close::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+}
+.fl-lightbox__title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--fl-mono, var(--font-pt-mono, ui-monospace, monospace));
+  font-size: var(--_fs);
+  letter-spacing: var(--track-label);
+  line-height: 1.35;
+  text-transform: uppercase;
+  color: rgb(var(--dawn-rgb));
+  text-wrap: balance;
+}
+.fl-lightbox__title i {
+  font-style: normal;
+  color: rgba(var(--dawn-rgb), 0.45);
+}
+/* ONE box for every kind. A film's letterbox is BLACK in both themes (the
+   unframed dialog's own ruling — kept-dark imagery). */
+.fl-lightbox__box {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(var(--dawn-rgb), 0.25);
+}
+.fl-lightbox__media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: contain;
+}
+
 @keyframes flLightboxIn {
   from {
     opacity: 0;
@@ -6542,7 +6745,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fl-lightbox,
-  .fl-lightbox__frame {
+  .fl-lightbox__frame,
+  .fl-lightbox__card {
     animation: none;
   }
 }

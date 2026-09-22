@@ -440,6 +440,14 @@ html[data-theme="light"] .vwd__mstack {
     backdrop-filter: none;
   }
 }
+/* The same card at dialog scale (ADR-082 U35's framed lightbox), on the same
+   two corrections: the bloom smears on parchment, and the pane is denser
+   because nothing behind it needs separating. It carries no frost of its own —
+   the scrim is what blurs. */
+html[data-theme="light"] .fl-lightbox--frame {
+  --fl-lbf-bloom-a: 0.06;
+  --fl-lbf-glass-a: 0.9;
+}
 
 html[data-theme="light"] .fl-panel__viz {
   background: transparent;
