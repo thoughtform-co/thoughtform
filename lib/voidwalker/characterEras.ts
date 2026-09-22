@@ -436,7 +436,8 @@ export interface CharacterEraMediaEmbed extends CharacterEraMediaBase {
    * thing, and only after a click.
    */
   poster: string;
-  /** `M:SS`, when it is known. Chrome; the head's tag omits it otherwise. */
+  /** `M:SS`, or `H:MM:SS` past an hour, when it is known. Chrome; the head's
+   *  tag omits it otherwise. */
   duration?: string;
 }
 
@@ -489,7 +490,10 @@ const ERA_MEDIA_IMAGE_PATH =
  *  would be a file Safari cannot play with no fallback source beside it. */
 const ERA_MEDIA_VIDEO_PATH = /^\/videos\/voidwalker\/media\/[a-z0-9][a-z0-9._-]*\.mp4$/i;
 const ERA_MEDIA_YOUTUBE_ID = /^[\w-]{11}$/;
-const ERA_MEDIA_DURATION = /^\d{1,2}:\d{2}$/;
+/** `M:SS` / `MM:SS`, or `H:MM:SS` — ADR-082 U33: the Architect's podcast runs
+ *  62 minutes, and "62:11" is a length nobody reads at a glance. Past an hour
+ *  the minutes take two digits, so `1:2:11` stays out. */
+const ERA_MEDIA_DURATION = /^(?:\d{1,2}|\d:\d{2}):\d{2}$/;
 
 const isUnit = (n: unknown): n is number => typeof n === "number" && n >= 0 && n <= 1;
 const isPixels = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n) && n > 0;
@@ -672,6 +676,26 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
       { k: "Decides", v: "Which setup runs which workflow" },
       { k: "Answers for", v: "What it inherits, and the outcome" },
     ],
+    /* ADR-082 U33 (owner, 2026-09-22): the era's first pile — a keynote and a
+       podcast. ⚠ THE TITLES ARE THE SOURCES' OWN WORDS WITH HIS NAME TAKEN OFF:
+       the station is already him, and the podcast's own title is 63 characters
+       against the card's 60. Lengths read off each video's own watch page. */
+    media: [
+      {
+        kind: "embed",
+        youtubeId: "EQKIiqVyjJk",
+        title: "Accelerating thoughtfully with AI",
+        duration: "10:36",
+        poster: "/images/voidwalker/media/film-accelerating-thoughtfully.jpg",
+      },
+      {
+        kind: "embed",
+        youtubeId: "bouBxlVy3zc",
+        title: "How anyone can leverage the power of A.I.",
+        duration: "1:02:11",
+        poster: "/images/voidwalker/media/film-leverage-ai.jpg",
+      },
+    ],
   },
   {
     id: "genai",
@@ -727,12 +751,23 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
     ],
     // The film the era is named for. Its id lives as a source comment on
     // the `genai` beat; the record has no second `film` field to put it in.
+    // ⚠ ITS 2:55 ARRIVED WITH THE SECOND CARD (ADR-082 U33): the head's tag
+    // reads the FRONT card's length, so a pile whose front had none printed a
+    // blank tag on one card and "7:06" on the other.
     media: [
       {
         kind: "embed",
         youtubeId: "jFVezT4mznU",
         title: "Welcome to Latent Land",
+        duration: "2:55",
         poster: "/images/voidwalker/media/film-latent-land.jpg",
+      },
+      {
+        kind: "embed",
+        youtubeId: "T6z9sbGl04Y",
+        title: "Welcome to Latent Land, behind the scenes",
+        duration: "7:06",
+        poster: "/images/voidwalker/media/film-latent-land-bts.jpg",
       },
     ],
   },
@@ -916,6 +951,15 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
         title: "How the power of fans saved The Expanse",
         duration: "2:14",
         poster: "/images/voidwalker/media/film-save-the-expanse.jpg",
+      },
+      // ADR-082 U33: the set visit itself, as the network cut it. The source
+      // title's "| Prime Video" is the channel, not the film.
+      {
+        kind: "embed",
+        youtubeId: "pNlYOGwt1nA",
+        title: "The Expanse Season 4 superfans, behind the scenes",
+        duration: "3:58",
+        poster: "/images/voidwalker/media/film-expanse-superfans.jpg",
       },
     ],
   },

@@ -258,8 +258,28 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
       youtubeId: "a5-DcdfxCvU",
       duration: "2:14",
     });
-    for (const id of ["loop", "azeroth", "pokemon-go"]) {
+    for (const id of ["azeroth", "pokemon-go"]) {
       expect(eraMedia(findCharacterEra(id)), `${id} has no transmission`).toEqual([]);
+    }
+  });
+
+  it("three eras carry a real pile, front card first (ADR-082 U33)", () => {
+    // The owner's films, in the order he gave them. A new card goes BEHIND the
+    // era's existing front card, so the two films above stay the record's lead.
+    const pile = (id: string) =>
+      eraMedia(findCharacterEra(id)).map((m) => (m.kind === "embed" ? m.youtubeId : m.title));
+    expect(pile("expanse")).toEqual(["a5-DcdfxCvU", "pNlYOGwt1nA"]);
+    expect(pile("loop")).toEqual(["EQKIiqVyjJk", "bouBxlVy3zc"]);
+    expect(pile("genai")).toEqual(["jFVezT4mznU", "T6z9sbGl04Y"]);
+    // Every card in a pile states its length, so the head's tag never goes
+    // blank on one card and prints a time on the next.
+    for (const id of ["expanse", "loop", "genai"]) {
+      for (const item of eraMedia(findCharacterEra(id))) {
+        expect(
+          item.kind === "image" || Boolean(item.duration),
+          `${id} · "${item.title}" has no length`
+        ).toBe(true);
+      }
     }
   });
 
@@ -318,6 +338,8 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
         { ...embed, poster: "/images/voidwalker/holo-still-thoughtform.jpg" },
       ],
       ["a duration that is not M:SS", { ...embed, duration: "2m14s" }],
+      // Past an hour the minutes take two digits.
+      ["an hour with one-digit minutes", { ...embed, duration: "1:2:11" }],
       // `media-src` is 'self': a bucket URL is blocked outright.
       ["a remote video", { ...video, src: "https://cdn.example.com/a-cut.mp4" }],
       ["a webm with no fallback beside it", { ...video, src: "/videos/voidwalker/media/a.webm" }],
@@ -337,6 +359,10 @@ describe("ADR-082 U31 · the era's transmission pile", () => {
     expect(isCharacterEraMedia(null)).toBe(false);
     expect(isCharacterEraMedia("film")).toBe(false);
     expect(isCharacterEraMedia({ ...image, focus: [0, 1] })).toBe(true);
+    // ADR-082 U33: a length past an hour reads as one (the podcast is 62 min).
+    for (const d of ["0:30", "10:36", "62:11", "1:02:11"]) {
+      expect(isCharacterEraMedia({ ...embed, duration: d }), d).toBe(true);
+    }
   });
 
   it("the accessor drops what fails and truncates at the cap, without throwing", () => {

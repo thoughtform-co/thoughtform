@@ -34,6 +34,13 @@
  *
  *   node scripts/capture-era-media.mjs --vp 1920x1247 --theme dark --out <dir>
  *   node scripts/capture-era-media.mjs --vp 1280x720  --piles 1,4
+ *   node scripts/capture-era-media.mjs --vp 1280x720  --record --era loop
+ *
+ * ⚠ `--record` GATES THE ERA'S OWN PILE (ADR-082 U33), not the fixture: the
+ * URL carries no `media=`, so the lab mounts the registry's pile for `--era`
+ * and the card count is read off the pile's published `data-vwd-media-count`.
+ * Since U33 three eras carry a real pile, and a fixture that fits proves only
+ * that the fixture's titles fit.
  */
 import { mkdirSync } from "node:fs";
 
@@ -48,7 +55,9 @@ const [VW, VH] = argOf("--vp", "1920x1247").split("x").map(Number);
 const PORT = argOf("--port", "3003");
 const THEME = argOf("--theme", "dark");
 const ERA = argOf("--era", "genai");
-const PILES = argOf("--piles", "1,2,3,4").split(",").map(Number);
+const RECORD = args.includes("--record");
+/* `null` is the record's own pile, whose size is only known once it renders. */
+const PILES = RECORD ? [null] : argOf("--piles", "1,2,3,4").split(",").map(Number);
 const OUT = argOf("--out", "");
 if (OUT) mkdirSync(OUT, { recursive: true });
 /* The sheet's own phone rung. There the reading FITS rather than scrolls
@@ -208,13 +217,26 @@ function gate(s, n, label) {
 
 console.log(`\nera media · ${VW}x${VH} · ${THEME} · era ${ERA}`);
 
-for (const n of PILES) {
+for (const seed of PILES) {
+  const pileQuery = seed === null ? "" : `media=${seed}&`;
   await page.goto(
-    `http://localhost:${PORT}/test/voidwalker-datum-lab?media=${n}&era=${ERA}&theme=${THEME}`,
+    `http://localhost:${PORT}/test/voidwalker-datum-lab?${pileQuery}era=${ERA}&theme=${THEME}`,
     { waitUntil: "domcontentloaded" }
   );
   await page.waitForSelector(".vwd__sheet", { timeout: 90_000 });
   await page.evaluate(() => document.fonts.ready);
+  let n = seed;
+  if (n === null) {
+    // The record's pile: a pile publishes its count; an empty era says so.
+    await page.waitForSelector(
+      '.vwd__mstack[data-vwd-media-count], .vwd__body[data-cell="ll"] .vwd__absent',
+      { state: "attached", timeout: 30_000 }
+    );
+    n = await page.evaluate(() =>
+      Number(document.querySelector(".vwd__mstack")?.getAttribute("data-vwd-media-count") ?? 0)
+    );
+    console.log(`  the record's pile for ${ERA}: ${n} card(s)`);
+  }
   // ≤700px the four panels are ONE seat behind a view switch, and the pile's
   // cell is `display: none` until TRANSMISSION is the open reading. With an
   // empty pile that tab is disabled — which is its own gate.
