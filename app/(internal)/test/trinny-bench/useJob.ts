@@ -84,16 +84,20 @@ export function useJob() {
     [follow]
   );
 
-  /** Show a finished job from the history strip without re-running it. */
+  /** Show a finished job (`?job=<id>`) without re-running it. Resolves to
+   *  the job, or null when today's session has no job by that id. */
   const load = useCallback(
-    async (id: string) => {
+    async (id: string): Promise<Job | null> => {
       stop();
       idRef.current = id;
       setError(null);
       const r = await fetch(`/api/trinny-bench/job/${encodeURIComponent(id)}`, {
         cache: "no-store",
       });
-      if (r.ok) setJob((await r.json()) as Job);
+      if (!r.ok) return null;
+      const j = (await r.json()) as Job;
+      if (idRef.current === id) setJob(j);
+      return j;
     },
     [stop]
   );

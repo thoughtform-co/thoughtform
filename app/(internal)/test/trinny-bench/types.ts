@@ -90,6 +90,10 @@ export interface Measurement {
         method?: string;
         pixels?: number;
         clusters?: Swatch[];
+        /** The inner 60 % of the product box the colour was read from. */
+        sampled_box?: number[];
+        dominant?: Swatch;
+        refined_to_band?: boolean;
       })
     | null;
   band: Swatch | null;
@@ -182,31 +186,42 @@ export interface HistoryRow {
   error: string | null;
 }
 
+export interface RegressionNegative {
+  file: string;
+  recipe: string;
+  derived_from: string;
+  must_fail: string[];
+  must_report: string[];
+  hits: Record<string, number>;
+  all_hits?: Record<string, number>;
+  held: boolean;
+  verdicts: string[];
+  state: string | null;
+  delta_e00: number | null;
+}
+
+export interface RegressionPositive {
+  file: string;
+  verdicts: string[];
+  pass_fraction: number;
+  flipped: string[];
+  state: string | null;
+  delta_e00?: number | null;
+  failed?: string[];
+}
+
 export interface Regression {
   regression: {
     rubric_version: string;
     runs: number;
     graded_at: string;
     offline?: boolean;
-    negatives: Array<{
-      file: string;
-      recipe: string;
-      derived_from: string;
-      must_fail: string[];
-      must_report: string[];
-      hits: Record<string, number>;
-      held: boolean;
-      verdicts: string[];
-      state: string | null;
-      delta_e00: number | null;
-    }>;
-    positives: Array<{
-      file: string;
-      verdicts: string[];
-      pass_fraction: number;
-      flipped: string[];
-      state: string | null;
-    }>;
+    /** The negatives' folder on Drive; the img route serves under it. */
+    folder?: string;
+    grader?: string;
+    seconds?: number;
+    negatives: RegressionNegative[];
+    positives: RegressionPositive[];
     summary: { negatives: number; held: number; positives: number; positives_clean: number };
   } | null;
   path?: string;
@@ -214,14 +229,15 @@ export interface Regression {
   note?: string;
 }
 
-/** One rail row's state, derived from a job on every poll. */
-export type RailState = "pending" | "running" | "pass" | "fail" | "unsure" | "na";
-
-export const VERDICT_WORDS: Record<string, string> = {
-  PASS: "Pass",
-  PASS_WITH_NOTES: "Pass, with a note",
-  RETRY: "Retry",
-  FAIL: "Fail",
-  ERROR: "Error",
-  DRY_RUN: "Dry run",
-};
+/** An image staged in Upload mode: in memory until Run posts it. */
+export interface Pending {
+  file: File;
+  url: string;
+  name: string;
+  /** The product the colour says it is nearest (`/suggest`), if any. */
+  suggested: string | null;
+  dE: number | null;
+  /** Loaded from a regression case: its subject is read off its name. */
+  fromCase: boolean;
+  submitted: boolean;
+}

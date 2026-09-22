@@ -42,10 +42,11 @@ export const LIGHT_LOCKED_ROUTES = [
   "/arcs/suri-proposal",
   "/arcs/perfect-ted-proposal",
   "/arcs/hungry-minds-proposal",
-  /* The Trinny brand bench (ADR-120): a lab page composed on the pitch
-     page's parchment, with its coral wash. Dev-only (`(internal)/test`), but
-     a locked route is locked wherever it paints, and this one paints product
-     swatches that have to be read against paper. */
+  /* The Trinny brand bench (ADR-120, Update 1): one module on the plain
+     warm grey of the client's own product tiles, no sheet and no switch
+     drawn. Dev-only (`(internal)/test`), but a locked route is locked
+     wherever it paints, and this one paints product swatches that have to
+     be read against paper. */
   "/test/trinny-bench",
 ] as const;
 

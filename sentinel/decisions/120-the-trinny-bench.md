@@ -79,3 +79,85 @@ npm run typecheck && npm run lint && npm run test:run
 Open http://localhost:3003/test/trinny-bench?offline=1, drop a wave-01 frame,
 watch the rail settle; then http://localhost:3003/test/trinny-bench for one
 real generate. Arriving with `?theme=dark` still paints light.
+
+## Update 1 — one module (2026-09-22, owner)
+
+He read the first face the same evening and sent it back whole.
+
+> _"The interface that you've built, with all due respect, looks really
+> convoluted and not as elegant as what I've built with Delaware and the Moira
+> eval workshop. I really want you to go back to the basics and really make a
+> super clean interface. Maybe we were too tied to some of the elements […]"_
+>
+> _"Now all the elements are disconnected. They are all floating. It looks like
+> a glorified PowerPoint. Instead, I want you to go back to what we've built with
+> Moira, where we're just one module with different features, and it should be
+> super visual, super clear."_
+>
+> _"And there should also be a switch where you can either generate an image,
+> which then gets checked, or upload an image. […] When you run the checks, it
+> should highlight what's correct, and on the right side, it should show the
+> checks, the reasoning, and either a green score, an orange score, or red.
+> It's like our evals, our degrees of freedom."_
+
+Asked, he chose three things: a **plain page with no HUD** (the wash goes too),
+the **product box** as the highlight (what the colour layer already finds, no
+new model call), and **red only where a fixed rule broke**.
+
+### What lost
+
+- **Decision 1's sheet**: `SheetShell`, the HUD chrome, the corner instruments,
+  the three scrolled chapters, and the coral wash with them. The page is the
+  module alone on the palest warm grey — the client's own product-tile ground.
+  The light lock stays (the row in `LIGHT_LOCKED_ROUTES`, `ThemeLock`); no theme
+  switch is drawn, so the rule that hid it went with the sheet.
+- **The masthead readout** (its facts are one caption line under the module),
+  **the free-standing yellow CTA** (the yellow survives on the module's one
+  primary button, the proposal's CTA exactly), and **the history strip** (the
+  route stays; `?job=<id>` opens any job of today's session).
+- **Decision 3's "no traffic light"**. The states keep their words and gain the
+  owner's three colours, carried by shape as well: pass outlined, review
+  dashed, fail filled.
+- **The page's claim that a rehearsal spends nothing.** A Generate in
+  `?offline=1` still draws with the real model; the caption says so.
+
+### The decision
+
+1. **One module, Moira's grammar.** A bar above it: `Generate | Upload` on the
+   left (Delaware's workstream switch, two modes of one engine), `Run | Skill |
+Evals` on the right. Run is three cells — input, output, the dark rail of
+   checks — and the rail stays beside Skill and Evals too.
+2. **The real product sits in INPUT.** The identity reference goes into every
+   draw and every grade, so it is an input; beside the candidate it still reads
+   left to right, and OUTPUT keeps its whole width for the picture under review.
+3. **The colour is the rubric's own strictness** (`derive.ts`, pinned in
+   `tests/lib/trinny-bench-derive.test.ts`): a `gate` that fails on the majority
+   is red; a judged check that fails (critical, minor, advisory), a split vote,
+   or an unanswered check is orange; a check that held on every run is green.
+   Evals draws the same rule as degrees of freedom — fixed (the gates, pass or
+   fail), adapted (everything judged, pass or review), free (what the brief
+   leaves open, checked by nobody on one frame).
+4. **The highlight is measured, never drawn for effect.** The product box
+   (`measurement.box`, normalised x0 y0 x1 y1) is outlined in percent inside a
+   wrapper with the picture's own aspect ratio, the sampled inner 60 % dashed
+   inside it, labelled with the product and its ΔE2000. Offline and on a
+   texture frame there is no box, and the page says so.
+5. **The colour settles first.** F1/F2 are computed before any grade, so their
+   row settles when `measurement` lands; the stranger's read fills under
+   Identity when it lands; the other rows settle in order when the verdict
+   does, then the verdict. Rows are always mounted and swap two faces on a
+   `data-settled` flag delayed by their own index, so the 400 ms poll never
+   restarts a transition.
+6. **A regression case runs in one click.** Evals lists the negatives and the
+   positive controls with their thumbnails, the checks each must trip and what
+   it got; "Check this one" loads it into Upload **as the product its name
+   says** (`derived_from`), never the one its colour suggests — the plum swap
+   is Naked Ambition.
+
+### Verified
+
+At 1920×1247 and 1440×900 the page fits with no scroll either way. On today's
+real Naked Ambition generate (`?job=bmud076pt6srgh7`) the outline measured to
+the pixel against the box × the rendered image (890, 454, 140×460 at the
+owner's viewport; 483 px square at 1440). A rehearsal of the plum swap settled
+the colour first ("another product's band", ΔE 40.7) and the rest in order.

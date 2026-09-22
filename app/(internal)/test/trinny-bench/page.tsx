@@ -1,46 +1,32 @@
-import { SheetShell } from "@/components/sheet/SheetShell";
 import { ThemeLock } from "@/components/landing/v7/ThemeLock";
 import { THEME_TOGGLE } from "@/components/landing/v7/themeToggle";
-import type { SheetChapter } from "@/lib/sheet/composition";
-import { sliceV7Sections } from "@/lib/v7-parse";
 
 import { TrinnyBench } from "./TrinnyBench";
 
-// Sheet order is load-bearing (ADR-058): landing.css carries the @font-face
-// block and the token chain; theme.css is LAST of the production set; the
-// corner instruments after it; the route's own sheet last of all so its
-// scoped rules win.
+// landing.css carries the @font-face block and the token chain; theme.css
+// the light cascade (the route is light-locked, ADR-093); the route's own
+// sheet last so its scoped rules win. No sheet, no HUD: the module stands
+// alone (ADR-120 Update 1).
 import "@/components/landing/v7/landing.css";
-import "@/components/sheet/sheet.css";
-import "@/components/sheet/instrument.css";
 import "@/components/landing/v7/theme.css";
-import "@/components/landing/v7/rail-instruments/rail-instruments.css";
 import "./trinny-bench.css";
 
 /**
- * /test/trinny-bench — the Trinny London brand bench (ADR-120).
+ * /test/trinny-bench — the Trinny London brand bench (ADR-120, Update 1).
  *
  * A live module, not a curated one: generate a product image with the
- * ship's harness or drop one in, and have the rubric grade it three times
+ * ship's harness or upload one, and have the rubric grade it three times
  * with the colour measured in code. The judgment lives in the sibling repo
  * (`Arcs_Trinny London/skill/references/`); this page is its face, in the
- * pitch page's register: parchment, one coral wash, the client's yellow on
- * the one primary control.
+ * grammar of Moira's workshop bench: one module, a switch, three views and
+ * a rail of checks, on the plain ground of the client's own product tiles.
  *
- * SERVER component because `sliceV7Sections` reads the prototype off disk
- * for the HUD chrome (`[]` = frame only, no stations), exactly as
- * `/test/arcs-instrument-kit` does. Light-locked (ADR-093): the row in
- * `LIGHT_LOCKED_ROUTES`, the leaf below, and the switch rule in the sheet.
- *
- * `?offline=1` rehearses the whole page against the harness's deterministic
- * fake grader, with the colour layer still real: no spend, same choreography.
+ * `?offline=1` rehearses against the harness's deterministic fake grader
+ * with the colour layer still real; a Generate still draws for real.
+ * `?job=<id>` opens a job from today's session without re-running it.
  */
 
-const CHAPTERS: readonly SheetChapter[] = [
-  { id: "run", label: "Run", primary: true },
-  { id: "skill", label: "Skill" },
-  { id: "evals", label: "Evals" },
-];
+const JOB_ID = /^[A-Za-z0-9_-]{1,80}$/;
 
 export default async function TrinnyBenchRoute({
   searchParams,
@@ -49,22 +35,33 @@ export default async function TrinnyBenchRoute({
 }) {
   const sp = await searchParams;
   const offline = sp.offline === "1";
-  const slice = sliceV7Sections([]);
+  const job = typeof sp.job === "string" && JOB_ID.test(sp.job) ? sp.job : null;
   return (
     <>
       {THEME_TOGGLE && <ThemeLock />}
-      <div className="tb-root">
-        <div className="tb-wash" aria-hidden="true" />
-        <SheetShell
-          hudHtml={slice.hudHtml}
-          bodyClass={slice.bodyClass}
-          page="trinny-bench"
-          profile="instrument"
-          chapters={CHAPTERS}
-        >
-          <TrinnyBench offline={offline} />
-        </SheetShell>
-      </div>
+      <main className="tb-root">
+        <div className="tb-page">
+          <header className="tb-head">
+            {/* eslint-disable-next-line @next/next/no-img-element -- the client's own mark, their grey */}
+            <img
+              className="tb-head__mark"
+              src="/trinny-london/trinny-london-mark.svg"
+              alt="Trinny London"
+              width={40}
+              height={40}
+            />
+            <h1 className="tb-head__title">
+              <span>Generate a product image, or drop one in.</span>{" "}
+              <span className="tb-head__accent">The rubric checks it.</span>
+            </h1>
+            <p className="tb-head__lede">
+              Three grades, the majority per check. Colour is measured in code against the
+              product&rsquo;s own tile. Nothing here decides: a person is the gate.
+            </p>
+          </header>
+          <TrinnyBench offline={offline} jobId={job} />
+        </div>
+      </main>
     </>
   );
 }
