@@ -704,6 +704,21 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(station).not.toMatch(/setCard|cardsRef|front/);
   });
 
+  it("the `gallery` slot is a LAB seam — production never fills it", () => {
+    // `/test/musings-gallery` mounts the REAL station with a direction in
+    // place of the row and the way out. The landing mounts it through the
+    // portal with posts alone, so the slot is empty there by construction —
+    // and if a second caller ever appears it has to answer this pin first.
+    const portal = read("components/landing/home-v2/musings/MusingsPortal.tsx");
+    expect(portal).toContain("root.render(<MusingsStation posts={posts} />);");
+    expect(portal).not.toMatch(/gallery=/);
+    // `!== undefined`, never `??`: a `null` direction draws nothing and must
+    // stay distinct from no direction at all.
+    const station = read(STATION);
+    expect(station).toContain("gallery !== undefined ?");
+    expect(station).not.toMatch(/gallery\s*\?\?/);
+  });
+
   it("the pinned head hangs from the SERVICES line, and the base rows stay content-height (ADR-121 U2)", () => {
     // ⚠ The owner's read: the title and the paragraph sit "more down" than
     // services' "AI CAPABILITY / YOUR TEAM OWNS.". The group was centred, so

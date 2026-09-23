@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type CSSProperties } from "react";
+import { useRef, type CSSProperties, type ReactNode } from "react";
 
 import { MUSINGS_COORDS, MUSINGS_MASTHEAD, MUSINGS_TITLE_TEXT } from "@/lib/musings/mastheadData";
 import type { MusingCardData } from "@/lib/musings/types";
@@ -35,8 +35,23 @@ import { useMusingsScroll } from "./useMusingsScroll";
  *
  * ⚠ **EVERY CARD RENDERS, ALWAYS.** The attribute is what opens a card; the
  * arrival's aperture is what hides one.
+ *
+ * ⚠ **`gallery` IS A LAB SEAM, AND PRODUCTION NEVER FILLS IT.** Given a node,
+ * it takes the place of the row AND the way out, so a direction in
+ * `/test/musings-gallery` is judged under the REAL head, pinned stage, decode
+ * and arrival stamps rather than a copy of them. Omitted, the render is
+ * byte-identical (`musings-row.test.ts` pins that `MusingsPortal` passes
+ * nothing). `!== undefined`, never `??`: `null` is a direction that draws
+ * nothing, and must stay distinguishable from no direction at all. With no row
+ * mounted the writer's card handlers find no row and do nothing.
  */
-export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) {
+export function MusingsStation({
+  posts,
+  gallery,
+}: {
+  posts: readonly MusingCardData[];
+  gallery?: ReactNode;
+}) {
   const runwayRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const bandRef = useRef<HTMLDivElement | null>(null);
@@ -127,40 +142,46 @@ export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) 
             </div>
           </header>
 
-          {posts.length > 0 ? (
-            /* ⚠ ONE FLEX ROW, AND THE CARDS ARE ITS DIRECT CHILDREN — the
-               writer queries `:scope > .mu-card` and the sheet's `--mu-open-w`
-               is solved off this box's own inline size. A wrapper between the
-               two would change both answers silently. */
-            <div className="mu__row" ref={rowRef}>
-              {posts.map((post, i) => (
-                <MusingCard key={post.slug} post={post} index={i} />
-              ))}
-            </div>
+          {gallery !== undefined ? (
+            gallery
           ) : (
-            /* ⚠ NO POSTS IS A REAL STATE, AND IT MAY NOT BE A BLANK VIEWPORT.
-               Every post on disk is a draft until one is published, and this
-               station is an opaque full-screen cover either way — so with an
-               empty row it says so and keeps its way out. */
-            <p className="mu__empty">The first notes are being written.</p>
-          )}
+            <>
+              {posts.length > 0 ? (
+                /* ⚠ ONE FLEX ROW, AND THE CARDS ARE ITS DIRECT CHILDREN — the
+                   writer queries `:scope > .mu-card` and the sheet's `--mu-open-w`
+                   is solved off this box's own inline size. A wrapper between the
+                   two would change both answers silently. */
+                <div className="mu__row" ref={rowRef}>
+                  {posts.map((post, i) => (
+                    <MusingCard key={post.slug} post={post} index={i} />
+                  ))}
+                </div>
+              ) : (
+                /* ⚠ NO POSTS IS A REAL STATE, AND IT MAY NOT BE A BLANK VIEWPORT.
+                   Every post on disk is a draft until one is published, and this
+                   station is an opaque full-screen cover either way — so with an
+                   empty row it says so and keeps its way out. */
+                <p className="mu__empty">The first notes are being written.</p>
+              )}
 
-          <div className="mu__foot">
-            {/* ⚠ A PLAIN `<a>`, AND `next/link` IS NOT AN OPTION HERE. This
-                station renders inside a nested `createRoot`, which does NOT
-                inherit React context from the tree that mounted it — so
-                `Link` has no App Router context to read and its client
-                navigation cannot work. Every internal link on the site
-                footer, mounted the same way one station down, is a plain
-                anchor for the same reason; there the rule simply does not
-                fire because the href arrives as a variable. A full document
-                navigation is the correct behaviour out of a detached root. */}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a className="mu__all" href="/musings">
-              All musings
-              <span className="mu__all-arrow" aria-hidden="true" />
-            </a>
-          </div>
+              <div className="mu__foot">
+                {/* ⚠ A PLAIN `<a>`, AND `next/link` IS NOT AN OPTION HERE. This
+                    station renders inside a nested `createRoot`, which does NOT
+                    inherit React context from the tree that mounted it — so
+                    `Link` has no App Router context to read and its client
+                    navigation cannot work. Every internal link on the site
+                    footer, mounted the same way one station down, is a plain
+                    anchor for the same reason; there the rule simply does not
+                    fire because the href arrives as a variable. A full document
+                    navigation is the correct behaviour out of a detached root. */}
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a className="mu__all" href="/musings">
+                  All musings
+                  <span className="mu__all-arrow" aria-hidden="true" />
+                </a>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

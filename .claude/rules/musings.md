@@ -4,7 +4,9 @@ paths:
   - "lib/musings/**"
   - "content/musings/**"
   - "app/(internal)/test/musings-row/**"
+  - "app/(internal)/test/musings-gallery/**"
   - "scripts/capture-musings-row.mjs"
+  - "scripts/capture-musings-gallery.mjs"
 description: The musings row (#musings) — a row that opens on hover, its transparent stage and the footer's held bed
 ---
 
@@ -386,6 +388,25 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   DOM the writer reads (a hidden `#voidwalker[data-vw-mode="hologram"]` marker
   and `data-corridor-exit` on `<html>`), so the station goes transparent and the
   glass has the lab's BED to blur. A window onto production, not a copy.
+
+- **`MusingsStation`'s `gallery` slot is a LAB SEAM, and production never
+  fills it.** Given a node it takes the place of the row AND the way out, so
+  a direction in `/test/musings-gallery` is judged under the REAL head, pinned
+  stage, decode and arrival stamps. `MusingsPortal` renders
+  `<MusingsStation posts={posts} />` and `musings-row.test.ts` pins that it
+  passes nothing. `!== undefined`, never `??` (a `null` direction draws
+  nothing). ⚠ The writer needs no change — with no `.mu__row` its card
+  handlers find no row — but a lab must RE-KEY the station when its
+  direction changes, because the writer's listeners bind at mount; and a
+  direction may never carry `data-mu-decode` / `data-mu-cursor`, which the
+  writer collects from the whole `.mu` subtree and would scramble.
+  ⚠ `musings-row.test.ts` fails the station file on the substring `front`
+  anywhere, comments included — "frontmatter" in a comment is a red suite.
+- **`lib/musings/outline.ts` reads an essay's shape off its body** — its
+  sections (split on `#`/`##`, as `mdx.tsx` renders them, never `###`) and
+  each one's prose words, fences and `<Figure>` blocks skipped. Zero imports,
+  body in, projection out, so the body never reaches a client chunk. The
+  gallery lab draws it; nothing on the landing reads it yet.
 
 ## The footer's bed (ADR-105 U3)
 
