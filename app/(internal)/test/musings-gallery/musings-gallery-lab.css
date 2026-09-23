@@ -1087,10 +1087,14 @@ html[data-theme="light"] #musings .mu .mg-plate {
     108px
   );
   --mg-ch-foot: clamp(58px, 7svh, 76px);
+  /* ⚠ ROUND FOUR: the ceiling is 320px, not 400 — at the owner's viewport the
+     open row was a 400px feature with ~200px of hole between the excerpt and
+     the way in. The copy is one stack seated at the top now (below). */
+  --mg-ch-open-max: 320px;
   --mg-ch-open: clamp(
     var(--mg-ch-open-min),
     calc(100cqh - var(--mu-n, 3) * (var(--mg-ch-row) + 1px) - 1px - var(--mg-ch-foot)),
-    400px
+    var(--mg-ch-open-max)
   );
   --mg-ch-gap: clamp(14px, 1.6vw, 28px);
   --mg-ch-thumb: calc(var(--mg-ch-row) - 16px);
@@ -1137,16 +1141,15 @@ html[data-theme="light"] #musings .mu .mg-plate {
     background-color 200ms ease-out,
     border-color 200ms ease-out;
 }
+/* The row's meta: the round-three chip over the one meta line, set right. */
 .mg-ch__meta {
   display: grid;
   justify-items: end;
-  gap: 6px;
-  font-family: var(--font-pt-mono);
-  font-size: var(--mu-chrome);
-  line-height: 1;
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  gap: 7px;
   white-space: nowrap;
+}
+.mg-ch__item:not([data-mg-on]) .mg-ch__chip,
+.mg-ch__item:not([data-mg-on]) .mg-ch__chip .mg-chip__b {
   color: var(--mu-ink-3);
 }
 .mg-ch__title {
@@ -1225,13 +1228,17 @@ html[data-theme="light"] #musings .mu .mg-plate {
   height: var(--mg-ch-open);
   padding: 2px 0 clamp(18px, 2.6svh, 30px) calc(12px + var(--mg-ch-gap));
 }
+/* ⚠ ONE STACK, SEATED AT THE TOP (round four). `space-between` put the way in
+   on the row's floor and left the room between it and the excerpt as a hole;
+   text seated on the cover's top line with the way in under it reads as one
+   block, and the air falls below, where it is the row's. */
 .mg-ch__copy {
   grid-column: 1;
   grid-row: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: clamp(14px, 2svh, 24px);
+  justify-content: flex-start;
+  gap: clamp(16px, 2.4svh, 28px);
   min-height: 0;
 }
 .mg-ch__summary {
@@ -1245,16 +1252,6 @@ html[data-theme="light"] #musings .mu .mg-plate {
   display: grid;
   gap: clamp(12px, 1.6svh, 18px);
   max-width: 24rem;
-}
-.mg-ch__byline {
-  font-family: var(--font-pt-mono);
-  font-size: var(--mu-chrome);
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  color: var(--mu-ink-2);
-}
-.mg-ch__by {
-  color: var(--mu-ink-3);
 }
 .mg-ch__cover {
   grid-column: 2;
@@ -1395,6 +1392,171 @@ html[data-theme="light"] .mg-raster__dot {
   display: flex;
   align-items: center;
   height: var(--mg-ch-foot);
+}
+
+/* ── v10 · Chapters, the LEDGER (round four) ───────────────────────────
+   The rows tightened to one line each — the mark, the date in its own
+   column, the title, the chip, the length — no thumbnails. The open row is
+   a compact feature: the excerpt with the byline and a compact way in on the
+   left, the cover a SQUARE of the row's height at its end. */
+.mg--chapters[data-mg-variant="ledger"] {
+  --mg-ch-open-min: clamp(190px, 22svh, 240px);
+  --mg-ch-open-max: 260px;
+  --mg-ch-row: clamp(
+    40px,
+    min(6.4svh, calc((100cqh - var(--mg-ch-open-min) - var(--mg-ch-foot)) / var(--mu-n, 3) - 1px)),
+    68px
+  );
+  --mg-ch-date: clamp(96px, 8vw, 130px);
+  --mg-ch-len: clamp(44px, 4vw, 64px);
+}
+.mg--chapters[data-mg-variant="ledger"] .mg-ch__row {
+  grid-template-columns: 12px var(--mg-ch-date) minmax(0, 1fr) auto var(--mg-ch-len);
+  column-gap: clamp(12px, 1.3vw, 22px);
+}
+.mg--chapters[data-mg-variant="ledger"] .mg-ch__title {
+  font-size: min(clamp(20px, 1.7vw, 32px), calc(var(--mg-ch-row) * 0.58));
+}
+.mg-ch__date,
+.mg-ch__len {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--mu-ink-3);
+}
+.mg-ch__len {
+  text-align: right;
+}
+.mg--chapters[data-mg-variant="ledger"] .mg-ch__detail {
+  grid-template-columns: minmax(0, 1fr) var(--mg-ch-open);
+  column-gap: clamp(20px, 2.6vw, 48px);
+  padding: 0 0 clamp(14px, 2svh, 22px) calc(12px + var(--mg-ch-date) + 2 * clamp(12px, 1.3vw, 22px));
+}
+.mg--chapters[data-mg-variant="ledger"] .mg-ch__summary {
+  max-width: 36em;
+  font-size: clamp(15px, 1.15vw, 19px);
+  line-height: 1.45;
+}
+/* The byline and the way in share one line; the button is compact. */
+.mg--chapters[data-mg-variant="ledger"] .mg-ch__sign {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2vw, 32px);
+  max-width: none;
+}
+.mg--chapters[data-mg-variant="ledger"] .mg-ch__read {
+  min-height: 38px;
+  padding: 0 12px;
+}
+.mg--chapters[data-mg-variant="ledger"] .mg-ch__cover {
+  aspect-ratio: 1;
+  justify-self: end;
+  height: 100%;
+}
+
+/* ── v11 · Chapters, the CARDS (round four) ────────────────────────────
+   Every note is a folder plate — the notch, the lip — eight pixels apart:
+   the thumbnail in a well, the title over the meta line, the chip at the
+   row's end. The open card grows into a horizontal feature: the copy left,
+   the cover a square at the card's height on the right, inside the card. */
+.mg--chapters[data-mg-variant="cards"] {
+  --mg-ch-open-min: clamp(200px, 24svh, 260px);
+  --mg-ch-open-max: 300px;
+  --mg-ch-card-gap: 8px;
+  --mg-ch-row: clamp(
+    56px,
+    min(
+      7.6svh,
+      calc(
+        (100cqh - var(--mg-ch-open-min) - var(--mg-ch-foot)) / var(--mu-n, 3) -
+          var(--mg-ch-card-gap)
+      )
+    ),
+    80px
+  );
+  --mg-ch-open: clamp(
+    var(--mg-ch-open-min),
+    calc(100cqh - var(--mu-n, 3) * (var(--mg-ch-row) + var(--mg-ch-card-gap)) - var(--mg-ch-foot)),
+    var(--mg-ch-open-max)
+  );
+  --mg-ch-thumb: calc(var(--mg-ch-row) - 20px);
+}
+.mg--chapters[data-mg-variant="cards"] .mg-ch__list {
+  display: grid;
+  align-content: start;
+  gap: var(--mg-ch-card-gap);
+  border-top: 0;
+  padding: 2px 0;
+}
+.mg--chapters[data-mg-variant="cards"] .mg-ch__item {
+  border-bottom: 0;
+}
+.mg--chapters[data-mg-variant="cards"] .mg-ch__row {
+  grid-template-columns: var(--mg-ch-thumb) minmax(0, 1fr) auto;
+  column-gap: clamp(12px, 1.3vw, 20px);
+  padding: 0 calc(var(--mu-ch) + 6px) 0 10px;
+}
+.mg-ch__well {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--mg-ch-thumb);
+  height: var(--mg-ch-thumb);
+  border: 1px solid var(--mu-rule);
+  background: var(--mg-well);
+}
+.mg-ch__well .mg-thumb {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: none;
+}
+/* A card keeps its thumbnail open or shut — it is the card's mark, and the
+   feature's cover sits beside the copy rather than under the row. */
+.mg--chapters[data-mg-variant="cards"] .mg-ch__item[data-mg-on] .mg-thumb {
+  visibility: visible;
+}
+.mg-ch__text {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.mg--chapters[data-mg-variant="cards"] .mg-ch__title {
+  font-size: min(clamp(18px, 1.4vw, 26px), calc(var(--mg-ch-row) * 0.4));
+  line-height: 1.12;
+}
+.mg--chapters[data-mg-variant="cards"] .mg-ch__detail {
+  grid-template-columns: minmax(0, 1fr) var(--mg-ch-open);
+  column-gap: clamp(20px, 2.6vw, 48px);
+  height: calc(var(--mg-ch-open) + var(--mg-pad));
+  padding: 0 calc(var(--mu-ch) + 6px) var(--mg-pad)
+    calc(10px + var(--mg-ch-thumb) + clamp(12px, 1.3vw, 20px));
+}
+.mg--chapters[data-mg-variant="cards"] .mg-ch__summary {
+  max-width: 34em;
+  font-size: clamp(15px, 1.15vw, 19px);
+  line-height: 1.45;
+}
+.mg--chapters[data-mg-variant="cards"] .mg-ch__sign {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2vw, 32px);
+  max-width: none;
+}
+.mg--chapters[data-mg-variant="cards"] .mg-ch__read {
+  min-height: 40px;
+  padding: 0 12px;
+}
+/* Inside a plate the cover is a framed square, not a second plate. */
+.mg--chapters[data-mg-variant="cards"] .mg-ch__cover {
+  aspect-ratio: 1;
+  justify-self: end;
+  height: 100%;
+  border: 1px solid var(--mu-rule);
+  background: var(--mg-well);
 }
 
 /* ═══ v5 · Memory map (seed) ═══════════════════════════════════════════
@@ -2469,16 +2631,31 @@ html[data-theme="light"] .mg-tx__item[data-mg-on] .mg-tx__row {
   .mg-ch__detail {
     height: auto;
   }
-  .mg-ch__row {
+  .mg-ch__row,
+  .mg--chapters[data-mg-variant="ledger"] .mg-ch__row,
+  .mg--chapters[data-mg-variant="cards"] .mg-ch__row {
     grid-template-columns: 12px minmax(0, 1fr) auto;
   }
-  .mg-ch__kind,
+  .mg-ch__line,
+  .mg-ch__date,
+  .mg-ch__len,
+  .mg-ch__well,
   .mg-thumb {
     display: none;
   }
-  .mg-ch__cover {
+  .mg--chapters[data-mg-variant="ledger"] .mg-ch__detail,
+  .mg--chapters[data-mg-variant="cards"] .mg-ch__detail {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    padding-left: 0;
+  }
+  .mg-ch__cover,
+  .mg--chapters[data-mg-variant="ledger"] .mg-ch__cover,
+  .mg--chapters[data-mg-variant="cards"] .mg-ch__cover {
     grid-column: 1;
     grid-row: auto;
     aspect-ratio: 16 / 10;
+    height: auto;
+    justify-self: stretch;
   }
 }

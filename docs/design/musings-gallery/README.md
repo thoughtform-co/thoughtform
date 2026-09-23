@@ -162,9 +162,29 @@ override the weld to zero, having no era to overlap.
 3. **Whether the row's leave-restore** (the newest reopens when the pointer
    leaves) survives a promotion — every lab direction is sticky instead.
 
+## Round four (owner, 2026-09-23)
+
+> Looking at the designs, I actually like V4 the best. I'm wondering whether
+> we can enhance it and really make it better, and make two more variants
+> where the design of the cards is a bit tighter.
+
+ONE component (`Chapters.tsx`), three variants, so the comparison is between
+the cards' design alone:
+
+| id    | name              | what changed                                                                                                                                                                                                                                                                        |
+| ----- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v4`  | Chapters          | Enhanced in place: the row's meta is the round-three chip over the meta line (`[ NAVIGATE ]` · `14 SEP 2026 · 1 MIN READ`); the open feature's ceiling drops 400 → 320px and its copy is ONE stack seated at the top — the ~200px hole between the excerpt and the way in is gone.  |
+| `v10` | Chapters · ledger | The rows tightened to one line each — mark · date · title · chip · length — no thumbnails, rows 40–68px, titles 20–32px. The open row is a compact feature: the excerpt with the byline and a compact way in on one line, the cover a SQUARE of the row's height at its end.        |
+| `v11` | Chapters · cards  | Every note a folder plate (the notch, the lip), 8px apart: the thumbnail in a well, the title over the meta line, the chip at the end. The open card grows into a horizontal feature — the copy left, the cover a framed square at the card's height on the right, inside the card. |
+
+Both tight variants keep v4's mechanic (one transitioned `grid-template-rows`
+0fr → 1fr, the detail laid out at its final size), v4's arithmetic (the open
+row's floor paid first, the rows solved from the count) and v4's knobs
+(`?cover=`; the ledger has no thumbnails, a card's thumbnail is its mark).
+
 ## Knobs
 
-`?v=v0…v9` · `?src=live|lab` (the three real notes, or the seven placeholders)
+`?v=v0…v11` · `?src=live|lab` (the three real notes, or the seven placeholders)
 · `?n=3|5|7` (placeholders only) · `?theme=light` · `?console=0` (hide the
 console) · a direction's own knobs, shown by the console only for the
 directions that declare them in the registry: `?cover=dial|raster|field`

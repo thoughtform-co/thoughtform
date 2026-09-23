@@ -4,7 +4,9 @@ import { useRef } from "react";
 
 import {
   AllMusings,
-  BEAT_NAME,
+  Byline,
+  Chip,
+  Meta,
   ReadButton,
   beatOfPost,
   filed,
@@ -13,7 +15,7 @@ import {
   useLabSelect,
   type DirectionProps,
 } from "./kit";
-import { COVER_KINDS, NoteCover, NoteThumb, type CoverKind } from "./NoteCover";
+import { NoteCover, NoteThumb, coverKindOf } from "./NoteCover";
 
 /**
  * v4 · CHAPTERS — the index, read like a book's contents.
@@ -39,20 +41,48 @@ import { COVER_KINDS, NoteCover, NoteThumb, type CoverKind } from "./NoteCover";
  *     closed row carries its cover as a thumbnail and says "min read";
  *   · the cover is a knob (`?cover=dial|raster|field`) because the right-hand
  *     composition is the open question.
+ *
+ * ⚠ ROUND FOUR (owner, 2026-09-23, on rounds two and three: "I actually like
+ * V4 the best … enhance it and really make it better, and make two more
+ * variants where the design of the cards is a bit tighter"). ONE component,
+ * three VARIANTS, so the comparison is between the cards' design alone:
+ *   · `default` (v4), enhanced: the row's meta is the round-three chip and
+ *     meta line (`[ NAVIGATE ]` over `14 SEP 2026 · 1 MIN READ`), the open
+ *     feature is shorter (its cap 400 → 320px) with the copy seated at the
+ *     TOP as one stack — the hole between the excerpt and the way in is gone —
+ *     and the cover fills the right column edge to edge.
+ *   · `ledger` (v10), tighter ROWS: one line per note — the mark, the date in
+ *     its own column, the title at 26–32px, the chip, the length — no
+ *     thumbnails; the open row is a compact feature, the cover a small square
+ *     at the row's end, the way in a compact button.
+ *   · `cards` (v11), tighter CARDS: every note is a folder plate (the notch,
+ *     the lip), 8px apart — thumbnail, title and meta on one card; the open
+ *     card grows into a horizontal feature, the copy on the left and the
+ *     cover a square at the card's height on the right.
  */
-export function Chapters({ posts, knobs }: DirectionProps) {
+
+export type ChaptersVariant = "default" | "ledger" | "cards";
+
+const VARIANT_ID: Record<ChaptersVariant, string> = { default: "v4", ledger: "v10", cards: "v11" };
+
+export function Chapters({
+  posts,
+  knobs,
+  variant = "default",
+}: DirectionProps & { variant?: ChaptersVariant }) {
   const ref = useRef<HTMLDivElement | null>(null);
   useLabSelect(ref);
-  const cover: CoverKind = COVER_KINDS.includes(knobs?.cover as CoverKind)
-    ? (knobs?.cover as CoverKind)
-    : "dial";
-  const thumbs = knobs?.thumbs !== "0";
+  const cover = coverKindOf(knobs?.cover, "dial");
+  /* The ledger has no thumbnails; a card's thumbnail is its identity mark, so
+     it is not a knob there; the default keeps `?thumbs=0`. */
+  const thumbs = variant === "cards" || (variant === "default" && knobs?.thumbs !== "0");
 
   return (
     <div
       className="mg mg--chapters"
       data-mg-root=""
-      data-mg-v="v4"
+      data-mg-v={VARIANT_ID[variant]}
+      data-mg-variant={variant}
       data-mg-cover={cover}
       data-mg-thumbs={thumbs ? "" : undefined}
       ref={ref}
@@ -61,19 +91,48 @@ export function Chapters({ posts, knobs }: DirectionProps) {
         {posts.map((p, i) => {
           const beat = beatOfPost(p);
           return (
-            <li key={p.slug} className="mg-ch__item" data-mg-slug={p.slug} data-mg-on={onAtRest(i)}>
+            <li
+              key={p.slug}
+              className={`mg-ch__item${variant === "cards" ? " mg-plate mg-ch__card" : ""}`}
+              data-mg-slug={p.slug}
+              data-mg-on={onAtRest(i)}
+            >
               <a className="mg-ch__row" href={postHref(p.slug)} data-mg-slug={p.slug}>
-                <span className="mg-ch__mark" aria-hidden="true" />
-                <span className="mg-ch__title">{p.title}</span>
-                {/* One right-set block, two lines: when, then what and how long.
-                    Three columns cost the titles the width they are set in. */}
-                <span className="mg-ch__meta">
-                  <span className="mg-ch__date">{filed(p)}</span>
-                  <span className="mg-ch__kind">
-                    {beat ? BEAT_NAME[beat] : "Practice"} · {p.readingMinutes} min read
-                  </span>
-                </span>
-                {thumbs ? <NoteThumb post={p} posts={posts} /> : null}
+                {variant === "cards" ? (
+                  /* The card: the thumbnail leads, the title and the meta line
+                     stack beside it, the chip closes the row. */
+                  <>
+                    <span className="mg-ch__well">
+                      <NoteThumb post={p} posts={posts} />
+                    </span>
+                    <span className="mg-ch__text">
+                      <span className="mg-ch__title">{p.title}</span>
+                      <Meta post={p} className="mg-ch__line" />
+                    </span>
+                    <Chip beat={beat} className="mg-ch__chip" />
+                  </>
+                ) : variant === "ledger" ? (
+                  /* The ledger: one line — mark · date · title · chip · length. */
+                  <>
+                    <span className="mg-ch__mark" aria-hidden="true" />
+                    <span className="mg-ch__date">{filed(p)}</span>
+                    <span className="mg-ch__title">{p.title}</span>
+                    <Chip beat={beat} className="mg-ch__chip" />
+                    <span className="mg-ch__len">{p.readingMinutes} min</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="mg-ch__mark" aria-hidden="true" />
+                    <span className="mg-ch__title">{p.title}</span>
+                    {/* One right-set block, two lines: the beat, then when and
+                        how long. Three columns cost the titles their width. */}
+                    <span className="mg-ch__meta">
+                      <Chip beat={beat} className="mg-ch__chip" />
+                      <Meta post={p} className="mg-ch__line" />
+                    </span>
+                    {thumbs ? <NoteThumb post={p} posts={posts} /> : null}
+                  </>
+                )}
               </a>
               <div className="mg-ch__open">
                 <div className="mg-ch__inner">
@@ -81,13 +140,14 @@ export function Chapters({ posts, knobs }: DirectionProps) {
                     <div className="mg-ch__copy">
                       <p className="mg-ch__summary">{p.summary}</p>
                       <div className="mg-ch__sign">
-                        <span className="mg-ch__byline">
-                          <span className="mg-ch__by">By</span> {p.author}
-                        </span>
+                        <Byline post={p} className="mg-ch__byline" />
                         <ReadButton post={p} className="mg-ch__read" />
                       </div>
                     </div>
-                    <div className="mg-plate mg-ch__cover">
+                    <div
+                      className={`mg-ch__cover${variant === "cards" ? "" : " mg-plate"}`}
+                      aria-hidden="true"
+                    >
                       <NoteCover post={p} posts={posts} kind={cover} />
                     </div>
                   </div>
@@ -102,4 +162,14 @@ export function Chapters({ posts, knobs }: DirectionProps) {
       </div>
     </div>
   );
+}
+
+/** v10 — the rows tightened into a ledger. */
+export function ChaptersLedger(props: DirectionProps) {
+  return <Chapters {...props} variant="ledger" />;
+}
+
+/** v11 — the rows tightened into cards. */
+export function ChaptersCards(props: DirectionProps) {
+  return <Chapters {...props} variant="cards" />;
 }

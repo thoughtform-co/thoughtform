@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-import { Chapters } from "./Chapters";
+import { Chapters, ChaptersCards, ChaptersLedger } from "./Chapters";
 import { Codex } from "./Codex";
 import { Columns } from "./Columns";
 import { Feature } from "./Feature";
@@ -44,6 +44,8 @@ export const MG_DIRECTION_IDS = [
   "v7",
   "v8",
   "v9",
+  "v10",
+  "v11",
 ] as const;
 export type MgDirectionId = (typeof MG_DIRECTION_IDS)[number];
 
@@ -61,7 +63,7 @@ export interface MgDirection {
   /** What it was built from — a reference, or the seed. */
   provenance: string;
   /** The round it was built in. */
-  round: 1 | 2 | 3;
+  round: 1 | 2 | 3 | 4;
   /** The knobs it reads, in the order the console shows them. */
   knobs?: readonly MgKnob[];
   /** Its own default cover, when it draws one and `?cover=` is unset. */
@@ -158,6 +160,27 @@ export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
       "Starfield's missions and The Outer Worlds' journal, read as a log grouped by kind · the Chapters mechanic.",
     round: 3,
   },
+  v10: {
+    id: "v10",
+    label: "Chapters · ledger",
+    thesis:
+      "v4 with its rows tightened to one line each — mark, date, title, chip, length — and a compact feature with a square cover at the row's end.",
+    provenance: "v4 (the owner's pick), the rows tightened; the Dragonfly writing list's density.",
+    round: 4,
+    knobs: ["cover"],
+    cover: "dial",
+  },
+  v11: {
+    id: "v11",
+    label: "Chapters · cards",
+    thesis:
+      "v4 with every note a folder card — thumbnail, title, meta, chip — the open card a horizontal feature with the cover a square at its height.",
+    provenance:
+      "v4 (the owner's pick), the rows tightened into plates; the proof card's folder skin.",
+    round: 4,
+    knobs: ["cover"],
+    cover: "dial",
+  },
 };
 
 /**
@@ -178,4 +201,6 @@ export const MG_GALLERIES: Readonly<
   v7: Columns,
   v8: Transmissions,
   v9: Missions,
+  v10: ChaptersLedger,
+  v11: ChaptersCards,
 };
