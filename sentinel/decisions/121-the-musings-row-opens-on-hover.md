@@ -1,0 +1,291 @@
+# ADR-121: The musings row opens on hover
+
+- **Status:** Proposed (2026-09-23) — shipped and guarded, pending the owner's live read.
+- **Surface:** `#musings` — the homepage's writing station, between the era stage
+  and the footer.
+- **Supersedes:** [ADR-119](119-the-musings-rack.md) **on the form** — U0's rack,
+  U1's shelf and U2's tipped 3D row with a scroll detent are all retired. Everything
+  else in that record stands: the station and its transparent stage (U1 §1), the
+  cover lockstep, the footer's bed (ADR-105 U3), the head's decode (U2 §1), the
+  aperture (U1 §4), the notch, the cover record, the type fixes (U3).
+- **Rules:** [`.claude/rules/musings.md`](../../.claude/rules/musings.md),
+  [`.claude/rules/landing-v7.md`](../../.claude/rules/landing-v7.md)
+
+## The ask
+
+Owner, 2026-09-23, on ADR-119 U2 read live:
+
+> What we currently have looks ugly, so I want to remove the jukebox carousel thing
+> because it's not working. I just want to do something simpler. [Lighthouse HQ's]
+> cards collapse open when you hover over them … repurpose them and make them fit
+> for our design language. This means that they should have that sort of
+> glass-like effect, a notch, etc. … properly scope it, and then remove any dead
+> code. I still want that glitch effect on the texts.
+
+And in session: at rest the **newest post is open**, and there is **no timer**.
+
+## The decision
+
+The row is a flex row. Every card is a strip (`flex: 0 0 --mu-closed`); the one
+under the pointer — or under keyboard focus — takes the band's free width
+(`flex-grow: 1`, transitioned); the rest stay strips. The newest post is open at
+rest and the writer moves ONE attribute, `data-mu-open`, on `pointerover` /
+`focusin`, putting it back on `pointerleave`. The card is the proof card's folder
+skin at card scale: glass at .62 with a blur on the stage rung, the flat gold lip
+rising to the whole line on the open card, the scanline under the copy, a bloom
+stated in pixels, one top-right notch on the evenodd ring. The head still decodes
+in place on the services masthead's clock and the cards still arrive on the
+centre-out aperture after it. The runway is one dwell. Nothing 3D survives.
+
+## The reference, measured
+
+Lighthouse HQ's customer row, read off its live DOM:
+
+```
+.customer-carousel      display:flex; gap:10px
+.customer-card          flex: 0 0 120px; height 445px; overflow:hidden; border-radius 5px;
+                        transition: flex-grow 1.1s cubic-bezier(0.19, 1, 0.22, 1)
+.customer-card--active  flex-grow: 100        (JS moves the class on pointer + a timer)
+inactive media          filter: brightness(.82) saturate(.82)
+.customer-card__tag     the pill, visible on the active card only (keyframe in 360ms)
+≤900px                  the row becomes a horizontal scroll-snap rail
+```
+
+The mechanic is ONE property. Everything the house adds — the glass, the notch,
+the lip, the fixed cover band, the un-reflowing body — is material and
+composition; the motion is the reference's, re-solved.
+
+## Why it is built this way
+
+### ⚠ ONE TRANSITIONED PROPERTY, AND THE DIAL IS THE REFERENCE'S CURVE RE-SOLVED
+
+`.mu-card { flex: 0 0 var(--mu-closed); transition: flex-grow var(--mu-grow) }`,
+`.mu-card[data-mu-open] { flex-grow: 1 }`. Mid-grow the two cards' grows sum to
+one, so the free width is always fully distributed and no gap opens. Nothing is
+posed, nothing is measured, nothing is written per frame.
+
+`--mu-grow` is `900ms cubic-bezier(0.19, 1, 0.22, 1)` — the reference's expo-out
+(1.1s there) for ~350px of edge travel here. ⚠ **THE APERTURE'S CURVE WAS
+DELIBERATELY NOT COPIED.** ADR-097 U12's 720ms ease-in-out is right for an arrival
+the reader did not cause: it is half-travelled at 360ms and readable end to end. A
+pointer response wants an immediate start — the expo-out moves 84 % of the way in
+its first sixth and settles over the rest, so the row answers the hand at once and
+comes to rest without a snap. The house pair is the alternative for the owner's
+read, and it is one token.
+
+### ⚠ THE TEXT NEVER REFLOWS DURING THE GROW
+
+The row is an inline-size container and publishes
+`--mu-open-w: calc(100cqw − (n − 1) × (--mu-closed + --mu-gap))` — the width the
+open card WILL have. Every card's body is laid out at that width once; the face's
+`overflow: hidden` clips it while the card is a strip, and the grow UNCOVERS it.
+Pure motion, no opacity, no reflow — the caption card's own law, and the
+reference's own read: the strips show the head of each line. The capture proves
+it the direct way: a Range's client rects are the LAYOUT, not the clip, so the
+same title reports the same width from inside a strip and from an open card
+(263.64px both ways at 1920×1247).
+
+⚠ `cqw` resolves on the element that USES the value against its nearest query
+container; a face or a card made a container would silently re-base it.
+
+### ⚠ THE COVER IS A FIXED-HEIGHT BAND, AND THE GLYPH IS A FIXED SIZE
+
+`--mu-cover-h` is 46 % of the card on every card, so five covers end on one datum
+and all five kickers share a baseline across the row. The beat glyph is
+`--mu-glyph` (52–80px), whole inside the narrowest strip with air either side; a
+percentage would resize it through the grow. The date axis spans whatever width
+the card has with the lit mark at its year fraction — the reference's own
+behaviour, where the image re-centres as the card grows.
+
+### ⚠ THE OPEN CARD IS ONE ATTRIBUTE, RENDERED BY REACT AND MOVED BY THE WRITER
+
+React renders `data-mu-open` on index 0, so SSR, a page with no script and a
+reduced-motion reader all show the finished row with the newest post open.
+`useMusingsScroll` delegates `pointerover` / `focusin` on the row and moves the
+attribute to the card under them; `pointerleave`, and a `focusout` that leaves the
+row, put it back on card 0. One attribute write on an event, no `setState` — the
+hook returns nothing now, because ADR-119's one piece of React state (the detented
+front index) had nothing left to be. ⚠ The holder is QUERIED, never cached: the lab
+re-keys the row when its count changes and a cached card is a detached one. ⚠ React
+does not touch a DOM attribute whose prop has not changed, so the writer's move
+survives every re-render this component will ever see. ⚠ The handlers are gated on
+the rung, so the rail is byte-identical to what ADR-119 shipped.
+
+### ⚠ EVERY CARD IS A REAL LINK AND EVERY CARD IS FOCUSABLE
+
+ADR-119 gave cards 1..n `tabIndex={-1}` + `aria-hidden` so four invisible 3D planes
+would not sit in the tab order — and on every parked rung the rail SHOWED those
+cards while hiding them from the keyboard, an a11y bug from the first commit. There
+is nothing invisible in a flex row: Tab from card 0 opens card 1 exactly as hover
+does (measured), and a click on a strip navigates.
+
+### ⚠ THE GLASS IS MEASURED, NOT ASSUMED — AND IT COSTS NOTHING MEASURABLE
+
+ADR-119 banned `backdrop-filter` on this station for five OVERLAPPING 3D planes in
+a `preserve-3d` context, each a backdrop snapshot a frame. A flat row of five
+non-overlapping cards is one proof card's area of glass. So the material is the
+proof card's: `--mu-plate` `rgba(--void-deep-rgb, .62)`, `blur(14px)` under
+`@supports`, the flat lip `color-mix(in srgb, var(--gold-line) 30%, transparent)`
+rising to `--gold-line` on the open card, the 1px/3px gold scanline under the copy,
+and the bloom stated in PIXELS re-solved for a card that is 120px shut and ~650px
+open (`260px 180px at calc(100% − 60px) −30px`; the proof card's `460px 300px`
+lit a whole strip).
+
+⚠ **ON THE STAGE RUNG ONLY** (`#musings[data-mu-mode="stage"]`): at 961–1100 the
+station is opaque and a blur would re-snapshot every frame to frost its own stars.
+⚠ **LIGHT DROPS THE FROST** (`theme.css` BLOCK 4g, BLOCK 4c's reasoning — the bed
+is faded there), with a selector that mirrors the sheet's own, because the dark
+rule is (1,4,0) and a lighter light selector loses on specificity whatever the
+source order. ⚠ **AND LIGHT'S PANE GOES TO .9**, BLOCK 4d's reasoning one surface
+over: on the light still the unfrosted .62 plate let the corridor's wireframe print
+straight through the copy; parchment over parchment loses nothing at .9 and the card
+reads by its lip, as the proof card does.
+
+**Measured** (`capture-musings-row.mjs --perf`, a rAF-delta sampler while parked
+and while the pointer sweeps every card twice, headed, over the live corridor at
+1920×1247 dark, three cards): idle **0 % long frames** (319 frames, mean 4.7ms,
+p95 8.3ms, max 12.5ms); hovering **0 %** (493 frames, mean 5.4ms, p95 8.4ms, max
+16.7ms). The lab at five cards over its static bed: 0 % both, mean 4.2ms. The bar
+was the proof card's recorded 15 %; the recorded fallback — the blur on the OPEN
+card alone with the strips at .94 — was not needed and is not applied.
+
+### ⚠ THE STATE IS THE RING AND THE KICKER, NEVER A FILTER
+
+The reference dims its inactive cards with `brightness(.82)`. A large-area
+brightness change on every hover is the class of motion ADR-097 U12 retired, so
+the open card is told by its lip rising to the whole line and its kicker taking
+the gold; the strips' kickers sit on `--mu-ink-3`. The row carries ONE gold line of
+chrome.
+
+### ⚠ THE RUNWAY IS ONE DWELL
+
+`height: calc(100svh + var(--mu-dwell))`, `--mu-dwell: 60svh`. ADR-119 pinned the
+stage for one step per card (42svh each plus a tail) because a detent needs scroll;
+a hover row does not. The head's thresholds on `p` are unchanged; the arrival's
+hysteresis moved to `lib/musings/arrive.ts` (the `arriveNext` lift ADR-119 U1
+named as the follow-up) with `ROW_ARRIVE_IN` re-solved to 0.10 for the short dwell
+(0.26 of 60svh would have held the cards shut for 16svh after the head had
+resolved) and the close still at 0.95, before the head leaves at 0.965. On the
+stage rung the station is ~1.6 viewports plus its 100svh band; ADR-119 U2 was
+~3.2 at five posts.
+
+### ⚠ THE PLACEHOLDER COPY LIVES IN A LAB, AND THE LAB IS A WINDOW
+
+The row is designed for five and the landing has three, and the site is live: a
+`draft: false` file in `content/musings/` publishes a page and a sitemap row. So
+`/test/musings-row` mounts the PRODUCTION station — nothing re-drawn — inside the
+real HUD frame with seven placeholder records (`placeholders.ts`, house-register
+titles that are names, tags across the three Arc beats, dates across the year),
+`?n=3|5|7`, `?theme=light`. The lab supplies the DOM the writer reads (a hidden
+`#voidwalker[data-vw-mode="hologram"]` marker and `data-corridor-exit` on
+`<html>`), so the station goes transparent under `home-v2.css`'s own promotion rule
+and the glass has the lab's BED to blur — a fixed stand-in for the corridor's light.
+The substrate lab's law: a window onto production, not a copy.
+
+## What the guards found that a still did not, and the reverse
+
+- ⚠ **A DEFINITE-WIDTH GRID ITEM GROWS AN `auto` COLUMN TO ITSELF, AND EVERY
+  SIBLING IN THAT COLUMN STRETCHES WITH IT.** The body's `width: --mu-open-w`
+  (~930px) set the face's implicit `auto` column's base size — an item whose
+  preferred size is definite contributes its min-content size, and `min-width: 0`
+  does not reach that — so the COVER, in the same column, was 930px wide inside a
+  120px strip and its centred glyph sat 464px in: clipped, on every strip, with
+  every other gate green. The capture's glyph-in-strip gate caught it on the first
+  run; the face's column is `minmax(0, 1fr)` now (sized from the face's free space,
+  the body overflowing it, which is the point), and the capture asks the direct
+  question too: every cover is its card's width.
+- ⚠ **`elementFromPoint` AND `elementsFromPoint()[0]` AGREE ON EVERY PROBE POINT
+  NOW.** ADR-119 found them disagreeing inside the 3D context (the singular form
+  returned the `preserve-3d` ancestors). With no 3D context left the capture reads
+  both on all five points and reports agreement: `tl tr bl br mid` all `y`, at
+  every viewport. The plural form stays the one the gate uses.
+- ⚠ **THE MECHANICAL GATE ON THE LAB WITHOUT `--prm` IS A VOID.** The gate does
+  not scroll; the lab's station begins a viewport down and its head is blank until
+  the stage parks, so `--scope ".mu"` yields no text and the gate says so
+  (`MECHANICAL VOID`). Under `--prm` the writer parks, the rail shows and the head
+  is whole: that is the reading.
+- ⚠ **A SOURCE RATCHET READS COMMENTS.** The new test's "no `tabIndex`" assertion
+  failed on the card's own header, which quotes the bug it fixed. The ratchet
+  strips comments before it matches, as `theme-css-sweep`'s prose trap already
+  taught one sheet over.
+- **The still at 1920×1247** reads as one column — the head, the row, the way out
+  on the band's left edge — with the open card at 928px beside two 120px strips
+  showing "7 SEP 2026 ·", the glyph, the lit mark and the head of each line. The
+  light still, before the pane went to .9, showed the corridor's wireframe through
+  the copy; after, the card reads by its lip.
+
+## Deleted
+
+`lib/musings/rowMath.ts` (the pose, the seat, the tilt, the detent, the reading
+band, the near-edge floor, `ROW_*`); the writer's pose loop, its per-card
+`transform` / `z-index` / `data-mu-tilt` writes, its `front` state and `frontRef`,
+its return value; `MusingCard`'s `isFront`, `tabIndex`, `aria-hidden`,
+`data-mu-card`, `--mu-i`, `cardRef`; the station's `setCard` / `cardsRef` and the
+`.mu__window > .mu__rig > .mu__rack` wrappers; the sheet's 3D rung (the window
+mask, the rig, the rack seat, the transform transition, the centred foot),
+`--mu-step`, `--mu-tail` and its off-stage restore; `MUSINGS_RACK_MAX` →
+`MUSINGS_ROW_MAX` and two stale comments (`MUSINGS_STEP_SVH`, `RACK_DEPTH` never
+existed; `musings-shelf.test.ts`); `scripts/capture-musings-rack.mjs` →
+`capture-musings-row.mjs` with the pose / tilt / centring / detent / fade gates
+gone. Every remaining reference (`rowMath`, `rowPose`, `mu__rack`, `mu__rig`,
+`mu__window`, `muTilt`, `data-mu-front`, `MUSINGS_RACK`) was grepped across the
+repo and fixed; the seams spec's `NOT_SNAP_AREAS` names `.mu__row`.
+
+## Guards
+
+- `tests/lib/musings-row.test.ts` — rewritten, 51 cases: the arrival's hysteresis
+  (re-solved, closing at 0.95 before the head leaves), the head's clock and the
+  cover's arithmetic (unchanged), and the source ratchets — the rung mirrored, the
+  mechanic ONE transitioned `flex-grow`, nothing 3D anywhere (no `perspective`,
+  `rotate*`, `translateZ`, `preserve-3d`, the only `mask-image` the masthead's
+  own), `data-mu-open` on index 0 and every card a real link, `--mu-open-w` solved
+  from the same tokens the strip and the gap use, the writer moving one attribute
+  on four events with no `useState`, the glass on the stage rung only with light's
+  BLOCK 4g out-ranking it, the state a ring and never a filter, one flex row with
+  the cards as direct children, the runway one dwell, the aperture's three-host
+  lockstep, every row rule gated on the stamp AND the rung, three clears of
+  `data-ft-reveal`.
+- `scripts/capture-musings-row.mjs` — headed, real scrolls: PASS at 1920×1247 dark
+  (with `--perf`) and light, 1280×720 dark, 390×844 dark, and `--lab --n 5` at
+  1920×1247 in both themes. Gates: the band's opaque ground; the head blank off
+  the pin and whole through the dwell; the arrival in at 0.45 and out at 0.99; rest
+  = card 0 open at ≥ 3× a strip; hover card 2 opens it inside the grow and
+  collapses card 0; leaving restores card 0; Tab opens card 1; the title's laid-out
+  width equal open and closed; every cover one height and its card's width, every
+  glyph whole in its strip; glass on every face on the stage rung in dark, none in
+  light, none under reduced motion (a second context); the TR-only notch
+  hit-tested from both ends with the singular/plural agreement reported; the bed
+  armed on the band and the readout MUSINGS at every stop; the footer uncovering
+  (561 → 1247); the type floor; `--perf`.
+- `about-voidwalker-handoff-boundaries` 8/8 (`--workers=1`) ·
+  `services-ring-smoke` 11/11 on desktop · `mobile-section-seams` 14/14 on both
+  iPhone projects · `landing-page -g "HUD"` 2/2 **without** `--update-snapshots` ·
+  `capture-site-footer` at 1920×1247 dark: `plateIsStation true`, band left 357,
+  G3 pass — the bed did not move · `mechanical.mjs --scope ".mu" --prm` on the
+  landing: the SIX known findings in dark and in light (the title glow ×5, the
+  coord stamp at 1.43 / 1.40:1) and no seventh, and the same six on the lab
+  under `--prm` (without it the gate is a VOID — it does not scroll) · the eight vitest suites the plan
+  names, 214/214 · `tsc` clean · `npm run lint` 337/337 (at the ratchet, no new
+  warning).
+- The four cover-lockstep readers all still name `.mu__band` and none moved.
+
+## Left open
+
+- **Three posts.** The row reads best at five; at three the open card is 928px of
+  the 1200px band and the two strips read as afterthoughts. The writing track
+  produces the real notes; the lab shows the row at five and seven meanwhile.
+- **Touch on a ≥961 device.** A tap fires `pointerover` and the click together, so
+  it opens and navigates in one gesture. A first-tap-opens rule is a decision for
+  the owner's read, not taken.
+- **The open card's lower air.** The card is `clamp(336px, 52svh, 464px)` tall and
+  a one-sentence summary at 56ch fills ~100px of the ~250px body, so at the
+  owner's viewport ~150px of plate sits under the lede. The fixed height is what
+  keeps the strips one height; a shorter card or a longer summary are both dials.
+- **The grow's curve.** The reference's expo-out at 900ms is what shipped; the
+  house's 720ms ease-in-out pair is one token away for his read.
+- **The light pane at .9** is a read, not a number to tune blind.
+- **The `.mu` gate's six known findings** (the glow, the coords) stand as ADR-119
+  U3 recorded them.
+- **The bloom on the strips**: every card carries it at its top-right, so each
+  strip's top catches a little light. Uniform material by intent; the open card
+  alone is the alternative.

@@ -1,28 +1,29 @@
 /**
- * lib/musings/cards — the homepage rack's projection (ADR-119). Zero imports
- * beyond the types, so the guard can walk it and the landing does not drag
- * the registry's `fs` reader into a client chunk.
+ * lib/musings/cards — the homepage row's projection (ADR-119 → ADR-121). Zero
+ * imports beyond the types, so the guard can walk it and the landing does not
+ * drag the registry's `fs` reader into a client chunk.
  *
  * ⚠ **THE HOMEPAGE SHOWS A WINDOW, NOT THE INDEX.** `/musings` lists every
- * post; the station is a beat in a scroll and holds a rack. `MUSINGS_RACK_MAX`
- * is what the rack draws, newest first, and the station's own `→ All musings`
- * link is what carries the rest. Raising it lengthens the station's runway by
- * `MUSINGS_STEP_SVH` per card, which is the page getting longer — a dial with
- * a cost, not a free number.
+ * post; the station is a beat in a scroll and holds a row. `MUSINGS_ROW_MAX`
+ * is what the row draws, newest first, and the station's own `→ All musings`
+ * link is what carries the rest. Raising it does not lengthen the page any
+ * more (the runway is one dwell since ADR-121) — it NARROWS the open card:
+ * every closed strip costs `--mu-closed + --mu-gap` of the band, so at seven
+ * posts the open card has ~384px of a 1200px band and at five ~656px.
  */
 import type { MusingCardData, MusingPost } from "./types";
 
 /**
- * ⚠ **THE RACK WANTS FIVE, AND BELOW THAT IT IS NOT A RACK.** It draws the
- * front card plus two either side (`RACK_DEPTH`), so at five every seat is a
- * different post; at four the far seats show the same card twice and at three
- * a card appears on both flanks at once. That is not a crash and no guard can
- * see it — the wrap is correct arithmetic — so it is written down here.
+ * ⚠ **THE ROW READS BEST AT FIVE.** At three the open card is ~928px of the
+ * band and the two strips beside it read as afterthoughts; at seven the open
+ * card is under 400px and the row is mostly strips. Neither is a crash and no
+ * guard can see either — the arithmetic is correct at every count — so it is
+ * written down here. The landing has three posts today.
  */
-export const MUSINGS_RACK_MAX = 7;
+export const MUSINGS_ROW_MAX = 7;
 
 export function cardsFor(posts: readonly MusingPost[]): MusingCardData[] {
-  return posts.slice(0, MUSINGS_RACK_MAX).map((p) => ({
+  return posts.slice(0, MUSINGS_ROW_MAX).map((p) => ({
     slug: p.slug,
     title: p.title,
     date: p.date,
@@ -33,7 +34,7 @@ export function cardsFor(posts: readonly MusingPost[]): MusingCardData[] {
 }
 
 /**
- * `14 SEP 2026` — the rack's kicker.
+ * `14 SEP 2026` — the card's kicker.
  *
  * ⚠ FORMATTED FROM THE STRING, never through `Date`/`toLocaleDateString`: an
  * ISO date with no zone parses as UTC and renders a day earlier for anyone

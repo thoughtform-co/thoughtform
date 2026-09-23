@@ -1653,6 +1653,25 @@ pass. A lab that mounts a production component inherits every "decided once"
 input that component has, and has to wait for each of them the way production
 implicitly does.
 
+## A definite-width grid item grows an `auto` column to itself, and every sibling in the column stretches with it (ADR-121)
+
+The musings card's body is laid out at the OPEN width (`width: var(--mu-open-w)`,
+~930px) so the text never reflows while the card grows from a 120px strip; the
+face's `overflow: hidden` is meant to clip it. It did — but the face is a grid
+with one implicit `auto` column, and an item whose preferred size is DEFINITE
+contributes its min-content size to that column's base size (`min-width: 0`
+does not reach it; it only matters when the preferred size is `auto`). The
+column became 930px inside a 120px face, and the COVER in the same column
+stretched to 930px too: its centred glyph sat 464px in and every strip showed a
+dot field with no glyph, while every gate that measured the card's own box
+stayed green. `grid-template-columns: minmax(0, 1fr)` sizes the track from the
+container's free space and lets the item overflow it, which is the point. The
+rule: when one grid item is deliberately wider than its container, the track
+must be told its size explicitly, or every other item in that track inherits
+the overflow. The guard that found it asked whether the glyph was whole inside
+its strip; the guard that now names it asks whether the cover is its card's
+width.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.
@@ -1661,4 +1680,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-09-21_
+_Last updated: 2026-09-23_

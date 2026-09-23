@@ -6,6 +6,12 @@
   its composition and geometry are untouched). Carries **ADR-105 Update 3**.
 - **Rules:** [`.claude/rules/musings.md`](../../.claude/rules/musings.md),
   [`.claude/rules/landing-v7.md`](../../.claude/rules/landing-v7.md)
+- ⚠ **Superseded on the FORM by [ADR-121](121-the-musings-row-opens-on-hover.md)
+  (2026-09-23, owner):** the rack (U0), the shelf (U1) and the tipped 3D row
+  with its detent (U2) are all retired; the row opens on hover. What stands
+  from this record: the station and its transparent stage (U1 §1), the cover
+  lockstep, the footer's bed (ADR-105 U3), the head's decode (U2 §1), the
+  aperture (U1 §4), the notch, the cover record, the type fixes (U3).
 
 ## The ask
 

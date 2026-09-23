@@ -191,16 +191,20 @@ class="stations">`.** Four things read that and a `<footer id="contact">` falls 
   (`rail-manifest` · `v7-parse` · `section-label` · `detentTable` ·
   `rail-instrument-marks`) and `mechanical.mjs --scope ".ft-foot" --prm` in both themes.
 
-⚠ **THE WRITING IS A ROW, AND THE FOOTER IS A BED
-([ADR-119](../sentinel/decisions/119-the-musings-rack.md), 2026-09-22, owner).**
-`#musings` sits between the era stage and the footer: the SERVICES MASTHEAD's
-grammar on the editorial band, decoding IN PLACE once the stage parks (U2 —
-U1's head was never blank, so its glyphs rode the stage in and out), and a row
-of flat cards CENTRED on the one being read with the rest tipped back about X
-(U2 — "rotated on the x-axis", no skeuomorphism; U1's 90° spines and U0's fan
-are both retired). Each card carries its own `perspective()`: an ancestor
-`perspective` inside this sticky stage painted ~140px off its measured rect.
-Rules: [`.claude/rules/musings.md`](musings.md).
+⚠ **THE WRITING IS A ROW THAT OPENS ON HOVER, AND THE FOOTER IS A BED
+([ADR-119](../sentinel/decisions/119-the-musings-rack.md), 2026-09-22 →
+[ADR-121](../sentinel/decisions/121-the-musings-row-opens-on-hover.md),
+2026-09-23, owner).** `#musings` sits between the era stage and the footer: the
+SERVICES MASTHEAD's grammar on the editorial band, decoding IN PLACE once the
+stage parks (ADR-119 U2 — U1's head was never blank, so its glyphs rode the
+stage in and out), and a flex row of glass cards in which the one under the
+pointer takes the band's free width and the rest collapse to strips —
+Lighthouse HQ's customer row measured off its DOM, one transitioned
+`flex-grow`, in the proof card's folder skin. The newest post is open at rest,
+no timer; `data-mu-open` is moved by the writer on `pointerover` / `focusin`.
+ADR-119's fan (U0), shelf (U1) and tipped 3D row with a detent (U2) are all
+retired with the form; nothing 3D survives in the station. Rules:
+[`.claude/rules/musings.md`](musings.md).
 
 - ⚠ **ON THE CAPABLE RUNG THE STATION IS A TRANSPARENT STAGE AND ITS LAST
   VIEWPORT IS THE COVER (U1).** U0 shipped it opaque, and an opaque station in
@@ -233,12 +237,14 @@ Rules: [`.claude/rules/musings.md`](musings.md).
   frame's floor from scroll 0 and it paints straight through the TRANSPARENT era
   stage over the live corridor. ⚠ Pinned, never transformed — the GIC reference
   does not move either, and a main-thread follower lags by one wheel step.
-- ⚠ **A CARD IS A PIVOT AND A FACE, AND THE PIVOT CARRIES A TRANSFORM AND
-  NOTHING ELSE.** `overflow` ≠ visible, `clip-path` ≠ none, `opacity` < 1 and
-  `filter` ≠ none each force `transform-style: flat` on the element that declares
-  them — U1's flattened pivot rendered its 90°-turned spine as a zero-width
-  strip, with the transform applied, the element measurable and every geometry
-  gate green. The FACE takes the clip and the overflow.
+- ⚠ **A CARD IS A FLEX ITEM AND A FACE, AND THE TWO NEVER FIGHT OVER ONE
+  BOX (ADR-121).** The card's box is what `flex-grow` transitions; the face
+  carries the plate, the clip, the ring, the glass and the arrival's aperture.
+  ⚠ The body is laid out at the OPEN width (`--mu-open-w`, a `cqw` of the row)
+  and the face's `overflow: hidden` uncovers it, so the text never reflows —
+  and the face's grid column must be `minmax(0, 1fr)`, because a definite-width
+  body grows an `auto` column to itself and the cover stretches with it (the
+  capture's first run: a 930px cover in a 120px strip, its glyph 464px in).
 - ⚠ **AN ABSENT `data-mu-ready` MEANS SHOWN** — the rest state is a horizontal
   rail, which is the finished page on every phone, under reduced motion and with
   no script at all. `data-mu-arrive` and `data-mu-mode` follow the same polarity,

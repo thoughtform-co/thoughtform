@@ -22,7 +22,7 @@ import "@/components/landing/home-v2/about/about-band.css";
 // cover. BEFORE theme.css like every route sheet, so the light rows
 // cascade last.
 import "@/components/landing/v7/site-footer/site-footer.css";
-// The musings rack (ADR-119) — `#musings`, the writing as a folder you flip,
+// The musings row (ADR-119 → ADR-121) — `#musings`, the writing as a row that opens on hover,
 // and the station that took the corridor's opaque COVER role off `#contact`.
 // AFTER landing.css, because it overrides the ≤960 padding floor's input and
 // the ADR-113 snap block for its own station; BEFORE theme.css like every

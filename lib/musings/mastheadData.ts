@@ -57,7 +57,7 @@ export interface MastheadRecord {
  * this grammar's stamps come from — ten lines of FNV against a module that
  * also exports JSX and pulls `lib/arcs/types` onto whatever imports it. The
  * landing's import doctrine is what makes the copy the right call; the
- * arithmetic is identical and `musings-shelf.test.ts` pins it against the
+ * arithmetic is identical and `musings-row.test.ts` pins it against the
  * original's published values.
  *
  * It is a HASH of the id, so the stamps are stable across SSR and hydration

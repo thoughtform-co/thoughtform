@@ -239,33 +239,29 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
     the brand mark … they would be too close to the elements."_ U38's foot put
     the band's last glyph on the wordmark's TOP line (the bottom brackets'
     edge) and 21px under the TRANSMISSION pile at his window; the band's BOX
-    is centred on the docked wordmark's box now.
-    - **The value.** `--vwd-foot` is `--hud-margin + --hud-brand-dock-h / 2 −
+    is centred on the docked wordmark's box now. - **The value.** `--vwd-foot` is `--hud-margin + --hud-brand-dock-h / 2 −
 --vwd-band-box / 2`, still inside U38's `min(…, (100svh − 720px) × 0.4)`
-      ease: 29.4px at 1936×1221 (was 88.3), 33.6 at 1920×1080, 19.0 at
-      1440×900, and 0 at 1280×720 as before (the full value is ~14 there and
-      the cap holds the band on the floor). Exact from ~755 tall at 1280 wide,
-      ~805 at 1920.
-    - ⚠ **THE WORDMARK'S BOX IS THREE HUD TOKENS NOW** (`landing.css`
-      `:root`): `--hud-brand-w` (the width `.hud__brand` reads),
-      `--hud-brand-dock` (the docked `scale()` it reads) and
-      `--hud-brand-aspect` (the lockup's viewBox, 494.93 / 1178.18 = 0.42008,
-      which CSS cannot read from the file — `tests/lib/hud-brand-tokens` pins
-      it to the SVG the prototype loads). `--hud-brand-dock-h` is their
-      product; every computed value is byte-identical to the literals it
-      replaced, and the HUD snapshot is the proof.
-    - **What "aligned" was read as.** Both seats were shot at his window
-      before choosing: the box centred on the mark puts the thumbnails over
-      33 of the mark's 43px (their centre 12px above its centre, the names
-      hanging under the pictures inside the box; the names' box ends 11px
-      under the mark's bottom line) and the air under the pile at 40px;
-      bottom-aligning the box on the mark's bottom left the pictures ABOVE the
-      wordmark with 28px of air. Centred is what ships.
-    - ⚠ **U38's mechanism stands** — the absolute band, the fifth stage row,
-      paid by the panels and never the figure; a SMALLER foot is more body
-      row, so the pile gains what the band gave up. The lab mirrors the
-      expression character for character. `scripts/probe-voidwalker-figure-span`
-      and both handoff specs are the figure's proof that nothing moved.
+    ease: 29.4px at 1936×1221 (was 88.3), 33.6 at 1920×1080, 19.0 at
+    1440×900, and 0 at 1280×720 as before (the full value is ~14 there and
+    the cap holds the band on the floor). Exact from ~755 tall at 1280 wide,
+    ~805 at 1920. - ⚠ **THE WORDMARK'S BOX IS THREE HUD TOKENS NOW** (`landing.css`
+    `:root`): `--hud-brand-w` (the width `.hud__brand` reads),
+    `--hud-brand-dock` (the docked `scale()` it reads) and
+    `--hud-brand-aspect` (the lockup's viewBox, 494.93 / 1178.18 = 0.42008,
+    which CSS cannot read from the file — `tests/lib/hud-brand-tokens` pins
+    it to the SVG the prototype loads). `--hud-brand-dock-h` is their
+    product; every computed value is byte-identical to the literals it
+    replaced, and the HUD snapshot is the proof. - **What "aligned" was read as.** Both seats were shot at his window
+    before choosing: the box centred on the mark puts the thumbnails over
+    33 of the mark's 43px (their centre 12px above its centre, the names
+    hanging under the pictures inside the box; the names' box ends 11px
+    under the mark's bottom line) and the air under the pile at 40px;
+    bottom-aligning the box on the mark's bottom left the pictures ABOVE the
+    wordmark with 28px of air. Centred is what ships. - ⚠ **U38's mechanism stands** — the absolute band, the fifth stage row,
+    paid by the panels and never the figure; a SMALLER foot is more body
+    row, so the pile gains what the band gave up. The lab mirrors the
+    expression character for character. `scripts/probe-voidwalker-figure-span`
+    and both handoff specs are the figure's proof that nothing moved.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title
@@ -913,14 +909,18 @@ handoff and the `701–1100px` complete fallback alone.
   CSS cover choose that rect in lockstep. Without the mode, `#voidwalker`
   remains the first opaque cover and owns the kill.
   ⚠ **THE STATION THAT TAKES THE COVER HAS MOVED TWICE AND IS `#musings` NOW**
-  ([ADR-119](../sentinel/decisions/119-the-musings-rack.md), 2026-09-22) — it was
-  `#practice` when this paragraph was written, then `#contact` under ADR-105, and
-  the rack is the first opaque station below the corridor today. ⚠ The lockstep
-  has FOUR readers, not two: `home-v2.css`'s `~ #musings` rule,
-  `useCorridorExitScroll`'s query, `about-voidwalker-handoff-boundaries`' cover
-  case and `services-ring-smoke`'s ambient-hold case (which reads it twice).
-  Splitting them hard-cuts the canvas at one of their edges — ADR-030 §6, on
-  record as hit five times. Rules: [`musings.md`](musings.md).
+  ([ADR-119](../sentinel/decisions/119-the-musings-rack.md), 2026-09-22; the row
+  that opens on hover since [ADR-121](../sentinel/decisions/121-the-musings-row-opens-on-hover.md),
+  2026-09-23) — it was `#practice` when this paragraph was written, then
+  `#contact` under ADR-105. ⚠ On the capable rung `#musings` is itself a
+  TRANSPARENT stage (ADR-119 U1) and the cover is its 100svh `.mu__band`; below
+  1101px, under PRM and on the fallback the station is opaque and is its own
+  cover. ⚠ The lockstep has FOUR readers, not two: `home-v2.css`'s mode-gated
+  `#musings[data-mu-mode="stage"]` promotion rule, `useCorridorExitScroll`'s
+  query, `about-voidwalker-handoff-boundaries`' cover case and
+  `services-ring-smoke`'s ambient-hold case (which reads it twice) — all four
+  name `.mu__band`. Splitting them hard-cuts the canvas at one of their edges —
+  ADR-030 §6, on record as hit six times. Rules: [`musings.md`](musings.md).
 - **Every hologram path is starless.** `data-vw-surface="hologram"` removes
   `v7-stars.svg` on static fallbacks too. Mobile, tablet, PRM, flag-off and
   corridor-fallback remain solid-void normal flow; they never inherit the

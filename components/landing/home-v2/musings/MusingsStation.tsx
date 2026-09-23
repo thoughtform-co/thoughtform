@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, type CSSProperties } from "react";
+import { useRef, type CSSProperties } from "react";
 
 import { MUSINGS_COORDS, MUSINGS_MASTHEAD, MUSINGS_TITLE_TEXT } from "@/lib/musings/mastheadData";
 import type { MusingCardData } from "@/lib/musings/types";
@@ -9,50 +9,40 @@ import { MusingCard } from "./MusingCard";
 import { useMusingsScroll } from "./useMusingsScroll";
 
 /**
- * `#musings` — the writing, as a row you scroll along (ADR-119, U2).
+ * `#musings` — the writing, as a row that opens on hover (ADR-121).
  *
- * The owner's ask, 2026-09-22: the post in view is a clean card with a
- * thumbnail, a title and a summary, and the others are "rotated on the
- * x-axis" — a jukebox / carousel / rolodex. After two readings of that on the
- * vertical axis (U0's fan, U1's shelf) he chose the ROW (U2): the card being
- * read upright in the centre, the others left and right of it tipped back
- * about their horizontal axis, flat panes with no skeuomorphism, the row
- * sliding sideways as the reader scrolls.
+ * The owner, 2026-09-23, on ADR-119's 3D row read live: _"what we currently
+ * have looks ugly, so I want to remove the jukebox carousel thing because it's
+ * not working. I just want to do something simpler."_ The reference is
+ * Lighthouse HQ's customer row — a flex row in which the card under the
+ * pointer grows wide and the rest collapse to narrow strips — re-cut in the
+ * house material: glass, the notch, the gold lip. At rest the NEWEST post is
+ * open; no timer.
  *
  * Composition: the masthead on the editorial band, the row under it, one way
- * out. The geometry is `lib/musings/rowMath.ts`, the head's decode
- * `lib/musings/headDecode.ts`, and the clock `useMusingsScroll`; this file is
- * the arrangement and nothing else.
+ * out. The head's decode is `lib/musings/headDecode.ts`, the arrival
+ * `lib/musings/arrive.ts`, the clock `useMusingsScroll`; this file is the
+ * arrangement and nothing else. The row has NO geometry module any more —
+ * the mechanic is one transitioned `flex-grow` in the sheet.
  *
  * ⚠ **ON THE STAGE RUNG THE STATION IS TRANSPARENT AND `.mu__band` IS THE
  * COVER** (ADR-119 U1 §1): the corridor stays alive behind the whole beat and
  * dies on the band. Off it the station is opaque again and is its own cover.
  *
- * ⚠ **THE PERSPECTIVE IS ON THE RIG AND THE FADE ON THE WINDOW ABOVE IT.** A
- * `mask-image` is a grouping property — on the rig or the rack it would flatten
- * the row's 3D context into one plane — so it lives on `.mu__window`, which is
- * outside that context and only ever sees the rendered row.
+ * ⚠ **THE ROW IS ONE REF AND THE WRITER DELEGATES.** No per-card refs, no
+ * per-card poses: `useMusingsScroll` listens on the row for `pointerover` /
+ * `focusin` and moves `data-mu-open` to the card under them.
  *
- * ⚠ **EVERY CARD RENDERS, ALWAYS.** The POSE is what places a card; the
+ * ⚠ **EVERY CARD RENDERS, ALWAYS.** The attribute is what opens a card; the
  * arrival's aperture is what hides one.
  */
 export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) {
   const runwayRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const bandRef = useRef<HTMLDivElement | null>(null);
-  const cardsRef = useRef<(HTMLElement | null)[]>([]);
+  const rowRef = useRef<HTMLDivElement | null>(null);
 
-  /* A stable per-index ref callback. A fresh closure each render makes React
-     detach and re-attach every card's ref, and the writer would pose a stale
-     array for a frame. */
-  const setCard = useCallback(
-    (i: number) => (el: HTMLAnchorElement | null) => {
-      cardsRef.current[i] = el;
-    },
-    []
-  );
-
-  const { front } = useMusingsScroll(runwayRef, rootRef, cardsRef, posts.length, bandRef);
+  useMusingsScroll(runwayRef, rootRef, rowRef, posts.length, bandRef);
 
   return (
     <div className="mu" ref={rootRef} style={{ "--mu-n": posts.length } as CSSProperties}>
@@ -138,26 +128,20 @@ export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) 
           </header>
 
           {posts.length > 0 ? (
-            <div className="mu__window">
-              <div className="mu__rig">
-                <div className="mu__rack">
-                  {posts.map((post, i) => (
-                    <MusingCard
-                      key={post.slug}
-                      post={post}
-                      index={i}
-                      isFront={i === front}
-                      cardRef={setCard(i)}
-                    />
-                  ))}
-                </div>
-              </div>
+            /* ⚠ ONE FLEX ROW, AND THE CARDS ARE ITS DIRECT CHILDREN — the
+               writer queries `:scope > .mu-card` and the sheet's `--mu-open-w`
+               is solved off this box's own inline size. A wrapper between the
+               two would change both answers silently. */
+            <div className="mu__row" ref={rowRef}>
+              {posts.map((post, i) => (
+                <MusingCard key={post.slug} post={post} index={i} />
+              ))}
             </div>
           ) : (
             /* ⚠ NO POSTS IS A REAL STATE, AND IT MAY NOT BE A BLANK VIEWPORT.
                Every post on disk is a draft until one is published, and this
                station is an opaque full-screen cover either way — so with an
-               empty rack it says so and keeps its way out. */
+               empty row it says so and keeps its way out. */
             <p className="mu__empty">The first notes are being written.</p>
           )}
 
@@ -191,10 +175,7 @@ export function MusingsStation({ posts }: { posts: readonly MusingCardData[] }) 
 
           ⚠ It is `display: none` off the stage rung: at 961–1100, under PRM and
           on the phone the STATION is opaque again and is its own cover, and a
-          second opaque viewport there would be a blank screen nobody asked for.
-
-          ⚠ Named `__band`, not `__tail`: `--mu-tail` already exists as the
-          runway's trailing slack and means something else entirely. */}
+          second opaque viewport there would be a blank screen nobody asked for. */}
       <div className="mu__band" ref={bandRef} aria-hidden="true" />
     </div>
   );

@@ -236,7 +236,7 @@ const PINS: Record<string, Pin> = {
     content: { A: 0, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
-  /* The musings shelf (ADR-119) — `#musings`, on the landing route. Authored
+  /* The musings row (ADR-119 → ADR-121) — `#musings`, on the landing route. Authored
      token-only from line one and pinned the hour it was written, which is the
      only way a sheet enters this map at zero.
      ⚠ A: 0 → 1 (ADR-119 U1, 2026-09-22). The owner asked for the SERVICES

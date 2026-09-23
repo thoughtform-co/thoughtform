@@ -1069,9 +1069,9 @@ test.describe("mobile section seams", () => {
     ".pf-slot",
     ".svc-ring-runway",
     ".svc-ring-band",
-    /* The rack's own rail: a sideways scroller inside a snapping station.
-       `touch-action: pan-y` keeps its gesture off the document. */
-    ".mu__rack",
+    /* The row's own rail (ADR-121): a sideways scroller inside a snapping
+       station. `touch-action: pan-y` keeps its gesture off the document. */
+    ".mu__row",
     ".voidwalker",
     ".vwd__band",
   ] as const;

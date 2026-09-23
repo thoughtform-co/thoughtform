@@ -4,6 +4,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { coordStamp as arcCoordStamp } from "@/components/arcs/chrome";
+import { ROW_ARRIVE_END, ROW_ARRIVE_IN, ROW_ARRIVE_OUT, rowArrive } from "@/lib/musings/arrive";
+import { MUSINGS_ROW_MAX } from "@/lib/musings/cards";
 import { beatOf, coverSpec, slugSeed, yearFraction } from "@/lib/musings/cover";
 import {
   HEAD_LEAVE_AT,
@@ -25,188 +27,39 @@ import {
   MUSINGS_TITLE_TEXT,
   coordStamp,
 } from "@/lib/musings/mastheadData";
-import {
-  ROW_ARRIVE_END,
-  ROW_ARRIVE_IN,
-  ROW_ARRIVE_OUT,
-  ROW_DEPTH_CLEAR,
-  ROW_PERSPECTIVE,
-  ROW_READ,
-  ROW_TILT,
-  rowArrive,
-  rowGeom,
-  rowIndex,
-  rowNearDepth,
-  rowPose,
-  rowReadIndex,
-  rowSeat,
-} from "@/lib/musings/rowMath";
 
 /**
- * The row's arithmetic and the head's decode (ADR-119 U2).
+ * The row's arrival, the head's decode, and the source ratchets (ADR-121).
  *
- * The row is CSS 3D driven by a scroll writer, so nothing here can be seen by a
- * DOM guard until it is already on screen — which is exactly the shape of
- * defect this house keeps finding late (ADR-069 U1: the guard measured a
- * silhouette; ADR-070 U34: the guard measured a model of the drawing). So the
- * geometry is pure and it is checked here, and the capture checks what the
- * browser does with it.
+ * The row has NO geometry module any more — its mechanic is one transitioned
+ * `flex-grow` in the sheet and one attribute the writer moves on an event —
+ * so what a unit test can hold is the arrival's hysteresis, the head's clock,
+ * the cover's arithmetic, and the SOURCE: that the rung is mirrored, that the
+ * mechanic is the one property, that nothing 3D survived, that every card is
+ * a real link, and that the writer renders nothing. The capture
+ * (`scripts/capture-musings-row.mjs`) checks what the browser does with it.
  */
-
-const N = 5;
-/** The owner's own viewport's face: 420 × 464 at 1920×1247. */
-const G = rowGeom(420, 464);
-/** The 961px rung's narrow, tall face — where a width-only depth would bite. */
-const NARROW = rowGeom(300, 464);
-
-const sin = (deg: number) => Math.sin((deg * Math.PI) / 180);
-
-describe("rowPose — the row, tipped back about X", () => {
-  it("stands the card being read upright on the rig's centre", () => {
-    const p = rowPose(2, N, 2, G);
-    expect(p.tilt).toBe(0);
-    expect(p.transform).toBe(
-      `perspective(${ROW_PERSPECTIVE}px) translateX(0.00px) translateZ(0.00px) rotateX(0deg)`
-    );
-  });
-
-  it("tips every other card back by ROW_TILT, about X and ONLY about X", () => {
-    // The owner, three passes running: the others are "rotated on the x-axis".
-    // U0 turned them about Y (a copy of the services ring) and U1 turned them
-    // 90° about Y (a shelf). Neither may come back through this function.
-    for (let open = 0; open < N; open++) {
-      for (let i = 0; i < N; i++) {
-        const p = rowPose(i, N, open, G);
-        expect(p.transform).not.toMatch(/rotateY|rotateZ|rotate\(/);
-        expect(p.tilt).toBe(i === open ? 0 : ROW_TILT);
-        expect(p.transform).toContain(`rotateX(${i === open ? 0 : ROW_TILT}deg)`);
-      }
-    }
-    // Positive rotateX carries the card's TOP away from the reader.
-    expect(ROW_TILT).toBeGreaterThan(0);
-    expect(ROW_TILT).toBeLessThan(90);
-  });
-
-  it("seats the row symmetrically about the card being read", () => {
-    for (let k = 1; k <= 3; k++) {
-      const a = rowSeat(-k, G);
-      const b = rowSeat(k, G);
-      expect(a.dx).toBeCloseTo(-b.dx, 9);
-      expect(a.z).toBeCloseTo(b.z, 9);
-      expect(b.dx).toBeGreaterThan(0);
-    }
-  });
-
-  it("recedes and spreads monotonically with the distance from the centre", () => {
-    let prevDx = 0;
-    let prevZ = 0;
-    for (let k = 1; k <= 6; k++) {
-      const s = rowSeat(k, G);
-      expect(s.dx).toBeGreaterThan(prevDx);
-      expect(s.z).toBeGreaterThan(prevZ);
-      prevDx = s.dx;
-      prevZ = s.z;
-    }
-  });
-
-  it("keeps every tipped card's near edge BEHIND the upright one, so no two planes intersect", () => {
-    // ⚠ A tipped card swings its bottom edge toward the reader by (h/2)·sin(tilt).
-    // Across the upright card's plane the browser splits the two and the
-    // neighbour prints THROUGH the card being read. The depth is floored on the
-    // HEIGHT for exactly the narrow, tall face of the 961px rung.
-    for (const g of [G, NARROW, rowGeom(333, 374), rowGeom(420, 336)]) {
-      for (let k = 1; k <= 4; k++) {
-        const near = -rowSeat(k, g).z + (g.h / 2) * sin(ROW_TILT);
-        expect(near).toBeLessThanOrEqual(-ROW_DEPTH_CLEAR + 1e-9);
-      }
-    }
-    expect(rowNearDepth(NARROW)).toBeGreaterThanOrEqual((NARROW.h / 2) * sin(ROW_TILT));
-  });
-
-  it("uses ONE function list in ONE order for both states: the eye first, the tip last", () => {
-    // ⚠ A transition interpolates function by function only when the two lists
-    // match; a list that changed between upright and tipped would SNAP at every
-    // detent. The perspective is FIRST so every card is seen from one eye (all
-    // are seated on the rig's centre), and the rotation is LAST so it turns the
-    // card about its own centre at its seat.
-    const shape = (t: string) => t.replace(/-?\d+(\.\d+)?/g, "#");
-    const up = rowPose(1, N, 1, G).transform;
-    const tipped = rowPose(3, N, 1, G).transform;
-    expect(shape(up)).toBe(shape(tipped));
-    for (const t of [up, tipped]) {
-      expect(t.startsWith(`perspective(${ROW_PERSPECTIVE}px) `)).toBe(true);
-      expect(t.indexOf("perspective(")).toBeLessThan(t.indexOf("translateX"));
-      expect(t.indexOf("translateX")).toBeLessThan(t.indexOf("translateZ"));
-      expect(t.indexOf("translateZ")).toBeLessThan(t.indexOf("rotateX"));
-    }
-  });
-
-  it("paints the card being read over its neighbours, and each step out under the last", () => {
-    expect(rowPose(2, N, 2, G).zIndex).toBeGreaterThan(rowPose(3, N, 2, G).zIndex);
-    expect(rowPose(3, N, 2, G).zIndex).toBeGreaterThan(rowPose(4, N, 2, G).zIndex);
-    expect(rowPose(1, N, 2, G).zIndex).toBe(rowPose(3, N, 2, G).zIndex);
-  });
-
-  it("clamps rather than throwing on an index outside the row", () => {
-    expect(rowPose(-2, N, 0, G).transform).toBe(rowPose(0, N, 0, G).transform);
-    expect(rowPose(99, N, 0, G).transform).toBe(rowPose(N - 1, N, 0, G).transform);
-  });
-});
-
-describe("rowIndex — the detent", () => {
-  it("rounds to a whole card, per the owner's ruling", () => {
-    expect(rowIndex(0.49, N)).toBe(0);
-    expect(rowIndex(0.5, N)).toBe(1);
-    expect(rowIndex(2.7, N)).toBe(3);
-  });
-
-  it("stays on the row", () => {
-    expect(rowIndex(-3, N)).toBe(0);
-    expect(rowIndex(99, N)).toBe(N - 1);
-    expect(rowIndex(0, 0)).toBe(0);
-  });
-});
-
-describe("rowReadIndex — the reading band", () => {
-  it("holds the first card through the approach and the last to the end", () => {
-    expect(rowReadIndex(0, N)).toBe(0);
-    expect(rowReadIndex(ROW_READ[0], N)).toBe(0);
-    expect(rowReadIndex(ROW_READ[1], N)).toBeCloseTo(N - 1, 9);
-    expect(rowReadIndex(1, N)).toBeCloseTo(N - 1, 9);
-  });
-
-  it("gives every card a whole step of the band", () => {
-    const seen = new Set<number>();
-    for (let i = 0; i <= 1000; i++) seen.add(rowIndex(rowReadIndex(i / 1000, N), N));
-    expect([...seen].sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4]);
-  });
-
-  it("advances monotonically, and is safe at one card", () => {
-    let prev = -1;
-    for (let i = 0; i <= 1000; i++) {
-      const idx = rowReadIndex(i / 1000, N);
-      expect(idx).toBeGreaterThanOrEqual(prev - 1e-9);
-      prev = idx;
-    }
-    expect(rowReadIndex(0.6, 1)).toBe(0);
-  });
-});
 
 describe("rowArrive — the bounded burst", () => {
   it("opens after the head's own reveal, never with it", () => {
     // The owner's order: the text appears with a glitch effect, THEN the cards
     // come into view. The writer also holds `in` until the head has resolved.
     expect(ROW_ARRIVE_IN).toBeGreaterThan(HEAD_REVEAL_AT);
-    expect(ROW_ARRIVE_IN).toBeGreaterThan(ROW_READ[0]);
   });
 
-  it("holds the row open past the reading band's own end, and closes before the head leaves", () => {
-    // A row that shut while the last card was being read would take the
-    // reading away; a head that left before the cards would be the entry
-    // played in the wrong order.
-    expect(ROW_ARRIVE_END).toBeGreaterThan(ROW_READ[1]);
-    expect(rowArrive("in", ROW_READ[1])).toBe("in");
+  it("is re-solved for the ONE dwell, not the detented runway", () => {
+    // ADR-119 U2 opened at 0.26 of a runway that grew a step per card; the row
+    // pins for one 60svh dwell, and 0.26 of that would hold the cards shut for
+    // 16svh after the head had resolved. Inside the first eighth of the dwell.
+    expect(ROW_ARRIVE_IN).toBeGreaterThanOrEqual(0.05);
+    expect(ROW_ARRIVE_IN).toBeLessThanOrEqual(0.125);
+  });
+
+  it("closes at 0.95, before the head leaves, so the exit is the entry backwards", () => {
+    expect(ROW_ARRIVE_END).toBe(0.95);
     expect(ROW_ARRIVE_END).toBeLessThan(HEAD_LEAVE_AT);
+    expect(rowArrive("in", 0.94)).toBe("in");
+    expect(rowArrive("in", 0.95)).toBe("out");
   });
 
   it("is a hysteresis, so resting on the edge does not re-trigger it", () => {
@@ -216,7 +69,7 @@ describe("rowArrive — the bounded burst", () => {
   });
 
   it("closes on the way back and on the way past, and re-opens either way", () => {
-    expect(rowArrive("in", 0.1)).toBe("out");
+    expect(rowArrive("in", 0.01)).toBe("out");
     expect(rowArrive("in", 0.99)).toBe("out");
     expect(rowArrive("out", 0.5)).toBe("in");
   });
@@ -224,9 +77,9 @@ describe("rowArrive — the bounded burst", () => {
   it("keeps `await` and `out` APART", () => {
     // ⚠ Both paint nothing, but `out` plays the close and `await` has never
     // been seen — collapsing them shuts the row on the way IN.
-    expect(rowArrive("await", 0.1)).toBe("await");
+    expect(rowArrive("await", 0.01)).toBe("await");
     expect(rowArrive("await", 0.99)).toBe("await");
-    expect(rowArrive("out", 0.1)).toBe("out");
+    expect(rowArrive("out", 0.01)).toBe("out");
   });
 
   it("seeds `in` on a deep reload past the threshold, never `await`", () => {
@@ -485,90 +338,127 @@ describe("cover — the drawn record", () => {
   });
 });
 
-describe("the rung is mirrored by hand, so pin it", () => {
+describe("the row's window", () => {
+  it("draws at most seven — a strip costs the open card its width, not the page its length", () => {
+    expect(MUSINGS_ROW_MAX).toBe(7);
+  });
+});
+
+/* ── The source ratchets ───────────────────────────────────────────────── */
+
+describe("the row is mirrored by hand between the writer and the sheet, so pin it", () => {
   const ROOT = join(__dirname, "..", "..");
   const read = (rel: string) => readFileSync(join(ROOT, rel), "utf8");
 
   const HOOK = "components/landing/home-v2/musings/useMusingsScroll.ts";
   const SHEET = "components/landing/home-v2/musings/musings.css";
   const CARD = "components/landing/home-v2/musings/MusingCard.tsx";
+  const STATION = "components/landing/home-v2/musings/MusingsStation.tsx";
+  const THEME = "components/landing/v7/theme.css";
   const RUNG = "(min-width: 961px) and (prefers-reduced-motion: no-preference)";
 
+  /** The sheet with its comments stripped — a comment quoting a banned word is not a rule. */
+  const rules = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "");
+  /** Every `selector { body }` pair in a sheet, comments stripped. */
+  const blocks = (css: string) => [...rules(css).matchAll(/([^{}]*)\{([^{}]*)\}/g)];
+  /** The body of the first block whose selector, trimmed, is `sel`. */
+  const bodyOf = (css: string, sel: string) =>
+    blocks(css).find(([, s]) => s.trim() === sel)?.[2] ?? "";
+
   it("the writer and the sheet name the SAME query", () => {
-    // A writer and a sheet that disagree about the rung is a row posed in 3D
-    // inside a box laid out as a flat rail, or a flat rail whose cards have
-    // been given absolute seats. Neither errors and neither is visible in a
-    // still taken at the other rung.
-    expect(read(HOOK)).toContain(`MUSINGS_RACK_MEDIA = "${RUNG}"`);
+    // A writer and a sheet that disagree about the rung is a row of strips
+    // nothing will ever open, or a rail whose cards have been given a grow.
+    // Neither errors and neither is visible in a still taken at the other rung.
+    expect(read(HOOK)).toContain(`MUSINGS_ROW_MEDIA = "${RUNG}"`);
     expect(read(SHEET)).toContain(`@media ${RUNG} {`);
   });
 
-  it("the shelf's spine and yaw are GONE, from the sheet, the card and the writer", () => {
-    // ADR-119 U2 — "I don't want a physical shelf or whatever". A spine that
-    // came back would be a second lettered plane beside every card, and the
-    // yaw a lean the symmetric row does not have.
-    for (const src of [read(SHEET), read(CARD), read(HOOK)]) {
-      expect(src).not.toMatch(/mu-card__spine/);
-      expect(src).not.toMatch(/--mu-drift|--mu-spine|--mu-shelf-gap/);
+  it("the mechanic is ONE transitioned property — flex-grow — on the row rung", () => {
+    // Lighthouse HQ's row measured: `flex: 0 0 <strip>` on every card and
+    // `flex-grow` transitioned on the active one. Nothing is posed, nothing
+    // is measured, nothing is written per frame.
+    const sheet = read(SHEET);
+    const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
+    const card = bodyOf(rung, ".mu[data-mu-ready] .mu-card");
+    expect(card).toMatch(/flex:\s*0 0 var\(--mu-closed\)/);
+    expect(card).toMatch(/transition:\s*flex-grow var\(--mu-grow\)/);
+    expect(card).not.toMatch(/transition:[^;]*(width|transform)/);
+    expect(bodyOf(rung, ".mu[data-mu-ready] .mu-card[data-mu-open]")).toMatch(/flex-grow:\s*1/);
+    expect(bodyOf(sheet, ".mu")).toMatch(/--mu-grow:\s*900ms cubic-bezier\(0\.19, 1, 0\.22, 1\)/);
+  });
+
+  it("nothing 3D survives — no perspective, no rotation, no 3D context, no edge fade", () => {
+    // ADR-119's rack, shelf and row are all retired with the form (ADR-121).
+    // A `perspective` or a `rotateX` that came back would be the jukebox
+    // returning under a new name; a mask on the row would be its edge fade.
+    for (const src of [read(SHEET), read(CARD), read(STATION), read(HOOK)]) {
+      const s = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+      expect(s).not.toMatch(/perspective/);
+      expect(s).not.toMatch(/rotate[XYZ]?\(/);
+      expect(s).not.toMatch(/translateZ|preserve-3d|transform-style/);
+      expect(s).not.toMatch(/mu__window|mu__rig|mu__rack|data-mu-tilt|muTilt|data-mu-front/);
+      expect(s).not.toMatch(/--mu-step|--mu-tail|--mu-i\b|data-mu-card/);
+      expect(s).not.toMatch(/rowMath|rowPose|rowGeom/);
     }
-    expect(read(SHEET)).not.toMatch(/rotateY\(/);
-  });
-
-  it("seats every card on the rig's CENTRE, because that is the eye", () => {
-    // ⚠ `rowPose` opens on `perspective()`, which projects about the card's own
-    // transform-origin — its centre. `inset: 0; margin: auto` puts that centre
-    // on the rig's centre for every card, so the row shares one view; U1's
-    // `left: 0` seat would have put the row half a band out and given every
-    // card its own vanishing point (U2: "the entire stack … should be centered").
-    const sheet = read(SHEET);
-    const rung = sheet.slice(sheet.indexOf(`@media ${RUNG} {`));
-    const card = rung.match(/\.mu\[data-mu-ready\] \.mu-card \{([^}]*)\}/)?.[1] ?? "";
-    expect(card).toMatch(/inset:\s*0/);
-    expect(card).toMatch(/margin:\s*auto/);
-    expect(card).toMatch(/transform-origin:\s*50% 50%/);
-    expect(card).not.toMatch(/left:\s*(0|50%)/);
-  });
-
-  it("declares NO ancestor perspective and NO shared 3D context — each card owns its eye", () => {
-    // ⚠ MEASURED: with `perspective` on `.mu__rig` over a `preserve-3d` rack,
-    // the compositor inside this sticky, promoted stage painted a tipped card's
-    // cover glyph ~125px right and ~140px below its own reported rect — each
-    // neighbour a 30px sliver under the mid-line, every geometry gate green.
-    // The perspective lives in each card's own matrix now (`rowPose`), where it
-    // is resolved in one place.
-    const rules = read(SHEET).replace(/\/\*[\s\S]*?\*\//g, "");
-    expect(rules).not.toMatch(/(^|[\s;{])perspective\s*:/);
-    expect(rules).not.toMatch(/preserve-3d/);
-    expect(rowPose(0, N, 1, G).transform).toMatch(/^perspective\(\d+px\) /);
-  });
-
-  it("puts the edge fade on the window, never on the rig, the rack or a card", () => {
-    // A mask hides everything outside its box and flattens what is inside it;
-    // it belongs to the one box whose job is the band's edge.
-    const sheet = read(SHEET);
-    const blocks = [...sheet.matchAll(/([^{}]*)\{([^{}]*)\}/g)];
-    for (const [, sel, body] of blocks) {
-      if (/mask-image/.test(body)) expect(sel).not.toMatch(/\.mu__(rig|rack)\s*$|\.mu-card\s*$/);
+    // The only mask left in the sheet is the masthead's own dot-grid lift.
+    for (const [, sel, body] of blocks(read(SHEET))) {
+      if (/mask-image/.test(body)) expect(sel.trim()).toBe(".mu__grid");
     }
-    expect(sheet).toMatch(/\.mu__window \{[^}]*mask-image/);
+    // And the writer assigns no per-card style at all.
+    expect(read(HOOK)).not.toMatch(/style\.(transform|zIndex|opacity|filter)\s*=/);
   });
 
-  it("the pivot carries NO grouping property, on any rung", () => {
-    // ⚠ `overflow` other than visible, `clip-path` other than none, an
-    // `opacity` under 1 and a `filter` other than none each force
-    // `transform-style: flat` on the element that declares them (CSS
-    // Transforms 2 sec. 3). The face takes them; the pivot stays a transform.
+  it("`data-mu-open` is rendered on the NEWEST post, and every card is a real link", () => {
+    // The owner's rest state: the newest is open, no timer — rendered by React
+    // so SSR / no-JS / PRM show the finished row. ⚠ And no card is hidden from
+    // the keyboard: ADR-119's `tabIndex={-1}` + `aria-hidden` on cards 1..n was
+    // an a11y bug on every parked rung, where the rail showed them.
+    // Comments stripped: the card's own header quotes the bug it fixed.
+    const card = read(CARD).replace(/\/\*[\s\S]*?\*\//g, "");
+    expect(card).toContain('data-mu-open={index === 0 ? "" : undefined}');
+    expect(card).toContain("href={`/musings/${post.slug}`}");
+    expect(card).not.toMatch(/tabIndex/);
+    expect(card).not.toMatch(/aria-hidden=\{/);
+    expect(card).not.toMatch(/isFront|data-mu-front|cardRef/);
+  });
+
+  it("the open width is solved from the SAME tokens the strip and the gap use", () => {
+    // ⚠ The body is laid out at the width the open card WILL have, so the text
+    // never reflows during the grow; the arithmetic has to be the row's own —
+    // `100cqw` of the row minus (n − 1) strips and gaps — or the two drift.
     const sheet = read(SHEET);
-    const pivots = [...sheet.matchAll(/([^{}]*)\{([^{}]*)\}/g)].filter(([, sel]) =>
-      /(^|[\s,>])\.mu-card(\[[^\]]*\])?\s*$/.test(sel)
+    const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
+    const row = bodyOf(rung, ".mu[data-mu-ready] .mu__row");
+    expect(row).toMatch(/container-type:\s*inline-size/);
+    expect(row).toMatch(
+      /--mu-open-w:\s*calc\(100cqw - \(var\(--mu-n, 1\) - 1\) \* \(var\(--mu-closed\) \+ var\(--mu-gap\)\)\)/
     );
-    expect(pivots.length).toBeGreaterThanOrEqual(2);
-    for (const [, , body] of pivots) {
-      expect(body).not.toMatch(/(^|[\s;])overflow\s*:(?!\s*visible)/);
-      expect(body).not.toMatch(/(^|[\s;])clip-path\s*:(?!\s*none)/);
-      expect(body).not.toMatch(/(^|[\s;])filter\s*:(?!\s*none)/);
-      expect(body).not.toMatch(/(^|[\s;])opacity\s*:/);
-    }
+    expect(row).toMatch(/gap:\s*var\(--mu-gap\)/);
+    expect(bodyOf(rung, ".mu[data-mu-ready] .mu-card__body")).toMatch(
+      /width:\s*var\(--mu-open-w\)/
+    );
+    // And the station hands the row its count.
+    expect(read(STATION)).toContain('"--mu-n": posts.length');
+  });
+
+  it("the writer moves ONE attribute on events and holds NO React state", () => {
+    // ADR-002: one writer, CSS custom properties. The row has no detent, so
+    // the last `setState` ADR-119 kept (the front index) is gone with it.
+    const hook = read(HOOK);
+    for (const ev of ["pointerover", "pointerleave", "focusin", "focusout"])
+      expect(hook).toContain(`addEventListener("${ev}"`);
+    expect(hook).toContain('setAttribute("data-mu-open", "")');
+    expect(hook).toContain('removeAttribute("data-mu-open")');
+    expect((hook.match(/setState\(/g) ?? []).length).toBeLessThanOrEqual(1);
+    expect(hook).not.toMatch(/useState/);
+  });
+
+  it("the writer never asks the kernel for a frame at t = 0 — the head goes through `headFrame`", () => {
+    // ⚠ The defect ADR-119 U2 fixed: `scrambleFrame(…, 0)` is NOT blank.
+    const hook = read(HOOK);
+    expect(hook).not.toMatch(/scrambleFrame\(/);
+    expect(hook).toContain("headFrame(");
+    expect(hook).not.toMatch(/advanceScrambles/);
   });
 
   it("the aperture carries the house's ONE pair of numbers, on all three hosts", () => {
@@ -599,36 +489,73 @@ describe("the rung is mirrored by hand, so pin it", () => {
     expect(read(HOOK)).toContain('removeAttribute("data-mu-arrive")');
   });
 
-  it("the writer publishes no opacity and no filter per card", () => {
-    // The row's depth is its geometry (no shading, no material, by the owner's
-    // ruling), and either as an element style would be the flattening above
-    // arriving from the writer instead of the sheet.
-    const hook = read(HOOK);
-    expect(hook).not.toMatch(/style\.opacity\s*=/);
-    expect(hook).not.toMatch(/style\.filter\s*=/);
-  });
-
-  it("the writer never asks the kernel for a frame at t = 0 — the head goes through `headFrame`", () => {
-    // ⚠ The defect this pass fixed: `scrambleFrame(…, 0)` is NOT blank.
-    const hook = read(HOOK);
-    expect(hook).not.toMatch(/scrambleFrame\(/);
-    expect(hook).toContain("headFrame(");
-    expect(hook).not.toMatch(/advanceScrambles/);
-  });
-
   it("the sheet gates every row rule on BOTH the rung and the stamp", () => {
     // `an absent stamp means shown` is the house's polarity law: the rest
     // state is the rail, which is what a phone, a reduced-motion reader and a
-    // page whose script never ran all get.
-    const sheet = read(SHEET);
+    // page whose script never ran all get. A grow on the rail would be a rail
+    // whose first card is three times the width of the rest.
+    const sheet = rules(read(SHEET));
     const rung = sheet.slice(sheet.indexOf(`@media ${RUNG} {`));
-    // The edge fade and the card's absolute seat are row rules: on the rail
-    // the one would fade a list and the other would stack every card on one spot.
-    const fade = sheet.match(/([^{}]*)\{[^{}]*linear-gradient\(\s*90deg/)?.[1] ?? "";
-    expect(fade).toContain(".mu[data-mu-ready] .mu__window");
-    expect(rung).toContain(fade.trim());
-    const seat = rung.match(/([^{}]*)\{[^{}]*inset:\s*0;\s*margin:\s*auto/)?.[1] ?? "";
-    expect(seat).toContain(".mu[data-mu-ready] .mu-card");
+    for (const [, sel, body] of blocks(sheet)) {
+      const s = sel.trim();
+      if (/flex-grow|--mu-open-w|backdrop-filter|container-type/.test(body)) {
+        expect(s, `${s} is a row rule and must carry the stamp`).toContain("[data-mu-ready]");
+        expect(rung, `${s} is a row rule and must sit inside the rung`).toContain(body);
+      }
+    }
+  });
+
+  it("the glass is on the STAGE rung only, and light drops it in theme.css BLOCK 4g", () => {
+    // ⚠ A blur over an opaque station re-snapshots every frame to frost its
+    // own stars; the plate only blurs where the corridor is alive behind it.
+    // Light has no bed to separate from, so the frost goes there too — with
+    // a selector that OUT-RANKS the sheet's (1,4,0), or it loses silently.
+    const sheet = rules(read(SHEET));
+    for (const [, sel, body] of blocks(sheet)) {
+      if (/backdrop-filter/.test(body)) {
+        expect(sel.trim()).toBe(
+          '#musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-card__front'
+        );
+        expect(body).not.toMatch(/brightness/);
+      }
+    }
+    expect(sheet).toMatch(/@supports \(backdrop-filter: blur\(2px\)\)/);
+    const theme = rules(read(THEME));
+    expect(theme).toMatch(/html\[data-theme="light"\] \.mu \{[^}]*--mu-bloom-a:/);
+    const light = bodyOf(
+      theme,
+      'html[data-theme="light"] #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-card__front'
+    );
+    expect(light).toMatch(/backdrop-filter:\s*none/);
+  });
+
+  it("the state is the ring, never a filter on the strips", () => {
+    // The reference dims its inactive cards with `brightness(.82)`; a
+    // large-area brightness change on every hover is the class of motion
+    // ADR-097 U12 retired. The open card is told by its lip and its kicker.
+    const sheet = rules(read(SHEET));
+    for (const [, sel, body] of blocks(sheet)) {
+      if (/\.mu-card/.test(sel)) expect(body, sel).not.toMatch(/(^|[\s;])filter\s*:/);
+    }
+    expect(bodyOf(sheet, ".mu-card[data-mu-open] .mu-card__front::before")).toMatch(
+      /background-color:\s*var\(--gold-line\)/
+    );
+    expect(bodyOf(sheet, ".mu-card__front::before")).toMatch(/background-color:\s*var\(--mu-lip\)/);
+  });
+
+  it("the station renders ONE flex row with the cards as its direct children", () => {
+    const station = read(STATION);
+    expect(station).toContain('className="mu__row"');
+    expect(station).toMatch(/<MusingCard key=\{post\.slug\} post=\{post\} index=\{i\} \/>/);
+    expect(station).not.toMatch(/setCard|cardsRef|front/);
+  });
+
+  it("the runway is ONE dwell, and the dwell is the dial", () => {
+    const sheet = rules(read(SHEET));
+    expect(bodyOf(sheet, ".mu[data-mu-ready] .mu__runway")).toMatch(
+      /height:\s*calc\(100svh \+ var\(--mu-dwell\)\)/
+    );
+    expect(bodyOf(sheet, ".mu")).toMatch(/--mu-dwell:\s*60svh/);
   });
 
   it("the writer clears the footer's stamp on every path that stops writing", () => {
@@ -640,14 +567,5 @@ describe("the rung is mirrored by hand, so pin it", () => {
     const clears = hook.match(/removeAttribute\("data-ft-reveal"\)/g) ?? [];
     expect(clears.length).toBeGreaterThanOrEqual(3);
     expect(hook).toContain('setAttribute("data-ft-reveal"');
-  });
-
-  it("the writer holds no per-frame React state", () => {
-    // ADR-002: one writer, CSS custom properties. The detent is the ONLY thing
-    // that may re-render.
-    const hook = read(HOOK);
-    const sets = hook.match(/setState\(/g) ?? [];
-    expect(sets.length).toBeLessThanOrEqual(4);
-    expect(hook).toContain("frontRef");
   });
 });

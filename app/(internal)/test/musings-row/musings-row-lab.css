@@ -1,0 +1,100 @@
+/* /test/musings-row — the musings row's look-dev host (ADR-121).
+
+   ⚠ NOTHING HERE STYLES THE ROW. The station, its sheet and its writer are
+   production's; this sheet is the lab's own frame around them — the lead, the
+   tail, the bed the glass blurs, and the console. Tokens only, so the light
+   still is a real light still. */
+
+.mrl {
+  position: relative;
+  min-height: 100svh;
+  background: var(--void);
+  color: var(--dawn);
+  font-family: var(--font-pp-neue-montreal, system-ui, sans-serif);
+}
+
+/* One viewport of lead above the station and one of tail below it — the
+   station is in flow and the writer is a scroll writer. */
+.mrl__lead,
+.mrl__tail {
+  height: 100svh;
+  pointer-events: none;
+}
+
+/* ⚠ THE BED IS A STAND-IN FOR THE CORRIDOR'S LIGHT, NOT A COPY OF IT. On the
+   landing the station is transparent over the live canvas and the glass blurs
+   the corridor; here the same transparency shows this fixed layer — the
+   station's own ground recipe (void + stars) with the corridor's warmth as two
+   soft washes — so the frost, the plate's alpha and the lip can be read on a
+   still. Under the promoted station (z 6) by construction. */
+.mrl__bed {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--void);
+  background-image:
+    radial-gradient(60vw 48vh at 22% 38%, rgba(var(--gold-rgb), 0.16), transparent 68%),
+    radial-gradient(48vw 40vh at 76% 62%, rgba(var(--dawn-rgb), 0.12), transparent 66%),
+    radial-gradient(rgba(var(--dawn-rgb), 0.22) 1px, transparent 1.6px), url("/v7-stars.svg");
+  background-size:
+    auto,
+    auto,
+    22px 22px,
+    1600px 900px;
+  background-position:
+    center,
+    center,
+    center,
+    center top;
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+}
+
+.mrl__stations {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── The console ──────────────────────────────────────────────────────── */
+.mrl-console {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  z-index: 80;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.2);
+  background: rgba(var(--void-deep-rgb), 0.86);
+  font-family: var(--font-pt-mono);
+  font-size: 10px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: rgba(var(--dawn-rgb), 0.74);
+}
+.mrl-console__title {
+  padding-right: 8px;
+  border-right: 1px solid rgba(var(--dawn-rgb), 0.16);
+  color: var(--gold-ink);
+}
+.mrl-console__row {
+  display: flex;
+  gap: 4px;
+}
+.mrl-btn {
+  appearance: none;
+  padding: 4px 9px;
+  border: 1px solid rgba(var(--dawn-rgb), 0.2);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.mrl-btn[data-on] {
+  border-color: var(--gold-line);
+  color: var(--dawn);
+}

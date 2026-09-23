@@ -1,34 +1,38 @@
 /* ═══════════════════════════════════════════════════════════════════
-   THE MUSINGS ROW — `#musings`, the writing as a row you scroll (ADR-119 U2)
+   THE MUSINGS ROW — `#musings`, the writing as a row that opens on hover
+   (ADR-121)
 
-   Owner, 2026-09-22: the post in view is a clean card with a thumbnail, a
-   title and a summary; the others are "rotated on the x-axis" — a jukebox /
-   carousel / rolodex. His pick after U0's fan and U1's shelf: the card being
-   read upright and CENTRED, the others left and right of it TIPPED BACK about
-   their horizontal axis, flat panes with no skeuomorphism, the row sliding
-   sideways as the reader scrolls. The head decodes in place, like the
-   services masthead, and never travels.
+   Owner, 2026-09-23, on ADR-119's 3D row: "what we currently have looks
+   ugly … remove the jukebox carousel thing because it's not working. I just
+   want to do something simpler." The reference is Lighthouse HQ's customer
+   row — a flex row where the card under the pointer takes the free width and
+   the rest collapse to narrow strips, ONE transitioned property — re-cut in
+   the house material: the proof card's glass, the top-right notch, the flat
+   gold lip, the scanline under the copy. The head decodes in place, like the
+   services masthead, and never travels; the cards arrive on the aperture
+   after it. At rest the NEWEST post is open, and there is no timer.
 
    ⚠ TOKENS ONLY, FROM LINE ONE. Every colour is a ramp step off
    `--dawn-rgb` / `--void-rgb` / `--void-deep-rgb` / `--gold-rgb` /
    `--gold-line`, which ADR-058 SWAPS — so one set of declarations paints
-   cream on near-black and ink on parchment, and `theme.css` carries NO block
-   for this sheet. Every letter-spacing is an ADR-092 role token and every
-   weight is at or under `--weight-lit`. `type-material-tokens` and
-   `theme-css-sweep` pin it at zero, registered the hour it was written: that
-   is the only way a sheet enters those maps (`proof-stack.css` sat in neither
-   for a week while its own header claimed both).
+   cream on near-black and ink on parchment. `theme.css` carries two blocks
+   for this sheet: 4e (the quietest text rung, ADR-119 U3) and 4g (the glass
+   — the bloom's alpha and the blur, which light drops, ADR-121). Every
+   letter-spacing is an ADR-092 role token but one (`.mu__title`, recorded)
+   and every weight is at or under `--weight-lit`. `type-material-tokens`,
+   `theme-css-sweep` and `phone-viewport-units` all carry this file.
 
-   ⚠ THE STATION IS THE CORRIDOR'S OPAQUE COVER (ADR-119 §4). Its ground and
-   stars are `.station:not(.hero)`'s own and are NOT touched here — the
-   handoff guard asserts the cover has `alpha === 1` AND a background image,
-   and a station whose only ground is its content fails both.
+   ⚠ THE STATION IS THE CORRIDOR'S OPAQUE COVER OFF THE STAGE RUNG (ADR-119
+   §4), AND ITS BAND IS THE COVER ON IT (ADR-119 U1). The ground and stars
+   are `.station:not(.hero)`'s own and are NOT touched here — the handoff
+   guard asserts the cover has `alpha === 1` AND a background image, and a
+   station whose only ground is its content fails both.
 
    ⚠ AN ABSENT `data-mu-ready` MEANS SHOWN. The rest state — no script, a
    reduced-motion reader, any phone — is a horizontal RAIL of the same cards,
-   and it is the finished page rather than a fallback. Everything 3D is gated
-   on the stamp AND on the rung, so the two can never disagree about which
-   layout is live.
+   and it is the finished page rather than a fallback. Every row rule is
+   gated on the stamp AND on the rung, so the two can never disagree about
+   which layout is live.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── The station's own box ───────────────────────────────────────────
@@ -40,11 +44,11 @@
 
    ⚠ AND IT GIVES UP `content-visibility`. `.station:not(.hero)` pairs
    `content-visibility: auto` with a ONE-VIEWPORT intrinsic guess, and this
-   station is three to four — the browser corrects it the moment the station
-   enters the rendering window and the document reflows under the reader.
-   The cover also keys on this station's RECT, and a 100vh placeholder for a
-   four-viewport box puts the corridor's kill edge where the reader is not
-   (ADR-105's own reason, one station along). */
+   station is two and a half on the stage rung — the browser corrects it the
+   moment the station enters the rendering window and the document reflows
+   under the reader. The cover also keys on this station's RECT, and a 100vh
+   placeholder for a taller box puts the corridor's kill edge where the
+   reader is not (ADR-105's own reason, one station along). */
 #musings.station {
   --station-pad-top: 0px;
   --station-pad-bottom: 0px;
@@ -55,7 +59,7 @@
      THE OTHER HALF OF THE FOOTER'S BED (ADR-105 U3). `.station:not(.hero)`
      declares `z-index: 2` on a STATIC box, where it is inert; the footer
      below is `position: sticky; z-index: 0` while armed, so without a
-     positioned station above it the held plate would paint over the rack it
+     positioned station above it the held plate would paint over the row it
      is meant to be uncovered by. Declared here rather than in the
      corridor-exit cover rule because that rule only holds while
      `data-corridor-exit` is true, and the footer stays held long after the
@@ -77,14 +81,26 @@
   --mu-draw: rgba(var(--dawn-rgb), 0.5);
   --mu-rule: rgba(var(--dawn-rgb), 0.16);
   --mu-rule-soft: rgba(var(--dawn-rgb), 0.1);
-  /* ⚠ THE PLATE IS SOLID, BY THE OWNER'S RULING, AND 0.62 WAS TUNED
-     AGAINST AN OPAQUE STATION. The card sits over the LIVE corridor now, and
-     nothing mechanical can measure a translucent plate against a moving
-     canvas — the gate composites against a background COLOUR. A near-opaque
-     ground is the one value that reads the same at every frame of the
-     corridor behind it; the whisper that is left is what keeps it a plate on
-     a stage rather than a hole cut through one. */
-  --mu-plate: rgba(var(--void-deep-rgb), 0.94);
+
+  /* ── THE CARD IS THE PROOF CARD'S FOLDER SKIN, RE-SOLVED FOR THIS SIZE
+     (ADR-097 → ADR-121). ONE dial for the glass: the plate is a tint of the
+     page's own deep step, so it stays a tint of whatever ground it sits on
+     across the flip. ADR-119 U1 took the plate to .94 because "nothing
+     mechanical can read a translucent plate over a live canvas" — true, and
+     the gate still composites against a background colour; what changed is
+     the owner's ask ("that sort of glass-like effect"), and the card's own
+     ink is measured on the rail, where the station is opaque. */
+  --mu-glass-a: 0.62;
+  --mu-plate: rgba(var(--void-deep-rgb), var(--mu-glass-a));
+  --mu-blur: 14px;
+  /* The lip: FLAT, the housing's own value (ADR-092 stage 1 U1). `--gold-line`
+     is the ramp's LINE step — byte-equal to `--gold` in dark and the parchment
+     value in light — so the lip re-derives with no theme branch. At rest it is
+     30 % of that; the open card takes the whole line. */
+  --mu-lip: color-mix(in srgb, var(--gold-line) 30%, transparent);
+  /* A corner catching light, at the plate's own alpha; light lowers it. */
+  --mu-bloom-a: 0.13;
+  /* The way out's border — a control, not a card, so it keeps the dawn edge. */
   --mu-edge: rgba(var(--dawn-rgb), 0.2);
 
   /* One type ladder. Chrome is PT Mono, prose is PP Neue Montreal — two
@@ -98,27 +114,46 @@
   /* The card, and the corner. ⚠ ONE NOTCH, TOP-RIGHT — his corner every
      time (ADR-097's proof card, ADR-098 U5's plates, ADR-082 U37's record
      cards). `--mu-chi` is the RING's inner leg: insetting a 45° cut by `d`
-     shortens its leg by `d(2 − √2)` ≈ 0.586d, so it is not `ch − 1px`. */
+     shortens its leg by `d(2 − √2)` ≈ 0.586d, so it is not `ch − 1px`.
+     `--mu-card-w` is the RAIL's card; on the row a card's width is the row's
+     arithmetic (`--mu-closed`, or the free width). */
   --mu-card-w: clamp(300px, 26vw, 420px);
   --mu-card-h: clamp(336px, 52svh, 464px);
   --mu-ch: clamp(14px, 1.6vw, 22px);
   --mu-chi: calc(var(--mu-ch) - 0.586px);
 
-  /* The runway. ⚠ THE STEP IS THE ONE DIAL AND IT COSTS PAGE LENGTH:
-     every card adds `--mu-step` of document. At five posts the station is
-     ~3.2 viewports, at seven ~4.0. The reading band is 70 % of the travel
-     (`ROW_READ` in `rowMath.ts`), so a step of 42svh gives each card
-     about 0.4 of a viewport to be read in. */
-  --mu-step: 42svh;
-  /* ⚠ RE-SOLVED FOR THE BAND (ADR-119 U1), NOT INHERITED. It was 55svh of
-     trailing slack that let the last card dwell before the station ended. On
-     the stage rung the station is transparent and the BAND is what follows, so
-     55svh of held, empty, transparent frame between the row closing and the
-     band's edge is dead scroll over a corridor the reader has finished with.
-     18svh is the dwell the last card actually needs; the band supplies the
-     rest of the ending. Off the stage rung there is no band, so the original
-     slack is restored below. */
-  --mu-tail: 18svh;
+  /* ── THE ROW'S DIALS (ADR-121), the reference's own three numbers re-solved
+     for the band. A closed card is a STRIP wide enough for the head of each
+     line ("14 SEP", the glyph whole); the gap is the reference's 10px scaled;
+     the grow is the reference's expo-out (`cubic-bezier(0.19, 1, 0.22, 1)`,
+     1.1s there) at 900ms for ~350px of edge travel. ⚠ THE APERTURE'S CURVE IS
+     DELIBERATELY NOT COPIED HERE: an ease-in-out is right for an arrival the
+     reader did not cause, and wrong for a pointer response, which wants an
+     immediate start — the expo-out moves 84 % of the way in its first sixth
+     and settles over the rest, so the row answers the hand at once and comes
+     to rest without a snap. The house's 720ms ease-in-out pair is the
+     alternative for the owner's read. */
+  --mu-closed: clamp(88px, 7.5vw, 120px);
+  --mu-gap: clamp(10px, 1vw, 16px);
+  --mu-grow: 900ms cubic-bezier(0.19, 1, 0.22, 1);
+  /* The cover is a FIXED-HEIGHT BAND on every card, so all five covers end on
+     one datum and all five kickers share a baseline across the row. ~46 % of
+     the card; the body takes the rest. Consumed on the row rung only — the
+     rail's cover keeps its aspect, and on the phone `--mu-card-h` is `auto`. */
+  --mu-cover-h: calc(var(--mu-card-h) * 0.46);
+  /* The beat glyph at a FIXED size, whole inside the narrowest strip (88px)
+     with air either side; a percentage would resize it through the grow. */
+  --mu-glyph: clamp(52px, 4.4vw, 80px);
+
+  /* The runway. ⚠ THE DWELL IS THE ONE DIAL (ADR-121). ADR-119 pinned the
+     stage for one step per card (42svh each, plus a tail), which is what a
+     detent needs and a hover row does not: the reader opens cards with the
+     pointer, not the wheel. One dwell holds the stage long enough for the
+     head to decode (~0.7s) and the cards to arrive, and gives the reader a
+     parked frame to hover in before the band takes over. On the stage rung
+     the station is ~1.6 viewports plus its 100svh band; at five posts
+     ADR-119 U2 was ~3.2. */
+  --mu-dwell: 60svh;
 
   /* ⚠ DECLARED, NOT INHERITED — ADR-067's STANDING TRAP, AND THE MECHANICAL
      GATE FOUND IT HERE EXACTLY AS IT FOUND IT ON THE FOOTER (ADR-105). The
@@ -141,13 +176,13 @@
 }
 
 /* ⚠ THE PIN IS GATED ON THE WRITTEN STAMP, the `#voidwalker[data-vw-mode]`
-   recipe: the geometry and the poser turn on together, so there is never a
-   frame of a pinned stage holding cards nothing has posed. The document
+   recipe: the geometry and the writer turn on together, so there is never a
+   frame of a pinned stage holding cards nothing will ever open. The document
    grows by the runway at hydration, exactly as the corridor's lazy chunks
    already grow it — every scroll helper on this page re-solves rather than
    trusting one measured `y`. */
 .mu[data-mu-ready] .mu__runway {
-  height: calc(100svh + (var(--mu-n, 1) - 1) * var(--mu-step) + var(--mu-tail));
+  height: calc(100svh + var(--mu-dwell));
 }
 .mu[data-mu-ready] .mu__stage {
   position: sticky;
@@ -190,17 +225,13 @@
   background-position: center top;
   background-repeat: repeat;
 }
-/* The runway keeps its original trailing dwell where no band follows it. */
-#musings:not([data-mu-mode="stage"]) .mu {
-  --mu-tail: 55svh;
-}
 
 /* ⚠ THREE CONTENT-HEIGHT ROWS, CENTRED AS ONE GROUP — NEVER A `1fr` MIDDLE.
-   The first cut gave the rack row `minmax(0, 1fr)`, which is the same
+   The first cut gave the row's track `minmax(0, 1fr)`, which is the same
    slack-pooling defect this house has now measured four times (ADR-070 U14's
    tail share, ADR-069 U1's title baseline, ADR-088's directory seams): the
    frame is 1247px at the owner's viewport and the content is 613, so the 1fr
-   row absorbed all 634px of surplus and centred the rack inside it — putting
+   row absorbed all 634px of surplus and centred the row inside it — putting
    **205px between the masthead's baseline and the top card** and the same
    again above the button. Measured on the still: three disconnected objects
    with two holes between them.
@@ -505,15 +536,12 @@
   }
 }
 
-/* ── The rig ─────────────────────────────────────────────────────────
+/* ── The row ─────────────────────────────────────────────────────────
    Rest: a rail. The cards are in flow, the box scrolls sideways, and each
    card is a snap stop. ⚠ `touch-action: pan-y` hands nothing horizontal to
    the page (mobile-sections.md §9 — the root clips at ≤960 and a gesture
    inside a clipped reel must not pan the document). */
-.mu__rig {
-  min-width: 0;
-}
-.mu__rack {
+.mu__row {
   display: flex;
   align-items: stretch;
   gap: clamp(14px, 1.6vw, 28px);
@@ -524,28 +552,15 @@
   padding-block: 4px;
   scrollbar-width: none;
 }
-.mu__rack::-webkit-scrollbar {
+.mu__row::-webkit-scrollbar {
   display: none;
 }
 
 /* ── The card ────────────────────────────────────────────────────────
-   ⚠ NO `backdrop-filter`. The proof card can afford one because it is ONE
-   card; five overlapping planes inside a `preserve-3d` context, on a page
-   already running the corridor's canvas, is five backdrop SNAPSHOTS a frame
-   — and ADR-056's measurement of exactly that cost is why the casefile's
-   blur waits for `data-proof-settled`. The plate is a flat translucent
-   ground instead, which reads the same at this size. */
-/* ⚠ THE PIVOT CARRIES A TRANSFORM AND NOTHING ELSE. `overflow` other than
-   `visible`, `clip-path` other than `none`, an `opacity` under 1 and a
-   `filter` other than `none` are each GROUPING properties: they force
-   `transform-style: flat` on the element that declares them, whatever that
-   element also says about `preserve-3d` (CSS Transforms 2 sec. 3). U1's
-   shelf found this the hard way — a flattened pivot rendered its 90° spine as
-   a zero-width strip with every geometry gate green. The row's card is one
-   pane now, but the law stays: the face takes `overflow` and the clip, and
-   the pivot stays a transform so the card keeps its place in the row's one 3D
-   context. The row's depth is its geometry (ADR-119 U2: no shading, no
-   material), so there is no per-card opacity or blur to publish either. */
+   Two elements, two jobs: the CARD is the link and the flex item whose
+   `flex-grow` transitions on the row rung; the FACE carries the material —
+   the plate, the clip, the ring, the glass — and the arrival's aperture. The
+   two never fight over one box. */
 .mu-card {
   position: relative;
   flex: 0 0 auto;
@@ -558,11 +573,38 @@
   text-decoration: none;
 }
 
+/* ⚠ THE FACE IS THE PROOF CARD'S FOLDER, AT CARD SCALE (ADR-097 → ADR-121):
+   the plate's own scanline UNDER the copy (a card of prose is not a screen
+   you look into), a corner catching light stated in PIXELS and re-solved for
+   a card that is 88px shut and ~650px open (`260px 180px` hung 60px in from
+   the top-right; the proof card's `460px 300px at −90px` lit a whole quadrant
+   here), then the glass. ⚠ NO `border` — a clip CUTS a border and never
+   strokes one; the rule is the clipped RING below. ⚠ And no padded-gradient
+   SHELL: on a translucent body it reads straight through and lights the plate
+   warm-grey (hud-panel-lab.css measured it). */
 .mu-card__front {
+  position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  /* ⚠ THE COLUMN IS THE FACE'S WIDTH, NEVER THE BODY'S. The body carries a
+     DEFINITE width (`--mu-open-w`, ~930px at three posts) on the row rung, and
+     an `auto` column takes an item's min-content contribution as its base
+     size when that item's preferred size is definite — so the column grew to
+     the body's width, the COVER stretched with it, and its centred glyph sat
+     464px into a 120px strip: clipped, on every strip, with the row's other
+     gates green. The capture's glyph-in-strip gate caught it on the first
+     run. `minmax(0, 1fr)` sizes the track from the face's free space instead,
+     and the body overflows it, which is the point. */
+  grid-template-columns: minmax(0, 1fr);
   grid-area: 1 / 1;
-  background: var(--mu-plate);
+  background:
+    repeating-linear-gradient(to bottom, rgba(var(--gold-rgb), 0.025) 0 1px, transparent 1px 3px),
+    radial-gradient(
+      260px 180px at calc(100% - 60px) -30px,
+      rgba(var(--gold-rgb), var(--mu-bloom-a)),
+      transparent 62%
+    ),
+    var(--mu-plate);
   overflow: hidden;
   /* The silhouette: the fill is genuinely CUT, because a ring drawn over a
      square corner is a diagonal with nothing behind it. */
@@ -574,14 +616,16 @@
    line on its diagonal. Outer contour, then the inner one 1px in with its
    own shortened leg; `evenodd` makes the middle a hole.
    ⚠ BOTH CONTOURS CLOSE. Every housing on `/arcs` painted a bow-tie until
-   ADR-118 U2, because one of them did not. */
+   ADR-118 U2, because one of them did not.
+   ⚠ `background-color`, NOT `background`, so the open card's lift to the
+   whole line can TRANSITION on the row rung. */
 .mu-card__front::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: var(--mu-edge);
+  background-color: var(--mu-lip);
   clip-path: polygon(
     evenodd,
     0 0,
@@ -599,8 +643,12 @@
   );
 }
 
-.mu-card[data-mu-front] .mu-card__front::before {
-  background: var(--gold-line);
+/* ⚠ THE STATE IS THE RING, NOT A FILTER. The reference dims its inactive
+   cards with `brightness(.82)`; a large-area brightness change on every hover
+   is the class of motion ADR-097 U12 retired, so the open card is told by
+   its lip rising to the whole line (and, on the row rung, its kicker's ink). */
+.mu-card[data-mu-open] .mu-card__front::before {
+  background-color: var(--gold-line);
 }
 
 .mu-card:focus-visible {
@@ -615,6 +663,7 @@
   row-gap: clamp(6px, 0.7svh, 12px);
   padding: clamp(12px, 1.5svh, 20px) clamp(14px, 1.4vw, 22px) clamp(14px, 1.8svh, 24px);
   border-top: 1px solid var(--mu-rule);
+  min-width: 0;
 }
 .mu-card__kicker {
   font-family: var(--font-pt-mono);
@@ -622,6 +671,7 @@
   font-weight: var(--weight-text);
   letter-spacing: var(--track-label);
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--gold-ink);
 }
 /* ⚠ THE SEPARATOR INHERITS THE KICKER'S OWN INK. Dimmed to `--mu-ink-3` it
@@ -747,25 +797,29 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   THE ROW — 3D, and only where the writer is live
+   THE ROW — opens on hover, and only where the writer is live
 
-   ⚠ THE RUNG IS MIRRORED BY HAND FROM `MUSINGS_RACK_MEDIA` in
+   ⚠ THE RUNG IS MIRRORED BY HAND FROM `MUSINGS_ROW_MEDIA` in
    `useMusingsScroll.ts`, and `tests/lib/musings-row.test.ts` asserts the
    two carry the same query. A writer and a sheet that disagree about the
-   rung is a row posed in 3D inside a box laid out as a flat rail.
+   rung is a row of strips nothing will ever open, or a rail whose cards
+   have been given a grow.
 
-   ⚠ NO SHARED 3D CONTEXT, AND NO `perspective` PROPERTY — EACH CARD CARRIES
-   ITS OWN `perspective()` (`rowPose`). The first cut of this row put the
-   perspective on `.mu__rig` over a `preserve-3d` rack, as U1's shelf did, and
-   inside this sticky, promoted stage the compositor resolved it somewhere
-   other than `getBoundingClientRect` did: a tipped neighbour PAINTED as a 30px
-   sliver ~140px below its own reported rect, with every geometry gate green.
-   A perspective in the card's own matrix is resolved in one place. The cards
-   never intersect (their depth is floored so they cannot), so paint order is
-   plain z-index — the card being read over its neighbours, each step out
-   under the last.
-   ⚠ `.mu__window` holds the band's box and the edge FADE; the rig and the
-   rack are plain boxes the cards are seated in.
+   ⚠ THE MECHANIC IS ONE PROPERTY, AS THE REFERENCE: every card is
+   `flex: 0 0 --mu-closed` and the open one is `flex-grow: 1`, transitioned.
+   Nothing is posed, nothing is measured, nothing is written per frame; the
+   writer moves one attribute on an event. Mid-grow the two cards' grows sum
+   to one, so the free width is always fully distributed and no gap opens.
+
+   ⚠ THE TEXT NEVER REFLOWS DURING THE GROW. The row publishes `--mu-open-w`
+   — the width the open card WILL have, solved off the row's own inline size
+   through a container query unit — and every card's body is laid out at
+   that width once. The face's overflow clips it while the card is a strip,
+   and the grow UNCOVERS it: pure motion, no opacity, no reflow (the caption
+   card's law, and the reference's own read — the strips show the head of
+   each line). ⚠ `cqw` resolves on the element that USES the value against
+   its nearest query container, which is the row; a face or a card made a
+   container would silently re-base it.
    ═══════════════════════════════════════════════════════════════════ */
 /* ⚠ THE STATION GIVES UP ITS PADDING ON THE DESKTOP RUNG ONLY, AND THE FIRST
    CUT DECLARED IT UNCONDITIONALLY — WHICH IS THE TRAP `mobile-sections.md` §1
@@ -787,78 +841,107 @@
 }
 
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  /* ⚠ THE ROW IS CENTRED, BY THE OWNER'S RULING (ADR-119 U2: "the entire
-     stack of Musings should be centered"). U1 stood the shelf on the band's
-     left edge by a session decision; the card being read sits on the band's
-     centre now and the row slides past it. The window keeps the BAND's box —
-     the same pair `.mu__head` rides — so the centre it seats on is the page's.
-     ⚠ THE FADE IS WHAT BOUNDS THE ROW, AND IT FINISHES 3 % INSIDE THE WINDOW.
-     Cards two and more steps out reach past the band at every rung, and at
-     1280×720 the band's right edge runs 15px PAST the rail's BEARING readout
-     (U1's measurement) — a fade that ended on the edge would still lay a
-     faint plate under live telemetry. Fully transparent from 97 % out, the
-     row stops ~15px short of it there; `capture-musings-rack` asserts it.
-     ⚠ The window carries vertical PADDING because a mask hides everything
-     outside its box: without it the front card's focus ring, 3px outboard of
-     the card, would be masked away at the top and bottom edges. */
-  .mu[data-mu-ready] .mu__window {
+  /* The row takes the BAND's box — the same pair `.mu__head` rides — so the
+     head, the row and the way out share one left edge (ADR-119 U1's column,
+     kept). A flex row, the reference's own `gap`, the card's height as the
+     row's, and `overflow: visible` so the open card's focus ring, 3px
+     outboard, is not clipped by the rail's scroller. */
+  .mu[data-mu-ready] .mu__row {
     max-width: var(--band-max);
     margin-inline: var(--rail-inset);
-    padding-block: 8px;
-    -webkit-mask-image: linear-gradient(90deg, transparent 3%, #000 12%, #000 88%, transparent 97%);
-    mask-image: linear-gradient(90deg, transparent 3%, #000 12%, #000 88%, transparent 97%);
-  }
-
-  .mu[data-mu-ready] .mu__rig {
-    position: relative;
+    gap: var(--mu-gap);
     height: var(--mu-card-h);
-  }
-
-  .mu[data-mu-ready] .mu__rack {
-    position: relative;
-    display: block;
-    height: 100%;
-    min-height: var(--mu-card-h);
     overflow: visible;
-    gap: 0;
-    padding-block: 0;
     scroll-snap-type: none;
+    touch-action: auto;
+    padding-block: 0;
+    container-type: inline-size;
+    --mu-open-w: calc(100cqw - (var(--mu-n, 1) - 1) * (var(--mu-closed) + var(--mu-gap)));
   }
 
-  /* The pose is assigned by the writer. What lives here is only what the
-     writer does NOT own: the seat the transform is measured from, the
-     detent's easing, and the silhouette.
-
-     ⚠ EVERY CARD IS SEATED ON THE RIG'S CENTRE, AND THAT IS THE EYE. `inset: 0;
-     margin: auto` centres the card's own LAYOUT box, so its transform-origin
-     (its centre) is the rig's centre — which is where `rowPose`'s leading
-     `perspective()` puts the eye for every card. A seat anywhere else moves
-     that card's vanishing point with it, and the row stops sharing one view.
-     ⚠ THE ORIGIN IS THE CARD'S OWN CENTRE, so the tip turns each card about its
-     horizontal centre line — the row keeps one mid-line.
-     ⚠ THE CURVE IS THE HOUSE'S SETTLED PAIR, RE-SOLVED FOR THIS OBJECT'S SIZE
-     (ADR-097 U12): 720ms ease-in-out is half-travelled at 360ms and readable
-     end to end on a card this size. */
+  /* ⚠ ONE TRANSITIONED PROPERTY. `flex-grow` is the whole mechanic; the
+     basis is the strip and never moves, so the closed cards are exactly
+     `--mu-closed` at rest and mid-grow alike. */
   .mu[data-mu-ready] .mu-card {
-    position: absolute;
-    inset: 0;
-    margin: auto;
-    flex: none;
+    flex: 0 0 var(--mu-closed);
+    width: auto;
+    min-width: 0;
     min-height: 0;
-    height: var(--mu-card-h);
     scroll-snap-align: none;
-    transform-origin: 50% 50%;
-    transition: transform 720ms cubic-bezier(0.65, 0, 0.35, 1);
+    transition: flex-grow var(--mu-grow);
+  }
+  .mu[data-mu-ready] .mu-card[data-mu-open] {
+    flex-grow: 1;
   }
 
-  /* The way out centres under the row it belongs to. */
-  .mu[data-mu-ready] .mu__foot {
-    text-align: center;
+  /* The lip lifts to the whole line and the kicker takes the gold; a strip
+     keeps its kicker on the quiet text rung, so the row carries ONE gold
+     line of chrome — the open card's. Both are colour, neither is motion. */
+  .mu[data-mu-ready] .mu-card__front::before {
+    transition: background-color 360ms ease;
+  }
+  .mu[data-mu-ready] .mu-card__kicker {
+    color: var(--mu-ink-3);
+    transition: color 360ms ease;
+  }
+  .mu[data-mu-ready] .mu-card[data-mu-open] .mu-card__kicker {
+    color: var(--gold-ink);
+  }
+
+  /* The body at the OPEN width, on every card, clipped by the face. The
+     copy caps its own measure inside it. ⚠ The lede's clamp is a BELT (a
+     summary is one sentence, three lines at the narrowest open card), never
+     a layout lever: it keeps the face's clip from taking half a line at the
+     floor. */
+  .mu[data-mu-ready] .mu-card__body {
+    width: var(--mu-open-w);
+  }
+  .mu[data-mu-ready] .mu-card__title,
+  .mu[data-mu-ready] .mu-card__lede {
+    max-width: 56ch;
+  }
+  .mu[data-mu-ready] .mu-card__lede {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+  }
+
+  /* The cover is a fixed-height band on every card, the glyph at a fixed
+     size centred in it (whole inside the narrowest strip), the date axis
+     spanning whatever width the card has with the lit mark at its year
+     fraction — so five covers end on one datum and the kickers share a
+     baseline across the row. */
+  .mu[data-mu-ready] .mu-cover {
+    aspect-ratio: auto;
+    height: var(--mu-cover-h);
+  }
+  .mu[data-mu-ready] .mu-cover__beat {
+    width: var(--mu-glyph);
+  }
+
+  /* ── THE GLASS (ADR-121). ⚠ ON THE STAGE RUNG ONLY, WHERE THERE IS A
+     LIVE CORRIDOR TO BLUR: at 961–1100 the station is opaque and a blur
+     would re-snapshot every frame to frost its own stars. ADR-119's ban on
+     `backdrop-filter` here was argued for five OVERLAPPING 3D planes; a flat
+     row of five non-overlapping cards is one proof card's area of glass,
+     and it is MEASURED rather than assumed — `capture-musings-row.mjs
+     --perf` gates the long-frame share against the proof card's recorded
+     15 %. ⚠ NO `brightness()` (the services plate's OPEN lift, which turns a
+     ground grey — the proof card's own note). Light drops the frost in
+     `theme.css` BLOCK 4g, the bed being faded on that side. If the perf gate
+     fails, the recorded fallback is the blur on the OPEN card alone with
+     the strips at .94. */
+  @supports (backdrop-filter: blur(2px)) {
+    #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-card__front {
+      -webkit-backdrop-filter: blur(var(--mu-blur));
+      backdrop-filter: blur(var(--mu-blur));
+    }
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   THE SHELF'S ARRIVAL — a centre-out APERTURE, and nothing fades
+   THE ROW'S ARRIVAL — a centre-out APERTURE, and nothing fades
 
    Owner, on the live read: _"the text should appear with a glitch effect,
    and then the cards should come into view."_
@@ -874,10 +957,10 @@
    route's `tl-aperture*` carry the same two, and one changing alone is a
    house grammar with a different clock on one surface.
 
-   ⚠ ON THE CARD'S FACE, NEVER THE PIVOT OR THE RACK. The pivot carries the
-   pose and nothing else (the law U1's shelf was split for, kept so a shared
-   3D context can come back without a hunt), and a clip on the rack would cut
-   every card at once.
+   ⚠ ON THE CARD'S FACE, NEVER THE CARD OR THE ROW. The card's box is what
+   `flex-grow` transitions, and an animation on the same box would fight it;
+   a clip on the row would cut every card at once. Every face opens from its
+   own centre, the wide one and the strips alike, on one clock.
    ⚠ AND ON THE ROW'S RUNG ONLY. Below it the writer parks, so an `await`
    state would hide a row nothing was ever going to open.
    ═══════════════════════════════════════════════════════════════════ */
@@ -885,9 +968,7 @@
   /* ⚠ AN ABSENT STAMP MEANS SHOWN. The two hidden states paint identically
      and both are gated on the stamp's presence, so a parked writer, a page
      whose script never ran and a reduced-motion reader all get the finished
-     row (ADR-101 §A's polarity law).
-     ⚠ The HIDING may not move up to the pivot, however obvious that looks:
-     `opacity` there is a grouping property. */
+     row (ADR-101 §A's polarity law). */
   .mu[data-mu-ready][data-mu-arrive="await"] .mu-card__front,
   .mu[data-mu-ready][data-mu-arrive="out"] .mu-card__front,
   /* The way out is part of the beat, not chrome standing over it: it arrives

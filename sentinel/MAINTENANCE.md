@@ -54,6 +54,48 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-23 — the musings row opens on hover, the rack retired (ADR-121)
+
+**Trigger:** the owner, on ADR-119 U2's tipped 3D row read live: _"what we
+currently have looks ugly, so I want to remove the jukebox carousel thing
+because it's not working. I just want to do something simpler"_ — Lighthouse
+HQ's hover row, in the house material, the head's glitch kept, dead code gone,
+placeholder copy for the design while the writing track runs.
+
+- **Cycle B, in full.** ADR-121 (Proposed): the reference measured off its
+  DOM, one transitioned `flex-grow`, `data-mu-open` moved by the writer on
+  events, the body at the open width uncovered by the grow, the fixed cover
+  band, the proof card's folder skin with the glass MEASURED (0 % long frames
+  idle and hovering against the proof card's 15 %), one dwell, every card a
+  real link. `.claude/rules/musings.md` rewritten for the row; CLAUDE.md,
+  `landing-v7.md`, `voidwalker.md` and ADR-119's header re-pointed; the lab
+  `/test/musings-row` with seven placeholder records (never in
+  `content/musings/`).
+- **Q3 (a class of bug) → BEST-PRACTICES:** a definite-width grid item grows an
+  `auto` column to itself and every sibling in the column stretches with it —
+  the capture's first run found a 930px cover inside a 120px strip.
+- **Q4 (files that move together):** `MUSINGS_ROW_MEDIA` ↔ the sheet's rung
+  (pinned); `--mu-open-w` ↔ `--mu-closed` / `--mu-gap` / `--mu-n` (pinned);
+  the sheet's stage-rung glass ↔ `theme.css` BLOCK 4g (pinned by selector);
+  the four cover-lockstep readers (untouched, all naming `.mu__band`).
+- **Q5 (a runtime check that caught it earlier):** the capture gained the
+  hover / leave / Tab / no-reflow / glass / reduced-motion / `--perf` gates and
+  a second context for PRM; the glyph-in-strip gate is what found the column.
+- **Deleted, with their guards' subjects:** `lib/musings/rowMath.ts`, the
+  writer's pose loop and React state, `MusingCard`'s `isFront` / `tabIndex` /
+  `aria-hidden`, the `.mu__window > .mu__rig > .mu__rack` wrappers, the sheet's
+  3D rung, `--mu-step` / `--mu-tail`, `capture-musings-rack.mjs`.
+- **Verified:** the eight vitest suites 214/214 (`musings-row` rewritten, 51);
+  `about-voidwalker-handoff-boundaries` 8/8 · `services-ring-smoke` 11/11 ·
+  `mobile-section-seams` 14/14 on both phones · `landing-page -g "HUD"` 2/2
+  untouched; `capture-musings-row` PASS at 1920×1247 dark (+`--perf`) and
+  light, 1280×720, 390×844, and the lab at five in both themes;
+  `capture-site-footer` unmoved; `mechanical.mjs --scope ".mu" --prm` the six
+  known findings in both themes and on the lab, no seventh; `tsc` clean;
+  lint 337/337 at the ratchet.
+- ⚠ **Not pushed**: a visible design change on the live site waits for the
+  owner's word.
+
 ### 2026-09-21 — the era stage: the figure rises, the record is rebuilt, the figures are graded (ADR-082 U31)
 
 **Trigger:** the owner, on `#voidwalker`: the avatars sit too low ("what I've

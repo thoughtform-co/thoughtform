@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import { clamp01 } from "@/lib/math";
+import { rowArrive, type RowArrive } from "@/lib/musings/arrive";
 import {
   HEAD_OUT_SPEEDUP,
   headFrame,
@@ -13,56 +14,54 @@ import {
   type HeadRun,
   type HeadWant,
 } from "@/lib/musings/headDecode";
-import {
-  rowArrive,
-  rowGeom,
-  rowIndex,
-  rowPose,
-  rowReadIndex,
-  type RowArrive,
-} from "@/lib/musings/rowMath";
 import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 /**
- * The musings station's ONE scroll writer (ADR-119).
+ * The musings station's ONE scroll writer (ADR-119 → ADR-121).
  *
- * It owns everything that moves in this beat, and it publishes two kinds of
- * thing: the row's per-card pose, assigned straight onto the elements, and
- * a handful of attributes — `data-mu-ready` / `data-mu-arrive` on `.mu`,
- * `data-mu-mode` on the STATION and **`data-ft-reveal` on `<html>`**, which is
- * what arms the footer's held bed (ADR-105 U3).
+ * It owns everything that moves in this beat and it publishes ATTRIBUTES and
+ * custom properties only: `--mu-head` (the head's level), `data-mu-ready` /
+ * `data-mu-arrive` on `.mu`, `data-mu-mode` on the STATION, `data-mu-open` on
+ * ONE card, `data-live` on the head's cursor hosts, and **`data-ft-reveal` on
+ * `<html>`**, which is what arms the footer's held bed (ADR-105 U3).
  *
- * ⚠ **IT RENDERS NOTHING PER FRAME.** The only React state is the front card's
- * index, which changes at a DETENT — a handful of times across the station.
- * ADR-002's law is one writer publishing CSS custom properties.
+ * ⚠ **IT RENDERS NOTHING, EVER.** ADR-119 kept one piece of React state (the
+ * detented front index); the row has no detent, so there is none left. The
+ * open card is one attribute moved on an EVENT — `pointerover` / `focusin`
+ * per card, `pointerleave` / `focusout` on the row — never a `setState`
+ * (ADR-002: one writer, CSS custom properties). The sheet does the rest:
+ * `flex-grow` transitions on `[data-mu-open]`.
  *
- * ⚠ **THE ROW IS A PURE FUNCTION OF ONE RECT, SO SCROLLING BACK UNWINDS IT
- * EXACTLY** (ADR-021). The HEAD is the one thing here with a clock of its own
- * (ADR-119 U2): scroll decides where it is going, a bounded burst walks it
- * there, and it snaps blank the moment the stage is not parked.
+ * ⚠ **THE HEAD IS THE ONE THING HERE WITH A CLOCK OF ITS OWN** (ADR-119 U2):
+ * scroll decides where it is going, a bounded burst walks it there, and it
+ * snaps blank the moment the stage is not parked. The row's arrival is a
+ * second bounded burst on a hysteresis (`lib/musings/arrive.ts`), held until
+ * the head has resolved — the owner's order.
  *
  * ⚠ **IT READS THE LAYOUT VIEWPORT, NOT `innerHeight`** (ADR-113): the runway
  * is authored in `svh`, and on iOS `innerHeight` follows the toolbar.
  */
 
 /**
- * The rung the 3D row draws on.
+ * The rung the row opens on hover on.
  *
  * ⚠ **BYTE-EQUAL TO `SERVICES_SCROLL_OWNED_MEDIA`, AND MIRRORED BY HAND IN
  * `musings.css`.** It is not an alias of it: that constant answers "does
- * `#services` own the wheel", and coupling this station's geometry to that
+ * `#services` own the wheel", and coupling this station's layout to that
  * question would mean a change there silently re-rung this row.
  * `tests/lib/musings-row.test.ts` asserts the sheet carries the same query.
+ * Below it — every phone, and a reduced-motion reader at any width — the row
+ * rests as a flat horizontal RAIL, which is the finished page.
  */
-export const MUSINGS_RACK_MEDIA = "(min-width: 961px) and (prefers-reduced-motion: no-preference)";
+export const MUSINGS_ROW_MEDIA = "(min-width: 961px) and (prefers-reduced-motion: no-preference)";
 
 /**
  * The rung the station becomes a TRANSPARENT STAGE on (ADR-119 U1).
  *
- * ⚠ **THREE RUNGS, NOT TWO.** The row draws from 961px; the era stage is only a
+ * ⚠ **THREE RUNGS, NOT TWO.** The row opens from 961px; the era stage is only a
  * hologram from **1101px**, and this station may only go transparent where
- * there is a live corridor behind it. 961–1100 is a real rung with a 3D row
- * and an OPAQUE station.
+ * there is a live corridor behind it. 961–1100 is a real rung with a hover
+ * row and an OPAQUE station.
  *
  * ⚠ **THE ERA'S MODE IS READ OFF THE DOM, NEVER COPIED AS A FLAG** —
  * `#voidwalker[data-vw-mode="hologram"]` is written under the era's own full
@@ -70,13 +69,6 @@ export const MUSINGS_RACK_MEDIA = "(min-width: 961px) and (prefers-reduced-motio
  */
 export const MUSINGS_STAGE_MEDIA =
   "(min-width: 1101px) and (prefers-reduced-motion: no-preference)";
-
-export interface MusingsScrollState {
-  /** The detented front card. React state — it changes a handful of times. */
-  front: number;
-  /** False on the inert rung: the row rests as a list and nothing is posed. */
-  live: boolean;
-}
 
 interface HeadTarget extends HeadRun {
   el: HTMLElement;
@@ -87,19 +79,16 @@ interface HeadTarget extends HeadRun {
 export function useMusingsScroll(
   runwayRef: React.RefObject<HTMLElement | null>,
   stationRef: React.RefObject<HTMLElement | null>,
-  cardsRef: React.MutableRefObject<(HTMLElement | null)[]>,
+  rowRef: React.RefObject<HTMLElement | null>,
   count: number,
   bandRef: React.RefObject<HTMLElement | null>
-): MusingsScrollState {
-  const [state, setState] = useState<MusingsScrollState>({ front: 0, live: false });
+): void {
   const rafRef = useRef<number | null>(null);
-  /** Last written front index — so `setState` fires only at a detent. */
-  const frontRef = useRef(-1);
 
   useEffect(() => {
     if (count <= 0) return;
 
-    const mq = window.matchMedia(MUSINGS_RACK_MEDIA);
+    const mq = window.matchMedia(MUSINGS_ROW_MEDIA);
     const mqStage = window.matchMedia(MUSINGS_STAGE_MEDIA);
 
     /**
@@ -133,6 +122,52 @@ export function useMusingsScroll(
     /* ⚠ THE ARRIVAL IS STATE, DECIDED ONCE PER CROSSING — never re-derived
        from `p` each frame, which is what makes it a burst and not a channel. */
     let arrive: RowArrive | null = null;
+
+    /* ── The open card (ADR-121) ────────────────────────────────────────
+       ONE attribute, on ONE card, moved on events. `data-mu-open` is
+       rendered on the newest post by React (the owner's rest state: the
+       newest is open, no timer) and this writer moves it — it is never
+       re-derived, never timed, never React state. ⚠ The current holder is
+       QUERIED, not cached: the lab re-keys the whole row when its count
+       changes, and a cached element would be a detached one. */
+    const cards = () => {
+      const row = rowRef.current;
+      return row ? [...row.querySelectorAll<HTMLElement>(":scope > .mu-card")] : [];
+    };
+    const openCard = (el: HTMLElement | null) => {
+      const row = rowRef.current;
+      if (!row || !el || el.hasAttribute("data-mu-open")) return;
+      for (const c of row.querySelectorAll<HTMLElement>(".mu-card[data-mu-open]"))
+        c.removeAttribute("data-mu-open");
+      el.setAttribute("data-mu-open", "");
+    };
+    /** Back to the newest post — the rest state, and what every rung rests on. */
+    const openRest = () => openCard(cards()[0] ?? null);
+    const cardOf = (t: EventTarget | null) =>
+      t instanceof Element ? t.closest<HTMLElement>(".mu-card") : null;
+    /* ⚠ GATED ON THE RUNG, so the rail — a phone, a reduced-motion reader — is
+       byte-identical to what ADR-119 shipped: card 0 lit, nothing moving. */
+    const onPointerOver = (e: PointerEvent) => {
+      if (!mq.matches) return;
+      const card = cardOf(e.target);
+      if (card && rowRef.current?.contains(card)) openCard(card);
+    };
+    const onPointerLeave = () => {
+      if (mq.matches) openRest();
+    };
+    const onFocusIn = (e: FocusEvent) => {
+      if (!mq.matches) return;
+      const card = cardOf(e.target);
+      if (card && rowRef.current?.contains(card)) openCard(card);
+    };
+    /* Focus leaving the ROW altogether goes back to rest; a Tab from one card
+       to the next is a `focusin` on the next and stays inside. */
+    const onFocusOut = (e: FocusEvent) => {
+      if (!mq.matches) return;
+      const row = rowRef.current;
+      const to = e.relatedTarget;
+      if (row && !(to instanceof Node && row.contains(to))) openRest();
+    };
 
     /* ── The head (ADR-119 U2) ──────────────────────────────────────────
        `level` is 0 blank → 1 whole, and null until the first live frame, so a
@@ -267,21 +302,11 @@ export function useMusingsScroll(
          (ADR-008 rule 1). */
       section()?.removeAttribute("data-mu-mode");
       restoreHead();
-      for (const el of cardsRef.current) {
-        if (!el) continue;
-        el.style.removeProperty("transform");
-        el.style.removeProperty("z-index");
-        delete el.dataset.muTilt;
-      }
+      /* The open card goes home: the rail rests with the newest post lit. */
+      openRest();
       /* ⚠ THE FOOTER'S BED IS DISARMED TOO: left stamped on a rung that never
          writes again, `#contact` would be sticky for the rest of the document. */
       document.documentElement.removeAttribute("data-ft-reveal");
-      if (frontRef.current !== 0) {
-        frontRef.current = 0;
-        setState({ front: 0, live: false });
-      } else {
-        setState((s) => (s.live ? { front: s.front, live: false } : s));
-      }
     };
 
     const tick = () => {
@@ -310,8 +335,9 @@ export function useMusingsScroll(
       const rect = runway.getBoundingClientRect();
 
       /* The pinned clock: how far the runway's top has passed the frame's
-         top, over the travel the sticky child actually has. `offsetHeight`
-         rather than the rect's height, so a transform above cannot enter it. */
+         top, over the travel the sticky child actually has — ONE dwell,
+         `--mu-dwell`, since ADR-121. `offsetHeight` rather than the rect's
+         height, so a transform above cannot enter it. */
       const travel = Math.max(1, runway.offsetHeight - vh);
       const p = clamp01(-rect.top / travel);
       /* ⚠ PARKED IS THE RUNWAY COVERING THE FRAME, which is exactly when the
@@ -347,27 +373,6 @@ export function useMusingsScroll(
       }
       if (!station.hasAttribute("data-mu-ready")) station.setAttribute("data-mu-ready", "");
 
-      const open = rowIndex(rowReadIndex(p, count), count);
-      const cards = cardsRef.current;
-      /* ⚠ THE FACE'S SIZE IS MEASURED, AND IT IS `offsetWidth`/`offsetHeight`.
-         Both come from `clamp()`s, so no constant can stand in for them, and
-         the LAYOUT box is what a transform does not move — the rect would
-         report a tipped card's projection. */
-      const first = cards.find((el) => el);
-      const w = first?.offsetWidth ?? 0;
-      const h = first?.offsetHeight ?? 0;
-      if (w > 0 && h > 0) {
-        const g = rowGeom(w, h);
-        for (let i = 0; i < cards.length; i++) {
-          const el = cards[i];
-          if (!el) continue;
-          const pose = rowPose(i, count, open, g);
-          el.style.transform = pose.transform;
-          el.style.zIndex = String(pose.zIndex);
-          if (el.dataset.muTilt !== String(pose.tilt)) el.dataset.muTilt = String(pose.tilt);
-        }
-      }
-
       /**
        * ⚠ **THE FOOTER'S BED IS ARMED ON THE COVER'S TOP REACHING THE FRAME'S,
        * AND IT MUST BE REVERSIBLE.** `#contact` becomes `position: sticky;
@@ -382,13 +387,6 @@ export function useMusingsScroll(
         stage && bandRef.current ? bandRef.current.getBoundingClientRect().top : rect.top;
       if (revealTop <= 0) document.documentElement.setAttribute("data-ft-reveal", "");
       else document.documentElement.removeAttribute("data-ft-reveal");
-
-      if (open !== frontRef.current) {
-        frontRef.current = open;
-        setState({ front: open, live: true });
-      } else {
-        setState((s) => (s.live ? s : { front: open, live: true }));
-      }
     };
 
     function onScroll() {
@@ -410,6 +408,11 @@ export function useMusingsScroll(
       onScroll();
     };
 
+    const row = rowRef.current;
+    row?.addEventListener("pointerover", onPointerOver);
+    row?.addEventListener("pointerleave", onPointerLeave);
+    row?.addEventListener("focusin", onFocusIn);
+    row?.addEventListener("focusout", onFocusOut);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     mq.addEventListener("change", onMq);
@@ -418,6 +421,10 @@ export function useMusingsScroll(
     tick();
 
     return () => {
+      row?.removeEventListener("pointerover", onPointerOver);
+      row?.removeEventListener("pointerleave", onPointerLeave);
+      row?.removeEventListener("focusin", onFocusIn);
+      row?.removeEventListener("focusout", onFocusOut);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       mq.removeEventListener("change", onMq);
@@ -437,7 +444,5 @@ export function useMusingsScroll(
          left mid-scramble there stays mid-scramble on the page. */
       restoreHead();
     };
-  }, [runwayRef, stationRef, cardsRef, bandRef, count]);
-
-  return state;
+  }, [runwayRef, stationRef, rowRef, bandRef, count]);
 }

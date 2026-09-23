@@ -482,6 +482,36 @@ html[data-theme="light"] .services-masthead {
   --survey-state: var(--gold-ink);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   BLOCK 4g — the musings row's glass, re-derived (ADR-121)
+
+   The row's cards are the proof card's folder at card scale — glass over the
+   corridor with a flat gold lip — so they take BLOCK 4c's two corrections for
+   BLOCK 4c's two reasons. The LIP needs nothing: it is `color-mix()` of
+   `--gold-line`, already the parchment value on this side. The BLOOM is an
+   alpha, and an alpha inverts across the flip — a corner catching light on
+   the void is a smear on parchment. And the FROST goes: the bed is faded on
+   this side, so a blur would re-snapshot every frame to separate the card
+   from nothing. ⚠ The selector mirrors the sheet's own (stage mode AND the
+   stamp) because the dark rule is (1,4,0) and a lighter light selector loses
+   on specificity whatever the source order.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .mu {
+  --mu-bloom-a: 0.08;
+  /* And the pane is DENSER here, for BLOCK 4d's reason one surface over:
+     unfrosted, the .62 plate let the corridor's wireframe print straight
+     through the copy on the light still (ADR-121 looked at it), and parchment
+     over parchment loses nothing at .9 - the card reads by its lip on this
+     side, as the proof card does. */
+  --mu-glass-a: 0.9;
+}
+@supports (backdrop-filter: blur(2px)) {
+  html[data-theme="light"] #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-card__front {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 html[data-theme="light"] .fl-panel__viz {
   background: transparent;
   border-color: transparent;
