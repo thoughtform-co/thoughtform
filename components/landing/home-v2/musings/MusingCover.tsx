@@ -26,8 +26,9 @@ import { coverSpec, type MusingBeat } from "@/lib/musings/cover";
  * this surface has removed a console head, a foot and a designator for.
  */
 
-/** Byte-identical to the rail's, at this drawing's scale. */
-const BEAT_PATHS: Readonly<Record<MusingBeat, readonly string[]>> = {
+/** Byte-identical to the rail's, at this drawing's scale. Exported for the
+ *  gallery lab (`/test/musings-gallery`), which draws the same three marks. */
+export const BEAT_PATHS: Readonly<Record<MusingBeat, readonly string[]>> = {
   /* A compass needle. */
   navigate: ["M12 3l4.5 14.5L12 14l-4.5 3.5Z", "M7 21h10"],
   /* Registration brackets closing on a lattice — judgment, crystallised. */
@@ -37,7 +38,7 @@ const BEAT_PATHS: Readonly<Record<MusingBeat, readonly string[]>> = {
 };
 
 /** `encode`'s lattice is the one filled figure in the set. */
-const ENCODE_CELLS =
+export const ENCODE_CELLS =
   "M9 9h2.4v2.4H9zM12.8 9h2.4v2.4h-2.4zM9 12.8h2.4v2.4H9zM12.8 12.8h2.4v2.4h-2.4z";
 
 export function MusingCover({

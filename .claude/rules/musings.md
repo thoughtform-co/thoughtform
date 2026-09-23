@@ -490,6 +490,11 @@ node scripts/capture-musings-row.mjs --lab --n 7 --vp 1280x720 --theme dark    #
 # (U2) the title's top on --band-top below the stage's, the brief on the
 # title's line above 900px, the way out inside the frame — "head seat".
 node scripts/capture-site-footer.mjs  --vp 1920x1247 --theme dark   # the bed must not move
+# The gallery lab (/test/musings-gallery) — the directions under the head, on
+# the production station's `gallery` slot. Only the control (v0) fails the run;
+# a direction failing a gate is a finding. README: docs/design/musings-gallery/.
+node scripts/capture-musings-gallery.mjs
+npx vitest run tests/lib/musings-gallery.test.ts tests/lib/musings-outline.test.ts
 ```
 
 Then, **from PowerShell** (Git Bash rewrites a `/route` argument into a Windows

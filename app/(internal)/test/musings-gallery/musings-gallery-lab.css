@@ -1,0 +1,1484 @@
+/* /test/musings-gallery — the directions for what sits under the musings head.
+
+   ⚠ EVERY DIRECTION RENDERS INSIDE THE PRODUCTION STATION (`.mu`), so it reads
+   the station's own tokens — `--mu-ink*`, `--mu-rule`, `--mu-edge`,
+   `--mu-plate`, `--mu-lip`, `--mu-ch`, `--mu-chrome`, `--mu-copy` — which
+   `theme.css` already re-derives for parchment. Anything new is declared on
+   `.mg` and re-derived under `html[data-theme="light"]`, never inherited
+   (ADR-058). Tracking and weight are the ADR-092 role tokens only.
+
+   ⚠ NO VERTICAL RULE OF THE PAGE'S OWN (the owner, 2026-09-20: "we already
+   have our rails"). A device divides itself with horizontal seams and cells
+   that share edges. The one exemption is a chart's graticule inside its own
+   housing — `/arcs`' monitor carries the same one. */
+
+/* ── The console: wider, it carries six directions ────────────────────── */
+.mg-console {
+  max-width: calc(100vw - 32px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ═══ The region ═══════════════════════════════════════════════════════
+   The head hangs from `--band-top` (ADR-121 U2); the device takes everything
+   between it and the rails' last tick — ADR-118's "each device is as tall as
+   the rails". `--hud-rail-y-end` is a distance from the frame's floor. */
+.mg {
+  --mg-seam: rgba(var(--dawn-rgb), 0.28);
+  --mg-well: rgba(var(--dawn-rgb), 0.07);
+  --mg-band-from: rgba(var(--gold-rgb), 0.24);
+  --mg-band-to: rgba(var(--gold-rgb), 0.05);
+  --mg-cell: rgba(var(--dawn-rgb), 0.16);
+  --mg-cell-2: rgba(var(--dawn-rgb), 0.3);
+  --mg-lit: rgba(var(--gold-rgb), 0.5);
+  --mg-led: var(--gold);
+  --mg-pad: clamp(14px, 1.4vw, 22px);
+
+  position: relative;
+  min-width: 0;
+  max-width: var(--band-max);
+  margin-inline: var(--rail-inset);
+  font-family: var(--font-pp-neue-montreal);
+  font-weight: var(--weight-text);
+  color: var(--mu-ink);
+}
+html[data-theme="light"] .mg {
+  --mg-seam: rgba(var(--dawn-rgb), 0.34);
+  --mg-well: rgba(var(--dawn-rgb), 0.08);
+  --mg-band-from: rgba(var(--gold-rgb), 0.22);
+  --mg-band-to: rgba(var(--gold-rgb), 0.04);
+  --mg-cell: rgba(var(--dawn-rgb), 0.14);
+  --mg-cell-2: rgba(var(--dawn-rgb), 0.28);
+  --mg-lit: rgba(var(--gold-rgb), 0.55);
+  /* A mark on parchment takes the LINE rung (ADR-063 U2) — raw gold is a
+     fill's colour and vanishes as a 7px mark on a light ground. */
+  --mg-led: var(--gold-line);
+}
+
+@media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  .mu[data-mu-ready] .mu__stage:has(> .mg) {
+    grid-template-rows: auto minmax(0, 1fr);
+    padding-block-end: var(--hud-rail-y-end);
+  }
+  .mu[data-mu-ready] .mg {
+    height: 100%;
+    min-height: 0;
+  }
+  html[data-rail-instruments] .mu[data-mu-ready] .mg {
+    margin-inline-end: calc(var(--rail-inset) + var(--mu-band-end));
+  }
+
+  /* The arrival: the device opens on the house aperture AFTER the head has
+     decoded (the writer holds `in` until it has), and closes before the head
+     un-types — the station's own clock, one object over. */
+  .mu[data-mu-ready][data-mu-arrive="await"] .mg,
+  .mu[data-mu-ready][data-mu-arrive="out"] .mg {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .mu[data-mu-ready][data-mu-arrive="in"] .mg {
+    animation: mu-aperture-slit 720ms cubic-bezier(0.65, 0, 0.35, 1) none;
+  }
+  .mu[data-mu-ready][data-mu-arrive="out"] .mg {
+    animation: mu-aperture-slit-close 420ms cubic-bezier(0.65, 0, 0.35, 1) none;
+  }
+}
+
+/* ═══ Shared parts ═════════════════════════════════════════════════════ */
+
+/* The housing — the proof card's folder skin (ADR-097): glass, a flat gold
+   lip on a clipped ring, the TR notch, the scanline, a bloom in pixels. */
+.mg-plate {
+  position: relative;
+  min-width: 0;
+  background:
+    repeating-linear-gradient(to bottom, rgba(var(--gold-rgb), 0.025) 0 1px, transparent 1px 3px),
+    radial-gradient(
+      260px 180px at calc(100% - 60px) -30px,
+      rgba(var(--gold-rgb), var(--mu-bloom-a)),
+      transparent 70%
+    ),
+    var(--mu-plate);
+  clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
+}
+.mg-plate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background-color: var(--mu-lip);
+  clip-path: polygon(
+    evenodd,
+    0 0,
+    calc(100% - var(--mu-ch)) 0,
+    100% var(--mu-ch),
+    100% 100%,
+    0 100%,
+    0 0,
+    1px 1px,
+    calc(100% - 1px - var(--mu-chi)) 1px,
+    calc(100% - 1px) calc(1px + var(--mu-chi)),
+    calc(100% - 1px) calc(100% - 1px),
+    1px calc(100% - 1px),
+    1px 1px
+  );
+  transition: background-color 240ms ease-out;
+}
+.mg-plate[data-mg-on]::before,
+.mg-plate.mg-plate--lit::before {
+  background-color: var(--gold-line);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mg-plate {
+    -webkit-backdrop-filter: blur(var(--mu-blur));
+    backdrop-filter: blur(var(--mu-blur));
+  }
+}
+html[data-theme="light"] #musings .mu .mg-plate {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* The head band — the folder's tinted band, full width, the rule under it. */
+.mg-band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: clamp(34px, 4svh, 44px);
+  padding: 0 calc(var(--mu-ch) + 10px) 0 var(--mg-pad);
+  border-bottom: 1px solid var(--mu-rule);
+  background: linear-gradient(90deg, var(--mg-band-from), var(--mg-band-to));
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mg-band__kick {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--gold-ink);
+}
+.mg-band__glyph {
+  width: 14px;
+  height: 14px;
+}
+.mg-band__meta {
+  color: var(--mu-ink-2);
+}
+
+/* The essay's shape: one cell per section, its width its share of the words. */
+.mg-shape {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.mg-shape__bar,
+.mg-shape__labels {
+  display: flex;
+  gap: 3px;
+  min-width: 0;
+}
+.mg-shape__cell {
+  flex: var(--mg-w) 1 0;
+  min-width: 4px;
+  height: 7px;
+  background: var(--mg-cell-2);
+}
+.mg-shape__cell--lead {
+  background: repeating-linear-gradient(90deg, var(--mg-cell-2) 0 1px, transparent 1px 4px);
+}
+.mg-shape__label {
+  flex: var(--mg-w) 1 0;
+  min-width: 4px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+
+/* Starfield's TRAVEL DATA — the key filled and framed, the value set right. */
+.mg-readout {
+  display: grid;
+  row-gap: 3px;
+  margin: 0;
+  min-width: 0;
+}
+.mg-readout__row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+}
+.mg-readout__key,
+.mg-readout__val {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-width: 0;
+  height: clamp(26px, 3svh, 32px);
+  margin: 0;
+  padding: 0 clamp(8px, 0.7vw, 12px);
+  border: 1px solid var(--mg-seam);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mg-readout__key {
+  background: var(--mg-well);
+  color: var(--mu-ink-2);
+}
+.mg-readout__val {
+  justify-content: flex-end;
+  border-left: 0;
+  color: var(--mu-ink);
+}
+
+/* The contents — each section named whole, a bar for its length against the
+   longest, its words set right. Rows are ruled, never boxed. */
+.mg-toc {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--mu-rule);
+  min-width: 0;
+}
+.mg-toc__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(48px, 30%) 4.5ch;
+  align-items: center;
+  column-gap: clamp(10px, 1vw, 16px);
+  min-height: clamp(30px, 3.6svh, 40px);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--mu-rule);
+}
+.mg-toc__name {
+  min-width: 0;
+  font-size: var(--mu-copy);
+  line-height: 1.25;
+  color: var(--mu-ink);
+}
+.mg-toc__name--lead {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-toc__bar {
+  display: block;
+  height: 5px;
+  background: var(--mg-well);
+}
+.mg-toc__bar i {
+  display: block;
+  height: 100%;
+  background: var(--mg-cell-2);
+}
+.mg-toc__n {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-align: right;
+  color: var(--mu-ink-3);
+}
+
+/* The way in — the proof card's full-width button: outlined at rest, filled
+   on hover and focus with its ink knocked out. */
+.mg-read {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-height: clamp(44px, 5.5svh, 58px);
+  padding: 0 14px;
+  border: 1px solid var(--gold-line);
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--gold-ink);
+  transition:
+    color 180ms ease-out,
+    background-color 180ms ease-out,
+    border-color 180ms ease-out;
+}
+.mg-read:hover,
+.mg-read:focus-visible {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+.mg-read:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+.mg-read__act {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.mg-read__arrow {
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 1px;
+  background: currentColor;
+}
+.mg-read__arrow::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* The field — a note's place in its year: a seeded substrate, the beat's
+   mark, and a baseline with the archive's filings on it, this one lit. */
+.mg-field {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border-block: 1px solid var(--mu-rule);
+  /* A size container, so the glyph is bounded by the field's own height and
+     never runs into its axis when the field is short (1280×720). */
+  container-type: size;
+}
+.mg-field__dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(var(--dawn-rgb), 0.34) 1.1px, transparent 1.6px);
+  background-size: var(--mg-pitch) var(--mg-pitch);
+  background-position: center;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 45%, #000 40%, transparent 92%);
+  mask-image: radial-gradient(120% 90% at 50% 45%, #000 40%, transparent 92%);
+}
+.mg-field__glyph {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: min(clamp(56px, 11svh, 150px), 38cqh);
+  height: min(clamp(56px, 11svh, 150px), 38cqh);
+  transform: translate(-50%, -50%);
+  color: var(--mu-ink-2);
+}
+.mg-field__axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(18px, 3svh, 34px);
+  height: 1px;
+  background: var(--mu-rule);
+}
+.mg-field__month {
+  position: absolute;
+  top: -3px;
+  width: 1px;
+  height: 7px;
+  background: var(--mu-rule);
+}
+.mg-field__mark {
+  position: absolute;
+  top: -3px;
+  width: 7px;
+  height: 7px;
+  margin-left: -3px;
+  background: var(--mu-draw);
+}
+.mg-field__mark--lit {
+  top: -4px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4px;
+  background: var(--gold);
+}
+/* ⚠ THE FIELD PAYS FIRST. At the binding shape (seven notes, 1280×720) the
+   dossier cannot hold the field, the contents and the readout at once, so a
+   short field keeps its year strip — the axis, the filings — and gives up the
+   glyph and the substrate, which are its material, not its record. */
+@container (max-height: 96px) {
+  .mg-field__glyph,
+  .mg-field__dots {
+    display: none;
+  }
+}
+.mg-field__initial {
+  position: absolute;
+  top: 9px;
+  transform: translateX(-50%);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1;
+  color: var(--mu-ink-3);
+}
+.mg-field__year {
+  position: absolute;
+  left: 4%;
+  top: -22px;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  color: var(--mu-ink-3);
+}
+
+/* ═══ v1 · Codex ═══════════════════════════════════════════════════════ */
+.mg--codex {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  column-gap: clamp(18px, 2.2vw, 36px);
+  align-items: stretch;
+}
+.mg-cx__index {
+  display: grid;
+  grid-template-rows: auto minmax(0, auto) auto;
+  align-content: start;
+  min-height: 0;
+  min-width: 0;
+}
+.mg-cx__head {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--mu-rule);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-cx__list {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 3px 3px 0;
+  list-style: none;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mu-edge) transparent;
+}
+.mg-cx__row {
+  display: grid;
+  grid-template-columns: clamp(20px, 1.7vw, 28px) minmax(0, 1fr);
+  align-items: center;
+  column-gap: clamp(10px, 1vw, 16px);
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+.mg-cx__glyph {
+  width: 100%;
+  aspect-ratio: 1;
+  color: var(--mu-draw);
+  transition: color 180ms ease-out;
+}
+.mg-cx__plate {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: clamp(9px, 1.2svh, 15px) clamp(12px, 1.1vw, 18px);
+  border: 1px solid var(--mu-edge);
+  background: var(--mu-plate);
+  transition:
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    color 180ms ease-out;
+}
+.mg-cx__kick {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-cx__title {
+  font-size: clamp(16px, 1.2vw, 21px);
+  line-height: 1.22;
+  letter-spacing: var(--track-copy);
+}
+/* ⚠ FILL AMONG OUTLINES (ADR-089 U4): the selected plate is inverse video,
+   its ink knocked out on `--gold-contrast`; the rest stay outlined. */
+.mg-cx__row[data-mg-on] .mg-cx__plate {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+.mg-cx__row[data-mg-on] .mg-cx__kick {
+  color: var(--gold-contrast);
+}
+.mg-cx__row[data-mg-on] .mg-cx__glyph {
+  color: var(--gold-ink);
+}
+.mg-cx__row:focus-visible .mg-cx__plate {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 2px;
+}
+.mg-cx__foot {
+  padding-top: clamp(14px, 2svh, 24px);
+}
+
+.mg-cx__dossiers {
+  display: grid;
+  min-height: 0;
+}
+.mg-cx__dossier {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  visibility: hidden;
+}
+.mg-cx__dossier[data-mg-on] {
+  visibility: visible;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mg-cx__dossier[data-mg-on] {
+    animation: mu-aperture 260ms cubic-bezier(0.16, 1, 0.3, 1) none;
+  }
+}
+.mg-cx__body {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: clamp(12px, 1.8svh, 24px);
+  min-height: 0;
+  padding: clamp(16px, 2.4svh, 32px) var(--mg-pad) clamp(12px, 1.6svh, 20px);
+}
+.mg-cx__name {
+  margin: 0;
+  font-size: clamp(26px, 2.4vw, 44px);
+  font-weight: var(--weight-text);
+  line-height: 1.08;
+  letter-spacing: var(--track-display);
+  color: var(--mu-ink);
+}
+.mg-cx__summary {
+  margin: 0;
+  max-width: 38em;
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.5;
+  color: var(--mu-ink-2);
+}
+.mg-cx__record {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 15rem);
+  gap: clamp(14px, 1.6vw, 28px);
+  align-items: start;
+}
+.mg-cx__go {
+  padding: 0 var(--mg-pad) var(--mg-pad);
+}
+
+/* ═══ v2 · Starmap ═════════════════════════════════════════════════════ */
+.mg--starmap {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: clamp(10px, 1.4svh, 18px);
+}
+.mg-sm__chart {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: clamp(220px, 30svh, 340px);
+}
+.mg-sm__field {
+  display: grid;
+  grid-template-columns: clamp(96px, 8vw, 132px) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  padding: clamp(10px, 1.6svh, 20px) calc(var(--mu-ch) + 8px) clamp(8px, 1svh, 12px) 0;
+}
+.mg-sm__lanes {
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mg-sm__lane {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-left: var(--mg-pad);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-sm__lane-glyph {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.mg-sm__plot {
+  position: relative;
+  min-height: 0;
+  /* The lanes' seams — horizontal, the field's own divisions. */
+  background:
+    linear-gradient(var(--mu-rule), var(--mu-rule)) 0 33.333% / 100% 1px no-repeat,
+    linear-gradient(var(--mu-rule), var(--mu-rule)) 0 66.666% / 100% 1px no-repeat;
+  border-block: 1px solid var(--mu-rule);
+}
+.mg-sm__grid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dotted var(--mu-rule);
+}
+.mg-sm__route {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.mg-sm__route polyline {
+  fill: none;
+  stroke: var(--gold-line);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+  vector-effect: non-scaling-stroke;
+}
+.mg-sm__now {
+  position: absolute;
+  top: -8px;
+  bottom: 0;
+  width: 0;
+  border-left: 1px solid rgba(var(--gold-rgb), 0.55);
+}
+.mg-sm__now-tag {
+  position: absolute;
+  top: -6px;
+  left: 6px;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.mg-sm__drop {
+  position: absolute;
+  bottom: 0;
+  width: 0;
+  border-left: 1px dashed var(--gold-line);
+  visibility: hidden;
+}
+.mg-sm__drop[data-mg-on] {
+  visibility: visible;
+}
+/* A waypoint: the diamond seated ON its date and lane, the title beside it.
+   The link's box is the label's, so the whole name is the target. */
+.mg-sm__pt {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translate(-7px, -50%);
+  max-width: 34%;
+  color: var(--mu-ink-2);
+  text-decoration: none;
+  outline: none;
+  white-space: nowrap;
+}
+.mg-sm__pt[data-flip] {
+  flex-direction: row-reverse;
+  transform: translate(calc(-100% + 7px), -50%);
+}
+.mg-sm__pt[data-lift] .mg-sm__label {
+  transform: translateY(-120%);
+}
+.mg-sm__mark {
+  position: relative;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin: 2px;
+  border: 1px solid var(--gold-line);
+  background: rgba(var(--void-deep-rgb), 0.9);
+  transform: rotate(45deg);
+  transition: background-color 180ms ease-out;
+}
+.mg-sm__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: clamp(13px, 0.95vw, 16px);
+  line-height: 1.2;
+}
+.mg-sm__pt[data-mg-on] {
+  color: var(--mu-ink);
+}
+.mg-sm__pt[data-mg-on] .mg-sm__mark {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+/* The reticle: four brackets around the lit mark — framed, not a device.
+   On the LINK, which is not rotated, seated on the mark's centre (7px in from
+   whichever end the mark sits at). */
+.mg-sm__pt[data-mg-on]::before {
+  --r: var(--gold-line);
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -7px;
+  width: 28px;
+  height: 28px;
+  margin-top: -14px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--r), var(--r)) top left / 6px 1px no-repeat,
+    linear-gradient(var(--r), var(--r)) top left / 1px 6px no-repeat,
+    linear-gradient(var(--r), var(--r)) top right / 6px 1px no-repeat,
+    linear-gradient(var(--r), var(--r)) top right / 1px 6px no-repeat,
+    linear-gradient(var(--r), var(--r)) bottom left / 6px 1px no-repeat,
+    linear-gradient(var(--r), var(--r)) bottom left / 1px 6px no-repeat,
+    linear-gradient(var(--r), var(--r)) bottom right / 6px 1px no-repeat,
+    linear-gradient(var(--r), var(--r)) bottom right / 1px 6px no-repeat;
+}
+.mg-sm__pt[data-mg-on][data-flip]::before {
+  left: auto;
+  right: -7px;
+}
+.mg-sm__pt:focus-visible .mg-sm__label {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 3px;
+}
+.mg-sm__axis {
+  position: relative;
+  grid-column: 2;
+  height: clamp(22px, 2.6svh, 30px);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-sm__month,
+.mg-sm__tick {
+  position: absolute;
+  top: 7px;
+  white-space: nowrap;
+}
+.mg-sm__month {
+  padding-left: 5px;
+}
+.mg-sm__tick {
+  z-index: 1;
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  background: var(--gold);
+  color: var(--gold-contrast);
+  /* A halo of the plate's own ground, so the division label the tag lands
+     on is masked rather than printing half-out beside it. */
+  box-shadow: 0 0 0 6px rgb(var(--void-deep-rgb));
+  visibility: hidden;
+}
+.mg-sm__tick[data-mg-on] {
+  visibility: visible;
+}
+
+.mg-sm__readouts {
+  display: grid;
+  min-width: 0;
+}
+.mg-sm__readout {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 16rem) minmax(200px, 17rem);
+  align-items: center;
+  gap: clamp(16px, 2vw, 36px);
+  padding: clamp(14px, 2svh, 24px) calc(var(--mu-ch) + 8px) clamp(14px, 2svh, 24px) var(--mg-pad);
+  visibility: hidden;
+}
+.mg-sm__readout[data-mg-on] {
+  visibility: visible;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mg-sm__readout[data-mg-on] {
+    animation: mu-aperture 260ms cubic-bezier(0.16, 1, 0.3, 1) none;
+  }
+}
+.mg-sm__text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.mg-sm__kick,
+.mg-mm__kick {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.mg-sm__name,
+.mg-mm__name {
+  margin: 0;
+  font-size: clamp(22px, 1.9vw, 34px);
+  font-weight: var(--weight-text);
+  line-height: 1.1;
+  letter-spacing: var(--track-display);
+}
+.mg-sm__summary,
+.mg-mm__summary {
+  margin: 0;
+  max-width: 40em;
+  font-size: var(--mu-copy);
+  line-height: 1.45;
+  color: var(--mu-ink-2);
+}
+.mg-sm__go,
+.mg-mm__go {
+  display: grid;
+  gap: 10px;
+}
+.mg-sm__all,
+.mg-mm__all {
+  justify-self: stretch;
+  justify-content: center;
+}
+
+/* ═══ v3 · Terminal store ══════════════════════════════════════════════ */
+.mg--store {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: clamp(12px, 1.8svh, 22px);
+}
+.mg-st__rack {
+  display: grid;
+  grid-template-columns: repeat(clamp(3, var(--mg-n), 4), minmax(0, 1fr));
+  gap: clamp(10px, 1vw, 16px);
+  min-height: clamp(360px, 46svh, 720px);
+}
+.mg--store[data-mg-many] .mg-st__rack {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 3 * clamp(10px, 1vw, 16px)) / 4.35);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mu-edge) transparent;
+  padding-bottom: 6px;
+}
+.mg-st__card {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+  scroll-snap-align: start;
+}
+.mg-st__face {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  min-height: 0;
+}
+.mg-st__card[data-mg-on] .mg-st__face::before {
+  background-color: var(--gold-line);
+}
+.mg-st__card:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 3px;
+}
+.mg-st__kick {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: clamp(10px, 1.4svh, 16px) calc(var(--mu-ch) + 6px) clamp(10px, 1.4svh, 16px)
+    var(--mg-pad);
+  border-bottom: 1px solid var(--mu-rule);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+  transition: color 240ms ease-out;
+}
+.mg-st__card[data-mg-on] .mg-st__kick {
+  color: var(--gold-ink);
+}
+.mg-st__field {
+  position: relative;
+  display: grid;
+  min-height: 0;
+  overflow: hidden;
+}
+/* The emblem: the beat's mark in a machined diamond, a bezel inside it —
+   Vilimovský's store emblems, drawn in the house's line. */
+.mg-st__emblem {
+  grid-area: 1 / 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: clamp(14px, 2.2svh, 28px);
+  background-image: radial-gradient(rgba(var(--dawn-rgb), 0.14) 1px, transparent 1.4px);
+  background-size: 13px 13px;
+  background-position: center;
+}
+.mg-st__diamond {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(96px, 17svh, 230px);
+  aspect-ratio: 1;
+}
+.mg-st__diamond::before,
+.mg-st__diamond::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border: 1px solid var(--mu-edge);
+  transform: rotate(45deg);
+}
+.mg-st__diamond::after {
+  inset: 22%;
+  border-color: var(--mu-rule);
+}
+.mg-st__card[data-mg-on] .mg-st__diamond::before {
+  border-color: var(--gold-line);
+}
+.mg-st__glyph {
+  position: relative;
+  width: 30%;
+  height: 30%;
+  color: var(--mu-ink-2);
+}
+/* The foot block — the reference's small meta, two readings off the record. */
+.mg-st__meta {
+  position: absolute;
+  left: var(--mg-pad);
+  right: var(--mg-pad);
+  bottom: clamp(12px, 1.6svh, 20px);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mu-rule);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-st__meta {
+  white-space: nowrap;
+}
+.mg-st__meta b {
+  margin-right: 5px;
+  font-weight: var(--weight-text);
+  color: var(--mu-ink-2);
+}
+.mg-st__beat {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+/* ⚠ THE CARD YOU ARE ON ELABORATES, THE 4ST MOVE — and it is PURE MOTION: a
+   panel wipes down over the emblem on a clip, no opacity, nothing reflows
+   (the text is laid out in its final box whether or not it shows). */
+.mg-st__more {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.8svh, 20px);
+  padding: clamp(14px, 2svh, 24px) var(--mg-pad) clamp(12px, 1.6svh, 20px);
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 480ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mg-st__card[data-mg-on] .mg-st__more {
+  clip-path: inset(0);
+}
+/* ⚠ THE TWO WIPES ARE COMPLEMENTARY, ON ONE CLOCK: the panel is uncovered
+   from the top as the emblem is covered from the top, so one edge travels
+   down the field — above it the note, below it the emblem — and the panel
+   can stay glass (an opaque panel read as a hole in the card). */
+.mg-st__emblem {
+  clip-path: inset(0);
+  transition: clip-path 480ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mg-st__card[data-mg-on] .mg-st__emblem {
+  clip-path: inset(100% 0 0 0);
+}
+.mg-st__toc {
+  margin-top: auto;
+}
+/* At card width the bars cost the names their line; the words carry it. */
+.mg-st__toc .mg-toc__row {
+  grid-template-columns: minmax(0, 1fr) 4.5ch;
+}
+.mg-st__toc .mg-toc__bar {
+  display: none;
+}
+.mg-st__summary {
+  font-size: clamp(15px, 1.15vw, 19px);
+  line-height: 1.45;
+  color: var(--mu-ink-2);
+}
+.mg-st__cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold-ink);
+}
+.mg-st__shape {
+  padding: 12px var(--mg-pad) 0;
+}
+.mg-st__title {
+  /* Two lines reserved on every card, so a one-line title and a two-line one
+     seat their fields — and the meta under them — on one datum. */
+  min-height: calc(2 * 1.14em);
+  padding: clamp(10px, 1.4svh, 16px) var(--mg-pad) clamp(14px, 2svh, 22px);
+  font-size: clamp(18px, 1.45vw, 26px);
+  line-height: 1.14;
+  letter-spacing: var(--track-display);
+}
+
+/* ═══ v4 · Chapters ════════════════════════════════════════════════════
+   A contents page: the title first, set large at the band's left edge, the
+   record's readings in mono columns on the right. ⚠ THE DEVICE IS A SIZE
+   CONTAINER so the open row takes what the closed rows leave — up to a
+   ceiling, past which the surplus is frame under the list, never a hole
+   inside the open row. Its detail is laid out at that height once, and the
+   row's `grid-template-rows` 0fr → 1fr uncovers it. */
+.mg--chapters {
+  /* The row is solved from the COUNT as well as the frame, so seven notes on a
+     tall window still leave the open row its floor without a scroller. */
+  --mg-ch-row: clamp(
+    44px,
+    min(8.2svh, calc((100cqh - 170px - var(--mg-ch-foot)) / var(--mu-n, 3) - 1px)),
+    108px
+  );
+  --mg-ch-foot: clamp(58px, 7svh, 76px);
+  --mg-ch-open: clamp(
+    170px,
+    calc(100cqh - var(--mu-n, 3) * (var(--mg-ch-row) + 1px) - 1px - var(--mg-ch-foot)),
+    300px
+  );
+  display: grid;
+  grid-template-rows: minmax(0, auto) auto;
+  align-content: start;
+  container-type: size;
+  min-height: clamp(420px, 52svh, 820px);
+}
+.mg-ch__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--mu-rule);
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mu-edge) transparent;
+}
+.mg-ch__item {
+  border-bottom: 1px solid var(--mu-rule);
+}
+.mg-ch__row {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) minmax(7em, 9em) minmax(8em, 10em) 5.5em;
+  align-items: center;
+  column-gap: clamp(14px, 1.6vw, 28px);
+  height: var(--mg-ch-row);
+  padding-right: 4px;
+  color: var(--mu-ink-2);
+  text-decoration: none;
+  outline: none;
+  transition: color 200ms ease-out;
+}
+.mg-ch__mark {
+  width: 8px;
+  height: 8px;
+  margin-left: 2px;
+  border: 1px solid var(--mu-edge);
+  transform: rotate(45deg);
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out;
+}
+.mg-ch__date,
+.mg-ch__beat,
+.mg-ch__min {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--mu-ink-3);
+}
+.mg-ch__min {
+  justify-content: flex-end;
+}
+.mg-ch__glyph {
+  width: 14px;
+  height: 14px;
+}
+.mg-ch__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(22px, 2.6vw, 50px);
+  line-height: 1.08;
+  letter-spacing: var(--track-display);
+}
+.mg-ch__item[data-mg-on] .mg-ch__row {
+  color: var(--mu-ink);
+}
+.mg-ch__item[data-mg-on] .mg-ch__mark {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+.mg-ch__item[data-mg-on] .mg-ch__date {
+  color: var(--gold-ink);
+}
+.mg-ch__row:focus-visible .mg-ch__title {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 4px;
+}
+.mg-ch__open {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 520ms;
+}
+.mg-ch__item[data-mg-on] .mg-ch__open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition:
+    grid-template-rows 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0s;
+}
+.mg-ch__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+/* ⚠ EVERY CELL PLACED EXPLICITLY — the record spans two rows, and an item
+   with a definite row is auto-placed BEFORE the rest, which put the summary
+   in the right-hand column on the first cut. */
+.mg-ch__detail {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  column-gap: clamp(20px, 3.4vw, 64px);
+  row-gap: clamp(12px, 1.8svh, 20px);
+  box-sizing: border-box;
+  height: var(--mg-ch-open);
+  padding: 0 0 clamp(16px, 2.4svh, 28px) calc(12px + clamp(14px, 1.6vw, 28px));
+}
+.mg-ch__summary {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  max-width: 34em;
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.5;
+  color: var(--mu-ink-2);
+}
+.mg-ch__read {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  max-width: 22rem;
+}
+.mg-ch__record {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  display: grid;
+  align-content: start;
+  gap: clamp(14px, 2svh, 22px);
+  min-width: 0;
+}
+.mg-ch__foot {
+  display: flex;
+  align-items: center;
+  height: var(--mg-ch-foot);
+}
+
+/* ═══ v5 · Memory map (seed) ═══════════════════════════════════════════
+   The seed's numbers (`docs/design/musings-gallery/seed-memory-map.md`): 8 × 16
+   cells, a quarter-tick every four columns (the "G2" period, 32 = 128 / 4),
+   chrome at 11 (the "h3" gap), the selected title at 28 (the "tG" gap), and
+   the ONLY doubled line the map's own top and bottom edge (the string opens
+   on "hh" and closes on "88"). */
+.mg--memory {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: clamp(10px, 1.4svh, 18px);
+}
+.mg-mm__map {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-height: clamp(260px, 36svh, 640px);
+}
+.mg-mm__scale {
+  position: relative;
+  height: 12px;
+  margin: 10px calc(var(--mu-ch) + 8px) 0 var(--mg-pad);
+}
+.mg-mm__tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 4px;
+  background: var(--mu-rule);
+}
+.mg-mm__tick--q {
+  height: 10px;
+  background: var(--mu-edge);
+}
+.mg-mm__grid {
+  position: relative;
+  container: mgmap / size;
+  display: grid;
+  grid-template-columns: repeat(var(--mg-cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--mg-rows), minmax(0, 1fr));
+  gap: 1px;
+  min-height: 0;
+  margin: 4px calc(var(--mu-ch) + 8px) var(--mg-pad) var(--mg-pad);
+  padding-block: 4px;
+  /* The doubled edge — two hairlines 3px apart, top and bottom, and nowhere
+     else on the device. */
+  border-block: 1px solid var(--mu-edge);
+}
+.mg-mm__grid::before,
+.mg-mm__grid::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--mu-edge);
+}
+.mg-mm__grid::before {
+  top: -5px;
+}
+.mg-mm__grid::after {
+  bottom: -5px;
+}
+/* ⚠ GOLD IS A MARK, NEVER AN AREA (ADR-089 U2's measure: every solid accent
+   in the reference panels is small or thin). A cell is a slot with an LED in
+   it — the slot a faint wash, the LED a small square — so the selected note
+   lights as many small marks, never as a gold third of the map. The LED is
+   solid on a section's cells and hollow on the next section's, so the
+   essay's divisions read inside its run. */
+.mg-mm__cell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  background: var(--mg-well);
+}
+.mg-mm__cell::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* 8px — the seed's `tt` gap, its one small unit. */
+  width: 8px;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: var(--mg-cell-2);
+  transition:
+    background-color 200ms ease-out,
+    box-shadow 200ms ease-out;
+}
+.mg-mm__cell[data-sec="b"]::after {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--mg-cell-2);
+}
+.mg-mm__cell[data-alt] {
+  background: rgba(var(--dawn-rgb), 0.12);
+}
+/* A note begins on a full-height edge; a section inside it on a short tick. */
+.mg-mm__cell[data-post-start]::before,
+.mg-mm__cell[data-sec-start]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 1px;
+  background: var(--mu-edge);
+}
+.mg-mm__cell[data-post-start]::before {
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--mu-ink-3);
+}
+.mg-mm__cell[data-sec-start]::before {
+  top: 30%;
+  bottom: 30%;
+}
+.mg-mm__cell[data-mg-on] {
+  background: rgba(var(--gold-rgb), 0.07);
+}
+.mg-mm__cell[data-mg-on]::after {
+  background: var(--mg-led);
+}
+.mg-mm__cell[data-mg-on][data-sec="b"]::after {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--mg-led);
+}
+.mg-mm__cell[data-mg-on][data-sec-start]::before,
+.mg-mm__cell[data-mg-on][data-post-start]::before {
+  background: var(--gold-line);
+}
+/* The label is the link — lettered on the run's longest row segment, over
+   its cells, on a plate of its own so the cells never print through it. */
+.mg-mm__label {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  justify-self: start;
+  display: inline-grid;
+  gap: 3px;
+  max-width: calc(100% - 12px);
+  margin-left: 8px;
+  padding: 5px 8px 6px;
+  background: rgba(var(--void-deep-rgb), 0.82);
+  color: var(--mu-ink-2);
+  text-decoration: none;
+  outline: none;
+  overflow: hidden;
+}
+html[data-theme="light"] .mg-mm__label {
+  background: rgba(var(--void-deep-rgb), 0.9);
+}
+.mg-mm__date {
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-mm__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(13px, 0.95vw, 16px);
+  line-height: 1.2;
+}
+.mg-mm__label[data-narrow] .mg-mm__title {
+  display: none;
+}
+/* ⚠ A ROW SHORTER THAN THE TWO-LINE PLATE letters the title alone — the
+   plate may not print over the row above or below it. The grid is a size
+   container; a row is (height − padding) / 8. */
+@container mgmap (max-height: 360px) {
+  .mg-mm__date {
+    display: none;
+  }
+  .mg-mm__label {
+    padding: 2px 8px;
+  }
+  .mg-mm__title {
+    font-size: 12px;
+  }
+}
+.mg-mm__label[data-mg-on] {
+  color: var(--mu-ink);
+  box-shadow: inset 0 0 0 1px var(--gold-line);
+}
+.mg-mm__label[data-mg-on] .mg-mm__date {
+  color: var(--gold-ink);
+}
+.mg-mm__label:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 2px;
+}
+.mg-mm__readouts {
+  display: grid;
+  min-width: 0;
+}
+.mg-mm__readout {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 16rem) minmax(200px, 17rem);
+  align-items: center;
+  gap: clamp(16px, 2vw, 36px);
+  padding: clamp(14px, 2svh, 22px) calc(var(--mu-ch) + 8px) clamp(14px, 2svh, 22px) var(--mg-pad);
+  visibility: hidden;
+}
+.mg-mm__readout[data-mg-on] {
+  visibility: visible;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mg-mm__readout[data-mg-on] {
+    animation: mu-aperture 260ms cubic-bezier(0.16, 1, 0.3, 1) none;
+  }
+}
+.mg-mm__text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.mg-mm__name {
+  font-size: 28px;
+}
+.mg-mm__kick {
+  font-size: 11px;
+}
+
+/* ═══ The flowing rung (≤960, reduced motion, no script) ═══════════════
+   The lab is judged on the pinned rung; below it every device stacks into
+   one column so nothing overflows the phone. */
+@media (max-width: 960px) {
+  .mg--codex,
+  .mg-sm__readout,
+  .mg-mm__readout,
+  .mg-cx__record,
+  .mg-ch__detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mg-st__rack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mg--chapters {
+    container-type: normal;
+    min-height: 0;
+  }
+  .mg-ch__detail {
+    height: auto;
+  }
+  .mg-ch__row {
+    grid-template-columns: 12px minmax(0, 1fr) auto;
+  }
+  .mg-ch__date,
+  .mg-ch__beat {
+    display: none;
+  }
+}
