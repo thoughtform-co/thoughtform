@@ -54,6 +54,28 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-23 — the musings row seats its copy and yields to the telemetry (ADR-121 U1)
+
+**Trigger:** the coordinating session, off ADR-121's own stills: the open card
+pooled ~120px of bare plate under a two-line lede, and at 1280×720 the last
+card ran under the right rail's SECTOR readout.
+
+- **Cycle A.** The body is a derived box (`--mu-body-h`, its tokens being the
+  body's own declarations) and the cover takes the rest; the strip yields so
+  the open card keeps its measure; `--mu-band-end` pulls the head's and the
+  row's right edge in where the readouts would be reached. ADR-121 Update 1;
+  `.claude/rules/musings.md`, CLAUDE.md and `landing-v7.md` re-pointed.
+- **Q3 (a class of bug) → BEST-PRACTICES:** a 100vw station and a fixed rail
+  disagree by half the scrollbar; and when a form is retired, list what each
+  deleted feature was protecting (ADR-119's edge fade was the row's clearance).
+- **Q5 (a runtime check that caught it):** the capture gained the body-seat
+  gates (bare plate under the lede, the shared kicker line, the unclamped lede
+  within its reserved lines, one-line titles, the open card at its measure) and
+  the clearance gate (≥ 12px at rest, on hover and on Tab) — and they failed on
+  the committed CSS first. The rung floor (961×720) is what found the
+  scrollbar. The hover gates now carry their own event trace.
+- **Verified:** the numbers are in ADR-121 Update 1.
+
 ### 2026-09-23 — the musings row opens on hover, the rack retired (ADR-121)
 
 **Trigger:** the owner, on ADR-119 U2's tipped 3D row read live: _"what we

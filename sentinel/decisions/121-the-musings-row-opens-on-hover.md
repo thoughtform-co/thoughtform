@@ -90,6 +90,10 @@ container; a face or a card made a container would silently re-base it.
 
 ### ⚠ THE COVER IS A FIXED-HEIGHT BAND, AND THE GLYPH IS A FIXED SIZE
 
+> ⚠ **Superseded by Update 1**: the BODY is the fixed, derived box now and the
+> cover takes the rest; `--mu-cover-h` is retired, and the strip (so the glyph)
+> may yield where the row cannot afford `--mu-closed`.
+
 `--mu-cover-h` is 46 % of the card on every card, so five covers end on one datum
 and all five kickers share a baseline across the row. The beat glyph is
 `--mu-glyph` (52–80px), whole inside the narrowest strip with air either side; a
@@ -277,10 +281,11 @@ repo and fixed; the seams spec's `NOT_SNAP_AREAS` names `.mu__row`.
 - **Touch on a ≥961 device.** A tap fires `pointerover` and the click together, so
   it opens and navigates in one gesture. A first-tap-opens rule is a decision for
   the owner's read, not taken.
-- **The open card's lower air.** The card is `clamp(336px, 52svh, 464px)` tall and
+- ~~**The open card's lower air.** The card is `clamp(336px, 52svh, 464px)` tall and
   a one-sentence summary at 56ch fills ~100px of the ~250px body, so at the
   owner's viewport ~150px of plate sits under the lede. The fixed height is what
-  keeps the strips one height; a shorter card or a longer summary are both dials.
+  keeps the strips one height; a shorter card or a longer summary are both dials.~~
+  → **Resolved by Update 1**: the slack is the cover's now.
 - **The grow's curve.** The reference's expo-out at 900ms is what shipped; the
   house's 720ms ease-in-out pair is one token away for his read.
 - **The light pane at .9** is a read, not a number to tune blind.
@@ -289,3 +294,144 @@ repo and fixed; the seams spec's `NOT_SNAP_AREAS` names `.mu__row`.
 - **The bloom on the strips**: every card carries it at its top-right, so each
   strip's top catches a little light. Uniform material by intent; the open card
   alone is the alternative.
+
+---
+
+## Update 1 — the body seats its copy, and the band yields to the telemetry (2026-09-23)
+
+Two composition defects on the committed row, both read off ADR-121's own
+stills by the coordinating session the same morning, both fixed here.
+
+### 1 · The open card pooled its slack in the body
+
+The cover was a fixed 46 % band and the body took the other 54 % of a
+`clamp(336px, 52svh, 464px)` card, so a two-line lede sat over a hole: this
+station's recorded mis-seat (ADR-119 §composition — air around a composition is
+room, air inside one is a mis-seat; ADR-070 U24 — bare field under the content
+reads as a hole). The slack belongs to the COVER, which is material.
+
+- **The body is a derived box.** On the row the face's rows are
+  `minmax(0, 1fr) var(--mu-body-h)`, and `--mu-body-h` is the body's rule, its
+  padding, ONE kicker line, ONE title line and `--mu-lede-lines` (3) of lede,
+  each at the line-height its own rule declares. The cover takes everything
+  else. Every body is the same box, so every cover ends on one datum and every
+  kicker starts on one line across the row — by construction, where the fixed
+  cover band had it by coincidence.
+- **The tokens ARE the declarations.** `.mu-card__body`'s padding, gap and rule
+  and the three text rules' line-heights read `--mu-body-*` / `--mu-*-lh`, so
+  the calc and the rules cannot drift; the kicker's line-height is declared
+  (`1.3`) because `normal` is a font metric no calc can read.
+  `musings-row.test.ts` pins both halves.
+- **Three lines is the budget, not a guess.** `musings-registry` caps a summary
+  at 220 characters, ~98em of PP Neue Montreal (mean advance 0.446em, measured
+  on the live copy), and three lines of the 34em measure hold 102em. The lede's
+  clamp is `var(--mu-lede-lines)` — a belt at exactly the reserved capacity that
+  no shipping copy can reach, and the capture reads every lede UNCLAMPED (a
+  clone, the casefile's method) to prove it.
+- **The measure is held, so a lede's line count is a property of the copy.** The
+  title and lede sit in `--mu-measure` (34em of the lede's face ≈ the 56ch they
+  had, stated through `--mu-copy` because `ch` would resolve against whichever
+  element substituted it), and the open card may never drop under
+  `--mu-open-min` = the measure plus the body's inset. At seven posts, or on the
+  961–1100 rung, a fixed strip would squeeze it: so the strip is now
+  `--mu-strip = clamp(2 × inset, (100cqw − open-min) / (n − 1) − gap,
+--mu-closed)` — `--mu-closed` wherever the row affords it, narrowing where it
+  cannot. It depends on the row and the count, never on which card is open, so
+  it is constant through the grow and `flex-grow` stays the one transitioned
+  property. The glyph yields only with it: `min(--mu-glyph, strip − inset)`.
+
+| viewport · host     | body (px) before → after | bare plate under the lede (px)     | pooled beyond padding + reserved lines |
+| ------------------- | ------------------------ | ---------------------------------- | -------------------------------------- |
+| 1920×1247 · lab ×5  | 250.6 → 172.5            | 123.6 → 47.9                       | 67.1 → 0                               |
+| 1920×1247 · landing | 250.6 → 172.5            | 123.6 → 47.9                       | 67.1 → 0                               |
+| 1440×800 · lab ×5   | 224.6 → 135.3            | 123.5 → 36.3                       | 79.9 → 0                               |
+| 1280×720 · landing  | 202.2 → 128.9            | 106.2 → 34.9 (Encode: 87.8 → 16.5) | 64.5 → 0                               |
+
+The cover grows by what the body gave up (213.4 → 291.5px at 1920×1247). The
+47.9px left under a two-line lede is its 22.5px of padding plus the one line it
+reserves and does not use; the three-line Encode lede fills its capacity to the
+padding. Kickers on one line at every viewport, before and after.
+
+**The narrowest open card** (lab, seven cards): at 1280×720 the strips yield
+96 → 71.2px so the open card holds 477.9px against a 477.8px floor, every lede
+at two lines and every title at one; at 1920×1247 they yield 120 → 86px. ⚠ **The
+envelope's edge is seven posts at the 961px rung**: 28px strips (the floor) and
+a 14px glyph — legible, and degenerate, because the measure is held first and
+the strips pay. Fixed strips there would push the longest live lede (Encode,
+168 characters) past the three lines its body reserves. At n ≤ 5 from 1280px
+nothing yields at all.
+
+### 2 · The last card ran under the right rail's telemetry
+
+ADR-119's tipped row had an edge FADE ending 3 % inside its window precisely so
+no plate lay under the right rail's readouts; the flat row deleted the fade and,
+silently, the job it was doing. Measured: the last card's right edge ran
+**25.4px under SECTOR ··· 06/07 at 1280×720 and 13.7px at 1440×800**.
+
+- **The band's end is derived from the frame's own geometry.** The readouts
+  (`rail-instruments.css` `.rin-tele`) hang `--hud-rail-guide-inset + 8px` in
+  from the right rail's outer edge, which sits `--hud-margin` in from the frame,
+  and read inboard; their type is fixed-size, so their width is a constant of
+  the frame — SECTOR is 6 × 6.4 + 34 + 5 × 7 = 107.4px (measured 107.41 at 1280,
+  1440 and 1920). `--mu-band-end = max(0px, --mu-tele-reach + --mu-body-pad-x −
+--band-margin)` goes on the HEAD's and the ROW's inline-end margin, so the
+  composition keeps one right edge; it is ZERO from ~1560px up (the owner's 1920) and gated on `html[data-rail-instruments]`, the stamp the readouts'
+  component writes. The test re-derives the 107.4px from the frame's own
+  declarations, so a readout that grows fails the unit suite before the capture.
+- ⚠ **The last 3px are the scrollbar's.** Every station is 100vw, centred
+  across the page's 6px scrollbar; the rail is fixed to the visible frame. So
+  the band sits half a scrollbar nearer the readouts than `--band-margin` says.
+  Without the term the capture measured **11px** at 961×720 against its 12px;
+  with it the air is exactly one card inset. (BEST-PRACTICES records the class.)
+- The head yielding with the row changes no wrap: the brief's 42ch box is
+  narrower than its column at every rung (checked on the 1440 still, three
+  lines before and after).
+
+| viewport · host    | the last card's clearance to the leftmost readout (px) |
+| ------------------ | ------------------------------------------------------ |
+| 1280×720 · landing | −25.4 → **+17.9**                                      |
+| 1440×800 · lab ×5  | −13.7 → **+20.1**                                      |
+| 1920×1247 · both   | +187.6 → +187.6 (no inset)                             |
+| 961×720 · lab ×7   | → **+14.0** (11.0 before the scrollbar term)           |
+
+Held at rest, on hover and on Tab (the last card's right edge is the row's in
+every state).
+
+### What the guards found
+
+- **The new gates failed on the committed CSS first**, on exactly these two
+  defects and nowhere else, which is what makes their passing mean something:
+  pooled slack on every card at 1920, 1440 and 1280, and the clearance at 1280
+  and 1440. The capture prints both numbers now — "bare under the lede" and
+  "clearance".
+- **The rung floor found the scrollbar.** A gate that compares two token
+  expressions would never see it; the capture compares painted rects.
+- **A test's own lookup was wrong once**: it destructured a regex's full match
+  where it meant the selector group, and failed — correctly — on a rule that was
+  there. Fixed in the test, not the sheet.
+
+### Guards
+
+- `musings-row.test.ts` 51 → 55: the strip yields (the clamp, the floor, the
+  glyph, the measure); the body is a derived box (the calc, both halves of the
+  token/declaration pair, the face's rows, the cover carrying no height, the
+  belt at the capacity, `--mu-cover-h` gone); the capacity holds the registry's
+  budget (read from `musings-registry.test.ts`); the band's end is derived (the
+  readout's width re-derived from `rail-instruments.css`, the scrollbar from
+  `landing.css`, the `max(0px, …)`, the head-and-row rule under
+  `data-rail-instruments` on the rung).
+- `capture-musings-row.mjs` gains: no plate pooled under any lede beyond its
+  padding and reserved lines, every kicker on one line, every lede within its
+  reserved lines UNCLAMPED, every title on one line, the open card at its
+  measure or wider, and every card ≥ 12px clear of the leftmost readout at
+  rest, on hover and on Tab.
+
+### Left open
+
+- **Seven posts on the 961–1100 rung** is the envelope's degenerate corner
+  (above). Capping the visible count per rung is the alternative, not taken
+  without the owner's read.
+- **The PRM rail at desktop widths** still takes ADR-119's composition: its
+  cover keeps the 16/10 aspect (so a little body slack remains there) and its
+  scroller is not on the band, so it keeps its own relationship to the
+  readouts. Neither was in scope; both are one rule away.

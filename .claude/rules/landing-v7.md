@@ -203,7 +203,7 @@ Lighthouse HQ's customer row measured off its DOM, one transitioned
 `flex-grow`, in the proof card's folder skin. The newest post is open at rest,
 no timer; `data-mu-open` is moved by the writer on `pointerover` / `focusin`.
 ADR-119's fan (U0), shelf (U1) and tipped 3D row with a detent (U2) are all
-retired with the form; nothing 3D survives in the station. Rules:
+retired with the form; nothing 3D survives in the station. ⚠ **ADR-121 U1**: the body is a derived box and the cover takes the slack; the band's right edge yields to the right rail's telemetry below ~1560px (`--mu-band-end`, which carries half the page's 6px scrollbar — the 100vw station is centred across it, the fixed rail is not). Rules:
 [`.claude/rules/musings.md`](musings.md).
 
 - ⚠ **ON THE CAPABLE RUNG THE STATION IS A TRANSPARENT STAGE AND ITS LAST

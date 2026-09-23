@@ -1672,6 +1672,27 @@ the overflow. The guard that found it asked whether the glyph was whole inside
 its strip; the guard that now names it asks whether the cover is its card's
 width.
 
+## A 100vw station and a fixed rail disagree by half the scrollbar (ADR-121 U1)
+
+Every station is `width: 100vw; margin-left: calc(50% - 50vw)` — centred
+across the layout viewport INCLUDING the scrollbar — while the HUD's rails and
+readouts are `position: fixed`, measured from the VISIBLE frame. So anything on
+the editorial band sits half a scrollbar (3px, the page's declared 6px
+`::-webkit-scrollbar`) nearer the right rail than the tokens say: `--band-margin`
+is symmetric, the painted band is not. The musings row's end inset was derived
+from the tokens alone and measured 11px of air at 961×720 against the 12px the
+capture asked for; the term is in `--mu-tele-reach` now, and the unit test
+re-derives it from `landing.css`'s scrollbar rule. Any clearance between band
+content and fixed chrome on this site has to carry it — and a guard that
+compares two token expressions instead of two painted rects will never see it.
+
+And the reason the clearance had to be derived at all: ADR-119's tipped row
+had an edge FADE ending 3 % inside its window precisely so no plate lay under
+the telemetry. Replacing the form deleted the fade and, silently, the job the
+fade was doing (ADR-101's "taking an animation away takes what it was holding
+up", one surface later). When a form is retired, list what each deleted
+feature was PROTECTING before deciding it has nothing left to do.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.

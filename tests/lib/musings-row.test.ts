@@ -364,6 +364,8 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
   /** The body of the first block whose selector, trimmed, is `sel`. */
   const bodyOf = (css: string, sel: string) =>
     blocks(css).find(([, s]) => s.trim() === sel)?.[2] ?? "";
+  /** Whitespace removed — so a derived `calc()` is pinned whatever way Prettier wraps it. */
+  const flat = (s: string) => s.replace(/\s+/g, "");
 
   it("the writer and the sheet name the SAME query", () => {
     // A writer and a sheet that disagree about the rung is a row of strips
@@ -380,7 +382,7 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     const sheet = read(SHEET);
     const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
     const card = bodyOf(rung, ".mu[data-mu-ready] .mu-card");
-    expect(card).toMatch(/flex:\s*0 0 var\(--mu-closed\)/);
+    expect(card).toMatch(/flex:\s*0 0 var\(--mu-strip\)/);
     expect(card).toMatch(/transition:\s*flex-grow var\(--mu-grow\)/);
     expect(card).not.toMatch(/transition:[^;]*(width|transform)/);
     expect(bodyOf(rung, ".mu[data-mu-ready] .mu-card[data-mu-open]")).toMatch(/flex-grow:\s*1/);
@@ -430,8 +432,8 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
     const row = bodyOf(rung, ".mu[data-mu-ready] .mu__row");
     expect(row).toMatch(/container-type:\s*inline-size/);
-    expect(row).toMatch(
-      /--mu-open-w:\s*calc\(100cqw - \(var\(--mu-n, 1\) - 1\) \* \(var\(--mu-closed\) \+ var\(--mu-gap\)\)\)/
+    expect(flat(row)).toContain(
+      "--mu-open-w:calc(100cqw-(var(--mu-n,1)-1)*(var(--mu-strip)+var(--mu-gap)))"
     );
     expect(row).toMatch(/gap:\s*var\(--mu-gap\)/);
     expect(bodyOf(rung, ".mu[data-mu-ready] .mu-card__body")).toMatch(
@@ -439,6 +441,158 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     );
     // And the station hands the row its count.
     expect(read(STATION)).toContain('"--mu-n": posts.length');
+  });
+
+  it("the strip YIELDS so the open card keeps its measure (ADR-121 U1)", () => {
+    // ⚠ At seven posts, or on the 961–1100 rung, a fixed strip would squeeze
+    // the open card under its measure and the lede past the lines its body
+    // reserves. So the strip is `--mu-closed` wherever the row affords it and
+    // narrows — never below the body's inset pair — so the open card holds
+    // `--mu-open-min`: the measure whole plus its inset. The strip depends on
+    // the row and the count, never on which card is open, so it is constant
+    // through the grow; the glyph yields only with it.
+    const sheet = read(SHEET);
+    const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
+    const row = flat(bodyOf(rung, ".mu[data-mu-ready] .mu__row"));
+    expect(row).toContain(
+      "--mu-strip:clamp(2*var(--mu-body-pad-x),(100cqw-var(--mu-open-min))/max(1,var(--mu-n,1)-1)-var(--mu-gap),var(--mu-closed))"
+    );
+    const mu = flat(bodyOf(sheet, ".mu"));
+    expect(mu).toContain("--mu-measure:calc(var(--mu-copy)*34)");
+    expect(mu).toContain("--mu-open-min:calc(var(--mu-measure)+2*var(--mu-body-pad-x))");
+    expect(flat(bodyOf(rung, ".mu[data-mu-ready] .mu-cover__beat"))).toContain(
+      "width:min(var(--mu-glyph),var(--mu-strip)-var(--mu-body-pad-x))"
+    );
+    // The title and the lede share one text column: the measure.
+    const column = blocks(rung).find(
+      ([, s]) => flat(s) === ".mu[data-mu-ready].mu-card__title,.mu[data-mu-ready].mu-card__lede"
+    );
+    expect(column?.[2] ?? "").toMatch(/max-width:\s*var\(--mu-measure\)/);
+  });
+
+  it("the body is a DERIVED box and the slack is the cover's (ADR-121 U1)", () => {
+    // ⚠ The open card pooled 124px of bare plate under a two-line lede at
+    // 1920×1247 — the station's recorded mis-seat. On the row the body is
+    // exactly its rule, its padding, one kicker line, one title line and the
+    // reserved lede lines, each at the line-height its OWN rule declares, and
+    // the cover takes the rest. The calc and the rules read one set of tokens,
+    // so they cannot drift — which is what this pins, both halves.
+    const sheet = read(SHEET);
+    const mu = flat(bodyOf(sheet, ".mu"));
+    expect(mu).toContain(
+      "--mu-body-h:calc(var(--mu-body-rule)+var(--mu-body-pad-t)+var(--mu-chrome)*var(--mu-kicker-lh)+var(--mu-body-gap)+var(--mu-card-title)*var(--mu-title-lh)+var(--mu-body-gap)+var(--mu-copy)*var(--mu-lede-lh)*var(--mu-lede-lines)+var(--mu-body-pad-b))"
+    );
+    const body = flat(bodyOf(sheet, ".mu-card__body"));
+    expect(body).toContain("padding:var(--mu-body-pad-t)var(--mu-body-pad-x)var(--mu-body-pad-b)");
+    expect(body).toContain("row-gap:var(--mu-body-gap)");
+    expect(body).toContain("border-top:var(--mu-body-rule)solidvar(--mu-rule)");
+    const kicker = flat(bodyOf(sheet, ".mu-card__kicker"));
+    expect(kicker).toContain("font-size:var(--mu-chrome)");
+    expect(kicker).toContain("line-height:var(--mu-kicker-lh)");
+    const title = flat(bodyOf(sheet, ".mu-card__title"));
+    expect(title).toContain("font-size:var(--mu-card-title)");
+    expect(title).toContain("line-height:var(--mu-title-lh)");
+    const lede = flat(bodyOf(sheet, ".mu-card__lede"));
+    expect(lede).toContain("font-size:var(--mu-copy)");
+    expect(lede).toContain("line-height:var(--mu-lede-lh)");
+
+    // On the rung: the cover row takes the rest, the body row is the derived
+    // box, the cover carries NO height of its own, and the clamp is a belt at
+    // exactly the capacity the body reserves.
+    const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
+    expect(flat(bodyOf(rung, ".mu[data-mu-ready] .mu-card__front"))).toContain(
+      "grid-template-rows:minmax(0,1fr)var(--mu-body-h)"
+    );
+    const cover = bodyOf(rung, ".mu[data-mu-ready] .mu-cover");
+    expect(cover).toMatch(/aspect-ratio:\s*auto/);
+    expect(cover).not.toMatch(/(^|[\s;])height\s*:/);
+    expect(flat(bodyOf(rung, ".mu[data-mu-ready] .mu-card__lede"))).toContain(
+      "-webkit-line-clamp:var(--mu-lede-lines)"
+    );
+    expect(sheet).not.toMatch(/--mu-cover-h/);
+  });
+
+  it("the lines the body reserves hold the registry's whole summary budget at the measure", () => {
+    // Three lede lines is the BUDGET, not a guess: `musings-registry` caps a
+    // summary at N characters; at PP Neue Montreal's mean advance that is
+    // N × 0.45em, and three lines of the 34em measure hold 102em. The advance
+    // is MEASURED (the landing's capability summary: 521px for 73 characters
+    // at 16px, 0.446em), and the capture reads every live lede unclamped, so
+    // this is the arithmetic and the capture is the proof. Raise the budget
+    // and this fails, pointing at `--mu-lede-lines`.
+    const MEAN_ADVANCE_EM = 0.45;
+    const registry = read("tests/lib/musings-registry.test.ts");
+    const budget = Number(/summary\.length\)\.toBeLessThanOrEqual\((\d+)\)/.exec(registry)?.[1]);
+    expect(budget).toBeGreaterThan(0);
+    const mu = flat(bodyOf(read(SHEET), ".mu"));
+    const lines = Number(/--mu-lede-lines:(\d+);/.exec(mu)?.[1]);
+    const measureEm = Number(/--mu-measure:calc\(var\(--mu-copy\)\*(\d+)\)/.exec(mu)?.[1]);
+    expect(lines).toBe(3);
+    expect(lines * measureEm).toBeGreaterThanOrEqual(budget * MEAN_ADVANCE_EM);
+  });
+
+  it("the band's end is DERIVED from the frame's own geometry, and zero where it need not be", () => {
+    // ⚠ ADR-121 shipped a row whose last card ran 25.4px UNDER the right
+    // rail's SECTOR readout at 1280×720 (13.7px at 1440×800). The readouts'
+    // width is a constant of the frame — fixed-size type — so it is re-derived
+    // HERE from `rail-instruments.css`'s own declarations, and the musings
+    // token must equal it: if the frame's readout grows, this fails before
+    // the capture's live gate does.
+    const tele = rules(read("components/landing/v7/rail-instruments/rail-instruments.css"));
+    const px = (s: string | undefined) => Number(/(\d+(?:\.\d+)?)px/.exec(s ?? "")?.[1]);
+    const em = (s: string | undefined) => Number(/(\d+(?:\.\d+)?)em/.exec(s ?? "")?.[1]);
+    const decl = (sel: string, prop: string) =>
+      new RegExp(`${prop}:\\s*([^;]+);`).exec(bodyOf(tele, sel))?.[1];
+    expect(flat(decl(".rin-tele", "right") ?? "")).toBe("calc(var(--hud-rail-guide-inset)+8px)");
+    const PT_MONO_ADVANCE = 0.6; // a monospace face: every glyph is 600/1000 em
+    const keyPx = px(decl(".rin-tele__k", "font-size"));
+    const keyTrack = em(decl(".rin-tele__k", "letter-spacing"));
+    const valPx = px(decl(".rin-tele__v", "font-size"));
+    const valTrack = em(decl(".rin-tele__v", "letter-spacing"));
+    const rule = px(decl(".rin-tele__rule", "width"));
+    const gap = px(decl(".rin-tele", "gap"));
+    // The three readouts, by their own formats (RailInstruments.tsx /
+    // useJourneyMarks.ts): a 3-digit bearing, `NN/NN` sector, `toFixed(2)` local.
+    const width = (key: string, valueChars: number) =>
+      key.length * keyPx * (PT_MONO_ADVANCE + keyTrack) +
+      2 * gap +
+      rule +
+      valueChars * valPx * (PT_MONO_ADVANCE + valTrack);
+    const widest = Math.max(width("BEARING", 3), width("SECTOR", 5), width("LOCAL", 4));
+    expect(widest).toBeCloseTo(107.4, 6);
+
+    // The 3px is half the page's declared scrollbar: the 100vw station is
+    // centred across it, the fixed rail is not.
+    const scrollbar = px(
+      /::-webkit-scrollbar\s*\{[^}]*width:\s*([^;]+);/.exec(
+        rules(read("components/landing/v7/landing.css"))
+      )?.[1]
+    );
+    expect(scrollbar / 2).toBe(3);
+
+    const mu = flat(bodyOf(read(SHEET), ".mu"));
+    expect(mu).toContain(
+      "--mu-tele-reach:calc(var(--hud-margin)+var(--hud-rail-guide-inset)+8px+107.4px+3px)"
+    );
+    // Zero wherever the band already ends short of the readouts (the owner's
+    // 1920 included): a `max(0px, …)`, never a fixed inset.
+    expect(mu).toContain(
+      "--mu-band-end:max(0px,var(--mu-tele-reach)+var(--mu-body-pad-x)-var(--band-margin))"
+    );
+    // Head and row take the same edge, only where the readouts are drawn, and
+    // only on the row's rung.
+    const sheet = read(SHEET);
+    const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
+    const yield_ = blocks(rung).find(
+      ([, , b]) => /--mu-band-end/.test(b) && /margin-inline-end/.test(b)
+    );
+    expect(yield_).toBeDefined();
+    const sel = flat(yield_?.[1] ?? "");
+    expect(sel).toContain("html[data-rail-instruments].mu[data-mu-ready].mu__head");
+    expect(sel).toContain("html[data-rail-instruments].mu[data-mu-ready].mu__row");
+    expect(flat(yield_?.[2] ?? "")).toContain(
+      "margin-inline-end:calc(var(--rail-inset)+var(--mu-band-end))"
+    );
   });
 
   it("the writer moves ONE attribute on events and holds NO React state", () => {

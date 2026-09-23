@@ -145,8 +145,56 @@ const readRow = () =>
       if (!rects.length) return null;
       const x = Math.min(...rects.map((r) => r.left));
       const r = Math.max(...rects.map((r2) => r2.right));
-      return { x: px(x), w: px(r - x), lines: rects.length };
+      /* One rect per LINE, counted by distinct tops: the kicker is three
+         inline runs on one line and must count as one. */
+      const lines = new Set(rects.map((q) => Math.round(q.top))).size;
+      return {
+        x: px(x),
+        y: px(Math.min(...rects.map((q) => q.top))),
+        b: px(Math.max(...rects.map((q) => q.bottom))),
+        w: px(r - x),
+        lines,
+      };
     };
+
+    /* ⚠ THE LEDE'S LINE COUNT IS READ OFF AN UNCLAMPED CLONE (casefile's own
+       method): a `-webkit-box` clamp CLIPS rather than overflows, so the
+       clamped box cannot report its own truncation. Same parent (so the same
+       font and rules), same width, no clamp, invisible, removed at once. */
+    const ledeLinesOf = (lede) => {
+      if (!lede) return null;
+      const w = lede.getBoundingClientRect().width;
+      const clone = lede.cloneNode(true);
+      clone.style.cssText = `display:block;-webkit-line-clamp:unset;overflow:visible;position:absolute;visibility:hidden;left:0;top:0;width:${w}px;max-width:none`;
+      lede.parentElement.appendChild(clone);
+      const lh = parseFloat(getComputedStyle(clone).lineHeight);
+      const lines = Math.round(clone.getBoundingClientRect().height / lh);
+      clone.remove();
+      return { lines, lh: px(lh) };
+    };
+
+    /* ⚠ A CUSTOM PROPERTY IS A STRING UNTIL SOMETHING LAYS IT OUT, and these
+       two are `cqw` expressions that only resolve INSIDE the row (its query
+       container). A probe seated in the row reads them as pixels. */
+    const rowEl = document.querySelector(".mu__row");
+    const resolveInRow = (prop) => {
+      if (!rowEl || !getComputedStyle(rowEl).getPropertyValue(prop).trim()) return null;
+      const probe = document.createElement("i");
+      probe.style.cssText = `position:absolute;visibility:hidden;height:0;width:var(${prop})`;
+      rowEl.appendChild(probe);
+      const w = probe.getBoundingClientRect().width;
+      probe.remove();
+      return px(w);
+    };
+    const capRaw = cs(mu)?.getPropertyValue("--mu-lede-lines").trim();
+
+    /* The right rail's telemetry — BEARING · SECTOR · LOCAL — as painted. */
+    const tele = [...document.querySelectorAll(".rin-tele")]
+      .map((el) => ({
+        k: (el.querySelector(".rin-tele__k")?.textContent ?? "").trim(),
+        ...box(el),
+      }))
+      .filter((t) => t.w > 0 && t.h > 0);
 
     const contact = document.getElementById("contact");
     const vh = document.documentElement.clientHeight;
@@ -199,11 +247,18 @@ const readRow = () =>
         };
       })(),
       rowBox: box(document.querySelector(".mu__row")),
+      tele,
+      teleLeft: tele.length ? px(Math.min(...tele.map((t) => t.x))) : null,
+      openMin: resolveInRow("--mu-open-min"),
+      ledeCap: capRaw ? Number(capRaw) : 3,
+      sb: window.innerWidth - document.documentElement.clientWidth,
       open,
       cards: cards.map((c, i) => {
         const s = getComputedStyle(c);
         const face = c.querySelector(".mu-card__front");
         const fs = getComputedStyle(face);
+        const body = c.querySelector(".mu-card__body");
+        const lede = c.querySelector(".mu-card__lede");
         return {
           i,
           open: c.hasAttribute("data-mu-open"),
@@ -221,6 +276,10 @@ const readRow = () =>
           beat: box(c.querySelector(".mu-cover__beat")),
           litMark: box(c.querySelector(".mu-cover__mark--lit")),
           tabbable: c.tabIndex >= 0 && !c.hasAttribute("aria-hidden"),
+          body: box(body),
+          padB: px(parseFloat(getComputedStyle(body).paddingBottom)),
+          kicker: inkOf(c.querySelector(".mu-card__kicker")),
+          ledeFit: ledeLinesOf(lede),
         };
       }),
       head: box(document.querySelector(".mu__head")),
@@ -362,6 +421,7 @@ await page.screenshot({ path: `${OUT}/mu-${tag}-rest.png` });
 
 /* Hover, leave, keyboard — the mechanic, asked of the browser. */
 let hover = null;
+let hoverTrace = [];
 let back = null;
 let kb = null;
 let perfIdle = null;
@@ -369,6 +429,33 @@ let perfHover = null;
 if (!phone && rest.cards.length >= 2) {
   const t = rest.cards[Math.min(2, rest.cards.length - 1)];
   const centre = (c) => [c.box.x + c.box.w / 2, c.box.y + c.box.h / 2];
+  /* ⚠ THE HOVER GATES CARRY THEIR OWN TRACE. A hover probe that fails with
+     only an end state ("card 0 is open") says what, never why; this records
+     every pointer and focus event the row receives, every move of
+     `data-mu-open` and every scroll from here to the Tab read, and the gates
+     print it whenever one of them fails. */
+  await page.evaluate(() => {
+    window.__muTrace = [];
+    const row = document.querySelector(".mu__row");
+    const idx = (el) => [...row.children].indexOf(el?.closest?.(".mu-card"));
+    const t0 = performance.now();
+    const at = () => `${Math.round(performance.now() - t0)}ms`;
+    for (const type of ["pointerover", "pointerleave", "focusin", "focusout"])
+      row.addEventListener(type, (e) =>
+        window.__muTrace.push(
+          `${at()} ${type} card ${idx(e.target)} @${Math.round(e.clientX ?? -1)},${Math.round(e.clientY ?? -1)}`
+        )
+      );
+    new MutationObserver((ms) => {
+      for (const m of ms)
+        window.__muTrace.push(
+          `${at()} data-mu-open ${m.target.hasAttribute("data-mu-open") ? "set on" : "cleared from"} card ${idx(m.target)}`
+        );
+    }).observe(row, { subtree: true, attributes: true, attributeFilter: ["data-mu-open"] });
+    window.addEventListener("scroll", () =>
+      window.__muTrace.push(`${at()} scroll ${Math.round(scrollY)}`)
+    );
+  });
   await page.mouse.move(...centre(t), { steps: 4 });
   await page.waitForTimeout(GROW_MS + 150);
   hover = await readRow();
@@ -385,6 +472,7 @@ if (!phone && rest.cards.length >= 2) {
   await page.screenshot({ path: `${OUT}/mu-${tag}-focus.png` });
   await page.evaluate(() => document.activeElement?.blur());
   await page.waitForTimeout(GROW_MS + 150);
+  hoverTrace = await page.evaluate(() => window.__muTrace ?? []);
 
   /* ── `--perf`: parked, then the pointer sweeping the row ───────────── */
   if (PERF) {
@@ -510,6 +598,47 @@ const showCards = (label, r) => {
 showCards("rest", rest);
 showCards("hover card 2", hover);
 showCards("Tab from card 0", kb);
+
+/* ── The body's seat (ADR-121 U1) ──────────────────────────────────────
+   `bare` is the plate under the lede's last line — the face's bottom minus
+   the lede's ink bottom. `allowed` is what the body may legitimately hold
+   there: its own bottom padding, the lede lines it reserves and this copy
+   does not use, and half a line for the leading the ink rect does not
+   include. Anything over that is slack pooled in the plate. */
+const slackOf = (r, c) => {
+  if (!c.body || !c.lede || !c.ledeFit) return null;
+  const bare = c.body.y + c.body.h - c.lede.b;
+  const unused = Math.max(0, r.ledeCap - c.ledeFit.lines);
+  const allowed = c.padB + unused * c.ledeFit.lh + c.ledeFit.lh / 2;
+  return {
+    bare: Math.round(bare * 10) / 10,
+    allowed: Math.round(allowed * 10) / 10,
+    pooled: Math.round((bare - allowed) * 10) / 10,
+  };
+};
+line(
+  `\n── the body's seat (cap ${rest.ledeCap} lede lines · open-min ${rest.openMin ?? "—"}px) ──`
+);
+for (const c of rest.cards) {
+  const s = slackOf(rest, c);
+  line(
+    `  ${c.i}${c.open ? "*" : " "} body ${c.body?.h}px · cover ${c.cover?.h}px · kicker top ${c.kicker?.y} · ` +
+      `title lines ${c.title?.lines} · lede lines ${c.ledeFit?.lines} (unclamped) · ` +
+      `bare under the lede ${s?.bare}px against ${s?.allowed} allowed → pooled ${s?.pooled}px`
+  );
+}
+/* ── The row's end against the right rail's telemetry (ADR-121 U1) ── */
+const clearOf = (r) =>
+  r && r.teleLeft != null
+    ? Math.round((r.teleLeft - Math.max(...r.cards.map((c) => c.box.x + c.box.w))) * 10) / 10
+    : null;
+line(
+  `\ntelemetry  ${rest.tele.map((t) => `${t.k} x${t.x}–${Math.round((t.x + t.w) * 10) / 10} y${t.y}`).join(" · ") || "none drawn"}`
+);
+line(
+  `row end    right ${rest.rowBox ? Math.round((rest.rowBox.x + rest.rowBox.w) * 10) / 10 : "—"} · ` +
+    `clearance to the leftmost readout: rest ${clearOf(rest)} · hover ${clearOf(hover)} · Tab ${clearOf(kb)} · scrollbar ${rest.sb}px`
+);
 line(
   `\nreduced motion  ready ${prm.ready} · open ${prm.open} · row ${prm.display} · glass ${[...new Set(prm.backdrops)].join(",")}`
 );
@@ -592,6 +721,52 @@ if (!phone) {
     if (c.beat && c.box && (c.beat.x < c.box.x || c.beat.x + c.beat.w > c.box.x + c.box.w))
       fails.push(`card ${c.i}'s glyph is not whole inside its strip`);
 
+  /* ── THE BODY'S SEAT (ADR-121 U1). The slack is the COVER's, never the
+     plate's: no card may carry more under its lede than its padding and the
+     lede lines it reserves. And the covers end on one datum, so every kicker
+     starts on one line across the row. ── */
+  for (const c of rest.cards) {
+    const s = slackOf(rest, c);
+    if (s && s.pooled > 1)
+      fails.push(
+        `card ${c.i} pools ${s.pooled}px of plate under its lede (${s.bare} bare, ${s.allowed} allowed)`
+      );
+  }
+  const kickerTops = rest.cards.map((c) => c.kicker?.y).filter((y) => y != null);
+  if (kickerTops.length && Math.max(...kickerTops) - Math.min(...kickerTops) > 0.5)
+    fails.push(
+      `the kickers do not share a line (${Math.min(...kickerTops)}–${Math.max(...kickerTops)})`
+    );
+  /* ⚠ THE COPY FITS WHAT THE BODY RESERVES, AT THE OPEN WIDTH, UNCLAMPED —
+     the clamp is a belt against future copy, so today's copy may not reach it
+     (proof.md). And the open card is never narrower than the lede's measure. */
+  for (const c of rest.cards) {
+    if (c.title && c.title.lines !== 1)
+      fails.push(`card ${c.i}'s title takes ${c.title.lines} lines`);
+    if (c.ledeFit && c.ledeFit.lines > rest.ledeCap)
+      fails.push(
+        `card ${c.i}'s lede needs ${c.ledeFit.lines} lines against ${rest.ledeCap} reserved`
+      );
+  }
+  const openCard = rest.cards.find((c) => c.open);
+  if (openCard && rest.openMin != null && openCard.box.w < rest.openMin - 1)
+    fails.push(`the open card is ${openCard.box.w}px, under its measure's ${rest.openMin}px`);
+
+  /* ── THE ROW ENDS BEFORE THE TELEMETRY (ADR-121 U1). Every card's right
+     edge clears the leftmost right-rail readout by ≥ 12px, at rest, on hover
+     and on keyboard focus — a plate under live telemetry is the one thing
+     the band's edge may not do (ADR-119 U1 recorded the band running 15px
+     past BEARING at 1280). ── */
+  for (const [label, r] of [
+    ["rest", rest],
+    ["hover", hover],
+    ["Tab", kb],
+  ]) {
+    const clear = clearOf(r);
+    if (clear != null && clear < 12)
+      fails.push(`${label}: the row's last card ends ${clear}px from the telemetry (needs ≥ 12)`);
+  }
+
   /* ── HOVER: card 2 opens inside the grow; card 0 collapses; leave restores. ── */
   if (hover) {
     const want = Math.min(2, rest.cards.length - 1);
@@ -616,6 +791,13 @@ if (!phone) {
   }
   if (back && back.open !== 0) fails.push(`leaving the row left card ${back.open} open`);
   if (kb && kb.open !== 1) fails.push(`Tab from card 0 opened card ${kb.open}, not card 1`);
+  if (
+    fails.some((f) => /^hovering|^the hovered|^card 0 did not|^leaving the row|^Tab from/.test(f))
+  ) {
+    line("");
+    line("── the hover's own trace (it failed) ──");
+    for (const e of hoverTrace) line(`  ${e}`);
+  }
 
   /* ── GLASS: on every face on the stage rung in dark; none in light. ── */
   const glass = rest.cards.map((c) => c.backdrop);

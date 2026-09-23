@@ -68,15 +68,27 @@ to the sheet's variety law. They share exactly one thing: the record.
 ## Contracts
 
 - **THE MECHANIC IS ONE PROPERTY, AS THE REFERENCE.** `.mu__row` is a flex row;
-  every card is `flex: 0 0 var(--mu-closed)` and the open one is
+  every card is `flex: 0 0 var(--mu-strip)` and the open one is
   `flex-grow: 1`, transitioned on `--mu-grow` (900ms
   `cubic-bezier(0.19, 1, 0.22, 1)`, the reference's expo-out re-solved for
   ~350px of edge travel). Mid-grow the two grows sum to one, so the free width
   is always fully distributed and no gap opens. Nothing is posed, nothing is
   measured, nothing is written per frame. The dials sit on `.mu`:
   `--mu-closed` (88–120px, a strip wide enough for "14 SEP" and the glyph
-  whole), `--mu-gap` (10–16px), `--mu-grow`, `--mu-cover-h` (46 % of the
-  card), `--mu-glyph`, `--mu-dwell`.
+  whole), `--mu-gap` (10–16px), `--mu-grow`, `--mu-glyph`, `--mu-dwell`, and
+  the body's tokens (`--mu-body-*`, `--mu-lede-lines`, `--mu-measure`).
+- ⚠ **THE STRIP YIELDS SO THE OPEN CARD KEEPS ITS MEASURE (ADR-121 U1).**
+  `--mu-strip` is `--mu-closed` wherever the row affords it and narrows —
+  never below the body's inset pair — so the open card never drops under
+  `--mu-open-min` (the lede's `--mu-measure`, 34em of its own face, plus the
+  body's inset either side). So a lede's line count is a property of the copy
+  alone, the same at three posts and at seven. It depends on the row's width
+  and the count, never on which card is open, so it is constant through the
+  grow; the glyph (`min(--mu-glyph, strip − inset)`) yields only with it.
+  ⚠ **The envelope's edge is seven posts on the 961px rung**: 28px strips and
+  a 14px glyph, legible and degenerate, because the measure is held first and
+  the strips pay; fixed strips there would push the longest live lede past the
+  lines its body reserves. At n ≤ 5 from 1280px nothing yields.
   ⚠ **THE APERTURE'S CURVE IS DELIBERATELY NOT COPIED HERE.** An ease-in-out
   is right for an arrival the reader did not cause and wrong for a pointer
   response, which wants an immediate start; the expo-out answers the hand at
@@ -96,21 +108,48 @@ to the sheet's variety law. They share exactly one thing: the record.
   what ADR-119 shipped: card 0 lit, nothing moving.
 - **THE TEXT NEVER REFLOWS DURING THE GROW.** The row is an inline-size
   container and publishes
-  `--mu-open-w: calc(100cqw − (n − 1) × (--mu-closed + --mu-gap))` — the
+  `--mu-open-w: calc(100cqw − (n − 1) × (--mu-strip + --mu-gap))` — the
   width the open card WILL have — and every card's body is laid out at that
   width once; the face's `overflow: hidden` clips it while the card is a strip
   and the grow UNCOVERS it. Pure motion: no opacity, no reflow (the caption
   card's own law, and the reference's read — the strips show the head of each
-  line). The copy caps its measure at 56ch inside it. ⚠ `cqw` resolves on the
-  element that USES the value against its nearest query container; a face or
-  a card made a container would silently re-base it. ⚠ The station hands the
-  row its count as `--mu-n`; the two files move together.
-- **THE COVER IS A FIXED-HEIGHT BAND ON EVERY CARD** (`--mu-cover-h`), the
-  beat glyph at a FIXED size centred in it (whole inside the narrowest strip),
-  the date axis spanning whatever width the card has with the lit mark at its
-  year fraction — so five covers end on one datum and all five kickers share a
-  baseline across the row. The rail's cover keeps its 16/10 aspect; on the
-  phone `--mu-card-h` is `auto` and the band is never consumed.
+  line). The title and the lede sit in `--mu-measure` inside it. ⚠ `cqw`
+  resolves on the element that USES the value against its nearest query
+  container; a face or a card made a container would silently re-base it.
+  ⚠ The station hands the row its count as `--mu-n`; the two files move
+  together.
+- ⚠ **THE BODY IS A DERIVED BOX AND THE SLACK IS THE COVER'S (ADR-121 U1).** On
+  the row the face's rows are `minmax(0, 1fr) var(--mu-body-h)`: the body is
+  exactly its rule, its padding, ONE kicker line, ONE title line and
+  `--mu-lede-lines` (3) of lede, each at the line-height its OWN rule declares
+  (`--mu-kicker-lh` · `--mu-title-lh` · `--mu-lede-lh` — the kicker's is
+  declared because `normal` is a font metric no calc can read), and the COVER,
+  which is material, takes the rest. The first cut pooled 124px of bare plate
+  under a two-line lede at 1920×1247 — the station's recorded mis-seat. Every
+  body is the same box, so every cover ends on one datum and every kicker
+  starts on one line across the row BY CONSTRUCTION. ⚠ The tokens ARE the
+  body's declarations (`.mu-card__body`'s padding, gap and rule; the three text
+  rules' line-heights), so the calc and the rules cannot drift; the test pins
+  both halves. ⚠ **THREE LINES IS THE BUDGET**: `musings-registry` caps a summary
+  at 220 characters, ~98em, i.e. three lines of the 34em measure — so the
+  lede's `-webkit-line-clamp: var(--mu-lede-lines)` is a belt no shipping copy
+  can reach, and the capture reads every lede UNCLAMPED to prove it. The rail's
+  cover keeps its 16/10 aspect; on the phone `--mu-card-h` is `auto`.
+- ⚠ **THE BAND'S END YIELDS TO THE RIGHT RAIL'S TELEMETRY (ADR-121 U1).** The
+  row's first cut ran its last card 25.4px UNDER the SECTOR readout at
+  1280×720 (13.7px at 1440×800); ADR-119's row had a fade ending 3 % inside its
+  window for exactly this, and the flat row has none. `--mu-band-end` =
+  `max(0px, --mu-tele-reach + --mu-body-pad-x − --band-margin)` is added to the
+  HEAD's and the ROW's inline-end margin — one right edge for the composition —
+  under `html[data-rail-instruments]` on the row rung: zero from ~1560px up
+  (the owner's 1920), a card inset of air below it. `--mu-tele-reach` is the
+  frame's own geometry: `--hud-margin + --hud-rail-guide-inset + 8px` to the
+  readout's right edge, plus its WIDTH, a constant of the frame because its
+  type is fixed-size (SECTOR ··· 06/07, 107.4px; the test re-derives it from
+  `rail-instruments.css`'s declarations), plus **3px — half the page's 6px
+  scrollbar, across which the 100vw station is centred and the fixed rail is
+  not.** Without that term the air measured 11px at 961×720. The capture asks
+  ≥ 12px at rest, on hover and on Tab.
 - **THE MATERIAL IS THE PROOF CARD'S FOLDER, RE-SOLVED FOR THIS SIZE
   (ADR-097).** `--mu-plate` is `rgba(--void-deep-rgb, .62)` (.9 on parchment,
   `theme.css` BLOCK 4g — unfrosted, the corridor printed through the copy);
@@ -236,7 +275,11 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   ⚠ **THE RIGHT-HAND SURVEY CHROME YIELDS TO THE FRAME BELOW 1700px**: the close
   cross hangs 24px outboard of an end-justified brief, and the right rail's
   BEARING / SECTOR / LOCAL readouts are right-aligned to the rail and reach
-  ~100px inboard. Measured at 1280×720 — band ends at 1148, `BEARING` begins at 1133. The brief's TEXT never collides; only the marks do.
+  ~100px inboard. Measured at 1280×720 — band ends at 1148, `BEARING` begins at 1133. The brief's TEXT never collides; only the marks do. ⚠ Since ADR-121
+  U1 the head's right edge ALSO yields with `--mu-band-end` below ~1560px, so
+  the brief, the state chip and the row's last card end on one line (1107.7 at
+  1280×720); the brief's wrap is unchanged, since its 42ch box is narrower
+  than its column at every rung.
 - ⚠ **THE HEAD DECODES IN PLACE, ON THE SERVICES MASTHEAD'S CLOCK (ADR-119 U2:
   "the texts … shouldn't move into view … just like we have in the services
   section").** U1 scrubbed it off the scroll position and asked the kernel for
@@ -320,8 +363,9 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   path, so a missing row works in dev and 500s on Vercel.
 - ⚠ **THE ROW READS BEST AT FIVE, AND THE LANDING HAS THREE.** At three the
   open card is ~928px of a 1200px band and the two strips read as afterthoughts;
-  at seven the open card is under 400px. `MUSINGS_ROW_MAX` is 7; a strip costs
-  the open card its width, not the page its length.
+  at seven the strips yield (86px at 1920, 71px at 1280) so the open card keeps
+  its measure. `MUSINGS_ROW_MAX` is 7; a strip costs the open card its width,
+  not the page its length.
 - ⚠ **PLACEHOLDER COPY LIVES IN THE LAB AND NOWHERE ELSE.** The site is live: a
   `draft: false` file in `content/musings/` publishes a page and a sitemap row.
   `/test/musings-row` (`app/(internal)/test/musings-row/`) mounts the
@@ -398,12 +442,18 @@ npx playwright test tests/visual/mobile-section-seams.spec.ts \
   --project=iphone-14-chromium --project=iphone-14-pro-max-chromium
 node scripts/capture-musings-row.mjs --vp 1920x1247 --theme dark --perf   # and light, 1280x720, 390x844
 node scripts/capture-musings-row.mjs --lab --n 5 --vp 1920x1247 --theme dark   # the placeholder host
+node scripts/capture-musings-row.mjs --lab --n 7 --vp 1280x720 --theme dark    # the narrowest open card
 # the capture gates: card 0 open at rest at ≥ 3× a strip; hover card 2 opens it
 # inside --mu-grow and collapses card 0; leaving restores card 0; Tab opens as
 # hover does; the title's laid-out width equal open and closed; glass on every
 # face on the stage rung in dark and on none in light or under reduced motion;
 # the head EMPTY off the pin and whole through the dwell; the TR-only notch
-# hit-tested from both ends; the bed, the readout and the footer's reveal
+# hit-tested from both ends; the bed, the readout and the footer's reveal;
+# (U1) no plate pooled under any lede beyond its padding and reserved lines,
+# every kicker on one line, every lede within its reserved lines UNCLAMPED and
+# every title on one, the open card at its measure or wider, and every card's
+# right edge ≥ 12px clear of the leftmost right-rail readout at rest, on hover
+# and on Tab. It prints both numbers — "bare under the lede" and "clearance".
 node scripts/capture-site-footer.mjs  --vp 1920x1247 --theme dark   # the bed must not move
 ```
 
