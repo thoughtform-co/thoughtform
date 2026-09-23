@@ -92,8 +92,13 @@ describe("the memory map (v5) — area is the words", () => {
   const live: GalleryPost[] = cardsFor(allPosts()).map((c, i) => ({
     ...c,
     outline: outlineOf(allPosts()[i].body),
+    author: allPosts()[i].author,
   }));
-  const lab: GalleryPost[] = LAB_MUSINGS.map((c) => ({ ...c, outline: LAB_OUTLINES[c.slug] }));
+  const lab: GalleryPost[] = LAB_MUSINGS.map((c) => ({
+    ...c,
+    outline: LAB_OUTLINES[c.slug],
+    author: "Vince Buyssens",
+  }));
 
   for (const [name, set] of [
     ["live", live],

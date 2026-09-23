@@ -41,10 +41,13 @@ export default function MusingsGalleryLabRoute() {
   const live: GalleryPost[] = cardsFor(posts).map((c, i) => ({
     ...c,
     outline: outlineOf(posts[i].body),
+    author: posts[i].author,
   }));
+  /* The placeholders are the owner's own voice, so they carry his byline. */
   const lab: GalleryPost[] = LAB_MUSINGS.map((c) => ({
     ...c,
     outline: LAB_OUTLINES[c.slug] ?? { sections: [], words: 0 },
+    author: "Vince Buyssens",
   }));
   return (
     <MusingsGalleryLabShell

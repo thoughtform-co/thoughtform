@@ -49,6 +49,8 @@ const VS = arg("--v", "v0,v1,v2,v3,v4,v5").split(",");
 const SRCS = arg("--src", "live,lab5,lab7").split(",");
 const HEADED = process.argv.includes("--headed");
 const ROOT_OUT = arg("--out", "shots/musings-gallery");
+/* Extra query for a direction's own knobs, e.g. `--q cover=raster`. */
+const EXTRA = arg("--q", "");
 
 const FACES = /PT Mono|PP Neue Montreal/i;
 const report = [];
@@ -70,10 +72,10 @@ for (const vp of VPS) {
       for (const srcKey of SRCS) {
         const src = srcKey.startsWith("lab") ? "lab" : "live";
         const n = src === "lab" ? srcKey.slice(3) || "5" : "";
-        const tag = `${v}-${srcKey}`;
+        const tag = `${v}-${srcKey}${EXTRA ? `-${EXTRA.replace(/[=&]/g, "_")}` : ""}`;
         const url =
           `http://localhost:${PORT}/test/musings-gallery?v=${v}&src=${src}` +
-          `${n ? `&n=${n}` : ""}&theme=${theme}&console=0`;
+          `${n ? `&n=${n}` : ""}&theme=${theme}&console=0${EXTRA ? `&${EXTRA}` : ""}`;
         errors.length = 0;
         await page.goto(url, { waitUntil: "domcontentloaded" });
         await page.waitForSelector(`[data-mg-stamp^="${v}|${src}|"]`, { timeout: 60_000 });

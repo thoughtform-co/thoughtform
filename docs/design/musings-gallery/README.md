@@ -37,20 +37,51 @@ http://localhost:3003/test/musings-gallery?v=v1
 
 ## The directions
 
-| id   | name           | built from                                                                                     | the idea                                                                                                                                                                                                                     | trade-off                                                                                                                                     |
-| ---- | -------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `v0` | Row            | production (ADR-121)                                                                           | The newest note open; the rest are strips that open on hover.                                                                                                                                                                | The control.                                                                                                                                  |
-| `v1` | Codex          | CP2077 codex/journal (Cyberpunk-3) · Starfield's starmap panel · the `/arcs` log + dossier     | Master and detail. On the left, an index with one plate per note and the chosen one filled. On the right, a glass dossier: title, summary, the note's place in its year, its contents with lengths, the readout, one button. | The most scalable and the best to read. It is also the most "application". At three notes the index is short and its column has air below it. |
-| `v2` | Starmap        | Starfield star map (Starfield-2) · the amber terminal instruments · ADR-078's program board    | The Arc plotted. Every note is a waypoint at its filing date in its beat's lane, on one dotted route in the order written. The selected note drops a line to its date. A readout strip sits underneath.                      | The only direction that draws the travelling the site claims. It depends on the tags: a note with no Arc tag has no lane.                     |
-| `v3` | Terminal store | Vilimovský STORE ACCESS (Panel-3) · CP2077 4ST store · Marathon armory · Brand Codex STACK     | Equal portrait cards, each with an emblem (the beat in a machined diamond) and its meta. The card you are on elaborates in place: the note wipes in as the emblem wipes out, on one clock.                                   | The classic gallery done properly. Past four notes it becomes a rail that scrolls. It reads most like "a blog".                               |
-| `v4` | Chapters       | a chapter select read as a book's contents · Dragonfly's writing list · Vilimovský MARKET DATA | A contents page. Every title is whole and large at the band's edge, with the record in mono columns. The open row grows down to its summary, contents and way in.                                                            | The most editorial and the simplest. It is ADR-121's accepted mechanic turned ninety degrees, and the least instrument-like.                  |
-| `v5` | Memory map     | a random seed ([seed-memory-map.md](seed-memory-map.md))                                       | The archive as 128 cells. Every note takes cells in proportion to its words, and its sections subdivide its run. The selection lights the note's LEDs.                                                                       | The most distinctive. It needs the readout to say which note is which. At seven notes on a laptop its labels drop to one line.                |
+| id   | name           | built from                                                                                          | the idea                                                                                                                                                                                                                                                                    | trade-off                                                                                                                                     |
+| ---- | -------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v0` | Row            | production (ADR-121)                                                                                | The newest note open; the rest are strips that open on hover.                                                                                                                                                                                                               | The control.                                                                                                                                  |
+| `v1` | Codex          | CP2077 codex/journal (Cyberpunk-3) · Starfield's starmap panel · the `/arcs` log + dossier          | Master and detail. On the left, an index with one plate per note and the chosen one filled. On the right, a glass dossier: title, summary, the note's place in its year, its contents with lengths, the readout, one button.                                                | The most scalable and the best to read. It is also the most "application". At three notes the index is short and its column has air below it. |
+| `v2` | Starmap        | Starfield star map (Starfield-2) · the amber terminal instruments · ADR-078's program board         | The Arc plotted. Every note is a waypoint at its filing date in its beat's lane, on one dotted route in the order written. The selected note drops a line to its date. A readout strip sits underneath.                                                                     | The only direction that draws the travelling the site claims. It depends on the tags: a note with no Arc tag has no lane.                     |
+| `v3` | Terminal store | Vilimovský STORE ACCESS (Panel-3) · CP2077 4ST store · Marathon armory · Brand Codex STACK          | Equal portrait cards, each with an emblem (the beat in a machined diamond) and its meta. The card you are on elaborates in place: the note wipes in as the emblem wipes out, on one clock.                                                                                  | The classic gallery done properly. Past four notes it becomes a rail that scrolls. It reads most like "a blog".                               |
+| `v4` | Chapters       | a chapter select read as a book's contents · Dragonfly's writing list · the outcomes dial (ADR-106) | A contents page. Every title is whole and large, with one right-set meta block and the note's cover as a thumbnail. The open row grows into a FEATURE: excerpt, byline and the way in on the left, the note's drawn cover on the right. **Round two, on his read (below).** | The most editorial. The owner's pick of round one. Past five notes on a laptop the list scrolls within itself.                                |
+| `v5` | Memory map     | a random seed ([seed-memory-map.md](seed-memory-map.md))                                            | The archive as 128 cells. Every note takes cells in proportion to its words, and its sections subdivide its run. The selection lights the note's LEDs.                                                                                                                      | The most distinctive. It needs the readout to say which note is which. At seven notes on a laptop its labels drop to one line.                |
+
+## v4, round two (owner, 2026-09-23)
+
+> I like V4 but I think it should be a bit more visual. It should be clearer
+> that it's a blog post. I think we don't need the section length. For the
+> opening I think we need something on the right side, but I'm not sure about
+> the current composition.
+
+- **The section lengths are gone**: the contents list and the Sections /
+  Length readout.
+- **A blog post is recognised by a picture, a byline and "min read".** Each
+  closed row carries its cover as a thumbnail and reads `NAVIGATE · 4 MIN
+READ` under its date. The open row signs itself `BY VINCE BUYSSENS` (the
+  record's own `author`).
+- **The open row is a feature.** The excerpt sits at the top of the left
+  column, the byline and the button at its floor, and the COVER fills the
+  right. The two columns share a top and a floor.
+- **The cover is the open question, so it is a knob:** `?cover=dial` (default),
+  `raster` or `field`, and `?thumbs=0` drops the thumbnails.
+  - **dial.** The house's ring register (ADR-106's outcomes dial). The beat's
+    mark sits at the centre. The year runs on the track clockwise from
+    January, with the filing day lit, a hand to it and the elapsed arc drawn
+    up to it. The archive's other notes that year are unlit marks. Corners
+    read the beat, the year and `DAY 257`.
+  - **raster.** The beat's mark as a halftone dot screen over a seeded field,
+    with a scanline.
+  - **field.** The Codex field: substrate, mark and year strip.
+- **The open row's floor is paid first.** The closed rows are solved from
+  what is left and from the count, and titles scale with their row, so seven
+  notes never clip the button.
 
 ## Knobs
 
 `?v=v0…v5` · `?src=live|lab` (the three real notes, or the seven placeholders)
 · `?n=3|5|7` (placeholders only) · `?theme=light` · `?console=0` (hide the
-console). The console at the foot switches all four.
+console) · on v4, `?cover=dial|raster|field` and `?thumbs=0`. The console at
+the foot switches all of them.
 
 ⚠ **The placeholders live in `../musings-row/placeholders.ts` and their
 outlines in `app/(internal)/test/musings-gallery/outlines.ts`**, and nowhere

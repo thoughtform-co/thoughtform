@@ -12,6 +12,7 @@ import { useThemeStore } from "@/lib/stores/themeStore";
 import { HudFrame } from "../hud-panel-lab/HudFrame";
 
 import type { GalleryPost } from "./directions/kit";
+import { COVER_KINDS, type CoverKind } from "./directions/NoteCover";
 import {
   MG_DIRECTIONS,
   MG_DIRECTION_IDS,
@@ -67,6 +68,8 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
   const [src, setSrc] = useState<LabSource>("live");
   const [n, setN] = useState<LabCount>(5);
   const [theme, setTheme] = useState<LabTheme>("dark");
+  const [cover, setCover] = useState<CoverKind>("dial");
+  const [thumbs, setThumbs] = useState(true);
   const [consoleMounted, setConsoleMounted] = useState(true);
   const [adopted, setAdopted] = useState(false);
   const setMode = useThemeStore((s) => s.setMode);
@@ -82,6 +85,9 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
     const qn = Number(q.get("n"));
     if (qn === 3 || qn === 5 || qn === 7) setN(qn);
     if (q.get("theme") === "light") setTheme("light");
+    const qc = q.get("cover") as CoverKind | null;
+    if (qc && COVER_KINDS.includes(qc)) setCover(qc);
+    if (q.get("thumbs") === "0") setThumbs(false);
     if (q.get("console") === "0") setConsoleMounted(false);
     setAdopted(true);
   }, []);
@@ -125,7 +131,10 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
 
   const shown = src === "live" ? live : lab.slice(0, n);
   const Gallery = v === "v0" ? null : MG_GALLERIES[v];
-  const stamp = adopted ? `${v}|${src}|${src === "live" ? live.length : n}|${theme}` : undefined;
+  const stamp = adopted
+    ? `${v}|${src}|${src === "live" ? live.length : n}|${theme}|${cover}|${thumbs ? 1 : 0}`
+    : undefined;
+  const knobs = { cover, thumbs: thumbs ? "1" : "0" };
 
   return (
     <div
@@ -149,7 +158,7 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
           <MusingsStation
             key={`${v}|${src}|${n}`}
             posts={shown}
-            gallery={Gallery ? <Gallery posts={shown} today={today} /> : undefined}
+            gallery={Gallery ? <Gallery posts={shown} today={today} knobs={knobs} /> : undefined}
           />
         </section>
       </main>
@@ -211,6 +220,37 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
                   {c}
                 </button>
               ))}
+            </div>
+          ) : null}
+          {v === "v4" ? (
+            <div className="mrl-console__row">
+              {COVER_KINDS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className="mrl-btn"
+                  data-on={c === cover || undefined}
+                  aria-pressed={c === cover}
+                  onClick={() => {
+                    setCover(c);
+                    writeParam("cover", c);
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="mrl-btn"
+                data-on={thumbs || undefined}
+                aria-pressed={thumbs}
+                onClick={() => {
+                  setThumbs(!thumbs);
+                  writeParam("thumbs", thumbs ? "0" : "1");
+                }}
+              >
+                thumbs
+              </button>
             </div>
           ) : null}
           <div className="mrl-console__row">

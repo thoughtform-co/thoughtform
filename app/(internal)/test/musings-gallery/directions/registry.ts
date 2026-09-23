@@ -73,9 +73,10 @@ export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
   v4: {
     id: "v4",
     label: "Chapters",
-    thesis: "A contents page: every title whole and large, the open one growing down to its note.",
+    thesis:
+      "A contents page of whole, large titles; the open one grows into a feature with the note's drawn cover.",
     provenance:
-      "A chapter select read as a book · the Dragonfly writing list · Vilimovský MARKET DATA.",
+      "A chapter select read as a book · the Dragonfly writing list · the outcomes dial (ADR-106) as the cover.",
   },
   v5: {
     id: "v5",

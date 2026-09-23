@@ -1066,25 +1066,34 @@ html[data-theme="light"] #musings .mu .mg-plate {
 
 /* ═══ v4 · Chapters ════════════════════════════════════════════════════
    A contents page: the title first, set large at the band's left edge, the
-   record's readings in mono columns on the right. ⚠ THE DEVICE IS A SIZE
-   CONTAINER so the open row takes what the closed rows leave — up to a
-   ceiling, past which the surplus is frame under the list, never a hole
-   inside the open row. Its detail is laid out at that height once, and the
-   row's `grid-template-rows` 0fr → 1fr uncovers it. */
+   record's readings in mono columns, the note's cover as a thumbnail at the
+   row's end. The open row grows into a FEATURE — the excerpt, the byline and
+   the way in on the left, the cover on the right, sharing a top and a floor.
+   ⚠ THE DEVICE IS A SIZE CONTAINER so the open row takes what the closed rows
+   leave — up to a ceiling, past which the surplus is frame under the list,
+   never a hole inside the open row. Its detail is laid out at that height
+   once, and the row's `grid-template-rows` 0fr → 1fr uncovers it. */
 .mg--chapters {
   /* The row is solved from the COUNT as well as the frame, so seven notes on a
      tall window still leave the open row its floor without a scroller. */
+  /* ⚠ THE OPEN ROW'S FLOOR IS PAID FOR FIRST. Its feature (excerpt, byline,
+     the way in, the cover) needs about 300px to read; the closed rows are
+     solved from what is LEFT and the count, so seven notes on a tall window
+     shrink the rows rather than clipping the button. */
+  --mg-ch-open-min: clamp(220px, 26svh, 320px);
   --mg-ch-row: clamp(
-    44px,
-    min(8.2svh, calc((100cqh - 170px - var(--mg-ch-foot)) / var(--mu-n, 3) - 1px)),
+    48px,
+    min(8.6svh, calc((100cqh - var(--mg-ch-open-min) - var(--mg-ch-foot)) / var(--mu-n, 3) - 1px)),
     108px
   );
   --mg-ch-foot: clamp(58px, 7svh, 76px);
   --mg-ch-open: clamp(
-    170px,
+    var(--mg-ch-open-min),
     calc(100cqh - var(--mu-n, 3) * (var(--mg-ch-row) + 1px) - 1px - var(--mg-ch-foot)),
-    300px
+    400px
   );
+  --mg-ch-gap: clamp(14px, 1.6vw, 28px);
+  --mg-ch-thumb: calc(var(--mg-ch-row) - 16px);
   display: grid;
   grid-template-rows: minmax(0, auto) auto;
   align-content: start;
@@ -1106,15 +1115,17 @@ html[data-theme="light"] #musings .mu .mg-plate {
 }
 .mg-ch__row {
   display: grid;
-  grid-template-columns: 12px minmax(0, 1fr) minmax(7em, 9em) minmax(8em, 10em) 5.5em;
+  grid-template-columns: 12px minmax(0, 1fr) auto auto;
   align-items: center;
-  column-gap: clamp(14px, 1.6vw, 28px);
+  column-gap: var(--mg-ch-gap);
   height: var(--mg-ch-row);
-  padding-right: 4px;
   color: var(--mu-ink-2);
   text-decoration: none;
   outline: none;
   transition: color 200ms ease-out;
+}
+.mg--chapters:not([data-mg-thumbs]) .mg-ch__row {
+  grid-template-columns: 12px minmax(0, 1fr) auto;
 }
 .mg-ch__mark {
   width: 8px;
@@ -1126,32 +1137,25 @@ html[data-theme="light"] #musings .mu .mg-plate {
     background-color 200ms ease-out,
     border-color 200ms ease-out;
 }
-.mg-ch__date,
-.mg-ch__beat,
-.mg-ch__min {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.mg-ch__meta {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
   font-family: var(--font-pt-mono);
   font-size: var(--mu-chrome);
+  line-height: 1;
   letter-spacing: var(--track-label);
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--mu-ink-3);
-}
-.mg-ch__min {
-  justify-content: flex-end;
-}
-.mg-ch__glyph {
-  width: 14px;
-  height: 14px;
 }
 .mg-ch__title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: clamp(22px, 2.6vw, 50px);
+  /* The title rides its row: shorter rows (more notes) set it smaller. */
+  font-size: min(clamp(22px, 2.5vw, 48px), calc(var(--mg-ch-row) * 0.6));
   line-height: 1.08;
   letter-spacing: var(--track-display);
 }
@@ -1169,61 +1173,224 @@ html[data-theme="light"] #musings .mu .mg-plate {
   outline: 1px solid var(--gold-line);
   outline-offset: 4px;
 }
+
+/* The thumbnail — the note's own cover, stripped to its rings and its mark,
+   in a square slot with the plate's hairline. On the open row it gives way:
+   the same drawing is the feature's cover below it. */
+.mg-thumb {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--mg-ch-thumb);
+  height: var(--mg-ch-thumb);
+  border: 1px solid var(--mu-rule);
+  background: var(--mg-well);
+}
+.mg-thumb .mg-dial {
+  width: 86%;
+  height: 86%;
+}
+.mg-ch__item[data-mg-on] .mg-thumb {
+  visibility: hidden;
+}
+
 .mg-ch__open {
   display: grid;
   grid-template-rows: 0fr;
   visibility: hidden;
   transition:
-    grid-template-rows 520ms cubic-bezier(0.16, 1, 0.3, 1),
-    visibility 0s linear 520ms;
+    grid-template-rows 560ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 560ms;
 }
 .mg-ch__item[data-mg-on] .mg-ch__open {
   grid-template-rows: 1fr;
   visibility: visible;
   transition:
-    grid-template-rows 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    grid-template-rows 560ms cubic-bezier(0.16, 1, 0.3, 1),
     visibility 0s linear 0s;
 }
 .mg-ch__inner {
   min-height: 0;
   overflow: hidden;
 }
-/* ⚠ EVERY CELL PLACED EXPLICITLY — the record spans two rows, and an item
-   with a definite row is auto-placed BEFORE the rest, which put the summary
-   in the right-hand column on the first cut. */
+/* ⚠ EVERY CELL PLACED EXPLICITLY — an item with a definite row is
+   auto-placed BEFORE the rest, which put the summary in the right-hand
+   column on the first cut. The copy column starts under the title (the
+   mark's column and one gap in); the cover ends on the row's right edge. */
 .mg-ch__detail {
   display: grid;
   grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  column-gap: clamp(20px, 3.4vw, 64px);
-  row-gap: clamp(12px, 1.8svh, 20px);
+  column-gap: clamp(24px, 3.4vw, 64px);
   box-sizing: border-box;
   height: var(--mg-ch-open);
-  padding: 0 0 clamp(16px, 2.4svh, 28px) calc(12px + clamp(14px, 1.6vw, 28px));
+  padding: 2px 0 clamp(18px, 2.6svh, 30px) calc(12px + var(--mg-ch-gap));
 }
-.mg-ch__summary {
+.mg-ch__copy {
   grid-column: 1;
   grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(14px, 2svh, 24px);
+  min-height: 0;
+}
+.mg-ch__summary {
   margin: 0;
-  max-width: 34em;
-  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
-  line-height: 1.5;
+  max-width: 30em;
+  font-size: clamp(16px, 1.3vw, 22px);
+  line-height: 1.45;
   color: var(--mu-ink-2);
 }
-.mg-ch__read {
-  grid-column: 1;
-  grid-row: 2;
-  align-self: start;
-  max-width: 22rem;
-}
-.mg-ch__record {
-  grid-column: 2;
-  grid-row: 1 / span 3;
+.mg-ch__sign {
   display: grid;
-  align-content: start;
-  gap: clamp(14px, 2svh, 22px);
-  min-width: 0;
+  gap: clamp(12px, 1.6svh, 18px);
+  max-width: 24rem;
 }
+.mg-ch__byline {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-2);
+}
+.mg-ch__by {
+  color: var(--mu-ink-3);
+}
+.mg-ch__cover {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  min-height: 0;
+}
+
+/* ── The covers ───────────────────────────────────────────────────────── */
+.mg-cover {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+  container-type: size;
+}
+.mg-cover__label {
+  position: absolute;
+  z-index: 1;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-cover__label--tl {
+  top: var(--mg-pad);
+  left: var(--mg-pad);
+  color: var(--gold-ink);
+}
+.mg-cover__label--bl {
+  bottom: var(--mg-pad);
+  left: var(--mg-pad);
+}
+.mg-cover__label--br {
+  right: var(--mg-pad);
+  bottom: var(--mg-pad);
+}
+.mg-cover__field {
+  height: 100%;
+  border-block: 0;
+}
+
+/* The dial: square, bounded by the plate's height, centred in it; the four
+   quarter months hang just outside the rim as DOM labels. */
+.mg-cover__dial {
+  position: relative;
+  width: min(78cqh, 70cqw);
+  aspect-ratio: 1;
+}
+.mg-dial {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.mg-dial path,
+.mg-dial line {
+  fill: none;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.mg-dial__line {
+  stroke: rgba(var(--dawn-rgb), 0.3);
+}
+.mg-dial__line2 {
+  stroke: rgba(var(--dawn-rgb), 0.2);
+}
+.mg-dial__tick {
+  stroke: rgba(var(--dawn-rgb), 0.32);
+}
+.mg-dial__stub {
+  stroke: rgba(var(--dawn-rgb), 0.6);
+}
+.mg-dial__gold {
+  stroke: var(--gold-line);
+  stroke-opacity: 0.7;
+}
+.mg-dial__soft {
+  stroke: var(--gold-line);
+  stroke-opacity: 0.35;
+}
+.mg-dial path.mg-dial__elapsed {
+  stroke: var(--gold-line);
+  stroke-width: 2;
+}
+.mg-dial line.mg-dial__hand {
+  stroke: var(--gold-line);
+}
+.mg-dial__mark {
+  fill: rgba(var(--dawn-rgb), 0.55);
+}
+.mg-dial__lit {
+  fill: var(--gold);
+}
+html[data-theme="light"] .mg-dial__lit {
+  fill: var(--gold-line);
+}
+.mg-dial__glyph {
+  color: var(--mu-ink-2);
+}
+.mg-dial__glyph path {
+  vector-effect: none;
+}
+.mg-cover__q {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1;
+  letter-spacing: var(--track-label);
+  color: var(--mu-ink-3);
+}
+
+/* The raster: the beat's mark as a halftone over a seeded field. */
+.mg-raster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.mg-raster__dot {
+  fill: var(--gold);
+}
+html[data-theme="light"] .mg-raster__dot {
+  fill: var(--gold-line);
+}
+.mg-raster__field {
+  fill: rgba(var(--dawn-rgb), 0.3);
+}
+.mg-raster__scan {
+  fill: rgba(var(--dawn-rgb), 0.05);
+}
+
 .mg-ch__foot {
   display: flex;
   align-items: center;
@@ -1477,8 +1644,13 @@ html[data-theme="light"] .mg-mm__label {
   .mg-ch__row {
     grid-template-columns: 12px minmax(0, 1fr) auto;
   }
-  .mg-ch__date,
-  .mg-ch__beat {
+  .mg-ch__kind,
+  .mg-thumb {
     display: none;
+  }
+  .mg-ch__cover {
+    grid-column: 1;
+    grid-row: auto;
+    aspect-ratio: 16 / 10;
   }
 }

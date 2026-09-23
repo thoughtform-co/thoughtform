@@ -21,12 +21,17 @@ import type { MusingCardData } from "@/lib/musings/types";
 /** A card's record plus the essay's shape, read server-side off its body. */
 export interface GalleryPost extends MusingCardData {
   outline: MusingOutline;
+  /** The byline — the record's own `author`, which the landing's card
+   *  projection leaves out and a blog post is recognised by. */
+  author: string;
 }
 
 export interface DirectionProps {
   posts: readonly GalleryPost[];
   /** `YYYY-MM-DD`, the practice's own day, asked ONCE by the server page. */
   today: string;
+  /** A direction's own knobs, adopted from the URL by the shell. */
+  knobs?: Readonly<Record<string, string>>;
 }
 
 /** The post's page. A variable, so the literal-href lint rule never fires. */
