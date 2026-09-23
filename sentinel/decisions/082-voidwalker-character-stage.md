@@ -4708,3 +4708,78 @@ https://ehijwavsxbvnxsrunegu.supabase.co`. So the captured playback already
 - **The clip is 60fps at 1280 × 720 for a card that plays it at dialog scale.**
   A 30fps cut would roughly halve the bytes; not taken without his word, since
   the original ships unaltered.
+
+## Update 40 — the band seats on the wordmark (2026-09-23, owner)
+
+The owner, on U38's seat, live: _"move the gallery at the bottom a bit down so
+they're horizontally aligned with the brand mark, because I think they would
+be too close to the elements."_ U38 had mirrored the title's datum into the
+foot, which stood the band's last glyph on the bottom brackets' top edge — the
+wordmark's TOP line — and, at his window, 21px under the TRANSMISSION pile.
+
+### A · The seat
+
+- **The band's BOX is centred on the docked wordmark's box.** `--vwd-foot` is
+  `--hud-margin + --hud-brand-dock-h / 2 − --vwd-band-box / 2`, inside U38's
+  `min(…, max(0px, (100svh − 720px) × 0.4))` ease, which stays: the full value
+  is ~14px at 1280 × 720 and the cap holds the band on the floor there, as
+  before; it is exact from ~755px tall at 1280 wide and ~805 at 1920, which
+  covers every other reference rung.
+- **Both readings of "aligned" were shot at 1936 × 1221 before choosing.**
+  Centred: the thumbnails overlap the wordmark's 43px by 33 (their centre 12px
+  above its centre, because the names hang under the pictures inside the box),
+  the names' box ends 11px under the mark's bottom line, the air under the pile
+  goes 21 → 40px. Bottom-aligned on the mark's bottom line: the pictures sit
+  ABOVE the wordmark, the names beside its lower half, 28px of air. Centred is
+  what ships; the other is one term away.
+- ⚠ **U38's mechanism stands to the letter** — the absolute band, the fifth
+  stage row, paid by the panels and never the figure. A SMALLER foot is more
+  body row: rows 2 and 4 gain half the difference each.
+- ⚠ **Where the pile FILLS its seat, it grows instead of gaining air.** At
+  1920 × 1080 and 1440 × 900 the TRANSMISSION seat is height-bound
+  (`container-type: size`, the frame the one item that gives), so the extra
+  body row goes into the film frame and the gap under the pile stays 17–18px;
+  at his 1221 the pile is content-height and the room opens as air. Both are
+  the composition working as U31 built it.
+
+### B · The wordmark's box, as HUD tokens
+
+- The mark's geometry was two literals in two rules (`width: clamp(104px,
+8.5vw, 150px)` on `.hud__brand`, `scale(0.68)` on its docked state) and an
+  intrinsic aspect only the browser knew. `landing.css` `:root` carries
+  `--hud-brand-w`, `--hud-brand-dock` and `--hud-brand-aspect` (494.93 /
+  1178.18 = 0.42008, the lockup's own viewBox) and their product
+  `--hud-brand-dock-h`; the two rules read the first two. Every computed value
+  is byte-identical to the literal it replaced — measured 42.8px tall at the
+  150px cap before and after, and the HUD snapshot spec is the proof.
+- ⚠ **The aspect is the one term CSS cannot derive from the file**, so
+  `tests/lib/hud-brand-tokens.test.ts` reads the SVG the prototype's
+  `.hud__brand` loads and pins the token to its viewBox within 1e-4, along with
+  the two rules and both sheets' foot expression. A re-exported lockup with a
+  different artboard would otherwise seat the band a few pixels off with
+  nothing to say so.
+- The era sheet reads the tokens with fallbacks at the 1920-wide values
+  (`54px`, `42.85px`), the same courtesy `--vwd-mast-top` extends to
+  `--hud-corner-foot`, for a host that does not load the HUD's sheet.
+
+### Verified
+
+| viewport    | foot, U38 → U40 | band centre / mark centre (from the floor) | air under the pile    |
+| ----------- | --------------- | ------------------------------------------ | --------------------- |
+| 1936 × 1221 | 88.3 → **29.4** | 75.4 / 75.4                                | 21 → **40**           |
+| 1920 × 1080 | 90.1 → **33.6** | 75.4 / 75.4                                | 18 → 18 (frame grows) |
+| 1440 × 900  | 71.6 → **19.0** | 58.0 / 58.0                                | 15 → 17               |
+| 1280 × 720  | 0 → **0**       | (cap)                                      | 12 → 12               |
+
+- `probe-band-brand.mjs` (scratch), headed, real scrolls, the four rows above.
+- `hud-brand-tokens` (4), `voidwalker-datum-sheet` (28), `type-material-tokens`
+  (76), `theme-css-sweep` (29), `phone-viewport-units` (24): green.
+- `probe-voidwalker-figure-span --vp 1920x1247`, both handoff specs and the HUD
+  snapshot spec: see the commit for their result.
+
+### Left open
+
+- **The 17–18px under a height-bound pile at the laptop rungs** is U31's seat
+  law, not the band's; if it reads tight there, the lever is the seat's own
+  `padding-bottom`, not the foot.
+- The hud-panel lab still does not mirror the foot (it has lagged since U22).

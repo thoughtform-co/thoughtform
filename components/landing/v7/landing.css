@@ -54,6 +54,17 @@
   --hud-margin: clamp(16px, min(2.8125vw, 5vmin), 54px);
   --hud-rail-width: clamp(48px, 4.27vw, 82px);
   --hud-corner-zone: clamp(28px, 4.17vmin, 45px);
+  /* ⚠ THE WORDMARK'S BOX, AS TOKENS (ADR-082 U40). `.hud__brand` is
+     `--hud-brand-w` wide and docks at `--hud-brand-dock` once scrolled; its
+     height follows the lockup's own viewBox (1178.18 × 494.93 → 0.42008,
+     pinned to the file by `tests/lib/hud-brand-tokens.test.ts`). The era stage
+     seats its band on that box, so the three numbers live here, once, and the
+     rules that draw the mark read the same ones. ⚠ Every computed value is
+     byte-identical to the literals it replaced. */
+  --hud-brand-w: clamp(104px, 8.5vw, 150px);
+  --hud-brand-dock: 0.68;
+  --hud-brand-aspect: 0.42008;
+  --hud-brand-dock-h: calc(var(--hud-brand-w) * var(--hud-brand-dock) * var(--hud-brand-aspect));
   /* Shared viewport Y for BOTH rail ends and any readout physically welded
      to them (the services casefile mirrors both; the voidwalker datum hangs
      from the start). Keeping the expressions here prevents a second,
@@ -458,7 +469,7 @@
      foot of the same editorial column instead of floating out at the
      rail. Mobile matches the hero's flat padding in the ≤960 block. */
   left: var(--hud-content-inset);
-  width: clamp(104px, 8.5vw, 150px);
+  width: var(--hud-brand-w);
   display: block;
   pointer-events: auto;
   z-index: 52;
@@ -491,7 +502,7 @@
      (transform-origin: bottom left keeps the shrunk mark pinned in the
      corner). 0.82 → 0.68: once scrolled it reads as a quiet signature. */
   left: var(--hud-margin);
-  transform: scale(0.68);
+  transform: scale(var(--hud-brand-dock));
 }
 .hud__brand img {
   width: 100%;

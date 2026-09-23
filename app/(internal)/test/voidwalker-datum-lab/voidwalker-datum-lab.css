@@ -59,11 +59,11 @@
        as a fifth stage row; a lab that re-declared neither would measure the
        TRANSMISSION pile in a seat ~half a foot taller than the landing gives
        it — `capture-era-media` passing a pile the landing cannot hold. The
-       expression is production's, character for character. */
+       expression is production's, character for character (U40 seats the
+       band's box on the docked wordmark's box, through the HUD's own tokens). */
     --vwd-foot: min(
       calc(
-        var(--vwd-mast-top) + 0.16 * var(--vwd-title-fs) - var(--vwd-band-pad-b) - 0.36 *
-          var(--vwd-name-fs)
+        var(--hud-margin, 54px) + var(--hud-brand-dock-h, 42.85px) / 2 - var(--vwd-band-box) / 2
       ),
       max(0px, (100svh - 720px) * 0.4)
     );

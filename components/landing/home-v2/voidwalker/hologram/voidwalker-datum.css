@@ -340,29 +340,29 @@
        surrendered its own padding and pinned, so the stage's top edge IS the
        line the four heads hang from, and there is height to spend. */
     --vwd-rise: 1;
-    /* ⚠ THE FOOT MIRRORS THE MAST (ADR-082 U38, owner 2026-09-22: the band
-       should sit "the same margin at the bottom relative to the margin above
-       the Intelligence Architect title"). The title hangs from the TL bracket's
-       foot; the band's last glyph now stands the same distance above the
-       frame's floor — which is the top edge of the bottom brackets, the
-       wordmark's top line.
-       ⚠ IN INK, NOT IN BOXES. The title's caps start 0.16 of its size below
-       its box (PP Neue Montreal at 1.1), and the names' caps end 0.36 of
-       theirs above their line box (PT Mono at 1.25) — measured off the pixels
-       at 1920×1247 (7px and 4.3px). Mirroring the boxes would leave the bottom
-       ~11px lighter than the top at every size.
-       ⚠ AND IT IS PAID BY THE PANELS, NEVER THE FIGURE — see the band-zone row
-       below. The full value costs each body row half of it, which the shortest
-       reference (1280×720) cannot afford: ~61px there is ~30 off each body,
-       all of the frame a two-card pile with a two-line title has to give (the
-       record's worst today) and more than a three-card one's ~8 (the cap). So
-       it eases in over the first 180px above 720 tall (`0.4`) and is exact
-       from ~900 up, which covers 1440×900, 1920×1080 and the owner's
-       1920×1247. */
+    /* ⚠ THE FOOT SEATS THE BAND ON THE WORDMARK (ADR-082 U40, owner
+       2026-09-23: "move the gallery at the bottom a bit down so they're
+       horizontally aligned with the brand mark … they would be too close to
+       the elements"). U38 mirrored the title's datum into it, which put the
+       band's last glyph on the bottom brackets' top edge — the wordmark's TOP
+       — and 21px under the TRANSMISSION pile at his window. The band's BOX is
+       centred on the docked wordmark's box now: `--hud-brand-dock-h` is the
+       HUD's own token (width × dock scale × the lockup's viewBox aspect,
+       landing.css), so the seat cannot drift from the mark it aligns to.
+       Measured at 1936×1221: the thumbnails overlap the wordmark's height by
+       33 of its 43px (their centre 12px above the mark's, because the names
+       hang under the pictures inside the box), the names' box ends 11px under
+       the mark's bottom line, and the air under the pile goes 21 → 40px.
+       Bottom-aligning the box on the mark was shot and not taken: it leaves
+       the pictures above the wordmark and the air at 28.
+       ⚠ STILL PAID BY THE PANELS, NEVER THE FIGURE — the band-zone row below
+       is unchanged, and a smaller foot is MORE body row. The ease above 720
+       tall stays (`0.4`): the full value is ~14px at 1280×720 and the cap
+       holds the band on the floor there, as U38 left it; exact from ~755 tall
+       at 1280 wide and ~805 at 1920, which covers every other reference. */
     --vwd-foot: min(
       calc(
-        var(--vwd-mast-top) + 0.16 * var(--vwd-title-fs) - var(--vwd-band-pad-b) - 0.36 *
-          var(--vwd-name-fs)
+        var(--hud-margin, 54px) + var(--hud-brand-dock-h, 42.85px) / 2 - var(--vwd-band-box) / 2
       ),
       max(0px, (100svh - 720px) * 0.4)
     );
