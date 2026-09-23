@@ -44,9 +44,18 @@ import {
  * lesson: a wait on `location.search` passed before the page had read it).
  *
  * ── THE URL ───────────────────────────────────────────────────────────────
- * `?v=v0…v5` · `?src=live|lab` · `?n=3|5|7` · `?theme=light` · `?console=0`,
- * adopted in a MOUNT EFFECT (never `useSearchParams`, a CSR bailout of the
- * whole route), each setter writing only its own parameter.
+ * `?v=v0…v9` · `?src=live|lab` · `?n=3|5|7` · `?theme=light` · `?console=0`,
+ * plus a direction's own knobs (`?cover=dial|raster|field` · `?thumbs=0` ·
+ * `?dek=1`, each shown by the console only for a direction that declares it
+ * in the registry), adopted in a MOUNT EFFECT (never `useSearchParams`, a
+ * CSR bailout of the whole route), each setter writing only its own
+ * parameter.
+ *
+ * ── THE PROGRESS ──────────────────────────────────────────────────────────
+ * `--mg-p` on the root is the writer's own formula over `.mu__runway`
+ * (round three's Feature rides its feed on it). Written on change only, from
+ * a passive scroll listener; the production writer publishes no number and
+ * is not touched.
  */
 
 const COUNTS = [3, 5, 7] as const;
@@ -64,12 +73,14 @@ interface ShellProps {
 
 export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }: ShellProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const [v, setV] = useState<MgDirectionId>("v1");
+  const [v, setV] = useState<MgDirectionId>("v6");
   const [src, setSrc] = useState<LabSource>("live");
   const [n, setN] = useState<LabCount>(5);
   const [theme, setTheme] = useState<LabTheme>("dark");
-  const [cover, setCover] = useState<CoverKind>("dial");
+  /* `null` = the direction's own default cover (the registry's). */
+  const [cover, setCover] = useState<CoverKind | null>(null);
   const [thumbs, setThumbs] = useState(true);
+  const [dek, setDek] = useState(false);
   const [consoleMounted, setConsoleMounted] = useState(true);
   const [adopted, setAdopted] = useState(false);
   const setMode = useThemeStore((s) => s.setMode);
@@ -88,10 +99,42 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
     const qc = q.get("cover") as CoverKind | null;
     if (qc && COVER_KINDS.includes(qc)) setCover(qc);
     if (q.get("thumbs") === "0") setThumbs(false);
+    if (q.get("dek") === "1") setDek(true);
     if (q.get("console") === "0") setConsoleMounted(false);
     setAdopted(true);
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  /* ── The station's progress, for a direction that rides it ──────────── */
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    let raf = 0;
+    let last = "";
+    const paint = () => {
+      raf = 0;
+      const runway = root.querySelector<HTMLElement>(".mu__runway");
+      if (!runway) return;
+      const vh = document.documentElement.clientHeight;
+      const travel = Math.max(1, runway.offsetHeight - vh);
+      const p = Math.min(1, Math.max(0, -runway.getBoundingClientRect().top / travel));
+      const next = p.toFixed(3);
+      if (next === last) return;
+      last = next;
+      root.style.setProperty("--mg-p", next);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(paint);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   const writeParam = useCallback((key: string, value: string) => {
     const url = new URL(window.location.href);
@@ -131,10 +174,14 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
 
   const shown = src === "live" ? live : lab.slice(0, n);
   const Gallery = v === "v0" ? null : MG_GALLERIES[v];
+  const direction = MG_DIRECTIONS[v];
+  const knobsOf = direction.knobs ?? [];
+  /* The effective cover: the URL's if set, else the direction's own. */
+  const coverShown = cover ?? direction.cover ?? "dial";
   const stamp = adopted
-    ? `${v}|${src}|${src === "live" ? live.length : n}|${theme}|${cover}|${thumbs ? 1 : 0}`
+    ? `${v}|${src}|${src === "live" ? live.length : n}|${theme}|${coverShown}|${thumbs ? 1 : 0}|${dek ? 1 : 0}`
     : undefined;
-  const knobs = { cover, thumbs: thumbs ? "1" : "0" };
+  const knobs = { cover: coverShown, thumbs: thumbs ? "1" : "0", dek: dek ? "1" : "0" };
 
   return (
     <div
@@ -222,35 +269,53 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
               ))}
             </div>
           ) : null}
-          {v === "v4" ? (
+          {knobsOf.length ? (
             <div className="mrl-console__row">
-              {COVER_KINDS.map((c) => (
+              {knobsOf.includes("cover")
+                ? COVER_KINDS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className="mrl-btn"
+                      data-on={c === coverShown || undefined}
+                      aria-pressed={c === coverShown}
+                      onClick={() => {
+                        setCover(c);
+                        writeParam("cover", c);
+                      }}
+                    >
+                      {c}
+                    </button>
+                  ))
+                : null}
+              {knobsOf.includes("thumbs") ? (
                 <button
-                  key={c}
                   type="button"
                   className="mrl-btn"
-                  data-on={c === cover || undefined}
-                  aria-pressed={c === cover}
+                  data-on={thumbs || undefined}
+                  aria-pressed={thumbs}
                   onClick={() => {
-                    setCover(c);
-                    writeParam("cover", c);
+                    setThumbs(!thumbs);
+                    writeParam("thumbs", thumbs ? "0" : "1");
                   }}
                 >
-                  {c}
+                  thumbs
                 </button>
-              ))}
-              <button
-                type="button"
-                className="mrl-btn"
-                data-on={thumbs || undefined}
-                aria-pressed={thumbs}
-                onClick={() => {
-                  setThumbs(!thumbs);
-                  writeParam("thumbs", thumbs ? "0" : "1");
-                }}
-              >
-                thumbs
-              </button>
+              ) : null}
+              {knobsOf.includes("dek") ? (
+                <button
+                  type="button"
+                  className="mrl-btn"
+                  data-on={dek || undefined}
+                  aria-pressed={dek}
+                  onClick={() => {
+                    setDek(!dek);
+                    writeParam("dek", dek ? "0" : "1");
+                  }}
+                >
+                  dek
+                </button>
+              ) : null}
             </div>
           ) : null}
           <div className="mrl-console__row">

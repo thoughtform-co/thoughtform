@@ -45,7 +45,7 @@ const arg = (flag, dflt) => {
 const PORT = arg("--port", "3003");
 const VPS = arg("--vp", "1920x1247,1280x720").split(",");
 const THEMES = arg("--theme", "dark,light").split(",");
-const VS = arg("--v", "v0,v1,v2,v3,v4,v5").split(",");
+const VS = arg("--v", "v0,v1,v2,v3,v4,v5,v6,v7,v8,v9").split(",");
 const SRCS = arg("--src", "live,lab5,lab7").split(",");
 const HEADED = process.argv.includes("--headed");
 const ROOT_OUT = arg("--out", "shots/musings-gallery");
@@ -210,7 +210,7 @@ for (const vp of VPS) {
                inside its own housing (`/arcs`' monitor carries the same one). */
             const verticals = dev
               ? [...dev.querySelectorAll("*")]
-                  .filter((el) => !el.closest(".mg-sm__grid"))
+                  .filter((el) => !el.closest(".mg-sm__grid") && !el.closest(".mg-cl__row"))
                   .filter((el) => {
                     const b = el.getBoundingClientRect();
                     if (b.height <= vh / 2 || !shown(el)) return false;
@@ -225,7 +225,11 @@ for (const vp of VPS) {
                   .map((el) => el.className)
               : [];
             const cut = dev
-              ? [...dev.querySelectorAll(".mg-ch__title, .mg-sm__label, .mg-mm__title")]
+              ? [
+                  ...dev.querySelectorAll(
+                    ".mg-ch__title, .mg-sm__label, .mg-mm__title, .mg-ft__title, .mg-ft__rowtitle, .mg-cl__title, .mg-tx__subject, .mg-mb__title"
+                  ),
+                ]
                   .filter((el) => shown(el) && el.scrollWidth > el.clientWidth + 1)
                   .map((el) => el.textContent)
               : [];

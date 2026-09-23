@@ -252,6 +252,89 @@ export function AllMusings({ className = "" }: { className?: string }) {
   );
 }
 
+/* ── Round three's shared parts ─────────────────────────────────────────
+   What the web scan settled as practice (docs/design/musings-gallery/README
+   §Round three): ONE meta format everywhere, a designation that is a
+   bracketed mono chip and never a pill, and a byline — the three things a
+   blog post is recognised by. */
+
+/** The one meta line — `14 SEP 2026 · 4 MIN READ`. */
+export function Meta({ post, className = "" }: { post: MusingCardData; className?: string }) {
+  return (
+    <span className={`mg-meta ${className}`}>
+      {filed(post)}
+      <span className="mg-meta__dot" aria-hidden="true">
+        {" · "}
+      </span>
+      {post.readingMinutes} min read
+    </span>
+  );
+}
+
+/** The beat as a bracketed mono designation — the house has no pills. */
+export function Chip({ beat, className = "" }: { beat: MusingBeat | null; className?: string }) {
+  return (
+    <span className={`mg-chip ${className}`}>
+      <span className="mg-chip__b" aria-hidden="true">
+        [
+      </span>
+      {beat ? BEAT_NAME[beat] : "Practice"}
+      <span className="mg-chip__b" aria-hidden="true">
+        ]
+      </span>
+    </span>
+  );
+}
+
+/** The byline, off the record's own `author`. */
+export function Byline({ post, className = "" }: { post: GalleryPost; className?: string }) {
+  return (
+    <span className={`mg-byline ${className}`}>
+      <span className="mg-byline__by">By</span> {post.author}
+    </span>
+  );
+}
+
+/**
+ * v6 — how far the feed's list is shifted for the station's runway progress
+ * `p` and the feed's overflow `over` (px): nothing until the row has arrived
+ * (p 0.10), the whole overflow by p 0.85, so the last note is on screen
+ * before the row closes at 0.95. PURE; the sheet carries the same constants
+ * in `--mg-feed-t` and the test pins both.
+ */
+export const FEED_RIDE_FROM = 0.1;
+export const FEED_RIDE_TO = 0.85;
+export function feedShift(p: number, over: number): number {
+  if (!Number.isFinite(p) || !Number.isFinite(over) || over <= 0) return 0;
+  const t = Math.min(1, Math.max(0, (p - FEED_RIDE_FROM) / (FEED_RIDE_TO - FEED_RIDE_FROM)));
+  return t === 0 ? 0 : -t * over;
+}
+
+/**
+ * v7 — the column widths for `n` notes across a band `w` px wide, Prime
+ * Intellect's proportions: a closed column is 26 % of the band (capped at
+ * 320px, floored at 180px so a title still wraps to three lines), and the
+ * open one takes the rest — never less than 40 % of the band, past which the
+ * housing rails. PURE; the sheet carries the same expression in
+ * `--mg-cl-col` and the test pins both.
+ */
+export const COLUMN_SHARE = 0.26;
+export const COLUMN_MAX = 320;
+export const COLUMN_MIN = 180;
+export const COLUMN_OPEN_SHARE = 0.4;
+export function columnWidths(
+  n: number,
+  w: number
+): { closed: number; open: number; overflow: boolean } {
+  const rest = Math.max(1, n - 1);
+  const closed = Math.max(
+    COLUMN_MIN,
+    Math.min(COLUMN_SHARE * w, COLUMN_MAX, (w - COLUMN_OPEN_SHARE * w) / rest)
+  );
+  const open = Math.max(COLUMN_OPEN_SHARE * w, w - (n - 1) * closed);
+  return { closed, open, overflow: (n - 1) * closed + open > w + 0.5 };
+}
+
 /**
  * The selection: ONE attribute, `data-mg-on`, moved on an EVENT — the
  * production writer's law (ADR-121), one direction over. Every element that

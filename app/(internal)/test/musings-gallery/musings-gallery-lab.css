@@ -1620,6 +1620,790 @@ html[data-theme="light"] .mg-mm__label {
   font-size: 11px;
 }
 
+/* ═══ Round three's shared parts ═══════════════════════════════════════
+   What the web scan settled as practice: ONE meta format, a bracketed mono
+   chip (never a pill), a byline. */
+.mg-meta {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--mu-ink-3);
+}
+.mg-chip {
+  display: inline-flex;
+  gap: 0.4em;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold-ink);
+}
+.mg-chip__b {
+  color: var(--mu-ink-3);
+}
+.mg-byline {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-2);
+}
+.mg-byline__by {
+  color: var(--mu-ink-3);
+}
+/* A readout value that is a TITLE wraps; the framed key stays one line. */
+.mg-readout__val--wrap {
+  height: auto;
+  min-height: clamp(26px, 3svh, 32px);
+  padding-block: 5px;
+  line-height: 1.25;
+  text-align: right;
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: var(--track-copy);
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(13px, 0.95vw, 15px);
+}
+
+/* ═══ v6 · Feature ═════════════════════════════════════════════════════
+   Cohere's blog index: 2:1, the feature left, the feed right. The pinned
+   stage is the sticky. Every feature pane is rendered in one cell and one is
+   shown. ⚠ THE FEED RIDES THE RUNWAY WHEN IT OVERFLOWS: `--mg-p` is the
+   shell's copy of the writer's progress, `--mg-feed-over` the measured
+   overflow, and the shift is this sheet's arithmetic — the kit's `feedShift`
+   is the same expression and the test pins both (0.10 → 0.85). */
+.mg--feature {
+  --mg-ft-gap: clamp(24px, 3vw, 56px);
+  --mg-ft-thumb: clamp(52px, 6.6svh, 84px);
+  --mg-feed-t: clamp(0, calc((var(--mg-p, 0) - 0.1) / 0.75), 1);
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  column-gap: var(--mg-ft-gap);
+  align-items: stretch;
+}
+.mg-ft__features {
+  display: grid;
+  min-height: 0;
+  min-width: 0;
+}
+.mg-ft__feature {
+  grid-area: 1 / 1;
+  display: grid;
+  min-height: 0;
+  visibility: hidden;
+}
+.mg-ft__feature[data-mg-on] {
+  visibility: visible;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mg-ft__feature[data-mg-on] {
+    animation: mu-aperture 260ms cubic-bezier(0.16, 1, 0.3, 1) none;
+  }
+}
+/* The whole plate is ONE link (Cohere's feature card). */
+.mg-ft__link {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+.mg-ft__link:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: -3px;
+}
+.mg-ft__cover {
+  display: grid;
+  min-height: 0;
+  border-bottom: 1px solid var(--mu-rule);
+}
+.mg-ft__cover .mg-cover,
+.mg-ft__cover .mg-cover__field {
+  height: 100%;
+}
+.mg-ft__copy {
+  display: grid;
+  gap: clamp(10px, 1.4svh, 16px);
+  padding: clamp(14px, 2svh, 24px) calc(var(--mu-ch) + 8px) clamp(14px, 2svh, 22px) var(--mg-pad);
+}
+.mg-ft__title {
+  font-size: clamp(24px, 2.3vw, 44px);
+  line-height: 1.06;
+  letter-spacing: var(--track-display);
+  color: var(--mu-ink);
+}
+.mg-ft__dek {
+  max-width: 40em;
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.5;
+  color: var(--mu-ink-2);
+}
+.mg-ft__foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: clamp(4px, 1svh, 12px);
+}
+.mg-ft__sign {
+  display: grid;
+  gap: 6px;
+}
+/* The way in, as a span inside the one link (the plate is the link). */
+.mg-ft__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: clamp(38px, 4.6svh, 48px);
+  padding: 0 14px;
+  border: 1px solid var(--gold-line);
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold-ink);
+  transition:
+    color 180ms ease-out,
+    background-color 180ms ease-out,
+    border-color 180ms ease-out;
+}
+.mg-ft__link:hover .mg-ft__go,
+.mg-ft__link:focus-visible .mg-ft__go {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--gold-contrast);
+}
+
+.mg-ft__feed {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  min-width: 0;
+}
+.mg-ft__feed-head {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--mu-rule);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-ft__box {
+  position: relative;
+  min-height: 0;
+  overflow: clip;
+}
+.mg-ft__list {
+  --mg-feed-shift: calc(-1 * var(--mg-feed-t) * var(--mg-feed-over, 0px));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateY(var(--mg-feed-shift));
+}
+.mg-ft__item {
+  border-bottom: 1px solid var(--mu-rule);
+}
+.mg-ft__row {
+  display: grid;
+  grid-template-columns: var(--mg-ft-thumb) minmax(0, 1fr) 10px;
+  align-items: center;
+  column-gap: clamp(12px, 1.2vw, 18px);
+  padding: clamp(10px, 1.4svh, 16px) 4px clamp(10px, 1.4svh, 16px) 0;
+  color: var(--mu-ink-2);
+  text-decoration: none;
+  outline: none;
+}
+.mg-ft__thumb {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--mg-ft-thumb);
+  height: var(--mg-ft-thumb);
+  border: 1px solid var(--mu-rule);
+  background: var(--mg-well);
+}
+.mg-ft__thumb .mg-thumb {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: none;
+}
+.mg-ft__text {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.mg-ft__rowtitle {
+  font-size: clamp(15px, 1.15vw, 20px);
+  line-height: 1.22;
+  color: var(--mu-ink);
+}
+.mg-ft__mark {
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--mu-edge);
+  transform: rotate(45deg);
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out;
+}
+.mg-ft__item[data-mg-on] .mg-ft__mark {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+.mg-ft__item:not([data-mg-on]) .mg-ft__rowtitle {
+  color: var(--mu-ink-2);
+}
+.mg-ft__row:focus-visible .mg-ft__rowtitle {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 3px;
+}
+.mg-ft__feed-foot {
+  padding-top: clamp(14px, 2svh, 24px);
+}
+
+/* ═══ v7 · Columns ═════════════════════════════════════════════════════
+   Prime Intellect's row: ONE housing, columns sharing hairline seams, the
+   open one carrying the picture. ⚠ THE FOOT IS LAID OUT AT THE CLOSED WIDTH
+   ON EVERY COLUMN, so the title's wrap never changes through the grow; the
+   growth uncovers the picture. `--mg-cl-col` is `columnWidths()` in CSS
+   (26 % of the band, 320px cap, 180px floor, never leaving the open column
+   under 40 %); past the band the row rails. */
+.mg--columns {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  row-gap: clamp(12px, 1.8svh, 22px);
+  min-height: 0;
+}
+.mg-cl__housing {
+  container-type: inline-size;
+  display: grid;
+  min-height: 0;
+}
+.mg-cl__row {
+  --mg-cl-col: max(180px, min(26cqw, 320px, calc(60cqw / max(1, var(--mu-n, 3) - 1))));
+  display: flex;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mu-edge) transparent;
+}
+.mg-cl__col {
+  position: relative;
+  flex: 0 0 var(--mg-cl-col);
+  min-width: 0;
+  scroll-snap-align: start;
+  /* A cell edge of one device, never a rule of the page's own. */
+  border-left: 1px solid var(--mu-rule);
+  transition:
+    flex-grow var(--mu-grow),
+    flex-basis var(--mu-grow);
+}
+.mg-cl__col:first-child {
+  border-left: 0;
+}
+.mg-cl__col[data-mg-on] {
+  flex-grow: 1;
+  flex-basis: max(var(--mg-cl-col), 40cqw);
+}
+.mg-cl__card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  box-sizing: border-box;
+  height: 100%;
+  padding: var(--mg-pad);
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+.mg-cl__card:focus-visible {
+  outline: 1px solid var(--gold-line);
+  outline-offset: -3px;
+}
+.mg-cl__picture {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity var(--mu-grow);
+}
+.mg-cl__col[data-mg-on] .mg-cl__picture {
+  opacity: 1;
+}
+.mg-cl__picture .mg-cover,
+.mg-cl__picture .mg-cover__field {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+/* The chip and the meta say the beat and the date; the cover's corner labels
+   and the field's year axis would say them again under the foot. */
+.mg-cl__picture .mg-cover__label,
+.mg-cl__picture .mg-field__axis {
+  display: none;
+}
+.mg-cl__picture::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 42%;
+  background: linear-gradient(to top, rgba(var(--void-deep-rgb), 0.94), transparent);
+}
+.mg-cl__glyph {
+  position: relative;
+  z-index: 1;
+  grid-row: 1;
+  width: clamp(22px, 1.8vw, 30px);
+  height: clamp(22px, 1.8vw, 30px);
+  color: var(--mu-ink-2);
+}
+.mg-cl__foot {
+  position: relative;
+  z-index: 1;
+  grid-row: 3;
+  display: grid;
+  gap: clamp(8px, 1.2svh, 12px);
+  box-sizing: border-box;
+  width: calc(var(--mg-cl-col) - 2 * var(--mg-pad));
+  max-width: 100%;
+}
+.mg-cl__title {
+  font-size: clamp(18px, 1.5vw, 24px);
+  line-height: 1.15;
+  letter-spacing: var(--track-display);
+  color: var(--mu-ink);
+}
+.mg-cl__col:not([data-mg-on]) .mg-cl__title {
+  color: var(--mu-ink-2);
+}
+.mg-cl__dek {
+  max-width: 34em;
+  font-size: clamp(14px, 1vw, 16px);
+  line-height: 1.45;
+  color: var(--mu-ink-2);
+}
+.mg-cl__way {
+  display: flex;
+  align-items: center;
+}
+
+/* ═══ v8 · Transmissions ═══════════════════════════════════════════════
+   The manifest (Starfield's roster table) over the open transmission
+   (Cyberpunk's message plate). ⚠ The device is a size container: past half
+   its height the manifest scrolls within itself (the Codex precedent), and
+   the transmission keeps its room. */
+.mg--transmissions {
+  /* ⚠ THE PLATE'S FLOOR IS PAID FIRST (the Chapters rule): the transmission
+     needs its band, its header, a line or two of body and the way in, so the
+     manifest takes what is LEFT and scrolls within itself past that — seven
+     notes at 1280×720 is the binding shape. */
+  --mg-tx-plate-min: clamp(200px, 32svh, 320px);
+  --mg-tx-way: 44px;
+  --mg-tx-gap: clamp(12px, 1.8svh, 22px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) var(--mg-tx-way);
+  row-gap: var(--mg-tx-gap);
+  min-height: 0;
+  container-type: size;
+}
+.mg-tx__manifest {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  max-height: calc(100cqh - var(--mg-tx-plate-min) - var(--mg-tx-way) - 2 * var(--mg-tx-gap));
+  min-height: 0;
+}
+.mg-tx__head,
+.mg-tx__row {
+  display: grid;
+  grid-template-columns: 14px clamp(96px, 8vw, 130px) clamp(72px, 6vw, 96px) minmax(0, 1fr) clamp(
+      56px,
+      5vw,
+      80px
+    );
+  align-items: center;
+  column-gap: clamp(12px, 1.4vw, 22px);
+}
+.mg-tx__head {
+  padding: 0 var(--mg-pad) 8px;
+  border-bottom: 1px solid var(--mu-edge);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-tx__head-len,
+.mg-tx__len {
+  text-align: right;
+}
+.mg-tx__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mu-edge) transparent;
+}
+.mg-tx__item {
+  border-bottom: 1px solid var(--mu-rule);
+}
+.mg-tx__row {
+  box-sizing: border-box;
+  min-height: clamp(36px, 5svh, 52px);
+  padding: 6px var(--mg-pad);
+  color: var(--mu-ink-2);
+  text-decoration: none;
+  outline: none;
+  transition:
+    background-color 180ms ease-out,
+    color 180ms ease-out;
+}
+/* The lit row is a dawn wash and a gold MARK — never a gold fill across the
+   band (Starfield's selected row is filled light). */
+.mg-tx__item[data-mg-on] .mg-tx__row {
+  background: rgba(var(--dawn-rgb), 0.06);
+  color: var(--mu-ink);
+}
+html[data-theme="light"] .mg-tx__item[data-mg-on] .mg-tx__row {
+  background: rgba(var(--dawn-rgb), 0.09);
+}
+.mg-tx__mark {
+  width: 7px;
+  height: 7px;
+  margin-left: 2px;
+  border: 1px solid var(--mu-edge);
+  transform: rotate(45deg);
+}
+.mg-tx__item[data-mg-on] .mg-tx__mark {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+.mg-tx__stamp,
+.mg-tx__beat,
+.mg-tx__len {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--mu-ink-3);
+}
+.mg-tx__item[data-mg-on] .mg-tx__stamp {
+  color: var(--gold-ink);
+}
+.mg-tx__subject {
+  min-width: 0;
+  font-size: clamp(15px, 1.15vw, 19px);
+  line-height: 1.25;
+}
+.mg-tx__row:focus-visible .mg-tx__subject {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 3px;
+}
+.mg-tx__panes {
+  display: grid;
+  min-height: 0;
+}
+.mg-tx__pane {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  visibility: hidden;
+  container-type: size;
+}
+.mg-tx__pane[data-mg-on] {
+  visibility: visible;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mg-tx__pane[data-mg-on] {
+    animation: mu-aperture 260ms cubic-bezier(0.16, 1, 0.3, 1) none;
+  }
+}
+.mg-tx__body {
+  --mg-tx-well: clamp(88px, 8.5vw, 140px);
+  display: grid;
+  grid-template-columns: var(--mg-tx-well) minmax(0, 1fr);
+  column-gap: clamp(18px, 2.2vw, 36px);
+  min-height: 0;
+  padding: clamp(14px, 2.2svh, 28px) calc(var(--mu-ch) + 8px) var(--mg-pad) var(--mg-pad);
+}
+/* The sender well — Cyberpunk's glyph plate beside the header. */
+.mg-tx__well {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: var(--mg-tx-well);
+  height: var(--mg-tx-well);
+  border: 1px solid var(--mu-edge);
+  background: var(--mg-well);
+}
+.mg-tx__well-glyph {
+  width: 54%;
+  height: 54%;
+  color: var(--mu-ink-2);
+}
+.mg-tx__message {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(12px, 1.8svh, 22px);
+  min-height: 0;
+  min-width: 0;
+}
+.mg-tx__header {
+  max-width: 34rem;
+}
+.mg-tx__text {
+  margin: 0;
+  max-width: 38em;
+  min-height: 0;
+  overflow: hidden;
+  font-size: var(--band-copy, clamp(15px, 1.15vw, 18px));
+  line-height: 1.5;
+  color: var(--mu-ink-2);
+}
+.mg-tx__sign {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+.mg-tx__read {
+  min-width: min(240px, 100%);
+}
+/* The signal — the drawn cover — only where the plate is wide enough. */
+.mg-tx__signal {
+  display: none;
+  min-height: 0;
+  border: 1px solid var(--mu-rule);
+}
+.mg-tx__signal .mg-cover,
+.mg-tx__signal .mg-cover__field {
+  height: 100%;
+}
+@container (min-width: 1080px) {
+  .mg-tx__body {
+    grid-template-columns: var(--mg-tx-well) minmax(0, 1fr) minmax(220px, 30%);
+  }
+  .mg-tx__signal {
+    display: grid;
+  }
+}
+/* A short plate keeps FROM and RE (the beat and the length are on the
+   manifest's row already), tightens its air, and drops the byline: the way
+   in is what the floor is for. */
+@container (max-height: 300px) {
+  .mg-tx__header .mg-readout__row:nth-child(n + 3) {
+    display: none;
+  }
+  .mg-tx__body {
+    --mg-tx-well: clamp(64px, 6vw, 96px);
+    padding-top: 10px;
+  }
+  .mg-tx__message {
+    gap: 8px;
+  }
+  .mg-tx__byline {
+    display: none;
+  }
+  .mg-tx__read {
+    min-height: 36px;
+  }
+}
+.mg-tx__way {
+  display: flex;
+  align-items: center;
+  height: var(--mg-tx-way);
+}
+
+/* ═══ v9 · Missions ════════════════════════════════════════════════════
+   The Arc as lanes — NAVIGATE · ENCODE · BUILD — divided by air; the open
+   entry expands in place (the Chapters mechanic). Counts are marks. */
+.mg--missions {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  row-gap: clamp(12px, 1.8svh, 22px);
+  min-height: 0;
+}
+.mg-mb__lanes {
+  display: grid;
+  grid-template-columns: repeat(var(--mg-lanes, 3), minmax(0, 1fr));
+  column-gap: clamp(18px, 2.4vw, 40px);
+  min-height: 0;
+}
+.mg-mb__lane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  min-width: 0;
+}
+.mg-mb__lane-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--mu-edge);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--mu-ink-2);
+}
+.mg-mb__lane-glyph {
+  width: 16px;
+  height: 16px;
+  color: var(--gold-ink);
+}
+.mg-mb__lane-name {
+  flex: 1 1 auto;
+}
+.mg-mb__count {
+  display: inline-flex;
+  gap: 4px;
+}
+.mg-mb__count i {
+  width: 6px;
+  height: 6px;
+  background: var(--mg-cell-2);
+}
+.mg-mb__list {
+  display: grid;
+  align-content: start;
+  gap: clamp(8px, 1.2svh, 14px);
+  margin: 0;
+  padding: clamp(10px, 1.6svh, 18px) 0 0;
+  list-style: none;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mu-edge) transparent;
+}
+.mg-mb__entry {
+  display: grid;
+}
+.mg-mb__row {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 12px;
+  padding: clamp(12px, 1.6svh, 18px) calc(var(--mu-ch) + 6px) clamp(12px, 1.6svh, 18px)
+    var(--mg-pad);
+  color: var(--mu-ink-2);
+  text-decoration: none;
+  outline: none;
+}
+.mg-mb__mark {
+  width: 8px;
+  height: 8px;
+  margin-top: 4px;
+  border: 1px solid var(--mu-edge);
+  transform: rotate(45deg);
+  transition:
+    background-color 200ms ease-out,
+    border-color 200ms ease-out;
+}
+.mg-mb__entry[data-mg-on] .mg-mb__mark {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+.mg-mb__text {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.mg-mb__stamp {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  line-height: 1;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-3);
+}
+.mg-mb__entry[data-mg-on] .mg-mb__stamp {
+  color: var(--gold-ink);
+}
+.mg-mb__title {
+  font-size: clamp(17px, 1.35vw, 22px);
+  line-height: 1.2;
+  letter-spacing: var(--track-display);
+  color: var(--mu-ink);
+}
+.mg-mb__row:focus-visible .mg-mb__title {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 3px;
+}
+.mg-mb__open {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows 560ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 560ms;
+}
+.mg-mb__entry[data-mg-on] .mg-mb__open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition:
+    grid-template-rows 560ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0s;
+}
+.mg-mb__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.mg-mb__summary {
+  margin: 0;
+  padding: 0 calc(var(--mu-ch) + 6px) 0 calc(var(--mg-pad) + 22px);
+  font-size: clamp(14px, 1.05vw, 17px);
+  line-height: 1.45;
+  color: var(--mu-ink-2);
+}
+.mg-mb__sign {
+  display: grid;
+  gap: 12px;
+  padding: clamp(12px, 1.6svh, 18px) calc(var(--mu-ch) + 6px) var(--mg-pad)
+    calc(var(--mg-pad) + 22px);
+}
+.mg-mb__empty {
+  padding: clamp(14px, 2svh, 22px) var(--mg-pad);
+  border: 1px dashed var(--mu-edge);
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--mu-ink-3);
+}
+.mg-mb__way {
+  display: flex;
+  align-items: center;
+}
+
 /* ═══ The flowing rung (≤960, reduced motion, no script) ═══════════════
    The lab is judged on the pinned rung; below it every device stacks into
    one column so nothing overflows the phone. */
@@ -1628,8 +2412,52 @@ html[data-theme="light"] .mg-mm__label {
   .mg-sm__readout,
   .mg-mm__readout,
   .mg-cx__record,
-  .mg-ch__detail {
+  .mg-ch__detail,
+  .mg--feature,
+  .mg-mb__lanes,
+  .mg-tx__body {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .mg-ft__cover {
+    aspect-ratio: 16 / 10;
+  }
+  .mg-cl__row {
+    flex-direction: column;
+    overflow: visible;
+  }
+  .mg-cl__col {
+    flex-basis: auto;
+    border-left: 0;
+    border-top: 1px solid var(--mu-rule);
+  }
+  .mg-cl__col[data-mg-on] {
+    flex-basis: auto;
+  }
+  .mg-cl__foot {
+    width: auto;
+  }
+  .mg-cl__picture {
+    position: relative;
+    aspect-ratio: 16 / 10;
+  }
+  .mg-tx__signal,
+  .mg-tx__head {
+    display: none;
+  }
+  .mg-tx__row {
+    grid-template-columns: 14px minmax(0, 1fr);
+  }
+  .mg-tx__stamp,
+  .mg-tx__beat,
+  .mg-tx__len {
+    grid-column: 2;
+  }
+  .mg--transmissions,
+  .mg-tx__pane {
+    container-type: normal;
+  }
+  .mg-tx__manifest {
+    max-height: none;
   }
   .mg-st__rack {
     grid-template-columns: minmax(0, 1fr);

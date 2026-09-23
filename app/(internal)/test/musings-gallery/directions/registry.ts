@@ -2,10 +2,15 @@ import type { ComponentType } from "react";
 
 import { Chapters } from "./Chapters";
 import { Codex } from "./Codex";
+import { Columns } from "./Columns";
+import { Feature } from "./Feature";
 import type { DirectionProps } from "./kit";
 import { MemoryMap } from "./MemoryMap";
+import { Missions } from "./Missions";
+import type { CoverKind } from "./NoteCover";
 import { Starmap } from "./Starmap";
 import { Store } from "./Store";
+import { Transmissions } from "./Transmissions";
 
 /**
  * /test/musings-gallery — the direction registry.
@@ -28,11 +33,25 @@ import { Store } from "./Store";
  * its own ADR, and the losers are deleted with their guards.
  */
 
-export const MG_DIRECTION_IDS = ["v0", "v1", "v2", "v3", "v4", "v5"] as const;
+export const MG_DIRECTION_IDS = [
+  "v0",
+  "v1",
+  "v2",
+  "v3",
+  "v4",
+  "v5",
+  "v6",
+  "v7",
+  "v8",
+  "v9",
+] as const;
 export type MgDirectionId = (typeof MG_DIRECTION_IDS)[number];
 
 export const isDirectionId = (v: string | null): v is MgDirectionId =>
   (MG_DIRECTION_IDS as readonly string[]).includes(v ?? "");
+
+/** The knobs a direction reads; the shell shows a control for each. */
+export type MgKnob = "cover" | "thumbs" | "dek";
 
 export interface MgDirection {
   id: MgDirectionId;
@@ -41,6 +60,12 @@ export interface MgDirection {
   thesis: string;
   /** What it was built from — a reference, or the seed. */
   provenance: string;
+  /** The round it was built in. */
+  round: 1 | 2 | 3;
+  /** The knobs it reads, in the order the console shows them. */
+  knobs?: readonly MgKnob[];
+  /** Its own default cover, when it draws one and `?cover=` is unset. */
+  cover?: CoverKind;
 }
 
 export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
@@ -49,6 +74,7 @@ export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
     label: "Row",
     thesis: "The shipped row: the newest note open, the rest strips that open on hover.",
     provenance: "Production (ADR-121), after U2's head seat. The control.",
+    round: 1,
   },
   v1: {
     id: "v1",
@@ -56,6 +82,7 @@ export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
     thesis: "Master and detail: an index of notes beside the one you are reading about.",
     provenance:
       "CP2077 codex/journal · Starfield starmap panel · the /arcs log + dossier (ADR-118).",
+    round: 1,
   },
   v2: {
     id: "v2",
@@ -63,12 +90,14 @@ export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
     thesis:
       "The Arc, plotted: every note a waypoint at its date, in its beat's lane, on one route.",
     provenance: "Starfield star map · the amber terminal instruments · ADR-078's program board.",
+    round: 1,
   },
   v3: {
     id: "v3",
     label: "Terminal store",
     thesis: "Equal portrait cards; the one you are on opens in place with its summary and readout.",
     provenance: "Vilimovský STORE ACCESS · CP2077 4ST store · Marathon armory · Brand Codex STACK.",
+    round: 1,
   },
   v4: {
     id: "v4",
@@ -77,12 +106,57 @@ export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
       "A contents page of whole, large titles; the open one grows into a feature with the note's drawn cover.",
     provenance:
       "A chapter select read as a book · the Dragonfly writing list · the outcomes dial (ADR-106) as the cover.",
+    round: 2,
+    knobs: ["cover", "thumbs"],
+    cover: "dial",
   },
   v5: {
     id: "v5",
     label: "Memory map",
     thesis: "The archive as 128 cells; every note takes cells in proportion to its words.",
     provenance: "A random seed (docs/design/musings-gallery/seed-memory-map.md).",
+    round: 1,
+  },
+  v6: {
+    id: "v6",
+    label: "Feature",
+    thesis:
+      "Cohere's blog: the newest note as a feature on the left, the feed of the rest on the right, riding the runway when it overflows.",
+    provenance: "cohere.com/blog (the owner's reference) · the folder plate · the drawn cover.",
+    round: 3,
+    knobs: ["cover"],
+    cover: "dial",
+  },
+  v7: {
+    id: "v7",
+    label: "Columns",
+    thesis:
+      "Prime Intellect's row, collapsing less: one housing of columns, the open one carrying the picture, the closed ones keeping their whole title.",
+    provenance:
+      "primeintellect.ai's Customer Stories (the owner's reference) · the folder plate · the drawn cover.",
+    round: 3,
+    knobs: ["cover", "dek"],
+    cover: "dial",
+  },
+  v8: {
+    id: "v8",
+    label: "Transmissions",
+    thesis:
+      "A comms panel: the manifest as a roster table, then the open transmission — sender well, framed header, the body, the signal.",
+    provenance:
+      "Starfield's ship crew roster · Cyberpunk 2077's NEW MESSAGES panel · the framed-key readout.",
+    round: 3,
+    knobs: ["cover"],
+    cover: "raster",
+  },
+  v9: {
+    id: "v9",
+    label: "Missions",
+    thesis:
+      "The notes filed under the Arc: three lanes, NAVIGATE · ENCODE · BUILD, the open entry expanding in place.",
+    provenance:
+      "Starfield's missions and The Outer Worlds' journal, read as a log grouped by kind · the Chapters mechanic.",
+    round: 3,
   },
 };
 
@@ -100,4 +174,8 @@ export const MG_GALLERIES: Readonly<
   v3: Store,
   v4: Chapters,
   v5: MemoryMap,
+  v6: Feature,
+  v7: Columns,
+  v8: Transmissions,
+  v9: Missions,
 };

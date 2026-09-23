@@ -50,6 +50,10 @@ import { BEAT_NAME, CoverField, type GalleryPost } from "./kit";
 export type CoverKind = "dial" | "raster" | "field";
 export const COVER_KINDS: readonly CoverKind[] = ["dial", "raster", "field"];
 
+/** The knob's value if it names a kind, else the direction's own default. */
+export const coverKindOf = (v: string | undefined, dflt: CoverKind): CoverKind =>
+  COVER_KINDS.includes(v as CoverKind) ? (v as CoverKind) : dflt;
+
 const INK: Record<DialInk, string> = {
   line: "mg-dial__line",
   line2: "mg-dial__line2",

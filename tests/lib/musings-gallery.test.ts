@@ -13,7 +13,18 @@ import {
   MG_DIRECTION_IDS,
   MG_GALLERIES,
 } from "../../app/(internal)/test/musings-gallery/directions/registry";
-import type { GalleryPost } from "../../app/(internal)/test/musings-gallery/directions/kit";
+import {
+  COLUMN_MAX,
+  COLUMN_MIN,
+  COLUMN_OPEN_SHARE,
+  COLUMN_SHARE,
+  FEED_RIDE_FROM,
+  FEED_RIDE_TO,
+  columnWidths,
+  feedShift,
+  type GalleryPost,
+} from "../../app/(internal)/test/musings-gallery/directions/kit";
+import { lanesOf } from "../../app/(internal)/test/musings-gallery/directions/Missions";
 import { LAB_OUTLINES } from "../../app/(internal)/test/musings-gallery/outlines";
 import { LAB_MUSINGS } from "../../app/(internal)/test/musings-row/placeholders";
 import { cardsFor } from "@/lib/musings/cards";
@@ -67,6 +78,78 @@ describe("the lab stays out of the station's own machinery", () => {
       expect(MG_DIRECTIONS[id].provenance.length).toBeGreaterThan(10);
       if (id !== "v0") expect(MG_GALLERIES[id]).toBeTypeOf("function");
     }
+  });
+
+  it("a direction that reads a cover declares its default, and the capture shoots every id", () => {
+    for (const id of MG_DIRECTION_IDS) {
+      const d = MG_DIRECTIONS[id];
+      if (d.knobs?.includes("cover")) expect(d.cover, id).toBeDefined();
+      if (d.cover) expect(d.knobs, id).toContain("cover");
+    }
+    // ⚠ The capture keeps its own id list (a .mjs cannot import the registry);
+    // a direction missing from it is a still nobody shoots.
+    const capture = readFileSync(join(ROOT, "scripts", "capture-musings-gallery.mjs"), "utf8");
+    const dflt = /arg\("--v",\s*"([^"]+)"\)/.exec(capture)?.[1]?.split(",") ?? [];
+    expect(dflt).toEqual([...MG_DIRECTION_IDS]);
+  });
+});
+
+describe("round three — the arithmetic the sheets carry", () => {
+  it("v6: the feed rides the runway between the row's arrival and just before it closes", () => {
+    expect(feedShift(0, 400)).toBe(0);
+    expect(feedShift(FEED_RIDE_FROM, 400)).toBe(0);
+    expect(feedShift(FEED_RIDE_TO, 400)).toBe(-400);
+    expect(feedShift(0.99, 400)).toBe(-400);
+    expect(feedShift((FEED_RIDE_FROM + FEED_RIDE_TO) / 2, 400)).toBeCloseTo(-200, 6);
+    // No overflow, no ride — three notes on any frame.
+    expect(feedShift(0.5, 0)).toBe(0);
+    expect(feedShift(Number.NaN, 400)).toBe(0);
+    // ⚠ The row closes at 0.95 (ROW_ARRIVE_END); the ride must be done before.
+    expect(FEED_RIDE_TO).toBeLessThan(0.95);
+    expect(FEED_RIDE_FROM).toBeGreaterThanOrEqual(0.1);
+    // The sheet's own copy of the constants.
+    const css = readFileSync(join(LAB, "musings-gallery-lab.css"), "utf8");
+    expect(css).toContain(
+      `--mg-feed-t: clamp(0, calc((var(--mg-p, 0) - ${FEED_RIDE_FROM}) / ${+(FEED_RIDE_TO - FEED_RIDE_FROM).toFixed(2)}), 1)`
+    );
+  });
+
+  it("v7: three notes give Prime Intellect's proportions, five hold the floor, seven rail", () => {
+    const three = columnWidths(3, 1200);
+    expect(three.closed / 1200).toBeCloseTo(0.26, 2);
+    expect(three.open / 1200).toBeCloseTo(0.48, 2);
+    expect(three.overflow).toBe(false);
+    const five = columnWidths(5, 1200);
+    expect(five.closed).toBe(COLUMN_MIN);
+    expect(five.open / 1200).toBeCloseTo(COLUMN_OPEN_SHARE, 2);
+    expect(five.overflow).toBe(false);
+    const seven = columnWidths(7, 1200);
+    expect(seven.closed).toBe(COLUMN_MIN);
+    expect(seven.overflow).toBe(true);
+    // The narrow band: the cap and the floor both bind somewhere.
+    expect(columnWidths(3, 979).closed).toBeCloseTo(0.26 * 979, 6);
+    expect(columnWidths(2, 2000).closed).toBe(COLUMN_MAX);
+    // The sheet's own copy.
+    const css = readFileSync(join(LAB, "musings-gallery-lab.css"), "utf8");
+    expect(css).toContain(
+      `--mg-cl-col: max(${COLUMN_MIN}px, min(${COLUMN_SHARE * 100}cqw, ${COLUMN_MAX}px, calc(${(1 - COLUMN_OPEN_SHARE) * 100}cqw / max(1, var(--mu-n, 3) - 1))))`
+    );
+    expect(css).toContain(`flex-basis: max(var(--mg-cl-col), ${COLUMN_OPEN_SHARE * 100}cqw)`);
+  });
+
+  it("v9: every note lands in its beat's lane, in the Arc's order, and an unfiled note opens PRACTICE", () => {
+    const lab: GalleryPost[] = LAB_MUSINGS.map((c) => ({
+      ...c,
+      outline: LAB_OUTLINES[c.slug],
+      author: "Vince Buyssens",
+    }));
+    const lanes = lanesOf(lab);
+    expect(lanes.map((l) => l.id)).toEqual(["navigate", "encode", "build"]);
+    expect(lanes.reduce((n, l) => n + l.entries.length, 0)).toBe(lab.length);
+    for (const l of lanes) for (const p of l.entries) expect(p.tags).toContain(l.id);
+    const unfiled = lanesOf([{ ...lab[0], tags: ["practice"] }]);
+    expect(unfiled.map((l) => l.id)).toEqual(["navigate", "encode", "build", "practice"]);
+    expect(unfiled[3].entries).toHaveLength(1);
   });
 });
 
