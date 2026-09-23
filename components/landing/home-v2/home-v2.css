@@ -496,7 +496,14 @@ html[data-corridor-exit="true"] #voidwalker {
 
    ⚠ THE STATION'S OPAQUE END IS `.mu__band`, not the station. It is what the
    corridor's kill edge and the footer's reveal both key on; see
-   `musings.css` §The band and `.claude/rules/musings.md`. */
+   `musings.css` §The band and `.claude/rules/musings.md`.
+
+   ⚠ AND ON THIS SAME STAMP THE STATION IS WELDED ONE VIEWPORT OVER THE ERA
+   STAGE (ADR-121 U3, in `musings.css`): both stations are z 6 here, so DOM
+   order paints the musings stage over `.vwd` for the overlap, and the
+   station is hit-transparent for it (`pointer-events: none`, the band and
+   the arrived runway restored) so the era's live band still takes the click
+   through it. The kill edge is unmoved relative to the runway. */
 html[data-corridor-exit="true"] #musings[data-mu-mode="stage"].station {
   position: relative;
   z-index: 6;

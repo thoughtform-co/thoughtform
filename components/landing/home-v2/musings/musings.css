@@ -52,6 +52,12 @@
 #musings.station {
   --station-pad-top: 0px;
   --station-pad-bottom: 0px;
+  /* ⚠ THE WELD (ADR-121 U3): how far the station overlaps the era stage on the
+     stage rung. It EQUALS the era stage's height (`.vwd`, 100svh sticky in a
+     260svh station) so this stage pins in the frame the era's unpins — larger
+     pins two stages at once, smaller restores dead viewport. Spent by the
+     stage-mode rule below the band; the labs override it to 0. */
+  --mu-weld: 100svh;
   display: block;
   content-visibility: visible;
   contain-intrinsic-size: none;
@@ -284,7 +290,44 @@
   background-size: 1600px 900px;
   background-position: center top;
   background-repeat: repeat;
+  /* The welded station is hit-transparent (below); the band takes its hits
+     back — opaque, over the held footer, a hit-transparent band would click
+     the footer's links through itself once the bed is armed. */
+  pointer-events: auto;
 }
+
+/* ── The weld: the station overlaps the era stage by one viewport ──────
+   ⚠ ADR-121 U3 (owner, 2026-09-23: "when you scroll into the musings
+   section, it takes a few scrolls to get to the elements"). A sticky stage in
+   normal flow pins only once its top reaches the frame's top, and the head is
+   forced blank until then (the masthead motion law) — so the reader scrolled
+   ONE WHOLE VIEWPORT of transparent stage rising behind an emptied era stage
+   before anything of this station painted: ≈1342px at 1920×1247, ≈775px at
+   1280×720, measured from the era's last content leaving (era p 0.96) to the
+   head decoding (musings p 0.02). The era's stage is `.vwd`, 100svh sticky in
+   a 260svh station, so its content is gone 6.4svh before it unpins; welding
+   this station up by the era stage's height pins THIS stage in the frame the
+   era's unpins, and the head decodes 1.2svh later. The era's own idiom
+   (`#voidwalker[data-vw-handoff="ready"] { margin-top: -120svh }`).
+   ⚠ KEYED ON THE STAGE STAMP — the 961–1100 opaque rung and the phone are
+   byte-identical, because an opaque station pulled over a static era section
+   would cover its content. The band stays exactly 100svh at the runway's
+   foot, so the corridor's kill, the footer's arm edge and the four ADR-030 §6
+   readers are untouched: they read live rects.
+   ⚠ AND A TRANSPARENT BOX STILL TAKES THE CLICK. From era p ≈ 0.45 this
+   station's box covers the era's band tablist and record cards, which stay
+   live until the era goes inert at p 0.92. `pointer-events` inherits, so the
+   station is `none` with two restores: the band (above) and the runway once
+   the row is `in`. Never `visibility: hidden` on the stage — the head decodes
+   during `await`, before `in`. The HUD's corner readout flips on the PIN for
+   a welded station (`data-station-edge="pin"`, written beside the stage
+   stamp), not on the viewport's middle, which the weld would put 8svh before
+   the era's exit begins. */
+#musings[data-mu-mode="stage"].station {
+  margin-top: calc(-1 * var(--mu-weld));
+  pointer-events: none;
+}
+/* The runway's restore sits with the arrival rules on the rung, below. */
 
 /* ⚠ THREE CONTENT-HEIGHT ROWS — NEVER A `1fr` MIDDLE.
    The first cut gave the row's track `minmax(0, 1fr)`, which is the same
@@ -1096,6 +1139,15 @@
   .mu[data-mu-ready][data-mu-arrive="out"] .mu__all {
     opacity: 0;
     visibility: hidden;
+  }
+
+  /* ⚠ THE WELDED STATION TAKES ITS HITS BACK ONLY ONCE THE ROW IS IN
+     (ADR-121 U3). On the stage rung the station is `pointer-events: none`,
+     because its box covers the era's live band for a viewport before the pin;
+     during `await` and `out` what is under the runway is the era's own inert
+     box, and the band restores itself beside the weld rule. */
+  #musings[data-mu-mode="stage"] .mu[data-mu-ready][data-mu-arrive="in"] .mu__runway {
+    pointer-events: auto;
   }
 
   .mu[data-mu-ready][data-mu-arrive="in"] .mu__all {

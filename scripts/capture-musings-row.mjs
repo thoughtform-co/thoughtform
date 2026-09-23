@@ -205,8 +205,89 @@ const readRow = () =>
        reader can see is the strip the opaque station above has left. */
     const mb = st?.getBoundingClientRect().bottom ?? vh;
 
+    /* ── The seam with the era stage (ADR-121 U3) ──
+       The station is welded one viewport over `#voidwalker` on the stage
+       rung. What is read: the weld as laid out, the era's exit level, whether
+       the era's lit chip still takes the click through the transparent
+       station (it must, until the era goes inert), and how many of the era's
+       text runs are still inked inside the frame (none once the head decodes). */
+    const era = (() => {
+      const vw = document.getElementById("voidwalker");
+      const vwd = vw?.querySelector(".vwd") ?? null;
+      const stRect = st?.getBoundingClientRect();
+      const vwRect = vw?.getBoundingClientRect();
+      const chip =
+        vw?.querySelector('.vwd__band [role="tab"][aria-selected="true"]') ??
+        vw?.querySelector('.vwd__band [role="tab"]') ??
+        null;
+      let chipHit = null;
+      if (chip) {
+        const r = chip.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < vh) {
+          const top = document.elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2)[0];
+          chipHit = {
+            inBand: !!top?.closest(".vwd__band"),
+            inMusings: !!top?.closest("#musings"),
+          };
+        }
+      }
+      let inked = 0;
+      if (vwd) {
+        const vwW = document.documentElement.clientWidth;
+        const faded = (el) => {
+          for (let e = el; e && e !== vwd.parentElement; e = e.parentElement) {
+            const s = getComputedStyle(e);
+            if (s.visibility === "hidden" || s.display === "none" || parseFloat(s.opacity) < 0.05)
+              return true;
+          }
+          return false;
+        };
+        const walker = document.createTreeWalker(vwd, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+          if (!node.textContent.trim() || !node.parentElement || faded(node.parentElement))
+            continue;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          const hit = [...range.getClientRects()].some(
+            (q) =>
+              q.width > 0 &&
+              q.height > 0 &&
+              q.bottom > 0 &&
+              q.top < vh &&
+              q.right > 0 &&
+              q.left < vwW
+          );
+          range.detach();
+          if (hit) inked += 1;
+        }
+      }
+      return {
+        present: !!vw,
+        exit: vwd?.style.getPropertyValue("--vwh-exit") || null,
+        inert: vwd?.inert ?? null,
+        chipHit,
+        inked,
+        weld: st ? px(parseFloat(getComputedStyle(st).marginTop)) : null,
+        edge: st?.getAttribute("data-station-edge") ?? null,
+        /* The station's top against the era's bottom: −vh welded, 0 in flow. */
+        gap: stRect && vwRect ? px(stRect.top - vwRect.bottom) : null,
+        vwDocTop: vwRect ? px(vwRect.top + window.scrollY) : null,
+        vwH: vw?.offsetHeight ?? null,
+        /* ⚠ Document offsets are read HERE, at the stop — a `scrollY` read
+           after the walk is the document's end, not this frame. */
+        muDocTop: (() => {
+          const r = document.querySelector(".mu__runway")?.getBoundingClientRect();
+          return r ? px(r.top + window.scrollY) : null;
+        })(),
+      };
+    })();
+
     return {
       vh,
+      era,
+      runwayBox: box(document.querySelector(".mu__runway")),
+      bandBox: box(band),
       ambient: document.documentElement.hasAttribute("data-services-ambient"),
       exit: document.documentElement.hasAttribute("data-corridor-exit"),
       ftReveal: document.documentElement.hasAttribute("data-ft-reveal"),
@@ -382,11 +463,15 @@ const perfStop = () =>
   });
 
 /* ── The walk ───────────────────────────────────────────────────────── */
-/* ⚠ −0.3 AND 1.15 ARE OFF THE PIN ON PURPOSE: the approach and the release,
-   where the stage travels and the head must be EMPTY (U2). The pointer parks
-   in the left margin for the whole walk, so no card is hovered by accident. */
+/* ⚠ −1.0, −0.3, −0.15 AND 1.15 ARE OFF THE PIN ON PURPOSE: the approach and
+   the release, where the stage travels and the head must be EMPTY (U2). Since
+   the weld (U3) the approach is the ERA'S OWN LAST VIEWPORT: −1.0 is era p
+   0.625 (the era band on screen, its chip must still take the click through
+   the transparent station), −0.3 is 0.89 and −0.15 is 0.94 (mid-exit), and
+   the corner must read VOIDWALKER at all three. The pointer parks in the left
+   margin for the whole walk, so no card is hovered by accident. */
 await page.mouse.move(8, Math.round(H / 2));
-const stops = [-0.3, 0.02, 0.14, 0.3, 0.45, 0.6, 0.75, 0.9, 0.99, 1.15];
+const stops = [-1.0, -0.3, -0.15, 0.02, 0.14, 0.3, 0.45, 0.6, 0.75, 0.9, 0.99, 1.15];
 const walk = [];
 for (const p of stops) {
   const landed = await rollToP(p);
@@ -741,6 +826,59 @@ if (killStop) {
   if ((killStop.coverImage ?? "none") === "none") fails.push("the cover paints no surface");
   if (killStop.stageMode && (killStop.coverBox?.h ?? 0) < killStop.vh - 1)
     fails.push(`the band is ${killStop.coverBox?.h}px against a ${killStop.vh}px frame`);
+  /* ⚠ THE BAND SITS ON THE RUNWAY'S FOOT (U3). The weld is a margin on the
+     STATION; a margin that leaked onto the runway or the band would open a
+     gap here, and every ADR-030 §6 reader keys on the band's own top. */
+  if (killStop.stageMode && killStop.runwayBox && killStop.bandBox) {
+    const seam = killStop.bandBox.y - (killStop.runwayBox.y + killStop.runwayBox.h);
+    if (Math.abs(seam) > 1)
+      fails.push(`the band starts ${Math.round(seam * 10) / 10}px off the runway's foot`);
+  }
+}
+/* ── The seam with the era stage (ADR-121 U3), landing only ──────────
+   On the stage rung the station is welded one viewport over the era stage:
+   the station's top is exactly one frame above the era's bottom, the corner
+   reads VOIDWALKER for every stop before the pin and MUSINGS from it, the
+   era's lit chip still takes the click through the transparent station
+   while the era is on screen, and by the time the head decodes the era's
+   exit is complete with none of its text inked in the frame. */
+if (!LAB && !phone) {
+  const staged = walk.filter((s) => typeof s.p === "number" && s.stageMode && s.era?.present);
+  for (const s of staged) {
+    if (s.era.gap == null || Math.abs(s.era.gap + s.vh) > 1)
+      fails.push(
+        `the station sits ${s.era.gap}px off the era's bottom at p ${s.p} (weld: −${s.vh})`
+      );
+    if (s.era.edge !== "pin")
+      fails.push(`no data-station-edge="pin" on the welded station at p ${s.p}`);
+    if (s.p < 0 && s.activeStation !== "voidwalker")
+      fails.push(`the HUD reads ${s.activeStation} at p ${s.p}, before the pin`);
+    if (s.p >= 0.02 && s.p <= 0.9) {
+      if (s.era.exit !== "1.0000")
+        fails.push(`the era's exit is ${s.era.exit} at p ${s.p}, not complete`);
+      if (s.era.inked > 0) fails.push(`${s.era.inked} era text runs still inked at p ${s.p}`);
+    }
+  }
+  const approach = staged.find((s) => s.p === -1);
+  if (approach) {
+    if (!approach.era.chipHit) fails.push("the era's chip is not on screen at p −1.0");
+    else if (!approach.era.chipHit.inBand || approach.era.chipHit.inMusings)
+      fails.push("the transparent station swallows the era's chip at p −1.0");
+  }
+  const seamStop = staged.find((s) => s.p === 0.02);
+  if (seamStop && seamStop.era.vwDocTop != null && seamStop.era.muDocTop != null) {
+    /* Print the seam: from the era's content leaving (era p 0.96) to the head
+       decoding (musings p 0.02), in px and viewports. 7.6svh since the weld
+       (U3); 107.6svh before it. */
+    const vwTravel = seamStop.era.vwH - seamStop.vh;
+    const eraGoneY = seamStop.era.vwDocTop + 0.96 * vwTravel;
+    const travel = seamStop.runwayBox.h - seamStop.vh;
+    const headY = seamStop.era.muDocTop + 0.02 * travel;
+    const seam = headY - eraGoneY;
+    line(
+      `seam · era content gone → head decodes: ${Math.round(seam)}px (${(seam / seamStop.vh).toFixed(3)} viewports) · weld ${seamStop.era.weld}px`
+    );
+  }
 }
 for (const s of walk) {
   if (typeof s.p !== "number") continue;
@@ -896,6 +1034,16 @@ if (!phone) {
       fails.push(`the footer did not uncover (${half.revealed} → ${end.revealed})`);
     if (end && end.contactPosition !== "sticky")
       fails.push(`#contact is ${end.contactPosition}, not sticky, at the document's end`);
+    /* ⚠ THE BED ARMS ON THE BAND'S TOP AND NOWHERE ELSE (U3): the weld moves
+       where in the document the band arrives, never what arms the footer. */
+    for (const s of walk) {
+      if (typeof s.p !== "number" || !s.stageMode || !s.bandBox) continue;
+      const shouldArm = s.bandBox.y <= 0;
+      if (s.ftReveal !== shouldArm)
+        fails.push(
+          `the footer's bed is ${s.ftReveal ? "armed" : "off"} with the band's top at ${s.bandBox.y} (p ${s.p})`
+        );
+    }
   }
   /* ⚠ THE READOUT NAMES THIS STATION FOR THE WHOLE BEAT. It is the one thing
      the sticky bed can silently take away, and nothing else measures it. */

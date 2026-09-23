@@ -192,6 +192,40 @@ to the sheet's variety law. They share exactly one thing: the record.
   0.10 — re-solved for the short dwell — and closes at 0.95, before the head
   leaves at 0.965. On the stage rung the station is ~1.6 viewports plus its
   100svh band (ADR-119 U2 was ~3.2 at five posts).
+- ⚠ **THE STATION IS WELDED ONE VIEWPORT OVER THE ERA STAGE, ON THE STAGE RUNG
+  ONLY (ADR-121 U3, owner: "it takes a few scrolls to get to the elements").**
+  A sticky stage pins only once its top reaches the frame's top and the head
+  is blank until then, so the reader scrolled ONE WHOLE VIEWPORT of transparent
+  stage rising behind an emptied era stage — 107.6svh from the era's content
+  leaving (era p 0.96) to the head decoding, 1342px at his viewport.
+  `#musings.station { --mu-weld: 100svh }` and
+  `#musings[data-mu-mode="stage"].station { margin-top: calc(-1 * var(--mu-weld)) }`:
+  this stage pins in the frame the era's unpins and the head decodes 1.2svh
+  later (7.6svh from the era's content leaving; the era's own 6.4svh tail
+  stays). ⚠ **The weld EQUALS the era stage's height** (`.vwd`, 100svh sticky
+  in a 260svh station) — larger pins two stages at once, smaller restores dead
+  viewport; `musings-row.test.ts` proves it by arithmetic off both sheets.
+  ⚠ **KEYED ON THE STAGE STAMP, NEVER ON THE RUNG**: on 961–1100 and the phone
+  the era is a static section an opaque station would cover. The writer
+  follows the era's mode through a `MutationObserver` as well as scroll, or
+  the weld lands on the first scroll instead of at load. ⚠ **A TRANSPARENT
+  BOX STILL TAKES THE CLICK** — the welded station covers the era's live band
+  from era p ≈ 0.45, so it is `pointer-events: none` with two restores: the
+  band (opaque, over the held footer) and the runway once the row is `in`;
+  never `visibility: hidden` on the stage (the head decodes during `await`).
+  ⚠ **AND TWO READOUTS FLIP AT THE PIN**: welded, the station's top crosses
+  the viewport's middle 8svh BEFORE the era's exit begins, so the writer stamps
+  `data-station-edge="pin"` with the mode (cleared on the same three paths as
+  `data-ft-reveal`), `useLandingScroll` lights a pin-edge station when its top
+  reaches the frame's top, and the rail's LOCAL reads the station the bus
+  names rather than the first one holding the middle. Musings-only and
+  explicit — the About → Voidwalker flip (about p 0.60) is a separate ruling.
+  ⚠ **THE LABS WELD NOTHING**: `[data-mrl] #musings.station { --mu-weld: 0px }`
+  in the shared lab sheet — the hidden era marker makes the writer stamp
+  `stage`, and there is no era to overlap. The band, the footer's arm edge, the
+  kill and the four ADR-030 §6 readers are untouched: they read live rects,
+  and the band is asserted on the runway's foot. `landing-page.spec.ts`'s page
+  baselines drift by design (one viewport shorter); the HUD pair does not.
 - ⚠ **ONE WRITER, AND IT RENDERS NOTHING, EVER.** `useMusingsScroll` reads
   one rect in a rAF and publishes `--mu-head` (the head's level),
   `data-mu-ready` and `data-mu-arrive` on `.mu`, `data-mu-mode` on the

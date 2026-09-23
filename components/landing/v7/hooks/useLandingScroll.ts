@@ -198,7 +198,17 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
       const ownTop = scrollY + rect.top;
       const stationTop =
         getComputedStyle(station).position === "sticky" ? Math.max(ownTop, prevBottom) : ownTop;
-      if (stationTop <= viewportMid) activeStation = station;
+      /* ⚠ A WELDED STAGE IS ACTIVE AT ITS PIN, NOT AT THE VIEWPORT'S MIDDLE
+         (ADR-121 U3). `#musings` on its stage rung overlaps the era stage by
+         one viewport, so its top crosses the middle 8svh BEFORE the era's exit
+         even begins — the corner would read MUSINGS over the last era's
+         content. Its writer stamps `data-station-edge="pin"` with the stage
+         mode, and the station lights when its top reaches the frame's top:
+         the frame its stage pins in and its head decodes in. Explicit and
+         opt-in — a generic "negative margin" rule would also move the
+         About → Voidwalker flip, which is a separate ruling. */
+      const edge = station.dataset.stationEdge === "pin" ? scrollY + 0.5 : viewportMid;
+      if (stationTop <= edge) activeStation = station;
       prevBottom = ownTop + rect.height;
     }
     const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";

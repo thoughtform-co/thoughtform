@@ -21,9 +21,11 @@ import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
  *
  * It owns everything that moves in this beat and it publishes ATTRIBUTES and
  * custom properties only: `--mu-head` (the head's level), `data-mu-ready` /
- * `data-mu-arrive` on `.mu`, `data-mu-mode` on the STATION, `data-mu-open` on
- * ONE card, `data-live` on the head's cursor hosts, and **`data-ft-reveal` on
- * `<html>`**, which is what arms the footer's held bed (ADR-105 U3).
+ * `data-mu-arrive` on `.mu`, `data-mu-mode` and `data-station-edge` on the
+ * STATION (the second tells the HUD's readout that a welded stage is active
+ * at its PIN, ADR-121 U3), `data-mu-open` on ONE card, `data-live` on the
+ * head's cursor hosts, and **`data-ft-reveal` on `<html>`**, which is what
+ * arms the footer's held bed (ADR-105 U3).
  *
  * ⚠ **IT RENDERS NOTHING, EVER.** ADR-119 kept one piece of React state (the
  * detented front index); the row has no detent, so there is none left. The
@@ -299,8 +301,10 @@ export function useMusingsScroll(
       }
       /* ⚠ THE STAGE MODE GOES WITH IT, AND THE STATION IS OPAQUE AGAIN, or a
          reader on the inert rung gets a transparent box over a dead corridor
-         (ADR-008 rule 1). */
+         (ADR-008 rule 1). The readout's edge goes with the mode: an unwelded
+         station is active at the viewport's middle like every other. */
       section()?.removeAttribute("data-mu-mode");
+      section()?.removeAttribute("data-station-edge");
       restoreHead();
       /* The open card goes home: the rail rests with the newest post lit. */
       openRest();
@@ -326,8 +330,17 @@ export function useMusingsScroll(
       if (sec) {
         if (stage) {
           if (sec.dataset.muMode !== "stage") sec.dataset.muMode = "stage";
+          /* ⚠ THE WELDED STATION IS ACTIVE AT ITS PIN (ADR-121 U3). The sheet
+             pulls the station one viewport over the era stage on this mode,
+             so its top crosses the viewport's middle 8svh BEFORE the era's
+             exit begins; `useLandingScroll` reads this edge and lights the
+             corner when the top reaches the frame's top — the frame the head
+             decodes in. Written and cleared with the mode, never apart. */
+          if (sec.getAttribute("data-station-edge") !== "pin")
+            sec.setAttribute("data-station-edge", "pin");
         } else if (sec.dataset.muMode) {
           sec.removeAttribute("data-mu-mode");
+          sec.removeAttribute("data-station-edge");
         }
       }
 
@@ -418,9 +431,23 @@ export function useMusingsScroll(
     mq.addEventListener("change", onMq);
     mqStage.addEventListener("change", onMq);
     document.addEventListener("visibilitychange", onVisibility);
+    /* ⚠ THE STAGE MODE FOLLOWS THE ERA'S, AND THE ERA STAMPS LATE (ADR-121
+       U3). `stageMode()` reads `#voidwalker`'s `data-vw-mode`, which lands
+       after its codec probe — later than this writer's first tick. Left to
+       scroll and resize alone, the stamp (and with it the weld, the
+       promotion and the band) arrived on the reader's first scroll rather
+       than at load, and a spec reading the page at rest saw an unwelded
+       station. One observer, one attribute, the same rAF-coalesced tick. */
+    const vwEl = document.getElementById("voidwalker");
+    const vwObserver = vwEl ? new MutationObserver(onScroll) : null;
+    vwObserver?.observe(vwEl as HTMLElement, {
+      attributes: true,
+      attributeFilter: ["data-vw-mode"],
+    });
     tick();
 
     return () => {
+      vwObserver?.disconnect();
       row?.removeEventListener("pointerover", onPointerOver);
       row?.removeEventListener("pointerleave", onPointerLeave);
       row?.removeEventListener("focusin", onFocusIn);
@@ -437,8 +464,10 @@ export function useMusingsScroll(
       document.documentElement.removeAttribute("data-ft-reveal");
       /* ⚠ And the mode lives on the STATION, which this component does not
          render — left behind, it would hold a transparent, promoted station
-         over a dead corridor for the rest of the document. */
+         over a dead corridor for the rest of the document. The readout's
+         edge goes with it. */
       section()?.removeAttribute("data-mu-mode");
+      section()?.removeAttribute("data-station-edge");
       /* ⚠ And the decoded runs go back to the strings React rendered. A fast
          refresh re-runs the effect against a node that survives, and a head
          left mid-scramble there stays mid-scramble on the page. */

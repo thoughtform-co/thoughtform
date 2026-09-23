@@ -27,6 +27,7 @@ import {
   MUSINGS_TITLE_TEXT,
   coordStamp,
 } from "@/lib/musings/mastheadData";
+import { VOIDWALKER_HOLOGRAM_EXIT_WINDOW } from "@/lib/voidwalker/voidwalkerHologramClock";
 
 /**
  * The row's arrival, the head's decode, and the source ratchets (ADR-121).
@@ -764,5 +765,105 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     const clears = hook.match(/removeAttribute\("data-ft-reveal"\)/g) ?? [];
     expect(clears.length).toBeGreaterThanOrEqual(3);
     expect(hook).toContain('setAttribute("data-ft-reveal"');
+  });
+
+  /* ── The weld (ADR-121 U3) ─────────────────────────────────────────── */
+
+  it("the station is welded one viewport over the era stage, on the stage rung ONLY", () => {
+    // ⚠ The owner's read: "it takes a few scrolls to get to the elements". A
+    // sticky stage pins only once its top reaches the frame's top and the head
+    // is blank until then, so the reader scrolled one whole viewport of
+    // transparent stage rising behind an emptied era stage. The weld takes
+    // that viewport back, and it is keyed on the stage stamp: an opaque
+    // station pulled over a static era section would cover its content.
+    const sheet = rules(read(SHEET));
+    expect(bodyOf(sheet, "#musings.station")).toMatch(/--mu-weld:\s*100svh/);
+    const weld = flat(bodyOf(sheet, '#musings[data-mu-mode="stage"].station'));
+    expect(weld).toContain("margin-top:calc(-1*var(--mu-weld))");
+    // ⚠ The `flex-grow | --mu-open-w | backdrop-filter | container-type`
+    // ratchet cannot see a margin, so every negative `margin-top` in the sheet
+    // is walked and must carry the stage key.
+    for (const [, sel, body] of blocks(sheet)) {
+      if (/margin-top:\s*(-|calc\(\s*-1)/.test(body)) {
+        expect(sel, `an unkeyed weld: ${sel.trim()}`).toContain('[data-mu-mode="stage"]');
+      }
+    }
+  });
+
+  it("the weld equals the era stage's height, and the era's content is gone before the head decodes", () => {
+    // ⚠ ARITHMETIC, NOT A LITERAL. The era station is `.vw--hologram`'s runway
+    // with `.vwd` sticky inside it; its content is off-frame at the exit
+    // window's end. The musings stage pins when its runway's top reaches the
+    // frame's top — the weld puts that frame at the era's release — and the
+    // head decodes at `HEAD_REVEAL_AT` of the dwell after it. Larger than the
+    // era stage pins two stages at once; smaller restores dead viewport.
+    const num = (s: string | undefined, re: RegExp) => Number(re.exec(s ?? "")?.[1]);
+    const vw = rules(read("components/landing/home-v2/voidwalker/voidwalker.css"));
+    const vwd = rules(read("components/landing/home-v2/voidwalker/hologram/voidwalker-datum.css"));
+    const runway = num(
+      bodyOf(vw, '#voidwalker[data-vw-mode="hologram"] .vw--hologram'),
+      /min-height:\s*(\d+)svh/
+    );
+    const stageBody = blocks(vwd)
+      .filter(([, s]) => s.trim() === ".vwd")
+      .map(([, , b]) => b)
+      .find((b) => /height:\s*\d+svh/.test(b));
+    const stage = num(stageBody, /(?:^|[^-])height:\s*(\d+)svh/);
+    const sheet = rules(read(SHEET));
+    const weld = num(bodyOf(sheet, "#musings.station"), /--mu-weld:\s*(\d+)svh/);
+    const dwell = num(bodyOf(sheet, ".mu"), /--mu-dwell:\s*(\d+)svh/);
+    expect(runway).toBe(260);
+    expect(stage).toBe(100);
+    expect(weld).toBe(stage);
+    const exitEnd = VOIDWALKER_HOLOGRAM_EXIT_WINDOW[1];
+    // svh from the era's content leaving to the musings head decoding.
+    const seam = (1 - exitEnd) * (runway - stage) - (stage - weld) + HEAD_REVEAL_AT * dwell;
+    expect(seam).toBeGreaterThan(0);
+    expect(seam).toBeLessThan(12); // 7.6 today — the era's own tail plus 1.2svh
+  });
+
+  it("the welded station is hit-transparent, and the band and the arrived runway take their hits back", () => {
+    // ⚠ A transparent box still takes the click: from era p ≈ 0.45 the station's
+    // box covers the era's band tablist, live until the era goes inert at
+    // 0.92. `pointer-events` inherits, so one `none` and two `auto` restores.
+    const sheet = rules(read(SHEET));
+    expect(bodyOf(sheet, '#musings[data-mu-mode="stage"].station')).toMatch(
+      /pointer-events:\s*none/
+    );
+    expect(bodyOf(sheet, '#musings[data-mu-mode="stage"] .mu__band')).toMatch(
+      /pointer-events:\s*auto/
+    );
+    expect(
+      bodyOf(
+        sheet,
+        '#musings[data-mu-mode="stage"] .mu[data-mu-ready][data-mu-arrive="in"] .mu__runway'
+      )
+    ).toMatch(/pointer-events:\s*auto/);
+    // Never `visibility: hidden` on the stage — the head decodes during `await`.
+    expect(bodyOf(sheet, '#musings[data-mu-mode="stage"].station')).not.toMatch(/visibility/);
+  });
+
+  it("the readouts flip at the PIN while the station is welded, and the labs weld nothing", () => {
+    // ⚠ Welded, the station's top crosses the viewport's middle 8svh before
+    // the era's exit begins, so the corner would read MUSINGS over the last
+    // era's content. The writer stamps the edge WITH the mode and clears it
+    // on every path the mode is cleared; the landing hook and the rail's
+    // LOCAL both read it.
+    const hook = read(HOOK);
+    expect(hook).toContain('setAttribute("data-station-edge", "pin")');
+    const clears = hook.match(/removeAttribute\("data-station-edge"\)/g) ?? [];
+    expect(clears.length).toBeGreaterThanOrEqual(3);
+    const landing = read("components/landing/v7/hooks/useLandingScroll.ts");
+    expect(landing).toContain('stationEdge === "pin"');
+    expect(landing).toContain("scrollY + 0.5");
+    expect(landing).toContain('position === "sticky"');
+    const marks = read("components/landing/v7/rail-instruments/useJourneyMarks.ts");
+    expect(marks).toContain('getAttribute("data-active-station")');
+    expect(marks).toContain('stationEdge === "pin"');
+    // The labs mount the station over a hidden era marker and have nothing to
+    // overlap: the weld would put the station at document y 0.
+    expect(flat(read("app/(internal)/test/musings-row/musings-row-lab.css"))).toContain(
+      "[data-mrl]#musings.station{--mu-weld:0px;}"
+    );
   });
 });

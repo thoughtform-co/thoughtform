@@ -517,3 +517,124 @@ var(--band-top) }`, inside the row rung's media block. `.proof__report` is the
   `min(42ch, 34vw)` where this is `min(42ch, 100%)`; and the survey chrome's
   tracking is on the role tokens (0.15em / 0.08em) where services carries its
   older literals (0.18em / 0.2em / 0.1em).
+
+## Update 3 — the station is welded over the era stage (2026-09-23)
+
+Owner, on the row read live:
+
+> When you scroll into the musings section, it takes a few scrolls to get to
+> the elements of the musings section. There's a bit of dead space, so I think
+> we can remove that and have the elements appear more quickly after you've
+> scrolled out of the previous section.
+
+### The defect, measured
+
+A sticky stage in normal flow pins only once its top reaches the frame's top,
+and this head is forced blank until the stage is parked (U2 §1, the masthead
+motion law). `#musings` began exactly at `#voidwalker`'s bottom, and the era
+station is 260svh with a 100svh sticky `.vwd` whose exit window ends at era
+p 0.96. So between the era's last content leaving and this head starting to
+decode the reader scrolled **107.6svh**: 6.4svh of the era's own tail, and
+**one whole viewport of transparent musings stage rising behind an emptied era
+stage** — nothing of this station painted (the head at `""`, the cards
+`await`), only the live corridor and the HUD. Then the time chain the owner
+already has: the head's 0.67s decode, the cards' 720ms aperture.
+
+| viewport  | era content gone → head decodes, before | after    |
+| --------- | --------------------------------------- | -------- |
+| 1920×1247 | 1342px (107.6svh)                       | **95px** |
+| 1280×720  | 775px (107.6svh)                        | **55px** |
+
+At ~100–120px a wheel notch that was eleven to thirteen notches at his viewport.
+The trinny route had already named the cost — _a sticky stage costs ONE VIEWPORT
+of scroll-off at its end by construction_ (ADR-101 §A) — and the era station
+already takes the cure at its own top edge (`margin-top: -120svh`, ADR-082).
+
+### The ruling
+
+- **The station is welded one viewport over the era stage, on the stage rung
+  only.** `#musings.station { --mu-weld: 100svh }` and
+  `#musings[data-mu-mode="stage"].station { margin-top: calc(-1 * var(--mu-weld)) }`.
+  The weld EQUALS the era stage's height, so this stage pins in the frame the
+  era's unpins (era p 1.0; its content left at 0.96): the head decodes 1.2svh
+  after the pin, the row arms 6svh after it. The page is one viewport shorter.
+- ⚠ **Keyed on the stage stamp, never on the rung.** The writer stamps
+  `data-mu-mode="stage"` only when the stage query matches AND `#voidwalker`
+  is in a transparent mode. On the 961–1100 opaque rung and the phone the era
+  is a static section, and an opaque station pulled over it would cover its
+  content: those rungs are byte-identical. ⚠ The writer now follows the era's
+  mode through a `MutationObserver` on `#voidwalker`'s `data-vw-mode` as well
+  as scroll and resize — the era's stamp lands after its codec probe, later
+  than this writer's first tick, and a stale mode is a station that welds on
+  the first scroll instead of at load.
+- **What does not move:** the runway (`100svh + --mu-dwell`), the 100svh
+  `.mu__band` directly after it, the footer's arm edge (the band's top), the
+  corridor's kill and the four ADR-030 §6 readers — all read live rects. The
+  rail's MUSINGS click targets `offsetTop`, which IS the pin (station padding
+  is 0 on this rung). The band is asserted on the runway's foot.
+- ⚠ **The welded station is hit-transparent.** Both stations are promoted to
+  z 6 while the corridor-exit band is live, so DOM order paints this stage
+  over `.vwd` for the overlap — but a transparent box still takes the click,
+  and from era p ≈ 0.45 this station's box covers the era's band tablist and
+  record cards, which stay live until the era goes inert at p 0.92.
+  `pointer-events: none` on the welded station, restored on the band (opaque,
+  over the held footer — hit-transparent it would click the footer's links
+  through itself once the bed arms) and on the runway once the row is `in`
+  (the Trinny `#proposition` await/out precedent). Never `visibility: hidden`
+  on the stage: the head decodes during `await`.
+- ⚠ **Two readouts flip at the PIN, not at the viewport's middle.**
+  `useLandingScroll` makes a station active when its top crosses the middle;
+  welded, this station's top crosses it at era p 0.6875 — while the era is
+  fully seated (its exit starts at 0.74) — so the corner would have read
+  MUSINGS over the last era's content. The writer stamps
+  `data-station-edge="pin"` with the stage mode (cleared on the same three
+  paths as `data-ft-reveal`), and a station carrying it is active when its
+  top reaches the frame's top: the frame its stage pins in and its head
+  decodes in. Explicit and musings-only — a generic negative-margin rule
+  would also move the About → Voidwalker flip (today at about p 0.60, 24.5svh
+  before that exit opens), which is a separate ruling. The rail's LOCAL
+  fraction read "the first station holding the middle" and would have printed
+  the era's 0.81 → 1.00 for most of this dwell under a corner saying MUSINGS;
+  it reads the station the bus names now, and for a pin-edge station it is
+  that station's own travel (0 as the stage pins, 1 as its box leaves).
+- **The labs weld nothing.** Both mount the station over a hidden
+  `#voidwalker[data-vw-mode="hologram"]` marker, so the writer stamps `stage`;
+  `[data-mrl] #musings.station { --mu-weld: 0px }` in the shared lab sheet,
+  because there is no era to overlap and the weld would put the station at
+  document y 0.
+
+### Guards
+
+- `musings-row.test.ts` 57 → 61: the weld rule exists, keyed on the stamp, and
+  no negative `margin-top` in the sheet lacks the key (the flex-grow ratchet
+  cannot see a margin); the arithmetic — the era runway (260svh) and stage
+  (100svh) read off their sheets, the weld off this one, the exit window and
+  `HEAD_REVEAL_AT` imported — proves the era's content is gone before the head
+  decodes (7.6svh) and that the weld equals the era stage's height; the three
+  `pointer-events` rules by selector; the edge stamped and cleared ≥3 times,
+  read by both readouts; the lab override.
+- `capture-musings-row.mjs`: three stops before the pin (−1.0 = era p 0.625,
+  −0.3, −0.15 = mid-exit); the station one frame above the era's bottom at
+  every staged stop; the corner VOIDWALKER at every p < 0 and MUSINGS from the
+  pin; the era's lit chip taking the click through the station at −1.0; the
+  era's exit at 1.0000 with zero of its text inked in the frame from p 0.02;
+  the band on the runway's foot; the bed armed exactly when the band's top
+  ≤ 0. It prints the seam (`era content gone → head decodes`).
+- `about-voidwalker-handoff-boundaries.spec.ts`: `flowState()` carries the
+  musings seam (−800 at 1101×800, ≥ −1 at 1100); the band case reads the
+  corner, the row's arrival and the chip hit at era p 0.5, the exit and the
+  corner at 0.98, and the corner plus zero era ink at musings p 0.02.
+- `landing-page.spec.ts`'s page baselines drift by design (the document is a
+  viewport shorter); the HUD pair must pass untouched.
+
+### Left open
+
+- **The era's own 6.4svh tail** (exit complete at 0.96, release at 1.0) stays;
+  a larger weld would pin two stages at once.
+- **The 961–1100 rung has the same one-viewport approach** (an opaque station
+  rising over a static era section); untouched, because the weld's premise —
+  a transparent stage over an emptied one — does not hold there.
+- **The About → Voidwalker readout** flips 24.5svh before that exit opens, by
+  the same middle rule; the pin edge is written to reach it if it is asked for.
+- **A deep-link reload of `/#musings`** lands before the writer's first tick;
+  scroll anchoring absorbs the −100svh shift in Chromium — read on a device.

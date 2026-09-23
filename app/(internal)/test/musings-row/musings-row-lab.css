@@ -21,6 +21,15 @@
   pointer-events: none;
 }
 
+/* ⚠ NO WELD IN THE LABS (ADR-121 U3). The hidden `#voidwalker` marker makes
+   the writer stamp `stage`, and on the landing that mode pulls the station one
+   viewport over the era stage. There is no era here — the weld would put the
+   station at document y 0 and the capture's approach stop (p −0.3) out of
+   reach. Shared by both labs through this sheet. */
+[data-mrl] #musings.station {
+  --mu-weld: 0px;
+}
+
 /* ⚠ THE BED IS A STAND-IN FOR THE CORRIDOR'S LIGHT, NOT A COPY OF IT. On the
    landing the station is transparent over the live canvas and the glass blurs
    the corridor; here the same transparency shows this fixed layer — the

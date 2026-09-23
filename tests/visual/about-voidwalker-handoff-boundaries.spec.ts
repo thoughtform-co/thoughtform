@@ -122,6 +122,10 @@ async function flowState(page: Page) {
     if (!about || !voidwalker || !root) throw new Error("Missing About/Voidwalker boundary");
     const documentTop = (element: HTMLElement) =>
       element.getBoundingClientRect().top + window.scrollY;
+    /* ⚠ THE MUSINGS SEAM IS PART OF THE FLOW STATE SINCE ADR-121 U3: on the
+       stage rung `#musings` is welded ONE VIEWPORT over the era stage, and off
+       it the two are in plain flow. Read with the same instrument. */
+    const musings = document.querySelector<HTMLElement>("#musings");
     return {
       aboutMode: about.getAttribute("data-about-mode"),
       aboutHandoff: about.getAttribute("data-about-handoff"),
@@ -131,6 +135,11 @@ async function flowState(page: Page) {
       rootInert: root.inert,
       marginTop: Number.parseFloat(getComputedStyle(voidwalker).marginTop),
       flowGap: documentTop(voidwalker) - (documentTop(about) + about.offsetHeight),
+      musingsMode: musings?.getAttribute("data-mu-mode") ?? null,
+      musingsMarginTop: musings ? Number.parseFloat(getComputedStyle(musings).marginTop) : null,
+      musingsFlowGap: musings
+        ? documentTop(musings) - (documentTop(voidwalker) + voidwalker.offsetHeight)
+        : null,
     };
   });
 }
@@ -209,9 +218,19 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await waitForHandoff(page);
 
+    /* ADR-121 U3: the musings station is welded one viewport (800 here) over
+       the era stage on the stage rung — and only there. Its writer follows the
+       era's mode through a MutationObserver, so the stamp lands without a
+       scroll; wait on it rather than on the handoff alone. */
+    await page.waitForFunction(
+      () => document.getElementById("musings")?.getAttribute("data-mu-mode") === "stage"
+    );
     const at1101 = await flowState(page);
     expect(at1101.marginTop).toBeCloseTo(-960, 0);
     expect(at1101.flowGap).toBeCloseTo(-960, 0);
+    expect(at1101.musingsMode).toBe("stage");
+    expect(at1101.musingsMarginTop).toBeCloseTo(-800, 0);
+    expect(at1101.musingsFlowGap).toBeCloseTo(-800, 0);
 
     await page.setViewportSize({ width: 1100, height: 800 });
     await page.waitForFunction(() => {
@@ -229,6 +248,10 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     expect(at1100.rootReady).toBe(false);
     expect(at1100.marginTop).toBeCloseTo(0, 1);
     expect(at1100.flowGap).toBeGreaterThanOrEqual(-1);
+    /* Off the stage rung the station is opaque and in plain flow: no weld. */
+    expect(at1100.musingsMode).toBeNull();
+    expect(at1100.musingsMarginTop).toBeCloseTo(0, 1);
+    expect(at1100.musingsFlowGap).toBeGreaterThanOrEqual(-1);
 
     await page.setViewportSize({ width: 1101, height: 800 });
     await waitForHandoff(page);
@@ -606,6 +629,93 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
       timeout: 5_000,
     });
     await expect(page.locator("html")).toHaveAttribute("data-corridor-exit", "true");
+
+    /* ── The weld (ADR-121 U3) ──
+       `#musings` overlaps the era stage by one viewport here, so at era p 0.5
+       its transparent box already covers the era's band. Three things must
+       hold: the corner still reads VOIDWALKER (the welded station is active
+       at its PIN, not the viewport's middle), the row has not arrived, and
+       the era's lit chip still takes the click through the station (the hit
+       shield). Then at era p 0.98 the exit is complete with the corner
+       unchanged, and at musings p 0.02 the corner reads MUSINGS with none of
+       the era's text inked in the frame. */
+    const overlap = await page.evaluate(() => {
+      const chip =
+        document.querySelector<HTMLElement>(
+          '#voidwalker .vwd__band [role="tab"][aria-selected="true"]'
+        ) ?? document.querySelector<HTMLElement>('#voidwalker .vwd__band [role="tab"]');
+      if (!chip) throw new Error("Missing era band chip");
+      const r = chip.getBoundingClientRect();
+      const top = document.elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2)[0];
+      return {
+        active: document.documentElement.getAttribute("data-active-station"),
+        arrive: document.querySelector<HTMLElement>("#musings .mu")?.dataset.muArrive ?? null,
+        edge: document.getElementById("musings")?.getAttribute("data-station-edge") ?? null,
+        chipInBand: !!top?.closest(".vwd__band"),
+        chipUnderMusings: !!top?.closest("#musings"),
+      };
+    });
+    expect(overlap.edge, "the welded station names its edge").toBe("pin");
+    expect(overlap.active, "the corner reads the era while the era is on screen").toBe(
+      "voidwalker"
+    );
+    expect(overlap.arrive, "the row has not arrived under the era").not.toBe("in");
+    expect(overlap.chipInBand, "the era's chip takes the click through the station").toBe(true);
+    expect(overlap.chipUnderMusings).toBe(false);
+
+    await setRunwayProgress(page, ".vw--hologram", 0.98);
+    const eraDone = await page.evaluate(() => ({
+      exit: document
+        .querySelector<HTMLElement>("#voidwalker .vwd")
+        ?.style.getPropertyValue("--vwh-exit"),
+      active: document.documentElement.getAttribute("data-active-station"),
+    }));
+    expect(eraDone.exit, "the era's exit is complete before its release").toBe("1.0000");
+    expect(eraDone.active, "the corner holds the era until the musings stage pins").toBe(
+      "voidwalker"
+    );
+
+    await setRunwayProgress(page, ".mu__runway", 0.02);
+    await page.waitForFunction(
+      () => document.documentElement.getAttribute("data-active-station") === "musings"
+    );
+    const pinned = await page.evaluate(() => {
+      const vwd = document.querySelector<HTMLElement>("#voidwalker .vwd");
+      const vh = window.innerHeight;
+      const vw = document.documentElement.clientWidth;
+      let inked = 0;
+      if (vwd) {
+        const faded = (el: Element | null) => {
+          for (let e = el; e && e !== vwd.parentElement; e = e.parentElement) {
+            const s = getComputedStyle(e);
+            if (s.visibility === "hidden" || s.display === "none" || parseFloat(s.opacity) < 0.05)
+              return true;
+          }
+          return false;
+        };
+        const walker = document.createTreeWalker(vwd, NodeFilter.SHOW_TEXT);
+        let node: Node | null;
+        while ((node = walker.nextNode())) {
+          if (!node.textContent?.trim() || faded(node.parentElement)) continue;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          const hit = [...range.getClientRects()].some(
+            (q) =>
+              q.width > 0 &&
+              q.height > 0 &&
+              q.bottom > 0 &&
+              q.top < vh &&
+              q.right > 0 &&
+              q.left < vw
+          );
+          range.detach();
+          if (hit) inked += 1;
+        }
+      }
+      return { inked, mode: document.getElementById("musings")?.getAttribute("data-mu-mode") };
+    });
+    expect(pinned.mode).toBe("stage");
+    expect(pinned.inked, "no era text is inked once the musings head decodes").toBe(0);
     /* ⚠ THE WAYPOINT IS THE KILL EDGE ITSELF, NOT A WALK PAST IT — AND THAT IS
        ARITHMETIC, NOT A PREFERENCE. Every earlier cover was at least three
        viewports tall, so "0.3 viewports inside it" still left the box covering

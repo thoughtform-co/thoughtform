@@ -184,17 +184,39 @@ export function useScrollReadouts(
       const bearingEl = targets.bearing.current;
       if (bearingEl && bearingEl.textContent !== pct) bearingEl.textContent = pct;
 
-      // LOCAL is progress through the section currently holding the
-      // viewport midline. Read off the live rect rather than a table: the
+      // LOCAL is progress through the ACTIVE station — the one
+      // `useLandingScroll` named on the bus, with its sticky and welded cases
+      // already resolved — read off the live rect rather than a table: the
       // corridor and services runways change height as their lazy chunks
       // mount, and a cached table would print a stale fraction.
+      // ⚠ NOT "the first station holding the viewport's middle" (ADR-121 U3):
+      // `#musings` overlaps the era stage by a viewport on its stage rung, so
+      // that scan kept reporting the era's 0.81 → 1.00 for most of the musings
+      // dwell while the corner already said MUSINGS, then jumped.
       const mid = window.innerHeight / 2;
+      const vh = window.innerHeight;
       let localTxt = "0.00";
-      for (const el of document.querySelectorAll<HTMLElement>(".station")) {
-        const r = el.getBoundingClientRect();
-        if (r.top <= mid && r.bottom > mid && r.height > 0) {
-          localTxt = Math.min(1, Math.max(0, (mid - r.top) / r.height)).toFixed(2);
-          break;
+      const activeKey = doc.getAttribute("data-active-station");
+      const active = activeKey
+        ? (document.querySelector<HTMLElement>(`.station[data-station="${activeKey}"]`) ??
+          document.getElementById(activeKey))
+        : null;
+      if (active) {
+        const r = active.getBoundingClientRect();
+        // A station active at its PIN reads its own travel: 0 as its stage
+        // pins, 1 as its box leaves — the middle rule would open it at 0.31.
+        localTxt = (
+          active.dataset.stationEdge === "pin"
+            ? Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - vh)))
+            : Math.min(1, Math.max(0, (mid - r.top) / Math.max(1, r.height)))
+        ).toFixed(2);
+      } else {
+        for (const el of document.querySelectorAll<HTMLElement>(".station")) {
+          const r = el.getBoundingClientRect();
+          if (r.top <= mid && r.bottom > mid && r.height > 0) {
+            localTxt = Math.min(1, Math.max(0, (mid - r.top) / r.height)).toFixed(2);
+            break;
+          }
         }
       }
       const localEl = targets.local.current;
