@@ -704,6 +704,34 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(station).not.toMatch(/setCard|cardsRef|front/);
   });
 
+  it("the pinned head hangs from the SERVICES line, and the base rows stay content-height (ADR-121 U2)", () => {
+    // ⚠ The owner's read: the title and the paragraph sit "more down" than
+    // services' "AI CAPABILITY / YOUR TEAM OWNS.". The group was centred, so
+    // the head landed wherever the cards below it left room (~287px of a
+    // 1247px frame against services' 136). Pinned, it hangs from `--band-top`.
+    const sheet = rules(read(SHEET));
+    const rung = sheet.slice(sheet.indexOf(`@media ${RUNG} {`));
+    const stage = bodyOf(rung, ".mu[data-mu-ready] .mu__stage");
+    expect(stage).toMatch(/align-content:\s*start/);
+    expect(stage).toMatch(/padding-block-start:\s*var\(--band-top\)/);
+    // ADR-119's composition law survives: no `1fr` track to pool slack in.
+    const base = bodyOf(sheet, ".mu__stage");
+    expect(base).toMatch(/grid-template-rows:\s*auto auto auto/);
+    expect(base).not.toMatch(/1fr/);
+    // Services seats both blocks on one `top`; the brief carries no offset.
+    expect(bodyOf(sheet, ".mu__head-brief")).not.toMatch(/padding-top/);
+    // ⚠ THE OTHER HALF OF THE LINK. Services hangs from `--band-top` plus a
+    // trim that is 0 today; a trim there would split the one shared line in
+    // silence, so it is pinned from this side.
+    const svc = blocks(read("components/landing/home-v2/services/services.css"))
+      .filter(([, s]) => s.trim() === ".services-masthead")
+      .map(([, , b]) => flat(b))
+      .find((b) => b.includes("--masthead-top:"));
+    expect(svc).toBeDefined();
+    expect(svc).toMatch(/--masthead-top:calc\(var\(--band-top,/);
+    expect(svc).toContain("--masthead-top-trim:0px");
+  });
+
   it("the runway is ONE dwell, and the dwell is the dial", () => {
     const sheet = rules(read(SHEET));
     expect(bodyOf(sheet, ".mu[data-mu-ready] .mu__runway")).toMatch(

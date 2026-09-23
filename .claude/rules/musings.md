@@ -269,6 +269,18 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   wanted (zero props, `closest(".services-stage")`, `--svc-*` channels no hook
   writes here, ABSOLUTE inside a pinned stage); `ArcSectionHead` is the
   canonical in-flow copy and this is its third instance.
+  ⚠ **AND ITS SEAT IS COPIED TOO, SINCE ADR-121 U2** — the type was copied in
+  ADR-119 and the seat was not, so the head sat wherever the centred group put
+  it (~287px down at 1920×1247 against services' 136; the owner: "more down").
+  On the pinned rung (`.mu[data-mu-ready]`, 961px up, NOT the transparent
+  `stage` mode — services sits on this line across 961–1100 too) the stage is
+  `align-content: start` on `padding-block-start: var(--band-top)`, the line
+  `.services-masthead__lead`/`__intro` hang from, and the brief's box starts on
+  the title's (no top padding). The base rule still centres its three `auto`
+  rows for the flowing rail. ⚠ **The link is pinned from BOTH ends** in
+  `musings-row.test.ts` — including `services.css`'s `--masthead-top-trim: 0px`,
+  because a trim there would split the one shared line in silence — and the
+  capture gates the title on `--band-top` resolved through a probe box.
   ⚠ **THE STRINGS ARE AUTHORED UPPERCASE AND THE SHEET TRANSFORMS NOTHING**
   (ADR-092), and `0.04em` is the sheet's ONE type literal — the ratchet's pin is
   `A: 1` with its reason recorded, and it only goes down from there.
@@ -454,6 +466,8 @@ node scripts/capture-musings-row.mjs --lab --n 7 --vp 1280x720 --theme dark    #
 # every title on one, the open card at its measure or wider, and every card's
 # right edge ≥ 12px clear of the leftmost right-rail readout at rest, on hover
 # and on Tab. It prints both numbers — "bare under the lede" and "clearance".
+# (U2) the title's top on --band-top below the stage's, the brief on the
+# title's line above 900px, the way out inside the frame — "head seat".
 node scripts/capture-site-footer.mjs  --vp 1920x1247 --theme dark   # the bed must not move
 ```
 

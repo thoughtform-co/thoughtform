@@ -286,7 +286,7 @@
   background-repeat: repeat;
 }
 
-/* ⚠ THREE CONTENT-HEIGHT ROWS, CENTRED AS ONE GROUP — NEVER A `1fr` MIDDLE.
+/* ⚠ THREE CONTENT-HEIGHT ROWS — NEVER A `1fr` MIDDLE.
    The first cut gave the row's track `minmax(0, 1fr)`, which is the same
    slack-pooling defect this house has now measured four times (ADR-070 U14's
    tail share, ADR-069 U1's title baseline, ADR-088's directory seams): the
@@ -294,10 +294,16 @@
    row absorbed all 634px of surplus and centred the row inside it — putting
    **205px between the masthead's baseline and the top card** and the same
    again above the button. Measured on the still: three disconnected objects
-   with two holes between them.
-   With `auto` rows the whole group centres and the surplus splits ABOVE the
-   head and BELOW the foot, where it is the frame rather than a hole. Air
-   around a composition is room; air inside one is a mis-seat. */
+   with two holes between them. Air around a composition is room; air inside
+   one is a mis-seat.
+   ⚠ THE BASE CENTRES; THE PINNED STAGE HANGS FROM THE SERVICES LINE
+   (ADR-121 U2). Centring the group was right for a flowing rail and wrong for
+   a pinned frame: it put the head wherever the cards below it left room — the
+   title at ~287px of a 1247px frame, against the services masthead's 136 —
+   and lower still on a taller window, because the card height caps and the
+   frame does not. On the pinned rung the head hangs from `--band-top`, the
+   services masthead's own line (see the rung block below), and the surplus
+   pools under the way out. */
 .mu__stage {
   display: grid;
   grid-template-rows: auto auto auto;
@@ -336,11 +342,13 @@
 .mu__head-lead {
   position: relative;
 }
+/* ⚠ NO TOP PADDING (ADR-121 U2). The 6px came from `.arc-head__intro`, the
+   in-flow copy this head was taken from; the services original seats both
+   blocks on one `top`, so the brief's box starts on the title's. */
 .mu__head-brief {
   position: relative;
   justify-self: end;
   max-width: min(42ch, 100%);
-  padding-top: 6px;
 }
 
 /* ⚠ THE DISPLAY LADDER IS THE MASTHEAD'S OWN, AND `--mu-display` IS RETIRED
@@ -582,7 +590,6 @@
   .mu__head-brief {
     justify-self: start;
     max-width: 52ch;
-    padding-top: 0;
   }
   .mu__mark,
   .mu__coord {
@@ -908,6 +915,21 @@
 }
 
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+  /* ⚠ THE HEAD HANGS FROM THE SERVICES LINE (ADR-121 U2, owner: the title and
+     the paragraph "on top", where "AI CAPABILITY / YOUR TEAM OWNS." sits).
+     `.services-masthead__lead` / `__intro` both sit at `top: var(--masthead-
+     top)`, which is `--band-top` plus a 0px trim; `.proof__report` is the
+     in-flow precedent (`padding-block: var(--band-top) …; align-content:
+     start`). ⚠ KEYED ON THE STAMP, NOT ON `data-mu-mode="stage"`: the pinned
+     stage exists across 961–1100 as well, and the services masthead sits on
+     this line there too — keyed on the mode, the head would have two seats
+     depending on whether the corridor is alive. `musings-row.test.ts` pins
+     the services half of the link, so a trim there cannot split the line. */
+  .mu[data-mu-ready] .mu__stage {
+    align-content: start;
+    padding-block-start: var(--band-top);
+  }
+
   /* The row takes the BAND's box — the same pair `.mu__head` rides — so the
      head, the row and the way out share one left edge (ADR-119 U1's column,
      kept). A flex row, the reference's own `gap`, the card's height as the

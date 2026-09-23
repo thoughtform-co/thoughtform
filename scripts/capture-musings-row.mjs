@@ -419,6 +419,51 @@ await page.waitForTimeout(GROW_MS + 100);
 const rest = await readRow();
 await page.screenshot({ path: `${OUT}/mu-${tag}-rest.png` });
 
+/* ── The head's seat (ADR-121 U2) ─────────────────────────────────────
+   The pinned head hangs from the SERVICES line. ⚠ `--band-top` IS A `calc()`
+   AND A CUSTOM PROPERTY IS A STRING UNTIL SOMETHING LAYS IT OUT, so it is
+   resolved through a probe box inside `.mu`, never parsed. The survey chrome
+   is reported against the frame's own corner marks, which the raised head now
+   sits beside. */
+const seat = await page.evaluate(() => {
+  const mu = document.querySelector(".mu");
+  const title = document.querySelector(".mu__title");
+  const brief = document.querySelector(".mu__brief");
+  const all = document.querySelector(".mu__all");
+  const desig = document.querySelector(".mu__desig");
+  const stage = document.querySelector(".mu__stage");
+  if (!mu || !title || !stage) return null;
+  const probe = document.createElement("i");
+  probe.style.cssText = "position:absolute;width:0;height:var(--band-top);visibility:hidden";
+  mu.appendChild(probe);
+  const bandTop = probe.getBoundingClientRect().height;
+  probe.remove();
+  const r = (el) => {
+    if (!el) return null;
+    const b = el.getBoundingClientRect();
+    return {
+      x: Math.round(b.x * 10) / 10,
+      y: Math.round(b.y * 10) / 10,
+      b: Math.round(b.bottom * 10) / 10,
+    };
+  };
+  const stageTop = stage.getBoundingClientRect().top;
+  const tl = document.querySelector(".hud__corner--tl");
+  const nav = document.querySelector(".hud__nav__btn");
+  return {
+    bandTop: Math.round(bandTop * 10) / 10,
+    stageTop: Math.round(stageTop * 10) / 10,
+    title: r(title),
+    brief: r(brief),
+    all: r(all),
+    desig: r(desig),
+    cornerTl: r(tl),
+    nav: r(nav),
+    vh: window.innerHeight,
+    vw: window.innerWidth,
+  };
+});
+
 /* Hover, leave, keyboard — the mechanic, asked of the browser. */
 let hover = null;
 let hoverTrace = [];
@@ -639,6 +684,12 @@ line(
   `row end    right ${rest.rowBox ? Math.round((rest.rowBox.x + rest.rowBox.w) * 10) / 10 : "—"} · ` +
     `clearance to the leftmost readout: rest ${clearOf(rest)} · hover ${clearOf(hover)} · Tab ${clearOf(kb)} · scrollbar ${rest.sb}px`
 );
+if (seat)
+  line(
+    `\nhead seat  band-top ${seat.bandTop}px · title top ${seat.title?.y} (from the stage ${Math.round(((seat.title?.y ?? 0) - seat.stageTop) * 10) / 10}) · ` +
+      `brief top ${seat.brief?.y ?? "—"} · way out bottom ${seat.all?.b ?? "—"} of ${seat.vh} · ` +
+      `designation y ${seat.desig?.y ?? "—"} · TL bracket bottom ${seat.cornerTl?.b ?? "—"} · nav bottom ${seat.nav?.b ?? "—"}`
+  );
 line(
   `\nreduced motion  ready ${prm.ready} · open ${prm.open} · row ${prm.display} · glass ${[...new Set(prm.backdrops)].join(",")}`
 );
@@ -653,6 +704,24 @@ if (perfHover)
 
 /* ── The gates ──────────────────────────────────────────────────────── */
 const fails = [];
+/* ⚠ THE HEAD HANGS FROM THE SERVICES LINE (ADR-121 U2): on the pinned rung
+   the title's top is `--band-top` below the stage's, the brief starts on the
+   title's line where the two share one, and the way out still ends inside
+   the frame. The phone rung flows and has no line to hang from. */
+if (!phone) {
+  if (!seat || !seat.title) fails.push("the head's seat could not be read");
+  else {
+    const fromStage = seat.title.y - seat.stageTop;
+    if (Math.abs(fromStage - seat.bandTop) > 0.5)
+      fails.push(
+        `the title sits ${Math.round(fromStage * 10) / 10}px down the stage, not on --band-top's ${seat.bandTop}`
+      );
+    if (seat.vw > 900 && seat.brief && Math.abs(seat.brief.y - seat.title.y) > 0.5)
+      fails.push(`the brief starts at ${seat.brief.y}, not on the title's line at ${seat.title.y}`);
+    if (seat.all && seat.all.b > seat.vh)
+      fails.push(`the way out ends at ${seat.all.b}, past the ${seat.vh}px frame`);
+  }
+}
 /* ⚠ THE CORRIDOR IS ALIVE THROUGH THE WHOLE BEAT, BY THE OWNER'S RULING
    (ADR-119 U1): on the stage rung the cards paint over the living corridor
    and the KILL is the band at the foot. The cover contract (ADR-030 §6 — its

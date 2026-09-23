@@ -435,3 +435,85 @@ every state).
   cover keeps the 16/10 aspect (so a little body slack remains there) and its
   scroller is not on the band, so it keeps its own relationship to the
   readouts. Neither was in scope; both are one rule away.
+
+---
+
+## Update 2 — the head hangs from the services line (2026-09-23)
+
+Owner, on the row read live:
+
+> The placement of the hero one, the H1, and the paragraph is off. The reference
+> is the services section, where you see "AI capability your team owns" and then,
+> on the right side, you have the paragraph. It's more like it's on top, whereas
+> with Musings it's more down.
+
+### The defect
+
+ADR-119 copied the services masthead's TYPE and its survey chrome, rung for rung,
+and never copied its SEAT. `.services-masthead__lead` and `__intro` both hang from
+`top: var(--masthead-top)`, which is `--band-top` plus a 0px trim: a fixed line at
+~11.5svh (136px at 1920×1247, 82.8px at 1280×720). The musings stage instead
+centred its three rows as ONE group (`align-content: center`, ADR-119's
+composition pass — the fix for a `1fr` middle row that pooled 205px between the
+masthead and the cards). Centring answered that defect and created this one: the
+head sat wherever the cards below it left room.
+
+| viewport  | title top, before | `--band-top` | title top, after |
+| --------- | ----------------- | ------------ | ---------------- |
+| 1920×1247 | ~287px            | 136          | **136**          |
+| 1280×720  | ~89px             | 82.8         | **82.8**         |
+| 961×720   | ~89px             | 82.8         | **82.8**         |
+
+It also drifted with the frame's height: the card caps at 464px and the frame
+does not, so the taller the window the lower the head. The brief carried a stray
+`padding-top: 6px` besides — inherited from `.arc-head__intro`, the in-flow copy
+this head was taken from; services has none.
+
+### The ruling
+
+- **On the pinned rung the stage hangs from `--band-top`.**
+  `.mu[data-mu-ready] .mu__stage { align-content: start; padding-block-start:
+var(--band-top) }`, inside the row rung's media block. `.proof__report` is the
+  in-flow precedent (`padding-block: var(--band-top) …; align-content: start`).
+- ⚠ **KEYED ON THE STAMP, NOT ON `data-mu-mode="stage"`.** The pinned stage exists
+  from 961px (`data-mu-ready`), and the services masthead sits on this line across
+  961–1100 too; keyed on the transparent mode, the head would take two seats
+  depending on whether the corridor is alive.
+- **The base rule is untouched.** It still centres three `auto` rows, which is
+  right for the flowing rail (≤960, reduced motion, no script), where the stage is
+  as tall as its content and centring does nothing. ADR-119's no-`1fr` law
+  survives: the surplus pools BELOW the way out, where it is frame.
+- **The brief's 6px is deleted**, with the ≤900 block's `padding-top: 0` that
+  existed only to undo it. The brief's box now starts on the title's (measured
+  equal to the 0.1px at 1920×1247, 1280×720 and 961×720). The phone was already
+  at 0; only the 901–960 rail moves, 6px up, onto the services seat.
+
+### Guards
+
+- `musings-row.test.ts` 55 → 56: the rung's stage is `start` on `var(--band-top)`;
+  the base rows stay `auto auto auto` with no `1fr`; the brief carries no
+  `padding-top`; and **the services half of the link** — `.services-masthead`
+  still derives `--masthead-top` from `--band-top` with a `0px` trim, because a
+  trim there would split the one shared line in silence.
+- `capture-musings-row.mjs` resolves `--band-top` through a probe box (a custom
+  property is a string until something lays it out) and gates, on every rung
+  above the phone: the title's top is `--band-top` below the stage's (±0.5px),
+  the brief starts on the title's line above 900px, and the way out ends inside
+  the frame. It prints the designation's y against the TL bracket and the nav
+  corner, which the raised head now sits beside (1280×720: designation 48.8,
+  bracket bottom 66, nav bottom 68 — beside, not under; the chrome hangs at
+  x 126 and the bracket ends at x 66).
+
+### Left open
+
+- **The floor.** With the head raised, ~435px of frame pools under the way out at
+  1920×1247 (way out bottom 812 of 1247), ~100px at 1280×720. That is the room
+  the gallery below the head is being redesigned to use —
+  `/test/musings-gallery`, the directions lab — not something to solve here by
+  stretching the card.
+- **Three type differences from the services masthead are recorded, not
+  changed** (he asked about placement): the brief's ink is `--mu-ink-2` (.74)
+  where services runs full `--dawn`; services caps its paragraph at
+  `min(42ch, 34vw)` where this is `min(42ch, 100%)`; and the survey chrome's
+  tracking is on the role tokens (0.15em / 0.08em) where services carries its
+  older literals (0.18em / 0.2em / 0.1em).
