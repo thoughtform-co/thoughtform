@@ -677,8 +677,12 @@
   min-height: 1.1em;
 }
 .services-masthead__title-line--em {
-  /* Station-header em recipe: gold, weight 500. */
-  color: var(--gold, #caa554);
+  /* Station-header em recipe: gold, weight 500 — on the INK rung, because
+   * this is gold as TEXT (ADR-063 U2). Byte-identical in dark, where the ink
+   * rung IS the mark's value; on parchment the raw mark lettered this line at
+   * 1.83:1 and the ink rung letters it at 5.73 (ADR-044, 2026-09-23 — the
+   * musings masthead's ADR-119 U3 treatment, one surface over). */
+  color: var(--gold-ink, #caa554);
   font-weight: 500;
 }
 
@@ -793,9 +797,21 @@
  * every other survey element sits at ≤ 70% dawn (handoff hierarchy rule).
  * Desktop-only — hidden with the static mobile/PRM stack below. */
 .services-masthead {
-  --survey-ink: rgba(var(--dawn-rgb), 0.4); /* designation labels */
+  /* ⚠ `--survey-ink` IS TEXT — the 9.5px designations — and at .4 it sat
+   * under the floor on both grounds: 3.19:1 on the void, 2.55:1 on
+   * parchment, against 4.5. The gate never saw it, because PRM hides this
+   * chrome and a plain run never reaches the park. .54 reads 4.99 in dark;
+   * light re-derives it in theme.css BLOCK 4f at .62 (4.95), because an
+   * alpha inverts its meaning across the flip — the same rung and the same
+   * arithmetic as the musings masthead's `--mu-ink-3` (ADR-119 U3; ADR-044,
+   * 2026-09-23). The close mark keeps .7: a drawing, not text. */
+  --survey-ink: rgba(var(--dawn-rgb), 0.54); /* designation labels */
   --survey-ink-faint: rgba(var(--dawn-rgb), 0.22); /* coord stamps */
   --survey-mark-dawn: rgba(var(--dawn-rgb), 0.7); /* close mark */
+  /* The state chip is gold as TEXT at 9.5px. `--gold-70` reads 4.61 on the
+   * void and 1.51 on parchment, so dark keeps it byte-identical and light
+   * takes `--gold-ink` (5.73) through the same theme.css block. */
+  --survey-state: var(--gold-70, rgba(202, 165, 84, 0.7)); /* state chip */
   --survey-label-rise: 34px; /* label top above the block head */
   --survey-coord-drop: 26px; /* coord stamp below the block foot */
   --survey-mark-out: 24px; /* registration mark, outboard of the far corner */
@@ -880,7 +896,7 @@
   line-height: 1;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--gold-70, rgba(202, 165, 84, 0.7));
+  color: var(--survey-state);
   white-space: nowrap;
   pointer-events: none;
 }

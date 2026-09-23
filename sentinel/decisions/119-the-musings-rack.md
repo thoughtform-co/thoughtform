@@ -744,7 +744,9 @@ U2's open gate findings, and only those two.
 - ⚠ **The services masthead carries the SAME two defects**: raw `--gold` on
   its em line in light, and its designations at dawn .4 with no light value.
   It passed the gate only because PRM hides that chrome. Not taken here; it is
-  a different surface's pass.
+  a different surface's pass. → Taken the next day on the owner's word
+  ("give services the same treatment"): [ADR-044](044-services-masthead.md),
+  Update 2026-09-23, which also found the state chip at 1.51:1 on parchment.
 
 **Measured.** `mechanical.mjs --scope ".mu" --prm` goes from 8 → 6 findings in
 dark and 9 → 6 in light: the glow ×5 and the coords, nothing else. Also green:

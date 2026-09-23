@@ -316,3 +316,58 @@ entries), zero frames with a moved stage and visible copy or chrome on
 reverse scroll, replay on re-entry, lab replay intact. `#proof` got the
 same treatment the same day (ADR-054 U2 round 2) — one recipe, two
 stations, retune together or neither.
+
+## Update (2026-09-23) — the designations and the light gold line clear their floors
+
+Owner: _"give services the same treatment"_ — [ADR-119 U3](119-the-musings-rack.md)'s
+pass on the musings masthead, which copied this one's survey grammar and found
+the same two defects here. That record named them and left them, because they
+are a different surface's pass. Why the gate never reported them: the survey
+chrome is `display: none` under PRM and `opacity: 0` until the park on a plain
+run, so `mechanical.mjs` has only ever measured this masthead's title and
+paragraph. The ratios below are the gate's own arithmetic (`composite` /
+`contrast`, copied verbatim) against the grounds it composites on — `--void`
+`#0a0908` in dark and `#ece3d6` in light, the pair that reproduces its 4.41 /
+3.40 readings on the musings twin at dawn .5 — and the live read at the park
+(`scripts/probe-services-masthead-ink.mjs`) confirms the computed colours.
+
+| element                                    | dark, before → after            | light, before → after                        |
+| ------------------------------------------ | ------------------------------- | -------------------------------------------- |
+| designations (`--survey-ink`, 9.5px)       | dawn .4 **3.19** → .54 **4.99** | dawn .4 **2.55** → .62 **4.95**              |
+| state chip (`--survey-state`, 9.5px)       | `--gold-70` **4.61**, kept      | `--gold-70` **1.51** → `--gold-ink` **5.73** |
+| title em line (`--gold-ink`, display size) | **8.55**, byte-identical        | `--gold` **1.83** → **5.73**                 |
+| coord stamps (`--survey-ink-faint`, 8px)   | 1.73, untouched                 | 1.61, untouched                              |
+
+- **The designations** take the same TEXT rung as `--mu-ink-3`: .54 in the
+  sheet, .62 re-derived in `theme.css` BLOCK 4f, because an alpha inverts its
+  meaning across the flip. Both stay under the close mark's .7, so the survey's
+  "every other element at ≤ 70 % dawn" hierarchy keeps its order.
+- **The state chip** is the one thing this pass adds to U3's list. It is gold
+  as TEXT at 9.5px (ADR-063 U2's rung): it passes on the void at `--gold-70`
+  and fails on parchment at 1.51, so dark is byte-identical (`--survey-state`
+  aliases `--gold-70`) and light takes the ink rung through the same block.
+- **The em line** takes `--gold-ink` in the sheet. The ink rung IS the mark's
+  value in dark, so the dark title is byte-identical; on parchment 1.83 → 5.73.
+  It is display-size text, whose floor is 3, and it failed even that.
+- **What stays open, deliberately** — the same two as the musings station: the
+  title's gold glow (the house display recipe the gate bans outright) and the
+  8px coord stamps at dawn .22 (faint by the survey grammar). Both are the
+  owner's calls.
+- ⚠ **Nothing in CI guards this chrome.** A designation alpha that drifts back
+  under the floor fails no test: the gate cannot reach it, and the services
+  smokes' light walk does not read the masthead. The probe exits non-zero when
+  one of the three moved elements is under its floor, but only when someone
+  runs it. If the surface ever gets a colour guard it wants to run at the
+  park, not under PRM.
+
+**Verified.** `theme-css-sweep` + `type-material-tokens` (105 green; the two
+new tokens are colours, so no ratchet pin moves). The probe at 1440×900 in
+both themes, at the park with `data-reveal="done"` and the chrome at opacity 1:
+dark 4.99 / 4.61 / 8.55, light 4.95 / 5.73 / 5.73 for designations / state chip
+/ em line — the computed colours are the sheet's, and the light block reaches
+the elements. `mechanical.mjs --scope ".services-masthead" --prm` in both
+themes: `contrast 0`, and its nine findings are all the title's and
+pre-existing — the uppercase sans (×2, the owner's face since 2026-07-16), the
+gold glow (×5) and two wrapper `font-family` notes on elements that letter
+nothing (ADR-067's standing `--font-mono` trap). Stills of the parked masthead
+in both themes, read for the change: dark unmoved to the eye, light legible.

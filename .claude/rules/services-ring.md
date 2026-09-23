@@ -270,6 +270,22 @@ in ADR-061 and `.claude/rules/proof.md`.
 
 ## Traps specific to this surface
 
+- ⚠ **THE MASTHEAD'S SURVEY CHROME IS TEXT THE GATE CANNOT SEE** (ADR-044,
+  2026-09-23 — ADR-119 U3's treatment given to the surface it copied). The 9.5px
+  designations ride `--survey-ink` (.54 dark / .62 light, re-derived in
+  `theme.css` BLOCK 4f — an alpha inverts its meaning across the flip), the
+  state chip rides `--survey-state` (`--gold-70` in dark, where it clears 4.5;
+  `--gold-ink` on parchment, where raw gold at .7 read 1.51:1), and the title's
+  em line is `--gold-ink` (byte-identical in dark, 1.83 → 5.73 in light). Every
+  one of them is `display: none` under PRM and `opacity: 0` until the park on a
+  plain run, so `mechanical.mjs` measures NONE of them — its PASS on this scope
+  is the title and the paragraph. Their ratios are the gate's own arithmetic
+  against body's background (`scripts/probe-services-masthead-ink.mjs` reads
+  the computed colours at the park, headed, prints them and exits 1 under the
+  floor — but nothing in CI runs it), so a value that drifts back under 4.5
+  trips no gate on its own. The 8px coord stamps stay faint
+  by the survey grammar (an owner call, as on the musings station), and so does
+  the title's gold glow.
 - **Renumbering the deck.** `DECK_INTRA_ORDERS` is positional over
   `cardGroup.children`. Mount children with their FLAG, never gated on a lazily
   loaded texture — a mid-session child insert renumbers the ADR-047 deck's

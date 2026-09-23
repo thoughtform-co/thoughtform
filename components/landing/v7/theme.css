@@ -463,6 +463,25 @@ html[data-theme="light"] .mu {
   --mu-ink-3: rgba(var(--dawn-rgb), 0.62);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   BLOCK 4f — the services masthead's survey chrome, re-derived
+   (ADR-044, 2026-09-23 — BLOCK 4e's treatment on the masthead the musings
+   station copied its grammar from)
+
+   The same two rungs, the same arithmetic. The designations are `--dawn-rgb`
+   at an alpha and read 2.55:1 here at the dark side's .4 (3.19 there, both
+   under 4.5); .62 reads 4.95 and stays under the close mark's .7. The state
+   chip is gold as TEXT at 9.5px: `--gold-70` reads 4.61 on the void and 1.51
+   on parchment, so dark keeps it and light takes the ink rung (5.73). The
+   title's em line took `--gold-ink` in the sheet itself, which resolves per
+   theme with no block needed. The 8px coord stamps stay faint by the survey
+   grammar, as on the musings station.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="light"] .services-masthead {
+  --survey-ink: rgba(var(--dawn-rgb), 0.62);
+  --survey-state: var(--gold-ink);
+}
+
 html[data-theme="light"] .fl-panel__viz {
   background: transparent;
   border-color: transparent;

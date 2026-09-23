@@ -60,6 +60,7 @@ yarn-error.log*
 .cursor/services-mobile/
 .cursor/mobile-lockin/
 .cursor/mobile-deck/
+.cursor/services-masthead-ink/
 
 # Local screenshot captures (root-only, keeps tracked design/inspiration/**.png)
 /*.png
