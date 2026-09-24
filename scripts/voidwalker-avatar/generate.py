@@ -307,16 +307,19 @@ def main() -> int:
         type=Path,
         nargs="*",
         default=[],
-        help="edit stage: photographs of the new rifle's DESIGN (optional; the words carry it without them)",
+        help="edit stage: photographs of the new rifle's (or, --edit-kind rig, the helmet's) DESIGN — "
+        "all after ONE flag; optional, the words carry it without them",
     )
     # ADR-082 U33: `aim` draws a scene's END POSE from the picked plate, so its
     # framing is checked before a video is paid for.
-    ap.add_argument("--edit-kind", choices=("rifle", "aim", "command", "mouth", "aim-stand", "face"),
+    ap.add_argument("--edit-kind",
+                    choices=("rifle", "aim", "command", "mouth", "aim-stand", "face", "rig"),
                     default="rifle",
                     help="edit stage: the rifle swap (U32), the scene's aim pose (U33), "
                          "the standing commander (U34), its mouth closed (U34), the "
-                         "commander's standing aim through the optic (U35), or his own "
-                         "face put back from the wave's identity crops (U41)")
+                         "commander's standing aim through the optic (U35), his own "
+                         "face put back from the wave's identity crops (U41), or the "
+                         "helmet and the broader build (U41, --design = the helmet frames)")
     ap.add_argument("--model", choices=("gemini", "gpt"), default="gemini",
                     help="edit stage: the image model — gemini (the chain's) or gpt "
                          "(GPT Image 2, the identity-rescue lane; face edits only)")
@@ -359,11 +362,13 @@ def main() -> int:
         # the face edit is addressed to them by number, and every other edit is
         # told, first, that his face stays exactly theirs.
         identity = plate_refs(wave) if (wave / "refs" / "refs.json").exists() else []
-        if args.edit_kind == "face":
+        if args.edit_kind in ("face", "rig"):
+            # These two address the identity crops (and the rig its design
+            # frames) by number themselves.
             if not identity:
-                raise SystemExit("the face edit needs the wave's identity crops (refs.py --set face)")
+                raise SystemExit(f"the {args.edit_kind} edit needs the wave's identity crops (refs.py --set face)")
             refs += identity
-            prompt = edit_prompt(args.era, 0, "face", n_identity=len(identity))
+            prompt = edit_prompt(args.era, len(args.design), args.edit_kind, n_identity=len(identity))
         else:
             prompt = edit_prompt(args.era, len(args.design), args.edit_kind)
             if identity:
@@ -379,11 +384,17 @@ def main() -> int:
                     shift = len(identity)
                     for i in range(2 + len(args.design) - 1, 1, -1):
                         prompt = prompt.replace(f"IMAGE {i}", f"IMAGE {i + shift}")
+        design_role = "HELMET DESIGN" if args.edit_kind == "rig" else "RIFLE DESIGN"
+        design_stem = "helmet-design" if args.edit_kind == "rig" else "rifle-design"
         for i, d in enumerate(args.design, start=1):
-            refs.append(("RIFLE DESIGN", shrink(d, wave / "refs" / f"rifle-design-{i}.jpg")))
+            refs.append((design_role, shrink(d, wave / "refs" / f"{design_stem}-{i}.jpg")))
         if args.edit_kind == "face":
             stem = f"plate-{args.era}-face"
             note_tail = "Change only his face; every other pixel of IMAGE 1 is fixed."
+        elif args.edit_kind == "rig":
+            stem = f"plate-{args.era}-rig"
+            note_tail = ("Change the helmet and his build; his face, the rifle, the pose, the "
+                         "boots and the ground are fixed.")
         elif args.edit_kind == "aim":
             stem = f"plate-{args.era}-aim"
             note_tail = "Change only the pose above the waist; everything else in IMAGE 1 is fixed."

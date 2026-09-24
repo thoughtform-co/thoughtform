@@ -677,7 +677,8 @@ def plate_idle_prompt(era: str, prop_wording: bool = False) -> str:
     allows if the video model refuses a weapon beside a real face; a second
     refusal means that era ships its poster only."""
     action, still = PLATE_IDLE[era]
-    hold = PLATE_IDLE_HOLD.get(era, "")
+    still = headgear(still, era)
+    hold = headgear(PLATE_IDLE_HOLD.get(era, ""), era)
     if prop_wording:
         action = action.replace("rifle", "costume prop carbine")
         still = still.replace("rifle", "costume prop carbine")
@@ -821,7 +822,7 @@ def plate_scene_prompt(
         raise SystemExit(f"no '{ending}' scene is authored for era '{era}'")
     if listen and scene == PLATE_SCENE_AIM.get(era):
         raise SystemExit(f"the listen fallback did not change '{era}'s scene — its order sentence moved")
-    scene = f"{scene} {PLATE_SOUND}"
+    scene = f"{headgear(scene, era)} {PLATE_SOUND}"
     return scene.replace("rifle", "costume prop carbine") if prop_wording else scene
 
 
@@ -1076,6 +1077,138 @@ below the collar.
 """
 
 
+#: ADR-082 U41 (owner, 2026-09-24, on the rescued face: "the face looks good,
+#: but I think my body should be a bit bulkier, with broader shoulders … a
+#: space helmet instead of a cap. Let's make sure you can see my face"), with
+#: two frames of the production's marine helmet as the reference.
+#: ⚠ TWO CHANGES IN ONE EDIT, DELIBERATELY. The chain's law is one change per
+#: hop, and it holds: the helmet's padded collar sits on the shoulders it
+#: joins, so a helmet drawn on the old frame and a build drawn under the old
+#: helmet are two edits that each undo half of the other — and every hop is
+#: one more re-draw of the face U41 just put back. The identity crops travel
+#: with it, and the face is named as fixed.
+#: ⚠ THE HELMET IS DESCRIBED BY ITS PROPERTIES, never by whose it is: no show,
+#: no studio, and the nameplate on its brow is BLANK — a real name on that
+#: plate is lettering, which this wardrobe bans.
+HELMET_DESIGN = (
+    "an open-faced hard-shell marine helmet: a matte dark-grey shell with thin red "
+    "trim lines along its panel seams, a raised brow ridge over one small BLANK "
+    "rectangular plate, small round pods at the ears, a wide clear curved visor that "
+    "stands OPEN in front of the face, and a padded neck collar that joins the helmet "
+    "to the chest armour"
+)
+
+EDIT_RIG = """
+IMAGE 1 is the photograph to edit. {idents} this man's IDENTITY — the same
+person, photographed.{designs}
+
+Keep exactly as IMAGE 1: this man's FACE — the brow, the eyes, the nose, the
+chin beard, exactly as the identity photographs — the turn of his head and his
+gaze, the rifle held low in the hand on the LEFT of the picture, the pointing
+arm on the RIGHT, both hands, the kilt panel, the leggings, the socks, the
+boots, his stance with both feet planted where they are, his place in the
+picture, the light, and the flat blue ground.
+
+Make TWO changes, and nothing else.
+
+ONE — HIS CAP BECOMES A HELMET: {helmet}. His WHOLE face is visible inside it,
+unobstructed — no reflection, no tint and no glare across the eyes, no
+breathing mask. No cap under it, no hood. The earpiece and boom mic are gone:
+the helmet carries its own comms. No lettering, numbers or insignia anywhere on
+it.
+
+TWO — HE IS BULKIER, WITH BROADER SHOULDERS: a heavier build under the same
+armour — the chest plate deeper and wider, larger rounded shoulder caps
+standing further out, thicker plated upper arms and forearms, a thicker neck
+in the collar. A marine's frame, not a bodybuilder's: his height does not
+change, his boots do not move, and no part of him reaches a frame edge — the
+pointing hand stays well inside the picture.
+
+Photoreal, a used production costume, semi-matte and faintly scuffed, never
+glossy, lit by the same light as IMAGE 1. The ground stays one perfectly
+uniform blue, #0A28D2, edge to edge — no shadow, no gradient, and no blue
+light on the figure.
+
+DO NOT: a closed, tinted or mirrored visor; a reflection across the face; a
+mask over the mouth; a cap; a different face; a younger, smaller or slimmer
+man; a superhero suit; a cartoon; lettering, numbers or insignia; a change to
+the rifle, the kilt, the boots, the pose or the framing.
+"""
+
+
+def rig_prompt(n_identity: int, n_design: int) -> str:
+    """The helmet-and-build edit: IMAGE 1 the plate, IMAGES 2… the identity crops,
+    then the helmet's reference frames, if any."""
+    if n_identity < 1:
+        raise SystemExit("the rig edit needs the wave's identity crops (refs.py --set face)")
+    nums = [f"IMAGE {i}" for i in range(2, 2 + n_identity)]
+    idents = (
+        f"{nums[0]} is" if len(nums) == 1 else ", ".join(nums[:-1]) + f" and {nums[-1]} are"
+    )
+    if n_design:
+        d = [f"IMAGE {i}" for i in range(2 + n_identity, 2 + n_identity + n_design)]
+        dn = f"{d[0]} shows" if len(d) == 1 else ", ".join(d[:-1]) + f" and {d[-1]} show"
+        designs = (
+            f" {dn} only the DESIGN of the helmet — take its shapes, its visor, its trim "
+            "and its colours; ignore the people wearing it, their faces, their angle, "
+            "their background and any lettering on it."
+        )
+    else:
+        designs = ""
+    return EDIT_RIG.format(idents=idents, designs=designs, helmet=HELMET_DESIGN).strip()
+
+
+#: The commander wears the helmet from the rig edit on (ADR-082 U41). Every
+#: later lock that named the cap, the earpiece and the boom mic reads the
+#: helmet instead through `headgear()`; the cap wording stays in the constants
+#: as the record of the plates before it.
+EXPANSE_HEADGEAR = "helmet"
+HEADGEAR_WORDS: dict[str, dict[str, str]] = {
+    "helmet": {
+        "the cap, the earpiece in his ear and the boom mic": (
+            "the open-visor helmet with his whole face visible inside it"
+        ),
+        "the cap, the earpiece and the boom mic": (
+            "the open-visor helmet with his whole face visible inside it"
+        ),
+        "the cap, the kilt and the earpiece": "the helmet, the kilt",
+        "presses the earpiece at his ear; he tilts his head to it and MOUTHS one short "
+        "order into the boom mic": (
+            "touches the side of his helmet at the ear, keying its comms; he tilts his head "
+            "to it and MOUTHS one short order"
+        ),
+        "presses the earpiece at his ear; he tilts his head to it and MOUTHS one short order "
+        "into the boom mic": (
+            "touches the side of his helmet at the ear, keying its comms; he tilts his head "
+            "to it and MOUTHS one short order"
+        ),
+        "Then that hand leaves the earpiece and takes": "Then that hand leaves the helmet and takes",
+        "presses the earpiece at his ear; he tilts his head to it, LISTENING": (
+            "touches the side of his helmet at the ear, keying its comms; he tilts his head "
+            "to it, LISTENING"
+        ),
+        "The top of the cap about": "The top of the helmet about",
+        "from the top of the cap to the soles": "from the top of the helmet to the soles",
+        "its muzzle sits a little above the cap": "its muzzle sits a little above the helmet",
+    }
+}
+
+
+def headgear(text: str, era: str | None) -> str:
+    """Re-word a lock for the era's headgear (the Expanse's helmet since U41).
+    ⚠ The locks wrap their sentences, so a phrase can carry a line break in the
+    middle; every key matches across ANY whitespace, or a lock that happens to
+    break on "the cap, the" keeps its cap with nothing to say so."""
+    if era != "expanse" or EXPANSE_HEADGEAR != "helmet":
+        return text
+    import re
+
+    for old, new in HEADGEAR_WORDS["helmet"].items():
+        pattern = r"\s+".join(re.escape(w) for w in old.split())
+        text = re.sub(pattern, new, text)
+    return text
+
+
 def face_prompt(n_identity: int) -> str:
     """The face edit: IMAGE 1 the plate, IMAGES 2… the identity crops."""
     if n_identity < 1:
@@ -1097,14 +1230,16 @@ def edit_prompt(era: str, n_design: int, kind: str = "rifle", n_identity: int = 
         raise SystemExit(f"no plate edit is authored for era '{era}'")
     if kind == "face":
         return face_prompt(n_identity)
+    if kind == "rig":
+        return rig_prompt(n_identity, n_design)
     if kind == "aim":
-        return EDIT_AIM.strip()
+        return headgear(EDIT_AIM.strip(), era)
     if kind == "command":
-        return EDIT_COMMAND.strip()
+        return headgear(EDIT_COMMAND.strip(), era)
     if kind == "mouth":
-        return EDIT_MOUTH.strip()
+        return headgear(EDIT_MOUTH.strip(), era)
     if kind == "aim-stand":
-        return EDIT_AIM_STANDING.strip()
+        return headgear(EDIT_AIM_STANDING.strip(), era)
     if n_design:
         nums = " and ".join(f"IMAGE {i}" for i in range(2, 2 + n_design))
         clause = (

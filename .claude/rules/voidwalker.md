@@ -278,8 +278,21 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
     frame; GPT's three put his face back with the pose, rifle, armour and
     ground untouched. So EVERY edit kind now attaches the wave's crops.
     `sheet.py` writes `heads.jpg` (plates beside his photographs);
-    `legs.py` is U35's legs IoU as a script. ⚠ G1 is his pick; the Veo scene,
-    `post.py --version v6` and the install follow it.
+    `legs.py` is U35's legs IoU as a script. ⚠ **AND THE CAP LEFT THIS ERA
+    WITH `-v6`** (his second ask on the rescued face: bulkier, broader
+    shoulders, "a helmet, like a space helmet, instead of a cap … make sure
+    you can see my face"): `--edit-kind rig` is a two-change edit with the
+    owner's helmet frames as `HELMET DESIGN`, `prompt.py`'s `headgear()`
+    rewrites every cap/earpiece phrase for an era whose headgear is `helmet`
+    (whitespace-tolerant — exact strings missed phrases split by a line
+    break), and the GPT lane's stems carry `-gpt` so both lanes' draws of one
+    kind coexist. The `-v6` delivery: his pick `rig-gpt_01`, the aim-stand
+    with the best legs (0.900; a Gemini plate's K3 of 27 % is the CLEAR VISOR
+    keying as ground, not spill), one take cut at f176, `headY` 0.1 (the
+    helmet's crown), thumb marks re-read off frame zero. T2's median reads 6.4
+    on this scene and the manifest records it: the two holds read 1.6 / 2.6,
+    the settle 6.9 — motion, not a strobing grade; the line is not moved.
+    `post.py` prints UTF-8 now (it crashed after the grade on a `→`).
   - ⚠ **U42 (2026-09-24, owner): AN ERA CHANGE IS THE FIGURE'S OWN GLITCH,
     SCROLL AND CLICK ALIKE.** The hero's theme-swap kernel (ADR-060,
     `lib/key-visual/themeGlitch.ts`) on a canvas laid over the `<video>`

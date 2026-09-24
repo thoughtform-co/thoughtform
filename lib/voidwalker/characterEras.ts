@@ -973,7 +973,7 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
        "Blazer · shirt · lanyard · camera · phone · cap" — BYTE-IDENTICAL to
        `pokemon-go`'s, which is what a placeholder looks like, and which is why
        a scoped edit was needed to change one of them. */
-    loadout: "Marine plate · gauntlets · kilt panel · his own cap.",
+    loadout: "Marine plate · gauntlets · kilt panel · open-visor helmet.",
     motto: "Venting became a campaign.",
     modelPath: null,
     stillPath: "/images/voidwalker/era-expanse.jpg",
@@ -1020,15 +1020,27 @@ export const CHARACTER_ERAS: readonly CharacterEra[] = [
        move under a directed near-silence, which the audio filter passed where
        U34's parted-mouth plate had been refused five times), raises the rifle
        and holds the aim — a ping-pong cut at f168, inside the hold, before
-       Veo's landing morph. His boots do not move a pixel across the take. */
+       Veo's landing morph. His boots do not move a pixel across the take.
+       ⚠ `-v6` IS HIS FACE, IN A HELMET, BROADER (ADR-082 U41, owner: v5's face
+       "doesn't really look like me"; then, on the rescued face, "my body
+       should be a bit bulkier, with broader shoulders … add a helmet, like a
+       space helmet, instead of a cap. Let's make sure you can see my face").
+       v4's plate had been edited four times without a photograph beside it
+       and had drifted; GPT Image 2 puts the face back with three identity
+       crops attached, a second edit swaps the cap for an OPEN-VISOR helmet
+       and widens the build (his pick, `plate-expanse-rig-gpt_01`), and the
+       same scene runs from it to a re-drawn aim-stand (legs 0.900 IoU) — a
+       ping-pong cut at f176 inside the hold. `headY` is the helmet's crown.
+       ⚠ THE CAP LEAVES THIS ERA, on the owner's own word — the v1 ruling
+       above is superseded here and nowhere else; the Architect keeps his. */
     hologram: {
-      videoPath: "/videos/voidwalker/holo-idle-expanse-v5.mp4",
-      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v5.webm",
-      posterPath: "/images/voidwalker/holo-still-expanse-v5.jpg",
-      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v5.webp",
-      thumbPath: "/images/voidwalker/holo-thumb-expanse-v5.webp",
+      videoPath: "/videos/voidwalker/holo-idle-expanse-v6.mp4",
+      videoAlphaPath: "/videos/voidwalker/holo-idle-expanse-v6.webm",
+      posterPath: "/images/voidwalker/holo-still-expanse-v6.jpg",
+      posterAlphaPath: "/images/voidwalker/holo-still-expanse-v6.webp",
+      thumbPath: "/images/voidwalker/holo-thumb-expanse-v6.webp",
       frame: { width: 720, height: 1280 },
-      headY: 0.1039,
+      headY: 0.1,
       footY: 0.9953,
     },
     short: "The Expanse",

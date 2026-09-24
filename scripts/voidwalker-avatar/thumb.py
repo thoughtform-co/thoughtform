@@ -62,8 +62,13 @@ MARKS: dict[str, dict] = {
     # v5 (U35, the scene) starts ON that plate at the same seat — its frame zero
     # matches v4's head band to 0.995 alpha IoU, the crown on the same row — so
     # the marks carry over, measured.
-    "expanse": dict(poster="holo-still-expanse-v5.webp", out="holo-thumb-expanse-v5.webp",
-                    crown=0.1148, chin=0.237, eye=0.174, cx=0.445),
+    # v6 (U41, the helmet): a re-faced, re-rigged plate at the same seat — the
+    # crown is the HELMET's top in the head's own columns (alpha row 145), the
+    # chin the beard's bottom inside the open visor (302), the eye line 222,
+    # read off its own frame zero. Within 2px of v5's on every mark, measured,
+    # which is the scene starting on the same plate at the same seat.
+    "expanse": dict(poster="holo-still-expanse-v6.webp", out="holo-thumb-expanse-v6.webp",
+                    crown=0.1133, chin=0.236, eye=0.1734, cx=0.445),
     # 2016's trainer (ADR-082 U33), a cel: the crown is the CAP's top, and the
     # drawn head is larger than a photographed one (0.175 of the canvas against
     # the Architect's 0.136) — the marks centre it, one eye line across the row.

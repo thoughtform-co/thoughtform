@@ -101,11 +101,11 @@ describe("ADR-082 · normalized character hologram assets", () => {
     expect(resolveCharacterEraHologram(expanse!)).toBe(expanse!.hologram);
     // ⚠ v2 (ADR-082 U32) SHIPPED WITHOUT A `.mov`, and v1's was deleted with it:
     // an HEVC-alpha file pointing at the standing v1 figure would show Safari
-    // a different man. v3 (U33) and v4 (U34) keep that: Safari takes the floor
-    // until a Mac cuts one.
+    // a different man. v3 (U33), v4 (U34), v5 (U35) and v6 (U41, the helmet)
+    // keep that: Safari takes the floor until a Mac cuts one.
     expect(expanse?.hologram?.videoAlphaHevcPath).toBeUndefined();
-    expect(expanse?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-expanse-v5.webm");
-    expect(expanse?.hologram?.thumbPath).toBe("/images/voidwalker/holo-thumb-expanse-v5.webp");
+    expect(expanse?.hologram?.videoAlphaPath).toBe("/videos/voidwalker/holo-idle-expanse-v6.webm");
+    expect(expanse?.hologram?.thumbPath).toBe("/images/voidwalker/holo-thumb-expanse-v6.webp");
     expect(expanse?.hologram?.footY).toBeCloseTo(0.9953, 3);
     // ⚠ v4 STANDS (U34, the commander), so no stature is authored: the span is
     // the delivery's own head-to-foot, like every other standing era. A stature

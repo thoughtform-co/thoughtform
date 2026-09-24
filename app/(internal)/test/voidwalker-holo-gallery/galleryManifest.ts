@@ -64,6 +64,7 @@ export interface GalleryRun {
 }
 
 const PG1 = `${MIRROR}/20260922-pokemon-go-v1`;
+const EX8 = `${MIRROR}/20260924-expanse-v8`;
 const EX7 = `${MIRROR}/20260922-expanse-v7`;
 const EX6 = `${MIRROR}/20260922-expanse-v6`;
 const EX5 = `${MIRROR}/20260922-expanse-v5`;
@@ -129,11 +130,84 @@ export const GALLERY_RUNS: readonly GalleryRun[] = [
     ],
   },
   {
+    id: "ex-v6",
+    wave: "20260924-expanse-v8",
+    title: "The Expanse v6 — his face put back, an open-visor helmet, a broader build",
+    date: "2026-09-24",
+    status: "SHIPPING",
+    adr: "ADR-082 U41",
+    summary: [
+      "Owner, on v5: \"doesn't really look like me; the face I mean, so please go back and recreate it as accurately as possible.\" The shipped face was four edits from the plate (rifle → command → mouth → aim-stand) and NONE of them attached a photograph. This wave edits v4's plate with his three identity crops beside it: GPT Image 2 put the face back (the brow, the hollows, the chin beard, the jaw) with the pose, rifle, armour and ground untouched; Gemini's three barely moved it or redrew the frame.",
+      'Then, on the rescued face: "my body should be a bit bulkier, with broader shoulders … add a helmet, like a space helmet, instead of a cap. Let\'s make sure you can see my face." A second edit (`--edit-kind rig`, two reference frames of an open-visor marine helmet as HELMET DESIGN, the identity crops attached) swaps the cap for the helmet and widens the build; his pick was rig-gpt_01, "the closest".',
+      "⚠ THE END POSE IS DRAWN FROM THE HELMET PLATE (six edits, both lanes): aimstand_03 keeps the legs closest, 0.900 IoU, with a clean face inside the visor. Its K3 reads 27 % because the CLEAR VISOR keys as ground on the band inside the edge — transparency, not spill. aimstand_02 carried a white reflection across the right eye.",
+      "The scene runs from the helmet plate to that aim: point → the hand keys the comms at the helmet's ear, the order mouthed → rifle up → the aim held from f158. Ping-pong cut at f176: 352 frames, 14.7 s, seam 0.842, closed. Graded ×0.85 (p75 117, 4.5 % hot), seated +47px, no wall. T2 median 6.4 (> 6.0, recorded): the holds read 1.6 and 2.6, the settle 6.9 — the median lands on motion, not a strobing grade.",
+    ],
+    assets: [
+      {
+        id: "ex-v6-idle",
+        kind: "video",
+        src: `${EX8}/out/holo-idle-expanse-v6.mp4`,
+        alphaSrc: `${EX8}/out/holo-idle-expanse-v6.webm`,
+        label: "v6 · point, order, aim — in the helmet (live on the site)",
+        note: "Ping-pong of the scene cut at f176. No `.mov`: Safari takes the floor for this era until a Mac cuts one from veo/graded/.",
+        mb: 1.3,
+      },
+      {
+        id: "ex-v6-strip",
+        kind: "sheet",
+        src: `${EX8}/strip-scene.jpg`,
+        label: "the scene, twelve frames across 8 s",
+        note: "f0–f24 the point, f25–f67 the hand at the helmet and the order, f68–f102 the rifle up, f158 onward the aim; the loop turns at f176.",
+        wide: true,
+      },
+      {
+        id: "ex-v6-graded",
+        kind: "sheet",
+        src: `${EX8}/strip-graded.jpg`,
+        label: "the graded loop on the void, nine frames",
+        note: "The helmet holds across the aim (four consecutive hold frames identical to the eye; 1.6–2.6 per frame by number).",
+        wide: true,
+      },
+      {
+        id: "ex-v6-faces",
+        kind: "plate",
+        src: `${EX8}/heads.jpg`,
+        label: "the six face edits beside his three photographs",
+        note: "Three per lane. GPT Image 2's three (the second row) are the ones that read as him; face-gpt_02 was his pick.",
+        wide: true,
+      },
+      {
+        id: "ex-v6-rigs",
+        kind: "plate",
+        src: `${EX8}/rig-vs-source.png`,
+        label: "the face plate and the six helmet-and-build edits (rig-gpt_01 picked)",
+        note: "Two changes in one edit: the cap becomes the reference helmet with the face visible, and the build widens.",
+        wide: true,
+      },
+      {
+        id: "ex-v6-aims",
+        kind: "plate",
+        src: `${EX8}/aim-stills.jpg`,
+        label: "the helmet plate and the six drawn aims (aimstand_03 used)",
+        note: "GPT legs 0.706 / 0.835 / 0.770, Gemini 0.875 / 0.865 / 0.900 against the plate; the stance is what a scene's last frame must keep.",
+        wide: true,
+      },
+      {
+        id: "ex-v6-aim-heads",
+        kind: "plate",
+        src: `${EX8}/aim-heads.jpg`,
+        label: "the seven heads at 2×",
+        note: "The source, then the six aims. The visor is a bubble on both lanes; the sixth is the pick.",
+        wide: true,
+      },
+    ],
+  },
+  {
     id: "ex-v5",
     wave: "20260922-expanse-v7",
     title: "The Expanse v5 — he points, gives the order, looks through the scope",
     date: "2026-09-22",
-    status: "SHIPPING",
+    status: "SUPERSEDED",
     adr: "ADR-082 U35",
     summary: [
       "Owner, on v4: \"I feel like I'm floating … I look like a zombie, like my eyes are opening and closing. There needs to be a bit more movement. I need to use my headpiece to voice commands. I need to look through my weapon. I need to point.\" A SCENE from v4's own plate to a DRAWN end pose: he holds the point, presses the earpiece and gives the order, raises the rifle and holds the aim through the optic.",
@@ -147,7 +221,7 @@ export const GALLERY_RUNS: readonly GalleryRun[] = [
         kind: "video",
         src: `${EX7}/out/holo-idle-expanse-v5.mp4`,
         alphaSrc: `${EX7}/out/holo-idle-expanse-v5.webm`,
-        label: "v5 · point, order, aim (live on the site)",
+        label: "v5 · point, order, aim (superseded by v6, the helmet)",
         note: "Ping-pong of the scene cut at f168. No `.mov`: Safari takes the floor for this era until a Mac cuts one from veo/graded/.",
         mb: 0.98,
       },
