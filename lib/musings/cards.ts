@@ -1,35 +1,34 @@
 /**
- * lib/musings/cards — the homepage row's projection (ADR-119 → ADR-121). Zero
- * imports beyond the types, so the guard can walk it and the landing does not
- * drag the registry's `fs` reader into a client chunk.
+ * lib/musings/cards — the homepage list's projection (ADR-119 → ADR-122).
+ * Zero imports beyond the types, so the guard can walk it and the landing does
+ * not drag the registry's `fs` reader into a client chunk.
  *
  * ⚠ **THE HOMEPAGE SHOWS A WINDOW, NOT THE INDEX.** `/musings` lists every
- * post; the station is a beat in a scroll and holds a row. `MUSINGS_ROW_MAX`
- * is what the row draws, newest first, and the station's own `→ All musings`
- * link is what carries the rest. Raising it does not lengthen the page any
- * more (the runway is one dwell since ADR-121) — it NARROWS the open card:
- * every closed strip costs `--mu-closed + --mu-gap` of the band, so at seven
- * posts the open card has ~384px of a 1200px band and at five ~656px.
+ * post; the station is a beat in a scroll and holds a list. `MUSINGS_LIST_MAX`
+ * is what the list draws, newest first, and the station's own `→ All musings`
+ * link is what carries the rest.
  */
 import type { MusingCardData, MusingPost } from "./types";
 
 /**
- * ⚠ **THE ROW READS BEST AT FIVE.** At three the open card is ~928px of the
- * band and the two strips beside it read as afterthoughts; at seven the open
- * card is under 400px and the row is mostly strips. Neither is a crash and no
- * guard can see either — the arithmetic is correct at every count — so it is
- * written down here. The landing has three posts today.
+ * ⚠ **FIVE, THE OWNER'S NUMBER** (2026-09-24: "maybe we can show more, maybe
+ * 5 in total"). The list's rows are solved from the count inside the frame
+ * (ADR-122): at five on the owner's 1920×1247 every row keeps a v4 title near
+ * its full size with the open card whole; past that the titles shrink with
+ * their rows, and at 1280×720 five already scroll inside the list. The
+ * landing has three published notes today, so it shows three.
  */
-export const MUSINGS_ROW_MAX = 7;
+export const MUSINGS_LIST_MAX = 5;
 
 export function cardsFor(posts: readonly MusingPost[]): MusingCardData[] {
-  return posts.slice(0, MUSINGS_ROW_MAX).map((p) => ({
+  return posts.slice(0, MUSINGS_LIST_MAX).map((p) => ({
     slug: p.slug,
     title: p.title,
     date: p.date,
     summary: p.summary,
     tags: p.tags,
     readingMinutes: p.readingMinutes,
+    author: p.author,
   }));
 }
 

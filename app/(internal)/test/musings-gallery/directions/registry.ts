@@ -33,7 +33,8 @@ import { Transmissions } from "./Transmissions";
  * better.
  *
  * ⚠ `v0` IS PRODUCTION, MOUNTED, NOT REBUILT — the station with no `gallery`,
- * i.e. the row the landing ships. Every other direction is mounted IN THE
+ * i.e. the list the landing ships (v17, promoted as ADR-122 — the row
+ * before it). Every other direction is mounted IN THE
  * STATION'S `gallery` SLOT, under the real head, pinned stage, decode and
  * arrival, so a comparison is between compositions and never between two
  * heads.
@@ -90,9 +91,10 @@ export interface MgDirection {
 export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
   v0: {
     id: "v0",
-    label: "Row",
-    thesis: "The shipped row: the newest note open, the rest strips that open on hover.",
-    provenance: "Production (ADR-121), after U2's head seat. The control.",
+    label: "List",
+    thesis:
+      "The shipped list: v17 promoted — five notes at most, the newest open, each opening on hover and staying open.",
+    provenance: "Production (ADR-122), v17 promoted. The control.",
     round: 1,
   },
   v1: {

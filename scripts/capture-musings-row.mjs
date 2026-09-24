@@ -1,6 +1,7 @@
 /**
- * Shoot the musings row and the footer's bed (ADR-121 / ADR-105 U3), and
- * measure what no unit test and no mechanical gate can.
+ * Shoot the musings list and the footer's bed (ADR-122 / ADR-105 U3), and
+ * measure what no unit test and no mechanical gate can. (The file keeps the
+ * row's name: the station was a row when it was written.)
  *
  * ⚠ **HEADED, AND REAL SCROLLS.** The station is a transparent stage under a
  * scroll-driven WebGL corridor: a headless context leaves the canvas dead and
@@ -9,26 +10,31 @@
  * — never publish. `scripts/capture-site-footer.mjs`'s own law, one station up.
  *
  * ⚠ **THE THINGS THAT CANNOT BE GATED ANY OTHER WAY.** `arrive` and
- * `headDecode` are pure and unit-pinned, and the mechanic is one CSS
- * transition; nothing there knows whether the browser opened a card, whether
- * the title reflowed while it did, whether the glass is actually applied, or
- * whether the footer is uncovering. Specifically:
+ * `headDecode` are pure and unit-pinned, and the list's mechanic is two CSS
+ * transitions; nothing there knows whether the browser opened a note, whether
+ * a title was cut, whether the sign landed on the cover's floor, whether the
+ * glass is applied, or whether the footer is uncovering. Specifically:
  *   · `coverOpaque`   — the band's own ground, the ADR-030 §6 contract.
  *   · `headBlank`     — the head is EMPTY at every stop the stage is not parked:
  *                       text never travels (ADR-119 U2).
  *   · `headWhole`     — and whole through the dwell.
- *   · `rest`          — card 0 open at rest, at ≥ 3× a strip's width.
- *   · `hover`         — the pointer over card 2 opens it inside `--mu-grow`
- *                       and card 0 collapses; leaving the row restores card 0.
- *   · `keyboard`      — Tab from card 0 opens card 1: focus opens as hover does.
- *   · `noReflow`      — the title's laid-out width is the same open and closed:
- *                       the body is set at the open width and UNCOVERED.
- *   · `glass`         — every face carries the blur on the stage rung in dark,
+ *   · `rest`          — note 0 open at rest; every title whole on one line;
+ *                       every note a focusable link; the notes inside the
+ *                       rails' last tick; the covers unframed, one thumbnail
+ *                       size, the open one square.
+ *   · `signFloor`     — the open note's byline and way in end on its cover's
+ *                       floor (±1.5px), at rest, on hover and on Tab.
+ *   · `hover`         — the pointer over note 2 opens it and closes note 0;
+ *                       leaving the list LEAVES it open (ADR-122: a list whose
+ *                       open card is taller than the rest would move every
+ *                       note under a hand travelling to them).
+ *   · `keyboard`      — tabbing into note 1 opens it: focus opens as hover does.
+ *   · `glass`         — every note carries the blur on the stage rung in dark,
  *                       none in light, none under reduced motion.
- *   · `reveal`        — the footer's visible height growing as the row leaves.
+ *   · `reveal`        — the footer's visible height growing as the list leaves.
  *   · `notchPaint`    — the corner, HIT-TESTED rather than parsed, from both ends.
  *   · `--perf`        — the long-frame share while parked and while the pointer
- *                       sweeps the row, against the proof card's recorded 15 %.
+ *                       sweeps the list, against the proof card's recorded 15 %.
  *
  *   node scripts/capture-musings-row.mjs --vp 1920x1247 --theme dark --perf
  *   node scripts/capture-musings-row.mjs --vp 1920x1247 --theme light
@@ -36,9 +42,9 @@
  *   node scripts/capture-musings-row.mjs --vp 390x844   --theme dark
  *   node scripts/capture-musings-row.mjs --lab --n 5 --vp 1920x1247 --theme dark
  *
- * `--lab` drives `/test/musings-row` (the placeholder host, ADR-121) instead of
- * the landing: same gates on the row, none on the corridor or the footer,
- * which that route does not have.
+ * `--lab` drives `/test/musings-row` (the placeholder host) instead of the
+ * landing: same gates on the list, none on the corridor or the footer, which
+ * that route does not have.
  */
 import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
@@ -56,8 +62,9 @@ const PERF = process.argv.includes("--perf");
 const N = arg("--n", "5");
 mkdirSync(OUT, { recursive: true });
 
-/* Mirrored from `musings.css`'s `--mu-grow` (900ms) — the wait after a hover. */
-const GROW_MS = 900;
+/* `musings.css`'s `--mu-note-grow` (560ms) plus a frame's margin — the wait
+   after a hover. */
+const GROW_MS = 700;
 /* The proof card's recorded long-frame share at 1920×1247 (ADR-097) — the bar
    the row's glass has to clear, or the recorded fallback applies. */
 const PERF_LONG_SHARE_MAX = 15;
@@ -72,7 +79,10 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e).slice(0, 200)));
 
 await page.goto(url, { waitUntil: "domcontentloaded" });
-await page.waitForSelector("#musings .mu-card", { timeout: 30_000 });
+/* ⚠ `attached`, NEVER VISIBLE: the notes are hidden while the arrival
+   AWAITS the head (an absent stamp means shown — a present `await` means not
+   yet), so a visibility wait times out on the pinned rung. */
+await page.waitForSelector("#musings .mu-note", { state: "attached", timeout: 30_000 });
 
 /** Walk down in real steps until `#musings` sits at the given runway fraction. */
 async function rollToP(target) {
@@ -128,8 +138,8 @@ const readRow = () =>
     const cover = stage && band ? band : st;
     const mu = document.querySelector(".mu");
     const cs = (el) => (el ? getComputedStyle(el) : null);
-    const cards = [...document.querySelectorAll(".mu-card")];
-    const open = cards.findIndex((c) => c.hasAttribute("data-mu-open"));
+    const notes = [...document.querySelectorAll(".mu-note")];
+    const open = notes.findIndex((c) => c.hasAttribute("data-mu-open"));
 
     /* ⚠ LAID-OUT INK, NOT ELEMENT BOXES — AND NOT CLIPPED. A Range's client
        rects are the line boxes the text was laid out into, which the face's
@@ -157,36 +167,16 @@ const readRow = () =>
       };
     };
 
-    /* ⚠ THE LEDE'S LINE COUNT IS READ OFF AN UNCLAMPED CLONE (casefile's own
-       method): a `-webkit-box` clamp CLIPS rather than overflows, so the
-       clamped box cannot report its own truncation. Same parent (so the same
-       font and rules), same width, no clamp, invisible, removed at once. */
-    const ledeLinesOf = (lede) => {
-      if (!lede) return null;
-      const w = lede.getBoundingClientRect().width;
-      const clone = lede.cloneNode(true);
-      clone.style.cssText = `display:block;-webkit-line-clamp:unset;overflow:visible;position:absolute;visibility:hidden;left:0;top:0;width:${w}px;max-width:none`;
-      lede.parentElement.appendChild(clone);
-      const lh = parseFloat(getComputedStyle(clone).lineHeight);
-      const lines = Math.round(clone.getBoundingClientRect().height / lh);
-      clone.remove();
-      return { lines, lh: px(lh) };
-    };
-
-    /* ⚠ A CUSTOM PROPERTY IS A STRING UNTIL SOMETHING LAYS IT OUT, and these
-       two are `cqw` expressions that only resolve INSIDE the row (its query
-       container). A probe seated in the row reads them as pixels. */
-    const rowEl = document.querySelector(".mu__row");
-    const resolveInRow = (prop) => {
-      if (!rowEl || !getComputedStyle(rowEl).getPropertyValue(prop).trim()) return null;
-      const probe = document.createElement("i");
-      probe.style.cssText = `position:absolute;visibility:hidden;height:0;width:var(${prop})`;
-      rowEl.appendChild(probe);
-      const w = probe.getBoundingClientRect().width;
-      probe.remove();
-      return px(w);
-    };
-    const capRaw = cs(mu)?.getPropertyValue("--mu-lede-lines").trim();
+    /* The rails' last tick, as the stage lays it out: the notes may not end
+       below it (the stage's bottom padding IS `--hud-rail-y-end`). */
+    const stageEl = document.querySelector(".mu__stage");
+    const railEnd = stageEl
+      ? px(
+          stageEl.getBoundingClientRect().bottom -
+            parseFloat(getComputedStyle(stageEl).paddingBottom)
+        )
+      : null;
+    const listEl = document.querySelector(".mu__list");
 
     /* The right rail's telemetry — BEARING · SECTOR · LOCAL — as painted. */
     const tele = [...document.querySelectorAll(".rin-tele")]
@@ -327,40 +317,40 @@ const readRow = () =>
           sample: title.slice(0, 24),
         };
       })(),
-      rowBox: box(document.querySelector(".mu__row")),
+      notesBox: box(document.querySelector(".mu__notes")),
+      listBox: box(listEl),
+      listScrolls: listEl ? listEl.scrollHeight > listEl.clientHeight + 1 : null,
+      railEnd,
       tele,
       teleLeft: tele.length ? px(Math.min(...tele.map((t) => t.x))) : null,
-      openMin: resolveInRow("--mu-open-min"),
-      ledeCap: capRaw ? Number(capRaw) : 3,
       sb: window.innerWidth - document.documentElement.clientWidth,
       open,
-      cards: cards.map((c, i) => {
-        const s = getComputedStyle(c);
-        const face = c.querySelector(".mu-card__front");
-        const fs = getComputedStyle(face);
-        const body = c.querySelector(".mu-card__body");
-        const lede = c.querySelector(".mu-card__lede");
+      notes: notes.map((n, i) => {
+        const s = getComputedStyle(n);
+        const on = n.hasAttribute("data-mu-open");
+        const title = n.querySelector(".mu-note__title");
+        const row = n.querySelector(".mu-note__row");
+        const lede = n.querySelector(".mu-note__lede");
+        const meta = n.querySelector(".mu-note__meta");
+        const coverEl = n.querySelector(".mu-note__cover");
         return {
           i,
-          open: c.hasAttribute("data-mu-open"),
-          box: box(c),
-          flexGrow: s.flexGrow,
+          open: on,
+          box: box(n),
           transition: s.transitionProperty,
-          backdrop: fs.backdropFilter || fs.webkitBackdropFilter || "none",
-          lip: getComputedStyle(face, "::before").backgroundColor,
-          title: inkOf(c.querySelector(".mu-card__title")),
-          lede: inkOf(c.querySelector(".mu-card__lede")),
-          titlePx: px(parseFloat(getComputedStyle(c.querySelector(".mu-card__title")).fontSize)),
-          ledePx: px(parseFloat(getComputedStyle(c.querySelector(".mu-card__lede")).fontSize)),
-          kickerPx: px(parseFloat(getComputedStyle(c.querySelector(".mu-card__kicker")).fontSize)),
-          cover: box(c.querySelector(".mu-cover")),
-          beat: box(c.querySelector(".mu-cover__beat")),
-          litMark: box(c.querySelector(".mu-cover__mark--lit")),
-          tabbable: c.tabIndex >= 0 && !c.hasAttribute("aria-hidden"),
-          body: box(body),
-          padB: px(parseFloat(getComputedStyle(body).paddingBottom)),
-          kicker: inkOf(c.querySelector(".mu-card__kicker")),
-          ledeFit: ledeLinesOf(lede),
+          backdrop: s.backdropFilter || s.webkitBackdropFilter || "none",
+          lip: getComputedStyle(n, "::before").backgroundColor,
+          title: inkOf(title),
+          /* nowrap + ellipsis: a cut title is one whose content outruns its box. */
+          titleCut: title ? title.scrollWidth > title.clientWidth + 1 : null,
+          titlePx: title ? px(parseFloat(getComputedStyle(title).fontSize)) : null,
+          ledePx: lede ? px(parseFloat(getComputedStyle(lede).fontSize)) : null,
+          metaPx: meta ? px(parseFloat(getComputedStyle(meta).fontSize)) : null,
+          cover: box(coverEl),
+          coverBorder: coverEl ? getComputedStyle(coverEl).borderTopWidth : null,
+          coverGround: coverEl ? getComputedStyle(coverEl).backgroundColor : null,
+          sign: on ? box(n.querySelector(".mu-note__sign")) : null,
+          tabbable: !!row && row.tabIndex >= 0 && !row.closest("[aria-hidden]"),
         };
       }),
       head: box(document.querySelector(".mu__head")),
@@ -379,9 +369,11 @@ const readRow = () =>
  */
 const readNotch = () =>
   page.evaluate(() => {
-    const card = document.querySelector(".mu-card[data-mu-open]");
-    const face = card?.querySelector(".mu-card__front");
-    if (!card || !face) return null;
+    /* The note carries the clip itself: its own box is the plate (ADR-122 —
+       ADR-121's face span went with the grow it was separated from). */
+    const card = document.querySelector(".mu-note[data-mu-open]");
+    const face = card;
+    if (!card) return null;
     const ch = parseFloat(getComputedStyle(card).getPropertyValue("--mu-ch")) || 18;
     /* A point well inside each corner's chamfer triangle: 30 % along the cut
        from the corner, which is outside the polygon for a cut corner and
@@ -487,18 +479,21 @@ const phone = W <= 960;
 await rollToP(0.45);
 /* ⚠ WAIT ON THE ARRIVAL, NEVER A FIXED SLEEP (ADR-119 U2). Re-entering the
    beat from below replays the owner's order — the head decodes (~0.7s), THEN
-   the row's aperture opens (0.72s) — so a probe that sleeps reads the face
-   mid-aperture, with every corner outside its clip. ⚠ ONLY WHERE THE ROW
-   RUNS: on the phone rung the writer parks and there is no arrival stamp. */
+   the notes unfold one after another — so a probe that sleeps reads a note
+   mid-unfold, with every corner outside its clip. `subtree` because the lip
+   runs its own animation on `::before`. ⚠ ONLY WHERE THE LIST PINS: on the
+   phone rung the writer parks and there is no arrival stamp. */
 if (!phone)
   await page.waitForFunction(
     () => {
       const mu = document.querySelector(".mu");
-      const face = document.querySelector(".mu-card[data-mu-open] .mu-card__front");
-      return mu?.dataset.muArrive === "in" && face && face.getAnimations().length === 0;
+      const list = document.querySelector(".mu__notes");
+      return (
+        mu?.dataset.muArrive === "in" && list && list.getAnimations({ subtree: true }).length === 0
+      );
     },
     null,
-    { timeout: 8000 }
+    { timeout: 12_000 }
   );
 await page.waitForTimeout(GROW_MS + 100);
 const rest = await readRow();
@@ -556,63 +551,80 @@ let back = null;
 let kb = null;
 let perfIdle = null;
 let perfHover = null;
-if (!phone && rest.cards.length >= 2) {
-  const t = rest.cards[Math.min(2, rest.cards.length - 1)];
-  const centre = (c) => [c.box.x + c.box.w / 2, c.box.y + c.box.h / 2];
+if (!phone && rest.notes.length >= 2) {
+  const want = Math.min(2, rest.notes.length - 1);
+  /* A row's centre, read LIVE: opening a note moves every note below it. */
+  const rowCentre = (i) =>
+    page.evaluate((k) => {
+      const r = document.querySelectorAll(".mu-note__row")[k]?.getBoundingClientRect();
+      return r ? [r.left + r.width / 2, r.top + r.height / 2] : null;
+    }, i);
   /* ⚠ THE HOVER GATES CARRY THEIR OWN TRACE. A hover probe that fails with
-     only an end state ("card 0 is open") says what, never why; this records
-     every pointer and focus event the row receives, every move of
+     only an end state ("note 0 is open") says what, never why; this records
+     every pointer and focus event the list receives, every move of
      `data-mu-open` and every scroll from here to the Tab read, and the gates
      print it whenever one of them fails. */
   await page.evaluate(() => {
     window.__muTrace = [];
-    const row = document.querySelector(".mu__row");
-    const idx = (el) => [...row.children].indexOf(el?.closest?.(".mu-card"));
+    const list = document.querySelector(".mu__list");
+    const idx = (el) => [...list.children].indexOf(el?.closest?.(".mu-note"));
     const t0 = performance.now();
     const at = () => `${Math.round(performance.now() - t0)}ms`;
     for (const type of ["pointerover", "pointerleave", "focusin", "focusout"])
-      row.addEventListener(type, (e) =>
+      list.addEventListener(type, (e) =>
         window.__muTrace.push(
-          `${at()} ${type} card ${idx(e.target)} @${Math.round(e.clientX ?? -1)},${Math.round(e.clientY ?? -1)}`
+          `${at()} ${type} note ${idx(e.target)} @${Math.round(e.clientX ?? -1)},${Math.round(e.clientY ?? -1)}`
         )
       );
     new MutationObserver((ms) => {
       for (const m of ms)
         window.__muTrace.push(
-          `${at()} data-mu-open ${m.target.hasAttribute("data-mu-open") ? "set on" : "cleared from"} card ${idx(m.target)}`
+          `${at()} data-mu-open ${m.target.hasAttribute("data-mu-open") ? "set on" : "cleared from"} note ${idx(m.target)}`
         );
-    }).observe(row, { subtree: true, attributes: true, attributeFilter: ["data-mu-open"] });
+    }).observe(list, { subtree: true, attributes: true, attributeFilter: ["data-mu-open"] });
     window.addEventListener("scroll", () =>
       window.__muTrace.push(`${at()} scroll ${Math.round(scrollY)}`)
     );
   });
-  await page.mouse.move(...centre(t), { steps: 4 });
+  const target = await rowCentre(want);
+  if (target) await page.mouse.move(...target, { steps: 4 });
   await page.waitForTimeout(GROW_MS + 150);
   hover = await readRow();
   await page.screenshot({ path: `${OUT}/mu-${tag}-hover.png` });
-  /* Leave the row: back to the margin. */
+  /* Leave the list: back to the margin. The note stays open (ADR-122). */
   await page.mouse.move(8, Math.round(H / 2), { steps: 4 });
   await page.waitForTimeout(GROW_MS + 150);
   back = await readRow();
-  /* Keyboard: focus card 0, Tab to card 1 — focus opens as hover does. */
-  await page.evaluate(() => document.querySelector(".mu-card")?.focus());
-  await page.keyboard.press("Tab");
+  /* Keyboard: focus note 0's row, then Tab until focus is inside note 1 —
+     note 0 is open, so its own way in is the next stop on the way. */
+  await page.evaluate(() => document.querySelector(".mu-note__row")?.focus());
+  await page.waitForTimeout(GROW_MS + 150);
+  for (let step = 0; step < 4; step += 1) {
+    await page.keyboard.press("Tab");
+    await page.waitForTimeout(90);
+    const at = await page.evaluate(() => {
+      const n = document.activeElement?.closest?.(".mu-note");
+      return n ? [...n.parentElement.children].indexOf(n) : -1;
+    });
+    if (at === 1) break;
+  }
   await page.waitForTimeout(GROW_MS + 150);
   kb = await readRow();
   await page.screenshot({ path: `${OUT}/mu-${tag}-focus.png` });
   await page.evaluate(() => document.activeElement?.blur());
-  await page.waitForTimeout(GROW_MS + 150);
+  await page.waitForTimeout(200);
   hoverTrace = await page.evaluate(() => window.__muTrace ?? []);
 
-  /* ── `--perf`: parked, then the pointer sweeping the row ───────────── */
+  /* ── `--perf`: parked, then the pointer sweeping the list ──────────── */
   if (PERF) {
     await perfStart();
     await page.waitForTimeout(1500);
     perfIdle = await perfStop();
     await perfStart();
     for (let pass = 0; pass < 2; pass += 1) {
-      for (const c of rest.cards) {
-        await page.mouse.move(...centre(c), { steps: 6 });
+      for (let i = 0; i < rest.notes.length; i += 1) {
+        const c = await rowCentre(i);
+        if (c) await page.mouse.move(...c, { steps: 6 });
         await page.waitForTimeout(240);
       }
     }
@@ -664,34 +676,32 @@ const prmCtx = await browser.newContext({
 });
 const prmPage = await prmCtx.newPage();
 await prmPage.goto(url, { waitUntil: "domcontentloaded" });
-await prmPage.waitForSelector("#musings .mu-card", { timeout: 30_000 });
+await prmPage.waitForSelector("#musings .mu-note", { state: "attached", timeout: 30_000 });
 await prmPage.waitForTimeout(600);
 const prm = await prmPage.evaluate(() => {
   const mu = document.querySelector(".mu");
-  const faces = [...document.querySelectorAll(".mu-card__front")];
+  const notes = [...document.querySelectorAll(".mu-note")];
   return {
     ready: mu?.hasAttribute("data-mu-ready") ?? false,
-    open: [...document.querySelectorAll(".mu-card")].findIndex((c) =>
-      c.hasAttribute("data-mu-open")
-    ),
-    backdrops: faces.map((f) => {
+    open: notes.findIndex((c) => c.hasAttribute("data-mu-open")),
+    backdrops: notes.map((f) => {
       const s = getComputedStyle(f);
       return s.backdropFilter || s.webkitBackdropFilter || "none";
     }),
-    display: mu ? getComputedStyle(document.querySelector(".mu__row")).display : null,
+    display: mu ? getComputedStyle(document.querySelector(".mu__list")).display : null,
   };
 });
 await prmCtx.close();
 
 /* ── The readout ────────────────────────────────────────────────────── */
 const line = (s) => console.log(s);
-line(`\n══ MUSINGS ROW · ${tag} · port ${PORT}${LAB ? " · lab" : ""} ══`);
+line(`\n══ MUSINGS LIST · ${tag} · port ${PORT}${LAB ? " · lab" : ""} ══`);
 const first = walk[0];
 line(`cover     ground ${first.coverGround} · image ${first.coverImage}`);
 line(`          position ${first.coverPosition} z ${first.coverZ} · vh ${first.vh}`);
 line(`head      ${JSON.stringify(first.head)} · display ${first.titlePx}px`);
 line(
-  `cards     ${first.cards.length} · type ${first.cards[0]?.titlePx}/${first.cards[0]?.ledePx}/${first.cards[0]?.kickerPx}px`
+  `notes     ${first.notes.length} · type ${first.notes[0]?.titlePx}/${first.notes[0]?.ledePx}/${first.notes[0]?.metaPx}px`
 );
 line(
   `notch     ch ${notch?.ch} · mid ${notch?.mid} · TL ${notch?.tl} TR ${notch?.tr} BL ${notch?.bl} BR ${notch?.br}`
@@ -714,59 +724,42 @@ for (const s of walk) {
   );
 }
 
-const showCards = (label, r) => {
+/* The open note's sign against its cover's floor: the owner's ask ("the call
+   to action and the author … aligned to the bottom of that visual"). */
+const floorOf = (r) => {
+  const c = r?.notes.find((n) => n.open);
+  return c && c.sign && c.cover
+    ? Math.round((c.sign.y + c.sign.h - (c.cover.y + c.cover.h)) * 10) / 10
+    : null;
+};
+const showNotes = (label, r) => {
   if (!r) return;
-  line(`\n── ${label} (open ${r.open}) · row ${JSON.stringify(r.rowBox)} ──`);
-  for (const c of r.cards) {
+  line(
+    `\n── ${label} (open ${r.open}) · notes ${JSON.stringify(r.notesBox)} · rail end ${r.railEnd} · list scrolls ${r.listScrolls} ──`
+  );
+  for (const c of r.notes) {
     line(
-      `  ${c.i}${c.open ? "*" : " "} w ${String(c.box?.w).padEnd(8)} grow ${String(c.flexGrow).padEnd(4)} ` +
-        `title w ${String(c.title?.w).padEnd(8)} lines ${c.title?.lines}  glass ${c.backdrop.slice(0, 12).padEnd(12)} ` +
-        `lip ${c.lip}  cover ${c.cover?.h}px  glyph ${c.beat?.w ?? "—"}px`
+      `  ${c.i}${c.open ? "*" : " "} h ${String(c.box?.h).padEnd(7)} title ${c.titlePx}px cut ${c.titleCut}  ` +
+        `cover ${c.cover?.w}×${c.cover?.h}  glass ${c.backdrop.slice(0, 12).padEnd(12)} lip ${c.lip}`
     );
   }
+  line(`  sign → cover floor ${floorOf(r)}px`);
 };
-showCards("rest", rest);
-showCards("hover card 2", hover);
-showCards("Tab from card 0", kb);
+showNotes("rest", rest);
+showNotes("hover note 2", hover);
+showNotes("after leaving the list", back);
+showNotes("Tab into note 1", kb);
 
-/* ── The body's seat (ADR-121 U1) ──────────────────────────────────────
-   `bare` is the plate under the lede's last line — the face's bottom minus
-   the lede's ink bottom. `allowed` is what the body may legitimately hold
-   there: its own bottom padding, the lede lines it reserves and this copy
-   does not use, and half a line for the leading the ink rect does not
-   include. Anything over that is slack pooled in the plate. */
-const slackOf = (r, c) => {
-  if (!c.body || !c.lede || !c.ledeFit) return null;
-  const bare = c.body.y + c.body.h - c.lede.b;
-  const unused = Math.max(0, r.ledeCap - c.ledeFit.lines);
-  const allowed = c.padB + unused * c.ledeFit.lh + c.ledeFit.lh / 2;
-  return {
-    bare: Math.round(bare * 10) / 10,
-    allowed: Math.round(allowed * 10) / 10,
-    pooled: Math.round((bare - allowed) * 10) / 10,
-  };
-};
-line(
-  `\n── the body's seat (cap ${rest.ledeCap} lede lines · open-min ${rest.openMin ?? "—"}px) ──`
-);
-for (const c of rest.cards) {
-  const s = slackOf(rest, c);
-  line(
-    `  ${c.i}${c.open ? "*" : " "} body ${c.body?.h}px · cover ${c.cover?.h}px · kicker top ${c.kicker?.y} · ` +
-      `title lines ${c.title?.lines} · lede lines ${c.ledeFit?.lines} (unclamped) · ` +
-      `bare under the lede ${s?.bare}px against ${s?.allowed} allowed → pooled ${s?.pooled}px`
-  );
-}
-/* ── The row's end against the right rail's telemetry (ADR-121 U1) ── */
+/* ── The list's end against the right rail's telemetry (ADR-121 U1) ── */
 const clearOf = (r) =>
-  r && r.teleLeft != null
-    ? Math.round((r.teleLeft - Math.max(...r.cards.map((c) => c.box.x + c.box.w))) * 10) / 10
+  r && r.teleLeft != null && r.notes.length
+    ? Math.round((r.teleLeft - Math.max(...r.notes.map((c) => c.box.x + c.box.w))) * 10) / 10
     : null;
 line(
   `\ntelemetry  ${rest.tele.map((t) => `${t.k} x${t.x}–${Math.round((t.x + t.w) * 10) / 10} y${t.y}`).join(" · ") || "none drawn"}`
 );
 line(
-  `row end    right ${rest.rowBox ? Math.round((rest.rowBox.x + rest.rowBox.w) * 10) / 10 : "—"} · ` +
+  `list end   right ${rest.notesBox ? Math.round((rest.notesBox.x + rest.notesBox.w) * 10) / 10 : "—"} · ` +
     `clearance to the leftmost readout: rest ${clearOf(rest)} · hover ${clearOf(hover)} · Tab ${clearOf(kb)} · scrollbar ${rest.sb}px`
 );
 if (seat)
@@ -776,7 +769,7 @@ if (seat)
       `designation y ${seat.desig?.y ?? "—"} · TL bracket bottom ${seat.cornerTl?.b ?? "—"} · nav bottom ${seat.nav?.b ?? "—"}`
   );
 line(
-  `\nreduced motion  ready ${prm.ready} · open ${prm.open} · row ${prm.display} · glass ${[...new Set(prm.backdrops)].join(",")}`
+  `\nreduced motion  ready ${prm.ready} · open ${prm.open} · list ${prm.display} · glass ${[...new Set(prm.backdrops)].join(",")}`
 );
 if (perfIdle)
   line(
@@ -883,7 +876,7 @@ if (!LAB && !phone) {
 for (const s of walk) {
   if (typeof s.p !== "number") continue;
   if (phone) {
-    if (s.muReady) fails.push(`the row pinned itself on the phone rung at p ${s.p}`);
+    if (s.muReady) fails.push(`the list pinned itself on the phone rung at p ${s.p}`);
     if (s.ftReveal) fails.push(`the footer's bed armed on the phone rung at p ${s.p}`);
   } else if (!s.muReady && s.p >= 0 && s.p <= 1) fails.push(`no data-mu-ready at p ${s.p}`);
 }
@@ -897,73 +890,60 @@ if (!phone) {
     if (s.pinned && s.p >= 0.3 && s.p <= 0.9 && !s.headState.whole)
       fails.push(`the head is not whole in the dwell at p ${s.p} ("${s.headState.sample}")`);
   }
-  /* The cards arrive AFTER the head and close BEFORE it leaves. */
+  /* The notes arrive AFTER the head and fold BEFORE it leaves. */
   const mid = walk.find((s) => s.p === 0.45);
-  if (mid && mid.arrive !== "in") fails.push(`the row is ${mid.arrive} at p 0.45, not in`);
+  if (mid && mid.arrive !== "in") fails.push(`the list is ${mid.arrive} at p 0.45, not in`);
   const late = walk.find((s) => s.p === 0.99);
-  if (late && late.arrive === "in") fails.push("the row is still open at p 0.99");
+  if (late && late.arrive === "in") fails.push("the list is still in at p 0.99");
 
-  /* ── REST: the newest post open, at three strips' width or more. ── */
-  const strips = rest.cards.filter((c) => !c.open);
-  const stripW = strips.length ? Math.min(...strips.map((c) => c.box.w)) : 0;
-  const stripMax = strips.length ? Math.max(...strips.map((c) => c.box.w)) : 0;
-  if (rest.open !== 0) fails.push(`card ${rest.open} is open at rest, not card 0`);
-  if (rest.cards[0] && stripW > 0 && rest.cards[0].box.w < 3 * stripW)
-    fails.push(`the open card is ${rest.cards[0].box.w}px against strips of ${stripW}px (< 3×)`);
-  if (stripMax - stripW > 1) fails.push(`the strips are not one width (${stripW}–${stripMax})`);
-  if (rest.cards[0] && !/flex-grow/.test(rest.cards[0].transition))
-    fails.push(`the card transitions ${rest.cards[0].transition}, not flex-grow`);
-  if (rest.cards.some((c) => !c.tabbable)) fails.push("a card is not focusable");
-  /* Every cover ends on one datum; every glyph is whole in the narrowest strip.
-     ⚠ AND EVERY COVER IS ITS CARD'S WIDTH. The body's definite open width grew
-     the face's `auto` column to itself on the first run, and the cover
-     stretched with it — a 930px cover inside a 120px strip, its glyph 464px
-     in. The glyph gate saw it; this is the direct question. */
-  const coverHs = new Set(rest.cards.map((c) => Math.round(c.cover?.h ?? 0)));
-  if (coverHs.size > 1) fails.push(`the covers are not one height (${[...coverHs].join(", ")})`);
-  for (const c of rest.cards)
-    if (c.cover && c.box && Math.abs(c.cover.w - c.box.w) > 1)
-      fails.push(`card ${c.i}'s cover is ${c.cover.w}px wide in a ${c.box.w}px card`);
-  for (const c of strips)
-    if (c.beat && c.box && (c.beat.x < c.box.x || c.beat.x + c.beat.w > c.box.x + c.box.w))
-      fails.push(`card ${c.i}'s glyph is not whole inside its strip`);
-
-  /* ── THE BODY'S SEAT (ADR-121 U1). The slack is the COVER's, never the
-     plate's: no card may carry more under its lede than its padding and the
-     lede lines it reserves. And the covers end on one datum, so every kicker
-     starts on one line across the row. ── */
-  for (const c of rest.cards) {
-    const s = slackOf(rest, c);
-    if (s && s.pooled > 1)
-      fails.push(
-        `card ${c.i} pools ${s.pooled}px of plate under its lede (${s.bare} bare, ${s.allowed} allowed)`
-      );
-  }
-  const kickerTops = rest.cards.map((c) => c.kicker?.y).filter((y) => y != null);
-  if (kickerTops.length && Math.max(...kickerTops) - Math.min(...kickerTops) > 0.5)
-    fails.push(
-      `the kickers do not share a line (${Math.min(...kickerTops)}–${Math.max(...kickerTops)})`
-    );
-  /* ⚠ THE COPY FITS WHAT THE BODY RESERVES, AT THE OPEN WIDTH, UNCLAMPED —
-     the clamp is a belt against future copy, so today's copy may not reach it
-     (proof.md). And the open card is never narrower than the lede's measure. */
-  for (const c of rest.cards) {
+  /* ── REST: the newest note open; every title whole; every note a link. ── */
+  if (rest.open !== 0) fails.push(`note ${rest.open} is open at rest, not note 0`);
+  if (rest.notes.some((c) => !c.tabbable)) fails.push("a note's row is not a focusable link");
+  if (rest.notes[0] && !/grid-template-columns/.test(rest.notes[0].transition))
+    fails.push(`the note transitions ${rest.notes[0].transition}, not its cover column`);
+  for (const c of rest.notes) {
+    if (c.titleCut) fails.push(`note ${c.i}'s title is cut by its ellipsis`);
     if (c.title && c.title.lines !== 1)
-      fails.push(`card ${c.i}'s title takes ${c.title.lines} lines`);
-    if (c.ledeFit && c.ledeFit.lines > rest.ledeCap)
-      fails.push(
-        `card ${c.i}'s lede needs ${c.ledeFit.lines} lines against ${rest.ledeCap} reserved`
-      );
+      fails.push(`note ${c.i}'s title takes ${c.title.lines} lines`);
+    /* The cover is UNFRAMED: the card is already the frame (round six). */
+    if (c.coverBorder && parseFloat(c.coverBorder) > 0)
+      fails.push(`note ${c.i}'s cover is framed (${c.coverBorder})`);
+    if (c.coverGround && !/rgba\(0, 0, 0, 0\)|transparent/.test(c.coverGround))
+      fails.push(`note ${c.i}'s cover paints a ground (${c.coverGround})`);
   }
-  const openCard = rest.cards.find((c) => c.open);
-  if (openCard && rest.openMin != null && openCard.box.w < rest.openMin - 1)
-    fails.push(`the open card is ${openCard.box.w}px, under its measure's ${rest.openMin}px`);
+  /* One thumbnail size; the open cover is square and GROWN. */
+  const thumbs = rest.notes.filter((c) => !c.open && c.cover).map((c) => c.cover.w);
+  const openNote = rest.notes.find((c) => c.open);
+  if (thumbs.length && Math.max(...thumbs) - Math.min(...thumbs) > 1)
+    fails.push(`the thumbnails are not one size (${Math.min(...thumbs)}–${Math.max(...thumbs)})`);
+  if (openNote?.cover && Math.abs(openNote.cover.w - openNote.cover.h) > 1)
+    fails.push(`the open cover is ${openNote.cover.w}×${openNote.cover.h}, not square`);
+  if (openNote?.cover && thumbs.length && openNote.cover.w < 2 * Math.max(...thumbs))
+    fails.push(
+      `the open cover is ${openNote.cover.w}px against ${Math.max(...thumbs)}px thumbnails`
+    );
+  /* ⚠ INSIDE THE RAILS: the rows are solved from the count so the list ends
+     on the rails' last tick; five notes may not scroll on a tall frame. */
+  if (rest.notesBox && rest.railEnd != null && rest.notesBox.y + rest.notesBox.h > rest.railEnd + 1)
+    fails.push(
+      `the notes end at ${Math.round(rest.notesBox.y + rest.notesBox.h)}, past the rails' last tick at ${rest.railEnd}`
+    );
+  if (rest.notes.length <= 5 && rest.vh >= 1000 && rest.listScrolls)
+    fails.push(`the list scrolls at ${rest.notes.length} notes on a ${rest.vh}px frame`);
 
-  /* ── THE ROW ENDS BEFORE THE TELEMETRY (ADR-121 U1). Every card's right
-     edge clears the leftmost right-rail readout by ≥ 12px, at rest, on hover
-     and on keyboard focus — a plate under live telemetry is the one thing
-     the band's edge may not do (ADR-119 U1 recorded the band running 15px
-     past BEARING at 1280). ── */
+  /* ── THE SIGN ON THE COVER'S FLOOR, wherever a note is open. ── */
+  for (const [label, r] of [
+    ["rest", rest],
+    ["hover", hover],
+    ["Tab", kb],
+  ]) {
+    if (!r) continue;
+    const f = floorOf(r);
+    if (f == null) fails.push(`${label}: the open note's sign could not be read`);
+    else if (Math.abs(f) > 1.5) fails.push(`${label}: the sign ends ${f}px off the cover's floor`);
+  }
+
+  /* ── THE LIST ENDS BEFORE THE TELEMETRY (ADR-121 U1). ── */
   for (const [label, r] of [
     ["rest", rest],
     ["hover", hover],
@@ -971,53 +951,43 @@ if (!phone) {
   ]) {
     const clear = clearOf(r);
     if (clear != null && clear < 12)
-      fails.push(`${label}: the row's last card ends ${clear}px from the telemetry (needs ≥ 12)`);
+      fails.push(`${label}: the list ends ${clear}px from the telemetry (needs ≥ 12)`);
   }
 
-  /* ── HOVER: card 2 opens inside the grow; card 0 collapses; leave restores. ── */
+  /* ── HOVER: note 2 opens; note 0 closes; leaving keeps note 2 open. ── */
   if (hover) {
-    const want = Math.min(2, rest.cards.length - 1);
-    if (hover.open !== want) fails.push(`hovering card ${want} opened card ${hover.open}`);
-    const c0 = hover.cards[0];
-    const cw = hover.cards[want];
-    if (cw && c0 && cw.box.w < 3 * c0.box.w)
-      fails.push(
-        `the hovered card is ${cw.box.w}px against card 0's ${c0.box.w}px (< 3×) after the grow`
-      );
-    if (c0 && Math.abs(c0.box.w - stripW) > 1.5)
-      fails.push(`card 0 did not collapse to a strip (${c0.box.w}px against ${stripW})`);
-    /* ⚠ NO REFLOW: the title's laid-out width is the same open and closed. */
-    const closedTitle = rest.cards[want]?.title;
-    const openTitle = cw?.title;
-    if (closedTitle && openTitle && Math.abs(closedTitle.w - openTitle.w) > 0.6)
-      fails.push(`the title reflowed on open (${closedTitle.w} → ${openTitle.w}px)`);
-    if (closedTitle && openTitle && closedTitle.lines !== openTitle.lines)
-      fails.push(
-        `the title's line count changed on open (${closedTitle.lines} → ${openTitle.lines})`
-      );
+    const want = Math.min(2, rest.notes.length - 1);
+    if (hover.open !== want) fails.push(`hovering note ${want} opened note ${hover.open}`);
+    const c0 = hover.notes[0];
+    const cw = hover.notes[want];
+    if (c0?.cover && thumbs.length && Math.abs(c0.cover.w - Math.min(...thumbs)) > 1.5)
+      fails.push(`note 0 did not close to the thumbnail (${c0.cover.w}px)`);
+    if (cw?.cover && openNote?.cover && Math.abs(cw.cover.w - openNote.cover.w) > 1.5)
+      fails.push(`the hovered note's cover is ${cw.cover.w}px, not the open ${openNote.cover.w}px`);
   }
-  if (back && back.open !== 0) fails.push(`leaving the row left card ${back.open} open`);
-  if (kb && kb.open !== 1) fails.push(`Tab from card 0 opened card ${kb.open}, not card 1`);
+  if (back && hover && back.open !== hover.open)
+    fails.push(`leaving the list moved the open note from ${hover.open} to ${back.open}`);
+  if (kb && kb.open !== 1) fails.push(`tabbing into note 1 opened note ${kb.open}`);
   if (
-    fails.some((f) => /^hovering|^the hovered|^card 0 did not|^leaving the row|^Tab from/.test(f))
+    fails.some((f) => /^hovering|^note 0 did not|^the hovered|^leaving the list|^tabbing/.test(f))
   ) {
     line("");
     line("── the hover's own trace (it failed) ──");
     for (const e of hoverTrace) line(`  ${e}`);
   }
 
-  /* ── GLASS: on every face on the stage rung in dark; none in light. ── */
-  const glass = rest.cards.map((c) => c.backdrop);
+  /* ── GLASS: on every note on the stage rung in dark; none in light. ── */
+  const glass = rest.notes.map((c) => c.backdrop);
   if (rest.stageMode && THEME === "dark") {
     if (!glass.every((g) => /blur\(/.test(g)))
-      fails.push(`a face has no glass on the stage rung: ${glass.join(" | ")}`);
+      fails.push(`a note has no glass on the stage rung: ${glass.join(" | ")}`);
   } else if (glass.some((g) => /blur\(/.test(g)))
     fails.push(
       `glass where there is nothing to blur (${THEME}, stage ${rest.stageMode}): ${glass.join(" | ")}`
     );
   if (prm.backdrops.some((g) => /blur\(/.test(g))) fails.push("glass under reduced motion");
-  if (prm.ready) fails.push("the row pinned itself under reduced motion");
-  if (prm.open !== 0) fails.push(`reduced motion rests on card ${prm.open}`);
+  if (prm.ready) fails.push("the list pinned itself under reduced motion");
+  if (prm.open !== 0) fails.push(`reduced motion rests on note ${prm.open}`);
 
   /* ── The bed, the readout, the footer (landing only). ── */
   if (!LAB) {
@@ -1025,9 +995,9 @@ if (!phone) {
     const armed = walk.filter((s) => s.ftReveal);
     if (!armed.length) fails.push("the footer's bed was never armed");
     if (!rest.stageMode && ends.some((s) => !s.ftReveal))
-      fails.push("the footer's bed was not armed inside the row");
+      fails.push("the footer's bed was not armed inside the list");
     if (rest.stageMode && ends.some((s) => s.ftReveal))
-      fails.push("the footer's bed armed while the row was still over the live corridor");
+      fails.push("the footer's bed armed while the list was still over the live corridor");
     const half = walk.find((s) => s.p === "footer-half");
     const end = walk.find((s) => s.p === "footer-end");
     if (half && end && !(end.revealed > half.revealed + 8))
@@ -1067,9 +1037,9 @@ if (notch) {
     if (notch.tr) fails.push("the top-right corner is NOT cut");
   }
 }
-for (const c of rest.cards)
-  if (c.open && (c.titlePx < 16 || c.ledePx < 12 || c.kickerPx < 10))
-    fails.push(`type under the floor: ${c.titlePx}/${c.ledePx}/${c.kickerPx}`);
+for (const c of rest.notes)
+  if (c.titlePx < 20 || (c.open && (c.ledePx < 13 || c.metaPx < 10)))
+    fails.push(`type under the floor on note ${c.i}: ${c.titlePx}/${c.ledePx}/${c.metaPx}`);
 if (errors.length) fails.push(`page errors: ${errors.join(" | ")}`);
 
 line("");

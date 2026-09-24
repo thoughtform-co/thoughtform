@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { coordStamp as arcCoordStamp } from "@/components/arcs/chrome";
 import { ROW_ARRIVE_END, ROW_ARRIVE_IN, ROW_ARRIVE_OUT, rowArrive } from "@/lib/musings/arrive";
-import { MUSINGS_ROW_MAX } from "@/lib/musings/cards";
+import { MUSINGS_LIST_MAX } from "@/lib/musings/cards";
 import { beatOf, coverSpec, slugSeed, yearFraction } from "@/lib/musings/cover";
 import {
   HEAD_LEAVE_AT,
@@ -27,18 +27,33 @@ import {
   MUSINGS_TITLE_TEXT,
   coordStamp,
 } from "@/lib/musings/mastheadData";
+import {
+  ORBIT_HALF,
+  ORBIT_HALO,
+  ORBIT_QUARTER_R,
+  ORBIT_QUARTERS,
+  ORBIT_RIM,
+  ORBIT_RINGS,
+  dayOfYear,
+  orbitPoint,
+  orbitSpec,
+} from "@/lib/musings/orbit";
 import { VOIDWALKER_HOLOGRAM_EXIT_WINDOW } from "@/lib/voidwalker/voidwalkerHologramClock";
 
 /**
- * The row's arrival, the head's decode, and the source ratchets (ADR-121).
+ * The list's arrival, the head's decode, and the source ratchets (ADR-121 →
+ * ADR-122).
  *
- * The row has NO geometry module any more — its mechanic is one transitioned
- * `flex-grow` in the sheet and one attribute the writer moves on an event —
- * so what a unit test can hold is the arrival's hysteresis, the head's clock,
- * the cover's arithmetic, and the SOURCE: that the rung is mirrored, that the
- * mechanic is the one property, that nothing 3D survived, that every card is
- * a real link, and that the writer renders nothing. The capture
- * (`scripts/capture-musings-row.mjs`) checks what the browser does with it.
+ * The list has NO geometry module — its rows are solved from the count in the
+ * sheet and one attribute the writer moves on an event opens a note — so what
+ * a unit test can hold is the arrival's hysteresis, the head's clock, the
+ * drawing's arithmetic, and the SOURCE: that the rung is mirrored, that the
+ * open note grows on its two transitions, that the sign is solved onto the
+ * cover's floor, that the arrival is a line that unfolds, that nothing 3D
+ * survived, that every note is a real link, and that the writer renders
+ * nothing. The capture (`scripts/capture-musings-row.mjs`) checks what the
+ * browser does with it. (The file keeps its name: the station was a row when
+ * it was written, and every pin below that survived is still its.)
  */
 
 describe("rowArrive — the bounded burst", () => {
@@ -339,9 +354,52 @@ describe("cover — the drawn record", () => {
   });
 });
 
-describe("the row's window", () => {
-  it("draws at most seven — a strip costs the open card its width, not the page its length", () => {
-    expect(MUSINGS_ROW_MAX).toBe(7);
+describe("the list's window", () => {
+  it("draws at most five — the owner's number", () => {
+    // "maybe we can show more, maybe 5 in total" (2026-09-24). The rows are
+    // solved from the count inside the frame, so a sixth shrinks every title.
+    expect(MUSINGS_LIST_MAX).toBe(5);
+  });
+});
+
+describe("orbit — the About drawing, re-seated for a note (ADR-122)", () => {
+  it("reads the day of the year off the STRING, never through a Date", () => {
+    expect(dayOfYear("2026-01-01")).toBe(1);
+    expect(dayOfYear("2026-09-14")).toBe(257);
+    expect(dayOfYear("2024-03-01")).toBe(61);
+    expect(dayOfYear("2026-03-01")).toBe(60);
+    expect(Number.isNaN(dayOfYear("nonsense"))).toBe(true);
+  });
+
+  it("plots the note on its own day and the year's OTHER notes, never itself or another year's", () => {
+    const posts = [
+      { slug: "a", date: "2026-09-14" },
+      { slug: "b", date: "2026-03-01" },
+      { slug: "c", date: "2025-12-31" },
+    ];
+    const spec = orbitSpec(posts[0], posts);
+    expect(spec.lit).toBeCloseTo(yearFraction("2026-09-14") * 360, 6);
+    expect(spec.others).toHaveLength(1);
+    expect(spec.others[0]).toBeCloseTo(yearFraction("2026-03-01") * 360, 6);
+    expect(spec.month).toBe(8);
+    expect(spec.day).toBe("Day 257");
+    expect(spec.year).toBe("2026");
+  });
+
+  it("keeps every ring inside the rim, the halo outside it, and the quarter months inside the crop", () => {
+    // ⚠ THE CROP CARRIES THE LABELS' ROOM: the lab's first still printed "ICT"
+    // and "API" at a 240 crop. A quarter month is seated on its radius and
+    // centred on it, so its centre must leave half a label of air.
+    for (const r of ORBIT_RINGS) expect(r.r).toBeLessThanOrEqual(ORBIT_RIM);
+    expect(ORBIT_HALO).toBeGreaterThan(ORBIT_RIM);
+    expect(ORBIT_QUARTER_R).toBeGreaterThan(ORBIT_HALO);
+    for (const [, deg] of ORBIT_QUARTERS) {
+      const p = orbitPoint(deg, ORBIT_QUARTER_R);
+      expect(Math.abs(p.x)).toBeLessThanOrEqual(ORBIT_HALF - 30);
+      expect(Math.abs(p.y)).toBeLessThanOrEqual(ORBIT_HALF - 30);
+    }
+    // The thumbnail keeps the gold track and the inner ring, and only those.
+    expect(ORBIT_RINGS.filter((r) => !r.detail).map((r) => r.ink)).toEqual(["gold", "line"]);
   });
 });
 
@@ -353,7 +411,8 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
 
   const HOOK = "components/landing/home-v2/musings/useMusingsScroll.ts";
   const SHEET = "components/landing/home-v2/musings/musings.css";
-  const CARD = "components/landing/home-v2/musings/MusingCard.tsx";
+  const NOTE = "components/landing/home-v2/musings/MusingNote.tsx";
+  const ORBIT = "components/landing/home-v2/musings/MusingOrbit.tsx";
   const STATION = "components/landing/home-v2/musings/MusingsStation.tsx";
   const THEME = "components/landing/v7/theme.css";
   const RUNG = "(min-width: 961px) and (prefers-reduced-motion: no-preference)";
@@ -376,25 +435,33 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(read(SHEET)).toContain(`@media ${RUNG} {`);
   });
 
-  it("the mechanic is ONE transitioned property — flex-grow — on the row rung", () => {
-    // Lighthouse HQ's row measured: `flex: 0 0 <strip>` on every card and
-    // `flex-grow` transitioned on the active one. Nothing is posed, nothing
-    // is measured, nothing is written per frame.
+  it("the open note grows on TWO transitions and one clock — the cover column and the excerpt's row", () => {
+    // v17's mechanic: the cover is ONE element whose column widens from the
+    // thumbnail to the feature, and the excerpt unrolls 0fr → 1fr. Nothing is
+    // posed, measured or written per frame; the writer moves one attribute.
     const sheet = read(SHEET);
-    const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
-    const card = bodyOf(rung, ".mu[data-mu-ready] .mu-card");
-    expect(card).toMatch(/flex:\s*0 0 var\(--mu-strip\)/);
-    expect(card).toMatch(/transition:\s*flex-grow var\(--mu-grow\)/);
-    expect(card).not.toMatch(/transition:[^;]*(width|transform)/);
-    expect(bodyOf(rung, ".mu[data-mu-ready] .mu-card[data-mu-open]")).toMatch(/flex-grow:\s*1/);
-    expect(bodyOf(sheet, ".mu")).toMatch(/--mu-grow:\s*900ms cubic-bezier\(0\.19, 1, 0\.22, 1\)/);
+    const note = bodyOf(sheet, ".mu-note");
+    expect(flat(note)).toContain("grid-template-columns:minmax(0,1fr)var(--mu-note-col)");
+    expect(flat(note)).toContain("--mu-note-col:var(--mu-note-thumb)");
+    expect(note).toMatch(/transition:\s*grid-template-columns var\(--mu-note-grow\)/);
+    expect(bodyOf(sheet, ".mu-note[data-mu-open]")).toMatch(
+      /--mu-note-col:\s*var\(--mu-note-open\)/
+    );
+    expect(bodyOf(sheet, ".mu-note__open")).toMatch(/grid-template-rows:\s*0fr/);
+    expect(bodyOf(sheet, ".mu-note[data-mu-open] .mu-note__open")).toMatch(
+      /grid-template-rows:\s*1fr/
+    );
+    expect(bodyOf(sheet, ".mu")).toMatch(
+      /--mu-note-grow:\s*560ms cubic-bezier\(0\.16, 1, 0\.3, 1\)/
+    );
+    // ADR-121's row mechanic is gone with the row.
+    expect(rules(sheet)).not.toMatch(/flex-grow|--mu-strip|--mu-open-w|--mu-closed/);
   });
-
   it("nothing 3D survives — no perspective, no rotation, no 3D context, no edge fade", () => {
     // ADR-119's rack, shelf and row are all retired with the form (ADR-121).
     // A `perspective` or a `rotateX` that came back would be the jukebox
     // returning under a new name; a mask on the row would be its edge fade.
-    for (const src of [read(SHEET), read(CARD), read(STATION), read(HOOK)]) {
+    for (const src of [read(SHEET), read(NOTE), read(ORBIT), read(STATION), read(HOOK)]) {
       const s = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
       expect(s).not.toMatch(/perspective/);
       expect(s).not.toMatch(/rotate[XYZ]?\(/);
@@ -411,127 +478,87 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(read(HOOK)).not.toMatch(/style\.(transform|zIndex|opacity|filter)\s*=/);
   });
 
-  it("`data-mu-open` is rendered on the NEWEST post, and every card is a real link", () => {
+  it("`data-mu-open` is rendered on the NEWEST note, and every note is a real link", () => {
     // The owner's rest state: the newest is open, no timer — rendered by React
-    // so SSR / no-JS / PRM show the finished row. ⚠ And no card is hidden from
+    // so SSR / no-JS / PRM show the finished list. ⚠ And no note is hidden from
     // the keyboard: ADR-119's `tabIndex={-1}` + `aria-hidden` on cards 1..n was
-    // an a11y bug on every parked rung, where the rail showed them.
-    // Comments stripped: the card's own header quotes the bug it fixed.
-    const card = read(CARD).replace(/\/\*[\s\S]*?\*\//g, "");
-    expect(card).toContain('data-mu-open={index === 0 ? "" : undefined}');
-    expect(card).toContain("href={`/musings/${post.slug}`}");
-    expect(card).not.toMatch(/tabIndex/);
-    expect(card).not.toMatch(/aria-hidden=\{/);
-    expect(card).not.toMatch(/isFront|data-mu-front|cardRef/);
+    // an a11y bug on every parked rung. Comments stripped: the header quotes it.
+    const note = read(NOTE).replace(/\/\*[\s\S]*?\*\//g, "");
+    expect(note).toContain('data-mu-open={index === 0 ? "" : undefined}');
+    expect(note).toContain("const href = `/musings/${post.slug}`;");
+    expect(note).toMatch(/className="mu-note__row" href=\{href\}/);
+    expect(note).not.toMatch(/tabIndex/);
+    expect(note).not.toMatch(/isFront|data-mu-front|cardRef/);
+    // The only thing hidden from assistive tech is the drawing.
+    expect(note.match(/aria-hidden="true"/g)?.length ?? 0).toBeGreaterThan(0);
+    expect(note).toContain('className="mu-note__cover" aria-hidden="true"');
   });
-
-  it("the open width is solved from the SAME tokens the strip and the gap use", () => {
-    // ⚠ The body is laid out at the width the open card WILL have, so the text
-    // never reflows during the grow; the arithmetic has to be the row's own —
-    // `100cqw` of the row minus (n − 1) strips and gaps — or the two drift.
+  it("the rows are solved from the COUNT inside the frame, on the pinned rung", () => {
+    // ⚠ The open card's floor is paid for first, then the way out; the closed
+    // rows share what is left at v4's 8.6svh where they can, never under 64px;
+    // the open cover takes what the rows then leave, up to 240px. `100cqh` is
+    // the notes' box — the one size container above the rows.
     const sheet = read(SHEET);
     const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
-    const row = bodyOf(rung, ".mu[data-mu-ready] .mu__row");
-    expect(row).toMatch(/container-type:\s*inline-size/);
-    expect(flat(row)).toContain(
-      "--mu-open-w:calc(100cqw-(var(--mu-n,1)-1)*(var(--mu-strip)+var(--mu-gap)))"
+    const notes = flat(bodyOf(rung, ".mu[data-mu-ready] .mu__notes"));
+    expect(notes).toContain("container-type:size");
+    expect(notes).toContain(
+      "--mu-note-row:clamp(64px,min(8.6svh,calc((100cqh-var(--mu-note-open-min)-var(--mu-foot-h))/var(--mu-n,3)-var(--mu-note-gap))),108px)"
     );
-    expect(row).toMatch(/gap:\s*var\(--mu-gap\)/);
-    expect(bodyOf(rung, ".mu[data-mu-ready] .mu-card__body")).toMatch(
-      /width:\s*var\(--mu-open-w\)/
+    expect(notes).toContain(
+      "--mu-note-open:clamp(var(--mu-note-open-min),calc(100cqh-var(--mu-n,3)*(var(--mu-note-row)+var(--mu-note-gap))-var(--mu-foot-h)),240px)"
     );
-    // And the station hands the row its count.
+    // The way out's row is the term the arithmetic subtracts.
+    expect(bodyOf(sheet, ".mu__foot")).toMatch(/height:\s*var\(--mu-foot-h\)/);
+    // And the station hands the list its count.
     expect(read(STATION)).toContain('"--mu-n": posts.length');
   });
-
-  it("the strip YIELDS so the open card keeps its measure (ADR-121 U1)", () => {
-    // ⚠ At seven posts, or on the 961–1100 rung, a fixed strip would squeeze
-    // the open card under its measure and the lede past the lines its body
-    // reserves. So the strip is `--mu-closed` wherever the row affords it and
-    // narrows — never below the body's inset pair — so the open card holds
-    // `--mu-open-min`: the measure whole plus its inset. The strip depends on
-    // the row and the count, never on which card is open, so it is constant
-    // through the grow; the glyph yields only with it.
+  it("the byline and the way in sit on the COVER's floor (the owner's ask)", () => {
+    // "the call to action and the author should be aligned to the bottom of that
+    // visual". The cover spans both rows from 10px down; the detail's height is
+    // solved so its content box ends where the cover does, and the sign is
+    // pushed to that line. Both halves of the arithmetic are pinned.
     const sheet = read(SHEET);
-    const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
-    const row = flat(bodyOf(rung, ".mu[data-mu-ready] .mu__row"));
-    expect(row).toContain(
-      "--mu-strip:clamp(2*var(--mu-body-pad-x),(100cqw-var(--mu-open-min))/max(1,var(--mu-n,1)-1)-var(--mu-gap),var(--mu-closed))"
+    const cover = flat(bodyOf(sheet, ".mu-note__cover"));
+    expect(cover).toContain("grid-row:1/3");
+    expect(cover).toContain("aspect-ratio:1");
+    expect(cover).toContain("margin-top:10px");
+    expect(cover).not.toMatch(/border:|background:/);
+    const detail = flat(bodyOf(sheet, ".mu-note__detail"));
+    expect(detail).toContain(
+      "height:calc(var(--mu-note-open)+10px+var(--mu-note-inset)-var(--mu-note-row))"
     );
-    const mu = flat(bodyOf(sheet, ".mu"));
-    expect(mu).toContain("--mu-measure:calc(var(--mu-copy)*34)");
-    expect(mu).toContain("--mu-open-min:calc(var(--mu-measure)+2*var(--mu-body-pad-x))");
-    expect(flat(bodyOf(rung, ".mu[data-mu-ready] .mu-cover__beat"))).toContain(
-      "width:min(var(--mu-glyph),var(--mu-strip)-var(--mu-body-pad-x))"
-    );
-    // The title and the lede share one text column: the measure.
-    const column = blocks(rung).find(
-      ([, s]) => flat(s) === ".mu[data-mu-ready].mu-card__title,.mu[data-mu-ready].mu-card__lede"
-    );
-    expect(column?.[2] ?? "").toMatch(/max-width:\s*var\(--mu-measure\)/);
+    expect(detail).toContain("padding:00var(--mu-note-inset)");
+    expect(bodyOf(sheet, ".mu-note__sign")).toMatch(/margin-top:\s*auto/);
   });
-
-  it("the body is a DERIVED box and the slack is the cover's (ADR-121 U1)", () => {
-    // ⚠ The open card pooled 124px of bare plate under a two-line lede at
-    // 1920×1247 — the station's recorded mis-seat. On the row the body is
-    // exactly its rule, its padding, one kicker line, one title line and the
-    // reserved lede lines, each at the line-height its OWN rule declares, and
-    // the cover takes the rest. The calc and the rules read one set of tokens,
-    // so they cannot drift — which is what this pins, both halves.
+  it("the title is v4's scale, set whole on one line", () => {
+    // "what I like about v4 still is the big title size". The cap is what the
+    // row leaves above the meta line, so a short row sets a smaller title
+    // rather than a clipped one — and the ellipsis is a belt the capture fails.
     const sheet = read(SHEET);
-    const mu = flat(bodyOf(sheet, ".mu"));
-    expect(mu).toContain(
-      "--mu-body-h:calc(var(--mu-body-rule)+var(--mu-body-pad-t)+var(--mu-chrome)*var(--mu-kicker-lh)+var(--mu-body-gap)+var(--mu-card-title)*var(--mu-title-lh)+var(--mu-body-gap)+var(--mu-copy)*var(--mu-lede-lh)*var(--mu-lede-lines)+var(--mu-body-pad-b))"
+    expect(flat(bodyOf(sheet, ".mu"))).toContain(
+      "--mu-note-title:min(clamp(22px,2.5vw,48px),calc((var(--mu-note-row)-26px)*0.9))"
     );
-    const body = flat(bodyOf(sheet, ".mu-card__body"));
-    expect(body).toContain("padding:var(--mu-body-pad-t)var(--mu-body-pad-x)var(--mu-body-pad-b)");
-    expect(body).toContain("row-gap:var(--mu-body-gap)");
-    expect(body).toContain("border-top:var(--mu-body-rule)solidvar(--mu-rule)");
-    const kicker = flat(bodyOf(sheet, ".mu-card__kicker"));
-    expect(kicker).toContain("font-size:var(--mu-chrome)");
-    expect(kicker).toContain("line-height:var(--mu-kicker-lh)");
-    const title = flat(bodyOf(sheet, ".mu-card__title"));
-    expect(title).toContain("font-size:var(--mu-card-title)");
-    expect(title).toContain("line-height:var(--mu-title-lh)");
-    const lede = flat(bodyOf(sheet, ".mu-card__lede"));
-    expect(lede).toContain("font-size:var(--mu-copy)");
-    expect(lede).toContain("line-height:var(--mu-lede-lh)");
-
-    // On the rung: the cover row takes the rest, the body row is the derived
-    // box, the cover carries NO height of its own, and the clamp is a belt at
-    // exactly the capacity the body reserves.
-    const rung = rules(sheet).slice(rules(sheet).indexOf(`@media ${RUNG} {`));
-    expect(flat(bodyOf(rung, ".mu[data-mu-ready] .mu-card__front"))).toContain(
-      "grid-template-rows:minmax(0,1fr)var(--mu-body-h)"
-    );
-    const cover = bodyOf(rung, ".mu[data-mu-ready] .mu-cover");
-    expect(cover).toMatch(/aspect-ratio:\s*auto/);
-    expect(cover).not.toMatch(/(^|[\s;])height\s*:/);
-    expect(flat(bodyOf(rung, ".mu[data-mu-ready] .mu-card__lede"))).toContain(
-      "-webkit-line-clamp:var(--mu-lede-lines)"
-    );
-    expect(sheet).not.toMatch(/--mu-cover-h/);
+    const title = flat(bodyOf(sheet, ".mu-note__title"));
+    expect(title).toContain("font-size:var(--mu-note-title)");
+    expect(title).toContain("white-space:nowrap");
+    expect(title).toContain("font-family:var(--font-pp-neue-montreal)");
   });
-
-  it("the lines the body reserves hold the registry's whole summary budget at the measure", () => {
-    // Three lede lines is the BUDGET, not a guess: `musings-registry` caps a
-    // summary at N characters; at PP Neue Montreal's mean advance that is
-    // N × 0.45em, and three lines of the 34em measure hold 102em. The advance
-    // is MEASURED (the landing's capability summary: 521px for 73 characters
-    // at 16px, 0.446em), and the capture reads every live lede unclamped, so
-    // this is the arithmetic and the capture is the proof. Raise the budget
-    // and this fails, pointing at `--mu-lede-lines`.
+  it("three lines of the excerpt's measure hold the registry's whole budget, and the gap above the sign is a MINIMUM", () => {
+    // ⚠ At a 28px gap a three-line excerpt (the live "Encode the context")
+    // pushed the sign 7.9px under the cover's floor at 1920×1247; the sign's
+    // `margin-top: auto` is what seats it, the gap only bounds how close.
     const MEAN_ADVANCE_EM = 0.45;
     const registry = read("tests/lib/musings-registry.test.ts");
     const budget = Number(/summary\.length\)\.toBeLessThanOrEqual\((\d+)\)/.exec(registry)?.[1]);
     expect(budget).toBeGreaterThan(0);
-    const mu = flat(bodyOf(read(SHEET), ".mu"));
-    const lines = Number(/--mu-lede-lines:(\d+);/.exec(mu)?.[1]);
-    const measureEm = Number(/--mu-measure:calc\(var\(--mu-copy\)\*(\d+)\)/.exec(mu)?.[1]);
-    expect(lines).toBe(3);
-    expect(lines * measureEm).toBeGreaterThanOrEqual(budget * MEAN_ADVANCE_EM);
+    const measureEm = Number(
+      /max-width:\s*(\d+)em/.exec(bodyOf(read(SHEET), ".mu-note__lede"))?.[1]
+    );
+    expect(measureEm).toBe(34);
+    expect(3 * measureEm).toBeGreaterThanOrEqual(budget * MEAN_ADVANCE_EM);
+    expect(bodyOf(read(SHEET), ".mu-note__detail")).toMatch(/gap:\s*12px/);
   });
-
   it("the band's end is DERIVED from the frame's own geometry, and zero where it need not be", () => {
     // ⚠ ADR-121 shipped a row whose last card ran 25.4px UNDER the right
     // rail's SECTOR readout at 1280×720 (13.7px at 1440×800). The readouts'
@@ -578,7 +605,7 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     // Zero wherever the band already ends short of the readouts (the owner's
     // 1920 included): a `max(0px, …)`, never a fixed inset.
     expect(mu).toContain(
-      "--mu-band-end:max(0px,var(--mu-tele-reach)+var(--mu-body-pad-x)-var(--band-margin))"
+      "--mu-band-end:max(0px,var(--mu-tele-reach)+var(--mu-note-inset)-var(--band-margin))"
     );
     // Head and row take the same edge, only where the readouts are drawn, and
     // only on the row's rung.
@@ -590,24 +617,26 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(yield_).toBeDefined();
     const sel = flat(yield_?.[1] ?? "");
     expect(sel).toContain("html[data-rail-instruments].mu[data-mu-ready].mu__head");
-    expect(sel).toContain("html[data-rail-instruments].mu[data-mu-ready].mu__row");
+    expect(sel).toContain("html[data-rail-instruments].mu[data-mu-ready].mu__notes");
     expect(flat(yield_?.[2] ?? "")).toContain(
       "margin-inline-end:calc(var(--rail-inset)+var(--mu-band-end))"
     );
   });
 
-  it("the writer moves ONE attribute on events and holds NO React state", () => {
-    // ADR-002: one writer, CSS custom properties. The row has no detent, so
-    // the last `setState` ADR-119 kept (the front index) is gone with it.
+  it("the writer moves ONE attribute on events, leaves it where the reader left it, and holds NO React state", () => {
+    // ADR-002: one writer, CSS custom properties. ⚠ No `pointerleave` /
+    // `focusout` restore (ADR-122): a list whose open card is taller than the
+    // rest would move every note below it under a hand travelling to them.
     const hook = read(HOOK);
-    for (const ev of ["pointerover", "pointerleave", "focusin", "focusout"])
-      expect(hook).toContain(`addEventListener("${ev}"`);
+    for (const ev of ["pointerover", "focusin"]) expect(hook).toContain(`addEventListener("${ev}"`);
+    for (const ev of ["pointerleave", "focusout"])
+      expect(hook).not.toContain(`addEventListener("${ev}"`);
     expect(hook).toContain('setAttribute("data-mu-open", "")');
     expect(hook).toContain('removeAttribute("data-mu-open")');
+    expect(hook).toContain(":scope > .mu-note");
     expect((hook.match(/setState\(/g) ?? []).length).toBeLessThanOrEqual(1);
     expect(hook).not.toMatch(/useState/);
   });
-
   it("the writer never asks the kernel for a frame at t = 0 — the head goes through `headFrame`", () => {
     // ⚠ The defect ADR-119 U2 fixed: `scrambleFrame(…, 0)` is NOT blank.
     const hook = read(HOOK);
@@ -616,24 +645,45 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(hook).not.toMatch(/advanceScrambles/);
   });
 
-  it("the aperture carries the house's ONE pair of numbers, on all three hosts", () => {
-    /* ⚠ 720ms in / 420ms out on `cubic-bezier(0.65, 0, 0.35, 1)` is ADR-097
-       U12's settled pair. One host changing alone is a house grammar running a
-       different clock on one surface. */
+  it("the notes arrive as a LINE that unfolds down — and the aperture stays the house's on its two hosts", () => {
+    /* ⚠ The owner: "I don't think we should use the scan line effect … the
+       cards should first be a line and then unfold downwards." The centre-out
+       aperture (720ms / 420ms on `cubic-bezier(0.65, 0, 0.35, 1)`, ADR-097
+       U12's settled pair) LEAVES this station and stays the proof card's and
+       the Trinny route's — one of those changing alone is still a house grammar
+       on a different clock. */
     const IN = "720ms cubic-bezier(0.65, 0, 0.35, 1)";
     const OUT = "420ms cubic-bezier(0.65, 0, 0.35, 1)";
-    const hosts = [
-      SHEET,
+    for (const host of [
       "components/landing/home-v2/services/proof-stack/proof-stack.css",
       "app/(marketing)/arcs/trinny-london/proposal/trinny-london.css",
-    ];
-    for (const host of hosts) {
+    ]) {
       const css = read(host);
       expect(css, `${host} carries the aperture's in`).toContain(IN);
       expect(css, `${host} carries the aperture's out`).toContain(OUT);
     }
+    const sheet = rules(read(SHEET));
+    expect(sheet).not.toMatch(/mu-aperture/);
+    // The unfold: across first (the first 40 %), then down; five points a frame.
+    const unfold = /@keyframes mu-unfold \{([\s\S]*?)\n\}/.exec(sheet)?.[1] ?? "";
+    expect(flat(unfold)).toContain("0%{clip-path:polygon(00,00,01px,01px,01px);}");
+    expect(flat(unfold)).toContain(
+      "40%{clip-path:polygon(00,calc(100%-var(--mu-ch))0,100%1px,100%1px,01px);}"
+    );
+    // ⚠ Geometry only — no opacity curve in the arrival, no filter (ADR-097 U12).
+    expect(unfold).not.toMatch(/opacity|filter/);
+    const mu = flat(bodyOf(read(SHEET), ".mu"));
+    expect(mu).toContain("--mu-unfold-in:820mscubic-bezier(0.65,0,0.35,1)");
+    expect(mu).toContain("--mu-unfold-out:420mscubic-bezier(0.65,0,0.35,1)");
+    // One after another: the note carries its slot, the delay reads it, and the
+    // fill is `backwards` (a waiting note is a zero-width line; the last frame
+    // is the cascade's own silhouette).
+    expect(read(NOTE)).toContain('"--mu-slot": index');
+    const rung = sheet.slice(sheet.lastIndexOf(`@media ${RUNG} {`));
+    expect(flat(bodyOf(rung, '.mu[data-mu-ready][data-mu-arrive="in"] .mu-note'))).toContain(
+      "animation:mu-unfoldvar(--mu-unfold-in)calc(var(--mu-slot,0)*var(--mu-unfold-step))backwards"
+    );
   });
-
   it("gates every aperture rule on the stamp AND the rung", () => {
     const sheet = read(SHEET);
     for (const m of sheet.matchAll(/\[data-mu-arrive="(await|out|in)"\]/g)) {
@@ -644,18 +694,23 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(read(HOOK)).toContain('removeAttribute("data-mu-arrive")');
   });
 
-  it("the sheet gates every row rule on BOTH the rung and the stamp", () => {
+  it("the sheet gates every pinned-list rule on BOTH the rung and the stamp", () => {
     // `an absent stamp means shown` is the house's polarity law: the rest
-    // state is the rail, which is what a phone, a reduced-motion reader and a
-    // page whose script never ran all get. A grow on the rail would be a rail
-    // whose first card is three times the width of the rest.
+    // state is the list with its newest note open, which is what a phone, a
+    // reduced-motion reader and a page whose script never ran all get. The
+    // glass, the rows solved from the frame and the arrival need the pin.
     const sheet = rules(read(SHEET));
     const rung = sheet.slice(sheet.indexOf(`@media ${RUNG} {`));
     for (const [, sel, body] of blocks(sheet)) {
       const s = sel.trim();
-      if (/flex-grow|--mu-open-w|backdrop-filter|container-type/.test(body)) {
-        expect(s, `${s} is a row rule and must carry the stamp`).toContain("[data-mu-ready]");
-        expect(rung, `${s} is a row rule and must sit inside the rung`).toContain(body);
+      // (The orbit's dial reads `100cqh` too — against the COVER's container,
+      // which exists on every rung — so the pinned-list rule is named by its
+      // own token, not by the unit.)
+      if (/backdrop-filter|--mu-note-open-min|animation:\s*mu-(un)?fold/.test(body)) {
+        expect(s, `${s} is a pinned-list rule and must carry the stamp`).toContain(
+          "[data-mu-ready]"
+        );
+        expect(rung, `${s} is a pinned-list rule and must sit inside the rung`).toContain(body);
       }
     }
   });
@@ -668,9 +723,7 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     const sheet = rules(read(SHEET));
     for (const [, sel, body] of blocks(sheet)) {
       if (/backdrop-filter/.test(body)) {
-        expect(sel.trim()).toBe(
-          '#musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-card__front'
-        );
+        expect(sel.trim()).toBe('#musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-note');
         expect(body).not.toMatch(/brightness/);
       }
     }
@@ -679,29 +732,32 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(theme).toMatch(/html\[data-theme="light"\] \.mu \{[^}]*--mu-bloom-a:/);
     const light = bodyOf(
       theme,
-      'html[data-theme="light"] #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-card__front'
+      'html[data-theme="light"] #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-note'
     );
     expect(light).toMatch(/backdrop-filter:\s*none/);
   });
 
-  it("the state is the ring, never a filter on the strips", () => {
-    // The reference dims its inactive cards with `brightness(.82)`; a
-    // large-area brightness change on every hover is the class of motion
-    // ADR-097 U12 retired. The open card is told by its lip and its kicker.
+  it("the state is the ring, never a filter on the notes", () => {
+    // A large-area brightness change on every hover is the class of motion
+    // ADR-097 U12 retired. The open note is told by its lip, its ink and its chip.
     const sheet = rules(read(SHEET));
     for (const [, sel, body] of blocks(sheet)) {
-      if (/\.mu-card/.test(sel)) expect(body, sel).not.toMatch(/(^|[\s;])filter\s*:/);
+      if (/\.mu-note/.test(sel)) expect(body, sel).not.toMatch(/(^|[\s;])filter\s*:/);
     }
-    expect(bodyOf(sheet, ".mu-card[data-mu-open] .mu-card__front::before")).toMatch(
+    expect(bodyOf(sheet, ".mu-note[data-mu-open]::before")).toMatch(
       /background-color:\s*var\(--gold-line\)/
     );
-    expect(bodyOf(sheet, ".mu-card__front::before")).toMatch(/background-color:\s*var\(--mu-lip\)/);
+    expect(bodyOf(sheet, ".mu-note::before")).toMatch(/background-color:\s*var\(--mu-lip\)/);
   });
 
-  it("the station renders ONE flex row with the cards as its direct children", () => {
+  it("the station renders ONE list with the notes as its direct children", () => {
     const station = read(STATION);
-    expect(station).toContain('className="mu__row"');
-    expect(station).toMatch(/<MusingCard key=\{post\.slug\} post=\{post\} index=\{i\} \/>/);
+    expect(station).toContain('className="mu__list"');
+    expect(station).toMatch(
+      /<MusingNote key=\{post\.slug\} post=\{post\} posts=\{posts\} index=\{i\} \/>/
+    );
+    // `MusingCardData` is the record's type and stays; the COMPONENT went.
+    expect(station).not.toMatch(/mu__row|<MusingCard\b|from "\.\/MusingCard"/);
     expect(station).not.toMatch(/setCard|cardsRef|front/);
   });
 
@@ -732,8 +788,11 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(stage).toMatch(/padding-block-start:\s*var\(--band-top\)/);
     // ADR-119's composition law survives: no `1fr` track to pool slack in.
     const base = bodyOf(sheet, ".mu__stage");
-    expect(base).toMatch(/grid-template-rows:\s*auto auto auto/);
+    expect(base).toMatch(/grid-template-rows:\s*auto auto;/);
     expect(base).not.toMatch(/1fr/);
+    // Pinned, the notes take everything from the head to the rails' last tick.
+    expect(flat(stage)).toContain("grid-template-rows:autominmax(0,1fr)");
+    expect(stage).toMatch(/padding-block-end:\s*var\(--hud-rail-y-end\)/);
     // Services seats both blocks on one `top`; the brief carries no offset.
     expect(bodyOf(sheet, ".mu__head-brief")).not.toMatch(/padding-top/);
     // ⚠ THE OTHER HALF OF THE LINK. Services hangs from `--band-top` plus a

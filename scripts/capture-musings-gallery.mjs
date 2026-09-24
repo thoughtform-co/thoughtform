@@ -107,7 +107,7 @@ for (const vp of VPS) {
               const mu = document.querySelector(".mu");
               if (mu?.dataset.muArrive !== "in") return false;
               const dev =
-                document.querySelector("[data-mg-root]") ?? document.querySelector(".mu__row");
+                document.querySelector("[data-mg-root]") ?? document.querySelector(".mu__notes");
               return !!dev && dev.getAnimations({ subtree: true }).length === 0;
             },
             null,
@@ -122,7 +122,7 @@ for (const vp of VPS) {
           ({ facesSrc }) => {
             const faces = new RegExp(facesSrc, "i");
             const dev =
-              document.querySelector("[data-mg-root]") ?? document.querySelector(".mu__row");
+              document.querySelector("[data-mg-root]") ?? document.querySelector(".mu__notes");
             const vh = window.innerHeight;
             const r = (b) => ({
               x: Math.round(b.x * 10) / 10,

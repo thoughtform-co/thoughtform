@@ -17,26 +17,31 @@ import {
 import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 
 /**
- * The musings station's ONE scroll writer (ADR-119 → ADR-121).
+ * The musings station's ONE scroll writer (ADR-119 → ADR-121 → ADR-122).
  *
  * It owns everything that moves in this beat and it publishes ATTRIBUTES and
  * custom properties only: `--mu-head` (the head's level), `data-mu-ready` /
  * `data-mu-arrive` on `.mu`, `data-mu-mode` and `data-station-edge` on the
  * STATION (the second tells the HUD's readout that a welded stage is active
- * at its PIN, ADR-121 U3), `data-mu-open` on ONE card, `data-live` on the
+ * at its PIN, ADR-121 U3), `data-mu-open` on ONE note, `data-live` on the
  * head's cursor hosts, and **`data-ft-reveal` on `<html>`**, which is what
  * arms the footer's held bed (ADR-105 U3).
  *
- * ⚠ **IT RENDERS NOTHING, EVER.** ADR-119 kept one piece of React state (the
- * detented front index); the row has no detent, so there is none left. The
- * open card is one attribute moved on an EVENT — `pointerover` / `focusin`
- * per card, `pointerleave` / `focusout` on the row — never a `setState`
- * (ADR-002: one writer, CSS custom properties). The sheet does the rest:
- * `flex-grow` transitions on `[data-mu-open]`.
+ * ⚠ **IT RENDERS NOTHING, EVER.** ADR-119 kept one piece of React state; the
+ * list has none. The open note is one attribute moved on an EVENT —
+ * `pointerover` / `focusin` on the list — never a `setState` (ADR-002: one
+ * writer, CSS custom properties). The sheet does the rest: the note's cover
+ * column and its excerpt's row transition on `[data-mu-open]`.
+ *
+ * ⚠ **THE OPEN NOTE STAYS WHERE THE READER LEFT IT (ADR-122).** ADR-121's row
+ * snapped back to the newest on `pointerleave`; a list whose open card is
+ * taller than the rest cannot — a card closing as the pointer leaves the list
+ * moves every note below it, and the way out with them, under the hand that
+ * is travelling to them. It goes home only when the writer parks.
  *
  * ⚠ **THE HEAD IS THE ONE THING HERE WITH A CLOCK OF ITS OWN** (ADR-119 U2):
  * scroll decides where it is going, a bounded burst walks it there, and it
- * snaps blank the moment the stage is not parked. The row's arrival is a
+ * snaps blank the moment the stage is not parked. The list's arrival is a
  * second bounded burst on a hysteresis (`lib/musings/arrive.ts`), held until
  * the head has resolved — the owner's order.
  *
@@ -45,25 +50,26 @@ import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
  */
 
 /**
- * The rung the row opens on hover on.
+ * The rung the list opens on hover on (the name is ADR-121's row; the rung is
+ * unchanged).
  *
  * ⚠ **BYTE-EQUAL TO `SERVICES_SCROLL_OWNED_MEDIA`, AND MIRRORED BY HAND IN
  * `musings.css`.** It is not an alias of it: that constant answers "does
  * `#services` own the wheel", and coupling this station's layout to that
- * question would mean a change there silently re-rung this row.
+ * question would mean a change there silently re-rung this list.
  * `tests/lib/musings-row.test.ts` asserts the sheet carries the same query.
- * Below it — every phone, and a reduced-motion reader at any width — the row
- * rests as a flat horizontal RAIL, which is the finished page.
+ * Below it — every phone, and a reduced-motion reader at any width — the list
+ * rests with its newest note open, which is the finished page.
  */
 export const MUSINGS_ROW_MEDIA = "(min-width: 961px) and (prefers-reduced-motion: no-preference)";
 
 /**
  * The rung the station becomes a TRANSPARENT STAGE on (ADR-119 U1).
  *
- * ⚠ **THREE RUNGS, NOT TWO.** The row opens from 961px; the era stage is only a
+ * ⚠ **THREE RUNGS, NOT TWO.** The list opens from 961px; the era stage is only a
  * hologram from **1101px**, and this station may only go transparent where
  * there is a live corridor behind it. 961–1100 is a real rung with a hover
- * row and an OPAQUE station.
+ * list and an OPAQUE station.
  *
  * ⚠ **THE ERA'S MODE IS READ OFF THE DOM, NEVER COPIED AS A FLAG** —
  * `#voidwalker[data-vw-mode="hologram"]` is written under the era's own full
@@ -81,7 +87,7 @@ interface HeadTarget extends HeadRun {
 export function useMusingsScroll(
   runwayRef: React.RefObject<HTMLElement | null>,
   stationRef: React.RefObject<HTMLElement | null>,
-  rowRef: React.RefObject<HTMLElement | null>,
+  listRef: React.RefObject<HTMLElement | null>,
   count: number,
   bandRef: React.RefObject<HTMLElement | null>
 ): void {
@@ -125,50 +131,39 @@ export function useMusingsScroll(
        from `p` each frame, which is what makes it a burst and not a channel. */
     let arrive: RowArrive | null = null;
 
-    /* ── The open card (ADR-121) ────────────────────────────────────────
-       ONE attribute, on ONE card, moved on events. `data-mu-open` is
-       rendered on the newest post by React (the owner's rest state: the
+    /* ── The open note (ADR-121 → ADR-122) ──────────────────────────────
+       ONE attribute, on ONE note, moved on events. `data-mu-open` is
+       rendered on the newest note by React (the owner's rest state: the
        newest is open, no timer) and this writer moves it — it is never
        re-derived, never timed, never React state. ⚠ The current holder is
-       QUERIED, not cached: the lab re-keys the whole row when its count
+       QUERIED, not cached: the lab re-keys the whole list when its count
        changes, and a cached element would be a detached one. */
-    const cards = () => {
-      const row = rowRef.current;
-      return row ? [...row.querySelectorAll<HTMLElement>(":scope > .mu-card")] : [];
+    const notes = () => {
+      const list = listRef.current;
+      return list ? [...list.querySelectorAll<HTMLElement>(":scope > .mu-note")] : [];
     };
-    const openCard = (el: HTMLElement | null) => {
-      const row = rowRef.current;
-      if (!row || !el || el.hasAttribute("data-mu-open")) return;
-      for (const c of row.querySelectorAll<HTMLElement>(".mu-card[data-mu-open]"))
+    const openNote = (el: HTMLElement | null) => {
+      const list = listRef.current;
+      if (!list || !el || el.hasAttribute("data-mu-open")) return;
+      for (const c of list.querySelectorAll<HTMLElement>(".mu-note[data-mu-open]"))
         c.removeAttribute("data-mu-open");
       el.setAttribute("data-mu-open", "");
     };
-    /** Back to the newest post — the rest state, and what every rung rests on. */
-    const openRest = () => openCard(cards()[0] ?? null);
-    const cardOf = (t: EventTarget | null) =>
-      t instanceof Element ? t.closest<HTMLElement>(".mu-card") : null;
-    /* ⚠ GATED ON THE RUNG, so the rail — a phone, a reduced-motion reader — is
-       byte-identical to what ADR-119 shipped: card 0 lit, nothing moving. */
+    /** Back to the newest note — the rest state, and what every rung rests on. */
+    const openRest = () => openNote(notes()[0] ?? null);
+    const noteOf = (t: EventTarget | null) =>
+      t instanceof Element ? t.closest<HTMLElement>(".mu-note") : null;
+    /* ⚠ GATED ON THE RUNG, so the rested list — a phone, a reduced-motion
+       reader — never moves: the newest note open, the rest links. */
     const onPointerOver = (e: PointerEvent) => {
       if (!mq.matches) return;
-      const card = cardOf(e.target);
-      if (card && rowRef.current?.contains(card)) openCard(card);
-    };
-    const onPointerLeave = () => {
-      if (mq.matches) openRest();
+      const note = noteOf(e.target);
+      if (note && listRef.current?.contains(note)) openNote(note);
     };
     const onFocusIn = (e: FocusEvent) => {
       if (!mq.matches) return;
-      const card = cardOf(e.target);
-      if (card && rowRef.current?.contains(card)) openCard(card);
-    };
-    /* Focus leaving the ROW altogether goes back to rest; a Tab from one card
-       to the next is a `focusin` on the next and stays inside. */
-    const onFocusOut = (e: FocusEvent) => {
-      if (!mq.matches) return;
-      const row = rowRef.current;
-      const to = e.relatedTarget;
-      if (row && !(to instanceof Node && row.contains(to))) openRest();
+      const note = noteOf(e.target);
+      if (note && listRef.current?.contains(note)) openNote(note);
     };
 
     /* ── The head (ADR-119 U2) ──────────────────────────────────────────
@@ -240,7 +235,7 @@ export function useMusingsScroll(
      * The bounded burst. It walks `headLevel` toward `headWant` at 1/span per
      * second going up and `HEAD_OUT_SPEEDUP`/span going down, and it stops the
      * frame it arrives. Reaching 1 asks the scroll writer for one more frame,
-     * because the row's arrival waits on the head (the owner's order).
+     * because the list's arrival waits on the head (the owner's order).
      */
     const burst = (now: number) => {
       burstRaf = null;
@@ -288,8 +283,8 @@ export function useMusingsScroll(
      * Put everything back the way the sheet rests it.
      *
      * ⚠ **AN ABSENT STAMP MEANS SHOWN** — the house's polarity law. The phone, a
-     * reduced-motion reader and a page whose script never ran all get the row
-     * as a plain rail of cards, which is the finished page and not a fallback.
+     * reduced-motion reader and a page whose script never ran all get the list
+     * with its newest note open, which is the finished page and not a fallback.
      */
     const park = () => {
       const station = stationRef.current;
@@ -306,7 +301,7 @@ export function useMusingsScroll(
       section()?.removeAttribute("data-mu-mode");
       section()?.removeAttribute("data-station-edge");
       restoreHead();
-      /* The open card goes home: the rail rests with the newest post lit. */
+      /* The open note goes home: the list rests with the newest open. */
       openRest();
       /* ⚠ THE FOOTER'S BED IS DISARMED TOO: left stamped on a rung that never
          writes again, `#contact` would be sticky for the rest of the document. */
@@ -376,7 +371,7 @@ export function useMusingsScroll(
         if (headLevel !== want) startBurst();
       }
 
-      /* ── The row's arrival, AFTER the head (the owner's order). ── */
+      /* ── The list's arrival, AFTER the head (the owner's order). ── */
       let nextArrive = rowArrive(arrive, p);
       if (nextArrive === "in" && arrive !== "in" && (headLevel ?? 0) < 1)
         nextArrive = arrive ?? "await";
@@ -421,11 +416,9 @@ export function useMusingsScroll(
       onScroll();
     };
 
-    const row = rowRef.current;
-    row?.addEventListener("pointerover", onPointerOver);
-    row?.addEventListener("pointerleave", onPointerLeave);
-    row?.addEventListener("focusin", onFocusIn);
-    row?.addEventListener("focusout", onFocusOut);
+    const list = listRef.current;
+    list?.addEventListener("pointerover", onPointerOver);
+    list?.addEventListener("focusin", onFocusIn);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     mq.addEventListener("change", onMq);
@@ -448,10 +441,8 @@ export function useMusingsScroll(
 
     return () => {
       vwObserver?.disconnect();
-      row?.removeEventListener("pointerover", onPointerOver);
-      row?.removeEventListener("pointerleave", onPointerLeave);
-      row?.removeEventListener("focusin", onFocusIn);
-      row?.removeEventListener("focusout", onFocusOut);
+      list?.removeEventListener("pointerover", onPointerOver);
+      list?.removeEventListener("focusin", onFocusIn);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       mq.removeEventListener("change", onMq);
@@ -473,5 +464,5 @@ export function useMusingsScroll(
          left mid-scramble there stays mid-scramble on the page. */
       restoreHead();
     };
-  }, [runwayRef, stationRef, rowRef, bandRef, count]);
+  }, [runwayRef, stationRef, listRef, bandRef, count]);
 }

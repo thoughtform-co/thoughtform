@@ -25,6 +25,7 @@ export const LAB_MUSINGS: readonly MusingCardData[] = [
       "Which lane a piece of work runs in is a question about who owns the outcome, not about the model. The seat comes first and the lane follows it.",
     tags: ["navigate", "practice"],
     readingMinutes: 4,
+    author: "Vince Buyssens",
   },
   {
     slug: "what-a-skill-actually-encodes",
@@ -34,6 +35,7 @@ export const LAB_MUSINGS: readonly MusingCardData[] = [
       "A skill is not a prompt with a name. It is the judgment a team already exercises, written down once so the model can be held to it.",
     tags: ["encode", "practice"],
     readingMinutes: 6,
+    author: "Vince Buyssens",
   },
   {
     slug: "software-for-the-few",
@@ -43,6 +45,7 @@ export const LAB_MUSINGS: readonly MusingCardData[] = [
       "The tools worth building are the ones only your team would use. A briefing agent for one studio does more than a platform for everyone.",
     tags: ["build", "practice"],
     readingMinutes: 5,
+    author: "Vince Buyssens",
   },
   {
     slug: "reading-the-spend-as-work",
@@ -52,6 +55,7 @@ export const LAB_MUSINGS: readonly MusingCardData[] = [
       "A token bill is a record of what the organisation asked for. Read it as work shape and it tells you which teams are thinking with the layer.",
     tags: ["navigate", "practice"],
     readingMinutes: 3,
+    author: "Vince Buyssens",
   },
   {
     slug: "the-context-is-the-product",
@@ -61,6 +65,7 @@ export const LAB_MUSINGS: readonly MusingCardData[] = [
       "Most of the value in a configured workflow sits in the material it reaches for. Encoding that material is the work; the prompt is the receipt.",
     tags: ["encode", "practice"],
     readingMinutes: 7,
+    author: "Vince Buyssens",
   },
   {
     slug: "owning-the-loop",
@@ -70,6 +75,7 @@ export const LAB_MUSINGS: readonly MusingCardData[] = [
       "A team that owns its loops can swap the model underneath in an afternoon. A team that owns a subscription waits for the vendor.",
     tags: ["build", "practice"],
     readingMinutes: 4,
+    author: "Vince Buyssens",
   },
   {
     slug: "the-first-beat-of-the-arc",
@@ -79,5 +85,6 @@ export const LAB_MUSINGS: readonly MusingCardData[] = [
       "Automation is the last beat of the Arc, not the first. Teams that skip to it inherit a workflow nobody in the room understood.",
     tags: ["navigate", "practice"],
     readingMinutes: 5,
+    author: "Vince Buyssens",
   },
 ];

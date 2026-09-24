@@ -2,7 +2,7 @@
 
 import { useEffect, type CSSProperties, type RefObject } from "react";
 
-import { BEAT_PATHS, ENCODE_CELLS } from "@/components/landing/home-v2/musings/MusingCover";
+import { BEAT_PATHS, ENCODE_CELLS } from "@/components/landing/home-v2/musings/MusingOrbit";
 import { rackDate } from "@/lib/musings/cards";
 import { beatOf, coverSpec, yearFraction, type MusingBeat } from "@/lib/musings/cover";
 import type { MusingOutline } from "@/lib/musings/outline";

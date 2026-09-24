@@ -1069,9 +1069,10 @@ test.describe("mobile section seams", () => {
     ".pf-slot",
     ".svc-ring-runway",
     ".svc-ring-band",
-    /* The row's own rail (ADR-121): a sideways scroller inside a snapping
-       station. `touch-action: pan-y` keeps its gesture off the document. */
-    ".mu__row",
+    /* The list (ADR-122): a column of notes inside a snapping station. It
+       scrolls within itself only on the pinned desktop rung; on a phone it
+       flows, and it may never become a snap area of its own. */
+    ".mu__list",
     ".voidwalker",
     ".vwd__band",
   ] as const;

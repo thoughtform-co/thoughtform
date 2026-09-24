@@ -1,26 +1,30 @@
 /* ═══════════════════════════════════════════════════════════════════
-   THE MUSINGS ROW — `#musings`, the writing as a row that opens on hover
-   (ADR-121)
+   THE MUSINGS LIST — `#musings`, the writing as a list of notes that opens
+   on hover (ADR-122; ADR-121's row before it)
 
-   Owner, 2026-09-23, on ADR-119's 3D row: "what we currently have looks
-   ugly … remove the jukebox carousel thing because it's not working. I just
-   want to do something simpler." The reference is Lighthouse HQ's customer
-   row — a flex row where the card under the pointer takes the free width and
-   the rest collapse to narrow strips, ONE transitioned property — re-cut in
-   the house material: the proof card's glass, the top-right notch, the flat
-   gold lip, the scanline under the copy. The head decodes in place, like the
-   services masthead, and never travels; the cards arrive on the aperture
-   after it. At rest the NEWEST post is open, and there is no timer.
+   Owner, 2026-09-24, after six rounds of `/test/musings-gallery`: "Let's go
+   for V17 and maybe we can show more, maybe 5 in total. Implement this on our
+   homepage." v17 is v4's contents page — every title whole, large, on one
+   line — cut into the house's folder cards (v13: "I'm not really a fan of
+   horizontal dividers that don't close"), each note carrying its drawn cover
+   UNFRAMED in its last column, in the register of the About drawing. The open
+   note's cover column grows from the thumbnail to the feature and its excerpt
+   unrolls; the byline and the way in sit on the cover's floor. The head
+   decodes in place, like the services masthead, and never travels; the notes
+   arrive after it, each drawn as a LINE first and then unfolded down ("the
+   cards should first be a line and then unfold downwards"). At rest the
+   NEWEST note is open, and there is no timer.
 
    ⚠ TOKENS ONLY, FROM LINE ONE. Every colour is a ramp step off
    `--dawn-rgb` / `--void-rgb` / `--void-deep-rgb` / `--gold-rgb` /
    `--gold-line`, which ADR-058 SWAPS — so one set of declarations paints
    cream on near-black and ink on parchment. `theme.css` carries two blocks
    for this sheet: 4e (the quietest text rung, ADR-119 U3) and 4g (the glass
-   — the bloom's alpha and the blur, which light drops, ADR-121). Every
-   letter-spacing is an ADR-092 role token but one (`.mu__title`, recorded)
-   and every weight is at or under `--weight-lit`. `type-material-tokens`,
-   `theme-css-sweep` and `phone-viewport-units` all carry this file.
+   and the lit mark — the bloom's alpha, the blur, which light drops, and the
+   mark's rung). Every letter-spacing is an ADR-092 role token but one
+   (`.mu__title`, recorded) and every weight is at or under `--weight-lit`.
+   `type-material-tokens`, `theme-css-sweep` and `phone-viewport-units` all
+   carry this file.
 
    ⚠ THE STATION IS THE CORRIDOR'S OPAQUE COVER OFF THE STAGE RUNG (ADR-119
    §4), AND ITS BAND IS THE COVER ON IT (ADR-119 U1). The ground and stars
@@ -29,10 +33,11 @@
    station whose only ground is its content fails both.
 
    ⚠ AN ABSENT `data-mu-ready` MEANS SHOWN. The rest state — no script, a
-   reduced-motion reader, any phone — is a horizontal RAIL of the same cards,
-   and it is the finished page rather than a fallback. Every row rule is
-   gated on the stamp AND on the rung, so the two can never disagree about
-   which layout is live.
+   reduced-motion reader, any phone — is the same list with its newest note
+   open, and it is the finished page rather than a fallback. What the stamp
+   adds is the pinned stage, the list's rows solved inside the frame, the
+   glass and the arrival; every such rule is gated on the stamp AND on the
+   rung, so the two can never disagree about which layout is live.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── The station's own box ───────────────────────────────────────────
@@ -88,21 +93,17 @@
   --mu-rule: rgba(var(--dawn-rgb), 0.16);
   --mu-rule-soft: rgba(var(--dawn-rgb), 0.1);
 
-  /* ── THE CARD IS THE PROOF CARD'S FOLDER SKIN, RE-SOLVED FOR THIS SIZE
-     (ADR-097 → ADR-121). ONE dial for the glass: the plate is a tint of the
-     page's own deep step, so it stays a tint of whatever ground it sits on
-     across the flip. ADR-119 U1 took the plate to .94 because "nothing
-     mechanical can read a translucent plate over a live canvas" — true, and
-     the gate still composites against a background colour; what changed is
-     the owner's ask ("that sort of glass-like effect"), and the card's own
-     ink is measured on the rail, where the station is opaque. */
+  /* ── THE NOTE IS THE PROOF CARD'S FOLDER SKIN, RE-SOLVED FOR THIS SIZE
+     (ADR-097 → ADR-121 → ADR-122). ONE dial for the glass: the plate is a tint
+     of the page's own deep step, so it stays a tint of whatever ground it sits
+     on across the flip. */
   --mu-glass-a: 0.62;
   --mu-plate: rgba(var(--void-deep-rgb), var(--mu-glass-a));
   --mu-blur: 14px;
   /* The lip: FLAT, the housing's own value (ADR-092 stage 1 U1). `--gold-line`
      is the ramp's LINE step — byte-equal to `--gold` in dark and the parchment
      value in light — so the lip re-derives with no theme branch. At rest it is
-     30 % of that; the open card takes the whole line. */
+     30 % of that; the open note takes the whole line. */
   --mu-lip: color-mix(in srgb, var(--gold-line) 30%, transparent);
   /* A corner catching light, at the plate's own alpha; light lowers it. */
   --mu-bloom-a: 0.13;
@@ -115,77 +116,48 @@
      (IBM Plex) from an ancestor and that is a documented third face. */
   --mu-chrome: clamp(10px, 0.72vw, 12px);
   --mu-copy: clamp(13px, 0.95vw, 16px);
-  --mu-card-title: clamp(18px, 1.5vw, 26px);
 
-  /* The card, and the corner. ⚠ ONE NOTCH, TOP-RIGHT — his corner every
-     time (ADR-097's proof card, ADR-098 U5's plates, ADR-082 U37's record
-     cards). `--mu-chi` is the RING's inner leg: insetting a 45° cut by `d`
-     shortens its leg by `d(2 − √2)` ≈ 0.586d, so it is not `ch − 1px`.
-     `--mu-card-w` is the RAIL's card; on the row a card's width is the row's
-     arithmetic (`--mu-closed`, or the free width). */
-  --mu-card-w: clamp(300px, 26vw, 420px);
-  --mu-card-h: clamp(336px, 52svh, 464px);
+  /* The corner. ⚠ ONE NOTCH, TOP-RIGHT — his corner every time (ADR-097's
+     proof card, ADR-098 U5's plates, ADR-082 U37's record cards). `--mu-chi`
+     is the RING's inner leg: insetting a 45° cut by `d` shortens its leg by
+     `d(2 − √2)` ≈ 0.586d, so it is not `ch − 1px`. */
   --mu-ch: clamp(14px, 1.6vw, 22px);
   --mu-chi: calc(var(--mu-ch) - 0.586px);
 
-  /* ── THE ROW'S DIALS (ADR-121), the reference's own three numbers re-solved
-     for the band. A closed card is a STRIP wide enough for the head of each
-     line ("14 SEP", the glyph whole); the gap is the reference's 10px scaled;
-     the grow is the reference's expo-out (`cubic-bezier(0.19, 1, 0.22, 1)`,
-     1.1s there) at 900ms for ~350px of edge travel. ⚠ THE APERTURE'S CURVE IS
-     DELIBERATELY NOT COPIED HERE: an ease-in-out is right for an arrival the
-     reader did not cause, and wrong for a pointer response, which wants an
-     immediate start — the expo-out moves 84 % of the way in its first sixth
-     and settles over the rest, so the row answers the hand at once and comes
-     to rest without a snap. The house's 720ms ease-in-out pair is the
-     alternative for the owner's read. */
-  --mu-closed: clamp(88px, 7.5vw, 120px);
-  --mu-gap: clamp(10px, 1vw, 16px);
-  --mu-grow: 900ms cubic-bezier(0.19, 1, 0.22, 1);
-  /* ── THE BODY IS A DERIVED BOX, AND THE SLACK IS THE COVER'S (ADR-121 U1).
-     Read off ADR-121's own stills: the open card pooled 124px of bare plate
-     under a two-line lede at 1920×1247 and 106px at 1280×720 — this station's
-     recorded mis-seat (air around a composition is room, air inside one is a
-     mis-seat; ADR-070 U24: bare field under the content reads as a hole). So
-     on the row the body is exactly what it holds — its rule, its padding, ONE
-     kicker line, ONE title line and `--mu-lede-lines` of lede, each at the
-     line-height its own rule declares — and the COVER, which is material
-     (the substrate, the beat, the plotted date), takes everything else. Every
-     body is the same box, so every cover ends on one datum and the kickers
-     share a line across the row BY CONSTRUCTION, not by coincidence.
-     ⚠ THREE LEDE LINES IS THE BUDGET, NOT A GUESS: `musings-registry` caps a
-     summary at 220 characters, ~98em of PP Neue Montreal, i.e. three lines
-     of the 34em measure below; the live copy runs two to three.
-     ⚠ THESE TOKENS ARE THE BODY'S OWN DECLARATIONS (`.mu-card__body` and the
-     three text rules read them), so the calc and the rules cannot drift. */
-  --mu-body-rule: 1px;
-  --mu-body-pad-t: clamp(12px, 1.5svh, 20px);
-  --mu-body-pad-b: clamp(14px, 1.8svh, 24px);
-  --mu-body-pad-x: clamp(14px, 1.4vw, 22px);
-  --mu-body-gap: clamp(6px, 0.7svh, 12px);
-  --mu-kicker-lh: 1.3;
-  --mu-title-lh: 1.12;
-  --mu-lede-lh: 1.42;
-  --mu-lede-lines: 3;
-  --mu-body-h: calc(
-    var(--mu-body-rule) + var(--mu-body-pad-t) + var(--mu-chrome) * var(--mu-kicker-lh) +
-      var(--mu-body-gap) + var(--mu-card-title) * var(--mu-title-lh) + var(--mu-body-gap) +
-      var(--mu-copy) * var(--mu-lede-lh) * var(--mu-lede-lines) + var(--mu-body-pad-b)
-  );
-  /* The copy's MEASURE: 34em of the lede's own face (≈ the 56ch it had),
-     stated through `--mu-copy` so the ROW can compute with it — `ch` would
-     resolve against whichever element substituted it. And the narrowest the
-     open card may ever be: that measure whole, plus the body's inset either
-     side. Holding it is the strips' job (`--mu-strip`, the row rung), which
-     is what makes a lede's line count a property of the copy alone — the
-     same at three posts and at seven. */
-  --mu-measure: calc(var(--mu-copy) * 34);
-  --mu-open-min: calc(var(--mu-measure) + 2 * var(--mu-body-pad-x));
-  /* The beat glyph at a FIXED size while the strips hold `--mu-closed` —
-     whole inside them with air either side (a percentage would resize it
-     through the grow); on the row rung it yields only with a strip that
-     yields. */
-  --mu-glyph: clamp(52px, 4.4vw, 80px);
+  /* ── THE LIST'S DIALS (ADR-122) — the gallery lab's v17, number for number.
+     A note is one ROW (the title over its meta line, the chip) and, open, the
+     excerpt under it; its cover rides the last column across both. Off the
+     pinned rung the row and the open cover are rested values; ON it they are
+     SOLVED from the count inside the frame (`.mu__notes`, below), which is
+     what keeps five notes and the open card inside the rails at the owner's
+     viewport. ⚠ THE TITLE IS v4's SCALE (the owner: "what I like about v4
+     still is the big title size") — `clamp(22px, 2.5vw, 48px)`, capped by what
+     the row leaves above the meta line: a 64px row holds a 32px title, the
+     6px gap and the meta line with room to spare. ⚠ The thumbnail and the
+     open card's floor are declared OFF the row, so they re-solve with it. */
+  --mu-note-gap: 8px;
+  --mu-note-inset: clamp(14px, 1.4vw, 22px);
+  --mu-note-cgap: clamp(12px, 1.3vw, 20px);
+  --mu-note-row: clamp(64px, 8.6svh, 108px);
+  --mu-note-open: clamp(180px, 20svh, 240px);
+  --mu-note-thumb: calc(var(--mu-note-row) - 20px);
+  --mu-note-title: min(clamp(22px, 2.5vw, 48px), calc((var(--mu-note-row) - 26px) * 0.9));
+  /* The open note's growth: the cover column and the excerpt's row move on
+     one clock, the house's expo-out — a pointer response wants an immediate
+     start (ADR-121's reason, kept). */
+  --mu-note-grow: 560ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* The way out's own row — part of the list's arithmetic, so a token. */
+  --mu-foot-h: clamp(58px, 7svh, 76px);
+
+  /* ── THE ARRIVAL (ADR-122, owner: "the cards should first be a line and
+     then unfold downwards"). A note is drawn as its own top edge first — a
+     1px line from the left — then unfolds down from it; the notes arrive one
+     after another, top to bottom, `--mu-unfold-step` apart. The leaving is the
+     same gesture played back, all at once. The house's ease-in-out, on each
+     phase: an arrival the reader did not cause wants to start soft. */
+  --mu-unfold-in: 820ms cubic-bezier(0.65, 0, 0.35, 1);
+  --mu-unfold-out: 420ms cubic-bezier(0.65, 0, 0.35, 1);
+  --mu-unfold-step: 90ms;
 
   /* ── THE BAND ENDS BEFORE THE RIGHT RAIL'S TELEMETRY (ADR-121 U1). The
      readouts (`rail-instruments.css` `.rin-tele`: BEARING · SECTOR · LOCAL)
@@ -198,35 +170,28 @@
      1440 and 1920 alike. `musings-row.test.ts` re-derives it from the
      frame's own declarations and `capture-musings-row` re-measures the gap
      on every run, so the frame cannot outgrow this number quietly.
-     The band's end is that reach plus one card inset of air, less the band's
+     The band's end is that reach plus one note inset of air, less the band's
      own margin — ZERO wherever the band already ends short of it, which is
-     from ~1560px up, the owner's 1920 included. Measured before: the last
-     card ran 25.4px UNDER SECTOR at 1280×720 and 13.7px at 1440×800.
+     from ~1560px up, the owner's 1920 included.
      ⚠ AND THE LAST 3px ARE THE SCROLLBAR'S, AND THEY ARE NOT OPTIONAL. The
      station is 100vw wide and centred across the page's 6px scrollbar
      (landing.css `::-webkit-scrollbar`), while the rail is fixed to the
      visible frame — so the band sits half a scrollbar nearer the readouts
-     than the frame's own geometry says. Without the term the air measured
-     11px at 961×720, under the 12px the capture asks for. */
+     than the frame's own geometry says. */
   --mu-tele-reach: calc(var(--hud-margin) + var(--hud-rail-guide-inset) + 8px + 107.4px + 3px);
-  --mu-band-end: max(0px, var(--mu-tele-reach) + var(--mu-body-pad-x) - var(--band-margin));
+  --mu-band-end: max(0px, var(--mu-tele-reach) + var(--mu-note-inset) - var(--band-margin));
 
-  /* The runway. ⚠ THE DWELL IS THE ONE DIAL (ADR-121). ADR-119 pinned the
-     stage for one step per card (42svh each, plus a tail), which is what a
-     detent needs and a hover row does not: the reader opens cards with the
-     pointer, not the wheel. One dwell holds the stage long enough for the
-     head to decode (~0.7s) and the cards to arrive, and gives the reader a
-     parked frame to hover in before the band takes over. On the stage rung
-     the station is ~1.6 viewports plus its 100svh band; at five posts
-     ADR-119 U2 was ~3.2. */
+  /* The runway. ⚠ THE DWELL IS THE ONE DIAL (ADR-121). One dwell holds the
+     stage long enough for the head to decode (~0.7s) and the notes to arrive,
+     and gives the reader a parked frame to hover in before the band takes
+     over. */
   --mu-dwell: 60svh;
 
   /* ⚠ DECLARED, NOT INHERITED — ADR-067's STANDING TRAP, AND THE MECHANICAL
      GATE FOUND IT HERE EXACTLY AS IT FOUND IT ON THE FOOTER (ADR-105). The
      ambient `--font-mono` is IBM Plex Mono, NOT this surface's `--font-pt-mono`,
      so every wrapper that letters nothing still hands a THIRD face to whatever
-     is added under it later. First run: 13 `fonts` violations, all of them on
-     boxes with no text in them. Each text element below names its own family;
+     is added under it later. Each text element below names its own family;
      this is the bed, so a new child inherits the PROSE face rather than a
      third one. */
   font-family: var(--font-pp-neue-montreal);
@@ -329,7 +294,7 @@
 }
 /* The runway's restore sits with the arrival rules on the rung, below. */
 
-/* ⚠ THREE CONTENT-HEIGHT ROWS — NEVER A `1fr` MIDDLE.
+/* ⚠ CONTENT-HEIGHT ROWS — NEVER A `1fr` MIDDLE (the head, then the notes).
    The first cut gave the row's track `minmax(0, 1fr)`, which is the same
    slack-pooling defect this house has now measured four times (ADR-070 U14's
    tail share, ADR-069 U1's title baseline, ADR-088's directory seams): the
@@ -349,7 +314,7 @@
    pools under the way out. */
 .mu__stage {
   display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto;
   align-content: center;
   row-gap: clamp(20px, 3.2svh, 52px);
   padding-block: clamp(56px, 9svh, 120px);
@@ -646,67 +611,49 @@
   }
 }
 
-/* ── The row ─────────────────────────────────────────────────────────
-   Rest: a rail. The cards are in flow, the box scrolls sideways, and each
-   card is a snap stop. ⚠ `touch-action: pan-y` hands nothing horizontal to
-   the page (mobile-sections.md §9 — the root clips at ≤960 and a gesture
-   inside a clipped reel must not pan the document). */
-.mu__row {
-  display: flex;
-  align-items: stretch;
-  gap: clamp(14px, 1.6vw, 28px);
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x proximity;
-  touch-action: pan-y;
-  padding-block: 4px;
-  scrollbar-width: none;
+/* ── The notes ───────────────────────────────────────────────────────
+   ONE box for the list and the way out, on the band's own pair — so the head,
+   the list and the way out share one left edge (ADR-119 U1's column, kept).
+   On the pinned rung it is the size container the rows are solved in. */
+.mu__notes {
+  max-width: var(--band-max);
+  margin-inline: var(--rail-inset);
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto auto;
+  align-content: start;
 }
-.mu__row::-webkit-scrollbar {
-  display: none;
+.mu__list {
+  margin: 0;
+  padding: 2px 0;
+  list-style: none;
+  display: grid;
+  align-content: start;
+  gap: var(--mu-note-gap);
+  min-height: 0;
 }
 
-/* ── The card ────────────────────────────────────────────────────────
-   Two elements, two jobs: the CARD is the link and the flex item whose
-   `flex-grow` transitions on the row rung; the FACE carries the material —
-   the plate, the clip, the ring, the glass — and the arrival's aperture. The
-   two never fight over one box. */
-.mu-card {
+/* ── The note ────────────────────────────────────────────────────────
+   ⚠ THE PROOF CARD'S FOLDER, AT LIST SCALE (ADR-097 → ADR-122): the plate's
+   own scanline under the copy, a corner catching light stated in PIXELS
+   (`260px 180px` hung 60px in from the top-right), then the glass. ⚠ NO
+   `border` — a clip CUTS a border and never strokes one; the edge is the
+   clipped RING below.
+   ⚠ ONE COVER, TWO SIZES: the note is a grid of two columns and two rows,
+   the row and the excerpt in the first column, the cover in the last across
+   both. `--mu-note-col` is the cover column — the thumbnail at rest, the
+   feature open — and `grid-template-columns` is what transitions (a length to
+   a length, one track each side), so nothing is measured and nothing is
+   written per frame. */
+.mu-note {
+  --mu-note-col: var(--mu-note-thumb);
   position: relative;
-  flex: 0 0 auto;
-  width: var(--mu-card-w);
-  min-height: var(--mu-card-h);
-  scroll-snap-align: center;
+  min-width: 0;
   display: grid;
-  grid-template-rows: minmax(0, 1fr);
-  color: var(--mu-ink);
-  text-decoration: none;
-}
-
-/* ⚠ THE FACE IS THE PROOF CARD'S FOLDER, AT CARD SCALE (ADR-097 → ADR-121):
-   the plate's own scanline UNDER the copy (a card of prose is not a screen
-   you look into), a corner catching light stated in PIXELS and re-solved for
-   a card that is 88px shut and ~650px open (`260px 180px` hung 60px in from
-   the top-right; the proof card's `460px 300px at −90px` lit a whole quadrant
-   here), then the glass. ⚠ NO `border` — a clip CUTS a border and never
-   strokes one; the rule is the clipped RING below. ⚠ And no padded-gradient
-   SHELL: on a translucent body it reads straight through and lights the plate
-   warm-grey (hud-panel-lab.css measured it). */
-.mu-card__front {
-  position: relative;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  /* ⚠ THE COLUMN IS THE FACE'S WIDTH, NEVER THE BODY'S. The body carries a
-     DEFINITE width (`--mu-open-w`, ~930px at three posts) on the row rung, and
-     an `auto` column takes an item's min-content contribution as its base
-     size when that item's preferred size is definite — so the column grew to
-     the body's width, the COVER stretched with it, and its centred glyph sat
-     464px into a 120px strip: clipped, on every strip, with the row's other
-     gates green. The capture's glyph-in-strip gate caught it on the first
-     run. `minmax(0, 1fr)` sizes the track from the face's free space instead,
-     and the body overflows it, which is the point. */
-  grid-template-columns: minmax(0, 1fr);
-  grid-area: 1 / 1;
+  grid-template-columns: minmax(0, 1fr) var(--mu-note-col);
+  grid-template-rows: var(--mu-note-row) auto;
+  column-gap: var(--mu-note-cgap);
+  padding: 0 calc(var(--mu-ch) + 6px) 0 var(--mu-note-inset);
   background:
     repeating-linear-gradient(to bottom, rgba(var(--gold-rgb), 0.025) 0 1px, transparent 1px 3px),
     radial-gradient(
@@ -715,21 +662,21 @@
       transparent 62%
     ),
     var(--mu-plate);
-  overflow: hidden;
   /* The silhouette: the fill is genuinely CUT, because a ring drawn over a
      square corner is a diagonal with nothing behind it. */
   clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
+  transition: grid-template-columns var(--mu-note-grow);
+}
+.mu-note[data-mu-open] {
+  --mu-note-col: var(--mu-note-open);
 }
 
-/* ⚠ THE EDGE IS A CLOSED TWO-CONTOUR RING, NEVER A `border`: a clip CUTS a
-   border and never strokes one, so a chamfered box with `border: 1px` has no
-   line on its diagonal. Outer contour, then the inner one 1px in with its
-   own shortened leg; `evenodd` makes the middle a hole.
-   ⚠ BOTH CONTOURS CLOSE. Every housing on `/arcs` painted a bow-tie until
-   ADR-118 U2, because one of them did not.
-   ⚠ `background-color`, NOT `background`, so the open card's lift to the
-   whole line can TRANSITION on the row rung. */
-.mu-card__front::before {
+/* ⚠ THE EDGE IS A CLOSED TWO-CONTOUR RING, NEVER A `border`: outer contour,
+   then the inner one 1px in with its own shortened leg; `evenodd` makes the
+   middle a hole. ⚠ BOTH CONTOURS CLOSE — every housing on `/arcs` painted a
+   bow-tie until ADR-118 U2 because one of them did not. ⚠ `background-color`,
+   NOT `background`, so the open note's lift to the whole line transitions. */
+.mu-note::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -751,128 +698,347 @@
     1px calc(100% - 1px),
     1px 1px
   );
+  transition: background-color 240ms ease-out;
 }
-
-/* ⚠ THE STATE IS THE RING, NOT A FILTER. The reference dims its inactive
-   cards with `brightness(.82)`; a large-area brightness change on every hover
-   is the class of motion ADR-097 U12 retired, so the open card is told by
-   its lip rising to the whole line (and, on the row rung, its kicker's ink). */
-.mu-card[data-mu-open] .mu-card__front::before {
+/* ⚠ THE STATE IS THE RING, NEVER A FILTER. A large-area brightness change on
+   every hover is the class of motion ADR-097 U12 retired; the open note is
+   told by its lip rising to the whole line, its row's ink and its chip. */
+.mu-note[data-mu-open]::before {
   background-color: var(--gold-line);
 }
 
-.mu-card:focus-visible {
-  outline: 1px solid var(--gold-line);
-  outline-offset: 3px;
-}
-
-/* ── The card's body ─────────────────────────────────────────────── */
-/* ⚠ EVERY LENGTH HERE IS A `.mu` TOKEN, because the row rung DERIVES the
-   body's height from them (`--mu-body-h`): a literal here would be a second
-   source the calc could not see. */
-.mu-card__body {
+/* The row — the note's link: the title over its meta line, the chip. */
+.mu-note__row {
+  grid-column: 1;
+  grid-row: 1;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  row-gap: var(--mu-body-gap);
-  padding: var(--mu-body-pad-t) var(--mu-body-pad-x) var(--mu-body-pad-b);
-  border-top: var(--mu-body-rule) solid var(--mu-rule);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--mu-note-cgap);
+  min-width: 0;
+  color: var(--mu-ink-2);
+  text-decoration: none;
+  outline: none;
+  transition: color 200ms ease-out;
+}
+.mu-note[data-mu-open] .mu-note__row {
+  color: var(--mu-ink);
+}
+.mu-note__row:focus-visible .mu-note__title {
+  outline: 1px solid var(--gold-line);
+  outline-offset: 4px;
+}
+.mu-note__text {
+  display: grid;
+  gap: 6px;
   min-width: 0;
 }
-.mu-card__kicker {
+/* ⚠ v4's TITLE: whole, one line, set as large as the row allows. The ellipsis
+   is a belt — the capture fails a title that reaches it. */
+.mu-note__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: var(--mu-note-title);
+  font-weight: var(--weight-text);
+  line-height: 1.08;
+  letter-spacing: var(--track-display);
+}
+.mu-note__meta {
   font-family: var(--font-pt-mono);
   font-size: var(--mu-chrome);
   font-weight: var(--weight-text);
-  /* DECLARED, not `normal`: `normal` is a font metric the body's height
-     calc cannot read. */
-  line-height: var(--mu-kicker-lh);
+  line-height: 1.3;
   letter-spacing: var(--track-label);
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--gold-ink);
+  color: var(--mu-ink-3);
 }
-/* ⚠ THE SEPARATOR INHERITS THE KICKER'S OWN INK. Dimmed to `--mu-ink-3` it
-   measured **4.41:1 at 10.37px** on the mechanical gate — under the 4.5 floor,
-   on a glyph that is three characters wide and easy to argue is decorative.
-   It is not worth arguing: a mid-dot separates by SHAPE, so it needs no value
-   of its own, and the run reads as one line of chrome rather than a value, a
-   whisper and a value. The air is the whole treatment. */
-.mu-card__dot {
+/* ⚠ THE SEPARATOR INHERITS THE LINE'S OWN INK — a mid-dot separates by
+   SHAPE, so it needs no value of its own (ADR-121's measured reason). */
+.mu-note__dot {
   padding-inline: 0.5em;
 }
-.mu-card__title {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: var(--mu-card-title);
-  font-weight: var(--weight-lit);
-  line-height: var(--mu-title-lh);
-  letter-spacing: var(--track-display);
-  color: var(--mu-ink);
-}
-.mu-card__lede {
-  font-family: var(--font-pp-neue-montreal);
-  font-size: var(--mu-copy);
+/* The beat, as a bracketed mono designation — the house has no pills. Closed
+   notes carry it on the quiet rung; the open note's is the list's ONE gold
+   line of chrome. */
+.mu-note__chip {
+  display: inline-flex;
+  gap: 0.4em;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
   font-weight: var(--weight-text);
-  line-height: var(--mu-lede-lh);
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--mu-ink-3);
+  transition: color 200ms ease-out;
+}
+.mu-note[data-mu-open] .mu-note__chip {
+  color: var(--gold-ink);
+}
+.mu-note__b {
+  color: var(--mu-ink-3);
+}
+
+/* The cover — ONE element, seated across both rows in the last column: the
+   thumbnail at rest (centred in its row by its 10px margin), the feature open.
+   ⚠ A SIZE CONTAINER NAMED `mu-cv`, so the drawing below it knows which of
+   its two sizes it is. ⚠ NO BORDER, NO WELL: the note is the frame. */
+.mu-note__cover {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: start;
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 0;
+  margin-top: 10px;
+  container-type: size;
+  container-name: mu-cv;
+}
+
+/* The excerpt, unrolled: one transitioned `grid-template-rows` 0fr → 1fr,
+   the detail laid out at its final size once, so the copy never reflows as it
+   is uncovered. The closed notes' copy is `visibility: hidden` — out of the
+   tab order, which is what a hidden control owes. */
+.mu-note__open {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--mu-note-grow),
+    visibility 0s linear 560ms;
+}
+.mu-note[data-mu-open] .mu-note__open {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--mu-note-grow),
+    visibility 0s linear 0s;
+}
+.mu-note__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+/* ⚠ THE SIGN SITS ON THE COVER'S FLOOR (the owner: "the call to action and
+   the author should be aligned to the bottom of that visual"). The cover runs
+   from 10px below the note's top to `10px + open`; the note is the row plus
+   this detail, so solving the detail's height from the cover puts its content
+   box's floor exactly on the cover's, and `margin-top: auto` seats the byline
+   and the way in there — the excerpt keeps the top, the air falls between. */
+.mu-note__detail {
+  display: flex;
+  flex-direction: column;
+  /* ⚠ A MINIMUM, NOT A SPACING. The sign's `margin-top: auto` puts it on the
+     floor; this gap only says how close a long excerpt may come to it. At
+     28px a three-line excerpt (the registry's 220-character budget, and the
+     live "Encode the context") pushed the sign 7.9px under the cover's floor
+     at 1920×1247 — three lines, 12px and the 40px button fit the box the
+     cover solves at every rung. */
+  gap: 12px;
+  box-sizing: border-box;
+  height: calc(var(--mu-note-open) + 10px + var(--mu-note-inset) - var(--mu-note-row));
+  padding: 0 0 var(--mu-note-inset);
+}
+.mu-note__lede {
+  margin: 0;
+  max-width: 34em;
+  font-family: var(--font-pp-neue-montreal);
+  font-size: clamp(15px, 1.15vw, 19px);
+  font-weight: var(--weight-text);
+  line-height: 1.45;
   letter-spacing: var(--track-copy);
   color: var(--mu-ink-2);
 }
-
-/* ── The drawn cover ─────────────────────────────────────────────────
-   Three readings off the record: the post's Arc beat as a glyph, its filing
-   date as a lit mark on a baseline, and a substrate whose pitch is seeded
-   off the slug. `lib/musings/cover.ts` resolves all of it. Nothing here is
-   lettered — the card's own kicker prints the date, and a figure said twice
-   on one card is what this surface has removed a console head, a foot and a
-   designator for. */
-.mu-cover {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  background: rgba(var(--void-rgb), 0.5);
-  color: var(--mu-draw);
+.mu-note__sign {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2vw, 32px);
 }
-.mu-cover__field {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle, rgba(var(--dawn-rgb), 0.22) 0.8px, transparent 1.2px);
-  background-size: var(--mu-cover-pitch, 11px) var(--mu-cover-pitch, 11px);
-  background-position: center;
+.mu-note__by {
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  font-weight: var(--weight-text);
+  line-height: 1.3;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  color: var(--mu-ink-2);
 }
-.mu-cover__beat {
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  width: 34%;
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  color: rgba(var(--dawn-rgb), 0.62);
+.mu-note__by-k {
+  color: var(--mu-ink-3);
 }
-.mu-cover__axis {
-  position: absolute;
-  left: clamp(10px, 6%, 26px);
-  right: clamp(10px, 6%, 26px);
-  bottom: 22%;
-  height: 1px;
-  background: var(--mu-rule);
+/* The way in — the proof card's button (`.pf-watch`): outlined at rest,
+   filled on hover and focus with its ink knocked out on `--gold-contrast`. */
+.mu-note__read {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--gold-line);
+  font-family: var(--font-pt-mono);
+  font-size: 11px;
+  font-weight: var(--weight-text);
+  line-height: 1;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--gold-ink);
+  transition:
+    color 180ms ease-out,
+    background-color 180ms ease-out,
+    border-color 180ms ease-out;
 }
-.mu-cover__mark {
-  position: absolute;
-  bottom: calc(22% - 2px);
-  width: 5px;
-  height: 5px;
-  transform: translateX(-50%);
-  background: rgba(var(--dawn-rgb), 0.28);
-}
-.mu-cover__mark--lit {
-  bottom: calc(22% - 3px);
-  width: 7px;
-  height: 7px;
+.mu-note__read:hover,
+.mu-note__read:focus-visible {
+  border-color: var(--gold);
   background: var(--gold);
+  color: var(--gold-contrast);
+}
+.mu-note__read:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+.mu-note__arrow {
+  width: 16px;
+  height: 1px;
+  background: currentColor;
 }
 
-/* ── The way out, and the empty state ───────────────────────────── */
+/* ── The drawn cover: the About drawing, re-seated (`MusingOrbit`) ─────
+   The inks are the station's dawn ramp and the gold LINE step; the lit mark
+   takes the gold fill and light re-derives it in theme.css BLOCK 4g. What
+   the thumbnail drops is marked `.mu-cv-detail` and struck below 140px. */
+.mu-orbit {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.mu-orbit__dial {
+  position: relative;
+  width: min(100cqh, 100cqw);
+  aspect-ratio: 1;
+}
+.mu-orbit__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.mu-orbit__svg path {
+  fill: none;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.mu-orbit__line {
+  stroke: rgba(var(--dawn-rgb), 0.3);
+}
+.mu-orbit__line2 {
+  stroke: rgba(var(--dawn-rgb), 0.2);
+}
+.mu-orbit__faint {
+  stroke: rgba(var(--dawn-rgb), 0.14);
+}
+.mu-orbit__tick {
+  stroke: rgba(var(--dawn-rgb), 0.32);
+}
+.mu-orbit__stub {
+  stroke: rgba(var(--dawn-rgb), 0.6);
+}
+.mu-orbit__gold {
+  stroke: var(--gold-line);
+  stroke-opacity: 0.7;
+}
+.mu-orbit__soft {
+  stroke: var(--gold-line);
+  stroke-opacity: 0.35;
+}
+.mu-orbit__svg path.mu-orbit__elapsed {
+  stroke: var(--gold-line);
+  stroke-width: 2;
+}
+.mu-orbit__svg path.mu-orbit__hand {
+  stroke: var(--gold-line);
+}
+.mu-orbit__halo {
+  fill: rgba(var(--dawn-rgb), 0.4);
+}
+.mu-orbit__halo--lit,
+.mu-orbit__lit {
+  fill: var(--gold);
+}
+.mu-orbit__mark {
+  fill: rgba(var(--dawn-rgb), 0.55);
+}
+/* The beat's mark keeps its own 1.5 stroke in its own 24-unit box, and the
+   Encode cells their fill — `.mu-orbit__svg path` above is for line work. */
+.mu-orbit__glyph {
+  color: var(--mu-ink-2);
+}
+.mu-orbit__svg .mu-orbit__glyph path {
+  stroke: currentColor;
+  stroke-width: 1.5;
+  vector-effect: none;
+}
+.mu-orbit__svg .mu-orbit__glyph path[stroke="none"] {
+  fill: currentColor;
+  stroke: none;
+}
+/* The designations (About's diagonal pair: the day and the year) and the
+   quarter months — DOM, so no `<text>` needs a fit discipline. */
+.mu-orbit__label,
+.mu-orbit__q {
+  position: absolute;
+  z-index: 1;
+  font-family: var(--font-pt-mono);
+  font-size: var(--mu-chrome);
+  font-weight: var(--weight-text);
+  line-height: 1;
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--mu-ink-3);
+}
+.mu-orbit__label--tr {
+  top: var(--mu-note-inset);
+  right: var(--mu-note-inset);
+}
+.mu-orbit__label--bl {
+  bottom: var(--mu-note-inset);
+  left: var(--mu-note-inset);
+}
+.mu-orbit__q {
+  transform: translate(-50%, -50%);
+}
+@container mu-cv (max-width: 140px) {
+  .mu-cv-detail,
+  .mu-orbit__label,
+  .mu-orbit__q {
+    display: none;
+  }
+}
+
+/* ── The way out, and the empty state ───────────────────────────────
+   Both live inside `.mu__notes`, which carries the band's pair: neither
+   insets itself again. The way out's row is `--mu-foot-h`, the term the
+   list's arithmetic subtracts. */
 .mu__foot {
-  max-width: var(--band-max);
-  margin-inline: var(--rail-inset);
+  display: flex;
+  align-items: center;
+  height: var(--mu-foot-h);
 }
 .mu__all {
   display: inline-flex;
@@ -903,8 +1069,6 @@
 }
 .mu__empty {
   margin: 0;
-  max-width: var(--band-max);
-  margin-inline: var(--rail-inset);
   font-family: var(--font-pp-neue-montreal);
   font-size: var(--mu-copy);
   font-weight: var(--weight-text);
@@ -913,43 +1077,21 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   THE ROW — opens on hover, and only where the writer is live
+   THE LIST — pinned, solved inside the frame, and only where the writer
+   is live
 
    ⚠ THE RUNG IS MIRRORED BY HAND FROM `MUSINGS_ROW_MEDIA` in
    `useMusingsScroll.ts`, and `tests/lib/musings-row.test.ts` asserts the
-   two carry the same query. A writer and a sheet that disagree about the
-   rung is a row of strips nothing will ever open, or a rail whose cards
-   have been given a grow.
-
-   ⚠ THE MECHANIC IS ONE PROPERTY, AS THE REFERENCE: every card is
-   `flex: 0 0 --mu-strip` (`--mu-closed`, unless the row cannot afford it)
-   and the open one is `flex-grow: 1`, transitioned.
-   Nothing is posed, nothing is measured, nothing is written per frame; the
-   writer moves one attribute on an event. Mid-grow the two cards' grows sum
-   to one, so the free width is always fully distributed and no gap opens.
-
-   ⚠ THE TEXT NEVER REFLOWS DURING THE GROW. The row publishes `--mu-open-w`
-   — the width the open card WILL have, solved off the row's own inline size
-   through a container query unit — and every card's body is laid out at
-   that width once. The face's overflow clips it while the card is a strip,
-   and the grow UNCOVERS it: pure motion, no opacity, no reflow (the caption
-   card's law, and the reference's own read — the strips show the head of
-   each line). ⚠ `cqw` resolves on the element that USES the value against
-   its nearest query container, which is the row; a face or a card made a
-   container would silently re-base it.
+   two carry the same query.
    ═══════════════════════════════════════════════════════════════════ */
 /* ⚠ THE STATION GIVES UP ITS PADDING ON THE DESKTOP RUNG ONLY, AND THE FIRST
    CUT DECLARED IT UNCONDITIONALLY — WHICH IS THE TRAP `mobile-sections.md` §1
    NAMES IN SO MANY WORDS. A station that writes `padding-top` at id
    specificity ties with the ≤960 chrome floor (also `#musings.station`, also
    (1,1,0)) and wins on source order, because `musings.css` is imported AFTER
-   `landing.css`. The floor silently resolved to 0 and the eyebrow printed
-   under the TL corner bracket at the station's seat — found by
-   `mobile-section-seams`, invisible in every desktop still.
-   The tokens above stay unconditional so the floor's `max()` has its input;
-   the raw zeroing lives here, where the pinned stage owns its own air and
-   both paddings would otherwise come out of the runway (the sticky child
-   travels inside its container's CONTENT box). */
+   `landing.css`. The tokens above stay unconditional so the floor's `max()`
+   has its input; the raw zeroing lives here, where the pinned stage owns its
+   own air. */
 @media (min-width: 961px) {
   #musings.station {
     padding-top: 0;
@@ -958,143 +1100,80 @@
 }
 
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
-  /* ⚠ THE HEAD HANGS FROM THE SERVICES LINE (ADR-121 U2, owner: the title and
-     the paragraph "on top", where "AI CAPABILITY / YOUR TEAM OWNS." sits).
-     `.services-masthead__lead` / `__intro` both sit at `top: var(--masthead-
-     top)`, which is `--band-top` plus a 0px trim; `.proof__report` is the
-     in-flow precedent (`padding-block: var(--band-top) …; align-content:
-     start`). ⚠ KEYED ON THE STAMP, NOT ON `data-mu-mode="stage"`: the pinned
+  /* ⚠ THE HEAD HANGS FROM THE SERVICES LINE (ADR-121 U2), AND THE NOTES TAKE
+     EVERYTHING FROM IT TO THE RAILS' LAST TICK (ADR-122 — ADR-118's "each
+     device is as tall as the rails"). `.services-masthead__lead` / `__intro`
+     sit at `top: var(--masthead-top)`, which is `--band-top` plus a 0px
+     trim. ⚠ KEYED ON THE STAMP, NOT ON `data-mu-mode="stage"`: the pinned
      stage exists across 961–1100 as well, and the services masthead sits on
-     this line there too — keyed on the mode, the head would have two seats
-     depending on whether the corridor is alive. `musings-row.test.ts` pins
-     the services half of the link, so a trim there cannot split the line. */
+     this line there too. `musings-row.test.ts` pins the services half of the
+     link, so a trim there cannot split the line.
+     ⚠ THE `1fr` IS THE NOTES' BOX, NOT A POOL: the notes align to its start
+     and solve their rows from it, so the surplus falls under the way out,
+     where it is room — never between the head and the first note. */
   .mu[data-mu-ready] .mu__stage {
     align-content: start;
+    grid-template-rows: auto minmax(0, 1fr);
     padding-block-start: var(--band-top);
+    padding-block-end: var(--hud-rail-y-end);
   }
 
-  /* The row takes the BAND's box — the same pair `.mu__head` rides — so the
-     head, the row and the way out share one left edge (ADR-119 U1's column,
-     kept). A flex row, the reference's own `gap`, the card's height as the
-     row's, and `overflow: visible` so the open card's focus ring, 3px
-     outboard, is not clipped by the rail's scroller. */
-  .mu[data-mu-ready] .mu__row {
-    max-width: var(--band-max);
-    margin-inline: var(--rail-inset);
-    gap: var(--mu-gap);
-    height: var(--mu-card-h);
-    overflow: visible;
-    scroll-snap-type: none;
-    touch-action: auto;
-    padding-block: 0;
-    container-type: inline-size;
-    /* ⚠ THE STRIP YIELDS SO THE OPEN CARD KEEPS ITS MEASURE (ADR-121 U1). A
-       strip is `--mu-closed` wherever the row can afford it; where it cannot
-       — seven posts, or the 961–1100 rung — the strips narrow so the open
-       card never drops under `--mu-open-min`, down to a floor of the body's
-       own inset pair. It depends on the row's width and the count, never on
-       which card is open, so it is constant through the grow. */
-    --mu-strip: clamp(
-      2 * var(--mu-body-pad-x),
-      (100cqw - var(--mu-open-min)) / max(1, var(--mu-n, 1) - 1) - var(--mu-gap),
-      var(--mu-closed)
+  /* ⚠ THE ROWS ARE SOLVED FROM THE COUNT, INSIDE THE FRAME. The open card's
+     floor is paid for first, then the way out; the closed rows share what is
+     left, at v4's own 8.6svh wherever they can have it and never under 64px,
+     and the open cover takes whatever the rows then leave, up to 240px. So
+     five notes at the owner's 1920×1247 keep their titles near full size with
+     the open card whole, and a short frame (1280×720) scrolls the list inside
+     itself rather than clipping it. ⚠ `100cqh` is resolved where each token
+     is USED — inside the note — against this box, the nearest size container;
+     the cover's own container is a sibling of the row, never an ancestor. */
+  .mu[data-mu-ready] .mu__notes {
+    --mu-note-open-min: clamp(180px, 20svh, 240px);
+    --mu-note-row: clamp(
+      64px,
+      min(
+        8.6svh,
+        calc(
+          (100cqh - var(--mu-note-open-min) - var(--mu-foot-h)) / var(--mu-n, 3) -
+            var(--mu-note-gap)
+        )
+      ),
+      108px
     );
-    --mu-open-w: calc(100cqw - (var(--mu-n, 1) - 1) * (var(--mu-strip) + var(--mu-gap)));
+    --mu-note-open: clamp(
+      var(--mu-note-open-min),
+      calc(100cqh - var(--mu-n, 3) * (var(--mu-note-row) + var(--mu-note-gap)) - var(--mu-foot-h)),
+      240px
+    );
+    height: 100%;
+    min-height: 0;
+    container-type: size;
+    grid-template-rows: minmax(0, auto) auto;
+  }
+  .mu[data-mu-ready] .mu__list {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--mu-edge) transparent;
   }
 
-  /* ⚠ THE BAND'S END YIELDS TO THE TELEMETRY, HEAD AND ROW TOGETHER
+  /* ⚠ THE BAND'S END YIELDS TO THE TELEMETRY, HEAD AND NOTES TOGETHER
      (ADR-121 U1). `--mu-band-end` is zero wherever the band already stops
      short of the right rail's readouts; below ~1560px it pulls the band's
-     right edge in so the last card clears them by a card inset. The HEAD
-     takes the same edge so the composition keeps ONE right edge — a row that
-     stopped short of the brief above it would read as a mis-seat of its
-     own. ⚠ GATED ON `data-rail-instruments`, the stamp the readouts'
-     component writes: no readouts, no yield. */
+     right edge in so the notes clear them by a note inset. ⚠ GATED ON
+     `data-rail-instruments`, the stamp the readouts' component writes: no
+     readouts, no yield. */
   html[data-rail-instruments] .mu[data-mu-ready] .mu__head,
-  html[data-rail-instruments] .mu[data-mu-ready] .mu__row {
+  html[data-rail-instruments] .mu[data-mu-ready] .mu__notes {
     margin-inline-end: calc(var(--rail-inset) + var(--mu-band-end));
-  }
-
-  /* ⚠ ONE TRANSITIONED PROPERTY. `flex-grow` is the whole mechanic; the
-     basis is the strip and never moves, so the closed cards are exactly
-     `--mu-strip` at rest and mid-grow alike. */
-  .mu[data-mu-ready] .mu-card {
-    flex: 0 0 var(--mu-strip);
-    width: auto;
-    min-width: 0;
-    min-height: 0;
-    scroll-snap-align: none;
-    transition: flex-grow var(--mu-grow);
-  }
-  .mu[data-mu-ready] .mu-card[data-mu-open] {
-    flex-grow: 1;
-  }
-
-  /* The lip lifts to the whole line and the kicker takes the gold; a strip
-     keeps its kicker on the quiet text rung, so the row carries ONE gold
-     line of chrome — the open card's. Both are colour, neither is motion. */
-  .mu[data-mu-ready] .mu-card__front::before {
-    transition: background-color 360ms ease;
-  }
-  .mu[data-mu-ready] .mu-card__kicker {
-    color: var(--mu-ink-3);
-    transition: color 360ms ease;
-  }
-  .mu[data-mu-ready] .mu-card[data-mu-open] .mu-card__kicker {
-    color: var(--gold-ink);
-  }
-
-  /* The body at the OPEN width, on every card, clipped by the face; the copy
-     sits in its MEASURE inside it, and since the strips hold the open card at
-     `--mu-open-min` or wider, the measure is always whole. ⚠ The lede's clamp
-     is a BELT at the capacity the body reserves, never a layout lever: the
-     registry's 220-character budget fits three lines of the measure, so no
-     copy that ships can reach it — `capture-musings-row` reads every lede
-     UNCLAMPED and fails on one that would. */
-  .mu[data-mu-ready] .mu-card__body {
-    width: var(--mu-open-w);
-  }
-  .mu[data-mu-ready] .mu-card__title,
-  .mu[data-mu-ready] .mu-card__lede {
-    max-width: var(--mu-measure);
-  }
-  .mu[data-mu-ready] .mu-card__lede {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: var(--mu-lede-lines);
-    overflow: hidden;
-  }
-
-  /* ⚠ THE BODY IS A FIXED, DERIVED ROW AND THE COVER TAKES THE REST. The
-     slack a short lede leaves is the cover's — material — never bare plate
-     under the text; and every body being the same box is what puts all the
-     covers on one datum and all the kickers on one line across the row. The
-     glyph keeps its fixed size, whole inside a strip with half an inset of
-     air either side, and yields only where a strip does. */
-  .mu[data-mu-ready] .mu-card__front {
-    grid-template-rows: minmax(0, 1fr) var(--mu-body-h);
-  }
-  .mu[data-mu-ready] .mu-cover {
-    aspect-ratio: auto;
-  }
-  .mu[data-mu-ready] .mu-cover__beat {
-    width: min(var(--mu-glyph), var(--mu-strip) - var(--mu-body-pad-x));
   }
 
   /* ── THE GLASS (ADR-121). ⚠ ON THE STAGE RUNG ONLY, WHERE THERE IS A
      LIVE CORRIDOR TO BLUR: at 961–1100 the station is opaque and a blur
-     would re-snapshot every frame to frost its own stars. ADR-119's ban on
-     `backdrop-filter` here was argued for five OVERLAPPING 3D planes; a flat
-     row of five non-overlapping cards is one proof card's area of glass,
-     and it is MEASURED rather than assumed — `capture-musings-row.mjs
-     --perf` gates the long-frame share against the proof card's recorded
-     15 %. ⚠ NO `brightness()` (the services plate's OPEN lift, which turns a
-     ground grey — the proof card's own note). Light drops the frost in
-     `theme.css` BLOCK 4g, the bed being faded on that side. If the perf gate
-     fails, the recorded fallback is the blur on the OPEN card alone with
-     the strips at .94. */
+     would re-snapshot every frame to frost its own stars. ⚠ NO
+     `brightness()` (the services plate's OPEN lift, which turns a ground
+     grey). Light drops the frost in `theme.css` BLOCK 4g. */
   @supports (backdrop-filter: blur(2px)) {
-    #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-card__front {
+    #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-note {
       -webkit-backdrop-filter: blur(var(--mu-blur));
       backdrop-filter: blur(var(--mu-blur));
     }
@@ -1102,46 +1181,47 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   THE ROW'S ARRIVAL — a centre-out APERTURE, and nothing fades
+   THE ARRIVAL — a line, then the note unfolds down from it
 
-   Owner, on the live read: _"the text should appear with a glitch effect,
-   and then the cards should come into view."_
+   Owner, 2026-09-24: "I don't think we should use the scan line effect. It
+   looks a bit cringe. Maybe we can do something more elegant. We can keep the
+   glitch effect for the text, but I think the cards should first be a line
+   and then unfold downwards." So ADR-121's centre-out aperture — a slit
+   sweeping open across the card — leaves this station (it stays the proof
+   card's and the Trinny route's, `musings-row.test.ts` pins them), and each
+   note arrives as its own TOP EDGE first: a 1px line drawn from the left
+   (the first 40 % of `--mu-unfold-in`), then the plate unfolding down from
+   it (the rest), the lip lit gold while it is a line. The notes arrive one
+   after another, top to bottom, `--mu-unfold-step` apart; the way out is
+   last. The head keeps its decode, and the list waits for it (the writer
+   holds `in` until the head is whole — the owner's order).
 
-   ⚠ AND THE GLITCH HE MEANS IS NOT A FLASH. He asked for one on the proof
-   card, read it live and pulled it the same day as a photosensitivity risk —
-   countable, at ~4 dark↔light alternations a second against WCAG 2.3.1's
-   three-per-second threshold (ADR-097 U12). The house's object arrival since
-   is the corridor caption card's centre-out aperture: PURE MOTION, zero
-   fades, no opacity curve, no tear, no `filter`. This is the third host of
-   that pair of numbers — 720ms in, 420ms out, `cubic-bezier(0.65, 0, 0.35, 1)`
-   — and ⚠ **THE THREE MOVE TOGETHER**: `proof-stack.css` and the Trinny
-   route's `tl-aperture*` carry the same two, and one changing alone is a
-   house grammar with a different clock on one surface.
-
-   ⚠ ON THE CARD'S FACE, NEVER THE CARD OR THE ROW. The card's box is what
-   `flex-grow` transitions, and an animation on the same box would fight it;
-   a clip on the row would cut every card at once. Every face opens from its
-   own centre, the wide one and the strips alike, on one clock.
-   ⚠ AND ON THE ROW'S RUNG ONLY. Below it the writer parks, so an `await`
-   state would hide a row nothing was ever going to open.
+   ⚠ STILL NOT A FLASH (ADR-097 U12). Every frame is geometry — a clip moving
+   across and down — and the one colour change is a 1px line settling from the
+   gold line to the lip's own value. No opacity curve, no `filter`.
+   ⚠ `fill-mode: backwards`, never `forwards`: a note waiting for its slot
+   shows the zero-width line (nothing), and the last frame IS the cascade's
+   own silhouette, so a `forwards` fill would pin a `clip-path` on the note
+   for the rest of the page.
+   ⚠ ON THE LIST'S RUNG ONLY. Below it the writer parks, so an `await` state
+   would hide notes nothing was ever going to reveal.
    ═══════════════════════════════════════════════════════════════════ */
 @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
   /* ⚠ AN ABSENT STAMP MEANS SHOWN. The two hidden states paint identically
      and both are gated on the stamp's presence, so a parked writer, a page
      whose script never ran and a reduced-motion reader all get the finished
-     row (ADR-101 §A's polarity law). */
-  .mu[data-mu-ready][data-mu-arrive="await"] .mu-card__front,
-  .mu[data-mu-ready][data-mu-arrive="out"] .mu-card__front,
-  /* The way out is part of the beat, not chrome standing over it: it arrives
-     with the row and leaves with it. ⚠ `visibility: hidden` also takes it
-     out of the tab order, which is what an absent control owes. */
+     list (ADR-101 §A's polarity law). The way out arrives with the notes and
+     leaves with them; `visibility: hidden` also takes it out of the tab
+     order, which is what an absent control owes. */
+  .mu[data-mu-ready][data-mu-arrive="await"] .mu-note,
+  .mu[data-mu-ready][data-mu-arrive="out"] .mu-note,
   .mu[data-mu-ready][data-mu-arrive="await"] .mu__all,
   .mu[data-mu-ready][data-mu-arrive="out"] .mu__all {
     opacity: 0;
     visibility: hidden;
   }
 
-  /* ⚠ THE WELDED STATION TAKES ITS HITS BACK ONLY ONCE THE ROW IS IN
+  /* ⚠ THE WELDED STATION TAKES ITS HITS BACK ONLY ONCE THE LIST IS IN
      (ADR-121 U3). On the stage rung the station is `pointer-events: none`,
      because its box covers the era's live band for a viewport before the pin;
      during `await` and `out` what is under the runway is the era's own inert
@@ -1150,95 +1230,146 @@
     pointer-events: auto;
   }
 
+  .mu[data-mu-ready][data-mu-arrive="in"] .mu-note {
+    animation: mu-unfold var(--mu-unfold-in) calc(var(--mu-slot, 0) * var(--mu-unfold-step))
+      backwards;
+  }
+  .mu[data-mu-ready][data-mu-arrive="in"] .mu-note::before {
+    animation: mu-unfold-lip var(--mu-unfold-in) calc(var(--mu-slot, 0) * var(--mu-unfold-step))
+      backwards;
+  }
+  .mu[data-mu-ready][data-mu-arrive="out"] .mu-note {
+    animation: mu-fold var(--mu-unfold-out) none;
+  }
   .mu[data-mu-ready][data-mu-arrive="in"] .mu__all {
-    animation: mu-aperture-slit 720ms cubic-bezier(0.65, 0, 0.35, 1) none;
+    animation: mu-unfold-rect var(--mu-unfold-in) calc(var(--mu-n, 1) * var(--mu-unfold-step))
+      backwards;
   }
   .mu[data-mu-ready][data-mu-arrive="out"] .mu__all {
-    animation: mu-aperture-slit-close 420ms cubic-bezier(0.65, 0, 0.35, 1) none;
-  }
-
-  .mu[data-mu-ready][data-mu-arrive="in"] .mu-card__front {
-    /* ⚠ `fill-mode: none`. The last frame IS the cascade's own silhouette, so
-       a `forwards` fill would pin a `clip-path` on the face for the rest of
-       the page and freeze the notch the ring is drawn against. */
-    animation: mu-aperture 720ms cubic-bezier(0.65, 0, 0.35, 1) none;
-  }
-
-  .mu[data-mu-ready][data-mu-arrive="out"] .mu-card__front {
-    animation: mu-aperture-close 420ms cubic-bezier(0.65, 0, 0.35, 1) none;
+    animation: mu-fold-rect var(--mu-unfold-out) none;
   }
 }
 
-/* `from` is the card's own silhouette with every X at 50% and every Y
-   untouched — a zero-width slit down the middle at full height — and `to` is
-   that silhouette verbatim. FIVE points on both ends and one fill rule, so
-   the polygon interpolates point for point instead of snapping discrete, the
-   sweep is purely lateral, and the shape is never square for a frame. */
-@keyframes mu-aperture {
-  from {
-    clip-path: polygon(50% 0, 50% 0, 50% var(--mu-ch), 50% 100%, 50% 100%);
+/* The note's own silhouette at three moments — FIVE points each and one fill
+   rule, so the polygon interpolates point for point instead of snapping:
+   a zero-width line at the note's top-left, the full-width 1px top edge, the
+   whole notched plate. Only the RIGHT points move in the first phase and only
+   the BOTTOM points in the second — across, then down. */
+@keyframes mu-unfold {
+  0% {
+    clip-path: polygon(0 0, 0 0, 0 1px, 0 1px, 0 1px);
   }
-  to {
+  40% {
+    clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% 1px, 100% 1px, 0 1px);
+  }
+  100% {
     clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
   }
 }
-
-/* The iris shutting. ⚠ IT HOLDS `opacity` AND `visibility` ITSELF: the `out`
-   cascade above already says `opacity: 0; visibility: hidden`, so a close
-   that animated the clip alone would play on a face nobody can see. It ends
-   on the slit, where nothing paints, and the cascade takes over from there
-   with no pop and nothing interpolating `visibility`. */
-/* The way out's own sweep. It is a plain rectangle — no chamfer — so the slit
-   is an `inset`, opening on the same clock as the cards above it. */
-@keyframes mu-aperture-slit {
-  from {
-    clip-path: inset(0 50% 0 50%);
-  }
-  to {
-    clip-path: inset(0);
+/* The line is the lip, lit: the gold line while the note is a line, then
+   settling to the note's own value (no `to` frame — it lands on the cascade). */
+@keyframes mu-unfold-lip {
+  0%,
+  40% {
+    background-color: var(--gold-line);
   }
 }
-@keyframes mu-aperture-slit-close {
-  from {
-    opacity: 1;
-    visibility: visible;
-    clip-path: inset(0);
-  }
-  to {
-    opacity: 1;
-    visibility: visible;
-    clip-path: inset(0 50% 0 50%);
-  }
-}
-
-@keyframes mu-aperture-close {
-  from {
+/* The leaving, played back: up into the line, then the line drawn in. ⚠ IT
+   HOLDS `opacity` AND `visibility` ITSELF: the `out` cascade above already
+   hides the note, so a fold that animated the clip alone would play on a note
+   nobody can see. It ends on the zero-width line, where nothing paints. */
+@keyframes mu-fold {
+  0% {
     opacity: 1;
     visibility: visible;
     clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
   }
-  to {
+  55% {
     opacity: 1;
     visibility: visible;
-    clip-path: polygon(50% 0, 50% 0, 50% var(--mu-ch), 50% 100%, 50% 100%);
+    clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% 1px, 100% 1px, 0 1px);
+  }
+  100% {
+    opacity: 1;
+    visibility: visible;
+    clip-path: polygon(0 0, 0 0, 0 1px, 0 1px, 0 1px);
+  }
+}
+/* The way out: a plain rectangle, so an `inset` — its top border is the line. */
+@keyframes mu-unfold-rect {
+  0% {
+    clip-path: inset(0 100% calc(100% - 1px) 0);
+  }
+  40% {
+    clip-path: inset(0 0 calc(100% - 1px) 0);
+  }
+  100% {
+    clip-path: inset(0);
+  }
+}
+@keyframes mu-fold-rect {
+  0% {
+    opacity: 1;
+    visibility: visible;
+    clip-path: inset(0);
+  }
+  55% {
+    opacity: 1;
+    visibility: visible;
+    clip-path: inset(0 0 calc(100% - 1px) 0);
+  }
+  100% {
+    opacity: 1;
+    visibility: visible;
+    clip-path: inset(0 100% calc(100% - 1px) 0);
   }
 }
 
 /* ── The phone ───────────────────────────────────────────────────────
-   The rail is the rest state, so there is almost nothing to say. What it
-   does need is the band's own inset released — the rail bleeds to the
-   station's edges so a card can sit half off-screen and read as a rail
-   rather than as a cropped grid. */
+   The same list, flowing: the newest note open, the rest links. Nothing
+   pins, so nothing is solved from the frame: a row is as tall as its title
+   (which may wrap here — two lines of a note's name beat an ellipsis), the
+   cover stays a thumbnail at the row's right, and the open note's excerpt
+   and way in run the card's whole width under it. */
 @media (max-width: 960px) {
   .mu__stage {
     row-gap: clamp(14px, 2svh, 24px);
     padding-block: clamp(24px, 4svh, 48px);
   }
   .mu {
-    --mu-card-w: min(78vw, 320px);
-    --mu-card-h: auto;
+    --mu-note-title: clamp(20px, 5.4vw, 26px);
+    --mu-note-inset: 14px;
   }
-  .mu-card {
-    min-height: 0;
+  .mu-note,
+  .mu-note[data-mu-open] {
+    --mu-note-col: 56px;
+    grid-template-rows: auto auto;
+    padding: 0 calc(var(--mu-ch) + 4px) 0 var(--mu-note-inset);
+  }
+  .mu-note__row {
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 14px;
+  }
+  .mu-note__title {
+    white-space: normal;
+    overflow: visible;
+  }
+  .mu-note__chip {
+    display: none;
+  }
+  .mu-note__cover {
+    grid-row: 1;
+    margin-top: 14px;
+  }
+  .mu-note__open {
+    grid-column: 1 / -1;
+  }
+  .mu-note__detail {
+    height: auto;
+    padding-bottom: 16px;
+  }
+  .mu-note__sign {
+    flex-wrap: wrap;
+    margin-top: 4px;
   }
 }

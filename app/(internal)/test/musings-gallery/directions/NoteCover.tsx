@@ -15,7 +15,7 @@ import {
   dialPoint,
   type DialInk,
 } from "@/components/arcs/steps/dialLayout";
-import { BEAT_PATHS, ENCODE_CELLS } from "@/components/landing/home-v2/musings/MusingCover";
+import { BEAT_PATHS, ENCODE_CELLS } from "@/components/landing/home-v2/musings/MusingOrbit";
 import { beatOf, slugSeed, yearFraction } from "@/lib/musings/cover";
 
 import { CoverGlyph, OrbitCover, OrreryCover, SigilCover } from "./AboutCovers";

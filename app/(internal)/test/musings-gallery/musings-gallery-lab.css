@@ -3212,3 +3212,37 @@ html[data-theme="light"] .mg-tx__item[data-mg-on] .mg-tx__row {
     aspect-ratio: 16 / 10;
   }
 }
+
+/* === The aperture, kept for the lab ==================================
+   ADR-121's centre-out aperture left the production station with ADR-122 (the
+   notes arrive as a line that unfolds down). The lab's directions still open
+   and swap on it, so its keyframes live here now - the lab's own, loaded only
+   on this route. */
+@keyframes mu-aperture {
+  from {
+    clip-path: polygon(50% 0, 50% 0, 50% var(--mu-ch), 50% 100%, 50% 100%);
+  }
+  to {
+    clip-path: polygon(0 0, calc(100% - var(--mu-ch)) 0, 100% var(--mu-ch), 100% 100%, 0 100%);
+  }
+}
+@keyframes mu-aperture-slit {
+  from {
+    clip-path: inset(0 50% 0 50%);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+@keyframes mu-aperture-slit-close {
+  from {
+    opacity: 1;
+    visibility: visible;
+    clip-path: inset(0);
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+    clip-path: inset(0 50% 0 50%);
+  }
+}

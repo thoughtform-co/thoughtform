@@ -483,9 +483,10 @@ html[data-theme="light"] .services-masthead {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   BLOCK 4g — the musings row's glass, re-derived (ADR-121)
+   BLOCK 4g — the musings list's glass and its lit mark, re-derived
+   (ADR-121 → ADR-122)
 
-   The row's cards are the proof card's folder at card scale — glass over the
+   The list's notes are the proof card's folder at list scale — glass over the
    corridor with a flat gold lip — so they take BLOCK 4c's two corrections for
    BLOCK 4c's two reasons. The LIP needs nothing: it is `color-mix()` of
    `--gold-line`, already the parchment value on this side. The BLOOM is an
@@ -506,10 +507,17 @@ html[data-theme="light"] .mu {
   --mu-glass-a: 0.9;
 }
 @supports (backdrop-filter: blur(2px)) {
-  html[data-theme="light"] #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-card__front {
+  html[data-theme="light"] #musings[data-mu-mode="stage"] .mu[data-mu-ready] .mu-note {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
+/* The note's drawn cover (ADR-122): the lit day and the lit month are gold
+   FILLS, and a 7px mark on parchment takes the LINE rung (ADR-063 U2) - raw
+   gold is a fill's colour and vanishes at that size on a light ground. */
+html[data-theme="light"] .mu-orbit__lit,
+html[data-theme="light"] .mu-orbit__halo--lit {
+  fill: var(--gold-line);
 }
 
 html[data-theme="light"] .fl-panel__viz {

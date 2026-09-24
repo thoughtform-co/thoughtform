@@ -12,6 +12,19 @@ classic in structure, and it has to be better.
 http://localhost:3003/test/musings-gallery?v=v6
 ```
 
+⚠ **v17 WON AND IS ON THE HOMEPAGE (owner, 2026-09-24; [ADR-122](../../../sentinel/decisions/122-the-musings-list.md)).**
+_"Let's go for V17 and maybe we can show more, maybe 5 in total."_ Production
+took v17 with three changes:
+
+- **At most five notes**, with the rows solved from the count inside the frame.
+- **The arrival is a line that unfolds downward**, replacing the centre-out
+  aperture the owner read as a scan line.
+- **The open note stays open** when the pointer leaves.
+
+`v0` is now that list, and it is the control. The lab stays until the owner has
+read the list live. After that, the losing directions go, with their guards
+(ADR-070 U35).
+
 (Read the port off the running server; 3003 is the default, not a guarantee.
 `/test/*` is proxy-blocked in production, so there is no thoughtform.co URL.)
 
@@ -292,7 +305,7 @@ The console at the foot switches all of them.
 outlines in `app/(internal)/test/musings-gallery/outlines.ts`**, and nowhere
 else. The site is live, and a file in `content/musings/` publishes a page.
 
-## What the owner is being asked
+## What the owner was asked (answered: v17, ADR-122)
 
 1. **Which direction**, or which parts of which. They share the kit (the
    folder plate, the framed readout, the contents list, the button), so a

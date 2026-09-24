@@ -5,45 +5,42 @@ import { useRef, type CSSProperties, type ReactNode } from "react";
 import { MUSINGS_COORDS, MUSINGS_MASTHEAD, MUSINGS_TITLE_TEXT } from "@/lib/musings/mastheadData";
 import type { MusingCardData } from "@/lib/musings/types";
 
-import { MusingCard } from "./MusingCard";
+import { MusingNote } from "./MusingNote";
 import { useMusingsScroll } from "./useMusingsScroll";
 
 /**
- * `#musings` — the writing, as a row that opens on hover (ADR-121).
+ * `#musings` — the writing, as a LIST of notes that opens on hover (ADR-122).
  *
- * The owner, 2026-09-23, on ADR-119's 3D row read live: _"what we currently
- * have looks ugly, so I want to remove the jukebox carousel thing because it's
- * not working. I just want to do something simpler."_ The reference is
- * Lighthouse HQ's customer row — a flex row in which the card under the
- * pointer grows wide and the rest collapse to narrow strips — re-cut in the
- * house material: glass, the notch, the gold lip. At rest the NEWEST post is
- * open; no timer.
+ * The owner, 2026-09-24, after six rounds of the gallery lab: "Let's go for
+ * V17 and maybe we can show more, maybe 5 in total. Implement this on our
+ * homepage." v17 is v4's contents page — every title whole and large — cut
+ * into the house's folder cards (v13's framing: "I'm not really a fan of
+ * horizontal dividers that don't close"), each card carrying its drawn cover
+ * unframed in its last column, drawn in the register of the About drawing.
+ * At rest the NEWEST note is open; no timer.
  *
- * Composition: the masthead on the editorial band, the row under it, one way
- * out. The head's decode is `lib/musings/headDecode.ts`, the arrival
+ * Composition: the masthead on the editorial band, the notes under it, one
+ * way out. The head's decode is `lib/musings/headDecode.ts`, the arrival
  * `lib/musings/arrive.ts`, the clock `useMusingsScroll`; this file is the
- * arrangement and nothing else. The row has NO geometry module any more —
- * the mechanic is one transitioned `flex-grow` in the sheet.
+ * arrangement and nothing else. The list's sizing is solved from the count in
+ * the sheet (the rows share what the open card leaves), never measured here.
  *
  * ⚠ **ON THE STAGE RUNG THE STATION IS TRANSPARENT AND `.mu__band` IS THE
  * COVER** (ADR-119 U1 §1): the corridor stays alive behind the whole beat and
  * dies on the band. Off it the station is opaque again and is its own cover.
  *
- * ⚠ **THE ROW IS ONE REF AND THE WRITER DELEGATES.** No per-card refs, no
- * per-card poses: `useMusingsScroll` listens on the row for `pointerover` /
- * `focusin` and moves `data-mu-open` to the card under them.
- *
- * ⚠ **EVERY CARD RENDERS, ALWAYS.** The attribute is what opens a card; the
- * arrival's aperture is what hides one.
+ * ⚠ **THE LIST IS ONE REF AND THE WRITER DELEGATES.** No per-note refs:
+ * `useMusingsScroll` listens on the list for `pointerover` / `focusin` and
+ * moves `data-mu-open` to the note under them — and leaves it there.
  *
  * ⚠ **`gallery` IS A LAB SEAM, AND PRODUCTION NEVER FILLS IT.** Given a node,
- * it takes the place of the row AND the way out, so a direction in
+ * it takes the place of the notes AND the way out, so a direction in
  * `/test/musings-gallery` is judged under the REAL head, pinned stage, decode
  * and arrival stamps rather than a copy of them. Omitted, the render is
  * byte-identical (`musings-row.test.ts` pins that `MusingsPortal` passes
  * nothing). `!== undefined`, never `??`: `null` is a direction that draws
- * nothing, and must stay distinguishable from no direction at all. With no row
- * mounted the writer's card handlers find no row and do nothing.
+ * nothing, and must stay distinguishable from no direction at all. With no
+ * list mounted the writer's note handlers find no list and do nothing.
  */
 export function MusingsStation({
   posts,
@@ -55,9 +52,9 @@ export function MusingsStation({
   const runwayRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const bandRef = useRef<HTMLDivElement | null>(null);
-  const rowRef = useRef<HTMLDivElement | null>(null);
+  const listRef = useRef<HTMLOListElement | null>(null);
 
-  useMusingsScroll(runwayRef, rootRef, rowRef, posts.length, bandRef);
+  useMusingsScroll(runwayRef, rootRef, listRef, posts.length, bandRef);
 
   return (
     <div className="mu" ref={rootRef} style={{ "--mu-n": posts.length } as CSSProperties}>
@@ -145,22 +142,25 @@ export function MusingsStation({
           {gallery !== undefined ? (
             gallery
           ) : (
-            <>
+            /* ⚠ ONE BOX FOR THE NOTES AND THE WAY OUT. On the pinned rung it is
+               the size container the list's rows are solved in — the rows
+               share what the open card and the way out leave of it — so the
+               way out lives inside it, not beside it. */
+            <div className="mu__notes">
               {posts.length > 0 ? (
-                /* ⚠ ONE FLEX ROW, AND THE CARDS ARE ITS DIRECT CHILDREN — the
-                   writer queries `:scope > .mu-card` and the sheet's `--mu-open-w`
-                   is solved off this box's own inline size. A wrapper between the
-                   two would change both answers silently. */
-                <div className="mu__row" ref={rowRef}>
+                /* ⚠ THE NOTES ARE THE LIST'S DIRECT CHILDREN — the writer
+                   queries `:scope > .mu-note`, and a wrapper between the two
+                   would change its answer silently. */
+                <ol className="mu__list" ref={listRef} aria-label="Musings">
                   {posts.map((post, i) => (
-                    <MusingCard key={post.slug} post={post} index={i} />
+                    <MusingNote key={post.slug} post={post} posts={posts} index={i} />
                   ))}
-                </div>
+                </ol>
               ) : (
                 /* ⚠ NO POSTS IS A REAL STATE, AND IT MAY NOT BE A BLANK VIEWPORT.
                    Every post on disk is a draft until one is published, and this
                    station is an opaque full-screen cover either way — so with an
-                   empty row it says so and keeps its way out. */
+                   empty list it says so and keeps its way out. */
                 <p className="mu__empty">The first notes are being written.</p>
               )}
 
@@ -180,7 +180,7 @@ export function MusingsStation({
                   <span className="mu__all-arrow" aria-hidden="true" />
                 </a>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

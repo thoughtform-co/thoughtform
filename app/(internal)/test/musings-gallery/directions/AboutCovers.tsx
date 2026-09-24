@@ -3,7 +3,7 @@
 import type { CSSProperties } from "react";
 
 import { dialArcPath, dialCirclePath, dialPoint } from "@/components/arcs/steps/dialLayout";
-import { BEAT_PATHS, ENCODE_CELLS } from "@/components/landing/home-v2/musings/MusingCover";
+import { BEAT_PATHS, ENCODE_CELLS } from "@/components/landing/home-v2/musings/MusingOrbit";
 import { beatOf, slugSeed, yearFraction, type MusingBeat } from "@/lib/musings/cover";
 import { SIGIL_RING_MORPHS } from "@/lib/celestial/orbits";
 

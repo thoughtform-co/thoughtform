@@ -50,4 +50,8 @@ export interface MusingCardData {
   summary: string;
   tags: readonly string[];
   readingMinutes: number;
+  /** The byline — the open card signs itself (ADR-122). A name, not a body:
+   *  it costs the payload a few bytes and leaks nothing the page does not
+   *  print. */
+  author: string;
 }
