@@ -619,6 +619,116 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     }
   });
 
+  test("an era change is the figure's own glitch, over a hidden video, and lifts clean (ADR-082 U42)", async ({
+    page,
+  }, testInfo) => {
+    desktopOnly(testInfo);
+    await bootCapable(page);
+    await walkToRunwayProgress(page, ".vw--hologram", 0.44);
+    // The walk itself steps eras (loop → genai → azeroth), and the last of
+    // those runs may still be in flight: wait for the figure to be at rest
+    // rather than for a number of milliseconds.
+    await page.waitForFunction(() => !document.querySelector("#voidwalker .vwh__glitch"), null, {
+      timeout: 6_000,
+    });
+    await settle(page, 200);
+
+    /* ⚠ ALPHA BRANCH ONLY. The glitch is a canvas over the alpha video; on
+       the floor branch (an engine with neither codec, Safari on an era with
+       no `.mov`) an era change is the cut the station always had, by design. */
+    const alpha = await page.locator("#voidwalker .vwh__slot").getAttribute("data-holo-alpha");
+    if (alpha === null) {
+      testInfo.annotations.push({
+        type: "note",
+        description: "floor branch: no glitch to measure",
+      });
+      return;
+    }
+
+    const SLOW = 8;
+    const RUN_MS = 640 * SLOW;
+    // The dev hook: the run stretched 8×, so the samples below are real frames
+    // of the choreography rather than a race against Playwright's round trips.
+    await page.evaluate((slow) => {
+      document
+        .querySelector("#voidwalker .vwd")
+        ?.setAttribute("data-vwh-glitch-slow", String(slow));
+    }, SLOW);
+
+    const readSlot = () =>
+      page.evaluate(() => {
+        const root = document.querySelector<HTMLElement>("#voidwalker .vwd");
+        const slot = document.querySelector<HTMLElement>("#voidwalker .vwh__slot");
+        const wrap = document.querySelector<HTMLElement>("#voidwalker .vwh__media-wrap");
+        const media = document.querySelectorAll<HTMLElement>("#voidwalker .vwh__media");
+        const canvases = document.querySelectorAll<HTMLElement>("#voidwalker .vwh__glitch");
+        const m = media[0] ? getComputedStyle(media[0]) : null;
+        const c = canvases[0] ? getComputedStyle(canvases[0]) : null;
+        const w = wrap?.getBoundingClientRect();
+        const cb = canvases[0]?.getBoundingClientRect();
+        return {
+          era: root?.getAttribute("data-vwh-era") ?? null,
+          glitch: slot?.getAttribute("data-vwh-glitch") ?? null,
+          mediaCount: media.length,
+          mediaVisibility: m?.visibility ?? null,
+          mediaOpacity: m ? Number.parseFloat(m.opacity) : Number.NaN,
+          canvases: canvases.length,
+          canvasBg: c?.backgroundColor ?? null,
+          canvasBorder: c ? `${c.borderTopStyle} ${c.borderTopWidth}` : null,
+          canvasW: cb?.width ?? 0,
+          canvasBottom: cb?.bottom ?? 0,
+          wrapW: w?.width ?? 0,
+          wrapBottom: w?.bottom ?? 0,
+          overscan: Number.parseFloat(
+            wrap ? getComputedStyle(wrap).getPropertyValue("--holo-overscan") || "1" : "1"
+          ),
+        };
+      });
+
+    const before = await readSlot();
+    expect(before.era, "runway 0.44 holds on the floor era").toBe("azeroth");
+    expect(before.canvases, "no canvas at rest").toBe(0);
+
+    // The same path a click takes: the band's lit chip, one step right.
+    await page.locator("[data-vwh-era-tab][data-on='true']").first().focus();
+    await page.keyboard.press("ArrowRight");
+    const t0 = Date.now();
+    const start = await readSlot();
+
+    // Frame 0: the canvas is up over a HIDDEN video (never a faded one), and it
+    // is the media's box at fit 1 — wrap × overscan, bottom-seated — with no
+    // ground and no border of its own (the >700px sweep's own clauses).
+    expect(start.glitch, "the slot names the run").toMatch(/^\/videos\/.+>\/videos\/.+$/);
+    expect(start.canvases).toBe(1);
+    expect(start.mediaCount, "still exactly one media element").toBe(1);
+    expect(start.mediaVisibility).toBe("hidden");
+    expect(start.mediaOpacity, "the media is hidden, not faded").toBeGreaterThan(0.5);
+    expect(start.canvasBg).toBe("rgba(0, 0, 0, 0)");
+    // The reset leaves every element `border: 0 solid`; what the sweep asks
+    // is that no WIDTH paints, so that is the question here too.
+    expect(start.canvasBorder).toMatch(/ 0px$/);
+    expect(Math.abs(start.canvasW - start.wrapW * start.overscan)).toBeLessThanOrEqual(2);
+    expect(Math.abs(start.canvasBottom - start.wrapBottom)).toBeLessThanOrEqual(1);
+
+    // Mid-run the canvas is still the picture; the era has already moved on
+    // underneath it.
+    await page.waitForTimeout(Math.max(0, t0 + RUN_MS * 0.5 - Date.now()));
+    const mid = await readSlot();
+    expect(mid.canvases).toBe(1);
+    expect(mid.mediaVisibility).toBe("hidden");
+    expect(mid.era).toBe("expanse");
+
+    // After the run: the canvas is gone, the video is shown, one media element,
+    // the new era — a continuation, not a cut.
+    await page.waitForTimeout(Math.max(0, t0 + RUN_MS + 600 - Date.now()));
+    const after = await readSlot();
+    expect(after.canvases, "the canvas lifts on the identity frame").toBe(0);
+    expect(after.glitch).toBeNull();
+    expect(after.mediaCount).toBe(1);
+    expect(after.mediaVisibility).toBe("visible");
+    expect(after.era).toBe("expanse");
+  });
+
   test("the rising footer is an actually opaque cover when it kills the corridor", async ({
     page,
   }, testInfo) => {

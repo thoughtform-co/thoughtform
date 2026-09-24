@@ -262,6 +262,27 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
     row, so the pile gains what the band gave up. The lab mirrors the
     expression character for character. `scripts/probe-voidwalker-figure-span`
     and both handoff specs are the figure's proof that nothing moved.
+  - ⚠ **U42 (2026-09-24, owner): AN ERA CHANGE IS THE FIGURE'S OWN GLITCH,
+    SCROLL AND CLICK ALIKE.** The hero's theme-swap kernel (ADR-060,
+    `lib/key-visual/themeGlitch.ts`) on a canvas laid over the `<video>`
+    (`useHoloGlitch` in `HoloFigure.tsx`; the arithmetic pure in
+    `lib/voidwalker/holoGlitch.ts`): the outgoing frame torn away in bands,
+    the incoming plate resolving from a mosaic, the canvas lifting on the
+    identity frame — no fade, no brightness pulse (the no-flashing law). ⚠ The
+    `<video>` carries NO `src` prop: the layout effect snapshots the outgoing
+    frame, inserts the canvas, paints frame 0 and THEN writes the source. ⚠
+    The video is `visibility: hidden` under the canvas (two alpha pictures
+    double-expose) and `--holo-spill` opens to the largest box for the run. ⚠
+    `drawImage(<video>)` draws NOTHING paused at its load point and
+    half-bright otherwise (measured) — the incoming plate is the era's alpha
+    POSTER, the snapshot is ink-checked with the poster as fallback. The
+    neighbours' posters warm once near; an interrupted run restarts from its
+    target's poster; the floor branch (Safari on the three `.mov`-less eras),
+    PRM, a hidden tab and the first mount are the cut they were. `pick` no
+    longer bumps `epoch` (the tear-in and the `steps(8)` settle are the lab's).
+    Guards: `holo-glitch.test.ts`, the boundaries spec's glitch case,
+    `scripts/capture-holo-glitch.mjs` (`data-vwh-glitch-slow`). Hand-over
+    measured 2.05 / 3.46 per 255 with the video held.
   - ⚠ **U43 (2026-09-24, owner): THE RECORD THUMBNAILS ARE HAIRLINE
     DRAWINGS.** _"It looks like a trash bin; can we do something a bit more
     elegant?"_ — the pixel magazine (a masthead bar over a narrow box) was the

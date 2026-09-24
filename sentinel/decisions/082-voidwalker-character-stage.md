@@ -4867,3 +4867,136 @@ the facts' marks too, he chose the hairline for the three record kinds alone.
 
 - The facts' marks stay pixel; one station, two media — his read decides
   whether they follow.
+
+## Update 42 — an era change is the figure's own glitch (2026-09-24, owner)
+
+The owner: _"when you scroll between eras I want a glitch effect to happen on
+the avatar so there's a clean transition between the avatars; can you scope
+this out?"_ The era change was a bare `src` swap on one `<video>`
+(`HoloFigure.tsx`): on scroll a hard cut — the old frame, the new poster, the
+new video — and on a click a 900ms tear-in on the NEW figure plus a 640ms
+`steps(8)` `brightness(1.5)` settle, a luminance pulse, with no exit for the
+old figure at all. Offered one transition for both paths or a glitch on scroll
+alone, he chose one transition.
+
+### A · The hero's grammar, on a canvas over the video
+
+- **The kernel is ADR-060's** (`lib/key-visual/themeGlitch.ts`, unchanged): 640ms,
+  fourteen bands, the outgoing plate torn ±5 % for the first 22 %, the bands
+  flipping on a shuffled rank cascade to 78 % with the incoming plate arriving
+  as a 24px mosaic that resolves to the house grid, then released to native on
+  the identity frame. Pure spatial tearing — no opacity curve on the figure and
+  no brightness pulse — which is what keeps it inside ADR-097 U12's no-flashing
+  law; a band firms 0.45 → 1 monotonically, the hero's own ramp.
+- **A canvas laid over the `<video>`** (`.vwh__glitch`, inserted by
+  `useHoloGlitch` inside `.vwh__media-wrap` before the edge bar) holds the
+  OUTGOING frame and tears it into the incoming plate; it lifts on the kernel's
+  identity frame. Its BOX is the media's at fit 1 — `100% × --holo-overscan` of
+  the wrap, bottom-centred (534 × 1089 at 1920 × 1247) — and each era's plate
+  is drawn inside it at that era's own `--holo-fit`, contain-bottom, so both
+  pictures land where their videos do (`holoPlateRect`, byte-equal to
+  `containedHologramPlacement`). Its PAINT is the media's, declared once for
+  both: blend, alpha, filter and the scanline mask, with `mask-position` set
+  per run to the incoming video's own phase (`holoScanPhase`: 2.92px arriving
+  on the Expanse, 0 on Azeroth).
+- ⚠ **THE VIDEO IS HIDDEN UNDER THE CANVAS, NOT FADED, AND THE WRAP'S CLIP
+  OPENS.** Both are alpha pictures, so a video showing through the canvas's
+  transparent parts would double-expose the incoming figure under the outgoing
+  one's bands: `.vwh__slot[data-vwh-glitch] .vwh__media { visibility: hidden }`
+  — `visibility`, because the handoff spec pins the media's opacity to the
+  morph and the video must keep loading. And `--holo-spill` is overridden to
+  the largest box for the run: the wrap's clip is solved from the era the slot
+  HOLDS, which at the swap is already the incoming one, so a run leaving the
+  floor era would have had Azeroth's pauldrons cut at the wrap for 640ms.
+- ⚠ **THE `<video>`'S `src` IS SET IMPERATIVELY, IN A LAYOUT EFFECT.** The
+  outgoing frame has to be snapshotted while the element still holds it, and
+  a `src` React had already written would have emptied it before any effect
+  ran. So the element carries no `src` prop; the layout effect snapshots
+  (`drawImage`), inserts the canvas, paints frame 0, THEN writes the source —
+  all before the browser paints. (The first cut kept a `shown` state and
+  adjusted it in the effect; that is one hook warning on a lint ratchet with no
+  headroom, and the DOM-as-truth shape needs none.)
+- ⚠ **`drawImage(<video>)` IS NOT THE PICTURE THE VIDEO PAINTS, AND THAT WAS
+  MEASURED TWICE.** A video paused at its load point (readyState 4,
+  `currentTime` 0) draws NOTHING — alpha 0 on every pixel; at other moments it
+  draws half-bright (the frame under the canvas came out at mean 11.7/255
+  against the video's own 43.9). Drawing the swapped video as the incoming
+  plate was tried on that basis and reverted. The incoming plate is the era's
+  alpha POSTER — frame zero as a q82 WebP, which is what the element paints
+  first when shown again — and the outgoing snapshot is checked for ink on a
+  36 × 64 sample, with the outgoing era's poster standing in where the frame
+  is blank. ⚠ The one-pixel alpha probe (`holoAlphaSupport`) cannot tell
+  "alpha honoured" from "nothing drawn"; it was never asked to.
+- **The neighbours' posters are warmed** (idx ± 1, `posterAlphaPath`, 83–152 kB
+  each, `Image.decode()`) once the figure is near, and the current era's own
+  as the snapshot's fallback — never all five. A plate not decoded at the
+  moment of the change means no glitch, which is the cut the station had.
+- **Interrupted, a run restarts from the plate it was arriving at** — its
+  poster, whole — never a snapshot of the canvas (mosaic on mosaic). A pair's
+  seed is order-sensitive (FNV-1a over `from → to`), so a→b and b→a tear
+  differently and a pair always tears the same way.
+- **One transition for scroll AND click.** `pick` no longer bumps `epoch`; the
+  epoch-driven `reveal` / `settle` phases (`vwhReveal`, `vwhEdge`,
+  `vwhSettle`) are the figure lab's timed materialize now and production never
+  enters them on an era change. The brightness-step settle is out of
+  production with them.
+- **Where it does not run, by design:** reduced motion (the sheet also
+  `display: none`s the canvas and un-hides the media as a belt); the FLOOR
+  branch — an engine with neither codec, and Safari on the three eras with no
+  `.mov` (Azeroth, the Expanse, Pokémon Go), where a run across a branch flip
+  would have to paint two compositing models at once; a hidden tab (a run in
+  flight finishes on `visibilitychange`); the figure off screen; the first
+  mount.
+- **The dev hook:** `data-vwh-glitch-slow="N"` on `.vwd` stretches a run N×,
+  read once at `begin`, so a capture can hold real frames of the choreography.
+
+### B · Guards
+
+- `tests/lib/holo-glitch.test.ts` (12): the seed and the plan (a pair stable,
+  its reverse different, the identity frame at `done`), the plate's seat (the
+  registry's contain-bottom placement at fit 1, scaled by the era's fit and
+  bottom-centred otherwise, every era painting one figure height through the
+  canvas within a pixel), the scan phase in `[0, pitch)`, the interrupt policy,
+  the neighbours. `theme-glitch` (18) unchanged.
+- `about-voidwalker-handoff-boundaries.spec.ts` gains "an era change is the
+  figure's own glitch, over a hidden video, and lifts clean": at 0.44, after
+  the walk's own runs have lifted, a keyboard step right — frame 0 shows the
+  canvas up over a HIDDEN (never faded) media, exactly one media element, the
+  canvas the wrap × overscan wide and bottom-seated, no ground, no painted
+  border; mid-run the canvas still up with the era already moved on; after the
+  run the canvas gone, the attribute gone, the media visible, the new era.
+  Alpha branch only — the floor branch annotates and returns. 9 of 9 in the
+  file; `about-voidwalker-handoff` (one media element, the pose at three
+  progresses, PRM) unchanged.
+- `scripts/capture-holo-glitch.mjs` — headed, real scrolls, the walk re-solved
+  until the era reads Azeroth (one pass landed on `loop`), the run slowed 8×,
+  frames at 0 / 25 / 50 / 75 / 98 % and after, both directions, and the NO-POP
+  number: the last frame under the canvas against the first without it with
+  the video held still. Strips in `docs/design/era-stage-pass/glitch/`.
+
+### Verified
+
+| run (1920 × 1247, dark) | canvas box | mask phase | hand-over mean \|Δ\| |
+| ----------------------- | ---------- | ---------- | -------------------- |
+| Azeroth → the Expanse   | 534 × 1089 | 2.92px     | **2.05** / 255       |
+| the Expanse → Azeroth   | 534 × 1089 | 0px        | **3.46** / 255       |
+
+- The hand-over is the poster → VP9 texture step the reader already crosses
+  on every load; with the swapped video drawn as the incoming plate it read
+  13.2 and 32.2 (the half-bright picture), which is why that route is out.
+- The wrap's clip during a run: `inset(-16% -8% 0px)` on both directions; the
+  media's opacity 0.92 throughout (0.906 once, mid-flicker — the rest flicker
+  dips the media, not the canvas, a 1.5 % mismatch for one frame every 7.3s).
+- ESLint on `HoloFigure.tsx` at its baseline (one `set-state-in-effect` on the
+  observer's `setNear`, pre-existing); `tsc` clean.
+
+### Left open
+
+- **The floor branch cuts.** Safari on Azeroth, the Expanse and Pokémon Go
+  has no `.mov`, so those changes are the cut they were; the honest fix is
+  cutting the HEVC-alpha deliveries on a Mac, not a second glitch.
+- **640ms is the hero's duration**, kept on ADR-097 U12's own reasoning (a
+  figure ~845px tall against a 1247px plate is near enough in pixels); if it
+  reads fast, `HOLO_GLITCH_MS` is the one dial.
+- **Two neighbour posters per era** (~220 kB) are the warming's cost, paid
+  only once the figure is near.

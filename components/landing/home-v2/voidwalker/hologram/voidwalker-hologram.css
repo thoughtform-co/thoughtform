@@ -257,8 +257,19 @@
   --holo-clip-x: calc(-50% * var(--holo-spill));
   --holo-clip-top: calc(-100% * var(--holo-spill));
 }
-.vwh__slot[data-holo-alpha] .vwh__media {
+.vwh__slot[data-holo-alpha] .vwh__media,
+.vwh__slot[data-holo-alpha] .vwh__glitch {
   mix-blend-mode: normal;
+}
+/* ⚠ WHILE AN ERA CHANGES, THE WRAP'S CLIP OPENS TO THE LARGEST BOX (ADR-082
+   U42). The spill above is solved from the era the slot HOLDS, which at the
+   swap is already the incoming one; a run leaving the floor era (fit 1, the
+   only box larger than the wrap) would otherwise have its outgoing plate cut
+   at the wrap for the length of the tear — his pauldrons, again, for 640ms.
+   `--holo-spill` alone is overridden; the two insets read it at computed-value
+   time, so the rest rule and the keyframes follow without restating. */
+.vwh__slot[data-holo-alpha][data-vwh-glitch] .vwh__media-wrap {
+  --holo-spill: calc(var(--holo-overscan, 1) - 1);
 }
 
 /* ⚠ THE FIGURE OVERSCANS ITS SLOT ON THE ALPHA BRANCH (ADR-082 U29, owner
@@ -401,6 +412,38 @@
   max-width: none;
   object-fit: contain;
   object-position: bottom center;
+}
+/* ── The era glitch's canvas (ADR-082 U42) ──────────────────────────
+   Laid over the media for the length of an era change, holding the outgoing
+   frame and tearing it into the incoming plate (`HoloFigure`'s
+   `useHoloGlitch`; the arithmetic is `lib/voidwalker/holoGlitch.ts`). Its
+   BOX is the media's at fit 1 — the union of every era's box, bottom-centred
+   like theirs — and each era's plate is drawn inside it at that era's own
+   fit, so both pictures land exactly where their `<video>`s do. Its PAINT is
+   the media's, declared once for both below (blend, alpha, filter, scan
+   mask); `mask-position` is set inline per run to the incoming video's own
+   phase. No ground, no border: the >700px sweep walks it. */
+.vwh__glitch {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  translate: -50% 0;
+  display: block;
+  width: calc(100% * var(--holo-overscan, 1));
+  height: calc(100% * var(--holo-overscan, 1));
+  max-width: none;
+  pointer-events: none;
+}
+/* ⚠ THE VIDEO IS HIDDEN, NOT FADED, UNDER THE CANVAS. Both are alpha
+   pictures, so a video showing through the canvas's transparent parts would
+   double-expose the incoming figure under the outgoing one's bands.
+   `visibility`, never `opacity`: the handoff spec pins the media's opacity to
+   the morph, and the video keeps loading while it is hidden. */
+.vwh__slot[data-vwh-glitch] .vwh__media {
+  visibility: hidden;
+}
+.vwh__media,
+.vwh__glitch {
   mix-blend-mode: var(--holo-blend, plus-lighter);
   opacity: var(--holo-alpha, 0.92);
   /* ⚠ ONE GLOW, NOT TWO. A second drop-shadow at 70px on a 700px-tall
@@ -427,7 +470,8 @@
 }
 
 @supports not (mix-blend-mode: plus-lighter) {
-  .vwh__media {
+  .vwh__media,
+  .vwh__glitch {
     mix-blend-mode: screen;
   }
 }
@@ -643,6 +687,14 @@
   }
   .vwh__edge {
     opacity: 0;
+  }
+  /* The era glitch never runs here (`useHoloGlitch` bails on `reduced`);
+     this is the belt, and the media stays visible whatever the slot says. */
+  .vwh__glitch {
+    display: none;
+  }
+  .vwh__slot[data-vwh-glitch] .vwh__media {
+    visibility: visible;
   }
 }
 

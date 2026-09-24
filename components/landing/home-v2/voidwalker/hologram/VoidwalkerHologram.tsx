@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import {
   advanceScrambles,
@@ -17,6 +17,7 @@ import {
   holoFigureHeadShare,
   resolveCharacterEraHologram,
 } from "@/lib/voidwalker/characterEras";
+import { neighbourEras } from "@/lib/voidwalker/holoGlitch";
 import { voidwalkerHologramProgressRef } from "@/lib/voidwalker/voidwalkerHologramClock";
 
 import {
@@ -50,20 +51,19 @@ import { HoloFigure } from "./HoloFigure";
  *    lift, the reticle's centre, the phone column's translate and the About
  *    handoff's portrait seat all read `.vwh__base`'s geometry, so only its
  *    PAINT went and nothing moved.
- * 2. ERA SWITCHING IS DELIBERATE. The stage scroll clock owns only entry,
- *    reading hold and exit; choosing one of the five loadouts remains a
- *    tab, pointer, or keyboard action.
+ * 2. ERA SWITCHING IS SCROLL-STEPPED AND CLICKABLE, AND EVERY CHANGE IS THE
+ *    SAME TRANSITION. The one scroll writer derives the era from the runway
+ *    (owner, 2026-08-27) and the band's chips, pointer or keyboard choose
+ *    one directly; either way the figure changes by the glitch in
+ *    `HoloFigure` (ADR-082 U42), never by the epoch-driven materialize, which
+ *    is the figure lab's now.
  *
- * ⚠ FOUR OF THE FIVE ERAS RENDER THE CANONICAL THOUGHTFORM ASSET. Exactly
- * one era-specific pair is authored today — the Azeroth warlock (Vince's
- * actual WoW character Arafel, rendered in the gold-emissive hologram
- * grammar with a fel-green accent). Its wave and asset version live in
- * `characterEras.ts` beside the paths, which is the one place they can be
- * read without going stale here. The remaining four era buttons switch the
- * copy panels but keep the same figure; each new wave lifts one era off the
- * fallback. Author holograms lift here by extending the era registry with a
- * validated `hologram` field. The resolver keeps the canonical Thoughtform
- * pair as the visible fallback for eras without their own asset.
+ * ⚠ FOUR OF THE FIVE ERAS CARRY THEIR OWN FIGURE; ONLY `loop` (the Intelligence
+ * Architect, 2026) renders the canonical Thoughtform pair, which is also every
+ * era's fallback. The others' waves and asset versions live in
+ * `characterEras.ts` beside the paths, which is the one place they can be read
+ * without going stale here; a new era lifts itself off the fallback by
+ * extending the registry with a validated `hologram` field.
  */
 
 const SCRAMBLE_ARM_AT = 0.05;
@@ -95,7 +95,6 @@ const TITLE_DECODE_WINDOW: readonly [number, number] = [0.02, 0.18];
 
 export function VoidwalkerHologram() {
   const [eraIdx, setEraIdx] = useState(0);
-  const [epoch, setEpoch] = useState(0);
   const [reduced, setReduced] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLSpanElement>(null);
@@ -108,9 +107,9 @@ export function VoidwalkerHologram() {
   /* ⚠ SCROLL STEPS THE ERAS BEFORE THE PAGE MOVES ON (owner, 2026-08-27).
      The runway already exists and is already pinned, so this needs no wheel
      capture and no second listener: the one scroll writer derives the index
-     and hands it here. A scrubbed arrival is NOT deliberate — it must not
-     bump `epoch`, or every notch of the wheel would restart the figure's
-     900ms materialize. */
+     and hands it here. A scrubbed arrival is NOT deliberate — the title's
+     decode stays scrubbed — and since ADR-082 U42 the figure's own glitch
+     answers either kind of change the same way. */
   useEffect(() => {
     voidwalkerEraScrubRef.current = (index: number) => {
       setEraIdx((prev) => (prev === index ? prev : index));
@@ -130,6 +129,15 @@ export function VoidwalkerHologram() {
 
   const era = CHARACTER_ERAS[eraIdx];
   const hologram = resolveCharacterEraHologram(era);
+  /* The eras a step away — their posters are what the figure's glitch tears
+     INTO, decoded ahead while the figure is near (ADR-082 U42). */
+  const neighbours = useMemo(
+    () =>
+      neighbourEras(eraIdx, CHARACTER_ERAS.length).map((i) =>
+        resolveCharacterEraHologram(CHARACTER_ERAS[i]!)
+      ),
+    [eraIdx]
+  );
 
   /**
    * THE MASTHEAD DECODES IN, LIKE THE SECTION BEFORE IT.
@@ -146,8 +154,8 @@ export function VoidwalkerHologram() {
    * keeps that final as its accessible label; the generated ghost keeps the
    * mast's responsive footprint invariant while the live string is blank or
    * partial. It re-runs on every era switch. Initial figure
-   * acquisition is owned by the reversible runway morph; only an explicit
-   * era-button choice bumps the figure's finite materialize epoch. Reverse
+   * acquisition is owned by the reversible runway morph; an era change is
+   * the figure's own glitch (ADR-082 U42), whoever asked for it. Reverse
    * scroll below the floor restores the finals, blanks again, and permits a
    * clean replay instead of leaving a one-shot latch behind.
    */
@@ -282,9 +290,11 @@ export function VoidwalkerHologram() {
   const pick = (i: number) => {
     deliberateRef.current = true;
     setEraIdx(i);
-    // The runway owns initial acquisition. A deliberate era choice is the
-    // only event allowed to start HoloFigure's finite 900ms materialize.
-    setEpoch((value) => value + 1);
+    /* ⚠ NO EPOCH BUMP (ADR-082 U42). A click used to start HoloFigure's
+       finite 900ms tear-in on the NEW figure plus a brightness-step settle;
+       the era change itself is the transition now — the same canvas glitch a
+       scrubbed arrival gets — so the two paths cannot disagree about what an
+       era change looks like. `deliberate` still owns the TITLE's timed decode. */
     /* ⚠ A CLICK PINS THE SCROLL TO THAT ERA'S SLICE CENTRE. Without this the
        scroll spy resolves the runway's own position on the very next frame
        and overrides the choice — the casefile's browse band learned this and
@@ -304,8 +314,8 @@ export function VoidwalkerHologram() {
   /* ⚠ THE FIGURE IS A NODE THE COMPOSITION SEATS, not a sibling of it. The
      datum stage puts it INSIDE its grid (column 2, spanning the content
      rows) rather than beside the panels, and `HoloFigure` carries the
-     `portrait` handoff target — so it is built once here, where the
-     materialize epoch lives, and handed down. */
+     `portrait` handoff target — so it is built once here, where the era
+     lives, and handed down. `epoch` is the lab's button and never moves here. */
   const figureColumn = (
     <div
       className="vwh__column"
@@ -326,7 +336,8 @@ export function VoidwalkerHologram() {
     >
       <HoloFigure
         hologram={hologram}
-        epoch={epoch}
+        neighbours={neighbours}
+        epoch={0}
         form="emissive"
         blend="plus-lighter"
         alpha={0.92}
