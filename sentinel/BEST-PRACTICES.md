@@ -1759,6 +1759,29 @@ through a sieve that returns the value or `null` (`lib/api/numbers`), answer
 and take a default only for an ABSENT field.** A coercion (`Number("50")`)
 hides the caller's bug; a guard written as `x < 1` does not see `NaN`.
 
+## A canvas with nothing to paint still costs a context (ADR-123 B, 2026-09-24)
+
+The brandmark particle canvas mounted on every landing load — a second
+full-screen WebGL context at DPR 1.75, redrawing once per scroll frame — and on
+`/` it could not paint a pixel: its journey needs two live anchors and the
+route strips every station that carries one. Nothing measured it because
+nothing it drew was missing. **A painter whose inputs cannot exist on a route
+must not mount on that route; gate the mount on the inputs, and pin the
+route's inputs in a test**, because "it draws nothing" is not the same as "it
+costs nothing" — the context, its buffers and its per-frame work are the cost,
+and a phone's memory budget is where that cost comes due.
+
+## What a pinned band covers is a lever, and what it hides is a cost (ADR-123 B)
+
+Eight sticky sheets on a phone kept the corridor scene painting every frame
+under them, and each covered sheet kept painting its own glass and rim under
+the sheets on top of it. The pile OWNS the frame for most of its runway, and
+a frame nobody can see is the cheapest frame to skip: observe when the cover
+is total, stop the pump, paint one frame per scroll event for the gutters, and
+hide the covered sheet's card (never its slot — the hook measures the slot).
+The costs are named — the gutters' twinkle rests between events — because a
+saving that is not stated is a regression the next reader finds by eye.
+
 ## An in-flow `dvh` box moves the whole document on iOS, and nothing anchors it (ADR-123, 2026-09-24)
 
 The hero was `100dvh` so that its lift clock could say "the curtain has cleared"

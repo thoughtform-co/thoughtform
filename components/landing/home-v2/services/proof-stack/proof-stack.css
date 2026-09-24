@@ -2597,6 +2597,19 @@
   .pf-stack.pf-stack--split .pf-card::after {
     display: block;
   }
+  /* ADR-123 (commit B): A COVERED FIELD SHEET STOPS PAINTING. Only the
+     card's BODY hid before (`:1529`), so each covered sheet kept painting its
+     glass, band, rim and wash under the sheets on top of it — an animated
+     translate / scale / opacity with a clip-path, eight times over. On the
+     CARD, never the slot (the hook reads the slot's rect); the RECORD keeps
+     its band by construction (ADR-107 §4 — that band is the tab that says
+     which folder is underneath). Covered ⇔ cover ≥ .999, so nothing visible
+     changes at the flip. No `contain: paint` (a rising card sits `--pc-rise`
+     below its slot during arrival), no `will-change`. */
+  .pf-stack.pf-stack--split .pf-slot--field[data-pc-state="covered"] .pf-card {
+    visibility: hidden;
+    clip-path: none;
+  }
   .pf-stack.pf-stack--split .pf-card--record {
     grid-template-rows: var(--pc-peek) minmax(0, 1fr);
     /* One rung down on both faces, so a title, a lede and four claim bands

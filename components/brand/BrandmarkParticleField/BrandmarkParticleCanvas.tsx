@@ -53,6 +53,9 @@ export function BrandmarkParticleCanvas({
   // and BrandmarkFrameDriver kicks a settle frame on remount, so the
   // remount re-syncs with no state to migrate.
   const [glEpoch, setGlEpoch] = useState(0);
+  const [coarsePointer] = useState(
+    () => typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches
+  );
   // W4 (plan 03adb0dd) — corridor handoff hardening. The home-v2
   // depth corridor sets `data-brandmark-mode="off"` on `<html>`
   // whenever its engagement is armed/active (see HomeCorridor.tsx),
@@ -159,7 +162,9 @@ export function BrandmarkParticleCanvas({
         // Capped at the corridor's desktop budget (DepthGatewayScene
         // ships [1, 1.75]) — this full-viewport canvas previously ran
         // uncapped to dpr 2, the highest fill cost on the page.
-        dpr={[1, 1.75]}
+        // ADR-123 (commit B): 1.4 on a coarse pointer, the corridor's own
+        // mobile ceiling, for the hosts that do mount it.
+        dpr={[1, coarsePointer ? 1.4 : 1.75]}
         gl={{
           alpha: true,
           antialias: false,
