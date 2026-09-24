@@ -7,6 +7,7 @@ import {
   ChaptersGrown,
   ChaptersLedger,
   ChaptersRight,
+  ChaptersRightTitled,
 } from "./Chapters";
 import { Codex } from "./Codex";
 import { Columns } from "./Columns";
@@ -59,6 +60,7 @@ export const MG_DIRECTION_IDS = [
   "v14",
   "v15",
   "v16",
+  "v17",
 ] as const;
 export type MgDirectionId = (typeof MG_DIRECTION_IDS)[number];
 
@@ -252,6 +254,17 @@ export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
     cover: "orbit",
     raster: true,
   },
+  v17: {
+    id: "v17",
+    label: "Chapters · one cover, v4 titles",
+    thesis:
+      "v14 with v4's title scale: the same card, unframed cover and sign on its floor, the rows grown to hold a title set as large as v4's.",
+    provenance:
+      'v14 and v4\'s title (the owner: "what I like about v4 still is the big title size").',
+    round: 6,
+    knobs: ["cover"],
+    cover: "orbit",
+  },
 };
 
 /**
@@ -279,4 +292,5 @@ export const MG_GALLERIES: Readonly<
   v14: ChaptersRight,
   v15: DossierCards,
   v16: DossierPlates,
+  v17: ChaptersRightTitled,
 };

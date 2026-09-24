@@ -100,7 +100,8 @@ export function Chapters({
   posts,
   knobs,
   variant = "default",
-}: DirectionProps & { variant?: ChaptersVariant }) {
+  titles = "card",
+}: DirectionProps & { variant?: ChaptersVariant; titles?: "card" | "big" }) {
   const ref = useRef<HTMLDivElement | null>(null);
   useLabSelect(ref);
   const cover = coverKindOf(knobs?.cover, variant === "right" ? "orbit" : "dial");
@@ -120,7 +121,8 @@ export function Chapters({
     <div
       className="mg mg--chapters"
       data-mg-root=""
-      data-mg-v={VARIANT_ID[variant]}
+      data-mg-v={titles === "big" ? "v17" : VARIANT_ID[variant]}
+      data-mg-titles={titles === "big" ? "big" : undefined}
       data-mg-variant={variant}
       data-mg-cover={cover}
       data-mg-thumbs={thumbs ? "" : undefined}
@@ -254,6 +256,15 @@ export function ChaptersGrown(props: DirectionProps) {
 }
 
 /** v14 — v13 with the one cover unframed, on the right. */
+/**
+ * v17 — v14 with v4's title scale (owner, 2026-09-24: "what I like about v4
+ * still is the big title size"). The card, the one cover, the sign on its
+ * floor are v14's to the rule; only the row grows to hold a v4 title.
+ */
+export function ChaptersRightTitled(props: DirectionProps) {
+  return <Chapters {...props} variant="right" titles="big" />;
+}
+
 export function ChaptersRight(props: DirectionProps) {
   return <Chapters {...props} variant="right" />;
 }

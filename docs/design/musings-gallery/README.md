@@ -221,6 +221,15 @@ the picture is the note's drawn cover.
 | `v15` | Codex · cards               | v1 tightened: an index of v13's folder cards (thumbnail, title, meta) on the left, ONE card on the right as tall as what it says — band, the visual, title, excerpt, byline and the way in. The visual is the index row's thumbnail at card size, **as glyphs at rest, resolving on the card**. v1's contents list, readout and year strip are gone. |
 | `v16` | Codex · plates              | the same card, with v1's own index grammar tightened: outlined plates, the open one filled gold with its ink knocked out (ADR-089 U4), the thumbnail outside the plate where v1 hung its beat glyph.                                                                                                                                                 |
 
+**v17 · Chapters · one cover, v4 titles** (owner, same day: "what I like
+about v4 still is the big title size"): v14 unchanged but for the row and the
+title. The row takes v4's own formula (8.6svh, solved from the count after the
+open row's floor, up to 108px) less the cards' gap, floored at 64px; the title
+takes v4's `clamp(22px, 2.5vw, 48px)`, capped by what the row leaves above the
+meta line — 48px at 1920×1247, 32px at 1280×720, as v4. The thumbnail and the
+open card's floor are declared off the row, so the sign still lands on the
+cover.
+
 **Three new covers**, on every direction's `?cover=` knob, each plotting the
 note's own record (its beat, its filing day, the year's other notes):
 
@@ -259,7 +268,7 @@ ratio past 2:1 either way; it measures about 1.1:1.
 
 ## Knobs
 
-`?v=v0…v16` · `?src=live|lab` (the three real notes, or the seven placeholders)
+`?v=v0…v17` · `?src=live|lab` (the three real notes, or the seven placeholders)
 · `?n=3|5|7` (placeholders only) · `?theme=light` · `?console=0` (hide the
 console) · a direction's own knobs, shown by the console only for the
 directions that declare them in the registry:
@@ -300,7 +309,7 @@ else. The site is live, and a file in `content/musings/` publishes a page.
 ## Verifying
 
 ```bash
-node scripts/capture-musings-gallery.mjs            # 17 directions × 3 sources × 2 themes × 2 viewports
+node scripts/capture-musings-gallery.mjs            # 18 directions × 3 sources × 2 themes × 2 viewports
 node scripts/capture-musings-gallery.mjs --v v2 --src lab7 --vp 1280x720 --theme dark
 node scripts/capture-musings-gallery.mjs --v v7 --src lab7 --vp 1280x720 --theme dark   # the rail case
 node scripts/capture-musings-gallery.mjs --v v7 --q dek=1                               # the summary on the open card

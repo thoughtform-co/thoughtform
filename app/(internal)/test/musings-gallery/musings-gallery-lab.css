@@ -1730,6 +1730,37 @@ html[data-theme="light"] .mg-raster__dot {
   margin-top: auto;
 }
 
+/* ── v17 · v14 with v4's TITLES (owner, 2026-09-24: "what I like about v4
+   still is the big title size") ─────────────────────────────────────────
+   Only the row and the title move. The row takes v4's own formula (8.6svh,
+   solved from the count after the open row's floor, up to 108px) less the
+   cards' 8px gap, floored at 64px because a card row also carries the meta
+   line; the title takes v4's `clamp(22px, 2.5vw, 48px)`, capped by what the
+   row leaves above that line (a 64px row holds a 32px title, the 6px gap and
+   the meta line with 9px to spare — v4's own 1280 size). ⚠ The thumbnail (`row − 20`) and the open
+   card's floor (`--mg-ch-open`) are declared off `--mg-ch-row` on this same
+   element, so they re-solve with it — the sign still lands on the cover. */
+.mg--chapters[data-mg-variant="right"][data-mg-titles="big"] {
+  --mg-ch-row: clamp(
+    64px,
+    min(
+      8.6svh,
+      calc(
+        (100cqh - var(--mg-ch-open-min) - var(--mg-ch-foot)) / var(--mu-n, 3) -
+          var(--mg-ch-card-gap)
+      )
+    ),
+    108px
+  );
+}
+.mg--chapters[data-mg-variant="right"][data-mg-titles="big"] .mg-ch__title {
+  font-size: min(clamp(22px, 2.5vw, 48px), calc((var(--mg-ch-row) - 26px) * 0.9));
+  line-height: 1.08;
+}
+.mg--chapters[data-mg-variant="right"][data-mg-titles="big"] .mg-ch__text {
+  gap: 6px;
+}
+
 /* ── The one cover's container (v13, v14, and round six's thumbnails) ──
    Wherever a cover is sized as a box, the box is a size container named
    `mg-cv`, and a cover under 140px is its own THUMBNAIL: no labels, no

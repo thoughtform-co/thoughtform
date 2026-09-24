@@ -45,7 +45,7 @@ const arg = (flag, dflt) => {
 const PORT = arg("--port", "3003");
 const VPS = arg("--vp", "1920x1247,1280x720").split(",");
 const THEMES = arg("--theme", "dark,light").split(",");
-const VS = arg("--v", "v0,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16").split(",");
+const VS = arg("--v", "v0,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16,v17").split(",");
 const SRCS = arg("--src", "live,lab5,lab7").split(",");
 const HEADED = process.argv.includes("--headed");
 const ROOT_OUT = arg("--out", "shots/musings-gallery");
@@ -291,7 +291,7 @@ for (const vp of VPS) {
            rests as GLYPHS, resolves on the card, and the two states' mean ink
            stays one transition (ADR-097 U12 — no flash). */
         const own = [];
-        if (v === "v14") {
+        if (v === "v14" || v === "v17") {
           const a = await page.evaluate(() => {
             const it = document.querySelector('[data-mg-variant="right"] .mg-ch__item[data-mg-on]');
             const cover = it?.querySelector(".mg-ch__cover");
