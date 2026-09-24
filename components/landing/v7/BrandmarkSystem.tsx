@@ -131,6 +131,8 @@ export const BrandmarkSystem = forwardRef<BrandmarkActorHandle, BrandmarkSystemP
       return () => observer.disconnect();
     }, [rootRef]);
 
+    const anchorCount = ANCHOR_KEYS.filter((key) => anchorEls[key]).length;
+
     return (
       <>
         {ANCHOR_KEYS.map((key) => {
@@ -159,9 +161,17 @@ export const BrandmarkSystem = forwardRef<BrandmarkActorHandle, BrandmarkSystemP
             Boundary fallback is null on purpose: if the painter
             crashes, the vector actor + dock glyphs above keep the
             brand visible — losing atmosphere grain is invisible. */}
-        <CanvasErrorBoundary fallback={null}>
-          <BrandmarkParticleCanvas />
-        </CanvasErrorBoundary>
+        {/* ADR-123 (commit B): ONLY with two live anchors. The journey needs
+            two keyframes with a measured rect before it ever sets `visible`
+            (`useBrandmarkJourney`), and the landing strips every station that
+            carried one — so on `/` this full-screen WebGL context mounted,
+            redrew once per scroll frame at DPR 1.75, and could never paint a
+            pixel. `landing-brand-anchors.test.ts` pins the count at zero. */}
+        {anchorCount >= 2 && (
+          <CanvasErrorBoundary fallback={null}>
+            <BrandmarkParticleCanvas />
+          </CanvasErrorBoundary>
+        )}
       </>
     );
   }

@@ -29,7 +29,7 @@ import { readDiagBoot } from "./DiagGate";
  */
 
 /** Which build of the bisect ladder this is. Moved by hand per commit. */
-export const DIAG_VARIANT = "A";
+export const DIAG_VARIANT = "B";
 
 type Snap = BlackBoxRecord;
 

@@ -439,6 +439,28 @@ test.describe("the ring on phones (ADR-108)", () => {
     });
   }
 
+  /* ── ADR-123 commit B: the band is where the corridor draws ────────────── */
+  test("on the band the corridor paints and the pile's hold is off (ADR-123 B)", async ({
+    page,
+  }) => {
+    await boot(page);
+    await seatBand(page, BEAT[1]);
+    await page.waitForTimeout(400);
+    expect(
+      await page.evaluate(() => document.documentElement.getAttribute("data-pile-hold"))
+    ).toBeNull();
+    const frames = () =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __tfFrames?: { corridor: number } }).__tfFrames?.corridor ?? -1
+      );
+    const f0 = await frames();
+    expect(f0).toBeGreaterThanOrEqual(0);
+    await page.waitForTimeout(600);
+    const f1 = await frames();
+    expect(f1 - f0, "the corridor is not painting on the band").toBeGreaterThanOrEqual(5);
+  });
+
   test("the ring rests off-stage before the band and leaves with it", async ({ page }) => {
     await boot(page);
     const top = await bandTop(page);

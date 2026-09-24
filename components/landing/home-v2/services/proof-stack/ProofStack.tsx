@@ -3,6 +3,7 @@
 import { useEffect, useRef, type CSSProperties } from "react";
 
 import { useStackedCardsScroll } from "@/components/landing/v7/tools-cards/useStackedCardsScroll";
+import { setPileHold } from "@/lib/home-v2/pileHoldRef";
 import type { CaseTrack } from "@/lib/cases/types";
 
 import { ProofCard } from "./ProofCard";
@@ -94,6 +95,46 @@ export function ProofStack({
 }) {
   const runwayRef = useRef<HTMLDivElement>(null);
   useStackedCardsScroll(runwayRef);
+
+  /* ── The pile HOLD (ADR-123 commit B), split mode only ─────────────────
+     While the runway spans from above the frame's top 8 % to below its
+     bottom 92 %, the eight sticky sheets cover everything but the gutters —
+     and the corridor scene under them was still redrawing every frame. Two
+     observers, one flag: `hold` is TRUE only while both bands intersect the
+     runway. Written to a three-free ref the corridor's `FrameInvalidator`
+     reads (never a store field — `servicesAmbient` keeps its one writer) and
+     mirrored on `<html>` as `data-pile-hold` for the diag and the smokes.
+     ⚠ NOT a scroll listener: an observer fires on the compositor's own
+     schedule and costs nothing at rest, which is the whole point. */
+  useEffect(() => {
+    if (!split) return;
+    const runway = runwayRef.current;
+    if (!runway || typeof IntersectionObserver === "undefined") return;
+    let top = false;
+    let bottom = false;
+    const publish = () => setPileHold(top && bottom);
+    const topBand = new IntersectionObserver(
+      ([e]) => {
+        top = !!e?.isIntersecting;
+        publish();
+      },
+      { rootMargin: "0px 0px -92% 0px", threshold: 0 }
+    );
+    const bottomBand = new IntersectionObserver(
+      ([e]) => {
+        bottom = !!e?.isIntersecting;
+        publish();
+      },
+      { rootMargin: "-92% 0px 0px 0px", threshold: 0 }
+    );
+    topBand.observe(runway);
+    bottomBand.observe(runway);
+    return () => {
+      topBand.disconnect();
+      bottomBand.disconnect();
+      setPileHold(false);
+    };
+  }, [split]);
 
   /* ── The first card's materialisation (ADR-097 U11) ─────────────────
      Three states on the SLOT, beside the hook's own: `await` (risen, not yet
