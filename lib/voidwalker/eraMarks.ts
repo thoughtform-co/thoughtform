@@ -1,13 +1,13 @@
 /**
- * The era stage's drawn marks (ADR-082 U35) — the FACTS grid's four and the
- * ON RECORD cards' three, on the particle-icon grammar
- * (`.claude/skills/thoughtform-design/references/particle-icon-grammar.md`).
+ * The era stage's FACTS marks (ADR-082 U35) — four, on the particle-icon
+ * grammar (`.claude/skills/thoughtform-design/references/particle-icon-grammar.md`).
  *
- * Owner, 2026-09-22: the facts want "icons, make a bit of a grid … uniform",
- * and each press card "on the left side, a thumbnail". He chose a DRAWN mark
- * for the thumbnail over a publisher's photograph or the outlet's logo, so the
- * card's picture says what KIND of coverage it is and the medium line under the
- * headline says which outlet.
+ * Owner, 2026-09-22: the facts want "icons, make a bit of a grid … uniform".
+ * ⚠ THE ON RECORD THUMBNAILS LEFT THIS TABLE IN ADR-082 U43 (owner,
+ * 2026-09-24: the magazine "looks like a trash bin … something a bit more
+ * elegant"). They are hairline drawings now — `recordMarks.ts`, a 21-unit
+ * grid — because seven cells could not tell a magazine from a can in four
+ * cuts. This table is the facts' alone.
  *
  * The grammar, as this file holds it:
  *   · a 7×7 lattice at integer cells (`[col, row]`, 0–6), square pixels, no
@@ -43,14 +43,7 @@ export interface EraMark {
   readonly dr: readonly EraMarkPixel[];
 }
 
-export type EraMarkKey =
-  | "base"
-  | "move"
-  | "reach"
-  | "result"
-  | "newspaper"
-  | "magazine"
-  | "broadcast";
+export type EraMarkKey = "base" | "move" | "reach" | "result";
 
 export const ERA_MARKS: Readonly<Record<EraMarkKey, EraMark>> = {
   /* BASE — where it happened. A pin standing on its ground; the signal is the
@@ -130,76 +123,5 @@ export const ERA_MARKS: Readonly<Record<EraMarkKey, EraMark>> = {
     ],
     sig: [[1, 0]],
     dr: [[6, 1]],
-  },
-  /* NEWSPAPER — a broadsheet: the masthead, a column of lines, a picture. */
-  newspaper: {
-    sk: [
-      [0, 1],
-      [1, 1],
-      [2, 1],
-      [3, 1],
-      [4, 1],
-      [5, 1],
-      [6, 1],
-      [0, 3],
-      [1, 3],
-      [2, 3],
-      [0, 5],
-      [1, 5],
-      [2, 5],
-    ],
-    sig: [
-      [4, 4],
-      [5, 4],
-    ],
-    dr: [[3, 5]],
-  },
-  /* MAGAZINE — a cover: the masthead band over the cover's framed picture.
-     ⚠ Two cuts failed on the contact sheet, both worth keeping in mind: a
-     spine, a foot and a masthead open on the right read as a letter C at 14px,
-     and a figure under a masthead read as a PERSON — the phone's own figure
-     tab turned upside down, on the same station. */
-  magazine: {
-    sk: [
-      [1, 0],
-      [2, 0],
-      [3, 0],
-      [4, 0],
-      [5, 0],
-      [2, 2],
-      [3, 2],
-      [4, 2],
-      [2, 3],
-      [4, 3],
-      [2, 4],
-      [4, 4],
-      [2, 5],
-      [3, 5],
-      [4, 5],
-    ],
-    sig: [[3, 3]],
-    dr: [[6, 0]],
-  },
-  /* BROADCAST — a screen on its antenna; the signal is the lit screen. */
-  broadcast: {
-    sk: [
-      [2, 2],
-      [4, 2],
-      [3, 3],
-      [1, 4],
-      [2, 4],
-      [3, 4],
-      [4, 4],
-      [5, 4],
-      [1, 5],
-      [5, 5],
-      [1, 6],
-      [2, 6],
-      [3, 6],
-      [4, 6],
-      [5, 6],
-    ],
-    sig: [[3, 5]],
-    dr: [[1, 2]],
   },
 };

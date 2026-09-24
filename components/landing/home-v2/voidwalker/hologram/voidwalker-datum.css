@@ -67,14 +67,17 @@
      ~10px label, which is where 14px was always the match.) */
   --vwd-press-mark: 14px;
 
-  /* ADR-082 U35's drawn marks, on the same law (integer multiples of the
-     7-cell lattice). A fact's mark sits beside a ~10px mono label, so it takes
-     the 2px cell; a press card's THUMBNAIL is the card's picture, so it takes
-     the 3px cell inside a well padded by a whole number of pixels.
-     ⚠ THE WELL IS PADDED, NEVER CENTRED: a 21px mark centred in an even box
-     lands on a half pixel and every rect goes soft, so the mark's offset is
-     `--vwd-pcard-pad` by construction and the well's size is whatever that
-     sums to (21 + 2 × 10 + 2 × 1 = 43px). */
+  /* ADR-082 U35's facts marks, on the same law (integer multiples of the
+     7-cell lattice): a fact's mark sits beside a ~10px mono label, so it takes
+     the 2px cell.
+     ⚠ THE PRESS CARD'S THUMBNAIL IS A HAIRLINE DRAWING SINCE ADR-082 U43
+     (`lib/voidwalker/recordMarks.ts`): a 21-unit grid rendered at 21px, so
+     one unit is one pixel and every axis line sits on its own half pixel —
+     the size is the drawing's grid at 1:1, and it is no longer a lattice
+     multiple that has to be kept whole. What the well still owes it is a
+     WHOLE-PIXEL seat: padded by `--vwd-pcard-pad`, never centred, so the
+     drawing's half-pixel lines land on device pixels (21 + 2 × 10 + 2 × 1 =
+     43px). */
   --vwd-fact-mark: 14px;
   --vwd-pcard-mark: 21px;
   --vwd-pcard-pad: 10px;
@@ -707,11 +710,12 @@
   color: rgb(var(--vwd-dawn-rgb));
   text-wrap: pretty;
 }
-/* The marks' three layers — DAWN ONLY: the signal is the brightest dawn, never
-   gold, because gold on this station is the era band's "you are here". One
-   rule for the facts' marks and the press cards' thumbnails, so the two sets
-   cannot drift apart. `--vwd-dawn-rgb` flips with the theme, so light
-   re-derives the ladder for free. */
+/* The facts marks' three layers — DAWN ONLY: the signal is the brightest dawn,
+   never gold, because gold on this station is the era band's "you are here".
+   (The press cards' thumbnails read the same token through `.vwd__rm__*`
+   below since ADR-082 U43, so the two media share one ladder.)
+   `--vwd-dawn-rgb` flips with the theme, so light re-derives the ladder for
+   free. */
 .vwd__mk__sk {
   fill: rgba(var(--vwd-dawn-rgb), 0.62);
 }
@@ -1229,11 +1233,28 @@
   padding: var(--vwd-pcard-pad);
   border: 1px solid rgba(var(--vwd-dawn-rgb), 0.2);
 }
+/* ⚠ THE HAIRLINE REGISTER, NOT THE LATTICE (ADR-082 U43): `geometricPrecision`,
+   never `crispEdges`. The axis lines are authored on the half pixel and land
+   crisp on their own; the two 45° rabbit ears on the broadcast set are
+   anti-aliased on purpose — under `crispEdges` a 1px diagonal is a staircase
+   of single pixels, i.e. the pixel grammar this thumbnail just left. */
 .vwd__pcard__mark {
   display: block;
   width: var(--vwd-pcard-mark);
   height: var(--vwd-pcard-mark);
-  shape-rendering: crispEdges;
+  shape-rendering: geometricPrecision;
+}
+/* The drawing's two layers — DAWN ONLY, the same law as the facts' marks:
+   the line at the outline's own strength, the signal at full dawn. Unchanged
+   on hover (U35): the card's state is its ring and its ink, never its picture. */
+.vwd__rm__line {
+  fill: none;
+  stroke: rgba(var(--vwd-dawn-rgb), 0.62);
+  stroke-width: 1;
+  stroke-linecap: butt;
+}
+.vwd__rm__sig {
+  fill: rgb(var(--vwd-dawn-rgb));
 }
 .vwd__pcard__text {
   display: grid;

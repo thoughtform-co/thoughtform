@@ -302,15 +302,23 @@ describe("ON RECORD is cards (ADR-082 U35)", () => {
     expect(css).not.toContain(".vwd__press__headline");
   });
 
-  it("seats every mark on the pixel lattice", () => {
+  it("seats every pixel mark on the lattice, and the thumbnail on its own grid", () => {
     // 7 cells: anything but an integer multiple goes soft.
-    for (const token of ["--vwd-press-mark", "--vwd-fact-mark", "--vwd-pcard-mark"]) {
+    for (const token of ["--vwd-press-mark", "--vwd-fact-mark"]) {
       const px = Number(new RegExp(`${token}:\\s*(\\d+)px`).exec(css)?.[1]);
       expect(px, token).toBeGreaterThan(0);
       expect(px % 7, token).toBe(0);
     }
-    for (const selector of [".vwd__press__arrow", ".vwd__pcard__mark", ".vwd__facts__mark"])
+    for (const selector of [".vwd__press__arrow", ".vwd__facts__mark"])
       expect(ruleBody(css, selector), selector).toContain("shape-rendering: crispEdges");
+    // ⚠ The thumbnail is the HAIRLINE register since ADR-082 U43: a 21-unit
+    // drawing at 1:1, its axis lines on the half pixel, its diagonals
+    // anti-aliased — `crispEdges` here would turn the rabbit ears back into a
+    // pixel staircase.
+    expect(Number(/--vwd-pcard-mark:\s*(\d+)px/.exec(css)?.[1])).toBe(21);
+    const mark = ruleBody(css, ".vwd__pcard__mark");
+    expect(mark).toContain("shape-rendering: geometricPrecision");
+    expect(mark).not.toContain("crispEdges");
   });
 
   it("pads the thumbnail's mark into place rather than centring it", () => {
@@ -357,6 +365,17 @@ describe("FACTS is one grid of four (ADR-082 U35)", () => {
       expect(body).toMatch(/--vwd-dawn-rgb/);
       expect(body).not.toMatch(/gold/);
     }
+    // The record thumbnails' two layers (ADR-082 U43): a 1px dawn stroke and a
+    // dawn fill, on the same token, and no hover rule reaches either.
+    const line = ruleBody(css, ".vwd__rm__line");
+    expect(line).toMatch(/stroke:\s*rgba\(var\(--vwd-dawn-rgb\)/);
+    expect(line).toMatch(/stroke-width:\s*1\b/);
+    expect(line).toMatch(/fill:\s*none/);
+    expect(line).not.toMatch(/gold/);
+    const sig = ruleBody(css, ".vwd__rm__sig");
+    expect(sig).toMatch(/fill:\s*rgb\(var\(--vwd-dawn-rgb\)\)/);
+    expect(sig).not.toMatch(/gold/);
+    expect(css).not.toMatch(/:(hover|focus-visible)[^{]*\.vwd__rm__/);
   });
 });
 

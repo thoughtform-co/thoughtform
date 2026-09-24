@@ -2,44 +2,39 @@ import { describe, expect, it } from "vitest";
 
 import { ERA_MARKS, type EraMark, type EraMarkPixel } from "@/lib/voidwalker/eraMarks";
 import { CHARACTER_ERA_FACT_KEYS } from "@/lib/voidwalker/characterEras";
-import { VW_OUTLET_KIND } from "@/lib/voidwalker/voidwalkerData";
 
 /**
- * The era stage's drawn marks (ADR-082 U35) — the particle-icon grammar held
+ * The era stage's FACTS marks (ADR-082 U35) — the particle-icon grammar held
  * clause by clause, the way `proof-glyphs.test.ts` holds the casefile's.
  *
  * ⚠ A GUARD IS NOT A CONTACT SHEET. Every clause below can pass on a mark that
- * reads as the wrong thing — the magazine's first two cuts did (a letter C,
- * then a person) — so a change to a mark is re-judged on the rendered sheet,
- * unlabelled, before it ships. What this file stops is the mark that is
- * illegible by construction: off the lattice, over the budget, a drift pixel
- * sitting on the form, or two marks that are one drawing.
+ * reads as the wrong thing — the magazine's cuts did (a letter C, a person,
+ * then a trash bin), which is why the ON RECORD thumbnails left this table for
+ * the hairline register (ADR-082 U43, `record-marks.test.ts`). A change to a
+ * mark is re-judged on the rendered sheet, unlabelled, before it ships. What
+ * this file stops is the mark that is illegible by construction: off the
+ * lattice, over the budget, a drift pixel sitting on the form, or two marks
+ * that are one drawing.
  */
-const EXPECTED_KEYS = [
-  "base",
-  "move",
-  "reach",
-  "result",
-  "newspaper",
-  "magazine",
-  "broadcast",
-] as const;
+const EXPECTED_KEYS = ["base", "move", "reach", "result"] as const;
 
 const key = ([x, y]: EraMarkPixel) => `${x},${y}`;
 const all = (m: EraMark) => [...m.sk, ...m.sig, ...m.dr];
 
 describe("ADR-082 U35 · the era marks", () => {
-  it("draws exactly the seven marks the stage asks for", () => {
+  it("draws exactly the four facts' marks, and nothing for the record cards", () => {
     expect(Object.keys(ERA_MARKS).sort()).toEqual([...EXPECTED_KEYS].sort());
+    // The record thumbnails are `RECORD_MARKS` since U43; a pixel mark for a
+    // coverage kind returning here is the bin coming back.
+    for (const gone of ["newspaper", "magazine", "broadcast"]) {
+      expect(ERA_MARKS).not.toHaveProperty(gone);
+    }
   });
 
-  it("every fact key and every outlet kind has its mark", () => {
+  it("every fact key has its mark", () => {
     // The four fact labels are title case in the record, lower case here.
     for (const k of CHARACTER_ERA_FACT_KEYS) {
       expect(ERA_MARKS, k).toHaveProperty(k.toLowerCase());
-    }
-    for (const [outlet, kind] of Object.entries(VW_OUTLET_KIND)) {
-      expect(ERA_MARKS, `${outlet} → ${kind}`).toHaveProperty(kind);
     }
   });
 

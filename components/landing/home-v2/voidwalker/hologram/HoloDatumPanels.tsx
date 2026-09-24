@@ -17,10 +17,12 @@ import {
   type CharacterEraMedia,
 } from "@/lib/voidwalker/characterEras";
 import { ERA_MARKS, type EraMark, type EraMarkKey } from "@/lib/voidwalker/eraMarks";
+import { RECORD_MARKS, type RecordMark } from "@/lib/voidwalker/recordMarks";
 import {
   VOIDWALKER_BEATS,
   vwOutletKind,
   vwPlain,
+  type VwOutletKind,
   type VwPress,
 } from "@/lib/voidwalker/voidwalkerData";
 
@@ -155,13 +157,15 @@ function FigureReticle() {
 }
 
 /**
- * One of the era stage's drawn marks (`lib/voidwalker/eraMarks.ts`, ADR-082
- * U35): the facts grid's four and the press cards' three thumbnails. Rect-only
- * on the 7×7 lattice, `crispEdges`, no text node — the same grammar as
- * `FigureGlyph` and `PressArrow`. The three layers are three classes so the
- * SHEET owns their dawn ladder (and light re-derives it through the token).
- * ⚠ 21px = a 3px cell: the size is the sheet's, and it stays an INTEGER
- * multiple of the lattice or the mark goes soft.
+ * One of the FACTS grid's four drawn marks (`lib/voidwalker/eraMarks.ts`,
+ * ADR-082 U35; the press cards' thumbnails left this grammar for
+ * `RecordMarkSvg` in U43). Rect-only on the 7×7 lattice, `crispEdges`, no text
+ * node — the same grammar as `FigureGlyph` and `PressArrow`. The three layers
+ * are three classes so the SHEET owns their dawn ladder (and light re-derives
+ * it through the token).
+ * ⚠ 14px = a 2px cell: the size is the sheet's, and it stays an INTEGER
+ * multiple of the lattice or the mark goes soft. The `width`/`height`
+ * attributes below are the pre-CSS fallback and are kept a lattice multiple.
  */
 function EraMarkSvg({ mark, className }: { mark: EraMark; className: string }) {
   const cells = (pts: EraMark["sk"], layer: "sk" | "sig" | "dr") =>
@@ -187,6 +191,42 @@ function EraMarkSvg({ mark, className }: { mark: EraMark; className: string }) {
       {cells(mark.dr, "dr")}
       {cells(mark.sk, "sk")}
       {cells(mark.sig, "sig")}
+    </svg>
+  );
+}
+
+/**
+ * The record card's thumbnail (ADR-082 U43): a line drawing of the coverage's
+ * KIND in the reticle's own register — 1px hairlines on a 21-unit grid at 1:1,
+ * one filled signal — never the 7×7 lattice, which could not tell a magazine
+ * from a trash bin in four cuts. Two classes so the SHEET owns the dawn ink
+ * (and light re-derives it through the token); `shape-rendering` is the
+ * sheet's too (`geometricPrecision` — the axis lines are authored on the half
+ * pixel and land crisp by themselves, the 45° ears are anti-aliased on
+ * purpose).
+ */
+function RecordMarkSvg({ mark, className }: { mark: RecordMark; className: string }) {
+  const s = mark.signal;
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 21 21"
+      width="21"
+      height="21"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {mark.lines.map(([x1, y1, x2, y2]) => (
+        <line
+          key={`${x1},${y1},${x2},${y2}`}
+          className="vwd__rm__line"
+          x1={x1}
+          y1={y1}
+          x2={x2}
+          y2={y2}
+        />
+      ))}
+      <rect className="vwd__rm__sig" x={s.x} y={s.y} width={s.w} height={s.h} />
     </svg>
   );
 }
@@ -290,6 +330,10 @@ function MediaDialog({
  * this one's thumbnail says what KIND of coverage it was (a newspaper, a
  * magazine, a broadcast — `vwOutletKind`), and the outlet reads under the
  * headline as the medium.
+ * ⚠ THE THUMBNAIL IS A HAIRLINE DRAWING SINCE U43 (owner, 2026-09-24: the pixel
+ * magazine "looks like a trash bin … something a bit more elegant") —
+ * `RECORD_MARKS`, the reticle's register; the well, the notch and the hover
+ * are untouched.
  *
  * ⚠ AN OUTLINE, NEVER A GROUND — the station's law since U29, and the >700px
  * paint sweep would not notice a card narrower than that painting one.
@@ -299,11 +343,11 @@ function MediaDialog({
  */
 function PressCard({ press }: { press: VwPress }) {
   const year = press.date ? press.date.slice(0, 4) : null;
-  const kind: EraMarkKey = vwOutletKind(press.outlet);
+  const kind: VwOutletKind = vwOutletKind(press.outlet);
   const body = (
     <>
       <span className="vwd__pcard__thumb" data-vwd-press-kind={kind} aria-hidden="true">
-        <EraMarkSvg mark={ERA_MARKS[kind]} className="vwd__pcard__mark" />
+        <RecordMarkSvg mark={RECORD_MARKS[kind]} className="vwd__pcard__mark" />
       </span>
       <span className="vwd__pcard__text">
         <span className="vwd__pcard__title">{press.headline}</span>

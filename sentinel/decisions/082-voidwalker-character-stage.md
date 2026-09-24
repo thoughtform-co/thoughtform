@@ -4783,3 +4783,87 @@ wordmark's TOP line — and, at his window, 21px under the TRANSMISSION pile.
   law, not the band's; if it reads tight there, the lever is the seat's own
   `padding-bottom`, not the foot.
 - The hud-panel lab still does not mirror the foot (it has lagged since U22).
+
+## Update 43 — the record thumbnails are hairline drawings (2026-09-24, owner)
+
+The owner, on the ON RECORD cards: _"I don't really like the icon; it looks
+like a trash bin; can we do something a bit more elegant?"_ It did. The
+`magazine` mark (MIT Technology Review on Azeroth, Newsweek on the Expanse)
+was a wide masthead bar, a row of air, then a narrow box with a bright centre
+pixel — the trash-can silhouette exactly — and it was that glyph's FOURTH cut
+on the 7×7 particle lattice (a letter C, a person, a 17-pixel draft, the bin).
+Offered a fifth pixel cut, the hairline register, or the hairline register for
+the facts' marks too, he chose the hairline for the three record kinds alone.
+
+### A · The register
+
+- **Three line-drawn pictograms, one per coverage kind**
+  (`lib/voidwalker/recordMarks.ts`, zero-import): a 21-unit grid rendered at
+  21px, 1px dawn strokes at .62, one filled dawn signal — ADR-059's
+  section-glyph register one size up. NEWSPAPER is a broadsheet (the sheet, a
+  masthead rule across it, two column lines beside the photograph, two lines
+  running the full measure under it). MAGAZINE is a bound cover (the sheet, a
+  SPINE two units inside its left edge, the masthead rule, one large framed
+  picture with the signal at its centre). BROADCAST is a set (a landscape
+  screen on a stem and a base, two rabbit ears rising 45° off the top centre,
+  the lit centre).
+- ⚠ **Seven cells cannot tell a magazine from a can.** The pixel grammar's
+  whole vocabulary at 7×7 is a bar, a box and a dot, and a "cover" IS a bar
+  over a box — every legal cut of the magazine converged on the bin. Twenty-one
+  units of hairline carry a spine and a frame, which is what distinguishes a
+  bound publication from a folded one and both from a container.
+- **The well, the notch, the hover and the card are untouched** (U35, U37):
+  43px, padded never centred, dawn only, the state on the ring and the ink;
+  `RecordMarkSvg` replaces `EraMarkSvg` in `PressCard` and nothing else in the
+  card moves.
+- ⚠ **Two icon media on one station, and that is the named cost.** FACTS keeps
+  `ERA_MARKS` — four pixel marks at 14px beside their labels, wayfinding
+  bullets — while the record thumbnails are PICTURES of a kind. They share one
+  dawn token and one ladder (`.vwd__rm__*` reads `--vwd-dawn-rgb` exactly as
+  `.vwd__mk__*` does). If he reads the two as clashing, the facts take the
+  hairline register too — the plan's third option, offered and not taken.
+- ⚠ **`geometricPrecision`, never `crispEdges`, on the thumbnail.** An axis
+  line is authored on the half pixel ACROSS its length and runs integer to
+  integer ALONG it (`[3, 1.5, 18, 1.5]` is row 1, columns 3–17), so butt caps
+  fill whole pixels and the line is crisp with no help; the two diagonals are
+  anti-aliased on purpose — under `crispEdges` a 1px 45° line is a staircase of
+  single pixels, i.e. the grammar this thumbnail just left. The facts' marks and
+  the link-out arrow keep `crispEdges`; `voidwalker-datum-sheet` pins both.
+
+### B · Guards
+
+- `tests/lib/record-marks.test.ts` (17): the three kinds equal
+  `VW_OUTLET_KIND`'s values and every outlet has a drawing; every coordinate
+  inside the grid; axis lines on the half pixel across and whole pixels along;
+  diagonals at 45° ending on pixel centres; at most twelve lines; exactly one
+  whole-pixel signal inside the grid; no repeated line; no two kinds one
+  drawing.
+- `era-marks.test.ts` is the facts' alone (19): four keys, and the three
+  coverage kinds pinned ABSENT — a pixel mark for a kind returning there is
+  the bin coming back.
+- `voidwalker-datum-sheet` (28): `--vwd-pcard-mark` 21px and
+  `geometricPrecision` on the thumbnail with no `crispEdges`; `.vwd__rm__line`
+  a 1px dawn stroke with `fill: none` and `.vwd__rm__sig` a dawn fill, no gold,
+  and no hover rule reaching either; the lattice pins narrowed to the arrow and
+  the facts' mark.
+- ⚠ **A GUARD IS NOT A CONTACT SHEET.** `scripts/capture-record-marks.mjs`
+  (`node --experimental-strip-types …`, static DOM, no server) shoots the three
+  in the card's own well beside the four facts marks, dark and light, at DPR 3,
+  UNLABELLED → `docs/design/voidwalker-record-marks/`. Judged blind before the
+  station was shot: a broadsheet, a bound cover, a set with rabbit ears, and
+  nothing that reads as a bin.
+
+### Verified
+
+- The sheet, both themes; the station at 1920×1247, dark and light, on the
+  Azeroth (magazine), Expanse (magazine · broadcast) and Pokémon Go
+  (newspaper · newspaper) slices — the marks crisp in the well and
+  distinguishable at the card's own size in both themes.
+- `probe-voidwalker-phone`: the instrument fits at every shape, era and tab.
+- `record-marks` (17), `era-marks` (19), `voidwalker-datum-sheet` (28),
+  `voidwalker-data` (17): green.
+
+### Left open
+
+- The facts' marks stay pixel; one station, two media — his read decides
+  whether they follow.

@@ -262,6 +262,23 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
     row, so the pile gains what the band gave up. The lab mirrors the
     expression character for character. `scripts/probe-voidwalker-figure-span`
     and both handoff specs are the figure's proof that nothing moved.
+  - ⚠ **U43 (2026-09-24, owner): THE RECORD THUMBNAILS ARE HAIRLINE
+    DRAWINGS.** _"It looks like a trash bin; can we do something a bit more
+    elegant?"_ — the pixel magazine (a masthead bar over a narrow box) was the
+    bin's silhouette and that glyph's FOURTH 7×7 cut; seven cells cannot tell a
+    magazine from a can. `lib/voidwalker/recordMarks.ts`: three line-drawn
+    pictograms on a 21-unit grid at 21px (a broadsheet, a bound cover with a
+    spine, a set with rabbit ears), 1px dawn strokes at .62, one filled dawn
+    signal, straight lines only (ADR-059's register one size up); the well,
+    the notch and the hover untouched. ⚠ An axis line sits on the half pixel
+    across and runs whole pixels along; a diagonal is 45° on pixel centres;
+    the thumbnail is `geometricPrecision`, never `crispEdges` (a 1px diagonal
+    under it is a pixel staircase). ⚠ `ERA_MARKS` is the FACTS' alone now
+    (four keys, the three kinds pinned ABSENT) — two icon media on one
+    station is the named cost. A new drawing re-runs
+    `scripts/capture-record-marks.mjs` (`--experimental-strip-types`,
+    unlabelled, both themes) before it ships; `record-marks.test.ts` holds the
+    grammar.
 - ⚠ **THE STAGE IS REDRAWN ON THE REFERENCE'S GRAMMAR (ADR-082 U23,
   2026-09-17, owner)** — panel-scoped rules, readout rows, a ring, and air.
   **The eyebrow is DELETED**: `ERA / 04 OF 05` and the year cost the title
