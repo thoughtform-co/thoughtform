@@ -1,6 +1,6 @@
 import "server-only";
 
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 import matter from "gray-matter";
@@ -65,15 +65,40 @@ function readPost(file: string): MusingPost {
   };
 }
 
+/**
+ * ⚠ MEMOISED ON THE FOLDER'S OWN STAMP (the `lib/v7-parse/parseBody.ts`
+ * shape). One post page render asked for the folder three or four times —
+ * `generateStaticParams` → `postSlugs`, `generateMetadata` → `getPost`, the
+ * page → `getPost` and `relatedTo(post, allPosts())` — each a full
+ * `readdirSync` plus a gray-matter parse per file: ~80 parses per slug at five
+ * posts, and under `next dev` on every request. The stamp is every file's name
+ * and `mtimeMs`, so an `.mdx` edit still shows on the next request; a plain
+ * memo would freeze it. The array is FROZEN: every caller slices or filters,
+ * none may mutate the shared record.
+ */
+let cache: { stamp: string; posts: readonly MusingPost[] } | null = null;
+
+function folderStamp(files: readonly string[]): string {
+  return files.map((f) => `${f}:${statSync(join(DIR, f)).mtimeMs}`).join("|");
+}
+
 /** Every post, newest first. Drafts included. */
 export function allPosts(): MusingPost[] {
   let files: string[] = [];
   try {
-    files = readdirSync(DIR).filter((f) => f.endsWith(".mdx"));
+    files = readdirSync(DIR)
+      .filter((f) => f.endsWith(".mdx"))
+      .sort();
   } catch {
     return [];
   }
-  return files.map(readPost).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  const stamp = folderStamp(files);
+  if (cache && cache.stamp === stamp) return cache.posts as MusingPost[];
+  const posts = Object.freeze(
+    files.map(readPost).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+  );
+  cache = { stamp, posts };
+  return posts as MusingPost[];
 }
 
 /** The posts the world may see: drafts excluded. */

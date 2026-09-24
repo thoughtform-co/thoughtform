@@ -21,6 +21,7 @@ import {
   estimateTFPCSize,
 } from "@/lib/key-visual/baked-pointcloud";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { adminFetch } from "@/lib/auth/adminFetch";
 
 // ═══════════════════════════════════════════════════════════════
 // GATEWAY LAB TAB - STAGED WORKFLOW
@@ -645,7 +646,7 @@ export default function GatewayLabTab() {
       formData.append("file", file);
       formData.append("name", "gateway");
 
-      const response = await fetch("/api/gateway-particles/upload", {
+      const response = await adminFetch("/api/gateway-particles/upload", {
         method: "POST",
         body: formData,
       });

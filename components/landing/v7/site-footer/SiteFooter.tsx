@@ -117,7 +117,7 @@ export function SiteFooter() {
                         className="ft-foot__link"
                         href={link.href}
                         {...(link.social ? { "data-social": link.social } : null)}
-                        {...(link.external
+                        {...(link.external && /^https?:/.test(link.href)
                           ? { target: "_blank", rel: "noreferrer noopener" }
                           : null)}
                       >

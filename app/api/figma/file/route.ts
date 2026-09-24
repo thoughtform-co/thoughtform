@@ -10,7 +10,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthorized } from "@/lib/auth-server";
-import { getFile } from "@/lib/figma/client";
+import { getFile, isFigmaFileKey } from "@/lib/figma/client";
 import type { FigmaNode, FigmaTreeNode } from "@/lib/figma/types";
 
 /** Convert a full Figma node tree to a lightweight tree for the browser */
@@ -41,6 +41,9 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const fileKey = searchParams.get("fileKey") || undefined;
+    if (fileKey !== undefined && !isFigmaFileKey(fileKey)) {
+      return NextResponse.json({ error: "fileKey must be a Figma file key" }, { status: 400 });
+    }
     const depth = parseInt(searchParams.get("depth") || "2", 10);
     const ids = searchParams.get("ids")?.split(",").filter(Boolean) || undefined;
 

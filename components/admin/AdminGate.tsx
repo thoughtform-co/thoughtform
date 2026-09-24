@@ -11,8 +11,9 @@ interface AdminGateProps {
  * AdminGate component that only renders children for authenticated admin users.
  *
  * Uses the centralized allowlist check from lib/auth/allowed-user.ts.
- * In development: Shows for any logged-in user (no email restriction).
- * In production: Only shows for the allowed email configured in NEXT_PUBLIC_ALLOWED_EMAIL.
+ * Shows only for the allowed email configured in NEXT_PUBLIC_ALLOWED_EMAIL,
+ * in every environment (the development pass went with the server's bypass,
+ * ADR-003 amendment 2026-09-24).
  */
 export function AdminGate({ children }: AdminGateProps) {
   const { user, isLoading } = useAuth();
@@ -27,12 +28,7 @@ export function AdminGate({ children }: AdminGateProps) {
     return null;
   }
 
-  // In development, any logged-in user can access admin tools
-  if (process.env.NODE_ENV === "development") {
-    return <>{children}</>;
-  }
-
-  // In production, only render children if user is the allowed admin
+  // Only the allowed admin, in every environment.
   if (!isAllowedUserEmail(user?.email)) {
     return null;
   }

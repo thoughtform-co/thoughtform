@@ -225,6 +225,11 @@ export interface DecodedTFPC {
  * Decode TFPC binary data back to layered particle data
  */
 export function decodeTFPC(buffer: ArrayBuffer): DecodedTFPC {
+  // A buffer shorter than the header is not a TFPC file; say so, rather than
+  // letting the DataView throw a RangeError out of the magic read.
+  if (buffer.byteLength < 8) {
+    throw new Error(`Invalid TFPC file: ${buffer.byteLength} bytes, shorter than the header`);
+  }
   const view = new DataView(buffer);
   let offset = 0;
 

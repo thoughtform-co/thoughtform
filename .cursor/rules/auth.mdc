@@ -11,6 +11,8 @@ alwaysApply: false
 
 Gates on the client are **UX only**; **server** must verify tokens and allowlist for mutations.
 
+**There is NO development bypass** (ADR-003, amendment 2026-09-24): `isAuthorized` IS `verifyAllowlistedBearer` in every environment — `next dev` listens on the LAN and runs with the production key. Dev signs in as production does; the admin UI attaches its token through `lib/auth/adminFetch.ts`, and `tests/lib/no-dev-auth-bypass.test.ts` fails on a `NODE_ENV === "development"` in a route, a guard or an admin gate.
+
 **Read first:** `sentinel/decisions/003-auth-centralization.md`, `lib/auth/allowed-user.ts` (`isAllowedUserEmail()`). See also `.cursor/rules/admin-access.mdc`.
 
 **The owner's pass (ADR-117):** `/arcs` is gated in the page (`force-dynamic` + `assertOwner()` from `lib/auth/ownerGate.ts`), never in `proxy.ts` (a proxy path check leaks through `.rsc` / `.segments` URLs) and never client-side. The mint (`/api/owner-pass`) uses `verifyAllowlistedBearer` — no dev bypass. The pass is `Path=/arcs`, carries no identity, fails closed, and no other API route may read it. Full rule: `.claude/rules/auth.md`.

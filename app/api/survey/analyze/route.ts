@@ -208,10 +208,22 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+    // ⚠ PARSED IS NOT SHAPED. `null`, an array or a bare string parse fine
+    // and then threw at the destructure below — a 500 with no `raw`, after
+    // the model had been paid for. Same branch, same body: the raw answer
+    // is kept for the reader.
+    if (analysis === null || typeof analysis !== "object" || Array.isArray(analysis)) {
+      console.error("Claude response is not an object:", textContent.text);
+      return NextResponse.json(
+        { error: "Analysis is not an object", raw: textContent.text },
+        { status: 500 }
+      );
+    }
 
-    // Add to history
+    // Add to history. ⚠ A stored `history` is whatever PATCH /api/survey/items
+    // last wrote there; only an array may be unshifted onto.
     const existingAnalysis = item.analysis || {};
-    const history = existingAnalysis.history || [];
+    const history = Array.isArray(existingAnalysis.history) ? existingAnalysis.history : [];
     if (Object.keys(existingAnalysis).length > 0) {
       const { history: _, ...previousAnalysis } = existingAnalysis;
       if (Object.keys(previousAnalysis).length > 0) {

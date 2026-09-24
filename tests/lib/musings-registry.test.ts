@@ -28,6 +28,13 @@ const ROOT = join(__dirname, "..", "..");
 describe("musings registry (ADR-114)", () => {
   const posts = allPosts();
 
+  it("is memoised on the folder's stamp: a second read is the same frozen record", () => {
+    // The post page asked for the folder three or four times per render
+    // (~80 gray-matter parses at five posts). Same stamp, same array.
+    expect(allPosts()).toBe(allPosts());
+    expect(Object.isFrozen(allPosts())).toBe(true);
+  });
+
   it("reads at least one post, newest first, with complete frontmatter", () => {
     expect(posts.length).toBeGreaterThan(0);
     for (let i = 1; i < posts.length; i++) expect(posts[i - 1].date >= posts[i].date).toBe(true);

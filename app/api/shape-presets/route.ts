@@ -1,11 +1,6 @@
 import { NextRequest } from "next/server";
 
-import {
-  jsonError,
-  jsonSuccess,
-  requireAdmin,
-  requireAdminAndServiceClient,
-} from "@/lib/api/guards";
+import { jsonError, jsonSuccess, requireAdminAndServiceClient } from "@/lib/api/guards";
 
 // Ensure this route is always dynamic (never statically cached)
 export const dynamic = "force-dynamic";
@@ -117,11 +112,9 @@ export async function POST(request: NextRequest) {
 
 // DELETE — delete a preset (admin only)
 export async function DELETE(request: NextRequest) {
-  // Re-check admin BEFORE we resolve the service client, so an
-  // unauthorized DELETE never spins up a service-role connection.
-  const denied = await requireAdmin(request);
-  if (denied) return denied;
-
+  // `requireAdminAndServiceClient` checks the admin BEFORE it resolves the
+  // service client; a second `requireAdmin` in front of it was the same
+  // `auth.getUser` round-trip twice per delete.
   const guard = await requireAdminAndServiceClient(request);
   if (!guard.ok) return guard.response;
   const { supabase } = guard;

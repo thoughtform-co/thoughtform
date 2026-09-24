@@ -1048,14 +1048,11 @@ function AstrogationContent() {
 // ═══════════════════════════════════════════════════════════════
 
 export default function Astrogation() {
-  // Auth bypass is a DEV-ONLY convenience. NODE_ENV is inlined at compile
-  // time in Next client bundles, so production builds hard-code this to
-  // false and the auth wall below cannot be toggled at runtime.
-  const BYPASS_AUTH = process.env.NODE_ENV === "development";
-
+  // No development bypass (ADR-003 amendment 2026-09-24): the wall below is
+  // the same in every environment, and the API behind it checks the token.
   const { user, isLoading } = useAuth();
 
-  if (isLoading && !BYPASS_AUTH) {
+  if (isLoading) {
     return (
       <div className="astrogation astrogation--loading">
         <span className="astrogation__loading">Loading...</span>
@@ -1063,7 +1060,7 @@ export default function Astrogation() {
     );
   }
 
-  if (!BYPASS_AUTH && (!user?.email || !isAllowedUserEmail(user.email))) {
+  if (!user?.email || !isAllowedUserEmail(user.email)) {
     return (
       <div className="astrogation astrogation--unauthorized">
         <h1>Astrogation</h1>
@@ -1075,7 +1072,6 @@ export default function Astrogation() {
     );
   }
 
-  // In dev mode or with bypass, AdminGate will automatically allow access
   return (
     <AdminGate>
       <AstrogationContent />

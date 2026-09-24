@@ -54,6 +54,43 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-24 — the whole codebase, reviewed: fifteen findings (ADR-003 amendment)
+
+**Trigger:** the owner ran `/code-review [ultra]` over the entire codebase
+after the footer commit's review; fifteen findings, every one verified against
+the source by two read-only passes before a line moved; his two calls: remove
+the dev bypass entirely, drop the MCP route's `?token=`.
+
+- **Cycle A, row 6 (an architectural assumption) → ADR-003 amendment:** the
+  development auth bypass is deleted — `isAuthorized` is the strict verifier,
+  `getServerUser` invents no user, the survey items' inline clauses and five
+  client gates go, and the admin UI's fourteen token-less fetches take
+  `lib/auth/adminFetch.ts`. `.claude/rules/auth.md` re-pointed.
+- **Also fixed:** the Figma `fileKey` gated (`isFigmaFileKey`) and
+  URL-encoded; the design MCP token header-only; crop bounds through a pure
+  `cropRect`; the TFPC upload's short-file and size guards (and `decodeTFPC`'s);
+  the analyzer's JSON shape and `history` array; the segments route's five
+  numbers validated before Replicate and before the delete; the presets DELETE's
+  double admin check; the footer's `mailto:` no longer `_blank`;
+  `useLandingScroll`'s two per-frame `matchMedia` lists cached, its style read
+  gated and its rect reads moved ahead of the frame's writes; `AuthProvider`
+  parses `?code` instead of substring-matching; one `shiftMonth`; the musings
+  registry memoised on the folder's mtime stamp; `park()` once per rung; the
+  celestial query's timer cleared.
+- **Q3 (a class of bug) → BEST-PRACTICES:** a development bypass on a server
+  that shares production keys is production exposure; validate before you pay.
+- **Q5 (a runtime check that caught it earlier):** `no-dev-auth-bypass`
+  (walks routes, guards and gates), `figma-file-key`, `api-numbers`,
+  `crop-rect`, `auth-params`; `owner-pass-route` flipped to pin the absence;
+  `footer-nav` pins `external` to https; `musings-registry` pins the memo.
+- **Found, not taken (his call):** two duplicate `waitForCardFonts` races with
+  the same uncleared timer; `PATCH /api/survey/items` writes `annotations` and
+  `analysis` unchecked; the voices page can send `Bearer undefined`; a timeout's
+  seed fallback is cached for five minutes by `unstable_cache`.
+- **Verified:** see the commit; the running dev server answered 401 without a
+  token on the presets route (GET, DELETE), the survey items POST, the MCP
+  route with `?token=` and the Figma file route with `../me`.
+
 ### 2026-09-24 — the footer's rise, reviewed (ADR-105 U4 §8)
 
 **Trigger:** a code review of `44eeeb7c` — eight findings, all taken; the

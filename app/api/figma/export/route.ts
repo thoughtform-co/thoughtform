@@ -12,7 +12,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthorized } from "@/lib/auth-server";
-import { getImages, fetchSvgContent } from "@/lib/figma/client";
+import { getImages, fetchSvgContent, isFigmaFileKey } from "@/lib/figma/client";
 import type { FigmaExportOptions } from "@/lib/figma/types";
 
 export async function GET(request: NextRequest) {
@@ -27,6 +27,9 @@ export async function GET(request: NextRequest) {
     const format = (searchParams.get("format") || "svg") as FigmaExportOptions["format"];
     const scale = searchParams.get("scale") ? parseFloat(searchParams.get("scale")!) : undefined;
     const fileKey = searchParams.get("fileKey") || undefined;
+    if (fileKey !== undefined && !isFigmaFileKey(fileKey)) {
+      return NextResponse.json({ error: "fileKey must be a Figma file key" }, { status: 400 });
+    }
     const raw = searchParams.get("raw") === "true";
 
     if (!ids?.length) {

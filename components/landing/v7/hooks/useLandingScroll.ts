@@ -14,6 +14,14 @@ interface ScrollTelemetry {
  *  lifted clear of the viewport. */
 const HERO_CURTAIN_RELEASE_VH = 1.35;
 
+/** Lazily-constructed MediaQueryList singletons — `useCorridorExitScroll`'s
+ *  own pattern (2026-07-29 perf pass): a `MediaQueryList` is live, so
+ *  `.matches` per frame is the whole intent, and CONSTRUCTING two lists per
+ *  scroll frame was the cost the 2026-09-24 review found here. Module scope
+ *  survives remounts; created on first frame so the module stays SSR-safe. */
+let prmQuery: MediaQueryList | null = null;
+let phoneQuery: MediaQueryList | null = null;
+
 export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>) {
   const telemetryRef = useRef<ScrollTelemetry>({
     progress: 0,
@@ -68,11 +76,68 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     const scrollMax = Math.max(1, document.documentElement.scrollHeight - vh);
     const progress = Math.max(0, Math.min(1, scrollY / scrollMax));
 
-    // Capability gate (single matchMedia read per frame, reused by the
-    // parallax block at the bottom of the frame). The hero -> corridor
+    // Active station. ⚠ READ BEFORE THE FRAME WRITES: this loop's seven rect
+    // reads used to follow the `--depth`, `--hero-lift` and `--hero-cover`
+    // writes below, which made every one a forced layout; nothing it reads
+    // depends on them (they drive CSS envelopes, never a station's box), so
+    // it runs first and the frame's reads stay ahead of its writes. The
+    // `data-active-station` write itself is further down, where it was.
+    const stations = Array.from(root.querySelectorAll<HTMLElement>(".station"));
+    const viewportMid = scrollY + vh / 2;
+    let activeStation = stations[0];
+    /* ⚠ **A STUCK STATION'S PAINTED TOP IS NOT WHERE IT LIVES, AND
+       `offsetTop` DOES NOT RESCUE YOU.** Since ADR-105 U3 `#contact` is
+       `position: sticky; bottom: 0` for the whole of the musings beat, so its
+       painted top is `vh − h` with `h ≥ vh` — `≤ 0` at EVERY scroll position
+       once the bed is armed — and this is a LAST-WINS loop over stations in
+       document order with `#contact` last. The HUD's corner readout therefore
+       said CONTACT for the entire beat and the `musings` row never lit.
+       ⚠ **MEASURED, because the obvious fix does not work**: `offsetTop`
+       reports the STUCK position too. At 1024×760 inside the beat,
+       `#contact.offsetTop` read **17174** against `#musings`'s **17217** — a
+       station beginning BEFORE the one above it, which cannot happen in flow.
+       (`lib/rail-manifest/clickToNavigate.ts` says "which sticky does not
+       move"; that was written before this surface had a sticky station.)
+       So the truth for a stuck station is the bottom edge of the one ABOVE
+       it, which is in normal flow and whose rect can be trusted.
+       ⚠ Narrowed to `sticky` deliberately: a blanket `max` would break the
+       phone's `#about`, which takes a `-100svh` weld (ADR-115) and legitimately
+       begins above its predecessor's bottom. */
+    let prevBottom = Number.NEGATIVE_INFINITY;
+    for (const station of stations) {
+      const rect = station.getBoundingClientRect();
+      const ownTop = scrollY + rect.top;
+      /* ⚠ THE STYLE READ IS PAID ONLY WHERE IT CAN MATTER: `max(ownTop,
+         prevBottom)` is `ownTop` whenever a station begins at or below the
+         one above it, so `getComputedStyle` — a forced style recalc, per
+         station, per frame — runs only for a station that overlaps its
+         predecessor, which today is the phone's welded `#about` and nothing
+         else (the sticky bed is gone since ADR-105 U4). */
+      const stationTop =
+        ownTop < prevBottom && getComputedStyle(station).position === "sticky"
+          ? prevBottom
+          : ownTop;
+      /* ⚠ A WELDED STAGE IS ACTIVE AT ITS PIN, NOT AT THE VIEWPORT'S MIDDLE
+         (ADR-121 U3). `#musings` on its stage rung overlaps the era stage by
+         one viewport, so its top crosses the middle 8svh BEFORE the era's exit
+         even begins — the corner would read MUSINGS over the last era's
+         content. Its writer stamps `data-station-edge="pin"` with the stage
+         mode, and the station lights when its top reaches the frame's top:
+         the frame its stage pins in and its head decodes in. Explicit and
+         opt-in — a generic "negative margin" rule would also move the
+         About → Voidwalker flip, which is a separate ruling. */
+      const edge = station.dataset.stationEdge === "pin" ? scrollY + 0.5 : viewportMid;
+      if (stationTop <= edge) activeStation = station;
+      prevBottom = ownTop + rect.height;
+    }
+    const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";
+
+    // Capability gate (one live MediaQueryList, read per frame, reused by
+    // the parallax block at the bottom of the frame). The hero -> corridor
     // seam is a fixed-entry curtain reveal (ADR-022 v8): no portalled
     // proxy plane, no held hero, no `--hero-cover` transform channel.
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    prmQuery ??= window.matchMedia("(prefers-reduced-motion: reduce)");
+    const reduceMotion = prmQuery.matches;
 
     // Defer the depth gauge to the corridor while it's the engaged
     // owner. `useDepthScroll` (home-v2) sets `data-corridor-engaged="true"`
@@ -170,49 +235,6 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     // Without #buildQuote, #practice ends naturally and no sticky-pin
     // compensation is needed inside this hook.
 
-    // Active station
-    const stations = Array.from(root.querySelectorAll<HTMLElement>(".station"));
-    const viewportMid = scrollY + vh / 2;
-    let activeStation = stations[0];
-    /* ⚠ **A STUCK STATION'S PAINTED TOP IS NOT WHERE IT LIVES, AND
-       `offsetTop` DOES NOT RESCUE YOU.** Since ADR-105 U3 `#contact` is
-       `position: sticky; bottom: 0` for the whole of the musings beat, so its
-       painted top is `vh − h` with `h ≥ vh` — `≤ 0` at EVERY scroll position
-       once the bed is armed — and this is a LAST-WINS loop over stations in
-       document order with `#contact` last. The HUD's corner readout therefore
-       said CONTACT for the entire beat and the `musings` row never lit.
-       ⚠ **MEASURED, because the obvious fix does not work**: `offsetTop`
-       reports the STUCK position too. At 1024×760 inside the beat,
-       `#contact.offsetTop` read **17174** against `#musings`'s **17217** — a
-       station beginning BEFORE the one above it, which cannot happen in flow.
-       (`lib/rail-manifest/clickToNavigate.ts` says "which sticky does not
-       move"; that was written before this surface had a sticky station.)
-       So the truth for a stuck station is the bottom edge of the one ABOVE
-       it, which is in normal flow and whose rect can be trusted.
-       ⚠ Narrowed to `sticky` deliberately: a blanket `max` would break the
-       phone's `#about`, which takes a `-100svh` weld (ADR-115) and legitimately
-       begins above its predecessor's bottom. */
-    let prevBottom = Number.NEGATIVE_INFINITY;
-    for (const station of stations) {
-      const rect = station.getBoundingClientRect();
-      const ownTop = scrollY + rect.top;
-      const stationTop =
-        getComputedStyle(station).position === "sticky" ? Math.max(ownTop, prevBottom) : ownTop;
-      /* ⚠ A WELDED STAGE IS ACTIVE AT ITS PIN, NOT AT THE VIEWPORT'S MIDDLE
-         (ADR-121 U3). `#musings` on its stage rung overlaps the era stage by
-         one viewport, so its top crosses the middle 8svh BEFORE the era's exit
-         even begins — the corner would read MUSINGS over the last era's
-         content. Its writer stamps `data-station-edge="pin"` with the stage
-         mode, and the station lights when its top reaches the frame's top:
-         the frame its stage pins in and its head decodes in. Explicit and
-         opt-in — a generic "negative margin" rule would also move the
-         About → Voidwalker flip, which is a separate ruling. */
-      const edge = station.dataset.stationEdge === "pin" ? scrollY + 0.5 : viewportMid;
-      if (stationTop <= edge) activeStation = station;
-      prevBottom = ownTop + rect.height;
-    }
-    const activeKey = activeStation?.getAttribute("data-station") || activeStation?.id || "hero";
-
     // Active-station bridge (ADR-030 Update 1): publish the active
     // station on <html>. Consumers observe via MutationObserver — the
     // tools header type-on, the right-rail register handover, and the
@@ -235,8 +257,9 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     // the drift is a per-frame rect read plus a `translate` layer on the hero
     // plate, a compositor scroll's one main-thread follower — the class of
     // motion mobile-sections.md exists to keep off the phone. Desktop keeps
-    // it; one matchMedia read per frame, like `reduceMotion`.
-    const phone = window.matchMedia("(max-width: 960px)").matches;
+    // it; one live list, read per frame, like `reduceMotion`.
+    phoneQuery ??= window.matchMedia("(max-width: 960px)");
+    const phone = phoneQuery.matches;
     if (!reduceMotion && !phone && scrollY !== lastScrollY.current) {
       lastScrollY.current = scrollY;
       const viewportCenter = scrollY + vh / 2;

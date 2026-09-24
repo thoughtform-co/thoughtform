@@ -20,7 +20,7 @@ export function CelestialEditorOverlay() {
   const [editConfig, setEditConfig] = useState<CelestialConfig | undefined>();
   const chipsRef = useRef<HTMLElement[]>([]);
 
-  const isAdmin = process.env.NODE_ENV === "development" || isAllowedUserEmail(user?.email);
+  const isAdmin = isAllowedUserEmail(user?.email);
   const token = session?.access_token;
   const clearDraft = useCelestialDrafts((s) => s.clearDraft);
 

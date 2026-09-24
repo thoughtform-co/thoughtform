@@ -45,6 +45,15 @@ describe("the footer's link grid (ADR-105 U2)", () => {
     }
   });
 
+  it("opens a new tab only for cross-origin https — never a mailto, which leaves a blank tab", () => {
+    for (const link of allRows) {
+      // An unpublished social row keeps its flag with a null href; it renders nothing.
+      if (link.external && link.href !== null)
+        expect(link.href, `${link.label}`).toMatch(/^https:\/\//);
+      if (link.href?.startsWith("mailto:")) expect(link.external, `${link.label}`).toBeFalsy();
+    }
+  });
+
   it("every href is an anchor, an internal path, a mailto, or absolute https", () => {
     for (const link of published.flatMap((c) => c.links)) {
       expect(

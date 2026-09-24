@@ -22,8 +22,12 @@
  * digits, and the card-only digit ban does not extend to a page whose subject
  * is a calendar.
  *
- * Zero runtime imports.
+ * One import — `shiftMonth` from `lib/sheet/dates`, itself zero-import — so
+ * the sessions timeline and the arcs axis cannot disagree about a month (the
+ * 2026-09-24 review found a byte-identical copy here). Nothing else.
  */
+
+import { shiftMonth } from "@/lib/sheet/dates";
 
 export interface Session {
   /** Kebab-case, unique — the timeline node's and the step's shared id. */
@@ -77,8 +81,4 @@ export function sessionsAxis(): { from: string; to: string } {
   return { from: shiftMonth(first, -1), to: shiftMonth(last, 1) };
 }
 
-export function shiftMonth(ym: string, by: number): string {
-  const [y, m] = ym.split("-").map(Number);
-  const idx = y * 12 + (m - 1) + by;
-  return `${Math.floor(idx / 12)}-${String((idx % 12) + 1).padStart(2, "0")}`;
-}
+export { shiftMonth };

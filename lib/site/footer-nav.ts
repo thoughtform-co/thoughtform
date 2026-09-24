@@ -48,6 +48,10 @@ export interface FooterLink {
   readonly label: string;
   /** Destination, or `null` while it is unpublished — the row renders nothing. */
   readonly href: string | null;
+  /** Opens in a new tab: cross-origin `https://` ONLY. Never a `mailto:` —
+   *  Chrome opens the blank tab first and leaves it behind when the mail
+   *  client takes the link (the review's finding); the renderer refuses the
+   *  pair and the test pins it. */
   readonly external?: boolean;
   readonly social?: SocialIcon;
 }
@@ -117,7 +121,7 @@ const AUTHORED: readonly FooterColumn[] = [
     links: [
       social("linkedin") ?? { label: "LinkedIn", href: null },
       social("x") ?? { label: "X", href: null },
-      { label: "Email", href: `mailto:${CONTACT_EMAIL}`, external: true },
+      { label: "Email", href: `mailto:${CONTACT_EMAIL}` },
     ],
   },
   {

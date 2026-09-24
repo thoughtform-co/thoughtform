@@ -3,19 +3,15 @@ import { isAllowedUserEmail } from "./auth/allowed-user";
 
 /**
  * Get the authenticated user from a Bearer token in the Authorization header.
- * Returns the user object if valid, null otherwise.
+ * Returns the user object if valid, null otherwise — in EVERY environment.
+ * (Until 2026-09-24 a missing token under `next dev` returned a made-up user
+ * with the allowlisted email; see `verifyAllowlistedBearer` for why that went.)
  *
  * @param request - The incoming request with Authorization header
  */
 export async function getServerUser(request: Request) {
   const authHeader = request.headers.get("Authorization");
   const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
-
-  // In development, allow all (for easier testing), but if a real token is present,
-  // return the actual Supabase user so created rows get a stable user_id.
-  if (process.env.NODE_ENV === "development" && !bearerToken) {
-    return { email: process.env.NEXT_PUBLIC_ALLOWED_EMAIL || "dev@example.com" };
-  }
 
   if (!bearerToken) return null;
   const token = bearerToken;
@@ -36,12 +32,24 @@ export async function getServerUser(request: Request) {
 }
 
 /**
- * The STRICT check: a Bearer token that resolves to a real Supabase user
- * whose email is the allowlisted one — with NO development bypass.
+ * THE check: a Bearer token that resolves to a real Supabase user whose email
+ * is the allowlisted one. There is one check and it runs the same in every
+ * environment.
  *
- * For anything whose result outlives the request, where a dev
- * short-circuit would mint something valid in production (the owner's
- * pass, ADR-117). `isAuthorized` below is this plus its dev shortcut.
+ * ⚠ THERE IS NO DEVELOPMENT BYPASS, AND THERE WAS ONE UNTIL 2026-09-24
+ * (ADR-003, amendment). `isAuthorized` returned `true` for every caller under
+ * `NODE_ENV=development` "for easier testing" — on a dev server that `next
+ * dev` binds to EVERY interface by default (`-H 0.0.0.0`) and that runs with
+ * the PRODUCTION service-role key. Twenty-nine admin routes — storage and
+ * database writes, and eight that spend Anthropic, Replicate, Voyage and
+ * Figma keys — were open to anyone on the same Wi-Fi, no token needed, with
+ * the writes landing on the live project. The owner's pass (ADR-117) had
+ * already refused the shortcut for its own route because a pass minted that
+ * way would be valid in production; the rest of the API now refuses it for
+ * the same reason. Dev signs in exactly as production does, and the admin UI
+ * sends its token through `lib/auth/adminFetch.ts`.
+ * `tests/lib/no-dev-auth-bypass.test.ts` walks the routes and the gates for a
+ * `NODE_ENV === "development"` that came back.
  */
 export async function verifyAllowlistedBearer(request: Request): Promise<boolean> {
   const authHeader = request.headers.get("Authorization");
@@ -70,17 +78,12 @@ export async function verifyAllowlistedBearer(request: Request): Promise<boolean
 }
 
 /**
- * Check if the current request is from an authorized admin user.
- * Validates the Bearer token and checks the user's email against the allowlist.
+ * Is this request from the allowlisted admin? The same verifier as above, in
+ * every environment; kept as a name because twenty-nine routes call it.
  *
  * @param request - The incoming request with Authorization header
  * @returns true if the request is from the allowed admin user
  */
 export async function isAuthorized(request: Request): Promise<boolean> {
-  // In development, allow all (for easier testing)
-  if (process.env.NODE_ENV === "development") {
-    return true;
-  }
-
   return verifyAllowlistedBearer(request);
 }

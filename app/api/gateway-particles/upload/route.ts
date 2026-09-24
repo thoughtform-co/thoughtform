@@ -14,6 +14,11 @@ const BUCKET_NAME = "gateway-particles";
 
 // Allowed file extensions
 const ALLOWED_EXTENSIONS = [".tfpc"];
+/** Magic (4) + version (4): the least a TFPC can be. */
+const TFPC_HEADER_BYTES = 8;
+/** A gateway bake is single-digit MB (`estimateTFPCSize`); this caps the
+ *  request, it is not a budget. */
+const MAX_TFPC_BYTES = 64 * 1024 * 1024;
 
 // Configure route for uploads
 export const runtime = "nodejs";
@@ -34,11 +39,17 @@ export async function POST(request: NextRequest) {
 
     // Parse form data
     const formData = await request.formData();
-    const file = formData.get("file") as File | null;
+    const file = formData.get("file");
     const name = formData.get("name") as string | null;
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
+    if (file.size > MAX_TFPC_BYTES) {
+      return NextResponse.json(
+        { error: `File too large (max ${MAX_TFPC_BYTES / (1024 * 1024)} MB)` },
+        { status: 400 }
+      );
     }
 
     // Validate file extension
@@ -51,8 +62,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate TFPC magic bytes
+    // Validate TFPC magic bytes. ⚠ A FILE SHORTER THAN ITS HEADER IS A BAD
+    // FILE, NOT A SERVER FAULT: the DataView reads below threw a RangeError
+    // on an empty or two-byte upload, and the outer catch reported it as 500.
     const arrayBuffer = await file.arrayBuffer();
+    if (arrayBuffer.byteLength < TFPC_HEADER_BYTES) {
+      return NextResponse.json(
+        { error: "Invalid TFPC file format - missing magic header" },
+        { status: 400 }
+      );
+    }
     const view = new DataView(arrayBuffer);
     const magic = String.fromCharCode(
       view.getUint8(0),

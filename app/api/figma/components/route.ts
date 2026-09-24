@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthorized } from "@/lib/auth-server";
-import { getComponents } from "@/lib/figma/client";
+import { getComponents, isFigmaFileKey } from "@/lib/figma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,6 +19,9 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const fileKey = searchParams.get("fileKey") || undefined;
+    if (fileKey !== undefined && !isFigmaFileKey(fileKey)) {
+      return NextResponse.json({ error: "fileKey must be a Figma file key" }, { status: 400 });
+    }
 
     const result = await getComponents(fileKey);
 

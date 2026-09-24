@@ -7,8 +7,8 @@ import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 // Admin-only editor, split out of the marketing bundle. Imported
 // straight from the component file (not the CelestialEditor barrel,
 // which would drag CelestialEditorModal back into this chunk) and
-// mounted only for dev / allowlisted users, so anonymous visitors
-// never fetch the editor chunk.
+// mounted only for the allowlisted user, so anonymous visitors never
+// fetch the editor chunk.
 const CelestialEditorOverlay = dynamic(
   () => import("./CelestialEditorOverlay").then((m) => m.CelestialEditorOverlay),
   { ssr: false }
@@ -34,6 +34,6 @@ const CelestialEditorOverlay = dynamic(
  */
 export function CelestialEditorGate() {
   const { user } = useAuth();
-  const editorEnabled = process.env.NODE_ENV === "development" || isAllowedUserEmail(user?.email);
+  const editorEnabled = isAllowedUserEmail(user?.email);
   return editorEnabled ? <CelestialEditorOverlay /> : null;
 }

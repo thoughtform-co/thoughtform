@@ -131,6 +131,8 @@ export function useMusingsScroll(
     /* ⚠ THE ARRIVAL IS STATE, DECIDED ONCE PER CROSSING — never re-derived
        from `p` each frame, which is what makes it a burst and not a channel. */
     let arrive: RowArrive | null = null;
+    /* The inert rung's latch: `park()` has run and nothing has changed since. */
+    let rested = false;
 
     /* ── The open note (ADR-121 → ADR-122) ──────────────────────────────
        ONE attribute, on ONE note, moved on events. `data-mu-open` is
@@ -336,9 +338,19 @@ export function useMusingsScroll(
       if (!runway || !station) return;
 
       if (!mq.matches) {
-        park();
+        /* ⚠ ONCE PER RUNG, NOT ONCE PER FRAME. On the inert rung — every
+           phone, a reduced-motion reader — nothing this writer owns can
+           change between scroll events, and `park()` still cost a
+           `querySelectorAll` and six attribute removals per rAF (the review's
+           finding). The latch holds until the rung changes (`onMq` clears
+           it) or the capable rung is seen again below. */
+        if (!rested) {
+          rested = true;
+          park();
+        }
         return;
       }
+      rested = false;
 
       /* ⚠ THE READY STAMP LANDS BEFORE THE MEASURE. The runway's height (the
          dwell plus the rise) and the footer's weld both key on `data-mu-ready`
@@ -434,7 +446,10 @@ export function useMusingsScroll(
     }
 
     /* A rung change re-asks the whole question, including the two stamps. */
-    const onMq = () => onScroll();
+    const onMq = () => {
+      rested = false;
+      onScroll();
+    };
 
     /* ⚠ A HIDDEN TAB STOPS rAF MID-BURST. On the way back the head settles
        where it was going — never left half-shuffled over a parked stage. */

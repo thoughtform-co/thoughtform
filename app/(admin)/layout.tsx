@@ -10,8 +10,10 @@ const PUBLIC_ADMIN_PATHS = ["/admin", "/admin/callback"];
 /**
  * Layout for all admin-tier routes: /admin, /orrery, /astrogation.
  * The /admin login page itself is public (avoids redirect loop).
- * Other routes redirect unauthenticated visitors to /admin login in production.
- * In development, all routes pass through for easier local testing.
+ * Other routes redirect anyone but the allowlisted user to the /admin login —
+ * in every environment. (The development pass-through went with the server's
+ * bypass, ADR-003 amendment 2026-09-24: a dev server on the LAN with the
+ * production key is the production database.)
  */
 export default function AdminGroupLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -22,7 +24,6 @@ export default function AdminGroupLayout({ children }: { children: React.ReactNo
 
   useEffect(() => {
     if (isLoading || isPublicPath) return;
-    if (process.env.NODE_ENV === "development") return;
 
     if (!isAllowedUserEmail(user?.email)) {
       router.replace("/admin");
@@ -34,10 +35,6 @@ export default function AdminGroupLayout({ children }: { children: React.ReactNo
   }
 
   if (isLoading) return null;
-
-  if (process.env.NODE_ENV === "development") {
-    return <>{children}</>;
-  }
 
   if (!isAllowedUserEmail(user?.email)) {
     return null;

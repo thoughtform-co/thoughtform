@@ -3,11 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 /**
  * The mint route and the strict verifier behind it (ADR-117).
  *
- * ⚠ THE ONE ASSERTION THAT MATTERS MOST IS THE DEVELOPMENT ONE: the rest of
- * the admin API trusts everybody under `next dev` (`isAuthorized`'s DX
- * bypass), and a pass minted that way would be valid in production whenever
- * the dev server shares the key. The mint route must refuse a missing token
- * in development exactly as it does in production.
+ * ⚠ THE ONE ASSERTION THAT MATTERS MOST IS THE DEVELOPMENT ONE. Until
+ * 2026-09-24 the rest of the admin API trusted everybody under `next dev`
+ * (`isAuthorized`'s DX bypass) while the mint route alone refused, because a
+ * pass minted that way would have been valid in production whenever the dev
+ * server shared the key. The bypass is DELETED now (ADR-003, amendment):
+ * `isAuthorized` IS the strict verifier, and this file pins both halves — the
+ * mint route refuses a missing token in development, and so does everything
+ * behind `isAuthorized`.
  */
 
 const getUserMock = vi.fn();
@@ -47,8 +50,10 @@ describe("verifyAllowlistedBearer — no development bypass", () => {
     expect(await verifyAllowlistedBearer(withBearer())).toBe(false);
     expect(await verifyAllowlistedBearer(withBearer(""))).toBe(false);
     expect(getUserMock).not.toHaveBeenCalled();
-    // …while the admin API's own check keeps its DX shortcut, unchanged.
-    expect(await isAuthorized(withBearer())).toBe(true);
+    // …and the admin API's own check is the same verifier: no DX shortcut.
+    expect(await isAuthorized(withBearer())).toBe(false);
+    expect(await isAuthorized(withBearer(""))).toBe(false);
+    expect(getUserMock).not.toHaveBeenCalled();
   });
 
   it("accepts only a real user with the allowlisted email", async () => {

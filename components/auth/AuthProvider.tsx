@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { onAuthSessionStarted } from "@/lib/auth/authBridge";
+import { hasAuthParams } from "@/lib/auth/authParams";
 import type { User, Session } from "@supabase/supabase-js";
 
 /** Does a persisted Supabase session token exist? Checked WITHOUT loading
@@ -18,10 +19,12 @@ function hasPersistedSession(): boolean {
   return false;
 }
 
-/** Is the current URL carrying auth material (magic-link / OAuth return)? */
+/** Is the current URL carrying auth material (magic-link / OAuth return)?
+ *  Exact keys, parsed — `?promocode=` used to match a `code=` substring and
+ *  load the client for an anonymous visitor (`lib/auth/authParams`). */
 function hasAuthParamsInUrl(): boolean {
   if (typeof window === "undefined") return false;
-  return window.location.hash.includes("access_token=") || window.location.search.includes("code=");
+  return hasAuthParams(window.location.search, window.location.hash);
 }
 
 /**

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { adminFetch } from "@/lib/auth/adminFetch";
 import type { SurveyItem } from "../_components/types";
 import {
   extractDesignTokens,
@@ -67,7 +68,7 @@ export function useReferenceMatch(): UseReferenceMatchReturn {
         const description = tokensToDescription(extractedTokens);
 
         // 3. Call the MCP match endpoint
-        const response = await fetch("/api/thoughtform/match", {
+        const response = await adminFetch("/api/thoughtform/match", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -123,7 +124,7 @@ export function useReferenceMatch(): UseReferenceMatchReturn {
 
       try {
         // Call the MCP match endpoint directly
-        const response = await fetch("/api/thoughtform/match", {
+        const response = await adminFetch("/api/thoughtform/match", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

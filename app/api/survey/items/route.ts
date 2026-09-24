@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     // Get authenticated user
     const user = await getServerUser(request);
-    if ((!user || !("id" in user) || !user.id) && process.env.NODE_ENV !== "development") {
+    if (!user || !("id" in user) || !user.id) {
       return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
     }
 
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
 
     // Get authenticated user
     const user = await getServerUser(request);
-    if ((!user || !("id" in user) || !user.id) && process.env.NODE_ENV !== "development") {
+    if (!user || !("id" in user) || !user.id) {
       // Clean up uploaded file
       await supabase.storage.from(BUCKET_NAME).remove([uploadData.path]);
       return NextResponse.json({ error: "User not authenticated" }, { status: 401 });

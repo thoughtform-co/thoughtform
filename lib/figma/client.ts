@@ -30,6 +30,18 @@ function getDefaultFileKey(): string {
   return key;
 }
 
+/**
+ * A Figma file key is alphanumeric (22 characters today; the bound is
+ * generous). ⚠ IT IS PART OF A URL PATH: an unchecked key from a query string
+ * — `../me`, `abc/versions?x=` — walks to a different `api.figma.com` endpoint
+ * under the site's own token, and the Figma error body comes back to the
+ * caller. Every builder below also URL-encodes the key; the routes gate on
+ * this before touching the client. Zero imports.
+ */
+export function isFigmaFileKey(key: string): boolean {
+  return /^[A-Za-z0-9]{8,64}$/.test(key);
+}
+
 async function figmaFetch<T>(path: string): Promise<T> {
   const token = getToken();
   const url = `${FIGMA_API_BASE}${path}`;
@@ -65,7 +77,7 @@ export interface GetFileOptions {
  * Returns the full file structure as JSON.
  */
 export async function getFile(fileKey?: string, opts?: GetFileOptions): Promise<FigmaFileResponse> {
-  const key = fileKey || getDefaultFileKey();
+  const key = encodeURIComponent(fileKey || getDefaultFileKey());
   const params = new URLSearchParams();
 
   if (opts?.depth) params.set("depth", String(opts.depth));
@@ -85,7 +97,7 @@ export async function getFileNodes(
   fileKey?: string,
   opts?: { depth?: number; geometry?: "paths" }
 ): Promise<FigmaFileNodesResponse> {
-  const key = fileKey || getDefaultFileKey();
+  const key = encodeURIComponent(fileKey || getDefaultFileKey());
   const params = new URLSearchParams();
 
   params.set("ids", nodeIds.join(","));
@@ -109,7 +121,7 @@ export async function getImages(
   fileKey?: string,
   opts?: FigmaExportOptions
 ): Promise<FigmaImagesResponse> {
-  const key = fileKey || getDefaultFileKey();
+  const key = encodeURIComponent(fileKey || getDefaultFileKey());
   const params = new URLSearchParams();
 
   params.set("ids", nodeIds.join(","));
@@ -149,7 +161,7 @@ export async function getComponents(fileKey?: string) {
  * Note: Requires at minimum a Professional plan.
  */
 export async function getVariables(fileKey?: string): Promise<FigmaVariablesResponse> {
-  const key = fileKey || getDefaultFileKey();
+  const key = encodeURIComponent(fileKey || getDefaultFileKey());
   return figmaFetch<FigmaVariablesResponse>(`/v1/files/${key}/variables/local`);
 }
 

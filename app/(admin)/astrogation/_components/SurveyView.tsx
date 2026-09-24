@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Network, Eye, EyeOff, Grid3X3, Check, Trash2 } from "lucide-react";
+import { adminFetch } from "@/lib/auth/adminFetch";
 import type { SurveyItem, SurveyAnnotation, SurveySegment } from "./types";
 import { AnnotationBox } from "./AnnotationBox";
 import { FilterButton, type FilterState } from "./FilterButton";
@@ -679,7 +680,7 @@ function DetailView({
                                       if (onDeleteSegment) {
                                         await onDeleteSegment(segment.id);
                                       } else {
-                                        await fetch(
+                                        await adminFetch(
                                           `/api/survey/segments?segmentId=${segment.id}`,
                                           {
                                             method: "DELETE",

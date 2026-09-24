@@ -75,12 +75,19 @@ export async function getCelestialSlots(): Promise<SlotsMap> {
       .eq("enabled", true);
 
     const TIMEOUT = Symbol("slots-timeout");
+    // ⚠ THE TIMER IS CLEARED WHEN THE QUERY WINS. Left pending it kept a
+    // serverless invocation's event loop open for the rest of the 3.5s after
+    // an 80ms query (the 2026-09-24 review). ⚠ AND A TIMEOUT'S SEED FALLBACK
+    // IS CACHED: `getCelestialSlotsCached` wraps this in `unstable_cache`
+    // (`revalidate: 300`), which cannot skip caching a value, so one slow
+    // query serves the seed for up to five minutes. Recorded, not changed.
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const raced = await Promise.race([
       query,
-      new Promise<typeof TIMEOUT>((resolve) =>
-        setTimeout(() => resolve(TIMEOUT), SLOTS_QUERY_TIMEOUT_MS)
-      ),
-    ]);
+      new Promise<typeof TIMEOUT>((resolve) => {
+        timer = setTimeout(() => resolve(TIMEOUT), SLOTS_QUERY_TIMEOUT_MS);
+      }),
+    ]).finally(() => clearTimeout(timer));
 
     if (raced === TIMEOUT) {
       warnSeedFallback("timeout", `${SLOTS_QUERY_TIMEOUT_MS}ms`);

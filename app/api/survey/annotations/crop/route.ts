@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { isAuthorized } from "@/lib/auth-server";
+import { cropRect } from "@/lib/survey/cropRect";
 import sharp from "sharp";
 
 const BUCKET_NAME = "survey-media";
@@ -96,32 +97,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Could not read image dimensions" }, { status: 500 });
     }
 
-    // Convert percentage bounds to pixel coordinates
-    const pixelX = Math.round((cropBounds.x / 100) * metadata.width);
-    const pixelY = Math.round((cropBounds.y / 100) * metadata.height);
-    const pixelWidth = Math.round((cropBounds.width / 100) * metadata.width);
-    const pixelHeight = Math.round((cropBounds.height / 100) * metadata.height);
-
-    // Ensure bounds are within image
-    const safeX = Math.max(0, Math.min(pixelX, metadata.width - 1));
-    const safeY = Math.max(0, Math.min(pixelY, metadata.height - 1));
-    const safeWidth = Math.min(pixelWidth, metadata.width - safeX);
-    const safeHeight = Math.min(pixelHeight, metadata.height - safeY);
-
-    if (safeWidth < 1 || safeHeight < 1) {
-      return NextResponse.json({ error: "Invalid crop dimensions" }, { status: 400 });
+    // Percent bounds → a validated pixel rect (`lib/survey/cropRect`). ⚠ The
+    // inline clamp this replaces let a `NaN` through its `< 1` guard into
+    // `sharp`, which threw — a 500 for a bad request — and it sieved only the
+    // BODY's bounds while the stored annotation's, which PATCH writes
+    // unchecked, went through the same arithmetic. One sieve, both sources.
+    const rect = cropRect(cropBounds, { width: metadata.width, height: metadata.height });
+    if (!rect) {
+      return NextResponse.json({ error: "Invalid crop bounds" }, { status: 400 });
     }
 
     // Crop the image
-    const croppedBuffer = await sharp(imageBuffer)
-      .extract({
-        left: safeX,
-        top: safeY,
-        width: safeWidth,
-        height: safeHeight,
-      })
-      .png()
-      .toBuffer();
+    const croppedBuffer = await sharp(imageBuffer).extract(rect).png().toBuffer();
 
     // Determine the crop path
     const cropPath = `annotations/${itemId}/${annotationId}.png`;
@@ -145,8 +132,8 @@ export async function POST(request: NextRequest) {
       ...annotation,
       crop_path: cropPath,
       crop_mime: "image/png",
-      crop_width: safeWidth,
-      crop_height: safeHeight,
+      crop_width: rect.width,
+      crop_height: rect.height,
     };
 
     // Save updated annotations back to the item

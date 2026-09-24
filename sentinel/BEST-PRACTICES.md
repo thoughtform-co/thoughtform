@@ -1724,6 +1724,41 @@ layout on the first tick, a plain read on every other — and pin the order in
 the source test, because nothing at runtime reports a measurement taken one
 layout too early.
 
+## A development bypass on a server that shares production keys is production exposure (ADR-003, 2026-09-24)
+
+`isAuthorized` returned `true` for every caller under `NODE_ENV=development`,
+"for easier testing", from the day it was written. It was never a local
+convenience: `next dev` binds to every interface by default, the dev server
+runs with the production service-role key, and twenty-nine admin routes —
+storage and database writes, and eight that spend paid API keys — sat behind
+it. Anyone on the same Wi-Fi could delete an upload or run the analyzer on the
+site's key, no token needed, with the writes landing on the live project. The
+owner's pass had already refused the shortcut for its own route (ADR-117) for
+exactly this reason, and the rest of the API kept it for two more months. Two
+things made it invisible: nothing in a test or a capture ever asked a route to
+refuse in development, and the admin UI had grown to DEPEND on it — fourteen
+fetches sent no token at all and answered 401 in production, unnoticed. **A
+shortcut that only fires in development is not tested by anything that runs in
+development, and the code that grows on top of it is broken everywhere else.**
+Dev signs in as production does now, and a source test walks the routes and
+the gates for a `NODE_ENV === "development"` that comes back.
+
+## Validate before you pay: the 400 comes before the paid call and before the delete (2026-09-24 review)
+
+The segments route read five numbers off the body with destructuring
+defaults and sent them to Replicate; a `NaN` or a string passed straight
+through (`maxSegments = 50` only covers `undefined`), emptied the `slice` AFTER
+the run — "none contained any on-pixels", a 502 with Replicate already
+billed — and on the local path `maxSegments: 0` deleted an item's segments and
+inserted none. The crop route let a `NaN` through a `< 1` guard (`NaN < 1` is
+false) into `sharp`, which threw a 500 for a bad request; the analyzer
+destructured the model's JSON after paying for it, so a `null` answer was a
+500 with the raw text lost. One shape, three routes: **read every number
+through a sieve that returns the value or `null` (`lib/api/numbers`), answer
+400 for a present-and-wrong field before any paid call and before any delete,
+and take a default only for an ABSENT field.** A coercion (`Number("50")`)
+hides the caller's bug; a guard written as `x < 1` does not see `NaN`.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.

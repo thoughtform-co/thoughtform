@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
+import { intIn, numberIn } from "@/lib/api/numbers";
 import { isAuthorized } from "@/lib/auth-server";
 import { logger } from "@/lib/logger";
 import Replicate from "replicate";
@@ -123,18 +124,39 @@ export async function POST(request: NextRequest) {
     }
 
     const body = (await request.json()) as GenerateRequest;
-    const {
-      itemId,
-      pointsPerSide = 32,
-      predIouThresh = 0.88,
-      stabilityScoreThresh = 0.95,
-      minMaskRegionArea = 100,
-      maxSegments = 50,
-    } = body;
+    const { itemId } = body;
 
     if (!itemId) {
       return NextResponse.json({ error: "Missing itemId" }, { status: 400 });
     }
+
+    // ⚠ VALIDATE BEFORE YOU PAY. Every number below reaches Replicate (billed)
+    // or the local SAM service, then a `slice`, then the segments table. A
+    // `NaN` or a string used to empty the slice AFTER the run ("none contained
+    // any on-pixels", 502, Replicate already charged), and on the local path
+    // `maxSegments: 0` deleted an item's segments and inserted none. Absent →
+    // the default; present and wrong → 400 here, before anything runs or is
+    // deleted. `lib/api/numbers` rejects strings on purpose.
+    const tuned = {
+      pointsPerSide: body.pointsPerSide === undefined ? 32 : intIn(body.pointsPerSide, 1, 64),
+      predIouThresh: body.predIouThresh === undefined ? 0.88 : numberIn(body.predIouThresh, 0, 1),
+      stabilityScoreThresh:
+        body.stabilityScoreThresh === undefined ? 0.95 : numberIn(body.stabilityScoreThresh, 0, 1),
+      minMaskRegionArea:
+        body.minMaskRegionArea === undefined ? 100 : intIn(body.minMaskRegionArea, 0, 1_000_000),
+      maxSegments: body.maxSegments === undefined ? 50 : intIn(body.maxSegments, 1, 200),
+    };
+    const invalid = (Object.keys(tuned) as (keyof typeof tuned)[]).filter((k) => tuned[k] === null);
+    if (invalid.length > 0) {
+      return NextResponse.json(
+        {
+          error: `Invalid ${invalid.join(", ")}: pointsPerSide 1–64, thresholds 0–1, minMaskRegionArea ≥ 0, maxSegments 1–200`,
+        },
+        { status: 400 }
+      );
+    }
+    const { pointsPerSide, predIouThresh, stabilityScoreThresh, minMaskRegionArea, maxSegments } =
+      tuned as { [K in keyof typeof tuned]: number };
 
     // Fetch the survey item
     const { data: item, error: fetchError } = await supabase

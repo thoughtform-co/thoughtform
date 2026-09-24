@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { adminFetch } from "@/lib/auth/adminFetch";
 import type { FigmaTreeNode, FigmaNode } from "@/lib/figma/types";
 import type { TokenDiffReport } from "@/lib/figma/token-diff";
 
@@ -101,7 +102,7 @@ export async function loadFileTree() {
   setState({ treeLoading: true, treeError: null });
 
   try {
-    const res = await fetch("/api/figma/file?depth=2");
+    const res = await adminFetch("/api/figma/file?depth=2");
     if (!res.ok) {
       const data = await res.json();
       throw new Error(data.error || `HTTP ${res.status}`);
@@ -123,7 +124,7 @@ export async function loadFileTree() {
 
 export async function expandNode(nodeId: string) {
   try {
-    const res = await fetch(`/api/figma/file?ids=${nodeId}&depth=3`);
+    const res = await adminFetch(`/api/figma/file?ids=${nodeId}&depth=3`);
     if (!res.ok) return;
     const data = await res.json();
 
@@ -166,8 +167,8 @@ export async function selectNode(nodeId: string) {
   try {
     // Fetch node details and preview in parallel
     const [nodeRes, exportRes] = await Promise.all([
-      fetch(`/api/figma/nodes?ids=${nodeId}`),
-      fetch(`/api/figma/export?ids=${nodeId}&format=png&scale=2`),
+      adminFetch(`/api/figma/nodes?ids=${nodeId}`),
+      adminFetch(`/api/figma/export?ids=${nodeId}&format=png&scale=2`),
     ]);
 
     if (nodeRes.ok) {
@@ -196,7 +197,7 @@ export async function exportNodeSvg(nodeId: string) {
   setState({ exportLoading: true, svgContent: null });
 
   try {
-    const res = await fetch(`/api/figma/export?ids=${nodeId}&format=svg&raw=true`);
+    const res = await adminFetch(`/api/figma/export?ids=${nodeId}&format=svg&raw=true`);
     if (!res.ok) throw new Error("Export failed");
     const data = await res.json();
     const svg = data.svgContents?.[nodeId] || null;
@@ -213,7 +214,7 @@ export async function loadTokenDiff() {
   setState({ tokenDiffLoading: true });
 
   try {
-    const res = await fetch("/api/figma/token-diff");
+    const res = await adminFetch("/api/figma/token-diff");
     if (!res.ok) throw new Error("Token diff failed");
     const data = await res.json();
     setState({ tokenDiff: data, tokenDiffLoading: false });
@@ -227,7 +228,7 @@ export async function loadComponents() {
   setState({ componentsLoading: true });
 
   try {
-    const res = await fetch("/api/figma/components");
+    const res = await adminFetch("/api/figma/components");
     if (!res.ok) throw new Error("Components fetch failed");
     const data = await res.json();
     setState({ components: data.components || [], componentsLoading: false });

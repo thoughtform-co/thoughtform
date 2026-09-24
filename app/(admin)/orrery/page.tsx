@@ -5,6 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AdminGate } from "@/components/admin/AdminGate";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { adminFetch } from "@/lib/auth/adminFetch";
 import { isAllowedUserEmail } from "@/lib/auth/allowed-user";
 import { getAllShapes, getShapeGenerator, type Vec3 } from "@/lib/particle-geometry";
 import "./orrery.css";
@@ -443,7 +444,7 @@ function ParticlesTab() {
 
   // Load presets
   useEffect(() => {
-    fetch("/api/shape-presets")
+    adminFetch("/api/shape-presets")
       .then((r) => r.json())
       .then((data) => setPresets(data.presets || []))
       .catch(console.error);
@@ -452,7 +453,7 @@ function ParticlesTab() {
   const savePreset = useCallback(async () => {
     if (!presetName.trim()) return;
     try {
-      const res = await fetch("/api/shape-presets", {
+      const res = await adminFetch("/api/shape-presets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -485,7 +486,7 @@ function ParticlesTab() {
 
   const deletePreset = useCallback(async (id: string) => {
     try {
-      await fetch(`/api/shape-presets?id=${id}`, { method: "DELETE" });
+      await adminFetch(`/api/shape-presets?id=${id}`, { method: "DELETE" });
       setPresets((prev) => prev.filter((p) => p.id !== id));
     } catch (e) {
       console.error(e);

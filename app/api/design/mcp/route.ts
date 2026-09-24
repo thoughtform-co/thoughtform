@@ -29,9 +29,13 @@
  * resource_metadata pointer that 404s makes claude.ai fail discovery rather
  * than fall back to the bearer token.
  *
- * Auth: DESIGN_MCP_TOKEN as `Authorization: Bearer <token>` or `?token=<token>`
- * — the query form exists because claude.ai custom connectors cannot set
- * custom headers. Fails closed with 503 when the env var is unset.
+ * Auth: DESIGN_MCP_TOKEN as `Authorization: Bearer <token>`, header ONLY.
+ * ⚠ The `?token=` form is deleted (2026-09-24, review): a credential in the
+ * query string is written to Vercel's request logs, every drain and any
+ * Referer, which the header form is not. It existed for claude.ai custom
+ * connectors, which cannot set headers — nothing was ever registered that way;
+ * if one is, it comes back behind its OWN token so a leak through logs rotates
+ * alone. Fails closed with 503 when the env var is unset.
  *
  * Env: SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL), SUPABASE_SERVICE_ROLE_KEY,
  *      VOYAGE_API_KEY, DESIGN_MCP_TOKEN.
@@ -179,10 +183,8 @@ function checkAuth(req: NextRequest): NextResponse | null {
   }
   const header = req.headers.get("authorization") ?? "";
   const bearer = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  const queryToken = new URL(req.url).searchParams.get("token") ?? "";
-  const presented = bearer || queryToken;
-  if (!presented) return unauthorized("missing bearer token");
-  if (tokenMatches(presented, staticToken)) return null;
+  if (!bearer) return unauthorized("missing bearer token");
+  if (tokenMatches(bearer, staticToken)) return null;
   return unauthorized("invalid token");
 }
 
