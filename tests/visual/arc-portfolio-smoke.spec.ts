@@ -552,7 +552,7 @@ test.describe("portfolio arc — the dossiers and the architecture (ADR-072, ADR
       expect(box.stations, `${label}: the three readings`).toEqual([
         "WORK",
         "CONFIGURATION",
-        "SUBSTRATE",
+        "LAYER",
       ]);
       expect(box.overflowX, `${label}: horizontal overflow`).toBeLessThanOrEqual(0);
 

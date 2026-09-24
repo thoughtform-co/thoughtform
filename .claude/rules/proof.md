@@ -718,7 +718,7 @@ is seated inside it. Promoted from `/test/hud-panel-lab`'s `v2`.
   higher was closing a box that was closed. `logCode` joins `stamp` and
   `state` — in the record, lettered nowhere. The console takes the 26px back.
   ⚠ The head still STOPS AT THE COLUMN SPLIT, and that is a collision, not a
-  taste: a band-wide rule runs under WORK / CONFIGURATION / SUBSTRATE, and
+  taste: a band-wide rule runs under WORK / CONFIGURATION / LAYER, and
   `ConsoleRail` is the field's own header. (The `1fr auto 1fr` → flex fix is
   moot for content now; the width rule is not.)
 - ⚠ **`+ Archive` IS DELETED, AND ITS RULING WENT WITH THE IA IT ARGUED FOR**
@@ -1738,7 +1738,7 @@ a slot.
 ## The reading rail, and the wheel (ADR-063, live)
 
 The right panel is the PDA console (`map/pda/**`), three readings:
-**THE WORK · THE CONFIGURATION · THE SUBSTRATE**.
+**THE WORK · THE CONFIGURATION · THE LAYER** (the third renamed by ADR-124).
 
 - **The rail is HORIZONTAL, across the top of the console** (owner,
   2026-08-06), three equal stations. Still not a web tab strip: diamonds, mono
@@ -3240,7 +3240,7 @@ precedent). Full read, the reference distillations and the owner questions:
   straight through the client's own name. The header stops at the column split
   besides, because `ConsoleRail` occupies the same band on the right and is
   the FIELD's header. Same class of collision put the field's corner labels
-  through WORK / CONFIGURATION / SUBSTRATE — **two labels overlapping is the
+  through WORK / CONFIGURATION / LAYER — **two labels overlapping is the
   check containment never makes**, and both were found by looking at a still
   with every geometry gate green.
 - ⚠ **THE REGISTER AND THE DIRECTORY HAVE ~4px OF SLACK**, so neither grows a

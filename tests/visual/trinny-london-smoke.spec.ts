@@ -874,7 +874,7 @@ test.describe("Trinny London pitch variant", () => {
        field's rail, which is also what makes them pressable here: the card
        covers the console with a transparent layer so its wheel capture
        cannot freeze the stack. */
-    expect(shapes[3].stations).toEqual(["WORK", "CONFIGURATION", "SUBSTRATE"]);
+    expect(shapes[3].stations).toEqual(["WORK", "CONFIGURATION", "LAYER"]);
     expect(shapes[3].maps).toBe(1);
     expect(
       await page.locator('[data-pc-index="3"] .fl-pda .fl-con__rail').count(),

@@ -422,9 +422,11 @@ export function footCopy(
     };
   }
   if (view === 3) {
+    /* ADR-124: the reading is the layer, said plainly; the five-shape
+       taxonomy left the caption with the rename. */
     return {
-      title: "03 · The substrate",
-      body: `${totals.mains === 5 ? "Five" : totals.mains} shapes recur across the estate. One team pays to encode each. Every team after that draws on it for nothing.`,
+      title: "03 · The layer",
+      body: `${totals.skills} Skills, each written down once by the team that needed it. Every team after draws on it, and a new model inherits it.`,
     };
   }
   return {

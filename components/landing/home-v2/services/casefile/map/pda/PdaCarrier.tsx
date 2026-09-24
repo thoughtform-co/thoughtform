@@ -58,8 +58,8 @@ import { FS } from "./substrateKit";
  * the estate view without having to click again.
  *
  * ⚠ **THE HUB IS NOT A FLIGHT HOME NOW.** The brief carries the reading's
- * argument — _the judgment this work keeps reusing, encoded once by the team
- * that needed it, then drawn on by every team after_ — and lets the reader
+ * argument — _what stays when the model changes: judgment encoded once, drawn
+ * on by every team after_ (ADR-124) — and lets the reader
  * click any of the forty-seven cells to see its identity. `Aperture` branches
  * on pinned → brief; there is no seated card any more, and the seat rect / K
  * exports left with it.
@@ -1264,8 +1264,10 @@ export function carrierLayout(record: CarrierRecord): {
  * grade on a plate. Sentence case, like `CaseMapShape.meaning` and for the same
  * reason: it is the one thing here meant to be read rather than scanned.
  */
+/* Reworded 2026-09-24 (ADR-124): the reading is the LAYER now, and the hub
+   says what it is in one plain line; "encoded once" is the guarded phrase. */
 const BRIEF =
-  "The judgment this work keeps reusing — encoded once by the team that needed it, then drawn on by every team after.";
+  "What stays when the model changes: judgment encoded once, drawn on by every team after.";
 const BRIEF_FS = 13;
 const BRIEF_TRACK = 0.02;
 /**

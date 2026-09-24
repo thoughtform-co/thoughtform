@@ -236,13 +236,13 @@ its values carried nine different grammars. Legacy `readouts` normalize into
 that same 2×2 register. The right panel has no generic footer: the selected
 visual owns its full height beneath the designation rail.
 
-The Intelligence Map has exactly three projections: **CONFIGURATION · TEAM ·
-ALLOCATION**. The persistent moving atom is a work configuration, keyed by a
-stable non-display id, and selection survives projection and overlay changes.
-Configuration uses one vertical set of five work-shape anchors. The canonical
-47 Skills form one fixed bus labelled `ENCODED SUBSTRATE · 47 SKILLS / 5
-SHAPES`, with 47 persistent pips in five unlabelled runs. Do not restore a
-bottom shape legend, SUBSTRATE tab, STACK view or renamed Skills inventory.
+The Intelligence Map is the PDA console with three readings, **WORK ·
+CONFIGURATION · LAYER** (ids `work` / `configuration` / `substrate`; ADR-070,
+the third renamed 2026-09-24 by ADR-124). Reading 03 is the carrier: 47 Skill
+cells around a hub that letters one plain-language brief and no figure. The old
+CONFIGURATION · TEAM · ALLOCATION field, its `ENCODED SUBSTRATE` bus label and
+the STACK view are retired; do not restore them, a bottom shape legend, or a
+renamed Skills inventory.
 
 Compact detail occupies a reserved, non-overlapping lower console: identity,
 summary and six facet states plus checkpoint, allocation basis, broad owner and

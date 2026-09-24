@@ -561,7 +561,10 @@ export function PdaConsole({ shapes, districts, works, skills, envelope, railHos
   const STATIONS: readonly ConsoleStation[] = [
     { id: "work", name: "WORK" },
     { id: "configuration", name: "CONFIGURATION" },
-    { id: "substrate", name: "SUBSTRATE" },
+    /* The reading was named SUBSTRATE until 2026-09-24 (ADR-124): the owner
+       read it as vague, so the tab says what the drawing is, the layer that
+       stays. The id keys React only and does not churn. */
+    { id: "substrate", name: "LAYER" },
   ];
 
   /* SHARED WITH EVERY OTHER PLATE (2026-08-06). This rail's own grammar
