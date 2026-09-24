@@ -129,6 +129,33 @@ export const HEAD_REARM_BELOW = 0.01;
 
 export type HeadWant = 0 | 1;
 
+/**
+ * May the head be SHOWN on this frame — is the stage parked?
+ *
+ * PINNED: the runway covers the frame (`top ≤ 0.5`, `bottom ≥ vh − 0.5`),
+ * which is exactly when the sticky stage is still.
+ *
+ * ⚠ OR COVERED (ADR-105 U4, the review's finding). Where the footer is taller
+ * than the frame (1280×720: 307px taller) the document runs on past the
+ * runway's end, and the stage travels up under a footer whose top is `rise`
+ * above the runway's foot — at or above the frame's top, so the frame is
+ * already covered. Snapping the head blank there, as "not pinned", was
+ * invisible; but the return re-pinned with the frame still covered and started
+ * a ~0.7s decode that a fast flick then uncovered mid-shuffle. So under the
+ * footer the head stays WHOLE, and the footer lifts off a whole head — the
+ * masthead motion law is about text SEEN moving, and nothing is seen here.
+ * ⚠ THE TEST IS THE FOOTER'S OWN TOP (`bottom − rise ≤ 0.5`), not `rise === vh`:
+ * a rise retuned shorter than the frame would expose a strip of travelling
+ * stage, and this returns false there so the snap comes back.
+ * ⚠ GATED ON A RISE: in the labs (rise 0) nothing covers the released stage,
+ * it travels out in view, and the snap is the law.
+ */
+export function headParked(top: number, bottom: number, vh: number, rise: number): boolean {
+  const pinned = top <= 0.5 && bottom >= vh - 0.5;
+  const covered = rise > 0 && top < 0 && bottom - rise <= 0.5;
+  return pinned || covered;
+}
+
 export function headTarget(prev: HeadWant | null, p: number, pinned: boolean): HeadWant {
   if (!pinned) return 0;
   const at: HeadWant = prev ?? 0;

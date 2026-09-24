@@ -913,14 +913,19 @@ handoff and the `701–1100px` complete fallback alone.
   that opens on hover since [ADR-121](../sentinel/decisions/121-the-musings-row-opens-on-hover.md),
   2026-09-23) — it was `#practice` when this paragraph was written, then
   `#contact` under ADR-105. ⚠ On the capable rung `#musings` is itself a
-  TRANSPARENT stage (ADR-119 U1) and the cover is its 100svh `.mu__band`; below
-  1101px, under PRM and on the fallback the station is opaque and is its own
-  cover. ⚠ The lockstep has FOUR readers, not two: `home-v2.css`'s mode-gated
-  `#musings[data-mu-mode="stage"]` promotion rule, `useCorridorExitScroll`'s
-  query, `about-voidwalker-handoff-boundaries`' cover case and
+  TRANSPARENT stage (ADR-119 U1) and **the cover is `#contact` again since
+  [ADR-105 U4](../sentinel/decisions/105-the-page-ends-on-a-bold-footer.md)
+  (2026-09-24)** — the footer welded up over the list's last viewport and
+  rising over it, opaque at z 8; ADR-119 U1's 100svh `.mu__band` is deleted.
+  Below 1101px, under PRM and on the fallback the station is opaque and is its
+  own cover. ⚠ The lockstep has FOUR readers, not two: `home-v2.css`'s
+  mode-gated `#musings[data-mu-mode="stage"]` promotion rule,
+  `useCorridorExitScroll`'s query (`musingsCover` is `contactEl ?? musingsEl`
+  on the stage rung), `about-voidwalker-handoff-boundaries`' cover case and
   `services-ring-smoke`'s ambient-hold case (which reads it twice) — all four
-  name `.mu__band`. Splitting them hard-cuts the canvas at one of their edges —
-  ADR-030 §6, on record as hit six times. Rules: [`musings.md`](musings.md).
+  name `#contact` there. Splitting them hard-cuts the canvas at one of their
+  edges — ADR-030 §6, on record as hit six times. Rules:
+  [`musings.md`](musings.md).
 - **Every hologram path is starless.** `data-vw-surface="hologram"` removes
   `v7-stars.svg` on static fallbacks too. Mobile, tablet, PRM, flag-off and
   corridor-fallback remain solid-void normal flow; they never inherit the

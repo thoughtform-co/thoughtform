@@ -64,12 +64,15 @@
      stage-mode rule below the band; the labs override it to 0. */
   --mu-weld: 100svh;
   /* ⚠ THE RISE (ADR-105 U4): the runway's last viewport, in which the stage
-     stays pinned while the footer rises over it. It EQUALS `#contact`'s weld
-     (`--ft-weld`, site-footer.css) — the footer's top enters the floor at the
-     end of the dwell and reaches the frame's top exactly as the runway
-     releases, so the stage never unpins uncovered. `musings-row.test.ts` pins
-     the two equal by arithmetic; they cannot share a token because neither
-     station can read the other's custom properties.
+     stays pinned while the footer rises over it. It IS `#contact`'s weld —
+     the footer's top enters the floor at the end of the dwell and reaches the
+     frame's top exactly as the runway releases, so the stage never unpins
+     uncovered. ⚠ ONE DECLARATION, READ BY BOTH: neither station can read the
+     other's custom properties, but both inherit their parent's, so `--ft-weld`
+     is declared ONCE on `.stations` (site-footer.css) and the rule below spends
+     it as this station's rise. The equality is by construction; the source test
+     pins that there is one declaration and that this is an alias of it, never a
+     second number.
      ⚠ ZERO UNLESS A FOOTER FOLLOWS (the rule below). The labs mount this
      station with no `#contact` after it, and a rise with nothing rising would
      hold the list pinned one viewport longer and then drift it for nobody. */
@@ -86,7 +89,7 @@
   position: relative;
 }
 #musings.station:has(~ #contact.station) {
-  --mu-rise: 100svh;
+  --mu-rise: var(--ft-weld, 0px);
 }
 
 /* ── The ramp and the ladder ─────────────────────────────────────── */
@@ -1352,6 +1355,16 @@
       content: "";
       position: absolute;
       inset: 0;
+      /* ⚠ ABOVE EVERY LAYER IN THE STAGE. The stage is a stacking context (it is
+         sticky, and transformed while it drifts), and inside it the title and
+         the brief sit at z 1, the orbit's designations at 1, the notes' ring at
+         2. A veil at `z-index: auto` paints in tree order among the z-0 layer —
+         over the notes' glass, UNDER the head and the rings — so at mid-rise
+         the list dimmed while the two title lines and the paragraph stayed at
+         full ink. The capture's veil gate read the pseudo-element's OPACITY and
+         passed. 3 is one above the sheet's highest interior rung, and the source
+         test pins it as the maximum. */
+      z-index: 3;
       background-color: rgb(var(--void-rgb));
       opacity: 0;
       pointer-events: none;

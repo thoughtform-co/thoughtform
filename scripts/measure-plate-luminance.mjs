@@ -20,6 +20,15 @@
  * composition can be solved against it without re-measuring per viewport.
  * Only x is cropped: u(imageX) = 0.5 + (imageX - 0.5) * A/S.
  *
+ * ⚠ ADR-105 U4 SCALES THAT IDENTITY ON THE GLIDE RUNG. Behind `@supports
+ * (animation-timeline: view())` at ≥961px the `<img>` is `--ft-par` (25svh)
+ * taller than its plate, so the cover fit scales the picture by (H + par)/H
+ * and at rest shows its top H/(H + par): station-y = image-y × (1 + par/H),
+ * and x uses S' = W/(H + par). The PROFILE below is unchanged (it is the
+ * image's); the MAPPING is what moved, and site-footer.css §the glide carries
+ * the re-derived numbers (the ring's left edge lands at u 0.591 / 0.588 /
+ * 0.579 at 1920×1247 / 1440×900 / 1280×720 — more clearance, not less).
+ *
  * ⚠ AND THE SAME ARITHMETIC RETIRES AN OPEN ITEM. ADR-105 left "nudge
  * `object-position: center 45%` if the baked caption shows" as the named fix;
  * height-bound means there is no vertical crop to move, so that nudge is a

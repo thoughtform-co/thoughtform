@@ -54,6 +54,38 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-24 — the footer's rise, reviewed (ADR-105 U4 §8)
+
+**Trigger:** a code review of `44eeeb7c` — eight findings, all taken; the
+owner: "fix all".
+
+- **Cycle A.** ADR-105 U4 §8 records the eight. Code: the veil at `z-index: 3`
+  (it painted under the head and the notes' ring); `headParked` — the head
+  stays whole under a footer taller than the frame instead of re-decoding on
+  the way back (1280×720, 307px past the runway's end); the ready stamp lands
+  before the measure; `--ft-weld` declared once on `.stations` and aliased as
+  `--mu-rise`. Record: `musings.md`'s four stale bottom-exit bullets, the
+  lockstep readers in `home-v2.css` / `useCorridorExitScroll` / `voidwalker.md`
+  / this ledger's ADR-121 line, `page.tsx`'s import comments, the glide's
+  re-framing of U2's plate identity (site-footer.css,
+  `measure-plate-luminance.mjs`), the gallery lab's feed-ride bound.
+- **Q3 (a class of bug) → BEST-PRACTICES:** a gate that reads an element's own
+  property cannot see what it is layered against; a layout-changing stamp
+  written at the end of the tick means the tick measured the layout before it.
+- **Q4 (files that move together):** the weld is ONE declaration now, so the
+  pair that had to move together no longer exists; the test pins the single
+  declaration and the alias instead.
+- **Q5 (a runtime check that caught it earlier):** the capture reads the veil's
+  z against the stage's interior, the head at the document's end, and the head
+  AT ONCE on the way back up (a read after 700ms is after any burst).
+- **Verified:** `musings-row` 73/73 (+8), `musings-gallery` 18/18, the whole
+  unit suite 2173/2173, `tsc` clean, eslint clean; `capture-musings-row` PASS
+  at 1280×720 (the head whole under the footer 307px past the frame, whole at
+  once on the way back) and 1920×1247 dark (the rise exact at every quarter,
+  the veil above the stage's interior); `capture-site-footer` 1920×1247 dark
+  G3 pass, title 6.71:1 — the same reading U4 §7 recorded, at the glide's
+  framing.
+
 ### 2026-09-23 — the musings row seats its copy and yields to the telemetry (ADR-121 U1)
 
 **Trigger:** the coordinating session, off ADR-121's own stills: the open card
@@ -99,7 +131,8 @@ placeholder copy for the design while the writing track runs.
 - **Q4 (files that move together):** `MUSINGS_ROW_MEDIA` ↔ the sheet's rung
   (pinned); `--mu-open-w` ↔ `--mu-closed` / `--mu-gap` / `--mu-n` (pinned);
   the sheet's stage-rung glass ↔ `theme.css` BLOCK 4g (pinned by selector);
-  the four cover-lockstep readers (untouched, all naming `.mu__band`).
+  the four cover-lockstep readers (untouched, all naming `.mu__band` — since
+  ADR-105 U4, 2026-09-24, all four name `#contact` and the band is deleted).
 - **Q5 (a runtime check that caught it earlier):** the capture gained the
   hover / leave / Tab / no-reflow / glass / reduced-motion / `--perf` gates and
   a second context for PRM; the glyph-in-strip gate is what found the column.

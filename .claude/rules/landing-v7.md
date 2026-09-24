@@ -260,9 +260,10 @@ z-index: 8; margin-top: calc(-1 * var(--ft-weld)) }`, keyed on the SAME stamp
   no script at all. `data-mu-arrive` and `data-mu-mode` follow the same polarity,
   and `park()` and the effect's teardown clear all three.
 - ⚠ **THE HUD's CORNER READOUT WAS A CASUALTY OF THE BED, AND `offsetTop` DOES
-  NOT FIX IT.** `useLandingScroll` picks the active station from the PAINTED
-  rect, last wins, `#contact` last — so once `data-ft-reveal` armed, the corner
-  said CONTACT for the whole beat. `offsetTop` reports the STUCK position too
+  NOT FIX IT** (the bed and `data-ft-reveal` are deleted since ADR-105 U4; the
+  finding and the narrowing stand). `useLandingScroll` picks the active station
+  from the PAINTED rect, last wins, `#contact` last — so once `data-ft-reveal`
+  armed, the corner said CONTACT for the whole beat. `offsetTop` reports the STUCK position too
   (measured 17174 against `#musings`'s 17217, a station beginning before the one
   above it), so the truth for a stuck station is the BOTTOM of the one above it —
   narrowed to `position === "sticky"`, because the phone's `#about` takes a

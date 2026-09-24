@@ -681,8 +681,10 @@ allowed).
   `position: relative; z-index: 8`.
 - **Both key on the same stamp**, `#musings:has(.mu[data-mu-ready]) ~ #contact.station`,
   so the weld and the tail always turn on together.
-- **`musings-row.test.ts` pins `--mu-rise` equal to `--ft-weld` by arithmetic.**
-  Neither station can read the other's custom properties.
+- **`--mu-rise` IS `--ft-weld`: one declaration, on `.stations`, read by both**
+  (since the review pass below — the first cut declared it twice and had
+  `musings-row.test.ts` pin the pair by arithmetic). Neither station can read
+  the other's custom properties, but both inherit their parent's.
 - **The footer's top enters at the floor exactly at the end of the dwell.** It
   reaches the frame's top exactly as the runway releases, so the stage never
   unpins uncovered.
@@ -786,4 +788,65 @@ Taken with the list capture (headed, real scrolls) and the rise probe.
 - **The title sets on three lines at every desktop width.** At 72px the capitals
   cannot hold the authored two-line break inside the band's 54vw.
 - **At 1280×720 the footer is 307px taller than the frame**, so it keeps scrolling
-  after it has covered the list.
+  after it has covered the list. (What that did to the head is fixed below; the
+  extra scroll itself stands.)
+
+### 8 · The review pass (same day)
+
+A code review of the commit found eight things; all eight are taken. Four are code,
+each with a guard; four are the record catching up with the change.
+
+1. **The veil painted UNDER the head and the rings.** `.mu__stage` is a stacking
+   context (sticky, and transformed while it drifts); inside it the title and the
+   brief sit at z 1 and the notes' ring at 2, and the veil on `::after` had
+   `z-index: auto` — so at mid-rise the notes dimmed while the two title lines and
+   the paragraph stayed at full ink, and the capture's veil gate, reading the
+   pseudo-element's OPACITY, passed. The veil is `z-index: 3`; the source test
+   pins it as the sheet's maximum and the capture reads its z against the stage's
+   interior. **A gate that reads an element's own property cannot see what it
+   is layered against.**
+2. **Past the runway's end, the head blanked under the footer and re-decoded on the
+   way back.** Where the footer is taller than the frame (1280×720) the document
+   runs past the runway's end, the sticky stage travels up under a footer whose top
+   is already at or above the frame's top, and `pinned` went false — the head
+   snapped blank, invisibly; then the return re-pinned with the frame still covered
+   and started a ~0.7s decode that a fast flick uncovered mid-shuffle. The capture
+   read the way back after 700ms, i.e. after the burst. `headParked` (pure,
+   `lib/musings/headDecode.ts`) is pinned OR covered — the footer's own top,
+   `bottom − rise ≤ 0.5`, not `rise === vh`, so a rise retuned shorter than the
+   frame brings the snap back — and the writer asks it instead of `pinned`. The
+   capture reads the head at the document's end and AT ONCE on the way back.
+3. **The first tick measured the flowing list.** The runway's height and the
+   footer's weld both key on `data-mu-ready`, and the writer stamped it at the END
+   of the tick, so the first tick after a deep reload read a rest-height runway:
+   `travel = max(1, rest − vh − rise) = 1`, `p` saturated, and the head was seeded
+   off a layout nobody sees (the capture had guarded `ready ? rise : 0`; the hook
+   had not). The stamp lands at the top of the tick; the source test pins the
+   order.
+4. **The weld was two hand-mirrored tokens held equal by a test.** `--mu-rise` on
+   `#musings` and `--ft-weld` on `#contact`, "because neither station can read the
+   other's custom properties" — but both are children of `main.stations`, so one
+   declaration there is readable by both. `--ft-weld: 100svh` is declared once on
+   `.stations` (site-footer.css) and `#musings.station:has(~ #contact.station)`
+   spends it as `--mu-rise: var(--ft-weld, 0px)`; the test pins the single
+   declaration and the alias.
+5. **The glide re-frames the plate, and U2's identity did not say so.** A `cover`
+   fit into a box `--ft-par` taller is still height-bound, so on the glide rung the
+   picture is scaled by `(H + par)/H` and shows its top 80 % at rest: U2's
+   "image-y === station-y" is scaled by 1.25 there, the ring sits at station y
+   0.29–0.84 rather than 0.23–0.67, and its left edge lands at u 0.591 / 0.588 /
+   0.579 (1920×1247 / 1440×900 / 1280×720) — MORE clearance from the 54vw cap
+   than the 0.573 U2 solved against, so the cap stands, re-measured. The baked
+   caption falls off the plate's floor on that rung. Recorded in site-footer.css,
+   `measure-plate-luminance.mjs` and here; §7's contrast reading (6.71:1 dark,
+   10.06:1 light) was already taken at this framing.
+6. **`musings.md` contradicted itself** — four bullets still described the deleted
+   bottom exit (the close at 0.95, the leave at 0.965, the head EMPTY at 1.15).
+7. **Four lockstep readers still described the bed and the band**: `home-v2.css`'s
+   promotion rule, `useCorridorExitScroll`'s U3 comment, `voidwalker.md`'s
+   lockstep paragraph and MAINTENANCE's ADR-121 line (annotated, not rewritten —
+   it is a record of that session). `page.tsx`'s import comments and
+   `landing-v7.md`'s bed finding are re-pointed with them.
+8. **`musings-gallery.test.ts` bounded the feed ride against a deleted constant.**
+   The lab has no footer and no bottom exit; its stage releases at p 1, and the
+   bound is stated against that.

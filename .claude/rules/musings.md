@@ -187,9 +187,11 @@ var(--mu-note-col)`: the row (title over meta, the chip) in column 1, the
   dwell, so changing it moves them in svh: the arrival's hysteresis
   (`lib/musings/arrive.ts`, the lifted `arriveNext`) opens at `ROW_ARRIVE_IN`
   **0.05** (was 0.10 at 60svh — the same 6svh, re-solved with the dial) and
-  closes at 0.95, before the head leaves at 0.965; the head reveals at 0.02,
-  2.4svh past the pin, which the weld's seam test still bounds under 12svh.
-  On the stage rung the station is ~2.2 viewports plus its 100svh band.
+  closes ONLY on the way back up, at `ROW_ARRIVE_OUT` 0.025 — there is no exit
+  at the bottom since ADR-105 U4, the footer covering the list is the exit; the
+  head reveals at 0.02, 2.4svh past the pin, which the weld's seam test still
+  bounds under 12svh. On the stage rung the station is ~2.2 viewports plus its
+  100svh rise, under which the footer arrives.
 - ⚠ **THE STATION IS WELDED ONE VIEWPORT OVER THE ERA STAGE, ON THE STAGE RUNG
   ONLY (ADR-121 U3, owner: "it takes a few scrolls to get to the elements").**
   A sticky stage pins only once its top reaches the frame's top and the head
@@ -336,8 +338,9 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   - **`headFrame` returns `""` at level 0**, for every run — the regression the
     test exists for — and the writer may not call `scrambleFrame` itself.
   - **TIME DRIVES THE LEVEL, SCROLL DECIDES THE TARGET.** `headTarget` picks 0
-    or 1 (reveal at p ≥ 0.02, leave at ≥ 0.965 or < 0.01, a hysteresis band at
-    each end); a bounded rAF burst walks the level there — up over the whole
+    or 1 (reveal at p ≥ 0.02, back to blank below 0.01 — one hysteresis band,
+    at the top; the leave at 0.965 is deleted since ADR-105 U4, the footer
+    covering the head is its exit); a bounded rAF burst walks the level there — up over the whole
     span (~0.7s: lines 0.18s apart, the paragraph typing at 220 chars/s behind
     0.12s, services' numbers), down twice as fast. ADR-021's sanctioned kind,
     the services masthead's own clock.
@@ -357,10 +360,20 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   - Two registers stay: chrome and title SCRAMBLE, the paragraph TYPES. ⚠ The
     heading carries an `aria-label`, or a reader arriving mid-decode is handed
     the shuffle. The survey chrome fades with `--mu-head`.
-    ⚠ With a 120svh dwell `pinned` holds for 120svh of scroll: the head decodes on
-    entry, the cards open after it, and the exit runs backwards
-    (`data-mu-arrive="out"` at 0.95 before the head leaves at 0.965). The
-    capture reads the head EMPTY at −0.3 and 1.15 and whole through 0.3–0.9.
+    ⚠ With a 120svh dwell `pinned` holds for 120svh of scroll and then for the
+    100svh rise: the head decodes on entry, the cards open after it, and both
+    stay whole under the rising footer (ADR-105 U4 — no `out` and no leave at
+    the bottom; scrolling back UP into the era stage the fold and the un-type
+    run backwards under 0.025 / 0.01). ⚠ **AND PAST THE RUNWAY'S END THE HEAD
+    STAYS WHOLE UNDER THE FOOTER** (`headParked`, the review fix): where the
+    footer is taller than the frame (1280×720, 307px) the stage travels up
+    covered, and blanking it there — as "not pinned" — re-armed a 0.7s decode on
+    the return that a flick uncovered mid-shuffle. Parked means pinned OR the
+    footer's top (`bottom − rise`) at or above the frame's top; in the labs
+    (rise 0) the released stage travels out in view and the snap is the law. The
+    capture reads the head EMPTY at −0.3, whole through 0.3–1 and at every
+    quarter of the rise, whole at the document's end and whole AT ONCE on the
+    way back (a read after 700ms is after any burst).
 - **THE NOTES ARRIVE AS A LINE THAT UNFOLDS DOWN, AFTER THE HEAD HAS
   RESOLVED (ADR-122)** — the owner's order (_"the text should appear with a
   glitch effect, and then the cards should come into view"_) and his gesture
@@ -385,8 +398,9 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   (`proof-stack.css`, the Trinny route) and may not reappear in `musings.css`.
   ⚠ It is a BOUNDED BURST on a hysteresis (`rowArrive`, `lib/musings/arrive.ts`):
   NaN leaves the state alone, a deep reload seeds `in`, `await` is NOT `out`,
-  and it closes at **0.95**, BEFORE the head leaves (0.965), so the exit is the
-  entry backwards. ⚠ **Re-entering from below replays the order**, so a probe
+  and it closes only on the way back up (`ROW_ARRIVE_OUT` 0.025 — ADR-105 U4
+  deleted the close at 0.95: the footer covering the list is the exit).
+  ⚠ **Re-entering from below replays the order**, so a probe
   must WAIT on `data-mu-arrive="in"` and on `.mu__notes` having no running
   animation (`getAnimations({ subtree: true })` — the lip animates a
   pseudo-element) — never sleep. ⚠ **And it waits `state: "attached"`**: the
@@ -464,26 +478,41 @@ sectionGlyphs.tsx`) are both hand-copies. ⚠ A post with no Arc tag draws NO
   `calc(100svh + var(--mu-dwell) + var(--mu-rise))` and
   `#musings:has(.mu[data-mu-ready]) ~ #contact.station` takes
   `margin-top: calc(-1 * var(--ft-weld))`, `position: relative`, `z-index: 8`.
-  ⚠ **`--mu-rise` EQUALS `--ft-weld` (100svh), BY ARITHMETIC** — the footer's
+  ⚠ **`--mu-rise` IS `--ft-weld` (100svh), ONE DECLARATION** — the footer's
   top enters the floor at the end of the dwell and reaches the frame's top as
-  the runway releases, so the stage never unpins uncovered.
-  `musings-row.test.ts` pins the pair; neither station can read the other's
-  custom properties. ⚠ **`--mu-rise` is `0px` unless a footer follows**
-  (`#musings.station:has(~ #contact.station)`) — the labs have none.
+  the runway releases, so the stage never unpins uncovered. Neither station
+  can read the other's custom properties, but both inherit their parent's, so
+  `--ft-weld` is declared ONCE on `.stations` (site-footer.css) and
+  `#musings.station:has(~ #contact.station)` spends it as `--mu-rise:
+var(--ft-weld, 0px)`; `musings-row.test.ts` pins the single declaration and
+  the alias (the first cut declared it twice and pinned the pair by arithmetic).
+  ⚠ **`--mu-rise` is `0px` unless a footer follows** — the labs have none.
 - ⚠ **THE WRITER'S CLOCK IS THE DWELL.** `travel = runway − vh − rise` (the
   rise read off a probe box in the station), so `p` saturates at 1 through the
   rise and every threshold keeps its meaning. ⚠ **THERE IS NO EXIT AT THE
   BOTTOM**: `ROW_ARRIVE_END`, `HEAD_LEAVE_AT` and `HEAD_RETURN_BELOW` are
   deleted — the footer covering the list is the exit, and scrolling back up
-  it lifts off a whole list.
+  it lifts off a whole list. ⚠ **THE STAMP LANDS BEFORE THE MEASURE**: the
+  runway's height and the weld both key on `data-mu-ready`, so the writer sets
+  it at the top of the tick — a rect read before it is the flowing list's, and
+  on the first tick after a deep reload that put `travel` at 1 and seeded the
+  head off a saturated `p` (the capture had guarded `ready ? rise : 0`; the
+  hook had not). ⚠ **AND PAST THE RUNWAY'S END THE HEAD IS PARKED, NOT
+  BLANKED** (`headParked`): where the footer is taller than the frame the
+  stage travels covered, and a blank there re-armed a decode on the return.
 - ⚠ **THE DRIFT AND THE DIM ARE ON THE COMPOSITOR.** `.mu__stage` drifts
   `translateY(0 → −0.25 × rise)` on the RUNWAY's view timeline
   (`--mu-run`, `contain calc(100% − var(--mu-rise)) contain 100%`) and a void
   veil on `::after` dims to 0.4, inside `@supports (animation-timeline:
 view())` and the rung. ⚠ Never `opacity` on the stage (glass notes,
-  ADR-097); the stage, never the station (the section clock). A browser
-  without timelines keeps the weld and the pin: the footer covers a still
-  list.
+  ADR-097); the stage, never the station (the section clock). ⚠ **THE VEIL
+  IS AT `z-index: 3`, ABOVE EVERY LAYER IN THE STAGE** — the stage is a
+  stacking context and the title, the brief and the notes' ring sit at 1 / 1 /
+  2 inside it, so a veil at `auto` dimmed the list and left the head at full
+  ink while the opacity gate passed; the source test pins 3 as the sheet's
+  maximum and the capture reads the veil's z against the stage's interior. A
+  browser without timelines keeps the weld and the pin: the footer covers a
+  still list.
 - ⚠ **THE FOOTER IS THE CORRIDOR'S COVER** on the stage rung —
   `useCorridorExitScroll`'s `musingsCover` is `contactEl ?? musingsEl`, the
   ambient fading as the footer's top rises from 0.6 of the frame to its top.
@@ -492,8 +521,11 @@ view())` and the rung. ⚠ Never `opacity` on the stage (glass notes,
   site-footer.css).
 - **The capture's rise gates**: the footer's top at vh·(1 − k) at each quarter,
   the stage pinned, the list `in` and the head whole under it, the drift and
-  the veil at k's share, no void between the two, the corridor alive at 0.25
-  and dead at 1, the readout on CONTACT from 0.75, a whole list scrolling back.
+  the veil at k's share (and the veil's z above the stage's interior), no void
+  between the two, the corridor alive at 0.25 and dead at 1, the readout on
+  CONTACT from 0.75, the head whole at the document's end, and a whole list
+  AND a whole head scrolling back — read at once, before any burst could
+  finish, and again settled.
 
 ## What a still shows and a gate does not, and the reverse
 

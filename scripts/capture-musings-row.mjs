@@ -310,6 +310,19 @@ const readRow = () =>
       stageTy,
       stageAnim: stageCs?.animationName ?? null,
       veil: stageEl ? px(parseFloat(getComputedStyle(stageEl, "::after").opacity || "0")) : 0,
+      /* ⚠ THE VEIL'S ORDER, NOT JUST ITS OPACITY: at `auto` it dimmed the notes
+         and left the head at full ink, with this gate green. Read against the
+         highest z inside the stage — the title, the brief, the notes' ring. */
+      veilZ: stageEl ? getComputedStyle(stageEl, "::after").zIndex : null,
+      stageTopZ: stageEl
+        ? Math.max(
+            0,
+            ...[...stageEl.querySelectorAll("*")]
+              .map((el) => Number(getComputedStyle(el).zIndex))
+              .filter((z) => Number.isFinite(z)),
+            ...notes.map((n) => Number(getComputedStyle(n, "::before").zIndex) || 0)
+          )
+        : null,
       ambient: document.documentElement.hasAttribute("data-services-ambient"),
       exit: document.documentElement.hasAttribute("data-corridor-exit"),
       activeStation: document.documentElement.getAttribute("data-active-station"),
@@ -690,6 +703,7 @@ const notch = await readNotch();
    one (ADR-105 U4: the footer covering the list is its only exit at the
    bottom). Landing only — the lab has no footer and no corridor. */
 let backUp = null;
+let backUpFast = null;
 if (!LAB) {
   await page.evaluate(() => {
     const max = document.documentElement.scrollHeight - window.innerHeight;
@@ -701,6 +715,12 @@ if (!LAB) {
   await page.screenshot({ path: `${OUT}/mu-${tag}-footer-end.png` });
   if (!phone) {
     await rollToP(null, 0.5);
+    /* ⚠ READ AT ONCE, THEN SETTLED. Where the footer is taller than the frame
+       (1280×720) the document runs past the runway's end and the stage travels
+       under the covering footer; the head must be WHOLE there and stay whole
+       as the footer lifts. A read after 700ms is after any burst — it saw a
+       whole head that had in fact been re-decoded under the descending footer. */
+    backUpFast = await readRow();
     await page.waitForTimeout(700);
     backUp = await readRow();
   }
@@ -1108,9 +1128,32 @@ if (!phone) {
         fails.push(`scrolling back up, the footer lifts off a list that is ${backUp.arrive}`);
       if (!backUp.headState?.whole) fails.push("scrolling back up, the head is not whole");
     }
+    if (backUpFast && !backUpFast.headState?.whole)
+      fails.push(
+        `scrolling back up, the head is re-decoding under the footer ("${backUpFast.headState?.sample}")`
+      );
+    /* ⚠ AND WHOLE UNDER THE FOOTER AT THE DOCUMENT'S END — past the runway's
+       end where the footer is taller than the frame, the stage travels covered
+       and the head may not blank (that is what re-armed the decode). */
+    if (end?.muReady && !end.headState?.whole)
+      fails.push(
+        `the head is not whole under the footer at the document's end ("${end.headState?.sample}")`
+      );
+    /* The veil paints above the head and the rings, not between them. */
+    for (const r of rise) {
+      if (r.stageAnim === "mu-under" && r.veilZ != null && r.stageTopZ != null) {
+        const z = Number(r.veilZ);
+        if (!Number.isFinite(z) || z <= r.stageTopZ)
+          fails.push(
+            `rise ${r.k}: the veil is at z ${r.veilZ}, under the stage's interior at ${r.stageTopZ}`
+          );
+      }
+    }
   }
-  /* ⚠ THE READOUT NAMES THIS STATION FOR THE WHOLE BEAT. It is the one thing
-     the sticky bed can silently take away, and nothing else measures it. */
+  /* ⚠ THE READOUT NAMES THIS STATION FOR THE WHOLE BEAT. It is the one thing a
+     station beginning above its predecessor's bottom — the footer's weld now,
+     U3's sticky bed before it — can silently take away, and nothing else
+     measures it. */
   for (const s of walk) {
     if (typeof s.p !== "number" || s.p < 0 || s.p > 1) continue;
     if (s.activeStation !== "musings")

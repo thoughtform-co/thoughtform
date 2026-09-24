@@ -14,6 +14,7 @@ import {
   HEAD_REARM_BELOW,
   HEAD_REVEAL_AT,
   headFrame,
+  headParked,
   headRunEnd,
   headRunLive,
   headSpan,
@@ -216,6 +217,34 @@ describe("headTarget — where the head is going", () => {
   it("shows the head whole on a deep reload parked inside the dwell or the rise", () => {
     expect(headTarget(null, 0.5, true)).toBe(1);
     expect(headTarget(null, 1, true)).toBe(1);
+  });
+
+  it("is parked while the runway covers the frame, and NOT on the approach or a bare release", () => {
+    const vh = 1247;
+    expect(headParked(0, vh, vh, 0)).toBe(true);
+    expect(headParked(0.5, vh - 0.5, vh, 0)).toBe(true);
+    expect(headParked(-600, vh + 400, vh, vh)).toBe(true); // mid-dwell, a rise declared
+    expect(headParked(1, vh + 1000, vh, 0)).toBe(false); // the approach
+    // The labs: no rise, the stage travels out in view — blank (the masthead law).
+    expect(headParked(-1, vh - 1, vh, 0)).toBe(false);
+    expect(headParked(-300, vh - 300, vh, 0)).toBe(false);
+  });
+
+  it("stays parked UNDER the footer past the runway's end (ADR-105 U4)", () => {
+    // 1280×720: the footer is 307px taller than the frame, so the document runs
+    // past the runway's end and the stage travels up under a footer whose top
+    // (`bottom − rise`) is already at or above the frame's top. Blanking it there
+    // was invisible; the return re-pinned under a covered frame and burst a
+    // 0.7s decode that a flick uncovered mid-shuffle. Whole under the footer.
+    const vh = 720;
+    expect(headParked(-1, vh - 1, vh, vh)).toBe(true);
+    expect(headParked(-307, vh - 307, vh, vh)).toBe(true); // the document's end
+    expect(headParked(-2000, vh - 307, vh, vh)).toBe(true); // a deep reload there
+    // ⚠ The test is the FOOTER's top, not `rise === vh`: a rise retuned shorter
+    // than the frame would expose a strip of travelling stage, and the snap
+    // must come back there.
+    expect(headParked(-1, vh - 1, vh, 0.8 * vh)).toBe(false);
+    expect(headParked(-200, vh - 200, vh, 0.8 * vh)).toBe(true); // once the footer's top passes 0
   });
 
   it("leaves the state alone on a non-finite reading", () => {
@@ -826,24 +855,27 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
 
   const FOOTER = "components/landing/v7/site-footer/site-footer.css";
 
-  it("the rise EQUALS the footer's weld, and exists only where a footer follows", () => {
-    // ⚠ ARITHMETIC, NOT A LITERAL. The stage stays pinned for `--mu-rise` after
+  it("the rise IS the footer's weld — ONE declaration on the stations' parent, read by both", () => {
+    // ⚠ ONE NUMBER, ONE DECLARATION. The stage stays pinned for `--mu-rise` after
     // the dwell and `#contact` is pulled up by `--ft-weld`: equal, the footer's
     // top enters the floor at the end of the dwell and reaches the frame's top
     // exactly as the runway releases. Larger, the stage unpins uncovered;
     // smaller, the footer arrives early over the dwell. Neither station can
-    // read the other's custom properties, so this is the only thing joining them.
-    const num = (body: string, re: RegExp) => Number(re.exec(body)?.[1]);
+    // read the other's custom properties, but both inherit `.stations`', so the
+    // weld is declared THERE, once, and the musings station aliases it. The
+    // first cut declared it twice and pinned the pair by arithmetic — two edits
+    // and a test for what one declaration says. A second `--ft-weld:` anywhere
+    // is that pair coming back.
     const sheet = rules(read(SHEET));
     const footer = rules(read(FOOTER));
     expect(bodyOf(sheet, "#musings.station")).toMatch(/--mu-rise:\s*0px/);
-    const rise = num(
-      bodyOf(sheet, "#musings.station:has(~ #contact.station)"),
-      /--mu-rise:\s*(\d+)svh/
+    expect(flat(bodyOf(sheet, "#musings.station:has(~ #contact.station)"))).toContain(
+      "--mu-rise:var(--ft-weld,0px)"
     );
-    const weld = num(bodyOf(footer, "#contact.station"), /--ft-weld:\s*(\d+)svh/);
-    expect(rise).toBe(100);
-    expect(weld).toBe(rise);
+    expect(bodyOf(footer, ".stations")).toMatch(/--ft-weld:\s*100svh/);
+    expect(bodyOf(footer, "#contact.station")).not.toMatch(/--ft-weld\s*:/);
+    expect(sheet.match(/--ft-weld\s*:/g) ?? []).toHaveLength(0);
+    expect(footer.match(/--ft-weld\s*:/g) ?? []).toHaveLength(1);
   });
 
   it("the footer is welded on the list's own stamp, promoted, and never sticky", () => {
@@ -866,11 +898,57 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
 
   it("the writer's clock is the DWELL — the rise is subtracted, so no threshold moved", () => {
     const hook = read(HOOK);
-    expect(hook).toContain("runway.offsetHeight - vh - risePx()");
+    expect(hook).toContain("runway.offsetHeight - vh - rise");
     // The rise is read off a probe sized by the property (a custom property is
     // a string until something lays it out), and the probe is cleaned up.
     expect(hook).toContain("height:var(--mu-rise,0px)");
     expect(hook).toContain("riseProbe?.remove()");
+  });
+
+  it("the writer stamps data-mu-ready BEFORE it measures, so the first tick reads the pinned layout", () => {
+    // The runway's height and the footer's weld both key on the stamp. Read
+    // before it, the rect is the FLOWING list's: on the first tick after a deep
+    // reload `travel` was max(1, rest − vh − rise) = 1, `p` saturated, and the
+    // head was seeded off a layout nobody sees.
+    const hook = read(HOOK);
+    const tick = hook.slice(hook.indexOf("const tick = () =>"));
+    const stamp = tick.indexOf('setAttribute("data-mu-ready"');
+    expect(stamp).toBeGreaterThan(-1);
+    expect(stamp).toBeLessThan(tick.indexOf("runway.getBoundingClientRect()"));
+    expect(stamp).toBeLessThan(tick.indexOf("risePx()"));
+    expect(stamp).toBeLessThan(tick.indexOf("runway.offsetHeight"));
+  });
+
+  it("the head is shown while parked OR covered by the footer — never on a stage seen moving", () => {
+    // The writer asks `headParked` (pinned, or past the runway's end under a
+    // footer whose top is at or above the frame's top) and blanks the head on
+    // any other frame; a bare `pinned` re-armed a decode under the footer.
+    const hook = read(HOOK);
+    expect(hook).toContain("headParked(rect.top, rect.bottom, vh, rise)");
+    expect(hook).toMatch(/const want = headTarget\(headWant, p, parked\)/);
+    expect(hook).toMatch(/if \(!parked\) \{/);
+  });
+
+  it("the veil under the rising footer paints ABOVE every layer in the stage", () => {
+    // The stage is a stacking context (sticky, and transformed while it
+    // drifts). The title and the brief sit at z 1 and the notes' ring at 2, so
+    // a veil at `z-index: auto` dimmed the list and left the head at full ink —
+    // and the capture's veil gate, reading the pseudo-element's OPACITY,
+    // passed. The veil takes one rung above the sheet's highest interior z.
+    const sheet = rules(read(SHEET));
+    const sup = sheet.slice(sheet.indexOf("@supports (animation-timeline: view())"));
+    const veil = bodyOf(
+      sup,
+      "#musings:has(~ #contact.station) .mu[data-mu-ready] .mu__stage::after"
+    );
+    const veilZ = Number(/z-index:\s*(\d+)/.exec(veil)?.[1]);
+    expect(veilZ).toBe(3);
+    // Every other z-index in the sheet — the stage's interior — stays under it.
+    const others = [...sheet.replace(veil, "").matchAll(/z-index:\s*(\d+)/g)].map((m) =>
+      Number(m[1])
+    );
+    expect(others.length).toBeGreaterThan(0);
+    expect(Math.max(...others)).toBeLessThan(veilZ);
   });
 
   it("the list drifts and dims under the footer on the COMPOSITOR, behind @supports", () => {

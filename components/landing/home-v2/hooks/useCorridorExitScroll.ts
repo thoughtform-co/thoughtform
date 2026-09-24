@@ -227,9 +227,10 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // neither of which has a `#musings`, and on those routes the answer is
       // still `#contact`. A bare `musingsEl` would leave both with no cover
       // and no error.
-      // ⚠ AND THAT IS WHAT FREES THE FOOTER: with the cover here, `#contact`
-      // can become the sticky bed the rack scrolls over (ADR-105 U3). A
-      // cover cannot also be the thing being uncovered.
+      // ⚠ ADR-105 U4: ON THE STAGE RUNG THE COVER IS `#contact` AGAIN — the
+      // footer rises OVER the pinned list (`musingsCover`, below). U3's held
+      // bed is deleted: a cover cannot also be the thing being uncovered, and
+      // nothing is uncovered any more.
       // ⚠ Keep this query and home-v2.css's
       // `html[data-corridor-exit="true"] #voidwalker` rule on the SAME
       // station (the ADR-030 §6 seam bug — see the comment below).

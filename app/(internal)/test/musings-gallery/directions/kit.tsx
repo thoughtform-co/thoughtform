@@ -299,8 +299,9 @@ export function Byline({ post, className = "" }: { post: GalleryPost; className?
  * v6 — how far the feed's list is shifted for the station's runway progress
  * `p` and the feed's overflow `over` (px): nothing until the row has arrived
  * (p 0.10), the whole overflow by p 0.85, so the last note is on screen
- * before the row closes at 0.95. PURE; the sheet carries the same constants
- * in `--mg-feed-t` and the test pins both.
+ * before the lab's stage releases at p 1 (there is no exit at the bottom
+ * since ADR-105 U4, and the lab has no footer). PURE; the sheet carries the
+ * same constants in `--mg-feed-t` and the test pins both.
  */
 export const FEED_RIDE_FROM = 0.1;
 export const FEED_RIDE_TO = 0.85;

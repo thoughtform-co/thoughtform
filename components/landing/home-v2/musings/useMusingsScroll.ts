@@ -7,6 +7,7 @@ import { rowArrive, type RowArrive } from "@/lib/musings/arrive";
 import {
   HEAD_OUT_SPEEDUP,
   headFrame,
+  headParked,
   headRunLive,
   headSpan,
   headTarget,
@@ -339,6 +340,19 @@ export function useMusingsScroll(
         return;
       }
 
+      /* ⚠ THE READY STAMP LANDS BEFORE THE MEASURE. The runway's height (the
+         dwell plus the rise) and the footer's weld both key on `data-mu-ready`
+         (ADR-105 U4), so a rect read before it is the FLOWING list's — and on
+         the first tick after a deep reload that put `travel` at 1 (a rest-height
+         runway minus two viewports), saturated `p`, and seeded the head off a
+         layout no reader sees; a second tick corrected it only where the era's
+         mode observer happened to fire. Stamped here, the same tick lays out and
+         measures the pinned runway. The attribute is idempotent, so this is one
+         forced layout on the first tick and a plain read on every other. It is
+         also what keeps the runway's rise and `#contact`'s weld turning on and
+         off in the same frame, so the two can never disagree. */
+      if (!station.hasAttribute("data-mu-ready")) station.setAttribute("data-mu-ready", "");
+
       /* The stage stamp, before anything reads it. `useCorridorExitScroll`
          resolves its cover off this attribute on its own cadence. */
       const sec = section();
@@ -370,17 +384,23 @@ export function useMusingsScroll(
          the footer rises and every threshold keeps the meaning it had.
          `offsetHeight` rather than the rect's height, so a transform above
          cannot enter it. */
-      const travel = Math.max(1, runway.offsetHeight - vh - risePx());
+      const rise = risePx();
+      const travel = Math.max(1, runway.offsetHeight - vh - rise);
       const p = clamp01(-rect.top / travel);
       /* ⚠ PARKED IS THE RUNWAY COVERING THE FRAME, which is exactly when the
-         sticky stage is still. `p` alone cannot say it: it clamps to 0 all the
-         way up the approach and to 1 all the way through the release. */
-      const pinned = rect.top <= 0.5 && rect.bottom >= vh - 0.5;
+         sticky stage is still — OR THE FRAME COVERED BY THE FOOTER (ADR-105
+         U4): where the footer is taller than the frame the document runs past
+         the runway's end and the stage travels under a footer that already
+         covers everything, and snapping the head blank there re-armed a decode
+         the footer's descent then uncovered mid-shuffle. `headParked` is the
+         pure test; `p` alone cannot say either: it clamps to 0 all the way up
+         the approach and to 1 all the way through the release. */
+      const parked = headParked(rect.top, rect.bottom, vh, rise);
 
       /* ── The head: decide where it is going, then get it there. ── */
       targets();
-      const want = headTarget(headWant, p, pinned);
-      if (!pinned) {
+      const want = headTarget(headWant, p, parked);
+      if (!parked) {
         /* ⚠ TEXT NEVER TRAVELS. Unparked, the head is blank NOW — a burst
            still playing would print on a moving stage. */
         headWant = 0;
@@ -403,10 +423,6 @@ export function useMusingsScroll(
         arrive = nextArrive;
         station.dataset.muArrive = nextArrive;
       }
-      /* ⚠ `data-mu-ready` IS ALSO THE FOOTER'S WELD (ADR-105 U4): the runway's
-         rise and `#contact`'s negative margin both key on it, so the two turn
-         on and off in the same frame and can never disagree. */
-      if (!station.hasAttribute("data-mu-ready")) station.setAttribute("data-mu-ready", "");
     };
 
     function onScroll() {

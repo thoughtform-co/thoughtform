@@ -51,11 +51,20 @@
   --ft-pad-bottom: max(var(--station-pad-bottom), var(--mobile-chrome-bottom, 0px));
   padding-top: var(--ft-pad-top);
   padding-bottom: var(--ft-pad-bottom);
-  /* ⚠ THE WELD (ADR-105 U4): how far this station rises over the end of
-     `#musings`. It EQUALS that station's `--mu-rise` — the runway's last
-     viewport, in which the list stays pinned — so the footer's top reaches the
-     frame's top exactly as the list's runway releases. Neither station can read
-     the other's custom properties, so `musings-row.test.ts` pins the pair. */
+}
+
+/* ⚠ THE WELD (ADR-105 U4): how far the footer rises over the end of `#musings`
+   — and, read from that station, the runway's last viewport in which the list
+   stays pinned (`--mu-rise`). The two are ONE NUMBER, so it is declared ONCE,
+   on the stations' shared parent: neither station can read the other's custom
+   properties, but both inherit their parent's, and `#musings.station:has(~
+   #contact.station)` spends this as its rise. Equal by construction — the first
+   cut declared it twice and pinned the pair by arithmetic in
+   `musings-row.test.ts`, which is two edits and a test for what one declaration
+   says. `.stations` is `<main>` on the landing; the subpages' footer host has
+   neither `.stations` nor `#musings`, so the weld rule below never matches
+   there and the token is inert. */
+.stations {
   --ft-weld: 100svh;
 }
 
@@ -214,6 +223,22 @@ html[data-theme="light"] .ft-foot__plate-img--light {
    view — on the landing that is the rise, ending on the document's last frame.
    ⚠ THE PLATE ALREADY CLIPS (`overflow: hidden`, above) and the station
    never does (ADR-105 contract 6), so the oversize is spent inside the plate.
+   ⚠ AND THE OVERSIZE RE-FRAMES THE PICTURE — U2's "image-y fraction ===
+   station-y fraction" no longer holds on this rung. A `cover` fit into a box
+   `par` taller is still height-bound, so the plate is scaled by
+   `(H + par) / H` (1.25 at 1920×1247, 1.31 at 1280×720) and at rest shows the
+   image's TOP `H / (H + par)` (80 %): station-y = image-y × (1 + par/H), and
+   x is `u = 0.5 + (x − 0.5) · A / S'` with S' = W / (H + par). Re-derived from
+   U2's profile (`measure-plate-luminance.mjs`, bright mass y 0.23–0.67,
+   x 0.563–0.896): the ring sits at station y 0.29–0.84 at rest (0.04–0.59 as
+   the footer enters, gliding down), and its left edge lands at u 0.591 at
+   1920×1247 / 0.588 at 1440×900 / 0.579 at 1280×720 — MORE clearance from
+   `--ft-band-right` 54vw than U2's 0.573, so the cap stands, re-measured
+   rather than assumed. The baked caption at image y 0.86–0.91 falls off the
+   plate's floor (station y ≥ 1.075); the scrim's bottom band still buries it
+   wherever this block does not apply. The ink-contrast gate
+   (`capture-site-footer.mjs` G3) reads the composited plate at the document's
+   end, i.e. at THIS framing.
    ⚠ `@supports` IS LOAD-BEARING (the Trinny finding): without it a browser
    lacking scroll timelines would run the keyframes on the document timeline.
    There the picture simply sits still, as it did before. */
@@ -338,12 +363,19 @@ html[data-theme="light"] .ft-foot__plate-img--light {
 /* ⚠ THE CAP IS THE RING'S MEASURED LEFT EDGE, NOT A TASTE VALUE (ADR-105 U2).
    `scripts/measure-plate-luminance.mjs` profiles `Gateway_v1b`: its bright
    mass is y 0.23–0.67 and x 0.563–0.896 in IMAGE fractions. Every desktop rung
-   is height-bound (station aspect < image aspect), so the y figures are
+   is height-bound (station aspect < image aspect), so the y figures were
    STATION fractions verbatim — the ring starts a quarter of the way down and
    there is NO quiet upper region to seat a wide band in. The band therefore
    clears the ring HORIZONTALLY, which is U1's own conclusion reached with a
    number instead of an eye: u(0.563) is 0.573 at 1920x1247 and 0.570 at
    1440x900, so 54vw leaves ~3 % of clearance on both.
+   ⚠ SINCE U4's GLIDE THE PICTURE IS `--ft-par` TALLER THAN THE PLATE on the
+   capable rung, which scales it by (H + par)/H and moves the ring's left edge
+   OUTWARD — u(0.563) is 0.591 at 1920x1247, 0.588 at 1440x900, 0.579 at
+   1280x720 (the derivation is in the glide block above). The cap is re-solved
+   against that framing and the ~3 % became ~5 %; on the rungs without the
+   glide the U2 numbers hold as written. Both plates are read by the capture's
+   G3 at the document's end.
    ⚠ WIDTH ONLY IS CUT, never the inset — the left edge stays the page's
    editorial column (ADR-048, and the same shape as the `52ch` it replaces). */
 .ft-foot__band {

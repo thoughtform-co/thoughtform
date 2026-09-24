@@ -114,7 +114,7 @@ describe("the lab stays out of the station's own machinery", () => {
 });
 
 describe("round three — the arithmetic the sheets carry", () => {
-  it("v6: the feed rides the runway between the row's arrival and just before it closes", () => {
+  it("v6: the feed rides the runway between the row's arrival and before the stage releases", () => {
     expect(feedShift(0, 400)).toBe(0);
     expect(feedShift(FEED_RIDE_FROM, 400)).toBe(0);
     expect(feedShift(FEED_RIDE_TO, 400)).toBe(-400);
@@ -123,8 +123,10 @@ describe("round three — the arithmetic the sheets carry", () => {
     // No overflow, no ride — three notes on any frame.
     expect(feedShift(0.5, 0)).toBe(0);
     expect(feedShift(Number.NaN, 400)).toBe(0);
-    // ⚠ The row closes at 0.95 (ROW_ARRIVE_END); the ride must be done before.
-    expect(FEED_RIDE_TO).toBeLessThan(0.95);
+    // ⚠ The lab has no footer and, since ADR-105 U4, there is no exit at the
+    // bottom (`ROW_ARRIVE_END` is deleted): the lab's stage simply releases at
+    // p 1 and travels out. The ride must be done before that release.
+    expect(FEED_RIDE_TO).toBeLessThan(1);
     expect(FEED_RIDE_FROM).toBeGreaterThanOrEqual(0.1);
     // The sheet's own copy of the constants.
     const css = readFileSync(join(LAB, "musings-gallery-lab.css"), "utf8");

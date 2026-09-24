@@ -1693,6 +1693,37 @@ fade was doing (ADR-101's "taking an animation away takes what it was holding
 up", one surface later). When a form is retired, list what each deleted
 feature was PROTECTING before deciding it has nothing left to do.
 
+## A gate that reads an element's own property cannot see what it is layered against (ADR-105 U4)
+
+The veil under the rising footer was `.mu__stage::after` at `z-index: auto`,
+and the capture's gate read the pseudo-element's computed OPACITY: 0.1 / 0.2 /
+0.3 / 0.4 at each quarter, exactly as authored, PASS. But the stage is a
+stacking context (sticky, and transformed while it drifts), and inside it the
+title and the brief sit at z 1 and the notes' ring at 2 — so a veil at `auto`
+painted in tree order among the z-0 layer: over the notes' glass, UNDER the
+head and the rings. The list dimmed while the two title lines and the paragraph
+stayed at full ink, and nothing measured it, because opacity is a property of
+the veil and coverage is a relation between the veil and its siblings. A dim, a
+scrim, a cover or a mask is judged by what it PAINTS OVER: read its `z-index`
+against the highest z inside the same stacking context (the source test pins
+the veil as the sheet's maximum; the capture reads it live), or read the pixels
+of the thing it was meant to cover.
+
+## A layout-changing stamp written at the end of the tick means the tick measured the layout before it (ADR-105 U4)
+
+`data-mu-ready` turns on the musings runway's height (the dwell plus the rise)
+and the footer's negative-margin weld — and the writer set it as the LAST line
+of its tick. So the first tick after a deep reload measured the FLOWING list:
+`travel = max(1, rest − vh − rise)` collapsed to 1, `p` saturated, and the
+head was seeded off a layout no reader ever sees; a second tick corrected it
+only where the era's mode observer happened to fire. The capture had guarded
+its own copy of the arithmetic with `ready ? rise : 0` and the hook had not,
+which is how the two disagreed with every gate green. When an attribute the
+writer owns changes geometry the same writer reads, stamp it FIRST — one forced
+layout on the first tick, a plain read on every other — and pin the order in
+the source test, because nothing at runtime reports a measurement taken one
+layout too early.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.
@@ -1701,4 +1732,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-09-23_
+_Last updated: 2026-09-24_

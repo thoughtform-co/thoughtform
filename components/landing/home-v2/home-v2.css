@@ -452,10 +452,15 @@ html[data-corridor-exit="true"] #voidwalker {
    HAS to take the role rather than being exempted from it: an opaque station
    the hook does not name hard-cuts the canvas at its own top edge.
 
-   ⚠ AND THAT IS WHAT FREES THE FOOTER TO BE HELD. With the cover here,
-   `#contact` needs neither this rule nor its `z-index: 6`, so it can become
-   the sticky bed the rack scrolls over (ADR-105 U3) — the two halves of one
-   change. A cover cannot also be the thing being uncovered.
+   ⚠ ADR-105 U4 (2026-09-24) MOVES THE STAGE-RUNG COVER BACK TO `#contact`.
+   The footer is welded up over the musings runway's last viewport and rises
+   OVER the pinned stage at z 8, opaque, so the ambient dies at the FOOTER's
+   top — `useCorridorExitScroll`'s `musingsCover` is `contactEl ?? musingsEl`
+   while `data-mu-mode="stage"` is stamped, and `#musings` (transparent there)
+   is the cover only on the rungs where it is opaque. U3's held bed
+   (`position: sticky; bottom: 0` under `data-ft-reveal`) is DELETED with the
+   band: a cover cannot also be the thing being uncovered, and nothing is
+   uncovered any more.
 
    `#musings` keeps `.station:not(.hero)`'s own `var(--void)` ground and
    stars, so it satisfies the only property this role requires, and the
@@ -494,9 +499,12 @@ html[data-corridor-exit="true"] #voidwalker {
    stacking context at 6, and its children need an order inside it that keeps
    the stage over the band the reader has not reached yet.
 
-   ⚠ THE STATION'S OPAQUE END IS `.mu__band`, not the station. It is what the
-   corridor's kill edge and the footer's reveal both key on; see
-   `musings.css` §The band and `.claude/rules/musings.md`.
+   ⚠ THE STATION HAS NO OPAQUE END OF ITS OWN SINCE ADR-105 U4. ADR-119 U1's
+   100svh `.mu__band` (one viewport of empty stars) is deleted; on this rung
+   the corridor's kill edge is the FOOTER's top, welded up over the runway's
+   last viewport (`--ft-weld`, one declaration on `.stations`, spent by the
+   musings station as `--mu-rise`). See `musings.css` §The runway and
+   `.claude/rules/musings.md` §The rise.
 
    ⚠ AND ON THIS SAME STAMP THE STATION IS WELDED ONE VIEWPORT OVER THE ERA
    STAGE (ADR-121 U3, in `musings.css`): both stations are z 6 here, so DOM

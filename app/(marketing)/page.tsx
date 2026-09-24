@@ -18,12 +18,13 @@ import "@/components/landing/home-v2/about/about-stage.css";
 // (both at the foot of landing.css); BEFORE theme.css like every route sheet.
 import "@/components/landing/home-v2/about/about-band.css";
 // The site footer (ADR-105) — `#contact` is the page's ending, and since
-// ADR-105 U3 a HELD BED the rack scrolls over rather than the corridor's
-// cover. BEFORE theme.css like every route sheet, so the light rows
-// cascade last.
+// ADR-105 U4 it RISES over the pinned musings list (welded up by `--ft-weld`)
+// and is the corridor's opaque cover again on the stage rung. BEFORE theme.css
+// like every route sheet, so the light rows cascade last.
 import "@/components/landing/v7/site-footer/site-footer.css";
-// The musings row (ADR-119 → ADR-121) — `#musings`, the writing as a row that opens on hover,
-// and the station that took the corridor's opaque COVER role off `#contact`.
+// The musings list (ADR-119 → ADR-122) — `#musings`, the writing as a list of
+// notes; it took the corridor's opaque COVER role off `#contact` in ADR-119
+// and handed the stage-rung half back in ADR-105 U4 (the footer rises over it).
 // AFTER landing.css, because it overrides the ≤960 padding floor's input and
 // the ADR-113 snap block for its own station; BEFORE theme.css like every
 // route sheet.
