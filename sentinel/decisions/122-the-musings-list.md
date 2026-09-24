@@ -350,3 +350,18 @@ all pass. At 1280×720 five notes scroll inside the list, as recorded above.
 ⚠ **The post route pre-lists its slugs (`dynamicParams = false`).** A running
 `next dev` therefore returns 404 for a note added after it compiled the route,
 until the route recompiles. A build lists them fresh.
+
+## Update 2: the list's exit is the footer (2026-09-24)
+
+[ADR-105 Update 4](105-the-page-ends-on-a-bold-footer.md) welds the footer up over
+the runway's last viewport (the RISE, `--mu-rise`), so it rises OVER the pinned
+list.
+
+- **The runway is `100svh + --mu-dwell + --mu-rise`.**
+- **The writer's clock is the dwell alone**, so `p` saturates at 1 through the rise.
+- **The list's and the head's bottom exits are deleted**: `ROW_ARRIVE_END`,
+  `HEAD_LEAVE_AT` and `HEAD_RETURN_BELOW`. The footer covering the list is the exit.
+- **Under the footer the stage drifts** a quarter of the rise and dims under a void
+  veil, on the runway's own view timeline.
+- **The 100svh `.mu__band` is deleted.** It was one viewport of empty stars, and its
+  cover role went to the footer.

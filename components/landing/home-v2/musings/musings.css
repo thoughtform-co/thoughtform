@@ -63,19 +63,30 @@
      pins two stages at once, smaller restores dead viewport. Spent by the
      stage-mode rule below the band; the labs override it to 0. */
   --mu-weld: 100svh;
+  /* ⚠ THE RISE (ADR-105 U4): the runway's last viewport, in which the stage
+     stays pinned while the footer rises over it. It EQUALS `#contact`'s weld
+     (`--ft-weld`, site-footer.css) — the footer's top enters the floor at the
+     end of the dwell and reaches the frame's top exactly as the runway
+     releases, so the stage never unpins uncovered. `musings-row.test.ts` pins
+     the two equal by arithmetic; they cannot share a token because neither
+     station can read the other's custom properties.
+     ⚠ ZERO UNLESS A FOOTER FOLLOWS (the rule below). The labs mount this
+     station with no `#contact` after it, and a rise with nothing rising would
+     hold the list pinned one viewport longer and then drift it for nobody. */
+  --mu-rise: 0px;
   display: block;
   content-visibility: visible;
   contain-intrinsic-size: none;
-  /* ⚠ THE `position` IS WHAT ACTIVATES THE INHERITED `z-index: 2`, AND IT IS
-     THE OTHER HALF OF THE FOOTER'S BED (ADR-105 U3). `.station:not(.hero)`
-     declares `z-index: 2` on a STATIC box, where it is inert; the footer
-     below is `position: sticky; z-index: 0` while armed, so without a
-     positioned station above it the held plate would paint over the row it
-     is meant to be uncovered by. Declared here rather than in the
-     corridor-exit cover rule because that rule only holds while
-     `data-corridor-exit` is true, and the footer stays held long after the
-     ambient has died. */
+  /* ⚠ THE `position` ACTIVATES THE INHERITED `z-index: 2`. `.station:not(.hero)`
+     declares it on a STATIC box, where it is inert. Since ADR-105 U4 the footer
+     rises OVER this station at z 8 (site-footer.css), so what this still buys
+     is the station's own order above the stations before it — declared here
+     rather than in the corridor-exit cover rule because that rule only holds
+     while `data-corridor-exit` is true. */
   position: relative;
+}
+#musings.station:has(~ #contact.station) {
+  --mu-rise: 100svh;
 }
 
 /* ── The ramp and the ladder ─────────────────────────────────────── */
@@ -216,54 +227,24 @@
    frame of a pinned stage holding cards nothing will ever open. The document
    grows by the runway at hydration, exactly as the corridor's lazy chunks
    already grow it — every scroll helper on this page re-solves rather than
-   trusting one measured `y`. */
+   trusting one measured `y`.
+   ⚠ THE RUNWAY IS THE DWELL PLUS THE RISE (ADR-105 U4, owner, 2026-09-24:
+   "when you scroll away from the muse section, I want the footer to scroll
+   over it in a subtle way"). The stage stays pinned for one more viewport
+   after the dwell, and `#contact` is welded up over exactly that viewport, so
+   the footer rises OVER a stage that is not moving. ADR-119 U1's 100svh
+   `.mu__band` is deleted with it: it was one viewport of empty stars between
+   the list and the footer — the dead space the owner named — and its cover
+   role passes to the footer, which is opaque and promoted above the corridor's
+   canvas. The writer measures its clock over the DWELL alone, so no threshold
+   moved. */
 .mu[data-mu-ready] .mu__runway {
-  height: calc(100svh + var(--mu-dwell));
+  height: calc(100svh + var(--mu-dwell) + var(--mu-rise));
 }
 .mu[data-mu-ready] .mu__stage {
   position: sticky;
   top: 0;
   height: 100svh;
-}
-
-/* ── The band: the station's opaque end ──────────────────────────────
-   ⚠ IT PAINTS THE STATION'S OWN GROUND, AND THE RECIPE IS COPIED FROM
-   `.station:not(.hero)` RATHER THAN INHERITED. On the stage rung the station
-   is transparent, so this box is the only opaque surface left — and the cover
-   contract asserts exactly two things (`alpha === 1` AND a painted
-   background-image), which is what these two declarations are.
-
-   ⚠ FULL BLEED, AND THE IDENTITY ONLY RESOLVES HERE. `calc(50% - 50vw)` is
-   `−inset` only while the containing block is the station's CONTENT box —
-   50 % of `(100vw − 2·inset)` minus 50vw. `.mu` is `width: 100%` of that box,
-   so a band inside `.mu` still resolves correctly; move it into any narrower
-   wrapper and the bleed silently becomes a margin.
-
-   ⚠ `display: none` OFF THE STAGE RUNG. At 961–1100, under reduced motion and
-   on the phone the STATION is opaque and is its own cover; a second opaque
-   viewport there is a blank screen at the end of the beat. */
-.mu__band {
-  display: none;
-}
-#musings[data-mu-mode="stage"] .mu__band {
-  display: block;
-  position: relative;
-  /* Above the sticky stage in the one frame their boxes touch, and above the
-     held footer — though the station's own stacking context already guarantees
-     the second (see `#musings.station`'s `position` note). */
-  z-index: 1;
-  height: 100svh;
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  background-color: var(--void);
-  background-image: url("/v7-stars.svg");
-  background-size: 1600px 900px;
-  background-position: center top;
-  background-repeat: repeat;
-  /* The welded station is hit-transparent (below); the band takes its hits
-     back — opaque, over the held footer, a hit-transparent band would click
-     the footer's links through itself once the bed is armed. */
-  pointer-events: auto;
 }
 
 /* ── The weld: the station overlaps the era stage by one viewport ──────
@@ -281,14 +262,13 @@
    (`#voidwalker[data-vw-handoff="ready"] { margin-top: -120svh }`).
    ⚠ KEYED ON THE STAGE STAMP — the 961–1100 opaque rung and the phone are
    byte-identical, because an opaque station pulled over a static era section
-   would cover its content. The band stays exactly 100svh at the runway's
-   foot, so the corridor's kill, the footer's arm edge and the four ADR-030 §6
-   readers are untouched: they read live rects.
+   would cover its content. The corridor's kill and the four ADR-030 §6
+   readers read live rects — since ADR-105 U4 they read the footer's.
    ⚠ AND A TRANSPARENT BOX STILL TAKES THE CLICK. From era p ≈ 0.45 this
    station's box covers the era's band tablist and record cards, which stay
    live until the era goes inert at p 0.92. `pointer-events` inherits, so the
-   station is `none` with two restores: the band (above) and the runway once
-   the row is `in`. Never `visibility: hidden` on the stage — the head decodes
+   station is `none` with one restore: the runway once the row is `in` (the
+   band's restore went with the band). Never `visibility: hidden` on the stage — the head decodes
    during `await`, before `in`. The HUD's corner readout flips on the PIN for
    a welded station (`data-station-edge="pin"`, written beside the stage
    stamp), not on the viewport's middle, which the weld would put 8svh before
@@ -1230,7 +1210,8 @@
      (ADR-121 U3). On the stage rung the station is `pointer-events: none`,
      because its box covers the era's live band for a viewport before the pin;
      during `await` and `out` what is under the runway is the era's own inert
-     box, and the band restores itself beside the weld rule. */
+     box. (The footer that rises over the runway is its own station and takes
+     its own hits, ADR-105 U4.) */
   #musings[data-mu-mode="stage"] .mu[data-mu-ready][data-mu-arrive="in"] .mu__runway {
     pointer-events: auto;
   }
@@ -1327,6 +1308,73 @@
     opacity: 1;
     visibility: visible;
     clip-path: inset(0 100% calc(100% - 1px) 0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE LIST UNDER THE RISING FOOTER (ADR-105 U4)
+
+   While the footer rises over the pinned stage, the stage DRIFTS UP at a
+   quarter of the scroll speed and DIMS — the owner's pick when asked
+   ("drift up slowly"), the subtle parallax he asked for.
+   ⚠ COMPOSITOR-DRIVEN, OR IT JITTERS. A rAF writer posing the stage against a
+   page the compositor is scrolling lands one wheel step behind it, every step
+   (the Trinny hero curtain's measurement, `main-thread-writer-lags-compositor`).
+   So the drift is a scroll timeline on a TRANSFORM, and its timeline is the
+   RUNWAY's own view timeline — the stage is its child, so no `timeline-scope`
+   is needed — windowed on the runway's last `--mu-rise` of `contain`: the
+   rise, and nothing before it.
+   ⚠ THE STAGE, NEVER THE STATION. The station's rect is what the section clock
+   and the writer measure (the Trinny "hold the content" lesson); the stage is
+   a sticky child, and a transform does not move its sticky seat.
+   ⚠ THE DIM IS A VEIL, NEVER `opacity` ON THE STAGE. The notes are glass, and
+   a translucent ancestor blinds a `backdrop-filter` (ADR-097); a transform does
+   not. The veil is the ground's own colour, so in light it recedes toward the
+   parchment rather than darkening it.
+   ⚠ NO GAP CAN OPEN: at rise fraction f the stage's bottom sits at vh − 25f
+   and the footer's top at vh − 100f.
+   ⚠ `@supports` IS LOAD-BEARING (the Trinny finding): a browser without scroll
+   timelines would keep the `animation` and drop only its timeline, and the
+   keyframes would run on the document timeline. Without it — Firefox today —
+   the weld and the pin still hold, and the footer covers a still list.
+   ═══════════════════════════════════════════════════════════════════ */
+@supports (animation-timeline: view()) {
+  @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+    .mu[data-mu-ready] .mu__runway {
+      view-timeline: --mu-run block;
+    }
+    #musings:has(~ #contact.station) .mu[data-mu-ready] .mu__stage {
+      animation: mu-under linear both;
+      animation-timeline: --mu-run;
+      animation-range: contain calc(100% - var(--mu-rise)) contain 100%;
+    }
+    #musings:has(~ #contact.station) .mu[data-mu-ready] .mu__stage::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-color: rgb(var(--void-rgb));
+      opacity: 0;
+      pointer-events: none;
+      animation: mu-under-veil linear both;
+      animation-timeline: --mu-run;
+      animation-range: contain calc(100% - var(--mu-rise)) contain 100%;
+    }
+  }
+}
+@keyframes mu-under {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-0.25 * var(--mu-rise)));
+  }
+}
+@keyframes mu-under-veil {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.4;
   }
 }
 

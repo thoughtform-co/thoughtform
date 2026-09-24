@@ -14,7 +14,8 @@
  * transitions; nothing there knows whether the browser opened a note, whether
  * a title was cut, whether the sign landed on the cover's floor, whether the
  * glass is applied, or whether the footer is uncovering. Specifically:
- *   · `coverOpaque`   — the band's own ground, the ADR-030 §6 contract.
+ *   · `coverOpaque`   — the cover's own ground, the ADR-030 §6 contract (the
+ *                       footer on the stage rung since ADR-105 U4).
  *   · `headBlank`     — the head is EMPTY at every stop the stage is not parked:
  *                       text never travels (ADR-119 U2).
  *   · `headWhole`     — and whole through the dwell.
@@ -31,7 +32,13 @@
  *   · `keyboard`      — tabbing into note 1 opens it: focus opens as hover does.
  *   · `glass`         — every note carries the blur on the stage rung in dark,
  *                       none in light, none under reduced motion.
- *   · `reveal`        — the footer's visible height growing as the list leaves.
+ *   · `rise`          — the footer rising over the PINNED list (ADR-105 U4):
+ *                       its top at vh·(1 − k) at each quarter of the rise,
+ *                       the list `in` and the head whole under it, the stage
+ *                       drifting a quarter of the rise and the veil dimming,
+ *                       the corridor alive at k 0.25 and dead at k 1, the
+ *                       readout on CONTACT once the footer holds the middle,
+ *                       and a whole list when the reader scrolls back up.
  *   · `notchPaint`    — the corner, HIT-TESTED rather than parsed, from both ends.
  *   · `--perf`        — the long-frame share while parked and while the pointer
  *                       sweeps the list, against the proof card's recorded 15 %.
@@ -84,23 +91,41 @@ await page.goto(url, { waitUntil: "domcontentloaded" });
    yet), so a visibility wait times out on the pinned rung. */
 await page.waitForSelector("#musings .mu-note", { state: "attached", timeout: 30_000 });
 
-/** Walk down in real steps until `#musings` sits at the given runway fraction. */
-async function rollToP(target) {
+/**
+ * Walk down in real steps until `#musings` sits at the given progress.
+ *
+ * ⚠ THE WRITER'S CLOCK, NOT THE RUNWAY'S (ADR-105 U4). The runway is the dwell
+ * PLUS the rise, and the writer measures `p` over the dwell alone, so p 1 is
+ * the end of the dwell and the rise is p ∈ (1, 1 + rise/dwell]. `riseK` asks
+ * for a fraction of the rise instead. The rise is read off a probe sized by
+ * `--mu-rise` (a custom property is a string until something lays it out),
+ * and only counts where the runway is pinned — off the rung it has no tail.
+ */
+async function rollToP(target, riseK = null) {
   for (let pass = 0; pass < 240; pass += 1) {
     const state = await page.evaluate(() => {
       const runway = document.querySelector(".mu__runway");
-      if (!runway) return null;
-      const travel = Math.max(1, runway.offsetHeight - document.documentElement.clientHeight);
+      const sec = document.getElementById("musings");
+      if (!runway || !sec) return null;
+      const ready = !!document.querySelector(".mu[data-mu-ready]");
+      const probe = document.createElement("i");
+      probe.style.cssText = "position:absolute;width:0;height:var(--mu-rise,0px);visibility:hidden";
+      sec.appendChild(probe);
+      const rise = ready ? probe.offsetHeight : 0;
+      probe.remove();
+      const vh = document.documentElement.clientHeight;
+      const travel = Math.max(1, runway.offsetHeight - vh - rise);
       const top = runway.getBoundingClientRect().top;
-      return { p: -top / travel, travel };
+      return { p: -top / travel, travel, rise };
     });
     if (!state) return null;
+    const want = riseK == null ? target : 1 + (riseK * state.rise) / state.travel;
     /* ⚠ CONVERGE, NEVER SOLVE ONCE. The corridor's lazy chunks grow the
        document under the scroll and this station's own runway appears at
        hydration, so a position solved before the roll lands somewhere else
        (the trinny route's `rollToP` law, and ADR-102's `rollToS`). */
-    if (Math.abs(state.p - target) < 0.004) return state.p;
-    const delta = (target - state.p) * state.travel;
+    if (Math.abs(state.p - want) < 0.004) return state.p;
+    const delta = (want - state.p) * state.travel;
     await page.evaluate((d) => window.scrollBy({ top: d, behavior: "instant" }), Math.round(delta));
     await page.waitForTimeout(70);
   }
@@ -108,7 +133,7 @@ async function rollToP(target) {
 }
 
 /* Engage the corridor with real wheel steps first — the exit attributes only
-   publish on the way through, and the band's cover role depends on them. */
+   publish on the way through, and the cover's role depends on them. */
 for (let i = 0; i < 90; i += 1) {
   const top = await page.evaluate(
     () => document.querySelector("#musings")?.getBoundingClientRect().top ?? 1e9
@@ -128,14 +153,25 @@ const readRow = () =>
       return { x: px(r.left), y: px(r.top), w: px(r.width), h: px(r.height) };
     };
     const st = document.getElementById("musings");
-    /* ⚠ THE COVER IS THE BAND, NOT THE STATION (ADR-119 U1). On the stage
-       rung `#musings` is TRANSPARENT and promoted — the corridor is alive
-       behind the whole beat, by the owner's ruling — and the opaque thing
-       that kills it is the 100svh `.mu__band` at the foot of the runway. On
-       every lower rung the station is opaque again and IS its own cover. */
-    const band = document.querySelector("#musings .mu__band");
+    /* ⚠ THE COVER IS THE FOOTER ON THE STAGE RUNG (ADR-105 U4). `#musings` is
+       TRANSPARENT and promoted there — the corridor is alive behind the whole
+       beat — and the opaque thing that kills it is `#contact`, welded up over
+       the runway's last viewport and rising OVER the pinned stage. (ADR-119's
+       100svh `.mu__band` held the role until then and is deleted.) On every
+       lower rung the station is opaque again and IS its own cover. */
     const stage = st?.dataset.muMode === "stage";
-    const cover = stage && band ? band : st;
+    const contactEl = document.getElementById("contact");
+    const cover = stage && contactEl ? contactEl : st;
+    const riseProbe = document.createElement("i");
+    riseProbe.style.cssText =
+      "position:absolute;width:0;height:var(--mu-rise,0px);visibility:hidden";
+    st?.appendChild(riseProbe);
+    const rise = riseProbe.offsetHeight;
+    riseProbe.remove();
+    const stageEl = document.querySelector(".mu__stage");
+    const stageCs = stageEl ? getComputedStyle(stageEl) : null;
+    const tf = stageCs?.transform && stageCs.transform !== "none" ? stageCs.transform : "";
+    const stageTy = tf ? px(parseFloat(tf.slice(tf.indexOf("(") + 1).split(",")[5])) : 0;
     const mu = document.querySelector(".mu");
     const cs = (el) => (el ? getComputedStyle(el) : null);
     const notes = [...document.querySelectorAll(".mu-note")];
@@ -169,7 +205,6 @@ const readRow = () =>
 
     /* The rails' last tick, as the stage lays it out: the notes may not end
        below it (the stage's bottom padding IS `--hud-rail-y-end`). */
-    const stageEl = document.querySelector(".mu__stage");
     const railEnd = stageEl
       ? px(
           stageEl.getBoundingClientRect().bottom -
@@ -186,14 +221,8 @@ const readRow = () =>
       }))
       .filter((t) => t.w > 0 && t.h > 0);
 
-    const contact = document.getElementById("contact");
+    const contact = contactEl;
     const vh = document.documentElement.clientHeight;
-    /* ⚠ "REVEALED" IS MEASURED OFF THE STATION'S BOTTOM, NOT THE FOOTER'S
-       RECT. A sticky-bottom box's rect is PINNED to the frame's floor for the
-       whole of the reveal, so intersecting it with the viewport reports the
-       full viewport height at every stop (measured: 1247 → 1247). What the
-       reader can see is the strip the opaque station above has left. */
-    const mb = st?.getBoundingClientRect().bottom ?? vh;
 
     /* ── The seam with the era stage (ADR-121 U3) ──
        The station is welded one viewport over `#voidwalker` on the stage
@@ -277,10 +306,12 @@ const readRow = () =>
       vh,
       era,
       runwayBox: box(document.querySelector(".mu__runway")),
-      bandBox: box(band),
+      rise,
+      stageTy,
+      stageAnim: stageCs?.animationName ?? null,
+      veil: stageEl ? px(parseFloat(getComputedStyle(stageEl, "::after").opacity || "0")) : 0,
       ambient: document.documentElement.hasAttribute("data-services-ambient"),
       exit: document.documentElement.hasAttribute("data-corridor-exit"),
-      ftReveal: document.documentElement.hasAttribute("data-ft-reveal"),
       activeStation: document.documentElement.getAttribute("data-active-station"),
       muReady: mu?.hasAttribute("data-mu-ready") ?? false,
       arrive: mu?.dataset.muArrive ?? null,
@@ -293,7 +324,7 @@ const readRow = () =>
       contactPosition: cs(contact)?.position ?? null,
       contactZ: cs(contact)?.zIndex ?? null,
       contactBox: box(contact),
-      revealed: px(Math.max(0, Math.min(vh, vh - mb))),
+      contactMt: cs(contact)?.marginTop ?? null,
       /* ⚠ PARKED IS THE RUNWAY COVERING THE FRAME — the writer's own test. The
          head may only show while this is true (U2). */
       pinned: (() => {
@@ -455,15 +486,18 @@ const perfStop = () =>
   });
 
 /* ── The walk ───────────────────────────────────────────────────────── */
-/* ⚠ −1.0, −0.3, −0.15 AND 1.15 ARE OFF THE PIN ON PURPOSE: the approach and
-   the release, where the stage travels and the head must be EMPTY (U2). Since
+/* ⚠ −1.0, −0.3 AND −0.15 ARE OFF THE PIN ON PURPOSE: the approach, where the
+   stage travels and the head must be EMPTY (U2). (1.15 — the release — went
+   with ADR-105 U4: past the dwell is the RISE now, walked in quarters below,
+   and the stage releases only once the footer covers it.) Since
    the weld (U3) the approach is the ERA'S OWN LAST VIEWPORT: −1.0 is era p
    0.625 (the era band on screen, its chip must still take the click through
    the transparent station), −0.3 is 0.89 and −0.15 is 0.94 (mid-exit), and
    the corner must read VOIDWALKER at all three. The pointer parks in the left
    margin for the whole walk, so no card is hovered by accident. */
 await page.mouse.move(8, Math.round(H / 2));
-const stops = [-1.0, -0.3, -0.15, 0.02, 0.14, 0.3, 0.45, 0.6, 0.75, 0.9, 0.99, 1.15];
+const phone = W <= 960;
+const stops = [-1.0, -0.3, -0.15, 0.02, 0.14, 0.3, 0.45, 0.6, 0.75, 0.9, 0.99];
 const walk = [];
 for (const p of stops) {
   const landed = await rollToP(p);
@@ -472,8 +506,20 @@ for (const p of stops) {
   walk.push({ p, landed: landed == null ? null : Math.round(landed * 1000) / 1000, ...r });
   await page.screenshot({ path: `${OUT}/mu-${tag}-p${String(p).replace(".", "")}.png` });
 }
-
-const phone = W <= 960;
+/* ── The rise (ADR-105 U4): the footer over the pinned list, in quarters. ──
+   On the pinned rungs only — off them nothing pins and the footer follows the
+   list in flow. Landing only: the labs have no footer and no rise. */
+const RISE_KS = [0.25, 0.5, 0.75, 1];
+const rise = [];
+if (!phone && !LAB) {
+  for (const k of RISE_KS) {
+    await rollToP(null, k);
+    await page.waitForTimeout(600);
+    const r = await readRow();
+    rise.push({ k, ...r });
+    await page.screenshot({ path: `${OUT}/mu-${tag}-rise${String(k).replace(".", "")}.png` });
+  }
+}
 
 /* ── The row, seated and arrived ────────────────────────────────────── */
 await rollToP(0.45);
@@ -639,32 +685,24 @@ if (!phone && rest.notes.length >= 2) {
    two viewports above the frame and every probe lands outside it. */
 const notch = await readNotch();
 
-/* Past the row: the footer uncovering, then the document's end. Landing only —
-   the lab has no footer and no corridor. */
+/* Past the list: the document's end, where the footer fills the frame, then
+   BACK UP into the rise — the footer must lift off a whole list, not a folded
+   one (ADR-105 U4: the footer covering the list is its only exit at the
+   bottom). Landing only — the lab has no footer and no corridor. */
+let backUp = null;
 if (!LAB) {
-  for (const [name, frac] of [
-    ["footer-half", 1.06],
-    ["footer-end", 2.0],
-  ]) {
-    await page.evaluate(() => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      window.scrollTo({ top: max, behavior: "instant" });
-    });
-    if (name === "footer-half") {
-      /* ⚠ SEEK OFF THE STATION, NOT THE FOOTER. `#contact` is sticky through
-         the whole reveal, so its rect is pinned and solving a scroll position
-         from it converges on wherever the page already is. Half revealed
-         means the station's BOTTOM sits at 55 % of the frame. */
-      await page.evaluate(() => {
-        const m = document.getElementById("musings");
-        const y = m.getBoundingClientRect().bottom + window.scrollY - window.innerHeight * 0.55;
-        window.scrollTo({ top: Math.max(0, y), behavior: "instant" });
-      });
-    }
+  await page.evaluate(() => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo({ top: max, behavior: "instant" });
+  });
+  await page.waitForTimeout(700);
+  const r = await readRow();
+  walk.push({ p: "footer-end", landed: null, ...r });
+  await page.screenshot({ path: `${OUT}/mu-${tag}-footer-end.png` });
+  if (!phone) {
+    await rollToP(null, 0.5);
     await page.waitForTimeout(700);
-    const r = await readRow();
-    walk.push({ p: name, landed: frac, ...r });
-    await page.screenshot({ path: `${OUT}/mu-${tag}-${name}.png` });
+    backUp = await readRow();
   }
 }
 
@@ -712,7 +750,7 @@ line(
 );
 line("");
 line(
-  "  p      landed  ready  pinned open  arrive  head (level · text)              ambient/exit  ftReveal  readout   #contact            revealed"
+  "  p      landed  ready  pinned open  arrive  head (level · text)              ambient/exit  readout   #contact"
 );
 for (const s of walk) {
   const pad = (v, n) => String(v).padEnd(n);
@@ -720,7 +758,7 @@ for (const s of walk) {
   line(
     `  ${pad(s.p, 6)} ${pad(s.landed, 7)} ${pad(s.muReady, 6)} ${pad(s.pinned, 6)} ${pad(s.open, 5)} ${pad(s.arrive, 7)} ` +
       `${pad(head, 34)} ${pad(`${s.ambient}/${s.exit}`, 13)} ` +
-      `${pad(s.ftReveal, 9)} ${pad(s.activeStation, 9)} ${pad(`${s.contactPosition} z${s.contactZ} y${s.contactBox?.y}`, 19)} ${s.revealed}`
+      `${pad(s.activeStation, 9)} ${pad(`${s.contactPosition} z${s.contactZ} y${s.contactBox?.y} mt ${s.contactMt}`, 36)}`
   );
 }
 
@@ -732,6 +770,21 @@ const floorOf = (r) => {
     ? Math.round((c.sign.y + c.sign.h - (c.cover.y + c.cover.h)) * 10) / 10
     : null;
 };
+if (rise.length) {
+  line(
+    "\n  rise   footer top  (want)    stage ty (want)   veil   arrive  head      ambient/exit  readout"
+  );
+  for (const r of rise) {
+    const want = Math.round(r.vh * (1 - r.k) * 10) / 10;
+    const wantTy = Math.round(-0.25 * r.rise * r.k * 10) / 10;
+    line(
+      `  ${String(r.k).padEnd(6)} ${String(r.contactBox?.y).padEnd(11)} (${String(want).padEnd(7)}) ` +
+        `${String(r.stageTy).padEnd(9)} (${String(wantTy).padEnd(6)}) ${String(r.veil).padEnd(6)} ` +
+        `${String(r.arrive).padEnd(7)} ${String(r.headState?.level).padEnd(9)} ${String(`${r.ambient}/${r.exit}`).padEnd(13)} ${r.activeStation}`
+    );
+  }
+}
+
 const showNotes = (label, r) => {
   if (!r) return;
   line(
@@ -814,18 +867,25 @@ if (killStop) {
     fails.push(
       `the corridor outlived an opaque station (ambient ${killStop.ambient}, exit ${killStop.exit})`
     );
-  if (!/^rgba?\([^)]*, 1\)$|^rgb\(/.test(killStop.coverGround ?? ""))
+  /* ⚠ LANDING ONLY: the lab has no footer and no corridor, so with ADR-119's
+     band deleted there is no cover to ask anything of there (ADR-105 U4). */
+  if (!LAB && !/^rgba?\([^)]*, 1\)$|^rgb\(/.test(killStop.coverGround ?? ""))
     fails.push(`the cover's ground is not opaque: ${killStop.coverGround}`);
-  if ((killStop.coverImage ?? "none") === "none") fails.push("the cover paints no surface");
-  if (killStop.stageMode && (killStop.coverBox?.h ?? 0) < killStop.vh - 1)
-    fails.push(`the band is ${killStop.coverBox?.h}px against a ${killStop.vh}px frame`);
-  /* ⚠ THE BAND SITS ON THE RUNWAY'S FOOT (U3). The weld is a margin on the
-     STATION; a margin that leaked onto the runway or the band would open a
-     gap here, and every ADR-030 §6 reader keys on the band's own top. */
-  if (killStop.stageMode && killStop.runwayBox && killStop.bandBox) {
-    const seam = killStop.bandBox.y - (killStop.runwayBox.y + killStop.runwayBox.h);
+  if (!LAB && (killStop.coverImage ?? "none") === "none") fails.push("the cover paints no surface");
+  if (!LAB && killStop.stageMode && (killStop.coverBox?.h ?? 0) < killStop.vh - 1)
+    fails.push(`the cover is ${killStop.coverBox?.h}px against a ${killStop.vh}px frame`);
+  /* ⚠ THE FOOTER IS WELDED ONE RISE OVER THE RUNWAY'S FOOT (ADR-105 U4):
+     its top sits exactly `--mu-rise` above the runway's bottom, which is what
+     makes it reach the frame's top as the runway releases. A weld that leaked
+     or a rise that drifted from `--ft-weld` would open a gap or an overlap
+     here, and every ADR-030 §6 reader keys on the footer's own top. */
+  if (!LAB && killStop.muReady && killStop.runwayBox && killStop.contactBox) {
+    const seam =
+      killStop.contactBox.y - (killStop.runwayBox.y + killStop.runwayBox.h) + killStop.rise;
     if (Math.abs(seam) > 1)
-      fails.push(`the band starts ${Math.round(seam * 10) / 10}px off the runway's foot`);
+      fails.push(
+        `the footer sits ${Math.round(seam * 10) / 10}px off one rise above the runway's foot`
+      );
   }
 }
 /* ── The seam with the era stage (ADR-121 U3), landing only ──────────
@@ -865,7 +925,7 @@ if (!LAB && !phone) {
        (U3); 107.6svh before it. */
     const vwTravel = seamStop.era.vwH - seamStop.vh;
     const eraGoneY = seamStop.era.vwDocTop + 0.96 * vwTravel;
-    const travel = seamStop.runwayBox.h - seamStop.vh;
+    const travel = seamStop.runwayBox.h - seamStop.vh - seamStop.rise;
     const headY = seamStop.era.muDocTop + 0.02 * travel;
     const seam = headY - eraGoneY;
     line(
@@ -877,7 +937,8 @@ for (const s of walk) {
   if (typeof s.p !== "number") continue;
   if (phone) {
     if (s.muReady) fails.push(`the list pinned itself on the phone rung at p ${s.p}`);
-    if (s.ftReveal) fails.push(`the footer's bed armed on the phone rung at p ${s.p}`);
+    if (s.contactMt && s.contactMt !== "0px")
+      fails.push(`the footer is welded on the phone rung at p ${s.p} (margin-top ${s.contactMt})`);
   } else if (!s.muReady && s.p >= 0 && s.p <= 1) fails.push(`no data-mu-ready at p ${s.p}`);
 }
 if (!phone) {
@@ -893,8 +954,10 @@ if (!phone) {
   /* The notes arrive AFTER the head and fold BEFORE it leaves. */
   const mid = walk.find((s) => s.p === 0.45);
   if (mid && mid.arrive !== "in") fails.push(`the list is ${mid.arrive} at p 0.45, not in`);
+  /* ⚠ AND NO EXIT AT THE BOTTOM (ADR-105 U4): the footer covering the list is
+     the exit, so the list is still `in` at the end of the dwell. */
   const late = walk.find((s) => s.p === 0.99);
-  if (late && late.arrive === "in") fails.push("the list is still in at p 0.99");
+  if (late && late.arrive !== "in") fails.push(`the list is ${late.arrive} at p 0.99, not in`);
 
   /* ── REST: the newest note open; every title whole; every note a link. ── */
   if (rest.open !== 0) fails.push(`note ${rest.open} is open at rest, not note 0`);
@@ -989,30 +1052,61 @@ if (!phone) {
   if (prm.ready) fails.push("the list pinned itself under reduced motion");
   if (prm.open !== 0) fails.push(`reduced motion rests on note ${prm.open}`);
 
-  /* ── The bed, the readout, the footer (landing only). ── */
+  /* ── THE RISE (ADR-105 U4), landing only. The footer rises over the PINNED
+     list: at each quarter k of the rise its top is at vh·(1 − k), the list
+     is `in` and the head whole under it, the stage has drifted a quarter of
+     the rise and the veil dimmed toward 0.4, the corridor is alive while the
+     list shows and dead once the frame is covered, and the readout has moved
+     to CONTACT once the footer holds the middle. No void can open between the
+     list and the footer. ── */
   if (!LAB) {
-    const ends = walk.filter((s) => typeof s.p === "number" && s.p >= 0.9 && s.p <= 0.99);
-    const armed = walk.filter((s) => s.ftReveal);
-    if (!armed.length) fails.push("the footer's bed was never armed");
-    if (!rest.stageMode && ends.some((s) => !s.ftReveal))
-      fails.push("the footer's bed was not armed inside the list");
-    if (rest.stageMode && ends.some((s) => s.ftReveal))
-      fails.push("the footer's bed armed while the list was still over the live corridor");
-    const half = walk.find((s) => s.p === "footer-half");
-    const end = walk.find((s) => s.p === "footer-end");
-    if (half && end && !(end.revealed > half.revealed + 8))
-      fails.push(`the footer did not uncover (${half.revealed} → ${end.revealed})`);
-    if (end && end.contactPosition !== "sticky")
-      fails.push(`#contact is ${end.contactPosition}, not sticky, at the document's end`);
-    /* ⚠ THE BED ARMS ON THE BAND'S TOP AND NOWHERE ELSE (U3): the weld moves
-       where in the document the band arrives, never what arms the footer. */
-    for (const s of walk) {
-      if (typeof s.p !== "number" || !s.stageMode || !s.bandBox) continue;
-      const shouldArm = s.bandBox.y <= 0;
-      if (s.ftReveal !== shouldArm)
+    if (rise.length !== RISE_KS.length) fails.push("the rise was not walked");
+    for (const r of rise) {
+      const want = r.vh * (1 - r.k);
+      const at = r.contactBox?.y ?? NaN;
+      if (!(Math.abs(at - want) <= 2))
+        fails.push(`rise ${r.k}: the footer's top is at ${at}, not ${Math.round(want)}`);
+      if (r.k < 1 && !r.pinned) fails.push(`rise ${r.k}: the stage unpinned under the footer`);
+      if (r.arrive !== "in") fails.push(`rise ${r.k}: the list is ${r.arrive} under the footer`);
+      if (r.k < 1 && !r.headState?.whole)
         fails.push(
-          `the footer's bed is ${s.ftReveal ? "armed" : "off"} with the band's top at ${s.bandBox.y} (p ${s.p})`
+          `rise ${r.k}: the head is not whole under the footer ("${r.headState?.sample}")`
         );
+      if (r.stageAnim === "mu-under") {
+        const wantTy = -0.25 * r.rise * r.k;
+        if (Math.abs(r.stageTy - wantTy) > 2)
+          fails.push(`rise ${r.k}: the stage drifted ${r.stageTy}px, not ${Math.round(wantTy)}`);
+        if (Math.abs(r.veil - 0.4 * r.k) > 0.03)
+          fails.push(`rise ${r.k}: the veil is ${r.veil}, not ${0.4 * r.k}`);
+      }
+      /* No void between the two: the stage's bottom stays under the footer. */
+      const stageBottom = r.vh + r.stageTy;
+      if (stageBottom < at - 1)
+        fails.push(`rise ${r.k}: ${Math.round(at - stageBottom)}px of void opens above the footer`);
+      if (r.stageMode && r.k <= 0.25 && !(r.ambient && r.exit))
+        fails.push(`rise ${r.k}: the corridor died while the list still shows`);
+      if (r.k === 1 && (r.ambient || r.exit))
+        fails.push("the corridor outlived the footer's full cover");
+      if (r.k >= 0.75 && r.activeStation !== "contact")
+        fails.push(`rise ${r.k}: the HUD reads ${r.activeStation}, not contact`);
+      if (r.k <= 0.25 && r.activeStation !== "musings")
+        fails.push(`rise ${r.k}: the HUD reads ${r.activeStation}, not musings`);
+    }
+    const end = walk.find((s) => s.p === "footer-end");
+    if (end) {
+      if (!end.contactBox || end.contactBox.y > 0.5)
+        fails.push(`the footer's top is at ${end.contactBox?.y} at the document's end`);
+      if (end.contactBox && end.contactBox.y + end.contactBox.h < end.vh - 1)
+        fails.push("the footer does not fill the frame at the document's end");
+      if (end.contactPosition === "sticky")
+        fails.push("#contact is still sticky (the bed is back)");
+      if (end.muReady && end.contactZ !== "8")
+        fails.push(`#contact is at z ${end.contactZ}, not 8`);
+    }
+    if (backUp) {
+      if (backUp.arrive !== "in")
+        fails.push(`scrolling back up, the footer lifts off a list that is ${backUp.arrive}`);
+      if (!backUp.headState?.whole) fails.push("scrolling back up, the head is not whole");
     }
   }
   /* ⚠ THE READOUT NAMES THIS STATION FOR THE WHOLE BEAT. It is the one thing

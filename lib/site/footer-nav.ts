@@ -78,12 +78,6 @@ function arcLink(): FooterLink {
   return { label: "The Arc", href: `#${CORRIDOR_MOUNT_ID}` };
 }
 
-/** The tagline over the crest — the Arc's own three beats, so it cannot drift
- *  from the corridor it names. */
-export function arcTagline(): string {
-  return (["navigate", "encode", "build"] as const).map((id) => entry(id).name).join(" · ");
-}
-
 const social = (icon: SocialIcon): FooterLink | null => {
   const row = SOCIALS.find((s) => s.icon === icon);
   return row ? { label: row.label, href: row.href, external: true, social: icon } : null;

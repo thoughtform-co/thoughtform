@@ -169,8 +169,6 @@ const SEL = [
   ".ft-foot__lede",
   ".ft-foot__cta",
   ".ft-foot__mail",
-  ".ft-foot__wordmark",
-  ".ft-foot__tagline",
   ".ft-foot__col-head",
   ".ft-foot__link",
   ".ft-foot__mark",
@@ -189,7 +187,7 @@ const inkTargets = await page.evaluate((sels) => {
       });
     }
   }
-  document.querySelectorAll(".ft-foot__band, .ft-foot__crest, .ft-foot__bar").forEach((n) => {
+  document.querySelectorAll(".ft-foot__band, .ft-foot__bar").forEach((n) => {
     n.style.visibility = "hidden";
   });
   return out;
@@ -221,7 +219,7 @@ const clip = {
    that differs between them IS ink, and the bed is read at exactly those. */
 const bedPng = (await page.screenshot({ clip })).toString("base64");
 await page.evaluate(() => {
-  document.querySelectorAll(".ft-foot__band, .ft-foot__crest, .ft-foot__bar").forEach((n) => {
+  document.querySelectorAll(".ft-foot__band, .ft-foot__bar").forEach((n) => {
     n.style.visibility = "";
   });
 });

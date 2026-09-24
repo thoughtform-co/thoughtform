@@ -145,8 +145,6 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
     let aboutEl: HTMLElement | null = null;
     let voidwalkerEl: HTMLElement | null = null;
     let musingsEl: HTMLElement | null = null;
-    /** The rack's opaque end — the cover on its transparent stage rung. */
-    let musingsBandEl: HTMLElement | null = null;
     let contactEl: HTMLElement | null = null;
     let killEl: HTMLElement | null = null;
     // Last-written DOM state, so attributes flip only on edges and the
@@ -249,9 +247,6 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       if (!musingsEl || !musingsEl.isConnected) {
         musingsEl = root.querySelector<HTMLElement>("#musings");
       }
-      if (!musingsBandEl || !musingsBandEl.isConnected) {
-        musingsBandEl = root.querySelector<HTMLElement>(".mu__band");
-      }
       if (!contactEl || !contactEl.isConnected) {
         contactEl = root.querySelector<HTMLElement>("#contact");
       }
@@ -272,15 +267,18 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
         VOIDWALKER_EXTENDS_CORRIDOR &&
         (voidwalkerMode === "hologram" || voidwalkerMode === "travel");
       // ⚠ ADR-119 U1: `#musings` IS TRANSPARENT ON ITS STAGE RUNG, AND A
-      // TRANSPARENT STATION CANNOT BE A COVER. Its opaque end is `.mu__band` —
-      // one 100svh full-bleed box at the foot of its runway — so on that rung
-      // the ambient dies at the BAND's top instead, which is also the edge the
-      // footer's bed arms on (`useMusingsScroll`). Read PER FRAME off the same
-      // stamp `home-v2.css` keys its cover rule on, never hoisted: a resize
-      // across 1101px and the era's own engage/disengage both change it.
+      // TRANSPARENT STATION CANNOT BE A COVER. ⚠ ADR-105 U4: THE COVER IS THE
+      // FOOTER. `#contact` is welded up over the musings runway's last viewport
+      // (its `rise`) and rises OVER the pinned stage at z 8, opaque, so on that
+      // rung the ambient dies at the FOOTER's top — as it rises from 0.6 of the
+      // frame to its top, i.e. with the frame covered. ADR-119's 100svh
+      // `.mu__band` held this role until then; it was one viewport of empty
+      // stars and is deleted. Read PER FRAME off the same stamp `home-v2.css`
+      // keys its promotion rule on, never hoisted: a resize across 1101px and
+      // the era's own engage/disengage both change it.
       //
       // ⚠ THIS IS DELIBERATELY *NOT* `data-corridor-kill`. That attribute is
-      // consulted BEFORE this whole chain, so a stamp on the band would also
+      // consulted BEFORE this whole chain, so a stamp on the cover would also
       // win at 961–1100px, under reduced motion and on the corridor fallback —
       // exactly the rungs where `#musings` is opaque again and must resume the
       // cover — and it would hard-cut the canvas at that station's own top
@@ -289,7 +287,7 @@ export function useCorridorExitScroll(rootRef: RefObject<HTMLDivElement | null>)
       // still-connected element, so a writer-stamped version cannot work
       // either. The mode branch keeps the fallbacks byte-identical.
       const musingsStage = musingsEl?.dataset.muMode === "stage";
-      const musingsCover = musingsStage ? (musingsBandEl ?? musingsEl) : musingsEl;
+      const musingsCover = musingsStage ? (contactEl ?? musingsEl) : musingsEl;
       const desiredNextStation =
         killEl ??
         (ABOUT_DECK_STAGE

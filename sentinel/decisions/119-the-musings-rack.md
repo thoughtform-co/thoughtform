@@ -758,3 +758,15 @@ U2's open gate findings, and only those two.
 dark and 9 → 6 in light: the glow ×5 and the coords, nothing else. Also green:
 `theme-css-sweep`, `musings-row`, `type-material-tokens`, `phone-viewport-units`
 (189 tests), and `capture-musings-rack` at 1920 × 1247 in both themes.
+
+## Note (2026-09-24): the band is gone, and U1's parallax ruling is reversed for the footer
+
+[ADR-105 Update 4](105-the-page-ends-on-a-bold-footer.md) deletes U1's 100svh
+`.mu__band` and the footer's bed. The footer is welded up over the musings
+runway's last viewport and rises OVER the pinned stage, and it is the corridor's
+cover.
+
+U1 recorded an opaque station travelling over a pinned stage as the parallax the
+owner rejected. His 2026-09-24 ask is that geometry for the footer ("I want the
+footer to scroll over it in a subtle way"), so the ruling is reversed for this one
+seam, on his word.

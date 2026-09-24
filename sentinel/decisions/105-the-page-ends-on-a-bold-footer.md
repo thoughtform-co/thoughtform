@@ -2,6 +2,8 @@
 
 - **Status:** Proposed (2026-09-15) — shipped and guarded. **Update 1 (same day, owner's
   live read) makes the plate full bleed; see the Update at the foot.**
+  ⚠ **Update 4 (2026-09-24) is the live ending: the footer rises OVER the pinned
+  musings list, and Update 3's bed is deleted.**
 - **Surface:** the homepage's ending — `#voidwalker` → `#contact`
 - **Supersedes:** ADR-056's `#practice` breather (deleted) and the parsed `.contact` /
   `<footer class="foot">` markup. ADR-030 §6's cover lockstep is re-pointed, not repealed.
@@ -640,3 +642,148 @@ html[data-ft-reveal] #contact.station {
   URL — one of the two inputs U2 left open — has landed. The Connect column and
   the About stage light together, which is the whole reason that record is one
   array.
+
+## Update 4: the footer rises over the list (2026-09-24, owner)
+
+> I think it already looks good, but I want it to be parallax-scrolled over the
+> previous section. In a previous iteration, we did the reverse … That doesn't
+> work because it adds dead space … When you scroll away from the muse section,
+> I want the footer to scroll over it in a subtle way. … the title, "Navigate
+> intelligence with your team," should be full caps. I think the "Thoughtform"
+> above it and "navigating code build" should be removed. … look at [inversa.com]
+> and try to replicate the smooth scroll at the footer.
+
+**This supersedes Update 3 (the bed) and ADR-119 U1's `.mu__band`.**
+
+### 1 · Why the dead space existed
+
+Under Update 3 the page ended in three steps:
+
+1. `#musings` was a transparent pinned stage.
+2. A 100svh opaque `.mu__band` sat at the foot of its runway. It was the
+   corridor's cover and the bed's arm edge.
+3. `html[data-ft-reveal] #contact.station { position: sticky; bottom: 0 }` held
+   the footer at the floor, to be uncovered.
+
+After the list, the reader therefore scrolled through one viewport of empty stars
+before the footer began to show. That viewport was the dead space.
+
+### 2 · The rise
+
+This applies on both pinned rungs (`.mu[data-mu-ready]`: 961px and up, with motion
+allowed).
+
+- **The musings runway gains a RISE.** It becomes
+  `calc(100svh + var(--mu-dwell) + var(--mu-rise))`, with `--mu-rise: 100svh`, so
+  the stage stays pinned for one more viewport after the dwell.
+- **`#contact` is welded up over exactly that viewport.** It takes
+  `margin-top: calc(-1 * var(--ft-weld))` with `--ft-weld: 100svh`, plus
+  `position: relative; z-index: 8`.
+- **Both key on the same stamp**, `#musings:has(.mu[data-mu-ready]) ~ #contact.station`,
+  so the weld and the tail always turn on together.
+- **`musings-row.test.ts` pins `--mu-rise` equal to `--ft-weld` by arithmetic.**
+  Neither station can read the other's custom properties.
+- **The footer's top enters at the floor exactly at the end of the dwell.** It
+  reaches the frame's top exactly as the runway releases, so the stage never
+  unpins uncovered.
+- **`--mu-rise` is `0px` unless a footer follows the station.** The labs mount the
+  station without one.
+- **The band, the bed and `data-ft-reveal` are deleted**, together with the bed's
+  three clear paths. The document is one viewport shorter.
+- **Phones, reduced motion and no-JS keep plain flow.**
+
+### 3 · The footer is the corridor's cover again
+
+While the ambient lives, the corridor's canvas sits fixed at z 2 inside a z 3 host
+with an opaque void. Any station below z 3 is invisible under it, so the rising
+footer has to BE the cover.
+
+- **`useCorridorExitScroll`'s stage-rung cover is `contactEl ?? musingsEl`.** It was
+  the band.
+- **The ambient fades as the footer's top rises** from 0.6 of the frame to its top,
+  and dies once the frame is covered.
+- **The ADR-030 §6 lockstep moved in one commit.** The handoff spec's cover case and
+  the ring smoke's ambient hold now read `#contact`. `home-v2.css`'s musings
+  promotion is untouched.
+- **This reverses a ruling in ADR-119 U1.** That ADR records an opaque station
+  travelling over a pinned stage as the parallax the owner rejected. He now asks for
+  exactly that geometry for the footer.
+
+### 4 · The list stays until it is covered
+
+The footer covering the list is now the list's exit. Folding the list first would
+leave the footer rising over an empty frame.
+
+- **The writer measures `p` over the dwell alone:**
+  `runway.offsetHeight − vh − risePx()`, with the rise read off a probe box.
+  `p` therefore saturates at 1 through the rise, and no threshold moved.
+- **`ROW_ARRIVE_END`, `HEAD_LEAVE_AT` and `HEAD_RETURN_BELOW` are deleted.** The
+  list and the head close only on the way back up.
+- **Scrolling back up, the footer lifts off a whole list.**
+
+### 5 · The drift, the dim and the glide, all driven by the compositor
+
+Each is a CSS scroll timeline behind `@supports (animation-timeline: view())` and
+the rung. A main-thread writer against a compositor scroll lands one wheel step
+behind (the Trinny hero curtain's measurement).
+
+- **The drift.** `.mu__stage` moves `translateY(0 → −0.25 × rise)` on the RUNWAY's
+  own view timeline, over `contain calc(100% − var(--mu-rise)) contain 100%`. That is
+  a quarter of the scroll speed, which was the owner's pick when asked.
+- **The dim.** A void veil on `::after` goes from opacity 0 to 0.4. The stage itself
+  never takes an opacity: the notes are glass, and a translucent ancestor blinds a
+  `backdrop-filter`.
+- **The glide.** Measured live on inversa.com, its footer box travels 1:1 and one
+  thing inside it, the wordmark, travels at about 0.72×. That page is also smoothed
+  sitewide by Lenis; the owner chose to take the footer only. Here the key visual's
+  `<img>` is taller than its plate by `--ft-par` (25svh) and slides from `−par` to 0
+  over `entry` on `.ft-foot`'s own view timeline, so it rises at 0.75×. The plate
+  already clips; the station never does.
+- **Without timeline support (Firefox today),** the weld and the pin still hold, and
+  the footer covers a still list.
+
+### 6 · The copy
+
+- **The crest is deleted:** the `Thoughtform` wordmark and the
+  `Navigate · Encode · Build` tagline, with `arcTagline()` and its test. This
+  overrules U2's "never the crest" on the owner's word.
+- **The grid is `1fr auto`**, and the frame's top hairline went with the crest.
+- **The title is AUTHORED in capitals, never transformed**, so ratchet C stays 0.
+- **It takes the house caps-display tracking, `0.04em`.** That is the literal
+  `.services-masthead__title`, `.mu__title`, `.arc-title` and `.voidwalker__name`
+  already spell. The sheet's A pin moved from 0 to 1, recorded.
+- **Everything else is untouched:** size, weight, colour, `Let's build`, the ask
+  and the nav.
+- **The subpages take the copy too**, because `SheetClose` mounts the same footer.
+
+### 7 · Measured
+
+Taken with the list capture (headed, real scrolls) and the rise probe.
+
+| stop (1920×1247 dark) | footer top (want) | stage drift (want) | veil | list · head | ambient | readout |
+| --------------------- | ----------------- | ------------------ | ---- | ----------- | ------- | ------- |
+| rise 0.25             | 935.8 (935.3)     | −77.8 (−77.9)      | 0.1  | in · whole  | alive   | musings |
+| rise 0.5              | 623.8 (623.5)     | −155.8 (−155.9)    | 0.2  | in · whole  | alive   | musings |
+| rise 0.75             | 311.8 (311.8)     | −233.8 (−233.8)    | 0.3  | in · whole  | alive   | contact |
+| rise 1                | 0.8 (0)           | −311.5 (−311.7)    | 0.4  | in · whole  | dead    | contact |
+
+- **Frames during the rise:** 3% long frames under real wheel steps (mean 5.9ms, p95
+  12.4ms), against the 15% bar. The one 58ms frame is the corridor's teardown.
+- **Contrast:** the caps title's worst glyph over the plate is 6.71:1 in dark and
+  10.06:1 in light, against a 4.5 floor. The plate still equals the station.
+- **Captures pass** at 1920×1247 light, 1280×720, 1024×768 (the 961–1100 rung),
+  390×844, and on both lab hosts.
+- **Specs pass:** `about-voidwalker-handoff-boundaries`, `services-ring-smoke`,
+  `landing-page -g HUD` (unchanged, no snapshot update), `landing-corridor-smoke`,
+  and `mobile-section-seams` on both iPhones.
+- **The mechanical gate passes**: `mechanical.mjs --scope ".ft-foot" --prm`, in both
+  themes.
+
+### Still open
+
+- **The footer's leading edge has no hairline.** It is the station's opaque top.
+  Judge it live; the fallback is a hairline on the STATION, never on `.ft-foot`.
+- **The title sets on three lines at every desktop width.** At 72px the capitals
+  cannot hold the authored two-line break inside the band's 54vw.
+- **At 1280×720 the footer is 307px taller than the frame**, so it keeps scrolling
+  after it has covered the list.

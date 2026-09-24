@@ -51,58 +51,51 @@
   --ft-pad-bottom: max(var(--station-pad-bottom), var(--mobile-chrome-bottom, 0px));
   padding-top: var(--ft-pad-top);
   padding-bottom: var(--ft-pad-bottom);
+  /* ⚠ THE WELD (ADR-105 U4): how far this station rises over the end of
+     `#musings`. It EQUALS that station's `--mu-rise` — the runway's last
+     viewport, in which the list stays pinned — so the footer's top reaches the
+     frame's top exactly as the list's runway releases. Neither station can read
+     the other's custom properties, so `musings-row.test.ts` pins the pair. */
+  --ft-weld: 100svh;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   THE FOOTER IS A BED THE RACK SCROLLS OVER (ADR-105 Update 3)
+   THE FOOTER RISES OVER THE MUSINGS LIST (ADR-105 Update 4)
 
-   Owner, 2026-09-22: "I want the footer, like the general intelligence
-   company's footer, to be visible and parallaxed … and the musings section
-   needs to scroll over it."
+   Owner, 2026-09-24: "I want [the footer] to be parallax-scrolled over the
+   previous section. In a previous iteration, we did the reverse … That doesn't
+   work because it adds dead space … When you scroll away from the muse
+   section, I want the footer to scroll over it in a subtle way."
 
-   That reference is a REVEAL, not a travel: GIC's footer does not move — it
-   is held at the frame's floor and progressively UNCOVERED as the block above
-   it scrolls away. So this is one declaration and no writer of its own, and
-   ⚠ **IT IS NOT A TRANSFORM.** A main-thread `translateY` off a scroll
-   variable lags the compositor by exactly one wheel step, every step
-   (measured on `/arcs/trinny-london/proposal`'s hero hold: 227.2 / 243.2 /
-   243.2 repeating) — "which is why the homepage holds its corridor with
-   `position: fixed` rather than a transform". No easing hides a frame of lag.
+   U3 held this station at the frame's floor (`position: sticky; bottom: 0`)
+   and let `#musings` scroll away to uncover it — behind a 100svh band of empty
+   stars that was the station's opaque end. That band was the dead space.
 
-   ⚠ **EVERY TERM OF ADR-105's GEOMETRY IS UNTOUCHED.** `--ft-pad-*`, the
-   plate's negation of exactly those, the band's 54vw, the three-layer scrim,
-   the two plates' `display` swap. At the document's end a sticky-bottom box
-   is at its natural seat, so sticky is a NO-OP there and `plateIsStation`
-   still measures the rect it always did.
+   ⚠ **NOW THE FOOTER IS WELDED UP OVER THE LIST'S LAST VIEWPORT.** `#musings`'s
+   runway gains a rise (`--mu-rise`) in which its stage stays pinned, and this
+   station's `margin-top` pulls it up by the same amount, so it rises 1:1 over
+   a list that is not moving — the list drifts up at a quarter of the speed and
+   dims under it on the compositor (musings.css), and the key visual glides at
+   0.75× inside it (below). The document is one viewport shorter.
 
-   ⚠ **IT IS GATED ON A STAMP, AND THE GATE IS THE WHOLE MECHANISM.** Ungated,
-   `position: sticky; bottom: 0` with `.stations` as the containing block pulls
-   this station up to the frame's floor from scroll 0 — and `#voidwalker` on
-   the capable path is a pinned TRANSPARENT stage, so the footer would paint
-   straight through the era stage over the live corridor. `useMusingsScroll`
-   writes `data-ft-reveal` on `<html>` only while `#musings`' top has passed
-   the frame's top, i.e. while that opaque station fills the screen and the
-   snap is invisible behind it — and it CLEARS it on the way back up, on
-   unmount, and on the inert rung. An armed stamp with no writer is the
-   failure this rule cannot survive.
+   ⚠ **IT IS THE CORRIDOR'S COVER AGAIN, SO IT IS PROMOTED ABOVE EVERYTHING.**
+   While the ambient lives, the corridor's canvas is fixed at z 2 in a z 3 host
+   with an opaque void, and any station below z 3 is invisible under it; the
+   musings stage is promoted to z 6/7 (home-v2.css). The footer rises over both
+   at z 8, and `useCorridorExitScroll` kills the ambient on THIS station's top
+   (ADR-030 §6 — the four readers name `#contact`). Its ground is opaque void
+   and stars (`.station:not(.hero)`), which is the cover contract.
 
-   ⚠ **AND IT ONLY WORKS BECAUSE THE COVER MOVED** (ADR-119 §4). While
-   `#contact` was the corridor's kill cover, `home-v2.css` gave it
-   `position: relative; z-index: 6` during the exit band — a cover cannot
-   also be the thing being uncovered. `#musings` holds that role now.
-
-   ⚠ **NOT ON THE PHONE AND NOT UNDER REDUCED MOTION**, which is not a media
-   query here but a property of the stamp: the writer parks on that rung and
-   removes it. `#contact` is a snap stop at ≤960 and its bottom padding is
-   solved against fixed chrome in the DYNAMIC viewport — a held footer there
-   would seat the legal bar against a floor that moves with the toolbar.
-   ═══════════════════════════════════════════════════════════════════ */
-html[data-ft-reveal] #contact.station {
-  position: sticky;
-  bottom: 0;
-  /* Under `#musings`, which activates its own inherited `z-index: 2` with a
-     `position: relative`. Both are inside `.stations`' stacking context. */
-  z-index: 0;
+   ⚠ **KEYED ON THE LIST'S OWN STAMP, `data-mu-ready`**, which also switches
+   the runway's rise on — one stamp, so the weld and the tail can never
+   disagree. It is absent on the phone, under reduced motion and before the
+   writer's first frame, and there the footer simply follows the list in flow.
+   ⚠ **NEVER A TRANSFORM.** A main-thread `translateY` lags the compositor by
+   one wheel step, every step; a margin is layout, and the scroll moves it. */
+#musings:has(.mu[data-mu-ready]) ~ #contact.station {
+  position: relative;
+  z-index: 8;
+  margin-top: calc(-1 * var(--ft-weld));
 }
 
 /* ⚠ THE SLOT IS THE FLEX CHILD, NOT `.ft-foot`. The station is a centring
@@ -125,15 +118,21 @@ html[data-ft-reveal] #contact.station {
      than a third one. The mechanical gate reads the wrappers, which is how a
      leak like this is visible before a sentence lands in it. */
   font-family: var(--font-pp-neue-montreal);
+  /* The key visual's glide (below): how far the picture lags the footer. On
+     the footer's own root, so the subpages' `SheetClose` host glides too. */
+  --ft-par: 25svh;
 
   /* ⚠ ITS BOX IS THE STATION'S CONTENT BOX, AND THAT IDENTITY IS
      LOAD-BEARING: the plate's negative insets are the station's padding, so
      `.ft-foot` may never gain padding, margin or a border of its own. */
   position: relative;
-  /* crest · band · bar. The `1fr` on the band is what keeps the bar on the
-     floor and leaves the plate its open ground between them (ADR-105 U2). */
+  /* band · bar. The `1fr` on the band is what keeps the bar on the floor and
+     leaves the plate its open ground (ADR-105 U2). The crest — the wordmark
+     and the Arc's beats on a hairline — is deleted (ADR-105 U4, owner: "the
+     'Thoughtform' above it and 'Navigate · Encode · Build' should be
+     removed"); with it went U2's ruling that the crest never shortens. */
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr auto;
   row-gap: clamp(32px, 5svh, 72px);
   flex: 1 1 auto;
   align-self: stretch;
@@ -197,6 +196,47 @@ html[data-theme="light"] .ft-foot__plate-img--dark {
 html[data-theme="light"] .ft-foot__plate-img--light {
   display: block;
   object-position: center center;
+}
+
+/* ── the glide: the key visual lags the footer (ADR-105 U4) ────────────
+   inversa.com, the owner's reference for "the smooth scroll at the footer",
+   measured live: its footer box travels 1:1 and ONE thing inside it — the
+   full-width wordmark — rises at about 0.72× (365px of offset settling to 30
+   across the footer's arrival). Our key visual takes that role: the picture is
+   `--ft-par` taller than its plate and slides from `-par` to 0 while the
+   footer enters, so it rises at 0.75× and reads as sitting behind the frame.
+   The title, the ask and the links travel 1:1, as the reference's do.
+   ⚠ ON THE FOOTER'S OWN VIEW TIMELINE, ON THE COMPOSITOR. `.ft-foot` is the
+   root in both hosts (the landing's portal and the subpages' `SheetClose`), so
+   the timeline is declared there and the picture is its descendant. It is
+   smaller than a frame (the station's top padding is outside it), so its
+   `entry` runs from its top entering the floor to its whole box being in
+   view — on the landing that is the rise, ending on the document's last frame.
+   ⚠ THE PLATE ALREADY CLIPS (`overflow: hidden`, above) and the station
+   never does (ADR-105 contract 6), so the oversize is spent inside the plate.
+   ⚠ `@supports` IS LOAD-BEARING (the Trinny finding): without it a browser
+   lacking scroll timelines would run the keyframes on the document timeline.
+   There the picture simply sits still, as it did before. */
+@supports (animation-timeline: view()) {
+  @media (min-width: 961px) and (prefers-reduced-motion: no-preference) {
+    .ft-foot {
+      view-timeline: --ft block;
+    }
+    .ft-foot__plate-img {
+      height: calc(100% + var(--ft-par, 0px));
+      animation: ft-glide linear both;
+      animation-timeline: --ft;
+      animation-range: entry 0% entry 100%;
+    }
+  }
+}
+@keyframes ft-glide {
+  from {
+    transform: translateY(calc(-1 * var(--ft-par, 0px)));
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* Three layers, each with one job, all on `--void-rgb`:
@@ -294,48 +334,6 @@ html[data-theme="light"] .ft-foot__plate-img--light {
    whole.
    The copy sits in the top third: the station's own `--station-pad-top` is
    the seat, so the band's padding is only a trim. */
-/* ── the crest: wordmark left, the Arc's beats right, on a hairline ─── */
-/* ⚠ SAME WIDTH CONTRACT AS `.ft-foot__bar`, so the line at the top and the
-   rule at the floor are the same two edges — that is what makes the whole
-   thing read as a frame instead of a stack. And the border lives HERE, never
-   on `.ft-foot`, whose box IS the station's content box and whose identity the
-   plate's negative insets are measured against. */
-.ft-foot__crest {
-  position: relative;
-  z-index: 1;
-  max-width: var(--band-max);
-  margin-inline: var(--rail-inset);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px 32px;
-  padding-top: clamp(12px, 1.6svh, 22px);
-  border-top: 1px solid rgba(var(--dawn-rgb), 0.16);
-}
-
-.ft-foot__wordmark {
-  margin: 0;
-  font-family: var(--font-pp-neue-montreal);
-  font-weight: var(--weight-lit);
-  font-size: clamp(16px, 1.15vw, 20px);
-  letter-spacing: var(--track-display);
-  color: var(--dawn);
-}
-
-.ft-foot__tagline {
-  margin: 0;
-  font-family: var(--font-pt-mono);
-  font-weight: var(--weight-text);
-  font-size: 10px;
-  letter-spacing: var(--track-eyebrow);
-  text-transform: uppercase;
-  /* ⚠ 0.62, THE RUNG `.ft-foot__mark` ALREADY PROVES ON THIS SURFACE. At 0.5
-     the mechanical gate reads 4.41:1 at 10px against the station's ground —
-     under the 4.5 floor, and 10px mono is exactly where that floor bites. */
-  color: rgba(var(--dawn-rgb), 0.62);
-}
-
 /* ── the band: the ask, and the link grid under it ──────────────────── */
 /* ⚠ THE CAP IS THE RING'S MEASURED LEFT EDGE, NOT A TASTE VALUE (ADR-105 U2).
    `scripts/measure-plate-luminance.mjs` profiles `Gateway_v1b`: its bright
@@ -440,7 +438,14 @@ html[data-theme="light"] .ft-foot__plate-img--light {
   font-weight: var(--weight-lit);
   font-size: clamp(34px, 4.6vw, 72px);
   line-height: 1.04;
-  letter-spacing: var(--track-display);
+  /* ⚠ THE HOUSE CAPS-DISPLAY TRACKING, THIS SHEET'S ONE TYPE LITERAL
+     (ADR-105 U4). The title is authored in capitals now (owner: "full caps"),
+     and every caps display title on the site — `.services-masthead__title`,
+     `.mu__title`, `.arc-title`, `.voidwalker__name` — spells the same `.04em`,
+     which is not on the role ramp (`type-material-tokens.test.ts` records the
+     recipe and pins this sheet's A count at 1 for it). `--track-display` is
+     the SENTENCE-CASE display rung, and at −.02em capitals close up. */
+  letter-spacing: 0.04em;
   color: var(--dawn);
   text-wrap: balance;
 }

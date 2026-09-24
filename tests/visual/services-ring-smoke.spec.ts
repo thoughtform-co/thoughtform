@@ -2616,15 +2616,15 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // reported `null` for the rect it asserts on. Both reads name one station
     // — and `home-v2.css`'s cover rule and `useCorridorExitScroll`'s query
     // are the other two that move with them (ADR-030 §6).
-    // ⚠ THE WAYPOINT IS THE BAND'S OWN TOP, NOT 0.3vh PAST IT. The band is
-    // EXACTLY `100svh` — one pixel inside it and it covers `vh − 1`, with the
-    // held footer showing in the gap, which is the reveal working rather than
-    // a cover failing. Every earlier cover was three viewports tall and
-    // absorbed the walk; this one is the edge itself, so the assertion is made
-    // where the envelope actually reaches zero. Same correction as the
-    // handoff spec's cover case, in the same commit.
+    // ⚠ ADR-105 U4: THE COVER IS THE FOOTER AGAIN — welded up over the musings
+    // runway's last viewport, it rises OVER the pinned stage and the ambient
+    // dies on ITS top. ADR-119's 100svh `.mu__band` held the role until then
+    // and was one viewport of empty stars; it is deleted.
+    // ⚠ THE WAYPOINT IS THE COVER'S OWN TOP, NOT 0.3vh PAST IT — the envelope
+    // reaches zero there, so that is where the property is claimed. Same
+    // correction as the handoff spec's cover case, in the same commit.
     const underNext = await page.evaluate(() => {
-      const next = document.querySelector<HTMLElement>("#musings .mu__band");
+      const next = document.querySelector<HTMLElement>("#contact");
       if (!next) return null;
       return Math.ceil(window.scrollY + next.getBoundingClientRect().top);
     });
@@ -2633,7 +2633,7 @@ test.describe("Services card ring smoke (ADR-029)", () => {
     // Wait for the corridor's rAF writer to see the settled scroll.
     await page.waitForTimeout(600);
     const after = await page.evaluate(() => {
-      const pr = document.querySelector<HTMLElement>("#musings .mu__band");
+      const pr = document.querySelector<HTMLElement>("#contact");
       return {
         ambient: document.documentElement.hasAttribute("data-services-ambient"),
         exit: document.documentElement.hasAttribute("data-corridor-exit"),
@@ -2648,16 +2648,18 @@ test.describe("Services card ring smoke (ADR-029)", () => {
            ⚠ ADR-119 moved the cover onto a THREE-VIEWPORT station, where
            `top < 0` would pass again — which is why it is not restored: it
            would be passing by coincidence a second time. */
+        /* ⚠ `vh − 1`: the footer is the document's last element, and the
+           browser ceils `scrollHeight`, so at the page's floor its bottom is
+           `vh − 1 + frac` (ADR-105 U2's arithmetic, the handoff spec's own
+           tolerance). */
         coversVh: pr
-          ? pr.getBoundingClientRect().bottom >= window.innerHeight &&
+          ? pr.getBoundingClientRect().bottom >= window.innerHeight - 1 &&
             pr.getBoundingClientRect().top <= 0
           : null,
       };
     });
-    expect(after.prTopVh, "the walk landed above the musings band").toBeLessThanOrEqual(0);
-    expect(after.coversVh, "the musings band does not fill the viewport at the kill edge").toBe(
-      true
-    );
+    expect(after.prTopVh, "the walk landed above the footer's top").toBeLessThanOrEqual(0);
+    expect(after.coversVh, "the footer does not fill the viewport at the kill edge").toBe(true);
     expect(after.ambient).toBe(false);
     expect(after.exit).toBe(false);
   });

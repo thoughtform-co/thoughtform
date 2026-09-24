@@ -24,8 +24,9 @@ import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
  * `data-mu-arrive` on `.mu`, `data-mu-mode` and `data-station-edge` on the
  * STATION (the second tells the HUD's readout that a welded stage is active
  * at its PIN, ADR-121 U3), `data-mu-open` on ONE note, `data-live` on the
- * head's cursor hosts, and **`data-ft-reveal` on `<html>`**, which is what
- * arms the footer's held bed (ADR-105 U3).
+ * head's cursor hosts. (Its `<html>` stamp, `data-ft-reveal`, went with the
+ * footer's bed in ADR-105 U4: the footer now rises OVER the pinned stage,
+ * welded on `data-mu-ready` alone, so there is nothing left to arm.)
  *
  * ⚠ **IT RENDERS NOTHING, EVER.** ADR-119 kept one piece of React state; the
  * list has none. The open note is one attribute moved on an EVENT —
@@ -88,8 +89,7 @@ export function useMusingsScroll(
   runwayRef: React.RefObject<HTMLElement | null>,
   stationRef: React.RefObject<HTMLElement | null>,
   listRef: React.RefObject<HTMLElement | null>,
-  count: number,
-  bandRef: React.RefObject<HTMLElement | null>
+  count: number
 ): void {
   const rafRef = useRef<number | null>(null);
 
@@ -303,9 +303,30 @@ export function useMusingsScroll(
       restoreHead();
       /* The open note goes home: the list rests with the newest open. */
       openRest();
-      /* ⚠ THE FOOTER'S BED IS DISARMED TOO: left stamped on a rung that never
-         writes again, `#contact` would be sticky for the rest of the document. */
-      document.documentElement.removeAttribute("data-ft-reveal");
+    };
+
+    /**
+     * The rise, in pixels (ADR-105 U4): the runway's last `--mu-rise`, during
+     * which the stage stays pinned while the footer rises over it.
+     *
+     * ⚠ A CUSTOM PROPERTY IS A STRING UNTIL SOMETHING LAYS IT OUT, so the value
+     * is read off a probe box sized by it — in the STATION, where the property
+     * is declared and which is not React's to reconcile. It is `0px` wherever no
+     * footer follows the station (the labs), so the clock there is the runway.
+     */
+    let riseProbe: HTMLElement | null = null;
+    const risePx = (): number => {
+      const sec = section();
+      if (!sec) return 0;
+      if (!riseProbe || !riseProbe.isConnected || riseProbe.parentElement !== sec) {
+        riseProbe?.remove();
+        riseProbe = document.createElement("i");
+        riseProbe.setAttribute("aria-hidden", "true");
+        riseProbe.style.cssText =
+          "position:absolute;left:0;top:0;width:0;height:var(--mu-rise,0px);visibility:hidden;pointer-events:none";
+        sec.appendChild(riseProbe);
+      }
+      return riseProbe.offsetHeight;
     };
 
     const tick = () => {
@@ -343,10 +364,13 @@ export function useMusingsScroll(
       const rect = runway.getBoundingClientRect();
 
       /* The pinned clock: how far the runway's top has passed the frame's
-         top, over the travel the sticky child actually has — ONE dwell,
-         `--mu-dwell`, since ADR-121. `offsetHeight` rather than the rect's
-         height, so a transform above cannot enter it. */
-      const travel = Math.max(1, runway.offsetHeight - vh);
+         top, over ONE dwell, `--mu-dwell` (ADR-121). ⚠ THE RISE IS NOT PART
+         OF IT (ADR-105 U4): the runway is the dwell plus the rise, and the
+         clock is measured over the dwell alone, so `p` saturates at 1 while
+         the footer rises and every threshold keeps the meaning it had.
+         `offsetHeight` rather than the rect's height, so a transform above
+         cannot enter it. */
+      const travel = Math.max(1, runway.offsetHeight - vh - risePx());
       const p = clamp01(-rect.top / travel);
       /* ⚠ PARKED IS THE RUNWAY COVERING THE FRAME, which is exactly when the
          sticky stage is still. `p` alone cannot say it: it clamps to 0 all the
@@ -379,22 +403,10 @@ export function useMusingsScroll(
         arrive = nextArrive;
         station.dataset.muArrive = nextArrive;
       }
+      /* ⚠ `data-mu-ready` IS ALSO THE FOOTER'S WELD (ADR-105 U4): the runway's
+         rise and `#contact`'s negative margin both key on it, so the two turn
+         on and off in the same frame and can never disagree. */
       if (!station.hasAttribute("data-mu-ready")) station.setAttribute("data-mu-ready", "");
-
-      /**
-       * ⚠ **THE FOOTER'S BED IS ARMED ON THE COVER'S TOP REACHING THE FRAME'S,
-       * AND IT MUST BE REVERSIBLE.** `#contact` becomes `position: sticky;
-       * bottom: 0` while this attribute is present, and a sticky-bottom box is
-       * pulled UP to the frame's floor from anywhere above its seat — armed a
-       * station early it would paint the whole footer through the transparent
-       * era stage. On the stage rung the edge is the BAND's (the station is
-       * transparent there); off it the station is opaque and its runway's own
-       * top is right.
-       */
-      const revealTop =
-        stage && bandRef.current ? bandRef.current.getBoundingClientRect().top : rect.top;
-      if (revealTop <= 0) document.documentElement.setAttribute("data-ft-reveal", "");
-      else document.documentElement.removeAttribute("data-ft-reveal");
     };
 
     function onScroll() {
@@ -450,10 +462,8 @@ export function useMusingsScroll(
       document.removeEventListener("visibilitychange", onVisibility);
       if (rafRef.current != null) window.cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
-      /* ⚠ The stamp lives on `<html>`, outside this station's subtree, so
-         unmounting without clearing it leaves the footer sticky forever. */
-      document.documentElement.removeAttribute("data-ft-reveal");
-      /* ⚠ And the mode lives on the STATION, which this component does not
+      riseProbe?.remove();
+      /* ⚠ The mode lives on the STATION, which this component does not
          render — left behind, it would hold a transparent, promoted station
          over a dead corridor for the rest of the document. The readout's
          edge goes with it. */
@@ -464,5 +474,5 @@ export function useMusingsScroll(
          left mid-scramble there stays mid-scramble on the page. */
       restoreHead();
     };
-  }, [runwayRef, stationRef, listRef, bandRef, count]);
+  }, [runwayRef, stationRef, listRef, count]);
 }

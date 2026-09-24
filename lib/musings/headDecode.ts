@@ -113,16 +113,19 @@ export function headRunLive(run: HeadRun, level: number, span: number): boolean 
  * then 0 at once; the writer also snaps the LEVEL to 0 there rather than
  * letting a burst play out on text that is moving (the masthead motion law:
  * copy never travels, never fades).
- * ⚠ TWO HYSTERESIS BANDS, so a reader resting on an edge does not re-trigger
- * a 0.7s decode: in at `HEAD_REVEAL_AT`, back out below `HEAD_REARM_BELOW`;
- * out at `HEAD_LEAVE_AT`, back in below `HEAD_RETURN_BELOW`.
- * ⚠ `HEAD_LEAVE_AT` IS PAST THE ROW'S OWN CLOSE (`ROW_ARRIVE_END`, 0.95), so
- * the exit is the entry backwards — the cards leave, then the text.
+ * ⚠ ONE HYSTERESIS BAND, so a reader resting on the edge does not re-trigger
+ * a 0.7s decode: in at `HEAD_REVEAL_AT`, back out below `HEAD_REARM_BELOW`.
+ * ⚠ THERE IS NO EXIT AT THE BOTTOM ANY MORE (ADR-105 U4). ADR-119 U2 un-typed
+ * the head at p 0.965, just before the release, so the exit was the entry
+ * backwards. Since the footer rises OVER the pinned stage, the footer
+ * covering the head IS the exit — un-typing first would leave the footer
+ * rising over an empty frame, which is the dead space the owner named. The
+ * head stays whole under the footer, and scrolling back up the footer lifts
+ * off a whole head. (The writer's clock is measured over the dwell, so `p`
+ * saturates at 1 through the rise.)
  */
 export const HEAD_REVEAL_AT = 0.02;
 export const HEAD_REARM_BELOW = 0.01;
-export const HEAD_LEAVE_AT = 0.965;
-export const HEAD_RETURN_BELOW = 0.925;
 
 export type HeadWant = 0 | 1;
 
@@ -130,6 +133,6 @@ export function headTarget(prev: HeadWant | null, p: number, pinned: boolean): H
   if (!pinned) return 0;
   const at: HeadWant = prev ?? 0;
   if (!Number.isFinite(p)) return at;
-  if (at === 1) return p < HEAD_REARM_BELOW || p >= HEAD_LEAVE_AT ? 0 : 1;
-  return p >= HEAD_REVEAL_AT && p < HEAD_RETURN_BELOW ? 1 : 0;
+  if (at === 1) return p < HEAD_REARM_BELOW ? 0 : 1;
+  return p >= HEAD_REVEAL_AT ? 1 : 0;
 }

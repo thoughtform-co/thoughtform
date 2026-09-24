@@ -230,10 +230,18 @@ const PINS: Record<string, Pin> = {
   /* The site footer (ADR-105). Authored token-only from line one — which is
      the only way a new sheet enters this map at zero: `proof-stack.css` sat
      in NEITHER ratchet for a week while its own header said it was in both,
-     and retro-fitting is what this exists to prevent. */
+     and retro-fitting is what this exists to prevent.
+     ⚠ A: 0 → 1 (ADR-105 U4, 2026-09-24). The owner asked for the footer's
+     title in FULL CAPS, authored so (never `text-transform`, so C stays 0), and
+     every caps display title on the site spells the same `0.04em` —
+     `.services-masthead__title`, `.mu__title`, `.arc-title`,
+     `.voidwalker__name` (the recipe recorded above). `--track-display` is the
+     SENTENCE-CASE display rung, and at −0.02em capitals close up. ONE rule
+     (`.ft-foot__title`) and no other. **Raising a pin is a design change and
+     this one is recorded as such.** */
   "components/landing/v7/site-footer/site-footer.css": {
     tier: "content",
-    content: { A: 0, B: 0, C: 0 },
+    content: { A: 1, B: 0, C: 0 },
     frame: { A: 0, B: 0, C: 0 },
   },
   /* The musings row (ADR-119 → ADR-121) — `#musings`, on the landing route. Authored

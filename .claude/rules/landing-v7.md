@@ -212,15 +212,22 @@ retired with the form; nothing 3D survives in the station. ⚠ **ADR-121 U1**: t
   move: measured, the musings ground entered the fold at era progress 0.375 with
   every era element still seated, and the owner read it as the parallax that
   deleted `#practice`. It is the `#voidwalker` recipe now — transparent,
-  promoted, the corridor alive for the whole beat — and the kill is one opaque
-  100svh `.mu__band` at the foot of its runway. Below 1101px, under PRM and on
-  the fallback the station is opaque again and IS its own cover.
+  promoted, the corridor alive for the whole beat. ⚠ **SINCE ADR-105 U4 THE
+  KILL IS THE FOOTER RISING OVER THE PINNED LIST** (owner, 2026-09-24: "when
+  you scroll away from the muse section, I want the footer to scroll over it
+  in a subtle way"): U1's 100svh `.mu__band` — one viewport of empty stars, the
+  dead space he named — is deleted, and `#contact` is welded up over the
+  runway's last viewport (the rise) at z 8. That reverses U1's own ruling that
+  an opaque station travelling over a pinned stage is the rejected parallax,
+  for this one seam, on his word. Below 1101px, under PRM and on the fallback
+  the station is opaque again and IS its own cover.
 - ⚠ **ADR-030 §6's LOCKSTEP HAS FOUR READERS AND THEY MOVE IN ONE COMMIT**:
   `home-v2.css`'s mode-gated promotion rule, `useCorridorExitScroll`'s
   next-station query, the handoff spec's cover case, and `services-ring-smoke`'s
   ambient-hold case — which reads it TWICE, once to solve the waypoint and once
-  to assert on it. ⚠ **NOT `data-corridor-kill`**: it is consulted before the
-  whole chain, so a stamp on the band would also win on the rungs where the
+  to assert on it. All four name `#contact` on the stage rung since ADR-105 U4.
+  ⚠ **NOT `data-corridor-kill`**: it is consulted before the
+  whole chain, so a stamp on the cover would also win on the rungs where the
   station is opaque, and `killEl` is cached against `isConnected`. ⚠
   `?? contactEl` is load-bearing: `/claude-workshop` and the Trinny proposal
   mount the same hook from their own prototypes and have no `#musings`.
@@ -229,14 +236,17 @@ retired with the form; nothing 3D survives in the station. ⚠ **ADR-121 U1**: t
   transparent stage paints its head and cards BEHIND the corridor — invisible,
   every geometry gate green. z 6 while transparent is what `#services`,
   `#about` and `#voidwalker` all already do.
-- ⚠ **AND THAT IS WHAT FREES THE FOOTER TO BE HELD (ADR-105 U3).**
-  `html[data-ft-reveal] #contact.station { position: sticky; bottom: 0; z-index: 0 }`
-  — one rule, ADR-105's whole geometry untouched, sticky a no-op at the document's
-  end. **A cover cannot also be the thing being uncovered.** ⚠ The gate is the
-  mechanism, not a refinement: ungated, sticky-bottom pulls the footer to the
-  frame's floor from scroll 0 and it paints straight through the TRANSPARENT era
-  stage over the live corridor. ⚠ Pinned, never transformed — the GIC reference
-  does not move either, and a main-thread follower lags by one wheel step.
+- ⚠ **THE FOOTER RISES OVER THE LIST (ADR-105 U4; U3's held bed is DELETED).**
+  `#musings:has(.mu[data-mu-ready]) ~ #contact.station { position: relative;
+z-index: 8; margin-top: calc(-1 * var(--ft-weld)) }`, keyed on the SAME stamp
+  as the musings runway's rise (`--mu-rise`, equal to `--ft-weld` by
+  arithmetic), so the footer's top enters the floor at the end of the dwell and
+  reaches the frame's top as the runway releases. The list drifts a quarter of
+  the rise and dims under it, and the footer's key visual glides at 0.75×
+  (inversa.com's footer, measured) — all three on CSS scroll timelines behind
+  `@supports`, because a main-thread follower lags by one wheel step. The
+  footer's copy lost its crest and its title is authored in capitals.
+  Rules: [`.claude/rules/musings.md`](musings.md) §The rise.
 - ⚠ **A CARD IS A FLEX ITEM AND A FACE, AND THE TWO NEVER FIGHT OVER ONE
   BOX (ADR-121).** The card's box is what `flex-grow` transitions; the face
   carries the plate, the clip, the ring, the glass and the arrival's aperture.

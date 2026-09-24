@@ -25,9 +25,12 @@ import { useMusingsScroll } from "./useMusingsScroll";
  * arrangement and nothing else. The list's sizing is solved from the count in
  * the sheet (the rows share what the open card leaves), never measured here.
  *
- * ⚠ **ON THE STAGE RUNG THE STATION IS TRANSPARENT AND `.mu__band` IS THE
- * COVER** (ADR-119 U1 §1): the corridor stays alive behind the whole beat and
- * dies on the band. Off it the station is opaque again and is its own cover.
+ * ⚠ **ON THE STAGE RUNG THE STATION IS TRANSPARENT AND THE FOOTER IS THE
+ * COVER** (ADR-119 U1 §1 → ADR-105 U4): the corridor stays alive behind the
+ * whole beat and dies under the footer as it rises over the pinned stage. The
+ * 100svh `.mu__band` that used to end the station was one viewport of empty
+ * stars, and it is deleted. Off the stage rung the station is opaque and the
+ * corridor has already died at the era stage.
  *
  * ⚠ **THE LIST IS ONE REF AND THE WRITER DELEGATES.** No per-note refs:
  * `useMusingsScroll` listens on the list for `pointerover` / `focusin` and
@@ -51,10 +54,9 @@ export function MusingsStation({
 }) {
   const runwayRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const bandRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLOListElement | null>(null);
 
-  useMusingsScroll(runwayRef, rootRef, listRef, posts.length, bandRef);
+  useMusingsScroll(runwayRef, rootRef, listRef, posts.length);
 
   return (
     <div className="mu" ref={rootRef} style={{ "--mu-n": posts.length } as CSSProperties}>
@@ -184,20 +186,6 @@ export function MusingsStation({
           )}
         </div>
       </div>
-
-      {/* ⚠ THE BAND IS THE STATION'S OPAQUE END, AND IT DOES TWO JOBS (ADR-119
-          U1 §4). On the stage rung the station itself is TRANSPARENT over the
-          live corridor, so something has to (a) be the corridor's kill edge —
-          an opaque surface that fills the frame, which is the only property
-          `about-voidwalker-handoff-boundaries` actually asserts — and (b) be
-          the thing that lifts off the held footer, which is what the reveal
-          means. One 100svh full-bleed box is both, and the two edges are the
-          same rect by construction rather than by two tuned numbers.
-
-          ⚠ It is `display: none` off the stage rung: at 961–1100, under PRM and
-          on the phone the STATION is opaque again and is its own cover, and a
-          second opaque viewport there would be a blank screen nobody asked for. */}
-      <div className="mu__band" ref={bandRef} aria-hidden="true" />
     </div>
   );
 }

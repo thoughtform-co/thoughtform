@@ -1,7 +1,7 @@
 "use client";
 
 import { CONTACT_EMAIL } from "@/lib/site/socials";
-import { arcTagline, footerColumns } from "@/lib/site/footer-nav";
+import { footerColumns } from "@/lib/site/footer-nav";
 
 export function SiteFooter() {
   const columns = footerColumns();
@@ -61,31 +61,22 @@ export function SiteFooter() {
         <div className="ft-foot__scrim" />
       </div>
 
-      {/* The crest — the reference set's shared opening: a hairline, the
-          wordmark, and the practice's own three beats tracked out opposite it.
-          ⚠ THE RULE LIVES HERE AND NEVER ON `.ft-foot`, whose box IS the
-          station's content box and whose identity the plate's negative insets
-          are measured against. It takes the bar's width contract so the line
-          at the top and the rule at the floor are the same two edges, which is
-          what makes the composition read as a frame rather than as a stack. */}
-      <div className="ft-foot__crest">
-        <p className="ft-foot__wordmark">Thoughtform</p>
-        {/* Derived from the manifest's own Arc beats, so the footer cannot
-            drift from the corridor it names. */}
-        <p className="ft-foot__tagline">{arcTagline()}</p>
-      </div>
-
       <div className="ft-foot__band">
         <div className="ft-foot__head">
           <p className="ft-foot__eyebrow">Let&rsquo;s build</p>
           {/* ⚠ A TITLE IS A NAME, NOT AN APHORISM (the copy law, ADR-078).
               "Plot your course." was exactly the shape that law bans, and the
               replacement may not be a second epigram — so this is the
-              practice's own claim, which is also what the hero opens on. */}
+              practice's own claim, which is also what the hero opens on.
+              ⚠ AUTHORED IN CAPITALS, NEVER TRANSFORMED (ADR-105 U4, owner: the
+              title "should be full caps"). The sans does not shout by
+              `text-transform` on this site (ADR-092; the ratchet pins it), so
+              the string is the caps — the services masthead's and the musings
+              head's own recipe. */}
           <h2 className="ft-foot__title">
-            Navigate intelligence
+            NAVIGATE INTELLIGENCE
             <br />
-            with your team.
+            WITH YOUR TEAM.
           </h2>
           <p className="ft-foot__lede">
             Tell me what your team is trying to do with AI. I&rsquo;ll reply with a route.

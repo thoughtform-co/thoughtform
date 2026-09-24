@@ -9,7 +9,7 @@
 import { describe, expect, it } from "vitest";
 import sitemap from "@/app/sitemap";
 import { getV7Content } from "@/lib/v7-parse";
-import { FOOTER_COLUMNS, footerColumns, arcTagline } from "@/lib/site/footer-nav";
+import { FOOTER_COLUMNS, footerColumns } from "@/lib/site/footer-nav";
 import { SOCIALS } from "@/lib/site/socials";
 
 /* Duplicated from app/(marketing)/page.tsx, exactly as
@@ -97,10 +97,6 @@ describe("the footer's link grid (ADR-105 U2)", () => {
       const source = SOCIALS.find((s) => s.icon === icon);
       expect(row?.href ?? null, icon).toBe(source?.href ?? null);
     }
-  });
-
-  it("the crest's tagline is the Arc's own three beats", () => {
-    expect(arcTagline()).toBe("Navigate · Encode · Build");
   });
 
   it("no heading is repeated and none is empty", () => {

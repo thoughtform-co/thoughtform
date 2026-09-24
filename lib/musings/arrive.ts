@@ -32,13 +32,16 @@
  * the threshold halved to keep the same 6svh (0.05 × 120), and the close rung
  * with it; 0.10 of the longer dwell would have held the notes shut for 12svh.
  *
- * ⚠ IT CLOSES AT `ROW_ARRIVE_END`, BEFORE THE HEAD LEAVES (`HEAD_LEAVE_AT`,
- * 0.965), so the exit is the entry run backwards: cards first, then the text.
- * `tests/lib/musings-row.test.ts` pins the order.
+ * ⚠ IT CLOSES ONLY ON THE WAY BACK UP (ADR-105 U4). Until then the list also
+ * folded at p 0.95, before the release — the exit was the entry run
+ * backwards. Since the footer rises OVER the pinned stage, the footer
+ * covering the list IS the exit: folding first would leave it rising over an
+ * empty frame, the dead space the owner named. So the list stays `in` under
+ * the footer and the footer lifts off a whole list on the way back. The fold
+ * still plays when the reader scrolls back up into the era stage.
  */
 export const ROW_ARRIVE_IN = 0.05;
 export const ROW_ARRIVE_OUT = 0.025;
-export const ROW_ARRIVE_END = 0.95;
 
 export type RowArrive = "await" | "in" | "out";
 
@@ -52,7 +55,6 @@ export type RowArrive = "await" | "in" | "out";
 export function rowArrive(prev: RowArrive | null, p: number): RowArrive {
   const at = prev ?? "await";
   if (!Number.isFinite(p)) return at;
-  if (p >= ROW_ARRIVE_END) return at === "in" ? "out" : at;
   if (p >= ROW_ARRIVE_IN) return "in";
   if (p <= ROW_ARRIVE_OUT) return at === "in" ? "out" : at;
   return at;

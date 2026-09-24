@@ -619,7 +619,7 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     }
   });
 
-  test("the musings band is an actually opaque cover when it kills the corridor", async ({
+  test("the rising footer is an actually opaque cover when it kills the corridor", async ({
     page,
   }, testInfo) => {
     desktopOnly(testInfo);
@@ -719,18 +719,17 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     /* ⚠ THE WAYPOINT IS THE KILL EDGE ITSELF, NOT A WALK PAST IT — AND THAT IS
        ARITHMETIC, NOT A PREFERENCE. Every earlier cover was at least three
        viewports tall, so "0.3 viewports inside it" still left the box covering
-       the frame. The band is EXACTLY `100svh`: one pixel past its top it covers
-       `vh − 1`, and what shows in the gap is the held footer beginning to be
-       revealed, which is correct behaviour and not a cover failure. So the
-       property is asserted where it is actually claimed — at the edge the
-       envelope reaches zero on, which is the band's own top.
+       the frame. Since ADR-105 U4 the cover is the FOOTER rising over the
+       pinned musings stage, and the envelope reaches zero on ITS top — the
+       frame the footer finishes covering the list. So the property is asserted
+       where it is actually claimed: at the footer's own top.
        ⚠ The clamp stays for the reason ADR-105 recorded: `scrollTo` clamps
        silently and `waitForFunction` does not, so a target past the document's
        end waits out its whole timeout on a page already where it was asked. */
     await page.evaluate(() => {
       const max = document.documentElement.scrollHeight - window.innerHeight;
-      const cover = document.querySelector<HTMLElement>("#musings .mu__band");
-      if (!cover) throw new Error("Missing .mu__band");
+      const cover = document.querySelector<HTMLElement>("#contact");
+      if (!cover) throw new Error("Missing #contact");
       const y = cover.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({ top: Math.max(0, Math.min(Math.ceil(y), max)), behavior: "instant" });
     });
@@ -742,8 +741,8 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     await settle(page);
 
     const state = await page.evaluate(() => {
-      const cover = document.querySelector<HTMLElement>("#musings .mu__band");
-      if (!cover) throw new Error("Missing .mu__band");
+      const cover = document.querySelector<HTMLElement>("#contact");
+      if (!cover) throw new Error("Missing #contact");
       const style = getComputedStyle(cover);
       return {
         top: cover.getBoundingClientRect().top,
@@ -768,12 +767,13 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
        that moves the cover onto a one-viewport station would find a green
        guard and a dead canvas. Coverage is the property either way. */
     expect(state.top).toBeLessThanOrEqual(0);
-    /* ⚠ ADR-119 U1: THE COVER IS THE BAND, NOT THE STATION. `#musings` is a
-       TRANSPARENT stage over the live corridor on this rung — it has no ground
-       of its own and cannot be what ends the ambient. Its opaque end is one
-       100svh full-bleed box at the foot of its runway, and the coverage
-       property below binds EXACTLY on it rather than by three viewports of
-       slack, which is a strengthening. */
+    /* ⚠ ADR-105 U4: THE COVER IS THE FOOTER. `#musings` is a TRANSPARENT stage
+       over the live corridor on this rung and cannot end the ambient; ADR-119
+       U1 gave it a 100svh opaque band at the foot of its runway for that, and
+       the band was one viewport of empty stars — the dead space the owner
+       named. The footer is welded up over the runway's last viewport and rises
+       OVER the pinned stage, opaque and promoted, so it is what fills the frame
+       when the ambient dies. */
     /* ⚠ ONE SUB-PIXEL OF TOLERANCE, AND IT IS ARITHMETIC RATHER THAN A
        LOOSENING (ADR-105 U2). ⚠ THE COVER IS NO LONGER THE STATION THIS
        PARAGRAPH IS ABOUT — ADR-119 moved it to `#musings`, three viewports
@@ -798,7 +798,7 @@ test.describe("About -> Voidwalker handoff boundaries", () => {
     );
     expect(state.ambient).toBe(false);
     expect(state.exit).toBe(false);
-    expect(cssAlpha(state.background), "the band owns an opaque ground").toBe(1);
+    expect(cssAlpha(state.background), "the footer owns an opaque ground").toBe(1);
     expect(state.backgroundImage, "the opaque station surface is painted").not.toBe("none");
   });
 });

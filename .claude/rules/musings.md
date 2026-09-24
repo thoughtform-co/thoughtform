@@ -38,15 +38,18 @@ the capable rung it is the `#voidwalker` recipe exactly: transparent, promoted,
 the corridor alive behind the whole beat, because an opaque station in normal
 flow can only arrive by TRAVELLING over a pinned stage that does not move —
 which is the "parallax" he named, and the complaint that deleted `#practice`.
-What kills the corridor and arms the footer's bed is one opaque 100svh
-`.mu__band` at the foot of its runway. Three rungs, and the lower two are
-byte-identical to what ADR-119 shipped:
+⚠ **SINCE [ADR-105 U4](../../sentinel/decisions/105-the-page-ends-on-a-bold-footer.md)
+(2026-09-24, owner: "when you scroll away from the muse section, I want the
+footer to scroll over it in a subtle way") WHAT KILLS THE CORRIDOR IS THE
+FOOTER, RISING OVER THE PINNED LIST.** ADR-119 U1's 100svh `.mu__band` and the
+footer's bed are deleted: the band was one viewport of empty stars, the dead
+space he named. Three rungs:
 
-| rung                                       | `data-mu-mode` | station              | cover       | footer bed          | glass |
-| ------------------------------------------ | -------------- | -------------------- | ----------- | ------------------- | ----- |
-| ≥1101, motion, live corridor, hologram era | `stage`        | transparent, z 6     | `.mu__band` | armed on the band   | blur  |
-| 961–1100 (list pinned, no stage)           | —              | opaque               | `#musings`  | armed on the runway | none  |
-| ≤960 / PRM / no JS                         | —              | opaque, flowing list | `#musings`  | never armed         | none  |
+| rung                                       | `data-mu-mode` | station              | cover      | the footer                       | glass |
+| ------------------------------------------ | -------------- | -------------------- | ---------- | -------------------------------- | ----- |
+| ≥1101, motion, live corridor, hologram era | `stage`        | transparent, z 6     | `#contact` | rises over the pinned list (z 8) | blur  |
+| 961–1100 (list pinned, no stage)           | —              | opaque               | `#musings` | rises over the pinned list (z 8) | none  |
+| ≤960 / PRM / no JS                         | —              | opaque, flowing list | `#musings` | follows in flow, no weld         | none  |
 
 ⚠ The PAGE `/musings` is a different surface with a different grammar — the
 SHEET (ADR-114), [`.claude/rules/sheet.md`](sheet.md). This station is a
@@ -205,27 +208,27 @@ var(--mu-note-col)`: the row (title over meta, the chip) in column 1, the
   follows the era's mode through a `MutationObserver` as well as scroll, or
   the weld lands on the first scroll instead of at load. ⚠ **A TRANSPARENT
   BOX STILL TAKES THE CLICK** — the welded station covers the era's live band
-  from era p ≈ 0.45, so it is `pointer-events: none` with two restores: the
-  band (opaque, over the held footer) and the runway once the row is `in`;
+  from era p ≈ 0.45, so it is `pointer-events: none` with one restore: the
+  runway once the list is `in` (the band's went with the band, ADR-105 U4);
   never `visibility: hidden` on the stage (the head decodes during `await`).
   ⚠ **AND TWO READOUTS FLIP AT THE PIN**: welded, the station's top crosses
   the viewport's middle 8svh BEFORE the era's exit begins, so the writer stamps
-  `data-station-edge="pin"` with the mode (cleared on the same three paths as
-  `data-ft-reveal`), `useLandingScroll` lights a pin-edge station when its top
+  `data-station-edge="pin"` with the mode (cleared on the writer's three
+  paths: the inert rung, unmount, a non-stage frame), `useLandingScroll` lights a pin-edge station when its top
   reaches the frame's top, and the rail's LOCAL reads the station the bus
   names rather than the first one holding the middle. Musings-only and
   explicit — the About → Voidwalker flip (about p 0.60) is a separate ruling.
   ⚠ **THE LABS WELD NOTHING**: `[data-mrl] #musings.station { --mu-weld: 0px }`
   in the shared lab sheet — the hidden era marker makes the writer stamp
-  `stage`, and there is no era to overlap. The band, the footer's arm edge, the
-  kill and the four ADR-030 §6 readers are untouched: they read live rects,
-  and the band is asserted on the runway's foot. `landing-page.spec.ts`'s page
+  `stage`, and there is no era to overlap — and no footer follows the lab
+  station, so its `--mu-rise` is 0 too. The kill and the four ADR-030 §6
+  readers read live rects. `landing-page.spec.ts`'s page
   baselines drift by design (one viewport shorter); the HUD pair does not.
 - ⚠ **ONE WRITER, AND IT RENDERS NOTHING, EVER.** `useMusingsScroll` reads
   one rect in a rAF and publishes `--mu-head` (the head's level),
   `data-mu-ready` and `data-mu-arrive` on `.mu`, `data-mu-mode` on the
-  STATION, `data-ft-reveal` on `<html>`, `data-mu-open` on one note, and
-  `data-live` on the head's cursor hosts. It returns nothing and holds no
+  STATION, `data-mu-open` on one note, and `data-live` on the head's cursor
+  hosts (`data-ft-reveal` went with the bed, ADR-105 U4). It returns nothing and holds no
   React state — the last `setState` (ADR-119's detented front index) went
   with the detent. A `setState` in the rAF is a re-render across every card,
   every frame, on a page running a WebGL corridor two stations up.
@@ -245,23 +248,22 @@ var(--mu-note-col)`: the row (title over meta, the chip) in column 1, the
   rule, `useCorridorExitScroll`'s next-station query,
   `about-voidwalker-handoff-boundaries`' cover case, and `services-ring-smoke`'s
   ambient-hold case — which reads it **twice**, once to solve the waypoint and
-  once to assert on it. All four name **`.mu__band`** on the stage rung and
-  ADR-121 moved none of them.
+  once to assert on it. All four name **`#contact`** on the stage rung since
+  ADR-105 U4 (they named `.mu__band` from ADR-119 U1 until then).
   ⚠ **NOT `data-corridor-kill`**: it is consulted BEFORE the whole chain, so a
-  stamp on the band would also win at 961–1100, under PRM and on the fallback,
+  stamp on the cover would also win at 961–1100, under PRM and on the fallback,
   where `#musings` is opaque again — and `killEl` is cached against
   `isConnected` and never re-queries when an attribute is removed from a
   connected element, so a writer-stamped version does not work either.
-  ⚠ **AND THE BAND IS EXACTLY 100svh**, so a guard that walks 0.3 viewports into
-  its top covers `vh − 1` and fails. The property is asserted at the edge it
-  is claimed on — the band's own top — and what shows one pixel past it is the
-  held footer beginning to be revealed, which is the reveal working.
+  ⚠ **THE PROPERTY IS ASSERTED AT THE COVER'S OWN TOP**, where the envelope
+  reaches zero — the frame the footer finishes covering the list — with the
+  one sub-pixel of tolerance the document's last element needs (ADR-105 U2).
   ⚠ **`?? contactEl` IS LOAD-BEARING**: `/claude-workshop` and the Trinny
   proposal mount the same hook from their own prototypes and have no
   `#musings`. On those routes the answer is still `#contact`.
 - ⚠ **THE COVER SATISFIES ITS CONTRACT BY INHERITANCE, SO DO NOT TAKE ITS
   GROUND.** Off the stage rung `.station:not(.hero)` paints `var(--void)` plus
-  the stars; on it the BAND paints the same pair full-bleed. The guard asserts
+  the stars; on it the cover is `#contact`, which paints the same pair. The guard asserts
   `alpha === 1` AND a background image, and a surface whose only ground is its
   content fails both.
 - ⚠ **THE WRITER HAS NO HANDLE ON THE STATION WITHOUT CLIMBING.** `stationRef`
@@ -456,24 +458,42 @@ sectionGlyphs.tsx`) are both hand-copies. ⚠ A post with no Arc tag draws NO
   body in, projection out, so the body never reaches a client chunk. The
   gallery lab draws it; nothing on the landing reads it yet.
 
-## The footer's bed (ADR-105 U3)
+## The rise: the footer over the list (ADR-105 U4)
 
-- **One rule, gated on one stamp.** `html[data-ft-reveal] #contact.station {
-position: sticky; bottom: 0; z-index: 0 }`, with `#musings.station`
-  `position: relative` activating its inherited `z-index: 2` above it.
-- ⚠ **UNGATED IT IS FATAL.** Sticky-bottom pulls the footer to the frame's floor
-  from scroll 0, and `#voidwalker` on the capable path is a pinned TRANSPARENT
-  stage — the footer would paint through the era stage over the live corridor.
-- ⚠ **THREE EXITS CLEAR THE STAMP** — the inert rung, unmount, and scrolling
-  back above the row. An armed stamp with no writer is the one failure this
-  cannot survive; a source ratchet counts the clears.
-- ⚠ **PINNED, NEVER TRANSFORMED.** The reference does not move either; it is
-  uncovered. A main-thread `translateY` off a scroll variable lags the
-  compositor by one wheel step, every step.
-- ⚠ **MEASURE THE REVEAL OFF THE STATION'S BOTTOM, NOT THE FOOTER'S RECT.** A
-  sticky-bottom box is PINNED for the whole reveal, so intersecting it with the
-  viewport reports the full viewport height at every stop — the capture's first
-  cut passed a footer that had not uncovered at all (1247 → 1247).
+- **One tail, one weld, one stamp.** The runway is
+  `calc(100svh + var(--mu-dwell) + var(--mu-rise))` and
+  `#musings:has(.mu[data-mu-ready]) ~ #contact.station` takes
+  `margin-top: calc(-1 * var(--ft-weld))`, `position: relative`, `z-index: 8`.
+  ⚠ **`--mu-rise` EQUALS `--ft-weld` (100svh), BY ARITHMETIC** — the footer's
+  top enters the floor at the end of the dwell and reaches the frame's top as
+  the runway releases, so the stage never unpins uncovered.
+  `musings-row.test.ts` pins the pair; neither station can read the other's
+  custom properties. ⚠ **`--mu-rise` is `0px` unless a footer follows**
+  (`#musings.station:has(~ #contact.station)`) — the labs have none.
+- ⚠ **THE WRITER'S CLOCK IS THE DWELL.** `travel = runway − vh − rise` (the
+  rise read off a probe box in the station), so `p` saturates at 1 through the
+  rise and every threshold keeps its meaning. ⚠ **THERE IS NO EXIT AT THE
+  BOTTOM**: `ROW_ARRIVE_END`, `HEAD_LEAVE_AT` and `HEAD_RETURN_BELOW` are
+  deleted — the footer covering the list is the exit, and scrolling back up
+  it lifts off a whole list.
+- ⚠ **THE DRIFT AND THE DIM ARE ON THE COMPOSITOR.** `.mu__stage` drifts
+  `translateY(0 → −0.25 × rise)` on the RUNWAY's view timeline
+  (`--mu-run`, `contain calc(100% − var(--mu-rise)) contain 100%`) and a void
+  veil on `::after` dims to 0.4, inside `@supports (animation-timeline:
+view())` and the rung. ⚠ Never `opacity` on the stage (glass notes,
+  ADR-097); the stage, never the station (the section clock). A browser
+  without timelines keeps the weld and the pin: the footer covers a still
+  list.
+- ⚠ **THE FOOTER IS THE CORRIDOR'S COVER** on the stage rung —
+  `useCorridorExitScroll`'s `musingsCover` is `contactEl ?? musingsEl`, the
+  ambient fading as the footer's top rises from 0.6 of the frame to its top.
+- ⚠ **NEVER A TRANSFORM ON THE FOOTER.** The margin is layout and the scroll
+  moves it; only its key visual glides (`.ft-foot`'s own view timeline,
+  site-footer.css).
+- **The capture's rise gates**: the footer's top at vh·(1 − k) at each quarter,
+  the stage pinned, the list `in` and the head whole under it, the drift and
+  the veil at k's share, no void between the two, the corridor alive at 0.25
+  and dead at 1, the readout on CONTACT from 0.75, a whole list scrolling back.
 
 ## What a still shows and a gate does not, and the reverse
 
@@ -497,7 +517,8 @@ position: sticky; bottom: 0; z-index: 0 }`, with `#musings.station`
   lets the list's count a title's LINES: `overflow: hidden` never shrinks the
   line boxes. A CUT title is asked separately — `scrollWidth` against
   `clientWidth`, because an ellipsis is a clip.
-- ⚠ **THE HUD'S READOUT IS SOMETHING THE STICKY BED CAN SILENTLY TAKE AWAY.**
+- ⚠ **THE HUD'S READOUT WAS SOMETHING THE STICKY BED COULD SILENTLY TAKE AWAY
+  (the bed is gone since ADR-105 U4; the branch stays, dormant).**
   `useLandingScroll` picked the active station from the PAINTED rect, last wins,
   `#contact` last — so once the bed armed the corner read CONTACT for the whole
   beat. ⚠ `offsetTop` does NOT rescue you: it reports the stuck position too
@@ -532,10 +553,10 @@ node scripts/capture-musings-row.mjs --lab --n 7 --vp 1280x720 --theme dark    #
 # and closes note 0, and leaving keeps note 2 open; Tab into note 1 opens it;
 # glass on every note on the stage rung in dark, on none in light or under
 # reduced motion; the head EMPTY off the pin and whole through the dwell; the
-# TR-only notch hit-tested from both ends; the bed, the readout and the
-# footer's reveal; every note >= 12px clear of the right rail's readouts; the
-# title's top on --band-top (ADR-121 U2).
-node scripts/capture-site-footer.mjs  --vp 1920x1247 --theme dark   # the bed must not move
+# TR-only notch hit-tested from both ends; the readout; every note >= 12px
+# clear of the right rail's readouts; the title's top on --band-top (ADR-121
+# U2); and the RISE (ADR-105 U4) — see §The rise.
+node scripts/capture-site-footer.mjs  --vp 1920x1247 --theme dark   # the footer's own contrast + plate
 # The gallery lab (/test/musings-gallery) — the directions under the head, on
 # the production station's `gallery` slot. Only the control (v0) fails the run;
 # a direction failing a gate is a finding. README: docs/design/musings-gallery/.

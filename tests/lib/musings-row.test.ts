@@ -4,14 +4,14 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { coordStamp as arcCoordStamp } from "@/components/arcs/chrome";
-import { ROW_ARRIVE_END, ROW_ARRIVE_IN, ROW_ARRIVE_OUT, rowArrive } from "@/lib/musings/arrive";
+import * as ARRIVE from "@/lib/musings/arrive";
+import { ROW_ARRIVE_IN, ROW_ARRIVE_OUT, rowArrive } from "@/lib/musings/arrive";
 import { MUSINGS_LIST_MAX } from "@/lib/musings/cards";
 import { beatOf, coverSpec, slugSeed, yearFraction } from "@/lib/musings/cover";
+import * as HEAD from "@/lib/musings/headDecode";
 import {
-  HEAD_LEAVE_AT,
   HEAD_LINE_STAGGER_S,
   HEAD_REARM_BELOW,
-  HEAD_RETURN_BELOW,
   HEAD_REVEAL_AT,
   headFrame,
   headRunEnd,
@@ -72,11 +72,14 @@ describe("rowArrive — the bounded burst", () => {
     expect(ROW_ARRIVE_IN).toBeLessThanOrEqual(0.125);
   });
 
-  it("closes at 0.95, before the head leaves, so the exit is the entry backwards", () => {
-    expect(ROW_ARRIVE_END).toBe(0.95);
-    expect(ROW_ARRIVE_END).toBeLessThan(HEAD_LEAVE_AT);
-    expect(rowArrive("in", 0.94)).toBe("in");
-    expect(rowArrive("in", 0.95)).toBe("out");
+  it("has NO exit at the bottom — the footer covering the list is the exit (ADR-105 U4)", () => {
+    // ⚠ Until U4 the list folded at p 0.95, before the release. The footer
+    // rises OVER the pinned stage now, and a list that folded first would leave
+    // it rising over an empty frame — the dead space the owner named. `p`
+    // saturates at 1 through the rise (the writer's clock is the dwell), so the
+    // list must stay `in` at 1, and the retired constant may not come back.
+    for (const p of [0.94, 0.95, 0.99, 1]) expect(rowArrive("in", p)).toBe("in");
+    expect("ROW_ARRIVE_END" in ARRIVE).toBe(false);
   });
 
   it("is a hysteresis, so resting on the edge does not re-trigger it", () => {
@@ -85,9 +88,8 @@ describe("rowArrive — the bounded burst", () => {
     expect(rowArrive("await", (ROW_ARRIVE_IN + ROW_ARRIVE_OUT) / 2)).toBe("await");
   });
 
-  it("closes on the way back and on the way past, and re-opens either way", () => {
+  it("closes on the way back up, and re-opens from there", () => {
     expect(rowArrive("in", 0.01)).toBe("out");
-    expect(rowArrive("in", 0.99)).toBe("out");
     expect(rowArrive("out", 0.5)).toBe("in");
   });
 
@@ -95,7 +97,6 @@ describe("rowArrive — the bounded burst", () => {
     // ⚠ Both paint nothing, but `out` plays the close and `await` has never
     // been seen — collapsing them shuts the row on the way IN.
     expect(rowArrive("await", 0.01)).toBe("await");
-    expect(rowArrive("await", 0.99)).toBe("await");
     expect(rowArrive("out", 0.01)).toBe("out");
   });
 
@@ -194,27 +195,27 @@ describe("headTarget — where the head is going", () => {
     }
   });
 
-  it("reveals just past the pin and leaves just before the release", () => {
+  it("reveals just past the pin, and stays whole under the rising footer", () => {
+    // ⚠ ADR-105 U4: no leave at the bottom. The footer covering the head IS the
+    // exit; `p` saturates at 1 through the rise and the stage stays parked.
     expect(headTarget(0, HEAD_REVEAL_AT, true)).toBe(1);
     expect(headTarget(0, 0.5, true)).toBe(1);
-    expect(headTarget(1, HEAD_LEAVE_AT, true)).toBe(0);
+    for (const p of [0.965, 0.99, 1]) expect(headTarget(1, p, true)).toBe(1);
     expect(headTarget(1, HEAD_REARM_BELOW - 0.001, true)).toBe(0);
+    expect("HEAD_LEAVE_AT" in HEAD).toBe(false);
+    expect("HEAD_RETURN_BELOW" in HEAD).toBe(false);
   });
 
-  it("is a hysteresis at both ends", () => {
+  it("is a hysteresis at the top", () => {
     expect(HEAD_REARM_BELOW).toBeLessThan(HEAD_REVEAL_AT);
-    expect(HEAD_RETURN_BELOW).toBeLessThan(HEAD_LEAVE_AT);
     const low = (HEAD_REARM_BELOW + HEAD_REVEAL_AT) / 2;
-    const high = (HEAD_RETURN_BELOW + HEAD_LEAVE_AT) / 2;
     expect(headTarget(1, low, true)).toBe(1);
     expect(headTarget(0, low, true)).toBe(0);
-    expect(headTarget(1, high, true)).toBe(1);
-    expect(headTarget(0, high, true)).toBe(0);
   });
 
-  it("shows the head whole on a deep reload parked inside the band", () => {
+  it("shows the head whole on a deep reload parked inside the dwell or the rise", () => {
     expect(headTarget(null, 0.5, true)).toBe(1);
-    expect(headTarget(null, 0.99, true)).toBe(0);
+    expect(headTarget(null, 1, true)).toBe(1);
   });
 
   it("leaves the state alone on a non-finite reading", () => {
@@ -222,8 +223,7 @@ describe("headTarget — where the head is going", () => {
     expect(headTarget(0, Number.NaN, true)).toBe(0);
   });
 
-  it("leaves AFTER the row has closed, so the exit is the entry backwards", () => {
-    expect(HEAD_LEAVE_AT).toBeGreaterThan(ROW_ARRIVE_END);
+  it("decodes BEFORE the list arrives (the owner's order)", () => {
     expect(HEAD_REVEAL_AT).toBeLessThan(ROW_ARRIVE_IN);
   });
 });
@@ -680,7 +680,11 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     // fill is `backwards` (a waiting note is a zero-width line; the last frame
     // is the cascade's own silhouette).
     expect(read(NOTE)).toContain('"--mu-slot": index');
-    const rung = sheet.slice(sheet.lastIndexOf(`@media ${RUNG} {`));
+    // The arrival's rung block — the LAST one before the drift's `@supports`
+    // block (ADR-105 U4), which carries a rung of its own.
+    const rung = sheet.slice(
+      sheet.lastIndexOf(`@media ${RUNG} {`, sheet.indexOf("@supports (animation-timeline: view())"))
+    );
     expect(flat(bodyOf(rung, '.mu[data-mu-ready][data-mu-arrive="in"] .mu-note'))).toContain(
       "animation:mu-unfoldvar(--mu-unfold-in)calc(var(--mu-slot,0)*var(--mu-unfold-step))backwards"
     );
@@ -808,25 +812,105 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(svc).toContain("--masthead-top-trim:0px");
   });
 
-  it("the runway is ONE dwell, and the dwell is the dial", () => {
+  it("the runway is ONE dwell plus the RISE, and the dwell is the dial", () => {
     const sheet = rules(read(SHEET));
-    expect(bodyOf(sheet, ".mu[data-mu-ready] .mu__runway")).toMatch(
-      /height:\s*calc\(100svh \+ var\(--mu-dwell\)\)/
+    expect(flat(bodyOf(sheet, ".mu[data-mu-ready] .mu__runway"))).toContain(
+      "height:calc(100svh+var(--mu-dwell)+var(--mu-rise))"
     );
     // 120svh since ADR-122 U1 (owner: "it scrolls too quickly into the next
     // section"); 60svh held the list for ~6 wheel steps at 1247px.
     expect(bodyOf(sheet, ".mu")).toMatch(/--mu-dwell:\s*120svh/);
   });
 
-  it("the writer clears the footer's stamp on every path that stops writing", () => {
-    // ⚠ `#contact` is `position: sticky; bottom: 0` while `data-ft-reveal` is
-    // present, and a sticky-bottom box is pulled UP to the frame's floor from
-    // anywhere above its seat. Three exits have to clear it: the inert rung,
-    // unmount, and scrolling back above the row.
+  /* ── The rise: the footer over the list (ADR-105 U4) ─────────────────── */
+
+  const FOOTER = "components/landing/v7/site-footer/site-footer.css";
+
+  it("the rise EQUALS the footer's weld, and exists only where a footer follows", () => {
+    // ⚠ ARITHMETIC, NOT A LITERAL. The stage stays pinned for `--mu-rise` after
+    // the dwell and `#contact` is pulled up by `--ft-weld`: equal, the footer's
+    // top enters the floor at the end of the dwell and reaches the frame's top
+    // exactly as the runway releases. Larger, the stage unpins uncovered;
+    // smaller, the footer arrives early over the dwell. Neither station can
+    // read the other's custom properties, so this is the only thing joining them.
+    const num = (body: string, re: RegExp) => Number(re.exec(body)?.[1]);
+    const sheet = rules(read(SHEET));
+    const footer = rules(read(FOOTER));
+    expect(bodyOf(sheet, "#musings.station")).toMatch(/--mu-rise:\s*0px/);
+    const rise = num(
+      bodyOf(sheet, "#musings.station:has(~ #contact.station)"),
+      /--mu-rise:\s*(\d+)svh/
+    );
+    const weld = num(bodyOf(footer, "#contact.station"), /--ft-weld:\s*(\d+)svh/);
+    expect(rise).toBe(100);
+    expect(weld).toBe(rise);
+  });
+
+  it("the footer is welded on the list's own stamp, promoted, and never sticky", () => {
+    // One stamp (`data-mu-ready`) turns on the runway's rise AND the footer's
+    // weld, so the two cannot disagree. z 8 is above the corridor's canvas host
+    // (z 3) and the promoted musings stage (z 6/7) — the footer is the cover.
+    const footer = rules(read(FOOTER));
+    const weld = flat(bodyOf(footer, "#musings:has(.mu[data-mu-ready]) ~ #contact.station"));
+    expect(weld).toContain("margin-top:calc(-1*var(--ft-weld))");
+    expect(weld).toContain("position:relative");
+    expect(weld).toContain("z-index:8");
+    // ⚠ U3's bed is DELETED — a sticky footer would be held under the list it
+    // now rises over, and its stamp may not come back on any file.
+    expect(footer).not.toMatch(/position:\s*sticky/);
+    for (const f of [HOOK, SHEET, FOOTER, STATION])
+      expect(read(f), `${f} still names the bed`).not.toMatch(
+        /setAttribute\("data-ft-reveal"|html\[data-ft-reveal\]/
+      );
+  });
+
+  it("the writer's clock is the DWELL — the rise is subtracted, so no threshold moved", () => {
     const hook = read(HOOK);
-    const clears = hook.match(/removeAttribute\("data-ft-reveal"\)/g) ?? [];
-    expect(clears.length).toBeGreaterThanOrEqual(3);
-    expect(hook).toContain('setAttribute("data-ft-reveal"');
+    expect(hook).toContain("runway.offsetHeight - vh - risePx()");
+    // The rise is read off a probe sized by the property (a custom property is
+    // a string until something lays it out), and the probe is cleaned up.
+    expect(hook).toContain("height:var(--mu-rise,0px)");
+    expect(hook).toContain("riseProbe?.remove()");
+  });
+
+  it("the list drifts and dims under the footer on the COMPOSITOR, behind @supports", () => {
+    // ⚠ A main-thread writer posing the stage against a compositor scroll lands
+    // one wheel step behind it (the Trinny hero curtain). So the drift is a
+    // scroll timeline — the runway's own — windowed on the rise, and the whole
+    // block is inside `@supports`, without which a browser lacking timelines
+    // runs the keyframes on the document timeline.
+    const sheet = rules(read(SHEET));
+    const sup = sheet.slice(sheet.indexOf("@supports (animation-timeline: view())"));
+    expect(sup).toContain(`@media ${RUNG} {`);
+    const stageSel = "#musings:has(~ #contact.station) .mu[data-mu-ready] .mu__stage";
+    const stage = flat(bodyOf(sup, stageSel));
+    expect(stage).toContain("animation:mu-underlinearboth");
+    expect(stage).toContain("animation-timeline:--mu-run");
+    expect(stage).toContain("animation-range:containcalc(100%-var(--mu-rise))contain100%");
+    // ⚠ NEVER opacity on the stage — the notes are glass and a translucent
+    // ancestor blinds their backdrop-filter (ADR-097). The dim is the veil.
+    expect(stage).not.toMatch(/opacity/);
+    expect(flat(bodyOf(sup, `${stageSel}::after`))).toContain("animation:mu-under-veillinearboth");
+    expect(flat(bodyOf(sup, ".mu[data-mu-ready] .mu__runway"))).toContain(
+      "view-timeline:--mu-runblock"
+    );
+    expect(flat(sheet)).toContain("transform:translateY(calc(-0.25*var(--mu-rise)))");
+  });
+
+  it("the footer's key visual glides at 0.75x on its own view timeline, behind @supports", () => {
+    // inversa.com's footer, measured: the box travels 1:1 and its wordmark at
+    // ~0.72x. The picture is `--ft-par` taller than its plate and slides from
+    // −par to 0 over the footer's entry; the plate already clips.
+    const footer = rules(read(FOOTER));
+    const sup = footer.slice(footer.indexOf("@supports (animation-timeline: view())"));
+    expect(sup).toContain(`@media ${RUNG} {`);
+    expect(flat(bodyOf(sup, ".ft-foot"))).toContain("view-timeline:--ftblock");
+    const img = flat(bodyOf(sup, ".ft-foot__plate-img"));
+    expect(img).toContain("height:calc(100%+var(--ft-par,0px))");
+    expect(img).toContain("animation-timeline:--ft");
+    expect(img).toContain("animation-range:entry0%entry100%");
+    expect(flat(bodyOf(footer, ".ft-foot"))).toContain("--ft-par:25svh");
+    expect(flat(bodyOf(footer, ".ft-foot__plate"))).toContain("overflow:hidden");
   });
 
   /* ── The weld (ADR-121 U3) ─────────────────────────────────────────── */
@@ -884,17 +968,16 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(seam).toBeLessThan(12); // 7.6 today — the era's own tail plus 1.2svh
   });
 
-  it("the welded station is hit-transparent, and the band and the arrived runway take their hits back", () => {
+  it("the welded station is hit-transparent, and the arrived runway takes its hits back", () => {
     // ⚠ A transparent box still takes the click: from era p ≈ 0.45 the station's
     // box covers the era's band tablist, live until the era goes inert at
-    // 0.92. `pointer-events` inherits, so one `none` and two `auto` restores.
+    // 0.92. `pointer-events` inherits, so one `none` and one `auto` restore
+    // (the band's restore went with the band, ADR-105 U4).
     const sheet = rules(read(SHEET));
     expect(bodyOf(sheet, '#musings[data-mu-mode="stage"].station')).toMatch(
       /pointer-events:\s*none/
     );
-    expect(bodyOf(sheet, '#musings[data-mu-mode="stage"] .mu__band')).toMatch(
-      /pointer-events:\s*auto/
-    );
+    expect(sheet).not.toMatch(/mu__band/);
     expect(
       bodyOf(
         sheet,
