@@ -367,5 +367,8 @@ nothing, and the stretch runs are two, each under a third of the screen.
 - The device read, for both parts.
 - WebKit's proximity radius against the two 282px stretches.
 - `height: 100svh` on `.vwd` if the figure's breathing reads wrong.
-- Vercel preview builds and their protection on this project — unverified before
-  the branch was pushed.
+- Vercel builds a preview per branch commit on this project (verified against
+  the `claude/morning-0wg116` ladder of 2026-09-16), and **Deployment
+  Protection is ON for every URL but the custom domains** (`ssoProtection:
+  all_except_custom_domains`) — the owner signs in to Vercel once, per phone
+  browser, before the first preview opens.
