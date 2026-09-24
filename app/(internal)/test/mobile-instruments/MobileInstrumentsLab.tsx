@@ -70,9 +70,9 @@ const PROOF_TRACKS: readonly ProofTrack[] = [
       "Every piece of work at Loop, and how much intelligence runs in it. The board lays out the estate: work streams as modules, clustered by the team that owns them.",
     proofs: [
       "Every stream on one board",
-      "47 Skills encoded",
-      "Reuse beats rebuilding",
-      "Draw stays within envelope",
+      "47 Skills encoded once",
+      "Adoption writes the layer",
+      "Automation runs on it",
     ],
     artifact: "map",
   },

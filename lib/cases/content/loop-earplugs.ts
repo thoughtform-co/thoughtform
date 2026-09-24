@@ -2154,12 +2154,13 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           chains: MAP_CHAINS,
           envelope: "WITHIN",
         },
-        // Four proof blocks in the left-column register, and each one is a
-        // reading the drawing beside it can be checked against (ADR-062,
+        // Four proof blocks in the left-column register. The first two are
+        // readings the drawing beside them can be checked against (ADR-062,
         // PRD §10): 27 modules on the board, 47 Skills summed by the five
-        // mains, the reuse figure below grade, and the envelope in the
-        // chrome. `value` is textual so the fourth can name a status rather
-        // than invent a count.
+        // mains. The last two are the seam the proposals already state, in
+        // the same words (ADR-124, owner 2026-09-24): adoption writes the
+        // layer, automation runs on it. The glyph keys stay; the reuse figure
+        // and the envelope remain on the console's own readings.
         //
         // ⚠ "14 TEAMS USING THE LAYER" LEFT THIS PANEL with ADR-062, by
         // owner ruling — a deliberate removal, not an erosion. It was the
@@ -2181,18 +2182,18 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           },
           {
             glyph: "encode",
-            title: "47 Skills encoded",
-            desc: "Judgment made reusable, and kept to one standard.",
+            title: "47 Skills encoded once",
+            desc: "Written down by the team that needed it, reused by every team after.",
           },
           {
             glyph: "reuse",
-            title: "Reuse beats rebuilding",
-            desc: "Nineteen of twenty-four configured streams drew on a shape already paid for.",
+            title: "Adoption writes the layer",
+            desc: "Each team learns on its own work, then writes down what good looks like.",
           },
           {
             glyph: "envelope",
-            title: "Draw stays within envelope",
-            desc: "Relative draw measured against workload. Never a price.",
+            title: "Automation runs on it",
+            desc: "The layer runs inside the tools they already use and hands the time back.",
           },
         ],
         context: [
@@ -2244,12 +2245,12 @@ export const LOOP_EARPLUGS_CASE: CaseDef = {
           ". The board lays out the estate: work streams as modules, clustered by the team that owns them. Open one and it comes apart into its configuration. Below grade runs the shared substrate — encoded once for one team, tapped by the next.",
         ],
         card: {
-          lede: "Every workstream at Loop mapped to the intelligence that runs it: 47 Skills encoded once and reused across teams, with the work deliberately left to people on the same record.",
+          lede: "The same move, team by team: embed in the work, write down what good looks like, build the tools around it, hand it over. First the studio, then every team at Loop.",
         },
         /* The arc's last beat — the sequence itself is documented on
-           `atl-films`, which opens it. ⚠ This lede still describes the MAP
-           where the beat claims the EXPANSION; flagged for the owner rather
-           than rewritten here, because the words are his. */
+           `atl-films`, which opens it. The lede claims the EXPANSION the
+           title makes (owner ruling, 2026-09-24, ADR-124); until then it
+           described the map, which the console beside it still draws. */
         arc: { step: "04", title: "We took it to the rest of the company" },
       },
       {
