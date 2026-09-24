@@ -61,8 +61,9 @@ A/B capture rules above). Newest first.
 Nothing here can measure a WebKit memory kill, so the era stage is fixed by
 construction and the reload is bisected with four preview builds he opens.
 
-- **Cycle B → ADR-123**, on `diag/phone-pile` (a worktree beside the main tree,
-  the one exception to direct-to-main, on his word): Part 2 — `#voidwalker` is
+- **Cycle B → ADR-123**, built on `diag/phone-pile` (a worktree beside the main
+  tree) and landed on `main` the same day on his word — Part 2 and A–C as four
+  commits, D held on the branch: Part 2 — `#voidwalker` is
   a runway and the stop on ≤700, `.vwd` sticky at `100dvh`, the eras on the
   dwell (`VOIDWALKER_PHONE_ERA_BAND`), two release targets, the hero on `svh`,
   programmatic scrolls on seats; Part 1 — the diag strip behind `?diag=phone`,

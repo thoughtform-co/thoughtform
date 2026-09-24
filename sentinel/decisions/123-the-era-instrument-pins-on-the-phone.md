@@ -1,8 +1,10 @@
 # ADR-123: The era instrument pins on the phone, and the pile's reload is bisected on the device
 
-- **Status:** Proposed (2026-09-24). Part 2 shipped and guarded on `diag/phone-pile`;
-  Part 1 is four preview builds the owner reads on his iPhone; the survivors land on
-  `main` as one commit after his read. Not on `main`.
+- **Status:** Accepted (2026-09-24, owner: "push to main"). Part 2 and builds A, B
+  and C are on `main` as four commits, before the device read; build D (the phone
+  ring off) stays on `diag/phone-pile` as a comparison build only. The ladder's
+  reading on the device is still the open question, and the four previews stand
+  for it.
 - **Surface:** the landing on a phone (≤700 for the era stage, ≤960 for the pile), on
   iOS Safari and iOS Chrome — both WebKit.
 - **Reverses:** [ADR-113](113-the-phone-locks-in.md) §1's "a sticky runway for
@@ -370,5 +372,5 @@ nothing, and the stretch runs are two, each under a third of the screen.
 - Vercel builds a preview per branch commit on this project (verified against
   the `claude/morning-0wg116` ladder of 2026-09-16), and **Deployment
   Protection is ON for every URL but the custom domains** (`ssoProtection:
-  all_except_custom_domains`) — the owner signs in to Vercel once, per phone
+all_except_custom_domains`) — the owner signs in to Vercel once, per phone
   browser, before the first preview opens.
