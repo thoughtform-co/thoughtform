@@ -536,6 +536,12 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     expect(state).toMatch(/^(pinned|covered)$/);
     await page.waitForTimeout(400);
     expect(await hold(), "the pile owns the frame but the hold is off").toBe("1");
+    // ADR-123 commit C: this deep in the pile the band is more than 1.5
+    // viewports away, so the ring's bakes are released.
+    expect(
+      await page.evaluate(() => document.documentElement.getAttribute("data-ring-near")),
+      "the ring is baked under the pile"
+    ).toBeNull();
 
     // At rest inside the pile the corridor's Canvas paints nothing.
     const f0 = await frames();
