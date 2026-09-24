@@ -184,8 +184,13 @@
   /* The runway. ⚠ THE DWELL IS THE ONE DIAL (ADR-121). One dwell holds the
      stage long enough for the head to decode (~0.7s) and the notes to arrive,
      and gives the reader a parked frame to hover in before the band takes
-     over. */
-  --mu-dwell: 60svh;
+     over. ⚠ 120svh SINCE ADR-122 U1 (owner: "it scrolls too quickly into the
+     next section"): at 60svh the list held for ~6 wheel steps at his 1247px
+     frame, five notes and a hover included; doubled, ~13. Every threshold on
+     the station's progress is a FRACTION of this, so a change here moves them
+     in svh — `ROW_ARRIVE_IN` was re-solved with it to keep the notes armed
+     6svh in. */
+  --mu-dwell: 120svh;
 
   /* ⚠ DECLARED, NOT INHERITED — ADR-067's STANDING TRAP, AND THE MECHANICAL
      GATE FOUND IT HERE EXACTLY AS IT FOUND IT ON THE FOOTER (ADR-105). The

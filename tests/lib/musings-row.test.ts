@@ -64,9 +64,10 @@ describe("rowArrive — the bounded burst", () => {
   });
 
   it("is re-solved for the ONE dwell, not the detented runway", () => {
-    // ADR-119 U2 opened at 0.26 of a runway that grew a step per card; the row
-    // pins for one 60svh dwell, and 0.26 of that would hold the cards shut for
-    // 16svh after the head had resolved. Inside the first eighth of the dwell.
+    // ADR-119 U2 opened at 0.26 of a runway that grew a step per card; the
+    // station pins for ONE dwell (120svh since ADR-122 U1, 60 before), and 0.26
+    // of that would hold the notes shut for ~31svh after the head had resolved.
+    // Inside the first eighth of the dwell; 0.05 is the old 6svh, re-solved.
     expect(ROW_ARRIVE_IN).toBeGreaterThanOrEqual(0.05);
     expect(ROW_ARRIVE_IN).toBeLessThanOrEqual(0.125);
   });
@@ -812,7 +813,9 @@ describe("the row is mirrored by hand between the writer and the sheet, so pin i
     expect(bodyOf(sheet, ".mu[data-mu-ready] .mu__runway")).toMatch(
       /height:\s*calc\(100svh \+ var\(--mu-dwell\)\)/
     );
-    expect(bodyOf(sheet, ".mu")).toMatch(/--mu-dwell:\s*60svh/);
+    // 120svh since ADR-122 U1 (owner: "it scrolls too quickly into the next
+    // section"); 60svh held the list for ~6 wheel steps at 1247px.
+    expect(bodyOf(sheet, ".mu")).toMatch(/--mu-dwell:\s*120svh/);
   });
 
   it("the writer clears the footer's stamp on every path that stops writing", () => {

@@ -20,21 +20,24 @@
  */
 
 /**
- * The thresholds, as fractions of the pinned travel (`--mu-dwell`, 60svh).
+ * The thresholds, as fractions of the pinned travel (`--mu-dwell`, 120svh
+ * since ADR-122 U1; 60svh before).
  *
  * ⚠ RE-SOLVED FOR THE SHORT DWELL (ADR-121). ADR-119 U2 opened at 0.26 of a
  * runway that grew one step per card (~100svh of travel at three posts, so
  * ~26svh into the pin); the row pins for ONE dwell of 60svh, and 0.26 of that
  * would hold the cards shut for 16svh after the head had resolved. 0.10 is 6svh
  * — the arrival is armed almost at once, and the writer's hold on the head's
- * level (~0.7s) is what actually paces it.
+ * level (~0.7s) is what actually paces it. ⚠ ADR-122 U1 DOUBLED THE DWELL, so
+ * the threshold halved to keep the same 6svh (0.05 × 120), and the close rung
+ * with it; 0.10 of the longer dwell would have held the notes shut for 12svh.
  *
  * ⚠ IT CLOSES AT `ROW_ARRIVE_END`, BEFORE THE HEAD LEAVES (`HEAD_LEAVE_AT`,
  * 0.965), so the exit is the entry run backwards: cards first, then the text.
  * `tests/lib/musings-row.test.ts` pins the order.
  */
-export const ROW_ARRIVE_IN = 0.1;
-export const ROW_ARRIVE_OUT = 0.05;
+export const ROW_ARRIVE_IN = 0.05;
+export const ROW_ARRIVE_OUT = 0.025;
 export const ROW_ARRIVE_END = 0.95;
 
 export type RowArrive = "await" | "in" | "out";

@@ -176,13 +176,17 @@ var(--mu-note-col)`: the row (title over meta, the chip) in column 1, the
   drawing. Touch on a ≥961 device: a tap opens and navigates in one gesture
   (left open, ADR-121).
 - **THE RUNWAY IS ONE DWELL** — `height: calc(100svh + var(--mu-dwell))`,
-  `--mu-dwell: 60svh`, the one dial. ADR-119 pinned one step per card (42svh
-  each) because a detent needs scroll; a hover row does not. The head's
-  thresholds on `p` are unchanged; the arrival's hysteresis
+  `--mu-dwell: 120svh`, the one dial. ⚠ **120 SINCE ADR-122 U1** (owner: _"it
+  scrolls too quickly into the next section"_): 60svh held the list for ~6
+  wheel steps at 1247px, five notes and a hover included; 120 holds it for
+  ~13. ADR-119 pinned one step per card (42svh each) because a detent needs
+  scroll; a hover list does not. Every threshold on `p` is a FRACTION of the
+  dwell, so changing it moves them in svh: the arrival's hysteresis
   (`lib/musings/arrive.ts`, the lifted `arriveNext`) opens at `ROW_ARRIVE_IN`
-  0.10 — re-solved for the short dwell — and closes at 0.95, before the head
-  leaves at 0.965. On the stage rung the station is ~1.6 viewports plus its
-  100svh band (ADR-119 U2 was ~3.2 at five posts).
+  **0.05** (was 0.10 at 60svh — the same 6svh, re-solved with the dial) and
+  closes at 0.95, before the head leaves at 0.965; the head reveals at 0.02,
+  2.4svh past the pin, which the weld's seam test still bounds under 12svh.
+  On the stage rung the station is ~2.2 viewports plus its 100svh band.
 - ⚠ **THE STATION IS WELDED ONE VIEWPORT OVER THE ERA STAGE, ON THE STAGE RUNG
   ONLY (ADR-121 U3, owner: "it takes a few scrolls to get to the elements").**
   A sticky stage pins only once its top reaches the frame's top and the head
@@ -351,7 +355,7 @@ mastheadData.ts` + `.mu__head*`): the two-column split sharing one top line,
   - Two registers stay: chrome and title SCRAMBLE, the paragraph TYPES. ⚠ The
     heading carries an `aria-label`, or a reader arriving mid-decode is handed
     the shuffle. The survey chrome fades with `--mu-head`.
-    ⚠ With a 60svh dwell `pinned` holds for 60svh of scroll: the head decodes on
+    ⚠ With a 120svh dwell `pinned` holds for 120svh of scroll: the head decodes on
     entry, the cards open after it, and the exit runs backwards
     (`data-mu-arrive="out"` at 0.95 before the head leaves at 0.965). The
     capture reads the head EMPTY at −0.3 and 1.15 and whole through 0.3–0.9.
@@ -417,8 +421,11 @@ sectionGlyphs.tsx`) are both hand-copies. ⚠ A post with no Arc tag draws NO
   ⚠ `next.config.mjs` must name `/` under `outputFileTracingIncludes` for
   `content/musings/**`: the tracer follows imports and this folder is opened by
   path, so a missing row works in dev and 500s on Vercel.
-- ⚠ **FIVE IS THE WINDOW, AND THE LANDING HAS THREE.** Until more notes are
-  written the list shows three; `/test/musings-row?n=5` is how five reads.
+- ⚠ **FIVE IS THE WINDOW, AND THE LANDING HAS FIVE (ADR-122 U1).** Two notes
+  were added to fill it, each translated from the owner's own published posts
+  through `thoughtform-tov` and dated on the post it came from (so they sit
+  under the September three). A sixth pushes the oldest off the homepage;
+  `/musings` lists them all.
   `cardsFor()` projects `author` for the byline (ADR-122) and still leaves
   `body` out.
 - ⚠ **PLACEHOLDER COPY LIVES IN THE LAB AND NOWHERE ELSE.** The site is live: a

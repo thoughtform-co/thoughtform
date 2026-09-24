@@ -286,8 +286,67 @@ parked, and 0% while the pointer sweeps the list twice (mean 4.7ms, p95 8.4ms).
 - **Five notes scroll inside the frame below roughly 1000px of height.** Options are
   a count that yields to the frame, a smaller open floor, or accepting the scroller.
   This is the owner's call.
-- **The landing publishes three notes.** The list shows three until more are
-  written. The placeholder host at `/test/musings-row?n=5` is how five reads today.
+- **The two new notes are drafts for the owner's read** (Update 1). They are
+  committed with `draft: false` so the homepage can be judged at five, and they
+  should not be pushed until he has read them.
 - **The gallery lab stays for now.** ADR-070 U35 says the losing directions go, with
   their guards, once the owner has read the winner live.
 - **Touch at ≥961px.** A tap still opens and navigates in one gesture, as in ADR-121.
+
+## Update 1: a longer hold, and five notes (2026-09-24)
+
+The owner, reading the pushed list live:
+
+> I do think that when you scroll from the musing sections, it scrolls too quickly
+> into the next section. I'm wondering whether you can show more articles. Now we
+> have three; maybe we can do five so it nicely fills the viewport.
+
+### The dwell doubles, and the arrival threshold halves with it
+
+- **`--mu-dwell` is 120svh, up from 60svh.** At 60svh, the list was fully shown
+  for about 636px of scroll at 1920×1247, about six wheel steps. At 120svh it
+  holds for about thirteen.
+- **Every threshold on the station's progress is a fraction of the dwell.**
+  Doubling the dial therefore doubles each one in svh.
+- **`ROW_ARRIVE_IN` goes from 0.10 to 0.05, and `ROW_ARRIVE_OUT` from 0.05 to
+  0.025.** This keeps the notes armed 6svh into the pin, as before. At 0.10 of
+  the longer dwell they would have stayed shut for 12svh after the head had
+  resolved.
+- **The head's thresholds stay as they are.** It reveals 2.4svh past the pin
+  instead of 1.2svh. The weld's seam test still holds the era-to-head seam under
+  12svh: it measures 8.8svh.
+
+### Two notes, translated from his own posts
+
+Only three notes were published. Two more were written with `thoughtform-tov` in
+translate mode. The sources were his staged Notion drafts of his published
+LinkedIn posts (`00_vince-voice-corpus/staged/musings-en/`):
+
+| note                    | sources                                                                        | date on the site |
+| ----------------------- | ------------------------------------------------------------------------------ | ---------------- |
+| The vibe is different   | "On cultivating an AI intuition" (2025-03-08) and "AI sycophancy" (2025-08-12) | 2025-08-12       |
+| The model has a dialect | "Is talking to Fable also giving you brain fog" (2026-07-16)                   | 2026-07-16       |
+
+The process:
+
+- **Every particular traces to a post**, and the fidelity repair ran sentence by
+  sentence. It restored one dropped hedge ("often"), deleted three additions and
+  removed one "because" the post had not made.
+- **`evals/mechanical.py --format musing --mode translate` passes both notes**,
+  with 0 gates failed.
+- **The dates are the source posts' dates.** Each note is a rewrite of thinking
+  he published then, and the September notes stay on top. A publication date is
+  his to set if he prefers one.
+- **Both are about 520 words, tagged `navigate`.** The playbook's 1,200-word band
+  is advisory under supply: the posts carry about 17 and 31 particulars.
+
+### Measured
+
+At 1920×1247, five notes end on the rails' last tick (1116) with no scroll,
+every title is 48px, and the sign lands 0px off the cover's floor at rest, on
+hover and on Tab. Perf shows 0% long frames. Light theme, 1280×720 and the phone
+all pass. At 1280×720 five notes scroll inside the list, as recorded above.
+
+⚠ **The post route pre-lists its slugs (`dynamicParams = false`).** A running
+`next dev` therefore returns 404 for a note added after it compiled the route,
+until the route recompiles. A build lists them fresh.
