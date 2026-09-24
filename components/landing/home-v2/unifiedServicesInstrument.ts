@@ -511,7 +511,13 @@ export const PROOF_STACK_SPLIT_MEDIA =
  * frame-rate the owner reads on his own device, not a number this tree can
  * measure — a fail there ships the flag off and nothing else moves.
  */
-export const SERVICES_CARD_RING_MOBILE = true;
+/* ⚠ ADR-123 commit D — THE BISECT'S LAST RUNG, NOT A DECISION. Off, the phone
+   takes ADR-108 §194's ship-with-fail answer: no dock, no ambient hold, no
+   fixed canvas, no band, no deck (ADR-115 goes with it). This build exists so
+   the owner can read whether the pile still reloads with the ring's whole
+   surface gone; the phone ring smokes and the seams spec's about-band stops
+   are EXPECTED RED on this commit and green on A–C. */
+export const SERVICES_CARD_RING_MOBILE = false;
 
 /**
  * The phone rung on which the ring mounts (ADR-108) — ONE string, THREE
