@@ -54,6 +54,24 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-24 — the last proof card claims the expansion, the Embedded card says what it does, the third reading is the layer (ADR-124)
+
+**Trigger:** the owner, in a dictated note after the week's client work: the
+thing the practice sells sits between adoption and automation and the site
+does not say so; the last proof card should be the climax; the Embedded card
+"doesn't say enough about what it does"; the console's Substrate reading is
+too vague.
+
+- **Cycle A, rows 4 and 6 → ADR-124:** copy on three existing surfaces, one
+  label rename that moves two Playwright pins and two rules together, and a
+  deliberate narrowing of ADR-111 (the marketing team named on the Embedded
+  card's baked face; the general claim stays in `serviceData.body`).
+- **Rules:** `services-ring.md` §The Proof map corrected to WORK ·
+  CONFIGURATION · LAYER; `proof.md`'s three mentions of the third reading.
+- **Left open:** the five band names on the dial (a separate commit, so it
+  reverts alone); card 2's "self-sufficient"; the prompt-tool-agent reading,
+  declined this round.
+
 ### 2026-09-24 — the phone: the era instrument pins, the pile's reload is bisected on the device (ADR-123)
 
 **Trigger:** the owner, on his iPhone (Safari and Chrome): the proof section
