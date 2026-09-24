@@ -197,13 +197,86 @@ mark travelling — was refused rather than built: it is a full-height vertical
 rule of the page's own (the rails are the verticals), and it earns nothing at
 three notes.
 
+## Round six (owner, 2026-09-24)
+
+> I like the cleanliness of V12, but I like the framing … of V13. I'm not
+> really a fan of horizontal dividers that don't close … with V13, the visual
+> doesn't need to be inside a frame. We already have an overarching frame …
+> it can be a bit more creative, like the diagrams we have behind my profile,
+> in the About section … It needs to be aligned on the right and the call to
+> action and the author should be aligned to the bottom of that visual …
+> another variant inspired by V1, with an overview on the left side and a
+> card on the right side … better versions that are tighter. The visual at the
+> center should be the thumbnail, of course, but with the dither glitch
+> effects we have for our other pictures as well.
+
+He confirmed "the dither glitch effects" means **ADR-112's glyph raster**, the
+services portrait's treatment: glyphs at rest, resolving into the picture
+through a pixel mosaic on hover. The notes have no photographs (ADR-119), so
+the picture is the note's drawn cover.
+
+| id    | name                        | what it is                                                                                                                                                                                                                                                                                                                                           |
+| ----- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v14` | Chapters · one cover, right | v13's folder cards with the one cover in the card's LAST column and **no frame of its own** — no border, no well, the drawing on the card's glass — drawn in the About register by default (`orbit`). The byline and the way in are pushed to the copy's foot, whose floor is solved onto the cover's: the capture measures 0.0px between them.      |
+| `v15` | Codex · cards               | v1 tightened: an index of v13's folder cards (thumbnail, title, meta) on the left, ONE card on the right as tall as what it says — band, the visual, title, excerpt, byline and the way in. The visual is the index row's thumbnail at card size, **as glyphs at rest, resolving on the card**. v1's contents list, readout and year strip are gone. |
+| `v16` | Codex · plates              | the same card, with v1's own index grammar tightened: outlined plates, the open one filled gold with its ink knocked out (ADR-089 U4), the thumbnail outside the plate where v1 hung its beat glyph.                                                                                                                                                 |
+
+**Three new covers**, on every direction's `?cover=` knob, each plotting the
+note's own record (its beat, its filing day, the year's other notes):
+
+- `orbit` — the About drawing itself (`AboutStage.tsx`): six rings on its
+  dash ladder, the graduated rim, four gold spokes, the halo as twelve month
+  dots with the note's month lit. About's spinning bodies are static and
+  re-seated as the record: the note lit on the gold track at its day, the
+  year elapsed up to it, the other notes on the outer ring.
+- `sigil` — the corridor's gateway sigil: four rings bent toward their
+  orbits (`SIGIL_RING_MORPHS`, part-way), the 30° graduation, NAVIGATE ·
+  ENCODE · BUILD on their leaders with the note's own beat lit.
+- `orrery` — the note's year as a tilted orbit (the tilt seeded off the
+  slug), the year's notes as bodies at their dates, the note itself a phase
+  disc lit to how much of its year had passed.
+
+Each drops to its own thumbnail below 140px (`@container mg-cv`): its spine
+and the beat's mark.
+
+**The glyph raster** (`directions/glyphRaster.ts` + `RasterCover.tsx`) copies
+`cardViz.applyGlyphRaster`'s ramp, normalisation, skip floor and scan rows,
+and imports the reveal's ramps and damp rate from `lib/services-ring/reveal.ts`.
+Three things differ from the services face because the source is a line
+drawing on a transparent canvas, not a photograph on a ground:
+
+- **the signal is coverage**;
+- **each glyph takes its cell's own colour**, so gold rings letter in gold;
+- **the glyphs read the drawing with every stroke three times thicker**,
+  because a 1px ring sampled as-is letters as a scatter of dots.
+
+The drawing is the live SVG, cloned with its computed paint inlined and drawn
+to a canvas, so the raster is never a second drawing. The cover's labels stay
+crisp DOM over it.
+
+Nothing flashes. The capture compares the two states' mean ink and fails a
+ratio past 2:1 either way; it measures about 1.1:1.
+
 ## Knobs
 
-`?v=v0…v13` · `?src=live|lab` (the three real notes, or the seven placeholders)
+`?v=v0…v16` · `?src=live|lab` (the three real notes, or the seven placeholders)
 · `?n=3|5|7` (placeholders only) · `?theme=light` · `?console=0` (hide the
 console) · a direction's own knobs, shown by the console only for the
-directions that declare them in the registry: `?cover=dial|raster|field`
-(v4, v6, v7, v8 and the Chapters variants — each with its own default: dial, dial, dial, raster, dial), `?thumbs=0` (v4, v12), `?dek=1` (v7).
+directions that declare them in the registry:
+
+- `?cover=dial|raster|field|orbit|sigil|orrery` — on v4, v6, v7, v8 and the
+  Chapters variants, each with its own default:
+
+  | direction              | default cover |
+  | ---------------------- | ------------- |
+  | v4 · v6 · v7 · v10–v13 | `dial`        |
+  | v8                     | `raster`      |
+  | v14 · v15 · v16        | `orbit`       |
+
+- `?thumbs=0` — v4, v12;
+- `?dek=1` — v7;
+- `?raster=0|1` — v15, v16; on by default.
+
 The console at the foot switches all of them.
 
 ⚠ **The placeholders live in `../musings-row/placeholders.ts` and their
@@ -227,7 +300,7 @@ else. The site is live, and a file in `content/musings/` publishes a page.
 ## Verifying
 
 ```bash
-node scripts/capture-musings-gallery.mjs            # 10 directions × 3 sources × 2 themes × 2 viewports
+node scripts/capture-musings-gallery.mjs            # 17 directions × 3 sources × 2 themes × 2 viewports
 node scripts/capture-musings-gallery.mjs --v v2 --src lab7 --vp 1280x720 --theme dark
 node scripts/capture-musings-gallery.mjs --v v7 --src lab7 --vp 1280x720 --theme dark   # the rail case
 node scripts/capture-musings-gallery.mjs --v v7 --q dek=1                               # the summary on the open card

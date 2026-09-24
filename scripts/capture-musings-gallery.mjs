@@ -45,7 +45,7 @@ const arg = (flag, dflt) => {
 const PORT = arg("--port", "3003");
 const VPS = arg("--vp", "1920x1247,1280x720").split(",");
 const THEMES = arg("--theme", "dark,light").split(",");
-const VS = arg("--v", "v0,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13").split(",");
+const VS = arg("--v", "v0,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15,v16").split(",");
 const SRCS = arg("--src", "live,lab5,lab7").split(",");
 const HEADED = process.argv.includes("--headed");
 const ROOT_OUT = arg("--out", "shots/musings-gallery");
@@ -227,7 +227,7 @@ for (const vp of VPS) {
             const cut = dev
               ? [
                   ...dev.querySelectorAll(
-                    ".mg-ch__title, .mg-sm__label, .mg-mm__title, .mg-ft__title, .mg-ft__rowtitle, .mg-cl__title, .mg-tx__subject, .mg-mb__title"
+                    ".mg-ch__title, .mg-sm__label, .mg-mm__title, .mg-ft__title, .mg-ft__rowtitle, .mg-cl__title, .mg-tx__subject, .mg-mb__title, .mg-ds__title"
                   ),
                 ]
                   .filter((el) => shown(el) && el.scrollWidth > el.clientWidth + 1)
@@ -285,6 +285,67 @@ for (const vp of VPS) {
           await page.evaluate(() => document.activeElement?.blur());
         }
 
+        /* Round six's own questions (findings, like every direction's).
+           v14: the byline and the way in sit on the cover's floor, and the
+           cover carries no frame of its own. v15 · v16: the card's visual
+           rests as GLYPHS, resolves on the card, and the two states' mean ink
+           stays one transition (ADR-097 U12 — no flash). */
+        const own = [];
+        if (v === "v14") {
+          const a = await page.evaluate(() => {
+            const it = document.querySelector('[data-mg-variant="right"] .mg-ch__item[data-mg-on]');
+            const cover = it?.querySelector(".mg-ch__cover");
+            const sign = it?.querySelector(".mg-ch__sign");
+            if (!cover || !sign) return null;
+            const cs = getComputedStyle(cover);
+            return {
+              delta: sign.getBoundingClientRect().bottom - cover.getBoundingClientRect().bottom,
+              border: parseFloat(cs.borderTopWidth) + parseFloat(cs.borderLeftWidth),
+              bg: cs.backgroundColor,
+            };
+          });
+          if (!a) own.push("no open card");
+          else {
+            if (Math.abs(a.delta) > 1.5)
+              own.push(`the sign sits ${Math.round(a.delta * 10) / 10}px off the cover's floor`);
+            if (a.border > 0 || a.bg !== "rgba(0, 0, 0, 0)")
+              own.push(`the cover is framed (${a.border}px, ${a.bg})`);
+          }
+        }
+        let raster = null;
+        if (v === "v15" || v === "v16") {
+          const sel = ".mg-ds__card[data-mg-on] .mg-rc";
+          const rest = await page
+            .waitForFunction((s) => document.querySelector(s)?.dataset.mgRaster === "rest", sel, {
+              timeout: 8000,
+            })
+            .then(() => true)
+            .catch(() => false);
+          if (!rest) own.push("the card's visual never rested as glyphs");
+          else {
+            await page.locator(`.mg-ds__card[data-mg-on] .mg-ds__stage`).first().hover();
+            const whole = await page
+              .waitForFunction((s) => document.querySelector(s)?.dataset.mgLevel === "1", sel, {
+                timeout: 5000,
+              })
+              .then(() => true)
+              .catch(() => false);
+            if (!whole) own.push("the card's visual never resolved");
+            raster = await page.evaluate((s) => {
+              const d = document.querySelector(s)?.dataset ?? {};
+              return { rest: Number(d.mgInkRest), clean: Number(d.mgInkClean) };
+            }, sel);
+            /* One transition, not a flash: the resolved drawing may be no more
+               than twice as inky as the glyphs, or half. */
+            if (raster.rest > 0 && raster.clean > 0) {
+              const ratio = raster.clean / raster.rest;
+              if (ratio > 2 || ratio < 0.5)
+                own.push(`rest→resolved ink ratio ${Math.round(ratio * 100) / 100}`);
+            }
+            await page.mouse.move(6, Math.round(H / 2));
+          }
+        }
+
         const fails = [];
         if (m.overflowX) fails.push("the page scrolls sideways");
         if (!m.box) fails.push("no device");
@@ -308,10 +369,11 @@ for (const vp of VPS) {
             fails.push(`hover selected ${hover.got.join(",")} not ${hover.want}`);
           if (focus && (focus.got.length !== 1 || focus.got[0] !== focus.want))
             fails.push(`focus selected ${focus.got.join(",")} not ${focus.want}`);
+          fails.push(...own);
         }
         if (errors.length) fails.push(`page errors: ${errors.join(" | ")}`);
 
-        const row = { vp, theme, v, src: srcKey, ...m, hover, focus, fails };
+        const row = { vp, theme, v, src: srcKey, ...m, hover, focus, raster, fails };
         report.push(row);
         const verdict = fails.length ? (v === "v0" ? "FAIL" : "FIND") : "ok  ";
         console.log(
@@ -319,6 +381,7 @@ for (const vp of VPS) {
             `box ${m.box ? `${m.box.y}–${m.box.b}` : "—"} floor ${m.vh - m.railEnd} ` +
             `tele ${m.teleLeft != null && m.box ? Math.round((m.teleLeft - m.box.r) * 10) / 10 : "—"}` +
             `${m.cut.length ? ` · cut ${m.cut.length}` : ""}` +
+            `${raster ? ` · ink ${raster.rest}→${raster.clean}` : ""}` +
             (fails.length ? `\n      · ${fails.join("\n      · ")}` : "")
         );
         if (fails.length) {

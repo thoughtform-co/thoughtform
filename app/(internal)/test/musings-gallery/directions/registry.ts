@@ -1,8 +1,16 @@
 import type { ComponentType } from "react";
 
-import { Chapters, ChaptersCards, ChaptersDated, ChaptersGrown, ChaptersLedger } from "./Chapters";
+import {
+  Chapters,
+  ChaptersCards,
+  ChaptersDated,
+  ChaptersGrown,
+  ChaptersLedger,
+  ChaptersRight,
+} from "./Chapters";
 import { Codex } from "./Codex";
 import { Columns } from "./Columns";
+import { DossierCards, DossierPlates } from "./Dossier";
 import { Feature } from "./Feature";
 import type { DirectionProps } from "./kit";
 import { MemoryMap } from "./MemoryMap";
@@ -48,6 +56,9 @@ export const MG_DIRECTION_IDS = [
   "v11",
   "v12",
   "v13",
+  "v14",
+  "v15",
+  "v16",
 ] as const;
 export type MgDirectionId = (typeof MG_DIRECTION_IDS)[number];
 
@@ -55,7 +66,7 @@ export const isDirectionId = (v: string | null): v is MgDirectionId =>
   (MG_DIRECTION_IDS as readonly string[]).includes(v ?? "");
 
 /** The knobs a direction reads; the shell shows a control for each. */
-export type MgKnob = "cover" | "thumbs" | "dek";
+export type MgKnob = "cover" | "thumbs" | "dek" | "raster";
 
 export interface MgDirection {
   id: MgDirectionId;
@@ -65,11 +76,13 @@ export interface MgDirection {
   /** What it was built from — a reference, or the seed. */
   provenance: string;
   /** The round it was built in. */
-  round: 1 | 2 | 3 | 4 | 5;
+  round: 1 | 2 | 3 | 4 | 5 | 6;
   /** The knobs it reads, in the order the console shows them. */
   knobs?: readonly MgKnob[];
   /** Its own default cover, when it draws one and `?cover=` is unset. */
   cover?: CoverKind;
+  /** Its own default for the glyph raster, when it reads `?raster=`. */
+  raster?: boolean;
 }
 
 export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
@@ -204,6 +217,41 @@ export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
     knobs: ["cover"],
     cover: "dial",
   },
+  v14: {
+    id: "v14",
+    label: "Chapters · one cover, right",
+    thesis:
+      "v13's folder cards with the one cover UNFRAMED on the right, drawn in the About register, and the byline and the way in on the cover's floor.",
+    provenance:
+      "v13 (the owner's pick over v12) and the diagrams behind the portrait in #about (AboutStage.tsx) — round six.",
+    round: 6,
+    knobs: ["cover"],
+    cover: "orbit",
+  },
+  v15: {
+    id: "v15",
+    label: "Codex · cards",
+    thesis:
+      "v1 tightened: an index of v13's folder cards on the left, one card on the right whose visual is the row's thumbnail as glyphs, resolving on the card.",
+    provenance:
+      "v1 (Codex), v13's cards, and ADR-112's glyph raster — the services portrait's treatment — round six.",
+    round: 6,
+    knobs: ["cover", "raster"],
+    cover: "orbit",
+    raster: true,
+  },
+  v16: {
+    id: "v16",
+    label: "Codex · plates",
+    thesis:
+      "v1 tightened in its own grammar: outlined plates with the open one filled, the thumbnail outside each plate, the same raster card on the right.",
+    provenance:
+      "v1 (Codex) and ADR-089 U4's fill among outlines, with ADR-112's glyph raster — round six.",
+    round: 6,
+    knobs: ["cover", "raster"],
+    cover: "orbit",
+    raster: true,
+  },
 };
 
 /**
@@ -228,4 +276,7 @@ export const MG_GALLERIES: Readonly<
   v11: ChaptersCards,
   v12: ChaptersDated,
   v13: ChaptersGrown,
+  v14: ChaptersRight,
+  v15: DossierCards,
+  v16: DossierPlates,
 };

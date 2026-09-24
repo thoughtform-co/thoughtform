@@ -72,9 +72,20 @@ import { NoteCover, NoteThumb, coverKindOf } from "./NoteCover";
  *     seating itself to the right. Nothing appears beside the thumbnail; the
  *     thumbnail becomes the picture. The growth is the card's own grid column
  *     transitioning, on the row's clock.
+ *
+ * ⚠ ROUND SIX (owner, 2026-09-24: v13's framing over v12's open rules — "I'm
+ * not really a fan of horizontal dividers that don't close" — but the visual
+ * "doesn't need to be inside a frame. We already have an overarching frame …
+ * It needs to be aligned on the right and the call to action and the author
+ * should be aligned to the bottom of that visual"):
+ *   · `right` (v14): v13's cards with the ONE cover in the card's LAST
+ *     column, unframed — no border, no well, the drawing on the card's own
+ *     glass, in the About register by default (`orbit`) — and the byline and
+ *     the way in pushed to the foot of the copy, whose floor is solved onto
+ *     the cover's.
  */
 
-export type ChaptersVariant = "default" | "ledger" | "cards" | "dated" | "grown";
+export type ChaptersVariant = "default" | "ledger" | "cards" | "dated" | "grown" | "right";
 
 const VARIANT_ID: Record<ChaptersVariant, string> = {
   default: "v4",
@@ -82,6 +93,7 @@ const VARIANT_ID: Record<ChaptersVariant, string> = {
   cards: "v11",
   dated: "v12",
   grown: "v13",
+  right: "v14",
 };
 
 export function Chapters({
@@ -91,15 +103,18 @@ export function Chapters({
 }: DirectionProps & { variant?: ChaptersVariant }) {
   const ref = useRef<HTMLDivElement | null>(null);
   useLabSelect(ref);
-  const cover = coverKindOf(knobs?.cover, "dial");
+  const cover = coverKindOf(knobs?.cover, variant === "right" ? "orbit" : "dial");
   /* The ledger has no thumbnails; a card's thumbnail is its identity mark, so
      it is not a knob there (and on `grown` it IS the cover); the default and
      the dated rows keep `?thumbs=0`. */
   const thumbs =
     variant === "cards" ||
     variant === "grown" ||
+    variant === "right" ||
     ((variant === "default" || variant === "dated") && knobs?.thumbs !== "0");
-  const plate = variant === "cards" || variant === "grown";
+  const plate = variant === "cards" || variant === "grown" || variant === "right";
+  /* v13 and v14 draw ONE cover per card, at two sizes. */
+  const oneCover = variant === "grown" || variant === "right";
 
   return (
     <div
@@ -121,11 +136,13 @@ export function Chapters({
               data-mg-slug={p.slug}
               data-mg-on={onAtRest(i)}
             >
-              {variant === "grown" ? (
-                /* The one cover: a sibling of the row, seated in the card's
-                   first column across both of its rows, so the same element
-                   is the thumbnail at rest and the picture when open. */
-                <div className="mg-ch__cover mg-ch__cover--grown" aria-hidden="true">
+              {oneCover ? (
+                /* The one cover: a sibling of the row, seated in its own grid
+                   column across both of the card's rows (the first on v13,
+                   the last on v14), so the same element is the thumbnail at
+                   rest and the picture when open. `.mg-cvbox` is the
+                   container its compact form is asked of. */
+                <div className="mg-ch__cover mg-ch__cover--grown mg-cvbox" aria-hidden="true">
                   <NoteCover post={p} posts={posts} kind={cover} />
                 </div>
               ) : null}
@@ -143,7 +160,7 @@ export function Chapters({
                     </span>
                     <Chip beat={beat} className="mg-ch__chip" />
                   </>
-                ) : variant === "grown" ? (
+                ) : oneCover ? (
                   /* The grown card's row is the card's text alone — the cover
                      is the sibling above. */
                   <>
@@ -197,7 +214,7 @@ export function Chapters({
                         <ReadButton post={p} className="mg-ch__read" />
                       </div>
                     </div>
-                    {variant === "grown" ? null : (
+                    {oneCover ? null : (
                       <div className={`mg-ch__cover${plate ? "" : " mg-plate"}`} aria-hidden="true">
                         <NoteCover post={p} posts={posts} kind={cover} />
                       </div>
@@ -234,4 +251,9 @@ export function ChaptersDated(props: DirectionProps) {
 /** v13 — the cards, the thumbnail growing into the cover. */
 export function ChaptersGrown(props: DirectionProps) {
   return <Chapters {...props} variant="grown" />;
+}
+
+/** v14 — v13 with the one cover unframed, on the right. */
+export function ChaptersRight(props: DirectionProps) {
+  return <Chapters {...props} variant="right" />;
 }

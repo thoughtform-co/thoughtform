@@ -18,6 +18,7 @@ import {
 import { BEAT_PATHS, ENCODE_CELLS } from "@/components/landing/home-v2/musings/MusingCover";
 import { beatOf, slugSeed, yearFraction } from "@/lib/musings/cover";
 
+import { CoverGlyph, OrbitCover, OrreryCover, SigilCover } from "./AboutCovers";
 import { BEAT_NAME, CoverField, type GalleryPost } from "./kit";
 
 /**
@@ -47,8 +48,17 @@ import { BEAT_NAME, CoverField, type GalleryPost } from "./kit";
  * pointing the wrong way).
  */
 
-export type CoverKind = "dial" | "raster" | "field";
-export const COVER_KINDS: readonly CoverKind[] = ["dial", "raster", "field"];
+export type CoverKind = "dial" | "raster" | "field" | "orbit" | "sigil" | "orrery";
+export const COVER_KINDS: readonly CoverKind[] = [
+  "dial",
+  "raster",
+  "field",
+  "orbit",
+  "sigil",
+  "orrery",
+];
+/** The kinds drawn as one SVG in a square box — what the glyph raster reads. */
+export const DRAWN_KINDS: readonly CoverKind[] = ["dial", "orbit", "sigil", "orrery"];
 
 /** The knob's value if it names a kind, else the direction's own default. */
 export const coverKindOf = (v: string | undefined, dflt: CoverKind): CoverKind =>
@@ -67,29 +77,6 @@ const INK: Record<DialInk, string> = {
 function dayOfYear(iso: string): number {
   const [y, m, d] = iso.split("-").map(Number);
   return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 1)) / 86_400_000) + 1;
-}
-
-function Glyph({ post, size }: { post: GalleryPost; size: number }) {
-  const beat = beatOf(post.tags);
-  if (!beat) return null;
-  return (
-    <svg
-      x={-size / 2}
-      y={-size / 2}
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      className="mg-dial__glyph"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-    >
-      {BEAT_PATHS[beat].map((d) => (
-        <path key={d} d={d} />
-      ))}
-      {beat === "encode" ? <path fill="currentColor" stroke="none" d={ENCODE_CELLS} /> : null}
-    </svg>
-  );
 }
 
 /** The dial. `compact` is the row's thumbnail: the rings, the mark, the hand. */
@@ -156,7 +143,7 @@ function Dial({
         })}
       <line x1={hand0.x} y1={hand0.y} x2={hand1.x} y2={hand1.y} className="mg-dial__hand" />
       <rect x={at.x - 4.5} y={at.y - 4.5} width={9} height={9} className="mg-dial__lit" />
-      <Glyph post={post} size={compact ? 50 : 44} />
+      <CoverGlyph beat={beatOf(post.tags)} size={compact ? 50 : 44} />
     </svg>
   );
 }
@@ -237,6 +224,28 @@ export function NoteCover({
 }) {
   const beat = beatOf(post.tags);
   if (kind === "field") return <CoverField post={post} posts={posts} className="mg-cover__field" />;
+  /* Round six's three: About's designation PAIR on the lawful diagonal
+     (TR/BL), lettering what the card prints nowhere else — the day, the year;
+     TR/BL because a card's chip already sits at the cover's top-left. */
+  if (kind === "orbit" || kind === "sigil" || kind === "orrery") {
+    return (
+      <div className={`mg-cover mg-cover--${kind}`} aria-hidden="true">
+        <span className="mg-cover__label mg-cover__label--tr mg-cover__label--dim">
+          Day {dayOfYear(post.date)}
+        </span>
+        <span className="mg-cover__label mg-cover__label--bl">{post.date.slice(0, 4)}</span>
+        <div className="mg-cover__dial">
+          {kind === "orbit" ? (
+            <OrbitCover post={post} posts={posts} />
+          ) : kind === "sigil" ? (
+            <SigilCover post={post} posts={posts} />
+          ) : (
+            <OrreryCover post={post} posts={posts} />
+          )}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={`mg-cover mg-cover--${kind}`} aria-hidden="true">
       <span className="mg-cover__label mg-cover__label--tl">

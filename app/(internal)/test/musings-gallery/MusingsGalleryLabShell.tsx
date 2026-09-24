@@ -44,9 +44,10 @@ import {
  * lesson: a wait on `location.search` passed before the page had read it).
  *
  * ── THE URL ───────────────────────────────────────────────────────────────
- * `?v=v0…v9` · `?src=live|lab` · `?n=3|5|7` · `?theme=light` · `?console=0`,
- * plus a direction's own knobs (`?cover=dial|raster|field` · `?thumbs=0` ·
- * `?dek=1`, each shown by the console only for a direction that declares it
+ * `?v=v0…v16` · `?src=live|lab` · `?n=3|5|7` · `?theme=light` · `?console=0`,
+ * plus a direction's own knobs (`?cover=dial|raster|field|orbit|sigil|orrery`
+ * · `?thumbs=0` · `?dek=1` · `?raster=0|1`, each shown by the console only for
+ * a direction that declares it
  * in the registry), adopted in a MOUNT EFFECT (never `useSearchParams`, a
  * CSR bailout of the whole route), each setter writing only its own
  * parameter.
@@ -81,6 +82,8 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
   const [cover, setCover] = useState<CoverKind | null>(null);
   const [thumbs, setThumbs] = useState(true);
   const [dek, setDek] = useState(false);
+  /* `null` = the direction's own default (the registry's). */
+  const [raster, setRaster] = useState<boolean | null>(null);
   const [consoleMounted, setConsoleMounted] = useState(true);
   const [adopted, setAdopted] = useState(false);
   const setMode = useThemeStore((s) => s.setMode);
@@ -100,6 +103,8 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
     if (qc && COVER_KINDS.includes(qc)) setCover(qc);
     if (q.get("thumbs") === "0") setThumbs(false);
     if (q.get("dek") === "1") setDek(true);
+    if (q.get("raster") === "0") setRaster(false);
+    if (q.get("raster") === "1") setRaster(true);
     if (q.get("console") === "0") setConsoleMounted(false);
     setAdopted(true);
   }, []);
@@ -178,10 +183,16 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
   const knobsOf = direction.knobs ?? [];
   /* The effective cover: the URL's if set, else the direction's own. */
   const coverShown = cover ?? direction.cover ?? "dial";
+  const rasterShown = raster ?? direction.raster ?? false;
   const stamp = adopted
-    ? `${v}|${src}|${src === "live" ? live.length : n}|${theme}|${coverShown}|${thumbs ? 1 : 0}|${dek ? 1 : 0}`
+    ? `${v}|${src}|${src === "live" ? live.length : n}|${theme}|${coverShown}|${thumbs ? 1 : 0}|${dek ? 1 : 0}|${rasterShown ? 1 : 0}`
     : undefined;
-  const knobs = { cover: coverShown, thumbs: thumbs ? "1" : "0", dek: dek ? "1" : "0" };
+  const knobs = {
+    cover: coverShown,
+    thumbs: thumbs ? "1" : "0",
+    dek: dek ? "1" : "0",
+    raster: rasterShown ? "1" : "0",
+  };
 
   return (
     <div
@@ -314,6 +325,20 @@ export function MusingsGalleryLabShell({ hudHtml, bodyClass, live, lab, today }:
                   }}
                 >
                   dek
+                </button>
+              ) : null}
+              {knobsOf.includes("raster") ? (
+                <button
+                  type="button"
+                  className="mrl-btn"
+                  data-on={rasterShown || undefined}
+                  aria-pressed={rasterShown}
+                  onClick={() => {
+                    setRaster(!rasterShown);
+                    writeParam("raster", rasterShown ? "0" : "1");
+                  }}
+                >
+                  raster
                 </button>
               ) : null}
             </div>

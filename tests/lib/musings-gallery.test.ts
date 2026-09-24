@@ -25,6 +25,22 @@ import {
   type GalleryPost,
 } from "../../app/(internal)/test/musings-gallery/directions/kit";
 import { lanesOf } from "../../app/(internal)/test/musings-gallery/directions/Missions";
+import {
+  ellipseAtBearing,
+  phasePath,
+} from "../../app/(internal)/test/musings-gallery/directions/AboutCovers";
+import {
+  GLYPH_RAMP,
+  MOSAIC_MIN,
+  cellStats,
+  glyphAlpha,
+  glyphIndex,
+  mosaicCols,
+  normaliseCover,
+  poppedCells,
+  popHash,
+} from "../../app/(internal)/test/musings-gallery/directions/glyphRaster";
+import { revealPop } from "@/lib/services-ring/reveal";
 import { LAB_OUTLINES } from "../../app/(internal)/test/musings-gallery/outlines";
 import { LAB_MUSINGS } from "../../app/(internal)/test/musings-row/placeholders";
 import { cardsFor } from "@/lib/musings/cards";
@@ -85,6 +101,9 @@ describe("the lab stays out of the station's own machinery", () => {
       const d = MG_DIRECTIONS[id];
       if (d.knobs?.includes("cover")) expect(d.cover, id).toBeDefined();
       if (d.cover) expect(d.knobs, id).toContain("cover");
+      /* The raster knob the same way: a default wherever the console shows it. */
+      if (d.knobs?.includes("raster")) expect(d.raster, id).toBeTypeOf("boolean");
+      if (d.raster !== undefined) expect(d.knobs, id).toContain("raster");
     }
     // ⚠ The capture keeps its own id list (a .mjs cannot import the registry);
     // a direction missing from it is a still nobody shoots.
@@ -150,6 +169,74 @@ describe("round three — the arithmetic the sheets carry", () => {
     const unfiled = lanesOf([{ ...lab[0], tags: ["practice"] }]);
     expect(unfiled.map((l) => l.id)).toEqual(["navigate", "encode", "build", "practice"]);
     expect(unfiled[3].entries).toHaveLength(1);
+  });
+});
+
+describe("round six — the glyph raster and the About covers", () => {
+  it("the pop hash is the shader's, deterministic, and its popped share tracks revealPop", () => {
+    expect(popHash(3, 7, 0.25)).toBe(popHash(3, 7, 0.25));
+    expect(popHash(3, 7, 0.25)).not.toBe(popHash(3, 7, 0.26));
+    for (let i = 0; i < 200; i++) {
+      const h = popHash(i % 17, i % 23, 0.4);
+      expect(h).toBeGreaterThanOrEqual(0);
+      expect(h).toBeLessThan(1);
+    }
+    for (const r of [0.2, 0.5, 0.8]) {
+      const cells = poppedCells(40, 40, 0.37, r);
+      const share = cells.filter(Boolean).length / cells.length;
+      expect(Math.abs(share - revealPop(r)), `r ${r}`).toBeLessThan(0.05);
+    }
+    // The ends: nothing popped at rest, everything at the whole reveal.
+    expect(poppedCells(24, 24, 0.1, 0).some(Boolean)).toBe(false);
+    expect(poppedCells(24, 24, 0.1, 1).every(Boolean)).toBe(true);
+  });
+
+  it("the mosaic starts coarse and ends at the canvas's own pixels", () => {
+    expect(mosaicCols(480, 0)).toBe(MOSAIC_MIN);
+    expect(mosaicCols(480, 0.1)).toBe(MOSAIC_MIN);
+    expect(mosaicCols(480, 1)).toBe(480);
+    expect(mosaicCols(480, 0.6)).toBeGreaterThan(MOSAIC_MIN);
+    expect(mosaicCols(480, 0.6)).toBeLessThan(480);
+  });
+
+  it("coverage is normalised over the INK, never the air, and every glyph is on the ramp", () => {
+    // A line drawing: most cells empty, a few faint, one dense.
+    const cover = Float32Array.from([0, 0, 0, 0, 0.02, 0.04, 0.06, 0.3, 0, 0]);
+    const lum = normaliseCover(cover);
+    expect(lum[0]).toBe(0);
+    expect(lum[4]).toBe(0);
+    expect(lum[7]).toBe(1);
+    expect(lum[5]).toBeGreaterThan(0);
+    expect(lum[5]).toBeLessThan(1);
+    for (let l = 0; l <= 1.0001; l += 0.05) {
+      expect(glyphIndex(l)).toBeGreaterThanOrEqual(0);
+      expect(glyphIndex(l)).toBeLessThan(GLYPH_RAMP.length);
+    }
+    // Below the skip floor a cell letters nothing; every third row keeps .55.
+    expect(glyphAlpha(0.01, 0)).toBe(0);
+    expect(glyphAlpha(1, 2)).toBeCloseTo(glyphAlpha(1, 0) * 0.55, 6);
+  });
+
+  it("cell statistics weigh colour by alpha, so a faint gold ring letters in gold", () => {
+    // 4 × 2 px: the left cell half gold at full alpha, the right cell empty.
+    const w = 4;
+    const h = 2;
+    const data = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < 2; x++) data.set([202, 165, 84, 255], (y * w + x) * 4);
+    const s = cellStats(data, w, h, 2, 1);
+    expect(s.cover[0]).toBeGreaterThan(0.99);
+    expect(s.cover[1]).toBe(0);
+    expect([...s.rgb.slice(0, 3)].map(Math.round)).toEqual([202, 165, 84]);
+  });
+
+  it("a ray on a bearing meets a circle at its radius, and the phase disc is one closed path", () => {
+    const p = ellipseAtBearing({ rx: 100, ry: 100, deg: 30 }, 90);
+    expect(p.x).toBeCloseTo(100, 6);
+    expect(p.y).toBeCloseTo(0, 6);
+    const q = ellipseAtBearing({ rx: 160, ry: 60, deg: 0 }, 0);
+    expect(q.y).toBeCloseTo(-60, 6);
+    for (const k of [0.1, 0.5, 0.9]) expect(phasePath(0, 0, 10, k)).toMatch(/^M .* Z$/);
   });
 });
 
