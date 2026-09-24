@@ -229,6 +229,11 @@ const SEAT_CANDIDATES = [
   "#about",
   ".voidwalker__snap-in",
   ".voidwalker__snap",
+  /* ADR-123: the about band's RELEASE, the era runway's station and its
+     release target. `.vwd` stays a candidate for the flag-off page. */
+  ".voidwalker__snap-out",
+  "#voidwalker",
+  ".vw-phone-snap",
   "#musings",
   "#contact",
   ".vwd",
@@ -256,6 +261,9 @@ async function snapSeats(page: Page): Promise<number[]> {
          against `SNAP_STOPS` instead: adding a stop and forgetting this list
          makes the engine snap to a position `seekTo` does not recognise, and
          every seek near it runs out its timeout with nothing to say. */
+      ".voidwalker__snap-out",
+      "#voidwalker",
+      ".vw-phone-snap",
       "#musings",
       "#contact",
       ".vwd",
@@ -497,11 +505,16 @@ async function stationRests(page: Page, id: string): Promise<{ label: string; y:
   return page.evaluate((stationId) => {
     const el = document.getElementById(stationId);
     if (!el) throw new Error(`missing station #${stationId}`);
-    // The seat is the INSTRUMENT: `.vwd` for the eras; the reading state's
-    // snap target for the about band (ADR-115), the station otherwise.
+    // The seat is the INSTRUMENT: `.vwd` for the eras — the STATION on the
+    // phone runway (ADR-123: padding 0, the pin frame is the station's top);
+    // the reading state's snap target for the about band (ADR-115), the
+    // station otherwise.
+    const phoneRunway = stationId === "voidwalker" && el.dataset.vwPhone === "runway";
     const seatEl =
       stationId === "voidwalker"
-        ? (el.querySelector<HTMLElement>(".vwd") ?? el)
+        ? phoneRunway
+          ? el
+          : (el.querySelector<HTMLElement>(".vwd") ?? el)
         : stationId === "about"
           ? (el.querySelector<HTMLElement>(".voidwalker__snap") ?? el)
           : el;
@@ -528,6 +541,16 @@ async function stationRests(page: Page, id: string): Promise<{ label: string; y:
         });
       }
       rests.push({ label: "release", y: Math.round(top + r.height - window.innerHeight) });
+      return rests;
+    }
+    /* ADR-123: the era runway's rests are the PIN (the seat), the dwell's
+       middle (era 2, pinned — the covering rule holds the reader there) and
+       the RELEASE (the instrument's last pinned frame, the second target). */
+    if (phoneRunway) {
+      const band = el.querySelector<HTMLElement>(".vwd");
+      const bandH = band ? band.getBoundingClientRect().height : window.innerHeight;
+      rests.push({ label: "mid", y: Math.round(top + (r.height - bandH) * 0.5) });
+      rests.push({ label: "release", y: Math.round(top + r.height - bandH) });
       return rests;
     }
     if (r.height > window.innerHeight * 1.6) {
@@ -1043,26 +1066,37 @@ test.describe("mobile section seams", () => {
     "#services",
     ".voidwalker__snap-in",
     ".voidwalker__snap",
+    /* ADR-123: the about band's RELEASE — its last pinned frame, the
+       handover — so a rest short of it glides onto it and a rest past it
+       returns; then the era RUNWAY, `#services`' idiom: the station is the
+       stop (padding 0, the pin frame is its top), the pinned `.vwd` inside
+       it is not; then the runway's own release target. */
+    ".voidwalker__snap-out",
+    "#voidwalker",
+    ".vw-phone-snap",
     /* ADR-119: the rack is a flowing station with a horizontal RAIL inside it
        on this rung. The rail has its own scroller, so it creates no snap
        position on the page's, and the station's own top is the only stop. */
     "#musings",
     "#contact",
-    ".vwd",
   ] as const;
   /** The alignment each stop declares; `end` names its BOTTOM edge. */
   const SNAP_ALIGN: Record<(typeof SNAP_STOPS)[number], "start" | "end"> = {
     "#services": "start",
     ".voidwalker__snap-in": "end",
     ".voidwalker__snap": "start",
+    ".voidwalker__snap-out": "start",
+    "#voidwalker": "start",
+    ".vw-phone-snap": "start",
     "#musings": "start",
     "#contact": "start",
-    ".vwd": "start",
   };
   const NOT_SNAP_AREAS = [
     "#hero",
     "#about",
-    "#voidwalker",
+    /* ADR-123: the pinned era instrument creates no snap position of its
+       own — the station is the stop. */
+    ".vwd",
     ".home-v2-stage",
     ".home-v2-stage__sticky",
     ".pf-stack",
@@ -1111,14 +1145,20 @@ test.describe("mobile section seams", () => {
       const want = SNAP_ALIGN[sel as (typeof SNAP_STOPS)[number]];
       expect(v, `${sel} is not a snap stop (${want})`).toMatch(new RegExp(`^${want}`));
     }
-    // ⚠ The seat is the INSTRUMENT: `#voidwalker` keeps ~67px of its own
-    // padding on the phone, so a station-top stop would seat the 100svh
-    // instrument 67px down and its era stops below the fold. The hero and
-    // the corridor host are deliberately not stops, and no sticky child
-    // (the ring band, the proof slots) may become one.
+    // ⚠ ADR-123: the era STATION is the stop on the phone runway (padding 0,
+    // so its top IS the pin frame) and the pinned `.vwd` inside it is not —
+    // a sticky child creates no snap position (the ring band, the proof
+    // slots), and one that did would name the runway's top a second time.
+    // The hero and the corridor host are deliberately not stops.
     for (const [sel, v] of snap.inert) {
       expect(v, `${sel} became a snap area`).toMatch(/^(none|\(absent\))$/);
     }
+    // The held dial, turned (ADR-113 → ADR-123): a fling may not skip the
+    // instrument.
+    const stop = await page.evaluate(
+      () => getComputedStyle(document.getElementById("voidwalker")!).scrollSnapStop
+    );
+    expect(stop, "#voidwalker is not a mandatory stop on the way past").toBe("always");
   });
 
   test("a stop short of a station glides onto its seat; the instrument seats itself (ADR-113)", async ({
@@ -1226,8 +1266,8 @@ test.describe("mobile section seams", () => {
     // The seated instrument, both stills at once: the era stops on screen
     // above the settings row, the title clear of the readout and the TL
     // bracket. This is what the snap is FOR.
-    await test.step(".vwd seated", async () => {
-      await seekTo(page, await seatOf(".vwd"));
+    await test.step("#voidwalker seated", async () => {
+      await seekTo(page, await seatOf("#voidwalker"));
       await settle(page, SETTLE_MS);
       const chrome = await visibleChrome(page, [
         ".hud__nav__btn",
@@ -1297,6 +1337,212 @@ test.describe("mobile section seams", () => {
       body: landings.join("\n"),
       contentType: "text/plain",
     });
+  });
+
+  /* ── ADR-123: the era instrument pins, and nothing rests half-and-half ── */
+
+  /** Document y of a selector's top (the `start` seat it would name). */
+  const docTop = (page: Page, sel: string) =>
+    page.evaluate((s) => {
+      const el = document.querySelector<HTMLElement>(s);
+      if (!el) throw new Error(`missing ${s}`);
+      return Math.round(el.getBoundingClientRect().top + window.scrollY);
+    }, sel);
+
+  test("the runway's geometry: the pin frame is the station's top, the release targets sit on the bands' last pinned frames (ADR-123)", async ({
+    page,
+  }, testInfo) => {
+    phonesOnly(testInfo);
+    await boot(page);
+    // Warm the corridor, then read from just above the station so the
+    // pinned box is still at its static seat.
+    await seekTo(page, Math.max(0, (await docTop(page, "#voidwalker")) - 300));
+    const g = await page.evaluate(() => {
+      const vh = document.documentElement.clientHeight;
+      const st = document.getElementById("voidwalker")!;
+      const vwd = st.querySelector<HTMLElement>(".vwd")!;
+      const snap = st.querySelector<HTMLElement>(".vw-phone-snap");
+      const about = document.getElementById("about")!;
+      const band = about.querySelector<HTMLElement>(":scope > .voidwalker");
+      const out = about.querySelector<HTMLElement>(".voidwalker__snap-out");
+      const r = (el: Element | null) => (el ? el.getBoundingClientRect() : null);
+      return {
+        vh,
+        stamp: st.dataset.vwPhone ?? null,
+        stationTop: r(st)!.top,
+        stationBottom: r(st)!.bottom,
+        stationPadTop: Number.parseFloat(getComputedStyle(st).paddingTop),
+        vwdTop: r(vwd)!.top,
+        vwdH: r(vwd)!.height,
+        vwdPosition: getComputedStyle(vwd).position,
+        vwdAlign: getComputedStyle(vwd).scrollSnapAlign,
+        snapTop: r(snap)?.top ?? null,
+        snapAlign: snap ? getComputedStyle(snap).scrollSnapAlign : null,
+        aboutBottom: r(about)!.bottom,
+        bandH: r(band)?.height ?? null,
+        outTop: r(out)?.top ?? null,
+        outAlign: out ? getComputedStyle(out).scrollSnapAlign : null,
+      };
+    });
+    expect(g.stamp, "the writer never stamped the runway").toBe("runway");
+    expect(g.stationPadTop, "the runway station keeps padding above its pin frame").toBe(0);
+    expect(
+      Math.abs(g.vwdTop - g.stationTop),
+      "the instrument's seat is not the station's top"
+    ).toBeLessThanOrEqual(1);
+    expect(g.vwdPosition).toBe("sticky");
+    expect(g.vwdAlign).toBe("none");
+    expect(g.vwdH, "the pinned band is not one frame").toBeCloseTo(g.vh, 0);
+    expect(g.snapAlign).toMatch(/^start/);
+    expect(
+      Math.abs(g.snapTop! - (g.stationBottom - g.vwdH)),
+      "the release target's top is not the instrument's last pinned frame"
+    ).toBeLessThanOrEqual(1);
+    expect(g.outAlign).toMatch(/^start/);
+    expect(
+      Math.abs(g.outTop! - (g.aboutBottom - g.bandH!)),
+      "the about band's release target is not on its last pinned frame"
+    ).toBeLessThanOrEqual(1);
+    // The dwell holds the instrument for more than one frame.
+    expect(g.stationBottom - g.stationTop).toBeGreaterThan(g.vh * 1.8);
+  });
+
+  test("seated in the dwell, nothing inside the instrument moves and the era has stepped (ADR-123)", async ({
+    page,
+  }, testInfo) => {
+    phonesOnly(testInfo);
+    await boot(page);
+    const seat = await docTop(page, "#voidwalker");
+    await seekTo(page, Math.max(0, seat - 300));
+    const dwell = await page.evaluate(() => {
+      const st = document.getElementById("voidwalker")!;
+      const vwd = st.querySelector<HTMLElement>(".vwd")!;
+      return st.getBoundingClientRect().height - vwd.getBoundingClientRect().height;
+    });
+    const read = () =>
+      page.evaluate(() => {
+        const st = document.getElementById("voidwalker")!;
+        const vwd = st.querySelector<HTMLElement>(".vwd")!;
+        const box = (el: Element | null) => {
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return [r.left, r.top, r.width, r.height].map((v) => Math.round(v * 2) / 2);
+        };
+        const chips = [...vwd.querySelectorAll<HTMLElement>(".vwd__chip")]
+          .map((c) => c.getBoundingClientRect())
+          .filter((r) => r.width > 0 && r.height > 0);
+        const tabs = [...vwd.querySelectorAll<HTMLElement>("[data-vwh-era-tab]")];
+        return {
+          vwd: box(vwd),
+          title: box(vwd.querySelector(".vwd__mast__title")),
+          band: box(vwd.querySelector(".vwd__band")),
+          chipsBottom: chips.length ? Math.round(Math.max(...chips.map((r) => r.bottom))) : null,
+          era: vwd.dataset.vwhEra ?? null,
+          selected: tabs.findIndex((t) => t.getAttribute("aria-selected") === "true"),
+          settingsTop:
+            document.querySelector<HTMLElement>(".rin-settings")?.getBoundingClientRect().top ??
+            null,
+        };
+      });
+    await seekTo(page, seat);
+    await settle(page, SETTLE_MS);
+    const atSeat = await read();
+    expect(atSeat.vwd![1], "the instrument is not on its seat").toBeLessThanOrEqual(0.5);
+    // Half the dwell in: outside both radii, the covering rule holds the
+    // reader here, and the eras have walked to the middle one.
+    await rollTo(page, Math.round(seat + dwell * 0.5));
+    await settle(page, SETTLE_MS + 400);
+    const mid = await read();
+    expect(mid.vwd, "the pinned instrument moved").toEqual(atSeat.vwd);
+    expect(mid.band, "the era band moved").toEqual(atSeat.band);
+    // The title's STRING changes with the era (so its width does); its seat —
+    // the top-left of its box — is what may not move.
+    if (atSeat.title)
+      expect(mid.title!.slice(0, 2), "the title's seat moved").toEqual(atSeat.title.slice(0, 2));
+    expect(mid.selected, "the dwell's middle is not the middle era").toBe(2);
+    expect(mid.era).not.toBe(atSeat.era);
+    if (mid.settingsTop !== null && mid.chipsBottom !== null)
+      expect(mid.chipsBottom, "the era stops run under the settings row").toBeLessThanOrEqual(
+        mid.settingsTop + 0.5
+      );
+    // A tap on a NEIGHBOURING era glides the scroll to its slice without
+    // moving the instrument, and the era follows the tap, not the spy. ⚠ The
+    // phone's reel is a three-cell window over five chips (ADR-082 U23): only
+    // the lit era and its two neighbours are on screen, so the tap goes to a
+    // chip whose box is inside the viewport — never `.first()`.
+    const tapIdx = await page.evaluate(() => {
+      const vw = document.documentElement.clientWidth;
+      const tabs = [...document.querySelectorAll<HTMLElement>("[data-vwh-era-tab]")];
+      return tabs.findIndex((t) => {
+        const r = t.getBoundingClientRect();
+        return (
+          t.getAttribute("aria-selected") !== "true" && r.left >= 0 && r.right <= vw && r.width > 0
+        );
+      });
+    });
+    expect(tapIdx, "no unselected era chip is on screen").toBeGreaterThanOrEqual(0);
+    await page.locator("[data-vwh-era-tab]").nth(tapIdx).click();
+    await settleSnap(page, 2500);
+    await settle(page, SETTLE_MS);
+    const tapped = await read();
+    expect(tapped.selected, "the tap did not hold its era").toBe(tapIdx);
+    expect(tapped.vwd, "the tap moved the instrument").toEqual(atSeat.vwd);
+  });
+
+  test("every rest between the bio's reading seat and the writing lands on a stop or a pin (ADR-123)", async ({
+    page,
+  }, testInfo) => {
+    phonesOnly(testInfo);
+    test.setTimeout(240_000);
+    await boot(page);
+    const from = await seekTo(page, await docTop(page, ".voidwalker__snap"));
+    const to = await docTop(page, "#musings");
+    const vh = await page.evaluate(() => document.documentElement.clientHeight);
+    const seats = await snapSeats(page);
+    const rows: { y: number; at: number; kind: string }[] = [];
+    for (let y = from; y <= to; y += 40) {
+      await rollTo(page, y);
+      const at = await page.evaluate(() => window.scrollY);
+      const pinned = await page.evaluate(() => {
+        const st = document.getElementById("voidwalker")!.getBoundingClientRect();
+        const vwd = document.querySelector<HTMLElement>(".vwd")!.getBoundingClientRect();
+        const vh = document.documentElement.clientHeight;
+        return Math.abs(vwd.top) <= 0.5 && st.top <= 0.5 && st.bottom >= vh - 0.5;
+      });
+      const seated = seats.some((s) => Math.abs(at - s) <= 1.5);
+      const kind = seated
+        ? "seat"
+        : pinned
+          ? "pinned"
+          : Math.abs(at - y) <= 1.5
+            ? "stretch"
+            : "fail";
+      rows.push({ y, at: Math.round(at), kind });
+    }
+    await testInfo.attach("rest-sweep", {
+      body: rows.map((r) => `${r.y} → ${r.at} ${r.kind}`).join("\n"),
+      contentType: "text/plain",
+    });
+    expect(
+      rows.filter((r) => r.kind === "fail"),
+      "a rest landed on nothing"
+    ).toEqual([]);
+    // What may remain: a run of un-pulled rests of at most one radius, each
+    // bounded by a named pair (about's release → the runway; the runway's
+    // release → the writing). Two runs, never inside the runway.
+    const runs: { start: number; end: number }[] = [];
+    for (const r of rows) {
+      if (r.kind !== "stretch") continue;
+      const last = runs[runs.length - 1];
+      if (last && r.y - last.end <= 40) last.end = r.y;
+      else runs.push({ start: r.y, end: r.y });
+    }
+    expect(runs.length, `stretch runs: ${JSON.stringify(runs)}`).toBeLessThanOrEqual(2);
+    for (const run of runs)
+      expect(
+        run.end - run.start,
+        `a stretch of ${run.end - run.start}px at ${run.start}`
+      ).toBeLessThanOrEqual(vh / 3 + 80);
   });
 
   test("the desktop declares no snap (byte-identity)", async ({ page }, testInfo) => {

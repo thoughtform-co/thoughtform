@@ -339,3 +339,39 @@ stays" is the covering rule in its own radius-free zone. `SNAP_STOPS` in
 `mobile-section-seams` names the two targets with their alignment;
 `stationRests("about")`'s seat is the reading target. See
 [ADR-115](115-the-phones-deck-flip.md).
+
+## Update 2 (2026-09-24, owner) — the era instrument PINS; the hero joins the small viewport; the held dial is turned (ADR-123)
+
+His second device read: the era section "is not locking into place … the
+section inside it, with all the components, should not be able to move as
+awkwardly as it does now." Three of this ADR's rulings reverse on his word, in
+[ADR-123](123-the-era-instrument-pins-on-the-phone.md):
+
+- **§1's "a sticky runway for `#voidwalker` was considered and rejected" is
+  reversed.** `.vwd` was the journey's ONE unpinned stop between two pinned
+  bands, held only by a proximity radius with 807px of un-pulled stretch before
+  it. On the phone runway rung (`VOIDWALKER_PHONE_RUNWAY_MEDIA`, ≤700) the
+  STATION is the stop (`padding-block: 0`, so its top is the pin frame) and
+  `.vwd` pins inside it at `100dvh` with the five eras riding the dwell — the
+  round-3 dead-scroll objection does not hold once every 24svh of the dwell
+  changes the era. `.vwd` declares `scroll-snap-align: none` there; "the seat is
+  the instrument, never the station" survives as arithmetic (the station's top
+  IS the instrument's top) rather than as a rule about padding.
+- **§2's `--hero-lift` exemption is deleted.** The hero was the page's one
+  in-flow `100dvh` box, and an in-flow `dvh` box re-lays the whole document on
+  every toolbar transition — the pinned bands absorbed it in their measured
+  clocks, the unpinned instrument jumped ~99px under the thumb. The hero is
+  `100svh` now, its clips and `useLandingScroll` read the layout viewport, and
+  `layout-viewport-height.test.ts`'s DELIBERATE case reads "no exception
+  remains". ⚠ This also corrects ADR-115 U1's "clock drift with the bars": the
+  term that drifted was the hero's, one station up.
+- **The held dial is turned**: `scroll-snap-stop: always` on the runway station,
+  because the device showed a fling from `#about` overshooting the instrument.
+- `#about` gains a THIRD target, `.voidwalker__snap-out` on its release frame,
+  and the runway its own `.vw-phone-snap`, so the two remaining un-pulled
+  stretches are one radius each and bounded by named pairs.
+
+Everything else here stands: the proximity root, `#services` / `#contact` as
+stops, no `scroll-padding-top`, no gating on reduced motion, §3's no-live-`dvh`
+law for in-flow content (the pinned `.vwd` is a band, ADR-115 U1's own class),
+and §4.

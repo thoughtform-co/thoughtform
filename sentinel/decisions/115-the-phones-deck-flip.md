@@ -520,3 +520,16 @@ twin, the same picture), the chevron 439 → 235 → 439, frames p50 4.3ms · p9
   goes back to the flip's end), a larger one narrows it. Either way no stop
   rests mid-decode.
 - The 342 kB of ADR-112 portraits on the phone, unchanged.
+
+## Note (2026-09-24) — the third target, and the drift's real term (ADR-123)
+
+- `#about` carries a THIRD snap target since ADR-123: `.voidwalker__snap-out`,
+  `100dvh` on the band's last pinned frame (`start`), so a rest in the last
+  radius of the hold pulls forward to the handover and a rest just past it pulls
+  back. `.voidwalker__snap` is stamped `data-station-seat`, which is what the
+  drawer's About link now lands on.
+- U1's "a few percent of clock drift with the bars, in the scroll's direction"
+  was measured with the HERO still `100dvh` — an in-flow box whose reflow on
+  every bar transition rewound every runway below it. With the hero on the small
+  viewport (ADR-123) the band's own clock is the measured-travel arithmetic U1
+  chose and nothing else; the ~9 % figure in "Left open" is the hero's, retired.

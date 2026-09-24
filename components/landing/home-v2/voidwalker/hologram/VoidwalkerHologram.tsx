@@ -18,9 +18,16 @@ import {
   resolveCharacterEraHologram,
 } from "@/lib/voidwalker/characterEras";
 import { neighbourEras } from "@/lib/voidwalker/holoGlitch";
+import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
+import {
+  VOIDWALKER_PHONE_RUNWAY,
+  VOIDWALKER_PHONE_RUNWAY_MEDIA,
+} from "../../unifiedServicesInstrument";
 import { voidwalkerHologramProgressRef } from "@/lib/voidwalker/voidwalkerHologramClock";
 
 import {
+  VOIDWALKER_PHONE_ERA_BAND,
+  voidwalkerEraPickRef,
   voidwalkerEraScrubRef,
   voidwalkerProgressForEra,
 } from "@/lib/voidwalker/voidwalkerHologramClock";
@@ -130,13 +137,18 @@ export function VoidwalkerHologram() {
   const era = CHARACTER_ERAS[eraIdx];
   const hologram = resolveCharacterEraHologram(era);
   /* The eras a step away — their posters are what the figure's glitch tears
-     INTO, decoded ahead while the figure is near (ADR-082 U42). */
+     INTO, decoded ahead while the figure is near (ADR-082 U42).
+     ⚠ ON THE PHONE RUNWAY, EVERY ERA (ADR-123): a fling crosses four slices
+     in a beat, and a tear into an undecoded poster is a blank frame. */
+  const phoneRunwayMedia = useMediaQuery(VOIDWALKER_PHONE_RUNWAY_MEDIA);
+  const phoneRunway = VOIDWALKER_PHONE_RUNWAY && phoneRunwayMedia;
   const neighbours = useMemo(
     () =>
-      neighbourEras(eraIdx, CHARACTER_ERAS.length).map((i) =>
-        resolveCharacterEraHologram(CHARACTER_ERAS[i]!)
-      ),
-    [eraIdx]
+      (phoneRunway
+        ? CHARACTER_ERAS.map((_, i) => i).filter((i) => i !== eraIdx)
+        : neighbourEras(eraIdx, CHARACTER_ERAS.length)
+      ).map((i) => resolveCharacterEraHologram(CHARACTER_ERAS[i]!)),
+    [eraIdx, phoneRunway]
   );
 
   /**
@@ -300,13 +312,29 @@ export function VoidwalkerHologram() {
        and overrides the choice — the casefile's browse band learned this and
        the two halves are one contract (ADR-056 U13). Failing to find the
        runway simply leaves the click as a plain selection. */
-    const runway = rootRef.current?.parentElement;
-    if (!runway) return;
-    const travel = runway.offsetHeight - window.innerHeight;
+    const root = rootRef.current;
+    const runway = root?.parentElement;
+    if (!root || !runway) return;
+    /* ADR-123: on the phone runway the band is the pinned `.vwd` (100dvh),
+       so the travel is runway − band, MEASURED as the writer measures it,
+       the slice table is the phone's edge-to-edge band, and the pick ref
+       holds this era through the glide (the spy would otherwise step
+       through every slice on the way). Off the runway rung the travel is
+       ≤ 0 and a tap is a plain selection, as before. */
+    const phone = runway.closest<HTMLElement>("#voidwalker")?.dataset.vwPhone === "runway";
+    const travel = runway.offsetHeight - (phone ? root.offsetHeight : window.innerHeight);
     if (travel <= 0) return;
     const top = runway.getBoundingClientRect().top + window.scrollY;
+    if (phone) voidwalkerEraPickRef.current = { era: i, at: performance.now() };
     window.scrollTo({
-      top: top + voidwalkerProgressForEra(i, CHARACTER_ERAS.length) * travel,
+      top:
+        top +
+        voidwalkerProgressForEra(
+          i,
+          CHARACTER_ERAS.length,
+          phone ? VOIDWALKER_PHONE_ERA_BAND : undefined
+        ) *
+          travel,
       behavior: "auto",
     });
   };
@@ -358,6 +386,10 @@ export function VoidwalkerHologram() {
       data-vwh-era={era.id}
       data-vwh-region="character-sheet"
       data-testid="voidwalker-character-sheet"
+      /* ADR-123: the SEAT the drawer and the hash anchor land on — the
+         instrument, never the station (which keeps its padding off the
+         pinned rungs). */
+      data-station-seat=""
       ref={rootRef}
     >
       <HoloDatumPanels

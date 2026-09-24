@@ -255,7 +255,16 @@ export function HudNav({ items = NAV_ITEMS }: { items?: readonly NavItem[] } = {
     const target = document.querySelector(href);
     if (target) {
       e.preventDefault();
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      /* ADR-123: land on the station's SEAT where it declares one — the about
+         band's reading state, the era instrument — never on a station top
+         that is the weld frame or 67px above the instrument, from which the
+         snap then makes a second motion (the "settle"). A seat with no box
+         (its rung off) falls back to the station. */
+      const seat =
+        [...target.querySelectorAll<HTMLElement>("[data-station-seat]")].find(
+          (el) => el.getClientRects().length > 0
+        ) ?? target;
+      seat.scrollIntoView({ behavior: "smooth", block: "start" });
       setOpen(false);
       // The drawer goes inert on close, which would strand focus on the
       // link that was just activated — hand it back to the trigger.

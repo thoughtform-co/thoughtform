@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useCallback } from "react";
 
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
+
 interface ScrollTelemetry {
   progress: number;
   activeStation: string;
@@ -72,7 +74,12 @@ export function useLandingScroll(rootRef: React.RefObject<HTMLDivElement | null>
     if (!root) return;
 
     const scrollY = window.scrollY;
-    const vh = window.innerHeight;
+    /* ⚠ THE LAYOUT VIEWPORT (ADR-113 §2, adopted by ADR-123). `--hero-lift`
+       divided by `innerHeight` while the hero was `100dvh` — one identity on
+       the dynamic viewport. The hero is `100svh` now, so the lift reads the
+       small viewport with it: `lift = 1 ⇔ scrollY = 100svh ⇔ the hero has
+       cleared`, and no term here moves while the thumb is still. */
+    const vh = layoutViewportHeight();
     const scrollMax = Math.max(1, document.documentElement.scrollHeight - vh);
     const progress = Math.max(0, Math.min(1, scrollY / scrollMax));
 
