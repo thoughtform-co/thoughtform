@@ -115,8 +115,6 @@ import {
 } from "@/app/(internal)/test/intelligence-substrate-lab/VariantSkillFacet";
 import {
   CARRIER_BAND_FS,
-  CARRIER_BAND_INK_HALF,
-  CARRIER_BAND_INK_MID,
   CARRIER_BAND_R,
   CARRIER_BAND_TRACK,
   CARRIER_BRIEF,
@@ -143,8 +141,6 @@ import {
   carrierArcTarget,
   carrierCrop,
   carrierBandArcPath,
-  carrierBandArcRadius,
-  carrierBandMeasure,
   carrierBriefFits,
   carrierCellArcPath,
   carrierCellArcRadius,
@@ -1511,41 +1507,10 @@ describe("compound carrier divides one plate into equal cells", () => {
     expect(onRim, "no cell is on the rim").toBeGreaterThan(4);
   });
 
-  it("centres the substrate names in the band on the uppercase metric", () => {
-    /* ⚠ THE TWO FAMILIES TAKE DIFFERENT CONSTANTS AND IT IS NOT A TUNING
-       CHOICE. A Skill is sentence case, so ascenders and descenders both land
-       and the ink is near-symmetric about the em; a substrate name is uppercase,
-       where nothing falls below the baseline at all — its ink runs
-       `baseline − capHeight` to `baseline`, so its centre is a full half
-       cap-height up. One shared constant would seat the five region names 2.3
-       units low inside their own recess, which on a 36-unit band is a visible
-       lean on the most structural strings on the plate. */
-    expect(CARRIER_BAND_INK_MID).toBeGreaterThan(CARRIER_LABEL_INK_MID);
-    const rise = CARRIER_BAND_INK_MID * CARRIER_BAND_FS;
-    for (const group of carrierLayout(record()).groups) {
-      const arcR = carrierBandArcRadius(group);
-      const flip = Math.sin((((group.a0 + group.a1) / 2) * Math.PI) / 180) > 0;
-      expect(
-        arcR - CARRIER_BAND_R,
-        `band.${group.key}: the ink-centring correction is missing or mis-signed`
-      ).toBeCloseTo((flip ? 1 : -1) * rise, 6);
-      /* The cap block clears the band's own two walls by the same amount. ⚠ For
-         an uppercase run the centre offset and the half-height ARE the same
-         number, because nothing falls below the baseline — which is the one case
-         where reusing one constant for both is correct, and the reason the two
-         are still declared separately is that the Skill family next door is the
-         case where it is not. */
-      const half = CARRIER_BAND_INK_HALF * CARRIER_BAND_FS;
-      const inkMid = arcR + (flip ? -1 : 1) * rise;
-      const airOut = CARRIER_R_CELL - (inkMid + half);
-      const airIn = inkMid - half - CARRIER_R_IN;
-      expect(
-        Math.abs(airOut - airIn),
-        `band.${group.key}: name leans (${airIn.toFixed(1)}u in vs ${airOut.toFixed(1)}u out)`
-      ).toBeLessThan(0.5);
-      expect(airIn, `band.${group.key}: name crowds the hub's rim`).toBeGreaterThan(6);
-    }
-  });
+  /* The band's names were centred on the uppercase metric and measured inside
+     their arcs until ADR-124 (2026-09-24) took them off the dial; the two
+     guards that walked them retired with the letters. The arc furniture and its
+     constants stay exported for the hub's own rung and the seams. */
 
   it("letters every string on the plate over eight pixels at the binding preset", () => {
     /* ⚠ **A FLOOR IS NOT A FAMILY, AND THAT IS HOW 7.46px SHIPPED GREEN.** The
@@ -1581,34 +1546,15 @@ describe("compound carrier divides one plate into equal cells", () => {
     expect(CARRIER_BAND_TRACK).toBeGreaterThan(CARRIER_LABEL_TRACK);
   });
 
-  it("letters every substrate name inside its band arc", () => {
-    /* ⚠ THE BAND IS A CONTINUATION OF THE PLATE'S GRAMMAR, not a new region.
-       Its labels are set on `textPath` at `CARRIER_BAND_R`, one per group,
-       divided by the same seams the cells are. STAKEHOLDER (the longest
-       name) is the binding case; its wedge sweeps 37°, which at 179u is
-       116u of arc against 85u of name. */
+  it("letters no band name at rest: the band is five recesses, named only in the hub", () => {
+    /* ADR-124: the five-shape vocabulary left the dial. What remains at rest
+       is the brief and the forty-seven cells; a band's name is lettered at the
+       hub's rung only once a reader commits it (`shape.*.title`). */
     const specs = carrierLettering(record());
-    const band = specs.filter((s) => s.slot.startsWith("band."));
-    expect(band, "the band dropped a substrate name").toHaveLength(5);
-    const groups = carrierLayout(record()).groups;
-    for (const spec of band) {
-      const key = spec.slot.slice("band.".length);
-      const group = groups.find((g) => g.key === key)!;
-      expect(group, `band.${key} names an unknown part`).toBeDefined();
-      expect(spec.fs, `${spec.slot} letters under the floor`).toBeGreaterThanOrEqual(FS_FLOOR);
-      const width = spec.text.length * (spec.fs * (0.6 + spec.track));
-      expect(
-        width,
-        `${spec.slot}: "${spec.text}" runs past its ${spec.measure.toFixed(0)}u arc`
-      ).toBeLessThanOrEqual(spec.measure);
-      /* ⚠ THE MEASURE IS DERIVED FROM THE GROUP, so re-deriving it here
-         proves the derivation is what the spec carries — the group's arc
-         at BAND_R minus the band's per-end pad. */
-      expect(spec.measure, `${spec.slot} measure drifted off the group`).toBeCloseTo(
-        carrierBandMeasure(group),
-        6
-      );
-    }
+    expect(specs.filter((s) => s.slot.startsWith("band."))).toHaveLength(0);
+    expect(
+      specs.filter((s) => s.slot.startsWith("shape.") && s.slot.endsWith(".title"))
+    ).toHaveLength(5);
   });
 
   it("draws a `textPath` arc for every label, cell and band alike", () => {

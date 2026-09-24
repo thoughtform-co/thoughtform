@@ -1704,17 +1704,11 @@ export function carrierLettering(record: CarrierRecord): LetterSpec[] {
     measure: BRIEF_MEASURE,
   }));
 
-  /* The band's five substrate names — one arc each, uppercase, tracked wide so
-     they read STRUCTURAL where a Skill reads NAMED. */
-  for (const group of layout.groups) {
-    out.push({
-      slot: `band.${group.key}`,
-      text: group.name.toUpperCase(),
-      fs: BAND_FS,
-      track: BAND_TRACK,
-      measure: carrierBandMeasure(group),
-    });
-  }
+  /* The band's five names are no longer lettered at rest (ADR-124, owner
+     2026-09-24: the reading is the layer, and the five-shape taxonomy read as
+     vague). The band stays as five recesses and five hit targets; a name is
+     lettered only in the hub, when a reader commits a band (`shape.*.title`
+     below). */
 
   /* The forty-seven cell labels — each set along its own arc at rest. The
      measure is the cell's INNER arc, which is the binding one. */
@@ -1728,11 +1722,10 @@ export function carrierLettering(record: CarrierRecord): LetterSpec[] {
     });
   }
 
-  /* ⚠ AND WHAT THE HUB LETTERS ONCE THE READER COMMITS A SUBSTRATE. The band's
-     name is declared twice on purpose — once as the arc label at `BAND_FS`, and
-     again here at the hub's own rung, because they are two different strings on
-     two different measures and a guard that walked only one would be blind to
-     the other overflowing. */
+  /* ⚠ AND WHAT THE HUB LETTERS ONCE THE READER COMMITS A BAND. Since ADR-124
+     this is the one place the band's name is declared: at the hub's own rung,
+     on the hub's own measure (the arc label at `BAND_FS` left with the
+     taxonomy). */
   for (const group of layout.groups) {
     out.push({
       slot: `shape.${group.key}.title`,
@@ -2162,8 +2155,9 @@ export function ViewCarrier({
           be half-buried under that fill. */}
       <path d={polygonPath(R_OUT)} fill="none" stroke="var(--pda-hair2)" strokeWidth="2" />
 
-      {/* The band's five substrate names, each on its own arc between the hub
-          and the cells. Uppercase, tracked wide — chrome, not content.
+      {/* The band's five hit targets, one per recess between the hub and the
+          cells. The names left the arc with ADR-124 (the reading is the layer);
+          a click letters the name in the hub, with what the band means.
 
           ⚠ **THE WHOLE SEGMENT IS THE TARGET, NOT THE WORD.** A `textPath` run
           is a thin ribbon on a curve, so hit-testing the glyphs would give the
@@ -2204,22 +2198,6 @@ export function ViewCarrier({
           }}
         >
           <path d={carrierTapPath(group)} fill="transparent" pointerEvents="all" />
-          <text
-            pointerEvents="none"
-            fontSize={BAND_FS}
-            letterSpacing={`${BAND_TRACK}em`}
-            fill={
-              litKey === group.key
-                ? "var(--pda-hot)"
-                : taps.has(group.key)
-                  ? "var(--pda-sel)"
-                  : "var(--pda-txt)"
-            }
-          >
-            <textPath href={`#carrier-band-arc-${group.key}`} startOffset="50%" textAnchor="middle">
-              {group.name.toUpperCase()}
-            </textPath>
-          </text>
         </g>
       ))}
 
