@@ -65,21 +65,11 @@ type Allow = { sheet: string; path: RegExp; why: string };
 /** The named exceptions. A match is on the block's nesting-aware selector
  *  path, so a rule inside `@media` is judged by its own selector. */
 const ALLOW: Allow[] = [
-  {
-    sheet: "components/landing/v7/landing.css",
-    path: /(^|\s)\.hud__rail$|\.hud__corner--(tl|br)$/,
-    why: "the HUD's curtain-reveal clips — paired with --hero-lift = scrollY / innerHeight by design (the hero is 100dvh)",
-  },
-  {
-    sheet: "components/landing/v7/rail-instruments/rail-instruments.css",
-    path: /\.rin-settings__row$|\.hud__rail$|\.hud__corner--tl$/,
-    why: "the same curtain-reveal clips, restated for the instrument rail",
-  },
-  {
-    sheet: "components/landing/v7/landing.css",
-    path: /^\.hero$/,
-    why: "the hero is the one 100dvh box on purpose: lift = 1 ⇔ the curtain has cleared, on every device (landing.css §hero)",
-  },
+  /* ADR-123 (2026-09-24): the hero is `100svh` now, and the curtain clips and
+     `--hero-lift` read the same small viewport. The hero was the page's one
+     IN-FLOW dvh box, and on iOS it re-laid every flowing station ~99px on
+     every toolbar transition — the "settling" at its source. No exception
+     remains for it, or for the clips that were paired with it. */
   {
     sheet: "components/landing/v7/landing.css",
     path: /^\.station$/,
@@ -117,8 +107,18 @@ const ALLOW: Allow[] = [
   },
   {
     sheet: "components/landing/home-v2/about/about-band.css",
-    path: /\.voidwalker$|\.voidwalker__snap(-in)?$/,
-    why: "the pinned about band and its two snap targets share the dynamic viewport (ADR-115 U1); the station and the weld stay in svh, the writer measures station − band",
+    path: /\.voidwalker$|\.voidwalker__snap(-in|-out)?$/,
+    why: "the pinned about band and its three snap targets share the dynamic viewport (ADR-115 U1; the release target is ADR-123's); the station and the weld stay in svh, the writer measures station − band",
+  },
+  /* ADR-123 — THE ERA INSTRUMENT IS A PINNED BAND ON THE PHONE. Same law as
+     the two bands above: the pinned `.vwd` is 100dvh so its era stops seat
+     against the fixed chrome's floor, and its release target is the runway's
+     last 100dvh. The runway and the dwell stay in svh; the writer measures
+     runway − band. */
+  {
+    sheet: "components/landing/home-v2/voidwalker/voidwalker.css",
+    path: /\.vwd$|\.vw-phone-snap$/,
+    why: "the pinned era instrument and its release target take the dynamic viewport (ADR-123, ADR-115 U1's law); the runway and `--vw-phone-dwell` stay in svh",
   },
 ];
 
@@ -126,9 +126,9 @@ const ALLOW: Allow[] = [
 const PINS: Record<(typeof SHEETS)[number], number> = {
   "app/styles/variables.css": 0,
   "app/styles/base.css": 0,
-  "components/landing/v7/landing.css": 12,
+  "components/landing/v7/landing.css": 8,
   "components/landing/v7/theme.css": 0,
-  "components/landing/v7/rail-instruments/rail-instruments.css": 3,
+  "components/landing/v7/rail-instruments/rail-instruments.css": 0,
   "components/landing/v7/site-footer/site-footer.css": 0,
   "components/landing/home-v2/home-v2.css": 2,
   "components/landing/home-v2/services/services.css": 1,
@@ -139,8 +139,8 @@ const PINS: Record<(typeof SHEETS)[number], number> = {
   "components/landing/home-v2/services/casefile/console/console.css": 0,
   "components/landing/home-v2/services/casefile/map/pda/pda.css": 0,
   "components/landing/home-v2/about/about-stage.css": 0,
-  "components/landing/home-v2/about/about-band.css": 4,
-  "components/landing/home-v2/voidwalker/voidwalker.css": 0,
+  "components/landing/home-v2/about/about-band.css": 5,
+  "components/landing/home-v2/voidwalker/voidwalker.css": 2,
   "components/landing/home-v2/voidwalker/voidwalker-wire.css": 0,
   "components/landing/home-v2/voidwalker/voidwalker-travel.css": 0,
   "components/landing/home-v2/voidwalker/hologram/voidwalker-hologram.css": 0,

@@ -26,6 +26,7 @@ const stripComments = (src: string) =>
 
 /** Every scroll writer that measures svh-authored geometry on the landing. */
 const ADOPTERS = [
+  "lib/landing/scrollMemory.ts",
   "components/landing/home-v2/hooks/useServicesStageScroll.ts",
   "components/landing/v7/tools-cards/useStackedCardsScroll.ts",
   "components/landing/home-v2/hooks/useCorridorExitScroll.ts",
@@ -35,12 +36,13 @@ const ADOPTERS = [
   "lib/services-ring/beatScrollTarget.ts",
   // ADR-115: the phone's about band is a runway in svh, read by one writer.
   "components/landing/home-v2/about/useAboutBandScroll.ts",
+  // ADR-123: the hero is 100svh and `--hero-lift` divides by the same small
+  // viewport — the last deliberate `innerHeight` reader joined the adopters.
+  "components/landing/v7/hooks/useLandingScroll.ts",
+  // ADR-123: the era instrument's phone branch reads the frame it is on
+  // screen against.
+  "components/landing/home-v2/hooks/useVoidwalkerHologramScroll.ts",
 ];
-
-/** The one deliberate exception: `--hero-lift = scrollY / innerHeight` is
- *  paired with the hero's `100dvh` box (landing.css §hero, "DELIBERATELY NO
- *  100lvh FLOOR"), so lift = 1 ⇔ the hero has cleared on every device. */
-const DELIBERATE = "components/landing/v7/hooks/useLandingScroll.ts";
 
 describe("layoutViewportHeight", () => {
   const original = Object.getOwnPropertyDescriptor(
@@ -100,14 +102,14 @@ describe("the writers read the layout viewport", () => {
     });
   }
 
-  it("keeps --hero-lift on the dynamic viewport, exactly once, and says why", () => {
-    const src = read(DELIBERATE);
-    const bare = stripComments(src).match(/window\.innerHeight/g) ?? [];
-    expect(
-      bare,
-      "useLandingScroll's --hero-lift must divide by innerHeight (100dvh pair)"
-    ).toHaveLength(1);
-    expect(src).not.toContain('from "@/lib/viewport/layoutViewportHeight"');
+  it("no deliberate exception remains: the hero is svh and the lift reads the same viewport (ADR-123)", () => {
+    // The hero was the page's one in-flow `100dvh` box and `--hero-lift` its
+    // one `innerHeight` reader. Both moved to the small viewport together.
+    const hero = read("components/landing/v7/landing.css");
+    const heroBlock =
+      /\.hero \{[\s\S]*?\n\}/.exec(hero.replace(/\/\*[\s\S]*?\*\//g, ""))?.[0] ?? "";
+    expect(heroBlock).toMatch(/height:\s*100svh/);
+    expect(heroBlock).not.toMatch(/100dvh/);
   });
 
   it("is three-free and DOM-only", () => {

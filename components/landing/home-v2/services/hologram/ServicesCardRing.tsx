@@ -2182,6 +2182,17 @@ export interface ServicesCardRingProps {
   figureInk?: CardFigureInk;
 }
 
+/** One 1×1 canvas a released phone texture points at (ADR-123 C). */
+let blank: HTMLCanvasElement | null = null;
+function blankCanvas(): HTMLCanvasElement {
+  if (!blank) {
+    blank = document.createElement("canvas");
+    blank.width = 1;
+    blank.height = 1;
+  }
+  return blank;
+}
+
 export function ServicesCardRing({
   scale = 1,
   progressRef = servicesRingProgressRef,
@@ -2249,6 +2260,25 @@ export function ServicesCardRing({
   const setRingAnchors = useHologramConnectors((s) => s.setRingAnchors);
 
   const [textures, setTextures] = useState<THREE.CanvasTexture[] | null>(null);
+  /* ADR-123 (commit C): on the PHONE the bakes exist only while the band is
+     near — `ServicesStage` stamps `data-ring-near` on `<html>` from two
+     observers (the ring's runway and `#about`, 150 % each side). Desktop is
+     always wanted, so its bake is byte-identical. Read at mount and on the
+     attribute's mutations; never a scroll listener. */
+  const [bakeWanted, setBakeWanted] = useState<boolean>(() =>
+    !mobileProfile || typeof document === "undefined"
+      ? true
+      : document.documentElement.hasAttribute("data-ring-near")
+  );
+  useEffect(() => {
+    if (!mobileProfile || typeof MutationObserver === "undefined") return;
+    const html = document.documentElement;
+    const read = () => setBakeWanted(html.hasAttribute("data-ring-near"));
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(html, { attributes: true, attributeFilter: ["data-ring-near"] });
+    return () => observer.disconnect();
+  }, [mobileProfile]);
   // The deck's shared portrait back (ADR-047): ONE texture + ONE material +
   // ONE geometry across all four back planes — the backs are only ever
   // seen converged (the flip), so identical faces are correct and cheap.
@@ -2945,7 +2975,25 @@ export function ServicesCardRing({
   // Bake the four card faces once (fonts + photos are awaited; a glEpoch
   // canvas remount re-runs this effect and re-bakes).
   useEffect(() => {
+    /* ADR-123 (commit C): not wanted (the phone, the band far away) ⇒ no
+       bake, and whatever was baked is dropped — the `[textures]` /
+       `[backTexture]` cleanups dispose the GPU copies and dropping the state
+       drops the source canvases. The back cache is emptied the same way; its
+       mirror effect disposes what left. */
+    if (!bakeWanted) {
+      // A frame later, not in the effect body (the cascading-render shape
+      // the lint ratchet counts); the release is not on a hot path.
+      const raf = requestAnimationFrame(() => {
+        setTextures(null);
+        if (mobileProfile) {
+          setBackTexture(null);
+          setCardBackTextures((prev) => (prev.some(Boolean) ? prev.map(() => null) : prev));
+        }
+      });
+      return () => cancelAnimationFrame(raf);
+    }
     let disposed = false;
+    const bakeStarted = performance.now();
     (async () => {
       await waitForCardFonts();
       const baked = await Promise.all(
@@ -2987,6 +3035,15 @@ export function ServicesCardRing({
         return texture;
       };
       setTextures(baked.map((b) => toTexture(b.face)));
+      // The diag strip reads this (ADR-123): how long the phone's faces took
+      // from the band coming near, so the release margin can be judged
+      // against a fling.
+      if (mobileProfile) {
+        document.documentElement.setAttribute(
+          "data-ring-bake-ms",
+          String(Math.round(performance.now() - bakeStarted))
+        );
+      }
       // Never a setState on the production path: the state stays its
       // initial null and every consumer's dep is stable.
       if (revealOn) setRevealTextures(baked.map((b) => (b.reveal ? toTexture(b.reveal) : null)));
@@ -3025,6 +3082,7 @@ export function ServicesCardRing({
     plates,
     volumeOn,
     revealOn,
+    bakeWanted,
   ]);
 
   /* ── The DRAWER bake is LAZY (ADR-050 promotion, owner 2026-07-26) ────────
@@ -3082,7 +3140,7 @@ export function ServicesCardRing({
      the loop treats as absent and the next bake replaces. The upload is
      drained through the warm-up queue below like every other bake. */
   useEffect(() => {
-    if (!flipBack || !backRequest) return;
+    if (!flipBack || !backRequest || !bakeWanted) return;
     let disposed = false;
     let idle = 0;
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -3130,7 +3188,7 @@ export function ServicesCardRing({
       if (idle && "cancelIdleCallback" in window) window.cancelIdleCallback(idle);
       if (timer) clearTimeout(timer);
     };
-  }, [gl, flipBack, backRequest, ringTheme, faceVariant, anisotropyCap, plates]);
+  }, [gl, flipBack, backRequest, bakeWanted, ringTheme, faceVariant, anisotropyCap, plates]);
   // Dispose whatever backs are live on unmount (per-entry eviction and
   // replacement dispose the rest as they go).
   useEffect(
@@ -3178,6 +3236,15 @@ export function ServicesCardRing({
       if (texture) {
         try {
           gl.initTexture(texture);
+          /* ADR-123 (commit C): on the phone the SOURCE canvas is released
+             once the GPU copy exists — the four faces are ~10 MB of canvas
+             beside ~13.7 MB of texture. A 1×1 canvas, NEVER null: three reads
+             `image` for its size on every bind, and `needsUpdate` is only
+             ever set at creation, so nothing re-uploads it; a lost context
+             re-runs the bake effect (its `gl` dep) from scratch. */
+          if (mobileProfile && texture.image instanceof HTMLCanvasElement) {
+            texture.image = blankCanvas();
+          }
         } catch {
           // A lost context mid-warm is fine — the glEpoch remount re-runs.
         }
@@ -3194,7 +3261,17 @@ export function ServicesCardRing({
     return () => {
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [gl, scene, camera, textures, backTexture, drawerTextures, revealTextures, cardBackTextures]);
+  }, [
+    gl,
+    scene,
+    camera,
+    textures,
+    backTexture,
+    drawerTextures,
+    revealTextures,
+    cardBackTextures,
+    mobileProfile,
+  ]);
 
   // Dispose bakes on replacement/unmount (materials/geometries are
   // declarative — R3F disposes those; the shared back material/geometry
@@ -3216,7 +3293,7 @@ export function ServicesCardRing({
      deck hands over to the DOM is pixel-identical. Re-runs on a theme flip
      (a new memo key); the old texture disposes through the effect above. */
   useEffect(() => {
-    if (!deckFlip || !mobileProfile || !portraitWanted) return;
+    if (!deckFlip || !mobileProfile || !portraitWanted || !bakeWanted) return;
     let disposed = false;
     const maxAniso = gl.capabilities.getMaxAnisotropy?.() ?? 1;
     portraitBakeFor(ringTheme, BAKE_SCALE_MOBILE_BACK, faceVariant === "full").then((canvas) => {
@@ -3236,7 +3313,16 @@ export function ServicesCardRing({
     return () => {
       disposed = true;
     };
-  }, [deckFlip, mobileProfile, portraitWanted, ringTheme, faceVariant, gl, anisotropyCap]);
+  }, [
+    deckFlip,
+    mobileProfile,
+    portraitWanted,
+    bakeWanted,
+    ringTheme,
+    faceVariant,
+    gl,
+    anisotropyCap,
+  ]);
   useEffect(() => {
     if (!drawerTextures) return;
     return () => {

@@ -410,9 +410,13 @@ rev c, 2026-07-19, owner):** the corner brackets + both rails
 over them — a spatial clip, NOT an opacity fade, NOT a z-index pop. Each
 frame element clips ONLY its top edge to the hero's bottom edge:
 `.hud__rail`/`.hud__corner--tl`/`.hud__corner--br { clip-path: inset(max(0px,
-calc((1 − var(--hero-lift))·100dvh − <its own top offset>)) <sides>) }`
+calc((1 − var(--hero-lift))·100svh − <its own top offset>)) <sides>) }`
 (rail top `--hud-rail-y-start`, TL corner `--hud-margin`, BR corner
-`margin + corner-zone − lift·100dvh`). The RAIL's side/bottom insets MUST be
+`margin + corner-zone − lift·100svh`). ⚠ **`svh` since ADR-123 (2026-09-24)**, with the hero
+itself: it was the page's one in-flow `100dvh` box and every iOS toolbar
+transition re-laid the whole document under the thumb. `--hero-lift` reads
+`layoutViewportHeight()` so lift = 1 ⇔ cleared still holds on the small
+viewport; desktop is byte-identical by arithmetic. The RAIL's side/bottom insets MUST be
 negative (`−100px`) — its tick marks + manifest diamond OVERHANG the rail box
 ~21px, so `0` sides clip them off (the bug the ticks vanished from). `--hero-lift` is the hero's LINEAR
 off-screen fraction (`scrollY/vh`) written by the SAME single

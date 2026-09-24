@@ -439,6 +439,52 @@ test.describe("the ring on phones (ADR-108)", () => {
     });
   }
 
+  /* ── ADR-123 commit C: the bakes come back before the band is seated ─────── */
+  test("the ring is near and baked by the time the band seats, and its cards publish inside 1.5 s (ADR-123 C)", async ({
+    page,
+  }) => {
+    await boot(page);
+    await seatBand(page, BEAT[0]!);
+    const seatedAt = Date.now();
+    expect(
+      await page.evaluate(() => document.documentElement.getAttribute("data-ring-near")),
+      "the band is seated and the ring is not near"
+    ).toBe("1");
+    await page.waitForFunction(
+      () => document.querySelectorAll(".svc-ring-hits__hit").length >= 3,
+      undefined,
+      { timeout: 1500 }
+    );
+    expect(Date.now() - seatedAt).toBeLessThanOrEqual(1500);
+    const bakeMs = await page.evaluate(() =>
+      Number(document.documentElement.getAttribute("data-ring-bake-ms"))
+    );
+    expect(bakeMs, "the phone stamped no bake time").toBeGreaterThan(0);
+    test.info().annotations.push({ type: "ring-bake-ms", description: String(bakeMs) });
+  });
+
+  /* ── ADR-123 commit B: the band is where the corridor draws ────────────── */
+  test("on the band the corridor paints and the pile's hold is off (ADR-123 B)", async ({
+    page,
+  }) => {
+    await boot(page);
+    await seatBand(page, BEAT[1]);
+    await page.waitForTimeout(400);
+    expect(
+      await page.evaluate(() => document.documentElement.getAttribute("data-pile-hold"))
+    ).toBeNull();
+    const frames = () =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __tfFrames?: { corridor: number } }).__tfFrames?.corridor ?? -1
+      );
+    const f0 = await frames();
+    expect(f0).toBeGreaterThanOrEqual(0);
+    await page.waitForTimeout(600);
+    const f1 = await frames();
+    expect(f1 - f0, "the corridor is not painting on the band").toBeGreaterThanOrEqual(5);
+  });
+
   test("the ring rests off-stage before the band and leaves with it", async ({ page }) => {
     await boot(page);
     const top = await bandTop(page);

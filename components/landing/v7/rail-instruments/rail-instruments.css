@@ -287,7 +287,7 @@
   clip-path: inset(
     max(
         0px,
-        calc(var(--hud-margin) + var(--hud-corner-zone) - var(--hero-lift, 0) * 100dvh)
+        calc(var(--hud-margin) + var(--hud-corner-zone) - var(--hero-lift, 0) * 100svh)
       ) -340px -340px -340px
   );
 }
@@ -518,7 +518,7 @@ html[data-rail-instruments] .hud__rail {
   clip-path: inset(
     max(
         0px,
-        calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-rail-y-start))
+        calc((1 - var(--hero-lift, 0)) * 100svh - var(--hud-rail-y-start))
       ) -340px -340px -340px
   );
 }
@@ -528,7 +528,7 @@ html[data-rail-instruments] .hud__rail {
    corner just widens what the curtain has to travel over. The TOP inset is
    untouched — it is what uncovers the frame as the hero lifts. */
 html[data-rail-instruments] .hud__corner--tl {
-  clip-path: inset(max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) 0 0 0);
+  clip-path: inset(max(0px, calc((1 - var(--hero-lift, 0)) * 100svh - var(--hud-margin))) 0 0 0);
 }
 @media (prefers-reduced-motion: reduce) {
   .rin-mark,

@@ -259,6 +259,41 @@ export function ServicesStage() {
   // `data-active-step` — the step that owns which plate is open.
   useServicesStageScroll(stageRef, setActiveByStep);
 
+  /* ── ADR-123 (commit C): the ring's bakes are RELEASED until the band is
+     near. On the phone the four faces (~13.7 MB of GPU texture with mips at
+     `BAKE_SCALE_MOBILE` 0.75, plus their source canvases) baked at mount and
+     were held through the whole proof pile, off-stage. Two observers — the
+     ring's runway AND `#about` (the deck needs the faces through the band's
+     exit and the flip) — at a 150 % margin each side stamp `data-ring-near`
+     on `<html>`; `ServicesCardRing` bakes while it is on and drops its
+     textures when it goes. Phone ring only: the desktop ring keeps its
+     mount-time bake, byte-identical. */
+  useEffect(() => {
+    if (!cardRingMobileActive || typeof IntersectionObserver === "undefined") return;
+    const runway = stageRef.current?.querySelector<HTMLElement>(".svc-ring-runway") ?? null;
+    const about = document.getElementById("about");
+    const targets = [runway, about].filter((el): el is HTMLElement => !!el);
+    if (!targets.length) return;
+    const near = new Map<Element, boolean>();
+    const publish = () => {
+      const on = Array.from(near.values()).some(Boolean);
+      if (on) document.documentElement.setAttribute("data-ring-near", "1");
+      else document.documentElement.removeAttribute("data-ring-near");
+    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) near.set(e.target, e.isIntersecting);
+        publish();
+      },
+      { rootMargin: "150% 0px 150% 0px", threshold: 0 }
+    );
+    for (const el of targets) observer.observe(el);
+    return () => {
+      observer.disconnect();
+      document.documentElement.removeAttribute("data-ring-near");
+    };
+  }, [cardRingMobileActive]);
+
   // Ring rotation is NATIVE-SCROLL-OWNED (2026-07-15 pass): the wheel-snap
   // hijack is retired so scrubbing over the cards reads as continuous
   // scroll and scrolling in the dead space around them advances the runway

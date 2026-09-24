@@ -54,6 +54,36 @@ If unsure, use **one** of the questions in [Cycle A](#cycle-a-post-incident-capt
 Chronological record of repo-wide maintenance passes (distinct from the Cycle
 A/B capture rules above). Newest first.
 
+### 2026-09-24 — the phone: the era instrument pins, the pile's reload is bisected on the device (ADR-123)
+
+**Trigger:** the owner, on his iPhone (Safari and Chrome): the proof section
+"reloads when I scroll" and the era section "is not locking into place".
+Nothing here can measure a WebKit memory kill, so the era stage is fixed by
+construction and the reload is bisected with four preview builds he opens.
+
+- **Cycle B → ADR-123**, built on `diag/phone-pile` (a worktree beside the main
+  tree) and landed on `main` the same day on his word — Part 2 and A–C as four
+  commits, D held on the branch: Part 2 — `#voidwalker` is
+  a runway and the stop on ≤700, `.vwd` sticky at `100dvh`, the eras on the
+  dwell (`VOIDWALKER_PHONE_ERA_BAND`), two release targets, the hero on `svh`,
+  programmatic scrolls on seats; Part 1 — the diag strip behind `?diag=phone`,
+  the landing's own scroll restoration, the services boundary (A), the pile's
+  frame hold and the covered field's paint (B), the bakes released until the
+  band is near (C), the ring flag off (D).
+- **Reverses on his word:** ADR-113 §1 (no sticky runway) and §2 (the hero's
+  `innerHeight` exemption), its held dial turned — recorded as ADR-113 U2; an
+  ADR-115 note corrects U1's drift claim.
+- **Q3 (a class of bug) → BEST-PRACTICES:** an in-flow `dvh` box moves the
+  document on iOS; a one-screen stop between pinned bands needs a runway.
+- **Q5 (a runtime check that caught it earlier):** `voidwalker-phone-runway`
+  (the lockstep), the seams spec's sweep (every rest lands on a seat or a pin —
+  the check that would have measured the 807px), the geometry and stillness
+  cases, `scroll-memory`.
+- **Rules:** `mobile-sections.md` §10 / §11 amended, new §12; `voidwalker.md`;
+  `landing-v7.md`'s clip paragraph; `services-ring.md`'s stale bake figure.
+- **Not verified here:** the device, both parts; WebKit's snap radius; Vercel
+  preview builds on this project.
+
 ### 2026-09-24 — the whole codebase, reviewed: fifteen findings (ADR-003 amendment)
 
 **Trigger:** the owner ran `/code-review [ultra]` over the entire codebase

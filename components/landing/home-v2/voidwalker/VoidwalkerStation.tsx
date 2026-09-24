@@ -490,6 +490,11 @@ export function VoidwalkerStation() {
   return (
     <div className="vw vw--hologram">
       <VoidwalkerHologram />
+      {/* ADR-123: THE RELEASE TARGET on the phone runway — a 100dvh box at
+          the runway's foot whose top is the instrument's last pinned frame,
+          so a rest just past the eras springs back to them. `display: none`
+          everywhere the runway is not (voidwalker.css). */}
+      <div className="vw-phone-snap" aria-hidden="true" />
     </div>
   );
 }

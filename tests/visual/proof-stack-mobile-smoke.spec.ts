@@ -478,4 +478,141 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     expect(short.split).toBe(false);
     expect(short.slots).toEqual(["static", "static", "static", "static"]);
   });
+
+  /* ── ADR-123 commit A: the landing lands where the reader was ─────────
+     The browser's own restore fires against a document the lazy corridor has
+     not yet grown and clamps a deep position to the bottom; the landing keeps
+     its own memory and replays it once the split pile and the stage are up. */
+  test("a reload deep in the pile comes back to the same slot (ADR-123)", async ({ page }) => {
+    await openPile(page);
+    const state = await seatSlot(page, 4);
+    expect(state).toMatch(/^(pinned|covered)$/);
+    // Let the memory's coalesced write land (<=4 Hz) before the reload.
+    await page.waitForTimeout(400);
+    const saved = await page.evaluate(() => Math.round(window.scrollY));
+    expect(saved).toBeGreaterThan(1000);
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".pf-stack--split", { timeout: 60_000 });
+    // The replay waits for a still document tall enough to hold the target
+    // (cap 4 s) and re-applies once at +500 ms; give it both.
+    await page.waitForFunction((y) => Math.abs(window.scrollY - y) <= 2, saved, { timeout: 8000 });
+    await page.waitForTimeout(700);
+    const after = await page.evaluate(() => ({
+      y: Math.round(window.scrollY),
+      restoration: history.scrollRestoration,
+      state:
+        document.querySelector<HTMLElement>('.pf-slot[data-pc-index="4"]')?.dataset.pcState ?? null,
+    }));
+    expect(Math.abs(after.y - saved), "the reload did not land where it left").toBeLessThanOrEqual(
+      2
+    );
+    expect(after.restoration).toBe("manual");
+    expect(after.state).toMatch(/^(pinned|covered)$/);
+  });
+
+  /* ── ADR-123 commit B: the pile owns the frame, and the scene under it rests ──
+     `__tfFrames` is exposed only under `navigator.webdriver` (the governor's
+     own carve-out), which Playwright sets. */
+  test("under the pile the corridor rests, the covered field stops painting, and no particle canvas mounts (ADR-123 B)", async ({
+    page,
+  }) => {
+    await openPile(page);
+    const frames = () =>
+      page.evaluate(
+        () =>
+          (window as unknown as { __tfFrames?: { corridor: number } }).__tfFrames?.corridor ?? -1
+      );
+    const hold = () => page.evaluate(() => document.documentElement.getAttribute("data-pile-hold"));
+
+    // At the page's top nothing holds.
+    await rollTo(page, 0);
+    await page.waitForTimeout(300);
+    expect(await hold(), "the hold is on above the pile").toBeNull();
+    // The particle canvas has nothing to paint on this route and never mounts.
+    expect(await page.locator(".tf-brandmark-particle-canvas").count()).toBe(0);
+
+    const state = await seatSlot(page, 3);
+    expect(state).toMatch(/^(pinned|covered)$/);
+    await page.waitForTimeout(400);
+    expect(await hold(), "the pile owns the frame but the hold is off").toBe("1");
+    // ADR-123 commit C: this deep in the pile the band is more than 1.5
+    // viewports away, so the ring's bakes are released.
+    expect(
+      await page.evaluate(() => document.documentElement.getAttribute("data-ring-near")),
+      "the ring is baked under the pile"
+    ).toBeNull();
+
+    // At rest inside the pile the corridor's Canvas paints nothing.
+    const f0 = await frames();
+    expect(f0, "__tfFrames is not exposed under webdriver").toBeGreaterThanOrEqual(0);
+    await page.waitForTimeout(600);
+    const f1 = await frames();
+    expect(f1 - f0, "the corridor kept painting under the pile at rest").toBeLessThanOrEqual(2);
+
+    // A scroll still moves the bed in the gutters: one frame per event.
+    const y = await page.evaluate(() => window.scrollY);
+    await page.evaluate(async (from) => {
+      for (let i = 1; i <= 6; i++) {
+        window.scrollTo(0, from + i * 20);
+        await new Promise((r) => requestAnimationFrame(r));
+      }
+    }, y);
+    await page.waitForTimeout(200);
+    const f2 = await frames();
+    expect(f2 - f1, "a scroll under the hold painted nothing").toBeGreaterThanOrEqual(2);
+
+    // The covered FIELD sheet stops painting; its RECORD keeps its band; the
+    // slot's geometry (what the hook measures) is untouched.
+    await seatSlot(page, 4);
+    await page.waitForTimeout(300);
+    const covered = await page.evaluate(() => {
+      const slot1 = document.querySelector<HTMLElement>('.pf-slot[data-pc-index="1"]');
+      const card1 = slot1?.querySelector<HTMLElement>(".pf-card");
+      const head0 = document.querySelector<HTMLElement>(
+        '.pf-slot[data-pc-index="0"] .pf-card__head'
+      );
+      const r = slot1?.getBoundingClientRect();
+      return {
+        state1: slot1?.dataset.pcState ?? null,
+        card1Visibility: card1 ? getComputedStyle(card1).visibility : null,
+        card1Clip: card1 ? getComputedStyle(card1).clipPath : null,
+        head0Visibility: head0 ? getComputedStyle(head0).visibility : null,
+        slot1Height: r?.height ?? 0,
+      };
+    });
+    expect(covered.state1).toBe("covered");
+    expect(covered.card1Visibility, "the covered field sheet still paints").toBe("hidden");
+    expect(covered.card1Clip).toBe("none");
+    expect(covered.head0Visibility, "the record's band went with the field").toBe("visible");
+    expect(covered.slot1Height).toBeGreaterThan(100);
+  });
+
+  test("the diag strip mounts only on ?diag=phone, with a 44px copy chit (ADR-123)", async ({
+    page,
+  }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".pf-stack", { timeout: 60_000 });
+    await page.waitForTimeout(800);
+    expect(
+      await page.locator("[data-diag-phone]").count(),
+      "the strip is on the anonymous path"
+    ).toBe(0);
+
+    await page.goto("/?diag=phone", { waitUntil: "domcontentloaded" });
+    const strip = page.locator("[data-diag-phone]");
+    await expect(strip).toBeVisible({ timeout: 20_000 });
+    const chit = strip.locator("button");
+    const box = await chit.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // The build letter moves per bisect rung (`DIAG_VARIANT`).
+    await expect(strip).toContainText(/NOW [A-D] /);
+    // The flag survives a reload without the query string (that is the point).
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("[data-diag-phone]")).toBeVisible({ timeout: 20_000 });
+    await page.goto("/?diag=off", { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(800);
+    expect(await page.locator("[data-diag-phone]").count()).toBe(0);
+  });
 });

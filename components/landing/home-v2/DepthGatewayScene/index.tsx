@@ -11,7 +11,9 @@ import {
   useQualityStore,
 } from "@/lib/hooks/useQualityTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { FrameCounter } from "@/components/landing/home-v2/FrameCounter";
 import { vwTravelRef } from "@/lib/home-v2/vwTravelRef";
+import { onPileHold, pileHoldRef } from "@/lib/home-v2/pileHoldRef";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { BrandmarkPhysicsCoreActor } from "./BrandmarkPhysicsCoreActor";
 import { CelestialMotes } from "./CelestialMotes";
@@ -151,7 +153,19 @@ function FrameInvalidator() {
       // ADR-081: the time tunnel pins #voidwalker for fourteen viewports
       // and the reader WILL stop scrolling inside it. Without this the
       // demand loop dies mid-flight and the tunnel freezes.
-      return t.active || t.armed || t.docked || t.servicesAmbient || vwTravelRef.current.engaged;
+      // ADR-123 (commit B): NOT while the phone's proof pile owns the frame
+      // (`pileHoldRef`, written by the pile's own observers) — eight sticky
+      // sheets cover everything but the gutters, and a scene nobody can see
+      // was the one thing still painting every frame. Under the hold the
+      // scroll listener below paints one frame per event so the bed in the
+      // gutters still moves; at rest nothing draws.
+      return (
+        t.active ||
+        t.armed ||
+        t.docked ||
+        (t.servicesAmbient && !pileHoldRef.value) ||
+        vwTravelRef.current.engaged
+      );
     };
 
     const pump = () => {
@@ -176,7 +190,7 @@ function FrameInvalidator() {
     engaged = isEngaged();
     if (engaged) start();
 
-    const unsubscribe = useDepthGatewayStore.subscribe(() => {
+    const reconcile = () => {
       const next = isEngaged();
       if (next && !engaged) {
         engaged = true;
@@ -188,12 +202,20 @@ function FrameInvalidator() {
         // disengaged (hidden) state before the loop idles.
         invalidate();
       }
-    });
+    };
+    const unsubscribe = useDepthGatewayStore.subscribe(reconcile);
+    const unsubscribeHold = onPileHold(reconcile);
+    const onScroll = () => {
+      if (pileHoldRef.value) invalidate();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       engaged = false;
       stop();
       unsubscribe();
+      unsubscribeHold();
+      window.removeEventListener("scroll", onScroll);
     };
   }, [invalidate]);
   return null;
@@ -422,6 +444,9 @@ export function DepthGatewayScene() {
       {/* Re-entry guard — wakes the demand-mode loop when the corridor
           re-engages so scroll-back never strands a cleared buffer. */}
       <FrameInvalidator />
+      {/* ADR-123: counts the frames this Canvas paints, for the phone diag and
+          the smokes' "the corridor is at rest in the pile" assertion. */}
+      <FrameCounter which="corridor" />
       <FlyingCameraRig />
       <StaticStarfield />
       {/* SubstrateTopography — the realm OUTSIDE the wormhole: a
