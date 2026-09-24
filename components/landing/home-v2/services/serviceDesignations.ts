@@ -100,7 +100,9 @@ export const SERVICE_DESIGNATIONS: Record<ServiceId, readonly ServiceDesignation
   ],
   // 03 Embedded
   embedded: [
-    D("crown", "THREE STAGES", "each one a gate", "left", 36, -26),
+    // The crown's detail names the scope (ADR-124): the three stages run
+    // from production to review.
+    D("crown", "THREE STAGES", "production to review", "left", 36, -26),
     D("upper-right-arm", "YOUR OWN KEYS", "no seat to renew", "left", 24, -60),
     D("lower-left-arm", "TRAINED PEOPLE", "who run it after", "right", 24, 60),
     // Ownership moves to the base's detail, which is the slot that always

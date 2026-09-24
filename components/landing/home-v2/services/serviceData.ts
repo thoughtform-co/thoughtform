@@ -192,7 +192,7 @@ export const SERVICES: readonly Service[] = [
        on a DOM surface with no bake budget, phrased as evidence. It may not
        travel to the baked face or the phone back. ADR-112 adds the leadership
        altitude in the same breath — Advisory's standing read, inside the embed. */
-    body: "A modular sprint in three stage-gated workstreams, run on your own keys inside the tools the team already uses, with a standing session for leadership alongside. Proven first on creative work; the same shape takes any team's own workstreams.",
+    body: "Embedded in your marketing team, from creative production to operations to review: a modular sprint in three stage-gated workstreams on your own keys, inside the tools the team already uses, with a standing session for leadership alongside. Proven first on creative work; the same shape takes any team's own workstreams.",
     meta: [
       { label: "Runs", value: "Three workstreams · leadership" },
       { label: "Format", value: "Fixed term · dated handover" },
