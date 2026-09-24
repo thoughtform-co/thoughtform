@@ -86,6 +86,11 @@ export function useAboutBandScroll(active: boolean): void {
     const about = document.getElementById("about");
     const band = about?.querySelector<HTMLElement>(":scope > .voidwalker") ?? null;
     if (!about || !band) return;
+    /* ADR-123: the drawer and the hash anchor land on SEATS, not stations —
+       `#about`'s is the reading state. Stamped where the band is resolved;
+       off the band rung the target is `display: none` and the resolver falls
+       back to the station. */
+    about.querySelector<HTMLElement>(".voidwalker__snap")?.setAttribute("data-station-seat", "");
 
     const name = band.querySelector<HTMLElement>(".voidwalker__name");
     const role = band.querySelector<HTMLElement>(".voidwalker__role");

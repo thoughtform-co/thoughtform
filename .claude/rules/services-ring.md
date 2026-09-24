@@ -494,10 +494,25 @@ RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
   depth. The ask is `ringMobileFrontWidthPx(vw) = min(260, 0.66·vw)`; the
   radius is `RING_ORBIT_BASE_RADIUS × RING_MOBILE_RADIUS_MUL` (0.7) so the
   side cards stay inside the 70° portrait frustum.
-- **THE PHONE PROFILE**: `profile="mobile"` → bake at `BAKE_SCALE_MOBILE` 0.5
+- ⚠ **THE PHONE'S BAKES ARE RELEASED UNTIL THE BAND IS NEAR (ADR-123 commit
+  C, 2026-09-24).** `ServicesStage` observes `.svc-ring-runway` AND `#about`
+  at a 150 % margin each side and stamps `data-ring-near` on `<html>`;
+  `ServicesCardRing`'s `bakeWanted` (a `MutationObserver` on that attribute,
+  mobile profile only — desktop is always wanted and byte-identical) gates the
+  face bake, the phone portrait and the back cache, and `!bakeWanted` drops
+  every texture through the existing cleanups. The warm-up drain points a
+  released phone texture's `image` at a 1×1 canvas after `gl.initTexture`
+  (never `null`), and the bake's duration is stamped as `data-ring-bake-ms`
+  for the diag. Cost, named: a fling from the pile faster than the re-bake
+  shows the cards a beat late — the ring smoke asserts the hits publish
+  inside 1.5 s of the band seating, and the margin is the dial.
+- **THE PHONE PROFILE**: `profile="mobile"` → bake at `BAKE_SCALE_MOBILE`
+  **0.75 since ADR-115 U1** (this line said 0.5 / ~6 MB until 2026-09-24: at
+  0.75 the four faces are ~13.7 MB of texture with mips plus ~10 MB of source
+  canvases, held from mount — the figure ADR-123's bisect starts from)
   through `bakeSize()` with the bake drawing under `ctx.scale` (every
   coordinate stays in 840×1360 space; the CTA/drawer box fractions hold by
-  construction; ~6 MB of texture with mips against ~32), `openDrawer={false}`
+  construction), `openDrawer={false}`
   (no drawer bake, no open state), no portrait back, no hover pick,
   anisotropy ≤ 4. Governor floor: `useQualityStore.countMultiplier > 0.35`
   or no ring at all — never half a ring.

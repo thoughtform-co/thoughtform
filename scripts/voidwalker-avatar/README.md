@@ -62,6 +62,9 @@ python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage
 python scripts/voidwalker-avatar/generate.py ... --edit-kind face --model gpt --draws 3   # GPT Image 2, the identity-rescue lane
 python scripts/voidwalker-avatar/grade.py --wave <wave> --stage plate && python scripts/voidwalker-avatar/sheet.py --wave <wave>   # + heads.jpg
 # every LATER edit in a wave that holds identity crops attaches them too (aim-stand, command, mouth, rifle)
+# ADR-082 U41 C: the cap becomes the owner's reference HELMET and the build widens — one two-change edit
+python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage edit --edit-kind rig --source <the picked face plate> --design <helmet-frame.jpg> <helmet-frame-2.jpg> --model gpt --draws 3
+python scripts/voidwalker-avatar/legs.py --wave <wave> --source <path to the rig plate>     # every aim-stand's legs against it, a number per plate
 ```
 
 ⚠ **AN EDIT ATTACHES THE IDENTITY CROPS OR IT DRIFTS (U41).** The Expanse's face
@@ -190,7 +193,7 @@ seat box is still there), so a figure ending above the canvas floor hovers.
 | era          | wave                     | status                                                   |
 | ------------ | ------------------------ | -------------------------------------------------------- |
 | `genai`      | `20260918-genai-v3`      | shipped (one-step, `-v2`) — re-cut on the two-step route |
-| `expanse`    | `20260922-expanse-v7`    | the commander performs (U35): point → order → aim, `-v5` |
+| `expanse`    | `20260924-expanse-v8`    | his face back, helmet, broader (U41): the scene, `-v6`   |
 | `azeroth`    | offline `v5-blender`     | shipped `-v11` (v10 seated 33 rows, `reseat_azeroth.py`) |
 | `pokemon-go` | `20260922-pokemon-go-v1` | the trainer as a cel, on magenta (U33), `-v1`            |
 

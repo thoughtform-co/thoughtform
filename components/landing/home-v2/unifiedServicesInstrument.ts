@@ -511,7 +511,13 @@ export const PROOF_STACK_SPLIT_MEDIA =
  * frame-rate the owner reads on his own device, not a number this tree can
  * measure — a fail there ships the flag off and nothing else moves.
  */
-export const SERVICES_CARD_RING_MOBILE = true;
+/* ⚠ ADR-123 commit D — THE BISECT'S LAST RUNG, NOT A DECISION. Off, the phone
+   takes ADR-108 §194's ship-with-fail answer: no dock, no ambient hold, no
+   fixed canvas, no band, no deck (ADR-115 goes with it). This build exists so
+   the owner can read whether the pile still reloads with the ring's whole
+   surface gone; the phone ring smokes and the seams spec's about-band stops
+   are EXPECTED RED on this commit and green on A–C. */
+export const SERVICES_CARD_RING_MOBILE = false;
 
 /**
  * The phone rung on which the ring mounts (ADR-108) — ONE string, THREE
@@ -548,3 +554,36 @@ export const SERVICES_RING_MOBILE_MEDIA = PROOF_STACK_SPLIT_MEDIA;
  * the acceptance gate is his device.
  */
 export const SERVICES_ABOUT_DECK_MOBILE = true;
+
+/**
+ * Feature flag for THE ERA INSTRUMENT PINNED ON THE PHONE (ADR-123).
+ *
+ * Owner, 2026-09-24: _"In the Voidwalker section, when I enter it, the
+ * components or just that section scroll weirdly. It's not locking into
+ * place … Once you hit a section, the section inside it, with all the
+ * components, should not be able to move as awkwardly as it does now."_
+ * `#services` and `#about` lock in because each is a PINNED band whose scroll
+ * only advances a clock; `.vwd` was the journey's one unpinned stop — a
+ * one-screen box in flow, held only by the proximity snap after the finger
+ * lifts. On the ≤700 rung the station becomes a runway (`100svh +
+ * --vw-phone-dwell`), `.vwd` pins inside it, and the five eras ride the dwell
+ * — the desktop's own ADR-082 U10 law, one rung down. A tap still glides the
+ * scroll to its era. This reverses ADR-113 §1's "no sticky runway" on his word.
+ *
+ * ⚠ OFF ⇒ ADR-113's PHONE PAGE, BYTE-IDENTICAL: the station keeps its
+ * padding, `.vwd` flows and is the snap seat, taps alone select. Read by
+ * `useVoidwalkerHologramScroll` (the phone branch and its `data-vw-phone`
+ * stamp), `VoidwalkerHologram` (the tap's glide and the poster warm) and,
+ * through the stamp, `voidwalker.css`. `tests/lib/voidwalker-phone-runway.test.ts`
+ * pins the media string to the sheet's block.
+ */
+export const VOIDWALKER_PHONE_RUNWAY = true;
+
+/**
+ * The rung the era instrument pins on: the instrument's own one-screen rung
+ * (`voidwalker-datum.css`'s ≤700 block — `.vwd` is `100svh` there and
+ * content-height above it), with the ring rung's height floor and motion
+ * gate. ONE string, read by the hook and pinned to the sheet's `@media`.
+ */
+export const VOIDWALKER_PHONE_RUNWAY_MEDIA =
+  "(max-width: 700px) and (min-height: 681px) and (prefers-reduced-motion: no-preference)";

@@ -554,6 +554,52 @@ display: none }` gives the films and the map no row and no second gap; the
   still stuck, `offsetTop` reading 743 for 0, and the seat converging on
   `covered`. Any new scroll-then-measure in these smokes takes the same helper.
 
+## The pile's hold, and the covered field (ADR-123 commit B, 2026-09-24)
+
+The phone's pile is eight sticky sheets over a LIVE corridor bed (ADR-108's
+fixed canvas), and the owner's iPhone reloaded the page inside it — a WebKit
+memory kill nothing here can measure, so what is resident and running under
+the pile was cut and the cut is bisected on the device (ADR-123 §Part 1).
+
+- **THE HOLD.** In split mode `ProofStack` runs two `IntersectionObserver`s on
+  `.pf-stack__runway` (`0 0 -92% 0` and `-92% 0 0 0`): while the runway spans
+  from above the frame's top 8 % to below its bottom 92 %, the sheets cover
+  everything but the gutters, and `setPileHold(true)` writes three-free
+  `lib/home-v2/pileHoldRef.ts` and stamps `data-pile-hold="1"` on `<html>`.
+  ⚠ A REF, NOT A STORE FIELD — `servicesAmbient` keeps its single writer
+  (ADR-021). ⚠ Observers, never a scroll listener: they fire on the
+  compositor's own schedule and cost nothing at rest.
+- **WHAT READS IT.** The corridor's `FrameInvalidator` gate is
+  `active || armed || docked || (servicesAmbient && !hold) || vwTravel.engaged`,
+  re-reconciled on the hold's own listener (`onPileHold`) as well as the
+  store's; under the hold a passive `scroll` listener paints ONE frame per
+  event so the bed in the gutters still moves, and at rest nothing draws.
+  Cost, named: the haze's twinkle freezes in the gutters between scroll
+  events. Desktop never sets the hold (the pile is seated over a pinned stage
+  there), so the invalidator is byte-identical off the split rung.
+- **A COVERED FIELD SHEET STOPS PAINTING.**
+  `.pf-slot--field[data-pc-state="covered"] .pf-card { visibility: hidden;
+clip-path: none }` in the split block — on the CARD, never the slot (the
+  hook measures the slot's rect), and the RECORD keeps its band by
+  construction (ADR-107 §4: the band is the tab that names the folder
+  underneath). Covered ⇔ cover ≥ .999, so nothing visible changes at the
+  flip. ⚠ No `contain: paint` (a rising card sits `--pc-rise` below its slot
+  during arrival) and no `will-change`.
+- **THE PARTICLE CANVAS DOES NOT MOUNT ON `/`.** `BrandmarkSystem` renders
+  `BrandmarkParticleCanvas` only with two live anchors — the journey needs two
+  keyframes with a measured rect before it ever sets `visible`
+  (`useBrandmarkJourney`), and the landing strips every station that carried
+  one; so a second full-screen WebGL context was mounting at DPR 1.75,
+  redrawing once per scroll frame, and could never paint a pixel.
+  `landing-brand-anchors.test.ts` pins the parsed body at zero anchors. Hosts
+  that do mount it take DPR 1.4 on a coarse pointer.
+- **GUARDS.** The phone proof-stack smoke: no hold at the top; hold on with
+  slot 3 pinned; `__tfFrames.corridor` (exposed under `navigator.webdriver`
+  only) advances ≤ 2 over 600 ms at rest and ≥ 2 after six scroll steps; the
+  covered field's card `hidden` with its record's band `visible` and the slot's
+  box intact; no `.tf-brandmark-particle-canvas`. The ring smoke: on the band
+  no hold and the corridor advancing ≥ 5 frames in 600 ms.
+
 ## The phone's ruling sheets (ADR-116, 2026-09-21, owner)
 
 - ⚠ **A FIELD SHEET'S CONTENTS FIT ITS BAY, AND THAT IS NOW MEASURED.** The

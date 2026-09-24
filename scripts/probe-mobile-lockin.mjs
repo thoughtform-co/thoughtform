@@ -37,7 +37,18 @@ const SHAPES = argOf("--shapes", "390x844,430x932,390x745")
   .map((s) => s.split("x").map(Number));
 const OUT_BASE = argOf("--out", ".cursor/mobile-lockin");
 const HEADLESS = args.includes("--headless");
-const STOPS = ["#services", "#about", ".vwd", "#contact"];
+/* ADR-115 took `#about` off the list (its two targets are the stops); ADR-123
+   adds the band's release, makes the era STATION the stop and adds its
+   release target. `.vwd` is pinned inside the runway and no longer a stop. */
+const STOPS = [
+  "#services",
+  ".voidwalker__snap",
+  ".voidwalker__snap-out",
+  "#voidwalker",
+  ".vw-phone-snap",
+  "#musings",
+  "#contact",
+];
 const SWEEP = [40, 80, 120, 160, 200, 240, 280, 320, 360, 400];
 
 let failures = 0;
@@ -184,7 +195,7 @@ for (const [w, h] of SHAPES) {
   /* ── the proximity radius, per stop ─────────────────────────────── */
   console.log("\n  radius sweep (largest short-stop that lands on the seat)");
   const radii = {};
-  for (const sel of ["#services", "#about", ".vwd"]) {
+  for (const sel of ["#services", ".voidwalker__snap", "#voidwalker"]) {
     let byScroll = 0;
     let byWheel = 0;
     for (const n of SWEEP) {

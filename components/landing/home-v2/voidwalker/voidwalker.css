@@ -995,3 +995,81 @@ html[data-corridor-exit="true"] #voidwalker[data-vw-mode="hologram"].station {
     display: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   THE ERA INSTRUMENT PINS ON THE PHONE (ADR-123)
+
+   Owner, 2026-09-24: "when I enter it, the components or just that section
+   scroll weirdly. It's not locking into place … Once you hit a section, the
+   section inside it, with all the components, should not be able to move as
+   awkwardly as it does now." `#services` and `#about` hold because each is a
+   PINNED band whose scroll only advances a clock; `.vwd` was the journey's
+   one unpinned stop, a one-screen box in flow that every pixel of a drag
+   moved until the proximity snap pulled — and between the bio's reading seat
+   and the instrument's seat nothing pulled for ~807px at 390×844.
+
+   ⚠ THIS REVERSES ADR-113 §1's "no sticky runway", ON HIS WORD. That ruling
+   stood on the taps: "every extra pixel is a band in which nothing changes".
+   The eras ride the dwell here (the desktop's own ADR-082 U10 law), so the
+   dwell is the era selector and nothing in it is dead scroll.
+
+   ⚠ GATED ON THE STAMP, ADR-113's own recipe (`data-vw-mode`): the writer
+   sets `data-vw-phone="runway"` under `VOIDWALKER_PHONE_RUNWAY` and the
+   media string the sheet restates here — `tests/lib/voidwalker-phone-runway`
+   pins the two equal. Flag off, or the rung unmatched, and every rule below
+   is inert: ADR-113's phone page, byte for byte.
+   ⚠ ≤700 ONLY: the instrument's own one-screen rung (`voidwalker-datum.css`).
+   At 701–960 `.vwd` is content-height and cannot pin at one screen, so that
+   rung keeps today's flow.
+   ⚠ THE STATION IS THE STOP, `#services`' idiom for a runway station. Its
+   padding goes to 0 — the pin frame is the station's own top — and the
+   chrome bands are reserved from INSIDE the instrument as they always were
+   (`.vwd__sheet`'s padding-top, `.vwd__band`'s padding-bottom). `.vwd`'s own
+   `scroll-snap-align` goes to `none`: one seat, the station's.
+   ⚠ `scroll-snap-stop: always` IS ADR-113's HELD DIAL, TURNED — the device
+   showed the overshoot the dial was waiting for.
+   ⚠ THE PINNED BAND IS `100dvh` (ADR-115 U1's law): its stops are seated
+   against the fixed chrome, which lives in the dynamic viewport. The runway
+   and the dwell stay in `svh`, and the writer MEASURES the travel (runway −
+   band). The recorded fallback if the figure's breathing on a bar transition
+   reads wrong on the device is one declaration: `height: 100svh` here.
+   ⚠ NO WELD OVER `#about`. An opaque station rising over the pinned bio band
+   would cover the paragraph, the chevron and the portrait's handover — the
+   band's own release target (`about-band.css`) closes that stretch instead.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 700px) and (min-height: 681px) and (prefers-reduced-motion: no-preference) {
+  #voidwalker[data-vw-phone="runway"].station {
+    /* THE ONE DIAL: 120svh, ADR-122 U1's reason (60svh "scrolls too quickly
+       into the next section"); five eras of 24svh each. */
+    --vw-phone-dwell: 120svh;
+    padding-block: 0;
+    min-height: calc(100svh + var(--vw-phone-dwell));
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  #voidwalker[data-vw-phone="runway"] .vw--hologram {
+    min-height: calc(100svh + var(--vw-phone-dwell));
+  }
+  #voidwalker[data-vw-phone="runway"] .vw--hologram > .vwd {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    scroll-snap-align: none;
+  }
+  /* THE RELEASE TARGET: a 100dvh box on the runway's foot, so its top IS the
+     instrument's last pinned frame in either bar state. A rest just past the
+     eras springs back to them; a rest short of the frame glides onto it. */
+  #voidwalker[data-vw-phone="runway"] .vw-phone-snap {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100dvh;
+    scroll-snap-align: start;
+    pointer-events: none;
+  }
+}
+.vw-phone-snap {
+  display: none;
+}

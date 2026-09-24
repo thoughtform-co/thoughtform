@@ -19,12 +19,20 @@ import {
   type ViewportRect,
 } from "@/lib/voidwalker/aboutVoidwalkerHandoff";
 import { clamp01 } from "@/lib/math";
+import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
 import {
+  VOIDWALKER_PHONE_ERA_BAND,
   voidwalkerEraFromProgress,
+  voidwalkerEraPickRef,
   voidwalkerEraScrubRef,
 } from "@/lib/voidwalker/voidwalkerHologramClock";
 
-import { ABOUT_DECK_STAGE, VOIDWALKER_HOLOGRAM_STAGE } from "../unifiedServicesInstrument";
+import {
+  ABOUT_DECK_STAGE,
+  VOIDWALKER_HOLOGRAM_STAGE,
+  VOIDWALKER_PHONE_RUNWAY,
+  VOIDWALKER_PHONE_RUNWAY_MEDIA,
+} from "../unifiedServicesInstrument";
 
 const CAPABLE_QUERY = "(min-width: 1101px) and (prefers-reduced-motion: no-preference)";
 const INTERACTIVE_ENTER = 0.58;
@@ -107,8 +115,17 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
     let observedSlot: HTMLElement | null = null;
     let observedDossier: HTMLElement | null = null;
     let observedTitle: HTMLElement | null = null;
+    /* ADR-123 — the phone runway's own state: whether the stamp is on, the
+       era the dwell last resolved to (an INPUT to the hysteresis, as
+       `currentEra` is above), the last progress written, and whether a tap's
+       glide has landed. */
+    let phoneEngaged = false;
+    let phoneEra = 0;
+    let lastPhoneP = -1;
+    let pickLanded = false;
 
     const capableMedia = window.matchMedia(CAPABLE_QUERY);
+    const phoneMedia = window.matchMedia(VOIDWALKER_PHONE_RUNWAY_MEDIA);
     const targetResizeObserver =
       typeof ResizeObserver === "undefined"
         ? null
@@ -131,7 +148,12 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
         // Native hash positioning can run before the async About/Voidwalker
         // portals inflate their runways. Re-seat the requested station after
         // this hook has applied the final capable/fallback geometry.
-        const top = stationEl.getBoundingClientRect().top + window.scrollY;
+        // ⚠ THE SEAT, NOT THE STATION (ADR-123): `.vwd` carries
+        // `data-station-seat`. On the pinned rungs its static top is the
+        // station's own; on the flowing ones the station keeps ~67px of
+        // padding and a station-top landing sat the instrument that far down.
+        const seatEl = stationEl.querySelector<HTMLElement>("[data-station-seat]") ?? stationEl;
+        const top = seatEl.getBoundingClientRect().top + window.scrollY;
         window.scrollTo(0, Math.max(0, Math.round(top)));
       });
     };
@@ -261,6 +283,63 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
       window.dispatchEvent(new Event(ABOUT_VOIDWALKER_HANDOFF_CHANGE_EVENT));
     };
 
+    /* ── ADR-123: THE PHONE RUNWAY ─────────────────────────────────────
+       The same listener and the same rAF as the capable branch — ONE writer
+       on this station (ADR-082 U1's two-clocks defect is why). On the ≤700
+       rung the station is a runway of `100svh + --vw-phone-dwell` with the
+       instrument pinned inside it, and the five eras ride the dwell exactly
+       as the desktop's do (ADR-082 U10): `p` is the pinned travel, the era
+       is derived from it with the same hysteresis, a tap's glide holds its
+       era until it lands. It writes the STAMP the sheet keys on and `--vwh-p`
+       — never `data-vw-mode`, `data-vwh-ready`, `data-vw-handoff` or the
+       hologram progress ref, so §G's choreography, the desktop weld and the
+       title decode stay off, as every phone pin (`about-voidwalker-handoff-
+       boundaries`, the seams spec's boot) requires. */
+    const disengagePhone = () => {
+      if (!phoneEngaged) return;
+      phoneEngaged = false;
+      phoneEra = 0;
+      lastPhoneP = -1;
+      pickLanded = false;
+      voidwalkerEraPickRef.current = null;
+      stationEl?.removeAttribute("data-vw-phone");
+      rootRef.current?.style.removeProperty("--vwh-p");
+    };
+    const writePhone = (root: HTMLElement) => {
+      const runway = root.parentElement; // .vw--hologram
+      if (!runway || !stationEl) return;
+      if (!phoneEngaged) {
+        phoneEngaged = true;
+        stationEl.setAttribute("data-vw-phone", "runway");
+      }
+      const rr = runway.getBoundingClientRect();
+      /* MEASURED, never authored (ADR-115 U1): the band is `100dvh` and the
+         runway `svh`, so the travel moves with the bar and the clock follows
+         the box the reader is looking at. */
+      const travel = rr.height - root.getBoundingClientRect().height;
+      const raw = travel > 0 ? clamp01(-rr.top / travel) : 0;
+      const p = raw === 0 ? 0 : raw; // never `-0` at the pin (ADR-102)
+      if (shouldWriteProgress(p, lastPhoneP)) {
+        root.style.setProperty("--vwh-p", p.toFixed(4));
+        lastPhoneP = p;
+      }
+      // Off screen the era HOLDS: a change there glitches a figure nobody sees.
+      if (rr.bottom <= 0 || rr.top >= layoutViewportHeight()) return;
+      const pick = voidwalkerEraPickRef.current;
+      if (pick) {
+        phoneEra = pick.era;
+        if (!pickLanded && performance.now() - pick.at < 900) return;
+        voidwalkerEraPickRef.current = null;
+        pickLanded = false;
+      }
+      const count = root.querySelectorAll("[data-vwh-era-tab]").length || 1;
+      const next = voidwalkerEraFromProgress(p, count, phoneEra, VOIDWALKER_PHONE_ERA_BAND);
+      if (next !== phoneEra) {
+        phoneEra = next;
+        voidwalkerEraScrubRef.current?.(next);
+      }
+    };
+
     const write = () => {
       frame = 0;
       if (disposed) return;
@@ -276,15 +355,27 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
       // The surface attribute removes the authored star tile on every
       // hologram path. Static/mobile/PRM remain solid-void; only capable
       // stage mode becomes a transparent window onto the live corridor.
-      stationEl.setAttribute("data-vw-surface", "hologram");
+      // Written ONCE: it was rewritten on every scroll frame, on every rung.
+      if (stationEl.dataset.vwSurface !== "hologram") {
+        stationEl.setAttribute("data-vw-surface", "hologram");
+      }
 
       const capable =
         ABOUT_DECK_STAGE && VOIDWALKER_HOLOGRAM_STAGE && capableMedia.matches && !fallbackActive();
       if (!capable) {
-        disengage(root);
+        // On the TRANSITION only — this ran ~10 no-op DOM writes per scroll
+        // frame on every phone (the 2026-09-24 review).
+        if (engaged) disengage(root);
+        if (VOIDWALKER_PHONE_RUNWAY && phoneMedia.matches) {
+          writePhone(root);
+          settleInitialAnchor();
+          return;
+        }
+        disengagePhone();
         settleInitialAnchor();
         return;
       }
+      disengagePhone();
 
       if (!engaged) {
         engaged = true;
@@ -305,7 +396,10 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
       const eraCount = root.querySelectorAll("[data-vwh-era-tab]").length || 1;
       const runway = root.parentElement; // .vw--hologram
       if (!runway) return;
-      const vh = window.innerHeight || 1;
+      // The LAYOUT viewport (ADR-113): the runway is in svh, and on a tablet
+      // whose toolbar moves, innerHeight would re-scale every clock under the
+      // thumb. Identical to innerHeight wherever nothing overlays the frame.
+      const vh = layoutViewportHeight();
       const rect = runway.getBoundingClientRect();
       const travel = rect.height - vh;
       const progress = travel > 0 ? clamp01(-rect.top / travel) : 0;
@@ -373,10 +467,19 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
       targetsDirty = true;
       requestWrite();
     };
+    /* ADR-123: a tap's glide has landed — the era is scroll's again. Where
+       the engine never fires `scrollend`, `writePhone`'s 900ms cap stands in. */
+    const onScrollEnd = () => {
+      if (!voidwalkerEraPickRef.current) return;
+      pickLanded = true;
+      requestWrite();
+    };
 
     requestWrite();
     window.addEventListener("scroll", requestWrite, { passive: true });
+    window.addEventListener("scrollend", onScrollEnd);
     window.addEventListener("resize", onResize);
+    phoneMedia.addEventListener?.("change", onResize);
     window.addEventListener("wheel", cancelInitialAnchor, { passive: true });
     window.addEventListener("touchstart", cancelInitialAnchor, { passive: true });
     window.addEventListener("keydown", cancelInitialAnchor);
@@ -399,7 +502,9 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
       window.clearTimeout(settleA);
       window.clearTimeout(settleB);
       window.removeEventListener("scroll", requestWrite);
+      window.removeEventListener("scrollend", onScrollEnd);
       window.removeEventListener("resize", onResize);
+      phoneMedia.removeEventListener?.("change", onResize);
       window.removeEventListener("wheel", cancelInitialAnchor);
       window.removeEventListener("touchstart", cancelInitialAnchor);
       window.removeEventListener("keydown", cancelInitialAnchor);
@@ -408,6 +513,7 @@ export function useVoidwalkerHologramScroll(rootRef: RefObject<HTMLElement | nul
       targetResizeObserver?.disconnect();
       eraObserver.disconnect();
       disengage(mountedRoot);
+      disengagePhone();
       if (stationEl?.dataset.vwSurface === "hologram") {
         stationEl.removeAttribute("data-vw-surface");
       }

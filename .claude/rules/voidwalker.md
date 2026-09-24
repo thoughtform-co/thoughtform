@@ -278,8 +278,21 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
     frame; GPT's three put his face back with the pose, rifle, armour and
     ground untouched. So EVERY edit kind now attaches the wave's crops.
     `sheet.py` writes `heads.jpg` (plates beside his photographs);
-    `legs.py` is U35's legs IoU as a script. ⚠ G1 is his pick; the Veo scene,
-    `post.py --version v6` and the install follow it.
+    `legs.py` is U35's legs IoU as a script. ⚠ **AND THE CAP LEFT THIS ERA
+    WITH `-v6`** (his second ask on the rescued face: bulkier, broader
+    shoulders, "a helmet, like a space helmet, instead of a cap … make sure
+    you can see my face"): `--edit-kind rig` is a two-change edit with the
+    owner's helmet frames as `HELMET DESIGN`, `prompt.py`'s `headgear()`
+    rewrites every cap/earpiece phrase for an era whose headgear is `helmet`
+    (whitespace-tolerant — exact strings missed phrases split by a line
+    break), and the GPT lane's stems carry `-gpt` so both lanes' draws of one
+    kind coexist. The `-v6` delivery: his pick `rig-gpt_01`, the aim-stand
+    with the best legs (0.900; a Gemini plate's K3 of 27 % is the CLEAR VISOR
+    keying as ground, not spill), one take cut at f176, `headY` 0.1 (the
+    helmet's crown), thumb marks re-read off frame zero. T2's median reads 6.4
+    on this scene and the manifest records it: the two holds read 1.6 / 2.6,
+    the settle 6.9 — motion, not a strobing grade; the line is not moved.
+    `post.py` prints UTF-8 now (it crashed after the grade on a `→`).
   - ⚠ **U42 (2026-09-24, owner): AN ERA CHANGE IS THE FIGURE'S OWN GLITCH,
     SCROLL AND CLICK ALIKE.** The hero's theme-swap kernel (ADR-060,
     `lib/key-visual/themeGlitch.ts`) on a canvas laid over the `<video>`
@@ -496,11 +509,19 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   at zero `dvh`/`lvh`. ⚠ The comment that stood here before U26 — _"inside a
   100svh instrument this element's own bottom edge IS that floor"_ — was
   FALSE on a real iPhone and stays false; the reserve is paid knowingly.
-  ⚠ **AND `.vwd` IS THE PHONE'S SNAP SEAT** (`scroll-snap-align: start`,
-  `voidwalker.css` ≤960; the root is `y proximity`, landing.css's last block)
-  — the probe's seat law written into the sheet. Nothing locked the
-  instrument before: the owner's two stills were the same box ~50px high and
-  ~100px low. Rules in `mobile-sections.md` §10.
+  ⚠ **AND `.vwd` WAS THE PHONE'S SNAP SEAT — SINCE ADR-123 (2026-09-24, owner)
+  IT PINS.** ADR-113 made it the stop (`scroll-snap-align: start`) because the
+  owner's two stills were the same box ~50px high and ~100px low; his second
+  device read was that it "is not locking into place" — a one-screen box in
+  flow between two PINNED bands, held only by a proximity radius with 807px of
+  un-pulled stretch before it. On the runway rung (`VOIDWALKER_PHONE_RUNWAY_MEDIA`,
+  ≤700) the STATION is the stop and the runway (`padding-block: 0`, `100svh +
+  --vw-phone-dwell`), `.vwd` is `position: sticky; top: 0; height: 100dvh;
+  scroll-snap-align: none` inside it, and the five eras ride the dwell on
+  `VOIDWALKER_PHONE_ERA_BAND` `[0, 1]`. ⚠ **"Never inherit a runway or sticky
+  child" (below) is amended for this one rung**, and U26's "pays for the strip
+  twice" is superseded there: a `100dvh` band ends on the real floor. Rules in
+  `mobile-sections.md` §12.
   ⚠ **Chromium resolves svh/lvh/dvh to one number**, so every change above is
   byte-identical in CI and the only proof is a device: compare `innerHeight`
   with `.home-v2-stage__canvas`'s `getBoundingClientRect().bottom`.
@@ -983,9 +1004,13 @@ handoff and the `701–1100px` complete fallback alone.
   edges — ADR-030 §6, on record as hit six times. Rules:
   [`musings.md`](musings.md).
 - **Every hologram path is starless.** `data-vw-surface="hologram"` removes
-  `v7-stars.svg` on static fallbacks too. Mobile, tablet, PRM, flag-off and
+  `v7-stars.svg` on static fallbacks too. Tablet, PRM, flag-off and
   corridor-fallback remain solid-void normal flow; they never inherit the
-  `260svh` runway or sticky child.
+  `260svh` runway or sticky child. ⚠ **The PHONE (≤700, ADR-123) is its OWN
+  runway, not the desktop's**: `100svh + 120svh` with `.vwd` sticky at `100dvh`,
+  written by a second branch of the same hook that never stamps `data-vw-mode`,
+  `data-vwh-ready` or `data-vw-handoff` — none of the desktop choreography
+  below runs there.
 - **One reversible writer.** `useVoidwalkerHologramScroll` derives progress
   from `.vw--hologram` geometry and writes only `--vwh-in`, `--vwh-exit`,
   `data-vwh-ready`, station mode and the component-local progress ref. Entry is

@@ -61,7 +61,8 @@
   display: contents;
 }
 .voidwalker__snap,
-.voidwalker__snap-in {
+.voidwalker__snap-in,
+.voidwalker__snap-out {
   display: none;
 }
 .voidwalker__orbit__portrait picture {
@@ -353,7 +354,8 @@
 
   /* ── THE SNAP SEATS ────────────────────────────────────────────────── */
   #about[data-about-band="on"] .voidwalker__snap,
-  #about[data-about-band="on"] .voidwalker__snap-in {
+  #about[data-about-band="on"] .voidwalker__snap-in,
+  #about[data-about-band="on"] .voidwalker__snap-out {
     display: block;
     position: absolute;
     left: 0;
@@ -372,6 +374,17 @@
   /* The reading seat. */
   #about[data-about-band="on"] .voidwalker__snap {
     top: calc(var(--about-band-read) * (var(--about-band-runway) - 100dvh));
+    height: 100dvh;
+    scroll-snap-align: start;
+  }
+  /* ADR-123: THE RELEASE — the band's last pinned frame (p = 1), the handover
+     the reader stops on before the eras. Its box is the runway's last 100dvh,
+     so its top IS the release in either bar state; a rest inside the radius
+     on either side lands there — never a half-scrolled band between the
+     reading seat and the instrument (807px of un-pulled approach at 390×844
+     before it). */
+  #about[data-about-band="on"] .voidwalker__snap-out {
+    bottom: 0;
     height: 100dvh;
     scroll-snap-align: start;
   }

@@ -11,6 +11,8 @@ import { useCorridorMount } from "./hooks/useCorridorMount";
 import { type BrandmarkActorHandle } from "./BrandmarkActor";
 import { BrandmarkSystem } from "./BrandmarkSystem";
 import { HudNav, type NavItem } from "./HudNav";
+import { DiagGate } from "./diag/DiagGate";
+import { ScrollRestoration } from "./ScrollRestoration";
 import { useHeroBoot } from "./hooks/useHeroBoot";
 import { THEME_TOGGLE } from "./themeToggle";
 import { useBrandmarkSingletonCheck } from "./lib/brandmarkSingletonCheck";
@@ -371,6 +373,13 @@ export function LandingPage({
       {/* Top-right HUD nav: inline links in the hero that collapse into
           a right-rail-aligned hamburger once the hero scrolls away. */}
       <HudNav items={navItems} />
+      {/* ADR-123: the phone diagnostic's gate (a dynamic edge, loaded only on
+          `?diag=phone`) and the landing's own scroll restoration — the
+          browser's fires against a document the corridor chunk has not yet
+          grown, and clamps a deep position to the bottom. Both render nothing
+          on the anonymous path. */}
+      <DiagGate />
+      <ScrollRestoration />
       {/* Light/dark toggle (ADR-058): the bottom-right chrome band,
           inboard of the `--br` corner bracket, pairing with the ADR-043
           bottom-left wordmark. Its own fixed overlay outside `.hud`, so

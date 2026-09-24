@@ -5064,16 +5064,78 @@ near-clean cheeks.
 - Three aim-stand plates from the best GPT face (identity attached): legs IoU
   0.978 / 0.968 / **0.981** against the face plate, the stance and boots
   unmoved, the rifle up and foreshortened toward the viewer (U35's own pose).
-- ⚠ **The deliveries are NOT re-cut yet.** G1 is his pick on `heads.jpg`
-  (the wave's `sheet-key.json` names the letters), and the Veo scene from the
-  picked plate to its aim-stand end is the paid step behind it; `post.py
---version v6`, `thumb.py`, the install into `public/` and the registry's
-  `-v6` paths follow. `identity-map.md`'s beard line is corrected to the
-  shoot the same day.
+- His pick on `heads.jpg` was `plate-expanse-face-gpt_02`. `identity-map.md`'s
+  beard line is corrected to the shoot the same day.
+
+### C · The helmet and the build, then the `-v6` delivery (same day, owner)
+
+On the rescued face: _"the face looks good, but I think my body should be a
+bit bulkier, with broader shoulders … I was thinking it makes more sense to add
+a helmet, like a space helmet, instead of a cap. Let's make sure you can see my
+face."_ Two reference frames of an open-visor marine helmet came with it.
+
+- **`generate.py --edit-kind rig`** is a second edit of the face plate with
+  the identity crops attached and the two frames as `HELMET DESIGN`
+  (`refs/helmet-design-N.jpg`): `EDIT_RIG` names TWO changes — the cap becomes
+  that helmet with the visor open and his whole face visible, and he is
+  bulkier through the shoulders and chest — with everything else fixed by
+  name. Six draws, three per lane; his pick was **`plate-expanse-rig-gpt_01`**
+  (_"Yeah I think this is the closest"_). ⚠ Both lanes' draws of one kind now
+  coexist on disk: the GPT lane's stem carries `-gpt`, because the first
+  aim-stand run from the helmet plate was skipped as "already on disk, kept"
+  by a Gemini file of the same name.
+- **The cap leaves every prompt this era speaks.** `prompt.py`'s
+  `headgear(text, era)` rewrites the cap and earpiece phrases of the scene,
+  the idle and every edit kind for an era whose `EXPANSE_HEADGEAR` is
+  `helmet` — the pointing hand "touches the side of his helmet at the ear,
+  keying its comms" where it pressed an earpiece, and the height runs "from
+  the top of the helmet to the soles". ⚠ Whitespace-tolerant on purpose: the
+  first cut matched exact strings and missed two phrases split across a line
+  break, so the scene prompt still asked for an earpiece under a helmet.
+- **Six aim-stands from the helmet plate**, both lanes, identity attached.
+  Legs IoU against it: GPT 0.706 / 0.835 / 0.770 (K3 11–16 %), Gemini 0.875 /
+  0.865 / **0.900** (K3 25–28 %). ⚠ **The Gemini K3 is the VISOR, not a
+  lighting defect**: the gate reads alpha on a band 2–8px inside the figure's
+  edge, and a clear bubble visor keys as ground exactly there — which is what
+  a clear visor must do on the void. `aimstand_03` is the pick: the best legs,
+  a clean face inside the visor, the helmet the source's. `aimstand_02` drew a
+  white reflection across the right eye and is out.
+- **One Veo take, passed on its audio first time** — point (f0–24) → the hand
+  up (25–32) → at the helmet, the order mouthed (33–67) → the rifle up
+  (68–102) → the settle into the aim (103–157) → the aim held (158–191), read
+  by consecutive-mask IoU. Cut at **f176** inside the hold: 352 frames,
+  14.7 s, seam 0.842, motion 1.551, closed. Graded ×0.85 → deep-interior p75
+  117, 4.5 % hot; seated +47px (boots at 0.9586); ground drift 3.0; no wall
+  (ink x 67–642). Anchors `headY` **0.1** (the helmet's crown — v5's cap was
+  0.1039), `footY` 0.9953, `headW` 0.5875.
+- ⚠ **T2 reads 6.4 against its 6.0 line and the manifest says so** (`problems`
+  is not empty). Measured by segment: the point hold 1.59, the aim hold 2.64,
+  the hand at the helmet 3.57, the settle 6.9, the rifle-up 12.2 (medians per
+  frame). The clip's median lands on the settle — the rifle coming into the
+  shoulder — which is motion, and four consecutive hold frames of the helmet
+  are identical to the eye. The grade does not strobe; the line is not moved
+  (a guard loosened until it passes stops describing the take), and the
+  finding stands in the manifest as a record of a livelier scene than v5's
+  (median 4.12, a faster settle).
+- **`thumb.py`'s marks re-read off frame zero**: crown 0.1133 (alpha row
+  145, the helmet's top in the head's columns), chin 0.236 (the beard's bottom
+  inside the visor), eye 0.1734, cx 0.445 — within 2px of v5's on every mark,
+  because the scene starts on the same plate at the same seat. 5.7 kB.
+- **Installed**: `holo-{idle,still}-expanse-v6.*` and `holo-thumb-expanse-v6.webp`
+  in `public/`, v5 archived under `waves/_shipped/expanse-v5/` (gitignored,
+  like v3 and v4), the registry's `-v6` paths with `headY` 0.1, the loadout
+  reads `open-visor helmet` where it read `his own cap`, the test pins moved,
+  the gallery's `ex-v6` run added and `ex-v5` superseded. ⚠ **THE CAP LEAVES
+  THIS ERA ON THE OWNER'S OWN WORD** — the v1 ruling ("the cap is the
+  identity's, not the set's") is superseded on the Expanse alone; the
+  Architect keeps his.
+- ⚠ `post.py` crashed AFTER the grade on a `→` in its libwebp-fallback
+  message, under Windows' cp1252 console — the delivery was on disk and the
+  manifest was not. It reconfigures stdout to UTF-8 now, as `thumb.py` does.
 
 ### Left open
 
-- The picked plate's own K3 spill (~10 %) is the lineage's; `post.py`'s
-  ground key handled it on every delivery so far.
-- `-v6` will ship without a `.mov`, like `-v5`: HEVC-alpha needs macOS
-  videotoolbox.
+- `-v6` ships without a `.mov`, like `-v5`: HEVC-alpha needs macOS
+  videotoolbox; a Mac cuts one from `veo/graded/`.
+- The photographs the era is named off still show him in a cap; the era's
+  `wardrobe` comment records that and the figure does not follow it.

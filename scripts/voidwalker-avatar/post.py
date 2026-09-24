@@ -36,6 +36,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+# ⚠ The console is cp1252 on Windows and this file prints arrows; without this the
+#   libwebp fallback's own message crashed the encode AFTER the grade (2026-09-24).
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 W, H = 720, 1280
 FPS = 24
 OPAQUE = 32  # /255, the cutoff the shipped anchors were measured at
