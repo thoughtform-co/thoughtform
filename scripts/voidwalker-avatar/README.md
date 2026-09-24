@@ -55,7 +55,30 @@ python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage
 python scripts/voidwalker-avatar/vid.py --wave <wave> --stage plate --era expanse --scene --ending aim --last <the picked aimstand plate>
 # ...and only if the spoken beat is refused: he LISTENS at the earpiece instead (lips closed, one nod)
 python scripts/voidwalker-avatar/vid.py ... --scene --ending aim --last <aimstand> --listen
+# ADR-082 U41: HIS FACE PUT BACK on a picked plate, the identity crops ATTACHED (the edit stage
+# never attached them, which is how four edits drifted the Expanse's face into a stranger's)
+python scripts/voidwalker-avatar/refs.py --era expanse --wave <wave> --set face      # the three identity crops alone; LOOK, then --looked
+python scripts/voidwalker-avatar/generate.py --era expanse --wave <wave> --stage edit --edit-kind face --source <the picked plate> --draws 3
+python scripts/voidwalker-avatar/generate.py ... --edit-kind face --model gpt --draws 3   # GPT Image 2, the identity-rescue lane
+python scripts/voidwalker-avatar/grade.py --wave <wave> --stage plate && python scripts/voidwalker-avatar/sheet.py --wave <wave>   # + heads.jpg
+# every LATER edit in a wave that holds identity crops attaches them too (aim-stand, command, mouth, rifle)
 ```
+
+⚠ **AN EDIT ATTACHES THE IDENTITY CROPS OR IT DRIFTS (U41).** The Expanse's face
+went plate → rifle → command → mouth → aim-stand, and every one of those edits
+saw only the plate it was editing — a photocopy of a photocopy — until the
+owner read the shipped figure as not him. The v8 face wave measured the two
+lanes: Gemini's three face edits either barely moved the face or redrew the
+frame (a cyan ground, a frontal glare, K1 off the lock); GPT Image 2's three put
+his face back — the brow, the hollows, the chin beard, the jaw — with the pose,
+the rifle, the armour and the ground untouched to the pixel. So `generate.py`
+attaches the wave's identity crops on EVERY edit kind now (`plate_refs`), tells
+a non-face edit first that his face stays exactly theirs, and takes `--model
+gpt` on any edit. ⚠ `gpt-image-2` refuses `input_fidelity`; the bare retry
+carries it. ⚠ The face is also said in WORDS (`FACE_LOCK`), read off the
+photographs — "close-trimmed, connected" let the model keep a full even beard
+across the cheeks; the shoot shows a dense chin beard and near-clean cheeks
+(`identity-map.md` corrected the same day).
 
 ⚠ **A SPOKEN BEAT IS MOUTHED, NEVER VOICED (U35).** The commander's scene has
 him press the earpiece and give an order. After U34's five audio refusals the

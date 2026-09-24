@@ -158,6 +158,44 @@ def main() -> int:
     sheet.save(out, quality=88)
     (wave / "sheet-key.json").write_text(json.dumps(key, indent=1), encoding="utf-8")
     print(f"blind sheet -> {out}   (key: sheet-key.json)")
+
+    # ⚠ THE HEADS STRIP (ADR-082 U41): every plate's face at one face height,
+    # lettered by the sheet's own key, then a gap, then EVERY identity crop's
+    # face, unlettered — the likeness read in one row, against all the
+    # photographs rather than the first alone. The identity crops are whatever
+    # `refs/` holds (`refs.py --set face` writes three).
+    heads = []
+    for letter, path in zip("ABCDEFGHIJ", order):
+        plate = Image.open(path).convert("RGB")
+        box = find_face(plate)
+        if box is None:
+            fx0, fy0, fx1, fy1 = EXPECTED_FACE[era]
+            box = (int(fx0 * plate.width), int(fy0 * plate.height),
+                   int(fx1 * plate.width), int(fy1 * plate.height))
+        heads.append((letter, face_zoom(plate, box, FACE_H)))
+    refs_faces = []
+    for ident in sorted((wave / "refs").glob("identity-*.jpg")):
+        im = Image.open(ident).convert("RGB")
+        box = REF_FACE_BOX if ident.name == "identity-1.jpg" else (find_face(im) or (0, 0, im.width, im.height))
+        refs_faces.append(face_zoom(im, box, FACE_H))
+    if refs_faces:
+        gap = 36
+        width = sum(h.width for _, h in heads) + 12 * (len(heads) - 1) + gap + \
+            sum(r.width for r in refs_faces) + 12 * (len(refs_faces) - 1)
+        strip = Image.new("RGB", (width, FACE_H + 28), (14, 13, 12))
+        x = 0
+        d = ImageDraw.Draw(strip)
+        for letter, h in heads:
+            strip.paste(h, (x, 22))
+            d.text((x + 4, 4), letter, fill=(235, 227, 214))
+            x += h.width + 12
+        x += gap - 12
+        for r in refs_faces:
+            strip.paste(r, (x, 22))
+            x += r.width + 12
+        hout = wave / "heads.jpg"
+        strip.save(hout, quality=90)
+        print(f"heads strip -> {hout}   (plates lettered, his photographs after the gap)")
     return 0
 
 

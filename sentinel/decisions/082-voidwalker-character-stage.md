@@ -5000,3 +5000,80 @@ alone, he chose one transition.
   reads fast, `HOLO_GLITCH_MS` is the one dial.
 - **Two neighbour posters per era** (~220 kB) are the warming's cost, paid
   only once the figure is near.
+
+## Update 41 — the Expanse's face is put back from the photographs (2026-09-24, owner)
+
+The owner: _"the Expanse Avatar doesn't really look like me; the face I mean,
+so please go back and recreate it as accurately as possible."_ It did not. The
+shipped `-v5` figure is the end of a chain of FOUR image edits — the v3 plate →
+the rifle (U32) → the standing commander (U34) → its mouth closed (U34) → the
+aim-stand end pose (U35) — then a Veo scene, then the gold grade at the
+exposure floor, and **not one of those edits attached an identity
+photograph**: every sidecar after the plate wave lists `IMAGE 1 — THE
+PHOTOGRAPH TO EDIT` and nothing else. Each hop re-drew the face from the plate
+it was editing, a photocopy of a photocopy, which is exactly the skill's own
+Rule 0 ("identity is slot 1, always; a previous output as slot 1 drifts the
+face") broken by construction. Read against the shoot, the shipped head is
+rounder and younger, with a full even beard across the cheeks and a smaller
+nose; his is a long oval with an angular jaw, a heavy low brow, deep-set hooded
+eyes with hollows, a broad-bridged nose and a dense CHIN beard that thins to
+near-clean cheeks.
+
+### A · The fix is an edit with the photographs beside it, never a redraw
+
+- **`refs.py --set face`** cuts the three identity crops alone (`face-detail`,
+  the `colour-04` crop, and a THIRD angle new here — the `colour-01` head,
+  three-quarter, because the commander's head is turned) into the wave's
+  `refs/`, looked at on the contact sheet before a draw is paid for. ⚠ Not
+  added to `IDENTITY` itself: every plate lock numbers its wardrobe from
+  IMAGE 3.
+- **`generate.py --edit-kind face`** attaches them after the plate and
+  `EDIT_FACE` addresses them by number — ONE change, the face, everything
+  below the collar named as fixed, the mouth CLOSED (U34's five audio
+  refusals) — with the face also said in words (`FACE_LOCK`, read off the
+  photographs): "close-trimmed, connected" had let the model keep its own
+  idea of a bearded man in a cap.
+- **`--model gpt`** is the second lane: GPT Image 2 through
+  `/v1/images/edits`, the skill's own "identity rescue when face drifts" route
+  (`SKILL.md`, `prompts.md`), documented since U1 and never coded. One signed
+  multipart POST, the images in `image[]` in the prompt's own order, no SDK;
+  `OPENAI_API_KEY` joins `env.py`'s `WANTED` for it. ⚠ `gpt-image-2` refuses
+  `input_fidelity`; the bare retry (the Gemini lane's rule for a renamed
+  field) carries it.
+- ⚠ **AN EDIT ATTACHES THE IDENTITY CROPS OR IT DRIFTS — EVERY KIND.** When a
+  wave holds them, `generate.py` attaches them on the rifle, command, mouth
+  and aim-stand edits too, and tells the model first that his face stays
+  exactly theirs; the aim-stand plates below were drawn that way.
+- **`sheet.py` writes `heads.jpg`** beside the blind sheet: every plate's face
+  at one face height, lettered by the sheet's key, then his three photographs
+  after a gap. **`legs.py`** is U35's hand-measured "legs IoU" as a script —
+  the figure keyed on its ground, intersection-over-union below the waist
+  against the source plate.
+
+### B · What the v8 wave measured
+
+- Six face edits of `plate-expanse-mouth_01` (U34's plate), three per lane,
+  picked blind on the heads. **Gemini's three barely moved the face** (two
+  read as the shipped stranger) **or redrew the frame** (a cyan ground, a
+  frontal glare, K1 off the lock by 108). **GPT Image 2's three put his face
+  back** — the brow, the hollows, the chin beard, the jaw — **with the pose,
+  the rifle, the armour, the kilt and the ground untouched to the pixel.** The
+  gates: GPT's K3 spill 9–10 %, which is the shipped lineage's own level (the
+  rifle-edit plates ran 8–9 % and shipped); the ground on the lock; the gold
+  preview p75 118–125, inside the band.
+- Three aim-stand plates from the best GPT face (identity attached): legs IoU
+  0.978 / 0.968 / **0.981** against the face plate, the stance and boots
+  unmoved, the rifle up and foreshortened toward the viewer (U35's own pose).
+- ⚠ **The deliveries are NOT re-cut yet.** G1 is his pick on `heads.jpg`
+  (the wave's `sheet-key.json` names the letters), and the Veo scene from the
+  picked plate to its aim-stand end is the paid step behind it; `post.py
+--version v6`, `thumb.py`, the install into `public/` and the registry's
+  `-v6` paths follow. `identity-map.md`'s beard line is corrected to the
+  shoot the same day.
+
+### Left open
+
+- The picked plate's own K3 spill (~10 %) is the lineage's; `post.py`'s
+  ground key handled it on every delivery so far.
+- `-v6` will ship without a `.mov`, like `-v5`: HEVC-alpha needs macOS
+  videotoolbox.

@@ -262,6 +262,24 @@ aim-stand`), eyes open with quick blinks by name; `vid.py --listen` is
     row, so the pile gains what the band gave up. The lab mirrors the
     expression character for character. `scripts/probe-voidwalker-figure-span`
     and both handoff specs are the figure's proof that nothing moved.
+  - ⚠ **U41 (2026-09-24, owner): THE EXPANSE'S FACE IS PUT BACK FROM THE
+    PHOTOGRAPHS — AN EDIT ATTACHES THE IDENTITY CROPS OR IT DRIFTS.** _"It
+    doesn't really look like me; the face I mean."_ The shipped `-v5` face
+    went through FOUR edits (rifle → command → mouth → aim-stand) none of
+    which attached a photograph — the skill's Rule 0 broken by construction.
+    `refs.py --set face` cuts the three identity crops (a third, three-quarter
+    angle is new); `generate.py --edit-kind face` attaches them after the
+    plate with `FACE_LOCK` saying the face in words (a dense CHIN beard with
+    near-clean cheeks, the heavy low brow, the hollows, the broad nose, the
+    angular jaw — "close-trimmed, connected" grew a full beard); `--model gpt`
+    is GPT Image 2 (`/v1/images/edits`, `OPENAI_API_KEY` in `env.py`; it
+    refuses `input_fidelity`, the bare retry carries it). ⚠ Measured on the
+    v8 wave: Gemini's three face edits barely moved the face or redrew the
+    frame; GPT's three put his face back with the pose, rifle, armour and
+    ground untouched. So EVERY edit kind now attaches the wave's crops.
+    `sheet.py` writes `heads.jpg` (plates beside his photographs);
+    `legs.py` is U35's legs IoU as a script. ⚠ G1 is his pick; the Veo scene,
+    `post.py --version v6` and the install follow it.
   - ⚠ **U42 (2026-09-24, owner): AN ERA CHANGE IS THE FIGURE'S OWN GLITCH,
     SCROLL AND CLICK ALIKE.** The hero's theme-swap kernel (ADR-060,
     `lib/key-visual/themeGlitch.ts`) on a canvas laid over the `<video>`

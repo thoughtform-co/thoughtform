@@ -1020,13 +1020,83 @@ No legible text, numbers or logos. The ground stays one perfectly uniform blue,
 """
 
 
-def edit_prompt(era: str, n_design: int, kind: str = "rifle") -> str:
+#: ADR-082 U41 (owner, 2026-09-24: the Expanse "doesn't really look like me;
+#: the face I mean, so please go back and recreate it as accurately as
+#: possible").
+#: ⚠ THE FACE DRIFTED BECAUSE NO EDIT EVER SAW A PHOTOGRAPH. The v3 plate wave
+#: attached the identity crops; every hop after it (rifle → command → mouth →
+#: aim-stand) attached only the plate it was editing, so each re-draw of the
+#: face was a photocopy of a photocopy — the skill's Rule 0 ("identity is slot
+#: 1, always; a previous output as slot 1 drifts the face") broken by
+#: construction. This edit puts the photographs back beside the plate: ONE
+#: change, the face, matched to them; everything else in IMAGE 1 is fixed; the
+#: mouth stays CLOSED (U34's five audio refusals).
+#: ⚠ THE FACE IS ALSO SAID IN WORDS, read off the photographs. A reference alone
+#: let the model keep its own idea of "a bearded man in a cap": the beard the
+#: shoot shows is a DENSE CHIN BEARD with near-clean cheeks, not the full even
+#: beard the plate grew, and the brow, the eyes and the jaw are what make him
+#: him at a glance.
+FACE_LOCK = """
+HIS FACE, exactly as in the identity photographs: a long oval face with a
+strong, angular jaw a little wider than his temples; a heavy, straight, low-set
+dark brow; deep-set, hooded dark eyes with shadowed hollows beneath them; a
+straight nose with a broad bridge; a thin upper lip over a fuller lower lip.
+THE BEARD IS A CHIN BEARD: a dark moustache joining a dense, full beard on the
+chin and along the jawline, while the CHEEKS are nearly clean — faint stubble at
+most, never a full even beard across them. The sides of his head are shaved to
+the skin under the cap. Warm olive skin, a serious and contained expression,
+and his MOUTH CLOSED — lips together, no teeth.
+""".strip()
+
+EDIT_FACE = """
+IMAGE 1 is the photograph to edit. {idents} this man's IDENTITY — the same
+person, photographed. Take his face from them.
+
+Keep IMAGE 1 exactly as it is: the cap, the earpiece and the boom mic, the
+armour, the kilt panel, the leggings, the socks, the boots, the rifle, the
+pose, BOTH arms and both hands, the framing, his size and his place in the
+picture, the light, and the flat blue ground. Do not redraw, re-light or
+re-sculpt anything except his face.
+
+Make ONE change: his face becomes THIS man's face, unchanged and recognisable
+at a glance — matched to the identity photographs in every feature — with the
+head's turn, the gaze and the light of IMAGE 1 kept.
+
+{face}
+
+Photoreal, real skin, no computer-graphics smoothness, lit by the same light as
+IMAGE 1. No legible text, numbers or logos. The ground stays one perfectly
+uniform blue, #0A28D2, edge to edge — no shadow, no gradient, and no blue light
+on the figure.
+
+DO NOT: a younger or rounder face; a full or even beard across the cheeks;
+smooth or cartoon cheeks; a different nose; an open or parted mouth; a smile;
+glasses; a different cap; changed lighting; blue light on the figure; any change
+below the collar.
+"""
+
+
+def face_prompt(n_identity: int) -> str:
+    """The face edit: IMAGE 1 the plate, IMAGES 2… the identity crops."""
+    if n_identity < 1:
+        raise SystemExit("the face edit needs at least one identity crop after the plate")
+    nums = [f"IMAGE {i}" for i in range(2, 2 + n_identity)]
+    idents = (
+        f"{nums[0]} is" if len(nums) == 1 else ", ".join(nums[:-1]) + f" and {nums[-1]} are"
+    )
+    return EDIT_FACE.format(idents=idents, face=FACE_LOCK).strip()
+
+
+def edit_prompt(era: str, n_design: int, kind: str = "rifle", n_identity: int = 0) -> str:
     """The one-change edit for a picked plate. `n_design` is how many photographs
     of the new rifle follow IMAGE 1 (0 means the words alone carry it); `kind`
     "aim" is the scene's end pose (ADR-082 U33), "command" the standing
-    commander (U34), "mouth" that commander with his mouth closed (U34)."""
+    commander (U34), "mouth" that commander with his mouth closed (U34), "face"
+    his own face put back from `n_identity` photographs (U41)."""
     if era != "expanse":
         raise SystemExit(f"no plate edit is authored for era '{era}'")
+    if kind == "face":
+        return face_prompt(n_identity)
     if kind == "aim":
         return EDIT_AIM.strip()
     if kind == "command":

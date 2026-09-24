@@ -62,6 +62,13 @@ from prompt import BLOCKED, edit_prompt, plate_prompt, still_prompt  # noqa: E40
 
 MODEL = "gemini-3-pro-image"
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+#: ADR-082 U41: the face edit's second model — the skill's own "identity
+#: rescue when face drifts" route (`SKILL.md`, `prompts.md`), never coded until
+#: the Expanse's face had drifted through four edits. One signed multipart POST,
+#: SDK-free like the Gemini lane; the images travel in `image[]` IN ORDER, so the
+#: prompt's `IMAGE n` clauses mean what they mean on the other lane.
+GPT_MODEL = "gpt-image-2"
+GPT_ENDPOINT = "https://api.openai.com/v1/images/edits"
 RETRY_BACKOFF = (0, 8, 16, 24)
 REF_MAX_PX = 2048
 
@@ -106,6 +113,92 @@ def post(body: dict, key: str) -> dict:
     )
     with urllib.request.urlopen(req, timeout=300) as resp:
         return json.loads(resp.read())
+
+
+def multipart(fields: list[tuple[str, str]], files: list[tuple[str, Path]]) -> tuple[bytes, str]:
+    """A multipart/form-data body by hand — no SDK, no requests."""
+    boundary = "----voidwalker-" + hashlib.sha1(str(time.time_ns()).encode()).hexdigest()[:24]
+    out = bytearray()
+    for name, value in fields:
+        out += (
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"\r\n\r\n{value}\r\n"
+        ).encode()
+    for name, path in files:
+        mime = mimetypes.guess_type(path.name)[0] or "image/png"
+        out += (
+            f"--{boundary}\r\nContent-Disposition: form-data; name=\"{name}\"; "
+            f"filename=\"{path.name}\"\r\nContent-Type: {mime}\r\n\r\n"
+        ).encode()
+        out += path.read_bytes()
+        out += b"\r\n"
+    out += f"--{boundary}--\r\n".encode()
+    return bytes(out), boundary
+
+
+def draw_one_gpt(prompt: str, refs: list[tuple[str, Path]], seed_note: str, key: str) -> bytes:
+    """One edit through GPT Image 2. The reference ORDER is the label: the body
+    opens by naming what each attached image is, in the order it is attached.
+    ⚠ `input_fidelity: high` is what keeps a face — it is the whole point of
+    this lane — and a 400 naming it (or the size) retries ONCE without, the
+    Gemini lane's own rule for a renamed field."""
+    legend = "; ".join(f"IMAGE {i} — {role}" for i, (role, _) in enumerate(refs, start=1))
+    text = f"The images are attached in this order: {legend}.\n\n{prompt}\n\n{seed_note}"
+    files = [("image[]", path) for _, path in refs]
+    full = [
+        ("model", GPT_MODEL),
+        ("prompt", text),
+        ("n", "1"),
+        ("size", "1024x1536"),
+        ("quality", "high"),
+        ("output_format", "png"),
+        ("input_fidelity", "high"),
+    ]
+    bare = [f for f in full if f[0] not in ("input_fidelity", "size")]
+    fields = full
+    last: Exception | None = None
+    for attempt, wait in enumerate(RETRY_BACKOFF):
+        if wait:
+            time.sleep(wait)
+        body, boundary = multipart(fields, files)
+        req = urllib.request.Request(
+            GPT_ENDPOINT,
+            data=body,
+            headers={
+                "Content-Type": f"multipart/form-data; boundary={boundary}",
+                "Authorization": f"Bearer {key}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=600) as resp:
+                data = json.loads(resp.read())
+        except urllib.error.HTTPError as err:
+            detail = err.read().decode("utf-8", "ignore")[:400]
+            if err.code in (401, 403):
+                raise SystemExit(
+                    f"the image model refused OPENAI_API_KEY (HTTP {err.code}). Stopping. "
+                    "Check it with:\n  python scripts/voidwalker-avatar/env.py --check OPENAI_API_KEY"
+                ) from None
+            if err.code == 400 and fields is full and any(
+                token in detail for token in ("input_fidelity", "size", "quality")
+            ):
+                print(f"    · 400 on a field; retrying bare once — {detail[:120]}")
+                fields = bare
+                last = RuntimeError(f"HTTP 400: {detail[:200]}")
+                continue
+            last = RuntimeError(f"HTTP {err.code}: {detail[:200]}")
+            print(f"    · HTTP {err.code} (attempt {attempt + 1}/{len(RETRY_BACKOFF)})")
+            continue
+        except Exception as err:  # noqa: BLE001 - network shapes vary
+            last = RuntimeError(type(err).__name__)
+            print(f"    · {type(err).__name__} (attempt {attempt + 1}/{len(RETRY_BACKOFF)})")
+            continue
+        for item in data.get("data", []):
+            if item.get("b64_json"):
+                return base64.b64decode(item["b64_json"])
+        last = RuntimeError("no image in the response")
+        print("    · no image returned")
+    raise RuntimeError(str(last))
 
 
 def parts_for(prompt: str, refs: list[tuple[str, Path]], seed_note: str) -> list[dict]:
@@ -218,11 +311,15 @@ def main() -> int:
     )
     # ADR-082 U33: `aim` draws a scene's END POSE from the picked plate, so its
     # framing is checked before a video is paid for.
-    ap.add_argument("--edit-kind", choices=("rifle", "aim", "command", "mouth", "aim-stand"),
+    ap.add_argument("--edit-kind", choices=("rifle", "aim", "command", "mouth", "aim-stand", "face"),
                     default="rifle",
                     help="edit stage: the rifle swap (U32), the scene's aim pose (U33), "
-                         "the standing commander (U34), its mouth closed (U34), or the "
-                         "commander's standing aim through the optic (U35)")
+                         "the standing commander (U34), its mouth closed (U34), the "
+                         "commander's standing aim through the optic (U35), or his own "
+                         "face put back from the wave's identity crops (U41)")
+    ap.add_argument("--model", choices=("gemini", "gpt"), default="gemini",
+                    help="edit stage: the image model — gemini (the chain's) or gpt "
+                         "(GPT Image 2, the identity-rescue lane; face edits only)")
     ap.add_argument("--identity", type=Path, help="still stage: the identity frame")
     # ⚠ MORE THAN ONE WARDROBE REFERENCE IS ALLOWED, and the identity still
     # goes FIRST. `expanse` needs two: a solo full-body frame for the silhouette
@@ -252,12 +349,42 @@ def main() -> int:
         missing = [d for d in args.design if not d.exists()]
         if missing:
             raise SystemExit("design photograph(s) not found: " + ", ".join(map(str, missing)))
-        prompt = edit_prompt(args.era, len(args.design), args.edit_kind)
         # The source goes UNSHRUNK: it is the likeness being kept, not a hint.
         refs = [("THE PHOTOGRAPH TO EDIT", args.source)]
+        # ⚠ AN EDIT ATTACHES THE IDENTITY CROPS OR IT DRIFTS (ADR-082 U41). The
+        # Expanse's face went through four edits that each saw only the plate
+        # they were editing — a photocopy of a photocopy — and came out a
+        # stranger. When the wave's `refs/` holds identity crops (`refs.py --set
+        # face`, looked at and listed) they follow the plate on EVERY edit kind:
+        # the face edit is addressed to them by number, and every other edit is
+        # told, first, that his face stays exactly theirs.
+        identity = plate_refs(wave) if (wave / "refs" / "refs.json").exists() else []
+        if args.edit_kind == "face":
+            if not identity:
+                raise SystemExit("the face edit needs the wave's identity crops (refs.py --set face)")
+            refs += identity
+            prompt = edit_prompt(args.era, 0, "face", n_identity=len(identity))
+        else:
+            prompt = edit_prompt(args.era, len(args.design), args.edit_kind)
+            if identity:
+                refs += identity
+                nums = [f"IMAGE {i}" for i in range(2, 2 + len(identity))]
+                keep = (
+                    f"{', '.join(nums[:-1])} and {nums[-1]} are" if len(nums) > 1 else f"{nums[0]} is"
+                ) + " this man's IDENTITY: his face, his beard and his skin stay exactly theirs and exactly IMAGE 1's — the change below does not touch them."
+                prompt = keep + "\n\n" + prompt
+                # The rifle design photographs, if any, then come after the
+                # identity crops; the rifle lock's own numbering is re-based.
+                if args.design:
+                    shift = len(identity)
+                    for i in range(2 + len(args.design) - 1, 1, -1):
+                        prompt = prompt.replace(f"IMAGE {i}", f"IMAGE {i + shift}")
         for i, d in enumerate(args.design, start=1):
             refs.append(("RIFLE DESIGN", shrink(d, wave / "refs" / f"rifle-design-{i}.jpg")))
-        if args.edit_kind == "aim":
+        if args.edit_kind == "face":
+            stem = f"plate-{args.era}-face"
+            note_tail = "Change only his face; every other pixel of IMAGE 1 is fixed."
+        elif args.edit_kind == "aim":
             stem = f"plate-{args.era}-aim"
             note_tail = "Change only the pose above the waist; everything else in IMAGE 1 is fixed."
         elif args.edit_kind == "command":
@@ -272,6 +399,11 @@ def main() -> int:
         else:
             stem = f"plate-{args.era}-edit"
             note_tail = "Change only the rifle; everything else in IMAGE 1 is fixed."
+        # The GPT lane's draws live beside the Gemini lane's under their own
+        # stem, whatever the kind — resume-by-existence otherwise reads the
+        # other model's draw as this one's and skips it.
+        if args.model == "gpt":
+            stem += "-gpt"
     else:
         if not args.identity or not args.wardrobe:
             raise SystemExit("the still stage needs --identity and --wardrobe")
@@ -290,7 +422,9 @@ def main() -> int:
         print("\n" + prompt)
         return 0
 
-    key = require("GEMINI_API_KEY")
+    use_gpt = args.stage == "edit" and args.model == "gpt"
+    model_name = GPT_MODEL if use_gpt else MODEL
+    key = require("OPENAI_API_KEY" if use_gpt else "GEMINI_API_KEY")
     made = 0
     for i in range(1, args.draws + 1):
         out = out_dir / f"{stem}_{i:02d}.png"
@@ -303,22 +437,24 @@ def main() -> int:
         sidecar = {
             "draw": i,
             "file": out.name,
-            "model": MODEL,
+            "model": model_name,
             "stage": args.stage,
             "era": args.era,
-            "config": {"aspectRatio": "9:16", "imageSize": "2K"},
+            "config": {"size": "1024x1536", "quality": "high", "input_fidelity": "high"}
+            if use_gpt
+            else {"aspectRatio": "9:16", "imageSize": "2K"},
             "refs": [{"image": n, "role": role, "file": p.name, "sha256_16": sha(p)}
                      for n, (role, p) in enumerate(refs, start=1)],
             "prompt": prompt + "\n\n" + note,
         }
         try:
-            out.write_bytes(draw_one(parts, key))
+            out.write_bytes(draw_one_gpt(prompt, refs, note, key) if use_gpt else draw_one(parts, key))
             made += 1
-            row = {"draw": i, "file": out.name, "model": MODEL, "stage": args.stage, "ok": True}
+            row = {"draw": i, "file": out.name, "model": model_name, "stage": args.stage, "ok": True}
             print(f"     -> {out.stat().st_size // 1024} KB")
         except Exception as err:  # noqa: BLE001
             # ⚠ A FAILED DRAW IS RECORDED, NOT SWALLOWED.
-            row = {"draw": i, "file": out.name, "model": MODEL, "stage": args.stage,
+            row = {"draw": i, "file": out.name, "model": model_name, "stage": args.stage,
                    "ok": False, "error": str(err)[:300]}
             sidecar["error"] = str(err)[:300]
             print(f"     -> FAILED: {str(err)[:160]}")

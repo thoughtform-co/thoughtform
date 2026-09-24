@@ -42,8 +42,11 @@ CANONICAL = Path(
     r"\20260820-ai-readiness\skill\scripts\.env"
 )
 LOCAL = Path(__file__).resolve().parent / ".env"
-#: The only keys this chain signs requests with.
-WANTED = ("GEMINI_API_KEY",)
+#: The only keys this chain signs requests with. ⚠ `OPENAI_API_KEY` joined for
+#: ONE call (ADR-082 U41): the face edit's GPT Image 2 branch — the skill's own
+#: "identity rescue when face drifts" route, documented since U1 and never
+#: coded. Same law: read by name, printed as a length, never a fallback.
+WANTED = ("GEMINI_API_KEY", "OPENAI_API_KEY")
 
 _LINE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$")
 _loaded: dict[str, str] | None = None

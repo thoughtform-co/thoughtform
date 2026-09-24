@@ -50,6 +50,16 @@ IDENTITY = [
     ("identity-2.jpg", "IDENTITY", BANK / "colour-04.jpg", (0, 0, 1143, 1010),
      "the face at a second angle and light; cut above the chest"),
 ]
+#: ADR-082 U41 — the FACE set: the identity crops ALONE, for a face edit of a
+#: picked plate (`generate.py --edit-kind face`). A THIRD angle joins the pair:
+#: the commander's head is turned three-quarter, and the two near-frontal crops
+#: left the model matching loosely. ⚠ NOT added to `IDENTITY` itself: every
+#: plate lock numbers its wardrobe images from IMAGE 3, and a third identity
+#: crop there would shift every one of those labels.
+IDENTITY_FACE = IDENTITY + [
+    ("identity-3.jpg", "IDENTITY", BANK / "colour-01-3q-hands.jpg", (360, 90, 820, 560),
+     "the face at a third angle, three-quarter; the chin beard and the shaved sides plain"),
+]
 BOOTS = ("boots.jpg", "HIS BOOTS", BANK / "boots-detail.jpg", (260, 0, 1100, 585),
          "his boots on the stage; the audience's heads are below the box")
 RECIPES: dict[str, list[tuple[str, str, Path, tuple[int, int, int, int] | None, str]]] = {
@@ -111,6 +121,9 @@ def main() -> int:
     ap.add_argument("--wave", required=True)
     ap.add_argument("--looked", action="store_true",
                     help="after OPENING contact.jpg: mark every crop as looked at")
+    ap.add_argument("--set", choices=("plate", "face"), default="plate",
+                    help="plate: the era's full recipe; face: the three identity crops alone "
+                         "(ADR-082 U41, for `generate.py --edit-kind face`)")
     args = ap.parse_args()
 
     refs = Path(__file__).resolve().parent / "waves" / args.wave / "refs"
@@ -124,7 +137,8 @@ def main() -> int:
         return 0
 
     rows = []
-    for n, (name, role, src, box, why) in enumerate(RECIPES[args.era], start=1):
+    recipe = IDENTITY_FACE if args.set == "face" else RECIPES[args.era]
+    for n, (name, role, src, box, why) in enumerate(recipe, start=1):
         if not src.exists():
             raise SystemExit(f"reference source missing: {src}")
         size = write(src, box, refs / name)
