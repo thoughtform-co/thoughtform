@@ -1759,6 +1759,29 @@ through a sieve that returns the value or `null` (`lib/api/numbers`), answer
 and take a default only for an ABSENT field.** A coercion (`Number("50")`)
 hides the caller's bug; a guard written as `x < 1` does not see `NaN`.
 
+## An in-flow `dvh` box moves the whole document on iOS, and nothing anchors it (ADR-123, 2026-09-24)
+
+The hero was `100dvh` so that its lift clock could say "the curtain has cleared"
+on every device. It was also the page's ONE in-flow box sized in the dynamic
+viewport, and on iOS every toolbar transition re-laid it by ~99px — which moved
+every flowing box below it under the reader's thumb, because WebKit has no
+scroll anchoring. The pinned bands absorbed it in their measured clocks; the one
+unpinned instrument jumped, and the drift was recorded one station down as the
+band's own arithmetic. **A `dvh` size belongs on a PINNED box or a backdrop,
+where nothing is laid out against it; an in-flow `dvh` box is a document that
+reflows on a gesture it did not ask for.** The hero is `svh`, and the ratchet
+pins that no `100dvh` survives on it.
+
+## A one-screen stop between two pinned bands needs a runway, not a radius (ADR-123)
+
+Two stations pinned as sticky bands, and one box in normal flow between them
+held by a proximity snap: the flow box is the only thing on the page that can
+rest half-scrolled, and it will, because a proximity radius reaches ~280px and
+the stretch before it was 807. **Where the neighbours pin, pin the instrument
+too and put the seat on its runway's top** — the dwell then buys something (the
+eras ride it) and the snap has a station-sized area to hold instead of a
+radius to miss.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.
@@ -1767,4 +1790,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-09-24_
+_Last updated: 2026-09-24 (ADR-123)_

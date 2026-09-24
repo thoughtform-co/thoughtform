@@ -496,11 +496,19 @@ disc, so a figure ending at 0.945 of its canvas hovers above it.
   at zero `dvh`/`lvh`. ⚠ The comment that stood here before U26 — _"inside a
   100svh instrument this element's own bottom edge IS that floor"_ — was
   FALSE on a real iPhone and stays false; the reserve is paid knowingly.
-  ⚠ **AND `.vwd` IS THE PHONE'S SNAP SEAT** (`scroll-snap-align: start`,
-  `voidwalker.css` ≤960; the root is `y proximity`, landing.css's last block)
-  — the probe's seat law written into the sheet. Nothing locked the
-  instrument before: the owner's two stills were the same box ~50px high and
-  ~100px low. Rules in `mobile-sections.md` §10.
+  ⚠ **AND `.vwd` WAS THE PHONE'S SNAP SEAT — SINCE ADR-123 (2026-09-24, owner)
+  IT PINS.** ADR-113 made it the stop (`scroll-snap-align: start`) because the
+  owner's two stills were the same box ~50px high and ~100px low; his second
+  device read was that it "is not locking into place" — a one-screen box in
+  flow between two PINNED bands, held only by a proximity radius with 807px of
+  un-pulled stretch before it. On the runway rung (`VOIDWALKER_PHONE_RUNWAY_MEDIA`,
+  ≤700) the STATION is the stop and the runway (`padding-block: 0`, `100svh +
+  --vw-phone-dwell`), `.vwd` is `position: sticky; top: 0; height: 100dvh;
+  scroll-snap-align: none` inside it, and the five eras ride the dwell on
+  `VOIDWALKER_PHONE_ERA_BAND` `[0, 1]`. ⚠ **"Never inherit a runway or sticky
+  child" (below) is amended for this one rung**, and U26's "pays for the strip
+  twice" is superseded there: a `100dvh` band ends on the real floor. Rules in
+  `mobile-sections.md` §12.
   ⚠ **Chromium resolves svh/lvh/dvh to one number**, so every change above is
   byte-identical in CI and the only proof is a device: compare `innerHeight`
   with `.home-v2-stage__canvas`'s `getBoundingClientRect().bottom`.
@@ -983,9 +991,13 @@ handoff and the `701–1100px` complete fallback alone.
   edges — ADR-030 §6, on record as hit six times. Rules:
   [`musings.md`](musings.md).
 - **Every hologram path is starless.** `data-vw-surface="hologram"` removes
-  `v7-stars.svg` on static fallbacks too. Mobile, tablet, PRM, flag-off and
+  `v7-stars.svg` on static fallbacks too. Tablet, PRM, flag-off and
   corridor-fallback remain solid-void normal flow; they never inherit the
-  `260svh` runway or sticky child.
+  `260svh` runway or sticky child. ⚠ **The PHONE (≤700, ADR-123) is its OWN
+  runway, not the desktop's**: `100svh + 120svh` with `.vwd` sticky at `100dvh`,
+  written by a second branch of the same hook that never stamps `data-vw-mode`,
+  `data-vwh-ready` or `data-vw-handoff` — none of the desktop choreography
+  below runs there.
 - **One reversible writer.** `useVoidwalkerHologramScroll` derives progress
   from `.vw--hologram` geometry and writes only `--vwh-in`, `--vwh-exit`,
   `data-vwh-ready`, station mode and the component-local progress ref. Entry is

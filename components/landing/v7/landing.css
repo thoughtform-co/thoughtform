@@ -430,18 +430,19 @@
   clip-path: inset(
     max(
         0px,
-        calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-rail-y-start))
+        calc((1 - var(--hero-lift, 0)) * 100svh - var(--hud-rail-y-start))
       ) -100px -100px -100px
   );
 }
 .hud__corner--tl {
-  clip-path: inset(max(0px, calc((1 - var(--hero-lift, 0)) * 100dvh - var(--hud-margin))) 0 0 0);
+  clip-path: inset(max(0px, calc((1 - var(--hero-lift, 0)) * 100svh - var(--hud-margin))) 0 0 0);
 }
 .hud__corner--br {
-  /* Bottom-anchored: its top sits at `100dvh − margin − corner-zone`, so the
-     hero-edge inset reduces to `margin + corner-zone − lift·100dvh`. */
+  /* Bottom-anchored: its top sits at `100svh − margin − corner-zone`, so the
+     hero-edge inset reduces to `margin + corner-zone − lift·100svh`. The
+     hero is `100svh` and the lift divides by the same viewport (ADR-123). */
   clip-path: inset(
-    max(0px, calc(var(--hud-margin) + var(--hud-corner-zone) - var(--hero-lift, 0) * 100dvh)) 0 0 0
+    max(0px, calc(var(--hud-margin) + var(--hud-corner-zone) - var(--hero-lift, 0) * 100svh)) 0 0 0
   );
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1932,20 +1933,26 @@
 .hero {
   position: relative;
   z-index: 4;
-  /* ⚠ dvh, AND DELIBERATELY NO `100lvh` FLOOR. The hero's exit is not a
+  /* ⚠ svh, AND DELIBERATELY NO `100lvh` FLOOR. The hero's exit is not a
      choreography that can be tuned to a height — it is an IDENTITY:
-     `--hero-lift = scrollY / window.innerHeight` (useLandingScroll.ts:137),
-     and `innerHeight` tracks the DYNAMIC viewport. So `lift = 1` means
-     "one dynamic viewport of scroll has happened", and the HUD reveal
-     clips that consume it are already written in `100dvh` (see
-     `.hud__rail` / `.hud__corner--*` above). dvh is the one unit that
-     keeps `lift = 1 ⇔ the hero has fully cleared`.
+     `--hero-lift = scrollY / layoutViewportHeight()` (useLandingScroll.ts),
+     the SMALL viewport, and the HUD reveal clips that consume it are written
+     in `100svh` (`.hud__rail` / `.hud__corner--*` above). `lift = 1 ⇔ the
+     hero has fully cleared` holds on every device, on the one viewport that
+     does not move while the thumb is still.
+     ⚠ IT WAS `100dvh` UNTIL ADR-123 (2026-09-24), AND THAT WAS THE PAGE'S ONE
+     IN-FLOW DYNAMIC BOX. On iOS every toolbar collapse re-laid this card
+     ~99px taller and shifted EVERY flowing box below it by that much under
+     the reader's thumb — WebKit has no scroll anchoring to absorb it. The
+     pinned bands hid it in their clocks; the era instrument, the musings
+     list and the footer visibly jumped (ADR-113's "settling", at its
+     source). What the small viewport costs: as the toolbar collapses during
+     the lift, a ~99px strip of the corridor's frozen first frame shows under
+     the hero's edge — the reveal the curtain performs anyway, 99px early.
      Give this box `100lvh` — which is what a bare `100vh` resolves to
      while the mobile URL bar is showing — and the card is taller than the
-     travel that lifts it: at lift 1 an lvh−dvh strip of opaque hero is
-     still parked over the corridor's first frame. Measured 0px at
-     390x844 in the emulator (no dynamic toolbar) and ~60–90px on a real
-     iOS/Android phone with the bar out.
+     travel that lifts it: at lift 1 an lvh−svh strip of opaque hero is
+     still parked over the corridor's first frame.
      ⚠ THIS IS NOT `.station--cover`'s RULE (~:11229) AND MUST NOT BE
      "HARMONISED" WITH IT. That block pairs dvh with a `min-height: 100lvh`
      floor on purpose, because it holds a DIFFERENT invariant: it is a
@@ -1953,7 +1960,7 @@
      or the next section peeks under it. One is bounded above by the
      scroll that clears it; the other is bounded below by what it covers. */
   height: 100vh;
-  height: 100dvh;
+  height: 100svh;
   min-height: 0;
   display: flex;
   flex-direction: column;

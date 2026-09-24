@@ -50,6 +50,29 @@ export const VOIDWALKER_ERA_BAND: readonly [number, number] = [0.16, 0.72];
 export const VOIDWALKER_ERA_HYSTERESIS = 0.22;
 
 /**
+ * THE PHONE'S ERA BAND (ADR-123): the whole dwell. On the ≤700 rung the pinned
+ * instrument has no entry and no exit choreography — the pin frame IS era 0
+ * and the release IS era 4 — so the band runs edge to edge and each era is
+ * one fifth of `--vw-phone-dwell`. Passed EXPLICITLY by the phone branch;
+ * every desktop caller takes the default and is byte-identical.
+ */
+export const VOIDWALKER_PHONE_ERA_BAND: readonly [number, number] = [0, 1];
+
+/**
+ * A deliberate tap's claim on the era while its glide is in flight (ADR-123).
+ *
+ * The tap scrolls to the era's slice centre and the spy resolves the runway's
+ * own position on the very next frame — through every intermediate slice. The
+ * desktop has that race and records it; the phone closes it: while this is
+ * set the tapped era holds and the derivation waits for `scrollend` (or a
+ * 900ms cap), then the ref clears and scroll is the selector again. A SLOT,
+ * not a store, for `voidwalkerEraScrubRef`'s reason.
+ */
+export const voidwalkerEraPickRef: { current: { era: number; at: number } | null } = {
+  current: null,
+};
+
+/**
  * Which era the runway is showing at `progress`, given how many there are.
  *
  * ⚠ `current` IS AN INPUT, NOT A HINT. The band is divided into equal
@@ -60,10 +83,11 @@ export const VOIDWALKER_ERA_HYSTERESIS = 0.22;
 export function voidwalkerEraFromProgress(
   progress: number,
   count: number,
-  current: number
+  current: number,
+  band: readonly [number, number] = VOIDWALKER_ERA_BAND
 ): number {
   if (count <= 1) return 0;
-  const [lo, hi] = VOIDWALKER_ERA_BAND;
+  const [lo, hi] = band;
   const span = hi - lo;
   if (span <= 0) return current;
   const t = clamp01((clamp01(progress) - lo) / span);
@@ -81,9 +105,13 @@ export function voidwalkerEraFromProgress(
  * Used by a deliberate click, so the pointer and the scroll agree about which
  * era is showing.
  */
-export function voidwalkerProgressForEra(index: number, count: number): number {
-  if (count <= 1) return VOIDWALKER_ERA_BAND[0];
-  const [lo, hi] = VOIDWALKER_ERA_BAND;
+export function voidwalkerProgressForEra(
+  index: number,
+  count: number,
+  band: readonly [number, number] = VOIDWALKER_ERA_BAND
+): number {
+  if (count <= 1) return band[0];
+  const [lo, hi] = band;
   const slice = (hi - lo) / count;
   return lo + slice * (Math.min(Math.max(index, 0), count - 1) + 0.5);
 }

@@ -422,15 +422,18 @@ too high or too low … when you scroll to the section, the components lock in
 one symptom, and two laws.
 
 **The seats.** On the phone rung the root is `scroll-snap-type: y proximity`
-(landing.css's last block) and `#services`, `#about`, `#contact` and `.vwd`
-are `scroll-snap-align: start`. A stop short of a seat glides onto it; a stop
+(landing.css's last block) and `#services`, `#contact`, **`#voidwalker` on the
+runway rung (§12)** — and `.vwd` only where the runway flag is off — are
+`scroll-snap-align: start`. A stop short of a seat glides onto it; a stop
 past a station TALLER than the screen stays where the reader stopped (the
-covering rule — right for a section you read down); the one-screen instrument
-snaps from either side.
+covering rule — right for a section you read down); a one-screen box snaps
+from either side.
 
-- ⚠ **THE SEAT IS THE INSTRUMENT, NEVER THE STATION** — §3's probe law,
-  written into the sheet. A `#voidwalker` stop would seat `.vwd` ~67px down
-  and its era stops below the fold.
+- ⚠ **THE SEAT IS THE INSTRUMENT, NEVER THE STATION'S PADDING** — §3's probe
+  law. Before ADR-123 that meant `.vwd` was the stop (a `#voidwalker` stop
+  seated it ~67px down, its era stops below the fold); on the runway rung the
+  station has NO padding, its top IS the instrument's top, and the station is
+  the stop (§12). Same law, satisfied by arithmetic now.
 - ⚠ **NOT the hero** (a stop at 0 drags the half-lifted curtain back), **NOT
   the corridor host** (820svh, no snap area, so proximity cannot fire inside
   it — its one reachable stop is `#services`' seat at its end), **no sticky
@@ -440,8 +443,8 @@ snaps from either side.
   band twice.
 - ⚠ **NOT gated on reduced motion** — snap is UA scrolling, not an authored
   animation, and a reduced-motion reader has the same chrome to collide with.
-- `scroll-snap-stop: always` on `.vwd` is the one dial, held until the device
-  shows a fling from #about overshooting the instrument.
+- ⚠ `scroll-snap-stop: always` was the one dial, held — **and the device
+  showed the overshoot** (ADR-123): it is set on the runway station now.
 - The ring's side-tap tween (`ringScrollTween`, per-frame instant `scrollTo`)
   ends far outside any proximity radius of #about's stop; the seams spec's
   "snap-landings" attachment records the measured landings, and
@@ -457,10 +460,15 @@ innerHeight`, the initial containing block — is what the writers read now:
 `useServicesStageScroll`, `useStackedCardsScroll`, `useCorridorExitScroll`,
 `useDepthScroll`, `MobileEpilogueSignal`, `HudNav`, `beatScrollTarget`.
 
-- ⚠ **THE ONE EXCEPTION IS `--hero-lift`** (`useLandingScroll`): it divides by
-  `innerHeight` BECAUSE the hero is `100dvh` — lift = 1 ⇔ the curtain has
-  cleared, on every device. `layout-viewport-height.test.ts` pins the
-  adopters by source and pins that exception at exactly one read.
+- ⚠ **THERE IS NO EXCEPTION ANY MORE (ADR-123).** `--hero-lift` divided by
+  `innerHeight` because the hero was `100dvh` — and an in-flow `dvh` box is
+  exactly what §8's law forbids: every toolbar transition re-laid the hero and
+  shifted the whole document under the thumb (~99px on an iPhone 14, no scroll
+  anchoring on WebKit). The hero is `100svh`, its curtain clips are `svh`, and
+  `useLandingScroll` reads the layout viewport; lift = 1 ⇔ cleared still holds,
+  on the small viewport. `layout-viewport-height.test.ts` pins the adopters
+  (with `useLandingScroll` and the hologram hook) and that no `100dvh` survives
+  on `.hero`.
 - ⚠ **DESKTOP IS BYTE-IDENTICAL BY ARITHMETIC**: `clientHeight` excludes only
   a horizontal scrollbar and this site never renders one. The HUD snapshots
   are the proof.
@@ -532,8 +540,9 @@ image of the same bake before the band unpins. Behind
   desktop's own `aboutStageProgressRef` and `aboutSlotRef`; the stamps are
   `data-about-band` · `data-about-deck` · `data-vw-name` / `data-vw-copy` ·
   `data-about-slot` · `data-bio-open`.
-- ⚠ **TWO SNAP TARGETS INSIDE ONE RUNWAY, AND THE STATION IS NOT A STOP** —
-  which amends §10's list for `#about`. A band with decode windows cannot rest
+- ⚠ **THREE SNAP TARGETS INSIDE ONE RUNWAY, AND THE STATION IS NOT A STOP** —
+  which amends §10's list for `#about`. (The third, `.voidwalker__snap-out` on
+  the band's RELEASE frame, is ADR-123's — §12.) A band with decode windows cannot rest
   on its top (cards stacked, band blank) or mid-window; it rests at THE FLIP'S
   END (`.voidwalker__snap-in`, `end`-aligned, `100svh + 0.26 × travel` tall
   from the station's top — the one position it names is its bottom on the
@@ -585,10 +594,77 @@ image of the same bake before the band unpins. Behind
   diff with `sharp`, the chevron, frame deltas. **The device is the gate**
   (ADR-115 §Device checklist).
 
+## 12 · The era instrument pins on the phone (ADR-123)
+
+Owner, 2026-09-24, from his phone: _"In the Voidwalker section, when I enter
+it, the components or just that section scroll weirdly. It's not locking into
+place … Once you hit a section, the section inside it, with all the components,
+should not be able to move as awkwardly as it does now."_ `#services` and
+`#about` were pinned bands; `.vwd` was the one unpinned stop between them, held
+only by a proximity radius with 807px of un-pulled stretch before it. On the
+runway rung (`VOIDWALKER_PHONE_RUNWAY_MEDIA`: at most 700 wide, at least 681
+tall, no-preference; behind `VOIDWALKER_PHONE_RUNWAY`) it is §7's shape one
+station down.
+
+- **The STATION is the runway and the stop.** `#voidwalker[data-vw-phone="runway"]`
+  takes `padding-block: 0` (its top IS the pin frame — `.vwd__sheet` /
+  `.vwd__band` reserve both chrome bands from inside), `min-height: calc(100svh
+  - var(--vw-phone-dwell))`with`--vw-phone-dwell: 120svh`the ONE dial,`scroll-snap-align: start`and`scroll-snap-stop: always`. `.vw--hologram`carries the same`min-height`.
+- **`.vwd` pins inside it at `100dvh`** (§11's law for a pinned band; the
+  fallback if the figure's breathing on a bar transition reads wrong is
+  `100svh`, one declaration) and declares `scroll-snap-align: none` — a sticky
+  child creates no snap position, and one that did would name the runway's top
+  twice.
+- **Two release targets, `100dvh`, absolute, full-width, `start`,
+  `pointer-events: none`:** `.vw-phone-snap` on the runway's foot (an
+  `aria-hidden` sibling after `<VoidwalkerHologram/>`) and `.voidwalker__snap-out`
+  on the about band's foot (§11's third target, markup in the prototype). A rest
+  in a band's last radius pulls forward to its handover frame; a rest just past
+  it pulls back. What is left un-pulled is 282px above `#voidwalker` and 282px
+  above `#musings`, one radius each, bounded by named pairs — the seams spec's
+  sweep walks every 40px from the reading seat to the writing.
+- ⚠ **NO WELD over `#about`** (a negative `margin-top` is pinned absent): the
+  about band's release and the runway's pin are two frames a radius apart, on
+  purpose — the era stops would be the first thing a weld covered.
+- **The writer is a second branch of the SAME hook** (`useVoidwalkerHologramScroll`
+  — one listener, one rAF): not capable and the phone media matches, so
+  `writePhone()` runs — it stamps `data-vw-phone="runway"` once, measures
+  `travel = runway rect − .vwd rect` (never a constant — ADR-115 U1), writes
+  `--vwh-p` delta-gated, returns while the station is off-screen (the figure
+  never glitches unseen), honours a tap's glide through `voidwalkerEraPickRef`
+  (`scrollend` or a 900 ms cap) and derives the era with
+  `voidwalkerEraFromProgress(p, n, current, VOIDWALKER_PHONE_ERA_BAND)`.
+  ⚠ It writes NONE of the desktop's stamps (`data-vw-mode`, `data-vwh-ready`,
+  `data-vw-handoff`, the hologram progress ref) — the desktop choreography, the
+  weld and the title decode stay off; the unit test pins the absence.
+- **The phone band is `[0, 1]`** (`VOIDWALKER_PHONE_ERA_BAND`): the pin frame IS
+  era 0 and the release IS era 4, five slices of 24svh. The clock functions
+  take an optional `band` defaulting to the desktop's — identity for every
+  desktop caller, unit-pinned point for point.
+- **A tap glides the PAGE**, not the instrument (`pick`: `travel =
+runway.offsetHeight − .vwd.offsetHeight`, the pick ref claims the era, the
+  scroll goes to the era's slice centre); the reel warms every era's poster
+  once the station is near, because a fling can cross four.
+- **The hero is `100svh`** (§10's exception deleted; ADR-113 U2): the document
+  below it no longer reflows on a bar transition. At scroll 0 iOS shows the
+  bars, so the hero fills exactly; as the toolbar collapses during the lift a
+  ~99px strip of the corridor's first frame shows under the hero's edge — the
+  reveal the curtain performs anyway, earlier.
+- **Programmatic scrolls land on seats**: `HudNav` and `settleInitialAnchor`
+  resolve the first `[data-station-seat]` inside a target (`.voidwalker__snap`,
+  `.vwd`) before falling back to the station.
+- **The guards**: `voidwalker-phone-runway.test.ts` (the lockstep: the media
+  literal, the dwell once, every declaration by selector, both targets, the
+  band, desktop identity, no weld, the writer's absences), the moved pins in
+  `phone-viewport-units` and `layout-viewport-height`, `mobile-section-seams`'
+  geometry / stillness / sweep cases and its re-cut snap tables, and
+  `scripts/probe-mobile-lockin.mjs` on the new stops. **The device is the gate**
+  (ADR-123 §Device checklist).
+
 ## Verifying
 
 ```bash
-npx vitest run tests/lib/layout-viewport-height.test.ts tests/lib/phone-viewport-units.test.ts
+npx vitest run tests/lib/layout-viewport-height.test.ts tests/lib/phone-viewport-units.test.ts tests/lib/voidwalker-phone-runway.test.ts
 node scripts/probe-mobile-lockin.mjs --theme dark   # headed; the radius sweep, ±40/+60 landings, stills
 node scripts/probe-mobile-deck.mjs --theme dark      # headed; the exit, the about band, the handover diff, the chevron (ADR-115)
 node scripts/probe-voidwalker-phone.mjs             # byte-identical to before ADR-113 — Chromium cannot see the unit
