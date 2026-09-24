@@ -478,4 +478,63 @@ test.describe("the proof stack on phones (ADR-107)", () => {
     expect(short.split).toBe(false);
     expect(short.slots).toEqual(["static", "static", "static", "static"]);
   });
+
+  /* ── ADR-123 commit A: the landing lands where the reader was ─────────
+     The browser's own restore fires against a document the lazy corridor has
+     not yet grown and clamps a deep position to the bottom; the landing keeps
+     its own memory and replays it once the split pile and the stage are up. */
+  test("a reload deep in the pile comes back to the same slot (ADR-123)", async ({ page }) => {
+    await openPile(page);
+    const state = await seatSlot(page, 4);
+    expect(state).toMatch(/^(pinned|covered)$/);
+    // Let the memory's coalesced write land (<=4 Hz) before the reload.
+    await page.waitForTimeout(400);
+    const saved = await page.evaluate(() => Math.round(window.scrollY));
+    expect(saved).toBeGreaterThan(1000);
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".pf-stack--split", { timeout: 60_000 });
+    // The replay waits for a still document tall enough to hold the target
+    // (cap 4 s) and re-applies once at +500 ms; give it both.
+    await page.waitForFunction((y) => Math.abs(window.scrollY - y) <= 2, saved, { timeout: 8000 });
+    await page.waitForTimeout(700);
+    const after = await page.evaluate(() => ({
+      y: Math.round(window.scrollY),
+      restoration: history.scrollRestoration,
+      state:
+        document.querySelector<HTMLElement>('.pf-slot[data-pc-index="4"]')?.dataset.pcState ?? null,
+    }));
+    expect(Math.abs(after.y - saved), "the reload did not land where it left").toBeLessThanOrEqual(
+      2
+    );
+    expect(after.restoration).toBe("manual");
+    expect(after.state).toMatch(/^(pinned|covered)$/);
+  });
+
+  test("the diag strip mounts only on ?diag=phone, with a 44px copy chit (ADR-123)", async ({
+    page,
+  }) => {
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".pf-stack", { timeout: 60_000 });
+    await page.waitForTimeout(800);
+    expect(
+      await page.locator("[data-diag-phone]").count(),
+      "the strip is on the anonymous path"
+    ).toBe(0);
+
+    await page.goto("/?diag=phone", { waitUntil: "domcontentloaded" });
+    const strip = page.locator("[data-diag-phone]");
+    await expect(strip).toBeVisible({ timeout: 20_000 });
+    const chit = strip.locator("button");
+    const box = await chit.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(strip).toContainText("NOW A");
+    // The flag survives a reload without the query string (that is the point).
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("[data-diag-phone]")).toBeVisible({ timeout: 20_000 });
+    await page.goto("/?diag=off", { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(800);
+    expect(await page.locator("[data-diag-phone]").count()).toBe(0);
+  });
 });

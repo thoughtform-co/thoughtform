@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { ServicesStage } from "./ServicesStage";
+import { ServicesBoundary, ServicesFallbackPile } from "./ServicesBoundary";
+import { proofStackClient, proofStackTracks } from "./proof-stack/proofOrder";
 
 interface ServicesPortalProps {
   containerRef: React.RefObject<HTMLElement | null>;
@@ -42,7 +44,23 @@ export function ServicesPortal({ containerRef }: ServicesPortalProps) {
       root = createRoot(slot);
       rootRef.current = root;
     }
-    root.render(<ServicesStage />);
+    /* ADR-123: a nested root has no boundary above it, and an uncaught error
+       in the stage emptied the whole station — most of the page's height —
+       which clamps the scroll and reads as a reload that landed elsewhere.
+       The fallback is the pile alone, whole; the error goes to the black box. */
+    root.render(
+      <ServicesBoundary
+        fallback={
+          <ServicesFallbackPile
+            tracks={proofStackTracks()}
+            client={proofStackClient()}
+            split={window.matchMedia?.("(max-width: 960px)").matches ?? false}
+          />
+        }
+      >
+        <ServicesStage />
+      </ServicesBoundary>
+    );
 
     return () => {
       const r = rootRef.current;

@@ -11,6 +11,7 @@ import {
   useQualityStore,
 } from "@/lib/hooks/useQualityTier";
 import { useDepthGatewayStore } from "@/lib/stores/depthGatewayStore";
+import { FrameCounter } from "@/components/landing/home-v2/FrameCounter";
 import { vwTravelRef } from "@/lib/home-v2/vwTravelRef";
 import { BrandmarkAccretionShell } from "./BrandmarkAccretionShell";
 import { BrandmarkPhysicsCoreActor } from "./BrandmarkPhysicsCoreActor";
@@ -422,6 +423,9 @@ export function DepthGatewayScene() {
       {/* Re-entry guard — wakes the demand-mode loop when the corridor
           re-engages so scroll-back never strands a cleared buffer. */}
       <FrameInvalidator />
+      {/* ADR-123: counts the frames this Canvas paints, for the phone diag and
+          the smokes' "the corridor is at rest in the pile" assertion. */}
+      <FrameCounter which="corridor" />
       <FlyingCameraRig />
       <StaticStarfield />
       {/* SubstrateTopography — the realm OUTSIDE the wormhole: a

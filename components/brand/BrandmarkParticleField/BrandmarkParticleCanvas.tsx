@@ -1,6 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
+import { FrameCounter } from "@/components/landing/home-v2/FrameCounter";
 import { useEffect, useState } from "react";
 import { useBrandmarkJourneyStore } from "@/lib/stores/brandmarkJourneyStore";
 import { probeWebGL } from "@/lib/webgl/probe";
@@ -176,6 +177,8 @@ export function BrandmarkParticleCanvas({
         style={{ background: "transparent", pointerEvents: "none" }}
       >
         <BrandmarkFrameDriver />
+        {/* ADR-123: counts the frames this Canvas paints (the phone diag). */}
+        <FrameCounter which="brandmark" />
         <BrandmarkParticleStation />
         {/* ADR-019: silhouette point cloud that paints the brandmark
             from Diagnostic onward. Reads the SAME journey transform
