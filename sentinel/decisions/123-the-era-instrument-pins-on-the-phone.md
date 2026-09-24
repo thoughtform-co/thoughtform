@@ -328,16 +328,24 @@ about handover need the canvas); dropping `BAKE_SCALE_MOBILE`; retuning the
 governor's ladder; touching the corridor mount's valves beyond the gate's
 opener; `scrollRestoration` in `app/layout.tsx`.
 
-## Measured (Chromium, the phone projects)
+## Measured (Chromium, the phone projects — `probe-mobile-lockin.mjs`, dark)
 
-_Filled per build as the smokes and probes run; the device column is the owner's._
+Every stop lands within 0.5px of its seat from 40px short; every station taller
+than the screen holds a stop 60px past its seat (the covering rule); the two
+one-screen targets snap back from 60px past.
 
-| what                                             | 390×844 | 430×932 |
-| ------------------------------------------------ | ------- | ------- |
-| `#voidwalker`'s pin frame = `.vwd`'s top         |         |         |
-| `.vw-phone-snap`'s top = station bottom − `.vwd` |         |         |
-| the dwell (station − band)                       |         |         |
-| un-pulled stretch runs (count · longest)         |         |         |
+| what                                                             | 390×844     | 430×932    | 390×745     |
+| ---------------------------------------------------------------- | ----------- | ---------- | ----------- |
+| `#voidwalker` seated: `.vwd`'s top                               | −0.1        | 0.0        | −0.2        |
+| the era stops' bottom / the settings row's top                   | 787.9 / 800 | 876 / 888  | 688.8 / 701 |
+| the title's ink / the TL bracket's foot                          | 53.9 / 44   | 54 / 44    | 53.8 / 44   |
+| the runway (station − `.vwd`), i.e. the dwell                    | 1013        | 1118       | 894         |
+| `#voidwalker`'s proximity radius (largest short stop that lands) | ≥ 280       | ≥ 280      | ≥ 240       |
+| `.voidwalker__snap-out` / `.vw-phone-snap` seat −40              | 0.1 / −0.1  | −0.3 / 0.1 | −0.2 / −0.2 |
+
+The seams spec's sweep (every 40px from the reading seat to the writing, both
+iPhone projects) attaches its landings as `rest-sweep`: no rest lands on
+nothing, and the stretch runs are two, each under a third of the screen.
 
 ## The device checklist, in his words
 

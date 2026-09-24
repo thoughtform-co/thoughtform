@@ -26,6 +26,7 @@ const stripComments = (src: string) =>
 
 /** Every scroll writer that measures svh-authored geometry on the landing. */
 const ADOPTERS = [
+  "lib/landing/scrollMemory.ts",
   "components/landing/home-v2/hooks/useServicesStageScroll.ts",
   "components/landing/v7/tools-cards/useStackedCardsScroll.ts",
   "components/landing/home-v2/hooks/useCorridorExitScroll.ts",
@@ -105,7 +106,8 @@ describe("the writers read the layout viewport", () => {
     // The hero was the page's one in-flow `100dvh` box and `--hero-lift` its
     // one `innerHeight` reader. Both moved to the small viewport together.
     const hero = read("components/landing/v7/landing.css");
-    const heroBlock = /\.hero \{[\s\S]*?\n\}/.exec(hero.replace(/\/\*[\s\S]*?\*\//g, ""))?.[0] ?? "";
+    const heroBlock =
+      /\.hero \{[\s\S]*?\n\}/.exec(hero.replace(/\/\*[\s\S]*?\*\//g, ""))?.[0] ?? "";
     expect(heroBlock).toMatch(/height:\s*100svh/);
     expect(heroBlock).not.toMatch(/100dvh/);
   });

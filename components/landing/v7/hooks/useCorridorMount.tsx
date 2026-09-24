@@ -21,20 +21,36 @@ import type { V7CorridorText } from "@/lib/v7-parse";
 // the import gate waits for first scroll / first interaction / idle
 // (2.5 s cap) before fetching. Desktop resolves immediately. Only the
 // chunk ARRIVAL shifts — the ADR-018 mount machinery is untouched.
+//
+// ADR-123 (2026-09-24): a page PUT BACK at depth — the landing's own scroll
+// restoration after a reload — has no first scroll to wait for, so the
+// restoration releases the gate itself through `releaseCorridorImportGate()`.
+// The valves are untouched: the gate still opens on scroll, pointer, key or
+// idle; this is one more opener, and a release before the gate exists is
+// remembered so the gate resolves at once when it is created.
+let gateReleased = false;
+let gateOpener: (() => void) | null = null;
+export function releaseCorridorImportGate(): void {
+  gateReleased = true;
+  gateOpener?.();
+}
+
 function corridorImportGate(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   const isNarrow = window.matchMedia?.("(max-width: 960px)").matches ?? false;
-  if (!isNarrow) return Promise.resolve();
+  if (!isNarrow || gateReleased) return Promise.resolve();
   return new Promise((resolve) => {
     let done = false;
     const go = () => {
       if (done) return;
       done = true;
+      gateOpener = null;
       window.removeEventListener("scroll", go);
       window.removeEventListener("pointerdown", go);
       window.removeEventListener("keydown", go);
       resolve();
     };
+    gateOpener = go;
     window.addEventListener("scroll", go, { passive: true, once: true });
     window.addEventListener("pointerdown", go, { passive: true, once: true });
     window.addEventListener("keydown", go, { once: true });
