@@ -59,11 +59,30 @@ import { NoteCover, NoteThumb, coverKindOf } from "./NoteCover";
  *     the lip), 8px apart — thumbnail, title and meta on one card; the open
  *     card grows into a horizontal feature, the copy on the left and the
  *     cover a square at the card's height on the right.
+ *
+ * ⚠ ROUND FIVE (2026-09-24, "continue" — the two ideas round four listed and
+ * did not build), two more variants of the same component:
+ *   · `dated` (v12): v4's rows, titles and thumbnails with the LEDGER's date
+ *     column left of the title, so the right block is the chip and the
+ *     length alone — tighter without losing the picture.
+ *   · `grown` (v13): v11's folder cards with the thumbnail and the feature's
+ *     cover ONE drawing at two sizes (ADR-069's persistent object — the PDA
+ *     card that flies between its two homes): the well IS the cover at
+ *     thumbnail size, and the open card grows it to the feature's, the copy
+ *     seating itself to the right. Nothing appears beside the thumbnail; the
+ *     thumbnail becomes the picture. The growth is the card's own grid column
+ *     transitioning, on the row's clock.
  */
 
-export type ChaptersVariant = "default" | "ledger" | "cards";
+export type ChaptersVariant = "default" | "ledger" | "cards" | "dated" | "grown";
 
-const VARIANT_ID: Record<ChaptersVariant, string> = { default: "v4", ledger: "v10", cards: "v11" };
+const VARIANT_ID: Record<ChaptersVariant, string> = {
+  default: "v4",
+  ledger: "v10",
+  cards: "v11",
+  dated: "v12",
+  grown: "v13",
+};
 
 export function Chapters({
   posts,
@@ -74,8 +93,13 @@ export function Chapters({
   useLabSelect(ref);
   const cover = coverKindOf(knobs?.cover, "dial");
   /* The ledger has no thumbnails; a card's thumbnail is its identity mark, so
-     it is not a knob there; the default keeps `?thumbs=0`. */
-  const thumbs = variant === "cards" || (variant === "default" && knobs?.thumbs !== "0");
+     it is not a knob there (and on `grown` it IS the cover); the default and
+     the dated rows keep `?thumbs=0`. */
+  const thumbs =
+    variant === "cards" ||
+    variant === "grown" ||
+    ((variant === "default" || variant === "dated") && knobs?.thumbs !== "0");
+  const plate = variant === "cards" || variant === "grown";
 
   return (
     <div
@@ -93,10 +117,18 @@ export function Chapters({
           return (
             <li
               key={p.slug}
-              className={`mg-ch__item${variant === "cards" ? " mg-plate mg-ch__card" : ""}`}
+              className={`mg-ch__item${plate ? " mg-plate mg-ch__card" : ""}`}
               data-mg-slug={p.slug}
               data-mg-on={onAtRest(i)}
             >
+              {variant === "grown" ? (
+                /* The one cover: a sibling of the row, seated in the card's
+                   first column across both of its rows, so the same element
+                   is the thumbnail at rest and the picture when open. */
+                <div className="mg-ch__cover mg-ch__cover--grown" aria-hidden="true">
+                  <NoteCover post={p} posts={posts} kind={cover} />
+                </div>
+              ) : null}
               <a className="mg-ch__row" href={postHref(p.slug)} data-mg-slug={p.slug}>
                 {variant === "cards" ? (
                   /* The card: the thumbnail leads, the title and the meta line
@@ -111,6 +143,16 @@ export function Chapters({
                     </span>
                     <Chip beat={beat} className="mg-ch__chip" />
                   </>
+                ) : variant === "grown" ? (
+                  /* The grown card's row is the card's text alone — the cover
+                     is the sibling above. */
+                  <>
+                    <span className="mg-ch__text">
+                      <span className="mg-ch__title">{p.title}</span>
+                      <Meta post={p} className="mg-ch__line" />
+                    </span>
+                    <Chip beat={beat} className="mg-ch__chip" />
+                  </>
                 ) : variant === "ledger" ? (
                   /* The ledger: one line — mark · date · title · chip · length. */
                   <>
@@ -119,6 +161,17 @@ export function Chapters({
                     <span className="mg-ch__title">{p.title}</span>
                     <Chip beat={beat} className="mg-ch__chip" />
                     <span className="mg-ch__len">{p.readingMinutes} min</span>
+                  </>
+                ) : variant === "dated" ? (
+                  /* The dated row: the ledger's columns at v4's size — mark ·
+                     date · title · chip · length · thumbnail. */
+                  <>
+                    <span className="mg-ch__mark" aria-hidden="true" />
+                    <span className="mg-ch__date">{filed(p)}</span>
+                    <span className="mg-ch__title">{p.title}</span>
+                    <Chip beat={beat} className="mg-ch__chip" />
+                    <span className="mg-ch__len">{p.readingMinutes} min</span>
+                    {thumbs ? <NoteThumb post={p} posts={posts} /> : null}
                   </>
                 ) : (
                   <>
@@ -144,12 +197,11 @@ export function Chapters({
                         <ReadButton post={p} className="mg-ch__read" />
                       </div>
                     </div>
-                    <div
-                      className={`mg-ch__cover${variant === "cards" ? "" : " mg-plate"}`}
-                      aria-hidden="true"
-                    >
-                      <NoteCover post={p} posts={posts} kind={cover} />
-                    </div>
+                    {variant === "grown" ? null : (
+                      <div className={`mg-ch__cover${plate ? "" : " mg-plate"}`} aria-hidden="true">
+                        <NoteCover post={p} posts={posts} kind={cover} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -172,4 +224,14 @@ export function ChaptersLedger(props: DirectionProps) {
 /** v11 — the rows tightened into cards. */
 export function ChaptersCards(props: DirectionProps) {
   return <Chapters {...props} variant="cards" />;
+}
+
+/** v12 — v4 with the ledger's date column. */
+export function ChaptersDated(props: DirectionProps) {
+  return <Chapters {...props} variant="dated" />;
+}
+
+/** v13 — the cards, the thumbnail growing into the cover. */
+export function ChaptersGrown(props: DirectionProps) {
+  return <Chapters {...props} variant="grown" />;
 }

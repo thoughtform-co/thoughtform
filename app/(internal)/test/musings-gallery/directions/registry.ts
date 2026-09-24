@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-import { Chapters, ChaptersCards, ChaptersLedger } from "./Chapters";
+import { Chapters, ChaptersCards, ChaptersDated, ChaptersGrown, ChaptersLedger } from "./Chapters";
 import { Codex } from "./Codex";
 import { Columns } from "./Columns";
 import { Feature } from "./Feature";
@@ -46,6 +46,8 @@ export const MG_DIRECTION_IDS = [
   "v9",
   "v10",
   "v11",
+  "v12",
+  "v13",
 ] as const;
 export type MgDirectionId = (typeof MG_DIRECTION_IDS)[number];
 
@@ -63,7 +65,7 @@ export interface MgDirection {
   /** What it was built from — a reference, or the seed. */
   provenance: string;
   /** The round it was built in. */
-  round: 1 | 2 | 3 | 4;
+  round: 1 | 2 | 3 | 4 | 5;
   /** The knobs it reads, in the order the console shows them. */
   knobs?: readonly MgKnob[];
   /** Its own default cover, when it draws one and `?cover=` is unset. */
@@ -181,6 +183,27 @@ export const MG_DIRECTIONS: Readonly<Record<MgDirectionId, MgDirection>> = {
     knobs: ["cover"],
     cover: "dial",
   },
+  v12: {
+    id: "v12",
+    label: "Chapters · dated",
+    thesis:
+      "v4 with the ledger's date column left of the title — the big titles and the thumbnails kept, the right block the chip and the length alone.",
+    provenance: "v4 (the owner's pick) and v10's columns — round four's first unbuilt idea.",
+    round: 5,
+    knobs: ["cover", "thumbs"],
+    cover: "dial",
+  },
+  v13: {
+    id: "v13",
+    label: "Chapters · one cover",
+    thesis:
+      "v11's folder cards with the thumbnail and the cover ONE drawing at two sizes: the open card grows its well into the feature's picture, and nothing appears beside it.",
+    provenance:
+      "v11 and ADR-069's persistent object (the PDA card that flies between its two homes) — round four's second unbuilt idea.",
+    round: 5,
+    knobs: ["cover"],
+    cover: "dial",
+  },
 };
 
 /**
@@ -203,4 +226,6 @@ export const MG_GALLERIES: Readonly<
   v9: Missions,
   v10: ChaptersLedger,
   v11: ChaptersCards,
+  v12: ChaptersDated,
+  v13: ChaptersGrown,
 };

@@ -182,13 +182,28 @@ Both tight variants keep v4's mechanic (one transitioned `grid-template-rows`
 row's floor paid first, the rows solved from the count) and v4's knobs
 (`?cover=`; the ledger has no thumbnails, a card's thumbnail is its mark).
 
+## Round five (2026-09-24, "continue")
+
+The two ideas round four listed and did not build, as two more variants of
+the same component:
+
+| id    | name                 | what it is                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `v12` | Chapters · dated     | v4's rows, titles and thumbnails with the LEDGER's date column left of the title, so the right block is the chip and the length alone — tighter without losing the picture. The copy column starts under the title.                                                                                                                                                                                                                                                        |
+| `v13` | Chapters · one cover | v11's folder cards, with the thumbnail and the feature's cover ONE element at two sizes (ADR-069's persistent object): the card is a two-column grid, the cover in its first column across both rows, and the open card's first column grows from the thumbnail's width to the feature's — `grid-template-columns` is what transitions, on the row's 560ms curve — while the detail unrolls beside it. A container query strips the cover to the compact dial below 140px. |
+
+A third idea — a running index, a hairline down the mark column with the lit
+mark travelling — was refused rather than built: it is a full-height vertical
+rule of the page's own (the rails are the verticals), and it earns nothing at
+three notes.
+
 ## Knobs
 
-`?v=v0…v11` · `?src=live|lab` (the three real notes, or the seven placeholders)
+`?v=v0…v13` · `?src=live|lab` (the three real notes, or the seven placeholders)
 · `?n=3|5|7` (placeholders only) · `?theme=light` · `?console=0` (hide the
 console) · a direction's own knobs, shown by the console only for the
 directions that declare them in the registry: `?cover=dial|raster|field`
-(v4, v6, v7 and v8 — each with its own default: dial, dial, dial, raster), `?thumbs=0` (v4), `?dek=1` (v7).
+(v4, v6, v7, v8 and the Chapters variants — each with its own default: dial, dial, dial, raster, dial), `?thumbs=0` (v4, v12), `?dek=1` (v7).
 The console at the foot switches all of them.
 
 ⚠ **The placeholders live in `../musings-row/placeholders.ts` and their

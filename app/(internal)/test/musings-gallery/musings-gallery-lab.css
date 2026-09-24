@@ -1457,15 +1457,38 @@ html[data-theme="light"] .mg-raster__dot {
   height: 100%;
 }
 
+/* ── v12 · Chapters, DATED (round five) ────────────────────────────────
+   v4's rows, titles and thumbnails with the LEDGER's date column left of the
+   title; the right block is the chip and the length, then the thumbnail.
+   The row's arithmetic and the feature are v4's — only the columns move. */
+.mg--chapters[data-mg-variant="dated"] {
+  --mg-ch-date: clamp(96px, 8vw, 130px);
+  --mg-ch-len: clamp(44px, 4vw, 64px);
+  --mg-ch-dgap: clamp(12px, 1.4vw, 24px);
+}
+.mg--chapters[data-mg-variant="dated"] .mg-ch__row {
+  grid-template-columns: 12px var(--mg-ch-date) minmax(0, 1fr) auto var(--mg-ch-len) auto;
+  column-gap: var(--mg-ch-dgap);
+}
+.mg--chapters[data-mg-variant="dated"]:not([data-mg-thumbs]) .mg-ch__row {
+  grid-template-columns: 12px var(--mg-ch-date) minmax(0, 1fr) auto var(--mg-ch-len);
+}
+/* The copy starts under the TITLE — the mark's column, the date's and two gaps in. */
+.mg--chapters[data-mg-variant="dated"] .mg-ch__detail {
+  padding-left: calc(12px + var(--mg-ch-date) + 2 * var(--mg-ch-dgap));
+}
+
 /* ── v11 · Chapters, the CARDS (round four) ────────────────────────────
    Every note is a folder plate — the notch, the lip — eight pixels apart:
    the thumbnail in a well, the title over the meta line, the chip at the
    row's end. The open card grows into a horizontal feature: the copy left,
    the cover a square at the card's height on the right, inside the card. */
-.mg--chapters[data-mg-variant="cards"] {
+.mg--chapters[data-mg-variant="cards"],
+.mg--chapters[data-mg-variant="grown"] {
   --mg-ch-open-min: clamp(200px, 24svh, 260px);
   --mg-ch-open-max: 300px;
   --mg-ch-card-gap: 8px;
+  --mg-ch-cgap: clamp(12px, 1.3vw, 20px);
   --mg-ch-row: clamp(
     56px,
     min(
@@ -1484,14 +1507,16 @@ html[data-theme="light"] .mg-raster__dot {
   );
   --mg-ch-thumb: calc(var(--mg-ch-row) - 20px);
 }
-.mg--chapters[data-mg-variant="cards"] .mg-ch__list {
+.mg--chapters[data-mg-variant="cards"] .mg-ch__list,
+.mg--chapters[data-mg-variant="grown"] .mg-ch__list {
   display: grid;
   align-content: start;
   gap: var(--mg-ch-card-gap);
   border-top: 0;
   padding: 2px 0;
 }
-.mg--chapters[data-mg-variant="cards"] .mg-ch__item {
+.mg--chapters[data-mg-variant="cards"] .mg-ch__item,
+.mg--chapters[data-mg-variant="grown"] .mg-ch__item {
   border-bottom: 0;
 }
 .mg--chapters[data-mg-variant="cards"] .mg-ch__row {
@@ -1524,7 +1549,8 @@ html[data-theme="light"] .mg-raster__dot {
   gap: 5px;
   min-width: 0;
 }
-.mg--chapters[data-mg-variant="cards"] .mg-ch__title {
+.mg--chapters[data-mg-variant="cards"] .mg-ch__title,
+.mg--chapters[data-mg-variant="grown"] .mg-ch__title {
   font-size: min(clamp(18px, 1.4vw, 26px), calc(var(--mg-ch-row) * 0.4));
   line-height: 1.12;
 }
@@ -1535,18 +1561,21 @@ html[data-theme="light"] .mg-raster__dot {
   padding: 0 calc(var(--mu-ch) + 6px) var(--mg-pad)
     calc(10px + var(--mg-ch-thumb) + clamp(12px, 1.3vw, 20px));
 }
-.mg--chapters[data-mg-variant="cards"] .mg-ch__summary {
+.mg--chapters[data-mg-variant="cards"] .mg-ch__summary,
+.mg--chapters[data-mg-variant="grown"] .mg-ch__summary {
   max-width: 34em;
   font-size: clamp(15px, 1.15vw, 19px);
   line-height: 1.45;
 }
-.mg--chapters[data-mg-variant="cards"] .mg-ch__sign {
+.mg--chapters[data-mg-variant="cards"] .mg-ch__sign,
+.mg--chapters[data-mg-variant="grown"] .mg-ch__sign {
   display: flex;
   align-items: center;
   gap: clamp(16px, 2vw, 32px);
   max-width: none;
 }
-.mg--chapters[data-mg-variant="cards"] .mg-ch__read {
+.mg--chapters[data-mg-variant="cards"] .mg-ch__read,
+.mg--chapters[data-mg-variant="grown"] .mg-ch__read {
   min-height: 40px;
   padding: 0 12px;
 }
@@ -1557,6 +1586,92 @@ html[data-theme="light"] .mg-raster__dot {
   height: 100%;
   border: 1px solid var(--mu-rule);
   background: var(--mg-well);
+}
+
+/* ── v13 · Chapters, ONE COVER (round five) ────────────────────────────
+   v11's folder cards, with the thumbnail and the feature's cover ONE
+   element at two sizes (ADR-069's persistent object). The card is a grid of
+   two columns and two rows: the cover sits in the first column across both
+   rows, the row's text and the detail in the second. At rest the first
+   column is the thumbnail's width and the cover a square in it; the open
+   card's first column is the feature's, and the cover — `aspect-ratio: 1`,
+   width 100 % — grows with it while the detail unrolls beside it on the same
+   clock. ⚠ `grid-template-columns` is what transitions (a length to a
+   length, one track each side), so nothing is measured and nothing is
+   written per frame; the well's drawing is never duplicated. */
+.mg--chapters[data-mg-variant="grown"] {
+  --mg-ch-col: var(--mg-ch-thumb);
+  /* ⚠ A SMALLER SQUARE THAN THE CARDS'. The cover starts at the CARD's top
+     (it is the thumbnail), so its height is most of the card's; at 300px the
+     first still had 150px of bare plate beside the copy and seven notes
+     scrolled at the owner's viewport. 240 seats the copy against it and lets
+     seven rows fit at 1920×1247 (56.9px each) without a scroller. */
+  --mg-ch-open-min: clamp(180px, 20svh, 240px);
+  --mg-ch-open-max: 240px;
+}
+.mg--chapters[data-mg-variant="grown"] .mg-ch__item {
+  display: grid;
+  grid-template-columns: var(--mg-ch-col) minmax(0, 1fr);
+  grid-template-rows: var(--mg-ch-row) auto;
+  column-gap: var(--mg-ch-cgap);
+  padding: 0 calc(var(--mu-ch) + 6px) 0 10px;
+  transition: grid-template-columns 560ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mg--chapters[data-mg-variant="grown"] .mg-ch__item[data-mg-on] {
+  --mg-ch-col: var(--mg-ch-open);
+}
+.mg--chapters[data-mg-variant="grown"] .mg-ch__row {
+  grid-column: 2;
+  grid-row: 1;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 0;
+}
+.mg--chapters[data-mg-variant="grown"] .mg-ch__open {
+  grid-column: 2;
+  grid-row: 2;
+}
+/* The one cover: the thumbnail's square at rest (centred in its row by its
+   10px margin — the well's own inset), the feature's when open. */
+.mg--chapters[data-mg-variant="grown"] .mg-ch__cover {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  align-self: start;
+  display: grid;
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 0;
+  margin-top: 10px;
+  border: 1px solid var(--mu-rule);
+  background: var(--mg-well);
+  container-type: size;
+  container-name: mg-grown;
+}
+/* ⚠ THE DETAIL'S HEIGHT IS SOLVED FROM THE COVER, NOT COPIED FROM THE CARDS'.
+   The cover runs from 10px below the card's top to `10px + open`; the card is
+   the row plus this detail, so the detail is what puts the card's floor one
+   `--mg-pad` under the cover — the cards' `open + pad` here left 90px of
+   plate under the square (measured), because their cover starts a row lower. */
+.mg--chapters[data-mg-variant="grown"] .mg-ch__detail {
+  grid-template-columns: minmax(0, 1fr);
+  height: calc(var(--mg-ch-open) + 10px + var(--mg-pad) - var(--mg-ch-row));
+  padding: 0 0 var(--mg-pad);
+}
+/* At thumbnail size the cover is the compact dial: no labels, no months, no
+   other notes' marks, the secondary rings gone — the drawing the well drew. */
+@container mg-grown (max-width: 140px) {
+  .mg-cover__label,
+  .mg-cover__q,
+  .mg-dial__tick,
+  .mg-dial__stub,
+  .mg-dial__mark,
+  .mg-dial__line2,
+  .mg-field__axis {
+    display: none;
+  }
+  .mg-cover__dial {
+    width: 88%;
+  }
 }
 
 /* ═══ v5 · Memory map (seed) ═══════════════════════════════════════════
@@ -2633,7 +2748,9 @@ html[data-theme="light"] .mg-tx__item[data-mg-on] .mg-tx__row {
   }
   .mg-ch__row,
   .mg--chapters[data-mg-variant="ledger"] .mg-ch__row,
-  .mg--chapters[data-mg-variant="cards"] .mg-ch__row {
+  .mg--chapters[data-mg-variant="dated"] .mg-ch__row,
+  .mg--chapters[data-mg-variant="cards"] .mg-ch__row,
+  .mg--chapters[data-mg-variant="grown"] .mg-ch__row {
     grid-template-columns: 12px minmax(0, 1fr) auto;
   }
   .mg-ch__line,
@@ -2644,7 +2761,9 @@ html[data-theme="light"] .mg-tx__item[data-mg-on] .mg-tx__row {
     display: none;
   }
   .mg--chapters[data-mg-variant="ledger"] .mg-ch__detail,
-  .mg--chapters[data-mg-variant="cards"] .mg-ch__detail {
+  .mg--chapters[data-mg-variant="dated"] .mg-ch__detail,
+  .mg--chapters[data-mg-variant="cards"] .mg-ch__detail,
+  .mg--chapters[data-mg-variant="grown"] .mg-ch__detail {
     grid-template-columns: minmax(0, 1fr);
     height: auto;
     padding-left: 0;
@@ -2657,5 +2776,16 @@ html[data-theme="light"] .mg-tx__item[data-mg-on] .mg-tx__row {
     aspect-ratio: 16 / 10;
     height: auto;
     justify-self: stretch;
+  }
+  /* The grown card flows: the cover above the title, the copy under it. */
+  .mg--chapters[data-mg-variant="grown"] .mg-ch__item {
+    display: block;
+    padding: 0 var(--mg-pad);
+  }
+  .mg--chapters[data-mg-variant="grown"] .mg-ch__cover {
+    width: auto;
+    aspect-ratio: 16 / 10;
+    margin: 10px 0 0;
+    container-type: normal;
   }
 }

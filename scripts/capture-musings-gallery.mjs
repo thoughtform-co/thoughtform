@@ -45,7 +45,7 @@ const arg = (flag, dflt) => {
 const PORT = arg("--port", "3003");
 const VPS = arg("--vp", "1920x1247,1280x720").split(",");
 const THEMES = arg("--theme", "dark,light").split(",");
-const VS = arg("--v", "v0,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11").split(",");
+const VS = arg("--v", "v0,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13").split(",");
 const SRCS = arg("--src", "live,lab5,lab7").split(",");
 const HEADED = process.argv.includes("--headed");
 const ROOT_OUT = arg("--out", "shots/musings-gallery");
