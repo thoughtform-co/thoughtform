@@ -10,6 +10,8 @@ import {
   ABOUT_BAND_FLIP_WINDOW,
   ABOUT_BAND_KILL,
   ABOUT_BAND_NAME_WINDOW,
+  ABOUT_BAND_OPEN_IN,
+  ABOUT_BAND_OPEN_OUT,
   ABOUT_BAND_READ,
   ABOUT_BAND_RUNWAY_SVH,
   ABOUT_BAND_SLOT_MIN_PX,
@@ -46,11 +48,24 @@ describe("the about band's ladder", () => {
     expect(ABOUT_BAND_NAME_WINDOW[0]).toBeLessThan(ABOUT_BAND_NAME_WINDOW[1]);
     expect(ABOUT_BAND_NAME_WINDOW[1]).toBeLessThanOrEqual(ABOUT_BAND_COPY_WINDOW[0]);
     expect(ABOUT_BAND_COPY_WINDOW[0]).toBeLessThan(ABOUT_BAND_COPY_WINDOW[1]);
-    // The reading state is a hair past the copy's landing — the snap seat
-    // is solved to a pixel and may never rest on `decode`.
-    expect(ABOUT_BAND_READ).toBeGreaterThan(ABOUT_BAND_COPY_WINDOW[1]);
-    expect(ABOUT_BAND_READ - ABOUT_BAND_COPY_WINDOW[1]).toBeLessThan(0.05);
+    // The rest unfolds after the paragraph has typed, on a hysteresis (U2):
+    // OUT sits at or past the copy's landing, IN past OUT by real scroll, and
+    // the reading seat past IN by enough that a landing a fraction short of
+    // it never rests on a folding rest — the seat IS the expanded state.
+    const travel = (ABOUT_BAND_RUNWAY_SVH - 1) * 844;
+    expect(ABOUT_BAND_OPEN_OUT).toBeGreaterThanOrEqual(ABOUT_BAND_COPY_WINDOW[1]);
+    expect(ABOUT_BAND_OPEN_IN).toBeGreaterThan(ABOUT_BAND_OPEN_OUT);
+    expect((ABOUT_BAND_OPEN_IN - ABOUT_BAND_OPEN_OUT) * travel).toBeGreaterThanOrEqual(24);
+    expect(ABOUT_BAND_READ).toBeGreaterThan(ABOUT_BAND_OPEN_IN);
+    expect((ABOUT_BAND_READ - ABOUT_BAND_OPEN_IN) * travel).toBeGreaterThanOrEqual(48);
+    expect(ABOUT_BAND_READ - ABOUT_BAND_OPEN_IN).toBeLessThan(0.1);
     expect(ABOUT_BAND_READ).toBeLessThan(ABOUT_BAND_DONE);
+    // ⚠ MEASURED IN BLINK (ADR-115 U2): once the reading seat's top sits a
+    // whole viewport below the weld (READ × travel ≥ vh), its first-visible
+    // position becomes a snap position inside the flip's-end covering range
+    // and every rest near the WELD is pulled 6.5px past it. 0.72 broke the
+    // weld; the product stays under 0.99, and a longer runway tightens it.
+    expect(ABOUT_BAND_READ * (ABOUT_BAND_RUNWAY_SVH - 1)).toBeLessThan(0.99);
     // The deck squares up between the seat and the handover.
     expect(ABOUT_BAND_SQUARE_WINDOW[0]).toBeGreaterThanOrEqual(ABOUT_BAND_READ);
     expect(ABOUT_BAND_SQUARE_WINDOW[1]).toBeLessThan(ABOUT_BAND_DONE);

@@ -4,8 +4,9 @@
  * On the ring rung `#about` is a sticky band inside a runway of
  * `ABOUT_BAND_RUNWAY_SVH` viewports: the deck FLIPS to the portrait on
  * ADR-047's own window (`ABOUT_FLIP_WINDOW`, shared with the ring), the name
- * and the role SCRAMBLE in, the first paragraph TYPES in, and the band holds
- * for reading until it unpins. Every window is a fraction of the band's
+ * and the role SCRAMBLE in, the first paragraph TYPES in, the rest of the
+ * bio UNFOLDS (U2), and the band holds for reading until it unpins. Every
+ * window is a fraction of the band's
  * pinned travel, read by ONE writer (`useAboutBandScroll`) and mirrored by
  * nothing — the ring reads the same `aboutStageProgressRef` the desktop
  * stage writes, so the flip needs no phone copy of its clock.
@@ -33,11 +34,35 @@ export const ABOUT_BAND_NAME_WINDOW: readonly [number, number] = [0.3, 0.42];
 /** The first paragraph types in, one typewriter across its lines. */
 export const ABOUT_BAND_COPY_WINDOW: readonly [number, number] = [0.42, 0.6];
 
+/** THE REST OF THE BIO UNFOLDS ON THE CLOCK (ADR-115 U2, owner: "the full
+ *  text shown automatically when you scroll through the section"). A
+ *  hysteresis pair, the pattern the proof stack's arrival uses: the rest
+ *  opens once `p` passes IN — after the first paragraph has typed
+ *  (`ABOUT_BAND_COPY_WINDOW[1]`) — and folds again only under OUT, so a
+ *  rest on the threshold never flickers it. The band's 420ms grid
+ *  transition is the gesture (about-band.css); the writer pulses through
+ *  it so the deck follows the seat as the copy takes its height. The
+ *  chevron that used to toggle the same attribute is deleted — one owner. */
+export const ABOUT_BAND_OPEN_IN = 0.65;
+export const ABOUT_BAND_OPEN_OUT = 0.61;
+
 /** THE READING STATE — the snap seat (ADR-113 §10): a stop near it lands
- *  here, with the portrait on the seat and both texts resolved. A hair past
- *  the copy's window, not on it: the seat is solved to a pixel and a landing
- *  a fraction short of the window's end would rest on `decode`. */
-export const ABOUT_BAND_READ = 0.62;
+ *  here, with the portrait on the seat and every text resolved, THE REST
+ *  OPEN (U2 — the reading state is the expanded one). Past the open's
+ *  threshold by enough scroll that a landing a fraction short of it never
+ *  rests on a folding rest: 0.62 → 0.70 with U2.
+ *  ⚠ `READ × (RUNWAY − 1) < 1` IS A HARD BOUND, MEASURED IN BLINK (U2): the
+ *  reading seat is `.voidwalker__snap`, a `start` area one screen tall at
+ *  `READ × travel` from the station's top. Once that top sits a whole
+ *  viewport or more below the weld frame (READ × travel ≥ vh, i.e. READ ≥
+ *  1/(RUNWAY − 1) = 0.714 at 2.4), Blink treats the seat's FIRST-VISIBLE
+ *  position (`top − vh`) as a snap position inside the flip's-end covering
+ *  range and pulls every rest within ±60px of the WELD onto it — the ring
+ *  band's release seated 6.5px down at 844, 7.1 at 932, and both the seams'
+ *  weld case and the ring smoke's About case went red. 0.72 was over the
+ *  bound by a hair; 0.70 clears it by 24px of travel at 844; the unit test
+ *  pins the product under 0.99. Growing the runway TIGHTENS this bound. */
+export const ABOUT_BAND_READ = 0.7;
 
 /** THE FLIP'S-END SEAT — `.voidwalker__snap-in` is `100svh + COVER × travel`
  *  tall from the station's top and `end`-aligned, so the one position it
@@ -63,8 +88,9 @@ export const ABOUT_BAND_DONE = 0.995;
 export const ABOUT_BAND_KILL = 0.999;
 
 /** Below this seat height the portrait hides — a stamp is not a portrait.
- *  The chevron's expanded copy takes its height from the seat, so on a
- *  short phone the slot can shrink under it. */
+ *  The rest of the bio takes its height from the seat when it unfolds,
+ *  so on a short phone the slot can shrink under it (≈149px at the rung's
+ *  681px floor with the chevron's row gone — over the floor by 9px). */
 export const ABOUT_BAND_SLOT_MIN_PX = 140;
 
 /** The share of the services band's EXIT clock over which its copy un-types

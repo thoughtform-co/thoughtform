@@ -50,12 +50,10 @@
    radius. Nothing rests on a half-decoded line.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* The new markup is invisible to every other viewport: the chevron and the
-   snap target are gone, the rest's wrapper is transparent to layout, the
-   picture is transparent to the portrait's own rules. */
-.voidwalker__more {
-  display: none;
-}
+/* The new markup is invisible to every other viewport: the snap targets
+   are gone, the rest's wrapper is transparent to layout, the picture is
+   transparent to the portrait's own rules. (The chevron that opened the
+   rest is deleted since ADR-115 U2 — the rest unfolds on the clock.) */
 .voidwalker__rest,
 .voidwalker__rest__in {
   display: contents;
@@ -86,7 +84,7 @@
   /* ── THE STATION IS THE RUNWAY ─────────────────────────────────────── */
   #about.station[data-about-band="on"] {
     --about-band-runway: 240svh;
-    --about-band-read: 0.62;
+    --about-band-read: 0.7;
     --about-band-cover: 0.26;
     display: block;
     position: relative;
@@ -136,8 +134,10 @@
     max-width: none;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    /* name · role · SEAT · the first paragraph · the rest · the chevron */
-    grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+    /* name · role · SEAT · the first paragraph · the rest (ADR-115 U2: the
+       chevron's row is gone — the rest unfolds on the clock, and its own
+       bottom edge seats on the band's padding) */
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto;
     row-gap: clamp(12px, 2.2svh, 22px);
     justify-items: center;
     align-items: start;
@@ -146,7 +146,7 @@
        own numbers: the two 56px bands are the HUD's. */
     padding: calc(var(--mobile-chrome-top) + 8px) var(--hud-content-inset, 22px)
       calc(var(--mobile-chrome-bottom) + 16px);
-    /* The band paints copy; only the chevron takes a tap. */
+    /* The band paints copy and takes no tap (U2: nothing to press). */
     pointer-events: none;
   }
   #about[data-about-band="on"] .voidwalker__copy {
@@ -218,7 +218,7 @@
     filter: none;
   }
   /* While the WebGL deck owns the seat the DOM image is hidden; under the
-     portrait floor (the chevron's expanded copy on a short phone) too. */
+     portrait floor (the rest, unfolded, on a short phone) too. */
   #about[data-about-band="on"][data-about-deck="live"] .voidwalker__orbit__portrait,
   #about[data-about-band="on"][data-about-slot="hidden"] .voidwalker__orbit__portrait {
     visibility: hidden;
@@ -234,7 +234,9 @@
   /* The rest of the bio: the house disclosure idiom (services.css's
      `grid-template-rows: 0fr → 1fr`, always in the DOM so it can GROW). The
      seat row is `1fr`, so the copy rising takes its height from the
-     portrait — "the text moves upward and the rest is revealed downward". */
+     portrait — "the text moves upward and the rest is revealed downward".
+     ⚠ OPENED BY THE WRITER ON THE BAND'S CLOCK (ADR-115 U2, `data-bio-open`
+     past `ABOUT_BAND_OPEN_IN`), never by a tap: the chevron is gone. */
   #about[data-about-band="on"] .voidwalker__rest {
     grid-row: 5;
     display: grid;
@@ -275,42 +277,6 @@
     display: none;
   }
 
-  /* ── THE CHEVRON ───────────────────────────────────────────────────── */
-  #about[data-about-band="on"] .voidwalker__more {
-    grid-row: 6;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--gold);
-    pointer-events: auto;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-  #about[data-about-band="on"] .voidwalker__more::before {
-    /* The house chevron: a 7px border box (home-v2.css's cue), turned to
-       point DOWN; UP once the rest is open. */
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-top: 2px solid currentColor;
-    border-right: 2px solid currentColor;
-    transform: translateY(-2px) rotate(135deg);
-    opacity: 0.6;
-    transition: transform 320ms var(--ease-out, ease-out);
-  }
-  #about[data-about-band="on"] .voidwalker[data-bio-open="1"] .voidwalker__more::before {
-    transform: translateY(2px) rotate(-45deg);
-  }
-  #about[data-about-band="on"] .voidwalker__more:focus-visible {
-    outline: 1px dashed rgba(var(--gold-rgb), 0.55);
-    outline-offset: -4px;
-  }
-
   /* ── THE DECODE ────────────────────────────────────────────────────── */
   /* The reveal system's one-shot emerge is neutralised on the band: the
      writer owns visibility through the run stamps below, and a `[data-m]`
@@ -332,8 +298,7 @@
   #about[data-about-band="on"][data-vw-copy="decode"] .voidwalker__copy > .voidwalker__bio {
     visibility: hidden;
   }
-  /* The chevron and the rest arrive with the paragraph. */
-  #about[data-about-band="on"]:not([data-vw-copy="1"]) .voidwalker__more,
+  /* The rest arrives with the paragraph. */
   #about[data-about-band="on"]:not([data-vw-copy="1"]) .voidwalker__rest {
     visibility: hidden;
   }

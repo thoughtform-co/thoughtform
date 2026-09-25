@@ -15,6 +15,8 @@ import {
   ABOUT_BAND_COPY_WINDOW,
   ABOUT_BAND_DONE,
   ABOUT_BAND_NAME_WINDOW,
+  ABOUT_BAND_OPEN_IN,
+  ABOUT_BAND_OPEN_OUT,
   ABOUT_BAND_SLOT_MIN_PX,
   aboutBandCopyT,
   aboutBandNameT,
@@ -48,7 +50,10 @@ import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
  *     from `ABOUT_BAND_DONE` — and at once when no ring is live), and
  *     `data-about-slot="hidden"` when the seat is under the portrait floor;
  *   · the decode layer (per-line leaves over the centred runs);
- *   · the chevron and the portrait's blob.
+ *   · `data-bio-open` — the rest of the bio, unfolded ON THE CLOCK past
+ *     `ABOUT_BAND_OPEN_IN` and folded under `ABOUT_BAND_OPEN_OUT` (ADR-115
+ *     U2; the chevron that toggled it is gone — one owner);
+ *   · the portrait's blob.
  *
  * ⚠ THE PORTRAIT IS THE BAKE, NOT THE PHOTO. `portraitBakeFor` is the memo
  * the ring's phone profile reads too; this side turns the canvas into a
@@ -75,10 +80,13 @@ function setAttr(el: Element, name: string, value: string | null): void {
   }
 }
 
-/** How long the chevron's grid transition runs (about-band.css: 420ms) plus
- *  a frame either side — the writer re-measures the seat every frame of it,
- *  because no scroll fires while the row grows and the deck must follow. */
-const CHEVRON_PULSE_MS = 520;
+/** How long the rest's grid transition runs (about-band.css: 420ms) plus a
+ *  frame either side — the writer re-measures the seat every frame of it,
+ *  because no scroll fires while the row grows and the deck must follow;
+ *  and re-measures the decode's lines, because a fold under `OPEN_OUT`
+ *  moves the paragraph the leaves are posed on while it may still be
+ *  un-typing. */
+const REST_PULSE_MS = 520;
 
 export function useAboutBandScroll(active: boolean): void {
   useEffect(() => {
@@ -96,7 +104,6 @@ export function useAboutBandScroll(active: boolean): void {
     const role = band.querySelector<HTMLElement>(".voidwalker__role");
     const copy = band.querySelector<HTMLElement>(".voidwalker__copy > .voidwalker__bio");
     const slot = band.querySelector<HTMLElement>(".voidwalker__orbit__portrait");
-    const more = band.querySelector<HTMLButtonElement>(".voidwalker__more");
     const source = slot?.querySelector<HTMLSourceElement>("source") ?? null;
     const img = slot?.querySelector<HTMLImageElement>("img") ?? null;
     const sourceSrcset = source?.getAttribute("srcset") ?? null;
@@ -112,6 +119,9 @@ export function useAboutBandScroll(active: boolean): void {
     let frame = 0;
     let pulseUntil = 0;
     let measured = false;
+    /** The rest of the bio: open past `ABOUT_BAND_OPEN_IN`, folded again
+     *  under `ABOUT_BAND_OPEN_OUT`. Module state, one owner. */
+    let open = false;
     let lastP = -1;
     let bakeUrl: string | null = null;
     let bakedFor: ThemeMode | null = null;
@@ -169,7 +179,20 @@ export function useAboutBandScroll(active: boolean): void {
       setAttr(about, "data-vw-copy", copyState);
       const nameLive = nameState === "decode";
       const copyLive = copyState === "decode";
-      if ((nameLive || copyLive) && !measured) measure();
+      /* The rest unfolds ON THE CLOCK (ADR-115 U2): a hysteresis, so a rest
+         on the threshold never flickers it. The grid transition runs after
+         the scroll stops, so the writer keeps posing the deck for the pulse
+         and re-measures the lines through it (the seat gives up height,
+         the copy rises). The first synchronous `write()` lands the attribute
+         with `data-about-band`, so a deep reload paints open, untransitioned. */
+      const want = open ? p > ABOUT_BAND_OPEN_OUT : p >= ABOUT_BAND_OPEN_IN;
+      if (want !== open) {
+        open = want;
+        setAttr(band, "data-bio-open", open ? "1" : null);
+        measured = false;
+        pulseUntil = performance.now() + REST_PULSE_MS;
+      }
+      if ((nameLive || copyLive) && (!measured || performance.now() < pulseUntil)) measure();
       const nameT = aboutBandNameT(p);
       const copyT = aboutBandCopyT(p);
       for (const run of layer.runs) {
@@ -211,20 +234,6 @@ export function useAboutBandScroll(active: boolean): void {
       frame = window.requestAnimationFrame(write);
     };
 
-    /* The chevron: the rest of the bio unfolds under the first paragraph
-       (about-band.css grows its grid row), the seat gives up the height and
-       the deck follows the slot — so the writer runs every frame of the
-       transition, and the lines are re-measured before the next decode. */
-    const onMore = () => {
-      const open = band.getAttribute("data-bio-open") !== "1";
-      setAttr(band, "data-bio-open", open ? "1" : null);
-      more?.setAttribute("aria-expanded", open ? "true" : "false");
-      measured = false;
-      pulseUntil = performance.now() + CHEVRON_PULSE_MS;
-      requestWrite();
-    };
-    more?.addEventListener("click", onMore);
-
     const onResize = () => {
       measured = false;
       requestWrite();
@@ -243,7 +252,6 @@ export function useAboutBandScroll(active: boolean): void {
       window.removeEventListener("scroll", requestWrite);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
-      more?.removeEventListener("click", onMore);
       unsubscribeTheme();
       unmountDecodeLayer(layer);
       for (const attr of [
@@ -258,7 +266,6 @@ export function useAboutBandScroll(active: boolean): void {
       }
       about.style.removeProperty("--about-band-p");
       band.removeAttribute("data-bio-open");
-      more?.setAttribute("aria-expanded", "false");
       if (source) {
         if (sourceSrcset) source.setAttribute("srcset", sourceSrcset);
         else source.removeAttribute("srcset");

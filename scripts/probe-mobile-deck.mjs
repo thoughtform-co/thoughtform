@@ -47,7 +47,10 @@ const HEADLESS = args.includes("--headless");
    reading state (`ABOUT_BAND_READ`) — restated here as a reading, and the
    probe prints the page's own values beside them. */
 const LEAVE = 0.73;
-const READ = 0.62;
+/* ADR-115 U2: the reading seat is the EXPANDED state; the flip's end is the
+   folded one. */
+const READ = 0.7;
+const COVER = 0.26;
 
 let failures = 0;
 const fail = (msg) => {
@@ -336,26 +339,28 @@ for (const [w, h] of SHAPES) {
     console.log("· the handover: `sharp` unavailable, stills only");
   }
 
-  /* ── the chevron ──────────────────────────────────────────────────── */
-  await seatAbout(READ);
+  /* ── the rest, on the clock (ADR-115 U2) ─────────────────────────── */
+  await seatAbout(COVER);
+  await page.waitForTimeout(700);
   const closed = await readAbout();
-  await page.evaluate(() => document.querySelector(".voidwalker__more")?.click());
+  await seatAbout(READ);
   await page.waitForTimeout(700);
   const opened = await readAbout();
-  await still("chevron-open");
-  await page.evaluate(() => document.querySelector(".voidwalker__more")?.click());
+  await still("rest-open");
+  await seatAbout(COVER);
   await page.waitForTimeout(700);
   const reclosed = await readAbout();
   console.log(
-    `· the chevron: slot ${closed.slot?.h} → ${opened.slot?.h} (${opened.slotState ?? "shown"}) → ${reclosed.slot?.h}; rest ${closed.restH} → ${opened.restH} → ${reclosed.restH}; open ${opened.bioOpen}`
+    `· the rest on the clock: slot ${closed.slot?.h} → ${opened.slot?.h} (${opened.slotState ?? "shown"}) → ${reclosed.slot?.h}; rest ${closed.restH} → ${opened.restH} → ${reclosed.restH}; open ${closed.bioOpen} → ${opened.bioOpen} → ${reclosed.bioOpen}`
   );
+  if (closed.bioOpen !== null) fail("the rest is open on the flip's-end seat");
   if (opened.bioOpen !== "1" || !(opened.restH > closed.restH + 40))
-    fail("the chevron did not unfold the rest");
+    fail("the rest did not unfold on the reading seat");
   if (opened.slot && closed.slot && !(opened.slot.h < closed.slot.h))
     fail("the seat did not give up height to the copy");
   if (reclosed.bioOpen !== null || Math.abs((reclosed.slot?.h ?? 0) - (closed.slot?.h ?? 0)) > 2)
-    fail("closing the chevron did not restore the seat");
-  else ok("the chevron unfolds the rest and the seat gives up its height");
+    fail("scrolling back did not fold the rest and restore the seat");
+  else ok("the rest unfolds on the clock, folds on the way back, and the seat follows");
 
   /* ── the snap seat ────────────────────────────────────────────────── */
   const snapTop = await page.evaluate(() => {
