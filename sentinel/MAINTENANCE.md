@@ -68,6 +68,31 @@ Embedded card must be practical, what a buyer can expect.
 - The three surfaces (site, keynote, session) now share one line: a layer
   built for the intelligence, a person keeping the last word.
 
+### 2026-09-25 — the About unfold follows the thumb; a phone lab for the map (ADR-115 U3)
+
+**Trigger:** the owner's device read of the pass below: "overall it looks
+great"; the About unfold "seems to have a step in between"; and the main ask,
+the map card on a phone "just looks like a lot of text and a lot of frames …
+make a test page and some designs."
+
+- **Cycle A on ADR-115 → U3:** the unfold is scrubbed on
+  `ABOUT_BAND_REST_WINDOW` [0.58, 0.70] (a smoothstep, ¶1's peak pinned ≤ 2.5×
+  the finger), the rest's px measured by a `ResizeObserver`, the writer
+  synchronous in the scroll and resize events (the canvas read last frame's
+  slot), a 140 / 150 floor hysteresis, the short-frame gaps in `svh`.
+- **Cycle B (look-dev, no ADR until he picks):** `/test/map-phone-lab` —
+  production's pile and field sheet in real phone frames, `shipped` beside
+  three directions (One stream · Readout rows · Swipe deck), every string
+  declared in `lettering()` and walked by `map-phone-lab.test.tsx` (the
+  envelope, the ordinal and teams bans, and the RENDERED markup against the
+  declaration); the map envelope extracted to `tests/lib/helpers/mapEnvelope.ts`
+  for both phone suites; `scripts/capture-map-phone-lab.mjs` gates the
+  directions (no ink outside the bay, no overflow, the type floors and faces,
+  44px targets) and prints `shipped` as a findings ledger.
+- **Q3 (a class of bug) → the rule:** a threshold that starts a timed
+  transition in a scroll-scrubbed band plays after the scroll stops, which
+  reads as a step; scrub it on the band's own clock (`mobile-sections.md` §11).
+
 ### 2026-09-25 — the Arc travels again, the frame fills, three sections answer (ADR-125 U1 · ADR-059 U7 · ADR-107 U2 · ADR-115 U2)
 
 **Trigger:** the owner's device read of ADR-125, with four stills: "it just

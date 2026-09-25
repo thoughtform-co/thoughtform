@@ -576,18 +576,24 @@ image of the same bake before the band unpins. Behind
   posing a WebGL object against a compositor scroll would lag a step every
   step (ADR-102's measurement), so nothing in the canvas may follow an
   unpinned band.
-- **The rest of the bio unfolds ON THE CLOCK (ADR-115 U2, 2026-09-25 — the
-  chevron is deleted):** the writer stamps `data-bio-open` past
-  `ABOUT_BAND_OPEN_IN` (0.65, after ¶1 has typed) and clears it under
-  `ABOUT_BAND_OPEN_OUT` (0.61), a hysteresis; `.voidwalker__rest` grows `0fr →
-1fr` (420ms) and the seat row gives up its height — the READING seat
-  (`ABOUT_BAND_READ` 0.70) is the expanded state. ⚠ **`READ × (RUNWAY − 1) <
+- **The rest of the bio unfolds UNDER THE THUMB (ADR-115 U3, 2026-09-25 —
+  U2's clock was the "step" the owner saw; the chevron stays deleted):** the
+  rest is scrubbed on `ABOUT_BAND_REST_WINDOW` [0.58, 0.70] (`aboutBandRestT`,
+  a smoothstep — ¶1's peak speed pinned ≤ 2.5× the finger) as `height:
+  calc(--about-rest-t × --about-rest-h)`, the px measured by a
+  `ResizeObserver`, `height: auto` at `data-rest-full`; the seat row gives up
+  its height as it grows and the READING seat (`ABOUT_BAND_READ` 0.70) is the
+  expanded state. ⚠ **Scroll and resize call the writer SYNCHRONOUSLY** (both
+  dispatch before rAF, so the canvas's `useFrame` reads this frame's slot),
+  and the floor has a hysteresis (hide < 140, show ≥ 150). ⚠ **No timed
+  motion in the band**: a transition started by a threshold plays after the
+  scroll has stopped, which is the step. Short frames are paid in `svh`
+  (`row-gap: clamp(10px, calc(5svh − 24px), 22px)`), never a height query. ⚠ **`READ × (RUNWAY − 1) <
 1`, MEASURED**: at 0.72 the seat's first-visible position fell inside the
   flip's-end target's covering range and Blink pulled every rest near the
   WELD 6.5px past it (the unit test pins the product under 0.99). Under
   `ABOUT_BAND_SLOT_MIN_PX` (140) the slot is invalidated, the DOM image hides
-  AND the deck is killed (never the desktop's centre-screen fallback seat). The
-  writer runs every frame of the transition because no scroll fires.
+  AND the deck is killed (never the desktop's centre-screen fallback seat).
 - **Parallax is off on phones** (`useLandingScroll`'s `[data-parallax]` loop
   gated `> 960`): a per-frame rect read and a main-thread follower of a
   compositor scroll, the class §2 exists to keep off the phone.

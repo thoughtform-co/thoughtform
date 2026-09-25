@@ -656,3 +656,74 @@ rasterQuietAt(·, 300, 1060)` at every px); `services-ring-mobile-smoke` —
    eras.
 6. Services: the card sits between the title and the paragraph, touching
    neither; the paragraph on the card is readable with the toolbars showing.
+
+## Update 3 (2026-09-25, owner) — the unfold follows the thumb
+
+Owner, on the device, of U2's unfold: _"the transition from the full photo to
+the smaller photo with the full paragraph seems to have a step in between … we
+can make it a bit smoother."_
+
+**The step, diagnosed.** Everything in the band was scrubbed on its scroll
+progress `p` (the flip, the name decode, ¶1 typing) EXCEPT U2's unfold: a
+boolean stamped at p 0.65 that started a 420ms `grid-template-rows 0fr → 1fr`
+on `cubic-bezier(0.16, 1, 0.3, 1)` — about 56 % of the motion in its first
+50ms, then a ~300ms creep — on the clock, after the scroll had stopped.
+Nothing read `p` in [0.60, 0.70], so the reader saw ¶1 finish, a hold, then a
+jolt and a creep. Two aggravators: the canvas posed the card ONE FRAME LATE
+(R3F's `useFrame` runs before the writer's rAF and read last frame's slot —
+47 / 38 / 29px too tall on the transition's steep first frames, its foot under
+the rising ¶1), and on the toolbar-shown frame the open seat sat at or under
+the 140px floor, so the portrait could hide mid-unfold.
+
+- **The window** (`aboutBandMath.ts`): `ABOUT_BAND_OPEN_IN` / `_OUT` are
+  deleted. `ABOUT_BAND_NAME_WINDOW` [0.30, 0.41], `ABOUT_BAND_COPY_WINDOW`
+  [0.41, 0.58], and a new `ABOUT_BAND_REST_WINDOW = [COPY end, READ]` =
+  [0.58, 0.70] with `aboutBandRestT(p)` a `smoothstep` over it — peak slope
+  1.5×; smootherstep's 1.875× would move ¶1 at up to ~4× the finger. READ 0.70,
+  the runway and U2's Blink bound are unchanged.
+- **The writer** (`useAboutBandScroll.ts`): a `ResizeObserver` on
+  `.voidwalker__rest__in` writes `--about-rest-h` in px (width, font swap and
+  toolbar reflows all land); every `write()` sets `--about-rest-t`
+  (delta-gated, the exact 0 and 1 always land), `data-bio-open` while t > 0 and
+  `data-rest-full` at t ≥ 0.999. `REST_PULSE_MS` and the pulse are deleted — no
+  timed motion is left in the band. ⚠ **The scroll and resize listeners call
+  `write()` SYNCHRONOUSLY**: both events dispatch before rAF callbacks, so the
+  canvas's `useFrame` reads THIS frame's slot. ⚠ **The floor has a
+  hysteresis**: the slot hides under 140 and shows again from
+  `ABOUT_BAND_SLOT_SHOW_PX` 150, so a drag across the floor cannot flicker the
+  portrait.
+- **The sheet** (`about-band.css`): `.voidwalker__rest` is `height:
+calc(var(--about-rest-t) * var(--about-rest-h))`, `overflow: hidden` — a
+  clip reveal, pure motion — and `height: auto` at `[data-rest-full]`, so the
+  reading seat never depends on a stale measure. Both `grid-template-rows`
+  transitions are gone. ⚠ **Short frames are paid in `svh`, never a height
+  query** (iOS resolves height media on the LARGE viewport): the band's
+  `row-gap` is `clamp(10px, calc(5svh − 24px), 22px)` and the rest's
+  paragraph margin 12 → 8px.
+- **Why U2's ruling reverses.** U2 chose the clock because a scrubbed height
+  needs the rest in px (the observer measures it), scrubs ¶1 under the thumb
+  while it is read (bounded now: the unit test pins ¶1's peak at ≤ 2.5× the
+  finger at 844) and makes a mid-window rest a half-open rest (the reading
+  seat is a snap target; a lift mid-window settles on it, which is now on the
+  device checklist). The owner's read is that the clock was the step.
+
+**Measured** (Chromium 390×844 against a production build, the window swept
+in 12 steps with snap off): the rest 0 → 5.2 → 21.3 → 46.6 → 75.2 → 106.5 →
+134.2 → 157.6 → 170.9 → 173.5px while the slot falls 534 → 402, both
+monotonic, ¶1 never over the seat. Headed, the deck probe is green at 844,
+932 and 745; headless SwiftShader fails only its p95 frame-time proxy
+(53–60ms, software GL), as it did before this change.
+
+**Guards:** `about-band-math.test.ts` (REST[0] ≥ COPY[1], REST[1] = READ, the
+ends and monotonicity of `aboutBandRestT`, ¶1's peak speed ≤ 2.5× the finger,
+the slot hysteresis ≥ 8px); `services-ring-mobile-smoke` — the unfold case is
+U3's: COVER folded, a MID read with `scroll-snap-type: none` asserting the
+rest and the slot strictly between their ends, READ open, back to COVER
+folded; the 390×681 case asserts the open seat ≥ 157px; `probe-mobile-deck`
+prints the 12-step sweep and checks it.
+
+### Device checklist (U3)
+
+7. About: scroll slowly past ¶1 — the portrait shrinks and the rest unfolds
+   under the thumb, with no pause before it; lift the finger mid-unfold — it
+   settles onto the open reading seat; scroll back — it folds the same way.
