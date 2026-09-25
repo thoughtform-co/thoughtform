@@ -225,6 +225,7 @@ for (const [w, h] of SHAPES) {
           .replace(/\s/g, "").length,
         bioOpen: band?.getAttribute("data-bio-open") ?? null,
         restH: rest ? +rest.getBoundingClientRect().height.toFixed(1) : NaN,
+        copyTop: copy ? +copy.getBoundingClientRect().top.toFixed(1) : NaN,
         ringLive: document.documentElement.getAttribute("data-card-ring-live"),
         ambient: document.documentElement.getAttribute("data-services-ambient"),
       };
@@ -339,7 +340,7 @@ for (const [w, h] of SHAPES) {
     console.log("· the handover: `sharp` unavailable, stills only");
   }
 
-  /* ── the rest, on the clock (ADR-115 U2) ─────────────────────────── */
+  /* ── the rest, with the thumb (ADR-115 U3) ────────────────────────── */
   await seatAbout(COVER);
   await page.waitForTimeout(700);
   const closed = await readAbout();
@@ -360,7 +361,38 @@ for (const [w, h] of SHAPES) {
     fail("the seat did not give up height to the copy");
   if (reclosed.bioOpen !== null || Math.abs((reclosed.slot?.h ?? 0) - (closed.slot?.h ?? 0)) > 2)
     fail("scrolling back did not fold the rest and restore the seat");
-  else ok("the rest unfolds on the clock, folds on the way back, and the seat follows");
+  else ok("the rest unfolds, folds on the way back, and the seat follows");
+
+  /* The unfold SAMPLED (U3): the snap off for the sweep (every position in the
+     window is inside the reading seat's pull), twelve stops across it. The
+     rest must grow and the seat shrink monotonically, and the paragraph may
+     never sit above the seat's foot — one continuous motion, no step. */
+  await page.addStyleTag({ content: "html { scroll-snap-type: none !important; }" });
+  const sweep = [];
+  for (let i = 0; i <= 12; i += 1) {
+    const target = 0.55 + (0.72 - 0.55) * (i / 12);
+    await seatAbout(target);
+    await page.waitForTimeout(120);
+    const a = await readAbout();
+    sweep.push(a);
+  }
+  await page.addStyleTag({ content: "html { scroll-snap-type: y proximity !important; }" });
+  console.log(
+    "· the unfold, sampled: " +
+      sweep.map((a) => `p ${a.p.toFixed(3)} rest ${a.restH} slot ${a.slot?.h ?? "-"}`).join(" | ")
+  );
+  let mono = true;
+  let under = false;
+  for (let i = 1; i < sweep.length; i += 1) {
+    if (sweep[i].restH + 0.5 < sweep[i - 1].restH) mono = false;
+    if ((sweep[i].slot?.h ?? 0) > (sweep[i - 1].slot?.h ?? 0) + 0.5) mono = false;
+  }
+  for (const a of sweep) {
+    if (a.slot && a.copyTop + 0.5 < a.slot.y + a.slot.h) under = true;
+  }
+  if (!mono) fail("the unfold is not monotonic across its window");
+  else if (under) fail("the paragraph rose over the seat's foot mid-unfold");
+  else ok("the unfold is one continuous motion across its window");
 
   /* ── the snap seat ────────────────────────────────────────────────── */
   const snapTop = await page.evaluate(() => {

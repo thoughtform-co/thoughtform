@@ -15,12 +15,12 @@ import {
   ABOUT_BAND_COPY_WINDOW,
   ABOUT_BAND_DONE,
   ABOUT_BAND_NAME_WINDOW,
-  ABOUT_BAND_OPEN_IN,
-  ABOUT_BAND_OPEN_OUT,
   ABOUT_BAND_SLOT_MIN_PX,
+  ABOUT_BAND_SLOT_SHOW_PX,
   aboutBandCopyT,
   aboutBandNameT,
   aboutBandProgress,
+  aboutBandRestT,
 } from "@/lib/services-ring/aboutBandMath";
 import { PORTRAIT_BACK_SRC, portraitBakeFor } from "@/lib/services-ring/portraitBake";
 import { aboutStageProgressRef } from "@/lib/services-ring/aboutStageProgressRef";
@@ -50,9 +50,11 @@ import { layoutViewportHeight } from "@/lib/viewport/layoutViewportHeight";
  *     from `ABOUT_BAND_DONE` — and at once when no ring is live), and
  *     `data-about-slot="hidden"` when the seat is under the portrait floor;
  *   · the decode layer (per-line leaves over the centred runs);
- *   · `data-bio-open` — the rest of the bio, unfolded ON THE CLOCK past
- *     `ABOUT_BAND_OPEN_IN` and folded under `ABOUT_BAND_OPEN_OUT` (ADR-115
- *     U2; the chevron that toggled it is gone — one owner);
+ *   · the rest of the bio's unfold (ADR-115 U3): `--about-rest-t`, scrubbed
+ *     on `ABOUT_BAND_REST_WINDOW`, against `--about-rest-h`, the rest's own
+ *     height (a `ResizeObserver`); `data-bio-open` while any of it shows and
+ *     `data-rest-full` once it has landed (the chevron that toggled U2's
+ *     boolean is gone — one owner, and no timed motion);
  *   · the portrait's blob.
  *
  * ⚠ THE PORTRAIT IS THE BAKE, NOT THE PHOTO. `portraitBakeFor` is the memo
@@ -80,14 +82,6 @@ function setAttr(el: Element, name: string, value: string | null): void {
   }
 }
 
-/** How long the rest's grid transition runs (about-band.css: 420ms) plus a
- *  frame either side — the writer re-measures the seat every frame of it,
- *  because no scroll fires while the row grows and the deck must follow;
- *  and re-measures the decode's lines, because a fold under `OPEN_OUT`
- *  moves the paragraph the leaves are posed on while it may still be
- *  un-typing. */
-const REST_PULSE_MS = 520;
-
 export function useAboutBandScroll(active: boolean): void {
   useEffect(() => {
     if (!active) return;
@@ -103,6 +97,7 @@ export function useAboutBandScroll(active: boolean): void {
     const name = band.querySelector<HTMLElement>(".voidwalker__name");
     const role = band.querySelector<HTMLElement>(".voidwalker__role");
     const copy = band.querySelector<HTMLElement>(".voidwalker__copy > .voidwalker__bio");
+    const restIn = band.querySelector<HTMLElement>(".voidwalker__rest__in");
     const slot = band.querySelector<HTMLElement>(".voidwalker__orbit__portrait");
     const source = slot?.querySelector<HTMLSourceElement>("source") ?? null;
     const img = slot?.querySelector<HTMLImageElement>("img") ?? null;
@@ -116,18 +111,31 @@ export function useAboutBandScroll(active: boolean): void {
     const layer = mountDecodeLayer(band, "voidwalker__decode");
 
     let disposed = false;
-    let frame = 0;
-    let pulseUntil = 0;
     let measured = false;
-    /** The rest of the bio: open past `ABOUT_BAND_OPEN_IN`, folded again
-     *  under `ABOUT_BAND_OPEN_OUT`. Module state, one owner. */
-    let open = false;
     let lastP = -1;
+    let lastRestT = -1;
+    /** The portrait's floor, with a hysteresis (U3): hidden under
+     *  `ABOUT_BAND_SLOT_MIN_PX`, shown again only from `_SHOW_PX`. */
+    let slotShown = true;
     let bakeUrl: string | null = null;
     let bakedFor: ThemeMode | null = null;
 
     setAttr(about, "data-about-band", "on");
     aboutStageProgressRef.current.engaged = true;
+
+    /* The rest's own height, for the scrubbed unfold (U3). `.voidwalker__rest__in`
+       is a flow root inside a clipped block, so its box is its natural height
+       whatever the rest's current height — measured once now, then by a
+       `ResizeObserver` (width, a font swap, a toolbar reflow). A resize
+       re-writes at once: the seat the deck is posed on moved with it. */
+    const writeRestH = () => {
+      if (!restIn) return;
+      band.style.setProperty(
+        "--about-rest-h",
+        `${restIn.getBoundingClientRect().height.toFixed(1)}px`
+      );
+    };
+    writeRestH();
 
     const measure = () => {
       measureDecodeLayer(layer, band, specs, "voidwalker__decode__line");
@@ -157,7 +165,6 @@ export function useAboutBandScroll(active: boolean): void {
     });
 
     const write = () => {
-      frame = 0;
       if (disposed) return;
       const vh = layoutViewportHeight();
       const r = about.getBoundingClientRect();
@@ -179,20 +186,26 @@ export function useAboutBandScroll(active: boolean): void {
       setAttr(about, "data-vw-copy", copyState);
       const nameLive = nameState === "decode";
       const copyLive = copyState === "decode";
-      /* The rest unfolds ON THE CLOCK (ADR-115 U2): a hysteresis, so a rest
-         on the threshold never flickers it. The grid transition runs after
-         the scroll stops, so the writer keeps posing the deck for the pulse
-         and re-measures the lines through it (the seat gives up height,
-         the copy rises). The first synchronous `write()` lands the attribute
-         with `data-about-band`, so a deep reload paints open, untransitioned. */
-      const want = open ? p > ABOUT_BAND_OPEN_OUT : p >= ABOUT_BAND_OPEN_IN;
-      if (want !== open) {
-        open = want;
-        setAttr(band, "data-bio-open", open ? "1" : null);
-        measured = false;
-        pulseUntil = performance.now() + REST_PULSE_MS;
+      /* The rest unfolds WITH THE THUMB (ADR-115 U3): its height is a function
+         of `p` across `ABOUT_BAND_REST_WINDOW`, so the seat gives up height,
+         the paragraph rises and the deck follows the slot on the same frame
+         as the scroll — nothing runs on the clock after the reader stops.
+         The ends always land exactly (a delta gate alone would leave 0.9996).
+         The window opens where the copy's closes, so t is 0 on every frame the
+         decode layer is live and its measured lines never move under it. */
+      const restT = aboutBandRestT(p);
+      if (
+        restT === 0 || restT === 1 ? restT !== lastRestT : Math.abs(restT - lastRestT) >= 0.0005
+      ) {
+        band.style.setProperty(
+          "--about-rest-t",
+          restT === 0 || restT === 1 ? String(restT) : restT.toFixed(4)
+        );
+        lastRestT = restT;
       }
-      if ((nameLive || copyLive) && (!measured || performance.now() < pulseUntil)) measure();
+      setAttr(band, "data-bio-open", restT > 0 ? "1" : null);
+      setAttr(band, "data-rest-full", restT >= 0.999 ? "1" : null);
+      if ((nameLive || copyLive) && !measured) measure();
       const nameT = aboutBandNameT(p);
       const copyT = aboutBandCopyT(p);
       for (const run of layer.runs) {
@@ -212,7 +225,10 @@ export function useAboutBandScroll(active: boolean): void {
          floor the slot is invalid and the DOM portrait hides with it. */
       if (slot && r.bottom > 0 && r.top < vh) {
         const s = slot.getBoundingClientRect();
-        if (s.height >= ABOUT_BAND_SLOT_MIN_PX && s.width > 1) {
+        slotShown = slotShown
+          ? s.height >= ABOUT_BAND_SLOT_MIN_PX
+          : s.height >= ABOUT_BAND_SLOT_SHOW_PX;
+        if (slotShown && s.width > 1) {
           writeAboutSlotRect(
             s.left + s.width / 2,
             s.top + s.height / 2,
@@ -226,30 +242,40 @@ export function useAboutBandScroll(active: boolean): void {
           setAttr(about, "data-about-slot", "hidden");
         }
       }
-
-      if (performance.now() < pulseUntil) requestWrite();
-    };
-    const requestWrite = () => {
-      if (frame) return;
-      frame = window.requestAnimationFrame(write);
     };
 
+    /* ⚠ SCROLL AND RESIZE WRITE SYNCHRONOUSLY (U3), never on a rAF. Both
+       events dispatch in the rendering update BEFORE the animation-frame
+       callbacks, and the canvas's `useFrame` is registered ahead of anything
+       this hook would queue — so a rAF write left the WebGL deck reading LAST
+       frame's slot (the card ran 47/38/29px taller than its seat on the
+       unfold's steep frames, its foot under the rising paragraph). Written
+       here, the deck and the DOM agree on the same frame. The browser
+       coalesces both events to one per frame, so the cost is the rAF's. */
     const onResize = () => {
       measured = false;
-      requestWrite();
+      write();
     };
+    const restObserver =
+      restIn && typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            writeRestH();
+            if (!disposed) write();
+          })
+        : null;
+    if (restIn) restObserver?.observe(restIn);
     const onVisibility = () => {
       if (!document.hidden) write();
     };
-    window.addEventListener("scroll", requestWrite, { passive: true });
+    window.addEventListener("scroll", write, { passive: true });
     window.addEventListener("resize", onResize, { passive: true });
     document.addEventListener("visibilitychange", onVisibility);
     write();
 
     return () => {
       disposed = true;
-      if (frame) window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", requestWrite);
+      restObserver?.disconnect();
+      window.removeEventListener("scroll", write);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
       unsubscribeTheme();
@@ -266,6 +292,9 @@ export function useAboutBandScroll(active: boolean): void {
       }
       about.style.removeProperty("--about-band-p");
       band.removeAttribute("data-bio-open");
+      band.removeAttribute("data-rest-full");
+      band.style.removeProperty("--about-rest-t");
+      band.style.removeProperty("--about-rest-h");
       if (source) {
         if (sourceSrcset) source.setAttribute("srcset", sourceSrcset);
         else source.removeAttribute("srcset");

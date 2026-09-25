@@ -13,9 +13,8 @@ import { FACE_PHONE_RUNGS } from "../../lib/services-ring/ringType";
 import { BAKE_W } from "../../components/landing/home-v2/services/hologram/ringCtaBox";
 import {
   ABOUT_BAND_COVER,
-  ABOUT_BAND_OPEN_IN,
-  ABOUT_BAND_OPEN_OUT,
   ABOUT_BAND_READ,
+  ABOUT_BAND_REST_WINDOW,
 } from "../../lib/services-ring/aboutBandMath";
 
 /** Each card's beat, as a fraction of the band's own scroll — the clock's
@@ -904,7 +903,7 @@ test.describe("the ring on phones (ADR-108)", () => {
     });
   }
 
-  test("the rest of the bio unfolds on the clock, and folds again on the way back (ADR-115 U2)", async ({
+  test("the rest of the bio unfolds with the thumb, and folds again on the way back (ADR-115 U3)", async ({
     page,
   }) => {
     await boot(page);
@@ -918,11 +917,27 @@ test.describe("the ring on phones (ADR-108)", () => {
     expect(closed.restBioVisible).toBe("hidden");
     expect(closed.rest!.h).toBeLessThan(2);
 
-    // The reading seat, past OPEN_IN: unfolded, the seat paid for it.
+    // MID-UNFOLD (U3): the rest is SCRUBBED, so a position inside the window
+    // shows it partly open, the seat partly given up. Every such position is
+    // inside the reading seat's Blink pull, so the snap is switched off on
+    // <html> for this one read — the question is the clock, not the snap.
+    await page.addStyleTag({ content: "html { scroll-snap-type: none !important; }" });
+    const midP = (ABOUT_BAND_REST_WINDOW[0] + ABOUT_BAND_REST_WINDOW[1]) / 2;
+    await seatAboutBand(page, midP);
+    await page.waitForTimeout(300);
+    const mid = await readAbout(page);
+    expect(mid.p, "the mid read did not land inside the unfold's window").toBeGreaterThan(
+      ABOUT_BAND_REST_WINDOW[0]
+    );
+    expect(mid.p).toBeLessThan(ABOUT_BAND_REST_WINDOW[1]);
+    expect(mid.bioOpen).toBe("1");
+    await page.addStyleTag({ content: "html { scroll-snap-type: y proximity !important; }" });
+
+    // The reading seat: unfolded, the seat paid for it.
     await seatAboutBand(page, ABOUT_BAND_READ);
     await page.waitForTimeout(800);
     const open = await readAbout(page);
-    expect(open.p).toBeGreaterThan(ABOUT_BAND_OPEN_IN);
+    expect(open.p).toBeGreaterThanOrEqual(ABOUT_BAND_REST_WINDOW[1] - 0.005);
     expect(open.bioOpen).toBe("1");
     expect(open.rest!.h, "the rest did not unfold").toBeGreaterThan(120);
     expect(open.restBioVisible).toBe("visible");
@@ -935,21 +950,30 @@ test.describe("the ring on phones (ADR-108)", () => {
     expect(open.imgVisible).toBe("hidden");
     // Nothing runs under the settings row.
     expect(open.rest!.y + open.rest!.h).toBeLessThanOrEqual(open.vh - 56 + 1);
+    // The mid read sat strictly between the two ends: the rest part-way
+    // open and the seat part-way given up — no step, one continuous motion.
+    expect(mid.rest!.h).toBeGreaterThan(closed.rest!.h + 20);
+    expect(mid.rest!.h).toBeLessThan(open.rest!.h - 20);
+    expect(mid.slot!.h).toBeLessThan(closed.slot!.h - 10);
+    expect(mid.slot!.h).toBeGreaterThan(open.slot!.h + 10);
 
-    // Back to the flip's end, under OPEN_OUT: folded again, the seat restored.
+    // Back to the flip's end, before the window: folded again, the seat restored.
     await seatAboutBand(page, ABOUT_BAND_COVER);
     await page.waitForTimeout(800);
     const again = await readAbout(page);
-    expect(again.p).toBeLessThan(ABOUT_BAND_OPEN_OUT);
+    expect(again.p).toBeLessThan(ABOUT_BAND_REST_WINDOW[0]);
     expect(again.bioOpen).toBeNull();
     expect(Math.abs(again.slot!.h - closed.slot!.h)).toBeLessThanOrEqual(2);
   });
 
-  test("the expanded seat stays over the portrait's floor on the shortest band phone (ADR-115 U2)", async ({
+  test("the expanded seat stays over the portrait's floor on the shortest band phone (ADR-115 U3)", async ({
     page,
   }) => {
     // The ring rung opens at 681px; the rest's height is fixed px, so this is
-    // the frame where the seat is smallest.
+    // the frame where the seat is smallest. ⚠ The device's toolbar-shown band
+    // is 664–676 (iOS resolves the rung on the LARGE viewport while the band
+    // is 100dvh), so the seat here must clear the floor by the difference:
+    // ≥ 157px here is ≥ 140 on a 664 band (U3 — the svh gaps pay for it).
     await page.setViewportSize({ width: 390, height: 681 });
     await boot(page);
     await seatBand(page, 1);
@@ -960,7 +984,9 @@ test.describe("the ring on phones (ADR-108)", () => {
     expect(a.bioOpen).toBe("1");
     expect(a.rest!.h).toBeGreaterThan(120);
     expect(a.slotState, "the portrait fell under its floor on the shortest phone").toBeNull();
-    expect(a.slot!.h).toBeGreaterThanOrEqual(140);
+    expect(a.slot!.h, "the seat will not clear the floor on a 664 band").toBeGreaterThanOrEqual(
+      157
+    );
     expect(a.deck).toBe("live");
     expect(a.rest!.y + a.rest!.h).toBeLessThanOrEqual(a.vh - 56 + 1);
   });

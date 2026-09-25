@@ -5335,8 +5335,9 @@ html { scroll-behavior: smooth; }
         </p>
         <!-- THE REST OF THE BIO (ADR-115, U2): on the phone's ring rung the
              band shows the first paragraph and this wrapper is a disclosure
-             the band's own scroll clock opens (useAboutBandScroll stamps
-             data-bio-open past ABOUT_BAND_OPEN_IN; the chevron that toggled
+             the band's own scroll clock opens, scrubbed with the thumb
+             (useAboutBandScroll writes its height across
+             ABOUT_BAND_REST_WINDOW, ADR-115 U3; the chevron that toggled
              it is deleted); everywhere else the wrapper is transparent to
              layout (about-band.css: display: contents), so the no-JS page and
              the fallback rungs keep a complete, static about. No angle-bracket

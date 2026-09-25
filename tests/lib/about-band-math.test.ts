@@ -10,16 +10,17 @@ import {
   ABOUT_BAND_FLIP_WINDOW,
   ABOUT_BAND_KILL,
   ABOUT_BAND_NAME_WINDOW,
-  ABOUT_BAND_OPEN_IN,
-  ABOUT_BAND_OPEN_OUT,
   ABOUT_BAND_READ,
+  ABOUT_BAND_REST_WINDOW,
   ABOUT_BAND_RUNWAY_SVH,
   ABOUT_BAND_SLOT_MIN_PX,
+  ABOUT_BAND_SLOT_SHOW_PX,
   ABOUT_BAND_SQUARE_WINDOW,
   MOBILE_UNTYPE_WINDOW,
   aboutBandCopyT,
   aboutBandNameT,
   aboutBandProgress,
+  aboutBandRestT,
   aboutBandSnapOffset,
   aboutBandSquareT,
   mobileUntypeT,
@@ -48,17 +49,13 @@ describe("the about band's ladder", () => {
     expect(ABOUT_BAND_NAME_WINDOW[0]).toBeLessThan(ABOUT_BAND_NAME_WINDOW[1]);
     expect(ABOUT_BAND_NAME_WINDOW[1]).toBeLessThanOrEqual(ABOUT_BAND_COPY_WINDOW[0]);
     expect(ABOUT_BAND_COPY_WINDOW[0]).toBeLessThan(ABOUT_BAND_COPY_WINDOW[1]);
-    // The rest unfolds after the paragraph has typed, on a hysteresis (U2):
-    // OUT sits at or past the copy's landing, IN past OUT by real scroll, and
-    // the reading seat past IN by enough that a landing a fraction short of
-    // it never rests on a folding rest — the seat IS the expanded state.
-    const travel = (ABOUT_BAND_RUNWAY_SVH - 1) * 844;
-    expect(ABOUT_BAND_OPEN_OUT).toBeGreaterThanOrEqual(ABOUT_BAND_COPY_WINDOW[1]);
-    expect(ABOUT_BAND_OPEN_IN).toBeGreaterThan(ABOUT_BAND_OPEN_OUT);
-    expect((ABOUT_BAND_OPEN_IN - ABOUT_BAND_OPEN_OUT) * travel).toBeGreaterThanOrEqual(24);
-    expect(ABOUT_BAND_READ).toBeGreaterThan(ABOUT_BAND_OPEN_IN);
-    expect((ABOUT_BAND_READ - ABOUT_BAND_OPEN_IN) * travel).toBeGreaterThanOrEqual(48);
-    expect(ABOUT_BAND_READ - ABOUT_BAND_OPEN_IN).toBeLessThan(0.1);
+    // The rest unfolds WITH THE THUMB (U3), from the paragraph's landing to
+    // the reading seat: it opens where the copy closes — never before, since
+    // t = 0 on every frame the decode layer measures is what lets the writer
+    // drop U2's timed re-measure — and it lands open ON the seat, so the seat
+    // IS the expanded state.
+    expect(ABOUT_BAND_REST_WINDOW[0]).toBeGreaterThanOrEqual(ABOUT_BAND_COPY_WINDOW[1]);
+    expect(ABOUT_BAND_REST_WINDOW[1]).toBe(ABOUT_BAND_READ);
     expect(ABOUT_BAND_READ).toBeLessThan(ABOUT_BAND_DONE);
     // ⚠ MEASURED IN BLINK (ADR-115 U2): once the reading seat's top sits a
     // whole viewport below the weld (READ × travel ≥ vh), its first-visible
@@ -150,8 +147,37 @@ describe("the about band's ladder", () => {
     expect(aboutBandSnapOffset(844, 844)).toBe(0);
   });
 
-  it("names the slot floor and the un-type share", () => {
+  it("unfolds the rest continuously, and no faster than twice-and-a-half the finger (U3)", () => {
+    expect(aboutBandRestT(0)).toBe(0);
+    expect(aboutBandRestT(ABOUT_BAND_REST_WINDOW[0])).toBe(0);
+    expect(aboutBandRestT(ABOUT_BAND_REST_WINDOW[1])).toBe(1);
+    expect(aboutBandRestT(1)).toBe(1);
+    // The paragraph rises by the rest's height (~204px at 390 wide) across
+    // the window's scroll; the peak rate of the ease sets its fastest frame.
+    const travel = (ABOUT_BAND_RUNWAY_SVH - 1) * 844;
+    const REST_PX = 204;
+    let last = -1;
+    let peak = 0;
+    const dp = 0.0005;
+    for (let p = 0; p <= 1; p += dp) {
+      const v = aboutBandRestT(p);
+      expect(v).toBeGreaterThanOrEqual(last - 1e-12);
+      if (last >= 0) peak = Math.max(peak, (v - last) / dp);
+      last = v;
+    }
+    const peakPxPerScrollPx = (peak * REST_PX) / travel;
+    expect(peakPxPerScrollPx, "the paragraph outruns the finger").toBeLessThanOrEqual(2.5);
+    // Zero slope at both ends: the paragraph lands, then the rest grows, then
+    // it lands open on the seat.
+    const [a, b] = ABOUT_BAND_REST_WINDOW;
+    expect(aboutBandRestT(a + 0.001) - aboutBandRestT(a)).toBeLessThan(0.002);
+    expect(aboutBandRestT(b) - aboutBandRestT(b - 0.001)).toBeLessThan(0.002);
+  });
+
+  it("names the slot floor, its hysteresis and the un-type share", () => {
     expect(ABOUT_BAND_SLOT_MIN_PX).toBeGreaterThanOrEqual(120);
+    // A drag across the floor may not flicker the portrait (U3).
+    expect(ABOUT_BAND_SLOT_SHOW_PX - ABOUT_BAND_SLOT_MIN_PX).toBeGreaterThanOrEqual(8);
     expect(MOBILE_UNTYPE_WINDOW[0]).toBe(0);
     expect(MOBILE_UNTYPE_WINDOW[1]).toBeGreaterThan(0.5);
     expect(MOBILE_UNTYPE_WINDOW[1]).toBeLessThan(1);

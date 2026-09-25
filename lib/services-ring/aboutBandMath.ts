@@ -5,8 +5,8 @@
  * `ABOUT_BAND_RUNWAY_SVH` viewports: the deck FLIPS to the portrait on
  * ADR-047's own window (`ABOUT_FLIP_WINDOW`, shared with the ring), the name
  * and the role SCRAMBLE in, the first paragraph TYPES in, the rest of the
- * bio UNFOLDS (U2), and the band holds for reading until it unpins. Every
- * window is a fraction of the band's
+ * bio UNFOLDS (U2, scrubbed since U3), and the band holds for reading until
+ * it unpins. Every window is a fraction of the band's
  * pinned travel, read by ONE writer (`useAboutBandScroll`) and mirrored by
  * nothing — the ring reads the same `aboutStageProgressRef` the desktop
  * stage writes, so the flip needs no phone copy of its clock.
@@ -14,7 +14,7 @@
  * Three-free and DOM-free; `tests/lib/about-band-math.test.ts` walks it.
  */
 
-import { clamp01 } from "@/lib/math";
+import { clamp01, smoothstep } from "@/lib/math";
 
 import { ABOUT_FLIP_WINDOW } from "./aboutDeckMath";
 import { smootherstep } from "./ringMath";
@@ -29,22 +29,12 @@ export const ABOUT_BAND_RUNWAY_SVH = 2.4;
  *  onto that seat must show the portrait alone, not the decode's first
  *  frame (measured: a window opening ON the seat rested on three leaves of
  *  glyph noise). */
-export const ABOUT_BAND_NAME_WINDOW: readonly [number, number] = [0.3, 0.42];
+export const ABOUT_BAND_NAME_WINDOW: readonly [number, number] = [0.3, 0.41];
 
-/** The first paragraph types in, one typewriter across its lines. */
-export const ABOUT_BAND_COPY_WINDOW: readonly [number, number] = [0.42, 0.6];
-
-/** THE REST OF THE BIO UNFOLDS ON THE CLOCK (ADR-115 U2, owner: "the full
- *  text shown automatically when you scroll through the section"). A
- *  hysteresis pair, the pattern the proof stack's arrival uses: the rest
- *  opens once `p` passes IN — after the first paragraph has typed
- *  (`ABOUT_BAND_COPY_WINDOW[1]`) — and folds again only under OUT, so a
- *  rest on the threshold never flickers it. The band's 420ms grid
- *  transition is the gesture (about-band.css); the writer pulses through
- *  it so the deck follows the seat as the copy takes its height. The
- *  chevron that used to toggle the same attribute is deleted — one owner. */
-export const ABOUT_BAND_OPEN_IN = 0.65;
-export const ABOUT_BAND_OPEN_OUT = 0.61;
+/** The first paragraph types in, one typewriter across its lines. (U3 pulled
+ *  both decode windows a hundredth or two earlier so the unfold after them
+ *  has room; each keeps the scroll the ladder test asks of it.) */
+export const ABOUT_BAND_COPY_WINDOW: readonly [number, number] = [0.41, 0.58];
 
 /** THE READING STATE — the snap seat (ADR-113 §10): a stop near it lands
  *  here, with the portrait on the seat and every text resolved, THE REST
@@ -63,6 +53,23 @@ export const ABOUT_BAND_OPEN_OUT = 0.61;
  *  bound by a hair; 0.70 clears it by 24px of travel at 844; the unit test
  *  pins the product under 0.99. Growing the runway TIGHTENS this bound. */
 export const ABOUT_BAND_READ = 0.7;
+
+/** THE REST OF THE BIO UNFOLDS WITH THE THUMB (ADR-115 U3, owner 2026-09-25:
+ *  "the transition from the full photo to the smaller photo with the full
+ *  paragraph seems to have a step in between"). U2 flipped a boolean at
+ *  0.65 that started a 420ms front-loaded grid transition ON THE CLOCK,
+ *  after the scroll had stopped — the only timed motion in a band where
+ *  everything else is scrubbed, so the reader saw the paragraph land, a
+ *  hold, then a jolt and a creep. The rest's height is now a function of
+ *  `p` across this window: from the paragraph's landing to the reading seat,
+ *  so it lands open ON the seat. ⚠ It starts where the copy ends, never
+ *  before: the decode layer measures its lines only while a run is live,
+ *  and t = 0 on every one of those frames is what lets the writer drop the
+ *  timed re-measure U2 needed. */
+export const ABOUT_BAND_REST_WINDOW: readonly [number, number] = [
+  ABOUT_BAND_COPY_WINDOW[1],
+  ABOUT_BAND_READ,
+];
 
 /** THE FLIP'S-END SEAT — `.voidwalker__snap-in` is `100svh + COVER × travel`
  *  tall from the station's top and `end`-aligned, so the one position it
@@ -89,9 +96,12 @@ export const ABOUT_BAND_KILL = 0.999;
 
 /** Below this seat height the portrait hides — a stamp is not a portrait.
  *  The rest of the bio takes its height from the seat when it unfolds,
- *  so on a short phone the slot can shrink under it (≈149px at the rung's
- *  681px floor with the chevron's row gone — over the floor by 9px). */
+ *  so on a short phone the slot can shrink under it. */
 export const ABOUT_BAND_SLOT_MIN_PX = 140;
+/** … and a hidden portrait shows again only from here (U3): the unfold is
+ *  scrubbed now, so a drag back and forth across one threshold would
+ *  flicker the portrait on and off with the thumb. */
+export const ABOUT_BAND_SLOT_SHOW_PX = 150;
 
 /** The share of the services band's EXIT clock over which its copy un-types
  *  (the title lines scramble out, the paragraph un-types from its tail); the
@@ -115,6 +125,14 @@ export function aboutBandNameT(p: number): number {
 }
 export function aboutBandCopyT(p: number): number {
   return smootherstep(ABOUT_BAND_COPY_WINDOW[0], ABOUT_BAND_COPY_WINDOW[1], clamp01(p));
+}
+/** The rest's unfold (U3). `smoothstep`, not `smootherstep`: ~204px of text
+ *  opens over ~140px of scroll at 844, and the steeper curve's 1.875× peak
+ *  would move the first paragraph up to ~4× the finger's speed; 1.5× keeps
+ *  it near 2×. Zero slope at both ends all the same — the paragraph lands,
+ *  then the rest grows, then it lands open on the seat. */
+export function aboutBandRestT(p: number): number {
+  return smoothstep(ABOUT_BAND_REST_WINDOW[0], ABOUT_BAND_REST_WINDOW[1], clamp01(p));
 }
 export function aboutBandSquareT(p: number): number {
   return smootherstep(ABOUT_BAND_SQUARE_WINDOW[0], ABOUT_BAND_SQUARE_WINDOW[1], clamp01(p));

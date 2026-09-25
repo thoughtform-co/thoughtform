@@ -138,7 +138,15 @@
        chevron's row is gone — the rest unfolds on the clock, and its own
        bottom edge seats on the band's padding) */
     grid-template-rows: auto auto minmax(0, 1fr) auto auto;
-    row-gap: clamp(12px, 2.2svh, 22px);
+    /* ⚠ THE GAPS PAY FOR THE PORTRAIT ON A SHORT FRAME, IN `svh` (ADR-115
+       U3). With the rest unfolded the seat is what is left over, and on the
+       toolbar-shown iPhone frame (a 664–676 band) it fell to ≈133–144px, at
+       or under the 140px floor that hides the portrait mid-unfold. A
+       `max-height` query cannot fix that on the device — iOS resolves it on
+       the LARGE viewport (≈745 on an iPhone 14), so it never fires — while
+       `svh` IS the toolbar-shown frame. ≈10px at 681, ≈18px at 844 (U2's
+       18.6), 22px from ≈920: four gaps, ≈20px back at the binding frame. */
+    row-gap: clamp(10px, calc(5svh - 24px), 22px);
     justify-items: center;
     align-items: start;
     text-align: center;
@@ -167,9 +175,10 @@
 
   /* ── THE SEAT ──────────────────────────────────────────────────────── */
   /* The orbit box is the seat row — a SIZE container, so the slot inside
-     can take a share of its height (`cqh`): the ring's own fill law,
-     `min(260px, 0.66·vw, 0.82·seatH·aspect)`, written in CSS so the DOM
-     slot and the WebGL card agree by construction. */
+     can take a share of its height (`cqh`): the ring's own width law
+     (`RING_MOBILE_FRONT_MAX_PX`, `RING_MOBILE_FRONT_VW`) at a fill of 1,
+     written in CSS so the DOM slot and the WebGL card agree by construction;
+     `services-ring-mobile-gate` pins the two numbers against ringMath. */
   #about[data-about-band="on"] .voidwalker__orbit {
     grid-row: 3;
     container-type: size;
@@ -231,42 +240,47 @@
     max-width: 38ch;
     line-height: 1.5;
   }
-  /* The rest of the bio: the house disclosure idiom (services.css's
-     `grid-template-rows: 0fr → 1fr`, always in the DOM so it can GROW). The
-     seat row is `1fr`, so the copy rising takes its height from the
-     portrait — "the text moves upward and the rest is revealed downward".
-     ⚠ OPENED BY THE WRITER ON THE BAND'S CLOCK (ADR-115 U2, `data-bio-open`
-     past `ABOUT_BAND_OPEN_IN`), never by a tap: the chevron is gone. */
+  /* The rest of the bio, revealed downward as the seat gives up height —
+     "the text moves upward and the rest is revealed downward". The seat row
+     is `1fr`, so every pixel the rest takes comes out of the portrait.
+     ⚠ SCRUBBED, NOT TRANSITIONED (ADR-115 U3): its height is
+     `--about-rest-t × --about-rest-h`, both written by the band's writer —
+     t on `ABOUT_BAND_REST_WINDOW` (the paragraph's landing → the reading
+     seat), h the inner's own height. U2's 420ms `0fr → 1fr` ran on the
+     clock after the scroll stopped, front-loaded, and read as a step. A
+     clip reveal, pure motion; no opacity anywhere. Once landed
+     (`data-rest-full`) the height is `auto`, so the reading seat never
+     depends on a measure that could be a frame stale. */
   #about[data-about-band="on"] .voidwalker__rest {
     grid-row: 5;
-    display: grid;
-    grid-template-rows: 0fr;
-    /* Folded, the rest is HIDDEN as well as clipped: a `0fr` row clips its
-       text out of sight, but every glyph still reports a rect (the seams
+    display: block;
+    height: calc(var(--about-rest-t, 0) * var(--about-rest-h, 0px));
+    overflow: hidden;
+    /* Folded, the rest is HIDDEN as well as clipped: a zero-height box clips
+       its text out of sight, but every glyph still reports a rect (the seams
        guard read two lines of it under the settings cluster with nothing on
-       screen). The flip waits for the fold on close and leads it on open. */
+       screen). */
     visibility: hidden;
-    transition:
-      grid-template-rows 420ms var(--ease-out, ease-out),
-      visibility 0s 420ms;
     width: 100%;
     max-width: 38ch;
   }
   #about[data-about-band="on"] .voidwalker[data-bio-open="1"] .voidwalker__rest {
-    grid-template-rows: 1fr;
     visibility: visible;
-    transition:
-      grid-template-rows 420ms var(--ease-out, ease-out),
-      visibility 0s 0s;
   }
+  #about[data-about-band="on"] .voidwalker[data-rest-full="1"] .voidwalker__rest {
+    height: auto;
+  }
+  /* A flow root, so the bios' margins stay INSIDE the box the writer
+     measures (a plain block lets the last one collapse through it). */
   #about[data-about-band="on"] .voidwalker__rest__in {
-    display: block;
-    min-height: 0;
-    overflow: hidden;
+    display: flow-root;
   }
   #about[data-about-band="on"] .voidwalker__rest .voidwalker__bio {
-    margin: 0 0 12px;
+    margin: 0 0 8px;
     line-height: 1.5;
+  }
+  #about[data-about-band="on"] .voidwalker__rest .voidwalker__bio:last-child {
+    margin-bottom: 0;
   }
   /* The meta rows and the socials leave the phone band: the eras carry the
      base and the years, the footer the socials (ADR-105) — and with them in

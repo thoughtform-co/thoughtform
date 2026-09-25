@@ -7,7 +7,14 @@
 // here; `ServicesCardRing` reads it inside `useFrame` to derive the deck
 // pivot's seat, viewport-first, every frame. One-frame-max staleness
 // between the window rAF and the R3F loop is the accepted
-// `brandmarkScreenRectRef` precedent. Nobody else writes.
+// `brandmarkScreenRectRef` precedent on the desktop stage. Nobody else writes.
+//
+// ⚠ THE PHONE BAND IS THE EXCEPTION, AND IT IS NOT STALE (ADR-115 U3):
+// `useAboutBandScroll` writes this rect from the `scroll` and `resize`
+// events themselves, which dispatch before the frame's rAF callbacks, so
+// the deck reads the slot of the SAME frame. There the slot shrinks with
+// the scrubbed unfold at up to ~2× the scroll's own speed, and a frame of
+// lag ran the card's foot under the rising paragraph.
 
 export interface AboutSlotRect {
   /** Slot centre, CSS px (viewport coords — the canvas is full-viewport). */
