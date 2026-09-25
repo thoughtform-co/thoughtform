@@ -28,6 +28,27 @@ export const WEIGHT_TEXT = 400;
 /** The ceiling. ⚠ PT Mono has no 500: on mono it renders 400. */
 export const WEIGHT_LIT = 500;
 
+/** Which surface a card FACE is baked for. The desktop passes none and
+ *  every branch in the bake falls to its literals (byte-identical); the
+ *  phone mount passes `"phone"` and the face takes `FACE_PHONE_RUNGS`. */
+export type FaceRung = "desktop" | "phone";
+
+/** THE PHONE FACE'S TYPE (ADR-115 U2, owner: the card's copy "barely
+ *  legible"; the card itself may not grow — it overlapped the band's texts).
+ *  The phone canvas caps at 1.4× DPR, so a 210–312 css px card shows a
+ *  840-wide bake at 0.25–0.37: the one lever is the type INSIDE the bake.
+ *  The name takes the bled treatment's own 74/88/52 (`ServicesCardRing`);
+ *  the lede is the smallest rung that clears 12 css px on a 210px card
+ *  (46/48 fail at 11.5/12.0) — on screen 12.5 at 676, 15.4 at 745, 18.6 at
+ *  844, 19.6 at 932. Bake px, in the 840×1360 space. */
+export const FACE_PHONE_RUNGS = {
+  name: 74,
+  nameLh: 88,
+  nameCap: 52,
+  lede: 50,
+  ledeLh: 68,
+} as const;
+
 /** The two faces the bakes draw with — the sheet's own stacks. */
 export const BAKE_MONO = '"PT Mono", "IBM Plex Mono", ui-monospace, monospace';
 export const BAKE_SANS = '"PP Neue Montreal", "Helvetica Neue", Arial, sans-serif';

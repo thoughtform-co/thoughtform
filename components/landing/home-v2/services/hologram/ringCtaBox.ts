@@ -14,8 +14,9 @@ export const BAKE_W = 840;
 export const BAKE_H = 1360;
 
 /**
- * The PHONE's bake ratio (ADR-108). A phone renders the front card ~260 css
- * px wide at DPR ≤ 1.4 (the mobile GPU profile's ceiling), so a 840×1360
+ * The PHONE's bake ratio (ADR-108). A phone renders the front card ~220–330
+ * css px wide (ADR-115 U2's fit) at DPR ≤ 1.4 (the mobile GPU profile's
+ * ceiling), so a 840×1360
  * face is 2.3× the pixels it can ever show — and four of them are ~24 MB of
  * texture with mips on a device the corridor is already taxing. At 0.5 the
  * four faces are 420×680 (RING_CARD_ASPECT exactly), ≈ 6 MB with mips.

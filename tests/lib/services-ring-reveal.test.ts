@@ -4,12 +4,15 @@ import { BAKE_H } from "@/components/landing/home-v2/services/hologram/ringCtaBo
 import {
   RASTER_QUIET_EASE,
   RASTER_QUIET_FOOT,
+  RASTER_QUIET_FOOT_PHONE,
   RASTER_QUIET_HEAD,
+  RASTER_QUIET_HEAD_PHONE,
   RASTER_QUIET_LEVEL,
   REVEAL_DAMP_RATE,
   REVEAL_GRID_MIN,
   REVEAL_POP_GRID,
   rasterQuiet,
+  rasterQuietAt,
   revealBandEaseUv,
   revealBandsUv,
   revealGrid,
@@ -110,5 +113,25 @@ describe("the reveal's ramps", () => {
       level += (1 - level) * Math.min(1, REVEAL_DAMP_RATE / 60);
     expect(level).toBeGreaterThan(0.4);
     expect(level).toBeLessThan(0.6);
+  });
+});
+
+describe("the phone face's quiet zones (ADR-115 U2)", () => {
+  it("are the same function with the phone's two bands bound; the desktop's is untouched", () => {
+    for (let y = 0; y <= BAKE_H; y += 1) {
+      expect(rasterQuiet(y)).toBe(rasterQuietAt(y, RASTER_QUIET_HEAD, RASTER_QUIET_FOOT));
+    }
+    // Two lines of 74/88 from a 140 cap top (+40 of ease); five lines of
+    // 50/68 on the 1288 baseline (cap 35, 50 of air).
+    expect(RASTER_QUIET_HEAD_PHONE).toBeGreaterThanOrEqual(140 + 52 + 88 + 40);
+    expect(RASTER_QUIET_FOOT_PHONE).toBeLessThanOrEqual(BAKE_H - 72 - 4 * 68 - 35 - 50);
+    expect(RASTER_QUIET_HEAD_PHONE + RASTER_QUIET_EASE).toBeLessThan(
+      RASTER_QUIET_FOOT_PHONE - RASTER_QUIET_EASE
+    );
+    const q = (y: number) => rasterQuietAt(y, RASTER_QUIET_HEAD_PHONE, RASTER_QUIET_FOOT_PHONE);
+    expect(q(RASTER_QUIET_HEAD_PHONE)).toBe(RASTER_QUIET_LEVEL);
+    expect(q(RASTER_QUIET_HEAD_PHONE + RASTER_QUIET_EASE)).toBe(1);
+    expect(q(RASTER_QUIET_FOOT_PHONE - RASTER_QUIET_EASE)).toBe(1);
+    expect(q(RASTER_QUIET_FOOT_PHONE)).toBe(RASTER_QUIET_LEVEL);
   });
 });

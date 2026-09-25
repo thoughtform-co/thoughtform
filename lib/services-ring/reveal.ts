@@ -31,6 +31,13 @@ import { BAKE_H } from "@/components/landing/home-v2/services/hologram/ringCtaBo
 export const RASTER_QUIET_HEAD = 300;
 /** Below this y the raster is quiet — the paragraph's band, with 53px to spare. */
 export const RASTER_QUIET_FOOT = 1060;
+/** THE PHONE FACE'S BANDS (ADR-115 U2): its name is two lines of 74/88 from
+ *  a cap top of 140 (bottom 280, +40 of ease) and its lede up to five lines
+ *  of 50/68 on the same last baseline (block top ≈ 966, −38 of air). The
+ *  desktop's two numbers are untouched — `rasterQuiet` is the same function
+ *  with them bound, so the shader and every desktop bake are byte-identical. */
+export const RASTER_QUIET_HEAD_PHONE = 320;
+export const RASTER_QUIET_FOOT_PHONE = 928;
 /** The ease INSIDE the loud region, off each quiet edge. */
 export const RASTER_QUIET_EASE = 40;
 /** What a quiet cell keeps of its alpha. */
@@ -44,8 +51,13 @@ export const RASTER_SKIP_LUM = 0.06;
  *  each edge (the ease sits inside the field, so the bands themselves are
  *  uniformly quiet). */
 export function rasterQuiet(y: number): number {
-  const head = smoothstep(RASTER_QUIET_HEAD, RASTER_QUIET_HEAD + RASTER_QUIET_EASE, y);
-  const foot = 1 - smoothstep(RASTER_QUIET_FOOT - RASTER_QUIET_EASE, RASTER_QUIET_FOOT, y);
+  return rasterQuietAt(y, RASTER_QUIET_HEAD, RASTER_QUIET_FOOT);
+}
+/** The same multiplier against a face's OWN two bands (the phone's are
+ *  `RASTER_QUIET_HEAD_PHONE` / `_FOOT_PHONE`). */
+export function rasterQuietAt(y: number, headY: number, footY: number): number {
+  const head = smoothstep(headY, headY + RASTER_QUIET_EASE, y);
+  const foot = 1 - smoothstep(footY - RASTER_QUIET_EASE, footY, y);
   return RASTER_QUIET_LEVEL + (1 - RASTER_QUIET_LEVEL) * Math.min(head, foot);
 }
 

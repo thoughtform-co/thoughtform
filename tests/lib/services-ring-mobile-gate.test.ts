@@ -29,12 +29,19 @@ import {
 } from "@/components/landing/home-v2/unifiedServicesInstrument";
 import { ringMobileBandFraction } from "@/lib/services-ring/beatScrollTarget";
 import {
+  RASTER_QUIET_FOOT_PHONE,
+  RASTER_QUIET_HEAD_PHONE,
+  rasterQuietAt,
+} from "@/lib/services-ring/reveal";
+import { FACE_PHONE_RUNGS } from "@/lib/services-ring/ringType";
+import {
   RING_CARD_ASPECT,
   RING_EXIT_START,
   RING_MOBILE_ARRIVE,
   RING_MOBILE_FRONT_MAX_PX,
   RING_MOBILE_FRONT_VW,
   RING_MOBILE_LEAVE_START,
+  RING_MOBILE_POSE_SLACK,
   RING_MOBILE_RUNWAY_SVH,
   RING_FLIP_BACK_PUBLISH,
   RING_FLIP_RATE,
@@ -240,10 +247,10 @@ describe("the seat (ADR-109)", () => {
   });
 
   it("bounds the front card's HEIGHT to the seat's fill share, aspect kept", () => {
-    // 390×844: the seat is ~538 tall → 0.82·538 = 441 of height → 272 of
-    // width, so the card stays width-bound at 257.4 (ADR-108's number).
+    // 390×844: the seat is ~538 tall → 0.94·538 = 506 of height → 312 of
+    // width, so the card is width-bound at 312 (ADR-115 U1's number).
     expect(ringMobileFrontWidthPx(390, 538)).toBeCloseTo(390 * RING_MOBILE_FRONT_VW, 6);
-    // A 700h phone: ~393 of seat → height-bound at 0.82·393·(420/680).
+    // A 700h phone: ~393 of seat → height-bound at 0.94·393·(420/680).
     const short = ringMobileFrontWidthPx(390, 393);
     expect(short).toBeCloseTo(393 * RING_MOBILE_SEAT_FILL * RING_CARD_ASPECT, 6);
     expect(short / RING_CARD_ASPECT).toBeLessThanOrEqual(393 * RING_MOBILE_SEAT_FILL + 1e-9);
@@ -391,5 +398,85 @@ describe("the card turns over (ADR-110)", () => {
       const src = read(p);
       expect(src, `${p} still names the sheet`).not.toMatch(/ServicesSpecSheet|svc-sheet|sheetTop/);
     }
+  });
+});
+
+/**
+ * THE CARD FITS ITS SEAT, AND ITS TYPE GROWS INSIDE THE BAKE (ADR-115 U2).
+ *
+ * Owner, 2026-09-25, from his phone: the cards must be scaled down "so they
+ * don't overlap with the text", and the copy on them was already the thing
+ * U1 grew the card for. The fit goes back under 1 with the tilt's slack as
+ * a constant, the band's paragraph and gaps fund the seat on the small
+ * frame, and the legibility moves INTO the bake: a phone face rung for the
+ * name and the lede, a coarser raster pitch, quiet bands solved for the
+ * taller type. The desktop bake passes no rung and is byte-identical.
+ */
+describe("the card fits its seat, and its type grows inside the bake (ADR-115 U2)", () => {
+  it("the fill is under 1 and the tilted rect never leaves the seat", () => {
+    expect(RING_MOBILE_SEAT_FILL).toBeLessThanOrEqual(1);
+    expect(RING_MOBILE_SEAT_FILL).toBeGreaterThan(0.85);
+    expect(RING_MOBILE_POSE_SLACK).toBeGreaterThan(1);
+    expect(RING_MOBILE_SEAT_FILL * RING_MOBILE_POSE_SLACK).toBeLessThanOrEqual(1);
+  });
+
+  it("solves the three frames the still is read on", () => {
+    // 390×844, the toolbar hidden: the seat clears ~539 → width-bound at 312.
+    expect(ringMobileFrontWidthPx(390, 539)).toBeCloseTo(312, 0);
+    // 390×676, the toolbar shown (the frame he photographs): the funded seat
+    // is ~381 → height-bound, ~221 wide.
+    expect(ringMobileFrontWidthPx(390, 381)).toBeCloseTo(
+      381 * RING_MOBILE_SEAT_FILL * RING_CARD_ASPECT,
+      6
+    );
+    expect(ringMobileFrontWidthPx(390, 381)).toBeGreaterThan(215);
+    expect(ringMobileFrontWidthPx(390, 381)).toBeLessThan(225);
+    // 430×932: the width cap.
+    expect(ringMobileFrontWidthPx(430, 622)).toBe(RING_MOBILE_FRONT_MAX_PX);
+  });
+
+  it("the about band's DOM slot states the same width law, at fill 1", () => {
+    const css = read("components/landing/home-v2/about/about-band.css");
+    const law = new RegExp(
+      `width:\\s*min\\(${RING_MOBILE_FRONT_MAX_PX}px,\\s*${Math.round(RING_MOBILE_FRONT_VW * 100)}vw,\\s*calc\\(100cqh \\* 420 / 680\\)\\)`
+    );
+    expect(css, "about-band.css's portrait width law drifted from ringMath").toMatch(law);
+  });
+
+  it("the phone rungs read on the smallest card the rung mounts", () => {
+    // 390×681 is the rung's floor (`SERVICES_RING_MOBILE_MEDIA`); with the
+    // band's chrome and its funded paragraph the seat is ~361 there.
+    const cardW = ringMobileFrontWidthPx(390, 361);
+    const cssPx = (bake: number) => (bake * cardW) / BAKE_W;
+    expect(cssPx(FACE_PHONE_RUNGS.lede), "the lede under 12 css px").toBeGreaterThanOrEqual(12);
+    expect(cssPx(FACE_PHONE_RUNGS.name), "the name under 18 css px").toBeGreaterThanOrEqual(18);
+    // The name is the bled treatment's own rungs — one drawing, not two.
+    expect(FACE_PHONE_RUNGS.name).toBe(74);
+    expect(FACE_PHONE_RUNGS.nameLh).toBe(88);
+    expect(FACE_PHONE_RUNGS.nameCap).toBe(52);
+    expect(FACE_PHONE_RUNGS.ledeLh).toBeGreaterThan(FACE_PHONE_RUNGS.lede);
+  });
+
+  it("the phone's quiet bands clear a two-line name and a five-line lede", () => {
+    // Cap top 140 (TIGHT_EXPAND_INSET + TIGHT_EXPAND_SIZE + 50), two lines.
+    const nameBottom = 140 + FACE_PHONE_RUNGS.nameCap + FACE_PHONE_RUNGS.nameLh;
+    expect(RASTER_QUIET_HEAD_PHONE).toBeGreaterThanOrEqual(nameBottom + 40);
+    // Five lines on TIGHT_COPY_BOTTOM = BAKE_H − 72, cap ~35 of the 50.
+    const ledeTop = BAKE_H - 72 - 4 * FACE_PHONE_RUNGS.ledeLh - 35;
+    expect(RASTER_QUIET_FOOT_PHONE).toBeLessThanOrEqual(ledeTop - 30);
+    expect(RASTER_QUIET_FOOT_PHONE).toBeGreaterThan(RASTER_QUIET_HEAD_PHONE + 200);
+    expect(rasterQuietAt(0, RASTER_QUIET_HEAD_PHONE, RASTER_QUIET_FOOT_PHONE)).toBeLessThan(1);
+    expect(rasterQuietAt(BAKE_H / 2, RASTER_QUIET_HEAD_PHONE, RASTER_QUIET_FOOT_PHONE)).toBe(1);
+  });
+
+  it("the phone mount alone passes the rung; the raster's phone pitch is coarser", () => {
+    const ring = read("components/landing/home-v2/services/hologram/ServicesCardRing.tsx");
+    expect(ring).toMatch(/mobileProfile \? \{ rung: "phone" \} : undefined/);
+    // The desktop literals the phone rung substitutes for are still there.
+    expect(ring).toContain("const TIGHT_LEDE_PX = 35;");
+    expect(ring).toMatch(/display: \{ px: 62, lh: 74, capH: 44/);
+    const viz = read("components/landing/home-v2/services/hologram/cardViz.ts");
+    expect(viz).toContain("export const RASTER_PX_PHONE = 24;");
+    expect(viz).toContain("const RASTER_PX = 18;");
   });
 });

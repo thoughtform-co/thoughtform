@@ -369,10 +369,12 @@ export function CorridorArmillary({ scale = ARMILLARY_SCALE }: { scale?: number 
           entrance staggered off the same dissipate clock as the orbit
           wrap-on, card rects published for the DOM hit-areas. */}
       {SERVICES_CARD_RING && ringMobile && !ringCapable && !ringOff && (
-        /* ADR-108 — the phone mount. `profile="mobile"` halves the bakes,
-           drops the portrait back, the anisotropy and the hover pick, and
-           seats the ring viewport-first (the front card at
-           `ringMobileFrontWidthPx`); `openDrawer` stays off; the band's hold
+        /* ADR-108 — the phone mount. `profile="mobile"` bakes at 0.75 on the
+           PHONE FACE RUNG (ADR-115 U2: the display name and the lede lifted
+           inside the bake, the raster at its coarser pitch), drops the
+           portrait back, the anisotropy and the hover pick, and seats the
+           ring viewport-first (the front card at `ringMobileFrontWidthPx`,
+           fitted INSIDE the band's seat); `openDrawer` stays off; the band's hold
            is the master opacity so the cards leave with their stage. The
            desktop mount below is untouched — this branch is exclusive with
            it by the media gates. */

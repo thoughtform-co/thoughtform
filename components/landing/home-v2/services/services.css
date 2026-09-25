@@ -3090,10 +3090,15 @@
      it". The masthead renders INSIDE the band on this rung — three rows:
      the title, an empty SEAT the ring fills, the paragraph. The seat is the
      thing that gets MEASURED (useServicesStageScroll publishes its rect as
-     `seat`; the ring sizes its front card to 82 % of that height and
-     centres on it — ringMath's `RING_MOBILE_SEAT_FILL`), so a short phone
-     gets a smaller card and a tall one the width-bound 257–260px: the fill
-     law does the resizing and nothing else moves.
+     `seat`; the ring sizes its front card to `RING_MOBILE_SEAT_FILL` of
+     that height — 0.94 since ADR-115 U2, with the tilt's `POSE_SLACK` the
+     card never leaves the seat — and centres on it), so a short phone gets
+     a smaller card and a tall one the width-bound 312px: the fill law does
+     the resizing and nothing else moves.
+     ⚠ THE INTRO AND THE ROW GAPS ARE THE SEAT'S BUDGET ON THE SMALL FRAME
+     (ADR-115 U2): at 390×676 the seat was 347px; the intro at 14px/1.45 in
+     42ch (three lines probable, four worst) and the gap a step tighter
+     give it 381 — a 221×358 card in place of 201×326.
      ⚠ The runway is full-bleed (above), so the band takes the inset back
      for its two texts; the two 56px bands are the HUD's own chrome
      (`mobile-sections.md` §1) and the copy stays clear of both.
@@ -3122,7 +3127,7 @@
        (measured: seat bottom 7022, intro top 7022). A row-gap gives the
        card a floor and the copy a ceiling; the seat pays for it, which is
        the only thing on this band that can. */
-    row-gap: clamp(20px, 3.4svh, 36px);
+    row-gap: clamp(18px, 3svh, 32px);
     justify-items: center;
     text-align: center;
   }
@@ -3147,7 +3152,11 @@
   .services-stage[data-card-ring-mobile="on"] .svc-ring-band .services-masthead__intro {
     grid-row: 3;
     margin: 0;
-    max-width: 38ch;
+    /* ADR-115 U2: the paragraph pays the seat — 14/1.45 in 42ch is one
+       line fewer than 15/1.5 in 38ch on the same copy. */
+    font-size: 14px;
+    line-height: 1.45;
+    max-width: 42ch;
     transition: opacity 0.35s ease;
   }
   /* While the sheet is out the section copy recedes (the desktop's ADR-050

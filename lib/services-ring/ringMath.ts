@@ -1125,14 +1125,21 @@ export function ringMobileClock(p: number, deck = false): RingMobileClock {
 /** The share of the band's FREE HEIGHT (between the masthead's title and
  *  its paragraph) the front card's height may take (ADR-109). The width law
  *  above still caps it; whichever is tighter wins, so a tall phone is
- *  width-bound at 257–260px and a short one height-bound. */
-export const RING_MOBILE_SEAT_FILL = 1.25;
-/* ⚠ ABOVE 1 SINCE ADR-115 U1 — the card OVERLAPS the band's title and
- *  paragraph by an eighth of the seat each side (owner: "I don't mind if they
- *  may overlap a bit behind the text"); the band's row gaps absorb most of
- *  it, and the card's top and bottom edges are its chamfer chrome and its
- *  dark foot, not copy. The width law still caps: at 390 wide the card is
- *  width-bound at 312 once the seat clears ~404px. */
+ *  width-bound at 312px and a short one height-bound.
+ *  ⚠ UNDER 1 AGAIN (ADR-115 U2, owner, 2026-09-25: "scale them down a bit
+ *  on mobile so they don't overlap with the text"). U1's 1.25 let the card
+ *  run 47–79px into the title and the paragraph on every frame under 844,
+ *  which read as a collision, not an allowance. `FILL × POSE_SLACK ≤ 1` is
+ *  the invariant now: the front pose's tilt can never take the projected
+ *  rect out of the seat, so the band's row gaps are pure clearance. The
+ *  legibility U1 bought with size is bought inside the BAKE instead
+ *  (`FACE_PHONE_RUNGS`, `ringType.ts`): the phone canvas caps at 1.4× DPR,
+ *  so a bigger card buys pixels it cannot show and bigger baked type does. */
+export const RING_MOBILE_SEAT_FILL = 0.94;
+/** The FRONT pose's tilt, as the share by which the card's projected rect
+ *  outgrows its unrotated box (measured 6 %; the smoke's own literal since
+ *  ADR-109, promoted). Paired with the fill: `FILL × SLACK ≤ 1`. */
+export const RING_MOBILE_POSE_SLACK = 1.06;
 /** How far the SIDE cards recede while a card is open on the phone (their
  *  opacity is multiplied by `1 − DIM × flipT`); the open card is untouched. */
 export const RING_MOBILE_OPEN_SIDE_DIM = 0.6;
@@ -1146,7 +1153,8 @@ export const RING_FLIP_BACK_PUBLISH = 0.9;
 /** The front card's width in css px for a viewport `vw` px wide — and,
  *  when the band's free height `seatH` is known, no taller than
  *  `RING_MOBILE_SEAT_FILL` of it (the aspect never changes: the card's
- *  height is its width ÷ `RING_CARD_ASPECT`). */
+ *  height is its width ÷ `RING_CARD_ASPECT`). At 390 wide: 221 on the
+ *  toolbar-shown frame (seat ~381), 312 (width-bound) from a ~539 seat. */
 export function ringMobileFrontWidthPx(vw: number, seatH?: number): number {
   const byWidth = Math.min(RING_MOBILE_FRONT_MAX_PX, vw * RING_MOBILE_FRONT_VW);
   if (!seatH || seatH <= 0) return byWidth;

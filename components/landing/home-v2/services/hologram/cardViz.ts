@@ -1019,6 +1019,12 @@ type VizDraw = (
  *  ring the card renders ~0.55× bake, so an 18px cell is a 10px glyph — the
  *  dot-matrix read of the HORSE 2026 reference, not a readable letter. */
 const RASTER_PX = 18;
+/** THE PHONE'S PITCH (ADR-115 U2). On a 210–221 css px card over a ≤1.4×
+ *  canvas an 18px cell is 6.6×4 canvas px and the face reads as a halftone,
+ *  not as glyphs; 24 is the smallest pitch at which `@ % # *` resolve. The
+ *  portrait keeps reading — the reveal's coarsest mosaic is 24×39 and the
+ *  face is still recognisable there (58×57 cells at this pitch). */
+export const RASTER_PX_PHONE = 24;
 /** The density ramp, dark → light, all PT Mono glyphs. The house glyph pool
  *  (`captionScramble`'s `·-+`) at its foot. */
 const RASTER_RAMP = ["·", "-", "+", "=", "#", "@"] as const;
@@ -1468,6 +1474,10 @@ export function applyHalftone(
  * still, 2026-09-19). The gold plate lights where it is bright and keeps the
  * positive reading.
  *
+ * `pitch` and `quiet` are the PHONE face's (ADR-115 U2): a coarser grid
+ * (`RASTER_PX_PHONE`) and the quiet zones solved for its taller type bands.
+ * Both default to the desktop's, so every existing call is byte-identical.
+ *
  * Reads the CANVAS's pixels (the phone's half-bake under `ctx.scale`) and
  * letters in BAKE px — `applyHalftone`'s contract, stated.
  */
@@ -1477,15 +1487,17 @@ export function applyGlyphRaster(
   canvasH: number,
   scale: number,
   pal: VizPalette,
-  opts?: { invert?: boolean }
+  opts?: { invert?: boolean; pitch?: number; quiet?: (y: number) => number }
 ): void {
   const bakeW = canvasW / scale;
   const bakeH = canvasH / scale;
   const src = ctx.getImageData(0, 0, canvasW, canvasH);
   const px = src.data;
+  const pitch = opts?.pitch ?? RASTER_PX;
+  const quietAt = opts?.quiet ?? rasterQuiet;
 
-  const cols = Math.max(8, Math.round(bakeW / (RASTER_PX * 0.6)));
-  const rows = Math.max(8, Math.round(bakeH / RASTER_PX));
+  const cols = Math.max(8, Math.round(bakeW / (pitch * 0.6)));
+  const rows = Math.max(8, Math.round(bakeH / pitch));
   const cellW = bakeW / cols;
   const cellH = bakeH / rows;
 
@@ -1516,12 +1528,12 @@ export function applyGlyphRaster(
   // Pass two: wipe to ground, letter each cell.
   ctx.fillStyle = pal.ground;
   ctx.fillRect(0, 0, bakeW, bakeH);
-  setBakeType(ctx, { family: "mono", px: RASTER_PX, track: 0 });
+  setBakeType(ctx, { family: "mono", px: pitch, track: 0 });
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   for (let r = 0; r < rows; r++) {
     const py = (r + 0.5) * cellH;
-    const quiet = rasterQuiet(py);
+    const quiet = quietAt(py);
     for (let c = 0; c < cols; c++) {
       const norm = Math.min(1, Math.max(0, (lums[r * cols + c] - lo) / (hi - lo)));
       const lum = opts?.invert ? 1 - norm : norm;

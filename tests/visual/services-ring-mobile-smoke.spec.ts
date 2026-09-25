@@ -6,8 +6,17 @@ import {
   RING_MOBILE_FRONT_MAX_PX,
   RING_MOBILE_FRONT_VW,
   RING_MOBILE_LEAVE_START,
+  RING_MOBILE_POSE_SLACK,
   RING_MOBILE_SEAT_FILL,
 } from "../../lib/services-ring/ringMath";
+import { FACE_PHONE_RUNGS } from "../../lib/services-ring/ringType";
+import { BAKE_W } from "../../components/landing/home-v2/services/hologram/ringCtaBox";
+import {
+  ABOUT_BAND_COVER,
+  ABOUT_BAND_OPEN_IN,
+  ABOUT_BAND_OPEN_OUT,
+  ABOUT_BAND_READ,
+} from "../../lib/services-ring/aboutBandMath";
 
 /** Each card's beat, as a fraction of the band's own scroll — the clock's
  *  inverse, never a literal: ADR-115 moved the leave and a fixed 0.4 landed
@@ -390,8 +399,10 @@ test.describe("the ring on phones (ADR-108)", () => {
       );
       expect(front!.w).toBeGreaterThan(ask * 0.85);
       expect(front!.w).toBeLessThan(ask * 1.15);
-      // The projected rect carries the front pose's tilt; 6 % is that.
-      expect(front!.h).toBeLessThan(s.seat!.h * RING_MOBILE_SEAT_FILL * 1.06);
+      // The projected rect carries the front pose's tilt (`POSE_SLACK`), and
+      // with `FILL × SLACK ≤ 1` it never outgrows the seat (ADR-115 U2).
+      expect(front!.h).toBeLessThan(s.seat!.h * RING_MOBILE_SEAT_FILL * RING_MOBILE_POSE_SLACK);
+      expect(front!.h).toBeLessThanOrEqual(s.seat!.h + 1);
       // Inside the frame — the first cut solved the scale at the mark's
       // depth and the card spilled past both edges of the phone.
       expect(front!.x).toBeGreaterThanOrEqual(-1);
@@ -410,14 +421,15 @@ test.describe("the ring on phones (ADR-108)", () => {
       expect(s.title, "the masthead's title is not in the band").toBeTruthy();
       expect(s.intro, "the masthead's paragraph is not in the band").toBeTruthy();
       expect(s.title!.y).toBeGreaterThanOrEqual(56);
-      /* ADR-115 U1: the card may OVERLAP each text by up to half of what
-         `RING_MOBILE_SEAT_FILL` adds beyond the seat (owner: "I don't mind
-         if they may overlap a bit behind the text") — the same allowance
-         the law makes, so the guard cannot drift from it. At fill 1 this is
-         the ADR-109 "between the two texts" bound to the pixel. */
-      const over = (s.seat!.h * Math.max(0, RING_MOBILE_SEAT_FILL - 1)) / 2 + 1;
-      expect(s.title!.y + s.title!.h).toBeLessThanOrEqual(front!.y + over);
-      expect(front!.y + front!.h).toBeLessThanOrEqual(s.intro!.y + over);
+      /* ADR-115 U2 (owner: "scale them down a bit on mobile so they don't
+         overlap with the text"): the card sits BETWEEN the two texts with
+         air either side — U1's overlap allowance is gone with its fill. */
+      expect(s.title!.y + s.title!.h + 8, "the card runs into the title").toBeLessThanOrEqual(
+        front!.y
+      );
+      expect(front!.y + front!.h + 8, "the card runs into the paragraph").toBeLessThanOrEqual(
+        s.intro!.y
+      );
       expect(s.intro!.y + s.intro!.h).toBeLessThanOrEqual(s.vh - 56 + 1);
       expect(s.introText.length).toBeGreaterThan(80);
       // The seat is the band between the two texts, and the card sits on it.
@@ -438,6 +450,44 @@ test.describe("the ring on phones (ADR-108)", () => {
       expect(s.plateOpen).toBeNull();
     });
   }
+
+  /* ── ADR-115 U2: the fit on the rung's shortest frame ─────────────────────── */
+  test("the card sits between the two texts on the rung's shortest frame, its lede readable (ADR-115 U2)", async ({
+    page,
+  }) => {
+    // The ring rung opens at 681px (`SERVICES_RING_MOBILE_MEDIA`); on the
+    // device the toolbar-shown frame is ≈676 and the rung resolves on the
+    // LARGE viewport, so 681 is the CI proxy for the frame he photographs.
+    await page.setViewportSize({ width: 390, height: 681 });
+    await boot(page);
+    expect(await bandTop(page), "the ring rung did not open at 681").not.toBeNaN();
+    await seatBand(page, BEAT[1]!);
+    const s = await readBand(page);
+    const front = s.hits.find((h) => h.front);
+    expect(front, "no front-card button").toBeTruthy();
+    expect(s.seat, "no seat row in the band").toBeTruthy();
+    const ask = Math.min(
+      RING_MOBILE_FRONT_MAX_PX,
+      s.vw * RING_MOBILE_FRONT_VW,
+      s.seat!.h * RING_MOBILE_SEAT_FILL * (420 / 680)
+    );
+    expect(front!.w).toBeGreaterThan(ask * 0.85);
+    expect(front!.w).toBeLessThan(ask * 1.15);
+    expect(front!.h).toBeLessThanOrEqual(s.seat!.h + 1);
+    expect(s.title!.y).toBeGreaterThanOrEqual(56);
+    expect(s.title!.y + s.title!.h + 8, "the card runs into the title").toBeLessThanOrEqual(
+      front!.y
+    );
+    expect(front!.y + front!.h + 8, "the card runs into the paragraph").toBeLessThanOrEqual(
+      s.intro!.y
+    );
+    expect(s.intro!.y + s.intro!.h).toBeLessThanOrEqual(s.vh - 56 + 1);
+    // The lede at the phone rung is at least 12 css px on this card.
+    expect(
+      (FACE_PHONE_RUNGS.lede * front!.w) / BAKE_W,
+      "the lede under 12 css px"
+    ).toBeGreaterThanOrEqual(12);
+  });
 
   /* ── ADR-123 commit C: the bakes come back before the band is seated ─────── */
   test("the ring is near and baked by the time the band seats, and its cards publish inside 1.5 s (ADR-123 C)", async ({
@@ -793,9 +843,15 @@ test.describe("the ring on phones (ADR-108)", () => {
       a = await readAbout(page);
       expect(a.vwName, "the name decodes on the flip's-end seat").toBe("pending");
 
-      // The reading seat: everything resolved, the real text shown, no leaf.
-      const read = await seatAboutBand(page, 0.62);
-      expect(Math.abs(read - 0.62)).toBeLessThan(0.01);
+      // The flip's end shows the rest FOLDED.
+      expect(a.bioOpen).toBeNull();
+
+      // The reading seat: everything resolved, the real text shown, no leaf,
+      // and the rest of the bio OPEN (ADR-115 U2 — the reading state is the
+      // expanded one); no chevron in the DOM.
+      const read = await seatAboutBand(page, ABOUT_BAND_READ);
+      expect(Math.abs(read - ABOUT_BAND_READ)).toBeLessThan(0.01);
+      await page.waitForTimeout(600);
       a = await readAbout(page);
       expect(a.vwName).toBe("1");
       expect(a.vwCopy).toBe("1");
@@ -806,12 +862,15 @@ test.describe("the ring on phones (ADR-108)", () => {
       expect(a.leaves).toBe(0);
       expect(a.deck).toBe("live");
       expect(a.imgVisible).toBe("hidden");
-      expect(a.more, "no chevron").toBeTruthy();
-      expect(a.more!.w).toBeGreaterThanOrEqual(44);
-      expect(a.more!.h).toBeGreaterThanOrEqual(44);
-      expect(a.more!.y + a.more!.h).toBeLessThanOrEqual(a.vh - 56 + 1);
+      expect(a.more, "the chevron is back").toBeNull();
+      expect(a.bioOpen).toBe("1");
+      expect(a.restBioVisible).toBe("visible");
+      expect(a.rest!.h, "the rest did not unfold on the clock").toBeGreaterThan(120);
+      expect(a.rest!.y + a.rest!.h).toBeLessThanOrEqual(a.vh - 56 + 1);
+      expect(a.slotState, "the portrait fell under its floor").toBeNull();
       // The band's rows, in order and clear of the chrome bands.
       expect(a.slot!.y).toBeGreaterThanOrEqual(56);
+      expect(a.slot!.h).toBeGreaterThanOrEqual(140);
       expect(a.slot!.y + a.slot!.h).toBeLessThanOrEqual(a.vh - 56);
       const nameBox = await page.evaluate(() => {
         const r = document.querySelector(".voidwalker__name")!.getBoundingClientRect();
@@ -826,7 +885,7 @@ test.describe("the ring on phones (ADR-108)", () => {
         return { y: r.top, b: r.bottom };
       });
       expect(copyBox.y).toBeGreaterThanOrEqual(a.slot!.y + a.slot!.h - 1);
-      expect(copyBox.b).toBeLessThanOrEqual(a.more!.y + 1);
+      expect(copyBox.b).toBeLessThanOrEqual(a.rest!.y + 1);
 
       // The handover: at the runway's end the DOM image (the bake, a blob)
       // shows and the deck is done; back on the seat the deck owns it again.
@@ -838,49 +897,71 @@ test.describe("the ring on phones (ADR-108)", () => {
       expect(a.imgSrc.startsWith("blob:"), `the picture's source is ${a.imgSrc.slice(0, 30)}`).toBe(
         true
       );
-      await seatAboutBand(page, 0.62);
+      await seatAboutBand(page, ABOUT_BAND_READ);
       a = await readAbout(page);
       expect(a.deck).toBe("live");
       expect(a.imgVisible).toBe("hidden");
     });
   }
 
-  test("the chevron unfolds the rest of the bio and the seat gives up its height (ADR-115)", async ({
+  test("the rest of the bio unfolds on the clock, and folds again on the way back (ADR-115 U2)", async ({
     page,
   }) => {
     await boot(page);
     await seatBand(page, 1);
-    await seatAboutBand(page, 0.62);
+    // The flip's-end seat: folded, the seat at its full height.
+    await seatAboutBand(page, ABOUT_BAND_COVER);
+    await page.waitForTimeout(600);
     const closed = await readAbout(page);
-    expect(closed.moreExpanded).toBe("false");
+    expect(closed.more, "the chevron is back").toBeNull();
+    expect(closed.bioOpen).toBeNull();
     expect(closed.restBioVisible).toBe("hidden");
     expect(closed.rest!.h).toBeLessThan(2);
 
-    await page.mouse.click(
-      closed.more!.x + closed.more!.w / 2,
-      closed.more!.y + closed.more!.h / 2
-    );
+    // The reading seat, past OPEN_IN: unfolded, the seat paid for it.
+    await seatAboutBand(page, ABOUT_BAND_READ);
     await page.waitForTimeout(800);
     const open = await readAbout(page);
+    expect(open.p).toBeGreaterThan(ABOUT_BAND_OPEN_IN);
     expect(open.bioOpen).toBe("1");
-    expect(open.moreExpanded).toBe("true");
     expect(open.rest!.h, "the rest did not unfold").toBeGreaterThan(120);
     expect(open.restBioVisible).toBe("visible");
-    // The copy rose and the seat paid for it; on this shape the portrait is
-    // still a portrait (over the floor) — a shorter phone hides it instead.
     expect(open.slot!.h).toBeLessThan(closed.slot!.h);
-    if (open.slotState !== "hidden") {
-      expect(open.slot!.h).toBeGreaterThanOrEqual(140);
-      expect(open.imgVisible === "hidden" || open.deck === "live").toBe(true);
-    }
+    // On this shape the portrait is still a portrait: over the floor, the
+    // deck live on it.
+    expect(open.slotState).toBeNull();
+    expect(open.slot!.h).toBeGreaterThanOrEqual(140);
+    expect(open.deck).toBe("live");
+    expect(open.imgVisible).toBe("hidden");
     // Nothing runs under the settings row.
-    expect(open.more!.y + open.more!.h).toBeLessThanOrEqual(open.vh - 56 + 1);
+    expect(open.rest!.y + open.rest!.h).toBeLessThanOrEqual(open.vh - 56 + 1);
 
-    await page.mouse.click(open.more!.x + open.more!.w / 2, open.more!.y + open.more!.h / 2);
+    // Back to the flip's end, under OPEN_OUT: folded again, the seat restored.
+    await seatAboutBand(page, ABOUT_BAND_COVER);
     await page.waitForTimeout(800);
     const again = await readAbout(page);
+    expect(again.p).toBeLessThan(ABOUT_BAND_OPEN_OUT);
     expect(again.bioOpen).toBeNull();
-    expect(again.moreExpanded).toBe("false");
     expect(Math.abs(again.slot!.h - closed.slot!.h)).toBeLessThanOrEqual(2);
+  });
+
+  test("the expanded seat stays over the portrait's floor on the shortest band phone (ADR-115 U2)", async ({
+    page,
+  }) => {
+    // The ring rung opens at 681px; the rest's height is fixed px, so this is
+    // the frame where the seat is smallest.
+    await page.setViewportSize({ width: 390, height: 681 });
+    await boot(page);
+    await seatBand(page, 1);
+    await seatAboutBand(page, ABOUT_BAND_READ);
+    await page.waitForTimeout(800);
+    const a = await readAbout(page);
+    expect(a.band).toBe("on");
+    expect(a.bioOpen).toBe("1");
+    expect(a.rest!.h).toBeGreaterThan(120);
+    expect(a.slotState, "the portrait fell under its floor on the shortest phone").toBeNull();
+    expect(a.slot!.h).toBeGreaterThanOrEqual(140);
+    expect(a.deck).toBe("live");
+    expect(a.rest!.y + a.rest!.h).toBeLessThanOrEqual(a.vh - 56 + 1);
   });
 });

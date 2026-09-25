@@ -54,7 +54,7 @@ import * as THREE from "three";
 import { resolveScenePalette } from "@/lib/theme/palette";
 
 import { createRevealMaterial, driveRevealMaterial } from "./cardReveal";
-import { applyGlyphRaster, applyHalftone, drawCardViz } from "./cardViz";
+import { RASTER_PX_PHONE, applyGlyphRaster, applyHalftone, drawCardViz } from "./cardViz";
 import {
   VOLUME_QUALITY_FLOOR,
   buildFigureAtlas,
@@ -67,7 +67,12 @@ import {
 } from "./cardFigureVolume";
 import { useQualityStore } from "@/lib/hooks/useQualityTier";
 import { bodyFor } from "@/lib/services-ring/figureFields";
-import { REVEAL_DAMP_RATE } from "@/lib/services-ring/reveal";
+import {
+  RASTER_QUIET_FOOT_PHONE,
+  RASTER_QUIET_HEAD_PHONE,
+  REVEAL_DAMP_RATE,
+  rasterQuietAt,
+} from "@/lib/services-ring/reveal";
 import { isFigureSlot } from "@/lib/services-ring/serviceFigures";
 import { TENSOR_GOLD } from "@/lib/home-v2/goldPalette";
 import { buildCardTrackOrbits } from "./cardTrackOrbits";
@@ -148,7 +153,12 @@ import {
 } from "@/lib/services-ring/portraitBake";
 import { ABOUT_BAND_KILL, aboutBandSquareT } from "@/lib/services-ring/aboutBandMath";
 import { openPlateRef } from "@/lib/services-ring/openPlateRef";
-import { TRACK_DISPLAY, setBakeType } from "@/lib/services-ring/ringType";
+import {
+  FACE_PHONE_RUNGS,
+  TRACK_DISPLAY,
+  setBakeType,
+  type FaceRung,
+} from "@/lib/services-ring/ringType";
 import {
   servicesRingProgressRef,
   type ServicesRingProgress,
@@ -1002,9 +1012,14 @@ function bakeCardFace(
      under them — which is the REVEAL texture the veil plane resolves toward
      (round four). An option and not a variant: a phantom `"reveal"` face
      would be accepted by `isTightLayout`, `faceUsesPhoto`, `slabGeometry`,
-     `bakeCardBack` and `bakePortraitBack` alike. */
-  opts?: { photoOnly?: boolean }
+     `bakeCardBack` and `bakePortraitBack` alike.
+     `rung` (ADR-115 U2) is the PHONE's: the display name at the bled
+     treatment's own rungs, the lede at `FACE_PHONE_RUNGS.lede`, the raster
+     at `RASTER_PX_PHONE` under its own quiet bands. The desktop passes none
+     and every branch below falls to its literal — byte-identical. */
+  opts?: { photoOnly?: boolean; rung?: FaceRung }
 ): HTMLCanvasElement {
+  const phoneRung = opts?.rung === "phone";
   const canvas = document.createElement("canvas");
   /* ADR-108: a scaled bake keeps EVERY drawing coordinate in bake px — the
      canvas is smaller and the context is scaled, so nothing below knows.
@@ -1090,6 +1105,11 @@ function bakeCardFace(
         { ...pal, ground: pal.ground },
         {
           invert: pal.print,
+          /* The phone's grid and bands (ADR-115 U2); undefined = the desktop's. */
+          pitch: phoneRung ? RASTER_PX_PHONE : undefined,
+          quiet: phoneRung
+            ? (y) => rasterQuietAt(y, RASTER_QUIET_HEAD_PHONE, RASTER_QUIET_FOOT_PHONE)
+            : undefined,
         }
       );
     }
@@ -1281,9 +1301,14 @@ function bakeCardFace(
     const ts = TITLE_STYLE[comp.bled ? "display" : (comp.pin ?? titleStyle)] ?? TITLE_STYLE.framed;
     const framed = ts.box !== "none";
 
-    const namePx = comp.bled ? 74 : ts.px;
-    const nameLh = comp.bled ? 88 : ts.lh;
-    const nameCapH = comp.bled ? 52 : ts.capH;
+    /* THE PHONE FACE (ADR-115 U2): on the phone bake the DISPLAY name takes
+       the bled treatment's own rungs and the lede lifts to the phone rung —
+       the canvas caps at 1.4× DPR there, so a bigger bake buys nothing and
+       bigger baked type is the one lever. Desktop: no rung, the literals. */
+    const phoneDisplay = phoneRung && !comp.bled && ts === TITLE_STYLE.display;
+    const namePx = comp.bled ? 74 : phoneDisplay ? FACE_PHONE_RUNGS.name : ts.px;
+    const nameLh = comp.bled ? 88 : phoneDisplay ? FACE_PHONE_RUNGS.nameLh : ts.lh;
+    const nameCapH = comp.bled ? 52 : phoneDisplay ? FACE_PHONE_RUNGS.nameCap : ts.capH;
     label.letterSpacing = comp.bled ? "6px" : `${ts.track}px`;
     ctx.font = `700 ${namePx}px ${CARD_FONT}`;
     const nameText = plate.chip.toUpperCase();
@@ -1444,22 +1469,24 @@ function bakeCardFace(
        cannot land on top of its own paragraph. */
     if (comp.para !== "none") {
       label.letterSpacing = "0px";
-      ctx.font = `400 ${TIGHT_LEDE_PX}px ${CARD_SANS}`;
+      const ledePx = phoneRung ? FACE_PHONE_RUNGS.lede : TIGHT_LEDE_PX;
+      const ledeLh = phoneRung ? FACE_PHONE_RUNGS.ledeLh : TIGHT_LEDE_LH;
+      ctx.font = `400 ${ledePx}px ${CARD_SANS}`;
       const paraCentre = comp.para === "foot-centre";
       const ledeLines = wrapRuns(ctx, plate.lede, maxW);
       const bottom =
         comp.para === "under-title"
-          ? frameY + frameH + 46 + (ledeLines.length - 1) * TIGHT_LEDE_LH
+          ? frameY + frameH + 46 + (ledeLines.length - 1) * ledeLh
           : titleTop
             ? TIGHT_COPY_BOTTOM
-            : frameY - TIGHT_LEDE_LH * 0.6;
+            : frameY - ledeLh * 0.6;
       ledeLines.forEach((line, i) => {
         const lineW = ctx.measureText(line.map((r) => r.text).join(" ")).width;
         drawRunLine(
           ctx,
           line,
           paraCentre ? (BAKE_W - lineW) / 2 : PAD_X,
-          bottom - (ledeLines.length - 1 - i) * TIGHT_LEDE_LH,
+          bottom - (ledeLines.length - 1 - i) * ledeLh,
           pal.ink(0.82),
           pal.gold
         );
@@ -3011,7 +3038,18 @@ export function ServicesCardRing({
             }
           }
           return {
-            face: bakeCardFace(plate, img, faceVariant, facePal, titleStyle, bakeScale),
+            /* ADR-115 U2: the phone mount bakes its face at the phone rung
+               (`FACE_PHONE_RUNGS`); the desktop passes no options and the
+               bake is source-identical to the line before this pass. */
+            face: bakeCardFace(
+              plate,
+              img,
+              faceVariant,
+              facePal,
+              titleStyle,
+              bakeScale,
+              mobileProfile ? { rung: "phone" } : undefined
+            ),
             /* The REVEAL (round four): the same composition without the glyph
                pass, from the same image, so the type lands on the same
                pixels. Full size on purpose — a 0.75 twin would soften the

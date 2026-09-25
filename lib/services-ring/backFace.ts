@@ -27,8 +27,9 @@ import {
 } from "@/components/landing/home-v2/services/hologram/ringCtaBox";
 import { TRACK_DISPLAY, TRACK_EYEBROW, TRACK_LABEL } from "./ringType";
 
-/** The rungs, bake px. On a 257 css px iPhone 14 card one bake px is
- *  0.306 css px, so the floor letters at ~10.4 css px (owner, 2026-09-16:
+/** The rungs, bake px. On the phone card (ADR-115 U2: 221 css px on the
+ *  toolbar-shown iPhone 14 frame, 312 with the toolbar hidden) one bake px is
+ *  0.263–0.371 css px, so the floor letters at ~8.9–12.6 css px (owner, 2026-09-16:
  *  the card keeps its size when it turns — the floor is the lever). The
  *  first cut floored at 30 and pooled ~110 bake px above the CTA; the
  *  visual review spent that slack on the type. */
