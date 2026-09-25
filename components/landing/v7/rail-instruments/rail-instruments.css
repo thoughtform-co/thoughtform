@@ -194,7 +194,10 @@
    `--br` bracket, on the bottom margin line, pairing with the ADR-043
    wordmark at the other end of the band. It is what the controls fall back
    to wherever the marks are not drawn, and it is byte-identical to
-   `.theme-toggle-overlay`, which `/arcs` still mounts. */
+   `.theme-toggle-overlay`, which `/arcs` still mounts.
+   ⚠ ≤960 THE SWITCH SITS IN THE CORNER ITSELF (ADR-059 U7): the brackets
+   are gone on the phone (landing.css), so the seat the `--br` bracket held
+   is the switch's — `right: --hud-margin`, the same rung below. */
 .rin-settings {
   /* The theme switch's box. HALF of it is the centring offset in the >960
      rule below, so it has to be a variable rather than a literal 36 — and
@@ -501,6 +504,8 @@
 html[data-rail-instruments] .hud__corner--br {
   border: 0;
 }
+/* (≤960 the bracket is `display: none` outright — landing.css, ADR-059
+   U7 — so nothing here brings its border back on the phone.) */
 
 /* ── Curtain clips, widened ─────────────────────────────────────────────
    ⚠ The TOP inset of each is copied VERBATIM from `landing.css` — it is
@@ -549,9 +554,12 @@ html[data-rail-instruments] .hud__corner--tl {
    ⚠ SETTINGS IS NEVER GATED — only the marks beside it are. It is the only
    control in the frame besides the nav corner, it is `position: fixed` and
    owes nothing to the rails, and a theme switch that disappears on a phone
-   is a bug rather than a simplification. Losing the marks re-anchors the
-   row to the ADR-058 slot (see the `min-width: 961px` block above), which
-   is also what keeps the control clear of the bracket coming back. */
+   is a bug rather than a simplification. Losing the marks moves the row
+   into the CORNER'S OWN SEAT (ADR-059 U7): the phone draws no brackets
+   (landing.css ≤960), so the slot the `--br` bracket held is the
+   switch's — `right: --hud-margin`, bottom on `max(--hud-margin,
+   --safe-bottom)` as before, the 44px coarse-pointer control centred on
+   the --hud-corner-zone row. */
 @media (max-width: 960px) {
   /* ⚠ THE JOURNEY ROW AND THE TL BRACKET ARE NOT LISTED HERE ANY MORE —
      both are unconditional above, and a rung repeating an unconditional
@@ -560,10 +568,11 @@ html[data-rail-instruments] .hud__corner--tl {
   .rin-settings__row {
     display: none;
   }
-  /* That row is gone, so its bracket comes back. The BL bracket is not
-     listed because it was never suppressed. */
-  html[data-rail-instruments] .hud__corner--br {
-    border-bottom: 2px solid var(--hud-rail-line);
-    border-right: 2px solid var(--hud-rail-line);
+  /* The switch takes the corner (ADR-059 U7). The old rung here put the
+     BR bracket's border back for the phone; that bracket is `display:
+     none` ≤960 now, and a border on a hidden element is a rule that
+     looks load-bearing and is not. */
+  .rin-settings {
+    right: var(--hud-margin);
   }
 }

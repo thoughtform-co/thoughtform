@@ -8186,13 +8186,20 @@ body.density-dense .station {
        expressed once so a flowing station can reserve them and a guard
        can read them off computed style.
        TOP  = the nav overlay corner: `.hud-nav-overlay` is pinned at
-              --hud-margin and the TL bracket is --hud-corner-zone tall,
-              +12px of air. Measured 56px at 390x844 and at 430x932
-              (--hud-margin floors at 16, --hud-corner-zone at 28).
-       BOTTOM = the same stack at the other end, but the bottom row
-              (`.rin-settings`, `.hud__corner--br`) sits on
-              `max(--hud-margin, --safe-bottom)` — the notch inset wins on
-              a device that has one, so the floor has to take the max too.
+              --hud-margin and its ROW is --hud-corner-zone tall (the
+              readout button's own height; the TL bracket that used to
+              share the row is gone on the phone since ADR-125 U1 /
+              ADR-059 U7), +12px of air. Measured 56px at 390x844 and at
+              430x932 (--hud-margin floors at 16, --hud-corner-zone at 28).
+       BOTTOM = the same stack at the other end: the settings row
+              (`.rin-settings`, the theme switch in the corner's own seat
+              since ADR-059 U7) sits on `max(--hud-margin, --safe-bottom)`
+              — the notch inset wins on a device that has one, so the
+              floor has to take the max too.
+       ⚠ THE BANDS RESERVE ROWS, NOT BRACKETS. Removing the brackets
+       bought no band: a centred 340px title reaches x≈365 under the
+       readout, and a caption ending below the bottom band would sit 4px
+       off the 44px switch. What it bought is the corners' clutter.
        ⚠ These are DERIVED from the chrome's own tokens, never literals:
        a new fixed painter re-derives them here in the same commit or the
        band it occupies is unreserved (.claude/rules/mobile-sections.md). */
@@ -8202,6 +8209,19 @@ body.density-dense .station {
     );
   }
   .hud__rail {
+    display: none;
+  }
+  /* ── NO BRACKETS ON THE PHONE (ADR-125 U1, ADR-059 U7) ──────────────
+     The owner, on the Arc's stills: "remove the white corners in the
+     top-left and bottom-right". Both corner brackets are hidden on every
+     route that mounts this sheet (the landing, /arcs, /claude-workshop,
+     the Trinny proposal — one phone frame), and the theme switch takes
+     the bottom-right corner's own seat (rail-instruments.css, theme.css).
+     The chrome bands above are untouched: they reserve the readout's row
+     and the switch's row, which the brackets only shared. Desktop keeps
+     both brackets and its curtain clips. */
+  .hud__corner--tl,
+  .hud__corner--br {
     display: none;
   }
   .hud__brandmark {

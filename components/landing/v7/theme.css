@@ -75,6 +75,14 @@
 .theme-toggle-overlay > * {
   pointer-events: auto;
 }
+/* ≤960 the corner's brackets are gone (landing.css, ADR-059 U7) and the
+   switch takes the corner's own seat — the same rung `.rin-settings`
+   carries in rail-instruments.css; move both. */
+@media (max-width: 960px) {
+  .theme-toggle-overlay {
+    right: var(--hud-margin);
+  }
+}
 
 .theme-toggle {
   appearance: none;
