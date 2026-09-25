@@ -68,6 +68,57 @@ Embedded card must be practical, what a buyer can expect.
 - The three surfaces (site, keynote, session) now share one line: a layer
   built for the intelligence, a person keeping the last word.
 
+### 2026-09-25 — the Arc travels again, the frame fills, three sections answer (ADR-125 U1 · ADR-059 U7 · ADR-107 U2 · ADR-115 U2)
+
+**Trigger:** the owner's device read of ADR-125, with four stills: "it just
+jumps from Navigate to Encode to Build without that smooth transition, which
+is the entire shtick of our website"; "so much unused space above and below";
+"remove the white corners … move the light and dark mode buttons to the
+bottom-right corner"; the map card's tabs show only the first tab; the
+services cards overlap the copy; the About chevron should open by itself.
+
+- **Cycle A on ADR-125 → U1** (his decision, AskUserQuestion: continuous
+  travel, soft landings): 24svh dwells, cruise passes derived to one speed
+  (1.333× the desktop, peak 1.63×), four `normal` seats and no `always`, the
+  beats composed on the chrome bands by DERIVED straddles
+  (`lib/home-v2/phoneStraddle.ts`, the tracker's `derivePhoneSeats()`), the
+  sphere solved from the tightest band and capped at 1.3.
+- **Cycle A → ADR-059 U7:** both brackets `display: none` at ≤960; the
+  settings cluster and the theme toggle take the corner; the bands stay 56/56.
+- **Cycle A → ADR-107 U2:** the map card's fallback is three lists keyed on
+  `view` (`PdaPhoneReadings.tsx`, `phoneConfiguration` / `phoneLayer` in the
+  three-free record); the field's overlay off at ≤960; the list scrolls.
+- **Cycle A → ADR-115 U2:** the About rest unfolds on the band's clock with a
+  hysteresis (`OPEN_IN` 0.65 / `OPEN_OUT` 0.61, READ 0.70 — a first cut at
+  0.72 snapped the weld frame 6.5px down on both phones: `READ × (RUNWAY − 1)
+< 1` is a measured Blink bound, unit-pinned), the chevron deleted; the services card fits its seat (fill 0.94 × slack 1.06 ≤ 1), the
+  band funds the seat, the type grows inside the bake (`FACE_PHONE_RUNGS`,
+  `RASTER_PX_PHONE`, the phone quiet bands).
+- **Q3 (a class of bug) → BEST-PRACTICES:** a hold in the clock is a still,
+  travel is the brand; a fallback that ignores the control it sits under is a
+  control nobody can press; the record carried the axis the decision never
+  read (`scrollMemory`'s `vh`, fixed — ADR-123 amended).
+- **Q5 (a runtime check that caught it earlier):** `phone-corridor-clock`
+  (rewritten), `phone-straddle`, `pda-phone-readings`, `scroll-memory` (the
+  height axis), `about-band-math` (the hysteresis ladder),
+  `services-ring-mobile-gate` + `services-ring-reveal` (the fit invariant, the
+  phone rungs and bands); the seams' composed case at 844 AND 676 and its
+  re-cut sweep; the proof smoke's map-readings case; the ring smoke's 681
+  cases; `seekTo` hardened to the asked seat's half-screen.
+- **Rules:** `mobile-sections.md` intro, §1, §11, §13 (rewritten);
+  `scroll-animations.md`; the corridor grammar reference (both copies);
+  `proof.md`, `proof-stack.md`, `services-ring.md`, `landing-v7.md`.
+- **Not verified here:** the device — the flight's pace, the sphere's cap, the
+  thesis `always` dial, the About hold, the card's lede at 676.
+- **Pre-existing red, not this pass's:** `trinny-london-smoke` "ADR-100: the
+  board fills its band, letters at the floor and collides nowhere" reports 30
+  label collisions at 1280x720 on the LIVE site (`BASE_URL=https://thoughtform.co`,
+  main at `da5d11c2`) exactly as on this tree; nothing here touches the board.
+  The shared :3003 dev server's SSR worker was also dead for every `[slug]`
+  arc ("Jest worker encountered 2 child process exceptions", 3.4 GB), so the
+  desktop arc smokes were run on an isolated `.next-verify` build on 3011 -
+  the `local-build-verification` recipe.
+
 ### 2026-09-25 — the phone corridor lands on its beats (ADR-125)
 
 **Trigger:** the owner, on his iPhone, in the Arc: scrolling "shoots off or is

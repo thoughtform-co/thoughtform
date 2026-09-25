@@ -141,6 +141,20 @@ and (prefers-reduced-motion: no-preference)` — the park rung's first term
   taken back, the other two kept), re-sticks the slots INSIDE the seat rung's
   ≤960. The seat rung stays as it is; `proof-stack-split-gate.test.ts` pins
   the sheet's literal to the constant.
+- ⚠ **THE MAP CARD'S FIELD ANSWERS ITS RAIL ON THE PHONE (ADR-107 U2,
+  2026-09-25, owner: the tabs "only show the first tab's content").** Below
+  the console's rung the map's fallback is THREE lists keyed on the same
+  `view` the portalled rail selects (`PdaPhoneReadings.tsx`: the index, the
+  configured streams' `RUNS · REACH · WHERE`, the five shapes with their
+  sentences and their Skills, the roster's flagship leading), never one list
+  that ignores it — and NO rail of its own (`ConsoleFrame` renders the
+  fallback on every rung; a second `ConsoleRail` doubled the desktop arcs'
+  stations behind a hidden list); `.pf-field--map::after` is `display: none` at ≤960 (the
+  wheel listener it guarded only captures at ≥961), and `.fl-pda__list`
+  releases at its bounds (`overscroll-behavior-y: auto; touch-action: pan-y`).
+  A fallback that ignores the control it sits under is a control nobody can
+  press. Guard: the phone smoke's "the map's field answers its rail with
+  three readings" + `tests/lib/pda-phone-readings.test.ts`.
 - ⚠ **ON A PHONE EVERY PROJECT IS TWO SHEETS (ADR-107).** `ProofStack`'s
   `split` renders each track as a RECORD slot (`data-pc-index 2k`, `--i: k`,
   the head band over the record) and a FIELD slot (`2k+1`, **`--i: k+1`**, the

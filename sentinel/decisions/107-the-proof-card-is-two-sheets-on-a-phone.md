@@ -233,3 +233,76 @@ npx playwright test tests/visual/landing-corridor-smoke.spec.ts \
 
 **54 passed, 0 failed** — the job's first green in days. The new gate was also
 forced to fail, to prove it still can.
+
+## Update 2 (2026-09-25, owner) — the map card answers its rail on the phone
+
+Owner, from his iPhone, on the proof card _"We built the layer the agents run
+on"_: clicking its tabs shows only the first tab's content — _"Please fix it."_
+
+**Root cause, verified.** That card is the INTELLIGENCE MAP card (the last in
+`proofOrder.ts`; phone sheets `data-pc-index` 6 record / 7 field). Its rail is
+the map's WORK · CONFIGURATION · LAYER, state `view` in `PdaConsole`,
+portalled into `.pf-card__tabs`; a tap runs `go()` → `setView`. But `pda.css`
+hides `.fl-pda .fl-con__console` at `(max-width: 980px)` and shows
+`.fl-pda__list` — the one `fallback`, the stream index, which never read
+`view` except in its off-screen last line. So the tap changed state and
+nothing visible followed. **A fallback that ignores the control it sits under
+is a control nobody can press.** And the list could not be thumb-scrolled:
+`proof-stack.css` lays `.pf-field--map::after { inset: 0; z-index: 2 }` over
+the field to keep the DESKTOP console's non-passive wheel listener off the
+pile — but that listener only captures under `SERVICES_SCROLL_OWNED_MEDIA`
+(`min-width: 961px`), so at ≤960 the overlay stopped nothing but the thumb.
+The tools and films switch on `ProofCard`'s `idx`, the studio sheets on
+`SheetsPlate.activeIdx` with an UNWRAPPED console — only the map hid.
+
+**The design — three phone readings keyed on the same `view`, as lists from
+the record:**
+
+- `pdaRecord.ts` (three-free) gains `PDA_PHONE_VIEW = {1:"work",
+2:"configuration", 3:"layer"}`, `phoneConfiguration(shown)` (one row per
+  stream of the same twenty `selectWorks` returns — `RUNS` = Skill · lane
+  verbs, `REACH` = graph · system, `WHERE` = agent · surface, the R4 board's
+  own answers; person-led rows carry the record's absence strings) and
+  `phoneLayer(shapes, skills)` (the five shapes, `meaning` verbatim in
+  sentence case, the roster's `short` labels whose `engine.toLowerCase() ===
+key`, the flagship first). ⚠ **The flagship is the ROSTER's `flagship` flag**
+  (one per engine, registry-pinned — the carrier's own rule), never the
+  shape's `first` work's Skill: that Skill can file under another engine (a
+  stream that trenched Pattern runs a Validation Skill), and a lead that is not
+  in the run it leads is a green mark on nothing. The first cut derived it and
+  the unit test caught it.
+- New `map/pda/PdaPhoneReadings.tsx` in `ConsoleFrame`'s existing `fallback`
+  slot: `.fl-pda__list[data-pda-phone-view]`, the index / the ledger / the
+  five shapes, then the existing `.fl-pda__list-foot`. ⚠ **NO RAIL OF ITS
+  OWN**: the first cut rendered a second `ConsoleRail` in the fallback for
+  the hosts that portal nothing out, and `ConsoleFrame` renders its fallback
+  on EVERY rung — so the desktop arcs carried six `.fl-con__stn` behind a
+  `display: none` list and `arc-portfolio-smoke`'s "the three readings" went
+  red on the production build (a hidden duplicate tablist is two sets of tabs
+  to a screen reader as well). The proof card's rail is the portalled one. **No Skill count per shape** (the hub's own ruling: a
+  run of labels is countable and a numeral beside it is the surface saying it
+  twice); no ordinals. PT Mono chrome at the list's rungs, `meaning` in PP
+  Neue Montreal.
+- **Scroll:** `proof-stack.css` ≤960 adds `.pf-stack .pf-field--map::after {
+display: none }`; `pda.css` ≤980 adds `.fl-pda__list { overscroll-behavior-y:
+auto; touch-action: pan-y }` (ADR-083's release-at-bounds law). The WORK
+  list stays twenty rows and scrolls inside the bay; a cut last row is the
+  honest overflow signal.
+
+**Guards:** `tests/lib/pda-phone-readings.test.ts` (every configured stream
+once with three non-empty answers, every person-led once with the absence
+strings; five shapes with their sentences, the runs disjoint and their union
+the roster, one flagship per shape leading; the envelope over every lettered
+string; the console mounts the component keyed on `view`; the overlay and the
+release rules pinned). `proof-stack-mobile-smoke` "the map's field answers its
+rail with three readings (ADR-107 U2)" — the slot found by `.pf-field--map`,
+never by index; the console hidden; the list scrolling under a wheel; tapping
+CONFIGURATION and LAYER changes the marker, the `data-view` and the list.
+`services-ring-smoke`, `trinny-london-smoke` and `arc-portfolio-smoke` are the
+desktop's byte-identity.
+
+**Left open:** the arcs and the reduced-motion casefile at ≤980 still show
+the fallback with NO rail (as before this update) — the list follows `view`
+now, but nothing on those hosts can change it. A rail that lives OUTSIDE the
+hidden console (a `railHost` on `ArcIntelligence`, the proof card's own seam)
+is the shape; not taken here because the owner's defect was the proof card's.

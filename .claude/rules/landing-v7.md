@@ -334,7 +334,8 @@ stage ref goes null).
 ⚠ **ON THE PHONE RUNG `#about` IS A BAND SINCE ADR-115 (2026-09-20)** —
 `AboutStage` mounts `AboutBand` there instead of the stage: the parsed
 `.voidwalker` block becomes a sticky 100svh band inside a 240svh station
-(name · role · the portrait's seat · ¶1 · the rest behind a chevron), welded
+(name · role · the portrait's seat · ¶1 · the rest, unfolding on the band's
+own clock since ADR-115 U2 — the chevron is deleted), welded
 to the services band by `-100svh`, the ring's deck stacking on the services
 exit and flipping to the portrait on the band's clock, handing over to a DOM
 image of the same bake before the band unpins. The prototype carries the

@@ -2,7 +2,12 @@
 
 - **Status:** Proposed (2026-09-25) — shipped and guarded on Chromium; the device
   read is the gate (§Device checklist). Chromium proves the clock, the seats and
-  the composed frames; it cannot see WebKit's snap reach.
+  the composed frames; it cannot see WebKit's snap reach. ⚠ **U1 (same day,
+  after his device read) SUPERSEDES §1–§3 ON THE CLOCK AND THE SEATS**: the
+  plateaus become 24svh dwells, the passes cruise at 1.33× the desktop, the
+  eight seats become four `normal` ones, and the beats are composed on the
+  chrome bands by DERIVED straddles — see §Update 1 below before citing any
+  number in the body.
 - **Surface:** the landing's depth corridor on the mobile composition
   (`isMobileComposition()`, < 760), the ≤960 corridor host, and the rail's
   click-to-navigate. The desktop is byte-identical: the remap is gated behind
@@ -321,3 +326,196 @@ dial); a `modulepreload` of the corridor chunk.
 - The entry flight's ~450px un-pulled stretch, if a slow drag rests in it on
   the device: a shorter pass steepens the flight; a ninth seat mid-rise would
   seat a frame that is still moving.
+
+## Update 1 (2026-09-25, owner) — the Arc travels again; the beats fill the frame
+
+**His read, on the iPhone, with four stills of NAVIGATE / ENCODE / BUILD:**
+
+> It looks better but … we lost a bit of the smooth scrolling … Now it just
+> jumps from Navigate to Encode to Build without that smooth transition, which
+> is the entire shtick of our website. Our brand is that we travel through the
+> Latent Space and on desktop the scroll works very smoothly. … if you scroll
+> from Build to "AI KPI Capability Your Team Owns," that's a smooth scroll. …
+> we have so much unused space above and below … move that eyebrow above it a
+> bit more toward the top and move the "Intelligence Becomes Capability" card
+> down and slightly increase the size of the sphere … for all three parts of
+> our arc.
+
+**The decision (AskUserQuestion, same day): continuous travel, soft landings.**
+The camera never stops; a SHORT dwell at each beat; the flight near the
+desktop's pace; a flick glides through a pass; a rest near a beat settles onto
+its composed frame; one-flick-one-beat comes off.
+
+### The diagnosis, restated
+
+The body above bought a landing with an 80svh HOLD and `always` seats, and the
+price was the travel: each pass moved the whole park-to-park distance in
+50svh — 2.57× the desktop's linear pace on the Encode pass (3.86× at the
+smoothstep's peak), 3.12× / 4.68× on the Build pass — between seats that cut
+every flick short. The epilogue, which ADR-125 left alone, is plain linear
+scroll smoothed by the follower with no seat until `#services`: that is the
+"smooth scroll" he pointed at, and it is the benchmark.
+
+And the beats were composed at ONE frame height. The straddles were world
+units tuned at 390×844 while the DOM clusters are fixed px, so on the frame he
+photographs most (the toolbar-shown ≈390×676 — the cell is `100svh`, the SMALL
+viewport) the Build title sat ~118px under the top and the caption ~96px above
+the bottom, and at 844 the Build title 159px down.
+
+### 1 · The clock: dwells, cruise passes, one speed
+
+`PHONE_CORRIDOR_LEGS = { thesisHold: 40, thesisRise: 60, dwell: 24, tail: 40 }`.
+The three passes are DERIVED: the remainder (544.39 − 100 − 72 − 40 =
+332.39svh) is split in the desktop's own paint ratios (Δ .2909 / .2364 /
+.2864), so every pass runs at ONE speed — `PHONE_PASS_SPEED` = 0.002448
+paint/svh = **1.333× the desktop's linear pace** (pre-ADR-125 the phone flew
+at 1.27× and nobody called it a jump).
+
+| leg           | svh    | from the pin  | paint                | ease   |
+| ------------- | ------ | ------------- | -------------------- | ------ |
+| thesis-hold   | 40     | 0–40          | 0                    | hold   |
+| thesis-rise   | 60     | 40–100        | 0 → `DOLLY_HOLD_END` | linear |
+| pass-navigate | 118.84 | 100–218.84    | → `.navigate`        | cruise |
+| **NAVIGATE**  | 24     | 218.84–242.84 | held                 | hold   |
+| pass-encode   | 96.56  | 242.84–339.40 | → `.diagnostic`      | cruise |
+| **ENCODE**    | 24     | 339.40–363.40 | held                 | hold   |
+| pass-build    | 116.99 | 363.40–480.39 | → `.intelligence`    | cruise |
+| **BUILD**     | 24     | 480.39–504.39 | held                 | hold   |
+| tail          | 40     | 504.39–544.39 | → 1                  | linear |
+
+- **`ease: "cruise"`** — a sine ramp in over `PASS_RAMP = 0.25` of the pass, a
+  LINEAR middle, a sine ramp out; peak factor `k = 1/(1 − 2e + 4e/π) = 1.222`,
+  so the peak is **1.63× desktop** (smoothstep would be 2.0×, smootherstep
+  2.5×). Zero velocity at both dwell edges — a slow drag never clicks off a
+  beat — and the middle half of every pass IS the desktop's linear grammar.
+  `passPeakFactor(ease)` is exported for the test and the teleport arithmetic.
+- **Why 24svh:** ≈200px at 844, a thumb nudge; **shorter than one Blink radius
+  (~vh/3)**, so every rest inside a dwell is pulled onto its seat and no
+  un-pulled dwell frame exists (the 80svh plateau had 115px of un-pulled
+  middle); 3×24 is what the budget spares at 1.33×. The thesis 40+60 is kept.
+- ⚠ **"Nothing lettered inside a pass" no longer holds, by design**: the title
+  fades on the desktop's own `depthFade` windows — fully opaque from ≈28svh
+  before the seat through the dwell to ≈26svh past it. A rest outside a seat's
+  reach shows a mid-flight frame: that is TRAVEL, and a nudge lands the beat.
+
+Pixel budget (seat = dwell start → end; 1svh = 8.44 / 6.76 / 9.32px):
+
+| frame   | NAVIGATE  | ENCODE    | BUILD     | corridor | passes px         |
+| ------- | --------- | --------- | --------- | -------- | ----------------- |
+| 390×844 | 1847–2050 | 2865–3067 | 4055–4257 | 4595     | 1003 / 815 / 987  |
+| 390×676 | 1479–1642 | 2294–2457 | 3247–3410 | 3680     | 803 / 653 / 791   |
+| 430×932 | 2040–2263 | 3163–3387 | 4477–4701 | 5074     | 1108 / 900 / 1090 |
+
+### 2 · The seats: four, `normal`, on the dwells
+
+`CorridorPhoneSeats` renders FOUR — `thesis`, `navigate`, `encode`, `build` —
+all `start`, all `normal`, at each dwell's START, the box the dwell itself
+(thesis 40) under `SEAT_BOX_MAX_SVH`. The `-out` twins are deleted (a dwell's
+last frame is inside its seat's radius, and a seat deeper in a 100svh pass
+would seat a moving frame); `stop` comes off `PhoneCorridorSeat`, the
+`data-corridor-stop` attribute and its `always` rule are deleted. **No
+`always` anywhere on the corridor.** Hero → thesis: a medium flick lands in
+the thesis seat's radius or its 40svh hold (paint 0 either way); a hard flick
+can pass it — the desktop's own behaviour; `always` on the thesis seat alone
+is the named dial if the device shows the opening skipped.
+
+⚠ **THE RADIUS TEST INVERTS**: every pass is `> 2·vh/3` on every shape (a
+mid-pass rest is travel) and every dwell `≤ vh/3` (every dwell rest is pulled
+onto the composed frame). The seams sweep is re-cut as **"every rest within
+reach of a park seat is pulled onto it; every other rest is travel"** — no
+rest may land on nothing; the reach actually measured is attached as the
+record for the device read.
+
+### 3 · The composition: derived straddles, a solved sphere
+
+The anchor declares a phone seat; the tracker derives a world-Y straddle per
+resize; a three-free registry carries it; `stationHeaderPosition`'s mobile
+branch reads it with the old literal as the fallback. Desktop byte-identical.
+
+- New `lib/home-v2/phoneStraddle.ts`: `PHONE_SEAT_AIR_PX = 12`;
+  `phoneStraddleWorldY({ edge, vh, seatLinePx, clusterPx, scale, centreY,
+pxPerUnit })` — for `edge: "top"` (origin `bottom-center`) the anchored edge
+  is `seatLinePx + clusterPx·scale`, for `"bottom"` (origin `top-center`) it is
+  `vh − seatLinePx − clusterPx·scale`; the straddle is `(centreY − anchoredY) /
+pxPerUnit`. `phoneSphereScale()` solves the sphere; `read/write*` is a `Map`
+  with the literal as the fallback until the first derive.
+- `useWorldDomTracker.ts`: `WorldAnchor.phoneSeat?: { edge; parkProgress;
+base(t) }`. `derivePhoneSeats()` runs on resize (and when a seated element
+  first mounts), gated `isMobileComposition()`: a SCRATCH camera synced to
+  `parkProgress`, `base(park)` projected for `centreY`, `pxPerUnit` from the
+  projection of `base + 1 unit`, the cluster's `offsetHeight`, and the seat
+  line from two hidden probes (`.home-v2-copy-seat--top/--bottom`, height =
+  the chrome band + `--corridor-seat-air`) — the seat stays derived from the
+  chrome's own tokens. No per-tick layout read. The record is published as
+  JSON on `.home-v2-copy-layer[data-phone-seats]` for the smoke.
+  ⚠ Project the anchor's OWN pose, not `parkDistance − 0.1`:
+  `diagnosticApproach` ends at .66, so at the Encode park the title still sits
+  −0.085 deeper; the projection absorbs that and the lookAt bob.
+- `sceneGeom.ts`: the six anchors read `readPhoneStraddle("navigate.title",
+2.0)` etc. (fallbacks 2.0 / −1.8 · 1.7 / −1.5 · 1.65 / −1.35 — the old
+  literals) and declare `phoneSeat`.
+- **The sphere is SOLVED per frame, capped.** `mobileGyroSphereScale()` reads
+  the registry: `clamp(1.1 × (tightestHalfBand − air) / ringPxAt1.1, 1.1,
+MOBILE_GYRO_SPHERE_SCALE_MAX = 1.3)`, the tightest of the three beats' free
+  bands between the title's bottom and the caption's top. A constant would be
+  +5 % at 676 (which would not read as "slightly bigger") and +57 % at 844
+  before a cap. The cap is the dial the still decides; `gyroAssemblyWorldPosition`
+  folds the factor in so the weld is true.
+
+**Measured (the seams' composed case, Chromium, both frames):**
+
+| beat @ frame | title top / bottom | caption top / bottom | straddles (title / caption) | sphere y · ring px at 1.1 · fit |
+| ------------ | ------------------ | -------------------- | --------------------------- | ------------------------------- |
+| navigate@844 | 67.4 / 193.7       | 639.9 / 774.5        | +2.26 / −2.26               | 417.3 · 149.4 · 1.30            |
+| encode@844   | 67.7 / 172.1       | 659.2 / 775.2        | +2.54 / −2.46               | 419.7 · 148.9 · 1.30            |
+| build@844    | 69.0 / 174.3       | 641.8 / 777.3        | +2.57 / −2.16               | 427.4 · 148.6 · 1.30            |
+| navigate@676 | 67.6 / 193.9       | 472.3 / 607.0        | +1.77 / −1.75               | 334.2 · 119.7 · 1.16            |
+
+The title's top sits on the top band + 12 (68) and the caption's bottom on the
+bottom band − 12 (vh − 68) within 4px on every beat and both frames; the
+ring clears both clusters by the air; opacity ≥ 0.925, scale within 2 % of 1.
+
+### 4 · Two things found on the way
+
+- ⚠ **THE LANDING'S SCROLL MEMORY REPLAYED A RECORD FROM ANOTHER FRAME HEIGHT.**
+  ADR-123's `scrollMemory.ts` stored `vh` from the first day and `shouldRestore`
+  read only `vw`, so a rest at 390×844 replayed into a 390×676 boot ~2 s in
+  and moved the page 1768px — onto the Build seat — under the seams test, which
+  read it as a seek that "settled on the wrong seat". Both axes are checked
+  now (`SCROLL_MEMORY_ROTATION_PX` on `vh` too; `layoutViewportHeight()` is
+  the small viewport on iOS, so a toolbar transition is NOT a height change).
+  Recorded at ADR-123 §Part 1 too.
+- ⚠ **A SEEK THAT ACCEPTS ANY SEAT ACCEPTS THE WRONG ONE.** `seekTo` counted a
+  landing on a seat 953px past the ask as settled; it takes only a seat within
+  half a screen of the ask now.
+
+### Guards
+
+`phone-corridor-clock.test.ts` rewritten (17): the legs, one speed in
+[1.2, 1.5] (record 1.333), the cruise's properties, monotonic + velocity-
+continuous with the peak `k·Δ/L`, dwells that land softly, the pixel budget,
+the 844 record, four seats with no `stop`, the inverted radius law, the CSS
+pins (no `scroll-snap-stop`, no `data-corridor-stop`), the teleport pin. New
+`phone-straddle.test.ts` (9). The seams spec: the snap tables lose the `-out`
+entries, the sweep is re-cut, the composed case runs at 844 and 676 and
+asserts the seat lines and the ring's clearance off the tracker's record.
+`scroll-memory.test.ts` pins the height check.
+
+### Device checklist (U1)
+
+1. Flick off the hero: the Thoughtform frame stops; flick again and the
+   corridor TRAVELS — the sphere flies, the title fades in as Navigate
+   approaches, and the page settles onto the composed beat if the flick ends
+   near it, or rests mid-flight if it does not (a nudge lands it). Same for
+   Encode and Build. Say whether the flight reads as the desktop's pace.
+2. On each beat: the eyebrow + title just under the top readout's row, the
+   caption card just above the theme switch's row, the sphere larger — on both
+   the toolbar-shown and toolbar-hidden frames.
+
+### Left open after U1
+
+- `always` on the thesis seat (the opening skipped by a hard flick — a dial).
+- `MOBILE_GYRO_SPHERE_SCALE_MAX` 1.3 (the sphere reads too big or too small on
+  the device — one number).
+- The passes' 1.333× (too quick or too slow — `PHONE_CORRIDOR_LEGS.dwell` and
+  the tail are the other two terms of the same budget).

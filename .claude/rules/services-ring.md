@@ -526,7 +526,9 @@ RING_SLAB_CHAMFER_FRAC` — the card's own leg). Neither half owns a
   an empty **`.svc-ring-seat`** · the paragraph. The hook publishes the
   seat's rect as the OPTIONAL `seat` on `servicesRingProgressRef` (absent on
   desktop and every lab ⇒ byte-identical there); the ring fits the front
-  card's HEIGHT to `RING_MOBILE_SEAT_FILL` (0.82) of it
+  card's HEIGHT to `RING_MOBILE_SEAT_FILL` (0.94 since ADR-115 U2, with
+  `RING_MOBILE_POSE_SLACK` 1.06: `FILL × SLACK ≤ 1`, the card never leaves the
+  seat) of it
   (`ringMobileFrontWidthPx(vw, seatH)` — the width law still caps, the
   aspect and the bake never change) and lands its centre on the seat's
   (`ringMobileSeatY`, solved at the card's own depth, re-projected by the
@@ -594,15 +596,28 @@ RING_CONTENT_LIFT)`, `rotation.y = π`, FrontSide, renderOrder 0.115, its
   itself is not, and the side-tap tween's beats rest far outside any proximity
   radius of `#about`'s stop (`mobile-section-seams.spec.ts`, `probe-mobile-
 lockin.mjs`). Rules in `mobile-sections.md` §10.
-- ⚠ **THE PHONE CARD IS 0.8 OF THE FRAME, MAY OVERLAP THE BAND'S TEXTS, AND
-  BAKES AT 0.75 (ADR-115 U1, owner: the card's copy "barely legible").**
-  `RING_MOBILE_FRONT_VW` 0.8 · `RING_MOBILE_FRONT_MAX_PX` 330 ·
-  `RING_MOBILE_SEAT_FILL` **1.25** (an eighth of the seat over the title and
-  the paragraph each side — his allowance; the row gaps absorb most of it)
-  · `BAKE_SCALE_MOBILE` 0.75. At 390 the front card is 312 css px (was 209),
-  its lede 13 css px (was 8.7). The about band's DOM slot mirrors the width
-  law at fill 1.0. ⚠ **AND THE BAND IS `100dvh`**, the runway `330svh`, the
-  hook measuring `runway − band` — see `mobile-sections.md` §11.
+- ⚠ **THE PHONE CARD FITS ITS SEAT, AND ITS TYPE GROWS INSIDE THE BAKE
+  (ADR-115 U2, 2026-09-25, owner: "scale them down a bit on mobile so they
+  don't overlap with the text").** `RING_MOBILE_FRONT_VW` 0.8 ·
+  `RING_MOBILE_FRONT_MAX_PX` 330 · `RING_MOBILE_SEAT_FILL` **0.94** ·
+  `RING_MOBILE_POSE_SLACK` **1.06** (`FILL × SLACK ≤ 1` — the tilted rect
+  never leaves the seat; U1's 1.25 ran 47–79px into both texts on every frame
+  under 844) · `BAKE_SCALE_MOBILE` 0.75. The band's intro (14/1.45/42ch) and
+  row gap (`clamp(18px, 3svh, 32px)`) fund the seat on the small frame: at
+  390×676 the card is 221×358 (was 201×326 with U1's overlap); at 844 312×505,
+  width-bound. Legibility is bought INSIDE the bake — `FACE_PHONE_RUNGS`
+  (`ringType.ts`: name 74/88/52 — the bled treatment's own — lede 50/68) on the
+  phone mount alone (`bakeCardFace(…, { rung: "phone" })`; the desktop passes
+  nothing and is source-identical), the raster at `RASTER_PX_PHONE` 24 under
+  `RASTER_QUIET_HEAD_PHONE` 320 / `_FOOT_PHONE` 928 (`rasterQuietAt`;
+  `rasterQuiet` is the desktop's binding of it). On screen the lede is 12.5
+  css px at 676, 18.6 at 844 (was 13.0). ⚠ 390×676 cannot mount the ring in
+  Chromium (`min-height: 681px`; iOS resolves the rung on the LARGE viewport)
+  — **390×681 is the CI proxy** for the toolbar-shown frame. The about band's
+  DOM slot mirrors the width law at fill 1.0 (pinned against the constants).
+  The back's 34 floor is left open (a lift cuts copy on every record). ⚠ **AND
+  THE BAND IS `100dvh`**, the runway `330svh`, the hook measuring `runway −
+band` — see `mobile-sections.md` §11.
 - ⚠ **THE BAND'S EXIT IS THE DECK'S STACK, AND THE DECK FLIPS ON THE ABOUT
   BAND (ADR-115, 2026-09-20, owner: _"the cards should then stack on top of
   each other, rotate them as we have on desktop, and then reveal my profile
@@ -634,7 +649,9 @@ tests/lib/ring-type.test.ts` (the three readers, the bake, the clock, the
   every record, the rungs) and
   `npx playwright test tests/visual/services-ring-mobile-smoke.spec.ts
 --project=iphone-14-chromium --project=iphone-14-pro-max-chromium`; stills
-  via `node scripts/capture-services-mobile.mjs --theme dark|light [--vp 430x932]`.
+  via `node scripts/capture-services-mobile.mjs --theme dark|light [--vp 430x932]`
+  — and at `--vp 390x681`, the rung's shortest frame (ADR-115 U2): the card
+  between the two texts, the lede readable, the raster reading as glyphs.
   ⚠ The emulated iPhone USED TO lay out 421px wide (ADR-107's finding) — a
   31px `100vw` overflow the emulator zoomed out to fit; since ADR-082 U28
   clipped the root it lays out at the device's own 390, so every width ask

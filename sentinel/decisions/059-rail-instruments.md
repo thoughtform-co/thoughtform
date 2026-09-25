@@ -716,3 +716,33 @@ baseline unmoved.
   landing (its widened clips sit outside its own PRM block) now reaches the
   arcs. Pre-existing; fixing it changes landing behaviour and belongs in its
   own pass.
+
+## Update 7 (2026-09-25, owner) — the phone drops both brackets; the switch takes the corner
+
+Owner, from his iPhone: _"remove the white corners in the top-left and
+bottom-right corners. If we remove them we can move the light and dark mode
+buttons to the bottom-right corner."_
+
+- **`.hud__corner--tl, .hud__corner--br { display: none }` at ≤960** in
+  `landing.css`, beside the rail's own `display: none` — every HUD route
+  imports this sheet (the landing, `/arcs`, `/claude-workshop`, Trinny), so it
+  is one phone frame everywhere. `/arcs`' chapter row inside the TL corner was
+  already hidden since ADR-098 U1.
+- **The settings cluster takes the corner's own seat**: `.rin-settings {
+right: var(--hud-margin) }` at ≤960 (it sat one control inboard of the
+  bracket), and `.theme-toggle-overlay` moves with it in `theme.css` ("move
+  both" — `/arcs` still mounts it). `rail-instruments.css`'s
+  `html[data-rail-instruments] .hud__corner--br { border… }` re-show is deleted
+  (a border on a hidden element); `.rin-settings__row { display: none }` stays.
+- ⚠ **THE TWO CHROME BANDS STAY AT 56 / 56** (`mobile-sections.md` §1). They
+  reserve ROWS, not brackets: the TR readout button sits at `top: 16`, ~28–36
+  tall, and a 340px title centred in 390 reaches x≈365 under it; the 44px
+  switch centred on the 28px row spans `vh−52 … vh−8`, so a caption ending
+  below `vh − 56` would be 4px off it. The derivation comment in `landing.css`
+  says so now.
+- **Guards:** the seams spec's `CHROME_SELECTORS` drops both brackets and the
+  band case asserts they compute `display: none` and that `.rin-settings`'
+  right edge is `vw − hud-margin ± 1`; `KNOWN_CHROME_COLLISIONS.services` names
+  `.rin-settings` alone; `probe-mobile-lockin` reads the readout's rect where
+  it read the bracket's. `landing-page.spec.ts` still snapshots the TL corner
+  on DESKTOP, unchanged.

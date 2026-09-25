@@ -1829,6 +1829,42 @@ argument and the arithmetic (0.25 of raw is over a thousand px on the shortest
 phone). The inverse holds for what MUST follow the derived clock: the streaks'
 velocity reads the paint's rate, or they stream past a held camera.
 
+## A hold in the clock is a still; travel is the brand (ADR-125 U1, 2026-09-25)
+
+ADR-125 answered "it lands wrong" with 80svh plateaus and one-flick-one-beat
+seats, and the owner's next read was "it just jumps from Navigate to Encode to
+Build … our brand is that we travel through the Latent Space". A landing was
+bought by deleting the flight. The corridor's grammar is CONTINUOUS travel —
+the epilogue he pointed at as the benchmark is plain linear scroll — so a
+beat is a short DWELL (shorter than one snap radius, so every rest inside it
+is pulled onto the composed frame) between passes that run at one speed near
+the desktop's, with zero velocity at the dwell's edges and the desktop's own
+linear grammar in the middle. When a landing problem tempts you to hold the
+clock, hold it for as little as a thumb nudge and derive the passes from the
+budget that remains; a rest mid-pass is travel, not a defect.
+
+## A fallback that ignores the control it sits under is a control nobody can press (ADR-107 U2, 2026-09-25)
+
+The map card's rail switched `view` on the phone and the field showed the same
+list whatever it said, because the ≤980 fallback was written once as "the
+stream index" while the rail kept working above it. The tap changed state and
+nothing visible followed — no error, no red test, a control that looked
+pressable and was not. When a surface hides its instrument below a rung, the
+thing that replaces it must be KEYED on the same state the visible controls
+write, or the controls come off with it. And an overlay that exists to guard a
+listener must be gated on the same media the listener is — an `::after` over
+the field was guarding a wheel capture that never engages under 961px, and
+stopping only the thumb.
+
+## The record carried the axis the decision never read (ADR-125 U1, 2026-09-25)
+
+`scrollMemory.ts` stored `{ y, docH, vw, vh, t }` "so a rotation is recognised"
+and `shouldRestore` compared `vw` alone — so a rest at 390×844 replayed into a
+390×676 boot two seconds in, 1768px away, on a page whose every runway is in
+`svh`. A field written for a reason and read by nothing is a decision half
+made; when a record carries a dimension, the predicate that consumes it walks
+every dimension it carries, and the unit test asks about each one.
+
 ## 🔁 After a non-trivial fix
 
 When a bugfix changes runtime behavior, **do not** rely on chat history — run the **post-incident capture** steps in [MAINTENANCE.md](MAINTENANCE.md) (Cycle A). If a checkbox triggers, update `sentinel/BEST-PRACTICES.md`, an ADR, a path rule, or a `SKILL.md` **before** the work is considered done.
@@ -1837,4 +1873,4 @@ Trivial changes (typos, copy, formatting-only) skip this; see [MAINTENANCE — W
 
 ---
 
-_Last updated: 2026-09-24 (ADR-123)_
+_Last updated: 2026-09-25 (ADR-125 U1, ADR-107 U2)_

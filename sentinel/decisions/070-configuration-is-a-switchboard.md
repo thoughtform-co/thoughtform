@@ -4116,3 +4116,13 @@ confirming the one they did is the affordance.
   and it is the obvious third rung for this readout, but the owner asked for
   what a shape MEANS and adding a second answer to a two-line block is how a
   readout becomes a table. Named so the next pass decides it deliberately.
+
+## Note (2026-09-25) — the phone's three readings are ADR-107 U2's
+
+Below the console's rung (≤980, reduced motion) the map's fallback was ONE
+list whatever the rail said. It is three now — WORK · CONFIGURATION · LAYER
+as lists from the same record, keyed on the same `view` — recorded at
+[ADR-107 U2](107-the-proof-card-is-two-sheets-on-a-phone.md), because the
+defect was the proof card's on a phone. Nothing in the desktop drawings above
+changed; `PdaPhoneReadings.tsx` letters what `PdaConfiguration` and
+`PdaCarrier` draw, under the same envelope.

@@ -533,3 +533,126 @@ twin, the same picture), the chevron 439 → 235 → 439, frames p50 4.3ms · p9
   every bar transition rewound every runway below it. With the hero on the small
   viewport (ADR-123) the band's own clock is the measured-travel arithmetic U1
   chose and nothing else; the ~9 % figure in "Left open" is the hero's, retired.
+
+## Update 2 (2026-09-25, owner) — the rest unfolds on the clock; the card fits its seat
+
+Two asks from the same device read.
+
+### A · The About band's rest unfolds on the band's own clock
+
+Owner: the chevron's expansion _"should be activated automatically"_ while
+scrolling — the portrait shrinks, the full text shows — and then the scroll
+continues to the next section.
+
+- `aboutBandMath.ts`: `ABOUT_BAND_OPEN_IN = 0.65` (after ¶1 has typed at
+  0.60), `ABOUT_BAND_OPEN_OUT = 0.61` (47px of hysteresis at 844),
+  `ABOUT_BAND_READ` 0.62 → **0.70** — the reading seat IS the expanded state —
+  and `ABOUT_BAND_SQUARE_WINDOW` follows it; COVER, DONE, KILL unchanged.
+  ⚠ **`READ × (RUNWAY − 1) < 1` IS A HARD BOUND, FOUND BY THE SMOKES**: the
+  first cut set READ 0.72, and the ring band's RELEASE — the weld frame —
+  seated 6.5px down at 844 (7.1 at 932) on both phones, with every rest
+  within ±60px of it pulled onto that phantom. Measured with `--about-band-
+read` overridden: 0.62, 0.70 and 0.71 are clean, 0.715 puts the phantom ON
+  the weld, 0.72 puts it 6.5px past. The reading seat is a `start` area one
+  screen tall at `READ × travel` from the station's top; once its top sits a
+  whole viewport below the weld (READ × 1.4vh ≥ vh ⇔ READ ≥ 0.714), Blink
+  treats the seat's first-visible position (`top − vh`) as a snap position
+  inside the flip's-end target's covering range. The unit test pins the
+  product under 0.99; a longer runway TIGHTENS the bound.
+  Chosen over a scrubbed height (which needs the rest in px, scrubs ¶1 under
+  the thumb while it is read, and makes a mid-window rest a half-open rest):
+  this reuses the approved 420ms gesture, keeps ONE owner of `data-bio-open`,
+  reverses on scroll-up, and the deck already follows the shrinking slot
+  through the pulse.
+- `useAboutBandScroll.ts`: inside `write()`, `want = open ? p > OPEN_OUT : p ≥
+OPEN_IN`; on change the attribute, `measured = false` and a `REST_PULSE_MS`
+  (520) pulse; the measure gate becomes `(nameLive || copyLive) && (!measured
+|| now < pulseUntil)` so a fast scroll-up that un-types ¶1 while the rest
+  folds keeps the leaves on the moving line. The first synchronous `write()`
+  lands the attribute with `data-about-band`, so a deep reload paints open.
+- **The chevron is deleted** — the `<button class="voidwalker__more">` and
+  `id="about-rest"` in the prototype, its two CSS blocks; the rows become
+  `auto auto minmax(0,1fr) auto auto` (name · role · seat · ¶1 · rest). The
+  rest stays `visibility: hidden` before its window as the name and ¶1 are;
+  no-JS / PRM keep the whole static bio.
+- Seats and the hold at 844 (travel 1.4×vh): OUT→IN 47px, IN→READ 59px, hold
+  after READ 354px (the unit test's 300 floor holds). The runway does NOT grow;
+  the named dials are `ABOUT_BAND_RUNWAY_SVH` 2.4 → 2.6 or `always` on
+  `.voidwalker__snap`. Short phones: with the chevron's row gone the open seat
+  is ≈149px at 681h — over `ABOUT_BAND_SLOT_MIN_PX` 140 by 9px; the floor is
+  kept and the smoke's 681 case asserts it.
+- **Guards:** `about-band-math.test.ts` (OUT ≥ the copy's end, IN past OUT by
+  ≥24px of travel, READ past IN by ≥48px, READ − IN < 0.1, the sheet's
+  `--about-band-read` 0.72 in lockstep); `services-ring-mobile-smoke` — the
+  theme case asserts the flip's end FOLDED and the reading seat OPEN with no
+  chevron in the DOM, "the rest of the bio unfolds on the clock, and folds
+  again on the way back" replaces the chevron case, and "the expanded seat
+  stays over the portrait's floor on the shortest band phone" runs at 390×681;
+  `probe-mobile-deck` reads COVER / READ / COVER.
+
+### B · The services card fits its seat, and its type grows inside the bake
+
+Owner: _"scale them down a bit on mobile so they don't overlap with the text …
+Maybe we need to slightly redesign the cards and the text size on mobile."_
+
+Two corrections found while designing. The ring rung is `(min-height: 681px)`,
+so **390×676 cannot mount the ring in Chromium** — on iOS the media query
+resolves on the LARGE viewport while the `100dvh` band is 664–676 with the
+toolbars showing, which is why his device shows a band shorter than the
+rung's own floor; **390×681 is the CI proxy**. And `--hud-content-inset` is
+24px at ≤960 (band inner width 342 at 390).
+
+- **The fit** (`ringMath.ts`): `RING_MOBILE_SEAT_FILL` 1.25 → **0.94**, a new
+  `RING_MOBILE_POSE_SLACK = 1.06` (the smoke's tilt literal, promoted) with the
+  invariant `FILL × SLACK ≤ 1` — the projected rect can never leave the seat,
+  so the row gaps are pure clearance. U1's 1.25 let the card run 47–79px into
+  the title and the paragraph on every frame under 844: a collision, not an
+  allowance. `RING_MOBILE_FRONT_VW` 0.8 / `MAX_PX` 330 stay.
+- **The band funds the seat on the small frame** (`services.css` ≤960 ring
+  block): the intro at `14px / 1.45 / 42ch` (three lines probable, four worst,
+  was four at 15/1.5/38ch), the row gap `clamp(18px, 3svh, 32px)` (was
+  20/3.4/36). Seat → card at 390 wide, before → after: 676 → 347 (201×326) vs
+  **381 (221×358)**; 745 → 411 vs 446 (259×419); 844 → 503 vs 539 (312×505,
+  width-bound again); 430×932 → 330 (the cap).
+- **The type grows INSIDE the bake** — the phone rung U1 itself named:
+  `ringType.ts` gains `FaceRung` and `FACE_PHONE_RUNGS = { name: 74, nameLh:
+88, nameCap: 52, lede: 50, ledeLh: 68 }` (the name takes the BLED
+  treatment's own rungs; the lede is the smallest that clears 12 css px on a
+  210px card — 46/48 fail at 11.5/12.0). `bakeCardFace(…, opts?.rung)`: the
+  phone mount passes `{ rung: "phone" }`, the desktop passes nothing and every
+  branch falls to its literal (source pins on `TIGHT_LEDE_PX = 35` and the
+  display style's 62/74/44). On screen (bake × cardW/840): 676 → lede **12.5**,
+  name **18.5**; 745 → 15.4 / 22.8; 844 → 18.6 / 27.5 (was 13.0); 932 → 19.6 /
+  29.1. If 18.6 reads loud at 844, the dial is one number.
+- **The raster follows the type**: `RASTER_PX_PHONE = 24` beside `RASTER_PX`
+  18 (`cardViz.ts`; at a 210–221px card over a ≤1.4× canvas an 18px cell is
+  6.6×4 canvas px and reads as halftone — 24 is the smallest at which `@ % # *`
+  resolve; the portrait keeps 58×57 cells, coarser than the reveal's coarsest
+  mosaic), and `reveal.ts` gains `RASTER_QUIET_HEAD_PHONE = 320` /
+  `RASTER_QUIET_FOOT_PHONE = 928` with `rasterQuietAt(y, head, foot)` —
+  `rasterQuiet(y)` is that function with the desktop's bands bound, so the
+  shader and every desktop bake are byte-identical (the reveal test walks
+  every px of it).
+- **The back's 34 floor is left** (8.9–12.6 css px on the phone card):
+  `backFaceLayout` has no slack above `BACK_CONTENT_LIMIT`, so a lift cuts copy
+  on every record. The alternatives are shorter `breakdown` / spec strings, or
+  ADR-109's DOM sheet.
+- **Guards:** `services-ring-mobile-gate.test.ts` (fill ≤ 1, `FILL × SLACK ≤
+1`, the three frames' widths, the about band's width law read against the
+  constants, the phone rungs ≥ 12 / ≥ 18 css px on the rung's smallest card,
+  the phone bands against a two-line name and a five-line lede, the source
+  pins); `services-ring-reveal.test.ts` (the phone block; `rasterQuiet ===
+rasterQuietAt(·, 300, 1060)` at every px); `services-ring-mobile-smoke` —
+  the U1 `over` allowance is gone (title bottom + 8 ≤ card top, card bottom
+  - 8 ≤ intro top, card height ≤ seat), the tilt literal reads `POSE_SLACK`,
+    and "the card sits between the two texts on the rung's shortest frame, its
+    lede readable" runs at 390×681. `type-material-tokens`' 18/6 pins on the
+    ring hold (no new `letterSpacing`, no new bold literal).
+
+### Device checklist (U2)
+
+5. About: scroll past the first paragraph — the rest unfolds and the portrait
+   shrinks on its own; scroll up — it folds; the next flick leaves for the
+   eras.
+6. Services: the card sits between the title and the paragraph, touching
+   neither; the paragraph on the card is readable with the toolbars showing.
